@@ -1,0 +1,49 @@
+{
+  "mapScene": {
+    "mapType": "route_animation",
+    "mapStyle": "historical",
+    "title": "단종 유배 경로",
+    "source": "한양 → 영월 청령포 (1457년)",
+    "camera": {
+      "keyframes": [
+        { "frame": 0, "center": [127.7, 37.35], "zoom": 8.5 },
+        { "frame": 89, "center": [127.7, 37.35], "zoom": 8.5 }
+      ]
+    },
+    "route": {
+      "coordinates": [
+        [126.977, 37.566],
+        [127.050, 37.515],
+        [127.130, 37.440],
+        [127.300, 37.380],
+        [127.460, 37.340],
+        [127.636, 37.298],
+        [127.780, 37.330],
+        [127.920, 37.342],
+        [128.050, 37.280],
+        [128.191, 37.133],
+        [128.300, 37.160],
+        [128.400, 37.175],
+        [128.456, 37.172]
+      ],
+      "color": "#C62828",
+      "width": 4,
+      "drawDurationFrames": 60,
+      "style": "solid"
+    },
+    "markers": [
+      {
+        "coordinates": [126.977, 37.566],
+        "label": "한양",
+        "style": "dot",
+        "appearAtFrame": 0
+      },
+      {
+        "coordinates": [128.456, 37.172],
+        "label": "청령포",
+        "style": "pulse",
+        "appearAtFrame": 70
+      }
+    ]
+  }
+}

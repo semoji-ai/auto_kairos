@@ -1,0 +1,27 @@
+{
+  "name": "세모지스타일",
+  "description": "세상의모든지식 채널 메인 아트스타일. 심플하고 귀여운 2D 플랫 디자인",
+  "reference_image": "artstyle/styles/semoji_base.jpg",
+  "scene_style_description": "The attached image is a 2D flat design with no border in style.",
+  "style": {
+    "art_style": "Borderless 2D flat design with simple, rounded characters",
+    "linework": {
+      "outline": "Simple, rounded, and clean lines without intricate details",
+      "variation": "Smooth, minimalist outlines with no visible strokes or rough edges"
+    },
+    "shapes": "Chubby and friendly proportions. Round faces, stout bodies, and generally cute or approachable proportions. Heads are slightly oversized in relation to the body",
+    "color_palette": "Flat, bold colors. Solid blocks of color with minimal gradients or shading. Colors are bright but slightly muted, giving a retro feel",
+    "shading": "Limited texture. Clothing and hair have a smooth, almost plastic-like appearance, with no visible fabric textures or hair strands",
+    "character_design": "Minimalist facial features. Eyes are simple dots or small ovals, with minimal to no indication of a nose or mouth beyond simple lines. Eyebrows are thick and expressive. Stylized hands with few visible fingers, feet depicted as simple ovals or block shapes"
+  },
+  "technical": {
+    "no_text": true,
+    "critical_requirements": [
+      "FLAT 2D illustration style, absolutely NO 3D rendering or shading",
+      "NO outlines, NO borders, NO black strokes around shapes",
+      "Simple flat color fills only, NO gradients, NO highlights, NO shadows",
+      "Soft, muted pastel color palette with flat fills",
+      "Clean, minimal, borderless design"
+    ]
+  }
+}

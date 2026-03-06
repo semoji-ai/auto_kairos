@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Projects — Auto Agent V2{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Projects</h1>
+</div>
+
+{% if projects %}
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Status</th>
+      <th>Scenes</th>
+      <th>Assets</th>
+      <th>Updated</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in projects %}
+    <tr>
+      <td>{{ p.id }}</td>
+      <td>
+        <a href="/projects/{{ p.id }}">{{ p.name }}</a>
+        {% if p.topic %}
+        <br><small style="color: var(--text-muted)">{{ p.topic[:50] }}</small>
+        {% endif %}
+      </td>
+      <td><span class="badge badge-{{ p.status }}">{{ p.status }}</span></td>
+      <td>{{ p.scene_count }}</td>
+      <td>
+        {% set counts = p.get('asset_counts', {}) %}
+        {% set total = counts.values()|sum %}
+        {{ total }}
+        {% if counts %}
+        <br><small style="color: var(--text-muted)">
+          {% for t, c in counts.items() %}{{ t }}:{{ c }}{% if not loop.last %}, {% endif %}{% endfor %}
+        </small>
+        {% endif %}
+      </td>
+      <td style="color: var(--text-muted); font-size: 13px">{{ p.updated_at[:16] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty">
+  <p>No projects yet.</p>
+  <p style="margin-top: 8px">Run <code>python -m db.cli project create "프로젝트명"</code> to create one.</p>
+</div>
+{% endif %}
+{% endblock %}

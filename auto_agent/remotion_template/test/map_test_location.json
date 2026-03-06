@@ -1,0 +1,31 @@
+{
+  "mapScene": {
+    "mapType": "location_reveal",
+    "mapStyle": "historical",
+    "title": "청령포 — 단종 유배지",
+    "source": "강원도 영월군",
+    "camera": {
+      "keyframes": [
+        { "frame": 0, "center": [127.5, 37.4], "zoom": 7 },
+        { "frame": 60, "center": [128.456, 37.172], "zoom": 13 }
+      ],
+      "easing": "easeInOutCubic"
+    },
+    "markers": [
+      {
+        "coordinates": [128.456, 37.172],
+        "label": "청령포",
+        "style": "pulse",
+        "appearAtFrame": 45
+      }
+    ],
+    "labels": [
+      {
+        "coordinates": [126.977, 37.566],
+        "text": "한양",
+        "fontSize": 20,
+        "appearAtFrame": 5
+      }
+    ]
+  }
+}

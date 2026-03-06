@@ -1,0 +1,19 @@
+{
+  "vizData": {
+    "vizType": "slide_countdown",
+    "title": "",
+    "items": ["에트나 산", "후지 산", "베수비오 산"],
+    "values": [3, 2, 1],
+    "unit": "",
+    "source": "",
+    "descriptions": ["이탈리아 시칠리아", "일본 혼슈", "이탈리아 나폴리"],
+    "imagePath": "assets/reference_grid_bg.jpg"
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 0.3},
+      {"itemIndex": 1, "timeSec": 1.0},
+      {"itemIndex": 2, "timeSec": 1.7}
+    ]
+  }
+}

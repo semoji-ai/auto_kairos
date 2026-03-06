@@ -1,0 +1,24 @@
+{
+  "name": "Stickman Cute",
+  "description": "귀여운 스틱맨 스타일. 깔끔하고 친근한 손그림 느낌의 교육/설명 콘텐츠에 적합",
+  "reference_image": "artstyle/styles/stickman_style.jpg",
+  "scene_style_description": "Clean and charming hand-drawn stick figure illustration style with friendly, symmetric characters and positive, lighthearted mood.",
+  "style": {
+    "art_style": "Clean and charming hand-drawn stick figure illustration",
+    "linework": {
+      "outline": "Smooth, consistent black ink lines. Organic but tidy, resembling a high-quality felt-tip pen drawing",
+      "variation": "Minimal wobble, clean strokes without messy scribbles or scratchiness to ensure a polished look"
+    },
+    "shapes": "Cute and approachable proportions. Large perfectly round head, simple stick body with slightly rounded hands and feet. Soft curves rather than sharp angles",
+    "color_palette": "Crisp black outlines on a clean white background. (Flexible for adding bright, soft, and friendly flat colors if needed)",
+    "shading": "Flat and clean, smooth white paper feel, removing heavy crumpled textures for a crisp and modern look",
+    "character_design": "Friendly, symmetric, and expressive. Big circular eyes and a wide, happy smile. Features are designed to look appealing and cute (호감형), avoiding the grotesque or manic look of typical rage comics",
+    "mood_and_tone": "Positive, energetic, lighthearted, and playful. A doodle style that feels warm and inviting",
+    "background": "Pure white or very subtle minimal background"
+  },
+  "technical": {
+    "no_text": true,
+    "resolution": "High contrast, crisp digital line art",
+    "scene_style": "Clean and charming hand-drawn stick figure illustration. Characters have large round heads and simple stick bodies. Positive, lighthearted doodle style."
+  }
+}

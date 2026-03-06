@@ -1,0 +1,344 @@
+{
+  "manifest": {
+    "meta": {
+      "topic": "Creative Direction Test",
+      "resolution": { "width": 1920, "height": 1080 },
+      "fps": 30,
+      "subtitleFont": "Pretendard",
+      "vizFont": "Pretendard"
+    },
+    "scenes": [
+      {
+        "sceneNumber": 1,
+        "imagePath": "",
+        "audioPath": "",
+        "audioDurationSec": 5.0,
+        "subtitles": [
+          { "text": "헤드라인 텍스트 테스트입니다.", "startSec": 0.5, "endSec": 4.0 }
+        ],
+        "visualization": {
+          "title": "headline_only 테스트",
+          "items": [],
+          "values": [],
+          "unit": "",
+          "source": "",
+          "creative": {
+            "concept": "어두운 화면에 핵심 헤드라인이 페이드인으로 나타나며 키워드가 accent 색상으로 강조된다",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "{{크리에이티브 디렉션}}\n자연 추론 테스트",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+        "transition": { "type": "fade", "durationFrames": 15 },
+        "vizAnimation": { "stagger": 6, "itemDuration": 20, "easing": "easeOut" }
+      },
+      {
+        "sceneNumber": 2,
+        "imagePath": "",
+        "audioPath": "",
+        "audioDurationSec": 6.0,
+        "subtitles": [
+          { "text": "이 폭격으로 2400명의 민간인이 사망했습니다.", "startSec": 0.5, "endSec": 5.0 }
+        ],
+        "visualization": {
+          "title": "counter 테스트",
+          "items": [],
+          "values": [2400],
+          "unit": "명",
+          "source": "",
+          "creative": {
+            "concept": "어두운 화면에 '민간인 사망자' 텍스트가 먼저 나타나고, 잠시 정적 후 '2,400' 숫자가 카운팅되며 크게 나타난다",
+            "reveal": "dramatic_pause",
+            "emphasis": "number",
+            "headline": "민간인 사망자\n{{2,400명}}",
+            "mood": "somber"
+          }
+        },
+        "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+        "transition": { "type": "fade", "durationFrames": 15 },
+        "vizAnimation": { "stagger": 6, "itemDuration": 20, "easing": "easeOut" }
+      },
+      {
+        "sceneNumber": 3,
+        "imagePath": "",
+        "audioPath": "",
+        "audioDurationSec": 7.0,
+        "subtitles": [
+          { "text": "미국은 테헤란, 이스파한, 시라즈 등 9개 도시를 동시에 타격했습니다.", "startSec": 0.5, "endSec": 6.0 }
+        ],
+        "visualization": {
+          "title": "items_grid 테스트",
+          "items": ["테헤란", "이스파한", "시라즈", "반다르아바스", "타브리즈", "아흐바즈", "마슈하드", "케르만", "부셰르"],
+          "values": [9],
+          "unit": "개 도시",
+          "source": "",
+          "creative": {
+            "concept": "도시 이름이 하나씩 그리드에 나타나고, 모두 표시되면 동시에 번쩍이며 총 개수가 강조된다",
+            "reveal": "stagger_then_flash",
+            "emphasis": "count",
+            "headline": "{{9개 도시}}\n일제히 불탔다",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+        "transition": { "type": "fade", "durationFrames": 15 },
+        "vizAnimation": { "stagger": 6, "itemDuration": 20, "easing": "easeOut" }
+      },
+      {
+        "sceneNumber": 4,
+        "imagePath": "",
+        "audioPath": "",
+        "audioDurationSec": 6.0,
+        "subtitles": [
+          { "text": "토마호크, 하이마스, 스텔스기, 전갈 드론이 투입되었습니다.", "startSec": 0.5, "endSec": 5.0 }
+        ],
+        "visualization": {
+          "title": "items_list 테스트 (이미지 카드형)",
+          "items": ["토마호크 순항미사일", "HIMARS 다연장 로켓", "스텔스 전투기", "전갈 태스크포스"],
+          "images": ["project/images/878dde377e66.jpg", "project/images/5568c1aec9e4.jpg", "project/images/a92dd4778615.jpg", "project/images/5283d491ac90.jpg"],
+          "values": [],
+          "unit": "",
+          "source": "",
+          "creative": {
+            "concept": "각 무기 체계가 이미지와 함께 가로 카드형으로 등장, 마지막 전갈 태스크포스에 spotlight",
+            "reveal": "stagger",
+            "emphasis": "sequence",
+            "headline": "에픽 퓨리의 {{무기들}}",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+        "transition": { "type": "slide", "durationFrames": 15 },
+        "vizAnimation": { "stagger": 6, "itemDuration": 20, "easing": "easeOut" }
+      },
+      {
+        "sceneNumber": 5,
+        "imagePath": "",
+        "audioPath": "",
+        "audioDurationSec": 5.0,
+        "subtitles": [
+          { "text": "최고지도자께서 순교하셨습니다.", "startSec": 0.5, "endSec": 4.0 }
+        ],
+        "visualization": {
+          "title": "quote 테스트 (초상화 포함)",
+          "items": ["\"최고지도자께서 순교하셨습니다\""],
+          "images": ["project/images/3cfa7a70481a.jpg"],
+          "values": [],
+          "unit": "",
+          "source": "이란 국영방송",
+          "creative": {
+            "concept": "인물 이미지와 함께 인용문이 타이핑되며 나타나고, 출처가 하단에 페이드인",
+            "reveal": "typewriter",
+            "emphasis": "quote",
+            "headline": "{{순교하셨습니다}}",
+            "mood": "somber"
+          }
+        },
+        "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+        "transition": { "type": "fade", "durationFrames": 15 },
+        "vizAnimation": { "stagger": 6, "itemDuration": 20, "easing": "easeOut" }
+      },
+      {
+        "sceneNumber": 6,
+        "imagePath": "",
+        "audioPath": "",
+        "audioDurationSec": 6.0,
+        "subtitles": [
+          { "text": "작전명 에픽 퓨리와 포효하는 사자가 동시에 발동했습니다.", "startSec": 0.5, "endSec": 5.0 }
+        ],
+        "visualization": {
+          "title": "split 테스트 (합동작전, vs 없음)",
+          "items": ["Epic Fury — 에픽 퓨리", "Roaring Lion — 포효하는 사자"],
+          "images": ["project/images/873375095c07.jpg", "project/images/5283d491ac90.jpg"],
+          "descriptions": ["미국 국방부 · 장대한 분노", "이스라엘군 · 참수 작전"],
+          "values": [],
+          "unit": "",
+          "source": "",
+          "creative": {
+            "concept": "화면이 좌우로 분할되어, 왼쪽에 미국 작전 'Epic Fury', 오른쪽에 이스라엘 작전 'Roaring Lion'이 동시에 나타남 — 합동작전",
+            "reveal": "split_reveal",
+            "emphasis": "contrast",
+            "headline": "{{Epic Fury}}\n{{Roaring Lion}}",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+        "transition": { "type": "wipe", "durationFrames": 15 },
+        "vizAnimation": { "stagger": 6, "itemDuration": 20, "easing": "easeOut" }
+      },
+      {
+        "sceneNumber": 7,
+        "imagePath": "",
+        "audioPath": "",
+        "audioDurationSec": 7.0,
+        "subtitles": [
+          { "text": "1979년 이슬람 혁명과 대사관 인질극이 벌어졌습니다.", "startSec": 0.5, "endSec": 6.0 }
+        ],
+        "visualization": {
+          "title": "Timeline 추론 테스트",
+          "items": ["이슬람 혁명", "대사관 인질극", "이란-이라크 전쟁"],
+          "descriptions": ["1월, 팔레비 왕조 붕괴 → 호메이니 집권", "11월, 미국인 52명 444일간 인질", "1980~1988, 8년간의 소모전"],
+          "values": [1979.01, 1979.11, 1980],
+          "unit": "",
+          "source": "",
+          "creative": {
+            "concept": "1979년부터의 이벤트가 타임라인 위에 순차적으로 쌓이며, 적대의 역사가 드러난다",
+            "reveal": "stagger",
+            "emphasis": "sequence",
+            "headline": "{{혁명}}과 {{인질극}}\n적대의 원년",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+        "transition": { "type": "fade", "durationFrames": 15 },
+        "vizAnimation": { "stagger": 8, "itemDuration": 20, "easing": "easeOut" }
+      },
+      {
+        "sceneNumber": 8,
+        "imagePath": "",
+        "audioPath": "",
+        "audioDurationSec": 6.0,
+        "subtitles": [
+          { "text": "미국과 이스라엘은 핵 위협 제거를, 중국과 러시아는 즉각 중단을 요구했습니다.", "startSec": 0.5, "endSec": 5.0 }
+        ],
+        "visualization": {
+          "title": "Compare 추론 테스트",
+          "left": {
+            "label": "미국-이스라엘",
+            "items": ["핵 위협 제거", "테러 지원국 응징", "중동 안정화"]
+          },
+          "right": {
+            "label": "중국-러시아",
+            "items": ["중동 안정 훼손", "즉각 전쟁 중단", "유엔 결의안 촉구"]
+          },
+          "items": [],
+          "values": [],
+          "unit": "",
+          "source": "",
+          "creative": {
+            "concept": "화면 좌우 분할, 미국-이스라엘 vs 중국-러시아의 상반된 입장 대비",
+            "reveal": "split_reveal",
+            "emphasis": "contrast",
+            "headline": "{{핵 위협 제거}}\nvs\n{{즉각 중단}}",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+        "transition": { "type": "fade", "durationFrames": 15 },
+        "vizAnimation": { "stagger": 6, "itemDuration": 20, "easing": "easeOut" }
+      },
+      {
+        "sceneNumber": 9,
+        "imagePath": "",
+        "audioPath": "",
+        "audioDurationSec": 6.0,
+        "subtitles": [
+          { "text": "이란 리알화가 폭락하여 142만 리알에 달했습니다.", "startSec": 0.5, "endSec": 5.0 }
+        ],
+        "visualization": {
+          "title": "Bar chart 추론 테스트",
+          "items": ["2024년 초", "2025년 12월", "2026년 3월"],
+          "values": [800000, 1200000, 1420000],
+          "unit": "리알/달러",
+          "source": "",
+          "creative": {
+            "concept": "리알화 가치 하락을 바 차트로 시각화, 마지막 바가 빨간색으로 142만 강조",
+            "reveal": "count_up",
+            "emphasis": "number",
+            "headline": "리알화 {{폭락}}\n142만 리알/달러",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+        "transition": { "type": "fade", "durationFrames": 15 },
+        "vizAnimation": { "stagger": 10, "itemDuration": 20, "easing": "easeOut" }
+      },
+      {
+        "sceneNumber": 10,
+        "imagePath": "project/images/0745050f1184.jpg",
+        "audioPath": "",
+        "audioDurationSec": 6.0,
+        "subtitles": [
+          { "text": "호르무즈 해협은 세계 석유 수송의 20%가 통과하는 전략적 요충지입니다.", "startSec": 0.5, "endSec": 5.0 }
+        ],
+        "visualization": {
+          "title": "이미지 배경 + Creative 오버레이 테스트",
+          "items": [],
+          "values": [],
+          "unit": "",
+          "source": "",
+          "creative": {
+            "concept": "위성사진 배경 위에 핵심 수치가 페이드인으로 나타나며, 전략적 중요성을 시각적으로 전달",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "호르무즈 해협\n세계 석유의 {{20%}}가 통과",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": { "enabled": true, "zoomFactor": 1.15, "zoomDirection": "in" },
+        "transition": { "type": "fade", "durationFrames": 15 },
+        "vizAnimation": { "stagger": 6, "itemDuration": 20, "easing": "easeOut" }
+      },
+      {
+        "sceneNumber": 11,
+        "imagePath": "",
+        "audioPath": "",
+        "audioDurationSec": 6.0,
+        "subtitles": [
+          { "text": "미군은 테헤란, 이스파한 등 주요 군사시설을 정밀 타격했습니다.", "startSec": 0.5, "endSec": 5.0 }
+        ],
+        "visualization": {
+          "title": "맵 씬 테스트",
+          "items": ["테헤란", "이스파한", "시라즈"],
+          "values": [],
+          "unit": "",
+          "source": "",
+          "creative": {
+            "concept": "지도 위에 타격 위치가 하나씩 표시되며 붉은 펄스 마커로 강조",
+            "reveal": "stagger",
+            "emphasis": "sequence",
+            "headline": "{{정밀 타격}} 지점",
+            "mood": "dramatic"
+          }
+        },
+        "mapScene": {
+          "mapType": "location_reveal",
+          "mapStyle": "modern_clean",
+          "title": "작전 에픽 퓨리 — 타격 지점",
+          "camera": {
+            "keyframes": [
+              { "frame": 0, "center": [53.0, 32.5], "zoom": 5 },
+              { "frame": 90, "center": [51.4, 35.7], "zoom": 7 }
+            ]
+          },
+          "markers": [
+            { "coordinates": [51.389, 35.689], "label": "테헤란", "style": "pulse", "appearAtFrame": 30 },
+            { "coordinates": [51.677, 32.652], "label": "이스파한", "style": "pulse", "appearAtFrame": 60 },
+            { "coordinates": [52.583, 29.591], "label": "시라즈", "style": "pulse", "appearAtFrame": 90 }
+          ],
+          "prerenderedFramesDir": "map_frames/scene_5"
+        },
+        "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+        "transition": { "type": "fade", "durationFrames": 15 },
+        "vizAnimation": { "stagger": 8, "itemDuration": 20, "easing": "easeOut" }
+      }
+    ],
+    "bgm": null
+  },
+  "subtitleConfig": {
+    "visible": true,
+    "fontFamily": "'Pretendard', sans-serif",
+    "fontSize": 44,
+    "fontWeight": 700,
+    "color": "white",
+    "strokeColor": "#3D3B2F",
+    "strokeWidth": 0,
+    "keywordColor": "#F7D94C",
+    "keywordStrokeColor": "#5A4B00",
+    "bottomOffset": 80,
+    "maxWidth": "85%",
+    "lineHeight": 1.5
+  }
+}

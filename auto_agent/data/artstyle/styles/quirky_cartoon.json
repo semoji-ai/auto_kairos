@@ -1,0 +1,24 @@
+{
+  "name": "Quirky Hand-drawn Cartoon",
+  "description": "개성있는 낙서 스타일 만화. 느슨하고 유머러스한 손그림 느낌",
+  "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",
+  "scene_style_description": "1990s American comic book style, exaggerated proportions, bold lines.",
+  "style": {
+    "art_style": "Loose, absurd hand-drawn cartoon illustration",
+    "linework": {
+      "outline": "Thick and uneven black lines, scribbly and wobbly as if drawn quickly by hand",
+      "variation": "Not smooth, slightly misaligned strokes, playful and imperfect feel"
+    },
+    "shapes": "Basic geometric forms but intentionally distorted, head and body in exaggerated proportions",
+    "color_palette": "Bright and simple colors, flat digital fill, some areas spilling outside the outlines",
+    "shading": "Almost none, simple flat fills only",
+    "character_design": "Facial features placed abnormally (crooked mouth, misplaced nose or ears). Expressive, silly, and exaggerated expressions for a comical look",
+    "mood_and_tone": "Playful, humorous, and whimsical, like a doodle-style cartoon",
+    "background": "Simple stage or props drawn roughly and minimally"
+  },
+  "technical": {
+    "no_text": true,
+    "resolution": "Digital drawing with a hand-drawn texture feel",
+    "scene_style": "Loose, absurd hand-drawn cartoon illustration style. Characters have exaggerated proportions with thick uneven lines. Playful and humorous mood like a quick doodle sketch."
+  }
+}

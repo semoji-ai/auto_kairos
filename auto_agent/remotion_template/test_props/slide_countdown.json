@@ -1,0 +1,26 @@
+{
+  "vizData": {
+    "vizType": "slide_countdown",
+    "title": "세계에서 가장 위험한 화산 TOP 5",
+    "items": ["탐보라", "크라카타우", "피나투보", "세인트 헬렌스", "베수비오"],
+    "values": [5, 4, 3, 2, 1],
+    "unit": "",
+    "source": "USGS Global Volcanism Program",
+    "descriptions": [
+      "인도네시아 — 1815년 역사상 최대 분화",
+      "인도네시아 — 1883년 분화로 3만 6천명 사망",
+      "필리핀 — 1991년 20세기 최대 분화",
+      "미국 — 1980년 분화로 산 정상 400m 소멸",
+      "이탈리아 — AD 79년 폼페이를 매몰"
+    ]
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 0.3},
+      {"itemIndex": 1, "timeSec": 0.8},
+      {"itemIndex": 2, "timeSec": 1.3},
+      {"itemIndex": 3, "timeSec": 1.8},
+      {"itemIndex": 4, "timeSec": 2.3}
+    ]
+  }
+}

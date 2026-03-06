@@ -1,0 +1,226 @@
+{
+  "meta": {
+    "topic": "시각화 디자인 테스트",
+    "resolution": { "width": 1920, "height": 1080 },
+    "fps": 30,
+    "subtitleFont": "NotoSansKR",
+    "vizFont": "GriunPolFairness"
+  },
+  "scenes": [
+    {
+      "sceneNumber": 1,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "bar_chart",
+        "title": "주요 교통수단 최고속도 비교",
+        "items": ["마차", "증기기관차", "자동차", "고속열차", "비행기"],
+        "values": [40, 120, 250, 430, 900],
+        "unit": "km/h",
+        "source": "교통연구원 2024"
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    },
+    {
+      "sceneNumber": 2,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "line_chart",
+        "title": "연도별 자동차 생산량 추이",
+        "items": ["1910", "1920", "1930", "1940", "1950", "1960", "1970"],
+        "values": [18, 250, 4500, 3700, 8000, 16000, 29000],
+        "unit": "만대",
+        "source": "OICA"
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    },
+    {
+      "sceneNumber": 3,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "pie_chart",
+        "title": "2024 글로벌 교통수단 분담률",
+        "items": ["자동차", "대중교통", "자전거", "도보", "기타"],
+        "values": [45, 28, 12, 10, 5],
+        "unit": "%",
+        "source": "World Bank"
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    },
+    {
+      "sceneNumber": 4,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "timeline",
+        "title": "교통 혁명의 역사",
+        "items": ["바퀴 발명", "증기기관차", "자동차 등장", "제트 비행기", "고속철도", "자율주행"],
+        "values": ["3500 BC", "1804", "1886", "1952", "1964", "2024"],
+        "unit": "",
+        "source": ""
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    },
+    {
+      "sceneNumber": 5,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "table",
+        "title": "교통수단별 에너지 효율",
+        "items": ["자전거", "전철", "버스", "승용차", "비행기"],
+        "values": [0.05, 0.15, 0.28, 0.89, 2.5],
+        "unit": "MJ/인km",
+        "source": "IEA"
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    },
+    {
+      "sceneNumber": 6,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "diagram",
+        "title": "자동차 생산시간 변화",
+        "items": ["수작업 조립", "포드 컨베이어"],
+        "values": [750, 93],
+        "unit": "분",
+        "source": "포드 박물관"
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    },
+    {
+      "sceneNumber": 7,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "slide_quote",
+        "title": "",
+        "items": ["기술은 인간의 이동 능력을 확장하고,\n이동은 문명의 지평을 넓혀왔다."],
+        "values": [],
+        "unit": "",
+        "source": "앨빈 토플러"
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    },
+    {
+      "sceneNumber": 8,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "slide_compare",
+        "title": "증기 vs 내연기관",
+        "items": [],
+        "values": [],
+        "unit": "",
+        "source": "",
+        "left": {
+          "label": "증기기관",
+          "items": ["외부 연소 방식", "효율 5~10%", "석탄/물 필요", "무거운 중량"]
+        },
+        "right": {
+          "label": "내연기관",
+          "items": ["내부 연소 방식", "효율 25~35%", "가솔린/디젤", "경량 소형화"]
+        }
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    },
+    {
+      "sceneNumber": 9,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "slide_list",
+        "title": "자율주행의 핵심 기술",
+        "items": ["LiDAR 센서로 주변 환경 3D 매핑", "AI 기반 실시간 판단 시스템", "V2X 차량 간 통신 기술", "고정밀 GPS 측위 시스템"],
+        "values": [],
+        "unit": "",
+        "source": ""
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    },
+    {
+      "sceneNumber": 10,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "slide_numbered",
+        "title": "포드 모델T 성공 요인",
+        "items": ["컨베이어 벨트 대량생산 시스템 도입", "부품 표준화로 수리비용 절감", "가격을 $825에서 $255까지 인하", "노동자 임금을 2배로 인상"],
+        "values": [],
+        "unit": "",
+        "source": ""
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    },
+    {
+      "sceneNumber": 11,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "slide_highlight",
+        "title": "",
+        "items": ["전 세계 자동차 시장의\n50%를 장악한 모델T"],
+        "values": [],
+        "unit": "",
+        "source": "1921년 기준, 포드 자동차"
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    },
+    {
+      "sceneNumber": 12,
+      "imagePath": "",
+      "audioPath": "",
+      "audioDurationSec": 5.0,
+      "subtitles": [],
+      "visualization": {
+        "vizType": "tech_tree",
+        "title": "교통수단 진화 계보",
+        "items": ["바퀴", "마차", "증기기관", "자동차", "비행기", "로켓"],
+        "values": [-1, 0, 0, 2, 2, 2],
+        "relations": ["", "발전", "혁신", "소형화", "응용", "극한"],
+        "descriptions": ["BC 3500", "BC 2000", "1769", "1886", "1903", "1961"],
+        "unit": "",
+        "source": ""
+      },
+      "kenBurns": { "enabled": false, "zoomFactor": 1.0 },
+      "transition": { "type": "crossfade", "durationFrames": 15 }
+    }
+  ],
+  "bgm": null
+}

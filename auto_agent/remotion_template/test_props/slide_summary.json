@@ -1,0 +1,28 @@
+{
+  "vizData": {
+    "vizType": "slide_summary",
+    "title": "핵심 정리",
+    "items": [
+      "세종은 1418년 즉위하여 32년간 통치했다",
+      "훈민정음은 1443년 창제, 1446년 반포되었다",
+      "집현전 학사들과 함께 학문 연구를 주도했다",
+      "측우기, 해시계 등 과학 기기를 발명했다",
+      "4군 6진 개척으로 북방 영토를 확장했다",
+      "조선 최고의 성군으로 평가받는다"
+    ],
+    "values": [],
+    "unit": "",
+    "source": "",
+    "descriptions": ["결론: 세종대왕은 문화, 과학, 국방 모든 분야에서 조선의 황금기를 이끌었다"]
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 1.0},
+      {"itemIndex": 1, "timeSec": 2.5},
+      {"itemIndex": 2, "timeSec": 4.0},
+      {"itemIndex": 3, "timeSec": 5.5},
+      {"itemIndex": 4, "timeSec": 7.0},
+      {"itemIndex": 5, "timeSec": 8.5}
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "vizData": {
+    "vizType": "slide_definition",
+    "title": "",
+    "items": [
+      "양적완화",
+      "정의: 중앙은행이 국채나 자산을 대규모로 매입하여 시중에 유동성을 공급하는 비전통적 통화정책",
+      "예: 2008년 미국 연방준비제도의 QE1~QE3 (총 4조 달러 규모)",
+      "예: 2020년 코로나19 팬데믹 대응 무제한 양적완화"
+    ],
+    "values": [],
+    "unit": "",
+    "source": "경제학 용어사전",
+    "descriptions": ["Quantitative Easing, QE"]
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 0.5},
+      {"itemIndex": 1, "timeSec": 2.0},
+      {"itemIndex": 2, "timeSec": 5.0},
+      {"itemIndex": 3, "timeSec": 7.0}
+    ]
+  }
+}

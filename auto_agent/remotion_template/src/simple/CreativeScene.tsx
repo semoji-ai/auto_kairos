@@ -1,0 +1,2975 @@
+/**
+ * CreativeScene — Enhanced Creative Renderer
+ *
+ * 자동 레이아웃 감지:
+ *   headline_only | items_grid | items_list | counter | quote | split | bar
+ *
+ * Styling: mood(색상/속도) + emphasis({{}} 강조) + reveal(애니메이션)
+ * Overlays: spotlight + flash
+ * Whisper 자막 타임스탬프 동기화 지원
+ */
+import React, { useRef, useLayoutEffect, useState } from "react";
+import {
+  AbsoluteFill,
+  Img,
+  staticFile,
+  useCurrentFrame,
+  interpolate,
+  Easing,
+} from "remotion";
+import {
+  C,
+  ease,
+  ease8020,
+  clamp,
+  useFade,
+  useFadeRise,
+  useCountUp,
+  useScale,
+  CircleBadge,
+  ImageBadge,
+  extractNumber,
+  formatWithTemplate,
+  Icon,
+  IconBadge,
+  FlagBadge,
+  LogoBadge,
+  resolveIcon,
+  resolveLogo,
+  useOvershootScale,
+  useBounceIn,
+  useShake,
+  staggerDelay,
+  Tag,
+  Divider,
+  ProgressBar,
+  StatusDot,
+  AccentText,
+} from "./BuildingBlocks";
+
+/* ================================================================
+   Types
+   ================================================================ */
+
+interface SubtitleEntry {
+  text: string;
+  startSec: number;
+  endSec: number;
+}
+
+interface MoodConfig {
+  accent: string;
+  accentRgb: string;
+  speed: number;
+  glow: number;
+}
+
+type LayoutType =
+  | "headline_only"
+  | "items_grid"
+  | "items_list"
+  | "person_card"
+  | "counter"
+  | "quote"
+  | "split"
+  | "bar"
+  | "logo_grid"
+  | "pie"
+  | "line";
+
+/* ================================================================
+   Layout Auto-Detection
+   ================================================================ */
+
+function detectLayout(data: any, creative: any): LayoutType {
+  const reveal: string = creative.reveal || "fade_in";
+  const emphasis: string = creative.emphasis || "none";
+  const items: string[] = data.items || [];
+  const values: number[] = data.values || [];
+  const headline: string = creative.headline || "";
+
+  // ── Creative 필드 우선 판단 (데이터 구조보다 의도 우선) ──
+
+  // 0. displayMode 명시적 지정 — logo_grid, pie, line 등
+  if (creative.displayMode === "logo_grid") return "logo_grid";
+  if (creative.displayMode === "pie_chart" || creative.chartConfig?.type === "pie") return "pie";
+  if (creative.displayMode === "line_chart" || creative.chartConfig?.type === "line") return "line";
+
+  // 1. 인용문 — emphasis="quote"
+  if (
+    emphasis === "quote" ||
+    (items.length === 1 && /["""']/.test(items[0]))
+  ) {
+    return "quote";
+  }
+
+  // 2. 비교/VS — split_reveal 또는 contrast+2항목
+  if (reveal === "split_reveal") {
+    return "split";
+  }
+  if (emphasis === "contrast" && items.length === 2) {
+    return "split";
+  }
+
+  // 3. 인물 카드 — emphasis="person" + items 2개 이상
+  if (emphasis === "person" && items.length >= 2) {
+    return "person_card";
+  }
+
+  // 4. 카운터/빅넘버 — emphasis가 number/count이고 {{}}에 숫자 포함
+  //    (bar보다 먼저! 숫자 강조가 핵심인 씬은 카운터로)
+  if (emphasis === "number" || emphasis === "count") {
+    const accentMatch = headline.match(/\{\{([^}]+)\}\}/);
+    if (accentMatch) {
+      const num = extractNumber(accentMatch[1]);
+      if (num > 0) return "counter";
+    }
+  }
+
+  // 5. 시퀀스/프로세스 — emphasis="sequence"이면 리스트 (번호 배지)
+  if (emphasis === "sequence" && items.length >= 2) {
+    return "items_list";
+  }
+
+  // 6. 바 차트 — items + values 쌍이 3개 이상이고
+  //    reveal이 바 차트에 적합한 경우만 (cascade, stagger, parallel)
+  //    2개일 때는 split이 더 적합하므로 제외
+  if (
+    items.length >= 3 &&
+    values.length >= 3 &&
+    items.length === values.length &&
+    emphasis !== "keyword" &&
+    emphasis !== "sequence"
+  ) {
+    return "bar";
+  }
+
+  // 7. 아이템 그리드/리스트 — items가 있고 headline과 다른 데이터
+  if (items.length >= 3) {
+    const headlineLower = headline.toLowerCase();
+    const itemsAreData = items.some(
+      (item) => item.length > 1 && !headlineLower.includes(item.toLowerCase()),
+    );
+    if (itemsAreData) {
+      return items.length >= 6 ? "items_grid" : "items_list";
+    }
+  }
+
+  // 8. 2항목 + 2값 → 여전히 items가 있으면 리스트로 (bar 대신)
+  if (items.length === 2 && values.length >= 2) {
+    return "items_list";
+  }
+
+  // 9. 기본 — headline만 크게 표시
+  return "headline_only";
+}
+
+/* ================================================================
+   Layer 1: Mood → 색상 팔레트 + 속도 + 배경 그라데이션
+   ================================================================ */
+
+const MOOD_CONFIGS: Record<string, MoodConfig> = {
+  dramatic: {
+    accent: "#F59E0B",
+    accentRgb: "245,158,11",
+    speed: 1.2,
+    glow: 0.6,
+  },
+  urgent: {
+    accent: "#EF4444",
+    accentRgb: "239,68,68",
+    speed: 1.5,
+    glow: 0.8,
+  },
+  somber: {
+    accent: "#71717A",
+    accentRgb: "113,113,122",
+    speed: 0.7,
+    glow: 0.2,
+  },
+  informative: {
+    accent: "#3B82F6",
+    accentRgb: "59,130,246",
+    speed: 1.0,
+    glow: 0.3,
+  },
+  contemplative: {
+    accent: "#3B82F6",
+    accentRgb: "59,130,246",
+    speed: 0.6,
+    glow: 0.2,
+  },
+  suspense: {
+    accent: "#F59E0B",
+    accentRgb: "245,158,11",
+    speed: 0.8,
+    glow: 0.5,
+  },
+  triumphant: {
+    accent: "#10B981",
+    accentRgb: "16,185,129",
+    speed: 1.0,
+    glow: 0.5,
+  },
+};
+
+const MOOD_GRADIENTS: Record<string, string> = {
+  dramatic:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #1a1005 0%, #0A0A0A 70%)",
+  urgent:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #1a0808 0%, #0A0A0A 70%)",
+  somber:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #0d0d0e 0%, #0A0A0A 70%)",
+  informative:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #080d1a 0%, #0A0A0A 70%)",
+  contemplative:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #080d1a 0%, #0A0A0A 70%)",
+  suspense:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #14100a 0%, #0A0A0A 70%)",
+  triumphant:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #081a10 0%, #0A0A0A 70%)",
+};
+
+function getMoodConfig(mood: string): MoodConfig {
+  return MOOD_CONFIGS[mood] || MOOD_CONFIGS.informative;
+}
+
+/* ================================================================
+   Layer 2: Reveal → 타이밍 계산
+   ================================================================ */
+
+function computeSubtitleDelays(
+  subtitles: SubtitleEntry[],
+  count: number,
+  fps: number,
+): number[] {
+  if (!subtitles.length || count <= 0) return Array(count).fill(0);
+  const subCount = subtitles.length;
+  return Array.from({ length: count }, (_, i) => {
+    const subIdx = Math.min(
+      Math.floor((i * subCount) / count),
+      subCount - 1,
+    );
+    return Math.round(subtitles[subIdx].startSec * fps);
+  });
+}
+
+/**
+ * 아이템별 자막 텍스트 매칭 — 각 아이템을 해당 나레이션 자막에 시간 동기화
+ * 같은 자막에 여러 아이템이 매칭되면 그 구간 내에서 stagger 처리
+ */
+function computeItemSubtitleDelays(
+  subtitles: SubtitleEntry[],
+  items: string[],
+  fps: number,
+): number[] {
+  if (!subtitles.length || !items.length) return items.map(() => 0);
+
+  // 각 아이템을 가장 잘 매칭되는 자막에 연결
+  const itemSubIdx = items.map((item) => {
+    const words = item
+      .toLowerCase()
+      .replace(/[()（）\[\]'"]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 1);
+    let bestIdx = 0;
+    let bestScore = 0;
+
+    for (let si = 0; si < subtitles.length; si++) {
+      const subText = subtitles[si].text.toLowerCase();
+      const score = words.filter((w) => subText.includes(w)).length;
+      if (score > bestScore) {
+        bestScore = score;
+        bestIdx = si;
+      }
+    }
+    return bestIdx;
+  });
+
+  // 같은 자막에 매칭된 아이템끼리 그룹화 → 구간 내 stagger
+  const groups = new Map<number, number[]>();
+  itemSubIdx.forEach((si, i) => {
+    if (!groups.has(si)) groups.set(si, []);
+    groups.get(si)!.push(i);
+  });
+
+  const delays = new Array(items.length).fill(0);
+  for (const [si, indices] of groups) {
+    const startFrame = Math.round(subtitles[si].startSec * fps);
+    const endFrame = Math.round(subtitles[si].endSec * fps);
+    const available = endFrame - startFrame;
+    const staggerGap =
+      indices.length > 1
+        ? Math.min(Math.round(available / (indices.length + 1)), 30)
+        : 0;
+    const offset = Math.min(5, Math.round(available * 0.05));
+    indices.forEach((idx, j) => {
+      delays[idx] = startFrame + offset + staggerGap * j;
+    });
+  }
+
+  return delays;
+}
+
+function computeFixedDelays(
+  reveal: string,
+  count: number,
+  speed: number,
+): number[] {
+  const s = (f: number) => Math.round(f / speed);
+  const base = s(8);
+  const gap = s(12);
+
+  switch (reveal) {
+    case "fade_in":
+    case "parallel":
+    case "zoom_in":
+      return Array(count).fill(base);
+    case "stagger":
+    case "typewriter":
+      return Array.from({ length: count }, (_, i) => base + i * gap);
+    case "cascade":
+      return Array.from(
+        { length: count },
+        (_, i) => base + i * Math.round(gap * 1.5),
+      );
+    case "build_up":
+      return Array.from(
+        { length: count },
+        (_, i) => base + (count - 1 - i) * gap,
+      );
+    case "stagger_then_flash":
+      return Array.from(
+        { length: count },
+        (_, i) => base + i * Math.round(gap * 0.7),
+      );
+    case "count_up":
+    case "dramatic_pause":
+      return Array.from({ length: count }, (_, i) =>
+        i === 0 ? base : base + s(30),
+      );
+    case "spotlight":
+      return Array.from({ length: count }, (_, i) => s(25) + i * gap);
+    case "split_reveal":
+      return Array.from({ length: count }, () => s(25));
+    default:
+      return Array(count).fill(base);
+  }
+}
+
+/* ================================================================
+   Layer 3: Emphasis → {{}} 스타일
+   ================================================================ */
+
+function getAccentFontSize(emphasis: string): number {
+  switch (emphasis) {
+    case "number":
+      return 132;
+    case "keyword":
+      return 112;
+    case "count":
+      return 108;
+    default:
+      return 96;
+  }
+}
+
+function getBaseFontSize(emphasis: string): number {
+  switch (emphasis) {
+    case "number":
+    case "count":
+      return 72;
+    case "quote":
+      return 88;
+    default:
+      return 80;
+  }
+}
+
+/* ================================================================
+   EmphasisAccentText — {{}} 파싱 + emphasis 스타일 + multi count-up
+   ================================================================ */
+
+const EmphasisAccentText: React.FC<{
+  text: string;
+  emphasis: string;
+  moodCfg: MoodConfig;
+  countedValues: number[];
+  glowOpacity: number;
+  accentFontSizeOverride?: number;
+  accentStartIndex?: number;
+}> = ({
+  text,
+  emphasis,
+  moodCfg,
+  countedValues,
+  glowOpacity,
+  accentFontSizeOverride,
+  accentStartIndex = 0,
+}) => {
+  const isCountEmphasis = emphasis === "number" || emphasis === "count";
+  const accentSize = accentFontSizeOverride || getAccentFontSize(emphasis);
+  const baseSize = getBaseFontSize(emphasis);
+  const sizeDiff = accentSize - baseSize;
+
+  const parts = text.split(/(\{\{[^}]+\}\})/g);
+  const nonEmpty = parts.filter((p) => p.trim());
+  const hasAccent = nonEmpty.some((p) => p.startsWith("{{"));
+  const hasNormal = nonEmpty.some((p) => !p.startsWith("{{"));
+  const hasMixed = hasAccent && hasNormal;
+
+  // Track which {{}} index we're on for multi-counter (글로벌 인덱스)
+  let accentIdx = accentStartIndex;
+
+  // --- 렌더 헬퍼: accent span (counter/quote 등 전용 레이아웃용) ---
+  const renderAccent = (part: string, pi: number) => {
+    const content = part.slice(2, -2);
+    const num = extractNumber(content);
+    const isNum = !isNaN(num) && num > 0;
+    const currentCountIdx = accentIdx;
+    accentIdx++;
+    const counted = countedValues[currentCountIdx] || 0;
+    const shouldCountUp = isCountEmphasis && isNum && num >= 100;
+    const displayText = shouldCountUp
+      ? formatWithTemplate(content, counted)
+      : content;
+    return (
+      <span
+        key={pi}
+        style={{
+          fontSize: accentSize,
+          fontWeight: 800,
+          color: moodCfg.accent,
+          lineHeight: 1.2,
+          textShadow: shouldCountUp
+            ? `0 0 60px rgba(${moodCfg.accentRgb},${glowOpacity})`
+            : undefined,
+        }}
+      >
+        {displayText}
+      </span>
+    );
+  };
+
+  // ============================================================
+  // 인라인 레이아웃: accent에 좌우 여백 추가 (사이즈 차이 클 때)
+  // ============================================================
+  const accentMargin = hasMixed && sizeDiff >= 6 ? "0 12px" : undefined;
+
+  return (
+    <>
+      {parts.map((part, pi) => {
+        if (part.startsWith("{{") && part.endsWith("}}")) {
+          // accent span에 좌우 여백 추가
+          const content = part.slice(2, -2);
+          const num = extractNumber(content);
+          const isNum = !isNaN(num) && num > 0;
+          const currentCountIdx = accentIdx;
+          accentIdx++;
+          const counted = countedValues[currentCountIdx] || 0;
+          const shouldCountUp = isCountEmphasis && isNum && num >= 100;
+          const displayText = shouldCountUp
+            ? formatWithTemplate(content, counted)
+            : content;
+          return (
+            <span
+              key={pi}
+              style={{
+                fontSize: accentSize,
+                fontWeight: 800,
+                color: moodCfg.accent,
+                lineHeight: 1.2,
+                verticalAlign: "baseline",
+                margin: accentMargin,
+                textShadow: shouldCountUp
+                  ? `0 0 60px rgba(${moodCfg.accentRgb},${glowOpacity})`
+                  : undefined,
+              }}
+            >
+              {displayText}
+            </span>
+          );
+        }
+        return (
+          <span key={pi} style={{ color: C.textMuted }}>
+            {part}
+          </span>
+        );
+      })}
+    </>
+  );
+};
+
+/* ================================================================
+   MoodBackground — mood별 그라데이션 배경
+   ================================================================ */
+
+const MoodBackground: React.FC<{ mood: string; transparent?: boolean }> = ({ mood, transparent }) => (
+  <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      background: transparent
+        ? "rgba(10,10,10,0.45)"
+        : (MOOD_GRADIENTS[mood] || MOOD_GRADIENTS.informative),
+      zIndex: 0,
+    }}
+  />
+);
+
+/* ================================================================
+   SpotlightOverlay — radial-gradient
+   ================================================================ */
+
+const SpotlightOverlay: React.FC<{ speed: number }> = ({ speed }) => {
+  const frame = useCurrentFrame();
+  const s = (f: number) => Math.round(f / speed);
+  const overlayOpacity = interpolate(
+    frame,
+    [0, s(30), s(50)],
+    [0.95, 0.7, 0.3],
+    clamp,
+  );
+  const size = interpolate(frame, [s(10), s(45)], [100, 600], {
+    ...clamp,
+    easing: ease,
+  });
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 1,
+        pointerEvents: "none",
+        background: `radial-gradient(circle ${size}px at 50% 45%, transparent 0%, rgba(0,0,0,${overlayOpacity}) 100%)`,
+      }}
+    />
+  );
+};
+
+/* ================================================================
+   FlashOverlay — stagger_then_flash 완성용
+   ================================================================ */
+
+const FlashOverlay: React.FC<{
+  flashAt: number;
+  accentRgb: string;
+}> = ({ flashAt, accentRgb }) => {
+  const frame = useCurrentFrame();
+  const flash = interpolate(
+    frame,
+    [flashAt, flashAt + 4, flashAt + 25],
+    [0, 0.15, 0],
+    clamp,
+  );
+  return flash > 0 ? (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 10,
+        pointerEvents: "none",
+        background: `radial-gradient(ellipse at 50% 50%, rgba(${accentRgb},${flash}) 0%, transparent 70%)`,
+      }}
+    />
+  ) : null;
+};
+
+/* ================================================================
+   SplitLayout — split_reveal 전용 좌/우 분할
+   ================================================================ */
+
+const SplitLayout: React.FC<{
+  lines: string[];
+  delays: number[];
+  emphasis: string;
+  moodCfg: MoodConfig;
+  countedValues: number[];
+  glowOpacity: number;
+  source: string;
+  mood: string;
+  hasImageBg?: boolean;
+  images?: string[];
+  descriptions?: string[];
+}> = ({
+  lines,
+  delays,
+  emphasis,
+  moodCfg,
+  countedValues,
+  glowOpacity,
+  source,
+  mood,
+  hasImageBg,
+  images,
+  descriptions,
+}) => {
+  const frame = useCurrentFrame();
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+  const [boxWidth, setBoxWidth] = useState<number | undefined>(undefined);
+
+  useLayoutEffect(() => {
+    const lw = leftRef.current?.scrollWidth || 0;
+    const rw = rightRef.current?.scrollWidth || 0;
+    const max = Math.max(lw, rw) + 10;
+    if (max > 10) setBoxWidth(max);
+  }, []);
+
+  const leftDelay = delays[0] || 0;
+  const rightDelay = delays[1] || delays[0] || 0;
+
+  const leftOpacity = interpolate(
+    frame,
+    [leftDelay, leftDelay + 18],
+    [0, 1],
+    clamp,
+  );
+  const leftSlide = interpolate(
+    frame,
+    [leftDelay, leftDelay + 18],
+    [-40, 0],
+    { ...clamp, easing: ease },
+  );
+
+  const rightOpacity = interpolate(
+    frame,
+    [rightDelay, rightDelay + 18],
+    [0, 1],
+    clamp,
+  );
+  const rightSlide = interpolate(
+    frame,
+    [rightDelay, rightDelay + 18],
+    [40, 0],
+    { ...clamp, easing: ease },
+  );
+
+  const divHeight = interpolate(
+    frame,
+    [
+      Math.min(leftDelay, rightDelay) + 5,
+      Math.min(leftDelay, rightDelay) + 30,
+    ],
+    [0, 100],
+    { ...clamp, easing: ease },
+  );
+  const vsScale = useScale(Math.max(leftDelay, rightDelay) + 10, 15);
+  const sourceFade = useFade(Math.max(leftDelay, rightDelay) + 40, 15, 0.8);
+
+  // descriptions는 VS 등장 후 딜레이로 표시 (스포일러 방지)
+  const descDelay = Math.max(leftDelay, rightDelay) + 35;
+  const descOpacity = interpolate(frame, [descDelay, descDelay + 15], [0, 1], clamp);
+  const descSlideY = interpolate(frame, [descDelay, descDelay + 15], [12, 0], { ...clamp, easing: ease });
+
+  // 승리 도장: descriptions에 "승리" 포함 시 분리 → 도장으로 표시
+  const winnerIdx = descriptions ? descriptions.findIndex((d) => d?.includes("승리")) : -1;
+  const stampDelay = descDelay + 20;
+  const stampEasing = Easing.bezier(0.34, 1.56, 0.64, 1); // overshoot bounce
+  const stampScaleVal = interpolate(frame, [stampDelay, stampDelay + 10], [3, 1], { ...clamp, easing: stampEasing });
+  const stampOpacity = interpolate(frame, [stampDelay, stampDelay + 5], [0, 1], clamp);
+  const stampRotation = interpolate(frame, [stampDelay, stampDelay + 10], [-15, -5], { ...clamp, easing: ease });
+  // 도장 임팩트 플래시
+  const stampFlash = interpolate(frame, [stampDelay, stampDelay + 3, stampDelay + 12], [0, 0.6, 0], clamp);
+
+  // VS 표시 조건: headline에 "vs"가 포함되어 있을 때만
+  const hasVs = lines.some((l) => /^\s*vs\s*$/i.test(l));
+  const leftImg = images?.[0] || null;
+  const rightImg = images?.[1] || null;
+  const rawLeftDesc = descriptions?.[0] || null;
+  const rawRightDesc = descriptions?.[1] || null;
+  // "승리" 텍스트를 description에서 제거 (도장으로 표시)
+  const leftDesc = rawLeftDesc?.replace(/\s*승리\s*/, "").trim() || rawLeftDesc;
+  const rightDesc = rawRightDesc?.replace(/\s*승리\s*/, "").trim() || rawRightDesc;
+
+  return (
+    <AbsoluteFill>
+      <MoodBackground mood={mood} transparent={hasImageBg} />
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "80px 40px",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: hasImageBg ? "1fr auto 1fr" : "1fr auto 1fr",
+            width: "100%",
+            alignItems: "center",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              opacity: leftOpacity,
+              transform: `translateX(${leftSlide}px)`,
+            }}
+          >
+            <div
+              ref={leftRef}
+              style={{
+                position: "relative",
+                display: "inline-flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                fontSize: getBaseFontSize(emphasis),
+                fontWeight: 600,
+                lineHeight: 1.6,
+                padding: hasImageBg ? "40px 48px" : "40px 24px",
+                ...(hasImageBg ? {
+                  backgroundColor: "rgba(0,0,0,0.65)",
+                  borderRadius: 16,
+                  ...(boxWidth ? { width: boxWidth } : {}),
+                } : {}),
+              }}
+            >
+              {leftImg && (
+                <ImageBadge imageUrl={leftImg} size={120} style={{ margin: "0 auto 16px" }} />
+              )}
+              <EmphasisAccentText
+                text={lines[0] || ""}
+                emphasis={emphasis}
+                moodCfg={moodCfg}
+                countedValues={countedValues}
+                glowOpacity={glowOpacity}
+              />
+              {leftDesc && (
+                <div style={{ fontSize: 36, color: C.textDim, marginTop: 12, fontWeight: 400, opacity: descOpacity, transform: `translateY(${descSlideY}px)` }}>
+                  {leftDesc}
+                </div>
+              )}
+              {/* 승리 도장 */}
+              {winnerIdx === 0 && (
+                <>
+                  <div style={{
+                    position: "absolute", inset: 0, borderRadius: 16,
+                    backgroundColor: `rgba(${moodCfg.accentRgb},${stampFlash})`,
+                    pointerEvents: "none",
+                  }} />
+                  <div style={{
+                    position: "absolute", top: -20, right: -20,
+                    opacity: stampOpacity,
+                    transform: `scale(${stampScaleVal}) rotate(${stampRotation}deg)`,
+                    fontSize: 32, fontWeight: 900,
+                    color: "#fff",
+                    backgroundColor: "#EF4444",
+                    padding: "8px 20px",
+                    borderRadius: 8,
+                    border: "3px solid #fff",
+                    boxShadow: "0 4px 20px rgba(239,68,68,0.5)",
+                    zIndex: 10,
+                    whiteSpace: "nowrap",
+                  }}>
+                    승리
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div
+            style={{
+              position: "relative",
+              width: hasVs ? 60 : 24,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                width: 2,
+                height: `${divHeight}%`,
+                backgroundColor: moodCfg.accent,
+                opacity: 1,
+              }}
+            />
+            {hasVs && (
+              <div
+                style={{
+                  ...vsScale,
+                  fontSize: 36,
+                  fontWeight: 800,
+                  color: moodCfg.accent,
+                  backgroundColor: C.bg,
+                  padding: "16px 24px",
+                  borderRadius: 8,
+                  border: `1px solid ${moodCfg.accent}33`,
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                VS
+              </div>
+            )}
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              opacity: rightOpacity,
+              transform: `translateX(${rightSlide}px)`,
+            }}
+          >
+            <div
+              ref={rightRef}
+              style={{
+                position: "relative",
+                display: "inline-flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                fontSize: getBaseFontSize(emphasis),
+                fontWeight: 600,
+                lineHeight: 1.6,
+                padding: hasImageBg ? "40px 48px" : "40px 24px",
+                ...(hasImageBg ? {
+                  backgroundColor: "rgba(0,0,0,0.65)",
+                  borderRadius: 16,
+                  ...(boxWidth ? { width: boxWidth } : {}),
+                } : {}),
+              }}
+            >
+              {rightImg && (
+                <ImageBadge imageUrl={rightImg} size={120} style={{ margin: "0 auto 16px" }} />
+              )}
+              <EmphasisAccentText
+                text={lines.length > 2 ? lines[2] : lines[1] || ""}
+                emphasis={emphasis}
+                moodCfg={moodCfg}
+                countedValues={countedValues}
+                glowOpacity={glowOpacity}
+              />
+              {rightDesc && (
+                <div style={{ fontSize: 36, color: C.textDim, marginTop: 12, fontWeight: 400, opacity: descOpacity, transform: `translateY(${descSlideY}px)` }}>
+                  {rightDesc}
+                </div>
+              )}
+              {/* 승리 도장 */}
+              {winnerIdx === 1 && (
+                <>
+                  <div style={{
+                    position: "absolute", inset: 0, borderRadius: 16,
+                    backgroundColor: `rgba(${moodCfg.accentRgb},${stampFlash})`,
+                    pointerEvents: "none",
+                  }} />
+                  <div style={{
+                    position: "absolute", top: -20, right: -20,
+                    opacity: stampOpacity,
+                    transform: `scale(${stampScaleVal}) rotate(${stampRotation}deg)`,
+                    fontSize: 32, fontWeight: 900,
+                    color: "#fff",
+                    backgroundColor: "#EF4444",
+                    padding: "8px 20px",
+                    borderRadius: 8,
+                    border: "3px solid #fff",
+                    boxShadow: "0 4px 20px rgba(239,68,68,0.5)",
+                    zIndex: 10,
+                    whiteSpace: "nowrap",
+                  }}>
+                    승리
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {source && (
+          <div
+            style={{
+              opacity: sourceFade,
+              fontSize: 32,
+              color: C.textDim,
+              marginTop: 32,
+            }}
+          >
+            {source}
+          </div>
+        )}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/* ================================================================
+   ItemsGrid — 아이템 그리드 레이아웃 (6+ items)
+   ================================================================ */
+
+const ItemsGrid: React.FC<{
+  items: string[];
+  delays: number[];
+  headlineDelays: number[];
+  moodCfg: MoodConfig;
+  reveal: string;
+  itemIcons?: string[];
+  itemFlags?: string[];
+}> = ({ items, delays, headlineDelays, moodCfg, reveal, itemIcons, itemFlags }) => {
+  const frame = useCurrentFrame();
+  const cols = items.length >= 9 ? 3 : items.length >= 4 ? 3 : 2;
+  const isFlash = reveal === "stagger_then_flash";
+  const allDone = Math.max(...delays, ...headlineDelays) + 20;
+  const flashGlow = isFlash
+    ? interpolate(frame, [allDone, allDone + 4, allDone + 30], [0, 1, 0.3], clamp)
+    : 0;
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        gap: 12,
+        width: "100%",
+        maxWidth: 1040,
+        marginTop: 24,
+      }}
+    >
+      {items.map((item, i) => {
+        const d = delays[i] || 0;
+        const opacity = interpolate(frame, [d, d + 15], [0, 1], clamp);
+        const rise = interpolate(frame, [d, d + 15], [12, 0], {
+          ...clamp,
+          easing: ease,
+        });
+        const borderGlow =
+          flashGlow > 0
+            ? `0 0 20px rgba(${moodCfg.accentRgb},${flashGlow})`
+            : "none";
+
+        return (
+          <div
+            key={i}
+            style={{
+              opacity,
+              transform: `translateY(${rise}px)`,
+              padding: "14px 16px",
+              borderRadius: 10,
+              border: `1px solid ${moodCfg.accent}${flashGlow > 0 ? "88" : "33"}`,
+              backgroundColor: `rgba(${moodCfg.accentRgb},0.06)`,
+              textAlign: "center",
+              fontSize: items.length > 6 ? 15 : 18,
+              fontWeight: 600,
+              color: C.text,
+              boxShadow: borderGlow,
+              transition: "box-shadow 0.1s",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            {/* Grid item icon */}
+            {itemIcons?.[i] && (() => {
+              const Ic = resolveIcon(itemIcons[i]);
+              return Ic ? (
+                <Icon icon={Ic} size={items.length > 6 ? 20 : 24} color={moodCfg.accent} />
+              ) : null;
+            })()}
+            {itemFlags?.[i] && (
+              <FlagBadge countryCode={itemFlags[i]} size={items.length > 6 ? 28 : 32} />
+            )}
+            <span>{item}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ================================================================
+   PersonCardRow — 인물 카드 가로 레이아웃
+   ================================================================ */
+
+const PersonCardRow: React.FC<{
+  items: string[];
+  delays: number[];
+  moodCfg: MoodConfig;
+  images?: string[];
+  itemStatuses?: Array<"positive" | "negative" | "neutral" | "warning">;
+}> = ({ items, delays, moodCfg, images, itemStatuses }) => {
+  const frame = useCurrentFrame();
+  const count = items.length;
+  const cardW = count <= 3 ? 280 : count <= 4 ? 240 : 200;
+  const imgH = count <= 3 ? 280 : 240;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 20,
+        justifyContent: "center",
+        marginTop: 28,
+      }}
+    >
+      {items.map((item, i) => {
+        const d = delays[i] || 0;
+        const opacity = interpolate(frame, [d, d + 18], [0, 1], clamp);
+        const slideY = interpolate(frame, [d, d + 18], [30, 0], {
+          ...clamp,
+          easing: ease,
+        });
+        const img = images?.[i];
+        const imgSrc = img
+          ? img.startsWith("http") ? img : staticFile(img)
+          : null;
+        const status = itemStatuses?.[i];
+        const isNegative = status === "negative";
+
+        return (
+          <div
+            key={i}
+            style={{
+              opacity,
+              transform: `translateY(${slideY}px)`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              width: cardW,
+              borderRadius: 14,
+              backgroundColor: "rgba(255,255,255,0.04)",
+              border: `1px solid ${isNegative ? "#EF4444" + "55" : moodCfg.accent + "33"}`,
+              overflow: "hidden",
+            }}
+          >
+            {/* Person image or silhouette */}
+            <div
+              style={{
+                width: "100%",
+                height: imgH,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: isNegative
+                  ? "rgba(239,68,68,0.08)"
+                  : "rgba(255,255,255,0.02)",
+                overflow: "hidden",
+              }}
+            >
+              {imgSrc ? (
+                <Img
+                  src={imgSrc}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "center 20%",
+                    filter: isNegative ? "grayscale(0.6)" : "none",
+                  }}
+                />
+              ) : (
+                <svg
+                  width={imgH * 0.5}
+                  height={imgH * 0.5}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    cx="12"
+                    cy="8"
+                    r="4"
+                    fill={isNegative ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.15)"}
+                  />
+                  <path
+                    d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"
+                    fill={isNegative ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.1)"}
+                  />
+                </svg>
+              )}
+            </div>
+
+            {/* Name + status */}
+            <div
+              style={{
+                padding: "14px 10px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 6,
+                width: "100%",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: count <= 3 ? 28 : 24,
+                  fontWeight: 600,
+                  color: C.text,
+                  textAlign: "center",
+                  lineHeight: 1.3,
+                }}
+              >
+                {item}
+              </span>
+              {isNegative && (
+                <span
+                  style={{
+                    fontSize: 26,
+                    fontWeight: 700,
+                    color: "#EF4444",
+                    letterSpacing: 2,
+                  }}
+                >
+                  ✕ 폭사
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ================================================================
+   ItemsList — 아이템 리스트 레이아웃 (3-5 items)
+   ================================================================ */
+
+const ItemsList: React.FC<{
+  items: string[];
+  delays: number[];
+  headlineDelays: number[];
+  moodCfg: MoodConfig;
+  emphasis: string;
+  concept: string;
+  images?: string[];
+  itemIcons?: string[];
+  itemFlags?: string[];
+  itemStatuses?: Array<"positive" | "negative" | "neutral" | "warning">;
+}> = ({ items, delays, headlineDelays, moodCfg, emphasis, concept, images, itemIcons, itemFlags, itemStatuses }) => {
+  const frame = useCurrentFrame();
+  const showBadge = emphasis === "sequence" || emphasis === "person";
+  const hasImages = images && images.length > 0;
+  const conceptLower = concept.toLowerCase();
+  const hasSpotlightHint =
+    conceptLower.includes("spotlight") ||
+    conceptLower.includes("강조") ||
+    conceptLower.includes("마지막");
+
+  // 이미지가 있으면 가로 카드형 레이아웃
+  if (hasImages) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          gap: 16,
+          width: "100%",
+          justifyContent: "center",
+          flexWrap: "wrap",
+          marginTop: 20,
+        }}
+      >
+        {items.map((item, i) => {
+          const d = delays[i] || 0;
+          const opacity = interpolate(frame, [d, d + 18], [0, 1], clamp);
+          const slideY = interpolate(frame, [d, d + 18], [24, 0], {
+            ...clamp,
+            easing: ease,
+          });
+          const img = images[i] || null;
+          const isLast = i === items.length - 1;
+          const spotlight = hasSpotlightHint && isLast;
+
+          const imgSrc = img
+            ? img.startsWith("http") ? img : staticFile(img)
+            : null;
+
+          return (
+            <div
+              key={i}
+              style={{
+                opacity,
+                transform: `translateY(${slideY}px)`,
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: 12,
+                backgroundColor: spotlight
+                  ? `rgba(${moodCfg.accentRgb},0.12)`
+                  : "rgba(255,255,255,0.04)",
+                border: `1px solid ${spotlight ? moodCfg.accent : moodCfg.accent + "33"}`,
+                width: items.length <= 3 ? 260 : 200,
+                overflow: "hidden",
+              }}
+            >
+              {imgSrc && (
+                <div style={{ width: "100%", height: items.length <= 3 ? 140 : 110, overflow: "hidden" }}>
+                  <Img
+                    src={imgSrc}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                </div>
+              )}
+              <span
+                style={{
+                  fontSize: items.length <= 3 ? 20 : 17,
+                  fontWeight: spotlight ? 700 : 600,
+                  color: spotlight ? moodCfg.accent : C.text,
+                  textAlign: "center",
+                  lineHeight: 1.3,
+                  padding: "14px 12px",
+                }}
+              >
+                {item}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // 이미지 없으면 기존 세로 리스트
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        width: "100%",
+        maxWidth: 940,
+        marginTop: 20,
+      }}
+    >
+      {items.map((item, i) => {
+        const d = delays[i] || 0;
+        const opacity = interpolate(frame, [d, d + 15], [0, 1], clamp);
+        const slideX = interpolate(frame, [d, d + 15], [-20, 0], {
+          ...clamp,
+          easing: ease,
+        });
+        const isLast = i === items.length - 1;
+        const spotlight = hasSpotlightHint && isLast;
+
+        return (
+          <div
+            key={i}
+            style={{
+              opacity,
+              transform: `translateX(${slideX}px)`,
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              padding: "12px 20px",
+              borderRadius: 10,
+              backgroundColor: spotlight
+                ? `rgba(${moodCfg.accentRgb},0.12)`
+                : "rgba(255,255,255,0.03)",
+              borderLeft: `3px solid ${spotlight ? moodCfg.accent : moodCfg.accent + "44"}`,
+            }}
+          >
+            {/* Per-item icon badge */}
+            {itemIcons?.[i] && (() => {
+              const Ic = resolveIcon(itemIcons[i]);
+              return Ic ? <IconBadge icon={Ic} size={36} /> : null;
+            })()}
+            {/* Per-item flag badge */}
+            {itemFlags?.[i] && (
+              <FlagBadge countryCode={itemFlags[i]} size={36} />
+            )}
+            {/* Per-item status dot */}
+            {itemStatuses?.[i] && (
+              <StatusDot status={itemStatuses[i]} />
+            )}
+            {/* Sequence/person badge (fallback) */}
+            {showBadge && !itemIcons?.[i] && !itemFlags?.[i] && !itemStatuses?.[i] && (
+              <CircleBadge
+                text={
+                  emphasis === "person"
+                    ? item.charAt(0)
+                    : String(i + 1)
+                }
+                size={36}
+                filled={spotlight}
+              />
+            )}
+            <span
+              style={{
+                fontSize: 28,
+                fontWeight: spotlight ? 700 : 500,
+                color: spotlight ? moodCfg.accent : C.text,
+                flex: 1,
+              }}
+            >
+              {item}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ================================================================
+   QuoteDisplay — 인용문 전용 레이아웃
+   ================================================================ */
+
+const QuoteDisplay: React.FC<{
+  items: string[];
+  source: string;
+  moodCfg: MoodConfig;
+  reveal: string;
+  speed: number;
+  mood: string;
+  hasImageBg?: boolean;
+  portrait?: string;
+}> = ({ items, source, moodCfg, reveal, speed, mood, hasImageBg, portrait }) => {
+  const frame = useCurrentFrame();
+  const s = (f: number) => Math.round(f / speed);
+  const quoteText = items[0] || "";
+
+  // typewriter effect
+  const isTypewriter = reveal === "typewriter";
+  const charCount = quoteText.length;
+  const typeLen = Math.max(charCount * 2, 1); // 0 방지
+  const visibleChars = isTypewriter
+    ? Math.floor(
+        interpolate(frame, [s(10), s(10) + typeLen], [0, charCount], clamp),
+      )
+    : charCount;
+  const displayText = isTypewriter
+    ? quoteText.slice(0, visibleChars)
+    : quoteText;
+
+  const quoteOpacity = interpolate(frame, [s(5), s(15)], [0, 1], clamp);
+  const quoteRise = interpolate(frame, [s(5), s(15)], [15, 0], {
+    ...clamp,
+    easing: ease,
+  });
+
+  const markOpacity = interpolate(frame, [s(3), s(10)], [0, 0.25], clamp);
+  const sourceOpacity = interpolate(
+    frame,
+    [s(10) + (isTypewriter ? charCount * 2 + 10 : 25), s(10) + (isTypewriter ? charCount * 2 + 25 : 40)],
+    [0, 0.6],
+    clamp,
+  );
+
+  const portraitSrc = portrait
+    ? portrait.startsWith("http") ? portrait : staticFile(portrait)
+    : null;
+
+  const portraitOpacity = interpolate(frame, [0, 20], [0, 1], clamp);
+
+  return (
+    <AbsoluteFill>
+      <MoodBackground mood={mood} transparent={hasImageBg || !!portrait} />
+
+      {/* Portrait as background image */}
+      {portraitSrc && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 0,
+            opacity: portraitOpacity * 0.3,
+            overflow: "hidden",
+          }}
+        >
+          <Img
+            src={portraitSrc}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              filter: "blur(2px) grayscale(0.4)",
+            }}
+          />
+          {/* Vignette overlay for text readability */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "radial-gradient(ellipse at center, transparent 30%, #0A0A0A 80%)",
+            }}
+          />
+        </div>
+      )}
+
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "80px 60px",
+        }}
+      >
+        {/* Quote mark decoration */}
+        <div
+          style={{
+            fontSize: 180,
+            fontWeight: 800,
+            color: moodCfg.accent,
+            opacity: markOpacity,
+            lineHeight: 1,
+            marginBottom: -30,
+            userSelect: "none",
+          }}
+        >
+          &ldquo;
+        </div>
+
+        {/* Quote text */}
+        <div
+          style={{
+            opacity: quoteOpacity,
+            transform: `translateY(${quoteRise}px)`,
+            fontSize: 84,
+            fontWeight: 600,
+            color: C.text,
+            textAlign: "center",
+            maxWidth: "80%",
+            lineHeight: 1.7,
+            fontStyle: "italic",
+          }}
+        >
+          {displayText}
+          {isTypewriter && visibleChars < charCount && (
+            <span
+              style={{
+                display: "inline-block",
+                width: 3,
+                height: "1em",
+                backgroundColor: moodCfg.accent,
+                marginLeft: 2,
+                opacity: frame % 20 < 10 ? 1 : 0,
+              }}
+            />
+          )}
+        </div>
+
+        {/* Source */}
+        {source && (
+          <div
+            style={{
+              opacity: sourceOpacity,
+              fontSize: 44,
+              color: moodCfg.accent,
+              marginTop: 32,
+              fontWeight: 500,
+            }}
+          >
+            — {source}
+          </div>
+        )}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/* ================================================================
+   LogoGridLayout — 브랜드 로고 그리드
+   ================================================================ */
+
+/** 브랜드 컬러 맵 */
+const BRAND_COLORS: Record<string, string> = {
+  apple: "#A2AAAD",
+  microsoft: "#00A4EF",
+  nvidia: "#76B900",
+  amazon: "#FF9900",
+  alphabet: "#4285F4",
+  google: "#4285F4",
+  meta: "#0668E1",
+  tesla: "#CC0000",
+};
+
+/** 로고 이미지 경로 (Simple Icons에 없는 브랜드용) */
+const LOGO_IMAGE_PATH: Record<string, string> = {
+  amazon: "logos/amazon.svg",
+  microsoft: "logos/microsoft.svg",
+};
+
+const LogoGridLayout: React.FC<{
+  items: string[];
+  values: number[];
+  unit: string;
+  headline: string;
+  moodCfg: MoodConfig;
+  source: string;
+  mood: string;
+  emphasis: string;
+  countedValues: number[];
+  glowOpacity: number;
+  hasImageBg?: boolean;
+  logoMap?: Record<string, string>;
+}> = ({
+  items,
+  values,
+  unit,
+  headline,
+  moodCfg,
+  source,
+  mood,
+  emphasis,
+  countedValues,
+  glowOpacity,
+  hasImageBg,
+  logoMap,
+}) => {
+  const frame = useCurrentFrame();
+  const maxVal = Math.max(...values, 1);
+  const lines = headline.split("\n").filter((l: string) => l.trim());
+
+  // headline fade
+  const headlineFade = useFade(5, 15, 0.8);
+
+  // source fade
+  const sourceFade = useFade(items.length * 8 + 40, 15, 0.8);
+
+  return (
+    <AbsoluteFill>
+      <MoodBackground mood={mood} transparent={hasImageBg} />
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "60px 60px",
+          gap: 32,
+        }}
+      >
+        {/* Headline */}
+        <div style={{ opacity: headlineFade, textAlign: "center", maxWidth: "90%" }}>
+          {lines.map((line, i) => (
+            <div
+              key={i}
+              style={{
+                fontSize: i === 0 ? 72 : 56,
+                fontWeight: 700,
+                color: C.text,
+                lineHeight: 1.3,
+              }}
+            >
+              <AccentText text={line} baseColor={C.text} />
+            </div>
+          ))}
+        </div>
+
+        {/* Logo Grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: items.length <= 4
+              ? `repeat(${items.length}, 1fr)`
+              : items.length <= 6
+                ? "repeat(3, 1fr)"
+                : "repeat(4, 1fr)",
+            gap: 24,
+            width: "100%",
+            maxWidth: 1100,
+          }}
+        >
+          {items.map((item, i) => {
+            const delay = 10 + i * 8;
+            const itemFade = interpolate(frame, [delay, delay + 12], [0, 1], clamp);
+            const itemScale = interpolate(frame, [delay, delay + 12], [0.85, 1], clamp);
+            const key = (logoMap?.[item] || item).toLowerCase().replace(/\s+/g, "");
+            const brandColor = BRAND_COLORS[key] || moodCfg.accent;
+            const logoPath = LOGO_IMAGE_PATH[key];
+            const LogoComp = resolveLogo(logoMap?.[item] || item);
+            const val = values[i];
+
+            return (
+              <div
+                key={i}
+                style={{
+                  opacity: itemFade,
+                  transform: `scale(${itemScale})`,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "20px 12px",
+                  borderRadius: 16,
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                }}
+              >
+                {/* Logo */}
+                <div
+                  style={{
+                    width: 64,
+                    height: 64,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {logoPath ? (
+                    <Img
+                      src={staticFile(logoPath)}
+                      style={{ width: 52, height: 52, objectFit: "contain" }}
+                    />
+                  ) : LogoComp ? (
+                    <LogoComp size={52} color={brandColor} />
+                  ) : (
+                    <div
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 12,
+                        backgroundColor: brandColor,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 28,
+                        fontWeight: 700,
+                        color: "#FFF",
+                      }}
+                    >
+                      {item.charAt(0)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Company name */}
+                <div
+                  style={{
+                    fontSize: 30,
+                    fontWeight: 600,
+                    color: C.text,
+                    textAlign: "center",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {item}
+                </div>
+
+                {/* Value */}
+                {val !== undefined && (
+                  <div
+                    style={{
+                      fontSize: 36,
+                      fontWeight: 700,
+                      color: brandColor,
+                    }}
+                  >
+                    {val}{unit}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Source */}
+        {source && (
+          <div
+            style={{
+              opacity: sourceFade,
+              fontSize: 28,
+              color: C.textDim,
+              marginTop: 8,
+            }}
+          >
+            {source}
+          </div>
+        )}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/* ================================================================
+   BarDisplay — 수평 바 차트
+   ================================================================ */
+
+const BarDisplay: React.FC<{
+  items: string[];
+  values: number[];
+  unit: string;
+  headline: string;
+  moodCfg: MoodConfig;
+  source: string;
+  mood: string;
+  emphasis: string;
+  countedValues: number[];
+  glowOpacity: number;
+  hasImageBg?: boolean;
+}> = ({
+  items,
+  values,
+  unit,
+  headline,
+  moodCfg,
+  source,
+  mood,
+  emphasis,
+  countedValues,
+  glowOpacity,
+  hasImageBg,
+}) => {
+  const frame = useCurrentFrame();
+  const hasNegative = values.some((v) => v < 0);
+  const maxVal = Math.max(...values, 1);
+  const NEG_COLOR = "#EF4444";
+  // 마이너스 포함: 0축 위치를 전체 범위(min~max) 대비로 계산
+  const rangeMin = Math.min(...values, 0);
+  const rangeMax = Math.max(...values, 0);
+  const totalRange = rangeMax - rangeMin || 1;
+  const zeroPos = hasNegative ? (Math.abs(rangeMin) / totalRange) * 100 : 0;
+
+  const headlineOpacity = interpolate(frame, [5, 18], [0, 1], clamp);
+  const headlineRise = interpolate(frame, [5, 18], [15, 0], {
+    ...clamp,
+    easing: ease,
+  });
+  const sourceFade = interpolate(
+    frame,
+    [15 + items.length * 10 + 20, 15 + items.length * 10 + 35],
+    [0, 0.4],
+    clamp,
+  );
+
+  return (
+    <AbsoluteFill>
+      <MoodBackground mood={mood} transparent={hasImageBg} />
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "60px 80px",
+        }}
+      >
+        {/* Headline */}
+        <div
+          style={{
+            opacity: headlineOpacity,
+            transform: `translateY(${headlineRise}px)`,
+            fontSize: 72,
+            fontWeight: 600,
+            marginBottom: 40,
+            textAlign: "center",
+            lineHeight: 1.4,
+          }}
+        >
+          <EmphasisAccentText
+            text={headline}
+            emphasis={emphasis}
+            moodCfg={moodCfg}
+            countedValues={countedValues}
+            glowOpacity={glowOpacity}
+            accentFontSizeOverride={66}
+          />
+        </div>
+
+        {/* Bars */}
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 800,
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+          }}
+        >
+          {items.map((label, i) => {
+            const d = 15 + i * 10;
+            const val = values[i] || 0;
+            const isNeg = val < 0;
+            // barProgress: 0→1 애니메이션 (비율은 바 너비에서 적용)
+            const barProgress = interpolate(
+              frame,
+              [d, d + 25],
+              [0, 1],
+              { ...clamp, easing: ease8020 },
+            );
+            const labelOpacity = interpolate(frame, [d, d + 12], [0, 1], clamp);
+            const valOpacity = interpolate(
+              frame,
+              [d + 15, d + 25],
+              [0, 1],
+              clamp,
+            );
+            // 바 너비: 전체 범위 대비 비율
+            const barWidthPct = hasNegative
+              ? (Math.abs(val) / totalRange) * 100 * barProgress
+              : (val / maxVal) * 100 * barProgress;
+
+            return (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                  opacity: labelOpacity,
+                }}
+              >
+                <div
+                  style={{
+                    width: 200,
+                    textAlign: "right",
+                    fontSize: 36,
+                    fontWeight: 500,
+                    color: C.textMuted,
+                    flexShrink: 0,
+                  }}
+                >
+                  {label}
+                </div>
+
+                {hasNegative ? (
+                  /* 마이너스 포함: 0축 기준 양방향 바 */
+                  <div
+                    style={{
+                      flex: 1,
+                      height: 32,
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      borderRadius: 6,
+                      position: "relative",
+                    }}
+                  >
+                    {/* 0축 라인 */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: `${zeroPos}%`,
+                        top: -4,
+                        bottom: -4,
+                        width: 2,
+                        backgroundColor: "rgba(255,255,255,0.3)",
+                        zIndex: 2,
+                      }}
+                    />
+                    {isNeg ? (
+                      /* 마이너스 바: 0축에서 왼쪽으로 */
+                      <div
+                        style={{
+                          position: "absolute",
+                          right: `${100 - zeroPos}%`,
+                          top: 0,
+                          height: "100%",
+                          width: `${barWidthPct}%`,
+                          backgroundColor: NEG_COLOR,
+                          borderRadius: "6px 0 0 6px",
+                        }}
+                      />
+                    ) : (
+                      /* 플러스 바: 0축에서 오른쪽으로 */
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: `${zeroPos}%`,
+                          top: 0,
+                          height: "100%",
+                          width: `${barWidthPct}%`,
+                          backgroundColor: moodCfg.accent,
+                          borderRadius: "0 6px 6px 0",
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  /* 양수만: 기존 레이아웃 */
+                  <div
+                    style={{
+                      flex: 1,
+                      height: 32,
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      borderRadius: 6,
+                      overflow: "hidden",
+                      position: "relative",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${barWidthPct}%`,
+                        height: "100%",
+                        backgroundColor: moodCfg.accent,
+                        borderRadius: 6,
+                      }}
+                    />
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    opacity: valOpacity,
+                    width: 120,
+                    fontSize: 36,
+                    fontWeight: 700,
+                    color: isNeg ? NEG_COLOR : moodCfg.accent,
+                    textAlign: "left",
+                    flexShrink: 0,
+                  }}
+                >
+                  {(() => {
+                    const sign = hasNegative && !isNeg ? "+" : "";
+                    const prefix = unit === "$" || unit === "₩" ? unit : "";
+                    const suffix = prefix ? "" : unit;
+                    return `${prefix}${sign}${val.toLocaleString()}${suffix}`;
+                  })()}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Unit */}
+        {unit && (
+          <div
+            style={{
+              opacity: sourceFade,
+              fontSize: 36,
+              color: C.textMuted,
+              marginTop: 16,
+            }}
+          >
+            {unit}
+          </div>
+        )}
+
+        {/* Source */}
+        {source && (
+          <div
+            style={{ opacity: sourceFade, fontSize: 32, color: C.textDim, marginTop: 12 }}
+          >
+            {source}
+          </div>
+        )}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/* ================================================================
+   PieChartDisplay — SVG 도넛 차트
+   ================================================================ */
+
+const PIE_COLORS = ["#F59E0B", "#3B82F6", "#10B981", "#EF4444", "#8B5CF6", "#6B7280", "#EC4899", "#14B8A6"];
+
+const PieChartDisplay: React.FC<{
+  items: string[];
+  values: number[];
+  unit: string;
+  headline: string;
+  moodCfg: MoodConfig;
+  source: string;
+  mood: string;
+  hasImageBg?: boolean;
+  chartConfig?: { maxSlices?: number; highlightIndex?: number; showTotal?: boolean };
+}> = ({ items, values, unit, headline, moodCfg, source, mood, hasImageBg, chartConfig }) => {
+  const frame = useCurrentFrame();
+  const lines = headline.split("\n").filter((l: string) => l.trim());
+  const headlineFade = useFade(5, 15, 0.8);
+  const sourceFade = useFade(items.length * 6 + 60, 15, 0.8);
+
+  const maxSlices = chartConfig?.maxSlices ?? 8;
+  const displayItems = items.slice(0, maxSlices);
+  const displayValues = values.slice(0, maxSlices);
+  const total = displayValues.reduce((a, b) => a + b, 0);
+
+  // SVG donut
+  const cx = 200, cy = 200, r = 150, strokeW = 60;
+  const circumference = 2 * Math.PI * r;
+
+  // sweep 애니메이션: frame 10→70 에서 0→360
+  const sweepProgress = interpolate(frame, [10, 70], [0, 1], { ...clamp, easing: ease8020 });
+
+  // 각 슬라이스의 시작 각도와 크기 계산
+  let accumulated = 0;
+  const slices = displayValues.map((val, i) => {
+    const fraction = total > 0 ? val / total : 0;
+    const startAngle = accumulated;
+    accumulated += fraction;
+    return { fraction, startAngle, color: PIE_COLORS[i % PIE_COLORS.length] };
+  });
+
+  return (
+    <AbsoluteFill>
+      <MoodBackground mood={mood} transparent={hasImageBg} />
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "60px 60px",
+          gap: 24,
+        }}
+      >
+        {/* Headline */}
+        <div style={{ opacity: headlineFade, textAlign: "center", maxWidth: "90%" }}>
+          {lines.map((line, i) => (
+            <div key={i} style={{ fontSize: i === 0 ? 64 : 48, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+              <AccentText text={line} baseColor={C.text} />
+            </div>
+          ))}
+        </div>
+
+        {/* Chart + Legend row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 48, width: "100%", maxWidth: 1100, justifyContent: "center" }}>
+          {/* SVG Donut */}
+          <svg width={400} height={400} viewBox="0 0 400 400" style={{ flexShrink: 0 }}>
+            {/* 역순 렌더링: slice 0(accent)이 DOM 마지막 = 최상단 z-order → 경계 bleed 방지 */}
+            {[...slices].map((_, ri) => {
+              const i = slices.length - 1 - ri;
+              const slice = slices[i];
+              // 글로벌 sweep: 0→1 진행 중 이 슬라이스가 보이는 비율 계산
+              const sliceEnd = slice.startAngle + slice.fraction;
+              let visibleFraction = 0;
+              if (sweepProgress >= sliceEnd) {
+                visibleFraction = slice.fraction;
+              } else if (sweepProgress > slice.startAngle) {
+                visibleFraction = sweepProgress - slice.startAngle;
+              }
+              if (visibleFraction <= 0) return null;
+              const visibleLen = circumference * visibleFraction;
+              return (
+                <circle
+                  key={i}
+                  cx={cx}
+                  cy={cy}
+                  r={r}
+                  fill="none"
+                  stroke={slice.color}
+                  strokeWidth={strokeW}
+                  strokeLinecap="butt"
+                  strokeDasharray={`${visibleLen} ${circumference - visibleLen}`}
+                  strokeDashoffset={-circumference * slice.startAngle}
+                  transform={`rotate(-90 ${cx} ${cy})`}
+                  style={{ transition: "none" }}
+                />
+              );
+            })}
+            {/* Center text */}
+            {chartConfig?.showTotal !== false && (
+              <text x={cx} y={cy + 8} textAnchor="middle" fontSize={48} fontWeight={700} fill={C.text}>
+                {total}{unit}
+              </text>
+            )}
+          </svg>
+
+          {/* Legend */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {displayItems.map((item, i) => {
+              const delay = 20 + i * 6;
+              const labelFade = interpolate(frame, [delay, delay + 12], [0, 1], clamp);
+              return (
+                <div key={i} style={{ opacity: labelFade, display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 4, backgroundColor: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
+                  <span style={{ fontSize: 30, color: C.text, fontWeight: 500 }}>{item}</span>
+                  <span style={{ fontSize: 30, color: PIE_COLORS[i % PIE_COLORS.length], fontWeight: 700, marginLeft: 8 }}>
+                    {displayValues[i]}{unit}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {source && (
+          <div style={{ opacity: sourceFade, fontSize: 28, color: C.textDim, marginTop: 8 }}>{source}</div>
+        )}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/* ================================================================
+   LineChartDisplay — SVG 라인 차트
+   ================================================================ */
+
+const LineChartDisplay: React.FC<{
+  items: string[];
+  values: number[];
+  unit: string;
+  headline: string;
+  moodCfg: MoodConfig;
+  source: string;
+  mood: string;
+  hasImageBg?: boolean;
+  chartConfig?: { showGrid?: boolean; showDots?: boolean; showArea?: boolean };
+}> = ({ items, values, unit, headline, moodCfg, source, mood, hasImageBg, chartConfig }) => {
+  const frame = useCurrentFrame();
+  const lines = headline.split("\n").filter((l: string) => l.trim());
+  const headlineFade = useFade(5, 15, 0.8);
+  const sourceFade = useFade(items.length * 4 + 60, 15, 0.8);
+
+  const showGrid = chartConfig?.showGrid !== false;
+  const showDots = chartConfig?.showDots !== false;
+  const showArea = chartConfig?.showArea !== false;
+
+  // Chart dimensions
+  const W = 860, H = 440;
+  const padL = 80, padR = 80, padT = 50, padB = 60;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const maxVal = Math.max(...values, 1);
+  const minVal = Math.min(...values, 0);
+  const range = maxVal - minVal || 1;
+
+  // Points
+  const points = values.map((v, i) => ({
+    x: padL + (items.length > 1 ? (i / (items.length - 1)) * chartW : chartW / 2),
+    y: padT + chartH - ((v - minVal) / range) * chartH,
+  }));
+
+  const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+  const areaD = `${pathD} L${points[points.length - 1].x},${padT + chartH} L${points[0].x},${padT + chartH} Z`;
+
+  // Drawing animation via clipPath
+  const drawProgress = interpolate(frame, [15, 70], [0, 1], { ...clamp, easing: ease8020 });
+  const clipX = padL + drawProgress * chartW;
+
+  // Grid lines (4 horizontal)
+  const gridLines = showGrid ? [0, 0.25, 0.5, 0.75, 1].map((frac) => ({
+    y: padT + chartH * (1 - frac),
+    label: Math.round(minVal + range * frac),
+  })) : [];
+
+  return (
+    <AbsoluteFill>
+      <MoodBackground mood={mood} transparent={hasImageBg} />
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "60px 40px",
+          gap: 24,
+          overflow: "visible",
+        }}
+      >
+        {/* Headline */}
+        <div style={{ opacity: headlineFade, textAlign: "center", maxWidth: "90%" }}>
+          {lines.map((line, i) => (
+            <div key={i} style={{ fontSize: i === 0 ? 64 : 48, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+              <AccentText text={line} baseColor={C.text} />
+            </div>
+          ))}
+        </div>
+
+        {/* SVG Chart */}
+        <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible", flexShrink: 0 }}>
+          <defs>
+            <clipPath id="line-clip">
+              <rect x={0} y={0} width={clipX + 10} height={H + 20} />
+            </clipPath>
+            <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={moodCfg.accent} stopOpacity={0.4} />
+              <stop offset="100%" stopColor={moodCfg.accent} stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+
+          {/* Grid */}
+          {gridLines.map((gl, i) => (
+            <g key={i}>
+              <line x1={padL} y1={gl.y} x2={W - padR} y2={gl.y} stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+              <text x={padL - 10} y={gl.y + 5} textAnchor="end" fontSize={22} fill="rgba(255,255,255,0.5)">
+                {gl.label}{unit}
+              </text>
+            </g>
+          ))}
+
+          {/* X-axis labels */}
+          {items.map((label, i) => {
+            const x = padL + (items.length > 1 ? (i / (items.length - 1)) * chartW : chartW / 2);
+            const labelFade = interpolate(frame, [15 + i * 3, 20 + i * 3], [0, 1], clamp);
+            return (
+              <text key={i} x={x} y={H - 10} textAnchor="middle" fontSize={22} fill={`rgba(255,255,255,${labelFade * 0.7})`}>
+                {label}
+              </text>
+            );
+          })}
+
+          <g clipPath="url(#line-clip)">
+            {/* Area */}
+            {showArea && points.length >= 2 && (
+              <path d={areaD} fill="url(#area-grad)" />
+            )}
+
+            {/* Line */}
+            <path d={pathD} fill="none" stroke={moodCfg.accent} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+
+            {/* Dots */}
+            {showDots && points.map((p, i) => {
+              const dotDelay = 15 + (i / (points.length - 1 || 1)) * 55;
+              const dotScale = interpolate(frame, [dotDelay, dotDelay + 8], [0, 1], clamp);
+              return (
+                <g key={i}>
+                  <circle cx={p.x} cy={p.y} r={7 * dotScale} fill={moodCfg.accent} stroke="#0A0A0A" strokeWidth={2} />
+                  {dotScale > 0.5 && (
+                    <text
+                      x={p.x}
+                      y={p.y - 16}
+                      textAnchor={i === points.length - 1 ? "end" : i === 0 ? "start" : "middle"}
+                      fontSize={20}
+                      fontWeight={700}
+                      fill={C.text}
+                    >
+                      {values[i]}{unit}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          </g>
+        </svg>
+
+        {source && (
+          <div style={{ opacity: sourceFade, fontSize: 28, color: C.textDim, marginTop: 8 }}>{source}</div>
+        )}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/* ================================================================
+   BadgeRow — 배지 (국기/아이콘/로고) 행
+   ================================================================ */
+
+const BadgeRow: React.FC<{
+  badges: Array<{
+    type: "flag" | "icon" | "logo";
+    code?: string;
+    name?: string;
+    label?: string;
+  }>;
+  delay: number;
+}> = ({ badges, delay }) => {
+  const frame = useCurrentFrame();
+  const overshoot = Easing.out(Easing.back(1.7));
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 24,
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: 24,
+      }}
+    >
+      {badges.map((badge, i) => {
+        const d = delay + i * 6;
+        const f = frame - d;
+        const opacity = interpolate(f, [0, 8], [0, 1], {
+          ...clamp,
+          easing: ease,
+        });
+        const scale = interpolate(f, [0, 20], [0.5, 1], {
+          ...clamp,
+          easing: overshoot,
+        });
+        const IconComp =
+          badge.type === "icon" && badge.name
+            ? resolveIcon(badge.name)
+            : null;
+
+        return (
+          <div
+            key={i}
+            style={{
+              opacity,
+              transform: `scale(${scale})`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            {badge.type === "flag" && badge.code && (
+              <FlagBadge countryCode={badge.code} size={56} />
+            )}
+            {badge.type === "icon" && IconComp && (
+              <IconBadge icon={IconComp} size={56} />
+            )}
+            {badge.type === "logo" && badge.name && (
+              <LogoBadge logo={badge.name} size={56} />
+            )}
+            {badge.label && (
+              <span
+                style={{
+                  fontSize: 28,
+                  color: C.textMuted,
+                  fontWeight: 500,
+                }}
+              >
+                {badge.label}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ================================================================
+   StatusDotList — 상태 표시 도트 리스트
+   ================================================================ */
+
+const StatusDotList: React.FC<{
+  dots: Array<{
+    label: string;
+    status: "positive" | "negative" | "neutral" | "warning";
+  }>;
+  delay: number;
+}> = ({ dots, delay }) => {
+  const frame = useCurrentFrame();
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        marginTop: 24,
+        maxWidth: 600,
+      }}
+    >
+      {dots.map((dot, i) => {
+        const d = delay + i * 8;
+        const opacity = interpolate(frame, [d, d + 15], [0, 1], clamp);
+        const slideX = interpolate(frame, [d, d + 15], [-15, 0], {
+          ...clamp,
+          easing: ease,
+        });
+
+        return (
+          <div
+            key={i}
+            style={{
+              opacity,
+              transform: `translateX(${slideX}px)`,
+            }}
+          >
+            <StatusDot status={dot.status} label={dot.label} />
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ================================================================
+   TagRow — 태그/칩 행
+   ================================================================ */
+
+const TagRow: React.FC<{
+  tags: Array<{ text: string; active?: boolean }>;
+  delay: number;
+}> = ({ tags, delay }) => {
+  const frame = useCurrentFrame();
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 10,
+        flexWrap: "wrap",
+        justifyContent: "center",
+        marginTop: 16,
+        marginBottom: 8,
+      }}
+    >
+      {tags.map((tag, i) => {
+        const d = delay + i * 5;
+        const opacity = interpolate(frame, [d, d + 12], [0, 1], clamp);
+        const rise = interpolate(frame, [d, d + 12], [10, 0], {
+          ...clamp,
+          easing: ease,
+        });
+
+        return (
+          <div
+            key={i}
+            style={{ opacity, transform: `translateY(${rise}px)` }}
+          >
+            <Tag text={tag.text} active={tag.active} size="md" />
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ================================================================
+   CreativeScene — 메인 컴포넌트
+   ================================================================ */
+
+interface CreativeSceneProps {
+  data: any;
+  subtitles?: SubtitleEntry[];
+  fps?: number;
+  hasImageBackground?: boolean;
+  imageAssetPlacement?: "background" | "left" | "right";
+}
+
+export const CreativeScene: React.FC<CreativeSceneProps> = ({
+  data,
+  subtitles,
+  fps = 30,
+  hasImageBackground,
+  imageAssetPlacement,
+}) => {
+  const frame = useCurrentFrame();
+  const creative = data.creative || {};
+  const headline: string = creative.headline || data.title || "";
+  const reveal: string = creative.reveal || "fade_in";
+  const emphasis: string = creative.emphasis || "none";
+  const mood: string = creative.mood || "informative";
+  const source: string = data.source || "";
+  const items: string[] = data.items || [];
+  const values: number[] = data.values || [];
+  const unit: string = data.unit || "";
+  const concept: string = creative.concept || "";
+  const badges: any[] = data.badges || [];
+  const statusDots: any[] = data.statusDots || [];
+  const tags: any[] = data.tags || [];
+
+  const moodCfg = getMoodConfig(mood);
+  const layout = detectLayout(data, creative);
+  const lines = headline.split("\n").filter((l: string) => l.trim());
+
+  // === 타이밍 ===
+  const headlineLineCount = lines.length;
+  const itemCount =
+    layout === "items_grid" || layout === "items_list" ? items.length : 0;
+
+  // headline/item 애니메이션 지속 시간 (LineReveal=18, Items=15)
+  const LINE_ANIM_DUR = 18;
+  const ITEM_ANIM_DUR = 15;
+
+  // Raw TTS 시작 프레임 (count-up 타이밍 기준용)
+  const headlineSubtitleStarts =
+    subtitles && subtitles.length > 0
+      ? computeSubtitleDelays(subtitles, headlineLineCount, fps)
+      : computeFixedDelays(reveal, headlineLineCount, moodCfg.speed);
+
+  // headline 딜레이: 애니메이션이 TTS 시작 시점에 완료되도록 앞당김
+  const headlineDelays = headlineSubtitleStarts.map((d) =>
+    Math.max(d - LINE_ANIM_DUR, 0),
+  );
+
+  // items 딜레이: 자막 텍스트 매칭 사용 (각 아이템이 나레이션되는 시점에 등장)
+  let itemDelays: number[];
+  if (itemCount === 0) {
+    itemDelays = [];
+  } else if (subtitles && subtitles.length > 0) {
+    // Raw TTS 시작 프레임에서 아이템 애니메이션 시간만큼 앞당김
+    const rawItemDelays = computeItemSubtitleDelays(subtitles, items, fps);
+    itemDelays = rawItemDelays.map((d) => Math.max(d - ITEM_ANIM_DUR, 0));
+  } else {
+    const headlineDone = Math.max(...headlineDelays, 0) + 15;
+    itemDelays = computeFixedDelays(reveal, itemCount, moodCfg.speed).map(
+      (d) => d + headlineDone,
+    );
+  }
+
+  const allDelays = [...headlineDelays, ...itemDelays];
+
+  // === Multi-counter: {{}}에서 최대 4개 숫자 추출 ===
+  const accentMatches = [...headline.matchAll(/\{\{([^}]+)\}\}/g)];
+  const numTargets = accentMatches.map((m) => extractNumber(m[1]));
+  const isCountEmphasis = emphasis === "number" || emphasis === "count";
+
+  // 각 accent가 어느 headline 라인에 속하는지 매핑
+  const COUNT_UP_DURATION = 35;
+  const accentLineDelays: number[] = (() => {
+    if (!isCountEmphasis) return [9999, 9999, 9999, 9999];
+    let accentI = 0;
+    const delays: number[] = [];
+    for (let li = 0; li < lines.length; li++) {
+      const lineAccents = [...lines[li].matchAll(/\{\{[^}]+\}\}/g)];
+      for (let _j = 0; _j < lineAccents.length; _j++) {
+        // 카운트업은 TTS 시작 시점에 완료되도록: raw TTS start - duration
+        const ttsStart = headlineSubtitleStarts[li] || 0;
+        delays.push(Math.max(ttsStart - COUNT_UP_DURATION, 0));
+        accentI++;
+      }
+    }
+    // 4개 채우기
+    while (delays.length < 4) delays.push(9999);
+    return delays;
+  })();
+
+  // 항상 4개 counter hook 호출 (React rules)
+  // >= 100인 숫자만 카운트업 (점점 올라가는 의미가 있는 큰 수치만)
+  const counted0 = useCountUp(
+    isCountEmphasis && (numTargets[0] || 0) >= 100 ? accentLineDelays[0] : 9999,
+    COUNT_UP_DURATION,
+    numTargets[0] || 1,
+  );
+  const counted1 = useCountUp(
+    isCountEmphasis && (numTargets[1] || 0) >= 100 ? accentLineDelays[1] : 9999,
+    COUNT_UP_DURATION,
+    numTargets[1] || 1,
+  );
+  const counted2 = useCountUp(
+    isCountEmphasis && (numTargets[2] || 0) >= 100 ? accentLineDelays[2] : 9999,
+    COUNT_UP_DURATION,
+    numTargets[2] || 1,
+  );
+  const counted3 = useCountUp(
+    isCountEmphasis && (numTargets[3] || 0) >= 100 ? accentLineDelays[3] : 9999,
+    COUNT_UP_DURATION,
+    numTargets[3] || 1,
+  );
+  const countedValues = [counted0, counted1, counted2, counted3];
+
+  const earliestCountDelay = Math.min(...accentLineDelays.filter((d) => d < 9999), 9999);
+  const glowOpacity = interpolate(
+    frame,
+    [earliestCountDelay, earliestCountDelay + 40],
+    [0, moodCfg.glow],
+    clamp,
+  );
+
+  const sourceFade = useFade(Math.max(...allDelays, 0) + 50, 15, 0.8);
+
+  // === Layout routing ===
+
+  // Quote
+  if (layout === "quote") {
+    // items가 비어있으면 data.quote를 폴백으로 사용
+    const quoteItems = items.length > 0 ? items : (data.quote ? [data.quote] : [headline]);
+    return (
+      <QuoteDisplay
+        items={quoteItems}
+        source={source}
+        moodCfg={moodCfg}
+        reveal={reveal}
+        speed={moodCfg.speed}
+        mood={mood}
+        hasImageBg={hasImageBackground}
+        portrait={data.images?.[0]}
+      />
+    );
+  }
+
+  // Split
+  if (layout === "split" && lines.length >= 2) {
+    return (
+      <SplitLayout
+        lines={lines}
+        delays={headlineDelays}
+        emphasis={emphasis}
+        moodCfg={moodCfg}
+        countedValues={countedValues}
+        glowOpacity={glowOpacity}
+        source={source}
+        mood={mood}
+        hasImageBg={hasImageBackground}
+        images={data.images}
+        descriptions={data.descriptions}
+      />
+    );
+  }
+
+  // Pie chart
+  if (layout === "pie") {
+    return (
+      <PieChartDisplay
+        items={items}
+        values={values}
+        unit={unit}
+        headline={headline}
+        moodCfg={moodCfg}
+        source={source}
+        mood={mood}
+        hasImageBg={hasImageBackground}
+        chartConfig={creative.chartConfig}
+      />
+    );
+  }
+
+  // Line chart
+  if (layout === "line") {
+    return (
+      <LineChartDisplay
+        items={items}
+        values={values}
+        unit={unit}
+        headline={headline}
+        moodCfg={moodCfg}
+        source={source}
+        mood={mood}
+        hasImageBg={hasImageBackground}
+        chartConfig={creative.chartConfig}
+      />
+    );
+  }
+
+  // Logo grid
+  if (layout === "logo_grid") {
+    return (
+      <LogoGridLayout
+        items={items}
+        values={values}
+        unit={unit}
+        headline={headline}
+        moodCfg={moodCfg}
+        source={source}
+        mood={mood}
+        emphasis={emphasis}
+        countedValues={countedValues}
+        glowOpacity={glowOpacity}
+        hasImageBg={hasImageBackground}
+        logoMap={creative.logoMap}
+      />
+    );
+  }
+
+  // Bar chart
+  if (layout === "bar") {
+    return (
+      <BarDisplay
+        items={items}
+        values={values}
+        unit={unit}
+        headline={headline}
+        moodCfg={moodCfg}
+        source={source}
+        mood={mood}
+        emphasis={emphasis}
+        countedValues={countedValues}
+        glowOpacity={glowOpacity}
+        hasImageBg={hasImageBackground}
+      />
+    );
+  }
+
+  // === 공통 레이아웃: headline + optional items ===
+  const isFlash = reveal === "stagger_then_flash";
+  const flashAt = isFlash ? Math.max(...allDelays) + 20 : 9999;
+
+  return (
+    <AbsoluteFill>
+      <MoodBackground mood={mood} transparent={hasImageBackground} />
+
+      {/* Spotlight overlay */}
+      {reveal === "spotlight" && <SpotlightOverlay speed={moodCfg.speed} />}
+
+      {/* Flash overlay */}
+      {isFlash && (
+        <FlashOverlay flashAt={flashAt} accentRgb={moodCfg.accentRgb} />
+      )}
+
+      {/* Quote mark */}
+      {emphasis === "quote" && (
+        <div style={{ position: "relative", zIndex: 2 }}>
+          <QuoteMark color={moodCfg.accent} delay={headlineDelays[0] || 0} />
+        </div>
+      )}
+
+      {/* Main content */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "60px 40px",
+        }}
+      >
+        {/* Badges */}
+        {badges.length > 0 && (
+          <BadgeRow
+            badges={badges}
+            delay={Math.max((headlineDelays[0] || 0) - 10, 0)}
+          />
+        )}
+
+        {/* Headline lines */}
+        <div
+          style={{
+            textAlign: "center",
+            maxWidth: "95%",
+          }}
+        >
+          {lines.map((line: string, i: number) => {
+            // 이 라인 이전 라인들의 accent 개수 합산 → accent 시작 인덱스
+            const accentOffset = lines
+              .slice(0, i)
+              .reduce((sum, l) => sum + ([...l.matchAll(/\{\{[^}]+\}\}/g)].length), 0);
+            return (
+              <LineReveal
+                key={i}
+                line={line}
+                delay={headlineDelays[i] || 0}
+                reveal={reveal}
+                emphasis={emphasis}
+                moodCfg={moodCfg}
+                countedValues={countedValues}
+                glowOpacity={glowOpacity}
+                lineIndex={i}
+                totalLines={lines.length}
+                accentOffset={accentOffset}
+              />
+            );
+          })}
+        </div>
+
+        {/* Tags */}
+        {tags.length > 0 && (
+          <TagRow
+            tags={tags}
+            delay={Math.max(...headlineDelays, 0) + 15}
+          />
+        )}
+
+        {/* Person cards */}
+        {layout === "person_card" && (
+          <PersonCardRow
+            items={items}
+            delays={itemDelays}
+            moodCfg={moodCfg}
+            images={data.images}
+            itemStatuses={data.itemStatuses}
+          />
+        )}
+
+        {/* Items grid */}
+        {layout === "items_grid" && (
+          <ItemsGrid
+            items={items}
+            delays={itemDelays}
+            headlineDelays={headlineDelays}
+            moodCfg={moodCfg}
+            reveal={reveal}
+            itemIcons={data.itemIcons}
+            itemFlags={data.itemFlags}
+          />
+        )}
+
+        {/* Items list */}
+        {layout === "items_list" && (
+          <ItemsList
+            items={items}
+            delays={itemDelays}
+            headlineDelays={headlineDelays}
+            moodCfg={moodCfg}
+            emphasis={emphasis}
+            concept={concept}
+            images={data.images}
+            itemIcons={data.itemIcons}
+            itemFlags={data.itemFlags}
+            itemStatuses={data.itemStatuses}
+          />
+        )}
+
+        {/* Status Dots */}
+        {statusDots.length > 0 && (
+          <StatusDotList
+            dots={statusDots}
+            delay={
+              itemDelays.length > 0
+                ? Math.max(...itemDelays) + 15
+                : Math.max(...headlineDelays, 0) + 30
+            }
+          />
+        )}
+
+        {/* Source */}
+        {source && (
+          <div
+            style={{
+              opacity: sourceFade,
+              fontSize: 32,
+              color: C.textDim,
+              marginTop: 24,
+            }}
+          >
+            {source}
+          </div>
+        )}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/* ================================================================
+   LineReveal — 라인별 등장 애니메이션
+   ================================================================ */
+
+const LineReveal: React.FC<{
+  line: string;
+  delay: number;
+  reveal: string;
+  emphasis: string;
+  moodCfg: MoodConfig;
+  countedValues: number[];
+  glowOpacity: number;
+  lineIndex: number;
+  totalLines: number;
+  accentOffset?: number;
+}> = ({
+  line,
+  delay,
+  reveal,
+  emphasis,
+  moodCfg,
+  countedValues,
+  glowOpacity,
+  lineIndex,
+  totalLines,
+  accentOffset = 0,
+}) => {
+  const frame = useCurrentFrame();
+  const dur = 18;
+
+  let opacity: number;
+  let transform: string;
+
+  if (reveal === "zoom_in") {
+    opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
+    const s = interpolate(frame, [delay, delay + dur], [0.6, 1], {
+      ...clamp,
+      easing: Easing.out(Easing.exp),
+    });
+    transform = `scale(${s})`;
+  } else if (reveal === "build_up") {
+    opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
+    const rise = interpolate(frame, [delay, delay + dur], [30, 0], {
+      ...clamp,
+      easing: ease,
+    });
+    transform = `translateY(${rise}px)`;
+  } else if (reveal === "dramatic_pause") {
+    if (lineIndex === 0) {
+      opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
+      const rise = interpolate(frame, [delay, delay + dur], [20, 0], {
+        ...clamp,
+        easing: ease,
+      });
+      transform = `translateY(${rise}px)`;
+    } else {
+      opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
+      const s = interpolate(frame, [delay, delay + 20], [1.3, 1], {
+        ...clamp,
+        easing: Easing.out(Easing.exp),
+      });
+      transform = `scale(${s})`;
+    }
+  } else if (reveal === "stagger_then_flash") {
+    opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
+    const rise = interpolate(frame, [delay, delay + dur], [15, 0], {
+      ...clamp,
+      easing: ease,
+    });
+    transform = `translateY(${rise}px)`;
+  } else {
+    opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
+    const rise = interpolate(frame, [delay, delay + dur], [20, 0], {
+      ...clamp,
+      easing: ease,
+    });
+    transform = `translateY(${rise}px)`;
+  }
+
+  const isChapterLabel = /^CHAPTER\s*\d/i.test(line.trim());
+  const baseFontSize = isChapterLabel ? 36 : getBaseFontSize(emphasis);
+  const showBadge = emphasis === "sequence" && totalLines > 1;
+
+  return (
+    <div
+      style={{
+        opacity,
+        transform,
+        fontSize: baseFontSize,
+        fontWeight: 600,
+        lineHeight:
+          emphasis === "number" || emphasis === "count" ? 2.4 : 1.6,
+        marginBottom: lineIndex < totalLines - 1 ? 8 : 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: showBadge ? 16 : 0,
+      }}
+    >
+      {showBadge && (
+        <CircleBadge
+          text={String(lineIndex + 1)}
+          size={40}
+          filled={lineIndex === totalLines - 1}
+        />
+      )}
+      <EmphasisAccentText
+        text={line}
+        emphasis={emphasis}
+        moodCfg={moodCfg}
+        countedValues={countedValues}
+        glowOpacity={glowOpacity}
+        accentStartIndex={accentOffset}
+      />
+    </div>
+  );
+};
+
+/* ================================================================
+   QuoteMark — 인용 장식
+   ================================================================ */
+
+const QuoteMark: React.FC<{ color: string; delay: number }> = ({
+  color,
+  delay,
+}) => {
+  const qFade = useFadeRise(delay, 15, 10);
+  return (
+    <div
+      style={{
+        ...qFade,
+        fontSize: 120,
+        fontWeight: 800,
+        color,
+        opacity: (qFade.opacity as unknown as number) * 0.3,
+        lineHeight: 1,
+        marginBottom: -20,
+        position: "relative",
+        zIndex: 2,
+      }}
+    >
+      &ldquo;
+    </div>
+  );
+};

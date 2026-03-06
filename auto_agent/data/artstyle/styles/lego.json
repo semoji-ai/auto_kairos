@@ -1,0 +1,24 @@
+{
+  "name": "Photorealistic LEGO",
+  "description": "포토리얼리스틱 레고 미니피규어 스타일. 레고 무비처럼 실사에 가까운 3D 레고 렌더링",
+  "reference_image": "artstyle/styles/lego_base.png",
+  "scene_style_description": "LEGO cinema style, characters must be in the form of LEGO head blocks, and elements must be in the form of combinations of existing LEGO blocks.",
+  "style": {
+    "art_style": "Photorealistic LEGO minifigure style (실사 레고 스타일)",
+    "linework": {
+      "outline": "Clean, defined edges with smooth plastic surface appearance, photorealistic rendering",
+      "variation": "Consistent LEGO brick aesthetic with realistic lighting and textures"
+    },
+    "shapes": "Cylindrical head, rectangular body parts typical of LEGO minifigures",
+    "color_palette": "Bright, solid plastic colors with realistic reflections and surface textures",
+    "shading": "Photorealistic plastic sheen, soft shadows, realistic ambient occlusion",
+    "character_design": "Classic LEGO minifigure proportions - cylindrical head with C-shaped hands, short legs. Expressive printed face on round head. Photorealistic 3D rendering like official LEGO movie",
+    "mood_and_tone": "Photorealistic toy aesthetic, like The LEGO Movie or official LEGO promotional renders",
+    "background": "LEGO brick elements with photorealistic rendering, realistic depth of field"
+  },
+  "technical": {
+    "no_text": true,
+    "resolution": "High quality photorealistic 3D rendered LEGO style",
+    "scene_style": "Photorealistic LEGO cinema style like The LEGO Movie. Characters must be realistic LEGO minifigures with plastic texture. All elements must look like real LEGO bricks photographed in real life."
+  }
+}

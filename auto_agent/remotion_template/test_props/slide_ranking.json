@@ -1,0 +1,21 @@
+{
+  "vizData": {
+    "vizType": "slide_ranking",
+    "title": "2024년 GDP 세계 순위",
+    "items": ["미국", "중국", "독일", "일본", "인도", "영국", "프랑스"],
+    "values": [28780, 18530, 4590, 4110, 3940, 3500, 3130],
+    "unit": "십억$",
+    "source": "IMF World Economic Outlook 2024"
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 1.0},
+      {"itemIndex": 1, "timeSec": 2.5},
+      {"itemIndex": 2, "timeSec": 4.0},
+      {"itemIndex": 3, "timeSec": 5.0},
+      {"itemIndex": 4, "timeSec": 6.0},
+      {"itemIndex": 5, "timeSec": 7.0},
+      {"itemIndex": 6, "timeSec": 8.0}
+    ]
+  }
+}

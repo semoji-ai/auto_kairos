@@ -1,0 +1,35 @@
+{
+  "vizData": {
+    "vizType": "slide_checklist",
+    "title": "부동산 투자 전 체크리스트",
+    "items": [
+      "등기부등본 확인",
+      "실거래가 조회",
+      "주변 개발 계획 확인",
+      "대출 한도 사전 심사",
+      "세금 계산 (취득세/양도세)",
+      "현장 방문 및 하자 점검"
+    ],
+    "values": [1, 1, 1, 0, 1, 0],
+    "unit": "",
+    "source": "",
+    "descriptions": [
+      "소유권, 근저당 확인 완료",
+      "국토부 실거래가 기준",
+      "GTX-A 노선 확인",
+      "DSR 규제로 한도 부족",
+      "취득세 1.1% 계산 완료",
+      "미방문 — 일정 조율 필요"
+    ]
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 1.5},
+      {"itemIndex": 1, "timeSec": 3.0},
+      {"itemIndex": 2, "timeSec": 4.5},
+      {"itemIndex": 3, "timeSec": 6.0},
+      {"itemIndex": 4, "timeSec": 7.5},
+      {"itemIndex": 5, "timeSec": 9.0}
+    ]
+  }
+}

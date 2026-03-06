@@ -1,0 +1,22 @@
+{
+  "mapScene": {
+    "mapType": "location_reveal",
+    "mapStyle": "warm_earth",
+    "title": "단종의 유배지 — 청령포",
+    "source": "조선왕조실록",
+    "camera": {
+      "keyframes": [
+        { "frame": 0, "center": [127.5, 36.5], "zoom": 6.5 },
+        { "frame": 89, "center": [128.456, 37.172], "zoom": 10 }
+      ],
+      "easing": "easeInOutCubic"
+    },
+    "markers": [
+      { "coordinates": [128.456, 37.172], "label": "청령포", "style": "pulse", "appearAtFrame": 50 },
+      { "coordinates": [126.977, 37.566], "label": "한양", "style": "pin", "appearAtFrame": 10 }
+    ],
+    "labels": [
+      { "coordinates": [128.462, 37.184], "text": "영월", "fontSize": 20, "appearAtFrame": 40 }
+    ]
+  }
+}

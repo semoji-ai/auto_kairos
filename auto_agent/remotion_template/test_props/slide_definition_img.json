@@ -1,0 +1,25 @@
+{
+  "vizData": {
+    "vizType": "slide_definition",
+    "title": "",
+    "items": [
+      "양적완화",
+      "정의: 중앙은행이 국채 등 자산을 매입하여 시중에 유동성을 공급하는 비전통적 통화정책",
+      "예: 2008년 글로벌 금융위기 이후 미국 연준(Fed)의 QE1~QE3",
+      "예: 2020년 코로나19 팬데믹 대응 무제한 양적완화"
+    ],
+    "values": [],
+    "unit": "",
+    "source": "한국은행",
+    "descriptions": ["Quantitative Easing, QE"],
+    "imagePath": "assets/reference_grid_bg.jpg"
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 0.5},
+      {"itemIndex": 1, "timeSec": 1.5},
+      {"itemIndex": 2, "timeSec": 2.0},
+      {"itemIndex": 3, "timeSec": 2.5}
+    ]
+  }
+}

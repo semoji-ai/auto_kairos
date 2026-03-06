@@ -1,0 +1,15 @@
+{
+  "vizData": {
+    "vizType": "slide_statistic",
+    "title": "",
+    "items": ["4조 2천억"],
+    "values": [4200000000000],
+    "unit": "원",
+    "source": "산업통상자원부",
+    "descriptions": ["2024년 반도체 수출액", "전년 대비 52% 증가"],
+    "imagePath": "assets/reference_grid_bg.jpg"
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [{"itemIndex": 0, "timeSec": 1.0}]
+  }
+}

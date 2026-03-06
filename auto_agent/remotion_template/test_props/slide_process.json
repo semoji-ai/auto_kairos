@@ -1,0 +1,20 @@
+{
+  "vizData": {
+    "vizType": "slide_process",
+    "title": "mRNA 백신 작용 원리",
+    "items": ["주사 접종", "세포 흡수", "단백질 생성", "면역 인식", "항체 형성"],
+    "values": [],
+    "unit": "",
+    "source": "CDC",
+    "descriptions": ["mRNA가 근육세포에 전달", "지질나노입자가 세포막 통과", "스파이크 단백질 합성", "면역세포가 항원 탐지", "기억세포가 장기 면역 형성"]
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 1.0},
+      {"itemIndex": 1, "timeSec": 3.0},
+      {"itemIndex": 2, "timeSec": 5.0},
+      {"itemIndex": 3, "timeSec": 7.0},
+      {"itemIndex": 4, "timeSec": 9.0}
+    ]
+  }
+}

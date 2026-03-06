@@ -1,0 +1,22 @@
+{
+  "vizData": {
+    "vizType": "slide_profile",
+    "title": "",
+    "items": ["재위", "출생", "업적", "가족", "시호"],
+    "values": [],
+    "unit": "",
+    "source": "조선왕조실록",
+    "descriptions": ["1418년 ~ 1450년 (32년)", "1397년 5월 15일", "훈민정음 창제, 과학기술 발전", "소헌왕후 심씨, 18남 4녀", "세종장헌영문예무인성명효대왕"],
+    "profileName": "세종대왕",
+    "profileSubtitle": "조선 제4대 국왕"
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 2.0},
+      {"itemIndex": 1, "timeSec": 3.5},
+      {"itemIndex": 2, "timeSec": 5.0},
+      {"itemIndex": 3, "timeSec": 6.5},
+      {"itemIndex": 4, "timeSec": 8.0}
+    ]
+  }
+}

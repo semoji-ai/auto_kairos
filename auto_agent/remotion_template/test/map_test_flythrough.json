@@ -1,0 +1,30 @@
+{
+  "mapScene": {
+    "mapType": "fly_through",
+    "mapStyle": "historical",
+    "title": "단종의 마지막 여정",
+    "camera": {
+      "keyframes": [
+        { "frame": 0, "center": [126.977, 37.579], "zoom": 14, "bearing": 0, "pitch": 30 },
+        { "frame": 90, "center": [126.977, 37.566], "zoom": 10, "bearing": 15, "pitch": 20 },
+        { "frame": 180, "center": [128.000, 37.300], "zoom": 9, "bearing": -8, "pitch": 12 },
+        { "frame": 270, "center": [128.456, 37.172], "zoom": 13, "bearing": 0, "pitch": 0 }
+      ],
+      "easing": "easeInOutCubic"
+    },
+    "markers": [
+      {
+        "coordinates": [126.977, 37.579],
+        "label": "경복궁",
+        "style": "dot",
+        "appearAtFrame": 0
+      },
+      {
+        "coordinates": [128.456, 37.172],
+        "label": "청령포",
+        "style": "pulse",
+        "appearAtFrame": 230
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "vizData": {
+    "vizType": "slide_proscons",
+    "title": "원자력 발전의 장단점",
+    "items": [],
+    "values": [],
+    "unit": "",
+    "source": "에너지경제연구원",
+    "left": {
+      "label": "장점",
+      "items": ["탄소 배출 제로", "높은 발전 효율 (90%+)", "안정적 기저 전력 공급", "연료비 비중 낮음"]
+    },
+    "right": {
+      "label": "단점",
+      "items": ["방사능 누출 위험", "고준위 폐기물 처리 난제", "높은 초기 건설 비용", "입지 선정 갈등"]
+    }
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 1.0},
+      {"itemIndex": 1, "timeSec": 2.5},
+      {"itemIndex": 2, "timeSec": 4.0},
+      {"itemIndex": 3, "timeSec": 5.5},
+      {"itemIndex": 4, "timeSec": 7.0},
+      {"itemIndex": 5, "timeSec": 8.5},
+      {"itemIndex": 6, "timeSec": 10.0},
+      {"itemIndex": 7, "timeSec": 11.5}
+    ]
+  }
+}

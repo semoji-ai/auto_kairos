@@ -1,0 +1,20 @@
+{
+  "vizData": {
+    "vizType": "slide_ranking",
+    "title": "2024년 GDP 세계 순위",
+    "items": ["미국", "중국", "독일", "일본", "인도"],
+    "values": [28780, 18530, 4590, 4110, 3940],
+    "unit": "십억$",
+    "source": "IMF",
+    "imagePath": "assets/reference_grid_bg.jpg"
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 0.5},
+      {"itemIndex": 1, "timeSec": 1.0},
+      {"itemIndex": 2, "timeSec": 1.5},
+      {"itemIndex": 3, "timeSec": 2.0},
+      {"itemIndex": 4, "timeSec": 2.5}
+    ]
+  }
+}

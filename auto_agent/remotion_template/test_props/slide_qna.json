@@ -1,0 +1,19 @@
+{
+  "vizData": {
+    "vizType": "slide_qna",
+    "title": "",
+    "items": [
+      "블랙홀에 빠지면 어떻게 되나요?",
+      "사건의 지평선을 넘으면 빛조차 탈출할 수 없습니다. 강력한 조석력에 의해 물체는 '스파게티화' 현상을 겪게 되며, 시간은 외부 관측자 기준으로 무한히 느려집니다."
+    ],
+    "values": [],
+    "unit": "",
+    "source": "NASA"
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 0.5},
+      {"itemIndex": 1, "timeSec": 3.0}
+    ]
+  }
+}

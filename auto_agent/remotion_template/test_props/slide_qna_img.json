@@ -1,0 +1,20 @@
+{
+  "vizData": {
+    "vizType": "slide_qna",
+    "title": "",
+    "items": [
+      "블랙홀에 빠지면 어떻게 되나요?",
+      "사건의 지평선을 넘으면 빛조차 탈출할 수 없습니다."
+    ],
+    "values": [],
+    "unit": "",
+    "source": "NASA",
+    "imagePath": "assets/reference_grid_bg.jpg"
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 0.5},
+      {"itemIndex": 1, "timeSec": 2.0}
+    ]
+  }
+}

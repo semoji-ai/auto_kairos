@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — Auto Agent V2{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ project.name }}</h1>
+    <div class="meta">
+      <span class="badge badge-{{ project.status }}">{{ project.status }}</span>
+      &nbsp; {{ project.slug }} &nbsp;|&nbsp; {{ project.scene_count }} scenes
+      {% if project.topic %}&nbsp;|&nbsp; {{ project.topic[:60] }}{% endif %}
+    </div>
+  </div>
+  <div>
+    <a href="/" class="btn">&larr; Back</a>
+  </div>
+</div>
+
+<div class="tabs">
+  <a href="/projects/{{ project.id }}?tab=overview" class="{% if tab == 'overview' %}active{% endif %}">Overview</a>
+  <a href="/projects/{{ project.id }}?tab=pipeline" class="{% if tab == 'pipeline' %}active{% endif %}">Pipeline</a>
+  <a href="/projects/{{ project.id }}?tab=assets" class="{% if tab == 'assets' %}active{% endif %}">Assets</a>
+  <a href="/projects/{{ project.id }}?tab=versions" class="{% if tab == 'versions' %}active{% endif %}">Versions</a>
+  <a href="/projects/{{ project.id }}?tab=costs" class="{% if tab == 'costs' %}active{% endif %}">Costs</a>
+</div>
+
+{% if tab == 'overview' %}
+<!-- ═══ OVERVIEW ═══ -->
+<div class="stats-grid">
+  <div class="stat">
+    <div class="label">Scenes</div>
+    <div class="value">{{ project.scene_count }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Duration</div>
+    <div class="value">{{ "%.1f"|format(project.total_duration_sec / 60) }}m</div>
+    <div class="sub">{{ "%.0f"|format(project.total_duration_sec) }}s total</div>
+  </div>
+  <div class="stat">
+    <div class="label">Total Assets</div>
+    <div class="value">{{ asset_counts.values()|sum }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Pipeline Runs</div>
+    <div class="value">{{ cost.get('total_runs') or 0 }}</div>
+    <div class="sub">${{ "%.4f"|format(cost.get('total_usd') or 0) }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Project Info</h3>
+  <table>
+    <tr><td style="width:150px;color:var(--text-muted)">Theme</td><td>{{ project.theme }}</td></tr>
+    <tr><td style="color:var(--text-muted)">Output Dir</td><td><code>{{ project.output_dir }}</code></td></tr>
+    <tr><td style="color:var(--text-muted)">Created</td><td>{{ project.created_at }}</td></tr>
+    <tr><td style="color:var(--text-muted)">Updated</td><td>{{ project.updated_at }}</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>Assets Breakdown</h3>
+  <table>
+    <thead><tr><th>Type</th><th>Count</th></tr></thead>
+    <tbody>
+    {% for atype, count in asset_counts.items()|sort %}
+    <tr><td>{{ atype }}</td><td>{{ count }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% elif tab == 'pipeline' %}
+<!-- ═══ PIPELINE ═══ -->
+{% if runs %}
+<table>
+  <thead>
+    <tr>
+      <th>Phase</th>
+      <th>Step</th>
+      <th>Agent/Module</th>
+      <th>Status</th>
+      <th>Duration</th>
+      <th>Cost</th>
+      <th>Time</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for r in runs %}
+  <tr>
+    <td>{{ r.phase }}</td>
+    <td>{{ r.step_name or r.step }}</td>
+    <td>{{ r.agent_or_module or '-' }}</td>
+    <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+    <td>{% if r.duration_sec %}{{ "%.1f"|format(r.duration_sec) }}s{% else %}-{% endif %}</td>
+    <td>{% if r.cost_usd %}${{ "%.4f"|format(r.cost_usd) }}{% else %}-{% endif %}</td>
+    <td style="font-size:12px;color:var(--text-muted)">{{ (r.started_at or r.created_at)[:16] }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty">No pipeline runs recorded yet.</div>
+{% endif %}
+
+{% elif tab == 'assets' %}
+<!-- ═══ ASSETS ═══ -->
+<div class="stats-grid">
+  {% for atype, count in asset_counts.items()|sort %}
+  <div class="stat">
+    <div class="label">{{ atype }}</div>
+    <div class="value">{{ count }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<table>
+  <thead>
+    <tr><th>Scene</th><th>Type</th><th>File</th><th>Size</th></tr>
+  </thead>
+  <tbody>
+  {% for a in assets[:100] %}
+  <tr>
+    <td>{% if a.scene_number %}{{ "%03d"|format(a.scene_number) }}{% else %}-{% endif %}</td>
+    <td>{{ a.asset_type }}</td>
+    <td style="font-size:13px">{{ a.file_name }}</td>
+    <td>{{ "%.1f"|format(a.file_size / 1024) }}KB</td>
+  </tr>
+  {% endfor %}
+  {% if assets|length > 100 %}
+  <tr><td colspan="4" style="text-align:center;color:var(--text-muted)">... and {{ assets|length - 100 }} more</td></tr>
+  {% endif %}
+  </tbody>
+</table>
+
+{% elif tab == 'versions' %}
+<!-- ═══ VERSIONS ═══ -->
+{% if all_versions %}
+{% for file_type, versions in all_versions.items() %}
+<div class="card">
+  <h3>{{ file_type }}</h3>
+  <table>
+    <thead><tr><th>Version</th><th>Size</th><th>Created</th><th>By</th><th>Description</th></tr></thead>
+    <tbody>
+    {% for v in versions %}
+    <tr>
+      <td>v{{ "%03d"|format(v.version) }}</td>
+      <td>{{ "%.1f"|format(v.file_size / 1024) }}KB</td>
+      <td style="font-size:13px">{{ v.created_at[:16] }}</td>
+      <td>{{ v.created_by or '-' }}</td>
+      <td>{{ v.description or '' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty">No version history available.</div>
+{% endif %}
+
+{% elif tab == 'costs' %}
+<!-- ═══ COSTS ═══ -->
+<div class="stats-grid">
+  <div class="stat">
+    <div class="label">Total Runs</div>
+    <div class="value">{{ cost.get('total_runs') or 0 }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Input Tokens</div>
+    <div class="value">{{ "{:,}".format(cost.get('total_tokens_in') or 0 or 0) }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Output Tokens</div>
+    <div class="value">{{ "{:,}".format(cost.get('total_tokens_out') or 0 or 0) }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Total Cost</div>
+    <div class="value">${{ "%.4f"|format(cost.get('total_usd') or 0 or 0) }}</div>
+  </div>
+</div>
+
+{% if cost_by_agent %}
+<div class="card">
+  <h3>Cost by Agent/Module</h3>
+  <table>
+    <thead><tr><th>Agent</th><th>Runs</th><th>Input</th><th>Output</th><th>USD</th></tr></thead>
+    <tbody>
+    {% for c in cost_by_agent %}
+    <tr>
+      <td>{{ c.agent_or_module }}</td>
+      <td>{{ c.run_count }}</td>
+      <td>{{ "{:,}".format(c.tokens_in or 0) }}</td>
+      <td>{{ "{:,}".format(c.tokens_out or 0) }}</td>
+      <td>${{ "%.4f"|format(c.total_usd or 0) }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty">No cost data recorded yet. Pipeline runs will populate this section.</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

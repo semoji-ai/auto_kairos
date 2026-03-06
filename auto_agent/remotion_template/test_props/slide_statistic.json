@@ -1,0 +1,18 @@
+{
+  "vizData": {
+    "vizType": "slide_statistic",
+    "title": "",
+    "items": ["4조 2천억", "전년 대비 +34%", "세계 3위"],
+    "values": [4200000000000, 34, 3],
+    "unit": "원",
+    "source": "한국은행 2024",
+    "descriptions": ["2024년 기준 반도체 수출액", "역대 최대 규모"]
+  },
+  "vizAnimation": {
+    "itemSyncPoints": [
+      {"itemIndex": 0, "timeSec": 1.0},
+      {"itemIndex": 1, "timeSec": 3.0},
+      {"itemIndex": 2, "timeSec": 5.0}
+    ]
+  }
+}
