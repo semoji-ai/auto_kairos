@@ -65,13 +65,15 @@ Act 3 (결말) — 전체의 15-20%
 
 ---
 
-## 4. 사용 가능한 씬 타입
+## 4. 씬 힌트 참고 (아웃라인용)
+
+아래는 scene_hints에서 사용할 수 있는 **시각화 힌트**입니다. 렌더러 타입이 아니며, visual-composer가 creative 필드를 설계할 때 참고하는 의도 표현입니다.
 
 ```
 타이틀/텍스트: title_card, text_highlight, quote_card
 데이터 시각화: bar_chart, line_chart, pie_chart, timeline, table_view
-비교/구조:    compare_card, list_card, numbered_list, tech_tree, diagram
-아이콘 조합:  icon_grid, icon_flow, icon_stat
+비교/구조:    compare_card, list_card, numbered_list, diagram
+아이콘 조합:  icon_grid, icon_stat
 특수:         narration_only, image_scene
 ```
 

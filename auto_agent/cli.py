@@ -8,12 +8,15 @@ auto-agent — AI 영상 제작 파이프라인 CLI
   auto-agent project list|create|active|info    # 프로젝트 관리
   auto-agent config get|set|set-json|delete     # 프로젝트 설정
   auto-agent studio --project <slug>            # Remotion 스튜디오
+  auto-agent style list|add|remove              # 아트스타일 관리
+  auto-agent voice list|add|remove              # 음성 프리셋 관리
   auto-agent version list|rollback              # 버전 관리
   auto-agent assets [--type audio]              # 에셋 조회
   auto-agent cleanup [--execute]                # 클린업
   auto-agent costs                              # 비용 요약
   auto-agent dashboard [--port 8080]            # 웹 대시보드
 """
+import json
 import shutil
 import subprocess
 import sys
@@ -21,19 +24,30 @@ from pathlib import Path
 
 from auto_agent import __version__
 from auto_agent.paths import get_package_dir, get_data_dir, get_workspace_dir
+from auto_agent.ui import (
+    console,
+    print_error,
+    print_success,
+    print_warning,
+    print_header,
+    is_non_interactive,
+    style_table,
+    voice_table,
+)
 
 
 def cmd_init(args):
     """워크스페이스 초기화."""
     if not args:
-        print("Usage: auto-agent init <workspace-path>")
-        print("Example: auto-agent init ~/my-project")
+        print_error("Usage: auto-agent init <workspace-path>")
+        console.print("  예시: auto-agent init ~/my-project")
         sys.exit(1)
 
     workspace = Path(args[0]).resolve()
     template_dir = get_package_dir() / "remotion_template"
 
-    print(f"Initializing workspace: {workspace}")
+    print_header(f"auto-agent — 워크스페이스 초기화")
+    console.print(f"  경로: [accent]{workspace}[/accent]\n")
 
     # 1. 디렉토리 생성
     workspace.mkdir(parents=True, exist_ok=True)
@@ -43,9 +57,9 @@ def cmd_init(args):
     # 2. Remotion 템플릿 복사
     remotion_dest = workspace / "remotion"
     if remotion_dest.exists():
-        print(f"  [SKIP] remotion/ already exists")
+        console.print("  [dim]SKIP[/dim] remotion/ (이미 존재)")
     else:
-        print(f"  [COPY] remotion/ template")
+        console.print("  [accent]COPY[/accent] remotion/ 템플릿")
         shutil.copytree(template_dir, remotion_dest, dirs_exist_ok=True)
 
     # 3. .env.example 생성
@@ -65,7 +79,7 @@ def cmd_init(args):
             "GOOGLE_API_KEY=\n",
             encoding="utf-8",
         )
-        print(f"  [CREATE] .env.example")
+        console.print("  [accent]CREATE[/accent] .env.example")
 
     # 4. DB 초기화
     db_path = workspace / "auto_agent.db"
@@ -74,15 +88,15 @@ def cmd_init(args):
         os.environ["AUTO_AGENT_WORKSPACE"] = str(workspace)
         from auto_agent.db.connection import init_db
         init_db()
-        print(f"  [CREATE] auto_agent.db")
+        console.print("  [accent]CREATE[/accent] auto_agent.db")
     else:
-        print(f"  [SKIP] auto_agent.db already exists")
+        console.print("  [dim]SKIP[/dim] auto_agent.db (이미 존재)")
 
     # 5. npm install
     remotion_pkg = remotion_dest / "package.json"
     remotion_nm = remotion_dest / "node_modules"
     if remotion_pkg.exists() and not remotion_nm.exists():
-        print(f"  [NPM] Installing Remotion dependencies...")
+        console.print("  [accent]NPM[/accent] Remotion 의존성 설치 중...")
         try:
             result = subprocess.run(
                 ["npm", "install"],
@@ -91,21 +105,20 @@ def cmd_init(args):
                 text=True,
             )
             if result.returncode == 0:
-                print(f"  [OK] npm install complete")
+                print_success("npm install 완료")
             else:
-                print(f"  [WARN] npm install failed: {result.stderr[:200]}")
-                print(f"         Run manually: cd {remotion_dest} && npm install")
+                print_warning(f"npm install 실패: {result.stderr[:200]}")
+                console.print(f"  수동 실행: cd {remotion_dest} && npm install")
         except FileNotFoundError:
-            print(f"  [WARN] npm not found. Install Node.js first.")
-            print(f"         Then run: cd {remotion_dest} && npm install")
+            print_warning("npm을 찾을 수 없습니다. Node.js를 먼저 설치하세요.")
+            console.print(f"  설치 후: cd {remotion_dest} && npm install")
 
-    print(f"\nWorkspace ready: {workspace}")
-    print(f"Next steps:")
-    print(f"  1. cp {workspace}/.env.example {workspace}/.env")
-    print(f"  2. Edit .env with your API keys")
-    print(f"  3. cd {workspace}")
-    print(f"  4. auto-agent project create \"My Project\"")
-    print(f"  5. auto-agent run --project my-project")
+    console.print(f"\n[accent]워크스페이스 준비 완료![/accent]")
+    console.print(f"\n  다음 단계:")
+    console.print(f"    1. cp {workspace}/.env.example {workspace}/.env")
+    console.print(f"    2. .env 파일에 API 키 입력")
+    console.print(f"    3. cd {workspace}")
+    console.print(f"    4. [accent]auto-agent project create[/accent]")
 
 
 def cmd_run(args):
@@ -140,15 +153,15 @@ def cmd_studio(args):
     remotion_dir = workspace / "remotion"
 
     if not remotion_dir.exists():
-        print(f"ERROR: Remotion directory not found: {remotion_dir}")
-        print(f"Run 'auto-agent init {workspace}' first.")
+        print_error(f"Remotion 디렉토리를 찾을 수 없습니다: {remotion_dir}")
+        console.print(f"  'auto-agent init {workspace}' 를 먼저 실행하세요.")
         sys.exit(1)
 
     env = {}
     if parsed.project:
         env["PROJECT_NAME"] = parsed.project
 
-    print(f"Starting Remotion Studio in {remotion_dir}")
+    print_success(f"Remotion Studio 시작: {remotion_dir}")
     subprocess.run(
         ["npx", "remotion", "studio"],
         cwd=str(remotion_dir),
@@ -198,6 +211,131 @@ def cmd_dashboard(args):
     _cmd_dashboard(args)
 
 
+# ── 아트스타일 관리 ─────────────────────────────
+
+def cmd_style(args):
+    """아트스타일 관리: list, add, remove."""
+    from auto_agent.ui.prompts import _scan_art_styles
+
+    if not args or args[0] == "list":
+        styles = _scan_art_styles()
+        if not styles:
+            print_warning("등록된 아트스타일이 없습니다.")
+            return
+        console.print(style_table(styles))
+
+    elif args[0] == "add":
+        try:
+            from auto_agent.ui.prompts import prompt_style_add
+            data = prompt_style_add()
+        except KeyboardInterrupt:
+            console.print("\n[dim]취소됨[/dim]")
+            return
+
+        # 워크스페이스에 JSON 저장
+        styles_dir = get_workspace_dir() / "artstyle" / "styles"
+        styles_dir.mkdir(parents=True, exist_ok=True)
+
+        filename = data["name"].replace(" ", "_").lower() + ".json"
+        filepath = styles_dir / filename
+
+        style_json = {
+            "name": data["name"],
+            "description": data["description"],
+            "reference_image": "",
+            "scene_style_description": data["art_style"],
+            "style": {
+                "art_style": data["art_style"],
+                "color_palette": data["color_palette"],
+                "mood_and_tone": data["mood_and_tone"],
+            },
+            "technical": {
+                "no_text": True,
+                "resolution": "1024x1024",
+            },
+        }
+
+        filepath.write_text(
+            json.dumps(style_json, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        print_success(f"아트스타일 추가됨: [accent]{data['name']}[/accent] → {filepath}")
+
+    elif args[0] == "remove":
+        if len(args) < 2:
+            print_error("Usage: style remove <파일명 또는 스타일명>")
+            return
+
+        target = args[1]
+        styles = _scan_art_styles()
+        matched = None
+        for s in styles:
+            if s["filename"] == target or s["name"] == target or s["filename"] == target + ".json":
+                matched = s
+                break
+
+        if not matched:
+            print_error(f"스타일 '{target}' 을 찾을 수 없습니다.")
+            return
+
+        # 워크스페이스 스타일만 삭제 가능
+        ws_styles = str(get_workspace_dir() / "artstyle" / "styles")
+        if not matched["path"].startswith(ws_styles):
+            print_error("기본 내장 스타일은 삭제할 수 없습니다. 워크스페이스에 추가한 스타일만 삭제 가능합니다.")
+            return
+
+        Path(matched["path"]).unlink()
+        print_success(f"스타일 삭제됨: {matched['name']}")
+
+    else:
+        print_error(f"알 수 없는 서브커맨드: {args[0]}")
+        console.print("  사용 가능: list, add, remove <이름>")
+
+
+# ── 음성 프리셋 관리 ────────────────────────────
+
+def cmd_voice(args):
+    """음성 프리셋 관리: list, add, remove."""
+    from auto_agent.voice_manager import VoiceManager
+    vm = VoiceManager()
+
+    if not args or args[0] == "list":
+        voices = vm.list_voices()
+        if not voices:
+            print_warning("등록된 음성 프리셋이 없습니다.")
+            return
+        console.print(voice_table(voices))
+
+    elif args[0] == "add":
+        try:
+            from auto_agent.ui.prompts import prompt_voice_add
+            data = prompt_voice_add()
+        except KeyboardInterrupt:
+            console.print("\n[dim]취소됨[/dim]")
+            return
+
+        vm.add_voice(
+            name=data["name"],
+            voice_id=data["voice_id"],
+            description=data["description"],
+        )
+        print_success(f"음성 프리셋 추가됨: [accent]{data['name']}[/accent]")
+
+    elif args[0] == "remove":
+        if len(args) < 2:
+            print_error("Usage: voice remove <이름>")
+            return
+        name = args[1]
+        if vm.remove_voice(name):
+            print_success(f"음성 프리셋 삭제됨: {name}")
+        else:
+            print_error(f"프리셋 '{name}' 을 찾을 수 없습니다.")
+
+    else:
+        print_error(f"알 수 없는 서브커맨드: {args[0]}")
+        console.print("  사용 가능: list, add, remove <이름>")
+
+
 COMMANDS = {
     "init": cmd_init,
     "run": cmd_run,
@@ -209,7 +347,31 @@ COMMANDS = {
     "cleanup": cmd_cleanup,
     "costs": cmd_costs,
     "dashboard": cmd_dashboard,
+    "style": cmd_style,
+    "voice": cmd_voice,
 }
+
+
+def _print_banner():
+    """브랜드 배너 + 사용법 출력."""
+    print_header(f"auto-agent v{__version__}")
+    console.print()
+    cmds = [
+        ("init <workspace>", "워크스페이스 초기화"),
+        ("project create", "새 프로젝트 (인터랙티브)"),
+        ("project list", "프로젝트 목록"),
+        ("run --project <slug>", "파이프라인 실행"),
+        ("studio --project <slug>", "Remotion 스튜디오"),
+        ("config get|set", "프로젝트 설정"),
+        ("style list|add|remove", "아트스타일 관리"),
+        ("voice list|add|remove", "음성 프리셋 관리"),
+        ("version list|rollback", "버전 관리"),
+        ("assets", "에셋 조회"),
+        ("costs", "비용 요약"),
+        ("dashboard", "웹 대시보드"),
+    ]
+    for cmd, desc in cmds:
+        console.print(f"  [accent]auto-agent {cmd:<28}[/accent] {desc}")
 
 
 def main():
@@ -218,20 +380,19 @@ def main():
     # --version 플래그
     if not args or "--version" in args:
         if "--version" in args:
-            print(f"auto-agent {__version__}")
+            console.print(f"[accent]auto-agent[/accent] v{__version__}")
             return
-        print(__doc__)
+        _print_banner()
         return
 
     if args[0] in ("-h", "--help", "help"):
-        print(__doc__)
+        _print_banner()
         return
 
     cmd = args[0]
     if cmd not in COMMANDS:
-        print(f"Unknown command: {cmd}")
-        print(f"Available: {', '.join(COMMANDS.keys())}")
-        print(f"\nRun 'auto-agent --help' for usage.")
+        print_error(f"알 수 없는 명령어: {cmd}")
+        console.print(f"  사용 가능: [accent]{', '.join(COMMANDS.keys())}[/accent]")
         sys.exit(1)
 
     COMMANDS[cmd](args[1:])

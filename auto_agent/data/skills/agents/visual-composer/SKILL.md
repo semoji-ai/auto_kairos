@@ -104,7 +104,7 @@ creative 필드 + 데이터 구조 기반으로 visualization 구성
 (remotion-design-system 스킬 참조)
 렌더러가 creative 필드(reveal, emphasis, mood, headline) + 데이터 구조(items, values,
 descriptions, left/right, relations)를 조합하여 렌더링 형태를 자동 결정
-vizType 지정 불필요
+creative 필드만으로 렌더링 결정
 ```
 
 ### 설계 규칙

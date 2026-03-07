@@ -415,7 +415,7 @@ creative:
 4. **mood로 전체 톤 조절** (색상, 속도, 글로우)
 5. **items/values 데이터로 레이아웃 자동 감지** (그리드, 리스트, 바차트 등)
 
-vizType은 optional이며 렌더링에 영향을 주지 않는다.
+렌더링은 creative 필드만으로 결정된다.
 concept은 creative 필드 설계의 근거가 되는 자연어 의도 서술이다.
 
 ---

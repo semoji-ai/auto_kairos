@@ -212,7 +212,7 @@ python src/tools/image_generate.py edit \
 
 ### 시각화 배경 생성 플로우
 ```
-1. scene_specs.json에서 시각화 씬 추출 (vizType이 있는 씬)
+1. scene_specs.json에서 시각화 씬 추출 (visualization.creative가 있는 씬)
 2. 각 시각화 씬별:
    a. generate_viz_background() 호출
    b. 결과를 output/{slug}/images/viz_bg/scene_NNN_bg.png 저장

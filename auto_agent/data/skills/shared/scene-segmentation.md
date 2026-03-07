@@ -139,5 +139,5 @@ estimated_duration_sec = narration_char_count / 5
 ## 주의사항
 
 - Phase 1은 **순수 분할**만 수행. 씬 분류나 시각 연출 결정은 하지 않는다
-- 시각적 연출 결정(vizType, creative)은 Phase 2 Creative Direction에서 수행
+- 시각적 연출 결정(creative 필드)은 Phase 2 Creative Direction에서 수행
 - 나레이션 텍스트는 원고의 것을 그대로 보존 (수정 금지)

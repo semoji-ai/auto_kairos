@@ -301,7 +301,6 @@ research_report.json ──→ outline.json + final_manuscript.md
       ],
       "durationFrames": "number — 120-600 (필수)",
       "visualization": {
-        "vizType": "string (필수)",
         "title": "string",
         "items": ["string"],
         "values": ["number"],
@@ -359,19 +358,6 @@ research_report.json ──→ outline.json + final_manuscript.md
     }
   ]
 }
-```
-
-### vizType 유효 값 (기존 + Creative)
-
-```
-기존: title_card, slide_highlight, slide_bignum, slide_quote,
-      slide_list, slide_numbered, bar_chart, timeline, compare,
-      table, slide_statistic, slide_process, slide_proscons,
-      slide_summary, diagram, icon_grid, icon_stat
-
-Creative: impact_count, dramatic_number, reveal_sequence,
-          split_contrast, spotlight_reveal, counter_wall,
-          narrative_build, word_cascade
 ```
 
 ### 검증 규칙
@@ -732,27 +718,13 @@ output/{project}/image_licenses.json
 
 ---
 
-## 유효한 vizType 목록
+## 렌더링 방식
 
-v4.0에서는 rigid한 sceneType → vizType 매핑이 폐지되었습니다.
-Visual Composer가 Creative Direction 과정에서 각 씬에 가장 적합한 vizType을 직접 선택합니다.
+v4.0에서는 rigid한 타입 매핑이 폐지되었습니다.
+모든 시각화는 **creative 필드 + 데이터 구조**로 자동 결정됩니다.
+렌더러(CreativeScene)가 reveal, emphasis, mood, headline, items/values 패턴을 분석하여 최적의 레이아웃을 선택합니다.
 
-### 기존 타입
-```
-title_card, slide_highlight, slide_bignum, slide_quote,
-slide_list, slide_numbered, bar_chart, timeline, compare,
-table, slide_statistic, slide_process, slide_proscons,
-slide_summary, diagram, icon_grid, icon_stat
-```
-
-### Creative 타입 (v4.0 신규)
-```
-impact_count, dramatic_number, reveal_sequence,
-split_contrast, spotlight_reveal, counter_wall,
-narrative_build, word_cascade
-```
-
-### 특수
+### 특수 씬 유형
 ```
 map_scene → mapScene 필드 사용 (visualization 대신)
 narration_only → visualization 없음
@@ -773,9 +745,9 @@ image_scene → 외부 이미지 전용
 | 변경 항목 | v3.0 | v4.0 | 변경 사유 |
 |----------|------|------|----------|
 | scene_decomposition.json | scene_type (19개 rigid) | 분류 필드 제거 (순수 분할만) | Creative Direction 도입 |
-| scene_specs.json | sceneType 필드 | 제거 (vizType만 사용) | rigid 매핑 폐지 |
-| visualization | vizType 필수 필드만 | vizType + creative 필드 필수 | 씬별 창의적 연출 지원 |
-| vizType | 19개 (1:1 매핑) | 25개+ (Creative 타입 추가) | 다양한 시각 표현 |
+| scene_specs.json | sceneType 필드 | 제거 (creative 필드로 대체) | rigid 매핑 폐지 |
+| visualization | rigid 타입 필드만 | creative 필드 필수 (자동 레이아웃) | 씬별 창의적 연출 지원 |
+| 렌더링 방식 | 19개 타입 1:1 매핑 | creative 필드 + 데이터 구조 자동 감지 | 다양한 시각 표현 |
 | version | "3.0" | "4.0" | Creative Direction 스키마 |
 | theme | "kairos" | "simple" | SimpleVideo 기본 |
 | shared skill | scene-types.md | scene-segmentation.md + creative-direction.md | 분리 |

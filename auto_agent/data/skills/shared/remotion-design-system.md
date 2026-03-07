@@ -1,7 +1,7 @@
 # Remotion Design System
 
 SimpleVideo 기반 Remotion 영상의 시각 디자인 규칙을 정의합니다.
-컬러, 아이콘, 레이아웃, 애니메이션, vizType 스키마, imageAsset, mapScene 규칙을 포함합니다.
+컬러, 아이콘, 레이아웃, 애니메이션, creative 필드 스키마, imageAsset, mapScene 규칙을 포함합니다.
 
 **참조 에이전트**: visual-composer, qa-reviewer
 
@@ -173,41 +173,43 @@ durationFrames = base + padding
 
 ---
 
-## 8. vizType별 visualization 필수 필드
+## 8. creative 필드 기반 렌더링
 
-### 기존 타입
+모든 시각화는 **creative 필드 + 데이터 구조**로 자동 결정된다.
 
-| vizType | 필수 필드 |
-|---------|----------|
-| `title_card` | title, chapter (선택), creative |
-| `slide_highlight` | creative.headline, creative |
-| `slide_bignum` | title, items, values, unit, creative |
-| `slide_quote` | title(인용문), items(발화자+맥락), creative |
-| `slide_list` | title, items, creative |
-| `slide_numbered` | title, items, creative |
-| `bar_chart` | title, items, values, unit, source, creative |
-| `timeline` | title, items, values (선택), creative |
-| `compare` | title, items(2개), creative |
-| `table` | title, items(헤더), values(행 데이터), source, creative |
-| `slide_statistic` | title, items, values, unit, creative |
-| `slide_process` | title, items, creative |
-| `slide_proscons` | title, items, creative |
-| `slide_summary` | title, items, creative |
+### 자동 레이아웃 감지 (CreativeScene)
 
-### 신규 Creative 타입
+렌더러가 아래 순서로 레이아웃을 자동 결정:
 
-| vizType | 필수 필드 | 용도 |
-|---------|----------|------|
-| `impact_count` | title, items, values, creative | 항목 누적 → 동시 강조 → 총수 표시 |
-| `dramatic_number` | title, values, unit, creative | 극적 정지 후 큰 숫자 공개 |
-| `reveal_sequence` | title, items, creative | 단계별 공개, 전체 조망 |
-| `split_contrast` | title, items(2개), creative | 화면 분할 대비 표현 |
-| `spotlight_reveal` | title, items, creative | 어둠 속 스포트라이트 공개 |
-| `counter_wall` | title, items, values, unit, creative | 다수 통계 동시 카운팅 |
-| `narrative_build` | title, items, creative | 요소가 쌓여 전체 그림 완성 |
-| `word_cascade` | title, items, creative | 키워드 폭포 효과 |
+1. **displayMode 명시** → logo_grid, pie_chart, line_chart
+2. **emphasis/reveal 조합** → quote, split, person_card, counter
+3. **데이터 구조** → items/values 수, chartConfig 존재, descriptions 유무
+4. **기본값** → headline_only
 
-### 모든 타입 공통 — creative 필드 (필수)
+| 데이터 패턴 | 자동 감지 레이아웃 | 조건 |
+|------------|------------------|------|
+| displayMode="logo_grid" | 로고 그리드 | items가 기업명 |
+| chartConfig.type="pie" | 파이 차트 | items + values (%) |
+| chartConfig.type="line" | 라인 차트 | items(시간축) + values |
+| emphasis="quote" | 인용문 | items[0]이 인용문 |
+| emphasis="contrast" + items 2개 | VS 분할 | 좌/우 비교 |
+| emphasis="person" + items 2개+ | 인물 카드 | 이미지/실루엣 |
+| emphasis="number"/"count" | 큰 숫자 카운터 | headline에 {{숫자}} |
+| emphasis="sequence" + descriptions | 타임라인 | 시간순 이벤트 |
+| items 3개+ + values 3개+ | 바 차트 | 카테고리별 비교 |
+| items 6개+ | 아이콘 그리드 | 개념 나열 |
+| items 3~5개 | 리스트 | 순서/목록 |
+| 그 외 | headline_only | 텍스트 강조 |
+
+### 보완 메커니즘 (normalizeCreative)
+
+creative 필드가 불완전할 때 렌더러가 자동 보정:
+- **headline 없음** → title에서 생성
+- **emphasis 없음** → 데이터 패턴에서 추론 (values 있으면 number, 아니면 none)
+- **reveal 없음** → items 3개+ 이면 stagger, 아니면 fade_in
+- **mood 없음** → informative 기본값
+
+### creative 필드 (필수)
 
 ```json
 {
