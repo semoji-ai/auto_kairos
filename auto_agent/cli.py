@@ -15,6 +15,7 @@ auto-agent — AI 영상 제작 파이프라인 CLI
   auto-agent cleanup [--execute]                # 클린업
   auto-agent costs                              # 비용 요약
   auto-agent dashboard [--port 8080]            # 웹 대시보드
+  auto-agent update                             # 최신 버전으로 업데이트
 """
 import json
 import shutil
@@ -336,6 +337,84 @@ def cmd_voice(args):
         console.print("  사용 가능: list, add, remove <이름>")
 
 
+def cmd_update(args):
+    """최신 버전으로 업데이트."""
+    import importlib.metadata
+
+    print_header("auto-agent — 업데이트")
+
+    # 패키지 설치 위치에서 Git repo 경로 탐색
+    pkg_dir = get_package_dir()
+    repo_dir = pkg_dir.parent  # auto_agent/ → repo root
+
+    git_dir = repo_dir / ".git"
+    if not git_dir.exists():
+        # pip install git+... 로 설치한 경우 (site-packages에 위치)
+        console.print("  [dim]Git 저장소가 아닌 환경에서 설치되었습니다.[/dim]\n")
+        console.print("  업데이트 방법:")
+        console.print("  [accent]pip install --upgrade git+ssh://git@github.com/jleavens01/kairos-agent.git[/accent]")
+        return
+
+    current = __version__
+
+    # 1. git pull
+    console.print(f"  현재 버전: [accent]v{current}[/accent]")
+    console.print("  [accent]git pull[/accent] 실행 중...")
+
+    result = subprocess.run(
+        ["git", "pull"],
+        cwd=str(repo_dir),
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        print_error(f"git pull 실패: {result.stderr.strip()}")
+        return
+
+    if "Already up to date" in result.stdout:
+        print_success("이미 최신 버전입니다.")
+        return
+
+    console.print(f"  {result.stdout.strip()}")
+
+    # 2. pip install -e . (editable) 또는 pip install . 재설치
+    console.print("  [accent]pip install[/accent] 재설치 중...")
+
+    # editable 설치 여부 확인
+    try:
+        dist = importlib.metadata.distribution("auto-agent")
+        direct_url = dist.read_text("direct_url.json")
+        is_editable = direct_url and '"editable": true' in direct_url
+    except Exception:
+        is_editable = False
+
+    pip_cmd = [sys.executable, "-m", "pip", "install", "-q"]
+    if is_editable:
+        pip_cmd += ["-e", str(repo_dir)]
+    else:
+        pip_cmd += [str(repo_dir)]
+
+    result = subprocess.run(pip_cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        print_error(f"pip install 실패: {result.stderr.strip()[:300]}")
+        return
+
+    # 3. 업데이트 후 버전 확인
+    result = subprocess.run(
+        [sys.executable, "-c", "from auto_agent import __version__; print(__version__)"],
+        capture_output=True,
+        text=True,
+    )
+    new_version = result.stdout.strip() if result.returncode == 0 else "?"
+
+    if new_version != current:
+        print_success(f"업데이트 완료! v{current} → [accent]v{new_version}[/accent]")
+    else:
+        print_success(f"재설치 완료 (v{new_version})")
+
+
 COMMANDS = {
     "init": cmd_init,
     "run": cmd_run,
@@ -349,6 +428,7 @@ COMMANDS = {
     "dashboard": cmd_dashboard,
     "style": cmd_style,
     "voice": cmd_voice,
+    "update": cmd_update,
 }
 
 
@@ -369,6 +449,7 @@ def _print_banner():
         ("assets", "에셋 조회"),
         ("costs", "비용 요약"),
         ("dashboard", "웹 대시보드"),
+        ("update", "최신 버전으로 업데이트"),
     ]
     for cmd, desc in cmds:
         console.print(f"  [accent]auto-agent {cmd:<28}[/accent] {desc}")
