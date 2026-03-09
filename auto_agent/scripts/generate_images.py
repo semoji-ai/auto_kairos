@@ -213,10 +213,12 @@ def step_4_generate_standalone_images(output_dir: Path, style_path: str, specs: 
             if f"scene_{scene_num:03d}" in plan_ids:
                 continue
 
+        placement = asset.get("placement", "background")
         standalone.append({
             "scene_number": scene_num,
             "prompt": asset.get("query", s.get("title", "")),
             "output_path": str(out_path),
+            "placement": placement,
         })
 
     if not standalone:
@@ -229,15 +231,22 @@ def step_4_generate_standalone_images(output_dir: Path, style_path: str, specs: 
 
     ok = 0
     for item in standalone:
+        placement = item.get("placement", "background")
+        # placement에 따라 aspect_ratio 결정
+        if placement in ("left", "right"):
+            aspect = "1:1"  # 인물/에셋은 정사각형
+        else:
+            aspect = "16:9"  # 배경은 와이드
         try:
             result = generate_scene(
                 prompt=item["prompt"],
                 output_path=item["output_path"],
                 style_path=style_path,
+                aspect_ratio=aspect,
             )
             if result.get("success"):
                 ok += 1
-                print(f"  [OK] scene_{item['scene_number']:03d}")
+                print(f"  [OK] scene_{item['scene_number']:03d} ({placement}, {aspect})")
             else:
                 print(f"  [FAIL] scene_{item['scene_number']:03d}: {result.get('error', '')}")
         except Exception as e:
