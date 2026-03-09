@@ -112,31 +112,39 @@ def validate_image_assets(report: ValidationReport, specs: dict, project_dir: Pa
 
 
 def validate_viz_data(report: ValidationReport, specs: dict):
-    """시각화 데이터 완전성 검증."""
+    """creative 필드 + 시각화 데이터 완전성 검증."""
     scenes = specs.get("scenes", [])
 
     for scene in scenes:
         viz = scene.get("visualization", {})
-        viz_type = viz.get("vizType", "")
         num = scene.get("sceneNumber", 0)
+        creative = viz.get("creative", {})
 
-        if not viz_type:
+        # creative 필드 존재 확인
+        if not creative:
+            report.warn("creative", f"scene {num}: creative 필드 없음 (normalizeCreative가 보완)")
             continue
 
-        data = viz.get("data", {})
+        # headline 확인
+        if not creative.get("headline"):
+            report.warn("creative", f"scene {num}: headline 없음")
 
-        # 데이터 타입별 필수 필드 검증
-        if viz_type in ("bar_chart", "line_chart") and not data.get("items"):
-            report.error("viz_data", f"scene {num}: {viz_type}에 items 없음")
+        # chartConfig 있으면 items/values 일치 확인
+        if creative.get("chartConfig"):
+            items = viz.get("items", [])
+            values = viz.get("values", [])
+            if items and values and len(items) != len(values):
+                report.error("creative", f"scene {num}: items({len(items)}) != values({len(values)})")
 
-        if viz_type == "pie_chart":
-            items = data.get("items", [])
-            if items:
-                total = sum(item.get("value", 0) for item in items)
+        # pie 차트 합계 검증
+        if creative.get("chartConfig", {}).get("type") == "pie":
+            values = viz.get("values", [])
+            if values:
+                total = sum(values)
                 if abs(total - 100) > 5:
-                    report.warn("viz_data", f"scene {num}: pie_chart 합계 {total}% (100% 아님)")
+                    report.warn("creative", f"scene {num}: pie 합계 {total}% (100% 아님)")
 
-    report.ok("Viz data validation complete")
+    report.ok("Creative/viz data validation complete")
 
 
 def validate_icons(report: ValidationReport, specs: dict):

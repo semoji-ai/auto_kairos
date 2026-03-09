@@ -1,0 +1,41 @@
+<!-- Costs 탭 -->
+<div class="stats-grid">
+  <div class="stat">
+    <div class="label">Total Runs</div>
+    <div class="value">{{ cost.get('total_runs') or 0 }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Input Tokens</div>
+    <div class="value">{{ "{:,}".format(cost.get('total_tokens_in') or 0) }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Output Tokens</div>
+    <div class="value">{{ "{:,}".format(cost.get('total_tokens_out') or 0) }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Total Cost</div>
+    <div class="value">${{ "%.4f"|format(cost.get('total_usd') or 0) }}</div>
+  </div>
+</div>
+
+{% if cost_by_agent %}
+<div class="card">
+  <h3>Cost by Agent/Module</h3>
+  <table>
+    <thead><tr><th>Agent</th><th>Runs</th><th>Input</th><th>Output</th><th>USD</th></tr></thead>
+    <tbody>
+    {% for c in cost_by_agent %}
+    <tr>
+      <td>{{ c.agent_or_module }}</td>
+      <td>{{ c.run_count }}</td>
+      <td>{{ "{:,}".format(c.tokens_in or 0) }}</td>
+      <td>{{ "{:,}".format(c.tokens_out or 0) }}</td>
+      <td>${{ "%.4f"|format(c.total_usd or 0) }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty">No cost data recorded yet.</div>
+{% endif %}

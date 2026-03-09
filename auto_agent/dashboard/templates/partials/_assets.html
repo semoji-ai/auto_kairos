@@ -1,0 +1,35 @@
+<!-- Assets 탭 -->
+<div class="stats-grid">
+  {% for atype, count in asset_counts.items()|sort %}
+  <div class="stat">
+    <div class="label">{{ atype }}</div>
+    <div class="value">{{ count }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<table>
+  <thead>
+    <tr><th>Scene</th><th>Type</th><th>File</th><th>Size</th><th>Preview</th></tr>
+  </thead>
+  <tbody>
+  {% for a in assets[:100] %}
+  <tr>
+    <td>{% if a.scene_number %}{{ "%03d"|format(a.scene_number) }}{% else %}-{% endif %}</td>
+    <td>{{ a.asset_type }}</td>
+    <td style="font-size:13px">{{ a.file_name }}</td>
+    <td>{{ "%.1f"|format(a.file_size / 1024) }}KB</td>
+    <td>
+      {% if a.asset_type == 'audio' and a.file_path %}
+      <audio controls preload="none" src="/output/{{ slug }}/audio/{{ a.file_name }}" style="height:24px;width:200px"></audio>
+      {% elif a.asset_type == 'image' and a.file_path %}
+      <img src="/output/{{ slug }}/images/{{ a.file_name }}" alt="" style="height:40px;border-radius:4px">
+      {% else %}-{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  {% if assets|length > 100 %}
+  <tr><td colspan="5" style="text-align:center;color:var(--text-muted)">... and {{ assets|length - 100 }} more</td></tr>
+  {% endif %}
+  </tbody>
+</table>

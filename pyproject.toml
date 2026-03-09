@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dashboard = ["fastapi", "uvicorn", "jinja2"]
+dashboard = ["fastapi", "uvicorn", "jinja2", "websockets"]
 
 [project.scripts]
 auto-agent = "auto_agent.cli:main"
@@ -31,4 +31,6 @@ auto_agent = [
     "data/**/*.txt",
     "remotion_template/**/*",
     "db/schema.sql",
+    "dashboard/templates/**/*",
+    "dashboard/static/**/*",
 ]

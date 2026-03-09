@@ -3,18 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Auto Agent V2{% endblock %}</title>
+  <title>{% block title %}Auto Agent{% endblock %}</title>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
   <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  {% block head %}{% endblock %}
 </head>
 <body>
-  <nav>
-    <span class="brand">Auto Agent V2</span>
-    <a href="/">Projects</a>
-    <a href="/api/projects">API</a>
-  </nav>
-  <div class="container">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <a href="/">Auto Agent</a>
+    </div>
+    {% block sidebar %}
+    <nav class="sidebar-nav">
+      <a href="/" class="sidebar-link active">Projects</a>
+      <a href="/api/projects" class="sidebar-link">API</a>
+    </nav>
+    {% endblock %}
+    <div class="sidebar-footer">
+      <button class="sidebar-link terminal-toggle" id="terminal-toggle" onclick="toggleTerminal()">
+        <span class="terminal-icon">&#9654;</span> Terminal
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
     {% block content %}{% endblock %}
+  </main>
+
+  <!-- Terminal Panel — 고정 오른쪽 패널 -->
+  <div class="terminal-panel" id="terminal-panel">
+    <div class="terminal-panel-header">
+      <span>Terminal</span>
+      <button class="panel-close" onclick="toggleTerminal()">&times;</button>
+    </div>
+    <div id="terminal"></div>
   </div>
+
+  <script src="/static/dashboard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+  <script src="/static/terminal.js"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

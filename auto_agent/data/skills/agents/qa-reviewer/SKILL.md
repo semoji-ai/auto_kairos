@@ -49,10 +49,9 @@ skills:
 
 #### A. 씬 스펙 완전성
 - sceneNumber 연속 번호 검증
-- vizType이 유효한 타입 중 하나인지 (기존 + Creative 타입)
 - narration 비어있지 않은지
 - durationFrames 120-600 범위
-- visualization 필수 필드 존재 (`shared/remotion-design-system` 8번 참조)
+- creative 필드 존재 + headline 비공백 (`shared/remotion-design-system` 8번 참조)
 - transition type 유효성
 
 #### B. 아이콘 유효성
@@ -97,7 +96,7 @@ skills:
   - `placement: "left"` → 이미지 비율 3:4 또는 1:1 권장 (16:9 사용 시 severity: warning)
   - `placement: "background"` → 이미지 비율 16:9 권장
 - **방향 충돌 체크**:
-  - split_contrast/split_reveal vizType + `placement != "background"` → 이미지 방향과 텍스트 방향 충돌 가능 severity: warning
+  - split_reveal emphasis/reveal + `placement != "background"` → 이미지 방향과 텍스트 방향 충돌 가능 severity: warning
   - items_grid/items_list + `placement: "left"/"right"` → 아이템 영역과 이미지 겹침 가능 severity: warning
 
 #### H-2. 레이아웃 시각 검증 (Post-image QA)

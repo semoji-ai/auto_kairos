@@ -1,0 +1,24 @@
+<!-- Versions 탭 -->
+{% if all_versions %}
+{% for file_type, versions in all_versions.items() %}
+<div class="card">
+  <h3>{{ file_type }}</h3>
+  <table>
+    <thead><tr><th>Version</th><th>Size</th><th>Created</th><th>By</th><th>Description</th></tr></thead>
+    <tbody>
+    {% for v in versions %}
+    <tr>
+      <td>v{{ "%03d"|format(v.version) }}</td>
+      <td>{{ "%.1f"|format(v.file_size / 1024) }}KB</td>
+      <td style="font-size:13px">{{ v.created_at[:16] }}</td>
+      <td>{{ v.created_by or '-' }}</td>
+      <td>{{ v.description or '' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty">No version history available.</div>
+{% endif %}

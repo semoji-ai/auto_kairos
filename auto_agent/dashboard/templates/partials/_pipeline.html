@@ -1,0 +1,63 @@
+<!-- Pipeline 탭 -->
+{% if pipeline_progress and pipeline_progress.phases %}
+<div class="pipeline-steps">
+  {% for phase in pipeline_progress.phases %}
+  <div class="pipeline-step {{ phase.status }}">
+    <div class="circle">{% if phase.status == 'completed' %}&#10003;{% elif phase.status == 'running' %}&#9654;{% elif phase.status == 'failed' %}&#10007;{% else %}{{ loop.index }}{% endif %}</div>
+    <div class="step-label">{{ phase.name }}</div>
+    {% if not loop.last %}<div class="connector"></div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+{% for phase in pipeline_progress.phases %}
+<div class="card collapsible" onclick="this.classList.toggle('open')">
+  <h3>
+    <span class="badge badge-{{ phase.status }}">{{ phase.status }}</span>
+    &nbsp; {{ phase.name }}
+    <span class="collapse-arrow">&#9660;</span>
+  </h3>
+  <div class="collapse-content">
+    <table>
+      <thead><tr><th>Step</th><th>Name</th><th>Type</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for step in phase.steps %}
+      <tr>
+        <td>{{ step.id }}</td>
+        <td>{{ step.name }}</td>
+        <td>{{ step.get('type', '-') }}</td>
+        <td><span class="badge badge-{{ step.status }}">{{ step.status }}</span></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if runs %}
+<div class="card">
+  <h3>Execution History</h3>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>Step</th><th>Agent/Module</th><th>Status</th><th>Duration</th><th>Cost</th><th>Time</th></tr>
+    </thead>
+    <tbody>
+    {% for r in runs %}
+    <tr>
+      <td>{{ r.phase }}</td>
+      <td>{{ r.step_name or r.step }}</td>
+      <td>{{ r.agent_or_module or '-' }}</td>
+      <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+      <td>{% if r.duration_sec %}{{ "%.1f"|format(r.duration_sec) }}s{% else %}-{% endif %}</td>
+      <td>{% if r.cost_usd %}${{ "%.4f"|format(r.cost_usd) }}{% else %}-{% endif %}</td>
+      <td style="font-size:12px;color:var(--text-muted)">{{ (r.started_at or r.created_at)[:16] }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty">No pipeline runs recorded yet.</div>
+{% endif %}

@@ -1,0 +1,35 @@
+<!-- Manuscript 탭 — 순수 원고 텍스트 -->
+{% if chapters %}
+<div class="chapter-filter">
+  <button class="btn btn-accent chapter-btn active" onclick="filterChapter(0, this)">All</button>
+  {% for ch in chapters %}
+  <button class="btn chapter-btn" onclick="filterChapter({{ ch.number }}, this)">Ch{{ ch.number }}</button>
+  {% endfor %}
+</div>
+
+<div class="manuscript-reading">
+  {% for ch in chapters %}
+  <div class="ms-chapter" data-chapter="{{ ch.number }}">
+    <h2 class="ms-chapter-title">Ch{{ ch.number }}. {{ ch.title }}</h2>
+    {% for scene in ch.scenes %}
+    <div class="ms-scene">
+      <div class="ms-scene-header">Scene {{ scene.number }}: {{ scene.title }}</div>
+      <div class="ms-text">{{ scene.lines|join('\n') }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+function filterChapter(num, btn) {
+  document.querySelectorAll('.chapter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.ms-chapter').forEach(ch => {
+    ch.style.display = (num === 0 || ch.dataset.chapter == num) ? '' : 'none';
+  });
+}
+</script>
+{% else %}
+<div class="empty">No manuscript found. Run the pipeline first.</div>
+{% endif %}

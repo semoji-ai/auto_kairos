@@ -179,11 +179,11 @@ def build_manifest():
         # Subtitles
         subtitles = load_subtitles(num, SUBTITLES_JSON, SUBTITLE_DIR)
 
-        # Visualization data: scene_specs v4.0에서는 vizType, title, items 등이
-        # 씬 최상위에 있으므로 visualization 객체로 조립
+        # Visualization data: scene_specs에서 visualization 객체 추출
+        # creative 필드 기반 렌더링 — vizType 불필요
         viz = scene.get("visualization")
-        if not viz and scene.get("vizType"):
-            # 매니페스트/메타 필드 제외한 나머지를 visualization으로 묶기
+        if not viz:
+            # visualization 필드가 없으면 씬 최상위 필드들로 조립
             _skip = {"scene_number", "sceneNumber", "narration", "narration_tts",
                      "durationFrames", "sceneType", "transition", "vizAnimation",
                      "accentColor", "mapScene", "imageAsset", "chapter"}
@@ -206,7 +206,7 @@ def build_manifest():
         }
 
         # Ken Burns (only for image scenes)
-        has_image = bool(image_rel) or scene.get("sceneType") == "image_scene" or scene.get("vizType") == "image_scene"
+        has_image = bool(image_rel) or scene.get("sceneType") == "image_scene" or bool(scene.get("imageAsset"))
         ken_burns = {
             "enabled": has_image,
             "zoomFactor": 1.08 if has_image else 1.0,

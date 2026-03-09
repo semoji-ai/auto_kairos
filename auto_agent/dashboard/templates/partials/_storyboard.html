@@ -1,0 +1,115 @@
+<!-- Storyboard 탭 — 원고 + 미리보기 + TTS 통합 -->
+{% if scenes %}
+<div class="storyboard-filter">
+  <button class="btn btn-accent chapter-btn active" onclick="filterStoryboard(0, this)">All</button>
+  {% for ch in chapters_list %}
+  <button class="btn chapter-btn" onclick="filterStoryboard({{ ch }}, this)">Ch{{ ch }}</button>
+  {% endfor %}
+  <button class="btn chapter-btn" onclick="filterImages(this)">Images Only</button>
+</div>
+
+<div class="scene-list" id="scene-list">
+  {% for scene in scenes %}
+  <div class="sb-card" data-chapter="{{ scene.chapter }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
+    <!-- 좌측: 미리보기 -->
+    <div class="sb-preview" onclick="openSceneDetail({{ project.id }}, {{ scene.sceneNumber }})">
+      {% if scene._image_url %}
+      <img src="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }}" class="sb-thumb" loading="lazy">
+      {% else %}
+      <div class="sb-thumb-placeholder">
+        {% if scene.visualization and scene.visualization.creative %}
+        <div class="concept-preview">{{ (scene.visualization.creative.concept or '')[:100] }}{% if (scene.visualization.creative.concept or '')|length > 100 %}...{% endif %}</div>
+        {% else %}
+        <div class="concept-preview">Scene {{ scene.sceneNumber }}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- 우측: 원고 + 메타 -->
+    <div class="sb-body">
+      <div class="sb-header">
+        <div class="sb-title">
+          <span class="scene-num">Scene {{ scene.sceneNumber }}</span>
+          <span class="ch-tag">Ch{{ scene.chapter }}</span>
+          <span class="sb-scene-title" data-headline>
+            {% if scene.visualization and scene.visualization.creative %}
+              {{ scene.visualization.creative.headline or scene.title }}
+            {% else %}
+              {{ scene.title }}
+            {% endif %}
+          </span>
+        </div>
+        <div class="sb-meta">
+          <span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 30) }}s</span>
+          {% if scene._tts_duration %}<span class="duration-tag">TTS {{ "%.1f"|format(scene._tts_duration) }}s</span>{% endif %}
+        </div>
+      </div>
+
+      {% if scene.visualization and scene.visualization.creative %}
+      <div class="tags">
+        {% if scene.visualization.creative.reveal %}<span class="viz-badge">{{ scene.visualization.creative.reveal }}</span>{% endif %}
+        {% if scene.visualization.creative.emphasis %}<span class="viz-badge">{{ scene.visualization.creative.emphasis }}</span>{% endif %}
+        {% if scene.visualization.creative.mood %}<span class="mood-badge">{{ scene.visualization.creative.mood }}</span>{% endif %}
+      </div>
+      {% endif %}
+
+      <div class="narration">{{ scene.narration }}</div>
+
+      {% if scene._audio_url %}
+      <div class="audio-player">
+        <audio controls preload="none" src="{{ scene._audio_url }}"></audio>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- 씬 상세 슬라이드 패널 -->
+<div id="scene-detail-overlay" class="scene-overlay" onclick="closeSceneDetail()">
+  <div class="scene-detail-panel" onclick="event.stopPropagation()">
+    <button class="close-btn" onclick="closeSceneDetail()">&times;</button>
+    <div id="scene-detail-content">Loading...</div>
+  </div>
+</div>
+
+<script>
+function filterStoryboard(ch, btn) {
+  document.querySelectorAll('.storyboard-filter .chapter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.sb-card').forEach(card => {
+    card.style.display = (ch === 0 || card.dataset.chapter == ch) ? '' : 'none';
+  });
+}
+
+function filterImages(btn) {
+  var isActive = btn.classList.contains('active');
+  document.querySelectorAll('.storyboard-filter .chapter-btn').forEach(b => b.classList.remove('active'));
+  if (!isActive) {
+    btn.classList.add('active');
+    document.querySelectorAll('.sb-card').forEach(card => {
+      card.style.display = card.dataset.hasImage === 'true' ? '' : 'none';
+    });
+  } else {
+    document.querySelector('.storyboard-filter .chapter-btn').classList.add('active');
+    document.querySelectorAll('.sb-card').forEach(card => { card.style.display = ''; });
+  }
+}
+
+function openSceneDetail(projectId, sceneNum) {
+  var overlay = document.getElementById('scene-detail-overlay');
+  document.getElementById('scene-detail-content').innerHTML = '<div class="empty">Loading...</div>';
+  overlay.classList.add('open');
+  htmx.ajax('GET', '/api/projects/' + projectId + '/storyboard/scene/' + sceneNum, {
+    target: '#scene-detail-content', swap: 'innerHTML'
+  });
+}
+
+function closeSceneDetail() {
+  document.getElementById('scene-detail-overlay').classList.remove('open');
+}
+</script>
+{% else %}
+<div class="empty">No scene specs found. Run the pipeline first.</div>
+{% endif %}

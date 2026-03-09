@@ -1,0 +1,99 @@
+<!-- Research 탭 -->
+{% if research and research.sections %}
+<div class="research-layout">
+  <div class="research-sidebar">
+    <div class="sidebar-title">Sections</div>
+    {% for section in research.sections %}
+    <a href="#section-{{ section.id }}" class="sidebar-item {% if loop.first %}active{% endif %}"
+       onclick="showSection('{{ section.id }}', this)">
+      {{ section.title }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="research-content">
+    {% for section in research.sections %}
+    <div id="section-{{ section.id }}" class="research-section {% if not loop.first %}hidden{% endif %}">
+      <h2>{{ section.title }}</h2>
+
+      {% if section.subsections %}
+      {% for sub in section.subsections %}
+      <div class="subsection">
+        <h3>{{ sub.title }}</h3>
+
+        {% if sub.content %}
+        <p class="content-text">{{ sub.content }}</p>
+        {% endif %}
+
+        {% if sub.key_facts %}
+        <div class="key-facts">
+          <h4>Key Facts</h4>
+          <ul>
+            {% for fact in sub.key_facts %}
+            <li>{{ fact }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        {# 구조화 데이터 자동 렌더링 #}
+        {% for key, val in sub.items() %}
+          {% if key not in ['id', 'title', 'content', 'key_facts', 'sources'] %}
+            {% if val is mapping %}
+            <div class="data-table-wrap">
+              <h4>{{ key|replace('_', ' ')|title }}</h4>
+              <table class="data-table">
+                <tbody>
+                {% for k, v in val.items() %}
+                <tr><td style="color:var(--text-muted)">{{ k }}</td><td>{{ v }}</td></tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% elif val is iterable and val is not string %}
+            <div class="data-table-wrap">
+              <h4>{{ key|replace('_', ' ')|title }}</h4>
+              {% if val and val[0] is mapping %}
+              <table class="data-table">
+                <thead><tr>{% for h in val[0].keys() %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+                <tbody>
+                {% for row in val %}
+                <tr>{% for v in row.values() %}<td>{{ v }}</td>{% endfor %}</tr>
+                {% endfor %}
+                </tbody>
+              </table>
+              {% else %}
+              <ul>{% for item in val %}<li>{{ item }}</li>{% endfor %}</ul>
+              {% endif %}
+            </div>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+
+        {% if sub.sources %}
+        <div class="sources">
+          <span class="sources-label">Sources:</span>
+          {% for s in sub.sources %}
+          <span class="source-tag">{{ s }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+function showSection(id, el) {
+  document.querySelectorAll('.research-section').forEach(s => s.classList.add('hidden'));
+  document.getElementById('section-' + id).classList.remove('hidden');
+  document.querySelectorAll('.sidebar-item').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+{% else %}
+<div class="empty">No research report found. Run the pipeline first.</div>
+{% endif %}

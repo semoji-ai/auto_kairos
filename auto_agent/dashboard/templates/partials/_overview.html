@@ -1,0 +1,71 @@
+<!-- Overview 탭 -->
+{% if pipeline_progress and pipeline_progress.phases %}
+<div class="pipeline-steps">
+  {% for phase in pipeline_progress.phases %}
+  <div class="pipeline-step {{ phase.status }}">
+    <div class="circle">{% if phase.status == 'completed' %}&#10003;{% elif phase.status == 'running' %}&#9654;{% elif phase.status == 'failed' %}&#10007;{% else %}{{ loop.index }}{% endif %}</div>
+    <div class="step-label">{{ phase.name }}</div>
+    {% if not loop.last %}<div class="connector"></div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="stats-grid">
+  <div class="stat">
+    <div class="label">Scenes</div>
+    <div class="value">{{ project.scene_count }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Duration</div>
+    <div class="value">{{ "%.1f"|format(project.total_duration_sec / 60) }}m</div>
+    <div class="sub">{{ "%.0f"|format(project.total_duration_sec) }}s total</div>
+  </div>
+  <div class="stat">
+    <div class="label">Total Assets</div>
+    <div class="value">{{ asset_counts.values()|sum }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Pipeline Runs</div>
+    <div class="value">{{ cost.get('total_runs') or 0 }}</div>
+    <div class="sub">${{ "%.4f"|format(cost.get('total_usd') or 0) }}</div>
+  </div>
+</div>
+
+{% if recent_images %}
+<div class="card">
+  <h3>Recent Images</h3>
+  <div class="image-row">
+    {% for img_url in recent_images %}
+    <img src="{{ img_url }}" alt="preview" class="thumb-preview">
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <h3>Output Files</h3>
+  <table>
+    <thead><tr><th>File</th><th>Status</th><th>Size</th><th>Modified</th></tr></thead>
+    <tbody>
+    {% for fname, info in file_status.items() %}
+    <tr>
+      <td>{{ fname }}</td>
+      <td>{% if info.exists %}<span class="badge badge-completed">OK</span>{% else %}<span class="badge badge-archived">-</span>{% endif %}</td>
+      <td>{% if info.exists %}{{ info.size_kb }}KB{% else %}-{% endif %}</td>
+      <td style="font-size:13px;color:var(--text-muted)">{{ info.modified or '-' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3>Project Info</h3>
+  <table>
+    <tr><td style="width:150px;color:var(--text-muted)">Theme</td><td>{{ project.theme }}</td></tr>
+    <tr><td style="color:var(--text-muted)">Output Dir</td><td><code>{{ project.output_dir }}</code></td></tr>
+    <tr><td style="color:var(--text-muted)">Created</td><td>{{ project.created_at }}</td></tr>
+    <tr><td style="color:var(--text-muted)">Updated</td><td>{{ project.updated_at }}</td></tr>
+  </table>
+</div>

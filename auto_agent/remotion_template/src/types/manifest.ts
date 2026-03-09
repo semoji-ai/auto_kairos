@@ -116,7 +116,7 @@ export interface CreativeDirection {
 }
 
 export interface VisualizationData {
-  /** 시각화 타입 힌트 (optional — 렌더링은 creative 필드 기반) */
+  /** @deprecated v4.0에서 제거됨. 렌더링은 creative 필드 기반. 하위 호환용으로만 존재. */
   vizType?: string;
   title: string;
   items: string[];

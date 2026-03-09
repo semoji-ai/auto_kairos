@@ -40,7 +40,7 @@
 
 ## 4. VIZ 마커 규칙
 
-씬의 Remotion 컴포넌트 타입을 지정합니다.
+씬의 시각화 의도를 힌트로 남깁니다. 렌더러가 직접 사용하지 않으며, visual-composer가 creative 필드를 설계할 때 참고합니다.
 
 ```
 [VIZ:타입 key1=value1 key2=value2]

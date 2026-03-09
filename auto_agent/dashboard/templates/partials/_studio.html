@@ -1,0 +1,139 @@
+<!-- Remotion Studio 탭 — iframe으로 Remotion Studio 임베드 -->
+<div class="studio-container" id="studio-container">
+  <div class="studio-toolbar">
+    <div class="studio-status" id="studio-status">
+      <span class="status-dot" id="studio-dot"></span>
+      <span id="studio-status-text">프로젝트 설정 중...</span>
+    </div>
+    <div class="studio-actions">
+      <button class="btn btn-accent" id="studio-start-btn" onclick="startStudio()" style="display:none;">Studio 시작</button>
+      <button class="btn" id="studio-stop-btn" onclick="stopStudio()" style="display:none;">Studio 중지</button>
+      <a class="btn" id="studio-open-btn" href="http://localhost:3000" target="_blank" style="display:none;">새 창에서 열기</a>
+    </div>
+  </div>
+
+  <div class="studio-frame-wrapper" id="studio-frame-wrapper" style="display:none;">
+    <iframe id="studio-iframe" src="about:blank" class="studio-iframe" allow="autoplay"></iframe>
+  </div>
+
+  <div class="studio-placeholder" id="studio-placeholder">
+    <div class="studio-placeholder-icon">&#9654;</div>
+    <h3>Remotion Studio</h3>
+    <p>Remotion Studio를 시작하면 여기에서 실시간 미리보기를 확인할 수 있습니다.</p>
+    <button class="btn btn-accent" onclick="startStudio()">Studio 시작</button>
+  </div>
+</div>
+
+<script>
+var _studioCheckTimer = null;
+var _studioSlug = '{{ slug }}';
+
+function updateStudioUI(data) {
+  var dot = document.getElementById('studio-dot');
+  var text = document.getElementById('studio-status-text');
+  var startBtn = document.getElementById('studio-start-btn');
+  var stopBtn = document.getElementById('studio-stop-btn');
+  var openBtn = document.getElementById('studio-open-btn');
+  var placeholder = document.getElementById('studio-placeholder');
+  var frameWrapper = document.getElementById('studio-frame-wrapper');
+  var iframe = document.getElementById('studio-iframe');
+
+  if (!dot) return;
+
+  if (data.running) {
+    dot.className = 'status-dot running';
+    text.textContent = 'Studio 실행 중 — ' + _studioSlug + ' (port ' + data.port + ')';
+    startBtn.style.display = 'none';
+    stopBtn.style.display = '';
+    openBtn.style.display = '';
+    placeholder.style.display = 'none';
+    frameWrapper.style.display = '';
+    if (iframe.src === 'about:blank') {
+      iframe.src = 'http://localhost:' + data.port;
+    }
+    clearInterval(_studioCheckTimer);
+    _studioCheckTimer = setInterval(checkStudioStatus, 10000);
+  } else {
+    dot.className = 'status-dot stopped';
+    text.textContent = '중지됨';
+    startBtn.style.display = '';
+    stopBtn.style.display = 'none';
+    openBtn.style.display = 'none';
+    placeholder.style.display = '';
+    frameWrapper.style.display = 'none';
+    iframe.src = 'about:blank';
+  }
+}
+
+function checkStudioStatus() {
+  fetch('/api/studio/status')
+    .then(function(r) { return r.json(); })
+    .then(updateStudioUI)
+    .catch(function() {
+      var dot = document.getElementById('studio-dot');
+      var text = document.getElementById('studio-status-text');
+      if (dot) dot.className = 'status-dot stopped';
+      if (text) text.textContent = '상태 확인 실패';
+    });
+}
+
+function setupProject() {
+  // 탭 진입 시 자동으로 현재 프로젝트의 symlink + manifest 갈아끼우기
+  fetch('/api/studio/setup', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({slug: _studioSlug})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.running) {
+      // Studio가 이미 실행 중 → iframe 새로고침으로 새 manifest 반영
+      var iframe = document.getElementById('studio-iframe');
+      if (iframe && iframe.src !== 'about:blank') {
+        iframe.src = iframe.src; // reload
+      }
+      updateStudioUI({running: true, port: 3000});
+    } else {
+      checkStudioStatus();
+    }
+  })
+  .catch(function() {
+    checkStudioStatus();
+  });
+}
+
+function startStudio() {
+  var btn = document.getElementById('studio-start-btn');
+  var placeholderBtn = document.querySelector('.studio-placeholder .btn');
+  if (btn) btn.disabled = true;
+  if (placeholderBtn) { placeholderBtn.disabled = true; placeholderBtn.textContent = '시작 중...'; }
+
+  fetch('/api/studio/start', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({slug: _studioSlug})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        setTimeout(checkStudioStatus, 3000);
+      } else {
+        alert('Studio 시작 실패: ' + (data.error || 'unknown'));
+        if (btn) btn.disabled = false;
+        if (placeholderBtn) { placeholderBtn.disabled = false; placeholderBtn.textContent = 'Studio 시작'; }
+      }
+    });
+}
+
+function stopStudio() {
+  fetch('/api/studio/stop', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      setTimeout(checkStudioStatus, 1000);
+    });
+}
+
+// 탭 진입 시 자동 프로젝트 설정 → 상태 확인
+setupProject();
+_studioCheckTimer = setInterval(checkStudioStatus, 5000);
+</script>

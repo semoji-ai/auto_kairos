@@ -1,0 +1,114 @@
+<!-- 씬 상세 패널 (HTMX partial) -->
+<div class="scene-detail">
+  <div class="scene-detail-header">
+    <h2>Scene {{ scene.sceneNumber }} — {{ scene.title }}</h2>
+    <span class="ch-tag">Ch{{ scene.chapter }}</span>
+    <span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 30) }}s &middot; {{ scene.durationFrames }}f</span>
+  </div>
+
+  {% if scene._image_url %}
+  <div class="section">
+    <img src="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }}" class="detail-image">
+  </div>
+  {% endif %}
+
+  {% if scene.visualization and scene.visualization.creative %}
+  <div class="section">
+    <h4>Creative Direction</h4>
+    <div class="creative-card">
+      {% if scene.visualization.creative.headline %}
+      <div class="creative-headline">{{ scene.visualization.creative.headline|e }}</div>
+      {% endif %}
+      {% if scene.visualization.creative.concept %}
+      <p class="creative-concept">{{ scene.visualization.creative.concept }}</p>
+      {% endif %}
+      <div class="tags">
+        {% if scene.visualization.creative.reveal %}<span class="viz-badge">{{ scene.visualization.creative.reveal }}</span>{% endif %}
+        {% if scene.visualization.creative.emphasis %}<span class="viz-badge">{{ scene.visualization.creative.emphasis }}</span>{% endif %}
+        {% if scene.visualization.creative.mood %}<span class="mood-badge">{{ scene.visualization.creative.mood }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% set viz_items = scene.visualization.get('items', []) if scene.visualization else [] %}
+  {% set viz_values = scene.visualization.get('values', []) if scene.visualization else [] %}
+  {% if viz_items %}
+  <div class="section">
+    <h4>Visualization Data</h4>
+    <table class="data-table">
+      <thead><tr><th>Item</th><th>Value</th></tr></thead>
+      <tbody>
+      {% for i in range(viz_items|length) %}
+      <tr>
+        <td>{{ viz_items[i] }}</td>
+        <td>{{ viz_values[i] if i < viz_values|length else '-' }}{{ scene.visualization.get('unit', '') }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% if scene.visualization.get('source') %}
+    <div class="sources"><span class="sources-label">Source:</span> {{ scene.visualization.source }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="section">
+    <h4>Narration</h4>
+    <div class="narration-full">{{ scene.narration|replace('\n', '<br>') }}</div>
+    {% if scene._audio_url %}
+    <div class="audio-player" style="margin-top:8px">
+      <audio controls preload="none" src="{{ scene._audio_url }}"></audio>
+      {% if scene._tts_duration %}<span class="duration-tag">{{ "%.1f"|format(scene._tts_duration) }}s</span>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  {% if scene.imageAsset %}
+  <div class="section">
+    <h4>Image Asset</h4>
+    <table class="data-table">
+      <tr><td style="color:var(--text-muted)">Source</td><td>{{ scene.imageAsset.source }}</td></tr>
+      <tr><td style="color:var(--text-muted)">Query</td><td>{{ scene.imageAsset.query }}</td></tr>
+      <tr><td style="color:var(--text-muted)">Placement</td><td>{{ scene.imageAsset.placement }}</td></tr>
+      <tr><td style="color:var(--text-muted)">Opacity</td><td>{{ scene.imageAsset.opacity }}</td></tr>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if scene.vizAnimation %}
+  <div class="section">
+    <h4>Animation</h4>
+    <table class="data-table">
+      <tr><td style="color:var(--text-muted)">Stagger</td><td>{{ scene.vizAnimation.stagger }}f</td></tr>
+      <tr><td style="color:var(--text-muted)">Item Duration</td><td>{{ scene.vizAnimation.itemDuration }}f</td></tr>
+      <tr><td style="color:var(--text-muted)">Easing</td><td>{{ scene.vizAnimation.easing }}</td></tr>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if scene.transition %}
+  <div class="section">
+    <h4>Transition</h4>
+    <span class="viz-badge">{{ scene.transition.type }}</span>
+    <span class="duration-tag">{{ scene.transition.durationFrames }}f</span>
+  </div>
+  {% endif %}
+
+  {% if subtitles and subtitles.entries %}
+  <div class="section">
+    <h4>Subtitles</h4>
+    <table class="data-table">
+      <thead><tr><th>Time</th><th>Text</th></tr></thead>
+      <tbody>
+      {% for entry in subtitles.entries %}
+      <tr>
+        <td style="white-space:nowrap">{{ "%.1f"|format(entry.startSec) }}s — {{ "%.1f"|format(entry.endSec) }}s</td>
+        <td>{{ entry.text }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>

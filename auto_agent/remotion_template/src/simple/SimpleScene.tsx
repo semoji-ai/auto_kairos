@@ -1,23 +1,15 @@
 /**
- * 키네틱 타이포그래피 씬 렌더러 v3
+ * 씬 렌더러 v4 — Creative Direction 기반
  *
- * 레퍼런스 연출 방법론 적용:
- * - 카드 시스템: 다크 틴트 배경 + 액센트 보더
- * - 컨텍스트(뮤트) → 히어로(볼드) 위계
- * - 원형 장식 요소 (프로필, 아이콘, 진행률)
- * - 배지/필 요소 (pill tags)
- * - 3열 그리드 패턴
- * - 점진적 빌드업 애니메이션
- * - 60% 가로 너비 중앙 집중
+ * 모든 시각화는 creative 필드 + 데이터 구조로 CreativeScene이 자동 결정.
+ * vizType 기반 라우팅은 제거됨 (v4.0+).
  *
- * v3 추가:
- * - title_card: 챕터 제목 전용
- * - slide_bignum: 카운팅 애니메이션 숫자 강조
- * - icon_grid: 개념 그리드 (2x2, 3x2)
- * - icon_stat: 단일 KPI 숫자 + 라벨
- * - ImageBadge: 이미지/실루엣 원형 배지
- * - 바 차트 두께 증가
- * - 통계 카운팅 애니메이션
+ * 라우팅 흐름:
+ * 1. 데이터 없음 → Bridge (안전 폴백)
+ * 2. chapter 필드 → TitleCard
+ * 3. normalizeCreative(): creative 필드 보완 (불완전 시 데이터에서 추론)
+ * 4. inferChartType(): timeline/compare/table/diagram 전용 렌더러
+ * 5. 나머지 → CreativeScene (자동 레이아웃 감지)
  */
 import React from "react";
 import {
@@ -83,11 +75,42 @@ function inferChartType(data: any, creative: any): string | null {
   return null;
 }
 
-/* ---------- Backward compat: vizType 기반 라우팅 (creative 없는 레거시) ---------- */
-const DATA_VIZ_TYPES = new Set([
-  "bar_chart", "line_chart", "pie_chart", "table",
-  "timeline", "compare", "diagram", "slide_proscons",
-]);
+/* ---------- Creative 보완 (normalizeCreative) ---------- */
+
+/**
+ * creative 필드가 없거나 불완전할 때, 데이터 구조에서 합리적 기본값을 자동 생성.
+ * visual-composer가 제대로 분석하지 못한 씬도 CreativeScene에서 렌더링 가능하도록 보완.
+ */
+function normalizeCreative(data: any): any {
+  const viz = data || {};
+  const creative = { ...(viz.creative || {}) };
+
+  // headline 보완: creative.headline 없으면 title에서
+  if (!creative.headline) {
+    creative.headline = viz.title || "";
+  }
+
+  // emphasis 보완: 데이터 패턴에서 추론
+  if (!creative.emphasis) {
+    if (viz.values?.length >= 1 && (viz.items?.length || 0) <= 2) {
+      creative.emphasis = "number";
+    } else {
+      creative.emphasis = "none";
+    }
+  }
+
+  // reveal 보완: items 수 기반
+  if (!creative.reveal) {
+    creative.reveal = (viz.items?.length || 0) >= 3 ? "stagger" : "fade_in";
+  }
+
+  // mood 보완
+  if (!creative.mood) {
+    creative.mood = "informative";
+  }
+
+  return { ...viz, creative };
+}
 
 /* ---------- Router ---------- */
 
@@ -108,89 +131,38 @@ interface Props {
 
 export const SimpleScene: React.FC<Props> = ({ data, sceneNumber, durationInFrames, subtitles, hasImageBackground, imageAssetPlacement }) => {
   const scene = (() => {
-    if (!data) return <Bridge text="" />;
+    // 데이터 없음 → 안전 폴백
+    if (!data || (!data.creative && !data.title && !data.items?.length)) {
+      return <Bridge text={data?.title || ""} />;
+    }
 
-    const creative = data.creative;
+    // TitleCard: chapter 필드가 있으면 타이틀 카드
+    if (data.chapter) {
+      return <TitleCard data={data} />;
+    }
 
-    // ── Creative Direction 기반 라우팅 (v4.0+) ──
-    // creative 필드가 있으면 creative 필드 + 데이터 구조로 자연 추론
-    if (creative?.headline) {
-      // 차트 타입 추론: emphasis/reveal + 데이터 구조
-      const chartType = inferChartType(data, creative);
-      if (chartType) {
-        switch (chartType) {
-          case "timeline":  return <TimelineScene data={data} />;
-          case "compare":   return <CompareScene data={data} />;
-          case "table":     return <TableScene data={data} />;
-          case "diagram":   return <DiagramScene data={data} />;
-        }
+    // creative 보완: 불완전한 creative 필드를 데이터 구조에서 자동 생성
+    const normalized = normalizeCreative(data);
+    const creative = normalized.creative;
+
+    // 차트 타입 추론 (timeline/compare/table/diagram)
+    const chartType = inferChartType(normalized, creative);
+    if (chartType) {
+      switch (chartType) {
+        case "timeline":  return <TimelineScene data={normalized} />;
+        case "compare":   return <CompareScene data={normalized} />;
+        case "table":     return <TableScene data={normalized} />;
+        case "diagram":   return <DiagramScene data={normalized} />;
       }
-      // 차트 아님 → CreativeScene (bar/items/counter/quote/split 등 자동 감지)
-      return <CreativeScene data={data} subtitles={subtitles} fps={30} hasImageBackground={hasImageBackground} imageAssetPlacement={imageAssetPlacement} />;
     }
 
-    // ── Backward compat: creative 필드 없는 레거시 데이터 ──
-    switch (data.vizType) {
-      // 데이터 시각화
-      case "bar_chart":
-        return <BarChartScene data={data} />;
-      case "timeline":
-        return <TimelineScene data={data} />;
-      case "compare":
-        return <CompareScene data={data} />;
-      case "table":
-        return <TableScene data={data} />;
-      case "slide_proscons":
-        return <CompareScene data={data} />;
-      case "diagram":
-        return <DiagramScene data={data} />;
-      // 레거시 크리에이티브 씬
-      case "title_card":
-        return <TitleCard data={data} />;
-      case "slide_highlight":
-        return <Highlight data={data} />;
-      case "slide_bignum":
-        return <BigNumber data={data} />;
-      case "slide_quote":
-        return <Quote data={data} />;
-      case "slide_list":
-        return <ListScene data={data} />;
-      case "slide_numbered":
-        return <NumberedListScene data={data} />;
-      case "slide_statistic":
-        return <StatisticScene data={data} />;
-      case "slide_process":
-        return <ProcessScene data={data} />;
-      case "slide_summary":
-        return <ListScene data={data} />;
-      case "icon_grid":
-        return <IconGrid data={data} />;
-      case "icon_stat":
-        return <IconStat data={data} />;
-      case "impact_count":
-        return <ImpactCount data={data} />;
-      case "dramatic_number":
-        return <DramaticNumber data={data} />;
-      case "reveal_sequence":
-        return <RevealSequence data={data} />;
-      case "split_contrast":
-        return <SplitContrast data={data} />;
-      case "spotlight_reveal":
-        return <SpotlightReveal data={data} />;
-      case "counter_wall":
-        return <CounterWall data={data} />;
-      case "narrative_build":
-        return <NarrativeBuild data={data} />;
-      case "word_cascade":
-        return <WordCascade data={data} />;
-      default:
-        return <Highlight data={data} />;
-    }
+    // 나머지 모든 씬 → CreativeScene (자동 레이아웃 감지)
+    return <CreativeScene data={normalized} subtitles={subtitles} fps={30} hasImageBackground={hasImageBackground} imageAssetPlacement={imageAssetPlacement} />;
   })();
 
   // 이미지 배경이 있을 때: 배경 투명 + 전체 폭 사용
-  // 이미지 배경이 없을 때: 기존 방식 (검정 배경 + 60% 폭)
-  const useFullWidth = hasImageBackground && data?.creative?.headline;
+  // 이미지 배경이 없을 때: 기존 방식 (검정 배경 + 78% 폭)
+  const useFullWidth = hasImageBackground && !!data?.creative;
 
   // 이미지 에셋 배치에 따른 컨텐츠 영역 조정
   // left/right 에셋: SideImageLayout이 flex row를 잡아주므로 여기서는 100% 사용
