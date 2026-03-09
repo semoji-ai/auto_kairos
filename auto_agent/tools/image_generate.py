@@ -22,6 +22,8 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 
+from auto_agent.paths import get_workspace_dir
+
 # .env 자동 로딩 (CLI 실행 시 환경변수 설정)
 def _load_dotenv():
     """프로젝트 루트의 .env 파일에서 환경변수를 로드"""
@@ -57,7 +59,6 @@ ENDPOINT_GENERATE = "fal-ai/nano-banana-2"
 ENDPOINT_EDIT = "fal-ai/nano-banana-2/edit"
 ENDPOINT_CHARACTER = "fal-ai/nano-banana-2/edit"
 
-from auto_agent.paths import get_workspace_dir
 PROJECT_ROOT = get_workspace_dir()  # 하위 호환
 
 NO_TEXT_RULES = (
