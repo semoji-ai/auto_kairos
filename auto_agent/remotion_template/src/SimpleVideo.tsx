@@ -86,6 +86,7 @@ export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
         return (
           <Sequence
             key={scene.sceneNumber}
+            name={`Scene ${scene.sceneNumber}${scene.visualization?.title ? ` - ${scene.visualization.title}` : ''}`}
             from={from}
             durationInFrames={dur}
             layout="none"

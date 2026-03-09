@@ -252,6 +252,15 @@ def cmd_dashboard(args):
     _cmd_dashboard(args)
 
 
+def _get_arg(args: list, flag: str) -> str:
+    """CLI 인자에서 --flag <value> 추출."""
+    if flag in args:
+        idx = args.index(flag)
+        if idx + 1 < len(args):
+            return args[idx + 1]
+    return ""
+
+
 # ── 아트스타일 관리 ─────────────────────────────
 
 def cmd_style(args):
@@ -266,12 +275,32 @@ def cmd_style(args):
         console.print(style_table(styles))
 
     elif args[0] == "add":
-        try:
-            from auto_agent.ui.prompts import prompt_style_add
-            data = prompt_style_add()
-        except KeyboardInterrupt:
-            console.print("\n[dim]취소됨[/dim]")
-            return
+        # 비인터랙티브: style add --name <이름> --image <이미지경로> [--description <설명>]
+        if "--name" in args:
+            name = _get_arg(args, "--name")
+            image = _get_arg(args, "--image") or ""
+            description = _get_arg(args, "--description") or ""
+            style_desc = _get_arg(args, "--style-desc") or ""
+            if not name:
+                print_error("--name 은 필수입니다.")
+                return
+            data = {
+                "name": name,
+                "description": description,
+                "art_style": style_desc,
+                "color_palette": "",
+                "mood_and_tone": "",
+            }
+            ref_image_path = image
+        else:
+            # 인터랙티브
+            try:
+                from auto_agent.ui.prompts import prompt_style_add
+                data = prompt_style_add()
+            except KeyboardInterrupt:
+                console.print("\n[dim]취소됨[/dim]")
+                return
+            ref_image_path = ""
 
         # 워크스페이스에 JSON 저장
         styles_dir = get_workspace_dir() / "artstyle" / "styles"
@@ -280,15 +309,24 @@ def cmd_style(args):
         filename = data["name"].replace(" ", "_").lower() + ".json"
         filepath = styles_dir / filename
 
+        # reference_image: 이미지 파일을 스타일 디렉토리에 복사
+        saved_ref_image = ""
+        if ref_image_path and Path(ref_image_path).exists():
+            src = Path(ref_image_path)
+            dest = styles_dir / f"{Path(filename).stem}_base{src.suffix}"
+            shutil.copy2(src, dest)
+            saved_ref_image = f"artstyle/styles/{dest.name}"
+            console.print(f"  [accent]COPY[/accent] 기준 이미지 → {dest}")
+
         style_json = {
             "name": data["name"],
             "description": data["description"],
-            "reference_image": "",
-            "scene_style_description": data["art_style"],
+            "reference_image": saved_ref_image,
+            "scene_style_description": data.get("art_style", ""),
             "style": {
-                "art_style": data["art_style"],
-                "color_palette": data["color_palette"],
-                "mood_and_tone": data["mood_and_tone"],
+                "art_style": data.get("art_style", ""),
+                "color_palette": data.get("color_palette", ""),
+                "mood_and_tone": data.get("mood_and_tone", ""),
             },
             "technical": {
                 "no_text": True,
@@ -301,6 +339,8 @@ def cmd_style(args):
             encoding="utf-8",
         )
         print_success(f"아트스타일 추가됨: [accent]{data['name']}[/accent] → {filepath}")
+        if saved_ref_image:
+            print_success(f"  기준 이미지: {saved_ref_image}")
 
     elif args[0] == "remove":
         if len(args) < 2:
@@ -348,19 +388,30 @@ def cmd_voice(args):
         console.print(voice_table(voices))
 
     elif args[0] == "add":
-        try:
-            from auto_agent.ui.prompts import prompt_voice_add
-            data = prompt_voice_add()
-        except KeyboardInterrupt:
-            console.print("\n[dim]취소됨[/dim]")
-            return
+        # 비인터랙티브: voice add --name <이름> --voice-id <ID> [--description <설명>]
+        if "--name" in args and "--voice-id" in args:
+            name = _get_arg(args, "--name")
+            voice_id = _get_arg(args, "--voice-id")
+            description = _get_arg(args, "--description") or ""
+            if not name or not voice_id:
+                print_error("--name 과 --voice-id 는 필수입니다.")
+                return
+            data = {"name": name, "voice_id": voice_id, "description": description}
+        else:
+            # 인터랙티브
+            try:
+                from auto_agent.ui.prompts import prompt_voice_add
+                data = prompt_voice_add()
+            except KeyboardInterrupt:
+                console.print("\n[dim]취소됨[/dim]")
+                return
 
         vm.add_voice(
             name=data["name"],
             voice_id=data["voice_id"],
             description=data["description"],
         )
-        print_success(f"음성 프리셋 추가됨: [accent]{data['name']}[/accent]")
+        print_success(f"음성 프리셋 추가됨: [accent]{data['name']}[/accent] (voice_id: {data['voice_id']})")
 
     elif args[0] == "remove":
         if len(args) < 2:
