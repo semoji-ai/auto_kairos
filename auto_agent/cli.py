@@ -506,6 +506,13 @@ def _print_banner():
 
 
 def main():
+    # 워크스페이스 .env 로드 (API 키 등)
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(get_workspace_dir() / ".env")
+    except ImportError:
+        pass
+
     args = sys.argv[1:]
 
     # --version 플래그

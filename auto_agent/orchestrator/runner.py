@@ -68,6 +68,13 @@ class PipelineRunner:
     """pipeline.json 기반 파이프라인 실행기."""
 
     def __init__(self, project_slug: str):
+        # 워크스페이스 .env 로드
+        try:
+            from dotenv import load_dotenv
+            load_dotenv(get_workspace_dir() / ".env")
+        except ImportError:
+            pass
+
         self.project_slug = project_slug
         self.pipeline = self._load_pipeline()
         self.pm = self._get_project_manager()
