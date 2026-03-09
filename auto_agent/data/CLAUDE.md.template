@@ -66,15 +66,31 @@ auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
 → ✅ 팩트체크 완료. 다음 단계(씬 설계)를 진행합니다.
 
 ### Phase 3: 씬 설계 (Claude Code 직접 수행)
-1. `$SKILL_BASE/skills/agents/visual-composer/SKILL.md` 참조
-2. `$SKILL_BASE/skills/shared/creative-direction.md` 연출 규칙
-3. `$SKILL_BASE/skills/shared/remotion-design-system.md` 컴포넌트 스펙
-4. `$SKILL_BASE/skills/shared/data-mapping.md` 데이터 매핑 규칙
-5. `$SKILL_BASE/skills/shared/motion-rhythm.md` 모션 설계
-6. `$SKILL_BASE/docs/data-contracts.md` 스키마 참조
-7. final_manuscript.md → 씬 분할 → creative direction → 데이터 보강 → 모션 설계
-8. **출력**: `output/{slug}/scene_specs.json`, `output/{slug}/motion_plan.json`
-9. 검증: scene_specs.json의 각 씬에 vizType, creative, narration 필드 존재 확인
+**반드시 아래 스킬 문서를 모두 참조할 것:**
+1. `$SKILL_BASE/skills/agents/visual-composer/SKILL.md` — 전체 워크플로우
+2. `$SKILL_BASE/skills/shared/scene-segmentation.md` — 씬 분할 규칙
+3. `$SKILL_BASE/skills/shared/creative-direction.md` — 연출 규칙
+4. `$SKILL_BASE/skills/shared/remotion-design-system.md` — 컴포넌트 스펙
+5. `$SKILL_BASE/skills/shared/data-mapping.md` — 데이터 매핑 규칙
+6. `$SKILL_BASE/skills/shared/chart-mapping.md` — 차트 세부 매핑 (pie/line/bar/logo_grid)
+7. `$SKILL_BASE/skills/shared/asset-advisory.md` — **에셋 추천 (아이콘/국기/로고/이미지 배치)**
+8. `$SKILL_BASE/skills/shared/motion-rhythm.md` — 모션 설계
+9. `$SKILL_BASE/docs/data-contracts.md` — 스키마 참조
+
+**4단계 순차 수행:**
+1. **씬 분할** → `output/{slug}/scene_decomposition.json`
+2. **Creative Direction + Asset Advisory** → 씬별 visual concept + 에셋 추천 (아이콘, 로고, 국기, 이미지 등)
+3. **데이터 보강** → 차트/통계 데이터 매핑
+4. **모션 설계** → `output/{slug}/motion_plan.json`
+
+**출력**: `output/{slug}/scene_decomposition.json`, `output/{slug}/scene_specs.json`, `output/{slug}/motion_plan.json`
+
+**검증 체크리스트:**
+- 각 씬에 vizType, creative, narration 필드 존재
+- itemIcons 배열에 적절한 lucide-react 아이콘 매핑
+- 이미지가 필요한 씬에 imageAsset 설정 (source: search/generate/wikimedia)
+- 차트 씬에 chartData/chartConfig 존재
+- logoMap 필요 시 기업명 → 로고 매핑 포함
 → ✅ 씬 설계 완료. 다음 단계(에셋 생산)를 진행합니다.
 
 ### Phase 4~5: 에셋 생산 + 조립 + 렌더링 (auto-agent CLI 실행)
