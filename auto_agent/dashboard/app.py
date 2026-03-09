@@ -102,11 +102,16 @@ def _load_tab_data(pm: ProjectManager, project: dict, tab: str) -> dict:
         context["cost"] = pm.get_cost_summary(project_id)
         context["file_status"] = get_file_status(out_dir)
         context["recent_images"] = get_recent_images(slug, out_dir)
-        context["pipeline_progress"] = get_pipeline_progress(out_dir, str(DATA_DIR))
+        runs = pm.get_pipeline_history(project_id)
+        context["pipeline_progress"] = get_pipeline_progress(
+            out_dir, str(DATA_DIR), db_runs=runs
+        )
 
     elif tab == "pipeline":
         context["runs"] = pm.get_pipeline_history(project_id)
-        context["pipeline_progress"] = get_pipeline_progress(out_dir, str(DATA_DIR))
+        context["pipeline_progress"] = get_pipeline_progress(
+            out_dir, str(DATA_DIR), db_runs=context["runs"]
+        )
 
     elif tab == "research":
         context["research"] = load_project_json(out_dir, "research_report.json")

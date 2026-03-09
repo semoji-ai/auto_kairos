@@ -113,19 +113,38 @@ def parse_manuscript_chapters(text: str) -> list:
     return chapters
 
 
-def get_pipeline_progress(output_dir: str, data_dir: str) -> dict:
-    """pipeline.json + pipeline_state.json을 조합하여 진행률 계산."""
+def get_pipeline_progress(output_dir: str, data_dir: str,
+                          db_runs: list = None) -> dict:
+    """pipeline.json + DB 실행 이력을 조합하여 진행률 계산.
+
+    db_runs가 제공되면 DB 기반으로 상태를 결정하고,
+    없으면 pipeline_state.json을 폴백으로 사용한다.
+    """
     pipeline_path = Path(data_dir) / "pipeline.json"
     if not pipeline_path.exists():
         return {"phases": []}
 
     pipeline_def = json.loads(pipeline_path.read_text(encoding="utf-8"))
-    state = load_project_json(output_dir, "pipeline_state.json") or {}
 
-    completed_steps = set(state.get("completed_steps", []))
-    failed_steps = set(state.get("failed_steps", []))
-    skipped_steps = set(state.get("skipped_steps", []))
-    current_step = state.get("current_step")
+    # DB 이력에서 각 스텝의 최신 상태를 추출
+    if db_runs:
+        step_status_map = {}
+        for run in reversed(db_runs):  # 오래된 것부터 → 최신이 덮어씀
+            step_key = run.get("step", "")
+            status = run.get("status", "")
+            if step_key and status:
+                step_status_map[step_key] = status
+        completed_steps = {k for k, v in step_status_map.items() if v == "completed"}
+        failed_steps = {k for k, v in step_status_map.items() if v == "failed"}
+        skipped_steps = {k for k, v in step_status_map.items() if v == "skipped"}
+        running_steps = {k for k, v in step_status_map.items() if v == "running"}
+    else:
+        # 폴백: pipeline_state.json
+        state = load_project_json(output_dir, "pipeline_state.json") or {}
+        completed_steps = set(state.get("completed_steps", []))
+        failed_steps = set(state.get("failed_steps", []))
+        skipped_steps = set(state.get("skipped_steps", []))
+        running_steps = {state.get("current_step")} if state.get("current_step") else set()
 
     phases = []
     for phase in pipeline_def.get("phases", []):
@@ -138,7 +157,7 @@ def get_pipeline_progress(output_dir: str, data_dir: str) -> dict:
                 s_status = "failed"
             elif step_id in skipped_steps:
                 s_status = "skipped"
-            elif step_id == current_step:
+            elif step_id in running_steps:
                 s_status = "running"
             else:
                 s_status = "pending"
