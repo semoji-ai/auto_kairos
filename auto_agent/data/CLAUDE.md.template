@@ -5,6 +5,7 @@
 - 프로그램 소스 코드 수정 금지
 - **각 단계 완료 시 반드시 "✅ [단계명] 완료" 메시지를 출력**하고 다음 단계로 넘어갈 것. 절대 완료 후 대기하지 말 것.
 - 파일 출력 경로: `output/{project-slug}/` (프로젝트 슬러그는 `auto-agent project list`로 확인)
+- **auto-agent CLI 명령은 반드시 워크스페이스 디렉토리에서 실행할 것** (DB와 output이 CWD 기준)
 
 ## 스킬 문서 경로
 패키지에 포함된 스킬 문서를 참조하려면:
@@ -35,8 +36,9 @@ auto-agent voice list    # 사용 가능한 음성 프리셋 목록 출력
 ```
 → 목록을 사용자에게 보여주고 "어떤 음성을 사용할까요?" 질문 → 선택받은 후:
 ```bash
-auto-agent config set voice <선택된 프리셋> --project <slug>
+auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
 ```
+(프리셋 이름으로 설정하면 voice_id + voice_settings가 자동 반영됨)
 → ✅ 프로젝트 설정 완료
 
 ### Phase 1: 리서치 (Claude Code 직접 수행)
@@ -75,19 +77,18 @@ auto-agent config set voice <선택된 프리셋> --project <slug>
 9. 검증: scene_specs.json의 각 씬에 vizType, creative, narration 필드 존재 확인
 → ✅ 씬 설계 완료. 다음 단계(에셋 생산)를 진행합니다.
 
-### Phase 4: 에셋 생산 (auto-agent CLI 실행)
-모듈 스크립트를 순차 실행:
+### Phase 4~5: 에셋 생산 + 조립 + 렌더링 (auto-agent CLI 실행)
+step_7부터 한번에 순차 실행:
+```bash
+auto-agent run --project <slug> --from step_7
+```
+개별 실행이 필요한 경우:
 ```bash
 auto-agent run --project <slug> --only step_7    # TTS 전처리
 auto-agent run --project <slug> --only step_8    # TTS 생성
-auto-agent run --project <slug> --only step_8b   # 이미지 생성
+auto-agent run --project <slug> --only step_8b   # 이미지 생성 (필요 시)
 auto-agent run --project <slug> --only step_9    # 자막 동기화
 auto-agent run --project <slug> --only step_9b   # TTS 검증
-```
-→ ✅ 에셋 생산 완료. 다음 단계(조립)를 진행합니다.
-
-### Phase 5: 조립 + 렌더링 (auto-agent CLI 실행)
-```bash
 auto-agent run --project <slug> --only step_10   # 데이터 검증
 auto-agent run --project <slug> --only step_11   # 매니페스트 빌드
 auto-agent run --project <slug> --only step_12   # 영상 렌더링

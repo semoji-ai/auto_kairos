@@ -234,7 +234,7 @@
           "module": "video-assembler",
           "input": "remotion/public/manifest.json",
           "output": "output/{project}/final_video.mp4",
-          "command": "npx remotion render {composition} --output output/{project}/final_video.mp4",
+          "command": "cd remotion && npx remotion render {composition} --output ../output/{project}/final_video.mp4",
           "resolution": "1920x1080",
           "fps": 30
         },

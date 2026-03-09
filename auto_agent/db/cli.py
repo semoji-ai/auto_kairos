@@ -187,6 +187,27 @@ def cmd_config(args):
             value = json.loads(value)
         except (json.JSONDecodeError, TypeError):
             pass
+
+        # voice 프리셋 이름 → voice_id + voice_settings 자동 해석
+        if key == "voice" and isinstance(value, str):
+            from auto_agent.voice_manager import VoiceManager
+            vm = VoiceManager()
+            preset = vm.get_voice(value)
+            if preset:
+                updates = {"voice_id": preset["voice_id"]}
+                if preset.get("voice_settings"):
+                    updates["voice_settings"] = preset["voice_settings"]
+                pm.update_config(project["id"], **updates)
+                print_success(f"voice = {value}  (프로젝트: {project['name']})")
+                print_success(f"  → voice_id = {preset['voice_id']}")
+                if preset.get("voice_settings"):
+                    print_success(f"  → voice_settings = {json.dumps(preset['voice_settings'])}")
+                return
+            else:
+                print_error(f"음성 프리셋 '{value}'을 찾을 수 없습니다.")
+                console.print("  [dim]사용 가능한 프리셋: auto-agent voice list[/dim]")
+                return
+
         pm.update_config(project["id"], **{key: value})
         print_success(f"{key} = {value}  (프로젝트: {project['name']})")
 
