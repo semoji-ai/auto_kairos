@@ -9,7 +9,7 @@
 ## 스킬 문서 경로
 패키지에 포함된 스킬 문서를 참조하려면:
 ```bash
-SKILL_BASE=$(auto-agent skill-path)
+SKILL_BASE=$(python3 -c "from auto_agent.paths import get_data_dir; print(get_data_dir())")
 # 예: cat "$SKILL_BASE/skills/agents/research-orchestrator/SKILL.md"
 ```
 
@@ -17,10 +17,25 @@ SKILL_BASE=$(auto-agent skill-path)
 
 ### Phase 0: 프로젝트 설정
 Claude Code에서 직접 실행:
+1. 프로젝트 생성:
 ```bash
 auto-agent project create <name> --topic <topic>
-auto-agent config set art_style <style> --project <slug>
-auto-agent config set voice <preset> --project <slug>
+```
+2. **아트스타일 선택** — 반드시 사용자에게 선택지를 보여주고 선택받을 것:
+```bash
+auto-agent style list    # 사용 가능한 스타일 목록 출력
+```
+→ 목록을 사용자에게 보여주고 "어떤 아트스타일을 사용할까요?" 질문 → 선택받은 후:
+```bash
+auto-agent config set art_style <선택된 스타일> --project <slug>
+```
+3. **음성 프리셋 선택** — 반드시 사용자에게 선택지를 보여주고 선택받을 것:
+```bash
+auto-agent voice list    # 사용 가능한 음성 프리셋 목록 출력
+```
+→ 목록을 사용자에게 보여주고 "어떤 음성을 사용할까요?" 질문 → 선택받은 후:
+```bash
+auto-agent config set voice <선택된 프리셋> --project <slug>
 ```
 → ✅ 프로젝트 설정 완료
 
