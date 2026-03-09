@@ -76,8 +76,7 @@ def main():
 
     # 1. API 키
     print("\n[API Keys]")
-    if not check_env_var("ANTHROPIC_API_KEY"):
-        errors += 1
+    check_env_var("ANTHROPIC_API_KEY", required=False)  # Claude Code 구독제 사용 시 불필요
     if not check_env_var("ELEVENLABS_API_KEY"):
         errors += 1
     check_env_var("OPENAI_API_KEY", required=False)
