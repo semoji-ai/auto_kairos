@@ -95,7 +95,34 @@ def cmd_init(args):
     else:
         console.print("  [dim]SKIP[/dim] CLAUDE.md (이미 존재)")
 
-    # 5. DB 초기화
+    # 5. Claude Code 권한 설정
+    claude_settings_dir = workspace / ".claude"
+    claude_settings = claude_settings_dir / "settings.json"
+    if not claude_settings.exists():
+        claude_settings_dir.mkdir(exist_ok=True)
+        claude_settings.write_text(
+            json.dumps({
+                "permissions": {
+                    "allow": [
+                        "Bash(auto-agent *)",
+                        "Bash(python3 *)",
+                        "Bash(npm *)",
+                        "Bash(npx remotion *)",
+                        "Bash(cd *)",
+                        "Bash(ls *)",
+                        "Bash(cat *)",
+                        "Bash(mkdir *)",
+                        "Bash(cp *)",
+                    ]
+                }
+            }, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        console.print("  [accent]CREATE[/accent] .claude/settings.json (권한 사전 승인)")
+    else:
+        console.print("  [dim]SKIP[/dim] .claude/settings.json (이미 존재)")
+
+    # 6. DB 초기화
     db_path = workspace / "auto_agent.db"
     if not db_path.exists():
         import os
@@ -106,7 +133,7 @@ def cmd_init(args):
     else:
         console.print("  [dim]SKIP[/dim] auto_agent.db (이미 존재)")
 
-    # 5. npm install
+    # 7. npm install
     remotion_pkg = remotion_dest / "package.json"
     remotion_nm = remotion_dest / "node_modules"
     if remotion_pkg.exists() and not remotion_nm.exists():
