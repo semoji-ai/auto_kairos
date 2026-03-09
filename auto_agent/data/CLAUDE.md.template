@@ -1,0 +1,98 @@
+# Auto Agent 워크스페이스
+
+## 핵심 규칙
+- 항상 한글로 답변
+- 프로그램 소스 코드 수정 금지
+- **각 단계 완료 시 반드시 "✅ [단계명] 완료" 메시지를 출력**하고 다음 단계로 넘어갈 것. 절대 완료 후 대기하지 말 것.
+- 파일 출력 경로: `output/{project-slug}/` (프로젝트 슬러그는 `auto-agent project list`로 확인)
+
+## 스킬 문서 경로
+패키지에 포함된 스킬 문서를 참조하려면:
+```bash
+SKILL_BASE=$(auto-agent skill-path)
+# 예: cat "$SKILL_BASE/skills/agents/research-orchestrator/SKILL.md"
+```
+
+## 파이프라인 실행 방법
+
+### Phase 0: 프로젝트 설정
+Claude Code에서 직접 실행:
+```bash
+auto-agent project create <name> --topic <topic>
+auto-agent config set art_style <style> --project <slug>
+auto-agent config set voice <preset> --project <slug>
+```
+→ ✅ 프로젝트 설정 완료
+
+### Phase 1: 리서치 (Claude Code 직접 수행)
+1. `$SKILL_BASE/skills/agents/research-orchestrator/SKILL.md` 참조
+2. `$SKILL_BASE/skills/shared/research-format.md` 형식 준수
+3. WebSearch로 심층 리서치 수행
+4. **출력**: `output/{slug}/research_report.json`
+5. 검증: 파일이 올바른 JSON이고, sections 배열이 있는지 확인
+→ ✅ 리서치 완료. 다음 단계(원고 작성)를 진행합니다.
+
+### Phase 1b: 원고 작성 (Claude Code 직접 수행)
+1. `$SKILL_BASE/skills/agents/write-manuscript/SKILL.md` 참조
+2. `$SKILL_BASE/skills/shared/outline-template.md` 아웃라인 규칙
+3. `$SKILL_BASE/skills/shared/writing-style.md` 문체 규칙
+4. `$SKILL_BASE/skills/shared/scene-segmentation.md` 씬 분할 규칙
+5. research_report.json을 입력으로 아웃라인 → 원고 작성
+6. **출력**: `output/{slug}/outline.json`, `output/{slug}/final_manuscript.md`
+7. 검증: 챕터 수, 씬 수, VIZ 마커 존재 확인
+→ ✅ 원고 작성 완료. 다음 단계(팩트체크)를 진행합니다.
+
+### Phase 2: 팩트체크 (Claude Code 직접 수행)
+1. `$SKILL_BASE/skills/agents/fact-verifier/SKILL.md` 참조
+2. research_report.json + final_manuscript.md 교차 검증
+3. **출력**: `output/{slug}/fact_check_report.json`
+→ ✅ 팩트체크 완료. 다음 단계(씬 설계)를 진행합니다.
+
+### Phase 3: 씬 설계 (Claude Code 직접 수행)
+1. `$SKILL_BASE/skills/agents/visual-composer/SKILL.md` 참조
+2. `$SKILL_BASE/skills/shared/creative-direction.md` 연출 규칙
+3. `$SKILL_BASE/skills/shared/remotion-design-system.md` 컴포넌트 스펙
+4. `$SKILL_BASE/skills/shared/data-mapping.md` 데이터 매핑 규칙
+5. `$SKILL_BASE/skills/shared/motion-rhythm.md` 모션 설계
+6. `$SKILL_BASE/docs/data-contracts.md` 스키마 참조
+7. final_manuscript.md → 씬 분할 → creative direction → 데이터 보강 → 모션 설계
+8. **출력**: `output/{slug}/scene_specs.json`, `output/{slug}/motion_plan.json`
+9. 검증: scene_specs.json의 각 씬에 vizType, creative, narration 필드 존재 확인
+→ ✅ 씬 설계 완료. 다음 단계(에셋 생산)를 진행합니다.
+
+### Phase 4: 에셋 생산 (auto-agent CLI 실행)
+모듈 스크립트를 순차 실행:
+```bash
+auto-agent run --project <slug> --only step_7    # TTS 전처리
+auto-agent run --project <slug> --only step_8    # TTS 생성
+auto-agent run --project <slug> --only step_8b   # 이미지 생성
+auto-agent run --project <slug> --only step_9    # 자막 동기화
+auto-agent run --project <slug> --only step_9b   # TTS 검증
+```
+→ ✅ 에셋 생산 완료. 다음 단계(조립)를 진행합니다.
+
+### Phase 5: 조립 + 렌더링 (auto-agent CLI 실행)
+```bash
+auto-agent run --project <slug> --only step_10   # 데이터 검증
+auto-agent run --project <slug> --only step_11   # 매니페스트 빌드
+auto-agent run --project <slug> --only step_12   # 영상 렌더링
+```
+→ ✅ 영상 제작 완료!
+
+## 조회/관리 명령어
+```bash
+auto-agent project list                    # 프로젝트 목록
+auto-agent project info <slug>             # 프로젝트 상세
+auto-agent config get --project <slug>     # 설정 조회
+auto-agent style list                      # 아트스타일 목록
+auto-agent voice list                      # 음성 프리셋 목록
+auto-agent assets                          # 에셋 조회
+auto-agent costs                           # 비용 요약
+auto-agent dashboard --port 8080           # 웹 대시보드
+```
+
+## 환경 변수 (.env)
+- `ELEVENLABS_API_KEY` — TTS (필수)
+- `OPENAI_API_KEY` — 자막 Whisper (필수)
+- `SERPER_API_KEY` — 리서치 웹 검색
+- `FAL_API_KEY` — 이미지 생성
