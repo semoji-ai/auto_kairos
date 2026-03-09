@@ -196,9 +196,6 @@ def step_4_generate_standalone_images(output_dir: Path, style_path: str, specs: 
         source = asset.get("source", "")
         if source != "generate":
             continue
-        placement = asset.get("placement", "")
-        if placement == "background":
-            continue  # 배경은 step 5에서 처리
 
         scene_num = s.get("sceneNumber", 0)
         out_path = output_dir / "images" / f"scene_{scene_num:03d}.png"
