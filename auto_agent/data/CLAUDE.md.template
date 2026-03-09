@@ -77,11 +77,19 @@ auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
 8. `$SKILL_BASE/skills/shared/motion-rhythm.md` — 모션 설계
 9. `$SKILL_BASE/docs/data-contracts.md` — 스키마 참조
 
-**4단계 순차 수행:**
+**5단계 순차 수행 (각 단계를 반드시 별도로 수행할 것):**
 1. **씬 분할** → `output/{slug}/scene_decomposition.json`
-2. **Creative Direction + Asset Advisory** → 씬별 visual concept + 에셋 추천 (아이콘, 로고, 국기, 이미지 등)
-3. **데이터 보강** → 차트/통계 데이터 매핑
-4. **모션 설계** → `output/{slug}/motion_plan.json`
+2. **Creative Direction** → 씬별 visual concept (reveal/emphasis/mood/headline/concept)
+3. **Asset Advisory (필수! 절대 건너뛰지 말 것)** → 모든 씬 순회하며 에셋 추천:
+   - 차트 추천 (chartConfig/chartData) — `chart-mapping.md` 참조
+   - 아이콘 추천 (itemIcons) — Lucide React 아이콘
+   - 국기 추천 (itemFlags) — ISO 2자리 코드
+   - 로고 추천 (logoMap/displayMode) — Simple Icons
+   - 이미지 추천 (imageAsset) — search/generate/wikimedia
+   - 배치/투명도 결정 (placement/opacity)
+   - 충돌 검사 (차트+이미지 금지 등)
+4. **데이터 보강** → 차트/통계 데이터 매핑
+5. **모션 설계** → `output/{slug}/motion_plan.json`
 
 **출력**: `output/{slug}/scene_decomposition.json`, `output/{slug}/scene_specs.json`, `output/{slug}/motion_plan.json`
 

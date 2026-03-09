@@ -1,6 +1,6 @@
 ---
 name: visual-composer
-description: 원고→씬 분할 + Creative Direction + 데이터 보강 + 모션 설계
+description: 원고→씬 분할 + Creative Direction + Asset Advisory + 데이터 보강 + 모션 설계
 model: claude-opus-4-6
 max_turns: 60
 allowed_tools:
@@ -13,6 +13,8 @@ skills:
   - shared/scene-segmentation
   - shared/motion-rhythm
   - shared/data-mapping
+  - shared/asset-advisory
+  - shared/chart-mapping
 ---
 
 # Visual Composer
