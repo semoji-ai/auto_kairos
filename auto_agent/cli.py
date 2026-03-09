@@ -82,7 +82,57 @@ def cmd_init(args):
         )
         console.print("  [accent]CREATE[/accent] .env.example")
 
-    # 4. DB 초기화
+    # 4. CLAUDE.md 생성 (Claude Code 연동)
+    claude_md = workspace / "CLAUDE.md"
+    if not claude_md.exists():
+        claude_md.write_text(
+            "# Auto Agent 워크스페이스\n\n"
+            "## 규칙\n"
+            "- auto-agent CLI만 사용하여 영상 제작 파이프라인을 관리할 것\n"
+            "- 프로그램 소스 코드 수정 금지\n"
+            "- 항상 한글로 답변\n\n"
+            "## 사용 가능 명령어\n"
+            "- `auto-agent project create` — 새 프로젝트 생성 (인터랙티브)\n"
+            "- `auto-agent project list` — 프로젝트 목록\n"
+            "- `auto-agent project info <slug>` — 프로젝트 상세\n"
+            "- `auto-agent run --project <slug>` — 파이프라인 실행\n"
+            "- `auto-agent run --project <slug> --from step_N` — 특정 단계부터 재개\n"
+            "- `auto-agent run --project <slug> --only step_N` — 특정 단계만 실행\n"
+            "- `auto-agent run --project <slug> --dry-run` — 실행 계획 미리보기\n"
+            "- `auto-agent config get` — 프로젝트 설정 조회\n"
+            "- `auto-agent config set <key> <value>` — 설정 변경\n"
+            "- `auto-agent style list` — 아트스타일 목록\n"
+            "- `auto-agent voice list` — 음성 프리셋 목록\n"
+            "- `auto-agent assets` — 에셋 조회\n"
+            "- `auto-agent costs` — 비용 요약\n"
+            "- `auto-agent version list` — 버전 이력\n"
+            "- `auto-agent studio --project <slug>` — Remotion Studio 실행\n"
+            "- `auto-agent dashboard --port 8080` — 웹 대시보드 실행\n\n"
+            "## 워크플로우\n"
+            "1. `auto-agent project create`로 프로젝트 생성\n"
+            "2. `auto-agent config set`으로 아트스타일/음성 설정\n"
+            "3. `auto-agent run --project <slug>`로 파이프라인 실행\n"
+            "4. `auto-agent dashboard`로 결과물 확인\n"
+            "5. 필요 시 `auto-agent run --from step_N`으로 특정 단계 재실행\n\n"
+            "## 파이프라인 단계\n"
+            "- Phase 1: 리서치 + 원고 작성\n"
+            "- Phase 2: 팩트체크 + 중복 검사\n"
+            "- Phase 3: 캐릭터 기획 + 씬 설계\n"
+            "- Phase 4: TTS + 이미지 생성 + 자막\n"
+            "- Phase 5: 매니페스트 빌드 + 렌더링\n\n"
+            "## 환경 변수 (.env)\n"
+            "- `ANTHROPIC_API_KEY` — Claude API (필수)\n"
+            "- `ELEVENLABS_API_KEY` — TTS (필수)\n"
+            "- `SERPER_API_KEY` — 리서치 웹 검색\n"
+            "- `FAL_API_KEY` — 이미지 생성\n"
+            "- `OPENAI_API_KEY` — 자막 (Whisper)\n",
+            encoding="utf-8",
+        )
+        console.print("  [accent]CREATE[/accent] CLAUDE.md")
+    else:
+        console.print("  [dim]SKIP[/dim] CLAUDE.md (이미 존재)")
+
+    # 5. DB 초기화
     db_path = workspace / "auto_agent.db"
     if not db_path.exists():
         import os
