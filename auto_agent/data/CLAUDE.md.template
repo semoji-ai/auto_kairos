@@ -95,10 +95,12 @@ auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
 
 **검증 체크리스트:**
 - 각 씬에 vizType, creative, narration 필드 존재
-- itemIcons 배열에 적절한 lucide-react 아이콘 매핑
-- 이미지가 필요한 씬에 imageAsset 설정 (source: search/generate/wikimedia)
+- items가 있는 씬에 itemIcons 배열 매핑 (2개 이상이면 거의 항상)
+- **전체 씬의 70~90%에 시각 에셋(imageAsset/차트/로고/아이콘) 존재** — 텍스트만 있는 씬 최소화
+- imageAsset: 텍스트만 있는 씬, 감정적 씬, 개념 설명 씬에 적극 추가 (source: search/generate/wikimedia)
 - 차트 씬에 chartData/chartConfig 존재
 - logoMap 필요 시 기업명 → 로고 매핑 포함
+- 연속 2개 이상 시각 에셋 없는 씬이 없는지 확인
 → ✅ 씬 설계 완료. 다음 단계(에셋 생산)를 진행합니다.
 
 ### Phase 4~5: 에셋 생산 + 조립 + 렌더링 (auto-agent CLI 실행)
