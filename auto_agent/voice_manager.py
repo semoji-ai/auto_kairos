@@ -13,14 +13,36 @@ from auto_agent.paths import get_workspace_dir
 
 DEFAULT_VOICES = [
     {
-        "name": "기본 남성",
+        "name": "이로미즘",
         "voice_id": "9Sj8ugvpK1DmcAXyvi3a",
-        "description": "기본 한국어 남성 (ElevenLabs)",
+        "description": "이로미즘 피디 (quirky_cartoon)",
         "voice_settings": {
             "stability": 1.0,
             "similarity_boost": 0.6,
             "style": 0.9,
             "use_speaker_boost": True,
+            "speed": 1.1,
+        },
+    },
+    {
+        "name": "세모지",
+        "voice_id": "W7FnAxJNpD5WGjrF5GLp",
+        "description": "세모지 피디 (semoji)",
+        "voice_settings": {
+            "stability": 1.0,
+            "similarity_boost": 0.9,
+            "style": 0.9,
+            "speed": 1.1,
+        },
+    },
+    {
+        "name": "최후의경제왕",
+        "voice_id": "4JJwo477JUAx3HV0T7n7",
+        "description": "최후의경제왕 피디 (lego)",
+        "voice_settings": {
+            "stability": 1.0,
+            "similarity_boost": 0.9,
+            "style": 0.9,
             "speed": 1.1,
         },
     },

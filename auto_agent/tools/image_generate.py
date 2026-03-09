@@ -115,10 +115,23 @@ def _load_art_style(style_path: str) -> Dict[str, Any]:
     """art_style.json 로드. reference_image 상대경로를 절대경로로 해석."""
     with open(style_path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    # reference_image가 상대경로이면 프로젝트 루트 기준으로 해석
+    # reference_image가 상대경로이면 art_style.json 위치 기준 → 패키지 data 기준 순서로 해석
     ref = data.get("reference_image", "")
     if ref and not Path(ref).is_absolute():
-        data["reference_image"] = str(PROJECT_ROOT / ref)
+        # 1) art_style.json이 있는 디렉토리 기준
+        style_dir = Path(style_path).resolve().parent
+        candidate = style_dir / Path(ref).name  # semoji_base.jpg 등
+        if candidate.exists():
+            data["reference_image"] = str(candidate)
+        else:
+            # 2) 패키지 데이터 디렉토리 기준
+            from auto_agent.paths import get_data_dir
+            pkg_candidate = get_data_dir() / ref
+            if pkg_candidate.exists():
+                data["reference_image"] = str(pkg_candidate)
+            else:
+                # 3) 워크스페이스 기준 (하위 호환)
+                data["reference_image"] = str(PROJECT_ROOT / ref)
     return data
 
 
