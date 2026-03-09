@@ -133,19 +133,38 @@ visual-composer가 씬에 `mapScene` 필드를 함께 작성한다.
 | `territory_overlay` | 세력 범위, 점령지, 영토 변화 |
 | `fly_through` | 지역 전체 조망, 광역 시각화 |
 
-#### 이미지 배경 — imageAsset 필드 작성
+#### 이미지 — imageAsset 필드 작성 (배경 + 에셋)
 
-concept에 "사진 배경 위에...", "실제 장면 이미지 위에..." 등 서술하면
-visual-composer가 씬에 `imageAsset` 필드를 함께 작성한다.
+이미지는 **배경**뿐 아니라 **장면의 핵심 에셋**으로도 활용한다.
+concept에 이미지 활용 의도를 서술하면 visual-composer가 `imageAsset` 필드를 작성한다.
+
+**배경 활용** (placement: "background"):
+concept에 "사진 배경 위에...", "분위기 이미지 위에..." 등 서술.
 
 | 상황 | source | 예시 query |
 |------|--------|-----------|
 | 실제 사건 장면 | search | "Iran aerial strike night" |
 | 역사 사진 | search | "Iranian revolution 1979" |
-| 인물 | search | "Ali Khamenei portrait" |
 | 추상적/개념 배경 | generate | "dark military command center, cinematic" |
+| 감정/분위기 연출 | generate | "hopeful sunrise over city, warm tones" |
 
-imageAsset 스키마: `{ "source": "search"|"generate", "query": "검색어/프롬프트" }`
+**에셋 활용** (placement: "left" / "right"):
+concept에 "한쪽에 인물 이미지를 배치하고...", "오브젝트를 왼쪽에 놓고..." 등 서술.
+
+| 상황 | source | placement | 예시 |
+|------|--------|-----------|------|
+| 실존 인물 초상 | wikimedia / search | left/right | 워런 버핏, 잭 보글 |
+| 핵심 오브젝트 | generate / search | left/right | 금괴, 주식 증서, 건물 |
+| 캐릭터 일러스트 | generate | left/right | 스타일 맞춤 캐릭터 |
+| 상징적 사물 | generate | left/right | 저금통, 로켓, 방패 |
+
+imageAsset 스키마: `{ "source": "search"|"generate"|"wikimedia", "query": "검색어/프롬프트", "placement": "background"|"left"|"right", "opacity": 0.3 }`
+
+**적극 활용 원칙:**
+- 텍스트만 있는 씬은 시각적으로 빈약 → 이미지를 넣어 시각적 풍성함 확보
+- 나레이션에 구체적 대상(인물, 사물, 장소)이 언급되면 에셋(`left`/`right`)으로 배치
+- 추상적 분위기만 필요하면 배경(`background`)으로 깔기
+- **전체 씬의 70% 이상에 시각 에셋(이미지/차트/아이콘/로고) 존재 목표**
 
 ### 차트 레이아웃 자동 추론
 
