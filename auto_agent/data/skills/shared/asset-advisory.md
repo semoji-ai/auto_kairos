@@ -118,6 +118,51 @@ items의 각 항목 텍스트를 분석하여 적합한 Lucide 아이콘을 `ite
 
 ---
 
+## 3.5 아이템별 이미지 (images 배열)
+
+### 용도
+
+items 각각에 대응하는 이미지를 `images` 배열로 설정하면, 렌더러가 `ImageBadge`(원형 이미지)로 표시한다.
+아이콘이나 번호 대신 **실제 이미지를 아이템 블록의 에셋**으로 활용할 수 있다.
+
+### 적합한 상황
+
+| 상황 | 예시 |
+|------|------|
+| items가 인물 목록 | 워런 버핏, 피터 린치, 잭 보글 → 각각 인물 사진 |
+| items가 제품/건물/장소 | NYSE, NASDAQ → 각각 건물 이미지 |
+| items가 브랜드 | Apple, Tesla → 로고 이미지 (logoMap보다 시각적 임팩트 클 때) |
+| emphasis="person" + items 2개+ | 인물 카드 형태로 렌더링 |
+
+### 사용 규칙
+
+- `images` 배열 길이 = `items` 배열 길이 (1:1 대응)
+- 이미지가 없는 항목은 `null` → CircleBadge(번호) 폴백
+- `images`는 `imageAsset`의 파일이 아니라 **개별 아이템의 이미지 경로**
+- 이미지 파일은 step_8b(이미지 생성)에서 `images/item_sceneNNN_N.png`로 생성
+- `itemIcons`와 `images`가 동시에 있으면 `images` 우선
+
+### scene_specs 반영
+
+```json
+{
+  "visualization": {
+    "items": ["워런 버핏", "피터 린치", "잭 보글"],
+    "images": [null, null, null],
+    "emphasis": "person"
+  },
+  "imageAsset": {
+    "source": "wikimedia",
+    "query": "Warren Buffett, Peter Lynch, Jack Bogle portraits",
+    "itemImages": true
+  }
+}
+```
+
+> `imageAsset.itemImages: true`이면 이미지 생성 스크립트가 items 각각에 대해 개별 이미지를 검색/생성하고 `images` 배열을 채운다.
+
+---
+
 ## 4. 국기 추천
 
 ### 감지 규칙

@@ -496,6 +496,20 @@ Shield, Brain, TrendingUp, Swords, Crown, Globe, DollarSign, Users, AlertTriangl
 개념을 표현한다 → IconBadge
 텍스트/숫자로 충분하다 → CircleBadge
 
+### 아이템 블록 에셋
+
+items 각각에 이미지를 매핑하여 아이콘/번호 대신 **실제 이미지를 아이템 에셋으로 활용**할 수 있다.
+`visualization.images` 배열(items와 1:1 대응)로 설정하면 렌더러가 `ImageBadge`로 표시한다.
+
+```
+적합한 상황:
+- items가 인물 목록 → 각각의 초상화를 ImageBadge로
+- items가 건물/장소 → 각각의 실물 사진을 ImageBadge로
+- emphasis="person" + items 2개+ → 인물 카드 형태
+```
+
+imageAsset에 `"itemImages": true`를 설정하면 이미지 생성 스크립트가 items별 개별 이미지를 생성한다.
+
 ---
 
 ## 주의사항
