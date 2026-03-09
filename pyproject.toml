@@ -23,13 +23,33 @@ auto-agent = "auto_agent.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["auto_agent*"]
+exclude = ["auto_agent.remotion_template.out*", "auto_agent.remotion_template.output*", "auto_agent.remotion_template.test*"]
+
+[tool.setuptools.exclude-package-data]
+auto_agent = [
+    "remotion_template/out/**/*",
+    "remotion_template/output/**/*",
+    "remotion_template/test/**/*",
+    "remotion_template/test_output/**/*",
+    "remotion_template/test_props/**/*",
+    "remotion_template/public/assets/**/*",
+    "remotion_template/public/map_frames/**/*",
+    "remotion_template/public/project",
+]
 
 [tool.setuptools.package-data]
 auto_agent = [
     "data/**/*.json",
     "data/**/*.md",
     "data/**/*.txt",
-    "remotion_template/**/*",
+    "remotion_template/src/**/*",
+    "remotion_template/public/fonts/*",
+    "remotion_template/public/geojson/*",
+    "remotion_template/package.json",
+    "remotion_template/package-lock.json",
+    "remotion_template/tsconfig.json",
+    "remotion_template/remotion.config.ts",
+    "remotion_template/render_scene.js",
     "db/schema.sql",
     "dashboard/templates/**/*",
     "dashboard/static/**/*",
