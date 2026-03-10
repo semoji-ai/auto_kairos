@@ -334,14 +334,36 @@ def _resolve_art_style(output_dir: Path) -> str:
     return str(local)  # 존재하지 않아도 경로 반환 (이후 경고)
 
 
-def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> bool:
-    """0단계: 프리플라이트 — 아트스타일 + 캐릭터 이미지 검증"""
+def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
+    """0단계: 프리플라이트 — 아트스타일 + 캐릭터 이미지 검증.
+
+    Returns:
+        (통과 여부, 최종 style_path) — 자동 프로비저닝 시 경로 변경 가능
+    """
     print("[Step 0] 프리플라이트 검증...")
     errors = []
     warnings = []
 
-    # 1) 아트스타일 파일 검증
+    # 1) 아트스타일 파일 검증 — 없으면 자동 프로비저닝 시도
     style_file = Path(style_path)
+    if not style_file.exists():
+        # 프로젝트 폴더에 없으면 DB config에서 자동 복사 시도
+        print("  [AUTO] 아트스타일 파일 없음 — 자동 프로비저닝 시도...")
+        try:
+            from auto_agent.db.connection import db_exists
+            if db_exists():
+                from auto_agent.db.project_manager import ProjectManager
+                pm = ProjectManager()
+                project = pm.get_active_project()
+                if project:
+                    dest = pm.provision_art_style(project["id"])
+                    if dest:
+                        style_path = dest
+                        style_file = Path(dest)
+                        print(f"  [AUTO] 프로비저닝 완료: {dest}")
+        except Exception as e:
+            print(f"  [AUTO] 프로비저닝 실패: {e}")
+
     if not style_file.exists():
         errors.append(f"아트스타일 파일 없음: {style_path}")
         errors.append("  → 'auto-agent config set art_style <스타일경로> --project <slug>' 로 설정하세요")
@@ -355,9 +377,13 @@ def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> bool:
             else:
                 ref_img = Path(style_data["reference_image"])
                 if not ref_img.is_absolute():
-                    # 패키지 데이터 디렉토리 기준 해석
-                    from auto_agent.paths import get_data_dir
-                    ref_img = get_data_dir() / ref_img
+                    # 프로젝트 폴더 기준 먼저, 없으면 패키지 데이터 기준
+                    local_ref = output_dir / ref_img
+                    if local_ref.exists():
+                        ref_img = local_ref
+                    else:
+                        from auto_agent.paths import get_data_dir
+                        ref_img = get_data_dir() / ref_img
                 if not ref_img.exists():
                     errors.append(f"아트스타일 참조 이미지 없음: {ref_img}")
             if not style_data.get("scene_style_description"):
@@ -418,11 +444,11 @@ def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> bool:
             print(f"  [ERROR] {e}")
         print()
         print("[Step 0] 프리플라이트 실패 — 위 오류를 해결한 뒤 다시 실행하세요.")
-        return False
+        return False, style_path
 
     print("[Step 0] 프리플라이트 통과")
     print()
-    return True
+    return True, style_path
 
 
 def main():
@@ -439,8 +465,9 @@ def main():
     print(f"Scenes: {len(specs.get('scenes', []))}개")
     print()
 
-    # Step 0: 프리플라이트 검증
-    if not step_0_preflight(output_dir, style_path, specs):
+    # Step 0: 프리플라이트 검증 (자동 프로비저닝으로 style_path 변경 가능)
+    passed, style_path = step_0_preflight(output_dir, style_path, specs)
+    if not passed:
         sys.exit(1)
 
     # Step 1: 캐릭터 생성 (캐릭터가 씬의 입력이므로 먼저)

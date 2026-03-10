@@ -211,6 +211,14 @@ def cmd_config(args):
         pm.update_config(project["id"], **{key: value})
         print_success(f"{key} = {value}  (프로젝트: {project['name']})")
 
+        # art_style 설정 시 → JSON + 참조 이미지를 프로젝트 폴더에 복사
+        if key == "art_style":
+            dest = pm.provision_art_style(project["id"])
+            if dest:
+                print_success(f"  → 프로젝트 폴더에 복사 완료: {dest}")
+            else:
+                print_error(f"  → 아트스타일 파일을 찾을 수 없습니다: {value}")
+
     elif args[0] == "set-json":
         if len(args) < 2:
             print_error("Usage: config set-json '<json>'")

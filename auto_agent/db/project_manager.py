@@ -160,6 +160,55 @@ class ProjectManager:
             return str(root)
         return None
 
+    def provision_art_style(self, project_id: int) -> Optional[str]:
+        """아트스타일 JSON + 참조 이미지를 프로젝트 출력 폴더에 복사.
+
+        Returns:
+            복사된 art_style.json 경로, 또는 None (소스 없음)
+        """
+        import shutil
+        config = self.get_config(project_id)
+        art_style_rel = config.get("art_style")
+        if not art_style_rel:
+            return None
+
+        # 소스 경로 해석
+        src_path = Path(art_style_rel)
+        if not src_path.is_absolute():
+            src_path = get_data_dir() / art_style_rel
+        if not src_path.exists():
+            return None
+
+        project_dir = self.get_project_dir(project_id)
+        project_dir.mkdir(parents=True, exist_ok=True)
+        dest_json = project_dir / "art_style.json"
+
+        # 1) JSON 복사
+        shutil.copy2(src_path, dest_json)
+
+        # 2) 참조 이미지 복사
+        try:
+            import json as _json
+            style_data = _json.loads(src_path.read_text(encoding="utf-8"))
+            ref_image = style_data.get("reference_image", "")
+            if ref_image:
+                ref_src = Path(ref_image)
+                if not ref_src.is_absolute():
+                    ref_src = get_data_dir() / ref_image
+                if ref_src.exists():
+                    ref_dest = project_dir / ref_src.name
+                    shutil.copy2(ref_src, ref_dest)
+                    # JSON 내 참조 경로를 로컬 파일명으로 갱신
+                    style_data["reference_image"] = ref_src.name
+                    dest_json.write_text(
+                        _json.dumps(style_data, ensure_ascii=False, indent=2),
+                        encoding="utf-8"
+                    )
+        except Exception:
+            pass  # 참조 이미지 복사 실패해도 JSON은 이미 복사됨
+
+        return str(dest_json)
+
     def get_voice_config(self, project_id: int) -> dict:
         """프로젝트의 TTS 설정 반환. {voice_id, voice_settings}."""
         config = self.get_config(project_id)
