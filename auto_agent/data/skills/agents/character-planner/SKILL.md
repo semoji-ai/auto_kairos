@@ -1,6 +1,6 @@
 ---
 name: character-planner
-description: 원고 분석 → 2씬+ 등장 캐릭터 추출 + 변이 분석 + character_plan.json 생성
+description: 씬 분할 결과 + 원고 분석 → 2씬+ 등장 캐릭터 추출 + 변이 분석 + character_plan.json 생성
 model: claude-sonnet-4-5-20250929
 max_turns: 20
 allowed_tools:
@@ -19,6 +19,7 @@ final_manuscript.md를 분석하여 **2씬 이상 등장하는 캐릭터**를 �
 
 ## 입력
 
+- `scene_decomposition.json` — 씬 분할 결과 (씬별 등장인물, 시각적 요소 등)
 - `final_manuscript.md` — `## Scene N:` 구조로 씬별 나레이션 포함
 - `research_report.json` — 인물 정보, 역사적 맥락
 - `art_style.json` — 아트스타일 설정 (historical_period, style 등)
@@ -65,14 +66,15 @@ final_manuscript.md를 분석하여 **2씬 이상 등장하는 캐릭터**를 �
 
 ### 1단계: 인물 추출
 
-final_manuscript.md의 모든 `## Scene N:` 섹션에서 나레이션 텍스트를 읽어 인물명을 추출합니다.
+**scene_decomposition.json**과 **final_manuscript.md**를 함께 분석하여 인물명을 추출합니다.
 
-- 나레이션에 직접 이름이 언급된 인물
+- scene_decomposition.json의 각 씬에서 등장인물/캐릭터 정보 추출
+- final_manuscript.md의 나레이션에서 직접 이름이 언급된 인물 보완
 - 인물 관련 이미지 마커(`[IMG:...]`)에 명시된 인물
 
 ### 2단계: 등장 횟수 카운트
 
-각 인물의 등장 씬 번호 목록을 작성합니다.
+scene_decomposition.json의 씬 구조를 기반으로 각 인물의 등장 씬 번호 목록을 작성합니다.
 
 **2회 이상 등장** → 캐릭터 계획 대상
 **1회만 등장** → 제외 (씬에서 직접 표현)

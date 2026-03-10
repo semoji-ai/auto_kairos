@@ -23,11 +23,26 @@ try:
 except ImportError:
     HAS_PIL = False
 
+import re as _re
+
+try:
+    import numpy as np
+    HAS_NUMPY = True
+except ImportError:
+    HAS_NUMPY = False
+
 MAX_IMAGE_SIZE = 1920
 
 CC_SAFE_DOMAINS = {
     "wikipedia.org", "wikimedia.org", "flickr.com",
     "unsplash.com", "pixabay.com", "pexels.com",
+}
+
+# 워터마크 흔한 도메인/소스
+WATERMARK_DOMAINS = {
+    "shutterstock.com", "gettyimages.com", "istockphoto.com",
+    "dreamstime.com", "123rf.com", "depositphotos.com",
+    "adobestock.com", "alamy.com", "stock.adobe.com",
 }
 
 
@@ -81,6 +96,216 @@ class ImageSearchResult:
     def save(self, path: Path):
         with open(path, "w", encoding="utf-8") as f:
             json.dump(self.to_dict(), f, ensure_ascii=False, indent=2)
+
+
+# ── 이미지 품질 스코어링 ──
+
+def _score_resolution(width: int, height: int) -> float:
+    """해상도 점수 (0~30). 1920px 이상이면 만점."""
+    pixels = max(width, height)
+    if pixels >= 1920:
+        return 30.0
+    if pixels >= 1280:
+        return 25.0
+    if pixels >= 960:
+        return 20.0
+    if pixels >= 640:
+        return 12.0
+    if pixels >= 400:
+        return 5.0
+    return 0.0
+
+
+def _score_aspect_ratio(width: int, height: int, preferred: str = "16:9") -> float:
+    """종횡비 점수 (0~10). 선호 비율에 가까울수록 높은 점수."""
+    if width == 0 or height == 0:
+        return 0.0
+    ratio = width / height
+    targets = {"16:9": 16/9, "1:1": 1.0, "4:3": 4/3, "3:2": 3/2}
+    target = targets.get(preferred, 16/9)
+    diff = abs(ratio - target) / target
+    if diff < 0.05:
+        return 10.0
+    if diff < 0.15:
+        return 7.0
+    if diff < 0.3:
+        return 4.0
+    return 2.0
+
+
+def _score_license(license_str: str, source: str) -> float:
+    """라이선스 점수 (0~20). CC/공개 도메인이면 높은 점수."""
+    license_lower = license_str.lower()
+    if any(tag in license_lower for tag in ("cc0", "public domain", "pd")):
+        return 20.0
+    if any(tag in license_lower for tag in ("cc", "likely_cc", "pixabay")):
+        return 15.0
+    if source in ("wikimedia", "pixabay", "wikipedia"):
+        return 12.0
+    return 3.0
+
+
+def _score_relevance(query: str, title: str, description: str) -> float:
+    """관련도 점수 (0~25). 쿼리 키워드가 제목/설명에 포함될수록 높은 점수."""
+    query_words = set(query.lower().split())
+    if not query_words:
+        return 10.0  # 기본점
+    text = f"{title} {description}".lower()
+    matched = sum(1 for w in query_words if w in text)
+    match_ratio = matched / len(query_words)
+    return round(match_ratio * 25.0, 1)
+
+
+def _score_source(source: str, source_domain: str) -> float:
+    """소스 신뢰도 점수 (0~15). 워터마크 도메인이면 감점."""
+    # 워터마크 유명 스톡사이트 → 감점
+    for wm_domain in WATERMARK_DOMAINS:
+        if wm_domain in source_domain:
+            return -20.0  # 페널티
+    if source in ("wikimedia", "wikipedia"):
+        return 15.0
+    if source == "pixabay":
+        return 13.0
+    if source == "serper":
+        # CC 안전 도메인이면 가산
+        for safe in CC_SAFE_DOMAINS:
+            if safe in source_domain:
+                return 12.0
+        return 5.0
+    return 3.0
+
+
+def score_image(img: SearchedImage, query: str, preferred_aspect: str = "16:9") -> float:
+    """이미지 종합 스코어 (0~100). 높을수록 좋음."""
+    s = 0.0
+    s += _score_resolution(img.width, img.height)
+    s += _score_aspect_ratio(img.width, img.height, preferred_aspect)
+    s += _score_license(img.license, img.source)
+    s += _score_relevance(query, img.title, img.description)
+    s += _score_source(img.source, img.source_domain)
+    return round(s, 1)
+
+
+def rank_images(images: List[SearchedImage], query: str,
+                preferred_aspect: str = "16:9") -> List[SearchedImage]:
+    """이미지 목록을 스코어 기준으로 정렬 (높은 순)."""
+    scored = [(img, score_image(img, query, preferred_aspect)) for img in images]
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return [img for img, _s in scored]
+
+
+# ── 워터마크 감지 ──
+
+def detect_watermark(image_path: str) -> bool:
+    """다운로드된 이미지에서 워터마크 흔적을 감지.
+
+    휴리스틱 기반:
+    1. 대각선 반복 패턴 감지 (스톡 워터마크 특유)
+    2. 중앙/하단 영역의 비정상적 반투명 오버레이 감지
+    3. 이미지 전체의 고주파 텍스트 패턴 감지
+
+    Returns:
+        True면 워터마크 의심, False면 정상
+    """
+    if not HAS_PIL or not HAS_NUMPY:
+        return False
+
+    try:
+        img = Image.open(image_path).convert("RGB")
+        w, h = img.size
+
+        # 너무 작은 이미지는 검사 스킵
+        if w < 200 or h < 200:
+            return False
+
+        arr = np.array(img, dtype=np.float32)
+
+        # 1) 중앙 영역 반투명 오버레이 감지
+        # 워터마크가 있으면 중앙부 밝기 분산이 비정상적으로 높음
+        cx, cy = w // 2, h // 2
+        margin_x, margin_y = w // 6, h // 6
+        center_crop = arr[cy - margin_y:cy + margin_y, cx - margin_x:cx + margin_x]
+
+        if center_crop.size > 0:
+            # 그레이스케일 변환
+            gray_center = center_crop.mean(axis=2)
+
+            # 라플라시안(간이) — 고주파 에지 밀도 측정
+            # 워터마크 텍스트는 에지가 많고 반복적
+            dx = np.diff(gray_center, axis=1)
+            dy = np.diff(gray_center, axis=0)
+            edge_density = (np.abs(dx).mean() + np.abs(dy).mean()) / 2
+
+            # 에지 밀도가 높고 대비가 낮으면 워터마크 의심
+            # (실제 내용물은 대비가 높고 에지가 자연스러움)
+            contrast = gray_center.std()
+
+            # 워터마크: 에지 밀도 높음 + 대비 중간 (반투명 오버레이)
+            if edge_density > 15.0 and 10.0 < contrast < 40.0:
+                return True
+
+        # 2) 하단 1/6 영역 워터마크 텍스트 바 감지
+        bottom_strip = arr[int(h * 0.83):, :]
+        if bottom_strip.size > 0:
+            gray_bottom = bottom_strip.mean(axis=2)
+            bottom_std = gray_bottom.std()
+            # 하단이 균일한 색상(바) + 약간의 텍스트 에지
+            if bottom_std < 20.0:
+                # 균일한 바 영역 — 에지가 있는지 확인
+                dx_b = np.abs(np.diff(gray_bottom, axis=1))
+                if dx_b.mean() > 3.0:
+                    return True
+
+        # 3) 대각선 패턴 감지 (타일형 워터마크)
+        # 이미지를 4x4 그리드로 나눠서 각 블록의 평균 밝기 패턴 비교
+        block_h, block_w = h // 4, w // 4
+        if block_h > 20 and block_w > 20:
+            gray_full = arr.mean(axis=2)
+            block_means = []
+            for bi in range(4):
+                row = []
+                for bj in range(4):
+                    block = gray_full[bi*block_h:(bi+1)*block_h,
+                                      bj*block_w:(bj+1)*block_w]
+                    row.append(block.mean())
+                block_means.append(row)
+
+            # 대각선 패턴: (0,0)≈(1,1)≈(2,2)≈(3,3) 이면서
+            # (0,1)≈(1,2)≈(2,3) 이면 타일 반복 의심
+            diag = [block_means[i][i] for i in range(4)]
+            diag_std = np.std(diag)
+            off_diag = [block_means[i][(i+1)%4] for i in range(4)]
+            off_diag_std = np.std(off_diag)
+
+            # 대각선과 오프다각 모두 균일하면 타일 워터마크
+            if diag_std < 3.0 and off_diag_std < 3.0:
+                # 전체 분산은 있어야 함 (균일색 이미지가 아닌 경우)
+                full_std = gray_full.std()
+                if full_std > 15.0:
+                    return True
+
+        return False
+    except Exception:
+        return False
+
+
+def filter_watermarked(images: List[SearchedImage]) -> List[SearchedImage]:
+    """다운로드된 이미지 목록에서 워터마크 감지된 것을 제거."""
+    filtered = []
+    for img in images:
+        if not img.local_path:
+            filtered.append(img)
+            continue
+        if detect_watermark(img.local_path):
+            print(f"    [WM] 워터마크 감지 — 제외: {Path(img.local_path).name}")
+            # 워터마크 이미지 파일 삭제
+            try:
+                Path(img.local_path).unlink(missing_ok=True)
+            except Exception:
+                pass
+        else:
+            filtered.append(img)
+    return filtered
 
 
 class WikimediaSearcher:
@@ -297,56 +522,95 @@ class ImageSearcher:
             return None
 
     def search_and_download(self, query: str, limit: int = 5,
-                            source: str = "wikimedia") -> List[SearchedImage]:
+                            source: str = "wikimedia",
+                            preferred_aspect: str = "16:9") -> List[SearchedImage]:
+        """검색 → 스코어링 → 상위 N개 다운로드 → 워터마크 필터링."""
+        # 더 많이 검색해서 랭킹할 여지를 확보
+        fetch_limit = max(limit * 3, 10)
+
         if source == "wikimedia":
-            result = self.search_wikimedia(query, limit)
+            result = self.search_wikimedia(query, fetch_limit)
         elif source == "serper":
-            result = self.search_serper(query, limit)
+            result = self.search_serper(query, fetch_limit)
         elif source == "pixabay":
-            result = self.search_pixabay(query, limit)
+            result = self.search_pixabay(query, fetch_limit)
         else:
             raise ValueError(f"Unknown source: {source}")
 
+        # 1) 스톡 워터마크 도메인 사전 필터링
+        candidates = [
+            img for img in result.images
+            if not any(wd in img.source_domain for wd in WATERMARK_DOMAINS)
+        ]
+        if not candidates:
+            candidates = result.images  # 폴백
+
+        # 2) 메타데이터 기반 스코어링 + 정렬
+        ranked = rank_images(candidates, query, preferred_aspect)
+
+        # 3) 상위 N개만 다운로드
         downloaded = []
-        for img in result.images:
+        for img in ranked:
+            if len(downloaded) >= limit:
+                break
             path = self.download_image(img)
             if path:
                 downloaded.append(img)
+
+        # 4) 워터마크 감지 필터링
+        downloaded = filter_watermarked(downloaded)
+
         return downloaded
 
-    def search_waterfall(self, query: str, limit: int = 3) -> List[SearchedImage]:
-        """워터폴 폴백: wikimedia → serper → pixabay 순서로 시도"""
+    def search_waterfall(self, query: str, limit: int = 3,
+                         preferred_aspect: str = "16:9") -> List[SearchedImage]:
+        """워터폴 폴백: wikimedia → serper → pixabay.
+        모든 소스에서 후보를 모아 통합 랭킹."""
+        all_candidates: List[SearchedImage] = []
+
         # 1. Wikimedia (무료/CC)
-        result = self.search_wikimedia(query, limit)
-        downloaded = []
-        for img in result.images:
-            path = self.download_image(img)
-            if path:
-                downloaded.append(img)
-        if downloaded:
-            return downloaded
+        result = self.search_wikimedia(query, limit * 3)
+        all_candidates.extend(result.images)
 
         # 2. Serper (Google Images)
         try:
-            result = self.search_serper(query, limit)
-            for img in result.images:
-                path = self.download_image(img)
-                if path:
-                    downloaded.append(img)
-            if downloaded:
-                return downloaded
+            result = self.search_serper(query, limit * 3)
+            all_candidates.extend(result.images)
         except ValueError:
             pass
 
         # 3. Pixabay (스톡포토)
         try:
-            result = self.search_pixabay(query, limit)
-            for img in result.images:
-                path = self.download_image(img)
-                if path:
-                    downloaded.append(img)
+            result = self.search_pixabay(query, limit * 2)
+            all_candidates.extend(result.images)
         except ValueError:
             pass
+
+        if not all_candidates:
+            return []
+
+        # 스톡 워터마크 도메인 사전 필터링
+        filtered = [
+            img for img in all_candidates
+            if not any(wd in img.source_domain for wd in WATERMARK_DOMAINS)
+        ]
+        if not filtered:
+            filtered = all_candidates
+
+        # 통합 랭킹
+        ranked = rank_images(filtered, query, preferred_aspect)
+
+        # 상위 N개 다운로드
+        downloaded = []
+        for img in ranked:
+            if len(downloaded) >= limit:
+                break
+            path = self.download_image(img)
+            if path:
+                downloaded.append(img)
+
+        # 워터마크 감지 필터링
+        downloaded = filter_watermarked(downloaded)
 
         return downloaded
 
@@ -420,20 +684,27 @@ class ImageSearcher:
             if not query:
                 continue
 
-            print(f"  [검색] scene_{scene_num:03d}: '{query}' (source={source})")
+            # placement에 따른 선호 종횡비 결정
+            placement = asset.get("placement", "background")
+            preferred = "1:1" if placement in ("left", "right") else "16:9"
+
+            print(f"  [검색] scene_{scene_num:03d}: '{query}' (source={source}, {preferred})")
 
             if source == "wikimedia":
-                downloaded = self.search_and_download(query, 3, "wikimedia")
+                downloaded = self.search_and_download(query, 3, "wikimedia", preferred)
                 if not downloaded:
-                    # 폴백: serper → pixabay
-                    downloaded = self.search_waterfall(query, 3)
+                    downloaded = self.search_waterfall(query, 3, preferred)
             else:
-                downloaded = self.search_and_download(query, 3, "serper")
+                try:
+                    downloaded = self.search_and_download(query, 3, "serper", preferred)
+                except ValueError:
+                    downloaded = []
                 if not downloaded:
-                    downloaded = self.search_waterfall(query, 3)
+                    downloaded = self.search_waterfall(query, 3, preferred)
 
             if downloaded:
                 best = downloaded[0]
+                best_score = score_image(best, query, preferred)
                 results[scene_num] = {
                     "local_path": best.local_path,
                     "license": best.license,
@@ -442,8 +713,9 @@ class ImageSearcher:
                     "title": best.title,
                     "width": best.width,
                     "height": best.height,
+                    "score": best_score,
                 }
-                print(f"    → {best.local_path}")
+                print(f"    → {best.local_path} (score={best_score}, {best.width}x{best.height})")
             else:
                 print(f"    → 이미지 없음")
 

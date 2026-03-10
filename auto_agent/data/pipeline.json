@@ -96,27 +96,39 @@
       "steps": [
         {
           "id": "step_5",
+          "name": "scene_decomposition",
+          "description": "원고 → 씬 분할 (scene_decomposition.json 생성)",
+          "agent": "visual-composer",
+          "input": ["final_manuscript.md", "outline.json", "research_report.json"],
+          "output": "scene_decomposition.json",
+          "skills": ["shared/scene-segmentation"],
+          "notes": "visual-composer의 1단계만 수행. 씬 분할 결과를 먼저 생성하여 캐릭터 플래닝에 활용"
+        },
+        {
+          "id": "step_5b",
           "name": "character_planning",
-          "description": "원고 분석 → 2씬+ 등장 캐릭터 추출 + 변이 분석 + 캐릭터 계획 수립",
+          "description": "씬 분할 기반 2씬+ 등장 캐릭터 추출 + 변이 분석 + 캐릭터 계획 수립",
           "agent": "character-planner",
-          "input": ["final_manuscript.md", "research_report.json"],
+          "input": ["final_manuscript.md", "scene_decomposition.json", "research_report.json"],
           "input_optional": ["art_style.json"],
           "output": "character_plan.json",
           "conditional": true,
-          "condition": "원고에 캐릭터가 2씬+ 등장하는 경우",
-          "condition_check": {"type": "file_exists", "path": "final_manuscript.md"},
-          "notes": "final_manuscript.md의 ## Scene N: 구조에서 직접 인물 추출 (기존 scene_decomposition.json 입력에서 변경)"
+          "condition": "씬 분할 결과에서 캐릭터가 2씬+ 등장하는 경우",
+          "condition_check": {"type": "file_exists", "path": "scene_decomposition.json"},
+          "depends_on": "step_5",
+          "notes": "scene_decomposition.json의 씬 구조를 기반으로 2씬 이상 등장 캐릭터를 정확히 추출"
         },
         {
           "id": "step_6",
-          "name": "visual_composition_full",
-          "description": "씬 분할 → 렌더링 스펙 → 데이터 보강 → 모션 설계 (4-in-1)",
+          "name": "visual_composition",
+          "description": "Creative Direction → Asset Advisory → 데이터 보강 → 모션 설계",
           "agent": "visual-composer",
-          "input": ["final_manuscript.md", "outline.json", "research_report.json"],
+          "input": ["final_manuscript.md", "outline.json", "research_report.json", "scene_decomposition.json"],
           "input_optional": ["character_plan.json"],
-          "output": ["scene_decomposition.json", "scene_specs.json", "motion_plan.json"],
+          "output": ["scene_specs.json", "motion_plan.json"],
           "skills": ["shared/remotion-design-system", "shared/scene-segmentation", "shared/creative-direction", "shared/motion-rhythm", "shared/data-mapping", "shared/chart-mapping", "shared/asset-advisory"],
-          "notes": "4단계 순차 실행: (1) 씬 분할→scene_decomposition.json (기존 scene-decomposer), (2) 렌더링 스펙→scene_specs.json, (3) 데이터 보강→scene_specs.json 업데이트 (기존 data-enricher), (4) 모션 설계→motion_plan.json (기존 motion-choreographer)"
+          "depends_on": "step_5b",
+          "notes": "씬 분할 완료 상태에서 4단계 순차 실행: (1) Creative Direction, (2) Asset Advisory, (3) 데이터 보강→scene_specs.json, (4) 모션 설계→motion_plan.json. scene_decomposition.json은 step_5에서 이미 생성됨"
         }
       ]
     },
