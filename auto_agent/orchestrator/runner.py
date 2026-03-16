@@ -607,8 +607,9 @@ class PipelineRunner:
         chapter_results = {}
         total_cost = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0}
 
-        # 1차 병렬 실행
-        with ThreadPoolExecutor(max_workers=4) as pool:
+        # 1차 병렬 실행 (챕터 수에 따라 최대 10 워커)
+        workers = min(n_chapters, 10)
+        with ThreadPoolExecutor(max_workers=workers) as pool:
             futures = {}
             for ch_num, ch_scenes in chapters.items():
                 fut = pool.submit(
