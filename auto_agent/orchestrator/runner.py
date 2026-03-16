@@ -974,6 +974,67 @@ JSON 구조는 기존 scene_specs와 동일하되, scenes 배열에는 챕터 {c
 
         return full_text[start:end][:15000]
 
+    def _ensure_art_style_and_characters(self):
+        """아트스타일 JSON + reference image + 기준 캐릭터 이미지 존재 확인.
+        누락 시 패키지에서 복제 또는 Supabase에서 다운로드."""
+        config = self.state.config
+        art_style_rel = config.get("art_style")
+
+        # 1. art_style.json 확인/복제
+        if art_style_rel:
+            art_path = self.project_dir / art_style_rel
+        else:
+            art_path = None
+
+        if not art_path or not art_path.exists():
+            default_style = PACKAGE_DIR / "data" / "artstyle" / "styles" / "semoji.json"
+            if default_style.exists():
+                target_dir = self.project_dir / "artstyle" / "styles"
+                target_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy(default_style, target_dir / "semoji.json")
+                # reference image 복제
+                src_dir = PACKAGE_DIR / "data" / "artstyle" / "styles"
+                for img in src_dir.glob("semoji*"):
+                    if img.suffix in (".jpg", ".png"):
+                        shutil.copy(img, target_dir / img.name)
+                _notify("System", "아트스타일 누락 → 기본 스타일(semoji) 복제했습니다",
+                        phase=self.state.current_phase, project=self.project_slug,
+                        level="warning")
+                print("    [PREFLIGHT] 아트스타일 복제 완료")
+
+        # 2. character_casting.json 기반 기준 캐릭터 이미지 확인
+        casting_path = self.project_dir / "output" / self.project_slug / "character_casting.json"
+        if not casting_path.exists():
+            return
+
+        try:
+            casting = json.loads(casting_path.read_text(encoding="utf-8"))
+        except Exception:
+            return
+
+        for char_id, info in casting.items():
+            img_rel = info.get("image_path", "")
+            if not img_rel:
+                continue
+            img_path = self.project_dir / img_rel
+            if img_path.exists():
+                continue
+
+            # Supabase Storage에서 다운로드 시도
+            storage_url = info.get("storage_url")
+            if storage_url:
+                try:
+                    import urllib.request
+                    img_path.parent.mkdir(parents=True, exist_ok=True)
+                    urllib.request.urlretrieve(storage_url, str(img_path))
+                    _notify("System", f"기준 캐릭터 '{char_id}' 이미지 복원했습니다",
+                            phase=self.state.current_phase, project=self.project_slug,
+                            level="warning")
+                except Exception:
+                    _notify("System", f"기준 캐릭터 '{char_id}' 복원 실패 — 이미지 재생성 필요",
+                            phase=self.state.current_phase, project=self.project_slug,
+                            level="error")
+
     # ─────────────────────────────────────
     # Step 실행
     # ─────────────────────────────────────
@@ -993,6 +1054,10 @@ JSON 구조는 기존 scene_specs와 동일하되, scenes 배열에는 챕터 {c
         # chunked_parallel 분기
         if step.get("chunked_parallel"):
             return self._run_chunked_parallel(step)
+
+        # 이미지 소싱 전 아트스타일/캐릭터 프리플라이트
+        if step_name == "image_asset_sourcing":
+            self._ensure_art_style_and_characters()
 
         self.state.current_step = step_id
         print(f"  [{step_id}] {step_name} ... ", end="", flush=True)
