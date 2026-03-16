@@ -77,7 +77,7 @@ def parse_manuscript_chapters(text: str) -> list:
     current_scene = None
 
     for line in text.split("\n"):
-        ch_match = re.match(r'^#{1,2}\s*(?:Ch(?:apter)?)\s*(\d+)[\.\s]+(.+)', line)
+        ch_match = re.match(r'^#{1,2}\s*(?:Ch(?:apter)?)\s*(\d+)[:\.\s]+(.+)', line)
         if ch_match:
             if current_scene:
                 current_scenes.append(current_scene)
@@ -270,6 +270,7 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
         "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
         "comparison_table", "before_after", "icon_stat", "stacked_progress",
         "card_carousel", "hero_with_context", "quote_portrait", "annotated_chart",
+        "cinematic",
     }
 
     # 1순위: creative.layout 직접 지정

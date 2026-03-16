@@ -246,6 +246,43 @@ items가 2개 이상이면 itemIcons를 **반드시** 함께 제공한다. 아�
 | `hero_with_context` | "핵심 메시지가 크고, 부연이 작게 따라온다" | headline + items (보조 정보) |
 | `quote_portrait` | "인물 사진과 함께 인용문을 보여줄 때" | images[0] + items[0] (인용문) |
 | `annotated_chart` | "차트에 주석을 달아 특정 부분을 설명할 때" | items + values + annotations[] |
+| `cinematic` | "텍스트 없이 이미지만으로 감정/분위기를 전달할 때" | imageAsset (필수), headline/items 불필요 |
+
+### cinematic 레이아웃 가이드
+
+`cinematic`은 **텍스트를 일절 표시하지 않는** 유일한 레이아웃이다. 나레이션이 이야기를 전달하고, 화면은 순수하게 시각적 감정만 담당한다.
+
+**언제 사용하나:**
+- 폭격, 전쟁, 재난 등 **강렬한 이미지가 나레이션보다 더 강한 임팩트**를 줄 때
+- 감정적 전환 구간 — 여운, 슬픔, 경외감을 **이미지 + 침묵(또는 나레이션)**으로 전달
+- 나레이션이 이미 충분히 설명적이어서 **텍스트가 오히려 방해**할 때
+- 챕터 전환 직전/직후의 **브리딩 포인트**
+
+**필수 조건:**
+- `imageAsset.source`가 반드시 설정되어야 함 (search 또는 generate)
+- `imageAsset.placement: "fullscreen"`, `imageAsset.opacity: 0.85` 이상 권장
+- headline/items는 비워도 되지만, concept은 반드시 작성 (이미지 검색/생성 키워드로 사용)
+
+```json
+{
+  "creative": {
+    "concept": "이란 상공에서 폭발하는 미사일의 야간 장노출 사진",
+    "layout": "cinematic",
+    "reveal": "fade_in",
+    "emphasis": "none",
+    "headline": "",
+    "mood": "dramatic"
+  },
+  "imageAsset": {
+    "source": "search",
+    "query": "Iran airstrike night explosion 2026",
+    "placement": "fullscreen",
+    "opacity": 0.9
+  }
+}
+```
+
+**주의:** 전체 영상에서 cinematic 씬이 과도하면 정보 전달력이 떨어진다. 전체 씬의 **10~15% 이내**가 적절하다.
 
 ### layout 사용 예시
 

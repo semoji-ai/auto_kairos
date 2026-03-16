@@ -119,7 +119,8 @@ type LayoutType =
   | "card_carousel"     // Card 3-4장 수평 스태거 (정보 카드)
   | "hero_with_context" // 큰 헤드라인 + 작은 부연 카드들
   | "quote_portrait"    // ImageBadge 큰 사이즈 + QuoteMark + 인용문
-  | "annotated_chart";  // bar/pie/line + AnnotationLine + Callout
+  | "annotated_chart"   // bar/pie/line + AnnotationLine + Callout
+  | "cinematic";        // 이미지 풀스크린 + Ken Burns, 텍스트 없음 (나레이션만)
 
 /* ================================================================
    Layout Resolution — 의도 기반 (creative.layout 직접 지정) + 데이터 추론 fallback
@@ -132,6 +133,7 @@ const VALID_LAYOUTS = new Set<LayoutType>([
   "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
   "comparison_table", "before_after", "icon_stat", "stacked_progress",
   "card_carousel", "hero_with_context", "quote_portrait", "annotated_chart",
+  "cinematic",
 ]);
 
 function resolveLayout(data: any, creative: any): LayoutType {
@@ -2675,12 +2677,16 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
 
   // Quote
   if (layout === "quote") {
-    // items[0]이 인용문 본문이어야 함. 화자 이름만 있으면(짧은 텍스트) headline을 폴백
+    // headline에 줄바꿈(\n)이 있으면 우선 사용 (줄바꿈이 의도된 표시 텍스트)
+    const headlineClean = headline.replace(/\{\{|\}\}/g, "");
+    const headlineHasBreak = headline.includes("\n") || headline.includes("\\n");
     const rawQuoteItems = items.length > 0 ? items : (data.quote ? [data.quote] : []);
     const isNameOnly = rawQuoteItems.length === 1 && rawQuoteItems[0].length <= 10 && !rawQuoteItems[0].includes(" ");
     const quoteItems = (rawQuoteItems.length === 0 || isNameOnly)
-      ? [headline.replace(/\{\{|\}\}/g, "")]
-      : rawQuoteItems;
+      ? [headlineClean]
+      : headlineHasBreak
+        ? [headlineClean]
+        : rawQuoteItems;
     // 화자 이름이 items에 잘못 들어왔으면 source로 사용
     const effectiveSource = (isNameOnly && !source) ? rawQuoteItems[0] : source;
     return (
@@ -2786,6 +2792,17 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
         glowOpacity={glowOpacity}
         hasImageBg={hasImageBackground}
       />
+    );
+  }
+
+  // === cinematic: 이미지 풀스크린 + Ken Burns, 텍스트 없음 (나레이션만) ===
+  // 이미지는 부모(SimpleVideo)의 SceneImage가 렌더링하므로,
+  // CreativeScene은 빈 화면만 반환 → 이미지 위에 텍스트가 없는 순수 시각 씬
+  if (layout === "cinematic") {
+    return (
+      <AbsoluteFill>
+        {!hasImageBackground && <MoodBackground mood={mood} transparent={false} />}
+      </AbsoluteFill>
     );
   }
 
