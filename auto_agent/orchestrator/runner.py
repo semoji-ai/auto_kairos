@@ -1116,31 +1116,43 @@ JSON 구조는 기존 scene_specs와 동일하되, scenes 배열에는 챕터 {c
 
     def _ensure_art_style_and_characters(self):
         """아트스타일 JSON + reference image + 기준 캐릭터 이미지 존재 확인.
-        누락 시 패키지에서 복제 또는 Supabase에서 다운로드."""
+        config에 지정된 스타일을 패키지에서 복제. config 미설정 시 경고만."""
         config = self.state.config
         art_style_rel = config.get("art_style")
 
-        # 1. art_style.json 확인/복제
-        if art_style_rel:
-            art_path = self.project_dir / art_style_rel
-        else:
-            art_path = None
+        if not art_style_rel:
+            _notify("System", "아트스타일 미설정 — config에 art_style을 설정해주세요",
+                    phase=self.state.current_phase, project=self.project_slug,
+                    level="error")
+            print("    [PREFLIGHT] 아트스타일 config 미설정")
+            return
 
-        if not art_path or not art_path.exists():
-            default_style = PACKAGE_DIR / "data" / "artstyle" / "styles" / "semoji.json"
-            if default_style.exists():
-                target_dir = self.project_dir / "artstyle" / "styles"
-                target_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copy(default_style, target_dir / "semoji.json")
-                # reference image 복제
-                src_dir = PACKAGE_DIR / "data" / "artstyle" / "styles"
-                for img in src_dir.glob("semoji*"):
-                    if img.suffix in (".jpg", ".png"):
-                        shutil.copy(img, target_dir / img.name)
-                _notify("System", "아트스타일 누락 → 기본 스타일(semoji) 복제했습니다",
-                        phase=self.state.current_phase, project=self.project_slug,
-                        level="warning")
-                print("    [PREFLIGHT] 아트스타일 복제 완료")
+        # 1. 프로젝트 디렉토리에서 확인
+        art_path = self.project_dir / art_style_rel
+        if art_path.exists():
+            return  # 이미 존재
+
+        # 2. 패키지 디렉토리에서 복제
+        pkg_path = PACKAGE_DIR / "data" / art_style_rel
+        if pkg_path.exists():
+            target_dir = art_path.parent
+            target_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy(pkg_path, art_path)
+            # 같은 디렉토리의 관련 파일(reference image 등) 복제
+            style_stem = pkg_path.stem  # e.g. "quirky_cartoon"
+            for f in pkg_path.parent.glob(f"{style_stem}*"):
+                if f != pkg_path:
+                    shutil.copy(f, target_dir / f.name)
+            style_name = config.get("style_name", style_stem)
+            _notify("System", f"아트스타일 '{style_name}' 패키지에서 복제했습니다",
+                    phase=self.state.current_phase, project=self.project_slug,
+                    level="info")
+            print(f"    [PREFLIGHT] 아트스타일 '{style_name}' 복제 완료")
+        else:
+            _notify("System", f"아트스타일 파일 없음: {art_style_rel}",
+                    phase=self.state.current_phase, project=self.project_slug,
+                    level="error")
+            print(f"    [PREFLIGHT] 아트스타일 파일 없음: {art_style_rel}")
 
         # 2. character_casting.json 기반 기준 캐릭터 이미지 확인
         casting_path = self.project_dir / "output" / self.project_slug / "character_casting.json"
