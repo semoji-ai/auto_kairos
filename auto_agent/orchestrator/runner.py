@@ -20,6 +20,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
@@ -29,6 +30,132 @@ from typing import Dict, List, Optional
 
 from auto_agent.paths import get_workspace_dir, get_data_dir, PACKAGE_DIR, DATA_DIR
 from auto_agent.orchestrator.context_memory import ContextMemory
+from auto_agent.orchestrator.vault_rag import VaultRAG
+
+# ── Agent Messenger 브릿지 ──
+_MESSENGER_URL = "http://localhost:8080/api/agent-messages/send"
+
+def _notify(agent: str, text: str, phase: str = "", project: str = "", level: str = "info", data: dict = None):
+    """파이프라인 진행 상황을 대시보드 메신저로 HTTP POST 전송."""
+    try:
+        import urllib.request
+        payload = json.dumps({
+            "agent": agent, "text": text, "phase": phase,
+            "project": project, "level": level, "data": data or {},
+        }, ensure_ascii=False).encode("utf-8")
+        req = urllib.request.Request(
+            _MESSENGER_URL, data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        urllib.request.urlopen(req, timeout=2)
+    except Exception:
+        pass
+
+
+# ── 메신저 한글 메시지 매핑 ──
+_MSG_MAP = {
+    # phase_0
+    "environment_check":          ("환경 검증",           "환경 검증 통과"),
+    # phase_1
+    "deep_research_and_synthesis":("심층 리서치",          "심층 리서치 완료"),
+    "outline_and_manuscript":     ("아웃라인/원고 작성",    "아웃라인/원고 작성 완료"),
+    # phase_2
+    "duplicate_check":            ("중복 감지",            "중복 감지 완료"),
+    "fact_check":                 ("팩트 체크",            "팩트 체크 완료"),
+    # phase_3
+    "scene_decomposition":        ("씬 분할",              "씬 분할 완료"),
+    "character_planning":         ("캐릭터 플래닝",         "캐릭터 플래닝 완료"),
+    "creative_direction":         ("창의적 연출",           "창의적 연출 완료"),
+    "asset_advisory":             ("에셋 심의",            "에셋 심의 완료"),
+    "data_enrichment_and_motion": ("데이터 보강/모션 설계",  "데이터 보강/모션 설계 완료"),
+    # phase_4
+    "tts_preprocess":             ("TTS 전처리",           "TTS 전처리 완료"),
+    "tts_generation":             ("음성 생성",            "음성 생성 완료"),
+    "image_asset_sourcing":       ("이미지 소싱",           "이미지 소싱 완료"),
+    "subtitle_sync":              ("자막 동기화",           "자막 동기화 완료"),
+    "tts_verification":           ("TTS 발음 검증",         "TTS 발음 검증 완료"),
+    # phase_5
+    "data_validation":            ("데이터 정합성 검증",     "데이터 검증 통과"),
+    "manifest_building":          ("매니페스트 빌드",        "매니페스트 빌드 완료"),
+    "still_capture":              ("스틸 프레임 캡처",       "스틸 프레임 캡처 완료"),
+    "qa_pre_render":              ("사전 QA 검수",          "사전 QA 검수 통과"),
+    "video_assembly":             ("영상 렌더링",           "영상 렌더링 완료"),
+    "qa_post_render":             ("사후 QA 검수",          "사후 QA 검수 완료"),
+}
+
+
+def _step_label(step_name: str, event: str = "start") -> str:
+    """step_name → 한글 메시지 변환. event: 'start' | 'done' | 'fail'"""
+    labels = _MSG_MAP.get(step_name)
+    if not labels:
+        return step_name
+    start_label, done_label = labels
+    if event == "start":
+        return f"{start_label} 시작합니다"
+    elif event == "done":
+        return done_label
+    else:  # fail
+        return f"{start_label} 실패"
+
+
+class ProgressFileMonitor:
+    """에이전트가 기록하는 .progress.jsonl 파일을 감시하여 메신저로 중계."""
+
+    def __init__(self, progress_path: Path, project_slug: str, phase: str):
+        self.path = progress_path
+        self.project_slug = project_slug
+        self.phase = phase
+        self._stop = threading.Event()
+        self._thread = None
+        self._pos = 0
+
+    def start(self):
+        # 기존 파일 초기화
+        self.path.write_text("", encoding="utf-8")
+        self._pos = 0
+        self._thread = threading.Thread(target=self._watch, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=2)
+        # 남은 줄 flush
+        self._flush_remaining()
+        # 임시 파일 정리
+        self.path.unlink(missing_ok=True)
+
+    def _watch(self):
+        while not self._stop.is_set():
+            self._flush_remaining()
+            self._stop.wait(0.5)
+
+    def _flush_remaining(self):
+        try:
+            if not self.path.exists():
+                return
+            with open(self.path, "r", encoding="utf-8") as f:
+                f.seek(self._pos)
+                new_lines = f.readlines()
+                self._pos = f.tell()
+            for line in new_lines:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    msg = json.loads(line)
+                    _notify(
+                        agent=msg.get("agent", "System"),
+                        text=msg.get("text", ""),
+                        phase=msg.get("phase", self.phase),
+                        project=self.project_slug,
+                        level=msg.get("level", "info"),
+                        data=msg.get("data"),
+                    )
+                except json.JSONDecodeError:
+                    pass
+        except Exception:
+            pass
 
 PROJECT_ROOT = get_workspace_dir()  # 하위 호환
 
@@ -86,8 +213,13 @@ class PipelineRunner:
             started_at=datetime.now().isoformat(),
             config=self._load_project_config(),
         )
-        self.project_dir = Path(self.project["output_dir"])
+        output_dir = self.project["output_dir"]
+        if not output_dir:
+            output_dir = str(get_workspace_dir() / "output" / project_slug)
+        self.project_dir = Path(output_dir)
+        self.project_dir.mkdir(parents=True, exist_ok=True)
         self.context_memory = ContextMemory(self.project_dir)
+        self.vault = VaultRAG()
         self.sync = self._init_sync()
 
     def _init_sync(self):
@@ -108,8 +240,8 @@ class PipelineRunner:
             return json.load(f)
 
     def _get_project_manager(self):
-        from auto_agent.db.project_manager import ProjectManager
-        return ProjectManager()
+        from auto_agent.dashboard.supabase_data import SupabaseProjectManager
+        return SupabaseProjectManager()
 
     def _resolve_project(self) -> dict:
         project = self.pm.get_project(slug=self.project_slug)
@@ -151,6 +283,7 @@ class PipelineRunner:
         print(f"Config: art_style={self.state.config.get('art_style', 'N/A')}")
         print(f"        voice_id={self.state.config.get('voice_id', 'N/A')}")
         print(f"{'=' * 60}\n")
+        _notify("Director", "파이프라인 시작합니다", phase="pipeline", project=self.project_slug, level="info")
 
         # 프로젝트 상태 업데이트
         self.pm.update_project(self.project["id"], status="in_progress")
@@ -191,6 +324,7 @@ class PipelineRunner:
             print(f"{'─' * 40}\n")
 
             self.state.current_phase = phase_id
+            _notify("Director", f"{phase_name} 시작합니다 ({len(steps)}개 스텝)", phase=phase_id, project=self.project_slug)
 
             if dry_run:
                 for step in steps:
@@ -218,17 +352,21 @@ class PipelineRunner:
             self.state.results[step["id"]] = result.__dict__
 
             if result.status == "failed":
+                step_name = step.get("name", step["id"])
                 # gate step이면 파이프라인 중단
                 if step.get("gate"):
                     print(f"\n  GATE FAILED: {step['id']} — 파이프라인 중단")
+                    _notify("Director", f"파이프라인 중단 — {_step_label(step_name, 'fail')}", phase=self.state.current_phase, project=self.project_slug, level="error")
                     self.state.failed_steps.append(step["id"])
                     return
                 # non-blocking이면 계속
                 if step.get("blocking") is False:
                     print(f"  [WARN] {step['id']} failed (non-blocking) — 계속 진행")
+                    _notify("Director", f"{_step_label(step_name, 'fail')} (non-blocking) — 계속 진행", phase=self.state.current_phase, project=self.project_slug, level="warning")
                     self.state.failed_steps.append(step["id"])
                 else:
                     print(f"\n  STEP FAILED: {step['id']} — 파이프라인 중단")
+                    _notify("Director", f"{_step_label(step_name, 'fail')} — 파이프라인 중단", phase=self.state.current_phase, project=self.project_slug, level="error")
                     self.state.failed_steps.append(step["id"])
                     return
             else:
@@ -361,6 +499,8 @@ class PipelineRunner:
 
         self.state.current_step = step_id
         print(f"  [{step_id}] {step_name} ... ", end="", flush=True)
+        _agent_label = step.get("agent") or step.get("module", "System")
+        _notify(_agent_label, _step_label(step_name, "start"), phase=self.state.current_phase, project=self.project_slug)
 
         # DB 파이프라인 기록 시작
         run_id = self.pm.start_pipeline_run(
@@ -396,6 +536,7 @@ class PipelineRunner:
                 )
                 cost_str = f" ${cost['cost_usd']:.4f}" if cost.get("cost_usd") else ""
                 print(f"OK ({elapsed:.1f}s{cost_str})")
+                _notify(_agent_label, f"{_step_label(step_name, 'done')} ({elapsed:.1f}s{cost_str})", phase=self.state.current_phase, project=self.project_slug, level="success")
 
                 # 컨텍스트 메모리 수집 (에이전트 step만)
                 if step.get("agent") and result.output_files:
@@ -407,6 +548,13 @@ class PipelineRunner:
                         )
                     except Exception as mem_err:
                         print(f"    [WARN] 컨텍스트 메모리 수집 실패: {mem_err}")
+
+                # 볼트 축적 (리서치 완료 후 자동 저장)
+                if step.get("agent") == "research-orchestrator" and self.vault.enabled:
+                    try:
+                        self._vault_save_research(step, result)
+                    except Exception as vault_err:
+                        print(f"    [WARN] 볼트 축적 실패: {vault_err}")
 
                 # Supabase 동기화
                 if self.sync:
@@ -426,6 +574,7 @@ class PipelineRunner:
             else:
                 self.pm.fail_pipeline_run(run_id, result.error)
                 print(f"FAIL ({elapsed:.1f}s) — {result.error[:80]}")
+                _notify(_agent_label, f"{_step_label(step_name, 'fail')}: {result.error[:60]}", phase=self.state.current_phase, project=self.project_slug, level="error")
 
             return result
 
@@ -433,6 +582,7 @@ class PipelineRunner:
             elapsed = time.time() - t0
             self.pm.fail_pipeline_run(run_id, str(e))
             print(f"ERROR ({elapsed:.1f}s) — {e}")
+            _notify(_agent_label, f"{_step_label(step_name, 'fail')}: {str(e)[:60]}", phase=self.state.current_phase, project=self.project_slug, level="error")
             return StepResult(step_id=step_id, status="failed",
                               duration_sec=elapsed, error=str(e))
 
@@ -541,37 +691,58 @@ class PipelineRunner:
         for tool in allowed_tools:
             cmd.extend(["--allowedTools", tool])
 
-        # 프롬프트 파일 입력
-        cmd.extend(["--input-file", str(prompt_file)])
-
         print(f"\n    → CLI {agent} (model={model}, max_turns={max_turns}, "
               f"budget=${budget})", flush=True)
 
-        # 5. 서브프로세스 실행
+        # 5. 서브프로세스 실행 (Popen + 프로그레스 모니터링)
         env = os.environ.copy()
         env["PROJECT_NAME"] = self.project_slug
+        # Claude Code 중첩 세션 방지 해제
+        env.pop("CLAUDECODE", None)
+
+        progress_path = self.project_dir / f".progress_{step_id}.jsonl"
+        env["PROGRESS_FILE"] = str(progress_path)
+        monitor = ProgressFileMonitor(progress_path, self.project_slug, self.state.current_phase)
+        monitor.start()
+
+        # 프롬프트를 stdin으로 전달
+        prompt_text = prompt_file.read_text(encoding="utf-8")
 
         try:
-            result = subprocess.run(
+            proc = subprocess.Popen(
                 cmd,
                 cwd=str(self.project_dir),
                 env=env,
-                capture_output=True,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
-                timeout=timeout_sec,
             )
-        except subprocess.TimeoutExpired:
-            return StepResult(
-                step_id=step_id, status="failed",
-                error=f"Claude CLI 타임아웃 ({timeout_sec}s)",
-            )
+            try:
+                stdout, stderr = proc.communicate(input=prompt_text, timeout=timeout_sec)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.communicate()
+                return StepResult(
+                    step_id=step_id, status="failed",
+                    error=f"Claude CLI 타임아웃 ({timeout_sec}s)",
+                )
+
+            # subprocess.run 호환 객체 생성
+            class _Result:
+                pass
+            result = _Result()
+            result.stdout = stdout
+            result.stderr = stderr
+            result.returncode = proc.returncode
+
         except FileNotFoundError:
             return StepResult(
                 step_id=step_id, status="failed",
                 error="Claude CLI를 찾을 수 없습니다.",
             )
         finally:
-            # 임시 프롬프트 파일 정리
+            monitor.stop()
             prompt_file.unlink(missing_ok=True)
 
         # 6. 비용 정보 파싱
@@ -599,10 +770,11 @@ class PipelineRunner:
                 output_files=found, cost_info=cost_info,
             )
         elif missing:
+            detail = result.stderr[:300] if result.stderr else result.stdout[:300] if result.stdout else ""
             return StepResult(
                 step_id=step_id, status="failed",
                 error=f"출력 파일 미생성: {missing}. "
-                      f"exit_code={result.returncode}",
+                      f"exit_code={result.returncode}. {detail}",
                 cost_info=cost_info,
             )
         else:
@@ -662,9 +834,13 @@ class PipelineRunner:
                 error=f"Script not found: {script_path}",
             )
 
+        # 프로그레스 모니터 설정
+        progress_path = self.project_dir / f".progress_{step_id}.jsonl"
+        env["PROGRESS_FILE"] = str(progress_path)
+        monitor = ProgressFileMonitor(progress_path, self.project_slug, self.state.current_phase)
+        monitor.start()
+
         try:
-            # --project argv 대신 PROJECT_NAME env로 통일
-            # project_paths.py가 env를 2순위로 읽으므로 안전
             result = subprocess.run(
                 [sys.executable, str(script_path)],
                 cwd=str(get_workspace_dir()),
@@ -687,6 +863,8 @@ class PipelineRunner:
                 step_id=step_id, status="failed",
                 error="Timeout (600s)",
             )
+        finally:
+            monitor.stop()
 
     def _run_shell_command(self, step: dict, env: dict) -> StepResult:
         """shell 명령 실행 (video-assembler 등)."""
@@ -727,6 +905,42 @@ class PipelineRunner:
     # ─────────────────────────────────────
     # 헬퍼
     # ─────────────────────────────────────
+
+    def _vault_save_research(self, step: dict, result) -> None:
+        """리서치 완료 후 research_report.json에서 핵심 데이터를 볼트에 축적."""
+        report_path = self.project_dir / "research_report.json"
+        if not report_path.exists():
+            return
+
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        topic = report.get("topic", self.project_slug)
+        category = self.vault._detect_category(topic)
+
+        # 요약 추출
+        summary = report.get("summary", "")[:500]
+
+        # 핵심 팩트 추출
+        key_facts = []
+        for ep in report.get("episodes", [])[:10]:
+            for fact in ep.get("must_include", [])[:3]:
+                key_facts.append(fact)
+        # 통계
+        for stat in report.get("statistics", [])[:5]:
+            key_facts.append(f"{stat.get('label', '')}: {stat.get('value', '')}")
+
+        # 소스 추출
+        sources = []
+        for src in report.get("sources", [])[:10]:
+            sources.append(f"[{src.get('grade', '')}] {src.get('title', '')} — {src.get('url', '')}")
+
+        self.vault.save_research_result(
+            topic=topic,
+            category=category,
+            summary=summary,
+            key_facts=key_facts,
+            sources=sources,
+        )
+        print(f"    [VaultRAG] 리서치 결과 볼트 축적 완료: {topic}")
 
     def _find_claude_cli(self) -> str:
         """Claude CLI 바이너리 경로 탐색."""
@@ -836,7 +1050,17 @@ class PipelineRunner:
             step.get("id", "")
         )
 
-        # 6. 프롬프트 조립
+        # 6. 볼트 지식 주입 (Vault RAG)
+        vault_block = ""
+        if self.vault.enabled:
+            topic = self.state.config.get("topic", self.project_slug)
+            category = self.vault._detect_category(topic)
+            if agent_name in ("research-orchestrator",):
+                vault_block = self.vault.search_for_research(topic, category)
+            elif agent_name in ("write-manuscript",):
+                vault_block = self.vault.search_for_manuscript(topic, category)
+
+        # 7. 프롬프트 조립
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
 작업 디렉토리: {self.project_dir}
@@ -851,6 +1075,8 @@ class PipelineRunner:
 {shared_skills_text}
 </shared_skills>
 
+{vault_block}
+
 <task>
 Step: {step.get("id", "")} — {step.get("name", "")}
 {step.get("description", "")}
@@ -864,6 +1090,29 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
 모든 출력 파일을 성공적으로 생성하면 작업 완료입니다.
 </task>
+
+<progress_reporting>
+작업 진행 상황을 아래 파일에 기록하세요. 대시보드 메신저에 실시간으로 표시됩니다.
+파일 경로: {self.project_dir / f".progress_{step.get('id', '')}.jsonl"}
+
+Write 도구로 기록하되, 기존 내용 뒤에 append하세요 (기존 내용을 지우지 마세요).
+한 줄에 하나의 JSON:
+{{"agent": "에이전트이름", "text": "자연어 메시지", "level": "info"}}
+
+level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
+
+보고 시점과 내용:
+1. 작업 시작 → 무엇을 하려는지 ("코카콜라 초기 역사 리서치 시작")
+2. 병렬 태스크 배포 시 → 몇 개를 어떤 주제로 배포했는지
+3. 병렬 태스크가 하나씩 완료될 때마다 → 해당 태스크의 핵심 발견 서머리
+   예: {{"agent": "Explorer-1", "text": "초기 역사: 1886년 존 펨버턴이 발명, 약국에서 5센트에 판매 — 에피소드 3개", "level": "success"}}
+   예: {{"agent": "Explorer-3", "text": "마케팅: 산타클로스 캠페인(1931), I'd Like to Buy the World a Coke(1971) — 에피소드 4개", "level": "success"}}
+4. 전체 완료 시 → 통합 결과 요약 ("리서치 완료: 에피소드 12개, 통계 8건, 주요인물 5명")
+5. 실패/재시도 시 → 무슨 문제인지, 어떻게 대응하는지
+
+중요: 병렬 서브태스크(Task 도구)를 사용할 때, 각 태스크가 완료되면 즉시 해당 결과를 progress 파일에 기록하세요.
+톤: 자연어로 간결하게. 기술적 명령어나 파일 경로 대신 사람이 읽을 수 있는 내용 위주.
+</progress_reporting>
 
 {context_memory_block}"""
         return prompt
@@ -1035,6 +1284,11 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             print(f"  Tokens In: {cost_summary.get('total_tokens_in', 0):,}")
             print(f"  Tokens Out:{cost_summary.get('total_tokens_out', 0):,}")
         print(f"{'=' * 60}")
+
+        # 메신저 알림
+        level = "success" if failed == 0 else "warning"
+        cost_str = f" (${total_usd:.4f})" if total_usd > 0 else ""
+        _notify("Director", f"파이프라인 완료 — {completed}/{total} 성공{cost_str}", phase="pipeline", project=self.project_slug, level=level)
 
         # 상태 파일 저장
         state_path = self.project_dir / "pipeline_state.json"
