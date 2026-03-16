@@ -175,6 +175,16 @@ class StepResult:
 
 
 @dataclass
+class ChapterResult:
+    chapter: int
+    status: str  # "completed", "failed"
+    scenes: list = field(default_factory=list)
+    error: str = ""
+    cost_info: dict = field(default_factory=dict)
+    duration_sec: float = 0.0
+
+
+@dataclass
 class PipelineState:
     project_id: int
     project_slug: str
@@ -480,6 +490,59 @@ class PipelineRunner:
                 step_id=step_id, status="skipped",
                 error=f"Dependencies not met: {unmet}",
             ).__dict__
+
+    def _split_by_chapter(self, scene_specs: dict) -> Optional[dict]:
+        """scene_specs의 scenes를 chapter 필드로 그룹핑.
+
+        Returns:
+            {chapter_num: [scene_dict, ...], ...} 또는
+            chapter 필드 없으면 None (폴백 신호)
+        """
+        scenes = scene_specs.get("scenes", [])
+        if not scenes:
+            return None
+
+        has_chapter = any(s.get("chapter") for s in scenes)
+        if not has_chapter:
+            return None
+
+        from collections import defaultdict
+        chapters = defaultdict(list)
+        for scene in scenes:
+            ch = scene.get("chapter", 0)
+            chapters[ch].append(scene)
+
+        return dict(sorted(chapters.items()))
+
+    def _merge_chapter_results(
+        self,
+        original_specs: dict,
+        chapter_results: dict,
+    ) -> dict:
+        """챕터별 결과를 원본 scene_specs에 병합.
+
+        Args:
+            original_specs: 원본 scene_specs 전체
+            chapter_results: {chapter_num: ChapterResult}
+
+        Returns:
+            병합된 scene_specs dict
+        """
+        merged_scenes = []
+
+        for ch_num, ch_result in sorted(chapter_results.items()):
+            if ch_result.status == "completed" and ch_result.scenes:
+                merged_scenes.extend(ch_result.scenes)
+            else:
+                for s in original_specs.get("scenes", []):
+                    if s.get("chapter") == ch_num:
+                        merged_scenes.append(s)
+
+        merged_scenes.sort(key=lambda s: s.get("sceneNumber", 0))
+
+        result = dict(original_specs)
+        result["scenes"] = merged_scenes
+        return result
 
     # ─────────────────────────────────────
     # Step 실행
