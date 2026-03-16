@@ -128,6 +128,24 @@ export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
 
   const sub = findSubtitle(timing, frame, fps);
 
+  // ── postMessage 브릿지: 현재 씬 번호를 부모(대시보드)에 전달 ──
+  useEffect(() => {
+    if (typeof window === "undefined" || window === window.parent) return;
+    const current = timing.find(
+      (t) => frame >= t.from && frame < t.from + t.dur
+    );
+    if (current) {
+      try {
+        window.parent.postMessage(
+          { type: "remotion-scene", sceneNumber: current.scene.sceneNumber },
+          "*"
+        );
+      } catch (_) {
+        /* cross-origin 차단 시 무시 */
+      }
+    }
+  }, [frame, timing]);
+
   return (
     <VideoThemeProvider theme={themeName} artStyle={artStyle}>
     <AbsoluteFill style={{ backgroundColor: C.bg, fontFamily }}>
