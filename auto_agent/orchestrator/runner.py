@@ -741,6 +741,10 @@ class PipelineRunner:
                     print(f"    [WARN] Supabase 동기화 실패: {sync_err}")
                     _notify("Director", f"Supabase 동기화 실패: {str(sync_err)[:50]}",
                             phase=self.state.current_phase, project=self.project_slug, level="warning")
+
+            # ── 자동 매니페스트 빌드 + 썸네일 캡처 ──
+            self._auto_build_and_capture(chapter_results, chapters)
+
             return StepResult(
                 step_id=step_id, status="completed",
                 duration_sec=elapsed,
@@ -1003,6 +1007,104 @@ JSON 구조는 기존 scene_specs와 동일하되, scenes 배열에는 챕터 {c
         end = next_match.start() if next_match else len(full_text)
 
         return full_text[start:end][:15000]
+
+    def _auto_build_and_capture(self, chapter_results: dict, chapters: dict):
+        """병합 완료 후 자동 매니페스트 빌드 + 변경 씬 썸네일 캡처."""
+        _notify("Director", "매니페스트 빌드 + 썸네일 캡처 시작합니다",
+                phase=self.state.current_phase, project=self.project_slug)
+
+        # 1. 매니페스트 빌드
+        try:
+            pid = self.project["id"]
+            storage_key = self.sync.storage_key if self.sync else None
+            if storage_key:
+                result = subprocess.run(
+                    [sys.executable, "-m", "auto_agent.scripts.build_manifest",
+                     pid, storage_key],
+                    cwd=str(get_workspace_dir()),
+                    capture_output=True, text=True, timeout=120,
+                )
+                if result.returncode == 0:
+                    print("    [AUTO] 매니페스트 빌드 완료")
+                else:
+                    print(f"    [WARN] 매니페스트 빌드 실패: {result.stderr[:200]}")
+                    return
+            else:
+                print("    [SKIP] Supabase 미연결 — 매니페스트 빌드 스킵")
+                return
+        except Exception as e:
+            print(f"    [WARN] 매니페스트 빌드 에러: {e}")
+            return
+
+        # 2. 변경된 씬의 기존 썸네일 무효화
+        thumb_dir = self.project_dir / "thumbnails"
+        invalidated = 0
+        for ch_num, ch_result in chapter_results.items():
+            if ch_result.status == "completed":
+                for scene in chapters.get(ch_num, []):
+                    sn = scene.get("sceneNumber", 0)
+                    thumb = thumb_dir / f"scene_{sn:03d}.png"
+                    if thumb.exists():
+                        thumb.unlink(missing_ok=True)
+                        invalidated += 1
+
+        # 3. 썸네일 캡처 (generate-thumbnails.mjs)
+        try:
+            node = shutil.which("node")
+            if not node:
+                node_dir = Path.home() / "local/nodejs/node-v22.14.0-darwin-x64/bin"
+                if node_dir.exists():
+                    os.environ["PATH"] = str(node_dir) + ":" + os.environ.get("PATH", "")
+                    node = shutil.which("node")
+            if not node:
+                print("    [SKIP] Node.js 없음 — 썸네일 캡처 스킵")
+                return
+
+            script = get_workspace_dir() / "remotion" / "generate-thumbnails.mjs"
+            if not script.exists():
+                print(f"    [SKIP] {script} 없음")
+                return
+
+            # 매니페스트 경로 탐색
+            ws = get_workspace_dir()
+            manifest_path = None
+            for p in [
+                self.project_dir / "manifest.json",
+                ws / "remotion" / "public" / "manifests" / f"{self.sync.storage_key}.json" if self.sync else None,
+                ws / "remotion" / "public" / "manifest.json",
+            ]:
+                if p and p.exists():
+                    manifest_path = p
+                    break
+
+            if not manifest_path:
+                print("    [SKIP] 매니페스트 없음 — 썸네일 캡처 스킵")
+                return
+
+            _notify("Director", f"썸네일 캡처 시작합니다 ({invalidated}씬 무효화됨)",
+                    phase=self.state.current_phase, project=self.project_slug)
+
+            result = subprocess.run(
+                [node, str(script), str(manifest_path), str(self.project_dir),
+                 "--width=480"],
+                cwd=str(script.parent),
+                capture_output=True, text=True,
+                timeout=300,
+            )
+            if result.returncode == 0:
+                # 생성된 썸네일 수 파악
+                count = len(list(thumb_dir.glob("scene_*.png"))) if thumb_dir.exists() else 0
+                _notify("Director", f"썸네일 캡처 완료 ({count}씬)",
+                        phase=self.state.current_phase, project=self.project_slug, level="success")
+                print(f"    [AUTO] 썸네일 캡처 완료: {count}씬")
+            else:
+                print(f"    [WARN] 썸네일 캡처 실패: {result.stderr[:200]}")
+                _notify("Director", f"썸네일 캡처 실패: {result.stderr[:60]}",
+                        phase=self.state.current_phase, project=self.project_slug, level="warning")
+        except subprocess.TimeoutExpired:
+            print("    [WARN] 썸네일 캡처 타임아웃 (300s)")
+        except Exception as e:
+            print(f"    [WARN] 썸네일 캡처 에러: {e}")
 
     def _ensure_art_style_and_characters(self):
         """아트스타일 JSON + reference image + 기준 캐릭터 이미지 존재 확인.
