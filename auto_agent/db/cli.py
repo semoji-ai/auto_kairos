@@ -38,6 +38,32 @@ from auto_agent.ui import (
 )
 
 
+def _sync_project_to_supabase(pm, local_id, slug, name, topic=None):
+    """프로젝트 생성 후 Supabase에 자동 등록."""
+    try:
+        from auto_agent.supabase_client import supabase_enabled
+        if not supabase_enabled():
+            return
+        from auto_agent.supabase_client import get_supabase
+        import hashlib
+        sb = get_supabase()
+        project = pm.get_project(project_id=local_id)
+        output_dir = project.get("output_dir", "") if project else ""
+        storage_key = "proj-" + hashlib.sha1(slug.encode()).hexdigest()[:10]
+        sb.table("projects").upsert({
+            "slug": slug,
+            "name": name,
+            "topic": topic or name,
+            "status": "draft",
+            "scene_count": 0,
+            "output_dir": output_dir,
+            "storage_key": storage_key,
+        }, on_conflict="slug").execute()
+        console.print(f"  [dim]Supabase 동기화 완료[/dim]")
+    except Exception as e:
+        console.print(f"  [dim]Supabase 동기화 스킵: {e}[/dim]")
+
+
 def cmd_init(args):
     """DB 초기화."""
     from auto_agent.db.connection import init_db, get_db_path
@@ -93,6 +119,7 @@ def cmd_project(args):
                 theme=data["theme"],
                 config=config or None,
             )
+            _sync_project_to_supabase(pm, pid, data["slug"], data["name"], data.get("topic"))
             console.print()
             print_success(f"프로젝트 생성 완료: [accent]{data['name']}[/accent] (id={pid}, slug={data['slug']})")
             console.print(f"\n  다음 단계: [accent]auto-agent run --project {data['slug']}[/accent]")
@@ -110,6 +137,7 @@ def cmd_project(args):
                 if idx + 1 < len(args):
                     topic = args[idx + 1]
             pid = pm.create_project(name=name, slug=slug, topic=topic)
+            _sync_project_to_supabase(pm, pid, slug, name, topic)
             print_success(f"프로젝트 생성 완료: id={pid}, slug={slug}")
 
     elif args[0] == "active":
