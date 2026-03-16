@@ -576,6 +576,8 @@ class PipelineRunner:
         # ── 중간 동기화 ① scene_count 업데이트 ──
         try:
             self.pm.update_project(self.project["id"], scene_count=total_scenes)
+            _notify("Director", f"Supabase 동기화: scene_count={total_scenes}",
+                    phase=self.state.current_phase, project=self.project_slug, level="info")
         except Exception:
             pass
 
@@ -624,6 +626,9 @@ class PipelineRunner:
                     try:
                         partial = self._merge_chapter_results(original_specs, chapter_results)
                         self.sync.upload_json("scene_specs.json", partial)
+                        done_count = sum(1 for r in chapter_results.values() if r.status == "completed")
+                        _notify("Director", f"Supabase 동기화: scene_specs 업데이트 ({done_count}/{n_chapters} 챕터)",
+                                phase=self.state.current_phase, project=self.project_slug, level="info")
                     except Exception:
                         pass
 
@@ -730,8 +735,12 @@ class PipelineRunner:
                         project_data=dict(self.project),
                         duration_sec=elapsed,
                     )
+                    _notify("Director", "Supabase 동기화 완료",
+                            phase=self.state.current_phase, project=self.project_slug, level="success")
                 except Exception as sync_err:
                     print(f"    [WARN] Supabase 동기화 실패: {sync_err}")
+                    _notify("Director", f"Supabase 동기화 실패: {str(sync_err)[:50]}",
+                            phase=self.state.current_phase, project=self.project_slug, level="warning")
             return StepResult(
                 step_id=step_id, status="completed",
                 duration_sec=elapsed,
