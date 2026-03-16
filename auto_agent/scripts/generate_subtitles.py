@@ -445,6 +445,58 @@ def main():
     print(f"  Gemini fallback: {gemini_fallback}")
     print(f"  Proportional fallback: {proportional_fallback}")
 
+    # ── Supabase 즉시 업로드 + 에셋 등록 ──
+    _upload_subtitles_to_supabase(project_dir, all_subtitles)
+
+
+def _upload_subtitles_to_supabase(output_dir, all_subtitles: list):
+    """생성된 자막 에셋을 Supabase Storage에 업로드."""
+    try:
+        from auto_agent.supabase_client import supabase_enabled
+        if not supabase_enabled():
+            return
+    except ImportError:
+        return
+
+    project_slug = os.environ.get("PROJECT_NAME", "")
+    if not project_slug:
+        return
+
+    try:
+        from auto_agent.sync import SyncManager
+        sync = SyncManager(project_slug=project_slug, project_dir=Path(output_dir))
+        from auto_agent.dashboard.supabase_data import SupabaseProjectManager
+        pm = SupabaseProjectManager()
+        project = pm.get_project(slug=project_slug)
+        if not project:
+            return
+        pid = project["id"]
+    except Exception:
+        return
+
+    uploaded = 0
+    subtitles_dir = Path(output_dir) / "subtitles"
+    if not subtitles_dir.exists():
+        return
+
+    for srt in sorted(subtitles_dir.glob("scene_*.srt")):
+        import re
+        m = re.match(r"scene_(\d{3})", srt.stem)
+        scene_num = int(m.group(1)) if m else None
+        try:
+            sync.register_asset(
+                project_id=pid,
+                local_path=srt,
+                asset_type="subtitle",
+                scene_number=scene_num,
+            )
+            uploaded += 1
+        except Exception:
+            pass
+
+    if uploaded:
+        print(f"  [SYNC] Supabase 자막 업로드 완료: {uploaded}개")
+
 
 if __name__ == "__main__":
     main()

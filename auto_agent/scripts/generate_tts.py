@@ -162,6 +162,56 @@ def main():
     with open(project_dir / "tts_results.json", "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
 
+    # ── Supabase 즉시 업로드 + 에셋 등록 ──
+    _upload_audio_to_supabase(project_dir, results)
+
+
+def _upload_audio_to_supabase(output_dir: Path, results: list):
+    """생성된 오디오 에셋을 Supabase Storage에 업로드하고 assets 테이블에 등록."""
+    try:
+        from auto_agent.supabase_client import supabase_enabled
+        if not supabase_enabled():
+            return
+    except ImportError:
+        return
+
+    project_slug = os.environ.get("PROJECT_NAME", "")
+    if not project_slug:
+        return
+
+    try:
+        from auto_agent.sync import SyncManager
+        sync = SyncManager(project_slug=project_slug, project_dir=output_dir)
+        from auto_agent.dashboard.supabase_data import SupabaseProjectManager
+        pm = SupabaseProjectManager()
+        project = pm.get_project(slug=project_slug)
+        if not project:
+            return
+        pid = project["id"]
+    except Exception:
+        return
+
+    uploaded = 0
+    for r in results:
+        if r.get("status") not in ("ok", "exists") or not r.get("path"):
+            continue
+        audio_path = Path(r["path"])
+        if not audio_path.exists():
+            continue
+        try:
+            sync.register_asset(
+                project_id=pid,
+                local_path=audio_path,
+                asset_type="audio",
+                scene_number=r.get("scene"),
+            )
+            uploaded += 1
+        except Exception:
+            pass
+
+    if uploaded:
+        print(f"  [SYNC] Supabase 오디오 업로드 완료: {uploaded}개")
+
 
 if __name__ == "__main__":
     main()

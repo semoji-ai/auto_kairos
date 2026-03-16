@@ -172,13 +172,32 @@ def step_2_search_images(output_dir: Path, specs: dict):
             final_path = images_dir / f"{scene_key}{best_src.suffix}"
             shutil.copy2(best_src, final_path)
 
+            # 전체 검색 결과 메타데이터 수집 (다운로드하지 않은 후보 포함)
+            all_ranked_meta = []
+            for rank_idx, img in enumerate(getattr(searcher, 'last_all_ranked', []), 1):
+                img_score = score_image(img, query, preferred)
+                all_ranked_meta.append({
+                    "rank": rank_idx,
+                    "title": img.title,
+                    "thumbnail_url": img.thumbnail_url,
+                    "image_url": img.image_url,
+                    "source": img.source,
+                    "source_page": img.source_page,
+                    "width": img.width,
+                    "height": img.height,
+                    "license": img.license,
+                    "score": img_score,
+                    "downloaded": rank_idx <= len(candidates),
+                })
+
             print(f"  [OK] {scene_key} ({elapsed:.1f}s) — {best['source']} "
-                  f"score={best['score']} {len(candidates)}개 후보")
+                  f"score={best['score']} {len(candidates)}개 다운로드 / {len(all_ranked_meta)}개 후보")
             return scene_key, {
                 "success": True,
                 "path": str(final_path),
                 "selected_rank": 1,
                 "candidates": candidates,
+                "all_candidates": all_ranked_meta,
                 "source_url": best["source_url"],
                 "source": best["source"],
                 "license": best["license"],
@@ -210,6 +229,26 @@ def step_2_search_images(output_dir: Path, specs: dict):
 
     ok = sum(1 for r in results.values() if r.get("success"))
     print(f"[Step 2] 완료: {ok}/{len(search_scenes)} 검색 성공")
+
+    # 전체 검색 후보 메타데이터 저장 (썸네일 URL 포함)
+    all_candidates_data = {}
+    for key, res in results.items():
+        if res.get("all_candidates"):
+            all_candidates_data[key] = {
+                "query": next((s["query"] for s in search_scenes if f"scene_{s['scene_number']:03d}" == key), ""),
+                "selected_rank": res.get("selected_rank", 1),
+                "downloaded_count": len(res.get("candidates", [])),
+                "total_count": len(res["all_candidates"]),
+                "candidates": res["all_candidates"],
+            }
+    if all_candidates_data:
+        candidates_path = output_dir / "image_candidates.json"
+        candidates_path.write_text(
+            json.dumps(all_candidates_data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        total_candidates = sum(d["total_count"] for d in all_candidates_data.values())
+        print(f"[Step 2] image_candidates.json 저장: {total_candidates}개 후보 메타데이터")
 
     return {"searched": ok, "total": len(search_scenes), "results": results, "licenses": licenses}
 
@@ -686,6 +725,99 @@ def main():
 
     summary_path = output_dir / "image_gen_results.json"
     summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # ── Supabase 즉시 업로드 + 에셋 등록 ──
+    _upload_assets_to_supabase(output_dir)
+
+
+def _upload_assets_to_supabase(output_dir: Path):
+    """생성된 이미지 에셋을 Supabase Storage에 업로드하고 assets 테이블에 등록."""
+    try:
+        from auto_agent.supabase_client import supabase_enabled
+        if not supabase_enabled():
+            return
+    except ImportError:
+        return
+
+    project_slug = os.environ.get("PROJECT_NAME", "")
+    if not project_slug:
+        return
+
+    try:
+        from auto_agent.sync import SyncManager
+        sync = SyncManager(
+            project_slug=project_slug,
+            project_dir=output_dir,
+        )
+        # 프로젝트 ID 조회
+        from auto_agent.dashboard.supabase_data import SupabaseProjectManager
+        pm = SupabaseProjectManager()
+        project = pm.get_project(slug=project_slug)
+        if not project:
+            return
+        pid = project["id"]
+    except Exception as e:
+        print(f"  [SYNC] Supabase 초기화 실패: {e}")
+        return
+
+    from auto_agent.progress import report
+
+    images_dir = output_dir / "images"
+    uploaded = 0
+
+    # 씬 이미지 업로드
+    if images_dir.exists():
+        for img in sorted(images_dir.glob("scene_*")):
+            if not img.is_file():
+                continue
+            # scene_NNN 에서 씬 번호 추출
+            import re
+            m = re.match(r"scene_(\d{3})", img.stem)
+            scene_num = int(m.group(1)) if m else None
+            try:
+                url = sync.register_asset(
+                    project_id=pid,
+                    local_path=img,
+                    asset_type="image",
+                    scene_number=scene_num,
+                )
+                uploaded += 1
+                report("Image Generator", f"씬 {scene_num} 이미지 업로드 완료", level="success")
+            except Exception as e:
+                report("Image Generator", f"씬 {scene_num} 업로드 실패: {e}", level="warning")
+
+    # 캐릭터 이미지 업로드
+    char_dir = output_dir / "characters"
+    if char_dir.exists():
+        for img in sorted(char_dir.glob("*.png")):
+            try:
+                sync.register_asset(
+                    project_id=pid,
+                    local_path=img,
+                    asset_type="character",
+                )
+                uploaded += 1
+            except Exception:
+                pass
+
+    # 시각화 배경 업로드
+    viz_dir = output_dir / "images" / "viz_bg"
+    if viz_dir.exists():
+        for img in sorted(viz_dir.glob("*.png")):
+            m = re.match(r"scene_(\d{3})", img.stem)
+            scene_num = int(m.group(1)) if m else None
+            try:
+                sync.register_asset(
+                    project_id=pid,
+                    local_path=img,
+                    asset_type="viz_bg",
+                    scene_number=scene_num,
+                )
+                uploaded += 1
+            except Exception:
+                pass
+
+    print(f"\n  [SYNC] Supabase 에셋 업로드 완료: {uploaded}개")
 
 
 if __name__ == "__main__":

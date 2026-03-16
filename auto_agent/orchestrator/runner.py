@@ -571,6 +571,14 @@ class PipelineRunner:
             return self._run_agent_step(step)
 
         n_chapters = len(chapters)
+        total_scenes = len(original_specs.get("scenes", []))
+
+        # ── 중간 동기화 ① scene_count 업데이트 ──
+        try:
+            self.pm.update_project(self.project["id"], scene_count=total_scenes)
+        except Exception:
+            pass
+
         _notify(agent_name, f"{label} 시작합니다 ({n_chapters} 챕터 병렬)",
                 phase=self.state.current_phase, project=self.project_slug)
 
@@ -610,6 +618,14 @@ class PipelineRunner:
                         error=str(e),
                     )
                 chapter_results[ch_num] = ch_result
+
+                # ── 중간 동기화 ② 챕터 완료 시 부분 업로드 ──
+                if ch_result.status == "completed" and self.sync:
+                    try:
+                        partial = self._merge_chapter_results(original_specs, chapter_results)
+                        self.sync.upload_json("scene_specs.json", partial)
+                    except Exception:
+                        pass
 
         # 실패 챕터 재시도 (max 2회)
         failed_chapters = {
@@ -697,7 +713,12 @@ class PipelineRunner:
 
         # DB 기록
         if succeeded > 0:
-            self.pm.complete_pipeline_run(run_id, **total_cost)
+            self.pm.complete_pipeline_run(
+                run_id,
+                cost_tokens_in=total_cost.get("tokens_in", 0),
+                cost_tokens_out=total_cost.get("tokens_out", 0),
+                cost_usd=total_cost.get("cost_usd", 0.0),
+            )
             # Supabase 동기화
             if self.sync:
                 try:

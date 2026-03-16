@@ -27,7 +27,7 @@ from auto_agent.supabase_client import (
 class SyncManager:
     """프로젝트 단위 Supabase 동기화."""
 
-    def __init__(self, project_slug: str, project_dir: Path, local_project_id: int):
+    def __init__(self, project_slug: str, project_dir: Path, local_project_id=None):
         self.slug = project_slug
         self.storage_key = _to_storage_key(project_slug)
         self.project_dir = Path(project_dir)
@@ -50,7 +50,6 @@ class SyncManager:
             return self._remote_project_id
 
         row = {
-            "local_id": self.local_project_id,
             "storage_key": self.storage_key,
             "name": project_data.get("name", self.slug),
             "slug": self.slug,
@@ -62,6 +61,8 @@ class SyncManager:
             "config": project_data.get("config") if isinstance(project_data.get("config"), dict) else None,
             "output_dir": project_data.get("output_dir"),
         }
+        if isinstance(self.local_project_id, int):
+            row["local_id"] = self.local_project_id
 
         # slug 기준 upsert
         resp = (
@@ -108,6 +109,21 @@ class SyncManager:
     # ──────────────────────────────────────────
     # 파일 업로드 + 에셋 등록
     # ──────────────────────────────────────────
+    def upload_json(self, filename: str, data: dict) -> str:
+        """JSON 데이터를 Supabase Storage에 직접 업로드. public URL 반환."""
+        import json as _json
+        storage_path = f"{self.storage_key}/{filename}"
+        content = _json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+        self.sb.storage.from_(BUCKET_NAME).upload(
+            path=storage_path,
+            file=content,
+            file_options={
+                "content-type": "application/json",
+                "upsert": "true",
+            },
+        )
+        return self.sb.storage.from_(BUCKET_NAME).get_public_url(storage_path)
+
     def upload_file(self, local_path: Path, storage_path: str) -> str:
         """파일을 Supabase Storage에 업로드. public URL 반환."""
         content_type = mimetypes.guess_type(str(local_path))[0] or "application/octet-stream"
@@ -214,7 +230,7 @@ class SyncManager:
             return
 
         # 출력 파일 업로드 (디렉토리면 하위 파일 순회)
-        UPLOAD_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".mp3", ".wav", ".json"}
+        UPLOAD_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".mp3", ".wav", ".json", ".md", ".srt"}
         for file_path_str in output_files:
             fp = Path(file_path_str)
             if not fp.exists():
