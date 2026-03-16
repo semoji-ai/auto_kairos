@@ -299,3 +299,32 @@ items가 2개 이상이면 itemIcons를 **반드시** 함께 제공한다. 아�
 `layout` 필드가 없으면 렌더러가 emphasis/reveal/데이터 구조로 자동 추론한다.
 기본 11개 레이아웃은 자동 추론이 잘 작동하므로 `layout` 생략 가능.
 확장 13개 레이아웃은 자동 추론이 불가능하므로 **반드시 `layout`을 직접 지정**해야 한다.
+
+---
+
+## 7. 최종 출력 전 필수 검증 (MUST CHECK)
+
+모든 씬의 creative 필드를 출력하기 전에 아래 체크를 **씬별로** 수행하라. 하나라도 위반하면 해당 씬을 수정한 뒤 출력하라.
+
+### 검증 1: headline/items 중복
+
+각 items의 항목을 headline(accent 제거, 줄바꿈 제거)에서 찾을 수 있는가?
+- 찾을 수 있으면 → **중복. items에서 제거하거나 더 구체적인 세부 정보로 교체**
+- headline의 단어가 items에 그대로 반복되면 → **중복**
+
+```
+예: headline="유가↑ 달러↑ 금↑" items=["유가","달러","금"] → ⛔ 완전 중복
+수정: items=[] (headline만으로 충분) 또는 items=["WTI $120","DXY 108","$3,200/oz"] (구체 수치 보완)
+```
+
+### 검증 2: items 1개 금지
+
+items 배열에 항목이 1개뿐이면 → headline에 통합하고 items를 비운다.
+
+### 검증 3: accent 최대 2개
+
+headline에서 `{{}}` 개수를 세라. 3개 이상이면 → 가장 핵심 2개만 남기고 나머지는 accent 제거.
+
+### 검증 4: metric_wall의 items/values 쌍
+
+layout="metric_wall"이면 items와 values의 길이가 동일한가? values가 숫자인가?
