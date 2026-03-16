@@ -138,7 +138,7 @@ class SyncManager:
         except ValueError:
             rel_path = Path(local_path.name)
 
-        storage_path = f"{self.storage_key}/{rel_path}"
+        storage_path = f"{self.storage_key}/{rel_path.as_posix()}"
         public_url = self.upload_file(local_path, storage_path)
 
         checksum = _sha256(local_path)

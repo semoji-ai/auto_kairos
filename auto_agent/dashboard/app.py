@@ -109,15 +109,25 @@ TAB_TEMPLATES = {
 REMOTION_DIR = get_workspace_dir() / "remotion"
 STUDIO_PORT = 3100
 
-# Node.js PATH 보장 (homebrew/로컬 설치 모두 커버)
-_node_paths = [
-    Path.home() / "local" / "nodejs" / f"node-v22.14.0-darwin-x64" / "bin",
+# Node.js PATH 보장 (homebrew/nvm/fnm/volta/winget 등 커버)
+_node_candidates = [
     Path("/opt/homebrew/bin"),
     Path("/usr/local/bin"),
+    Path.home() / ".nvm" / "current" / "bin",
+    Path.home() / ".fnm" / "current" / "bin",
+    Path.home() / ".volta" / "bin",
+    Path.home() / "local" / "nodejs" / f"node-v22.14.0-darwin-x64" / "bin",
 ]
-for _np in _node_paths:
-    if (_np / "node").exists() and str(_np) not in os.environ.get("PATH", ""):
-        os.environ["PATH"] = f"{_np}:{os.environ.get('PATH', '')}"
+# nvm: 실제 버전 디렉토리 탐색
+_nvm_dir = Path.home() / ".nvm" / "versions" / "node"
+if _nvm_dir.exists():
+    for _v in sorted(_nvm_dir.iterdir(), reverse=True):
+        _node_candidates.insert(0, _v / "bin")
+
+_node_exe = "node.exe" if IS_WINDOWS else "node"
+for _np in _node_candidates:
+    if (_np / _node_exe).exists() and str(_np) not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = f"{_np}{os.pathsep}{os.environ.get('PATH', '')}"
         break
 _studio_proc: Optional[subprocess.Popen] = None
 
@@ -646,61 +656,79 @@ def _setup_studio_project(slug: str):
     public_dir = REMOTION_DIR / "public"
     manifest_dst = public_dir / "manifest.json"
 
-    # ── Supabase 프로젝트: proj-* 형태의 slug ──
-    if slug.startswith("proj-"):
-        # 이미 빌드된 매니페스트가 있으면 바로 사용
-        cached = public_dir / "manifests" / f"{slug}.json"
-        if cached.exists():
-            import shutil
-            shutil.copy2(str(cached), str(manifest_dst))
-            return
-        # 없으면 Supabase에서 빌드
-        try:
+    # Supabase에서 프로젝트 조회 → manifest 빌드
+    try:
+        from auto_agent.dashboard.supabase_data import SupabaseProjectManager
+        pm = SupabaseProjectManager()
+
+        # proj-* 형태이면 storage_key로 직접 조회
+        if slug.startswith("proj-"):
+            cached = public_dir / "manifests" / f"{slug}.json"
+            if cached.exists():
+                import shutil
+                shutil.copy2(str(cached), str(manifest_dst))
+                return
+
+        project = pm.get_project(slug=slug) if not slug.startswith("proj-") else None
+        storage_key = project.get("storage_key", "") if project else slug
+        pid = project.get("id", "") if project else slug
+
+        if storage_key and pid:
             subprocess.run(
                 [sys.executable, "-m", "auto_agent.scripts.build_manifest",
-                 "--supabase", slug, slug],
+                 pid, storage_key],
                 cwd=str(ws),
                 timeout=120,
                 capture_output=True,
             )
-            # 빌드 결과 복사
-            built = public_dir / "manifests" / f"{slug}.json"
+            built = public_dir / "manifests" / f"{storage_key}.json"
             if built.exists():
                 import shutil
                 shutil.copy2(str(built), str(manifest_dst))
-        except Exception:
-            pass
-        return
+    except Exception:
+        pass
 
-    # ── 로컬 프로젝트 ──
-    project_dir = ws / "output" / slug
-    if not project_dir.exists():
-        return
 
-    # 1) public/project → output/{slug} symlink
-    symlink = public_dir / "project"
-    target = os.path.relpath(project_dir, public_dir)
-    if symlink.is_symlink():
-        if os.readlink(str(symlink)) != target:
-            symlink.unlink()
-            symlink.symlink_to(target)
-    elif not symlink.exists():
-        symlink.symlink_to(target)
-
-    # 2) manifest 빌드 (motion_plan 있을 때만)
-    if (project_dir / "scene_specs.json").exists() and (project_dir / "motion_plan.json").exists():
+def _ensure_studio_ready() -> Optional[str]:
+    """Studio 실행 전 환경 체크. 문제 있으면 에러 메시지 반환, 없으면 None."""
+    if not REMOTION_DIR.exists():
+        # remotion 템플릿 자동 복사 시도
         try:
-            env = os.environ.copy()
-            env["PROJECT_NAME"] = slug
-            subprocess.run(
-                [sys.executable, "-m", "auto_agent.scripts.build_manifest", "--project", slug],
-                cwd=str(ws),
-                env=env,
-                timeout=30,
-                capture_output=True,
+            from auto_agent.paths import get_package_dir
+            import shutil
+            template = get_package_dir() / "remotion_template"
+            if template.exists():
+                shutil.copytree(template, REMOTION_DIR, dirs_exist_ok=True)
+            else:
+                return "remotion 디렉토리 없음. auto-kairos init을 먼저 실행하세요."
+        except Exception as e:
+            return f"remotion 복사 실패: {e}"
+
+    # node_modules 체크 + 자동 설치
+    node_modules = REMOTION_DIR / "node_modules"
+    if not node_modules.exists():
+        npx_cmd = "npx.cmd" if IS_WINDOWS else "npx"
+        npm_cmd = "npm.cmd" if IS_WINDOWS else "npm"
+        if not _find_cmd(npm_cmd):
+            return "Node.js가 설치되지 않았습니다. install.sh를 실행하거나 https://nodejs.org 에서 설치하세요."
+        try:
+            result = subprocess.run(
+                [npm_cmd, "install"],
+                cwd=str(REMOTION_DIR),
+                capture_output=True, text=True, timeout=120,
             )
-        except Exception:
-            pass
+            if result.returncode != 0:
+                return f"npm install 실패: {result.stderr[:300]}"
+        except Exception as e:
+            return f"npm install 에러: {e}"
+
+    return None
+
+
+def _find_cmd(name: str) -> bool:
+    """명령이 PATH에 있는지 확인."""
+    import shutil
+    return shutil.which(name) is not None
 
 
 @app.post("/api/studio/start")
@@ -710,10 +738,12 @@ async def studio_start(request: Request):
     if _is_studio_running():
         return {"ok": True, "message": "already running"}
 
-    if not REMOTION_DIR.exists():
-        return {"ok": False, "error": "remotion directory not found"}
+    # 환경 체크 (remotion 디렉토리, node_modules 등)
+    check_err = _ensure_studio_ready()
+    if check_err:
+        return {"ok": False, "error": check_err}
 
-    # 프로젝트 slug로 symlink + manifest 설정
+    # 프로젝트 slug로 manifest 설정
     try:
         body = await request.json()
         slug = body.get("slug", "")
@@ -722,11 +752,12 @@ async def studio_start(request: Request):
     if slug:
         _setup_studio_project(slug)
 
+    npx_cmd = "npx.cmd" if IS_WINDOWS else "npx"
     try:
         env = os.environ.copy()
         env["BROWSER"] = "none"  # 자동 브라우저 열기 방지
         _studio_proc = subprocess.Popen(
-            ["npx", "remotion", "studio", "--port", str(STUDIO_PORT)],
+            [npx_cmd, "remotion", "studio", "--port", str(STUDIO_PORT)],
             cwd=str(REMOTION_DIR),
             env=env,
             stdout=subprocess.DEVNULL,

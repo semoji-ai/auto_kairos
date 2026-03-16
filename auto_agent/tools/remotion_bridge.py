@@ -408,22 +408,10 @@ class RemotionBridge:
                 capture_output=True, text=True, timeout=120, env=node_env,
             )
 
-        # public/project 심볼릭 링크 (레거시 호환 + 프로젝트별)
+        # Supabase 전용 모드: 심볼릭 링크 불필요 (이미지/오디오 모두 Supabase URL)
         public_dir = self.remotion_dir / "public"
         public_dir.mkdir(exist_ok=True)
         output_dir = manifest_path.parent
-
-        # 프로젝트별 심링크: public/{slug} → output/{slug}/
-        project_slug = output_dir.name
-        slug_link = public_dir / project_slug
-        if not slug_link.exists():
-            slug_link.symlink_to(output_dir.resolve())
-
-        # 레거시 호환: public/project → output/{slug}/
-        project_link = public_dir / "project"
-        if project_link.is_symlink() or project_link.exists():
-            project_link.unlink()
-        project_link.symlink_to(output_dir.resolve())
 
         # 상대경로 manifest 생성
         with open(manifest_path, "r", encoding="utf-8") as f:

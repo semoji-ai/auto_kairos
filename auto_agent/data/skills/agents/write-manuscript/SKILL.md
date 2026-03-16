@@ -10,6 +10,7 @@ allowed_tools:
 skills:
   - shared/outline-template
   - shared/writing-style
+  - shared/writing-style-iromism
   - shared/scene-segmentation
 ---
 
@@ -45,6 +46,21 @@ research_report.json을 분석하여 3막 구조 아웃라인을 설계하고,
 
 ---
 
+## 아트스타일별 문체 분기
+
+원고 작성 전, 프로젝트의 `art_style.json`을 확인합니다.
+
+| art_style | 적용 문체 스킬 | 씬 분할 기준 |
+|-----------|--------------|------------|
+| `quirky_cartoon` | `shared/writing-style-iromism` | 250자 상한, 서사적 연결 허용 |
+| 그 외 모든 스타일 | `shared/writing-style` | 100자 상한, 개념당 1씬 |
+
+- `art_style.json`의 `name` 필드에 "quirky" 또는 "Quirky"가 포함되면 이로미즘 문체를 적용합니다.
+- 이로미즘 문체 적용 시 `shared/writing-style`의 문장 길이·씬 분할 규칙은 무시하고, `shared/writing-style-iromism`의 규칙을 따릅니다.
+- 금지 표현(번역체, 논문체)과 VIZ/IMG 마커 금지 규칙은 **모든 스타일에 공통** 적용됩니다.
+
+---
+
 ## Phase 2: Manuscript Writing
 
 outline.json과 research_report.json을 바탕으로 나레이션 원고를 작성합니다.
@@ -77,10 +93,13 @@ outline.json과 research_report.json을 바탕으로 나레이션 원고를 작�
 
 - **narrative_draft 활용**: episodes[].narrative_draft를 **핵심 재료**로 사용하되, statistics, key_figures, timeline, comparisons를 적극 참조하여 내용을 풍성하게 확장
 - **must_include 필수 반영**: episodes[].must_include의 모든 팩트가 최종 원고에 포함되었는지 확인
-- **문체**: `skills/shared/writing-style.md` 참조 (대화체, 짧은 문장, 능동태, 금지 표현)
+- **문체**: 아트스타일에 따라 적용 스킬이 달라짐 (위 "아트스타일별 문체 분기" 참조)
+  - quirky_cartoon → `skills/shared/writing-style-iromism.md` (이로미즘 문체)
+  - 그 외 → `skills/shared/writing-style.md` (대화체, 짧은 문장, 능동태)
 - ⚠️ **VIZ/IMG 마커 사용 금지** — 시각화·이미지 판단은 후속 단계(visual-composer, asset-advisory)가 전담
-- **씬 분할**: `skills/shared/writing-style.md` 6번 참조 — 하나의 씬에 정확히 하나의 개념
-- **글자 수 상한**: 나레이션 100자 초과 시 새 씬으로 분할 (`shared/scene-segmentation` 5번 참조)
+- **씬 분할**: 아트스타일에 따라 기준이 달라짐
+  - quirky_cartoon → 250자 상한, 서사적 연결 허용 (`writing-style-iromism` 5번 참조)
+  - 그 외 → 100자 상한, 개념당 1씬 (`writing-style` 6번, `scene-segmentation` 4번 참조)
 
 ---
 

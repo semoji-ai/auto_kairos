@@ -59,19 +59,24 @@ async def manifest_meta(slug: str):
 
 @manifest_router.post("/rebuild-manifest")
 async def rebuild_manifest(slug: str):
-    """manifest.json 재빌드 트리거."""
+    """manifest.json 재빌드 트리거 (Supabase 전용)."""
     project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
     import subprocess, shutil
-    python = shutil.which("python3") or "python3"
-    output_dir = project["output_dir"]
+    python = shutil.which("python3") or shutil.which("python") or "python3"
+
+    storage_key = project.get("storage_key", "")
+    pid = project.get("id", "")
+    if not storage_key or not pid:
+        return JSONResponse({"error": "Supabase 프로젝트 정보 없음"}, status_code=400)
 
     try:
         result = subprocess.run(
-            [python, "-m", "auto_agent.scripts.build_manifest", "--project", output_dir],
-            capture_output=True, text=True, timeout=30,
+            [python, "-m", "auto_agent.scripts.build_manifest",
+             str(pid), storage_key],
+            capture_output=True, text=True, timeout=120,
         )
         if result.returncode == 0:
             return {"ok": True, "message": "manifest 재빌드 완료"}

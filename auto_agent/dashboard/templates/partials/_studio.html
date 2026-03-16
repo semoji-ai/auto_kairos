@@ -177,7 +177,9 @@
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.running) {
-        if (elIframe.src !== 'about:blank') elIframe.src = elIframe.src;
+        // manifest가 교체되었으므로 iframe 강제 새로고침 (캐시 버스터)
+        var baseUrl = 'http://localhost:' + (data.port || _studioPort);
+        elIframe.src = baseUrl + '?t=' + Date.now();
         updateStudioUI({running: true, port: data.port || _studioPort});
       } else {
         elStatusText.textContent = 'Studio 시작 중...';
