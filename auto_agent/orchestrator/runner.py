@@ -1554,9 +1554,17 @@ JSON 구조는 기존 scene_specs와 동일하되, scenes 배열에는 챕터 {c
         monitor = ProgressFileMonitor(progress_path, self.project_slug, self.state.current_phase)
         monitor.start()
 
+        # manifest-builder는 project_id + storage_key 인자 필요
+        cmd = [sys.executable, str(script_path)]
+        if module_name == "manifest-builder":
+            pid = self.project.get("id", "")
+            sk = self.sync.storage_key if self.sync else ""
+            if pid and sk:
+                cmd.extend([pid, sk])
+
         try:
             result = subprocess.run(
-                [sys.executable, str(script_path)],
+                cmd,
                 cwd=str(get_workspace_dir()),
                 env=env,
                 capture_output=True,
