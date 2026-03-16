@@ -528,15 +528,22 @@ class PipelineRunner:
         Returns:
             병합된 scene_specs dict
         """
+        # 원본 씬을 챕터별로 그룹핑
+        from collections import defaultdict
+        original_by_chapter = defaultdict(list)
+        for s in original_specs.get("scenes", []):
+            original_by_chapter[s.get("chapter", 0)].append(s)
+
         merged_scenes = []
 
-        for ch_num, ch_result in sorted(chapter_results.items()):
-            if ch_result.status == "completed" and ch_result.scenes:
+        # 모든 챕터를 순회 (결과가 없는 챕터는 원본 유지)
+        all_chapters = set(original_by_chapter.keys()) | set(chapter_results.keys())
+        for ch_num in sorted(all_chapters):
+            ch_result = chapter_results.get(ch_num)
+            if ch_result and ch_result.status == "completed" and ch_result.scenes:
                 merged_scenes.extend(ch_result.scenes)
             else:
-                for s in original_specs.get("scenes", []):
-                    if s.get("chapter") == ch_num:
-                        merged_scenes.append(s)
+                merged_scenes.extend(original_by_chapter.get(ch_num, []))
 
         merged_scenes.sort(key=lambda s: s.get("sceneNumber", 0))
 
