@@ -626,8 +626,8 @@ def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
 
     # 3) 이미지 에셋 필요 씬 카운트
     scenes = specs.get("scenes", [])
-    generate_count = sum(1 for s in scenes if s.get("imageAsset", {}).get("source") == "generate")
-    search_count = sum(1 for s in scenes if s.get("imageAsset", {}).get("source") in ("search", "wikimedia"))
+    generate_count = sum(1 for s in scenes if (s.get("imageAsset") or {}).get("source") == "generate")
+    search_count = sum(1 for s in scenes if (s.get("imageAsset") or {}).get("source") in ("search", "wikimedia"))
     total_asset = generate_count + search_count
     print(f"  [INFO] 이미지 에셋 씬: 생성 {generate_count}개 + 검색 {search_count}개 = {total_asset}개")
 
