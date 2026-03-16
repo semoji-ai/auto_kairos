@@ -17,21 +17,19 @@
 <div class="scene-list" id="scene-list">
   {% for scene in scenes %}
   <div class="sb-card" data-chapter="{{ scene.chapter }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
-    <!-- 좌측: 미리보기 -->
+    <!-- 좌측: 미리보기 (Remotion 스크린샷) -->
     <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
       {% if scene._thumbnail_url %}
       <img src="{{ scene._thumbnail_url }}" alt="Scene {{ scene.sceneNumber }}" class="sb-thumb" loading="lazy"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
       <div style="display:none">
-        {% if scene._preview_html %}{{ scene._preview_html|safe }}{% else %}<div class="sb-thumb-placeholder"><div class="concept-preview">Scene {{ scene.sceneNumber }}</div></div>{% endif %}
+        <div class="sb-thumb-placeholder"><div class="concept-preview">Scene {{ scene.sceneNumber }}</div></div>
       </div>
-      {% elif scene._preview_html %}
-      {{ scene._preview_html|safe }}
       {% elif scene._image_url %}
       <img src="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }}" class="sb-thumb" loading="lazy">
       {% else %}
       <div class="sb-thumb-placeholder">
-        <div class="concept-preview">Scene {{ scene.sceneNumber }}</div>
+        <div class="concept-preview">Scene {{ scene.sceneNumber }}<br><small>Capture 버튼으로 생성</small></div>
       </div>
       {% endif %}
     </div>

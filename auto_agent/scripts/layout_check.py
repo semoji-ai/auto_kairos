@@ -35,11 +35,11 @@ def calc_scene_frames(manifest: dict) -> list:
 
     for scene in scenes:
         dur_frames = max(int(scene["audioDurationSec"] * fps), 1)
-        mid_frame = offset + dur_frames // 2
+        preview_frame = offset + int(dur_frames * 0.9)
         result.append({
             "sceneNumber": scene["sceneNumber"],
             "startFrame": offset,
-            "midFrame": mid_frame,
+            "midFrame": preview_frame,  # 90% 지점 (프리뷰용)
             "endFrame": offset + dur_frames,
             "durationFrames": dur_frames,
             "hasImage": bool(scene.get("imagePath")),

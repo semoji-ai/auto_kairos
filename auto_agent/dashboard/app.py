@@ -50,6 +50,8 @@ app.include_router(memory_router)
 app.include_router(scene_editor_router)
 app.include_router(manifest_router)
 app.include_router(design_presets_router)
+from auto_agent.dashboard.agent_messenger import router as messenger_router
+app.include_router(messenger_router)
 
 DASHBOARD_DIR = Path(__file__).parent
 DATA_DIR = get_data_dir()
@@ -65,6 +67,9 @@ if output_dir.exists():
 templates = Jinja2Templates(directory=str(DASHBOARD_DIR / "templates"))
 # Jinja2 필터 등록
 templates.env.filters["format_headline"] = format_headline
+
+
+USE_SUPABASE = True  # Supabase SSOT 전환 완료 — scene_editor 등에서 참조
 
 
 def get_pm():
@@ -84,6 +89,7 @@ TAB_TEMPLATES = {
     "versions": "partials/_versions.html",
     "costs": "partials/_costs.html",
     "design": "partials/_design.html",
+    "agent": "partials/_agent.html",
 }
 
 # ─────────────────────────────
@@ -215,7 +221,7 @@ async def index(request: Request):
 
 
 @app.get("/p/{slug}", response_class=HTMLResponse)
-async def project_by_slug(request: Request, slug: str, tab: str = "overview"):
+async def project_by_slug(request: Request, slug: str, tab: str = "research"):
     """slug 기반 프로젝트 상세 페이지."""
     pm = get_pm()
     project = pm.get_project(slug=slug)
@@ -228,7 +234,7 @@ async def project_by_slug(request: Request, slug: str, tab: str = "overview"):
 
 
 @app.get("/projects/{project_id}", response_class=HTMLResponse)
-async def project_detail(request: Request, project_id: int, tab: str = "overview"):
+async def project_detail(request: Request, project_id: int, tab: str = "research"):
     """레거시 ID 기반 → slug 리디렉트."""
     pm = get_pm()
     project = pm.get_project(project_id=project_id)
@@ -238,6 +244,36 @@ async def project_detail(request: Request, project_id: int, tab: str = "overview
         url=f"/p/{project['slug']}?tab={tab}",
         status_code=301,
     )
+
+
+# ─────────────────────────────
+# Manuscript 편집 API
+# ─────────────────────────────
+
+@app.get("/api/p/{slug}/manuscript/raw")
+async def manuscript_raw(slug: str):
+    """원고 raw 텍스트 반환."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "project not found"}, 404)
+    text = pm.load_project_text(project["id"], "final_manuscript.md")
+    return {"text": text or "", "chars": len(text) if text else 0}
+
+
+@app.post("/api/p/{slug}/manuscript/save")
+async def manuscript_save(slug: str, request: Request):
+    """원고 저장."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "project not found"}, 404)
+    body = await request.json()
+    text = body.get("text", "")
+    if not text.strip():
+        return JSONResponse({"error": "빈 원고는 저장할 수 없습니다."}, 400)
+    pm.save_project_text(project["id"], "final_manuscript.md", text)
+    return {"ok": True, "chars": len(text)}
 
 
 # ─────────────────────────────
@@ -419,7 +455,14 @@ async def api_update_scene(request: Request, slug: str, scene_num: int):
     # 저장
     pm.save_project_json(pid, "scene_specs.json", specs)
 
-    return {"ok": True, "scene_number": scene_num}
+    # 씬 편집 시 해당 씬 썸네일 무효화 (다음 Capture 시 재생성)
+    out_dir = project.get("output_dir", "")
+    if out_dir:
+        thumb_path = Path(out_dir) / "thumbnails" / f"scene_{str(scene_num).zfill(3)}.png"
+        if thumb_path.exists():
+            thumb_path.unlink(missing_ok=True)
+
+    return {"ok": True, "scene_number": scene_num, "thumbnail_invalidated": True}
 
 
 @app.post("/projects/{project_id}/cleanup", response_class=HTMLResponse)
@@ -435,19 +478,32 @@ async def run_cleanup(request: Request, project_id: int):
 # ─────────────────────────────
 
 @app.get("/api/p/{slug}/scene/{scene_num}/image-candidates")
-async def get_image_candidates_by_slug(slug: str, scene_num: int):
-    """slug 기반 씬 이미지 후보 목록."""
+async def get_image_candidates_by_slug(slug: str, scene_num: int, include_all: bool = False):
+    """slug 기반 씬 이미지 후보 목록.
+
+    include_all=true: 다운로드하지 않은 후보까지 썸네일 URL로 반환.
+    """
     from auto_agent.dashboard.helpers import get_scene_image_candidates
     pm = get_pm()
     project = pm.get_project(slug=slug)
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
     candidates = get_scene_image_candidates(slug, scene_num, project["output_dir"])
-    return {"scene_number": scene_num, "candidates": candidates}
+
+    # 전체 후보 (썸네일 포함) 반환
+    all_candidates = []
+    if include_all:
+        all_candidates = _load_all_candidates(project["output_dir"], scene_num)
+
+    return {
+        "scene_number": scene_num,
+        "candidates": candidates,
+        "all_candidates": all_candidates,
+    }
 
 
 @app.get("/api/projects/{project_id}/scene/{scene_num}/image-candidates")
-async def get_image_candidates(project_id: int, scene_num: int):
+async def get_image_candidates(project_id: int, scene_num: int, include_all: bool = False):
     """레거시 씬 이미지 후보 목록."""
     from auto_agent.dashboard.helpers import get_scene_image_candidates
     pm = get_pm()
@@ -455,7 +511,85 @@ async def get_image_candidates(project_id: int, scene_num: int):
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
     candidates = get_scene_image_candidates(project["slug"], scene_num, project["output_dir"])
-    return {"scene_number": scene_num, "candidates": candidates}
+    all_candidates = []
+    if include_all:
+        all_candidates = _load_all_candidates(project["output_dir"], scene_num)
+    return {"scene_number": scene_num, "candidates": candidates, "all_candidates": all_candidates}
+
+
+@app.post("/api/p/{slug}/scene/{scene_num}/download-candidate")
+async def download_candidate_image(request: Request, slug: str, scene_num: int):
+    """썸네일에서 선택한 미다운로드 후보의 원본을 다운로드 + 적용."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+
+    body = await request.json()
+    image_url = body.get("image_url", "")
+    if not image_url:
+        return JSONResponse({"error": "image_url required"}, status_code=400)
+
+    output_dir = Path(project["output_dir"])
+    images_dir = output_dir / "images"
+    search_dir = images_dir / "search"
+    search_dir.mkdir(parents=True, exist_ok=True)
+
+    # 원본 다운로드
+    try:
+        import requests as req
+        resp = req.get(image_url, timeout=30, headers={"User-Agent": "KairosAgent/1.0"})
+        resp.raise_for_status()
+
+        # 파일명: slug_scene_NNN_downloaded_hash.ext
+        import hashlib
+        url_hash = hashlib.md5(image_url.encode()).hexdigest()[:8]
+        ext = ".jpg"
+        ct = resp.headers.get("content-type", "")
+        if "png" in ct:
+            ext = ".png"
+        elif "webp" in ct:
+            ext = ".webp"
+
+        scene_key = f"scene_{scene_num:03d}"
+        filename = f"{scene_key}_dl_{url_hash}{ext}"
+        save_path = search_dir / filename
+        save_path.write_bytes(resp.content)
+
+        # 최종 이미지로 복사
+        final_path = images_dir / f"{scene_key}{ext}"
+        import shutil
+        shutil.copy2(save_path, final_path)
+
+        # scene_specs.json 업데이트
+        local_url = f"/output/{slug}/images/{final_path.name}"
+        specs = pm.load_project_json(project["id"], "scene_specs.json")
+        if specs:
+            for scene in specs.get("scenes", []):
+                sn = scene.get("sceneNumber") or scene.get("scene_number")
+                if sn == scene_num:
+                    scene["imagePath"] = local_url
+                    break
+            pm.save_project_json(project["id"], "scene_specs.json", specs)
+
+        return {"ok": True, "image_url": local_url, "saved_path": str(save_path)}
+
+    except Exception as e:
+        return JSONResponse({"error": f"다운로드 실패: {e}"}, status_code=500)
+
+
+def _load_all_candidates(output_dir: str, scene_num: int) -> list:
+    """image_candidates.json에서 해당 씬의 전체 후보 메타데이터 로드."""
+    candidates_path = Path(output_dir) / "image_candidates.json"
+    if not candidates_path.exists():
+        return []
+    try:
+        data = json.loads(candidates_path.read_text(encoding="utf-8"))
+        scene_key = f"scene_{scene_num:03d}"
+        scene_data = data.get(scene_key, {})
+        return scene_data.get("candidates", [])
+    except Exception:
+        return []
 
 
 @app.post("/api/p/{slug}/scene/{scene_num}/select-image")
@@ -509,6 +643,102 @@ async def _do_select_image(request: Request, project: dict, scene_num: int):
         pm.save_project_json(project["id"], "scene_specs.json", specs)
 
     return {"ok": True, "scene": scene_key, "image_url": image_url}
+
+
+# ─────────────────────────────
+# Pipeline 실행 API
+# ─────────────────────────────
+
+_pipeline_procs: dict[str, subprocess.Popen] = {}
+
+
+def _is_pipeline_running(slug: str) -> bool:
+    proc = _pipeline_procs.get(slug)
+    if proc and proc.poll() is None:
+        return True
+    _pipeline_procs.pop(slug, None)
+    return False
+
+
+@app.post("/api/p/{slug}/pipeline/start")
+async def pipeline_start(slug: str, request: Request):
+    """파이프라인 백그라운드 실행."""
+    if _is_pipeline_running(slug):
+        return {"ok": True, "status": "already_running"}
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    from_step = body.get("from_step")
+
+    env = os.environ.copy()
+    env.pop("CLAUDECODE", None)
+    env["PYTHONPATH"] = str(get_workspace_dir())
+
+    # .env 로드
+    dotenv_path = get_workspace_dir() / ".env"
+    if dotenv_path.exists():
+        for line in dotenv_path.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                env[k.strip()] = v.strip()
+
+    cmd = [
+        sys.executable, "-m", "auto_agent.orchestrator.runner",
+        "--project", slug,
+    ]
+    if from_step:
+        cmd.extend(["--from", from_step])
+
+    log_path = get_workspace_dir() / "output" / slug / "pipeline.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_file = open(log_path, "w", encoding="utf-8")
+
+    proc = subprocess.Popen(
+        cmd,
+        cwd=str(get_workspace_dir()),
+        env=env,
+        stdout=log_file,
+        stderr=subprocess.STDOUT,
+    )
+    _pipeline_procs[slug] = proc
+
+    from auto_agent.dashboard.agent_messenger import post_message
+    post_message("Director", "파이프라인 실행 시작", phase="pipeline",
+                 project_slug=slug, level="info")
+
+    return {"ok": True, "status": "started", "pid": proc.pid}
+
+
+@app.get("/api/p/{slug}/pipeline/status")
+async def pipeline_status(slug: str):
+    """파이프라인 실행 상태 확인."""
+    running = _is_pipeline_running(slug)
+    result = {"running": running, "slug": slug}
+    if not running:
+        proc = _pipeline_procs.get(slug)
+        if proc:
+            result["exit_code"] = proc.returncode
+    return result
+
+
+@app.post("/api/p/{slug}/pipeline/stop")
+async def pipeline_stop(slug: str):
+    """파이프라인 중지."""
+    proc = _pipeline_procs.get(slug)
+    if proc and proc.poll() is None:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+        from auto_agent.dashboard.agent_messenger import post_message
+        post_message("Director", "파이프라인 수동 중지", phase="pipeline",
+                     project_slug=slug, level="warning")
+        return {"ok": True, "status": "stopped"}
+    return {"ok": True, "status": "not_running"}
 
 
 # ─────────────────────────────
@@ -814,7 +1044,6 @@ def _enrich_scenes(pm, project_id: str, scenes: list,
         layout, explicit = resolve_layout(scene)
         scene["_layout"] = layout
         scene["_layout_explicit"] = explicit
-        scene["_preview_html"] = render_scene_preview(scene)
 
         # Remotion 캡처 썸네일
         scene["_thumbnail_url"] = None
