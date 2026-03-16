@@ -42,27 +42,52 @@ from auto_agent.ui import (
 
 
 def cmd_init(args):
-    """워크스페이스 초기화."""
+    """워크스페이스 초기화 (신규 또는 v2→v3 업그레이드)."""
     if not args:
-        print_error("Usage: auto-agent init <workspace-path>")
-        console.print("  예시: auto-agent init ~/my-project")
+        print_error("Usage: auto-kairos init <workspace-path> [--upgrade]")
+        console.print("  예시: auto-kairos init ~/my-video-project")
+        console.print("  업그레이드: auto-kairos init ~/my-video-project --upgrade")
         sys.exit(1)
 
-    workspace = Path(args[0]).resolve()
+    upgrade_mode = "--upgrade" in args
+    clean_args = [a for a in args if a != "--upgrade"]
+    workspace = Path(clean_args[0]).resolve()
     template_dir = get_package_dir() / "remotion_template"
 
-    print_header(f"auto-agent — 워크스페이스 초기화")
-    console.print(f"  경로: [accent]{workspace}[/accent]\n")
+    print_header(f"Auto Kairos v3 — {'업그레이드' if upgrade_mode else '워크스페이스 초기화'}")
+    console.print(f"  경로: [accent]{workspace}[/accent]")
+    if upgrade_mode:
+        console.print(f"  모드: [yellow]v2→v3 업그레이드 (기존 데이터 보존)[/yellow]\n")
+    else:
+        console.print("")
 
     # 1. 디렉토리 생성
     workspace.mkdir(parents=True, exist_ok=True)
     (workspace / "output").mkdir(exist_ok=True)
     (workspace / "RESEARCH").mkdir(exist_ok=True)
 
-    # 2. Remotion 템플릿 복사
+    # 2. Remotion 템플릿 복사/업데이트
     remotion_dest = workspace / "remotion"
-    if remotion_dest.exists():
-        console.print("  [dim]SKIP[/dim] remotion/ (이미 존재)")
+    if upgrade_mode and remotion_dest.exists():
+        # 업그레이드: src/만 덮어쓰기 (public/의 사용자 에셋 보존)
+        console.print("  [yellow]UPDATE[/yellow] remotion/src/ (v3 컴포넌트 업데이트)")
+        src_src = template_dir / "src"
+        src_dest = remotion_dest / "src"
+        if src_src.exists():
+            shutil.copytree(src_src, src_dest, dirs_exist_ok=True)
+        # package.json + config도 업데이트
+        for fname in ("package.json", "tsconfig.json", "remotion.config.ts", "render_scene.js"):
+            src_f = template_dir / fname
+            if src_f.exists():
+                shutil.copy2(src_f, remotion_dest / fname)
+        # public/fonts, public/geojson 동기화
+        for subdir in ("fonts", "geojson"):
+            src_d = template_dir / "public" / subdir
+            if src_d.exists():
+                shutil.copytree(src_d, remotion_dest / "public" / subdir, dirs_exist_ok=True)
+        console.print("  [yellow]UPDATE[/yellow] package.json, tsconfig.json, remotion.config.ts")
+    elif remotion_dest.exists():
+        console.print("  [dim]SKIP[/dim] remotion/ (이미 존재, --upgrade로 업데이트 가능)")
     else:
         console.print("  [accent]COPY[/accent] remotion/ 템플릿")
         shutil.copytree(template_dir, remotion_dest, dirs_exist_ok=True)
@@ -87,15 +112,21 @@ def cmd_init(args):
         )
         console.print("  [accent]CREATE[/accent] .env.example")
 
-    # 4. CLAUDE.md 생성 (Claude Code 연동 — 템플릿 복사)
+    # 4. CLAUDE.md 생성/업데이트 (Claude Code 연동 — 템플릿 복사)
     claude_md = workspace / "CLAUDE.md"
-    if not claude_md.exists():
-        template = get_data_dir() / "CLAUDE.md.template"
+    template = get_data_dir() / "CLAUDE.md.template"
+    if upgrade_mode or not claude_md.exists():
         if template.exists():
+            if claude_md.exists():
+                # 기존 백업
+                backup = workspace / "CLAUDE.md.v2.bak"
+                shutil.copy2(claude_md, backup)
+                console.print(f"  [yellow]BACKUP[/yellow] CLAUDE.md → CLAUDE.md.v2.bak")
             shutil.copy2(template, claude_md)
+            console.print(f"  [accent]{'UPDATE' if upgrade_mode else 'CREATE'}[/accent] CLAUDE.md (v3)")
         else:
-            claude_md.write_text("# Auto Agent 워크스페이스\n", encoding="utf-8")
-        console.print("  [accent]CREATE[/accent] CLAUDE.md")
+            claude_md.write_text("# Auto Kairos 워크스페이스\n", encoding="utf-8")
+            console.print("  [accent]CREATE[/accent] CLAUDE.md")
     else:
         console.print("  [dim]SKIP[/dim] CLAUDE.md (이미 존재)")
 
@@ -108,6 +139,7 @@ def cmd_init(args):
             json.dumps({
                 "permissions": {
                     "allow": [
+                        "Bash(auto-kairos *)",
                         "Bash(auto-agent *)",
                         "Bash(python3 *)",
                         "Bash(npm *)",
@@ -140,7 +172,7 @@ def cmd_init(args):
     # 7. npm install
     remotion_pkg = remotion_dest / "package.json"
     remotion_nm = remotion_dest / "node_modules"
-    if remotion_pkg.exists() and not remotion_nm.exists():
+    if remotion_pkg.exists() and (not remotion_nm.exists() or upgrade_mode):
         console.print("  [accent]NPM[/accent] Remotion 의존성 설치 중...")
         try:
             result = subprocess.run(

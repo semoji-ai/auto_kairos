@@ -3,10 +3,12 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "auto-agent"
-version = "2.9.3"
-description = "AI 영상 제작 파이프라인 CLI"
-requires-python = ">=3.9"
+name = "auto-kairos"
+version = "3.0.0"
+description = "AI Video Production Pipeline — 리서치부터 렌더링까지 자동화"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
 dependencies = [
     "anthropic>=0.52",
     "requests>=2.31",
@@ -19,8 +21,10 @@ dependencies = [
 [project.optional-dependencies]
 dashboard = ["fastapi", "uvicorn", "jinja2", "websockets"]
 sync = ["supabase>=2.0"]
+all = ["fastapi", "uvicorn", "jinja2", "websockets", "supabase>=2.0"]
 
 [project.scripts]
+auto-kairos = "auto_agent.cli:main"
 auto-agent = "auto_agent.cli:main"
 
 [tool.setuptools.packages.find]
