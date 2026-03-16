@@ -105,8 +105,8 @@ auto_agent/dashboard/static/geojson/
 auto_agent/dashboard/static/assets/
 .auto_agent/
 
-# Large built bundles (빌드로 재생성)
-auto_agent/dashboard/static/scene-editor.js
+# Large built bundles — scene-editor.js는 패키지에 포함 필요
+auto_agent/dashboard/static/map-editor.js
 
 # Backup files
 scene_specs.bak.*
