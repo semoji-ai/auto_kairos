@@ -1,8 +1,8 @@
 """
-Supabase 기반 프로젝트 데이터 액세스 레이어.
+Supabase 기반 프로젝트 데이터 액세스 레이어 (SSOT).
 
-기존 ProjectManager(SQLite)와 동일한 인터페이스를 제공하여
-대시보드가 Supabase를 단일 진실 소스(SSOT)로 사용할 수 있게 한다.
+모든 프로젝트 데이터(DB + Storage)를 Supabase에서 관리.
+로컬 파일 시스템 의존 없음. (manifest.json만 로컬 생성)
 
 사용법:
     from auto_agent.dashboard.supabase_data import SupabaseProjectManager
@@ -11,8 +11,10 @@ Supabase 기반 프로젝트 데이터 액세스 레이어.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import mimetypes
+from pathlib import Path
 from typing import List, Optional
 
 from auto_agent.supabase_client import get_supabase, BUCKET_NAME
@@ -52,6 +54,37 @@ class SupabaseProjectManager:
             return None
         return self._normalize_project(resp.data[0])
 
+    def create_project(
+        self,
+        name: str,
+        slug: str,
+        topic: str = None,
+        theme: str = "simple",
+        config: dict = None,
+    ) -> str:
+        """프로젝트 생성. Supabase UUID 반환."""
+        storage_key = "proj-" + hashlib.sha1(slug.encode()).hexdigest()[:10]
+        row = {
+            "name": name,
+            "slug": slug,
+            "topic": topic or name,
+            "theme": theme,
+            "config": config or {},
+            "status": "draft",
+            "scene_count": 0,
+            "storage_key": storage_key,
+        }
+        resp = self.sb.table("projects").insert(row).execute()
+        return resp.data[0]["id"]
+
+    def delete_project(self, project_id: str) -> None:
+        """프로젝트 + 관련 데이터 삭제."""
+        # 에셋, 파이프라인 이력, 버전 먼저 삭제
+        self.sb.table("assets").delete().eq("project_id", project_id).execute()
+        self.sb.table("pipeline_runs").delete().eq("project_id", project_id).execute()
+        self.sb.table("file_versions").delete().eq("project_id", project_id).execute()
+        self.sb.table("projects").delete().eq("id", project_id).execute()
+
     def get_active_project(self) -> Optional[dict]:
         resp = (
             self.sb.table("projects")
@@ -77,6 +110,59 @@ class SupabaseProjectManager:
                     row[key] = val
         if row:
             self.sb.table("projects").update(row).eq("id", project_id).execute()
+
+    # ──────────────────────────────────────
+    # 프로젝트 Config
+    # ──────────────────────────────────────
+
+    def get_config(self, project_id: str) -> dict:
+        """프로젝트 config JSON 반환."""
+        project = self.get_project(project_id=project_id)
+        if not project:
+            return {}
+        config = project.get("config")
+        if isinstance(config, str):
+            try:
+                return json.loads(config)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+        return config or {}
+
+    def set_config(self, project_id: str, config: dict) -> None:
+        """프로젝트 config 전체 교체."""
+        self.update_project(project_id, config=config)
+
+    def update_config(self, project_id: str, **kwargs) -> None:
+        """프로젝트 config에 키-값 머지."""
+        current = self.get_config(project_id)
+        current.update(kwargs)
+        self.set_config(project_id, current)
+
+    def delete_config_key(self, project_id: str, key: str) -> None:
+        """프로젝트 config에서 키 삭제."""
+        current = self.get_config(project_id)
+        current.pop(key, None)
+        self.set_config(project_id, current)
+
+    def provision_art_style(self, project_id: str) -> Optional[str]:
+        """아트스타일 JSON을 Storage에 업로드. Storage URL 반환."""
+        config = self.get_config(project_id)
+        art_style_rel = config.get("art_style")
+        if not art_style_rel:
+            return None
+        from auto_agent.paths import get_data_dir
+        src = get_data_dir() / art_style_rel
+        if not src.exists():
+            return None
+        # JSON을 Storage에 업로드
+        url = self.upload_local_file(project_id, "art_style.json", str(src))
+        # 참조 이미지도 업로드
+        ref_dir = src.parent
+        for img in ref_dir.glob("*.jpg"):
+            self.upload_local_file(project_id, f"artstyle/{img.name}", str(img))
+        for img in ref_dir.glob("*.png"):
+            self.upload_local_file(project_id, f"artstyle/{img.name}", str(img))
+        return url
 
     # ──────────────────────────────────────
     # 파이프라인 실행 이력
@@ -333,6 +419,75 @@ class SupabaseProjectManager:
         if resp.data:
             return resp.data[0].get("storage_url")
         return None
+
+    # ──────────────────────────────────────
+    # Storage 파일 업로드
+    # ──────────────────────────────────────
+
+    def upload_file(self, project_id: str, relative_path: str,
+                    content: bytes, content_type: str = None) -> str:
+        """파일을 Supabase Storage에 업로드. public URL 반환."""
+        storage_key = self._get_storage_key(project_id)
+        if not storage_key:
+            raise ValueError("프로젝트 storage_key를 찾을 수 없습니다.")
+        storage_path = f"{storage_key}/{relative_path}"
+        if not content_type:
+            content_type = mimetypes.guess_type(relative_path)[0] or "application/octet-stream"
+        self.sb.storage.from_(BUCKET_NAME).upload(
+            path=storage_path,
+            file=content,
+            file_options={"content-type": content_type, "upsert": "true"},
+        )
+        return self.sb.storage.from_(BUCKET_NAME).get_public_url(storage_path)
+
+    def upload_local_file(self, project_id: str, relative_path: str,
+                          local_path: str) -> str:
+        """로컬 파일을 Supabase Storage에 업로드. public URL 반환."""
+        with open(local_path, "rb") as f:
+            content = f.read()
+        return self.upload_file(project_id, relative_path, content)
+
+    def save_project_text(self, project_id: str, filename: str, text: str) -> str:
+        """텍스트 파일을 Storage에 저장. public URL 반환."""
+        content = text.encode("utf-8")
+        content_type = "text/markdown" if filename.endswith(".md") else "text/plain"
+        return self.upload_file(project_id, filename, content, content_type)
+
+    def register_asset(self, project_id: str, asset_type: str,
+                       scene_number: int = None, file_path: str = "",
+                       file_name: str = "", storage_url: str = "",
+                       metadata: dict = None) -> str:
+        """에셋을 assets 테이블에 등록. 에셋 ID 반환."""
+        row = {
+            "project_id": project_id,
+            "asset_type": asset_type,
+            "scene_number": scene_number,
+            "file_path": file_path,
+            "file_name": file_name or Path(file_path).name if file_path else "",
+            "storage_url": storage_url,
+            "metadata": metadata or {},
+        }
+        resp = self.sb.table("assets").upsert(
+            row, on_conflict="project_id,asset_type,scene_number,file_path"
+        ).execute()
+        return resp.data[0]["id"] if resp.data else ""
+
+    def save_version(self, project_id: str, file_type: str,
+                     version: int = None, storage_url: str = "",
+                     metadata: dict = None) -> None:
+        """파일 버전 기록."""
+        if version is None:
+            # 다음 버전 자동 계산
+            existing = self.get_versions(project_id, file_type)
+            version = (existing[0].get("version", 0) + 1) if existing else 1
+        row = {
+            "project_id": project_id,
+            "file_type": file_type,
+            "version": version,
+            "storage_url": storage_url,
+            "metadata": metadata or {},
+        }
+        self.sb.table("file_versions").insert(row).execute()
 
     # ──────────────────────────────────────
     # 라이선스

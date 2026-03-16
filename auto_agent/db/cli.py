@@ -38,54 +38,36 @@ from auto_agent.ui import (
 )
 
 
-def _sync_project_to_supabase(pm, local_id, slug, name, topic=None):
-    """프로젝트 생성 후 Supabase에 자동 등록."""
-    try:
-        from auto_agent.supabase_client import supabase_enabled
-        if not supabase_enabled():
-            return
-        from auto_agent.supabase_client import get_supabase
-        import hashlib
-        sb = get_supabase()
-        project = pm.get_project(project_id=local_id)
-        output_dir = project.get("output_dir", "") if project else ""
-        storage_key = "proj-" + hashlib.sha1(slug.encode()).hexdigest()[:10]
-        sb.table("projects").upsert({
-            "slug": slug,
-            "name": name,
-            "topic": topic or name,
-            "status": "draft",
-            "scene_count": 0,
-            "output_dir": output_dir,
-            "storage_key": storage_key,
-        }, on_conflict="slug").execute()
-        console.print(f"  [dim]Supabase 동기화 완료[/dim]")
-    except Exception as e:
-        console.print(f"  [dim]Supabase 동기화 스킵: {e}[/dim]")
+def _get_pm():
+    """Supabase ProjectManager 반환."""
+    from auto_agent.supabase_client import supabase_enabled
+    if not supabase_enabled():
+        print_error("SUPABASE_URL / SUPABASE_KEY 환경변수를 설정하세요.")
+        sys.exit(1)
+    from auto_agent.dashboard.supabase_data import SupabaseProjectManager
+    return SupabaseProjectManager()
 
 
 def cmd_init(args):
-    """DB 초기화."""
-    from auto_agent.db.connection import init_db, get_db_path
-    path = init_db()
-    print_success(f"DB 초기화 완료: {path}")
+    """워크스페이스 초기화 (Supabase 연결 확인)."""
+    from auto_agent.supabase_client import supabase_enabled
+    if supabase_enabled():
+        pm = _get_pm()
+        projects = pm.list_projects()
+        print_success(f"Supabase 연결 완료. 프로젝트 {len(projects)}개 확인.")
+    else:
+        print_error("SUPABASE_URL / SUPABASE_KEY 환경변수를 설정하세요.")
 
 
 def cmd_migrate(args):
-    """기존 프로젝트 마이그레이션."""
+    """기존 로컬 프로젝트 → Supabase 마이그레이션."""
     from auto_agent.db.migrate_existing import main
     main()
 
 
 def cmd_project(args):
     """프로젝트 관리 서브커맨드."""
-    from auto_agent.db.connection import db_exists
-    if not db_exists():
-        print_error("DB가 초기화되지 않았습니다. 'auto-agent init <workspace>' 를 먼저 실행하세요.")
-        sys.exit(1)
-
-    from auto_agent.db.project_manager import ProjectManager
-    pm = ProjectManager()
+    pm = _get_pm()
 
     if not args or args[0] == "list":
         projects = pm.list_projects()
@@ -119,12 +101,11 @@ def cmd_project(args):
                 theme=data["theme"],
                 config=config or None,
             )
-            _sync_project_to_supabase(pm, pid, data["slug"], data["name"], data.get("topic"))
             console.print()
-            print_success(f"프로젝트 생성 완료: [accent]{data['name']}[/accent] (id={pid}, slug={data['slug']})")
+            print_success(f"프로젝트 생성 완료: [accent]{data['name']}[/accent] (slug={data['slug']})")
             console.print(f"\n  다음 단계: [accent]auto-agent run --project {data['slug']}[/accent]")
         else:
-            # ── 비인터랙티브 모드 (하위 호환) ──
+            # ── 비인터랙티브 모드 ──
             if len(args) < 2:
                 print_error("Usage: project create <name> [--topic <topic>]")
                 return
@@ -137,8 +118,7 @@ def cmd_project(args):
                 if idx + 1 < len(args):
                     topic = args[idx + 1]
             pid = pm.create_project(name=name, slug=slug, topic=topic)
-            _sync_project_to_supabase(pm, pid, slug, name, topic)
-            print_success(f"프로젝트 생성 완료: id={pid}, slug={slug}")
+            print_success(f"프로젝트 생성 완료: slug={slug}")
 
     elif args[0] == "active":
         p = pm.get_active_project()
@@ -168,13 +148,7 @@ def cmd_config(args):
     """프로젝트 config 관리 (art_style, voice_id, voice_settings 등)."""
     import json
 
-    from auto_agent.db.connection import db_exists
-    if not db_exists():
-        print_error("DB가 초기화되지 않았습니다.")
-        sys.exit(1)
-
-    from auto_agent.db.project_manager import ProjectManager
-    pm = ProjectManager()
+    pm = _get_pm()
 
     # --project <slug> 옵션 처리
     project = None
@@ -280,13 +254,7 @@ def cmd_config(args):
 
 def cmd_version(args):
     """버전 관리."""
-    from auto_agent.db.connection import db_exists
-    if not db_exists():
-        print_error("DB가 초기화되지 않았습니다.")
-        sys.exit(1)
-
-    from auto_agent.db.project_manager import ProjectManager
-    pm = ProjectManager()
+    pm = _get_pm()
     project = pm.get_active_project()
     if not project:
         print_warning("활성 프로젝트가 없습니다.")
@@ -315,13 +283,7 @@ def cmd_version(args):
 
 def cmd_assets(args):
     """에셋 조회."""
-    from auto_agent.db.connection import db_exists
-    if not db_exists():
-        print_error("DB가 초기화되지 않았습니다.")
-        sys.exit(1)
-
-    from auto_agent.db.project_manager import ProjectManager
-    pm = ProjectManager()
+    pm = _get_pm()
     project = pm.get_active_project()
     if not project:
         print_warning("활성 프로젝트가 없습니다.")
@@ -341,15 +303,9 @@ def cmd_assets(args):
 
 def cmd_cleanup(args):
     """클린업."""
-    from auto_agent.db.connection import db_exists
-    if not db_exists():
-        print_error("DB가 초기화되지 않았습니다.")
-        sys.exit(1)
-
-    from auto_agent.db.project_manager import ProjectManager
     from auto_agent.db.cleanup import CleanupManager
 
-    pm = ProjectManager()
+    pm = _get_pm()
     project = pm.get_active_project()
     if not project:
         print_warning("활성 프로젝트가 없습니다.")
@@ -402,13 +358,7 @@ def cmd_cleanup(args):
 
 def cmd_costs(args):
     """비용 요약."""
-    from auto_agent.db.connection import db_exists
-    if not db_exists():
-        print_error("DB가 초기화되지 않았습니다.")
-        sys.exit(1)
-
-    from auto_agent.db.project_manager import ProjectManager
-    pm = ProjectManager()
+    pm = _get_pm()
 
     total = pm.get_cost_summary()
     projects = pm.list_projects()
