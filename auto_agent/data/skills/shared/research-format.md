@@ -1,3 +1,8 @@
+---
+name: research-format
+description: Use when formatting research reports into the standardized JSON structure for downstream pipeline consumption
+---
+
 # Research Format
 
 deep-research-kit 출력을 파이프라인 표준 포맷(research_report.json)으로 변환하는 규칙을 정의합니다.

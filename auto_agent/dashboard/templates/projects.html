@@ -20,7 +20,7 @@
     <tr>
       <td>{{ p.id }}</td>
       <td>
-        <a href="/projects/{{ p.id }}">{{ p.name }}</a>
+        <a href="/p/{{ p.slug }}">{{ p.name }}</a>
         {% if p.topic %}
         <br><small style="color: var(--text-muted)">{{ p.topic[:50] }}</small>
         {% endif %}

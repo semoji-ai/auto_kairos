@@ -18,39 +18,82 @@ import {
   delayRender,
   continueRender,
 } from "remotion";
-import { SimpleScene } from "./simple/SimpleScene";
+
+/** staticFile 대체: 절대 URL이면 그대로, 상대경로면 staticFile() 사용 */
+const resolveAsset = (path: string): string =>
+  path.startsWith("http://") || path.startsWith("https://")
+    ? path
+    : staticFile(path);
+import { CreativeScene } from "./simple/CreativeScene";
 import { MapSceneRenderer } from "./map/MapSceneRenderer";
+import { VideoThemeProvider, resolveVideoTheme, type ColorTokens } from "./simple/BuildingBlocks";
 import type { SceneManifest, SubtitleConfig } from "./types/manifest";
 
-const FONT = "'Pretendard', sans-serif";
+/** 번들 폰트 정의 — FontFace API로 로드 가능한 폰트 */
+const BUNDLED_FONTS: Record<string, { file: string; weight: string }[]> = {
+  Pretendard: [
+    { file: "fonts/Pretendard-Regular.otf", weight: "400" },
+    { file: "fonts/Pretendard-Bold.otf", weight: "700" },
+  ],
+};
 
-const C = {
-  bg: "#0A0A0A",
-  text: "#F5F5F5",
-  textMuted: "rgba(245,245,245,0.5)",
-  accent: "#F59E0B",
-} as const;
+const DEFAULT_FONT = "'Pretendard', sans-serif";
+
+/* C는 VideoThemeProvider 컨텍스트로 대체 — 하위호환용 다크 기본값 유지 */
+
+/** manifest의 폰트 설정으로 CSS font-family 문자열 생성 */
+const buildFontFamily = (fontName?: string): string => {
+  if (!fontName || fontName === "Pretendard") return DEFAULT_FONT;
+  return `'${fontName}', 'Pretendard', sans-serif`;
+};
 
 /* ---------- Font Loading ---------- */
-const useFonts = () => {
-  const [handle] = useState(() => delayRender("Loading Pretendard fonts"));
+/** 시스템에 폰트가 설치되어 있는지 확인 */
+const isSystemFont = (family: string): boolean => {
+  try {
+    return document.fonts.check(`16px "${family}"`);
+  } catch {
+    return false;
+  }
+};
+
+const useFonts = (fontName?: string) => {
+  const [handle] = useState(() => delayRender("Loading fonts"));
   useEffect(() => {
     const load = async () => {
-      const defs = [
-        { file: "fonts/Pretendard-Regular.otf", weight: "400" },
-        { file: "fonts/Pretendard-Bold.otf", weight: "700" },
-      ];
-      await Promise.all(
-        defs.map(async (d) => {
-          const face = new FontFace(
-            "Pretendard",
-            `url('${staticFile(d.file)}')`,
-            { weight: d.weight, style: "normal" },
+      // 시스템에 설치된 폰트면 번들 로드 스킵
+      if (!isSystemFont("Pretendard")) {
+        const pretendardDefs = BUNDLED_FONTS["Pretendard"];
+        await Promise.all(
+          pretendardDefs.map(async (d) => {
+            const face = new FontFace(
+              "Pretendard",
+              `url('${staticFile(d.file)}')`,
+              { weight: d.weight, style: "normal" },
+            );
+            const loaded = await face.load();
+            document.fonts.add(loaded);
+          }),
+        );
+      }
+
+      // 커스텀 폰트: 시스템에 있으면 스킵, 없으면 번들에서 로드
+      if (fontName && fontName !== "Pretendard") {
+        if (!isSystemFont(fontName) && BUNDLED_FONTS[fontName]) {
+          await Promise.all(
+            BUNDLED_FONTS[fontName].map(async (d) => {
+              const face = new FontFace(
+                fontName,
+                `url('${staticFile(d.file)}')`,
+                { weight: d.weight, style: "normal" },
+              );
+              const loaded = await face.load();
+              document.fonts.add(loaded);
+            }),
           );
-          const loaded = await face.load();
-          document.fonts.add(loaded);
-        }),
-      );
+        }
+      }
+
       continueRender(handle);
     };
     load().catch(() => continueRender(handle));
@@ -64,13 +107,20 @@ interface Props {
 }
 
 export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
-  useFonts();
+  const fontName = manifest.meta?.vizFont || "Pretendard";
+  const fontFamily = buildFontFamily(fontName);
+  useFonts(fontName);
   const { fps } = useVideoConfig();
   const frame = useCurrentFrame();
 
+  const themeName = manifest.meta?.videoTheme ?? "dark";
+  const artStyle = manifest.meta?.artStyle;
+  const C = resolveVideoTheme(themeName, artStyle);
+
   let offset = 0;
   const timing = manifest.scenes.map((scene) => {
-    const dur = Math.max(Math.ceil(scene.audioDurationSec * fps), 1);
+    // MP3 인코딩 패딩 + ffprobe 반올림 오차 보상: 2프레임 여유
+    const dur = Math.max(Math.ceil(scene.audioDurationSec * fps) + 2, 1);
     const from = offset;
     offset += dur;
     return { scene, from, dur };
@@ -79,14 +129,15 @@ export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
   const sub = findSubtitle(timing, frame, fps);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: C.bg, fontFamily: FONT }}>
+    <VideoThemeProvider theme={themeName} artStyle={artStyle}>
+    <AbsoluteFill style={{ backgroundColor: C.bg, fontFamily }}>
       {timing.map(({ scene, from, dur }) => {
         const hasImage = !!(scene.imagePath || scene.vizBackgroundPath);
 
         return (
           <Sequence
             key={scene.sceneNumber}
-            name={`Scene ${scene.sceneNumber}${scene.visualization?.title ? ` - ${scene.visualization.title}` : ''}`}
+            name={`S${scene.sceneNumber} - ${scene.visualization?.creative?.headline?.replace(/\{\{|\}\}/g, '').replace(/\n/g, ' ').slice(0, 30) || scene.visualization?.title || `Scene ${scene.sceneNumber}`}`}
             from={from}
             durationInFrames={dur}
             layout="none"
@@ -102,15 +153,58 @@ export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
                   />
                 </FadeWrap>
               ) : (
-                /* === 일반 씬: 이미지 배경/에셋 + SimpleScene === */
+                /* === 일반 씬: 이미지 배경/에셋 + CreativeScene === */
                 (() => {
                   const placement = scene.imageAsset?.placement ?? "background";
                   const imgOpacity = scene.imageAsset?.opacity ?? 0.4;
                   const imgSrc = scene.vizBackgroundPath || scene.imagePath;
                   const isSidePlacement = hasImage && (placement === "left" || placement === "right");
+                  const isFullscreen = hasImage && placement === "fullscreen";
+                  const isCenter = hasImage && placement === "center";
+
+                  if (isFullscreen) {
+                    return (
+                      <>
+                        <ImageBackground
+                          src={imgSrc}
+                          duration={dur}
+                          kenBurns={scene.kenBurns}
+                          opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9}
+                        />
+                        <FadeWrap duration={dur} fade={10}>
+                          <CreativeScene
+                            data={scene.visualization}
+                            subtitles={scene.subtitles}
+                            fps={fps}
+                            hasImageBackground={true}
+                            imageAssetPlacement="fullscreen"
+                          />
+                        </FadeWrap>
+                      </>
+                    );
+                  }
+
+                  if (isCenter) {
+                    return (
+                      <CenterImageLayout
+                        src={imgSrc}
+                        opacity={imgOpacity}
+                        duration={dur}
+                      >
+                        <FadeWrap duration={dur} fade={10}>
+                          <CreativeScene
+                            data={scene.visualization}
+                            subtitles={scene.subtitles}
+                            fps={fps}
+                            hasImageBackground={false}
+                            imageAssetPlacement="center"
+                          />
+                        </FadeWrap>
+                      </CenterImageLayout>
+                    );
+                  }
 
                   if (isSidePlacement) {
-                    // left/right: flex row로 텍스트와 이미지를 나란히 배치
                     return (
                       <SideImageLayout
                         src={imgSrc}
@@ -119,11 +213,10 @@ export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
                         duration={dur}
                       >
                         <FadeWrap duration={dur} fade={10}>
-                          <SimpleScene
+                          <CreativeScene
                             data={scene.visualization}
-                            sceneNumber={scene.sceneNumber}
-                            durationInFrames={dur}
                             subtitles={scene.subtitles}
+                            fps={fps}
                             hasImageBackground={false}
                             imageAssetPlacement={placement}
                           />
@@ -143,11 +236,10 @@ export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
                         />
                       )}
                       <FadeWrap duration={dur} fade={10}>
-                        <SimpleScene
+                        <CreativeScene
                           data={scene.visualization}
-                          sceneNumber={scene.sceneNumber}
-                          durationInFrames={dur}
                           subtitles={scene.subtitles}
+                          fps={fps}
                           hasImageBackground={hasImage}
                           imageAssetPlacement={placement}
                         />
@@ -157,7 +249,7 @@ export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
                 })()
               )}
               {scene.audioPath ? (
-                <Audio src={staticFile(scene.audioPath)} />
+                <Audio src={resolveAsset(scene.audioPath)} />
               ) : null}
             </AbsoluteFill>
           </Sequence>
@@ -166,9 +258,10 @@ export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
 
       {/* 자막 바 */}
       {sub && subtitleConfig.visible !== false && (
-        <SubtitleBar text={sub} />
+        <SubtitleBar text={sub} theme={C} />
       )}
     </AbsoluteFill>
+    </VideoThemeProvider>
   );
 };
 
@@ -203,7 +296,7 @@ const ImageBackground: React.FC<{
   return (
     <AbsoluteFill style={{ zIndex: 0, overflow: "hidden" }}>
       <Img
-        src={staticFile(src)}
+        src={resolveAsset(src)}
         style={{
           width: "100%",
           height: "100%",
@@ -244,7 +337,7 @@ const SideImageLayout: React.FC<{
       }}
     >
       <Img
-        src={staticFile(src)}
+        src={resolveAsset(src)}
         style={{
           maxWidth: "100%",
           maxHeight: "80%",
@@ -277,6 +370,61 @@ const SideImageLayout: React.FC<{
   );
 };
 
+/* ---------- Center Image Layout ---------- */
+const CenterImageLayout: React.FC<{
+  src: string;
+  opacity: number;
+  duration: number;
+  children: React.ReactNode;
+}> = ({ src, opacity, duration, children }) => {
+  const frame = useCurrentFrame();
+  const fadeIn = interpolate(frame, [0, 20], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  return (
+    <AbsoluteFill
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {/* 상단: 콘텐츠 */}
+      <div style={{ flex: "0 0 35%", width: "100%", position: "relative" }}>
+        {children}
+      </div>
+      {/* 중앙: 이미지 */}
+      <div
+        style={{
+          flex: "0 0 45%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "16px 40px",
+          opacity: fadeIn,
+        }}
+      >
+        <Img
+          src={resolveAsset(src)}
+          style={{
+            maxWidth: "70%",
+            maxHeight: "100%",
+            objectFit: "contain",
+            opacity,
+            borderRadius: 16,
+            filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.6))",
+          }}
+        />
+      </div>
+      {/* 하단 여백 (자막 영역) */}
+      <div style={{ flex: "0 0 20%" }} />
+    </AbsoluteFill>
+  );
+};
+
 /* ---------- Map Title ---------- */
 const MapTitle: React.FC<{ text: string }> = ({ text }) => {
   const frame = useCurrentFrame();
@@ -299,10 +447,10 @@ const MapTitle: React.FC<{ text: string }> = ({ text }) => {
           marginTop: 60,
           fontSize: 42,
           fontWeight: 700,
-          color: C.text,
-          fontFamily: FONT,
+          fontFamily: "inherit",
           textAlign: "center",
           opacity,
+          color: "#FFFFFF",
           textShadow: "0 2px 24px rgba(0,0,0,0.9)",
         }}
       >
@@ -329,7 +477,8 @@ const FadeWrap: React.FC<{
 };
 
 /* ---------- Subtitle Bar ---------- */
-const SubtitleBar: React.FC<{ text: string }> = ({ text }) => {
+const SubtitleBar: React.FC<{ text: string; theme: ColorTokens }> = ({ text, theme }) => {
+  const isDark = theme.bg === "#0A0A0A";
   return (
     <AbsoluteFill
       style={{
@@ -350,7 +499,7 @@ const SubtitleBar: React.FC<{ text: string }> = ({ text }) => {
         <div
           style={{
             width: 5,
-            backgroundColor: C.accent,
+            backgroundColor: theme.accent,
             borderRadius: "4px 0 0 4px",
             flexShrink: 0,
           }}
@@ -359,18 +508,19 @@ const SubtitleBar: React.FC<{ text: string }> = ({ text }) => {
         <div
           style={{
             flex: 1,
-            backgroundColor: "rgba(255, 255, 255, 0.8)",
+            backgroundColor: isDark ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.95)",
             padding: "14px 28px",
             borderRadius: "0 8px 8px 0",
             textAlign: "center",
+            boxShadow: isDark ? undefined : "0 2px 8px rgba(0,0,0,0.06)",
           }}
         >
           <span
             style={{
               fontSize: 36,
               fontWeight: 600,
-              color: "#111111",
-              fontFamily: FONT,
+              color: isDark ? "#111111" : "#1A1A2E",
+              fontFamily: "inherit",
               lineHeight: 1.5,
               letterSpacing: "0.01em",
             }}

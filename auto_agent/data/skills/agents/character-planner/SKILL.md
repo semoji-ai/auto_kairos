@@ -1,6 +1,6 @@
 ---
 name: character-planner
-description: 씬 분할 결과 + 원고 분석 → 2씬+ 등장 캐릭터 추출 + 변이 분석 + character_plan.json 생성
+description: Use when extracting recurring characters from scene specs and manuscript to generate character_plan.json with appearance tracking and variant analysis
 model: claude-sonnet-4-5-20250929
 max_turns: 20
 allowed_tools:

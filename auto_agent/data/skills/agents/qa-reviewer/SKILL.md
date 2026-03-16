@@ -1,6 +1,6 @@
 ---
 name: qa-reviewer
-description: 최종 결과물 품질 검수 — 2단계 (사전/사후)
+description: Use when reviewing final deliverables for quality assurance in pre-flight and post-render stages
 model: claude-sonnet-4-5-20250929
 max_turns: 25
 allowed_tools:
@@ -99,14 +99,59 @@ skills:
   - split_reveal emphasis/reveal + `placement != "background"` → 이미지 방향과 텍스트 방향 충돌 가능 severity: warning
   - items_grid/items_list + `placement: "left"/"right"` → 아이템 영역과 이미지 겹침 가능 severity: warning
 
-#### H-2. 레이아웃 시각 검증 (Post-image QA)
-- `scripts/layout_check.py` 실행하여 이미지 에셋 씬의 스틸 프레임 렌더링
-- 렌더링된 스틸 확인 항목:
-  - 텍스트가 이미지 에셋과 겹치지 않는지
-  - 배경 이미지 위 텍스트 가독성 (contrast ratio)
-  - left/right 배치 시 텍스트가 반대편에 정렬되는지
-  - 자막 영역과 이미지 겹치지 않는지
-  - 전체적인 시각적 밸런스
+#### H-2. 시각적 QA (Visual QA — 스틸 프레임 검증)
+
+`scripts/layout_check.py`가 **모든 씬**의 스틸 프레임을 캡처하여 `output/{project}/layout_check/` 에 저장한다.
+QA 에이전트는 렌더링된 PNG를 **Read 도구로 직접 열어** 시각적으로 검증한다.
+
+##### 실행 흐름
+1. `layout_check_report.json` 읽기 → 씬 목록 + 메타데이터 확인
+2. 각 씬의 `scene_{NNN}.png`를 **Read** 도구로 열기 (멀티모달 이미지 확인)
+3. `layout_check_report.json`의 씬별 메타(headline, items, vizType, layout 등)와 대조
+4. 이슈 발견 시 `qa_report_pre.json`에 기록 (severity: critical/warning)
+
+##### 검증 항목 (PNG를 보며 확인)
+1. **텍스트 넘침/줄바꿈**: headline이나 items 텍스트가 컨테이너 밖으로 잘리거나 의도치 않게 줄바꿈되는지
+   - 특히 긴 한글 headline (20자+), 숫자+단위 조합 주의
+   - severity: critical (읽을 수 없는 경우), warning (미관 문제)
+2. **headline-items 중복 표시**: 화면에 동일한 내용이 headline과 items 양쪽에 중복 노출되는지
+   - `shared/creative-direction` 2.1절 절대 규칙 위반
+   - severity: warning
+3. **빈 화면**: 데이터가 렌더링되지 않아 배경색(#0A0A0A)만 보이거나 텍스트 없는 검정 화면
+   - severity: critical
+4. **이미지-텍스트 겹침**: 이미지 에셋 위에 텍스트가 가려져 읽기 어려운 경우
+   - placement: background일 때 오버레이 불투명도 부족 여부
+   - placement: left/right일 때 텍스트 영역 침범
+   - severity: warning
+5. **레이아웃 의도 불일치**: vizType/layout 메타데이터 대비 실제 화면 배치가 다른 경우
+   - 예: vizType=bar_chart인데 차트가 안 보임, layout=split인데 단일 열
+   - severity: critical (핵심 시각화 누락), warning (배치 차이)
+6. **자막 영역 침범**: 하단 80px 자막 공간에 시각화 요소가 겹치는지
+   - severity: warning
+7. **accent 과다/부재**: `{{}}` 강조 텍스트가 화면에서 과도하거나(3개+) 아예 없는지
+   - severity: info
+8. **시각적 밸런스**: 한쪽에 요소가 과도하게 몰리거나 여백이 비정상적인지
+   - severity: info
+
+##### 수정 지시 출력
+이슈 발견 시 `qa_report_pre.json`의 issues 배열에 아래 형식으로 기록:
+```json
+{
+  "id": "QA-V-001",
+  "severity": "critical",
+  "category": "visual_overflow",
+  "scene": 12,
+  "description": "Scene 12 headline '대한민국 수출 주력 산업 변화 추이'가 오른쪽으로 잘림",
+  "suggestion": "headline을 2줄로 분리하거나 '수출 주력 산업\\n변화 추이'로 개행 추가",
+  "stillPath": "output/{project}/layout_check/scene_012.png",
+  "auto_fixable": false
+}
+```
+
+##### 검증 전략
+- 전체 씬을 순회하되, **렌더링 실패한 씬은 별도 critical 이슈**로 기록
+- 씬 수가 많으면 (30+) 10씬 단위로 묶어서 Read → 검증 → 다음 묶음
+- 각 PNG 확인 시 해당 씬의 메타데이터(headline, items, vizType)를 함께 참조하여 의도 대비 실제를 비교
 
 #### I. 모션 플랜 일관성
 - 같은 전환 타입 3회 연속 없는지 (`shared/motion-rhythm` 1번 참조)

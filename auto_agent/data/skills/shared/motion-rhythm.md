@@ -1,3 +1,8 @@
+---
+name: motion-rhythm
+description: Use when designing transition timing, scene pacing, and motion plan for video sequences
+---
+
 # Motion Rhythm
 
 전체 영상의 전환 효과, 타이밍, 시각적 리듬, 브리딩 포인트 규칙을 정의합니다.

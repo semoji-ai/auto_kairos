@@ -1,3 +1,8 @@
+---
+name: data-mapping
+description: Use when extracting structured data (items, values, units) from narration text for visualization
+---
+
 # Data Mapping
 
 시각화 씬에 리서치 기반 정확한 수치/통계를 보강하는 규칙을 정의합니다.

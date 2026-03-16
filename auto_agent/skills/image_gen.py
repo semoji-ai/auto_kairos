@@ -125,7 +125,7 @@ def _parallel_generate_characters(variants: list, style_path: str, output_dir: P
             log_fn(f"  [ERROR] {vid} ({elapsed:.1f}s) {e}")
             return vid, {"success": False, "error": str(e)}
 
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    with ThreadPoolExecutor(max_workers=10) as pool:
         futures = {pool.submit(gen_one, v): v["variant_id"] for v in variants}
         for fut in as_completed(futures):
             vid, res = fut.result()
@@ -303,7 +303,7 @@ def _parallel_generate_scenes(scenes: list, style_path: str, output_dir: Path, s
             log_fn(f"  [ERROR] {sid} ({elapsed:.1f}s) {e}")
             return sid, {"success": False, "error": str(e)}
 
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    with ThreadPoolExecutor(max_workers=10) as pool:
         futures = {pool.submit(gen_one, sc): sc["id"] for sc in scenes}
         for fut in as_completed(futures):
             sid, res = fut.result()
@@ -468,7 +468,7 @@ def _parallel_generate_viz_backgrounds(
             log_fn(f"  [ERROR] {scene_key}_bg ({elapsed:.1f}s) {e}")
             return scene_key, {"success": False, "error": str(e)}
 
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    with ThreadPoolExecutor(max_workers=10) as pool:
         futures = {pool.submit(gen_one, vs): vs["scene_number"] for vs in viz_scenes}
         for fut in as_completed(futures):
             key, res = fut.result()

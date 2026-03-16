@@ -7,12 +7,12 @@ import {
   continueRender,
   staticFile,
 } from "remotion";
+const resolveAsset = (p: string) => p.startsWith("http") ? p : staticFile(p);
 import type maplibregl from "maplibre-gl";
 import type { MapSceneData, TerritoryData } from "../types/manifest";
 import { interpolateCamera, type CameraState } from "./cameraInterpolation";
-import { resolveMapStyle } from "./mapStyles";
 import { RemotionMap } from "./RemotionMap";
-import { MapBase } from "./MapBase";
+import { PrerenderedMapBg } from "./PrerenderedMapBg";
 import { MarkerOverlay, LabelOverlay, MapTitleOverlay } from "./MapOverlays";
 import { AtmosphereOverlay } from "./AtmosphereOverlay";
 
@@ -25,10 +25,11 @@ interface Props {
 /**
  * TerritoryOverlay — 영역 변화 씬
  *
- * GeoJSON 폴리곤이 점진적으로 fade-in되어 영역을 표시.
- * 여러 영역을 시간차로 표시 가능.
- *
- * 예: 고구려 최대 영토, 조선 8도 등
+ * 렌더링 모드:
+ * 1. prerenderedBg: 정적 스크린샷 (영역 포함) + HTML 오버레이
+ *    - 프리렌더 스크립트가 MapLibre에 영역 GeoJSON을 추가한 뒤 캡처
+ *    - 영역 fade-in은 전체 이미지 opacity로 대체
+ * 2. RemotionMap: MapLibre 실시간 렌더링 (폴백)
  */
 export const TerritoryOverlay: React.FC<Props> = ({
   data,
@@ -45,6 +46,45 @@ export const TerritoryOverlay: React.FC<Props> = ({
 
   const territories = data.territories ?? [];
 
+  const overlays = (cam: CameraState) => (
+    <>
+      {data.markers && (
+        <MarkerOverlay markers={data.markers} camera={cam} width={1920} height={1080} />
+      )}
+      {data.labels && (
+        <LabelOverlay labels={data.labels} camera={cam} width={1920} height={1080} />
+      )}
+    </>
+  );
+
+  /* ── prerenderedBg 모드: 영역이 포함된 스크린샷 ── */
+  if (data.prerenderedBg) {
+    const bg = data.prerenderedBg;
+    const captureCam: CameraState = {
+      center: bg.cameraState.center,
+      zoom: bg.cameraState.zoom,
+      bearing: bg.cameraState.bearing,
+      pitch: bg.cameraState.pitch,
+    };
+
+    return (
+      <AbsoluteFill>
+        <PrerenderedMapBg
+          imagePath={bg.imagePath}
+          captureCamera={captureCam}
+          width={1920}
+          height={1080}
+        >
+          {overlays(captureCam)}
+        </PrerenderedMapBg>
+        <AtmosphereOverlay />
+        <MapTitleOverlay title={data.title} source={data.source} />
+      </AbsoluteFill>
+    );
+  }
+
+  /* ── RemotionMap 실시간 렌더링 (폴백) ── */
+
   // GeoJSON 로딩 (파일 경로가 있는 경우)
   const [loadedGeoJSON, setLoadedGeoJSON] = useState<
     Record<number, GeoJSON.FeatureCollection>
@@ -54,7 +94,6 @@ export const TerritoryOverlay: React.FC<Props> = ({
     return hasExternalFiles ? delayRender("Loading GeoJSON files") : null;
   });
 
-  // 외부 GeoJSON 파일 로딩
   React.useEffect(() => {
     const loadFiles = async () => {
       const loaded: Record<number, GeoJSON.FeatureCollection> = {};
@@ -62,7 +101,7 @@ export const TerritoryOverlay: React.FC<Props> = ({
         const t = territories[i];
         if (t.geojsonPath && !t.geojsonInline) {
           try {
-            const url = staticFile(t.geojsonPath);
+            const url = resolveAsset(t.geojsonPath);
             const res = await fetch(url);
             loaded[i] = await res.json();
           } catch (err) {
@@ -76,7 +115,6 @@ export const TerritoryOverlay: React.FC<Props> = ({
     loadFiles();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 맵 로드 시 레이어 추가
   const handleMapReady = useCallback(
     (map: maplibregl.Map) => {
       territories.forEach((territory, i) => {
@@ -93,18 +131,16 @@ export const TerritoryOverlay: React.FC<Props> = ({
             data: geojson as GeoJSON.GeoJSON,
           });
 
-          // 채우기 레이어
           map.addLayer({
             id: fillLayerId,
             type: "fill",
             source: sourceId,
             paint: {
               "fill-color": territory.fillColor,
-              "fill-opacity": 0, // 초기 투명 → 프레임별 업데이트
+              "fill-opacity": 0,
             },
           });
 
-          // 경계선 레이어
           if (territory.strokeColor) {
             map.addLayer({
               id: lineLayerId,
@@ -123,7 +159,6 @@ export const TerritoryOverlay: React.FC<Props> = ({
     [loadedGeoJSON], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  // 매 프레임 투명도 업데이트
   const handleFrameUpdate = useCallback(
     (map: maplibregl.Map) => {
       territories.forEach((territory, i) => {
@@ -155,59 +190,18 @@ export const TerritoryOverlay: React.FC<Props> = ({
     [frame], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const styleConfig = resolveMapStyle(data.mapStyle);
-  const isD3 = styleConfig.renderer === "d3";
-
-  // D3: 영역 투명도 계산
-  const d3Territories = isD3
-    ? territories.map((territory) => {
-        const appearAt = territory.appearAtFrame ?? 0;
-        const fadeIn = territory.fadeInFrames ?? 20;
-        const opacity = interpolate(
-          frame,
-          [appearAt, appearAt + fadeIn],
-          [0, 1],
-          { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-        );
-        return { data: territory, opacity };
-      })
-    : undefined;
-
-  const overlays = (
-    <>
-      {data.markers && (
-        <MarkerOverlay markers={data.markers} camera={camera} width={1920} height={1080} />
-      )}
-      {data.labels && (
-        <LabelOverlay labels={data.labels} camera={camera} width={1920} height={1080} />
-      )}
-    </>
-  );
-
   return (
     <AbsoluteFill>
-      {isD3 ? (
-        <MapBase
-          mapStyle={data.mapStyle}
-          cameraState={camera}
-          territories={d3Territories}
-          width={1920}
-          height={1080}
-        >
-          {overlays}
-        </MapBase>
-      ) : (
-        <RemotionMap
-          mapStyle={data.mapStyle}
-          cameraState={camera}
-          onMapReady={handleMapReady}
-          onFrameUpdate={handleFrameUpdate}
-          width={1920}
-          height={1080}
-        >
-          {overlays}
-        </RemotionMap>
-      )}
+      <RemotionMap
+        mapStyle={data.mapStyle}
+        cameraState={camera}
+        onMapReady={handleMapReady}
+        onFrameUpdate={handleFrameUpdate}
+        width={1920}
+        height={1080}
+      >
+        {overlays(camera)}
+      </RemotionMap>
       <AtmosphereOverlay />
       <MapTitleOverlay title={data.title} source={data.source} />
     </AbsoluteFill>

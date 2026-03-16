@@ -1,3 +1,8 @@
+---
+name: image-generation
+description: Use when generating scene images via AI image APIs with art style consistency and prompt engineering
+---
+
 # 이미지 생성 스킬 (Image Generation Skill)
 
 > FAL AI nano-banana-pro 모델 기반 이미지 생성 규칙.

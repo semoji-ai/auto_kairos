@@ -1,6 +1,6 @@
 ---
 name: research-orchestrator
-description: deep-research-kit 실행 + 리서치 결과 표준 포맷 변환
+description: Use when running deep-research-kit and converting research results into the standardized report format
 model: claude-opus-4-6
 max_turns: 70
 allowed_tools:

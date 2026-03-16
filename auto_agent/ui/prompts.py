@@ -224,6 +224,33 @@ def prompt_voice_add() -> dict:
     }
 
 
+def prompt_font() -> str:
+    """인터랙티브 폰트 선택. 퍼지 검색으로 시스템 폰트 + 번들 폰트 선택.
+
+    Returns:
+        선택된 폰트 패밀리 이름
+    """
+    from auto_agent.font_manager import FontManager, DEFAULT_FONT
+
+    fm = FontManager()
+    all_fonts = fm.list_fonts()
+
+    if not all_fonts:
+        return DEFAULT_FONT
+
+    selected = _ask_or_abort(
+        questionary.autocomplete(
+            "폰트를 선택하세요 (입력하여 검색):",
+            choices=[f["family"] for f in all_fonts],
+            default=DEFAULT_FONT,
+            style=PROMPT_STYLE,
+            validate=lambda t: len(t.strip()) > 0 or "폰트를 선택해주세요",
+        )
+    )
+
+    return selected.strip()
+
+
 def prompt_style_add() -> dict:
     """아트스타일 추가 프롬프트.
 

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate, Easing, staticFile } from "remotion";
+const resolveAsset = (p: string) => p.startsWith("http") ? p : staticFile(p);
 import type { MapSceneData } from "../types/manifest";
 import type { CameraState } from "./cameraInterpolation";
 import { MapBase } from "./MapBase";
+import { PrerenderedMapBg } from "./PrerenderedMapBg";
 import { MarkerOverlay, LabelOverlay } from "./MapOverlays";
 
 interface Props {
@@ -14,8 +16,10 @@ interface Props {
 /**
  * LocationReveal — 위치 표시 씬
  *
- * 프리렌더 모드: map_frames/scene_N/frame_XXXX.png → <Img>로 배경 표시
- * 폴백 모드: MapBase(MapLibre/D3) 실시간 렌더링
+ * 렌더링 모드 (우선순위):
+ * 1. prerenderedBg: 단일 스크린샷 배경 + HTML 오버레이 (권장)
+ * 2. prerenderedFramesDir: 프레임 시퀀스 PNG (레거시)
+ * 3. MapBase: MapLibre 실시간 렌더링 (폴백)
  *
  * 15프레임 ease(0.8,0,0.2,1) 줌 → 줌 완료 후 마커 stagger 등장
  */
@@ -56,90 +60,97 @@ export const LocationReveal: React.FC<Props> = ({
   // 줌 완료 후 마커/라벨 표시
   const zoomDone = frame >= ZOOM_FRAMES;
 
-  // 프리렌더 프레임 경로 (mapScene.prerenderedFramesDir이 있으면 사용)
-  const framesDir = data.prerenderedFramesDir;
-  const usePrerendered = !!framesDir;
+  // 마커/라벨 오버레이 (공통)
+  const renderOverlays = (cam: CameraState) => (
+    <>
+      {zoomDone && data.markers && (
+        <MarkerOverlay
+          markers={data.markers.map((m, i) => ({
+            ...m,
+            appearAtFrame: ZOOM_FRAMES + i * MARKER_STAGGER,
+          }))}
+          camera={cam}
+          width={1920}
+          height={1080}
+        />
+      )}
+      {zoomDone && data.labels && (
+        <LabelOverlay
+          labels={data.labels}
+          camera={cam}
+          width={1920}
+          height={1080}
+        />
+      )}
+    </>
+  );
 
-  // 현재 프레임 이미지 경로
-  const frameImagePath = usePrerendered
-    ? `${framesDir}/frame_${String(frame).padStart(4, "0")}.png`
-    : null;
+  /* ── 모드 1: prerenderedBg (단일 스크린샷) ── */
+  if (data.prerenderedBg) {
+    const bg = data.prerenderedBg;
+    const captureCam: CameraState = {
+      center: bg.cameraState.center,
+      zoom: bg.cameraState.zoom,
+      bearing: bg.cameraState.bearing,
+      pitch: bg.cameraState.pitch,
+    };
 
-  return (
-    <AbsoluteFill>
-      {usePrerendered && frameImagePath ? (
-        /* ── 프리렌더 모드: PNG 이미지 배경 ── */
-        <>
-          <Img
-            src={staticFile(frameImagePath)}
-            style={{
-              width: 1920,
-              height: 1080,
-              objectFit: "cover",
-              filter: "brightness(1.6)",
-            }}
-          />
-          {/* 마커/라벨 오버레이 — 프리렌더 이미지 위에 HTML로 합성 */}
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: 1920,
-              height: 1080,
-              pointerEvents: "none",
-            }}
-          >
-            {zoomDone && data.markers && (
-              <MarkerOverlay
-                markers={data.markers.map((m, i) => ({
-                  ...m,
-                  appearAtFrame: ZOOM_FRAMES + i * MARKER_STAGGER,
-                }))}
-                camera={camera}
-                width={1920}
-                height={1080}
-              />
-            )}
-            {zoomDone && data.labels && (
-              <LabelOverlay
-                labels={data.labels}
-                camera={camera}
-                width={1920}
-                height={1080}
-              />
-            )}
-          </div>
-        </>
-      ) : (
-        /* ── 폴백 모드: MapBase 실시간 렌더링 ── */
-        <MapBase
-          mapStyle={data.mapStyle}
-          cameraState={camera}
+    return (
+      <AbsoluteFill>
+        <PrerenderedMapBg
+          imagePath={bg.imagePath}
+          captureCamera={captureCam}
           width={1920}
           height={1080}
         >
-          {zoomDone && data.markers && (
-            <MarkerOverlay
-              markers={data.markers.map((m, i) => ({
-                ...m,
-                appearAtFrame: ZOOM_FRAMES + i * MARKER_STAGGER,
-              }))}
-              camera={camera}
-              width={1920}
-              height={1080}
-            />
-          )}
-          {zoomDone && data.labels && (
-            <LabelOverlay
-              labels={data.labels}
-              camera={camera}
-              width={1920}
-              height={1080}
-            />
-          )}
-        </MapBase>
-      )}
+          {renderOverlays(captureCam)}
+        </PrerenderedMapBg>
+      </AbsoluteFill>
+    );
+  }
+
+  /* ── 모드 2: prerenderedFramesDir (프레임 시퀀스, 레거시) ── */
+  if (data.prerenderedFramesDir) {
+    const frameImagePath = `${data.prerenderedFramesDir}/frame_${String(frame).padStart(4, "0")}.png`;
+
+    return (
+      <AbsoluteFill>
+        <Img
+          src={resolveAsset(frameImagePath)}
+          style={{
+            width: 1920,
+            height: 1080,
+            objectFit: "cover",
+            filter: "brightness(1.6)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 1920,
+            height: 1080,
+            pointerEvents: "none",
+          }}
+        >
+          {renderOverlays(camera)}
+        </div>
+      </AbsoluteFill>
+    );
+  }
+
+  /* ── 모드 3: MapBase 실시간 렌더링 (폴백) ── */
+  return (
+    <AbsoluteFill>
+      <MapBase
+        mapStyle={data.mapStyle}
+        cameraState={camera}
+        width={1920}
+        height={1080}
+      >
+        {renderOverlays(camera)}
+      </MapBase>
     </AbsoluteFill>
   );
 };

@@ -1,9 +1,12 @@
 /**
- * CreativeScene — Enhanced Creative Renderer
+ * CreativeScene — Intent-Based Creative Renderer
  *
- * 자동 레이아웃 감지:
- *   headline_only | items_grid | items_list | counter | quote | split | bar
+ * 레이아웃 결정 (resolveLayout):
+ *   1순위: creative.layout 직접 지정 (의도 기반, asset-advisory가 설정)
+ *   2순위: displayMode / chartConfig (하위호환)
+ *   3순위: 데이터 구조 기반 추론 (fallback)
  *
+ * 기본 11 + 확장 13 = 24개 LayoutType 지원
  * Styling: mood(색상/속도) + emphasis({{}} 강조) + reveal(애니메이션)
  * Overlays: spotlight + flash
  * Whisper 자막 타임스탬프 동기화 지원
@@ -17,8 +20,16 @@ import {
   interpolate,
   Easing,
 } from "remotion";
+
+/** staticFile 대체: 절대 URL이면 그대로, 상대경로면 staticFile() 사용 */
+const resolveAsset = (path: string): string =>
+  path.startsWith("http://") || path.startsWith("https://")
+    ? path
+    : staticFile(path);
+
 import {
-  C,
+  C as C_DEFAULT,
+  useC,
   ease,
   ease8020,
   clamp,
@@ -33,6 +44,7 @@ import {
   Icon,
   IconBadge,
   FlagBadge,
+  FlagCard,
   LogoBadge,
   resolveIcon,
   resolveLogo,
@@ -45,6 +57,24 @@ import {
   ProgressBar,
   StatusDot,
   AccentText,
+  Connector,
+  TimelineDot,
+  MetricCard,
+  Sparkline,
+  Callout,
+  StepBadge,
+  ComparisonCell,
+  RankBadge,
+  QuoteMark as QuoteMarkBlock,
+  GlowDot,
+  AnnotationLine,
+  MiniBar,
+  useFadeSlide,
+  Card,
+  Pill,
+  usePulse,
+  useTypewriter,
+  useSpringValue,
 } from "./BuildingBlocks";
 
 /* ================================================================
@@ -75,27 +105,60 @@ type LayoutType =
   | "bar"
   | "logo_grid"
   | "pie"
-  | "line";
+  | "line"
+  // ── 확장 레이아웃 (의도 기반 컴포지션) ──
+  | "flow"              // StepBadge + Connector 체인 (프로세스/인과)
+  | "timeline"          // TimelineDot + Card 수직 배치 (시간순)
+  | "metric_spotlight"  // MetricCard 1개 + Sparkline (단일 KPI 극적 강조)
+  | "metric_wall"       // MetricCard 2×2 그리드 (여러 KPI 동시)
+  | "rank_list"         // RankBadge + 항목 + MiniBar (순위)
+  | "comparison_table"  // ComparisonCell 행×열 (다차원 비교)
+  | "before_after"      // ComparisonCell 2열 + 화살표 (변화 전후)
+  | "icon_stat"         // IconBadge 중앙 + 큰 수치 + 트렌드 (단일 통계)
+  | "stacked_progress"  // ProgressBar 수직 스택 (점유율 비교)
+  | "card_carousel"     // Card 3-4장 수평 스태거 (정보 카드)
+  | "hero_with_context" // 큰 헤드라인 + 작은 부연 카드들
+  | "quote_portrait"    // ImageBadge 큰 사이즈 + QuoteMark + 인용문
+  | "annotated_chart";  // bar/pie/line + AnnotationLine + Callout
 
 /* ================================================================
-   Layout Auto-Detection
+   Layout Resolution — 의도 기반 (creative.layout 직접 지정) + 데이터 추론 fallback
    ================================================================ */
 
-function detectLayout(data: any, creative: any): LayoutType {
+/** 유효한 LayoutType인지 검증 */
+const VALID_LAYOUTS = new Set<LayoutType>([
+  "headline_only", "items_grid", "items_list", "person_card", "counter",
+  "quote", "split", "bar", "logo_grid", "pie", "line",
+  "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
+  "comparison_table", "before_after", "icon_stat", "stacked_progress",
+  "card_carousel", "hero_with_context", "quote_portrait", "annotated_chart",
+]);
+
+function resolveLayout(data: any, creative: any): LayoutType {
+  // ── 1순위: creative.layout 직접 지정 (의도 기반) ──
+  // asset-advisory(Phase 2.5)가 다중 관점 심의 결과로 설정
+  if (creative.layout && VALID_LAYOUTS.has(creative.layout)) {
+    return creative.layout;
+  }
+
+  // ── 2순위: displayMode / chartConfig (하위호환) ──
+  if (creative.displayMode === "logo_grid") return "logo_grid";
+  if (creative.displayMode === "pie_chart" || creative.chartConfig?.type === "pie") return "pie";
+  if (creative.displayMode === "line_chart" || creative.chartConfig?.type === "line") return "line";
+
+  // ── 3순위: 데이터 구조 기반 추론 (fallback) ──
+  return inferFromDataStructure(data, creative);
+}
+
+/** 기존 detectLayout 로직 — creative.layout이 없을 때만 사용되는 fallback */
+function inferFromDataStructure(data: any, creative: any): LayoutType {
   const reveal: string = creative.reveal || "fade_in";
   const emphasis: string = creative.emphasis || "none";
   const items: string[] = data.items || [];
   const values: number[] = data.values || [];
   const headline: string = creative.headline || "";
 
-  // ── Creative 필드 우선 판단 (데이터 구조보다 의도 우선) ──
-
-  // 0. displayMode 명시적 지정 — logo_grid, pie, line 등
-  if (creative.displayMode === "logo_grid") return "logo_grid";
-  if (creative.displayMode === "pie_chart" || creative.chartConfig?.type === "pie") return "pie";
-  if (creative.displayMode === "line_chart" || creative.chartConfig?.type === "line") return "line";
-
-  // 1. 인용문 — emphasis="quote"
+  // 인용문
   if (
     emphasis === "quote" ||
     (items.length === 1 && /["""']/.test(items[0]))
@@ -103,21 +166,14 @@ function detectLayout(data: any, creative: any): LayoutType {
     return "quote";
   }
 
-  // 2. 비교/VS — split_reveal 또는 contrast+2항목
-  if (reveal === "split_reveal") {
-    return "split";
-  }
-  if (emphasis === "contrast" && items.length === 2) {
-    return "split";
-  }
+  // 비교/VS
+  if (reveal === "split_reveal") return "split";
+  if (emphasis === "contrast" && items.length === 2) return "split";
 
-  // 3. 인물 카드 — emphasis="person" + items 2개 이상
-  if (emphasis === "person" && items.length >= 2) {
-    return "person_card";
-  }
+  // 인물 카드
+  if (emphasis === "person" && items.length >= 2) return "person_card";
 
-  // 4. 카운터/빅넘버 — emphasis가 number/count이고 {{}}에 숫자 포함
-  //    (bar보다 먼저! 숫자 강조가 핵심인 씬은 카운터로)
+  // 카운터/빅넘버
   if (emphasis === "number" || emphasis === "count") {
     const accentMatch = headline.match(/\{\{([^}]+)\}\}/);
     if (accentMatch) {
@@ -126,14 +182,10 @@ function detectLayout(data: any, creative: any): LayoutType {
     }
   }
 
-  // 5. 시퀀스/프로세스 — emphasis="sequence"이면 리스트 (번호 배지)
-  if (emphasis === "sequence" && items.length >= 2) {
-    return "items_list";
-  }
+  // 시퀀스/프로세스
+  if (emphasis === "sequence" && items.length >= 2) return "items_list";
 
-  // 6. 바 차트 — items + values 쌍이 3개 이상이고
-  //    reveal이 바 차트에 적합한 경우만 (cascade, stagger, parallel)
-  //    2개일 때는 split이 더 적합하므로 제외
+  // 바 차트
   if (
     items.length >= 3 &&
     values.length >= 3 &&
@@ -144,7 +196,7 @@ function detectLayout(data: any, creative: any): LayoutType {
     return "bar";
   }
 
-  // 7. 아이템 그리드/리스트 — items가 있고 headline과 다른 데이터
+  // 아이템 그리드/리스트
   if (items.length >= 3) {
     const headlineLower = headline.toLowerCase();
     const itemsAreData = items.some(
@@ -155,12 +207,10 @@ function detectLayout(data: any, creative: any): LayoutType {
     }
   }
 
-  // 8. 2항목 + 2값 → 여전히 items가 있으면 리스트로 (bar 대신)
-  if (items.length === 2 && values.length >= 2) {
-    return "items_list";
-  }
+  // 2항목 + 2값
+  if (items.length === 2 && values.length >= 2) return "items_list";
 
-  // 9. 기본 — headline만 크게 표시
+  // 기본
   return "headline_only";
 }
 
@@ -230,8 +280,40 @@ const MOOD_GRADIENTS: Record<string, string> = {
     "radial-gradient(ellipse 80% 60% at 50% 40%, #081a10 0%, #0A0A0A 70%)",
 };
 
-function getMoodConfig(mood: string): MoodConfig {
-  return MOOD_CONFIGS[mood] || MOOD_CONFIGS.informative;
+const MOOD_GRADIENTS_WHITE: Record<string, string> = {
+  dramatic:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #FFF7E6 0%, #FAFAFA 70%)",
+  urgent:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #FFF1F0 0%, #FAFAFA 70%)",
+  somber:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #F0F0F2 0%, #FAFAFA 70%)",
+  informative:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #EFF4FF 0%, #FAFAFA 70%)",
+  contemplative:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #EFF4FF 0%, #FAFAFA 70%)",
+  suspense:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #FFF8F0 0%, #FAFAFA 70%)",
+  triumphant:
+    "radial-gradient(ellipse 80% 60% at 50% 40%, #EFFFEF 0%, #FAFAFA 70%)",
+};
+
+/** accent 색상에서 RGB 문자열 추출 (hex → "r,g,b") */
+function hexToRgb(hex: string): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `${r},${g},${b}`;
+}
+
+/** mood 팔레트를 가져오되, dramatic/suspense의 기본 accent를 컨텍스트 accent로 대체 */
+function getMoodConfig(mood: string, themeAccent?: string): MoodConfig {
+  const base = MOOD_CONFIGS[mood] || MOOD_CONFIGS.informative;
+  // dramatic/suspense는 기본 amber(#F59E0B) — 아트스타일 accent로 대체
+  if (themeAccent && (mood === "dramatic" || mood === "suspense") && base.accent === "#F59E0B") {
+    return { ...base, accent: themeAccent, accentRgb: hexToRgb(themeAccent) };
+  }
+  return base;
 }
 
 /* ================================================================
@@ -378,11 +460,11 @@ function getBaseFontSize(emphasis: string): number {
   switch (emphasis) {
     case "number":
     case "count":
-      return 72;
+      return 60;
     case "quote":
-      return 88;
+      return 72;
     default:
-      return 80;
+      return 66;
   }
 }
 
@@ -407,6 +489,7 @@ const EmphasisAccentText: React.FC<{
   accentFontSizeOverride,
   accentStartIndex = 0,
 }) => {
+  const C = useC();
   const isCountEmphasis = emphasis === "number" || emphasis === "count";
   const accentSize = accentFontSizeOverride || getAccentFontSize(emphasis);
   const baseSize = getBaseFontSize(emphasis);
@@ -504,18 +587,23 @@ const EmphasisAccentText: React.FC<{
    MoodBackground — mood별 그라데이션 배경
    ================================================================ */
 
-const MoodBackground: React.FC<{ mood: string; transparent?: boolean }> = ({ mood, transparent }) => (
+const MoodBackground: React.FC<{ mood: string; transparent?: boolean }> = ({ mood, transparent }) => {
+  const C = useC();
+  const isWhite = C.bg === "#FAFAFA";
+  const gradients = isWhite ? MOOD_GRADIENTS_WHITE : MOOD_GRADIENTS;
+  return (
   <div
     style={{
       position: "absolute",
       inset: 0,
       background: transparent
-        ? "rgba(10,10,10,0.45)"
-        : (MOOD_GRADIENTS[mood] || MOOD_GRADIENTS.informative),
+        ? (isWhite ? "rgba(250,250,250,0.45)" : "rgba(10,10,10,0.45)")
+        : (gradients[mood] || gradients.informative),
       zIndex: 0,
     }}
   />
-);
+  );
+};
 
 /* ================================================================
    SpotlightOverlay — radial-gradient
@@ -605,6 +693,7 @@ const SplitLayout: React.FC<{
   images,
   descriptions,
 }) => {
+  const C = useC();
   const frame = useCurrentFrame();
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
@@ -746,7 +835,7 @@ const SplitLayout: React.FC<{
                 glowOpacity={glowOpacity}
               />
               {leftDesc && (
-                <div style={{ fontSize: 36, color: C.textDim, marginTop: 12, fontWeight: 400, opacity: descOpacity, transform: `translateY(${descSlideY}px)` }}>
+                <div style={{ fontSize: 30, color: C.textDim, marginTop: 12, fontWeight: 400, opacity: descOpacity, transform: `translateY(${descSlideY}px)` }}>
                   {leftDesc}
                 </div>
               )}
@@ -762,7 +851,7 @@ const SplitLayout: React.FC<{
                     position: "absolute", top: -20, right: -20,
                     opacity: stampOpacity,
                     transform: `scale(${stampScaleVal}) rotate(${stampRotation}deg)`,
-                    fontSize: 32, fontWeight: 900,
+                    fontSize: 28, fontWeight: 900,
                     color: "#fff",
                     backgroundColor: "#EF4444",
                     padding: "8px 20px",
@@ -802,7 +891,7 @@ const SplitLayout: React.FC<{
               <div
                 style={{
                   ...vsScale,
-                  fontSize: 36,
+                  fontSize: 30,
                   fontWeight: 800,
                   color: moodCfg.accent,
                   backgroundColor: C.bg,
@@ -857,7 +946,7 @@ const SplitLayout: React.FC<{
                 glowOpacity={glowOpacity}
               />
               {rightDesc && (
-                <div style={{ fontSize: 36, color: C.textDim, marginTop: 12, fontWeight: 400, opacity: descOpacity, transform: `translateY(${descSlideY}px)` }}>
+                <div style={{ fontSize: 30, color: C.textDim, marginTop: 12, fontWeight: 400, opacity: descOpacity, transform: `translateY(${descSlideY}px)` }}>
                   {rightDesc}
                 </div>
               )}
@@ -873,7 +962,7 @@ const SplitLayout: React.FC<{
                     position: "absolute", top: -20, right: -20,
                     opacity: stampOpacity,
                     transform: `scale(${stampScaleVal}) rotate(${stampRotation}deg)`,
-                    fontSize: 32, fontWeight: 900,
+                    fontSize: 28, fontWeight: 900,
                     color: "#fff",
                     backgroundColor: "#EF4444",
                     padding: "8px 20px",
@@ -895,7 +984,7 @@ const SplitLayout: React.FC<{
           <div
             style={{
               opacity: sourceFade,
-              fontSize: 32,
+              fontSize: 28,
               color: C.textDim,
               marginTop: 32,
             }}
@@ -921,6 +1010,7 @@ const ItemsGrid: React.FC<{
   itemIcons?: string[];
   itemFlags?: string[];
 }> = ({ items, delays, headlineDelays, moodCfg, reveal, itemIcons, itemFlags }) => {
+  const C = useC();
   const frame = useCurrentFrame();
   const cols = items.length >= 9 ? 3 : items.length >= 4 ? 3 : 2;
   const isFlash = reveal === "stagger_then_flash";
@@ -981,10 +1071,16 @@ const ItemsGrid: React.FC<{
                 <Icon icon={Ic} size={items.length > 6 ? 20 : 24} color={moodCfg.accent} />
               ) : null;
             })()}
-            {itemFlags?.[i] && (
-              <FlagBadge countryCode={itemFlags[i]} size={items.length > 6 ? 28 : 32} />
+            {itemFlags?.[i] && !itemIcons?.[i] ? (
+              <FlagCard countryCode={itemFlags[i]} label={item} width={items.length > 6 ? 80 : 100} />
+            ) : (
+              <>
+                {itemFlags?.[i] && (
+                  <FlagBadge countryCode={itemFlags[i]} size={items.length > 6 ? 28 : 32} />
+                )}
+                <span>{item}</span>
+              </>
             )}
-            <span>{item}</span>
           </div>
         );
       })}
@@ -1003,6 +1099,7 @@ const PersonCardRow: React.FC<{
   images?: string[];
   itemStatuses?: Array<"positive" | "negative" | "neutral" | "warning">;
 }> = ({ items, delays, moodCfg, images, itemStatuses }) => {
+  const C = useC();
   const frame = useCurrentFrame();
   const count = items.length;
   const cardW = count <= 3 ? 280 : count <= 4 ? 240 : 200;
@@ -1026,7 +1123,7 @@ const PersonCardRow: React.FC<{
         });
         const img = images?.[i];
         const imgSrc = img
-          ? img.startsWith("http") ? img : staticFile(img)
+          ? resolveAsset(img)
           : null;
         const status = itemStatuses?.[i];
         const isNegative = status === "negative";
@@ -1106,7 +1203,7 @@ const PersonCardRow: React.FC<{
             >
               <span
                 style={{
-                  fontSize: count <= 3 ? 28 : 24,
+                  fontSize: count <= 3 ? 24 : 22,
                   fontWeight: 600,
                   color: C.text,
                   textAlign: "center",
@@ -1151,6 +1248,7 @@ const ItemsList: React.FC<{
   itemFlags?: string[];
   itemStatuses?: Array<"positive" | "negative" | "neutral" | "warning">;
 }> = ({ items, delays, headlineDelays, moodCfg, emphasis, concept, images, itemIcons, itemFlags, itemStatuses }) => {
+  const C = useC();
   const frame = useCurrentFrame();
   const showBadge = emphasis === "sequence" || emphasis === "person";
   const hasImages = images && images.length > 0;
@@ -1185,7 +1283,7 @@ const ItemsList: React.FC<{
           const spotlight = hasSpotlightHint && isLast;
 
           const imgSrc = img
-            ? img.startsWith("http") ? img : staticFile(img)
+            ? resolveAsset(img)
             : null;
 
           return (
@@ -1280,10 +1378,12 @@ const ItemsList: React.FC<{
               const Ic = resolveIcon(itemIcons[i]);
               return Ic ? <IconBadge icon={Ic} size={36} /> : null;
             })()}
-            {/* Per-item flag badge */}
-            {itemFlags?.[i] && (
+            {/* Per-item flag: 아이콘 없으면 카드형, 있으면 배지형 */}
+            {itemFlags?.[i] && !itemIcons?.[i] ? (
+              <FlagCard countryCode={itemFlags[i]} width={80} />
+            ) : itemFlags?.[i] ? (
               <FlagBadge countryCode={itemFlags[i]} size={36} />
-            )}
+            ) : null}
             {/* Per-item status dot */}
             {itemStatuses?.[i] && (
               <StatusDot status={itemStatuses[i]} />
@@ -1302,7 +1402,7 @@ const ItemsList: React.FC<{
             )}
             <span
               style={{
-                fontSize: 28,
+                fontSize: 24,
                 fontWeight: spotlight ? 700 : 500,
                 color: spotlight ? moodCfg.accent : C.text,
                 flex: 1,
@@ -1331,6 +1431,7 @@ const QuoteDisplay: React.FC<{
   hasImageBg?: boolean;
   portrait?: string;
 }> = ({ items, source, moodCfg, reveal, speed, mood, hasImageBg, portrait }) => {
+  const C = useC();
   const frame = useCurrentFrame();
   const s = (f: number) => Math.round(f / speed);
   const quoteText = items[0] || "";
@@ -1363,7 +1464,7 @@ const QuoteDisplay: React.FC<{
   );
 
   const portraitSrc = portrait
-    ? portrait.startsWith("http") ? portrait : staticFile(portrait)
+    ? resolveAsset(portrait)
     : null;
 
   const portraitOpacity = interpolate(frame, [0, 20], [0, 1], clamp);
@@ -1436,7 +1537,7 @@ const QuoteDisplay: React.FC<{
           style={{
             opacity: quoteOpacity,
             transform: `translateY(${quoteRise}px)`,
-            fontSize: 84,
+            fontSize: 68,
             fontWeight: 600,
             color: C.text,
             textAlign: "center",
@@ -1465,7 +1566,7 @@ const QuoteDisplay: React.FC<{
           <div
             style={{
               opacity: sourceOpacity,
-              fontSize: 44,
+              fontSize: 36,
               color: moodCfg.accent,
               marginTop: 32,
               fontWeight: 500,
@@ -1528,6 +1629,7 @@ const LogoGridLayout: React.FC<{
   hasImageBg,
   logoMap,
 }) => {
+  const C = useC();
   const frame = useCurrentFrame();
   const maxVal = Math.max(...values, 1);
   const lines = headline.split("\n").filter((l: string) => l.trim());
@@ -1561,7 +1663,7 @@ const LogoGridLayout: React.FC<{
             <div
               key={i}
               style={{
-                fontSize: i === 0 ? 72 : 56,
+                fontSize: i === 0 ? 60 : 48,
                 fontWeight: 700,
                 color: C.text,
                 lineHeight: 1.3,
@@ -1624,7 +1726,7 @@ const LogoGridLayout: React.FC<{
                 >
                   {logoPath ? (
                     <Img
-                      src={staticFile(logoPath)}
+                      src={resolveAsset(logoPath)}
                       style={{ width: 52, height: 52, objectFit: "contain" }}
                     />
                   ) : LogoComp ? (
@@ -1639,7 +1741,7 @@ const LogoGridLayout: React.FC<{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: 700,
                         color: "#FFF",
                       }}
@@ -1652,7 +1754,7 @@ const LogoGridLayout: React.FC<{
                 {/* Company name */}
                 <div
                   style={{
-                    fontSize: 30,
+                    fontSize: 26,
                     fontWeight: 600,
                     color: C.text,
                     textAlign: "center",
@@ -1666,7 +1768,7 @@ const LogoGridLayout: React.FC<{
                 {val !== undefined && (
                   <div
                     style={{
-                      fontSize: 36,
+                      fontSize: 30,
                       fontWeight: 700,
                       color: brandColor,
                     }}
@@ -1684,7 +1786,7 @@ const LogoGridLayout: React.FC<{
           <div
             style={{
               opacity: sourceFade,
-              fontSize: 28,
+              fontSize: 24,
               color: C.textDim,
               marginTop: 8,
             }}
@@ -1726,6 +1828,7 @@ const BarDisplay: React.FC<{
   glowOpacity,
   hasImageBg,
 }) => {
+  const C = useC();
   const frame = useCurrentFrame();
   const hasNegative = values.some((v) => v < 0);
   const maxVal = Math.max(...values, 1);
@@ -1769,7 +1872,7 @@ const BarDisplay: React.FC<{
           style={{
             opacity: headlineOpacity,
             transform: `translateY(${headlineRise}px)`,
-            fontSize: 72,
+            fontSize: 60,
             fontWeight: 600,
             marginBottom: 40,
             textAlign: "center",
@@ -1833,7 +1936,7 @@ const BarDisplay: React.FC<{
                   style={{
                     width: 200,
                     textAlign: "right",
-                    fontSize: 36,
+                    fontSize: 30,
                     fontWeight: 500,
                     color: C.textMuted,
                     flexShrink: 0,
@@ -1920,7 +2023,7 @@ const BarDisplay: React.FC<{
                   style={{
                     opacity: valOpacity,
                     width: 120,
-                    fontSize: 36,
+                    fontSize: 30,
                     fontWeight: 700,
                     color: isNeg ? NEG_COLOR : moodCfg.accent,
                     textAlign: "left",
@@ -1944,7 +2047,7 @@ const BarDisplay: React.FC<{
           <div
             style={{
               opacity: sourceFade,
-              fontSize: 36,
+              fontSize: 30,
               color: C.textMuted,
               marginTop: 16,
             }}
@@ -1956,7 +2059,7 @@ const BarDisplay: React.FC<{
         {/* Source */}
         {source && (
           <div
-            style={{ opacity: sourceFade, fontSize: 32, color: C.textDim, marginTop: 12 }}
+            style={{ opacity: sourceFade, fontSize: 28, color: C.textDim, marginTop: 12 }}
           >
             {source}
           </div>
@@ -1983,6 +2086,7 @@ const PieChartDisplay: React.FC<{
   hasImageBg?: boolean;
   chartConfig?: { maxSlices?: number; highlightIndex?: number; showTotal?: boolean };
 }> = ({ items, values, unit, headline, moodCfg, source, mood, hasImageBg, chartConfig }) => {
+  const C = useC();
   const frame = useCurrentFrame();
   const lines = headline.split("\n").filter((l: string) => l.trim());
   const headlineFade = useFade(5, 15, 0.8);
@@ -2029,7 +2133,7 @@ const PieChartDisplay: React.FC<{
         {/* Headline */}
         <div style={{ opacity: headlineFade, textAlign: "center", maxWidth: "90%" }}>
           {lines.map((line, i) => (
-            <div key={i} style={{ fontSize: i === 0 ? 64 : 48, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+            <div key={i} style={{ fontSize: i === 0 ? 54 : 42, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
               <AccentText text={line} baseColor={C.text} />
             </div>
           ))}
@@ -2072,7 +2176,7 @@ const PieChartDisplay: React.FC<{
             })}
             {/* Center text */}
             {chartConfig?.showTotal !== false && (
-              <text x={cx} y={cy + 8} textAnchor="middle" fontSize={48} fontWeight={700} fill={C.text}>
+              <text x={cx} y={cy + 8} textAnchor="middle" fontSize={40} fontWeight={700} fill={C.text}>
                 {total}{unit}
               </text>
             )}
@@ -2086,8 +2190,8 @@ const PieChartDisplay: React.FC<{
               return (
                 <div key={i} style={{ opacity: labelFade, display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ width: 20, height: 20, borderRadius: 4, backgroundColor: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
-                  <span style={{ fontSize: 30, color: C.text, fontWeight: 500 }}>{item}</span>
-                  <span style={{ fontSize: 30, color: PIE_COLORS[i % PIE_COLORS.length], fontWeight: 700, marginLeft: 8 }}>
+                  <span style={{ fontSize: 26, color: C.text, fontWeight: 500 }}>{item}</span>
+                  <span style={{ fontSize: 26, color: PIE_COLORS[i % PIE_COLORS.length], fontWeight: 700, marginLeft: 8 }}>
                     {displayValues[i]}{unit}
                   </span>
                 </div>
@@ -2097,7 +2201,7 @@ const PieChartDisplay: React.FC<{
         </div>
 
         {source && (
-          <div style={{ opacity: sourceFade, fontSize: 28, color: C.textDim, marginTop: 8 }}>{source}</div>
+          <div style={{ opacity: sourceFade, fontSize: 24, color: C.textDim, marginTop: 8 }}>{source}</div>
         )}
       </div>
     </AbsoluteFill>
@@ -2119,6 +2223,7 @@ const LineChartDisplay: React.FC<{
   hasImageBg?: boolean;
   chartConfig?: { showGrid?: boolean; showDots?: boolean; showArea?: boolean };
 }> = ({ items, values, unit, headline, moodCfg, source, mood, hasImageBg, chartConfig }) => {
+  const C = useC();
   const frame = useCurrentFrame();
   const lines = headline.split("\n").filter((l: string) => l.trim());
   const headlineFade = useFade(5, 15, 0.8);
@@ -2178,7 +2283,7 @@ const LineChartDisplay: React.FC<{
         {/* Headline */}
         <div style={{ opacity: headlineFade, textAlign: "center", maxWidth: "90%" }}>
           {lines.map((line, i) => (
-            <div key={i} style={{ fontSize: i === 0 ? 64 : 48, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+            <div key={i} style={{ fontSize: i === 0 ? 54 : 42, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
               <AccentText text={line} baseColor={C.text} />
             </div>
           ))}
@@ -2252,7 +2357,7 @@ const LineChartDisplay: React.FC<{
         </svg>
 
         {source && (
-          <div style={{ opacity: sourceFade, fontSize: 28, color: C.textDim, marginTop: 8 }}>{source}</div>
+          <div style={{ opacity: sourceFade, fontSize: 24, color: C.textDim, marginTop: 8 }}>{source}</div>
         )}
       </div>
     </AbsoluteFill>
@@ -2272,6 +2377,7 @@ const BadgeRow: React.FC<{
   }>;
   delay: number;
 }> = ({ badges, delay }) => {
+  const C = useC();
   const frame = useCurrentFrame();
   const overshoot = Easing.out(Easing.back(1.7));
 
@@ -2314,7 +2420,7 @@ const BadgeRow: React.FC<{
             }}
           >
             {badge.type === "flag" && badge.code && (
-              <FlagBadge countryCode={badge.code} size={56} />
+              <FlagCard countryCode={badge.code} label={badge.label} width={100} />
             )}
             {badge.type === "icon" && IconComp && (
               <IconBadge icon={IconComp} size={56} />
@@ -2322,10 +2428,10 @@ const BadgeRow: React.FC<{
             {badge.type === "logo" && badge.name && (
               <LogoBadge logo={badge.name} size={56} />
             )}
-            {badge.label && (
+            {badge.label && badge.type !== "flag" && (
               <span
                 style={{
-                  fontSize: 28,
+                  fontSize: 24,
                   color: C.textMuted,
                   fontWeight: 500,
                 }}
@@ -2438,7 +2544,7 @@ interface CreativeSceneProps {
   subtitles?: SubtitleEntry[];
   fps?: number;
   hasImageBackground?: boolean;
-  imageAssetPlacement?: "background" | "left" | "right";
+  imageAssetPlacement?: "fullscreen" | "background" | "center" | "left" | "right" | "inline";
 }
 
 export const CreativeScene: React.FC<CreativeSceneProps> = ({
@@ -2448,6 +2554,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
   hasImageBackground,
   imageAssetPlacement,
 }) => {
+  const C = useC(); // 테마 컨텍스트에서 색상 팔레트 읽기 (dark/white)
   const frame = useCurrentFrame();
   const creative = data.creative || {};
   const headline: string = creative.headline || data.title || "";
@@ -2463,8 +2570,8 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
   const statusDots: any[] = data.statusDots || [];
   const tags: any[] = data.tags || [];
 
-  const moodCfg = getMoodConfig(mood);
-  const layout = detectLayout(data, creative);
+  const moodCfg = getMoodConfig(mood, C.accent);
+  const layout = resolveLayout(data, creative);
   const lines = headline.split("\n").filter((l: string) => l.trim());
 
   // === 타이밍 ===
@@ -2567,12 +2674,18 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
 
   // Quote
   if (layout === "quote") {
-    // items가 비어있으면 data.quote를 폴백으로 사용
-    const quoteItems = items.length > 0 ? items : (data.quote ? [data.quote] : [headline]);
+    // items[0]이 인용문 본문이어야 함. 화자 이름만 있으면(짧은 텍스트) headline을 폴백
+    const rawQuoteItems = items.length > 0 ? items : (data.quote ? [data.quote] : []);
+    const isNameOnly = rawQuoteItems.length === 1 && rawQuoteItems[0].length <= 10 && !rawQuoteItems[0].includes(" ");
+    const quoteItems = (rawQuoteItems.length === 0 || isNameOnly)
+      ? [headline.replace(/\{\{|\}\}/g, "")]
+      : rawQuoteItems;
+    // 화자 이름이 items에 잘못 들어왔으면 source로 사용
+    const effectiveSource = (isNameOnly && !source) ? rawQuoteItems[0] : source;
     return (
       <QuoteDisplay
         items={quoteItems}
-        source={source}
+        source={effectiveSource}
         moodCfg={moodCfg}
         reveal={reveal}
         speed={moodCfg.speed}
@@ -2679,8 +2792,14 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
   const isFlash = reveal === "stagger_then_flash";
   const flashAt = isFlash ? Math.max(...allDelays) + 20 : 9999;
 
+  // === width 조정 (이전 SimpleScene 역할 통합) ===
+  const hasAssetSide = imageAssetPlacement === "left" || imageAssetPlacement === "right";
+  const useFullWidth = hasImageBackground || hasAssetSide || imageAssetPlacement === "fullscreen" || imageAssetPlacement === "center";
+  const contentWidth = useFullWidth ? "100%" : "78%";
+
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{ backgroundColor: hasImageBackground ? "transparent" : "#0A0A0A", fontFamily: "inherit" }}>
+      <div style={{ width: contentWidth, height: "100%", margin: "0 auto", position: "relative" }}>
       <MoodBackground mood={mood} transparent={hasImageBackground} />
 
       {/* Spotlight overlay */}
@@ -2798,6 +2917,286 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           />
         )}
 
+        {/* ── 확장 레이아웃 렌더러 ── */}
+
+        {/* Flow — 프로세스/인과 흐름 */}
+        {layout === "flow" && items.length >= 2 && (() => {
+          const isHorizontal = items.length <= 4;
+          return (
+            <div style={{
+              display: "flex",
+              flexDirection: isHorizontal ? "row" : "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 0,
+              width: "100%",
+            }}>
+              {items.map((item, i) => (
+                <React.Fragment key={i}>
+                  <div style={{ ...useFadeRise(staggerDelay(i, 10, 15), 15) }}>
+                    <StepBadge step={i + 1} label={item} active={i === items.length - 1} />
+                  </div>
+                  {i < items.length - 1 && (
+                    <div style={{ opacity: useFade(staggerDelay(i, 10, 15) + 8, 10) }}>
+                      <Connector direction={isHorizontal ? "right" : "down"} length={isHorizontal ? 48 : 32} color={moodCfg.accent} />
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          );
+        })()}
+
+        {/* Timeline — 시간순 사건 나열 */}
+        {layout === "timeline" && items.length >= 2 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 4, width: "100%", paddingLeft: 24 }}>
+            {items.map((item, i) => {
+              const desc = (data.descriptions || [])[i] || "";
+              return (
+                <div key={i} style={{ display: "flex", gap: 16, alignItems: "flex-start", ...useFadeRise(staggerDelay(i, 12, 15), 15) }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
+                    <TimelineDot label="" active={i === items.length - 1} />
+                    {i < items.length - 1 && <div style={{ width: 2, height: 36, backgroundColor: C.cardBorder }} />}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: i === items.length - 1 ? moodCfg.accent : C.text }}>{item}</div>
+                    {desc && <div style={{ fontSize: 16, color: C.textMuted, marginTop: 4 }}>{desc}</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Metric Spotlight — 단일 KPI 극적 강조 */}
+        {layout === "metric_spotlight" && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, ...useScale(15) }}>
+            <MetricCard
+              label={items[0] || data.title || ""}
+              value={values.length > 0 ? `${values[0]}${data.unit || ""}` : ""}
+              change={items[1]}
+              trend={values.length > 1 ? (values[1] > 0 ? "up" : "down") : undefined}
+            />
+            {values.length > 2 && (
+              <div style={{ opacity: useFade(30, 15) }}>
+                <Sparkline data={values} width={200} height={40} color={moodCfg.accent} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Metric Wall — 여러 KPI 동시 */}
+        {layout === "metric_wall" && items.length >= 2 && (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: items.length <= 2 ? "1fr 1fr" : `repeat(${Math.min(items.length, 4)}, 1fr)`,
+            gap: 20, width: "100%",
+          }}>
+            {items.map((item, i) => (
+              <div key={i} style={useFadeRise(staggerDelay(i, 8, 12), 15)}>
+                <MetricCard
+                  label={item}
+                  value={values[i] != null ? `${values[i]}${data.unit || ""}` : ""}
+                  style={{ width: "100%" }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Rank List — 순위 시각화 */}
+        {layout === "rank_list" && items.length >= 2 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+            {items.map((item, i) => {
+              const maxVal = Math.max(...(values.length ? values : [1]));
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, ...useFadeRise(staggerDelay(i, 10, 12), 15) }}>
+                  <RankBadge rank={i + 1} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: C.text, marginBottom: 6 }}>{item}</div>
+                    {values[i] != null && (
+                      <MiniBar value={values[i]} maxValue={maxVal} color={i === 0 ? moodCfg.accent : C.cardBorder} />
+                    )}
+                  </div>
+                  {values[i] != null && (
+                    <span style={{ fontSize: 20, fontWeight: 700, color: i === 0 ? moodCfg.accent : C.textMuted }}>
+                      {values[i]}{data.unit || ""}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Before/After — 변화 전후 */}
+        {layout === "before_after" && items.length >= 2 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 24, justifyContent: "center" }}>
+            <div style={useFadeSlide(15, 15, -30)}>
+              <ComparisonCell
+                label="BEFORE"
+                value={items[0]}
+                sublabel={values[0] != null ? `${values[0]}${data.unit || ""}` : undefined}
+                variant="before"
+                style={{ minWidth: 200 }}
+              />
+            </div>
+            <div style={{ opacity: useFade(25, 10) }}>
+              <Connector direction="right" length={48} color={moodCfg.accent} />
+            </div>
+            <div style={useFadeSlide(35, 15, 30)}>
+              <ComparisonCell
+                label="AFTER"
+                value={items[1]}
+                sublabel={values[1] != null ? `${values[1]}${data.unit || ""}` : undefined}
+                variant="after"
+                style={{ minWidth: 200 }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Comparison Table — 다차원 비교 */}
+        {layout === "comparison_table" && items.length >= 2 && (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${Math.min(items.length, 4)}, 1fr)`,
+            gap: 16, width: "100%",
+          }}>
+            {items.map((item, i) => (
+              <div key={i} style={useFadeRise(staggerDelay(i, 8, 12), 15)}>
+                <ComparisonCell
+                  label={item}
+                  value={values[i] != null ? `${values[i]}${data.unit || ""}` : ""}
+                  style={{ width: "100%" }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Icon Stat — 단일 통계 + 아이콘 */}
+        {layout === "icon_stat" && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...useScale(15) }}>
+            {data.itemIcons?.[0] && resolveIcon(data.itemIcons[0]) && (
+              <IconBadge icon={resolveIcon(data.itemIcons[0])!} size={72} filled />
+            )}
+            {values[0] != null && (
+              <div style={{ fontSize: 60, fontWeight: 800, color: moodCfg.accent }}>
+                {values[0]}{data.unit || ""}
+              </div>
+            )}
+            {items[0] && (
+              <div style={{ fontSize: 24, color: C.textMuted }}>{items[0]}</div>
+            )}
+          </div>
+        )}
+
+        {/* Stacked Progress — 점유율 비교 */}
+        {layout === "stacked_progress" && items.length >= 2 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%", maxWidth: 600 }}>
+            {items.map((item, i) => {
+              const maxVal = Math.max(...(values.length ? values : [100]));
+              return (
+                <div key={i} style={useFadeRise(staggerDelay(i, 10, 12), 15)}>
+                  <ProgressBar
+                    progress={values[i] != null ? values[i] / maxVal : 0}
+                    label={`${item} — ${values[i] != null ? values[i] : 0}${data.unit || ""}`}
+                    color={i === 0 ? moodCfg.accent : `${moodCfg.accent}88`}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Card Carousel — 정보 카드 나열 */}
+        {layout === "card_carousel" && items.length >= 2 && (
+          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
+            {items.map((item, i) => {
+              const desc = (data.descriptions || [])[i] || "";
+              return (
+                <div key={i} style={useFadeRise(staggerDelay(i, 10, 15), 15)}>
+                  <Card style={{ minWidth: 200, maxWidth: 280, textAlign: "center" }}>
+                    {data.itemIcons?.[i] && resolveIcon(data.itemIcons[i]) && (
+                      <div style={{ marginBottom: 12 }}>
+                        <IconBadge icon={resolveIcon(data.itemIcons[i])!} size={48} />
+                      </div>
+                    )}
+                    <div style={{ fontSize: 20, fontWeight: 700, color: C.text, marginBottom: desc ? 8 : 0 }}>{item}</div>
+                    {desc && <div style={{ fontSize: 15, color: C.textMuted }}>{desc}</div>}
+                  </Card>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Hero with Context — 큰 헤드라인 + 부연 카드 */}
+        {layout === "hero_with_context" && items.length >= 1 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 24, width: "100%", alignItems: "center" }}>
+            {items.length > 0 && (
+              <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+                {items.map((item, i) => (
+                  <div key={i} style={useFadeRise(staggerDelay(i, 8, 30), 15)}>
+                    <Card style={{ padding: "12px 20px" }}>
+                      <span style={{ fontSize: 16, color: C.textMuted }}>{item}</span>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Quote Portrait — 인물 사진 + 인용문 */}
+        {layout === "quote_portrait" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 32, ...useFadeRise(15, 20) }}>
+            <ImageBadge
+              imageUrl={data.images?.[0]}
+              size={120}
+            />
+            <div style={{ flex: 1 }}>
+              <QuoteMarkBlock size={48} color={moodCfg.accent} />
+              <div style={{ fontSize: 24, fontWeight: 500, color: C.text, lineHeight: 1.5, fontStyle: "italic" }}>
+                {items[0] || ""}
+              </div>
+              {data.source && (
+                <div style={{ fontSize: 16, color: C.textMuted, marginTop: 12 }}>— {data.source}</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Annotated Chart — 간이 바 + 주석 */}
+        {layout === "annotated_chart" && items.length >= 2 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+            {/* 간이 바 렌더링 */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+              {items.map((item, i) => {
+                const maxVal = Math.max(...(values.length ? values : [1]));
+                return (
+                  <div key={i} style={useFadeRise(staggerDelay(i, 10, 12), 15)}>
+                    <MiniBar
+                      value={values[i] || 0}
+                      maxValue={maxVal}
+                      label={`${item}  ${values[i] != null ? values[i] : ""}${data.unit || ""}`}
+                      color={moodCfg.accent}
+                      height={10}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            {/* 주석 */}
+            {data.annotations?.map((ann: { text: string; index?: number }, i: number) => (
+              <div key={i} style={{ opacity: useFade(staggerDelay(i, 8, 40), 12), paddingLeft: 48 }}>
+                <AnnotationLine text={ann.text} width={80} color={moodCfg.accent} />
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Status Dots */}
         {statusDots.length > 0 && (
           <StatusDotList
@@ -2815,7 +3214,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           <div
             style={{
               opacity: sourceFade,
-              fontSize: 32,
+              fontSize: 28,
               color: C.textDim,
               marginTop: 24,
             }}
@@ -2824,6 +3223,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           </div>
         )}
       </div>
+      </div>{/* contentWidth wrapper */}
     </AbsoluteFill>
   );
 };
@@ -2908,7 +3308,7 @@ const LineReveal: React.FC<{
   }
 
   const isChapterLabel = /^CHAPTER\s*\d/i.test(line.trim());
-  const baseFontSize = isChapterLabel ? 36 : getBaseFontSize(emphasis);
+  const baseFontSize = isChapterLabel ? 30 : getBaseFontSize(emphasis);
   const showBadge = emphasis === "sequence" && totalLines > 1;
 
   return (

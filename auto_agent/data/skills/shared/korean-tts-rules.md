@@ -1,3 +1,8 @@
+---
+name: korean-tts-rules
+description: Use when preparing Korean narration text for TTS synthesis with pronunciation and pacing rules
+---
+
 # Korean TTS Rules
 
 한국어 TTS 전처리 규칙을 정의합니다.

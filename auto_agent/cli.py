@@ -10,6 +10,10 @@ auto-agent — AI 영상 제작 파이프라인 CLI
   auto-agent studio --project <slug>            # Remotion 스튜디오
   auto-agent style list|add|remove              # 아트스타일 관리
   auto-agent voice list|add|remove              # 음성 프리셋 관리
+  auto-agent font list|set|reset               # 폰트 관리
+  auto-agent bg start|stop|status|logs|list    # 백그라운드 파이프라인
+  auto-agent sync --project <slug>             # 로컬 → Supabase 동기화
+  auto-agent pull --project <slug>             # Supabase → 로컬 다운로드
   auto-agent version list|rollback              # 버전 관리
   auto-agent assets [--type audio]              # 에셋 조회
   auto-agent cleanup [--execute]                # 클린업
@@ -261,6 +265,35 @@ def _get_arg(args: list, flag: str) -> str:
     return ""
 
 
+def _get_active_project():
+    """활성 프로젝트 (pm, project, config) 반환. 없으면 (None, None, None)."""
+    try:
+        from auto_agent.db.connection import db_exists
+        if db_exists():
+            from auto_agent.db.project_manager import ProjectManager
+            pm = ProjectManager()
+            project = pm.get_active_project()
+            if project:
+                config = pm.get_config(project["id"])
+                return pm, project, config
+    except Exception:
+        pass
+    return None, None, None
+
+
+def _format_elapsed(started_at: str, finished_at: str = None) -> str:
+    """started_at/finished_at ISO 문자열로 경과 시간 포매팅."""
+    from datetime import datetime
+    start = datetime.fromisoformat(started_at)
+    end = datetime.fromisoformat(finished_at) if finished_at else datetime.now()
+    total_secs = int((end - start).total_seconds())
+    mins = total_secs // 60
+    if mins < 60:
+        secs = total_secs % 60
+        return f"{mins}분 {secs}초"
+    return f"{mins // 60}시간 {mins % 60}분"
+
+
 # ── 아트스타일 관리 ─────────────────────────────
 
 def cmd_style(args):
@@ -428,6 +461,292 @@ def cmd_voice(args):
         console.print("  사용 가능: list, add, remove <이름>")
 
 
+def cmd_font(args):
+    """폰트 관리: list, set, reset."""
+    from auto_agent.font_manager import FontManager, DEFAULT_FONT
+
+    fm = FontManager()
+
+    if not args or args[0] == "list":
+        # 폰트 목록 출력
+        fonts = fm.list_fonts()
+        if not fonts:
+            print_warning("시스템 폰트를 찾을 수 없습니다.")
+            return
+
+        # 현재 프로젝트 설정 폰트 확인
+        current_font = DEFAULT_FONT
+        _, _, config = _get_active_project()
+        if config:
+            current_font = config.get("font_family", DEFAULT_FONT)
+
+        from rich.table import Table
+        table = Table(title="사용 가능한 폰트", border_style="dim")
+        table.add_column("폰트", style="white")
+        table.add_column("소스", style="dim")
+        table.add_column("", style="accent")
+
+        bundled = [f for f in fonts if f["source"] == "bundled"]
+        system = [f for f in fonts if f["source"] == "system"]
+
+        for f in bundled:
+            marker = " <-- 현재" if f["family"] == current_font else ""
+            table.add_row(f["family"], "번들", marker)
+
+        for f in system:
+            marker = " <-- 현재" if f["family"] == current_font else ""
+            table.add_row(f["family"], "시스템", marker)
+
+        console.print(table)
+        console.print(f"\n  총 [accent]{len(fonts)}[/accent]개 ({len(bundled)} 번들 + {len(system)} 시스템)")
+        console.print(f"  현재: [accent]{current_font}[/accent]")
+
+    elif args[0] == "set":
+        # 폰트 설정
+        pm, project, _ = _get_active_project()
+        if not project:
+            print_warning("활성 프로젝트가 없습니다. (DB 미초기화 또는 프로젝트 없음)")
+            return
+
+        if len(args) >= 2:
+            # 비인터랙티브: font set <폰트명>
+            font_name = " ".join(args[1:])
+        else:
+            # 인터랙티브: 퍼지 검색 선택
+            try:
+                from auto_agent.ui.prompts import prompt_font
+                font_name = prompt_font()
+            except KeyboardInterrupt:
+                console.print("\n[dim]취소됨[/dim]")
+                return
+
+        # 유효성 검사
+        if not fm.is_available(font_name):
+            print_warning(f"'{font_name}' 폰트가 시스템에 설치되지 않았습니다.")
+            from auto_agent.ui.prompts import prompt_confirm
+            if not prompt_confirm(f"그래도 설정하시겠습니까? (렌더링 머신에 설치되어 있을 수 있음)"):
+                return
+
+        pm.update_config(project["id"], font_family=font_name)
+        is_bundled = fm.is_bundled(font_name)
+        source = "번들" if is_bundled else "시스템"
+        print_success(f"폰트 설정: [accent]{font_name}[/accent] ({source})  —  프로젝트: {project['name']}")
+        if not is_bundled:
+            console.print("  [dim]렌더링 머신에도 이 폰트가 설치되어 있어야 합니다.[/dim]")
+
+    elif args[0] == "reset":
+        # 기본 폰트로 리셋
+        pm, project, _ = _get_active_project()
+        if not project:
+            print_warning("활성 프로젝트가 없습니다. (DB 미초기화 또는 프로젝트 없음)")
+            return
+
+        pm.update_config(project["id"], font_family=DEFAULT_FONT)
+        print_success(f"폰트 초기화: [accent]{DEFAULT_FONT}[/accent]  —  프로젝트: {project['name']}")
+
+    else:
+        print_error(f"알 수 없는 서브커맨드: {args[0]}")
+        console.print("  사용 가능: list, set [폰트명], reset")
+
+
+def cmd_bg(args):
+    """백그라운드 파이프라인 세션 관리: start, stop, status, logs, list."""
+    from auto_agent.session_manager import SessionManager
+
+    sm = SessionManager()
+
+    if not args:
+        # 인자 없으면 list 출력
+        args = ["list"]
+
+    sub = args[0]
+
+    if sub == "start":
+        # bg start --project <slug> [--from step_N] [--only step_N]
+        project_slug = _get_arg(args[1:], "--project")
+        from_step = _get_arg(args[1:], "--from") or None
+        only_step = _get_arg(args[1:], "--only") or None
+
+        if not project_slug:
+            # 활성 프로젝트 사용
+            _, project, _ = _get_active_project()
+            if project:
+                project_slug = project["slug"]
+
+        if not project_slug:
+            print_error("프로젝트를 지정하세요: bg start --project <slug>")
+            return
+
+        try:
+            session = sm.start(project_slug, from_step=from_step, only_step=only_step)
+            print_success(f"백그라운드 파이프라인 시작: [accent]{project_slug}[/accent]")
+            console.print(f"  PID: {session['pid']}")
+            console.print(f"  로그: {session['log_file']}")
+            if from_step:
+                console.print(f"  시작 스텝: {from_step}")
+            console.print(f"\n  상태 확인: [accent]auto-agent bg status --project {project_slug}[/accent]")
+            console.print(f"  로그 보기: [accent]auto-agent bg logs --project {project_slug}[/accent]")
+        except RuntimeError as e:
+            print_error(str(e))
+
+    elif sub == "stop":
+        project_slug = _get_arg(args[1:], "--project") or (args[1] if len(args) > 1 and not args[1].startswith("-") else None)
+        if not project_slug:
+            print_error("프로젝트를 지정하세요: bg stop --project <slug>")
+            return
+
+        session = sm.stop(project_slug)
+        if session:
+            if session["status"] == "stopped":
+                print_success(f"파이프라인 중지됨: [accent]{project_slug}[/accent]")
+            else:
+                print_warning(f"이미 종료된 세션: {session['status']}")
+        else:
+            print_warning(f"'{project_slug}' 세션을 찾을 수 없습니다.")
+
+    elif sub == "status":
+        project_slug = _get_arg(args[1:], "--project") or (args[1] if len(args) > 1 and not args[1].startswith("-") else None)
+        if project_slug:
+            session = sm.get_session(project_slug)
+            if session:
+                _print_session_detail(session)
+            else:
+                print_warning(f"'{project_slug}' 세션을 찾을 수 없습니다.")
+        else:
+            # 모든 세션 상태
+            sessions = sm.list_sessions()
+            if not sessions:
+                print_warning("실행 중인 세션이 없습니다.")
+                return
+            _print_session_table(sessions)
+
+    elif sub == "logs":
+        project_slug = _get_arg(args[1:], "--project") or (args[1] if len(args) > 1 and not args[1].startswith("-") else None)
+        if not project_slug:
+            print_error("프로젝트를 지정하세요: bg logs --project <slug>")
+            return
+
+        follow = "--follow" in args or "-f" in args
+        lines = 50
+        for i, a in enumerate(args):
+            if a in ("--lines", "-n") and i + 1 < len(args):
+                try:
+                    lines = int(args[i + 1])
+                except ValueError:
+                    pass
+
+        if follow:
+            console.print(f"[dim]로그 실시간 추적: {project_slug} (Ctrl+C로 종료)[/dim]\n")
+            try:
+                for line in sm.follow_log(project_slug):
+                    console.print(line, highlight=False)
+            except KeyboardInterrupt:
+                console.print("\n[dim]추적 종료[/dim]")
+        else:
+            log_text = sm.get_log_tail(project_slug, lines=lines)
+            if log_text:
+                console.print(f"[dim]--- {project_slug} 로그 (최근 {lines}줄) ---[/dim]\n")
+                console.print(log_text, highlight=False)
+            else:
+                print_warning("로그가 비어있거나 세션을 찾을 수 없습니다.")
+
+    elif sub == "list":
+        sessions = sm.list_sessions()
+        if not sessions:
+            print_warning("세션 기록이 없습니다.")
+            console.print("  [dim]시작: auto-agent bg start --project <slug>[/dim]")
+            return
+        _print_session_table(sessions)
+
+    elif sub == "clean":
+        days = 7
+        for i, a in enumerate(args):
+            if a == "--days" and i + 1 < len(args):
+                try:
+                    days = int(args[i + 1])
+                except ValueError:
+                    pass
+        cleaned = sm.cleanup_finished(keep_days=days)
+        print_success(f"세션 정리 완료: {cleaned}개 (기준: {days}일 이전)")
+
+    else:
+        print_error(f"알 수 없는 서브커맨드: {sub}")
+        console.print("  사용 가능: start, stop, status, logs, list, clean")
+
+
+def _print_session_detail(session: dict):
+    """단일 세션 상세 출력."""
+    from rich.panel import Panel
+    from rich.text import Text
+
+    status = session["status"]
+    status_colors = {
+        "running": "green",
+        "completed": "blue",
+        "failed": "red",
+        "stopped": "yellow",
+    }
+    color = status_colors.get(status, "white")
+
+    lines = [
+        f"[white]프로젝트:[/white]  [accent]{session['project_slug']}[/accent]",
+        f"[white]상태:[/white]     [{color}]{status.upper()}[/{color}]",
+        f"[white]PID:[/white]      {session['pid']}",
+        f"[white]시작:[/white]     {session['started_at'][:19]}",
+    ]
+    if session.get("finished_at"):
+        lines.append(f"[white]종료:[/white]     {session['finished_at'][:19]}")
+    if session.get("from_step"):
+        lines.append(f"[white]시작스텝:[/white]  {session['from_step']}")
+    if session.get("only_step"):
+        lines.append(f"[white]단일스텝:[/white]  {session['only_step']}")
+    lines.append(f"[white]로그:[/white]     [dim]{session.get('log_file', 'N/A')}[/dim]")
+
+    # 실행 시간 계산
+    if session.get("started_at"):
+        lines.append(f"[white]경과:[/white]     {_format_elapsed(session['started_at'], session.get('finished_at'))}")
+
+    console.print(Panel(
+        "\n".join(lines),
+        title=f"세션: {session['project_slug']}",
+        border_style=color,
+    ))
+
+
+def _print_session_table(sessions: list[dict]):
+    """세션 목록 테이블 출력."""
+    from rich.table import Table
+
+    table = Table(title="백그라운드 세션", border_style="dim")
+    table.add_column("프로젝트", style="accent")
+    table.add_column("상태", justify="center")
+    table.add_column("PID", style="dim", justify="right")
+    table.add_column("시작", style="dim")
+    table.add_column("경과", justify="right")
+
+    status_styles = {
+        "running": "[green]RUNNING[/green]",
+        "completed": "[blue]DONE[/blue]",
+        "failed": "[red]FAILED[/red]",
+        "stopped": "[yellow]STOPPED[/yellow]",
+    }
+
+    for s in sessions:
+        status_text = status_styles.get(s["status"], s["status"])
+        started = s.get("started_at", "")[:16].replace("T", " ")
+        elapsed = _format_elapsed(s["started_at"], s.get("finished_at")) if s.get("started_at") else ""
+
+        table.add_row(
+            s["project_slug"],
+            status_text,
+            str(s["pid"]),
+            started,
+            elapsed,
+        )
+
+    console.print(table)
+
+
 def cmd_update(args):
     """최신 버전으로 업데이트."""
     import importlib.metadata
@@ -506,6 +825,87 @@ def cmd_update(args):
         print_success(f"재설치 완료 (v{new_version})")
 
 
+def cmd_sync(args):
+    """로컬 → Supabase 동기화 (push)."""
+    from auto_agent.supabase_client import supabase_enabled
+    if not supabase_enabled():
+        print_error("SUPABASE_URL / SUPABASE_KEY 환경변수가 설정되지 않았습니다.")
+        return
+
+    slug = _parse_project_flag(args)
+    if not slug:
+        print_error("--project <slug> 필수")
+        return
+
+    from auto_agent.db.project_manager import ProjectManager
+    from auto_agent.sync import SyncManager
+    from pathlib import Path
+
+    pm = ProjectManager()
+    project = pm.get_project(slug=slug)
+    if not project:
+        print_error(f"프로젝트 '{slug}'를 찾을 수 없습니다.")
+        return
+
+    print_header(f"Supabase 동기화 (push): {slug}")
+    sm = SyncManager(
+        project_slug=slug,
+        project_dir=Path(project["output_dir"]),
+        local_project_id=project["id"],
+    )
+    result = sm.push_all(dict(project))
+    console.print(f"  업로드: [accent]{result['uploaded']}[/accent]건, 스킵: {result['skipped']}건")
+    console.print(f"  프로젝트 ID: {result['project_id']}")
+
+
+def cmd_pull(args):
+    """Supabase → 로컬 다운로드 (pull)."""
+    from auto_agent.supabase_client import supabase_enabled
+    if not supabase_enabled():
+        print_error("SUPABASE_URL / SUPABASE_KEY 환경변수가 설정되지 않았습니다.")
+        return
+
+    slug = _parse_project_flag(args)
+    if not slug:
+        print_error("--project <slug> 필수")
+        return
+
+    from auto_agent.db.project_manager import ProjectManager
+    from auto_agent.sync import SyncManager
+    from pathlib import Path
+
+    pm = ProjectManager()
+    project = pm.get_project(slug=slug)
+    if not project:
+        print_error(f"프로젝트 '{slug}'를 찾을 수 없습니다.")
+        return
+
+    # --type 필터 (선택)
+    asset_types = None
+    if "--type" in args:
+        idx = args.index("--type")
+        if idx + 1 < len(args):
+            asset_types = [t.strip() for t in args[idx + 1].split(",")]
+
+    print_header(f"Supabase 다운로드 (pull): {slug}")
+    sm = SyncManager(
+        project_slug=slug,
+        project_dir=Path(project["output_dir"]),
+        local_project_id=project["id"],
+    )
+    result = sm.pull(asset_types=asset_types)
+    console.print(f"  다운로드: [accent]{result['downloaded']}[/accent]건, 스킵(최신): {result['skipped']}건")
+
+
+def _parse_project_flag(args):
+    """args에서 --project <slug> 값 추출."""
+    if "--project" in args:
+        idx = args.index("--project")
+        if idx + 1 < len(args):
+            return args[idx + 1]
+    return None
+
+
 COMMANDS = {
     "init": cmd_init,
     "run": cmd_run,
@@ -519,6 +919,10 @@ COMMANDS = {
     "dashboard": cmd_dashboard,
     "style": cmd_style,
     "voice": cmd_voice,
+    "font": cmd_font,
+    "bg": cmd_bg,
+    "sync": cmd_sync,
+    "pull": cmd_pull,
     "update": cmd_update,
     "skill-path": lambda args: print(get_data_dir()),
 }
@@ -537,9 +941,13 @@ def _print_banner():
         ("config get|set", "프로젝트 설정"),
         ("style list|add|remove", "아트스타일 관리"),
         ("voice list|add|remove", "음성 프리셋 관리"),
+        ("font list|set|reset", "폰트 관리"),
+        ("bg start|stop|status|logs", "백그라운드 파이프라인"),
         ("version list|rollback", "버전 관리"),
         ("assets", "에셋 조회"),
         ("costs", "비용 요약"),
+        ("sync --project <slug>", "로컬 → Supabase 동기화"),
+        ("pull --project <slug>", "Supabase → 로컬 다운로드"),
         ("dashboard", "웹 대시보드"),
         ("update", "최신 버전으로 업데이트"),
     ]

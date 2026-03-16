@@ -1,3 +1,8 @@
+---
+name: chart-mapping
+description: Use when mapping data to chart types (bar, pie, line) and configuring chart visualization parameters
+---
+
 # Chart Mapping 스킬
 
 > **상위 스킬**: `shared/asset-advisory` — 차트뿐 아니라 아이콘/국기/로고/이미지까지 포괄하는 에셋 추천 규칙.

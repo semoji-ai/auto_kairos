@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AbsoluteFill, delayRender, continueRender, staticFile } from "remotion";
+const resolveAsset = (p: string) => p.startsWith("http") ? p : staticFile(p);
 import { FONT_DEFS } from "../visualizations/vizStyles";
 import type { MapSceneData } from "../types/manifest";
 import { MapThemeProvider } from "./MapThemeContext";

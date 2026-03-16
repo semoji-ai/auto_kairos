@@ -80,7 +80,9 @@
           "id": "step_4",
           "name": "fact_check",
           "description": "주요 주장 교차 검증",
+          "type": "single_call",
           "agent": "fact-verifier",
+          "single_call_model": "claude-opus-4-6",
           "input": ["final_manuscript.md", "research_report.json"],
           "output": "factcheck_report.json",
           "blocking": false
@@ -98,7 +100,9 @@
           "id": "step_5",
           "name": "scene_decomposition",
           "description": "원고 → 씬 분할 (scene_decomposition.json 생성)",
+          "type": "single_call",
           "agent": "visual-composer",
+          "single_call_model": "claude-opus-4-6",
           "input": ["final_manuscript.md", "outline.json", "research_report.json"],
           "output": "scene_decomposition.json",
           "skills": ["shared/scene-segmentation"],
@@ -108,7 +112,9 @@
           "id": "step_5b",
           "name": "character_planning",
           "description": "씬 분할 기반 2씬+ 등장 캐릭터 추출 + 변이 분석 + 캐릭터 계획 수립",
+          "type": "single_call",
           "agent": "character-planner",
+          "single_call_model": "claude-sonnet-4-5-20250929",
           "input": ["final_manuscript.md", "scene_decomposition.json", "research_report.json"],
           "input_optional": ["art_style.json"],
           "output": "character_plan.json",
@@ -120,15 +126,44 @@
         },
         {
           "id": "step_6",
-          "name": "visual_composition",
-          "description": "Creative Direction → Asset Advisory → 데이터 보강 → 모션 설계",
+          "name": "creative_direction",
+          "description": "Creative Direction — 각 씬의 창의적 시각 연출 설계",
+          "type": "single_call",
           "agent": "visual-composer",
+          "single_call_model": "claude-opus-4-6",
           "input": ["final_manuscript.md", "outline.json", "research_report.json", "scene_decomposition.json"],
           "input_optional": ["character_plan.json"],
-          "output": ["scene_specs.json", "motion_plan.json"],
-          "skills": ["shared/remotion-design-system", "shared/scene-segmentation", "shared/creative-direction", "shared/motion-rhythm", "shared/data-mapping", "shared/chart-mapping", "shared/asset-advisory"],
+          "output": "scene_specs.json",
+          "skills": ["shared/remotion-design-system", "shared/scene-segmentation", "shared/creative-direction"],
           "depends_on": "step_5b",
-          "notes": "씬 분할 완료 상태에서 4단계 순차 실행: (1) Creative Direction, (2) Asset Advisory, (3) 데이터 보강→scene_specs.json, (4) 모션 설계→motion_plan.json. scene_decomposition.json은 step_5에서 이미 생성됨"
+          "notes": "★ Phase 2(Creative Direction)만 수행. 각 씬에 creative 필드(concept/reveal/emphasis/mood/headline) + visualization 기본 구조(items/values/itemIcons) + mapScene/imageAsset 초기 설정까지 완료. Asset Advisory(Phase 2.5)는 다음 스텝에서 별도 수행."
+        },
+        {
+          "id": "step_6b",
+          "name": "asset_advisory",
+          "description": "Asset Advisory — 다중 관점 심의로 에셋 추천 + 레이아웃 확정",
+          "type": "single_call",
+          "agent": "visual-composer",
+          "single_call_model": "claude-opus-4-6",
+          "input": ["scene_specs.json", "research_report.json"],
+          "input_optional": ["character_plan.json"],
+          "output": "scene_specs.json",
+          "skills": ["shared/asset-advisory", "shared/chart-mapping", "shared/remotion-design-system", "shared/creative-direction"],
+          "depends_on": "step_6",
+          "notes": "★ Phase 2.5(Asset Advisory)만 수행. scene_specs.json을 읽고 각 씬에 4관점 심의(📊차트/🏷️심볼/🖼️이미지/📐레이아웃) 적용: chartConfig, itemFlags, logoMap, imageAsset, creative.layout 확정. 전체 밸런스 검증(이미지 40-60%, 차트 15-30%, 에셋 없는 씬 최소화) 후 scene_specs.json 덮어쓰기."
+        },
+        {
+          "id": "step_6c",
+          "name": "data_enrichment_and_motion",
+          "description": "데이터 보강 + 모션 설계",
+          "type": "single_call",
+          "agent": "visual-composer",
+          "single_call_model": "claude-opus-4-6",
+          "input": ["scene_specs.json", "research_report.json"],
+          "output": ["scene_specs.json", "motion_plan.json"],
+          "skills": ["shared/data-mapping", "shared/motion-rhythm", "shared/remotion-design-system"],
+          "depends_on": "step_6b",
+          "notes": "★ Phase 3(Data Enrichment) + Phase 4(Motion Choreography)만 수행. research_report.json에서 정확한 수치를 가져와 values/unit/source 보강. 전환 효과, 타이밍, 브리딩 포인트 설계 → motion_plan.json 생성."
         }
       ]
     },
@@ -229,15 +264,29 @@
           "notes": "scene_specs + motion_plan → Remotion SceneManifest 포맷 변환"
         },
         {
+          "id": "step_11a",
+          "name": "still_capture",
+          "description": "모든 씬의 스틸 프레임 캡처 (시각적 QA용)",
+          "type": "module",
+          "module": "layout-check",
+          "input": ["remotion/public/manifest.json", "scene_specs.json"],
+          "output": ["output/{project}/layout_check/scene_*.png", "output/{project}/layout_check/layout_check_report.json"],
+          "depends_on": "step_11",
+          "notes": "Remotion CLI로 모든 씬의 중간 프레임을 PNG로 캡처. QA 에이전트가 시각적 검증에 활용"
+        },
+        {
           "id": "step_11b",
           "name": "qa_pre_render",
-          "description": "사전 검수 — manifest 기반 씬 스펙/아이콘/컬러/데이터 검증",
+          "description": "사전 검수 — manifest 기반 씬 스펙/아이콘/컬러/데이터 + 시각적 QA 검증",
+          "type": "single_call",
           "agent": "qa-reviewer",
-          "input": ["remotion/public/manifest.json", "scene_specs.json", "research_report.json", "output/{project}/audio/", "output/{project}/subtitles/", "output/{project}/images/"],
+          "single_call_model": "claude-opus-4-6",
+          "input": ["remotion/public/manifest.json", "scene_specs.json", "research_report.json", "output/{project}/audio/", "output/{project}/subtitles/", "output/{project}/images/", "output/{project}/layout_check/"],
           "output": "output/{project}/qa_report_pre.json",
           "skills": ["shared/remotion-design-system", "shared/writing-style", "shared/creative-direction", "shared/scene-segmentation", "shared/motion-rhythm", "shared/data-mapping"],
           "gate": true,
-          "notes": "critical 이슈 발견 시 렌더링 차단. 공유 스킬을 검증 기준으로 참조"
+          "depends_on": "step_11a",
+          "notes": "critical 이슈 발견 시 렌더링 차단. layout_check/ 스틸 PNG를 Read로 열어 시각적 QA 수행. 공유 스킬을 검증 기준으로 참조"
         },
         {
           "id": "step_12",
@@ -254,7 +303,9 @@
           "id": "step_12b",
           "name": "qa_post_render",
           "description": "사후 검수 — 렌더링 결과 영상 메타데이터/동기화/품질 검증",
+          "type": "single_call",
           "agent": "qa-reviewer",
+          "single_call_model": "claude-sonnet-4-5-20250929",
           "input": ["output/{project}/final_video.mp4", "output/{project}/qa_report_pre.json", "scene_specs.json"],
           "output": "output/{project}/qa_report_post.json",
           "notes": "블랙 프레임, 오디오 싱크, 자막 렌더링, 파일 크기 검증. 문제 발견 시 사용자 알림"
@@ -272,9 +323,9 @@
         "description": "outline.json + 최종 원고 확인. 수정 요청 가능"
       },
       {
-        "after_step": "step_6",
+        "after_step": "step_6c",
         "name": "씬 설계 검토",
-        "description": "Visual Composer 결과 확인 (scene_decomposition + scene_specs + motion_plan). 씬 타입/아이콘/컬러 수정 가능"
+        "description": "Visual Composer 결과 확인 (scene_specs + motion_plan). Creative Direction + Asset Advisory + Data Enrichment 결과 검토. 씬 타입/에셋/차트/레이아웃 수정 가능"
       },
       {
         "after_step": "step_8b",
@@ -313,7 +364,7 @@
     "agent_limits": {
       "research-orchestrator": {"max_duration_min": 20, "budget_usd": 2.5},
       "write-manuscript": {"max_duration_min": 15, "budget_usd": 2.5},
-      "visual-composer": {"max_duration_min": 20, "budget_usd": 3.0},
+      "visual-composer": {"max_duration_min": 25, "budget_usd": 2.5},
       "character-planner": {"max_duration_min": 5, "budget_usd": 0.5},
       "fact-verifier": {"max_duration_min": 5, "budget_usd": 0.5},
       "qa-reviewer": {"max_duration_min": 5, "budget_usd": 0.5}

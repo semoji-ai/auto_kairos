@@ -1,6 +1,6 @@
 ---
 name: fact-verifier
-description: 원고 주요 주장 교차 검증
+description: Use when cross-verifying key claims in the manuscript against research sources to produce a fact-check report
 model: claude-sonnet-4-5-20250929
 max_turns: 20
 allowed_tools:

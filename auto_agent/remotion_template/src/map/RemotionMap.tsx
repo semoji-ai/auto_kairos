@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { delayRender, continueRender } from "remotion";
 import maplibregl from "maplibre-gl";
 import type { CameraState } from "./cameraInterpolation";
-import { resolveMapStyle, type MapStyleConfig } from "./mapStyles";
+import { resolveMapStyle, applyLayerOverrides, type MapStyleConfig } from "./mapStyles";
 
 // MapLibre CSS는 JS 번들에 포함되지 않으므로 인라인 최소 스타일
 const MAP_CSS = `
@@ -77,7 +77,19 @@ export const RemotionMap: React.FC<RemotionMapProps> = ({
       ...(({ preserveDrawingBuffer: true }) as Record<string, unknown>),
     } as maplibregl.MapOptions);
 
+    // 누락 스프라이트 이미지 → 1x1 투명 placeholder 생성 (렌더링 에러 방지)
+    map.on("styleimagemissing", ({ id }: { id: string }) => {
+      if (!map.hasImage(id)) {
+        map.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) });
+      }
+    });
+
     map.on("load", () => {
+      // 레이어 오버라이드 적용 (테마별 색상/선/가시성)
+      if (styleConfig.layerOverrides?.length) {
+        applyLayerOverrides(map, styleConfig.layerOverrides);
+      }
+
       // 베이스맵 텍스트 라벨 숨김 — 경계선·도로선은 유지
       if (hideBaseLabels) {
         const style = map.getStyle();

@@ -46,12 +46,28 @@ import {
 import * as SimpleIcons from "@icons-pack/react-simple-icons";
 
 /* ================================================================
-   Design Tokens
+   Design Tokens — 다크/화이트 테마 팔레트
    ================================================================ */
 
 export const FONT = "'Pretendard', sans-serif";
 
-export const C = {
+export type VideoThemeName = "dark" | "white";
+
+export interface ColorTokens {
+  bg: string;
+  text: string;
+  textMuted: string;
+  textDim: string;
+  accent: string;
+  accentBg: string;
+  accentBorder: string;
+  accentSoft: string;
+  cardBg: string;
+  cardBorder: string;
+  divider: string;
+}
+
+const COLORS_DARK: ColorTokens = {
   bg: "#0A0A0A",
   text: "#FFFFFF",
   textMuted: "#FFFFFF",
@@ -63,7 +79,109 @@ export const C = {
   cardBg: "rgba(245,158,11,0.06)",
   cardBorder: "rgba(245,158,11,0.25)",
   divider: "rgba(255,255,255,0.08)",
-} as const;
+};
+
+const COLORS_WHITE: ColorTokens = {
+  bg: "#FAFAFA",
+  text: "#1A1A2E",
+  textMuted: "#4A4A5A",
+  textDim: "#6A6A7A",
+  accent: "#2563EB",
+  accentBg: "rgba(37,99,235,0.06)",
+  accentBorder: "rgba(37,99,235,0.25)",
+  accentSoft: "rgba(37,99,235,0.10)",
+  cardBg: "rgba(37,99,235,0.04)",
+  cardBorder: "rgba(37,99,235,0.18)",
+  divider: "rgba(0,0,0,0.06)",
+};
+
+export const THEME_PALETTES: Record<VideoThemeName, ColorTokens> = {
+  dark: COLORS_DARK,
+  white: COLORS_WHITE,
+};
+
+/** 아트스타일별 accent 오버라이드 (dark 기준 — white는 자동 유도) */
+interface ArtStyleAccent {
+  accent: string;       // 메인 악센트
+  accentRgb: string;    // rgba용
+}
+
+const ART_STYLE_ACCENTS: Record<string, ArtStyleAccent> = {
+  semoji: {
+    accent: "#6366F1",       // 인디고/퍼플
+    accentRgb: "99,102,241",
+  },
+  lego: {
+    accent: "#EF4444",       // 레고 레드
+    accentRgb: "239,68,68",
+  },
+  quirky_cartoon: {
+    accent: "#F59E0B",       // 오렌지/앰버 (기본값 유지)
+    accentRgb: "245,158,11",
+  },
+  stickman_cute: {
+    accent: "#10B981",       // 에메랄드 그린
+    accentRgb: "16,185,129",
+  },
+};
+
+/** accent 색상으로 연관 컬러 자동 생성 */
+function deriveAccentColors(accent: string, rgb: string, isDark: boolean): Partial<ColorTokens> {
+  if (isDark) {
+    return {
+      accent,
+      accentBg: `rgba(${rgb},0.08)`,
+      accentBorder: `rgba(${rgb},0.3)`,
+      accentSoft: `rgba(${rgb},0.15)`,
+      cardBg: `rgba(${rgb},0.06)`,
+      cardBorder: `rgba(${rgb},0.25)`,
+    };
+  }
+  return {
+    accent,
+    accentBg: `rgba(${rgb},0.06)`,
+    accentBorder: `rgba(${rgb},0.25)`,
+    accentSoft: `rgba(${rgb},0.10)`,
+    cardBg: `rgba(${rgb},0.04)`,
+    cardBorder: `rgba(${rgb},0.18)`,
+  };
+}
+
+/** 기본 C (다크 테마 — 하위호환) */
+export const C: ColorTokens = COLORS_DARK;
+
+/** 테마명 + 아트스타일로 팔레트 해석 */
+export function resolveVideoTheme(name?: string, artStyle?: string): ColorTokens {
+  const base = name === "white" ? COLORS_WHITE : COLORS_DARK;
+  const isDark = name !== "white";
+
+  // 아트스타일 accent 오버라이드
+  if (artStyle) {
+    // artStyle은 경로일 수 있음: "artstyle/styles/semoji.json" → "semoji"
+    const styleName = artStyle.replace(/.*\//, "").replace(/\.json$/, "");
+    const override = ART_STYLE_ACCENTS[styleName];
+    if (override) {
+      return { ...base, ...deriveAccentColors(override.accent, override.accentRgb, isDark) };
+    }
+  }
+  return base;
+}
+
+/* ── 비디오 테마 컨텍스트 ── */
+
+const VideoThemeCtx = React.createContext<ColorTokens>(COLORS_DARK);
+
+export const VideoThemeProvider: React.FC<{
+  theme: VideoThemeName | string;
+  artStyle?: string;
+  children: React.ReactNode;
+}> = ({ theme, artStyle, children }) => {
+  const palette = resolveVideoTheme(theme, artStyle);
+  return <VideoThemeCtx.Provider value={palette}>{children}</VideoThemeCtx.Provider>;
+};
+
+/** 현재 비디오 테마 팔레트를 가져온다 (컨텍스트 기반) */
+export const useC = (): ColorTokens => React.useContext(VideoThemeCtx);
 
 export const ease = Easing.out(Easing.cubic);
 export const ease8020 = Easing.bezier(0.8, 0, 0.2, 1);
@@ -485,6 +603,36 @@ export const FlagBadge: React.FC<{
   );
 };
 
+/** 국기 카드 — 직사각형 원본 비율, 국기가 주인공인 씬용 */
+export const FlagCard: React.FC<{
+  countryCode: string;
+  label?: string;
+  width?: number;
+  style?: React.CSSProperties;
+}> = ({ countryCode, label, width = 120, style }) => {
+  const h = Math.round(width * 2 / 3); // 3:2 비율
+  const FlagUrl = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode.toUpperCase()}.svg`;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, flexShrink: 0, ...style }}>
+      <div style={{
+        width, height: h, borderRadius: 8, overflow: "hidden",
+        border: `2px solid ${C.cardBorder}`,
+        boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+      }}>
+        <img
+          src={FlagUrl}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </div>
+      {label && (
+        <span style={{ fontSize: 28, fontWeight: 600, color: C.text, textAlign: "center" }}>
+          {label}
+        </span>
+      )}
+    </div>
+  );
+};
+
 /** 브랜드 로고 배지 (Simple Icons) */
 export const LogoBadge: React.FC<{
   logo: string;
@@ -532,12 +680,12 @@ export const ProgressBar: React.FC<{
   color?: string;
   label?: string;
   style?: React.CSSProperties;
-}> = ({ progress, height = 8, color = C.accent, label, style }) => (
+}> = ({ progress, height = 16, color = C.accent, label, style }) => (
   <div style={{ width: "100%", ...style }}>
     {label && (
       <div
         style={{
-          fontSize: 14,
+          fontSize: 36,
           color: C.textMuted,
           marginBottom: 6,
           display: "flex",
@@ -576,7 +724,7 @@ export const Tag: React.FC<{
   size?: "sm" | "md" | "lg";
   style?: React.CSSProperties;
 }> = ({ text, active, size = "md", style }) => {
-  const sizes = { sm: { px: 10, py: 4, fs: 13 }, md: { px: 16, py: 6, fs: 15 }, lg: { px: 20, py: 8, fs: 18 } };
+  const sizes = { sm: { px: 18, py: 8, fs: 26 }, md: { px: 28, py: 12, fs: 36 }, lg: { px: 36, py: 16, fs: 48 } };
   const s = sizes[size];
   return (
     <span
@@ -628,19 +776,281 @@ export const StatusDot: React.FC<{
     warning: "#F59E0B",
   };
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, ...style }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, ...style }}>
       <div
         style={{
-          width: 8,
-          height: 8,
-          borderRadius: 4,
+          width: 16,
+          height: 16,
+          borderRadius: 8,
           backgroundColor: colors[status],
           flexShrink: 0,
         }}
       />
       {label && (
-        <span style={{ fontSize: 15, color: C.textMuted }}>{label}</span>
+        <span style={{ fontSize: 36, color: C.textMuted }}>{label}</span>
       )}
+    </div>
+  );
+};
+
+/* ================================================================
+   UI Components — 확장 12개 (의도 기반 크리에이티브 컴포지션용)
+   ================================================================ */
+
+/** 노드 간 연결선/화살표 — 프로세스 흐름, 인과관계 */
+export const Connector: React.FC<{
+  direction?: "down" | "right" | "left";
+  length?: number;
+  arrow?: boolean;
+  color?: string;
+  style?: React.CSSProperties;
+}> = ({ direction = "down", length = 40, arrow = true, color = C.accent, style }) => {
+  const isVertical = direction === "down";
+  const w = isVertical ? 3 : length;
+  const h = isVertical ? length : 3;
+  const arrowSize = 10;
+  return (
+    <div style={{ display: "flex", flexDirection: isVertical ? "column" : "row", alignItems: "center", overflow: "visible", ...style }}>
+      <div style={{ width: w, height: h, backgroundColor: color, flexShrink: 0 }} />
+      {arrow && (
+        <div style={{
+          width: 0, height: 0, flexShrink: 0,
+          borderLeft: isVertical ? `${arrowSize}px solid transparent` : `${arrowSize + 2}px solid ${color}`,
+          borderRight: isVertical ? `${arrowSize}px solid transparent` : "none",
+          borderTop: isVertical ? `${arrowSize + 2}px solid ${color}` : `${arrowSize}px solid transparent`,
+          borderBottom: isVertical ? "none" : `${arrowSize}px solid transparent`,
+          ...(direction === "left" ? { transform: "rotate(180deg)" } : {}),
+        }} />
+      )}
+    </div>
+  );
+};
+
+/** 타임라인 이벤트 마커 — 연대기, 역사 사건 */
+export const TimelineDot: React.FC<{
+  label: string;
+  active?: boolean;
+  size?: number;
+  style?: React.CSSProperties;
+}> = ({ label, active, size = 32, style }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 16, ...style }}>
+    <div style={{
+      width: size, height: size, borderRadius: size / 2,
+      backgroundColor: active ? C.accent : "transparent",
+      border: `2px solid ${active ? C.accent : C.cardBorder}`,
+      flexShrink: 0,
+    }} />
+    <span style={{ fontSize: 42, fontWeight: active ? 700 : 400, color: active ? C.accent : C.text }}>
+      {label}
+    </span>
+  </div>
+);
+
+/** KPI 카드 — 라벨 + 큰 숫자 + 변화율 */
+export const MetricCard: React.FC<{
+  label: string;
+  value: string;
+  change?: string;
+  trend?: "up" | "down" | "neutral";
+  style?: React.CSSProperties;
+}> = ({ label, value, change, trend, style }) => {
+  const trendColor = trend === "up" ? "#22C55E" : trend === "down" ? "#EF4444" : C.textMuted;
+  const trendArrow = trend === "up" ? "↑" : trend === "down" ? "↓" : "";
+  return (
+    <div style={{
+      backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`,
+      borderRadius: 12, padding: "20px 24px", minWidth: 180, ...style,
+    }}>
+      <div style={{ fontSize: 48, color: C.textMuted, marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 120, fontWeight: 800, color: C.accent, lineHeight: 1.1 }}>{value}</div>
+      {change && (
+        <div style={{ fontSize: 48, color: trendColor, marginTop: 6, fontWeight: 600 }}>
+          {trendArrow} {change}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/** 인라인 미니 차트 — 트렌드를 컴팩트하게 표시 */
+export const Sparkline: React.FC<{
+  data: number[];
+  width?: number;
+  height?: number;
+  color?: string;
+  style?: React.CSSProperties;
+}> = ({ data, width = 280, height = 72, color = C.accent, style }) => {
+  if (!data.length) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const points = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / range) * height;
+    return `${x},${y}`;
+  }).join(" ");
+  return (
+    <svg width={width} height={height} style={style}>
+      <polyline points={points} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+};
+
+/** 말풍선/주석 박스 — 부연 설명, 인용 강조 */
+export const Callout: React.FC<{
+  children: React.ReactNode;
+  variant?: "info" | "warning" | "accent";
+  style?: React.CSSProperties;
+}> = ({ children, variant = "accent", style }) => {
+  const borderColor = variant === "warning" ? "#EF4444" : variant === "info" ? "#3B82F6" : C.accent;
+  return (
+    <div style={{
+      borderLeft: `5px solid ${borderColor}`,
+      paddingLeft: 24, paddingTop: 16, paddingBottom: 16,
+      backgroundColor: `${borderColor}11`,
+      borderRadius: "0 8px 8px 0",
+      fontSize: 42, color: C.text, lineHeight: 1.5,
+      ...style,
+    }}>
+      {children}
+    </div>
+  );
+};
+
+/** 번호 스텝 배지 — 프로세스 단계 표시 */
+export const StepBadge: React.FC<{
+  step: number;
+  label?: string;
+  active?: boolean;
+  size?: number;
+  style?: React.CSSProperties;
+}> = ({ step, label, active, size = 72, style }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 14, ...style }}>
+    <div style={{
+      width: size, height: size, borderRadius: size / 2,
+      backgroundColor: active ? C.accent : "transparent",
+      border: `2px solid ${C.accent}`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: size * 0.45, fontWeight: 800,
+      color: active ? C.bg : C.accent, flexShrink: 0,
+    }}>
+      {step}
+    </div>
+    {label && (
+      <span style={{ fontSize: 48, fontWeight: 600, color: active ? C.text : C.textMuted }}>
+        {label}
+      </span>
+    )}
+  </div>
+);
+
+/** 비교 셀 — before/after, 변화 전후 대비 */
+export const ComparisonCell: React.FC<{
+  label: string;
+  value: string;
+  sublabel?: string;
+  variant?: "before" | "after" | "neutral";
+  style?: React.CSSProperties;
+}> = ({ label, value, sublabel, variant = "neutral", style }) => {
+  const valueColor = variant === "after" ? "#22C55E" : variant === "before" ? C.textMuted : C.accent;
+  return (
+    <div style={{
+      backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`,
+      borderRadius: 12, padding: "16px 20px", textAlign: "center", ...style,
+    }}>
+      <div style={{ fontSize: 42, color: C.textMuted, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 84, fontWeight: 800, color: valueColor, lineHeight: 1.1 }}>{value}</div>
+      {sublabel && <div style={{ fontSize: 42, color: C.textMuted, marginTop: 4 }}>{sublabel}</div>}
+    </div>
+  );
+};
+
+/** 순위 배지 — 1st/2nd/3rd 색상 구분 */
+export const RankBadge: React.FC<{
+  rank: number;
+  size?: number;
+  style?: React.CSSProperties;
+}> = ({ rank, size = 72, style }) => {
+  const colors: Record<number, string> = { 1: "#FFD700", 2: "#C0C0C0", 3: "#CD7F32" };
+  const bg = colors[rank] || C.accent;
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: size / 2,
+      backgroundColor: bg, display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: size * 0.45, fontWeight: 800, color: "#0A0A0A", flexShrink: 0, ...style,
+    }}>
+      {rank}
+    </div>
+  );
+};
+
+/** 독립 인용부호 장식 */
+export const QuoteMark: React.FC<{
+  size?: number;
+  color?: string;
+  style?: React.CSSProperties;
+}> = ({ size = 64, color = C.accent, style }) => (
+  <span style={{
+    fontSize: size, fontWeight: 900, color, opacity: 0.3, lineHeight: 0.8,
+    fontFamily: "Georgia, serif", userSelect: "none", ...style,
+  }}>
+    &ldquo;
+  </span>
+);
+
+/** 발광 도트 — 펄스 애니메이션으로 주의 환기, 라이브 표시 */
+export const GlowDot: React.FC<{
+  color?: string;
+  size?: number;
+  style?: React.CSSProperties;
+}> = ({ color = C.accent, size = 24, style }) => (
+  <div style={{
+    width: size, height: size, borderRadius: size / 2,
+    backgroundColor: color,
+    boxShadow: `0 0 ${size}px ${size / 2}px ${color}66`,
+    flexShrink: 0, ...style,
+  }} />
+);
+
+/** 지시선 + 주석 — 차트/도표의 특정 부분 가리키기 */
+export const AnnotationLine: React.FC<{
+  text: string;
+  width?: number;
+  direction?: "left" | "right";
+  color?: string;
+  style?: React.CSSProperties;
+}> = ({ text, width = 100, direction = "right", color = C.accent, style }) => (
+  <div style={{
+    display: "flex", alignItems: "center", gap: 8,
+    flexDirection: direction === "left" ? "row-reverse" : "row",
+    ...style,
+  }}>
+    <div style={{ width, height: 1, backgroundColor: color, flexShrink: 0 }} />
+    <span style={{ fontSize: 36, color, whiteSpace: "nowrap", fontWeight: 600 }}>{text}</span>
+  </div>
+);
+
+/** 인라인 소형 막대 — 카드 내 비교 수치 */
+export const MiniBar: React.FC<{
+  value: number;
+  maxValue: number;
+  label?: string;
+  color?: string;
+  height?: number;
+  style?: React.CSSProperties;
+}> = ({ value, maxValue, label, color = C.accent, height = 12, style }) => {
+  const pct = maxValue > 0 ? Math.min((value / maxValue) * 100, 100) : 0;
+  return (
+    <div style={{ width: "100%", ...style }}>
+      {label && (
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 30, marginBottom: 4 }}>
+          <span style={{ color: C.textMuted }}>{label}</span>
+          <span style={{ color }}>{value}</span>
+        </div>
+      )}
+      <div style={{ width: "100%", height, backgroundColor: C.divider, borderRadius: height / 2, overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", backgroundColor: color, borderRadius: height / 2 }} />
+      </div>
     </div>
   );
 };

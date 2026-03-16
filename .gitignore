@@ -91,3 +91,29 @@ Thumbs.db
 # Misc temp files
 *.mp3
 !/auto_agent/remotion_template/public/assets/*.mp3
+.mcp.json
+
+# Dashboard data (프로젝트별 에셋 — 재생성 가능)
+auto_agent/dashboard/static/map_frames/
+auto_agent/dashboard/static/manifests/
+auto_agent/dashboard/static/manifest.json
+auto_agent/dashboard/static/iran_war_2026_manifest.json
+auto_agent/dashboard/static/images/
+auto_agent/dashboard/static/logos/
+auto_agent/dashboard/static/fonts/
+auto_agent/dashboard/static/geojson/
+auto_agent/dashboard/static/assets/
+.auto_agent/
+
+# Large built bundles (빌드로 재생성)
+auto_agent/dashboard/static/scene-editor.js
+
+# Backup files
+scene_specs.bak.*
+*.bak
+
+# Sample scripts
+sampleScript/
+
+# Misc docs
+수정계획안.md

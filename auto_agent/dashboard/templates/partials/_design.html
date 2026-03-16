@@ -1,0 +1,416 @@
+<!-- Design System — 테마·컬러·애니메이션 프리셋 관리 -->
+<div class="design-page">
+  <div class="design-header">
+    <h2>Design System</h2>
+    <p class="design-desc">테마, 컬러, 애니메이션 설정을 프리셋으로 저장하고 프로젝트에 적용합니다.</p>
+  </div>
+
+  <div class="design-layout">
+    <!-- ── 좌: 프리셋 목록 ── -->
+    <div class="design-sidebar">
+      <div class="design-sidebar-header">
+        <h3>프리셋</h3>
+        <button class="btn-sm btn-accent" onclick="newPreset()">+ 새 프리셋</button>
+      </div>
+      <div id="preset-list" class="preset-list">
+        <div class="loading-text">로딩 중...</div>
+      </div>
+    </div>
+
+    <!-- ── 우: 편집 영역 ── -->
+    <div class="design-editor">
+      <div id="editor-area">
+        <div class="editor-placeholder">
+          <div class="placeholder-icon">🎨</div>
+          <p>좌측에서 프리셋을 선택하거나 새로 만드세요</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.design-page { padding: 20px 24px; }
+.design-header h2 { margin: 0 0 4px; font-size: 18px; }
+.design-desc { color: var(--text-muted); font-size: 12px; margin: 0 0 16px; }
+
+.design-layout { display: flex; gap: 16px; height: calc(90vh - 140px); }
+
+/* 프리셋 목록 */
+.design-sidebar { flex: 0 0 240px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+.design-sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.design-sidebar-header h3 { margin: 0; font-size: 13px; }
+.preset-list { flex: 1; overflow-y: auto; padding: 6px; }
+
+.preset-card { padding: 8px 10px; border-radius: 6px; cursor: pointer; margin-bottom: 4px; transition: background 0.15s; border: 1px solid transparent; }
+.preset-card:hover { background: rgba(255,255,255,0.04); }
+.preset-card.active { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.3); }
+.preset-card-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+.preset-card-desc { font-size: 10px; color: var(--text-muted); }
+.preset-badge { font-size: 8px; background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 3px; color: var(--text-muted); }
+
+/* 편집 영역 */
+.design-editor { flex: 1; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; overflow-y: auto; }
+
+.editor-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); }
+.placeholder-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+
+/* 편집 폼 */
+.design-form { padding: 16px 20px; }
+.design-form-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.design-form-header h3 { margin: 0; font-size: 15px; }
+.design-form-actions { display: flex; gap: 6px; }
+
+.form-section { margin-bottom: 20px; }
+.form-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent, #F59E0B); margin-bottom: 10px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-group { display: flex; flex-direction: column; gap: 3px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-label { font-size: 10px; color: var(--text-muted); }
+.form-input, .form-select {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px; color: #E4E4E7; font-size: 12px; padding: 6px 8px; outline: none;
+  width: 100%; box-sizing: border-box;
+}
+.form-select { cursor: pointer; }
+.form-input:focus, .form-select:focus { border-color: rgba(245,158,11,0.4); }
+.form-input[type="color"] { height: 32px; padding: 2px 4px; cursor: pointer; }
+.form-input[type="range"] { accent-color: var(--accent, #F59E0B); }
+
+/* 프리뷰 그리드 */
+.preview-section { margin-top: 16px; }
+.preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.preview-chip {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px; padding: 10px; text-align: center; font-size: 11px;
+}
+.preview-chip-label { font-size: 9px; color: var(--text-muted); margin-top: 4px; }
+.preview-swatch { width: 100%; height: 28px; border-radius: 4px; margin-bottom: 4px; }
+
+/* 버튼 */
+.btn-sm { font-size: 11px; padding: 4px 10px; border-radius: 4px; cursor: pointer; border: none; }
+.btn-accent { background: var(--accent, #F59E0B); color: #000; font-weight: 600; }
+.btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #ccc; }
+.btn-outline:hover { background: rgba(255,255,255,0.05); }
+.btn-danger { background: rgba(239,68,68,0.15); color: #EF4444; border: 1px solid rgba(239,68,68,0.2); }
+.btn-apply { background: #22C55E; color: #000; font-weight: 600; }
+
+.status-msg { font-size: 11px; text-align: center; margin-top: 8px; }
+.status-ok { color: #22C55E; }
+.status-err { color: #EF4444; }
+</style>
+
+<script>
+(function() {
+  var SLUG = '{{ slug }}';
+  var _presets = [];
+  var _activeId = null;
+
+  function _esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function _v(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+  function _def(val, fallback) { return (val !== null && val !== undefined) ? val : fallback; }
+
+  // ── 프리셋 목록 로드 ──
+  window.loadPresets = function() {
+    fetch('/api/design-presets')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        _presets = data.presets || [];
+        _renderPresetList();
+      })
+      .catch(function(e) { console.error('preset load error', e); });
+  };
+
+  function _renderPresetList() {
+    var html = '';
+    _presets.forEach(function(p) {
+      var active = p._id === _activeId ? ' active' : '';
+      html += '<div class="preset-card' + active + '" data-pid="' + p._id + '">'
+        + '<div class="preset-card-name">' + _esc(p.name)
+        + (p.builtin ? '<span class="preset-badge">내장</span>' : '')
+        + '</div>'
+        + '<div class="preset-card-desc">' + _esc(p.description || '') + '</div>'
+        + '</div>';
+    });
+    var el = document.getElementById('preset-list');
+    if (el) {
+      el.innerHTML = html || '<div class="loading-text">프리셋 없음</div>';
+      // 이벤트 위임으로 클릭 처리
+      el.onclick = function(e) {
+        var card = e.target.closest('.preset-card');
+        if (card) window.selectPreset(card.getAttribute('data-pid'));
+      };
+    }
+  }
+
+  // ── 프리셋 선택 ──
+  window.selectPreset = function(id) {
+    _activeId = id;
+    _renderPresetList();
+    var p = _presets.find(function(x) { return x._id === id; });
+    if (p) _renderEditor(p);
+  };
+
+  // ── 새 프리셋 ──
+  window.newPreset = function() {
+    _activeId = null;
+    _renderPresetList();
+    _renderEditor({
+      _id: null, name: '', description: '', builtin: false,
+      global: { videoTheme: 'dark', artStyle: '', accentColor: '#F59E0B', vizFont: 'Pretendard' },
+      defaults: { mood: 'dramatic', reveal: 'stagger', emphasis: 'keyword', layout: '', imagePlacement: 'background', imageOpacity: 0.35 },
+      animation: { stagger: 8, itemDuration: 20, easing: 'easeOut', titleFadeIn: 15 },
+    });
+  };
+
+  // ── 편집 폼 렌더 ──
+  function _renderEditor(p) {
+    var g = p.global || {};
+    var d = p.defaults || {};
+    var a = p.animation || {};
+    var ro = !!p.builtin;  // readonly for builtin
+
+    var html = '<div class="design-form">'
+      + '<div class="design-form-header">'
+      + '<h3>' + (p.name ? _esc(p.name) : '새 프리셋') + '</h3>'
+      + '<div class="design-form-actions">';
+
+    if (ro) {
+      html += '<button class="btn-sm btn-outline" id="btn-fork">복제하여 편집</button>';
+    } else {
+      html += '<button class="btn-sm btn-accent" id="btn-save">저장</button>';
+      if (p._id) html += '<button class="btn-sm btn-danger" id="btn-del" data-pid="' + p._id + '">삭제</button>';
+    }
+    html += '<button class="btn-sm btn-apply" id="btn-apply" data-pid="' + (p._id || '') + '">프로젝트 적용</button>';
+    html += '</div></div>';
+
+    // 이름/설명
+    html += '<div class="form-section">'
+      + '<div class="form-section-title">기본 정보</div>'
+      + '<div class="form-grid">'
+      + _fmtInput('preset-name', '프리셋 이름', p.name || '', ro)
+      + _fmtInput('preset-desc', '설명', p.description || '', ro, 'full')
+      + '</div></div>';
+
+    // 글로벌 설정
+    html += '<div class="form-section">'
+      + '<div class="form-section-title">글로벌 설정</div>'
+      + '<div class="form-grid">'
+      + _fmtSelect('g-theme', '테마', g.videoTheme || 'dark', [['dark','Dark'],['white','White']], ro)
+      + _fmtSelect('g-artStyle', '아트스타일', g.artStyle || '', [['','없음'],['semoji','Semoji'],['lego','Lego'],['quirky_cartoon','Quirky Cartoon'],['stickman_cute','Stickman Cute']], ro)
+      + _fmtColor('g-accent', '액센트 색상', g.accentColor || '#F59E0B', ro)
+      + _fmtInput('g-font', '시각화 폰트', g.vizFont || 'Pretendard', ro)
+      + '</div></div>';
+
+    // 씬 기본값
+    var moods = [['dramatic','Dramatic'],['contemplative','Contemplative'],['urgent','Urgent'],
+      ['triumphant','Triumphant'],['somber','Somber'],['informative','Informative'],['suspense','Suspense']];
+    var reveals = [['fade_in','Fade In'],['stagger','Stagger'],['stagger_then_flash','Stagger+Flash'],
+      ['cascade','Cascade'],['count_up','Count Up'],['typewriter','Typewriter'],
+      ['spotlight','Spotlight'],['split_reveal','Split Reveal'],['zoom_in','Zoom In'],
+      ['build_up','Build Up'],['dramatic_pause','Dramatic Pause'],['parallel','Parallel']];
+    var emphases = [['number','Number'],['keyword','Keyword'],['count','Count'],['contrast','Contrast'],
+      ['sequence','Sequence'],['person','Person'],['quote','Quote'],['none','None']];
+    var layouts = [['','자동 (데이터 기반)'],
+      ['headline_only','Headline Only'],['items_grid','Items Grid'],['items_list','Items List'],
+      ['person_card','Person Card'],['counter','Counter'],['quote','Quote'],['split','Split'],
+      ['bar','Bar'],['logo_grid','Logo Grid'],['pie','Pie'],['line','Line'],
+      ['flow','Flow'],['timeline','Timeline'],['metric_spotlight','Metric Spotlight'],
+      ['metric_wall','Metric Wall'],['rank_list','Rank List'],['comparison_table','Comparison Table'],
+      ['before_after','Before After'],['icon_stat','Icon Stat'],['stacked_progress','Stacked Progress'],
+      ['card_carousel','Card Carousel'],['hero_with_context','Hero+Context'],
+      ['quote_portrait','Quote Portrait'],['annotated_chart','Annotated Chart']];
+    var placements = [['background','Background'],['fullscreen','Fullscreen'],['center','Center'],
+      ['left','Left'],['right','Right'],['inline','Inline']];
+
+    html += '<div class="form-section">'
+      + '<div class="form-section-title">씬 기본값</div>'
+      + '<div class="form-grid">'
+      + _fmtSelect('d-mood', 'Mood', d.mood || 'informative', moods, ro)
+      + _fmtSelect('d-reveal', 'Reveal', d.reveal || 'fade_in', reveals, ro)
+      + _fmtSelect('d-emphasis', 'Emphasis', d.emphasis || 'none', emphases, ro)
+      + _fmtSelect('d-layout', '기본 Layout', d.layout || '', layouts, ro)
+      + _fmtSelect('d-placement', '이미지 배치', d.imagePlacement || 'background', placements, ro)
+      + _fmtRange('d-opacity', '이미지 투명도', _def(d.imageOpacity, 0.35), 0, 1, 0.05, ro)
+      + '</div></div>';
+
+    // 애니메이션
+    var easings = [['easeOut','Ease Out'],['easeInOut','Ease In-Out'],['linear','Linear'],['easeIn','Ease In'],['bounce','Bounce']];
+    html += '<div class="form-section">'
+      + '<div class="form-section-title">애니메이션</div>'
+      + '<div class="form-grid">'
+      + _fmtRange('a-stagger', 'Stagger (프레임)', _def(a.stagger, 8), 2, 20, 1, ro)
+      + _fmtRange('a-itemDur', 'Item Duration (프레임)', _def(a.itemDuration, 20), 5, 60, 1, ro)
+      + _fmtSelect('a-easing', 'Easing', a.easing || 'easeOut', easings, ro)
+      + _fmtRange('a-titleFade', 'Title Fade In (프레임)', _def(a.titleFadeIn, 15), 5, 40, 1, ro)
+      + '</div></div>';
+
+    // 프리뷰
+    var accentHex = g.accentColor || '#F59E0B';
+    var themeBg = g.videoTheme === 'white' ? '#FAFAFA' : '#0A0A0A';
+    var themeFg = g.videoTheme === 'white' ? '#1A1A2E' : '#fff';
+    html += '<div class="form-section preview-section">'
+      + '<div class="form-section-title">프리뷰</div>'
+      + '<div id="preview-grid" class="preview-grid">'
+      + '<div class="preview-chip"><div class="preview-swatch" style="background:' + accentHex + '"></div>액센트<div class="preview-chip-label">' + _esc(accentHex) + '</div></div>'
+      + '<div class="preview-chip"><div class="preview-swatch" style="background:' + themeBg + ';display:flex;align-items:center;justify-content:center;font-size:10px;color:' + themeFg + '">' + _esc(g.videoTheme || 'dark') + '</div>테마</div>'
+      + '<div class="preview-chip"><div class="preview-swatch" style="background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:10px">' + _esc(d.mood || 'informative') + '</div>무드</div>'
+      + '</div></div>';
+
+    html += '<div id="design-status"></div>';
+    html += '</div>';
+
+    var area = document.getElementById('editor-area');
+    if (area) area.innerHTML = html;
+
+    // 버튼 이벤트 바인딩 (onclick 대신 addEventListener)
+    _bind('btn-save', 'click', function() { window.savePreset(); });
+    _bind('btn-del', 'click', function() { window.deletePreset(this.getAttribute('data-pid')); });
+    _bind('btn-apply', 'click', function() { window.applyPreset(this.getAttribute('data-pid')); });
+    _bind('btn-fork', 'click', function() { _forkBuiltin(p); });
+
+    // 실시간 프리뷰 업데이트
+    _bind('g-accent', 'input', _updatePreview);
+    _bind('g-theme', 'change', _updatePreview);
+    _bind('d-mood', 'change', _updatePreview);
+  }
+
+  function _bind(id, evt, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener(evt, fn);
+  }
+
+  function _updatePreview() {
+    var accent = _v('g-accent') || '#F59E0B';
+    var theme = _v('g-theme') || 'dark';
+    var mood = _v('d-mood') || 'informative';
+    var bg = theme === 'white' ? '#FAFAFA' : '#0A0A0A';
+    var fg = theme === 'white' ? '#1A1A2E' : '#fff';
+    var el = document.getElementById('preview-grid');
+    if (el) {
+      el.innerHTML = ''
+        + '<div class="preview-chip"><div class="preview-swatch" style="background:' + accent + '"></div>액센트<div class="preview-chip-label">' + _esc(accent) + '</div></div>'
+        + '<div class="preview-chip"><div class="preview-swatch" style="background:' + bg + ';display:flex;align-items:center;justify-content:center;font-size:10px;color:' + fg + '">' + _esc(theme) + '</div>테마</div>'
+        + '<div class="preview-chip"><div class="preview-swatch" style="background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:10px">' + _esc(mood) + '</div>무드</div>';
+    }
+  }
+
+  // 내장 프리셋 복제
+  function _forkBuiltin(p) {
+    _activeId = null;
+    _renderPresetList();
+    _renderEditor({
+      _id: null, name: p.name + ' (커스텀)', description: p.description, builtin: false,
+      global: JSON.parse(JSON.stringify(p.global || {})),
+      defaults: JSON.parse(JSON.stringify(p.defaults || {})),
+      animation: JSON.parse(JSON.stringify(p.animation || {})),
+    });
+  }
+
+  // ── 폼 헬퍼 ──
+  function _fmtInput(id, label, val, disabled, cls) {
+    return '<div class="form-group' + (cls ? ' ' + cls : '') + '">'
+      + '<span class="form-label">' + label + '</span>'
+      + '<input class="form-input" id="' + id + '" value="' + _esc(String(val)) + '"' + (disabled ? ' readonly' : '') + '>'
+      + '</div>';
+  }
+  function _fmtSelect(id, label, val, opts, disabled) {
+    var h = '<div class="form-group"><span class="form-label">' + label + '</span>'
+      + '<select class="form-select" id="' + id + '"' + (disabled ? ' disabled' : '') + '>';
+    opts.forEach(function(o) {
+      h += '<option value="' + o[0] + '"' + (o[0] === val ? ' selected' : '') + '>' + o[1] + '</option>';
+    });
+    return h + '</select></div>';
+  }
+  function _fmtColor(id, label, val, disabled) {
+    return '<div class="form-group"><span class="form-label">' + label + '</span>'
+      + '<input class="form-input" type="color" id="' + id + '" value="' + _esc(val) + '"' + (disabled ? ' disabled' : '') + '>'
+      + '</div>';
+  }
+  function _fmtRange(id, label, val, min, max, step, disabled) {
+    return '<div class="form-group"><span class="form-label">' + label + ' <b id="' + id + '-val">' + val + '</b></span>'
+      + '<input class="form-input" type="range" id="' + id + '" value="' + val + '" min="' + min + '" max="' + max + '" step="' + step + '"'
+      + (disabled ? ' disabled' : '') + '>'
+      + '</div>';
+  }
+
+  // range 값 표시 — 이벤트 위임
+  document.addEventListener('input', function(e) {
+    if (e.target.type === 'range') {
+      var lbl = document.getElementById(e.target.id + '-val');
+      if (lbl) lbl.textContent = e.target.value;
+    }
+  });
+
+  // ── 폼 수집 ──
+  function _collectForm() {
+    return {
+      name: _v('preset-name'),
+      description: _v('preset-desc'),
+      global: { videoTheme: _v('g-theme'), artStyle: _v('g-artStyle'), accentColor: _v('g-accent'), vizFont: _v('g-font') },
+      defaults: { mood: _v('d-mood'), reveal: _v('d-reveal'), emphasis: _v('d-emphasis'), layout: _v('d-layout'), imagePlacement: _v('d-placement'), imageOpacity: parseFloat(_v('d-opacity')) },
+      animation: { stagger: parseInt(_v('a-stagger')), itemDuration: parseInt(_v('a-itemDur')), easing: _v('a-easing'), titleFadeIn: parseInt(_v('a-titleFade')) },
+    };
+  }
+
+  // ── 저장 ──
+  window.savePreset = function() {
+    var data = _collectForm();
+    if (!data.name) { _showStatus('이름을 입력하세요', true); return; }
+    var method = _activeId ? 'PUT' : 'POST';
+    var url = _activeId ? '/api/design-presets/' + _activeId : '/api/design-presets';
+    fetch(url, { method: method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) })
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        if (res.ok) {
+          _showStatus('저장 완료');
+          if (res._id) _activeId = res._id;
+          window.loadPresets();
+        } else { _showStatus(res.error || '저장 실패', true); }
+      })
+      .catch(function(e) { _showStatus('오류: ' + e.message, true); });
+  };
+
+  // ── 삭제 ──
+  window.deletePreset = function(id) {
+    if (!confirm('프리셋을 삭제하시겠습니까?')) return;
+    fetch('/api/design-presets/' + id, { method: 'DELETE' })
+      .then(function(r) { return r.json(); })
+      .then(function() {
+        _activeId = null;
+        var area = document.getElementById('editor-area');
+        if (area) area.innerHTML = '<div class="editor-placeholder"><div class="placeholder-icon">🎨</div><p>프리셋을 선택하세요</p></div>';
+        window.loadPresets();
+      });
+  };
+
+  // ── 프로젝트에 적용 ──
+  window.applyPreset = function(id) {
+    if (!id) { _showStatus('먼저 프리셋을 저장하세요', true); return; }
+    var applyAll = confirm('모든 씬에 강제 적용하시겠습니까?\n\n확인: 모든 씬 덮어쓰기\n취소: 빈 값만 채우기');
+    fetch('/api/p/' + SLUG + '/apply-preset', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ preset_id: id, apply_all: applyAll })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.ok) { _showStatus(res.scenes_updated + '개 씬에 적용 완료'); }
+      else { _showStatus(res.error || '적용 실패', true); }
+    })
+    .catch(function(e) { _showStatus('오류: ' + e.message, true); });
+  };
+
+  function _showStatus(msg, isErr) {
+    var el = document.getElementById('design-status');
+    if (el) {
+      el.className = 'status-msg ' + (isErr ? 'status-err' : 'status-ok');
+      el.textContent = msg;
+      setTimeout(function() { el.textContent = ''; }, 3000);
+    }
+  }
+
+  // 초기 로드
+  window.loadPresets();
+})();
+</script>

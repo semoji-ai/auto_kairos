@@ -1,3 +1,8 @@
+---
+name: tts-verification
+description: Use when verifying TTS audio output quality through hybrid automated and manual checks
+---
+
 # TTS Verification (하이브리드 검증)
 
 Gemini 음성 인식으로 TTS 오디오를 재트랜스크립션하여 원본 나레이션과 비교.

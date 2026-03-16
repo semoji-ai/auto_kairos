@@ -3,12 +3,73 @@
   <div class="scene-detail-header">
     <h2>Scene {{ scene.sceneNumber }} — {{ scene.title }}</h2>
     <span class="ch-tag">Ch{{ scene.chapter }}</span>
-    <span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 30) }}s &middot; {{ scene.durationFrames }}f</span>
+    {% if scene._tts_duration %}<span class="duration-tag">{{ "%.1f"|format(scene._tts_duration) }}s</span>{% else %}<span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 60) }}s</span>{% endif %}
+    <!-- 탭 전환 -->
+    <div class="scene-tab-bar" style="margin-left:auto;display:flex;gap:4px">
+      <button class="scene-tab" data-tab="editor" onclick="switchSceneTab('editor',this)">편집</button>
+      <button class="scene-tab" data-tab="info" onclick="switchSceneTab('info',this)">정보</button>
+    </div>
   </div>
 
+  <div id="info-tab" style="display:none">
   {% if scene._image_url %}
   <div class="section">
-    <img src="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }}" class="detail-image">
+    <img src="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }}" class="detail-image" id="main-scene-image">
+    {% if scene.imageAsset and scene.imageAsset.source in ('wikimedia', 'search') %}
+    <div class="image-candidates" id="image-candidates" data-slug="{{ slug }}" data-scene="{{ scene.sceneNumber }}">
+      <div class="candidates-header">
+        <h5>검색 후보</h5>
+        <span class="candidates-loading" id="candidates-loading">로딩중...</span>
+      </div>
+      <div class="candidates-grid" id="candidates-grid"></div>
+    </div>
+    <script>
+    (function(){
+      const slug = '{{ slug }}';
+      const sceneNum = {{ scene.sceneNumber }};
+      const grid = document.getElementById('candidates-grid');
+      const loading = document.getElementById('candidates-loading');
+
+      fetch('/api/p/' + slug + '/scene/' + sceneNum + '/image-candidates')
+        .then(r => r.json())
+        .then(data => {
+          loading.style.display = 'none';
+          if (!data.candidates || data.candidates.length === 0) {
+            grid.innerHTML = '<span style="color:var(--text-muted);font-size:12px">후보 없음</span>';
+            return;
+          }
+          data.candidates.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'candidate-thumb' + (c.selected ? ' selected' : '');
+            div.title = (c.title || '') + (c.score ? ' (score: ' + c.score + ')' : '');
+            div.innerHTML = '<img src="' + c.url + '" alt="Rank ' + c.rank + '">'
+              + '<div class="candidate-info">'
+              + '<span class="candidate-rank">#' + c.rank + '</span>'
+              + (c.score ? '<span class="candidate-score">' + c.score + '점</span>' : '')
+              + (c.source ? '<span class="candidate-source">' + c.source + '</span>' : '')
+              + '</div>';
+            div.onclick = function() {
+              if (c.selected) return;
+              fetch('/api/p/' + slug + '/scene/' + sceneNum + '/select-image', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({rank: c.rank})
+              }).then(r => r.json()).then(res => {
+                if (res.ok) {
+                  document.getElementById('main-scene-image').src = res.image_url + '?t=' + Date.now();
+                  grid.querySelectorAll('.candidate-thumb').forEach(el => el.classList.remove('selected'));
+                  div.classList.add('selected');
+                  data.candidates.forEach(x => x.selected = (x.rank === c.rank));
+                }
+              });
+            };
+            grid.appendChild(div);
+          });
+        })
+        .catch(() => { loading.textContent = '로드 실패'; });
+    })();
+    </script>
+    {% endif %}
   </div>
   {% endif %}
 
@@ -111,4 +172,106 @@
     </table>
   </div>
   {% endif %}
+  </div><!-- /info-tab -->
+
+  <!-- ── 편집 탭 (React 마운트) ── -->
+  <div id="editor-tab" class="scene-editor-tab" style="height:calc(90vh - 100px)">
+    <div id="scene-editor-root" style="width:100%;height:100%"></div>
+  </div>
 </div>
+
+<style>
+.scene-tab-bar .scene-tab {
+  background: transparent; border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-muted); border-radius: 4px; padding: 3px 10px;
+  font-size: 11px; cursor: pointer; transition: all 0.15s;
+}
+.scene-tab-bar .scene-tab.active {
+  background: var(--accent, #F59E0B); color: #000; border-color: var(--accent, #F59E0B);
+  font-weight: 600;
+}
+</style>
+
+<script>
+function switchSceneTab(tab, btn) {
+  btn.parentElement.querySelectorAll('.scene-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+
+  var infoTab = document.getElementById('info-tab');
+  var editorTab = document.getElementById('editor-tab');
+
+  if (tab === 'editor') {
+    if (infoTab) infoTab.style.display = 'none';
+    if (editorTab) editorTab.style.display = 'block';
+    _tryMountEditor();
+  } else {
+    if (infoTab) infoTab.style.display = '';
+    if (editorTab) editorTab.style.display = 'none';
+  }
+}
+
+function _tryMountEditor() {
+  var editorTab = document.getElementById('editor-tab');
+  var root = document.getElementById('scene-editor-root');
+  if (!root) return;
+
+  // 이미 같은 씬+슬러그로 마운트되었으면 스킵
+  var sceneNum = {{ scene.sceneNumber }};
+  var slug = '{{ slug }}';
+  var key = slug + ':' + sceneNum;
+  if (editorTab.dataset.mountedKey === key) return;
+
+  // 기존 마운트 정리
+  if (window.unmountSceneEditor) window.unmountSceneEditor();
+
+  // scene-editor.js가 아직 로드 안 됐으면 대기
+  if (!window.mountSceneEditor) {
+    root.innerHTML = '<div style="padding:40px;color:#888;text-align:center;font-size:13px">에디터 로딩 중...</div>';
+    setTimeout(_tryMountEditor, 300);
+    return;
+  }
+
+  root.innerHTML = '<div style="padding:40px;color:#888;text-align:center;font-size:13px">씬 데이터 로딩 중...</div>';
+
+  // scene data + meta 병렬 fetch
+  Promise.all([
+    fetch('/api/p/' + slug + '/editor/scenes/' + sceneNum).then(function(r){ return r.json(); }),
+    fetch('/api/p/' + slug + '/manifest-meta').then(function(r){ return r.json(); }).catch(function(){ return {}; })
+  ]).then(function(results) {
+    var sceneResp = results[0];
+    var metaResp = results[1];
+
+    if (!sceneResp.scene) {
+      root.innerHTML = '<div style="padding:40px;color:#f66;text-align:center">씬 데이터 로드 실패: ' + (sceneResp.error || '') + '</div>';
+      return;
+    }
+
+    var fallbackMeta = { topic: '', resolution: {width:1920, height:1080}, fps: 30, subtitleFont: '', vizFont: 'Pretendard' };
+    window.__SCENE_EDITOR_DATA__ = {
+      scene: sceneResp.scene,
+      meta: metaResp.meta || fallbackMeta,
+      slug: slug
+    };
+    window.mountSceneEditor(root);
+    editorTab.dataset.mountedKey = key;
+  }).catch(function(err) {
+    root.innerHTML = '<div style="padding:40px;color:#f66;text-align:center">오류: ' + err.message + '</div>';
+  });
+}
+
+// scene-editor.js 로드 (한번만) + 기본 편집탭 자동 마운트
+(function() {
+  if (document.getElementById('scene-editor-script')) return;
+  var s = document.createElement('script');
+  s.id = 'scene-editor-script';
+  s.src = '/static/scene-editor.js?v=' + Date.now();
+  s.onload = function() { _tryMountEditor(); };
+  s.onerror = function() {
+    var r = document.getElementById('scene-editor-root');
+    if (r) r.innerHTML = '<div style="padding:40px;color:#f66;text-align:center;font-size:13px">scene-editor.js 로드 실패<br><small>remotion/ 에서 npm run build:editor 실행 필요</small></div>';
+  };
+  document.head.appendChild(s);
+})();
+// 이미 로드된 경우 즉시 마운트
+if (window.mountSceneEditor) _tryMountEditor();
+</script>

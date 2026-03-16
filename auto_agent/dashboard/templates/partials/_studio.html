@@ -1,17 +1,22 @@
-<!-- Remotion Studio 탭 — iframe으로 Remotion Studio 임베드 -->
+<!-- Studio 탭 — Remotion Studio 풀스크린 + 씬 편집 모달 -->
 <div class="studio-container" id="studio-container">
+  <!-- 상단 툴바 -->
   <div class="studio-toolbar">
     <div class="studio-status" id="studio-status">
       <span class="status-dot" id="studio-dot"></span>
       <span id="studio-status-text">프로젝트 설정 중...</span>
     </div>
     <div class="studio-actions">
-      <button class="btn btn-accent" id="studio-start-btn" onclick="startStudio()" style="display:none;">Studio 시작</button>
-      <button class="btn" id="studio-stop-btn" onclick="stopStudio()" style="display:none;">Studio 중지</button>
-      <a class="btn" id="studio-open-btn" href="http://localhost:3000" target="_blank" style="display:none;">새 창에서 열기</a>
+      <span style="font-size:11px;color:var(--text-muted)">S</span>
+      <input type="number" id="scene-num-input" min="1" value="1"
+        style="width:44px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;
+        color:var(--text);font-size:13px;font-weight:700;padding:2px 6px;text-align:center;outline:none;">
+      <button class="btn btn-sm btn-accent" id="btn-edit">편집</button>
+      <a class="btn btn-sm" id="studio-open-btn" target="_blank" style="display:none;">새 창</a>
     </div>
   </div>
 
+  <!-- Remotion Studio iframe (풀스크린) -->
   <div class="studio-frame-wrapper" id="studio-frame-wrapper" style="display:none;">
     <iframe id="studio-iframe" src="about:blank" class="studio-iframe" allow="autoplay"></iframe>
   </div>
@@ -19,121 +24,318 @@
   <div class="studio-placeholder" id="studio-placeholder">
     <div class="studio-placeholder-icon">&#9654;</div>
     <h3>Remotion Studio</h3>
-    <p>Remotion Studio를 시작하면 여기에서 실시간 미리보기를 확인할 수 있습니다.</p>
-    <button class="btn btn-accent" onclick="startStudio()">Studio 시작</button>
+    <p>매니페스트를 빌드하고 Studio를 시작합니다...</p>
   </div>
 </div>
 
+<!-- ── 편집 모달 (오버레이) ── -->
+<div class="edit-modal-overlay" id="edit-modal-overlay">
+  <div class="edit-modal" id="edit-modal">
+    <div class="edit-modal-header">
+      <div class="edit-modal-title" id="edit-modal-title">Scene 1</div>
+      <div class="edit-modal-actions">
+        <button class="btn-icon" id="modal-prev" title="이전 씬">&#8249;</button>
+        <button class="btn-icon" id="modal-next" title="다음 씬">&#8250;</button>
+        <button class="btn btn-sm btn-close" id="btn-close-modal">닫기 &times;</button>
+      </div>
+    </div>
+    <div class="edit-modal-body">
+      <div id="scene-editor-root" class="scene-editor-root"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ── 스튜디오 컨테이너 ── */
+.studio-container {
+  display: flex; flex-direction: column;
+  height: calc(100vh - 48px); min-height: 500px;
+}
+.studio-toolbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.studio-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+.status-dot.running { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.status-dot.stopped { background: var(--error); }
+
+.btn-icon {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 4px;
+  color: var(--text); font-size: 16px; padding: 1px 10px; cursor: pointer; line-height: 1;
+}
+.btn-icon:hover { background: var(--border); }
+.btn-icon:disabled { opacity: 0.3; cursor: default; }
+.studio-actions { display: flex; gap: 6px; }
+.btn-sm { font-size: 11px; padding: 3px 10px; }
+
+.studio-frame-wrapper { flex: 1; border-radius: 0 0 8px 8px; overflow: hidden; border: 1px solid var(--border); border-top: none; }
+.studio-iframe { width: 100%; height: 100%; border: none; background: #000; }
+
+.studio-placeholder {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  color: var(--text-muted); text-align: center;
+}
+.studio-placeholder-icon { font-size: 48px; color: var(--accent); opacity: 0.5; }
+.studio-placeholder h3 { font-size: 20px; color: var(--text); }
+.studio-placeholder p { max-width: 400px; font-size: 14px; }
+
+/* ── 편집 모달 ── */
+.edit-modal-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  align-items: center; justify-content: center;
+}
+.edit-modal-overlay.open { display: flex; }
+
+.edit-modal {
+  width: 92vw; height: 88vh;
+  background: #18181B; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+}
+.edit-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px; border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.edit-modal-title { font-size: 13px; font-weight: 600; color: var(--accent); }
+.edit-modal-actions { display: flex; align-items: center; gap: 6px; }
+.btn-close {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  color: #ccc; border-radius: 4px; cursor: pointer; font-size: 11px; padding: 3px 12px;
+}
+.btn-close:hover { background: rgba(239,68,68,0.15); color: #EF4444; border-color: rgba(239,68,68,0.3); }
+
+.edit-modal-body { flex: 1; overflow: hidden; }
+.edit-modal-body .scene-editor-root { width: 100%; height: 100%; }
+</style>
+
+<!-- scene-editor.js 번들 (일반 씬용) -->
+<script src="/static/scene-editor.js"></script>
+<!-- MapLibre GL JS (맵 에디터용 — Remotion과 동일 엔진) -->
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<!-- map-editor.js (맵 씬 전용) -->
+<script src="/static/map-editor.js"></script>
+
 <script>
-var _studioCheckTimer = null;
-var _studioSlug = '{{ slug }}';
+(function() {
+  var SLUG = '{{ slug }}';
+  var _studioPort = null;
+  var _scenes = [];
+  var _meta = null;
+  var _currentIdx = 0;
+  var _checkTimer = null;
+  var _dirty = false; // 모달에서 수정이 있었는지
 
-function updateStudioUI(data) {
-  var dot = document.getElementById('studio-dot');
-  var text = document.getElementById('studio-status-text');
-  var startBtn = document.getElementById('studio-start-btn');
-  var stopBtn = document.getElementById('studio-stop-btn');
-  var openBtn = document.getElementById('studio-open-btn');
-  var placeholder = document.getElementById('studio-placeholder');
-  var frameWrapper = document.getElementById('studio-frame-wrapper');
-  var iframe = document.getElementById('studio-iframe');
+  // DOM refs
+  var elDot = document.getElementById('studio-dot');
+  var elStatusText = document.getElementById('studio-status-text');
+  var elOpenBtn = document.getElementById('studio-open-btn');
+  var elPlaceholder = document.getElementById('studio-placeholder');
+  var elFrameWrapper = document.getElementById('studio-frame-wrapper');
+  var elIframe = document.getElementById('studio-iframe');
+  var elEdit = document.getElementById('btn-edit');
+  var elNumInput = document.getElementById('scene-num-input');
+  var elOverlay = document.getElementById('edit-modal-overlay');
+  var elModalTitle = document.getElementById('edit-modal-title');
+  var elRoot = document.getElementById('scene-editor-root');
+  var elModalPrev = document.getElementById('modal-prev');
+  var elModalNext = document.getElementById('modal-next');
+  var elCloseModal = document.getElementById('btn-close-modal');
 
-  if (!dot) return;
-
-  if (data.running) {
-    dot.className = 'status-dot running';
-    text.textContent = 'Studio 실행 중 — ' + _studioSlug + ' (port ' + data.port + ')';
-    startBtn.style.display = 'none';
-    stopBtn.style.display = '';
-    openBtn.style.display = '';
-    placeholder.style.display = 'none';
-    frameWrapper.style.display = '';
-    if (iframe.src === 'about:blank') {
-      iframe.src = 'http://localhost:' + data.port;
-    }
-    clearInterval(_studioCheckTimer);
-    _studioCheckTimer = setInterval(checkStudioStatus, 10000);
-  } else {
-    dot.className = 'status-dot stopped';
-    text.textContent = '중지됨';
-    startBtn.style.display = '';
-    stopBtn.style.display = 'none';
-    openBtn.style.display = 'none';
-    placeholder.style.display = '';
-    frameWrapper.style.display = 'none';
-    iframe.src = 'about:blank';
-  }
-}
-
-function checkStudioStatus() {
-  fetch('/api/studio/status')
-    .then(function(r) { return r.json(); })
-    .then(updateStudioUI)
-    .catch(function() {
-      var dot = document.getElementById('studio-dot');
-      var text = document.getElementById('studio-status-text');
-      if (dot) dot.className = 'status-dot stopped';
-      if (text) text.textContent = '상태 확인 실패';
-    });
-}
-
-function setupProject() {
-  // 탭 진입 시 자동으로 현재 프로젝트의 symlink + manifest 갈아끼우기
-  fetch('/api/studio/setup', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({slug: _studioSlug})
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
+  // ── Studio 상태 ──
+  function updateStudioUI(data) {
+    _studioPort = data.port;
     if (data.running) {
-      // Studio가 이미 실행 중 → iframe 새로고침으로 새 manifest 반영
-      var iframe = document.getElementById('studio-iframe');
-      if (iframe && iframe.src !== 'about:blank') {
-        iframe.src = iframe.src; // reload
-      }
-      updateStudioUI({running: true, port: 3000});
+      elDot.className = 'status-dot running';
+      elStatusText.textContent = 'Studio 실행 중 (port ' + data.port + ')';
+      elOpenBtn.style.display = '';
+      elOpenBtn.href = 'http://localhost:' + data.port;
+      elPlaceholder.style.display = 'none';
+      elFrameWrapper.style.display = '';
+      if (elIframe.src === 'about:blank') elIframe.src = 'http://localhost:' + data.port;
+      if (!_checkTimer) _checkTimer = setInterval(checkStatus, 15000);
     } else {
-      checkStudioStatus();
+      elDot.className = 'status-dot stopped';
+      elStatusText.textContent = '중지됨';
+      elOpenBtn.style.display = 'none';
     }
-  })
-  .catch(function() {
-    checkStudioStatus();
-  });
-}
+  }
 
-function startStudio() {
-  var btn = document.getElementById('studio-start-btn');
-  var placeholderBtn = document.querySelector('.studio-placeholder .btn');
-  if (btn) btn.disabled = true;
-  if (placeholderBtn) { placeholderBtn.disabled = true; placeholderBtn.textContent = '시작 중...'; }
+  function checkStatus() {
+    fetch('/api/studio/status').then(function(r) { return r.json(); }).then(updateStudioUI).catch(function() {});
+  }
 
-  fetch('/api/studio/start', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({slug: _studioSlug})
-    })
+  function autoStart() {
+    elStatusText.textContent = '매니페스트 빌드 중...';
+    fetch('/api/studio/setup', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({slug: SLUG}) })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.ok) {
-        setTimeout(checkStudioStatus, 3000);
+      if (data.running) {
+        if (elIframe.src !== 'about:blank') elIframe.src = elIframe.src;
+        updateStudioUI({running: true, port: data.port || _studioPort});
       } else {
-        alert('Studio 시작 실패: ' + (data.error || 'unknown'));
-        if (btn) btn.disabled = false;
-        if (placeholderBtn) { placeholderBtn.disabled = false; placeholderBtn.textContent = 'Studio 시작'; }
+        elStatusText.textContent = 'Studio 시작 중...';
+        fetch('/api/studio/start', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({slug: SLUG}) })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.ok) { setTimeout(checkStatus, 3000); _checkTimer = setInterval(checkStatus, 3000); }
+          else { elStatusText.textContent = 'Studio 시작 실패'; }
+        });
       }
-    });
-}
+    })
+    .catch(function() { checkStatus(); });
+  }
 
-function stopStudio() {
-  fetch('/api/studio/stop', { method: 'POST' })
-    .then(function(r) { return r.json(); })
-    .then(function() {
-      setTimeout(checkStudioStatus, 1000);
-    });
-}
+  // ── 씬 목록 ──
+  function loadScenes() {
+    fetch('/api/p/' + SLUG + '/editor/manifest-meta')
+      .then(function(r) { return r.json(); })
+      .then(function(data) { _meta = data.meta || null; })
+      .catch(function() {});
 
-// 탭 진입 시 자동 프로젝트 설정 → 상태 확인
-setupProject();
-_studioCheckTimer = setInterval(checkStudioStatus, 5000);
+    fetch('/api/p/' + SLUG + '/editor/scene-list')
+      .then(function(r) { return r.json(); })
+      .then(function(data) { _scenes = data.scenes || []; })
+      .catch(function() {});
+  }
+
+  function findIdxByNum(num) {
+    for (var i = 0; i < _scenes.length; i++) {
+      if ((_scenes[i].sceneNumber || (i+1)) === num) return i;
+    }
+    return -1;
+  }
+
+  function editByNum() {
+    var num = parseInt(elNumInput.value);
+    if (!num || num < 1) return;
+    var idx = findIdxByNum(num);
+    if (idx >= 0) { openModal(idx); }
+    else { openModal(Math.min(num - 1, _scenes.length - 1)); }
+  }
+
+  function updateNav() {
+    elModalPrev.disabled = _currentIdx <= 0;
+    elModalNext.disabled = _currentIdx >= _scenes.length - 1;
+    var num = (_scenes[_currentIdx] || {}).sceneNumber || (_currentIdx + 1);
+    elNumInput.value = num;
+  }
+
+  // ── 모달 열기/닫기 ──
+  function openModal(idx) {
+    if (idx < 0 || idx >= _scenes.length) return;
+    _currentIdx = idx;
+    _dirty = false;
+    updateNav();
+
+    var s = _scenes[idx];
+    var num = s.sceneNumber || (idx + 1);
+    var icon = s.hasMap ? '🌐 ' : '';
+    elModalTitle.textContent = icon + 'Scene ' + num + (s.title ? ' — ' + s.title.replace(/\{\{|\}\}/g, '').substring(0, 40) : '');
+
+    // 에디터 초기화
+    if (window.unmountSceneEditor) window.unmountSceneEditor();
+    if (window._mapEditorDestroy) { window._mapEditorDestroy(); window._mapEditorDestroy = null; }
+    elRoot.innerHTML = '<div style="padding:40px;text-align:center;color:#888">로딩 중...</div>';
+
+    // 씬 데이터 로드
+    fetch('/api/p/' + SLUG + '/editor/scenes/' + num)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.scene) return;
+
+        // mapScene 분기: 맵 에디터 vs 일반 에디터
+        if (data.scene.mapScene && data.scene.mapScene.mapType) {
+          if (window.renderMapEditor) {
+            window.renderMapEditor(elRoot, data.scene, num, SLUG, _meta);
+          } else {
+            elRoot.innerHTML = '<div style="padding:40px;text-align:center;color:#888">map-editor.js 로딩 중...</div>';
+            setTimeout(function() {
+              if (window.renderMapEditor) window.renderMapEditor(elRoot, data.scene, num, SLUG, _meta);
+            }, 1000);
+          }
+        } else {
+          window.__SCENE_EDITOR_DATA__ = {
+            scene: data.scene,
+            meta: _meta || { fps: 30, resolution: { width: 1920, height: 1080 }, subtitleFont: 'Pretendard', vizFont: 'Pretendard' },
+            slug: SLUG,
+          };
+          if (window.mountSceneEditor) window.mountSceneEditor(elRoot);
+        }
+      });
+
+    elOverlay.classList.add('open');
+  }
+
+  // 편집 버튼 → 씬 그리드 열기
+
+  function closeModal() {
+    elOverlay.classList.remove('open');
+    if (window.unmountSceneEditor) window.unmountSceneEditor();
+    if (window._mapEditorDestroy) { window._mapEditorDestroy(); window._mapEditorDestroy = null; }
+
+    if (_dirty) {
+      elStatusText.textContent = '매니페스트 재빌드 중...';
+      fetch('/api/p/' + SLUG + '/rebuild-manifest', { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(function() {
+          elStatusText.textContent = 'Studio 새로고침 중...';
+          loadScenes();
+          setTimeout(function() {
+            if (elIframe.src !== 'about:blank') elIframe.src = elIframe.src;
+            setTimeout(function() { elStatusText.textContent = 'Studio 실행 중 (port ' + _studioPort + ')'; }, 2000);
+          }, 1000);
+        });
+    }
+  }
+
+  // ── 모달 내 씬 전환 ──
+  function modalNav(delta) {
+    var newIdx = _currentIdx + delta;
+    if (newIdx >= 0 && newIdx < _scenes.length) {
+      // 현재 씬에 수정이 있었으면 dirty 유지
+      openModal(newIdx);
+    }
+  }
+
+  // ── 저장 이벤트 감지 ──
+  document.addEventListener('scene-editor-saved', function() {
+    _dirty = true;
+    loadScenes();
+  });
+
+  // ── 이벤트 바인딩 ──
+  elEdit.addEventListener('click', editByNum);
+  elNumInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') editByNum(); });
+
+  elModalPrev.addEventListener('click', function() { modalNav(-1); });
+  elModalNext.addEventListener('click', function() { modalNav(1); });
+  elCloseModal.addEventListener('click', closeModal);
+
+  // ESC 처리
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && elOverlay.classList.contains('open')) { closeModal(); return; }
+    if (elOverlay.classList.contains('open')) return;
+  });
+
+  // 편집 모달 바깥 클릭
+  elOverlay.addEventListener('click', function(e) { if (e.target === elOverlay) closeModal(); });
+
+  // ── Remotion Studio에서 현재 씬 자동 감지 (postMessage) ──
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'remotion-scene' && e.data.sceneNumber) {
+      elNumInput.value = e.data.sceneNumber;
+    }
+  });
+
+  // ── 초기화 ──
+  autoStart();
+  loadScenes();
+})();
 </script>

@@ -57,6 +57,7 @@ auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
 5. research_report.json을 입력으로 아웃라인 → 원고 작성
 6. **출력**: `output/{slug}/outline.json`, `output/{slug}/final_manuscript.md`
 7. 검증: 챕터 수, 씬 수, VIZ 마커 존재 확인
+8. **⚠️ VIZ 마커 주의**: `[VIZ:narration_only]` 사용 금지 — vizType 결정은 Phase 3(visual-composer)에서 수행
 → ✅ 원고 작성 완료. 다음 단계(팩트체크)를 진행합니다.
 
 ### Phase 2: 팩트체크 (Claude Code 직접 수행)

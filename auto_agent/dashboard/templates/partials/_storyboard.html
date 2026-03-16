@@ -6,22 +6,32 @@
   <button class="btn chapter-btn" onclick="filterStoryboard({{ ch }}, this)">Ch{{ ch }}</button>
   {% endfor %}
   <button class="btn chapter-btn" onclick="filterImages(this)">Images Only</button>
+  <button class="btn chapter-btn" id="gen-thumb-btn" onclick="generateThumbnails('{{ slug }}', this)" title="Remotion 캡처로 정확한 프리뷰 생성">Capture</button>
+  <span id="thumb-status" style="font-size:10px;color:var(--text-muted);margin-left:4px"></span>
+  <span class="sb-size-control">
+    <label>Size</label>
+    <input type="range" min="200" max="480" value="280" step="20" oninput="resizePreview(this.value)">
+  </span>
 </div>
 
 <div class="scene-list" id="scene-list">
   {% for scene in scenes %}
   <div class="sb-card" data-chapter="{{ scene.chapter }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
     <!-- 좌측: 미리보기 -->
-    <div class="sb-preview" onclick="openSceneDetail({{ project.id }}, {{ scene.sceneNumber }})">
-      {% if scene._image_url %}
+    <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
+      {% if scene._thumbnail_url %}
+      <img src="{{ scene._thumbnail_url }}" alt="Scene {{ scene.sceneNumber }}" class="sb-thumb" loading="lazy"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+      <div style="display:none">
+        {% if scene._preview_html %}{{ scene._preview_html|safe }}{% else %}<div class="sb-thumb-placeholder"><div class="concept-preview">Scene {{ scene.sceneNumber }}</div></div>{% endif %}
+      </div>
+      {% elif scene._preview_html %}
+      {{ scene._preview_html|safe }}
+      {% elif scene._image_url %}
       <img src="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }}" class="sb-thumb" loading="lazy">
       {% else %}
       <div class="sb-thumb-placeholder">
-        {% if scene.visualization and scene.visualization.creative %}
-        <div class="concept-preview">{{ (scene.visualization.creative.concept or '')[:100] }}{% if (scene.visualization.creative.concept or '')|length > 100 %}...{% endif %}</div>
-        {% else %}
         <div class="concept-preview">Scene {{ scene.sceneNumber }}</div>
-        {% endif %}
       </div>
       {% endif %}
     </div>
@@ -32,27 +42,21 @@
         <div class="sb-title">
           <span class="scene-num">Scene {{ scene.sceneNumber }}</span>
           <span class="ch-tag">Ch{{ scene.chapter }}</span>
-          <span class="sb-scene-title" data-headline>
-            {% if scene.visualization and scene.visualization.creative %}
-              {{ scene.visualization.creative.headline or scene.title }}
-            {% else %}
-              {{ scene.title }}
-            {% endif %}
-          </span>
+          <span class="sb-scene-title" data-headline>{{ scene.title }}</span>
         </div>
         <div class="sb-meta">
-          <span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 30) }}s</span>
-          {% if scene._tts_duration %}<span class="duration-tag">TTS {{ "%.1f"|format(scene._tts_duration) }}s</span>{% endif %}
+          {% if scene._tts_duration %}<span class="duration-tag">{{ "%.1f"|format(scene._tts_duration) }}s</span>{% else %}<span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 60) }}s</span>{% endif %}
         </div>
       </div>
 
-      {% if scene.visualization and scene.visualization.creative %}
       <div class="tags">
+        {% if scene._layout %}<span class="layout-badge{% if not scene._layout_explicit %} layout-inferred{% endif %}">{{ scene._layout }}</span>{% endif %}
+        {% if scene.visualization and scene.visualization.creative %}
         {% if scene.visualization.creative.reveal %}<span class="viz-badge">{{ scene.visualization.creative.reveal }}</span>{% endif %}
         {% if scene.visualization.creative.emphasis %}<span class="viz-badge">{{ scene.visualization.creative.emphasis }}</span>{% endif %}
         {% if scene.visualization.creative.mood %}<span class="mood-badge">{{ scene.visualization.creative.mood }}</span>{% endif %}
+        {% endif %}
       </div>
-      {% endif %}
 
       <div class="narration">{{ scene.narration }}</div>
 
@@ -97,17 +101,58 @@ function filterImages(btn) {
   }
 }
 
-function openSceneDetail(projectId, sceneNum) {
+function openSceneDetail(slug, sceneNum) {
   var overlay = document.getElementById('scene-detail-overlay');
   document.getElementById('scene-detail-content').innerHTML = '<div class="empty">Loading...</div>';
   overlay.classList.add('open');
-  htmx.ajax('GET', '/api/projects/' + projectId + '/storyboard/scene/' + sceneNum, {
+  htmx.ajax('GET', '/api/p/' + slug + '/storyboard/scene/' + sceneNum, {
     target: '#scene-detail-content', swap: 'innerHTML'
   });
 }
 
 function closeSceneDetail() {
   document.getElementById('scene-detail-overlay').classList.remove('open');
+}
+
+function resizePreview(val) {
+  document.getElementById('scene-list').style.setProperty('--sb-preview-w', val + 'px');
+}
+
+function generateThumbnails(slug, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Capturing...';
+  var status = document.getElementById('thumb-status');
+  status.textContent = '시작 중...';
+
+  fetch('/api/p/' + slug + '/generate-thumbnails', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === 'already_running') {
+        status.textContent = '이미 진행 중';
+      } else {
+        status.textContent = '생성 중... (1~2분 소요)';
+      }
+      // 폴링으로 상태 확인
+      var pollId = setInterval(function() {
+        fetch('/api/p/' + slug + '/thumbnails/status')
+          .then(function(r) { return r.json(); })
+          .then(function(s) {
+            status.textContent = s.count + '개 생성' + (s.running ? ' (진행중...)' : ' ✓');
+            if (!s.running) {
+              clearInterval(pollId);
+              btn.disabled = false;
+              btn.textContent = 'Capture';
+              // 페이지 새로고침하여 썸네일 반영
+              location.reload();
+            }
+          });
+      }, 3000);
+    })
+    .catch(function(e) {
+      status.textContent = '오류: ' + e.message;
+      btn.disabled = false;
+      btn.textContent = 'Capture';
+    });
 }
 </script>
 {% else %}

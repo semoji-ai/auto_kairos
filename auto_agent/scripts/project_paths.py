@@ -143,6 +143,14 @@ def get_motion_plan_path() -> Path:
 def get_manifest_path() -> Path:
     """manifest.json 출력 경로. DB 모드: manifests/{slug}.json, 레거시: manifest.json."""
     workspace = get_workspace_dir()
+
+    # --project CLI 인자에서 slug 추출 (rebuild-manifest 호출 시)
+    for i, arg in enumerate(sys.argv):
+        if arg == "--project" and i + 1 < len(sys.argv):
+            project_dir = Path(sys.argv[i + 1])
+            slug = project_dir.name
+            return workspace / "remotion" / "public" / "manifests" / f"{slug}.json"
+
     result = _try_db_project()
     if result:
         project_dir, pid = result

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { interpolate, useCurrentFrame } from "remotion";
 import type { MapMarker, MapLabel } from "../types/manifest";
 import type { CameraState } from "./cameraInterpolation";
@@ -10,7 +10,7 @@ import type { MarkerShape, TitleLayout, LabelStyle } from "./mapTheme";
    좌표 → 픽셀 변환
    ══════════════════════════════════════════════ */
 
-function lngLatToPixel(
+export function lngLatToPixel(
   lngLat: [number, number],
   camera: CameraState,
   width: number,
@@ -147,12 +147,15 @@ export const MarkerOverlay: React.FC<MarkerOverlayProps> = ({
   const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
 
   // 모든 마커의 픽셀 좌표를 미리 계산
-  const positions = markers.map((m) => lngLatToPixel(m.coordinates, camera, width, height));
+  const positions = useMemo(
+    () => markers.map((m) => lngLatToPixel(m.coordinates, camera, width, height)),
+    [markers, camera, width, height],
+  );
 
   // 라벨 위치 자동 결정 — 그리디 배치: 마커 중심 + 이미 배치된 라벨 모두 고려
   type Rect = { x1: number; y1: number; x2: number; y2: number };
   type Dir = "top" | "bottom" | "left" | "right";
-  const labelDirs = (() => {
+  const labelDirs = useMemo(() => {
     const LABEL_W = 100;
     const LABEL_H = 36;
     const MARKER_R = 22;
@@ -217,7 +220,7 @@ export const MarkerOverlay: React.FC<MarkerOverlayProps> = ({
       placedRects.push(makeRect(positions[i].x, positions[i].y, bestDir));
     }
     return dirs;
-  })();
+  }, [markers, positions]);
 
   return (
     <>
@@ -295,6 +298,9 @@ export const MarkerOverlay: React.FC<MarkerOverlayProps> = ({
                   fontFamily: mt.labelFontFamily ?? "'Pretendard', sans-serif",
                   whiteSpace: "nowrap",
                   boxShadow: mt.labelShadow,
+                  textShadow: mt.labelBg === "transparent"
+                    ? "0 1px 4px rgba(0,0,0,0.7), 0 0 8px rgba(0,0,0,0.4)"
+                    : undefined,
                   opacity: labelOpacity,
                 }}
               >

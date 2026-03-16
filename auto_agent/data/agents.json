@@ -51,6 +51,10 @@
       "max_turns": 60,
       "allowed_tools": ["Read", "Write", "Glob"],
       "skills": ["shared/creative-direction", "shared/remotion-design-system", "shared/scene-segmentation", "shared/motion-rhythm", "shared/data-mapping", "shared/chart-mapping", "shared/asset-advisory"],
+      "skill_refs": {
+        "creative-direction": ["patterns", "process", "examples-palette"],
+        "asset-advisory": ["perspectives", "cross-review", "examples"]
+      },
       "notes": "핵심 창작 에이전트. 5단계 순차 실행: (1) 씬 분할→scene_decomposition.json, (2) Creative Direction→scene_specs.json, (2.5) Asset Advisory→차트/아이콘/국기/로고/이미지 추천, (3) 데이터 보강→scene_specs.json 업데이트, (4) 모션 설계→motion_plan.json"
     }
   },
@@ -164,6 +168,10 @@
     "max_turns": 25,
     "allowed_tools": ["Read", "Write", "Glob"],
     "skills": ["shared/remotion-design-system", "shared/writing-style", "shared/creative-direction", "shared/scene-segmentation", "shared/motion-rhythm", "shared/data-mapping"],
+    "skill_refs": {
+      "creative-direction": [],
+      "asset-advisory": []
+    },
     "review_targets": [
       "씬 스펙 ↔ 실제 렌더링 일치 검증",
       "아이콘명 유효성 (Lucide 존재 여부)",
@@ -191,6 +199,26 @@
     "model": "claude-sonnet-4-5-20250929",
     "type": "background_task",
     "notes": "Research Orchestrator가 background_task()로 배포"
+  },
+
+  "single_call_config": {
+    "_comment": "3계층 실행 모델: agent(CLI 멀티턴) → single_call(API 1회) → module(Python)",
+    "description": "에이전트 루프 없이 LLM 1회 호출로 완료되는 스텝. 입력 파일을 프롬프트에 주입하고, 출력 JSON을 파싱하여 저장.",
+    "current_mode": "cli_fallback",
+    "steps": {
+      "step_4":  {"model": "claude-opus-4-6", "reason": "원고+리서치 교차검증은 깊은 추론 필요"},
+      "step_5":  {"model": "claude-opus-4-6", "reason": "원고→씬 분할은 구조적 창작 판단"},
+      "step_5b": {"model": "claude-sonnet-4-5-20250929", "reason": "캐릭터 추출은 구조화된 작업"},
+      "step_6":  {"model": "claude-opus-4-6", "reason": "Creative Direction은 핵심 창작"},
+      "step_6b": {"model": "claude-opus-4-6", "reason": "4관점 심의는 복합 판단 필요"},
+      "step_6c": {"model": "claude-opus-4-6", "reason": "데이터 보강+모션 설계는 정밀 작업"},
+      "step_11b":{"model": "claude-opus-4-6", "reason": "시각적 QA는 세밀한 검증 필요"},
+      "step_12b":{"model": "claude-sonnet-4-5-20250929", "reason": "메타데이터 검증은 구조화된 작업"}
+    },
+    "estimated_savings": {
+      "time": "에이전트 대비 ~70% 단축 (도구 루프 제거)",
+      "cost": "에이전트 대비 ~50% 절감 (시스템프롬프트+도구정의 재전송 제거)"
+    }
   },
 
   "model_selection_rationale": {

@@ -55,6 +55,10 @@ export interface SceneManifest {
     subtitleFont: string;
     vizFont: string;
     designTokens?: DesignTokens;
+    /** 비디오 테마 ("dark" = 다크 기본, "white" = 화이트 라이트) */
+    videoTheme?: "dark" | "white";
+    /** 아트스타일 (accent 색상 결정) */
+    artStyle?: string;
   };
   scenes: SceneEntry[];
   bgm: BGMConfig | null;
@@ -79,8 +83,9 @@ export interface SceneEntry {
 
   /** 이미지 에셋 배치 정보 (placement + opacity) */
   imageAsset?: {
-    placement: "background" | "left" | "right";
+    placement: "fullscreen" | "background" | "center" | "left" | "right" | "inline";
     opacity: number;
+    itemImages?: boolean;
   };
 
   /** 시각화 씬의 아트스타일 배경 이미지 경로 (하이브리드 viz) */
@@ -116,7 +121,7 @@ export interface CreativeDirection {
 }
 
 export interface VisualizationData {
-  /** @deprecated v4.0에서 제거됨. 렌더링은 creative 필드 기반. 하위 호환용으로만 존재. */
+  /** 시각화 타입 힌트 (optional — 렌더링은 creative 필드 기반) */
   vizType?: string;
   title: string;
   items: string[];
@@ -187,7 +192,9 @@ export interface MapLabel {
 
 export interface MapSceneData {
   mapType: "location_reveal" | "route_animation" | "territory_overlay" | "fly_through";
-  mapStyle?: "modern_clean" | "historical" | "dark_cyber" | "satellite";
+  mapStyle?: "modern_clean" | "historical" | "dark_cyber" | "satellite"
+    | "vintage_parchment" | "minimal_light" | "dark_elegant" | "blueprint"
+    | "warm_earth" | "matte_slate" | "clean_white";
   title?: string;
   source?: string;
 
@@ -201,8 +208,21 @@ export interface MapSceneData {
   territories?: TerritoryData[];
   labels?: MapLabel[];
 
-  /** 프리렌더 프레임 디렉토리 (예: "map_frames/scene_5") — staticFile 기준 상대경로 */
+  /** 프리렌더 프레임 디렉토리 (예: "map_frames/scene_5") — staticFile 기준 상대경로 (레거시) */
   prerenderedFramesDir?: string;
+
+  /** 프리렌더 배경 이미지 (씬당 1장 고해상도 스크린샷) */
+  prerenderedBg?: {
+    /** 배경 이미지 경로 (staticFile 기준 상대경로, 예: "map_frames/scene_5/bg.png") */
+    imagePath: string;
+    /** 스크린샷 캡처 시점의 카메라 상태 */
+    cameraState: {
+      center: [number, number];
+      zoom: number;
+      bearing: number;
+      pitch: number;
+    };
+  };
 }
 
 export interface KenBurnsConfig {

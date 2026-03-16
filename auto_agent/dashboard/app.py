@@ -5,7 +5,7 @@ FastAPI + Jinja2 + htmx + xterm.js.
 import asyncio
 import json
 import os
-import pty
+import platform
 import select
 import socket
 import subprocess
@@ -13,8 +13,13 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+IS_WINDOWS = platform.system() == "Windows"
+
+if not IS_WINDOWS:
+    import pty
+
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -22,6 +27,7 @@ from auto_agent.db.connection import db_exists, init_db
 from auto_agent.db.project_manager import ProjectManager
 from auto_agent.db.cleanup import CleanupManager
 from auto_agent.paths import get_data_dir, get_workspace_dir
+from auto_agent.supabase_client import supabase_enabled
 from auto_agent.dashboard.helpers import (
     load_project_json,
     load_project_text,
@@ -34,8 +40,24 @@ from auto_agent.dashboard.helpers import (
     format_headline,
     get_recent_images,
 )
+from auto_agent.dashboard.actions import router as actions_router
+from auto_agent.dashboard.json_editor import router as json_editor_router
+from auto_agent.dashboard.sse import router as sse_router
+from auto_agent.dashboard.memory_routes import router as memory_router
+from auto_agent.dashboard.scene_editor import router as scene_editor_router
+from auto_agent.dashboard.scene_editor import manifest_router
+from auto_agent.dashboard.design_presets import router as design_presets_router
 
 app = FastAPI(title="Auto Agent Dashboard")
+
+# ─── 신규 라우터 등록 ───
+app.include_router(actions_router)
+app.include_router(json_editor_router)
+app.include_router(sse_router)
+app.include_router(memory_router)
+app.include_router(scene_editor_router)
+app.include_router(manifest_router)
+app.include_router(design_presets_router)
 
 DASHBOARD_DIR = Path(__file__).parent
 DATA_DIR = get_data_dir()
@@ -53,7 +75,16 @@ templates = Jinja2Templates(directory=str(DASHBOARD_DIR / "templates"))
 templates.env.filters["format_headline"] = format_headline
 
 
-def get_pm() -> ProjectManager:
+# Supabase 모드: SUPABASE_URL + SUPABASE_KEY 환경변수 설정 시 활성화
+USE_SUPABASE = supabase_enabled()
+
+
+def get_pm():
+    """데이터 소스에 따라 ProjectManager 반환.
+    Supabase 환경변수가 있으면 SupabaseProjectManager, 없으면 로컬 SQLite."""
+    if USE_SUPABASE:
+        from auto_agent.dashboard.supabase_data import SupabaseProjectManager
+        return SupabaseProjectManager()
     if not db_exists():
         init_db()
     return ProjectManager()
@@ -69,13 +100,14 @@ TAB_TEMPLATES = {
     "assets": "partials/_assets.html",
     "versions": "partials/_versions.html",
     "costs": "partials/_costs.html",
+    "design": "partials/_design.html",
 }
 
 # ─────────────────────────────
 # Remotion Studio 프로세스 관리
 # ─────────────────────────────
 REMOTION_DIR = get_workspace_dir() / "remotion"
-STUDIO_PORT = 3000
+STUDIO_PORT = 3100
 
 # Node.js PATH 보장 (homebrew/로컬 설치 모두 커버)
 _node_paths = [
@@ -90,18 +122,43 @@ for _np in _node_paths:
 _studio_proc: Optional[subprocess.Popen] = None
 
 
-def _load_tab_data(pm: ProjectManager, project: dict, tab: str) -> dict:
-    """탭별 데이터 로딩."""
+def _load_tab_data(pm, project: dict, tab: str) -> dict:
+    """탭별 데이터 로딩. Supabase/로컬 모드 자동 분기."""
     project_id = project["id"]
     out_dir = project.get("output_dir", "")
     slug = project.get("slug", "")
     context = {"project": project, "tab": tab, "slug": slug}
 
+    # Supabase 모드에서는 pm.load_project_json() 사용
+    def _load_json(filename):
+        if USE_SUPABASE:
+            return pm.load_project_json(project_id, filename)
+        return load_project_json(out_dir, filename)
+
+    def _load_text(filename):
+        if USE_SUPABASE:
+            return pm.load_project_text(project_id, filename)
+        return load_project_text(out_dir, filename)
+
+    def _image_url(scene_num):
+        if USE_SUPABASE:
+            return pm.get_scene_image_url(project_id, scene_num)
+        return get_scene_image_url(slug, scene_num, out_dir)
+
+    def _audio_url(scene_num):
+        if USE_SUPABASE:
+            return pm.get_scene_audio_url(project_id, scene_num)
+        return get_scene_audio_url(slug, scene_num, out_dir)
+
     if tab == "overview":
         context["asset_counts"] = pm.get_asset_counts(project_id)
         context["cost"] = pm.get_cost_summary(project_id)
-        context["file_status"] = get_file_status(out_dir)
-        context["recent_images"] = get_recent_images(slug, out_dir)
+        if USE_SUPABASE:
+            context["file_status"] = _supabase_file_status(pm, project_id)
+            context["recent_images"] = _supabase_recent_images(pm, project_id)
+        else:
+            context["file_status"] = get_file_status(out_dir)
+            context["recent_images"] = get_recent_images(slug, out_dir)
         runs = pm.get_pipeline_history(project_id)
         context["pipeline_progress"] = get_pipeline_progress(
             out_dir, str(DATA_DIR), db_runs=runs
@@ -114,12 +171,12 @@ def _load_tab_data(pm: ProjectManager, project: dict, tab: str) -> dict:
         )
 
     elif tab == "research":
-        context["research"] = load_project_json(out_dir, "research_report.json")
+        context["research"] = _load_json("research_report.json")
 
     elif tab == "manuscript":
-        text = load_project_text(out_dir, "final_manuscript.md")
+        text = _load_text("final_manuscript.md")
         context["chapters"] = parse_manuscript_chapters(text) if text else []
-        tts = load_project_json(out_dir, "tts_results.json")
+        tts = _load_json("tts_results.json")
         tts_map = {}
         if tts:
             for r in tts.get("results", []):
@@ -127,10 +184,13 @@ def _load_tab_data(pm: ProjectManager, project: dict, tab: str) -> dict:
         context["tts_map"] = tts_map
 
     elif tab == "storyboard":
-        specs = load_project_json(out_dir, "scene_specs.json")
+        specs = _load_json("scene_specs.json")
         scenes = specs.get("scenes", []) if specs else []
-        tts = load_project_json(out_dir, "tts_results.json")
-        scenes = enrich_scenes_with_media(scenes, slug, out_dir, tts)
+        tts = _load_json("tts_results.json")
+        if USE_SUPABASE:
+            scenes = _supabase_enrich_scenes(pm, project_id, scenes, tts, slug=slug, out_dir=out_dir)
+        else:
+            scenes = enrich_scenes_with_media(scenes, slug, out_dir, tts)
         context["scenes"] = scenes
         ch_set = sorted(set(s.get("chapter", 0) for s in scenes))
         context["chapters_list"] = ch_set
@@ -177,11 +237,11 @@ async def index(request: Request):
     })
 
 
-@app.get("/projects/{project_id}", response_class=HTMLResponse)
-async def project_detail(request: Request, project_id: int, tab: str = "overview"):
-    """프로젝트 상세 페이지 — 초기 탭 콘텐츠 포함."""
+@app.get("/p/{slug}", response_class=HTMLResponse)
+async def project_by_slug(request: Request, slug: str, tab: str = "overview"):
+    """slug 기반 프로젝트 상세 페이지."""
     pm = get_pm()
-    project = pm.get_project(project_id=project_id)
+    project = pm.get_project(slug=slug)
     if not project:
         return HTMLResponse("Project not found", status_code=404)
 
@@ -190,13 +250,39 @@ async def project_detail(request: Request, project_id: int, tab: str = "overview
     return templates.TemplateResponse("project.html", context)
 
 
+@app.get("/projects/{project_id}", response_class=HTMLResponse)
+async def project_detail(request: Request, project_id: int, tab: str = "overview"):
+    """레거시 ID 기반 → slug 리디렉트."""
+    pm = get_pm()
+    project = pm.get_project(project_id=project_id)
+    if not project:
+        return HTMLResponse("Project not found", status_code=404)
+    return RedirectResponse(
+        url=f"/p/{project['slug']}?tab={tab}",
+        status_code=301,
+    )
+
+
 # ─────────────────────────────
 # HTMX Partials — 탭 콘텐츠
 # ─────────────────────────────
 
+@app.get("/api/p/{slug}/tab/{tab}", response_class=HTMLResponse)
+async def project_tab_by_slug(request: Request, slug: str, tab: str):
+    """slug 기반 탭 콘텐츠 (HTMX partial)."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project or tab not in TAB_TEMPLATES:
+        return HTMLResponse("Not found", status_code=404)
+
+    context = _load_tab_data(pm, project, tab)
+    context["request"] = request
+    return templates.TemplateResponse(TAB_TEMPLATES[tab], context)
+
+
 @app.get("/api/projects/{project_id}/tab/{tab}", response_class=HTMLResponse)
 async def project_tab_content(request: Request, project_id: int, tab: str):
-    """탭 콘텐츠만 반환 (HTMX partial)."""
+    """레거시 탭 콘텐츠 (HTMX partial)."""
     pm = get_pm()
     project = pm.get_project(project_id=project_id)
     if not project or tab not in TAB_TEMPLATES:
@@ -211,18 +297,21 @@ async def project_tab_content(request: Request, project_id: int, tab: str):
 # HTMX Partials — 씬 상세
 # ─────────────────────────────
 
-@app.get("/api/projects/{project_id}/storyboard/scene/{scene_num}", response_class=HTMLResponse)
-async def storyboard_scene_detail(request: Request, project_id: int, scene_num: int):
-    """씬 상세 패널 (HTMX partial)."""
+@app.get("/api/p/{slug}/storyboard/scene/{scene_num}", response_class=HTMLResponse)
+async def storyboard_scene_detail_by_slug(request: Request, slug: str, scene_num: int):
+    """slug 기반 씬 상세 패널 (HTMX partial)."""
     pm = get_pm()
-    project = pm.get_project(project_id=project_id)
+    project = pm.get_project(slug=slug)
     if not project:
         return HTMLResponse("Not found", status_code=404)
 
     out_dir = project["output_dir"]
-    slug = project["slug"]
+    pid = project["id"]
 
-    specs = load_project_json(out_dir, "scene_specs.json")
+    if USE_SUPABASE:
+        specs = pm.load_project_json(pid, "scene_specs.json")
+    else:
+        specs = load_project_json(out_dir, "scene_specs.json")
     scene = None
     if specs:
         for s in specs.get("scenes", []):
@@ -233,17 +322,27 @@ async def storyboard_scene_detail(request: Request, project_id: int, scene_num: 
     if not scene:
         return HTMLResponse(f"Scene {scene_num} not found", status_code=404)
 
-    scene["_image_url"] = get_scene_image_url(slug, scene_num, out_dir)
-    scene["_audio_url"] = get_scene_audio_url(slug, scene_num, out_dir)
+    if USE_SUPABASE:
+        scene["_image_url"] = pm.get_scene_image_url(pid, scene_num)
+        scene["_audio_url"] = pm.get_scene_audio_url(pid, scene_num)
+    else:
+        scene["_image_url"] = get_scene_image_url(slug, scene_num, out_dir)
+        scene["_audio_url"] = get_scene_audio_url(slug, scene_num, out_dir)
 
-    tts = load_project_json(out_dir, "tts_results.json")
+    if USE_SUPABASE:
+        tts = pm.load_project_json(pid, "tts_results.json")
+    else:
+        tts = load_project_json(out_dir, "tts_results.json")
     if tts:
         for r in tts.get("results", []):
             if r["scene"] == scene_num:
                 scene["_tts_duration"] = r.get("duration")
                 break
 
-    subtitles = load_project_json(out_dir, "subtitles.json")
+    if USE_SUPABASE:
+        subtitles = pm.load_project_json(pid, "subtitles.json")
+    else:
+        subtitles = load_project_json(out_dir, "subtitles.json")
     scene_subs = None
     if subtitles:
         for sub in subtitles.get("scenes", []):
@@ -257,6 +356,19 @@ async def storyboard_scene_detail(request: Request, project_id: int, scene_num: 
         "subtitles": scene_subs,
         "slug": slug,
     })
+
+
+@app.get("/api/projects/{project_id}/storyboard/scene/{scene_num}", response_class=HTMLResponse)
+async def storyboard_scene_detail(request: Request, project_id: int, scene_num: int):
+    """레거시 씬 상세 패널 (HTMX partial)."""
+    pm = get_pm()
+    project = pm.get_project(project_id=project_id)
+    if not project:
+        return HTMLResponse("Not found", status_code=404)
+    return RedirectResponse(
+        url=f"/api/p/{project['slug']}/storyboard/scene/{scene_num}",
+        status_code=301,
+    )
 
 
 # ─────────────────────────────
@@ -285,12 +397,212 @@ async def api_project_summary(project_id: int):
     return project
 
 
+@app.get("/api/p/{slug}/summary")
+async def api_project_summary_by_slug(slug: str):
+    """slug 기반 프로젝트 요약 (Supabase 모드 대응)."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    pid = project["id"]
+    project["asset_counts"] = pm.get_asset_counts(pid)
+    project["cost"] = pm.get_cost_summary(pid)
+    project["cost_by_agent"] = pm.get_cost_by_agent(pid)
+    return project
+
+
+@app.get("/api/p/{slug}/scenes")
+async def api_scenes_by_slug(slug: str):
+    """씬 목록 JSON (Supabase Storage에서 로드)."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    pid = project["id"]
+    if USE_SUPABASE:
+        specs = pm.load_project_json(pid, "scene_specs.json")
+    else:
+        specs = load_project_json(project["output_dir"], "scene_specs.json")
+    if not specs:
+        return {"scenes": []}
+    return {"scenes": specs.get("scenes", [])}
+
+
+@app.put("/api/p/{slug}/scenes/{scene_num}")
+async def api_update_scene(request: Request, slug: str, scene_num: int):
+    """씬 편집 → Supabase Storage에 저장."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    pid = project["id"]
+
+    body = await request.json()
+
+    # scene_specs.json 로드
+    if USE_SUPABASE:
+        specs = pm.load_project_json(pid, "scene_specs.json")
+    else:
+        specs = load_project_json(project["output_dir"], "scene_specs.json")
+    if not specs:
+        return JSONResponse({"error": "scene_specs.json not found"}, status_code=404)
+
+    # 해당 씬 찾아서 업데이트
+    updated = False
+    for i, scene in enumerate(specs.get("scenes", [])):
+        if scene["sceneNumber"] == scene_num:
+            specs["scenes"][i] = {**scene, **body}
+            updated = True
+            break
+
+    if not updated:
+        return JSONResponse({"error": f"Scene {scene_num} not found"}, status_code=404)
+
+    # 저장
+    if USE_SUPABASE:
+        pm.save_project_json(pid, "scene_specs.json", specs)
+    else:
+        import json as _json
+        from pathlib import Path as _Path
+        fp = _Path(project["output_dir"]) / "scene_specs.json"
+        fp.write_text(_json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return {"ok": True, "scene_number": scene_num}
+
+
 @app.post("/projects/{project_id}/cleanup", response_class=HTMLResponse)
 async def run_cleanup(request: Request, project_id: int):
     pm = get_pm()
     cm = CleanupManager(pm)
     result = cm.full_cleanup(project_id, dry_run=True)
     return JSONResponse(result)
+
+
+# ─────────────────────────────
+# Image Candidates API
+# ─────────────────────────────
+
+@app.get("/api/p/{slug}/scene/{scene_num}/image-candidates")
+async def get_image_candidates_by_slug(slug: str, scene_num: int):
+    """slug 기반 씬 이미지 후보 목록."""
+    from auto_agent.dashboard.helpers import get_scene_image_candidates
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    candidates = get_scene_image_candidates(slug, scene_num, project["output_dir"])
+    return {"scene_number": scene_num, "candidates": candidates}
+
+
+@app.get("/api/projects/{project_id}/scene/{scene_num}/image-candidates")
+async def get_image_candidates(project_id: int, scene_num: int):
+    """레거시 씬 이미지 후보 목록."""
+    from auto_agent.dashboard.helpers import get_scene_image_candidates
+    pm = get_pm()
+    project = pm.get_project(project_id=project_id)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    candidates = get_scene_image_candidates(project["slug"], scene_num, project["output_dir"])
+    return {"scene_number": scene_num, "candidates": candidates}
+
+
+@app.post("/api/p/{slug}/scene/{scene_num}/select-image")
+async def select_image_candidate_by_slug(request: Request, slug: str, scene_num: int):
+    """slug 기반 이미지 선택."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return await _do_select_image(request, project, scene_num)
+
+
+@app.post("/api/projects/{project_id}/scene/{scene_num}/select-image")
+async def select_image_candidate(request: Request, project_id: int, scene_num: int):
+    """레거시 이미지 선택."""
+    pm = get_pm()
+    project = pm.get_project(project_id=project_id)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return await _do_select_image(request, project, scene_num)
+
+
+async def _do_select_image(request: Request, project: dict, scene_num: int):
+    """이미지 선택 공통 로직. Supabase/로컬 자동 분기."""
+    import shutil
+
+    body = await request.json()
+    scene_key = f"scene_{scene_num:03d}"
+
+    # ── Supabase 모드: asset_id 또는 url 기반 선택 ──
+    if USE_SUPABASE:
+        asset_id = body.get("asset_id")
+        image_url = body.get("url", "")
+        if not asset_id and not image_url:
+            rank = body.get("rank")
+            if not rank:
+                return JSONResponse({"error": "asset_id, url, or rank required"}, status_code=400)
+            # rank → Supabase 후보에서 찾기
+            pm = get_pm()
+            candidates = pm.get_scene_image_candidates(project["id"], scene_num)
+            if rank <= len(candidates):
+                image_url = candidates[rank - 1].get("url", "")
+            if not image_url:
+                return JSONResponse({"error": f"candidate rank {rank} not found"}, status_code=404)
+
+        # scene_specs.json의 imagePath를 Supabase URL로 업데이트
+        pm = get_pm()
+        specs = pm.load_project_json(project["id"], "scene_specs.json")
+        if specs:
+            for scene in specs.get("scenes", []):
+                sn = scene.get("sceneNumber") or scene.get("scene_number")
+                if sn == scene_num:
+                    scene["imagePath"] = image_url
+                    break
+            pm.save_project_json(project["id"], "scene_specs.json", specs)
+
+        return {"ok": True, "scene": scene_key, "image_url": image_url}
+
+    # ── 로컬 모드: rank 기반 파일 복사 ──
+    rank = body.get("rank")
+    if not rank:
+        return JSONResponse({"error": "rank required"}, status_code=400)
+
+    out_dir = Path(project["output_dir"])
+    search_dir = out_dir / "images" / "search"
+    images_dir = out_dir / "images"
+
+    # 선택된 후보 파일 찾기
+    candidate = None
+    for ext in (".png", ".jpg", ".jpeg", ".webp"):
+        path = search_dir / f"{scene_key}_{rank:02d}{ext}"
+        if path.exists():
+            candidate = path
+            break
+
+    if not candidate:
+        return JSONResponse({"error": f"candidate rank {rank} not found"}, status_code=404)
+
+    # 기존 최종 이미지 제거 후 교체
+    for ext in (".png", ".jpg", ".jpeg", ".webp"):
+        old = images_dir / f"{scene_key}{ext}"
+        if old.exists():
+            old.unlink()
+
+    final_path = images_dir / f"{scene_key}{candidate.suffix}"
+    shutil.copy2(candidate, final_path)
+
+    # image_assets.json 업데이트
+    registry_path = images_dir / "image_assets.json"
+    if registry_path.exists():
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        for asset in registry.get("assets", []):
+            if asset.get("scene") == scene_key:
+                asset["selected_rank"] = rank
+                break
+        registry_path.write_text(json.dumps(registry, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return {"ok": True, "scene": scene_key, "selected_rank": rank,
+            "image_url": f"/output/{project['slug']}/images/{final_path.name}"}
 
 
 # ─────────────────────────────
@@ -325,15 +637,43 @@ async def studio_setup(request: Request):
     if not slug:
         return {"ok": False, "error": "slug required"}
     _setup_studio_project(slug)
-    return {"ok": True, "slug": slug, "running": _is_studio_running()}
+    return {"ok": True, "slug": slug, "running": _is_studio_running(), "port": STUDIO_PORT}
 
 
 def _setup_studio_project(slug: str):
-    """Studio 시작 전 프로젝트 symlink + manifest 설정."""
+    """Studio 시작 전 manifest 설정. 로컬/Supabase 프로젝트 모두 지원."""
     ws = get_workspace_dir()
-    project_dir = ws / "output" / slug
     public_dir = REMOTION_DIR / "public"
+    manifest_dst = public_dir / "manifest.json"
 
+    # ── Supabase 프로젝트: proj-* 형태의 slug ──
+    if slug.startswith("proj-"):
+        # 이미 빌드된 매니페스트가 있으면 바로 사용
+        cached = public_dir / "manifests" / f"{slug}.json"
+        if cached.exists():
+            import shutil
+            shutil.copy2(str(cached), str(manifest_dst))
+            return
+        # 없으면 Supabase에서 빌드
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "auto_agent.scripts.build_manifest",
+                 "--supabase", slug, slug],
+                cwd=str(ws),
+                timeout=120,
+                capture_output=True,
+            )
+            # 빌드 결과 복사
+            built = public_dir / "manifests" / f"{slug}.json"
+            if built.exists():
+                import shutil
+                shutil.copy2(str(built), str(manifest_dst))
+        except Exception:
+            pass
+        return
+
+    # ── 로컬 프로젝트 ──
+    project_dir = ws / "output" / slug
     if not project_dir.exists():
         return
 
@@ -422,18 +762,24 @@ async def terminal_ws(websocket: WebSocket):
     """xterm.js와 연결되는 WebSocket 터미널."""
     await websocket.accept()
 
+    if IS_WINDOWS:
+        await websocket.send_text("터미널은 macOS/Linux에서만 지원됩니다.\r\n")
+        await websocket.close()
+        return
+
     # pty 생성
     master_fd, slave_fd = pty.openpty()
 
-    # bash 프로세스 시작
+    # 셸 프로세스 시작
     ws_dir = str(get_workspace_dir())
     env = os.environ.copy()
     env["TERM"] = "xterm-256color"
     env["COLUMNS"] = "120"
     env["LINES"] = "30"
 
+    shell = os.environ.get("SHELL", "/bin/bash")
     proc = subprocess.Popen(
-        ["/bin/bash", "--login"],
+        [shell, "--login"],
         stdin=slave_fd,
         stdout=slave_fd,
         stderr=slave_fd,
@@ -445,7 +791,6 @@ async def terminal_ws(websocket: WebSocket):
 
     async def read_pty():
         """pty 출력을 WebSocket으로 전송."""
-        loop = asyncio.get_event_loop()
         try:
             while True:
                 await asyncio.sleep(0.01)
@@ -476,3 +821,81 @@ async def terminal_ws(websocket: WebSocket):
         except subprocess.TimeoutExpired:
             proc.kill()
         os.close(master_fd)
+
+
+# ─────────────────────────────
+# Supabase 모드 헬퍼
+# ─────────────────────────────
+
+def _supabase_file_status(pm, project_id: str) -> dict:
+    """Supabase assets 테이블에서 파일 상태 조회."""
+    filenames = [
+        "research_report.json", "outline.json", "final_manuscript.md",
+        "scene_decomposition.json", "scene_specs.json", "motion_plan.json",
+        "tts_results.json", "subtitles.json", "pipeline_state.json",
+    ]
+    result = {}
+    assets = pm.get_assets(project_id, asset_type="json") + pm.get_assets(project_id, asset_type="manuscript")
+    asset_map = {a.get("file_name"): a for a in assets}
+    for fname in filenames:
+        a = asset_map.get(fname)
+        if a:
+            result[fname] = {
+                "exists": True,
+                "size": a.get("file_size", 0),
+                "size_kb": round((a.get("file_size") or 0) / 1024, 1),
+                "modified": (a.get("created_at") or "")[:16].replace("T", " "),
+            }
+        else:
+            result[fname] = {"exists": False, "size": 0, "size_kb": 0, "modified": None}
+    return result
+
+
+def _supabase_recent_images(pm, project_id: str, limit: int = 3) -> list:
+    """Supabase에서 최근 이미지 URL 목록."""
+    assets = pm.get_assets(project_id, asset_type="image")
+    urls = [a.get("storage_url") for a in assets if a.get("storage_url")]
+    return urls[:limit]
+
+
+def _supabase_enrich_scenes(pm, project_id: str, scenes: list,
+                             tts_results: dict = None,
+                             slug: str = "", out_dir: str = "") -> list:
+    """Supabase 기반 씬 미디어 URL 보강 (배치 쿼리)."""
+    tts_map = {}
+    if tts_results:
+        for r in tts_results.get("results", []):
+            tts_map[r["scene"]] = r
+
+    # 배치: 이미지/오디오 에셋을 한 번에 조회
+    image_assets = pm.get_assets(project_id, asset_type="image")
+    audio_assets = pm.get_assets(project_id, asset_type="audio")
+    img_map = {a.get("scene_number"): a.get("storage_url") for a in image_assets}
+    aud_map = {a.get("scene_number"): a.get("storage_url") for a in audio_assets}
+
+    from auto_agent.dashboard.helpers import resolve_layout, render_scene_preview
+
+    # 썸네일 디렉토리 확인
+    thumb_dir = Path(out_dir) / "thumbnails" if out_dir else None
+    has_thumbs = thumb_dir and thumb_dir.exists()
+
+    for scene in scenes:
+        sn = scene["sceneNumber"]
+        scene["_image_url"] = img_map.get(sn)
+        scene["_audio_url"] = aud_map.get(sn)
+        tts = tts_map.get(sn, {})
+        scene["_tts_duration"] = tts.get("duration")
+        scene["_tts_status"] = tts.get("status")
+        layout, explicit = resolve_layout(scene)
+        scene["_layout"] = layout
+        scene["_layout_explicit"] = explicit
+        scene["_preview_html"] = render_scene_preview(scene)
+
+        # Remotion 캡처 썸네일
+        scene["_thumbnail_url"] = None
+        if has_thumbs and slug:
+            thumb_path = thumb_dir / f"scene_{str(sn).zfill(3)}.png"
+            if thumb_path.exists():
+                scene["_thumbnail_url"] = f"/api/p/{slug}/thumbnails/scene/{sn}"
+
+    return scenes

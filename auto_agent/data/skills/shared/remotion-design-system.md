@@ -1,3 +1,8 @@
+---
+name: remotion-design-system
+description: Use when referencing Remotion component APIs, layout types, BuildingBlocks, and rendering constraints
+---
+
 # Remotion Design System
 
 SimpleVideo 기반 Remotion 영상의 시각 디자인 규칙을 정의합니다.
@@ -58,7 +63,7 @@ SimpleVideo 기반 Remotion 영상의 시각 디자인 규칙을 정의합니다
 
 공유 코드는 `BuildingBlocks.tsx`에 위치. SimpleScene/CreativeScene 양쪽에서 import.
 
-### UI 컴포넌트 (13개)
+### UI 컴포넌트 — 기본 13개
 
 | 컴포넌트 | 용도 | 사용 시점 |
 |----------|------|----------|
@@ -75,6 +80,23 @@ SimpleVideo 기반 Remotion 영상의 시각 디자인 규칙을 정의합니다
 | Divider | 구분선 | 섹션 분리 |
 | StatusDot | 상태 도트 | 긍정/부정/중립 표시 |
 | Pill | 필 버튼 | 선택 항목 |
+
+### UI 컴포넌트 — 확장 12개 (의도 기반 컴포지션용)
+
+| 컴포넌트 | 용도 | 사용 시점 |
+|----------|------|----------|
+| Connector | 노드 간 화살표/연결선 | 프로세스 흐름, 인과관계 (flow 레이아웃) |
+| TimelineDot | 타임라인 이벤트 마커 | 연대기, 역사 사건 (timeline 레이아웃) |
+| MetricCard | KPI 카드 (라벨+큰숫자+변화율) | 핵심 통계 강조 (metric_spotlight, metric_wall) |
+| Sparkline | 인라인 미니 차트 (SVG) | 트렌드를 컴팩트하게 (metric_spotlight 보조) |
+| Callout | 말풍선/주석 박스 | 부연 설명, 인용 강조 |
+| StepBadge | 번호 스텝 배지 | 프로세스 단계 표시 (flow 레이아웃) |
+| ComparisonCell | 비교 항목 셀 (before/after) | 변화 전후 대비 (before_after, comparison_table) |
+| RankBadge | 순위 배지 (1st/2nd/3rd 색상) | 랭킹 (rank_list 레이아웃) |
+| QuoteMark | 독립 인용부호 장식 | 인용문 연출 강화 (quote_portrait) |
+| GlowDot | 발광 효과 점 (펄스) | 주의 환기, 라이브 표시 |
+| AnnotationLine | 지시선 + 주석 | 차트 주석 (annotated_chart 레이아웃) |
+| MiniBar | 인라인 소형 막대 | 카드 내 비교 수치 (rank_list 보조) |
 
 ### 애니메이션 훅 (15개)
 
@@ -175,31 +197,73 @@ durationFrames = base + padding
 
 ## 8. creative 필드 기반 렌더링
 
-모든 시각화는 **creative 필드 + 데이터 구조**로 자동 결정된다.
+모든 시각화는 **creative 필드 + 데이터 구조**로 결정된다.
 
-### 자동 레이아웃 감지 (CreativeScene)
+### 레이아웃 결정 (resolveLayout) — 의도 기반
 
-렌더러가 아래 순서로 레이아웃을 자동 결정:
+렌더러가 아래 **우선순위**로 레이아웃을 결정:
 
-1. **displayMode 명시** → logo_grid, pie_chart, line_chart
-2. **emphasis/reveal 조합** → quote, split, person_card, counter
-3. **데이터 구조** → items/values 수, chartConfig 존재, descriptions 유무
-4. **기본값** → headline_only
+1. **`creative.layout` 직접 지정** (1순위, 의도 기반) — asset-advisory가 다중 관점 심의 결과로 설정
+2. **displayMode / chartConfig** (2순위, 하위호환) — logo_grid, pie, line
+3. **데이터 구조 기반 추론** (3순위, fallback) — emphasis/reveal + items/values 패턴
 
-| 데이터 패턴 | 자동 감지 레이아웃 | 조건 |
-|------------|------------------|------|
-| displayMode="logo_grid" | 로고 그리드 | items가 기업명 |
-| chartConfig.type="pie" | 파이 차트 | items + values (%) |
-| chartConfig.type="line" | 라인 차트 | items(시간축) + values |
-| emphasis="quote" | 인용문 | items[0]이 인용문 |
-| emphasis="contrast" + items 2개 | VS 분할 | 좌/우 비교 |
-| emphasis="person" + items 2개+ | 인물 카드 | 이미지/실루엣 |
-| emphasis="number"/"count" | 큰 숫자 카운터 | headline에 {{숫자}} |
-| emphasis="sequence" + descriptions | 타임라인 | 시간순 이벤트 |
-| items 3개+ + values 3개+ | 바 차트 | 카테고리별 비교 |
-| items 6개+ | 아이콘 그리드 | 개념 나열 |
-| items 3~5개 | 리스트 | 순서/목록 |
-| 그 외 | headline_only | 텍스트 강조 |
+**핵심 원칙**: 같은 데이터도 씬의 의도에 따라 다른 레이아웃이 결정된다.
+- "이 기업들의 존재감" → `logo_grid`
+- "이 기업들의 비중 차이" → `pie`
+- "이 기업들의 순위" → `rank_list`
+
+### 레이아웃 타입 (24개)
+
+**기본 11개** (기존):
+
+| layout | 용도 | 필요 데이터 |
+|--------|------|-----------|
+| `headline_only` | 텍스트 임팩트 | headline만 |
+| `items_grid` | 6+ 항목 그리드 | items 6개+ |
+| `items_list` | 3-5 항목 리스트 | items 3-5개 |
+| `person_card` | 인물 카드 | emphasis=person, items 2+ |
+| `counter` | 빅넘버 카운팅 | emphasis=number/count, {{숫자}} |
+| `quote` | 인용문 | emphasis=quote |
+| `split` | 좌우 VS 비교 | emphasis=contrast / reveal=split_reveal |
+| `bar` | 바 차트 | items + values 3+쌍 |
+| `logo_grid` | 로고 그리드 | displayMode=logo_grid, logoMap |
+| `pie` | 파이 차트 | chartConfig.type=pie |
+| `line` | 라인 차트 | chartConfig.type=line |
+
+**확장 13개** (의도 기반 컴포지션):
+
+| layout | 용도 | 필요 데이터 |
+|--------|------|-----------|
+| `flow` | 프로세스/인과 흐름 | items (단계명), StepBadge+Connector |
+| `timeline` | 시간순 사건 나열 | items (시점), descriptions (설명) |
+| `metric_spotlight` | 단일 KPI 극적 강조 | items[0] (라벨), values[0] (수치) |
+| `metric_wall` | 여러 KPI 동시 비교 | items + values (2-4쌍) |
+| `rank_list` | 순위 시각화 | items + values (이미 순위 정렬) |
+| `comparison_table` | 다차원 비교 | items + values (각 항목별 수치) |
+| `before_after` | 변화 전후 대비 | items[0]=before, items[1]=after |
+| `icon_stat` | 단일 통계 + 아이콘 | itemIcons[0], values[0] |
+| `stacked_progress` | 점유율/진행률 비교 | items + values (ProgressBar 스택) |
+| `card_carousel` | 정보 카드 나열 | items + descriptions, itemIcons |
+| `hero_with_context` | 큰 헤드라인 + 부연 카드 | headline + items (보조 정보) |
+| `quote_portrait` | 인물 사진 + 인용문 | images[0], items[0] (인용문) |
+| `annotated_chart` | 차트 + 주석 | items + values + annotations[] |
+
+### layout 필드 스키마
+
+```json
+{
+  "creative": {
+    "concept": "...",
+    "reveal": "stagger",
+    "emphasis": "number",
+    "mood": "informative",
+    "headline": "...",
+    "layout": "rank_list"   // ← 의도 기반 직접 지정
+  }
+}
+```
+
+`layout`이 없으면 렌더러가 emphasis/reveal/데이터 구조로 자동 추론한다 (하위호환).
 
 ### 보완 메커니즘 (normalizeCreative)
 
@@ -208,6 +272,7 @@ creative 필드가 불완전할 때 렌더러가 자동 보정:
 - **emphasis 없음** → 데이터 패턴에서 추론 (values 있으면 number, 아니면 none)
 - **reveal 없음** → items 3개+ 이면 stagger, 아니면 fade_in
 - **mood 없음** → informative 기본값
+- **layout 없음** → resolveLayout fallback (데이터 구조 기반 추론)
 
 ### creative 필드 (필수)
 
@@ -273,11 +338,12 @@ items    = 보조 맥락 라벨
     "source": "wikimedia | search | generate | character",
     "query": "검색어/프롬프트",
     "subject": "대상 설명",
-    "placement": "background | center | left | right | inline",
+    "placement": "fullscreen | background | center | left | right | inline",
     "opacity": 0.8,
     "overlay": true,
     "usage": "asset | background",
     "characters": ["characters/variant_id.png"],
+    "itemImages": false,
     "license": null
   }
 }
@@ -288,6 +354,54 @@ items    = 보조 맥락 라벨
 - `search` — 웹 이미지 검색 (Serper/Pixabay)
 - `generate` — FAL.ai로 AI 이미지 생성
 - `character` — character_casting.json의 캐릭터 이미지 활용
+
+**placement 유형:**
+
+| placement | 이미지 역할 | 텍스트 위치 | opacity 기본값 | 적합한 상황 |
+|-----------|-----------|-----------|-------------|-----------|
+| `fullscreen` | **주체** — 이미지가 화면 전체 | 하단 자막만 또는 최소 오버레이 | 0.9~1.0 | 감성적 전환, 시네마틱 순간, 사건 장면 |
+| `background` | **보조** — 분위기 깔아줌 | 중앙에 텍스트/차트 | 0.10~0.50 (에셋 밀도에 따라) | 데이터+분위기 조합 |
+| `center` | **공동 주체** — 중앙 큰 이미지 | 상하에 텍스트 | 0.8~1.0 | 제품, 건물, 핵심 오브젝트 |
+| `left` / `right` | **에셋** — 한쪽에 배치 | 반대쪽에 텍스트 | 0.7~1.0 | 인물 초상, 실물 사진 |
+| `inline` | **아이템별** — items와 1:1 매칭 | 각 아이템 옆/위에 | 1.0 | 인물 카드, 아이템별 사진 |
+
+**fullscreen 이미지 씬 (텍스트 없는 이미지 단독 연출):**
+
+이미지 자체가 메시지인 씬. headline은 최소화하거나 생략 가능.
+```json
+{
+  "creative": {
+    "concept": "1929년 대공황 당시 월스트리트 사진이 화면을 가득 채운다",
+    "layout": "headline_only",
+    "reveal": "fade_in",
+    "emphasis": "none",
+    "headline": "{{1929}}",
+    "mood": "somber"
+  },
+  "imageAsset": {
+    "source": "search",
+    "query": "1929 wall street crash historic photo",
+    "placement": "fullscreen",
+    "opacity": 0.9
+  }
+}
+```
+
+**inline 이미지 (아이템별 개별 이미지):**
+
+`itemImages: true`이면 이미지 생성 스크립트가 items 각각에 대해 개별 이미지를 확보하고 `visualization.images` 배열을 채운다.
+```json
+{
+  "items": ["워런 버핏", "피터 린치", "잭 보글"],
+  "images": [null, null, null],
+  "imageAsset": {
+    "source": "wikimedia",
+    "query": "Warren Buffett, Peter Lynch, Jack Bogle portraits",
+    "placement": "inline",
+    "itemImages": true
+  }
+}
+```
 
 ---
 

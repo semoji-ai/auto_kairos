@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from auto_agent.paths import get_workspace_dir, get_data_dir, PACKAGE_DIR, DATA_DIR
+from auto_agent.orchestrator.context_memory import ContextMemory
 
 PROJECT_ROOT = get_workspace_dir()  # 하위 호환
 
@@ -86,6 +87,20 @@ class PipelineRunner:
             config=self._load_project_config(),
         )
         self.project_dir = Path(self.project["output_dir"])
+        self.context_memory = ContextMemory(self.project_dir)
+        self.sync = self._init_sync()
+
+    def _init_sync(self):
+        """Supabase 동기화 매니저 초기화. 환경변수 미설정 시 None."""
+        from auto_agent.supabase_client import supabase_enabled
+        if not supabase_enabled():
+            return None
+        from auto_agent.sync import SyncManager
+        return SyncManager(
+            project_slug=self.project_slug,
+            project_dir=self.project_dir,
+            local_project_id=self.project["id"],
+        )
 
     def _load_pipeline(self) -> dict:
         path = DATA_DIR / "pipeline.json"
@@ -358,7 +373,9 @@ class PipelineRunner:
 
         t0 = time.time()
         try:
-            if step.get("agent"):
+            if step_type == "single_call":
+                result = self._run_single_call_step(step)
+            elif step.get("agent"):
                 result = self._run_agent_step(step)
             elif step.get("module"):
                 result = self._run_module_step(step)
@@ -379,6 +396,33 @@ class PipelineRunner:
                 )
                 cost_str = f" ${cost['cost_usd']:.4f}" if cost.get("cost_usd") else ""
                 print(f"OK ({elapsed:.1f}s{cost_str})")
+
+                # 컨텍스트 메모리 수집 (에이전트 step만)
+                if step.get("agent") and result.output_files:
+                    try:
+                        self.context_memory.collect_after_step(
+                            step_id=step_id,
+                            agent_name=step["agent"],
+                            output_files=result.output_files,
+                        )
+                    except Exception as mem_err:
+                        print(f"    [WARN] 컨텍스트 메모리 수집 실패: {mem_err}")
+
+                # Supabase 동기화
+                if self.sync:
+                    try:
+                        self.sync.sync_step(
+                            step=step,
+                            phase=self.state.current_phase,
+                            status="completed",
+                            output_files=result.output_files or [],
+                            cost_info=cost,
+                            project_data=dict(self.project),
+                            duration_sec=elapsed,
+                        )
+                        print(f"    [SYNC] Supabase 동기화 완료")
+                    except Exception as sync_err:
+                        print(f"    [WARN] Supabase 동기화 실패: {sync_err}")
             else:
                 self.pm.fail_pipeline_run(run_id, result.error)
                 print(f"FAIL ({elapsed:.1f}s) — {result.error[:80]}")
@@ -392,8 +436,40 @@ class PipelineRunner:
             return StepResult(step_id=step_id, status="failed",
                               duration_sec=elapsed, error=str(e))
 
+    def _run_single_call_step(self, step: dict) -> StepResult:
+        """단일 호출 step → 향후 Anthropic API 직접 호출로 전환.
+
+        설계 의도:
+          - 입력 파일을 Python이 읽어서 프롬프트에 주입
+          - LLM 1회 호출로 결과 JSON 생성
+          - Python이 결과를 파싱하여 파일 저장
+          - 에이전트 루프(Read/Write 도구) 오버헤드 제거
+
+        현재(초안): CLI 에이전트로 폴백 실행.
+        최적화 시: _run_single_call_api() 구현 후 전환.
+
+        single_call_model 필드:
+          - claude-opus-4-6: 창작/판단이 필요한 복잡한 작업
+          - claude-sonnet-4-5-20250929: 구조화된 추출/검증 작업
+        """
+        step_id = step["id"]
+        target_model = step.get("single_call_model", "claude-opus-4-6")
+
+        # TODO: API 직접 호출 구현 시 여기서 분기
+        # if self._api_mode_enabled():
+        #     return self._run_single_call_api(step, target_model)
+
+        # 초안: CLI 에이전트로 폴백 (model은 agent 정의를 따름)
+        print(f"[single_call→CLI] ", end="", flush=True)
+        return self._run_agent_step(step)
+
     def _run_agent_step(self, step: dict) -> StepResult:
-        """에이전트 step → Claude Code CLI 호출."""
+        """에이전트 step → Claude CLI 서브프로세스 호출.
+
+        기본 실행 방식은 CLI (`claude` 바이너리).
+        에이전트 루프(multi-turn tool_use)가 필요한 작업은 CLI에서 처리.
+        웹 대시보드의 단순 수정만 Anthropic API 단일 호출 사용.
+        """
         step_id = step["id"]
         agent = step["agent"]
         outputs = step.get("output", [])
@@ -401,34 +477,35 @@ class PipelineRunner:
             outputs = [outputs]
 
         # 출력 파일이 이미 존재하면 스킵 (resume 지원)
-        all_exist = True
-        for out in outputs:
-            out_path = self._resolve_output_path(out)
-            # 와일드카드 패턴 ({N} 등)은 디렉토리 존재로 판단
-            if "{" in out:
-                parent = out_path.parent
-                if not (parent.exists() and any(parent.iterdir())):
+        # 단, 입력과 출력이 동일한 파일인 경우(in-place 업데이트)는 스킵하지 않음
+        inputs = step.get("input", [])
+        if isinstance(inputs, str):
+            inputs = [inputs]
+        input_set = set(inputs)
+        has_inplace_output = any(out in input_set for out in outputs)
+
+        if not has_inplace_output:
+            all_exist = True
+            for out in outputs:
+                out_path = self._resolve_output_path(out)
+                if "{" in out:
+                    parent = out_path.parent
+                    if not (parent.exists() and any(parent.iterdir())):
+                        all_exist = False
+                        break
+                elif not out_path.exists():
                     all_exist = False
                     break
-            elif not out_path.exists():
-                all_exist = False
-                break
 
-        if all_exist and outputs:
-            return StepResult(
-                step_id=step_id, status="completed",
-                output_files=[str(self._resolve_output_path(o)) for o in outputs],
-            )
+            if all_exist and outputs:
+                return StepResult(
+                    step_id=step_id, status="completed",
+                    output_files=[str(self._resolve_output_path(o)) for o in outputs],
+                )
 
-        # ── Claude CLI 실행 ──
+        # ── Claude CLI 서브프로세스 실행 ──
 
-        # 1. CLI 경로
-        try:
-            cli_path = self._find_claude_cli()
-        except FileNotFoundError as e:
-            return StepResult(step_id=step_id, status="failed", error=str(e))
-
-        # 2. 에이전트 설정
+        # 1. 에이전트 설정
         agents_config = self._load_agents_config()
         agent_def = agents_config.get("subagents", {}).get(agent, {})
         if not agent_def:
@@ -443,99 +520,97 @@ class PipelineRunner:
         budget = self._get_agent_budget(agent)
         timeout_sec = self._get_agent_timeout(agent)
 
-        # 3. 프롬프트 빌드
+        # 2. 프롬프트 빌드 (컨텍스트 메모리 포함)
         prompt = self._build_agent_prompt(step)
 
-        # 4. CLI 명령 구성 (항상 stdin pipe 사용 — 셸 인자 길이 제한 회피)
+        # 3. 프롬프트를 임시 파일에 저장 (긴 프롬프트 대비)
+        prompt_file = self.project_dir / f".prompt_{step_id}.md"
+        prompt_file.write_text(prompt, encoding="utf-8")
+
+        # 4. Claude CLI 명령 구성
+        cli_path = self._find_claude_cli()
         cmd = [
             cli_path,
+            "--print",
+            "--output-format", "json",
             "--model", model,
             "--max-turns", str(max_turns),
-            "--output-format", "json",
-            "--allowedTools", ",".join(allowed_tools),
-            "--dangerously-skip-permissions",
-            "-p", "-",
         ]
-        if budget > 0:
-            cmd.extend(["--max-budget-usd", str(budget)])
 
-        # 5. 환경변수
-        env = os.environ.copy()
-        env["PROJECT_NAME"] = self.project_slug
-        config = self.state.config
-        if config.get("voice_id"):
-            env["ELEVENLABS_VOICE_ID"] = config["voice_id"]
-        if config.get("voice_settings"):
-            env["ELEVENLABS_VOICE_SETTINGS"] = json.dumps(
-                config["voice_settings"]
-            )
+        # 허용 도구 설정
+        for tool in allowed_tools:
+            cmd.extend(["--allowedTools", tool])
 
-        # 6. 실행
-        print(f"\n    → claude {agent} (model={model}, max_turns={max_turns}, "
+        # 프롬프트 파일 입력
+        cmd.extend(["--input-file", str(prompt_file)])
+
+        print(f"\n    → CLI {agent} (model={model}, max_turns={max_turns}, "
               f"budget=${budget})", flush=True)
 
-        process = None
+        # 5. 서브프로세스 실행
+        env = os.environ.copy()
+        env["PROJECT_NAME"] = self.project_slug
+
         try:
-            process = subprocess.Popen(
+            result = subprocess.run(
                 cmd,
-                cwd=str(get_workspace_dir()),
+                cwd=str(self.project_dir),
                 env=env,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
+                timeout=timeout_sec,
             )
-
-            stdout, stderr = process.communicate(
-                input=prompt, timeout=timeout_sec
-            )
-
-            # 7. 비용 파싱
-            cost_info = self._parse_claude_cost(stdout, stderr)
-
-            # 8. 출력 파일 확인
-            missing = []
-            found = []
-            for out in outputs:
-                out_path = self._resolve_output_path(out)
-                if "{" in out:
-                    parent = out_path.parent
-                    if parent.exists() and any(parent.iterdir()):
-                        found.append(str(parent))
-                    else:
-                        missing.append(out)
-                elif out_path.exists():
-                    found.append(str(out_path))
-                else:
-                    missing.append(out)
-
-            if process.returncode == 0 and not missing:
-                return StepResult(
-                    step_id=step_id, status="completed",
-                    output_files=found, cost_info=cost_info,
-                )
-            elif missing:
-                return StepResult(
-                    step_id=step_id, status="failed",
-                    error=f"출력 파일 미생성: {missing}. "
-                          f"exit={process.returncode}",
-                    cost_info=cost_info,
-                )
-            else:
-                err_tail = stderr[-500:] if stderr else stdout[-500:]
-                return StepResult(
-                    step_id=step_id, status="failed",
-                    error=f"Exit code {process.returncode}: {err_tail}",
-                    cost_info=cost_info,
-                )
-
         except subprocess.TimeoutExpired:
-            if process:
-                process.kill()
-                process.wait()
             return StepResult(
                 step_id=step_id, status="failed",
-                error=f"Timeout ({timeout_sec}s = {timeout_sec // 60}min)",
+                error=f"Claude CLI 타임아웃 ({timeout_sec}s)",
+            )
+        except FileNotFoundError:
+            return StepResult(
+                step_id=step_id, status="failed",
+                error="Claude CLI를 찾을 수 없습니다.",
+            )
+        finally:
+            # 임시 프롬프트 파일 정리
+            prompt_file.unlink(missing_ok=True)
+
+        # 6. 비용 정보 파싱
+        cost_info = self._parse_claude_cost(result.stdout, result.stderr)
+
+        # 7. 출력 파일 확인
+        missing = []
+        found = []
+        for out in outputs:
+            out_path = self._resolve_output_path(out)
+            if "{" in out:
+                parent = out_path.parent
+                if parent.exists() and any(parent.iterdir()):
+                    found.append(str(parent))
+                else:
+                    missing.append(out)
+            elif out_path.exists():
+                found.append(str(out_path))
+            else:
+                missing.append(out)
+
+        if result.returncode == 0 and not missing:
+            return StepResult(
+                step_id=step_id, status="completed",
+                output_files=found, cost_info=cost_info,
+            )
+        elif missing:
+            return StepResult(
+                step_id=step_id, status="failed",
+                error=f"출력 파일 미생성: {missing}. "
+                      f"exit_code={result.returncode}",
+                cost_info=cost_info,
+            )
+        else:
+            error = result.stderr[:500] or result.stdout[-500:]
+            return StepResult(
+                step_id=step_id, status="failed",
+                error=f"CLI exit {result.returncode}: {error}",
+                cost_info=cost_info,
             )
 
     def _run_module_step(self, step: dict) -> StepResult:
@@ -566,6 +641,7 @@ class PipelineRunner:
             "tts-verifier": "scripts/verify_tts.py",
             "data-validator": "scripts/validate_data.py",
             "manifest-builder": "scripts/build_manifest.py",
+            "layout-check": "scripts/layout_check.py",
             "video-assembler": None,  # shell command
         }
 
@@ -688,11 +764,43 @@ class PipelineRunner:
             if s not in skill_names:
                 skill_names.append(s)
 
+        # skill_refs: 에이전트별 필요한 references만 선택 로드
+        skill_refs = agent_def.get("skill_refs", {})
+
         shared_skills_text = ""
         for skill_name in skill_names:
-            skill_file = DATA_DIR / "skills" / f"{skill_name}.md"
+            # 1) 디렉토리 스킬 (shared/{name}/SKILL.md + references/)
+            skill_dir = DATA_DIR / "skills" / "shared" / skill_name
+            if (skill_dir / "SKILL.md").exists():
+                content = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+                # skill_refs에 지정된 references만 로드 (없으면 전체)
+                refs_to_load = skill_refs.get(skill_name)
+                ref_dir = skill_dir / "references"
+                if ref_dir.exists():
+                    if refs_to_load is not None:
+                        # 지정된 파일만
+                        for ref_name in refs_to_load:
+                            ref_file = ref_dir / f"{ref_name}.md"
+                            if ref_file.exists():
+                                content += f"\n\n{ref_file.read_text(encoding='utf-8')}"
+                    else:
+                        # 전체 references 로드 (하위 호환)
+                        for ref_file in sorted(ref_dir.glob("*.md")):
+                            content += f"\n\n{ref_file.read_text(encoding='utf-8')}"
+                shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
+                continue
+
+            # 2) 플랫 파일 (shared/{name}.md — 레거시)
+            skill_file = DATA_DIR / "skills" / "shared" / f"{skill_name}.md"
             if skill_file.exists():
                 content = skill_file.read_text(encoding="utf-8")
+                shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
+                continue
+
+            # 3) 루트 레벨 (skills/{name}.md — 레거시 호환)
+            skill_file_root = DATA_DIR / "skills" / f"{skill_name}.md"
+            if skill_file_root.exists():
+                content = skill_file_root.read_text(encoding="utf-8")
                 shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
 
         # 3. 입력 파일 경로
@@ -723,7 +831,12 @@ class PipelineRunner:
             resolved = self._resolve_output_path(out)
             output_lines.append(f"- {out}: {resolved}")
 
-        # 5. 프롬프트 조립
+        # 5. 컨텍스트 메모리 주입
+        context_memory_block = self.context_memory.build_context_prompt(
+            step.get("id", "")
+        )
+
+        # 6. 프롬프트 조립
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
 작업 디렉토리: {self.project_dir}
@@ -750,7 +863,9 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 {chr(10).join(output_lines)}
 
 모든 출력 파일을 성공적으로 생성하면 작업 완료입니다.
-</task>"""
+</task>
+
+{context_memory_block}"""
         return prompt
 
     def _load_agents_config(self) -> dict:
@@ -817,24 +932,20 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             )
         return cost_info
 
-    def _estimate_cost(
-        self, tokens_in: int, tokens_out: int, model: str
-    ) -> float:
+    # 모델별 토큰 가격 (USD per 1M tokens)
+    _PRICING = {
+        "claude-sonnet-4-5-20250929": (3.0, 15.0),
+        "claude-haiku-4-5-20251001": (0.80, 4.0),
+        "claude-opus-4-5-20250514": (15.0, 75.0),
+    }
+
+    @staticmethod
+    def _estimate_cost(tokens_in: int, tokens_out: int, model: str) -> float:
         """모델별 토큰 가격으로 비용 추정 (USD)."""
-        pricing = {
-            "opus": {"input": 15.0, "output": 75.0},
-            "sonnet": {"input": 3.0, "output": 15.0},
-            "haiku": {"input": 0.8, "output": 4.0},
-        }
-        model_lower = model.lower()
-        for key, prices in pricing.items():
-            if key in model_lower:
-                return (
-                    tokens_in * prices["input"]
-                    + tokens_out * prices["output"]
-                ) / 1_000_000
-        # 알 수 없는 모델 → sonnet 기준
-        return (tokens_in * 3.0 + tokens_out * 15.0) / 1_000_000
+        price_in, price_out = PipelineRunner._PRICING.get(
+            model, (3.0, 15.0)  # Sonnet 기본값
+        )
+        return (tokens_in * price_in + tokens_out * price_out) / 1_000_000
 
     def _resolve_output_path(self, output_template: str) -> Path:
         """output 경로 템플릿 해석. {project} → slug 치환."""

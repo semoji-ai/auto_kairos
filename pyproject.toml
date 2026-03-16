@@ -4,10 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "auto-agent"
-version = "2.7.0"
+version = "2.9.3"
 description = "AI 영상 제작 파이프라인 CLI"
 requires-python = ">=3.9"
 dependencies = [
+    "anthropic>=0.52",
     "requests>=2.31",
     "google-genai>=1.0",
     "python-dotenv>=1.0",
@@ -17,6 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dashboard = ["fastapi", "uvicorn", "jinja2", "websockets"]
+sync = ["supabase>=2.0"]
 
 [project.scripts]
 auto-agent = "auto_agent.cli:main"

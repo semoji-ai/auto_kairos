@@ -1,3 +1,8 @@
+---
+name: outline-template
+description: Use when structuring video outlines with chapter organization and narrative arc design
+---
+
 # Outline Template
 
 3막 구조의 영상 아웃라인 설계 규칙을 정의합니다.

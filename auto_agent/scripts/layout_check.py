@@ -1,28 +1,29 @@
 """
-레이아웃 시각 검증 스크립트
+시각적 QA 스틸 캡처 스크립트
 
-이미지 에셋이 있는 씬의 스틸 프레임을 렌더링하여
-레이아웃 문제를 시각적으로 검증한다.
+모든 씬의 중간 프레임을 Remotion으로 렌더링하여
+시각적 QA 검증용 스틸 이미지를 생성한다.
 
 사용법:
-  python scripts/layout_check.py [--project <name>] [--scene <num>]
+  python -m auto_agent.scripts.layout_check [--project <name>] [--scene <num>]
 
 출력:
   output/{project}/layout_check/
-    ├── scene_001.png   # 렌더링된 스틸
-    ├── scene_008.png
-    └── report.json     # 검증 결과
+    ├── scene_001.png          # 렌더링된 스틸
+    ├── scene_002.png
+    ├── ...
+    └── layout_check_report.json  # 씬별 메타데이터 + 경로
 """
 import json
 import subprocess
 import sys
-import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from auto_agent.paths import get_workspace_dir
-from auto_agent.scripts.project_paths import get_project_dir
+from auto_agent.scripts.project_paths import get_project_dir, get_scene_specs_path
 
-PROJECT_ROOT = get_workspace_dir()  # 하위 호환
+PROJECT_ROOT = get_workspace_dir()
 
 
 def calc_scene_frames(manifest: dict) -> list:
@@ -49,6 +50,38 @@ def calc_scene_frames(manifest: dict) -> list:
     return result
 
 
+def load_scene_specs_meta(project_dir: Path) -> dict:
+    """scene_specs.json에서 씬별 메타데이터를 읽어온다."""
+    specs_path = get_scene_specs_path()
+    if not specs_path.exists():
+        return {}
+
+    with open(specs_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    scenes = data.get("scenes", [])
+    meta = {}
+    for s in scenes:
+        num = s.get("sceneNumber")
+        viz = s.get("visualization", {})
+        creative = viz.get("creative", {})
+        meta[num] = {
+            "headline": creative.get("headline", ""),
+            "layout": creative.get("layout", ""),
+            "emphasis": creative.get("emphasis", ""),
+            "reveal": creative.get("reveal", ""),
+            "vizType": viz.get("vizType", ""),
+            "items": viz.get("items", []),
+            "itemIcons": viz.get("itemIcons", []),
+            "values": viz.get("values", []),
+            "title": viz.get("title", ""),
+            "narration": s.get("narration", ""),
+            "hasImageAsset": bool(s.get("imageAsset")),
+            "imagePlacement": s.get("imageAsset", {}).get("placement", "") if s.get("imageAsset") else "",
+        }
+    return meta
+
+
 def render_still(frame: int, output_path: str, remotion_dir: str) -> bool:
     """Remotion CLI로 특정 프레임의 스틸 이미지를 렌더링한다."""
     cmd = [
@@ -58,7 +91,6 @@ def render_still(frame: int, output_path: str, remotion_dir: str) -> bool:
         f"--frame={frame}",
         "--overwrite",
     ]
-    print(f"    Rendering frame {frame} → {Path(output_path).name}")
     try:
         result = subprocess.run(
             cmd,
@@ -70,10 +102,10 @@ def render_still(frame: int, output_path: str, remotion_dir: str) -> bool:
         if result.returncode == 0:
             return True
         else:
-            print(f"    ERROR: {result.stderr[:200]}")
+            print(f"    ERROR (frame {frame}): {result.stderr[:200]}")
             return False
     except subprocess.TimeoutExpired:
-        print("    ERROR: Render timeout (120s)")
+        print(f"    ERROR: Render timeout (frame {frame})")
         return False
     except FileNotFoundError:
         print("    ERROR: npx not found. Node.js 환경을 확인하세요.")
@@ -94,76 +126,102 @@ def main():
         raw = json.load(f)
     manifest = raw.get("manifest", raw)
 
+    # scene_specs 메타데이터 로드
+    specs_meta = load_scene_specs_meta(project_dir)
+
     # 특정 씬만 체크할 경우
     target_scene = None
     for i, arg in enumerate(sys.argv):
         if arg == "--scene" and i + 1 < len(sys.argv):
             target_scene = int(sys.argv[i + 1])
 
-    # 프레임 계산
+    # 프레임 계산 — 모든 씬
     scene_frames = calc_scene_frames(manifest)
 
-    # 이미지 에셋이 있는 씬만 필터
+    # 타겟 필터 (--scene 옵션 시)
     check_targets = []
     for sf in scene_frames:
-        if not sf["hasImage"]:
-            continue
         if target_scene and sf["sceneNumber"] != target_scene:
             continue
         check_targets.append(sf)
 
     if not check_targets:
-        print("체크할 이미지 씬이 없습니다.")
+        print("체크할 씬이 없습니다.")
         return
 
     # 출력 디렉토리
     output_dir = project_dir / "layout_check"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"레이아웃 검증 대상: {len(check_targets)}개 씬")
+    print(f"시각적 QA 스틸 캡처: {len(check_targets)}개 씬")
     print(f"출력 디렉토리: {output_dir}")
 
+    # 병렬 렌더링 (최대 4 workers — Remotion CLI 프로세스 부하 고려)
     results = []
-    for t in check_targets:
+
+    def _render_one(t):
         num = t["sceneNumber"]
-        placement = t["imageAsset"]["placement"] if t["imageAsset"] else "background"
-        opacity = t["imageAsset"]["opacity"] if t["imageAsset"] else 0.4
-
         still_path = str(output_dir / f"scene_{num:03d}.png")
-
-        print(f"\n[Scene {num}] placement={placement}, opacity={opacity}")
+        print(f"  [Scene {num}] frame={t['midFrame']} → {Path(still_path).name}")
         ok = render_still(t["midFrame"], still_path, remotion_dir)
 
-        results.append({
+        scene_meta = specs_meta.get(num, {})
+        return {
             "sceneNumber": num,
-            "placement": placement,
-            "opacity": opacity,
             "midFrame": t["midFrame"],
+            "durationFrames": t["durationFrames"],
             "rendered": ok,
-            "stillPath": still_path if ok else None,
-        })
+            "stillPath": str(still_path) if ok else None,
+            "stillFilename": f"scene_{num:03d}.png",
+            # scene_specs 메타 (QA 에이전트 대조용)
+            "headline": scene_meta.get("headline", ""),
+            "vizType": scene_meta.get("vizType", ""),
+            "layout": scene_meta.get("layout", ""),
+            "emphasis": scene_meta.get("emphasis", ""),
+            "items": scene_meta.get("items", []),
+            "itemCount": len(scene_meta.get("items", [])),
+            "hasImageAsset": scene_meta.get("hasImageAsset", False),
+            "imagePlacement": scene_meta.get("imagePlacement", ""),
+            "narrationLength": len(scene_meta.get("narration", "")),
+        }
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futures = {pool.submit(_render_one, t): t for t in check_targets}
+        for future in as_completed(futures):
+            results.append(future.result())
+
+    # sceneNumber 순 정렬
+    results.sort(key=lambda r: r["sceneNumber"])
 
     # 리포트 저장
     report = {
-        "total": len(results),
-        "rendered": sum(1 for r in results if r["rendered"]),
+        "projectDir": str(project_dir),
+        "totalScenes": len(results),
+        "renderedCount": sum(1 for r in results if r["rendered"]),
+        "failedCount": sum(1 for r in results if not r["rendered"]),
+        "outputDir": str(output_dir),
         "scenes": results,
-        "checkRules": [
-            "텍스트가 이미지 에셋과 겹치지 않는지 확인",
-            "배경 이미지 위 텍스트가 읽기 쉬운지 확인",
-            "left/right 배치 시 텍스트가 반대편에 정렬되는지 확인",
-            "자막 영역과 이미지가 겹치지 않는지 확인",
-            "전체적인 시각적 밸런스 확인",
+        "qaCheckItems": [
+            "텍스트 넘침/줄바꿈: headline이나 items가 컨테이너를 넘어 잘렸는지",
+            "headline-items 중복: 화면에 같은 내용이 두 번 표시되는지",
+            "빈 화면: 데이터가 렌더링되지 않아 검정 화면만 보이는지",
+            "이미지-텍스트 겹침: 이미지 에셋 위에 텍스트가 가려지는지",
+            "레이아웃 의도 불일치: vizType/layout 대비 실제 배치가 다른지",
+            "자막 영역 침범: 하단 자막 공간에 시각화 요소가 겹치는지",
+            "accent 과다: {{}} 강조가 3개 이상으로 산만해 보이는지",
+            "시각적 밸런스: 한쪽에 요소가 몰리거나 여백이 과도한지",
         ],
     }
 
-    report_path = output_dir / "report.json"
+    report_path = output_dir / "layout_check_report.json"
     with open(report_path, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
-    print(f"\n완료: {report['rendered']}/{report['total']}개 렌더링됨")
+    print(f"\n완료: {report['renderedCount']}/{report['totalScenes']}개 렌더링됨")
+    if report["failedCount"] > 0:
+        print(f"실패: {report['failedCount']}개")
     print(f"리포트: {report_path}")
-    print(f"\n렌더링된 스틸을 확인하여 레이아웃 문제가 없는지 검토하세요.")
+    print(f"스틸 디렉토리: {output_dir}")
 
 
 if __name__ == "__main__":
