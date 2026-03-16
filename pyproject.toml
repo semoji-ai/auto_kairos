@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "auto-kairos"
-version = "3.0.0"
+version = "3.1.0"
 description = "AI Video Production Pipeline — 리서치부터 렌더링까지 자동화"
 readme = "README.md"
 license = {text = "MIT"}

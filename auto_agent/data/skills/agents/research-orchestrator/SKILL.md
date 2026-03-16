@@ -12,6 +12,7 @@ allowed_tools:
   - Task
 skills:
   - shared/research-format
+  - shared/research-requirements-semoji
 ---
 
 # Research Orchestrator
@@ -63,6 +64,16 @@ RESEARCH/{topic}_{timestamp}/
 5. `research_report.json`으로 저장
 
 변환 규칙의 상세 내용은 `skills/shared/research-format.md` 참조.
+
+## 아트스타일별 리서치 요구사항
+
+프로젝트의 `art_style`이 세모지(`semoji`)인 경우, `shared/research-requirements-semoji` 스킬을 참조하여 카테고리별 필수 리서치 항목을 확인합니다.
+
+- `art_style.json`의 `name`에 "세모지" 또는 "semoji"가 포함되면 적용
+- 주제 유형 자동 판별(§5) → 해당 카테고리 필수 항목(§2) 체크
+- research_report.json 변환 시 필수 항목 누락 여부 검증
+
+---
 
 ## 주의사항
 

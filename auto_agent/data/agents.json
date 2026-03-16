@@ -12,8 +12,8 @@
       "max_turns": 70,
       "allowed_tools": ["Read", "Write", "Glob", "WebSearch", "WebFetch", "Task"],
       "skill": "deep-research",
-      "skills": ["shared/research-format"],
-      "notes": "글로벌 스킬 ~/.claude/skills/deep-research/ 사용. background_task로 Explorer/Librarian 병렬 배포. 리서치 완료 후 research_report.json까지 직접 생성 (research-synthesizer 흡수)"
+      "skills": ["shared/research-format", "shared/research-requirements-semoji"],
+      "notes": "글로벌 스킬 ~/.claude/skills/deep-research/ 사용. art_style=semoji일 때 research-requirements-semoji 카테고리별 항목 적용"
     },
 
     "fact-verifier": {
@@ -31,8 +31,8 @@
       "model": "claude-opus-4-6",
       "max_turns": 60,
       "allowed_tools": ["Read", "Write", "Glob"],
-      "skills": ["shared/outline-template", "shared/writing-style", "shared/scene-segmentation"],
-      "notes": "Phase 1: outline.json 생성 (outline-builder 흡수), Phase 2: 원고 작성. 공유 스킬 3개 참조"
+      "skills": ["shared/outline-template", "shared/writing-style", "shared/writing-style-iromism", "shared/writing-style-semoji", "shared/research-requirements-semoji", "shared/scene-segmentation"],
+      "notes": "Phase 1: outline.json 생성, Phase 2: 원고 작성. art_style에 따라 writing-style-semoji 또는 writing-style-iromism이 writing-style을 오버라이드"
     },
 
     "_comment_team_c": "===== Team C: 씬 설계팀 (Remotion-First) =====",
@@ -259,10 +259,12 @@
       {"name": "scene-segmentation", "description": "씬 분할 규칙 + 과밀 체크 + 이미지/캐릭터 판단", "referenced_by": ["visual-composer", "write-manuscript", "qa-reviewer"]},
       {"name": "creative-direction", "description": "씬별 Creative Direction 설계 (reveal, emphasis, mood, headline)", "referenced_by": ["visual-composer", "qa-reviewer"]},
       {"name": "writing-style", "description": "문체, 톤, VIZ/IMG 마커 규칙", "referenced_by": ["write-manuscript", "qa-reviewer"]},
+      {"name": "writing-style-semoji", "description": "세모지 586편 분석 기반 — 서사구조·후킹·전환·페이싱 (art_style=semoji일 때 조건부 로드)", "referenced_by": ["write-manuscript", "qa-reviewer"]},
       {"name": "motion-rhythm", "description": "전환 패턴, 브리딩 포인트, 강약 곡선", "referenced_by": ["visual-composer", "qa-reviewer"]},
       {"name": "korean-tts-rules", "description": "숫자→한국어, 약어 발음, 호흡 단위", "referenced_by": ["tts-preprocess"]},
       {"name": "data-mapping", "description": "수치 보강 + 검증 규칙 (파이 차트 100%, 단위 표준화)", "referenced_by": ["visual-composer", "qa-reviewer"]},
       {"name": "research-format", "description": "deep-research 출력 → research_report.json 변환", "referenced_by": ["research-orchestrator"]},
+      {"name": "research-requirements-semoji", "description": "세모지 586편 역추적 — 카테고리별 필수 리서치 항목·소스 우선순위 (art_style=semoji일 때 조건부 로드)", "referenced_by": ["research-orchestrator", "write-manuscript"]},
       {"name": "outline-template", "description": "3막 구조 + 씬 힌트 원칙", "referenced_by": ["write-manuscript"]},
       {"name": "image-generation", "description": "FAL nano-banana-2 기반 이미지 생성 규칙, 스타일별 프롬프트, 참조 이미지 규칙", "referenced_by": ["image-generator"]},
       {"name": "chart-mapping", "description": "차트 후보 씬 식별 + 데이터 매핑 규칙 (pie/line/bar/logo_grid)", "referenced_by": ["visual-composer"]},

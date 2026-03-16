@@ -1544,6 +1544,7 @@ const QuoteDisplay: React.FC<{
             maxWidth: "80%",
             lineHeight: 1.7,
             fontStyle: "italic",
+            whiteSpace: "pre-line",
           }}
         >
           {displayText}
@@ -3309,7 +3310,7 @@ const LineReveal: React.FC<{
 
   const isChapterLabel = /^CHAPTER\s*\d/i.test(line.trim());
   const baseFontSize = isChapterLabel ? 30 : getBaseFontSize(emphasis);
-  const showBadge = emphasis === "sequence" && totalLines > 1;
+  const showBadge = false; // 헤드라인에 숫자 뱃지 비활성 — 시퀀스 뱃지는 items에서만 표시
 
   return (
     <div
