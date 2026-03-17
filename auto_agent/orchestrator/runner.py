@@ -1605,6 +1605,11 @@ JSON 구조는 기존 scene_specs와 동일하되, scenes 배열에는 챕터 {c
         command = command.replace("{project}", self.project_slug)
         command = command.replace("{composition}", self._resolve_composition())
 
+        # Node.js PATH 보장 (npx, node 등)
+        node_dir = Path.home() / "local/nodejs/node-v22.14.0-darwin-x64/bin"
+        if node_dir.exists() and str(node_dir) not in env.get("PATH", ""):
+            env["PATH"] = f"{node_dir}:{env.get('PATH', '')}"
+
         try:
             result = subprocess.run(
                 command, shell=True,
