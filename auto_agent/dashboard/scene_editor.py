@@ -34,27 +34,40 @@ async def manifest_meta(slug: str):
     from auto_agent.dashboard.app import USE_SUPABASE, get_pm
 
     # manifest.json 우선, 없으면 scene_specs.json
+    meta = {}
+
     if USE_SUPABASE:
         pm = get_pm()
         pid = project["id"]
         manifest = pm.load_project_json(pid, "manifest.json")
         if manifest:
-            return {"meta": manifest.get("meta", {})}
-        specs = pm.load_project_json(pid, "scene_specs.json")
-        if specs:
-            return {"meta": specs.get("meta", {})}
+            meta = manifest.get("meta", {})
+        else:
+            specs = pm.load_project_json(pid, "scene_specs.json")
+            if specs:
+                meta = specs.get("meta", {})
     else:
         out_dir = project.get("output_dir", "")
         manifest_path = Path(out_dir) / "manifest.json"
         if manifest_path.exists():
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            return {"meta": manifest.get("meta", {})}
-        specs_path = Path(out_dir) / "scene_specs.json"
-        if specs_path.exists():
-            specs = json.loads(specs_path.read_text(encoding="utf-8"))
-            return {"meta": specs.get("meta", {})}
+            meta = manifest.get("meta", {})
+        else:
+            specs_path = Path(out_dir) / "scene_specs.json"
+            if specs_path.exists():
+                specs = json.loads(specs_path.read_text(encoding="utf-8"))
+                meta = specs.get("meta", {})
 
-    return JSONResponse({"error": "manifest/specs 없음"}, status_code=404)
+    # 프로젝트 config에서 videoTheme/artStyle 보장 (manifest에 없을 수 있음)
+    config = project.get("config") or {}
+    if not meta.get("videoTheme") and config.get("video_theme"):
+        meta["videoTheme"] = config["video_theme"]
+    if not meta.get("artStyle") and config.get("art_style"):
+        meta["artStyle"] = config["art_style"]
+
+    if not meta:
+        return JSONResponse({"error": "manifest/specs 없음"}, status_code=404)
+    return {"meta": meta}
 
 
 @manifest_router.post("/rebuild-manifest")

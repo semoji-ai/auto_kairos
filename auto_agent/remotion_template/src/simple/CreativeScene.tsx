@@ -3011,7 +3011,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           <div style={{
             display: "grid",
             gridTemplateColumns: items.length <= 2 ? "1fr 1fr" : `repeat(${Math.min(items.length, 4)}, 1fr)`,
-            gap: 20, width: "100%",
+            gap: 20, width: "100%", maxWidth: 900, margin: "0 auto",
           }}>
             {items.map((item, i) => (
               <div key={i} style={useFadeRise(staggerDelay(i, 8, 12), 15)}>

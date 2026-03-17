@@ -885,7 +885,7 @@ export const MetricCard: React.FC<{
   return (
     <div style={{
       backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`,
-      borderRadius: 12, padding: "16px 20px", minWidth: 180, ...style,
+      borderRadius: 12, padding: "16px 20px", minWidth: 180, textAlign: "center", ...style,
     }}>
       <div style={{ fontSize: 20, color: C.textMuted, marginBottom: 6 }}>{label}</div>
       <div style={{ fontSize: 44, fontWeight: 800, color: C.accent, lineHeight: 1.1 }}>{value}</div>
