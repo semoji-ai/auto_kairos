@@ -30,6 +30,7 @@ class SyncManager:
     def __init__(self, project_slug: str, project_dir: Path, local_project_id=None):
         self.slug = project_slug
         self.storage_key = _to_storage_key(project_slug)
+        self.file_prefix = self.storage_key.replace("proj-", "")[:6]  # 6자 해시 프리픽스
         self.project_dir = Path(project_dir)
         self.local_project_id = local_project_id
         self._sb = None
@@ -147,14 +148,32 @@ class SyncManager:
         asset_type: str,
         scene_number: Optional[int] = None,
     ) -> str:
-        """파일 업로드 + assets 테이블 등록. public URL 반환."""
-        # Storage 경로: {slug}/{relative_path}
-        try:
-            rel_path = local_path.relative_to(self.project_dir)
-        except ValueError:
-            rel_path = Path(local_path.name)
+        """파일 업로드 + assets 테이블 등록. public URL 반환.
 
-        storage_path = f"{self.storage_key}/{rel_path.as_posix()}"
+        파일 네이밍 규칙:
+          - 에셋 파일: {storage_key}/{asset_type}/{prefix}_{filename}
+          - 프리픽스: storage_key에서 proj- 제거 후 앞 6자
+          - JSON 메타데이터: {storage_key}/{filename} (프리픽스 없음)
+        """
+        # 에셋 타입별 폴더 매핑
+        ASSET_FOLDERS = {
+            "audio": "audio",
+            "image": "images",
+            "subtitle": "subtitles",
+            "character": "characters",
+            "viz_bg": "images/viz_bg",
+        }
+
+        folder = ASSET_FOLDERS.get(asset_type)
+        original_name = local_path.name
+
+        if folder:
+            # 에셋 파일: 폴더 + 프리픽스 적용
+            prefixed_name = f"{self.file_prefix}_{original_name}"
+            storage_path = f"{self.storage_key}/{folder}/{prefixed_name}"
+        else:
+            # JSON 등 메타데이터: 루트에 프리픽스 없이
+            storage_path = f"{self.storage_key}/{original_name}"
         public_url = self.upload_file(local_path, storage_path)
 
         checksum = _sha256(local_path)
@@ -165,7 +184,7 @@ class SyncManager:
             "asset_type": asset_type,
             "scene_number": scene_number,
             "file_path": storage_path,
-            "file_name": local_path.name,
+            "file_name": f"{self.file_prefix}_{original_name}" if folder else original_name,
             "file_size": file_size,
             "checksum": checksum,
             "mime_type": mimetypes.guess_type(str(local_path))[0],

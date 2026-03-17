@@ -68,13 +68,22 @@ def build_manifest(project_id: str, storage_key: str):
     def public_url(path: str) -> str:
         return sb.storage.from_(bucket).get_public_url(f"{storage_key}/{path}")
 
+    # 파일 프리픽스: storage_key에서 proj- 제거 후 앞 6자
+    file_prefix = storage_key.replace("proj-", "")[:6]
+
+    def _strip_prefix(name: str) -> str:
+        """파일명에서 프리픽스 제거 → scene_NNN 키 추출."""
+        if name.startswith(f"{file_prefix}_"):
+            return name[len(file_prefix) + 1:]
+        return name
+
     # 이미지/오디오 파일 목록 (한 번에 조회)
     image_files = {}
     try:
         for f in sb.storage.from_(bucket).list(f"{storage_key}/images"):
             name = f.get("name", "")
             if any(name.lower().endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".webp")):
-                key = name.rsplit(".", 1)[0]
+                key = _strip_prefix(name).rsplit(".", 1)[0]
                 image_files[key] = f"images/{name}"
     except Exception:
         pass
@@ -84,7 +93,7 @@ def build_manifest(project_id: str, storage_key: str):
         for f in sb.storage.from_(bucket).list(f"{storage_key}/audio"):
             name = f.get("name", "")
             if name.endswith(".mp3"):
-                key = name.rsplit(".", 1)[0]
+                key = _strip_prefix(name).rsplit(".", 1)[0]
                 audio_files[key] = f"audio/{name}"
     except Exception:
         pass
