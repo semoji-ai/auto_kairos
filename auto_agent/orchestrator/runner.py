@@ -857,6 +857,7 @@ class PipelineRunner:
         cmd = [
             cli_path, "--print", "--output-format", "json",
             "--model", model, "--max-turns", "1",
+            "--tools", "",
         ]
 
         env = os.environ.copy()
@@ -1623,6 +1624,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             "--output-format", "json",
             "--model", target_model,
             "--max-turns", "1",
+            "--tools", "",
         ]
 
         timeout_sec = self._get_agent_timeout(agent) if agent else 900
