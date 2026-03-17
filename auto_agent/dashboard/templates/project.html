@@ -10,32 +10,24 @@
     <span>{{ project.scene_count }} scenes</span>
   </div>
 </div>
-<nav class="sidebar-nav">
-  <div class="sidebar-section-label">Management</div>
-  <a href="#" data-tab="overview" class="sidebar-link {% if tab == 'overview' %}active{% endif %}" onclick="switchTab('overview', this); return false;">Overview</a>
-  <a href="#" data-tab="pipeline" class="sidebar-link {% if tab == 'pipeline' %}active{% endif %}" onclick="switchTab('pipeline', this); return false;">Pipeline</a>
-
-  <div class="sidebar-section-label">Content</div>
-  <a href="#" data-tab="research" class="sidebar-link {% if tab == 'research' %}active{% endif %}" onclick="switchTab('research', this); return false;">Research</a>
-  <a href="#" data-tab="manuscript" class="sidebar-link {% if tab == 'manuscript' %}active{% endif %}" onclick="switchTab('manuscript', this); return false;">원고</a>
-  <a href="#" data-tab="storyboard" class="sidebar-link {% if tab == 'storyboard' %}active{% endif %}" onclick="switchTab('storyboard', this); return false;">스토리보드</a>
-  <a href="#" data-tab="studio" class="sidebar-link {% if tab == 'studio' %}active{% endif %}" onclick="switchTab('studio', this); return false;">Studio</a>
-  <a href="#" data-tab="design" class="sidebar-link {% if tab == 'design' %}active{% endif %}" onclick="switchTab('design', this); return false;">Design</a>
-
-  <div class="sidebar-section-label">Data</div>
-  <a href="#" data-tab="assets" class="sidebar-link {% if tab == 'assets' %}active{% endif %}" onclick="switchTab('assets', this); return false;">Assets</a>
-  <a href="#" data-tab="versions" class="sidebar-link {% if tab == 'versions' %}active{% endif %}" onclick="switchTab('versions', this); return false;">Versions</a>
-  <a href="#" data-tab="costs" class="sidebar-link {% if tab == 'costs' %}active{% endif %}" onclick="switchTab('costs', this); return false;">Costs</a>
-</nav>
 {% endblock %}
 
 {% block content %}
+<nav class="content-tabs" id="content-tabs">
+  <a href="#" data-tab="research" class="content-tab {% if tab == 'research' %}active{% endif %}" onclick="switchTab('research', this); return false;">Research</a>
+  <a href="#" data-tab="manuscript" class="content-tab {% if tab == 'manuscript' %}active{% endif %}" onclick="switchTab('manuscript', this); return false;">원고</a>
+  <a href="#" data-tab="storyboard" class="content-tab {% if tab == 'storyboard' %}active{% endif %}" onclick="switchTab('storyboard', this); return false;">스토리보드</a>
+  <a href="#" data-tab="studio" class="content-tab {% if tab == 'studio' %}active{% endif %}" onclick="switchTab('studio', this); return false;">Studio</a>
+  <a href="#" data-tab="design" class="content-tab {% if tab == 'design' %}active{% endif %}" onclick="switchTab('design', this); return false;">Design</a>
+  <span class="content-tab-divider"></span>
+  <a href="#" data-tab="assets" class="content-tab {% if tab == 'assets' %}active{% endif %}" onclick="switchTab('assets', this); return false;">Assets</a>
+  <a href="#" data-tab="versions" class="content-tab {% if tab == 'versions' %}active{% endif %}" onclick="switchTab('versions', this); return false;">Versions</a>
+  <a href="#" data-tab="costs" class="content-tab {% if tab == 'costs' %}active{% endif %}" onclick="switchTab('costs', this); return false;">Costs</a>
+  <span class="content-tab-divider"></span>
+  <a href="#" data-tab="agent" class="content-tab {% if tab == 'agent' %}active{% endif %}" onclick="switchTab('agent', this); return false;">Agent</a>
+</nav>
 <div id="tab-content">
-{% if tab == 'overview' %}
-  {% include "partials/_overview.html" %}
-{% elif tab == 'pipeline' %}
-  {% include "partials/_pipeline.html" %}
-{% elif tab == 'research' %}
+{% if tab == 'research' %}
   {% include "partials/_research.html" %}
 {% elif tab == 'manuscript' %}
   {% include "partials/_manuscript.html" %}
@@ -51,6 +43,8 @@
   {% include "partials/_costs.html" %}
 {% elif tab == 'design' %}
   {% include "partials/_design.html" %}
+{% elif tab == 'agent' %}
+  {% include "partials/_agent.html" %}
 {% endif %}
 </div>
 {% endblock %}
@@ -60,7 +54,7 @@
 var PROJECT_SLUG = '{{ slug }}';
 
 function switchTab(tab, el) {
-  document.querySelectorAll('.sidebar-nav .sidebar-link').forEach(function(a) { a.classList.remove('active'); });
+  document.querySelectorAll('.content-tabs .content-tab').forEach(function(a) { a.classList.remove('active'); });
   el.classList.add('active');
   htmx.ajax('GET', '/api/p/' + PROJECT_SLUG + '/tab/' + tab, {
     target: '#tab-content',

@@ -43,11 +43,15 @@ class SupabaseProjectManager:
         resp = query.execute()
         return [self._normalize_project(p) for p in resp.data]
 
-    def get_project(self, project_id: int = None, slug: str = None) -> Optional[dict]:
+    def get_project(self, project_id=None, slug: str = None) -> Optional[dict]:
         if slug:
             resp = self.sb.table("projects").select("*").eq("slug", slug).execute()
         elif project_id:
-            resp = self.sb.table("projects").select("*").eq("local_id", project_id).execute()
+            # UUID 문자열이면 id로, 정수면 local_id로 조회
+            if isinstance(project_id, str) and len(project_id) > 10:
+                resp = self.sb.table("projects").select("*").eq("id", project_id).execute()
+            else:
+                resp = self.sb.table("projects").select("*").eq("local_id", project_id).execute()
         else:
             return None
         if not resp.data:
@@ -70,7 +74,7 @@ class SupabaseProjectManager:
             "topic": topic or name,
             "theme": theme,
             "config": config or {},
-            "status": "draft",
+            "status": "created",
             "scene_count": 0,
             "storage_key": storage_key,
         }

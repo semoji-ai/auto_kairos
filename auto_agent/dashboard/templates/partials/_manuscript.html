@@ -1,35 +1,217 @@
-<!-- Manuscript 탭 — 챕터 + 원고 본문 -->
+<!-- Manuscript 탭 — 원고 에디터 (항상 편집 가능) -->
 {% if chapters %}
-<div class="chapter-filter">
-  <button class="btn btn-accent chapter-btn active" onclick="filterChapter(0, this)">All</button>
-  {% for ch in chapters %}
-  <button class="btn chapter-btn" onclick="filterChapter({{ ch.number }}, this)">Ch{{ ch.number }}</button>
-  {% endfor %}
+<div class="ms-toolbar">
+  <div class="ms-toolbar-left">
+    <span class="ms-chars" id="ms-chars"></span>
+  </div>
+  <div class="ms-toolbar-right">
+    <span id="ms-status" class="ms-status"></span>
+    <button class="btn-sm btn-outline" id="btn-undo" onclick="msUndo()" disabled title="Ctrl+Z">↩</button>
+    <button class="btn-sm btn-outline" id="btn-redo" onclick="msRedo()" disabled title="Ctrl+Y">↪</button>
+    <button class="btn-sm btn-accent" id="btn-save" onclick="msSave()" title="Ctrl+S">저장</button>
+  </div>
 </div>
 
-<div class="manuscript-reading">
-  {% for ch in chapters %}
-  <div class="ms-chapter" data-chapter="{{ ch.number }}">
-    <h2 class="ms-chapter-title">Ch{{ ch.number }}. {{ ch.title }}</h2>
-    <div class="ms-body">
-      {% for scene in ch.scenes %}
-      {% for line in scene.lines %}
-      <p>{{ line }}</p>
-      {% endfor %}
-      {% endfor %}
-    </div>
-  </div>
-  {% endfor %}
+<div id="ms-editor-wrap" class="ms-editor-wrap">
+  <div id="ms-highlight" class="ms-highlight" aria-hidden="true"></div>
+  <textarea id="ms-editor" class="ms-editor" spellcheck="false" placeholder="원고를 로딩 중..."></textarea>
 </div>
+
+<style>
+.ms-toolbar { display:flex; justify-content:space-between; align-items:center; padding:6px 0; margin-bottom:4px; }
+.ms-toolbar-left { display:flex; gap:8px; align-items:center; }
+.ms-toolbar-right { display:flex; gap:4px; align-items:center; }
+.ms-chars { font-size:10px; color:var(--text-muted); }
+.ms-status { font-size:10px; color:var(--text-muted); margin-right:4px; transition:color 0.3s; }
+.ms-status.saved { color:#22C55E; }
+.ms-status.error { color:#EF4444; }
+.ms-status.modified { color:#F59E0B; }
+
+.ms-editor-wrap { height:calc(100vh - 160px); position:relative; }
+.ms-highlight, .ms-editor {
+  width:100%; height:100%;
+  border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:20px 24px;
+  font-family:'Pretendard',sans-serif; font-size:14px; line-height:2.0;
+  tab-size:2; white-space:pre-wrap; word-wrap:break-word; overflow-y:auto;
+}
+.ms-highlight {
+  position:absolute; top:0; left:0; pointer-events:none;
+  color:transparent; background:rgba(255,255,255,0.03);
+}
+.ms-editor {
+  position:relative; background:transparent; color:#D4D4D8;
+  resize:none; outline:none; -webkit-text-fill-color:transparent; caret-color:#D4D4D8;
+}
+.ms-editor:focus { border-color:rgba(245,158,11,0.3); }
+.ms-editor::selection { background:rgba(245,158,11,0.2); -webkit-text-fill-color:#D4D4D8; }
+
+/* 하이라이트 스타일 */
+.hl-chapter { color:#F59E0B; font-weight:700; font-size:16px; }
+.hl-bold { color:#E4E4E7; font-weight:600; }
+.hl-text { color:#A1A1AA; }
+#btn-undo:not(:disabled), #btn-redo:not(:disabled) { color:#E4E4E7; }
+</style>
 
 <script>
-function filterChapter(num, btn) {
-  document.querySelectorAll('.chapter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.ms-chapter').forEach(ch => {
-    ch.style.display = (num === 0 || ch.dataset.chapter == num) ? '' : 'none';
+(function() {
+  var SLUG = typeof PROJECT_SLUG !== 'undefined' ? PROJECT_SLUG : '{{ slug }}';
+  var originalRaw = '';
+  var history = [];
+  var redoStack = [];
+  var MAX_HISTORY = 10;
+  var historyTimer = null;
+  var autoSaveTimer = null;
+
+  var elHighlight = document.getElementById('ms-highlight');
+  var elEditor = document.getElementById('ms-editor');
+  var elUndo = document.getElementById('btn-undo');
+  var elRedo = document.getElementById('btn-redo');
+  var elStatus = document.getElementById('ms-status');
+  var elChars = document.getElementById('ms-chars');
+
+  // 하이라이트 렌더링
+  function renderHighlight() {
+    var text = elEditor.value;
+    // HTML 이스케이프
+    var html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // # Ch 챕터 제목 → 강조
+    html = html.replace(/^(# Ch\d+\..*)$/gm, '<span class="hl-chapter">$1</span>');
+    // **볼드** → 강조
+    html = html.replace(/\*\*(.+?)\*\*/g, '<span class="hl-bold">**$1**</span>');
+    // 나머지 → 기본 텍스트색
+    // 줄 단위로 처리: 이미 span이 없는 줄은 hl-text
+    var lines = html.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf('<span') === -1 && lines[i].trim()) {
+        lines[i] = '<span class="hl-text">' + lines[i] + '</span>';
+      }
+    }
+    // textarea와 동기화를 위해 끝에 줄바꿈 추가
+    elHighlight.innerHTML = lines.join('\n') + '\n';
+  }
+
+  // 스크롤 동기화
+  elEditor.addEventListener('scroll', function() {
+    elHighlight.scrollTop = elEditor.scrollTop;
+    elHighlight.scrollLeft = elEditor.scrollLeft;
   });
-}
+
+  // 초기 로드
+  fetch('/api/p/' + SLUG + '/manuscript/raw')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var text = data.text || '';
+      originalRaw = text;
+      elEditor.value = text;
+      history = [text];
+      updateChars();
+      renderHighlight();
+      elStatus.textContent = '';
+    })
+    .catch(function() {
+      elEditor.value = '';
+      elStatus.textContent = '로드 실패';
+      elStatus.className = 'ms-status error';
+    });
+
+  function updateChars() {
+    var text = elEditor.value;
+    var lines = text.split('\n').filter(function(l) {
+      return l.trim() && !l.startsWith('#') && l.trim() !== '---';
+    });
+    var chars = 0;
+    lines.forEach(function(l) { chars += l.length; });
+    elChars.textContent = chars.toLocaleString() + '자 · ~' + (chars / 500).toFixed(1) + '분';
+  }
+
+  // 저장
+  window.msSave = function() {
+    var text = elEditor.value;
+    if (!text.trim()) { elStatus.textContent = '빈 원고는 저장 불가'; elStatus.className = 'ms-status error'; return; }
+    elStatus.textContent = '저장 중...';
+    elStatus.className = 'ms-status';
+
+    fetch('/api/p/' + SLUG + '/manuscript/save', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ text: text })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.ok) {
+        originalRaw = text;
+        elStatus.textContent = '저장됨';
+        elStatus.className = 'ms-status saved';
+        setTimeout(function() { if (elStatus.textContent === '저장됨') elStatus.textContent = ''; }, 2000);
+      } else {
+        elStatus.textContent = res.error || '저장 실패';
+        elStatus.className = 'ms-status error';
+      }
+    })
+    .catch(function(e) { elStatus.textContent = '오류'; elStatus.className = 'ms-status error'; });
+  };
+
+  // Undo/Redo
+  window.msUndo = function() {
+    if (history.length <= 1) return;
+    redoStack.push(history.pop());
+    elEditor.value = history[history.length - 1];
+    updateUndoRedo(); updateChars(); renderHighlight(); markModified();
+  };
+  window.msRedo = function() {
+    if (redoStack.length === 0) return;
+    var state = redoStack.pop();
+    history.push(state);
+    elEditor.value = state;
+    updateUndoRedo(); updateChars(); renderHighlight(); markModified();
+  };
+
+  function pushHistory() {
+    var current = elEditor.value;
+    if (history.length > 0 && history[history.length - 1] === current) return;
+    history.push(current);
+    if (history.length > MAX_HISTORY) history.shift();
+    redoStack = [];
+    updateUndoRedo();
+  }
+  function updateUndoRedo() {
+    elUndo.disabled = history.length <= 1;
+    elRedo.disabled = redoStack.length === 0;
+  }
+  function markModified() {
+    if (elEditor.value !== originalRaw) {
+      elStatus.textContent = '수정됨 (미저장)';
+      elStatus.className = 'ms-status modified';
+    }
+  }
+
+  // 입력 이벤트
+  elEditor.addEventListener('input', function() {
+    updateChars();
+    renderHighlight();
+    markModified();
+    clearTimeout(historyTimer);
+    historyTimer = setTimeout(pushHistory, 1000);
+  });
+
+  // 단축키
+  elEditor.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); msUndo(); }
+      if (e.key === 'z' && e.shiftKey) { e.preventDefault(); msRedo(); }
+      if (e.key === 'y') { e.preventDefault(); msRedo(); }
+      if (e.key === 's') { e.preventDefault(); msSave(); }
+    }
+  });
+
+  // 페이지 이탈 경고
+  window.addEventListener('beforeunload', function(e) {
+    if (elEditor.value !== originalRaw) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+})();
 </script>
 {% else %}
 <div class="empty">No manuscript found. Run the pipeline first.</div>

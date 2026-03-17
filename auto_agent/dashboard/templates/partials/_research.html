@@ -1,96 +1,229 @@
 <!-- Research 탭 -->
-{% if research and research.sections %}
+{% if research and (research.episodes or research.sections) %}
 <div class="research-layout">
   <div class="research-sidebar">
-    <div class="sidebar-title">Sections</div>
+    <div class="sidebar-title">목차</div>
+    {% if research.summary %}
+    <a href="#" class="sidebar-item active" onclick="showSection('summary', this); return false;">요약</a>
+    {% endif %}
+    {% if research.episodes %}
+    <a href="#" class="sidebar-item" onclick="showSection('episodes', this); return false;">에피소드 ({{ research.episodes|length }})</a>
+    {% endif %}
+    {% if research.key_figures %}
+    <a href="#" class="sidebar-item" onclick="showSection('figures', this); return false;">주요 인물 ({{ research.key_figures|length }})</a>
+    {% endif %}
+    {% if research.timeline %}
+    <a href="#" class="sidebar-item" onclick="showSection('timeline', this); return false;">타임라인 ({{ research.timeline|length }})</a>
+    {% endif %}
+    {% if research.statistics %}
+    <a href="#" class="sidebar-item" onclick="showSection('statistics', this); return false;">통계 ({{ research.statistics|length }})</a>
+    {% endif %}
+    {% if research.comparisons %}
+    <a href="#" class="sidebar-item" onclick="showSection('comparisons', this); return false;">비교 분석 ({{ research.comparisons|length }})</a>
+    {% endif %}
+    {% if research.sources %}
+    <a href="#" class="sidebar-item" onclick="showSection('sources', this); return false;">출처 ({{ research.sources|length }})</a>
+    {% endif %}
+    {# 레거시 sections 호환 #}
+    {% if research.sections %}
     {% for section in research.sections %}
-    <a href="#section-{{ section.id }}" class="sidebar-item {% if loop.first %}active{% endif %}"
-       onclick="showSection('{{ section.id }}', this)">
-      {{ section.title }}
-    </a>
+    <a href="#" class="sidebar-item" onclick="showSection('sec-{{ loop.index }}', this); return false;">{{ section.title }}</a>
     {% endfor %}
+    {% endif %}
   </div>
 
   <div class="research-content">
-    {% for section in research.sections %}
-    <div id="section-{{ section.id }}" class="research-section {% if not loop.first %}hidden{% endif %}">
-      <h2>{{ section.title }}</h2>
-
-      {% if section.subsections %}
-      {% for sub in section.subsections %}
+    {# 요약 #}
+    {% if research.summary %}
+    <div id="rs-summary" class="research-section">
+      <h2>{{ research.topic or '리서치 요약' }}</h2>
       <div class="subsection">
-        <h3>{{ sub.title }}</h3>
+        <p class="content-text" style="white-space:pre-line">{{ research.summary }}</p>
+      </div>
+    </div>
+    {% endif %}
 
-        {% if sub.content %}
-        <p class="content-text">{{ sub.content }}</p>
+    {# 에피소드 #}
+    {% if research.episodes %}
+    <div id="rs-episodes" class="research-section hidden">
+      <h2>에피소드</h2>
+      {% for ep in research.episodes %}
+      <div class="subsection">
+        <h3>{{ ep.title or '에피소드 ' ~ loop.index }}</h3>
+        {% if ep.subtopic or ep.period %}<span class="badge" style="margin-bottom:8px;display:inline-block">{{ ep.subtopic or ep.period }}</span>{% endif %}
+        <p class="content-text" style="color:var(--text-muted)">{{ ep.content or '' }}</p>
+        {% if ep.narrative_draft %}
+        <p class="content-text" style="white-space:pre-line;margin-top:8px">{{ ep.narrative_draft }}</p>
         {% endif %}
-
-        {% if sub.key_facts %}
-        <div class="key-facts">
-          <h4>Key Facts</h4>
-          <ul>
-            {% for fact in sub.key_facts %}
-            <li>{{ fact }}</li>
-            {% endfor %}
+        {% if ep.must_include %}
+        <div class="key-facts" style="margin-top:8px">
+          <h4 style="font-size:11px;color:var(--accent)">필수 팩트</h4>
+          <ul style="font-size:12px">
+          {% for fact in ep.must_include %}
+            <li>{{ fact.fact if fact is mapping else fact }}</li>
+          {% endfor %}
           </ul>
         </div>
         {% endif %}
-
-        {# 구조화 데이터 자동 렌더링 #}
-        {% for key, val in sub.items() %}
-          {% if key not in ['id', 'title', 'content', 'key_facts', 'sources'] %}
-            {% if val is mapping %}
-            <div class="data-table-wrap">
-              <h4>{{ key|replace('_', ' ')|title }}</h4>
-              <table class="data-table">
-                <tbody>
-                {% for k, v in val.items() %}
-                <tr><td style="color:var(--text-muted)">{{ k }}</td><td>{{ v }}</td></tr>
-                {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            {% elif val is iterable and val is not string %}
-            <div class="data-table-wrap">
-              <h4>{{ key|replace('_', ' ')|title }}</h4>
-              {% if val and val[0] is mapping %}
-              <table class="data-table">
-                <thead><tr>{% for h in val[0].keys() %}<th>{{ h }}</th>{% endfor %}</tr></thead>
-                <tbody>
-                {% for row in val %}
-                <tr>{% for v in row.values() %}<td>{{ v }}</td>{% endfor %}</tr>
-                {% endfor %}
-                </tbody>
-              </table>
-              {% else %}
-              <ul>{% for item in val %}<li>{{ item }}</li>{% endfor %}</ul>
-              {% endif %}
-            </div>
-            {% endif %}
-          {% endif %}
-        {% endfor %}
-
-        {% if sub.sources %}
+        {% if ep.sources %}
         <div class="sources">
           <span class="sources-label">Sources:</span>
-          {% for s in sub.sources %}
-          <span class="source-tag">{{ s }}</span>
+          {% for s in ep.sources %}
+            {% if s is mapping %}
+            <a href="{{ s.url }}" target="_blank" class="source-tag">{{ s.title or s.url }}</a>
+            {% else %}
+            <span class="source-tag">{{ s }}</span>
+            {% endif %}
           {% endfor %}
         </div>
         {% endif %}
       </div>
       {% endfor %}
+    </div>
+    {% endif %}
+
+    {# 주요 인물 #}
+    {% if research.key_figures %}
+    <div id="rs-figures" class="research-section hidden">
+      <h2>주요 인물</h2>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>인물</th><th>역할/설명</th><th>기간</th></tr></thead>
+          <tbody>
+          {% for fig in research.key_figures %}
+          <tr>
+            <td style="font-weight:600">{{ fig.name or fig }}</td>
+            <td>{{ fig.role or fig.get('description', '') }}</td>
+            <td style="color:var(--text-muted)">{{ fig.period or '' }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {# 타임라인 #}
+    {% if research.timeline %}
+    <div id="rs-timeline" class="research-section hidden">
+      <h2>타임라인</h2>
+      <div class="timeline-list">
+        {% for event in research.timeline %}
+        <div class="subsection" style="border-left:2px solid var(--accent);padding-left:12px;margin-bottom:12px">
+          <span style="color:var(--accent);font-weight:600;font-size:13px">{{ event.year or event.date or event.period or '' }}</span>
+          <p class="content-text" style="margin-top:4px">{{ event.event or event.description or event }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# 통계 #}
+    {% if research.statistics %}
+    <div id="rs-statistics" class="research-section hidden">
+      <h2>통계</h2>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>항목</th><th>수치</th><th>출처/비고</th></tr></thead>
+          <tbody>
+          {% for stat in research.statistics %}
+          <tr>
+            <td>{{ stat.label or stat.get('metric', '') }}</td>
+            <td style="font-weight:600">{{ stat.value or '' }}</td>
+            <td style="color:var(--text-muted);font-size:12px">{{ stat.source or stat.get('note', '') }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {# 비교 분석 #}
+    {% if research.comparisons %}
+    <div id="rs-comparisons" class="research-section hidden">
+      <h2>비교 분석</h2>
+      {% for comp in research.comparisons %}
+      <div class="subsection">
+        <h3>{{ comp.title or '비교 ' ~ loop.index }}</h3>
+        {% if comp.data is iterable and comp.data is not string %}
+        <div class="data-table-wrap">
+          <table class="data-table">
+            {% if comp.data and comp.data[0] is mapping %}
+            <thead><tr>{% for h in comp.data[0].keys() %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+            <tbody>
+            {% for row in comp.data %}
+            <tr>{% for v in row.values() %}<td>{{ v }}</td>{% endfor %}</tr>
+            {% endfor %}
+            </tbody>
+            {% endif %}
+          </table>
+        </div>
+        {% endif %}
+        {% if comp.insight %}<p class="content-text" style="margin-top:8px;color:var(--accent)">{{ comp.insight }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# 출처 #}
+    {% if research.sources %}
+    <div id="rs-sources" class="research-section hidden">
+      <h2>출처</h2>
+      {% if research.source_grades %}
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        {% for grade, count in research.source_grades.items() %}
+        <span class="badge">{{ grade }}: {{ count }}건</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>제목</th><th>등급</th><th>URL</th></tr></thead>
+          <tbody>
+          {% for s in research.sources %}
+          <tr>
+            <td>{{ s.title or s }}</td>
+            <td>{{ s.grade or '' }}</td>
+            <td>{% if s.url %}<a href="{{ s.url }}" target="_blank" style="font-size:11px">{{ s.url[:60] }}{% if s.url|length > 60 %}...{% endif %}</a>{% endif %}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {# 레거시 sections 호환 #}
+    {% if research.sections %}
+    {% for section in research.sections %}
+    <div id="rs-sec-{{ loop.index }}" class="research-section hidden">
+      <h2>{{ section.title }}</h2>
+      {% if section.content %}
+      <div class="subsection">
+        <p class="content-text" style="white-space:pre-line">{{ section.content }}</p>
+      </div>
+      {% endif %}
+      {% if section.subsections %}
+      {% for sub in section.subsections %}
+      <div class="subsection">
+        <h3>{{ sub.title }}</h3>
+        {% if sub.content %}<p class="content-text">{{ sub.content }}</p>{% endif %}
+      </div>
+      {% endfor %}
       {% endif %}
     </div>
     {% endfor %}
+    {% endif %}
   </div>
 </div>
 
 <script>
 function showSection(id, el) {
-  document.querySelectorAll('.research-section').forEach(s => s.classList.add('hidden'));
-  document.getElementById('section-' + id).classList.remove('hidden');
-  document.querySelectorAll('.sidebar-item').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('.research-section').forEach(function(s) { s.classList.add('hidden'); });
+  var target = document.getElementById('rs-' + id);
+  if (target) target.classList.remove('hidden');
+  document.querySelectorAll('.research-sidebar .sidebar-item').forEach(function(a) { a.classList.remove('active'); });
   el.classList.add('active');
 }
 </script>

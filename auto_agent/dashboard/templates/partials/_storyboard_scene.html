@@ -18,10 +18,23 @@
     {% if scene.imageAsset and scene.imageAsset.source in ('wikimedia', 'search') %}
     <div class="image-candidates" id="image-candidates" data-slug="{{ slug }}" data-scene="{{ scene.sceneNumber }}">
       <div class="candidates-header">
-        <h5>검색 후보</h5>
+        <h5>다운로드된 후보</h5>
         <span class="candidates-loading" id="candidates-loading">로딩중...</span>
       </div>
       <div class="candidates-grid" id="candidates-grid"></div>
+
+      <div style="margin-top:8px">
+        <button id="btn-show-all" class="btn-show-all" style="display:none" onclick="loadAllCandidates()">
+          🔍 더 많은 후보 보기
+        </button>
+      </div>
+      <div id="all-candidates-section" style="display:none;margin-top:8px">
+        <div class="candidates-header">
+          <h5>전체 검색 결과 (썸네일)</h5>
+          <span id="all-candidates-count" style="font-size:11px;color:var(--text-muted)"></span>
+        </div>
+        <div class="candidates-grid all-candidates-grid" id="all-candidates-grid"></div>
+      </div>
     </div>
     <script>
     (function(){
@@ -38,6 +51,7 @@
             grid.innerHTML = '<span style="color:var(--text-muted);font-size:12px">후보 없음</span>';
             return;
           }
+          document.getElementById('btn-show-all').style.display = 'inline-block';
           data.candidates.forEach(c => {
             const div = document.createElement('div');
             div.className = 'candidate-thumb' + (c.selected ? ' selected' : '');
@@ -59,7 +73,6 @@
                   document.getElementById('main-scene-image').src = res.image_url + '?t=' + Date.now();
                   grid.querySelectorAll('.candidate-thumb').forEach(el => el.classList.remove('selected'));
                   div.classList.add('selected');
-                  data.candidates.forEach(x => x.selected = (x.rank === c.rank));
                 }
               });
             };
@@ -67,6 +80,72 @@
           });
         })
         .catch(() => { loading.textContent = '로드 실패'; });
+
+      // 전체 후보 (썸네일) 로드
+      window.loadAllCandidates = function() {
+        const allGrid = document.getElementById('all-candidates-grid');
+        const allSection = document.getElementById('all-candidates-section');
+        const countEl = document.getElementById('all-candidates-count');
+        const btn = document.getElementById('btn-show-all');
+
+        btn.textContent = '로딩중...';
+        btn.disabled = true;
+
+        fetch('/api/p/' + slug + '/scene/' + sceneNum + '/image-candidates?include_all=true')
+          .then(r => r.json())
+          .then(data => {
+            const all = data.all_candidates || [];
+            if (all.length === 0) {
+              btn.textContent = '추가 후보 없음';
+              return;
+            }
+            btn.style.display = 'none';
+            allSection.style.display = 'block';
+            countEl.textContent = all.length + '개';
+
+            all.forEach(c => {
+              if (c.downloaded) return; // 이미 다운로드된 건 스킵
+              const div = document.createElement('div');
+              div.className = 'candidate-thumb thumbnail-only';
+              div.title = (c.title || '') + ' (' + c.source + ', score: ' + c.score + ')';
+              const thumbUrl = c.thumbnail_url || c.image_url;
+              div.innerHTML = '<img src="' + thumbUrl + '" alt="' + (c.title||'').substring(0,20) + '" loading="lazy">'
+                + '<div class="candidate-info">'
+                + '<span class="candidate-rank">#' + c.rank + '</span>'
+                + '<span class="candidate-score">' + c.score + '</span>'
+                + '<span class="candidate-source">' + c.source + '</span>'
+                + '</div>';
+              div.onclick = function() {
+                if (div.classList.contains('downloading')) return;
+                div.classList.add('downloading');
+                div.querySelector('.candidate-info').innerHTML = '<span style="color:var(--accent)">다운로드중...</span>';
+
+                fetch('/api/p/' + slug + '/scene/' + sceneNum + '/download-candidate', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({image_url: c.image_url})
+                }).then(r => r.json()).then(res => {
+                  if (res.ok) {
+                    document.getElementById('main-scene-image').src = res.image_url + '?t=' + Date.now();
+                    div.classList.remove('downloading');
+                    div.classList.add('selected');
+                    div.querySelector('.candidate-info').innerHTML = '<span style="color:var(--accent)">✓ 적용됨</span>';
+                    // 기존 그리드의 선택 해제
+                    grid.querySelectorAll('.candidate-thumb').forEach(el => el.classList.remove('selected'));
+                  } else {
+                    div.classList.remove('downloading');
+                    div.querySelector('.candidate-info').innerHTML = '<span style="color:#f66">실패</span>';
+                  }
+                }).catch(() => {
+                  div.classList.remove('downloading');
+                  div.querySelector('.candidate-info').innerHTML = '<span style="color:#f66">오류</span>';
+                });
+              };
+              allGrid.appendChild(div);
+            });
+          })
+          .catch(() => { btn.textContent = '로드 실패'; btn.disabled = false; });
+      };
     })();
     </script>
     {% endif %}
