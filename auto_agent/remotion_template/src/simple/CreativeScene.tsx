@@ -3007,23 +3007,32 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
         )}
 
         {/* Metric Wall — 여러 KPI 동시 */}
-        {layout === "metric_wall" && items.length >= 2 && (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: items.length <= 2 ? "1fr 1fr" : `repeat(${Math.min(items.length, 4)}, 1fr)`,
-            gap: 24, width: "100%", margin: "0 auto",
-          }}>
-            {items.map((item, i) => (
-              <div key={i} style={useFadeRise(staggerDelay(i, 8, 12), 15)}>
-                <MetricCard
-                  label={item}
-                  value={values[i] != null ? `${values[i]}${data.unit || ""}` : ""}
-                  style={{ width: "100%" }}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        {layout === "metric_wall" && items.length >= 2 && (() => {
+          // 가장 긴 텍스트 기준으로 카드 최소 너비 계산
+          const maxLabelLen = Math.max(...items.map(it => it.length));
+          const maxValueLen = Math.max(...values.map((v, i) => `${v}${data.unit || ""}`.length), 0);
+          const cardMinW = Math.max(maxLabelLen * 14, maxValueLen * 28) + 48;
+          const cols = Math.min(items.length, Math.max(1, Math.floor(1824 / (cardMinW + 24))));
+          const gridW = cols * cardMinW + (cols - 1) * 24;
+          return (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${cols}, ${cardMinW}px)`,
+              gap: 24, width: gridW, margin: "0 auto",
+              justifyContent: "center",
+            }}>
+              {items.map((item, i) => (
+                <div key={i} style={useFadeRise(staggerDelay(i, 8, 12), 15)}>
+                  <MetricCard
+                    label={item}
+                    value={values[i] != null ? `${values[i]}${data.unit || ""}` : ""}
+                    style={{ width: "100%" }}
+                  />
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Rank List — 순위 시각화 */}
         {layout === "rank_list" && items.length >= 2 && (
