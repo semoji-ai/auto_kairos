@@ -448,13 +448,13 @@ function computeFixedDelays(
 function getAccentFontSize(emphasis: string): number {
   switch (emphasis) {
     case "number":
-      return 132;
+      return 80;
     case "keyword":
-      return 112;
+      return 80;
     case "count":
-      return 108;
+      return 80;
     default:
-      return 96;
+      return 80;
   }
 }
 
@@ -462,11 +462,11 @@ function getBaseFontSize(emphasis: string): number {
   switch (emphasis) {
     case "number":
     case "count":
-      return 60;
+      return 48;
     case "quote":
-      return 72;
+      return 48;
     default:
-      return 66;
+      return 48;
   }
 }
 
@@ -989,9 +989,9 @@ const SplitLayout: React.FC<{
           <div
             style={{
               opacity: sourceFade,
-              fontSize: 28,
+              fontSize: 18,
               color: C.textDim,
-              marginTop: 32,
+              marginTop: 16,
             }}
           >
             {source}
@@ -1029,10 +1029,10 @@ const ItemsGrid: React.FC<{
       style={{
         display: "grid",
         gridTemplateColumns: `repeat(${cols}, 1fr)`,
-        gap: 12,
+        gap: 16,
         width: "100%",
         maxWidth: 1040,
-        marginTop: 24,
+        marginTop: 32,
       }}
     >
       {items.map((item, i) => {
@@ -1058,7 +1058,7 @@ const ItemsGrid: React.FC<{
               border: `1px solid ${moodCfg.accent}${flashGlow > 0 ? "88" : "33"}`,
               backgroundColor: `rgba(${moodCfg.accentRgb},0.06)`,
               textAlign: "center",
-              fontSize: items.length > 6 ? 15 : 18,
+              fontSize: 28,
               fontWeight: 600,
               color: C.text,
               boxShadow: borderGlow,
@@ -1273,7 +1273,7 @@ const ItemsList: React.FC<{
           width: "100%",
           justifyContent: "center",
           flexWrap: "wrap",
-          marginTop: 20,
+          marginTop: 32,
         }}
       >
         {items.map((item, i) => {
@@ -1322,7 +1322,7 @@ const ItemsList: React.FC<{
               )}
               <span
                 style={{
-                  fontSize: items.length <= 3 ? 20 : 17,
+                  fontSize: 28,
                   fontWeight: spotlight ? 700 : 600,
                   color: spotlight ? moodCfg.accent : C.text,
                   textAlign: "center",
@@ -1345,10 +1345,10 @@ const ItemsList: React.FC<{
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: 12,
         width: "100%",
         maxWidth: 940,
-        marginTop: 20,
+        marginTop: 32,
       }}
     >
       {items.map((item, i) => {
@@ -1407,7 +1407,7 @@ const ItemsList: React.FC<{
             )}
             <span
               style={{
-                fontSize: 24,
+                fontSize: 28,
                 fontWeight: spotlight ? 700 : 500,
                 color: spotlight ? moodCfg.accent : C.text,
                 flex: 1,
@@ -1525,7 +1525,7 @@ const QuoteDisplay: React.FC<{
         {/* Quote mark decoration */}
         <div
           style={{
-            fontSize: 180,
+            fontSize: 120,
             fontWeight: 800,
             color: moodCfg.accent,
             opacity: markOpacity,
@@ -1542,7 +1542,7 @@ const QuoteDisplay: React.FC<{
           style={{
             opacity: quoteOpacity,
             transform: `translateY(${quoteRise}px)`,
-            fontSize: 68,
+            fontSize: 44,
             fontWeight: 600,
             color: C.text,
             textAlign: "center",
@@ -1572,9 +1572,9 @@ const QuoteDisplay: React.FC<{
           <div
             style={{
               opacity: sourceOpacity,
-              fontSize: 36,
+              fontSize: 18,
               color: moodCfg.accent,
-              marginTop: 32,
+              marginTop: 16,
               fontWeight: 500,
             }}
           >
@@ -1669,7 +1669,7 @@ const LogoGridLayout: React.FC<{
             <div
               key={i}
               style={{
-                fontSize: i === 0 ? 60 : 48,
+                fontSize: 48,
                 fontWeight: 700,
                 color: C.text,
                 lineHeight: 1.3,
@@ -1760,7 +1760,7 @@ const LogoGridLayout: React.FC<{
                 {/* Company name */}
                 <div
                   style={{
-                    fontSize: 26,
+                    fontSize: 22,
                     fontWeight: 600,
                     color: C.text,
                     textAlign: "center",
@@ -1774,7 +1774,7 @@ const LogoGridLayout: React.FC<{
                 {val !== undefined && (
                   <div
                     style={{
-                      fontSize: 30,
+                      fontSize: 26,
                       fontWeight: 700,
                       color: brandColor,
                     }}
@@ -1792,9 +1792,9 @@ const LogoGridLayout: React.FC<{
           <div
             style={{
               opacity: sourceFade,
-              fontSize: 24,
+              fontSize: 18,
               color: C.textDim,
-              marginTop: 8,
+              marginTop: 16,
             }}
           >
             {source}
@@ -1878,9 +1878,9 @@ const BarDisplay: React.FC<{
           style={{
             opacity: headlineOpacity,
             transform: `translateY(${headlineRise}px)`,
-            fontSize: 60,
+            fontSize: 48,
             fontWeight: 600,
-            marginBottom: 40,
+            marginBottom: 32,
             textAlign: "center",
             lineHeight: 1.4,
           }}
@@ -1891,7 +1891,7 @@ const BarDisplay: React.FC<{
             moodCfg={moodCfg}
             countedValues={countedValues}
             glowOpacity={glowOpacity}
-            accentFontSizeOverride={66}
+            accentFontSizeOverride={80}
           />
         </div>
 
@@ -1902,7 +1902,7 @@ const BarDisplay: React.FC<{
             maxWidth: 800,
             display: "flex",
             flexDirection: "column",
-            gap: 16,
+            gap: 12,
           }}
         >
           {items.map((label, i) => {
@@ -1942,7 +1942,7 @@ const BarDisplay: React.FC<{
                   style={{
                     width: 200,
                     textAlign: "right",
-                    fontSize: 30,
+                    fontSize: 24,
                     fontWeight: 500,
                     color: C.textMuted,
                     flexShrink: 0,
@@ -2029,7 +2029,7 @@ const BarDisplay: React.FC<{
                   style={{
                     opacity: valOpacity,
                     width: 120,
-                    fontSize: 30,
+                    fontSize: 28,
                     fontWeight: 700,
                     color: isNeg ? NEG_COLOR : moodCfg.accent,
                     textAlign: "left",
@@ -2065,7 +2065,7 @@ const BarDisplay: React.FC<{
         {/* Source */}
         {source && (
           <div
-            style={{ opacity: sourceFade, fontSize: 28, color: C.textDim, marginTop: 12 }}
+            style={{ opacity: sourceFade, fontSize: 18, color: C.textDim, marginTop: 16 }}
           >
             {source}
           </div>
@@ -2139,7 +2139,7 @@ const PieChartDisplay: React.FC<{
         {/* Headline */}
         <div style={{ opacity: headlineFade, textAlign: "center", maxWidth: "90%" }}>
           {lines.map((line, i) => (
-            <div key={i} style={{ fontSize: i === 0 ? 54 : 42, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+            <div key={i} style={{ fontSize: 48, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
               <AccentText text={line} baseColor={C.text} />
             </div>
           ))}
@@ -2182,7 +2182,7 @@ const PieChartDisplay: React.FC<{
             })}
             {/* Center text */}
             {chartConfig?.showTotal !== false && (
-              <text x={cx} y={cy + 8} textAnchor="middle" fontSize={40} fontWeight={700} fill={C.text}>
+              <text x={cx} y={cy + 8} textAnchor="middle" fontSize={32} fontWeight={700} fill={C.text}>
                 {total}{unit}
               </text>
             )}
@@ -2196,8 +2196,8 @@ const PieChartDisplay: React.FC<{
               return (
                 <div key={i} style={{ opacity: labelFade, display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ width: 20, height: 20, borderRadius: 4, backgroundColor: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
-                  <span style={{ fontSize: 26, color: C.text, fontWeight: 500 }}>{item}</span>
-                  <span style={{ fontSize: 26, color: PIE_COLORS[i % PIE_COLORS.length], fontWeight: 700, marginLeft: 8 }}>
+                  <span style={{ fontSize: 22, color: C.text, fontWeight: 500 }}>{item}</span>
+                  <span style={{ fontSize: 22, color: PIE_COLORS[i % PIE_COLORS.length], fontWeight: 700, marginLeft: 8 }}>
                     {displayValues[i]}{unit}
                   </span>
                 </div>
@@ -2207,7 +2207,7 @@ const PieChartDisplay: React.FC<{
         </div>
 
         {source && (
-          <div style={{ opacity: sourceFade, fontSize: 24, color: C.textDim, marginTop: 8 }}>{source}</div>
+          <div style={{ opacity: sourceFade, fontSize: 18, color: C.textDim, marginTop: 16 }}>{source}</div>
         )}
       </div>
     </AbsoluteFill>
@@ -2289,7 +2289,7 @@ const LineChartDisplay: React.FC<{
         {/* Headline */}
         <div style={{ opacity: headlineFade, textAlign: "center", maxWidth: "90%" }}>
           {lines.map((line, i) => (
-            <div key={i} style={{ fontSize: i === 0 ? 54 : 42, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+            <div key={i} style={{ fontSize: 48, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
               <AccentText text={line} baseColor={C.text} />
             </div>
           ))}
@@ -2363,7 +2363,7 @@ const LineChartDisplay: React.FC<{
         </svg>
 
         {source && (
-          <div style={{ opacity: sourceFade, fontSize: 24, color: C.textDim, marginTop: 8 }}>{source}</div>
+          <div style={{ opacity: sourceFade, fontSize: 18, color: C.textDim, marginTop: 16 }}>{source}</div>
         )}
       </div>
     </AbsoluteFill>
@@ -2849,7 +2849,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          padding: "60px 40px",
+          padding: "60px 48px",
         }}
       >
         {/* Badges */}
@@ -2980,8 +2980,8 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
                     {i < items.length - 1 && <div style={{ width: 2, height: 36, backgroundColor: C.cardBorder }} />}
                   </div>
                   <div>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: i === items.length - 1 ? moodCfg.accent : C.text }}>{item}</div>
-                    {desc && <div style={{ fontSize: 16, color: C.textMuted, marginTop: 4 }}>{desc}</div>}
+                    <div style={{ fontSize: 28, fontWeight: 700, color: i === items.length - 1 ? moodCfg.accent : C.text }}>{item}</div>
+                    {desc && <div style={{ fontSize: 20, color: C.textMuted, marginTop: 4 }}>{desc}</div>}
                   </div>
                 </div>
               );
@@ -3034,13 +3034,13 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, ...useFadeRise(staggerDelay(i, 10, 12), 15) }}>
                   <RankBadge rank={i + 1} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 20, fontWeight: 600, color: C.text, marginBottom: 6 }}>{item}</div>
+                    <div style={{ fontSize: 24, fontWeight: 600, color: C.text, marginBottom: 6 }}>{item}</div>
                     {values[i] != null && (
                       <MiniBar value={values[i]} maxValue={maxVal} color={i === 0 ? moodCfg.accent : C.cardBorder} />
                     )}
                   </div>
                   {values[i] != null && (
-                    <span style={{ fontSize: 20, fontWeight: 700, color: i === 0 ? moodCfg.accent : C.textMuted }}>
+                    <span style={{ fontSize: 24, fontWeight: 700, color: i === 0 ? moodCfg.accent : C.textMuted }}>
                       {values[i]}{data.unit || ""}
                     </span>
                   )}
@@ -3144,8 +3144,8 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
                         <IconBadge icon={resolveIcon(data.itemIcons[i])!} size={48} />
                       </div>
                     )}
-                    <div style={{ fontSize: 20, fontWeight: 700, color: C.text, marginBottom: desc ? 8 : 0 }}>{item}</div>
-                    {desc && <div style={{ fontSize: 15, color: C.textMuted }}>{desc}</div>}
+                    <div style={{ fontSize: 28, fontWeight: 700, color: C.text, marginBottom: desc ? 8 : 0 }}>{item}</div>
+                    {desc && <div style={{ fontSize: 20, color: C.textMuted }}>{desc}</div>}
                   </Card>
                 </div>
               );
@@ -3161,7 +3161,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
                 {items.map((item, i) => (
                   <div key={i} style={useFadeRise(staggerDelay(i, 8, 30), 15)}>
                     <Card style={{ padding: "12px 20px" }}>
-                      <span style={{ fontSize: 16, color: C.textMuted }}>{item}</span>
+                      <span style={{ fontSize: 22, color: C.textMuted }}>{item}</span>
                     </Card>
                   </div>
                 ))}
@@ -3179,11 +3179,11 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
             />
             <div style={{ flex: 1 }}>
               <QuoteMarkBlock size={48} color={moodCfg.accent} />
-              <div style={{ fontSize: 24, fontWeight: 500, color: C.text, lineHeight: 1.5, fontStyle: "italic" }}>
+              <div style={{ fontSize: 28, fontWeight: 500, color: C.text, lineHeight: 1.5, fontStyle: "italic" }}>
                 {items[0] || ""}
               </div>
               {data.source && (
-                <div style={{ fontSize: 16, color: C.textMuted, marginTop: 12 }}>— {data.source}</div>
+                <div style={{ fontSize: 18, color: C.textMuted, marginTop: 16 }}>— {data.source}</div>
               )}
             </div>
           </div>
@@ -3235,9 +3235,9 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           <div
             style={{
               opacity: sourceFade,
-              fontSize: 28,
+              fontSize: 18,
               color: C.textDim,
-              marginTop: 24,
+              marginTop: 16,
             }}
           >
             {source}

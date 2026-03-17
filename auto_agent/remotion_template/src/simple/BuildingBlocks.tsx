@@ -434,7 +434,7 @@ export const Pill: React.FC<{
         borderRadius: 20,
         border: `1px solid ${active ? C.accent : C.cardBorder}`,
         backgroundColor: active ? C.accentSoft : "transparent",
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 600,
         color: active ? C.accent : C.textMuted,
         ...style,
@@ -641,7 +641,7 @@ export const FlagCard: React.FC<{
         />
       </div>
       {label && (
-        <span style={{ fontSize: 28, fontWeight: 600, color: C.text, textAlign: "center" }}>
+        <span style={{ fontSize: 24, fontWeight: 600, color: C.text, textAlign: "center" }}>
           {label}
         </span>
       )}
@@ -745,7 +745,7 @@ export const Tag: React.FC<{
   style?: React.CSSProperties;
 }> = ({ text, active, size = "md", style }) => {
   const C = useC();
-  const sizes = { sm: { px: 18, py: 8, fs: 26 }, md: { px: 28, py: 12, fs: 36 }, lg: { px: 36, py: 16, fs: 48 } };
+  const sizes = { sm: { px: 18, py: 8, fs: 20 }, md: { px: 28, py: 12, fs: 26 }, lg: { px: 36, py: 16, fs: 36 } };
   const s = sizes[size];
   return (
     <span
@@ -864,7 +864,7 @@ export const TimelineDot: React.FC<{
         border: `2px solid ${active ? C.accent : C.cardBorder}`,
         flexShrink: 0,
       }} />
-      <span style={{ fontSize: 42, fontWeight: active ? 700 : 400, color: active ? C.accent : C.text }}>
+      <span style={{ fontSize: 28, fontWeight: active ? 700 : 400, color: active ? C.accent : C.text }}>
         {label}
       </span>
     </div>
@@ -885,12 +885,12 @@ export const MetricCard: React.FC<{
   return (
     <div style={{
       backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`,
-      borderRadius: 12, padding: "20px 24px", minWidth: 180, ...style,
+      borderRadius: 12, padding: "16px 20px", minWidth: 180, ...style,
     }}>
-      <div style={{ fontSize: 22, color: C.textMuted, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 54, fontWeight: 800, color: C.accent, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 20, color: C.textMuted, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 44, fontWeight: 800, color: C.accent, lineHeight: 1.1 }}>{value}</div>
       {change && (
-        <div style={{ fontSize: 22, color: trendColor, marginTop: 6, fontWeight: 600 }}>
+        <div style={{ fontSize: 18, color: trendColor, marginTop: 6, fontWeight: 600 }}>
           {trendArrow} {change}
         </div>
       )}
@@ -936,7 +936,7 @@ export const Callout: React.FC<{
       paddingLeft: 24, paddingTop: 16, paddingBottom: 16,
       backgroundColor: `${borderColor}11`,
       borderRadius: "0 8px 8px 0",
-      fontSize: 42, color: C.text, lineHeight: 1.5,
+      fontSize: 28, color: C.text, lineHeight: 1.5,
       ...style,
     }}>
       {children}
@@ -951,10 +951,10 @@ export const StepBadge: React.FC<{
   active?: boolean;
   size?: number;
   style?: React.CSSProperties;
-}> = ({ step, label, active, size = 72, style }) => {
+}> = ({ step, label, active, size = 56, style }) => {
   const C = useC();
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 14, ...style }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, ...style }}>
       <div style={{
         width: size, height: size, borderRadius: size / 2,
         backgroundColor: active ? C.accent : "transparent",
@@ -966,7 +966,7 @@ export const StepBadge: React.FC<{
         {step}
       </div>
       {label && (
-        <span style={{ fontSize: 48, fontWeight: 600, color: active ? C.text : C.textMuted }}>
+        <span style={{ fontSize: 28, fontWeight: 600, color: active ? C.text : C.textMuted }}>
           {label}
         </span>
       )}
@@ -989,9 +989,9 @@ export const ComparisonCell: React.FC<{
       backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`,
       borderRadius: 12, padding: "16px 20px", textAlign: "center", ...style,
     }}>
-      <div style={{ fontSize: 42, color: C.textMuted, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 84, fontWeight: 800, color: valueColor, lineHeight: 1.1 }}>{value}</div>
-      {sublabel && <div style={{ fontSize: 42, color: C.textMuted, marginTop: 4 }}>{sublabel}</div>}
+      <div style={{ fontSize: 24, color: C.textMuted, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 48, fontWeight: 800, color: valueColor, lineHeight: 1.1 }}>{value}</div>
+      {sublabel && <div style={{ fontSize: 24, color: C.textMuted, marginTop: 4 }}>{sublabel}</div>}
     </div>
   );
 };
