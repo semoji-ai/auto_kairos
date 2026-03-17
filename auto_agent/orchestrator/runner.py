@@ -1547,12 +1547,56 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     output_files=[str(self._resolve_output_path(o)) for o in outputs],
                 )
 
-        # 프롬프트 빌드
-        prompt = self._build_agent_prompt(step)
+        # 프롬프트 빌드 — 1턴 전용 프롬프트가 있으면 사용
+        step_name = step.get("name", "")
+        prompt_file = self.SINGLE_CALL_PROMPTS.get(step_name)
+        if prompt_file:
+            # 1턴 전용 프롬프트 (컨텍스트 + 입력 파일 인라인 주입)
+            context_block = ""
+            for inp in inputs:
+                inp_path = self._resolve_output_path(inp)
+                if inp_path.exists():
+                    context_block += f"\n<file name=\"{inp}\">\n{inp_path.read_text(encoding='utf-8')[:80000]}\n</file>\n"
 
-        # 출력 파일 정보를 프롬프트에 추가 (JSON으로 응답하라는 지시)
+            template = self.rule_manager.load(f"prompts/single-call/{prompt_file}")
+            art_style_override = self._load_art_style_override(step_name)
+            # chapter_specs_json — motion_planning은 축약 데이터만 필요
+            specs_path = self._resolve_output_path("scene_specs.json")
+            if specs_path.exists():
+                if step_name == "motion_planning":
+                    # 씬별 sceneNumber, chapter, title, durationFrames, creative.reveal/mood만 추출
+                    full = json.loads(specs_path.read_text(encoding="utf-8"))
+                    compact_scenes = []
+                    for s in full.get("scenes", []):
+                        cr = s.get("visualization", {}).get("creative", {})
+                        compact_scenes.append({
+                            "sceneNumber": s.get("sceneNumber"),
+                            "chapter": s.get("chapter"),
+                            "title": s.get("title", ""),
+                            "durationFrames": s.get("durationFrames", 150),
+                            "reveal": cr.get("reveal", ""),
+                            "emphasis": cr.get("emphasis", ""),
+                            "mood": cr.get("mood", ""),
+                            "hasChart": bool(s.get("visualization", {}).get("chartConfig")),
+                            "hasImage": bool(s.get("imageAsset")),
+                            "hasMap": bool(s.get("mapScene")),
+                            "itemCount": len(s.get("visualization", {}).get("items", [])),
+                        })
+                    chapter_specs_json = json.dumps({"scenes": compact_scenes}, ensure_ascii=False, indent=2)
+                else:
+                    chapter_specs_json = specs_path.read_text(encoding="utf-8")[:80000]
+            else:
+                chapter_specs_json = "{}"
+
+            prompt = template.replace("{context_block}", context_block)
+            prompt = prompt.replace("{chapter_specs_json}", chapter_specs_json)
+            prompt = prompt.replace("{art_style_override}", art_style_override)
+        else:
+            prompt = self._build_agent_prompt(step)
+
+        # 출력 파일 정보를 프롬프트에 추가 (1턴 전용 프롬프트가 없을 때만)
         output_names = [Path(o).name for o in outputs if "{" not in o]
-        if len(output_names) == 1:
+        if not prompt_file and len(output_names) == 1:
             prompt += f"""
 
 <output_format>
