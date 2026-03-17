@@ -1000,11 +1000,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 {step.get("description", "")}
 {step.get("notes", "")}
 
-중요: 결과를 아래 파일에 저장하세요 (scene_specs.json이 아닌 챕터 전용 파일):
-출력 파일: {chapter_specs_path}
-
-JSON 구조는 기존 scene_specs와 동일하되, scenes 배열에는 챕터 {chapter_num}의 씬들만 포함합니다.
-절대 scene_specs.json에 직접 쓰지 마세요. 반드시 위의 출력 파일 경로에 저장하세요.
+각 씬의 visualization.creative, items, values, imageAsset, mapScene을 설계하세요.
+narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 </task>
 
 {context_memory_block}"""
