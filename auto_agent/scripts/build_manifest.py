@@ -112,6 +112,7 @@ def build_manifest(project_id: str, storage_key: str):
     font_family = "Pretendard"
     art_style = None
     video_theme = "dark"
+    map_theme = "modern_clean"
     try:
         proj_resp = sb.table("projects").select("config").eq("id", project_id).execute()
         if proj_resp.data:
@@ -119,6 +120,7 @@ def build_manifest(project_id: str, storage_key: str):
             font_family = cfg.get("font_family", "Pretendard")
             art_style = cfg.get("art_style")
             video_theme = cfg.get("video_theme", "dark")
+            map_theme = cfg.get("map_theme", "modern_clean")
     except Exception:
         pass
 
@@ -207,7 +209,11 @@ def build_manifest(project_id: str, storage_key: str):
             }
 
         if scene.get("mapScene"):
-            entry["mapScene"] = scene["mapScene"]
+            ms = dict(scene["mapScene"])
+            # config의 map_theme을 맵씬에 적용 (씬별 오버라이드가 없으면)
+            if not ms.get("mapStyle"):
+                ms["mapStyle"] = map_theme
+            entry["mapScene"] = ms
 
         scenes.append(entry)
 
