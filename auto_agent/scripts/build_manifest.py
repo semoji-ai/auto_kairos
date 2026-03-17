@@ -108,15 +108,17 @@ def build_manifest(project_id: str, storage_key: str):
     except Exception:
         pass
 
-    # 프로젝트 config에서 폰트/아트스타일 읽기
+    # 프로젝트 config에서 폰트/아트스타일/테마 읽기
     font_family = "Pretendard"
     art_style = None
+    video_theme = "dark"
     try:
         proj_resp = sb.table("projects").select("config").eq("id", project_id).execute()
         if proj_resp.data:
             cfg = proj_resp.data[0].get("config") or {}
             font_family = cfg.get("font_family", "Pretendard")
             art_style = cfg.get("art_style")
+            video_theme = cfg.get("video_theme", "dark")
     except Exception:
         pass
 
@@ -218,6 +220,7 @@ def build_manifest(project_id: str, storage_key: str):
             "fps": 30,
             "subtitleFont": font_family,
             "vizFont": font_family,
+            "videoTheme": video_theme,
             **({"artStyle": art_style} if art_style else {}),
         },
         "scenes": scenes,
