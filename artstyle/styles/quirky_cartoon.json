@@ -1,0 +1,29 @@
+{
+  "name": "Quirky Hand-drawn Cartoon",
+  "description": "개성있는 낙서 스타일 만화. 느슨하고 유머러스한 손그림 느낌",
+  "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",
+  "scene_style_description": "1990s American comic book style, exaggerated proportions, bold lines.",
+  "style": {
+    "art_style": "Loose, absurd hand-drawn cartoon illustration",
+    "linework": {
+      "outline": "Thick and uneven black lines, scribbly and wobbly as if drawn quickly by hand",
+      "variation": "Not smooth, slightly misaligned strokes, playful and imperfect feel"
+    },
+    "shapes": "Basic geometric forms but intentionally distorted, head and body in exaggerated proportions",
+    "color_palette": "Bright and simple colors, flat digital fill, some areas spilling outside the outlines",
+    "shading": "Almost none, simple flat fills only",
+    "character_design": "Facial features placed abnormally (crooked mouth, misplaced nose or ears). Expressive, silly, and exaggerated expressions for a comical look",
+    "mood_and_tone": "Playful, humorous, and whimsical, like a doodle-style cartoon",
+    "background": "Simple stage or props drawn roughly and minimally"
+  },
+  "technical": {
+    "no_text": true,
+    "resolution": "Digital drawing with a hand-drawn texture feel",
+    "scene_style": "Loose, absurd hand-drawn cartoon illustration style. Characters have exaggerated proportions with thick uneven lines. Playful and humorous mood like a quick doodle sketch."
+  },
+  "prompt_overrides": {
+    "creative-direction": "유머러스하고 위트 있는 톤을 유지하세요. headline에 말장난이나 과장된 비유를 적극 활용하세요. mood는 dramatic보다 playful한 느낌을 선호합니다.",
+    "asset-advisory": "이미지는 generate(AI 생성) 우선. 실사 사진보다 일러스트/카툰 스타일 이미지를 선호합니다. imageAsset.source는 가능하면 generate로 설정하세요.",
+    "data-enrichment": ""
+  }
+}

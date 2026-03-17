@@ -1,3 +1,6 @@
+# Rule cache (fetched from Supabase)
+auto_agent/.rules_cache/
+
 # Python
 __pycache__/
 *.py[cod]

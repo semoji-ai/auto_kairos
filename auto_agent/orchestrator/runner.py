@@ -214,6 +214,19 @@ class PipelineRunner:
             pass
 
         self.project_slug = project_slug
+
+        # 중앙 규칙 관리자 초기화 + fetch
+        from auto_agent.rule_manager import RuleManager
+        from auto_agent.supabase_client import supabase_enabled
+        self.rule_manager = RuleManager()
+        if supabase_enabled():
+            try:
+                changed = self.rule_manager.fetch_all()
+                if changed:
+                    print(f"[Rules] 중앙 규칙 {changed}개 갱신됨")
+            except Exception as e:
+                print(f"[Rules] 중앙 규칙 fetch 실패 (로컬 fallback): {e}")
+
         self.pipeline = self._load_pipeline()
         self.pm = self._get_project_manager()
         self.project = self._resolve_project()
@@ -245,9 +258,12 @@ class PipelineRunner:
         )
 
     def _load_pipeline(self) -> dict:
-        path = DATA_DIR / "pipeline.json"
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            return self.rule_manager.load_json("pipeline.json")
+        except FileNotFoundError:
+            path = DATA_DIR / "pipeline.json"
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
 
     def _get_project_manager(self):
         from auto_agent.dashboard.supabase_data import SupabaseProjectManager
@@ -883,7 +899,6 @@ class PipelineRunner:
         content = self._extract_json_from_cli_output(stdout)
         if content:
             llm_scenes = content.get("scenes", [])
-            # LLM 응답의 creative/visualization/imageAsset/mapScene을 원본에 머지
             updated_scenes = self._merge_llm_response(chapter_scenes, llm_scenes)
         else:
             # 폴백: 임시 파일에서 읽기
@@ -908,19 +923,133 @@ class PipelineRunner:
             cost_info=cost_info, duration_sec=elapsed,
         )
 
+    # 1턴 전용 프롬프트 파일 매핑 (step_name → 프롬프트 파일명)
+    SINGLE_CALL_PROMPTS = {
+        "creative_direction": "creative-direction.md",
+        "asset_advisory": "asset-advisory.md",
+        "data_enrichment_and_motion": "data-enrichment.md",
+    }
+
     def _build_chapter_prompt(self, step: dict, chapter_specs: dict) -> str:
         """챕터별 병렬 처리용 프롬프트 빌드."""
+        step_name = step.get("name", "")
+
+        # 1턴 전용 프롬프트 파일이 있으면 사용
+        prompt_file = self.SINGLE_CALL_PROMPTS.get(step_name)
+        if prompt_file:
+            return self._build_from_prompt_file(step, chapter_specs, prompt_file)
+
+        return self._build_chapter_prompt_generic(step, chapter_specs)
+
+    def _build_from_prompt_file(self, step: dict, chapter_specs: dict, prompt_file: str) -> str:
+        """1턴 전용 프롬프트 파일 로드 + 변수 치환 + 아트스타일 오버라이드."""
+        chapter_num = step.get("_chapter_num", 0)
+
+        # 프롬프트 템플릿 로드 (중앙 규칙 → 로컬 fallback)
+        prompt_key = f"prompts/single-call/{prompt_file}"
+        template = self.rule_manager.load(prompt_key)
+
+        # 컨텍스트 파일 빌드
+        context_block = ""
+        for fname in ["research_report.json", "outline.json"]:
+            fpath = self.project_dir / fname
+            if fpath.exists():
+                context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:50000]}\n</file>\n"
+
+        manuscript_path = self.project_dir / "final_manuscript.md"
+        if manuscript_path.exists():
+            full_ms = manuscript_path.read_text(encoding="utf-8")
+            chapter_ms = self._extract_chapter_manuscript(full_ms, chapter_num)
+            context_block += f"\n<file name=\"final_manuscript.md (챕터 {chapter_num})\">\n{chapter_ms}\n</file>\n"
+
+        # 아트스타일 오버라이드 로드
+        art_style_override = self._load_art_style_override(step.get("name", ""))
+
+        # 변수 치환
+        chapter_specs_json = json.dumps(chapter_specs, ensure_ascii=False, indent=2)
+        prompt = template.replace("{context_block}", context_block)
+        prompt = prompt.replace("{chapter_specs_json}", chapter_specs_json)
+        prompt = prompt.replace("{art_style_override}", art_style_override)
+
+        return prompt
+
+    def _load_art_style_override(self, step_name: str) -> str:
+        """아트스타일 JSON에서 prompt_overrides를 로드."""
+        config = self.state.config
+        art_style_rel = config.get("art_style", "")
+        if not art_style_rel:
+            return ""
+
+        art_path = self.project_dir / art_style_rel
+        if not art_path.exists():
+            # 패키지 데이터에서 탐색
+            art_path = DATA_DIR / art_style_rel
+        if not art_path.exists():
+            return ""
+
+        try:
+            art_data = json.loads(art_path.read_text(encoding="utf-8"))
+            overrides = art_data.get("prompt_overrides", {})
+            # step_name에서 언더스코어를 하이픈으로 변환하여 매칭
+            override_key = step_name.replace("_", "-")
+            override_text = overrides.get(override_key, "")
+            if override_text:
+                return f"\n<art_style_override>\n아트스타일: {art_data.get('name', '')}\n{override_text}\n</art_style_override>"
+        except Exception:
+            pass
+        return ""
+
+    def _load_skill_file(self, key: str) -> str:
+        """스킬 파일 1개 로드. 중앙 규칙 → 로컬 fallback. 없으면 빈 문자열."""
+        try:
+            return self.rule_manager.load(key)
+        except (FileNotFoundError, AttributeError):
+            return ""
+
+    def _load_shared_skill(self, skill_name: str, refs_to_load=None) -> str:
+        """공유 스킬 로드. 디렉토리 스킬(SKILL.md + references/) 또는 플랫 파일."""
+        # 1) 디렉토리 스킬
+        skill_key = f"skills/shared/{skill_name}/SKILL.md"
+        content = self._load_skill_file(skill_key)
+        if content:
+            # references 로드
+            if refs_to_load is not None:
+                for ref_name in refs_to_load:
+                    ref_key = f"skills/shared/{skill_name}/references/{ref_name}.md"
+                    ref_content = self._load_skill_file(ref_key)
+                    if ref_content:
+                        content += f"\n\n{ref_content}"
+            else:
+                # 전체 references — 로컬 디렉토리에서 glob (캐시에선 파일 목록 불가)
+                ref_dir = DATA_DIR / "skills" / "shared" / skill_name / "references"
+                if ref_dir.exists():
+                    for ref_file in sorted(ref_dir.glob("*.md")):
+                        ref_key = f"skills/shared/{skill_name}/references/{ref_file.name}"
+                        ref_content = self._load_skill_file(ref_key)
+                        if ref_content:
+                            content += f"\n\n{ref_content}"
+            return content
+
+        # 2) 플랫 파일
+        flat_key = f"skills/shared/{skill_name}.md"
+        content = self._load_skill_file(flat_key)
+        if content:
+            return content
+
+        # 3) 루트 레벨 (레거시)
+        root_key = f"skills/{skill_name}.md"
+        return self._load_skill_file(root_key)
+
+    def _build_chapter_prompt_generic(self, step: dict, chapter_specs: dict) -> str:
+        """범용 챕터별 병렬 처리 프롬프트 (기존 로직)."""
         agent_name = step["agent"]
         chapter_num = step.get("_chapter_num", 0)
         chapter_specs_path = step.get("_chapter_specs_path", "")
 
-        # 에이전트 스킬
-        skill_path = DATA_DIR / "skills" / "agents" / agent_name / "SKILL.md"
-        agent_skill = ""
-        if skill_path.exists():
-            agent_skill = skill_path.read_text(encoding="utf-8")
+        # 에이전트 스킬 (중앙 규칙 → 로컬 fallback)
+        agent_skill = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
 
-        # 공유 스킬 수집 (기존 _build_agent_prompt 로직 재사용)
+        # 공유 스킬 수집
         skill_names = list(step.get("skills", []))
         agents_config = self._load_agents_config()
         agent_def = agents_config.get("subagents", {}).get(agent_name, {})
@@ -931,25 +1060,9 @@ class PipelineRunner:
         skill_refs = agent_def.get("skill_refs", {})
         shared_skills_text = ""
         for skill_name in skill_names:
-            skill_dir = DATA_DIR / "skills" / "shared" / skill_name
-            if (skill_dir / "SKILL.md").exists():
-                content = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
-                refs_to_load = skill_refs.get(skill_name)
-                ref_dir = skill_dir / "references"
-                if ref_dir.exists():
-                    if refs_to_load is not None:
-                        for ref_name in refs_to_load:
-                            ref_file = ref_dir / f"{ref_name}.md"
-                            if ref_file.exists():
-                                content += f"\n\n{ref_file.read_text(encoding='utf-8')}"
-                    else:
-                        for ref_file in sorted(ref_dir.glob("*.md")):
-                            content += f"\n\n{ref_file.read_text(encoding='utf-8')}"
+            content = self._load_shared_skill(skill_name, skill_refs.get(skill_name))
+            if content:
                 shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
-                continue
-            skill_file = DATA_DIR / "skills" / "shared" / f"{skill_name}.md"
-            if skill_file.exists():
-                shared_skills_text += f"\n\n## {skill_name}\n\n{skill_file.read_text(encoding='utf-8')}"
 
         # 공통 컨텍스트 파일
         context_block = ""
@@ -1946,11 +2059,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         """
         agent_name = step["agent"]
 
-        # 1. Agent SKILL.md 읽기
-        skill_path = DATA_DIR / "skills" / "agents" / agent_name / "SKILL.md"
-        agent_skill = ""
-        if skill_path.exists():
-            agent_skill = skill_path.read_text(encoding="utf-8")
+        # 1. Agent SKILL.md 읽기 (중앙 규칙 → 로컬 fallback)
+        agent_skill = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
 
         # 2. 공유 스킬 수집 (step + agents.json 병합, 중복 제거)
         skill_names = list(step.get("skills", []))
@@ -1965,38 +2075,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
         shared_skills_text = ""
         for skill_name in skill_names:
-            # 1) 디렉토리 스킬 (shared/{name}/SKILL.md + references/)
-            skill_dir = DATA_DIR / "skills" / "shared" / skill_name
-            if (skill_dir / "SKILL.md").exists():
-                content = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
-                # skill_refs에 지정된 references만 로드 (없으면 전체)
-                refs_to_load = skill_refs.get(skill_name)
-                ref_dir = skill_dir / "references"
-                if ref_dir.exists():
-                    if refs_to_load is not None:
-                        # 지정된 파일만
-                        for ref_name in refs_to_load:
-                            ref_file = ref_dir / f"{ref_name}.md"
-                            if ref_file.exists():
-                                content += f"\n\n{ref_file.read_text(encoding='utf-8')}"
-                    else:
-                        # 전체 references 로드 (하위 호환)
-                        for ref_file in sorted(ref_dir.glob("*.md")):
-                            content += f"\n\n{ref_file.read_text(encoding='utf-8')}"
-                shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
-                continue
-
-            # 2) 플랫 파일 (shared/{name}.md — 레거시)
-            skill_file = DATA_DIR / "skills" / "shared" / f"{skill_name}.md"
-            if skill_file.exists():
-                content = skill_file.read_text(encoding="utf-8")
-                shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
-                continue
-
-            # 3) 루트 레벨 (skills/{name}.md — 레거시 호환)
-            skill_file_root = DATA_DIR / "skills" / f"{skill_name}.md"
-            if skill_file_root.exists():
-                content = skill_file_root.read_text(encoding="utf-8")
+            content = self._load_shared_skill(skill_name, skill_refs.get(skill_name))
+            if content:
                 shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
 
         # 3. 입력 파일 경로
@@ -2100,11 +2180,14 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         return prompt
 
     def _load_agents_config(self) -> dict:
-        """agents.json 로드 (캐시)."""
+        """agents.json 로드 (캐시). 중앙 규칙 → 로컬 fallback."""
         if not hasattr(self, "_agents_cache"):
-            path = DATA_DIR / "agents.json"
-            with open(path, "r", encoding="utf-8") as f:
-                self._agents_cache = json.load(f)
+            try:
+                self._agents_cache = self.rule_manager.load_json("agents.json")
+            except (FileNotFoundError, AttributeError):
+                path = DATA_DIR / "agents.json"
+                with open(path, "r", encoding="utf-8") as f:
+                    self._agents_cache = json.load(f)
         return self._agents_cache
 
     def _get_agent_budget(self, agent_name: str) -> float:
