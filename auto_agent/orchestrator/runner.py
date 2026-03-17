@@ -879,16 +879,19 @@ class PipelineRunner:
                 cost_info=cost_info, duration_sec=elapsed,
             )
 
-        # 4. stdout에서 JSON 파싱 (도구 없이 1턴이므로 stdout에 결과가 있음)
+        # 4. stdout에서 JSON 파싱 → 원본 씬에 머지
         content = self._extract_json_from_cli_output(stdout)
         if content:
-            updated_scenes = content.get("scenes", chapter_scenes)
+            llm_scenes = content.get("scenes", [])
+            # LLM 응답의 creative/visualization/imageAsset/mapScene을 원본에 머지
+            updated_scenes = self._merge_llm_response(chapter_scenes, llm_scenes)
         else:
-            # 폴백: 임시 파일에서 읽기 (에이전트가 Write 도구를 사용한 경우)
+            # 폴백: 임시 파일에서 읽기
             try:
                 if tmp_path.exists():
                     updated = json.loads(tmp_path.read_text(encoding="utf-8"))
-                    updated_scenes = updated.get("scenes", chapter_scenes)
+                    llm_scenes = updated.get("scenes", [])
+                    updated_scenes = self._merge_llm_response(chapter_scenes, llm_scenes)
                 else:
                     updated_scenes = chapter_scenes
             except Exception:
@@ -1068,6 +1071,51 @@ JSON 구조는 기존 scene_specs와 동일하되, scenes 배열에는 챕터 {c
             "total_scenes": len(scenes),
             "scenes": scenes,
         }
+
+    @staticmethod
+    def _merge_llm_response(original_scenes: list, llm_scenes: list) -> list:
+        """LLM 응답의 creative/visualization을 원본 씬에 머지.
+
+        LLM은 visualization.creative, items, values, imageAsset, mapScene 등만 출력.
+        원본의 narration, durationFrames, chapter 등은 유지.
+        """
+        llm_by_num = {}
+        for s in llm_scenes:
+            num = s.get("sceneNumber") or s.get("scene_number", 0)
+            llm_by_num[num] = s
+
+        merged = []
+        for orig in original_scenes:
+            num = orig.get("sceneNumber", 0)
+            llm = llm_by_num.get(num)
+            if llm:
+                result = dict(orig)
+                # visualization 머지 (creative, items, values 등)
+                if llm.get("visualization"):
+                    orig_viz = result.get("visualization") or {}
+                    llm_viz = llm["visualization"]
+                    merged_viz = {**orig_viz, **llm_viz}
+                    # creative는 깊은 머지
+                    if llm_viz.get("creative"):
+                        orig_cr = orig_viz.get("creative") or {}
+                        merged_viz["creative"] = {**orig_cr, **llm_viz["creative"]}
+                    result["visualization"] = merged_viz
+                # imageAsset 머지
+                if "imageAsset" in llm:
+                    result["imageAsset"] = llm["imageAsset"]
+                # mapScene 머지
+                if "mapScene" in llm:
+                    result["mapScene"] = llm["mapScene"]
+                # vizAnimation 머지
+                if "vizAnimation" in llm:
+                    result["vizAnimation"] = llm["vizAnimation"]
+                # transition 머지
+                if "transition" in llm:
+                    result["transition"] = llm["transition"]
+                merged.append(result)
+            else:
+                merged.append(orig)
+        return merged
 
     def _auto_build_and_capture(self, chapter_results: dict, chapters: dict):
         """병합 완료 후 자동 매니페스트 빌드 + 변경 씬 썸네일 캡처."""
