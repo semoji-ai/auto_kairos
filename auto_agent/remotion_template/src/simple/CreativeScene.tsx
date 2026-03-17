@@ -612,18 +612,21 @@ const MoodBackground: React.FC<{ mood: string; transparent?: boolean }> = ({ moo
    ================================================================ */
 
 const SpotlightOverlay: React.FC<{ speed: number }> = ({ speed }) => {
+  const C = useC();
+  const isWhite = C.bg === "#FAFAFA";
   const frame = useCurrentFrame();
   const s = (f: number) => Math.round(f / speed);
   const overlayOpacity = interpolate(
     frame,
     [0, s(30), s(50)],
-    [0.95, 0.7, 0.3],
+    isWhite ? [0.6, 0.3, 0.1] : [0.95, 0.7, 0.3],
     clamp,
   );
   const size = interpolate(frame, [s(10), s(45)], [100, 600], {
     ...clamp,
     easing: ease,
   });
+  const overlayColor = isWhite ? `rgba(200,200,200,${overlayOpacity})` : `rgba(0,0,0,${overlayOpacity})`;
 
   return (
     <div
@@ -632,7 +635,7 @@ const SpotlightOverlay: React.FC<{ speed: number }> = ({ speed }) => {
         inset: 0,
         zIndex: 1,
         pointerEvents: "none",
-        background: `radial-gradient(circle ${size}px at 50% 45%, transparent 0%, rgba(0,0,0,${overlayOpacity}) 100%)`,
+        background: `radial-gradient(circle ${size}px at 50% 45%, transparent 0%, ${overlayColor} 100%)`,
       }}
     />
   );
@@ -1500,7 +1503,7 @@ const QuoteDisplay: React.FC<{
             style={{
               position: "absolute",
               inset: 0,
-              background: "radial-gradient(ellipse at center, transparent 30%, #0A0A0A 80%)",
+              background: `radial-gradient(ellipse at center, transparent 30%, ${C.bg} 80%)`,
             }}
           />
         </div>
@@ -2340,7 +2343,7 @@ const LineChartDisplay: React.FC<{
               const dotScale = interpolate(frame, [dotDelay, dotDelay + 8], [0, 1], clamp);
               return (
                 <g key={i}>
-                  <circle cx={p.x} cy={p.y} r={7 * dotScale} fill={moodCfg.accent} stroke="#0A0A0A" strokeWidth={2} />
+                  <circle cx={p.x} cy={p.y} r={7 * dotScale} fill={moodCfg.accent} stroke={C.bg} strokeWidth={2} />
                   {dotScale > 0.5 && (
                     <text
                       x={p.x}
@@ -2816,7 +2819,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
   const contentWidth = useFullWidth ? "100%" : "78%";
 
   return (
-    <AbsoluteFill style={{ backgroundColor: hasImageBackground ? "transparent" : "#0A0A0A", fontFamily: "inherit" }}>
+    <AbsoluteFill style={{ backgroundColor: hasImageBackground ? "transparent" : C.bg, fontFamily: "inherit" }}>
       <div style={{ width: contentWidth, height: "100%", margin: "0 auto", position: "relative" }}>
       <MoodBackground mood={mood} transparent={hasImageBackground} />
 
