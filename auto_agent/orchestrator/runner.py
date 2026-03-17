@@ -562,13 +562,26 @@ class PipelineRunner:
         agent_name = step.get("agent", "visual-composer")
         label = _step_label(step_name, "start").replace(" 시작합니다", "")
 
-        # scene_specs 로드
+        # scene_specs 로드 (없으면 scene_decomposition.json에서 폴백)
         specs_path = self.project_dir / "scene_specs.json"
         if not specs_path.exists():
-            return StepResult(step_id=step_id, status="failed",
-                              error="scene_specs.json 없음")
-
-        original_specs = json.loads(specs_path.read_text(encoding="utf-8"))
+            decomp_path = self.project_dir / "scene_decomposition.json"
+            if decomp_path.exists():
+                # step_6(creative_direction)은 scene_decomposition → scene_specs 변환
+                # decomposition을 scene_specs 초기 구조로 변환
+                decomp = json.loads(decomp_path.read_text(encoding="utf-8"))
+                original_specs = self._decomp_to_specs(decomp)
+                specs_path.write_text(
+                    json.dumps(original_specs, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+                _notify("Director", f"scene_decomposition → scene_specs 변환 완료 ({len(original_specs.get('scenes', []))}씬)",
+                        phase=self.state.current_phase, project=self.project_slug)
+            else:
+                return StepResult(step_id=step_id, status="failed",
+                                  error="scene_specs.json 및 scene_decomposition.json 모두 없음")
+        else:
+            original_specs = json.loads(specs_path.read_text(encoding="utf-8"))
         chapters = self._split_by_chapter(original_specs)
 
         # chapter 필드 없으면 폴백 (agent step으로 위임)
@@ -1015,6 +1028,47 @@ JSON 구조는 기존 scene_specs와 동일하되, scenes 배열에는 챕터 {c
         end = next_match.start() if next_match else len(full_text)
 
         return full_text[start:end][:15000]
+
+    @staticmethod
+    def _decomp_to_specs(decomp: dict) -> dict:
+        """scene_decomposition.json → scene_specs.json 초기 구조 변환."""
+        scenes = []
+        for s in decomp.get("scenes", []):
+            scene = {
+                "sceneNumber": s.get("scene_number", s.get("sceneNumber", 0)),
+                "chapter": s.get("chapter", 0),
+                "title": s.get("title", ""),
+                "narration": s.get("narration", ""),
+                "narration_tts": s.get("narration", ""),
+                "durationFrames": int((s.get("estimated_duration_sec", 8)) * 30),
+                "visualization": {
+                    "title": s.get("title", ""),
+                    "items": [],
+                    "values": [],
+                    "creative": {},
+                },
+                "transition": {"type": "fade", "durationFrames": 15},
+                "imageAsset": None,
+                "mapScene": None,
+            }
+            # decomposition에서 이미지/맵 힌트가 있으면 전달
+            if s.get("has_image_asset"):
+                ia = s.get("image_asset") or {}
+                scene["imageAsset"] = {
+                    "source": ia.get("source", "search"),
+                    "query": ia.get("query", s.get("title", "")),
+                    "placement": ia.get("placement", "background"),
+                    "opacity": ia.get("opacity", 0.3),
+                }
+            scenes.append(scene)
+
+        return {
+            "version": "4.0",
+            "topic": decomp.get("topic", ""),
+            "theme": "simple",
+            "total_scenes": len(scenes),
+            "scenes": scenes,
+        }
 
     def _auto_build_and_capture(self, chapter_results: dict, chapters: dict):
         """병합 완료 후 자동 매니페스트 빌드 + 변경 씬 썸네일 캡처."""
