@@ -1562,10 +1562,15 @@ JSON 구조는 기존 scene_specs와 동일하되, scenes 배열에는 챕터 {c
             if pid and sk:
                 cmd.extend([pid, sk])
 
+        # PYTHONPATH에 워크스페이스 추가 (auto_agent 패키지 import 보장)
+        ws = str(get_workspace_dir())
+        existing_pypath = env.get("PYTHONPATH", "")
+        env["PYTHONPATH"] = f"{ws}:{existing_pypath}" if existing_pypath else ws
+
         try:
             result = subprocess.run(
                 cmd,
-                cwd=str(get_workspace_dir()),
+                cwd=ws,
                 env=env,
                 capture_output=True,
                 text=True,
