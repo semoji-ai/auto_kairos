@@ -1017,7 +1017,9 @@ const ItemsGrid: React.FC<{
 }> = ({ items, delays, headlineDelays, moodCfg, reveal, itemIcons, itemFlags }) => {
   const C = useC();
   const frame = useCurrentFrame();
-  const cols = items.length >= 9 ? 3 : items.length >= 4 ? 3 : 2;
+  // 4개: 4열(한줄) 또는 2x2, 5~8개: 3열, 9+: 3열
+  const cols = items.length === 4 ? (items.some(it => it.length > 8) ? 2 : 4)
+    : items.length >= 5 ? 3 : items.length >= 3 ? 3 : 2;
   const isFlash = reveal === "stagger_then_flash";
   const allDone = Math.max(...delays, ...headlineDelays) + 20;
   const flashGlow = isFlash
