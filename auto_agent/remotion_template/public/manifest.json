@@ -1,0 +1,2969 @@
+{
+  "manifest": {
+    "meta": {
+      "topic": "proj-13d05ef189",
+      "resolution": {
+        "width": 1920,
+        "height": 1080
+      },
+      "fps": 30,
+      "subtitleFont": "Pretendard",
+      "vizFont": "Pretendard"
+    },
+    "scenes": [
+      {
+        "sceneNumber": 1,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_001.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_001.mp3",
+        "audioDurationSec": 3.892,
+        "subtitles": [],
+        "visualization": {
+          "title": "전쟁 개시",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "어두운 화면에서 날짜가 타이핑되고, 폭격 이미지가 배경으로 페이드인",
+            "reveal": "typewriter",
+            "emphasis": "keyword",
+            "headline": "{{2026년 2월 28일}}\n폭격 개시",
+            "mood": "dramatic",
+            "layout": "headline_only"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "fullscreen",
+          "opacity": 0.7
+        }
+      },
+      {
+        "sceneNumber": 2,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_002.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_002.mp3",
+        "audioDurationSec": 5.982,
+        "subtitles": [],
+        "visualization": {
+          "title": "타격 도시",
+          "items": [
+            "테헤란",
+            "이스파한",
+            "콤",
+            "카라지",
+            "케르만샤"
+          ],
+          "values": [
+            5
+          ],
+          "itemIcons": [
+            "MapPin",
+            "MapPin",
+            "MapPin",
+            "MapPin",
+            "MapPin"
+          ],
+          "creative": {
+            "concept": "도시 이름이 하나씩 지도 위에 나타나며 동시에 번쩍임",
+            "reveal": "stagger_then_flash",
+            "emphasis": "count",
+            "headline": "{{5개 도시}}\n동시 타격",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "mapScene": {
+          "mapType": "location_reveal",
+          "mapStyle": "modern_clean",
+          "title": "에픽 퓨리 작전 타격 지점",
+          "camera": {
+            "keyframes": [
+              {
+                "frame": 0,
+                "center": [
+                  53.0,
+                  32.5
+                ],
+                "zoom": 3.5
+              },
+              {
+                "frame": 90,
+                "center": [
+                  53.0,
+                  32.5
+                ],
+                "zoom": 4.8
+              }
+            ],
+            "easing": "easeInOutCubic"
+          },
+          "markers": [
+            {
+              "coordinates": [
+                51.389,
+                35.689
+              ],
+              "label": "테헤란"
+            },
+            {
+              "coordinates": [
+                51.668,
+                32.652
+              ],
+              "label": "이스파한"
+            },
+            {
+              "coordinates": [
+                50.876,
+                34.64
+              ],
+              "label": "콤",
+              "labelAngle": 130
+            },
+            {
+              "coordinates": [
+                50.991,
+                35.836
+              ],
+              "label": "카라지"
+            },
+            {
+              "coordinates": [
+                47.066,
+                34.314
+              ],
+              "label": "케르만샤"
+            }
+          ]
+        }
+      },
+      {
+        "sceneNumber": 3,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_003.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_003.mp3",
+        "audioDurationSec": 3.657,
+        "subtitles": [],
+        "visualization": {
+          "title": "하메네이 암살",
+          "items": [
+            "의회 승인 없음"
+          ],
+          "values": [],
+          "creative": {
+            "concept": "하메네이 사진이 좌측에 나타나고, 우측에 '암살'과 '의회 승인 없음'이 강조",
+            "reveal": "spotlight",
+            "emphasis": "keyword",
+            "headline": "최고지도자 {{암살}}\n의회 승인 없이",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "left",
+          "opacity": 0.9
+        }
+      },
+      {
+        "sceneNumber": 4,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_004.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_004.mp3",
+        "audioDurationSec": 4.598,
+        "subtitles": [],
+        "visualization": {
+          "title": "JCPOA 체결",
+          "items": [
+            "2015년 7월",
+            "이란 핵합의 체결"
+          ],
+          "values": [],
+          "itemIcons": [
+            "Calendar",
+            "FileCheck"
+          ],
+          "creative": {
+            "concept": "시간이 되감기는 느낌으로 2015년이 크게 나타남",
+            "reveal": "zoom_in",
+            "emphasis": "keyword",
+            "headline": "{{2015년}}\n이란 핵합의 체결",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "fullscreen",
+          "opacity": 0.85
+        }
+      },
+      {
+        "sceneNumber": 5,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_005.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_005.mp3",
+        "audioDurationSec": 5.564,
+        "subtitles": [],
+        "visualization": {
+          "title": "JCPOA 탈퇴",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "2018년과 '탈퇴'가 극적으로 나타나며 붉은 색으로 깨짐 효과",
+            "reveal": "dramatic_pause",
+            "emphasis": "keyword",
+            "headline": "{{2018년}} 일방 탈퇴\n모든 비극의 출발점",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.25
+        }
+      },
+      {
+        "sceneNumber": 6,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_006.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_006.mp3",
+        "audioDurationSec": 5.433,
+        "subtitles": [],
+        "visualization": {
+          "title": "에스컬레이션 타임라인",
+          "items": [
+            "2018 최대 압박",
+            "2020 솔레이마니 암살",
+            "2025 핵시설 폭격",
+            "2026 전면전"
+          ],
+          "descriptions": [
+            "최대 압박 제재 시작",
+            "혁명수비대 사령관 드론 암살",
+            "이스라엘의 이란 핵시설 공습",
+            "에픽 퓨리 작전 개시"
+          ],
+          "creative": {
+            "concept": "타임라인이 좌에서 우로 빠르게 쌓이며 8년간의 에스컬레이션을 시각화",
+            "reveal": "build_up",
+            "emphasis": "sequence",
+            "headline": "{{8년간}} 에스컬레이션",
+            "mood": "dramatic",
+            "layout": "timeline"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 25,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "fullscreen",
+          "opacity": 0.8
+        }
+      },
+      {
+        "sceneNumber": 7,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_007.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_007.mp3",
+        "audioDurationSec": 4.441,
+        "subtitles": [],
+        "visualization": {
+          "title": "협상 결렬",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "제네바 협상 실패를 상징하는 깨진 악수 이미지와 함께 텍스트 등장",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "제네바 협상 {{결렬}}\n폭격 개시",
+            "mood": "somber"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.3
+        }
+      },
+      {
+        "sceneNumber": 8,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_008.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_008.mp3",
+        "audioDurationSec": 5.251,
+        "subtitles": [],
+        "visualization": {
+          "title": "핵심 질문",
+          "items": [
+            "핵 위협 제거?",
+            "시위대 보호?",
+            "정말 그게 전부?"
+          ],
+          "itemIcons": [
+            "Atom",
+            "Users",
+            "HelpCircle"
+          ],
+          "creative": {
+            "concept": "질문들이 하나씩 나타나며 마지막 질문에서 물음표가 크게 강조",
+            "reveal": "stagger",
+            "emphasis": "keyword",
+            "headline": "왜 전쟁을\n{{선택}}했을까?",
+            "mood": "suspense"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "left",
+          "opacity": 0.9
+        }
+      },
+      {
+        "sceneNumber": 9,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_009.mp3",
+        "audioDurationSec": 4.258,
+        "subtitles": [],
+        "visualization": {
+          "title": "전문가 분석",
+          "items": [
+            "미어샤이머",
+            "파시",
+            "나스르",
+            "프럼",
+            "월트"
+          ],
+          "itemIcons": [
+            "BookOpen",
+            "Scale",
+            "Target",
+            "AlertTriangle",
+            "Globe"
+          ],
+          "creative": {
+            "concept": "5인의 전문가 이름이 순차적으로 등장하며 로드맵 구성",
+            "reveal": "stagger",
+            "emphasis": "count",
+            "headline": "전문가 {{5인}}의 분석",
+            "mood": "informative",
+            "layout": "person_card"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 18,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 10,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_010.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_010.mp3",
+        "audioDurationSec": 3.788,
+        "subtitles": [],
+        "visualization": {
+          "title": "존 미어샤이머",
+          "items": [
+            "시카고대학교",
+            "국제정치학 석좌교수"
+          ],
+          "itemIcons": [
+            "GraduationCap",
+            "BookOpen"
+          ],
+          "creative": {
+            "concept": "미어샤이머 사진이 스포트라이트로 드러나고 직함이 표시됨",
+            "reveal": "spotlight",
+            "emphasis": "person",
+            "headline": "존 {{미어샤이머}}\n국제정치학 석학",
+            "mood": "triumphant",
+            "layout": "items_grid"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "left",
+          "opacity": 0.9
+        }
+      },
+      {
+        "sceneNumber": 11,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_011.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_011.mp3",
+        "audioDurationSec": 3.788,
+        "subtitles": [],
+        "visualization": {
+          "title": "미어샤이머 인용",
+          "items": [
+            "이스라엘을 위한 또 다른 전쟁"
+          ],
+          "values": [],
+          "source": "존 미어샤이머",
+          "creative": {
+            "concept": "인용문이 타이핑되며 나타나고 accent로 강조",
+            "reveal": "typewriter",
+            "emphasis": "quote",
+            "headline": "이스라엘을 위한\n{{또 다른 전쟁}}",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "fullscreen",
+          "opacity": 0.9
+        }
+      },
+      {
+        "sceneNumber": 12,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_012.mp3",
+        "audioDurationSec": 6.034,
+        "subtitles": [],
+        "visualization": {
+          "title": "로비 구조",
+          "items": [
+            "이스라엘 로비",
+            "트럼프 행정부",
+            "전쟁 결정"
+          ],
+          "itemIcons": [
+            "Shield",
+            "Landmark",
+            "Swords"
+          ],
+          "creative": {
+            "concept": "로비에서 행정부로 화살표가 이어지는 흐름도",
+            "reveal": "build_up",
+            "emphasis": "sequence",
+            "headline": "로비에 의해\n{{끌려들어간}} 전쟁",
+            "mood": "informative",
+            "layout": "flow"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 22,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 13,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_013.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_013.mp3",
+        "audioDurationSec": 6.296,
+        "subtitles": [],
+        "visualization": {
+          "title": "루비오 발언",
+          "items": [
+            "미국은 이스라엘 때문에 이란과 전쟁에 나섰다"
+          ],
+          "values": [],
+          "source": "마르코 루비오, 국무장관",
+          "creative": {
+            "concept": "루비오 사진과 함께 발언이 극적으로 공개됨",
+            "reveal": "dramatic_pause",
+            "emphasis": "quote",
+            "headline": "{{이스라엘 때문에}}\n전쟁에 나섰다",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "left",
+          "opacity": 0.9
+        }
+      },
+      {
+        "sceneNumber": 14,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_014.mp3",
+        "audioDurationSec": 5.46,
+        "subtitles": [],
+        "visualization": {
+          "title": "위협 부재",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "'위협이 아니었다'가 화면 중앙에 크게 나타남",
+            "reveal": "zoom_in",
+            "emphasis": "keyword",
+            "headline": "이란은 미국에\n{{위협이 아니었다}}",
+            "mood": "contemplative"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 15,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_015.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_015.mp3",
+        "audioDurationSec": 6.531,
+        "subtitles": [],
+        "visualization": {
+          "title": "진짜 목표",
+          "items": [
+            "정권 교체",
+            "이란 분열",
+            "위협 제거"
+          ],
+          "itemIcons": [
+            "Crown",
+            "Scissors",
+            "ShieldOff"
+          ],
+          "creative": {
+            "concept": "3단계 목표가 순차적으로 쌓이며 공개",
+            "reveal": "stagger",
+            "emphasis": "sequence",
+            "headline": "{{진짜 목표}}\n정권 교체와 분열",
+            "mood": "suspense",
+            "layout": "flow"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 22,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "center",
+          "opacity": 0.9
+        }
+      },
+      {
+        "sceneNumber": 16,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_016.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_016.mp3",
+        "audioDurationSec": 7.549,
+        "subtitles": [],
+        "visualization": {
+          "title": "워싱턴포스트 보도",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "신문 헤드라인 스타일로 보도 내용이 타이핑됨",
+            "reveal": "typewriter",
+            "emphasis": "keyword",
+            "headline": "이스라엘·사우디\n{{수주간 공격 압박}}",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.2
+        }
+      },
+      {
+        "sceneNumber": 17,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_017.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_017.mp3",
+        "audioDurationSec": 4.598,
+        "subtitles": [],
+        "visualization": {
+          "title": "이례적 동맹",
+          "items": [
+            "사우디아라비아",
+            "이스라엘"
+          ],
+          "values": [],
+          "itemFlags": [
+            "SA",
+            "IL"
+          ],
+          "creative": {
+            "concept": "두 국기가 양쪽에서 중앙으로 모여 합쳐지는 연출",
+            "reveal": "split_reveal",
+            "emphasis": "contrast",
+            "headline": "{{적}}이 동맹이 되다",
+            "mood": "suspense"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 18,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_018.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_018.mp3",
+        "audioDurationSec": 5.669,
+        "subtitles": [],
+        "visualization": {
+          "title": "각각의 목표",
+          "items": [
+            "이란 영향력 약화",
+            "핵 위협·헤즈볼라 제거"
+          ],
+          "values": [],
+          "itemFlags": [
+            "SA",
+            "IL"
+          ],
+          "creative": {
+            "concept": "좌우 분할로 사우디와 이스라엘의 목표를 대비",
+            "reveal": "parallel",
+            "emphasis": "contrast",
+            "headline": "{{사우디}} vs {{이스라엘}}\n각자의 계산",
+            "mood": "informative",
+            "layout": "split"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.3
+        }
+      },
+      {
+        "sceneNumber": 19,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_019.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_019.mp3",
+        "audioDurationSec": 6.452,
+        "subtitles": [],
+        "visualization": {
+          "title": "전쟁 추동 구조",
+          "items": [
+            "이스라엘 로비",
+            "사우디 석유 권력",
+            "미국 전쟁 결정"
+          ],
+          "itemIcons": [
+            "Shield",
+            "Fuel",
+            "Swords"
+          ],
+          "creative": {
+            "concept": "두 힘이 합쳐져 전쟁으로 이어지는 흐름도",
+            "reveal": "build_up",
+            "emphasis": "sequence",
+            "headline": "로비 + 석유 = {{전쟁}}",
+            "mood": "dramatic",
+            "layout": "flow"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 22,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.25
+        }
+      },
+      {
+        "sceneNumber": 20,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_020.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_020.mp3",
+        "audioDurationSec": 5.329,
+        "subtitles": [],
+        "visualization": {
+          "title": "미어샤이머 결론",
+          "items": [
+            "이 침공에는 도덕적으로도, 법적으로도 정당한 근거가 없다"
+          ],
+          "values": [],
+          "source": "존 미어샤이머",
+          "creative": {
+            "concept": "인용문이 천천히 타이핑되며 경고색으로 강조",
+            "reveal": "typewriter",
+            "emphasis": "quote",
+            "headline": "도덕적·법적\n{{정당성 없음}}",
+            "mood": "somber"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 21,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_021.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_021.mp3",
+        "audioDurationSec": 4.206,
+        "subtitles": [],
+        "visualization": {
+          "title": "트리타 파시",
+          "items": [
+            "퀸시연구소 부소장",
+            "이란-미국 관계 최고 권위자"
+          ],
+          "itemIcons": [
+            "Building",
+            "Award"
+          ],
+          "creative": {
+            "concept": "파시 사진이 스포트라이트로 드러나며 직함 표시",
+            "reveal": "spotlight",
+            "emphasis": "person",
+            "headline": "트리타 {{파시}}\n이란-미국 관계 전문가",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "left",
+          "opacity": 0.9
+        }
+      },
+      {
+        "sceneNumber": 22,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_022.mp3",
+        "audioDurationSec": 3.788,
+        "subtitles": [],
+        "visualization": {
+          "title": "파시 인용",
+          "items": [
+            "피할 수 있었던 전쟁"
+          ],
+          "values": [],
+          "source": "트리타 파시",
+          "creative": {
+            "concept": "큰따옴표와 함께 인용문이 중앙에 크게 나타남",
+            "reveal": "fade_in",
+            "emphasis": "quote",
+            "headline": "{{피할 수 있었던}}\n전쟁",
+            "mood": "contemplative"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 23,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_023.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_023.mp3",
+        "audioDurationSec": 4.911,
+        "subtitles": [],
+        "visualization": {
+          "title": "이란의 양보",
+          "items": [
+            "핵 프로그램 양보 제시"
+          ],
+          "values": [],
+          "itemIcons": [
+            "HandshakeIcon"
+          ],
+          "creative": {
+            "concept": "제네바 배경 위에 이란의 양보 내용이 표시",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "이란의 {{상당한 양보}}\n2026년 2월 제네바",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.2
+        }
+      },
+      {
+        "sceneNumber": 24,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_024.mp3",
+        "audioDurationSec": 4.728,
+        "subtitles": [],
+        "visualization": {
+          "title": "거부된 승리",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "'외교적 승리'가 나타났다가 '거부'로 바뀌는 반전",
+            "reveal": "dramatic_pause",
+            "emphasis": "keyword",
+            "headline": "외교적 승리를\n{{거부}}",
+            "mood": "suspense"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 25,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_025.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_025.mp3",
+        "audioDurationSec": 3.84,
+        "subtitles": [],
+        "visualization": {
+          "title": "합의 vs 굴복",
+          "items": [
+            "합의",
+            "굴복"
+          ],
+          "values": [],
+          "creative": {
+            "concept": "'합의'가 X표시되고 '굴복'이 강조되는 대비",
+            "reveal": "split_reveal",
+            "emphasis": "contrast",
+            "headline": "합의가 아닌\n{{굴복}}을 원했다",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "left",
+          "opacity": 0.85
+        }
+      },
+      {
+        "sceneNumber": 26,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_026.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_026.mp3",
+        "audioDurationSec": 3.84,
+        "subtitles": [],
+        "visualization": {
+          "title": "군사력 확신",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "군사력 이미지 배경 위에 '압도적 군사력'이 크게 나타남",
+            "reveal": "zoom_in",
+            "emphasis": "keyword",
+            "headline": "{{압도적 군사력}}으로\n빠른 굴복 확신",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.25
+        }
+      },
+      {
+        "sceneNumber": 27,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_027.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_027.mp3",
+        "audioDurationSec": 3.709,
+        "subtitles": [],
+        "visualization": {
+          "title": "왜곡된 인센티브",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "경고 아이콘과 함께 텍스트가 나타남",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "양측 모두\n{{왜곡된 인센티브}}",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 28,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_028.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_028.mp3",
+        "audioDurationSec": 7.419,
+        "subtitles": [],
+        "visualization": {
+          "title": "양측의 계산",
+          "items": [
+            "짧은 전쟁 → 협상력 상승",
+            "충분한 비용 부과 → 의미 있는 휴전"
+          ],
+          "itemFlags": [
+            "US",
+            "IR"
+          ],
+          "creative": {
+            "concept": "좌우 분할로 미국과 이란의 계산을 대비",
+            "reveal": "parallel",
+            "emphasis": "contrast",
+            "headline": "{{미국}} vs {{이란}}\n상반된 계산",
+            "mood": "informative",
+            "layout": "split"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 22,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "left",
+          "opacity": 0.9
+        }
+      },
+      {
+        "sceneNumber": 29,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_029.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_029.mp3",
+        "audioDurationSec": 5.094,
+        "subtitles": [],
+        "visualization": {
+          "title": "파시 결론",
+          "items": [
+            "트럼프는 좋은 합의 대신 피할 수 있었던 전쟁을 선택했다"
+          ],
+          "values": [],
+          "source": "트리타 파시",
+          "creative": {
+            "concept": "인용문이 천천히 등장하며 결론을 강조",
+            "reveal": "typewriter",
+            "emphasis": "quote",
+            "headline": "좋은 합의 대신\n{{전쟁을 선택}}",
+            "mood": "somber"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 30,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_030.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_030.mp3",
+        "audioDurationSec": 4.676,
+        "subtitles": [],
+        "visualization": {
+          "title": "발리 나스르",
+          "items": [
+            "존스홉킨스대 교수",
+            "전 국무부 수석고문"
+          ],
+          "itemIcons": [
+            "GraduationCap",
+            "Landmark"
+          ],
+          "creative": {
+            "concept": "나스르 사진이 스포트라이트로 드러남",
+            "reveal": "spotlight",
+            "emphasis": "person",
+            "headline": "발리 {{나스르}}\n전략 분석 전문가",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "left",
+          "opacity": 0.9
+        }
+      },
+      {
+        "sceneNumber": 31,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_031.mp3",
+        "audioDurationSec": 4.31,
+        "subtitles": [],
+        "visualization": {
+          "title": "나스르 진단",
+          "items": [
+            "적에 대한 오독에 기반한 거대한 오판"
+          ],
+          "values": [],
+          "source": "발리 나스르",
+          "creative": {
+            "concept": "'거대한 오판'이 극적으로 커지며 등장",
+            "reveal": "dramatic_pause",
+            "emphasis": "quote",
+            "headline": "트럼프의\n{{거대한 오판}}",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 32,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_032.mp3",
+        "audioDurationSec": 4.023,
+        "subtitles": [],
+        "visualization": {
+          "title": "명분 부재",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "'명분'이 흐릿하게 나타났다 사라지는 연출",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "전쟁 명분\n{{제대로 제시한 적 없다}}",
+            "mood": "contemplative"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 33,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_033.mp3",
+        "audioDurationSec": 3.762,
+        "subtitles": [],
+        "visualization": {
+          "title": "변하는 명분",
+          "items": [
+            "핵 위협 제거",
+            "정권 교체"
+          ],
+          "itemIcons": [
+            "Atom",
+            "Crown"
+          ],
+          "creative": {
+            "concept": "첫 번째 명분이 사라지고 두 번째로 교체되는 전환",
+            "reveal": "split_reveal",
+            "emphasis": "contrast",
+            "headline": "{{핵 위협 제거}} →\n{{정권 교체}}",
+            "mood": "suspense",
+            "layout": "before_after"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 34,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_034.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_034.mp3",
+        "audioDurationSec": 5.433,
+        "subtitles": [],
+        "visualization": {
+          "title": "고통 임계점 비교",
+          "items": [
+            "이란",
+            "이스라엘",
+            "미국"
+          ],
+          "values": [
+            90,
+            60,
+            30
+          ],
+          "unit": "점",
+          "itemFlags": [
+            "IR",
+            "IL",
+            "US"
+          ],
+          "source": "발리 나스르 분석",
+          "creative": {
+            "concept": "세 나라의 고통 임계점을 막대그래프로 비교. 이란이 가장 높음",
+            "reveal": "stagger",
+            "emphasis": "number",
+            "headline": "고통 임계점\n이란 {{최고}} 미국 {{최저}}",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 22,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 35,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_035.mp3",
+        "audioDurationSec": 4.78,
+        "subtitles": [],
+        "visualization": {
+          "title": "미국의 취약점",
+          "items": [
+            "에너지 가격 상승",
+            "여론 취약"
+          ],
+          "itemIcons": [
+            "Fuel",
+            "Users"
+          ],
+          "creative": {
+            "concept": "미국의 두 취약점이 경고 아이콘과 함께 나타남",
+            "reveal": "stagger",
+            "emphasis": "keyword",
+            "headline": "미국의 {{취약점}}\n유가와 여론",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 36,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_036.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_036.mp3",
+        "audioDurationSec": 5.46,
+        "subtitles": [],
+        "visualization": {
+          "title": "이란의 전략",
+          "items": [
+            "전쟁 확대",
+            "비용 증가",
+            "트럼프보다 오래 버티기"
+          ],
+          "itemIcons": [
+            "Maximize",
+            "TrendingUp",
+            "Clock"
+          ],
+          "creative": {
+            "concept": "3단계 전략이 순차적으로 쌓이며 완성",
+            "reveal": "build_up",
+            "emphasis": "sequence",
+            "headline": "확대·비용·{{지구전}}\n이란의 3대 전략",
+            "mood": "informative",
+            "layout": "flow"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 22,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "fullscreen",
+          "opacity": 0.85
+        }
+      },
+      {
+        "sceneNumber": 37,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_037.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_037.mp3",
+        "audioDurationSec": 5.799,
+        "subtitles": [],
+        "visualization": {
+          "title": "비대칭 비용",
+          "items": [
+            "저비용 드론",
+            "고비용 요격 미사일"
+          ],
+          "values": [],
+          "itemIcons": [
+            "Plane",
+            "Rocket"
+          ],
+          "creative": {
+            "concept": "저비용과 고비용의 극적 대비. 드론 vs 미사일",
+            "reveal": "split_reveal",
+            "emphasis": "contrast",
+            "headline": "{{저비용}} 드론 vs\n{{고비용}} 요격",
+            "mood": "informative",
+            "layout": "split"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.2
+        }
+      },
+      {
+        "sceneNumber": 38,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_038.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_038.mp3",
+        "audioDurationSec": 6.713,
+        "subtitles": [],
+        "visualization": {
+          "title": "나스르 경고",
+          "items": [
+            "참수 작전은 이란에서 통하지 않는다. 이 체제는 분산되어 작동하도록 설계되어 있다"
+          ],
+          "values": [],
+          "source": "발리 나스르",
+          "creative": {
+            "concept": "인용문이 경고색으로 천천히 드러남",
+            "reveal": "typewriter",
+            "emphasis": "quote",
+            "headline": "참수 작전\n{{통하지 않는다}}",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 39,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_039.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_039.mp3",
+        "audioDurationSec": 5.512,
+        "subtitles": [],
+        "visualization": {
+          "title": "통제권 상실",
+          "items": [
+            "우리는 이미 미국이 전쟁의 통제권을 상실한 시나리오에 있다"
+          ],
+          "values": [],
+          "source": "발리 나스르",
+          "creative": {
+            "concept": "'통제권 상실'이 붉은 색으로 크게 나타남",
+            "reveal": "dramatic_pause",
+            "emphasis": "quote",
+            "headline": "미국의\n{{통제권 상실}}",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "center",
+          "opacity": 0.85
+        }
+      },
+      {
+        "sceneNumber": 40,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_040.mp3",
+        "audioDurationSec": 3.657,
+        "subtitles": [],
+        "visualization": {
+          "title": "팩트체크",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "돋보기 아이콘과 함께 '팩트체크' 타이틀 카드",
+            "reveal": "zoom_in",
+            "emphasis": "keyword",
+            "headline": "CHAPTER 5\n{{팩트체크}}",
+            "mood": "informative",
+            "layout": "headline_only"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 41,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_041.mp3",
+        "audioDurationSec": 4.728,
+        "subtitles": [],
+        "visualization": {
+          "title": "트럼프 주장",
+          "items": [
+            "이란이 곧 미국 본토를 타격할 미사일을 보유할 것"
+          ],
+          "values": [],
+          "source": "도널드 트럼프",
+          "creative": {
+            "concept": "트럼프의 주장이 인용문으로 나타남",
+            "reveal": "fade_in",
+            "emphasis": "quote",
+            "headline": "이란이 {{곧}}\n미국 본토 타격 가능?",
+            "mood": "suspense"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 42,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_042.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_042.mp3",
+        "audioDurationSec": 7.236,
+        "subtitles": [],
+        "visualization": {
+          "title": "트럼프 주장 vs DIA 평가",
+          "items": [
+            "트럼프: '곧'",
+            "DIA: 2035년"
+          ],
+          "values": [
+            2026,
+            2035
+          ],
+          "unit": "년",
+          "source": "미 국방정보국(DIA), PBS 팩트체크",
+          "creative": {
+            "concept": "좌우 분할로 트럼프 주장과 DIA 평가를 극적으로 대비",
+            "reveal": "split_reveal",
+            "emphasis": "contrast",
+            "headline": "{{곧}} vs {{2035년}}\n10년의 차이",
+            "mood": "dramatic",
+            "layout": "split"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 22,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 43,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_043.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_043.mp3",
+        "audioDurationSec": 3.762,
+        "subtitles": [],
+        "visualization": {
+          "title": "과장의 규모",
+          "items": [],
+          "values": [
+            10
+          ],
+          "unit": "년",
+          "creative": {
+            "concept": "'10년'이라는 숫자가 카운팅되며 크게 나타남",
+            "reveal": "count_up",
+            "emphasis": "number",
+            "headline": "{{10년}}의 차이\n엄청난 과장",
+            "mood": "dramatic",
+            "layout": "metric_spotlight"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 44,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_044.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_044.mp3",
+        "audioDurationSec": 7.758,
+        "subtitles": [],
+        "visualization": {
+          "title": "주장 vs 실제",
+          "items": [
+            "완전히 궤멸",
+            "상당히 약화"
+          ],
+          "values": [],
+          "creative": {
+            "concept": "좌우 대비로 트럼프 주장과 백악관 문서의 괴리를 보여줌",
+            "reveal": "split_reveal",
+            "emphasis": "contrast",
+            "headline": "{{완전 궤멸}} vs\n{{상당히 약화}}",
+            "mood": "suspense",
+            "layout": "split"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "center",
+          "opacity": 0.85
+        }
+      },
+      {
+        "sceneNumber": 45,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_045.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_045.mp3",
+        "audioDurationSec": 6.87,
+        "subtitles": [],
+        "visualization": {
+          "title": "브레넌 발언",
+          "items": [
+            "트럼프 행정부가 군사작전을 정당화하기 위해 사실을 만들어내고 있다"
+          ],
+          "values": [],
+          "source": "존 브레넌, 전 CIA 국장",
+          "creative": {
+            "concept": "브레넌 사진과 함께 인용문이 타이핑됨",
+            "reveal": "typewriter",
+            "emphasis": "quote",
+            "headline": "사실을\n{{만들어내고}} 있다",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "left",
+          "opacity": 0.9
+        }
+      },
+      {
+        "sceneNumber": 46,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_046.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_046.mp3",
+        "audioDurationSec": 5.747,
+        "subtitles": [],
+        "visualization": {
+          "title": "경제적 충격",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "충격파가 퍼지는 물결 효과와 함께 전환",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "세계 경제\n{{즉각적 충격파}}",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.3
+        }
+      },
+      {
+        "sceneNumber": 47,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_047.mp3",
+        "audioDurationSec": 6.583,
+        "subtitles": [],
+        "visualization": {
+          "title": "국제 유가 급등",
+          "items": [
+            "전쟁 전",
+            "전쟁 후",
+            "최고점"
+          ],
+          "values": [
+            67,
+            90,
+            120
+          ],
+          "unit": "$/배럴",
+          "source": "Al Jazeera, CNBC (2026)",
+          "creative": {
+            "concept": "유가 차트가 가파르게 상승하는 라인차트",
+            "reveal": "build_up",
+            "emphasis": "number",
+            "headline": "유가 {{25%}} 급등\n배럴당 $120 돌파",
+            "mood": "urgent",
+            "chartConfig": {
+              "type": "line",
+              "showGrid": true,
+              "showDots": true,
+              "showArea": true
+            }
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 48,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_048.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_048.mp3",
+        "audioDurationSec": 6.269,
+        "subtitles": [],
+        "visualization": {
+          "title": "호르무즈 해협",
+          "items": [
+            "일일 운송량"
+          ],
+          "values": [
+            1500
+          ],
+          "unit": "만 배럴",
+          "source": "Al Jazeera (2026)",
+          "creative": {
+            "concept": "호르무즈 해협 지도 위에 원유 운송량이 크게 표시",
+            "reveal": "count_up",
+            "emphasis": "number",
+            "headline": "전 세계 원유 {{20%}}\n일 {{1,500만}} 배럴",
+            "mood": "informative",
+            "layout": "metric_spotlight"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "fullscreen",
+          "opacity": 0.8
+        },
+        "mapScene": {
+          "mapType": "location_reveal",
+          "mapStyle": "modern_clean",
+          "title": "호르무즈 해협",
+          "camera": {
+            "keyframes": [
+              {
+                "frame": 0,
+                "center": [
+                  54.0,
+                  26.5
+                ],
+                "zoom": 6
+              },
+              {
+                "frame": 60,
+                "center": [
+                  56.3,
+                  26.6
+                ],
+                "zoom": 9
+              }
+            ],
+            "easing": "easeInOutCubic"
+          },
+          "markers": [
+            {
+              "coordinates": [
+                56.3,
+                26.6
+              ],
+              "label": "호르무즈 해협"
+            }
+          ],
+          "prerenderedBg": {
+            "imagePath": "map_frames/scene_48/bg.png",
+            "cameraState": {
+              "center": [
+                56.3,
+                26.6
+              ],
+              "zoom": 9,
+              "bearing": 0,
+              "pitch": 0
+            }
+          }
+        }
+      },
+      {
+        "sceneNumber": 49,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_049.mp3",
+        "audioDurationSec": 4.258,
+        "subtitles": [],
+        "visualization": {
+          "title": "운항 중단",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "유조선 아이콘에 X 표시가 되며 운항 중단을 시각화",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "유조선 운항\n{{사실상 중단}}",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 50,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_050.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_050.mp3",
+        "audioDurationSec": 5.277,
+        "subtitles": [],
+        "visualization": {
+          "title": "전쟁 비용",
+          "items": [
+            "전비",
+            "미군 전사자"
+          ],
+          "values": [
+            37,
+            6
+          ],
+          "unit": "억 달러 / 명",
+          "source": "아시아엔 (2026)",
+          "creative": {
+            "concept": "두 핵심 수치가 동시에 카운팅되며 나타남",
+            "reveal": "parallel",
+            "emphasis": "number",
+            "headline": "{{37억 달러}}\n미군 {{6명}} 전사",
+            "mood": "somber",
+            "layout": "metric_wall"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 51,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_051.mp3",
+        "audioDurationSec": 4.676,
+        "subtitles": [],
+        "visualization": {
+          "title": "타격 규모",
+          "items": [
+            "표적 타격",
+            "함정 격침"
+          ],
+          "values": [
+            5000,
+            51
+          ],
+          "unit": "개 / 척",
+          "source": "아시아엔 (2026)",
+          "creative": {
+            "concept": "두 수치가 카운팅되며 큰 숫자로 나타남",
+            "reveal": "count_up",
+            "emphasis": "number",
+            "headline": "{{5,000+}} 표적\n함정 {{51척}} 격침",
+            "mood": "dramatic",
+            "layout": "metric_wall"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 52,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_052.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_052.mp3",
+        "audioDurationSec": 7.184,
+        "subtitles": [],
+        "visualization": {
+          "title": "전쟁 여론",
+          "items": [
+            "지지",
+            "반대"
+          ],
+          "values": [
+            38,
+            62
+          ],
+          "unit": "%",
+          "source": "Al Jazeera (2026)",
+          "creative": {
+            "concept": "파이차트로 지지 38% vs 반대 62%를 시각화",
+            "reveal": "count_up",
+            "emphasis": "number",
+            "headline": "전쟁 지지율\n겨우 {{38%}}",
+            "mood": "informative",
+            "chartConfig": {
+              "type": "pie",
+              "maxSlices": 2,
+              "highlightIndex": 0,
+              "showTotal": false
+            }
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 53,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_053.mp3",
+        "audioDurationSec": 6.583,
+        "subtitles": [],
+        "visualization": {
+          "title": "이란의 경제 전략",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "비용 상승을 나타내는 화살표와 함께 텍스트 강조",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "감당 불가능한\n{{비용 부과}} 전략",
+            "mood": "contemplative"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 54,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_054.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_054.mp3",
+        "audioDurationSec": 5.512,
+        "subtitles": [],
+        "visualization": {
+          "title": "데이비드 프럼",
+          "items": [
+            "전 부시 특별보좌관",
+            "'악의 축' 연설문 작성자"
+          ],
+          "itemIcons": [
+            "Landmark",
+            "FileText"
+          ],
+          "creative": {
+            "concept": "프럼 사진이 스포트라이트로 등장하며 이력 표시",
+            "reveal": "spotlight",
+            "emphasis": "person",
+            "headline": "데이비드 {{프럼}}\n'악의 축' 작성자",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "left",
+          "opacity": 0.9
+        }
+      },
+      {
+        "sceneNumber": 55,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_055.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_055.mp3",
+        "audioDurationSec": 5.016,
+        "subtitles": [],
+        "visualization": {
+          "title": "프럼 진단",
+          "items": [
+            "트럼프는 이 전쟁을 한 사람의 변덕에 의한 것으로 만들었다"
+          ],
+          "values": [],
+          "source": "데이비드 프럼",
+          "creative": {
+            "concept": "'한 사람의 변덕'이 극적으로 강조됨",
+            "reveal": "dramatic_pause",
+            "emphasis": "quote",
+            "headline": "한 사람의\n{{변덕}}에 의한 전쟁",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 56,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_056.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_056.mp3",
+        "audioDurationSec": 5.251,
+        "subtitles": [],
+        "visualization": {
+          "title": "전후 계획 부재",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "'전후 계획 없음'이 빈 문서 이미지와 함께 나타남",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "기밀 브리핑에서도\n{{전후 계획 없음}}",
+            "mood": "somber"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.3
+        }
+      },
+      {
+        "sceneNumber": 57,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_057.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_057.mp3",
+        "audioDurationSec": 5.016,
+        "subtitles": [],
+        "visualization": {
+          "title": "내부 증언",
+          "items": [
+            "행정부는 실질적인 근거도, 최종 목표도, 전후 계획도 없다"
+          ],
+          "values": [],
+          "source": "익명 정부 관리, 인터셉트",
+          "creative": {
+            "concept": "익명 증언이 어둡게 타이핑되며 나타남",
+            "reveal": "typewriter",
+            "emphasis": "quote",
+            "headline": "근거도 목표도\n{{계획도 없다}}",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 58,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_058.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_058.mp3",
+        "audioDurationSec": 3.762,
+        "subtitles": [],
+        "visualization": {
+          "title": "헌법 규정",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "헌법 문서 이미지 배경 위에 핵심 규정 강조",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "오직 {{의회}}만이\n전쟁 선포 가능",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.2
+        }
+      },
+      {
+        "sceneNumber": 59,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_059.mp3",
+        "audioDurationSec": 5.512,
+        "subtitles": [],
+        "visualization": {
+          "title": "하원 투표 결과",
+          "items": [
+            "반대(부결)",
+            "찬성"
+          ],
+          "values": [
+            219,
+            212
+          ],
+          "unit": "표",
+          "source": "NPR (2026-03-04)",
+          "creative": {
+            "concept": "투표 결과가 막대그래프로 나타나며 부결 강조",
+            "reveal": "count_up",
+            "emphasis": "number",
+            "headline": "{{219}} vs 212\n전쟁권한 결의안 부결",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 60,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_060.mp3",
+        "audioDurationSec": 7.758,
+        "subtitles": [],
+        "visualization": {
+          "title": "밴랜딩엄 판단",
+          "items": [
+            "국제법뿐 아니라 미국 헌법과 전쟁권한법을 명백히 위반한다"
+          ],
+          "values": [],
+          "source": "레이첼 밴랜딩엄, 전 중부사령부 수석 법률고문",
+          "creative": {
+            "concept": "법적 판단이 경고색으로 강조되며 나타남",
+            "reveal": "typewriter",
+            "emphasis": "quote",
+            "headline": "헌법·전쟁권한법\n{{명백한 위반}}",
+            "mood": "urgent"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 61,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_061.mp3",
+        "audioDurationSec": 6.348,
+        "subtitles": [],
+        "visualization": {
+          "title": "같은 경고",
+          "items": [
+            "전 부시 보좌관",
+            "전 외교관",
+            "전 CIA 국장"
+          ],
+          "itemIcons": [
+            "Landmark",
+            "Globe",
+            "Eye"
+          ],
+          "creative": {
+            "concept": "세 인물 유형이 순차적으로 등장하며 같은 경고를 상징",
+            "reveal": "stagger",
+            "emphasis": "count",
+            "headline": "모두가 같은\n{{경고}}를 한다",
+            "mood": "somber"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 22,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 62,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_062.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_062.mp3",
+        "audioDurationSec": 3.056,
+        "subtitles": [],
+        "visualization": {
+          "title": "전문가 총평",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "마지막 챕터 타이틀 — 결론으로의 전환",
+            "reveal": "fade_in",
+            "emphasis": "keyword",
+            "headline": "CHAPTER 7\n{{일치된 결론}}",
+            "mood": "contemplative",
+            "layout": "headline_only"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 63,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_063.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_063.mp3",
+        "audioDurationSec": 5.669,
+        "subtitles": [],
+        "visualization": {
+          "title": "전문가 판단",
+          "items": [
+            "미어샤이머: 의미 있는 승리 불가능",
+            "나스르: 통제권 상실"
+          ],
+          "itemIcons": [
+            "BookOpen",
+            "Target"
+          ],
+          "creative": {
+            "concept": "두 전문가의 판단이 순차적으로 나타남",
+            "reveal": "stagger",
+            "emphasis": "quote",
+            "headline": "승리 {{불가능}}\n통제권 {{상실}}",
+            "mood": "somber"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 22,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 64,
+        "imagePath": "",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_064.mp3",
+        "audioDurationSec": 5.433,
+        "subtitles": [],
+        "visualization": {
+          "title": "스팀슨센터 평가",
+          "items": [
+            "공습만으로는 정부를 무너뜨릴 수 없다. 미국 오만의 비싼 사례다"
+          ],
+          "values": [],
+          "source": "스팀슨센터",
+          "creative": {
+            "concept": "인용문이 중앙에 크게 나타남",
+            "reveal": "fade_in",
+            "emphasis": "quote",
+            "headline": "미국 {{오만}}의\n비싼 사례",
+            "mood": "somber"
+          }
+        },
+        "kenBurns": {
+          "enabled": false,
+          "zoomFactor": 1.0,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 65,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_065.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_065.mp3",
+        "audioDurationSec": 5.695,
+        "subtitles": [],
+        "visualization": {
+          "title": "월트의 분석",
+          "items": [
+            "공군력만으로 정권 교체 불가",
+            "지상군 투입 필수"
+          ],
+          "itemIcons": [
+            "Plane",
+            "Users"
+          ],
+          "creative": {
+            "concept": "공군 X 표시와 지상군 필수 표시의 대비",
+            "reveal": "stagger",
+            "emphasis": "contrast",
+            "headline": "공군력으로는 {{불가능}}\n지상군이 필수",
+            "mood": "informative"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 66,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_066.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_066.mp3",
+        "audioDurationSec": 3.709,
+        "subtitles": [],
+        "visualization": {
+          "title": "핵심 역설",
+          "items": [],
+          "values": [],
+          "creative": {
+            "concept": "'생존 = 승리'가 극적으로 나타남",
+            "reveal": "dramatic_pause",
+            "emphasis": "keyword",
+            "headline": "이란은 {{생존}}하면\n{{승리}}한다",
+            "mood": "dramatic"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "slide",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "center",
+          "opacity": 0.85
+        }
+      },
+      {
+        "sceneNumber": 67,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_067.jpg",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_067.mp3",
+        "audioDurationSec": 5.878,
+        "subtitles": [],
+        "visualization": {
+          "title": "승리 조건 비교",
+          "items": [
+            "이란: 생존 = 승리",
+            "미국: 정권 교체 = 승리"
+          ],
+          "values": [],
+          "itemFlags": [
+            "IR",
+            "US"
+          ],
+          "creative": {
+            "concept": "좌우 분할로 양측의 극적으로 다른 승리 조건을 대비",
+            "reveal": "split_reveal",
+            "emphasis": "contrast",
+            "headline": "{{생존}} vs\n{{정권 교체}}",
+            "mood": "dramatic",
+            "layout": "split"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 22,
+          "easing": "easeOut"
+        }
+      },
+      {
+        "sceneNumber": 68,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_068.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_068.mp3",
+        "audioDurationSec": 6.296,
+        "subtitles": [],
+        "visualization": {
+          "title": "미어샤이머 경고",
+          "items": [
+            "베트남 전쟁에서 미국이 거의 모든 전투에서 이기고도 전쟁에서 졌다는 것을 기억하라"
+          ],
+          "values": [],
+          "source": "존 미어샤이머",
+          "creative": {
+            "concept": "베트남 전쟁 이미지 배경 위에 인용문이 나타남",
+            "reveal": "typewriter",
+            "emphasis": "quote",
+            "headline": "모든 전투에서 이기고도\n{{전쟁에서 졌다}}",
+            "mood": "somber"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "wipe",
+          "durationFrames": 12
+        },
+        "vizAnimation": {
+          "stagger": 6,
+          "itemDuration": 20,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.25
+        }
+      },
+      {
+        "sceneNumber": 69,
+        "imagePath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/images/scene_069.png",
+        "audioPath": "https://gidxpynjscaiedvfxlaq.supabase.co/storage/v1/object/public/kairos-assets/proj-13d05ef189/audio/scene_069.mp3",
+        "audioDurationSec": 6.504,
+        "subtitles": [],
+        "visualization": {
+          "title": "마무리 질문",
+          "items": [
+            "핵 위협 제거?",
+            "시위대 보호?",
+            "이스라엘 로비?",
+            "대통령의 변덕?"
+          ],
+          "itemIcons": [
+            "Atom",
+            "Users",
+            "Shield",
+            "HelpCircle"
+          ],
+          "creative": {
+            "concept": "네 가지 가능성이 순차적으로 나타나고, 마지막에 물음표가 크게 강조",
+            "reveal": "stagger_then_flash",
+            "emphasis": "keyword",
+            "headline": "{{진짜 이유}}는\n무엇일까요?",
+            "mood": "contemplative"
+          }
+        },
+        "kenBurns": {
+          "enabled": true,
+          "zoomFactor": 1.08,
+          "zoomDirection": "in",
+          "panDirection": "none"
+        },
+        "transition": {
+          "type": "fade",
+          "durationFrames": 15
+        },
+        "vizAnimation": {
+          "stagger": 8,
+          "itemDuration": 22,
+          "easing": "easeOut"
+        },
+        "imageAsset": {
+          "placement": "background",
+          "opacity": 0.35
+        }
+      }
+    ],
+    "bgm": null
+  },
+  "subtitleConfig": {
+    "visible": true,
+    "fontFamily": "Pretendard",
+    "fontSize": 44,
+    "fontWeight": 700,
+    "color": "#FFFFFF",
+    "strokeColor": "#3D3B2F",
+    "strokeWidth": 2,
+    "keywordColor": "#F7D94C",
+    "keywordStrokeColor": "#5A4B00",
+    "bottomOffset": 30,
+    "maxWidth": "85%",
+    "lineHeight": 1.5
+  }
+}

@@ -26,7 +26,7 @@ const useFonts = () => {
   useEffect(() => {
     const loadAll = async () => {
       const promises = FONT_DEFS.map(async (f) => {
-        const url = staticFile(f.file);
+        const url = resolveAsset(f.file);
         const descriptors: FontFaceDescriptors = {
           weight: f.weight,
           style: "normal",

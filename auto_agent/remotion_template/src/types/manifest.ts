@@ -64,6 +64,22 @@ export interface SceneManifest {
   bgm: BGMConfig | null;
 }
 
+/** 캔버스 에디터 오버라이드 — 프리미어 스타일 직접 조작용 */
+export interface CanvasOverrides {
+  headline?: {
+    x: number;      // 0~1920 (캔버스 좌표)
+    y: number;      // 0~1080
+    fontSize: number; // px
+    width?: number;   // px (텍스트 박스 폭)
+  };
+  image?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
+
 export interface SceneEntry {
   sceneNumber: number;
   imagePath: string;
@@ -88,6 +104,9 @@ export interface SceneEntry {
     itemImages?: boolean;
   };
 
+  /** 캔버스 에디터 오버라이드 (프리미어 스타일 직접 조작) */
+  overrides?: CanvasOverrides;
+
   /** 시각화 씬의 아트스타일 배경 이미지 경로 (하이브리드 viz) */
   vizBackgroundPath?: string;
 
@@ -110,6 +129,7 @@ export interface SubtitleEntry {
 
 export interface CreativeDirection {
   concept: string;
+  layout?: string;
   reveal: "fade_in" | "stagger" | "stagger_then_flash" | "cascade" | "count_up"
     | "typewriter" | "spotlight" | "split_reveal" | "zoom_in" | "build_up"
     | "dramatic_pause" | "parallel";

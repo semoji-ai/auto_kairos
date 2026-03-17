@@ -29,7 +29,7 @@ export const kairosVideoSchema = z.object({
 
 export const sceneEditorSchema = z.object({
   manifest: z.any().describe("씬 데이터 (자동 로드)"),
-  sceneNumber: z.number().min(1).max(50).describe("씬 번호"),
+  sceneNumber: z.number().min(1).max(80).describe("씬 번호"),
   subtitleConfig: subtitleConfigSchema,
 });
 

@@ -89,18 +89,13 @@ export const RouteAnimation: React.FC<Props> = ({
     };
 
     // 경로 좌표 → 픽셀 좌표 변환 (캡처 카메라 기준)
-    const pixelCoords = useMemo(
-      () => visibleCoords.map((coord) =>
-        lngLatToPixel(coord as [number, number], captureCam, 1920, 1080),
-      ),
-      [visibleCoords, captureCam],
+    const pixelCoords = visibleCoords.map((coord) =>
+      lngLatToPixel(coord as [number, number], captureCam, 1920, 1080),
     );
-    const pathD = useMemo(
-      () => pixelCoords.length > 1
+    const pathD =
+      pixelCoords.length > 1
         ? pixelCoords.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ")
-        : "",
-      [pixelCoords],
-    );
+        : "";
 
     return (
       <AbsoluteFill>
@@ -162,7 +157,7 @@ export const RouteAnimation: React.FC<Props> = ({
     ],
   };
 
-  const handleMapReady = useCallback((map: maplibregl.Map) => {
+  const handleMapReady = (map: maplibregl.Map) => {
     if (!map.getSource(ROUTE_SOURCE_ID)) {
       map.addSource(ROUTE_SOURCE_ID, {
         type: "geojson",
@@ -183,14 +178,14 @@ export const RouteAnimation: React.FC<Props> = ({
         },
       });
     }
-  }, [visibleGeoJSON, route]);
+  };
 
-  const handleFrameUpdate = useCallback((map: maplibregl.Map) => {
+  const handleFrameUpdate = (map: maplibregl.Map) => {
     const source = map.getSource(ROUTE_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
     if (source) {
       source.setData(visibleGeoJSON);
     }
-  }, [visibleGeoJSON]);
+  };
 
   return (
     <AbsoluteFill>
