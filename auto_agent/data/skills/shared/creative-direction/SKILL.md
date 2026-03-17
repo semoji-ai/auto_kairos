@@ -152,19 +152,41 @@ headline에 이미 나온 단어/숫자를 items에서 반복하지 않는다.
 ✅ headline: "CHAPTER 3\n{{해외 배당 ETF}} 4대장"
 ```
 
-#### 규칙 4: items가 있으면 itemIcons도 있어야 한다
+#### 규칙 4: itemFlags와 itemIcons는 동시에 사용하지 않는다
 
-items가 2개 이상이면 itemIcons를 **반드시** 함께 제공한다. 아이콘 없는 아이템 리스트는 시각적으로 밋밋하다.
+국기(itemFlags)와 아이콘(itemIcons)이 동시에 있으면 화면이 복잡해지고 레이아웃이 깨진다.
+**국기가 있으면 아이콘을 비운다. 아이콘이 있으면 국기를 비운다.**
+
+```
+❌ items: ["사우디", "UAE", "이라크"]
+   itemFlags: ["SA", "AE", "IQ"]
+   itemIcons: ["Crown", "Building2", "Factory"]  ← ⛔ 국기+아이콘 동시
+
+✅ items: ["사우디", "UAE", "이라크"]
+   itemFlags: ["SA", "AE", "IQ"]
+   itemIcons: []  ← 국기가 주인공
+
+✅ items: ["SCHD", "JEPI", "JEPQ"]
+   itemFlags: []
+   itemIcons: ["TrendingUp", "DollarSign", "Zap"]  ← 아이콘이 주인공
+```
+
+**우선순위**: 국가/지역 항목 → `itemFlags` 사용. 개념/카테고리 항목 → `itemIcons` 사용.
+
+#### 규칙 4b: items가 있으면 itemIcons 또는 itemFlags 중 하나는 있어야 한다
+
+items가 2개 이상이면 시각적 구분자(아이콘 또는 국기)를 **반드시** 하나 제공한다.
 
 ```
 ❌ items: ["SCHD", "JEPI", "JEPQ"]
-   itemIcons: []  ← ⛔ 아이콘 없음
+   itemIcons: []
+   itemFlags: []  ← ⛔ 시각 구분자 없음
 
 ✅ items: ["SCHD", "JEPI", "JEPQ"]
    itemIcons: ["TrendingUp", "DollarSign", "Zap"]
 ```
 
-유일한 예외: items가 연도(`["2016", "2018", "2020"]`)나 순수 수치 데이터일 때는 아이콘 생략 가능.
+유일한 예외: items가 연도(`["2016", "2018", "2020"]`)나 순수 수치 데이터일 때는 생략 가능.
 
 #### 규칙 5: items가 1개뿐이면 items를 쓰지 않는다
 

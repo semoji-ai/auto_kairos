@@ -1069,20 +1069,17 @@ const ItemsGrid: React.FC<{
               gap: 6,
             }}
           >
-            {/* Grid item icon */}
-            {itemIcons?.[i] && (() => {
-              const Ic = resolveIcon(itemIcons[i]);
-              return Ic ? (
-                <Icon icon={Ic} size={items.length > 6 ? 20 : 24} color={moodCfg.accent} />
-              ) : null;
-            })()}
-            {itemFlags?.[i] && !itemIcons?.[i] ? (
-              <FlagCard countryCode={itemFlags[i]} label={item} width={items.length > 6 ? 80 : 100} />
+            {/* 국기가 있으면 국기 우선 (아이콘 숨김), 없으면 아이콘 */}
+            {itemFlags?.[i] ? (
+              <FlagCard countryCode={itemFlags[i]} label={item} width={items.length > 6 ? 120 : 160} />
             ) : (
               <>
-                {itemFlags?.[i] && (
-                  <FlagBadge countryCode={itemFlags[i]} size={items.length > 6 ? 28 : 32} />
-                )}
+                {itemIcons?.[i] && (() => {
+                  const Ic = resolveIcon(itemIcons[i]);
+                  return Ic ? (
+                    <Icon icon={Ic} size={items.length > 6 ? 20 : 24} color={moodCfg.accent} />
+                  ) : null;
+                })()}
                 <span>{item}</span>
               </>
             )}
@@ -1378,17 +1375,13 @@ const ItemsList: React.FC<{
               borderLeft: `3px solid ${spotlight ? moodCfg.accent : moodCfg.accent + "44"}`,
             }}
           >
-            {/* Per-item icon badge */}
-            {itemIcons?.[i] && (() => {
+            {/* 국기가 있으면 국기 우선 (아이콘 숨김), 없으면 아이콘 */}
+            {itemFlags?.[i] ? (
+              <FlagCard countryCode={itemFlags[i]} width={100} />
+            ) : itemIcons?.[i] ? (() => {
               const Ic = resolveIcon(itemIcons[i]);
               return Ic ? <IconBadge icon={Ic} size={36} /> : null;
-            })()}
-            {/* Per-item flag: 아이콘 없으면 카드형, 있으면 배지형 */}
-            {itemFlags?.[i] && !itemIcons?.[i] ? (
-              <FlagCard countryCode={itemFlags[i]} width={80} />
-            ) : itemFlags?.[i] ? (
-              <FlagBadge countryCode={itemFlags[i]} size={36} />
-            ) : null}
+            })() : null}
             {/* Per-item status dot */}
             {itemStatuses?.[i] && (
               <StatusDot status={itemStatuses[i]} />
