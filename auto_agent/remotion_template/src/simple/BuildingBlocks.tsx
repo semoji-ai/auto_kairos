@@ -370,6 +370,7 @@ export const AccentText: React.FC<{
   baseColor?: string;
   style?: React.CSSProperties;
 }> = ({ text, baseColor = C.text, style }) => {
+  const C = useC();
   const lines = text.split("\n");
   return (
     <span style={style}>
@@ -403,67 +404,76 @@ export const AccentText: React.FC<{
 export const Card: React.FC<{
   children: React.ReactNode;
   style?: React.CSSProperties;
-}> = ({ children, style }) => (
-  <div
-    style={{
-      backgroundColor: C.cardBg,
-      border: `1px solid ${C.cardBorder}`,
-      borderRadius: 12,
-      padding: "24px 28px",
-      ...style,
-    }}
-  >
-    {children}
-  </div>
-);
+}> = ({ children, style }) => {
+  const C = useC();
+  return (
+    <div
+      style={{
+        backgroundColor: C.cardBg,
+        border: `1px solid ${C.cardBorder}`,
+        borderRadius: 12,
+        padding: "24px 28px",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
 
 export const Pill: React.FC<{
   text: string;
   active?: boolean;
   style?: React.CSSProperties;
-}> = ({ text, active, style }) => (
-  <div
-    style={{
-      padding: "8px 20px",
-      borderRadius: 20,
-      border: `1px solid ${active ? C.accent : C.cardBorder}`,
-      backgroundColor: active ? C.accentSoft : "transparent",
-      fontSize: 18,
-      fontWeight: 600,
-      color: active ? C.accent : C.textMuted,
-      ...style,
-    }}
-  >
-    {text}
-  </div>
-);
+}> = ({ text, active, style }) => {
+  const C = useC();
+  return (
+    <div
+      style={{
+        padding: "8px 20px",
+        borderRadius: 20,
+        border: `1px solid ${active ? C.accent : C.cardBorder}`,
+        backgroundColor: active ? C.accentSoft : "transparent",
+        fontSize: 18,
+        fontWeight: 600,
+        color: active ? C.accent : C.textMuted,
+        ...style,
+      }}
+    >
+      {text}
+    </div>
+  );
+};
 
 export const CircleBadge: React.FC<{
   text: string;
   size?: number;
   filled?: boolean;
   style?: React.CSSProperties;
-}> = ({ text, size = 48, filled, style }) => (
-  <div
-    style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      border: `2px solid ${C.accent}`,
-      backgroundColor: filled ? C.accent : "transparent",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: size * 0.4,
-      fontWeight: 700,
-      color: filled ? C.bg : C.accent,
-      flexShrink: 0,
-      ...style,
-    }}
-  >
-    {text}
-  </div>
-);
+}> = ({ text, size = 48, filled, style }) => {
+  const C = useC();
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        border: `2px solid ${C.accent}`,
+        backgroundColor: filled ? C.accent : "transparent",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: size * 0.4,
+        fontWeight: 700,
+        color: filled ? C.bg : C.accent,
+        flexShrink: 0,
+        ...style,
+      }}
+    >
+      {text}
+    </div>
+  );
+};
 
 /** 이미지 원형 배지 — imageUrl이 있으면 이미지, 없으면 인물 실루엣 */
 export const ImageBadge: React.FC<{
@@ -471,6 +481,7 @@ export const ImageBadge: React.FC<{
   size?: number;
   style?: React.CSSProperties;
 }> = ({ imageUrl, size = 56, style }) => {
+  const C = useC();
   const resolvedUrl = imageUrl
     ? imageUrl.startsWith("http")
       ? imageUrl
@@ -536,28 +547,31 @@ export const IconBadge: React.FC<{
   size?: number;
   filled?: boolean;
   style?: React.CSSProperties;
-}> = ({ icon: LucideComp, size = 48, filled, style }) => (
-  <div
-    style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      border: `2px solid ${C.accent}`,
-      backgroundColor: filled ? C.accent : "transparent",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      flexShrink: 0,
-      ...style,
-    }}
-  >
-    <LucideComp
-      size={size * 0.5}
-      color={filled ? C.bg : C.accent}
-      strokeWidth={1.5}
-    />
-  </div>
-);
+}> = ({ icon: LucideComp, size = 48, filled, style }) => {
+  const C = useC();
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        border: `2px solid ${C.accent}`,
+        backgroundColor: filled ? C.accent : "transparent",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        ...style,
+      }}
+    >
+      <LucideComp
+        size={size * 0.5}
+        color={filled ? C.bg : C.accent}
+        strokeWidth={1.5}
+      />
+    </div>
+  );
+};
 
 /** 국기 원형 배지 (ISO alpha-2 코드) */
 export const FlagBadge: React.FC<{
@@ -565,6 +579,7 @@ export const FlagBadge: React.FC<{
   size?: number;
   style?: React.CSSProperties;
 }> = ({ countryCode, size = 48, style }) => {
+  const C = useC();
   // country-flag-icons provides SVG URLs via the package
   let FlagUrl: string | null = null;
   try {
@@ -610,6 +625,7 @@ export const FlagCard: React.FC<{
   width?: number;
   style?: React.CSSProperties;
 }> = ({ countryCode, label, width = 120, style }) => {
+  const C = useC();
   const h = Math.round(width * 2 / 3); // 3:2 비율
   const FlagUrl = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode.toUpperCase()}.svg`;
   return (
@@ -640,6 +656,7 @@ export const LogoBadge: React.FC<{
   color?: string;
   style?: React.CSSProperties;
 }> = ({ logo, size = 48, color = C.accent, style }) => {
+  const C = useC();
   const LogoComp = resolveLogo(logo);
   return (
     <div
@@ -680,42 +697,45 @@ export const ProgressBar: React.FC<{
   color?: string;
   label?: string;
   style?: React.CSSProperties;
-}> = ({ progress, height = 16, color = C.accent, label, style }) => (
-  <div style={{ width: "100%", ...style }}>
-    {label && (
+}> = ({ progress, height = 16, color = C.accent, label, style }) => {
+  const C = useC();
+  return (
+    <div style={{ width: "100%", ...style }}>
+      {label && (
+        <div
+          style={{
+            fontSize: 36,
+            color: C.textMuted,
+            marginBottom: 6,
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>{label}</span>
+          <span style={{ color: C.accent }}>{Math.round(progress * 100)}%</span>
+        </div>
+      )}
       <div
         style={{
-          fontSize: 36,
-          color: C.textMuted,
-          marginBottom: 6,
-          display: "flex",
-          justifyContent: "space-between",
+          width: "100%",
+          height,
+          backgroundColor: C.divider,
+          borderRadius: height / 2,
+          overflow: "hidden",
         }}
       >
-        <span>{label}</span>
-        <span style={{ color: C.accent }}>{Math.round(progress * 100)}%</span>
+        <div
+          style={{
+            width: `${Math.min(progress * 100, 100)}%`,
+            height: "100%",
+            backgroundColor: color,
+            borderRadius: height / 2,
+          }}
+        />
       </div>
-    )}
-    <div
-      style={{
-        width: "100%",
-        height,
-        backgroundColor: C.divider,
-        borderRadius: height / 2,
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          width: `${Math.min(progress * 100, 100)}%`,
-          height: "100%",
-          backgroundColor: color,
-          borderRadius: height / 2,
-        }}
-      />
     </div>
-  </div>
-);
+  );
+};
 
 /** 키워드 태그/칩 (Pill 개선) */
 export const Tag: React.FC<{
@@ -724,6 +744,7 @@ export const Tag: React.FC<{
   size?: "sm" | "md" | "lg";
   style?: React.CSSProperties;
 }> = ({ text, active, size = "md", style }) => {
+  const C = useC();
   const sizes = { sm: { px: 18, py: 8, fs: 26 }, md: { px: 28, py: 12, fs: 36 }, lg: { px: 36, py: 16, fs: 48 } };
   const s = sizes[size];
   return (
@@ -769,6 +790,7 @@ export const StatusDot: React.FC<{
   label?: string;
   style?: React.CSSProperties;
 }> = ({ status, label, style }) => {
+  const C = useC();
   const colors = {
     positive: "#22C55E",
     negative: "#EF4444",
@@ -832,19 +854,22 @@ export const TimelineDot: React.FC<{
   active?: boolean;
   size?: number;
   style?: React.CSSProperties;
-}> = ({ label, active, size = 32, style }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 16, ...style }}>
-    <div style={{
-      width: size, height: size, borderRadius: size / 2,
-      backgroundColor: active ? C.accent : "transparent",
-      border: `2px solid ${active ? C.accent : C.cardBorder}`,
-      flexShrink: 0,
-    }} />
-    <span style={{ fontSize: 42, fontWeight: active ? 700 : 400, color: active ? C.accent : C.text }}>
-      {label}
-    </span>
-  </div>
-);
+}> = ({ label, active, size = 32, style }) => {
+  const C = useC();
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 16, ...style }}>
+      <div style={{
+        width: size, height: size, borderRadius: size / 2,
+        backgroundColor: active ? C.accent : "transparent",
+        border: `2px solid ${active ? C.accent : C.cardBorder}`,
+        flexShrink: 0,
+      }} />
+      <span style={{ fontSize: 42, fontWeight: active ? 700 : 400, color: active ? C.accent : C.text }}>
+        {label}
+      </span>
+    </div>
+  );
+};
 
 /** KPI 카드 — 라벨 + 큰 숫자 + 변화율 */
 export const MetricCard: React.FC<{
@@ -854,6 +879,7 @@ export const MetricCard: React.FC<{
   trend?: "up" | "down" | "neutral";
   style?: React.CSSProperties;
 }> = ({ label, value, change, trend, style }) => {
+  const C = useC();
   const trendColor = trend === "up" ? "#22C55E" : trend === "down" ? "#EF4444" : C.textMuted;
   const trendArrow = trend === "up" ? "↑" : trend === "down" ? "↓" : "";
   return (
@@ -902,6 +928,7 @@ export const Callout: React.FC<{
   variant?: "info" | "warning" | "accent";
   style?: React.CSSProperties;
 }> = ({ children, variant = "accent", style }) => {
+  const C = useC();
   const borderColor = variant === "warning" ? "#EF4444" : variant === "info" ? "#3B82F6" : C.accent;
   return (
     <div style={{
@@ -924,25 +951,28 @@ export const StepBadge: React.FC<{
   active?: boolean;
   size?: number;
   style?: React.CSSProperties;
-}> = ({ step, label, active, size = 72, style }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 14, ...style }}>
-    <div style={{
-      width: size, height: size, borderRadius: size / 2,
-      backgroundColor: active ? C.accent : "transparent",
-      border: `2px solid ${C.accent}`,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: size * 0.45, fontWeight: 800,
-      color: active ? C.bg : C.accent, flexShrink: 0,
-    }}>
-      {step}
+}> = ({ step, label, active, size = 72, style }) => {
+  const C = useC();
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 14, ...style }}>
+      <div style={{
+        width: size, height: size, borderRadius: size / 2,
+        backgroundColor: active ? C.accent : "transparent",
+        border: `2px solid ${C.accent}`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: size * 0.45, fontWeight: 800,
+        color: active ? C.bg : C.accent, flexShrink: 0,
+      }}>
+        {step}
+      </div>
+      {label && (
+        <span style={{ fontSize: 48, fontWeight: 600, color: active ? C.text : C.textMuted }}>
+          {label}
+        </span>
+      )}
     </div>
-    {label && (
-      <span style={{ fontSize: 48, fontWeight: 600, color: active ? C.text : C.textMuted }}>
-        {label}
-      </span>
-    )}
-  </div>
-);
+  );
+};
 
 /** 비교 셀 — before/after, 변화 전후 대비 */
 export const ComparisonCell: React.FC<{
@@ -952,6 +982,7 @@ export const ComparisonCell: React.FC<{
   variant?: "before" | "after" | "neutral";
   style?: React.CSSProperties;
 }> = ({ label, value, sublabel, variant = "neutral", style }) => {
+  const C = useC();
   const valueColor = variant === "after" ? "#22C55E" : variant === "before" ? C.textMuted : C.accent;
   return (
     <div style={{
@@ -971,6 +1002,7 @@ export const RankBadge: React.FC<{
   size?: number;
   style?: React.CSSProperties;
 }> = ({ rank, size = 72, style }) => {
+  const C = useC();
   const colors: Record<number, string> = { 1: "#FFD700", 2: "#C0C0C0", 3: "#CD7F32" };
   const bg = colors[rank] || C.accent;
   return (
@@ -1039,6 +1071,7 @@ export const MiniBar: React.FC<{
   height?: number;
   style?: React.CSSProperties;
 }> = ({ value, maxValue, label, color = C.accent, height = 12, style }) => {
+  const C = useC();
   const pct = maxValue > 0 ? Math.min((value / maxValue) * 100, 100) : 0;
   return (
     <div style={{ width: "100%", ...style }}>
