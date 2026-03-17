@@ -52,8 +52,13 @@ Electron App (Vite + React 18 + TypeScript)
 ### 핵심 원칙
 
 - **3계층 분리**: React UI → Node.js 메인 → Python 파이프라인
-- **기존 Python 파이프라인은 건드리지 않음**: subprocess로 호출
-- **Pipeline Bridge**: JSON stdout/stderr + 파일시스템 통신 (기존 방식 활용)
+- **기존 Python 파이프라인은 최소 수정**: subprocess로 호출. 단, 스키마 검증기 주입 등 인터페이스 레벨 수정은 허용
+- **Pipeline Bridge 프로토콜**:
+  - Python → Node.js: JSON-lines (stdout), 한 줄에 하나의 이벤트
+  - 이벤트 타입: `{"type": "progress", "step": "step_1", "pct": 45}`, `{"type": "agent_msg", ...}`, `{"type": "error", ...}`
+  - 진행률: 기존 `auto_agent/progress.py`를 JSON-lines 출력으로 래핑
+  - 파일시스템 감시: fsevents(Mac) / chokidar(크로스플랫폼)으로 pipeline_state.json, manifest.json 변경 감지
+  - 에러: stderr는 비구조화 로그, 구조화된 에러는 stdout JSON-lines의 `type: "error"`로 전달
 
 ---
 
@@ -402,13 +407,26 @@ kairos-app/
 1단계 → Electron 껍질 + 기존 파이프라인 연결
 2단계 → 대시보드 React 재작성 + 에이전트 오피스
 3단계 → 스튜디오 (타임라인 + 씬 에디터)
-4단계 → KairosEngine (자체 렌더, Remotion 제거)
+4단계 → KairosEngine (Remotion을 내부 의존성으로 래핑 + 슬롯/에디터 추상화 레이어)
 5단계 → 토큰 디자인 시스템 + 템플릿 마켓
-6단계 → 유통팀 + 멀티포맷 렌더러
+6단계 → 유통팀 + 멀티포맷 렌더러 (MVP: VideoRenderer + TextRenderer 우선)
 7단계 → 전문가 마켓플레이스 + 에러 수집 서버
+8단계 → (조건부) Remotion 완전 자체 대체 — 라이선스/성능 병목 입증 시에만
 ```
 
 어느 단계에서든 기존 CLI 방식으로 영상 제작 가능. 새 앱과 기존 CLI가 같은 워크스페이스 공유.
+
+### 단계별 완료 기준
+
+| 단계 | Done Criteria |
+|---|---|
+| 1단계 | Electron에서 프로젝트 생성 + 파이프라인 실행 + 진행률 표시 |
+| 2단계 | 원고 편집 + 에이전트 오피스 시각화 + 파이프라인 모니터 동작 |
+| 3단계 | 씬 WYSIWYG 편집 → 저장 → 렌더 출력 반영 확인 |
+| 4단계 | Remotion 래핑 완료, 슬롯 레이아웃으로 씬 렌더 가능 |
+| 5단계 | 토큰 세트 교체 → 전체 영상 스타일 변경 확인 |
+| 6단계 | 동일 프로젝트에서 롱폼 MP4 + 블로그 Markdown 동시 출력 |
+| 7단계 | 전문가 에이전트 추가 → 컨설팅 → 파이프라인 투입 E2E 동작 |
 
 ---
 
@@ -431,3 +449,75 @@ kairos-app/
 - 에디터에서 씬 수정 → 프리뷰 반영 확인
 - 타임라인 씬 순서 변경 → 렌더 출력 검증
 - 토큰 변경 → 전체 씬 반영 확인
+
+---
+
+## 15. 보안 아키텍처
+
+### 15.1 API 키 저장
+
+- Electron `safeStorage` API 사용 (OS keychain 연동: macOS Keychain, Windows Credential Manager)
+- 평문 config 파일에 API 키 저장 금지
+- 기존 `.env` 파일은 Python subprocess 실행 시에만 메모리에서 전달, 디스크에는 암호화 저장
+
+### 15.2 Electron IPC 보안
+
+- `contextIsolation: true` (필수)
+- `nodeIntegration: false` (필수)
+- preload 스크립트에서 화이트리스트 IPC 채널만 노출
+- 렌더러에서 직접 파일시스템/subprocess 접근 불가
+
+### 15.3 코드 서명 및 업데이트
+
+- macOS: Apple Developer 인증서로 서명 + 공증(Notarization)
+- Windows: EV 코드 서명 인증서
+- 자동 업데이트: electron-updater + 서명 검증
+
+### 15.4 에러 수집 개인정보
+
+- 최초 실행 시 옵트인 동의 UI 표시
+- 수집 데이터: 에러 타입, 스택트레이스, manifest 구조(값 제외), OS/앱 버전
+- 미수집: 콘텐츠 텍스트, 이미지, API 키, LLM 대화, 프로젝트 주제
+- 사용자가 언제든 설정에서 비활성화 가능
+
+---
+
+## 16. 성능 및 리소스
+
+### 16.1 예상 앱 크기
+
+- Electron: ~150MB
+- ffmpeg 번들: ~70MB
+- Playwright 번들: ~50MB (Chromium headless)
+- 총 예상: ~300MB (설치 크기)
+
+### 16.2 런타임 리소스
+
+- 유휴 시: ~200MB RAM (Electron 기본)
+- 파이프라인 실행 시: ~2GB RAM (Python subprocess + LLM CLI)
+- 렌더링 시: ~3GB RAM (Playwright + ffmpeg 동시 실행)
+- 최소 요구사양: 8GB RAM, 4코어 CPU, 2GB 여유 디스크
+
+### 16.3 렌더 성능 목표
+
+- 프리뷰: 실시간 (React DOM 렌더, 프레임 캡처 없이)
+- 씬 단위 렌더: 30초 이내 (6초 씬 기준)
+- 전체 영상 렌더 (5분): 10~15분 목표 (병렬 씬 렌더)
+
+---
+
+## 17. 오프라인 동작 범위
+
+| 기능 | 오프라인 | 온라인 필요 |
+|---|---|---|
+| 프로젝트 열람/편집 | O | |
+| 씬 에디터 (WYSIWYG) | O | |
+| 타임라인 편집 | O | |
+| 토큰/테마 변경 | O | |
+| 로컬 프리뷰 재생 | O | |
+| 렌더링 (로컬 ffmpeg) | O | |
+| 파이프라인 실행 (LLM) | | O |
+| TTS 생성 | | O |
+| 이미지 생성/검색 | | O |
+| 에러 수집 전송 | | O (큐잉 후 재전송) |
+| Supabase 동기화 | | O |
