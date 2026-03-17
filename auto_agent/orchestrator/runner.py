@@ -825,30 +825,27 @@ class PipelineRunner:
 
         prompt = self._build_chapter_prompt(chapter_step, chapter_specs)
 
-        # 3. Claude CLI 실행
-        agents_config = self._load_agents_config()
-        agent_def = agents_config.get("subagents", {}).get(agent_name, {})
-        model = step.get("single_call_model", agent_def.get("model", "claude-opus-4-6"))
-        max_turns = agent_def.get("max_turns", 30)
-        allowed_tools = agent_def.get("allowed_tools", ["Read", "Write", "Glob"])
+        # 3. Claude CLI 1턴 실행 (도구 없음 — stdout JSON 파싱)
+        model = step.get("single_call_model", "claude-opus-4-6")
         timeout_sec = self._get_agent_timeout(agent_name)
+
+        # 프롬프트에 JSON 출력 지시 추가
+        prompt += """
+
+<output_format>
+결과를 JSON으로 출력하세요. scene_specs와 동일한 구조로, scenes 배열에 이 챕터의 씬들만 포함합니다.
+설명이나 마크다운 코드 블록(```) 없이 순수 JSON만 출력하세요.
+</output_format>"""
 
         cli_path = self._find_claude_cli()
         cmd = [
             cli_path, "--print", "--output-format", "json",
-            "--model", model, "--max-turns", str(max_turns),
+            "--model", model, "--max-turns", "1",
         ]
-        for tool in allowed_tools:
-            cmd.extend(["--allowedTools", tool])
 
         env = os.environ.copy()
         env["PROJECT_NAME"] = self.project_slug
         env.pop("CLAUDECODE", None)
-
-        progress_path = self.project_dir / f".progress_{step_id}_ch{chapter_num}.jsonl"
-        env["PROGRESS_FILE"] = str(progress_path)
-        monitor = ProgressFileMonitor(progress_path, self.project_slug, self.state.current_phase)
-        monitor.start()
 
         try:
             proc = subprocess.Popen(
@@ -870,9 +867,6 @@ class PipelineRunner:
                 chapter=chapter_num, status="failed",
                 error="Claude CLI를 찾을 수 없습니다",
             )
-        finally:
-            monitor.stop()
-            # 주의: tmp_path는 여기서 삭제하지 않음 — 결과 읽기 필요
 
         elapsed = time.time() - t0
         cost_info = self._parse_claude_cost(stdout, stderr)
@@ -885,15 +879,20 @@ class PipelineRunner:
                 cost_info=cost_info, duration_sec=elapsed,
             )
 
-        # 4. 결과 파싱: 챕터 전용 임시 파일에서 읽기
-        try:
-            if tmp_path.exists():
-                updated = json.loads(tmp_path.read_text(encoding="utf-8"))
-                updated_scenes = updated.get("scenes", chapter_scenes)
-            else:
+        # 4. stdout에서 JSON 파싱 (도구 없이 1턴이므로 stdout에 결과가 있음)
+        content = self._extract_json_from_cli_output(stdout)
+        if content:
+            updated_scenes = content.get("scenes", chapter_scenes)
+        else:
+            # 폴백: 임시 파일에서 읽기 (에이전트가 Write 도구를 사용한 경우)
+            try:
+                if tmp_path.exists():
+                    updated = json.loads(tmp_path.read_text(encoding="utf-8"))
+                    updated_scenes = updated.get("scenes", chapter_scenes)
+                else:
+                    updated_scenes = chapter_scenes
+            except Exception:
                 updated_scenes = chapter_scenes
-        except Exception:
-            updated_scenes = chapter_scenes
 
         _notify(agent_name,
                 f"{label} 완료 (Ch{chapter_num}, {elapsed:.1f}s)",
@@ -1355,31 +1354,183 @@ JSON 구조는 기존 scene_specs와 동일하되, scenes 배열에는 챕터 {c
                               duration_sec=elapsed, error=str(e))
 
     def _run_single_call_step(self, step: dict) -> StepResult:
-        """단일 호출 step → 향후 Anthropic API 직접 호출로 전환.
+        """단일 호출 step — CLI 1턴 모드 (도구 없음, stdout JSON 파싱).
 
-        설계 의도:
-          - 입력 파일을 Python이 읽어서 프롬프트에 주입
-          - LLM 1회 호출로 결과 JSON 생성
-          - Python이 결과를 파싱하여 파일 저장
-          - 에이전트 루프(Read/Write 도구) 오버헤드 제거
-
-        현재(초안): CLI 에이전트로 폴백 실행.
-        최적화 시: _run_single_call_api() 구현 후 전환.
-
-        single_call_model 필드:
-          - claude-opus-4-6: 창작/판단이 필요한 복잡한 작업
-          - claude-sonnet-4-5-20250929: 구조화된 추출/검증 작업
+        입력 파일을 프롬프트에 인라인 주입 → LLM 1턴 → stdout에서 JSON 파싱 → 파일 저장.
+        도구(Read/Write) 없이 실행하므로 multi-turn 오버헤드 제거.
         """
         step_id = step["id"]
+        step_name = step.get("name", step_id)
+        agent = step.get("agent", "")
         target_model = step.get("single_call_model", "claude-opus-4-6")
+        outputs = step.get("output", [])
+        if isinstance(outputs, str):
+            outputs = [outputs]
 
-        # TODO: API 직접 호출 구현 시 여기서 분기
-        # if self._api_mode_enabled():
-        #     return self._run_single_call_api(step, target_model)
+        # 출력 파일 이미 존재하면 스킵 (resume)
+        inputs = step.get("input", [])
+        if isinstance(inputs, str):
+            inputs = [inputs]
+        input_set = set(inputs)
+        has_inplace = any(out in input_set for out in outputs)
+        if not has_inplace and outputs:
+            all_exist = all(
+                self._resolve_output_path(out).exists()
+                for out in outputs
+                if "{" not in out
+            )
+            if all_exist:
+                return StepResult(
+                    step_id=step_id, status="completed",
+                    output_files=[str(self._resolve_output_path(o)) for o in outputs],
+                )
 
-        # 초안: CLI 에이전트로 폴백 (model은 agent 정의를 따름)
-        print(f"[single_call→CLI] ", end="", flush=True)
-        return self._run_agent_step(step)
+        # 프롬프트 빌드
+        prompt = self._build_agent_prompt(step)
+
+        # 출력 파일 정보를 프롬프트에 추가 (JSON으로 응답하라는 지시)
+        output_names = [Path(o).name for o in outputs if "{" not in o]
+        if len(output_names) == 1:
+            prompt += f"""
+
+<output_format>
+결과를 JSON으로 출력하세요. 파일 내용만 출력하고, 설명이나 마크다운 코드 블록(```) 없이 순수 JSON만 출력하세요.
+출력 파일: {output_names[0]}
+</output_format>"""
+        elif len(output_names) >= 2:
+            prompt += f"""
+
+<output_format>
+여러 파일을 출력해야 합니다. 아래 JSON 형식으로 출력하세요. 설명이나 마크다운 없이 순수 JSON만:
+{{
+  "files": {{
+    "{output_names[0]}": {{ ... 파일 내용 ... }},
+    "{output_names[1]}": {{ ... 파일 내용 ... }}
+  }}
+}}
+</output_format>"""
+
+        # CLI 1턴 실행 (도구 없음)
+        cli_path = self._find_claude_cli()
+        cmd = [
+            cli_path, "--print",
+            "--output-format", "json",
+            "--model", target_model,
+            "--max-turns", "1",
+        ]
+
+        timeout_sec = self._get_agent_timeout(agent) if agent else 900
+        print(f"[single_call 1턴] model={target_model}", flush=True)
+
+        env = os.environ.copy()
+        env["PROJECT_NAME"] = self.project_slug
+        env.pop("CLAUDECODE", None)
+
+        t0 = time.time()
+        try:
+            proc = subprocess.Popen(
+                cmd, cwd=str(self.project_dir), env=env,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, text=True,
+            )
+            stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.communicate()
+            return StepResult(step_id=step_id, status="failed",
+                              error=f"타임아웃 ({timeout_sec}s)")
+        except FileNotFoundError:
+            return StepResult(step_id=step_id, status="failed",
+                              error="Claude CLI를 찾을 수 없습니다")
+
+        elapsed = time.time() - t0
+        cost_info = self._parse_claude_cost(stdout, stderr)
+
+        if proc.returncode != 0:
+            error = stderr[:300] or stdout[:300]
+            return StepResult(step_id=step_id, status="failed",
+                              error=f"CLI exit {proc.returncode}: {error}",
+                              cost_info=cost_info, duration_sec=elapsed)
+
+        # stdout에서 JSON 추출
+        content = self._extract_json_from_cli_output(stdout)
+        if not content:
+            return StepResult(step_id=step_id, status="failed",
+                              error="stdout에서 JSON 파싱 실패",
+                              cost_info=cost_info, duration_sec=elapsed)
+
+        # 파일 저장
+        try:
+            if len(output_names) == 1:
+                out_path = self._resolve_output_path(outputs[0])
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_text(
+                    json.dumps(content, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+            elif len(output_names) >= 2:
+                files = content.get("files", content)
+                for out in outputs:
+                    fname = Path(out).name
+                    if fname in files:
+                        out_path = self._resolve_output_path(out)
+                        out_path.parent.mkdir(parents=True, exist_ok=True)
+                        out_path.write_text(
+                            json.dumps(files[fname], ensure_ascii=False, indent=2),
+                            encoding="utf-8",
+                        )
+        except Exception as e:
+            return StepResult(step_id=step_id, status="failed",
+                              error=f"파일 저장 실패: {e}",
+                              cost_info=cost_info, duration_sec=elapsed)
+
+        return StepResult(
+            step_id=step_id, status="completed",
+            output_files=[str(self._resolve_output_path(o)) for o in outputs],
+            cost_info=cost_info, duration_sec=elapsed,
+        )
+
+    @staticmethod
+    def _extract_json_from_cli_output(stdout: str) -> dict:
+        """Claude CLI --output-format json 출력에서 실제 JSON 콘텐츠 추출."""
+        # --output-format json일 때 CLI는 {"type":"result","result":...} 형태 출력
+        try:
+            cli_output = json.loads(stdout)
+            # CLI JSON 래퍼에서 실제 텍스트 추출
+            text = ""
+            if isinstance(cli_output, dict):
+                text = cli_output.get("result", stdout)
+                if isinstance(text, list):
+                    # content blocks에서 텍스트 추출
+                    text = " ".join(
+                        b.get("text", "") for b in text
+                        if isinstance(b, dict) and b.get("type") == "text"
+                    )
+            elif isinstance(cli_output, str):
+                text = cli_output
+        except json.JSONDecodeError:
+            text = stdout
+
+        # 텍스트에서 JSON 추출 (```json ... ``` 블록 또는 순수 JSON)
+        import re
+        # 마크다운 코드 블록 제거
+        md_match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', text, re.DOTALL)
+        if md_match:
+            text = md_match.group(1)
+
+        # 최외곽 { ... } 또는 [ ... ] 찾기
+        text = text.strip()
+        for start_char, end_char in [('{', '}'), ('[', ']')]:
+            start = text.find(start_char)
+            if start >= 0:
+                # 매칭되는 닫는 괄호 찾기 (마지막 것)
+                end = text.rfind(end_char)
+                if end > start:
+                    try:
+                        return json.loads(text[start:end + 1])
+                    except json.JSONDecodeError:
+                        continue
+        return None
 
     def _run_agent_step(self, step: dict) -> StepResult:
         """에이전트 step → Claude CLI 서브프로세스 호출.
