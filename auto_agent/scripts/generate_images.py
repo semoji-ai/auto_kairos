@@ -70,6 +70,9 @@ def step_2_search_images(output_dir: Path, specs: dict):
     search_scenes = []
 
     for s in scenes:
+        # 맵씬은 이미지 검색 불필요
+        if s.get("mapScene") and (s["mapScene"].get("markers") or s["mapScene"].get("center")):
+            continue
         asset = s.get("imageAsset")
         if not asset:
             continue
@@ -307,6 +310,9 @@ def step_4_generate_standalone_images(output_dir: Path, style_path: str, specs: 
     standalone = []
 
     for s in scenes:
+        # 맵씬은 이미지 생성 불필요
+        if s.get("mapScene") and (s["mapScene"].get("markers") or s["mapScene"].get("center")):
+            continue
         asset = s.get("imageAsset")
         if not asset:
             continue
