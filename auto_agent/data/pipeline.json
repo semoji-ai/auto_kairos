@@ -156,17 +156,30 @@
         },
         {
           "id": "step_6c",
-          "name": "data_enrichment_and_motion",
-          "description": "데이터 보강 + 모션 설계",
+          "name": "data_enrichment",
+          "description": "데이터 보강 — research_report 기반 수치 정밀화",
           "type": "single_call",
           "chunked_parallel": true,
           "agent": "visual-composer",
           "single_call_model": "claude-opus-4-6",
           "input": ["scene_specs.json", "research_report.json"],
-          "output": ["scene_specs.json", "motion_plan.json"],
-          "skills": ["shared/data-mapping", "shared/motion-rhythm", "shared/remotion-design-system"],
+          "output": "scene_specs.json",
+          "skills": ["shared/data-mapping", "shared/remotion-design-system"],
           "depends_on": "step_6b",
-          "notes": "★ Phase 3(Data Enrichment) + Phase 4(Motion Choreography)만 수행. research_report.json에서 정확한 수치를 가져와 values/unit/source 보강. 전환 효과, 타이밍, 브리딩 포인트 설계 → motion_plan.json 생성."
+          "notes": "★ Phase 3(Data Enrichment)만 수행. research_report.json에서 정확한 수치를 가져와 values/unit/source 보강 + vizAnimation 설정."
+        },
+        {
+          "id": "step_6d",
+          "name": "motion_planning",
+          "description": "모션 설계 — 전환 효과, 타이밍, 리듬 설계",
+          "type": "single_call",
+          "agent": "visual-composer",
+          "single_call_model": "claude-opus-4-6",
+          "input": ["scene_specs.json"],
+          "output": "motion_plan.json",
+          "skills": ["shared/motion-rhythm"],
+          "depends_on": "step_6c",
+          "notes": "★ Phase 4(Motion Choreography)만 수행. 전환 효과, 타이밍, 브리딩 포인트 설계 → motion_plan.json 생성."
         }
       ]
     },

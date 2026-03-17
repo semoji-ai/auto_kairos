@@ -927,7 +927,8 @@ class PipelineRunner:
     SINGLE_CALL_PROMPTS = {
         "creative_direction": "creative-direction.md",
         "asset_advisory": "asset-advisory.md",
-        "data_enrichment_and_motion": "data-enrichment.md",
+        "data_enrichment": "data-enrichment.md",
+        "motion_planning": "motion-planning.md",
     }
 
     def _build_chapter_prompt(self, step: dict, chapter_specs: dict) -> str:
@@ -1222,6 +1223,9 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 # transition 머지
                 if "transition" in llm:
                     result["transition"] = llm["transition"]
+                # enrichment 머지
+                if "enrichment" in llm:
+                    result["enrichment"] = llm["enrichment"]
                 merged.append(result)
             else:
                 merged.append(orig)

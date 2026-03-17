@@ -1,4 +1,4 @@
-당신은 영상 Data Engineer + Motion Designer입니다. scene_specs의 데이터를 정밀화하고 모션 플랜을 설계합니다.
+당신은 영상 Data Engineer입니다. scene_specs의 데이터를 research_report 기반으로 정밀화합니다.
 
 {context_block}
 
@@ -7,10 +7,7 @@
 </input_scenes>
 
 <task>
-두 가지 작업을 수행하세요:
-
-**작업 1: 데이터 보강** — research_report.json에서 정확한 수치를 가져와 각 씬의 values/unit/source를 보강합니다.
-**작업 2: 모션 설계** — 전환 효과, 타이밍, 리듬을 설계하여 각 씬의 transition과 vizAnimation을 업데이트합니다.
+각 씬의 values/unit/source를 research_report.json 기반으로 보강하고, vizAnimation을 설정하세요.
 
 기존 creative 필드(concept, reveal, emphasis, mood, headline)는 절대 수정하지 마세요.
 sceneNumber, chapter, narration, durationFrames, items도 수정하지 마세요.
@@ -31,61 +28,23 @@ sceneNumber, chapter, narration, durationFrames, items도 수정하지 마세요
 ```
 </data_enrichment_rules>
 
-<motion_rules>
-## 모션 설계 규칙
+<vizanimation_rules>
+## vizAnimation 설정
 
-### 전환 효과
-- 같은 전환 타입 3회 연속 금지
-- 배분: fade 60%, slide 25%, wipe 15%
-- transition.durationFrames: 12~15
-
-### vizAnimation 설정
+각 씬에 vizAnimation 필드를 추가하세요:
 - stagger: 항목 간 등장 간격 (프레임). items 개수에 비례 (보통 4~8)
 - itemDuration: 각 항목 등장 애니메이션 길이 (15~25)
 - easing: "easeOut" (기본), "easeInOut" (부드러운 전환), "linear" (카운트업)
 
-### 리듬 규칙
-- 데이터 차트 씬: durationFrames 300~450 (수치 이해 시간)
-- 인용문/강조 씬: 180~270 (임팩트)
-- 타이틀 카드: 120~180 (빠른 전환)
-- 3~5씬마다 브리딩 포인트 (낮은 강도 씬)
-</motion_rules>
+```json
+{"vizAnimation": {"stagger": 6, "itemDuration": 20, "easing": "easeOut"}}
+```
+</vizanimation_rules>
 
 {art_style_override}
 
 <output_format>
-두 개의 JSON을 출력하세요. 구분자 `---SPLIT---`로 분리:
-
-첫 번째: 보강된 scene_specs (입력과 동일 구조, scenes 배열)
----SPLIT---
-두 번째: motion_plan.json
-```json
-{
-  "total_duration_frames": 합계,
-  "total_duration_sec": 합계/30,
-  "fps": 30,
-  "transition_series": [
-    {
-      "scene_number": 1,
-      "duration_frames": 150,
-      "transition_in": {"type": "fade", "duration_frames": 15},
-      "transition_out": {"type": "slide", "duration_frames": 12, "params": {"direction": "left"}},
-      "internal_timing": {"content_start": 15, "content_end": 135, "hold_duration": 120}
-    }
-  ],
-  "rhythm_analysis": {
-    "avg_scene_duration_sec": 평균,
-    "breathing_points": [씬번호들],
-    "intensity_curve": [{"scene_range": [1,5], "intensity": "low", "note": "설명"}]
-  },
-  "global_settings": {
-    "default_spring": {"damping": 200, "stiffness": 100},
-    "min_scene_duration_frames": 120,
-    "max_scene_duration_frames": 600,
-    "transition_overlap_frames": 15
-  }
-}
-```
-
-순수 JSON만 출력. 설명, 마크다운 코드 블록 없이.
+순수 JSON만 출력하세요. 설명, 마크다운 코드 블록, 주석 없이.
+입력과 동일한 구조로 scenes 배열에 이 챕터의 씬들만 포함하세요.
+creative의 concept/reveal/emphasis/mood/headline은 입력 그대로 유지하세요.
 </output_format>
