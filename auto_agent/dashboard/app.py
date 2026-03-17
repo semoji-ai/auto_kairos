@@ -58,13 +58,13 @@ DATA_DIR = get_data_dir()
 
 app.mount("/static", StaticFiles(directory=str(DASHBOARD_DIR / "static")), name="static")
 
+# output 디렉토리 마운트 (이미지/오디오 직접 서빙)
+workspace = get_workspace_dir()
+
 # Remotion 폰트 서빙 (/fonts/ → remotion/public/fonts/)
 _fonts_dir = workspace / "remotion" / "public" / "fonts"
 if _fonts_dir.exists():
     app.mount("/fonts", StaticFiles(directory=str(_fonts_dir)), name="fonts")
-
-# output 디렉토리 마운트 (이미지/오디오 직접 서빙)
-workspace = get_workspace_dir()
 output_dir = workspace / "output"
 if output_dir.exists():
     app.mount("/output", StaticFiles(directory=str(output_dir)), name="output")
