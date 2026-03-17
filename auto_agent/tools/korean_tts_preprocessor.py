@@ -156,6 +156,17 @@ class KoreanTTSPreprocessor:
         """Initialize the preprocessor."""
         self.changes: List[str] = []
 
+    def _strip_markdown_markers(self, text: str) -> str:
+        """마크다운 강조 마커(**볼드**, *이탤릭*)를 제거.
+        원고에서 **볼드**는 영상 연출 힌트이므로 TTS/자막에서는 제거한다."""
+        # **볼드** → 볼드
+        stripped = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
+        # *이탤릭* → 이탤릭 (단, ** 처리 후 남은 단일 * 만)
+        stripped = re.sub(r'(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)', r'\1', stripped)
+        if stripped != text:
+            self.changes.append("마크다운 강조 마커 제거")
+        return stripped
+
     def process_text(self, text: str) -> tuple[str, List[str]]:
         """
         Process a single text string.
@@ -168,6 +179,9 @@ class KoreanTTSPreprocessor:
         """
         self.changes = []
         result = text
+
+        # Step 0: 마크다운 강조 마커 제거 (TTS/자막에 포함되면 안 됨)
+        result = self._strip_markdown_markers(result)
 
         # Process in order: English → punctuation → numbers → units → special cases
         result = self._convert_english(result)

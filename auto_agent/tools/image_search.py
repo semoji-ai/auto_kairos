@@ -451,6 +451,7 @@ class ImageSearcher:
         self._serper = None
         self._pixabay = None
         self.images_dir = Path(images_dir) if images_dir else None
+        self.last_all_ranked: List[SearchedImage] = []
         if self.images_dir:
             self.images_dir.mkdir(parents=True, exist_ok=True)
 
@@ -524,7 +525,11 @@ class ImageSearcher:
     def search_and_download(self, query: str, limit: int = 5,
                             source: str = "wikimedia",
                             preferred_aspect: str = "16:9") -> List[SearchedImage]:
-        """검색 → 스코어링 → 상위 N개 다운로드 → 워터마크 필터링."""
+        """검색 → 스코어링 → 상위 N개 다운로드 → 워터마크 필터링.
+
+        전체 검색 결과(메타데이터)는 self.last_all_ranked에 보관된다.
+        다운로드하지 않은 후보도 thumbnail_url로 접근 가능.
+        """
         # 더 많이 검색해서 랭킹할 여지를 확보
         fetch_limit = max(limit * 3, 10)
 
@@ -547,6 +552,9 @@ class ImageSearcher:
 
         # 2) 메타데이터 기반 스코어링 + 정렬
         ranked = rank_images(candidates, query, preferred_aspect)
+
+        # 전체 랭킹 결과 보관 (image_candidates.json 생성용)
+        self.last_all_ranked = ranked
 
         # 3) 상위 N개만 다운로드
         downloaded = []
@@ -599,6 +607,9 @@ class ImageSearcher:
 
         # 통합 랭킹
         ranked = rank_images(filtered, query, preferred_aspect)
+
+        # 전체 랭킹 결과 보관
+        self.last_all_ranked = ranked
 
         # 상위 N개 다운로드
         downloaded = []
