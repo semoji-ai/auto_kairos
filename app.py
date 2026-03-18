@@ -25,6 +25,9 @@ from fastapi.templating import Jinja2Templates
 
 from auto_agent.db.cleanup import CleanupManager
 from auto_agent.paths import get_data_dir, get_workspace_dir
+from auto_agent.supabase_client import supabase_enabled
+
+USE_SUPABASE = supabase_enabled()
 from auto_agent.dashboard.helpers import (
     load_project_json,
     load_project_text,
@@ -500,41 +503,272 @@ async def image_candidates(slug: str, scene_num: int):
 
 @app.post("/api/p/{slug}/images/select/{scene_num}")
 async def select_image(request: Request, slug: str, scene_num: int):
-    """후보 이미지 선택 → 다운로드 + scene_specs 업데이트."""
+    """이미지 선택 — URL 다운로드 또는 기존 버전 선택."""
+    from auto_agent.tools.image_assets import add_version, select_version, next_filename
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    out_dir = project.get("output_dir", "")
+    img_dir = Path(out_dir) / "images"
+    img_dir.mkdir(parents=True, exist_ok=True)
+
+    body = await request.json()
+    url = body.get("url", "")
+    file_name = body.get("file", "")  # 기존 버전 선택
+
+    if file_name:
+        # 기존 버전 선택
+        ok = select_version(img_dir, scene_num, file_name)
+        if ok:
+            _update_scene_specs_src(out_dir, slug, scene_num)
+            _setup_studio_project(slug)
+            return JSONResponse({"ok": True, "selected": file_name})
+        return JSONResponse({"error": "version not found"}, 404)
+
+    if not url:
+        return JSONResponse({"error": "url or file required"}, 400)
+
+    # URL 다운로드
+    from auto_agent.tools.wikimedia_search import download_image
+    from urllib.parse import urlparse
+    ext = Path(urlparse(url).path).suffix or ".jpg"
+    fname = next_filename(img_dir, scene_num, "search", ext)
+    result = download_image(url, str(img_dir / fname))
+
+    if result.get("success"):
+        title = body.get("title", "")
+        license_info = body.get("license", "")
+        add_version(img_dir, scene_num, fname, "search",
+                    query=body.get("query", ""), source_url=url,
+                    title=title, license=license_info)
+        _update_scene_specs_src(out_dir, slug, scene_num)
+        _setup_studio_project(slug)
+        return JSONResponse({"ok": True, "file": fname})
+    return JSONResponse({"error": result.get("error", "download failed")}, 500)
+
+
+@app.get("/api/p/{slug}/images/versions/{scene_num}")
+async def image_versions(slug: str, scene_num: int):
+    """씬의 모든 이미지 버전."""
+    from auto_agent.tools.image_assets import get_scene_versions
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    img_dir = Path(project.get("output_dir", "")) / "images"
+    scene_data = get_scene_versions(img_dir, scene_num)
+    # URL 추가
+    for v in scene_data.get("versions", []):
+        v["url"] = f"/output/{slug}/images/{v['file']}"
+    return JSONResponse(scene_data)
+
+
+def _update_scene_specs_src(out_dir: str, slug: str, scene_num: int):
+    """selected 이미지로 scene_specs.imageAsset.src 업데이트."""
+    from auto_agent.tools.image_assets import get_selected
+    img_dir = Path(out_dir) / "images"
+    selected = get_selected(img_dir, scene_num)
+    if not selected:
+        return
+    import json as _json
+    specs_path = Path(out_dir) / "scene_specs.json"
+    if specs_path.exists():
+        specs = _json.loads(specs_path.read_text(encoding="utf-8"))
+        for s in specs.get("scenes", []):
+            if s.get("sceneNumber") == scene_num:
+                if not s.get("imageAsset"):
+                    s["imageAsset"] = {}
+                ext = Path(selected).suffix
+                s["imageAsset"]["src"] = f"/output/{slug}/images/scene_{scene_num:03d}{ext}"
+                break
+        specs_path.write_text(_json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+@app.post("/api/p/{slug}/images/auto-prompt/{scene_num}")
+async def auto_prompt(slug: str, scene_num: int):
+    """Sonnet으로 씬 컨텍스트에서 이미지 프롬프트 자동 생성."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    out_dir = project.get("output_dir", "")
+    specs = load_project_json(out_dir, "scene_specs.json")
+    if not specs:
+        return JSONResponse({"error": "no specs"}, 404)
+    scene = None
+    for s in specs.get("scenes", []):
+        if s.get("sceneNumber") == scene_num:
+            scene = s
+            break
+    if not scene:
+        return JSONResponse({"error": "scene not found"}, 404)
+
+    title = scene.get("title", "")
+    narration = scene.get("narration", "")[:200]
+    concept = (scene.get("visualization") or {}).get("creative", {}).get("concept", "")
+    mood = (scene.get("visualization") or {}).get("creative", {}).get("mood", "")
+
+    prompt_input = (
+        f"씬 제목: {title}\n나레이션: {narration}\n연출 컨셉: {concept}\n무드: {mood}\n\n"
+        f"위 씬의 스틸컷 이미지 프롬프트를 작성하세요.\n"
+        f"규칙:\n"
+        f"- 정적인 스틸컷 묘사만 (동작/움직임 금지)\n"
+        f"- 텍스트 요소 금지\n"
+        f"- 주체 + 배경 + 구도 + 분위기 포함\n"
+        f"- 프롬프트만 출력하세요. 설명 없이."
+    )
+
+    try:
+        cli_path = str(Path.home() / ".local/bin/claude")
+        proc = subprocess.run(
+            [cli_path, "--print", "--model", "claude-sonnet-4-5-20250929", "--max-turns", "1"],
+            input=prompt_input, capture_output=True, text=True, timeout=30,
+            env={**dict(os.environ), "CLAUDECODE": ""},
+        )
+        result_text = proc.stdout.strip()
+        import json as _json
+        try:
+            cli_out = _json.loads(result_text)
+            if isinstance(cli_out, dict) and "result" in cli_out:
+                result_text = cli_out["result"]
+                if isinstance(result_text, list):
+                    result_text = " ".join(b.get("text", "") for b in result_text if isinstance(b, dict))
+        except _json.JSONDecodeError:
+            pass
+        return JSONResponse({"prompt": result_text.strip()})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, 500)
+
+
+@app.post("/api/p/{slug}/images/generate/{scene_num}")
+async def generate_image(request: Request, slug: str, scene_num: int):
+    """FAL.ai로 이미지 생성."""
     pm = get_pm()
     project = pm.get_project(slug=slug)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
     out_dir = project.get("output_dir", "")
     body = await request.json()
-    url = body.get("url", "")
-    if not url:
-        return JSONResponse({"error": "url required"}, 400)
+    prompt = body.get("prompt", "")
+    mode = body.get("mode", "scene")
+    if not prompt:
+        return JSONResponse({"error": "prompt required"}, 400)
 
-    from auto_agent.tools.wikimedia_search import download_image
+    import json as _json
+    config = project.get("config", {})
+    if isinstance(config, str):
+        config = _json.loads(config)
+    art_style = config.get("art_style", "")
+    style_path = str(get_workspace_dir() / art_style) if art_style else ""
+
+    from auto_agent.tools.image_assets import add_version, next_filename
     img_dir = Path(out_dir) / "images"
     img_dir.mkdir(parents=True, exist_ok=True)
-    # 확장자 추출
-    from urllib.parse import urlparse
-    ext = Path(urlparse(url).path).suffix or ".jpg"
-    output_path = str(img_dir / f"scene_{scene_num:03d}{ext}")
-    result = download_image(url, output_path)
 
-    if result.get("success"):
-        # scene_specs 업데이트
-        specs_path = Path(out_dir) / "scene_specs.json"
-        if specs_path.exists():
-            import json as _json
-            specs = _json.loads(specs_path.read_text(encoding="utf-8"))
-            for s in specs.get("scenes", []):
-                if s.get("sceneNumber") == scene_num:
-                    if not s.get("imageAsset"):
-                        s["imageAsset"] = {}
-                    s["imageAsset"]["src"] = f"/output/{slug}/images/scene_{scene_num:03d}{ext}"
-                    break
-            specs_path.write_text(_json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
-        return JSONResponse({"ok": True, "path": output_path})
-    return JSONResponse({"error": result.get("error", "download failed")}, 500)
+    # 버전 파일명 생성
+    fname = next_filename(img_dir, scene_num, "gen", ".png")
+    output_path = str(img_dir / fname)
+
+    # FAL.ai 호출
+    try:
+        cmd = [sys.executable, "-m", "auto_agent.tools.image_generate", mode,
+               "--prompt", prompt, "--output", output_path]
+        if style_path:
+            cmd.extend(["--style", style_path])
+        env = {**dict(os.environ), "PROJECT_NAME": slug}
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120,
+                                cwd=str(get_workspace_dir()), env=env)
+        if result.returncode == 0:
+            res = _json.loads(result.stdout)
+            # image_assets에 버전 추가 + selected 설정
+            add_version(img_dir, scene_num, fname, "generate",
+                        prompt=prompt[:200], art_style=art_style, mode=mode)
+            _update_scene_specs_src(out_dir, slug, scene_num)
+            _setup_studio_project(slug)
+            return JSONResponse({"ok": True, "path": output_path, "prompt_used": prompt[:200]})
+        else:
+            return JSONResponse({"error": result.stderr[:300] or result.stdout[:300]}, 500)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, 500)
+
+
+@app.get("/api/p/{slug}/art-style")
+async def get_art_style(slug: str):
+    """프로젝트 아트스타일 정보 + 사용 가능한 스타일 목록."""
+    import json as _json
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    config = project.get("config", {})
+    if isinstance(config, str):
+        config = _json.loads(config)
+    current = config.get("art_style", "")
+
+    # 현재 스타일 정보
+    current_info = {}
+    if current:
+        style_path = get_workspace_dir() / current
+        if style_path.exists():
+            try:
+                current_info = _json.loads(style_path.read_text(encoding="utf-8"))
+                # 참조 이미지 URL
+                ref = current_info.get("reference_image", "")
+                if ref:
+                    current_info["reference_image_url"] = f"/output/{slug}/artstyle/{Path(ref).name}"
+            except Exception:
+                pass
+
+    # 사용 가능한 스타일 목록
+    styles = []
+    for p in sorted(Path("artstyle/styles").glob("*.json")):
+        try:
+            d = _json.loads(p.read_text(encoding="utf-8"))
+            styles.append({"path": f"artstyle/styles/{p.name}", "name": d.get("name", p.stem), "file": p.name})
+        except Exception:
+            styles.append({"path": f"artstyle/styles/{p.name}", "name": p.stem, "file": p.name})
+
+    return JSONResponse({"current": current, "current_info": current_info, "available": styles})
+
+
+@app.post("/api/p/{slug}/art-style")
+async def set_art_style(request: Request, slug: str):
+    """프로젝트 아트스타일 변경."""
+    import json as _json
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    body = await request.json()
+    new_style = body.get("art_style", "")
+    config = project.get("config", {})
+    if isinstance(config, str):
+        config = _json.loads(config)
+    config["art_style"] = new_style
+    pm.set_config(project["id"], config)
+    return JSONResponse({"ok": True, "art_style": new_style})
+
+
+@app.get("/api/p/{slug}/images/history/{scene_num}")
+async def image_history(slug: str, scene_num: int):
+    """씬의 이미지 생성 히스토리."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    out_dir = project.get("output_dir", "")
+    history_dir = Path(out_dir) / "images" / "history"
+    if not history_dir.exists():
+        return JSONResponse({"versions": []})
+    versions = []
+    for f in sorted(history_dir.glob(f"scene_{scene_num:03d}_*")):
+        versions.append({
+            "filename": f.name,
+            "url": f"/output/{slug}/images/history/{f.name}",
+            "size_bytes": f.stat().st_size,
+        })
+    return JSONResponse({"versions": versions})
 
 
 @app.put("/api/p/{slug}/scenes/{scene_num}")

@@ -122,5 +122,11 @@ python3 -m auto_agent.tools.image_generate viz-background \
 - 위키미디어 원본 다운로드 시 **반드시 3초 딜레이**
 - User-Agent: "KairosAgent/3.1 (educational video production)"
 - 생성 시 아트스타일 **필수** 확인
-- 파일명 **반드시 scene_NNN 형식**
+- 파일명 **반드시 scene_NNN_search_NN 또는 scene_NNN_gen_NN 형식**
 - 모든 이미지의 라이선스 기록
+
+## 절대 금지
+- **Python 스크립트 작성 금지** — .py 파일을 Write로 작성하고 Bash로 실행하는 방식 금지
+- **자동화 스크립트 금지** — 반복문, 배치 처리용 스크립트 작성 금지
+- **반드시 Bash 도구로 직접 호출** — 씬 하나씩 `python3 -m auto_agent.tools.wikimedia_search ...` 호출
+- 한 번에 하나의 씬만 처리하고, 결과 확인 후 다음 씬 진행

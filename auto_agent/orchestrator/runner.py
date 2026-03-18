@@ -2270,6 +2270,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             "tts-preprocess": "tools/korean_tts_preprocessor.py",
             "tts-generator": "scripts/generate_tts.py",
             "image-generator": "scripts/generate_images.py",
+            "image-sourcer": "scripts/source_images.py",
             "subtitle-sync": "scripts/generate_subtitles.py",
             "tts-verifier": "scripts/verify_tts.py",
             "data-validator": "scripts/validate_data.py",

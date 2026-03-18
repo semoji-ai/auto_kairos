@@ -97,9 +97,17 @@ layout=quote_portrait 씬은 반드시 다음을 설정:
 <image_rules>
 ## 이미지 배치 규칙
 
-- imageAsset.placement: "background" (배경, opacity 0.15~0.3), "side" (좌우 배치), "fullscreen" (cinematic)
-- 차트 + 배경이미지 공존 시: opacity ≤ 0.18
-- mapScene + imageAsset 공존 금지 (지도가 배경이므로 중복)
+- imageAsset.placement 종류:
+  - "background": 배경 (opacity 0.3~0.5) — 데이터/차트 씬
+  - "left" / "right": 좌/우 배치 — 인물 소개, 인터뷰 느낌
+  - "center": 중앙 배치 — 피사체/장소 강조
+  - "fullscreen": 전체 화면 (opacity 0.8~1.0) — cinematic, 임팩트
+- **다양성 필수**: 연속 3씬 이상 같은 placement 반복 금지
+- 인물 씬 → "left" 또는 "right" 권장
+- 데이터/차트 씬 → "background"
+- 감정적 전환/클라이맥스 → "fullscreen"
+- 차트 + 이미지 공존 시: placement="background", opacity ≤ 0.3
+- mapScene + imageAsset 공존 금지
 - imageAsset.source: "wikimedia" (위키미디어 검색) 또는 "search" (웹 검색) 또는 "generate" (AI 생성)
 - **기본값은 "wikimedia"** — 프로젝트 config에서 search_engine을 확인하세요
 - query는 영문으로 작성

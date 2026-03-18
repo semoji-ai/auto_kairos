@@ -4,6 +4,7 @@
     <h2>Image Assets</h2>
     <div class="assets-stats" id="assets-stats"></div>
   </div>
+  <div class="art-style-bar" id="art-style-bar"></div>
   <div class="assets-list" id="assets-list">
     <div class="assets-loading">로드 중...</div>
   </div>
@@ -15,6 +16,16 @@
 .assets-header h2 { margin: 0; font-size: 16px; }
 .assets-stats { display: flex; gap: 8px; font-size: 11px; color: var(--text-muted); }
 .assets-stats .stat-badge { padding: 3px 10px; border-radius: 10px; background: rgba(255,255,255,0.06); }
+
+.art-style-bar {
+  display: flex; align-items: center; gap: 12px; padding: 8px 12px; margin-bottom: 12px;
+  background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.15);
+  border-radius: 8px; font-size: 11px;
+}
+.art-style-bar .style-label { color: #C084FC; font-weight: 600; }
+.art-style-bar .style-name { color: #E4E4E7; }
+.art-style-bar .style-ref { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; }
+.art-style-bar select { padding: 3px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); color: #E4E4E7; border: 1px solid rgba(255,255,255,0.1); font-size: 10px; }
 
 .assets-list { display: flex; flex-direction: column; gap: 16px; }
 .assets-loading { text-align: center; color: var(--text-muted); padding: 40px; }
@@ -81,6 +92,35 @@
   position: absolute; bottom: 2px; right: 2px; font-size: 7px; padding: 1px 3px;
   background: rgba(0,0,0,0.7); color: #9CA3AF; border-radius: 2px;
 }
+
+/* 생성 패널 */
+.generate-panel { padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.06); display: none; }
+.generate-panel.open { display: block; }
+.gen-prompt-area { width: 100%; min-height: 60px; padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #E4E4E7; font-size: 11px; font-family: inherit; resize: vertical; }
+.gen-controls { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.gen-mode { font-size: 10px; display: flex; gap: 8px; }
+.gen-mode label { display: flex; align-items: center; gap: 3px; color: var(--text-muted); cursor: pointer; }
+.gen-mode input { margin: 0; }
+.btn-generate { padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; background: rgba(168,85,247,0.2); color: #C084FC; border: 1px solid rgba(168,85,247,0.3); cursor: pointer; }
+.btn-generate:hover { background: rgba(168,85,247,0.35); }
+.btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-auto-prompt { padding: 4px 10px; border-radius: 5px; font-size: 10px; background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.2); cursor: pointer; }
+.gen-status { font-size: 10px; color: var(--text-muted); margin-top: 6px; }
+.gen-result img { max-width: 320px; border-radius: 6px; margin-top: 8px; }
+.btn-gen-toggle { padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 600; background: rgba(168,85,247,0.15); color: #C084FC; border: 1px solid rgba(168,85,247,0.3); cursor: pointer; margin-left: 4px; }
+.btn-gen-toggle:hover { background: rgba(168,85,247,0.25); }
+
+/* 히스토리 */
+.history-panel { padding: 6px 12px; border-top: 1px solid rgba(255,255,255,0.04); }
+.history-panel:empty { display: none; padding: 0; border: 0; }
+.history-label { font-size: 9px; color: var(--text-muted); margin-bottom: 4px; }
+.history-thumbs { display: flex; gap: 6px; overflow-x: auto; }
+.history-thumb {
+  width: 80px; height: 45px; flex-shrink: 0; border-radius: 4px; overflow: hidden;
+  cursor: pointer; border: 1px solid rgba(255,255,255,0.08); opacity: 0.7;
+}
+.history-thumb:hover { opacity: 1; border-color: rgba(59,130,246,0.5); }
+.history-thumb img { width: 100%; height: 100%; object-fit: cover; }
 </style>
 
 <script>
@@ -89,6 +129,24 @@
   var statsEl = document.getElementById('assets-stats');
   var slug = '{{ slug }}';
 
+  // 아트스타일 로드
+  fetch('/api/p/' + encodeURIComponent(slug) + '/art-style')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var bar = document.getElementById('art-style-bar');
+      var current = data.current_info || {};
+      var styles = data.available || [];
+      var options = styles.map(function(s) {
+        var sel = s.path === data.current ? ' selected' : '';
+        return '<option value="' + s.path + '"' + sel + '>' + esc(s.name) + '</option>';
+      }).join('');
+      bar.innerHTML =
+        '<span class="style-label">🎨 아트스타일</span>' +
+        '<select onchange="changeArtStyle(this.value)">' + options + '</select>' +
+        '<span class="style-name">' + esc(current.name || '미설정') + '</span>';
+    }).catch(function() {});
+
+  // 씬 로드
   fetch('/api/p/' + encodeURIComponent(slug) + '/scenes')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -107,6 +165,30 @@
         '<span class="stat-badge">🎨 생성 ' + genCount + '</span>';
 
       list.innerHTML = '';
+      // 버전 목록 로드
+      function loadVersions(sceneNum) {
+        fetch('/api/p/' + encodeURIComponent(slug) + '/images/versions/' + sceneNum)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var panel = document.getElementById('history-' + sceneNum);
+            var versions = data.versions || [];
+            var selected = data.selected || '';
+            if (versions.length <= 1) { panel.innerHTML = ''; return; }
+            var html = '<div class="history-label">버전 (' + versions.length + ')</div><div class="history-thumbs">';
+            versions.forEach(function(v) {
+              var isSel = v.file === selected;
+              var typeIcon = v.type === 'generate' ? '🎨' : '🔍';
+              html += '<div class="history-thumb' + (isSel ? ' selected' : '') + '" '
+                + 'onclick="selectVersion(' + sceneNum + ',\'' + esc(v.file) + '\')" '
+                + 'title="' + typeIcon + ' ' + esc(v.file) + '">'
+                + '<img src="' + v.url + '" loading="lazy">'
+                + '</div>';
+            });
+            html += '</div>';
+            panel.innerHTML = html;
+          }).catch(function() {});
+      }
+
       scenes.forEach(function(s) {
         var num = s.sceneNumber;
         var img = s.imageAsset || {};
@@ -139,13 +221,30 @@
                 (query ? '<div><strong>쿼리:</strong> ' + esc(query) + '</div>' : '') +
                 (placement ? '<div><strong>배치:</strong> ' + placement + (opacity ? ' · opacity ' + opacity : '') + '</div>' : '') +
               '</div>' +
-              (query ? '<button class="btn-candidates" onclick="loadCandidates(' + num + ',this)">🔍 후보 이미지 보기</button>' : '') +
+              (query ? '<button class="btn-candidates" onclick="loadCandidates(' + num + ',this)">🔍 후보 검색</button>' : '') +
+              '<button class="btn-gen-toggle" onclick="toggleGenerate(' + num + ',this)">🎨 이미지 생성</button>' +
             '</div>' +
           '</div>' +
           '<div class="candidates-panel" id="candidates-' + num + '">' +
             '<div class="loading">후보 로드 중...</div>' +
+          '</div>' +
+          '<div class="history-panel" id="history-' + num + '"></div>' +
+          '<div class="generate-panel" id="generate-' + num + '">' +
+            '<textarea class="gen-prompt-area" id="gen-prompt-' + num + '" placeholder="이미지 프롬프트를 입력하세요..."></textarea>' +
+            '<div class="gen-controls">' +
+              '<button class="btn-auto-prompt" onclick="autoPrompt(' + num + ')">✨ 자동 프롬프트</button>' +
+              '<div class="gen-mode">' +
+                '<label><input type="radio" name="mode-' + num + '" value="scene" checked> scene</label>' +
+                '<label><input type="radio" name="mode-' + num + '" value="scene-flat"> flat</label>' +
+                '<label><input type="radio" name="mode-' + num + '" value="viz-background"> viz-bg</label>' +
+              '</div>' +
+              '<button class="btn-generate" id="gen-btn-' + num + '" onclick="generateImage(' + num + ')">🎨 생성하기</button>' +
+            '</div>' +
+            '<div class="gen-status" id="gen-status-' + num + '"></div>' +
           '</div>';
         list.appendChild(row);
+        // 버전 목록 자동 로드
+        loadVersions(num);
       });
     });
 
@@ -204,6 +303,102 @@
         alert('실패: ' + (data.error || ''));
       }
     });
+  };
+
+  window.selectVersion = function(sceneNum, fileName) {
+    fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sceneNum, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ file: fileName }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        // 메인 이미지를 scene_NNN 복사본으로 갱신 (ext 추론)
+        var ext = fileName.split('.').pop();
+        var imgEl = document.getElementById('img-' + sceneNum);
+        if (imgEl) {
+          imgEl.src = '/output/' + slug + '/images/scene_' + String(sceneNum).padStart(3,'0') + '.' + ext + '?t=' + Date.now();
+        }
+        loadVersions(sceneNum);
+      } else {
+        alert('실패: ' + (d.error || ''));
+      }
+    });
+  };
+
+  window.changeArtStyle = function(path) {
+    fetch('/api/p/' + encodeURIComponent(slug) + '/art-style', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ art_style: path }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { if (d.ok) location.reload(); });
+  };
+
+  window.toggleGenerate = function(sceneNum, btn) {
+    var panel = document.getElementById('generate-' + sceneNum);
+    if (panel.classList.contains('open')) {
+      panel.classList.remove('open');
+      btn.textContent = '🎨 이미지 생성';
+    } else {
+      panel.classList.add('open');
+      btn.textContent = '접기';
+    }
+  };
+
+  window.autoPrompt = function(sceneNum) {
+    var textarea = document.getElementById('gen-prompt-' + sceneNum);
+    var status = document.getElementById('gen-status-' + sceneNum);
+    status.textContent = '프롬프트 생성 중...';
+    textarea.value = '';
+
+    fetch('/api/p/' + encodeURIComponent(slug) + '/images/auto-prompt/' + sceneNum, { method: 'POST' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.prompt) {
+          textarea.value = data.prompt;
+          status.textContent = '프롬프트 생성 완료';
+        } else {
+          status.textContent = '실패: ' + (data.error || '');
+        }
+      })
+      .catch(function(e) { status.textContent = '에러: ' + e.message; });
+  };
+
+  window.generateImage = function(sceneNum) {
+    var textarea = document.getElementById('gen-prompt-' + sceneNum);
+    var status = document.getElementById('gen-status-' + sceneNum);
+    var btn = document.getElementById('gen-btn-' + sceneNum);
+    var prompt = textarea.value.trim();
+    if (!prompt) { status.textContent = '프롬프트를 입력하세요'; return; }
+
+    var mode = 'scene';
+    var radios = document.querySelectorAll('input[name="mode-' + sceneNum + '"]');
+    radios.forEach(function(r) { if (r.checked) mode = r.value; });
+
+    btn.disabled = true;
+    status.innerHTML = '🎨 생성 중... (30초~2분 소요) <span class="spinner"></span>';
+
+    fetch('/api/p/' + encodeURIComponent(slug) + '/images/generate/' + sceneNum, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ prompt: prompt, mode: mode }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.disabled = false;
+      if (data.ok) {
+        status.textContent = '✅ 생성 완료!';
+        var imgEl = document.getElementById('img-' + sceneNum);
+        if (imgEl) imgEl.src = '/output/' + slug + '/images/scene_' + String(sceneNum).padStart(3,'0') + '.png?t=' + Date.now();
+        loadVersions(sceneNum);
+      } else {
+        status.textContent = '실패: ' + (data.error || '').substring(0, 100);
+      }
+    })
+    .catch(function(e) { btn.disabled = false; status.textContent = '에러: ' + e.message; });
   };
 
   function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }

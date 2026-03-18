@@ -1,4 +1,6 @@
 <!-- Storyboard 탭 — 원고 + 미리보기 + TTS 통합 -->
+<!-- scene-editor.js (에디터 + 썸네일 통합 번들) -->
+<script src="/static/scene-editor.js"></script>
 {% if scenes %}
 <div class="storyboard-filter">
   <button class="btn btn-accent chapter-btn active" onclick="filterStoryboard(0, this)">All</button>
@@ -171,25 +173,25 @@ function resizePreview(val) {
     });
   }, { rootMargin: '200px' });
 
-  // scene-editor.js 로드 대기 후 observe 시작
+  // scene-thumb.js 로드 후 observe 시작
   function startObserving() {
     document.querySelectorAll('.sb-player-mount').forEach(function(el) {
       if (!el.dataset.mounted) observer.observe(el);
     });
   }
 
+  // scene-thumb.js는 동기 로드이므로 즉시 사용 가능
   if (window.mountSceneThumb) {
     startObserving();
   } else {
-    // scene-editor.js 로드 후 시도
+    // 혹시 지연 로드 시 대기
     var checkInterval = setInterval(function() {
       if (window.mountSceneThumb) {
         clearInterval(checkInterval);
         startObserving();
       }
-    }, 500);
-    // 10초 후 타임아웃
-    setTimeout(function() { clearInterval(checkInterval); }, 10000);
+    }, 300);
+    setTimeout(function() { clearInterval(checkInterval); }, 5000);
   }
 })();
 

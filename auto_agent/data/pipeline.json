@@ -298,8 +298,8 @@
             "viz_background_generation (시각화 배경)"
           ],
           "notes": "캐릭터 생성→씬 생성 순서 보장. 라이선스 메타데이터 기록",
-          "type": "agent",
-          "agent": "image-sourcer"
+          "type": "module",
+          "module": "image-sourcer"
         },
         {
           "id": "step_9",

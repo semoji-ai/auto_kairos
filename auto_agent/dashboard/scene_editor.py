@@ -60,6 +60,11 @@ async def manifest_meta(slug: str):
 
     # 프로젝트 config에서 videoTheme/artStyle 보장 (manifest에 없을 수 있음)
     config = project.get("config") or {}
+    if isinstance(config, str):
+        try:
+            config = json.loads(config)
+        except (json.JSONDecodeError, TypeError):
+            config = {}
     if not meta.get("videoTheme") and config.get("video_theme"):
         meta["videoTheme"] = config["video_theme"]
     if not meta.get("artStyle") and config.get("art_style"):

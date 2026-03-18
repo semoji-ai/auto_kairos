@@ -338,19 +338,32 @@ function _tryMountEditor() {
   });
 }
 
-// scene-editor.js 로드 (한번만) + 기본 편집탭 자동 마운트
+// scene-thumb.js 사용 (scene-editor.js 대체 — maplibre-gl 번들 문제 회피)
+// scene-thumb.js는 스토리보드 탭에서 이미 로드됨
+// mountSceneThumb으로 씬 프리뷰 마운트
 (function() {
-  if (document.getElementById('scene-editor-script')) return;
-  var s = document.createElement('script');
-  s.id = 'scene-editor-script';
-  s.src = '/static/scene-editor.js?v=' + Date.now();
-  s.onload = function() { _tryMountEditor(); };
-  s.onerror = function() {
+  if (window.mountSceneEditor) {
+    _tryMountEditor();
+  } else if (window.mountSceneThumb) {
+    // scene-editor 대신 scene-thumb으로 프리뷰 표시
+    var root = document.getElementById('scene-editor-root');
+    if (root) {
+      var sceneNum = {{ scene.sceneNumber }};
+      var slug = '{{ slug }}';
+      Promise.all([
+        fetch('/api/p/' + slug + '/editor/scenes/' + sceneNum).then(function(r){ return r.json(); }),
+        fetch('/api/p/' + slug + '/manifest-meta').then(function(r){ return r.json(); }).catch(function(){ return {}; })
+      ]).then(function(results) {
+        var scene = results[0].scene;
+        var meta = results[1].meta || { fps: 30, resolution: {width:1920, height:1080}, vizFont: 'Pretendard' };
+        if (scene) {
+          window.mountSceneThumb(root, scene, meta);
+        }
+      });
+    }
+  } else {
     var r = document.getElementById('scene-editor-root');
-    if (r) r.innerHTML = '<div style="padding:40px;color:#f66;text-align:center;font-size:13px">scene-editor.js 로드 실패<br><small>remotion/ 에서 npm run build:editor 실행 필요</small></div>';
-  };
-  document.head.appendChild(s);
+    if (r) r.innerHTML = '<div style="padding:40px;color:#f66;text-align:center;font-size:13px">프리뷰 로드 실패</div>';
+  }
 })();
-// 이미 로드된 경우 즉시 마운트
-if (window.mountSceneEditor) _tryMountEditor();
 </script>

@@ -27,6 +27,13 @@ from auto_agent.db.connection import db_exists, init_db
 from auto_agent.db.project_manager import ProjectManager
 from auto_agent.db.cleanup import CleanupManager
 from auto_agent.paths import get_data_dir, get_workspace_dir
+
+# Supabase 사용 여부 — scene_editor.py 등에서 참조
+USE_SUPABASE = False  # 로컬 모드
+
+def get_pm() -> ProjectManager:
+    """프로젝트 매니저 인스턴스 반환."""
+    return ProjectManager()
 from auto_agent.dashboard.helpers import (
     load_project_json,
     load_project_text,
