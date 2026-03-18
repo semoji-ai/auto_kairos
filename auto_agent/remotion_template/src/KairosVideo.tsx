@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill } from "remotion";
 import { SceneSequencer } from "./components/SceneSequencer";
 import { SubtitleTrack } from "./components/SubtitleTrack";
+import { OverlayLayer } from "./components/OverlayLayer";
 import { BGMLayer } from "./components/BGMLayer";
 import { DesignTokenProvider } from "./contexts/DesignTokenContext";
 import type { SceneManifest, SubtitleConfig } from "./types/manifest";
@@ -27,7 +28,10 @@ export const KairosVideo: React.FC<Props> = ({
           fps={manifest.meta.fps}
         />
 
-        {/* Layer 3: 자막 (독립 트랙) */}
+        {/* Layer 3: GIF/Lottie 오버레이 */}
+        <OverlayLayer scenes={manifest.scenes} fps={manifest.meta.fps} />
+
+        {/* Layer 4: 자막 (독립 트랙) */}
         <SubtitleTrack
           scenes={manifest.scenes}
           fps={manifest.meta.fps}

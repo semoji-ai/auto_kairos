@@ -363,7 +363,18 @@ class SupabaseProjectManager:
     # ──────────────────────────────────────
 
     def get_scene_image_url(self, project_id: str, scene_number: int) -> Optional[str]:
-        """씬 이미지의 Supabase Storage public URL."""
+        """씬 이미지 URL. 로컬 파일 우선 → Supabase fallback."""
+        from pathlib import Path
+        project = self.get_project(project_id)
+        if project:
+            out_dir = project.get("output_dir", "")
+            slug = project.get("slug", "")
+            if out_dir:
+                for ext in (".jpg", ".jpeg", ".png", ".webp"):
+                    local = Path(out_dir) / "images" / f"scene_{scene_number:03d}{ext}"
+                    if local.exists():
+                        return f"/output/{slug}/images/scene_{scene_number:03d}{ext}"
+        # Supabase fallback
         resp = (
             self.sb.table("assets")
             .select("storage_url")
@@ -410,7 +421,17 @@ class SupabaseProjectManager:
         return candidates
 
     def get_scene_audio_url(self, project_id: str, scene_number: int) -> Optional[str]:
-        """씬 오디오의 Supabase Storage public URL."""
+        """씬 오디오 URL. 로컬 파일 우선 → Supabase fallback."""
+        from pathlib import Path
+        project = self.get_project(project_id)
+        if project:
+            out_dir = project.get("output_dir", "")
+            slug = project.get("slug", "")
+            if out_dir:
+                local = Path(out_dir) / "audio" / f"scene_{scene_number:03d}.mp3"
+                if local.exists():
+                    return f"/output/{slug}/audio/scene_{scene_number:03d}.mp3"
+        # Supabase fallback
         resp = (
             self.sb.table("assets")
             .select("storage_url")

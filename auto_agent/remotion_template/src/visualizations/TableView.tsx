@@ -1,6 +1,6 @@
 import React from "react";
 import { useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { TYPO as DEFAULT_TYPO } from "./vizStyles";
 import { calcItemDelay } from "../utils/syncDelay";
 import { countUpValue } from "../utils/countUp";
 import { resolveEasing } from "../utils/easingMap";
@@ -16,7 +16,6 @@ interface Props {
 }
 
 export const TableView: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const items = data.items ?? [];
   const values = data.values ?? [];
@@ -33,11 +32,11 @@ export const TableView: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
   const n = items.length;
   const rowPadV = n >= 7 ? 14 : n >= 5 ? 18 : 22;
   const rowPadH = 32;
-  const fontSize = n >= 7 ? TYPO.label.size - 4 : TYPO.label.size;
-  const valueFont = n >= 7 ? TYPO.value.size - 2 : TYPO.subtitle.size;
+  const fontSize = n >= 7 ? DEFAULT_TYPO.label.size - 4 : DEFAULT_TYPO.label.size;
+  const valueFont = n >= 7 ? DEFAULT_TYPO.value.size - 2 : DEFAULT_TYPO.subtitle.size;
 
-  // Alternating row background
-  const altRowBg = STYLE.grid + "40";
+  // Alternating row background — need grid hex for alpha concat
+  const altRowBg = "color-mix(in srgb, var(--viz-grid) 25%, transparent)";
 
   // ── Header 등장 ──
   const HEADER_ENTRANCE = 5;
@@ -69,16 +68,16 @@ export const TableView: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
             width: "fit-content",
             minWidth: "55%",
             maxWidth: "95%",
-            borderRadius: STYLE.cardRadius,
+            borderRadius: "var(--viz-card-radius)",
             overflow: "hidden",
-            boxShadow: STYLE.cardShadow,
+            boxShadow: "var(--viz-card-shadow)",
           }}
         >
           {/* Header */}
           <div
             style={{
               display: "flex",
-              background: `linear-gradient(135deg, ${STYLE.border}, ${STYLE.subtitle})`,
+              background: `linear-gradient(135deg, var(--viz-border), var(--viz-subtitle))`,
               padding: `${rowPadV}px ${rowPadH}px`,
               opacity: headerOpacity,
             }}
@@ -94,9 +93,9 @@ export const TableView: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
                       flex: ci === 0 ? 1 : undefined,
                       width: ci > 0 ? `${Math.floor(70 / (maxCols - 1))}%` : undefined,
                       color: "white",
-                      fontSize: TYPO.value.size,
-                      fontWeight: TYPO.title.weight,
-                      fontFamily: VIZ_FONT,
+                      fontSize: "var(--viz-value-size)",
+                      fontWeight: "var(--viz-title-weight)",
+                      fontFamily: "var(--viz-font)",
                       textAlign: ci > 0 ? "center" : "left",
                     }}
                   >
@@ -106,17 +105,17 @@ export const TableView: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
               </>
             ) : (
               <>
-                <span style={{ flex: 1, color: "white", fontSize: TYPO.value.size, fontWeight: TYPO.title.weight, fontFamily: VIZ_FONT }}>
+                <span style={{ flex: 1, color: "white", fontSize: "var(--viz-value-size)", fontWeight: "var(--viz-title-weight)", fontFamily: "var(--viz-font)" }}>
                   {VIZ_STRINGS.table_header_item}
                 </span>
                 <span
                   style={{
                     width: "30%",
                     color: "white",
-                    fontSize: TYPO.value.size,
-                    fontWeight: TYPO.title.weight,
+                    fontSize: "var(--viz-value-size)",
+                    fontWeight: "var(--viz-title-weight)",
                     textAlign: "right",
-                    fontFamily: VIZ_FONT,
+                    fontFamily: "var(--viz-font)",
                   }}
                 >
                   {data.unit ? `${VIZ_STRINGS.table_header_value} (${data.unit})` : VIZ_STRINGS.table_header_value}
@@ -157,13 +156,12 @@ export const TableView: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
               { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
             );
 
-            const color = STYLE.colors[i % STYLE.colors.length];
+            const color = `var(--viz-color-${i % 10})`;
             const animatedValue = countUpValue(frame, entranceDelay, 18, values[i] ?? 0, easingFn);
 
             // 강조 스타일 (테이블 행: scale 없이 컬러바 + 배경 + 그림자)
             const barWidth = 7 + hl * 5;
-            const bgTint = hl > 0 ? `${color}${Math.round(hl * 12).toString(16).padStart(2, "0")}` : "transparent";
-            const baseBg = i % 2 === 0 ? STYLE.cardBg : altRowBg;
+            const baseBg = i % 2 === 0 ? "var(--viz-card-bg)" : altRowBg;
             const rowShadow = hl > 0 ? `0 2px ${8 + hl * 12}px rgba(61,59,47,${hl * 0.12})` : "none";
 
             return (
@@ -173,7 +171,7 @@ export const TableView: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
                   display: "flex",
                   alignItems: "center",
                   padding: `${rowPadV}px ${rowPadH}px`,
-                  background: hl > 0 ? `linear-gradient(135deg, ${bgTint}, ${baseBg})` : baseBg,
+                  background: baseBg,
                   opacity: rowOpacity,
                   transform: `translateX(${rowSlide}px)`,
                   boxShadow: rowShadow,
@@ -203,10 +201,10 @@ export const TableView: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
                         style={{
                           flex: ci === 0 ? 1 : undefined,
                           width: ci > 0 ? `${Math.floor(70 / (maxCols - 1))}%` : undefined,
-                          color: ci === 0 ? STYLE.text : STYLE.subtitle,
+                          color: ci === 0 ? "var(--viz-text)" : "var(--viz-subtitle)",
                           fontSize: ci === 0 ? fontSize : fontSize - 2,
-                          fontWeight: ci === 0 ? TYPO.label.weight : TYPO.caption.weight,
-                          fontFamily: VIZ_FONT,
+                          fontWeight: ci === 0 ? "var(--viz-label-weight)" : "var(--viz-caption-weight)",
+                          fontFamily: "var(--viz-font)",
                           textAlign: ci > 0 ? "center" : "left",
                         }}
                       >
@@ -219,10 +217,10 @@ export const TableView: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
                     <span
                       style={{
                         flex: 1,
-                        color: STYLE.text,
+                        color: "var(--viz-text)",
                         fontSize: fontSize,
-                        fontWeight: TYPO.label.weight,
-                        fontFamily: VIZ_FONT,
+                        fontWeight: "var(--viz-label-weight)",
+                        fontFamily: "var(--viz-font)",
                       }}
                     >
                       {item}
@@ -230,11 +228,11 @@ export const TableView: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
                     <span
                       style={{
                         width: "30%",
-                        color: STYLE.text,
+                        color: "var(--viz-text)",
                         fontSize: valueFont,
-                        fontWeight: TYPO.title.weight,
+                        fontWeight: "var(--viz-title-weight)",
                         textAlign: "right",
-                        fontFamily: VIZ_FONT,
+                        fontFamily: "var(--viz-font)",
                       }}
                     >
                       {animatedValue.toLocaleString()}

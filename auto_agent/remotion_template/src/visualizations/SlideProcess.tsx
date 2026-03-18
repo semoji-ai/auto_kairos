@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { resolveAsset } from "../utils/resolveAsset";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
@@ -22,7 +22,6 @@ interface Props {
  * - 가로(≤5개) 또는 세로(6+개) 자동 전환
  */
 export const SlideProcess: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -34,8 +33,6 @@ export const SlideProcess: React.FC<Props> = ({ data, durationInFrames, fps, viz
   const descriptions = data.descriptions ?? [];
   const n = items.length;
   const isVertical = n >= 6;
-
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
 
   // Adaptive sizing
   const cardWidth = isVertical ? "85%" : `${Math.min(220, 800 / n)}px`;
@@ -57,8 +54,8 @@ export const SlideProcess: React.FC<Props> = ({ data, durationInFrames, fps, viz
           width: "100%",
           height: "100%",
           backgroundImage: isVertical
-            ? `repeating-linear-gradient(180deg, ${STYLE.border}15 0px, transparent 1px, transparent 60px)`
-            : `repeating-linear-gradient(90deg, ${STYLE.border}15 0px, transparent 1px, transparent 60px)`,
+            ? `repeating-linear-gradient(180deg, ${DEFAULT_STYLE.border}15 0px, transparent 1px, transparent 60px)`
+            : `repeating-linear-gradient(90deg, ${DEFAULT_STYLE.border}15 0px, transparent 1px, transparent 60px)`,
         }}
       />
     </AbsoluteFill>
@@ -94,8 +91,8 @@ export const SlideProcess: React.FC<Props> = ({ data, durationInFrames, fps, viz
                 maxWidth: "100%",
                 maxHeight: "85%",
                 objectFit: "cover",
-                borderRadius: STYLE.cardRadius,
-                boxShadow: STYLE.cardShadow,
+                borderRadius: "var(--viz-card-radius)",
+                boxShadow: "var(--viz-card-shadow)",
               }}
             />
           </div>
@@ -123,8 +120,8 @@ export const SlideProcess: React.FC<Props> = ({ data, durationInFrames, fps, viz
           {items.map((item, i) => {
             const entranceDelay = ENTRANCE_BASE + i * ENTRANCE_STAGGER;
             const desc = descriptions[i] ?? "";
-            const color = STYLE.colors[i % STYLE.colors.length];
-            const grad = STYLE.gradients[i % STYLE.gradients.length];
+            const color = DEFAULT_STYLE.colors[i % DEFAULT_STYLE.colors.length];
+            const grad = DEFAULT_STYLE.gradients[i % DEFAULT_STYLE.gradients.length];
             const isLast = i === n - 1;
 
             // 카드 등장
@@ -172,10 +169,10 @@ export const SlideProcess: React.FC<Props> = ({ data, durationInFrames, fps, viz
                     gap: isVertical ? 16 : 10,
                     width: isVertical ? "100%" : cardWidth,
                     padding: isVertical ? "14px 20px" : "20px 16px",
-                    background: `linear-gradient(135deg, ${hl > 0 ? `${color}0a` : "transparent"}, ${STYLE.cardBg})`,
-                    borderRadius: STYLE.cardRadius,
+                    background: `linear-gradient(135deg, ${hl > 0 ? `${color}0a` : "transparent"}, var(--viz-card-bg))`,
+                    borderRadius: "var(--viz-card-radius)",
                     boxShadow: `0 3px ${shadowBlur}px rgba(61,59,47,${shadowAlpha})`,
-                    border: hl > 0 ? `2px solid ${color}40` : `1px solid ${STYLE.grid}`,
+                    border: hl > 0 ? `2px solid ${color}40` : `1px solid var(--viz-grid)`,
                     opacity: cardOpacity,
                     transform: isVertical
                       ? `translateY(${cardSlide}px) scale(${scale})`
@@ -196,7 +193,7 @@ export const SlideProcess: React.FC<Props> = ({ data, durationInFrames, fps, viz
                       justifyContent: "center",
                       color: "white",
                       fontSize: Math.round(stepSize * 0.45),
-                      fontWeight: TYPO.title.weight,
+                      fontWeight: "var(--viz-title-weight)" as any,
                       flexShrink: 0,
                       boxShadow: `0 3px 8px ${grad[0]}30`,
                     }}
@@ -215,9 +212,9 @@ export const SlideProcess: React.FC<Props> = ({ data, durationInFrames, fps, viz
                   >
                     <span
                       style={{
-                        color: STYLE.text,
+                        color: "var(--viz-text)",
                         fontSize: textSize,
-                        fontWeight: TYPO.label.weight,
+                        fontWeight: "var(--viz-label-weight)" as any,
                         textAlign: isVertical ? "left" : "center",
                         lineHeight: 1.3,
                       }}
@@ -227,9 +224,9 @@ export const SlideProcess: React.FC<Props> = ({ data, durationInFrames, fps, viz
                     {desc && (
                       <span
                         style={{
-                          color: STYLE.subtitle,
+                          color: "var(--viz-subtitle)",
                           fontSize: descSize,
-                          fontWeight: TYPO.caption.weight,
+                          fontWeight: "var(--viz-caption-weight)" as any,
                           textAlign: isVertical ? "left" : "center",
                           lineHeight: 1.4,
                         }}

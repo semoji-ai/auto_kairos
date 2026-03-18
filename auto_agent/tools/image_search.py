@@ -495,8 +495,15 @@ class ImageSearcher:
                 img.local_path = str(local_path)
                 return str(local_path)
 
-            headers = {"User-Agent": "Mozilla/5.0"}
-            response = requests.get(img.image_url, headers=headers, timeout=30)
+            headers = {"User-Agent": "KairosAgent/3.1 (video-production; educational)"}
+            # 위키미디어 rate limit 대응: 재시도 + 딜레이
+            for attempt in range(3):
+                response = requests.get(img.image_url, headers=headers, timeout=30)
+                if response.status_code == 429:
+                    import time as _time
+                    _time.sleep(2 * (attempt + 1))
+                    continue
+                break
             response.raise_for_status()
 
             if HAS_PIL:

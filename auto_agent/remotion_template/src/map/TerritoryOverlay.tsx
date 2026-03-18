@@ -38,10 +38,12 @@ export const TerritoryOverlay: React.FC<Props> = ({
 }) => {
   const frame = useCurrentFrame();
 
+  const keyframes = data.camera?.keyframes ?? [];
+  if (keyframes.length === 0) return null;
   const camera: CameraState = interpolateCamera(
     frame,
-    data.camera.keyframes,
-    data.camera.easing,
+    keyframes,
+    data.camera?.easing,
   );
 
   const territories = data.territories ?? [];

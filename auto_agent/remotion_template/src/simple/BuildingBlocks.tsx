@@ -45,143 +45,43 @@ import {
 
 import * as SimpleIcons from "@icons-pack/react-simple-icons";
 
+import { useDesignPreset, usePresetColors, usePresetTypo, usePresetLayout, resolvePreset } from "../design";
+import type { PresetColors } from "../design/types";
+import { DEFAULT_PRESET } from "../design";
+
 /* ================================================================
-   Design Tokens — 다크/화이트 테마 팔레트
+   Design Tokens — DesignPreset Context 기반
    ================================================================ */
 
 export const FONT = "'Pretendard', sans-serif";
 
 export type VideoThemeName = "dark" | "white";
 
-export interface ColorTokens {
-  bg: string;
-  text: string;
-  textMuted: string;
-  textDim: string;
-  accent: string;
-  accentBg: string;
-  accentBorder: string;
-  accentSoft: string;
-  cardBg: string;
-  cardBorder: string;
-  divider: string;
-}
+/** @deprecated — PresetColors 사용 권장 */
+export type { PresetColors as ColorTokens } from "../design/types";
 
-const COLORS_DARK: ColorTokens = {
-  bg: "#0A0A0A",
-  text: "#FFFFFF",
-  textMuted: "#FFFFFF",
-  textDim: "#FFFFFF",
-  accent: "#F59E0B",
-  accentBg: "rgba(245,158,11,0.08)",
-  accentBorder: "rgba(245,158,11,0.3)",
-  accentSoft: "rgba(245,158,11,0.15)",
-  cardBg: "rgba(245,158,11,0.06)",
-  cardBorder: "rgba(245,158,11,0.25)",
-  divider: "rgba(255,255,255,0.08)",
-};
+/** @deprecated — usePresetColors() 또는 useC() 사용 권장. 하위호환용 전역 상수. */
+export const C: PresetColors = DEFAULT_PRESET.colors;
 
-const COLORS_WHITE: ColorTokens = {
-  bg: "#FAFAFA",
-  text: "#1A1A2E",
-  textMuted: "#4A4A5A",
-  textDim: "#6A6A7A",
-  accent: "#2563EB",
-  accentBg: "rgba(37,99,235,0.06)",
-  accentBorder: "rgba(37,99,235,0.25)",
-  accentSoft: "rgba(37,99,235,0.10)",
-  cardBg: "rgba(37,99,235,0.04)",
-  cardBorder: "rgba(37,99,235,0.18)",
-  divider: "rgba(0,0,0,0.06)",
-};
-
-export const THEME_PALETTES: Record<VideoThemeName, ColorTokens> = {
-  dark: COLORS_DARK,
-  white: COLORS_WHITE,
-};
-
-/** 아트스타일별 accent 오버라이드 (dark 기준 — white는 자동 유도) */
-interface ArtStyleAccent {
-  accent: string;       // 메인 악센트
-  accentRgb: string;    // rgba용
-}
-
-const ART_STYLE_ACCENTS: Record<string, ArtStyleAccent> = {
-  semoji: {
-    accent: "#6366F1",       // 인디고/퍼플
-    accentRgb: "99,102,241",
-  },
-  lego: {
-    accent: "#EF4444",       // 레고 레드
-    accentRgb: "239,68,68",
-  },
-  quirky_cartoon: {
-    accent: "#F59E0B",       // 오렌지/앰버 (기본값 유지)
-    accentRgb: "245,158,11",
-  },
-  stickman_cute: {
-    accent: "#10B981",       // 에메랄드 그린
-    accentRgb: "16,185,129",
-  },
-};
-
-/** accent 색상으로 연관 컬러 자동 생성 */
-function deriveAccentColors(accent: string, rgb: string, isDark: boolean): Partial<ColorTokens> {
-  if (isDark) {
-    return {
-      accent,
-      accentBg: `rgba(${rgb},0.08)`,
-      accentBorder: `rgba(${rgb},0.3)`,
-      accentSoft: `rgba(${rgb},0.15)`,
-      cardBg: `rgba(${rgb},0.06)`,
-      cardBorder: `rgba(${rgb},0.25)`,
-    };
-  }
-  return {
-    accent,
-    accentBg: `rgba(${rgb},0.06)`,
-    accentBorder: `rgba(${rgb},0.25)`,
-    accentSoft: `rgba(${rgb},0.10)`,
-    cardBg: `rgba(${rgb},0.04)`,
-    cardBorder: `rgba(${rgb},0.18)`,
-  };
-}
-
-/** 기본 C (다크 테마 — 하위호환) */
-export const C: ColorTokens = COLORS_DARK;
-
-/** 테마명 + 아트스타일로 팔레트 해석 */
-export function resolveVideoTheme(name?: string, artStyle?: string): ColorTokens {
-  const base = name === "white" ? COLORS_WHITE : COLORS_DARK;
-  const isDark = name !== "white";
-
-  // 아트스타일 accent 오버라이드
-  if (artStyle) {
-    // artStyle은 경로일 수 있음: "artstyle/styles/semoji.json" → "semoji"
-    const styleName = artStyle.replace(/.*\//, "").replace(/\.json$/, "");
-    const override = ART_STYLE_ACCENTS[styleName];
-    if (override) {
-      return { ...base, ...deriveAccentColors(override.accent, override.accentRgb, isDark) };
-    }
-  }
-  return base;
+/** @deprecated — resolvePreset() 사용 */
+export function resolveVideoTheme(name?: string, artStyle?: string): PresetColors {
+  const { colors } = resolvePreset({ videoTheme: name, artStyle });
+  return { ...colors, divider: colors.divider } as any;
 }
 
 /* ── 비디오 테마 컨텍스트 ── */
 
-const VideoThemeCtx = React.createContext<ColorTokens>(COLORS_DARK);
-
+// 하위호환: VideoThemeProvider → DesignPresetProvider 브릿지
+// 새 시스템이 적용되면 SimpleVideo에서 직접 DesignPresetProvider를 사용하므로
+// 이 컴포넌트는 점진적으로 제거됨
 export const VideoThemeProvider: React.FC<{
-  theme: VideoThemeName | string;
+  theme: string;
   artStyle?: string;
   children: React.ReactNode;
-}> = ({ theme, artStyle, children }) => {
-  const palette = resolveVideoTheme(theme, artStyle);
-  return <VideoThemeCtx.Provider value={palette}>{children}</VideoThemeCtx.Provider>;
-};
+}> = ({ children }) => <>{children}</>;
 
-/** 현재 비디오 테마 팔레트를 가져온다 (컨텍스트 기반) */
-export const useC = (): ColorTokens => React.useContext(VideoThemeCtx);
+/** @deprecated — usePresetColors() 사용 권장 */
+export const useC = (): PresetColors => usePresetColors();
 
 export const ease = Easing.out(Easing.cubic);
 export const ease8020 = Easing.bezier(0.8, 0, 0.2, 1);
@@ -369,8 +269,9 @@ export const AccentText: React.FC<{
   text: string;
   baseColor?: string;
   style?: React.CSSProperties;
-}> = ({ text, baseColor = C.text, style }) => {
+}> = ({ text, baseColor, style }) => {
   const C = useC();
+  const resolvedBaseColor = baseColor ?? C.text;
   const lines = text.split("\n");
   return (
     <span style={style}>
@@ -386,7 +287,7 @@ export const AccentText: React.FC<{
               );
             }
             return (
-              <span key={pi} style={{ color: baseColor }}>
+              <span key={pi} style={{ color: resolvedBaseColor }}>
                 {part}
               </span>
             );
@@ -537,9 +438,10 @@ export const Icon: React.FC<{
   size?: number;
   color?: string;
   style?: React.CSSProperties;
-}> = ({ icon: LucideComp, size = 24, color = C.accent, style }) => (
-  <LucideComp size={size} color={color} strokeWidth={1.5} style={style} />
-);
+}> = ({ icon: LucideComp, size = 24, color, style }) => {
+  const C = useC();
+  return <LucideComp size={size} color={color ?? C.accent} strokeWidth={1.5} style={style} />;
+};
 
 /** 아이콘 + 원형 배지 (CircleBadge의 아이콘 버전) */
 export const IconBadge: React.FC<{
@@ -655,7 +557,7 @@ export const LogoBadge: React.FC<{
   size?: number;
   color?: string;
   style?: React.CSSProperties;
-}> = ({ logo, size = 48, color = C.accent, style }) => {
+}> = ({ logo, size = 48, color, style }) => {
   const C = useC();
   const LogoComp = resolveLogo(logo);
   return (
@@ -674,13 +576,13 @@ export const LogoBadge: React.FC<{
       }}
     >
       {LogoComp ? (
-        <LogoComp size={size * 0.5} color={color} />
+        <LogoComp size={size * 0.5} color={color ?? C.accent} />
       ) : (
         <span
           style={{
             fontSize: size * 0.35,
             fontWeight: 700,
-            color: C.accent,
+            color: color ?? C.accent,
           }}
         >
           {logo.slice(0, 2).toUpperCase()}
@@ -697,8 +599,9 @@ export const ProgressBar: React.FC<{
   color?: string;
   label?: string;
   style?: React.CSSProperties;
-}> = ({ progress, height = 16, color = C.accent, label, style }) => {
+}> = ({ progress, height = 16, color, label, style }) => {
   const C = useC();
+  const resolvedColor = color ?? C.accent;
   return (
     <div style={{ width: "100%", ...style }}>
       {label && (
@@ -728,7 +631,7 @@ export const ProgressBar: React.FC<{
           style={{
             width: `${Math.min(progress * 100, 100)}%`,
             height: "100%",
-            backgroundColor: color,
+            backgroundColor: resolvedColor,
             borderRadius: height / 2,
           }}
         />
@@ -772,17 +675,21 @@ export const Divider: React.FC<{
   color?: string;
   thickness?: number;
   style?: React.CSSProperties;
-}> = ({ width = "100%", color = C.divider, thickness = 1, style }) => (
-  <div
-    style={{
-      width,
-      height: thickness,
-      backgroundColor: color,
-      flexShrink: 0,
-      ...style,
-    }}
-  />
-);
+}> = ({ width = "100%", color, thickness = 1, style }) => {
+  const C = useC();
+  const resolvedColor = color ?? C.divider;
+  return (
+    <div
+      style={{
+        width,
+        height: thickness,
+        backgroundColor: resolvedColor,
+        flexShrink: 0,
+        ...style,
+      }}
+    />
+  );
+};
 
 /** 상태 표시 도트 */
 export const StatusDot: React.FC<{
@@ -792,10 +699,10 @@ export const StatusDot: React.FC<{
 }> = ({ status, label, style }) => {
   const C = useC();
   const colors = {
-    positive: "#22C55E",
-    negative: "#EF4444",
-    neutral: "rgba(255,255,255,0.4)",
-    warning: "#F59E0B",
+    positive: C.positive,
+    negative: C.negative,
+    neutral: C.textDim,
+    warning: C.warning,
   };
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, ...style }}>
@@ -826,20 +733,22 @@ export const Connector: React.FC<{
   arrow?: boolean;
   color?: string;
   style?: React.CSSProperties;
-}> = ({ direction = "down", length = 40, arrow = true, color = C.accent, style }) => {
+}> = ({ direction = "down", length = 40, arrow = true, color, style }) => {
+  const C = useC();
+  const resolvedColor = color ?? C.accent;
   const isVertical = direction === "down";
   const w = isVertical ? 3 : length;
   const h = isVertical ? length : 3;
   const arrowSize = 10;
   return (
     <div style={{ display: "flex", flexDirection: isVertical ? "column" : "row", alignItems: "center", overflow: "visible", ...style }}>
-      <div style={{ width: w, height: h, backgroundColor: color, flexShrink: 0 }} />
+      <div style={{ width: w, height: h, backgroundColor: resolvedColor, flexShrink: 0 }} />
       {arrow && (
         <div style={{
           width: 0, height: 0, flexShrink: 0,
-          borderLeft: isVertical ? `${arrowSize}px solid transparent` : `${arrowSize + 2}px solid ${color}`,
+          borderLeft: isVertical ? `${arrowSize}px solid transparent` : `${arrowSize + 2}px solid ${resolvedColor}`,
           borderRight: isVertical ? `${arrowSize}px solid transparent` : "none",
-          borderTop: isVertical ? `${arrowSize + 2}px solid ${color}` : `${arrowSize}px solid transparent`,
+          borderTop: isVertical ? `${arrowSize + 2}px solid ${resolvedColor}` : `${arrowSize}px solid transparent`,
           borderBottom: isVertical ? "none" : `${arrowSize}px solid transparent`,
           ...(direction === "left" ? { transform: "rotate(180deg)" } : {}),
         }} />
@@ -880,7 +789,7 @@ export const MetricCard: React.FC<{
   style?: React.CSSProperties;
 }> = ({ label, value, change, trend, style }) => {
   const C = useC();
-  const trendColor = trend === "up" ? "#22C55E" : trend === "down" ? "#EF4444" : C.textMuted;
+  const trendColor = trend === "up" ? C.positive : trend === "down" ? C.negative : C.textMuted;
   const trendArrow = trend === "up" ? "↑" : trend === "down" ? "↓" : "";
   return (
     <div style={{
@@ -905,7 +814,8 @@ export const Sparkline: React.FC<{
   height?: number;
   color?: string;
   style?: React.CSSProperties;
-}> = ({ data, width = 280, height = 72, color = C.accent, style }) => {
+}> = ({ data, width = 280, height = 72, color, style }) => {
+  const C = useC();
   if (!data.length) return null;
   const min = Math.min(...data);
   const max = Math.max(...data);
@@ -917,7 +827,7 @@ export const Sparkline: React.FC<{
   }).join(" ");
   return (
     <svg width={width} height={height} style={style}>
-      <polyline points={points} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={points} fill="none" stroke={color ?? C.accent} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 };
@@ -929,7 +839,7 @@ export const Callout: React.FC<{
   style?: React.CSSProperties;
 }> = ({ children, variant = "accent", style }) => {
   const C = useC();
-  const borderColor = variant === "warning" ? "#EF4444" : variant === "info" ? "#3B82F6" : C.accent;
+  const borderColor = variant === "warning" ? C.negative : variant === "info" ? C.accent : C.accent;
   return (
     <div style={{
       borderLeft: `5px solid ${borderColor}`,
@@ -983,7 +893,7 @@ export const ComparisonCell: React.FC<{
   style?: React.CSSProperties;
 }> = ({ label, value, sublabel, variant = "neutral", style }) => {
   const C = useC();
-  const valueColor = variant === "after" ? "#22C55E" : variant === "before" ? C.textMuted : C.accent;
+  const valueColor = variant === "after" ? C.positive : variant === "before" ? C.textMuted : C.accent;
   return (
     <div style={{
       backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`,
@@ -1003,7 +913,9 @@ export const RankBadge: React.FC<{
   style?: React.CSSProperties;
 }> = ({ rank, size = 72, style }) => {
   const C = useC();
-  const colors: Record<number, string> = { 1: "#FFD700", 2: "#C0C0C0", 3: "#CD7F32" };
+  const preset = useDesignPreset();
+  const rankColors = preset.colors.rank;
+  const colors: Record<number, string> = { 1: rankColors[0], 2: rankColors[1], 3: rankColors[2] };
   const bg = colors[rank] || C.accent;
   return (
     <div style={{
@@ -1021,28 +933,35 @@ export const QuoteMark: React.FC<{
   size?: number;
   color?: string;
   style?: React.CSSProperties;
-}> = ({ size = 64, color = C.accent, style }) => (
-  <span style={{
-    fontSize: size, fontWeight: 900, color, opacity: 0.3, lineHeight: 0.8,
-    fontFamily: "Georgia, serif", userSelect: "none", ...style,
-  }}>
-    &ldquo;
-  </span>
-);
+}> = ({ size = 64, color, style }) => {
+  const C = useC();
+  return (
+    <span style={{
+      fontSize: size, fontWeight: 900, color: color ?? C.accent, opacity: 0.3, lineHeight: 0.8,
+      fontFamily: "Georgia, serif", userSelect: "none", ...style,
+    }}>
+      &ldquo;
+    </span>
+  );
+};
 
 /** 발광 도트 — 펄스 애니메이션으로 주의 환기, 라이브 표시 */
 export const GlowDot: React.FC<{
   color?: string;
   size?: number;
   style?: React.CSSProperties;
-}> = ({ color = C.accent, size = 24, style }) => (
-  <div style={{
-    width: size, height: size, borderRadius: size / 2,
-    backgroundColor: color,
-    boxShadow: `0 0 ${size}px ${size / 2}px ${color}66`,
-    flexShrink: 0, ...style,
-  }} />
-);
+}> = ({ color, size = 24, style }) => {
+  const C = useC();
+  const resolvedColor = color ?? C.accent;
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: size / 2,
+      backgroundColor: resolvedColor,
+      boxShadow: `0 0 ${size}px ${size / 2}px ${resolvedColor}66`,
+      flexShrink: 0, ...style,
+    }} />
+  );
+};
 
 /** 지시선 + 주석 — 차트/도표의 특정 부분 가리키기 */
 export const AnnotationLine: React.FC<{
@@ -1051,16 +970,20 @@ export const AnnotationLine: React.FC<{
   direction?: "left" | "right";
   color?: string;
   style?: React.CSSProperties;
-}> = ({ text, width = 100, direction = "right", color = C.accent, style }) => (
-  <div style={{
-    display: "flex", alignItems: "center", gap: 8,
-    flexDirection: direction === "left" ? "row-reverse" : "row",
-    ...style,
-  }}>
-    <div style={{ width, height: 1, backgroundColor: color, flexShrink: 0 }} />
-    <span style={{ fontSize: 36, color, whiteSpace: "nowrap", fontWeight: 600 }}>{text}</span>
-  </div>
-);
+}> = ({ text, width = 100, direction = "right", color, style }) => {
+  const C = useC();
+  const resolvedColor = color ?? C.accent;
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8,
+      flexDirection: direction === "left" ? "row-reverse" : "row",
+      ...style,
+    }}>
+      <div style={{ width, height: 1, backgroundColor: resolvedColor, flexShrink: 0 }} />
+      <span style={{ fontSize: 36, color: resolvedColor, whiteSpace: "nowrap", fontWeight: 600 }}>{text}</span>
+    </div>
+  );
+};
 
 /** 인라인 소형 막대 — 카드 내 비교 수치 */
 export const MiniBar: React.FC<{
@@ -1070,19 +993,20 @@ export const MiniBar: React.FC<{
   color?: string;
   height?: number;
   style?: React.CSSProperties;
-}> = ({ value, maxValue, label, color = C.accent, height = 12, style }) => {
+}> = ({ value, maxValue, label, color, height = 12, style }) => {
   const C = useC();
+  const resolvedColor = color ?? C.accent;
   const pct = maxValue > 0 ? Math.min((value / maxValue) * 100, 100) : 0;
   return (
     <div style={{ width: "100%", ...style }}>
       {label && (
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 30, marginBottom: 4 }}>
           <span style={{ color: C.textMuted }}>{label}</span>
-          <span style={{ color }}>{value}</span>
+          <span style={{ color: resolvedColor }}>{value}</span>
         </div>
       )}
       <div style={{ width: "100%", height, backgroundColor: C.divider, borderRadius: height / 2, overflow: "hidden" }}>
-        <div style={{ width: `${pct}%`, height: "100%", backgroundColor: color, borderRadius: height / 2 }} />
+        <div style={{ width: `${pct}%`, height: "100%", backgroundColor: resolvedColor, borderRadius: height / 2 }} />
       </div>
     </div>
   );

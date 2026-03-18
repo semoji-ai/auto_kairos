@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE, TYPO as DEFAULT_TYPO } from "./vizStyles";
 import { resolveAsset } from "../utils/resolveAsset";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay, msToFrames } from "../utils/syncDelay";
@@ -15,7 +15,6 @@ interface Props {
 }
 
 export const SlideQuote: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const quoteText = data.items?.[0] ?? "";
   const speaker = data.source ?? "";
@@ -58,8 +57,8 @@ export const SlideQuote: React.FC<Props> = ({ data, durationInFrames, fps, vizAn
   );
   const quoteScale = 1 + hl * 0.015;
 
-  const quoteMarkSize = TYPO.title.size * 2;
-  const grad = STYLE.gradients[0];
+  const quoteMarkSize = DEFAULT_TYPO.title.size * 2;
+  const grad = DEFAULT_STYLE.gradients[0];
 
   // Unique background: large faded quotation mark watermark
   const bg = (
@@ -76,7 +75,7 @@ export const SlideQuote: React.FC<Props> = ({ data, durationInFrames, fps, vizAn
         style={{
           fontSize: 600,
           fontWeight: 900,
-          color: STYLE.text,
+          color: "var(--viz-text)",
           lineHeight: 1,
           userSelect: "none",
         }}
@@ -117,8 +116,8 @@ export const SlideQuote: React.FC<Props> = ({ data, durationInFrames, fps, vizAn
                 maxWidth: "100%",
                 maxHeight: "80%",
                 objectFit: "cover",
-                borderRadius: STYLE.cardRadius,
-                boxShadow: STYLE.cardShadow,
+                borderRadius: "var(--viz-card-radius)",
+                boxShadow: "var(--viz-card-shadow)",
               }}
             />
           </div>
@@ -163,12 +162,12 @@ export const SlideQuote: React.FC<Props> = ({ data, durationInFrames, fps, vizAn
             {/* Quote text */}
             <div
               style={{
-                color: STYLE.text,
-                fontSize: TYPO.title.size,
-                fontWeight: TYPO.title.weight,
-                fontFamily: VIZ_TITLE_FONT,
+                color: "var(--viz-text)",
+                fontSize: "var(--viz-title-size)",
+                fontWeight: "var(--viz-title-weight)" as any,
+                fontFamily: "var(--viz-title-font)",
                 lineHeight: 1.5,
-                letterSpacing: TYPO.title.letterSpacing,
+                letterSpacing: "var(--viz-title-tracking)",
               }}
             >
               {quoteText.split("\\n").map((line, i) => (
@@ -201,9 +200,9 @@ export const SlideQuote: React.FC<Props> = ({ data, durationInFrames, fps, vizAn
           <div
             style={{
               marginTop: 24,
-              color: STYLE.subtitle,
-              fontSize: TYPO.subtitle.size,
-              fontWeight: TYPO.subtitle.weight,
+              color: "var(--viz-subtitle)",
+              fontSize: "var(--viz-subtitle-size)",
+              fontWeight: "var(--viz-subtitle-weight)" as any,
               opacity: speakerOpacity,
             }}
           >

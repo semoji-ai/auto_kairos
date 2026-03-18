@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate, spring } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { resolveAsset } from "../utils/resolveAsset";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
@@ -21,7 +21,6 @@ interface Props {
  * - 질문이 먼저 등장, 나레이션 싱크 시점에 답변 블러 해제
  */
 export const SlideQna: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -41,8 +40,8 @@ export const SlideQna: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
   }
 
   const hasSingle = pairs.length === 1;
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
-  const grad = STYLE.gradients[0];
+  const accentColor = DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0];
+  const grad = DEFAULT_STYLE.gradients[0];
 
   // Background: large faded question mark
   const bg = (
@@ -59,7 +58,7 @@ export const SlideQna: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
         style={{
           fontSize: 500,
           fontWeight: 900,
-          color: STYLE.text,
+          color: "var(--viz-text)",
           lineHeight: 1,
           userSelect: "none",
         }}
@@ -101,8 +100,8 @@ export const SlideQna: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                   maxWidth: "100%",
                   maxHeight: "85%",
                   objectFit: "cover",
-                  borderRadius: STYLE.cardRadius,
-                  boxShadow: STYLE.cardShadow,
+                  borderRadius: "var(--viz-card-radius)",
+                  boxShadow: "var(--viz-card-shadow)",
                 }}
               />
             </div>
@@ -167,11 +166,10 @@ const SingleQA: React.FC<{
   fps: number;
   vizAnimation?: VizAnimationConfig;
 }> = ({ question, answer, qIndex, aIndex, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
-  const grad = STYLE.gradients[0];
+  const accentColor = DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0];
+  const grad = DEFAULT_STYLE.gradients[0];
 
   // 질문 등장
   const Q_START = 5;
@@ -266,19 +264,19 @@ const SingleQA: React.FC<{
         <div
           style={{
             flex: 1,
-            background: STYLE.cardBg,
-            borderRadius: STYLE.cardRadius,
+            background: "var(--viz-card-bg)",
+            borderRadius: "var(--viz-card-radius)",
             padding: "24px 28px",
-            boxShadow: STYLE.cardShadow,
+            boxShadow: "var(--viz-card-shadow)",
             borderTop: `4px solid ${accentColor}`,
           }}
         >
           <span
             style={{
-              color: STYLE.text,
-              fontSize: TYPO.title.size - 4,
-              fontWeight: TYPO.title.weight,
-              fontFamily: VIZ_TITLE_FONT,
+              color: "var(--viz-text)",
+              fontSize: "var(--viz-title-size)",
+              fontWeight: "var(--viz-title-weight)" as any,
+              fontFamily: "var(--viz-title-font)",
               lineHeight: 1.5,
             }}
           >
@@ -304,9 +302,9 @@ const SingleQA: React.FC<{
           style={{
             flex: 1,
             background: answerVisible
-              ? `linear-gradient(135deg, ${accentColor}08, ${STYLE.cardBg})`
-              : STYLE.cardBg,
-            borderRadius: STYLE.cardRadius,
+              ? `linear-gradient(135deg, ${accentColor}08, var(--viz-card-bg))`
+              : "var(--viz-card-bg)",
+            borderRadius: "var(--viz-card-radius)",
             padding: "24px 28px",
             boxShadow: `0 4px ${16 + aHl * 16}px rgba(61,59,47,${0.06 + aHl * 0.1})`,
             borderLeft: `4px solid ${accentColor}`,
@@ -315,8 +313,8 @@ const SingleQA: React.FC<{
           <div
             style={{
               color: accentColor,
-              fontSize: TYPO.label.size - 2,
-              fontWeight: TYPO.title.weight,
+              fontSize: "var(--viz-label-size)",
+              fontWeight: "var(--viz-title-weight)" as any,
               marginBottom: 8,
               opacity: answerVisible ? 1 : 0,
             }}
@@ -325,9 +323,9 @@ const SingleQA: React.FC<{
           </div>
           <span
             style={{
-              color: STYLE.text,
-              fontSize: TYPO.subtitle.size + 2,
-              fontWeight: TYPO.subtitle.weight,
+              color: "var(--viz-text)",
+              fontSize: "var(--viz-subtitle-size)",
+              fontWeight: "var(--viz-subtitle-weight)" as any,
               lineHeight: 1.6,
             }}
           >
@@ -350,10 +348,9 @@ const MultiQACard: React.FC<{
   fps: number;
   vizAnimation?: VizAnimationConfig;
 }> = ({ question, answer, qIndex, aIndex, pairIndex, fps, vizAnimation }) => {
-  const { STYLE, TYPO } = useDesignTokens();
   const frame = useCurrentFrame();
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
-  const color = STYLE.colors[pairIndex % STYLE.colors.length];
+  const accentColor = DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0];
+  const color = DEFAULT_STYLE.colors[pairIndex % DEFAULT_STYLE.colors.length];
 
   const ENTRANCE_BASE = 8;
   const STAGGER = 8;
@@ -398,15 +395,15 @@ const MultiQACard: React.FC<{
           display: "flex",
           alignItems: "center",
           gap: 12,
-          background: STYLE.cardBg,
-          borderRadius: STYLE.cardRadius,
+          background: "var(--viz-card-bg)",
+          borderRadius: "var(--viz-card-radius)",
           padding: "14px 20px",
           borderLeft: `4px solid ${color}`,
-          boxShadow: STYLE.cardShadow,
+          boxShadow: "var(--viz-card-shadow)",
         }}
       >
-        <span style={{ color, fontSize: TYPO.label.size, fontWeight: 800 }}>Q</span>
-        <span style={{ color: STYLE.text, fontSize: TYPO.label.size + 2, fontWeight: TYPO.label.weight, lineHeight: 1.4 }}>
+        <span style={{ color, fontSize: "var(--viz-label-size)", fontWeight: 800 }}>Q</span>
+        <span style={{ color: "var(--viz-text)", fontSize: "var(--viz-label-size)", fontWeight: "var(--viz-label-weight)" as any, lineHeight: 1.4 }}>
           {question}
         </span>
       </div>
@@ -417,8 +414,8 @@ const MultiQACard: React.FC<{
           display: "flex",
           alignItems: "center",
           gap: 12,
-          background: answerVisible ? `${accentColor}06` : STYLE.cardBg,
-          borderRadius: STYLE.cardRadius,
+          background: answerVisible ? `${accentColor}06` : "var(--viz-card-bg)",
+          borderRadius: "var(--viz-card-radius)",
           padding: "14px 20px",
           marginLeft: 32,
           borderLeft: `4px solid ${accentColor}30`,
@@ -426,8 +423,8 @@ const MultiQACard: React.FC<{
           filter: `blur(${aBlur}px)`,
         }}
       >
-        <span style={{ color: accentColor, fontSize: TYPO.label.size, fontWeight: 800 }}>A</span>
-        <span style={{ color: STYLE.text, fontSize: TYPO.label.size, fontWeight: TYPO.subtitle.weight, lineHeight: 1.5 }}>
+        <span style={{ color: accentColor, fontSize: "var(--viz-label-size)", fontWeight: 800 }}>A</span>
+        <span style={{ color: "var(--viz-text)", fontSize: "var(--viz-label-size)", fontWeight: "var(--viz-subtitle-weight)" as any, lineHeight: 1.5 }}>
           {answer}
         </span>
       </div>

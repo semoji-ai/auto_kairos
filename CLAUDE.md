@@ -52,6 +52,26 @@ Today's date is 2026-03-16.
 - 이미지/오디오 경로는 `resolveAsset()` 유틸 사용
 - 절대경로/상대경로 혼용 금지
 
+### 8. single_call (1턴) 모드 규칙
+- CLI 호출 시 반드시 `--tools ""` 포함 (도구 비활성화) — 없으면 error_max_turns 발생
+- 입력 파일이 50KB 이상이면 필요한 필드만 축약하여 전달
+- 1턴 전용 프롬프트는 `auto_agent/data/prompts/single-call/` 에 관리
+- 스킬 파일 통째 주입 금지 — 핵심 규칙만 인라인으로 집약
+- 새 single_call 스텝 추가 시 `SINGLE_CALL_PROMPTS` 매핑 + 프롬프트 파일 + rule_store push 필요
+
+### 9. mapScene 좌표 규칙
+- scene_specs의 mapScene.center는 `[위도, 경도]` (LLM 자연 순서)
+- Remotion/MapLibre는 `[경도, 위도]` — build_manifest.py가 swap 담당
+- markers는 `{lat, lng}` → build_manifest가 `{coordinates: [lng, lat]}` 변환
+- mapType 없으면 build_manifest가 `"location_reveal"` 기본값 설정
+- camera.keyframes 없으면 build_manifest가 center/zoom에서 자동 생성
+- **절대 프롬프트에서 [lng, lat] 순서를 강제하지 말 것** — LLM이 헷갈림
+
+### 10. Remotion resolveLayout 규칙
+- chartConfig는 `visualization` 레벨에 위치 (creative 안이 아님)
+- resolveLayout에서 `data.chartConfig?.type`과 `creative.chartConfig?.type` 모두 체크
+- 새 시각화 필드 추가 시 resolveLayout이 data/creative 어느 레벨에서 읽는지 확인 필수
+
 ## 에러 볼트 워크플로우
 
 에러를 해결할 때마다:

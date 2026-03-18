@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { resolveAsset } from "../utils/resolveAsset";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
@@ -29,7 +29,6 @@ interface Props {
  * - imagePath → 초상 이미지
  */
 export const SlideProfile: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_FONT, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -47,7 +46,7 @@ export const SlideProfile: React.FC<Props> = ({ data, durationInFrames, fps, viz
   const statLabels = hasNameInItems ? (data.items ?? []).slice(1) : (data.items ?? []);
   const statValues = descriptions.slice(1);
 
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentColor = DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0];
 
   // ── Entrance animations ──
   const imgOpacity = interpolate(frame, [0, 15], [0, 1], {
@@ -126,9 +125,9 @@ export const SlideProfile: React.FC<Props> = ({ data, durationInFrames, fps, viz
               <span
                 style={{
                   color: "#FFFFFF",
-                  fontSize: TYPO.label.size,
+                  fontSize: "var(--viz-label-size)",
                   fontWeight: 600,
-                  fontFamily: VIZ_FONT,
+                  fontFamily: "var(--viz-font)",
                 }}
               >
                 핵심 인물
@@ -158,11 +157,11 @@ export const SlideProfile: React.FC<Props> = ({ data, durationInFrames, fps, viz
           >
             <div
               style={{
-                color: STYLE.text,
-                fontSize: TYPO.hero.size,
-                fontWeight: TYPO.hero.weight,
-                fontFamily: VIZ_TITLE_FONT,
-                letterSpacing: TYPO.hero.letterSpacing,
+                color: "var(--viz-text)",
+                fontSize: "var(--viz-hero-size)",
+                fontWeight: "var(--viz-hero-weight)" as any,
+                fontFamily: "var(--viz-title-font)",
+                letterSpacing: "var(--viz-hero-tracking)",
                 lineHeight: 1.2,
               }}
             >
@@ -177,7 +176,7 @@ export const SlideProfile: React.FC<Props> = ({ data, durationInFrames, fps, viz
                 color: accentColor,
                 fontSize: 34,
                 fontWeight: 400,
-                fontFamily: VIZ_FONT,
+                fontFamily: "var(--viz-font)",
                 opacity: subtitleOpacity,
                 marginTop: -12,
               }}
@@ -201,10 +200,10 @@ export const SlideProfile: React.FC<Props> = ({ data, durationInFrames, fps, viz
           {descText && (
             <div
               style={{
-                color: STYLE.subtitle,
+                color: "var(--viz-subtitle)",
                 fontSize: 34,
                 fontWeight: 400,
-                fontFamily: VIZ_FONT,
+                fontFamily: "var(--viz-font)",
                 lineHeight: 1.5,
                 maxWidth: 1000,
                 opacity: descOpacity,
@@ -259,20 +258,20 @@ export const SlideProfile: React.FC<Props> = ({ data, durationInFrames, fps, viz
                   >
                     <span
                       style={{
-                        color: STYLE.subtitle,
-                        fontSize: TYPO.label.size,
+                        color: "var(--viz-subtitle)",
+                        fontSize: "var(--viz-label-size)",
                         fontWeight: 400,
-                        fontFamily: VIZ_FONT,
+                        fontFamily: "var(--viz-font)",
                       }}
                     >
                       {label}
                     </span>
                     <span
                       style={{
-                        color: STYLE.text,
+                        color: "var(--viz-text)",
                         fontSize: 36,
                         fontWeight: 700,
-                        fontFamily: VIZ_FONT,
+                        fontFamily: "var(--viz-font)",
                       }}
                     >
                       {statValues[i] ?? ""}

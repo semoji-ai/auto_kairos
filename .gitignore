@@ -120,3 +120,6 @@ sampleScript/
 
 # Misc docs
 수정계획안.md
+.git_broken/
+
+.venv/

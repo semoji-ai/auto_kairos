@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { calcItemDelay } from "../utils/syncDelay";
 import { VizShell } from "./VizShell";
 import { resolveAsset } from "../utils/resolveAsset";
@@ -14,13 +14,12 @@ interface Props {
 }
 
 export const SlideNumbered: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_FONT, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const items = data.items ?? [];
   const descriptions = (data as any).descriptions ?? [];
   const hasImage = !!data.imagePath && typeof data.imagePath === "string";
 
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentColor = DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0];
 
   // Adaptive sizing
   const n = items.length;
@@ -91,7 +90,7 @@ export const SlideNumbered: React.FC<Props> = ({ data, durationInFrames, fps, vi
                 left: 0,
                 right: 0,
                 height: "50%",
-                background: `linear-gradient(to bottom, transparent, ${STYLE.background})`,
+                background: `linear-gradient(to bottom, transparent, var(--viz-bg))`,
               }}
             />
           </div>
@@ -117,11 +116,11 @@ export const SlideNumbered: React.FC<Props> = ({ data, durationInFrames, fps, vi
           >
             <div
               style={{
-                color: STYLE.text,
-                fontSize: TYPO.title.size,
-                fontWeight: TYPO.title.weight,
-                fontFamily: VIZ_TITLE_FONT,
-                letterSpacing: TYPO.title.letterSpacing,
+                color: "var(--viz-text)",
+                fontSize: "var(--viz-title-size)",
+                fontWeight: "var(--viz-title-weight)" as any,
+                fontFamily: "var(--viz-title-font)",
+                letterSpacing: "var(--viz-title-tracking)",
                 lineHeight: 1.2,
               }}
             >
@@ -190,9 +189,9 @@ export const SlideNumbered: React.FC<Props> = ({ data, durationInFrames, fps, vi
                     display: "flex",
                     alignItems: "center",
                     gap: 24,
-                    background: STYLE.cardBg,
+                    background: "var(--viz-card-bg)",
                     padding: "24px 28px",
-                    borderRadius: STYLE.cardRadius,
+                    borderRadius: "var(--viz-card-radius)",
                     borderLeft: `4px solid ${accentColor}${borderAlpha}`,
                     opacity: itemOpacity,
                     transform: `translateY(${itemSlide}px) scale(${scale})`,
@@ -205,7 +204,7 @@ export const SlideNumbered: React.FC<Props> = ({ data, durationInFrames, fps, vi
                       color: accentColor,
                       fontSize: numSize,
                       fontWeight: 700,
-                      fontFamily: VIZ_FONT,
+                      fontFamily: "var(--viz-font)",
                       flexShrink: 0,
                       minWidth: numSize * 1.4,
                     }}
@@ -215,10 +214,10 @@ export const SlideNumbered: React.FC<Props> = ({ data, durationInFrames, fps, vi
                   {/* Title */}
                   <span
                     style={{
-                      color: STYLE.text,
+                      color: "var(--viz-text)",
                       fontSize: titleSize,
                       fontWeight: 600,
-                      fontFamily: VIZ_FONT,
+                      fontFamily: "var(--viz-font)",
                       flexShrink: 0,
                     }}
                   >
@@ -228,10 +227,10 @@ export const SlideNumbered: React.FC<Props> = ({ data, durationInFrames, fps, vi
                   {descriptions[i] && (
                     <span
                       style={{
-                        color: STYLE.subtitle,
+                        color: "var(--viz-subtitle)",
                         fontSize: descSize,
                         fontWeight: 400,
-                        fontFamily: VIZ_FONT,
+                        fontFamily: "var(--viz-font)",
                       }}
                     >
                       {descriptions[i]}

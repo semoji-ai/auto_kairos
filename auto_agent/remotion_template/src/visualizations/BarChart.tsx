@@ -11,7 +11,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { TYPO as DEFAULT_TYPO } from "./vizStyles";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay, msToFrames } from "../utils/syncDelay";
 import { adaptiveBarSize, adaptiveYAxisWidth } from "../utils/adaptiveSize";
@@ -26,7 +26,6 @@ interface Props {
 }
 
 export const BarChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const items = data.items ?? [];
   const values = data.values ?? [];
@@ -41,7 +40,7 @@ export const BarChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
 
   // Adaptive sizing
   const barSize = adaptiveBarSize(items.length, 1080);
-  const yAxisWidth = adaptiveYAxisWidth(items, TYPO.label.size);
+  const yAxisWidth = adaptiveYAxisWidth(items, DEFAULT_TYPO.label.size);
   // Adaptive gap: compact for all counts, max bar height capped to prevent oversized bars
   const barGap = items.length <= 3 ? "20%" : items.length <= 6 ? "18%" : items.length <= 8 ? "14%" : "10%";
   const maxBarSize = items.length <= 3 ? 80 : items.length <= 5 ? 60 : undefined;
@@ -84,10 +83,10 @@ export const BarChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
         y={y + height / 2}
         textAnchor={isNeg ? "end" : "start"}
         dominantBaseline="central"
-        fill={isNeg ? STYLE.semantic.negative : STYLE.text}
-        fontSize={TYPO.value.size}
-        fontWeight={TYPO.value.weight}
-        fontFamily={VIZ_FONT}
+        fill={isNeg ? "var(--viz-negative)" : "var(--viz-text)"}
+        fontSize="var(--viz-value-size)"
+        fontWeight="var(--viz-value-weight)"
+        fontFamily="var(--viz-font)"
       >
         {value}
       </text>
@@ -102,10 +101,10 @@ export const BarChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
         y={y}
         textAnchor="end"
         dominantBaseline="central"
-        fill={STYLE.text}
-        fontSize={TYPO.label.size}
-        fontWeight={TYPO.label.weight}
-        fontFamily={VIZ_FONT}
+        fill="var(--viz-text)"
+        fontSize="var(--viz-label-size)"
+        fontWeight="var(--viz-label-weight)"
+        fontFamily="var(--viz-font)"
       >
         {payload.value}
       </text>
@@ -129,15 +128,15 @@ export const BarChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke={STYLE.grid}
+              stroke="var(--viz-grid)"
               horizontal={false}
             />
             <XAxis
               type="number"
               domain={[domainMin, domainMax]}
               tickFormatter={(v: number) => Number.isInteger(v) ? String(v) : v.toFixed(1)}
-              tick={{ fill: STYLE.subtitle, fontSize: TYPO.caption.size, fontFamily: VIZ_FONT }}
-              axisLine={{ stroke: STYLE.grid }}
+              tick={{ fill: "var(--viz-subtitle)", fontSize: "var(--viz-caption-size)", fontFamily: "var(--viz-font)" }}
+              axisLine={{ stroke: "var(--viz-grid)" }}
               tickLine={false}
             />
             <YAxis
@@ -150,7 +149,7 @@ export const BarChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
             />
             {/* 양수/음수 혼합 시 0 기준선 */}
             {hasNegative && (
-              <ReferenceLine x={0} stroke={STYLE.border} strokeWidth={2} />
+              <ReferenceLine x={0} stroke="var(--viz-border)" strokeWidth={2} />
             )}
             <Bar
               dataKey="value"
@@ -162,8 +161,8 @@ export const BarChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
               {chartData.map((d, i) => {
                 const isNeg = values[i] < 0;
                 const baseFill = hasNegative
-                  ? (isNeg ? STYLE.semantic.negative : STYLE.semantic.positive)
-                  : STYLE.colors[i % STYLE.colors.length];
+                  ? (isNeg ? "var(--viz-negative)" : "var(--viz-positive)")
+                  : `var(--viz-color-${i % 10})`;
                 return (
                   <Cell
                     key={i}

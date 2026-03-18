@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { resolveAsset } from "../utils/resolveAsset";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
@@ -104,7 +104,6 @@ const DataCompare: React.FC<{
   fps: number;
   vizAnimation?: VizAnimationConfig;
 }> = ({ data, fps, vizAnimation }) => {
-  const { STYLE, TYPO } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -147,7 +146,8 @@ const DataCompare: React.FC<{
 
   const leftValue = countUpValue(frame, LEFT_ENTRANCE, 25, values[0], easingFn);
   const rightValue = countUpValue(frame, RIGHT_ENTRANCE, 25, values[1], easingFn);
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentIdx = DEFAULT_STYLE.accentIndex ?? 0;
+  const accentColor = `var(--viz-color-${accentIdx})`;
 
   return (
     <div
@@ -163,26 +163,26 @@ const DataCompare: React.FC<{
       <div
         style={{
           width: "36%",
-          background: STYLE.cardBg,
-          borderRadius: STYLE.cardRadius + 4,
+          background: "var(--viz-card-bg)",
+          borderRadius: "var(--viz-card-radius)",
           padding: "40px 32px",
           textAlign: "center",
           opacity: leftOpacity,
           transform: `translateX(${leftSlide}px) scale(${1 + leftHl * 0.02})`,
           boxShadow: `0 4px ${20 + leftHl * 20}px rgba(61,59,47,${0.08 + leftHl * 0.14})`,
-          border: `${2 + leftHl * 2}px solid ${STYLE.grid}`,
+          border: `${2 + leftHl * 2}px solid var(--viz-grid)`,
           transformOrigin: "center center",
         }}
       >
-        <div style={{ color: STYLE.subtitle, fontSize: TYPO.label.size, fontWeight: TYPO.label.weight, marginBottom: 10 }}>
+        <div style={{ color: "var(--viz-subtitle)", fontSize: "var(--viz-label-size)", fontWeight: "var(--viz-label-weight)", marginBottom: 10 }}>
           {VIZ_STRINGS.diagram_before}
         </div>
-        <div style={{ color: STYLE.text, fontSize: TYPO.label.size, fontWeight: TYPO.label.weight, marginBottom: 20 }}>
+        <div style={{ color: "var(--viz-text)", fontSize: "var(--viz-label-size)", fontWeight: "var(--viz-label-weight)", marginBottom: 20 }}>
           {items[0]}
         </div>
-        <div style={{ color: STYLE.text, fontSize: TYPO.hero.size, fontWeight: TYPO.hero.weight }}>
+        <div style={{ color: "var(--viz-text)", fontSize: "var(--viz-hero-size)", fontWeight: "var(--viz-hero-weight)" }}>
           {leftValue.toLocaleString()}
-          <span style={{ fontSize: TYPO.label.size, fontWeight: TYPO.caption.weight }}>{unit}</span>
+          <span style={{ fontSize: "var(--viz-label-size)", fontWeight: "var(--viz-caption-weight)" }}>{unit}</span>
         </div>
       </div>
 
@@ -192,7 +192,7 @@ const DataCompare: React.FC<{
           <path
             d="M10 30 L40 30 L35 20 M40 30 L35 40"
             fill="none"
-            stroke={STYLE.border}
+            stroke="var(--viz-border)"
             strokeWidth={4}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -204,10 +204,10 @@ const DataCompare: React.FC<{
               marginTop: 8,
               padding: "6px 18px",
               borderRadius: 20,
-              background: changePositive ? STYLE.semantic.positiveBg : STYLE.semantic.negativeBg,
-              color: changePositive ? STYLE.semantic.positive : STYLE.semantic.negative,
-              fontSize: TYPO.label.size,
-              fontWeight: TYPO.title.weight,
+              background: changePositive ? "var(--viz-positive-bg)" : "var(--viz-negative-bg)",
+              color: changePositive ? "var(--viz-positive)" : "var(--viz-negative)",
+              fontSize: "var(--viz-label-size)",
+              fontWeight: "var(--viz-title-weight)",
             }}
           >
             {changePositive ? "+" : ""}{change}%
@@ -219,9 +219,9 @@ const DataCompare: React.FC<{
       <div
         style={{
           width: "36%",
-          background: `linear-gradient(135deg, ${accentColor}15, ${accentColor}08)`,
+          background: `linear-gradient(135deg, ${DEFAULT_STYLE.colors[accentIdx]}15, ${DEFAULT_STYLE.colors[accentIdx]}08)`,
           border: `${3 + rightHl * 2}px solid ${accentColor}`,
-          borderRadius: STYLE.cardRadius + 4,
+          borderRadius: "var(--viz-card-radius)",
           padding: "40px 32px",
           textAlign: "center",
           opacity: rightOpacity,
@@ -230,15 +230,15 @@ const DataCompare: React.FC<{
           transformOrigin: "center center",
         }}
       >
-        <div style={{ color: accentColor, fontSize: TYPO.label.size, fontWeight: TYPO.label.weight, marginBottom: 10 }}>
+        <div style={{ color: accentColor, fontSize: "var(--viz-label-size)", fontWeight: "var(--viz-label-weight)", marginBottom: 10 }}>
           {VIZ_STRINGS.diagram_after}
         </div>
-        <div style={{ color: STYLE.text, fontSize: TYPO.label.size, fontWeight: TYPO.label.weight, marginBottom: 20 }}>
+        <div style={{ color: "var(--viz-text)", fontSize: "var(--viz-label-size)", fontWeight: "var(--viz-label-weight)", marginBottom: 20 }}>
           {items[1]}
         </div>
-        <div style={{ color: STYLE.text, fontSize: TYPO.hero.size, fontWeight: TYPO.hero.weight }}>
+        <div style={{ color: "var(--viz-text)", fontSize: "var(--viz-hero-size)", fontWeight: "var(--viz-hero-weight)" }}>
           {rightValue.toLocaleString()}
-          <span style={{ fontSize: TYPO.label.size, fontWeight: TYPO.caption.weight }}>{unit}</span>
+          <span style={{ fontSize: "var(--viz-label-size)", fontWeight: "var(--viz-caption-weight)" }}>{unit}</span>
         </div>
       </div>
     </div>
@@ -252,7 +252,6 @@ const VsCompare: React.FC<{
   fps: number;
   vizAnimation?: VizAnimationConfig;
 }> = ({ data, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_FONT, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -273,7 +272,8 @@ const VsCompare: React.FC<{
   const labelFs = maxN >= 5 ? 38 : 48;
   const descFs = maxN >= 5 ? 26 : 32;
 
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentIdx = DEFAULT_STYLE.accentIndex ?? 0;
+  const accentColor = `var(--viz-color-${accentIdx})`;
 
   // ── Phase 1: Entrance ──
   const headerOpacity = interpolate(frame, [0, 12], [0, 1], {
@@ -320,11 +320,11 @@ const VsCompare: React.FC<{
       >
         <div
           style={{
-            color: STYLE.text,
-            fontSize: TYPO.title.size,
-            fontWeight: TYPO.title.weight,
-            fontFamily: VIZ_TITLE_FONT,
-            letterSpacing: TYPO.title.letterSpacing,
+            color: "var(--viz-text)",
+            fontSize: "var(--viz-title-size)",
+            fontWeight: "var(--viz-title-weight)",
+            fontFamily: "var(--viz-title-font)",
+            letterSpacing: "var(--viz-title-tracking)",
           }}
         >
           {data.title}
@@ -347,7 +347,7 @@ const VsCompare: React.FC<{
             display: "flex",
             flexDirection: "column",
             gap: panelGap,
-            background: STYLE.cardBg,
+            background: "var(--viz-card-bg)",
             padding: `${panelPadV}px ${panelPadH}px`,
             opacity: leftOpacity,
             transform: `translateX(${leftSlide}px) scale(${1 + leftHl * 0.01})`,
@@ -362,18 +362,18 @@ const VsCompare: React.FC<{
               style={{ width: "100%", height: imgHeight, objectFit: "cover", borderRadius: 8, flexShrink: 0 }}
             />
           ) : (
-            <div style={{ width: "100%", height: imgHeight, background: STYLE.border, borderRadius: 8, flexShrink: 0 }} />
+            <div style={{ width: "100%", height: imgHeight, background: "var(--viz-border)", borderRadius: 8, flexShrink: 0 }} />
           )}
-          <div style={{ color: STYLE.text, fontSize: labelFs, fontWeight: 700, fontFamily: VIZ_FONT }}>
+          <div style={{ color: "var(--viz-text)", fontSize: labelFs, fontWeight: 700, fontFamily: "var(--viz-font)" }}>
             {leftLabel}
           </div>
           {leftTag && (
-            <div style={{ color: accentColor, fontSize: TYPO.label.size, fontWeight: 500, fontFamily: VIZ_FONT }}>
+            <div style={{ color: accentColor, fontSize: "var(--viz-label-size)", fontWeight: 500, fontFamily: "var(--viz-font)" }}>
               {leftTag}
             </div>
           )}
           {leftDesc && (
-            <div style={{ color: STYLE.subtitle, fontSize: descFs, fontFamily: VIZ_FONT, lineHeight: 1.5, whiteSpace: "pre-line" }}>
+            <div style={{ color: "var(--viz-subtitle)", fontSize: descFs, fontFamily: "var(--viz-font)", lineHeight: 1.5, whiteSpace: "pre-line" }}>
               {leftDesc}
             </div>
           )}
@@ -397,7 +397,7 @@ const VsCompare: React.FC<{
               color: "#FFFFFF",
               fontSize: 40,
               fontWeight: 700,
-              fontFamily: VIZ_FONT,
+              fontFamily: "var(--viz-font)",
             }}
           >
             VS
@@ -411,7 +411,7 @@ const VsCompare: React.FC<{
             display: "flex",
             flexDirection: "column",
             gap: panelGap,
-            background: `${STYLE.background}`,
+            background: "var(--viz-bg)",
             padding: `${panelPadV}px ${panelPadH}px`,
             opacity: rightOpacity,
             transform: `translateX(${rightSlide}px) scale(${1 + rightHl * 0.01})`,
@@ -426,18 +426,18 @@ const VsCompare: React.FC<{
               style={{ width: "100%", height: imgHeight, objectFit: "cover", borderRadius: 8, flexShrink: 0 }}
             />
           ) : (
-            <div style={{ width: "100%", height: imgHeight, background: STYLE.border, borderRadius: 8, flexShrink: 0 }} />
+            <div style={{ width: "100%", height: imgHeight, background: "var(--viz-border)", borderRadius: 8, flexShrink: 0 }} />
           )}
-          <div style={{ color: STYLE.text, fontSize: labelFs, fontWeight: 700, fontFamily: VIZ_FONT }}>
+          <div style={{ color: "var(--viz-text)", fontSize: labelFs, fontWeight: 700, fontFamily: "var(--viz-font)" }}>
             {rightLabel}
           </div>
           {rightTag && (
-            <div style={{ color: accentColor, fontSize: TYPO.label.size, fontWeight: 500, fontFamily: VIZ_FONT }}>
+            <div style={{ color: accentColor, fontSize: "var(--viz-label-size)", fontWeight: 500, fontFamily: "var(--viz-font)" }}>
               {rightTag}
             </div>
           )}
           {rightDesc && (
-            <div style={{ color: STYLE.subtitle, fontSize: descFs, fontFamily: VIZ_FONT, lineHeight: 1.5, whiteSpace: "pre-line" }}>
+            <div style={{ color: "var(--viz-subtitle)", fontSize: descFs, fontFamily: "var(--viz-font)", lineHeight: 1.5, whiteSpace: "pre-line" }}>
               {rightDesc}
             </div>
           )}
@@ -454,10 +454,10 @@ const MultiCompare: React.FC<{
   fps: number;
   vizAnimation?: VizAnimationConfig;
 }> = ({ data, fps, vizAnimation }) => {
-  const { STYLE, TYPO } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentIdx = DEFAULT_STYLE.accentIndex ?? 0;
+  const accentColor = `var(--viz-color-${accentIdx})`;
 
   const items = data.items ?? [];
   const values = data.values ?? [];
@@ -511,7 +511,7 @@ const MultiCompare: React.FC<{
           const hl = useHighlight(frame, syncDelay);
 
           const isLast = i === items.length - 1;
-          const color = STYLE.colors[i % STYLE.colors.length];
+          const color = `var(--viz-color-${i % 10})`;
           const animatedValue = countUpValue(frame, entranceDelay, 20, values[i] ?? 0, easingFn);
 
           // 강조 스타일
@@ -519,7 +519,11 @@ const MultiCompare: React.FC<{
           const shadowBlur = 20 + hl * 20;
           const shadowAlpha = 0.08 + hl * 0.14;
           const borderW = 5 + hl * 3;
-          const bgTint = hl > 0 ? `${color}${Math.round(hl * 10).toString(16).padStart(2, "0")}` : "transparent";
+
+          // For hex alpha calculations on accent/color, use DEFAULT_STYLE.colors
+          const rawColor = DEFAULT_STYLE.colors[i % DEFAULT_STYLE.colors.length];
+          const rawAccent = DEFAULT_STYLE.colors[accentIdx];
+          const bgTint = hl > 0 ? `${rawColor}${Math.round(hl * 10).toString(16).padStart(2, "0")}` : "transparent";
 
           return (
             <div
@@ -529,23 +533,21 @@ const MultiCompare: React.FC<{
                 alignItems: "center",
                 padding: `${cardPadV}px ${cardPadH}px`,
                 background: isLast
-                  ? `linear-gradient(135deg, ${accentColor}${Math.round(15 + hl * 10).toString(16).padStart(2, "0")}, ${accentColor}08)`
-                  : `linear-gradient(135deg, ${bgTint}, ${STYLE.cardBg})`,
+                  ? `linear-gradient(135deg, ${rawAccent}${Math.round(15 + hl * 10).toString(16).padStart(2, "0")}, ${rawAccent}08)`
+                  : `linear-gradient(135deg, ${bgTint}, var(--viz-card-bg))`,
                 borderLeft: isLast ? undefined : `${borderW}px solid ${color}`,
                 border: isLast ? `${3 + hl * 2}px solid ${accentColor}` : undefined,
-                borderRadius: STYLE.cardRadius,
-                boxShadow: isLast
-                  ? `0 4px ${shadowBlur}px rgba(61,59,47,${shadowAlpha})`
-                  : `0 4px ${shadowBlur}px rgba(61,59,47,${shadowAlpha})`,
+                borderRadius: "var(--viz-card-radius)",
+                boxShadow: `0 4px ${shadowBlur}px rgba(61,59,47,${shadowAlpha})`,
                 opacity: itemOpacity,
                 transform: `translateY(${itemSlide}px) scale(${scale})`,
                 transformOrigin: "left center",
               }}
             >
-              <span style={{ flex: 1, color: STYLE.text, fontSize: TYPO.label.size, fontWeight: TYPO.label.weight }}>
+              <span style={{ flex: 1, color: "var(--viz-text)", fontSize: "var(--viz-label-size)", fontWeight: "var(--viz-label-weight)" }}>
                 {item}
               </span>
-              <span style={{ color: isLast ? accentColor : STYLE.text, fontSize: TYPO.subtitle.size, fontWeight: TYPO.title.weight, marginLeft: 24 }}>
+              <span style={{ color: isLast ? accentColor : "var(--viz-text)", fontSize: "var(--viz-subtitle-size)", fontWeight: "var(--viz-title-weight)", marginLeft: 24 }}>
                 {animatedValue.toLocaleString()}{unit}
               </span>
             </div>

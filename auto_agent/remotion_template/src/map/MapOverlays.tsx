@@ -2,7 +2,7 @@ import React from "react";
 import { interpolate, useCurrentFrame } from "remotion";
 import type { MapMarker, MapLabel } from "../types/manifest";
 import type { CameraState } from "./cameraInterpolation";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "../visualizations/vizStyles";
 import { useMapTheme } from "./MapThemeContext";
 import type { MarkerShape, TitleLayout, LabelStyle } from "./mapTheme";
 
@@ -140,11 +140,11 @@ export const MarkerOverlay: React.FC<MarkerOverlayProps> = ({
   height,
 }) => {
   const frame = useCurrentFrame();
-  const { STYLE } = useDesignTokens();
   const theme = useMapTheme();
   const mt = theme.marker;
   const anim = theme.animation;
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentIdx = DEFAULT_STYLE.accentIndex ?? 0;
+  const accentColor = `var(--viz-color-${accentIdx})`;
 
   // 모든 마커의 픽셀 좌표를 미리 계산
   const positions = markers.map((m) => lngLatToPixel(m.coordinates, camera, width, height));

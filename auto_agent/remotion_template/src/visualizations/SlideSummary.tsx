@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { calcItemDelay } from "../utils/syncDelay";
 import { VizShell } from "./VizShell";
 import type { VisualizationData, VizAnimationConfig } from "../types/manifest";
@@ -19,7 +19,6 @@ interface Props {
  * - descriptions[0]: 결론/takeaway 메시지 (선택)
  */
 export const SlideSummary: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const items = data.items ?? [];
   const descriptions = data.descriptions ?? [];
@@ -35,7 +34,7 @@ export const SlideSummary: React.FC<Props> = ({ data, durationInFrames, fps, viz
   const cardGap = n >= 6 ? 10 : n >= 5 ? 12 : 16;
   const textSize = n >= 6 ? 26 : n >= 5 ? 30 : 34;
 
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentColor = DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0];
 
   // ── Phase 1: 등장 ──
   const TITLE_FADE = 15;
@@ -69,8 +68,8 @@ export const SlideSummary: React.FC<Props> = ({ data, durationInFrames, fps, viz
           width: "100%",
           height: "100%",
           backgroundImage: `
-            repeating-linear-gradient(0deg, ${STYLE.border}15, ${STYLE.border}15 1px, transparent 1px, transparent 40px),
-            repeating-linear-gradient(90deg, ${STYLE.border}15, ${STYLE.border}15 1px, transparent 1px, transparent 40px)
+            repeating-linear-gradient(0deg, ${DEFAULT_STYLE.border}15, ${DEFAULT_STYLE.border}15 1px, transparent 1px, transparent 40px),
+            repeating-linear-gradient(90deg, ${DEFAULT_STYLE.border}15, ${DEFAULT_STYLE.border}15 1px, transparent 1px, transparent 40px)
           `,
         }}
       />
@@ -132,8 +131,8 @@ export const SlideSummary: React.FC<Props> = ({ data, durationInFrames, fps, viz
               { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
             );
 
-            const color = STYLE.colors[i % STYLE.colors.length];
-            const grad = STYLE.gradients[i % STYLE.gradients.length];
+            const color = DEFAULT_STYLE.colors[i % DEFAULT_STYLE.colors.length];
+            const grad = DEFAULT_STYLE.gradients[i % DEFAULT_STYLE.gradients.length];
             const scale = 1 + hl * 0.02;
             const shadowBlur = 16 + hl * 20;
             const shadowAlpha = 0.06 + hl * 0.12;
@@ -146,9 +145,9 @@ export const SlideSummary: React.FC<Props> = ({ data, durationInFrames, fps, viz
                   display: "flex",
                   alignItems: "flex-start",
                   gap: 14,
-                  background: `linear-gradient(135deg, ${hl > 0 ? `${color}0a` : "transparent"}, ${STYLE.cardBg})`,
+                  background: `linear-gradient(135deg, ${hl > 0 ? `${color}0a` : "transparent"}, var(--viz-card-bg))`,
                   borderTop: `${borderTopW}px solid ${color}`,
-                  borderRadius: STYLE.cardRadius,
+                  borderRadius: "var(--viz-card-radius)",
                   padding: `${cardPadV}px ${cardPadH}px`,
                   boxShadow: `0 3px ${shadowBlur}px rgba(61,59,47,${shadowAlpha})`,
                   opacity: itemOpacity,
@@ -177,9 +176,9 @@ export const SlideSummary: React.FC<Props> = ({ data, durationInFrames, fps, viz
                 </div>
                 <span
                   style={{
-                    color: STYLE.text,
+                    color: "var(--viz-text)",
                     fontSize: textSize,
-                    fontWeight: TYPO.label.weight,
+                    fontWeight: "var(--viz-label-weight)" as any,
                     lineHeight: 1.45,
                   }}
                 >
@@ -210,10 +209,10 @@ export const SlideSummary: React.FC<Props> = ({ data, durationInFrames, fps, viz
           >
             <span
               style={{
-                color: STYLE.text,
-                fontSize: TYPO.subtitle.size,
-                fontWeight: TYPO.title.weight,
-                fontFamily: VIZ_TITLE_FONT,
+                color: "var(--viz-text)",
+                fontSize: "var(--viz-subtitle-size)",
+                fontWeight: "var(--viz-title-weight)" as any,
+                fontFamily: "var(--viz-title-font)",
               }}
             >
               {takeaway}

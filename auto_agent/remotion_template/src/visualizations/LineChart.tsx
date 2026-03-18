@@ -9,7 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { resolveEasing } from "../utils/easingMap";
 import { msToFrames } from "../utils/syncDelay";
 import { VizShell, ANIM } from "./VizShell";
@@ -23,7 +23,6 @@ interface Props {
 }
 
 export const LineChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
 
   const items = data.items ?? [];
@@ -54,6 +53,8 @@ export const LineChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
     });
   }, [items.length, totalDrawFrames]);
 
+  const accentIdx = DEFAULT_STYLE.accentIndex ?? 0;
+
   /** Animated dot — 라인 진행에 맞춰 순차 등장 */
   const AnimatedDot = (props: any) => {
     const { cx, cy, index, payload } = props;
@@ -69,7 +70,7 @@ export const LineChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
       easing: easingFn,
     });
 
-    const baseColor = STYLE.colors[STYLE.accentIndex ?? 0];
+    const baseColor = `var(--viz-color-${accentIdx})`;
     const dotRadius = 8;
 
     const isFirst = index === 0;
@@ -83,7 +84,7 @@ export const LineChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
           cy={cy}
           r={dotRadius * scale}
           fill={baseColor}
-          stroke={STYLE.cardBg}
+          stroke="var(--viz-card-bg)"
           strokeWidth={3}
         />
         {scale > 0.8 && (
@@ -91,10 +92,10 @@ export const LineChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
             x={cx}
             y={cy - 20}
             textAnchor={textAnchor}
-            fill={STYLE.text}
-            fontSize={TYPO.value.size}
-            fontWeight={TYPO.value.weight}
-            fontFamily={VIZ_FONT}
+            fill="var(--viz-text)"
+            fontSize="var(--viz-value-size)"
+            fontWeight="var(--viz-value-weight)"
+            fontFamily="var(--viz-font)"
           >
             {payload.fullValue?.toLocaleString()}{unit}
           </text>
@@ -117,7 +118,7 @@ export const LineChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  const lineColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const lineColor = `var(--viz-color-${accentIdx})`;
 
   return (
     <VizShell
@@ -140,13 +141,13 @@ export const LineChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke={STYLE.grid}
+              stroke="var(--viz-grid)"
               vertical={false}
             />
             <XAxis
               dataKey="name"
-              tick={{ fill: STYLE.subtitle, fontSize: TYPO.label.size - 2, fontFamily: VIZ_FONT }}
-              axisLine={{ stroke: STYLE.grid }}
+              tick={{ fill: "var(--viz-subtitle)", fontSize: "var(--viz-label-size)", fontFamily: "var(--viz-font)" }}
+              axisLine={{ stroke: "var(--viz-grid)" }}
               tickLine={false}
               interval={0}
               dy={8}
@@ -155,7 +156,7 @@ export const LineChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
             />
             <YAxis
               domain={[0, maxVal]}
-              tick={{ fill: STYLE.subtitle, fontSize: TYPO.caption.size, fontFamily: VIZ_FONT }}
+              tick={{ fill: "var(--viz-subtitle)", fontSize: "var(--viz-caption-size)", fontFamily: "var(--viz-font)" }}
               axisLine={false}
               tickLine={false}
               width={60}

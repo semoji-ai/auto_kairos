@@ -594,6 +594,129 @@ tr:hover { background: var(--surface2); }
   justify-content: center;
   padding: 16px;
 }
+
+/* ── Remotion Player 썸네일 마운트 ── */
+.sb-player-mount {
+  width: 100%; aspect-ratio: 16/9;
+  border-radius: 4px; overflow: hidden;
+  background: #0A0A0A;
+}
+
+/* ── HTML 미리보기 (폴백) ── */
+.sb-html-thumb {
+  width: 100%; aspect-ratio: 16/9;
+  position: relative; overflow: hidden;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Pretendard', -apple-system, sans-serif;
+}
+
+/* ── 테마 배경 (Remotion과 동일 토큰) ── */
+.sb-html-thumb.theme-dark  { background: #0A0A0A; color: #fff; }
+.sb-html-thumb.theme-white { background: #FAFAFA; color: #1A1A2E; }
+
+/* mood별 radial gradient (Remotion MOOD_GRADIENTS 동일) */
+.theme-dark.mood-dramatic    { background: radial-gradient(ellipse 80% 60% at 50% 40%, #1a1005 0%, #0A0A0A 70%); }
+.theme-dark.mood-urgent      { background: radial-gradient(ellipse 80% 60% at 50% 40%, #1a0808 0%, #0A0A0A 70%); }
+.theme-dark.mood-somber      { background: radial-gradient(ellipse 80% 60% at 50% 40%, #0d0d0e 0%, #0A0A0A 70%); }
+.theme-dark.mood-informative { background: radial-gradient(ellipse 80% 60% at 50% 40%, #080d1a 0%, #0A0A0A 70%); }
+.theme-dark.mood-contemplative { background: radial-gradient(ellipse 80% 60% at 50% 40%, #080d1a 0%, #0A0A0A 70%); }
+.theme-dark.mood-suspense    { background: radial-gradient(ellipse 80% 60% at 50% 40%, #14100a 0%, #0A0A0A 70%); }
+.theme-dark.mood-triumphant  { background: radial-gradient(ellipse 80% 60% at 50% 40%, #081a10 0%, #0A0A0A 70%); }
+
+.theme-white.mood-dramatic    { background: radial-gradient(ellipse 80% 60% at 50% 40%, #FFF7E6 0%, #FAFAFA 70%); }
+.theme-white.mood-urgent      { background: radial-gradient(ellipse 80% 60% at 50% 40%, #FFF1F0 0%, #FAFAFA 70%); }
+.theme-white.mood-somber      { background: radial-gradient(ellipse 80% 60% at 50% 40%, #F0F0F2 0%, #FAFAFA 70%); }
+.theme-white.mood-informative { background: radial-gradient(ellipse 80% 60% at 50% 40%, #EFF4FF 0%, #FAFAFA 70%); }
+.theme-white.mood-contemplative { background: radial-gradient(ellipse 80% 60% at 50% 40%, #EFF4FF 0%, #FAFAFA 70%); }
+.theme-white.mood-suspense    { background: radial-gradient(ellipse 80% 60% at 50% 40%, #FFF8F0 0%, #FAFAFA 70%); }
+.theme-white.mood-triumphant  { background: radial-gradient(ellipse 80% 60% at 50% 40%, #EFFFEF 0%, #FAFAFA 70%); }
+
+/* ── 배경 이미지 레이어 ── */
+.thumb-bg-img {
+  position: absolute; inset: 0;
+  background-image: var(--bg-img);
+  background-size: cover; background-position: center;
+  opacity: 0.25;
+}
+
+/* ── 콘텐츠 레이어 ── */
+.thumb-content {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px; padding: 10px 14px;
+  width: 100%; height: 100%;
+  text-align: center;
+}
+
+/* ── Headline (Remotion EmphasisAccentText 근사) ── */
+.thumb-headline {
+  font-size: 13px; font-weight: 700; line-height: 1.35;
+  max-height: 3.6em; overflow: hidden;
+}
+.theme-dark .thumb-headline  { color: rgba(255,255,255,0.9); }
+.theme-white .thumb-headline { color: #1A1A2E; }
+
+/* accent 색상 (mood별 — Remotion MOOD_CONFIGS와 동일) */
+.thumb-accent { font-weight: 800; }
+.accent-dramatic    { color: #F59E0B; }
+.accent-urgent      { color: #EF4444; }
+.accent-somber      { color: #71717A; }
+.accent-informative { color: #3B82F6; }
+.accent-contemplative { color: #3B82F6; }
+.accent-suspense    { color: #F59E0B; }
+.accent-triumphant  { color: #10B981; }
+
+/* white 테마에서 accent 오버라이드 */
+.theme-white .accent-dramatic,
+.theme-white .accent-suspense { color: #2563EB; }
+
+/* ── Items (Remotion items_list/items_grid 근사) ── */
+.thumb-items {
+  display: flex; flex-direction: column; gap: 2px;
+  width: 100%; max-height: 60%; overflow: hidden;
+}
+.thumb-item {
+  font-size: 10px; padding: 2px 8px; border-radius: 4px;
+  display: flex; align-items: center; gap: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.theme-dark .thumb-item {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.85);
+}
+.theme-white .thumb-item {
+  background: rgba(37,99,235,0.04);
+  border: 1px solid rgba(37,99,235,0.12);
+  color: #4A4A5A;
+}
+.thumb-flag { font-size: 9px; opacity: 0.7; }
+.thumb-more { opacity: 0.5; font-size: 9px; }
+
+/* ── Title only (headline/items 없을 때) ── */
+.thumb-title-only {
+  font-size: 11px; font-weight: 500;
+}
+.theme-dark .thumb-title-only  { color: rgba(255,255,255,0.4); }
+.theme-white .thumb-title-only { color: rgba(26,26,46,0.4); }
+
+/* ── 배지 (차트/맵) ── */
+.thumb-badge {
+  position: absolute; top: 4px; right: 4px;
+  font-size: 8px; font-weight: 700;
+  padding: 1px 5px; border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+.thumb-chart { background: #3B82F6; color: #fff; }
+.thumb-map   { background: #10B981; color: #fff; }
+
+/* ── 씬 번호 (좌하단) ── */
+.thumb-scene-num {
+  position: absolute; bottom: 3px; left: 5px;
+  font-size: 9px; font-weight: 600; opacity: 0.4;
+}
 /* ── Scene Preview (Remotion 근사 렌더) ── */
 .scene-preview {
   width: 100%;

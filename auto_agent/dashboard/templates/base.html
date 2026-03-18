@@ -19,10 +19,10 @@
       <a href="/api/projects" class="sidebar-link">API</a>
     </nav>
     {% endblock %}
-    <!-- Agent Messenger (사이드바 하단 고정) -->
+    <!-- Agent Messenger (사이드바 하단 — 카톡 스타일) -->
     <div class="sidebar-messenger" id="sidebar-messenger">
       <div class="sm-header" onclick="toggleMessenger()">
-        <span>Agent <span id="sm-count" class="sm-count" style="display:none">0</span></span>
+        <span>💬 Agent Chat <span id="sm-count" class="sm-count" style="display:none">0</span></span>
         <span id="sm-toggle" class="sm-toggle">&#9650;</span>
       </div>
       <div class="sm-body" id="sm-body">
@@ -39,30 +39,46 @@
   </main>
 
   <style>
-  /* Agent Messenger — 사이드바 하단 고정 */
+  /* Agent Messenger — 사이드바 카톡 스타일 */
   .sidebar-messenger { border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .sm-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; cursor: pointer; font-size: 11px; font-weight: 600; color: #A1A1AA; background: rgba(255,255,255,0.02); }
   .sm-header:hover { color: #E4E4E7; background: rgba(255,255,255,0.04); }
   .sm-toggle { font-size: 8px; transition: transform 0.2s; }
   .sm-toggle.collapsed { transform: rotate(180deg); }
   .sm-count { background: #EF4444; color: #fff; font-size: 9px; padding: 0 5px; border-radius: 8px; margin-left: 4px; }
-  .sm-body { overflow-y: auto; flex: 1; min-height: 0; background: rgba(0,0,0,0.15); }
+  .sm-body { overflow-y: auto; flex: 1; min-height: 0; background: rgba(0,0,0,0.2); }
   .sm-body.collapsed { height: 0; overflow: hidden; }
-  .sm-messages { padding: 4px 8px; display: flex; flex-direction: column; gap: 3px; }
+  .sm-messages { padding: 6px 8px; display: flex; flex-direction: column; gap: 2px; }
 
-  .sm-msg { padding: 4px 6px; border-radius: 4px; font-size: 10px; line-height: 1.4; animation: smIn 0.3s ease; }
+  .sm-msg { display: flex; gap: 6px; align-items: flex-start; padding: 4px 6px; border-radius: 6px; font-size: 10px; line-height: 1.4; animation: smIn 0.3s ease; }
+  .sm-msg.first-msg { margin-top: 6px; }
+  .sm-msg.is-director { flex-direction: row-reverse; }
+  .sm-msg.is-director .sm-bubble-wrap { display: flex; flex-direction: column; align-items: flex-end; }
+  .sm-msg.is-director .sm-bubble { background: rgba(59,130,246,0.2); border-radius: 8px 2px 8px 8px; }
+  .sm-msg.is-director:not(.first-msg) .sm-bubble { border-radius: 8px; }
+  .sm-msg.is-director .sm-nick { text-align: right; }
   @keyframes smIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
-  .sm-msg .sm-agent { font-weight: 600; margin-right: 4px; }
-  .sm-msg .sm-text { color: #A1A1AA; }
-  .sm-msg .sm-time { color: rgba(255,255,255,0.2); font-size: 8px; float: right; }
+  .sm-profile { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; background: rgba(255,255,255,0.06); }
+  .sm-profile.hide { visibility: hidden; }
+  .sm-bubble-wrap { flex: 1; min-width: 0; }
+  .sm-nick { font-size: 9px; font-weight: 600; margin-bottom: 1px; }
+  .sm-bubble { display: inline-block; padding: 4px 8px; border-radius: 2px 8px 8px 8px; background: rgba(255,255,255,0.07); font-size: 10px; color: #D4D4D8; line-height: 1.5; word-break: break-word; max-width: 95%; }
+  .sm-msg:not(.first-msg) .sm-bubble { border-radius: 8px; }
+  .sm-time { font-size: 8px; color: rgba(255,255,255,0.45); margin-top: 1px; }
 
-  .sm-msg.role-director .sm-agent { color: #3B82F6; }
-  .sm-msg.role-researcher .sm-agent { color: #10B981; }
-  .sm-msg.role-writer .sm-agent { color: #F59E0B; }
-  .sm-msg.role-reviewer .sm-agent { color: #8B5CF6; }
-  .sm-msg.role-system .sm-agent { color: #6B7280; }
-  .sm-msg.level-success .sm-text { color: #22C55E; }
-  .sm-msg.level-error .sm-text { color: #EF4444; }
+  .sm-bubble.level-success { color: #86EFAC; border-left: 2px solid #22C55E; }
+  .sm-bubble.level-error { color: #FCA5A5; border-left: 2px solid #EF4444; }
+  .sm-bubble.level-warning { color: #FCD34D; border-left: 2px solid #F59E0B; }
+
+  .sm-nick.nick-director { color: #60A5FA; }
+  .sm-nick.nick-researcher { color: #34D399; }
+  .sm-nick.nick-writer { color: #FBBF24; }
+  .sm-nick.nick-composer { color: #F472B6; }
+  .sm-nick.nick-reviewer { color: #A78BFA; }
+  .sm-nick.nick-tts { color: #FB923C; }
+  .sm-nick.nick-builder { color: #38BDF8; }
+  .sm-nick.nick-system { color: #9CA3AF; }
+  .sm-nick.nick-runner { color: #C084FC; }
   </style>
 
   <script>
@@ -89,33 +105,82 @@
       if (!isCollapsed) { unread = 0; countEl.style.display = 'none'; }
     };
 
+    var AGENTS = {
+      'director':   { emoji: '🎬', nick: '사감독',   cls: 'director' },
+      'runner':     { emoji: '🏃', nick: '마달리',   cls: 'runner' },
+      'pipeline':   { emoji: '🏃', nick: '마달리',   cls: 'runner' },
+      'research':   { emoji: '🔍', nick: '김탐정',   cls: 'researcher' },
+      'explorer':   { emoji: '🗺️', nick: '박탐험',   cls: 'researcher' },
+      'writer':     { emoji: '✍️', nick: '이작가',   cls: 'writer' },
+      'manuscript': { emoji: '✍️', nick: '이작가',   cls: 'writer' },
+      'composer':   { emoji: '🎨', nick: '정비주얼', cls: 'composer' },
+      'visual':     { emoji: '🎨', nick: '정비주얼', cls: 'composer' },
+      'reviewer':   { emoji: '🧐', nick: '최깐깐',   cls: 'reviewer' },
+      'qa':         { emoji: '🧐', nick: '최깐깐',   cls: 'reviewer' },
+      'fact':       { emoji: '🔬', nick: '오팩트',   cls: 'reviewer' },
+      'duplicate':  { emoji: '🔎', nick: '한중복',   cls: 'reviewer' },
+      'tts':        { emoji: '🎙️', nick: '강성우',   cls: 'tts' },
+      'subtitle':   { emoji: '📝', nick: '윤자막',   cls: 'tts' },
+      'image':      { emoji: '🖼️', nick: '신그림',   cls: 'composer' },
+      'character':  { emoji: '👤', nick: '임캐릭',   cls: 'composer' },
+      'manifest':   { emoji: '📦', nick: '조빌더',   cls: 'builder' },
+      'video':      { emoji: '🎞️', nick: '류편집',   cls: 'builder' },
+      'layout':     { emoji: '📐', nick: '권비율',   cls: 'builder' },
+      'data':       { emoji: '📊', nick: '황데이터', cls: 'builder' },
+      'environment':{ emoji: '⚙️', nick: '카이로스', cls: 'system' },
+      'preflight': { emoji: '⚙️', nick: '카이로스', cls: 'system' },
+      'system':     { emoji: '🤖', nick: '전시스템', cls: 'system' },
+    };
+    var lastSideAgent = '';
+    var agentCounter = {};
+
+    function getProfile(agent) {
+      var a = (agent || '').toLowerCase();
+      for (var key in AGENTS) {
+        if (a.indexOf(key) >= 0) {
+          var p = Object.assign({}, AGENTS[key]);
+          // 에이전트명에 숫자/문자 접미사가 있을 때만 번호 표시 (Explorer-3, SubWriter-A 등)
+          var numMatch = (agent || '').match(/[-_](\d+|[A-Z])$/);
+          if (numMatch) {
+            p.nick = p.nick + numMatch[1];
+          }
+          return p;
+        }
+      }
+      return { emoji: '🤖', nick: agent || '???', cls: 'system' };
+    }
+
     function addMsg(msg) {
-      var role = getRole(msg.agent);
+      var profile = getProfile(msg.agent);
+      var isFirst = (lastSideAgent !== msg.agent);
+      lastSideAgent = msg.agent;
       var t = new Date(msg.timestamp * 1000);
       var time = t.toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'});
 
       var el = document.createElement('div');
-      el.className = 'sm-msg role-' + role + ' level-' + (msg.level || 'info');
-      el.innerHTML = '<span class="sm-agent">' + esc(msg.agent) + '</span>'
-        + '<span class="sm-text">' + esc(msg.text) + '</span>'
-        + '<span class="sm-time">' + time + '</span>';
-      msgs.appendChild(el);
+      var isDirector = (profile.cls === 'director');
+      el.className = 'sm-msg' + (isFirst ? ' first-msg' : '') + (isDirector ? ' is-director' : '');
 
-      // 최대 50개 유지
+      var profileHtml = isFirst
+        ? '<div class="sm-profile">' + profile.emoji + '</div>'
+        : '<div class="sm-profile hide"></div>';
+
+      var nickHtml = isFirst
+        ? '<div class="sm-nick nick-' + profile.cls + '">' + esc(profile.nick) + '</div>'
+        : '';
+
+      el.innerHTML = profileHtml
+        + '<div class="sm-bubble-wrap">'
+        + nickHtml
+        + '<div class="sm-bubble level-' + (msg.level || 'info') + '">' + esc(msg.text) + '</div>'
+        + '<div class="sm-time">' + time + '</div>'
+        + '</div>';
+
+      msgs.appendChild(el);
       while (msgs.children.length > 50) msgs.removeChild(msgs.firstChild);
       body.scrollTop = body.scrollHeight;
 
       if (isCollapsed) { unread++; countEl.textContent = unread; countEl.style.display = 'inline'; }
-    }
-
-    function getRole(a) {
-      if (!a) return 'system';
-      a = a.toLowerCase();
-      if (a.indexOf('director') >= 0) return 'director';
-      if (a.indexOf('research') >= 0) return 'researcher';
-      if (a.indexOf('writer') >= 0 || a.indexOf('작가') >= 0) return 'writer';
-      if (a.indexOf('review') >= 0) return 'reviewer';
-      return 'system';
     }
 
     function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }

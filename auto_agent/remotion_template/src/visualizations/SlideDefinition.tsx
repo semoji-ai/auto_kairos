@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE, TYPO as DEFAULT_TYPO } from "./vizStyles";
 import { resolveAsset } from "../utils/resolveAsset";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
@@ -23,7 +23,6 @@ interface Props {
  * - descriptions[0]: 발음/어원 (예: "Quantitative Easing, QE")
  */
 export const SlideDefinition: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -52,15 +51,15 @@ export const SlideDefinition: React.FC<Props> = ({ data, durationInFrames, fps, 
   const termLen = term.length;
   const termFontSize =
     termLen > 25
-      ? TYPO.title.size - 4
+      ? DEFAULT_TYPO.title.size - 4
       : termLen > 15
-        ? TYPO.title.size
+        ? DEFAULT_TYPO.title.size
         : termLen > 8
-          ? TYPO.hero.size
-          : TYPO.hero.size + 8;
+          ? DEFAULT_TYPO.hero.size
+          : DEFAULT_TYPO.hero.size + 8;
 
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
-  const grad = STYLE.gradients[0];
+  const accentColor = DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0];
+  const grad = DEFAULT_STYLE.gradients[0];
 
   // ── Phase 1: 등장 ──
   const TERM_START = 0;
@@ -121,7 +120,7 @@ export const SlideDefinition: React.FC<Props> = ({ data, durationInFrames, fps, 
         style={{
           width: "100%",
           height: "100%",
-          backgroundImage: `repeating-linear-gradient(0deg, ${STYLE.border}20, ${STYLE.border}20 1px, transparent 1px, transparent 32px)`,
+          backgroundImage: `repeating-linear-gradient(0deg, ${DEFAULT_STYLE.border}20, ${DEFAULT_STYLE.border}20 1px, transparent 1px, transparent 32px)`,
         }}
       />
     </AbsoluteFill>
@@ -158,8 +157,8 @@ export const SlideDefinition: React.FC<Props> = ({ data, durationInFrames, fps, 
                 maxWidth: "100%",
                 maxHeight: "85%",
                 objectFit: "cover",
-                borderRadius: STYLE.cardRadius,
-                boxShadow: STYLE.cardShadow,
+                borderRadius: "var(--viz-card-radius)",
+                boxShadow: "var(--viz-card-shadow)",
               }}
             />
           </div>
@@ -189,11 +188,11 @@ export const SlideDefinition: React.FC<Props> = ({ data, durationInFrames, fps, 
         >
           <span
             style={{
-              color: STYLE.text,
+              color: "var(--viz-text)",
               fontSize: termFontSize,
-              fontWeight: TYPO.hero.weight,
-              fontFamily: VIZ_TITLE_FONT,
-              letterSpacing: TYPO.hero.letterSpacing,
+              fontWeight: "var(--viz-hero-weight)" as any,
+              fontFamily: "var(--viz-title-font)",
+              letterSpacing: "var(--viz-hero-tracking)",
               lineHeight: 1.3,
             }}
           >
@@ -217,9 +216,9 @@ export const SlideDefinition: React.FC<Props> = ({ data, durationInFrames, fps, 
         {pronunciation && (
           <div
             style={{
-              color: STYLE.subtitle,
-              fontSize: TYPO.label.size,
-              fontWeight: TYPO.caption.weight,
+              color: "var(--viz-subtitle)",
+              fontSize: "var(--viz-label-size)",
+              fontWeight: "var(--viz-caption-weight)" as any,
               fontStyle: "italic",
               opacity: pronOpacity,
               marginTop: 12,
@@ -234,11 +233,11 @@ export const SlideDefinition: React.FC<Props> = ({ data, durationInFrames, fps, 
         {definitionItems.length > 0 && (
           <div
             style={{
-              background: STYLE.cardBg,
+              background: "var(--viz-card-bg)",
               borderLeft: `5px solid ${accentColor}`,
-              borderRadius: STYLE.cardRadius,
+              borderRadius: "var(--viz-card-radius)",
               padding: "24px 32px",
-              boxShadow: STYLE.cardShadow,
+              boxShadow: "var(--viz-card-shadow)",
               opacity: defOpacity,
               transform: `translateY(${defSlide}px)`,
               marginTop: pronunciation ? 0 : 24,
@@ -257,9 +256,9 @@ export const SlideDefinition: React.FC<Props> = ({ data, durationInFrames, fps, 
                 <div
                   key={i}
                   style={{
-                    color: STYLE.text,
-                    fontSize: TYPO.subtitle.size + 2,
-                    fontWeight: TYPO.subtitle.weight,
+                    color: "var(--viz-text)",
+                    fontSize: DEFAULT_TYPO.subtitle.size + 2,
+                    fontWeight: "var(--viz-subtitle-weight)" as any,
                     lineHeight: 1.65,
                     background: defHl > 0 ? `${accentColor}${Math.round(defHl * 10).toString(16).padStart(2, "0")}` : "transparent",
                     borderRadius: 4,
@@ -300,7 +299,7 @@ export const SlideDefinition: React.FC<Props> = ({ data, durationInFrames, fps, 
                 { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
               );
 
-              const color = STYLE.colors[(i + 1) % STYLE.colors.length];
+              const color = DEFAULT_STYLE.colors[(i + 1) % DEFAULT_STYLE.colors.length];
 
               return (
                 <div
@@ -326,9 +325,9 @@ export const SlideDefinition: React.FC<Props> = ({ data, durationInFrames, fps, 
                   />
                   <span
                     style={{
-                      color: STYLE.subtitle,
-                      fontSize: TYPO.label.size + 2,
-                      fontWeight: TYPO.label.weight,
+                      color: "var(--viz-subtitle)",
+                      fontSize: DEFAULT_TYPO.label.size + 2,
+                      fontWeight: "var(--viz-label-weight)" as any,
                       lineHeight: 1.5,
                     }}
                   >

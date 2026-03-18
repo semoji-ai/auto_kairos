@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE, LAYOUT } from "./vizStyles";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
 import { VizShell } from "./VizShell";
@@ -24,7 +24,6 @@ interface TreeNode {
 }
 
 export const TechTree: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, LAYOUT, VIZ_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -49,7 +48,7 @@ export const TechTree: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
       relation: relations[i] ?? "",
       parentIndex: parentIdx,
       level,
-      color: STYLE.colors[i % STYLE.colors.length],
+      color: `var(--viz-color-${i % 10})`,
     };
   });
 
@@ -117,7 +116,7 @@ export const TechTree: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                 key={`line-${n.index}`}
                 d={`M ${px} ${py} C ${px} ${midY}, ${cx_} ${midY}, ${cx_} ${cy_}`}
                 fill="none"
-                stroke={STYLE.grid}
+                stroke="var(--viz-grid)"
                 strokeWidth={2.5}
                 opacity={lineOpacity}
               />
@@ -178,9 +177,9 @@ export const TechTree: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                   {node.relation ? (
                     <div
                       style={{
-                        fontSize: TYPO.caption.size,
-                        color: STYLE.source,
-                        background: STYLE.grid,
+                        fontSize: "var(--viz-caption-size)",
+                        color: "var(--viz-source)",
+                        background: "var(--viz-grid)",
                         padding: "4px 12px",
                         borderRadius: 8,
                       }}
@@ -190,21 +189,21 @@ export const TechTree: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                   ) : null}
                   <div
                     style={{
-                      background: STYLE.cardBg,
+                      background: "var(--viz-card-bg)",
                       border: `3px solid ${node.color}`,
-                      borderRadius: STYLE.cardRadius - 2,
+                      borderRadius: "var(--viz-card-radius)",
                       padding: "16px 28px",
                       textAlign: "center",
                       minWidth: 120,
-                      boxShadow: `0 3px 12px ${node.color}20`,
+                      boxShadow: `0 3px 12px ${DEFAULT_STYLE.colors[node.index % DEFAULT_STYLE.colors.length]}20`,
                     }}
                   >
                     <div
                       style={{
-                        fontSize: TYPO.label.size,
-                        fontWeight: TYPO.title.weight,
+                        fontSize: "var(--viz-label-size)",
+                        fontWeight: "var(--viz-title-weight)",
                         color: node.color,
-                        fontFamily: VIZ_FONT,
+                        fontFamily: "var(--viz-font)",
                       }}
                     >
                       {node.label}
@@ -212,8 +211,8 @@ export const TechTree: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                     {node.description ? (
                       <div
                         style={{
-                          fontSize: TYPO.caption.size,
-                          color: STYLE.subtitle,
+                          fontSize: "var(--viz-caption-size)",
+                          color: "var(--viz-subtitle)",
                           marginTop: 4,
                         }}
                       >

@@ -1,9 +1,10 @@
 """
-Manifest Builder Script (Supabase 전용)
+Manifest Builder Script (로컬 중심)
 Combines scene_specs.json + motion_plan.json + audio durations + subtitles
 into Remotion SceneManifest format (manifest.json).
 
-모든 이미지/오디오는 Supabase Storage 공개 URL로 참조.
+에셋 참조: 로컬 파일 → Remotion staticFile() 상대 경로.
+Supabase는 프로젝트 config 조회에만 사용 (오프라인 시 fallback).
 """
 import json
 import sys
@@ -13,50 +14,78 @@ from dotenv import load_dotenv
 from auto_agent.paths import get_workspace_dir; load_dotenv(get_workspace_dir() / ".env")
 
 
-def _probe_mp3_duration(url: str) -> float:
-    """MP3 URL에서 duration 측정 (mutagen → Content-Length fallback)."""
-    import io
-    import urllib.request
+def _probe_mp3_duration_local(path: Path) -> float:
+    """로컬 MP3 파일에서 duration 측정."""
     try:
         from mutagen.mp3 import MP3
-        data = urllib.request.urlopen(url).read()
-        mp3 = MP3(io.BytesIO(data))
+        mp3 = MP3(str(path))
         return round(mp3.info.length, 3)
     except Exception:
         try:
-            req = urllib.request.Request(url, method="HEAD")
-            resp = urllib.request.urlopen(req)
-            size = int(resp.headers.get("Content-Length", 0))
-            return round(size / 16000, 1) if size else 0.0  # 128kbps
+            size = path.stat().st_size
+            return round(size / 16000, 1) if size else 0.0  # 128kbps 추정
         except Exception:
             return 0.0
 
 
-def build_manifest(project_id: str, storage_key: str):
-    """Supabase Storage 기반 manifest 빌드.
-    이미지/오디오 경로를 Supabase 공개 URL로 설정."""
-    from auto_agent.supabase_client import get_supabase, BUCKET_NAME
-
-    sb = get_supabase()
-    bucket = BUCKET_NAME
-
-    # scene_specs.json 다운로드
-    specs_data = sb.storage.from_(bucket).download(f"{storage_key}/scene_specs.json")
-    specs = json.loads(specs_data)
-
-    # motion_plan.json 다운로드 (없으면 빈 구조)
+def _load_project_config(project_id: str) -> dict:
+    """프로젝트 config 로드. Supabase → 로컬 fallback."""
     try:
-        motion_data = sb.storage.from_(bucket).download(f"{storage_key}/motion_plan.json")
-        motion = json.loads(motion_data)
+        from auto_agent.supabase_client import get_supabase, supabase_enabled
+        if supabase_enabled():
+            sb = get_supabase()
+            resp = sb.table("projects").select("config").eq("id", project_id).execute()
+            if resp.data:
+                return resp.data[0].get("config") or {}
     except Exception:
-        motion = {"transition_series": []}
+        pass
+    return {}
 
-    # subtitles.json 다운로드 (없으면 빈 구조)
-    try:
-        subs_raw = sb.storage.from_(bucket).download(f"{storage_key}/subtitles.json")
-        subs_data = json.loads(subs_raw)
-    except Exception:
-        subs_data = {"scenes": []}
+
+def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
+    """로컬 파일 기반 manifest 빌드.
+    이미지/오디오 경로를 Remotion staticFile() 상대 경로로 설정.
+
+    Args:
+        project_id: Supabase 프로젝트 UUID (config 조회용)
+        storage_key: Storage 경로 키 (매니페스트 파일명)
+        project_dir: 프로젝트 출력 디렉토리 (None이면 자동 탐색)
+    """
+    workspace = get_workspace_dir()
+
+    # 프로젝트 디렉토리 결정
+    if project_dir:
+        out_dir = Path(project_dir)
+    else:
+        # output/ 아래에서 찾기
+        for d in (workspace / "output").iterdir():
+            if d.is_dir():
+                if (d / "scene_specs.json").exists():
+                    out_dir = d
+                    break
+        else:
+            print("ERROR: scene_specs.json을 찾을 수 없습니다")
+            sys.exit(1)
+
+    # ── 로컬 파일 로드 ──
+    specs = json.loads((out_dir / "scene_specs.json").read_text(encoding="utf-8"))
+
+    motion = {"transition_series": []}
+    motion_path = out_dir / "motion_plan.json"
+    if motion_path.exists():
+        motion = json.loads(motion_path.read_text(encoding="utf-8"))
+
+    subs_data = {"scenes": []}
+    subs_path = out_dir / "subtitles.json"
+    if subs_path.exists():
+        subs_data = json.loads(subs_path.read_text(encoding="utf-8"))
+
+    tts_results = {}
+    tts_path = out_dir / "tts_results.json"
+    if tts_path.exists():
+        tts_data = json.loads(tts_path.read_text(encoding="utf-8"))
+        for r in tts_data.get("results", []):
+            tts_results[r["scene"]] = r
 
     motion_lookup = {}
     for entry in motion.get("transition_series", []):
@@ -64,85 +93,67 @@ def build_manifest(project_id: str, storage_key: str):
 
     sub_lookup = {s["sceneNumber"]: s for s in subs_data.get("scenes", [])}
 
-    # Storage 파일 목록으로 이미지/오디오 URL 구축
-    def public_url(path: str) -> str:
-        return sb.storage.from_(bucket).get_public_url(f"{storage_key}/{path}")
+    # ── Remotion public 디렉토리에 프로젝트 심볼릭 링크 ──
+    remotion_public = workspace / "remotion" / "public"
 
-    # 파일 프리픽스: storage_key에서 proj- 제거 후 앞 6자
-    file_prefix = storage_key.replace("proj-", "")[:6]
-
-    def _strip_prefix(name: str) -> str:
-        """파일명에서 프리픽스 제거 → scene_NNN 키 추출."""
-        if name.startswith(f"{file_prefix}_"):
-            return name[len(file_prefix) + 1:]
-        return name
-
-    # 이미지/오디오 파일 목록 (한 번에 조회)
-    image_files = {}
+    # 프로젝트 slug로 심볼릭 링크 (output/{slug} → remotion/public/project)
+    project_link = remotion_public / "project"
+    if project_link.exists() or project_link.is_symlink():
+        project_link.unlink()
     try:
-        for f in sb.storage.from_(bucket).list(f"{storage_key}/images"):
-            name = f.get("name", "")
-            if any(name.lower().endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".webp")):
-                key = _strip_prefix(name).rsplit(".", 1)[0]
-                image_files[key] = f"images/{name}"
-    except Exception:
-        pass
+        project_link.symlink_to(out_dir.resolve())
+        print(f"    [LINK] remotion/public/project → {out_dir}")
+    except OSError:
+        print(f"    [WARN] 심볼릭 링크 실패, 복사 대신 사용")
 
-    audio_files = {}
-    try:
-        for f in sb.storage.from_(bucket).list(f"{storage_key}/audio"):
-            name = f.get("name", "")
-            if name.endswith(".mp3"):
-                key = _strip_prefix(name).rsplit(".", 1)[0]
-                audio_files[key] = f"audio/{name}"
-    except Exception:
-        pass
+    # 하위 호환: assets/{storage_key} 심볼릭 링크도 유지
+    if storage_key:
+        asset_dir = remotion_public / "assets" / storage_key
+        if not asset_dir.exists() and not asset_dir.is_symlink():
+            asset_dir.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                asset_dir.symlink_to(out_dir.resolve())
+            except OSError:
+                pass
 
-    # TTS 메타데이터 (duration 정보)
-    tts_meta = {}
-    try:
-        tts_raw = sb.storage.from_(bucket).download(f"{storage_key}/tts_metadata.json")
-        tts_data = json.loads(tts_raw)
-        for entry in tts_data if isinstance(tts_data, list) else tts_data.get("scenes", []):
-            tts_meta[entry.get("sceneNumber", entry.get("scene_number"))] = entry
-    except Exception:
-        pass
+    def link_asset(src: Path, dest_subdir: str, dest_name: str) -> str:
+        """로컬 에셋의 staticFile 상대 경로 반환. project/ 기준."""
+        if not src.exists():
+            return ""
+        return f"project/{dest_subdir}/{dest_name}"
 
-    # 프로젝트 config에서 폰트/아트스타일/테마 읽기
-    font_family = "Pretendard"
-    art_style = None
-    video_theme = "dark"
-    map_theme = "modern_clean"
-    try:
-        proj_resp = sb.table("projects").select("config").eq("id", project_id).execute()
-        if proj_resp.data:
-            cfg = proj_resp.data[0].get("config") or {}
-            font_family = cfg.get("font_family", "Pretendard")
-            art_style = cfg.get("art_style")
-            video_theme = cfg.get("video_theme", "dark")
-            map_theme = cfg.get("map_theme", "modern_clean")
-    except Exception:
-        pass
+    # ── 씬별 매니페스트 엔트리 생성 ──
+    # 프로젝트 config
+    cfg = _load_project_config(project_id)
+    font_family = cfg.get("font_family", "Pretendard")
+    art_style = cfg.get("art_style")
+    video_theme = cfg.get("video_theme", "dark")
+    map_theme = cfg.get("map_theme", "modern_clean")
 
     scenes = []
     for scene in specs["scenes"]:
         num = scene.get("sceneNumber") or scene["scene_number"]
         scene_key = f"scene_{num:03d}"
 
-        # Audio URL
-        audio_rel = audio_files.get(scene_key, "")
-        audio_url = public_url(audio_rel) if audio_rel else ""
-        # duration: tts_metadata > MP3 probe > durationFrames/fps > 0
-        audio_duration = tts_meta.get(num, {}).get("duration", 0.0)
-        if not audio_duration and audio_url:
-            audio_duration = _probe_mp3_duration(audio_url)
+        # Audio — 로컬 파일 링크
+        audio_src = out_dir / "audio" / f"{scene_key}.mp3"
+        audio_path = link_asset(audio_src, "audio", f"{scene_key}.mp3")
+
+        # Duration: tts_results > 로컬 MP3 probe > durationFrames/fps
+        audio_duration = tts_results.get(num, {}).get("duration", 0.0)
+        if not audio_duration and audio_src.exists():
+            audio_duration = _probe_mp3_duration_local(audio_src)
         if not audio_duration and scene.get("durationFrames"):
-            specs_fps = specs.get("meta", {}).get("fps", 60)
+            specs_fps = specs.get("meta", {}).get("fps", 30)
             audio_duration = scene["durationFrames"] / specs_fps
 
-        # Image URL
-        image_rel = image_files.get(scene_key, "")
-        image_url = public_url(image_rel) if image_rel else ""
+        # Image — 로컬 파일 링크
+        image_path = ""
+        for ext in (".jpg", ".jpeg", ".png", ".webp"):
+            img_src = out_dir / "images" / f"{scene_key}{ext}"
+            if img_src.exists():
+                image_path = link_asset(img_src, "images", f"{scene_key}{ext}")
+                break
 
         # Subtitles
         sub_entries = []
@@ -173,7 +184,7 @@ def build_manifest(project_id: str, storage_key: str):
         }
 
         # Ken Burns
-        has_image = bool(image_url) or bool(scene.get("imageAsset"))
+        has_image = bool(image_path) or bool(scene.get("imageAsset"))
         ken_burns = {
             "enabled": has_image,
             "zoomFactor": 1.08 if has_image else 1.0,
@@ -191,8 +202,8 @@ def build_manifest(project_id: str, storage_key: str):
 
         entry = {
             "sceneNumber": num,
-            "imagePath": image_url,
-            "audioPath": audio_url,
+            "imagePath": image_path,
+            "audioPath": audio_path,
             "audioDurationSec": round(audio_duration, 3),
             "subtitles": sub_entries,
             "visualization": viz,
@@ -201,7 +212,7 @@ def build_manifest(project_id: str, storage_key: str):
             "vizAnimation": viz_animation,
         }
 
-        if scene.get("imageAsset") and image_url:
+        if scene.get("imageAsset") and image_path:
             ia = scene["imageAsset"]
             entry["imageAsset"] = {
                 "placement": ia.get("placement", "background"),
@@ -210,15 +221,51 @@ def build_manifest(project_id: str, storage_key: str):
 
         if scene.get("mapScene"):
             ms = dict(scene["mapScene"])
-            # config의 map_theme을 맵씬에 적용 (씬별 오버라이드가 없으면)
             if not ms.get("mapStyle"):
                 ms["mapStyle"] = map_theme
+            if not ms.get("mapType"):
+                ms["mapType"] = "location_reveal"
+            # markers 변환: {lat, lng, label} → {coordinates: [lng, lat], label}
+            if ms.get("markers"):
+                converted = []
+                for mk in ms["markers"]:
+                    if "coordinates" in mk:
+                        converted.append(mk)
+                    elif "lat" in mk and "lng" in mk:
+                        converted.append({
+                            "coordinates": [mk["lng"], mk["lat"]],
+                            "label": mk.get("label", ""),
+                            "style": mk.get("style", "pin"),
+                        })
+                    else:
+                        converted.append(mk)
+                ms["markers"] = converted
+            # center: scene_specs는 [lat, lng], Remotion/MapLibre는 [lng, lat]
+            if ms.get("center") and len(ms["center"]) == 2:
+                ms["center"] = [ms["center"][1], ms["center"][0]]
+            # camera 필드 보장
+            center_lnglat = ms.get("center", [0, 0])
+            if not ms.get("camera"):
+                zoom = ms.get("zoom", 5)
+                dur = scene.get("durationFrames", 150)
+                ms["camera"] = {
+                    "keyframes": [
+                        {"frame": 0, "center": list(center_lnglat), "zoom": max(2, zoom - 2)},
+                        {"frame": int(dur * 0.4), "center": list(center_lnglat), "zoom": zoom},
+                    ],
+                    "easing": "easeInOutCubic",
+                }
+            else:
+                for kf in ms.get("camera", {}).get("keyframes", []):
+                    if kf.get("center") and len(kf["center"]) == 2:
+                        kf["center"] = [kf["center"][1], kf["center"][0]]
             entry["mapScene"] = ms
 
         scenes.append(entry)
 
     # Manifest 조립
     topic = specs.get("topic", storage_key)
+    design_preset = specs.get("meta", {}).get("designPreset", None)
     manifest = {
         "meta": {
             "topic": topic,
@@ -228,6 +275,7 @@ def build_manifest(project_id: str, storage_key: str):
             "vizFont": font_family,
             "videoTheme": video_theme,
             **({"artStyle": art_style} if art_style else {}),
+            **({"designPreset": design_preset} if design_preset else {}),
         },
         "scenes": scenes,
         "bgm": None,
@@ -251,36 +299,36 @@ def build_manifest(project_id: str, storage_key: str):
     props = {"manifest": manifest, "subtitleConfig": subtitle_config}
 
     # 로컬 manifest 파일 저장
-    workspace = get_workspace_dir()
-    manifest_dir = workspace / "remotion" / "public" / "manifests"
+    manifest_dir = remotion_public / "manifests"
     manifest_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = manifest_dir / f"{storage_key}.json"
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(props, f, ensure_ascii=False, indent=2)
 
     # 레거시 manifest.json에도 복사
-    legacy_path = workspace / "remotion" / "public" / "manifest.json"
-    legacy_path.parent.mkdir(parents=True, exist_ok=True)
+    legacy_path = remotion_public / "manifest.json"
     with open(legacy_path, "w", encoding="utf-8") as f:
         json.dump(props, f, ensure_ascii=False, indent=2)
 
     total_duration = sum(s["audioDurationSec"] for s in scenes)
+    audio_count = sum(1 for s in scenes if s["audioPath"])
+    image_count = sum(1 for s in scenes if s["imagePath"])
     print(f"Manifest built: {manifest_path}")
-    print(f"  Scenes: {len(scenes)}, Audio: {sum(1 for s in scenes if s['audioPath'])}")
+    print(f"  Scenes: {len(scenes)}, Audio: {audio_count}, Images: {image_count}")
     print(f"  Total duration: {total_duration:.1f}s ({total_duration/60:.1f}min)")
+    print(f"  Asset dir: {asset_dir}")
     return manifest_path
 
 
 if __name__ == "__main__":
     if len(sys.argv) >= 3:
-        # build_manifest.py <project_id> <storage_key>
-        # 또는 build_manifest.py --supabase <project_id> <storage_key> (레거시 호환)
         args = [a for a in sys.argv[1:] if not a.startswith("--")]
         if len(args) >= 2:
-            build_manifest(args[0], args[1])
+            project_dir = args[2] if len(args) >= 3 else None
+            build_manifest(args[0], args[1], project_dir)
         else:
-            print("Usage: build_manifest.py <project_id> <storage_key>")
+            print("Usage: build_manifest.py <project_id> <storage_key> [project_dir]")
             sys.exit(1)
     else:
-        print("Usage: build_manifest.py <project_id> <storage_key>")
+        print("Usage: build_manifest.py <project_id> <storage_key> [project_dir]")
         sys.exit(1)

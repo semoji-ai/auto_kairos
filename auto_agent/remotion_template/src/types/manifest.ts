@@ -5,6 +5,8 @@
  * Remotion의 KairosVideo 컴포지션이 이를 소비합니다.
  */
 
+import type { DesignPresetOverride } from "../design/types";
+
 export interface DesignTokens {
   style?: {
     background?: string;
@@ -59,6 +61,8 @@ export interface SceneManifest {
     videoTheme?: "dark" | "white";
     /** 아트스타일 (accent 색상 결정) */
     artStyle?: string;
+    /** 디자인 프리셋 오버라이드 (아트스타일 기본값 위에 덮어씀) */
+    designPreset?: DesignPresetOverride;
   };
   scenes: SceneEntry[];
   bgm: BGMConfig | null;
@@ -117,6 +121,9 @@ export interface SceneEntry {
 
   /** 지도 씬 데이터 (위치/경로/영역/플라이스루) */
   mapScene?: MapSceneData | null;
+
+  /** GIF/Lottie 오버레이 목록 */
+  overlays?: OverlayItem[];
 }
 
 export interface SubtitleEntry {
@@ -291,6 +298,26 @@ export interface SubtitleConfig {
   bottomOffset: number;       // 하단 오프셋 px (기본 30)
   maxWidth: string;           // 최대 너비 (기본 "85%")
   lineHeight: number;         // 줄간격 (기본 1.5)
+}
+
+export interface OverlayItem {
+  type: "gif" | "lottie";
+  assetId: string;
+  position:
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right"
+    | "bottom-center"
+    | "center"
+    | "custom";
+  x?: number;
+  y?: number;
+  scale?: number;
+  opacity?: number;
+  enterFrame?: number;
+  exitFrame?: number;
+  loop?: boolean;
 }
 
 export interface BGMConfig {

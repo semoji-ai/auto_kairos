@@ -43,6 +43,18 @@ BUILTIN_PRESETS = {
             "easing": "easeOut",
             "titleFadeIn": 15,
         },
+        "designPreset": {
+            "baseTheme": "dark",
+            "colors": {
+                "accent": "#F59E0B",
+                "accentRgb": "245,158,11",
+            },
+            "fonts": {
+                "body": {"family": "Pretendard", "fallback": "'Apple SD Gothic Neo', sans-serif"},
+            },
+            "map": {"defaultTheme": "modern_clean"},
+            "subtitle": {"keywordColor": "#F7D94C"},
+        },
     },
     "white_clean": {
         "name": "White Clean",
@@ -67,6 +79,18 @@ BUILTIN_PRESETS = {
             "itemDuration": 15,
             "easing": "easeOut",
             "titleFadeIn": 12,
+        },
+        "designPreset": {
+            "baseTheme": "white",
+            "colors": {
+                "accent": "#2563EB",
+                "accentRgb": "37,99,235",
+            },
+            "fonts": {
+                "body": {"family": "Pretendard", "fallback": "'Apple SD Gothic Neo', sans-serif"},
+            },
+            "map": {"defaultTheme": "modern_clean"},
+            "subtitle": {"keywordColor": "#2563EB"},
         },
     },
     "urgent_red": {
@@ -93,6 +117,18 @@ BUILTIN_PRESETS = {
             "easing": "easeOut",
             "titleFadeIn": 8,
         },
+        "designPreset": {
+            "baseTheme": "dark",
+            "colors": {
+                "accent": "#EF4444",
+                "accentRgb": "239,68,68",
+            },
+            "fonts": {
+                "body": {"family": "Pretendard", "fallback": "'Apple SD Gothic Neo', sans-serif"},
+            },
+            "map": {"defaultTheme": "modern_clean"},
+            "subtitle": {"keywordColor": "#EF4444"},
+        },
     },
     "calm_green": {
         "name": "Calm Green",
@@ -117,6 +153,18 @@ BUILTIN_PRESETS = {
             "itemDuration": 30,
             "easing": "easeOut",
             "titleFadeIn": 20,
+        },
+        "designPreset": {
+            "baseTheme": "dark",
+            "colors": {
+                "accent": "#10B981",
+                "accentRgb": "16,185,129",
+            },
+            "fonts": {
+                "body": {"family": "Pretendard", "fallback": "'Apple SD Gothic Neo', sans-serif"},
+            },
+            "map": {"defaultTheme": "modern_clean"},
+            "subtitle": {"keywordColor": "#10B981"},
         },
     },
 }
@@ -184,6 +232,7 @@ async def create_preset(request: Request):
         "global": body.get("global", {}),
         "defaults": body.get("defaults", {}),
         "animation": body.get("animation", {}),
+        "designPreset": body.get("designPreset", {}),
     }
     fp.write_text(json.dumps(preset, ensure_ascii=False, indent=2), "utf-8")
     return {"ok": True, "_id": slug, "preset": preset}
@@ -206,6 +255,7 @@ async def update_preset(preset_id: str, request: Request):
         "global": body.get("global", existing.get("global", {})),
         "defaults": body.get("defaults", existing.get("defaults", {})),
         "animation": body.get("animation", existing.get("animation", {})),
+        "designPreset": body.get("designPreset", existing.get("designPreset", {})),
     })
     fp.write_text(json.dumps(existing, ensure_ascii=False, indent=2), "utf-8")
     return {"ok": True, "preset": existing}
@@ -274,6 +324,10 @@ async def apply_preset_to_project(slug: str, request: Request):
         specs["meta"]["artStyle"] = gl["artStyle"]
     if gl.get("vizFont"):
         specs["meta"]["vizFont"] = gl["vizFont"]
+
+    # 새 designPreset 필드
+    if preset.get("designPreset"):
+        specs["meta"]["designPreset"] = preset["designPreset"]
 
     # 씬별 기본값 적용 (사용자가 직접 설정한 값은 유지, 빈 값만 채움)
     apply_all = body.get("apply_all", False)

@@ -227,6 +227,15 @@ function showSection(id, el) {
   el.classList.add('active');
 }
 </script>
+{% elif research_md %}
+<!-- Markdown fallback 렌더링 -->
+<div class="research-layout">
+  <div class="research-content" style="max-width:100%">
+    <div class="research-section">
+      <div class="content-text md-render" style="white-space:pre-line; line-height:1.8; font-size:13px">{{ research_md }}</div>
+    </div>
+  </div>
+</div>
 {% else %}
-<div class="empty">No research report found. Run the pipeline first.</div>
+<div class="empty">리서치 보고서가 없습니다. 파이프라인을 먼저 실행하세요.</div>
 {% endif %}

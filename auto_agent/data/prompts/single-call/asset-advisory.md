@@ -70,8 +70,39 @@ chartConfig는 visualization 안에 넣으세요 (creative 밖).
 - imageAsset.placement: "background" (배경, opacity 0.15~0.3), "side" (좌우 배치), "fullscreen" (cinematic)
 - 차트 + 배경이미지 공존 시: opacity ≤ 0.18
 - mapScene + imageAsset 공존 금지 (지도가 배경이므로 중복)
-- imageAsset.source: "search" (실사 검색) 또는 "generate" (AI 생성)
+- imageAsset.source: "wikimedia" (위키미디어 검색) 또는 "search" (웹 검색) 또는 "generate" (AI 생성)
+- **기본값은 "wikimedia"** — 프로젝트 config에서 search_engine을 확인하세요
 - query는 영문으로 작성
+
+## 검색 엔진별 쿼리 작성 가이드
+
+### Wikimedia Commons (source: "wikimedia")
+위키미디어는 교육/백과사전 이미지 저장소입니다. 쿼리를 **단순하고 일반적**으로 작성하세요.
+
+좋은 쿼리:
+- "Elon Musk" (인물 이름만)
+- "semiconductor wafer" (일반 주제)
+- "oil refinery" (장소/시설)
+- "stock market crash" (개념)
+- "Korean flag" (상징)
+
+나쁜 쿼리 (위키미디어에서 찾을 수 없음):
+- "Elon Musk speaking announcement stage dramatic lighting" ← 너무 구체적
+- "Tesla AI chip close up macro photography" ← 촬영 스타일 지정 불필요
+- "Jensen Huang NVIDIA CEO keynote 2026" ← 특정 이벤트는 없을 수 있음
+
+규칙:
+- 핵심 명사 1~3단어로 작성
+- 촬영 스타일/조명/분위기 형용사 제거
+- 특정 날짜/이벤트 제거
+- 인물은 이름만, 기업은 이름 또는 로고/본사
+- fallback 쿼리도 함께 작성: imageAsset.fallbackQuery (더 일반적인 대안)
+
+### 웹 검색 (source: "search")
+구체적 이벤트/장면 검색 가능. 상세 쿼리 OK.
+
+### AI 생성 (source: "generate")
+생성 프롬프트는 구체적일수록 좋음. 스타일/분위기 포함.
 </image_rules>
 
 <layout_rules>

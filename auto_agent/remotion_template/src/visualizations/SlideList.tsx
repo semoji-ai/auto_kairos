@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { calcItemDelay } from "../utils/syncDelay";
 import { VizShell } from "./VizShell";
 import type { VisualizationData, VizAnimationConfig } from "../types/manifest";
@@ -13,7 +13,6 @@ interface Props {
 }
 
 export const SlideList: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO } = useDesignTokens();
   const frame = useCurrentFrame();
   const items = data.items ?? [];
 
@@ -35,7 +34,7 @@ export const SlideList: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
           top: 0,
           bottom: 0,
           width: "2.5%",
-          background: `linear-gradient(to bottom, ${STYLE.colors[STYLE.accentIndex ?? 0]}30, ${STYLE.colors[2]}30)`,
+          background: `linear-gradient(to bottom, ${DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0]}30, ${DEFAULT_STYLE.colors[2]}30)`,
         }}
       />
     </AbsoluteFill>
@@ -103,7 +102,7 @@ export const SlideList: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
             { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
           );
 
-          const color = STYLE.colors[i % STYLE.colors.length];
+          const color = DEFAULT_STYLE.colors[i % DEFAULT_STYLE.colors.length];
 
           // 강조 스타일
           const scale = 1 + hl * 0.025;
@@ -119,9 +118,9 @@ export const SlideList: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
                 display: "flex",
                 alignItems: "center",
                 gap: 18,
-                background: `linear-gradient(135deg, ${bgTint}, ${STYLE.cardBg})`,
+                background: `linear-gradient(135deg, ${bgTint}, var(--viz-card-bg))`,
                 padding: `${cardPadV}px ${cardPadH}px`,
-                borderRadius: STYLE.cardRadius,
+                borderRadius: "var(--viz-card-radius)",
                 boxShadow: `0 4px ${shadowBlur}px rgba(61,59,47,${shadowAlpha})`,
                 borderLeft: `${borderW}px solid ${color}`,
                 opacity: itemOpacity,
@@ -149,9 +148,9 @@ export const SlideList: React.FC<Props> = ({ data, durationInFrames, fps, vizAni
               </div>
               <span
                 style={{
-                  color: STYLE.text,
+                  color: "var(--viz-text)",
                   fontSize: textSize,
-                  fontWeight: TYPO.label.weight,
+                  fontWeight: "var(--viz-label-weight)" as any,
                   lineHeight: 1.45,
                 }}
               >

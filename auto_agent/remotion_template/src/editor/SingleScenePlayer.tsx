@@ -9,7 +9,8 @@ import React from "react";
 import { AbsoluteFill, Img } from "remotion";
 import { CreativeScene } from "../simple/CreativeScene";
 import { MapSceneRenderer } from "../map/MapSceneRenderer";
-import { VideoThemeProvider, resolveVideoTheme } from "../simple/BuildingBlocks";
+import { DesignPresetProvider, useDesignPreset } from "../design";
+import { buildFontFamily } from "../design/fonts";
 import type { SceneEntry, SceneManifest } from "../types/manifest";
 
 interface Props {
@@ -70,11 +71,10 @@ const CenterLayout: React.FC<{
   </AbsoluteFill>
 );
 
-export const SingleScenePlayer: React.FC<Props> = ({ scene, meta }) => {
-  const themeName = meta?.videoTheme ?? "dark";
-  const artStyle = meta?.artStyle;
-  const C = resolveVideoTheme(themeName, artStyle);
-  const fontFamily = `'${meta?.vizFont || "Pretendard"}', sans-serif`;
+/* ── Inner 컴포넌트: DesignPresetContext에서 색상/폰트를 읽는다 ── */
+const SingleSceneInner: React.FC<Props> = ({ scene, meta }) => {
+  const preset = useDesignPreset();
+  const fontFamily = buildFontFamily(preset);
 
   const fps = meta?.fps || 30;
   const durationInFrames = scene.audioDurationSec
@@ -84,15 +84,13 @@ export const SingleScenePlayer: React.FC<Props> = ({ scene, meta }) => {
   // ── 맵 씬 ──
   if (scene.mapScene) {
     return (
-      <VideoThemeProvider theme={themeName} artStyle={artStyle}>
-        <AbsoluteFill style={{ backgroundColor: C.bg, fontFamily }}>
-          <MapSceneRenderer
-            data={scene.mapScene}
-            durationInFrames={durationInFrames}
-            fps={fps}
-          />
-        </AbsoluteFill>
-      </VideoThemeProvider>
+      <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
+        <MapSceneRenderer
+          data={scene.mapScene}
+          durationInFrames={durationInFrames}
+          fps={fps}
+        />
+      </AbsoluteFill>
     );
   }
 
@@ -127,10 +125,16 @@ export const SingleScenePlayer: React.FC<Props> = ({ scene, meta }) => {
   }
 
   return (
-    <VideoThemeProvider theme={themeName} artStyle={artStyle}>
-      <AbsoluteFill style={{ backgroundColor: C.bg, fontFamily }}>
-        {content}
-      </AbsoluteFill>
-    </VideoThemeProvider>
+    <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
+      {content}
+    </AbsoluteFill>
+  );
+};
+
+export const SingleScenePlayer: React.FC<Props> = ({ scene, meta }) => {
+  return (
+    <DesignPresetProvider meta={meta}>
+      <SingleSceneInner scene={scene} meta={meta} />
+    </DesignPresetProvider>
   );
 };

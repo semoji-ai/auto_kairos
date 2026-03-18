@@ -4,7 +4,7 @@
  * 2컬러 시스템 (text + accent) + Pretendard 폰트
  * VizShell / DesignToken 없이 순수 Remotion 프리미티브만 사용
  */
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   AbsoluteFill,
   Sequence,
@@ -14,9 +14,6 @@ import {
   useCurrentFrame,
   useVideoConfig,
   interpolate,
-  Easing,
-  delayRender,
-  continueRender,
 } from "remotion";
 
 /** staticFile 대체: 절대 URL이면 그대로, 상대경로면 staticFile() 사용 */
@@ -26,79 +23,10 @@ const resolveAsset = (path: string): string =>
     : staticFile(path);
 import { CreativeScene } from "./simple/CreativeScene";
 import { MapSceneRenderer } from "./map/MapSceneRenderer";
-import { VideoThemeProvider, resolveVideoTheme, type ColorTokens } from "./simple/BuildingBlocks";
+import { DesignPresetProvider, useDesignPreset } from "./design";
+import { usePresetFonts, buildFontFamily } from "./design/fonts";
+import type { PresetColors } from "./design/types";
 import type { SceneManifest, SubtitleConfig } from "./types/manifest";
-
-/** 번들 폰트 정의 — FontFace API로 로드 가능한 폰트 */
-const BUNDLED_FONTS: Record<string, { file: string; weight: string }[]> = {
-  Pretendard: [
-    { file: "fonts/Pretendard-Regular.otf", weight: "400" },
-    { file: "fonts/Pretendard-Bold.otf", weight: "700" },
-  ],
-};
-
-const DEFAULT_FONT = "'Pretendard', sans-serif";
-
-/* C는 VideoThemeProvider 컨텍스트로 대체 — 하위호환용 다크 기본값 유지 */
-
-/** manifest의 폰트 설정으로 CSS font-family 문자열 생성 */
-const buildFontFamily = (fontName?: string): string => {
-  if (!fontName || fontName === "Pretendard") return DEFAULT_FONT;
-  return `'${fontName}', 'Pretendard', sans-serif`;
-};
-
-/* ---------- Font Loading ---------- */
-/** 시스템에 폰트가 설치되어 있는지 확인 */
-const isSystemFont = (family: string): boolean => {
-  try {
-    return document.fonts.check(`16px "${family}"`);
-  } catch {
-    return false;
-  }
-};
-
-const useFonts = (fontName?: string) => {
-  const [handle] = useState(() => delayRender("Loading fonts"));
-  useEffect(() => {
-    const load = async () => {
-      // 시스템에 설치된 폰트면 번들 로드 스킵
-      if (!isSystemFont("Pretendard")) {
-        const pretendardDefs = BUNDLED_FONTS["Pretendard"];
-        await Promise.all(
-          pretendardDefs.map(async (d) => {
-            const face = new FontFace(
-              "Pretendard",
-              `url('${staticFile(d.file)}')`,
-              { weight: d.weight, style: "normal" },
-            );
-            const loaded = await face.load();
-            document.fonts.add(loaded);
-          }),
-        );
-      }
-
-      // 커스텀 폰트: 시스템에 있으면 스킵, 없으면 번들에서 로드
-      if (fontName && fontName !== "Pretendard") {
-        if (!isSystemFont(fontName) && BUNDLED_FONTS[fontName]) {
-          await Promise.all(
-            BUNDLED_FONTS[fontName].map(async (d) => {
-              const face = new FontFace(
-                fontName,
-                `url('${staticFile(d.file)}')`,
-                { weight: d.weight, style: "normal" },
-              );
-              const loaded = await face.load();
-              document.fonts.add(loaded);
-            }),
-          );
-        }
-      }
-
-      continueRender(handle);
-    };
-    load().catch(() => continueRender(handle));
-  }, [handle]);
-};
 
 /* ---------- Main Composition ---------- */
 interface Props {
@@ -107,15 +35,19 @@ interface Props {
 }
 
 export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
-  const fontName = manifest.meta?.vizFont || "Pretendard";
-  const fontFamily = buildFontFamily(fontName);
-  useFonts(fontName);
+  return (
+    <DesignPresetProvider meta={manifest.meta}>
+      <SimpleVideoInner manifest={manifest} subtitleConfig={subtitleConfig} />
+    </DesignPresetProvider>
+  );
+};
+
+const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
+  const preset = useDesignPreset();
+  usePresetFonts();
+  const fontFamily = buildFontFamily(preset);
   const { fps } = useVideoConfig();
   const frame = useCurrentFrame();
-
-  const themeName = manifest.meta?.videoTheme ?? "dark";
-  const artStyle = manifest.meta?.artStyle;
-  const C = resolveVideoTheme(themeName, artStyle);
 
   let offset = 0;
   const timing = manifest.scenes.map((scene) => {
@@ -147,8 +79,7 @@ export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
   }, [frame, timing]);
 
   return (
-    <VideoThemeProvider theme={themeName} artStyle={artStyle}>
-    <AbsoluteFill style={{ backgroundColor: C.bg, fontFamily }}>
+    <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
       {timing.map(({ scene, from, dur }) => {
         const hasImage = !!(scene.imagePath || scene.vizBackgroundPath);
 
@@ -276,10 +207,9 @@ export const SimpleVideo: React.FC<Props> = ({ manifest, subtitleConfig }) => {
 
       {/* 자막 바 */}
       {sub && subtitleConfig.visible !== false && (
-        <SubtitleBar text={sub} theme={C} />
+        <SubtitleBar text={sub} theme={preset.colors} />
       )}
     </AbsoluteFill>
-    </VideoThemeProvider>
   );
 };
 
@@ -495,7 +425,7 @@ const FadeWrap: React.FC<{
 };
 
 /* ---------- Subtitle Bar ---------- */
-const SubtitleBar: React.FC<{ text: string; theme: ColorTokens }> = ({ text, theme }) => {
+const SubtitleBar: React.FC<{ text: string; theme: PresetColors }> = ({ text, theme }) => {
   const isDark = theme.bg === "#0A0A0A";
   return (
     <AbsoluteFill

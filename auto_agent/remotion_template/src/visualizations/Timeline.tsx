@@ -1,6 +1,6 @@
 import React from "react";
 import { useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
 import { VizShell } from "./VizShell";
@@ -20,14 +20,14 @@ interface Props {
  * 각 카드: 연도 + 이미지 플레이스홀더 + 제목 + 설명
  */
 export const Timeline: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_FONT, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const items = data.items ?? [];
   const values = data.values ?? [];
   const descriptions = (data as any).descriptions ?? [];
 
   const easingFn = resolveEasing(vizAnimation?.easing);
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentIdx = DEFAULT_STYLE.accentIndex ?? 0;
+  const accentColor = `var(--viz-color-${accentIdx})`;
 
   const n = items.length;
   const cardGap = n >= 6 ? 4 : n >= 5 ? 6 : 8;
@@ -83,11 +83,11 @@ export const Timeline: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
         >
           <div
             style={{
-              color: STYLE.text,
-              fontSize: TYPO.title.size,
-              fontWeight: TYPO.title.weight,
-              fontFamily: VIZ_TITLE_FONT,
-              letterSpacing: TYPO.title.letterSpacing,
+              color: "var(--viz-text)",
+              fontSize: "var(--viz-title-size)",
+              fontWeight: "var(--viz-title-weight)",
+              fontFamily: "var(--viz-title-font)",
+              letterSpacing: "var(--viz-title-tracking)",
             }}
           >
             {data.title}
@@ -98,7 +98,7 @@ export const Timeline: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                 color: accentColor,
                 fontSize: 36,
                 fontWeight: 700,
-                fontFamily: VIZ_FONT,
+                fontFamily: "var(--viz-font)",
               }}
             >
               {rangeText}
@@ -111,7 +111,7 @@ export const Timeline: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
           style={{
             width: "100%",
             height: 3,
-            background: STYLE.border,
+            background: "var(--viz-border)",
             position: "relative",
             flexShrink: 0,
           }}
@@ -171,9 +171,9 @@ export const Timeline: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                   display: "flex",
                   flexDirection: "column",
                   gap: 12,
-                  background: STYLE.cardBg,
+                  background: "var(--viz-card-bg)",
                   padding: "24px 20px",
-                  borderRadius: STYLE.cardRadius,
+                  borderRadius: "var(--viz-card-radius)",
                   opacity: colOpacity,
                   transform: `translateX(${colSlide}px) scale(${scale})`,
                   transformOrigin: "bottom center",
@@ -188,7 +188,7 @@ export const Timeline: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                       color: accentColor,
                       fontSize: yearSize,
                       fontWeight: 700,
-                      fontFamily: VIZ_FONT,
+                      fontFamily: "var(--viz-font)",
                     }}
                   >
                     {yearText}
@@ -200,7 +200,7 @@ export const Timeline: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                   style={{
                     width: "100%",
                     height: imgHeight,
-                    background: STYLE.border,
+                    background: "var(--viz-border)",
                     borderRadius: 8,
                     flexShrink: 0,
                   }}
@@ -209,10 +209,10 @@ export const Timeline: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                 {/* Title */}
                 <div
                   style={{
-                    color: STYLE.text,
+                    color: "var(--viz-text)",
                     fontSize: titleSize,
                     fontWeight: 600,
-                    fontFamily: VIZ_FONT,
+                    fontFamily: "var(--viz-font)",
                     lineHeight: 1.3,
                   }}
                 >
@@ -223,10 +223,10 @@ export const Timeline: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                 {descText && (
                   <div
                     style={{
-                      color: STYLE.subtitle,
+                      color: "var(--viz-subtitle)",
                       fontSize: descSize,
                       fontWeight: 400,
-                      fontFamily: VIZ_FONT,
+                      fontFamily: "var(--viz-font)",
                       lineHeight: 1.4,
                     }}
                   >

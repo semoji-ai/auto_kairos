@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { resolveAsset } from "../utils/resolveAsset";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
@@ -31,7 +31,6 @@ const MEDAL_COLORS = {
  * - 역순 공개 모드: itemSyncPoints 있으면 자동으로 카운트다운 느낌
  */
 export const SlideRanking: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -50,7 +49,7 @@ export const SlideRanking: React.FC<Props> = ({ data, durationInFrames, fps, viz
   const textSize = n >= 7 ? 26 : n >= 5 ? 30 : 34;
   const rankBadgeSize = n >= 7 ? 38 : n >= 5 ? 44 : 52;
 
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentColor = DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0];
 
   // ── Phase 1: 등장 (위→아래 순차) ──
   const ENTRANCE_BASE = 8;
@@ -101,8 +100,8 @@ export const SlideRanking: React.FC<Props> = ({ data, durationInFrames, fps, viz
                 maxWidth: "100%",
                 maxHeight: "85%",
                 objectFit: "cover",
-                borderRadius: STYLE.cardRadius,
-                boxShadow: STYLE.cardShadow,
+                borderRadius: "var(--viz-card-radius)",
+                boxShadow: "var(--viz-card-shadow)",
               }}
             />
           </div>
@@ -153,7 +152,7 @@ export const SlideRanking: React.FC<Props> = ({ data, durationInFrames, fps, viz
               { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
             );
 
-            const color = isTop3 ? "#FFD700" : STYLE.colors[i % STYLE.colors.length];
+            const color = isTop3 ? "#FFD700" : DEFAULT_STYLE.colors[i % DEFAULT_STYLE.colors.length];
             const scale = isFirst ? 1 + hl * 0.03 : 1 + hl * 0.025;
             const shadowBlur = 16 + hl * 24;
             const shadowAlpha = 0.06 + hl * 0.14;
@@ -181,8 +180,8 @@ export const SlideRanking: React.FC<Props> = ({ data, durationInFrames, fps, viz
                   alignItems: "center",
                   gap: 16,
                   padding: `${isFirst ? cardPadV + 4 : cardPadV}px 24px`,
-                  background: STYLE.cardBg,
-                  borderRadius: STYLE.cardRadius,
+                  background: "var(--viz-card-bg)",
+                  borderRadius: "var(--viz-card-radius)",
                   boxShadow: isFirst
                     ? `0 4px ${shadowBlur}px rgba(255,215,0,${shadowAlpha})`
                     : `0 3px ${shadowBlur}px rgba(61,59,47,${shadowAlpha})`,
@@ -215,13 +214,13 @@ export const SlideRanking: React.FC<Props> = ({ data, durationInFrames, fps, viz
                     width: isFirst ? rankBadgeSize + 8 : rankBadgeSize,
                     height: isFirst ? rankBadgeSize + 8 : rankBadgeSize,
                     borderRadius: "50%",
-                    background: medal?.bg ?? `${STYLE.grid}`,
+                    background: medal?.bg ?? "var(--viz-grid)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: medal?.text ?? STYLE.text,
+                    color: medal?.text ?? "var(--viz-text)",
                     fontSize: isFirst ? Math.round(rankBadgeSize * 0.5) : Math.round(rankBadgeSize * 0.45),
-                    fontWeight: TYPO.title.weight,
+                    fontWeight: "var(--viz-title-weight)" as any,
                     flexShrink: 0,
                     boxShadow: medal ? `0 3px 10px ${medal.shadow}` : undefined,
                     zIndex: 1,
@@ -234,10 +233,10 @@ export const SlideRanking: React.FC<Props> = ({ data, durationInFrames, fps, viz
                 <span
                   style={{
                     flex: 1,
-                    color: STYLE.text,
+                    color: "var(--viz-text)",
                     fontSize: isFirst ? textSize + 4 : textSize,
-                    fontWeight: isFirst ? TYPO.title.weight : TYPO.label.weight,
-                    fontFamily: isFirst ? VIZ_TITLE_FONT : undefined,
+                    fontWeight: isFirst ? "var(--viz-title-weight)" as any : "var(--viz-label-weight)" as any,
+                    fontFamily: isFirst ? "var(--viz-title-font)" : undefined,
                     zIndex: 1,
                   }}
                 >
@@ -248,9 +247,9 @@ export const SlideRanking: React.FC<Props> = ({ data, durationInFrames, fps, viz
                 {values[i] !== undefined && (
                   <span
                     style={{
-                      color: isFirst ? accentColor : STYLE.text,
+                      color: isFirst ? accentColor : "var(--viz-text)",
                       fontSize: isFirst ? textSize + 2 : textSize - 2,
-                      fontWeight: TYPO.title.weight,
+                      fontWeight: "var(--viz-title-weight)" as any,
                       marginLeft: 16,
                       zIndex: 1,
                     }}

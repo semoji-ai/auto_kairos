@@ -12,25 +12,35 @@ SimpleVideo 기반 Remotion 영상의 시각 디자인 규칙을 정의합니다
 
 ---
 
-## 1. 컬러 시스템 — SimpleVideo
+## 1. 컬러 시스템 — DesignPreset 기반
+
+프로젝트별 디자인 프리셋(`meta.designPreset`)으로 전체 컬러를 제어합니다.
+프리셋이 없으면 아트스타일 기본 프리셋 → DEFAULT_PRESET 순으로 fallback합니다.
 
 ```
-기본 팔레트 (전체 영상 공통):
-  bg:         '#0A0A0A'     ← 배경, 고정
-  surface:    '#141414'     ← 카드 배경, 고정
-  text:       '#FFFFFF'     ← 메인 텍스트, 고정
-  textMuted:  'rgba(255,255,255,0.5)' ← 보조 텍스트
-  border:     'rgba(255,255,255,0.1)' ← 테두리
+기본 팔레트 (default preset — dark):
+  bg:         '#0A0A0A'     ← 배경
+  text:       '#FFFFFF'     ← 메인 텍스트
+  textMuted:  '#FFFFFF'     ← 보조 텍스트
+  accent:     '#F59E0B'     ← 기본 accent (아트스타일별로 다름)
+  positive:   '#22C55E'     ← 긍정/상승
+  negative:   '#EF4444'     ← 부정/하락
+  warning:    '#F59E0B'     ← 경고
 
-씬별 accentColor (최대 2색):
-  warning:    '#F59E0B'     ← 기본 accent (강조, 경고) — 가장 많이 사용
-  primary:    '#3B82F6'     ← 정보, 기술, 차분
-  accent:     '#10B981'     ← 성장, 긍정, 성취
-  danger:     '#EF4444'     ← 위험, 하락, 긴박 — 드물게 사용
+아트스타일별 기본 accent:
+  semoji:         '#6366F1' (인디고)
+  lego:           '#EF4444' (레드)
+  quirky_cartoon: '#F59E0B' (앰버)
+  stickman_cute:  '#10B981' (에메랄드)
+
+white 테마 (baseTheme: "white"):
+  bg:         '#FAFAFA'
+  text:       '#1A1A2E'
+  accent:     '#2563EB' (블루)
 ```
 
 **규칙**: 각 씬에서 accentColor는 creative.mood에 따라 결정.
-대부분의 씬은 warning(#F59E0B) 1색만으로 충분합니다.
+프리셋의 moods 오버라이드로 무드별 accent를 커스터마이징할 수 있습니다.
 
 ---
 
@@ -413,6 +423,27 @@ items    = 보조 맥락 라벨
 
 ---
 
+## 10.1 디자인 프리셋 시스템
+
+`meta.designPreset` 필드로 전체 디자인을 제어합니다.
+
+**우선순위**: DEFAULT_PRESET → 아트스타일 기본 프리셋 → 사용자 오버라이드(designPreset)
+
+프리셋이 제어하는 항목:
+- 컬러 팔레트 (bg, text, accent, semantic colors)
+- 폰트 (body, title, quote)
+- 타이포 스케일 (headline, item, label, source 등)
+- 레이아웃 토큰 (padding, gap, cardRadius, badge sizes 등)
+- 무드별 accent/speed/glow/gradient 오버라이드
+- 맵 기본 테마
+- 자막 스타일
+- 애니메이션 기본값
+- 배경 패턴
+
+대시보드 Design System 탭에서 프리셋을 편집/저장/적용할 수 있습니다.
+
+---
+
 ## 11. AccentText 마크업
 
 creative.headline에 사용하는 텍스트 마크업:
@@ -443,14 +474,20 @@ Remotion의 `remotion/src/map/` 컴포넌트가 렌더링합니다.
 | `territory_overlay` | GeoJSON 영역 페이드인 | 세력 범위, 행정구역 |
 | `fly_through` | 키프레임 카메라 이동 | 여러 장소 순차 소개 |
 
-### mapStyle (4종)
+### mapStyle (10종)
 
 | mapStyle | 용도 |
 |----------|------|
-| `modern_clean` | 현대 콘텐츠, 밝고 깔끔 |
+| `modern_clean` | 현대 콘텐츠, 밝고 깔끔 (기본값) |
+| `minimal_light` | 미니멀 라이트 |
+| `dark_elegant` | 다크 + 골드 악센트 |
+| `blueprint` | 기술/청사진 스타일 |
+| `warm_earth` | 따뜻한 어스톤 |
 | `historical` | 역사 콘텐츠, 세피아 톤 |
-| `dark_cyber` | 기술/미래 콘텐츠, 어두운 톤 |
-| `satellite` | 실제 위성 이미지 (드물게) |
+| `dark_cyber` | 기술/미래 콘텐츠, 사이버펑크 |
+| `vintage_parchment` | 빈티지 양피지 |
+| `clean_white` | 퓨어 화이트, 교육 콘텐츠 |
+| `matte_slate` | 매트 슬레이트, 데이터 시각화 |
 
 ### mapScene 필드 스키마
 

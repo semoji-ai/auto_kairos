@@ -17,21 +17,9 @@
 <div class="scene-list" id="scene-list">
   {% for scene in scenes %}
   <div class="sb-card" data-chapter="{{ scene.chapter }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
-    <!-- 좌측: 미리보기 (Remotion 스크린샷) -->
+    <!-- 좌측: Remotion Player 경량 임베드 -->
     <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
-      {% if scene._thumbnail_url %}
-      <img src="{{ scene._thumbnail_url }}" alt="Scene {{ scene.sceneNumber }}" class="sb-thumb" loading="lazy"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-      <div style="display:none">
-        <div class="sb-thumb-placeholder"><div class="concept-preview">Scene {{ scene.sceneNumber }}</div></div>
-      </div>
-      {% elif scene._image_url %}
-      <img src="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }}" class="sb-thumb" loading="lazy">
-      {% else %}
-      <div class="sb-thumb-placeholder">
-        <div class="concept-preview">Scene {{ scene.sceneNumber }}<br><small>Capture 버튼으로 생성</small></div>
-      </div>
-      {% endif %}
+      <div class="sb-player-mount" data-scene-num="{{ scene.sceneNumber }}"></div>
     </div>
 
     <!-- 우측: 원고 + 메타 -->
@@ -115,6 +103,80 @@ function closeSceneDetail() {
 function resizePreview(val) {
   document.getElementById('scene-list').style.setProperty('--sb-preview-w', val + 'px');
 }
+
+// ── Remotion Player 썸네일 lazy mount ──
+(function() {
+  var slug = '{{ slug }}';
+  var metaCache = null;
+  var sceneCache = {};
+
+  function fetchMeta() {
+    if (metaCache) return Promise.resolve(metaCache);
+    return fetch('/api/p/' + slug + '/manifest-meta')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { metaCache = d.meta || { fps: 30, resolution: {width:1920,height:1080}, videoTheme: '{{ video_theme|default("dark") }}', vizFont: 'Pretendard' }; return metaCache; })
+      .catch(function() { metaCache = { fps: 30, resolution: {width:1920,height:1080}, videoTheme: '{{ video_theme|default("dark") }}', vizFont: 'Pretendard' }; return metaCache; });
+  }
+
+  function fetchScene(num) {
+    if (sceneCache[num]) return Promise.resolve(sceneCache[num]);
+    return fetch('/api/p/' + slug + '/editor/scenes/' + num)
+      .then(function(r) { return r.json(); })
+      .then(function(d) { sceneCache[num] = d.scene; return d.scene; });
+  }
+
+  function tryMount(el) {
+    if (el.dataset.mounted) return;
+    if (!window.mountSceneThumb) return;
+    var num = parseInt(el.dataset.sceneNum);
+    el.dataset.mounted = '1';
+    el.innerHTML = '<div style="width:100%;aspect-ratio:16/9;background:#111;display:flex;align-items:center;justify-content:center;font-size:10px;color:#555">Loading...</div>';
+
+    Promise.all([fetchMeta(), fetchScene(num)]).then(function(results) {
+      var meta = results[0];
+      var scene = results[1];
+      if (scene) {
+        el.innerHTML = '';
+        window.mountSceneThumb(el, scene, meta);
+      } else {
+        el.innerHTML = '<div style="width:100%;aspect-ratio:16/9;background:#111;display:flex;align-items:center;justify-content:center;font-size:10px;color:#f66">No data</div>';
+      }
+    }).catch(function() {
+      el.innerHTML = '<div style="width:100%;aspect-ratio:16/9;background:#111;display:flex;align-items:center;justify-content:center;font-size:10px;color:#f66">Error</div>';
+    });
+  }
+
+  // IntersectionObserver로 화면에 보일 때만 마운트
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        tryMount(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: '200px' });
+
+  // scene-editor.js 로드 대기 후 observe 시작
+  function startObserving() {
+    document.querySelectorAll('.sb-player-mount').forEach(function(el) {
+      if (!el.dataset.mounted) observer.observe(el);
+    });
+  }
+
+  if (window.mountSceneThumb) {
+    startObserving();
+  } else {
+    // scene-editor.js 로드 후 시도
+    var checkInterval = setInterval(function() {
+      if (window.mountSceneThumb) {
+        clearInterval(checkInterval);
+        startObserving();
+      }
+    }, 500);
+    // 10초 후 타임아웃
+    setTimeout(function() { clearInterval(checkInterval); }, 10000);
+  }
+})();
 
 function generateThumbnails(slug, btn) {
   btn.disabled = true;

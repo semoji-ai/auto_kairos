@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, interpolate, spring } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { calcItemDelay } from "../utils/syncDelay";
 import { VizShell } from "./VizShell";
 import type { VisualizationData, VizAnimationConfig } from "../types/manifest";
@@ -22,7 +22,6 @@ interface Props {
  * spring() API 최초 도입 — 아이콘 팝 애니메이션
  */
 export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO } = useDesignTokens();
   const frame = useCurrentFrame();
 
   const items = data.items ?? [];
@@ -34,11 +33,6 @@ export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, v
   const cardGap = n >= 6 ? 10 : n >= 5 ? 12 : 16;
   const textSize = n >= 6 ? 28 : n >= 5 ? 32 : 36;
   const iconSize = n >= 6 ? 32 : n >= 5 ? 36 : 40;
-
-  const passColor = STYLE.semantic.positive;
-  const passBg = STYLE.semantic.positiveBg;
-  const failColor = STYLE.semantic.negative;
-  const failBg = STYLE.semantic.negativeBg;
 
   // 요약 배지 계산
   const passCount = values.filter((v) => v === 1).length;
@@ -56,7 +50,7 @@ export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, v
         style={{
           width: "100%",
           height: "100%",
-          backgroundImage: `repeating-linear-gradient(135deg, ${STYLE.border}15, ${STYLE.border}15 1px, transparent 1px, transparent 20px)`,
+          backgroundImage: `repeating-linear-gradient(135deg, ${DEFAULT_STYLE.border}15, ${DEFAULT_STYLE.border}15 1px, transparent 1px, transparent 20px)`,
         }}
       />
     </AbsoluteFill>
@@ -94,8 +88,11 @@ export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, v
           {items.map((item, i) => {
             const isPass = values[i] === 1;
             const desc = descriptions[i] ?? "";
+            const passColor = "var(--viz-positive)";
+            const failColor = "var(--viz-negative)";
             const color = isPass ? passColor : failColor;
-            const bgTintColor = isPass ? passBg : failBg;
+            const rawColor = isPass ? DEFAULT_STYLE.semantic.positive : DEFAULT_STYLE.semantic.negative;
+            const bgTintColor = isPass ? "var(--viz-positive-bg)" : "var(--viz-negative-bg)";
 
             // Phase 1: 카드 등장 (아이콘 숨김)
             const entranceDelay = ENTRANCE_BASE + i * ENTRANCE_STAGGER;
@@ -135,7 +132,7 @@ export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, v
             const shadowAlpha = 0.06 + hl * 0.1;
 
             // 배경 틴트: 아이콘 공개 후 활성화
-            const bgTint = iconVisible ? bgTintColor : STYLE.cardBg;
+            const bgTint = iconVisible ? bgTintColor : "var(--viz-card-bg)";
 
             return (
               <div
@@ -146,9 +143,9 @@ export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, v
                   gap: 16,
                   background: bgTint,
                   padding: `${cardPadV}px 24px`,
-                  borderRadius: STYLE.cardRadius,
+                  borderRadius: "var(--viz-card-radius)",
                   boxShadow: `0 3px ${shadowBlur}px rgba(61,59,47,${shadowAlpha})`,
-                  borderLeft: iconVisible ? `4px solid ${color}` : `4px solid ${STYLE.grid}`,
+                  borderLeft: iconVisible ? `4px solid ${rawColor}` : `4px solid var(--viz-grid)`,
                   opacity: itemOpacity,
                   transform: `translateY(${itemSlide}px) scale(${scale})`,
                   transformOrigin: "left center",
@@ -160,7 +157,7 @@ export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, v
                     width: iconSize,
                     height: iconSize,
                     borderRadius: "50%",
-                    background: iconVisible ? color : STYLE.grid,
+                    background: iconVisible ? rawColor : "var(--viz-grid)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -191,7 +188,7 @@ export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, v
                     </svg>
                   )}
                   {!iconVisible && (
-                    <span style={{ color: STYLE.subtitle, fontSize: 16, fontWeight: 600 }}>?</span>
+                    <span style={{ color: "var(--viz-subtitle)", fontSize: 16, fontWeight: 600 }}>?</span>
                   )}
                 </div>
 
@@ -199,9 +196,9 @@ export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, v
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
                   <span
                     style={{
-                      color: STYLE.text,
+                      color: "var(--viz-text)",
                       fontSize: textSize,
-                      fontWeight: TYPO.label.weight,
+                      fontWeight: "var(--viz-label-weight)" as any,
                       lineHeight: 1.4,
                     }}
                   >
@@ -210,9 +207,9 @@ export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, v
                   {desc && (
                     <span
                       style={{
-                        color: STYLE.subtitle,
+                        color: "var(--viz-subtitle)",
                         fontSize: textSize - 8,
-                        fontWeight: TYPO.caption.weight,
+                        fontWeight: "var(--viz-caption-weight)" as any,
                         lineHeight: 1.3,
                       }}
                     >
@@ -232,8 +229,8 @@ export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, v
               marginTop: 8,
               padding: "10px 24px",
               borderRadius: 20,
-              background: passCount === totalCount ? passBg : `${STYLE.grid}`,
-              border: `2px solid ${passCount === totalCount ? passColor : STYLE.grid}40`,
+              background: passCount === totalCount ? "var(--viz-positive-bg)" : "var(--viz-grid)",
+              border: `2px solid ${passCount === totalCount ? DEFAULT_STYLE.semantic.positive : DEFAULT_STYLE.grid}40`,
               opacity: interpolate(
                 frame,
                 [ENTRANCE_BASE + n * ENTRANCE_STAGGER + 8, ENTRANCE_BASE + n * ENTRANCE_STAGGER + 18],
@@ -244,9 +241,9 @@ export const SlideChecklist: React.FC<Props> = ({ data, durationInFrames, fps, v
           >
             <span
               style={{
-                color: passCount === totalCount ? passColor : STYLE.text,
-                fontSize: TYPO.label.size,
-                fontWeight: TYPO.title.weight,
+                color: passCount === totalCount ? "var(--viz-positive)" : "var(--viz-text)",
+                fontSize: "var(--viz-label-size)",
+                fontWeight: "var(--viz-title-weight)" as any,
               }}
             >
               {passCount}/{totalCount} 달성

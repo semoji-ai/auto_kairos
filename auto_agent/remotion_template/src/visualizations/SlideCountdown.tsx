@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { resolveAsset } from "../utils/resolveAsset";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
@@ -25,7 +25,6 @@ interface Props {
  * itemSyncPoints로 공개 타이밍을 제어.
  */
 export const SlideCountdown: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -109,8 +108,8 @@ export const SlideCountdown: React.FC<Props> = ({ data, durationInFrames, fps, v
           const { start, end } = itemWindows[i];
           const rankNumber = values[i] ?? n - i;
           const desc = descriptions[i] ?? "";
-          const color = STYLE.colors[i % STYLE.colors.length];
-          const grad = STYLE.gradients[i % STYLE.gradients.length];
+          const color = DEFAULT_STYLE.colors[i % DEFAULT_STYLE.colors.length];
+          const grad = DEFAULT_STYLE.gradients[i % DEFAULT_STYLE.gradients.length];
           const isLast = i === n - 1;
 
           // 아이템 가시성: 해당 윈도우 내에서만 보임
@@ -219,7 +218,7 @@ export const SlideCountdown: React.FC<Props> = ({ data, durationInFrames, fps, v
                   transform: `scale(${watermarkScale})`,
                   fontSize: 300,
                   fontWeight: 900,
-                  color: STYLE.text,
+                  color: "var(--viz-text)",
                   lineHeight: 1,
                   userSelect: "none",
                 }}
@@ -262,11 +261,11 @@ export const SlideCountdown: React.FC<Props> = ({ data, durationInFrames, fps, v
                 {/* 항목 텍스트 */}
                 <div
                   style={{
-                    color: STYLE.text,
-                    fontSize: isLast ? TYPO.hero.size + 8 : TYPO.hero.size,
-                    fontWeight: TYPO.hero.weight,
-                    fontFamily: VIZ_TITLE_FONT,
-                    letterSpacing: TYPO.hero.letterSpacing,
+                    color: "var(--viz-text)",
+                    fontSize: isLast ? "calc(var(--viz-hero-size) + 8px)" : "var(--viz-hero-size)",
+                    fontWeight: "var(--viz-hero-weight)" as any,
+                    fontFamily: "var(--viz-title-font)",
+                    letterSpacing: "var(--viz-hero-tracking)",
                     textAlign: "center",
                     maxWidth: "75%",
                     lineHeight: 1.3,
@@ -281,9 +280,9 @@ export const SlideCountdown: React.FC<Props> = ({ data, durationInFrames, fps, v
                 {desc && (
                   <div
                     style={{
-                      color: STYLE.subtitle,
-                      fontSize: TYPO.subtitle.size,
-                      fontWeight: TYPO.subtitle.weight,
+                      color: "var(--viz-subtitle)",
+                      fontSize: "var(--viz-subtitle-size)",
+                      fontWeight: "var(--viz-subtitle-weight)" as any,
                       textAlign: "center",
                       maxWidth: "65%",
                       lineHeight: 1.5,

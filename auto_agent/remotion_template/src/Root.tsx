@@ -1,3 +1,4 @@
+import "./style.css";
 import React from "react";
 import { Composition, Folder, staticFile } from "remotion";
 import { SceneEditor } from "./SceneEditor";
@@ -57,6 +58,22 @@ const fallbackManifest: SceneManifest = {
       },
       kenBurns: { enabled: false, zoomFactor: 1.0 },
       transition: { type: "crossfade", durationFrames: 15 },
+      overlays: [
+        {
+          type: "lottie" as const,
+          assetId: "checkmark-success",
+          position: "top-right" as const,
+          scale: 0.6,
+          enterFrame: 15,
+        },
+        {
+          type: "lottie" as const,
+          assetId: "trophy",
+          position: "bottom-right" as const,
+          scale: 0.5,
+          enterFrame: 30,
+        },
+      ],
     },
   ],
   bgm: null,

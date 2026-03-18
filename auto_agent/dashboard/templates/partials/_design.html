@@ -245,6 +245,88 @@
       + _fmtRange('a-titleFade', 'Title Fade In (프레임)', _def(a.titleFadeIn, 15), 5, 40, 1, ro)
       + '</div></div>';
 
+    // ── 디자인 프리셋 (확장) ──
+    var dp = p.designPreset || {};
+    var dpC = dp.colors || {};
+    var dpF = dp.fonts || {};
+    var dpT = dp.typography || {};
+    var dpL = dp.layout || {};
+    var dpM = dp.map || {};
+    var dpS = dp.subtitle || {};
+
+    // 컬러 팔레트
+    html += '<div class="form-section">'
+      + '<div class="form-section-title">컬러 팔레트</div>'
+      + '<div class="form-grid">'
+      + _fmtColor('dp-bg', '배경', dpC.bg || '#0A0A0A', ro)
+      + _fmtColor('dp-text', '텍스트', dpC.text || '#FFFFFF', ro)
+      + _fmtColor('dp-accent', 'Accent', dpC.accent || g.accentColor || '#F59E0B', ro)
+      + _fmtColor('dp-positive', 'Positive', dpC.positive || '#22C55E', ro)
+      + _fmtColor('dp-negative', 'Negative', dpC.negative || '#EF4444', ro)
+      + _fmtColor('dp-warning', 'Warning', dpC.warning || '#F59E0B', ro)
+      + _fmtColor('dp-rank1', '1등', (dpC.rank && dpC.rank[0]) || '#FFD700', ro)
+      + _fmtColor('dp-rank2', '2등', (dpC.rank && dpC.rank[1]) || '#C0C0C0', ro)
+      + _fmtColor('dp-rank3', '3등', (dpC.rank && dpC.rank[2]) || '#CD7F32', ro)
+      + '</div></div>';
+
+    // 폰트
+    var fontOpts = [['Pretendard','Pretendard'],['SBAggroB','SB AggroB'],['GriunPolFairness','GriunPolFairness']];
+    html += '<div class="form-section">'
+      + '<div class="form-section-title">폰트</div>'
+      + '<div class="form-grid">'
+      + _fmtSelect('dp-bodyFont', '본문 폰트', (dpF.body && dpF.body.family) || 'Pretendard', fontOpts, ro)
+      + _fmtSelect('dp-titleFont', '제목 폰트', (dpF.title && dpF.title.family) || '', [['','본문과 동일']].concat(fontOpts), ro)
+      + _fmtInput('dp-quoteFont', '인용부호 폰트', (dpF.quote && dpF.quote.family) || 'Georgia, serif', ro)
+      + '</div></div>';
+
+    // 타이포그래피
+    html += '<div class="form-section">'
+      + '<div class="form-section-title">타이포그래피</div>'
+      + '<div class="form-grid">'
+      + _fmtRange('dp-headlineAccent', '헤드라인 Accent (px)', _def(dpT.headlineAccent, 80), 48, 120, 2, ro)
+      + _fmtRange('dp-headlineBase', '헤드라인 Base (px)', _def(dpT.headlineBase, 48), 28, 80, 2, ro)
+      + _fmtRange('dp-itemText', '아이템 텍스트 (px)', _def(dpT.itemText, 28), 16, 48, 1, ro)
+      + _fmtRange('dp-sourceText', '출처 텍스트 (px)', _def(dpT.sourceText, 18), 10, 28, 1, ro)
+      + _fmtRange('dp-chartTitle', '차트 제목 (px)', _def(dpT.chartTitle, 48), 28, 72, 2, ro)
+      + _fmtRange('dp-quoteText', '인용문 (px)', _def(dpT.quoteText, 44), 24, 64, 2, ro)
+      + '</div></div>';
+
+    // 레이아웃
+    html += '<div class="form-section">'
+      + '<div class="form-section-title">레이아웃</div>'
+      + '<div class="form-grid">'
+      + _fmtRange('dp-cardRadius', '카드 둥글기 (px)', _def(dpL.cardRadius, 12), 0, 32, 1, ro)
+      + _fmtRange('dp-gap', '기본 간격 (px)', _def(dpL.gap, 24), 8, 48, 2, ro)
+      + _fmtRange('dp-itemsGap', '아이템 간격 (px)', _def(dpL.itemsGap, 16), 4, 32, 2, ro)
+      + _fmtRange('dp-badgeSize', '배지 크기 (px)', _def(dpL.badgeSize, 48), 24, 80, 2, ro)
+      + _fmtRange('dp-barHeight', '바 차트 높이 (px)', _def(dpL.barHeight, 32), 12, 48, 2, ro)
+      + _fmtRange('dp-maxContent', '최대 콘텐츠 폭 (px)', _def(dpL.maxContentWidth, 1100), 600, 1600, 50, ro)
+      + '</div></div>';
+
+    // 맵 테마
+    var mapThemes = [
+      ['modern_clean','Modern Clean'],['minimal_light','Minimal Light'],['dark_elegant','Dark Elegant'],
+      ['blueprint','Blueprint'],['warm_earth','Warm Earth'],['historical','Historical'],
+      ['dark_cyber','Dark Cyber'],['vintage_parchment','Vintage Parchment'],
+      ['clean_white','Clean White'],['matte_slate','Matte Slate']
+    ];
+    html += '<div class="form-section">'
+      + '<div class="form-section-title">맵 설정</div>'
+      + '<div class="form-grid">'
+      + _fmtSelect('dp-mapTheme', '기본 맵 테마', dpM.defaultTheme || 'modern_clean', mapThemes, ro)
+      + '</div></div>';
+
+    // 자막 스타일
+    html += '<div class="form-section">'
+      + '<div class="form-section-title">자막 스타일</div>'
+      + '<div class="form-grid">'
+      + _fmtColor('dp-subKeyword', '키워드 색상', dpS.keywordColor || '#F7D94C', ro)
+      + _fmtColor('dp-subStroke', '외곽선 색상', dpS.strokeColor || '#3D3B2F', ro)
+      + _fmtRange('dp-subStrokeW', '외곽선 두께', _def(dpS.strokeWidth, 2), 0, 6, 0.5, ro)
+      + _fmtRange('dp-subSize', '자막 크기 (px)', _def(dpS.fontSize, 44), 24, 64, 2, ro)
+      + _fmtRange('dp-subBottom', '하단 오프셋 (px)', _def(dpS.bottomOffset, 30), 0, 120, 5, ro)
+      + '</div></div>';
+
     // 프리뷰
     var accentHex = g.accentColor || '#F59E0B';
     var themeBg = g.videoTheme === 'white' ? '#FAFAFA' : '#0A0A0A';
@@ -273,6 +355,10 @@
     _bind('g-accent', 'input', _updatePreview);
     _bind('g-theme', 'change', _updatePreview);
     _bind('d-mood', 'change', _updatePreview);
+    _bind('dp-bg', 'input', _updatePreview);
+    _bind('dp-accent', 'input', _updatePreview);
+    _bind('dp-positive', 'input', _updatePreview);
+    _bind('dp-negative', 'input', _updatePreview);
   }
 
   function _bind(id, evt, fn) {
@@ -281,17 +367,22 @@
   }
 
   function _updatePreview() {
-    var accent = _v('g-accent') || '#F59E0B';
+    var accent = _v('dp-accent') || _v('g-accent') || '#F59E0B';
     var theme = _v('g-theme') || 'dark';
     var mood = _v('d-mood') || 'informative';
-    var bg = theme === 'white' ? '#FAFAFA' : '#0A0A0A';
+    var bg = _v('dp-bg') || (theme === 'white' ? '#FAFAFA' : '#0A0A0A');
     var fg = theme === 'white' ? '#1A1A2E' : '#fff';
+    var pos = _v('dp-positive') || '#22C55E';
+    var neg = _v('dp-negative') || '#EF4444';
     var el = document.getElementById('preview-grid');
     if (el) {
       el.innerHTML = ''
+        + '<div class="preview-chip"><div class="preview-swatch" style="background:' + bg + ';display:flex;align-items:center;justify-content:center;font-size:10px;color:' + fg + '">' + _esc(theme) + '</div>배경</div>'
         + '<div class="preview-chip"><div class="preview-swatch" style="background:' + accent + '"></div>액센트<div class="preview-chip-label">' + _esc(accent) + '</div></div>'
-        + '<div class="preview-chip"><div class="preview-swatch" style="background:' + bg + ';display:flex;align-items:center;justify-content:center;font-size:10px;color:' + fg + '">' + _esc(theme) + '</div>테마</div>'
-        + '<div class="preview-chip"><div class="preview-swatch" style="background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:10px">' + _esc(mood) + '</div>무드</div>';
+        + '<div class="preview-chip"><div class="preview-swatch" style="background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:10px">' + _esc(mood) + '</div>무드</div>'
+        + '<div class="preview-chip"><div class="preview-swatch" style="background:' + pos + '"></div>Positive</div>'
+        + '<div class="preview-chip"><div class="preview-swatch" style="background:' + neg + '"></div>Negative</div>'
+        + '<div class="preview-chip"><div class="preview-swatch" style="background:' + bg + ';border:2px solid ' + accent + ';border-radius:' + (_v('dp-cardRadius') || '12') + 'px;display:flex;align-items:center;justify-content:center;font-size:9px;color:' + fg + '">Card</div>카드</div>';
     }
   }
 
@@ -304,6 +395,7 @@
       global: JSON.parse(JSON.stringify(p.global || {})),
       defaults: JSON.parse(JSON.stringify(p.defaults || {})),
       animation: JSON.parse(JSON.stringify(p.animation || {})),
+      designPreset: JSON.parse(JSON.stringify(p.designPreset || {})),
     });
   }
 
@@ -344,12 +436,54 @@
 
   // ── 폼 수집 ──
   function _collectForm() {
+    var titleFont = _v('dp-titleFont');
     return {
       name: _v('preset-name'),
       description: _v('preset-desc'),
       global: { videoTheme: _v('g-theme'), artStyle: _v('g-artStyle'), accentColor: _v('g-accent'), vizFont: _v('g-font') },
       defaults: { mood: _v('d-mood'), reveal: _v('d-reveal'), emphasis: _v('d-emphasis'), layout: _v('d-layout'), imagePlacement: _v('d-placement'), imageOpacity: parseFloat(_v('d-opacity')) },
       animation: { stagger: parseInt(_v('a-stagger')), itemDuration: parseInt(_v('a-itemDur')), easing: _v('a-easing'), titleFadeIn: parseInt(_v('a-titleFade')) },
+      designPreset: {
+        baseTheme: _v('g-theme') || 'dark',
+        colors: {
+          bg: _v('dp-bg') || '#0A0A0A',
+          text: _v('dp-text') || '#FFFFFF',
+          accent: _v('dp-accent') || '#F59E0B',
+          positive: _v('dp-positive') || '#22C55E',
+          negative: _v('dp-negative') || '#EF4444',
+          warning: _v('dp-warning') || '#F59E0B',
+          rank: [_v('dp-rank1') || '#FFD700', _v('dp-rank2') || '#C0C0C0', _v('dp-rank3') || '#CD7F32'],
+        },
+        fonts: {
+          body: { family: _v('dp-bodyFont') || 'Pretendard' },
+          title: titleFont ? { family: titleFont } : undefined,
+          quote: { family: _v('dp-quoteFont') || 'Georgia, serif' },
+        },
+        typography: {
+          headlineAccent: parseInt(_v('dp-headlineAccent')) || 80,
+          headlineBase: parseInt(_v('dp-headlineBase')) || 48,
+          itemText: parseInt(_v('dp-itemText')) || 28,
+          sourceText: parseInt(_v('dp-sourceText')) || 18,
+          chartTitle: parseInt(_v('dp-chartTitle')) || 48,
+          quoteText: parseInt(_v('dp-quoteText')) || 44,
+        },
+        layout: {
+          cardRadius: parseInt(_v('dp-cardRadius')) || 12,
+          gap: parseInt(_v('dp-gap')) || 24,
+          itemsGap: parseInt(_v('dp-itemsGap')) || 16,
+          badgeSize: parseInt(_v('dp-badgeSize')) || 48,
+          barHeight: parseInt(_v('dp-barHeight')) || 32,
+          maxContentWidth: parseInt(_v('dp-maxContent')) || 1100,
+        },
+        map: { defaultTheme: _v('dp-mapTheme') || 'modern_clean' },
+        subtitle: {
+          keywordColor: _v('dp-subKeyword') || '#F7D94C',
+          strokeColor: _v('dp-subStroke') || '#3D3B2F',
+          strokeWidth: parseFloat(_v('dp-subStrokeW')) || 2,
+          fontSize: parseInt(_v('dp-subSize')) || 44,
+          bottomOffset: parseInt(_v('dp-subBottom')) || 30,
+        },
+      },
     };
   }
 

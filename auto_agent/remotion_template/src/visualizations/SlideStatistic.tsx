@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { resolveAsset } from "../utils/resolveAsset";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
@@ -31,7 +31,6 @@ interface Props {
  * 하위호환: items.length <= 1 → 기존 히어로 숫자 + 서브 배지
  */
 export const SlideStatistic: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_FONT, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -40,7 +39,7 @@ export const SlideStatistic: React.FC<Props> = ({ data, durationInFrames, fps, v
   const descriptions = data.descriptions ?? [];
   const unit = data.unit ?? "";
 
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentColor = DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0];
 
   // Use grid layout for 2+ items
   const useGrid = items.length >= 2;
@@ -89,11 +88,11 @@ export const SlideStatistic: React.FC<Props> = ({ data, durationInFrames, fps, v
         >
           <div
             style={{
-              color: STYLE.text,
-              fontSize: TYPO.title.size,
-              fontWeight: TYPO.title.weight,
-              fontFamily: VIZ_TITLE_FONT,
-              letterSpacing: TYPO.title.letterSpacing,
+              color: "var(--viz-text)",
+              fontSize: "var(--viz-title-size)",
+              fontWeight: "var(--viz-title-weight)" as any,
+              fontFamily: "var(--viz-title-font)",
+              letterSpacing: "var(--viz-title-tracking)",
             }}
           >
             {data.title}
@@ -101,9 +100,9 @@ export const SlideStatistic: React.FC<Props> = ({ data, durationInFrames, fps, v
           <div
             style={{
               color: accentColor,
-              fontSize: TYPO.label.size,
+              fontSize: "var(--viz-label-size)",
               fontWeight: 600,
-              fontFamily: VIZ_FONT,
+              fontFamily: "var(--viz-font)",
               letterSpacing: 2,
             }}
           >
@@ -116,7 +115,7 @@ export const SlideStatistic: React.FC<Props> = ({ data, durationInFrames, fps, v
           style={{
             width: "100%",
             height: 3,
-            background: STYLE.border,
+            background: "var(--viz-border)",
             flexShrink: 0,
             position: "relative",
           }}
@@ -180,9 +179,9 @@ export const SlideStatistic: React.FC<Props> = ({ data, durationInFrames, fps, v
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 16,
-                  background: STYLE.cardBg,
+                  background: "var(--viz-card-bg)",
                   padding: "40px 36px",
-                  border: `1px solid ${STYLE.border}`,
+                  border: `1px solid var(--viz-border)`,
                   opacity: colOpacity,
                   transform: `translateY(${colSlide}px) scale(${scale})`,
                   transformOrigin: "center center",
@@ -195,7 +194,7 @@ export const SlideStatistic: React.FC<Props> = ({ data, durationInFrames, fps, v
                     color: accentColor,
                     fontSize: numSize,
                     fontWeight: 700,
-                    fontFamily: VIZ_FONT,
+                    fontFamily: "var(--viz-font)",
                     lineHeight: 1,
                   }}
                 >
@@ -205,10 +204,10 @@ export const SlideStatistic: React.FC<Props> = ({ data, durationInFrames, fps, v
                 {itemUnit && (
                   <div
                     style={{
-                      color: STYLE.subtitle,
+                      color: "var(--viz-subtitle)",
                       fontSize: unitSize,
                       fontWeight: 500,
-                      fontFamily: VIZ_FONT,
+                      fontFamily: "var(--viz-font)",
                     }}
                   >
                     {itemUnit}
@@ -217,10 +216,10 @@ export const SlideStatistic: React.FC<Props> = ({ data, durationInFrames, fps, v
                 {/* Label */}
                 <div
                   style={{
-                    color: STYLE.text,
+                    color: "var(--viz-text)",
                     fontSize: labelSize,
                     fontWeight: 600,
-                    fontFamily: VIZ_FONT,
+                    fontFamily: "var(--viz-font)",
                     textAlign: "center",
                   }}
                 >
@@ -239,7 +238,6 @@ export const SlideStatistic: React.FC<Props> = ({ data, durationInFrames, fps, v
  * Legacy layout: 히어로 숫자 1개 + 서브 배지 (items.length <= 1)
  */
 const SlideStatisticLegacy: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_FONT, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -253,7 +251,7 @@ const SlideStatisticLegacy: React.FC<Props> = ({ data, durationInFrames, fps, vi
   const mainValue = values[0] ?? 0;
   const hasCountUp = mainValue !== 0;
 
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentColor = DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0];
 
   const MAIN_START = 5;
   const MAIN_DURATION = 25;
@@ -295,7 +293,7 @@ const SlideStatisticLegacy: React.FC<Props> = ({ data, durationInFrames, fps, vi
         }}
       >
         {contextLabel && (
-          <div style={{ color: STYLE.subtitle, fontSize: TYPO.label.size, fontWeight: TYPO.label.weight }}>
+          <div style={{ color: "var(--viz-subtitle)", fontSize: "var(--viz-label-size)", fontWeight: "var(--viz-label-weight)" as any }}>
             {contextLabel}
           </div>
         )}
@@ -310,10 +308,10 @@ const SlideStatisticLegacy: React.FC<Props> = ({ data, durationInFrames, fps, vi
         >
           <span
             style={{
-              color: STYLE.text,
+              color: "var(--viz-text)",
               fontSize: 110,
-              fontWeight: TYPO.hero.weight,
-              fontFamily: VIZ_TITLE_FONT,
+              fontWeight: "var(--viz-hero-weight)" as any,
+              fontFamily: "var(--viz-title-font)",
               letterSpacing: "-0.03em",
               lineHeight: 1,
             }}
@@ -321,7 +319,7 @@ const SlideStatisticLegacy: React.FC<Props> = ({ data, durationInFrames, fps, vi
             {mainText}
           </span>
           {unit && (
-            <span style={{ color: STYLE.subtitle, fontSize: TYPO.title.size, fontWeight: TYPO.subtitle.weight }}>
+            <span style={{ color: "var(--viz-subtitle)", fontSize: "var(--viz-title-size)", fontWeight: "var(--viz-subtitle-weight)" as any }}>
               {unit}
             </span>
           )}

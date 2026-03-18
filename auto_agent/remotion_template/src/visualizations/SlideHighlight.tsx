@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE, TYPO as DEFAULT_TYPO } from "./vizStyles";
 import { resolveAsset } from "../utils/resolveAsset";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
@@ -15,7 +15,6 @@ interface Props {
 }
 
 export const SlideHighlight: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const highlightText = data.items?.[0] ?? "";
   const sourceText = data.source ?? "";
@@ -24,7 +23,7 @@ export const SlideHighlight: React.FC<Props> = ({ data, durationInFrames, fps, v
   const hasImage = !!imagePath;
 
   const easingFn = resolveEasing(vizAnimation?.easing);
-  const accentColor = STYLE.colors[STYLE.accentIndex ?? 0];
+  const accentColor = DEFAULT_STYLE.colors[DEFAULT_STYLE.accentIndex ?? 0];
 
   // ── Phase 1: 등장 ──
   const ENTRANCE_BASE = 8;
@@ -113,8 +112,8 @@ export const SlideHighlight: React.FC<Props> = ({ data, durationInFrames, fps, v
                 maxWidth: "100%",
                 maxHeight: "80%",
                 objectFit: "cover",
-                borderRadius: STYLE.cardRadius,
-                boxShadow: STYLE.cardShadow,
+                borderRadius: "var(--viz-card-radius)",
+                boxShadow: "var(--viz-card-shadow)",
               }}
             />
           </div>
@@ -160,12 +159,12 @@ export const SlideHighlight: React.FC<Props> = ({ data, durationInFrames, fps, v
               style={{
                 position: "relative",
                 zIndex: 1,
-                color: STYLE.text,
-                fontSize: TYPO.hero.size,
-                fontWeight: TYPO.hero.weight,
-                fontFamily: VIZ_TITLE_FONT,
+                color: "var(--viz-text)",
+                fontSize: "var(--viz-hero-size)",
+                fontWeight: "var(--viz-hero-weight)" as any,
+                fontFamily: "var(--viz-title-font)",
                 lineHeight: 1.4,
-                letterSpacing: TYPO.hero.letterSpacing,
+                letterSpacing: "var(--viz-hero-tracking)",
               }}
             >
               {highlightText.split("\\n").map((line, i) => (
@@ -182,9 +181,9 @@ export const SlideHighlight: React.FC<Props> = ({ data, durationInFrames, fps, v
             <div
               style={{
                 marginTop: 32,
-                color: STYLE.subtitle,
-                fontSize: TYPO.subtitle.size - 6,
-                fontWeight: TYPO.caption.weight,
+                color: "var(--viz-subtitle)",
+                fontSize: DEFAULT_TYPO.subtitle.size - 6,
+                fontWeight: "var(--viz-caption-weight)" as any,
                 opacity: sourceOpacity,
               }}
             >

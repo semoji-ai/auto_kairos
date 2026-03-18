@@ -82,18 +82,19 @@ outline.json과 research_report.json을 바탕으로 나레이션 원고를 작�
 
 ### 원고 포맷
 
-상세 포맷은 `skills/shared/writing-style.md` 7번 참조.
+**중요: 씬 분할은 하지 않습니다.** 챕터 단위로만 나레이션을 작성하세요.
+씬 분할은 후속 단계(visual-composer)가 전담합니다.
 
 ```markdown
 # Ch1. 챕터 제목
 
-## Scene 1: 씬 제목
-
 여러분, 혹시 AI가 스스로 도구를 골라 쓰는 세상을 상상해보신 적 있나요?
-
-## Scene 2: 씬 제목
-
 2025년 AI 에이전트 시장은 이미 150억 달러를 넘어섰습니다.
+이 시장이 왜 이렇게 빠르게 커졌는지, 오늘 그 이야기를 해보려 합니다.
+
+# Ch2. 챕터 제목
+
+(이어지는 나레이션...)
 ```
 
 ### 핵심 규칙
@@ -101,21 +102,19 @@ outline.json과 research_report.json을 바탕으로 나레이션 원고를 작�
 - **narrative_draft 활용**: episodes[].narrative_draft를 **핵심 재료**로 사용하되, statistics, key_figures, timeline, comparisons를 적극 참조하여 내용을 풍성하게 확장
 - **must_include 필수 반영**: episodes[].must_include의 모든 팩트가 최종 원고에 포함되었는지 확인
 - **문체**: 아트스타일에 따라 적용 스킬이 달라짐 (위 "아트스타일별 문체 분기" 참조)
-  - semoji (세모지스타일) → `skills/shared/writing-style-semoji.md` (세모지 문체 + "그런데" 반전 + "하지만" 역전 + "그렇게" 매듭)
+  - semoji (세모지스타일) → `skills/shared/writing-style-semoji.md` (세모지 문체)
   - quirky_cartoon → `skills/shared/writing-style-iromism.md` (이로미즘 문체)
   - 그 외 → `skills/shared/writing-style.md` (대화체, 짧은 문장, 능동태)
-- **리서치 체크**: 세모지 스타일일 경우 `skills/shared/research-requirements-semoji.md` §3~4 체크포인트를 아웃라인 설계 전에 확인
+- ⚠️ **씬 분할 금지** — `## Scene N:` 마커를 사용하지 마세요. 챕터 내에서 자연스럽게 이어지는 나레이션만 작성
 - ⚠️ **VIZ/IMG 마커 사용 금지** — 시각화·이미지 판단은 후속 단계(visual-composer, asset-advisory)가 전담
-- **씬 분할**: 아트스타일에 따라 기준이 달라짐
-  - quirky_cartoon → 250자 상한, 서사적 연결 허용 (`writing-style-iromism` 5번 참조)
-  - 그 외 (세모지 포함) → 100자 상한, 개념당 1씬 (`writing-style` 6번, `scene-segmentation` 4번 참조)
+- ⚠️ **scene_hints 참조 금지** — outline의 scene_hints는 무시하세요. 씬 설계는 visual-composer의 영역
 
 ---
 
 ## 주의사항
 
 - narrative_draft의 핵심 논점, 인과관계, 수치를 임의로 생략하거나 변형하지 않는다
-- outline.json의 scene_hints를 참조하되, 원고 흐름에 맞게 재배치 가능
+- outline.json의 scene_hints는 무시 (visual-composer 전용)
 - 모든 통계/수치는 research_report.json의 sources와 매칭 가능해야 함
 - 챕터별 파일(ch{N}.md)과 통합 파일(final_manuscript.md) 모두 생성
 - 원고에 `[VIZ:...]`, `[IMG:...]` 마커를 포함하지 않는다

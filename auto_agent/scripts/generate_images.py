@@ -122,12 +122,27 @@ def step_2_search_images(output_dir: Path, specs: dict):
             source = item["source"]
             query = item["query"]
 
-            # source_hint에 따라 우선 검색, 실패 시 워터폴
-            if source == "wikimedia":
+            # 프로젝트 config의 search_engine 우선 적용
+            config_engine = os.environ.get("SEARCH_ENGINE", "").lower()
+            effective_source = source
+            if config_engine == "wikimedia" and source in ("search", "wikimedia"):
+                effective_source = "wikimedia"
+
+            # source에 따라 검색, 실패 시 워터폴
+            if effective_source == "wikimedia":
                 downloaded = searcher.search_and_download(query, n, "wikimedia", preferred)
+                # fallback: 쿼리 단순화 후 재시도
+                if not downloaded and " " in query:
+                    simple_query = " ".join(query.split()[:2])
+                    downloaded = searcher.search_and_download(simple_query, n, "wikimedia", preferred)
+                if not downloaded:
+                    # fallbackQuery가 있으면 시도
+                    fallback_q = item.get("fallbackQuery", "")
+                    if fallback_q:
+                        downloaded = searcher.search_and_download(fallback_q, n, "wikimedia", preferred)
                 if not downloaded:
                     downloaded = searcher.search_waterfall(query, n, preferred)
-            elif source == "search":
+            elif effective_source == "search":
                 try:
                     downloaded = searcher.search_and_download(query, n, "serper", preferred)
                 except ValueError:

@@ -6,7 +6,6 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay, msToFrames } from "../utils/syncDelay";
 import { countUpValue } from "../utils/countUp";
@@ -22,7 +21,6 @@ interface Props {
 }
 
 export const PieChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const items = data.items ?? [];
   const values = data.values ?? [];
@@ -111,24 +109,24 @@ export const PieChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
     const endX = isRight ? cx + or + 120 : cx - or - 120;
     const textAnchor = isRight ? "start" : "end";
     const textX = endX + (isRight ? 10 : -10);
-    const color = STYLE.colors[index % STYLE.colors.length];
+    const color = `var(--viz-color-${index % 10})`;
 
     return (
       <g>
         {/* Radial stub */}
         <line x1={startX} y1={startY} x2={elbowX} y2={elbowY}
-          stroke={STYLE.subtitle} strokeWidth={1.5} />
+          stroke="var(--viz-subtitle)" strokeWidth={1.5} />
         {/* Horizontal arm */}
         <line x1={elbowX} y1={elbowY} x2={endX} y2={elbowY}
-          stroke={STYLE.subtitle} strokeWidth={1.5} />
+          stroke="var(--viz-subtitle)" strokeWidth={1.5} />
         {/* Name (line 1) */}
         <text
           x={textX} y={elbowY - 6}
           textAnchor={textAnchor}
-          fill={STYLE.text}
-          fontSize={TYPO.label.size + 2}
-          fontWeight={TYPO.label.weight}
-          fontFamily={VIZ_FONT}
+          fill="var(--viz-text)"
+          fontSize="var(--viz-label-size)"
+          fontWeight="var(--viz-label-weight)"
+          fontFamily="var(--viz-font)"
         >
           {payload.name}
         </text>
@@ -137,9 +135,9 @@ export const PieChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
           x={textX} y={elbowY + 28}
           textAnchor={textAnchor}
           fill={color}
-          fontSize={TYPO.value.size + 8}
-          fontWeight={TYPO.value.weight}
-          fontFamily={VIZ_FONT}
+          fontSize="var(--viz-value-size)"
+          fontWeight="var(--viz-value-weight)"
+          fontFamily="var(--viz-font)"
         >
           {payload.percentage}%
         </text>
@@ -189,7 +187,7 @@ export const PieChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                 innerRadius={innerRadius}
                 startAngle={90}
                 endAngle={90 - totalProgress}
-                stroke={STYLE.cardBg}
+                stroke="var(--viz-card-bg)"
                 strokeWidth={3}
                 isAnimationActive={false}
                 label={useLegend ? false : renderLabel}
@@ -198,7 +196,7 @@ export const PieChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                 {chartData.map((_, i) => (
                   <Cell
                     key={i}
-                    fill={STYLE.colors[i % STYLE.colors.length]}
+                    fill={`var(--viz-color-${i % 10})`}
                   />
                 ))}
               </Pie>
@@ -218,18 +216,18 @@ export const PieChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
           >
             <div
               style={{
-                fontSize: TYPO.caption.size,
-                color: STYLE.subtitle,
-                fontWeight: TYPO.subtitle.weight,
+                fontSize: "var(--viz-caption-size)",
+                color: "var(--viz-subtitle)",
+                fontWeight: "var(--viz-subtitle-weight)",
               }}
             >
               {VIZ_STRINGS.pie_total}
             </div>
             <div
               style={{
-                fontSize: TYPO.title.size,
-                fontWeight: TYPO.title.weight,
-                color: STYLE.text,
+                fontSize: "var(--viz-title-size)",
+                fontWeight: "var(--viz-title-weight)",
+                color: "var(--viz-text)",
               }}
             >
               {animatedTotal.toLocaleString()}
@@ -270,27 +268,27 @@ export const PieChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                       width: 16,
                       height: 16,
                       borderRadius: 4,
-                      background: STYLE.colors[i % STYLE.colors.length],
+                      background: `var(--viz-color-${i % 10})`,
                       flexShrink: 0,
                     }}
                   />
                   <span
                     style={{
                       flex: 1,
-                      color: STYLE.text,
-                      fontSize: TYPO.label.size - 4,
-                      fontWeight: TYPO.label.weight,
-                      fontFamily: VIZ_FONT,
+                      color: "var(--viz-text)",
+                      fontSize: "var(--viz-label-size)",
+                      fontWeight: "var(--viz-label-weight)",
+                      fontFamily: "var(--viz-font)",
                     }}
                   >
                     {entry.name}
                   </span>
                   <span
                     style={{
-                      color: STYLE.colors[i % STYLE.colors.length],
-                      fontSize: TYPO.value.size,
-                      fontWeight: TYPO.value.weight,
-                      fontFamily: VIZ_FONT,
+                      color: `var(--viz-color-${i % 10})`,
+                      fontSize: "var(--viz-value-size)",
+                      fontWeight: "var(--viz-value-weight)",
+                      fontFamily: "var(--viz-font)",
                     }}
                   >
                     {entry.percentage}%

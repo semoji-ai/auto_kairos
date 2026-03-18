@@ -55,9 +55,10 @@ def get_file_status(output_dir: str) -> dict:
 
 def get_scene_image_url(slug: str, scene_num: int, output_dir: str) -> Optional[str]:
     """씬 이미지 URL 반환 (/output/ 마운트 기준)."""
-    img = Path(output_dir) / "images" / f"scene_{scene_num:03d}.png"
-    if img.exists():
-        return f"/output/{slug}/images/scene_{scene_num:03d}.png"
+    for ext in (".jpg", ".jpeg", ".png", ".webp"):
+        img = Path(output_dir) / "images" / f"scene_{scene_num:03d}{ext}"
+        if img.exists():
+            return f"/output/{slug}/images/scene_{scene_num:03d}{ext}"
     return None
 
 

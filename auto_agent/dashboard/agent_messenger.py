@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api/agent-messages", tags=["agent-messenger"])
 
 # ── 메시지 큐 (파일 영속 + 인메모리 캐시) ──
 
-MAX_HISTORY = 200
+MAX_HISTORY = 1000
 _PERSIST_FILE = None
 
 def _get_persist_path():

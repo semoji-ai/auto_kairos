@@ -1,35 +1,176 @@
-<!-- Assets 탭 -->
-<div class="stats-grid">
-  {% for atype, count in asset_counts.items()|sort %}
-  <div class="stat">
-    <div class="label">{{ atype }}</div>
-    <div class="value">{{ count }}</div>
+<!-- Assets 탭 — 이미지 에셋 갤러리 -->
+<div class="assets-page">
+  <div class="assets-header">
+    <h2>Image Assets</h2>
+    <div class="assets-stats" id="assets-stats"></div>
   </div>
-  {% endfor %}
+
+  <div class="assets-grid" id="assets-grid">
+    <div class="assets-loading">이미지 에셋 로드 중...</div>
+  </div>
 </div>
 
-<table>
-  <thead>
-    <tr><th>Scene</th><th>Type</th><th>File</th><th>Size</th><th>Preview</th></tr>
-  </thead>
-  <tbody>
-  {% for a in assets[:100] %}
-  <tr>
-    <td>{% if a.scene_number %}{{ "%03d"|format(a.scene_number) }}{% else %}-{% endif %}</td>
-    <td>{{ a.asset_type }}</td>
-    <td style="font-size:13px">{{ a.file_name }}</td>
-    <td>{{ "%.1f"|format(a.file_size / 1024) }}KB</td>
-    <td>
-      {% if a.asset_type == 'audio' and a.file_path %}
-      <audio controls preload="none" src="/output/{{ slug }}/audio/{{ a.file_name }}" style="height:24px;width:200px"></audio>
-      {% elif a.asset_type == 'image' and a.file_path %}
-      <img src="/output/{{ slug }}/images/{{ a.file_name }}" alt="" style="height:40px;border-radius:4px">
-      {% else %}-{% endif %}
-    </td>
-  </tr>
-  {% endfor %}
-  {% if assets|length > 100 %}
-  <tr><td colspan="5" style="text-align:center;color:var(--text-muted)">... and {{ assets|length - 100 }} more</td></tr>
-  {% endif %}
-  </tbody>
-</table>
+<style>
+.assets-page { padding: 16px 20px; }
+.assets-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.assets-header h2 { margin: 0; font-size: 16px; }
+.assets-stats { display: flex; gap: 12px; font-size: 11px; color: var(--text-muted); }
+.assets-stats .stat-badge { padding: 3px 10px; border-radius: 10px; background: rgba(255,255,255,0.06); }
+
+.assets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.assets-loading { grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px; }
+
+.asset-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.asset-card:hover { border-color: rgba(255,255,255,0.15); }
+
+.asset-card .img-wrap {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: #111;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.asset-card .img-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.asset-card .img-wrap .no-img {
+  color: rgba(255,255,255,0.2); font-size: 32px;
+}
+.asset-card .img-wrap .badge-overlay {
+  position: absolute; top: 6px; left: 6px;
+  font-size: 9px; padding: 2px 6px; border-radius: 4px;
+  font-weight: 600;
+}
+.badge-search { background: rgba(59,130,246,0.8); color: #fff; }
+.badge-generate { background: rgba(168,85,247,0.8); color: #fff; }
+.badge-viz { background: rgba(16,185,129,0.8); color: #fff; }
+.badge-none { background: rgba(107,114,128,0.8); color: #fff; }
+
+.asset-card .scene-label {
+  position: absolute; top: 6px; right: 6px;
+  font-size: 10px; padding: 2px 6px; border-radius: 4px;
+  background: rgba(0,0,0,0.7); color: #fff; font-weight: 600;
+}
+
+.asset-card .card-body { padding: 8px 10px; }
+.asset-card .card-title { font-size: 11px; font-weight: 600; color: #E4E4E7; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asset-card .card-query { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asset-card .card-meta { display: flex; gap: 6px; margin-top: 4px; font-size: 9px; color: rgba(255,255,255,0.3); }
+.asset-card .card-layout { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,0.06); color: var(--text-muted); display: inline-block; margin-top: 4px; }
+
+/* 오디오 섹션 */
+.audio-section { margin-top: 24px; }
+.audio-section h3 { font-size: 14px; margin-bottom: 12px; color: #A1A1AA; }
+.audio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+.audio-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 11px; }
+.audio-item .scene-num { font-weight: 600; color: var(--accent); min-width: 40px; }
+.audio-item audio { height: 28px; flex: 1; }
+</style>
+
+<script>
+(function() {
+  var grid = document.getElementById('assets-grid');
+  var statsEl = document.getElementById('assets-stats');
+  var slug = '{{ slug }}';
+
+  // scene_specs에서 이미지/레이아웃 정보 가져오기
+  fetch('/api/p/' + encodeURIComponent(slug) + '/scenes')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var scenes = data.scenes || [];
+      if (!scenes.length) {
+        grid.innerHTML = '<div class="assets-loading">씬 데이터가 없습니다.</div>';
+        return;
+      }
+
+      // 통계
+      var imgCount = 0, chartCount = 0, searchCount = 0, genCount = 0;
+      scenes.forEach(function(s) {
+        var img = s.imageAsset || {};
+        if (img.src || img.query) imgCount++;
+        if (img.source === 'search' || img.source === 'wikimedia') searchCount++;
+        if (img.source === 'generate') genCount++;
+        var viz = s.visualization || {};
+        if (viz.chartConfig || (viz.creative || {}).chartConfig) chartCount++;
+      });
+
+      statsEl.innerHTML = ''
+        + '<span class="stat-badge">씬 ' + scenes.length + '개</span>'
+        + '<span class="stat-badge">🖼️ 이미지 ' + imgCount + '</span>'
+        + '<span class="stat-badge">🔍 검색 ' + searchCount + '</span>'
+        + '<span class="stat-badge">🎨 생성 ' + genCount + '</span>'
+        + '<span class="stat-badge">📊 차트 ' + chartCount + '</span>';
+
+      // 카드 렌더링
+      grid.innerHTML = '';
+      scenes.forEach(function(s) {
+        var num = s.sceneNumber;
+        var title = s.title || '씬 ' + num;
+        var img = s.imageAsset || {};
+        var viz = s.visualization || {};
+        var creative = viz.creative || {};
+        var layout = creative.layout || '';
+        var imgSrc = s._image_url || '';
+        var query = img.query || img.searchQuery || '';
+        var source = img.source || '';
+        var hasChart = !!(viz.chartConfig || creative.chartConfig);
+
+        var badgeClass = 'badge-none';
+        var badgeText = '없음';
+        if (source === 'search' || source === 'wikimedia') { badgeClass = 'badge-search'; badgeText = '🔍 검색'; }
+        else if (source === 'generate') { badgeClass = 'badge-generate'; badgeText = '🎨 생성'; }
+        else if (hasChart) { badgeClass = 'badge-viz'; badgeText = '📊 차트'; }
+
+        var card = document.createElement('div');
+        card.className = 'asset-card';
+        card.innerHTML = ''
+          + '<div class="img-wrap">'
+          + (imgSrc ? '<img src="' + imgSrc + '" loading="lazy">' : '<span class="no-img">🖼️</span>')
+          + '<span class="badge-overlay ' + badgeClass + '">' + badgeText + '</span>'
+          + '<span class="scene-label">S' + String(num).padStart(2,'0') + '</span>'
+          + '</div>'
+          + '<div class="card-body">'
+          + '<div class="card-title">' + esc(title) + '</div>'
+          + (query ? '<div class="card-query">🔍 ' + esc(query) + '</div>' : '')
+          + (layout ? '<span class="card-layout">' + esc(layout) + '</span>' : '')
+          + '<div class="card-meta">'
+          + (img.placement ? '<span>' + img.placement + '</span>' : '')
+          + (img.opacity ? '<span>opacity: ' + img.opacity + '</span>' : '')
+          + '</div>'
+          + '</div>';
+        grid.appendChild(card);
+      });
+
+      // 오디오 섹션
+      var audioHtml = '<div class="audio-section"><h3>🎙️ Audio</h3><div class="audio-grid">';
+      scenes.forEach(function(s) {
+        var audioUrl = s._audio_url;
+        if (audioUrl) {
+          audioHtml += '<div class="audio-item">'
+            + '<span class="scene-num">S' + String(s.sceneNumber).padStart(2,'0') + '</span>'
+            + '<audio controls preload="none" src="' + audioUrl + '"></audio>'
+            + '</div>';
+        }
+      });
+      audioHtml += '</div></div>';
+      grid.insertAdjacentHTML('afterend', audioHtml);
+    })
+    .catch(function(err) {
+      grid.innerHTML = '<div class="assets-loading">에셋 로드 실패: ' + err.message + '</div>';
+    });
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+})();
+</script>

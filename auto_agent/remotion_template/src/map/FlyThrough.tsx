@@ -30,10 +30,12 @@ export const FlyThrough: React.FC<Props> = ({
 }) => {
   const frame = useCurrentFrame();
 
+  const keyframes = data.camera?.keyframes ?? [];
+  if (keyframes.length === 0) return null;
   const camera: CameraState = interpolateCamera(
     frame,
-    data.camera.keyframes,
-    data.camera.easing,
+    keyframes,
+    data.camera?.easing,
   );
 
   /* ── prerenderedBg 모드: 정적 스크린샷 배경 ── */

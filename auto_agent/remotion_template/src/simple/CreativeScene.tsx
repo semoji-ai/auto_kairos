@@ -27,6 +27,8 @@ const resolveAsset = (path: string): string =>
     ? path
     : staticFile(path);
 
+import { useDesignPreset, usePresetColors, usePresetTypo, usePresetLayout } from "../design";
+
 import {
   C as C_DEFAULT,
   useC,
@@ -145,8 +147,10 @@ function resolveLayout(data: any, creative: any): LayoutType {
 
   // ── 2순위: displayMode / chartConfig (하위호환) ──
   if (creative.displayMode === "logo_grid") return "logo_grid";
-  if (creative.displayMode === "pie_chart" || creative.chartConfig?.type === "pie") return "pie";
-  if (creative.displayMode === "line_chart" || creative.chartConfig?.type === "line") return "line";
+  const chartType = data.chartConfig?.type || creative.chartConfig?.type;
+  if (creative.displayMode === "pie_chart" || chartType === "pie") return "pie";
+  if (creative.displayMode === "line_chart" || chartType === "line") return "line";
+  if (chartType === "bar") return "bar";
 
   // ── 3순위: 데이터 구조 기반 추론 (fallback) ──
   return inferFromDataStructure(data, creative);
@@ -316,6 +320,32 @@ function getMoodConfig(mood: string, themeAccent?: string): MoodConfig {
     return { ...base, accent: themeAccent, accentRgb: hexToRgb(themeAccent) };
   }
   return base;
+}
+
+/** preset-aware mood config: preset.moods 우선, MOOD_CONFIGS fallback */
+function getMoodConfigFromPreset(
+  mood: string,
+  preset: ReturnType<typeof useDesignPreset>,
+): MoodConfig {
+  const override = preset.moods[mood];
+  const fallback: MoodConfig = {
+    accent: preset.colors.accent,
+    accentRgb: preset.colors.accentRgb,
+    speed: 1.0,
+    glow: 0.3,
+  };
+  return {
+    accent: override?.accent ?? fallback.accent,
+    accentRgb: override?.accentRgb ?? fallback.accentRgb,
+    speed: override?.speed ?? fallback.speed,
+    glow: override?.glow ?? fallback.glow,
+  };
+}
+
+/** preset-aware mood gradient: preset.moods[mood].gradient 우선 */
+function getMoodGradient(mood: string, preset: ReturnType<typeof useDesignPreset>): string {
+  return preset.moods[mood]?.gradient
+    ?? `radial-gradient(ellipse 80% 60% at 50% 40%, ${preset.colors.bg} 0%, ${preset.colors.bg} 70%)`;
 }
 
 /* ================================================================
@@ -492,9 +522,10 @@ const EmphasisAccentText: React.FC<{
   accentStartIndex = 0,
 }) => {
   const C = useC();
+  const T = usePresetTypo();
   const isCountEmphasis = emphasis === "number" || emphasis === "count";
-  const accentSize = accentFontSizeOverride || getAccentFontSize(emphasis);
-  const baseSize = getBaseFontSize(emphasis);
+  const accentSize = accentFontSizeOverride || T.headlineAccent;
+  const baseSize = T.headlineBase;
   const sizeDiff = accentSize - baseSize;
 
   const parts = text.split(/(\{\{[^}]+\}\})/g);
@@ -591,8 +622,14 @@ const EmphasisAccentText: React.FC<{
 
 const MoodBackground: React.FC<{ mood: string; transparent?: boolean }> = ({ mood, transparent }) => {
   const C = useC();
+  const preset = useDesignPreset();
   const isWhite = C.bg === "#FAFAFA";
-  const gradients = isWhite ? MOOD_GRADIENTS_WHITE : MOOD_GRADIENTS;
+  // preset-aware gradient (아트스타일 프리셋에 정의된 gradient 우선)
+  const gradientFromPreset = getMoodGradient(mood, preset);
+  // white 테마 fallback: 기존 MOOD_GRADIENTS_WHITE 참조 (프리셋에 white용 gradient 미정의 시)
+  const gradient = isWhite
+    ? (MOOD_GRADIENTS_WHITE[mood] || MOOD_GRADIENTS_WHITE.informative)
+    : gradientFromPreset;
   return (
   <div
     style={{
@@ -600,7 +637,7 @@ const MoodBackground: React.FC<{ mood: string; transparent?: boolean }> = ({ moo
       inset: 0,
       background: transparent
         ? (isWhite ? "rgba(250,250,250,0.45)" : "rgba(10,10,10,0.45)")
-        : (gradients[mood] || gradients.informative),
+        : gradient,
       zIndex: 0,
     }}
   />
@@ -699,6 +736,8 @@ const SplitLayout: React.FC<{
   descriptions,
 }) => {
   const C = useC();
+  const T = usePresetTypo();
+  const L = usePresetLayout();
   const frame = useCurrentFrame();
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
@@ -818,7 +857,7 @@ const SplitLayout: React.FC<{
                 flexDirection: "column",
                 alignItems: "center",
                 textAlign: "center",
-                fontSize: getBaseFontSize(emphasis),
+                fontSize: T.splitLabel,
                 fontWeight: 600,
                 lineHeight: 1.6,
                 padding: hasImageBg ? "40px 48px" : "40px 24px",
@@ -840,7 +879,7 @@ const SplitLayout: React.FC<{
                 glowOpacity={glowOpacity}
               />
               {leftDesc && (
-                <div style={{ fontSize: 30, color: C.textDim, marginTop: 12, fontWeight: 400, opacity: descOpacity, transform: `translateY(${descSlideY}px)` }}>
+                <div style={{ fontSize: T.splitVsText, color: C.textDim, marginTop: 12, fontWeight: 400, opacity: descOpacity, transform: `translateY(${descSlideY}px)` }}>
                   {leftDesc}
                 </div>
               )}
@@ -896,7 +935,7 @@ const SplitLayout: React.FC<{
               <div
                 style={{
                   ...vsScale,
-                  fontSize: 30,
+                  fontSize: T.splitVsText,
                   fontWeight: 800,
                   color: moodCfg.accent,
                   backgroundColor: C.bg,
@@ -929,7 +968,7 @@ const SplitLayout: React.FC<{
                 flexDirection: "column",
                 alignItems: "center",
                 textAlign: "center",
-                fontSize: getBaseFontSize(emphasis),
+                fontSize: T.splitLabel,
                 fontWeight: 600,
                 lineHeight: 1.6,
                 padding: hasImageBg ? "40px 48px" : "40px 24px",
@@ -951,7 +990,7 @@ const SplitLayout: React.FC<{
                 glowOpacity={glowOpacity}
               />
               {rightDesc && (
-                <div style={{ fontSize: 30, color: C.textDim, marginTop: 12, fontWeight: 400, opacity: descOpacity, transform: `translateY(${descSlideY}px)` }}>
+                <div style={{ fontSize: T.splitVsText, color: C.textDim, marginTop: 12, fontWeight: 400, opacity: descOpacity, transform: `translateY(${descSlideY}px)` }}>
                   {rightDesc}
                 </div>
               )}
@@ -989,7 +1028,7 @@ const SplitLayout: React.FC<{
           <div
             style={{
               opacity: sourceFade,
-              fontSize: 18,
+              fontSize: T.sourceText,
               color: C.textDim,
               marginTop: 16,
             }}
@@ -1016,6 +1055,8 @@ const ItemsGrid: React.FC<{
   itemFlags?: string[];
 }> = ({ items, delays, headlineDelays, moodCfg, reveal, itemIcons, itemFlags }) => {
   const C = useC();
+  const T = usePresetTypo();
+  const L = usePresetLayout();
   const frame = useCurrentFrame();
   // 4개: 4열(한줄) 또는 2x2, 5~8개: 3열, 9+: 3열
   const cols = items.length === 4 ? (items.some(it => it.length > 8) ? 2 : 4)
@@ -1031,10 +1072,10 @@ const ItemsGrid: React.FC<{
       style={{
         display: "grid",
         gridTemplateColumns: `repeat(${cols}, 1fr)`,
-        gap: 16,
+        gap: L.itemsGap,
         width: "100%",
-        maxWidth: 1040,
-        marginTop: 32,
+        maxWidth: L.maxContentWidth,
+        marginTop: L.sectionMarginTop,
       }}
     >
       {items.map((item, i) => {
@@ -1060,7 +1101,7 @@ const ItemsGrid: React.FC<{
               border: `1px solid ${moodCfg.accent}${flashGlow > 0 ? "88" : "33"}`,
               backgroundColor: `rgba(${moodCfg.accentRgb},0.06)`,
               textAlign: "center",
-              fontSize: 28,
+              fontSize: T.itemText,
               fontWeight: 600,
               color: C.text,
               boxShadow: borderGlow,
@@ -1253,6 +1294,8 @@ const ItemsList: React.FC<{
   itemStatuses?: Array<"positive" | "negative" | "neutral" | "warning">;
 }> = ({ items, delays, headlineDelays, moodCfg, emphasis, concept, images, itemIcons, itemFlags, itemStatuses }) => {
   const C = useC();
+  const T = usePresetTypo();
+  const L = usePresetLayout();
   const frame = useCurrentFrame();
   const showBadge = emphasis === "sequence" || emphasis === "person";
   const hasImages = images && images.length > 0;
@@ -1268,11 +1311,11 @@ const ItemsList: React.FC<{
       <div
         style={{
           display: "flex",
-          gap: 16,
+          gap: L.itemsGap,
           width: "100%",
           justifyContent: "center",
           flexWrap: "wrap",
-          marginTop: 32,
+          marginTop: L.sectionMarginTop,
         }}
       >
         {items.map((item, i) => {
@@ -1298,7 +1341,7 @@ const ItemsList: React.FC<{
                 transform: `translateY(${slideY}px)`,
                 display: "flex",
                 flexDirection: "column",
-                borderRadius: 12,
+                borderRadius: L.cardRadius,
                 backgroundColor: spotlight
                   ? `rgba(${moodCfg.accentRgb},0.12)`
                   : "rgba(255,255,255,0.04)",
@@ -1321,7 +1364,7 @@ const ItemsList: React.FC<{
               )}
               <span
                 style={{
-                  fontSize: 28,
+                  fontSize: T.itemText,
                   fontWeight: spotlight ? 700 : 600,
                   color: spotlight ? moodCfg.accent : C.text,
                   textAlign: "center",
@@ -1346,8 +1389,8 @@ const ItemsList: React.FC<{
         flexDirection: "column",
         gap: 12,
         width: "100%",
-        maxWidth: 940,
-        marginTop: 32,
+        maxWidth: L.maxContentWidth,
+        marginTop: L.sectionMarginTop,
       }}
     >
       {items.map((item, i) => {
@@ -1402,7 +1445,7 @@ const ItemsList: React.FC<{
             )}
             <span
               style={{
-                fontSize: 28,
+                fontSize: T.itemText,
                 fontWeight: spotlight ? 700 : 500,
                 color: spotlight ? moodCfg.accent : C.text,
                 flex: 1,
@@ -1432,6 +1475,7 @@ const QuoteDisplay: React.FC<{
   portrait?: string;
 }> = ({ items, source, moodCfg, reveal, speed, mood, hasImageBg, portrait }) => {
   const C = useC();
+  const T = usePresetTypo();
   const frame = useCurrentFrame();
   const s = (f: number) => Math.round(f / speed);
   const quoteText = items[0] || "";
@@ -1520,7 +1564,7 @@ const QuoteDisplay: React.FC<{
         {/* Quote mark decoration */}
         <div
           style={{
-            fontSize: 120,
+            fontSize: T.quoteMarkSize,
             fontWeight: 800,
             color: moodCfg.accent,
             opacity: markOpacity,
@@ -1537,7 +1581,7 @@ const QuoteDisplay: React.FC<{
           style={{
             opacity: quoteOpacity,
             transform: `translateY(${quoteRise}px)`,
-            fontSize: 44,
+            fontSize: T.quoteText,
             fontWeight: 600,
             color: C.text,
             textAlign: "center",
@@ -1567,7 +1611,7 @@ const QuoteDisplay: React.FC<{
           <div
             style={{
               opacity: sourceOpacity,
-              fontSize: 18,
+              fontSize: T.sourceText,
               color: moodCfg.accent,
               marginTop: 16,
               fontWeight: 500,
@@ -1631,6 +1675,8 @@ const LogoGridLayout: React.FC<{
   logoMap,
 }) => {
   const C = useC();
+  const T = usePresetTypo();
+  const L = usePresetLayout();
   const frame = useCurrentFrame();
   const maxVal = Math.max(...values, 1);
   const lines = headline.split("\n").filter((l: string) => l.trim());
@@ -1654,8 +1700,8 @@ const LogoGridLayout: React.FC<{
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          padding: "60px 60px",
-          gap: 32,
+          padding: `${L.scenePadding[0]}px ${L.scenePadding[1]}px`,
+          gap: L.sectionMarginTop,
         }}
       >
         {/* Headline */}
@@ -1664,7 +1710,7 @@ const LogoGridLayout: React.FC<{
             <div
               key={i}
               style={{
-                fontSize: 48,
+                fontSize: T.chartTitle,
                 fontWeight: 700,
                 color: C.text,
                 lineHeight: 1.3,
@@ -1684,9 +1730,9 @@ const LogoGridLayout: React.FC<{
               : items.length <= 6
                 ? "repeat(3, 1fr)"
                 : "repeat(4, 1fr)",
-            gap: 24,
+            gap: L.gap,
             width: "100%",
-            maxWidth: 1100,
+            maxWidth: L.maxContentWidth,
           }}
         >
           {items.map((item, i) => {
@@ -1755,7 +1801,7 @@ const LogoGridLayout: React.FC<{
                 {/* Company name */}
                 <div
                   style={{
-                    fontSize: 22,
+                    fontSize: T.labelText,
                     fontWeight: 600,
                     color: C.text,
                     textAlign: "center",
@@ -1787,7 +1833,7 @@ const LogoGridLayout: React.FC<{
           <div
             style={{
               opacity: sourceFade,
-              fontSize: 18,
+              fontSize: T.sourceText,
               color: C.textDim,
               marginTop: 16,
             }}
@@ -1830,6 +1876,8 @@ const BarDisplay: React.FC<{
   hasImageBg,
 }) => {
   const C = useC();
+  const T = usePresetTypo();
+  const L = usePresetLayout();
   const frame = useCurrentFrame();
   const hasNegative = values.some((v) => v < 0);
   const maxVal = Math.max(...values, 1);
@@ -1865,7 +1913,7 @@ const BarDisplay: React.FC<{
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          padding: "60px 80px",
+          padding: `${L.scenePadding[0]}px 80px`,
         }}
       >
         {/* Headline */}
@@ -1873,9 +1921,9 @@ const BarDisplay: React.FC<{
           style={{
             opacity: headlineOpacity,
             transform: `translateY(${headlineRise}px)`,
-            fontSize: 48,
+            fontSize: T.chartTitle,
             fontWeight: 600,
-            marginBottom: 32,
+            marginBottom: L.sectionMarginTop,
             textAlign: "center",
             lineHeight: 1.4,
           }}
@@ -1894,7 +1942,7 @@ const BarDisplay: React.FC<{
         <div
           style={{
             width: "100%",
-            maxWidth: 800,
+            maxWidth: L.maxContentWidth,
             display: "flex",
             flexDirection: "column",
             gap: 12,
@@ -1935,9 +1983,9 @@ const BarDisplay: React.FC<{
               >
                 <div
                   style={{
-                    width: 200,
+                    width: L.barLabelWidth,
                     textAlign: "right",
-                    fontSize: 24,
+                    fontSize: T.labelText,
                     fontWeight: 500,
                     color: C.textMuted,
                     flexShrink: 0,
@@ -2023,8 +2071,8 @@ const BarDisplay: React.FC<{
                 <div
                   style={{
                     opacity: valOpacity,
-                    width: 120,
-                    fontSize: 28,
+                    width: L.barValueWidth,
+                    fontSize: T.chartValue,
                     fontWeight: 700,
                     color: isNeg ? NEG_COLOR : moodCfg.accent,
                     textAlign: "left",
@@ -2048,7 +2096,7 @@ const BarDisplay: React.FC<{
           <div
             style={{
               opacity: sourceFade,
-              fontSize: 30,
+              fontSize: T.splitVsText,
               color: C.textMuted,
               marginTop: 16,
             }}
@@ -2060,7 +2108,7 @@ const BarDisplay: React.FC<{
         {/* Source */}
         {source && (
           <div
-            style={{ opacity: sourceFade, fontSize: 18, color: C.textDim, marginTop: 16 }}
+            style={{ opacity: sourceFade, fontSize: T.sourceText, color: C.textDim, marginTop: 16 }}
           >
             {source}
           </div>
@@ -2088,6 +2136,8 @@ const PieChartDisplay: React.FC<{
   chartConfig?: { maxSlices?: number; highlightIndex?: number; showTotal?: boolean };
 }> = ({ items, values, unit, headline, moodCfg, source, mood, hasImageBg, chartConfig }) => {
   const C = useC();
+  const T = usePresetTypo();
+  const L = usePresetLayout();
   const frame = useCurrentFrame();
   const lines = headline.split("\n").filter((l: string) => l.trim());
   const headlineFade = useFade(5, 15, 0.8);
@@ -2127,21 +2177,21 @@ const PieChartDisplay: React.FC<{
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          padding: "60px 60px",
-          gap: 24,
+          padding: `${L.scenePadding[0]}px ${L.scenePadding[1]}px`,
+          gap: L.gap,
         }}
       >
         {/* Headline */}
         <div style={{ opacity: headlineFade, textAlign: "center", maxWidth: "90%" }}>
           {lines.map((line, i) => (
-            <div key={i} style={{ fontSize: 48, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+            <div key={i} style={{ fontSize: T.chartTitle, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
               <AccentText text={line} baseColor={C.text} />
             </div>
           ))}
         </div>
 
         {/* Chart + Legend row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 48, width: "100%", maxWidth: 1100, justifyContent: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 48, width: "100%", maxWidth: L.maxContentWidth, justifyContent: "center" }}>
           {/* SVG Donut */}
           <svg width={400} height={400} viewBox="0 0 400 400" style={{ flexShrink: 0 }}>
             {/* 역순 렌더링: slice 0(accent)이 DOM 마지막 = 최상단 z-order → 경계 bleed 방지 */}
@@ -2191,8 +2241,8 @@ const PieChartDisplay: React.FC<{
               return (
                 <div key={i} style={{ opacity: labelFade, display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ width: 20, height: 20, borderRadius: 4, backgroundColor: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
-                  <span style={{ fontSize: 22, color: C.text, fontWeight: 500 }}>{item}</span>
-                  <span style={{ fontSize: 22, color: PIE_COLORS[i % PIE_COLORS.length], fontWeight: 700, marginLeft: 8 }}>
+                  <span style={{ fontSize: T.labelText, color: C.text, fontWeight: 500 }}>{item}</span>
+                  <span style={{ fontSize: T.labelText, color: PIE_COLORS[i % PIE_COLORS.length], fontWeight: 700, marginLeft: 8 }}>
                     {displayValues[i]}{unit}
                   </span>
                 </div>
@@ -2202,7 +2252,7 @@ const PieChartDisplay: React.FC<{
         </div>
 
         {source && (
-          <div style={{ opacity: sourceFade, fontSize: 18, color: C.textDim, marginTop: 16 }}>{source}</div>
+          <div style={{ opacity: sourceFade, fontSize: T.sourceText, color: C.textDim, marginTop: 16 }}>{source}</div>
         )}
       </div>
     </AbsoluteFill>
@@ -2225,6 +2275,8 @@ const LineChartDisplay: React.FC<{
   chartConfig?: { showGrid?: boolean; showDots?: boolean; showArea?: boolean };
 }> = ({ items, values, unit, headline, moodCfg, source, mood, hasImageBg, chartConfig }) => {
   const C = useC();
+  const T = usePresetTypo();
+  const L = usePresetLayout();
   const frame = useCurrentFrame();
   const lines = headline.split("\n").filter((l: string) => l.trim());
   const headlineFade = useFade(5, 15, 0.8);
@@ -2276,15 +2328,15 @@ const LineChartDisplay: React.FC<{
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          padding: "60px 40px",
-          gap: 24,
+          padding: `${L.scenePadding[0]}px 40px`,
+          gap: L.gap,
           overflow: "visible",
         }}
       >
         {/* Headline */}
         <div style={{ opacity: headlineFade, textAlign: "center", maxWidth: "90%" }}>
           {lines.map((line, i) => (
-            <div key={i} style={{ fontSize: 48, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+            <div key={i} style={{ fontSize: T.chartTitle, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
               <AccentText text={line} baseColor={C.text} />
             </div>
           ))}
@@ -2358,7 +2410,7 @@ const LineChartDisplay: React.FC<{
         </svg>
 
         {source && (
-          <div style={{ opacity: sourceFade, fontSize: 18, color: C.textDim, marginTop: 16 }}>{source}</div>
+          <div style={{ opacity: sourceFade, fontSize: T.sourceText, color: C.textDim, marginTop: 16 }}>{source}</div>
         )}
       </div>
     </AbsoluteFill>
@@ -2556,6 +2608,9 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
   imageAssetPlacement,
 }) => {
   const C = useC(); // 테마 컨텍스트에서 색상 팔레트 읽기 (dark/white)
+  const preset = useDesignPreset();
+  const T = preset.typography;
+  const L = preset.layout;
   const frame = useCurrentFrame();
   const creative = data.creative || {};
   const headline: string = creative.headline || data.title || "";
@@ -2571,7 +2626,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
   const statusDots: any[] = data.statusDots || [];
   const tags: any[] = data.tags || [];
 
-  const moodCfg = getMoodConfig(mood, C.accent);
+  const moodCfg = getMoodConfigFromPreset(mood, preset);
   const layout = resolveLayout(data, creative);
   const lines = headline.split("\n").filter((l: string) => l.trim());
 
@@ -2844,7 +2899,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          padding: "60px 48px",
+          padding: `${L.scenePadding[0]}px ${L.scenePadding[1]}px`,
         }}
       >
         {/* Badges */}
@@ -2975,8 +3030,8 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
                     {i < items.length - 1 && <div style={{ width: 2, height: 36, backgroundColor: C.cardBorder }} />}
                   </div>
                   <div>
-                    <div style={{ fontSize: 28, fontWeight: 700, color: i === items.length - 1 ? moodCfg.accent : C.text }}>{item}</div>
-                    {desc && <div style={{ fontSize: 20, color: C.textMuted, marginTop: 4 }}>{desc}</div>}
+                    <div style={{ fontSize: T.itemText, fontWeight: 700, color: i === items.length - 1 ? moodCfg.accent : C.text }}>{item}</div>
+                    {desc && <div style={{ fontSize: T.descText, color: C.textMuted, marginTop: 4 }}>{desc}</div>}
                   </div>
                 </div>
               );
@@ -3148,8 +3203,8 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
                         <IconBadge icon={resolveIcon(data.itemIcons[i])!} size={48} />
                       </div>
                     )}
-                    <div style={{ fontSize: 28, fontWeight: 700, color: C.text, marginBottom: desc ? 8 : 0 }}>{item}</div>
-                    {desc && <div style={{ fontSize: 20, color: C.textMuted }}>{desc}</div>}
+                    <div style={{ fontSize: T.itemText, fontWeight: 700, color: C.text, marginBottom: desc ? 8 : 0 }}>{item}</div>
+                    {desc && <div style={{ fontSize: T.descText, color: C.textMuted }}>{desc}</div>}
                   </Card>
                 </div>
               );
@@ -3165,7 +3220,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
                 {items.map((item, i) => (
                   <div key={i} style={useFadeRise(staggerDelay(i, 8, 30), 15)}>
                     <Card style={{ padding: "12px 20px" }}>
-                      <span style={{ fontSize: 22, color: C.textMuted }}>{item}</span>
+                      <span style={{ fontSize: T.labelText, color: C.textMuted }}>{item}</span>
                     </Card>
                   </div>
                 ))}
@@ -3183,11 +3238,11 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
             />
             <div style={{ flex: 1 }}>
               <QuoteMarkBlock size={48} color={moodCfg.accent} />
-              <div style={{ fontSize: 28, fontWeight: 500, color: C.text, lineHeight: 1.5, fontStyle: "italic" }}>
+              <div style={{ fontSize: T.itemText, fontWeight: 500, color: C.text, lineHeight: 1.5, fontStyle: "italic" }}>
                 {items[0] || ""}
               </div>
               {data.source && (
-                <div style={{ fontSize: 18, color: C.textMuted, marginTop: 16 }}>— {data.source}</div>
+                <div style={{ fontSize: T.sourceText, color: C.textMuted, marginTop: 16 }}>— {data.source}</div>
               )}
             </div>
           </div>
@@ -3239,7 +3294,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           <div
             style={{
               opacity: sourceFade,
-              fontSize: 18,
+              fontSize: T.sourceText,
               color: C.textDim,
               marginTop: 16,
             }}
@@ -3280,6 +3335,7 @@ const LineReveal: React.FC<{
   totalLines,
   accentOffset = 0,
 }) => {
+  const T = usePresetTypo();
   const frame = useCurrentFrame();
   const dur = 18;
 
@@ -3333,7 +3389,7 @@ const LineReveal: React.FC<{
   }
 
   const isChapterLabel = /^CHAPTER\s*\d/i.test(line.trim());
-  const baseFontSize = isChapterLabel ? 30 : getBaseFontSize(emphasis);
+  const baseFontSize = isChapterLabel ? T.splitVsText : T.headlineBase;
   const showBadge = false; // 헤드라인에 숫자 뱃지 비활성 — 시퀀스 뱃지는 items에서만 표시
 
   return (
@@ -3379,12 +3435,13 @@ const QuoteMark: React.FC<{ color: string; delay: number }> = ({
   color,
   delay,
 }) => {
+  const T = usePresetTypo();
   const qFade = useFadeRise(delay, 15, 10);
   return (
     <div
       style={{
         ...qFade,
-        fontSize: 120,
+        fontSize: T.quoteMarkSize,
         fontWeight: 800,
         color,
         opacity: (qFade.opacity as unknown as number) * 0.3,

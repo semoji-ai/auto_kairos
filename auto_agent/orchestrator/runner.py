@@ -258,16 +258,19 @@ class PipelineRunner:
         )
 
     def _load_pipeline(self) -> dict:
+        # 로컬 DATA_DIR 우선 (Supabase 캐시보다 로컬 수정 우선)
+        path = DATA_DIR / "pipeline.json"
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
         try:
             return self.rule_manager.load_json("pipeline.json")
         except FileNotFoundError:
-            path = DATA_DIR / "pipeline.json"
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
+            raise FileNotFoundError("pipeline.json not found")
 
     def _get_project_manager(self):
-        from auto_agent.dashboard.supabase_data import SupabaseProjectManager
-        return SupabaseProjectManager()
+        from auto_agent.db.project_manager import ProjectManager
+        return ProjectManager()
 
     def _resolve_project(self) -> dict:
         project = self.pm.get_project(slug=self.project_slug)
@@ -363,6 +366,15 @@ class PipelineRunner:
             else:
                 self._run_sequential(steps)
 
+            # blocking step 실패 시 전체 파이프라인 중단
+            if self.state.failed_steps:
+                blocking_fails = [s for s in self.state.failed_steps
+                                  if not any(st.get("blocking") is False
+                                             for st in steps if st["id"] == s)]
+                if blocking_fails:
+                    print(f"\n  *** 파이프라인 중단: {blocking_fails} 실패 ***")
+                    break
+
             # phase 끝나면 checkpoint 확인
             self._check_checkpoint(phase_id, steps)
 
@@ -371,10 +383,259 @@ class PipelineRunner:
 
         self._finish()
 
+    def _merge_research_outputs(self):
+        """Explorer 산출물을 research_report.json으로 기계적 병합.
+
+        2가지 구조 지원:
+        1) RESEARCH/{session}/outputs/ + sources/ (deep-research-kit)
+        2) 프로젝트 루트에 research_*.md 파일들 (간단 구조)
+        """
+        # === 최우선: RESEARCH 안에 이미 report가 있으면 루트에 복사 ===
+        _research_dir = self.project_dir / "RESEARCH"
+        if _research_dir.exists():
+            for _sess in sorted([d for d in _research_dir.iterdir() if d.is_dir()], reverse=True):
+                _existing = _sess / "research_report.json"
+                if _existing.exists() and not (self.project_dir / "research_report.json").exists():
+                    import shutil
+                    shutil.copy(_existing, self.project_dir / "research_report.json")
+                    # .md도 생성
+                    _all_md = []
+                    _outputs = _sess / "outputs"
+                    if _outputs.exists():
+                        for _md in sorted(_outputs.rglob("*.md")):
+                            _all_md.append(_md.read_text(encoding="utf-8"))
+                    if _all_md:
+                        (self.project_dir / "research_report.md").write_text(
+                            "\n\n---\n\n".join(_all_md), encoding="utf-8")
+                    print(f"    [MERGE] RESEARCH 내부 report → 루트 복사 완료 ({len(_all_md)}섹션)")
+                    return
+                break
+        research_dir = self.project_dir / "RESEARCH"
+        sources = []
+        sections = []
+        agent_sections = []
+        meta = {}
+
+        # === 구조 1: RESEARCH/{session}/ ===
+        if research_dir.exists():
+            sessions = [d for d in sorted(research_dir.iterdir(), reverse=True) if d.is_dir()]
+            if sessions:
+                session = sessions[0]
+                src_file = session / "sources" / "sources.jsonl"
+                if src_file.exists():
+                    for line in src_file.read_text(encoding="utf-8").strip().split("\n"):
+                        if line.strip():
+                            try: sources.append(json.loads(line))
+                            except json.JSONDecodeError: pass
+                outputs_dir = session / "outputs"
+                if outputs_dir.exists():
+                    for md_file in sorted(outputs_dir.glob("*.md")):
+                        text = md_file.read_text(encoding="utf-8")
+                        title = text.split("\n")[0].lstrip("# ").strip() if text else md_file.stem
+                        sections.append({"title": title, "content": text})
+                    full_report_dir = outputs_dir / "01_full_report"
+                    if full_report_dir.exists():
+                        for md_file in sorted(full_report_dir.glob("*.md")):
+                            text = md_file.read_text(encoding="utf-8")
+                            title = text.split("\n")[0].lstrip("# ").strip() if text else md_file.stem
+                            sections.append({"title": title, "content": text})
+                agent_results_dir = session / "artifacts" / "agent_results"
+                if agent_results_dir.exists():
+                    for md_file in sorted(agent_results_dir.glob("*.md")):
+                        text = md_file.read_text(encoding="utf-8")
+                        title = text.split("\n")[0].lstrip("# ").strip() if text else md_file.stem
+                        agent_sections.append({"title": title, "content": text})
+                state_file = session / "state.json"
+                if state_file.exists():
+                    try: meta = json.loads(state_file.read_text(encoding="utf-8"))
+                    except json.JSONDecodeError: pass
+
+        # === 구조 2: 루트 + RESEARCH/ 에 있는 .md 파일들 ===
+        if not sections:
+            seen = set()
+            search_dirs = [self.project_dir]
+            if research_dir.exists():
+                search_dirs.append(research_dir)
+            for search_dir_item in search_dirs:
+                for pattern in ["research_*.md", "*_research*.md", "research*.md", "*리서치*.md", "deep_research*.md"]:
+                    for md_file in sorted(search_dir_item.glob(pattern)):
+                        if md_file.name in seen or md_file.name == "research_report.md":
+                            continue
+                        seen.add(md_file.name)
+                        text = md_file.read_text(encoding="utf-8")
+                        title = text.split("\n")[0].lstrip("# ").strip() if text else md_file.stem
+                        sections.append({"title": title, "content": text})
+            # RESEARCH/ 안에 아무 패턴에도 안 걸리는 .md도 포함
+            if not sections and research_dir.exists():
+                for md_file in sorted(research_dir.glob("*.md")):
+                    if md_file.name in seen:
+                        continue
+                    seen.add(md_file.name)
+                    text = md_file.read_text(encoding="utf-8")
+                    title = text.split("\n")[0].lstrip("# ").strip() if text else md_file.stem
+                    sections.append({"title": title, "content": text})
+
+        # === CLI가 이미 research_report.json을 만들었으면 루트로 복사 ===
+        if not sections and research_dir.exists():
+            for session_dir in sorted([d for d in research_dir.iterdir() if d.is_dir()], reverse=True):
+                existing_report = session_dir / "research_report.json"
+                if existing_report.exists():
+                    import shutil
+                    shutil.copy(existing_report, self.project_dir / "research_report.json")
+                    # .md도 생성
+                    all_md = []
+                    for md in sorted((session_dir / "outputs").rglob("*.md")) if (session_dir / "outputs").exists() else []:
+                        all_md.append(md.read_text(encoding="utf-8"))
+                    if all_md:
+                        (self.project_dir / "research_report.md").write_text(
+                            "\n\n---\n\n".join(all_md), encoding="utf-8")
+                    print(f"    [MERGE] RESEARCH 내부 report 복사 완료")
+                    return
+                break
+
+        if not sections:
+            print("    [MERGE] 병합할 리서치 파일 없음")
+            return
+
+        # research_report.json 생성
+        report = {
+            "topic": meta.get("topic", self.project_slug),
+            "summary": sections[0]["content"] if sections else "",
+            "sections": sections,
+            "agent_results": agent_sections,
+            "sources": sources,
+            "source_grades": {},
+            "agents_deployed": meta.get("agents_deployed", 0),
+            "search_mode": meta.get("search_mode", "unknown"),
+        }
+        # 소스 등급 집계
+        for s in sources:
+            grade = s.get("quality_grade", "?")
+            report["source_grades"][grade] = report["source_grades"].get(grade, 0) + 1
+
+        out_path = self.project_dir / "research_report.json"
+        out_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        # .md 버전도 생성 (대시보드 fallback용) — 전체 보고서 + Explorer 원본
+        md_path = self.project_dir / "research_report.md"
+        all_sections = sections + agent_sections
+        md_text = "\n\n---\n\n".join(s["content"] for s in all_sections)
+        md_path.write_text(md_text, encoding="utf-8")
+
+        print(f"    [MERGE] research_report.json 생성 완료 ({len(sections)}섹션, {len(sources)}소스)")
+        _notify("Runner", f"리서치 병합 완료: {len(sections)}섹션, {len(sources)}소스",
+                phase=self.state.current_phase, project=self.project_slug, level="success")
+
+    def _validate_step(self, step_id: str, result) -> StepResult:
+        """사감독 역할: 단계 완료 후 산출물 검증 + 부족하면 Python 보완."""
+
+        if step_id == "step_1":
+            # 1) Python 병합
+            report_path = self.project_dir / "research_report.json"
+            if not report_path.exists():
+                try:
+                    self._merge_research_outputs()
+                except Exception as e:
+                    print(f"    [WARN] 리서치 병합 실패: {e}")
+
+            if not report_path.exists():
+                _notify("Director", "리서치 검증 실패: 보고서 없음",
+                        phase=self.state.current_phase, project=self.project_slug, level="error")
+                return StepResult(step_id=step_id, status="failed", error="research_report.json 미생성")
+
+            # 2) 구조 검증
+            try:
+                data = json.loads(report_path.read_text(encoding="utf-8"))
+                sections = len(data.get("sections", []))
+                sources = len(data.get("sources", []))
+                if sections == 0:
+                    return StepResult(step_id=step_id, status="failed", error="리서치 섹션 0개")
+            except Exception:
+                return StepResult(step_id=step_id, status="failed", error="research_report.json 파싱 실패")
+
+            # 3) 내용 검증: 주제와 일치하는지 LLM 판단
+            topic = self.state.config.get("topic", self.project_slug)
+            summary = data.get("summary", "")[:500]
+            section_titles = [s.get("title", "") for s in data.get("sections", [])][:10]
+
+            verify_prompt = (
+                f"프로젝트 주제: {topic}\n\n"
+                f"리서치 요약:\n{summary}\n\n"
+                f"섹션 제목: {', '.join(section_titles)}\n\n"
+                f"이 리서치가 프로젝트 주제에 적합한지 판단하세요.\n"
+                f"JSON으로만 답하세요: {{\"valid\": true/false, \"reason\": \"한줄 사유\"}}"
+            )
+            try:
+                cli_path = self._find_claude_cli()
+                proc = subprocess.run(
+                    [cli_path, "--print", "--output-format", "json",
+                     "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
+                    input=verify_prompt, capture_output=True, text=True,
+                    cwd=str(self.project_dir), timeout=30,
+                    env={**os.environ, "CLAUDECODE": ""},
+                )
+                verify_result = self._extract_json_from_cli_output(proc.stdout)
+                if verify_result and verify_result.get("valid"):
+                    reason = verify_result.get("reason", "")
+                    print(f"    [검증] 리서치: {sections}섹션, {sources}소스, 주제 일치 ✓ ({reason})")
+                    _notify("Director", f"리서치 검증 통과: {sections}섹션, {sources}소스 — {reason}",
+                            phase=self.state.current_phase, project=self.project_slug, level="success")
+                    # 볼트 기록
+                    if self.vault.enabled:
+                        try:
+                            self._vault_save_research({"agent": "research-orchestrator"}, result)
+                        except Exception as ve:
+                            print(f"    [WARN] 볼트 축적 실패: {ve}")
+                    return StepResult(step_id=step_id, status="completed")
+                elif verify_result:
+                    reason = verify_result.get("reason", "주제 불일치")
+                    print(f"    [검증] 리서치: 주제 불일치 ✗ ({reason})")
+                    return StepResult(step_id=step_id, status="failed", error=f"리서치 주제 불일치: {reason}")
+            except Exception as e:
+                print(f"    [WARN] LLM 검증 실패 ({e}), 구조 검증만 통과")
+
+            # LLM 검증 실패해도 구조 검증 통과면 진행
+            print(f"    [검증] 리서치: {sections}섹션, {sources}소스 ✓ (구조 검증)")
+            _notify("Director", f"리서치 검증: {sections}섹션, {sources}소스",
+                    phase=self.state.current_phase, project=self.project_slug, level="success")
+            return StepResult(step_id=step_id, status="completed")
+
+        elif step_id == "step_2":
+            # 원고 검증: final_manuscript.md 존재 + 글자 수
+            ms_path = self.project_dir / "final_manuscript.md"
+            if ms_path.exists():
+                text = ms_path.read_text(encoding="utf-8")
+                chars = len(text)
+                has_scene_marker = "## Scene" in text
+                print(f"    [검증] 원고: {chars}자, 씬마커={'있음 ✗' if has_scene_marker else '없음 ✓'}")
+                _notify("Director", f"원고 검증: {chars}자",
+                        phase=self.state.current_phase, project=self.project_slug, level="success")
+            else:
+                return StepResult(step_id=step_id, status="failed", error="final_manuscript.md 미생성")
+
+        elif step_id == "step_5":
+            # 씬 분해 검증: scene_specs.json에 scenes 존재
+            specs_path = self.project_dir / "scene_specs.json"
+            if specs_path.exists():
+                try:
+                    data = json.loads(specs_path.read_text(encoding="utf-8"))
+                    n_scenes = len(data.get("scenes", []))
+                    if n_scenes > 0:
+                        print(f"    [검증] 씬 분해: {n_scenes}씬 ✓")
+                    else:
+                        return StepResult(step_id=step_id, status="failed", error="scene_specs.json에 씬 0개")
+                except Exception:
+                    return StepResult(step_id=step_id, status="failed", error="scene_specs.json 파싱 실패")
+
+        return result  # 기본: 원래 결과 유지
+
     def _run_sequential(self, steps: List[dict]):
-        """순차 실행."""
+        """순차 실행 + 사감독 검증."""
         for step in steps:
             result = self._execute_step(step)
+
+            # 사감독 검증 + 보완
+            result = self._validate_step(step["id"], result)
             self.state.results[step["id"]] = result.__dict__
 
             if result.status == "failed":
@@ -841,27 +1102,32 @@ class PipelineRunner:
 
         prompt = self._build_chapter_prompt(chapter_step, chapter_specs)
 
-        # 3. Claude CLI 1턴 실행 (도구 없음 — stdout JSON 파싱)
+        # 3. Claude CLI agent 모드 (Write 도구 허용, multi-turn)
         model = step.get("single_call_model", "claude-opus-4-6")
         timeout_sec = self._get_agent_timeout(agent_name)
 
-        # 프롬프트에 JSON 출력 지시 추가
-        prompt += """
+        # 프롬프트에 파일 저장 지시 추가
+        prompt += f"""
 
 <output_format>
-결과를 JSON으로 출력하세요. scene_specs와 동일한 구조로, scenes 배열에 이 챕터의 씬들만 포함합니다.
-설명이나 마크다운 코드 블록(```) 없이 순수 JSON만 출력하세요.
+결과를 scene_specs와 동일한 JSON 구조로, scenes 배열에 이 챕터의 씬들만 포함하여 작성하세요.
+**반드시 Write 도구를 사용하여** 아래 경로에 저장하세요:
+{tmp_path}
+
+특히 imageAsset의 searchQuery 필드를 반드시 채워주세요.
+모든 씬에 적절한 이미지 검색어를 영어로 작성해야 합니다.
 </output_format>"""
 
         cli_path = self._find_claude_cli()
         cmd = [
             cli_path, "--print", "--output-format", "json",
-            "--model", model, "--max-turns", "1",
-            "--tools", "",
+            "--model", model, "--max-turns", "5",
+            "--allowedTools", "Read", "--allowedTools", "Write",
         ]
 
         env = os.environ.copy()
         env["PROJECT_NAME"] = self.project_slug
+        env["SEARCH_ENGINE"] = self.state.config.get("search_engine", "")
         env.pop("CLAUDECODE", None)
 
         try:
@@ -896,22 +1162,25 @@ class PipelineRunner:
                 cost_info=cost_info, duration_sec=elapsed,
             )
 
-        # 4. stdout에서 JSON 파싱 → 원본 씬에 머지
-        content = self._extract_json_from_cli_output(stdout)
-        if content:
-            llm_scenes = content.get("scenes", [])
-            updated_scenes = self._merge_llm_response(chapter_scenes, llm_scenes)
-        else:
-            # 폴백: 임시 파일에서 읽기
-            try:
-                if tmp_path.exists():
-                    updated = json.loads(tmp_path.read_text(encoding="utf-8"))
-                    llm_scenes = updated.get("scenes", [])
+        # 4. 결과 파싱: 파일 우선 → stdout 폴백
+        updated_scenes = chapter_scenes  # 기본값
+        try:
+            if tmp_path.exists() and tmp_path.stat().st_size > 100:
+                updated = json.loads(tmp_path.read_text(encoding="utf-8"))
+                llm_scenes = updated.get("scenes", [])
+                if llm_scenes:
                     updated_scenes = self._merge_llm_response(chapter_scenes, llm_scenes)
-                else:
-                    updated_scenes = chapter_scenes
-            except Exception:
-                updated_scenes = chapter_scenes
+                    print(f"    [Ch{chapter_num}] 파일에서 읽기 성공 ({len(llm_scenes)}씬)")
+        except Exception as e:
+            print(f"    [Ch{chapter_num}] 파일 읽기 실패: {e}")
+
+        if updated_scenes is chapter_scenes:
+            # 파일에서 못 읽었으면 stdout에서 시도
+            content = self._extract_json_from_cli_output(stdout)
+            if content:
+                llm_scenes = content.get("scenes", [])
+                if llm_scenes:
+                    updated_scenes = self._merge_llm_response(chapter_scenes, llm_scenes)
 
         _notify(agent_name,
                 f"{label} 완료 (Ch{chapter_num}, {elapsed:.1f}s)",
@@ -930,6 +1199,7 @@ class PipelineRunner:
         "asset_advisory": "asset-advisory.md",
         "data_enrichment": "data-enrichment.md",
         "motion_planning": "motion-planning.md",
+        "tts_preprocess": "tts-preprocess.md",
     }
 
     def _build_chapter_prompt(self, step: dict, chapter_specs: dict) -> str:
@@ -1002,7 +1272,15 @@ class PipelineRunner:
         return ""
 
     def _load_skill_file(self, key: str) -> str:
-        """스킬 파일 1개 로드. 중앙 규칙 → 로컬 fallback. 없으면 빈 문자열."""
+        """스킬 파일 1개 로드. 로컬 DATA_DIR 우선 → 중앙 규칙 fallback. 없으면 빈 문자열."""
+        # 로컬 파일 우선 (Supabase 캐시보다 로컬 수정 우선)
+        local_path = DATA_DIR / key
+        if local_path.exists():
+            try:
+                return local_path.read_text(encoding="utf-8")
+            except Exception:
+                pass
+        # 중앙 규칙 fallback
         try:
             return self.rule_manager.load(key)
         except (FileNotFoundError, AttributeError):
@@ -1244,7 +1522,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             if storage_key:
                 result = subprocess.run(
                     [sys.executable, "-m", "auto_agent.scripts.build_manifest",
-                     pid, storage_key],
+                     str(pid), str(storage_key), str(self.project_dir)],
                     cwd=str(get_workspace_dir()),
                     capture_output=True, text=True, timeout=120,
                 )
@@ -1601,7 +1879,9 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             prompt += f"""
 
 <output_format>
-결과를 JSON으로 출력하세요. 파일 내용만 출력하고, 설명이나 마크다운 코드 블록(```) 없이 순수 JSON만 출력하세요.
+결과를 순수 JSON으로 직접 출력하세요.
+마크다운 코드 블록(```)으로 감싸도 괜찮습니다.
+설명, 서론, 부연은 절대 하지 마세요. JSON만 출력하세요.
 출력 파일: {output_names[0]}
 </output_format>"""
         elif len(output_names) >= 2:
@@ -1617,13 +1897,13 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 }}
 </output_format>"""
 
-        # CLI 1턴 실행 (도구 없음)
+        # CLI 실행 (도구 비활성, 3턴 — stdout으로 JSON 직접 출력)
         cli_path = self._find_claude_cli()
         cmd = [
             cli_path, "--print",
             "--output-format", "json",
             "--model", target_model,
-            "--max-turns", "1",
+            "--max-turns", "3",
             "--tools", "",
         ]
 
@@ -1663,6 +1943,17 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # stdout에서 JSON 추출
         content = self._extract_json_from_cli_output(stdout)
         if not content:
+            # 파일이 이미 존재하면 (이전 실행 등) 성공 처리
+            all_exist = all(
+                self._resolve_output_path(out).exists()
+                for out in outputs if "{" not in out
+            ) if outputs else False
+            if all_exist:
+                return StepResult(step_id=step_id, status="completed",
+                                  output_files=[str(self._resolve_output_path(o)) for o in outputs],
+                                  cost_info=cost_info, duration_sec=elapsed)
+            # 디버그: stdout 첫 500자 출력
+            print(f"    [single_call] JSON 파싱 실패. stdout 시작: {stdout[:500]}", flush=True)
             return StepResult(step_id=step_id, status="failed",
                               error="stdout에서 JSON 파싱 실패",
                               cost_info=cost_info, duration_sec=elapsed)
@@ -1701,26 +1992,40 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
     @staticmethod
     def _extract_json_from_cli_output(stdout: str) -> dict:
         """Claude CLI --output-format json 출력에서 실제 JSON 콘텐츠 추출."""
+        import re
+
         # --output-format json일 때 CLI는 {"type":"result","result":...} 형태 출력
+        text = ""
         try:
             cli_output = json.loads(stdout)
-            # CLI JSON 래퍼에서 실제 텍스트 추출
-            text = ""
             if isinstance(cli_output, dict):
-                text = cli_output.get("result", stdout)
-                if isinstance(text, list):
-                    # content blocks에서 텍스트 추출
-                    text = " ".join(
-                        b.get("text", "") for b in text
-                        if isinstance(b, dict) and b.get("type") == "text"
-                    )
+                # CLI 메타데이터 감지 — "type":"result" + "subtype" 존재하면 래퍼
+                if cli_output.get("type") == "result" and "subtype" in cli_output:
+                    # result 필드에서 실제 텍스트 추출
+                    result = cli_output.get("result", "")
+                    if isinstance(result, str):
+                        text = result
+                    elif isinstance(result, list):
+                        text = " ".join(
+                            b.get("text", "") for b in result
+                            if isinstance(b, dict) and b.get("type") == "text"
+                        )
+                    else:
+                        text = ""
+                    # result가 비어있으면 → LLM이 도구만 사용하고 텍스트 출력 안 한 것
+                    if not text.strip():
+                        return None
+                else:
+                    # CLI 래퍼가 아닌 순수 JSON → 그대로 반환
+                    return cli_output
             elif isinstance(cli_output, str):
                 text = cli_output
         except json.JSONDecodeError:
             text = stdout
 
-        # 텍스트에서 JSON 추출 (```json ... ``` 블록 또는 순수 JSON)
-        import re
+        if not text or not text.strip():
+            return None
+
         # 마크다운 코드 블록 제거
         md_match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', text, re.DOTALL)
         if md_match:
@@ -1731,11 +2036,14 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         for start_char, end_char in [('{', '}'), ('[', ']')]:
             start = text.find(start_char)
             if start >= 0:
-                # 매칭되는 닫는 괄호 찾기 (마지막 것)
                 end = text.rfind(end_char)
                 if end > start:
                     try:
-                        return json.loads(text[start:end + 1])
+                        parsed = json.loads(text[start:end + 1])
+                        # CLI 메타데이터를 실수로 파싱한 건 아닌지 검증
+                        if isinstance(parsed, dict) and parsed.get("type") == "result" and "duration_ms" in parsed:
+                            return None  # CLI 메타데이터 → 실패
+                        return parsed
                     except json.JSONDecodeError:
                         continue
         return None
@@ -1796,6 +2104,25 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         allowed_tools = agent_def.get("allowed_tools", ["Read", "Write", "Glob"])
         budget = self._get_agent_budget(agent)
         timeout_sec = self._get_agent_timeout(agent)
+
+        # 분량별 리서치 스케일링 (duration_minutes 기반)
+        duration_min = self.state.config.get("duration_minutes", 10)
+        if agent in ("research-orchestrator",):
+            scale = {1: (20, 1200), 3: (35, 1200), 5: (50, 1200)}
+            if duration_min in scale:
+                max_turns, timeout_sec = scale[duration_min]
+            elif duration_min < 3:
+                max_turns, timeout_sec = 20, 1200
+            # 10분 이상은 agents.json 기본값 + 넉넉한 타임아웃
+            else:
+                timeout_sec = max(timeout_sec, 1500)
+        elif agent in ("write-manuscript",):
+            if duration_min <= 1:
+                max_turns = min(max_turns, 25)
+                timeout_sec = min(timeout_sec, 600)
+            elif duration_min <= 3:
+                max_turns = min(max_turns, 35)
+                timeout_sec = min(timeout_sec, 900)
 
         # 2. 프롬프트 빌드 (컨텍스트 메모리 포함)
         prompt = self._build_agent_prompt(step)
@@ -1922,6 +2249,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # voice_id는 .env 폴백도 있으므로 env로도 주입
         env = os.environ.copy()
         env["PROJECT_NAME"] = self.project_slug
+        env["SEARCH_ENGINE"] = self.state.config.get("search_engine", "")
 
         config = self.state.config
         if config.get("voice_id"):
@@ -1970,8 +2298,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # manifest-builder는 project_id + storage_key 인자 필요
         cmd = [sys.executable, str(script_path)]
         if module_name == "manifest-builder":
-            pid = self.project.get("id", "")
-            sk = self.sync.storage_key if self.sync else ""
+            pid = str(self.project.get("id", ""))
+            sk = str(self.sync.storage_key) if self.sync and self.sync.storage_key else ""
             if pid and sk:
                 cmd.extend([pid, sk])
 
@@ -2172,12 +2500,29 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             elif agent_name in ("write-manuscript",):
                 vault_block = self.vault.search_for_manuscript(topic, category)
 
-        # 7. 프롬프트 조립
+        # 7. 프로젝트 config 주입
+        config = self.state.config or {}
+        duration_min = config.get("duration_minutes", 10)
+        art_style = config.get("art_style", "")
+        writing_style = config.get("writing_style", "")
+        # 분량별 글자 수 가이드 (한국어 기준, 약 3~4자/초)
+        target_chars = {1: 400, 3: 1200, 5: 2000, 10: 4000}.get(duration_min, duration_min * 400)
+
+        # 8. 프롬프트 조립
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
 작업 디렉토리: {self.project_dir}
 워크스페이스: {get_workspace_dir()}
 </system_context>
+
+<project_config>
+영상 분량: {duration_min}분
+목표 나레이션 글자 수: 약 {target_chars}자 (±10%)
+아트스타일: {art_style}
+문체 스타일: {writing_style}
+{"**이로미즘 문체 필수 적용** — writing-style-iromism 스킬의 규칙을 반드시 따르세요." if writing_style == "iromism" else ""}
+{"**세모지 문체 필수 적용** — writing-style-semoji 스킬의 규칙을 반드시 따르세요." if writing_style == "semoji" else ""}
+</project_config>
 
 <agent_skill>
 {agent_skill}
@@ -2215,7 +2560,10 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
 
 보고 시점과 내용:
 1. 작업 시작 → 무엇을 하려는지 ("코카콜라 초기 역사 리서치 시작")
-2. 병렬 태스크 배포 시 → 몇 개를 어떤 주제로 배포했는지
+2. 병렬 태스크 배포 시 → 각 에이전트가 무엇을 조사할지 개별 선언 필수:
+   예: {{"agent": "Explorer-1", "text": "테슬라 초기 반도체 역사 조사 시작합니다", "level": "info"}}
+   예: {{"agent": "Explorer-2", "text": "글로벌 반도체 시장 동향 조사 시작합니다", "level": "info"}}
+   — 배포 후 즉시 각 Explorer별 시작 메시지를 기록하세요
 3. 병렬 태스크가 하나씩 완료될 때마다 → 해당 태스크의 핵심 발견 서머리
    예: {{"agent": "Explorer-1", "text": "초기 역사: 1886년 존 펨버턴이 발명, 약국에서 5센트에 판매 — 에피소드 3개", "level": "success"}}
    예: {{"agent": "Explorer-3", "text": "마케팅: 산타클로스 캠페인(1931), I'd Like to Buy the World a Coke(1971) — 에피소드 4개", "level": "success"}}

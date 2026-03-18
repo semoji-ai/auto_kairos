@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Img, useCurrentFrame, interpolate } from "remotion";
-import { useDesignTokens } from "../contexts/DesignTokenContext";
+import { STYLE as DEFAULT_STYLE } from "./vizStyles";
 import { resolveAsset } from "../utils/resolveAsset";
 import { resolveEasing } from "../utils/easingMap";
 import { calcItemDelay } from "../utils/syncDelay";
@@ -22,7 +22,6 @@ interface Props {
  * - 또는 items 배열로 폴백: 전반부=장점, 후반부=단점
  */
 export const SlideProscons: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
-  const { STYLE, TYPO, VIZ_TITLE_FONT } = useDesignTokens();
   const frame = useCurrentFrame();
   const easingFn = resolveEasing(vizAnimation?.easing);
 
@@ -55,10 +54,8 @@ export const SlideProscons: React.FC<Props> = ({ data, durationInFrames, fps, vi
   const cardGap = maxSide >= 5 ? 10 : maxSide >= 4 ? 14 : 18;
   const textSize = maxSide >= 5 ? 28 : maxSide >= 4 ? 32 : 36;
 
-  const prosColor = STYLE.semantic.positive;
-  const prosBg = STYLE.semantic.positiveBg;
-  const consColor = STYLE.semantic.negative;
-  const consBg = STYLE.semantic.negativeBg;
+  const prosColor = DEFAULT_STYLE.semantic.positive;
+  const consColor = DEFAULT_STYLE.semantic.negative;
 
   // ── Phase 1: 등장 ──
   const HEADER_START = 8;
@@ -146,9 +143,9 @@ export const SlideProscons: React.FC<Props> = ({ data, durationInFrames, fps, vi
           <span
             style={{
               color,
-              fontSize: TYPO.subtitle.size,
-              fontWeight: TYPO.title.weight,
-              fontFamily: VIZ_TITLE_FONT,
+              fontSize: "var(--viz-subtitle-size)",
+              fontWeight: "var(--viz-title-weight)" as any,
+              fontFamily: "var(--viz-title-font)",
             }}
           >
             {label}
@@ -181,9 +178,9 @@ export const SlideProscons: React.FC<Props> = ({ data, durationInFrames, fps, vi
             <div
               key={i}
               style={{
-                background: `linear-gradient(135deg, ${hl > 0 ? bgColor : "transparent"}, ${STYLE.cardBg})`,
+                background: `linear-gradient(135deg, ${hl > 0 ? bgColor : "transparent"}, var(--viz-card-bg))`,
                 borderLeft: `${borderW}px solid ${color}`,
-                borderRadius: STYLE.cardRadius,
+                borderRadius: "var(--viz-card-radius)",
                 padding: `${cardPadV}px 24px`,
                 boxShadow: `0 3px ${shadowBlur}px rgba(61,59,47,${shadowAlpha})`,
                 opacity: itemOpacity,
@@ -193,9 +190,9 @@ export const SlideProscons: React.FC<Props> = ({ data, durationInFrames, fps, vi
             >
               <span
                 style={{
-                  color: STYLE.text,
+                  color: "var(--viz-text)",
                   fontSize: textSize,
-                  fontWeight: TYPO.label.weight,
+                  fontWeight: "var(--viz-label-weight)" as any,
                   lineHeight: 1.45,
                 }}
               >
@@ -249,8 +246,8 @@ export const SlideProscons: React.FC<Props> = ({ data, durationInFrames, fps, vi
                 maxWidth: "40%",
                 maxHeight: 200,
                 objectFit: "cover",
-                borderRadius: STYLE.cardRadius,
-                boxShadow: STYLE.cardShadow,
+                borderRadius: "var(--viz-card-radius)",
+                boxShadow: "var(--viz-card-shadow)",
               }}
             />
           </div>
@@ -265,21 +262,21 @@ export const SlideProscons: React.FC<Props> = ({ data, durationInFrames, fps, vi
         }}
       >
         {/* 장점 열 */}
-        {renderColumn(prosItems, prosLabel, prosColor, prosBg, "left", prosHeaderOpacity, 0)}
+        {renderColumn(prosItems, prosLabel, prosColor, DEFAULT_STYLE.semantic.positiveBg, "left", prosHeaderOpacity, 0)}
 
         {/* 세로 분리선 */}
         <div
           style={{
             width: 2,
             alignSelf: "stretch",
-            background: `linear-gradient(to bottom, transparent, ${STYLE.grid}, transparent)`,
+            background: `linear-gradient(to bottom, transparent, var(--viz-grid), transparent)`,
             clipPath: `inset(${100 - dividerHeight}% 0 0 0)`,
             flexShrink: 0,
           }}
         />
 
         {/* 단점 열 */}
-        {renderColumn(consItems, consLabel, consColor, consBg, "right", consHeaderOpacity, prosItems.length)}
+        {renderColumn(consItems, consLabel, consColor, DEFAULT_STYLE.semantic.negativeBg, "right", consHeaderOpacity, prosItems.length)}
       </div>
       </div>
     </VizShell>

@@ -34,7 +34,8 @@ export const LocationReveal: React.FC<Props> = ({
   fps,
 }) => {
   const frame = useCurrentFrame();
-  const kfs = data.camera.keyframes;
+  const kfs = data.camera?.keyframes ?? [];
+  if (kfs.length === 0) return null;
   const start = kfs[0];
   const end = kfs[kfs.length - 1] ?? start;
 

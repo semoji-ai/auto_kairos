@@ -1,7 +1,10 @@
-<!-- Agent Messenger — 에이전트 간 실시간 메시지 -->
+<!-- Agent Messenger — 카톡 스타일 에이전트 채팅 -->
 <div class="agent-page">
   <div class="agent-header">
-    <h2>Agent Messenger</h2>
+    <div class="agent-header-left">
+      <h2>Agent Chat</h2>
+      <span class="agent-member-count" id="agent-member-count"></span>
+    </div>
     <div class="agent-controls">
       <span id="agent-status" class="agent-badge offline">연결 중...</span>
       <button class="btn-sm btn-outline" onclick="clearMessages()">지우기</button>
@@ -9,14 +12,19 @@
   </div>
 
   <div id="agent-messages" class="agent-messages">
-    <div class="agent-empty">에이전트 메시지가 여기에 표시됩니다.</div>
+    <div class="agent-empty">
+      <div class="agent-empty-icon">💬</div>
+      <div>에이전트들이 대화를 시작하면 여기에 표시됩니다.</div>
+    </div>
   </div>
 </div>
 
 <style>
 .agent-page { padding: 16px 20px; height: calc(90vh - 100px); display: flex; flex-direction: column; }
 .agent-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.agent-header-left { display: flex; align-items: baseline; gap: 8px; }
 .agent-header h2 { margin: 0; font-size: 16px; }
+.agent-member-count { font-size: 11px; color: var(--text-muted); }
 .agent-controls { display: flex; gap: 8px; align-items: center; }
 
 .agent-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; }
@@ -24,61 +32,154 @@
 .agent-badge.offline { background: rgba(239,68,68,0.15); color: #EF4444; }
 
 .agent-messages {
-  flex: 1; overflow-y: auto; padding: 8px;
-  background: rgba(0,0,0,0.2); border-radius: 8px;
+  flex: 1; overflow-y: auto; padding: 12px 16px;
+  background: linear-gradient(180deg, rgba(15,15,20,0.9) 0%, rgba(10,10,15,0.95) 100%);
+  border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.06);
-  display: flex; flex-direction: column; gap: 6px;
+  display: flex; flex-direction: column; gap: 2px;
 }
-.agent-empty { color: var(--text-muted); text-align: center; padding: 40px; font-size: 12px; }
+.agent-empty { color: var(--text-muted); text-align: center; padding: 60px 20px; font-size: 12px; }
+.agent-empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.5; }
 
-.msg-row { display: flex; gap: 8px; align-items: flex-start; padding: 6px 10px; border-radius: 6px; animation: msgIn 0.3s ease; }
-.msg-row:hover { background: rgba(255,255,255,0.02); }
+/* 날짜/시간 구분선 */
+.msg-date-sep { text-align: center; font-size: 10px; color: rgba(255,255,255,0.3); padding: 8px 0; }
 
-@keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* 메시지 그룹 (같은 에이전트 연속) */
+.msg-group { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; animation: msgIn 0.3s ease; }
+.msg-group.first-in-group { margin-top: 10px; }
+.msg-group.is-director { flex-direction: row-reverse; }
+.msg-group.is-director .msg-bubble-wrap { display: flex; flex-direction: column; align-items: flex-end; }
+.msg-group.is-director .msg-bubble { background: rgba(59,130,246,0.15); border-radius: 12px 4px 12px 12px; }
+.msg-group.is-director:not(.first-in-group) .msg-bubble { border-radius: 12px; }
+.msg-group.is-director .msg-name-row { justify-content: flex-end; }
 
-.msg-avatar {
-  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+@keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 프로필 이미지 (이모지 캐릭터) */
+.msg-profile {
+  width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0; background: rgba(255,255,255,0.06); position: relative;
 }
-.msg-avatar.director { background: #3B82F6; color: #fff; }
-.msg-avatar.researcher { background: #10B981; color: #fff; }
-.msg-avatar.writer { background: #F59E0B; color: #000; }
-.msg-avatar.reviewer { background: #8B5CF6; color: #fff; }
-.msg-avatar.system { background: #6B7280; color: #fff; }
+.msg-profile.hide { visibility: hidden; width: 36px; }
 
-.msg-body { flex: 1; min-width: 0; }
-.msg-agent { font-size: 11px; font-weight: 600; margin-bottom: 1px; }
-.msg-agent .msg-phase { font-weight: 400; color: var(--text-muted); margin-left: 6px; font-size: 10px; }
-.msg-text { font-size: 12px; color: #D4D4D8; line-height: 1.5; word-break: break-word; }
-.msg-time { font-size: 9px; color: rgba(255,255,255,0.25); flex-shrink: 0; margin-top: 4px; }
+/* 온라인 표시 점 */
+.msg-profile::after {
+  content: ''; position: absolute; bottom: -1px; right: -1px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #22C55E; border: 2px solid #0A0A0F;
+}
+.msg-profile.hide::after { display: none; }
 
-.msg-row.level-success .msg-text { color: #22C55E; }
-.msg-row.level-error .msg-text { color: #EF4444; }
-.msg-row.level-warning .msg-text { color: #F59E0B; }
+/* 말풍선 */
+.msg-bubble-wrap { flex: 1; min-width: 0; }
+.msg-name-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; }
+.msg-nickname { font-size: 11px; font-weight: 600; }
+.msg-role-tag { font-size: 9px; padding: 1px 5px; border-radius: 4px; font-weight: 500; }
+.msg-phase-tag { font-size: 9px; color: rgba(255,255,255,0.3); }
+
+.msg-bubble {
+  display: inline-block; max-width: 85%; padding: 8px 12px;
+  border-radius: 4px 12px 12px 12px;
+  font-size: 12.5px; line-height: 1.6; word-break: break-word;
+  background: rgba(255,255,255,0.07); color: #E4E4E7;
+  position: relative;
+}
+.msg-group:not(.first-in-group) .msg-bubble { border-radius: 12px; }
+
+/* 레벨별 말풍선 스타일 */
+.msg-bubble.level-success { background: rgba(34,197,94,0.1); color: #86EFAC; border-left: 2px solid #22C55E; }
+.msg-bubble.level-error { background: rgba(239,68,68,0.1); color: #FCA5A5; border-left: 2px solid #EF4444; }
+.msg-bubble.level-warning { background: rgba(245,158,11,0.1); color: #FCD34D; border-left: 2px solid #F59E0B; }
+
+.msg-bubble-time { font-size: 9px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+
+/* 에이전트별 닉네임 색상 */
+.nick-director { color: #60A5FA; }
+.nick-researcher { color: #34D399; }
+.nick-writer { color: #FBBF24; }
+.nick-composer { color: #F472B6; }
+.nick-reviewer { color: #A78BFA; }
+.nick-tts { color: #FB923C; }
+.nick-builder { color: #38BDF8; }
+.nick-system { color: #9CA3AF; }
+.nick-runner { color: #C084FC; }
+
+/* 역할 태그 색상 */
+.tag-director { background: rgba(96,165,250,0.15); color: #60A5FA; }
+.tag-researcher { background: rgba(52,211,153,0.15); color: #34D399; }
+.tag-writer { background: rgba(251,191,36,0.15); color: #FBBF24; }
+.tag-composer { background: rgba(244,114,182,0.15); color: #F472B6; }
+.tag-reviewer { background: rgba(167,139,250,0.15); color: #A78BFA; }
+.tag-tts { background: rgba(251,146,60,0.15); color: #FB923C; }
+.tag-builder { background: rgba(56,189,248,0.15); color: #38BDF8; }
+.tag-system { background: rgba(156,163,175,0.15); color: #9CA3AF; }
+.tag-runner { background: rgba(192,132,252,0.15); color: #C084FC; }
 </style>
 
 <script>
 (function() {
   var container = document.getElementById('agent-messages');
   var statusEl = document.getElementById('agent-status');
+  var memberCountEl = document.getElementById('agent-member-count');
   var es = null;
-  var msgCount = 0;
+  var lastAgent = '';
+  var seenAgents = {};
+
+  /* --- 에이전트 캐릭터 프로필 --- */
+  var AGENTS = {
+    'director':   { emoji: '🎬', nick: '사감독',     role: '총괄 디렉터',   cls: 'director' },
+    'runner':     { emoji: '🏃', nick: '마달리',     role: '파이프라인',    cls: 'runner' },
+    'pipeline':   { emoji: '🏃', nick: '마달리',     role: '파이프라인',    cls: 'runner' },
+    'research':   { emoji: '🔍', nick: '김탐정',     role: '리서치 전문가', cls: 'researcher' },
+    'explorer':   { emoji: '🗺️', nick: '박탐험',     role: '리서치 탐색',  cls: 'researcher' },
+    'writer':     { emoji: '✍️', nick: '이작가',     role: '원고 작성',    cls: 'writer' },
+    'manuscript': { emoji: '✍️', nick: '이작가',     role: '원고 작성',    cls: 'writer' },
+    'composer':   { emoji: '🎨', nick: '정비주얼',   role: '씬 디자이너',  cls: 'composer' },
+    'visual':     { emoji: '🎨', nick: '정비주얼',   role: '씬 디자이너',  cls: 'composer' },
+    'reviewer':   { emoji: '🧐', nick: '최깐깐',     role: 'QA 검수',     cls: 'reviewer' },
+    'qa':         { emoji: '🧐', nick: '최깐깐',     role: 'QA 검수',     cls: 'reviewer' },
+    'fact':       { emoji: '🔬', nick: '오팩트',     role: '사실 검증',    cls: 'reviewer' },
+    'duplicate':  { emoji: '🔎', nick: '한중복',     role: '중복 검사',    cls: 'reviewer' },
+    'tts':        { emoji: '🎙️', nick: '강성우',     role: 'TTS/음성',    cls: 'tts' },
+    'subtitle':   { emoji: '📝', nick: '윤자막',     role: '자막 동기화',  cls: 'tts' },
+    'image':      { emoji: '🖼️', nick: '신그림',     role: '이미지 소싱',  cls: 'composer' },
+    'character':  { emoji: '👤', nick: '임캐릭',     role: '캐릭터 설계',  cls: 'composer' },
+    'manifest':   { emoji: '📦', nick: '조빌더',     role: '매니페스트',   cls: 'builder' },
+    'video':      { emoji: '🎞️', nick: '류편집',     role: '영상 조립',    cls: 'builder' },
+    'layout':     { emoji: '📐', nick: '권비율',     role: '레이아웃 체크', cls: 'builder' },
+    'data':       { emoji: '📊', nick: '황데이터',   role: '데이터 검증',  cls: 'builder' },
+    'environment':{ emoji: '⚙️', nick: '카이로스',   role: '환경 점검',    cls: 'system' },
+    'preflight': { emoji: '⚙️', nick: '카이로스',   role: '환경 점검',    cls: 'system' },
+    'system':     { emoji: '🤖', nick: '전시스템',   role: '시스템',       cls: 'system' },
+    'test':       { emoji: '🧪', nick: '테스터',     role: '테스트',       cls: 'system' },
+  };
+
+  var agentTabCounter = {};
+
+  function getProfile(agent) {
+    var a = (agent || '').toLowerCase();
+    for (var key in AGENTS) {
+      if (a.indexOf(key) >= 0) {
+        var p = Object.assign({}, AGENTS[key]);
+        var numMatch = (agent || '').match(/[-_](\d+|[A-Z])$/);
+        if (numMatch) {
+          p.nick = p.nick + numMatch[1];
+        }
+        return p;
+      }
+    }
+    return { emoji: '🤖', nick: agent || '???', role: '에이전트', cls: 'system' };
+  }
 
   function connect() {
     es = new EventSource('/api/agent-messages/stream');
-
     es.onopen = function() {
       statusEl.textContent = '연결됨';
       statusEl.className = 'agent-badge online';
     };
-
     es.onmessage = function(e) {
-      try {
-        var msg = JSON.parse(e.data);
-        addMessage(msg);
-      } catch(err) {}
+      try { addMessage(JSON.parse(e.data)); } catch(err) {}
     };
-
     es.onerror = function() {
       statusEl.textContent = '재연결 중...';
       statusEl.className = 'agent-badge offline';
@@ -88,63 +189,71 @@
   }
 
   function addMessage(msg) {
-    // 빈 상태 메시지 제거
     var empty = container.querySelector('.agent-empty');
     if (empty) empty.remove();
 
-    msgCount++;
-    var role = getRole(msg.agent);
-    var initials = getInitials(msg.agent);
-    var timeStr = new Date(msg.timestamp * 1000).toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    var profile = getProfile(msg.agent);
+    var isFirst = (lastAgent !== msg.agent);
+    lastAgent = msg.agent;
 
-    var row = document.createElement('div');
-    row.className = 'msg-row level-' + (msg.level || 'info');
-    row.innerHTML = ''
-      + '<div class="msg-avatar ' + role + '">' + initials + '</div>'
-      + '<div class="msg-body">'
-      + '  <div class="msg-agent">' + esc(msg.agent)
-      + (msg.phase ? '<span class="msg-phase">' + esc(msg.phase) + '</span>' : '')
-      + '  </div>'
-      + '  <div class="msg-text">' + esc(msg.text) + '</div>'
-      + '</div>'
-      + '<div class="msg-time">' + timeStr + '</div>';
+    // 참여 에이전트 추적
+    seenAgents[profile.nick] = profile.emoji;
+    updateMemberCount();
 
-    container.appendChild(row);
+    var timeStr = new Date(msg.timestamp * 1000).toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+
+    var group = document.createElement('div');
+    var isDirector = (profile.cls === 'director');
+    group.className = 'msg-group' + (isFirst ? ' first-in-group' : '') + (isDirector ? ' is-director' : '');
+
+    var profileHtml = isFirst
+      ? '<div class="msg-profile">' + profile.emoji + '</div>'
+      : '<div class="msg-profile hide"></div>';
+
+    var nameHtml = isFirst
+      ? '<div class="msg-name-row">'
+        + '<span class="msg-nickname nick-' + profile.cls + '">' + esc(profile.nick) + '</span>'
+        + '<span class="msg-role-tag tag-' + profile.cls + '">' + esc(profile.role) + '</span>'
+        + (msg.phase ? '<span class="msg-phase-tag">' + esc(msg.phase) + '</span>' : '')
+        + '</div>'
+      : '';
+
+    group.innerHTML = profileHtml
+      + '<div class="msg-bubble-wrap">'
+      + nameHtml
+      + '<div class="msg-bubble level-' + (msg.level || 'info') + '">' + esc(msg.text) + '</div>'
+      + '<div class="msg-bubble-time">' + timeStr + '</div>'
+      + '</div>';
+
+    container.appendChild(group);
     container.scrollTop = container.scrollHeight;
   }
 
-  function getRole(agent) {
-    var a = agent.toLowerCase();
-    if (a.indexOf('director') >= 0) return 'director';
-    if (a.indexOf('research') >= 0) return 'researcher';
-    if (a.indexOf('writer') >= 0 || a.indexOf('작가') >= 0) return 'writer';
-    if (a.indexOf('review') >= 0) return 'reviewer';
-    return 'system';
-  }
-
-  function getInitials(agent) {
-    if (!agent) return '?';
-    var parts = agent.split(/[-_\s]/);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return agent.substring(0, 2).toUpperCase();
+  function updateMemberCount() {
+    var names = Object.keys(seenAgents);
+    if (names.length > 0) {
+      var emojis = names.map(function(n) { return seenAgents[n]; }).join('');
+      memberCountEl.textContent = emojis + ' ' + names.length + '명 참여중';
+    }
   }
 
   function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
   window.clearMessages = function() {
-    container.innerHTML = '<div class="agent-empty">에이전트 메시지가 여기에 표시됩니다.</div>';
-    msgCount = 0;
+    container.innerHTML = '<div class="agent-empty"><div class="agent-empty-icon">💬</div><div>에이전트들이 대화를 시작하면 여기에 표시됩니다.</div></div>';
+    lastAgent = '';
+    seenAgents = {};
+    memberCountEl.textContent = '';
   };
 
   // 히스토리 로드
-  fetch('/api/agent-messages/history?limit=100')
+  fetch('/api/agent-messages/history?limit=500')
     .then(function(r) { return r.json(); })
     .then(function(data) {
       (data.messages || []).forEach(addMessage);
     })
     .catch(function() {});
 
-  // SSE 연결
   connect();
 })();
 </script>

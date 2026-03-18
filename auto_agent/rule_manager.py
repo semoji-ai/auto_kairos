@@ -87,6 +87,9 @@ class RuleManager:
 
     def fetch_all(self) -> int:
         """중앙에서 전체 규칙 fetch → 로컬 캐시 저장. 변경된 파일 수 리턴."""
+        # 로컬 기반 운영 — Supabase 동기화 비활성화
+        return 0
+
         if not self._enabled:
             return 0
 
@@ -117,16 +120,16 @@ class RuleManager:
     # ── Load (캐시 → fallback 로컬) ──
 
     def load(self, key: str) -> str:
-        """규칙 로드. 캐시 → 로컬 data/ 순서."""
-        # 1순위: 캐시
-        cache_path = self._cache_path(key)
-        if cache_path.exists():
-            return cache_path.read_text(encoding="utf-8")
-
-        # 2순위: 로컬 data/
+        """규칙 로드. 로컬 data/ 우선 → 캐시 fallback."""
+        # 1순위: 로컬 data/ (수정 반영 보장)
         local_path = DATA_DIR / PurePosixPath(key)
         if local_path.exists():
             return local_path.read_text(encoding="utf-8")
+
+        # 2순위: 캐시 (오프라인 fallback)
+        cache_path = self._cache_path(key)
+        if cache_path.exists():
+            return cache_path.read_text(encoding="utf-8")
 
         raise FileNotFoundError(f"규칙을 찾을 수 없습니다: {key}")
 

@@ -19,7 +19,7 @@ from typing import List, Optional
 # 볼트 기본 경로 (환경변수로 오버라이드 가능)
 VAULT_DIR = Path(os.environ.get(
     "KAIROS_VAULT_DIR",
-    os.path.expanduser("~/Desktop/kairos-vault"),
+    os.path.expanduser("~/Projects/kairos-vault"),
 ))
 
 

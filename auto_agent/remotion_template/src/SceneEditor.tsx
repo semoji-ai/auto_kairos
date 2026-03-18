@@ -4,7 +4,7 @@ import { SceneImage } from "./components/SceneImage";
 import { SubtitleOverlay } from "./components/SubtitleOverlay";
 import { TransitionEffect } from "./components/TransitionEffect";
 import { VisualizationRenderer } from "./components/VisualizationRenderer";
-import { DesignTokenProvider } from "./contexts/DesignTokenContext";
+import { DesignPresetProvider } from "./design";
 import { resolveAsset } from "./utils/resolveAsset";
 import type { SceneManifest, SubtitleConfig } from "./types/manifest";
 
@@ -44,7 +44,7 @@ export const SceneEditor: React.FC<Props> = ({ manifest, sceneNumber, subtitleCo
   const durationInFrames = Math.ceil(scene.audioDurationSec * fps);
 
   return (
-    <DesignTokenProvider tokens={manifest.meta.designTokens}>
+    <DesignPresetProvider meta={manifest.meta}>
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       {/* Layer 1: 영상/이미지 */}
       <TransitionEffect
@@ -82,6 +82,6 @@ export const SceneEditor: React.FC<Props> = ({ manifest, sceneNumber, subtitleCo
         <Audio src={resolveAsset(scene.audioPath)} />
       ) : null}
     </AbsoluteFill>
-    </DesignTokenProvider>
+    </DesignPresetProvider>
   );
 };

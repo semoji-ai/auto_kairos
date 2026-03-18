@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { AbsoluteFill, delayRender, continueRender, staticFile } from "remotion";
-const resolveAsset = (p: string) => p.startsWith("http") ? p : staticFile(p);
-import { FONT_DEFS } from "../visualizations/vizStyles";
+import React from "react";
+import { AbsoluteFill } from "remotion";
+import { usePresetFonts } from "../design/fonts";
 import type { MapSceneData } from "../types/manifest";
 import { MapThemeProvider } from "./MapThemeContext";
 import { LocationReveal } from "./LocationReveal";
@@ -20,37 +19,12 @@ interface Props {
  * VisualizationRenderer와 동일한 패턴: 폰트 로딩 + switch 디스패치.
  */
 
-const useFonts = () => {
-  const [handle] = useState(() => delayRender("Loading map fonts"));
-
-  useEffect(() => {
-    const loadAll = async () => {
-      const promises = FONT_DEFS.map(async (f) => {
-        const url = resolveAsset(f.file);
-        const descriptors: FontFaceDescriptors = {
-          weight: f.weight,
-          style: "normal",
-        };
-        const face = new FontFace(f.family, `url('${url}')`, descriptors);
-        const loaded = await face.load();
-        document.fonts.add(loaded);
-      });
-      await Promise.all(promises);
-      continueRender(handle);
-    };
-    loadAll().catch((err) => {
-      console.error("Font loading failed:", err);
-      continueRender(handle);
-    });
-  }, [handle]);
-};
-
 export const MapSceneRenderer: React.FC<Props> = ({
   data,
   durationInFrames,
   fps,
 }) => {
-  useFonts();
+  usePresetFonts();
 
   const commonProps = { data, durationInFrames, fps };
 

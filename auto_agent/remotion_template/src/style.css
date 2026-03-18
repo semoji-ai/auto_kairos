@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* STYLE */
+  --viz-bg: #FFFEF8;
+  --viz-text: #3D3B2F;
+  --viz-subtitle: #5D5B4F;
+  --viz-source: #8D8B7F;
+  --viz-grid: #E8E5DC;
+  --viz-card-bg: #FFFFFF;
+  --viz-border: #3D3B2F;
+  --viz-color-0: #F7D94C;
+  --viz-color-1: #FF8A5C;
+  --viz-color-2: #5BA8A0;
+  --viz-color-3: #FF6B8A;
+  --viz-color-4: #9B8FD9;
+  --viz-color-5: #6BCB77;
+  --viz-color-6: #FFB347;
+  --viz-color-7: #87CEEB;
+  --viz-color-8: #DDA0DD;
+  --viz-color-9: #98D8C8;
+  --viz-positive: #2E7D32;
+  --viz-positive-bg: #E8F5E9;
+  --viz-negative: #C62828;
+  --viz-negative-bg: #FFEBEE;
+  --viz-card-radius: 16px;
+  --viz-card-shadow: 0 4px 20px rgba(61,59,47,0.08);
+
+  /* TYPO */
+  --viz-title-size: 52px;
+  --viz-title-weight: 700;
+  --viz-title-tracking: -0.01em;
+  --viz-hero-size: 64px;
+  --viz-hero-weight: 800;
+  --viz-hero-tracking: -0.02em;
+  --viz-subtitle-size: 34px;
+  --viz-subtitle-weight: 500;
+  --viz-label-size: 26px;
+  --viz-label-weight: 600;
+  --viz-value-size: 24px;
+  --viz-value-weight: 700;
+  --viz-caption-size: 18px;
+  --viz-caption-weight: 400;
+
+  /* LAYOUT */
+  --viz-top-margin: 3%;
+  --viz-side-padding: 6%;
+  --viz-safe-zone: 18%;
+
+  /* FONT */
+  --viz-font: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+  --viz-title-font: 'GriunPolFairness', 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+}
