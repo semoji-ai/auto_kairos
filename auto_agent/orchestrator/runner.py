@@ -2062,7 +2062,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             outputs = [outputs]
 
         # 출력 파일이 이미 존재하면 스킵 (resume 지원)
-        # 단, 입력과 출력이 동일한 파일인 경우(in-place 업데이트)는 스킵하지 않음
+        # 단, 디렉토리 경로(images/ 등)는 해당 디렉토리 안에 실제 파일이 있어야 스킵
         inputs = step.get("input", [])
         if isinstance(inputs, str):
             inputs = [inputs]
@@ -2073,9 +2073,14 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             all_exist = True
             for out in outputs:
                 out_path = self._resolve_output_path(out)
-                if "{" in out:
-                    parent = out_path.parent
-                    if not (parent.exists() and any(parent.iterdir())):
+                if out.endswith("/"):
+                    # 디렉토리 출력 → 해당 디렉토리 자체가 존재하고 안에 파일이 있어야
+                    if not (out_path.exists() and out_path.is_dir() and any(out_path.iterdir())):
+                        all_exist = False
+                        break
+                elif "{" in out:
+                    # 패턴 경로 → 해당 디렉토리 안에 파일이 있어야
+                    if not (out_path.parent.exists() and out_path.parent.is_dir() and any(out_path.parent.glob(out_path.name.replace("{", "*").replace("}", "*")))):
                         all_exist = False
                         break
                 elif not out_path.exists():
@@ -2083,6 +2088,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     break
 
             if all_exist and outputs:
+                print(f"[resume] 출력 파일 존재 → 스킵", flush=True)
                 return StepResult(
                     step_id=step_id, status="completed",
                     output_files=[str(self._resolve_output_path(o)) for o in outputs],

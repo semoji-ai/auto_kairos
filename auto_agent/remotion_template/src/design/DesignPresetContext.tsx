@@ -45,3 +45,6 @@ export const usePresetTypo = () => React.useContext(DesignPresetCtx).typography;
 
 /** 레이아웃 토큰 */
 export const usePresetLayout = () => React.useContext(DesignPresetCtx).layout;
+
+/** 컴포넌트 변형 토큰 */
+export const usePresetVariants = () => React.useContext(DesignPresetCtx).variants;

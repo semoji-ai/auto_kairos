@@ -193,13 +193,14 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
         specs = _load_json("scene_specs.json")
         scenes = specs.get("scenes", []) if specs else []
         tts = _load_json("tts_results.json")
-        scenes = _enrich_scenes(pm, project_id, scenes, tts, slug=slug, out_dir=out_dir)
+        scenes = enrich_scenes_with_media(scenes, slug, out_dir, tts)
         context["scenes"] = scenes
         ch_set = sorted(set(s.get("chapter", 0) for s in scenes))
         context["chapters_list"] = ch_set
 
     elif tab == "studio":
-        pass  # Studio 탭은 별도 데이터 불필요 (JS로 상태 확인)
+        # Studio 탭 진입 시 해당 프로젝트 매니페스트 자동 설정
+        _setup_studio_project(slug)
 
     elif tab == "assets":
         context["asset_counts"] = pm.get_asset_counts(project_id)
@@ -447,7 +448,93 @@ async def api_scenes_by_slug(slug: str):
     scenes = specs.get("scenes", [])
     tts = load_project_json(out_dir, "tts_results.json")
     enriched = enrich_scenes_with_media(scenes, slug, out_dir, tts)
-    return {"scenes": enriched}
+    # 디버그: _image_url 확인
+    if enriched:
+        print(f"[DEBUG scenes API] 씬1 _image_url={enriched[0].get('_image_url')}, out_dir={out_dir}", flush=True)
+    return JSONResponse(content={"scenes": enriched})
+
+
+@app.get("/api/p/{slug}/images/candidates/{scene_num}")
+async def image_candidates(slug: str, scene_num: int):
+    """씬의 이미지 검색 후보 반환. 저장된 후보 우선, 없으면 실시간 검색."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    out_dir = project.get("output_dir", "")
+
+    # 1) 저장된 후보 확인
+    candidates_path = Path(out_dir) / "images" / "image_candidates.json"
+    if candidates_path.exists():
+        try:
+            import json as _json
+            data = _json.loads(candidates_path.read_text(encoding="utf-8"))
+            for s in data.get("scenes", []):
+                if s.get("sceneNumber") == scene_num:
+                    return JSONResponse({"query": s.get("query", ""), "candidates": s.get("candidates", []), "cached": True})
+        except Exception:
+            pass
+
+    # 2) 저장 안 되어있으면 실시간 검색 + 자동 저장
+    specs = load_project_json(out_dir, "scene_specs.json")
+    if not specs:
+        return JSONResponse({"error": "no specs"}, 404)
+    scene = None
+    for s in specs.get("scenes", []):
+        if s.get("sceneNumber") == scene_num:
+            scene = s
+            break
+    if not scene:
+        return JSONResponse({"error": "scene not found"}, 404)
+
+    query = (scene.get("imageAsset") or {}).get("query", "")
+    if not query:
+        return JSONResponse({"candidates": [], "query": ""})
+
+    from auto_agent.tools.wikimedia_search import search_wikimedia, save_candidates
+    candidates = search_wikimedia(query, 8)
+    # 자동 저장
+    save_candidates(scene_num, query, candidates, str(Path(out_dir) / "images"))
+    return JSONResponse({"query": query, "candidates": candidates, "cached": False})
+
+
+@app.post("/api/p/{slug}/images/select/{scene_num}")
+async def select_image(request: Request, slug: str, scene_num: int):
+    """후보 이미지 선택 → 다운로드 + scene_specs 업데이트."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    out_dir = project.get("output_dir", "")
+    body = await request.json()
+    url = body.get("url", "")
+    if not url:
+        return JSONResponse({"error": "url required"}, 400)
+
+    from auto_agent.tools.wikimedia_search import download_image
+    img_dir = Path(out_dir) / "images"
+    img_dir.mkdir(parents=True, exist_ok=True)
+    # 확장자 추출
+    from urllib.parse import urlparse
+    ext = Path(urlparse(url).path).suffix or ".jpg"
+    output_path = str(img_dir / f"scene_{scene_num:03d}{ext}")
+    result = download_image(url, output_path)
+
+    if result.get("success"):
+        # scene_specs 업데이트
+        specs_path = Path(out_dir) / "scene_specs.json"
+        if specs_path.exists():
+            import json as _json
+            specs = _json.loads(specs_path.read_text(encoding="utf-8"))
+            for s in specs.get("scenes", []):
+                if s.get("sceneNumber") == scene_num:
+                    if not s.get("imageAsset"):
+                        s["imageAsset"] = {}
+                    s["imageAsset"]["src"] = f"/output/{slug}/images/scene_{scene_num:03d}{ext}"
+                    break
+            specs_path.write_text(_json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+        return JSONResponse({"ok": True, "path": output_path})
+    return JSONResponse({"error": result.get("error", "download failed")}, 500)
 
 
 @app.put("/api/p/{slug}/scenes/{scene_num}")

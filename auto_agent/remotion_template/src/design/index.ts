@@ -1,4 +1,4 @@
-export type { DesignPreset, DesignPresetOverride, FontFile } from "./types";
+export type { DesignPreset, DesignPresetOverride, FontFile, ComponentVariants } from "./types";
 export { DEFAULT_PRESET } from "./defaults";
 export { resolvePreset, deepMerge } from "./resolvePreset";
 export {
@@ -7,5 +7,6 @@ export {
   usePresetColors,
   usePresetTypo,
   usePresetLayout,
+  usePresetVariants,
 } from "./DesignPresetContext";
 export { usePresetFonts, buildFontFamily, buildTitleFontFamily } from "./fonts";

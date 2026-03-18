@@ -5,26 +5,31 @@
     <p class="design-desc">테마, 컬러, 애니메이션 설정을 프리셋으로 저장하고 프로젝트에 적용합니다.</p>
   </div>
 
-  <div class="design-layout">
-    <!-- ── 좌: 프리셋 목록 ── -->
-    <div class="design-sidebar">
-      <div class="design-sidebar-header">
-        <h3>프리셋</h3>
-        <button class="btn-sm btn-accent" onclick="newPreset()">+ 새 프리셋</button>
-      </div>
-      <div id="preset-list" class="preset-list">
-        <div class="loading-text">로딩 중...</div>
-      </div>
-    </div>
+  <!-- ── 프리셋 선택 바 ── -->
+  <div class="design-topbar">
+    <select id="preset-dropdown" class="preset-dropdown" onchange="window.selectPreset(this.value)">
+      <option value="">프리셋 선택...</option>
+    </select>
+    <button class="btn-sm btn-accent" onclick="newPreset()">+ 새 프리셋</button>
+  </div>
 
-    <!-- ── 우: 편집 영역 ── -->
+  <div class="design-layout">
+    <!-- ── 좌: 편집 영역 ── -->
     <div class="design-editor">
       <div id="editor-area">
         <div class="editor-placeholder">
           <div class="placeholder-icon">🎨</div>
-          <p>좌측에서 프리셋을 선택하거나 새로 만드세요</p>
+          <p>상단에서 프리셋을 선택하거나 새로 만드세요</p>
         </div>
       </div>
+    </div>
+
+    <!-- ── 우: 프리뷰 ── -->
+    <div class="design-preview">
+      <div class="design-preview-header">
+        <h3>Preview</h3>
+      </div>
+      <iframe id="preview-iframe" src="/static/preview/index.html" style="width:100%;height:100%;border:none;border-radius:0 0 8px 8px;background:#000;"></iframe>
     </div>
   </div>
 </div>
@@ -34,23 +39,24 @@
 .design-header h2 { margin: 0 0 4px; font-size: 18px; }
 .design-desc { color: var(--text-muted); font-size: 12px; margin: 0 0 16px; }
 
-.design-layout { display: flex; gap: 16px; height: calc(90vh - 140px); }
+/* 프리셋 드롭다운 바 */
+.design-topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.preset-dropdown {
+  flex: 1; max-width: 360px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px; color: #E4E4E7; font-size: 13px; padding: 8px 12px; outline: none; cursor: pointer;
+}
+.preset-dropdown:focus { border-color: rgba(245,158,11,0.4); }
 
-/* 프리셋 목록 */
-.design-sidebar { flex: 0 0 240px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
-.design-sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-.design-sidebar-header h3 { margin: 0; font-size: 13px; }
-.preset-list { flex: 1; overflow-y: auto; padding: 6px; }
-
-.preset-card { padding: 8px 10px; border-radius: 6px; cursor: pointer; margin-bottom: 4px; transition: background 0.15s; border: 1px solid transparent; }
-.preset-card:hover { background: rgba(255,255,255,0.04); }
-.preset-card.active { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.3); }
-.preset-card-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
-.preset-card-desc { font-size: 10px; color: var(--text-muted); }
-.preset-badge { font-size: 8px; background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 3px; color: var(--text-muted); }
+.design-layout { display: flex; gap: 16px; height: calc(90vh - 180px); }
 
 /* 편집 영역 */
-.design-editor { flex: 1; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; overflow-y: auto; }
+.design-editor { flex: 0 0 400px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; overflow-y: auto; }
+
+/* 프리뷰 패널 */
+.design-preview { flex: 1; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; min-width: 480px; }
+.design-preview-header { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.design-preview-header h3 { margin: 0; font-size: 13px; }
 
 .editor-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); }
 .placeholder-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
@@ -122,25 +128,15 @@
   };
 
   function _renderPresetList() {
-    var html = '';
+    var dd = document.getElementById('preset-dropdown');
+    if (!dd) return;
+    var html = '<option value="">프리셋 선택...</option>';
     _presets.forEach(function(p) {
-      var active = p._id === _activeId ? ' active' : '';
-      html += '<div class="preset-card' + active + '" data-pid="' + p._id + '">'
-        + '<div class="preset-card-name">' + _esc(p.name)
-        + (p.builtin ? '<span class="preset-badge">내장</span>' : '')
-        + '</div>'
-        + '<div class="preset-card-desc">' + _esc(p.description || '') + '</div>'
-        + '</div>';
+      var sel = p._id === _activeId ? ' selected' : '';
+      var tag = p.builtin ? ' [내장]' : '';
+      html += '<option value="' + p._id + '"' + sel + '>' + _esc(p.name) + tag + '</option>';
     });
-    var el = document.getElementById('preset-list');
-    if (el) {
-      el.innerHTML = html || '<div class="loading-text">프리셋 없음</div>';
-      // 이벤트 위임으로 클릭 처리
-      el.onclick = function(e) {
-        var card = e.target.closest('.preset-card');
-        if (card) window.selectPreset(card.getAttribute('data-pid'));
-      };
-    }
+    dd.innerHTML = html;
   }
 
   // ── 프리셋 선택 ──
@@ -158,7 +154,7 @@
     _renderEditor({
       _id: null, name: '', description: '', builtin: false,
       global: { videoTheme: 'dark', artStyle: '', accentColor: '#F59E0B', vizFont: 'Pretendard' },
-      defaults: { mood: 'dramatic', reveal: 'stagger', emphasis: 'keyword', layout: '', imagePlacement: 'background', imageOpacity: 0.35 },
+      defaults: { mood: 'dramatic', reveal: 'stagger', emphasis: 'keyword', layout: '' },
       animation: { stagger: 8, itemDuration: 20, easing: 'easeOut', titleFadeIn: 15 },
     });
   };
@@ -230,8 +226,6 @@
       + _fmtSelect('d-reveal', 'Reveal', d.reveal || 'fade_in', reveals, ro)
       + _fmtSelect('d-emphasis', 'Emphasis', d.emphasis || 'none', emphases, ro)
       + _fmtSelect('d-layout', '기본 Layout', d.layout || '', layouts, ro)
-      + _fmtSelect('d-placement', '이미지 배치', d.imagePlacement || 'background', placements, ro)
-      + _fmtRange('d-opacity', '이미지 투명도', _def(d.imageOpacity, 0.35), 0, 1, 0.05, ro)
       + '</div></div>';
 
     // 애니메이션
@@ -327,6 +321,57 @@
       + _fmtRange('dp-subBottom', '하단 오프셋 (px)', _def(dpS.bottomOffset, 30), 0, 120, 5, ro)
       + '</div></div>';
 
+    // 컴포넌트 변형
+    var dpV = (dp.variants) || {};
+    var badgeShapes = [['circle','Circle'],['rounded-square','Rounded Square'],['square','Square']];
+    var cardStyles = [['bordered','Bordered'],['filled','Filled'],['glass','Glass'],['minimal','Minimal']];
+    var flagShapes = [['circle','Circle'],['card','Card'],['rounded-square','Rounded Sq']];
+    var tagStyles = [['rounded','Rounded'],['pill','Pill'],['square','Square']];
+    var connStyles = [['arrow','Arrow'],['line','Line'],['dashed','Dashed']];
+    var divStyles = [['solid','Solid'],['dashed','Dashed'],['dotted','Dotted'],['gradient','Gradient']];
+    var dotStyles = [['dot','Dot'],['icon','Icon'],['badge','Badge']];
+    var barStyles = [['rounded','Rounded'],['flat','Flat'],['thick','Thick']];
+    var quoteStyles = [['large','Large'],['small','Small'],['none','None']];
+    var calloutStyles = [['left-border','Left Border'],['full-border','Full Border'],['highlight','Highlight']];
+    var glowStyles = [['glow','Glow'],['solid','Solid'],['ring','Ring']];
+    var sparkStyles = [['line','Line'],['area','Area']];
+    var metricStyles = [['bordered','Bordered'],['filled','Filled'],['glass','Glass']];
+    var compStyles = [['bordered','Bordered'],['filled','Filled'],['accent-top','Accent Top']];
+    var stepShapes = [['circle','Circle'],['rounded-square','Rounded Sq']];
+    var tlDotShapes = [['circle','Circle'],['diamond','Diamond'],['square','Square']];
+    var rankShapes = [['circle','Circle'],['shield','Shield'],['square','Square']];
+    var annoStyles = [['solid','Solid'],['dashed','Dashed']];
+    var miniBarStyles = [['rounded','Rounded'],['flat','Flat']];
+    var pillStyles = [['pill','Pill'],['rounded','Rounded'],['square','Square']];
+
+    html += '<div class="form-section">'
+      + '<div class="form-section-title">컴포넌트 변형</div>'
+      + '<div class="form-grid">'
+      + _fmtSelect('v-circleBadge', 'CircleBadge', dpV.circleBadge || 'circle', badgeShapes, ro)
+      + _fmtSelect('v-iconBadge', 'IconBadge', dpV.iconBadge || 'circle', badgeShapes, ro)
+      + _fmtSelect('v-imageBadge', 'ImageBadge', dpV.imageBadge || 'circle', badgeShapes, ro)
+      + _fmtSelect('v-flagBadge', 'FlagBadge', dpV.flagBadge || 'circle', flagShapes, ro)
+      + _fmtSelect('v-logoBadge', 'LogoBadge', dpV.logoBadge || 'circle', badgeShapes, ro)
+      + _fmtSelect('v-rankBadge', 'RankBadge', dpV.rankBadge || 'circle', rankShapes, ro)
+      + _fmtSelect('v-card', 'Card', dpV.card || 'bordered', cardStyles, ro)
+      + _fmtSelect('v-metricCard', 'MetricCard', dpV.metricCard || 'bordered', metricStyles, ro)
+      + _fmtSelect('v-comparisonCell', 'ComparisonCell', dpV.comparisonCell || 'bordered', compStyles, ro)
+      + _fmtSelect('v-callout', 'Callout', dpV.callout || 'left-border', calloutStyles, ro)
+      + _fmtSelect('v-tag', 'Tag', dpV.tag || 'rounded', tagStyles, ro)
+      + _fmtSelect('v-pill', 'Pill', dpV.pill || 'pill', pillStyles, ro)
+      + _fmtSelect('v-statusDot', 'StatusDot', dpV.statusDot || 'dot', dotStyles, ro)
+      + _fmtSelect('v-progressBar', 'ProgressBar', dpV.progressBar || 'rounded', barStyles, ro)
+      + _fmtSelect('v-miniBar', 'MiniBar', dpV.miniBar || 'rounded', miniBarStyles, ro)
+      + _fmtSelect('v-connector', 'Connector', dpV.connector || 'arrow', connStyles, ro)
+      + _fmtSelect('v-timelineDot', 'TimelineDot', dpV.timelineDot || 'circle', tlDotShapes, ro)
+      + _fmtSelect('v-stepBadge', 'StepBadge', dpV.stepBadge || 'circle', stepShapes, ro)
+      + _fmtSelect('v-quoteMark', 'QuoteMark', dpV.quoteMark || 'large', quoteStyles, ro)
+      + _fmtSelect('v-divider', 'Divider', dpV.divider || 'solid', divStyles, ro)
+      + _fmtSelect('v-glowDot', 'GlowDot', dpV.glowDot || 'glow', glowStyles, ro)
+      + _fmtSelect('v-annotationLine', 'AnnotationLine', dpV.annotationLine || 'solid', annoStyles, ro)
+      + _fmtSelect('v-sparkline', 'Sparkline', dpV.sparkline || 'line', sparkStyles, ro)
+      + '</div></div>';
+
     // 프리뷰
     var accentHex = g.accentColor || '#F59E0B';
     var themeBg = g.videoTheme === 'white' ? '#FAFAFA' : '#0A0A0A';
@@ -359,6 +404,25 @@
     _bind('dp-accent', 'input', _updatePreview);
     _bind('dp-positive', 'input', _updatePreview);
     _bind('dp-negative', 'input', _updatePreview);
+
+    // iframe 프리뷰 동기화
+    ['dp-bg','dp-text','dp-accent','dp-positive','dp-negative','dp-warning',
+     'dp-rank1','dp-rank2','dp-rank3','dp-bodyFont','dp-titleFont','dp-quoteFont',
+     'dp-headlineAccent','dp-headlineBase','dp-itemText','dp-sourceText',
+     'dp-chartTitle','dp-quoteText','dp-cardRadius','dp-gap','dp-itemsGap',
+     'dp-badgeSize','dp-barHeight','dp-maxContent','dp-mapTheme',
+     'dp-subKeyword','dp-subStroke','dp-subStrokeW','dp-subSize','dp-subBottom',
+     'v-circleBadge','v-iconBadge','v-imageBadge','v-flagBadge','v-logoBadge',
+     'v-rankBadge','v-card','v-metricCard','v-comparisonCell','v-callout',
+     'v-tag','v-pill','v-statusDot','v-progressBar','v-miniBar',
+     'v-connector','v-timelineDot','v-stepBadge','v-quoteMark','v-divider',
+     'v-glowDot','v-annotationLine','v-sparkline'
+    ].forEach(function(id) {
+      _bind(id, 'input', _sendToPreview);
+      _bind(id, 'change', _sendToPreview);
+    });
+
+    _sendToPreview();
   }
 
   function _bind(id, evt, fn) {
@@ -384,6 +448,14 @@
         + '<div class="preview-chip"><div class="preview-swatch" style="background:' + neg + '"></div>Negative</div>'
         + '<div class="preview-chip"><div class="preview-swatch" style="background:' + bg + ';border:2px solid ' + accent + ';border-radius:' + (_v('dp-cardRadius') || '12') + 'px;display:flex;align-items:center;justify-content:center;font-size:9px;color:' + fg + '">Card</div>카드</div>';
     }
+    _sendToPreview();
+  }
+
+  function _sendToPreview() {
+    var iframe = document.getElementById('preview-iframe');
+    if (!iframe || !iframe.contentWindow) return;
+    var form = _collectForm();
+    iframe.contentWindow.postMessage({ type: 'preset-update', preset: form.designPreset || {} }, '*');
   }
 
   // 내장 프리셋 복제
@@ -441,7 +513,7 @@
       name: _v('preset-name'),
       description: _v('preset-desc'),
       global: { videoTheme: _v('g-theme'), artStyle: _v('g-artStyle'), accentColor: _v('g-accent'), vizFont: _v('g-font') },
-      defaults: { mood: _v('d-mood'), reveal: _v('d-reveal'), emphasis: _v('d-emphasis'), layout: _v('d-layout'), imagePlacement: _v('d-placement'), imageOpacity: parseFloat(_v('d-opacity')) },
+      defaults: { mood: _v('d-mood'), reveal: _v('d-reveal'), emphasis: _v('d-emphasis'), layout: _v('d-layout') },
       animation: { stagger: parseInt(_v('a-stagger')), itemDuration: parseInt(_v('a-itemDur')), easing: _v('a-easing'), titleFadeIn: parseInt(_v('a-titleFade')) },
       designPreset: {
         baseTheme: _v('g-theme') || 'dark',
@@ -482,6 +554,31 @@
           strokeWidth: parseFloat(_v('dp-subStrokeW')) || 2,
           fontSize: parseInt(_v('dp-subSize')) || 44,
           bottomOffset: parseInt(_v('dp-subBottom')) || 30,
+        },
+        variants: {
+          circleBadge: _v('v-circleBadge') || 'circle',
+          iconBadge: _v('v-iconBadge') || 'circle',
+          imageBadge: _v('v-imageBadge') || 'circle',
+          flagBadge: _v('v-flagBadge') || 'circle',
+          logoBadge: _v('v-logoBadge') || 'circle',
+          rankBadge: _v('v-rankBadge') || 'circle',
+          card: _v('v-card') || 'bordered',
+          metricCard: _v('v-metricCard') || 'bordered',
+          comparisonCell: _v('v-comparisonCell') || 'bordered',
+          callout: _v('v-callout') || 'left-border',
+          tag: _v('v-tag') || 'rounded',
+          pill: _v('v-pill') || 'pill',
+          statusDot: _v('v-statusDot') || 'dot',
+          progressBar: _v('v-progressBar') || 'rounded',
+          miniBar: _v('v-miniBar') || 'rounded',
+          connector: _v('v-connector') || 'arrow',
+          timelineDot: _v('v-timelineDot') || 'circle',
+          stepBadge: _v('v-stepBadge') || 'circle',
+          quoteMark: _v('v-quoteMark') || 'large',
+          divider: _v('v-divider') || 'solid',
+          glowDot: _v('v-glowDot') || 'glow',
+          annotationLine: _v('v-annotationLine') || 'solid',
+          sparkline: _v('v-sparkline') || 'line',
         },
       },
     };

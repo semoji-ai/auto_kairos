@@ -62,6 +62,36 @@ chartConfig는 visualization 안에 넣으세요 (creative 밖).
   "imageAsset": {"source": "search", "query": "Warren Buffett, Peter Lynch portraits", "itemImages": true}
 }
 ```
+
+## quote_portrait 레이아웃 (인물 인용) — 필수 규칙
+layout=quote_portrait 씬은 반드시 다음을 설정:
+- `profileName`: 인물 이름 (예: "일론 머스크") — items[0]과 별도 필드
+- `images`: `[null]` — 이미지 파이프라인이 인물 초상을 확보
+- `items[0]`: 인용문 텍스트
+- `source`: 인용 출처 (인물 이름 제외) — 예: "Tesla Investor Day 2023"
+- `imageAsset.source`: "wikimedia" 또는 "search"
+- `imageAsset.query`: 인물 초상 검색어 (예: "Elon Musk portrait photo")
+
+⚠ source에 인물 이름을 넣지 않는다 — profileName과 중복됨
+⚠ imageAsset.itemImages는 false (단일 초상, per-item 아님)
+
+```json
+{
+  "visualization": {
+    "items": ["가장 중요한 제품은 공장 그 자체다"],
+    "images": [null],
+    "profileName": "일론 머스크",
+    "source": "Tesla Investor Day 2023",
+    "creative": { "layout": "quote_portrait", "emphasis": "quote" }
+  },
+  "imageAsset": {
+    "source": "wikimedia",
+    "query": "Elon Musk portrait photo",
+    "placement": "background",
+    "opacity": 0.25
+  }
+}
+```
 </symbol_rules>
 
 <image_rules>

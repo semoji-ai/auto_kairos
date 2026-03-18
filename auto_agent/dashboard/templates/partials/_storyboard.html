@@ -42,6 +42,21 @@
         {% if scene.visualization.creative.emphasis %}<span class="viz-badge">{{ scene.visualization.creative.emphasis }}</span>{% endif %}
         {% if scene.visualization.creative.mood %}<span class="mood-badge">{{ scene.visualization.creative.mood }}</span>{% endif %}
         {% endif %}
+        {# 이미지 에셋 정보 #}
+        {% if scene.imageAsset %}
+        {% set img = scene.imageAsset %}
+        {% if img.source == 'wikimedia' or img.source == 'search' %}
+        <span class="img-badge img-search" title="{{ img.query or '' }}">🔍 {{ img.query[:20] if img.query else 'search' }}{% if img.query and img.query|length > 20 %}...{% endif %}</span>
+        {% elif img.source == 'generate' %}
+        <span class="img-badge img-gen">🎨 생성</span>
+        {% endif %}
+        {% if img.placement %}<span class="img-badge img-placement">📐 {{ img.placement }}</span>{% endif %}
+        {% if scene._image_url %}<span class="img-badge img-ok">✅ 이미지</span>{% else %}<span class="img-badge img-missing">⬜ 미확보</span>{% endif %}
+        {% endif %}
+        {# 차트 정보 #}
+        {% if scene.visualization and scene.visualization.chartConfig %}
+        <span class="img-badge img-chart">📊 {{ scene.visualization.chartConfig.type }}</span>
+        {% endif %}
       </div>
 
       <div class="narration">{{ scene.narration }}</div>

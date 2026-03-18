@@ -1,12 +1,11 @@
-<!-- Assets 탭 — 이미지 에셋 갤러리 -->
+<!-- Assets 탭 — 이미지 에셋 (후보 썸네일 + 교체) -->
 <div class="assets-page">
   <div class="assets-header">
     <h2>Image Assets</h2>
     <div class="assets-stats" id="assets-stats"></div>
   </div>
-
-  <div class="assets-grid" id="assets-grid">
-    <div class="assets-loading">이미지 에셋 로드 중...</div>
+  <div class="assets-list" id="assets-list">
+    <div class="assets-loading">로드 중...</div>
   </div>
 </div>
 
@@ -14,162 +13,198 @@
 .assets-page { padding: 16px 20px; }
 .assets-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .assets-header h2 { margin: 0; font-size: 16px; }
-.assets-stats { display: flex; gap: 12px; font-size: 11px; color: var(--text-muted); }
+.assets-stats { display: flex; gap: 8px; font-size: 11px; color: var(--text-muted); }
 .assets-stats .stat-badge { padding: 3px 10px; border-radius: 10px; background: rgba(255,255,255,0.06); }
 
-.assets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
-}
-.assets-loading { grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px; }
+.assets-list { display: flex; flex-direction: column; gap: 16px; }
+.assets-loading { text-align: center; color: var(--text-muted); padding: 40px; }
 
-.asset-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 10px;
-  overflow: hidden;
-  transition: border-color 0.2s;
+.asset-row {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px; overflow: hidden;
 }
-.asset-card:hover { border-color: rgba(255,255,255,0.15); }
+.asset-row:hover { border-color: rgba(255,255,255,0.12); }
 
-.asset-card .img-wrap {
-  position: relative;
-  aspect-ratio: 16/9;
-  background: #111;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.asset-main { display: flex; gap: 16px; padding: 12px; align-items: flex-start; }
+
+.asset-img-area {
+  width: 320px; flex-shrink: 0; border-radius: 8px; overflow: hidden;
+  background: #0a0a0a; position: relative; cursor: pointer;
 }
-.asset-card .img-wrap img {
-  width: 100%; height: 100%; object-fit: cover;
+.asset-img-area img { width: 100%; display: block; }
+.asset-img-area .no-img {
+  width: 100%; height: 180px; display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.1); font-size: 48px;
 }
-.asset-card .img-wrap .no-img {
-  color: rgba(255,255,255,0.2); font-size: 32px;
-}
-.asset-card .img-wrap .badge-overlay {
+.asset-img-area .badge-tl {
   position: absolute; top: 6px; left: 6px;
-  font-size: 9px; padding: 2px 6px; border-radius: 4px;
-  font-weight: 600;
+  font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 600;
 }
-.badge-search { background: rgba(59,130,246,0.8); color: #fff; }
-.badge-generate { background: rgba(168,85,247,0.8); color: #fff; }
-.badge-viz { background: rgba(16,185,129,0.8); color: #fff; }
-.badge-none { background: rgba(107,114,128,0.8); color: #fff; }
-
-.asset-card .scene-label {
+.asset-img-area .badge-tr {
   position: absolute; top: 6px; right: 6px;
-  font-size: 10px; padding: 2px 6px; border-radius: 4px;
-  background: rgba(0,0,0,0.7); color: #fff; font-weight: 600;
+  font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 700;
+  background: rgba(0,0,0,0.7); color: #fff;
 }
+.type-search { background: rgba(59,130,246,0.85); color: #fff; }
+.type-gen { background: rgba(168,85,247,0.85); color: #fff; }
+.type-none { background: rgba(239,68,68,0.7); color: #fff; }
 
-.asset-card .card-body { padding: 8px 10px; }
-.asset-card .card-title { font-size: 11px; font-weight: 600; color: #E4E4E7; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.asset-card .card-query { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.asset-card .card-meta { display: flex; gap: 6px; margin-top: 4px; font-size: 9px; color: rgba(255,255,255,0.3); }
-.asset-card .card-layout { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,0.06); color: var(--text-muted); display: inline-block; margin-top: 4px; }
+.asset-info { flex: 1; min-width: 0; }
+.asset-title { font-size: 13px; font-weight: 600; color: #E4E4E7; margin-bottom: 4px; }
+.asset-layout { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--text-muted); display: inline-block; }
+.asset-detail { font-size: 11px; color: #9CA3AF; line-height: 1.6; margin-top: 6px; }
+.asset-detail strong { color: #D4D4D8; }
 
-/* 오디오 섹션 */
-.audio-section { margin-top: 24px; }
-.audio-section h3 { font-size: 14px; margin-bottom: 12px; color: #A1A1AA; }
-.audio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
-.audio-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 11px; }
-.audio-item .scene-num { font-weight: 600; color: var(--accent); min-width: 40px; }
-.audio-item audio { height: 28px; flex: 1; }
+.btn-candidates {
+  margin-top: 8px; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 600;
+  background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.3);
+  cursor: pointer;
+}
+.btn-candidates:hover { background: rgba(59,130,246,0.25); }
+
+/* 후보 패널 */
+.candidates-panel { padding: 8px 12px; border-top: 1px solid rgba(255,255,255,0.06); display: none; }
+.candidates-panel.open { display: block; }
+.candidates-panel .loading { font-size: 10px; color: var(--text-muted); padding: 8px; }
+.candidates-grid {
+  display: flex; gap: 8px; overflow-x: auto; padding: 4px 0;
+}
+.candidate-thumb {
+  width: 120px; height: 68px; flex-shrink: 0; border-radius: 6px; overflow: hidden;
+  cursor: pointer; border: 2px solid transparent; position: relative;
+  background: #111;
+}
+.candidate-thumb:hover { border-color: rgba(59,130,246,0.5); }
+.candidate-thumb.selected { border-color: #22C55E; }
+.candidate-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.candidate-thumb .c-license {
+  position: absolute; bottom: 2px; right: 2px; font-size: 7px; padding: 1px 3px;
+  background: rgba(0,0,0,0.7); color: #9CA3AF; border-radius: 2px;
+}
 </style>
 
 <script>
 (function() {
-  var grid = document.getElementById('assets-grid');
+  var list = document.getElementById('assets-list');
   var statsEl = document.getElementById('assets-stats');
   var slug = '{{ slug }}';
 
-  // scene_specs에서 이미지/레이아웃 정보 가져오기
   fetch('/api/p/' + encodeURIComponent(slug) + '/scenes')
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var scenes = data.scenes || [];
-      if (!scenes.length) {
-        grid.innerHTML = '<div class="assets-loading">씬 데이터가 없습니다.</div>';
-        return;
-      }
+      if (!scenes.length) { list.innerHTML = '<div class="assets-loading">씬 없음</div>'; return; }
 
-      // 통계
-      var imgCount = 0, chartCount = 0, searchCount = 0, genCount = 0;
+      var total = scenes.length, imgOk = 0, imgQuery = 0, genCount = 0;
       scenes.forEach(function(s) {
-        var img = s.imageAsset || {};
-        if (img.src || img.query) imgCount++;
-        if (img.source === 'search' || img.source === 'wikimedia') searchCount++;
-        if (img.source === 'generate') genCount++;
-        var viz = s.visualization || {};
-        if (viz.chartConfig || (viz.creative || {}).chartConfig) chartCount++;
+        if (s._image_url) imgOk++;
+        if ((s.imageAsset || {}).query) imgQuery++;
+        if ((s.imageAsset || {}).source === 'generate') genCount++;
       });
+      statsEl.innerHTML =
+        '<span class="stat-badge">' + total + '씬</span>' +
+        '<span class="stat-badge">✅ ' + imgOk + '/' + imgQuery + '</span>' +
+        '<span class="stat-badge">🎨 생성 ' + genCount + '</span>';
 
-      statsEl.innerHTML = ''
-        + '<span class="stat-badge">씬 ' + scenes.length + '개</span>'
-        + '<span class="stat-badge">🖼️ 이미지 ' + imgCount + '</span>'
-        + '<span class="stat-badge">🔍 검색 ' + searchCount + '</span>'
-        + '<span class="stat-badge">🎨 생성 ' + genCount + '</span>'
-        + '<span class="stat-badge">📊 차트 ' + chartCount + '</span>';
-
-      // 카드 렌더링
-      grid.innerHTML = '';
+      list.innerHTML = '';
       scenes.forEach(function(s) {
         var num = s.sceneNumber;
-        var title = s.title || '씬 ' + num;
         var img = s.imageAsset || {};
-        var viz = s.visualization || {};
-        var creative = viz.creative || {};
-        var layout = creative.layout || '';
-        var imgSrc = s._image_url || '';
-        var query = img.query || img.searchQuery || '';
+        var imgUrl = s._image_url || '';
         var source = img.source || '';
-        var hasChart = !!(viz.chartConfig || creative.chartConfig);
+        var query = img.query || '';
+        var layout = ((s.visualization || {}).creative || {}).layout || '';
+        var mood = ((s.visualization || {}).creative || {}).mood || '';
+        var placement = img.placement || '';
+        var opacity = img.opacity || '';
 
-        var badgeClass = 'badge-none';
-        var badgeText = '없음';
-        if (source === 'search' || source === 'wikimedia') { badgeClass = 'badge-search'; badgeText = '🔍 검색'; }
-        else if (source === 'generate') { badgeClass = 'badge-generate'; badgeText = '🎨 생성'; }
-        else if (hasChart) { badgeClass = 'badge-viz'; badgeText = '📊 차트'; }
+        var typeClass = (source === 'wikimedia' || source === 'search') ? 'type-search' :
+                        source === 'generate' ? 'type-gen' : 'type-none';
+        var typeText = (source === 'wikimedia' || source === 'search') ? '🔍 검색' :
+                       source === 'generate' ? '🎨 생성' : '—';
 
-        var card = document.createElement('div');
-        card.className = 'asset-card';
-        card.innerHTML = ''
-          + '<div class="img-wrap">'
-          + (imgSrc ? '<img src="' + imgSrc + '" loading="lazy">' : '<span class="no-img">🖼️</span>')
-          + '<span class="badge-overlay ' + badgeClass + '">' + badgeText + '</span>'
-          + '<span class="scene-label">S' + String(num).padStart(2,'0') + '</span>'
-          + '</div>'
-          + '<div class="card-body">'
-          + '<div class="card-title">' + esc(title) + '</div>'
-          + (query ? '<div class="card-query">🔍 ' + esc(query) + '</div>' : '')
-          + (layout ? '<span class="card-layout">' + esc(layout) + '</span>' : '')
-          + '<div class="card-meta">'
-          + (img.placement ? '<span>' + img.placement + '</span>' : '')
-          + (img.opacity ? '<span>opacity: ' + img.opacity + '</span>' : '')
-          + '</div>'
-          + '</div>';
-        grid.appendChild(card);
+        var row = document.createElement('div');
+        row.className = 'asset-row';
+        row.innerHTML =
+          '<div class="asset-main">' +
+            '<div class="asset-img-area">' +
+              (imgUrl ? '<img src="' + imgUrl + '" loading="lazy" id="img-' + num + '">' : '<div class="no-img">🖼️</div>') +
+              '<span class="badge-tl ' + typeClass + '">' + typeText + '</span>' +
+              '<span class="badge-tr">S' + String(num).padStart(2,'0') + '</span>' +
+            '</div>' +
+            '<div class="asset-info">' +
+              '<div class="asset-title">' + esc(s.title || '') + '</div>' +
+              (layout ? '<span class="asset-layout">' + esc(layout) + (mood ? ' · ' + mood : '') + '</span>' : '') +
+              '<div class="asset-detail">' +
+                (query ? '<div><strong>쿼리:</strong> ' + esc(query) + '</div>' : '') +
+                (placement ? '<div><strong>배치:</strong> ' + placement + (opacity ? ' · opacity ' + opacity : '') + '</div>' : '') +
+              '</div>' +
+              (query ? '<button class="btn-candidates" onclick="loadCandidates(' + num + ',this)">🔍 후보 이미지 보기</button>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="candidates-panel" id="candidates-' + num + '">' +
+            '<div class="loading">후보 로드 중...</div>' +
+          '</div>';
+        list.appendChild(row);
       });
-
-      // 오디오 섹션
-      var audioHtml = '<div class="audio-section"><h3>🎙️ Audio</h3><div class="audio-grid">';
-      scenes.forEach(function(s) {
-        var audioUrl = s._audio_url;
-        if (audioUrl) {
-          audioHtml += '<div class="audio-item">'
-            + '<span class="scene-num">S' + String(s.sceneNumber).padStart(2,'0') + '</span>'
-            + '<audio controls preload="none" src="' + audioUrl + '"></audio>'
-            + '</div>';
-        }
-      });
-      audioHtml += '</div></div>';
-      grid.insertAdjacentHTML('afterend', audioHtml);
-    })
-    .catch(function(err) {
-      grid.innerHTML = '<div class="assets-loading">에셋 로드 실패: ' + err.message + '</div>';
     });
+
+  window.loadCandidates = function(sceneNum, btn) {
+    var panel = document.getElementById('candidates-' + sceneNum);
+    if (panel.classList.contains('open')) {
+      panel.classList.remove('open');
+      btn.textContent = '🔍 후보 이미지 보기';
+      return;
+    }
+    panel.classList.add('open');
+    btn.textContent = '접기';
+    panel.innerHTML = '<div class="loading">위키미디어 검색 중...</div>';
+
+    fetch('/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sceneNum)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var candidates = data.candidates || [];
+        if (!candidates.length) {
+          panel.innerHTML = '<div class="loading">검색 결과 없음</div>';
+          return;
+        }
+        var html = '<div class="candidates-grid">';
+        candidates.forEach(function(c, i) {
+          var thumb = c.thumbnail_url || '';
+          var title = c.title || '';
+          var license = c.license || '';
+          var origUrl = c.original_url || '';
+          html += '<div class="candidate-thumb" onclick="selectCandidate(' + sceneNum + ',\'' + esc(origUrl) + '\')" title="' + esc(title) + '">'
+            + (thumb ? '<img src="' + thumb + '" loading="lazy">' : '')
+            + '<span class="c-license">' + esc(license) + '</span>'
+            + '</div>';
+        });
+        html += '</div>';
+        panel.innerHTML = html;
+      })
+      .catch(function(e) {
+        panel.innerHTML = '<div class="loading">에러: ' + e.message + '</div>';
+      });
+  };
+
+  window.selectCandidate = function(sceneNum, url) {
+    if (!confirm('이 이미지로 교체할까요?')) return;
+    fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sceneNum, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url: url}),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        var imgEl = document.getElementById('img-' + sceneNum);
+        if (imgEl) imgEl.src = '/output/' + slug + '/images/scene_' + String(sceneNum).padStart(3,'0') + '.jpg?t=' + Date.now();
+        alert('교체 완료!');
+      } else {
+        alert('실패: ' + (data.error || ''));
+      }
+    });
+  };
 
   function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 })();

@@ -1,73 +1,126 @@
 ---
 name: image-sourcer
-description: 씬별 이미지 에셋 소싱 에이전트. 위키미디어 검색 + FAL.ai 생성 판단.
+description: 씬별 이미지 에셋 소싱 에이전트. 검색/생성 판단 후 서브태스크 병렬 처리.
 ---
 
 # Image Sourcer Agent
 
-씬 스펙의 `imageAsset` 필드를 기반으로 각 씬에 적합한 이미지를 소싱합니다.
+씬 스펙의 `imageAsset`을 기반으로 이미지를 소싱합니다.
 
 ## 역할
 
-1. `scene_specs.json`에서 이미지가 필요한 씬을 파악
-2. 위키미디어 검색 → 후보 썸네일 평가 → 최적 이미지 선택
-3. 검색 실패 시 쿼리 변경 또는 AI 생성으로 전환
-4. 선택된 이미지 원본 다운로드 (3초 딜레이)
-5. `image_assets.json` + scene_specs 업데이트
+1. `scene_specs.json` 읽기 → 이미지 필요한 씬 파악
+2. 씬별로 **검색** vs **생성** 판단
+3. 검색/생성을 Task 도구로 병렬 처리
+4. 결과 수집 → scene_specs 업데이트 → image_candidates.json 저장
 
-## 워크플로우
+## 판단 기준: 검색 vs 생성
 
-### Step 1: 씬 분석
-- `scene_specs.json` 읽기
-- `imageAsset.source`가 "search", "wikimedia", "generate"인 씬 추출
-- 각 씬의 컨텍스트 파악 (title, narration, creative.concept)
+| 검색 (wikimedia) | 생성 (FAL.ai) |
+|-----------------|--------------|
+| 실존 인물/장소/사건 | 추상적 개념/상상 |
+| 역사적 사진이 있을 법한 것 | 특정 구도/분위기가 필요한 것 |
+| 기업 로고/건물 | 아트스타일이 적용되어야 하는 것 |
+| source: "wikimedia" 또는 "search" | source: "generate" |
 
-### Step 2: 위키미디어 검색 (source: search 또는 wikimedia)
-- Bash 도구로 검색 스크립트 실행:
-  ```bash
-  python3 -m auto_agent.tools.wikimedia_search "{query}" {limit}
-  ```
-- 결과: 제목, 썸네일 URL, 원본 URL, 크기, 라이선스
-- **쿼리 작성 규칙**:
-  - 핵심 명사 1~3단어 (영어)
-  - 형용사/분위기/촬영스타일 제거
-  - 인물은 이름만, 기업은 이름/로고
-  - 예: "Elon Musk", "semiconductor wafer", "oil refinery"
+## 검색 워크플로우
 
-### Step 3: 이미지 선택
-후보 중 씬에 가장 적합한 이미지를 선택합니다. 판단 기준:
-- **관련성**: 씬의 주제/내용과 일치하는가
-- **구도**: 16:9 영상에 적합한 가로형인가
-- **품질**: 해상도가 충분한가 (최소 1280px 이상)
-- **배치**: imageAsset.placement(background/side/fullscreen)에 적합한가
+```bash
+python3 -m auto_agent.tools.wikimedia_search "쿼리" 8 --scene {씬번호} --save-dir images
+```
+- `--scene`과 `--save-dir`를 반드시 포함하세요 → 후보가 자동 저장됩니다
+- 결과에서 씬에 가장 적합한 이미지 선택
+- 쿼리 규칙: 핵심 명사 1~3단어, 영어, 형용사 제거
+- 선택 후 원본 다운로드:
+```bash
+python3 -m auto_agent.tools.wikimedia_search "download:원본URL" "images/scene_NNN.jpg"
+```
+- **다운로드 사이 3초 대기** (rate limit 방지)
+- 실패 시 쿼리 변경 후 재검색
 
-### Step 4: 다운로드
-- 선택된 이미지의 **원본 URL**을 다운로드
-- 저장 경로: `images/scene_{NNN}.{ext}`
-- **반드시 3초 이상 딜레이** 후 다음 이미지 다운로드 (rate limit 방지)
-- 다운로드 실패 시 1920px 썸네일로 fallback
+## 생성 워크플로우
 
-### Step 5: 검색 실패 대응
-검색 결과가 없거나 적합한 이미지가 없으면:
-1. **쿼리 변경**: 더 일반적인 키워드로 재검색
-2. **fallbackQuery 사용**: imageAsset.fallbackQuery가 있으면 시도
-3. **AI 생성 전환**: FAL.ai로 이미지 생성
+**생성 시 반드시 아트스타일을 확인하고 적용해야 합니다.**
+
+1. 아트스타일 경로 확인 — project_config의 `art_style` 필드 (예: `artstyle/styles/quirky_cartoon.json`)
+   - 프로젝트 output에 `artstyle/` 폴더가 없으면 워크스페이스에서 복제:
    ```bash
-   python3 -m auto_agent.tools.generate_image "{prompt}" "{output_path}"
+   cp -r artstyle/styles/ output/{project}/artstyle/
    ```
 
-### Step 6: 결과 저장
-- `images/image_assets.json` 업데이트
-- `scene_specs.json`의 각 씬 `imageAsset.src` 필드 업데이트
-- 라이선스 정보 기록 (`image_licenses.json`)
+2. 이미지 생성 (기존 도구 활용):
+```bash
+python3 -m auto_agent.tools.image_generate scene \
+  --prompt "영어 프롬프트" \
+  --output "images/scene_NNN.png" \
+  --style "artstyle/styles/quirky_cartoon.json"
+```
 
-## 출력 파일
-- `images/scene_NNN.{ext}` — 각 씬의 이미지
-- `images/image_assets.json` — 에셋 레지스트리
-- `image_licenses.json` — 라이선스/출처 정보
+3. 캐릭터가 포함된 씬:
+```bash
+python3 -m auto_agent.tools.image_generate scene \
+  --prompt "영어 프롬프트" \
+  --output "images/scene_NNN.png" \
+  --style "artstyle/styles/quirky_cartoon.json" \
+  --characters "캐릭터1,캐릭터2" \
+  --characters-info "character_plan.json"
+```
+
+4. 시각화 배경:
+```bash
+python3 -m auto_agent.tools.image_generate viz-background \
+  --title "차트 제목" --type "bar" --context "맥락" \
+  --output "images/scene_NNN.png" \
+  --style "artstyle/styles/quirky_cartoon.json"
+```
+
+## 파일명 규칙
+
+반드시 `scene_NNN` 형식:
+- `images/scene_001.jpg` (검색)
+- `images/scene_002.png` (생성)
+- `images/scene_003.jpg` ...
+
+## 결과 저장
+
+### 1. scene_specs.json 업데이트
+각 씬의 `imageAsset.src`에 경로 설정:
+```json
+"imageAsset": {
+  "source": "wikimedia",
+  "query": "semiconductor wafer",
+  "src": "/output/{project}/images/scene_001.jpg",
+  "placement": "background",
+  "opacity": 0.5
+}
+```
+
+### 2. image_candidates.json (검색 씬만)
+```json
+{
+  "scenes": [
+    {
+      "sceneNumber": 1,
+      "query": "semiconductor wafer",
+      "selected": 0,
+      "candidates": [
+        {"title": "...", "thumbnail_url": "https://...800px...", "original_url": "https://...", "width": 4000, "height": 3000, "license": "CC-BY-SA 4.0"}
+      ]
+    }
+  ]
+}
+```
+
+### 3. image_licenses.json
+```json
+[
+  {"scene": 1, "source": "wikimedia", "title": "...", "license": "CC-BY-SA 4.0", "url": "https://..."}
+]
+```
 
 ## 주의사항
-- 위키미디어 원본 다운로드 시 반드시 3초 딜레이
-- User-Agent 헤더 필수: "KairosAgent/3.1 (educational video production)"
-- 모든 이미지의 라이선스 기록 (CC-BY, CC-BY-SA 등)
-- 부적절한 이미지(폭력, 성적) 필터링
+- 위키미디어 원본 다운로드 시 **반드시 3초 딜레이**
+- User-Agent: "KairosAgent/3.1 (educational video production)"
+- 생성 시 아트스타일 **필수** 확인
+- 파일명 **반드시 scene_NNN 형식**
+- 모든 이미지의 라이선스 기록

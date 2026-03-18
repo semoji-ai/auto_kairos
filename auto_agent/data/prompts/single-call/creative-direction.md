@@ -73,6 +73,17 @@ creative 외에 함께 채울 필드들:
 4. items가 있으면 itemIcons 또는 itemFlags 중 하나는 있어야 한다 (순수 수치 예외).
 5. itemFlags(국기)와 itemIcons(아이콘) 동시 사용 금지.
 6. emphasis="quote" 시: items[0]=인용문 본문, source=화자. 화자를 items에 넣지 않는다.
+7. layout="person_card" 사용 조건:
+   - items가 **서로 다른 인물 이름**일 때만 사용 (예: ["워런 버핏", "피터 린치"])
+   - 한 인물의 직함/역할/속성 나열은 person_card가 아님 → items_list 또는 hero_with_context 사용
+   - 예) "일론 머스크: CEO, CTO, 창립자" → items_list + headline에 인물명
+   - emphasis="person"은 items가 인물 복수일 때만 설정
+8. layout="quote_portrait" 시 필수:
+   - profileName: 인물 이름 (예: "일론 머스크")
+   - items[0]: 인용문 텍스트
+   - source: 인용 출처 (인물 이름 제외, 예: "Tesla Investor Day 2023")
+   - images: [null] (이미지 파이프라인이 채움)
+   - ⚠ source에 인물 이름 넣지 않음 — profileName과 중복
 </rules>
 
 {art_style_override}

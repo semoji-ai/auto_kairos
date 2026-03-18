@@ -44,30 +44,23 @@ def _backup_json(file_path: Path):
 
 @router.get("/scenes")
 async def list_scenes(slug: str):
-    """씬 목록 반환."""
+    """씬 목록 반환 (이미지/오디오 URL 포함)."""
+    from auto_agent.dashboard.helpers import (
+        load_project_json, enrich_scenes_with_media,
+    )
     project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
-    specs_path = Path(project["output_dir"]) / "scene_specs.json"
-    if not specs_path.exists():
+    out_dir = project.get("output_dir", "")
+    specs = load_project_json(out_dir, "scene_specs.json")
+    if not specs:
         return JSONResponse({"error": "scene_specs.json 없음"}, status_code=404)
 
-    specs = json.loads(specs_path.read_text(encoding="utf-8"))
     scenes = specs.get("scenes", [])
-
-    return {
-        "total": len(scenes),
-        "scenes": [
-            {
-                "sceneNumber": s["sceneNumber"],
-                "chapter": s.get("chapter"),
-                "title": s.get("title", ""),
-                "layout": s.get("layout", ""),
-            }
-            for s in scenes
-        ],
-    }
+    tts = load_project_json(out_dir, "tts_results.json")
+    enriched = enrich_scenes_with_media(scenes, slug, out_dir, tts)
+    return JSONResponse(content={"total": len(enriched), "scenes": enriched})
 
 
 @router.get("/scenes/{scene_num}")

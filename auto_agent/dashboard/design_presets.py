@@ -34,8 +34,6 @@ BUILTIN_PRESETS = {
             "reveal": "stagger",
             "emphasis": "keyword",
             "layout": "",
-            "imagePlacement": "background",
-            "imageOpacity": 0.35,
         },
         "animation": {
             "stagger": 8,
@@ -71,8 +69,6 @@ BUILTIN_PRESETS = {
             "reveal": "fade_in",
             "emphasis": "number",
             "layout": "",
-            "imagePlacement": "center",
-            "imageOpacity": 0.8,
         },
         "animation": {
             "stagger": 6,
@@ -83,14 +79,27 @@ BUILTIN_PRESETS = {
         "designPreset": {
             "baseTheme": "white",
             "colors": {
+                "bg": "#FAFAFA",
+                "text": "#1A1A2E",
+                "textMuted": "#4A4A5A",
+                "textDim": "#6A6A7A",
                 "accent": "#2563EB",
                 "accentRgb": "37,99,235",
+                "accentBg": "rgba(37,99,235,0.06)",
+                "accentBorder": "rgba(37,99,235,0.25)",
+                "accentSoft": "rgba(37,99,235,0.10)",
+                "cardBg": "rgba(37,99,235,0.04)",
+                "cardBorder": "rgba(37,99,235,0.18)",
+                "divider": "rgba(0,0,0,0.06)",
+                "positive": "#16A34A",
+                "negative": "#DC2626",
+                "warning": "#D97706",
             },
             "fonts": {
                 "body": {"family": "Pretendard", "fallback": "'Apple SD Gothic Neo', sans-serif"},
             },
             "map": {"defaultTheme": "modern_clean"},
-            "subtitle": {"keywordColor": "#2563EB"},
+            "subtitle": {"keywordColor": "#2563EB", "color": "#1A1A2E", "strokeColor": "#FFFFFF"},
         },
     },
     "urgent_red": {
@@ -109,7 +118,6 @@ BUILTIN_PRESETS = {
             "emphasis": "keyword",
             "layout": "",
             "imagePlacement": "background",
-            "imageOpacity": 0.3,
         },
         "animation": {
             "stagger": 5,
@@ -145,8 +153,6 @@ BUILTIN_PRESETS = {
             "reveal": "fade_in",
             "emphasis": "none",
             "layout": "",
-            "imagePlacement": "fullscreen",
-            "imageOpacity": 0.5,
         },
         "animation": {
             "stagger": 12,
@@ -345,12 +351,7 @@ async def apply_preset_to_project(slug: str, request: Request):
         viz["creative"] = creative
         scene["visualization"] = viz
 
-        # 이미지 에셋 기본값
-        if scene.get("imageAsset"):
-            if apply_all or not scene["imageAsset"].get("placement"):
-                scene["imageAsset"]["placement"] = defs.get("imagePlacement", "background")
-            if apply_all:
-                scene["imageAsset"]["opacity"] = defs.get("imageOpacity", 0.4)
+        # 이미지 에셋(placement, opacity)은 씬별 고유값 — 프리셋에서 건드리지 않음
 
         # 애니메이션 설정
         if anim:

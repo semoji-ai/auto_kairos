@@ -102,7 +102,8 @@
       "model": "claude-sonnet-4-5-20250929",
       "max_turns": 30,
       "skills": [
-        "shared/asset-advisory"
+        "shared/asset-advisory",
+        "shared/image-prompt-rules"
       ],
       "allowed_tools": [
         "Read",

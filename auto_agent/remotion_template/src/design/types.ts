@@ -160,6 +160,32 @@ export interface PresetMap {
   fontOverride?: string;
 }
 
+export interface ComponentVariants {
+  circleBadge: "circle" | "rounded-square" | "square";
+  iconBadge: "circle" | "rounded-square" | "square";
+  imageBadge: "circle" | "rounded-square" | "square";
+  flagBadge: "circle" | "card" | "rounded-square";
+  logoBadge: "circle" | "rounded-square" | "square";
+  rankBadge: "circle" | "shield" | "square";
+  card: "bordered" | "filled" | "glass" | "minimal";
+  metricCard: "bordered" | "filled" | "glass";
+  comparisonCell: "bordered" | "filled" | "accent-top";
+  callout: "left-border" | "full-border" | "highlight";
+  tag: "rounded" | "pill" | "square";
+  pill: "pill" | "rounded" | "square";
+  statusDot: "dot" | "icon" | "badge";
+  progressBar: "rounded" | "flat" | "thick";
+  miniBar: "rounded" | "flat";
+  connector: "arrow" | "line" | "dashed";
+  timelineDot: "circle" | "diamond" | "square";
+  stepBadge: "circle" | "rounded-square";
+  quoteMark: "large" | "small" | "none";
+  divider: "solid" | "dashed" | "dotted" | "gradient";
+  glowDot: "glow" | "solid" | "ring";
+  annotationLine: "solid" | "dashed";
+  sparkline: "line" | "area";
+}
+
 export interface DesignPreset {
   id: string;
   name: string;
@@ -179,6 +205,7 @@ export interface DesignPreset {
   subtitle: PresetSubtitle;
   animation: PresetAnimation;
   background: PresetBackground;
+  variants: ComponentVariants;
 }
 
 /** manifest에서 전달되는 partial 오버라이드 (모든 필드 optional) */
