@@ -97,11 +97,12 @@ layout=quote_portrait 씬은 반드시 다음을 설정:
 <image_rules>
 ## 이미지 배치 규칙
 
-- imageAsset.placement 종류:
+- imageAsset.placement + opacity 규칙:
   - "background": 배경 (opacity 0.3~0.5) — 데이터/차트 씬
-  - "left" / "right": 좌/우 배치 — 인물 소개, 인터뷰 느낌
-  - "center": 중앙 배치 — 피사체/장소 강조
-  - "fullscreen": 전체 화면 (opacity 0.8~1.0) — cinematic, 임팩트
+  - "left" / "right": 좌/우 배치, **opacity 생략 (기본값 1.0)**
+  - "center": 중앙 배치, **opacity 생략 (기본값 1.0)**
+  - "fullscreen": 전체 화면, **opacity 생략 (기본값 1.0)**
+  - ⚠ background 외에는 opacity를 설정하지 않는다 — 코드에서 자동 1.0 적용
 - **다양성 필수**: 연속 3씬 이상 같은 placement 반복 금지
 - 인물 씬 → "left" 또는 "right" 권장
 - 데이터/차트 씬 → "background"

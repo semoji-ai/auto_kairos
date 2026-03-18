@@ -198,46 +198,7 @@
       + _fmtInput('g-font', '시각화 폰트', g.vizFont || 'Pretendard', ro)
       + '</div></div>';
 
-    // 씬 기본값
-    var moods = [['dramatic','Dramatic'],['contemplative','Contemplative'],['urgent','Urgent'],
-      ['triumphant','Triumphant'],['somber','Somber'],['informative','Informative'],['suspense','Suspense']];
-    var reveals = [['fade_in','Fade In'],['stagger','Stagger'],['stagger_then_flash','Stagger+Flash'],
-      ['cascade','Cascade'],['count_up','Count Up'],['typewriter','Typewriter'],
-      ['spotlight','Spotlight'],['split_reveal','Split Reveal'],['zoom_in','Zoom In'],
-      ['build_up','Build Up'],['dramatic_pause','Dramatic Pause'],['parallel','Parallel']];
-    var emphases = [['number','Number'],['keyword','Keyword'],['count','Count'],['contrast','Contrast'],
-      ['sequence','Sequence'],['person','Person'],['quote','Quote'],['none','None']];
-    var layouts = [['','자동 (데이터 기반)'],
-      ['headline_only','Headline Only'],['items_grid','Items Grid'],['items_list','Items List'],
-      ['person_card','Person Card'],['counter','Counter'],['quote','Quote'],['split','Split'],
-      ['bar','Bar'],['logo_grid','Logo Grid'],['pie','Pie'],['line','Line'],
-      ['flow','Flow'],['timeline','Timeline'],['metric_spotlight','Metric Spotlight'],
-      ['metric_wall','Metric Wall'],['rank_list','Rank List'],['comparison_table','Comparison Table'],
-      ['before_after','Before After'],['icon_stat','Icon Stat'],['stacked_progress','Stacked Progress'],
-      ['card_carousel','Card Carousel'],['hero_with_context','Hero+Context'],
-      ['quote_portrait','Quote Portrait'],['annotated_chart','Annotated Chart']];
-    var placements = [['background','Background'],['fullscreen','Fullscreen'],['center','Center'],
-      ['left','Left'],['right','Right'],['inline','Inline']];
-
-    html += '<div class="form-section">'
-      + '<div class="form-section-title">씬 기본값</div>'
-      + '<div class="form-grid">'
-      + _fmtSelect('d-mood', 'Mood', d.mood || 'informative', moods, ro)
-      + _fmtSelect('d-reveal', 'Reveal', d.reveal || 'fade_in', reveals, ro)
-      + _fmtSelect('d-emphasis', 'Emphasis', d.emphasis || 'none', emphases, ro)
-      + _fmtSelect('d-layout', '기본 Layout', d.layout || '', layouts, ro)
-      + '</div></div>';
-
-    // 애니메이션
-    var easings = [['easeOut','Ease Out'],['easeInOut','Ease In-Out'],['linear','Linear'],['easeIn','Ease In'],['bounce','Bounce']];
-    html += '<div class="form-section">'
-      + '<div class="form-section-title">애니메이션</div>'
-      + '<div class="form-grid">'
-      + _fmtRange('a-stagger', 'Stagger (프레임)', _def(a.stagger, 8), 2, 20, 1, ro)
-      + _fmtRange('a-itemDur', 'Item Duration (프레임)', _def(a.itemDuration, 20), 5, 60, 1, ro)
-      + _fmtSelect('a-easing', 'Easing', a.easing || 'easeOut', easings, ro)
-      + _fmtRange('a-titleFade', 'Title Fade In (프레임)', _def(a.titleFadeIn, 15), 5, 40, 1, ro)
-      + '</div></div>';
+    // 씬 기본값, 애니메이션은 씬별 고유 설정 — 디자인 프리셋에서 제외
 
     // ── 디자인 프리셋 (확장) ──
     var dp = p.designPreset || {};
@@ -398,7 +359,10 @@
 
     // 실시간 프리뷰 업데이트
     _bind('g-accent', 'input', _updatePreview);
-    _bind('g-theme', 'change', _updatePreview);
+    _bind('g-theme', 'change', function() {
+      _applyThemeDefaults(_v('g-theme'));
+      _updatePreview();
+    });
     _bind('d-mood', 'change', _updatePreview);
     _bind('dp-bg', 'input', _updatePreview);
     _bind('dp-accent', 'input', _updatePreview);
@@ -418,8 +382,8 @@
      'v-connector','v-timelineDot','v-stepBadge','v-quoteMark','v-divider',
      'v-glowDot','v-annotationLine','v-sparkline'
     ].forEach(function(id) {
-      _bind(id, 'input', _sendToPreview);
-      _bind(id, 'change', _sendToPreview);
+      _bind(id, 'input', function() { _sendToPreview(); _autoSaveToProject(); });
+      _bind(id, 'change', function() { _sendToPreview(); _autoSaveToProject(); });
     });
 
     _sendToPreview();
@@ -451,11 +415,40 @@
     _sendToPreview();
   }
 
+  var THEME_DEFAULTS = {
+    dark: { bg:'#0A0A0A', text:'#FFFFFF', textMuted:'#FFFFFF', textDim:'#FFFFFF', accent:'#F59E0B', positive:'#22C55E', negative:'#EF4444', warning:'#F59E0B', divider:'rgba(255,255,255,0.08)' },
+    white: { bg:'#FAFAFA', text:'#1A1A2E', textMuted:'#4A4A5A', textDim:'#6A6A7A', accent:'#2563EB', positive:'#16A34A', negative:'#DC2626', warning:'#D97706', divider:'rgba(0,0,0,0.06)' },
+  };
+
+  function _applyThemeDefaults(theme) {
+    var d = THEME_DEFAULTS[theme] || THEME_DEFAULTS.dark;
+    var fields = { 'dp-bg': d.bg, 'dp-text': d.text, 'dp-accent': d.accent, 'dp-positive': d.positive, 'dp-negative': d.negative, 'dp-warning': d.warning };
+    for (var id in fields) {
+      var el = document.getElementById(id);
+      if (el) el.value = fields[id];
+    }
+  }
+
   function _sendToPreview() {
     var iframe = document.getElementById('preview-iframe');
     if (!iframe || !iframe.contentWindow) return;
     var form = _collectForm();
     iframe.contentWindow.postMessage({ type: 'preset-update', preset: form.designPreset || {} }, '*');
+  }
+
+  // 프로젝트의 meta.designPreset에 자동 저장 (디바운스)
+  var _saveTimer = null;
+  function _autoSaveToProject() {
+    if (_saveTimer) clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(function() {
+      var form = _collectForm();
+      var dp = form.designPreset || {};
+      fetch('/api/p/' + SLUG + '/save-design-preset', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ designPreset: dp, videoTheme: form.global.videoTheme, artStyle: form.global.artStyle })
+      }).catch(function() {});
+    }, 1000); // 1초 디바운스
   }
 
   // 내장 프리셋 복제
@@ -509,21 +502,23 @@
   // ── 폼 수집 ──
   function _collectForm() {
     var titleFont = _v('dp-titleFont');
+    var theme = _v('g-theme') || 'dark';
+    var td = THEME_DEFAULTS[theme] || THEME_DEFAULTS.dark;
     return {
       name: _v('preset-name'),
       description: _v('preset-desc'),
-      global: { videoTheme: _v('g-theme'), artStyle: _v('g-artStyle'), accentColor: _v('g-accent'), vizFont: _v('g-font') },
+      global: { videoTheme: theme, artStyle: _v('g-artStyle'), accentColor: _v('g-accent'), vizFont: _v('g-font') },
       defaults: { mood: _v('d-mood'), reveal: _v('d-reveal'), emphasis: _v('d-emphasis'), layout: _v('d-layout') },
       animation: { stagger: parseInt(_v('a-stagger')), itemDuration: parseInt(_v('a-itemDur')), easing: _v('a-easing'), titleFadeIn: parseInt(_v('a-titleFade')) },
       designPreset: {
-        baseTheme: _v('g-theme') || 'dark',
+        baseTheme: theme,
         colors: {
-          bg: _v('dp-bg') || '#0A0A0A',
-          text: _v('dp-text') || '#FFFFFF',
-          accent: _v('dp-accent') || '#F59E0B',
-          positive: _v('dp-positive') || '#22C55E',
-          negative: _v('dp-negative') || '#EF4444',
-          warning: _v('dp-warning') || '#F59E0B',
+          bg: _v('dp-bg') || td.bg,
+          text: _v('dp-text') || td.text,
+          accent: _v('dp-accent') || td.accent,
+          positive: _v('dp-positive') || td.positive,
+          negative: _v('dp-negative') || td.negative,
+          warning: _v('dp-warning') || td.warning,
           rank: [_v('dp-rank1') || '#FFD700', _v('dp-rank2') || '#C0C0C0', _v('dp-rank3') || '#CD7F32'],
         },
         fonts: {
@@ -641,7 +636,37 @@
     }
   }
 
+  // ── 프로젝트 현재 디자인 프리셋 로드 ──
+  function _loadProjectPreset() {
+    fetch('/api/p/' + SLUG + '/manifest-meta')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var meta = data.meta || {};
+        var dp = meta.designPreset;
+        if (dp && Object.keys(dp).length > 0) {
+          // 프로젝트에 적용된 designPreset이 있으면 "현재 프로젝트" 가상 프리셋으로 에디터 표시
+          _renderEditor({
+            _id: null,
+            name: '현재 프로젝트 설정',
+            description: '프로젝트에 적용된 디자인 프리셋',
+            builtin: false,
+            global: {
+              videoTheme: meta.videoTheme || dp.baseTheme || 'dark',
+              artStyle: meta.artStyle || '',
+              accentColor: (dp.colors && dp.colors.accent) || '#F59E0B',
+              vizFont: meta.vizFont || 'Pretendard',
+            },
+            defaults: {},
+            animation: dp.animation || {},
+            designPreset: dp,
+          });
+        }
+      })
+      .catch(function() { /* manifest 없으면 무시 */ });
+  }
+
   // 초기 로드
   window.loadPresets();
+  _loadProjectPreset();
 })();
 </script>

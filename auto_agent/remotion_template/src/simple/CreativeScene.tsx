@@ -77,6 +77,7 @@ import {
   usePulse,
   useTypewriter,
   useSpringValue,
+  TextWithBreaks,
 } from "./BuildingBlocks";
 
 /* ================================================================
@@ -140,12 +141,11 @@ const VALID_LAYOUTS = new Set<LayoutType>([
 
 function resolveLayout(data: any, creative: any): LayoutType {
   // ── 1순위: creative.layout 직접 지정 (의도 기반) ──
-  // asset-advisory(Phase 2.5)가 다중 관점 심의 결과로 설정
   if (creative.layout && VALID_LAYOUTS.has(creative.layout)) {
     return creative.layout;
   }
 
-  // ── 2순위: displayMode / chartConfig (하위호환) ──
+  // ── 2순위: chartConfig / displayMode ──
   if (creative.displayMode === "logo_grid") return "logo_grid";
   const chartType = data.chartConfig?.type || creative.chartConfig?.type;
   if (creative.displayMode === "pie_chart" || chartType === "pie") return "pie";
@@ -1123,7 +1123,7 @@ const ItemsGrid: React.FC<{
                     <Icon icon={Ic} size={items.length > 6 ? 20 : 24} color={moodCfg.accent} />
                   ) : null;
                 })()}
-                <span>{item}</span>
+                <TextWithBreaks text={item} />
               </>
             )}
           </div>
@@ -1255,7 +1255,7 @@ const PersonCardRow: React.FC<{
                   lineHeight: 1.3,
                 }}
               >
-                {item}
+                <TextWithBreaks text={item} />
               </span>
               {isNegative && (
                 <span
@@ -1372,7 +1372,7 @@ const ItemsList: React.FC<{
                   padding: "14px 12px",
                 }}
               >
-                {item}
+                <TextWithBreaks text={item} />
               </span>
             </div>
           );
@@ -1451,7 +1451,7 @@ const ItemsList: React.FC<{
                 flex: 1,
               }}
             >
-              {item}
+              <TextWithBreaks text={item} />
             </span>
           </div>
         );
@@ -1808,7 +1808,7 @@ const LogoGridLayout: React.FC<{
                     lineHeight: 1.2,
                   }}
                 >
-                  {item}
+                  <TextWithBreaks text={item} />
                 </div>
 
                 {/* Value */}
@@ -1999,9 +1999,9 @@ const BarDisplay: React.FC<{
                   <div
                     style={{
                       flex: 1,
-                      height: 32,
+                      height: L.barHeight,
                       backgroundColor: "rgba(255,255,255,0.05)",
-                      borderRadius: 6,
+                      borderRadius: L.barHeight / 2,
                       position: "relative",
                     }}
                   >
@@ -2027,7 +2027,7 @@ const BarDisplay: React.FC<{
                           height: "100%",
                           width: `${barWidthPct}%`,
                           backgroundColor: NEG_COLOR,
-                          borderRadius: "6px 0 0 6px",
+                          borderRadius: `${L.barHeight / 2}px 0 0 ${L.barHeight / 2}px`,
                         }}
                       />
                     ) : (
@@ -2040,7 +2040,7 @@ const BarDisplay: React.FC<{
                           height: "100%",
                           width: `${barWidthPct}%`,
                           backgroundColor: moodCfg.accent,
-                          borderRadius: "0 6px 6px 0",
+                          borderRadius: `0 ${L.barHeight / 2}px ${L.barHeight / 2}px 0`,
                         }}
                       />
                     )}
@@ -2050,9 +2050,9 @@ const BarDisplay: React.FC<{
                   <div
                     style={{
                       flex: 1,
-                      height: 32,
+                      height: L.barHeight,
                       backgroundColor: "rgba(255,255,255,0.05)",
-                      borderRadius: 6,
+                      borderRadius: L.barHeight / 2,
                       overflow: "hidden",
                       position: "relative",
                     }}
@@ -2062,7 +2062,7 @@ const BarDisplay: React.FC<{
                         width: `${barWidthPct}%`,
                         height: "100%",
                         backgroundColor: moodCfg.accent,
-                        borderRadius: 6,
+                        borderRadius: L.barHeight / 2,
                       }}
                     />
                   </div>
@@ -2241,7 +2241,7 @@ const PieChartDisplay: React.FC<{
               return (
                 <div key={i} style={{ opacity: labelFade, display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ width: 20, height: 20, borderRadius: 4, backgroundColor: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
-                  <span style={{ fontSize: T.labelText, color: C.text, fontWeight: 500 }}>{item}</span>
+                  <TextWithBreaks text={item} style={{ fontSize: T.labelText, color: C.text, fontWeight: 500 }} />
                   <span style={{ fontSize: T.labelText, color: PIE_COLORS[i % PIE_COLORS.length], fontWeight: 700, marginLeft: 8 }}>
                     {displayValues[i]}{unit}
                   </span>
@@ -3018,21 +3018,35 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           );
         })()}
 
-        {/* Timeline — 시간순 사건 나열 */}
+        {/* Timeline — 가로 시간순 사건 나열 */}
         {layout === "timeline" && items.length >= 2 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, width: "100%", paddingLeft: 24 }}>
+          <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%", padding: `0 ${L.timelineDotSize}px` }}>
+            {/* 연결선: 첫 도트 중앙 ~ 마지막 도트 중앙 */}
+            <div style={{
+              position: "absolute",
+              top: L.timelineDotSize / 2 - L.timelineConnectorWidth / 2,
+              left: L.timelineDotSize + L.timelineDotSize / 2,
+              right: L.timelineDotSize + L.timelineDotSize / 2,
+              height: L.timelineConnectorWidth,
+              backgroundColor: C.cardBorder,
+            }} />
             {items.map((item, i) => {
               const desc = (data.descriptions || [])[i] || "";
+              const isLast = i === items.length - 1;
+              const anim = useFadeRise(staggerDelay(i, 12, 15), 15);
               return (
-                <div key={i} style={{ display: "flex", gap: 16, alignItems: "flex-start", ...useFadeRise(staggerDelay(i, 12, 15), 15) }}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-                    <TimelineDot label="" active={i === items.length - 1} />
-                    {i < items.length - 1 && <div style={{ width: 2, height: 36, backgroundColor: C.cardBorder }} />}
+                <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, position: "relative", zIndex: 1, flex: 1, ...anim }}>
+                  <div style={{
+                    width: L.timelineDotSize, height: L.timelineDotSize,
+                    borderRadius: L.timelineDotSize / 2,
+                    backgroundColor: isLast ? moodCfg.accent : "transparent",
+                    border: `${L.timelineConnectorWidth}px solid ${isLast ? moodCfg.accent : C.cardBorder}`,
+                    flexShrink: 0,
+                  }} />
+                  <div style={{ fontSize: T.itemText, fontWeight: isLast ? 700 : 500, color: isLast ? moodCfg.accent : C.text, textAlign: "center" }}>
+                    <TextWithBreaks text={item} />
                   </div>
-                  <div>
-                    <div style={{ fontSize: T.itemText, fontWeight: 700, color: i === items.length - 1 ? moodCfg.accent : C.text }}>{item}</div>
-                    {desc && <div style={{ fontSize: T.descText, color: C.textMuted, marginTop: 4 }}>{desc}</div>}
-                  </div>
+                  {desc && <div style={{ fontSize: T.descText, color: C.textMuted, textAlign: "center" }}>{desc}</div>}
                 </div>
               );
             })}
@@ -3093,7 +3107,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, ...useFadeRise(staggerDelay(i, 10, 12), 15) }}>
                   <RankBadge rank={i + 1} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 24, fontWeight: 600, color: C.text, marginBottom: 6 }}>{item}</div>
+                    <div style={{ fontSize: 24, fontWeight: 600, color: C.text, marginBottom: 6 }}><TextWithBreaks text={item} /></div>
                     {values[i] != null && (
                       <MiniBar value={values[i]} maxValue={maxVal} color={i === 0 ? moodCfg.accent : C.cardBorder} />
                     )}
@@ -3203,7 +3217,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
                         <IconBadge icon={resolveIcon(data.itemIcons[i])!} size={48} />
                       </div>
                     )}
-                    <div style={{ fontSize: T.itemText, fontWeight: 700, color: C.text, marginBottom: desc ? 8 : 0 }}>{item}</div>
+                    <div style={{ fontSize: T.itemText, fontWeight: 700, color: C.text, marginBottom: desc ? 8 : 0 }}><TextWithBreaks text={item} /></div>
                     {desc && <div style={{ fontSize: T.descText, color: C.textMuted }}>{desc}</div>}
                   </Card>
                 </div>
@@ -3220,7 +3234,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
                 {items.map((item, i) => (
                   <div key={i} style={useFadeRise(staggerDelay(i, 8, 30), 15)}>
                     <Card style={{ padding: "12px 20px" }}>
-                      <span style={{ fontSize: T.labelText, color: C.textMuted }}>{item}</span>
+                      <TextWithBreaks text={item} style={{ fontSize: T.labelText, color: C.textMuted }} />
                     </Card>
                   </div>
                 ))}

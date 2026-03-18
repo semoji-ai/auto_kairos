@@ -335,35 +335,8 @@ async def apply_preset_to_project(slug: str, request: Request):
     if preset.get("designPreset"):
         specs["meta"]["designPreset"] = preset["designPreset"]
 
-    # 씬별 기본값 적용 (사용자가 직접 설정한 값은 유지, 빈 값만 채움)
-    apply_all = body.get("apply_all", False)
-    for scene in specs.get("scenes", []):
-        viz = scene.get("visualization", {})
-        creative = viz.get("creative", {})
-
-        if apply_all or not creative.get("mood"):
-            creative["mood"] = defs.get("mood", creative.get("mood", "informative"))
-        if apply_all or not creative.get("reveal"):
-            creative["reveal"] = defs.get("reveal", creative.get("reveal", "fade_in"))
-        if apply_all or not creative.get("emphasis"):
-            creative["emphasis"] = defs.get("emphasis", creative.get("emphasis", "none"))
-
-        viz["creative"] = creative
-        scene["visualization"] = viz
-
-        # 이미지 에셋(placement, opacity)은 씬별 고유값 — 프리셋에서 건드리지 않음
-
-        # 애니메이션 설정
-        if anim:
-            if not scene.get("vizAnimation"):
-                scene["vizAnimation"] = {}
-            va = scene["vizAnimation"]
-            if apply_all or not va.get("stagger"):
-                va["stagger"] = anim.get("stagger", 8)
-            if apply_all or not va.get("itemDuration"):
-                va["itemDuration"] = anim.get("itemDuration", 20)
-            if apply_all or not va.get("easing"):
-                va["easing"] = anim.get("easing", "easeOut")
+    # 씬별 데이터(mood, reveal, emphasis, animation, placement, opacity)는 건드리지 않음
+    # 프리셋은 meta.designPreset만 저장
 
     # 저장
     specs_path = Path(out_dir) / "scene_specs.json" if out_dir else None
@@ -371,3 +344,51 @@ async def apply_preset_to_project(slug: str, request: Request):
         specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), "utf-8")
 
     return {"ok": True, "scenes_updated": len(specs.get("scenes", []))}
+
+
+@router.post("/api/p/{slug}/save-design-preset")
+async def save_design_preset_to_project(slug: str, request: Request):
+    """디자인 프리셋을 프로젝트 meta에 저장 (씬 기본값은 건드리지 않음)."""
+    body = await request.json()
+    design_preset = body.get("designPreset", {})
+    video_theme = body.get("videoTheme")
+    art_style = body.get("artStyle")
+
+    from auto_agent.dashboard.helpers import load_project_json
+    from auto_agent.supabase_client import supabase_enabled
+
+    if supabase_enabled():
+        from auto_agent.dashboard.supabase_data import SupabaseProjectManager
+        pm = SupabaseProjectManager()
+        project = pm.get_project(slug=slug)
+        if not project:
+            return JSONResponse({"error": "project not found"}, 404)
+        specs = pm.load_project_json(project["id"], "scene_specs.json")
+        out_dir = project.get("output_dir", "")
+    else:
+        from auto_agent.db.project_manager import ProjectManager
+        pm = ProjectManager()
+        project = pm.get_project(slug=slug)
+        if not project:
+            return JSONResponse({"error": "project not found"}, 404)
+        out_dir = project.get("output_dir", "")
+        specs = load_project_json(out_dir, "scene_specs.json")
+
+    if not specs:
+        return JSONResponse({"error": "scene_specs.json not found"}, 404)
+
+    if "meta" not in specs:
+        specs["meta"] = {}
+
+    # meta 업데이트 (designPreset만 — 씬 데이터 건드리지 않음)
+    specs["meta"]["designPreset"] = design_preset
+    if video_theme:
+        specs["meta"]["videoTheme"] = video_theme
+    if art_style:
+        specs["meta"]["artStyle"] = art_style
+
+    specs_path = Path(out_dir) / "scene_specs.json" if out_dir else None
+    if specs_path and specs_path.exists():
+        specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), "utf-8")
+
+    return {"ok": True}

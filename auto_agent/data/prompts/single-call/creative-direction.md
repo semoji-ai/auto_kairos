@@ -58,7 +58,7 @@ creative 외에 함께 채울 필드들:
 
 - items (string[]): 나레이션에서 추출한 핵심 데이터/사실. 2개 이상 권장. 1개면 headline에 통합.
 - values (number[]): items에 대응하는 수치 (있을 때만)
-- unit (string): values의 단위 (%, 원, 배럴 등)
+- unit (string): values의 단위 (%, 원, 배럴 등). **단위가 서로 다르면 unit을 비워둔다** (unit="" ). "혼합" 금지.
 - source (string): 출처 (있을 때만)
 - itemIcons (string[]): Lucide React 아이콘명. 국가 항목이면 사용하지 않음.
 - itemFlags (string[]): 국가 ISO 코드 (국가 비교 씬). itemIcons와 동시 사용 금지.
@@ -84,6 +84,15 @@ creative 외에 함께 채울 필드들:
    - source: 인용 출처 (인물 이름 제외, 예: "Tesla Investor Day 2023")
    - images: [null] (이미지 파이프라인이 채움)
    - ⚠ source에 인물 이름 넣지 않음 — profileName과 중복
+9. layout="before_after" 사용 조건:
+   - **동일 대상의 시간적 변화**에만 사용 (예: 매출 100 → 500, 점유율 5% → 30%)
+   - items[0]=Before 값, items[1]=After 값 — 짧은 텍스트/숫자
+   - **두 개념의 구조 비교**는 before_after가 아님 → split 사용
+   - items 텍스트에 → 화살표 프로세스를 넣지 않는다 (프로세스는 flow 레이아웃)
+   - 예) "챗봇 vs 에이전트" → split, "매출 $100M → $500M" → before_after
+10. items 텍스트에 → 기호로 프로세스를 표현하지 않는다.
+   - "질문 → 답변 → 결과" 같은 프로세스는 flow 레이아웃 + StepBadge 사용
+   - items는 단일 개념/라벨/수치만 담는다
 </rules>
 
 {art_style_override}

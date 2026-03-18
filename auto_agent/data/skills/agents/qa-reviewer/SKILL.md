@@ -114,9 +114,11 @@ QA 에이전트는 렌더링된 PNG를 **Read 도구로 직접 열어** 시각�
 1. **텍스트 넘침/줄바꿈**: headline이나 items 텍스트가 컨테이너 밖으로 잘리거나 의도치 않게 줄바꿈되는지
    - 특히 긴 한글 headline (20자+), 숫자+단위 조합 주의
    - severity: critical (읽을 수 없는 경우), warning (미관 문제)
-2. **headline-items 중복 표시**: 화면에 동일한 내용이 headline과 items 양쪽에 중복 노출되는지
-   - `shared/creative-direction` 2.1절 절대 규칙 위반
-   - severity: warning
+2. **headline-items 중복 표시**: 화면에 동일한 내용(숫자, 키워드)이 headline과 items/values 양쪽에 중복 노출되는지
+   - headline의 {{}} 안 숫자가 values에도 있으면 중복
+   - headline 텍스트가 items 텍스트와 겹치면 중복
+   - `shared/creative-direction` rule 3 위반
+   - severity: critical — 반드시 수정 후 통과
 3. **빈 화면**: 데이터가 렌더링되지 않아 배경색(#0A0A0A)만 보이거나 텍스트 없는 검정 화면
    - severity: critical
 4. **이미지-텍스트 겹침**: 이미지 에셋 위에 텍스트가 가려져 읽기 어려운 경우

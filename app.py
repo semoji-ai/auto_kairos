@@ -564,6 +564,143 @@ async def image_versions(slug: str, scene_num: int):
     return JSONResponse(scene_data)
 
 
+@app.post("/api/p/{slug}/tts/regenerate/{scene_num}")
+async def regenerate_tts(request: Request, slug: str, scene_num: int):
+    """씬별 TTS 재생성."""
+    import json as _json
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    out_dir = project.get("output_dir", "")
+    body = await request.json()
+    text = body.get("text", "")
+
+    if not text:
+        # scene_specs에서 narration_tts 읽기
+        specs = load_project_json(out_dir, "scene_specs.json")
+        if specs:
+            for s in specs.get("scenes", []):
+                if s.get("sceneNumber") == scene_num:
+                    text = s.get("narration_tts", s.get("narration", ""))
+                    break
+    if not text:
+        return JSONResponse({"error": "text required"}, 400)
+
+    # voice_id 결정
+    config = project.get("config", {})
+    if isinstance(config, str):
+        config = _json.loads(config)
+
+    STYLE_VOICE = {
+        "semoji": "W7FnAxJNpD5WGjrF5GLp",
+        "iromism": "9Sj8ugvpK1DmcAXyvi3a",
+        "default": "4JJwo477JUAx3HV0T7n7",
+    }
+    voice_id = config.get("voice_id") or STYLE_VOICE.get(config.get("writing_style", "default"), STYLE_VOICE["default"])
+
+    # TTS 생성 — audio_assets 기반
+    from auto_agent.tools.audio_assets import add_version, next_filename
+    audio_dir = Path(out_dir) / "audio"
+    audio_dir.mkdir(parents=True, exist_ok=True)
+    fname = next_filename(audio_dir, scene_num)
+    output_path = audio_dir / fname
+
+    try:
+        import requests as _requests
+        api_key = os.environ.get("ELEVENLABS_API_KEY", "")
+        if not api_key:
+            return JSONResponse({"error": "ELEVENLABS_API_KEY 미설정"}, 500)
+
+        voice_settings = {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": True}
+        resp = _requests.post(
+            f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
+            headers={"xi-api-key": api_key, "Content-Type": "application/json"},
+            json={"text": text, "model_id": "eleven_multilingual_v2", "voice_settings": voice_settings},
+            timeout=60,
+        )
+        if resp.status_code == 200:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_bytes(resp.content)
+        else:
+            return JSONResponse({"error": f"ElevenLabs {resp.status_code}: {resp.text[:100]}"}, 500)
+
+        if output_path.exists():
+            # audio_assets에 버전 등록
+            add_version(audio_dir, scene_num, fname, "regen",
+                        voice_id=voice_id, text=text[:100])
+            # narration_tts 업데이트
+            specs_path = Path(out_dir) / "scene_specs.json"
+            if specs_path.exists():
+                specs = _json.loads(specs_path.read_text(encoding="utf-8"))
+                for s in specs.get("scenes", []):
+                    if s.get("sceneNumber") == scene_num:
+                        s["narration_tts"] = text
+                        break
+                specs_path.write_text(_json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+            _setup_studio_project(slug)
+            return JSONResponse({"ok": True, "file": fname, "voice_id": voice_id, "size": output_path.stat().st_size})
+        else:
+            return JSONResponse({"error": "생성 실패 — 파일 미생성"}, 500)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, 500)
+
+
+@app.get("/api/p/{slug}/tts/versions/{scene_num}")
+async def tts_versions(slug: str, scene_num: int):
+    """씬의 TTS 버전 목록."""
+    from auto_agent.tools.audio_assets import get_scene_versions
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    audio_dir = Path(project.get("output_dir", "")) / "audio"
+    scene_data = get_scene_versions(audio_dir, scene_num)
+    for v in scene_data.get("versions", []):
+        v["url"] = f"/output/{slug}/audio/{v['file']}"
+    return JSONResponse(scene_data)
+
+
+@app.post("/api/p/{slug}/tts/select/{scene_num}")
+async def select_tts(request: Request, slug: str, scene_num: int):
+    """TTS 버전 선택."""
+    from auto_agent.tools.audio_assets import select_version
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    body = await request.json()
+    file_name = body.get("file", "")
+    if not file_name:
+        return JSONResponse({"error": "file required"}, 400)
+    audio_dir = Path(project.get("output_dir", "")) / "audio"
+    ok = select_version(audio_dir, scene_num, file_name)
+    if ok:
+        _setup_studio_project(slug)
+        return JSONResponse({"ok": True, "selected": file_name})
+    return JSONResponse({"error": "version not found"}, 404)
+
+
+@app.get("/api/p/{slug}/tts/text/{scene_num}")
+async def get_tts_text(slug: str, scene_num: int):
+    """씬의 TTS 텍스트 반환."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    out_dir = project.get("output_dir", "")
+    specs = load_project_json(out_dir, "scene_specs.json")
+    if not specs:
+        return JSONResponse({"error": "no specs"}, 404)
+    for s in specs.get("scenes", []):
+        if s.get("sceneNumber") == scene_num:
+            return JSONResponse({
+                "text": s.get("narration_tts", s.get("narration", "")),
+                "narration": s.get("narration", ""),
+            })
+    return JSONResponse({"error": "scene not found"}, 404)
+
+
 def _update_scene_specs_src(out_dir: str, slug: str, scene_num: int):
     """selected 이미지로 scene_specs.imageAsset.src 업데이트."""
     from auto_agent.tools.image_assets import get_selected

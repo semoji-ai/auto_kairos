@@ -171,8 +171,15 @@
     return { emoji: '🤖', nick: agent || '???', role: '에이전트', cls: 'system' };
   }
 
+  var projectSlug = (function() {
+    var m = window.location.pathname.match(/^\/p\/([^/]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  })();
+
   function connect() {
-    es = new EventSource('/api/agent-messages/stream');
+    var streamUrl = '/api/agent-messages/stream';
+    if (projectSlug) streamUrl += '?project=' + encodeURIComponent(projectSlug);
+    es = new EventSource(streamUrl);
     es.onopen = function() {
       statusEl.textContent = '연결됨';
       statusEl.className = 'agent-badge online';
@@ -247,7 +254,9 @@
   };
 
   // 히스토리 로드
-  fetch('/api/agent-messages/history?limit=500')
+  var histUrl = '/api/agent-messages/history?limit=500';
+  if (projectSlug) histUrl += '&project=' + encodeURIComponent(projectSlug);
+  fetch(histUrl)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       (data.messages || []).forEach(addMessage);

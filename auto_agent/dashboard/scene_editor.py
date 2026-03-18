@@ -77,7 +77,7 @@ async def manifest_meta(slug: str):
 
 @manifest_router.post("/rebuild-manifest")
 async def rebuild_manifest(slug: str):
-    """manifest.json 재빌드 트리거 (Supabase 전용)."""
+    """manifest.json 재빌드 트리거."""
     project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
@@ -85,16 +85,28 @@ async def rebuild_manifest(slug: str):
     import subprocess, shutil
     python = shutil.which("python3") or shutil.which("python") or "python3"
 
-    storage_key = project.get("storage_key", "")
-    pid = project.get("id", "")
-    if not storage_key or not pid:
-        return JSONResponse({"error": "Supabase 프로젝트 정보 없음"}, status_code=400)
+    from auto_agent.dashboard.app import USE_SUPABASE
+
+    if USE_SUPABASE:
+        storage_key = project.get("storage_key", "")
+        pid = project.get("id", "")
+        if not storage_key or not pid:
+            return JSONResponse({"error": "Supabase 프로젝트 정보 없음"}, status_code=400)
+        args = [python, "-m", "auto_agent.scripts.build_manifest", str(pid), storage_key]
+    else:
+        # 로컬 모드: output 디렉토리에서 직접 빌드
+        out_dir = project.get("output_dir", "")
+        if not out_dir:
+            return JSONResponse({"error": "output_dir 없음"}, status_code=400)
+        args = [python, "-m", "auto_agent.scripts.build_manifest", "--local", out_dir]
 
     try:
+        import os
+        env = {**os.environ}
         result = subprocess.run(
-            [python, "-m", "auto_agent.scripts.build_manifest",
-             str(pid), storage_key],
+            args,
             capture_output=True, text=True, timeout=120,
+            env=env,
         )
         if result.returncode == 0:
             return {"ok": True, "message": "manifest 재빌드 완료"}

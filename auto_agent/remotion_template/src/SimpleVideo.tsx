@@ -105,7 +105,9 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
                 /* === 일반 씬: 이미지 배경/에셋 + CreativeScene === */
                 (() => {
                   const placement = scene.imageAsset?.placement ?? "background";
-                  const imgOpacity = scene.imageAsset?.opacity ?? 0.4;
+                  // left, right, center, fullscreen은 기본 opacity 1 / background만 0.35
+                  const defaultOpacity = (placement === "background") ? 0.35 : 1.0;
+                  const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
                   const imgSrc = scene.vizBackgroundPath || scene.imagePath;
                   const isSidePlacement = hasImage && (placement === "left" || placement === "right");
                   const isFullscreen = hasImage && placement === "fullscreen";

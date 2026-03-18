@@ -321,7 +321,24 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) >= 3:
+    if "--local" in sys.argv:
+        # 로컬 모드: output 디렉토리에서 직접 빌드
+        idx = sys.argv.index("--local")
+        if idx + 1 < len(sys.argv):
+            local_dir = sys.argv[idx + 1]
+            # build_manifest_local: scene_specs.json → manifest.json (로컬 전용)
+            from pathlib import Path
+            out = Path(local_dir)
+            specs_path = out / "scene_specs.json"
+            if not specs_path.exists():
+                print(f"scene_specs.json not found in {local_dir}")
+                sys.exit(1)
+            slug = out.name
+            build_manifest(slug, slug, str(out))
+        else:
+            print("Usage: build_manifest.py --local <output_dir>")
+            sys.exit(1)
+    elif len(sys.argv) >= 3:
         args = [a for a in sys.argv[1:] if not a.startswith("--")]
         if len(args) >= 2:
             project_dir = args[2] if len(args) >= 3 else None
@@ -331,4 +348,5 @@ if __name__ == "__main__":
             sys.exit(1)
     else:
         print("Usage: build_manifest.py <project_id> <storage_key> [project_dir]")
+        print("       build_manifest.py --local <output_dir>")
         sys.exit(1)

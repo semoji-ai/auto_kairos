@@ -46,6 +46,7 @@ import {
 import * as SimpleIcons from "@icons-pack/react-simple-icons";
 
 import { useDesignPreset, usePresetColors, usePresetTypo, usePresetLayout, resolvePreset } from "../design";
+import { usePresetVariants } from "../design/DesignPresetContext";
 import type { PresetColors } from "../design/types";
 import { DEFAULT_PRESET } from "../design";
 
@@ -89,6 +90,20 @@ export const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
 };
+
+/** variant에 따른 borderRadius 계산 */
+function variantRadius(variant: string, size: number): number {
+  switch (variant) {
+    case "circle": return size / 2;
+    case "rounded-square": return size * 0.2;
+    case "square": return 0;
+    case "card": return 8;
+    case "pill": return size;
+    case "shield": return size * 0.15;
+    case "diamond": return 0; // diamond uses transform
+    default: return size / 2;
+  }
+}
 
 /* ================================================================
    Animation Hooks — 기존 6개
@@ -298,6 +313,26 @@ export const AccentText: React.FC<{
   );
 };
 
+/** 텍스트 내 \n을 <br/>로 변환 — AccentText와 동일한 방식 */
+export const TextWithBreaks: React.FC<{
+  text: string;
+  style?: React.CSSProperties;
+}> = ({ text, style }) => {
+  if (!text) return null;
+  const parts = text.split("\n");
+  if (parts.length === 1) return <span style={style}>{text}</span>;
+  return (
+    <span style={{ display: "inline-block", ...style }}>
+      {parts.map((line, i) => (
+        <React.Fragment key={i}>
+          {i > 0 && <br />}
+          {line}
+        </React.Fragment>
+      ))}
+    </span>
+  );
+};
+
 /* ================================================================
    UI Components — 기존 5개
    ================================================================ */
@@ -307,6 +342,14 @@ export const Card: React.FC<{
   style?: React.CSSProperties;
 }> = ({ children, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const cardStyles: Record<string, React.CSSProperties> = {
+    bordered: { backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}` },
+    filled: { backgroundColor: C.accentSoft, border: "none" },
+    glass: { backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid rgba(255,255,255,0.1)`, backdropFilter: "blur(10px)" },
+    minimal: { backgroundColor: "transparent", border: "none", padding: "12px 0" },
+  };
+  const vs = cardStyles[V.card] || cardStyles.bordered;
   return (
     <div
       style={{
@@ -314,6 +357,7 @@ export const Card: React.FC<{
         border: `1px solid ${C.cardBorder}`,
         borderRadius: 12,
         padding: "24px 28px",
+        ...vs,
         ...style,
       }}
     >
@@ -328,11 +372,13 @@ export const Pill: React.FC<{
   style?: React.CSSProperties;
 }> = ({ text, active, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const pillRadius = V.pill === "pill" ? 20 : V.pill === "square" ? 0 : 8;
   return (
     <div
       style={{
         padding: "8px 20px",
-        borderRadius: 20,
+        borderRadius: pillRadius,
         border: `1px solid ${active ? C.accent : C.cardBorder}`,
         backgroundColor: active ? C.accentSoft : "transparent",
         fontSize: 20,
@@ -353,12 +399,14 @@ export const CircleBadge: React.FC<{
   style?: React.CSSProperties;
 }> = ({ text, size = 48, filled, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const radius = variantRadius(V.circleBadge, size);
   return (
     <div
       style={{
         width: size,
         height: size,
-        borderRadius: size / 2,
+        borderRadius: radius,
         border: `2px solid ${C.accent}`,
         backgroundColor: filled ? C.accent : "transparent",
         display: "flex",
@@ -383,6 +431,8 @@ export const ImageBadge: React.FC<{
   style?: React.CSSProperties;
 }> = ({ imageUrl, size = 56, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const radius = variantRadius(V.imageBadge, size);
   const resolvedUrl = imageUrl
     ? imageUrl.startsWith("http")
       ? imageUrl
@@ -394,7 +444,7 @@ export const ImageBadge: React.FC<{
       style={{
         width: size,
         height: size,
-        borderRadius: size / 2,
+        borderRadius: radius,
         border: `2px solid ${C.accentBorder}`,
         backgroundColor: C.accentBg,
         display: "flex",
@@ -451,12 +501,14 @@ export const IconBadge: React.FC<{
   style?: React.CSSProperties;
 }> = ({ icon: LucideComp, size = 48, filled, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const radius = variantRadius(V.iconBadge, size);
   return (
     <div
       style={{
         width: size,
         height: size,
-        borderRadius: size / 2,
+        borderRadius: radius,
         border: `2px solid ${C.accent}`,
         backgroundColor: filled ? C.accent : "transparent",
         display: "flex",
@@ -482,6 +534,11 @@ export const FlagBadge: React.FC<{
   style?: React.CSSProperties;
 }> = ({ countryCode, size = 48, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const isCard = V.flagBadge === "card";
+  const radius = isCard ? 8 : variantRadius(V.flagBadge, size);
+  const w = isCard ? size * 1.5 : size;
+  const h = size;
   // country-flag-icons provides SVG URLs via the package
   let FlagUrl: string | null = null;
   try {
@@ -493,9 +550,9 @@ export const FlagBadge: React.FC<{
   return (
     <div
       style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
+        width: w,
+        height: h,
+        borderRadius: radius,
         border: `2px solid ${C.accentBorder}`,
         backgroundColor: C.accentBg,
         overflow: "hidden",
@@ -509,7 +566,7 @@ export const FlagBadge: React.FC<{
       {FlagUrl ? (
         <img
           src={FlagUrl}
-          style={{ width: "120%", height: "120%", objectFit: "cover" }}
+          style={{ width: isCard ? "100%" : "120%", height: isCard ? "100%" : "120%", objectFit: "cover" }}
         />
       ) : (
         <span style={{ fontSize: size * 0.4, color: C.textMuted }}>
@@ -559,13 +616,15 @@ export const LogoBadge: React.FC<{
   style?: React.CSSProperties;
 }> = ({ logo, size = 48, color, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const radius = variantRadius(V.logoBadge, size);
   const LogoComp = resolveLogo(logo);
   return (
     <div
       style={{
         width: size,
         height: size,
-        borderRadius: size / 2,
+        borderRadius: radius,
         border: `2px solid ${C.accentBorder}`,
         backgroundColor: C.accentBg,
         display: "flex",
@@ -601,6 +660,9 @@ export const ProgressBar: React.FC<{
   style?: React.CSSProperties;
 }> = ({ progress, height = 16, color, label, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const barRadius = V.progressBar === "flat" ? 0 : height / 2;
+  const barHeight = V.progressBar === "thick" ? height * 1.5 : height;
   const resolvedColor = color ?? C.accent;
   return (
     <div style={{ width: "100%", ...style }}>
@@ -621,9 +683,9 @@ export const ProgressBar: React.FC<{
       <div
         style={{
           width: "100%",
-          height,
+          height: barHeight,
           backgroundColor: C.divider,
-          borderRadius: height / 2,
+          borderRadius: barRadius,
           overflow: "hidden",
         }}
       >
@@ -632,7 +694,7 @@ export const ProgressBar: React.FC<{
             width: `${Math.min(progress * 100, 100)}%`,
             height: "100%",
             backgroundColor: resolvedColor,
-            borderRadius: height / 2,
+            borderRadius: barRadius,
           }}
         />
       </div>
@@ -648,13 +710,15 @@ export const Tag: React.FC<{
   style?: React.CSSProperties;
 }> = ({ text, active, size = "md", style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const tagRadius = V.tag === "pill" ? 20 : V.tag === "square" ? 0 : 6;
   const sizes = { sm: { px: 18, py: 8, fs: 20 }, md: { px: 28, py: 12, fs: 26 }, lg: { px: 36, py: 16, fs: 36 } };
   const s = sizes[size];
   return (
     <span
       style={{
         padding: `${s.py}px ${s.px}px`,
-        borderRadius: 6,
+        borderRadius: tagRadius,
         border: `1px solid ${active ? C.accent : C.cardBorder}`,
         backgroundColor: active ? C.accentSoft : C.cardBg,
         fontSize: s.fs,
@@ -677,14 +741,19 @@ export const Divider: React.FC<{
   style?: React.CSSProperties;
 }> = ({ width = "100%", color, thickness = 1, style }) => {
   const C = useC();
+  const V = usePresetVariants();
   const resolvedColor = color ?? C.divider;
+  const divStyle = V.divider === "dashed" ? "dashed" : V.divider === "dotted" ? "dotted" : "solid";
+  const isGradient = V.divider === "gradient";
   return (
     <div
       style={{
         width,
-        height: thickness,
-        backgroundColor: resolvedColor,
+        height: isGradient ? thickness : 0,
         flexShrink: 0,
+        ...(isGradient
+          ? { background: `linear-gradient(to right, transparent, ${resolvedColor}, transparent)` }
+          : { borderTop: `${thickness}px ${divStyle} ${resolvedColor}` }),
         ...style,
       }}
     />
@@ -698,12 +767,38 @@ export const StatusDot: React.FC<{
   style?: React.CSSProperties;
 }> = ({ status, label, style }) => {
   const C = useC();
+  const V = usePresetVariants();
   const colors = {
     positive: C.positive,
     negative: C.negative,
     neutral: C.textDim,
     warning: C.warning,
   };
+  const statusColor = colors[status];
+  const isBadge = V.statusDot === "badge";
+  const isIcon = V.statusDot === "icon";
+  if (isBadge) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 12, ...style }}>
+        <span style={{
+          padding: "2px 10px", borderRadius: 6, fontSize: 20, fontWeight: 700,
+          backgroundColor: `${statusColor}22`, color: statusColor,
+        }}>
+          {status === "positive" ? "OK" : status === "negative" ? "NG" : status === "warning" ? "!" : "-"}
+        </span>
+        {label && <span style={{ fontSize: 36, color: C.textMuted }}>{label}</span>}
+      </div>
+    );
+  }
+  if (isIcon) {
+    const icon = status === "positive" ? "\u2713" : status === "negative" ? "\u2717" : status === "warning" ? "!" : "\u2014";
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 12, ...style }}>
+        <span style={{ fontSize: 20, fontWeight: 700, color: statusColor, flexShrink: 0 }}>{icon}</span>
+        {label && <span style={{ fontSize: 36, color: C.textMuted }}>{label}</span>}
+      </div>
+    );
+  }
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, ...style }}>
       <div
@@ -711,7 +806,7 @@ export const StatusDot: React.FC<{
           width: 16,
           height: 16,
           borderRadius: 8,
-          backgroundColor: colors[status],
+          backgroundColor: statusColor,
           flexShrink: 0,
         }}
       />
@@ -735,15 +830,23 @@ export const Connector: React.FC<{
   style?: React.CSSProperties;
 }> = ({ direction = "down", length = 40, arrow = true, color, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const isDashed = V.connector === "dashed";
+  const showArrow = V.connector !== "line";
   const resolvedColor = color ?? C.accent;
   const isVertical = direction === "down";
   const w = isVertical ? 3 : length;
   const h = isVertical ? length : 3;
   const arrowSize = 10;
+  const lineStyle: React.CSSProperties = isDashed
+    ? isVertical
+      ? { width: 0, height: h, borderLeft: `3px dashed ${resolvedColor}`, flexShrink: 0 }
+      : { width: w, height: 0, borderTop: `3px dashed ${resolvedColor}`, flexShrink: 0 }
+    : { width: w, height: h, backgroundColor: resolvedColor, flexShrink: 0 };
   return (
     <div style={{ display: "flex", flexDirection: isVertical ? "column" : "row", alignItems: "center", overflow: "visible", ...style }}>
-      <div style={{ width: w, height: h, backgroundColor: resolvedColor, flexShrink: 0 }} />
-      {arrow && (
+      <div style={lineStyle} />
+      {arrow && showArrow && (
         <div style={{
           width: 0, height: 0, flexShrink: 0,
           borderLeft: isVertical ? `${arrowSize}px solid transparent` : `${arrowSize + 2}px solid ${resolvedColor}`,
@@ -765,13 +868,18 @@ export const TimelineDot: React.FC<{
   style?: React.CSSProperties;
 }> = ({ label, active, size = 32, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const dotRadius = V.timelineDot === "circle" ? size / 2 : V.timelineDot === "square" ? 2 : size / 2;
+  const isDiamond = V.timelineDot === "diamond";
+  const dotSize = isDiamond ? size * 0.7 : size;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 16, ...style }}>
       <div style={{
-        width: size, height: size, borderRadius: size / 2,
+        width: dotSize, height: dotSize, borderRadius: dotRadius,
         backgroundColor: active ? C.accent : "transparent",
         border: `2px solid ${active ? C.accent : C.cardBorder}`,
         flexShrink: 0,
+        ...(isDiamond ? { transform: "rotate(45deg)" } : {}),
       }} />
       <span style={{ fontSize: 28, fontWeight: active ? 700 : 400, color: active ? C.accent : C.text }}>
         {label}
@@ -789,15 +897,23 @@ export const MetricCard: React.FC<{
   style?: React.CSSProperties;
 }> = ({ label, value, change, trend, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const metricStyles: Record<string, React.CSSProperties> = {
+    bordered: { backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}` },
+    filled: { backgroundColor: C.accentSoft, border: "none" },
+    glass: { backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid rgba(255,255,255,0.1)`, backdropFilter: "blur(10px)" },
+    minimal: { backgroundColor: "transparent", border: "none", padding: "12px 0" },
+  };
+  const ms = metricStyles[V.metricCard] || metricStyles.bordered;
   const trendColor = trend === "up" ? C.positive : trend === "down" ? C.negative : C.textMuted;
   const trendArrow = trend === "up" ? "↑" : trend === "down" ? "↓" : "";
   return (
     <div style={{
       backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`,
-      borderRadius: 12, padding: "16px 20px", minWidth: 180, textAlign: "center", ...style,
+      borderRadius: 12, padding: "16px 20px", minWidth: 180, textAlign: "center", ...ms, ...style,
     }}>
-      <div style={{ fontSize: 20, color: C.textMuted, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 44, fontWeight: 800, color: C.accent, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 20, color: C.textMuted, marginBottom: 6 }}><TextWithBreaks text={label} /></div>
+      <div style={{ fontSize: 44, fontWeight: 800, color: C.accent, lineHeight: 1.1 }}><TextWithBreaks text={value} /></div>
       {change && (
         <div style={{ fontSize: 18, color: trendColor, marginTop: 6, fontWeight: 600 }}>
           {trendArrow} {change}
@@ -816,18 +932,28 @@ export const Sparkline: React.FC<{
   style?: React.CSSProperties;
 }> = ({ data, width = 280, height = 72, color, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const isArea = V.sparkline === "area";
   if (!data.length) return null;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
-  const points = data.map((v, i) => {
+  const pts = data.map((v, i) => {
     const x = (i / (data.length - 1)) * width;
     const y = height - ((v - min) / range) * height;
-    return `${x},${y}`;
-  }).join(" ");
+    return { x, y };
+  });
+  const points = pts.map(p => `${p.x},${p.y}`).join(" ");
+  const resolvedColor = color ?? C.accent;
+  const areaPoints = isArea
+    ? `0,${height} ${points} ${width},${height}`
+    : undefined;
   return (
     <svg width={width} height={height} style={style}>
-      <polyline points={points} fill="none" stroke={color ?? C.accent} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      {isArea && areaPoints && (
+        <polygon points={areaPoints} fill={`${resolvedColor}22`} />
+      )}
+      <polyline points={points} fill="none" stroke={resolvedColor} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 };
@@ -839,14 +965,17 @@ export const Callout: React.FC<{
   style?: React.CSSProperties;
 }> = ({ children, variant = "accent", style }) => {
   const C = useC();
+  const V = usePresetVariants();
   const borderColor = variant === "warning" ? C.negative : variant === "info" ? C.accent : C.accent;
+  const calloutStyle: React.CSSProperties = V.callout === "full-border"
+    ? { border: `2px solid ${borderColor}`, borderRadius: 8, paddingLeft: 24, paddingRight: 24, paddingTop: 16, paddingBottom: 16, borderLeft: undefined }
+    : V.callout === "highlight"
+    ? { backgroundColor: `${borderColor}22`, borderRadius: 8, padding: "16px 24px", borderLeft: "none" }
+    : { borderLeft: `5px solid ${borderColor}`, paddingLeft: 24, paddingTop: 16, paddingBottom: 16, backgroundColor: `${borderColor}11`, borderRadius: "0 8px 8px 0" };
   return (
     <div style={{
-      borderLeft: `5px solid ${borderColor}`,
-      paddingLeft: 24, paddingTop: 16, paddingBottom: 16,
-      backgroundColor: `${borderColor}11`,
-      borderRadius: "0 8px 8px 0",
       fontSize: 28, color: C.text, lineHeight: 1.5,
+      ...calloutStyle,
       ...style,
     }}>
       {children}
@@ -863,10 +992,12 @@ export const StepBadge: React.FC<{
   style?: React.CSSProperties;
 }> = ({ step, label, active, size = 56, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const radius = variantRadius(V.stepBadge, size);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, ...style }}>
       <div style={{
-        width: size, height: size, borderRadius: size / 2,
+        width: size, height: size, borderRadius: radius,
         backgroundColor: active ? C.accent : "transparent",
         border: `2px solid ${C.accent}`,
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -893,15 +1024,20 @@ export const ComparisonCell: React.FC<{
   style?: React.CSSProperties;
 }> = ({ label, value, sublabel, variant = "neutral", style }) => {
   const C = useC();
+  const V = usePresetVariants();
   const valueColor = variant === "after" ? C.positive : variant === "before" ? C.textMuted : C.accent;
+  const cellStyle: React.CSSProperties = V.comparisonCell === "filled"
+    ? { backgroundColor: C.accentSoft, border: "none" }
+    : V.comparisonCell === "accent-top"
+    ? { backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`, borderTop: `3px solid ${valueColor}` }
+    : { backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}` };
   return (
     <div style={{
-      backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`,
-      borderRadius: 12, padding: "16px 20px", textAlign: "center", ...style,
+      borderRadius: 12, padding: "16px 20px", textAlign: "center", ...cellStyle, ...style,
     }}>
-      <div style={{ fontSize: 24, color: C.textMuted, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 48, fontWeight: 800, color: valueColor, lineHeight: 1.1 }}>{value}</div>
-      {sublabel && <div style={{ fontSize: 24, color: C.textMuted, marginTop: 4 }}>{sublabel}</div>}
+      <div style={{ fontSize: 24, color: C.textMuted, marginBottom: 6 }}><TextWithBreaks text={label} /></div>
+      <div style={{ fontSize: 48, fontWeight: 800, color: valueColor, lineHeight: 1.1 }}><TextWithBreaks text={value} /></div>
+      {sublabel && <div style={{ fontSize: 24, color: C.textMuted, marginTop: 4 }}><TextWithBreaks text={sublabel} /></div>}
     </div>
   );
 };
@@ -913,15 +1049,20 @@ export const RankBadge: React.FC<{
   style?: React.CSSProperties;
 }> = ({ rank, size = 72, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const radius = variantRadius(V.rankBadge, size);
+  const isShield = V.rankBadge === "shield";
   const preset = useDesignPreset();
   const rankColors = preset.colors.rank;
   const colors: Record<number, string> = { 1: rankColors[0], 2: rankColors[1], 3: rankColors[2] };
   const bg = colors[rank] || C.accent;
   return (
     <div style={{
-      width: size, height: size, borderRadius: size / 2,
+      width: size, height: size, borderRadius: radius,
       backgroundColor: bg, display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: size * 0.45, fontWeight: 800, color: "#0A0A0A", flexShrink: 0, ...style,
+      fontSize: size * 0.45, fontWeight: 800, color: "#0A0A0A", flexShrink: 0,
+      ...(isShield ? { transform: "rotate(0deg)" } : {}),
+      ...style,
     }}>
       {rank}
     </div>
@@ -935,9 +1076,12 @@ export const QuoteMark: React.FC<{
   style?: React.CSSProperties;
 }> = ({ size = 64, color, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  if (V.quoteMark === "none") return null;
+  const qSize = V.quoteMark === "small" ? (size || 64) * 0.5 : size || 64;
   return (
     <span style={{
-      fontSize: size, fontWeight: 900, color: color ?? C.accent, opacity: 0.3, lineHeight: 0.8,
+      fontSize: qSize, fontWeight: 900, color: color ?? C.accent, opacity: 0.3, lineHeight: 0.8,
       fontFamily: "Georgia, serif", userSelect: "none", ...style,
     }}>
       &ldquo;
@@ -952,12 +1096,19 @@ export const GlowDot: React.FC<{
   style?: React.CSSProperties;
 }> = ({ color, size = 24, style }) => {
   const C = useC();
+  const V = usePresetVariants();
   const resolvedColor = color ?? C.accent;
+  const isGlow = V.glowDot === "glow";
+  const isRing = V.glowDot === "ring";
   return (
     <div style={{
       width: size, height: size, borderRadius: size / 2,
-      backgroundColor: resolvedColor,
-      boxShadow: `0 0 ${size}px ${size / 2}px ${resolvedColor}66`,
+      backgroundColor: isRing ? "transparent" : resolvedColor,
+      ...(isRing
+        ? { border: `2px solid ${resolvedColor}` }
+        : isGlow || V.glowDot === undefined
+          ? { boxShadow: `0 0 ${size}px ${size / 2}px ${resolvedColor}66` }
+          : {}),
       flexShrink: 0, ...style,
     }} />
   );
@@ -972,14 +1123,19 @@ export const AnnotationLine: React.FC<{
   style?: React.CSSProperties;
 }> = ({ text, width = 100, direction = "right", color, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const isDashed = V.annotationLine === "dashed";
   const resolvedColor = color ?? C.accent;
+  const lineStyle: React.CSSProperties = isDashed
+    ? { width, height: 0, borderTop: `1px dashed ${resolvedColor}`, flexShrink: 0 }
+    : { width, height: 1, backgroundColor: resolvedColor, flexShrink: 0 };
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 8,
       flexDirection: direction === "left" ? "row-reverse" : "row",
       ...style,
     }}>
-      <div style={{ width, height: 1, backgroundColor: resolvedColor, flexShrink: 0 }} />
+      <div style={lineStyle} />
       <span style={{ fontSize: 36, color: resolvedColor, whiteSpace: "nowrap", fontWeight: 600 }}>{text}</span>
     </div>
   );
@@ -995,6 +1151,8 @@ export const MiniBar: React.FC<{
   style?: React.CSSProperties;
 }> = ({ value, maxValue, label, color, height = 12, style }) => {
   const C = useC();
+  const V = usePresetVariants();
+  const barRadius = V.miniBar === "flat" ? 0 : height / 2;
   const resolvedColor = color ?? C.accent;
   const pct = maxValue > 0 ? Math.min((value / maxValue) * 100, 100) : 0;
   return (
@@ -1005,8 +1163,8 @@ export const MiniBar: React.FC<{
           <span style={{ color: resolvedColor }}>{value}</span>
         </div>
       )}
-      <div style={{ width: "100%", height, backgroundColor: C.divider, borderRadius: height / 2, overflow: "hidden" }}>
-        <div style={{ width: `${pct}%`, height: "100%", backgroundColor: resolvedColor, borderRadius: height / 2 }} />
+      <div style={{ width: "100%", height, backgroundColor: C.divider, borderRadius: barRadius, overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", backgroundColor: resolvedColor, borderRadius: barRadius }} />
       </div>
     </div>
   );

@@ -5,13 +5,23 @@
  * VideoThemeProvider → CreativeScene (레이아웃/모션/스타일링 그대로)
  * 폼에서 scene 속성을 바꾸면 Player가 즉시 반영 (WYSIWYG)
  */
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { AbsoluteFill, Img } from "remotion";
 import { CreativeScene } from "../simple/CreativeScene";
-import { MapSceneRenderer } from "../map/MapSceneRenderer";
 import { DesignPresetProvider, useDesignPreset } from "../design";
 import { buildFontFamily } from "../design/fonts";
 import type { SceneEntry, SceneManifest } from "../types/manifest";
+
+// MapSceneRenderer를 lazy import (maplibre-gl 번들 문제 회피)
+const MapSceneRenderer = lazy(() =>
+  import("../map/MapSceneRenderer").then((m) => ({ default: m.MapSceneRenderer }))
+);
+
+const MapFallback = () => (
+  <AbsoluteFill style={{ backgroundColor: "#1a1a2e", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 24 }}>
+    Map Loading...
+  </AbsoluteFill>
+);
 
 interface Props {
   scene: SceneEntry;
@@ -85,11 +95,13 @@ const SingleSceneInner: React.FC<Props> = ({ scene, meta }) => {
   if (scene.mapScene) {
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-        <MapSceneRenderer
-          data={scene.mapScene}
-          durationInFrames={durationInFrames}
-          fps={fps}
-        />
+        <Suspense fallback={<MapFallback />}>
+          <MapSceneRenderer
+            data={scene.mapScene}
+            durationInFrames={durationInFrames}
+            fps={fps}
+          />
+        </Suspense>
       </AbsoluteFill>
     );
   }
@@ -97,7 +109,8 @@ const SingleSceneInner: React.FC<Props> = ({ scene, meta }) => {
   // ── 일반 씬 ──
   const hasImage = !!(scene.imagePath || scene.vizBackgroundPath);
   const placement = scene.imageAsset?.placement ?? "background";
-  const imgOpacity = scene.imageAsset?.opacity ?? 0.4;
+  const defaultOpacity = (placement === "background") ? 0.35 : 1.0;
+  const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
   const imgSrc = scene.vizBackgroundPath || scene.imagePath;
 
   const creativeEl = (

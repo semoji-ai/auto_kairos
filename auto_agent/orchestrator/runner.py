@@ -246,16 +246,9 @@ class PipelineRunner:
         self.sync = self._init_sync()
 
     def _init_sync(self):
-        """Supabase 동기화 매니저 초기화. 환경변수 미설정 시 None."""
-        from auto_agent.supabase_client import supabase_enabled
-        if not supabase_enabled():
-            return None
-        from auto_agent.sync import SyncManager
-        return SyncManager(
-            project_slug=self.project_slug,
-            project_dir=self.project_dir,
-            local_project_id=self.project["id"],
-        )
+        """Supabase 동기화 — 파이프라인 중에는 비활성. 완료 후 프로젝트 단위로 동기화."""
+        # 파이프라인 실행 중 매 스텝 동기화 비활성
+        return None
 
     def _load_pipeline(self) -> dict:
         # 로컬 DATA_DIR 우선 (Supabase 캐시보다 로컬 수정 우선)
@@ -288,8 +281,21 @@ class PipelineRunner:
         # config 검증
         if not config.get("art_style"):
             print("WARNING: project config에 art_style 미설정")
+
+        # voice_id 미설정 시 writing_style에서 자동 매핑
         if not config.get("voice_id"):
-            print("WARNING: project config에 voice_id 미설정 → .env 폴백")
+            STYLE_VOICE_MAP = {
+                "semoji": {"voice_id": "W7FnAxJNpD5WGjrF5GLp", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
+                "iromism": {"voice_id": "9Sj8ugvpK1DmcAXyvi3a", "voice_settings": {"stability": 1.0, "similarity_boost": 0.6, "style": 0.9, "speed": 1.1}},
+                "default": {"voice_id": "4JJwo477JUAx3HV0T7n7", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
+            }
+            ws = config.get("writing_style", "default")
+            voice = STYLE_VOICE_MAP.get(ws, STYLE_VOICE_MAP.get("default", {}))
+            if voice:
+                config["voice_id"] = voice["voice_id"]
+                config["voice_settings"] = voice["voice_settings"]
+                print(f"    voice_id 자동 설정: {ws} → {voice['voice_id']}")
+
         return config
 
     # ─────────────────────────────────────

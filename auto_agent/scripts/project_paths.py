@@ -118,6 +118,16 @@ def get_project_dir() -> Path:
 def get_scene_specs_path() -> Path:
     """scene_specs.json 경로. DB 모드: 프로젝트 디렉토리 내, 레거시: 루트."""
     workspace = get_workspace_dir()
+    # PROJECT_NAME 환경변수 우선
+    env_name = os.getenv("PROJECT_NAME")
+    if env_name:
+        result = _try_db_project(slug=env_name)
+        if result:
+            project_dir, _ = result
+            path = project_dir / "scene_specs.json"
+            if path.exists():
+                return path
+    # 활성 프로젝트 폴백
     result = _try_db_project()
     if result:
         project_dir, _ = result

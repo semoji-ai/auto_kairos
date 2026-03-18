@@ -1,6 +1,6 @@
 <!-- Storyboard 탭 — 원고 + 미리보기 + TTS 통합 -->
 <!-- scene-editor.js (에디터 + 썸네일 통합 번들) -->
-<script src="/static/scene-editor.js"></script>
+<script src="/static/scene-editor.js?v={{ range(100000)|random }}"></script>
 {% if scenes %}
 <div class="storyboard-filter">
   <button class="btn btn-accent chapter-btn active" onclick="filterStoryboard(0, this)">All</button>
@@ -63,11 +63,19 @@
 
       <div class="narration">{{ scene.narration }}</div>
 
-      {% if scene._audio_url %}
       <div class="audio-player">
-        <audio controls preload="none" src="{{ scene._audio_url }}"></audio>
+        {% if scene._audio_url %}
+        <audio controls preload="none" src="{{ scene._audio_url }}" id="audio-{{ scene.sceneNumber }}"></audio>
+        {% endif %}
+        <button class="btn-tts-regen" onclick="toggleTtsRegen({{ scene.sceneNumber }})">🎙️ TTS</button>
       </div>
-      {% endif %}
+      <div class="tts-regen-panel" id="tts-regen-{{ scene.sceneNumber }}" style="display:none">
+        <textarea class="tts-text" id="tts-text-{{ scene.sceneNumber }}" rows="2" placeholder="로드 중..."></textarea>
+        <div class="tts-controls">
+          <button class="btn-tts-go" onclick="regenTts({{ scene.sceneNumber }})">🎙️ 재생성</button>
+          <span class="tts-status" id="tts-status-{{ scene.sceneNumber }}"></span>
+        </div>
+      </div>
     </div>
   </div>
   {% endfor %}
@@ -232,6 +240,95 @@ function generateThumbnails(slug, btn) {
     });
 }
 </script>
+<style>
+.btn-tts-regen { padding: 2px 8px; border-radius: 4px; font-size: 9px; background: rgba(251,146,60,0.15); color: #FB923C; border: 1px solid rgba(251,146,60,0.3); cursor: pointer; margin-left: 6px; }
+.btn-tts-regen:hover { background: rgba(251,146,60,0.25); }
+.tts-regen-panel { margin-top: 6px; padding: 6px; background: rgba(0,0,0,0.2); border-radius: 6px; }
+.tts-text { width: 100%; padding: 4px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #E4E4E7; font-size: 11px; font-family: inherit; resize: vertical; }
+.tts-controls { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.btn-tts-go { padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 600; background: rgba(251,146,60,0.2); color: #FB923C; border: 1px solid rgba(251,146,60,0.3); cursor: pointer; }
+.btn-tts-go:hover { background: rgba(251,146,60,0.35); }
+.btn-tts-go:disabled { opacity: 0.5; }
+.tts-status { font-size: 9px; color: var(--text-muted); }
+</style>
+
+<script>
+var slug = '{{ slug }}';
+function toggleTtsRegen(sn) {
+  var panel = document.getElementById('tts-regen-' + sn);
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    var textarea = document.getElementById('tts-text-' + sn);
+    if (!textarea.value || textarea.value === '로드 중...') {
+      fetch('/api/p/' + encodeURIComponent(slug) + '/tts/text/' + sn)
+        .then(function(r) { return r.json(); })
+        .then(function(d) { textarea.value = d.text || d.narration || ''; });
+      loadTtsVersions(sn);
+    }
+  } else {
+    panel.style.display = 'none';
+  }
+}
+function loadTtsVersions(sn) {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/tts/versions/' + sn)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var versions = data.versions || [];
+      var selected = data.selected || '';
+      if (versions.length <= 1) return;
+      var panel = document.getElementById('tts-regen-' + sn);
+      var html = '<div style="margin-top:4px;font-size:9px;color:var(--text-muted)">버전 (' + versions.length + '):</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">';
+      versions.forEach(function(v) {
+        var isSel = v.file === selected;
+        html += '<button style="padding:2px 6px;border-radius:3px;font-size:8px;cursor:pointer;'
+          + (isSel ? 'background:rgba(34,197,94,0.2);color:#22C55E;border:1px solid rgba(34,197,94,0.3)' : 'background:rgba(255,255,255,0.05);color:var(--text-muted);border:1px solid rgba(255,255,255,0.1)')
+          + '" onclick="selectTtsVersion(' + sn + ',\'' + v.file + '\')">'
+          + v.file.replace('scene_' + String(sn).padStart(3,'0') + '_', '').replace('.mp3','')
+          + '</button>';
+      });
+      html += '</div>';
+      panel.insertAdjacentHTML('beforeend', html);
+    }).catch(function() {});
+}
+function selectTtsVersion(sn, fileName) {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/tts/select/' + sn, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({file: fileName}),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) {
+      var audio = document.getElementById('audio-' + sn);
+      if (audio) audio.src = '/output/' + slug + '/audio/scene_' + String(sn).padStart(3,'0') + '.mp3?t=' + Date.now();
+    }
+  });
+}
+function regenTts(sn) {
+  var text = document.getElementById('tts-text-' + sn).value.trim();
+  var status = document.getElementById('tts-status-' + sn);
+  var btn = document.querySelector('#tts-regen-' + sn + ' .btn-tts-go');
+  if (!text) { status.textContent = '텍스트를 입력하세요'; return; }
+  btn.disabled = true;
+  status.textContent = '생성 중...';
+  fetch('/api/p/' + encodeURIComponent(slug) + '/tts/regenerate/' + sn, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text: text}),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    btn.disabled = false;
+    if (d.ok) {
+      status.textContent = '✅ 재생성 완료!';
+      var audio = document.getElementById('audio-' + sn);
+      if (audio) { audio.src = '/output/' + slug + '/audio/scene_' + String(sn).padStart(3,'0') + '.mp3?t=' + Date.now(); }
+      loadTtsVersions(sn);
+    } else {
+      status.textContent = '실패: ' + (d.error || '').substring(0, 50);
+    }
+  })
+  .catch(function(e) { btn.disabled = false; status.textContent = '에러: ' + e.message; });
+}
+</script>
+
 {% else %}
 <div class="empty">No scene specs found. Run the pipeline first.</div>
 {% endif %}

@@ -55,11 +55,23 @@ def run(project_dir: str):
         if not query:
             continue
 
+        # 이미 이미지 있으면 스킵
+        existing = list(img_dir.glob(f"scene_{sn:03d}.*")) + list(img_dir.glob(f"scene_{sn:03d}_*.*"))
+        has_image = any(f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") for f in existing)
+        if has_image:
+            log("image-sourcer", f"씬{sn} 이미지 이미 존재 → 스킵")
+            continue
+
         candidates = search_wikimedia(query, 8)
         search_results[sn] = candidates
         save_candidates(sn, query, candidates, str(img_dir))
         log("image-sourcer", f"씬{sn} 검색 완료: \"{query}\" → {len(candidates)}건")
         time.sleep(0.5)  # API 부담 줄이기
+
+    # 검색 안 한 씬 (이미 이미지 있거나 쿼리 없음) 제외
+    if not search_results:
+        log("image-sourcer", "모든 씬에 이미지 존재 → 소싱 완료", "success")
+        return
 
     # ── Step 2: Sonnet 판단 ──
     log("image-sourcer", "Sonnet에게 최적 이미지 선택 요청 중...")
@@ -75,6 +87,8 @@ def run(project_dir: str):
 
     for scene in scenes:
         sn = scene.get("sceneNumber")
+        if sn not in search_results:
+            continue  # 이미 이미지 있는 씬은 Sonnet에게 안 보냄
         img = scene.get("imageAsset") or {}
         query = img.get("query", "")
         title = scene.get("title", "")
@@ -179,13 +193,19 @@ action: "download" (후보 선택), "generate" (AI 생성), "skip" (이미지 �
             if not prompt:
                 continue
             fname = next_filename(img_dir, sn, "gen", ".png")
-            # art_style 확인
-            config_str = os.environ.get("PROJECT_CONFIG", "{}")
+            # art_style — DB에서 읽기
             try:
-                config = json.loads(config_str)
-            except:
-                config = {}
-            style_path = config.get("art_style", "")
+                from auto_agent.db.project_manager import ProjectManager
+                from auto_agent.db.connection import db_exists, init_db
+                if not db_exists(): init_db()
+                _pm = ProjectManager()
+                _proj = _pm.get_project(slug=os.environ.get("PROJECT_NAME", ""))
+                _cfg = _proj.get("config", {}) if _proj else {}
+                if isinstance(_cfg, str):
+                    _cfg = json.loads(_cfg)
+                style_path = _cfg.get("art_style", "")
+            except Exception:
+                style_path = ""
 
             log("image-sourcer", f"씬{sn} 생성 중: {prompt[:40]}...")
             cmd = [sys.executable, "-m", "auto_agent.tools.image_generate", "scene",
@@ -197,11 +217,13 @@ action: "download" (후보 선택), "generate" (AI 생성), "skip" (이미지 �
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=120,
                                         cwd=str(project_dir.parent.parent))
                 if result.returncode == 0:
-                    add_version(img_dir, sn, fname, "generate", prompt=prompt[:200])
+                    add_version(img_dir, sn, fname, "generate", prompt=prompt[:200],
+                                art_style=style_path)
                     generated += 1
                     log("image-sourcer", f"씬{sn} 생성 완료 ✓", "success")
                 else:
-                    log("image-sourcer", f"씬{sn} 생성 실패", "warning")
+                    err = result.stderr[:200] or result.stdout[:200]
+                    log("image-sourcer", f"씬{sn} 생성 실패: {err}", "warning")
             except Exception as e:
                 log("image-sourcer", f"씬{sn} 생성 에러: {e}", "error")
 

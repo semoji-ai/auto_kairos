@@ -115,10 +115,13 @@ export const ItemsEditor: React.FC<Props> = ({
         >
           <span style={{ color: "#666", fontSize: 10, cursor: "grab", userSelect: "none" }}>⠿</span>
           <span style={{ color: accent, fontSize: 11, fontWeight: 700, minWidth: 16 }}>{i + 1}</span>
-          <input
-            type="text"
+          <textarea
             value={item}
             onChange={(e) => updateItem(i, e.target.value)}
+            rows={item.includes("\n") ? item.split("\n").length : 1}
+            onKeyDown={(e) => {
+              // Shift+Enter로 줄바꿈 (기본 Enter도 줄바꿈 — textarea 기본 동작)
+            }}
             style={{
               flex: 1,
               background: "transparent",
@@ -128,6 +131,10 @@ export const ItemsEditor: React.FC<Props> = ({
               fontSize: 12,
               padding: "2px 4px",
               outline: "none",
+              resize: "none",
+              fontFamily: "inherit",
+              lineHeight: 1.4,
+              overflow: "hidden",
             }}
           />
           {values.length > 0 && (
