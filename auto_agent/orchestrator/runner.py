@@ -2265,10 +2265,10 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         module_name = step["module"]
 
         # 환경변수로 프로젝트 config 주입
-        # 스크립트들은 PROJECT_NAME → DB 조회로 config를 읽지만,
-        # voice_id는 .env 폴백도 있으므로 env로도 주입
         env = os.environ.copy()
         env["PROJECT_NAME"] = self.project_slug
+        # uuid 마이그레이션 후 프로젝트 디렉토리명이 {uuid}_{slug}이므로 직접 전달
+        env["PROJECT_DIR"] = str(self.project_dir)
         env["SEARCH_ENGINE"] = self.state.config.get("search_engine", "")
 
         config = self.state.config

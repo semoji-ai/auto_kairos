@@ -322,12 +322,23 @@ action: "download" (후보 선택), "generate" (AI 생성), "skip" (이미지 �
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        project_name = os.environ.get("PROJECT_NAME", "")
-        if project_name:
-            from auto_agent.paths import get_workspace_dir
-            run(str(get_workspace_dir() / "output" / project_name))
-        else:
-            print("Usage: source_images.py <project_dir>")
-    else:
+    if len(sys.argv) >= 2:
         run(sys.argv[1])
+    elif os.environ.get("PROJECT_DIR"):
+        run(os.environ["PROJECT_DIR"])
+    elif os.environ.get("PROJECT_NAME"):
+        # PROJECT_NAME으로 DB 조회 → 정확한 output_dir 사용
+        try:
+            from auto_agent.db.project_manager import ProjectManager
+            pm = ProjectManager()
+            project = pm.resolve_project(os.environ["PROJECT_NAME"])
+            if project:
+                run(project["output_dir"])
+            else:
+                from auto_agent.paths import get_workspace_dir
+                run(str(get_workspace_dir() / "output" / os.environ["PROJECT_NAME"]))
+        except Exception:
+            from auto_agent.paths import get_workspace_dir
+            run(str(get_workspace_dir() / "output" / os.environ["PROJECT_NAME"]))
+    else:
+        print("Usage: source_images.py <project_dir>")
