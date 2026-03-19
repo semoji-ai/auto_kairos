@@ -2531,8 +2531,19 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             category = self.vault._detect_category(topic)
             if agent_name in ("research-orchestrator",):
                 vault_block = self.vault.search_for_research(topic, category)
+                if vault_block:
+                    vault_chars = len(vault_block)
+                    print(f"    [VaultRAG] 리서치용 볼트 지식 주입: {vault_chars}자", flush=True)
+                    _notify("System", f"볼트에서 기존 리서치 {vault_chars}자 발견 → 프롬프트에 주입",
+                            phase=self.state.current_phase, project=self.project_slug, level="info")
+                else:
+                    print("    [VaultRAG] 리서치용 볼트 지식 없음", flush=True)
             elif agent_name in ("write-manuscript",):
                 vault_block = self.vault.search_for_manuscript(topic, category)
+                if vault_block:
+                    print(f"    [VaultRAG] 원고용 볼트 지식 주입: {len(vault_block)}자", flush=True)
+                    _notify("System", f"볼트에서 관련 원고 패턴 발견 → 프롬프트에 주입",
+                            phase=self.state.current_phase, project=self.project_slug, level="info")
 
         # 7. 프로젝트 config 주입
         config = self.state.config or {}
