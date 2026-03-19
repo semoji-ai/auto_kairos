@@ -196,9 +196,10 @@ estimated_duration_sec = narration_char_count / 5
 | art_style | 글자 수 상한 | 개념 수 | 전환어 분할 |
 |-----------|-----------|---------|-----------|
 | 기본 (모든 스타일) | 100자 | 1개 | 전환어 등장 시 분할 |
-| `quirky_cartoon` (이로미즘) | **250자** | **1~2개** | 서사 흐름 내 전환어 유지 가능 |
+| `quirky_cartoon` (이로미즘) | **80자** (0~2문장) | **1개** | **전환어 등장 시 무조건 분할** |
 
-quirky_cartoon 적용 시 상세 규칙은 `shared/writing-style-iromism.md` 5번 참조.
+quirky_cartoon(이로미즘)은 시네마틱 70% 스타일 — 한 씬 = 한 장면 = 한 이미지.
+나레이션은 짧게, 그림이 전달. 상세 규칙은 `shared/writing-style-iromism.md` 5번 참조.
 
 ---
 
