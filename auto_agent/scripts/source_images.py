@@ -90,6 +90,12 @@ def _run_search_track(search_scenes: list, img_dir: Path, project_dir: Path, log
             continue
 
         candidates = search_wikimedia(query, 8)
+        # fallback 검색
+        if not candidates:
+            fallback = img.get("fallbackQuery", "")
+            if fallback:
+                log_fn("image-search", f"씬{sn} 0건 → fallback: \"{fallback[:40]}\"")
+                candidates = search_wikimedia(fallback, 8)
         search_results[sn] = candidates
         save_candidates(sn, query, candidates, str(img_dir))
         log_fn("image-search", f"씬{sn} 검색: \"{query[:40]}\" → {len(candidates)}건")
