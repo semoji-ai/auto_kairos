@@ -522,8 +522,8 @@ def generate_scene(
     full_prompt = "\n\n".join(parts)
     full_prompt = _translate_to_english(full_prompt)
 
-    # nano-banana-pro: 캐릭터 ref가 있으면 사용, 아니면 Gemini edit
-    endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_EDIT
+    # nano-banana: 캐릭터 ref가 있으면 /edit, 없으면 기본 /generate
+    endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_GENERATE
     fal_input = {
         "prompt": full_prompt,
         "aspect_ratio": aspect_ratio,
@@ -642,7 +642,7 @@ def generate_scene_flat(
     full_prompt = "\n\n".join(parts)
     full_prompt = _translate_to_english(full_prompt)
 
-    endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_EDIT
+    endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_GENERATE
     fal_input = {
         "prompt": full_prompt,
         "aspect_ratio": aspect_ratio,
