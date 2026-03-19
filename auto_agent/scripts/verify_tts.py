@@ -107,7 +107,7 @@ def transcribe_with_gemini(client, audio_path: Path, narration: str) -> str:
     return response.text.strip()
 
 
-def main():
+def main(project_dir=None):
     from google import genai
 
     api_key = os.getenv("GOOGLE_API_KEY")
@@ -117,7 +117,10 @@ def main():
 
     client = genai.Client(api_key=api_key)
 
-    project_dir = get_project_dir()
+    if project_dir is None:
+        project_dir = get_project_dir()
+    else:
+        project_dir = Path(project_dir)
     scene_specs_path = project_dir / "scene_specs.json"
     if not scene_specs_path.exists():
         print(f"ERROR: {scene_specs_path} 없음")
@@ -220,4 +223,23 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    project_dir = os.environ.get("PROJECT_DIR")
+    if not project_dir:
+        project_name = os.environ.get("PROJECT_NAME", "")
+        if project_name:
+            try:
+                from auto_agent.db.project_manager import ProjectManager
+                pm = ProjectManager()
+                project = pm.resolve_project(project_name)
+                if project:
+                    project_dir = project["output_dir"]
+            except Exception:
+                pass
+            if not project_dir:
+                from auto_agent.paths import get_workspace_dir
+                project_dir = str(get_workspace_dir() / "output" / project_name)
+    if project_dir:
+        main(project_dir)
+    else:
+        print("Usage: verify_tts.py (set PROJECT_DIR or PROJECT_NAME)")
+        sys.exit(1)

@@ -267,17 +267,15 @@
         {
           "id": "step_9b",
           "name": "tts_verification",
-          "description": "에이전트 기반 TTS 검증: Gemini 트랜스크립션 비교 + 오류 시 재생성",
-          "input": [
-            "scene_specs.json",
-            "output/{project}/audio/"
-          ],
+          "description": "Python 모듈 기반 TTS 검증: Gemini 트랜스크립션 비교",
+          "type": "module",
+          "module": "tts-verifier",
+          "input": ["scene_specs.json", "output/{project}/audio/"],
           "output": "tts_verification_report.json",
           "depends_on": "step_8",
           "gate": false,
-          "notes": "advisory 단계. ERROR 씬은 경고하지만 파이프라인은 중단하지 않음",
-          "type": "agent",
-          "agent": "tts-verifier"
+          "blocking": false,
+          "notes": "advisory 단계. 실패해도 파이프라인 중단 안 함"
         },
         {
           "id": "step_6d",
