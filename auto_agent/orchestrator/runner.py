@@ -502,6 +502,20 @@ class PipelineRunner:
             print("    [MERGE] 병합할 리서치 파일 없음")
             return
 
+        # === 소스 추출: sections에서 출처/URL 파싱 ===
+        if not sources:
+            import re
+            seen_urls = set()
+            link_pattern = re.compile(r'\[([^\]]+)\]\((https?://[^\)]+)\)')
+            for sec in sections:
+                for match in link_pattern.finditer(sec.get("content", "")):
+                    title, url = match.group(1), match.group(2)
+                    if url not in seen_urls:
+                        seen_urls.add(url)
+                        sources.append({"title": title, "url": url, "quality_grade": "B"})
+            if sources:
+                print(f"    [MERGE] .md에서 소스 {len(sources)}개 추출")
+
         # research_report.json 생성
         report = {
             "topic": meta.get("topic", self.project_slug),
