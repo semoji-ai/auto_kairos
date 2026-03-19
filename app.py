@@ -456,55 +456,66 @@ async def api_scenes_by_slug(slug: str):
     scenes = specs.get("scenes", [])
     tts = load_project_json(out_dir, "tts_results.json")
     dir_name = Path(out_dir).name if out_dir else slug
+    print(f"[DEBUG] out_dir={out_dir}, dir_name={dir_name}, slug={slug}", flush=True)
     enriched = enrich_scenes_with_media(scenes, dir_name, out_dir, tts)
-    # 디버그: _image_url 확인
     if enriched:
-        print(f"[DEBUG scenes API] 씬1 _image_url={enriched[0].get('_image_url')}, out_dir={out_dir}", flush=True)
+        print(f"[DEBUG] 씬1 _image_url={enriched[0].get('_image_url')}", flush=True)
     return JSONResponse(content={"scenes": enriched})
 
 
 @app.get("/api/p/{slug}/images/candidates/{scene_num}")
-async def image_candidates(slug: str, scene_num: int):
-    """씬의 이미지 검색 후보 반환. 저장된 후보 우선, 없으면 실시간 검색."""
+async def image_candidates(slug: str, scene_num: int, q: str = "", source: str = "wikimedia"):
+    """씬의 이미지 검색 후보 반환. q=커스텀 쿼리, source=wikimedia|serper."""
     pm = get_pm()
     project = pm.get_project(slug=slug)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
     out_dir = project.get("output_dir", "")
 
-    # 1) 저장된 후보 확인
-    candidates_path = Path(out_dir) / "images" / "image_candidates.json"
-    if candidates_path.exists():
-        try:
-            import json as _json
-            data = _json.loads(candidates_path.read_text(encoding="utf-8"))
-            for s in data.get("scenes", []):
-                if s.get("sceneNumber") == scene_num:
-                    return JSONResponse({"query": s.get("query", ""), "candidates": s.get("candidates", []), "cached": True})
-        except Exception:
-            pass
+    # 커스텀 쿼리가 없으면 저장된 후보 확인
+    if not q:
+        candidates_path = Path(out_dir) / "images" / "image_candidates.json"
+        if candidates_path.exists():
+            try:
+                import json as _json
+                data = _json.loads(candidates_path.read_text(encoding="utf-8"))
+                for s in data.get("scenes", []):
+                    if s.get("sceneNumber") == scene_num:
+                        return JSONResponse({"query": s.get("query", ""), "candidates": s.get("candidates", []), "cached": True, "source": "cached"})
+            except Exception:
+                pass
 
-    # 2) 저장 안 되어있으면 실시간 검색 + 자동 저장
-    specs = load_project_json(out_dir, "scene_specs.json")
-    if not specs:
-        return JSONResponse({"error": "no specs"}, 404)
-    scene = None
-    for s in specs.get("scenes", []):
-        if s.get("sceneNumber") == scene_num:
-            scene = s
-            break
-    if not scene:
-        return JSONResponse({"error": "scene not found"}, 404)
-
-    query = (scene.get("imageAsset") or {}).get("query", "")
+    # 쿼리 결정: 커스텀 > scene_specs
+    query = q
+    if not query:
+        specs = load_project_json(out_dir, "scene_specs.json")
+        if not specs:
+            return JSONResponse({"error": "no specs"}, 404)
+        scene = None
+        for s in specs.get("scenes", []):
+            if s.get("sceneNumber") == scene_num:
+                scene = s
+                break
+        if not scene:
+            return JSONResponse({"error": "scene not found"}, 404)
+        query = (scene.get("imageAsset") or {}).get("searchQuery") or (scene.get("imageAsset") or {}).get("query", "")
     if not query:
         return JSONResponse({"candidates": [], "query": ""})
 
-    from auto_agent.tools.wikimedia_search import search_wikimedia, save_candidates
-    candidates = search_wikimedia(query, 8)
-    # 자동 저장
-    save_candidates(scene_num, query, candidates, str(Path(out_dir) / "images"))
-    return JSONResponse({"query": query, "candidates": candidates, "cached": False})
+    # 검색 실행
+    candidates = []
+    if source == "serper":
+        try:
+            from auto_agent.tools.serper_search import search_images
+            candidates = search_images(query, 12)
+        except Exception as e:
+            return JSONResponse({"error": f"serper 검색 실패: {e}", "candidates": [], "query": query})
+    else:
+        from auto_agent.tools.wikimedia_search import search_wikimedia, save_candidates
+        candidates = search_wikimedia(query, 8)
+        save_candidates(scene_num, query, candidates, str(Path(out_dir) / "images"))
+
+    return JSONResponse({"query": query, "candidates": candidates, "cached": False, "source": source})
 
 
 @app.post("/api/p/{slug}/images/select/{scene_num}")

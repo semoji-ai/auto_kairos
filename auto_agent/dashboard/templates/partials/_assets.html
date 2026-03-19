@@ -253,37 +253,65 @@
     var panel = document.getElementById('candidates-' + sceneNum);
     if (panel.classList.contains('open')) {
       panel.classList.remove('open');
-      btn.textContent = '🔍 후보 이미지 보기';
+      btn.textContent = '🔍 후보 검색';
       return;
     }
     panel.classList.add('open');
     btn.textContent = '접기';
-    panel.innerHTML = '<div class="loading">위키미디어 검색 중...</div>';
 
-    fetch('/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sceneNum)
+    // 검색 UI 렌더링
+    panel.innerHTML =
+      '<div class="search-bar" style="display:flex;gap:6px;margin-bottom:8px;align-items:center">' +
+        '<input type="text" id="search-q-' + sceneNum + '" placeholder="검색어 입력 (빈칸=자동)" style="flex:1;padding:4px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:4px;color:#E4E4E7;font-size:12px">' +
+        '<select id="search-src-' + sceneNum + '" style="padding:4px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:4px;color:#E4E4E7;font-size:11px">' +
+          '<option value="wikimedia">위키미디어</option>' +
+          '<option value="serper">Serper (Google)</option>' +
+        '</select>' +
+        '<button onclick="doSearch(' + sceneNum + ')" style="padding:4px 10px;background:var(--accent);border:none;border-radius:4px;color:#000;font-size:11px;font-weight:600;cursor:pointer">검색</button>' +
+      '</div>' +
+      '<div id="search-results-' + sceneNum + '"></div>';
+    // 자동 검색 (캐시 또는 기본 쿼리)
+    doSearch(sceneNum);
+  };
+
+  window.doSearch = function(sceneNum) {
+    var q = (document.getElementById('search-q-' + sceneNum) || {}).value || '';
+    var src = (document.getElementById('search-src-' + sceneNum) || {}).value || 'wikimedia';
+    var results = document.getElementById('search-results-' + sceneNum);
+    results.innerHTML = '<div class="loading">' + (src === 'serper' ? 'Google' : '위키미디어') + ' 검색 중...</div>';
+
+    var url = '/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sceneNum + '?source=' + src;
+    if (q) url += '&q=' + encodeURIComponent(q);
+
+    fetch(url)
       .then(function(r) { return r.json(); })
       .then(function(data) {
         var candidates = data.candidates || [];
+        var queryUsed = data.query || '';
+        if (queryUsed && !q) {
+          var input = document.getElementById('search-q-' + sceneNum);
+          if (input) input.placeholder = queryUsed;
+        }
         if (!candidates.length) {
-          panel.innerHTML = '<div class="loading">검색 결과 없음</div>';
+          results.innerHTML = '<div class="loading">검색 결과 없음 (쿼리: ' + esc(queryUsed) + ')</div>';
           return;
         }
         var html = '<div class="candidates-grid">';
         candidates.forEach(function(c, i) {
-          var thumb = c.thumbnail_url || '';
+          var thumb = c.thumbnail_url || c.imageUrl || '';
           var title = c.title || '';
           var license = c.license || '';
-          var origUrl = c.original_url || '';
+          var origUrl = c.original_url || c.imageUrl || '';
           html += '<div class="candidate-thumb" onclick="selectCandidate(' + sceneNum + ',\'' + esc(origUrl) + '\')" title="' + esc(title) + '">'
             + (thumb ? '<img src="' + thumb + '" loading="lazy">' : '')
-            + '<span class="c-license">' + esc(license) + '</span>'
+            + '<span class="c-license">' + esc(license || src) + '</span>'
             + '</div>';
         });
         html += '</div>';
-        panel.innerHTML = html;
+        results.innerHTML = html;
       })
       .catch(function(e) {
-        panel.innerHTML = '<div class="loading">에러: ' + e.message + '</div>';
+        results.innerHTML = '<div class="loading">에러: ' + e.message + '</div>';
       });
   };
 
