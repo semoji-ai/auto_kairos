@@ -3121,7 +3121,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
   // === width 조정 (이전 SimpleScene 역할 통합) ===
   const hasAssetSide = imageAssetPlacement === "left" || imageAssetPlacement === "right";
   const useFullWidth = hasImageBackground || hasAssetSide || imageAssetPlacement === "fullscreen" || imageAssetPlacement === "center";
-  const contentWidth = useFullWidth ? "100%" : "78%";
+  const contentWidth = useFullWidth ? "100%" : "90%";
 
   return (
     <AbsoluteFill style={{ backgroundColor: hasImageBackground ? "transparent" : C.bg, fontFamily: "inherit" }}>
