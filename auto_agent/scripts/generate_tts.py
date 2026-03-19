@@ -93,7 +93,28 @@ def main():
         print("ERROR: ELEVENLABS_API_KEY not found in .env")
         sys.exit(1)
 
-    project_dir = get_project_dir()
+    # PROJECT_DIR 우선 (uuid 마이그레이션 후 정확한 경로)
+    project_dir_env = os.environ.get("PROJECT_DIR")
+    if project_dir_env:
+        project_dir = Path(project_dir_env)
+    else:
+        project_slug = os.environ.get("PROJECT_NAME", "")
+        if project_slug:
+            # DB에서 정확한 output_dir 조회
+            try:
+                from auto_agent.db.project_manager import ProjectManager
+                pm = ProjectManager()
+                project = pm.resolve_project(project_slug)
+                if project:
+                    project_dir = Path(project["output_dir"])
+                else:
+                    workspace = PROJECT_ROOT
+                    project_dir = workspace / "output" / project_slug
+            except Exception:
+                workspace = PROJECT_ROOT
+                project_dir = workspace / "output" / project_slug
+        else:
+            project_dir = get_project_dir()
     scene_specs_path = project_dir / "scene_specs.json"
     if not scene_specs_path.exists():
         print(f"ERROR: {scene_specs_path} 없음")
