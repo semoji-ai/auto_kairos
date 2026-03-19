@@ -323,10 +323,23 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
 
     props = {"manifest": manifest, "subtitleConfig": subtitle_config}
 
+    # 매니페스트 파일명 결정: uuid_{slug}.json (DB 조회) 또는 fallback
+    try:
+        from auto_agent.db.project_manager import ProjectManager
+        pm = ProjectManager()
+        manifest_fname = pm.get_manifest_filename(
+            project_id=int(project_id) if str(project_id).isdigit() else None,
+            slug=project_id if not str(project_id).isdigit() else None,
+        )
+        if not manifest_fname:
+            manifest_fname = f"{storage_key}.json"
+    except Exception:
+        manifest_fname = f"{storage_key}.json"
+
     # 로컬 manifest 파일 저장
     manifest_dir = remotion_public / "manifests"
     manifest_dir.mkdir(parents=True, exist_ok=True)
-    manifest_path = manifest_dir / f"{storage_key}.json"
+    manifest_path = manifest_dir / manifest_fname
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(props, f, ensure_ascii=False, indent=2)
 

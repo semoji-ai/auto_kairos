@@ -445,10 +445,20 @@ class RemotionBridge:
         with open(render_manifest_path, "w", encoding="utf-8") as f:
             json.dump(render_manifest, f, ensure_ascii=False, indent=2)
 
-        # 프로젝트별 매니페스트 (manifests/{slug}.json)
+        # 프로젝트별 매니페스트 (manifests/{uuid}_{slug}.json)
         manifests_dir = public_dir / "manifests"
         manifests_dir.mkdir(exist_ok=True)
-        slug_manifest = manifests_dir / f"{project_slug}.json"
+        # manifest_fname: DB에서 uuid_{slug}.json 조회, 실패 시 output_dir.name 사용
+        try:
+            from auto_agent.db.project_manager import ProjectManager
+            _pm = ProjectManager()
+            _slug = output_dir.name
+            _manifest_fname = _pm.get_manifest_filename(slug=_slug)
+            if not _manifest_fname:
+                _manifest_fname = f"{_slug}.json"
+        except Exception:
+            _manifest_fname = f"{output_dir.name}.json"
+        slug_manifest = manifests_dir / _manifest_fname
         with open(slug_manifest, "w", encoding="utf-8") as f:
             json.dump(render_manifest, f, ensure_ascii=False, indent=2)
 
