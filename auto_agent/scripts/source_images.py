@@ -6,8 +6,10 @@ source별로 분류:
   - generate 씬 → 캐릭터 분석 → 캐릭터 생성 → FAL.ai 씬 이미지 생성
 두 트랙이 병렬 실행.
 """
+import base64
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -30,17 +32,44 @@ def phase_a_character_analysis(scene_specs: dict, output_dir: Path, style_path: 
         print("[Phase A] generate 씬 없음 — 캐릭터 분석 스킵")
         return None
 
-    person_scenes = {}
+    person_scenes = {}  # {name: [scene_numbers]}
+
     for scene in gen_scenes:
         sn = scene.get("sceneNumber", 0)
+
+        # 1. profileName (확실한 인물)
         profile = scene.get("visualization", {}).get("profileName")
         if profile:
             person_scenes.setdefault(profile, []).append(sn)
+
+        # 2. 나레이션 + concept에서 인물명 추출
+        narration = scene.get("narration", "")
+        concept = scene.get("visualization", {}).get("creative", {}).get("concept", "")
+        text = f"{narration} {concept}"
+
+        # 한글 인물명 패턴: 2~4글자 한글 이름 + 조사/직함
+        # 예: "트럼프가", "바이든은", "하메네이 대통령", "김정은 위원장"
+        kr_names = re.findall(r'([가-힣]{2,4})(?:이|가|은|는|의|을|를|에게|도|와|과|대통령|총리|위원장|장관|대표|씨이오|CEO)', text)
+
+        # 영문 인물명 패턴: 대문자로 시작하는 2단어 이상
+        en_names = re.findall(r'([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)', text)
+
+        for name in kr_names + en_names:
+            name = name.strip()
+            if len(name) >= 2:
+                person_scenes.setdefault(name, []).append(sn)
+
+    # 중복 제거 (같은 씬에서 여러 번 감지될 수 있음)
+    for name in person_scenes:
+        person_scenes[name] = sorted(set(person_scenes[name]))
 
     recurring = {name: sns for name, sns in person_scenes.items() if len(sns) >= 2}
     if not recurring:
         print("[Phase A] 2씬+ 등장 캐릭터 없음 — 캐릭터 생성 스킵")
         return None
+
+    for name, sns in recurring.items():
+        print(f"[Phase A] 캐릭터 감지: {name} → {len(sns)}씬 ({sns})")
 
     characters = []
     for name, sns in recurring.items():
@@ -196,6 +225,16 @@ def _sonnet_judge(scenes: list, search_results: dict) -> list:
 # ═══════════════════════════════════════════
 # 생성 트랙 (generate 씬)
 # ═══════════════════════════════════════════
+
+def _image_to_data_uri(path: str) -> str:
+    """이미지를 data URI로 변환 (fal_client용)."""
+    p = Path(path)
+    if not p.exists():
+        return ""
+    data = p.read_bytes()
+    mime = "image/jpeg" if p.suffix.lower() in (".jpg", ".jpeg") else "image/png"
+    return f"data:{mime};base64,{base64.b64encode(data).decode()}"
+
 
 def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, specs: dict, log_fn):
     """generate 씬: 캐릭터 분석 → 캐릭터 생성 → FAL.ai 씬 이미지 생성."""
