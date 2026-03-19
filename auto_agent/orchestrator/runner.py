@@ -645,6 +645,42 @@ class PipelineRunner:
             else:
                 return StepResult(step_id=step_id, status="failed", error="final_manuscript.md 미생성")
 
+        elif step_id == "step_4":
+            # 팩트체크 결과 확인 — adjusted 항목 원고 자동 반영
+            report_path = self.project_dir / "factcheck_report.json"
+            if report_path.exists():
+                try:
+                    report = json.loads(report_path.read_text(encoding="utf-8"))
+                    claims = report.get("claims", report.get("results", []))
+                    adjusted = [c for c in claims if c.get("status") == "adjusted" or c.get("action") == "adjust"]
+
+                    if adjusted:
+                        print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 발견 — 원고 자동 수정")
+                        _notify("Director", f"팩트체크 수정 권장 {len(adjusted)}건 → 원고 자동 반영",
+                                phase=self.state.current_phase, project=self.project_slug, level="warning")
+
+                        ms_path = self.project_dir / "final_manuscript.md"
+                        if ms_path.exists():
+                            text = ms_path.read_text(encoding="utf-8")
+                            applied = 0
+                            for item in adjusted:
+                                original = item.get("original_text", "") or item.get("claim", "")
+                                corrected = item.get("corrected_text", "") or item.get("suggestion", "")
+                                if original and corrected and original in text:
+                                    text = text.replace(original, corrected)
+                                    print(f"    [수정] \"{original[:30]}\" → \"{corrected[:30]}\"")
+                                    applied += 1
+                            ms_path.write_text(text, encoding="utf-8")
+                            if applied:
+                                _notify("Director", f"원고 수정 완료: {applied}건 반영",
+                                        phase=self.state.current_phase, project=self.project_slug, level="success")
+                            else:
+                                print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 중 원고 내 매칭 없음 — 수동 확인 필요")
+                    else:
+                        print(f"    [팩트체크] 수정 권장 항목 없음 ✓")
+                except Exception as e:
+                    print(f"    [WARN] 팩트체크 보고서 파싱 실패: {e}")
+
         elif step_id == "step_5":
             # 씬 분해 검증: scene_specs.json에 scenes 존재
             specs_path = self.project_dir / "scene_specs.json"
