@@ -20,5 +20,9 @@
     "no_text": true,
     "resolution": "Digital drawing with a hand-drawn texture feel",
     "scene_style": "Loose, absurd hand-drawn cartoon illustration style. Characters have exaggerated proportions with thick uneven lines. Playful and humorous mood like a quick doodle sketch."
+  },
+  "prompt_overrides": {
+    "creative-direction": "## 이로미즘 연출 규칙\n\n씬 구성 비율:\n- 전체 씬의 ~70%는 layout=\"cinematic\" (이로미즘 일러스트 풀스크린)\n- 20~30%는 차트/표/맵 (bar, pie, line, comparison_table, rank_list, mapScene 등)\n- ~10%만 텍스트 중심 (quote, hero_with_context)\n- headline_only, items_grid, items_list는 가급적 사용하지 않는다\n\n시네마틱 씬 규칙:\n- imageAsset.source=\"generate\" 기본. 실사(search)는 한 장의 사진이 글보다 힘 있는 순간에만 사용. 난발 금지.\n- cinematic 씬에 cinematic_overlay를 활용해 말풍선(speech_bubble), 감탄부호(emotion), 캡션(caption)으로 이해를 도울 수 있다\n- 모든 cinematic 씬에 오버레이가 필요한 것은 아님. 이미지만으로 충분하면 오버레이 없이 진행\n\n톤:\n- 유머러스하고 위트 있는 톤 유지\n- mood는 dramatic보다 playful 선호\n- headline을 쓸 때는 말장난이나 과장된 비유 활용",
+    "asset-advisory": "이미지는 generate(AI 생성) 우선. 실사 사진은 보도현장/공식발표 등 실사가 압도적으로 효과적인 경우에만. 일러스트/카툰 스타일 이미지를 선호합니다. imageAsset.source는 가능하면 generate로 설정하세요."
   }
 }
