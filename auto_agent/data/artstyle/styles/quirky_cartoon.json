@@ -2,24 +2,24 @@
   "name": "Quirky Hand-drawn Cartoon",
   "description": "개성있는 낙서 스타일 만화. 느슨하고 유머러스한 손그림 느낌",
   "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",
-  "scene_style_description": "1990s American comic book style, exaggerated proportions, bold lines.",
+  "scene_style_description": "Colorful hand-drawn cartoon illustration, cute human characters, thick outlines, warm bright colors.",
   "style": {
-    "art_style": "Loose, absurd hand-drawn cartoon illustration",
+    "art_style": "Colorful hand-drawn cartoon illustration, cute and friendly",
     "linework": {
-      "outline": "Thick and uneven black lines, scribbly and wobbly as if drawn quickly by hand",
-      "variation": "Not smooth, slightly misaligned strokes, playful and imperfect feel"
+      "outline": "Thick black outlines with a hand-drawn feel, slightly wobbly but clean",
+      "variation": "Consistent line weight, playful imperfections that feel intentional"
     },
-    "shapes": "Basic geometric forms but intentionally distorted, head and body in exaggerated proportions",
-    "color_palette": "Bright and simple colors, flat digital fill, some areas spilling outside the outlines",
-    "shading": "Almost none, simple flat fills only",
-    "character_design": "Facial features placed abnormally (crooked mouth, misplaced nose or ears). Expressive, silly, and exaggerated expressions for a comical look",
-    "mood_and_tone": "Playful, humorous, and whimsical, like a doodle-style cartoon",
-    "background": "Simple stage or props drawn roughly and minimally"
+    "shapes": "Rounded, friendly shapes. Characters have slightly large heads and expressive faces, but clearly human proportions",
+    "color_palette": "Bright, warm, cheerful colors. Flat digital fill with clean edges. Pastel accents",
+    "shading": "Minimal shading, mostly flat fills with occasional soft shadows",
+    "character_design": "Cute, friendly HUMAN characters with big expressive eyes and simple rounded features. Normal human anatomy with slightly cartoonish proportions (bigger head, smaller body). Clear facial expressions showing emotions. NO aliens, NO monsters, NO distorted faces",
+    "mood_and_tone": "Playful, warm, and approachable. Like a friendly children's book illustration with adult content",
+    "background": "Clean, simple backgrounds with relevant props and setting details"
   },
   "technical": {
     "no_text": true,
     "resolution": "Digital drawing with a hand-drawn texture feel",
-    "scene_style": "Loose, absurd hand-drawn cartoon illustration style. Characters have exaggerated proportions with thick uneven lines. Playful and humorous mood like a quick doodle sketch."
+    "scene_style": "Colorful hand-drawn cartoon illustration. Cute friendly human characters with big expressive eyes. Thick black outlines, bright warm colors, clean simple backgrounds. Playful and approachable mood. NO aliens, NO monsters."
   },
   "prompt_overrides": {
     "creative-direction": "## ⚠️ 이로미즘 연출 필수 규칙 (반드시 준수)\n\n### 씬 레이아웃 비율 (엄격 적용)\n- **최소 70%의 씬은 반드시 layout=\"cinematic\"으로 설정하세요.** 이것이 가장 중요한 규칙입니다.\n- 나머지 20~30%만 차트/표/맵 (bar, pie, line, comparison_table, rank_list, mapScene 등)\n- 텍스트 중심(quote, hero_with_context)은 최대 10% (정말 필요한 경우만)\n- headline_only, items_grid, items_list, icon_stat, metric_wall, metric_spotlight는 **사용 금지**\n- 예시: 10씬이면 최소 7씬은 cinematic, 2-3씬은 차트/맵, 0-1씬은 인용문\n\n### 검증\n출력 전 반드시 cinematic 비율을 세어보세요. 70% 미만이면 텍스트 씬을 cinematic으로 전환하세요.\n\n### cinematic 씬 규칙\n- layout=\"cinematic\" + imageAsset.source=\"generate\" 세트로 설정\n- items, values, itemIcons는 비워둠 (이미지만으로 전달)\n- cinematic_overlay로 말풍선/감탄부호/캡션 오버레이 가능 (선택)\n- 실사(search)는 한 장의 사진이 글보다 압도적으로 힘 있는 순간에만. 난발 금지.\n\n### 톤\n- 유머러스하고 위트 있는 톤 유지\n- mood는 dramatic보다 playful 선호\n- headline을 쓸 때는 말장난이나 과장된 비유 활용",
