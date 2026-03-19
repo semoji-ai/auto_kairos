@@ -240,10 +240,10 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
     except Exception:
         style_arg = ""
 
-    # 3. 씬별 이미지 생성 (병렬, max_workers=5)
+    # 3. 씬별 이미지 생성 (병렬 3개, 실패 시 1회 재시도)
     ws = str(project_dir.parent.parent) if "output" in str(project_dir) else str(project_dir)
 
-    def _generate_one(scene):
+    def _generate_one(scene, retry=False):
         sn = scene.get("sceneNumber")
         img = scene.get("imageAsset") or {}
         prompt = img.get("query", "")
@@ -252,11 +252,13 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
 
         existing = list(img_dir.glob(f"scene_{sn:03d}.*")) + list(img_dir.glob(f"scene_{sn:03d}_*.*"))
         if any(f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") for f in existing):
-            log_fn("image-gen", f"씬{sn} 이미 존재 → 스킵")
+            if not retry:
+                log_fn("image-gen", f"씬{sn} 이미 존재 → 스킵")
             return None
 
         fname = next_filename(img_dir, sn, "gen", ".png")
-        log_fn("image-gen", f"씬{sn} 생성 중: {prompt[:50]}...")
+        if not retry:
+            log_fn("image-gen", f"씬{sn} 생성 중: {prompt[:50]}...")
 
         cmd = [sys.executable, "-m", "auto_agent.tools.image_generate", "scene",
                "--prompt", prompt, "--output", str(img_dir / fname),
@@ -277,17 +279,39 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
                 return sn
             else:
                 err = result.stderr[:200] or result.stdout[:200]
-                log_fn("image-gen", f"씬{sn} 생성 실패: {err}", "warning")
+                if not retry:
+                    log_fn("image-gen", f"씬{sn} 실패 → 재시도 예정", "warning")
+                else:
+                    log_fn("image-gen", f"씬{sn} 재시도 실패: {err}", "warning")
         except Exception as e:
-            log_fn("image-gen", f"씬{sn} 생성 에러: {e}", "error")
+            if not retry:
+                log_fn("image-gen", f"씬{sn} 에러 → 재시도 예정: {e}", "warning")
+            else:
+                log_fn("image-gen", f"씬{sn} 재시도 에러: {e}", "error")
         return None
 
+    # 1차 실행 (3개 병렬)
     generated = 0
-    with ThreadPoolExecutor(max_workers=5) as pool:
-        futures = [pool.submit(_generate_one, s) for s in gen_scenes]
-        for f in as_completed(futures):
+    failed_scenes = []
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        future_map = {pool.submit(_generate_one, s): s for s in gen_scenes}
+        for f in as_completed(future_map):
             if f.result() is not None:
                 generated += 1
+            else:
+                scene = future_map[f]
+                if (scene.get("imageAsset") or {}).get("query"):
+                    failed_scenes.append(scene)
+
+    # 2차 재시도 (실패한 씬, 2개 병렬, 3초 간격)
+    if failed_scenes:
+        log_fn("image-gen", f"재시도: {len(failed_scenes)}씬", "info")
+        time.sleep(3)
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            future_map = {pool.submit(_generate_one, s, True): s for s in failed_scenes}
+            for f in as_completed(future_map):
+                if f.result() is not None:
+                    generated += 1
 
     log_fn("image-gen", f"생성 트랙 완료: {generated}건 생성", "success")
     return generated
