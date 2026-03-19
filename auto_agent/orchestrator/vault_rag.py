@@ -376,6 +376,133 @@ recurrence: 1
 
         return snippet
 
+    # ─────────────────────────────────────
+    # 강화 검색 메서드
+    # ─────────────────────────────────────
+
+    def search_by_keyword(self, keyword: str, max_results: int = 5) -> list:
+        """볼트 전체에서 파일명 + 내용 키워드 검색.
+
+        Returns:
+            [(Path, snippet_text), ...]
+        """
+        if not self.enabled:
+            return []
+
+        results = []
+        keyword_lower = keyword.lower()
+
+        for md_file in self.vault_dir.rglob("*.md"):
+            # _raw, _templates 등 제외
+            if any(part.startswith("_") for part in md_file.parts):
+                continue
+
+            score = 0
+            snippet = ""
+
+            # 파일명 매칭
+            if keyword_lower in md_file.stem.lower():
+                score += 10
+
+            # 내용 매칭
+            try:
+                content = md_file.read_text(encoding="utf-8")
+                # 키워드 등장 횟수
+                count = content.lower().count(keyword_lower)
+                if count > 0:
+                    score += count
+                    # 키워드 주변 스니펫 추출
+                    idx = content.lower().find(keyword_lower)
+                    start = max(0, idx - 100)
+                    end = min(len(content), idx + len(keyword) + 200)
+                    snippet = content[start:end].strip()
+            except Exception:
+                continue
+
+            if score > 0:
+                results.append((md_file, snippet, score))
+
+        # 점수순 정렬
+        results.sort(key=lambda x: -x[2])
+        return [(r[0], r[1]) for r in results[:max_results]]
+
+    def search_by_tags(self, tags: list, max_results: int = 5) -> list:
+        """frontmatter tags로 볼트 파일 필터링.
+
+        Returns:
+            [(Path, frontmatter_dict), ...]
+        """
+        if not self.enabled:
+            return []
+
+        results = []
+        tags_lower = [t.lower() for t in tags]
+
+        for md_file in self.vault_dir.rglob("*.md"):
+            if any(part.startswith("_") for part in md_file.parts):
+                continue
+
+            try:
+                content = md_file.read_text(encoding="utf-8")
+                # frontmatter 파싱
+                fm_match = re.match(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
+                if not fm_match:
+                    continue
+
+                fm_text = fm_match.group(1)
+                # tags 추출 (YAML 간이 파싱)
+                tags_match = re.search(r'tags:\s*\[([^\]]+)\]', fm_text)
+                if not tags_match:
+                    continue
+
+                file_tags = [t.strip().lower() for t in tags_match.group(1).split(",")]
+
+                # 태그 매칭
+                matched = [t for t in tags_lower if t in file_tags]
+                if matched:
+                    results.append((md_file, {"tags": file_tags, "matched": matched, "score": len(matched)}))
+            except Exception:
+                continue
+
+        results.sort(key=lambda x: -x[1]["score"])
+        return results[:max_results]
+
+    def search_backlinks(self, filename: str, max_results: int = 10) -> list:
+        """위키링크 역추적 — 이 파일을 [[참조]]하는 다른 파일 찾기.
+
+        Returns:
+            [(Path, link_context), ...]
+        """
+        if not self.enabled:
+            return []
+
+        target = filename.replace(".md", "")
+        results = []
+
+        for md_file in self.vault_dir.rglob("*.md"):
+            if any(part.startswith("_") for part in md_file.parts):
+                continue
+            if md_file.stem == target:
+                continue
+
+            try:
+                content = md_file.read_text(encoding="utf-8")
+                # [[filename]] 패턴 검색
+                links = re.findall(r'\[\[([^\]]+)\]\]', content)
+                for link in links:
+                    if target.lower() in link.lower():
+                        # 링크 주변 컨텍스트
+                        idx = content.find(f"[[{link}]]")
+                        start = max(0, idx - 50)
+                        end = min(len(content), idx + len(link) + 100)
+                        context = content[start:end].strip()
+                        results.append((md_file, context))
+                        break
+            except Exception:
+                continue
+
+        return results[:max_results]
+
     def _resolve_content_dir(self, category: str) -> Optional[Path]:
         """카테고리명 → 콘텐츠 디렉토리 매핑."""
         mapping = {
