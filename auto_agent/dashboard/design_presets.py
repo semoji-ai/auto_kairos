@@ -391,4 +391,13 @@ async def save_design_preset_to_project(slug: str, request: Request):
     if specs_path and specs_path.exists():
         specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), "utf-8")
 
+    # 매니페스트 리빌드 (디자인 변경을 Remotion에 반영)
+    try:
+        from auto_agent.scripts.build_manifest import build_manifest
+        pid = str(project.get("id", ""))
+        dir_name = Path(out_dir).name if out_dir else slug
+        build_manifest(pid, dir_name, out_dir)
+    except Exception as e:
+        print(f"[WARN] 매니페스트 리빌드 실패: {e}", flush=True)
+
     return {"ok": True}
