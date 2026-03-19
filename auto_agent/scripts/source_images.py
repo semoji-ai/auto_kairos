@@ -12,11 +12,12 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 
 from dotenv import load_dotenv
 
 
-def phase_a_character_analysis(scene_specs: dict, output_dir: Path, style_path: str = None) -> Path | None:
+def phase_a_character_analysis(scene_specs: dict, output_dir: Path, style_path: str = None) -> Optional[Path]:
     """Phase A: generate 씬에서 2씬+ 등장 캐릭터 식별 → character_plan.json 생성.
 
     scene_specs.json의 generate 씬만 필터링하여 narration/concept에서
