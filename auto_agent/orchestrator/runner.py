@@ -1265,17 +1265,15 @@ class PipelineRunner:
         return prompt
 
     def _load_art_style_override(self, step_name: str) -> str:
-        """아트스타일 JSON에서 prompt_overrides를 로드."""
+        """아트스타일 JSON에서 prompt_overrides를 로드. 중앙 참조."""
         config = self.state.config
         art_style_rel = config.get("art_style", "")
         if not art_style_rel:
             return ""
 
-        art_path = self.project_dir / art_style_rel
-        if not art_path.exists():
-            # 패키지 데이터에서 탐색
-            art_path = DATA_DIR / art_style_rel
-        if not art_path.exists():
+        from auto_agent.db.project_manager import resolve_art_style_path
+        art_path = resolve_art_style_path(art_style_rel)
+        if not art_path:
             return ""
 
         try:
@@ -1624,8 +1622,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             print(f"    [WARN] 썸네일 캡처 에러: {e}")
 
     def _ensure_art_style_and_characters(self):
-        """아트스타일 JSON + reference image + 기준 캐릭터 이미지 존재 확인.
-        config에 지정된 스타일을 패키지에서 복제. config 미설정 시 경고만."""
+        """아트스타일 존재 확인 (중앙 참조, 복제 안 함). config 미설정 시 경고만."""
         config = self.state.config
         art_style_rel = config.get("art_style")
 
@@ -1636,27 +1633,16 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             print("    [PREFLIGHT] 아트스타일 config 미설정")
             return
 
-        # 중앙 resolve 함수로 아트스타일 경로 해석
+        # 중앙 참조: 복제하지 않고 원본 경로만 확인
         from auto_agent.db.project_manager import resolve_art_style_path
-        resolved = resolve_art_style_path(art_style_rel, self.project_dir)
+        resolved = resolve_art_style_path(art_style_rel)
 
         if resolved:
-            # 프로젝트 디렉토리에 복제 (아직 없으면)
-            dest_dir = self.project_dir / "artstyle" / "styles"
-            dest_json = dest_dir / resolved.name
-            if not dest_json.exists():
-                dest_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copy(resolved, dest_json)
-                # 관련 파일(reference image 등) 복제
-                style_stem = resolved.stem
-                for f in resolved.parent.glob(f"{style_stem}*"):
-                    if f != resolved:
-                        shutil.copy(f, dest_dir / f.name)
-                style_name = config.get("style_name", style_stem)
-                _notify("System", f"아트스타일 '{style_name}' 복제 완료",
-                        phase=self.state.current_phase, project=self.project_slug,
-                        level="info")
-                print(f"    [PREFLIGHT] 아트스타일 '{style_name}' 복제 완료")
+            style_name = config.get("style_name", resolved.stem)
+            _notify("System", f"아트스타일 '{style_name}' 확인 완료: {resolved}",
+                    phase=self.state.current_phase, project=self.project_slug,
+                    level="info")
+            print(f"    [PREFLIGHT] 아트스타일 '{style_name}' → {resolved}")
         else:
             _notify("System", f"아트스타일 파일 없음: {art_style_rel}",
                     phase=self.state.current_phase, project=self.project_slug,

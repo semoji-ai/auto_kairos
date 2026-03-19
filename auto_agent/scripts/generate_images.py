@@ -574,25 +574,19 @@ def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
     errors = []
     warnings = []
 
-    # 1) 아트스타일 파일 검증 — 없으면 자동 프로비저닝 시도
+    # 1) 아트스타일 파일 검증 — 중앙 참조로 resolve
     style_file = Path(style_path)
     if not style_file.exists():
-        # 프로젝트 폴더에 없으면 DB config에서 자동 복사 시도
-        print("  [AUTO] 아트스타일 파일 없음 — 자동 프로비저닝 시도...")
+        print("  [AUTO] 아트스타일 경로 resolve 시도...")
         try:
-            from auto_agent.db.connection import db_exists
-            if db_exists():
-                from auto_agent.db.project_manager import ProjectManager
-                pm = ProjectManager()
-                project = pm.get_active_project()
-                if project:
-                    dest = pm.provision_art_style(project["id"])
-                    if dest:
-                        style_path = dest
-                        style_file = Path(dest)
-                        print(f"  [AUTO] 프로비저닝 완료: {dest}")
+            from auto_agent.db.project_manager import resolve_art_style_path
+            resolved = resolve_art_style_path(style_path)
+            if resolved:
+                style_path = str(resolved)
+                style_file = resolved
+                print(f"  [AUTO] resolve 완료: {resolved}")
         except Exception as e:
-            print(f"  [AUTO] 프로비저닝 실패: {e}")
+            print(f"  [AUTO] resolve 실패: {e}")
 
     if not style_file.exists():
         errors.append(f"아트스타일 파일 없음: {style_path}")
