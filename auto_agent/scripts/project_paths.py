@@ -186,18 +186,20 @@ def get_manifest_path() -> Path:
     workspace = get_workspace_dir()
     manifests_dir = workspace / "remotion" / "public" / "manifests"
 
-    # --project CLI 인자에서 slug 추출 (rebuild-manifest 호출 시)
+    # --project CLI 인자에서 식별자 추출 (rebuild-manifest 호출 시)
     for i, arg in enumerate(sys.argv):
         if arg == "--project" and i + 1 < len(sys.argv):
             identifier = sys.argv[i + 1]
-            slug = Path(identifier).name
+            # DB에서 uuid_slug.json 파일명 조회; 실패 시 identifier 그대로 사용
+            slug = Path(identifier).name  # 경로로 전달된 경우 최말단 이름만 추출
             fname = _get_manifest_filename(slug, fallback=f"{slug}.json")
             return manifests_dir / fname
 
     result = _try_db_project()
     if result:
         project_dir, pid = result
-        slug = project_dir.name
-        fname = _get_manifest_filename(slug, fallback=f"{slug}.json")
+        # project_dir.name은 output_dir의 basename → {uuid}_{slug} 형식
+        dir_name = project_dir.name
+        fname = _get_manifest_filename(dir_name, fallback=f"{dir_name}.json")
         return manifests_dir / fname
     return workspace / "remotion" / "public" / "manifest.json"

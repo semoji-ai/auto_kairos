@@ -1601,7 +1601,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             manifest_path = None
             for p in [
                 self.project_dir / "manifest.json",
-                ws / "remotion" / "public" / "manifests" / f"{self.sync.storage_key if self.sync else self.project_slug}.json",
+                ws / "remotion" / "public" / "manifests" / f"{self.sync.storage_key if self.sync else Path(self.project_dir).name}.json",
                 ws / "remotion" / "public" / "manifest.json",
             ]:
                 if p and p.exists():
@@ -2700,21 +2700,27 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         return (tokens_in * price_in + tokens_out * price_out) / 1_000_000
 
     def _resolve_output_path(self, output_template: str) -> Path:
-        """output 경로 템플릿 해석. {project} → slug 치환.
+        """output 경로 템플릿 해석. {project} → 디렉토리명(uuid_slug) 치환.
 
         경로 조합 기준:
         - 절대경로 → 그대로 사용
-        - output/{slug}/... → project_dir 기준으로 slug 이후 부분만 추출
-        - output/... (slug 없음) → PROJECT_ROOT 기준 (레거시 경로)
+        - output/{dir_name}/... → project_dir 기준으로 dir_name 이후 부분만 추출
+        - output/... (dir_name 없음) → PROJECT_ROOT 기준 (레거시 경로)
         - 그 외 상대경로 → project_dir 기준
         """
-        resolved = output_template.replace("{project}", self.project_slug)
+        # {project} 플레이스홀더는 실제 디렉토리명(uuid_slug) 기준으로 치환
+        dir_name = Path(self.project_dir).name
+        resolved = output_template.replace("{project}", dir_name)
         path = Path(resolved)
         if not path.is_absolute():
-            # output/{slug}/... 형태 → project_dir 기준으로 변환 (DB 경로 지원)
-            prefix = f"output/{self.project_slug}/"
+            # output/{dir_name}/... 형태 → project_dir 기준으로 변환 (DB 경로 지원)
+            prefix = f"output/{dir_name}/"
             if resolved.startswith(prefix):
                 return self.project_dir / resolved[len(prefix):]
+            # 레거시: output/{slug}/... (dir_name과 다를 수 있음)
+            legacy_prefix = f"output/{self.project_slug}/"
+            if resolved.startswith(legacy_prefix):
+                return self.project_dir / resolved[len(legacy_prefix):]
             # output/ 접두사가 있으나 slug 불포함 → 워크스페이스 루트 기준 (레거시)
             if resolved.startswith("output/"):
                 return PROJECT_ROOT / resolved

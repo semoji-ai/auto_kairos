@@ -160,14 +160,15 @@ async def generate_thumbnails(slug: str):
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
     output_dir = project.get("output_dir", "")
-    project_slug = Path(output_dir).name if output_dir else slug
+    # 디렉토리명(uuid_slug 형식) 기준으로 manifest 파일명 구성
+    dir_name = Path(output_dir).name if output_dir else slug
 
     # manifest 경로 탐색 (여러 위치)
     from auto_agent.paths import get_workspace_dir
     workspace = get_workspace_dir()
     manifest_candidates = [
         Path(output_dir) / "manifest.json",
-        workspace / "remotion" / "public" / "manifests" / f"{project_slug}.json",
+        workspace / "remotion" / "public" / "manifests" / f"{dir_name}.json",
         workspace / "remotion" / "public" / "manifest.json",
     ]
     manifest_path = None

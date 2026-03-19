@@ -319,10 +319,10 @@ class ProjectManager:
         return self.get_project_dir(project_id) / "motion_plan.json"
 
     def get_manifest_path(self, project_id: int) -> Path:
-        """Remotion manifest 경로 (remotion/public/manifests/{slug}.json)."""
+        """Remotion manifest 경로 (remotion/public/manifests/{uuid}_{slug}.json)."""
         project = self.get_project(project_id=project_id)
-        slug = project["slug"]
-        return get_workspace_dir() / "remotion" / "public" / "manifests" / f"{slug}.json"
+        fname = f"{project['uuid']}_{project['slug']}.json"
+        return get_workspace_dir() / "remotion" / "public" / "manifests" / fname
 
     def get_manuscript_path(self, project_id: int) -> Path:
         """final_manuscript.md 경로."""
