@@ -88,7 +88,8 @@ creative 외에 함께 채울 필드들:
     - ❌ 긴 설명문, 스타일 지시어, 형용사 나열 금지
   - fallbackQuery: query로 검색 실패 시 더 일반적인 검색어 (1~2단어)
   - placement: "fullscreen" | "background" | "center" | "left" | "right"
-  - opacity: 배경 투명도 (0.0~1.0, fullscreen이면 1.0)
+    - ⚠️ **layout="cinematic"이면 반드시 placement="fullscreen"** (center, background 등 사용 금지)
+  - opacity: 배경 투명도 (0.0~1.0). cinematic이면 생략 (자동 1.0)
 - mapScene: 지리적 이벤트 시 {"center":[위도,경도],"zoom":5,"markers":[{"lat":위도,"lng":경도,"label":"라벨"}]}
 </visualization_fields>
 
