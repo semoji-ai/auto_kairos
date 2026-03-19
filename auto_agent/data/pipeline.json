@@ -124,30 +124,6 @@
           "notes": "visual-composer의 1단계만 수행. 씬 분할 결과를 먼저 생성하여 캐릭터 플래닝에 활용"
         },
         {
-          "id": "step_5b",
-          "name": "character_planning",
-          "description": "씬 분할 기반 2씬+ 등장 캐릭터 추출 + 변이 분석 + 캐릭터 계획 수립",
-          "type": "agent",
-          "agent": "character-planner",
-          "input": [
-            "final_manuscript.md",
-            "scene_decomposition.json",
-            "research_report.json"
-          ],
-          "input_optional": [
-            "art_style.json"
-          ],
-          "output": "character_plan.json",
-          "conditional": true,
-          "condition": "씬 분할 결과에서 캐릭터가 2씬+ 등장하는 경우",
-          "condition_check": {
-            "type": "file_exists",
-            "path": "scene_decomposition.json"
-          },
-          "depends_on": "step_5",
-          "notes": "scene_decomposition.json의 씬 구조를 기반으로 2씬 이상 등장 캐릭터를 정확히 추출"
-        },
-        {
           "id": "step_6",
           "name": "creative_direction",
           "description": "Creative Direction — 각 씬의 창의적 시각 연출 설계",
@@ -161,9 +137,6 @@
             "research_report.json",
             "scene_decomposition.json"
           ],
-          "input_optional": [
-            "character_plan.json"
-          ],
           "output": "scene_specs.json",
           "skills": [
             "shared/remotion-design-system",
@@ -171,7 +144,7 @@
             "shared/creative-direction",
             "shared/overlay-selection"
           ],
-          "depends_on": "step_5b",
+          "depends_on": "step_5",
           "notes": "★ Phase 2(Creative Direction)만 수행. 각 씬에 creative 필드(concept/reveal/emphasis/mood/headline) + visualization 기본 구조(items/values/itemIcons) + mapScene/imageAsset 초기 설정까지 완료. Asset Advisory(Phase 2.5)는 다음 스텝에서 별도 수행."
         },
         {
@@ -184,9 +157,6 @@
           "input": [
             "scene_specs.json",
             "research_report.json"
-          ],
-          "input_optional": [
-            "character_plan.json"
           ],
           "output": "scene_specs.json",
           "skills": [
@@ -274,8 +244,7 @@
             "scene_specs.json"
           ],
           "input_optional": [
-            "art_style.json",
-            "character_plan.json"
+            "art_style.json"
           ],
           "output": [
             "output/{project}/images/",
@@ -291,7 +260,8 @@
             "field": "scenes[].imageAsset"
           },
           "sub_steps": [
-            "character_generation (2씬+ 등장 캐릭터, character_plan.json 기반)",
+            "character_analysis (scene_specs.json에서 generate 씬 기반 2씬+ 캐릭터 식별 → character_plan.json)",
+            "character_generation (character_plan.json 기반 FAL.ai 생성)",
             "image_search (wikimedia/serper/pixabay 워터폴)",
             "scene_image_generation (캐릭터 참조 기반 씬 이미지)",
             "standalone_image_generation (캐릭터 없는 단발 씬)",
