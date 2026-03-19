@@ -55,7 +55,7 @@
     },
     "_comment_team_c": "===== Team C: 씬 설계팀 (Remotion-First) =====",
     "character-planner": {
-      "description": "원고 분석 → 2씬+ 등장 캐릭터 추출 + 변이 분석 + character_plan.json 생성",
+      "description": "step_8b 내부에서 호출 — scene_specs.json의 generate 씬 분석 → 2씬+ 등장 캐릭터 추출 + character_plan.json 생성",
       "model": "claude-sonnet-4-5-20250929",
       "max_turns": 20,
       "allowed_tools": [
@@ -64,7 +64,7 @@
         "Glob",
         "WebSearch"
       ],
-      "notes": "final_manuscript.md에서 직접 캐릭터 추출. 실존 인물은 Wikipedia 검색. 변이 분석(의상/나이/신분)"
+      "notes": "독립 스텝이 아닌 image_asset_sourcing(step_8b) Phase A에서 호출. scene_specs.json에서 generate 씬만 필터링하여 캐릭터 식별."
     },
     "visual-composer": {
       "description": "원고→씬 분할 + Remotion 렌더링 스펙 + 데이터 보강 + 모션 설계 (4-in-1)",
@@ -296,10 +296,6 @@
         "model": "claude-opus-4-6",
         "reason": "원고→씬 분할은 구조적 창작 판단"
       },
-      "step_5b": {
-        "model": "claude-sonnet-4-5-20250929",
-        "reason": "캐릭터 추출은 구조화된 작업"
-      },
       "step_6": {
         "model": "claude-opus-4-6",
         "reason": "Creative Direction은 핵심 창작"
@@ -343,10 +339,9 @@
       "criteria": "독립적 판단/외부 도구 사용. 웹 검색, 품질 검수, 캐릭터 설계",
       "agents": [
         "fact-verifier",
-        "character-planner",
         "qa-reviewer"
       ],
-      "count": 3,
+      "count": 2,
       "execution_frequency": "다회/파이프라인",
       "notes": "기존 6개에서 3개로 축소. scene-decomposer/data-enricher/motion-choreographer/tts-preprocess는 스킬화 → visual-composer 흡수 또는 모듈화"
     },
