@@ -51,6 +51,14 @@ sceneNumber, chapter, narration, narration_tts, durationFrames는 절대 수정�
 
 선택 필드:
 - layout: 확장 레이아웃 사용 시 직접 지정 (flow, timeline, metric_spotlight, metric_wall, rank_list, comparison_table, before_after, icon_stat, stacked_progress, card_carousel, hero_with_context, quote_portrait, annotated_chart, cinematic)
+- cinematic_overlay (object, optional): cinematic 레이아웃에서만 사용. 이미지 위에 만화적 오버레이.
+  - type: "speech_bubble" | "emotion" | "caption"
+  - text: 오버레이 텍스트 (짧게, 10자 이내)
+  - position: "top_left" | "top_right" | "bottom_left" | "bottom_right" | "center"
+  - 모든 cinematic 씬에 필수가 아님. 텍스트가 이해를 돕는 경우에만 사용.
+  예) {"type":"speech_bubble","text":"뭐?!","position":"top_right"}
+  예) {"type":"emotion","text":"!!!","position":"center"}
+  예) {"type":"caption","text":"테슬라 기가팩토리","position":"bottom_left"}
 </creative_schema>
 
 <visualization_fields>
