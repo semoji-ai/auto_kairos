@@ -1708,6 +1708,11 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         step_name = step.get("name", step_id)
         step_type = step.get("type", "agent" if "agent" in step else "module")
 
+        # skip 플래그 체크
+        if step.get("skip"):
+            print(f"  [SKIP] {step_id}: skip=true")
+            return StepResult(step_id=step_id, status="skipped")
+
         # conditional 체크
         if step.get("conditional"):
             if not self._check_condition(step):
