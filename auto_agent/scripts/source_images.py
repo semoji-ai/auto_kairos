@@ -16,6 +16,69 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 
+def phase_a_character_analysis(scene_specs: dict, output_dir: Path, style_path: str = None) -> Path | None:
+    """Phase A: generate 씬에서 2씬+ 등장 캐릭터 식별 → character_plan.json 생성.
+
+    scene_specs.json의 generate 씬만 필터링하여 narration/concept에서
+    인물명을 추출하고, 2씬 이상 등장하는 인물에 대해 character_plan.json을 생성.
+    """
+    scenes = scene_specs.get("scenes", [])
+
+    # generate 씬만 필터
+    gen_scenes = [
+        s for s in scenes
+        if s.get("imageAsset", {}).get("source") == "generate"
+        or s.get("visualization", {}).get("creative", {}).get("layout") == "cinematic"
+    ]
+
+    if not gen_scenes:
+        print("[Phase A] generate 씬 없음 — 캐릭터 분석 스킵")
+        return None
+
+    # 인물명 등장 횟수 집계
+    person_scenes: dict[str, list[int]] = {}
+
+    for scene in gen_scenes:
+        sn = scene.get("sceneNumber", 0)
+        narration = scene.get("narration", "")
+        concept = scene.get("visualization", {}).get("creative", {}).get("concept", "")
+        text = f"{narration} {concept}"
+
+        # profileName이 있으면 확실한 인물
+        profile = scene.get("visualization", {}).get("profileName")
+        if profile:
+            person_scenes.setdefault(profile, []).append(sn)
+
+    # 2씬+ 등장 인물만
+    recurring = {name: sns for name, sns in person_scenes.items() if len(sns) >= 2}
+
+    if not recurring:
+        print("[Phase A] 2씬+ 등장 캐릭터 없음 — 캐릭터 생성 스킵")
+        return None
+
+    characters = []
+    for name, sns in recurring.items():
+        characters.append({
+            "name": name,
+            "name_en": "",
+            "is_real_person": True,
+            "variants": [{
+                "variant_id": name.replace(" ", "_").lower(),
+                "label": f"{name} 기본",
+                "scenes": sns,
+                "visual_guide": {},
+                "prompt_base": "",
+                "output": f"characters/{name.replace(' ', '_').lower()}.png"
+            }]
+        })
+
+    plan = {"characters": characters}
+    plan_path = output_dir / "character_plan.json"
+    plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[Phase A] character_plan.json 생성: {len(characters)}명")
+    return plan_path
+
+
 def run(project_dir: str):
     project_dir = Path(project_dir)
     load_dotenv(project_dir.parent.parent / ".env")
@@ -40,6 +103,11 @@ def run(project_dir: str):
         with open(progress_file, "a", encoding="utf-8") as f:
             f.write(msg + "\n")
         print(f"  [{agent}] {text}")
+
+    # Phase A: 캐릭터 분석 (step_5b 대체)
+    character_plan_path = project_dir / "character_plan.json"
+    if not character_plan_path.exists():
+        phase_a_character_analysis(specs, project_dir)
 
     # ── Step 1: 위키미디어 검색 ──
     log("image-sourcer", f"이미지 소싱 시작: {len(scenes)}씬")
