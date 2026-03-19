@@ -2510,7 +2510,13 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
         # 7. 프로젝트 config 주입
         config = self.state.config or {}
-        duration_min = config.get("duration_minutes", 10)
+        # duration_minutes (숫자) 또는 duration_target ("1min", "10min") 양쪽 지원
+        duration_min = config.get("duration_minutes")
+        if not duration_min:
+            dt = config.get("duration_target", "10min")
+            import re as _re
+            m = _re.search(r'(\d+)', str(dt))
+            duration_min = int(m.group(1)) if m else 10
         art_style = config.get("art_style", "")
         writing_style = config.get("writing_style", "")
         # 분량별 글자 수 가이드 (한국어 기준, 약 3~4자/초)
