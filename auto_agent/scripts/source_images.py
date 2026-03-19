@@ -317,13 +317,13 @@ def run(project_dir: str):
 
     log("image-sourcer", f"이미지 소싱 시작: {len(scenes)}씬")
 
-    # source별 분류
-    search_scenes = [s for s in scenes if s.get("imageAsset", {}).get("source") == "search"]
-    generate_scenes = [s for s in scenes if s.get("imageAsset", {}).get("source") == "generate"]
+    # source별 분류 (imageAsset이 None인 씬 안전 처리)
+    search_scenes = [s for s in scenes if (s.get("imageAsset") or {}).get("source") == "search"]
+    generate_scenes = [s for s in scenes if (s.get("imageAsset") or {}).get("source") == "generate"]
     # cinematic 레이아웃인데 source 미지정이면 generate로 간주
     for s in scenes:
         layout = s.get("visualization", {}).get("creative", {}).get("layout", "")
-        source = s.get("imageAsset", {}).get("source", "")
+        source = (s.get("imageAsset") or {}).get("source", "")
         if layout == "cinematic" and not source and s not in generate_scenes:
             generate_scenes.append(s)
 
