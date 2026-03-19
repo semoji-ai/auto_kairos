@@ -105,36 +105,41 @@ def _run_search_track(search_scenes: list, img_dir: Path, project_dir: Path, log
         log_fn("image-search", "검색 대상 없음", "success")
         return 0
 
-    # Step 2: Sonnet 판단
-    log_fn("image-search", "Sonnet에게 최적 이미지 선택 요청...")
-    selections = _sonnet_judge(search_scenes, search_results)
-    log_fn("image-search", f"Sonnet 판단 완료: {len(selections)}씬")
-
-    # Step 3: 다운로드
+    # Step 2: 검색 결과에서 최적 이미지 다운로드 (첫 번째 가로형 이미지 우선)
     downloaded = 0
-    for sel in selections:
-        sn = sel.get("scene")
-        action = sel.get("action", "skip")
-        if action == "download":
-            idx = sel.get("index", 0)
-            candidates = search_results.get(sn, [])
-            if idx < len(candidates):
-                c = candidates[idx]
-                url = c.get("thumbnail_1920_url", "") or c.get("original_url", "")
-                if not url:
-                    continue
-                fname = next_filename(img_dir, sn, "search", Path(url).suffix or ".jpg")
-                log_fn("image-search", f"씬{sn} 다운로드 중: {c.get('title', '')[:30]}")
-                result = download_image(url, str(img_dir / fname))
-                if result.get("success"):
-                    add_version(img_dir, sn, fname, "search",
-                                title=c.get("title", ""), license=c.get("license", ""),
-                                source_url=url)
-                    downloaded += 1
-                    log_fn("image-search", f"씬{sn} 다운로드 완료 ✓", "success")
-                else:
-                    log_fn("image-search", f"씬{sn} 다운로드 실패", "warning")
-                time.sleep(3)
+    for sn, candidates in search_results.items():
+        if not candidates:
+            log_fn("image-search", f"씬{sn} 검색 결과 없음 → 스킵", "warning")
+            continue
+
+        # 가로형(16:9 호환) 이미지 우선 선택
+        best = None
+        for c in candidates:
+            w = c.get("width", 0) or 0
+            h = c.get("height", 0) or 0
+            if w > h:  # 가로형
+                best = c
+                break
+        if not best:
+            best = candidates[0]  # 없으면 첫 번째
+
+        url = best.get("thumbnail_1920_url", "") or best.get("original_url", "")
+        if not url:
+            log_fn("image-search", f"씬{sn} URL 없음 → 스킵", "warning")
+            continue
+
+        fname = next_filename(img_dir, sn, "search", Path(url).suffix or ".jpg")
+        log_fn("image-search", f"씬{sn} 다운로드 중: {best.get('title', '')[:40]}")
+        result = download_image(url, str(img_dir / fname))
+        if result.get("success"):
+            add_version(img_dir, sn, fname, "search",
+                        title=best.get("title", ""), license=best.get("license", ""),
+                        source_url=url)
+            downloaded += 1
+            log_fn("image-search", f"씬{sn} 다운로드 완료 ✓", "success")
+        else:
+            log_fn("image-search", f"씬{sn} 다운로드 실패", "warning")
+        time.sleep(1)
 
     log_fn("image-search", f"검색 트랙 완료: {downloaded}건 다운로드", "success")
     return downloaded
