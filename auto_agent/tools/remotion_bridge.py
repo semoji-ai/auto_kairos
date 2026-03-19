@@ -161,56 +161,6 @@ class RemotionBridge:
         h, m, s = time_str.split(":")
         return float(h) * 3600 + float(m) * 60 + float(s)
 
-    def _map_viz_type(self, viz_type: str) -> str:
-        """vizType → Remotion 컴포넌트 매핑.
-
-        sceneType(18종)은 visual-composer가 vizType으로 변환한 뒤
-        scene_specs.json에 기록. 여기서는 vizType → Remotion 컴포넌트 매핑만 담당.
-
-        sceneType → vizType 매핑 (visual-composer 담당):
-          title_card    → slide_highlight    icon_grid    → slide_statistic
-          text_highlight→ slide_highlight    icon_flow    → slide_process
-          quote_card    → slide_quote        icon_stat    → slide_statistic
-          bar_chart     → bar_chart          narration_only → (없음)
-          line_chart    → line_chart         image_scene  → (없음)
-          pie_chart     → pie_chart          compare_card → compare
-          timeline      → timeline           list_card    → slide_list
-          table_view    → table              numbered_list→ slide_numbered
-          tech_tree     → tech_tree          diagram      → slide_process
-        """
-        mapping = {
-            # 차트
-            "bar_chart": "bar_chart",
-            "line_chart": "line_chart",
-            "pie_chart": "pie_chart",
-            # 구조
-            "tech_tree": "tech_tree",
-            "table": "table",
-            "timeline": "timeline",
-            "compare": "compare",
-            "diagram": "compare",           # 하위호환
-            "slide_compare": "compare",     # 하위호환
-            # 슬라이드
-            "slide_quote": "slide_quote",
-            "slide_list": "slide_list",
-            "slide_numbered": "slide_numbered",
-            "slide_highlight": "slide_highlight",
-            "slide_statistic": "slide_statistic",
-            "slide_process": "slide_process",
-            "slide_proscons": "slide_proscons",
-            "slide_definition": "slide_definition",
-            "slide_summary": "slide_summary",
-            "slide_profile": "slide_profile",
-            "slide_ranking": "slide_ranking",
-            "slide_checklist": "slide_checklist",
-            "slide_qna": "slide_qna",
-            "slide_countdown": "slide_countdown",
-            # 레거시 별칭
-            "graph": "bar_chart",
-            "chart": "pie_chart",
-        }
-        return mapping.get(viz_type, viz_type)
-
     def build_manifest(
         self,
         storyboard_path: Path,
@@ -296,7 +246,6 @@ class RemotionBridge:
                         flat_items.append(str(item))
 
                 visualization = {
-                    "vizType": self._map_viz_type(viz_type),
                     "title": viz_data.get("title", ""),
                     "items": flat_items,
                     "values": flat_values,

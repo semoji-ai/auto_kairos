@@ -49,7 +49,6 @@ const fallbackManifest: SceneManifest = {
         },
       ],
       visualization: {
-        vizType: "slide_quote",
         title: "Auto Agent",
         items: ["Dashboard → Studio 탭에서 시작"],
         values: [],

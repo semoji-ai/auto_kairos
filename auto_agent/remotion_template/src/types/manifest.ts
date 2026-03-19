@@ -147,9 +147,13 @@ export interface CreativeDirection {
     | "somber" | "informative" | "suspense";
 }
 
+export interface CinematicOverlay {
+  type: "speech_bubble" | "emotion" | "caption";
+  text: string;
+  position: "top_left" | "top_right" | "bottom_left" | "bottom_right" | "center";
+}
+
 export interface VisualizationData {
-  /** 시각화 타입 힌트 (optional — 렌더링은 creative 필드 기반) */
-  vizType?: string;
   title: string;
   items: string[];
   values: number[];
@@ -164,6 +168,8 @@ export interface VisualizationData {
   profileSubtitle?: string;   // slide_profile: 직함/부제
   /** Creative Direction v4.0 — 씬별 창의적 연출 */
   creative?: CreativeDirection;
+  /** 시네마틱 씬 오버레이 (말풍선/감탄부호/캡션) */
+  cinematicOverlay?: CinematicOverlay;
   /** 챕터 번호/라벨 (title_card 등) */
   chapter?: string;
   /** 단일 값 (slide_bignum, icon_stat 등) */

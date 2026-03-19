@@ -368,9 +368,9 @@ async def save_design_preset_to_project(slug: str, request: Request):
     else:
         from auto_agent.db.project_manager import ProjectManager
         pm = ProjectManager()
-        project = pm.get_project(slug=slug)
+        project = pm.get_project(slug=slug) or pm.resolve_project(slug)
         if not project:
-            return JSONResponse({"error": "project not found"}, 404)
+            return JSONResponse({"error": f"project not found: {slug}"}, 404)
         out_dir = project.get("output_dir", "")
         specs = load_project_json(out_dir, "scene_specs.json")
 

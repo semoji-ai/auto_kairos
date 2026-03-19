@@ -39,7 +39,7 @@ async function main() {
   } else if (sceneArg === "viz") {
     // Only visualization scenes
     sceneNumbers = manifest.scenes
-      .filter((s) => s.visualization && s.visualization.vizType)
+      .filter((s) => s.visualization)
       .map((s) => s.sceneNumber);
   } else {
     sceneNumbers = sceneArg.split(",").map(Number);
@@ -99,8 +99,8 @@ async function main() {
       });
 
       const durationSec = (composition.durationInFrames / fps).toFixed(1);
-      const vizType = scene.visualization?.vizType || "image";
-      console.log(`  Scene ${sceneNum} [${vizType}]: ${composition.durationInFrames}f (${durationSec}s) → ${path.basename(outputPath)}`);
+      const layout = scene.visualization?.creative?.layout || "image";
+      console.log(`  Scene ${sceneNum} [${layout}]: ${composition.durationInFrames}f (${durationSec}s) → ${path.basename(outputPath)}`);
 
       await renderMedia({
         composition,

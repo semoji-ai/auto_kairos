@@ -6,7 +6,7 @@ import { PieChart } from "../visualizations/PieChart";
 import { TableView } from "../visualizations/TableView";
 import { Timeline } from "../visualizations/Timeline";
 import { Compare } from "../visualizations/Compare";
-import { SlideQuote } from "../visualizations/SlideQuote";
+
 import { SlideList } from "../visualizations/SlideList";
 import { SlideNumbered } from "../visualizations/SlideNumbered";
 import { SlideHighlight } from "../visualizations/SlideHighlight";
@@ -77,7 +77,7 @@ export const VisualizationRenderer: React.FC<Props> = ({
     <AbsoluteFill>
       <VizBackgroundProvider value={vizBackgroundPath || ""}>
         {(() => {
-          switch (data.vizType) {
+          switch ((data as any).vizType) {  // 레거시 호환 — vizType 필드 제거 후 잔여 매니페스트 대응
             case "bar_chart":
             case "graph":        // 하위호환
               return <BarChart {...commonProps} />;
@@ -95,8 +95,6 @@ export const VisualizationRenderer: React.FC<Props> = ({
             case "diagram":        // 하위호환 → Compare
             case "slide_compare":  // 하위호환 → Compare
               return <Compare {...commonProps} />;
-            case "slide_quote":
-              return <SlideQuote {...commonProps} />;
             case "slide_list":
               return <SlideList {...commonProps} />;
             case "slide_numbered":

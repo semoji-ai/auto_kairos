@@ -2,7 +2,7 @@
  * 씬 렌더러 v4 — Creative Direction 기반
  *
  * 모든 시각화는 creative 필드 + 데이터 구조로 CreativeScene이 자동 결정.
- * vizType 기반 라우팅은 제거됨 (v4.0+).
+ * vizType 레거시 코드 완전 제거됨.
  *
  * 라우팅 흐름:
  * 1. 데이터 없음 → Bridge (안전 폴백)
@@ -43,7 +43,7 @@ import {
 
 /**
  * creative 필드 + 데이터 구조로 차트 타입 추론.
- * 명시적 vizType 없이 자연스럽게 차트 컴포넌트 선택.
+ * creative 필드 + 데이터 구조로 자연스럽게 차트 컴포넌트 선택.
  */
 function inferChartType(data: any, creative: any): string | null {
   if (!creative || !data) return null;
@@ -475,7 +475,7 @@ const BigNumber: React.FC<{ data: any }> = ({ data }) => {
 };
 
 /* ====================================================================
-   4. Quote — slide_quote
+   4. Quote — 인용문 레이아웃
    좌측 액센트 보더 카드 안에 인용문
    ==================================================================== */
 

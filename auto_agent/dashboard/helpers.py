@@ -302,10 +302,6 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
     if creative.get("layout") and creative["layout"] in VALID_LAYOUTS:
         return creative["layout"], True
 
-    # 1순위 (하위호환): vizType
-    if viz.get("vizType") and viz["vizType"] in VALID_LAYOUTS:
-        return viz["vizType"], True
-
     # 2순위: displayMode / chartConfig
     if creative.get("displayMode") == "logo_grid":
         return "logo_grid", False
