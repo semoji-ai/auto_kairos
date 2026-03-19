@@ -2339,7 +2339,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 env=env,
                 capture_output=True,
                 text=True,
-                timeout=600,  # 10분 타임아웃
+                timeout=1800,  # 30분 타임아웃
             )
 
             if result.returncode == 0:

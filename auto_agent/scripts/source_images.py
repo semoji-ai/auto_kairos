@@ -240,20 +240,20 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
     except Exception:
         style_arg = ""
 
-    # 3. 씬별 이미지 생성
-    generated = 0
-    for scene in gen_scenes:
+    # 3. 씬별 이미지 생성 (병렬, max_workers=5)
+    ws = str(project_dir.parent.parent) if "output" in str(project_dir) else str(project_dir)
+
+    def _generate_one(scene):
         sn = scene.get("sceneNumber")
         img = scene.get("imageAsset") or {}
         prompt = img.get("query", "")
         if not prompt:
-            continue
+            return None
 
-        # 이미 이미지 있으면 스킵
         existing = list(img_dir.glob(f"scene_{sn:03d}.*")) + list(img_dir.glob(f"scene_{sn:03d}_*.*"))
         if any(f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") for f in existing):
             log_fn("image-gen", f"씬{sn} 이미 존재 → 스킵")
-            continue
+            return None
 
         fname = next_filename(img_dir, sn, "gen", ".png")
         log_fn("image-gen", f"씬{sn} 생성 중: {prompt[:50]}...")
@@ -264,24 +264,30 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
         if style_arg:
             cmd.extend(["--style", style_arg])
 
-        # 캐릭터 참조 첨부
         chars = character_images.get(sn, [])
         if chars:
             cmd.extend(["--characters", ",".join(chars)])
 
         try:
-            ws = str(project_dir.parent.parent) if "output" in str(project_dir) else str(project_dir)
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, cwd=ws)
             if result.returncode == 0:
                 add_version(img_dir, sn, fname, "generate", prompt=prompt[:200],
                             art_style=style_arg)
-                generated += 1
                 log_fn("image-gen", f"씬{sn} 생성 완료 ✓", "success")
+                return sn
             else:
                 err = result.stderr[:200] or result.stdout[:200]
                 log_fn("image-gen", f"씬{sn} 생성 실패: {err}", "warning")
         except Exception as e:
             log_fn("image-gen", f"씬{sn} 생성 에러: {e}", "error")
+        return None
+
+    generated = 0
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        futures = [pool.submit(_generate_one, s) for s in gen_scenes]
+        for f in as_completed(futures):
+            if f.result() is not None:
+                generated += 1
 
     log_fn("image-gen", f"생성 트랙 완료: {generated}건 생성", "success")
     return generated
