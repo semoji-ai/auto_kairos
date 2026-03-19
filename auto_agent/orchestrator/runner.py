@@ -1636,31 +1636,27 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             print("    [PREFLIGHT] 아트스타일 config 미설정")
             return
 
-        # art_style이 스타일명만이면 (예: "quirky_cartoon") 전체 경로로 확장
-        if not art_style_rel.endswith(".json"):
-            art_style_rel = f"artstyle/styles/{art_style_rel}.json"
+        # 중앙 resolve 함수로 아트스타일 경로 해석
+        from auto_agent.db.project_manager import resolve_art_style_path
+        resolved = resolve_art_style_path(art_style_rel, self.project_dir)
 
-        # 1. 프로젝트 디렉토리에서 확인
-        art_path = self.project_dir / art_style_rel
-        if art_path.exists():
-            return  # 이미 존재
-
-        # 2. 패키지 디렉토리에서 복제
-        pkg_path = PACKAGE_DIR / "data" / art_style_rel
-        if pkg_path.exists():
-            target_dir = art_path.parent
-            target_dir.mkdir(parents=True, exist_ok=True)
-            shutil.copy(pkg_path, art_path)
-            # 같은 디렉토리의 관련 파일(reference image 등) 복제
-            style_stem = pkg_path.stem  # e.g. "quirky_cartoon"
-            for f in pkg_path.parent.glob(f"{style_stem}*"):
-                if f != pkg_path:
-                    shutil.copy(f, target_dir / f.name)
-            style_name = config.get("style_name", style_stem)
-            _notify("System", f"아트스타일 '{style_name}' 패키지에서 복제했습니다",
-                    phase=self.state.current_phase, project=self.project_slug,
-                    level="info")
-            print(f"    [PREFLIGHT] 아트스타일 '{style_name}' 복제 완료")
+        if resolved:
+            # 프로젝트 디렉토리에 복제 (아직 없으면)
+            dest_dir = self.project_dir / "artstyle" / "styles"
+            dest_json = dest_dir / resolved.name
+            if not dest_json.exists():
+                dest_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy(resolved, dest_json)
+                # 관련 파일(reference image 등) 복제
+                style_stem = resolved.stem
+                for f in resolved.parent.glob(f"{style_stem}*"):
+                    if f != resolved:
+                        shutil.copy(f, dest_dir / f.name)
+                style_name = config.get("style_name", style_stem)
+                _notify("System", f"아트스타일 '{style_name}' 복제 완료",
+                        phase=self.state.current_phase, project=self.project_slug,
+                        level="info")
+                print(f"    [PREFLIGHT] 아트스타일 '{style_name}' 복제 완료")
         else:
             _notify("System", f"아트스타일 파일 없음: {art_style_rel}",
                     phase=self.state.current_phase, project=self.project_slug,

@@ -19,6 +19,64 @@ def _generate_project_uuid() -> str:
     return _uuid.uuid4().hex[:8]
 
 
+def resolve_art_style_path(art_style: str, project_dir: Path = None) -> Optional[Path]:
+    """아트스타일 경로를 확실하게 resolve.
+
+    다양한 입력 형태를 모두 처리:
+      - 스타일명만: "quirky_cartoon"
+      - 상대경로: "artstyle/styles/quirky_cartoon.json"
+      - 절대경로: "/Users/.../quirky_cartoon.json"
+
+    탐색 순서:
+      1. 절대경로면 직접 확인
+      2. 프로젝트 디렉토리 내 art_style.json (복제본)
+      3. 프로젝트 디렉토리 내 artstyle/styles/{name}.json
+      4. PACKAGE_DIR/data/artstyle/styles/{name}.json
+      5. DATA_DIR/{art_style} (상대경로 그대로)
+    """
+    if not art_style:
+        return None
+
+    # 스타일명에서 .json 확장자 정리
+    style_name = art_style.replace(".json", "").split("/")[-1]  # "quirky_cartoon"
+
+    # 1. 절대경로
+    abs_path = Path(art_style)
+    if abs_path.is_absolute() and abs_path.exists():
+        return abs_path
+
+    # 2. 프로젝트 디렉토리 내 복제본
+    if project_dir:
+        for candidate in [
+            project_dir / "art_style.json",
+            project_dir / "artstyle" / "styles" / f"{style_name}.json",
+            project_dir / art_style,
+        ]:
+            if candidate.exists():
+                return candidate
+
+    # 3. 패키지 데이터 디렉토리 (가장 확실한 소스)
+    data_dir = get_data_dir()
+    for candidate in [
+        data_dir / "artstyle" / "styles" / f"{style_name}.json",
+        data_dir / art_style,
+        data_dir / f"{art_style}.json",
+    ]:
+        if candidate.exists():
+            return candidate
+
+    # 4. 워크스페이스 루트 fallback
+    ws = get_workspace_dir()
+    for candidate in [
+        ws / "artstyle" / "styles" / f"{style_name}.json",
+        ws / "art_style.json",
+    ]:
+        if candidate.exists():
+            return candidate
+
+    return None
+
+
 class ProjectManager:
     """프로젝트 CRUD, 에셋 등록, 파이프라인 추적, 버전 관리."""
 
@@ -179,25 +237,12 @@ class ProjectManager:
         self.set_config(project_id, current)
 
     def get_art_style_path(self, project_id: int) -> Optional[str]:
-        """프로젝트의 art_style JSON 경로. config → 프로젝트 디렉토리 → 루트 폴백."""
+        """프로젝트의 art_style JSON 경로. resolve_art_style_path()로 통합 resolve."""
         config = self.get_config(project_id)
-        # 1) config에 명시된 경우
-        if config.get("art_style"):
-            path = Path(config["art_style"])
-            if not path.is_absolute():
-                path = get_data_dir() / path
-            if path.exists():
-                return str(path)
-        # 2) 프로젝트 디렉토리 내 art_style.json
+        art_style = config.get("art_style")
         project_dir = self.get_project_dir(project_id)
-        local = project_dir / "art_style.json"
-        if local.exists():
-            return str(local)
-        # 3) 루트 폴백
-        root = get_workspace_dir() / "art_style.json"
-        if root.exists():
-            return str(root)
-        return None
+        result = resolve_art_style_path(art_style, project_dir)
+        return str(result) if result else None
 
     def provision_art_style(self, project_id: int) -> Optional[str]:
         """아트스타일 JSON + 참조 이미지를 프로젝트 출력 폴더에 복사.
@@ -211,11 +256,9 @@ class ProjectManager:
         if not art_style_rel:
             return None
 
-        # 소스 경로 해석
-        src_path = Path(art_style_rel)
-        if not src_path.is_absolute():
-            src_path = get_data_dir() / art_style_rel
-        if not src_path.exists():
+        # resolve_art_style_path로 통합 resolve
+        src_path = resolve_art_style_path(art_style_rel)
+        if not src_path:
             return None
 
         project_dir = self.get_project_dir(project_id)

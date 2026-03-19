@@ -526,32 +526,42 @@ def step_7_build_asset_registry(output_dir: Path, search_result: dict):
 
 
 def _resolve_art_style(output_dir: Path) -> str:
-    """art_style 경로 해석: DB config → 프로젝트 디렉토리 → 루트 폴백."""
-    # 1) DB config
+    """art_style 경로 해석: resolve_art_style_path() 통합 resolve."""
+    # 1) DB config → resolve_art_style_path
     try:
         from auto_agent.db.connection import db_exists
         if db_exists():
-            from auto_agent.db.project_manager import ProjectManager
+            from auto_agent.db.project_manager import ProjectManager, resolve_art_style_path
             pm = ProjectManager()
             project = pm.get_active_project()
             if project:
-                path = pm.get_art_style_path(project["id"])
-                if path:
-                    return path
+                config = pm.get_config(project["id"])
+                art_style = config.get("art_style", "")
+                project_dir = pm.get_project_dir(project_id=project["id"])
+                resolved = resolve_art_style_path(art_style, project_dir)
+                if resolved:
+                    return str(resolved)
     except Exception:
         pass
 
-    # 2) 프로젝트 디렉토리 내
+    # 2) 프로젝트 디렉토리 내 직접 탐색
+    try:
+        from auto_agent.db.project_manager import resolve_art_style_path
+        for name in ["quirky_cartoon", "semoji", "lego", "stickman_cute"]:
+            resolved = resolve_art_style_path(name, output_dir)
+            if resolved:
+                return str(resolved)
+    except Exception:
+        pass
+
+    # 3) 레거시 폴백
     local = output_dir / "art_style.json"
     if local.exists():
         return str(local)
-
-    # 3) 루트 폴백
     alt = PROJECT_ROOT / "art_style.json"
     if alt.exists():
         return str(alt)
-
-    return str(local)  # 존재하지 않아도 경로 반환 (이후 경고)
+    return str(local)
 
 
 def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
