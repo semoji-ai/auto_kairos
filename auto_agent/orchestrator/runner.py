@@ -1636,6 +1636,10 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             print("    [PREFLIGHT] 아트스타일 config 미설정")
             return
 
+        # art_style이 스타일명만이면 (예: "quirky_cartoon") 전체 경로로 확장
+        if not art_style_rel.endswith(".json"):
+            art_style_rel = f"artstyle/styles/{art_style_rel}.json"
+
         # 1. 프로젝트 디렉토리에서 확인
         art_path = self.project_dir / art_style_rel
         if art_path.exists():
