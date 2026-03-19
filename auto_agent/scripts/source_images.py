@@ -284,7 +284,11 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
     except Exception:
         style_arg = ""
 
-    # 3. reference_image data URI 미리 준비 (한번만)
+    # 3. FAL_KEY 설정 (FAL_API_KEY → FAL_KEY 매핑)
+    if not os.environ.get("FAL_KEY") and os.environ.get("FAL_API_KEY"):
+        os.environ["FAL_KEY"] = os.environ["FAL_API_KEY"]
+
+    # 4. reference_image data URI 미리 준비 (한번만)
     ref_image_uri = ""
     if style_arg:
         try:
