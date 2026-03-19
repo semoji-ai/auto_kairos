@@ -50,7 +50,14 @@ sceneNumber, chapter, narration, narration_tts, durationFrames는 절대 수정�
    - dramatic, contemplative, urgent, triumphant, somber, informative, suspense
 
 선택 필드:
-- layout: 확장 레이아웃 사용 시 직접 지정 (flow, timeline, metric_spotlight, metric_wall, rank_list, comparison_table, before_after, icon_stat, stacked_progress, card_carousel, hero_with_context, quote_portrait, annotated_chart, cinematic)
+- layout: 확장 레이아웃 사용 시 직접 지정.
+  차트 레이아웃 (수치 시각화):
+    - "bar": 세로 바 차트 (카테고리별 비교)
+    - "line": 라인 차트 (시간 추이, 트렌드)
+    - "pie": 파이/도넛 차트 (점유율, 비율)
+    - ⚠️ annotated_chart는 사용하지 마세요. bar/line/pie 중 직접 선택하세요.
+    - 선택 기준: 시간 흐름→line, 카테고리 비교→bar, 비율/점유율→pie
+  기타 레이아웃: flow, timeline, metric_spotlight, rank_list, comparison_table, before_after, icon_stat, stacked_progress, card_carousel, hero_with_context, quote_portrait, cinematic
 - cinematic_overlay (object, optional): cinematic 레이아웃에서만 사용. 이미지 위에 만화적 오버레이.
   - type: "speech_bubble" | "emotion" | "caption"
   - text: 오버레이 텍스트 (짧게, 10자 이내)
