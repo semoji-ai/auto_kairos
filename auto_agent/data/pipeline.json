@@ -186,22 +186,6 @@
           ],
           "depends_on": "step_6b",
           "notes": "★ Phase 3(Data Enrichment)만 수행. research_report.json에서 정확한 수치를 가져와 values/unit/source 보강 + vizAnimation 설정."
-        },
-        {
-          "id": "step_6d",
-          "name": "motion_planning",
-          "description": "모션 설계 — 전환 효과, 타이밍, 리듬 설계",
-          "type": "agent",
-          "agent": "visual-composer",
-          "input": [
-            "scene_specs.json"
-          ],
-          "output": "motion_plan.json",
-          "skills": [
-            "shared/motion-rhythm"
-          ],
-          "depends_on": "step_6c",
-          "notes": "★ Phase 4(Motion Choreography)만 수행. 전환 효과, 타이밍, 브리딩 포인트 설계 → motion_plan.json 생성."
         }
       ]
     },
@@ -294,6 +278,23 @@
           "notes": "advisory 단계. ERROR 씬은 경고하지만 파이프라인은 중단하지 않음",
           "type": "agent",
           "agent": "tts-verifier"
+        },
+        {
+          "id": "step_6d",
+          "name": "motion_planning",
+          "description": "모션 설계 — 전환 효과, 타이밍, 리듬 설계",
+          "type": "agent",
+          "agent": "visual-composer",
+          "input": [
+            "scene_specs.json",
+            "subtitles.json"
+          ],
+          "output": "motion_plan.json",
+          "skills": [
+            "shared/motion-rhythm"
+          ],
+          "depends_on": "step_9",
+          "notes": "★ Phase 4(Motion Choreography)만 수행. TTS 자막 타임스탬프(subtitles.json) 기반 전환 효과, 타이밍, 브리딩 포인트 설계 → motion_plan.json 생성."
         }
       ]
     },
