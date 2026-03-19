@@ -338,7 +338,17 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
             image_urls.append(ref_image_uri)
 
         # 스타일 프롬프트 구성
-        full_prompt = f"{style_desc}\n\n{prompt}" if style_desc else prompt
+        style_instruction = ""
+        if chars:
+            style_instruction = "Use the attached character reference images for the characters in this scene. Match their appearance."
+        elif ref_image_uri:
+            style_instruction = (
+                "The attached image is an ART STYLE reference ONLY. "
+                "Copy the drawing style, line weight, and color palette from it, "
+                "but do NOT copy the character or person in the reference image. "
+                "Draw completely new characters as described in the scene prompt."
+            )
+        full_prompt = f"{style_desc}\n\n{style_instruction}\n\n{prompt}" if style_desc else f"{style_instruction}\n\n{prompt}"
 
         try:
             import fal_client
