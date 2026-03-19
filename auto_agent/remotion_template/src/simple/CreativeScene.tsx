@@ -123,7 +123,9 @@ type LayoutType =
   | "hero_with_context" // 큰 헤드라인 + 작은 부연 카드들
   | "quote_portrait"    // ImageBadge 큰 사이즈 + QuoteMark + 인용문
   | "annotated_chart"   // bar/pie/line + AnnotationLine + Callout
-  | "cinematic";        // 이미지 풀스크린 + Ken Burns, 텍스트 없음 (나레이션만)
+  | "cinematic"         // 이미지 풀스크린 + Ken Burns, 텍스트 없음 (나레이션만)
+  | "bar_horizontal"    // 가로 바 차트 (항목별 비교, 긴 라벨에 적합)
+  | "donut";            // 도넛 차트 (점유율, 중앙에 총합 표시)
 
 /* ================================================================
    Layout Resolution — 의도 기반 (creative.layout 직접 지정) + 데이터 추론 fallback
@@ -136,7 +138,7 @@ const VALID_LAYOUTS = new Set<LayoutType>([
   "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
   "comparison_table", "before_after", "icon_stat", "stacked_progress",
   "card_carousel", "hero_with_context", "quote_portrait", "annotated_chart",
-  "cinematic",
+  "cinematic", "bar_horizontal", "donut",
 ]);
 
 function resolveLayout(data: any, creative: any): LayoutType {
@@ -2792,6 +2794,78 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
     );
   }
 
+  // Donut chart
+  if (layout === "donut") {
+    const total = values.reduce((a, b) => a + b, 0) || 1;
+    const colors = moodCfg.colors || ["#F59E0B", "#3B82F6", "#22C55E", "#EF4444", "#A855F7", "#EC4899", "#14B8A6", "#F97316"];
+    const size = 300;
+    const strokeWidth = 60;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    let accumulated = 0;
+
+    return (
+      <AbsoluteFill style={{ backgroundColor: hasImageBackground ? "transparent" : C.bg, fontFamily: "inherit" }}>
+        <MoodBackground mood={mood} transparent={hasImageBackground} />
+        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 60 }}>
+          <div style={{ position: "relative", width: size, height: size }}>
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+              {values.map((val, i) => {
+                const pct = val / total;
+                const dashLength = circumference * pct;
+                const dashOffset = circumference * accumulated;
+                accumulated += pct;
+                const delay = staggerDelay(i, values.length, moodCfg.speed);
+                const progress = interpolate(frame - delay, [0, 25], [0, 1], {
+                  extrapolateLeft: "clamp", extrapolateRight: "clamp",
+                  easing: Easing.out(Easing.cubic),
+                });
+                return (
+                  <circle
+                    key={i}
+                    cx={size / 2} cy={size / 2} r={radius}
+                    fill="none"
+                    stroke={colors[i % colors.length]}
+                    strokeWidth={strokeWidth}
+                    strokeDasharray={`${dashLength * progress} ${circumference}`}
+                    strokeDashoffset={-dashOffset}
+                    strokeLinecap="round"
+                    transform={`rotate(-90 ${size/2} ${size/2})`}
+                  />
+                );
+              })}
+            </svg>
+            {/* 중앙 총합 */}
+            <div style={{
+              position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+              textAlign: "center",
+            }}>
+              <div style={{ fontSize: 36, fontWeight: 800, color: C.text }}>{total}{unit}</div>
+              <div style={{ fontSize: 13, color: (C as any).textMuted || "rgba(255,255,255,0.5)" }}>총합</div>
+            </div>
+          </div>
+          {/* 범례 */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {items.map((item, i) => {
+              const delay = staggerDelay(i, items.length, moodCfg.speed);
+              const fade = interpolate(frame - delay, [0, 10], [0, 1], {
+                extrapolateLeft: "clamp", extrapolateRight: "clamp",
+              });
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, opacity: fade }}>
+                  <div style={{ width: 14, height: 14, borderRadius: 3, background: colors[i % colors.length], flexShrink: 0 }} />
+                  <span style={{ fontSize: 15, color: C.text }}>{item}</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: colors[i % colors.length], marginLeft: 4 }}>{values[i]}{unit}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        {source && <div style={{ position: "absolute", bottom: 30, right: 40, fontSize: 11, color: (C as any).textMuted || "rgba(255,255,255,0.4)" }}>출처: {source}</div>}
+      </AbsoluteFill>
+    );
+  }
+
   // Line chart
   if (layout === "line") {
     return (
@@ -2826,6 +2900,65 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
         hasImageBg={hasImageBackground}
         logoMap={creative.logoMap}
       />
+    );
+  }
+
+  // Horizontal Bar chart
+  if (layout === "bar_horizontal") {
+    const maxVal = Math.max(...values.map(Math.abs), 1);
+    return (
+      <AbsoluteFill style={{ backgroundColor: hasImageBackground ? "transparent" : C.bg, fontFamily: "inherit" }}>
+        <MoodBackground mood={mood} transparent={hasImageBackground} />
+        <div style={{
+          width: "78%", margin: "0 auto", height: "100%",
+          display: "flex", flexDirection: "column", justifyContent: "center", gap: 16, padding: "60px 0"
+        }}>
+          {headline && lines.length > 0 && (
+            <div style={{ marginBottom: 20, textAlign: "center" }}>
+              {lines.map((line, i) => (
+                <div key={i} style={{ fontSize: T.title?.size || 42, fontWeight: 800, color: C.text }}>
+                  <TextWithBreaks text={line} accentColor={moodCfg.accent} />
+                </div>
+              ))}
+            </div>
+          )}
+          {items.map((item, i) => {
+            const val = values[i] || 0;
+            const pct = (Math.abs(val) / maxVal) * 100;
+            const delay = staggerDelay(i, items.length, moodCfg.speed);
+            const barW = interpolate(frame - delay, [0, 20], [0, pct], {
+              extrapolateLeft: "clamp", extrapolateRight: "clamp",
+              easing: Easing.out(Easing.cubic),
+            });
+            const fade = interpolate(frame - delay, [0, 10], [0, 1], {
+              extrapolateLeft: "clamp", extrapolateRight: "clamp",
+            });
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, opacity: fade }}>
+                <div style={{ width: 120, textAlign: "right", fontSize: 14, fontWeight: 600, color: C.text, flexShrink: 0 }}>
+                  {item}
+                </div>
+                <div style={{ flex: 1, height: 28, background: "rgba(255,255,255,0.06)", borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{
+                    width: `${barW}%`, height: "100%",
+                    background: moodCfg.accent,
+                    borderRadius: 4,
+                    transition: "width 0.3s",
+                  }} />
+                </div>
+                <div style={{ width: 60, fontSize: 14, fontWeight: 700, color: moodCfg.accent }}>
+                  {emphasis === "number" ? (
+                    <span>{Math.round(interpolate(frame - delay, [0, 20], [0, val], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }))}{unit}</span>
+                  ) : (
+                    <span>{val}{unit}</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          {source && <div style={{ textAlign: "right", fontSize: 11, color: (C as any).textMuted || "rgba(255,255,255,0.4)", marginTop: 12 }}>출처: {source}</div>}
+        </div>
+      </AbsoluteFill>
     );
   }
 
@@ -3003,8 +3136,8 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
         <FlashOverlay flashAt={flashAt} accentRgb={moodCfg.accentRgb} />
       )}
 
-      {/* Quote mark */}
-      {emphasis === "quote" && (
+      {/* Quote mark — quote_portrait는 레이아웃 내부에 좌우 따옴표가 있으므로 제외 */}
+      {emphasis === "quote" && layout !== "quote_portrait" && (
         <div style={{ position: "relative", zIndex: 2 }}>
           <QuoteMark color={moodCfg.accent} delay={headlineDelays[0] || 0} />
         </div>
@@ -3365,21 +3498,34 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           </div>
         )}
 
-        {/* Quote Portrait — 인물 사진 + 인용문 */}
+        {/* Quote Portrait — 인물 사진 + 인용문 (좌우 큰따옴표 감싸기) */}
         {layout === "quote_portrait" && (
           <div style={{ display: "flex", alignItems: "center", gap: 32, ...useFadeRise(15, 20) }}>
             <ImageBadge
               imageUrl={data.images?.[0]}
               size={120}
             />
-            <div style={{ flex: 1 }}>
-              <QuoteMarkBlock size={48} color={moodCfg.accent} />
-              <div style={{ fontSize: T.itemText, fontWeight: 500, color: C.text, lineHeight: 1.5, fontStyle: "italic" }}>
-                {items[0] || ""}
+            <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 16 }}>
+              {/* 여는 큰따옴표 — 왼쪽 */}
+              <span style={{
+                fontSize: 72, fontWeight: 900, color: moodCfg.accent, opacity: 0.35,
+                lineHeight: 1, fontFamily: "Georgia, serif", userSelect: "none",
+                flexShrink: 0, alignSelf: "flex-start",
+              }}>&ldquo;</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: T.itemText, fontWeight: 500, color: C.text, lineHeight: 1.5, fontStyle: "italic" }}>
+                  {items[0] || ""}
+                </div>
+                {data.source && (
+                  <div style={{ fontSize: T.sourceText, color: C.textMuted, marginTop: 16 }}>— {data.source}</div>
+                )}
               </div>
-              {data.source && (
-                <div style={{ fontSize: T.sourceText, color: C.textMuted, marginTop: 16 }}>— {data.source}</div>
-              )}
+              {/* 닫는 큰따옴표 — 오른쪽 */}
+              <span style={{
+                fontSize: 72, fontWeight: 900, color: moodCfg.accent, opacity: 0.35,
+                lineHeight: 1, fontFamily: "Georgia, serif", userSelect: "none",
+                flexShrink: 0, alignSelf: "flex-end",
+              }}>&rdquo;</span>
             </div>
           </div>
         )}
