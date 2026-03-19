@@ -4,7 +4,7 @@
 - 항상 한글로 답변
 - 프로그램 소스 코드 수정 금지
 - **각 단계 완료 시 반드시 "✅ [단계명] 완료" 메시지를 출력**하고 다음 단계로 넘어갈 것. 절대 완료 후 대기하지 말 것.
-- 파일 출력 경로: `output/{project-slug}/` (프로젝트 슬러그는 `auto-agent project list`로 확인)
+- 파일 출력 경로: `output/{uuid}_{project-slug}/` (프로젝트 슬러그는 `auto-agent project list`로 확인, uuid는 8자리 hex)
 - **auto-agent CLI 명령은 반드시 워크스페이스 디렉토리에서 실행할 것** (DB와 output이 CWD 기준)
 
 ## 스킬 문서 경로
@@ -45,7 +45,7 @@ auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
 1. `$SKILL_BASE/skills/agents/research-orchestrator/SKILL.md` 참조
 2. `$SKILL_BASE/skills/shared/research-format.md` 형식 준수
 3. WebSearch로 심층 리서치 수행
-4. **출력**: `output/{slug}/research_report.json`
+4. **출력**: `output/{uuid}_{slug}/research_report.json`
 5. 검증: 파일이 올바른 JSON이고, sections 배열이 있는지 확인
 → ✅ 리서치 완료. 다음 단계(원고 작성)를 진행합니다.
 
@@ -55,7 +55,7 @@ auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
 3. `$SKILL_BASE/skills/shared/writing-style.md` 문체 규칙
 4. `$SKILL_BASE/skills/shared/scene-segmentation.md` 씬 분할 규칙
 5. research_report.json을 입력으로 아웃라인 → 원고 작성
-6. **출력**: `output/{slug}/outline.json`, `output/{slug}/final_manuscript.md`
+6. **출력**: `output/{uuid}_{slug}/outline.json`, `output/{uuid}_{slug}/final_manuscript.md`
 7. 검증: 챕터 수, 씬 수, VIZ 마커 존재 확인
 8. **⚠️ VIZ 마커 주의**: `[VIZ:narration_only]` 사용 금지 — vizType 결정은 Phase 3(visual-composer)에서 수행
 → ✅ 원고 작성 완료. 다음 단계(팩트체크)를 진행합니다.
@@ -63,7 +63,7 @@ auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
 ### Phase 2: 팩트체크 (Claude Code 직접 수행)
 1. `$SKILL_BASE/skills/agents/fact-verifier/SKILL.md` 참조
 2. research_report.json + final_manuscript.md 교차 검증
-3. **출력**: `output/{slug}/fact_check_report.json`
+3. **출력**: `output/{uuid}_{slug}/fact_check_report.json`
 → ✅ 팩트체크 완료. 다음 단계(씬 설계)를 진행합니다.
 
 ### Phase 3: 씬 설계 (Claude Code 직접 수행)
@@ -79,7 +79,7 @@ auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
 9. `$SKILL_BASE/docs/data-contracts.md` — 스키마 참조
 
 **5단계 순차 수행 (각 단계를 반드시 별도로 수행할 것):**
-1. **씬 분할** → `output/{slug}/scene_decomposition.json`
+1. **씬 분할** → `output/{uuid}_{slug}/scene_decomposition.json`
 2. **Creative Direction** → 씬별 visual concept (reveal/emphasis/mood/headline/concept)
 3. **Asset Advisory (필수! 절대 건너뛰지 말 것)** → 모든 씬 순회하며 에셋 추천:
    - 차트 추천 (chartConfig/chartData) — `chart-mapping.md` 참조
@@ -90,9 +90,9 @@ auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
    - 배치/투명도 결정 (placement/opacity)
    - 충돌 검사 (차트+이미지 금지 등)
 4. **데이터 보강** → 차트/통계 데이터 매핑
-5. **모션 설계** → `output/{slug}/motion_plan.json`
+5. **모션 설계** → `output/{uuid}_{slug}/motion_plan.json`
 
-**출력**: `output/{slug}/scene_decomposition.json`, `output/{slug}/scene_specs.json`, `output/{slug}/motion_plan.json`
+**출력**: `output/{uuid}_{slug}/scene_decomposition.json`, `output/{uuid}_{slug}/scene_specs.json`, `output/{uuid}_{slug}/motion_plan.json`
 
 **검증 체크리스트:**
 - 각 씬에 vizType, creative, narration 필드 존재
