@@ -233,6 +233,7 @@ async def storyboard_scene_detail(request: Request, project_id: int, scene_num: 
 
     out_dir = project["output_dir"]
     slug = project["slug"]
+    dir_name = Path(out_dir).name if out_dir else slug
 
     specs = load_project_json(out_dir, "scene_specs.json")
     scene = None
@@ -245,7 +246,7 @@ async def storyboard_scene_detail(request: Request, project_id: int, scene_num: 
     if not scene:
         return HTMLResponse(f"Scene {scene_num} not found", status_code=404)
 
-    scene["_image_url"] = get_scene_image_url(slug, scene_num, out_dir)
+    scene["_image_url"] = get_scene_image_url(dir_name, scene_num, out_dir)
     scene["_audio_url"] = get_scene_audio_url(slug, scene_num, out_dir)
 
     tts = load_project_json(out_dir, "tts_results.json")
@@ -306,6 +307,7 @@ async def storyboard_scene_by_slug(request: Request, slug: str, scene_num: int):
     if not project:
         return HTMLResponse("Not found", status_code=404)
     out_dir = project["output_dir"]
+    dir_name = Path(out_dir).name if out_dir else slug
 
     specs = load_project_json(out_dir, "scene_specs.json")
     scene = None
@@ -317,7 +319,7 @@ async def storyboard_scene_by_slug(request: Request, slug: str, scene_num: int):
     if not scene:
         return HTMLResponse(f"Scene {scene_num} not found", status_code=404)
 
-    scene["_image_url"] = get_scene_image_url(slug, scene_num, out_dir)
+    scene["_image_url"] = get_scene_image_url(dir_name, scene_num, out_dir)
     scene["_audio_url"] = get_scene_audio_url(slug, scene_num, out_dir)
 
     tts = load_project_json(out_dir, "tts_results.json")
@@ -363,7 +365,8 @@ async def editor_scene_by_slug(slug: str, scene_num: int):
         return JSONResponse({"error": f"Scene {scene_num} not found"}, status_code=404)
 
     # 로컬 이미지/오디오 경로 추가
-    scene["_image_url"] = get_scene_image_url(slug, scene_num, out_dir)
+    dir_name = Path(out_dir).name if out_dir else slug
+    scene["_image_url"] = get_scene_image_url(dir_name, scene_num, out_dir)
     scene["_audio_url"] = get_scene_audio_url(slug, scene_num, out_dir)
 
     return {"scene": scene}
@@ -397,7 +400,9 @@ async def image_candidates_by_slug(slug: str, scene_num: int):
     project = pm.get_project(slug=slug)
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
-    candidates = get_scene_image_candidates(slug, scene_num, project["output_dir"])
+    out_dir = project["output_dir"]
+    dir_name = Path(out_dir).name if out_dir else slug
+    candidates = get_scene_image_candidates(dir_name, scene_num, out_dir)
     return {"scene_number": scene_num, "candidates": candidates}
 
 
@@ -435,7 +440,8 @@ async def select_image_by_slug(request: Request, slug: str, scene_num: int):
 
     final_path = images_dir / f"{scene_key}{candidate.suffix}"
     shutil.copy2(candidate, final_path)
-    return {"ok": True, "image_url": f"/output/{slug}/images/{final_path.name}"}
+    dir_name = out_dir.name
+    return {"ok": True, "image_url": f"/output/{dir_name}/images/{final_path.name}"}
 
 
 # ─────────────────────────────
@@ -484,7 +490,9 @@ async def get_image_candidates(project_id: int, scene_num: int):
     project = pm.get_project(project_id=project_id)
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
-    candidates = get_scene_image_candidates(project["slug"], scene_num, project["output_dir"])
+    out_dir = project["output_dir"]
+    dir_name = Path(out_dir).name if out_dir else project["slug"]
+    candidates = get_scene_image_candidates(dir_name, scene_num, out_dir)
     return {"scene_number": scene_num, "candidates": candidates}
 
 
@@ -537,8 +545,9 @@ async def select_image_candidate(request: Request, project_id: int, scene_num: i
                 break
         registry_path.write_text(json.dumps(registry, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    dir_name = out_dir.name
     return {"ok": True, "scene": scene_key, "selected_rank": rank,
-            "image_url": f"/output/{project['slug']}/images/{final_path.name}"}
+            "image_url": f"/output/{dir_name}/images/{final_path.name}"}
 
 
 # ─────────────────────────────

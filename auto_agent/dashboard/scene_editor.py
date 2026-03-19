@@ -323,8 +323,10 @@ async def get_scene_images(slug: str, scene_num: int):
         candidates = pm.get_scene_image_candidates(project["id"], scene_num)
     else:
         from auto_agent.dashboard.helpers import get_scene_image_candidates
+        _out_dir = project.get("output_dir", "")
+        _dir_name = Path(_out_dir).name if _out_dir else project.get("slug", "")
         candidates = get_scene_image_candidates(
-            project.get("slug", ""), scene_num, project.get("output_dir", "")
+            _dir_name, scene_num, _out_dir
         )
 
     return JSONResponse(
@@ -423,12 +425,13 @@ async def get_editor_manifest_meta(slug: str):
                 if meta:
                     return {"meta": meta}
 
-    # 2) 로컬 파일에서 시도 (remotion/public/manifests/{slug}.json 포함)
+    # 2) 로컬 파일에서 시도 (remotion/public/manifests/{dir_name}.json 포함)
     from auto_agent.paths import get_workspace_dir
     workspace = get_workspace_dir()
+    _manifest_dir_name = Path(out_dir).name if out_dir else slug
     candidates = [
         Path(out_dir) / "manifest.json" if out_dir else None,
-        workspace / "remotion" / "public" / "manifests" / f"{slug}.json",
+        workspace / "remotion" / "public" / "manifests" / f"{_manifest_dir_name}.json",
         workspace / "remotion" / "public" / "manifest.json",
     ]
     for p in candidates:
@@ -489,7 +492,9 @@ def _inject_image_url(project: dict, scene: dict, scene_num: int):
         url = pm.get_scene_image_url(project["id"], scene_num)
     else:
         from auto_agent.dashboard.helpers import get_scene_image_url
-        url = get_scene_image_url(project.get("slug", ""), scene_num, project.get("output_dir", ""))
+        _out_dir = project.get("output_dir", "")
+        _dir_name = Path(_out_dir).name if _out_dir else project.get("slug", "")
+        url = get_scene_image_url(_dir_name, scene_num, _out_dir)
 
     if url:
         placement = (scene.get("imageAsset") or {}).get("placement", "background")
