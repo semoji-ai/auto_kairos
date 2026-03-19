@@ -64,7 +64,6 @@ _MSG_MAP = {
     "fact_check":                 ("팩트 체크",            "팩트 체크 완료"),
     # phase_3
     "scene_decomposition":        ("씬 분할",              "씬 분할 완료"),
-    "character_planning":         ("캐릭터 플래닝",         "캐릭터 플래닝 완료"),
     "creative_direction":         ("창의적 연출",           "창의적 연출 완료"),
     "asset_advisory":             ("에셋 심의",            "에셋 심의 완료"),
     "data_enrichment_and_motion": ("데이터 보강/모션 설계",  "데이터 보강/모션 설계 완료"),
@@ -1352,7 +1351,7 @@ class PipelineRunner:
 
         # 공통 컨텍스트 파일
         context_block = ""
-        for fname in ["research_report.json", "outline.json", "character_plan.json"]:
+        for fname in ["research_report.json", "outline.json"]:
             fpath = self.project_dir / fname
             if fpath.exists():
                 context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:50000]}\n</file>\n"
