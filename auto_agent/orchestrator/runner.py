@@ -2375,8 +2375,9 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             return StepResult(step_id=step_id, status="failed",
                               error="No command specified")
 
-        # 플레이스홀더 치환
-        command = command.replace("{project}", self.project_slug)
+        # 플레이스홀더 치환 — {project}는 디렉토리명(uuid_slug) 사용
+        project_dir_name = Path(self.project_dir).name
+        command = command.replace("{project}", project_dir_name)
         command = command.replace("{composition}", self._resolve_composition())
 
         # Node.js PATH 보장 (npx, node 등)
