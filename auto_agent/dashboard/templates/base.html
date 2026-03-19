@@ -13,6 +13,7 @@
     <div class="sidebar-brand">
       <a href="/">Auto Agent</a>
     </div>
+    <div class="sidebar-resize-handle" id="sidebar-resize"></div>
     {% block sidebar %}
     <nav class="sidebar-nav">
       <a href="/" class="sidebar-link active">Projects</a>
@@ -21,9 +22,13 @@
     {% endblock %}
     <!-- Agent Messenger (사이드바 하단 — 카톡 스타일) -->
     <div class="sidebar-messenger" id="sidebar-messenger">
-      <div class="sm-header" onclick="toggleMessenger()">
-        <span>💬 Agent Chat <span id="sm-count" class="sm-count" style="display:none">0</span></span>
-        <span id="sm-toggle" class="sm-toggle">&#9650;</span>
+      <div class="sm-header">
+        <span onclick="toggleMessenger()" style="cursor:pointer;flex:1">💬 Agent Chat <span id="sm-count" class="sm-count" style="display:none">0</span></span>
+        <span class="sm-font-controls">
+          <button onclick="smFontSize(-1)" title="글자 작게">A-</button>
+          <button onclick="smFontSize(1)" title="글자 크게">A+</button>
+        </span>
+        <span id="sm-toggle" class="sm-toggle" onclick="toggleMessenger()" style="cursor:pointer">&#9650;</span>
       </div>
       <div class="sm-body" id="sm-body">
         <div id="sm-messages" class="sm-messages"></div>
@@ -50,7 +55,7 @@
   .sm-body.collapsed { height: 0; overflow: hidden; }
   .sm-messages { padding: 6px 8px; display: flex; flex-direction: column; gap: 2px; }
 
-  .sm-msg { display: flex; gap: 6px; align-items: flex-start; padding: 4px 6px; border-radius: 6px; font-size: 10px; line-height: 1.4; animation: smIn 0.3s ease; }
+  .sm-msg { display: flex; gap: 6px; align-items: flex-start; padding: 4px 6px; border-radius: 6px; font-size: var(--sm-font, 10px); line-height: 1.4; animation: smIn 0.3s ease; }
   .sm-msg.first-msg { margin-top: 6px; }
   .sm-msg.is-director { flex-direction: row-reverse; }
   .sm-msg.is-director .sm-bubble-wrap { display: flex; flex-direction: column; align-items: flex-end; }
@@ -62,7 +67,7 @@
   .sm-profile.hide { visibility: hidden; }
   .sm-bubble-wrap { flex: 1; min-width: 0; }
   .sm-nick { font-size: 9px; font-weight: 600; margin-bottom: 1px; }
-  .sm-bubble { display: inline-block; padding: 4px 8px; border-radius: 2px 8px 8px 8px; background: rgba(255,255,255,0.07); font-size: 10px; color: #D4D4D8; line-height: 1.5; word-break: break-word; max-width: 95%; }
+  .sm-bubble { display: inline-block; padding: 4px 8px; border-radius: 2px 8px 8px 8px; background: rgba(255,255,255,0.07); font-size: var(--sm-font, 10px); color: #D4D4D8; line-height: 1.5; word-break: break-word; max-width: 95%; }
   .sm-msg:not(.first-msg) .sm-bubble { border-radius: 8px; }
   .sm-time { font-size: 8px; color: rgba(255,255,255,0.45); margin-top: 1px; }
 
@@ -79,9 +84,57 @@
   .sm-nick.nick-builder { color: #38BDF8; }
   .sm-nick.nick-system { color: #9CA3AF; }
   .sm-nick.nick-runner { color: #C084FC; }
+
+  /* 메신저 폰트 크기 조절 버튼 */
+  .sm-font-controls { display: flex; gap: 2px; margin-right: 6px; }
+  .sm-font-controls button { background: rgba(255,255,255,0.08); border: none; color: #A1A1AA; font-size: 9px; padding: 1px 5px; border-radius: 3px; cursor: pointer; font-weight: 600; }
+  .sm-font-controls button:hover { background: rgba(255,255,255,0.15); color: #E4E4E7; }
+
+  /* 사이드바 리사이즈 핸들 */
+  .sidebar-resize-handle { position: absolute; top: 0; right: -3px; width: 6px; height: 100%; cursor: col-resize; z-index: 60; }
+  .sidebar-resize-handle:hover, .sidebar-resize-handle.active { background: var(--accent); opacity: 0.5; }
   </style>
 
   <script>
+  // 메신저 폰트 크기 조절
+  var smFontLevel = parseInt(localStorage.getItem('smFontLevel') || '0');
+  var SM_SIZES = [8, 9, 10, 11, 12, 13, 14, 16];
+  var SM_DEFAULT = 2; // index=2 → 10px
+  function smFontSize(delta) {
+    smFontLevel = Math.max(0, Math.min(SM_SIZES.length - 1, (smFontLevel || SM_DEFAULT) + delta));
+    localStorage.setItem('smFontLevel', smFontLevel);
+    document.documentElement.style.setProperty('--sm-font', SM_SIZES[smFontLevel] + 'px');
+  }
+  // 초기 적용
+  if (smFontLevel) document.documentElement.style.setProperty('--sm-font', SM_SIZES[smFontLevel] + 'px');
+
+  // 사이드바 리사이즈
+  (function() {
+    var handle = document.getElementById('sidebar-resize');
+    var sidebar = document.getElementById('sidebar');
+    if (!handle || !sidebar) return;
+    var startX, startW;
+    handle.addEventListener('mousedown', function(e) {
+      startX = e.clientX; startW = sidebar.offsetWidth;
+      handle.classList.add('active');
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      e.preventDefault();
+    });
+    function onMove(e) {
+      var w = Math.max(240, Math.min(600, startW + (e.clientX - startX)));
+      document.documentElement.style.setProperty('--sidebar-w', w + 'px');
+    }
+    function onUp() {
+      handle.classList.remove('active');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      localStorage.setItem('sidebarW', getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w').trim());
+    }
+    var saved = localStorage.getItem('sidebarW');
+    if (saved) document.documentElement.style.setProperty('--sidebar-w', saved);
+  })();
+
   // Agent Messenger — 사이드바 미니 패널
   (function() {
     var body = document.getElementById('sm-body');
