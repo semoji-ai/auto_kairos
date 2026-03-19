@@ -5,12 +5,18 @@
 import json
 import hashlib
 import mimetypes
+import uuid as _uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from .connection import get_connection, get_db_path, transaction
 from auto_agent.paths import get_workspace_dir, get_data_dir
+
+
+def _generate_project_uuid() -> str:
+    """8자 hex 프로젝트 ID 생성. 충돌 확률 ~1/4B."""
+    return _uuid.uuid4().hex[:8]
 
 
 class ProjectManager:
@@ -30,30 +36,37 @@ class ProjectManager:
         topic: str = None,
         theme: str = "simple",
         config: dict = None,
+        uuid: str = None,
     ) -> int:
         """프로젝트 생성. output_dir 자동 생성. 프로젝트 ID 반환."""
-        output_dir = get_workspace_dir() / "output" / slug
+        if not uuid:
+            uuid = _generate_project_uuid()
+        output_dir = get_workspace_dir() / "output" / f"{uuid}_{slug}"
         output_dir.mkdir(parents=True, exist_ok=True)
 
         with transaction(self.db_path) as conn:
             cur = conn.execute(
-                """INSERT INTO projects (name, slug, topic, theme, config, output_dir)
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (name, slug, topic, theme,
+                """INSERT INTO projects (uuid, name, slug, topic, theme, config, output_dir)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (uuid, name, slug, topic, theme,
                  json.dumps(config, ensure_ascii=False) if config else None,
                  str(output_dir)),
             )
             return cur.lastrowid
 
     def get_project(
-        self, project_id: int = None, slug: str = None
+        self, project_id: int = None, slug: str = None, uuid: str = None
     ) -> Optional[dict]:
-        """ID 또는 slug로 프로젝트 조회."""
+        """ID, slug, 또는 uuid로 프로젝트 조회."""
         conn = get_connection(self.db_path)
         try:
             if project_id:
                 row = conn.execute(
                     "SELECT * FROM projects WHERE id = ?", (project_id,)
+                ).fetchone()
+            elif uuid:
+                row = conn.execute(
+                    "SELECT * FROM projects WHERE uuid = ?", (uuid,)
                 ).fetchone()
             elif slug:
                 row = conn.execute(
@@ -64,6 +77,32 @@ class ProjectManager:
             return dict(row) if row else None
         finally:
             conn.close()
+
+    def resolve_project(self, identifier: str) -> Optional[dict]:
+        """uuid(8자 hex) 또는 slug로 프로젝트 조회.
+
+        8자 hex 패턴이면 uuid 우선 조회, fallback으로 slug.
+        """
+        if (len(identifier) == 8
+                and all(c in '0123456789abcdef' for c in identifier.lower())):
+            project = self.get_project(uuid=identifier.lower())
+            if project:
+                return project
+        return self.get_project(slug=identifier)
+
+    def get_project_dir(self, project_id: int = None, uuid: str = None, slug: str = None) -> Optional[Path]:
+        """프로젝트 output 디렉토리 경로. DB의 output_dir 반환."""
+        project = self.get_project(project_id=project_id, uuid=uuid, slug=slug)
+        if not project:
+            return None
+        return Path(project["output_dir"])
+
+    def get_manifest_filename(self, project_id: int = None, uuid: str = None, slug: str = None) -> Optional[str]:
+        """매니페스트 파일명: {uuid}_{slug}.json"""
+        project = self.get_project(project_id=project_id, uuid=uuid, slug=slug)
+        if not project:
+            return None
+        return f"{project['uuid']}_{project['slug']}.json"
 
     def get_active_project(self) -> Optional[dict]:
         """가장 최근 업데이트된 비-archived 프로젝트 반환."""

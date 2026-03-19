@@ -8,6 +8,7 @@ PRAGMA foreign_keys=ON;
 -- ═══════════════════════════════════════════
 CREATE TABLE IF NOT EXISTS projects (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    uuid            TEXT NOT NULL DEFAULT '',            -- "b3cef462" (8자 hex 프로젝트 ID)
     name            TEXT NOT NULL,                       -- "미국 이란 전쟁 2026"
     slug            TEXT NOT NULL UNIQUE,                -- "미국_이란_전쟁_2026"
     status          TEXT NOT NULL DEFAULT 'created'
