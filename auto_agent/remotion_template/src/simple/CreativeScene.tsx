@@ -3384,34 +3384,68 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           </div>
         )}
 
-        {/* Annotated Chart — 간이 바 + 주석 */}
-        {layout === "annotated_chart" && items.length >= 2 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
-            {/* 간이 바 렌더링 */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
-              {items.map((item, i) => {
-                const maxVal = Math.max(...(values.length ? values : [1]));
-                return (
-                  <div key={i} style={useFadeRise(staggerDelay(i, 10, 12), 15)}>
-                    <MiniBar
-                      value={values[i] || 0}
-                      maxValue={maxVal}
-                      label={`${item}  ${values[i] != null ? values[i] : ""}${data.unit || ""}`}
-                      color={moodCfg.accent}
-                      height={10}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            {/* 주석 */}
-            {data.annotations?.map((ann: { text: string; index?: number }, i: number) => (
-              <div key={i} style={{ opacity: useFade(staggerDelay(i, 8, 40), 12), paddingLeft: 48 }}>
-                <AnnotationLine text={ann.text} width={80} color={moodCfg.accent} />
+        {/* Annotated Chart — chartConfig.type에 따라 line/pie/bar 렌더링 */}
+        {layout === "annotated_chart" && items.length >= 2 && (() => {
+          const annotatedChartType = creative.chartConfig?.type || data.chartConfig?.type || "bar";
+          if (annotatedChartType === "line") {
+            return (
+              <LineChartDisplay
+                items={items}
+                values={values}
+                unit={unit}
+                headline=""
+                moodCfg={moodCfg}
+                source=""
+                mood={mood}
+                hasImageBg={hasImageBackground}
+                chartConfig={creative.chartConfig}
+              />
+            );
+          }
+          if (annotatedChartType === "pie") {
+            return (
+              <PieChartDisplay
+                items={items}
+                values={values}
+                unit={unit}
+                headline=""
+                moodCfg={moodCfg}
+                source=""
+                mood={mood}
+                hasImageBg={hasImageBackground}
+                chartConfig={creative.chartConfig}
+              />
+            );
+          }
+          // 기본: bar (MiniBar + 주석)
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+              {/* 간이 바 렌더링 */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+                {items.map((item, i) => {
+                  const maxVal = Math.max(...(values.length ? values : [1]));
+                  return (
+                    <div key={i} style={useFadeRise(staggerDelay(i, 10, 12), 15)}>
+                      <MiniBar
+                        value={values[i] || 0}
+                        maxValue={maxVal}
+                        label={`${item}  ${values[i] != null ? values[i] : ""}${data.unit || ""}`}
+                        color={moodCfg.accent}
+                        height={10}
+                      />
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        )}
+              {/* 주석 */}
+              {data.annotations?.map((ann: { text: string; index?: number }, i: number) => (
+                <div key={i} style={{ opacity: useFade(staggerDelay(i, 8, 40), 12), paddingLeft: 48 }}>
+                  <AnnotationLine text={ann.text} width={80} color={moodCfg.accent} />
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Status Dots */}
         {statusDots.length > 0 && (
