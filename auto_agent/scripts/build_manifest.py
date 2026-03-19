@@ -28,8 +28,24 @@ def _probe_mp3_duration_local(path: Path) -> float:
             return 0.0
 
 
-def _load_project_config(project_id: str) -> dict:
-    """프로젝트 config 로드. Supabase → 로컬 fallback."""
+def _load_project_config(project_id: str, project_dir: str = None) -> dict:
+    """프로젝트 config 로드. 로컬 ProjectManager → Supabase fallback."""
+    # 1. 로컬 ProjectManager에서 로드
+    try:
+        from auto_agent.db.project_manager import ProjectManager
+        pm = ProjectManager()
+        # project_id가 숫자면 ID로, 아니면 slug로 조회
+        try:
+            pid = int(project_id)
+            config = pm.get_config(pid)
+        except (ValueError, TypeError):
+            proj = pm.get_project(slug=str(project_id))
+            config = pm.get_config(proj["id"]) if proj else None
+        if config:
+            return config
+    except Exception:
+        pass
+    # 2. Supabase fallback
     try:
         from auto_agent.supabase_client import get_supabase, supabase_enabled
         if supabase_enabled():
@@ -124,7 +140,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
 
     # ── 씬별 매니페스트 엔트리 생성 ──
     # 프로젝트 config
-    cfg = _load_project_config(project_id)
+    cfg = _load_project_config(project_id, str(out_dir))
     font_family = cfg.get("font_family", "Pretendard")
     art_style = cfg.get("art_style")
     video_theme = cfg.get("video_theme", "dark")
@@ -316,7 +332,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     print(f"Manifest built: {manifest_path}")
     print(f"  Scenes: {len(scenes)}, Audio: {audio_count}, Images: {image_count}")
     print(f"  Total duration: {total_duration:.1f}s ({total_duration/60:.1f}min)")
-    print(f"  Asset dir: {asset_dir}")
+    print(f"  Project dir: {out_dir}")
     return manifest_path
 
 

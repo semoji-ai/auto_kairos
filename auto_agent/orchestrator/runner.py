@@ -1523,22 +1523,18 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
         # 1. 매니페스트 빌드
         try:
-            pid = self.project["id"]
-            storage_key = self.sync.storage_key if self.sync else None
-            if storage_key:
-                result = subprocess.run(
-                    [sys.executable, "-m", "auto_agent.scripts.build_manifest",
-                     str(pid), str(storage_key), str(self.project_dir)],
-                    cwd=str(get_workspace_dir()),
-                    capture_output=True, text=True, timeout=120,
-                )
-                if result.returncode == 0:
-                    print("    [AUTO] 매니페스트 빌드 완료")
-                else:
-                    print(f"    [WARN] 매니페스트 빌드 실패: {result.stderr[:200]}")
-                    return
+            pid = str(self.project.get("id", self.project_slug))
+            storage_key = self.sync.storage_key if self.sync else self.project_slug
+            result = subprocess.run(
+                [sys.executable, "-m", "auto_agent.scripts.build_manifest",
+                 pid, storage_key, str(self.project_dir)],
+                cwd=str(get_workspace_dir()),
+                capture_output=True, text=True, timeout=120,
+            )
+            if result.returncode == 0:
+                print("    [AUTO] 매니페스트 빌드 완료")
             else:
-                print("    [SKIP] Supabase 미연결 — 매니페스트 빌드 스킵")
+                print(f"    [WARN] 매니페스트 빌드 실패: {result.stderr[:200]}")
                 return
         except Exception as e:
             print(f"    [WARN] 매니페스트 빌드 에러: {e}")
@@ -1578,7 +1574,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             manifest_path = None
             for p in [
                 self.project_dir / "manifest.json",
-                ws / "remotion" / "public" / "manifests" / f"{self.sync.storage_key}.json" if self.sync else None,
+                ws / "remotion" / "public" / "manifests" / f"{self.sync.storage_key if self.sync else self.project_slug}.json",
                 ws / "remotion" / "public" / "manifest.json",
             ]:
                 if p and p.exists():
@@ -2311,8 +2307,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # manifest-builder는 project_id + storage_key 인자 필요
         cmd = [sys.executable, str(script_path)]
         if module_name == "manifest-builder":
-            pid = str(self.project.get("id", ""))
-            sk = str(self.sync.storage_key) if self.sync and self.sync.storage_key else ""
+            pid = str(self.project.get("id", self.project_slug))
+            sk = str(self.sync.storage_key) if self.sync and self.sync.storage_key else self.project_slug
             if pid and sk:
                 cmd.extend([pid, sk])
 
