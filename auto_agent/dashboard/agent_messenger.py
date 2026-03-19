@@ -61,6 +61,7 @@ def post_message(
     project_slug: str = "",
     level: str = "info",
     data: dict = None,
+    skip_persist: bool = False,
 ):
     """에이전트 메시지를 큐에 추가하고 모든 SSE 구독자에게 전달."""
     global _msg_id, _messages, _initialized
@@ -83,12 +84,13 @@ def post_message(
     }
     _messages.append(msg)
 
-    # 파일에 영속 저장 (append)
-    try:
-        with open(_get_persist_path(), "a", encoding="utf-8") as f:
-            f.write(json.dumps(msg, ensure_ascii=False) + "\n")
-    except Exception:
-        pass
+    # 파일에 영속 저장 (runner가 이미 기록한 경우 스킵)
+    if not skip_persist:
+        try:
+            with open(_get_persist_path(), "a", encoding="utf-8") as f:
+                f.write(json.dumps(msg, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
 
     # 모든 SSE 구독자에게 전달
     dead = []
@@ -156,7 +158,7 @@ async def message_history(limit: int = 50, project: str = ""):
 
 @router.post("/send")
 async def send_message(request: Request):
-    """외부에서 메시지 전송 (HTTP POST)."""
+    """외부에서 메시지 전송 (HTTP POST). runner가 이미 파일에 기록했으므로 파일 저장 스킵."""
     body = await request.json()
     post_message(
         agent=body.get("agent", "System"),
@@ -165,5 +167,6 @@ async def send_message(request: Request):
         project_slug=body.get("project", ""),
         level=body.get("level", "info"),
         data=body.get("data"),
+        skip_persist=True,  # runner가 이미 파일에 기록
     )
     return {"ok": True}

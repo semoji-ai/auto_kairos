@@ -36,13 +36,26 @@ from auto_agent.orchestrator.vault_rag import VaultRAG
 _MESSENGER_URL = "http://localhost:8080/api/agent-messages/send"
 
 def _notify(agent: str, text: str, phase: str = "", project: str = "", level: str = "info", data: dict = None):
-    """파이프라인 진행 상황을 대시보드 메신저로 HTTP POST 전송."""
+    """파이프라인 진행 상황을 대시보드 메신저로 전송. 파일 영속 + HTTP POST."""
+    import time as _time
+    msg = {
+        "agent": agent, "text": text, "phase": phase,
+        "project": project, "level": level, "data": data or {},
+        "timestamp": _time.time(),
+    }
+    # 1. 파일 영속 저장 (대시보드 꺼져 있어도 유지)
+    try:
+        from auto_agent.paths import get_workspace_dir
+        persist = get_workspace_dir() / ".auto_agent" / "agent_messages.jsonl"
+        persist.parent.mkdir(parents=True, exist_ok=True)
+        with open(persist, "a", encoding="utf-8") as f:
+            f.write(json.dumps(msg, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+    # 2. HTTP POST로 실시간 SSE 전달 (대시보드 떠 있으면)
     try:
         import urllib.request
-        payload = json.dumps({
-            "agent": agent, "text": text, "phase": phase,
-            "project": project, "level": level, "data": data or {},
-        }, ensure_ascii=False).encode("utf-8")
+        payload = json.dumps(msg, ensure_ascii=False).encode("utf-8")
         req = urllib.request.Request(
             _MESSENGER_URL, data=payload,
             headers={"Content-Type": "application/json"},
