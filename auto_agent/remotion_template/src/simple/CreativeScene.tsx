@@ -2848,13 +2848,135 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
     );
   }
 
-  // === cinematic: 이미지 풀스크린 + Ken Burns, 텍스트 없음 (나레이션만) ===
-  // 이미지는 부모(SimpleVideo)의 SceneImage가 렌더링하므로,
-  // CreativeScene은 빈 화면만 반환 → 이미지 위에 텍스트가 없는 순수 시각 씬
+  /* ── Cinematic Overlay Components ── */
+
+  const OVERLAY_POSITIONS: Record<string, React.CSSProperties> = {
+    top_left:     { top: 80, left: 80 },
+    top_right:    { top: 80, right: 80 },
+    bottom_left:  { bottom: 120, left: 80 },
+    bottom_right: { bottom: 120, right: 80 },
+    center:       { top: "50%", left: "50%", transform: "translate(-50%, -50%)" },
+  };
+
+  const SpeechBubble: React.FC<{ text: string; position: string; delay: number }> = ({
+    text, position, delay,
+  }) => {
+    const frame = useCurrentFrame();
+    const scale = interpolate(frame - delay, [0, 8], [0, 1], {
+      extrapolateLeft: "clamp", extrapolateRight: "clamp",
+      easing: Easing.out(Easing.back(1.5)),
+    });
+    const pos = OVERLAY_POSITIONS[position] || OVERLAY_POSITIONS.center;
+    const tailSide = position.includes("right") ? "left" : "right";
+    const tailStyle: React.CSSProperties = {
+      position: "absolute",
+      bottom: -14,
+      [tailSide === "left" ? "left" : "right"]: 24,
+      width: 0, height: 0,
+      borderLeft: "12px solid transparent",
+      borderRight: "12px solid transparent",
+      borderTop: "16px solid #fff",
+      filter: "drop-shadow(0 2px 0 #222)",
+    };
+    return (
+      <div style={{
+        position: "absolute", ...pos, zIndex: 10,
+        transform: `${pos.transform || ""} scale(${scale})`,
+        opacity: scale,
+      }}>
+        <div style={{
+          position: "relative",
+          background: "#fff",
+          border: "4px solid #222",
+          borderRadius: 20,
+          padding: "16px 28px",
+          fontFamily: "inherit",
+          fontSize: 42,
+          fontWeight: 800,
+          color: "#222",
+          boxShadow: "4px 4px 0 #222",
+        }}>
+          {text}
+          <div style={tailStyle} />
+        </div>
+      </div>
+    );
+  };
+
+  const EmotionOverlay: React.FC<{ text: string; position: string; delay: number }> = ({
+    text, position, delay,
+  }) => {
+    const frame = useCurrentFrame();
+    const scale = interpolate(frame - delay, [0, 6], [0, 1], {
+      extrapolateLeft: "clamp", extrapolateRight: "clamp",
+      easing: Easing.out(Easing.back(2)),
+    });
+    const shake = Math.sin((frame - delay) * 0.8) * 3;
+    const pos = OVERLAY_POSITIONS[position] || OVERLAY_POSITIONS.center;
+    return (
+      <div style={{
+        position: "absolute", ...pos, zIndex: 10,
+        transform: `${pos.transform || ""} scale(${scale}) rotate(${-8 + shake}deg)`,
+        opacity: scale,
+        fontSize: 72,
+        fontWeight: 900,
+        color: "#FFE033",
+        textShadow: "3px 3px 0 #222, -1px -1px 0 #222",
+        fontFamily: "inherit",
+      }}>
+        {text}
+      </div>
+    );
+  };
+
+  const CaptionOverlay: React.FC<{ text: string; position: string; delay: number }> = ({
+    text, position, delay,
+  }) => {
+    const frame = useCurrentFrame();
+    const opacity = interpolate(frame - delay, [0, 10], [0, 1], {
+      extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    });
+    const pos = OVERLAY_POSITIONS[position] || OVERLAY_POSITIONS.bottom_left;
+    return (
+      <div style={{
+        position: "absolute", ...pos, zIndex: 10, opacity,
+        background: "rgba(0,0,0,0.75)",
+        borderRadius: 8,
+        padding: "10px 20px",
+        fontSize: 28,
+        fontWeight: 600,
+        color: "#fff",
+        fontFamily: "inherit",
+      }}>
+        {text}
+      </div>
+    );
+  };
+
+  const CinematicOverlayRenderer: React.FC<{
+    overlay: { type: string; text: string; position: string };
+    delay?: number;
+  }> = ({ overlay, delay = 9 }) => {
+    if (!overlay?.text) return null;
+    switch (overlay.type) {
+      case "speech_bubble": return <SpeechBubble text={overlay.text} position={overlay.position} delay={delay} />;
+      case "emotion":       return <EmotionOverlay text={overlay.text} position={overlay.position} delay={delay} />;
+      case "caption":       return <CaptionOverlay text={overlay.text} position={overlay.position} delay={delay} />;
+      default: return null;
+    }
+  };
+
+  // === cinematic: 이미지 풀스크린 + Ken Burns + optional 오버레이 ===
+  // 이미지는 부모(SimpleVideo)의 SceneImage가 렌더링.
+  // 오버레이가 있으면 말풍선/감탄부호/캡션을 이미지 위에 표시.
   if (layout === "cinematic") {
+    const cinematicOverlay = data?.cinematicOverlay;
     return (
       <AbsoluteFill>
         {!hasImageBackground && <MoodBackground mood={mood} transparent={false} />}
+        {cinematicOverlay && (
+          <CinematicOverlayRenderer overlay={cinematicOverlay} delay={9} />
+        )}
       </AbsoluteFill>
     );
   }
