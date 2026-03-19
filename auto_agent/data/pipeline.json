@@ -223,19 +223,10 @@
         {
           "id": "step_8b",
           "name": "image_asset_sourcing",
-          "description": "에이전트 기반 이미지 소싱: 위키미디어 검색 + FAL.ai 생성",
-          "input": [
-            "scene_specs.json"
-          ],
-          "input_optional": [
-            "art_style.json"
-          ],
-          "output": [
-            "output/{project}/images/",
-            "output/{project}/characters/",
-            "output/{project}/character_casting.json",
-            "output/{project}/image_licenses.json"
-          ],
+          "description": "이미지 소싱 — 검색(신사진) + 생성(윤화가) 병렬 실행",
+          "input": ["scene_specs.json"],
+          "input_optional": ["art_style.json"],
+          "output": ["output/{project}/images/"],
           "conditional": true,
           "condition": "scene_specs에 이미지 에셋이 필요한 씬이 있을 때만",
           "condition_check": {
@@ -243,17 +234,10 @@
             "path": "scene_specs.json",
             "field": "scenes[].imageAsset"
           },
-          "sub_steps": [
-            "character_analysis (scene_specs.json에서 generate 씬 기반 2씬+ 캐릭터 식별 → character_plan.json)",
-            "character_generation (character_plan.json 기반 FAL.ai 생성)",
-            "image_search (wikimedia/serper/pixabay 워터폴)",
-            "scene_image_generation (캐릭터 참조 기반 씬 이미지)",
-            "standalone_image_generation (캐릭터 없는 단발 씬)",
-            "viz_background_generation (시각화 배경)"
-          ],
-          "notes": "캐릭터 생성→씬 생성 순서 보장. 라이선스 메타데이터 기록",
-          "type": "module",
-          "module": "image-sourcer"
+          "type": "agent",
+          "agent": "image-painter",
+          "sub_agents": ["image-searcher", "image-painter"],
+          "notes": "신사진(검색) + 윤화가(생성) 병렬. 검색 실패 시 윤화가에게 생성 위임."
         },
         {
           "id": "step_9",

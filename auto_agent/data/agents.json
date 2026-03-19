@@ -98,21 +98,19 @@
       },
       "notes": "핵심 창작 에이전트. 5단계 순차 실행: (1) 씬 분할→scene_decomposition.json, (2) Creative Direction→scene_specs.json, (2.5) Asset Advisory→차트/아이콘/국기/로고/이미지 추천, (3) 데이터 보강→scene_specs.json 업데이트, (4) 모션 설계→motion_plan.json"
     },
-    "image-sourcer": {
+    "image-searcher": {
+      "description": "이미지 검색 에이전트(신사진). source=search 씬의 위키미디어/Serper 검색 + 다운로드. 검색 실패 시 image-painter에게 생성 위임.",
       "model": "claude-sonnet-4-5-20250929",
       "max_turns": 30,
-      "skills": [
-        "shared/asset-advisory",
-        "shared/image-prompt-rules"
-      ],
-      "allowed_tools": [
-        "Read",
-        "Write",
-        "Bash",
-        "Glob",
-        "WebFetch"
-      ],
-      "description": "이미지 에셋 소싱 에이전트. 위키미디어 검색 + FAL.ai 생성."
+      "allowed_tools": ["Read", "Write", "Bash", "Glob"],
+      "notes": "검색 도구: wikimedia_search, serper_search, download_image. 생성은 하지 않음."
+    },
+    "image-painter": {
+      "description": "이미지 생성 에이전트(윤화가). source=generate 씬의 FAL.ai 이미지 생성. 캐릭터 분석→캐릭터 생성→씬 이미지 생성.",
+      "model": "claude-sonnet-4-5-20250929",
+      "max_turns": 40,
+      "allowed_tools": ["Read", "Write", "Bash", "Glob"],
+      "notes": "생성 도구: image_generate (scene/character). 검색은 하지 않음. 항상 /edit 엔드포인트 + reference_image 첨부."
     },
     "tts-verifier": {
       "model": "claude-sonnet-4-5-20250929",
