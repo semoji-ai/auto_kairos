@@ -892,7 +892,7 @@ class PipelineRunner:
         # ── 중간 동기화 ① scene_count 업데이트 ──
         try:
             self.pm.update_project(self.project["id"], scene_count=total_scenes)
-            _notify("Director", f"Supabase 동기화: scene_count={total_scenes}",
+            _notify("Director", f"DB 업데이트: scene_count={total_scenes}",
                     phase=self.state.current_phase, project=self.project_slug, level="info")
         except Exception:
             pass
