@@ -247,7 +247,7 @@ async def storyboard_scene_detail(request: Request, project_id: int, scene_num: 
         return HTMLResponse(f"Scene {scene_num} not found", status_code=404)
 
     scene["_image_url"] = get_scene_image_url(dir_name, scene_num, out_dir)
-    scene["_audio_url"] = get_scene_audio_url(slug, scene_num, out_dir)
+    scene["_audio_url"] = get_scene_audio_url(dir_name, scene_num, out_dir)
 
     tts = load_project_json(out_dir, "tts_results.json")
     if tts:
@@ -320,7 +320,7 @@ async def storyboard_scene_by_slug(request: Request, slug: str, scene_num: int):
         return HTMLResponse(f"Scene {scene_num} not found", status_code=404)
 
     scene["_image_url"] = get_scene_image_url(dir_name, scene_num, out_dir)
-    scene["_audio_url"] = get_scene_audio_url(slug, scene_num, out_dir)
+    scene["_audio_url"] = get_scene_audio_url(dir_name, scene_num, out_dir)
 
     tts = load_project_json(out_dir, "tts_results.json")
     if tts:
@@ -367,7 +367,7 @@ async def editor_scene_by_slug(slug: str, scene_num: int):
     # 로컬 이미지/오디오 경로 추가
     dir_name = Path(out_dir).name if out_dir else slug
     scene["_image_url"] = get_scene_image_url(dir_name, scene_num, out_dir)
-    scene["_audio_url"] = get_scene_audio_url(slug, scene_num, out_dir)
+    scene["_audio_url"] = get_scene_audio_url(dir_name, scene_num, out_dir)
 
     return {"scene": scene}
 

@@ -368,12 +368,12 @@ class SupabaseProjectManager:
         project = self.get_project(project_id)
         if project:
             out_dir = project.get("output_dir", "")
-            slug = project.get("slug", "")
+            dir_name = Path(out_dir).name if out_dir else project.get("slug", "")
             if out_dir:
                 for ext in (".jpg", ".jpeg", ".png", ".webp"):
                     local = Path(out_dir) / "images" / f"scene_{scene_number:03d}{ext}"
                     if local.exists():
-                        return f"/output/{slug}/images/scene_{scene_number:03d}{ext}"
+                        return f"/output/{dir_name}/images/scene_{scene_number:03d}{ext}"
         # Supabase fallback
         resp = (
             self.sb.table("assets")
@@ -426,11 +426,11 @@ class SupabaseProjectManager:
         project = self.get_project(project_id)
         if project:
             out_dir = project.get("output_dir", "")
-            slug = project.get("slug", "")
+            dir_name = Path(out_dir).name if out_dir else project.get("slug", "")
             if out_dir:
                 local = Path(out_dir) / "audio" / f"scene_{scene_number:03d}.mp3"
                 if local.exists():
-                    return f"/output/{slug}/audio/scene_{scene_number:03d}.mp3"
+                    return f"/output/{dir_name}/audio/scene_{scene_number:03d}.mp3"
         # Supabase fallback
         resp = (
             self.sb.table("assets")
