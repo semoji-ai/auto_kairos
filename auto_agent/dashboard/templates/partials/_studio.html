@@ -125,6 +125,7 @@
 <script>
 (function() {
   var SLUG = '{{ slug }}';
+  var DIR_NAME = '{{ dir_name|default(slug) }}';
   var _studioPort = null;
   var _scenes = [];
   var _meta = null;

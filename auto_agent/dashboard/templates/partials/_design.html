@@ -109,6 +109,7 @@
 <script>
 (function() {
   var SLUG = '{{ slug }}';
+  var DIR_NAME = '{{ dir_name|default(slug) }}';
   var _presets = [];
   var _activeId = null;
 

@@ -132,6 +132,7 @@ function resizePreview(val) {
 // ── Remotion Player 썸네일 lazy mount ──
 (function() {
   var slug = '{{ slug }}';
+  var dirName = '{{ dir_name|default(slug) }}';
   var metaCache = null;
   var sceneCache = {};
 
@@ -254,6 +255,7 @@ function generateThumbnails(slug, btn) {
 
 <script>
 var slug = '{{ slug }}';
+var dirName = '{{ dir_name|default(slug) }}';
 function toggleTtsRegen(sn) {
   var panel = document.getElementById('tts-regen-' + sn);
   if (panel.style.display === 'none') {
@@ -297,7 +299,7 @@ function selectTtsVersion(sn, fileName) {
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.ok) {
       var audio = document.getElementById('audio-' + sn);
-      if (audio) audio.src = '/output/' + slug + '/audio/scene_' + String(sn).padStart(3,'0') + '.mp3?t=' + Date.now();
+      if (audio) audio.src = '/output/' + dirName + '/audio/scene_' + String(sn).padStart(3,'0') + '.mp3?t=' + Date.now();
     }
   });
 }
@@ -319,7 +321,7 @@ function regenTts(sn) {
     if (d.ok) {
       status.textContent = '✅ 재생성 완료!';
       var audio = document.getElementById('audio-' + sn);
-      if (audio) { audio.src = '/output/' + slug + '/audio/scene_' + String(sn).padStart(3,'0') + '.mp3?t=' + Date.now(); }
+      if (audio) { audio.src = '/output/' + dirName + '/audio/scene_' + String(sn).padStart(3,'0') + '.mp3?t=' + Date.now(); }
       loadTtsVersions(sn);
     } else {
       status.textContent = '실패: ' + (d.error || '').substring(0, 50);

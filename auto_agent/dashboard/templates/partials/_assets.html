@@ -128,6 +128,7 @@
   var list = document.getElementById('assets-list');
   var statsEl = document.getElementById('assets-stats');
   var slug = '{{ slug }}';
+  var dirName = '{{ dir_name|default(slug) }}';
 
   // 아트스타일 로드
   fetch('/api/p/' + encodeURIComponent(slug) + '/art-style')
@@ -297,7 +298,7 @@
     .then(function(data) {
       if (data.ok) {
         var imgEl = document.getElementById('img-' + sceneNum);
-        if (imgEl) imgEl.src = '/output/' + slug + '/images/scene_' + String(sceneNum).padStart(3,'0') + '.jpg?t=' + Date.now();
+        if (imgEl) imgEl.src = '/output/' + dirName + '/images/scene_' + String(sceneNum).padStart(3,'0') + '.jpg?t=' + Date.now();
         alert('교체 완료!');
       } else {
         alert('실패: ' + (data.error || ''));
@@ -318,7 +319,7 @@
         var ext = fileName.split('.').pop();
         var imgEl = document.getElementById('img-' + sceneNum);
         if (imgEl) {
-          imgEl.src = '/output/' + slug + '/images/scene_' + String(sceneNum).padStart(3,'0') + '.' + ext + '?t=' + Date.now();
+          imgEl.src = '/output/' + dirName + '/images/scene_' + String(sceneNum).padStart(3,'0') + '.' + ext + '?t=' + Date.now();
         }
         loadVersions(sceneNum);
       } else {
@@ -392,7 +393,7 @@
       if (data.ok) {
         status.textContent = '✅ 생성 완료!';
         var imgEl = document.getElementById('img-' + sceneNum);
-        if (imgEl) imgEl.src = '/output/' + slug + '/images/scene_' + String(sceneNum).padStart(3,'0') + '.png?t=' + Date.now();
+        if (imgEl) imgEl.src = '/output/' + dirName + '/images/scene_' + String(sceneNum).padStart(3,'0') + '.png?t=' + Date.now();
         loadVersions(sceneNum);
       } else {
         status.textContent = '실패: ' + (data.error || '').substring(0, 100);

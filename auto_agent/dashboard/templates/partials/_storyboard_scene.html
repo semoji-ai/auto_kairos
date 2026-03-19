@@ -39,6 +39,7 @@
     <script>
     (function(){
       const slug = '{{ slug }}';
+      const dirName = '{{ dir_name|default(slug) }}';
       const sceneNum = {{ scene.sceneNumber }};
       const grid = document.getElementById('candidates-grid');
       const loading = document.getElementById('candidates-loading');
@@ -297,6 +298,7 @@ function _tryMountEditor() {
   // 이미 같은 씬+슬러그로 마운트되었으면 스킵
   var sceneNum = {{ scene.sceneNumber }};
   var slug = '{{ slug }}';
+  var dirName = '{{ dir_name|default(slug) }}';
   var key = slug + ':' + sceneNum;
   if (editorTab.dataset.mountedKey === key) return;
 
@@ -350,6 +352,7 @@ function _tryMountEditor() {
     if (root) {
       var sceneNum = {{ scene.sceneNumber }};
       var slug = '{{ slug }}';
+      var dirName = '{{ dir_name|default(slug) }}';
       Promise.all([
         fetch('/api/p/' + slug + '/editor/scenes/' + sceneNum).then(function(r){ return r.json(); }),
         fetch('/api/p/' + slug + '/manifest-meta').then(function(r){ return r.json(); }).catch(function(){ return {}; })
