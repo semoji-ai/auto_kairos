@@ -204,15 +204,28 @@ def cmd_run(args):
     """파이프라인 실행."""
     import argparse
     parser = argparse.ArgumentParser(prog="auto-agent run")
-    parser.add_argument("--project", required=True, help="프로젝트 slug")
+    parser.add_argument("--project", required=True, help="프로젝트 slug 또는 uuid")
     parser.add_argument("--from", dest="from_step", help="이 step부터 실행")
     parser.add_argument("--only", dest="only_step", help="이 step만 실행")
     parser.add_argument("--dry-run", action="store_true", help="실행하지 않고 계획만 출력")
     parser.add_argument("--workspace", help="워크스페이스 경로")
     parsed = parser.parse_args(args)
 
+    # uuid/slug 양쪽 허용: DB로 resolve해 slug를 정규화
+    project_identifier = parsed.project
+    try:
+        from auto_agent.db.connection import db_exists
+        if db_exists():
+            from auto_agent.db.project_manager import ProjectManager
+            pm = ProjectManager()
+            project = pm.resolve_project(project_identifier)
+            if project:
+                project_identifier = project["slug"]
+    except Exception:
+        pass
+
     from auto_agent.orchestrator.runner import PipelineRunner
-    runner = PipelineRunner(parsed.project)
+    runner = PipelineRunner(project_identifier)
     runner.run(
         from_step=parsed.from_step,
         only_step=parsed.only_step,
@@ -598,7 +611,7 @@ def cmd_bg(args):
     sub = args[0]
 
     if sub == "start":
-        # bg start --project <slug> [--from step_N] [--only step_N]
+        # bg start --project <slug|uuid> [--from step_N] [--only step_N]
         project_slug = _get_arg(args[1:], "--project")
         from_step = _get_arg(args[1:], "--from") or None
         only_step = _get_arg(args[1:], "--only") or None
@@ -612,6 +625,18 @@ def cmd_bg(args):
         if not project_slug:
             print_error("프로젝트를 지정하세요: bg start --project <slug>")
             return
+
+        # uuid/slug 양쪽 허용: DB로 resolve해 slug를 정규화
+        try:
+            from auto_agent.db.connection import db_exists
+            if db_exists():
+                from auto_agent.db.project_manager import ProjectManager
+                pm = ProjectManager()
+                project = pm.resolve_project(project_slug)
+                if project:
+                    project_slug = project["slug"]
+        except Exception:
+            pass
 
         try:
             session = sm.start(project_slug, from_step=from_step, only_step=only_step)
