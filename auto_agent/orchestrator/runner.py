@@ -1108,6 +1108,37 @@ class PipelineRunner:
                     _notify("Director", f"Supabase 동기화 실패: {str(sync_err)[:50]}",
                             phase=self.state.current_phase, project=self.project_slug, level="warning")
 
+            # ── creative 빈 씬 검증 + 자동 수정 (creative_direction 완료 후) ──
+            if step_name == "creative_direction":
+                specs_path_check = self.project_dir / "scene_specs.json"
+                if specs_path_check.exists():
+                    specs_check = json.loads(specs_path_check.read_text(encoding="utf-8"))
+                    fixed = 0
+                    for scene in specs_check.get("scenes", []):
+                        creative = scene.get("visualization", {}).get("creative", {})
+                        if not creative.get("layout"):
+                            if "visualization" not in scene:
+                                scene["visualization"] = {}
+                            if "creative" not in scene["visualization"]:
+                                scene["visualization"]["creative"] = {}
+                            scene["visualization"]["creative"]["layout"] = "cinematic"
+                            scene["visualization"]["creative"]["reveal"] = "fade_in"
+                            scene["visualization"]["creative"]["emphasis"] = "none"
+                            scene["visualization"]["creative"]["mood"] = "informative"
+                            scene["visualization"]["creative"]["headline"] = ""
+                            scene["visualization"]["creative"]["concept"] = scene.get("narration", "")[:50]
+                            if not scene.get("imageAsset"):
+                                scene["imageAsset"] = {"source": "generate", "placement": "fullscreen"}
+                            fixed += 1
+                    if fixed:
+                        specs_path_check.write_text(
+                            json.dumps(specs_check, ensure_ascii=False, indent=2),
+                            encoding="utf-8",
+                        )
+                        print(f"    [검증] creative 빈 씬 {fixed}개 → cinematic 자동 할당")
+                        _notify("Director", f"creative 빈 씬 {fixed}개 발견 → cinematic 자동 할당",
+                                phase=self.state.current_phase, project=self.project_slug, level="warning")
+
             # ── 자동 매니페스트 빌드 + 썸네일 캡처 ──
             self._auto_build_and_capture(chapter_results, chapters)
 
