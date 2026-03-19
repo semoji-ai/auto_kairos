@@ -70,7 +70,16 @@ creative 외에 함께 채울 필드들:
 - source (string): 출처 (있을 때만)
 - itemIcons (string[]): Lucide React 아이콘명. 국가 항목이면 사용하지 않음.
 - itemFlags (string[]): 국가 ISO 코드 (국가 비교 씬). itemIcons와 동시 사용 금지.
-- imageAsset: 실물 이미지 필요 시 {"source":"search","query":"영문 검색어","placement":"background","opacity":0.3}
+- imageAsset: 이미지 에셋 설정.
+  - source="generate": AI 생성 (기본). query는 상세한 이미지 프롬프트 (영어).
+  - source="search": 실물 이미지 검색. **query는 위키미디어 검색용으로 심플하게** (2~4단어):
+    - 인물: 이름만 (예: "Elon Musk", "Brian Niccol")
+    - 사건: 키워드+연도 (예: "Iran revolution 1979", "semiconductor factory 2024")
+    - 장소: 장소명 (예: "Hormuz Strait", "TSMC factory")
+    - ❌ 긴 설명문, 스타일 지시어, 형용사 나열 금지
+  - fallbackQuery: query로 검색 실패 시 더 일반적인 검색어 (1~2단어)
+  - placement: "fullscreen" | "background" | "center" | "left" | "right"
+  - opacity: 배경 투명도 (0.0~1.0, fullscreen이면 1.0)
 - mapScene: 지리적 이벤트 시 {"center":[위도,경도],"zoom":5,"markers":[{"lat":위도,"lng":경도,"label":"라벨"}]}
 </visualization_fields>
 
