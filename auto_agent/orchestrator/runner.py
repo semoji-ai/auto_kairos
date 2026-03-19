@@ -1541,8 +1541,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         return merged
 
     def _auto_build_and_capture(self, chapter_results: dict, chapters: dict):
-        """병합 완료 후 자동 매니페스트 빌드 + 변경 씬 썸네일 캡처."""
-        _notify("Director", "매니페스트 빌드 + 썸네일 캡처 시작합니다",
+        """병합 완료 후 자동 매니페스트 빌드. (썸네일 캡처 비활성화)"""
+        _notify("Director", "매니페스트 빌드 시작합니다",
                 phase=self.state.current_phase, project=self.project_slug)
 
         # 1. 매니페스트 빌드
@@ -1564,7 +1564,10 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             print(f"    [WARN] 매니페스트 빌드 에러: {e}")
             return
 
-        # 2. 변경된 씬의 기존 썸네일 무효화
+        # 썸네일 캡처 비활성화 — 필요 시 대시보드에서 수동 실행
+        return
+
+        # [비활성화] 2. 변경된 씬의 기존 썸네일 무효화
         thumb_dir = self.project_dir / "thumbnails"
         invalidated = 0
         for ch_num, ch_result in chapter_results.items():
@@ -1576,7 +1579,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                         thumb.unlink(missing_ok=True)
                         invalidated += 1
 
-        # 3. 썸네일 캡처 (generate-thumbnails.mjs)
+        # [비활성화] 3. 썸네일 캡처 (generate-thumbnails.mjs)
         try:
             node = shutil.which("node")
             if not node:

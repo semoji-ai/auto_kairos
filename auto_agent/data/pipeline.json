@@ -350,10 +350,11 @@
             "output/{project}/layout_check/layout_check_report.json"
           ],
           "depends_on": "step_11",
-          "notes": "Remotion CLI로 모든 씬의 중간 프레임을 PNG로 캡처. QA 에이전트가 시각적 검증에 활용",
+          "notes": "비활성화 — 스틸 프레임 캡처 불필요",
           "blocking": false,
           "conditional": true,
-          "condition": "스킵 가능 — 필요 시 대시보드에서 수동 캡처"
+          "condition": "스킵 가능 — 필요 시 대시보드에서 수동 캡처",
+          "skip": true
         },
         {
           "id": "step_11b",

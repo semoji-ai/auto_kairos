@@ -23,7 +23,7 @@ def phase_a_character_analysis(scene_specs: dict, output_dir: Path, style_path: 
     scenes = scene_specs.get("scenes", [])
     gen_scenes = [
         s for s in scenes
-        if s.get("imageAsset", {}).get("source") == "generate"
+        if (s.get("imageAsset") or {}).get("source") == "generate"
         or s.get("visualization", {}).get("creative", {}).get("layout") == "cinematic"
     ]
     if not gen_scenes:
