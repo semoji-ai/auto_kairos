@@ -177,6 +177,18 @@ topic: {topic}
         print(f"[VaultRAG] 리서치 결과 저장: {filepath}")
         return filepath
 
+    def _get_vault_project_name(self, project_slug: str) -> str:
+        """볼트용 프로젝트 디렉토리명. DB에서 uuid 조회하여 uuid_{slug} 형식 반환."""
+        try:
+            from auto_agent.db.project_manager import ProjectManager
+            pm = ProjectManager()
+            project = pm.resolve_project(project_slug)
+            if project and project.get("uuid"):
+                return f"{project['uuid']}_{project['slug']}"
+        except Exception:
+            pass
+        return project_slug
+
     def save_project_retro(self, project_slug: str, topic: str,
                            successes: List[str], improvements: List[str],
                            patterns: List[str]) -> Optional[Path]:
@@ -184,7 +196,8 @@ topic: {topic}
         if not self.enabled:
             return None
 
-        project_dir = self.vault_dir / "07-projects" / project_slug
+        vault_project_name = self._get_vault_project_name(project_slug)
+        project_dir = self.vault_dir / "07-projects" / vault_project_name
         project_dir.mkdir(parents=True, exist_ok=True)
 
         filepath = project_dir / "retro.md"
