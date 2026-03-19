@@ -144,6 +144,8 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
     project_id = project["id"]
     out_dir = project.get("output_dir", "")
     slug = project.get("slug", "")
+    # URL 경로용: output 디렉토리명 (uuid_{slug} 형식)
+    dir_name = Path(out_dir).name if out_dir else slug
     context = {"project": project, "tab": tab, "slug": slug}
 
     def _load_json(filename):
@@ -153,10 +155,10 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
         return load_project_text(out_dir, filename)
 
     def _image_url(scene_num):
-        return get_scene_image_url(slug, scene_num, out_dir)
+        return get_scene_image_url(dir_name, scene_num, out_dir)
 
     def _audio_url(scene_num):
-        return get_scene_audio_url(slug, scene_num, out_dir)
+        return get_scene_audio_url(dir_name, scene_num, out_dir)
 
     if tab == "overview":
         context["asset_counts"] = pm.get_asset_counts(project_id)
@@ -196,7 +198,7 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
         specs = _load_json("scene_specs.json")
         scenes = specs.get("scenes", []) if specs else []
         tts = _load_json("tts_results.json")
-        scenes = enrich_scenes_with_media(scenes, slug, out_dir, tts)
+        scenes = enrich_scenes_with_media(scenes, dir_name, out_dir, tts)
         context["scenes"] = scenes
         ch_set = sorted(set(s.get("chapter", 0) for s in scenes))
         context["chapters_list"] = ch_set
@@ -358,8 +360,10 @@ async def storyboard_scene_detail_by_slug(request: Request, slug: str, scene_num
         return HTMLResponse(f"Scene {scene_num} not found", status_code=404)
 
     slug = project.get("slug", "")
-    scene["_image_url"] = get_scene_image_url(slug, scene_num, out_dir)
-    scene["_audio_url"] = get_scene_audio_url(slug, scene_num, out_dir)
+    # URL 경로용: output 디렉토리명 (uuid_{slug} 형식)
+    dir_name = Path(out_dir).name if out_dir else slug
+    scene["_image_url"] = get_scene_image_url(dir_name, scene_num, out_dir)
+    scene["_audio_url"] = get_scene_audio_url(dir_name, scene_num, out_dir)
 
     tts = load_project_json(out_dir,"tts_results.json")
     if tts:
@@ -450,7 +454,8 @@ async def api_scenes_by_slug(slug: str):
         return {"scenes": []}
     scenes = specs.get("scenes", [])
     tts = load_project_json(out_dir, "tts_results.json")
-    enriched = enrich_scenes_with_media(scenes, slug, out_dir, tts)
+    dir_name = Path(out_dir).name if out_dir else slug
+    enriched = enrich_scenes_with_media(scenes, dir_name, out_dir, tts)
     # 디버그: _image_url 확인
     if enriched:
         print(f"[DEBUG scenes API] 씬1 _image_url={enriched[0].get('_image_url')}, out_dir={out_dir}", flush=True)
@@ -556,11 +561,13 @@ async def image_versions(slug: str, scene_num: int):
     project = pm.get_project(slug=slug)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
-    img_dir = Path(project.get("output_dir", "")) / "images"
+    out_dir = project.get("output_dir", "")
+    dir_name = Path(out_dir).name if out_dir else slug
+    img_dir = Path(out_dir) / "images"
     scene_data = get_scene_versions(img_dir, scene_num)
     # URL 추가
     for v in scene_data.get("versions", []):
-        v["url"] = f"/output/{slug}/images/{v['file']}"
+        v["url"] = f"/output/{dir_name}/images/{v['file']}"
     return JSONResponse(scene_data)
 
 
@@ -654,10 +661,12 @@ async def tts_versions(slug: str, scene_num: int):
     project = pm.get_project(slug=slug)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
-    audio_dir = Path(project.get("output_dir", "")) / "audio"
+    out_dir = project.get("output_dir", "")
+    dir_name = Path(out_dir).name if out_dir else slug
+    audio_dir = Path(out_dir) / "audio"
     scene_data = get_scene_versions(audio_dir, scene_num)
     for v in scene_data.get("versions", []):
-        v["url"] = f"/output/{slug}/audio/{v['file']}"
+        v["url"] = f"/output/{dir_name}/audio/{v['file']}"
     return JSONResponse(scene_data)
 
 
@@ -709,6 +718,8 @@ def _update_scene_specs_src(out_dir: str, slug: str, scene_num: int):
     if not selected:
         return
     import json as _json
+    # URL 경로용: output 디렉토리명 (uuid_{slug} 형식)
+    dir_name = Path(out_dir).name if out_dir else slug
     specs_path = Path(out_dir) / "scene_specs.json"
     if specs_path.exists():
         specs = _json.loads(specs_path.read_text(encoding="utf-8"))
@@ -717,7 +728,7 @@ def _update_scene_specs_src(out_dir: str, slug: str, scene_num: int):
                 if not s.get("imageAsset"):
                     s["imageAsset"] = {}
                 ext = Path(selected).suffix
-                s["imageAsset"]["src"] = f"/output/{slug}/images/scene_{scene_num:03d}{ext}"
+                s["imageAsset"]["src"] = f"/output/{dir_name}/images/scene_{scene_num:03d}{ext}"
                 break
         specs_path.write_text(_json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -850,10 +861,12 @@ async def get_art_style(slug: str):
         if style_path.exists():
             try:
                 current_info = _json.loads(style_path.read_text(encoding="utf-8"))
-                # 참조 이미지 URL
+                # 참조 이미지 URL — output 디렉토리명(uuid_{slug}) 기반
                 ref = current_info.get("reference_image", "")
                 if ref:
-                    current_info["reference_image_url"] = f"/output/{slug}/artstyle/{Path(ref).name}"
+                    _art_out_dir = project.get("output_dir", "")
+                    _art_dir_name = Path(_art_out_dir).name if _art_out_dir else slug
+                    current_info["reference_image_url"] = f"/output/{_art_dir_name}/artstyle/{Path(ref).name}"
             except Exception:
                 pass
 
@@ -895,6 +908,7 @@ async def image_history(slug: str, scene_num: int):
     if not project:
         return JSONResponse({"error": "not found"}, 404)
     out_dir = project.get("output_dir", "")
+    dir_name = Path(out_dir).name if out_dir else slug
     history_dir = Path(out_dir) / "images" / "history"
     if not history_dir.exists():
         return JSONResponse({"versions": []})
@@ -902,7 +916,7 @@ async def image_history(slug: str, scene_num: int):
     for f in sorted(history_dir.glob(f"scene_{scene_num:03d}_*")):
         versions.append({
             "filename": f.name,
-            "url": f"/output/{slug}/images/history/{f.name}",
+            "url": f"/output/{dir_name}/images/history/{f.name}",
             "size_bytes": f.stat().st_size,
         })
     return JSONResponse({"versions": versions})
@@ -971,12 +985,14 @@ async def get_image_candidates_by_slug(slug: str, scene_num: int, include_all: b
     project = pm.get_project(slug=slug)
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
-    candidates = get_scene_image_candidates(slug, scene_num, project["output_dir"])
+    out_dir = project["output_dir"]
+    dir_name = Path(out_dir).name if out_dir else slug
+    candidates = get_scene_image_candidates(dir_name, scene_num, out_dir)
 
     # 전체 후보 (썸네일 포함) 반환
     all_candidates = []
     if include_all:
-        all_candidates = _load_all_candidates(project["output_dir"], scene_num)
+        all_candidates = _load_all_candidates(out_dir, scene_num)
 
     return {
         "scene_number": scene_num,
@@ -993,10 +1009,12 @@ async def get_image_candidates(project_id: int, scene_num: int, include_all: boo
     project = pm.get_project(project_id=project_id)
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
-    candidates = get_scene_image_candidates(project["slug"], scene_num, project["output_dir"])
+    out_dir = project["output_dir"]
+    dir_name = Path(out_dir).name if out_dir else project["slug"]
+    candidates = get_scene_image_candidates(dir_name, scene_num, out_dir)
     all_candidates = []
     if include_all:
-        all_candidates = _load_all_candidates(project["output_dir"], scene_num)
+        all_candidates = _load_all_candidates(out_dir, scene_num)
     return {"scene_number": scene_num, "candidates": candidates, "all_candidates": all_candidates}
 
 
@@ -1045,7 +1063,9 @@ async def download_candidate_image(request: Request, slug: str, scene_num: int):
         shutil.copy2(save_path, final_path)
 
         # scene_specs.json 업데이트
-        local_url = f"/output/{slug}/images/{final_path.name}"
+        _out_dir = project.get("output_dir", "")
+        _dir_name = Path(_out_dir).name if _out_dir else slug
+        local_url = f"/output/{_dir_name}/images/{final_path.name}"
         specs = load_project_json(project.get("output_dir", ""),"scene_specs.json")
         if specs:
             for scene in specs.get("scenes", []):
@@ -1175,7 +1195,12 @@ async def pipeline_start(slug: str, request: Request):
     if from_step:
         cmd.extend(["--from", from_step])
 
-    log_path = get_workspace_dir() / "output" / slug / "pipeline.log"
+    # output_dir에서 디렉토리명 결정 (uuid_{slug} 형식)
+    _pm = get_pm()
+    _proj = _pm.get_project(slug=slug)
+    _out_dir = _proj.get("output_dir", "") if _proj else ""
+    _dir_name = Path(_out_dir).name if _out_dir else slug
+    log_path = get_workspace_dir() / "output" / _dir_name / "pipeline.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     log_file = open(log_path, "w", encoding="utf-8")
 

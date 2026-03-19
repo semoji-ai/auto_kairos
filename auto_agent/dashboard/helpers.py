@@ -53,14 +53,17 @@ def get_file_status(output_dir: str) -> dict:
     return result
 
 
-def get_scene_image_url(slug: str, scene_num: int, output_dir: str) -> Optional[str]:
-    """씬 이미지 URL 반환 (/output/ 마운트 기준)."""
+def get_scene_image_url(project_dir_name: str, scene_num: int, output_dir: str) -> Optional[str]:
+    """씬 이미지 URL 반환 (/output/ 마운트 기준).
+
+    project_dir_name: output 디렉토리명 (uuid_{slug} 형식, e.g. "b3cef462_이로미즘_양자컴퓨터_1min")
+    """
     img_dir = Path(output_dir) / "images"
     # 1) scene_NNN.{ext} (selected 복사본)
     for ext in (".jpg", ".jpeg", ".png", ".webp"):
         img = img_dir / f"scene_{scene_num:03d}{ext}"
         if img.exists():
-            return f"/output/{slug}/images/scene_{scene_num:03d}{ext}"
+            return f"/output/{project_dir_name}/images/scene_{scene_num:03d}{ext}"
     # 2) image_assets.json의 selected 파일
     assets_path = img_dir / "image_assets.json"
     if assets_path.exists():
@@ -70,21 +73,24 @@ def get_scene_image_url(slug: str, scene_num: int, output_dir: str) -> Optional[
                 if s.get("sceneNumber") == scene_num and s.get("selected"):
                     selected = s["selected"]
                     if (img_dir / selected).exists():
-                        return f"/output/{slug}/images/{selected}"
+                        return f"/output/{project_dir_name}/images/{selected}"
         except Exception:
             pass
     # 3) scene_NNN_search_*.* 또는 scene_NNN_gen_*.* (아무거나)
     for f in sorted(img_dir.glob(f"scene_{scene_num:03d}_*.*")):
         if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
-            return f"/output/{slug}/images/{f.name}"
+            return f"/output/{project_dir_name}/images/{f.name}"
     return None
 
 
-def get_scene_audio_url(slug: str, scene_num: int, output_dir: str) -> Optional[str]:
-    """씬 오디오 URL 반환."""
+def get_scene_audio_url(project_dir_name: str, scene_num: int, output_dir: str) -> Optional[str]:
+    """씬 오디오 URL 반환.
+
+    project_dir_name: output 디렉토리명 (uuid_{slug} 형식)
+    """
     audio = Path(output_dir) / "audio" / f"scene_{scene_num:03d}.mp3"
     if audio.exists():
-        return f"/output/{slug}/audio/scene_{scene_num:03d}.mp3"
+        return f"/output/{project_dir_name}/audio/scene_{scene_num:03d}.mp3"
     return None
 
 
@@ -352,9 +358,12 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
     return "headline_only", False
 
 
-def enrich_scenes_with_media(scenes: list, slug: str, output_dir: str,
+def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: str,
                               tts_results: Optional[dict] = None) -> list:
-    """씬 목록에 이미지/오디오 URL + TTS 정보 + 레이아웃을 추가."""
+    """씬 목록에 이미지/오디오 URL + TTS 정보 + 레이아웃을 추가.
+
+    project_dir_name: output 디렉토리명 (uuid_{slug} 형식) — URL 구성에 사용.
+    """
     tts_map = {}
     if tts_results:
         for r in tts_results.get("results", []):
@@ -366,8 +375,8 @@ def enrich_scenes_with_media(scenes: list, slug: str, output_dir: str,
 
     for scene in scenes:
         sn = scene["sceneNumber"]
-        scene["_image_url"] = get_scene_image_url(slug, sn, output_dir)
-        scene["_audio_url"] = get_scene_audio_url(slug, sn, output_dir)
+        scene["_image_url"] = get_scene_image_url(project_dir_name, sn, output_dir)
+        scene["_audio_url"] = get_scene_audio_url(project_dir_name, sn, output_dir)
         tts = tts_map.get(sn, {})
         scene["_tts_duration"] = tts.get("duration")
         scene["_tts_status"] = tts.get("status")
@@ -381,7 +390,9 @@ def enrich_scenes_with_media(scenes: list, slug: str, output_dir: str,
         if has_thumbs:
             thumb_path = thumb_dir / f"scene_{str(sn).zfill(3)}.png"
             if thumb_path.exists():
-                scene["_thumbnail_url"] = f"/api/p/{slug}/thumbnails/scene/{sn}"
+                # 썸네일 API URL은 slug 기반 라우터를 사용 (slug만 필요)
+                slug_part = project_dir_name.split("_", 1)[-1] if "_" in project_dir_name else project_dir_name
+                scene["_thumbnail_url"] = f"/api/p/{slug_part}/thumbnails/scene/{sn}"
 
     return scenes
 
@@ -881,8 +892,10 @@ def render_scene_preview(scene: dict) -> str:
     return html
 
 
-def get_scene_image_candidates(slug: str, scene_num: int, output_dir: str) -> list:
+def get_scene_image_candidates(project_dir_name: str, scene_num: int, output_dir: str) -> list:
     """씬의 이미지 후보 목록 반환 (search/ 폴더에서 scene_NNN_01~05 검색).
+
+    project_dir_name: output 디렉토리명 (uuid_{slug} 형식) — URL 구성에 사용.
 
     Returns:
         [{"rank": 1, "url": "/output/.../scene_001_01.png", "filename": "...", "selected": True}, ...]
@@ -909,7 +922,7 @@ def get_scene_image_candidates(slug: str, scene_num: int, output_dir: str) -> li
                     continue
                 candidates.append({
                     "rank": rank,
-                    "url": f"/output/{slug}/images/search/{f.name}",
+                    "url": f"/output/{project_dir_name}/images/search/{f.name}",
                     "filename": f.name,
                 })
 
@@ -951,10 +964,13 @@ def get_scene_image_candidates(slug: str, scene_num: int, output_dir: str) -> li
     return candidates
 
 
-def get_recent_images(slug: str, output_dir: str, limit: int = 3) -> list:
-    """최근 이미지 파일 URL 목록."""
+def get_recent_images(project_dir_name: str, output_dir: str, limit: int = 3) -> list:
+    """최근 이미지 파일 URL 목록.
+
+    project_dir_name: output 디렉토리명 (uuid_{slug} 형식) — URL 구성에 사용.
+    """
     img_dir = Path(output_dir) / "images"
     if not img_dir.exists():
         return []
     images = sorted(img_dir.glob("scene_*.png"))
-    return [f"/output/{slug}/images/{img.name}" for img in images[:limit]]
+    return [f"/output/{project_dir_name}/images/{img.name}" for img in images[:limit]]
