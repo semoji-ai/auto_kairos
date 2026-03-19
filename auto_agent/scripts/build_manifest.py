@@ -232,10 +232,15 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
 
         if scene.get("imageAsset") and image_path:
             ia = scene["imageAsset"]
-            entry["imageAsset"] = {
-                "placement": ia.get("placement", "background"),
-                "opacity": ia.get("opacity", 0.4),
-            }
+            # cinematic 레이아웃은 무조건 fullscreen + opacity 1
+            layout = viz.get("creative", {}).get("layout", "")
+            if layout == "cinematic":
+                entry["imageAsset"] = {"placement": "fullscreen", "opacity": 1.0}
+            else:
+                entry["imageAsset"] = {
+                    "placement": ia.get("placement", "background"),
+                    "opacity": ia.get("opacity", 0.4),
+                }
 
         # cinematic_overlay → cinematicOverlay 변환
         co = viz.get("cinematic_overlay") or viz.get("cinematicOverlay")
