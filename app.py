@@ -146,7 +146,7 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
     slug = project.get("slug", "")
     # URL 경로용: output 디렉토리명 (uuid_{slug} 형식)
     dir_name = Path(out_dir).name if out_dir else slug
-    context = {"project": project, "tab": tab, "slug": slug}
+    context = {"project": project, "tab": tab, "slug": slug, "dir_name": dir_name}
 
     def _load_json(filename):
         return load_project_json(out_dir, filename)
@@ -385,6 +385,7 @@ async def storyboard_scene_detail_by_slug(request: Request, slug: str, scene_num
         "scene": scene,
         "subtitles": scene_subs,
         "slug": slug,
+        "dir_name": dir_name,
     })
 
 
