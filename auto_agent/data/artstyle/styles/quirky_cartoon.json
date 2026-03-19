@@ -12,7 +12,7 @@
     "shapes": "Basic geometric forms, slightly distorted. Characters have large heads and small bodies in a fun cartoonish way",
     "color_palette": "Bright and simple colors, flat digital fill, some areas spilling outside the outlines",
     "shading": "Almost none, simple flat fills only",
-    "character_design": "Human characters drawn in a loose doodle style. Big round heads, dot eyes or simple oval eyes, small body. Exaggerated but recognizably human expressions. Silly and comical poses. Always clearly human — no aliens or monsters",
+    "character_design": "Human characters drawn in a loose doodle style. Big round heads, round eyes with white sclera and black pupils (like the reference image), small body. Exaggerated but recognizably human expressions. Silly and comical poses. Always clearly human — no aliens or monsters. Eyes must always have visible white area around the pupil.",
     "mood_and_tone": "Playful, humorous, and whimsical, like a doodle-style cartoon",
     "background": "Simple stage or props drawn roughly and minimally"
   },
