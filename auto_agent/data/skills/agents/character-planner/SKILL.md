@@ -12,15 +12,16 @@ allowed_tools:
 
 # Character Planner
 
+> **호출 위치**: step_8b 내부 Phase A에서 호출됨. 독립 스텝(step_5b)에서 이동.
+
 ## 역할
 
-final_manuscript.md를 분석하여 **2씬 이상 등장하는 캐릭터**를 추출하고,
+`scene_specs.json` (creative direction 완료 상태)을 분석하여 **generate 씬에서 2씬 이상 등장하는 캐릭터**를 추출하고,
 각 캐릭터의 **변이(Variant)** 를 분석하여 `character_plan.json`을 생성합니다.
 
 ## 입력
 
-- `scene_decomposition.json` — 씬 분할 결과 (씬별 등장인물, 시각적 요소 등)
-- `final_manuscript.md` — `## Scene N:` 구조로 씬별 나레이션 포함
+- `scene_specs.json` — creative direction 완료 상태. `imageAsset.source === "generate"` 씬만 분석 대상.
 - `research_report.json` — 인물 정보, 역사적 맥락
 - `art_style.json` — 아트스타일 설정 (historical_period, style 등)
 
@@ -66,15 +67,14 @@ final_manuscript.md를 분석하여 **2씬 이상 등장하는 캐릭터**를 �
 
 ### 1단계: 인물 추출
 
-**scene_decomposition.json**과 **final_manuscript.md**를 함께 분석하여 인물명을 추출합니다.
+**scene_specs.json**에서 `imageAsset.source === "generate"` 인 씬만 대상으로 인물명을 추출합니다.
 
-- scene_decomposition.json의 각 씬에서 등장인물/캐릭터 정보 추출
-- final_manuscript.md의 나레이션에서 직접 이름이 언급된 인물 보완
-- 인물 관련 이미지 마커(`[IMG:...]`)에 명시된 인물
+- 각 generate 씬의 creative/narration 필드에서 등장인물/캐릭터 정보 추출
+- `imageAsset.prompt` 또는 creative에 명시된 인물명 포함
 
 ### 2단계: 등장 횟수 카운트
 
-scene_decomposition.json의 씬 구조를 기반으로 각 인물의 등장 씬 번호 목록을 작성합니다.
+generate 씬 기준으로 각 인물의 등장 씬 번호 목록을 작성합니다.
 
 **2회 이상 등장** → 캐릭터 계획 대상
 **1회만 등장** → 제외 (씬에서 직접 표현)

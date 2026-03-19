@@ -78,14 +78,10 @@ auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
 8. `$SKILL_BASE/skills/shared/motion-rhythm.md` — 모션 설계
 9. `$SKILL_BASE/docs/data-contracts.md` — 스키마 참조
 
-**6단계 순차 수행 (각 단계를 반드시 별도로 수행할 것):**
+**5단계 순차 수행 (각 단계를 반드시 별도로 수행할 것):**
 1. **씬 분할** → `output/{slug}/scene_decomposition.json`
-2. **캐릭터 플래닝** (2씬+ 등장 캐릭터 있을 때) → `output/{slug}/character_plan.json`
-   - scene_decomposition.json 기반으로 2씬 이상 등장하는 캐릭터 추출
-   - 변이(Variant) 분석 + 캐릭터 생성 프롬프트 작성
-   - `$SKILL_BASE/skills/agents/character-planner/SKILL.md` 참조
-3. **Creative Direction** → 씬별 visual concept (reveal/emphasis/mood/headline/concept)
-4. **Asset Advisory (필수! 절대 건너뛰지 말 것)** → 모든 씬 순회하며 에셋 추천:
+2. **Creative Direction** → 씬별 visual concept (reveal/emphasis/mood/headline/concept)
+3. **Asset Advisory (필수! 절대 건너뛰지 말 것)** → 모든 씬 순회하며 에셋 추천:
    - 차트 추천 (chartConfig/chartData) — `chart-mapping.md` 참조
    - 아이콘 추천 (itemIcons) — Lucide React 아이콘
    - 국기 추천 (itemFlags) — ISO 2자리 코드
@@ -93,8 +89,8 @@ auto-agent config set voice "<선택된 프리셋 이름>" --project <slug>
    - 이미지 추천 (imageAsset) — search/generate/wikimedia
    - 배치/투명도 결정 (placement/opacity)
    - 충돌 검사 (차트+이미지 금지 등)
-5. **데이터 보강** → 차트/통계 데이터 매핑
-6. **모션 설계** → `output/{slug}/motion_plan.json`
+4. **데이터 보강** → 차트/통계 데이터 매핑
+5. **모션 설계** → `output/{slug}/motion_plan.json`
 
 **출력**: `output/{slug}/scene_decomposition.json`, `output/{slug}/scene_specs.json`, `output/{slug}/motion_plan.json`
 
@@ -117,7 +113,7 @@ auto-agent run --project <slug> --from step_7
 ```bash
 auto-agent run --project <slug> --only step_7    # TTS 전처리
 auto-agent run --project <slug> --only step_8    # TTS 생성
-auto-agent run --project <slug> --only step_8b   # 이미지 생성 (필요 시)
+auto-agent run --project <slug> --only step_8b   # 이미지 소싱 (Phase A: 캐릭터 분석 → character_plan.json 내부 생성, Phase B: 이미지 검색/생성)
 auto-agent run --project <slug> --only step_9    # 자막 동기화
 auto-agent run --project <slug> --only step_9b   # TTS 검증
 auto-agent run --project <slug> --only step_10   # 데이터 검증

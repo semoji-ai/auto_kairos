@@ -9,6 +9,16 @@ description: 씬별 이미지 에셋 소싱 에이전트. 검색/생성 판단 �
 
 ## 역할
 
+### Phase A: 캐릭터 분석 (선행 작업)
+
+`scene_specs.json`에서 `imageAsset.source === "generate"` 씬을 분석하여 2씬 이상 등장하는 캐릭터를 식별하고 `character_plan.json`을 내부 생성합니다.
+
+- `character_plan.json`은 외부에서 받는 것이 아니라 이 단계에서 직접 생성됨
+- character-planner 스킬 규칙에 따라 변이(Variant) 분석 및 생성 프롬프트 작성
+- 캐릭터가 없거나 모든 캐릭터가 1회만 등장하는 경우 Phase A 생략 가능
+
+### Phase B: 이미지 소싱 (본 작업)
+
 1. `scene_specs.json` 읽기 → 이미지 필요한 씬 파악
 2. 씬별로 **검색** vs **생성** 판단
 3. 검색/생성을 Task 도구로 병렬 처리
