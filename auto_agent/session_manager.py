@@ -17,6 +17,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from auto_agent.paths import get_workspace_dir
 
@@ -90,8 +91,8 @@ class SessionManager:
     def start(
         self,
         project_slug: str,
-        from_step: str | None = None,
-        only_step: str | None = None,
+        from_step: Optional[str] = None,
+        only_step: Optional[str] = None,
     ) -> dict:
         """파이프라인을 백그라운드로 시작.
 
@@ -158,7 +159,7 @@ class SessionManager:
         self._save_session(project_slug, session)
         return session
 
-    def stop(self, project_slug: str) -> dict | None:
+    def stop(self, project_slug: str) -> Optional[dict]:
         """실행 중인 세션 중지.
 
         Returns:
@@ -194,7 +195,7 @@ class SessionManager:
         self._save_session(project_slug, session)
         return session
 
-    def get_session(self, project_slug: str) -> dict | None:
+    def get_session(self, project_slug: str) -> Optional[dict]:
         """프로젝트의 현재 세션 정보 조회."""
         path = _session_file(project_slug)
         if not path.exists():
