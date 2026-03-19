@@ -487,10 +487,6 @@
         "max_duration_min": 25,
         "budget_usd": 2.5
       },
-      "character-planner": {
-        "max_duration_min": 5,
-        "budget_usd": 0.5
-      },
       "fact-verifier": {
         "max_duration_min": 10,
         "budget_usd": 0.5
