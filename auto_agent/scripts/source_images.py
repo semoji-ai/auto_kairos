@@ -284,9 +284,27 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
     except Exception:
         style_arg = ""
 
-    # 3. 씬별 이미지 생성 (병렬 3개, 실패 시 1회 재시도)
-    ws = str(project_dir.parent.parent) if "output" in str(project_dir) else str(project_dir)
+    # 3. reference_image data URI 미리 준비 (한번만)
+    ref_image_uri = ""
+    if style_arg:
+        try:
+            style_data = json.loads(Path(style_arg).read_text(encoding="utf-8"))
+            ref_path = style_data.get("reference_image", "")
+            if ref_path and not Path(ref_path).is_absolute():
+                ref_path = str(Path(style_arg).parent / Path(ref_path).name)
+            ref_image_uri = _image_to_data_uri(ref_path)
+        except Exception:
+            pass
 
+    style_desc = ""
+    if style_arg:
+        try:
+            style_data = json.loads(Path(style_arg).read_text(encoding="utf-8"))
+            style_desc = style_data.get("scene_style_description", "")
+        except Exception:
+            pass
+
+    # 4. 씬별 이미지 생성 (병렬 3개, 실패 시 1회 재시도)
     def _generate_one(scene, retry=False):
         sn = scene.get("sceneNumber")
         img = scene.get("imageAsset") or {}
@@ -304,34 +322,40 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
         if not retry:
             log_fn("image-gen", f"씬{sn} 생성 중: {prompt[:50]}...")
 
-        cmd = [sys.executable, "-m", "auto_agent.tools.image_generate", "scene",
-               "--prompt", prompt, "--output", str(img_dir / fname),
-               "--aspect-ratio", "16:9"]
-        if style_arg:
-            cmd.extend(["--style", style_arg])
-
+        # image_urls 구성: 캐릭터 > reference_image
+        image_urls = []
         chars = character_images.get(sn, [])
         if chars:
-            cmd.extend(["--characters", ",".join(chars)])
+            for c in chars:
+                uri = _image_to_data_uri(c)
+                if uri:
+                    image_urls.append(uri)
+        if not image_urls and ref_image_uri:
+            image_urls.append(ref_image_uri)
+
+        # 스타일 프롬프트 구성
+        full_prompt = f"{style_desc}\n\n{prompt}" if style_desc else prompt
 
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, cwd=ws)
-            if result.returncode == 0:
-                add_version(img_dir, sn, fname, "generate", prompt=prompt[:200],
-                            art_style=style_arg)
+            import fal_client
+            import requests
+            result = fal_client.subscribe("fal-ai/nano-banana-2/edit", arguments={
+                "prompt": full_prompt,
+                "image_urls": image_urls,
+                "aspect_ratio": "16:9",
+            })
+            images = result.get("images", [])
+            if images:
+                resp = requests.get(images[0]["url"], timeout=30)
+                resp.raise_for_status()
+                (img_dir / fname).write_bytes(resp.content)
+                add_version(img_dir, sn, fname, "generate", prompt=prompt[:200], art_style=style_arg)
                 log_fn("image-gen", f"씬{sn} 생성 완료 ✓", "success")
                 return sn
             else:
-                err = result.stderr[:200] or result.stdout[:200]
-                if not retry:
-                    log_fn("image-gen", f"씬{sn} 실패 → 재시도 예정", "warning")
-                else:
-                    log_fn("image-gen", f"씬{sn} 재시도 실패: {err}", "warning")
+                log_fn("image-gen", f"씬{sn} {'재시도 ' if retry else ''}실패: 결과 없음", "warning")
         except Exception as e:
-            if not retry:
-                log_fn("image-gen", f"씬{sn} 에러 → 재시도 예정: {e}", "warning")
-            else:
-                log_fn("image-gen", f"씬{sn} 재시도 에러: {e}", "error")
+            log_fn("image-gen", f"씬{sn} {'재시도 ' if retry else ''}에러: {str(e)[:100]}", "warning" if not retry else "error")
         return None
 
     # 1차 실행 (3개 병렬)
