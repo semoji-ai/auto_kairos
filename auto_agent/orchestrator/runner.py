@@ -1650,7 +1650,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             print(f"    [PREFLIGHT] 아트스타일 파일 없음: {art_style_rel}")
 
         # 2. character_casting.json 기반 기준 캐릭터 이미지 확인
-        casting_path = self.project_dir / "output" / self.project_slug / "character_casting.json"
+        casting_path = self.project_dir / "character_casting.json"
         if not casting_path.exists():
             return
 
@@ -2668,11 +2668,22 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         return (tokens_in * price_in + tokens_out * price_out) / 1_000_000
 
     def _resolve_output_path(self, output_template: str) -> Path:
-        """output 경로 템플릿 해석. {project} → slug 치환."""
+        """output 경로 템플릿 해석. {project} → slug 치환.
+
+        경로 조합 기준:
+        - 절대경로 → 그대로 사용
+        - output/{slug}/... → project_dir 기준으로 slug 이후 부분만 추출
+        - output/... (slug 없음) → PROJECT_ROOT 기준 (레거시 경로)
+        - 그 외 상대경로 → project_dir 기준
+        """
         resolved = output_template.replace("{project}", self.project_slug)
         path = Path(resolved)
         if not path.is_absolute():
-            # output/ 접두사가 있으면 프로젝트 루트 기준
+            # output/{slug}/... 형태 → project_dir 기준으로 변환 (DB 경로 지원)
+            prefix = f"output/{self.project_slug}/"
+            if resolved.startswith(prefix):
+                return self.project_dir / resolved[len(prefix):]
+            # output/ 접두사가 있으나 slug 불포함 → 워크스페이스 루트 기준 (레거시)
             if resolved.startswith("output/"):
                 return PROJECT_ROOT / resolved
             # 그 외는 프로젝트 디렉토리 기준
