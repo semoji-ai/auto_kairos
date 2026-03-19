@@ -676,7 +676,26 @@ def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
 
 
 def main():
-    output_dir = get_project_dir()
+    # PROJECT_DIR 우선 (uuid 마이그레이션 후 정확한 경로)
+    project_dir_env = os.environ.get("PROJECT_DIR")
+    if project_dir_env:
+        output_dir = Path(project_dir_env)
+    else:
+        project_slug = os.environ.get("PROJECT_NAME", "")
+        if project_slug:
+            # DB에서 정확한 output_dir 조회
+            try:
+                from auto_agent.db.project_manager import ProjectManager
+                pm = ProjectManager()
+                project = pm.resolve_project(project_slug)
+                if project:
+                    output_dir = Path(project["output_dir"])
+                else:
+                    output_dir = PROJECT_ROOT / "output" / project_slug
+            except Exception:
+                output_dir = PROJECT_ROOT / "output" / project_slug
+        else:
+            output_dir = get_project_dir()
     print(f"Output directory: {output_dir}")
 
     # art_style 경로 해석 (DB config 우선)
