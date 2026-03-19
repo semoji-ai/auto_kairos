@@ -21,6 +21,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from typing import Optional
 
 from auto_agent.paths import get_workspace_dir, get_data_dir, PACKAGE_DIR, DATA_DIR
 
@@ -54,6 +55,36 @@ def _try_db_project(slug: str = None):
     except Exception:
         pass
     return None
+
+
+def _try_resolve_project_dir(identifier: str) -> Optional[Path]:
+    """DB에서 프로젝트 디렉토리 조회. 실패하면 None."""
+    try:
+        from auto_agent.db.connection import db_exists
+        if not db_exists():
+            return None
+        from auto_agent.db.project_manager import ProjectManager
+        pm = ProjectManager()
+        project = pm.resolve_project(identifier)
+        if project and Path(project["output_dir"]).exists():
+            return Path(project["output_dir"])
+    except Exception:
+        pass
+    return None
+
+
+def _get_manifest_filename(identifier: str, fallback: str) -> str:
+    """DB에서 uuid_{slug}.json 파일명 조회. 실패 시 fallback 반환."""
+    try:
+        from auto_agent.db.connection import db_exists
+        if not db_exists():
+            return fallback
+        from auto_agent.db.project_manager import ProjectManager
+        pm = ProjectManager()
+        fname = pm.get_manifest_filename(slug=identifier)
+        return fname if fname else fallback
+    except Exception:
+        return fallback
 
 
 def get_project_dir() -> Path:
@@ -151,19 +182,22 @@ def get_motion_plan_path() -> Path:
 
 
 def get_manifest_path() -> Path:
-    """manifest.json 출력 경로. DB 모드: manifests/{slug}.json, 레거시: manifest.json."""
+    """manifest.json 출력 경로. DB 모드: manifests/{uuid}_{slug}.json, 레거시: manifest.json."""
     workspace = get_workspace_dir()
+    manifests_dir = workspace / "remotion" / "public" / "manifests"
 
     # --project CLI 인자에서 slug 추출 (rebuild-manifest 호출 시)
     for i, arg in enumerate(sys.argv):
         if arg == "--project" and i + 1 < len(sys.argv):
-            project_dir = Path(sys.argv[i + 1])
-            slug = project_dir.name
-            return workspace / "remotion" / "public" / "manifests" / f"{slug}.json"
+            identifier = sys.argv[i + 1]
+            slug = Path(identifier).name
+            fname = _get_manifest_filename(slug, fallback=f"{slug}.json")
+            return manifests_dir / fname
 
     result = _try_db_project()
     if result:
         project_dir, pid = result
         slug = project_dir.name
-        return workspace / "remotion" / "public" / "manifests" / f"{slug}.json"
+        fname = _get_manifest_filename(slug, fallback=f"{slug}.json")
+        return manifests_dir / fname
     return workspace / "remotion" / "public" / "manifest.json"
