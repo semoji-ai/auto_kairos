@@ -235,6 +235,15 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 "opacity": ia.get("opacity", 0.4),
             }
 
+        # cinematic_overlay → cinematicOverlay 변환
+        co = viz.get("cinematic_overlay") or viz.get("cinematicOverlay")
+        if co:
+            entry.setdefault("visualization", {})["cinematicOverlay"] = {
+                "type": co.get("type", "caption"),
+                "text": co.get("text", ""),
+                "position": co.get("position", "bottom_left"),
+            }
+
         if scene.get("mapScene"):
             ms = dict(scene["mapScene"])
             if not ms.get("mapStyle"):
