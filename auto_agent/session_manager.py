@@ -34,10 +34,34 @@ def _session_file(project_slug: str) -> Path:
 
 
 def _logs_dir(project_slug: str) -> Path:
-    """프로젝트 로그 디렉토리."""
+    """로그 디렉토리. DB에서 output_dir 조회, 없으면 fallback."""
+    try:
+        from auto_agent.db.project_manager import ProjectManager
+        pm = ProjectManager()
+        project = pm.resolve_project(project_slug)
+        if project:
+            d = Path(project["output_dir"]) / "logs"
+            d.mkdir(parents=True, exist_ok=True)
+            return d
+    except Exception:
+        pass
+    # fallback for non-DB projects
     d = get_workspace_dir() / "output" / project_slug / "logs"
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+def _state_path(project_slug: str) -> Path:
+    """pipeline_state.json 경로. DB에서 output_dir 조회, 없으면 fallback."""
+    try:
+        from auto_agent.db.project_manager import ProjectManager
+        pm = ProjectManager()
+        project = pm.resolve_project(project_slug)
+        if project:
+            return Path(project["output_dir"]) / "pipeline_state.json"
+    except Exception:
+        pass
+    return get_workspace_dir() / "output" / project_slug / "pipeline_state.json"
 
 
 def _is_process_alive(pid: int) -> bool:
@@ -291,12 +315,7 @@ class SessionManager:
     def _mark_dead(self, project_slug: str, session: dict):
         """프로세스가 죽었는데 running으로 남은 세션을 정리."""
         # pipeline_state.json에서 최종 상태 판단
-        state_path = (
-            get_workspace_dir()
-            / "output"
-            / project_slug
-            / "pipeline_state.json"
-        )
+        state_path = _state_path(project_slug)
         if state_path.exists():
             try:
                 state = json.loads(state_path.read_text(encoding="utf-8"))
