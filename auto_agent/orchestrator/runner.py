@@ -2342,10 +2342,14 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             if result.returncode == 0:
                 return StepResult(step_id=step_id, status="completed")
             else:
-                error = result.stderr[:500] or result.stdout[-500:]
+                error = result.stderr or result.stdout[-2000:]
+                # 전체 에러를 로그 파일에 기록
+                print(f"\n    [ERROR] {module_name} 전체 stderr:\n{result.stderr}", flush=True)
+                if result.stdout:
+                    print(f"    [ERROR] {module_name} stdout 끝:\n{result.stdout[-500:]}", flush=True)
                 return StepResult(
                     step_id=step_id, status="failed",
-                    error=f"Exit code {result.returncode}: {error}",
+                    error=f"Exit code {result.returncode}: {error[:1000]}",
                 )
         except subprocess.TimeoutExpired:
             return StepResult(
