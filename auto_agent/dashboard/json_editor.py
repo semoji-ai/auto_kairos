@@ -59,7 +59,8 @@ async def list_scenes(slug: str):
 
     scenes = specs.get("scenes", [])
     tts = load_project_json(out_dir, "tts_results.json")
-    enriched = enrich_scenes_with_media(scenes, slug, out_dir, tts)
+    dir_name = Path(out_dir).name if out_dir else slug
+    enriched = enrich_scenes_with_media(scenes, dir_name, out_dir, tts)
     return JSONResponse(content={"total": len(enriched), "scenes": enriched})
 
 
