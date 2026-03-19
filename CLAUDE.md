@@ -72,6 +72,13 @@ Today's date is 2026-03-16.
 - resolveLayout에서 `data.chartConfig?.type`과 `creative.chartConfig?.type` 모두 체크
 - 새 시각화 필드 추가 시 resolveLayout이 data/creative 어느 레벨에서 읽는지 확인 필수
 
+### 11. 이미지 파일 삭제 절대 금지
+- 이미지를 재생성/재검색할 때 **기존 이미지 파일을 절대 삭제하지 않는다**
+- 새 이미지는 `_gen_02`, `_gen_03` 등 버전 번호로 생성
+- `image_assets.json`에 새 버전 추가 + `selected` 필드만 전환
+- `rm -f scene_*.png` 같은 명령 **절대 금지** — 이전 버전 복구 불가
+- 이 규칙은 검색 이미지, 생성 이미지, 캐릭터 이미지 모두 해당
+
 ## 에러 볼트 워크플로우
 
 에러를 해결할 때마다:
