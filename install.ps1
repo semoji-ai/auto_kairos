@@ -21,28 +21,48 @@ function Write-Fail    { param($msg) Write-Host "[X] $msg" -ForegroundColor Red;
 # Step 1: 시스템 의존성
 # ═══════════════════════════════════════
 
-function Ensure-Python {
-    try {
-        $ver = python --version 2>&1
-        $pyMinor = python -c "import sys; print(sys.version_info.minor)" 2>&1
-        if ([int]$pyMinor -ge 10) {
-            Write-Info "Python $ver [OK]"
-            return
-        }
-        Write-Warn "Python 3.10+ 필요"
-    } catch {}
-    Write-Info "Python 설치 중..."
-    try { winget install Python.Python.3.12 --accept-source-agreements --accept-package-agreements }
-    catch { Write-Fail "Python을 수동 설치하세요: https://python.org" }
-    Write-Success "Python 설치 완료 (터미널 재시작 필요할 수 있음)"
+function Test-Python {
+    $py = Get-Command python -ErrorAction SilentlyContinue
+    if (-not $py) {
+        Write-Error "Python 3.11+ 필요. https://python.org 에서 설치하세요."
+        exit 1
+    }
+    $version = python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+    $parts = $version.Split('.')
+    if ([int]$parts[0] -lt 3 -or ([int]$parts[0] -eq 3 -and [int]$parts[1] -lt 11)) {
+        Write-Error "Python $version 감지. Python 3.11+ 필요."
+        exit 1
+    }
+    Write-Host "✓ Python $version"
 }
 
 function Ensure-Node {
-    try { $v = node --version 2>&1; Write-Info "Node.js $v [OK]"; return } catch {}
-    Write-Info "Node.js 설치 중..."
-    try { winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements }
-    catch { Write-Fail "Node.js를 수동 설치하세요: https://nodejs.org" }
-    Write-Success "Node.js 설치 완료"
+    # Check PATH first
+    if (Get-Command node -ErrorAction SilentlyContinue) {
+        Write-Host "✓ Node.js $(node --version)"
+        return
+    }
+    # Check volta
+    $voltaNode = "$env:USERPROFILE\.volta\bin\node.exe"
+    if (Test-Path $voltaNode) {
+        $env:PATH = "$env:USERPROFILE\.volta\bin;$env:PATH"
+        Write-Host "✓ Node.js (volta) $(node --version)"
+        return
+    }
+    # Check nvm-windows
+    $nvmDir = "$env:APPDATA\nvm"
+    if (Test-Path $nvmDir) {
+        $latestNode = Get-ChildItem $nvmDir -Directory | Sort-Object Name -Descending | Select-Object -First 1
+        if ($latestNode) {
+            $env:PATH = "$($latestNode.FullName);$env:PATH"
+            if (Get-Command node -ErrorAction SilentlyContinue) {
+                Write-Host "✓ Node.js (nvm-windows) $(node --version)"
+                return
+            }
+        }
+    }
+    Write-Error "Node.js를 찾을 수 없습니다. https://nodejs.org 에서 설치하세요."
+    exit 1
 }
 
 function Ensure-FFmpeg {
@@ -51,6 +71,24 @@ function Ensure-FFmpeg {
     try { winget install Gyan.FFmpeg --accept-source-agreements --accept-package-agreements }
     catch { Write-Warn "ffmpeg를 수동 설치하세요: https://ffmpeg.org" }
     Write-Success "ffmpeg 설치 완료"
+}
+
+function Install-RemotionDeps {
+    $remotionDir = Join-Path $PSScriptRoot "auto_agent\remotion_template"
+    $nodeModules = Join-Path $remotionDir "node_modules"
+    if (-not (Test-Path $nodeModules)) {
+        Write-Host "📦 Remotion 의존성 설치 중..."
+        Push-Location $remotionDir
+        npm install
+        Pop-Location
+    } else {
+        Write-Host "✓ Remotion node_modules 존재"
+    }
+}
+
+function Install-Python {
+    Write-Host "📦 Python 패키지 설치 중..."
+    pip install -e .
 }
 
 # ═══════════════════════════════════════
@@ -215,12 +253,18 @@ Write-Header
 
 Write-Host "-- 시스템 의존성 확인 --" -ForegroundColor White
 Write-Host ""
-Ensure-Python
+Test-Python
 Ensure-Node
 Ensure-FFmpeg
 
 Write-Host ""
 Write-Host "-- 패키지 설치 --" -ForegroundColor White
+Write-Host ""
+Install-Python
+Install-RemotionDeps
+
+Write-Host ""
+Write-Host "-- 워크스페이스 및 환경 설정 --" -ForegroundColor White
 Write-Host ""
 Install-Package
 
@@ -228,3 +272,4 @@ Setup-Workspace
 Setup-Env
 Sync-Projects
 Write-Completion
+Write-Host "`n✅ 설치 완료!"
