@@ -1336,9 +1336,12 @@ def _ensure_studio_ready() -> Optional[str]:
     # node_modules 체크 + 자동 설치
     node_modules = REMOTION_DIR / "node_modules"
     if not node_modules.exists():
-        npm_cmd = _get_npm_cmd()
-        if not _find_cmd(npm_cmd):
+        try:
+            from auto_agent.utils.platform import get_node_bin_dir as _check_node
+            _check_node()
+        except EnvironmentError:
             return "Node.js가 설치되지 않았습니다. install.sh를 실행하거나 https://nodejs.org 에서 설치하세요."
+        npm_cmd = _get_npm_cmd()
         try:
             result = subprocess.run(
                 [npm_cmd, "install"],
