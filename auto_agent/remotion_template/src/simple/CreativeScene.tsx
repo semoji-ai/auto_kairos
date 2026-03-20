@@ -2556,6 +2556,9 @@ interface CreativeSceneProps {
 
 export const CreativeScene: React.FC<CreativeSceneProps> = (props) => {
   const source = props.data?.source || "";
+  const creative = props.data?.creative || {};
+  const srcX = creative.sourceOffsetX || 0;
+  const srcY = creative.sourceOffsetY || 0;
   return (
     <>
       <CreativeSceneInner {...props} />
@@ -2568,6 +2571,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = (props) => {
           color: "rgba(255,255,255,0.4)",
           pointerEvents: "none",
           zIndex: 5,
+          transform: (srcX || srcY) ? `translate(${srcX}px, ${srcY}px)` : undefined,
         }}>
           출처: {source}
         </div>
@@ -2598,6 +2602,10 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const values: number[] = data.values || [];
   const unit: string = data.unit || "";
   const concept: string = creative.concept || "";
+  const headlineTransform = (creative.headlineOffsetX || creative.headlineOffsetY)
+    ? `translate(${creative.headlineOffsetX || 0}px, ${creative.headlineOffsetY || 0}px)` : undefined;
+  const itemsTransform = (creative.itemsOffsetX || creative.itemsOffsetY)
+    ? `translate(${creative.itemsOffsetX || 0}px, ${creative.itemsOffsetY || 0}px)` : undefined;
   const badges: any[] = data.badges || [];
   const statusDots: any[] = data.statusDots || [];
   const tags: any[] = data.tags || [];
@@ -3072,6 +3080,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           style={{
             textAlign: "center",
             maxWidth: "95%",
+            transform: headlineTransform,
           }}
         >
           {lines.map((line: string, i: number) => {
@@ -3104,6 +3113,9 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             delay={Math.max(...headlineDelays, 0) + 15}
           />
         )}
+
+        {/* Items 영역 (위치 조절 가능) */}
+        <div style={{ width: "100%", transform: itemsTransform }}>
 
         {/* Person cards */}
         {layout === "person_card" && (
@@ -3507,6 +3519,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           />
         )}
 
+        </div>{/* Items 영역 끝 */}
       </div>
       </div>{/* contentWidth wrapper */}
     </AbsoluteFill>

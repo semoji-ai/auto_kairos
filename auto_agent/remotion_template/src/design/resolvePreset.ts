@@ -1,6 +1,6 @@
 // remotion/src/design/resolvePreset.ts
 import type { DesignPreset, DesignPresetOverride } from "./types";
-import { DEFAULT_PRESET } from "./defaults";
+import { DEFAULT_PRESET, WHITE_OVERRIDE } from "./defaults";
 import { ART_PRESETS } from "./presets";
 
 /** 재귀적 deep merge — source의 값이 있으면 base를 덮어씀 */
@@ -44,19 +44,20 @@ export function resolvePreset(meta: {
   designPreset?: DesignPresetOverride;
   videoTheme?: string;
 }): DesignPreset {
-  // 1. 기본
-  let base = DEFAULT_PRESET;
-
-  // videoTheme이 "white"이면 white 기본 프리셋 (향후 WHITE_PRESET 추가 가능)
-  // 지금은 DEFAULT_PRESET이 dark — white는 사용자 오버라이드로 처리
-
-  // 2. artStyle 프리셋
+  // 1. artStyle 프리셋 먼저 로드 (baseTheme 확인용)
   const artPreset = meta.artStyle
     ? ART_PRESETS[extractStyleName(meta.artStyle)]
     : undefined;
 
+  // 2. 기본 (videoTheme 또는 artPreset.baseTheme에 따라 white 오버라이드 적용)
+  const base = DEFAULT_PRESET;
+  const isWhite = meta.videoTheme === "white"
+    || meta.designPreset?.baseTheme === "white"
+    || artPreset?.baseTheme === "white";
+  const themeOverride = isWhite ? WHITE_OVERRIDE : undefined;
+
   // 3. 사용자 오버라이드
   const userOverride = meta.designPreset;
 
-  return deepMerge(base, artPreset as any, userOverride as any);
+  return deepMerge(base, themeOverride as any, artPreset as any, userOverride as any);
 }

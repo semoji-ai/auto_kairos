@@ -178,23 +178,6 @@ export const RemotionRoot: React.FC = () => {
               manifest: fallbackManifest,
               sceneNumber: sceneNum,
               subtitleConfig: DEFAULT_SUBTITLE_CONFIG,
-              override: {
-                headline: "",
-                layout: "" as any,
-                reveal: "fade_in" as any,
-                emphasis: "none" as any,
-                mood: "informative" as any,
-                title: "",
-                items: "",
-                values: "",
-                unit: "",
-                source: "",
-                headlineFontSize: 96,
-                itemFontSize: 36,
-                chartTitleFontSize: 48,
-                contentX: 0,
-                contentY: 0,
-              },
             }}
             calculateMetadata={async ({ props }) => {
               const manifest = await loadManifest(props.manifest);
@@ -214,7 +197,6 @@ export const RemotionRoot: React.FC = () => {
                   manifest,
                   sceneNumber: props.sceneNumber,
                   subtitleConfig: props.subtitleConfig,
-                  override: props.override,
                 },
               };
             }}

@@ -2,7 +2,7 @@ import type { DesignPresetOverride } from "../types";
 
 export const QUIRKY_CARTOON_PRESET: DesignPresetOverride = {
   artStyle: "quirky_cartoon",
-  baseTheme: "white",
+  baseTheme: "dark",
   defaultBackground: "background/light-gray-distorted-square-tile-texture-background-illustration.jpg",
   colors: {
     accent: "#F59E0B",

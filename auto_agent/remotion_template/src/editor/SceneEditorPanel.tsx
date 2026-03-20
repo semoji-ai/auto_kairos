@@ -421,6 +421,83 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
           />
         </div>
 
+        {/* Position Controls */}
+        <div>
+          <label style={{ ...labelStyle, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>위치 조절</label>
+
+          {/* Headline 위치 */}
+          <div style={{ marginBottom: 10 }}>
+            <label style={labelStyle}>Headline</label>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <span style={{ fontSize: 9, color: MUTED, width: 12 }}>X</span>
+              <input type="range" min={-960} max={960} step={10}
+                value={creative.headlineOffsetX || 0}
+                onChange={e => updateCreative({ headlineOffsetX: parseInt(e.target.value) } as any)}
+                style={{ flex: 1, accentColor: ACCENT }} />
+              <span style={{ fontSize: 9, color: TEXT, width: 32, textAlign: "right" }}>{creative.headlineOffsetX || 0}</span>
+            </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 2 }}>
+              <span style={{ fontSize: 9, color: MUTED, width: 12 }}>Y</span>
+              <input type="range" min={-540} max={540} step={10}
+                value={creative.headlineOffsetY || 0}
+                onChange={e => updateCreative({ headlineOffsetY: parseInt(e.target.value) } as any)}
+                style={{ flex: 1, accentColor: ACCENT }} />
+              <span style={{ fontSize: 9, color: TEXT, width: 32, textAlign: "right" }}>{creative.headlineOffsetY || 0}</span>
+            </div>
+          </div>
+
+          {/* Items 위치 */}
+          <div style={{ marginBottom: 10 }}>
+            <label style={labelStyle}>Items</label>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <span style={{ fontSize: 9, color: MUTED, width: 12 }}>X</span>
+              <input type="range" min={-960} max={960} step={10}
+                value={creative.itemsOffsetX || 0}
+                onChange={e => updateCreative({ itemsOffsetX: parseInt(e.target.value) } as any)}
+                style={{ flex: 1, accentColor: ACCENT }} />
+              <span style={{ fontSize: 9, color: TEXT, width: 32, textAlign: "right" }}>{creative.itemsOffsetX || 0}</span>
+            </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 2 }}>
+              <span style={{ fontSize: 9, color: MUTED, width: 12 }}>Y</span>
+              <input type="range" min={-540} max={540} step={10}
+                value={creative.itemsOffsetY || 0}
+                onChange={e => updateCreative({ itemsOffsetY: parseInt(e.target.value) } as any)}
+                style={{ flex: 1, accentColor: ACCENT }} />
+              <span style={{ fontSize: 9, color: TEXT, width: 32, textAlign: "right" }}>{creative.itemsOffsetY || 0}</span>
+            </div>
+          </div>
+
+          {/* Source 위치 */}
+          <div style={{ marginBottom: 6 }}>
+            <label style={labelStyle}>출처</label>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <span style={{ fontSize: 9, color: MUTED, width: 12 }}>X</span>
+              <input type="range" min={-960} max={960} step={10}
+                value={creative.sourceOffsetX || 0}
+                onChange={e => updateCreative({ sourceOffsetX: parseInt(e.target.value) } as any)}
+                style={{ flex: 1, accentColor: ACCENT }} />
+              <span style={{ fontSize: 9, color: TEXT, width: 32, textAlign: "right" }}>{creative.sourceOffsetX || 0}</span>
+            </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 2 }}>
+              <span style={{ fontSize: 9, color: MUTED, width: 12 }}>Y</span>
+              <input type="range" min={-540} max={540} step={10}
+                value={creative.sourceOffsetY || 0}
+                onChange={e => updateCreative({ sourceOffsetY: parseInt(e.target.value) } as any)}
+                style={{ flex: 1, accentColor: ACCENT }} />
+              <span style={{ fontSize: 9, color: TEXT, width: 32, textAlign: "right" }}>{creative.sourceOffsetY || 0}</span>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={() => updateCreative({ headlineOffsetX: 0, headlineOffsetY: 0, itemsOffsetX: 0, itemsOffsetY: 0, sourceOffsetX: 0, sourceOffsetY: 0 } as any)}
+              style={{ fontSize: 9, color: MUTED, background: "none", border: `1px solid ${BORDER}`, borderRadius: 3, padding: "2px 8px", cursor: "pointer" }}
+            >
+              전체 리셋
+            </button>
+          </div>
+        </div>
+
         {/* Save */}
         <div style={{ marginTop: "auto", paddingTop: 12, borderTop: `1px solid ${BORDER}` }}>
           <button
