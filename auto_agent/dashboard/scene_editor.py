@@ -26,40 +26,8 @@ manifest_router = _AR(prefix="/api/p/{slug}", tags=["manifest-utils"])
 
 @manifest_router.get("/manifest-meta")
 async def manifest_meta(slug: str):
-    """manifest.json 또는 scene_specs.json에서 meta 섹션 반환."""
-    project = resolve_project_by_slug(slug)
-    if not project:
-        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
-
-    # manifest.json 우선, 없으면 scene_specs.json
-    meta = {}
-
-    out_dir = project.get("output_dir", "")
-    manifest_path = Path(out_dir) / "manifest.json"
-    if manifest_path.exists():
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        meta = manifest.get("meta", {})
-    else:
-        specs_path = Path(out_dir) / "scene_specs.json"
-        if specs_path.exists():
-            specs = json.loads(specs_path.read_text(encoding="utf-8"))
-            meta = specs.get("meta", {})
-
-    # 프로젝트 config에서 videoTheme/artStyle 보장 (manifest에 없을 수 있음)
-    config = project.get("config") or {}
-    if isinstance(config, str):
-        try:
-            config = json.loads(config)
-        except (json.JSONDecodeError, TypeError):
-            config = {}
-    if not meta.get("videoTheme") and config.get("video_theme"):
-        meta["videoTheme"] = config["video_theme"]
-    if not meta.get("artStyle") and config.get("art_style"):
-        meta["artStyle"] = config["art_style"]
-
-    if not meta:
-        return JSONResponse({"error": "manifest/specs 없음"}, status_code=404)
-    return {"meta": meta}
+    """매니페스트 메타 데이터 반환 (get_editor_manifest_meta로 위임)."""
+    return await get_editor_manifest_meta(slug)
 
 
 @manifest_router.post("/rebuild-manifest")
@@ -179,16 +147,16 @@ async def generate_thumbnails(slug: str):
         return {"ok": True, "status": "already_running"}
 
     async def _run():
-        import subprocess, shutil, os
-        node = shutil.which("node")
-        if not node:
-            # PATH에 node 추가 시도
-            node_dir = Path.home() / "local/nodejs/node-v22.14.0-darwin-x64/bin"
-            if node_dir.exists():
-                os.environ["PATH"] = str(node_dir) + ":" + os.environ.get("PATH", "")
-                node = shutil.which("node")
-        if not node:
+        from auto_agent.utils.platform import get_env_with_node, get_node_bin_dir
+        import shutil
+        try:
+            node_env = get_env_with_node()
+            node_bin_dir = get_node_bin_dir()
+        except EnvironmentError:
             return
+
+        node_exe = "node.exe" if __import__("sys").platform == "win32" else "node"
+        node = str(node_bin_dir / node_exe)
 
         script = Path(__file__).parent.parent.parent / "remotion" / "generate-thumbnails.mjs"
         if not script.exists():
@@ -199,7 +167,7 @@ async def generate_thumbnails(slug: str):
             "--width=480",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env={**os.environ},
+            env=node_env,
             cwd=str(script.parent),
         )
         stdout, stderr = await proc.communicate()
