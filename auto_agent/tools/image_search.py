@@ -8,6 +8,7 @@ scene_specs.json 기반 검색+다운로드 지원.
 import argparse
 import json
 import os
+import sys
 import hashlib
 import requests
 from datetime import datetime
@@ -296,8 +297,12 @@ def filter_watermarked(images: List[SearchedImage]) -> List[SearchedImage]:
         if not img.local_path:
             filtered.append(img)
             continue
+        # Wikimedia Commons는 자체 라이선스 데이터 제공 — 워터마크 없음, 감지 스킵
+        if img.source == "wikimedia":
+            filtered.append(img)
+            continue
         if detect_watermark(img.local_path):
-            print(f"    [WM] 워터마크 감지 — 제외: {Path(img.local_path).name}")
+            print(f"    [WM] 워터마크 감지 — 제외: {Path(img.local_path).name}", file=sys.stderr)
             # 워터마크 이미지 파일 삭제
             try:
                 Path(img.local_path).unlink(missing_ok=True)
@@ -361,7 +366,7 @@ class WikimediaSearcher:
                     break
             return ImageSearchResult(query=query, source="wikimedia", total_results=len(images), images=images)
         except Exception as e:
-            print(f"  Wikimedia 검색 실패: {e}")
+            print(f"  Wikimedia 검색 실패: {e}", file=sys.stderr)
             return ImageSearchResult(query=query, source="wikimedia")
 
 
@@ -399,7 +404,7 @@ class SerperSearcher:
                 ))
             return ImageSearchResult(query=query, source="serper", total_results=len(images), images=images)
         except Exception as e:
-            print(f"  Serper 검색 실패: {e}")
+            print(f"  Serper 검색 실패: {e}", file=sys.stderr)
             return ImageSearchResult(query=query, source="serper")
 
 
@@ -439,7 +444,7 @@ class PixabaySearcher:
                 ))
             return ImageSearchResult(query=query, source="pixabay", total_results=len(images), images=images)
         except Exception as e:
-            print(f"  Pixabay 검색 실패: {e}")
+            print(f"  Pixabay 검색 실패: {e}", file=sys.stderr)
             return ImageSearchResult(query=query, source="pixabay")
 
 
@@ -526,7 +531,7 @@ class ImageSearcher:
             img.downloaded_at = datetime.now().isoformat()
             return str(local_path)
         except Exception as e:
-            print(f"  다운로드 실패: {img.image_url[:50]}... ({e})")
+            print(f"  다운로드 실패: {img.image_url[:50]}... ({e})", file=sys.stderr)
             return None
 
     def search_and_download(self, query: str, limit: int = 5,
@@ -667,7 +672,7 @@ class ImageSearcher:
                     path = self.download_image(img, target_dir=output_dir)
                     return path
         except Exception as e:
-            print(f"  Wikipedia 인물 이미지 검색 실패: {e}")
+            print(f"  Wikipedia 인물 이미지 검색 실패: {e}", file=sys.stderr)
         return None
 
     def search_for_scene_specs(self, scene_specs_path: Path, output_dir: Path) -> dict:
@@ -706,7 +711,7 @@ class ImageSearcher:
             placement = asset.get("placement", "background")
             preferred = "1:1" if placement in ("left", "right") else "16:9"
 
-            print(f"  [검색] scene_{scene_num:03d}: '{query}' (source={source}, {preferred})")
+            print(f"  [검색] scene_{scene_num:03d}: '{query}' (source={source}, {preferred})", file=sys.stderr)
 
             if source == "wikimedia":
                 downloaded = self.search_and_download(query, 3, "wikimedia", preferred)
@@ -733,9 +738,9 @@ class ImageSearcher:
                     "height": best.height,
                     "score": best_score,
                 }
-                print(f"    → {best.local_path} (score={best_score}, {best.width}x{best.height})")
+                print(f"    → {best.local_path} (score={best_score}, {best.width}x{best.height})", file=sys.stderr)
             else:
-                print(f"    → 이미지 없음")
+                print(f"    → 이미지 없음", file=sys.stderr)
 
         self.images_dir = saved_images_dir
         return results
