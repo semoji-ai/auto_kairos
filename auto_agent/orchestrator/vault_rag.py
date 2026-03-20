@@ -17,10 +17,7 @@ from pathlib import Path
 from typing import List, Optional
 
 # 볼트 기본 경로 (환경변수로 오버라이드 가능)
-VAULT_DIR = Path(os.environ.get(
-    "KAIROS_VAULT_DIR",
-    os.path.expanduser("~/Projects/kairos-vault"),
-))
+VAULT_DIR = Path(os.environ.get("KAIROS_VAULT_DIR") or (Path.home() / "Desktop" / "kairos-vault"))
 
 
 class VaultRAG:
