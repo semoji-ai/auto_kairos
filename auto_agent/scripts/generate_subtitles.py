@@ -51,6 +51,12 @@ def find_split_points(text: str) -> List[Tuple[int, int]]:
             end_pos += 1
         points.append((end_pos, 1))
     for m in re.finditer(r',', text):
+        pos = m.start()
+        # 숫자 사이 쉼표(1,500 등)는 분할 대상에서 제외
+        before_digit = pos > 0 and text[pos - 1].isdigit()
+        after_digit = pos + 1 < len(text) and text[pos + 1].isdigit()
+        if before_digit and after_digit:
+            continue
         points.append((m.end(), 2))
     for m in CLAUSE_PATTERNS.finditer(text):
         points.append((m.end(), 3))
@@ -153,14 +159,24 @@ def match_lines_to_timestamps(lines: List[str], words: List[Dict], audio_duratio
         else:
             i += 1
 
-    # 자막 간 갭 제거
-    for j in range(1, len(entries)):
-        if entries[j]["startSec"] > entries[j - 1]["endSec"]:
-            entries[j]["startSec"] = entries[j - 1]["endSec"]
-
-    # Ensure last entry extends to audio duration
-    if entries and entries[-1]["endSec"] < audio_duration - 0.1:
+    # 씬 전체를 자막으로 채우기: 첫 자막은 0.0부터, 마지막은 audio_duration까지
+    if entries:
+        entries[0]["startSec"] = 0.0
         entries[-1]["endSec"] = round(audio_duration, 3)
+
+    # 자막 간 갭 제거: 각 자막의 endSec = 다음 자막의 startSec
+    for j in range(len(entries) - 1):
+        entries[j]["endSec"] = entries[j + 1]["startSec"]
+
+    # 씬 내 자막 전환 선행 offset (첫 자막 제외, 0.3초 앞당김)
+    SUBTITLE_LEAD_OFFSET = 0.3
+    for j in range(1, len(entries)):
+        entries[j]["startSec"] = round(max(
+            entries[j - 1]["startSec"] + 0.1,  # 이전 자막과 최소 0.1초 간격 보장
+            entries[j]["startSec"] - SUBTITLE_LEAD_OFFSET,
+        ), 3)
+        # 이전 자막의 endSec도 맞춰줌
+        entries[j - 1]["endSec"] = entries[j]["startSec"]
 
     return entries
 
