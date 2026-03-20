@@ -47,6 +47,7 @@ def get_node_bin_dir() -> Path:
         3. nvm — ~/.nvm/alias/default → 버전 디렉토리, 없으면 최신 버전
         4. volta — ~/.volta/bin
         5. brew — /opt/homebrew/bin, /usr/local/bin
+        5.5. 로컬 nodejs 설치 — ~/local/nodejs/node-v*/bin
         6. Windows 시스템 경로 — C:/Program Files/nodejs, AppData nvm-windows
 
     Returns:
