@@ -29,6 +29,7 @@ from pathlib import Path
 
 from auto_agent import __version__
 from auto_agent.paths import get_package_dir, get_data_dir, get_workspace_dir
+from auto_agent.utils.platform import get_npm_cmd, get_npx_cmd, get_env_with_node
 from auto_agent.ui import (
     console,
     print_error,
@@ -175,13 +176,12 @@ def cmd_init(args):
     if remotion_pkg.exists() and (not remotion_nm.exists() or upgrade_mode):
         console.print("  [accent]NPM[/accent] Remotion 의존성 설치 중...")
         try:
-            import platform
-            npm_cmd = "npm.cmd" if platform.system() == "Windows" else "npm"
             result = subprocess.run(
-                [npm_cmd, "install"],
+                [get_npm_cmd(), "install"],
                 cwd=str(remotion_dest),
                 capture_output=True,
                 text=True,
+                env=get_env_with_node(),
             )
             if result.returncode == 0:
                 print_success("npm install 완료")
@@ -249,17 +249,15 @@ def cmd_studio(args):
         console.print(f"  'auto-agent init {workspace}' 를 먼저 실행하세요.")
         sys.exit(1)
 
-    env = {}
+    extra_env = {}
     if parsed.project:
-        env["PROJECT_NAME"] = parsed.project
+        extra_env["PROJECT_NAME"] = parsed.project
 
-    import platform
-    npx_cmd = "npx.cmd" if platform.system() == "Windows" else "npx"
     print_success(f"Remotion Studio 시작: {remotion_dir}")
     subprocess.run(
-        [npx_cmd, "remotion", "studio"],
+        [get_npx_cmd(), "remotion", "studio"],
         cwd=str(remotion_dir),
-        env={**__import__("os").environ, **env},
+        env={**get_env_with_node(), **extra_env},
     )
 
 
