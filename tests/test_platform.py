@@ -17,9 +17,15 @@ def _clear():
         pass
 
 
+@pytest.fixture(autouse=True)
+def clear_node_cache():
+    _clear()
+    yield
+    _clear()
+
+
 def test_get_node_bin_dir_env_override(tmp_path, monkeypatch):
     """NODEJS_BIN_DIR 환경변수가 있으면 그 경로를 반환"""
-    _clear()
     fake_bin = tmp_path / "mynode" / "bin"
     fake_bin.mkdir(parents=True)
     node_exe = "node.exe" if sys.platform == "win32" else "node"
@@ -31,7 +37,6 @@ def test_get_node_bin_dir_env_override(tmp_path, monkeypatch):
     from auto_agent.utils.platform import get_node_bin_dir
     result = get_node_bin_dir()
     assert result == fake_bin
-    _clear()
 
 
 def test_get_node_bin_dir_found():
@@ -39,16 +44,13 @@ def test_get_node_bin_dir_found():
     import shutil
     if not shutil.which("node"):
         pytest.skip("node가 설치되지 않은 환경 — 탐색 불가")
-    _clear()
     from auto_agent.utils.platform import get_node_bin_dir
     result = get_node_bin_dir()
     assert result.exists()
-    _clear()
 
 
 def test_get_node_bin_dir_not_found(monkeypatch):
     """node 찾지 못하면 EnvironmentError"""
-    _clear()
     monkeypatch.delenv("NODEJS_BIN_DIR", raising=False)
 
     with mock.patch("shutil.which", return_value=None), \
@@ -58,12 +60,10 @@ def test_get_node_bin_dir_not_found(monkeypatch):
         _clear()
         with pytest.raises(EnvironmentError, match="Node.js를 찾을 수 없습니다"):
             get_node_bin_dir()
-    _clear()
 
 
 def test_get_node_bin_dir_caching(tmp_path, monkeypatch):
     """lru_cache로 두 번 호출해도 함수 본체는 1회만 실행"""
-    _clear()
     fake_bin = tmp_path / "bin"
     fake_bin.mkdir()
     node_exe = "node.exe" if sys.platform == "win32" else "node"
@@ -77,12 +77,10 @@ def test_get_node_bin_dir_caching(tmp_path, monkeypatch):
     assert r1 == r2
     info = get_node_bin_dir.cache_info()
     assert info.hits >= 1  # 두 번째 호출은 캐시에서
-    _clear()
 
 
 def test_get_env_with_node_path_contains_node(tmp_path, monkeypatch):
     """get_env_with_node()의 PATH에 node bin 경로 포함"""
-    _clear()
     fake_bin = tmp_path / "bin"
     fake_bin.mkdir()
     node_exe = "node.exe" if sys.platform == "win32" else "node"
@@ -93,12 +91,10 @@ def test_get_env_with_node_path_contains_node(tmp_path, monkeypatch):
     from auto_agent.utils.platform import get_env_with_node
     env = get_env_with_node()
     assert str(fake_bin) in env["PATH"]
-    _clear()
 
 
 def test_get_env_with_node_no_global_mutation(tmp_path, monkeypatch):
     """get_env_with_node()는 os.environ을 수정하지 않음"""
-    _clear()
     fake_bin = tmp_path / "bin"
     fake_bin.mkdir()
     node_exe = "node.exe" if sys.platform == "win32" else "node"
@@ -110,15 +106,20 @@ def test_get_env_with_node_no_global_mutation(tmp_path, monkeypatch):
     from auto_agent.utils.platform import get_env_with_node
     get_env_with_node()
     assert os.environ.get("PATH", "") == original_path
-    _clear()
 
 
 def test_get_env_with_node_uses_pathsep(tmp_path, monkeypatch):
-    """PATH 구분자로 os.path.pathsep 사용"""
-    import inspect
-    from auto_agent.utils import platform as p
-    src = inspect.getsource(p.get_env_with_node)
-    assert "os.path.pathsep" in src
+    """PATH 구분자가 플랫폼 pathsep임을 동작으로 검증"""
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    node_exe = "node.exe" if sys.platform == "win32" else "node"
+    (fake_bin / node_exe).touch()
+    monkeypatch.setenv("NODEJS_BIN_DIR", str(fake_bin))
+    _clear()
+    from auto_agent.utils.platform import get_env_with_node
+    env = get_env_with_node()
+    parts = env["PATH"].split(os.path.pathsep)
+    assert str(fake_bin) in parts
 
 
 def test_npm_cmd_correct():

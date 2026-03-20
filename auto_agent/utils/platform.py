@@ -14,7 +14,6 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional
 
 
 # ─── 플랫폼 감지 ───────────────────────────────────────────────────────────────
@@ -104,6 +103,17 @@ def get_node_bin_dir() -> Path:
         if (brew_path / node_exe).exists():
             return brew_path
 
+    # 5.5. 로컬 nodejs 설치 (~/local/nodejs/node-v*/bin 형태)
+    local_nodejs = Path.home() / "local" / "nodejs"
+    if local_nodejs.exists():
+        try:
+            for ver_dir in sorted(local_nodejs.iterdir(), reverse=True):
+                bin_dir = ver_dir / "bin"
+                if (bin_dir / node_exe).exists():
+                    return bin_dir
+        except OSError:
+            pass
+
     # 6. Windows 시스템 경로
     if is_windows():
         candidates = [
@@ -154,6 +164,7 @@ def get_env_with_node() -> dict:
     env = os.environ.copy()
     node_bin = str(get_node_bin_dir())
     current_path = env.get("PATH", "")
-    if node_bin not in current_path:
+    path_parts = current_path.split(os.path.pathsep)
+    if node_bin not in path_parts:
         env["PATH"] = node_bin + os.path.pathsep + current_path
     return env
