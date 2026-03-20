@@ -6,13 +6,14 @@ Python 파이프라인과 Remotion(Node.js) 사이의 인터페이스.
 storyboard + narration + subtitles → remotion_manifest.json → 영상 렌더링.
 """
 import json
-import os
 import shutil
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any
+
+from auto_agent.utils.platform import get_env_with_node, get_npx_cmd, get_npm_cmd
 
 
 @dataclass
@@ -69,41 +70,7 @@ class RemotionBridge:
         self.fps = fps
         self.crf = crf
 
-        self._node_bin_dir = self._find_node_bin_dir()
-        self.npx_path = self._find_bin("npx")
-        self.npm_path = self._find_bin("npm")
-        self.ffprobe_path = self._find_local_bin("ffprobe") or shutil.which("ffprobe")
-
-    def _find_node_bin_dir(self) -> Optional[str]:
-        base_dir = self.remotion_dir.parent
-        bin_dir = base_dir / "bin"
-        if bin_dir.exists():
-            candidates = sorted(bin_dir.glob("node-v*/bin"), key=lambda p: p.parent.name, reverse=True)
-            for candidate in candidates:
-                if (candidate / "npx").exists():
-                    return str(candidate)
-        return None
-
-    def _find_local_bin(self, name: str) -> Optional[str]:
-        """프로젝트 bin/ 디렉토리에서 바이너리 검색"""
-        base_dir = self.remotion_dir.parent
-        local = base_dir / "bin" / name
-        if local.exists():
-            return str(local)
-        return None
-
-    def _find_bin(self, name: str) -> Optional[str]:
-        if self._node_bin_dir:
-            local = Path(self._node_bin_dir) / name
-            if local.exists():
-                return str(local)
-        return shutil.which(name)
-
-    def _get_node_env(self) -> dict:
-        env = dict(os.environ)
-        if self._node_bin_dir:
-            env["PATH"] = self._node_bin_dir + ":" + env.get("PATH", "")
-        return env
+        self.ffprobe_path = shutil.which("ffprobe")
 
     def _get_audio_duration(self, audio_path: Path) -> float:
         probe = self.ffprobe_path or "ffprobe"
@@ -341,19 +308,15 @@ class RemotionBridge:
 
     def render(self, manifest_path: Path, output_path: Path, concurrency: int = 2) -> bool:
         """npx remotion render 호출"""
-        if not self.npx_path:
-            print("npx를 찾을 수 없습니다.")
-            return False
         if not self.remotion_dir.exists():
             print(f"Remotion 디렉토리 없음: {self.remotion_dir}")
             return False
 
-        node_env = self._get_node_env()
+        node_env = get_env_with_node()
 
         if not (self.remotion_dir / "node_modules").exists():
-            npm_path = self.npm_path or "npm"
             subprocess.run(
-                [npm_path, "install"], cwd=str(self.remotion_dir),
+                [get_npm_cmd(), "install"], cwd=str(self.remotion_dir),
                 capture_output=True, text=True, timeout=120, env=node_env,
             )
 
@@ -412,7 +375,7 @@ class RemotionBridge:
             json.dump(render_manifest, f, ensure_ascii=False, indent=2)
 
         cmd = [
-            self.npx_path, "remotion", "render",
+            get_npx_cmd(), "remotion", "render",
             "KairosVideo", str(output_path.resolve()),
             "--props", str(render_manifest_path.resolve()),
             "--codec", "h264",
