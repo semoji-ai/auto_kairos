@@ -887,75 +887,13 @@ def cmd_update(args):
 
 
 def cmd_sync(args):
-    """로컬 → Supabase 동기화 (push)."""
-    from auto_agent.supabase_client import supabase_enabled
-    if not supabase_enabled():
-        print_error("SUPABASE_URL / SUPABASE_KEY 환경변수가 설정되지 않았습니다.")
-        return
-
-    slug = _parse_project_flag(args)
-    if not slug:
-        print_error("--project <slug> 필수")
-        return
-
-    from auto_agent.db.project_manager import ProjectManager
-    from auto_agent.sync import SyncManager
-    from pathlib import Path
-
-    pm = ProjectManager()
-    project = pm.get_project(slug=slug)
-    if not project:
-        print_error(f"프로젝트 '{slug}'를 찾을 수 없습니다.")
-        return
-
-    print_header(f"Supabase 동기화 (push): {slug}")
-    sm = SyncManager(
-        project_slug=slug,
-        project_dir=Path(project["output_dir"]),
-        local_project_id=project["id"],
-    )
-    result = sm.push_all(dict(project))
-    console.print(f"  업로드: [accent]{result['uploaded']}[/accent]건, 스킵: {result['skipped']}건")
-    console.print(f"  프로젝트 ID: {result['project_id']}")
+    """로컬 → Supabase 동기화 (push) — Supabase 미설정 시 비활성."""
+    print_warning("Supabase 동기화가 비활성화되어 있습니다. .env에서 SUPABASE_URL/KEY를 설정하세요.")
 
 
 def cmd_pull(args):
-    """Supabase → 로컬 다운로드 (pull)."""
-    from auto_agent.supabase_client import supabase_enabled
-    if not supabase_enabled():
-        print_error("SUPABASE_URL / SUPABASE_KEY 환경변수가 설정되지 않았습니다.")
-        return
-
-    slug = _parse_project_flag(args)
-    if not slug:
-        print_error("--project <slug> 필수")
-        return
-
-    from auto_agent.db.project_manager import ProjectManager
-    from auto_agent.sync import SyncManager
-    from pathlib import Path
-
-    pm = ProjectManager()
-    project = pm.get_project(slug=slug)
-    if not project:
-        print_error(f"프로젝트 '{slug}'를 찾을 수 없습니다.")
-        return
-
-    # --type 필터 (선택)
-    asset_types = None
-    if "--type" in args:
-        idx = args.index("--type")
-        if idx + 1 < len(args):
-            asset_types = [t.strip() for t in args[idx + 1].split(",")]
-
-    print_header(f"Supabase 다운로드 (pull): {slug}")
-    sm = SyncManager(
-        project_slug=slug,
-        project_dir=Path(project["output_dir"]),
-        local_project_id=project["id"],
-    )
-    result = sm.pull(asset_types=asset_types)
-    console.print(f"  다운로드: [accent]{result['downloaded']}[/accent]건, 스킵(최신): {result['skipped']}건")
+    """Supabase → 로컬 다운로드 (pull) — Supabase 미설정 시 비활성."""
+    print_warning("Supabase 동기화가 비활성화되어 있습니다. .env에서 SUPABASE_URL/KEY를 설정하세요.")
 
 
 def _parse_project_flag(args):

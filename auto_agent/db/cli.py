@@ -39,28 +39,23 @@ from auto_agent.ui import (
 
 
 def _get_pm():
-    """Supabase ProjectManager 반환."""
-    from auto_agent.supabase_client import supabase_enabled
-    if not supabase_enabled():
-        print_error("SUPABASE_URL / SUPABASE_KEY 환경변수를 설정하세요.")
-        sys.exit(1)
-    from auto_agent.dashboard.supabase_data import SupabaseProjectManager
-    return SupabaseProjectManager()
+    """로컬 SQLite ProjectManager 반환."""
+    from auto_agent.db.project_manager import ProjectManager
+    from auto_agent.db.connection import db_exists, init_db
+    if not db_exists():
+        init_db()
+    return ProjectManager()
 
 
 def cmd_init(args):
-    """워크스페이스 초기화 (Supabase 연결 확인)."""
-    from auto_agent.supabase_client import supabase_enabled
-    if supabase_enabled():
-        pm = _get_pm()
-        projects = pm.list_projects()
-        print_success(f"Supabase 연결 완료. 프로젝트 {len(projects)}개 확인.")
-    else:
-        print_error("SUPABASE_URL / SUPABASE_KEY 환경변수를 설정하세요.")
+    """워크스페이스 초기화 (로컬 DB 확인)."""
+    pm = _get_pm()
+    projects = pm.list_projects()
+    print_success(f"로컬 DB 연결 완료. 프로젝트 {len(projects)}개 확인.")
 
 
 def cmd_migrate(args):
-    """기존 로컬 프로젝트 → Supabase 마이그레이션."""
+    """기존 로컬 프로젝트 마이그레이션."""
     from auto_agent.db.migrate_existing import main
     main()
 
