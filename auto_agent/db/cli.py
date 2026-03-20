@@ -378,7 +378,7 @@ def cmd_dashboard(args):
     print_success(f"대시보드 실행: http://localhost:{port}")
     try:
         import uvicorn
-        uvicorn.run("auto_agent.dashboard.app:app", host="0.0.0.0", port=port, reload=True)
+        uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
     except ImportError:
         print_error("uvicorn 미설치. 실행: pip install fastapi uvicorn jinja2")
         sys.exit(1)

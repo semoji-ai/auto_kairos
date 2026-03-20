@@ -31,32 +31,19 @@ async def manifest_meta(slug: str):
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
-    from auto_agent.dashboard.app import USE_SUPABASE, get_pm
-
     # manifest.json 우선, 없으면 scene_specs.json
     meta = {}
 
-    if USE_SUPABASE:
-        pm = get_pm()
-        pid = project["id"]
-        manifest = pm.load_project_json(pid, "manifest.json")
-        if manifest:
-            meta = manifest.get("meta", {})
-        else:
-            specs = pm.load_project_json(pid, "scene_specs.json")
-            if specs:
-                meta = specs.get("meta", {})
+    out_dir = project.get("output_dir", "")
+    manifest_path = Path(out_dir) / "manifest.json"
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        meta = manifest.get("meta", {})
     else:
-        out_dir = project.get("output_dir", "")
-        manifest_path = Path(out_dir) / "manifest.json"
-        if manifest_path.exists():
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            meta = manifest.get("meta", {})
-        else:
-            specs_path = Path(out_dir) / "scene_specs.json"
-            if specs_path.exists():
-                specs = json.loads(specs_path.read_text(encoding="utf-8"))
-                meta = specs.get("meta", {})
+        specs_path = Path(out_dir) / "scene_specs.json"
+        if specs_path.exists():
+            specs = json.loads(specs_path.read_text(encoding="utf-8"))
+            meta = specs.get("meta", {})
 
     # 프로젝트 config에서 videoTheme/artStyle 보장 (manifest에 없을 수 있음)
     config = project.get("config") or {}
@@ -85,20 +72,11 @@ async def rebuild_manifest(slug: str):
     import subprocess, shutil
     python = shutil.which("python3") or shutil.which("python") or "python3"
 
-    from auto_agent.dashboard.app import USE_SUPABASE
-
-    if USE_SUPABASE:
-        storage_key = project.get("storage_key", "")
-        pid = project.get("id", "")
-        if not storage_key or not pid:
-            return JSONResponse({"error": "Supabase 프로젝트 정보 없음"}, status_code=400)
-        args = [python, "-m", "auto_agent.scripts.build_manifest", str(pid), storage_key]
-    else:
-        # 로컬 모드: output 디렉토리에서 직접 빌드
-        out_dir = project.get("output_dir", "")
-        if not out_dir:
-            return JSONResponse({"error": "output_dir 없음"}, status_code=400)
-        args = [python, "-m", "auto_agent.scripts.build_manifest", "--local", out_dir]
+    # 로컬 모드: output 디렉토리에서 직접 빌드
+    out_dir = project.get("output_dir", "")
+    if not out_dir:
+        return JSONResponse({"error": "output_dir 없음"}, status_code=400)
+    args = [python, "-m", "auto_agent.scripts.build_manifest", "--local", out_dir]
 
     try:
         import os
@@ -300,11 +278,7 @@ async def editor_meta(slug: str):
 
 
 def _load_specs(project: dict):
-    """Supabase/로컬 자동 전환으로 scene_specs.json 로드."""
-    from auto_agent.dashboard.app import USE_SUPABASE, get_pm
-    if USE_SUPABASE:
-        pm = get_pm()
-        return pm.load_project_json(project["id"], "scene_specs.json")
+    """로컬 scene_specs.json 로드."""
     specs_path = Path(project.get("output_dir", "")) / "scene_specs.json"
     if specs_path.exists():
         return json.loads(specs_path.read_text(encoding="utf-8"))
@@ -313,22 +287,17 @@ def _load_specs(project: dict):
 
 @router.get("/scenes/{scene_num}/images")
 async def get_scene_images(slug: str, scene_num: int):
-    """씬의 이미지 후보 목록 (Supabase/로컬 자동 전환)."""
+    """씬의 이미지 후보 목록."""
     project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
-    from auto_agent.dashboard.app import USE_SUPABASE, get_pm
-    if USE_SUPABASE:
-        pm = get_pm()
-        candidates = pm.get_scene_image_candidates(project["id"], scene_num)
-    else:
-        from auto_agent.dashboard.helpers import get_scene_image_candidates
-        _out_dir = project.get("output_dir", "")
-        _dir_name = Path(_out_dir).name if _out_dir else project.get("slug", "")
-        candidates = get_scene_image_candidates(
-            _dir_name, scene_num, _out_dir
-        )
+    from auto_agent.dashboard.helpers import get_scene_image_candidates
+    _out_dir = project.get("output_dir", "")
+    _dir_name = Path(_out_dir).name if _out_dir else project.get("slug", "")
+    candidates = get_scene_image_candidates(
+        _dir_name, scene_num, _out_dir
+    )
 
     return JSONResponse(
         {"scene_number": scene_num, "candidates": candidates},
@@ -364,15 +333,10 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
         return JSONResponse({"error": f"씬 {scene_num} 없음"}, status_code=404)
 
     # 저장
-    from auto_agent.dashboard.app import USE_SUPABASE, get_pm
-    if USE_SUPABASE:
-        pm = get_pm()
-        pm.save_project_json(project["id"], "scene_specs.json", specs)
-    else:
-        specs_path = Path(project["output_dir"]) / "scene_specs.json"
-        specs_path.write_text(
-            json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+    specs_path = Path(project["output_dir"]) / "scene_specs.json"
+    specs_path.write_text(
+        json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     return {"ok": True, "image_url": image_url}
 
@@ -405,28 +369,15 @@ async def get_scene_list(slug: str):
 @router.get("/manifest-meta")
 async def get_editor_manifest_meta(slug: str):
     """에디터용 매니페스트 메타 데이터 (fps, resolution, font 등).
-    Supabase → 로컬 manifest → 로컬 scene_specs → 기본값 순서로 탐색."""
+    로컬 manifest → 로컬 scene_specs → 기본값 순서로 탐색."""
     project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
-    from auto_agent.dashboard.app import USE_SUPABASE, get_pm
     from auto_agent.dashboard.helpers import load_project_json
     out_dir = project.get("output_dir", "")
 
-    # 1) Supabase에서 시도
-    if USE_SUPABASE:
-        pm = get_pm()
-        pid = project["id"]
-        for fname in ("manifest.json", "scene_specs.json"):
-            data = pm.load_project_json(pid, fname)
-            if data:
-                m = data.get("manifest", data)
-                meta = m.get("meta")
-                if meta:
-                    return {"meta": meta}
-
-    # 2) 로컬 파일에서 시도 (remotion/public/manifests/{dir_name}.json 포함)
+    # 로컬 파일에서 시도 (remotion/public/manifests/{dir_name}.json 포함)
     from auto_agent.paths import get_workspace_dir
     workspace = get_workspace_dir()
     _manifest_dir_name = Path(out_dir).name if out_dir else slug
@@ -483,19 +434,14 @@ async def get_scene_for_editor(slug: str, scene_num: int):
 
 
 def _inject_image_url(project: dict, scene: dict, scene_num: int):
-    """scene에 imagePath / vizBackgroundPath가 비어있으면 Supabase/로컬에서 URL 주입."""
+    """scene에 imagePath / vizBackgroundPath가 비어있으면 로컬에서 URL 주입."""
     if scene.get("imagePath") or scene.get("vizBackgroundPath"):
         return  # 이미 URL이 있으면 스킵
 
-    from auto_agent.dashboard.app import USE_SUPABASE, get_pm
-    if USE_SUPABASE:
-        pm = get_pm()
-        url = pm.get_scene_image_url(project["id"], scene_num)
-    else:
-        from auto_agent.dashboard.helpers import get_scene_image_url
-        _out_dir = project.get("output_dir", "")
-        _dir_name = Path(_out_dir).name if _out_dir else project.get("slug", "")
-        url = get_scene_image_url(_dir_name, scene_num, _out_dir)
+    from auto_agent.dashboard.helpers import get_scene_image_url
+    _out_dir = project.get("output_dir", "")
+    _dir_name = Path(_out_dir).name if _out_dir else project.get("slug", "")
+    url = get_scene_image_url(_dir_name, scene_num, _out_dir)
 
     if url:
         placement = (scene.get("imageAsset") or {}).get("placement", "background")
@@ -589,9 +535,7 @@ async def save_scene(slug: str, scene_num: int, request: Request):
     scenes[target_idx] = {**old_scene, **scene_data}
     specs["scenes"] = scenes
 
-    from auto_agent.dashboard.app import USE_SUPABASE, get_pm
-
-    # 로컬 파일에 항상 저장 (build_manifest가 로컬을 읽으므로)
+    # 로컬 파일에 저장
     output_dir = project.get("output_dir", "")
     if output_dir:
         specs_path = Path(output_dir) / "scene_specs.json"
@@ -603,11 +547,6 @@ async def save_scene(slug: str, scene_num: int, request: Request):
             json.dumps(specs, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-
-    # Supabase에도 저장
-    if USE_SUPABASE:
-        pm = get_pm()
-        pm.save_project_json(project["id"], "scene_specs.json", specs)
 
     return {
         "ok": True,

@@ -22,6 +22,7 @@ const resolveAsset = (path: string): string =>
     ? path
     : staticFile(path);
 import { CreativeScene } from "./simple/CreativeScene";
+import { CanvasScene } from "./simple/CanvasScene";
 import { MapSceneRenderer } from "./map/MapSceneRenderer";
 import { DesignPresetProvider, useDesignPreset } from "./design";
 import { usePresetFonts, buildFontFamily } from "./design/fonts";
@@ -81,7 +82,8 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
   return (
     <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
       {timing.map(({ scene, from, dur }) => {
-        const hasImage = !!(scene.imagePath || scene.vizBackgroundPath);
+        const defaultBg = preset.defaultBackground;
+        const hasImage = !!(scene.imagePath || scene.vizBackgroundPath || defaultBg);
 
         return (
           <Sequence
@@ -92,7 +94,13 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
             layout="none"
           >
             <AbsoluteFill>
-              {scene.mapScene ? (
+              {(scene as any)._canvas?.layers ? (
+                /* === 캔버스 씬: 의회식 크론 자유 캔버스 렌더링 === */
+                <CanvasScene
+                  canvas={(scene as any)._canvas}
+                  durationInFrames={dur}
+                />
+              ) : scene.mapScene ? (
                 /* === 맵 씬: 맵만 전체 표시 (마커 포함) === */
                 <FadeWrap duration={dur} fade={10}>
                   <MapSceneRenderer
@@ -108,7 +116,7 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
                   // left, right, center, fullscreen은 기본 opacity 1 / background만 0.35
                   const defaultOpacity = (placement === "background") ? 0.35 : 1.0;
                   const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
-                  const imgSrc = scene.vizBackgroundPath || scene.imagePath;
+                  const imgSrc = scene.vizBackgroundPath || scene.imagePath || defaultBg;
                   const isSidePlacement = hasImage && (placement === "left" || placement === "right");
                   const isFullscreen = hasImage && placement === "fullscreen";
                   const isCenter = hasImage && placement === "center";
@@ -483,9 +491,6 @@ const SubtitleBar: React.FC<{ text: string; theme: PresetColors }> = ({ text, th
   );
 };
 
-// WhisperX 타임스탬프가 실제 발화보다 약간 늦게 잡힘 → 자막을 앞당김
-const SUBTITLE_OFFSET_SEC = 0.3;
-
 function findSubtitle(
   timing: Array<{ scene: any; from: number; dur: number }>,
   frame: number,
@@ -493,9 +498,13 @@ function findSubtitle(
 ): string | null {
   for (const { scene, from, dur } of timing) {
     if (frame >= from && frame < from + dur) {
-      const t = (frame - from) / fps + SUBTITLE_OFFSET_SEC;
-      for (const s of scene.subtitles ?? []) {
-        if (t >= s.startSec && t <= s.endSec) return s.text;
+      const t = (frame - from) / fps;
+      const subs = scene.subtitles ?? [];
+      for (let i = 0; i < subs.length; i++) {
+        const s = subs[i];
+        // 마지막 자막은 씬 끝까지 유지
+        const isLast = i === subs.length - 1;
+        if (t >= s.startSec && (isLast || t < s.endSec)) return s.text;
       }
     }
   }

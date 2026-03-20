@@ -107,11 +107,12 @@ const SingleSceneInner: React.FC<Props> = ({ scene, meta }) => {
   }
 
   // ── 일반 씬 ──
-  const hasImage = !!(scene.imagePath || scene.vizBackgroundPath);
+  const defaultBg = preset.defaultBackground;
+  const hasImage = !!(scene.imagePath || scene.vizBackgroundPath || defaultBg);
   const placement = scene.imageAsset?.placement ?? "background";
   const defaultOpacity = (placement === "background") ? 0.35 : 1.0;
   const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
-  const imgSrc = scene.vizBackgroundPath || scene.imagePath;
+  const imgSrc = scene.vizBackgroundPath || scene.imagePath || defaultBg;
 
   const creativeEl = (
     <div style={{ width: "100%", height: "100%", position: "relative" }}>

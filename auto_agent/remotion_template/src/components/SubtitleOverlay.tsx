@@ -17,8 +17,13 @@ export const SubtitleOverlay: React.FC<Props> = ({ subtitles, fps, config }) => 
   const frame = useCurrentFrame();
   const currentTimeSec = frame / fps;
 
+  // 마지막 자막은 씬 끝까지 유지 (오디오+2프레임 여유분 커버)
   const activeSub = subtitles.find(
-    (s) => currentTimeSec >= s.startSec && currentTimeSec <= s.endSec,
+    (s, i) => currentTimeSec >= s.startSec && (
+      i === subtitles.length - 1
+        ? currentTimeSec <= s.endSec + 1  // 마지막 자막: 1초 여유
+        : currentTimeSec < s.endSec
+    ),
   );
 
   if (!activeSub) return null;

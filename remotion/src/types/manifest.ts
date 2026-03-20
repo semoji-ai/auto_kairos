@@ -154,8 +154,6 @@ export interface CinematicOverlay {
 }
 
 export interface VisualizationData {
-  /** 시각화 타입 힌트 (optional — 렌더링은 creative 필드 기반) */
-  vizType?: string;
   title: string;
   items: string[];
   values: number[];

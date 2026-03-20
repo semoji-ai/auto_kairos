@@ -912,8 +912,8 @@ export const MetricCard: React.FC<{
       backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`,
       borderRadius: 12, padding: "16px 20px", minWidth: 180, textAlign: "center", ...ms, ...style,
     }}>
-      <div style={{ fontSize: 20, color: C.textMuted, marginBottom: 6 }}><TextWithBreaks text={label} /></div>
-      <div style={{ fontSize: 44, fontWeight: 800, color: C.accent, lineHeight: 1.1 }}><TextWithBreaks text={value} /></div>
+      <div style={{ fontSize: 30, color: C.textMuted, marginBottom: 6 }}><TextWithBreaks text={label} /></div>
+      <div style={{ fontSize: 60, fontWeight: 800, color: C.accent, lineHeight: 1.1 }}><TextWithBreaks text={value} /></div>
       {change && (
         <div style={{ fontSize: 18, color: trendColor, marginTop: 6, fontWeight: 600 }}>
           {trendArrow} {change}

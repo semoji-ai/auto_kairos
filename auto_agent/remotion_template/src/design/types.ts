@@ -195,6 +195,7 @@ export interface DesignPreset {
   tags?: string[];
   artStyle?: string;
   baseTheme: "dark" | "white";
+  defaultBackground?: string;  // 이미지 없는 씬의 기본 배경 이미지 경로
 
   colors: PresetColors;
   fonts: PresetFonts;

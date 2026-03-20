@@ -9,6 +9,7 @@
 **수정 가능 필드:**
 - imageAsset.query / searchQuery / fallbackQuery (검색어/프롬프트 품질 보강)
 - chartConfig (차트 설정 추가)
+- title (chartConfig 추가 시, 차트 제목에 맞게 보정. 수치 넣지 말고 맥락만)
 - itemIcons / itemFlags (심볼 추가)
 - displayMode / logoMap (로고 그리드)
 - images 배열 (인물 이미지 슬롯)
@@ -20,10 +21,11 @@
 </input_scenes>
 
 <task>
-각 씬에 대해 3개 관점으로 분석하고 에셋을 보강하세요:
+각 씬에 대해 4개 관점으로 분석하고 에셋을 보강하세요:
 1. 📊 차트 관점: 데이터 비교/비중/추세가 있으면 chartConfig 추가
 2. 🏷️ 심볼 관점: items에 맞는 itemIcons(Lucide) 또는 itemFlags(국가 ISO) 추가
 3. 🖼️ 이미지 query 보강: imageAsset이 있는 씬의 query/searchQuery/fallbackQuery 품질 개선 (source와 placement는 변경 금지)
+4. 📎 출처 보강: values가 있는데 source가 비어있는 씬은 research_report.json에서 출처를 찾아 채우세요 (예: "한국은행 2026.3", "IMF World Economic Outlook")
 
 ⚠️ layout과 imageAsset.source/placement는 Creative Direction이 결정 완료. 변경하지 마세요.
 </task>
@@ -120,7 +122,7 @@ layout=quote_portrait 씬은 반드시 다음을 설정:
 - mapScene + imageAsset 공존 금지
 - imageAsset.source: "wikimedia" (위키미디어 검색) 또는 "search" (웹 검색) 또는 "generate" (AI 생성)
 - **기본값은 "wikimedia"** — 프로젝트 config에서 search_engine을 확인하세요
-- query는 영문으로 작성
+- generate query는 한글로 작성, search/wikimedia query는 영문으로 작성
 
 ## 검색 엔진별 쿼리 작성 가이드
 

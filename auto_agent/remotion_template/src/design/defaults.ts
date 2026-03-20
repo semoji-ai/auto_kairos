@@ -39,8 +39,8 @@ export const DEFAULT_PRESET: DesignPreset = {
   },
 
   typography: {
-    headlineAccent: 80,
-    headlineBase: 48,
+    headlineAccent: 160,
+    headlineBase: 96,
     metricValue: 60,
     itemText: 36,
     descText: 26,

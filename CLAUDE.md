@@ -79,6 +79,13 @@ Today's date is 2026-03-16.
 - `rm -f scene_*.png` 같은 명령 **절대 금지** — 이전 버전 복구 불가
 - 이 규칙은 검색 이미지, 생성 이미지, 캐릭터 이미지 모두 해당
 
+### 12. Remotion 렌더러 수정 규칙
+- 씬 렌더링 수정은 **CreativeScene (`remotion/src/simple/CreativeScene.tsx`)만 수정**
+- CreativeScene이 최상위 렌더러 — SimpleVideo, SingleScenePlayer, ThumbComposition, SceneEditor 모두 이걸 사용
+- VisualizationRenderer 등 레거시 렌더러 사용 금지
+- 디자인 토큰 수정은 `remotion/src/design/defaults.ts` 또는 아트스타일 프리셋(`remotion/src/design/presets/`)에서
+- 대시보드 반영 시 `cd remotion && npm run build:editor` 필수
+
 ## 에러 볼트 워크플로우
 
 에러를 해결할 때마다:

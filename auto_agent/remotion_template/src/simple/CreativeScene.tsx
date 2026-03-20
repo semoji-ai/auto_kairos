@@ -1026,18 +1026,6 @@ const SplitLayout: React.FC<{
           </div>
         </div>
 
-        {source && (
-          <div
-            style={{
-              opacity: sourceFade,
-              fontSize: T.sourceText,
-              color: C.textDim,
-              marginTop: 16,
-            }}
-          >
-            {source}
-          </div>
-        )}
       </div>
     </AbsoluteFill>
   );
@@ -1608,20 +1596,6 @@ const QuoteDisplay: React.FC<{
           )}
         </div>
 
-        {/* Source */}
-        {source && (
-          <div
-            style={{
-              opacity: sourceOpacity,
-              fontSize: T.sourceText,
-              color: moodCfg.accent,
-              marginTop: 16,
-              fontWeight: 500,
-            }}
-          >
-            — {source}
-          </div>
-        )}
       </div>
     </AbsoluteFill>
   );
@@ -1703,6 +1677,7 @@ const LogoGridLayout: React.FC<{
           justifyContent: "center",
           alignItems: "center",
           padding: `${L.scenePadding[0]}px ${L.scenePadding[1]}px`,
+          paddingBottom: `${L.scenePadding[0] + 100}px`,
           gap: L.sectionMarginTop,
         }}
       >
@@ -1830,19 +1805,6 @@ const LogoGridLayout: React.FC<{
           })}
         </div>
 
-        {/* Source */}
-        {source && (
-          <div
-            style={{
-              opacity: sourceFade,
-              fontSize: T.sourceText,
-              color: C.textDim,
-              marginTop: 16,
-            }}
-          >
-            {source}
-          </div>
-        )}
       </div>
     </AbsoluteFill>
   );
@@ -1916,6 +1878,7 @@ const BarDisplay: React.FC<{
           justifyContent: "center",
           alignItems: "center",
           padding: `${L.scenePadding[0]}px 80px`,
+          paddingBottom: `${L.scenePadding[0] + 100}px`,
         }}
       >
         {/* Headline */}
@@ -1985,12 +1948,13 @@ const BarDisplay: React.FC<{
               >
                 <div
                   style={{
-                    width: L.barLabelWidth,
+                    minWidth: L.barLabelWidth,
                     textAlign: "right",
                     fontSize: T.labelText,
                     fontWeight: 500,
                     color: C.textMuted,
                     flexShrink: 0,
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {label}
@@ -2073,19 +2037,19 @@ const BarDisplay: React.FC<{
                 <div
                   style={{
                     opacity: valOpacity,
-                    width: L.barValueWidth,
+                    minWidth: L.barValueWidth,
                     fontSize: T.chartValue,
                     fontWeight: 700,
                     color: isNeg ? NEG_COLOR : moodCfg.accent,
                     textAlign: "left",
                     flexShrink: 0,
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {(() => {
                     const sign = hasNegative && !isNeg ? "+" : "";
                     const prefix = unit === "$" || unit === "₩" ? unit : "";
-                    const suffix = prefix ? "" : unit;
-                    return `${prefix}${sign}${val.toLocaleString()}${suffix}`;
+                    return `${prefix}${sign}${val.toLocaleString()}`;
                   })()}
                 </div>
               </div>
@@ -2103,18 +2067,10 @@ const BarDisplay: React.FC<{
               marginTop: 16,
             }}
           >
-            {unit}
+            (단위: {unit})
           </div>
         )}
 
-        {/* Source */}
-        {source && (
-          <div
-            style={{ opacity: sourceFade, fontSize: T.sourceText, color: C.textDim, marginTop: 16 }}
-          >
-            {source}
-          </div>
-        )}
       </div>
     </AbsoluteFill>
   );
@@ -2180,6 +2136,7 @@ const PieChartDisplay: React.FC<{
           justifyContent: "center",
           alignItems: "center",
           padding: `${L.scenePadding[0]}px ${L.scenePadding[1]}px`,
+          paddingBottom: `${L.scenePadding[0] + 100}px`,
           gap: L.gap,
         }}
       >
@@ -2195,7 +2152,7 @@ const PieChartDisplay: React.FC<{
         {/* Chart + Legend row */}
         <div style={{ display: "flex", alignItems: "center", gap: 48, width: "100%", maxWidth: L.maxContentWidth, justifyContent: "center" }}>
           {/* SVG Donut */}
-          <svg width={400} height={400} viewBox="0 0 400 400" style={{ flexShrink: 0 }}>
+          <svg width={700} height={700} viewBox="0 0 400 400" style={{ flexShrink: 0 }}>
             {/* 역순 렌더링: slice 0(accent)이 DOM 마지막 = 최상단 z-order → 경계 bleed 방지 */}
             {[...slices].map((_, ri) => {
               const i = slices.length - 1 - ri;
@@ -2253,9 +2210,6 @@ const PieChartDisplay: React.FC<{
           </div>
         </div>
 
-        {source && (
-          <div style={{ opacity: sourceFade, fontSize: T.sourceText, color: C.textDim, marginTop: 16 }}>{source}</div>
-        )}
       </div>
     </AbsoluteFill>
   );
@@ -2289,7 +2243,7 @@ const LineChartDisplay: React.FC<{
   const showArea = chartConfig?.showArea !== false;
 
   // Chart dimensions
-  const W = 860, H = 440;
+  const W = 1100, H = 600;
   const padL = 80, padR = 80, padT = 50, padB = 60;
   const chartW = W - padL - padR;
   const chartH = H - padT - padB;
@@ -2331,6 +2285,7 @@ const LineChartDisplay: React.FC<{
           justifyContent: "center",
           alignItems: "center",
           padding: `${L.scenePadding[0]}px 40px`,
+          paddingBottom: `${L.scenePadding[0] + 100}px`,
           gap: L.gap,
           overflow: "visible",
         }}
@@ -2411,9 +2366,6 @@ const LineChartDisplay: React.FC<{
           </g>
         </svg>
 
-        {source && (
-          <div style={{ opacity: sourceFade, fontSize: T.sourceText, color: C.textDim, marginTop: 16 }}>{source}</div>
-        )}
       </div>
     </AbsoluteFill>
   );
@@ -2602,7 +2554,29 @@ interface CreativeSceneProps {
   imageAssetPlacement?: "fullscreen" | "background" | "center" | "left" | "right" | "inline";
 }
 
-export const CreativeScene: React.FC<CreativeSceneProps> = ({
+export const CreativeScene: React.FC<CreativeSceneProps> = (props) => {
+  const source = props.data?.source || "";
+  return (
+    <>
+      <CreativeSceneInner {...props} />
+      {source && (
+        <div style={{
+          position: "absolute",
+          bottom: 130,
+          right: 40,
+          fontSize: 22,
+          color: "rgba(255,255,255,0.4)",
+          pointerEvents: "none",
+          zIndex: 5,
+        }}>
+          출처: {source}
+        </div>
+      )}
+    </>
+  );
+};
+
+const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   data,
   subtitles,
   fps = 30,
@@ -2778,7 +2752,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
   }
 
   // Pie chart
-  if (layout === "pie") {
+  if (layout === "pie" || layout === "donut") {
     return (
       <PieChartDisplay
         items={items}
@@ -2789,80 +2763,8 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
         source={source}
         mood={mood}
         hasImageBg={hasImageBackground}
-        chartConfig={creative.chartConfig}
+        chartConfig={{ ...creative.chartConfig, showTotal: layout === "donut" ? true : creative.chartConfig?.showTotal }}
       />
-    );
-  }
-
-  // Donut chart
-  if (layout === "donut") {
-    const total = values.reduce((a, b) => a + b, 0) || 1;
-    const colors = moodCfg.colors || ["#F59E0B", "#3B82F6", "#22C55E", "#EF4444", "#A855F7", "#EC4899", "#14B8A6", "#F97316"];
-    const size = 300;
-    const strokeWidth = 60;
-    const radius = (size - strokeWidth) / 2;
-    const circumference = 2 * Math.PI * radius;
-    let accumulated = 0;
-
-    return (
-      <AbsoluteFill style={{ backgroundColor: hasImageBackground ? "transparent" : C.bg, fontFamily: "inherit" }}>
-        <MoodBackground mood={mood} transparent={hasImageBackground} />
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 60 }}>
-          <div style={{ position: "relative", width: size, height: size }}>
-            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-              {values.map((val, i) => {
-                const pct = val / total;
-                const dashLength = circumference * pct;
-                const dashOffset = circumference * accumulated;
-                accumulated += pct;
-                const delay = staggerDelay(i, values.length, moodCfg.speed);
-                const progress = interpolate(frame - delay, [0, 25], [0, 1], {
-                  extrapolateLeft: "clamp", extrapolateRight: "clamp",
-                  easing: Easing.out(Easing.cubic),
-                });
-                return (
-                  <circle
-                    key={i}
-                    cx={size / 2} cy={size / 2} r={radius}
-                    fill="none"
-                    stroke={colors[i % colors.length]}
-                    strokeWidth={strokeWidth}
-                    strokeDasharray={`${dashLength * progress} ${circumference}`}
-                    strokeDashoffset={-dashOffset}
-                    strokeLinecap="round"
-                    transform={`rotate(-90 ${size/2} ${size/2})`}
-                  />
-                );
-              })}
-            </svg>
-            {/* 중앙 총합 */}
-            <div style={{
-              position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-              textAlign: "center",
-            }}>
-              <div style={{ fontSize: 36, fontWeight: 800, color: C.text }}>{total}{unit}</div>
-              <div style={{ fontSize: 13, color: (C as any).textMuted || "rgba(255,255,255,0.5)" }}>총합</div>
-            </div>
-          </div>
-          {/* 범례 */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {items.map((item, i) => {
-              const delay = staggerDelay(i, items.length, moodCfg.speed);
-              const fade = interpolate(frame - delay, [0, 10], [0, 1], {
-                extrapolateLeft: "clamp", extrapolateRight: "clamp",
-              });
-              return (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, opacity: fade }}>
-                  <div style={{ width: 14, height: 14, borderRadius: 3, background: colors[i % colors.length], flexShrink: 0 }} />
-                  <span style={{ fontSize: 15, color: C.text }}>{item}</span>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: colors[i % colors.length], marginLeft: 4 }}>{values[i]}{unit}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        {source && <div style={{ position: "absolute", bottom: 30, right: 40, fontSize: 11, color: (C as any).textMuted || "rgba(255,255,255,0.4)" }}>출처: {source}</div>}
-      </AbsoluteFill>
     );
   }
 
@@ -2956,7 +2858,6 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
               </div>
             );
           })}
-          {source && <div style={{ textAlign: "right", fontSize: 11, color: (C as any).textMuted || "rgba(255,255,255,0.4)", marginTop: 12 }}>출처: {source}</div>}
         </div>
       </AbsoluteFill>
     );
@@ -3155,6 +3056,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           justifyContent: "center",
           alignItems: "center",
           padding: `${L.scenePadding[0]}px ${L.scenePadding[1]}px`,
+          paddingBottom: `${L.scenePadding[0] + 100}px`,
         }}
       >
         {/* Badges */}
@@ -3330,14 +3232,14 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           // 가장 긴 텍스트 기준으로 카드 최소 너비 계산
           const maxLabelLen = Math.max(...items.map(it => it.length));
           const maxValueLen = Math.max(...values.map((v, i) => `${v}${data.unit || ""}`.length), 0);
-          const cardMinW = Math.max(maxLabelLen * 14, maxValueLen * 28) + 48;
-          const cols = Math.min(items.length, Math.max(1, Math.floor(1824 / (cardMinW + 24))));
-          const gridW = cols * cardMinW + (cols - 1) * 24;
+          const cardMinW = Math.max(maxLabelLen * 22, maxValueLen * 80) + 48;
+          const cols = Math.min(items.length, Math.max(1, Math.floor(1824 / (cardMinW + 50))));
+          const gridW = cols * cardMinW + (cols - 1) * 50;
           return (
             <div style={{
               display: "grid",
               gridTemplateColumns: `repeat(${cols}, ${cardMinW}px)`,
-              gap: 24, width: gridW, margin: "0 auto",
+              gap: 50, width: gridW, margin: "0 auto",
               justifyContent: "center",
             }}>
               {items.map((item, i) => (
@@ -3605,19 +3507,6 @@ export const CreativeScene: React.FC<CreativeSceneProps> = ({
           />
         )}
 
-        {/* Source */}
-        {source && (
-          <div
-            style={{
-              opacity: sourceFade,
-              fontSize: T.sourceText,
-              color: C.textDim,
-              marginTop: 16,
-            }}
-          >
-            {source}
-          </div>
-        )}
       </div>
       </div>{/* contentWidth wrapper */}
     </AbsoluteFill>

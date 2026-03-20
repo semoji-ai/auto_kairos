@@ -8,9 +8,8 @@ from typing import Optional
 
 def resolve_project_by_slug(slug: str) -> Optional[dict]:
     """slug → project dict. 대시보드 라우터 공통 헬퍼 (Supabase 대응)."""
-    # app.py의 get_pm()을 사용해 Supabase/로컬 자동 전환
-    from auto_agent.dashboard.app import get_pm
-    pm = get_pm()
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
     return pm.get_project(slug=slug)
 
 

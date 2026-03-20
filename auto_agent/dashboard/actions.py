@@ -59,6 +59,12 @@ BLOCKED_ACTIONS = {
     "character_plan", "fact_verify",
 }
 
+# 액션 완료 후 자동으로 이어지는 후속 액션 체인
+ACTION_CHAINS = {
+    "tts_regenerate": ["subtitle_sync", "build_manifest"],
+    "subtitle_sync": ["build_manifest"],
+}
+
 
 @router.get("")
 async def list_actions(slug: str):
@@ -137,10 +143,36 @@ async def execute_action(slug: str, action_name: str, request: Request):
         )
 
         if result.returncode == 0:
+            chain_results = []
+            # 후속 액션 체인 실행
+            for next_action in ACTION_CHAINS.get(action_name, []):
+                next_def = ALLOWED_ACTIONS.get(next_action)
+                if not next_def:
+                    continue
+                next_script = PACKAGE_DIR / next_def["module"]
+                if not next_script.exists():
+                    continue
+                # subtitle_sync 전에 해당 씬 SRT 삭제 (재생성 보장)
+                if next_action == "subtitle_sync":
+                    sub_dir = Path(project["output_dir"]) / "subtitles"
+                    if sub_dir.exists() and body.get("scene_number"):
+                        sn = int(body["scene_number"])
+                        for srt in sub_dir.glob(f"scene_{sn:03d}.*"):
+                            srt.unlink()
+                next_cmd = [sys.executable, str(next_script)]
+                chain_result = subprocess.run(
+                    next_cmd, cwd=str(get_workspace_dir()),
+                    env=env, capture_output=True, text=True, timeout=300,
+                )
+                chain_results.append({
+                    "action": next_action,
+                    "ok": chain_result.returncode == 0,
+                })
             return {
                 "ok": True,
                 "action": action_name,
                 "output": result.stdout[-1000:] if result.stdout else "",
+                "chain": chain_results,
             }
         else:
             return JSONResponse(

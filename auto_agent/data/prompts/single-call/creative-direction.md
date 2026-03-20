@@ -40,9 +40,13 @@ sceneNumber, chapter, narration, narration_tts, durationFrames는 절대 수정�
    - quote: 발언 강조
    - none: 특별한 강조 없음
 
-4. headline (string): 임팩트 씬에서만 사용 (전체의 20~30%).
+4. headline (string): 씬의 맥락/주제를 잡아주는 제목. 차트/그래프/아이템 블록의 제목으로도 사용됨.
+   - **구체적 수치를 넣지 않는다** — 수치는 items/values가 담당. headline은 맥락만.
+     - ❌ "외환보유액 242억 달러 vs 실제 92억 달러"
+     - ✅ "외환보유액의 진실"
+     - ❌ "실업률 8.7%, 도산 기업 3,300개"
+     - ✅ "IMF의 상흔"
    - {{키워드}}는 accent 색상, \n은 줄바꿈
-   - 정보 씬(통계, 비교, 나열)은 headline="" (빈 문자열)로 두고 items에 집중
    - accent {{}}는 씬당 최대 2개
    - headline과 items 중복 금지
 
@@ -76,11 +80,24 @@ creative 외에 함께 채울 필드들:
 - items (string[]): 나레이션에서 추출한 핵심 데이터/사실. 2개 이상 권장. 1개면 headline에 통합.
 - values (number[]): items에 대응하는 수치 (있을 때만)
 - unit (string): values의 단위 (%, 원, 배럴 등). **단위가 서로 다르면 unit을 비워둔다** (unit="" ). "혼합" 금지.
-- source (string): 출처 (있을 때만)
+- source (string): 데이터 출처. **values가 있는 씬은 필수** (예: "한국은행 2026.3", "무역협회 조사"). research_report.json에서 출처를 확인하여 작성.
 - itemIcons (string[]): Lucide React 아이콘명. 국가 항목이면 사용하지 않음.
 - itemFlags (string[]): 국가 ISO 코드 (국가 비교 씬). itemIcons와 동시 사용 금지.
 - imageAsset: ⚠️ **Creative Direction이 최종 결정자**. Asset Advisory는 query만 보강하고 source/placement를 변경하지 않는다.
-  - source="generate": AI 생성 (기본). query는 상세한 이미지 프롬프트 (영어).
+  - source="generate": AI 생성 (기본). query는 아래 양식으로 한글 작성. 아트스타일 설명은 넣지 않는다 (시스템이 자동 추가).
+    ```
+    【상황】 장면에서 벌어지는 상황 묘사
+    【배경】 시대, 장소, 시간대, 날씨/분위기
+    【등장 캐릭터】 캐릭터명(특징) - 행동, 표정, 자세 (character_plan.json에 있는 캐릭터면 이름 그대로 사용)
+    【카메라 앵글】 롱샷/미디엄샷/클로즈업, 구도 방향
+    ```
+    - 【등장 캐릭터】는 character_plan.json에 정의된 캐릭터가 있으면 해당 이름을 명시 (캐릭터 이미지가 자동 참조됨)
+    - 인물 없는 씬은 【등장 캐릭터】 생략 가능
+    - 아트스타일/화풍 설명 (예: "quirky cartoon style") 절대 넣지 않는다
+    - ⚠️ 이미지 생성 금지 규칙:
+      - 건물/물체에 팔, 다리, 몸통을 달아 인격화하지 않는다 (표정만으로 의인화 가능)
+      - 사람의 팔은 반드시 2개, 다리도 2개. 3개 이상의 팔/다리 묘사 금지
+      - 손가락은 한 손에 5개. 기형적 신체 묘사 금지
   - source="search": 실물 이미지 검색. **query는 위키미디어 검색용으로 심플하게** (2~4단어):
     - 인물: 이름만 (예: "Elon Musk", "Brian Niccol")
     - 사건: 키워드+연도 (예: "Iran revolution 1979", "semiconductor factory 2024")
