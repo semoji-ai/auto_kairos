@@ -116,26 +116,11 @@ TAB_TEMPLATES = {
 REMOTION_DIR = get_workspace_dir() / "remotion"
 STUDIO_PORT = 3100
 
-# Node.js PATH 보장 (homebrew/nvm/fnm/volta/winget 등 커버)
-_node_candidates = [
-    Path("/opt/homebrew/bin"),
-    Path("/usr/local/bin"),
-    Path.home() / ".nvm" / "current" / "bin",
-    Path.home() / ".fnm" / "current" / "bin",
-    Path.home() / ".volta" / "bin",
-    Path.home() / "local" / "nodejs" / f"node-v22.14.0-darwin-x64" / "bin",
-]
-# nvm: 실제 버전 디렉토리 탐색
-_nvm_dir = Path.home() / ".nvm" / "versions" / "node"
-if _nvm_dir.exists():
-    for _v in sorted(_nvm_dir.iterdir(), reverse=True):
-        _node_candidates.insert(0, _v / "bin")
-
-_node_exe = "node.exe" if IS_WINDOWS else "node"
-for _np in _node_candidates:
-    if (_np / _node_exe).exists() and str(_np) not in os.environ.get("PATH", ""):
-        os.environ["PATH"] = f"{_np}{os.pathsep}{os.environ.get('PATH', '')}"
-        break
+# Node.js 경로는 subprocess 호출 시 platform.get_env_with_node()로 주입
+# (os.environ 전역 수정 제거 — COMPAT: was _node_candidates loop)
+from auto_agent.utils.platform import get_env_with_node as _get_node_env
+from auto_agent.utils.platform import get_npm_cmd as _get_npm_cmd
+from auto_agent.utils.platform import get_npx_cmd as _get_npx_cmd
 _studio_proc: Optional[subprocess.Popen] = None
 
 
@@ -1351,14 +1336,14 @@ def _ensure_studio_ready() -> Optional[str]:
     # node_modules 체크 + 자동 설치
     node_modules = REMOTION_DIR / "node_modules"
     if not node_modules.exists():
-        npx_cmd = "npx.cmd" if IS_WINDOWS else "npx"
-        npm_cmd = "npm.cmd" if IS_WINDOWS else "npm"
+        npm_cmd = _get_npm_cmd()
         if not _find_cmd(npm_cmd):
             return "Node.js가 설치되지 않았습니다. install.sh를 실행하거나 https://nodejs.org 에서 설치하세요."
         try:
             result = subprocess.run(
                 [npm_cmd, "install"],
                 cwd=str(REMOTION_DIR),
+                env=_get_node_env(),
                 capture_output=True, text=True, timeout=120,
             )
             if result.returncode != 0:
@@ -1396,9 +1381,9 @@ async def studio_start(request: Request):
     if slug:
         _setup_studio_project(slug)
 
-    npx_cmd = "npx.cmd" if IS_WINDOWS else "npx"
+    npx_cmd = _get_npx_cmd()
     try:
-        env = os.environ.copy()
+        env = _get_node_env()
         env["BROWSER"] = "none"  # 자동 브라우저 열기 방지
         _studio_proc = subprocess.Popen(
             [npx_cmd, "remotion", "studio", "--port", str(STUDIO_PORT)],
