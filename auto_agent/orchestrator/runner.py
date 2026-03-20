@@ -31,6 +31,7 @@ from typing import Dict, List, Optional
 from auto_agent.paths import get_workspace_dir, get_data_dir, PACKAGE_DIR, DATA_DIR
 from auto_agent.orchestrator.context_memory import ContextMemory
 from auto_agent.orchestrator.vault_rag import VaultRAG
+from auto_agent.utils.platform import get_env_with_node
 
 # ── Agent Messenger 브릿지 ──
 _MESSENGER_URL = "http://localhost:8080/api/agent-messages/send"
@@ -1656,12 +1657,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
         # [비활성화] 3. 썸네일 캡처 (generate-thumbnails.mjs)
         try:
-            node = shutil.which("node")
-            if not node:
-                node_dir = Path.home() / "local/nodejs/node-v22.14.0-darwin-x64/bin"
-                if node_dir.exists():
-                    os.environ["PATH"] = str(node_dir) + ":" + os.environ.get("PATH", "")
-                    node = shutil.which("node")
+            _thumb_env = get_env_with_node()
+            node = shutil.which("node", path=_thumb_env.get("PATH"))
             if not node:
                 print("    [SKIP] Node.js 없음 — 썸네일 캡처 스킵")
                 return
@@ -2410,7 +2407,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # PYTHONPATH에 워크스페이스 추가 (auto_agent 패키지 import 보장)
         ws = str(get_workspace_dir())
         existing_pypath = env.get("PYTHONPATH", "")
-        env["PYTHONPATH"] = f"{ws}:{existing_pypath}" if existing_pypath else ws
+        env["PYTHONPATH"] = (ws + os.path.pathsep + existing_pypath) if existing_pypath else ws
 
         try:
             result = subprocess.run(
@@ -2455,10 +2452,9 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         command = command.replace("{project}", project_dir_name)
         command = command.replace("{composition}", self._resolve_composition())
 
-        # Node.js PATH 보장 (npx, node 등)
-        node_dir = Path.home() / "local/nodejs/node-v22.14.0-darwin-x64/bin"
-        if node_dir.exists() and str(node_dir) not in env.get("PATH", ""):
-            env["PATH"] = f"{node_dir}:{env.get('PATH', '')}"
+        # Node.js PATH 보장 (npx, node 등) — get_env_with_node()로 플랫폼 중립적으로 처리
+        node_env = get_env_with_node()
+        env["PATH"] = node_env.get("PATH", env.get("PATH", ""))
 
         try:
             result = subprocess.run(
