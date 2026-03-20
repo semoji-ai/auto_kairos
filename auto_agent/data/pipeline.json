@@ -373,8 +373,8 @@
           "description": "Remotion CLI로 최종 렌더링",
           "module": "video-assembler",
           "input": "remotion/public/manifest.json",
-          "output": "output/{project}/final_video.mp4",
-          "command": "cd remotion && npx remotion render src/index.ts {composition} --output ../output/{project}/final_video.mp4",
+          "output": "output/{project}/{output_video}",
+          "command": "cd remotion && npx remotion render src/index.ts {composition} --output ../output/{project}/{output_video}",
           "resolution": "1920x1080",
           "fps": 30
         },
@@ -386,7 +386,7 @@
           "agent": "qa-reviewer",
           "single_call_model": "claude-sonnet-4-5-20250929",
           "input": [
-            "output/{project}/final_video.mp4",
+            "output/{project}/{output_video}",
             "output/{project}/qa_report_pre.json",
             "scene_specs.json"
           ],

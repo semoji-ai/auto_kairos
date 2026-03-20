@@ -2439,6 +2439,16 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         finally:
             monitor.stop()
 
+    def _resolve_video_output_filename(self) -> str:
+        """{slug}_final.mp4, 이미 존재하면 _v2, _v3 ... 자동 증가."""
+        base = f"{self.project_slug}_final"
+        if not (self.project_dir / f"{base}.mp4").exists():
+            return f"{base}.mp4"
+        v = 2
+        while (self.project_dir / f"{base}_v{v}.mp4").exists():
+            v += 1
+        return f"{base}_v{v}.mp4"
+
     def _run_shell_command(self, step: dict, env: dict) -> StepResult:
         """shell 명령 실행 (video-assembler 등)."""
         step_id = step["id"]
@@ -2451,6 +2461,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         project_dir_name = Path(self.project_dir).name
         command = command.replace("{project}", project_dir_name)
         command = command.replace("{composition}", self._resolve_composition())
+        # {output_video}: slug_final.mp4 (버전 관리 포함)
+        command = command.replace("{output_video}", self._resolve_video_output_filename())
 
         # Node.js PATH 보장 (npx, node 등) — get_env_with_node()로 플랫폼 중립적으로 처리
         node_env = get_env_with_node()
@@ -2793,6 +2805,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         # {project} 플레이스홀더는 실제 디렉토리명(uuid_slug) 기준으로 치환
         dir_name = Path(self.project_dir).name
         resolved = output_template.replace("{project}", dir_name)
+        resolved = resolved.replace("{output_video}", self._resolve_video_output_filename())
         path = Path(resolved)
         if not path.is_absolute():
             # output/{dir_name}/... 형태 → project_dir 기준으로 변환 (DB 경로 지원)
