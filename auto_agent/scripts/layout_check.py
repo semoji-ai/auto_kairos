@@ -22,6 +22,7 @@ from pathlib import Path
 
 from auto_agent.paths import get_workspace_dir
 from auto_agent.scripts.project_paths import get_project_dir, get_scene_specs_path
+from auto_agent.utils.platform import get_env_with_node, get_npx_cmd
 
 PROJECT_ROOT = get_workspace_dir()
 
@@ -84,7 +85,7 @@ def load_scene_specs_meta(project_dir: Path) -> dict:
 def render_still(frame: int, output_path: str, remotion_dir: str) -> bool:
     """Remotion CLI로 특정 프레임의 스틸 이미지를 렌더링한다."""
     cmd = [
-        "npx", "remotion", "still",
+        get_npx_cmd(), "remotion", "still",
         "SimpleVideo",
         output_path,
         f"--frame={frame}",
@@ -97,6 +98,7 @@ def render_still(frame: int, output_path: str, remotion_dir: str) -> bool:
             capture_output=True,
             text=True,
             timeout=120,
+            env=get_env_with_node(),
         )
         if result.returncode == 0:
             return True
