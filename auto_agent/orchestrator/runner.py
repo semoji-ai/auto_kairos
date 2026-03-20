@@ -1128,7 +1128,11 @@ class PipelineRunner:
                             scene["visualization"]["creative"]["headline"] = ""
                             scene["visualization"]["creative"]["concept"] = scene.get("narration", "")[:50]
                             if not scene.get("imageAsset"):
-                                scene["imageAsset"] = {"source": "generate", "placement": "fullscreen"}
+                                scene["imageAsset"] = {
+                                    "source": "generate",
+                                    "placement": "fullscreen",
+                                    "query": scene.get("narration", "")[:200],
+                                }
                             fixed += 1
                     if fixed:
                         specs_path_check.write_text(
@@ -1537,18 +1541,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     "creative": {},
                 },
                 "transition": {"type": "fade", "durationFrames": 15},
-                "imageAsset": None,
                 "mapScene": None,
             }
-            # decomposition에서 이미지/맵 힌트가 있으면 전달
-            if s.get("has_image_asset"):
-                ia = s.get("image_asset") or {}
-                scene["imageAsset"] = {
-                    "source": ia.get("source", "search"),
-                    "query": ia.get("query", s.get("title", "")),
-                    "placement": ia.get("placement", "background"),
-                    "opacity": ia.get("opacity", 0.3),
-                }
             scenes.append(scene)
 
         return {
@@ -1587,9 +1581,11 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                         orig_cr = orig_viz.get("creative") or {}
                         merged_viz["creative"] = {**orig_cr, **llm_viz["creative"]}
                     result["visualization"] = merged_viz
-                # imageAsset 머지
-                if "imageAsset" in llm:
+                # imageAsset 머지 (top-level 우선, visualization에서 승격 fallback)
+                if "imageAsset" in llm and llm["imageAsset"]:
                     result["imageAsset"] = llm["imageAsset"]
+                elif llm.get("visualization", {}).get("imageAsset"):
+                    result["imageAsset"] = llm["visualization"]["imageAsset"]
                 # mapScene 머지
                 if "mapScene" in llm:
                     result["mapScene"] = llm["mapScene"]
@@ -1605,6 +1601,18 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 merged.append(result)
             else:
                 merged.append(orig)
+
+        # cinematic 씬 검증: placement=fullscreen 강제
+        for scene in merged:
+            creative = (scene.get("visualization") or {}).get("creative") or {}
+            if creative.get("layout") == "cinematic":
+                if not scene.get("imageAsset"):
+                    scene["imageAsset"] = {"source": "generate", "placement": "fullscreen"}
+                else:
+                    scene["imageAsset"]["placement"] = "fullscreen"
+                    if "opacity" in scene["imageAsset"]:
+                        del scene["imageAsset"]["opacity"]
+
         return merged
 
     def _auto_build_and_capture(self, chapter_results: dict, chapters: dict):

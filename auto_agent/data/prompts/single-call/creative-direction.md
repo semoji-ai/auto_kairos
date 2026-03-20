@@ -79,7 +79,7 @@ creative 외에 함께 채울 필드들:
 - source (string): 출처 (있을 때만)
 - itemIcons (string[]): Lucide React 아이콘명. 국가 항목이면 사용하지 않음.
 - itemFlags (string[]): 국가 ISO 코드 (국가 비교 씬). itemIcons와 동시 사용 금지.
-- imageAsset: 이미지 에셋 설정.
+- imageAsset: ⚠️ **Creative Direction이 최종 결정자**. Asset Advisory는 query만 보강하고 source/placement를 변경하지 않는다.
   - source="generate": AI 생성 (기본). query는 상세한 이미지 프롬프트 (영어).
   - source="search": 실물 이미지 검색. **query는 위키미디어 검색용으로 심플하게** (2~4단어):
     - 인물: 이름만 (예: "Elon Musk", "Brian Niccol")
@@ -88,8 +88,11 @@ creative 외에 함께 채울 필드들:
     - ❌ 긴 설명문, 스타일 지시어, 형용사 나열 금지
   - fallbackQuery: query로 검색 실패 시 더 일반적인 검색어 (1~2단어)
   - placement: "fullscreen" | "background" | "center" | "left" | "right"
-    - ⚠️ **layout="cinematic"이면 반드시 placement="fullscreen"** (center, background 등 사용 금지)
-  - opacity: 배경 투명도 (0.0~1.0). cinematic이면 생략 (자동 1.0)
+    - ⚠️ **layout="cinematic"이면 반드시 placement="fullscreen"** (변경 금지)
+    - left/right: 인물 배치용 (세로 3:4 비율로 생성됨)
+    - fullscreen: 전체 화면용 (가로 16:9 비율로 생성됨)
+    - background: 배경 보조용 (가로 16:9 비율로 생성됨)
+  - opacity: 배경 투명도 (0.0~1.0). cinematic/fullscreen이면 생략 (자동 1.0)
 - mapScene: 지리적 이벤트 시 {"center":[위도,경도],"zoom":5,"markers":[{"lat":위도,"lng":경도,"label":"라벨"}]}
 </visualization_fields>
 
@@ -120,6 +123,7 @@ creative 외에 함께 채울 필드들:
 10. items 텍스트에 → 기호로 프로세스를 표현하지 않는다.
    - "질문 → 답변 → 결과" 같은 프로세스는 flow 레이아웃 + StepBadge 사용
    - items는 단일 개념/라벨/수치만 담는다
+11. 이미지가 불필요한 씬(순수 데이터/차트)은 imageAsset 필드를 아예 넣지 않는다. `imageAsset: null` 금지.
 </rules>
 
 {art_style_override}

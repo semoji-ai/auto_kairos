@@ -308,6 +308,15 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
         except Exception:
             pass
 
+    def _placement_to_ratio(placement: str) -> str:
+        """placement에 따른 이미지 생성 aspect_ratio."""
+        if placement in ("left", "right"):
+            return "3:4"
+        if placement == "center":
+            return "1:1"
+        # fullscreen, background, 기본값
+        return "16:9"
+
     # 4. 씬별 이미지 생성 (병렬 3개, 실패 시 1회 재시도)
     def _generate_one(scene, retry=False):
         sn = scene.get("sceneNumber")
@@ -353,10 +362,12 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
         try:
             import fal_client
             import requests
+            placement = img.get("placement", "fullscreen")
+            aspect_ratio = _placement_to_ratio(placement)
             result = fal_client.subscribe("fal-ai/nano-banana-2/edit", arguments={
                 "prompt": full_prompt,
                 "image_urls": image_urls,
-                "aspect_ratio": "16:9",
+                "aspect_ratio": aspect_ratio,
             })
             images = result.get("images", [])
             if images:
