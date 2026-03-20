@@ -1,7 +1,7 @@
 #!/bin/bash
 # 대시보드 시작 스크립트 — Python 3.12 venv 환경 고정
 set -e
-cd /Users/hannah/Projects/auto_kairos_v3
+cd "$(dirname "$0")"
 
 # venv 활성화
 source .venv/bin/activate
