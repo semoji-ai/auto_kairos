@@ -587,7 +587,7 @@ class PipelineRunner:
                 return StepResult(step_id=step_id, status="failed", error="research_report.json 파싱 실패")
 
             # 3) 내용 검증: 주제와 일치하는지 LLM 판단
-            topic = self.state.config.get("topic", self.project_slug)
+            topic = self.project.get("topic") or self.state.config.get("topic", self.project_slug)
             summary = data.get("summary", "")[:500]
             section_titles = [s.get("title", "") for s in data.get("sections", [])][:10]
 
