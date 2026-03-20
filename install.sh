@@ -36,6 +36,17 @@ detect_os() {
   else printf 'Linux'; fi
 }
 
+detect_platform() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "macos"
+  elif grep -qi microsoft /proc/version 2>/dev/null; then
+    echo "wsl"
+  else
+    echo "linux"
+  fi
+}
+PLATFORM=$(detect_platform)
+
 detect_pm() {
   if command -v brew >/dev/null 2>&1; then printf 'brew'
   elif command -v apt-get >/dev/null 2>&1; then printf 'apt'
@@ -48,15 +59,32 @@ detect_pm() {
 # Step 1: 시스템 의존성
 # ═══════════════════════════════════════
 
+check_python() {
+  local py_cmd
+  py_cmd=$(command -v python3 || command -v python)
+  if [ -z "$py_cmd" ]; then
+    echo "ERROR: Python 3.11+ 필요. https://python.org 에서 설치하세요."
+    exit 1
+  fi
+  local version
+  version=$($py_cmd -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+  local major minor
+  major=$(echo "$version" | cut -d. -f1)
+  minor=$(echo "$version" | cut -d. -f2)
+  if [ "$major" -lt 3 ] || { [ "$major" -eq 3 ] && [ "$minor" -lt 11 ]; }; then
+    echo "ERROR: Python $version 감지. Python 3.11+ 필요."
+    exit 1
+  fi
+  echo "✓ Python $version"
+}
+
 ensure_python() {
+  check_python
   if command -v python3 >/dev/null 2>&1; then
     local ver
     ver="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
-    if python3 -c "import sys; sys.exit(0 if sys.version_info >= (3,10) else 1)" 2>/dev/null; then
-      info "Python $ver ✓"
-      return 0
-    fi
-    warn "Python 3.10+ 필요 (현재 $ver)"
+    info "Python $ver ✓"
+    return 0
   fi
   info "Python 설치 중..."
   case "$(detect_pm)" in
@@ -70,18 +98,59 @@ ensure_python() {
 }
 
 ensure_node() {
-  if command -v node >/dev/null 2>&1; then
-    info "Node.js $(node -v) ✓"; return 0
+  if command -v node &>/dev/null; then
+    echo "✓ Node.js $(node --version)"
+    return
   fi
+  # nvm
+  if [ -s "$HOME/.nvm/nvm.sh" ]; then
+    source "$HOME/.nvm/nvm.sh"
+    if command -v node &>/dev/null; then
+      echo "✓ Node.js (via nvm) $(node --version)"
+      return
+    fi
+  fi
+  # volta
+  if [ -s "$HOME/.volta/bin/node" ]; then
+    export PATH="$HOME/.volta/bin:$PATH"
+    echo "✓ Node.js (via volta) $(node --version)"
+    return
+  fi
+  # ~/local/nodejs
+  local node_bin
+  node_bin=$(ls -d "$HOME/local/nodejs"/node-v*/bin 2>/dev/null | sort -V | tail -1)
+  if [ -n "$node_bin" ] && [ -f "$node_bin/node" ]; then
+    export PATH="$node_bin:$PATH"
+    echo "✓ Node.js (local) $(node --version)"
+    # Write to .env
+    echo "NODEJS_BIN_DIR=$node_bin" >> .env
+    return
+  fi
+  # 패키지 매니저로 설치
   info "Node.js 설치 중..."
   case "$(detect_pm)" in
     brew)   brew install node ;;
     apt)    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt-get install -y nodejs ;;
     dnf)    curl -fsSL https://rpm.nodesource.com/setup_22.x | sudo bash - && sudo dnf install -y nodejs ;;
     pacman) sudo pacman -S --noconfirm nodejs npm ;;
-    *)      fail "Node.js를 수동 설치하세요: https://nodejs.org" ;;
+    *)
+      echo "ERROR: Node.js를 찾을 수 없습니다."
+      echo "  macOS: brew install node"
+      echo "  또는: https://nodejs.org"
+      exit 1
+      ;;
   esac
   success "Node.js 설치 완료"
+}
+
+ensure_node_modules() {
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  local remotion_dir="$SCRIPT_DIR/auto_agent/remotion_template"
+  if [ -d "$remotion_dir" ] && [ ! -d "$remotion_dir/node_modules" ]; then
+    info "Remotion npm 의존성 설치 중..."
+    (cd "$remotion_dir" && npm install --quiet) && success "Remotion npm 설치 완료"
+  fi
 }
 
 ensure_ffmpeg() {
@@ -326,6 +395,7 @@ main() {
   printf "${BOLD}── 시스템 의존성 확인 ──${NC}\n\n"
   ensure_python
   ensure_node
+  ensure_node_modules
   ensure_ffmpeg
 
   # Step 2: 패키지 설치
