@@ -1931,16 +1931,50 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         )
 
         t0 = time.time()
+        max_attempts = self._get_step_max_attempts(step)
+        result = StepResult(step_id=step_id, status="failed", error="Unknown step type")
+        _prev_timeout = False
+
         try:
-            if step_type == "single_call":
-                result = self._run_single_call_step(step)
-            elif step.get("agent"):
-                result = self._run_agent_step(step)
-            elif step.get("module"):
-                result = self._run_module_step(step)
-            else:
-                result = StepResult(step_id=step_id, status="skipped",
-                                    error="Unknown step type")
+            for _attempt in range(max_attempts):
+                if step_type == "single_call":
+                    result = self._run_single_call_step(step)
+                elif step.get("agent"):
+                    result = self._run_agent_step(step)
+                elif step.get("module"):
+                    result = self._run_module_step(step)
+                else:
+                    result = StepResult(step_id=step_id, status="skipped",
+                                        error="Unknown step type")
+                    break
+
+                if result.status == "completed":
+                    break
+
+                # ── 재시도 여부 판단 ──
+                _is_timeout = "타임아웃" in (result.error or "")
+                _retryable  = self._is_retryable_error(result.error)
+                _consec_timeout = _is_timeout and _prev_timeout  # 연속 타임아웃 → 중단
+
+                if not _retryable or _consec_timeout or _attempt >= max_attempts - 1:
+                    break  # 더 이상 재시도 없음
+
+                # 재시도 대기: 타임아웃이면 즉시, 그 외 지수 백오프(15s / 45s)
+                _wait = 0 if _is_timeout else 15 * (3 ** _attempt)
+                _retry_label = (
+                    f"재시도 {_attempt + 1}/{max_attempts - 1} — "
+                    f"{(result.error or '')[:50]} "
+                    f"({'즉시' if _wait == 0 else f'{_wait}초 후'})"
+                )
+                print(f"\n    ↻ {_retry_label}", flush=True)
+                _notify(
+                    _agent_label, _retry_label,
+                    phase=self.state.current_phase, project=self.project_slug,
+                    level="warning",
+                )
+                if _wait > 0:
+                    time.sleep(_wait)
+                _prev_timeout = _is_timeout
 
             elapsed = time.time() - t0
             result.duration_sec = elapsed
@@ -2866,6 +2900,56 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
             return sum(1 for s in scenes if s.get("imageAsset"))
         except Exception:
             return 10
+
+    def _get_step_max_attempts(self, step: dict) -> int:
+        """스텝별 최대 실행 횟수 반환 (1 = 재시도 없음).
+
+        우선순위:
+          1. step 정의의 max_attempts 필드
+          2. 에이전트/스텝 이름 기반 기본값
+          3. 기본값 1 (재시도 없음)
+        """
+        if "max_attempts" in step:
+            return max(1, int(step["max_attempts"]))
+
+        agent = step.get("agent", "")
+        step_name = step.get("name", "")
+
+        # 네트워크 의존성 높은 스텝: 최초 1회 + 재시도 2회 = 총 3회
+        if agent in ("image-painter", "image-searcher") or step_name == "image_asset_sourcing":
+            return 3
+        if step_name in ("tts", "voice_generation", "tts_generation"):
+            return 3
+
+        # 렌더링: 환경 문제 가끔 있어서 1회 재시도
+        if step_name in ("video_assembly",):
+            return 2
+
+        # 일반 LLM 에이전트 / single_call: 1회 재시도
+        if step.get("agent") or step.get("type") == "single_call":
+            return 2
+
+        # 모듈(환경 체크, ffmpeg 등): 재시도 없음
+        return 1
+
+    def _is_retryable_error(self, error: str) -> bool:
+        """일시적 오류(재시도 가능) vs 구조적 오류(재시도 불필요) 판별.
+
+        구조적 오류 키워드: API 키 문제, 파일/CLI 없음, 내용 검증 실패,
+        JSON 파싱 오류, 설정 오류 — 재시도해도 동일하게 실패할 것들.
+        """
+        if not error:
+            return False
+        NON_RETRYABLE = [
+            "api키", "api 키", "api key", "api_key",           # 인증
+            "찾을 수 없습니다", "not found", "filenotfound",    # 파일/CLI 없음
+            "검증 실패", "주제 불일치", "validation",           # 내용 검증
+            "json 파싱", "json parse", "jsondecodeerror",       # 형식
+            "unknown step",                                     # 설정 오류
+            "permission denied",                               # 권한
+        ]
+        err_lower = error.lower()
+        return not any(kw in err_lower for kw in NON_RETRYABLE)
 
     def _resolve_composition(self) -> str:
         """프로젝트 theme에 따른 Remotion Composition ID 반환."""
