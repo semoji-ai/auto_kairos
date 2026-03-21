@@ -1,0 +1,213 @@
+"""이미지 배치 생성 파이프라인 모듈.
+
+환경변수:
+  PROJECT_DIR     프로젝트 디렉토리 경로
+  PROGRESS_FILE   진행 상황 JSONL 파일 경로 (선택)
+  FAL_API_KEY / FAL_KEY  FAL AI API 키
+
+출력: stdout에 JSON {"status": "completed", ...}
+"""
+from __future__ import annotations
+import json
+import logging
+import os
+import sys
+import urllib.request
+from pathlib import Path
+from typing import Optional
+
+from auto_agent.tools import fal_queue as fal_queue
+from auto_agent.tools.fal_queue import FalJob
+from auto_agent.tools.character_library import CharacterLibrary
+from auto_agent.tools.image_generate import (
+    _build_character_fal_input,
+    _build_scene_fal_input,
+)
+from auto_agent.tools import image_assets
+
+logger = logging.getLogger(__name__)
+
+_PROGRESS_FILE: Optional[Path] = None
+
+
+def _progress(msg: str, level: str = "info") -> None:
+    print(f"[image_batch] {msg}", flush=True)
+    if _PROGRESS_FILE:
+        with open(_PROGRESS_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"message": msg, "level": level}) + "\n")
+
+
+def _save_image_from_url(url: str, dest: Path) -> Path:
+    """URL에서 이미지를 다운로드해 저장."""
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    urllib.request.urlretrieve(url, str(dest))
+    return dest
+
+
+def _build_char_result_path(project_dir: Path, char_id: str) -> Path:
+    """캐릭터 결과 파일 경로 반환."""
+    return project_dir / "characters" / f"{char_id}.png"
+
+
+def run_batch(
+    project_dir: Path,
+    library: Optional[CharacterLibrary] = None,
+) -> dict:
+    """메인 배치 실행. summary dict 반환."""
+    if library is None:
+        library = CharacterLibrary()
+
+    # ── 입력 로드 ──
+    style_path = str(project_dir / "art_style.json")
+    art_style  = json.loads((project_dir / "art_style.json").read_text())
+    art_style_id = art_style.get("id", "default")
+
+    char_plan_path = project_dir / "character_plan.json"
+    characters = []
+    if char_plan_path.exists():
+        characters = json.loads(char_plan_path.read_text()).get("characters", [])
+
+    # ── Phase 1: 캐릭터 배치 ──
+    char_paths: dict[str, Optional[Path]] = {}
+    reused, to_generate = [], []
+
+    for char in characters:
+        char_id   = char["id"]
+        char_name = char["name"]
+        tags      = char.get("tags", [])
+        record = library.search(char_name, art_style_id, tags)
+        if record:
+            dest = library.copy_to_project(record, project_dir)
+            char_paths[char_id] = dest
+            reused.append(char_id)
+            _progress(f"캐릭터 재사용: {char_name}")
+        else:
+            person_photo = char.get("person_photo")
+            endpoint, arguments = _build_character_fal_input(
+                prompt=char.get("description", char_name),
+                style_path=style_path,
+                person_photo=person_photo,
+            )
+            to_generate.append((char, FalJob(idx=len(to_generate), endpoint=endpoint, arguments=arguments)))
+
+    if to_generate:
+        jobs = [job for _, job in to_generate]
+        _progress(f"캐릭터 {len(jobs)}개 FAL 제출 중...")
+        request_ids = fal_queue.submit_batch(jobs)
+
+        def on_char_done(result):
+            char, _ = to_generate[result.idx]
+            char_id = char["id"]
+            if result.success and result.images:
+                url  = result.images[0].get("url", "")
+                dest = _build_char_result_path(project_dir, char_id)
+                try:
+                    _save_image_from_url(url, dest)
+                    library.register(dest, {
+                        "character_name": char["name"],
+                        "art_style":      art_style_id,
+                        "tags":           ",".join(char.get("tags", [])),
+                        "features":       char.get("description", ""),
+                        "source_project": project_dir.name,
+                    })
+                    char_paths[char_id] = dest
+                    _progress(f"캐릭터 저장 완료: {char['name']}")
+                except Exception as e:
+                    logger.warning("캐릭터 저장 실패 (%s): %s", char_id, e)
+            else:
+                _progress(f"캐릭터 생성 실패: {char['name']} — {result.error}", level="warning")
+
+        fal_queue.poll_all(jobs, request_ids, on_done=on_char_done)
+
+    _progress(
+        f"캐릭터 완료: 재사용 {len(reused)}개, 신규 생성 {len(to_generate)}개, "
+        f"성공 {sum(1 for v in char_paths.values() if v is not None)}개"
+    )
+
+    # ── Phase 2: 씬 배치 ──
+    scene_specs_path = project_dir / "scene_specs.json"
+    scenes_success, scenes_fail = 0, 0
+    if scene_specs_path.exists():
+        scene_specs = json.loads(scene_specs_path.read_text())
+        images_dir  = project_dir / "images"
+        images_dir.mkdir(exist_ok=True)
+
+        scene_jobs: list[tuple[dict, FalJob]] = []
+        for scene in scene_specs.get("scenes", []):
+            if scene.get("imageAsset", {}).get("source") != "generate":
+                continue
+            scene_char_paths = {
+                cid: char_paths.get(cid)
+                for cid in scene.get("characters", [])
+            }
+            try:
+                endpoint, arguments = _build_scene_fal_input(
+                    scene, project_dir, scene_char_paths
+                )
+                scene_jobs.append((scene, FalJob(idx=len(scene_jobs), endpoint=endpoint, arguments=arguments)))
+            except Exception as e:
+                logger.warning("씬 %s 입력 빌드 실패: %s", scene.get("sceneNumber"), e)
+                scenes_fail += 1
+
+        if scene_jobs:
+            jobs = [job for _, job in scene_jobs]
+            _progress(f"씬 {len(jobs)}개 FAL 제출 중...")
+            request_ids = fal_queue.submit_batch(jobs)
+
+            def on_scene_done(result):
+                nonlocal scenes_success, scenes_fail
+                scene, _ = scene_jobs[result.idx]
+                scene_num = scene.get("sceneNumber", result.idx + 1)
+                if result.success and result.images:
+                    url      = result.images[0].get("url", "")
+                    filename = image_assets.next_filename(images_dir, scene_num, "gen", ".png")
+                    dest     = images_dir / filename
+                    try:
+                        _save_image_from_url(url, dest)
+                        image_assets.add_version(images_dir, scene_num, filename, "generate")
+                        scenes_success += 1
+                        _progress(f"씬 {scene_num} 저장 완료: {filename}")
+                    except Exception as e:
+                        logger.warning("씬 %s 저장 실패: %s", scene_num, e)
+                        scenes_fail += 1
+                else:
+                    _progress(f"씬 {scene_num} 생성 실패: {result.error}", level="warning")
+                    scenes_fail += 1
+
+            fal_queue.poll_all(jobs, request_ids, on_done=on_scene_done)
+
+    _progress(f"씬 완료: 성공 {scenes_success}개, 실패 {scenes_fail}개")
+
+    return {
+        "chars_reused":    len(reused),
+        "chars_generated": len(to_generate),
+        "scenes_success":  scenes_success,
+        "scenes_fail":     scenes_fail,
+    }
+
+
+def main():
+    """파이프라인 runner가 subprocess로 실행하는 진입점."""
+    global _PROGRESS_FILE
+    project_dir_str = os.environ.get("PROJECT_DIR", "")
+    if not project_dir_str:
+        print(json.dumps({"status": "failed", "error": "PROJECT_DIR 환경변수 없음"}))
+        sys.exit(1)
+
+    project_dir = Path(project_dir_str)
+    progress_path = os.environ.get("PROGRESS_FILE", "")
+    if progress_path:
+        _PROGRESS_FILE = Path(progress_path)
+
+    try:
+        summary = run_batch(project_dir)
+        summary["status"] = "completed"
+        print(json.dumps(summary, ensure_ascii=False))
+    except Exception as e:
+        logger.exception("image_batch_module 실행 실패")
+        print(json.dumps({"status": "failed", "error": str(e)}))
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
