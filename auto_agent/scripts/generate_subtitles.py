@@ -293,7 +293,12 @@ def generate_srt(entries: List[Dict]) -> str:
 
 
 def main():
-    import whisperx
+    try:
+        import whisperx
+        WHISPERX_AVAILABLE = True
+    except Exception:
+        WHISPERX_AVAILABLE = False
+        whisperx = None
     from google import genai
 
     # PROJECT_DIR 우선 (uuid 마이그레이션 후 정확한 경로)
@@ -336,9 +341,13 @@ def main():
 
     # WhisperX 정렬 모델 로드
     device = "cpu"
-    print("Loading WhisperX alignment model (ko)...")
-    model_a, metadata = whisperx.load_align_model(language_code="ko", device=device)
-    print("Model loaded.")
+    model_a, metadata = None, None
+    if WHISPERX_AVAILABLE:
+        print("Loading WhisperX alignment model (ko)...")
+        model_a, metadata = whisperx.load_align_model(language_code="ko", device=device)
+        print("Model loaded.")
+    else:
+        print("WhisperX unavailable — proportional fallback mode")
 
     # Gemini 클라이언트 (fallback용)
     api_key = os.getenv("GOOGLE_API_KEY")
@@ -375,8 +384,17 @@ def main():
 
         try:
             # 오디오 로드
-            audio = whisperx.load_audio(str(audio_path))
-            duration = len(audio) / 16000
+            if WHISPERX_AVAILABLE:
+                audio = whisperx.load_audio(str(audio_path))
+                duration = len(audio) / 16000
+            else:
+                import mutagen.mp3 as _mp3
+                try:
+                    _info = _mp3.MP3(str(audio_path)).info
+                    duration = _info.length
+                except Exception:
+                    duration = max(len(narration_tts) * 0.07, 3.0)  # 글자당 70ms 추정
+                audio = None
 
             # 디스플레이용 라인 분할 (원본 narration)
             display_lines = smart_split(narration)
@@ -389,8 +407,11 @@ def main():
             tts_lines = fix_quote_splits(tts_lines)
 
             # === 1차: WhisperX forced alignment (narration_tts로 alignment) ===
-            segments = [{"text": narration_tts, "start": 0.0, "end": duration}]
-            result = whisperx.align(segments, model_a, metadata, audio, device, return_char_alignments=False)
+            if WHISPERX_AVAILABLE:
+                segments = [{"text": narration_tts, "start": 0.0, "end": duration}]
+                result = whisperx.align(segments, model_a, metadata, audio, device, return_char_alignments=False)
+            else:
+                result = {"segments": []}
 
             words = []
             for seg in result.get("segments", []):
@@ -400,7 +421,7 @@ def main():
 
             # TTS 라인으로 타임스탬프 매칭 (음성과 텍스트가 일치하므로 정확)
             entries = match_lines_to_timestamps(tts_lines, words, duration)
-            source = "whisperx"
+            source = "whisperx" if WHISPERX_AVAILABLE else "proportional"
 
             # === 2차: 품질 검증 ===
             if not check_alignment_quality(entries, duration):

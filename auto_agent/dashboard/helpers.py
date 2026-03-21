@@ -459,8 +459,13 @@ def render_scene_preview(scene: dict) -> str:
     chart_config = creative.get("chartConfig") or {}
     image_url = scene.get("_image_url", "")
     img_asset = scene.get("imageAsset") or {}
-    img_opacity = img_asset.get("opacity", 0.2)
     placement = img_asset.get("placement", "background")
+    # Remotion과 동일: background=0.35, 나머지(fullscreen/center/side)=0.9
+    _default_opacity = 0.35 if placement == "background" else 0.9
+    img_opacity = img_asset.get("opacity", _default_opacity)
+    # fullscreen은 Remotion과 동일하게 최소 0.9 보장
+    if placement == "fullscreen" and img_opacity < 0.8:
+        img_opacity = 0.9
 
     # ── 컨테이너 시작 (16:9) ──
     bg_style = f"background:radial-gradient(ellipse 80% 60% at 50% 40%,{bg_tint},#0A0A0A)"
@@ -554,15 +559,26 @@ def render_scene_preview(scene: dict) -> str:
             html += _render_headline(headline, "sm")
         markers = map_scene["markers"]
         map_type = map_scene.get("mapType", "location_reveal")
-        html += f'<div class="sp-map">'
-        html += f'<div class="sp-map-type" style="color:{accent}">{_esc(map_type)}</div>'
-        html += '<div class="sp-map-markers">'
-        for mk in markers[:6]:
+        # 마커 위치를 캔버스 안에 분산 배치 (%)
+        _dot_positions = [
+            (28, 38), (62, 28), (52, 58), (24, 62), (72, 48),
+            (42, 74), (76, 22), (58, 78), (35, 52), (68, 68),
+        ]
+        html += '<div class="sp-map">'
+        html += f'<div class="sp-map-canvas">'
+        html += '<div class="sp-map-bg"></div>'
+        for i, mk in enumerate(markers[:8]):
             label = mk.get("label", "")
-            html += f'<span class="sp-map-pin" style="color:{accent}">📍</span><span class="sp-map-label">{_esc(label)}</span> '
-        if len(markers) > 6:
-            html += f'<span class="sp-more">+{len(markers)-6}</span>'
-        html += '</div></div>'
+            px, py = _dot_positions[i % len(_dot_positions)]
+            html += (
+                f'<div class="sp-map-dot" style="left:{px}%;top:{py}%;'
+                f'background:{accent};box-shadow:0 0 6px {accent}88">'
+                f'<span class="sp-map-dot-label">{_esc(label)}</span>'
+                f'</div>'
+            )
+        html += '</div>'
+        html += f'<div class="sp-map-type" style="color:{accent}">{_esc(map_type)}</div>'
+        html += '</div>'
 
     # ── headline_only: Remotion — headline만, items 숨김 (itemCount=0) ──
     elif layout == "headline_only":

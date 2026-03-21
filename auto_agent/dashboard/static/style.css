@@ -1009,6 +1009,65 @@ tr:hover { background: var(--surface2); }
   flex-direction: column;
   align-items: center;
   gap: 1.4cqw;
+  width: 100%;
+}
+/* 지도 캔버스 */
+.sp-map-canvas {
+  position: relative;
+  width: 86%;
+  aspect-ratio: 16/7;
+  border-radius: 1.2cqw;
+  overflow: hidden;
+}
+.sp-map-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    /* 도로 격자 느낌 */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 18px,
+      rgba(255,255,255,0.04) 18px,
+      rgba(255,255,255,0.04) 19px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 24px,
+      rgba(255,255,255,0.04) 24px,
+      rgba(255,255,255,0.04) 25px
+    ),
+    radial-gradient(ellipse 80% 60% at 50% 50%, #1a2a1a 0%, #0d1a0d 60%, #050d0a 100%);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+/* 마커 점 */
+.sp-map-dot {
+  position: absolute;
+  width: 2.2cqw;
+  height: 2.2cqw;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+.sp-map-dot::after {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.25;
+}
+.sp-map-dot-label {
+  position: absolute;
+  top: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.7cqw;
+  white-space: nowrap;
+  color: #E4E4E7;
+  text-shadow: 0 1px 4px #000;
+  pointer-events: none;
 }
 .sp-map-type {
   font-size: 2.9cqw;
@@ -1017,6 +1076,7 @@ tr:hover { background: var(--surface2); }
   letter-spacing: 0.18cqw;
   text-transform: uppercase;
 }
+/* 구형 텍스트 마커 클래스 — 하위 호환 유지 */
 .sp-map-markers {
   font-size: 3.2cqw;
   display: flex;
