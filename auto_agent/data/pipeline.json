@@ -221,23 +221,27 @@
           "depends_on": "step_7"
         },
         {
-          "id": "step_8b",
-          "name": "image_asset_sourcing",
-          "description": "이미지 소싱 — 검색(신사진) + 생성(윤화가) 병렬 실행",
-          "input": ["scene_specs.json"],
-          "input_optional": ["art_style.json"],
-          "output": ["output/{project}/images/"],
-          "conditional": true,
-          "condition": "scene_specs에 이미지 에셋이 필요한 씬이 있을 때만",
-          "condition_check": {
-            "type": "json_field_exists",
-            "path": "scene_specs.json",
-            "field": "scenes[].imageAsset"
-          },
+          "id": "step_8b_legacy",
+          "name": "image_asset_sourcing_legacy",
+          "description": "이미지 소싱 레거시 — Claude CLI image-painter 에이전트 방식 (롤백용 보존)",
           "type": "agent",
           "agent": "image-painter",
-          "sub_agents": ["image-searcher", "image-painter"],
-          "notes": "신사진(검색) + 윤화가(생성) 병렬. 검색 실패 시 윤화가에게 생성 위임."
+          "skip": true,
+          "input": ["scene_specs.json", "art_style.json"],
+          "output": ["images/image_assets.json"]
+        },
+        {
+          "id": "step_8b",
+          "name": "image_asset_sourcing",
+          "description": "이미지 배치 생성 — 캐릭터 라이브러리 조회 → FAL queue 배치 제출 → 폴링",
+          "type": "module",
+          "module": "image_batch",
+          "input": [
+            "character_plan.json",
+            "scene_specs.json",
+            "art_style.json"
+          ],
+          "output": ["images/image_assets.json", "characters/"]
         },
         {
           "id": "step_9",
