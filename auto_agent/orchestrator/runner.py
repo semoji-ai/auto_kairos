@@ -559,6 +559,78 @@ class PipelineRunner:
         _notify("Runner", f"리서치 병합 완료: {len(sections)}섹션, {len(sources)}소스",
                 phase=self.state.current_phase, project=self.project_slug, level="success")
 
+    def _supplement_research(self, report_path: Path, topic: str, gap_reason: str) -> bool:
+        """리서치 보충: 검증 실패 시 누락된 부분만 타겟으로 단일 Claude 호출 후 병합.
+
+        Returns:
+            True  — 보충 성공 (report_path 업데이트됨)
+            False — 보충 실패 (report_path 변경 없음)
+        """
+        _notify("Director", f"리서치 보충 시작 — 누락: {gap_reason[:60]}",
+                phase=self.state.current_phase, project=self.project_slug, level="info")
+        print(f"    [보충] 리서치 보충 시작: {gap_reason[:80]}", flush=True)
+
+        try:
+            data = json.loads(report_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"    [WARN] 보충 실패 — 리포트 읽기 오류: {e}")
+            return False
+
+        supplement_prompt = (
+            f"다음 주제에 대한 리서치 보고서가 있는데, 아래 내용이 누락되어 있습니다.\n\n"
+            f"전체 주제: {topic}\n\n"
+            f"누락된 내용: {gap_reason}\n\n"
+            f"누락된 내용만 집중적으로 조사하여 아래 JSON 형식으로 답하세요.\n"
+            f"실제로 알고 있는 정보만 포함하고, 불확실하면 omit하세요.\n\n"
+            f"JSON으로만 답하세요:\n"
+            f"{{\n"
+            f'  "sections": [\n'
+            f'    {{"title": "섹션제목", "content": "상세 내용 (500자 이상)"}}\n'
+            f"  ],\n"
+            f'  "sources": [\n'
+            f'    {{"title": "출처명", "url": "https://...", "summary": "요약"}}\n'
+            f"  ]\n"
+            f"}}"
+        )
+
+        try:
+            cli_path = self._find_claude_cli()
+            proc = subprocess.run(
+                [cli_path, "--print", "--output-format", "json",
+                 "--model", "claude-sonnet-4-6", "--max-turns", "1",
+                 "--tools", ""],
+                input=supplement_prompt, capture_output=True, text=True,
+                cwd=str(self.project_dir), timeout=60,
+                env={**os.environ, "CLAUDECODE": ""},
+            )
+            supplement = self._extract_json_from_cli_output(proc.stdout)
+            if not supplement:
+                print(f"    [WARN] 보충 응답 파싱 실패. stdout: {proc.stdout[:200]}")
+                return False
+
+            new_sections = supplement.get("sections", [])
+            new_sources = supplement.get("sources", [])
+            if not new_sections:
+                print(f"    [WARN] 보충 섹션 없음")
+                return False
+
+            # 기존 리포트에 병합
+            data.setdefault("sections", []).extend(new_sections)
+            data.setdefault("sources", []).extend(new_sources)
+
+            report_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            secs = len(data["sections"])
+            srcs = len(data["sources"])
+            print(f"    [보충] 완료 — {len(new_sections)}섹션 추가 → 총 {secs}섹션, {srcs}소스", flush=True)
+            _notify("Director", f"리서치 보충 완료: +{len(new_sections)}섹션 추가",
+                    phase=self.state.current_phase, project=self.project_slug, level="success")
+            return True
+
+        except Exception as e:
+            print(f"    [WARN] 보충 실패: {e}")
+            return False
+
     def _validate_step(self, step_id: str, result) -> StepResult:
         """사감독 역할: 단계 완료 후 산출물 검증 + 부족하면 Python 보완."""
 
@@ -623,6 +695,51 @@ class PipelineRunner:
                 elif verify_result:
                     reason = verify_result.get("reason", "주제 불일치")
                     print(f"    [검증] 리서치: 주제 불일치 ✗ ({reason})")
+                    # ── 보충 리서치 시도 (최대 1회) ──────────────────────────
+                    supplement_ok = self._supplement_research(
+                        report_path=report_path,
+                        topic=topic,
+                        gap_reason=reason,
+                    )
+                    if supplement_ok:
+                        # 재검증
+                        data2 = json.loads(report_path.read_text(encoding="utf-8"))
+                        summary2 = data2.get("summary", "")[:500]
+                        titles2 = [s.get("title", "") for s in data2.get("sections", [])][:10]
+                        verify2_prompt = (
+                            f"프로젝트 주제: {topic}\n\n"
+                            f"리서치 요약:\n{summary2}\n\n"
+                            f"섹션 제목: {', '.join(titles2)}\n\n"
+                            f"이 리서치가 프로젝트 주제에 적합한지 판단하세요.\n"
+                            f"JSON으로만 답하세요: {{\"valid\": true/false, \"reason\": \"한줄 사유\"}}"
+                        )
+                        try:
+                            proc2 = subprocess.run(
+                                [cli_path, "--print", "--output-format", "json",
+                                 "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
+                                input=verify2_prompt, capture_output=True, text=True,
+                                cwd=str(self.project_dir), timeout=30,
+                                env={**os.environ, "CLAUDECODE": ""},
+                            )
+                            verify2 = self._extract_json_from_cli_output(proc2.stdout)
+                            if verify2 and verify2.get("valid"):
+                                r2 = verify2.get("reason", "")
+                                secs2 = len(data2.get("sections", []))
+                                srcs2 = len(data2.get("sources", []))
+                                print(f"    [검증] 보충 후 재검증 ✓ ({r2})")
+                                _notify("Director", f"리서치 보충 완료: {secs2}섹션, {srcs2}소스 — {r2}",
+                                        phase=self.state.current_phase, project=self.project_slug, level="success")
+                                if self.vault.enabled:
+                                    try:
+                                        self._vault_save_research({"agent": "research-orchestrator"}, result)
+                                    except Exception as ve:
+                                        print(f"    [WARN] 볼트 축적 실패: {ve}")
+                                return StepResult(step_id=step_id, status="completed")
+                            else:
+                                r2 = (verify2 or {}).get("reason", "보충 후에도 불일치")
+                                print(f"    [검증] 보충 후 재검증 ✗ ({r2})")
+                        except Exception as e2:
+                            print(f"    [WARN] 보충 재검증 실패 ({e2})")
                     return StepResult(step_id=step_id, status="failed", error=f"리서치 주제 불일치: {reason}")
             except Exception as e:
                 print(f"    [WARN] LLM 검증 실패 ({e}), 구조 검증만 통과")
