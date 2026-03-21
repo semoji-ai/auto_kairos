@@ -2620,6 +2620,16 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # {output_video}: slug_final.mp4 (버전 관리 포함)
         command = command.replace("{output_video}", self._resolve_video_output_filename())
 
+        # video-assembler: 프로젝트별 manifest를 --props로 주입
+        # remotion/public/manifest.json은 공유 파일이므로 다른 프로젝트가 덮어쓸 수 있음
+        # --props로 프로젝트 전용 manifest 경로를 명시적으로 전달해 오렌더링 방지
+        if "remotion render" in command and "--props" not in command:
+            manifest_props = self._resolve_manifest_props()
+            if manifest_props:
+                command = command.replace(
+                    "--output", f"--props={manifest_props} --output"
+                )
+
         # Node.js PATH 보장 (npx, node 등) — get_env_with_node()로 플랫폼 중립적으로 처리
         node_env = get_env_with_node()
         env["PATH"] = node_env.get("PATH", env.get("PATH", ""))
@@ -2957,6 +2967,38 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         return {"simple": "SimpleVideo", "kairos": "KairosVideo"}.get(
             theme, "SimpleVideo"
         )
+
+    def _resolve_manifest_props(self) -> str | None:
+        """프로젝트 전용 manifest 파일 경로 반환 (remotion/ 기준 상대경로).
+
+        build_manifest.py가 remotion/public/manifests/{fname}.json에 저장하므로
+        여기서 찾아 --props 인자로 전달한다.
+        없으면 None 반환 → 공유 manifest.json 사용 (기존 동작)
+        """
+        ws = get_workspace_dir()
+        manifests_dir = ws / "remotion" / "public" / "manifests"
+
+        # 1) DB에서 정확한 파일명 조회
+        try:
+            from auto_agent.db.project_manager import ProjectManager
+            pm = ProjectManager()
+            manifest_fname = pm.get_manifest_filename(
+                project_id=self.project.get("id"),
+                slug=self.project_slug,
+            )
+            if manifest_fname:
+                candidate = manifests_dir / manifest_fname
+                if candidate.exists():
+                    return f"public/manifests/{manifest_fname}"
+        except Exception:
+            pass
+
+        # 2) slug로 glob 탐색 (UUID_slug 패턴)
+        for f in sorted(manifests_dir.glob(f"*{self.project_slug}*.json"),
+                        key=lambda p: p.stat().st_mtime, reverse=True):
+            return f"public/manifests/{f.name}"
+
+        return None
 
     def _parse_claude_cost(self, stdout: str, stderr: str) -> dict:
         """Claude CLI 출력에서 비용 정보 파싱."""
