@@ -475,6 +475,14 @@
         "max_duration_min": 10,
         "budget_usd": 0.5
       },
+      "image-painter": {
+        "max_duration_min": 40,
+        "budget_usd": 3.0
+      },
+      "image-searcher": {
+        "max_duration_min": 20,
+        "budget_usd": 1.0
+      },
       "qa-reviewer": {
         "max_duration_min": 5,
         "budget_usd": 0.5

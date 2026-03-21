@@ -2340,6 +2340,11 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             elif duration_min <= 3:
                 max_turns = min(max_turns, 35)
                 timeout_sec = min(timeout_sec, 900)
+        elif agent in ("image-painter", "image-searcher"):
+            # 씬 수에 비례해 타임아웃 스케일링: 씬당 ~45초 + 베이스 300s
+            scene_count = self._count_image_scenes()
+            scaled = 300 + scene_count * 45
+            timeout_sec = max(timeout_sec, scaled)
 
         # 2. 프롬프트 빌드 (컨텍스트 메모리 포함)
         prompt = self._build_agent_prompt(step)
@@ -2849,6 +2854,18 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         limits = self.pipeline.get("gateway", {}).get("agent_limits", {})
         max_min = limits.get(agent_name, {}).get("max_duration_min", 15)
         return max_min * 60
+
+    def _count_image_scenes(self) -> int:
+        """scene_specs.json에서 이미지 에셋이 필요한 씬 수 반환."""
+        try:
+            spec_path = self.project_dir / "scene_specs.json"
+            if not spec_path.exists():
+                return 10  # 기본 추정값
+            data = json.loads(spec_path.read_text(encoding="utf-8"))
+            scenes = data.get("scenes", [])
+            return sum(1 for s in scenes if s.get("imageAsset"))
+        except Exception:
+            return 10
 
     def _resolve_composition(self) -> str:
         """프로젝트 theme에 따른 Remotion Composition ID 반환."""
