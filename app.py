@@ -101,6 +101,82 @@ def get_pm():
     return ProjectManager()
 
 
+def _scan_and_register_output_projects() -> int:
+    """output/ 폴더를 스캔해 DB에 없는 프로젝트를 자동 등록. 등록 수 반환."""
+    import re
+    pm = get_pm()
+    output_root = get_workspace_dir() / "output"
+    if not output_root.exists():
+        return 0
+
+    # 기존 DB 프로젝트의 output_dir 집합
+    existing = {p["output_dir"] for p in pm.list_projects() if p.get("output_dir")}
+
+    registered = 0
+    # {8자_uuid}_{slug} 패턴 디렉토리만 처리
+    pattern = re.compile(r'^([0-9a-f]{8})_(.+)$')
+
+    for d in sorted(output_root.iterdir()):
+        if not d.is_dir():
+            continue
+        m = pattern.match(d.name)
+        if not m:
+            continue
+        if str(d) in existing:
+            continue  # 이미 등록됨
+
+        uuid_prefix, slug = m.group(1), m.group(2)
+
+        # pipeline_state.json에서 메타 읽기
+        state_path = d / "pipeline_state.json"
+        state = {}
+        if state_path.exists():
+            try:
+                state = json.loads(state_path.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+
+        # topic: research_report.json 우선, 없으면 slug
+        topic = slug
+        rr_path = d / "research_report.json"
+        if rr_path.exists():
+            try:
+                rr = json.loads(rr_path.read_text(encoding="utf-8"))
+                topic = rr.get("topic") or slug
+            except Exception:
+                pass
+
+        config = state.get("config", {})
+
+        try:
+            pm.create_project(
+                name=slug,
+                slug=slug,
+                topic=topic,
+                theme=config.get("theme", "simple"),
+                config=config,
+                uuid=uuid_prefix,
+            )
+            registered += 1
+            print(f"  [SCAN] 프로젝트 등록: {d.name}")
+        except Exception as e:
+            # UNIQUE 제약 등 — 무시
+            print(f"  [SCAN] 등록 스킵 ({d.name}): {e}")
+
+    return registered
+
+
+@app.on_event("startup")
+async def startup_scan():
+    """대시보드 시작 시 output/ 폴더 스캔 → 누락 프로젝트 자동 등록."""
+    try:
+        count = _scan_and_register_output_projects()
+        if count:
+            print(f"[startup] output 스캔 완료: {count}개 프로젝트 등록")
+    except Exception as e:
+        print(f"[startup] output 스캔 실패 (무시): {e}")
+
+
 TAB_TEMPLATES = {
     "overview": "partials/_overview.html",
     "pipeline": "partials/_pipeline.html",
