@@ -1,3 +1,4 @@
+import itertools
 import pytest
 from unittest.mock import MagicMock, patch
 from auto_agent.tools.fal_queue import FalJob, FalResult, submit_batch, poll_all
@@ -45,7 +46,7 @@ def test_poll_all_completes_all():
     with patch("auto_agent.tools.fal_queue.fal_client") as mock_fal:
         mock_fal.status.return_value = fake_status
         mock_fal.result.return_value = fake_result
-        poll_all(jobs, request_ids, on_done=done_results.append)
+        poll_all(jobs, request_ids, on_done=done_results.append, poll_interval=0)
 
     assert len(done_results) == 2
     assert all(r.success for r in done_results)
@@ -68,7 +69,7 @@ def test_poll_all_retries_on_failure():
     with patch("auto_agent.tools.fal_queue.fal_client") as mock_fal:
         mock_fal.status.side_effect = fake_status
         mock_fal.submit.return_value = new_handle
-        poll_all(jobs, request_ids, on_done=done_results.append, max_retries=1)
+        poll_all(jobs, request_ids, on_done=done_results.append, max_retries=1, poll_interval=0)
 
     assert len(done_results) == 1
     assert not done_results[0].success
@@ -87,7 +88,7 @@ def test_poll_all_timeout():
     with patch("auto_agent.tools.fal_queue.fal_client") as mock_fal:
         mock_fal.status.return_value = fake_status
         with patch("auto_agent.tools.fal_queue.time") as mock_time:
-            mock_time.time.side_effect = [0, 0, 9999]  # 즉시 timeout
+            mock_time.time.side_effect = itertools.chain([0], itertools.repeat(9999))  # 즉시 timeout
             mock_time.sleep = MagicMock()
             poll_all(jobs, request_ids, on_done=done_results.append, timeout=1.0)
 
@@ -114,6 +115,6 @@ def test_poll_all_callback_exception_continues():
     with patch("auto_agent.tools.fal_queue.fal_client") as mock_fal:
         mock_fal.status.return_value = fake_status
         mock_fal.result.return_value = fake_result
-        poll_all(jobs, request_ids, on_done=on_done)
+        poll_all(jobs, request_ids, on_done=on_done, poll_interval=0)
 
     assert success_count["n"] == 1  # idx=1은 정상 처리됨
