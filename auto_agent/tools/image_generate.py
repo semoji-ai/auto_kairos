@@ -395,6 +395,66 @@ def generate_character(
     return _save_fal_result(result, output_path)
 
 
+def _build_character_fal_input(
+    prompt: str,
+    style_path: str,
+    person_photo: Optional[str] = None,
+    aspect_ratio: str = "1:1",
+) -> tuple[str, dict]:
+    """캐릭터 FAL 입력 빌드. generate_character()와 동일한 로직, _call_fal 직전에서 중단.
+
+    Returns:
+        (endpoint, fal_input) — fal_queue.submit_batch()에 전달할 값
+    """
+    art_style = _load_art_style(style_path)
+    style_json_str = _get_style_json_str(art_style)
+    scene_style_desc = art_style.get("scene_style_description", "")
+    historical_period = art_style.get("historical_period", "")
+    critical_reqs = art_style.get("technical", {}).get("critical_requirements", [])
+
+    prompt = _enrich_historical_context(prompt, historical_period)
+    image_urls = []
+
+    ref_image = art_style.get("reference_image", "")
+    if ref_image and Path(ref_image).exists():
+        image_urls.append(_image_to_data_uri(ref_image))
+    if person_photo and Path(person_photo).exists():
+        image_urls.append(_image_to_data_uri(person_photo))
+
+    parts = []
+    if scene_style_desc:
+        parts.append(scene_style_desc + "\n\n")
+    parts.append(f"Style specification: {style_json_str}\n\n")
+    if critical_reqs:
+        parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs) + "\n\n")
+    if len(image_urls) >= 2:
+        parts.append(
+            "**REFERENCE IMAGE GUIDE:**\n"
+            "- FIRST image = ART STYLE reference. Match this style:\n"
+            "  • Same eye drawing style, line weight, and body proportions\n"
+            "  • Same color palette and flat shading approach\n"
+            "- SECOND image = PERSON reference for facial features only\n"
+            "- Draw the person from the second image IN THE STYLE of the first image\n\n"
+        )
+    elif len(image_urls) == 1:
+        parts.append(
+            "**STYLE REFERENCE:**\n"
+            "The attached image defines the art style. Match this style:\n"
+            "- Same eye drawing style, line weight, and body proportions\n"
+            "- Same color palette and flat shading approach\n"
+            "- Create a NEW character drawn in this same style\n\n"
+        )
+    parts.append(f"Character illustration:\n{prompt}\n\n")
+    parts.append("No text, letters, numbers, captions, watermarks, or speech bubbles in the image.")
+
+    full_prompt = "".join(parts)
+    endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_GENERATE
+    fal_input: dict = {"prompt": full_prompt, "aspect_ratio": aspect_ratio}
+    if image_urls:
+        fal_input["image_urls"] = image_urls
+    return endpoint, fal_input
+
+
 # ── 장면 생성 (cinematic) ──
 
 def generate_scene(
@@ -652,6 +712,220 @@ def generate_scene_flat(
 
     result = _call_fal(endpoint, fal_input)
     return _save_fal_result(result, output_path)
+
+
+def _build_scene_fal_input(
+    scene: dict,
+    project_dir: Path,
+    char_paths: Optional[Dict[str, Optional[Path]]] = None,
+    style_path: Optional[str] = None,
+) -> tuple[str, dict]:
+    """씬 FAL 입력 빌드. (endpoint, fal_input) 반환.
+
+    Args:
+        scene: scene_specs.json의 씬 딕셔너리
+        project_dir: 프로젝트 디렉토리 (art_style.json 경로 탐색용)
+        char_paths: {char_id: Path | None} — None이면 해당 캐릭터 참조 없이 생성
+        style_path: art_style.json 경로. None이면 project_dir/art_style.json 사용.
+    """
+    if style_path is None:
+        style_path = str(project_dir / "art_style.json")
+
+    image_asset = scene.get("imageAsset") or {}
+    scene_type  = image_asset.get("sceneType", "")
+
+    # viz_background 타입: 배경 전용 빌드
+    if scene_type == "viz_background":
+        creative = scene.get("creative") or {}
+        viz      = scene.get("visualization") or {}
+        return _build_viz_fal_input(
+            viz_title=creative.get("headline", scene.get("title", "")),
+            viz_type=viz.get("type", ""),
+            thematic_context=scene.get("narration", ""),
+            style_path=style_path,
+            aspect_ratio=image_asset.get("aspectRatio", "16:9"),
+        )
+
+    # 일반 씬
+    prompt          = scene.get("imageAsset", {}).get("prompt") or scene.get("narration", "")
+    characters_info = scene.get("imageAsset", {}).get("charactersInfo", "")
+    background      = scene.get("imageAsset", {}).get("background", "")
+    camera          = scene.get("imageAsset", {}).get("camera", "")
+    aspect_ratio    = image_asset.get("aspectRatio", "16:9")
+    staging         = image_asset.get("stagingStyle", "cinematic")
+
+    # 유효한 캐릭터 경로만 추출
+    char_path_strs: list[str] = []
+    if char_paths:
+        for cid, cp in char_paths.items():
+            if cp and Path(cp).exists():
+                char_path_strs.append(str(cp))
+
+    if staging == "flat" or not char_path_strs:
+        # generate_scene_flat 로직 재사용
+        art_style = _load_art_style(style_path)
+        style_json_str = _get_style_json_str(art_style)
+        scene_style_desc = art_style.get("scene_style_description", "")
+        historical_period = art_style.get("historical_period", "")
+        ref_image = art_style.get("reference_image", "")
+        critical_reqs = art_style.get("technical", {}).get("critical_requirements", [])
+
+        image_urls: list[str] = []
+        has_char = False
+        if char_path_strs:
+            for cp in char_path_strs:
+                image_urls.append(_image_to_data_uri(cp))
+            has_char = True
+        elif ref_image and Path(ref_image).exists():
+            image_urls.append(_image_to_data_uri(ref_image))
+
+        prompt = _enrich_historical_context(prompt, historical_period)
+        scene_desc = _filter_text_descriptions(prompt)
+
+        parts = []
+        if scene_style_desc:
+            parts.append(scene_style_desc)
+        parts.append(style_json_str)
+        if critical_reqs:
+            parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs))
+        parts.append(FLAT_STAGING_RULES)
+        parts.append(scene_desc)
+        if has_char:
+            parts.append(
+                "**Character Reference Rules:**\n"
+                "- Use reference images ONLY for face and clothing appearance\n"
+                "- ALL characters MUST face FORWARD (frontal view)"
+            )
+        struct = []
+        if characters_info:
+            struct.append(f"Character: {characters_info}")
+        if background:
+            struct.append(f"Background: {background} — fills entire canvas edge-to-edge, no empty space")
+        struct.append("Camera: Front view, eye-level, centered, flat composition")
+        parts.append("\n".join(struct))
+        parts.append(
+            "IMPORTANT: Do NOT include any text, letters, numbers, words, captions, "
+            "watermarks, signatures, or any written characters in the image."
+        )
+        full_prompt = _translate_to_english("\n\n".join(parts))
+        endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_GENERATE
+        fal_input: dict = {"prompt": full_prompt, "aspect_ratio": aspect_ratio}
+        if image_urls:
+            fal_input["image_urls"] = image_urls
+        return endpoint, fal_input
+
+    else:
+        # cinematic — generate_scene 로직 재사용 (char_path_strs 있음)
+        art_style = _load_art_style(style_path)
+        style_json_str = _get_style_json_str(art_style)
+        scene_style_desc = art_style.get("scene_style_description", "")
+        historical_period = art_style.get("historical_period", "")
+        critical_reqs = art_style.get("technical", {}).get("critical_requirements", [])
+
+        image_urls = [_image_to_data_uri(cp) for cp in char_path_strs]
+        prompt = _enrich_historical_context(prompt, historical_period)
+        scene_desc = _filter_text_descriptions(prompt)
+
+        parts = []
+        if scene_style_desc:
+            parts.append(scene_style_desc)
+        parts.append(style_json_str)
+        if critical_reqs:
+            parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs))
+        parts.append(scene_desc)
+        parts.append(
+            "**Character Reference Rules:**\n"
+            "- Use reference images ONLY for face and clothing appearance\n"
+            "- Do NOT copy the pose from reference images!\n"
+            "- Maintain consistent eye, nose, mouth, and body proportions"
+        )
+        struct = []
+        if characters_info:
+            struct.append(f"Character: {characters_info}")
+        if background:
+            struct.append(f"Background: {background}")
+        if camera:
+            struct.append(f"Camera: {camera}")
+        if struct:
+            struct.append(
+                "**Important: Maintain character body proportions, "
+                "refer to reference image for each character's face"
+            )
+            parts.append("\n".join(struct))
+        parts.append(
+            "IMPORTANT: Do NOT include any text, letters, numbers, words, captions, "
+            "watermarks, signatures, or any written characters in the image."
+        )
+        full_prompt = _translate_to_english("\n\n".join(parts))
+        fal_input = {"prompt": full_prompt, "aspect_ratio": aspect_ratio, "image_urls": image_urls}
+        return ENDPOINT_CHARACTER, fal_input
+
+
+def _build_viz_fal_input(
+    viz_title: str,
+    viz_type: str,
+    thematic_context: str,
+    style_path: str,
+    aspect_ratio: str = "16:9",
+) -> tuple[str, dict]:
+    """viz_background 씬 FAL 입력 빌드. generate_viz_background()와 동일 로직."""
+    art_style = _load_art_style(style_path)
+    style_json_str = _get_style_json_str(art_style)
+    scene_style_desc = art_style.get("scene_style_description", "")
+    ref_image = art_style.get("reference_image", "")
+
+    image_urls = []
+    if ref_image and Path(ref_image).exists():
+        image_urls.append(_image_to_data_uri(ref_image))
+
+    viz_mood = {
+        "bar_chart": "abstract shapes suggesting comparison and scale",
+        "line_chart": "flowing lines and gradual progression",
+        "pie_chart": "circular patterns and proportional segments",
+        "timeline": "sequential flow and historical progression",
+        "table_view": "organized grid-like patterns",
+        "tech_tree": "branching connections and nodes",
+        "compare_card": "balanced duality, two sides",
+        "quote_card": "contemplative, open space for text",
+        "list_card": "organized, structured layout atmosphere",
+        "numbered_list": "sequential, step-by-step visual rhythm",
+        "icon_grid": "organized grid with thematic elements",
+        "icon_flow": "flowing process, connected steps",
+    }.get(viz_type, "abstract decorative background")
+
+    parts = []
+    if scene_style_desc:
+        parts.append(scene_style_desc)
+    parts.append(style_json_str)
+    parts.append(
+        f"Create a decorative BACKGROUND illustration for a data visualization.\n\n"
+        f"**Topic:** {viz_title}\n"
+        f"**Context:** {thematic_context}\n"
+        f"**Visual mood:** {viz_mood}\n\n"
+        "**CRITICAL BACKGROUND REQUIREMENTS:**\n"
+        "- This is a BACKGROUND image — data/charts will be overlaid on top\n"
+        "- Use SOFT, MUTED, slightly desaturated colors\n"
+        "- Keep the CENTER area relatively EMPTY and SIMPLE\n"
+        "- Place decorative elements toward EDGES and CORNERS\n"
+        "- NO specific characters in focus, NO faces\n"
+        "- Think of it like a soft, blurred backdrop or wallpaper"
+    )
+    if image_urls:
+        parts.append(
+            "**STYLE REFERENCE ONLY:**\n"
+            "The attached reference image is ONLY for art style.\n"
+            "- COPY: Color palette, texture, rendering style\n"
+            "- NEVER COPY: Any character, person, figure"
+        )
+    parts.append(
+        f"aspect ratio {aspect_ratio}\n"
+        "IMPORTANT: Do NOT include any text, letters, numbers in the image."
+    )
+    full_prompt = _translate_to_english("\n\n".join(parts))
+    fal_input: dict = {"prompt": full_prompt, "aspect_ratio": aspect_ratio}
+    if image_urls:
+        fal_input["image_urls"] = image_urls
+    return ENDPOINT_EDIT, fal_input
 
 
 # ── Gemini 편집 ──
