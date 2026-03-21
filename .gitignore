@@ -74,7 +74,6 @@ Thumbs.db
 /dashboard/
 /skills/
 /artstyle/
-/docs/
 
 # Legacy config (auto_agent/data/에 복사됨)
 /pipeline.json
