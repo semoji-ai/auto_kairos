@@ -75,6 +75,11 @@ workspace = get_workspace_dir()
 _fonts_dir = workspace / "remotion" / "public" / "fonts"
 if _fonts_dir.exists():
     app.mount("/fonts", StaticFiles(directory=str(_fonts_dir)), name="fonts")
+
+# Remotion 배경 이미지 서빙 (/background/ → remotion/public/background/)
+_bg_dir = workspace / "remotion" / "public" / "background"
+if _bg_dir.exists():
+    app.mount("/background", StaticFiles(directory=str(_bg_dir)), name="background")
 output_dir = workspace / "output"
 if output_dir.exists():
     app.mount("/output", StaticFiles(directory=str(output_dir)), name="output")

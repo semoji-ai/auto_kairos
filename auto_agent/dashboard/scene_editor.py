@@ -391,6 +391,8 @@ async def get_scene_for_editor(slug: str, scene_num: int):
         if scene["sceneNumber"] == scene_num:
             # 이미지 URL 주입 (scene_specs에는 메타만 있음)
             _inject_image_url(project, scene, scene_num)
+            # 맵 씬 좌표 변환 (build_manifest와 동일)
+            _transform_map_scene(scene)
             layout = scene.get("layout", "")
             constraints = LAYOUT_CONSTRAINTS.get(layout, {})
             return JSONResponse(
@@ -417,6 +419,51 @@ def _inject_image_url(project: dict, scene: dict, scene_num: int):
             scene["vizBackgroundPath"] = url
         else:
             scene["imagePath"] = url
+
+
+def _transform_map_scene(scene: dict):
+    """mapScene 좌표 변환: scene_specs [lat,lng] → MapLibre [lng,lat].
+
+    build_manifest.py와 동일한 변환을 적용하여 스토리보드 썸네일에서도
+    맵이 올바르게 렌더링되도록 한다.
+    """
+    ms = scene.get("mapScene")
+    if not ms:
+        return
+    if not ms.get("mapStyle"):
+        ms["mapStyle"] = "modern_clean"
+    if not ms.get("mapType"):
+        ms["mapType"] = "location_reveal"
+    # markers 변환: {lat, lng, label} → {coordinates: [lng, lat], label}
+    if ms.get("markers"):
+        converted = []
+        for mk in ms["markers"]:
+            if "coordinates" in mk:
+                converted.append(mk)
+            elif "lat" in mk and "lng" in mk:
+                converted.append({
+                    "coordinates": [mk["lng"], mk["lat"]],
+                    "label": mk.get("label", ""),
+                    "style": mk.get("style", "pin"),
+                })
+            else:
+                converted.append(mk)
+        ms["markers"] = converted
+    # center: [lat, lng] → [lng, lat]
+    if ms.get("center") and len(ms["center"]) == 2:
+        ms["center"] = [ms["center"][1], ms["center"][0]]
+    # camera keyframes 자동 생성
+    center_lnglat = ms.get("center", [0, 0])
+    if not ms.get("camera"):
+        zoom = ms.get("zoom", 5)
+        dur = scene.get("durationFrames", 150)
+        ms["camera"] = {
+            "keyframes": [
+                {"frame": 0, "center": list(center_lnglat), "zoom": max(2, zoom - 2)},
+                {"frame": int(dur * 0.4), "center": list(center_lnglat), "zoom": zoom},
+            ],
+            "easing": "easeInOutCubic",
+        }
 
 
 @router.post("/scenes/{scene_num}")
