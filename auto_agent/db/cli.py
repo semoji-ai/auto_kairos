@@ -105,6 +105,9 @@ def cmd_project(args):
                 print_error("Usage: project create <name> [--topic <topic>]")
                 return
             name = args[1]
+            if name.startswith("-"):
+                print_error("Usage: project create <name> [--topic <topic>]")
+                return
             from auto_agent.scripts.project_paths import slugify
             slug = slugify(name)
             topic = None
