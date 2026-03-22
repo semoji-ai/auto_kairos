@@ -21,6 +21,7 @@ dependencies = [
 [project.optional-dependencies]
 dashboard = ["fastapi", "uvicorn", "jinja2", "websockets"]
 sync = ["supabase>=2.0"]
+rag = ["sentence-transformers>=2.7", "chromadb>=0.5"]
 all = ["fastapi", "uvicorn", "jinja2", "websockets", "supabase>=2.0"]
 
 [project.scripts]
