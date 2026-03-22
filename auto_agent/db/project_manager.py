@@ -87,6 +87,11 @@ class ProjectManager:
     # 프로젝트 CRUD
     # ─────────────────────────────────────
 
+    def delete_project(self, project_id: int) -> None:
+        """프로젝트 DB 레코드 삭제 (파일은 건드리지 않음)."""
+        with transaction(self.db_path) as conn:
+            conn.execute("DELETE FROM projects WHERE id = ?", (project_id,))
+
     def create_project(
         self,
         name: str,

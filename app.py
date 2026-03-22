@@ -109,7 +109,16 @@ def _scan_and_register_output_projects() -> int:
     if not output_root.exists():
         return 0
 
-    # 기존 DB 프로젝트의 output_dir 집합
+    all_projects = pm.list_projects()
+
+    # 역방향 체크: output_dir 폴더가 없으면 DB에서 제거
+    for p in all_projects:
+        out = p.get("output_dir", "")
+        if out and not Path(out).exists():
+            pm.delete_project(p["id"])
+            print(f"  [SCAN] 폴더 없음 → DB 삭제: {Path(out).name}")
+
+    # 기존 DB 프로젝트의 output_dir 집합 (삭제 후 재조회)
     existing = {p["output_dir"] for p in pm.list_projects() if p.get("output_dir")}
 
     registered = 0
