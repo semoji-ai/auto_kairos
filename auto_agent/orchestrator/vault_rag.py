@@ -16,8 +16,21 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
-# 볼트 기본 경로 (환경변수로 오버라이드 가능)
-VAULT_DIR = Path(os.environ.get("KAIROS_VAULT_DIR") or (Path.home() / "Desktop" / "kairos-vault"))
+def _resolve_vault_dir() -> Path:
+    """볼트 경로 결정. 환경변수 → Projects → Desktop 순으로 시도."""
+    if env := os.environ.get("KAIROS_VAULT_DIR"):
+        return Path(env)
+    projects_path = Path.home() / "Projects" / "kairos-vault"
+    desktop_path = Path.home() / "Desktop" / "kairos-vault"
+    if projects_path.exists():
+        return projects_path
+    if desktop_path.exists():
+        print("[VaultRAG] 경고: ~/Desktop/kairos-vault 사용 중. ~/Projects/로 이전을 권장합니다.")
+        return desktop_path
+    return projects_path  # 기본값 (미존재 시 비활성)
+
+
+VAULT_DIR = _resolve_vault_dir()
 
 
 class VaultRAG:
