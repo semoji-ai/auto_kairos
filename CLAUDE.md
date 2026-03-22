@@ -3,6 +3,48 @@
 ## Language
 - 항상 한글로 답변할 것
 
+## CLI 사용법 (auto-agent)
+
+### 기본 흐름
+```
+# 1. 프로젝트 생성 (대화형)
+auto-agent project create
+
+# 2. 파이프라인 실행
+auto-agent run --project <slug>
+
+# 3. 특정 스텝부터 재실행
+auto-agent run --project <slug> --from step_3
+
+# 4. 특정 스텝만 실행
+auto-agent run --project <slug> --only step_5
+
+# 5. 대시보드 열기
+auto-agent dashboard
+```
+
+### 백그라운드 실행 (모바일 등 터미널 연결 시 권장)
+```
+auto-agent bg start --project <slug>          # 백그라운드로 파이프라인 시작
+auto-agent bg start --project <slug> --from step_3  # 특정 스텝부터
+auto-agent bg status --project <slug>         # 진행 상태 확인
+auto-agent bg logs --project <slug>           # 로그 확인
+auto-agent bg stop --project <slug>           # 중단
+auto-agent bg list                            # 전체 세션 목록
+```
+
+### 프로젝트 관리
+```
+auto-agent project list                       # 프로젝트 목록
+auto-agent project info --project <slug>      # 프로젝트 정보
+auto-agent project create                     # 새 프로젝트 생성 (대화형)
+```
+
+### 주의사항
+- `project create` 뒤에는 프로젝트 이름을 바로 입력 (--help 같은 플래그 금지)
+- slug는 영문+숫자+언더스코어 (한글 자동 변환됨)
+- 모바일에서 장시간 실행 시 `bg start` 권장 (터미널 끊겨도 계속 실행)
+
 # currentDate
 Today's date is 2026-03-16.
 
