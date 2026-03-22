@@ -9,8 +9,8 @@ def test_env_var_overrides_all(tmp_path):
     """KAIROS_VAULT_DIR 환경변수가 설정되면 해당 경로를 반환한다."""
     custom = str(tmp_path / "my-vault")
     with patch.dict(os.environ, {"KAIROS_VAULT_DIR": custom}):
-        from auto_agent.orchestrator.vault_rag import _resolve_vault_dir
-        result = _resolve_vault_dir()
+        import auto_agent.orchestrator.vault_rag as vr
+        result = vr._resolve_vault_dir()
     assert str(result) == custom
 
 
@@ -30,7 +30,7 @@ def test_prefers_projects_when_exists(tmp_path):
     assert result == projects_vault
 
 
-def test_falls_back_to_desktop(tmp_path):
+def test_falls_back_to_desktop(tmp_path, capsys):
     """Projects가 없고 Desktop이 있으면 Desktop을 반환한다."""
     desktop_vault = tmp_path / "Desktop" / "kairos-vault"
     desktop_vault.mkdir(parents=True)
@@ -41,6 +41,8 @@ def test_falls_back_to_desktop(tmp_path):
             import auto_agent.orchestrator.vault_rag as vr
             result = vr._resolve_vault_dir()
     assert result == desktop_vault
+    captured = capsys.readouterr()
+    assert "Desktop" in captured.out or "Desktop" in captured.err
 
 
 def test_defaults_to_projects_when_neither_exists(tmp_path):
