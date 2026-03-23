@@ -761,8 +761,9 @@ def _build_scene_fal_input(
             if cp and Path(cp).exists():
                 char_path_strs.append(str(cp))
 
-    if staging == "flat" or not char_path_strs:
-        # generate_scene_flat 로직 재사용
+    if staging == "flat":
+        # generate_scene_flat 로직 — staging이 명시적으로 flat일 때만 적용
+        # (캐릭터 없을 때도 cinematic이면 cinematic 규칙 사용)
         art_style = _load_art_style(style_path)
         style_json_str = _get_style_json_str(art_style)
         scene_style_desc = art_style.get("scene_style_description", "")
@@ -815,14 +816,19 @@ def _build_scene_fal_input(
         return endpoint, fal_input
 
     else:
-        # cinematic — generate_scene 로직 재사용 (char_path_strs 있음)
+        # cinematic — generate_scene 로직 재사용
         art_style = _load_art_style(style_path)
         style_json_str = _get_style_json_str(art_style)
         scene_style_desc = art_style.get("scene_style_description", "")
         historical_period = art_style.get("historical_period", "")
         critical_reqs = art_style.get("technical", {}).get("critical_requirements", [])
+        ref_image = art_style.get("reference_image", "")
 
         image_urls = [_image_to_data_uri(cp) for cp in char_path_strs]
+        # 캐릭터 참조 없으면 스타일 base 이미지를 참조로 사용
+        if not image_urls and ref_image and Path(ref_image).exists():
+            image_urls = [_image_to_data_uri(ref_image)]
+
         prompt = _enrich_historical_context(prompt, historical_period)
         scene_desc = _filter_text_descriptions(prompt)
 
@@ -833,12 +839,13 @@ def _build_scene_fal_input(
         if critical_reqs:
             parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs))
         parts.append(scene_desc)
-        parts.append(
-            "**Character Reference Rules:**\n"
-            "- Use reference images ONLY for face and clothing appearance\n"
-            "- Do NOT copy the pose from reference images!\n"
-            "- Maintain consistent eye, nose, mouth, and body proportions"
-        )
+        if char_path_strs:
+            parts.append(
+                "**Character Reference Rules:**\n"
+                "- Use reference images ONLY for face and clothing appearance\n"
+                "- Do NOT copy the pose from reference images!\n"
+                "- Maintain consistent eye, nose, mouth, and body proportions"
+            )
         struct = []
         if characters_info:
             struct.append(f"Character: {characters_info}")
@@ -847,18 +854,22 @@ def _build_scene_fal_input(
         if camera:
             struct.append(f"Camera: {camera}")
         if struct:
-            struct.append(
-                "**Important: Maintain character body proportions, "
-                "refer to reference image for each character's face"
-            )
+            if char_path_strs:
+                struct.append(
+                    "**Important: Maintain character body proportions, "
+                    "refer to reference image for each character's face"
+                )
             parts.append("\n".join(struct))
         parts.append(
             "IMPORTANT: Do NOT include any text, letters, numbers, words, captions, "
             "watermarks, signatures, or any written characters in the image."
         )
         full_prompt = _translate_to_english("\n\n".join(parts))
-        fal_input = {"prompt": full_prompt, "aspect_ratio": aspect_ratio, "image_urls": image_urls}
-        return ENDPOINT_CHARACTER, fal_input
+        endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_GENERATE
+        fal_input: dict = {"prompt": full_prompt, "aspect_ratio": aspect_ratio}
+        if image_urls:
+            fal_input["image_urls"] = image_urls
+        return endpoint, fal_input
 
 
 def _build_viz_fal_input(

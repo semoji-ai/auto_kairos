@@ -544,20 +544,12 @@ def _resolve_art_style(output_dir: Path) -> str:
     except Exception:
         pass
 
-    # 2) 프로젝트 디렉토리 내 직접 탐색
-    try:
-        from auto_agent.db.project_manager import resolve_art_style_path
-        for name in ["quirky_cartoon", "semoji", "lego", "stickman_cute"]:
-            resolved = resolve_art_style_path(name, output_dir)
-            if resolved:
-                return str(resolved)
-    except Exception:
-        pass
-
-    # 3) 레거시 폴백
+    # 2) 프로젝트 디렉토리 내 art_style.json (provision된 복사본)
     local = output_dir / "art_style.json"
     if local.exists():
         return str(local)
+
+    # 3) 레거시 폴백
     alt = PROJECT_ROOT / "art_style.json"
     if alt.exists():
         return str(alt)
