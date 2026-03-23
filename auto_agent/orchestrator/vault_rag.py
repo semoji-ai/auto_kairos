@@ -7,14 +7,15 @@ Vault RAG — Obsidian 볼트 기반 지식 검색 + 축적 시스템
   - 리서치 후: 핵심 팩트/타임라인/소스를 볼트에 자동 축적
   - 프로젝트 완료 후: 회고 노트 생성
 
-Phase 1: 키워드 기반 마크다운 검색 (현재)
-Phase 2: 벡터 임베딩 기반 시맨틱 검색 (향후)
+Phase 1: 키워드 기반 마크다운 검색
+Phase 2: 벡터 임베딩 기반 시맨틱 검색 (sentence-transformers + Chroma)
 """
 import os
 import re
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
+
 
 def _resolve_vault_dir() -> Path:
     """볼트 경로 결정. 환경변수 → Projects → Desktop 순으로 시도."""
@@ -53,6 +54,25 @@ class VaultRAG:
 
         sections = []
 
+        # Phase 2: 시맨틱 검색 우선 시도
+        semantic_results = self.semantic_search(topic, top_k=5)
+        if semantic_results:
+            sections.append("## 관련 지식 (볼트 시맨틱 검색)")
+            for r in semantic_results:
+                sections.append(f"### {r['file']}\n{r['snippet']}\n")
+            return (
+                "<vault_knowledge>\n"
+                "아래는 이전에 수행된 리서치 결과입니다.\n"
+                "⚠️ 이미 확보된 정보를 다시 검색하지 마세요. 아래 내용을 기반으로:\n"
+                "1. 기존 리서치의 핵심 팩트를 그대로 활용하세요\n"
+                "2. 최신 정보(날짜/수치 변경, 새로운 사건)만 추가 검색하세요\n"
+                "3. 기존 소스가 여전히 유효한지 교차 검증하세요\n"
+                "4. 새로 발견된 정보만 추가 섹션으로 보고하세요\n\n"
+                + "\n".join(sections)
+                + "\n</vault_knowledge>"
+            )
+
+        # Phase 1 폴백: 키워드 검색
         # 1. 기존 주제 리서치 검색
         topics = self._search_files(
             self.vault_dir / "02-research" / "topics",
@@ -117,6 +137,21 @@ class VaultRAG:
 
         sections = []
 
+        # Phase 2: 시맨틱 검색 우선 (01-patterns 폴더 필터)
+        semantic_results = self.semantic_search(topic, top_k=5, folder_filter="01-patterns")
+        if semantic_results:
+            sections.append("## 서사 패턴 (볼트 시맨틱 검색)")
+            for r in semantic_results:
+                sections.append(f"### {r['file']}\n{r['snippet']}\n")
+            return (
+                "<vault_patterns>\n"
+                "아래는 Obsidian 볼트에서 검색된 서사 패턴/회고입니다. "
+                "원고 구성 시 참고하세요.\n\n"
+                + "\n".join(sections)
+                + "\n</vault_patterns>"
+            )
+
+        # Phase 1 폴백: 키워드 검색
         # 1. 카테고리별 서사 분석
         storytelling = self._search_files(
             self.vault_dir / "01-patterns" / "storytelling",
@@ -512,6 +547,75 @@ recurrence: 1
                 continue
 
         return results[:max_results]
+
+    # ─────────────────────────────────────
+    # Phase 2: 시맨틱 검색
+    # ─────────────────────────────────────
+
+    def _get_collection(self):
+        """Chroma 컬렉션 반환. 미설치 시 ImportError 발생."""
+        from auto_agent.orchestrator.vault_indexer import DEFAULT_CHROMA_DIR, COLLECTION_NAME, MODEL_NAME
+        import chromadb
+        from chromadb.utils import embedding_functions
+
+        client = chromadb.PersistentClient(path=str(DEFAULT_CHROMA_DIR))
+        ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name=MODEL_NAME
+        )
+        return client.get_or_create_collection(name=COLLECTION_NAME, embedding_function=ef)
+
+    def semantic_search(
+        self,
+        query: str,
+        top_k: int = 5,
+        folder_filter: str = None,
+    ) -> list[dict]:
+        """
+        시맨틱 검색. Chroma 미설치 시 키워드 검색으로 폴백.
+        반환: [{"file": str, "snippet": str, "score": float, "tags": list}]
+        """
+        if not self.enabled or not query.strip():
+            return []
+
+        try:
+            collection = self._get_collection()
+            query_kwargs = {"query_texts": [query], "n_results": top_k}
+            if folder_filter:
+                query_kwargs["where"] = {"folder": folder_filter}
+
+            raw = collection.query(**query_kwargs)
+            docs = raw.get("documents", [[]])[0]
+            metas = raw.get("metadatas", [[]])[0]
+            dists = raw.get("distances", [[]])[0]
+
+            results = []
+            for doc, meta, dist in zip(docs, metas, dists):
+                results.append({
+                    "file": meta.get("file", ""),
+                    "snippet": doc[:200] if doc else "",
+                    "score": round(float(1 - dist), 4),
+                    "tags": [t for t in meta.get("tags", "").split(",") if t],
+                })
+            return results
+
+        except ImportError:
+            print("[VaultRAG] Chroma/sentence-transformers 미설치, 키워드 폴백")
+            return self._keyword_fallback(query, top_k)
+        except Exception as e:
+            print(f"[VaultRAG] 검색 오류 ({type(e).__name__}: {e}), 키워드 폴백")
+            return self._keyword_fallback(query, top_k)
+
+    def _keyword_fallback(self, query: str, top_k: int) -> list[dict]:
+        """키워드 검색 폴백. semantic_search와 동일한 dict 구조 반환."""
+        raw = self.search_by_keyword(query, max_results=top_k)
+        results = []
+        for path, snippet in raw:
+            try:
+                file_str = str(path.relative_to(self.vault_dir))
+            except ValueError:
+                file_str = path.name
+            results.append({"file": file_str, "snippet": snippet[:200], "score": 0.0, "tags": []})
+        return results
 
     def _resolve_content_dir(self, category: str) -> Optional[Path]:
         """카테고리명 → 콘텐츠 디렉토리 매핑."""

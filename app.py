@@ -46,6 +46,7 @@ from auto_agent.dashboard.actions import router as actions_router
 from auto_agent.dashboard.json_editor import router as json_editor_router
 from auto_agent.dashboard.sse import router as sse_router
 from auto_agent.dashboard.memory_routes import router as memory_router
+from auto_agent.dashboard.vault_routes import router as vault_router
 from auto_agent.dashboard.scene_editor import router as scene_editor_router
 from auto_agent.dashboard.scene_editor import manifest_router
 from auto_agent.dashboard.design_presets import router as design_presets_router
@@ -57,6 +58,7 @@ app.include_router(actions_router)
 app.include_router(json_editor_router)
 app.include_router(sse_router)
 app.include_router(memory_router)
+app.include_router(vault_router)
 app.include_router(scene_editor_router)
 app.include_router(manifest_router)
 app.include_router(design_presets_router)
@@ -307,6 +309,12 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
 # ─────────────────────────────
 # HTML Pages
 # ─────────────────────────────
+
+@app.get("/vault/search", response_class=HTMLResponse)
+async def vault_search_page(request: Request):
+    """볼트 시맨틱 검색 페이지."""
+    return templates.TemplateResponse("vault_search.html", {"request": request})
+
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):

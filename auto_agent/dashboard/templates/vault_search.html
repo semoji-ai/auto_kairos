@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}볼트 검색 — Auto Agent{% endblock %}
+
+{% block content %}
+<div style="padding: 24px; max-width: 900px; margin: 0 auto;">
+  <h2 style="color: #E4E4E7; margin-bottom: 8px;">📚 볼트 검색</h2>
+
+  <!-- 검색 폼 -->
+  <form id="vault-search-form" style="display:flex; gap:8px; margin-bottom:16px;">
+    <input
+      id="vault-query"
+      type="text"
+      placeholder="검색어 입력 (예: 브랜드 스토리 후킹)"
+      style="flex:1; padding:10px 14px; background:#1C1C1E; border:1px solid #3F3F46;
+             border-radius:8px; color:#E4E4E7; font-size:14px;"
+    />
+    <select id="vault-folder"
+      style="padding:10px; background:#1C1C1E; border:1px solid #3F3F46;
+             border-radius:8px; color:#E4E4E7; font-size:13px;">
+      <option value="">전체 폴더</option>
+      <option value="01-patterns">01-patterns</option>
+      <option value="02-content">02-content</option>
+      <option value="02-research">02-research</option>
+      <option value="03-analysis">03-analysis</option>
+      <option value="07-projects">07-projects</option>
+      <option value="08-dev">08-dev</option>
+    </select>
+    <button type="submit"
+      style="padding:10px 20px; background:#6366F1; border:none; border-radius:8px;
+             color:white; font-size:14px; cursor:pointer;">검색</button>
+  </form>
+
+  <!-- 통계 -->
+  <div id="vault-stats" style="font-size:12px; color:#71717A; margin-bottom:16px;">
+    로딩 중...
+  </div>
+
+  <!-- 결과 -->
+  <div id="vault-results"></div>
+</div>
+
+<script>
+async function loadStats() {
+  try {
+    const res = await fetch('/api/vault/stats');
+    const data = await res.json();
+    document.getElementById('vault-stats').textContent =
+      `인덱싱된 파일 ${data.file_count || 0}개 · 청크 ${data.chunk_count || 0}개 · 마지막 인덱싱: ${data.last_indexed_at || '없음'}`;
+  } catch(e) {
+    document.getElementById('vault-stats').textContent = '통계 로드 실패';
+  }
+}
+
+document.getElementById('vault-search-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const q = document.getElementById('vault-query').value.trim();
+  const folder = document.getElementById('vault-folder').value;
+  if (!q) return;
+
+  document.getElementById('vault-results').innerHTML = '<p style="color:#71717A">검색 중...</p>';
+
+  const params = new URLSearchParams({ q, top_k: 5 });
+  if (folder) params.set('folder', folder);
+
+  try {
+    const res = await fetch(`/api/vault/search?${params}`);
+    const data = await res.json();
+
+    if (!data.results || data.results.length === 0) {
+      document.getElementById('vault-results').innerHTML = '<p style="color:#71717A">결과 없음</p>';
+      return;
+    }
+
+    const mode = data.mode === 'semantic' ? '🔍 시맨틱' : '📝 키워드';
+    let html = `<p style="font-size:12px;color:#71717A;margin-bottom:12px">${mode} 검색 — ${data.total}건</p>`;
+
+    for (const r of data.results) {
+      const obsidianUrl = `obsidian://open?vault=kairos-vault&file=${encodeURIComponent(r.file)}`;
+      const score = data.mode === 'semantic'
+        ? `<span style="color:#6366F1;font-size:11px">${(r.score * 100).toFixed(0)}%</span>`
+        : '';
+      const tags = r.tags.map(t =>
+        `<span style="background:#27272A;padding:2px 6px;border-radius:4px;font-size:11px;color:#A1A1AA">${t}</span>`
+      ).join(' ');
+
+      html += `
+        <div style="background:#18181B;border:1px solid #27272A;border-radius:10px;padding:16px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <a href="${obsidianUrl}" style="color:#818CF8;font-size:13px;font-weight:600;text-decoration:none">${r.file}</a>
+            ${score}
+          </div>
+          ${tags ? `<div style="margin-bottom:8px">${tags}</div>` : ''}
+          <p style="color:#A1A1AA;font-size:13px;line-height:1.6;margin:0">${r.snippet}</p>
+        </div>`;
+    }
+
+    document.getElementById('vault-results').innerHTML = html;
+  } catch(e) {
+    document.getElementById('vault-results').innerHTML = '<p style="color:#EF4444">검색 오류 발생</p>';
+  }
+});
+
+loadStats();
+</script>
+{% endblock %}

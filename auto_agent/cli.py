@@ -894,6 +894,65 @@ def cmd_pull(args):
     print_warning("Supabase 동기화가 비활성화되어 있습니다. .env에서 SUPABASE_URL/KEY를 설정하세요.")
 
 
+def cmd_vault(args):
+    """볼트 인덱스 관리: index / stats / search."""
+    from auto_agent.orchestrator.vault_rag import VAULT_DIR
+
+    sub = args[0] if args else "stats"
+
+    if sub == "index":
+        force = "--force" in args
+        try:
+            from auto_agent.orchestrator.vault_indexer import VaultIndexer
+        except ImportError:
+            print_error("RAG 의존성 미설치. 설치: pip install -e '.[rag]'")
+            sys.exit(1)
+
+        if not VAULT_DIR.exists():
+            print_error(f"볼트를 찾을 수 없음: {VAULT_DIR}")
+            sys.exit(1)
+
+        console.print(f"[bold]볼트 인덱싱 시작[/bold]: {VAULT_DIR}")
+        if force:
+            console.print("[yellow]--force: 전체 재인덱싱[/yellow]")
+        indexer = VaultIndexer()
+        result = indexer.index_all(VAULT_DIR, force=force)
+        console.print(
+            f"[green]완료[/green] — 인덱싱: {result['indexed']}, "
+            f"스킵: {result['skipped']}, 오류: {result['errors']}, "
+            f"총 청크: {result['total_chunks']}"
+        )
+
+    elif sub == "stats":
+        try:
+            from auto_agent.orchestrator.vault_indexer import VaultIndexer
+            stats = VaultIndexer().get_stats()
+            console.print(f"파일 수: {stats['file_count']}")
+            console.print(f"청크 수: {stats['chunk_count']}")
+            console.print(f"마지막 인덱싱: {stats['last_indexed_at'] or '없음'}")
+            console.print(f"Chroma 경로: {stats['chroma_dir']}")
+            console.print(f"볼트 경로: {VAULT_DIR}")
+        except ImportError:
+            print_error("RAG 의존성 미설치. 설치: pip install -e '.[rag]'")
+
+    elif sub == "search":
+        query = " ".join(a for a in args[1:] if not a.startswith("-"))
+        if not query:
+            print_error("사용법: auto-agent vault search <쿼리>")
+            sys.exit(1)
+        from auto_agent.orchestrator.vault_rag import VaultRAG
+        rag = VaultRAG()
+        results = rag.semantic_search(query, top_k=5)
+        if not results:
+            console.print("[yellow]결과 없음[/yellow]")
+            return
+        for r in results:
+            console.print(f"\n[bold]{r['file']}[/bold] (유사도: {r['score']})")
+            console.print(f"  {r['snippet'][:150]}...")
+    else:
+        console.print("사용법: auto-agent vault [index|stats|search] [--force]")
+
+
 def _parse_project_flag(args):
     """args에서 --project <slug> 값 추출."""
     if "--project" in args:
@@ -918,6 +977,7 @@ COMMANDS = {
     "voice": cmd_voice,
     "font": cmd_font,
     "bg": cmd_bg,
+    "vault": cmd_vault,
     "sync": cmd_sync,
     "pull": cmd_pull,
     "update": cmd_update,
