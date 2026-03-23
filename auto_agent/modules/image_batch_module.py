@@ -126,7 +126,7 @@ def run_batch(
 
     # ── Phase 2: 씬 배치 ──
     scene_specs_path = project_dir / "scene_specs.json"
-    scenes_success, scenes_fail = 0, 0
+    scenes_success, scenes_fail, skipped = 0, 0, 0
     if scene_specs_path.exists():
         scene_specs = json.loads(scene_specs_path.read_text())
         images_dir  = project_dir / "images"
@@ -135,6 +135,11 @@ def run_batch(
         scene_jobs: list[tuple[dict, FalJob]] = []
         for scene in scene_specs.get("scenes", []):
             if scene.get("imageAsset", {}).get("source") != "generate":
+                continue
+            scene_num = scene.get("sceneNumber", 0)
+            if image_assets.has_generated_version(images_dir, scene_num):
+                _progress(f"씬 {scene_num} 이미 생성됨 — 스킵")
+                skipped += 1
                 continue
             scene_char_paths = {
                 cid: char_paths.get(cid)
@@ -176,13 +181,14 @@ def run_batch(
 
             fal_queue.poll_all(jobs, request_ids, on_done=on_scene_done)
 
-    _progress(f"씬 완료: 성공 {scenes_success}개, 실패 {scenes_fail}개")
+    _progress(f"씬 완료: 성공 {scenes_success}개, 실패 {scenes_fail}개, 스킵 {skipped}개")
 
     return {
         "chars_reused":    len(reused),
         "chars_generated": len(to_generate),
         "scenes_success":  scenes_success,
         "scenes_fail":     scenes_fail,
+        "scenes_skipped":  skipped,
     }
 
 

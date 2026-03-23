@@ -46,6 +46,15 @@ def _get_scene(data: dict, scene_num: int) -> dict:
     return scene
 
 
+def has_generated_version(images_dir: Path, scene_num: int) -> bool:
+    """해당 씬에 이미 generate 타입 버전이 있는지 확인."""
+    data = _load(images_dir)
+    for s in data["scenes"]:
+        if s["sceneNumber"] == scene_num:
+            return any(v.get("type") == "generate" for v in s.get("versions", []))
+    return False
+
+
 def add_version(images_dir: Path, scene_num: int, file_name: str,
                 version_type: str, auto_select: bool = True, **meta) -> dict:
     """버전 추가. auto_select=True면 자동으로 selected 설정."""
