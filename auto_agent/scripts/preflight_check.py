@@ -59,6 +59,47 @@ def check_node_version() -> bool:
         return False
 
 
+def _ensure_remotion_setup() -> bool:
+    """remotion/ 디렉토리에 package.json과 node_modules 검증. 누락 시 자동 복구."""
+    remotion_dir = PROJECT_ROOT / "remotion"
+
+    # 1) package.json 누락 → 템플릿에서 복사
+    pkg_json = remotion_dir / "package.json"
+    if not pkg_json.exists():
+        template_dir = Path(__file__).resolve().parent.parent / "remotion_template"
+        if template_dir.exists():
+            print("  [AUTO] remotion/ 누락 — 템플릿에서 복사 중...")
+            import shutil as _sh
+            if remotion_dir.exists():
+                _sh.rmtree(remotion_dir)
+            _sh.copytree(template_dir, remotion_dir)
+            print("  [AUTO] remotion/ 템플릿 복사 완료")
+        else:
+            print("  [FAIL] remotion/package.json 없음 + 템플릿도 없음")
+            return False
+
+    # 2) node_modules 누락 → npm install
+    if not (remotion_dir / "node_modules").exists():
+        print("  [AUTO] node_modules 누락 — npm install 실행 중...")
+        try:
+            result = subprocess.run(
+                ["npm", "install"],
+                cwd=str(remotion_dir),
+                capture_output=True, text=True, encoding="utf-8",
+                timeout=120,
+            )
+            if result.returncode == 0:
+                print("  [AUTO] npm install 완료")
+            else:
+                print(f"  [FAIL] npm install 실패: {result.stderr[:200]}")
+                return False
+        except Exception as e:
+            print(f"  [FAIL] npm install 실행 오류: {e}")
+            return False
+
+    return True
+
+
 def check_npm_package(name: str) -> bool:
     remotion_dir = PROJECT_ROOT / "remotion"
     node_modules = remotion_dir / "node_modules" / name
@@ -92,7 +133,10 @@ def main():
         errors += 1
     check_command("npx")
 
-    # 3. NPM 패키지
+    # 3. Remotion 초기화 검증 + NPM 패키지
+    print("\n[Remotion Setup]")
+    if not _ensure_remotion_setup():
+        errors += 1
     print("\n[NPM Packages]")
     check_npm_package("@remotion/cli")
     check_npm_package("lucide-react")

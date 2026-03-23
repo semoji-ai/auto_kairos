@@ -29,7 +29,7 @@ def _load_dotenv():
     """프로젝트 루트의 .env 파일에서 환경변수를 로드"""
     env_path = get_workspace_dir() / ".env"
     if env_path.exists():
-        with open(env_path, "r") as f:
+        with open(env_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:

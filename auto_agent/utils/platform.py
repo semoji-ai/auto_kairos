@@ -29,7 +29,7 @@ def is_macos() -> bool:
 def is_wsl() -> bool:
     """/proc/version에서 'microsoft' 문자열로 WSL 감지. 파일 없으면 False."""
     try:
-        return "microsoft" in Path("/proc/version").read_text().lower()
+        return "microsoft" in Path("/proc/version").read_text(encoding="utf-8").lower()
     except (FileNotFoundError, PermissionError):
         return False
 
@@ -78,7 +78,7 @@ def get_node_bin_dir() -> Path:
     nvm_alias = Path.home() / ".nvm" / "alias" / "default"
     if nvm_alias.exists():
         try:
-            default_ver = nvm_alias.read_text().strip()
+            default_ver = nvm_alias.read_text(encoding="utf-8").strip()
             nvm_bin = Path.home() / ".nvm" / "versions" / "node" / default_ver / "bin"
             if (nvm_bin / node_exe).exists():
                 return nvm_bin

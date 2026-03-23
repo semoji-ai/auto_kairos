@@ -144,7 +144,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     font_family = cfg.get("font_family", "Pretendard")
     # art_style: 경로("artstyle/styles/quirky_cartoon.json")이면 스타일명만 추출
     art_style_raw = cfg.get("art_style", "")
-    art_style = art_style_raw.replace(".json", "").split("/")[-1] if art_style_raw else ""
+    art_style = Path(art_style_raw.replace(".json", "")).name if art_style_raw else ""
     video_theme = cfg.get("video_theme", "dark")
     map_theme = cfg.get("map_theme", "modern_clean")
 
