@@ -189,7 +189,7 @@ def _check_step_outputs_exist(step: dict, output_dir: str) -> bool:
                     found += 1
             continue
         p = out_path / cleaned
-        if cleaned.endswith("/"):
+        if cleaned.endswith("/") or cleaned.endswith("\\"):
             if p.is_dir() and any(p.iterdir()):
                 found += 1
         else:

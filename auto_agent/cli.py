@@ -864,7 +864,7 @@ def cmd_update(args):
     else:
         pip_cmd += [str(repo_dir)]
 
-    result = subprocess.run(pip_cmd, capture_output=True, text=True)
+    result = subprocess.run(pip_cmd, capture_output=True, text=True, encoding="utf-8")
 
     if result.returncode != 0:
         print_error(f"pip install 실패: {result.stderr.strip()[:300]}")
@@ -874,7 +874,7 @@ def cmd_update(args):
     result = subprocess.run(
         [sys.executable, "-c", "from auto_agent import __version__; print(__version__)"],
         capture_output=True,
-        text=True,
+        text=True, encoding="utf-8",
     )
     new_version = result.stdout.strip() if result.returncode == 0 else "?"
 

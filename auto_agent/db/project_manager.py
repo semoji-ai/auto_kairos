@@ -482,9 +482,9 @@ class ProjectManager:
         project = self.get_project(project_id=project_id)
         output_dir = Path(project["output_dir"])
         try:
-            rel_path = str(fp.relative_to(output_dir))
+            rel_path = str(fp.relative_to(output_dir)).replace("\\", "/")
         except ValueError:
-            rel_path = str(fp)
+            rel_path = str(fp).replace("\\", "/")
 
         # 중복 방지: 같은 프로젝트 + 같은 경로면 업데이트
         conn = get_connection(self.db_path)

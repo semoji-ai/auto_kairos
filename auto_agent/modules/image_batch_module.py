@@ -38,9 +38,18 @@ def _progress(msg: str, level: str = "info") -> None:
 
 
 def _save_image_from_url(url: str, dest: Path) -> Path:
-    """URL에서 이미지를 다운로드해 저장."""
+    """URL에서 이미지를 다운로드해 저장. 실패 시 부분 파일 정리."""
     dest.parent.mkdir(parents=True, exist_ok=True)
-    urllib.request.urlretrieve(url, str(dest))
+    tmp = dest.with_suffix(dest.suffix + ".tmp")
+    try:
+        urllib.request.urlretrieve(url, str(tmp))
+        if tmp.stat().st_size < 1024:  # 1KB 미만은 실패로 간주
+            tmp.unlink(missing_ok=True)
+            raise ValueError(f"다운로드 파일이 너무 작음: {tmp.stat().st_size}B")
+        tmp.rename(dest)
+    except Exception:
+        tmp.unlink(missing_ok=True)
+        raise
     return dest
 
 

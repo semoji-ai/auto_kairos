@@ -32,7 +32,7 @@ def check_command(name: str, version_flag: str = "--version") -> bool:
     try:
         result = subprocess.run(
             [name, version_flag],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True, text=True, encoding="utf-8", timeout=10,
         )
         version = result.stdout.strip().split("\n")[0] or result.stderr.strip().split("\n")[0]
         print(f"  [OK] {name} — {version}")
@@ -45,7 +45,7 @@ def check_command(name: str, version_flag: str = "--version") -> bool:
 def check_node_version() -> bool:
     try:
         result = subprocess.run(
-            ["node", "--version"], capture_output=True, text=True, timeout=10,
+            ["node", "--version"], capture_output=True, text=True, encoding="utf-8", timeout=10,
         )
         version = result.stdout.strip()
         major = int(version.lstrip("v").split(".")[0])

@@ -2317,7 +2317,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             all_exist = True
             for out in outputs:
                 out_path = self._resolve_output_path(out)
-                if out.endswith("/"):
+                if out.endswith("/") or out.endswith("\\"):
                     # 디렉토리 출력 → 해당 디렉토리 자체가 존재하고 안에 파일이 있어야
                     if not (out_path.exists() and out_path.is_dir() and any(out_path.iterdir())):
                         all_exist = False
@@ -2590,7 +2590,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         except subprocess.TimeoutExpired:
             return StepResult(
                 step_id=step_id, status="failed",
-                error="Timeout (600s)",
+                error="Timeout (1800s)",
             )
         finally:
             monitor.stop()

@@ -113,14 +113,34 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     remotion_public = workspace / "remotion" / "public"
 
     # 프로젝트 slug로 심볼릭 링크 (output/{slug} → remotion/public/project)
+    # Windows에서 심볼릭 링크는 관리자 권한 필요 → 실패 시 junction 또는 복사로 폴백
     project_link = remotion_public / "project"
     if project_link.exists() or project_link.is_symlink():
-        project_link.unlink()
+        if project_link.is_symlink() or project_link.is_junction() if hasattr(project_link, "is_junction") else False:
+            project_link.unlink()
+        else:
+            import shutil as _sh
+            _sh.rmtree(project_link)
     try:
         project_link.symlink_to(out_dir.resolve())
         print(f"    [LINK] remotion/public/project → {out_dir}")
     except OSError:
-        print(f"    [WARN] 심볼릭 링크 실패, 복사 대신 사용")
+        # Windows 폴백: junction 시도 → 실패 시 디렉토리 복사
+        try:
+            import subprocess as _sp
+            if _sp.os.name == "nt":
+                _sp.run(["cmd", "/c", "mklink", "/J", str(project_link), str(out_dir.resolve())],
+                        capture_output=True, timeout=10)
+                if project_link.exists():
+                    print(f"    [JUNCTION] remotion/public/project → {out_dir}")
+                else:
+                    raise OSError("junction failed")
+            else:
+                raise OSError("not windows")
+        except (OSError, Exception):
+            import shutil as _sh
+            _sh.copytree(out_dir, project_link, dirs_exist_ok=True)
+            print(f"    [COPY] remotion/public/project ← {out_dir}")
 
     # 하위 호환: assets/{storage_key} 심볼릭 링크도 유지
     if storage_key:
@@ -130,7 +150,11 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             try:
                 asset_dir.symlink_to(out_dir.resolve())
             except OSError:
-                pass
+                try:
+                    import shutil as _sh
+                    _sh.copytree(out_dir, asset_dir, dirs_exist_ok=True)
+                except Exception:
+                    pass
 
     def link_asset(src: Path, dest_subdir: str, dest_name: str) -> str:
         """로컬 에셋의 staticFile 상대 경로 반환. project/ 기준."""

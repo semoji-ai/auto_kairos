@@ -17,8 +17,12 @@ images/image_assets.json 구조:
 """
 import json
 import shutil
+import threading
 from pathlib import Path
 from typing import Optional
+
+# 멀티스레드 환경에서 image_assets.json 동시 쓰기 방지
+_file_lock = threading.Lock()
 
 
 def _load(images_dir: Path) -> dict:
@@ -57,36 +61,36 @@ def has_generated_version(images_dir: Path, scene_num: int) -> bool:
 
 def add_version(images_dir: Path, scene_num: int, file_name: str,
                 version_type: str, auto_select: bool = True, **meta) -> dict:
-    """버전 추가. auto_select=True면 자동으로 selected 설정."""
-    data = _load(images_dir)
-    scene = _get_scene(data, scene_num)
+    """버전 추가. auto_select=True면 자동으로 selected 설정. 스레드 안전."""
+    with _file_lock:
+        data = _load(images_dir)
+        scene = _get_scene(data, scene_num)
 
-    version = {"file": file_name, "type": version_type, **meta}
-    scene["versions"].append(version)
+        version = {"file": file_name, "type": version_type, **meta}
+        scene["versions"].append(version)
 
-    if auto_select:
-        scene["selected"] = file_name
-        # scene_NNN 심볼릭 링크/복사 업데이트
-        _update_selected_link(images_dir, scene_num, file_name)
+        if auto_select:
+            scene["selected"] = file_name
+            _update_selected_link(images_dir, scene_num, file_name)
 
-    _save(images_dir, data)
-    return version
+        _save(images_dir, data)
+        return version
 
 
 def select_version(images_dir: Path, scene_num: int, file_name: str) -> bool:
-    """selected 변경."""
-    data = _load(images_dir)
-    scene = _get_scene(data, scene_num)
+    """selected 변경. 스레드 안전."""
+    with _file_lock:
+        data = _load(images_dir)
+        scene = _get_scene(data, scene_num)
 
-    # 해당 파일이 versions에 있는지 확인
-    found = any(v["file"] == file_name for v in scene["versions"])
-    if not found:
-        return False
+        found = any(v["file"] == file_name for v in scene["versions"])
+        if not found:
+            return False
 
-    scene["selected"] = file_name
-    _update_selected_link(images_dir, scene_num, file_name)
-    _save(images_dir, data)
-    return True
+        scene["selected"] = file_name
+        _update_selected_link(images_dir, scene_num, file_name)
+        _save(images_dir, data)
+        return True
 
 
 def get_selected(images_dir: Path, scene_num: int) -> Optional[str]:
