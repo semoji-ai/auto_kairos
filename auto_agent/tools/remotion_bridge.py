@@ -177,7 +177,8 @@ class RemotionBridge:
             audio_duration = 0.0
             if audio_path.exists():
                 audio_duration = self._get_audio_duration(audio_path)
-            if audio_duration <= 0 and viz_type:
+            if audio_duration <= 0:
+                # 오디오 없거나 0초 → 최소 5초 보장 (0초 렌더링 방지)
                 audio_duration = 5.0
 
             # 자막

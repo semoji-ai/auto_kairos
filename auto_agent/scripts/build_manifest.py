@@ -217,6 +217,11 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             viz.setdefault("unit", "")
             viz.setdefault("source", "")
 
+        # chartConfig가 creative 안에 잘못 들어간 경우 → visualization 레벨로 승격
+        creative = viz.get("creative", {})
+        if creative.get("chartConfig") and not viz.get("chartConfig"):
+            viz["chartConfig"] = creative.pop("chartConfig")
+
         # Transition
         motion_entry = motion_lookup.get(num, {})
         transition_in = motion_entry.get("transition_in", scene.get("transition", {}))

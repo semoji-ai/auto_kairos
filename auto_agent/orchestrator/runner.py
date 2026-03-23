@@ -1009,6 +1009,23 @@ class PipelineRunner:
 
         merged_scenes.sort(key=lambda s: s.get("sceneNumber", 0))
 
+        # sceneNumber 중복 검증
+        seen = set()
+        for scene in merged_scenes:
+            sn = scene.get("sceneNumber")
+            if sn in seen:
+                logger.warning("sceneNumber %s 중복 발견 — 첫 번째만 유지", sn)
+            seen.add(sn)
+        # 중복 제거 (첫 번째 유지)
+        deduped = []
+        seen.clear()
+        for scene in merged_scenes:
+            sn = scene.get("sceneNumber")
+            if sn not in seen:
+                deduped.append(scene)
+                seen.add(sn)
+        merged_scenes = deduped
+
         result = dict(original_specs)
         result["scenes"] = merged_scenes
         return result
@@ -1414,7 +1431,8 @@ class PipelineRunner:
         )
 
     # 스텝별 전용 프롬프트 파일 매핑 (step_name → 프롬프트 파일명)
-    # chunked_parallel 및 single_call 스텝에서 사용
+    # single_call 및 chunked_parallel agent 스텝 모두에서 사용
+    # (step_6 creative_direction은 agent 타입이지만 동일한 프롬프트 로딩 경로 사용)
     SINGLE_CALL_PROMPTS = {
         "creative_direction": "creative-direction.md",
         "data_enrichment": "data-enrichment.md",
