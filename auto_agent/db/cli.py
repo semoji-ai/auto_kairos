@@ -95,6 +95,7 @@ def cmd_project(args):
                 topic=data["topic"],
                 theme=data["theme"],
                 config=config or None,
+                channel=data.get("channel"),
             )
             console.print()
             print_success(f"프로젝트 생성 완료: [accent]{data['name']}[/accent] (slug={data['slug']})")

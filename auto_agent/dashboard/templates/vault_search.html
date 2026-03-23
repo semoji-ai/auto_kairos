@@ -15,6 +15,13 @@
       style="flex:1; padding:10px 14px; background:#1C1C1E; border:1px solid #3F3F46;
              border-radius:8px; color:#E4E4E7; font-size:14px;"
     />
+    <select id="vault-channel"
+      style="padding:10px; background:#1C1C1E; border:1px solid #3F3F46;
+             border-radius:8px; color:#E4E4E7; font-size:13px;">
+      <option value="">전체 채널</option>
+      <option value="이로미즘">🎬 이로미즘</option>
+      <option value="세모지">✨ 세모지</option>
+    </select>
     <select id="vault-folder"
       style="padding:10px; background:#1C1C1E; border:1px solid #3F3F46;
              border-radius:8px; color:#E4E4E7; font-size:13px;">
@@ -56,12 +63,14 @@ document.getElementById('vault-search-form').addEventListener('submit', async (e
   e.preventDefault();
   const q = document.getElementById('vault-query').value.trim();
   const folder = document.getElementById('vault-folder').value;
+  const channel = document.getElementById('vault-channel').value;
   if (!q) return;
 
   document.getElementById('vault-results').innerHTML = '<p style="color:#71717A">검색 중...</p>';
 
   const params = new URLSearchParams({ q, top_k: 5 });
   if (folder) params.set('folder', folder);
+  if (channel) params.set('channel', channel);
 
   try {
     const res = await fetch(`/api/vault/search?${params}`);
@@ -83,11 +92,17 @@ document.getElementById('vault-search-form').addEventListener('submit', async (e
       const tags = r.tags.map(t =>
         `<span style="background:#27272A;padding:2px 6px;border-radius:4px;font-size:11px;color:#A1A1AA">${t}</span>`
       ).join(' ');
+      const channelBadge = r.channel
+        ? `<span style="background:${r.channel==='이로미즘'?'rgba(99,102,241,0.2)':'rgba(52,211,153,0.2)'};color:${r.channel==='이로미즘'?'#818CF8':'#34D399'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">${r.channel}</span>`
+        : '';
 
       html += `
         <div style="background:#18181B;border:1px solid #27272A;border-radius:10px;padding:16px;margin-bottom:10px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <a href="${obsidianUrl}" style="color:#818CF8;font-size:13px;font-weight:600;text-decoration:none">${r.file}</a>
+            <div style="display:flex;align-items:center;gap:8px">
+              <a href="${obsidianUrl}" style="color:#818CF8;font-size:13px;font-weight:600;text-decoration:none">${r.file}</a>
+              ${channelBadge}
+            </div>
             ${score}
           </div>
           ${tags ? `<div style="margin-bottom:8px">${tags}</div>` : ''}

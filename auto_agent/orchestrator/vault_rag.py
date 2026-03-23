@@ -47,15 +47,17 @@ class VaultRAG:
     # 검색 (리서치/원고 전)
     # ─────────────────────────────────────
 
-    def search_for_research(self, topic: str, category: str = "") -> str:
-        """리서치 시작 전: 관련 기존 지식을 검색하여 컨텍스트 텍스트 반환."""
+    def search_for_research(self, topic: str, category: str = "", channel: str = None) -> str:
+        """리서치 시작 전: 관련 기존 지식을 검색하여 컨텍스트 텍스트 반환.
+        channel: "이로미즘" | "세모지" | None(전체)
+        """
         if not self.enabled:
             return ""
 
         sections = []
 
-        # Phase 2: 시맨틱 검색 우선 시도
-        semantic_results = self.semantic_search(topic, top_k=5)
+        # Phase 2: 시맨틱 검색 우선 시도 (채널 필터 적용)
+        semantic_results = self.semantic_search(topic, top_k=5, channel=channel)
         if semantic_results:
             sections.append("## 관련 지식 (볼트 시맨틱 검색)")
             for r in semantic_results:
@@ -130,15 +132,17 @@ class VaultRAG:
             + "\n</vault_knowledge>"
         )
 
-    def search_for_manuscript(self, topic: str, category: str = "") -> str:
-        """원고 작성 전: 서사 패턴/문체 DNA를 검색하여 컨텍스트 텍스트 반환."""
+    def search_for_manuscript(self, topic: str, category: str = "", channel: str = None) -> str:
+        """원고 작성 전: 서사 패턴/문체 DNA를 검색하여 컨텍스트 텍스트 반환.
+        channel: "이로미즘" | "세모지" | None(전체)
+        """
         if not self.enabled:
             return ""
 
         sections = []
 
-        # Phase 2: 시맨틱 검색 우선 (01-patterns 폴더 필터)
-        semantic_results = self.semantic_search(topic, top_k=5, folder_filter="01-patterns")
+        # Phase 2: 시맨틱 검색 우선 (01-patterns 폴더 + 채널 필터)
+        semantic_results = self.semantic_search(topic, top_k=5, folder_filter="01-patterns", channel=channel)
         if semantic_results:
             sections.append("## 서사 패턴 (볼트 시맨틱 검색)")
             for r in semantic_results:
@@ -569,9 +573,11 @@ recurrence: 1
         query: str,
         top_k: int = 5,
         folder_filter: str = None,
+        channel: str = None,
     ) -> list[dict]:
         """
         시맨틱 검색. Chroma 미설치 시 키워드 검색으로 폴백.
+        channel: "이로미즘" | "세모지" | None(전체)
         반환: [{"file": str, "snippet": str, "score": float, "tags": list}]
         """
         if not self.enabled or not query.strip():
@@ -580,8 +586,18 @@ recurrence: 1
         try:
             collection = self._get_collection()
             query_kwargs = {"query_texts": [query], "n_results": top_k}
+
+            # 채널 + 폴더 필터 조합
+            where_clauses = []
             if folder_filter:
-                query_kwargs["where"] = {"folder": folder_filter}
+                where_clauses.append({"folder": folder_filter})
+            if channel:
+                where_clauses.append({"channel": channel})
+
+            if len(where_clauses) == 1:
+                query_kwargs["where"] = where_clauses[0]
+            elif len(where_clauses) > 1:
+                query_kwargs["where"] = {"$and": where_clauses}
 
             raw = collection.query(**query_kwargs)
             docs = raw.get("documents", [[]])[0]
@@ -595,6 +611,7 @@ recurrence: 1
                     "snippet": doc[:200] if doc else "",
                     "score": round(float(1 - dist), 4),
                     "tags": [t for t in meta.get("tags", "").split(",") if t],
+                    "channel": meta.get("channel", ""),
                 })
             return results
 
@@ -614,7 +631,7 @@ recurrence: 1
                 file_str = str(path.relative_to(self.vault_dir))
             except ValueError:
                 file_str = path.name
-            results.append({"file": file_str, "snippet": snippet[:200], "score": 0.0, "tags": []})
+            results.append({"file": file_str, "snippet": snippet[:200], "score": 0.0, "tags": [], "channel": ""})
         return results
 
     def _resolve_content_dir(self, category: str) -> Optional[Path]:

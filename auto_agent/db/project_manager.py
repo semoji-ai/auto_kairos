@@ -100,6 +100,7 @@ class ProjectManager:
         theme: str = "simple",
         config: dict = None,
         uuid: str = None,
+        channel: str = None,
     ) -> int:
         """프로젝트 생성. output_dir 자동 생성. 프로젝트 ID 반환."""
         if not uuid:
@@ -109,11 +110,11 @@ class ProjectManager:
 
         with transaction(self.db_path) as conn:
             cur = conn.execute(
-                """INSERT INTO projects (uuid, name, slug, topic, theme, config, output_dir)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                """INSERT INTO projects (uuid, name, slug, topic, theme, config, output_dir, channel)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 (uuid, name, slug, topic, theme,
                  json.dumps(config, ensure_ascii=False) if config else None,
-                 str(output_dir)),
+                 str(output_dir), channel),
             )
             return cur.lastrowid
 

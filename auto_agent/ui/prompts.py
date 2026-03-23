@@ -172,6 +172,16 @@ def prompt_project_create() -> dict:
         )
     )
 
+    channel = _ask_or_abort(
+        questionary.select(
+            "채널:",
+            choices=["이로미즘", "세모지", "기타(없음)"],
+            style=PROMPT_STYLE,
+        )
+    )
+    if channel == "기타(없음)":
+        channel = None
+
     theme = prompt_theme()
     art_style = prompt_art_style()
     voice_id, voice_settings = prompt_voice()
@@ -181,6 +191,7 @@ def prompt_project_create() -> dict:
         "slug": slug,
         "topic": topic.strip(),
         "theme": theme,
+        "channel": channel,
         "art_style": art_style,
         "voice_id": voice_id,
         "voice_settings": voice_settings,

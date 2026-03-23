@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS projects (
     theme           TEXT DEFAULT 'simple',               -- "simple" | "kairos"
     scene_count     INTEGER DEFAULT 0,
     total_duration_sec REAL DEFAULT 0.0,
+    channel         TEXT DEFAULT NULL,                   -- "이로미즘" | "세모지" | NULL
     config          TEXT,                                -- JSON: 프로젝트별 설정 오버라이드
     output_dir      TEXT NOT NULL,                       -- "output/미국_이란_전쟁_2026"
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),

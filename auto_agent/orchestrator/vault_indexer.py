@@ -23,6 +23,20 @@ MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 100
 
+_CHANNEL_KEYWORDS = {
+    "이로미즘": ["이로미즘", "iromism"],
+    "세모지": ["세모지", "semoji"],
+}
+
+
+def _extract_channel(tags: list[str]) -> str:
+    """태그 목록에서 채널명 추출. 없으면 빈 문자열."""
+    tags_lower = [t.lower().strip() for t in tags]
+    for channel, keywords in _CHANNEL_KEYWORDS.items():
+        if any(kw in tags_lower for kw in keywords):
+            return channel
+    return ""
+
 
 class VaultIndexer:
     """Obsidian 볼트 벡터 인덱서."""
@@ -104,6 +118,9 @@ class VaultIndexer:
         if not chunks:
             return 0
 
+        # 채널 추출 (이로미즘/세모지)
+        channel = _extract_channel(tags)
+
         # Chroma upsert
         ids = [f"{relative}#{i}" for i in range(len(chunks))]
         metadatas = [
@@ -111,6 +128,7 @@ class VaultIndexer:
                 "file": relative,
                 "folder": top_folder,
                 "tags": ",".join(tags),
+                "channel": channel,
                 "chunk_index": i,
             }
             for i in range(len(chunks))
