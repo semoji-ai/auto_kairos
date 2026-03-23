@@ -78,8 +78,7 @@ _MSG_MAP = {
     "fact_check":                 ("팩트 체크",            "팩트 체크 완료"),
     # phase_3
     "scene_decomposition":        ("씬 분할",              "씬 분할 완료"),
-    "creative_direction":         ("창의적 연출",           "창의적 연출 완료"),
-    "asset_advisory":             ("에셋 심의",            "에셋 심의 완료"),
+    "creative_direction":         ("창의적 연출 + 에셋 설계", "창의적 연출 + 에셋 설계 완료"),
     "data_enrichment_and_motion": ("데이터 보강/모션 설계",  "데이터 보강/모션 설계 완료"),
     # phase_4
     "tts_preprocess":             ("TTS 전처리",           "TTS 전처리 완료"),
@@ -1414,10 +1413,10 @@ class PipelineRunner:
             cost_info=cost_info, duration_sec=elapsed,
         )
 
-    # 1턴 전용 프롬프트 파일 매핑 (step_name → 프롬프트 파일명)
+    # 스텝별 전용 프롬프트 파일 매핑 (step_name → 프롬프트 파일명)
+    # chunked_parallel 및 single_call 스텝에서 사용
     SINGLE_CALL_PROMPTS = {
         "creative_direction": "creative-direction.md",
-        "asset_advisory": "asset-advisory.md",
         "data_enrichment": "data-enrichment.md",
         "motion_planning": "motion-planning.md",
         "tts_preprocess": "tts-preprocess.md",

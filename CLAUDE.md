@@ -94,12 +94,13 @@ Today's date is 2026-03-16.
 - 이미지/오디오 경로는 `resolveAsset()` 유틸 사용
 - 절대경로/상대경로 혼용 금지
 
-### 8. single_call (1턴) 모드 규칙
+### 8. single_call (1턴) 모드 규칙 (step_7, step_11b, step_12b에만 해당)
 - CLI 호출 시 반드시 `--tools ""` 포함 (도구 비활성화) — 없으면 error_max_turns 발생
 - 입력 파일이 50KB 이상이면 필요한 필드만 축약하여 전달
-- 1턴 전용 프롬프트는 `auto_agent/data/prompts/single-call/` 에 관리
+- 스텝 전용 프롬프트는 `auto_agent/data/prompts/single-call/` 에 관리
 - 스킬 파일 통째 주입 금지 — 핵심 규칙만 인라인으로 집약
-- 새 single_call 스텝 추가 시 `SINGLE_CALL_PROMPTS` 매핑 + 프롬프트 파일 + rule_store push 필요
+- step_6(creative_direction)은 멀티턴 agent로 전환됨 — single_call 아님
+- step_6b(asset_advisory)는 step_6에 통합되어 제거됨
 
 ### 9. mapScene 좌표 규칙
 - scene_specs의 mapScene.center는 `[위도, 경도]` (LLM 자연 순서)
