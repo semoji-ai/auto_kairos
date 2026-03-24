@@ -135,6 +135,7 @@ Director → generate_image(scene, preset)
 | `get_pipeline_state()` | 현재 진행 상황 (완료/실패/대기 스텝) | pipeline_state.json |
 | `get_step_info(step_id)` | 스텝 정의 (입력/출력/에이전트/스킬) | pipeline.json |
 | `run_step(step_id)` | 스텝 실행 | runner._execute_step() |
+| `run_steps_parallel(step_ids)` | 의존성 없는 스텝 동시 실행 | ThreadPoolExecutor |
 | `review_output(file_path)` | 결과물 읽고 반환 | Read 도구 |
 | `retry_step(step_id, feedback)` | 피드백 포함 재실행 | runner._execute_step() + 프롬프트 주입 |
 | `skip_step(step_id, reason)` | 스킵 + 사유 기록 | state 업데이트 |
@@ -251,8 +252,11 @@ Director 시작 전 하네스 레벨에서 강제하는 검증.
   │    │   → retry_step("step_5", "8씬 이내로")
   │    ├─ run_step("step_6") → creative direction
   │    ├─ review_output → "cinematic 비율 확인, 프리셋 가이드라인 참조"
-  │    ├─ run_step("step_8b") → 이미지 생성 (프리셋 staging 참조)
-  │    ├─ ... TTS, 자막, 렌더 ...
+  │    ├─ "step_7과 step_8b는 둘 다 step_6에만 의존 — 동시 실행"
+  │    │   → run_steps_parallel(["step_7", "step_8b"])
+  │    │     ├─ step_7: TTS 전처리 (병렬)
+  │    │     └─ step_8b: 이미지 생성, 프리셋 staging 참조 (병렬)
+  │    ├─ ... 자막, 렌더 ...
   │    └─ send_message("파이프라인 완료")
   │
   └─ 4. 사용자 피드백
