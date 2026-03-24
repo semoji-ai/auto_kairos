@@ -94,15 +94,11 @@ USE_SUPABASE = False  # 로컬 DB 기반으로 전환
 
 @app.get("/api/manifest/{dir_name}")
 async def get_manifest_for_project(dir_name: str):
-    """프로젝트별 manifest.json 반환 (스토리보드 썸네일용)."""
+    """프로젝트별 manifest.json 반환 (스토리보드 썸네일용). 해당 프로젝트만 반환."""
     from fastapi.responses import FileResponse
-    candidates = [
-        workspace / "remotion" / "public" / "manifests" / f"{dir_name}.json",
-        workspace / "remotion" / "public" / "manifest.json",
-    ]
-    for p in candidates:
-        if p.exists():
-            return FileResponse(str(p), media_type="application/json")
+    p = workspace / "remotion" / "public" / "manifests" / f"{dir_name}.json"
+    if p.exists():
+        return FileResponse(str(p), media_type="application/json")
     return JSONResponse({"error": "manifest not found"}, status_code=404)
 
 

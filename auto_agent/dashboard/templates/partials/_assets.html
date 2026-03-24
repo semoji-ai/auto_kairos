@@ -157,7 +157,7 @@
       var total = scenes.length, imgOk = 0, imgQuery = 0, genCount = 0;
       scenes.forEach(function(s) {
         if (s._image_url) imgOk++;
-        if ((s.imageAsset || {}).query) imgQuery++;
+        if ((s.imageAsset || {}).prompt || (s.imageAsset || {}).query) imgQuery++;
         if ((s.imageAsset || {}).source === 'generate') genCount++;
       });
       statsEl.innerHTML =
@@ -195,9 +195,9 @@
         var img = s.imageAsset || {};
         var imgUrl = s._image_url || '';
         var source = img.source || '';
-        var query = img.query || '';
-        var layout = ((s.visualization || {}).creative || {}).layout || '';
-        var mood = ((s.visualization || {}).creative || {}).mood || '';
+        var query = img.prompt || img.query || '';
+        var layout = s.layout || ((s.visualization || {}).creative || {}).layout || '';
+        var mood = s.mood || ((s.visualization || {}).creative || {}).mood || '';
         var placement = img.placement || '';
         var opacity = img.opacity || '';
 
@@ -222,7 +222,7 @@
                 (query ? '<div><strong>쿼리:</strong> ' + esc(query) + '</div>' : '') +
                 (placement ? '<div><strong>배치:</strong> ' + placement + (opacity ? ' · opacity ' + opacity : '') + '</div>' : '') +
               '</div>' +
-              (query ? '<button class="btn-candidates" onclick="loadCandidates(' + num + ',this)">🔍 후보 검색</button>' : '') +
+              '<button class="btn-candidates" onclick="loadCandidates(' + num + ',this)">🔍 후보 검색</button>' +
               '<button class="btn-gen-toggle" onclick="toggleGenerate(' + num + ',this)">🎨 이미지 생성</button>' +
             '</div>' +
           '</div>' +

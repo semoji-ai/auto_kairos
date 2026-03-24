@@ -396,6 +396,24 @@ class PipelineRunner:
             # phase 끝나면 checkpoint 확인
             self._check_checkpoint(phase_id, steps)
 
+            # stage_2 완료 후 매니페스트 자동 빌드 (대시보드 스토리보드용)
+            if phase_id == "stage_2" and "step_2" in self.state.completed_steps:
+                try:
+                    pid = str(self.project.get("id", self.project_slug))
+                    storage_key = self.sync.storage_key if self.sync else self.project_slug
+                    result = subprocess.run(
+                        [sys.executable, "-m", "auto_agent.scripts.build_manifest",
+                         pid, storage_key, str(self.project_dir)],
+                        cwd=str(get_workspace_dir()),
+                        capture_output=True, text=True, timeout=120,
+                    )
+                    if result.returncode == 0:
+                        print("    [AUTO] Stage 2 완료 → 매니페스트 빌드 완료")
+                    else:
+                        print(f"    [WARN] 매니페스트 빌드 실패: {result.stderr[:200]}")
+                except Exception as e:
+                    print(f"    [WARN] 매니페스트 빌드 에러: {e}")
+
             if only_step:
                 break
 

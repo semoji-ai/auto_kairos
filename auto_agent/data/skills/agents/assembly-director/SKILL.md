@@ -241,8 +241,9 @@ A와 B는 동시 실행.
 │    (art_style.json에 있으면 포함)                    │
 │                                                     │
 │ 4. 참조 이미지 매칭 지시                              │
-│    "Match the style of the reference image."        │
-│    (과도한 강제 표현 금지 — "MUST copy" 등 사용 X)    │
+│    "Match the art style only. Do NOT copy the face, │
+│     clothing, or pose from the reference image."    │
+│    (아트스타일만 참조. 얼굴/의상/포즈 복사 절대 금지) │
 │                                                     │
 │ 5. 실제 장면 묘사                                     │
 │    scene.imageAsset.prompt (한글 장면 묘사)           │
@@ -307,8 +308,9 @@ A와 B는 동시 실행.
 
 ```
 □ scene_style_description이 프롬프트 맨 앞에 있는가
-□ 참조 이미지 매칭 지시가 "Match this style" 수준으로 자연스러운가
-  (❌ "MUST exactly copy", "strictly follow" → 과도한 강제)
+□ 참조 이미지 매칭 지시가 "Match the art style only" 수준인가
+  (❌ "MUST copy", "copy the face/clothing" → 아트스타일만 참조)
+  (❌ 참조 이미지의 얼굴/의상이 결과에 나타나면 안 됨)
 □ 장면 묘사가 동작/움직임 없이 정적 상태인가
   (❌ "walking", "running", "transitioning")
   (✅ "standing", "placed on", "facing toward")
@@ -405,12 +407,19 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 
 ## 이미지 생성 규칙 (절대 규칙)
 
+### imageAsset.source 존중 (필수)
+
+**scene_specs의 `imageAsset.source` 필드를 반드시 따라야 한다.**
+- `source: "generate"` → `image_tool.generate()` 사용 (AI 생성)
+- `source: "search"` → `image_tool.search()` 사용 (실사 검색)
+- source=search인 씬을 generate로 대체하지 마라. 실사가 필요한 이유가 있다.
+- 검색 실패 시에만 generate fallback 허용 (3회 검색 시도 후)
+
 ### 저장 경로
 
-**생성된 이미지는 `images/generated/` 폴더에 저장한다.**
-- 생성: `images/generated/scene_001.png`
-- 루트(`images/scene_001.png`)에 복사하지 않는다 — 매니페스트 빌더가 `generated/` 에서 직접 읽음
+- AI 생성 이미지: `images/generated/scene_001.png`
 - 검색 이미지: `images/scene_001.jpg` (루트에 직접 저장)
+- 루트에 generate 이미지를 복사하지 않는다 — 매니페스트 빌더가 `generated/` 에서 직접 읽음
 
 ### 기존 이미지 보호 (CLAUDE.md §11)
 
@@ -487,7 +496,7 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 - ❌ 목표 시간을 맞추기 위해 씬 삭제
 - ❌ 이미지 프롬프트에 텍스트/글자 요소 포함
 - ❌ 이미지 프롬프트에 아트스타일 키워드 직접 삽입
-- ❌ 참조 이미지의 포즈를 복사
+- ❌ 참조 이미지의 얼굴/의상/포즈를 복사 (아트스타일만 참조)
 
 ---
 

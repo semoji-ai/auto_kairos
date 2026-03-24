@@ -58,11 +58,12 @@ def get_scene_image_url(project_dir_name: str, scene_num: int, output_dir: str) 
     project_dir_name: output 디렉토리명 (uuid_{slug} 형식, e.g. "b3cef462_이로미즘_양자컴퓨터_1min")
     """
     img_dir = Path(output_dir) / "images"
-    # 1) scene_NNN.{ext} (selected 복사본)
-    for ext in (".jpg", ".jpeg", ".png", ".webp"):
-        img = img_dir / f"scene_{scene_num:03d}{ext}"
-        if img.exists():
-            return f"/output/{project_dir_name}/images/scene_{scene_num:03d}{ext}"
+    # 1) scene_NNN.{ext} — 루트 → generated/ 순 탐색
+    for subdir in ("", "generated/"):
+        for ext in (".jpg", ".jpeg", ".png", ".webp"):
+            img = img_dir / f"{subdir}scene_{scene_num:03d}{ext}"
+            if img.exists():
+                return f"/output/{project_dir_name}/images/{subdir}scene_{scene_num:03d}{ext}"
     # 2) image_assets.json의 selected 파일
     assets_path = img_dir / "image_assets.json"
     if assets_path.exists():

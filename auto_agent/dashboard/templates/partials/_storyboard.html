@@ -34,7 +34,7 @@
           <span class="sb-scene-title" data-headline>{{ scene.title }}</span>
         </div>
         <div class="sb-meta">
-          {% if scene._tts_duration %}<span class="duration-tag">{{ "%.1f"|format(scene._tts_duration) }}s</span>{% else %}<span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 60) }}s</span>{% endif %}
+          {% if scene._tts_duration %}<span class="duration-tag">{{ "%.1f"|format(scene._tts_duration) }}s</span>{% elif scene.durationFrames %}<span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 60) }}s</span>{% endif %}
         </div>
       </div>
 

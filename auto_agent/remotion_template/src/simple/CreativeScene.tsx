@@ -3145,6 +3145,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 lineIndex={i}
                 totalLines={lines.length}
                 accentOffset={accentOffset}
+                motionConfig={motionPreset ? motionConfig : undefined}
               />
             );
           })}
@@ -3585,6 +3586,7 @@ const LineReveal: React.FC<{
   lineIndex: number;
   totalLines: number;
   accentOffset?: number;
+  motionConfig?: MotionConfig;
 }> = ({
   line,
   delay,
@@ -3596,58 +3598,83 @@ const LineReveal: React.FC<{
   lineIndex,
   totalLines,
   accentOffset = 0,
+  motionConfig,
 }) => {
   const T = usePresetTypo();
   const frame = useCurrentFrame();
-  const dur = 18;
+  const dur = motionConfig?.entrance.duration || 18;
+  const entranceType = motionConfig?.entrance.type || "";
 
   let opacity: number;
   let transform: string;
+  let extraStyle: React.CSSProperties = {};
 
-  if (reveal === "zoom_in") {
+  // motionConfig가 있으면 entrance.type 기반 애니메이션
+  if (entranceType === "bounce") {
+    const b = useBounceIn(delay, dur);
+    opacity = b.opacity as number;
+    transform = b.transform as string;
+  } else if (entranceType === "scale" || entranceType === "overshoot") {
     opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
-    const s = interpolate(frame, [delay, delay + dur], [0.6, 1], {
-      ...clamp,
-      easing: Easing.out(Easing.exp),
-    });
+    const s = entranceType === "overshoot"
+      ? interpolate(frame, [delay, delay + dur], [0.5, 1], { ...clamp, easing: Easing.out(Easing.back(1.7)) })
+      : interpolate(frame, [delay, delay + dur], [0.6, 1], { ...clamp, easing: Easing.out(Easing.exp) });
     transform = `scale(${s})`;
-  } else if (reveal === "build_up") {
+  } else if (entranceType === "spring") {
+    const sv = useSpringValue(delay, motionConfig?.entrance.springConfig);
+    opacity = interpolate(frame, [delay, delay + 8], [0, 1], clamp);
+    transform = `scale(${0.5 + sv * 0.5})`;
+  } else if (entranceType === "fadeSlide") {
+    const fs = useFadeSlide(delay, dur, motionConfig?.entrance.rise || 20);
+    opacity = fs.opacity as number;
+    transform = fs.transform as string;
+  } else if (entranceType === "typewriter") {
+    opacity = interpolate(frame, [delay, delay + 5], [0, 1], clamp);
+    transform = "";
+  } else if (reveal === "zoom_in") {
     opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
-    const rise = interpolate(frame, [delay, delay + dur], [30, 0], {
-      ...clamp,
-      easing: ease,
-    });
-    transform = `translateY(${rise}px)`;
+    const s = interpolate(frame, [delay, delay + dur], [0.6, 1], { ...clamp, easing: Easing.out(Easing.exp) });
+    transform = `scale(${s})`;
   } else if (reveal === "dramatic_pause") {
     if (lineIndex === 0) {
       opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
-      const rise = interpolate(frame, [delay, delay + dur], [20, 0], {
-        ...clamp,
-        easing: ease,
-      });
+      const rise = interpolate(frame, [delay, delay + dur], [20, 0], { ...clamp, easing: ease });
       transform = `translateY(${rise}px)`;
     } else {
-      opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
-      const s = interpolate(frame, [delay, delay + 20], [1.3, 1], {
-        ...clamp,
-        easing: Easing.out(Easing.exp),
-      });
+      opacity = interpolate(frame, [delay, delay + 20], [0, 1], clamp);
+      const s = interpolate(frame, [delay, delay + 20], [1.3, 1], { ...clamp, easing: Easing.out(Easing.exp) });
       transform = `scale(${s})`;
     }
-  } else if (reveal === "stagger_then_flash") {
-    opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
-    const rise = interpolate(frame, [delay, delay + dur], [15, 0], {
-      ...clamp,
-      easing: ease,
-    });
-    transform = `translateY(${rise}px)`;
   } else {
+    // fadeRise (기본)
     opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
-    const rise = interpolate(frame, [delay, delay + dur], [20, 0], {
-      ...clamp,
-      easing: ease,
-    });
+    const rise = interpolate(frame, [delay, delay + dur], [motionConfig?.entrance.rise || 20, 0], { ...clamp, easing: ease });
     transform = `translateY(${rise}px)`;
+  }
+
+  // emphasis 후처리 (entrance 이후)
+  if (motionConfig?.emphasis && frame > delay + dur) {
+    const emphDelay = delay + dur + (motionConfig.emphasis.delay || 0);
+    const emphDur = motionConfig.emphasis.duration || 20;
+    if (motionConfig.emphasis.type === "shake") {
+      const shakeIntensity = motionConfig.emphasis.intensity || 6;
+      const shakeProgress = interpolate(frame, [emphDelay, emphDelay + emphDur], [0, 1], clamp);
+      if (shakeProgress > 0 && shakeProgress < 1) {
+        const offset = Math.sin(shakeProgress * Math.PI * 6) * shakeIntensity * (1 - shakeProgress);
+        transform = (transform || "") + ` translateX(${offset}px)`;
+      }
+    } else if (motionConfig.emphasis.type === "pulse") {
+      const pulseProgress = interpolate(frame, [emphDelay, emphDelay + emphDur], [0, 1], clamp);
+      if (pulseProgress > 0) {
+        const pulse = 1 + Math.sin(pulseProgress * Math.PI * 2) * 0.03;
+        transform = (transform || "") + ` scale(${pulse})`;
+      }
+    } else if (motionConfig.emphasis.type === "glow") {
+      const glowP = interpolate(frame, [emphDelay, emphDelay + emphDur], [0, 0.6], clamp);
+      if (glowP > 0) {
+        extraStyle = { textShadow: `0 0 ${20 + glowP * 40}px rgba(${moodCfg.accentRgb},${glowP})` };
+      }
+    }
   }
 
   const isChapterLabel = /^CHAPTER\s*\d/i.test(line.trim());
@@ -3668,6 +3695,7 @@ const LineReveal: React.FC<{
         alignItems: "center",
         justifyContent: "center",
         gap: showBadge ? 16 : 0,
+        ...extraStyle,
       }}
     >
       {showBadge && (
