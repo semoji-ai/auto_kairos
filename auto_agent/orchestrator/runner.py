@@ -384,7 +384,15 @@ class PipelineRunner:
         print(f"Config: art_style={self.state.config.get('art_style', 'N/A')}")
         print(f"        voice_id={self.state.config.get('voice_id', 'N/A')}")
         print(f"{'=' * 60}\n")
-        _notify("Director", "파이프라인 시작합니다", phase="pipeline", project=self.project_slug, level="info")
+        cfg = self.state.config
+        config_summary = (
+            f"파이프라인 시작 | "
+            f"문체: {cfg.get('writing_style', 'N/A')} | "
+            f"아트: {Path(cfg.get('art_style', '')).stem if cfg.get('art_style') else 'N/A'} | "
+            f"분량: {cfg.get('duration_minutes', '?')}분 | "
+            f"음성: {cfg.get('voice_id', 'N/A')[:12]}"
+        )
+        _notify("Director", config_summary, phase="pipeline", project=self.project_slug, level="info")
 
         # 프로젝트 상태 업데이트
         self.pm.update_project(self.project["id"], status="in_progress")
