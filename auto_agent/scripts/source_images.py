@@ -29,7 +29,7 @@ def phase_a_character_analysis(scene_specs: dict, output_dir: Path, style_path: 
         or s.get("visualization", {}).get("creative", {}).get("layout") == "cinematic"
     ]
     if not gen_scenes:
-        print("[Phase A] generate 씬 없음 — 캐릭터 분석 스킵")
+        print("[Phase A] generate 씬 없음 -- 캐릭터 분석 스킵")
         return None
 
     person_scenes = {}  # {name: [scene_numbers]}
@@ -65,7 +65,7 @@ def phase_a_character_analysis(scene_specs: dict, output_dir: Path, style_path: 
 
     recurring = {name: sns for name, sns in person_scenes.items() if len(sns) >= 2}
     if not recurring:
-        print("[Phase A] 2씬+ 등장 캐릭터 없음 — 캐릭터 생성 스킵")
+        print("[Phase A] 2씬+ 등장 캐릭터 없음 -- 캐릭터 생성 스킵")
         return None
 
     for name, sns in recurring.items():
@@ -165,7 +165,7 @@ def _run_search_track(search_scenes: list, img_dir: Path, project_dir: Path, log
                         title=best.get("title", ""), license=best.get("license", ""),
                         source_url=url)
             downloaded += 1
-            log_fn("image-search", f"씬{sn} 다운로드 완료 ✓", "success")
+            log_fn("image-search", f"씬{sn} 다운로드 완료 [OK]", "success")
         else:
             log_fn("image-search", f"씬{sn} 다운로드 실패", "warning")
         time.sleep(1)
@@ -198,7 +198,7 @@ def _sonnet_judge(scenes: list, search_results: dict) -> list:
         proc = subprocess.run(
             [cli_path, "--print", "--output-format", "json",
              "--model", "claude-sonnet-4-5-20250929", "--max-turns", "1"],
-            input=prompt, capture_output=True, text=True, timeout=180,
+            input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=180,
             env={**os.environ, "CLAUDECODE": ""},
         )
         result_text = proc.stdout.strip()
@@ -375,7 +375,7 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
                 resp.raise_for_status()
                 (img_dir / fname).write_bytes(resp.content)
                 add_version(img_dir, sn, fname, "generate", prompt=prompt[:200], art_style=style_arg)
-                log_fn("image-gen", f"씬{sn} 생성 완료 ✓", "success")
+                log_fn("image-gen", f"씬{sn} 생성 완료 [OK]", "success")
                 return sn
             else:
                 log_fn("image-gen", f"씬{sn} {'재시도 ' if retry else ''}실패: 결과 없음", "warning")

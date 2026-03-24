@@ -51,7 +51,7 @@ async def rebuild_manifest(slug: str):
         env = {**os.environ}
         result = subprocess.run(
             args,
-            capture_output=True, text=True, timeout=120,
+            capture_output=True, text=True, encoding="utf-8", timeout=120,
             env=env,
         )
         if result.returncode == 0:
@@ -130,7 +130,7 @@ async def generate_thumbnails(slug: str):
         subprocess.run(
             [python, "-m", "auto_agent.scripts.build_manifest",
              "--project", output_dir],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True, text=True, encoding="utf-8", timeout=60,
             cwd=str(workspace),
         )
         # 다시 탐색

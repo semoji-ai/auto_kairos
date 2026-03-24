@@ -1,6 +1,16 @@
-"""Rich Console 래퍼 — 브랜드 테마 + 공통 출력 헬퍼."""
+"""Rich Console 래퍼 -- 브랜드 테마 + 공통 출력 헬퍼."""
 
+import os
+import platform
 import sys
+
+if platform.system() == "Windows":
+    # Windows cp949 콘솔에서 유니코드 출력 보장
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 from rich.console import Console
 from rich.panel import Panel
@@ -17,7 +27,7 @@ AUTO_AGENT_THEME = Theme(
     }
 )
 
-console = Console(theme=AUTO_AGENT_THEME)
+console = Console(theme=AUTO_AGENT_THEME, force_terminal=True)
 
 
 def print_header(title: str):

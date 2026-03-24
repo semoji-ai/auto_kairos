@@ -41,7 +41,7 @@ class VaultRAG:
         self.vault_dir = vault_dir or VAULT_DIR
         self.enabled = self.vault_dir.exists()
         if not self.enabled:
-            print(f"[VaultRAG] 볼트 미발견: {self.vault_dir} — 비활성")
+            print(f"[VaultRAG] 볼트 미발견: {self.vault_dir} -- 비활성")
 
     # ─────────────────────────────────────
     # 검색 (리서치/원고 전)

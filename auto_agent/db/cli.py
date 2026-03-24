@@ -84,6 +84,10 @@ def cmd_project(args):
             config = {}
             if data.get("art_style"):
                 config["art_style"] = data["art_style"]
+            if data.get("writing_style"):
+                config["writing_style"] = data["writing_style"]
+            if data.get("duration_minutes"):
+                config["duration_minutes"] = data["duration_minutes"]
             if data.get("voice_id"):
                 config["voice_id"] = data["voice_id"]
             if data.get("voice_settings"):

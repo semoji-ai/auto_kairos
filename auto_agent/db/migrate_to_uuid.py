@@ -107,8 +107,8 @@ def migrate(dry_run: bool = False):
     for row in conn.execute("SELECT id, uuid, slug, output_dir FROM projects ORDER BY id"):
         p = dict(row)
         exists = Path(p["output_dir"]).exists()
-        status = "✓" if exists else "✗ 폴더 없음"
-        print(f"  [{p['id']}] {p['uuid']}_{p['slug']} — {status}")
+        status = "[OK]" if exists else "[FAIL] 폴더 없음"
+        print(f"  [{p['id']}] {p['uuid']}_{p['slug']} --{status}")
     conn.close()
 
 

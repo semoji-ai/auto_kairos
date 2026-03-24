@@ -47,7 +47,7 @@ def step_1_generate_characters(output_dir: Path, style_path: str):
     if not character_plan.exists():
         character_plan = PROJECT_ROOT / "character_plan.json"
     if not character_plan.exists():
-        print("[Step 1] character_plan.json 없음 — 스킵")
+        print("[Step 1] character_plan.json 없음 -- 스킵")
         return
 
     print("[Step 1] 캐릭터 생성 시작...")
@@ -94,7 +94,7 @@ def step_2_search_images(output_dir: Path, specs: dict):
             })
 
     if not search_scenes:
-        print("[Step 2] 검색 대상 없음 — 스킵")
+        print("[Step 2] 검색 대상 없음 -- 스킵")
         return {"searched": 0, "total": 0}
 
     print(f"[Step 2] 이미지 검색 시작: {len(search_scenes)}개")
@@ -207,7 +207,7 @@ def step_2_search_images(output_dir: Path, specs: dict):
                     "downloaded": rank_idx <= len(candidates),
                 })
 
-            print(f"  [OK] {scene_key} ({elapsed:.1f}s) — {best['source']} "
+            print(f"  [OK] {scene_key} ({elapsed:.1f}s) -- {best['source']} "
                   f"score={best['score']} {len(candidates)}개 다운로드 / {len(all_ranked_meta)}개 후보")
             return scene_key, {
                 "success": True,
@@ -289,7 +289,7 @@ def step_3_generate_scene_images(output_dir: Path, style_path: str):
     if not scene_plan.exists():
         scene_plan = PROJECT_ROOT / "scene_plan.json"
     if not scene_plan.exists():
-        print("[Step 3] scene_plan.json 없음 — 스킵")
+        print("[Step 3] scene_plan.json 없음 -- 스킵")
         return
 
     # generated/ 서브폴더에 생성
@@ -358,7 +358,7 @@ def step_4_generate_standalone_images(output_dir: Path, style_path: str, specs: 
         })
 
     if not standalone:
-        print("[Step 4] 단발 이미지 생성 대상 없음 — 스킵")
+        print("[Step 4] 단발 이미지 생성 대상 없음 -- 스킵")
         return
 
     print(f"[Step 4] 단발 이미지 생성: {len(standalone)}개")
@@ -618,7 +618,7 @@ def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
         except json.JSONDecodeError as e:
             warnings.append(f"character_plan.json 파싱 실패: {e}")
     else:
-        print("  [INFO] character_plan.json 없음 — 캐릭터 생성 스킵 예정")
+        print("  [INFO] character_plan.json 없음 -- 캐릭터 생성 스킵 예정")
 
     # 3) 이미지 에셋 필요 씬 카운트
     scenes = specs.get("scenes", [])
@@ -638,7 +638,7 @@ def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
         for e in errors:
             print(f"  [ERROR] {e}")
         print()
-        print("[Step 0] 프리플라이트 실패 — 위 오류를 해결한 뒤 다시 실행하세요.")
+        print("[Step 0] 프리플라이트 실패 -- 위 오류를 해결한 뒤 다시 실행하세요.")
         return False, style_path
 
     print("[Step 0] 프리플라이트 통과")

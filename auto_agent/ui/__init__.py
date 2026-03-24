@@ -23,6 +23,8 @@ from .prompts import (
     prompt_art_style,
     prompt_voice,
     prompt_theme,
+    prompt_writing_style,
+    prompt_duration,
     prompt_font,
     prompt_confirm,
 )

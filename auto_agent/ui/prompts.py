@@ -99,6 +99,42 @@ def prompt_art_style() -> str:
     )
 
 
+def prompt_writing_style(channel: str = None) -> str:
+    """문체 스타일 선택. channel이 지정되면 자동 매핑."""
+    if channel == "이로미즘":
+        return "iromism"
+    if channel == "세모지":
+        return "semoji"
+
+    return _ask_or_abort(
+        questionary.select(
+            "문체 스타일을 선택하세요:",
+            choices=[
+                Choice("이로미즘  —  시네마틱 내러티브, 긴장감 있는 전개", value="iromism"),
+                Choice("세모지  —  친근한 설명체, 정보 전달 중심", value="semoji"),
+            ],
+            style=PROMPT_STYLE,
+        )
+    )
+
+
+def prompt_duration() -> int:
+    """영상 분량 선택. 분 단위 정수 반환."""
+    return int(_ask_or_abort(
+        questionary.select(
+            "영상 분량:",
+            choices=[
+                Choice("1분 (숏폼)", value="1"),
+                Choice("3분", value="3"),
+                Choice("5분", value="5"),
+                Choice("10분 (롱폼)", value="10"),
+            ],
+            default="1",
+            style=PROMPT_STYLE,
+        )
+    ))
+
+
 def prompt_voice() -> tuple:
     """음성 선택. (voice_id, voice_settings) 반환."""
     from auto_agent.voice_manager import VoiceManager
@@ -182,8 +218,10 @@ def prompt_project_create() -> dict:
     if channel == "기타(없음)":
         channel = None
 
+    writing_style = prompt_writing_style(channel)
     theme = prompt_theme()
     art_style = prompt_art_style()
+    duration_minutes = prompt_duration()
     voice_id, voice_settings = prompt_voice()
 
     return {
@@ -192,7 +230,9 @@ def prompt_project_create() -> dict:
         "topic": topic.strip(),
         "theme": theme,
         "channel": channel,
+        "writing_style": writing_style,
         "art_style": art_style,
+        "duration_minutes": duration_minutes,
         "voice_id": voice_id,
         "voice_settings": voice_settings,
     }

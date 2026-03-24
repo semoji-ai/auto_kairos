@@ -40,6 +40,20 @@ auto-agent project info --project <slug>      # 프로젝트 정보
 auto-agent project create                     # 새 프로젝트 생성 (대화형)
 ```
 
+### 프로젝트 생성 시 필수 config (Claude가 직접 생성할 때)
+```python
+# pm.create_project() 호출 시 config에 반드시 포함:
+config = {
+    "art_style": "artstyle/styles/quirky_cartoon.json",  # 필수
+    "writing_style": "iromism",                           # 필수: "iromism" 또는 "semoji"
+    "duration_minutes": 1,                                # 필수: 1, 3, 5, 10
+}
+# voice_id는 writing_style에서 자동 매핑되므로 생략 가능
+# channel: 이로미즘 채널 → "이로미즘", 세모지 채널 → "세모지"
+```
+- **이 값 중 하나라도 빠지면 파이프라인이 중간에 실패하거나 잘못된 결과를 생성함**
+- 이전 프로젝트를 참고할 때: `pm.get_project(id)`로 config 확인 후 동일 구조로 생성
+
 ### 주의사항
 - `project create` 뒤에는 프로젝트 이름을 바로 입력 (--help 같은 플래그 금지)
 - slug는 영문+숫자+언더스코어 (한글 자동 변환됨)

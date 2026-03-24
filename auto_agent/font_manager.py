@@ -58,7 +58,7 @@ class FontManager:
                     "families = list(fm.availableFontFamilies()); "
                     "print('\\n'.join(sorted(set(families))))"
                 ],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True, text=True, encoding="utf-8", timeout=15,
             )
             if result.returncode == 0 and result.stdout.strip():
                 return [f.strip() for f in result.stdout.strip().split("\n") if f.strip()]
@@ -79,7 +79,7 @@ class FontManager:
             )
             result = subprocess.run(
                 ["powershell", "-NoProfile", "-Command", ps_cmd],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True, text=True, encoding="utf-8", timeout=30,
             )
             if result.returncode == 0 and result.stdout.strip():
                 return [f.strip() for f in result.stdout.strip().split("\n") if f.strip()]
@@ -97,7 +97,7 @@ class FontManager:
             )
             result = subprocess.run(
                 ["powershell", "-NoProfile", "-Command", reg_cmd],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True, text=True, encoding="utf-8", timeout=30,
             )
             if result.returncode == 0 and result.stdout.strip():
                 return [f.strip() for f in result.stdout.strip().split("\n") if f.strip()]
@@ -115,7 +115,7 @@ class FontManager:
         try:
             result = subprocess.run(
                 ["fc-list", "--format=%{family}\n"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True, text=True, encoding="utf-8", timeout=15,
             )
             if result.returncode == 0 and result.stdout.strip():
                 families = set()

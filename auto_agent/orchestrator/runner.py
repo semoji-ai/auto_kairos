@@ -288,25 +288,79 @@ class PipelineRunner:
         return project
 
     def _load_project_config(self) -> dict:
-        """프로젝트 config 로드. art_style, voice_id 등."""
+        """프로젝트 config 로드. 필수 설정 미비 시 인터랙티브 인터뷰 또는 에러."""
         config = self.pm.get_config(self.project["id"])
-        # config 검증
+        updated = False
+
+        from auto_agent.ui.console import is_non_interactive
+        interactive = not is_non_interactive()
+
+        # 필수 설정 검증
+        missing = []
+        if not config.get("writing_style"):
+            missing.append("writing_style")
         if not config.get("art_style"):
-            print("WARNING: project config에 art_style 미설정")
+            missing.append("art_style")
+        if not config.get("duration_minutes"):
+            missing.append("duration_minutes")
+
+        if missing and not interactive:
+            # 백그라운드/비인터랙티브 환경 — 인터뷰 불가, 에러로 중단
+            print(f"\n  [ERROR] 필수 설정 누락: {', '.join(missing)}")
+            print("  프로젝트 생성 시 config에 포함하거나, 터미널에서 'auto-agent run'으로 실행하세요.")
+            raise SystemExit(1)
+
+        # 인터랙티브 환경 — 인터뷰
+        if not config.get("writing_style"):
+            print("\n  [WARN] writing_style 미설정")
+            try:
+                from auto_agent.ui.prompts import prompt_writing_style
+                channel = self.project.get("channel")
+                config["writing_style"] = prompt_writing_style(channel)
+                updated = True
+            except (ImportError, KeyboardInterrupt):
+                config["writing_style"] = "iromism"
+                print("    → 기본값 'iromism' 적용")
+
+        if not config.get("art_style"):
+            print("\n  [WARN] art_style 미설정")
+            try:
+                from auto_agent.ui.prompts import prompt_art_style
+                config["art_style"] = prompt_art_style()
+                updated = True
+            except (ImportError, KeyboardInterrupt):
+                print("  [ERROR] art_style 필수 -- 파이프라인 중단")
+                raise SystemExit(1)
+
+        if not config.get("duration_minutes"):
+            print("\n  [WARN] duration_minutes 미설정")
+            try:
+                from auto_agent.ui.prompts import prompt_duration
+                config["duration_minutes"] = prompt_duration()
+                updated = True
+            except (ImportError, KeyboardInterrupt):
+                config["duration_minutes"] = 1
+                print("    → 기본값 1분 적용")
 
         # voice_id 미설정 시 writing_style에서 자동 매핑
+        STYLE_VOICE_MAP = {
+            "semoji": {"voice_id": "W7FnAxJNpD5WGjrF5GLp", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
+            "iromism": {"voice_id": "9Sj8ugvpK1DmcAXyvi3a", "voice_settings": {"stability": 1.0, "similarity_boost": 0.6, "style": 0.9, "speed": 1.1}},
+            "default": {"voice_id": "4JJwo477JUAx3HV0T7n7", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
+        }
         if not config.get("voice_id"):
-            STYLE_VOICE_MAP = {
-                "semoji": {"voice_id": "W7FnAxJNpD5WGjrF5GLp", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
-                "iromism": {"voice_id": "9Sj8ugvpK1DmcAXyvi3a", "voice_settings": {"stability": 1.0, "similarity_boost": 0.6, "style": 0.9, "speed": 1.1}},
-                "default": {"voice_id": "4JJwo477JUAx3HV0T7n7", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
-            }
             ws = config.get("writing_style", "default")
             voice = STYLE_VOICE_MAP.get(ws, STYLE_VOICE_MAP.get("default", {}))
             if voice:
                 config["voice_id"] = voice["voice_id"]
                 config["voice_settings"] = voice["voice_settings"]
                 print(f"    voice_id 자동 설정: {ws} → {voice['voice_id']}")
+                updated = True
+
+        # 변경사항 DB에 저장
+        if updated:
+            self.pm.set_config(self.project["id"], config)
+            print("    [OK] 설정 저장 완료")
 
         return config
 
@@ -326,7 +380,7 @@ class PipelineRunner:
         found_start = from_step is None
 
         print(f"{'=' * 60}")
-        print(f"Pipeline Runner — {self.project_slug}")
+        print(f"Pipeline Runner -- {self.project_slug}")
         print(f"Config: art_style={self.state.config.get('art_style', 'N/A')}")
         print(f"        voice_id={self.state.config.get('voice_id', 'N/A')}")
         print(f"{'=' * 60}\n")
@@ -572,7 +626,7 @@ class PipelineRunner:
         try:
             data = json.loads(report_path.read_text(encoding="utf-8"))
         except Exception as e:
-            print(f"    [WARN] 보충 실패 — 리포트 읽기 오류: {e}")
+            print(f"    [WARN] 보충 실패 -- 리포트 읽기 오류: {e}")
             return False
 
         supplement_prompt = (
@@ -598,7 +652,7 @@ class PipelineRunner:
                 [cli_path, "--print", "--output-format", "json",
                  "--model", "claude-sonnet-4-6", "--max-turns", "1",
                  "--tools", ""],
-                input=supplement_prompt, capture_output=True, text=True,
+                input=supplement_prompt, capture_output=True, text=True, encoding="utf-8",
                 cwd=str(self.project_dir), timeout=60,
                 env={**os.environ, "CLAUDECODE": ""},
             )
@@ -621,7 +675,7 @@ class PipelineRunner:
 
             secs = len(data["sections"])
             srcs = len(data["sources"])
-            print(f"    [보충] 완료 — {len(new_sections)}섹션 추가 → 총 {secs}섹션, {srcs}소스", flush=True)
+            print(f"    [보충] 완료 -- {len(new_sections)}섹션 추가 -> 총 {secs}섹션, {srcs}소스", flush=True)
             _notify("Director", f"리서치 보충 완료: +{len(new_sections)}섹션 추가",
                     phase=self.state.current_phase, project=self.project_slug, level="success")
             return True
@@ -674,14 +728,14 @@ class PipelineRunner:
                 proc = subprocess.run(
                     [cli_path, "--print", "--output-format", "json",
                      "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
-                    input=verify_prompt, capture_output=True, text=True,
+                    input=verify_prompt, capture_output=True, text=True, encoding="utf-8",
                     cwd=str(self.project_dir), timeout=30,
                     env={**os.environ, "CLAUDECODE": ""},
                 )
                 verify_result = self._extract_json_from_cli_output(proc.stdout)
                 if verify_result and verify_result.get("valid"):
                     reason = verify_result.get("reason", "")
-                    print(f"    [검증] 리서치: {sections}섹션, {sources}소스, 주제 일치 ✓ ({reason})")
+                    print(f"    [검증] 리서치: {sections}섹션, {sources}소스, 주제 일치 [OK] ({reason})")
                     _notify("Director", f"리서치 검증 통과: {sections}섹션, {sources}소스 — {reason}",
                             phase=self.state.current_phase, project=self.project_slug, level="success")
                     # 볼트 기록
@@ -693,7 +747,7 @@ class PipelineRunner:
                     return StepResult(step_id=step_id, status="completed")
                 elif verify_result:
                     reason = verify_result.get("reason", "주제 불일치")
-                    print(f"    [검증] 리서치: 주제 불일치 ✗ ({reason})")
+                    print(f"    [검증] 리서치: 주제 불일치 [FAIL] ({reason})")
                     # ── 보충 리서치 시도 (최대 1회) ──────────────────────────
                     supplement_ok = self._supplement_research(
                         report_path=report_path,
@@ -716,7 +770,7 @@ class PipelineRunner:
                             proc2 = subprocess.run(
                                 [cli_path, "--print", "--output-format", "json",
                                  "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
-                                input=verify2_prompt, capture_output=True, text=True,
+                                input=verify2_prompt, capture_output=True, text=True, encoding="utf-8",
                                 cwd=str(self.project_dir), timeout=30,
                                 env={**os.environ, "CLAUDECODE": ""},
                             )
@@ -725,7 +779,7 @@ class PipelineRunner:
                                 r2 = verify2.get("reason", "")
                                 secs2 = len(data2.get("sections", []))
                                 srcs2 = len(data2.get("sources", []))
-                                print(f"    [검증] 보충 후 재검증 ✓ ({r2})")
+                                print(f"    [검증] 보충 후 재검증 [OK] ({r2})")
                                 _notify("Director", f"리서치 보충 완료: {secs2}섹션, {srcs2}소스 — {r2}",
                                         phase=self.state.current_phase, project=self.project_slug, level="success")
                                 if self.vault.enabled:
@@ -736,7 +790,7 @@ class PipelineRunner:
                                 return StepResult(step_id=step_id, status="completed")
                             else:
                                 r2 = (verify2 or {}).get("reason", "보충 후에도 불일치")
-                                print(f"    [검증] 보충 후 재검증 ✗ ({r2})")
+                                print(f"    [검증] 보충 후 재검증 [FAIL] ({r2})")
                         except Exception as e2:
                             print(f"    [WARN] 보충 재검증 실패 ({e2})")
                     return StepResult(step_id=step_id, status="failed", error=f"리서치 주제 불일치: {reason}")
@@ -744,7 +798,7 @@ class PipelineRunner:
                 print(f"    [WARN] LLM 검증 실패 ({e}), 구조 검증만 통과")
 
             # LLM 검증 실패해도 구조 검증 통과면 진행
-            print(f"    [검증] 리서치: {sections}섹션, {sources}소스 ✓ (구조 검증)")
+            print(f"    [검증] 리서치: {sections}섹션, {sources}소스 [OK] (구조 검증)")
             _notify("Director", f"리서치 검증: {sections}섹션, {sources}소스",
                     phase=self.state.current_phase, project=self.project_slug, level="success")
             return StepResult(step_id=step_id, status="completed")
@@ -756,7 +810,7 @@ class PipelineRunner:
                 text = ms_path.read_text(encoding="utf-8")
                 chars = len(text)
                 has_scene_marker = "## Scene" in text
-                print(f"    [검증] 원고: {chars}자, 씬마커={'있음 ✗' if has_scene_marker else '없음 ✓'}")
+                print(f"    [검증] 원고: {chars}자, 씬마커={'있음 [FAIL]' if has_scene_marker else '없음 [OK]'}")
                 _notify("Director", f"원고 검증: {chars}자",
                         phase=self.state.current_phase, project=self.project_slug, level="success")
             else:
@@ -772,7 +826,7 @@ class PipelineRunner:
                     adjusted = [c for c in claims if c.get("status") == "adjusted" or c.get("action") == "adjust"]
 
                     if adjusted:
-                        print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 발견 — 원고 자동 수정")
+                        print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 발견 -- 원고 자동 수정")
                         _notify("Director", f"팩트체크 수정 권장 {len(adjusted)}건 → 원고 자동 반영",
                                 phase=self.state.current_phase, project=self.project_slug, level="warning")
 
@@ -792,9 +846,9 @@ class PipelineRunner:
                                 _notify("Director", f"원고 수정 완료: {applied}건 반영",
                                         phase=self.state.current_phase, project=self.project_slug, level="success")
                             else:
-                                print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 중 원고 내 매칭 없음 — 수동 확인 필요")
+                                print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 중 원고 내 매칭 없음 -- 수동 확인 필요")
                     else:
-                        print(f"    [팩트체크] 수정 권장 항목 없음 ✓")
+                        print(f"    [팩트체크] 수정 권장 항목 없음 [OK]")
                 except Exception as e:
                     print(f"    [WARN] 팩트체크 보고서 파싱 실패: {e}")
 
@@ -806,7 +860,7 @@ class PipelineRunner:
                     data = json.loads(specs_path.read_text(encoding="utf-8"))
                     n_scenes = len(data.get("scenes", []))
                     if n_scenes > 0:
-                        print(f"    [검증] 씬 분해: {n_scenes}씬 ✓")
+                        print(f"    [검증] 씬 분해: {n_scenes}씬 [OK]")
                     else:
                         return StepResult(step_id=step_id, status="failed", error="scene_specs.json에 씬 0개")
                 except Exception:
@@ -827,17 +881,17 @@ class PipelineRunner:
                 step_name = step.get("name", step["id"])
                 # gate step이면 파이프라인 중단
                 if step.get("gate"):
-                    print(f"\n  GATE FAILED: {step['id']} — 파이프라인 중단")
+                    print(f"\n  GATE FAILED: {step['id']} -- 파이프라인 중단")
                     _notify("Director", f"파이프라인 중단 — {_step_label(step_name, 'fail')}", phase=self.state.current_phase, project=self.project_slug, level="error")
                     self.state.failed_steps.append(step["id"])
                     return
                 # non-blocking이면 계속
                 if step.get("blocking") is False:
-                    print(f"  [WARN] {step['id']} failed (non-blocking) — 계속 진행")
+                    print(f"  [WARN] {step['id']} failed (non-blocking) -- 계속 진행")
                     _notify("Director", f"{_step_label(step_name, 'fail')} (non-blocking) — 계속 진행", phase=self.state.current_phase, project=self.project_slug, level="warning")
                     self.state.failed_steps.append(step["id"])
                 else:
-                    print(f"\n  STEP FAILED: {step['id']} — 파이프라인 중단")
+                    print(f"\n  STEP FAILED: {step['id']} -- 파이프라인 중단")
                     _notify("Director", f"{_step_label(step_name, 'fail')} — 파이프라인 중단", phase=self.state.current_phase, project=self.project_slug, level="error")
                     self.state.failed_steps.append(step["id"])
                     return
@@ -1373,7 +1427,7 @@ class PipelineRunner:
             proc = subprocess.Popen(
                 cmd, cwd=str(self.project_dir), env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True,
+                stderr=subprocess.PIPE, text=True, encoding="utf-8",
             )
             try:
                 stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
@@ -1765,7 +1819,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 [sys.executable, "-m", "auto_agent.scripts.build_manifest",
                  pid, storage_key, str(self.project_dir)],
                 cwd=str(get_workspace_dir()),
-                capture_output=True, text=True, timeout=120,
+                capture_output=True, text=True, encoding="utf-8", timeout=120,
             )
             if result.returncode == 0:
                 print("    [AUTO] 매니페스트 빌드 완료")
@@ -1796,7 +1850,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             _thumb_env = get_env_with_node()
             node = shutil.which("node", path=_thumb_env.get("PATH"))
             if not node:
-                print("    [SKIP] Node.js 없음 — 썸네일 캡처 스킵")
+                print("    [SKIP] Node.js 없음 -- 썸네일 캡처 스킵")
                 return
 
             script = get_workspace_dir() / "remotion" / "generate-thumbnails.mjs"
@@ -1817,7 +1871,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     break
 
             if not manifest_path:
-                print("    [SKIP] 매니페스트 없음 — 썸네일 캡처 스킵")
+                print("    [SKIP] 매니페스트 없음 -- 썸네일 캡처 스킵")
                 return
 
             _notify("Director", f"썸네일 캡처 시작합니다 ({invalidated}씬 무효화됨)",
@@ -1827,7 +1881,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 [node, str(script), str(manifest_path), str(self.project_dir),
                  "--width=480"],
                 cwd=str(script.parent),
-                capture_output=True, text=True,
+                capture_output=True, text=True, encoding="utf-8",
                 timeout=300,
             )
             if result.returncode == 0:
@@ -2045,7 +2099,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                         print(f"    [WARN] Supabase 동기화 실패: {sync_err}")
             else:
                 self.pm.fail_pipeline_run(run_id, result.error)
-                print(f"FAIL ({elapsed:.1f}s) — {result.error[:80]}")
+                print(f"FAIL ({elapsed:.1f}s) -- {result.error[:80]}")
                 _notify(_agent_label, f"{_step_label(step_name, 'fail')}: {result.error[:60]}", phase=self.state.current_phase, project=self.project_slug, level="error")
 
             return result
@@ -2053,7 +2107,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         except Exception as e:
             elapsed = time.time() - t0
             self.pm.fail_pipeline_run(run_id, str(e))
-            print(f"ERROR ({elapsed:.1f}s) — {e}")
+            print(f"ERROR ({elapsed:.1f}s) -- {e}")
             _notify(_agent_label, f"{_step_label(step_name, 'fail')}: {str(e)[:60]}", phase=self.state.current_phase, project=self.project_slug, level="error")
             return StepResult(step_id=step_id, status="failed",
                               duration_sec=elapsed, error=str(e))
@@ -2183,7 +2237,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             proc = subprocess.Popen(
                 cmd, cwd=str(self.project_dir), env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True,
+                stderr=subprocess.PIPE, text=True, encoding="utf-8",
             )
             stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
         except subprocess.TimeoutExpired:
@@ -2445,7 +2499,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True,
+                text=True, encoding="utf-8",
             )
             try:
                 stdout, stderr = proc.communicate(input=prompt_text, timeout=timeout_sec)
@@ -2591,7 +2645,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 cwd=ws,
                 env=env,
                 capture_output=True,
-                text=True,
+                text=True, encoding="utf-8",
                 timeout=1800,  # 30분 타임아웃
             )
 
@@ -2660,7 +2714,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 cwd=str(get_workspace_dir()),
                 env=env,
                 capture_output=True,
-                text=True,
+                text=True, encoding="utf-8",
                 timeout=1800,  # 30분 (렌더링)
             )
 
@@ -2790,11 +2844,11 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         input_lines = []
         for inp in inputs:
             resolved = self._resolve_output_path(inp)
-            tag = "✓" if resolved.exists() else "✗ MISSING"
+            tag = "[OK]" if resolved.exists() else "[MISSING]"
             input_lines.append(f"- {inp}: {resolved} [{tag}]")
         for inp in optional_inputs:
             resolved = self._resolve_output_path(inp)
-            tag = "✓" if resolved.exists() else "없음 (선택)"
+            tag = "[OK]" if resolved.exists() else "없음 (선택)"
             input_lines.append(f"- {inp}: {resolved} [{tag}]")
 
         # 4. 출력 파일 경로
@@ -3174,7 +3228,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
             after_step = cp.get("after_step", "")
             if any(s["id"] == after_step for s in steps):
                 if after_step in self.state.completed_steps:
-                    print(f"\n  ★ CHECKPOINT: {cp['name']}")
+                    print(f"\n  * CHECKPOINT: {cp['name']}")
                     print(f"    {cp['description']}")
                     print()
 

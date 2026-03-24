@@ -80,7 +80,7 @@ class VaultIndexer:
                 hashes[str(relative)] = file_hash
                 stats["indexed"] += 1
             except Exception as e:
-                print(f"[VaultIndexer] 오류 skip: {relative} — {e}")
+                print(f"[VaultIndexer] 오류 skip: {relative} -- {e}")
                 stats["errors"] += 1
 
         stats["total_chunks"] = self._collection.count()

@@ -302,7 +302,7 @@ def filter_watermarked(images: List[SearchedImage]) -> List[SearchedImage]:
             filtered.append(img)
             continue
         if detect_watermark(img.local_path):
-            print(f"    [WM] 워터마크 감지 — 제외: {Path(img.local_path).name}", file=sys.stderr)
+            print(f"    [WM] 워터마크 감지 -- 제외: {Path(img.local_path).name}", file=sys.stderr)
             # 워터마크 이미지 파일 삭제
             try:
                 Path(img.local_path).unlink(missing_ok=True)

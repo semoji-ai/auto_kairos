@@ -56,7 +56,7 @@ def main():
     elif args.command == "push":
         local_path = DATA_DIR / PurePosixPath(args.key)
         if not local_path.exists():
-            print(f"ERROR: 파일 없음 — {local_path}")
+            print(f"ERROR: 파일 없음 -- {local_path}")
             sys.exit(1)
         content = local_path.read_text(encoding="utf-8")
         result = rm.push(args.key, content, updated_by="cli")

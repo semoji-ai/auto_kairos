@@ -53,7 +53,7 @@ def main():
     manuscript = project_dir / "final_manuscript.md"
 
     if not manuscript.exists():
-        print(f"WARNING: {manuscript} not found — 스킵")
+        print(f"WARNING: {manuscript} not found -- 스킵")
         sys.exit(0)
 
     print(f"Duplicate Check: {manuscript}")

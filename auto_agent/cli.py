@@ -180,7 +180,7 @@ def cmd_init(args):
                 [get_npm_cmd(), "install"],
                 cwd=str(remotion_dest),
                 capture_output=True,
-                text=True,
+                text=True, encoding="utf-8",
                 env=get_env_with_node(),
             )
             if result.returncode == 0:
@@ -834,7 +834,7 @@ def cmd_update(args):
         ["git", "pull"],
         cwd=str(repo_dir),
         capture_output=True,
-        text=True,
+        text=True, encoding="utf-8",
     )
 
     if result.returncode != 0:

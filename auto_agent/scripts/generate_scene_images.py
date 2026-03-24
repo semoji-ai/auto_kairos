@@ -66,7 +66,7 @@ def main():
 
         # 이미 생성된 이미지가 있으면 건너뛰기
         if output_path.exists():
-            print(f"  Scene {num}: EXISTS — skip")
+            print(f"  Scene {num}: EXISTS -- skip")
             continue
 
         # 캐릭터 매핑
@@ -141,14 +141,14 @@ def main():
             if result.get("success"):
                 w = result.get("width", 0)
                 h = result.get("height", 0)
-                print(f"  OK — {w}x{h}")
+                print(f"  OK -- {w}x{h}")
                 success += 1
             else:
-                print(f"  FAIL — {result.get('error', 'unknown')}")
+                print(f"  FAIL -- {result.get('error', 'unknown')}")
                 fail += 1
 
         except Exception as e:
-            print(f"  ERROR — {e}")
+            print(f"  ERROR -- {e}")
             fail += 1
 
     print(f"\n완료: 성공 {success}, 실패 {fail} / 총 {total}")

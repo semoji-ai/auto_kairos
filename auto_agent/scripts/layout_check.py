@@ -96,7 +96,7 @@ def render_still(frame: int, output_path: str, remotion_dir: str) -> bool:
             cmd,
             cwd=remotion_dir,
             capture_output=True,
-            text=True,
+            text=True, encoding="utf-8",
             timeout=120,
             env=get_env_with_node(),
         )

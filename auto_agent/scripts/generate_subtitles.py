@@ -347,7 +347,7 @@ def main():
         model_a, metadata = whisperx.load_align_model(language_code="ko", device=device)
         print("Model loaded.")
     else:
-        print("WhisperX unavailable — proportional fallback mode")
+        print("WhisperX unavailable -- proportional fallback mode")
 
     # Gemini 클라이언트 (fallback용)
     api_key = os.getenv("GOOGLE_API_KEY")
