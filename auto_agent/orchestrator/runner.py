@@ -373,8 +373,14 @@ class PipelineRunner:
         from_step: str = None,
         only_step: str = None,
         dry_run: bool = False,
+        mode: str = "legacy",
     ):
         """파이프라인 전체 또는 부분 실행."""
+        if mode == "director":
+            from auto_agent.orchestrator.director import run_director
+            run_director(self, from_step=from_step)
+            return
+
         phases = self.pipeline.get("phases", [])
         skip_until = from_step
         found_start = from_step is None
@@ -2977,6 +2983,16 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
 </progress_reporting>
 
 {context_memory_block}"""
+
+        # Director 피드백 주입 (Director 모드에서 run_step 시 전달)
+        director_feedback = step.get("_director_feedback", "")
+        if director_feedback:
+            prompt += (
+                f"\n\n<director_feedback>\n"
+                f"Director의 수정 지시:\n{director_feedback}\n"
+                f"</director_feedback>\n"
+            )
+
         return prompt
 
     def _load_agents_config(self) -> dict:
@@ -3240,8 +3256,8 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
                     print(f"    {cp['description']}")
                     print()
 
-    def _finish(self):
-        """파이프라인 완료 처리."""
+    def _finalize(self):
+        """파이프라인 완료 처리. Director 모드와 Legacy 모드 공용."""
         completed = len(self.state.completed_steps)
         failed = len(self.state.failed_steps)
         skipped = len(self.state.skipped_steps)
@@ -3265,7 +3281,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         # 메신저 알림
         level = "success" if failed == 0 else "warning"
         cost_str = f" (${total_usd:.4f})" if total_usd > 0 else ""
-        _notify("Director", f"파이프라인 완료 — {completed}/{total} 성공{cost_str}", phase="pipeline", project=self.project_slug, level=level)
+        _notify("Director", f"pipeline done -- {completed}/{total} ok{cost_str}", phase="pipeline", project=self.project_slug, level=level)
 
         # 상태 파일 저장
         state_path = self.project_dir / "pipeline_state.json"
@@ -3290,6 +3306,10 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
             self.pm.update_project(self.project["id"], status="completed")
         else:
             self.pm.update_project(self.project["id"], status="failed")
+
+    def _finish(self):
+        """Legacy alias -- _finalize() 호출."""
+        self._finalize()
 
 
 # ═══════════════════════════════════════

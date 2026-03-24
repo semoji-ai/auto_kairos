@@ -100,6 +100,29 @@ def _ensure_remotion_setup() -> bool:
     return True
 
 
+def check_preset(project_dir_str: str) -> bool:
+    """art style preset validation."""
+    from pathlib import Path
+    project_dir = Path(project_dir_str)
+    art_style_path = project_dir / "art_style.json"
+    if not art_style_path.exists():
+        print("  [WARN] art_style.json -- not found in project dir (will be provisioned)")
+        return True  # provision stage will copy it
+    try:
+        from auto_agent.data.artstyle.preset_schema import load_preset, validate_preset
+        preset = load_preset(art_style_path)
+        errors = validate_preset(preset)
+        if errors:
+            for e in errors:
+                print(f"  [FAIL] preset -- {e}")
+            return False
+        print("  [OK] preset -- validation passed")
+        return True
+    except Exception as e:
+        print(f"  [WARN] preset -- validation error: {e}")
+        return True  # legacy format passes
+
+
 def check_npm_package(name: str) -> bool:
     remotion_dir = PROJECT_ROOT / "remotion"
     node_modules = remotion_dir / "node_modules" / name
@@ -150,6 +173,15 @@ def main():
             print(f"  [OK] {pkg}")
         except ImportError:
             print(f"  [WARN] {pkg} -- 미설치")
+
+    # 5. Preset validation (if project dir is known)
+    print("\n[Preset Validation]")
+    project_dir = os.getenv("AUTO_AGENT_PROJECT_DIR", "")
+    if project_dir:
+        if not check_preset(project_dir):
+            errors += 1
+    else:
+        print("  [SKIP] AUTO_AGENT_PROJECT_DIR not set")
 
     print(f"\n{'=' * 40}")
     if errors:

@@ -102,6 +102,157 @@ TOOL_SCHEMAS = [
     },
 ]
 
+# ═══════════════════════════════════════
+# Director Agent 전용 도구 스키마
+# ═══════════════════════════════════════
+
+DIRECTOR_TOOL_SCHEMAS = [
+    {
+        "name": "get_pipeline_state",
+        "description": "현재 파이프라인 상태를 조회합니다. 완료/실패/스킵된 스텝 목록과 현재 phase/step을 반환합니다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "get_step_info",
+        "description": "pipeline.json에서 특정 스텝의 정의(에이전트, 모듈, 입출력, 옵션 등)를 반환합니다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "step_id": {
+                    "type": "string",
+                    "description": "조회할 스텝 ID (예: step_1, step_5)",
+                },
+            },
+            "required": ["step_id"],
+        },
+    },
+    {
+        "name": "run_step",
+        "description": "단일 스텝을 실행합니다. _execute_step + _validate_step을 호출하고 상태를 업데이트합니다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "step_id": {
+                    "type": "string",
+                    "description": "실행할 스텝 ID",
+                },
+                "feedback": {
+                    "type": "string",
+                    "description": "에이전트에 전달할 Director 피드백 (선택)",
+                },
+            },
+            "required": ["step_id"],
+        },
+    },
+    {
+        "name": "run_steps_parallel",
+        "description": "여러 스텝을 ThreadPoolExecutor로 동시 실행합니다. 독립적인 스텝들을 병렬로 처리할 때 사용합니다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "step_ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "동시 실행할 스텝 ID 배열",
+                },
+            },
+            "required": ["step_ids"],
+        },
+    },
+    {
+        "name": "retry_step",
+        "description": "실패한 스텝을 재실행합니다. 실패 목록에서 제거 후 feedback을 주입하여 다시 실행합니다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "step_id": {
+                    "type": "string",
+                    "description": "재실행할 스텝 ID",
+                },
+                "feedback": {
+                    "type": "string",
+                    "description": "재실행 시 에이전트에 전달할 피드백/지시사항",
+                },
+            },
+            "required": ["step_id"],
+        },
+    },
+    {
+        "name": "skip_step",
+        "description": "스텝을 건너뜁니다. skipped_steps에 추가하고 메신저에 알림을 보냅니다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "step_id": {
+                    "type": "string",
+                    "description": "건너뛸 스텝 ID",
+                },
+                "reason": {
+                    "type": "string",
+                    "description": "건너뛰는 이유",
+                },
+            },
+            "required": ["step_id", "reason"],
+        },
+    },
+    {
+        "name": "review_output",
+        "description": "프로젝트 디렉토리 기준 상대경로로 파일을 읽습니다. 5000자 초과 시 앞뒤만 요약합니다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "프로젝트 디렉토리 기준 상대 경로 (예: scene_specs.json)",
+                },
+            },
+            "required": ["file_path"],
+        },
+    },
+    {
+        "name": "log_preference",
+        "description": "Director 학습 메모를 .vault/preferences/에 기록합니다. 프리셋별로 축적됩니다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "note": {
+                    "type": "string",
+                    "description": "기록할 학습 메모/선호 사항",
+                },
+                "preset_id": {
+                    "type": "string",
+                    "description": "프리셋 ID (기본: general)",
+                },
+            },
+            "required": ["note"],
+        },
+    },
+    {
+        "name": "send_message",
+        "description": "대시보드 메신저에 메시지를 전송합니다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": "전송할 메시지 텍스트",
+                },
+                "level": {
+                    "type": "string",
+                    "enum": ["info", "success", "warning", "error"],
+                    "description": "메시지 레벨 (기본: info)",
+                },
+            },
+            "required": ["text"],
+        },
+    },
+]
+
+
 # Claude CLI 도구명 → API 도구명 매핑
 CLI_TO_API_TOOL_MAP = {
     "Read": "read_file",

@@ -1,6 +1,8 @@
 {
+  "id": "lego",
   "name": "Photorealistic LEGO",
   "description": "포토리얼리스틱 레고 미니피규어 스타일. 레고 무비처럼 실사에 가까운 3D 레고 렌더링",
+  "channel": null,
   "reference_image": "artstyle/styles/lego_base.png",
   "scene_style_description": "LEGO cinema style, characters must be in the form of LEGO head blocks, and elements must be in the form of combinations of existing LEGO blocks.",
   "style": {
@@ -20,5 +22,46 @@
     "no_text": true,
     "resolution": "High quality photorealistic 3D rendered LEGO style",
     "scene_style": "Photorealistic LEGO cinema style like The LEGO Movie. Characters must be realistic LEGO minifigures with plastic texture. All elements must look like real LEGO bricks photographed in real life."
-  }
+  },
+  "image": {
+    "staging": "cinematic",
+    "reference_image": "artstyle/styles/lego_base.png",
+    "scene_style_description": "LEGO cinema style, characters must be in the form of LEGO head blocks, and elements must be in the form of combinations of existing LEGO blocks.",
+    "style": {
+      "art_style": "Photorealistic LEGO minifigure style (실사 레고 스타일)",
+      "linework": {
+        "outline": "Clean, defined edges with smooth plastic surface appearance, photorealistic rendering",
+        "variation": "Consistent LEGO brick aesthetic with realistic lighting and textures"
+      },
+      "shapes": "Cylindrical head, rectangular body parts typical of LEGO minifigures",
+      "color_palette": "Bright, solid plastic colors with realistic reflections and surface textures",
+      "shading": "Photorealistic plastic sheen, soft shadows, realistic ambient occlusion",
+      "character_design": "Classic LEGO minifigure proportions - cylindrical head with C-shaped hands, short legs. Expressive printed face on round head. Photorealistic 3D rendering like official LEGO movie",
+      "mood_and_tone": "Photorealistic toy aesthetic, like The LEGO Movie or official LEGO promotional renders",
+      "background": "LEGO brick elements with photorealistic rendering, realistic depth of field"
+    },
+    "critical_requirements": [],
+    "prompt_language": "ko"
+  },
+  "voice": {
+    "voice_id": "4JJwo477JUAx3HV0T7n7",
+    "voice_settings": {
+      "stability": 1.0,
+      "similarity_boost": 0.9,
+      "style": 0.9,
+      "speed": 1.1
+    }
+  },
+  "creative": {
+    "headline_frequency": "20-30%",
+    "mood_palette": ["dramatic", "suspense", "contemplative", "informative"],
+    "preferred_layouts": ["cinematic", "before_after", "rank_list", "timeline", "flow", "metric_spotlight"]
+  },
+  "scenes": {
+    "density": "moderate",
+    "min_duration_sec": 4,
+    "max_duration_sec": 15,
+    "prefer_split_on": ["전환어", "감정 전환", "시각적 전환"]
+  },
+  "guidelines": "레고 미니피규어 스타일. 모든 캐릭터와 오브젝트는 레고 블록 조합으로 표현. 포토리얼 플라스틱 질감."
 }

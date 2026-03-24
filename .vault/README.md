@@ -12,6 +12,7 @@ tags: [vault, index]
 - **decisions/** — 아키텍처/설계 결정과 그 이유 (ADR)
 - **patterns/** — 반복되는 문제 패턴과 방지 규칙
 - **improvements/** — 개선 계획과 진행 상태
+- **preferences/** — 아트스타일별 사용자 선호도 축적. Director Agent가 참고
 
 ## 위키링크 규칙
 
