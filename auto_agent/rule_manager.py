@@ -24,9 +24,8 @@ DATA_DIR = Path(__file__).parent / "data"
 
 # 규칙 파일 → rule_type 매핑
 RULE_MANIFEST = {
-    # 1턴 프롬프트
+    # 스텝 전용 프롬프트
     "prompts/single-call/creative-direction.md": "prompt",
-    "prompts/single-call/asset-advisory.md": "prompt",
     "prompts/single-call/data-enrichment.md": "prompt",
     # 파이프라인 설정
     "pipeline.json": "pipeline",

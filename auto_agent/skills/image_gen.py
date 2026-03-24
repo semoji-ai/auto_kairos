@@ -1,11 +1,10 @@
 """
-이미지 생성 스킬 (캐릭터, 씬, 시각화 배경)
+이미지 생성 스킬 (캐릭터, 씬)
 
 LLM 불필요 — FAL.ai API 직접 호출, ThreadPoolExecutor 병렬 처리.
 
 auto_kairos_v2/src/skills/image_gen.py에서 이식.
 - generate_sub_scenes / _parallel_generate_sub_scenes 제거 (auto_agent_v2 불필요)
-- generate_viz_backgrounds: storyboard → scene_specs.json 기반으로 변경
 """
 
 import json
@@ -18,7 +17,6 @@ from ..tools.image_generate import (
     generate_scene,
     generate_scene_flat,
     generate_gemini_edit,
-    generate_viz_background,
 )
 
 
@@ -359,119 +357,3 @@ def regenerate_scenes(
     return {"success": True, "regenerated": ok}
 
 
-# ── 시각화 배경 이미지 ──
-
-def generate_viz_backgrounds(
-    scene_specs_path: Path,
-    style_path: str,
-    output_dir: Path,
-    log_fn=None,
-) -> dict:
-    """시각화 씬의 아트스타일 배경 이미지 병렬 생성.
-
-    scene_specs.json에서 imageAsset.placement=="background"인 씬을 추출하여
-    아트스타일 배경 이미지를 생성한다. 텍스트/수치는 Remotion이 오버레이.
-
-    Returns:
-        {"success": bool, "generated": int, "total": int, "results": dict}
-    """
-    log = log_fn or (lambda msg: print(f"[viz_bg] {msg}"))
-
-    if not scene_specs_path.exists():
-        return {"success": False, "error": "scene_specs.json 없음"}
-
-    if not style_path or not Path(style_path).exists():
-        return {"success": False, "error": "art_style.json 없음 — 스킵"}
-
-    specs = json.loads(scene_specs_path.read_text(encoding="utf-8"))
-    scenes = specs.get("scenes", [])
-
-    viz_dir = output_dir / "images" / "viz_bg"
-    viz_dir.mkdir(parents=True, exist_ok=True)
-
-    # 배경 이미지가 필요한 시각화 씬 필터링
-    # 조건: imageAsset 존재 + placement=="background" + source=="generate"
-    # 또는 sceneType이 시각화 타입이면서 배경이 필요한 경우
-    VIZ_SCENE_TYPES = {
-        "bar_chart", "line_chart", "pie_chart", "timeline",
-        "table_view", "tech_tree", "compare_card", "quote_card",
-        "list_card", "numbered_list", "icon_grid", "icon_flow",
-    }
-
-    viz_scenes = []
-    for s in scenes:
-        scene_num = s.get("sceneNumber", 0)
-        scene_type = s.get("sceneType", "")
-        image_asset = s.get("imageAsset")
-
-        # imageAsset에 background placement가 있는 경우
-        if image_asset and image_asset.get("placement") == "background" and image_asset.get("source") == "generate":
-            out_path = viz_dir / f"scene_{scene_num:03d}_bg.png"
-            if out_path.exists():
-                log(f"  [SKIP] scene_{scene_num:03d}_bg.png (이미 존재)")
-                continue
-
-            viz_scenes.append({
-                "scene_number": scene_num,
-                "viz_type": scene_type,
-                "viz_title": s.get("title", ""),
-                "thematic_context": s.get("narration", "")[:300],
-                "output_path": str(out_path),
-            })
-
-    if not viz_scenes:
-        log("  시각화 배경 생성 대상 없음")
-        return {"success": True, "generated": 0, "total": 0, "results": {}}
-
-    total = len(viz_scenes)
-    log(f"  시각화 배경 생성 시작: {total}개 씬")
-
-    results = _parallel_generate_viz_backgrounds(viz_scenes, style_path, log)
-    generated = sum(1 for r in results.values() if r.get("success"))
-
-    log(f"  시각화 배경 생성 완료: {generated}/{total}")
-
-    return {
-        "success": generated > 0,
-        "generated": generated,
-        "total": total,
-        "results": results,
-    }
-
-
-def _parallel_generate_viz_backgrounds(
-    viz_scenes: list,
-    style_path: str,
-    log_fn,
-) -> dict:
-    """ThreadPoolExecutor 기반 병렬 시각화 배경 생성"""
-    results = {}
-
-    def gen_one(vs):
-        scene_key = f"scene_{vs['scene_number']:03d}"
-        t0 = time.time()
-        log_fn(f"  [START] {scene_key}_bg ({vs['viz_type']})")
-        try:
-            result = generate_viz_background(
-                viz_title=vs["viz_title"],
-                viz_type=vs["viz_type"],
-                thematic_context=vs["thematic_context"],
-                output_path=vs["output_path"],
-                style_path=style_path,
-            )
-            elapsed = time.time() - t0
-            ok = result.get("success", False)
-            log_fn(f"  [{'OK' if ok else 'FAIL'}] {scene_key}_bg ({elapsed:.1f}s)")
-            return scene_key, result
-        except Exception as e:
-            elapsed = time.time() - t0
-            log_fn(f"  [ERROR] {scene_key}_bg ({elapsed:.1f}s) {e}")
-            return scene_key, {"success": False, "error": str(e)}
-
-    with ThreadPoolExecutor(max_workers=10) as pool:
-        futures = {pool.submit(gen_one, vs): vs["scene_number"] for vs in viz_scenes}
-        for fut in as_completed(futures):
-            key, res = fut.result()
-            results[key] = res
-
-    return results

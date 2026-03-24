@@ -38,9 +38,18 @@ def _progress(msg: str, level: str = "info") -> None:
 
 
 def _save_image_from_url(url: str, dest: Path) -> Path:
-    """URL에서 이미지를 다운로드해 저장."""
+    """URL에서 이미지를 다운로드해 저장. 실패 시 부분 파일 정리."""
     dest.parent.mkdir(parents=True, exist_ok=True)
-    urllib.request.urlretrieve(url, str(dest))
+    tmp = dest.with_suffix(dest.suffix + ".tmp")
+    try:
+        urllib.request.urlretrieve(url, str(tmp))
+        if tmp.stat().st_size < 1024:  # 1KB 미만은 실패로 간주
+            tmp.unlink(missing_ok=True)
+            raise ValueError(f"다운로드 파일이 너무 작음: {tmp.stat().st_size}B")
+        tmp.rename(dest)
+    except Exception:
+        tmp.unlink(missing_ok=True)
+        raise
     return dest
 
 
@@ -58,14 +67,20 @@ def run_batch(
         library = CharacterLibrary()
 
     # ── 입력 로드 ──
-    style_path = str(project_dir / "art_style.json")
-    art_style  = json.loads((project_dir / "art_style.json").read_text())
+    style_json_path = project_dir / "art_style.json"
+    if not style_json_path.exists():
+        _progress("art_style.json 누락 — 이미지 생성 스킵", level="error")
+        return {"chars_reused": 0, "chars_generated": 0, "scenes_success": 0,
+                "scenes_fail": 0, "scenes_skipped": 0, "status": "failed",
+                "error": "art_style.json 누락"}
+    style_path = str(style_json_path)
+    art_style  = json.loads(style_json_path.read_text(encoding="utf-8"))
     art_style_id = art_style.get("id", "default")
 
     char_plan_path = project_dir / "character_plan.json"
     characters = []
     if char_plan_path.exists():
-        characters = json.loads(char_plan_path.read_text()).get("characters", [])
+        characters = json.loads(char_plan_path.read_text(encoding="utf-8")).get("characters", [])
 
     # ── Phase 1: 캐릭터 배치 ──
     char_paths: dict[str, Optional[Path]] = {}
@@ -115,6 +130,7 @@ def run_batch(
                 except Exception as e:
                     logger.warning("캐릭터 저장 실패 (%s): %s", char_id, e)
             else:
+                char_paths[char_id] = None
                 _progress(f"캐릭터 생성 실패: {char['name']} — {result.error}", level="warning")
 
         fal_queue.poll_all(jobs, request_ids, on_done=on_char_done)
@@ -126,15 +142,20 @@ def run_batch(
 
     # ── Phase 2: 씬 배치 ──
     scene_specs_path = project_dir / "scene_specs.json"
-    scenes_success, scenes_fail = 0, 0
+    scenes_success, scenes_fail, skipped = 0, 0, 0
     if scene_specs_path.exists():
-        scene_specs = json.loads(scene_specs_path.read_text())
+        scene_specs = json.loads(scene_specs_path.read_text(encoding="utf-8"))
         images_dir  = project_dir / "images"
         images_dir.mkdir(exist_ok=True)
 
         scene_jobs: list[tuple[dict, FalJob]] = []
         for scene in scene_specs.get("scenes", []):
             if scene.get("imageAsset", {}).get("source") != "generate":
+                continue
+            scene_num = scene.get("sceneNumber", 0)
+            if image_assets.has_generated_version(images_dir, scene_num):
+                _progress(f"씬 {scene_num} 이미 생성됨 — 스킵")
+                skipped += 1
                 continue
             scene_char_paths = {
                 cid: char_paths.get(cid)
@@ -176,14 +197,22 @@ def run_batch(
 
             fal_queue.poll_all(jobs, request_ids, on_done=on_scene_done)
 
-    _progress(f"씬 완료: 성공 {scenes_success}개, 실패 {scenes_fail}개")
+    _progress(f"씬 완료: 성공 {scenes_success}개, 실패 {scenes_fail}개, 스킵 {skipped}개")
 
-    return {
+    total_attempted = scenes_success + scenes_fail
+    summary = {
         "chars_reused":    len(reused),
         "chars_generated": len(to_generate),
         "scenes_success":  scenes_success,
         "scenes_fail":     scenes_fail,
+        "scenes_skipped":  skipped,
     }
+    # 시도한 씬 중 절반 이상 실패 시 전체 실패로 처리
+    if total_attempted > 0 and scenes_fail > total_attempted * 0.5:
+        summary["status"] = "failed"
+        summary["error"] = f"이미지 생성 대량 실패: {scenes_fail}/{total_attempted}"
+        _progress(summary["error"], level="error")
+    return summary
 
 
 def main():

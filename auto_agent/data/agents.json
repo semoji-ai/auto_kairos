@@ -96,7 +96,7 @@
           "examples"
         ]
       },
-      "notes": "핵심 창작 에이전트. 5단계 순차 실행: (1) 씬 분할→scene_decomposition.json, (2) Creative Direction→scene_specs.json, (2.5) Asset Advisory→차트/아이콘/국기/로고/이미지 추천, (3) 데이터 보강→scene_specs.json 업데이트, (4) 모션 설계→motion_plan.json"
+      "notes": "핵심 창작 에이전트. 4단계 순차 실행: (1) 씬 분할→scene_decomposition.json, (2) Creative Direction+Asset Advisory(통합)→scene_specs.json, (3) 데이터 보강→scene_specs.json 업데이트, (4) 모션 설계→motion_plan.json"
     },
     "image-searcher": {
       "description": "이미지 검색 에이전트(신사진). source=search 씬의 위키미디어/Serper 검색 + 다운로드. 검색 실패 시 image-painter에게 생성 위임.",
@@ -293,14 +293,6 @@
       "step_5": {
         "model": "claude-opus-4-6",
         "reason": "원고→씬 분할은 구조적 창작 판단"
-      },
-      "step_6": {
-        "model": "claude-opus-4-6",
-        "reason": "Creative Direction은 핵심 창작"
-      },
-      "step_6b": {
-        "model": "claude-opus-4-6",
-        "reason": "4관점 심의는 복합 판단 필요"
       },
       "step_6c": {
         "model": "claude-opus-4-6",

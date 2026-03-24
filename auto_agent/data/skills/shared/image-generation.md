@@ -6,7 +6,7 @@ description: Use when generating scene images via AI image APIs with art style c
 # 이미지 생성 스킬 (Image Generation Skill)
 
 > FAL AI nano-banana-pro 모델 기반 이미지 생성 규칙.
-> 캐릭터, 씬, 시각화 배경 생성 시 아트스타일 적용 방법을 정의한다.
+> 캐릭터, 씬 생성 시 아트스타일 적용 방법을 정의한다.
 
 ---
 
@@ -175,14 +175,6 @@ python src/tools/image_generate.py scene-flat \
   --background "학교 운동장, 맑은 날" \
   --output output/project/images/scene_002.png
 
-# 시각화 배경 생성
-python src/tools/image_generate.py viz-background \
-  --title "GDP 성장률 비교" \
-  --type bar_chart \
-  --context "미국과 중국의 10년간 GDP 성장률 비교" \
-  --style artstyle/styles/semoji.json \
-  --output output/project/images/viz_bg/scene_010_bg.png
-
 # 이미지 편집 (Gemini)
 python src/tools/image_generate.py edit \
   --source output/project/images/scene_001.png \
@@ -213,14 +205,6 @@ python src/tools/image_generate.py edit \
    c. 2D 플랫 스타일 → generate_scene_flat()
       시네마틱 스타일 → generate_scene()
    d. 결과를 output/{slug}/images/scene_NNN.png 저장
-```
-
-### 시각화 배경 생성 플로우
-```
-1. scene_specs.json에서 시각화 씬 추출 (visualization.creative가 있는 씬)
-2. 각 시각화 씬별:
-   a. generate_viz_background() 호출
-   b. 결과를 output/{slug}/images/viz_bg/scene_NNN_bg.png 저장
 ```
 
 ---

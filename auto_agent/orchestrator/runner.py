@@ -78,8 +78,7 @@ _MSG_MAP = {
     "fact_check":                 ("팩트 체크",            "팩트 체크 완료"),
     # phase_3
     "scene_decomposition":        ("씬 분할",              "씬 분할 완료"),
-    "creative_direction":         ("창의적 연출",           "창의적 연출 완료"),
-    "asset_advisory":             ("에셋 심의",            "에셋 심의 완료"),
+    "creative_direction":         ("창의적 연출 + 에셋 설계", "창의적 연출 + 에셋 설계 완료"),
     "data_enrichment_and_motion": ("데이터 보강/모션 설계",  "데이터 보강/모션 설계 완료"),
     # phase_4
     "tts_preprocess":             ("TTS 전처리",           "TTS 전처리 완료"),
@@ -916,6 +915,8 @@ class PipelineRunner:
                 if result.status == "completed":
                     completed_ids.add(step["id"])
                     self.state.completed_steps.append(step["id"])
+                elif result.status == "skipped":
+                    self.state.skipped_steps.append(step["id"])
                 elif step.get("blocking") is not False:
                     self.state.failed_steps.append(step["id"])
 
@@ -1009,6 +1010,23 @@ class PipelineRunner:
                 merged_scenes.extend(original_by_chapter.get(ch_num, []))
 
         merged_scenes.sort(key=lambda s: s.get("sceneNumber", 0))
+
+        # sceneNumber 중복 검증
+        seen = set()
+        for scene in merged_scenes:
+            sn = scene.get("sceneNumber")
+            if sn in seen:
+                logger.warning("sceneNumber %s 중복 발견 — 첫 번째만 유지", sn)
+            seen.add(sn)
+        # 중복 제거 (첫 번째 유지)
+        deduped = []
+        seen.clear()
+        for scene in merged_scenes:
+            sn = scene.get("sceneNumber")
+            if sn not in seen:
+                deduped.append(scene)
+                seen.add(sn)
+        merged_scenes = deduped
 
         result = dict(original_specs)
         result["scenes"] = merged_scenes
@@ -1414,10 +1432,11 @@ class PipelineRunner:
             cost_info=cost_info, duration_sec=elapsed,
         )
 
-    # 1턴 전용 프롬프트 파일 매핑 (step_name → 프롬프트 파일명)
+    # 스텝별 전용 프롬프트 파일 매핑 (step_name → 프롬프트 파일명)
+    # single_call 및 chunked_parallel agent 스텝 모두에서 사용
+    # (step_6 creative_direction은 agent 타입이지만 동일한 프롬프트 로딩 경로 사용)
     SINGLE_CALL_PROMPTS = {
         "creative_direction": "creative-direction.md",
-        "asset_advisory": "asset-advisory.md",
         "data_enrichment": "data-enrichment.md",
         "motion_planning": "motion-planning.md",
         "tts_preprocess": "tts-preprocess.md",
@@ -2318,7 +2337,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             all_exist = True
             for out in outputs:
                 out_path = self._resolve_output_path(out)
-                if out.endswith("/"):
+                if out.endswith("/") or out.endswith("\\"):
                     # 디렉토리 출력 → 해당 디렉토리 자체가 존재하고 안에 파일이 있어야
                     if not (out_path.exists() and out_path.is_dir() and any(out_path.iterdir())):
                         all_exist = False
@@ -2591,7 +2610,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         except subprocess.TimeoutExpired:
             return StepResult(
                 step_id=step_id, status="failed",
-                error="Timeout (600s)",
+                error="Timeout (1800s)",
             )
         finally:
             monitor.stop()
@@ -2670,7 +2689,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             return
 
         report = json.loads(report_path.read_text(encoding="utf-8"))
-        topic = report.get("topic", self.project_slug)
+        topic = report.get("topic") or self.project.get("topic") or self.project_slug
         category = self.vault._detect_category(topic)
 
         # 요약 추출
@@ -2712,6 +2731,24 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         raise FileNotFoundError(
             "Claude CLI를 찾을 수 없습니다. "
             "PATH에 claude가 있는지 확인하거나 CLAUDE_CLI 환경변수를 설정하세요."
+        )
+
+    def _build_existing_images_context(self, agent_name: str) -> str:
+        """image-painter/image-searcher용: 기존 이미지 목록을 프롬프트에 주입."""
+        if agent_name not in ("image-painter", "image-searcher"):
+            return ""
+        images_dir = self.project_dir / "images"
+        if not images_dir.exists():
+            return ""
+        existing = sorted(images_dir.glob("scene_*_gen_*.png"))
+        if not existing:
+            return ""
+        lines = [f"- {p.name}" for p in existing]
+        return (
+            "<existing_images>\n"
+            "아래 씬은 이미 이미지가 생성되어 있습니다. 이 씬들은 건너뛰세요.\n"
+            + "\n".join(lines)
+            + "\n</existing_images>"
         )
 
     def _build_agent_prompt(self, step: dict) -> str:
@@ -2777,7 +2814,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # 6. 볼트 지식 주입 (Vault RAG)
         vault_block = ""
         if self.vault.enabled:
-            topic = self.state.config.get("topic", self.project_slug)
+            topic = self.project.get("topic") or self.state.config.get("topic", self.project_slug)
             category = self.vault._detect_category(topic)
             if agent_name in ("research-orchestrator",):
                 vault_block = self.vault.search_for_research(topic, category)
@@ -2848,6 +2885,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
 모든 출력 파일을 성공적으로 생성하면 작업 완료입니다.
 </task>
+
+{self._build_existing_images_context(agent_name)}
 
 <progress_reporting>
 작업 진행 상황을 아래 파일에 기록하세요. 대시보드 메신저에 실시간으로 표시됩니다.

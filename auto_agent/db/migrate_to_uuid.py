@@ -98,7 +98,7 @@ def migrate(dry_run: bool = False):
     # 4. rollback 정보 저장
     if not dry_run and rollback_log:
         rollback_path = workspace / "output" / "_migration_rollback.json"
-        rollback_path.write_text(json.dumps(rollback_log, indent=2, ensure_ascii=False))
+        rollback_path.write_text(json.dumps(rollback_log, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"\n[ROLLBACK] 복원 정보: {rollback_path}")
 
     # 5. 검증

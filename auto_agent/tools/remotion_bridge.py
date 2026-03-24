@@ -81,7 +81,7 @@ class RemotionBridge:
             str(audio_path),
         ]
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=10)
             return float(result.stdout.strip())
         except (ValueError, subprocess.TimeoutExpired):
             return 0.0
@@ -177,7 +177,8 @@ class RemotionBridge:
             audio_duration = 0.0
             if audio_path.exists():
                 audio_duration = self._get_audio_duration(audio_path)
-            if audio_duration <= 0 and viz_type:
+            if audio_duration <= 0:
+                # 오디오 없거나 0초 → 최소 5초 보장 (0초 렌더링 방지)
                 audio_duration = 5.0
 
             # 자막
@@ -317,7 +318,7 @@ class RemotionBridge:
         if not (self.remotion_dir / "node_modules").exists():
             subprocess.run(
                 [get_npm_cmd(), "install"], cwd=str(self.remotion_dir),
-                capture_output=True, text=True, timeout=120, env=node_env,
+                capture_output=True, text=True, encoding="utf-8", timeout=120, env=node_env,
             )
 
         # Supabase 전용 모드: 심볼릭 링크 불필요 (이미지/오디오 모두 Supabase URL)
@@ -333,8 +334,9 @@ class RemotionBridge:
 
         def _to_relative(abs_path: str) -> str:
             if abs_path and abs_path.startswith(output_abs):
-                return "project" + abs_path[len(output_abs):]
-            return abs_path
+                rel = "project" + abs_path[len(output_abs):]
+                return rel.replace("\\", "/")
+            return abs_path.replace("\\", "/")
 
         for scene in render_manifest.get("scenes", []):
             for key in ("imagePath", "audioPath"):
@@ -345,7 +347,7 @@ class RemotionBridge:
         def _to_public_relative(abs_path: str) -> str:
             """public/ 디렉토리 기준 상대경로 변환"""
             if abs_path and abs_path.startswith(public_abs):
-                return abs_path[len(public_abs) + 1:]  # "assets/file.mp3"
+                return abs_path[len(public_abs) + 1:].replace("\\", "/")
             return _to_relative(abs_path)
 
         bgm = render_manifest.get("bgm")
@@ -386,7 +388,7 @@ class RemotionBridge:
         try:
             result = subprocess.run(
                 cmd, cwd=str(self.remotion_dir),
-                capture_output=True, text=True, timeout=1800, env=node_env,
+                capture_output=True, text=True, encoding="utf-8", timeout=1800, env=node_env,
             )
             if result.returncode == 0:
                 print(f"  Remotion 렌더링 완료: {output_path}")

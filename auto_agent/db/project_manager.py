@@ -37,10 +37,10 @@ def resolve_art_style_path(art_style: str, project_dir: Path = None) -> Optional
     if not art_style:
         return None
 
-    # 스타일명에서 .json 확장자 정리
-    style_name = art_style.replace(".json", "").split("/")[-1]  # "quirky_cartoon"
+    # 스타일명에서 .json 확장자 정리 — / 와 \ 모두 분리하여 OS 차이 해결
+    style_name = Path(art_style.replace(".json", "").replace("\\", "/")).name  # "quirky_cartoon"
 
-    # 1. 절대경로
+    # 1. 절대경로 — 다른 OS 경로일 경우 style_name 기반 탐색으로 자동 fallback
     abs_path = Path(art_style)
     if abs_path.is_absolute() and abs_path.exists():
         return abs_path
@@ -483,9 +483,9 @@ class ProjectManager:
         project = self.get_project(project_id=project_id)
         output_dir = Path(project["output_dir"])
         try:
-            rel_path = str(fp.relative_to(output_dir))
+            rel_path = str(fp.relative_to(output_dir)).replace("\\", "/")
         except ValueError:
-            rel_path = str(fp)
+            rel_path = str(fp).replace("\\", "/")
 
         # 중복 방지: 같은 프로젝트 + 같은 경로면 업데이트
         conn = get_connection(self.db_path)

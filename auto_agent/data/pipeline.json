@@ -126,11 +126,10 @@
         {
           "id": "step_6",
           "name": "creative_direction",
-          "description": "Creative Direction — 각 씬의 창의적 시각 연출 설계",
-          "type": "single_call",
+          "description": "Creative Direction + Asset Advisory — 각 씬의 시각 연출 설계 + 에셋 추천 (통합)",
+          "type": "agent",
           "chunked_parallel": true,
           "agent": "visual-composer",
-          "single_call_model": "claude-opus-4-6",
           "input": [
             "final_manuscript.md",
             "outline.json",
@@ -142,31 +141,12 @@
             "shared/remotion-design-system",
             "shared/scene-segmentation",
             "shared/creative-direction",
-            "shared/overlay-selection"
+            "shared/overlay-selection",
+            "shared/asset-advisory",
+            "shared/chart-mapping"
           ],
           "depends_on": "step_5",
-          "notes": "★ Phase 2(Creative Direction)만 수행. 각 씬에 creative 필드(concept/reveal/emphasis/mood/headline) + visualization 기본 구조(items/values/itemIcons) + mapScene/imageAsset 초기 설정까지 완료. Asset Advisory(Phase 2.5)는 다음 스텝에서 별도 수행."
-        },
-        {
-          "id": "step_6b",
-          "name": "asset_advisory",
-          "description": "Asset Advisory — 다중 관점 심의로 에셋 추천 + 레이아웃 확정",
-          "type": "agent",
-          "chunked_parallel": true,
-          "agent": "visual-composer",
-          "input": [
-            "scene_specs.json",
-            "research_report.json"
-          ],
-          "output": "scene_specs.json",
-          "skills": [
-            "shared/asset-advisory",
-            "shared/chart-mapping",
-            "shared/remotion-design-system",
-            "shared/creative-direction"
-          ],
-          "depends_on": "step_6",
-          "notes": "★ Phase 2.5(Asset Advisory)만 수행. scene_specs.json을 읽고 각 씬에 4관점 심의(📊차트/🏷️심볼/🖼️이미지/📐레이아웃) 적용: chartConfig, itemFlags, logoMap, imageAsset, creative.layout 확정. 전체 밸런스 검증(이미지 40-60%, 차트 15-30%, 에셋 없는 씬 최소화) 후 scene_specs.json 덮어쓰기."
+          "notes": "★ Phase 2(Creative Direction + Asset Advisory) 통합 수행. 각 씬에 creative 필드 + visualization 구조(items/values/itemIcons) + chartConfig + imageAsset + mapScene을 한 번에 설계. 멀티턴 에이전트가 창의적 연출과 에셋 추천을 하나의 사고 흐름으로 처리."
         },
         {
           "id": "step_6c",
@@ -184,7 +164,7 @@
             "shared/data-mapping",
             "shared/remotion-design-system"
           ],
-          "depends_on": "step_6b",
+          "depends_on": "step_6",
           "notes": "★ Phase 3(Data Enrichment)만 수행. research_report.json에서 정확한 수치를 가져와 values/unit/source 보강 + vizAnimation 설정."
         }
       ]
@@ -221,27 +201,13 @@
           "depends_on": "step_7"
         },
         {
-          "id": "step_8b_legacy",
-          "name": "image_asset_sourcing_legacy",
-          "description": "이미지 소싱 레거시 — Claude CLI image-painter 에이전트 방식 (롤백용 보존)",
-          "type": "agent",
-          "agent": "image-painter",
-          "skip": true,
-          "input": ["scene_specs.json", "art_style.json"],
-          "output": ["images/image_assets.json"]
-        },
-        {
           "id": "step_8b",
           "name": "image_asset_sourcing",
-          "description": "이미지 배치 생성 — 캐릭터 라이브러리 조회 → FAL queue 배치 제출 → 폴링",
-          "type": "module",
-          "module": "image_batch",
-          "input": [
-            "character_plan.json",
-            "scene_specs.json",
-            "art_style.json"
-          ],
-          "output": ["images/image_assets.json", "characters/"]
+          "description": "이미지 소싱 — Claude CLI image-painter 에이전트 방식",
+          "type": "agent",
+          "agent": "image-painter",
+          "input": ["scene_specs.json", "art_style.json"],
+          "output": ["images/image_assets.json"]
         },
         {
           "id": "step_9",
@@ -411,7 +377,7 @@
       {
         "after_step": "step_6c",
         "name": "씬 설계 검토",
-        "description": "Visual Composer 결과 확인 (scene_specs + motion_plan). Creative Direction + Asset Advisory + Data Enrichment 결과 검토. 씬 타입/에셋/차트/레이아웃 수정 가능"
+        "description": "Visual Composer 결과 확인 (scene_specs + motion_plan). Creative Direction(에셋 통합) + Data Enrichment 결과 검토. 씬 타입/에셋/차트/레이아웃 수정 가능"
       },
       {
         "after_step": "step_8b",
