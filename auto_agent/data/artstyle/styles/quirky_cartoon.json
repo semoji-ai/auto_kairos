@@ -1,6 +1,31 @@
 {
   "name": "Quirky Hand-drawn Cartoon",
   "description": "개성있는 낙서 스타일 만화. 느슨하고 유머러스한 손그림 느낌",
+  "design_tokens": {
+    "baseTheme": "dark",
+    "defaultBackground": "background/light-gray-distorted-square-tile-texture-background-illustration.jpg",
+    "colors": {
+      "accent": "#F59E0B",
+      "accentRgb": "245,158,11",
+      "accentBg": "rgba(245,158,11,0.08)",
+      "accentBorder": "rgba(245,158,11,0.3)",
+      "accentSoft": "rgba(245,158,11,0.15)",
+      "cardBg": "rgba(245,158,11,0.06)",
+      "cardBorder": "rgba(245,158,11,0.25)"
+    },
+    "moods": {
+      "dramatic":      { "accent": "#F59E0B", "accentRgb": "245,158,11", "speed": 1.2, "glow": 0.6 },
+      "urgent":        { "accent": "#EF4444", "accentRgb": "239,68,68",  "speed": 1.5, "glow": 0.8 },
+      "somber":        { "accent": "#9CA3AF", "accentRgb": "156,163,175", "speed": 0.7, "glow": 0.2 },
+      "informative":   { "accent": "#F59E0B", "accentRgb": "245,158,11", "speed": 1.0, "glow": 0.3 },
+      "contemplative": { "accent": "#D97706", "accentRgb": "217,119,6",  "speed": 0.6, "glow": 0.2 },
+      "suspense":      { "accent": "#F59E0B", "accentRgb": "245,158,11", "speed": 0.8, "glow": 0.5 },
+      "triumphant":    { "accent": "#10B981", "accentRgb": "16,185,129",  "speed": 1.0, "glow": 0.5 }
+    },
+    "layout": { "cardRadius": 16, "gap": 28 },
+    "map": { "defaultTheme": "warm_earth" },
+    "subtitle": { "keywordColor": "#F59E0B" }
+  },
   "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",
   "scene_style_description": "Loose quirky hand-drawn cartoon, doodle style, thick wobbly lines, bright flat colors, human characters only.",
   "style": {

@@ -361,7 +361,9 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
 
 
 def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: str,
-                              tts_results: Optional[dict] = None) -> list:
+                              tts_results: Optional[dict] = None,
+                              project_accent: Optional[str] = None,
+                              art_style: Optional[str] = None) -> list:
     """씬 목록에 이미지/오디오 URL + TTS 정보 + 레이아웃을 추가.
 
     project_dir_name: output 디렉토리명 (uuid_{slug} 형식) — URL 구성에 사용.
@@ -385,7 +387,7 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         layout, explicit = resolve_layout(scene)
         scene["_layout"] = layout
         scene["_layout_explicit"] = explicit
-        scene["_preview_html"] = render_scene_preview(scene)
+        scene["_preview_html"] = render_scene_preview(scene, project_accent=project_accent, art_style=art_style or "")
 
         # Remotion 캡처 썸네일 (있으면 우선 사용)
         scene["_thumbnail_url"] = None
@@ -408,7 +410,8 @@ def format_headline(headline: str) -> str:
 
 # ─── 씬 프리뷰 렌더러 ───
 
-MOOD_COLORS = {
+# 기본 mood 색상 (artstyle design_tokens가 없을 때 fallback)
+_DEFAULT_MOOD_COLORS = {
     "dramatic": ("#F59E0B", "#1a1005"),
     "urgent": ("#EF4444", "#1a0808"),
     "somber": ("#71717A", "#0d0d0e"),
@@ -417,6 +420,38 @@ MOOD_COLORS = {
     "suspense": ("#F59E0B", "#14100a"),
     "triumphant": ("#10B981", "#081a10"),
 }
+
+def _load_design_tokens(art_style: str) -> dict:
+    """artstyle JSON에서 design_tokens 로드. 캐시됨."""
+    if not hasattr(_load_design_tokens, "_cache"):
+        _load_design_tokens._cache = {}
+    if art_style in _load_design_tokens._cache:
+        return _load_design_tokens._cache[art_style]
+    try:
+        from auto_agent.paths import get_workspace_dir
+        style_path = get_workspace_dir() / "auto_agent" / "data" / "artstyle" / "styles" / f"{art_style}.json"
+        if style_path.exists():
+            import json as _json
+            data = _json.loads(style_path.read_text(encoding="utf-8"))
+            tokens = data.get("design_tokens", {})
+            _load_design_tokens._cache[art_style] = tokens
+            return tokens
+    except Exception:
+        pass
+    _load_design_tokens._cache[art_style] = {}
+    return {}
+
+def get_mood_color(mood: str, art_style: str = "", project_accent: str = None) -> tuple:
+    """mood + artstyle design_tokens에서 accent/bg 색상 반환."""
+    tokens = _load_design_tokens(art_style) if art_style else {}
+    moods = tokens.get("moods", {})
+    mood_entry = moods.get(mood, {})
+    default_accent, default_bg = _DEFAULT_MOOD_COLORS.get(mood, ("#3B82F6", "#080d1a"))
+    accent = mood_entry.get("accent", default_accent)
+    # project_accent가 있으면 urgent/somber 외에는 대체 (Remotion resolvePreset과 동일)
+    if project_accent and mood not in ("urgent", "somber"):
+        accent = project_accent
+    return accent, default_bg
 
 
 def _esc(text: str) -> str:
@@ -444,14 +479,13 @@ def _flag_emoji(code: str) -> str:
     return "".join(chr(0x1F1E6 + ord(c) - ord("A")) for c in code.upper())
 
 
-def render_scene_preview(scene: dict) -> str:
+def render_scene_preview(scene: dict, project_accent: str = None, art_style: str = "") -> str:
     """씬 데이터로 HTML 미니 프리뷰 생성. 16:9 비율, Remotion CreativeScene과 동일 구조."""
     viz = scene.get("visualization") or {}
     creative = viz.get("creative") or {}
     layout = scene.get("_layout", "headline_only")
-    # 플랫 스키마: 최상위 필드 우선, creative 중첩 fallback
     mood = scene.get("mood") or creative.get("mood", "informative")
-    accent, bg_tint = MOOD_COLORS.get(mood, ("#3B82F6", "#080d1a"))
+    accent, bg_tint = get_mood_color(mood, art_style=art_style, project_accent=project_accent)
     headline = scene.get("headline") or creative.get("headline", "")
     emphasis = creative.get("emphasis", "")
     items = scene.get("items") or viz.get("items") or []

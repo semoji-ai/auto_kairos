@@ -287,7 +287,12 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
         specs = _load_json("scene_specs.json")
         scenes = specs.get("scenes", []) if specs else []
         tts = _load_json("tts_results.json")
-        scenes = enrich_scenes_with_media(scenes, dir_name, out_dir, tts)
+        _meta = specs.get("meta", {}) if specs else {}
+        _dp_accent = (_meta.get("designPreset") or {}).get("colors", {}).get("accent")
+        _proj_accent = _dp_accent or _meta.get("accentColor")
+        _art_style = _meta.get("artStyle", "")
+        scenes = enrich_scenes_with_media(scenes, dir_name, out_dir, tts,
+                                          project_accent=_proj_accent, art_style=_art_style)
         context["scenes"] = scenes
         ch_set = sorted(set(s.get("chapter", 0) for s in scenes))
         context["chapters_list"] = ch_set
@@ -546,7 +551,12 @@ async def api_scenes_by_slug(slug: str):
     tts = load_project_json(out_dir, "tts_results.json")
     dir_name = Path(out_dir).name if out_dir else slug
     print(f"[DEBUG] out_dir={out_dir}, dir_name={dir_name}, slug={slug}", flush=True)
-    enriched = enrich_scenes_with_media(scenes, dir_name, out_dir, tts)
+    _meta = specs.get("meta", {}) if specs else {}
+    _dp_accent = (_meta.get("designPreset") or {}).get("colors", {}).get("accent")
+    _proj_accent = _dp_accent or _meta.get("accentColor")
+    _art_style = _meta.get("artStyle", "")
+    enriched = enrich_scenes_with_media(scenes, dir_name, out_dir, tts,
+                                        project_accent=_proj_accent, art_style=_art_style)
     if enriched:
         print(f"[DEBUG] 씬1 _image_url={enriched[0].get('_image_url')}", flush=True)
     return JSONResponse(content={"scenes": enriched})
