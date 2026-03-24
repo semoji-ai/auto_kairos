@@ -1,418 +1,317 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# =============================================================
+# Auto Kairos — 설치 스크립트
+# Mac / Linux / Windows (Git Bash / WSL) 지원
+# =============================================================
+set -e
 
-# ─────────────────────────────────────────────
-# Auto Kairos v3 — 올인원 설치 스크립트
-# macOS / Linux / WSL
-#
-# 1) 시스템 의존성 (Python, Node, ffmpeg)
-# 2) pip install auto-kairos
-# 3) 워크스페이스 초기화 + v2 업그레이드
-# 4) .env 설정 (API 키 + Supabase)
-# 5) Supabase 프로젝트 동기화
-# ─────────────────────────────────────────────
+BOLD="\033[1m"
+GREEN="\033[32m"
+YELLOW="\033[33m"
+RED="\033[31m"
+RESET="\033[0m"
 
-GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'; BOLD='\033[1m'; DIM='\033[2m'
+info()  { echo -e "${GREEN}[✓]${RESET} $1"; }
+warn()  { echo -e "${YELLOW}[!]${RESET} $1"; }
+error() { echo -e "${RED}[✗]${RESET} $1"; }
+step()  { echo -e "\n${BOLD}── $1${RESET}"; }
 
-info()    { printf "${CYAN}▸${NC} %s\n" "$1"; }
-success() { printf "${GREEN}✅ %s${NC}\n" "$1"; }
-warn()    { printf "${YELLOW}⚠️  %s${NC}\n" "$1"; }
-fail()    { printf "${RED}❌ %s${NC}\n" "$1" >&2; exit 1; }
-ask()     { printf "${BOLD}? %s${NC} " "$1"; }
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SKILLS_DIR="$HOME/.claude/skills"
+ERRORS=0
 
-header() {
-  printf "\n${BOLD}╔═══════════════════════════════════════════════════╗${NC}\n"
-  printf "${BOLD}║  Auto Kairos v3 — AI Video Production Pipeline     ║${NC}\n"
-  printf "${BOLD}╚═══════════════════════════════════════════════════╝${NC}\n\n"
-}
+echo -e "${BOLD}════════════════════════════════════════${RESET}"
+echo -e "${BOLD}  Auto Kairos 설치${RESET}"
+echo -e "${BOLD}════════════════════════════════════════${RESET}"
 
-# ── OS/패키지매니저 감지 ──
-detect_os() {
-  local uname_s uname_r
-  uname_s="$(uname -s)"
-  uname_r="$(uname -r 2>/dev/null | tr '[:upper:]' '[:lower:]')" || uname_r=""
-  if [[ "$uname_r" == *microsoft* ]]; then printf 'WSL'
-  elif [ "$uname_s" = 'Darwin' ]; then printf 'macOS'
-  else printf 'Linux'; fi
-}
+# =============================================================
+step "1. 시스템 의존성 확인"
+# =============================================================
 
-detect_platform() {
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "macos"
-  elif grep -qi microsoft /proc/version 2>/dev/null; then
-    echo "wsl"
-  else
-    echo "linux"
-  fi
-}
-PLATFORM=$(detect_platform)
-
-detect_pm() {
-  if command -v brew >/dev/null 2>&1; then printf 'brew'
-  elif command -v apt-get >/dev/null 2>&1; then printf 'apt'
-  elif command -v dnf >/dev/null 2>&1; then printf 'dnf'
-  elif command -v pacman >/dev/null 2>&1; then printf 'pacman'
-  else printf 'none'; fi
-}
-
-# ═══════════════════════════════════════
-# Step 1: 시스템 의존성
-# ═══════════════════════════════════════
-
-check_python() {
-  local py_cmd
-  py_cmd=$(command -v python3 || command -v python)
-  if [ -z "$py_cmd" ]; then
-    echo "ERROR: Python 3.11+ 필요. https://python.org 에서 설치하세요."
-    exit 1
-  fi
-  local version
-  version=$($py_cmd -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-  local major minor
-  major=$(echo "$version" | cut -d. -f1)
-  minor=$(echo "$version" | cut -d. -f2)
-  if [ "$major" -lt 3 ] || { [ "$major" -eq 3 ] && [ "$minor" -lt 11 ]; }; then
-    echo "ERROR: Python $version 감지. Python 3.11+ 필요."
-    exit 1
-  fi
-  echo "✓ Python $version"
-}
-
-ensure_python() {
-  check_python
-  if command -v python3 >/dev/null 2>&1; then
-    local ver
-    ver="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
-    info "Python $ver ✓"
-    return 0
-  fi
-  info "Python 설치 중..."
-  case "$(detect_pm)" in
-    brew)   brew install python@3.12 ;;
-    apt)    sudo apt-get update && sudo apt-get install -y python3 python3-pip python3-venv ;;
-    dnf)    sudo dnf install -y python3 python3-pip ;;
-    pacman) sudo pacman -S --noconfirm python python-pip ;;
-    *)      fail "Python을 수동 설치하세요: https://python.org" ;;
-  esac
-  success "Python 설치 완료"
-}
-
-ensure_node() {
-  if command -v node &>/dev/null; then
-    echo "✓ Node.js $(node --version)"
-    return
-  fi
-  # nvm
-  if [ -s "$HOME/.nvm/nvm.sh" ]; then
-    source "$HOME/.nvm/nvm.sh"
-    if command -v node &>/dev/null; then
-      echo "✓ Node.js (via nvm) $(node --version)"
-      return
-    fi
-  fi
-  # volta
-  if [ -s "$HOME/.volta/bin/node" ]; then
-    export PATH="$HOME/.volta/bin:$PATH"
-    echo "✓ Node.js (via volta) $(node --version)"
-    return
-  fi
-  # ~/local/nodejs
-  local node_bin
-  node_bin=$(ls -d "$HOME/local/nodejs"/node-v*/bin 2>/dev/null | sort -V | tail -1)
-  if [ -n "$node_bin" ] && [ -f "$node_bin/node" ]; then
-    export PATH="$node_bin:$PATH"
-    echo "✓ Node.js (local) $(node --version)"
-    # Write to .env
-    echo "NODEJS_BIN_DIR=$node_bin" >> .env
-    return
-  fi
-  # 패키지 매니저로 설치
-  info "Node.js 설치 중..."
-  case "$(detect_pm)" in
-    brew)   brew install node ;;
-    apt)    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt-get install -y nodejs ;;
-    dnf)    curl -fsSL https://rpm.nodesource.com/setup_22.x | sudo bash - && sudo dnf install -y nodejs ;;
-    pacman) sudo pacman -S --noconfirm nodejs npm ;;
-    *)
-      echo "ERROR: Node.js를 찾을 수 없습니다."
-      echo "  macOS: brew install node"
-      echo "  또는: https://nodejs.org"
-      exit 1
-      ;;
-  esac
-  success "Node.js 설치 완료"
-}
-
-ensure_node_modules() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  local remotion_dir="$SCRIPT_DIR/auto_agent/remotion_template"
-  if [ -d "$remotion_dir" ] && [ ! -d "$remotion_dir/node_modules" ]; then
-    info "Remotion npm 의존성 설치 중..."
-    (cd "$remotion_dir" && npm install --quiet) && success "Remotion npm 설치 완료"
-  fi
-}
-
-ensure_ffmpeg() {
-  if command -v ffmpeg >/dev/null 2>&1; then
-    info "ffmpeg ✓"; return 0
-  fi
-  info "ffmpeg 설치 중..."
-  case "$(detect_pm)" in
-    brew)   brew install ffmpeg ;;
-    apt)    sudo apt-get install -y ffmpeg ;;
-    dnf)    sudo dnf install -y ffmpeg ;;
-    pacman) sudo pacman -S --noconfirm ffmpeg ;;
-    *)      warn "ffmpeg를 수동 설치하세요: https://ffmpeg.org" ;;
-  esac
-  success "ffmpeg 설치 완료"
-}
-
-# ═══════════════════════════════════════
-# Step 2: auto-kairos 패키지 설치
-# ═══════════════════════════════════════
-
-install_package() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  info "auto-kairos 패키지 설치 중..."
-  pip3 install -e "${SCRIPT_DIR}[all]" --quiet 2>/dev/null || pip3 install -e "${SCRIPT_DIR}[all]"
-  success "auto-kairos $(python3 -c 'from auto_agent import __version__; print(__version__)' 2>/dev/null || echo 'v3') 설치 완료"
-}
-
-# ═══════════════════════════════════════
-# Step 3: 워크스페이스 설정
-# ═══════════════════════════════════════
-
-setup_workspace() {
-  local default_ws="$HOME/my-video-project"
-
-  printf "\n${BOLD}── 워크스페이스 설정 ──${NC}\n\n"
-  ask "워크스페이스 경로 (Enter로 기본값: $default_ws):"
-  read -r ws_path
-  ws_path="${ws_path:-$default_ws}"
-  ws_path="${ws_path/#\~/$HOME}"
-
-  WORKSPACE="$(cd "$(dirname "$ws_path")" 2>/dev/null && pwd)/$(basename "$ws_path")" || WORKSPACE="$ws_path"
-
-  # 기존 워크스페이스 감지
-  if [ -d "$WORKSPACE/output" ] || [ -f "$WORKSPACE/auto_agent.db" ]; then
-    info "기존 워크스페이스 감지: $WORKSPACE"
-    info "v2→v3 업그레이드 모드로 초기화합니다 (기존 데이터 보존)"
-    auto-kairos init "$WORKSPACE" --upgrade 2>&1 | while IFS= read -r line; do printf "  %s\n" "$line"; done
-  else
-    info "새 워크스페이스 생성: $WORKSPACE"
-    auto-kairos init "$WORKSPACE" 2>&1 | while IFS= read -r line; do printf "  %s\n" "$line"; done
-  fi
-
-  success "워크스페이스 준비 완료: $WORKSPACE"
-}
-
-# ═══════════════════════════════════════
-# Step 4: .env 설정
-# ═══════════════════════════════════════
-
-setup_env() {
-  local env_file="$WORKSPACE/.env"
-
-  printf "\n${BOLD}── API 키 설정 ──${NC}\n\n"
-
-  if [ -f "$env_file" ]; then
-    info "기존 .env 파일 감지"
-
-    # Supabase 키 확인
-    if grep -q "SUPABASE_URL=" "$env_file" && grep -q "SUPABASE_KEY=" "$env_file"; then
-      local sb_url
-      sb_url="$(grep '^SUPABASE_URL=' "$env_file" | cut -d= -f2-)"
-      if [ -n "$sb_url" ] && [ "$sb_url" != "" ]; then
-        info "Supabase 설정 확인됨: $sb_url"
-        HAS_SUPABASE=true
-        return 0
-      fi
-    fi
-  else
-    # .env.example → .env 복사
-    if [ -f "$WORKSPACE/.env.example" ]; then
-      cp "$WORKSPACE/.env.example" "$env_file"
+# Python
+if command -v python3 &>/dev/null; then
+    PY_VER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+    PY_MAJOR=$(echo "$PY_VER" | cut -d. -f1)
+    PY_MINOR=$(echo "$PY_VER" | cut -d. -f2)
+    if [ "$PY_MAJOR" -ge 3 ] && [ "$PY_MINOR" -ge 10 ]; then
+        info "Python $PY_VER"
     else
-      touch "$env_file"
+        error "Python 3.10+ 필요 (현재: $PY_VER)"
+        ERRORS=$((ERRORS + 1))
     fi
-    info ".env 파일 생성됨"
-  fi
+else
+    error "Python3 미설치"
+    ERRORS=$((ERRORS + 1))
+fi
 
-  # Supabase 설정
-  printf "\n"
-  info "팀 프로젝트 공유를 위해 Supabase 설정이 필요합니다."
-  ask "Supabase URL (없으면 Enter로 건너뛰기):"
-  read -r sb_url
+# Node.js
+NODE_OK=0
+if command -v node &>/dev/null; then
+    NODE_VER=$(node -e "console.log(process.versions.node.split('.')[0])")
+    if [ "$NODE_VER" -ge 18 ]; then
+        info "Node.js v$(node -e "console.log(process.versions.node)")"
+        NODE_OK=1
+    else
+        error "Node.js 18+ 필요 (현재: v$(node -e "console.log(process.versions.node)"))"
+        ERRORS=$((ERRORS + 1))
+    fi
+elif [ -n "$NODEJS_BIN_DIR" ] && [ -x "$NODEJS_BIN_DIR/node" ]; then
+    export PATH="$NODEJS_BIN_DIR:$PATH"
+    info "Node.js ($NODEJS_BIN_DIR)"
+    NODE_OK=1
+else
+    error "Node.js 미설치"
+    echo "  https://nodejs.org 에서 설치하거나 NODEJS_BIN_DIR 환경변수 설정"
+    ERRORS=$((ERRORS + 1))
+fi
 
-  if [ -n "$sb_url" ]; then
-    ask "Supabase Anon Key:"
-    read -r sb_key
+# ffmpeg
+if command -v ffmpeg &>/dev/null; then
+    info "ffmpeg 설치됨"
+else
+    warn "ffmpeg 미설치 — 영상 렌더링에 필요"
+    echo "  Mac: brew install ffmpeg"
+    echo "  Windows: choco install ffmpeg"
+    echo "  Linux: sudo apt install ffmpeg"
+fi
 
-    # .env에 추가/업데이트
-    grep -v '^SUPABASE_URL=' "$env_file" > "$env_file.tmp" || true
-    grep -v '^SUPABASE_KEY=' "$env_file.tmp" > "$env_file" || true
-    rm -f "$env_file.tmp"
-    printf "\n# Supabase (팀 프로젝트 공유)\nSUPABASE_URL=%s\nSUPABASE_KEY=%s\n" "$sb_url" "$sb_key" >> "$env_file"
-    success "Supabase 설정 완료"
-    HAS_SUPABASE=true
-  else
-    info "Supabase 건너뜀 (나중에 .env 파일에서 설정 가능)"
-    HAS_SUPABASE=false
-  fi
+# Claude Code CLI
+if command -v claude &>/dev/null; then
+    info "Claude Code CLI 설치됨"
+else
+    error "Claude Code CLI 미설치 — 파이프라인 실행에 필수"
+    echo "  npm install -g @anthropic-ai/claude-code"
+    ERRORS=$((ERRORS + 1))
+fi
 
-  # 필수 API 키 안내
-  printf "\n"
-  local missing_keys=()
-  grep -q '^ELEVENLABS_API_KEY=.\+' "$env_file" 2>/dev/null || missing_keys+=("ELEVENLABS_API_KEY (TTS)")
-  grep -q '^OPENAI_API_KEY=.\+' "$env_file" 2>/dev/null || missing_keys+=("OPENAI_API_KEY (자막)")
+if [ "$ERRORS" -gt 0 ]; then
+    echo ""
+    error "$ERRORS개 필수 의존성이 누락되었습니다. 위 안내에 따라 설치 후 다시 실행하세요."
+    exit 1
+fi
 
-  if [ ${#missing_keys[@]} -gt 0 ]; then
-    warn "다음 API 키가 설정되지 않았습니다 (나중에 .env 편집):"
-    for k in "${missing_keys[@]}"; do
-      printf "  ${DIM}  - %s${NC}\n" "$k"
-    done
-  fi
+# =============================================================
+step "2. Python 패키지 설치"
+# =============================================================
+
+cd "$SCRIPT_DIR"
+
+# pip install (--break-system-packages 필요 시 자동 감지)
+if python3 -m pip install -e ".[all]" 2>&1 | tail -3; then
+    info "Python 패키지 설치 완료"
+else
+    warn "일반 설치 실패, --break-system-packages 시도..."
+    python3 -m pip install --break-system-packages -e ".[all]" 2>&1 | tail -3
+    info "Python 패키지 설치 완료 (system-packages)"
+fi
+
+# 추가 의존성
+python3 -m pip install python-multipart mutagen 2>/dev/null || \
+python3 -m pip install --break-system-packages python-multipart mutagen 2>/dev/null || true
+
+# matplotlib (whisperx 의존성)
+python3 -c "import matplotlib" 2>/dev/null || {
+    python3 -m pip install matplotlib 2>/dev/null || \
+    python3 -m pip install --break-system-packages matplotlib 2>/dev/null || true
 }
 
-# ═══════════════════════════════════════
-# Step 5: Supabase 프로젝트 동기화
-# ═══════════════════════════════════════
+# whisperx 확인 (선택)
+if python3 -c "import whisperx" 2>/dev/null; then
+    info "WhisperX 설치됨"
+else
+    warn "WhisperX 미설치 — 자막 동기화에 필요 (선택: pip install whisperx)"
+fi
 
-sync_projects() {
-  if [ "$HAS_SUPABASE" != "true" ]; then
-    return 0
-  fi
+# =============================================================
+step "3. Node.js 패키지 설치 (Remotion)"
+# =============================================================
 
-  printf "\n${BOLD}── 프로젝트 동기화 ──${NC}\n\n"
+if [ "$NODE_OK" -eq 1 ] && [ -d "$SCRIPT_DIR/remotion" ]; then
+    cd "$SCRIPT_DIR/remotion"
+    npm install 2>&1 | tail -3
+    info "Remotion 패키지 설치 완료"
 
-  # 로컬 프로젝트 목록
-  local output_dir="$WORKSPACE/output"
-  local local_projects=()
-  if [ -d "$output_dir" ]; then
-    while IFS= read -r d; do
-      [ -d "$d" ] && local_projects+=("$(basename "$d")")
-    done < <(find "$output_dir" -mindepth 1 -maxdepth 1 -type d | sort)
-  fi
-
-  if [ ${#local_projects[@]} -gt 0 ]; then
-    info "로컬 프로젝트 ${#local_projects[@]}개 감지:"
-    for p in "${local_projects[@]}"; do
-      printf "    %s\n" "$p"
-    done
-
-    printf "\n"
-    ask "로컬 프로젝트를 Supabase에 동기화하시겠습니까? (y/N):"
-    read -r do_sync
-    if [[ "$do_sync" =~ ^[yY] ]]; then
-      export AUTO_AGENT_WORKSPACE="$WORKSPACE"
-      for p in "${local_projects[@]}"; do
-        info "동기화 중: $p"
-        auto-kairos sync --project "$p" 2>&1 | while IFS= read -r line; do printf "    %s\n" "$line"; done || warn "동기화 실패: $p (나중에 수동 실행 가능)"
-      done
-      success "동기화 완료"
+    # 에디터 번들 빌드
+    if [ -f "vite.thumb.config.ts" ]; then
+        npx vite build --config vite.thumb.config.ts 2>&1 | tail -2
+        npx vite build --config vite.editor.config.ts 2>&1 | tail -2
+        info "대시보드 번들 빌드 완료"
     fi
-  fi
+    cd "$SCRIPT_DIR"
+else
+    warn "Remotion 설치 건너뜀"
+fi
 
-  # Supabase에서 pull (다른 팀원의 프로젝트)
-  printf "\n"
-  ask "Supabase에서 팀 프로젝트를 다운로드하시겠습니까? (y/N):"
-  read -r do_pull
-  if [[ "$do_pull" =~ ^[yY] ]]; then
-    info "Supabase 프로젝트 목록 조회 중..."
-    export AUTO_AGENT_WORKSPACE="$WORKSPACE"
-    # 프로젝트 목록 가져와서 로컬에 없는 것만 pull
+# =============================================================
+step "4. 환경변수 설정"
+# =============================================================
+
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    info ".env 파일 존재"
+else
+    cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
+    warn ".env 파일 생성됨 — API 키를 입력하세요: $SCRIPT_DIR/.env"
+fi
+
+# 필수 키 확인
+MISSING_KEYS=0
+for KEY in ELEVENLABS_API_KEY FAL_API_KEY SERPER_API_KEY; do
+    VAL=$(grep "^${KEY}=" "$SCRIPT_DIR/.env" 2>/dev/null | cut -d= -f2- || true)
+    if [ -z "$VAL" ] || echo "$VAL" | grep -q "YOUR_.*_HERE"; then
+        warn "$KEY 미설정"
+        MISSING_KEYS=$((MISSING_KEYS + 1))
+    else
+        info "$KEY ✓"
+    fi
+done
+
+if [ "$MISSING_KEYS" -gt 0 ]; then
+    warn "$MISSING_KEYS개 API 키가 미설정입니다. .env 파일을 편집하세요."
+fi
+
+# =============================================================
+step "5. 데이터베이스 초기화"
+# =============================================================
+
+cd "$SCRIPT_DIR"
+if [ -f "auto_agent.db" ]; then
+    info "데이터베이스 존재"
+else
     python3 -c "
-import sys, os
-sys.path.insert(0, '$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)')
-os.environ['AUTO_AGENT_WORKSPACE'] = '$WORKSPACE'
-from dotenv import load_dotenv; load_dotenv('$WORKSPACE/.env')
-from auto_agent.supabase_client import supabase_enabled, get_supabase, BUCKET_NAME
-if not supabase_enabled():
-    print('Supabase 연결 실패'); sys.exit(1)
-sb = get_supabase()
-resp = sb.table('projects').select('slug, name').execute()
-local_dirs = set(os.listdir('$output_dir')) if os.path.isdir('$output_dir') else set()
-remote_only = [p for p in resp.data if p['slug'] not in local_dirs]
-if not remote_only:
-    print('ALL_SYNCED')
-else:
-    for p in remote_only:
-        print(f'{p[\"slug\"]}|{p[\"name\"]}')
-" 2>/dev/null | while IFS='|' read -r slug name; do
-      if [ "$slug" = "ALL_SYNCED" ]; then
-        info "모든 프로젝트가 이미 로컬에 있습니다"
-        break
-      fi
-      info "다운로드: $slug ($name)"
-      auto-kairos pull --project "$slug" 2>&1 | while IFS= read -r line; do printf "    %s\n" "$line"; done || warn "다운로드 실패: $slug"
+from auto_agent.db.project_manager import ProjectManager
+pm = ProjectManager()
+print('DB initialized')
+" 2>/dev/null && info "데이터베이스 초기화 완료" || warn "DB 초기화 실패 — 첫 실행 시 자동 생성됩니다"
+fi
+
+# =============================================================
+step "6. 디렉토리 구조 생성"
+# =============================================================
+
+mkdir -p "$SCRIPT_DIR/output"
+mkdir -p "$SCRIPT_DIR/remotion/public/manifests" 2>/dev/null || true
+info "디렉토리 준비 완료"
+
+# =============================================================
+step "7. Claude Code 슬래시 스킬 설치"
+# =============================================================
+
+# 스킬 소스 디렉토리
+SKILL_SRC="$SCRIPT_DIR/skills"
+
+if [ ! -d "$SKILL_SRC" ]; then
+    # skills/ 디렉토리가 없으면 생성
+    mkdir -p "$SKILL_SRC"
+    # 현재 설치된 스킬을 skills/에 복사 (배포용)
+    for S in auto-kairos kairos-research kairos-write kairos-product; do
+        if [ -f "$SKILLS_DIR/$S/SKILL.md" ]; then
+            mkdir -p "$SKILL_SRC/$S"
+            cp "$SKILLS_DIR/$S/SKILL.md" "$SKILL_SRC/$S/SKILL.md"
+        fi
     done
-    success "다운로드 완료"
-  fi
-}
+fi
 
-# ═══════════════════════════════════════
-# 완료
-# ═══════════════════════════════════════
+mkdir -p "$SKILLS_DIR"
 
-print_completion() {
-  printf "\n"
-  printf "${GREEN}${BOLD}╔═══════════════════════════════════════════════════╗${NC}\n"
-  printf "${GREEN}${BOLD}║  Auto Kairos v3 설치 완료!                         ║${NC}\n"
-  printf "${GREEN}${BOLD}╚═══════════════════════════════════════════════════╝${NC}\n"
-  printf "\n"
-  printf "${BOLD}시작하기:${NC}\n"
-  printf "  cd %s\n" "$WORKSPACE"
-  printf "  claude\n"
-  printf "\n"
-  printf "${BOLD}유용한 명령어:${NC}\n"
-  printf "  auto-kairos dashboard          # 웹 대시보드\n"
-  printf "  auto-kairos project list       # 프로젝트 목록\n"
-  printf "  auto-kairos sync --project X   # Supabase 동기화\n"
-  printf "  auto-kairos pull --project X   # Supabase에서 다운로드\n"
-  printf "\n"
-  printf "${DIM}업데이트: cd auto_kairos && git pull && pip install -e .[all]${NC}\n"
-  printf "${DIM}워크스페이스 업데이트: auto-kairos init %s --upgrade${NC}\n" "$WORKSPACE"
-  printf "\n"
-}
+SKILL_COUNT=0
+for SKILL_NAME in auto-kairos kairos-research kairos-write kairos-product; do
+    SRC="$SKILL_SRC/$SKILL_NAME/SKILL.md"
+    DEST_DIR="$SKILLS_DIR/$SKILL_NAME"
 
-# ═══════════════════════════════════════
-# 메인
-# ═══════════════════════════════════════
+    if [ -f "$SRC" ]; then
+        mkdir -p "$DEST_DIR"
+        cp "$SRC" "$DEST_DIR/SKILL.md"
+        info "스킬 설치: /$SKILL_NAME"
+        SKILL_COUNT=$((SKILL_COUNT + 1))
+    fi
+done
 
-main() {
-  header
-  HAS_SUPABASE=false
-  WORKSPACE=""
+if [ "$SKILL_COUNT" -gt 0 ]; then
+    info "$SKILL_COUNT개 스킬 설치 완료"
+else
+    warn "스킬 파일이 없습니다. Claude Code에서 직접 사용하려면 ~/.claude/skills/에 수동 설치하세요."
+fi
 
-  local os
-  os="$(detect_os)"
-  info "OS: $os | 패키지매니저: $(detect_pm)"
-  printf "\n"
+# =============================================================
+step "8. 환경변수 프로필 설정"
+# =============================================================
 
-  # Step 1: 시스템 의존성
-  printf "${BOLD}── 시스템 의존성 확인 ──${NC}\n\n"
-  ensure_python
-  ensure_node
-  ensure_node_modules
-  ensure_ffmpeg
+echo ""
+info "아래 환경변수를 쉘 프로필에 추가하세요:"
+echo ""
+echo "  export KAIROS_HOME=\"$SCRIPT_DIR\""
+if [ "$NODE_OK" -eq 1 ] && [ -n "${NODEJS_BIN_DIR:-}" ]; then
+    echo "  export NODE_DIR=\"$NODEJS_BIN_DIR\""
+fi
+echo ""
 
-  # Step 2: 패키지 설치
-  printf "\n${BOLD}── 패키지 설치 ──${NC}\n\n"
-  install_package
+# 자동 추가 여부 확인
+PROFILE=""
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    PROFILE="$HOME/.zshrc"
+elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
+    PROFILE="$HOME/.bashrc"
+else
+    PROFILE="$HOME/.bashrc"
+fi
 
-  # Step 3: 워크스페이스
-  setup_workspace
+if [ -n "$PROFILE" ]; then
+    if ! grep -q "KAIROS_HOME" "$PROFILE" 2>/dev/null; then
+        read -p "  $PROFILE 에 자동 추가할까요? (y/N) " REPLY
+        if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+            echo "" >> "$PROFILE"
+            echo "# Auto Kairos" >> "$PROFILE"
+            echo "export KAIROS_HOME=\"$SCRIPT_DIR\"" >> "$PROFILE"
+            if [ -n "${NODEJS_BIN_DIR:-}" ]; then
+                echo "export NODE_DIR=\"$NODEJS_BIN_DIR\"" >> "$PROFILE"
+            fi
+            info "$PROFILE 에 추가 완료"
+        fi
+    else
+        info "KAIROS_HOME 이미 프로필에 설정됨"
+    fi
+fi
 
-  # Step 4: .env
-  setup_env
+# =============================================================
+step "9. 설치 검증"
+# =============================================================
 
-  # Step 5: 동기화
-  sync_projects
+VERIFY_OK=0
 
-  # 완료
-  print_completion
-}
+# CLI 테스트
+if python3 -m auto_agent.cli project list 2>/dev/null | head -3; then
+    info "auto-agent CLI 정상 작동"
+    VERIFY_OK=$((VERIFY_OK + 1))
+else
+    warn "auto-agent CLI 확인 실패"
+fi
 
-main "$@"
+# 매니페스트 빌더 테스트
+if python3 -c "from auto_agent.scripts.build_manifest import build_manifest; print('manifest builder OK')" 2>/dev/null; then
+    info "매니페스트 빌더 정상"
+    VERIFY_OK=$((VERIFY_OK + 1))
+fi
+
+# 이미지 도구 테스트
+if python3 -c "from auto_agent.tools.image_generate import build_fal_input; print('image tool OK')" 2>/dev/null; then
+    info "이미지 생성 도구 정상"
+    VERIFY_OK=$((VERIFY_OK + 1))
+fi
+
+# =============================================================
+echo ""
+echo -e "${BOLD}════════════════════════════════════════${RESET}"
+echo -e "${GREEN}${BOLD}  Auto Kairos 설치 완료! ($VERIFY_OK/3 검증 통과)${RESET}"
+echo -e "${BOLD}════════════════════════════════════════${RESET}"
+echo ""
+echo "  사용법:"
+echo "    auto-agent project create     프로젝트 생성"
+echo "    auto-agent run --project X    파이프라인 실행"
+echo "    auto-agent dashboard          대시보드 열기 (http://localhost:8080)"
+echo ""
+echo "  Claude Code 슬래시 스킬:"
+echo "    /auto-kairos [주제]           전체 파이프라인"
+echo "    /kairos-research [slug]       Stage 1 리서치"
+echo "    /kairos-write [slug]          Stage 2 원고+연출"
+echo "    /kairos-product [slug]        Stage 3 에셋조립"
+echo ""
