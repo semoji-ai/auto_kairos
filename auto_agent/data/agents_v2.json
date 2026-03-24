@@ -50,19 +50,30 @@
       "notes": "Stage 2에서 비차단 실행. 기존과 동일."
     },
 
-    "qa-reviewer": {
-      "description": "렌더링 전후 품질 검수",
-      "model": "claude-sonnet-4-5-20250514",
-      "max_turns": 25,
-      "budget": "$0.5",
-      "max_duration_minutes": 5,
-      "allowed_tools": ["Read", "Glob"],
-      "skill_file": "agents/qa-reviewer/SKILL.md",
+    "assembly-director": {
+      "description": "scene_specs의 창의적 의도를 해석하며 TTS/이미지/매니페스트를 조립하고 렌더링까지 수행",
+      "model": "claude-opus-4-6",
+      "max_turns": 60,
+      "budget": "$5.0",
+      "max_duration_minutes": 40,
+      "allowed_tools": ["Read", "Write", "Glob", "Bash"],
+      "skill_file": "agents/assembly-director/SKILL.md",
       "shared_skills": [
+        "shared/motion-presets",
         "shared/remotion-design-system",
-        "shared/motion-presets"
+        "shared/korean-tts-rules",
+        "shared/image-generation",
+        "shared/image-prompt-rules"
       ],
-      "notes": "Stage 3에서 pre/post render 2회 실행."
+      "tools": {
+        "tts_tool": { "module": "tts_generator", "description": "TTS 음성 생성 (speed/stability/style 조절 가능)" },
+        "image_tool": { "module": "image_batch_module", "description": "이미지 생성/검색/평가" },
+        "subtitle_tool": { "module": "subtitle_sync", "description": "WhisperX 자막 정렬" },
+        "manifest_tool": { "module": "manifest_builder", "description": "Remotion 매니페스트 빌드" },
+        "render_tool": { "module": "video_assembler", "description": "Remotion 영상 렌더링" },
+        "validate_tool": { "module": "data_validator", "description": "데이터 정합성 검증" }
+      },
+      "notes": "Stage 3 핵심. 기존 9스텝(TTS전처리~최종검수)을 에이전트 1명이 모듈을 도구로 사용하며 판단+실행. mood/motion에 따라 TTS 파라미터 조정, 이미지 품질 판단 후 재생성, 타이밍 보정 등 창의적 조립."
     }
   },
 
@@ -129,13 +140,19 @@
 
   "summary": {
     "v3_agents": 8,
-    "v4_agents": 4,
-    "removed": [
+    "v4_agents": 3,
+    "v4_agent_list": [
+      "research-orchestrator (Stage 1: 리서치)",
+      "script-director (Stage 2: 원고+연출)",
+      "assembly-director (Stage 3: 에셋 조립+렌더링)"
+    ],
+    "removed_agents": [
       "write-manuscript (script-director에 통합)",
       "visual-composer (script-director에 통합)",
-      "image-searcher (image_batch_module에 흡수)",
-      "image-painter (image_batch_module에 흡수)",
-      "tts-verifier (QA에 통합)"
+      "image-searcher (assembly-director의 도구로 흡수)",
+      "image-painter (assembly-director의 도구로 흡수)",
+      "tts-verifier (assembly-director가 내부 검수)",
+      "qa-reviewer (assembly-director가 내부 검수)"
     ],
     "v3_shared_skills": 16,
     "v4_shared_skills": 8,
@@ -151,6 +168,7 @@
     ],
     "new_skills": [
       "motion-presets (모션 그래픽 프리셋 15종)"
-    ]
+    ],
+    "architecture": "3 에이전트 × 6 모듈(도구). 에이전트가 판단, 모듈이 실행."
   }
 }

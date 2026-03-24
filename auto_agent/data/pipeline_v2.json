@@ -99,122 +99,53 @@
 
     {
       "id": "stage_3",
-      "name": "에셋 생성 + 조립",
-      "description": "TTS, 이미지, 자막 병렬 생성 → 검증 → 매니페스트 → 렌더링",
-      "execution": "parallel_then_sequential",
+      "name": "에셋 조립 + 렌더링",
+      "description": "assembly-director 에이전트가 창의적 의도를 해석하며 TTS/이미지/매니페스트를 조립하고 렌더링",
+      "execution": "agent_orchestrated",
       "steps": [
         {
-          "id": "step_3a",
-          "name": "tts_preprocess",
-          "description": "한국어 TTS 전처리 (숫자→한국어, 발음 교정)",
-          "type": "single_call",
-          "model": "claude-sonnet-4-5-20250514",
-          "input": ["scene_specs.json"],
-          "output": ["scene_specs.json"],
-          "skills": ["shared/korean-tts-rules"],
-          "group": "parallel_A",
-          "notes": "scene_specs.json의 narration 필드만 전처리. --tools '' 필수."
-        },
-        {
-          "id": "step_3b",
-          "name": "tts_generation",
-          "description": "씬별 나레이션 음성 생성",
-          "type": "module",
-          "module": "tts_generator",
-          "input": ["scene_specs.json"],
-          "output": ["audio/scene_{NNN}.mp3"],
-          "depends_on": ["step_3a"],
-          "group": "parallel_A"
-        },
-        {
-          "id": "step_3c",
-          "name": "subtitle_sync",
-          "description": "WhisperX 기반 단어 레벨 자막 정렬",
-          "type": "module",
-          "module": "subtitle_sync",
-          "input": ["audio/scene_{NNN}.mp3"],
-          "output": ["subtitles/scene_{NNN}.srt"],
-          "depends_on": ["step_3b"],
-          "group": "parallel_A"
-        },
-        {
-          "id": "step_3d",
-          "name": "image_sourcing",
-          "description": "이미지 배치 생성/검색 (캐릭터 + 씬 이미지)",
-          "type": "module",
-          "module": "image_batch_module",
-          "input": ["scene_specs.json", "art_style.json"],
-          "output": ["images/image_assets.json", "characters/"],
-          "group": "parallel_B",
-          "notes": "parallel_A와 독립 실행. FAL queue 배치 제출 → 폴링 대기."
-        },
-        {
-          "id": "step_4",
-          "name": "data_validation",
-          "description": "전 단계 데이터 정합성 검증",
-          "type": "module",
-          "module": "data_validator",
-          "input": ["scene_specs.json", "audio/", "subtitles/", "images/"],
-          "output": ["validation_report.json"],
-          "depends_on": ["step_3c", "step_3d"],
-          "gate": true,
-          "notes": "gate=true: 실패 시 파이프라인 중단. scene↔audio 매칭, 아이콘 존재, 이미지 파일 존재 검증."
-        },
-        {
-          "id": "step_5",
-          "name": "manifest_build",
-          "description": "Remotion 렌더링 매니페스트 생성",
-          "type": "module",
-          "module": "manifest_builder",
-          "input": ["scene_specs.json", "subtitles/", "audio/", "images/"],
-          "output": ["remotion/public/manifest.json"],
-          "depends_on": ["step_4"],
-          "notes": "v5 scene_specs → manifest 변환. motion preset 해석. mapScene 좌표 swap. 전환 효과 자동 결정. durationFrames를 오디오 길이에서 계산."
-        },
-        {
-          "id": "step_5b",
-          "name": "qa_pre_render",
-          "description": "렌더링 전 매니페스트 검수",
-          "type": "single_call",
-          "model": "claude-opus-4-6",
-          "input": ["remotion/public/manifest.json", "scene_specs.json"],
-          "output": ["qa_report_pre.json"],
-          "depends_on": ["step_5"],
-          "gate": true,
-          "notes": "critical 이슈 발견 시 렌더링 차단."
-        },
-        {
-          "id": "step_6",
-          "name": "video_render",
-          "description": "Remotion CLI로 최종 영상 렌더링",
-          "type": "module",
-          "module": "video_assembler",
-          "input": ["remotion/public/manifest.json"],
-          "output": ["{output_video}.mp4"],
-          "depends_on": ["step_5b"],
-          "notes": "1920x1080, 30fps."
-        },
-        {
-          "id": "step_6b",
-          "name": "qa_post_render",
-          "description": "렌더링 후 최종 검수",
-          "type": "single_call",
-          "model": "claude-sonnet-4-5-20250514",
-          "input": ["{output_video}.mp4", "scene_specs.json"],
-          "output": ["qa_post_render.json"],
-          "depends_on": ["step_6"]
+          "id": "step_3",
+          "name": "assembly",
+          "description": "scene_specs의 mood/motion을 해석하여 TTS 파라미터 조정, 이미지 생성/검수, 매니페스트 빌드, 렌더링까지 일괄 수행",
+          "agent": "assembly-director",
+          "input": ["scene_specs.json", "art_style.json", "project_config"],
+          "output": [
+            "audio/scene_{NNN}.mp3",
+            "subtitles/scene_{NNN}.srt",
+            "images/image_assets.json",
+            "characters/",
+            "remotion/public/manifest.json",
+            "{output_video}.mp4",
+            "assembly_report.json"
+          ],
+          "tools": [
+            "tts_tool",
+            "image_tool",
+            "subtitle_tool",
+            "manifest_tool",
+            "render_tool",
+            "validate_tool"
+          ],
+          "skills": [
+            "shared/motion-presets",
+            "shared/remotion-design-system",
+            "shared/korean-tts-rules",
+            "shared/image-generation",
+            "shared/image-prompt-rules"
+          ],
+          "notes": "에이전트가 모듈을 도구로 사용. 기존 step_3a~step_6b (9스텝)를 에이전트 1명이 판단하며 실행. Phase A(분석+계획) → Phase B(에셋 병렬 생성) → Phase C(검수+보정) → Phase D(매니페스트) → Phase E(렌더링+최종검수)."
         }
       ],
       "checkpoint": {
-        "description": "최종 영상 검수",
-        "artifacts": ["{output_video}.mp4", "qa_post_render.json"]
+        "description": "최종 영상 + 조립 리포트 검토",
+        "artifacts": ["{output_video}.mp4", "assembly_report.json"]
       }
     }
   ],
 
   "summary": {
     "v3_steps": 23,
-    "v4_steps": 11,
+    "v4_steps": 5,
     "removed": [
       "outline.json (scene_specs에 통합)",
       "scene_decomposition.json (불필요)",
@@ -231,7 +162,8 @@
       "scene_specs v5 플랫 스키마 (중첩 제거)",
       "motion preset 시스템 (15종)",
       "중간 산출물 5개 → 1개 (scene_specs.json)",
-      "Stage 3 에셋 생성 완전 병렬화"
+      "Stage 3 assembly-director 에이전트가 모듈을 도구로 사용하며 조립",
+      "Stage 3 기존 9스텝 → 에이전트 1명 (TTS/이미지/매니페스트/렌더링 통합)"
     ]
   }
 }
