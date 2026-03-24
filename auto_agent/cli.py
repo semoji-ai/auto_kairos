@@ -208,8 +208,6 @@ def cmd_run(args):
     parser.add_argument("--from", dest="from_step", help="이 step부터 실행")
     parser.add_argument("--only", dest="only_step", help="이 step만 실행")
     parser.add_argument("--dry-run", action="store_true", help="실행하지 않고 계획만 출력")
-    parser.add_argument("--mode", choices=["director", "legacy"], default="director",
-                        help="실행 모드 (director: LLM 판단, legacy: 기존 for loop)")
     parser.add_argument("--workspace", help="워크스페이스 경로")
     parsed = parser.parse_args(args)
 
@@ -232,7 +230,6 @@ def cmd_run(args):
         from_step=parsed.from_step,
         only_step=parsed.only_step,
         dry_run=parsed.dry_run,
-        mode=parsed.mode,
     )
 
 
@@ -612,11 +609,10 @@ def cmd_bg(args):
     sub = args[0]
 
     if sub == "start":
-        # bg start --project <slug|uuid> [--from step_N] [--only step_N] [--mode director|legacy]
+        # bg start --project <slug|uuid> [--from step_N] [--only step_N]
         project_slug = _get_arg(args[1:], "--project")
         from_step = _get_arg(args[1:], "--from") or None
         only_step = _get_arg(args[1:], "--only") or None
-        mode = _get_arg(args[1:], "--mode") or "director"
 
         if not project_slug:
             # 활성 프로젝트 사용
@@ -641,7 +637,7 @@ def cmd_bg(args):
             pass
 
         try:
-            session = sm.start(project_slug, from_step=from_step, only_step=only_step, mode=mode)
+            session = sm.start(project_slug, from_step=from_step, only_step=only_step)
             print_success(f"백그라운드 파이프라인 시작: [accent]{project_slug}[/accent]")
             console.print(f"  PID: {session['pid']}")
             console.print(f"  로그: {session['log_file']}")

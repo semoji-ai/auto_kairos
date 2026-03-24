@@ -373,14 +373,8 @@ class PipelineRunner:
         from_step: str = None,
         only_step: str = None,
         dry_run: bool = False,
-        mode: str = "legacy",
     ):
         """파이프라인 전체 또는 부분 실행."""
-        if mode == "director":
-            from auto_agent.orchestrator.director import run_director
-            run_director(self, from_step=from_step)
-            return
-
         phases = self.pipeline.get("phases", [])
         skip_until = from_step
         found_start = from_step is None

@@ -93,7 +93,6 @@ class SessionManager:
         project_slug: str,
         from_step: Optional[str] = None,
         only_step: Optional[str] = None,
-        mode: str = "director",
     ) -> dict:
         """파이프라인을 백그라운드로 시작.
 
@@ -121,8 +120,6 @@ class SessionManager:
             cmd += ["--from", from_step]
         if only_step:
             cmd += ["--only", only_step]
-        if mode and mode != "director":
-            cmd += ["--mode", mode]
 
         # 환경변수: 워크스페이스 경로 전달
         env = os.environ.copy()
