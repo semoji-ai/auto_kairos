@@ -172,6 +172,20 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     video_theme = cfg.get("video_theme", "dark")
     map_theme = cfg.get("map_theme", "modern_clean")
 
+    # image_assets.json → {sceneNumber: selected_filename} 룩업
+    image_assets_lookup = {}
+    image_assets_path = out_dir / "images" / "image_assets.json"
+    if image_assets_path.exists():
+        try:
+            ia_data = json.loads(image_assets_path.read_text(encoding="utf-8"))
+            for entry in ia_data.get("scenes", []):
+                sn = entry.get("sceneNumber")
+                sel = entry.get("selected")
+                if sn and sel:
+                    image_assets_lookup[sn] = sel
+        except Exception:
+            pass
+
     scenes = []
     for scene in specs["scenes"]:
         num = scene.get("sceneNumber") or scene["scene_number"]
@@ -189,13 +203,22 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             specs_fps = specs.get("meta", {}).get("fps", 30)
             audio_duration = scene["durationFrames"] / specs_fps
 
-        # Image — 로컬 파일 링크
+        # Image — image_assets.json selected 우선 → 루트 → generated/ 순 탐색
         image_path = ""
-        for ext in (".jpg", ".jpeg", ".png", ".webp"):
-            img_src = out_dir / "images" / f"{scene_key}{ext}"
+        selected_file = image_assets_lookup.get(num)
+        if selected_file:
+            img_src = out_dir / "images" / selected_file
             if img_src.exists():
-                image_path = link_asset(img_src, "images", f"{scene_key}{ext}")
-                break
+                image_path = link_asset(img_src, "images", selected_file)
+        if not image_path:
+            for subdir in ("", "generated/"):
+                if image_path:
+                    break
+                for ext in (".jpg", ".jpeg", ".png", ".webp"):
+                    img_src = out_dir / "images" / f"{subdir}{scene_key}{ext}"
+                    if img_src.exists():
+                        image_path = link_asset(img_src, "images", f"{subdir}{scene_key}{ext}")
+                        break
 
         # Subtitles
         sub_entries = []
@@ -205,12 +228,23 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 for e in sub_lookup[num].get("entries", [])
             ]
 
-        # Visualization
+        # Visualization — 플랫 스키마 + 중첩 스키마 모두 지원
+        is_flat = "layout" in scene and "motion" in scene  # 플랫 스키마 판별: 최상위에 layout+motion
         viz = scene.get("visualization")
-        if not viz:
+        if is_flat:
+            # 플랫: 최상위 필드에서 visualization 블록 조립
+            viz = {}
+            for k in ("layout", "headline", "items", "values", "unit", "source",
+                       "icons", "flags", "chartConfig", "title"):
+                if scene.get(k) is not None:
+                    viz[k] = scene[k]
+            viz.setdefault("items", [])
+            viz.setdefault("values", [])
+        elif not viz:
             _skip = {"scene_number", "sceneNumber", "narration", "narration_tts",
                      "durationFrames", "sceneType", "transition", "vizAnimation",
-                     "accentColor", "mapScene", "imageAsset", "chapter"}
+                     "accentColor", "mapScene", "imageAsset", "chapter",
+                     "layout", "motion", "mood"}
             viz = {k: v for k, v in scene.items() if k not in _skip}
             viz.setdefault("items", [])
             viz.setdefault("values", [])
@@ -222,13 +256,27 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         if creative.get("chartConfig") and not viz.get("chartConfig"):
             viz["chartConfig"] = creative.pop("chartConfig")
 
-        # Transition
-        motion_entry = motion_lookup.get(num, {})
-        transition_in = motion_entry.get("transition_in", scene.get("transition", {}))
-        transition = {
-            "type": transition_in.get("type", "crossfade"),
-            "durationFrames": transition_in.get("duration_frames", transition_in.get("durationFrames", 15)),
-        }
+        # Motion preset (v5) — motionPreset 필드로 매니페스트에 전달
+        motion_preset = scene.get("motion", "")
+        mood = scene.get("mood", "")
+
+        # Transition — v5는 motion preset에서 자동 결정, v4는 기존 로직
+        if is_flat:
+            # motion preset 기반 자동 전환 결정
+            _dramatic_motions = {"dramatic_shake", "glitch_alert", "split_compare"}
+            if motion_preset in _dramatic_motions:
+                transition = {"type": "cut", "durationFrames": 0}
+            elif motion_preset == "cinematic_fade":
+                transition = {"type": "crossfade", "durationFrames": 20}
+            else:
+                transition = {"type": "crossfade", "durationFrames": 15}
+        else:
+            motion_entry = motion_lookup.get(num, {})
+            transition_in = motion_entry.get("transition_in", scene.get("transition", {}))
+            transition = {
+                "type": transition_in.get("type", "crossfade"),
+                "durationFrames": transition_in.get("duration_frames", transition_in.get("durationFrames", 15)),
+            }
 
         # Ken Burns
         has_image = bool(image_path) or bool(scene.get("imageAsset"))
@@ -239,13 +287,35 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             "panDirection": "none",
         }
 
-        # VizAnimation
-        viz_anim = scene.get("vizAnimation", {})
-        viz_animation = {
-            "stagger": viz_anim.get("stagger", 6),
-            "itemDuration": viz_anim.get("itemDuration", 20),
-            "easing": viz_anim.get("easing", "easeOut"),
-        }
+        # VizAnimation — v5는 motion preset에서 자동, v4는 기존
+        if is_flat:
+            # motion preset → vizAnimation 자동 매핑
+            _motion_anim_map = {
+                "stagger_wave": {"stagger": 6, "itemDuration": 20, "easing": "easeOut"},
+                "cascade_rank": {"stagger": 8, "itemDuration": 22, "easing": "easeOut"},
+                "fade_rise": {"stagger": 0, "itemDuration": 25, "easing": "easeOut"},
+                "count_and_grow": {"stagger": 4, "itemDuration": 30, "easing": "linear"},
+                "number_spotlight": {"stagger": 0, "itemDuration": 35, "easing": "easeInOut"},
+                "dramatic_shake": {"stagger": 0, "itemDuration": 20, "easing": "easeOut"},
+                "bounce_celebrate": {"stagger": 5, "itemDuration": 18, "easing": "easeOut"},
+                "calm_float": {"stagger": 8, "itemDuration": 30, "easing": "easeInOut"},
+                "type_and_draw": {"stagger": 2, "itemDuration": 25, "easing": "linear"},
+                "glitch_alert": {"stagger": 0, "itemDuration": 15, "easing": "easeOut"},
+                "pie_spin": {"stagger": 4, "itemDuration": 25, "easing": "easeInOut"},
+                "split_compare": {"stagger": 0, "itemDuration": 20, "easing": "easeOut"},
+                "map_reveal": {"stagger": 0, "itemDuration": 30, "easing": "easeInOut"},
+                "cinematic_fade": {"stagger": 0, "itemDuration": 30, "easing": "easeInOut"},
+                "build_sequence": {"stagger": 6, "itemDuration": 20, "easing": "easeOut"},
+            }
+            viz_animation = _motion_anim_map.get(motion_preset,
+                                                  {"stagger": 6, "itemDuration": 20, "easing": "easeOut"})
+        else:
+            viz_anim = scene.get("vizAnimation", {})
+            viz_animation = {
+                "stagger": viz_anim.get("stagger", 6),
+                "itemDuration": viz_anim.get("itemDuration", 20),
+                "easing": viz_anim.get("easing", "easeOut"),
+            }
 
         entry = {
             "sceneNumber": num,
@@ -259,10 +329,21 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             "vizAnimation": viz_animation,
         }
 
+        # motionPreset, mood 필드 추가
+        if motion_preset:
+            entry["motionPreset"] = motion_preset
+        if mood:
+            entry["mood"] = mood
+
+        # layout 필드 (v5 최상위 또는 v4 creative 내부)
+        scene_layout = scene.get("layout") or viz.get("layout") or viz.get("creative", {}).get("layout", "")
+        if scene_layout:
+            entry["sceneType"] = scene_layout
+
         if scene.get("imageAsset") and image_path:
             ia = scene["imageAsset"]
             # cinematic 레이아웃은 무조건 fullscreen + opacity 1
-            layout = viz.get("creative", {}).get("layout", "")
+            layout = scene_layout or viz.get("creative", {}).get("layout", "")
             if layout == "cinematic":
                 entry["imageAsset"] = {"placement": "fullscreen", "opacity": 1.0}
             else:
@@ -383,6 +464,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     legacy_path = remotion_public / "manifest.json"
     with open(legacy_path, "w", encoding="utf-8") as f:
         json.dump(props, f, ensure_ascii=False, indent=2)
+
 
     total_duration = sum(s["audioDurationSec"] for s in scenes)
     audio_count = sum(1 for s in scenes if s["audioPath"])

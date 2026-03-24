@@ -82,11 +82,28 @@ const CenterLayout: React.FC<{
 );
 
 /* ── Inner 컴포넌트: DesignPresetContext에서 색상/폰트를 읽는다 ── */
+/** v5 플랫 스키마 → visualization 블록 조립 */
+const resolveVisualization = (scene: any): any => {
+  if (scene.visualization && (scene.visualization.items || scene.visualization.creative)) {
+    return scene.visualization;
+  }
+  const viz: any = {};
+  for (const k of ["layout", "headline", "items", "values", "unit", "source",
+                     "icons", "flags", "chartConfig", "title"]) {
+    if (scene[k] != null) viz[k] = scene[k];
+  }
+  if (scene.sceneType) viz.layout = scene.sceneType;
+  if (scene.motionPreset) viz.motionPreset = scene.motionPreset;
+  if (scene.mood) viz.mood = scene.mood;
+  return Object.keys(viz).length > 0 ? viz : (scene.visualization || {});
+};
+
 const SingleSceneInner: React.FC<Props> = ({ scene, meta }) => {
   const preset = useDesignPreset();
   const fontFamily = buildFontFamily(preset);
 
   const fps = meta?.fps || 30;
+  const vizData = resolveVisualization(scene);
   const durationInFrames = scene.audioDurationSec
     ? Math.max(Math.ceil(scene.audioDurationSec * fps), 1)
     : 150;
@@ -107,16 +124,17 @@ const SingleSceneInner: React.FC<Props> = ({ scene, meta }) => {
   }
 
   // ── 일반 씬 ──
-  const hasImage = !!(scene.imagePath || scene.vizBackgroundPath);
+  const defaultBg = preset.defaultBackground;
+  const hasImage = !!(scene.imagePath || scene.vizBackgroundPath || defaultBg);
   const placement = scene.imageAsset?.placement ?? "background";
   const defaultOpacity = (placement === "background") ? 0.35 : 1.0;
   const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
-  const imgSrc = scene.vizBackgroundPath || scene.imagePath;
+  const imgSrc = scene.vizBackgroundPath || scene.imagePath || defaultBg;
 
   const creativeEl = (
     <div style={{ width: "100%", height: "100%", position: "relative" }}>
       <CreativeScene
-        data={scene.visualization}
+        data={vizData}
         subtitles={scene.subtitles || []}
         fps={fps}
         hasImageBackground={hasImage && (placement === "background" || placement === "fullscreen")}

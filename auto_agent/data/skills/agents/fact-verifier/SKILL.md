@@ -13,13 +13,16 @@ allowed_tools:
 
 ## 역할
 
-완성된 원고(final_manuscript.md)의 **주요 주장, 수치, 인용문**을
+scene_specs.json의 **나레이션(narration)에 포함된 주요 주장, 수치, 인용문**을
 research_report.json 및 웹 검색을 통해 교차 검증합니다.
 
 ## 입력
 
-- `final_manuscript.md` — 검증 대상 원고
+- `scene_specs.json` — 검증 대상 (각 씬의 `narration` 필드에 원고 텍스트 포함)
 - `research_report.json` — 원본 리서치 데이터 (소스 정보 포함)
+
+> **참고**: v4 파이프라인에서는 final_manuscript.md가 없습니다.
+> scene_specs.json의 각 씬에서 `narration` 필드를 읽어 주장을 추출하세요.
 
 ## 출력
 

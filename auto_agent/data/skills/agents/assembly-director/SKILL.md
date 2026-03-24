@@ -33,11 +33,7 @@ TTS · 이미지 · 자막 · 매니페스트를 **판단하면서** 조립합�
 **모듈은 도구다. 에이전트가 판단한다.**
 
 ```
-기존 (V3):
-  모듈A → 모듈B → 모듈C → 모듈D (기계적 파이프)
-
-V4 (assembly-director):
-  에이전트가 scene_specs를 읽고:
+에이전트가 scene_specs를 읽고:
   1. "이 씬은 긴박하니까 TTS를 빠르게" → TTS 파라미터 조정
   2. "이 이미지는 분위기가 안 맞네" → 재생성 요청
   3. "오디오 길이가 예상보다 짧으니 모션 타이밍 조정" → 매니페스트 보정
@@ -137,6 +133,22 @@ validate_tool.check(
 
 scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
 
+**scene_specs 플랫 스키마** — 모든 필드가 씬 최상위에 있습니다:
+```
+각 씬의 필드:
+  narration     → TTS 텍스트
+  layout        → 레이아웃 타입 (cinematic, items_grid, counter 등)
+  motion        → 모션 프리셋 (fade_rise, dramatic_shake 등)
+  mood          → 감정 (dramatic, informative, contemplative 등)
+  headline      → 헤드라인 (있는 씬만)
+  items/values  → 데이터 (있는 씬만)
+  imageAsset    → {source, prompt, background, camera, placement}
+  chartConfig   → 차트 설정 (있는 씬만)
+  mapScene      → 지도 설정 (있는 씬만)
+
+※ visualization.creative 중첩 구조가 아닙니다. 최상위에서 직접 읽으세요.
+```
+
 ```
 각 씬에 대해:
 1. mood + motion → TTS 파라미터 결정
@@ -232,9 +244,9 @@ A와 B는 동시 실행.
 │    "Match the style of the reference image."        │
 │    (과도한 강제 표현 금지 — "MUST copy" 등 사용 X)    │
 │                                                     │
-│ 5. 실제 장면 묘사 (scene query)                      │
-│    scene_specs.imageAsset.query 또는                 │
-│    나레이션 기반 영어 장면 묘사                       │
+│ 5. 실제 장면 묘사                                     │
+│    scene.imageAsset.prompt (한글 장면 묘사)           │
+│    없으면 narration 기반 영어 장면 묘사               │
 │                                                     │
 │ 6. 카메라/배경 구조화 정보                            │
 │    "Medium shot, 3/4 angle, modern office, night"   │
@@ -319,7 +331,7 @@ TTS 검수:
 
 이미지 검수:
   - 생성/검색된 이미지 품질 평가 (image_tool.evaluate)
-  - score < 0.5 → 다른 query/prompt로 재시도 (최대 2회)
+  - score < 0.5 → 다른 prompt로 재시도 (최대 2회)
   - cinematic 씬 이미지 없으면 → 반드시 생성
 
 타이밍 검수:
@@ -366,7 +378,7 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 | 상황 | 판단 |
 |------|------|
 | 검색 결과 0건 | → generate로 전환 |
-| evaluate score < 0.5 | → query 수정 후 재검색 |
+| evaluate score < 0.5 | → prompt 수정 후 재검색 |
 | 2회 재시도 후에도 score < 0.5 | → 이미지 없이 진행 (cinematic 제외) |
 | cinematic 씬에 이미지 없음 | → 반드시 generate (필수) |
 
@@ -392,6 +404,13 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 ---
 
 ## 이미지 생성 규칙 (절대 규칙)
+
+### 저장 경로
+
+**생성된 이미지는 `images/generated/` 폴더에 저장한다.**
+- 생성: `images/generated/scene_001.png`
+- 루트(`images/scene_001.png`)에 복사하지 않는다 — 매니페스트 빌더가 `generated/` 에서 직접 읽음
+- 검색 이미지: `images/scene_001.jpg` (루트에 직접 저장)
 
 ### 기존 이미지 보호 (CLAUDE.md §11)
 
@@ -443,7 +462,7 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 1. 이미지 생성/검색
 2. image_tool.evaluate()로 품질 평가
    - score >= 0.5 → 채택
-   - score < 0.5 → query/prompt 수정 후 재시도
+   - score < 0.5 → prompt 수정 후 재시도
 3. 재시도 최대 2회 (총 3회 시도)
 4. 3회 후에도 score < 0.5:
    - cinematic 씬 → 반드시 재시도 (generate로 전환)
@@ -462,7 +481,7 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 ## 금지 사항
 
 - ❌ scene_specs.json의 나레이션 텍스트 수정 (TTS 전처리만 허용)
-- ❌ scene_specs.json의 creative 필드 수정 (에셋 조립만 담당)
+- ❌ scene_specs.json의 layout/motion/mood/headline 필드 수정 (에셋 조립만 담당)
 - ❌ **이미지 파일 삭제** (버전 번호로 관리, CLAUDE.md §11)
 - ❌ 3회 이상 재생성/재검색 반복 (무한루프 방지)
 - ❌ 목표 시간을 맞추기 위해 씬 삭제

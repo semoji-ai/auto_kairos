@@ -294,8 +294,12 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
         "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
         "comparison_table", "before_after", "icon_stat", "stacked_progress",
         "card_carousel", "hero_with_context", "quote_portrait", "annotated_chart",
-        "cinematic",
+        "cinematic", "bar_horizontal", "donut",
     }
+
+    # 0순위: 플랫 스키마 — scene.layout 직접 지정
+    if scene.get("layout") and scene["layout"] in VALID_LAYOUTS:
+        return scene["layout"], True
 
     # 1순위: creative.layout 직접 지정
     if creative.get("layout") and creative["layout"] in VALID_LAYOUTS:
@@ -304,18 +308,21 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
     # 2순위: displayMode / chartConfig
     if creative.get("displayMode") == "logo_grid":
         return "logo_grid", False
-    chart_type = (creative.get("chartConfig") or {}).get("type", "")
+    chart_type = (scene.get("chartConfig") or creative.get("chartConfig") or {}).get("type", "")
     if creative.get("displayMode") == "pie_chart" or chart_type == "pie":
         return "pie", False
     if creative.get("displayMode") == "line_chart" or chart_type == "line":
         return "line", False
+    if chart_type == "bar":
+        return "bar", False
 
     # 3순위: 데이터 구조 기반 추론
     reveal = creative.get("reveal", "fade_in")
     emphasis = creative.get("emphasis", "none")
-    items = viz.get("items") or []
-    values = viz.get("values") or []
-    headline = creative.get("headline", "")
+    # items/values/headline은 최상위 또는 viz 내부
+    items = scene.get("items") or viz.get("items") or []
+    values = scene.get("values") or viz.get("values") or []
+    headline = scene.get("headline") or creative.get("headline", "")
 
     if emphasis == "quote" or (len(items) == 1 and re.search(r'["""\']', items[0])):
         return "quote", False
@@ -442,21 +449,22 @@ def render_scene_preview(scene: dict) -> str:
     viz = scene.get("visualization") or {}
     creative = viz.get("creative") or {}
     layout = scene.get("_layout", "headline_only")
-    mood = creative.get("mood", "informative")
+    # 플랫 스키마: 최상위 필드 우선, creative 중첩 fallback
+    mood = scene.get("mood") or creative.get("mood", "informative")
     accent, bg_tint = MOOD_COLORS.get(mood, ("#3B82F6", "#080d1a"))
-    headline = creative.get("headline", "")
+    headline = scene.get("headline") or creative.get("headline", "")
     emphasis = creative.get("emphasis", "")
-    items = viz.get("items") or []
-    values = viz.get("values") or []
-    unit = viz.get("unit", "")
-    source = viz.get("source", "")
-    descriptions = viz.get("descriptions") or creative.get("descriptions") or []
-    item_icons = viz.get("itemIcons") or []
-    item_flags = viz.get("itemFlags") or []
+    items = scene.get("items") or viz.get("items") or []
+    values = scene.get("values") or viz.get("values") or []
+    unit = scene.get("unit") or viz.get("unit", "")
+    source = scene.get("source") or viz.get("source", "")
+    descriptions = scene.get("descriptions") or viz.get("descriptions") or creative.get("descriptions") or []
+    item_icons = scene.get("icons") or viz.get("itemIcons") or []
+    item_flags = scene.get("flags") or viz.get("itemFlags") or []
     item_statuses = viz.get("itemStatuses") or []
     item_images = viz.get("images") or creative.get("images") or []
     logo_map = creative.get("logoMap") or {}
-    chart_config = creative.get("chartConfig") or {}
+    chart_config = scene.get("chartConfig") or creative.get("chartConfig") or {}
     image_url = scene.get("_image_url", "")
     img_asset = scene.get("imageAsset") or {}
     placement = img_asset.get("placement", "background")

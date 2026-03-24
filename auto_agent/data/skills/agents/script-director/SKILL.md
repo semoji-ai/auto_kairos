@@ -110,11 +110,10 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 
 ---
 
-## 씬 스키마 (v5 — 플랫 구조)
+## 씬 스키마 (플랫 구조)
 
 ```json
 {
-  "version": "5.0",
   "total_scenes": 30,
   "scenes": [
     {
@@ -143,24 +142,40 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 }
 ```
 
-### v4 → v5 변경점
+### imageAsset 구조 (이미지가 필요한 씬만)
 
-| v4 (기존) | v5 (신규) | 이유 |
-|-----------|----------|------|
-| `visualization.creative.reveal` | 삭제 | motion 프리셋에 흡수 |
-| `visualization.creative.emphasis` | 삭제 | layout + motion 조합으로 대체 |
-| `visualization.creative.concept` | 삭제 | 나레이션이 곧 컨셉 |
-| `visualization.creative.mood` | `mood` (최상위) | 중첩 제거 |
-| `visualization.creative.headline` | `headline` (최상위) | 중첩 제거 |
-| `visualization.creative.layout` | `layout` (최상위) | 중첩 제거 |
-| `visualization.items/values` | `items/values` (최상위) | 중첩 제거 |
-| `visualization.title` | `title` (최상위) | 중첩 제거 |
-| `vizAnimation` | 삭제 | motion 프리셋에 흡수 |
-| `transition` | 삭제 | 매니페스트 빌더가 자동 결정 |
-| `durationFrames` | 삭제 | TTS 오디오 길이에서 자동 계산 |
-| `itemIcons` | `icons` | 이름 간소화 |
-| `itemFlags` | `flags` | 이름 간소화 |
-| 신규: `motion` | 모션 프리셋 이름 | 핵심 신규 필드 |
+```json
+{
+  "imageAsset": {
+    "source": "generate",
+    "prompt": "2008년 금융위기, 월스트리트 증권거래소, 빨간 숫자가 폭락하는 전광판, 당황한 트레이더들",
+    "background": "뉴욕 월스트리트 증권거래소 내부, 어둡고 긴장감 있는 조명",
+    "camera": "Medium shot, slightly low angle, dramatic lighting",
+    "placement": "fullscreen"
+  }
+}
+```
+
+**imageAsset 필드 규칙:**
+- `source`: `"generate"` (AI 생성) 또는 `"search"` (실물 검색)
+- `prompt`: **한글로** 장면 묘사. 주체 + 상황 + 분위기. 스타일 키워드 넣지 말 것 (도구가 아트스타일 자동 적용)
+- `background`: 배경/장소 묘사 (한글 또는 영어)
+- `camera`: 카메라 앵글/구도 (영어 권장: "Wide shot", "Close-up", "Aerial view" 등)
+- `placement`: `"fullscreen"` (cinematic) 또는 `"background"` (데이터 위에 배경)
+
+**금지:**
+- 아트스타일 키워드 (`cartoon style`, `thick wobbly lines` 등) — 도구가 art_style.json에서 자동 주입
+- 동작/움직임 표현 (`~하는 모습`, `running`, `transitioning`)
+- 텍스트 요소 (`글자가 보이는`, `sign saying`)
+
+```
+
+### 스키마 설계 원칙
+
+- 모든 필드는 **최상위** (중첩 없음)
+- `motion` 프리셋이 애니메이션 결정 (개별 reveal/emphasis 지정 불필요)
+- `transition`, `durationFrames`는 매니페스트 빌더가 자동 계산
+- `icons`/`flags`는 간소화된 이름 사용
 
 ---
 
@@ -193,7 +208,7 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 | art_style | 문체 스킬 | 글자 수 상한 | 특징 |
 |-----------|----------|------------|------|
 | semoji | writing-style-semoji | 100자 | 개념당 1씬, 이모지 활용 |
-| quirky_cartoon | writing-style-iromism | 80자 | 시네마틱 70%, 짧은 나레이션 |
+| quirky_cartoon | writing-style-iromism | 80자 | 교양 있는 수다 톤, 10~80자 리듬 교차 |
 | 그 외 | writing-style | 100자 | 대화체, 능동태 |
 
 ---
@@ -214,13 +229,30 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 | 지도/위치 공개 | `map_reveal` |
 | A vs B 대비 | `split_compare` |
 | 여운/성찰/마무리 | `calm_float` |
-| 텍스트 없이 이미지만 | `cinematic_fade` |
 | 순위/리스트 하나씩 | `cascade_rank` |
+
+### cinematic layout의 motion 선택
+
+cinematic layout이라고 무조건 `cinematic_fade`를 쓰지 마세요.
+**cinematic은 이미지가 주인공인 레이아웃**이지만, motion은 mood에 따라 달라야 합니다.
+
+| cinematic + mood | 추천 motion | 이유 |
+|------------------|------------|------|
+| dramatic/urgent | `dramatic_shake` | 긴장감, 임팩트 |
+| triumphant | `bounce_celebrate` | 성취의 에너지 |
+| suspense | `fade_rise` (느리게) | 서서히 드러남 |
+| contemplative | `calm_float` | 여운, 성찰 |
+| informative | `fade_rise` | 차분한 등장 |
+| playful | `bounce_celebrate` | 경쾌함 |
+| somber | `cinematic_fade` | 무겁고 느린 등장 |
+
+`cinematic_fade`는 **무거운 감정(somber)이나 마무리 씬**에만 사용하세요.
 
 ### 연속 규칙
 
 - 같은 motion 3회 연속 금지
-- `fade_rise`는 가장 기본이지만 전체의 30% 이하
+- `cinematic_fade` 전체의 20% 이하 (과다 사용 금지)
+- `fade_rise`는 전체의 30% 이하
 - `dramatic_shake`, `glitch_alert`는 전체의 10% 이하
 
 ---

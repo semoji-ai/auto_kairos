@@ -28,6 +28,7 @@ const resolveAsset = (path: string): string =>
     : staticFile(path);
 
 import { useDesignPreset, usePresetColors, usePresetTypo, usePresetLayout } from "../design";
+import { resolveSceneMotion, type MotionConfig } from "../utils/resolveMotion";
 
 import {
   C as C_DEFAULT,
@@ -142,6 +143,10 @@ const VALID_LAYOUTS = new Set<LayoutType>([
 ]);
 
 function resolveLayout(data: any, creative: any): LayoutType {
+  // ── 0순위: v5 플랫 스키마 — data.layout 직접 지정 ──
+  if (data.layout && VALID_LAYOUTS.has(data.layout)) {
+    return data.layout;
+  }
   // ── 1순위: creative.layout 직접 지정 (의도 기반) ──
   if (creative.layout && VALID_LAYOUTS.has(creative.layout)) {
     return creative.layout;
@@ -2555,8 +2560,9 @@ interface CreativeSceneProps {
 }
 
 export const CreativeScene: React.FC<CreativeSceneProps> = (props) => {
-  const source = props.data?.source || "";
-  const creative = props.data?.creative || {};
+  const safeData = props.data || {};
+  const source = safeData.source || "";
+  const creative = safeData.creative || {};
   const srcX = creative.sourceOffsetX || 0;
   const srcY = creative.sourceOffsetY || 0;
   return (
@@ -2592,16 +2598,40 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const T = preset.typography;
   const L = preset.layout;
   const frame = useCurrentFrame();
+  // data가 없으면 빈 객체로 fallback
+  if (!data) data = {};
   const creative = data.creative || {};
-  const headline: string = creative.headline || data.title || "";
-  const reveal: string = creative.reveal || "fade_in";
-  const emphasis: string = creative.emphasis || "none";
-  const mood: string = creative.mood || "informative";
+  // 플랫 스키마: 최상위 필드 우선, creative 중첩 fallback
+  const headline: string = data.headline || creative.headline || data.title || "";
+  const mood: string = data.mood || creative.mood || "informative";
   const source: string = data.source || "";
   const items: string[] = data.items || [];
   const values: number[] = data.values || [];
   const unit: string = data.unit || "";
   const concept: string = creative.concept || "";
+
+  // motion preset 연동
+  const motionPreset: string = data.motionPreset || "";
+  const motionConfig: MotionConfig = resolveSceneMotion(motionPreset, mood, items.length);
+
+  // motionConfig → 기존 reveal/emphasis 시스템 매핑
+  const _entranceToReveal: Record<string, string> = {
+    fade: "fade_in", fadeRise: "fade_in", fadeSlide: "fade_in",
+    scale: "zoom_in", spring: "fade_in", overshoot: "cascade",
+    bounce: "stagger", typewriter: "typewriter",
+  };
+  const reveal: string = motionPreset
+    ? (_entranceToReveal[motionConfig.entrance.type] || "fade_in")
+    : (creative.reveal || "fade_in");
+
+  const _emphasisToEmphasis: Record<string, string> = {
+    countUp: "number", shake: "none", glitch: "none", pulse: "none",
+    glow: "number", bounce: "none", lineExpand: "none", none: "none",
+  };
+  const emphasis: string = motionPreset
+    ? (_emphasisToEmphasis[motionConfig.emphasis?.type || "none"] || creative.emphasis || "none")
+    : (creative.emphasis || "none");
+
   const headlineTransform = (creative.headlineOffsetX || creative.headlineOffsetY)
     ? `translate(${creative.headlineOffsetX || 0}px, ${creative.headlineOffsetY || 0}px)` : undefined;
   const itemsTransform = (creative.itemsOffsetX || creative.itemsOffsetY)
@@ -2610,7 +2640,11 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const statusDots: any[] = data.statusDots || [];
   const tags: any[] = data.tags || [];
 
-  const moodCfg = getMoodConfigFromPreset(mood, preset);
+  const _rawMoodCfg = getMoodConfigFromPreset(mood, preset);
+  // motionConfig.speedFactor를 mood speed에 곱함
+  const moodCfg = motionPreset
+    ? { ..._rawMoodCfg, speed: _rawMoodCfg.speed * motionConfig.speedFactor }
+    : _rawMoodCfg;
   const layout = resolveLayout(data, creative);
   const lines = headline.split("\n").filter((l: string) => l.trim());
 
@@ -2619,9 +2653,13 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const itemCount =
     layout === "items_grid" || layout === "items_list" ? items.length : 0;
 
-  // headline/item 애니메이션 지속 시간 (LineReveal=18, Items=15)
-  const LINE_ANIM_DUR = 18;
-  const ITEM_ANIM_DUR = 15;
+  // headline/item 애니메이션 지속 시간 — motionConfig에서 동적 결정
+  const LINE_ANIM_DUR = motionPreset
+    ? Math.round(motionConfig.entrance.duration * motionConfig.speedFactor)
+    : 18;
+  const ITEM_ANIM_DUR = motionPreset
+    ? Math.round((motionConfig.entrance.duration * 0.8) * motionConfig.speedFactor)
+    : 15;
 
   // Raw TTS 시작 프레임 (count-up 타이밍 기준용)
   const headlineSubtitleStarts =
@@ -2644,9 +2682,15 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
     itemDelays = rawItemDelays.map((d) => Math.max(d - ITEM_ANIM_DUR, 0));
   } else {
     const headlineDone = Math.max(...headlineDelays, 0) + 15;
-    itemDelays = computeFixedDelays(reveal, itemCount, moodCfg.speed).map(
-      (d) => d + headlineDone,
-    );
+    if (motionPreset && motionConfig.stagger) {
+      // motionConfig stagger 기반 딜레이
+      const gap = motionConfig.stagger.gap;
+      itemDelays = Array.from({ length: itemCount }, (_, i) => headlineDone + i * gap);
+    } else {
+      itemDelays = computeFixedDelays(reveal, itemCount, moodCfg.speed).map(
+        (d) => d + headlineDone,
+      );
+    }
   }
 
   const allDelays = [...headlineDelays, ...itemDelays];

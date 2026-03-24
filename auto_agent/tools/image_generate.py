@@ -747,7 +747,7 @@ def _build_scene_fal_input(
         )
 
     # 일반 씬
-    prompt          = scene.get("imageAsset", {}).get("prompt") or scene.get("narration", "")
+    prompt          = scene.get("imageAsset", {}).get("prompt") or scene.get("imageAsset", {}).get("query") or scene.get("narration", "")
     characters_info = scene.get("imageAsset", {}).get("charactersInfo", "")
     background      = scene.get("imageAsset", {}).get("background", "")
     camera          = scene.get("imageAsset", {}).get("camera", "")

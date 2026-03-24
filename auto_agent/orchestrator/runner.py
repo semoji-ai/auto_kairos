@@ -750,19 +750,37 @@ class PipelineRunner:
             return StepResult(step_id=step_id, status="completed")
 
         elif step_id == "step_2":
-            # 원고 검증: final_manuscript.md 존재 + 글자 수
+            # script-director → scene_specs.json 직접 출력
+            specs_path = self.project_dir / "scene_specs.json"
             ms_path = self.project_dir / "final_manuscript.md"
-            if ms_path.exists():
+            if specs_path.exists():
+                try:
+                    data = json.loads(specs_path.read_text(encoding="utf-8"))
+                    n_scenes = len(data.get("scenes", []))
+                    version = data.get("version", "?")
+                    if n_scenes > 0:
+                        # 플랫 스키마 검증: narration + layout + motion 필드 존재 확인
+                        sample = data["scenes"][0]
+                        has_flat = all(k in sample for k in ("narration", "layout", "motion"))
+                        schema_tag = f"v{version} 플랫" if has_flat else f"v{version}"
+                        print(f"    [검증] 원고+연출: {n_scenes}씬, {schema_tag} 스키마 ✓")
+                        _notify("Director", f"원고+연출 검증: {n_scenes}씬, {schema_tag}",
+                                phase=self.state.current_phase, project=self.project_slug, level="success")
+                    else:
+                        return StepResult(step_id=step_id, status="failed", error="scene_specs.json에 씬 0개")
+                except Exception as e:
+                    return StepResult(step_id=step_id, status="failed", error=f"scene_specs.json 파싱 실패: {e}")
+            elif ms_path.exists():
+                # fallback: final_manuscript.md 기반 검증
                 text = ms_path.read_text(encoding="utf-8")
                 chars = len(text)
-                has_scene_marker = "## Scene" in text
-                print(f"    [검증] 원고: {chars}자, 씬마커={'있음 ✗' if has_scene_marker else '없음 ✓'}")
+                print(f"    [검증] 원고: {chars}자")
                 _notify("Director", f"원고 검증: {chars}자",
                         phase=self.state.current_phase, project=self.project_slug, level="success")
             else:
-                return StepResult(step_id=step_id, status="failed", error="final_manuscript.md 미생성")
+                return StepResult(step_id=step_id, status="failed", error="scene_specs.json 또는 final_manuscript.md 미생성")
 
-        elif step_id == "step_4":
+        elif step_id in ("step_4", "step_2b"):
             # 팩트체크 결과 확인 — adjusted 항목 원고 자동 반영
             report_path = self.project_dir / "factcheck_report.json"
             if report_path.exists():
@@ -1042,12 +1060,12 @@ class PipelineRunner:
         label = _step_label(step_name, "start").replace(" 시작합니다", "")
 
         # scene_specs 로드 (없으면 scene_decomposition.json에서 폴백)
+        # scene_specs가 아직 없는 생성 단계(script-director 등)는 단일 agent로 전환
         specs_path = self.project_dir / "scene_specs.json"
         if not specs_path.exists():
             decomp_path = self.project_dir / "scene_decomposition.json"
             if decomp_path.exists():
                 # step_6(creative_direction)은 scene_decomposition → scene_specs 변환
-                # decomposition을 scene_specs 초기 구조로 변환
                 decomp = json.loads(decomp_path.read_text(encoding="utf-8"))
                 original_specs = self._decomp_to_specs(decomp)
                 specs_path.write_text(
@@ -1057,8 +1075,10 @@ class PipelineRunner:
                 _notify("Director", f"scene_decomposition → scene_specs 변환 완료 ({len(original_specs.get('scenes', []))}씬)",
                         phase=self.state.current_phase, project=self.project_slug)
             else:
-                return StepResult(step_id=step_id, status="failed",
-                                  error="scene_specs.json 및 scene_decomposition.json 모두 없음")
+                # scene_specs 생성 단계 → 단일 agent 호출로 전환
+                _notify(agent_name, "scene_specs 없음 → 단일 agent 호출로 전환",
+                        phase=self.state.current_phase, project=self.project_slug, level="info")
+                return self._run_agent_step(step)
         else:
             original_specs = json.loads(specs_path.read_text(encoding="utf-8"))
         chapters = self._split_by_chapter(original_specs)
@@ -2896,7 +2916,8 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         return prompt
 
     def _load_agents_config(self) -> dict:
-        """agents.json 로드 (캐시). 중앙 규칙 → 로컬 fallback."""
+        """agents.json 로드 (캐시). 중앙 규칙 → 로컬 fallback.
+        v4(agents 키)와 v3(subagents 키) 모두 지원."""
         if not hasattr(self, "_agents_cache"):
             try:
                 self._agents_cache = self.rule_manager.load_json("agents.json")
@@ -2904,15 +2925,40 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
                 path = DATA_DIR / "agents.json"
                 with open(path, "r", encoding="utf-8") as f:
                     self._agents_cache = json.load(f)
+            # "agents" 키를 "subagents"로도 노출
+            cfg = self._agents_cache
+            if "agents" in cfg and "subagents" not in cfg:
+                cfg["subagents"] = cfg["agents"]
+            # shared_skills → skills 호환
+            for agent_def in cfg.get("subagents", {}).values():
+                if "shared_skills" in agent_def and "skills" not in agent_def:
+                    agent_def["skills"] = agent_def["shared_skills"]
         return self._agents_cache
 
     def _get_agent_budget(self, agent_name: str) -> float:
-        """pipeline.json에서 에이전트 예산 한도(USD) 조회."""
+        """에이전트 예산 한도(USD) 조회. v4: agents.json에서, v3: pipeline gateway에서."""
+        # agents.json 직접
+        agents_config = self._load_agents_config()
+        agent_def = agents_config.get("subagents", {}).get(agent_name, {})
+        budget_str = agent_def.get("budget", "")
+        if budget_str:
+            try:
+                return float(str(budget_str).replace("$", ""))
+            except ValueError:
+                pass
+        # fallback
         limits = self.pipeline.get("gateway", {}).get("agent_limits", {})
         return limits.get(agent_name, {}).get("budget_usd", 3.0)
 
     def _get_agent_timeout(self, agent_name: str) -> int:
-        """pipeline.json에서 에이전트 타임아웃(초) 조회."""
+        """에이전트 타임아웃(초) 조회. v4: agents.json에서, v3: pipeline gateway에서."""
+        # agents.json 직접
+        agents_config = self._load_agents_config()
+        agent_def = agents_config.get("subagents", {}).get(agent_name, {})
+        max_min = agent_def.get("max_duration_minutes", 0)
+        if max_min:
+            return max_min * 60
+        # fallback
         limits = self.pipeline.get("gateway", {}).get("agent_limits", {})
         max_min = limits.get(agent_name, {}).get("max_duration_min", 15)
         return max_min * 60

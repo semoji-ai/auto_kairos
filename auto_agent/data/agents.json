@@ -1,482 +1,148 @@
 {
   "$schema": "./docs/agents-schema.json",
-  "version": "3.0",
-  "description": "Auto Agent V3 — 에이전트/스킬 분리 구조. 공유 스킬 8개 + 독립 에이전트 7개",
-  "subagents": {
-    "_comment_team_a": "===== Team A: 리서치팀 =====",
+  "description": "Auto Agent 에이전트 정의 — 3단계 파이프라인용",
+
+  "agents": {
     "research-orchestrator": {
-      "description": "deep-research-kit 실행 + 리서치 결과 표준 포맷(research_report.json) 변환",
-      "model": "claude-opus-4-6",
+      "description": "심층 리서치 탐색 전담. Explorer 병렬 배포 → 탐색 완료 → 종료.",
+      "model": "opus",
       "max_turns": 70,
-      "allowed_tools": [
-        "Read",
-        "Write",
-        "Glob",
-        "WebSearch",
-        "WebFetch",
-        "Task"
-      ],
-      "skill": "deep-research",
-      "skills": [
-        "shared/research-requirements-semoji"
-      ],
-      "notes": "글로벌 스킬 ~/.claude/skills/deep-research/ 사용. art_style=semoji일 때 research-requirements-semoji 카테고리별 항목 적용"
+      "budget": "$2.5",
+      "max_duration_minutes": 20,
+      "allowed_tools": ["Read", "Write", "Glob", "WebSearch", "WebFetch", "Task"],
+      "skill_file": "agents/research-orchestrator/SKILL.md",
+      "shared_skills": ["shared/research-format"],
+      "notes": "기존과 동일. Stage 1에서 사용."
     },
-    "fact-verifier": {
-      "description": "원고 주요 주장 교차 검증",
-      "model": "claude-sonnet-4-5-20250929",
-      "max_turns": 20,
-      "allowed_tools": [
-        "Read",
-        "Write",
-        "WebSearch"
-      ],
-      "notes": "웹 검색으로 팩트 확인. 독립적 판단이 필요한 에이전트"
-    },
-    "_comment_team_b": "===== Team B: 원고팀 =====",
-    "write-manuscript": {
-      "description": "아웃라인 설계 + 에피소드 중심 원고 작성 + 시각화 마커 삽입",
-      "model": "claude-opus-4-6",
-      "max_turns": 60,
-      "allowed_tools": [
-        "Read",
-        "Write",
-        "Glob"
-      ],
-      "skills": [
-        "shared/outline-template",
+
+    "script-director": {
+      "description": "원고 작성 + 씬 분할 + 시각 연출 + 모션 설계를 통합 수행하는 핵심 에이전트",
+      "model": "opus",
+      "max_turns": 80,
+      "budget": "$4.0",
+      "max_duration_minutes": 30,
+      "allowed_tools": ["Read", "Write", "Glob"],
+      "skill_file": "agents/script-director/SKILL.md",
+      "shared_skills": [
         "shared/writing-style",
-        "shared/writing-style-iromism",
         "shared/writing-style-semoji",
-        "shared/research-requirements-semoji",
-        "shared/scene-segmentation"
+        "shared/writing-style-iromism",
+        "shared/motion-presets",
+        "shared/remotion-design-system"
       ],
-      "notes": "Phase 1: outline.json 생성, Phase 2: 원고 작성. art_style에 따라 writing-style-semoji 또는 writing-style-iromism이 writing-style을 오버라이드"
+      "chunked_parallel": {
+        "split_by": "chapter",
+        "max_parallel": 3,
+        "merge_strategy": "concat_scenes_renumber"
+      },
+      "notes": "Stage 2 핵심. 기존 write-manuscript + visual-composer 4개 Phase 통합. 챕터별 병렬 처리 지원."
     },
-    "_comment_team_c": "===== Team C: 씬 설계팀 (Remotion-First) =====",
-    "character-planner": {
-      "description": "step_8b 내부에서 호출 — scene_specs.json의 generate 씬 분석 → 2씬+ 등장 캐릭터 추출 + character_plan.json 생성",
-      "model": "claude-sonnet-4-5-20250929",
+
+    "fact-verifier": {
+      "description": "원고 내 주요 주장 교차 검증",
+      "model": "sonnet",
       "max_turns": 20,
-      "allowed_tools": [
-        "Read",
-        "Write",
-        "Glob",
-        "WebSearch"
-      ],
-      "notes": "독립 스텝이 아닌 image_asset_sourcing(step_8b) Phase A에서 호출. scene_specs.json에서 generate 씬만 필터링하여 캐릭터 식별."
+      "budget": "$0.5",
+      "max_duration_minutes": 10,
+      "allowed_tools": ["Read", "Write", "WebSearch"],
+      "skill_file": "agents/fact-verifier/SKILL.md",
+      "notes": "Stage 2에서 비차단 실행. v4: scene_specs.json의 narration에서 주장 추출."
     },
-    "visual-composer": {
-      "description": "원고→씬 분할 + Remotion 렌더링 스펙 + 데이터 보강 + 모션 설계 (4-in-1)",
-      "model": "claude-opus-4-6",
+
+    "assembly-director": {
+      "description": "scene_specs의 창의적 의도를 해석하며 TTS/이미지/매니페스트를 조립하고 렌더링까지 수행",
+      "model": "opus",
       "max_turns": 60,
-      "allowed_tools": [
-        "Read",
-        "Write",
-        "Glob"
-      ],
-      "skills": [
-        "shared/creative-direction",
+      "budget": "$5.0",
+      "max_duration_minutes": 40,
+      "allowed_tools": ["Read", "Write", "Glob", "Bash"],
+      "skill_file": "agents/assembly-director/SKILL.md",
+      "shared_skills": [
+        "shared/motion-presets",
         "shared/remotion-design-system",
-        "shared/scene-segmentation",
-        "shared/motion-rhythm",
-        "shared/data-mapping",
-        "shared/chart-mapping",
-        "shared/asset-advisory"
+        "shared/korean-tts-rules",
+        "shared/image-generation",
+        "shared/image-prompt-rules"
       ],
-      "skill_refs": {
-        "creative-direction": [
-          "patterns",
-          "process",
-          "examples-palette"
-        ],
-        "asset-advisory": [
-          "perspectives",
-          "cross-review",
-          "examples"
-        ]
+      "tools": {
+        "tts_tool": { "module": "tts_generator", "description": "TTS 음성 생성 (speed/stability/style 조절 가능)" },
+        "image_tool": { "module": "image_batch_module", "description": "이미지 생성/검색/평가" },
+        "subtitle_tool": { "module": "subtitle_sync", "description": "WhisperX 자막 정렬" },
+        "manifest_tool": { "module": "manifest_builder", "description": "Remotion 매니페스트 빌드" },
+        "render_tool": { "module": "video_assembler", "description": "Remotion 영상 렌더링" },
+        "validate_tool": { "module": "data_validator", "description": "데이터 정합성 검증" }
       },
-      "notes": "핵심 창작 에이전트. 4단계 순차 실행: (1) 씬 분할→scene_decomposition.json, (2) Creative Direction+Asset Advisory(통합)→scene_specs.json, (3) 데이터 보강→scene_specs.json 업데이트, (4) 모션 설계→motion_plan.json"
-    },
-    "image-searcher": {
-      "description": "이미지 검색 에이전트(신사진). source=search 씬의 위키미디어/Serper 검색 + 다운로드. 검색 실패 시 image-painter에게 생성 위임.",
-      "model": "claude-sonnet-4-5-20250929",
-      "max_turns": 30,
-      "allowed_tools": ["Read", "Write", "Bash", "Glob"],
-      "notes": "검색 도구: wikimedia_search, serper_search, download_image. 생성은 하지 않음."
-    },
-    "image-painter": {
-      "description": "이미지 생성 에이전트(윤화가). source=generate 씬의 FAL.ai 이미지 생성. 캐릭터 분석→캐릭터 생성→씬 이미지 생성.",
-      "model": "claude-sonnet-4-5-20250929",
-      "max_turns": 40,
-      "allowed_tools": ["Read", "Write", "Bash", "Glob"],
-      "notes": "생성 도구: image_generate (scene/character). 검색은 하지 않음. 항상 /edit 엔드포인트 + reference_image 첨부."
-    },
-    "tts-verifier": {
-      "model": "claude-sonnet-4-5-20250929",
-      "max_turns": 20,
-      "skills": [],
-      "allowed_tools": [
-        "Read",
-        "Write",
-        "Bash",
-        "Glob"
-      ],
-      "description": "TTS 음성 검증 + 재생성 에이전트. Gemini 트랜스크립션 비교."
+      "notes": "Stage 3 핵심. 기존 9스텝(TTS전처리~최종검수)을 에이전트 1명이 모듈을 도구로 사용하며 판단+실행. mood/motion에 따라 TTS 파라미터 조정, 이미지 품질 판단 후 재생성, 타이밍 보정 등 창의적 조립."
     }
   },
+
   "modules": {
-    "_comment_infra": "===== 인프라 모듈 =====",
     "preflight": {
-      "description": "API키, node, ffmpeg, Remotion, Lucide 의존성 검증",
+      "description": "환경 검증 (API키, Node, ffmpeg, Remotion)",
       "type": "python",
-      "requires_llm": false
+      "notes": "기존과 동일."
     },
-    "_comment_team_d": "===== Team D: 에셋 생산 + 조립 (프로그래밍/API 모듈) =====",
-    "duplicate-checker": {
-      "description": "N-gram 기반 원고 중복 감지",
+    "tts_generator": {
+      "description": "ElevenLabs TTS 음성 생성",
       "type": "python",
-      "requires_llm": false
+      "api": "ElevenLabs (primary) / Gemini TTS (fallback)",
+      "notes": "기존과 동일."
     },
-    "tts-preprocess": {
-      "description": "한국어 TTS 전처리: 숫자 변환, 된소리화, 발음 교정",
+    "subtitle_sync": {
+      "description": "WhisperX forced alignment 자막 정렬",
       "type": "python",
-      "script": "src/tools/korean_tts_preprocessor.py",
-      "requires_llm": false,
-      "skills": [
-        "shared/korean-tts-rules"
-      ],
-      "notes": "기존 Python 스크립트가 변환 규칙 대부분 구현. LLM 에이전트 → 모듈로 전환"
+      "notes": "기존과 동일."
     },
-    "tts-generator": {
-      "description": "씬별 나레이션 음성 생성",
-      "type": "skill",
-      "api": "elevenlabs",
-      "fallback_api": "gemini-tts",
-      "requires_llm": false
-    },
-    "subtitle-sync": {
-      "description": "WhisperX forced alignment 기반 단어 레벨 타임스탬프 + 자막 정렬",
+    "image_batch_module": {
+      "description": "이미지 배치 생성/검색 (캐릭터 + 씬)",
       "type": "python",
-      "script": "scripts/generate_subtitles.py",
-      "api": "whisperx-local",
-      "requires_llm": false
+      "api": "FAL.ai (generate) / Serper (search)",
+      "internal_agents": ["character-planner"],
+      "notes": "기존과 동일. 내부에서 character-planner 에이전트 호출."
     },
-    "tts-verifier": {
-      "description": "Gemini 하이브리드 TTS 검증 — 발음 오류 자동 감지",
+    "data_validator": {
+      "description": "데이터 정합성 검증 (scene↔audio↔subtitle↔image)",
       "type": "python",
-      "script": "scripts/verify_tts.py",
-      "api": "google-gemini",
-      "requires_llm": false,
-      "skills": [
-        "shared/tts-verification"
-      ],
-      "notes": "TTS 오디오를 Gemini로 재트랜스크립션하여 원본 나레이션과 비교. 발음 오류/누락 자동 감지"
+      "gate": true,
+      "notes": "기존과 동일."
     },
-    "image-generator": {
-      "description": "아트스타일 기반 캐릭터/씬/시각화배경 이미지 생성 + 검색",
-      "type": "skill",
-      "script": "scripts/generate_images.py",
-      "character_api": "fal-ai/nano-banana-2/edit",
-      "scene_api": "fal-ai/nano-banana-2/edit",
-      "generate_api": "fal-ai/nano-banana-2",
-      "source_priority": [
-        "wikimedia",
-        "search",
-        "generate"
-      ],
-      "requires_llm": false,
-      "notes": "art_style.json 기반. 캐릭터(2씬+) → 씬 이미지 → 검색 이미지 → 시각화 배경 순서. IP-Adapter 스타일 일관성"
-    },
-    "data-validator": {
-      "description": "전 단계 데이터 정합성 교차 검증",
+    "manifest_builder": {
+      "description": "scene_specs v5 → Remotion manifest 변환",
       "type": "python",
-      "requires_llm": false,
-      "checks": [
-        "scene_specs ↔ audio 파일 매칭",
-        "시각화 데이터 완전성 (빈 값 없음)",
-        "자막 타이밍 ↔ 오디오 길이 일치",
-        "아이콘명이 Lucide에 존재하는지 확인",
-        "이미지 에셋 파일 존재 확인"
-      ]
+      "notes": "v5 플랫 스키마 지원 추가. motion preset → 구체적 애니메이션 파라미터 변환. durationFrames를 오디오 길이에서 자동 계산. 전환 효과 자동 결정."
     },
-    "manifest-builder": {
-      "description": "scene_specs + motion_plan → Remotion manifest.json 생성",
-      "type": "python",
-      "script": "scripts/build_manifest.py",
-      "requires_llm": false
-    },
-    "video-assembler": {
-      "description": "Remotion CLI 렌더링",
+    "video_assembler": {
+      "description": "Remotion CLI 렌더링 실행",
       "type": "remotion",
-      "requires_llm": false,
-      "command": "npx remotion render KairosVideo --output final_video.mp4"
+      "resolution": "1920x1080",
+      "fps": 30,
+      "notes": "기존과 동일."
     }
   },
+
+  "internal_agents": {
+    "character-planner": {
+      "description": "캐릭터 라이브러리 조회 + 생성 계획",
+      "model": "sonnet",
+      "max_turns": 20,
+      "notes": "image_batch_module 내부에서만 호출. 외부 노출 안 함."
+    }
+  },
+
   "gateway": {
-    "description": "에이전트 감시/복구 — 무한 사고, stuck, 루프 탐지 + 강제 재시작",
-    "model": "claude-haiku-4-5-20251001",
-    "type": "monitor",
-    "polling_interval_sec": 2,
-    "detection_patterns": [
-      "timeout",
-      "repetition",
-      "token_explosion",
-      "no_progress",
-      "error_loop"
+    "model": "haiku",
+    "poll_interval_sec": 2,
+    "detection": ["timeout", "repetition", "token_explosion", "no_progress", "error_loop"],
+    "recovery_levels": ["warning", "restart", "shrink_restart", "skip_notify"],
+    "notes": "기존과 동일."
+  },
+
+  "summary": {
+    "agents": [
+      "research-orchestrator (Stage 1: 리서치)",
+      "script-director (Stage 2: 원고+연출)",
+      "assembly-director (Stage 3: 에셋 조립+렌더링)"
     ],
-    "recovery_levels": [
-      "warning",
-      "restart",
-      "shrink_restart",
-      "skip_notify"
-    ],
-    "max_restarts_per_agent": 2,
-    "notes": "상시 실행. 1차 Python 규칙 → 2차 애매한 케이스만 Haiku 판단 위임. 비용 최소화"
-  },
-  "qa-reviewer": {
-    "description": "최종 결과물 품질 검수 — 씬별 일관성, 데이터 정확도, 시각 품질 검증",
-    "model": "claude-sonnet-4-5-20250929",
-    "max_turns": 25,
-    "allowed_tools": [
-      "Read",
-      "Write",
-      "Glob"
-    ],
-    "skills": [
-      "shared/remotion-design-system",
-      "shared/writing-style",
-      "shared/creative-direction",
-      "shared/scene-segmentation",
-      "shared/motion-rhythm",
-      "shared/data-mapping"
-    ],
-    "skill_refs": {
-      "creative-direction": [],
-      "asset-advisory": []
-    },
-    "review_targets": [
-      "씬 스펙 ↔ 실제 렌더링 일치 검증",
-      "아이콘명 유효성 (Lucide 존재 여부)",
-      "컬러 규칙 준수 (씬당 2-3색 이내)",
-      "나레이션 ↔ 시각 요소 타이밍 동기화",
-      "자막 정확도 + 가독성",
-      "데이터 시각화 수치 정확도 (research_report 대조)",
-      "이미지 에셋 해상도 + 라이선스 확인",
-      "전체 영상 흐름/리듬 일관성"
-    ],
-    "output": "qa_report.json",
-    "notes": "렌더링 전후 2회 실행. 공유 스킬 4개를 검증 기준으로 참조"
-  },
-  "explorer_agent": {
-    "description": "deep-research-kit Phase 3에서 병렬 웹 검색 실행",
-    "model": "claude-sonnet-4-5-20250929",
-    "type": "background_task",
-    "max_concurrent": 5,
-    "notes": "Research Orchestrator가 background_task()로 배포"
-  },
-  "librarian_agent": {
-    "description": "소스 분류/중복 제거/A-E 품질 등급 평가",
-    "model": "claude-sonnet-4-5-20250929",
-    "type": "background_task",
-    "notes": "Research Orchestrator가 background_task()로 배포"
-  },
-  "single_call_config": {
-    "_comment": "3계층 실행 모델: agent(CLI 멀티턴) → single_call(API 1회) → module(Python)",
-    "description": "에이전트 루프 없이 LLM 1회 호출로 완료되는 스텝. 입력 파일을 프롬프트에 주입하고, 출력 JSON을 파싱하여 저장.",
-    "current_mode": "cli_fallback",
-    "steps": {
-      "step_4": {
-        "model": "claude-opus-4-6",
-        "reason": "원고+리서치 교차검증은 깊은 추론 필요"
-      },
-      "step_5": {
-        "model": "claude-opus-4-6",
-        "reason": "원고→씬 분할은 구조적 창작 판단"
-      },
-      "step_6c": {
-        "model": "claude-opus-4-6",
-        "reason": "데이터 보강+모션 설계는 정밀 작업"
-      },
-      "step_11b": {
-        "model": "claude-opus-4-6",
-        "reason": "시각적 QA는 세밀한 검증 필요"
-      },
-      "step_12b": {
-        "model": "claude-sonnet-4-5-20250929",
-        "reason": "메타데이터 검증은 구조화된 작업"
-      }
-    },
-    "estimated_savings": {
-      "time": "에이전트 대비 ~70% 단축 (도구 루프 제거)",
-      "cost": "에이전트 대비 ~50% 절감 (시스템프롬프트+도구정의 재전송 제거)"
-    }
-  },
-  "model_selection_rationale": {
-    "_comment": "v3.0 — 에이전트/스킬 분리 후 모델 배정",
-    "opus-4-6": {
-      "criteria": "창작/전략 판단. 의미→시각 번역, 구조 설계, 스토리텔링",
-      "agents": [
-        "research-orchestrator",
-        "write-manuscript",
-        "visual-composer"
-      ],
-      "count": 3,
-      "execution_frequency": "1-2회/파이프라인",
-      "notes": "기존 5개(+research-synthesizer, outline-builder)에서 3개로 축소. 규칙 기반 작업은 스킬로 분리"
-    },
-    "sonnet-4-5": {
-      "criteria": "독립적 판단/외부 도구 사용. 웹 검색, 품질 검수, 캐릭터 설계",
-      "agents": [
-        "fact-verifier",
-        "qa-reviewer"
-      ],
-      "count": 2,
-      "execution_frequency": "다회/파이프라인",
-      "notes": "기존 6개에서 3개로 축소. scene-decomposer/data-enricher/motion-choreographer/tts-preprocess는 스킬화 → visual-composer 흡수 또는 모듈화"
-    },
-    "haiku-4-5": {
-      "criteria": "감시/판단. 패턴 매칭, 상태 점검, 규칙 기반 판정",
-      "agents": [
-        "gateway"
-      ],
-      "count": 1,
-      "execution_frequency": "상시 (2초 간격 폴링)"
-    },
-    "non-llm": {
-      "criteria": "결정론적 작업. API 호출, 프로그래밍 로직",
-      "modules": [
-        "duplicate-checker",
-        "tts-preprocess",
-        "tts-generator",
-        "subtitle-sync",
-        "image-generator",
-        "data-validator",
-        "manifest-builder",
-        "video-assembler"
-      ],
-      "count": 8,
-      "notes": "tts-preprocess가 에이전트→모듈로 전환되어 1개 추가"
-    }
-  },
-  "shared_skills": {
-    "_comment": "공유 스킬 — 여러 에이전트가 참조하는 업무 매뉴얼",
-    "location": "skills/shared/",
-    "skills": [
-      {
-        "name": "remotion-design-system",
-        "description": "컬러, 아이콘, 애니메이션, 레이아웃, imageAsset 규칙",
-        "referenced_by": [
-          "visual-composer",
-          "qa-reviewer"
-        ]
-      },
-      {
-        "name": "scene-segmentation",
-        "description": "씬 분할 규칙 + 과밀 체크 + 이미지/캐릭터 판단",
-        "referenced_by": [
-          "visual-composer",
-          "write-manuscript",
-          "qa-reviewer"
-        ]
-      },
-      {
-        "name": "creative-direction",
-        "description": "씬별 Creative Direction 설계 (reveal, emphasis, mood, headline)",
-        "referenced_by": [
-          "visual-composer",
-          "qa-reviewer"
-        ]
-      },
-      {
-        "name": "writing-style",
-        "description": "문체, 톤, VIZ/IMG 마커 규칙",
-        "referenced_by": [
-          "write-manuscript",
-          "qa-reviewer"
-        ]
-      },
-      {
-        "name": "writing-style-semoji",
-        "description": "세모지 586편 분석 기반 — 서사구조·후킹·전환·페이싱 (art_style=semoji일 때 조건부 로드)",
-        "referenced_by": [
-          "write-manuscript",
-          "qa-reviewer"
-        ]
-      },
-      {
-        "name": "motion-rhythm",
-        "description": "전환 패턴, 브리딩 포인트, 강약 곡선",
-        "referenced_by": [
-          "visual-composer",
-          "qa-reviewer"
-        ]
-      },
-      {
-        "name": "korean-tts-rules",
-        "description": "숫자→한국어, 약어 발음, 호흡 단위",
-        "referenced_by": [
-          "tts-preprocess"
-        ]
-      },
-      {
-        "name": "data-mapping",
-        "description": "수치 보강 + 검증 규칙 (파이 차트 100%, 단위 표준화)",
-        "referenced_by": [
-          "visual-composer",
-          "qa-reviewer"
-        ]
-      },
-      {
-        "name": "research-format",
-        "description": "deep-research 출력 → research_report.json 변환",
-        "referenced_by": [
-          "research-orchestrator"
-        ]
-      },
-      {
-        "name": "research-requirements-semoji",
-        "description": "세모지 586편 역추적 — 카테고리별 필수 리서치 항목·소스 우선순위 (art_style=semoji일 때 조건부 로드)",
-        "referenced_by": [
-          "research-orchestrator",
-          "write-manuscript"
-        ]
-      },
-      {
-        "name": "outline-template",
-        "description": "3막 구조 + 씬 힌트 원칙",
-        "referenced_by": [
-          "write-manuscript"
-        ]
-      },
-      {
-        "name": "image-generation",
-        "description": "FAL nano-banana-2 기반 이미지 생성 규칙, 스타일별 프롬프트, 참조 이미지 규칙",
-        "referenced_by": [
-          "image-generator"
-        ]
-      },
-      {
-        "name": "chart-mapping",
-        "description": "차트 후보 씬 식별 + 데이터 매핑 규칙 (pie/line/bar/logo_grid)",
-        "referenced_by": [
-          "visual-composer"
-        ]
-      },
-      {
-        "name": "asset-advisory",
-        "description": "시각 에셋 자동 추천 (차트/아이콘/국기/로고/이미지/배치) — Phase 2.5 핵심 스킬",
-        "referenced_by": [
-          "visual-composer"
-        ]
-      },
-      {
-        "name": "overlay-selection",
-        "description": "GIF/Lottie 오버레이 선택 규칙 — 태그 매칭, 위치, 수량 제한",
-        "referenced_by": [
-          "visual-composer"
-        ]
-      }
-    ]
+    "architecture": "3 에이전트 × 6 모듈(도구). 에이전트가 판단, 모듈이 실행."
   }
 }
