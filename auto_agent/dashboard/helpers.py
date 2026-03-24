@@ -58,11 +58,12 @@ def get_scene_image_url(project_dir_name: str, scene_num: int, output_dir: str) 
     project_dir_name: output 디렉토리명 (uuid_{slug} 형식, e.g. "b3cef462_이로미즘_양자컴퓨터_1min")
     """
     img_dir = Path(output_dir) / "images"
-    # 1) scene_NNN.{ext} (selected 복사본)
-    for ext in (".jpg", ".jpeg", ".png", ".webp"):
-        img = img_dir / f"scene_{scene_num:03d}{ext}"
-        if img.exists():
-            return f"/output/{project_dir_name}/images/scene_{scene_num:03d}{ext}"
+    # 1) scene_NNN.{ext} — 루트 → generated/ 순 탐색
+    for subdir in ("", "generated/"):
+        for ext in (".jpg", ".jpeg", ".png", ".webp"):
+            img = img_dir / f"{subdir}scene_{scene_num:03d}{ext}"
+            if img.exists():
+                return f"/output/{project_dir_name}/images/{subdir}scene_{scene_num:03d}{ext}"
     # 2) image_assets.json의 selected 파일
     assets_path = img_dir / "image_assets.json"
     if assets_path.exists():
@@ -294,8 +295,12 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
         "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
         "comparison_table", "before_after", "icon_stat", "stacked_progress",
         "card_carousel", "hero_with_context", "quote_portrait", "annotated_chart",
-        "cinematic",
+        "cinematic", "bar_horizontal", "donut",
     }
+
+    # 0순위: 플랫 스키마 — scene.layout 직접 지정
+    if scene.get("layout") and scene["layout"] in VALID_LAYOUTS:
+        return scene["layout"], True
 
     # 1순위: creative.layout 직접 지정
     if creative.get("layout") and creative["layout"] in VALID_LAYOUTS:
@@ -304,18 +309,21 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
     # 2순위: displayMode / chartConfig
     if creative.get("displayMode") == "logo_grid":
         return "logo_grid", False
-    chart_type = (creative.get("chartConfig") or {}).get("type", "")
+    chart_type = (scene.get("chartConfig") or creative.get("chartConfig") or {}).get("type", "")
     if creative.get("displayMode") == "pie_chart" or chart_type == "pie":
         return "pie", False
     if creative.get("displayMode") == "line_chart" or chart_type == "line":
         return "line", False
+    if chart_type == "bar":
+        return "bar", False
 
     # 3순위: 데이터 구조 기반 추론
     reveal = creative.get("reveal", "fade_in")
     emphasis = creative.get("emphasis", "none")
-    items = viz.get("items") or []
-    values = viz.get("values") or []
-    headline = creative.get("headline", "")
+    # items/values/headline은 최상위 또는 viz 내부
+    items = scene.get("items") or viz.get("items") or []
+    values = scene.get("values") or viz.get("values") or []
+    headline = scene.get("headline") or creative.get("headline", "")
 
     if emphasis == "quote" or (len(items) == 1 and re.search(r'["""\']', items[0])):
         return "quote", False
@@ -354,7 +362,9 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
 
 
 def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: str,
-                              tts_results: Optional[dict] = None) -> list:
+                              tts_results: Optional[dict] = None,
+                              project_accent: Optional[str] = None,
+                              art_style: Optional[str] = None) -> list:
     """씬 목록에 이미지/오디오 URL + TTS 정보 + 레이아웃을 추가.
 
     project_dir_name: output 디렉토리명 (uuid_{slug} 형식) — URL 구성에 사용.
@@ -378,7 +388,7 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         layout, explicit = resolve_layout(scene)
         scene["_layout"] = layout
         scene["_layout_explicit"] = explicit
-        scene["_preview_html"] = render_scene_preview(scene)
+        scene["_preview_html"] = render_scene_preview(scene, project_accent=project_accent, art_style=art_style or "")
 
         # Remotion 캡처 썸네일 (있으면 우선 사용)
         scene["_thumbnail_url"] = None
@@ -401,7 +411,8 @@ def format_headline(headline: str) -> str:
 
 # ─── 씬 프리뷰 렌더러 ───
 
-MOOD_COLORS = {
+# 기본 mood 색상 (artstyle design_tokens가 없을 때 fallback)
+_DEFAULT_MOOD_COLORS = {
     "dramatic": ("#F59E0B", "#1a1005"),
     "urgent": ("#EF4444", "#1a0808"),
     "somber": ("#71717A", "#0d0d0e"),
@@ -410,6 +421,38 @@ MOOD_COLORS = {
     "suspense": ("#F59E0B", "#14100a"),
     "triumphant": ("#10B981", "#081a10"),
 }
+
+def _load_design_tokens(art_style: str) -> dict:
+    """artstyle JSON에서 design_tokens 로드. 캐시됨."""
+    if not hasattr(_load_design_tokens, "_cache"):
+        _load_design_tokens._cache = {}
+    if art_style in _load_design_tokens._cache:
+        return _load_design_tokens._cache[art_style]
+    try:
+        from auto_agent.paths import get_workspace_dir
+        style_path = get_workspace_dir() / "auto_agent" / "data" / "artstyle" / "styles" / f"{art_style}.json"
+        if style_path.exists():
+            import json as _json
+            data = _json.loads(style_path.read_text(encoding="utf-8"))
+            tokens = data.get("design_tokens", {})
+            _load_design_tokens._cache[art_style] = tokens
+            return tokens
+    except Exception:
+        pass
+    _load_design_tokens._cache[art_style] = {}
+    return {}
+
+def get_mood_color(mood: str, art_style: str = "", project_accent: str = None) -> tuple:
+    """mood + artstyle design_tokens에서 accent/bg 색상 반환."""
+    tokens = _load_design_tokens(art_style) if art_style else {}
+    moods = tokens.get("moods", {})
+    mood_entry = moods.get(mood, {})
+    default_accent, default_bg = _DEFAULT_MOOD_COLORS.get(mood, ("#3B82F6", "#080d1a"))
+    accent = mood_entry.get("accent", default_accent)
+    # project_accent가 있으면 urgent/somber 외에는 대체 (Remotion resolvePreset과 동일)
+    if project_accent and mood not in ("urgent", "somber"):
+        accent = project_accent
+    return accent, default_bg
 
 
 def _esc(text: str) -> str:
@@ -437,26 +480,26 @@ def _flag_emoji(code: str) -> str:
     return "".join(chr(0x1F1E6 + ord(c) - ord("A")) for c in code.upper())
 
 
-def render_scene_preview(scene: dict) -> str:
+def render_scene_preview(scene: dict, project_accent: str = None, art_style: str = "") -> str:
     """씬 데이터로 HTML 미니 프리뷰 생성. 16:9 비율, Remotion CreativeScene과 동일 구조."""
     viz = scene.get("visualization") or {}
     creative = viz.get("creative") or {}
     layout = scene.get("_layout", "headline_only")
-    mood = creative.get("mood", "informative")
-    accent, bg_tint = MOOD_COLORS.get(mood, ("#3B82F6", "#080d1a"))
-    headline = creative.get("headline", "")
+    mood = scene.get("mood") or creative.get("mood", "informative")
+    accent, bg_tint = get_mood_color(mood, art_style=art_style, project_accent=project_accent)
+    headline = scene.get("headline") or creative.get("headline", "")
     emphasis = creative.get("emphasis", "")
-    items = viz.get("items") or []
-    values = viz.get("values") or []
-    unit = viz.get("unit", "")
-    source = viz.get("source", "")
-    descriptions = viz.get("descriptions") or creative.get("descriptions") or []
-    item_icons = viz.get("itemIcons") or []
-    item_flags = viz.get("itemFlags") or []
+    items = scene.get("items") or viz.get("items") or []
+    values = scene.get("values") or viz.get("values") or []
+    unit = scene.get("unit") or viz.get("unit", "")
+    source = scene.get("source") or viz.get("source", "")
+    descriptions = scene.get("descriptions") or viz.get("descriptions") or creative.get("descriptions") or []
+    item_icons = scene.get("icons") or viz.get("itemIcons") or []
+    item_flags = scene.get("flags") or viz.get("itemFlags") or []
     item_statuses = viz.get("itemStatuses") or []
     item_images = viz.get("images") or creative.get("images") or []
     logo_map = creative.get("logoMap") or {}
-    chart_config = creative.get("chartConfig") or {}
+    chart_config = scene.get("chartConfig") or creative.get("chartConfig") or {}
     image_url = scene.get("_image_url", "")
     img_asset = scene.get("imageAsset") or {}
     placement = img_asset.get("placement", "background")

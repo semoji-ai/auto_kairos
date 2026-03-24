@@ -7,6 +7,7 @@
 import React from "react";
 import { AbsoluteFill, Img } from "remotion";
 import { CreativeScene } from "../simple/CreativeScene";
+import { MapSceneRenderer } from "../map/MapSceneRenderer";
 import { DesignPresetProvider, useDesignPreset } from "../design";
 import { buildFontFamily } from "../design/fonts";
 import type { SceneEntry, SceneManifest } from "../types/manifest";
@@ -18,8 +19,8 @@ interface Props {
 
 const resolveUrl = (path: string): string => {
   if (!path) return "";
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  return path;
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("/")) return path;
+  return "/" + path;
 };
 
 /* ── 이미지 배경 ── */
@@ -85,21 +86,61 @@ const MapPlaceholder: React.FC<{ data: any; bg?: string }> = ({ data, bg }) => (
   </AbsoluteFill>
 );
 
+/** v5 플랫 스키마 → visualization 블록 조립 (v4 호환) */
+const resolveVisualization = (scene: any): any => {
+  // v4: scene.visualization이 이미 있으면 그대로
+  if (scene.visualization && (scene.visualization.items || scene.visualization.creative)) {
+    return scene.visualization;
+  }
+  // v5 플랫: 최상위 필드에서 visualization 조립
+  const viz: any = {};
+  for (const k of ["layout", "headline", "items", "values", "unit", "source",
+                     "icons", "flags", "chartConfig", "title"]) {
+    if (scene[k] != null) viz[k] = scene[k];
+  }
+  if (scene.mood || scene.motion) {
+    viz.mood = scene.mood;
+    viz.motionPreset = scene.motion;
+  }
+  // sceneType/motionPreset from manifest
+  if (scene.sceneType) viz.layout = scene.sceneType;
+  if (scene.motionPreset) viz.motionPreset = scene.motionPreset;
+  if (scene.mood) viz.mood = scene.mood;
+  return Object.keys(viz).length > 0 ? viz : (scene.visualization || {});
+};
+
 /* ── 메인 컴포넌트 ── */
 const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
   const preset = useDesignPreset();
   const fontFamily = buildFontFamily(preset);
 
   const fps = meta?.fps || 30;
+  const vizData = resolveVisualization(scene);
+
+  // 디버그
+  if (typeof console !== "undefined") {
+    console.log(`[Thumb #${scene.sceneNumber}]`, {
+      accent: preset.colors.accent,
+      artStyle: preset.artStyle,
+      metaArtStyle: meta?.artStyle,
+    });
+  }
+
+  const defaultBg = preset.defaultBackground;
 
   // ── 맵 씬 ──
   if (scene.mapScene) {
-    const bgPath = scene.mapScene.prerenderedBg?.imagePath;
-    return <MapPlaceholder data={scene.mapScene} bg={bgPath} />;
+    const dur = Math.ceil((scene.audioDurationSec || 5) * fps);
+    return (
+      <MapSceneRenderer
+        data={scene.mapScene}
+        durationInFrames={dur}
+        fps={fps}
+      />
+    );
   }
 
   // ── 일반 씬 ──
-  const defaultBg = preset.defaultBackground;
   const hasImage = !!(scene.imagePath || scene.vizBackgroundPath || defaultBg);
   const placement = scene.imageAsset?.placement ?? "background";
   const defaultOpacity = (placement === "background") ? 0.35 : 1.0;
@@ -114,7 +155,7 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
         <ImageBg src={imgSrc} opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9} />
         <CreativeScene
-          data={scene.visualization}
+          data={vizData}
           subtitles={scene.subtitles}
           fps={fps}
           hasImageBackground={true}
@@ -129,7 +170,7 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
         <CenterLayout src={imgSrc} opacity={imgOpacity}>
           <CreativeScene
-            data={scene.visualization}
+            data={vizData}
             subtitles={scene.subtitles}
             fps={fps}
             hasImageBackground={false}
@@ -145,7 +186,7 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
         <SideLayout src={imgSrc} placement={placement as "left" | "right"} opacity={imgOpacity}>
           <CreativeScene
-            data={scene.visualization}
+            data={vizData}
             subtitles={scene.subtitles}
             fps={fps}
             hasImageBackground={false}

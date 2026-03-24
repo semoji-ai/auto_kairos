@@ -59,5 +59,26 @@ export function resolvePreset(meta: {
   // 3. 사용자 오버라이드
   const userOverride = meta.designPreset;
 
-  return deepMerge(base, themeOverride as any, artPreset as any, userOverride as any);
+  const result = deepMerge(base, themeOverride as any, artPreset as any, userOverride as any);
+
+  // designPreset에서 accent가 변경되면 moods의 accent도 일괄 업데이트
+  // (moods에 개별 accent가 하드코딩되어 있어도 사용자 선택을 반영)
+  const userAccent = userOverride?.colors?.accent;
+  if (userAccent && result.moods) {
+    const rgbMatch = userAccent.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    const userAccentRgb = rgbMatch
+      ? `${parseInt(rgbMatch[1], 16)},${parseInt(rgbMatch[2], 16)},${parseInt(rgbMatch[3], 16)}`
+      : result.colors?.accentRgb || "245,158,11";
+    for (const mood of Object.keys(result.moods)) {
+      const m = result.moods[mood];
+      // urgent(빨강), somber(회색)은 mood 고유 색상 유지
+      if (mood === "urgent" || mood === "somber") continue;
+      if (m) {
+        m.accent = userAccent;
+        m.accentRgb = userAccentRgb;
+      }
+    }
+  }
+
+  return result;
 }

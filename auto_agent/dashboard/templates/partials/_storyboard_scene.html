@@ -153,27 +153,43 @@
   </div>
   {% endif %}
 
-  {% if scene.visualization and scene.visualization.creative %}
+  {# v5 플랫 스키마 + v4 creative 중첩 모두 지원 #}
+  {% set _headline = scene.headline or (scene.visualization.creative.headline if scene.visualization and scene.visualization.creative else '') %}
+  {% set _mood = scene.mood or (scene.visualization.creative.mood if scene.visualization and scene.visualization.creative else '') %}
+  {% set _motion = scene.motion or '' %}
+  {% set _layout = scene.layout or (scene.visualization.creative.layout if scene.visualization and scene.visualization.creative else '') %}
+  {% set _concept = (scene.visualization.creative.concept if scene.visualization and scene.visualization.creative else '') %}
+
+  {% if _headline or _mood or _motion or _layout %}
   <div class="section">
     <h4>Creative Direction</h4>
     <div class="creative-card">
-      {% if scene.visualization.creative.headline %}
-      <div class="creative-headline">{{ scene.visualization.creative.headline|e }}</div>
+      {% if _headline %}
+      <div class="creative-headline">{{ _headline|e }}</div>
       {% endif %}
-      {% if scene.visualization.creative.concept %}
-      <p class="creative-concept">{{ scene.visualization.creative.concept }}</p>
+      {% if _concept %}
+      <p class="creative-concept">{{ _concept }}</p>
       {% endif %}
       <div class="tags">
+        {% if _layout %}<span class="layout-badge">{{ _layout }}</span>{% endif %}
+        {% if _motion %}<span class="viz-badge">🎬 {{ _motion }}</span>{% endif %}
+        {% if _mood %}<span class="mood-badge">{{ _mood }}</span>{% endif %}
+        {# v4 호환 #}
+        {% if not _motion and scene.visualization and scene.visualization.creative %}
         {% if scene.visualization.creative.reveal %}<span class="viz-badge">{{ scene.visualization.creative.reveal }}</span>{% endif %}
         {% if scene.visualization.creative.emphasis %}<span class="viz-badge">{{ scene.visualization.creative.emphasis }}</span>{% endif %}
-        {% if scene.visualization.creative.mood %}<span class="mood-badge">{{ scene.visualization.creative.mood }}</span>{% endif %}
+        {% endif %}
       </div>
     </div>
   </div>
   {% endif %}
 
-  {% set viz_items = scene.visualization.get('items', []) if scene.visualization else [] %}
-  {% set viz_values = scene.visualization.get('values', []) if scene.visualization else [] %}
+  {# v5: 최상위 items/values 우선, v4: visualization 내부 fallback #}
+  {% set _viz = scene.visualization if scene.visualization is mapping else {} %}
+  {% set viz_items = scene.get('items', []) or _viz.get('items', []) %}
+  {% set viz_values = scene.get('values', []) or _viz.get('values', []) %}
+  {% set viz_unit = scene.get('unit', '') or _viz.get('unit', '') %}
+  {% set viz_source = scene.get('source', '') or _viz.get('source', '') %}
   {% if viz_items %}
   <div class="section">
     <h4>Visualization Data</h4>
@@ -183,13 +199,13 @@
       {% for i in range(viz_items|length) %}
       <tr>
         <td>{{ viz_items[i] }}</td>
-        <td>{{ viz_values[i] if i < viz_values|length else '-' }}{{ scene.visualization.get('unit', '') }}</td>
+        <td>{{ viz_values[i] if i < viz_values|length else '-' }}{{ viz_unit }}</td>
       </tr>
       {% endfor %}
       </tbody>
     </table>
-    {% if scene.visualization.get('source') %}
-    <div class="sources"><span class="sources-label">Source:</span> {{ scene.visualization.source }}</div>
+    {% if viz_source %}
+    <div class="sources"><span class="sources-label">Source:</span> {{ viz_source }}</div>
     {% endif %}
   </div>
   {% endif %}

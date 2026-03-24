@@ -1,5 +1,6 @@
 <!-- Storyboard 탭 — 원고 + 미리보기 + TTS 통합 -->
-<!-- scene-editor.js (에디터 + 썸네일 통합 번들) -->
+<!-- scene-thumb.js (썸네일 프리뷰) + scene-editor.js (에디터) -->
+<script src="/static/scene-thumb.js?v={{ range(100000)|random }}"></script>
 <script src="/static/scene-editor.js?v={{ range(100000)|random }}"></script>
 {% if scenes %}
 <div class="storyboard-filter">
@@ -33,16 +34,21 @@
           <span class="sb-scene-title" data-headline>{{ scene.title }}</span>
         </div>
         <div class="sb-meta">
-          {% if scene._tts_duration %}<span class="duration-tag">{{ "%.1f"|format(scene._tts_duration) }}s</span>{% else %}<span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 60) }}s</span>{% endif %}
+          {% if scene._tts_duration %}<span class="duration-tag">{{ "%.1f"|format(scene._tts_duration) }}s</span>{% elif scene.durationFrames %}<span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 60) }}s</span>{% endif %}
         </div>
       </div>
 
       <div class="tags">
         {% if scene._layout %}<span class="layout-badge{% if not scene._layout_explicit %} layout-inferred{% endif %}">{{ scene._layout }}</span>{% endif %}
-        {% if scene.visualization and scene.visualization.creative %}
+        {# v5 플랫 스키마: 최상위 필드 우선, v4 creative 중첩 fallback #}
+        {% set _mood = scene.mood or (scene.visualization.creative.mood if scene.visualization and scene.visualization.creative else '') %}
+        {% set _motion = scene.motion or '' %}
+        {% if _motion %}<span class="viz-badge">🎬 {{ _motion }}</span>{% endif %}
+        {% if _mood %}<span class="mood-badge">{{ _mood }}</span>{% endif %}
+        {# v4 호환: reveal/emphasis 배지 #}
+        {% if not _motion and scene.visualization and scene.visualization.creative %}
         {% if scene.visualization.creative.reveal %}<span class="viz-badge">{{ scene.visualization.creative.reveal }}</span>{% endif %}
         {% if scene.visualization.creative.emphasis %}<span class="viz-badge">{{ scene.visualization.creative.emphasis }}</span>{% endif %}
-        {% if scene.visualization.creative.mood %}<span class="mood-badge">{{ scene.visualization.creative.mood }}</span>{% endif %}
         {% endif %}
         {# 이미지 에셋 정보 #}
         {% if scene.imageAsset %}
@@ -56,8 +62,9 @@
         {% if scene._image_url %}<span class="img-badge img-ok">✅ 이미지</span>{% else %}<span class="img-badge img-missing">⬜ 미확보</span>{% endif %}
         {% endif %}
         {# 차트 정보 #}
-        {% if scene.visualization and scene.visualization.chartConfig %}
-        <span class="img-badge img-chart">📊 {{ scene.visualization.chartConfig.type }}</span>
+        {% set _chart = scene.chartConfig or (scene.visualization.chartConfig if scene.visualization else none) %}
+        {% if _chart %}
+        <span class="img-badge img-chart">📊 {{ _chart.type }}</span>
         {% endif %}
       </div>
 
@@ -144,11 +151,43 @@ function resizePreview(val) {
       .catch(function() { metaCache = { fps: 30, resolution: {width:1920,height:1080}, videoTheme: '{{ video_theme|default("dark") }}', vizFont: 'Pretendard' }; return metaCache; });
   }
 
+  var manifestCache = null;
+  function fetchManifest() {
+    if (manifestCache) return Promise.resolve(manifestCache);
+    return fetch('/api/manifest/' + dirName)
+      .then(function(r) { return r.json(); })
+      .then(function(d) { manifestCache = d.manifest || d; return manifestCache; })
+      .catch(function() { return null; });
+  }
+
+  // manifest 경로(project/...)를 대시보드 경로(/output/dir_name/...)로 변환
+  function rewritePaths(scene) {
+    var prefix = '/output/' + dirName + '/';
+    if (scene.imagePath && scene.imagePath.startsWith('project/')) {
+      scene.imagePath = prefix + scene.imagePath.replace('project/', '');
+    }
+    if (scene.vizBackgroundPath && scene.vizBackgroundPath.startsWith('project/')) {
+      scene.vizBackgroundPath = prefix + scene.vizBackgroundPath.replace('project/', '');
+    }
+    return scene;
+  }
+
   function fetchScene(num) {
     if (sceneCache[num]) return Promise.resolve(sceneCache[num]);
-    return fetch('/api/p/' + slug + '/editor/scenes/' + num)
-      .then(function(r) { return r.json(); })
-      .then(function(d) { sceneCache[num] = d.scene; return d.scene; });
+    // manifest에서 씬 데이터 가져오기 (visualization 블록 포함)
+    return fetchManifest().then(function(manifest) {
+      if (manifest && manifest.scenes) {
+        var scene = manifest.scenes.find(function(s) { return s.sceneNumber === num; });
+        if (scene) {
+          sceneCache[num] = rewritePaths(JSON.parse(JSON.stringify(scene)));
+          return sceneCache[num];
+        }
+      }
+      // fallback: editor API
+      return fetch('/api/p/' + slug + '/editor/scenes/' + num)
+        .then(function(r) { return r.json(); })
+        .then(function(d) { sceneCache[num] = d.scene; return d.scene; });
+    });
   }
 
   function tryMount(el) {

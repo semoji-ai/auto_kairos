@@ -1,7 +1,6 @@
 {
   "$schema": "./docs/pipeline-schema.json",
-  "version": "3.0",
-  "description": "Auto Agent V3 파이프라인 — 에이전트/스킬 분리, Remotion-First, Simple is Best",
+  "description": "Auto Agent — 3단계 파이프라인: 리서치 → 원고+연출 → 에셋+조립",
   "phases": [
     {
       "id": "phase_0",
@@ -18,7 +17,6 @@
           "checks": [
             "ANTHROPIC_API_KEY (optional: Claude Code 구독 시 불필요)",
             "ELEVENLABS_API_KEY",
-            "OPENAI_API_KEY",
             "FAL_API_KEY (conditional: source=generate인 씬 있을 때)",
             "SERPER_API_KEY (conditional: source=search인 씬 있을 때)",
             "node >= 18",
@@ -29,471 +27,129 @@
         }
       ]
     },
+
     {
-      "id": "phase_1",
-      "name": "리서치 + 원고",
-      "description": "심층 자료 조사 + 표준 포맷 변환 → 아웃라인 + 원고 작성",
+      "id": "stage_1",
+      "name": "리서치",
+      "description": "심층 자료 조사 → research_report.json 생성",
       "execution": "sequential",
       "steps": [
         {
           "id": "step_1",
-          "name": "deep_research_and_synthesis",
+          "name": "deep_research",
           "description": "deep-research-kit 실행 (탐색만 수행, JSON 변환은 runner가 처리)",
           "agent": "research-orchestrator",
           "input": "topic (사용자 입력)",
-          "output": [
-            "RESEARCH/"
-          ],
+          "output": ["RESEARCH/"],
           "resumable": true,
-          "skills": [
-            "shared/research-format"
-          ],
-          "notes": "내부에서 Explorer 에이전트 병렬 배포. 탐색 완료 후 종료. research_report.json은 파이프라인 runner의 Python 병합이 자동 생성."
-        },
+          "skills": ["shared/research-format"],
+          "notes": "기존과 동일. Explorer 병렬 배포 → 탐색 완료 → runner가 research_report.json 자동 생성."
+        }
+      ],
+      "checkpoint": {
+        "description": "리서치 결과 검토",
+        "artifacts": ["research_report.json"]
+      }
+    },
+
+    {
+      "id": "stage_2",
+      "name": "원고 + 연출",
+      "description": "리서치 기반 원고 작성 + 씬 분할 + 시각 연출 + 모션 설계를 통합 수행",
+      "execution": "sequential",
+      "steps": [
         {
           "id": "step_2",
-          "name": "outline_and_manuscript",
-          "description": "3막 구조 아웃라인 설계 + 나레이션 원고 작성",
-          "agent": "write-manuscript",
-          "input": "research_report.json",
-          "output": [
-            "outline.json",
-            "chapters/ch{N}.md",
-            "final_manuscript.md"
-          ],
+          "name": "script_and_direct",
+          "description": "원고 작성과 시각 연출을 동시에 수행. 챕터별 병렬 처리 가능.",
+          "agent": "script-director",
+          "chunked_parallel": {
+            "split_by": "chapter",
+            "max_parallel": 3,
+            "merge_strategy": "concat_scenes_renumber"
+          },
+          "input": ["research_report.json", "art_style.json", "project_config"],
+          "output": ["scene_specs.json"],
           "skills": [
-            "shared/outline-template",
             "shared/writing-style",
-            "shared/scene-segmentation"
+            "shared/writing-style-semoji",
+            "shared/writing-style-iromism",
+            "shared/motion-presets",
+            "shared/remotion-design-system"
           ],
-          "notes": "Phase 1: outline.json 생성 (기존 outline-builder 통합), Phase 2: narrative_draft를 핵심 재료로 원고 작성"
+          "notes": "기존 step_2(원고) + step_5(씬분할) + step_6(크리에이티브) + step_6c(데이터보강) + step_6d(모션) 통합. scene_specs.json v5 플랫 스키마 출력."
+        },
+        {
+          "id": "step_2b",
+          "name": "fact_check",
+          "description": "원고 내 주요 주장 교차 검증",
+          "agent": "fact-verifier",
+          "input": ["scene_specs.json", "research_report.json"],
+          "output": ["factcheck_report.json"],
+          "blocking": false,
+          "notes": "비차단. 실패해도 파이프라인 계속. 결과는 QA 리포트에 반영."
         }
-      ]
+      ],
+      "checkpoint": {
+        "description": "원고 + 씬 연출 검토",
+        "artifacts": ["scene_specs.json"]
+      }
     },
+
     {
-      "id": "phase_2",
-      "name": "분석",
-      "description": "중복 감지 + 팩트 체크",
-      "execution": "parallel_group_A",
+      "id": "stage_3",
+      "name": "에셋 조립 + 렌더링",
+      "description": "assembly-director 에이전트가 창의적 의도를 해석하며 TTS/이미지/매니페스트를 조립하고 렌더링",
+      "execution": "agent_orchestrated",
       "steps": [
         {
           "id": "step_3",
-          "name": "duplicate_check",
-          "description": "N-gram 중복 감지",
-          "module": "duplicate-checker",
-          "input": "final_manuscript.md",
-          "output": "duplicate_check.json",
-          "blocking": false
-        },
-        {
-          "id": "step_4",
-          "name": "fact_check",
-          "description": "주요 주장 교차 검증",
-          "type": "agent",
-          "agent": "fact-verifier",
-          "input": [
-            "final_manuscript.md",
-            "research_report.json"
-          ],
-          "output": "factcheck_report.json",
-          "blocking": false
-        }
-      ]
-    },
-    {
-      "id": "phase_3",
-      "name": "씬 설계",
-      "description": "캐릭터 계획 + 씬 분할/렌더링 스펙/데이터 보강/모션 설계",
-      "execution": "sequential",
-      "steps": [
-        {
-          "id": "step_5",
-          "name": "scene_decomposition",
-          "description": "원고 → 씬 분할 (scene_decomposition.json 생성)",
-          "type": "agent",
-          "agent": "visual-composer",
-          "input": [
-            "final_manuscript.md",
-            "outline.json",
-            "research_report.json"
-          ],
-          "output": "scene_decomposition.json",
-          "skills": [
-            "shared/scene-segmentation"
-          ],
-          "notes": "visual-composer의 1단계만 수행. 씬 분할 결과를 먼저 생성하여 캐릭터 플래닝에 활용"
-        },
-        {
-          "id": "step_6",
-          "name": "creative_direction",
-          "description": "Creative Direction + Asset Advisory — 각 씬의 시각 연출 설계 + 에셋 추천 (통합)",
-          "type": "agent",
-          "chunked_parallel": true,
-          "agent": "visual-composer",
-          "input": [
-            "final_manuscript.md",
-            "outline.json",
-            "research_report.json",
-            "scene_decomposition.json"
-          ],
-          "output": "scene_specs.json",
-          "skills": [
-            "shared/remotion-design-system",
-            "shared/scene-segmentation",
-            "shared/creative-direction",
-            "shared/overlay-selection",
-            "shared/asset-advisory",
-            "shared/chart-mapping"
-          ],
-          "depends_on": "step_5",
-          "notes": "★ Phase 2(Creative Direction + Asset Advisory) 통합 수행. 각 씬에 creative 필드 + visualization 구조(items/values/itemIcons) + chartConfig + imageAsset + mapScene을 한 번에 설계. 멀티턴 에이전트가 창의적 연출과 에셋 추천을 하나의 사고 흐름으로 처리."
-        },
-        {
-          "id": "step_6c",
-          "name": "data_enrichment",
-          "description": "데이터 보강 — research_report 기반 수치 정밀화",
-          "type": "agent",
-          "chunked_parallel": true,
-          "agent": "visual-composer",
-          "input": [
-            "scene_specs.json",
-            "research_report.json"
-          ],
-          "output": "scene_specs.json",
-          "skills": [
-            "shared/data-mapping",
-            "shared/remotion-design-system"
-          ],
-          "depends_on": "step_6",
-          "notes": "★ Phase 3(Data Enrichment)만 수행. research_report.json에서 정확한 수치를 가져와 values/unit/source 보강 + vizAnimation 설정."
-        }
-      ]
-    },
-    {
-      "id": "phase_4",
-      "name": "에셋 생산",
-      "description": "TTS 전처리(모듈) + TTS 생성 + 이미지 에셋(선택) + 자막 동기화",
-      "execution": "parallel_group_B",
-      "steps": [
-        {
-          "id": "step_7",
-          "name": "tts_preprocess",
-          "description": "한국어 TTS 전처리 — 숫자/기호/발음 변환 (Claude Code 1턴)",
-          "type": "single_call",
-          "agent": "write-manuscript",
-          "model": "claude-sonnet-4-5-20250929",
-          "input": "scene_specs.json",
+          "name": "assembly",
+          "description": "scene_specs의 mood/motion을 해석하여 TTS 파라미터 조정, 이미지 생성/검수, 매니페스트 빌드, 렌더링까지 일괄 수행",
+          "agent": "assembly-director",
+          "input": ["scene_specs.json", "art_style.json", "project_config"],
           "output": [
-            "scene_specs.json"
-          ],
-          "skills": [
-            "shared/korean-tts-rules"
-          ],
-          "notes": "kairos_ai_main의 Gemini 전처리를 Claude 1턴으로 전환. 문맥 기반 한자어/고유어 구분, 금액 연음, 날짜 연음 등 AI 판단 필요한 변환 수행"
-        },
-        {
-          "id": "step_8",
-          "name": "tts_generation",
-          "description": "씬별 나레이션 음성 생성",
-          "module": "tts-generator",
-          "input": "scene_specs.json (전처리된 텍스트)",
-          "output": "output/{project}/audio/scene_{NNN}.mp3",
-          "depends_on": "step_7"
-        },
-        {
-          "id": "step_8b",
-          "name": "image_asset_sourcing",
-          "description": "이미지 소싱 — Claude CLI image-painter 에이전트 방식",
-          "type": "agent",
-          "agent": "image-painter",
-          "input": ["scene_specs.json", "art_style.json"],
-          "output": ["images/image_assets.json"]
-        },
-        {
-          "id": "step_9",
-          "name": "subtitle_sync",
-          "description": "WhisperX forced alignment 자막 동기화",
-          "module": "subtitle-sync",
-          "input": "output/{project}/audio/scene_{NNN}.mp3",
-          "output": "output/{project}/subtitles/scene_{NNN}.srt",
-          "depends_on": "step_8"
-        },
-        {
-          "id": "step_9b",
-          "name": "tts_verification",
-          "description": "Python 모듈 기반 TTS 검증: Gemini 트랜스크립션 비교",
-          "type": "module",
-          "module": "tts-verifier",
-          "input": ["scene_specs.json", "output/{project}/audio/"],
-          "output": "tts_verification_report.json",
-          "depends_on": "step_8",
-          "gate": false,
-          "blocking": false,
-          "notes": "advisory 단계. 실패해도 파이프라인 중단 안 함"
-        },
-        {
-          "id": "step_6d",
-          "name": "motion_planning",
-          "description": "모션 설계 — 전환 효과, 타이밍, 리듬 설계",
-          "type": "agent",
-          "agent": "visual-composer",
-          "input": [
-            "scene_specs.json",
-            "subtitles.json"
-          ],
-          "output": "motion_plan.json",
-          "skills": [
-            "shared/motion-rhythm"
-          ],
-          "depends_on": "step_9",
-          "notes": "★ Phase 4(Motion Choreography)만 수행. TTS 자막 타임스탬프(subtitles.json) 기반 전환 효과, 타이밍, 브리딩 포인트 설계 → motion_plan.json 생성."
-        }
-      ]
-    },
-    {
-      "id": "phase_5",
-      "name": "조립 + 검수",
-      "description": "데이터 검증 → manifest 생성 → 사전 검수 → 영상 렌더링 → 사후 검수",
-      "execution": "sequential",
-      "steps": [
-        {
-          "id": "step_10",
-          "name": "data_validation",
-          "description": "전 단계 데이터 정합성 검증",
-          "module": "data-validator",
-          "input": [
-            "scene_specs.json",
-            "motion_plan.json",
-            "output/{project}/audio/",
-            "output/{project}/subtitles/"
-          ],
-          "input_optional": [
-            "output/{project}/images/",
-            "output/{project}/characters/"
-          ],
-          "output": "output/{project}/validation_report.json",
-          "gate": true,
-          "notes": "검증 실패 시 파이프라인 중단"
-        },
-        {
-          "id": "step_11",
-          "name": "manifest_building",
-          "description": "Remotion manifest.json 생성",
-          "module": "manifest-builder",
-          "input": [
-            "scene_specs.json",
-            "motion_plan.json"
-          ],
-          "output": "remotion/public/manifest.json",
-          "notes": "scene_specs + motion_plan → Remotion SceneManifest 포맷 변환"
-        },
-        {
-          "id": "step_11a",
-          "name": "still_capture",
-          "description": "모든 씬의 스틸 프레임 캡처 (시각적 QA용)",
-          "type": "module",
-          "module": "layout-check",
-          "input": [
+            "audio/scene_{NNN}.mp3",
+            "subtitles/scene_{NNN}.srt",
+            "images/image_assets.json",
+            "characters/",
             "remotion/public/manifest.json",
-            "scene_specs.json"
+            "{output_video}.mp4",
+            "assembly_report.json"
           ],
-          "output": [
-            "output/{project}/layout_check/scene_*.png",
-            "output/{project}/layout_check/layout_check_report.json"
+          "tools": [
+            "tts_tool",
+            "image_tool",
+            "subtitle_tool",
+            "manifest_tool",
+            "render_tool",
+            "validate_tool"
           ],
-          "depends_on": "step_11",
-          "notes": "비활성화 — 스틸 프레임 캡처 불필요",
-          "blocking": false,
-          "conditional": true,
-          "condition": "스킵 가능 — 필요 시 대시보드에서 수동 캡처",
-          "skip": true
-        },
-        {
-          "id": "step_11b",
-          "name": "qa_pre_render",
-          "description": "사전 검수 — manifest 기반 씬 스펙/아이콘/컬러/데이터 + 시각적 QA 검증",
-          "type": "single_call",
-          "agent": "qa-reviewer",
-          "single_call_model": "claude-opus-4-6",
-          "input": [
-            "remotion/public/manifest.json",
-            "scene_specs.json",
-            "research_report.json",
-            "output/{project}/audio/",
-            "output/{project}/subtitles/",
-            "output/{project}/images/",
-            "output/{project}/layout_check/"
-          ],
-          "output": "output/{project}/qa_report_pre.json",
           "skills": [
+            "shared/motion-presets",
             "shared/remotion-design-system",
-            "shared/writing-style",
-            "shared/creative-direction",
-            "shared/scene-segmentation",
-            "shared/motion-rhythm",
-            "shared/data-mapping"
+            "shared/korean-tts-rules",
+            "shared/image-generation",
+            "shared/image-prompt-rules"
           ],
-          "gate": true,
-          "depends_on": "step_11a",
-          "notes": "critical 이슈 발견 시 렌더링 차단. layout_check/ 스틸 PNG를 Read로 열어 시각적 QA 수행. 공유 스킬을 검증 기준으로 참조"
-        },
-        {
-          "id": "step_12",
-          "name": "video_assembly",
-          "description": "Remotion CLI로 최종 렌더링",
-          "module": "video-assembler",
-          "input": "remotion/public/manifest.json",
-          "output": "output/{project}/{output_video}",
-          "command": "cd remotion && npx remotion render src/index.ts {composition} --output ../output/{project}/{output_video}",
-          "resolution": "1920x1080",
-          "fps": 30
-        },
-        {
-          "id": "step_12b",
-          "name": "qa_post_render",
-          "description": "사후 검수 — 렌더링 결과 영상 메타데이터/동기화/품질 검증",
-          "type": "single_call",
-          "agent": "qa-reviewer",
-          "single_call_model": "claude-sonnet-4-5-20250929",
-          "input": [
-            "output/{project}/{output_video}",
-            "output/{project}/qa_report_pre.json",
-            "scene_specs.json"
-          ],
-          "output": "output/{project}/qa_report_post.json",
-          "notes": "블랙 프레임, 오디오 싱크, 자막 렌더링, 파일 크기 검증. 문제 발견 시 사용자 알림"
+          "notes": "에이전트가 모듈을 도구로 사용. 기존 step_3a~step_6b (9스텝)를 에이전트 1명이 판단하며 실행. Phase A(분석+계획) → Phase B(에셋 병렬 생성) → Phase C(검수+보정) → Phase D(매니페스트) → Phase E(렌더링+최종검수)."
         }
-      ]
+      ],
+      "checkpoint": {
+        "description": "최종 영상 + 조립 리포트 검토",
+        "artifacts": ["{output_video}.mp4", "assembly_report.json"]
+      }
     }
   ],
-  "checkpoints": {
-    "description": "인터랙티브 모드에서 사용자 검토 포인트",
-    "points": [
-      {
-        "after_step": "step_2",
-        "name": "원고 검토",
-        "description": "outline.json + 최종 원고 확인. 수정 요청 가능"
-      },
-      {
-        "after_step": "step_6c",
-        "name": "씬 설계 검토",
-        "description": "Visual Composer 결과 확인 (scene_specs + motion_plan). Creative Direction(에셋 통합) + Data Enrichment 결과 검토. 씬 타입/에셋/차트/레이아웃 수정 가능"
-      },
-      {
-        "after_step": "step_8b",
-        "name": "이미지 에셋 검토",
-        "description": "생성/검색된 이미지 확인. 재생성 또는 대체 가능",
-        "conditional": true
-      },
-      {
-        "after_step": "step_12b",
-        "name": "최종 검수 결과 검토",
-        "description": "QA 사후 검수 리포트 확인. 재렌더링 또는 수정 요청 가능"
-      }
+
+  "summary": {
+    "steps": 5,
+    "key_points": [
+      "원고+연출 통합 → script-director 단일 에이전트",
+      "scene_specs 플랫 스키마 (중첩 제거)",
+      "motion preset 시스템 (15종)",
+      "산출물 1개 (scene_specs.json)",
+      "assembly-director가 모듈을 도구로 사용하며 에셋 조립+렌더링"
     ]
-  },
-  "gateway": {
-    "description": "에이전트 감시/복구 시스템 (Haiku 기반)",
-    "enabled": true,
-    "model": "claude-haiku-4-5-20251001",
-    "polling_interval_sec": 2,
-    "execution": "parallel_coroutine",
-    "scope": "모든 LLM 서브에이전트 (phase_1 ~ phase_5)",
-    "detection": {
-      "timeout": "에이전트별 max_duration 초과",
-      "repetition": "동일 출력 3회+ 또는 동일 도구 5회+ 연속",
-      "token_explosion": "단일 턴 입력 >100K 또는 budget 초과",
-      "no_progress": "마지막 출력 후 2분간 새 출력 없음",
-      "error_loop": "동일 오류 3회+ 반복"
-    },
-    "recovery_levels": [
-      {
-        "level": 1,
-        "action": "warning",
-        "description": "pipeline_state.json에 warning 기록"
-      },
-      {
-        "level": 2,
-        "action": "restart",
-        "description": "kill + 동일 프롬프트 재시작 (max 2회)"
-      },
-      {
-        "level": 3,
-        "action": "shrink_restart",
-        "description": "입력 축소 + max_turns 50% 감소 재시도"
-      },
-      {
-        "level": 4,
-        "action": "skip_notify",
-        "description": "step을 skipped_by_gateway로 표기 + 사용자 알림"
-      }
-    ],
-    "agent_limits": {
-      "research-orchestrator": {
-        "max_duration_min": 20,
-        "budget_usd": 2.5
-      },
-      "write-manuscript": {
-        "max_duration_min": 15,
-        "budget_usd": 2.5
-      },
-      "visual-composer": {
-        "max_duration_min": 25,
-        "budget_usd": 2.5
-      },
-      "fact-verifier": {
-        "max_duration_min": 10,
-        "budget_usd": 0.5
-      },
-      "image-painter": {
-        "max_duration_min": 40,
-        "budget_usd": 3.0
-      },
-      "image-searcher": {
-        "max_duration_min": 20,
-        "budget_usd": 1.0
-      },
-      "qa-reviewer": {
-        "max_duration_min": 5,
-        "budget_usd": 0.5
-      }
-    }
-  },
-  "state_management": {
-    "state_file": "pipeline_state.json",
-    "resume_strategy": "step_level",
-    "cost_tracking": true,
-    "per_step_timing": true
-  },
-  "design_constraints": {
-    "philosophy": "Simple is Best",
-    "max_colors_per_scene": 3,
-    "icon_library": "lucide-react",
-    "font_primary": "Pretendard",
-    "font_mono": "JetBrains Mono",
-    "background_pattern_opacity_max": 0.03,
-    "spring_damping_min": 150,
-    "padding_min_px": 48,
-    "max_info_per_scene": 1,
-    "one_concept_definition": {
-      "description": "하나의 씬은 아래 목록 중 정확히 하나만 담는다",
-      "atomic_units": [
-        "하나의 수치/통계 (예: 시장 규모 150억 달러)",
-        "하나의 인물 소개 (예: 수양대군의 야망)",
-        "하나의 사건 (예: 김종서 암살)",
-        "하나의 비교 (예: 세조실록 vs 숙종실록)",
-        "하나의 인용문 + 맥락",
-        "하나의 장소/배경 묘사",
-        "하나의 인과 관계 (A → B, 단 A→B→C→D는 분할)"
-      ],
-      "split_signals": [
-        "나레이션에 '한편', '그런데', '그러나', '이어서', '한 사람이 더' 등 전환어가 등장",
-        "2명 이상의 인물이 새로 소개됨",
-        "시간/장소가 전환됨",
-        "나레이션 글자 수가 씬 타입별 상한을 초과"
-      ]
-    },
-    "image_asset_ratio_target": "30% 이하",
-    "notes": "아이콘+타이포+차트가 기본. 이미지 에셋은 정보 전달 극대화를 위한 전략적 배치"
   }
 }
