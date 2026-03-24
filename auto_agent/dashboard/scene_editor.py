@@ -357,7 +357,7 @@ async def get_editor_manifest_meta(slug: str):
     for p in candidates:
         if p and p.exists():
             try:
-                data = json.loads(p.read_text("utf-8"))
+                data = json.loads(p.read_text(encoding="utf-8"))
                 m = data.get("manifest", data)
                 meta = m.get("meta")
                 if meta:

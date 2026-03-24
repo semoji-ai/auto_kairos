@@ -188,7 +188,7 @@ def _list_user_presets() -> list[dict]:
     result = []
     for f in sorted(PRESETS_DIR.glob("*.json")):
         try:
-            data = json.loads(f.read_text("utf-8"))
+            data = json.loads(f.read_text(encoding="utf-8"))
             data["_file"] = f.stem
             result.append(data)
         except Exception:
@@ -216,7 +216,7 @@ async def get_preset(preset_id: str):
         return {**BUILTIN_PRESETS[preset_id], "_id": preset_id}
     fp = PRESETS_DIR / f"{preset_id}.json"
     if fp.exists():
-        data = json.loads(fp.read_text("utf-8"))
+        data = json.loads(fp.read_text(encoding="utf-8"))
         return {**data, "_id": preset_id}
     return JSONResponse({"error": "not found"}, 404)
 
@@ -254,7 +254,7 @@ async def update_preset(preset_id: str, request: Request):
         return JSONResponse({"error": "not found"}, 404)
 
     body = await request.json()
-    existing = json.loads(fp.read_text("utf-8"))
+    existing = json.loads(fp.read_text(encoding="utf-8"))
     existing.update({
         "name": body.get("name", existing.get("name", "")),
         "description": body.get("description", existing.get("description", "")),
@@ -291,7 +291,7 @@ async def apply_preset_to_project(slug: str, request: Request):
         fp = PRESETS_DIR / f"{preset_id}.json"
         if not fp.exists():
             return JSONResponse({"error": "preset not found"}, 404)
-        preset = json.loads(fp.read_text("utf-8"))
+        preset = json.loads(fp.read_text(encoding="utf-8"))
 
     # scene_specs.json 찾기
     from auto_agent.dashboard.helpers import load_project_json
@@ -341,7 +341,7 @@ async def apply_preset_to_project(slug: str, request: Request):
     # 저장
     specs_path = Path(out_dir) / "scene_specs.json" if out_dir else None
     if specs_path and specs_path.exists():
-        specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), "utf-8")
+        specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
 
     return {"ok": True, "scenes_updated": len(specs.get("scenes", []))}
 
@@ -389,7 +389,7 @@ async def save_design_preset_to_project(slug: str, request: Request):
 
     specs_path = Path(out_dir) / "scene_specs.json" if out_dir else None
     if specs_path and specs_path.exists():
-        specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), "utf-8")
+        specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # 매니페스트 리빌드 (디자인 변경을 Remotion에 반영)
     try:
