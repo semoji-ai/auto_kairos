@@ -68,12 +68,21 @@ image_tool.search(
     query: str,
     style_hint: str = "",         # "dramatic", "calm" 등 분위기 힌트
     count: int = 3,               # 후보 수
+    aspect_ratio: str = "16:9",   # placement 기반 ratio (아래 매핑 참조)
 ) → [{ path: str, score: float, description: str }]
 
 image_tool.generate(
-    prompt: str,
-    style: str = "realistic",     # realistic | illustration | anime
-    aspect: str = "16:9",
+    prompt: str,                  # ⚠️ 반드시 아래 "프롬프트 조합 규칙"에 따라 구성
+    image_urls: list[str] = [],   # 참조 이미지 (스타일 base / 캐릭터 ref)
+    aspect_ratio: str = "16:9",   # placement 기반 ratio (아래 매핑 참조)
+    resolution: str = "1K",       # "0.5K", "1K", "2K"
+) → { path: str, description: str }
+
+image_tool.generate_character(
+    prompt: str,                  # 캐릭터 묘사 프롬프트
+    style_base_url: str,          # 아트스타일 base_image (필수)
+    person_photo_url: str = None, # 실존 인물 참조 사진 (선택)
+    aspect_ratio: str = "1:1",    # 캐릭터는 항상 1:1
 ) → { path: str, description: str }
 
 image_tool.evaluate(
@@ -173,10 +182,129 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
   3. 자막 정렬 (WhisperX)
 
 병렬 그룹 B (이미지):
-  1. imageAsset이 있는 씬의 이미지 생성/검색
-  2. 캐릭터 이미지 생성 (필요 시)
+  1. 캐릭터 플래닝 (2씬 이상 등장 인물 추출)
+  2. 캐릭터 이미지 생성 (generate_character)
+  3. 씬별 이미지 생성/검색 (캐릭터 ref 포함)
 
 A와 B는 동시 실행.
+단, 그룹 B 내부에서 캐릭터 이미지는 씬 이미지보다 먼저 생성해야 함.
+```
+
+#### placement → aspect_ratio 매핑 (절대 규칙)
+
+이미지의 용도(placement)에 따라 생성/검색 시 aspect_ratio를 반드시 맞춰야 합니다.
+
+| placement | aspect_ratio | 근거 |
+|-----------|-------------|------|
+| `fullscreen` | `16:9` | 1920×1080 화면 전체. cinematic 씬 필수 |
+| `background` | `16:9` | 화면 뒤 배경. 가로로 넓어야 레이아웃과 충돌 안 함 |
+| `side` | `4:3` 또는 `3:4` | 화면 좌/우측에 배치. 세로가 약간 긴 것이 자연스러움 |
+| `badge` / `person` | `1:1` | 원형 크롭될 이미지. 정사각형 필수 |
+| `character` (캐릭터 생성) | `1:1` | 캐릭터 라이브러리용. 항상 정사각형 |
+
+```
+❌ cinematic 씬인데 aspect_ratio: "1:1" → 양옆이 잘림
+❌ side 배치인데 aspect_ratio: "16:9" → 세로가 너무 짧아 레이아웃 낭비
+✅ fullscreen → "16:9", side → "3:4", badge → "1:1"
+```
+
+#### 이미지 프롬프트 조합 규칙 (절대 규칙)
+
+이미지 생성 시 프롬프트는 **정해진 순서**로 조합해야 합니다.
+순서가 틀리면 모델이 스타일을 무시하거나 캐릭터를 왜곡합니다.
+
+##### 씬 이미지 프롬프트 (generate)
+
+```
+┌─────────────────────────────────────────────────────┐
+│ 최종 prompt = 아래 1~8을 순서대로 결합               │
+│                                                     │
+│ 1. scene_style_description                          │
+│    (art_style.json의 스타일 설명문 — 톤 세팅)        │
+│                                                     │
+│ 2. style + technical JSON 스펙                      │
+│    (art_style, linework, shapes, color_palette 등)  │
+│                                                     │
+│ 3. critical_requirements                            │
+│    (art_style.json에 있으면 포함)                    │
+│                                                     │
+│ 4. 참조 이미지 매칭 지시                              │
+│    "Match the style of the reference image."        │
+│    (과도한 강제 표현 금지 — "MUST copy" 등 사용 X)    │
+│                                                     │
+│ 5. 실제 장면 묘사 (scene query)                      │
+│    scene_specs.imageAsset.query 또는                 │
+│    나레이션 기반 영어 장면 묘사                       │
+│                                                     │
+│ 6. 카메라/배경 구조화 정보                            │
+│    "Medium shot, 3/4 angle, modern office, night"   │
+│                                                     │
+│ 7. 컴포지션 규칙                                     │
+│    (캐릭터 위치, 시선 방향, 여백 등)                  │
+│                                                     │
+│ 8. NO TEXT 규칙                                      │
+│    "No text, no letters, no captions, no watermark" │
+│    (간결하게, 맨 끝에 한 줄)                         │
+└─────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────┐
+│ image_urls (참조 이미지) 결정:                        │
+│                                                     │
+│ IF 캐릭터 이미지 있음:                                │
+│   image_urls = [캐릭터_ref_1.png, 캐릭터_ref_2.png]  │
+│   (스타일 base_image 제외 — 블리드스루 방지)          │
+│                                                     │
+│ IF 캐릭터 이미지 없음:                                │
+│   image_urls = [스타일_base_image.jpg]               │
+│   (색감/질감/분위기만 참고, 인물 복사 금지)           │
+│                                                     │
+│ 두 경우 모두 포즈 복사는 절대 금지                    │
+└─────────────────────────────────────────────────────┘
+```
+
+##### 캐릭터 생성 프롬프트 (generate_character)
+
+```
+┌─────────────────────────────────────────────────────┐
+│ prompt 구성:                                         │
+│ 1. scene_style_description                          │
+│ 2. style + technical 스펙                           │
+│ 3. "Match the style of the reference image."        │
+│ 4. 캐릭터 묘사 (나이, 체형, 의상, 머리, 표정)       │
+│ 5. "Portrait, upper body, facing slightly right"    │
+│ 6. "No text, no watermark"                          │
+│                                                     │
+│ image_urls:                                         │
+│   style_base_url = art_style.json의 base_image      │
+│   person_photo_url = 실존 인물이면 참조 사진 (선택)  │
+│                                                     │
+│ aspect_ratio: "1:1" (항상)                           │
+└─────────────────────────────────────────────────────┘
+```
+
+##### 스타일별 scene_style_description (프롬프트 맨 앞)
+
+| art_style | scene_style_description |
+|-----------|------------------------|
+| semoji | "The attached image is a 2D flat design with no border in style." |
+| lego | "LEGO cinema style, characters must be in the form of LEGO head blocks, and elements must be in the form of combinations of existing LEGO blocks." |
+| quirky_cartoon | "1990s American comic book style, exaggerated proportions, bold lines." |
+| stickman_cute | "Clean and charming hand-drawn stick figure illustration style with friendly, symmetric characters and positive, lighthearted mood." |
+
+##### 주의사항 체크리스트 (프롬프트 조합 후 반드시 확인)
+
+```
+□ scene_style_description이 프롬프트 맨 앞에 있는가
+□ 참조 이미지 매칭 지시가 "Match this style" 수준으로 자연스러운가
+  (❌ "MUST exactly copy", "strictly follow" → 과도한 강제)
+□ 장면 묘사가 동작/움직임 없이 정적 상태인가
+  (❌ "walking", "running", "transitioning")
+  (✅ "standing", "placed on", "facing toward")
+□ NO TEXT가 프롬프트 맨 끝에 한 줄로 있는가
+□ aspect_ratio가 placement에 맞는가
+□ 캐릭터 ref가 있으면 스타일 base_image를 image_urls에서 제외했는가
+□ 캐릭터 ref가 없으면 스타일 base_image를 image_urls에 포함했는가
+□ art_style.json의 critical_requirements를 빠뜨리지 않았는가
 ```
 
 ### Phase C: 검수 + 보정 (핵심 — 에이전트의 가치)
@@ -291,23 +419,16 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 | quirky_cartoon | 두꺼운 불균일 선, 의도적 왜곡, 매끈한 선 금지 |
 | stickman_cute | 매끄러운 잉크선, 원형 머리, 미니멀 배경 |
 
-### 참조 이미지 규칙
+### 참조 이미지 + 프롬프트 조합
 
-```
-캐릭터 생성 시 → 스타일 base_image를 reference
-  - base_image의 눈/선/비율/컬러를 따름
-  - base_image의 특정 인물은 복사하지 않음
-  - "Match this style" 수준의 자연스러운 지시
+**상세 규칙은 Phase B의 "이미지 프롬프트 조합 규칙" 참조.**
 
-씬 생성 + 캐릭터 이미지 있음 → 캐릭터 이미지만 reference
-  - 스타일 base_image 제외 (블리드스루 방지)
-  - 캐릭터 얼굴/복장만 참고
-  - 포즈 절대 복사 금지
-
-씬 생성 + 캐릭터 이미지 없음 → 스타일 base_image를 reference
-  - 색감/질감/분위기/기법만 참고
-  - base_image의 인물은 절대 복사 금지
-```
+핵심 요약:
+- 프롬프트 = style_description + 스펙 + 주의사항 + 참조매칭 + 장면묘사 + 카메라 + NO TEXT
+- 캐릭터 ref 있음 → `image_urls`에 캐릭터만 (스타일 base 제외)
+- 캐릭터 ref 없음 → `image_urls`에 스타일 base만 (인물 복사 금지)
+- `aspect_ratio`는 `placement`에 맞게 (fullscreen→16:9, side→3:4, badge→1:1)
+- 과도한 강제 표현 금지 ("MUST copy" ❌ → "Match this style" ✅)
 
 ### 캐릭터 일관성
 
