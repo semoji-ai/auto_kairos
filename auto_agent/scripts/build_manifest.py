@@ -7,6 +7,7 @@ into Remotion SceneManifest format (manifest.json).
 Supabase는 프로젝트 config 조회에만 사용 (오프라인 시 fallback).
 """
 import json
+import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
@@ -128,7 +129,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         # Windows 폴백: junction 시도 → 실패 시 디렉토리 복사
         try:
             import subprocess as _sp
-            if _sp.os.name == "nt":
+            if os.name == "nt":
                 _sp.run(["cmd", "/c", "mklink", "/J", str(project_link), str(out_dir.resolve())],
                         capture_output=True, timeout=10)
                 if project_link.exists():
@@ -151,10 +152,20 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 asset_dir.symlink_to(out_dir.resolve())
             except OSError:
                 try:
-                    import shutil as _sh
-                    _sh.copytree(out_dir, asset_dir, dirs_exist_ok=True)
-                except Exception:
-                    pass
+                    if os.name == "nt":
+                        import subprocess as _sp2
+                        _sp2.run(["cmd", "/c", "mklink", "/J", str(asset_dir), str(out_dir.resolve())],
+                                 capture_output=True, timeout=10)
+                        if not asset_dir.exists():
+                            raise OSError("junction failed")
+                    else:
+                        raise OSError("not windows")
+                except (OSError, Exception):
+                    try:
+                        import shutil as _sh
+                        _sh.copytree(out_dir, asset_dir, dirs_exist_ok=True)
+                    except Exception:
+                        pass
 
     def link_asset(src: Path, dest_subdir: str, dest_name: str) -> str:
         """로컬 에셋의 staticFile 상대 경로 반환. project/ 기준."""

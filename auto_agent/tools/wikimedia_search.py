@@ -164,7 +164,8 @@ if __name__ == "__main__":
     if query.startswith("download:"):
         # 다운로드 모드: download:<url> <output_path>
         url = query[len("download:"):]
-        output_path = sys.argv[2] if len(sys.argv) > 2 else "/tmp/download.jpg"
+        import tempfile
+        output_path = sys.argv[2] if len(sys.argv) > 2 else str(Path(tempfile.gettempdir()) / "download.jpg")
         result = download_image(url, output_path)
         print(json.dumps(result, ensure_ascii=False))
     else:
