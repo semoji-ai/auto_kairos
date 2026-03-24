@@ -34,7 +34,7 @@ from auto_agent.orchestrator.vault_rag import VaultRAG
 from auto_agent.utils.platform import get_env_with_node
 
 # ── Agent Messenger 브릿지 ──
-_MESSENGER_URL = "http://localhost:8080/api/agent-messages/send"
+_MESSENGER_URL = os.environ.get("MESSENGER_URL", "http://localhost:8000/api/agent-messages/send")
 
 def _notify(agent: str, text: str, phase: str = "", project: str = "", level: str = "info", data: dict = None):
     """파이프라인 진행 상황을 대시보드 메신저로 전송. 파일 영속 + HTTP POST."""
