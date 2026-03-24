@@ -18,7 +18,7 @@ from auto_agent.paths import get_workspace_dir; load_dotenv(get_workspace_dir() 
 from auto_agent.scripts.project_paths import get_project_dir
 
 
-# 영어→한국어 발음 동의어 (비교 시 동일한 것으로 취급)
+# 영어->한국어 발음 동의어 (비교 시 동일한 것으로 취급)
 EQUIV_MAP = {
     's&p': '에스앤피', 's&p500': '에스앤피오백', 'snp': '에스앤피',
     'snp500': '에스앤피오백', 'sp': '에스앤피', 'sp500': '에스앤피오백',
@@ -35,12 +35,12 @@ EQUIV_MAP = {
 
 
 def normalize_text(text: str) -> str:
-    """정규화: 영어→한국어 동의어 변환 + 공백/구두점 제거."""
+    """정규화: 영어->한국어 동의어 변환 + 공백/구두점 제거."""
     text = text.lower()
     # 영어 표현을 한국어 발음으로 치환
     for eng, kor in sorted(EQUIV_MAP.items(), key=lambda x: -len(x[0])):
         text = text.replace(eng, kor)
-    text = re.sub(r'[.,!?"\'\-—…:;·\u201C\u201D\u300C\u300D~+]', '', text)
+    text = re.sub(r'[.,!?"\'\-\u2014\u2026:;\u00B7\u201C\u201D\u300C\u300D~+]', '', text)
     text = re.sub(r'\s+', '', text)
     return text
 
@@ -169,7 +169,7 @@ def main(project_dir=None):
             mismatch_summary = ""
             if mismatches:
                 mismatch_summary = " | " + ", ".join(
-                    f"'{m['original']}'→'{m['transcribed']}'" for m in mismatches[:3]
+                    f"'{m['original']}'->'{m['transcribed']}'" for m in mismatches[:3]
                 )
 
             print(f"  [{i+1}/{total}] Scene {num}: {status} (sim={similarity:.2%}){mismatch_summary}")
@@ -217,7 +217,7 @@ def main(project_dir=None):
                 continue
             print(f"\n  Scene {r['sceneNumber']} (sim={r['similarity']:.2%}):")
             for m in r["mismatches"]:
-                print(f"    {m['type']}: '{m['original']}' → '{m['transcribed']}'")
+                print(f"    {m['type']}: '{m['original']}' -> '{m['transcribed']}'")
 
     print(f"\nResults saved to: {output_path}")
 

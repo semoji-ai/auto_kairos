@@ -1,5 +1,5 @@
 """
-음성 프리셋 관리 — voices.json 기반 CRUD.
+음성 프리셋 관리 -- voices.json 기반 CRUD.
 
 워크스페이스 루트의 voices.json에 저장.
 최초 실행 시 기본 프리셋 1개 자동 생성.

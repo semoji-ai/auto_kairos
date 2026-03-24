@@ -363,7 +363,7 @@ class SupabaseProjectManager:
     # ──────────────────────────────────────
 
     def get_scene_image_url(self, project_id: str, scene_number: int) -> Optional[str]:
-        """씬 이미지 URL. 로컬 파일 우선 → Supabase fallback."""
+        """씬 이미지 URL. 로컬 파일 우선 -> Supabase fallback."""
         from pathlib import Path
         project = self.get_project(project_id)
         if project:
@@ -421,7 +421,7 @@ class SupabaseProjectManager:
         return candidates
 
     def get_scene_audio_url(self, project_id: str, scene_number: int) -> Optional[str]:
-        """씬 오디오 URL. 로컬 파일 우선 → Supabase fallback."""
+        """씬 오디오 URL. 로컬 파일 우선 -> Supabase fallback."""
         from pathlib import Path
         project = self.get_project(project_id)
         if project:
@@ -538,7 +538,7 @@ class SupabaseProjectManager:
     # ──────────────────────────────────────
 
     def _get_storage_key(self, project_id: str) -> Optional[str]:
-        """project_id → storage_key 조회 (캐시)."""
+        """project_id -> storage_key 조회 (캐시)."""
         if not hasattr(self, "_storage_key_cache"):
             self._storage_key_cache = {}
         if project_id in self._storage_key_cache:

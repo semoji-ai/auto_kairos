@@ -355,7 +355,7 @@ class SubtitleSync:
                         else:
                             resolved.append(part)
                     final_lines.extend(resolved)
-        # 소수점 분리 후처리 (e.g. "125." + "8%" → "125.8%")
+        # 소수점 분리 후처리 (e.g. "125." + "8%" -> "125.8%")
         final_lines = self._fix_decimal_splits(final_lines)
         return final_lines
 
@@ -420,7 +420,7 @@ class SubtitleSync:
             if not line_words:
                 continue
 
-            # 시작 단어 찾기 — 현재 위치에서 가까운 범위 내에서 검색
+            # 시작 단어 찾기 -- 현재 위치에서 가까운 범위 내에서 검색
             first_match = _find_word_forward(line_words[0], word_index, max_search=15)
             if first_match >= 0:
                 word_index = first_match
@@ -428,7 +428,7 @@ class SubtitleSync:
 
             start_time = words[word_index]["start"] if word_index < len(words) else 0
 
-            # 마지막 단어 찾기 — 시작 위치 이후, 가까운 첫 매칭만 취함
+            # 마지막 단어 찾기 -- 시작 위치 이후, 가까운 첫 매칭만 취함
             end_idx = word_index
             if len(line_words) > 1:
                 last_match = _find_word_forward(line_words[-1], word_index, max_search=20)
@@ -443,12 +443,12 @@ class SubtitleSync:
         if not entries:
             return entries
 
-        # 연속성 보장 — 역전 방지
+        # 연속성 보장 -- 역전 방지
         for i in range(len(entries) - 1):
             next_start = entries[i + 1].start
             if next_start >= entries[i].start:
                 entries[i].end = next_start
-            # next_start < current.start → 역전 발생, 보간으로 대체
+            # next_start < current.start -> 역전 발생, 보간으로 대체
             else:
                 entries[i].end = entries[i].start + (entries[i].end - entries[i].start)
 

@@ -188,7 +188,7 @@ def cmd_config(args):
         except (json.JSONDecodeError, TypeError):
             pass
 
-        # voice 프리셋 이름 → voice_id + voice_settings 자동 해석
+        # voice 프리셋 이름 -> voice_id + voice_settings 자동 해석
         if key == "voice" and isinstance(value, str):
             from auto_agent.voice_manager import VoiceManager
             vm = VoiceManager()
@@ -199,9 +199,9 @@ def cmd_config(args):
                     updates["voice_settings"] = preset["voice_settings"]
                 pm.update_config(project["id"], **updates)
                 print_success(f"voice = {value}  (프로젝트: {project['name']})")
-                print_success(f"  → voice_id = {preset['voice_id']}")
+                print_success(f"  -> voice_id = {preset['voice_id']}")
                 if preset.get("voice_settings"):
-                    print_success(f"  → voice_settings = {json.dumps(preset['voice_settings'])}")
+                    print_success(f"  -> voice_settings = {json.dumps(preset['voice_settings'])}")
                 return
             else:
                 print_error(f"음성 프리셋 '{value}'을 찾을 수 없습니다.")
@@ -211,13 +211,13 @@ def cmd_config(args):
         pm.update_config(project["id"], **{key: value})
         print_success(f"{key} = {value}  (프로젝트: {project['name']})")
 
-        # art_style 설정 시 → JSON + 참조 이미지를 프로젝트 폴더에 복사
+        # art_style 설정 시 -> JSON + 참조 이미지를 프로젝트 폴더에 복사
         if key == "art_style":
             dest = pm.provision_art_style(project["id"])
             if dest:
-                print_success(f"  → 프로젝트 폴더에 복사 완료: {dest}")
+                print_success(f"  -> 프로젝트 폴더에 복사 완료: {dest}")
             else:
-                print_error(f"  → 아트스타일 파일을 찾을 수 없습니다: {value}")
+                print_error(f"  -> 아트스타일 파일을 찾을 수 없습니다: {value}")
 
     elif args[0] == "set-json":
         if len(args) < 2:
@@ -273,7 +273,7 @@ def cmd_version(args):
         file_type = args[1]
         version = int(args[2])
         path = pm.rollback_version(project["id"], file_type, version)
-        print_success(f"{file_type} → v{version} 롤백 완료: {path}")
+        print_success(f"{file_type} -> v{version} 롤백 완료: {path}")
 
     else:
         console.print("  사용 가능: list [file_type], rollback <file_type> <version>")
@@ -314,7 +314,7 @@ def cmd_cleanup(args):
     result = cm.full_cleanup(project["id"], dry_run=dry_run)
 
     mode = "[warning]DRY RUN[/warning]" if dry_run else "[success]실행됨[/success]"
-    console.print(f"\nCleanup [{mode}] — {project['name']}")
+    console.print(f"\nCleanup [{mode}] -- {project['name']}")
 
     if result["backups_found"]:
         console.print(f"\n  [accent]백업 파일[/accent] ({len(result['backups_found'])}개):")

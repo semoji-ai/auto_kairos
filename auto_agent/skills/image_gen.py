@@ -1,11 +1,11 @@
 """
 이미지 생성 스킬 (캐릭터, 씬, 시각화 배경)
 
-LLM 불필요 — FAL.ai API 직접 호출, ThreadPoolExecutor 병렬 처리.
+LLM 불필요 -- FAL.ai API 직접 호출, ThreadPoolExecutor 병렬 처리.
 
 auto_kairos_v2/src/skills/image_gen.py에서 이식.
 - generate_sub_scenes / _parallel_generate_sub_scenes 제거 (auto_agent_v2 불필요)
-- generate_viz_backgrounds: storyboard → scene_specs.json 기반으로 변경
+- generate_viz_backgrounds: storyboard -> scene_specs.json 기반으로 변경
 """
 
 import json
@@ -65,7 +65,7 @@ def generate_characters(
         for v in variants:
             v["person_photo"] = person_photo
             v["character_name"] = ch["name"]
-            # prompt_base → prompt 호환
+            # prompt_base -> prompt 호환
             if "prompt_base" in v and "prompt" not in v:
                 v["prompt"] = v["prompt_base"]
             all_variants.append(v)
@@ -381,7 +381,7 @@ def generate_viz_backgrounds(
         return {"success": False, "error": "scene_specs.json 없음"}
 
     if not style_path or not Path(style_path).exists():
-        return {"success": False, "error": "art_style.json 없음 — 스킵"}
+        return {"success": False, "error": "art_style.json 없음 -- 스킵"}
 
     specs = json.loads(scene_specs_path.read_text(encoding="utf-8"))
     scenes = specs.get("scenes", [])

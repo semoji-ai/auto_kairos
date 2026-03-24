@@ -71,12 +71,12 @@ app.mount("/static", StaticFiles(directory=str(DASHBOARD_DIR / "static")), name=
 # output 디렉토리 마운트 (이미지/오디오 직접 서빙)
 workspace = get_workspace_dir()
 
-# Remotion 폰트 서빙 (/fonts/ → remotion/public/fonts/)
+# Remotion 폰트 서빙 (/fonts/ -> remotion/public/fonts/)
 _fonts_dir = workspace / "remotion" / "public" / "fonts"
 if _fonts_dir.exists():
     app.mount("/fonts", StaticFiles(directory=str(_fonts_dir)), name="fonts")
 
-# Remotion 배경 이미지 서빙 (/background/ → remotion/public/background/)
+# Remotion 배경 이미지 서빙 (/background/ -> remotion/public/background/)
 _bg_dir = workspace / "remotion" / "public" / "background"
 if _bg_dir.exists():
     app.mount("/background", StaticFiles(directory=str(_bg_dir)), name="background")
@@ -116,7 +116,7 @@ def _scan_and_register_output_projects() -> int:
         out = p.get("output_dir", "")
         if out and not Path(out).exists():
             pm.delete_project(p["id"])
-            print(f"  [SCAN] 폴더 없음 → DB 삭제: {Path(out).name}")
+            print(f"  [SCAN] 폴더 없음 -> DB 삭제: {Path(out).name}")
 
     # 기존 DB 프로젝트의 output_dir 집합 (삭제 후 재조회)
     existing = {p["output_dir"] for p in pm.list_projects() if p.get("output_dir")}
@@ -169,7 +169,7 @@ def _scan_and_register_output_projects() -> int:
             registered += 1
             print(f"  [SCAN] 프로젝트 등록: {d.name}")
         except Exception as e:
-            # UNIQUE 제약 등 — 무시
+            # UNIQUE 제약 등 -- 무시
             print(f"  [SCAN] 등록 스킵 ({d.name}): {e}")
 
     return registered
@@ -177,7 +177,7 @@ def _scan_and_register_output_projects() -> int:
 
 @app.on_event("startup")
 async def startup_scan():
-    """대시보드 시작 시 output/ 폴더 스캔 → 누락 프로젝트 자동 등록."""
+    """대시보드 시작 시 output/ 폴더 스캔 -> 누락 프로젝트 자동 등록."""
     try:
         count = _scan_and_register_output_projects()
         if count:
@@ -207,7 +207,7 @@ REMOTION_DIR = get_workspace_dir() / "remotion"
 STUDIO_PORT = 3100
 
 # Node.js 경로는 subprocess 호출 시 platform.get_env_with_node()로 주입
-# (os.environ 전역 수정 제거 — COMPAT: was _node_candidates loop)
+# (os.environ 전역 수정 제거 -- COMPAT: was _node_candidates loop)
 from auto_agent.utils.platform import get_env_with_node as _get_node_env
 from auto_agent.utils.platform import get_npm_cmd as _get_npm_cmd
 from auto_agent.utils.platform import get_npx_cmd as _get_npx_cmd
@@ -336,7 +336,7 @@ async def project_by_slug(request: Request, slug: str, tab: str = "research"):
 
 @app.get("/projects/{project_id}", response_class=HTMLResponse)
 async def project_detail(request: Request, project_id: int, tab: str = "research"):
-    """레거시 ID 기반 → slug 리디렉트."""
+    """레거시 ID 기반 -> slug 리디렉트."""
     pm = get_pm()
     project = pm.get_project(project_id=project_id)
     if not project:
@@ -379,7 +379,7 @@ async def manuscript_save(slug: str, request: Request):
 
 
 # ─────────────────────────────
-# HTMX Partials — 탭 콘텐츠
+# HTMX Partials -- 탭 콘텐츠
 # ─────────────────────────────
 
 @app.get("/api/p/{slug}/tab/{tab}", response_class=HTMLResponse)
@@ -409,7 +409,7 @@ async def project_tab_content(request: Request, project_id: int, tab: str):
 
 
 # ─────────────────────────────
-# HTMX Partials — 씬 상세
+# HTMX Partials -- 씬 상세
 # ─────────────────────────────
 
 @app.get("/api/p/{slug}/storyboard/scene/{scene_num}", response_class=HTMLResponse)
@@ -595,7 +595,7 @@ async def image_candidates(slug: str, scene_num: int, q: str = "", source: str =
 
 @app.post("/api/p/{slug}/images/select/{scene_num}")
 async def select_image(request: Request, slug: str, scene_num: int):
-    """이미지 선택 — URL 다운로드 또는 기존 버전 선택."""
+    """이미지 선택 -- URL 다운로드 또는 기존 버전 선택."""
     from auto_agent.tools.image_assets import add_version, select_version, next_filename
     pm = get_pm()
     project = pm.get_project(slug=slug)
@@ -693,7 +693,7 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
     }
     voice_id = config.get("voice_id") or STYLE_VOICE.get(config.get("writing_style", "default"), STYLE_VOICE["default"])
 
-    # TTS 생성 — audio_assets 기반
+    # TTS 생성 -- audio_assets 기반
     from auto_agent.tools.audio_assets import add_version, next_filename
     audio_dir = Path(out_dir) / "audio"
     audio_dir.mkdir(parents=True, exist_ok=True)
@@ -735,7 +735,7 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
             _setup_studio_project(slug)
             return JSONResponse({"ok": True, "file": fname, "voice_id": voice_id, "size": output_path.stat().st_size})
         else:
-            return JSONResponse({"error": "생성 실패 — 파일 미생성"}, 500)
+            return JSONResponse({"error": "생성 실패 -- 파일 미생성"}, 500)
     except Exception as e:
         return JSONResponse({"error": str(e)}, 500)
 
@@ -858,7 +858,7 @@ async def auto_prompt(slug: str, scene_num: int):
         cli_path = str(Path.home() / ".local/bin/claude")
         proc = subprocess.run(
             [cli_path, "--print", "--model", "claude-sonnet-4-5-20250929", "--max-turns", "1"],
-            input=prompt_input, capture_output=True, text=True, timeout=30,
+            input=prompt_input, capture_output=True, text=True, encoding="utf-8", timeout=30,
             env={**dict(os.environ), "CLAUDECODE": ""},
         )
         result_text = proc.stdout.strip()
@@ -912,7 +912,7 @@ async def generate_image(request: Request, slug: str, scene_num: int):
         if style_path:
             cmd.extend(["--style", style_path])
         env = {**dict(os.environ), "PROJECT_NAME": slug}
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120,
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=120,
                                 cwd=str(get_workspace_dir()), env=env)
         if result.returncode == 0:
             res = _json.loads(result.stdout)
@@ -948,7 +948,7 @@ async def get_art_style(slug: str):
         if style_path.exists():
             try:
                 current_info = _json.loads(style_path.read_text(encoding="utf-8"))
-                # 참조 이미지 URL — output 디렉토리명(uuid_{slug}) 기반
+                # 참조 이미지 URL -- output 디렉토리명(uuid_{slug}) 기반
                 ref = current_info.get("reference_image", "")
                 if ref:
                     _art_out_dir = project.get("output_dir", "")
@@ -1011,7 +1011,7 @@ async def image_history(slug: str, scene_num: int):
 
 @app.put("/api/p/{slug}/scenes/{scene_num}")
 async def api_update_scene(request: Request, slug: str, scene_num: int):
-    """씬 편집 → Supabase Storage에 저장."""
+    """씬 편집 -> Supabase Storage에 저장."""
     pm = get_pm()
     project = pm.get_project(slug=slug)
     if not project:
@@ -1213,7 +1213,7 @@ async def _do_select_image(request: Request, project: dict, scene_num: int):
         rank = body.get("rank")
         if not rank:
             return JSONResponse({"error": "asset_id, url, or rank required"}, status_code=400)
-        # rank → Supabase 후보에서 찾기
+        # rank -> Supabase 후보에서 찾기
         pm = get_pm()
         candidates = pm.get_scene_image_candidates(project["id"], scene_num)
         if rank <= len(candidates):
@@ -1269,7 +1269,7 @@ async def pipeline_start(slug: str, request: Request):
     # .env 로드
     dotenv_path = get_workspace_dir() / ".env"
     if dotenv_path.exists():
-        for line in dotenv_path.read_text().splitlines():
+        for line in dotenv_path.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 k, v = line.split("=", 1)
@@ -1372,7 +1372,7 @@ async def studio_setup(request: Request):
 
 
 def _setup_studio_project(slug: str):
-    """Studio 시작 전 manifest 설정 — 로컬 PM 기반."""
+    """Studio 시작 전 manifest 설정 -- 로컬 PM 기반."""
     ws = get_workspace_dir()
     public_dir = REMOTION_DIR / "public"
     manifest_dst = public_dir / "manifest.json"
@@ -1396,6 +1396,7 @@ def _setup_studio_project(slug: str):
             timeout=120,
             capture_output=True,
             text=True,
+            encoding="utf-8",
         )
 
         # 빌드된 manifest를 메인으로 복사
@@ -1437,7 +1438,7 @@ def _ensure_studio_ready() -> Optional[str]:
                 [npm_cmd, "install"],
                 cwd=str(REMOTION_DIR),
                 env=_get_node_env(),
-                capture_output=True, text=True, timeout=120,
+                capture_output=True, text=True, encoding="utf-8", timeout=120,
             )
             if result.returncode != 0:
                 return f"npm install 실패: {result.stderr[:300]}"

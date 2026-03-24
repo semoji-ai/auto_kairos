@@ -1,8 +1,8 @@
 """
 이중 루트 경로 해석 (Dual Root Path Resolution)
 
-PACKAGE_DIR:  패키지 설치 위치 (읽기 전용 — skills, pipeline.json, agents.json 등)
-WORKSPACE_DIR: 사용자 워크스페이스 (읽기/쓰기 — output, .env, DB, remotion)
+PACKAGE_DIR:  패키지 설치 위치 (읽기 전용 -- skills, pipeline.json, agents.json 등)
+WORKSPACE_DIR: 사용자 워크스페이스 (읽기/쓰기 -- output, .env, DB, remotion)
 
 워크스페이스 결정 우선순위:
   1. --workspace <path> CLI 인자

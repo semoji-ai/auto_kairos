@@ -17,7 +17,7 @@ from auto_agent.paths import get_workspace_dir; load_dotenv(get_workspace_dir() 
 API_KEY = os.getenv("ELEVENLABS_API_KEY")
 MODEL_ID = "eleven_multilingual_v2"
 
-# 기본값 — DB config로 오버라이드 가능
+# 기본값 -- DB config로 오버라이드 가능
 _DEFAULT_VOICE_ID = "9Sj8ugvpK1DmcAXyvi3a"
 _DEFAULT_VOICE_SETTINGS = {
     "stability": 1.0,
@@ -29,7 +29,7 @@ _DEFAULT_VOICE_SETTINGS = {
 
 
 def _resolve_voice_config() -> tuple:
-    """voice_id, voice_settings 해석: DB config → .env → 기본값."""
+    """voice_id, voice_settings 해석: DB config -> .env -> 기본값."""
     voice_id = None
     voice_settings = None
 
@@ -51,7 +51,7 @@ def _resolve_voice_config() -> tuple:
     if not voice_id:
         voice_id = os.getenv("ELEVENLABS_VOICE_ID", _DEFAULT_VOICE_ID)
 
-    # 3) settings: 환경변수 → 기본값 폴백
+    # 3) settings: 환경변수 -> 기본값 폴백
     if not voice_settings:
         settings_json = os.getenv("ELEVENLABS_VOICE_SETTINGS")
         if settings_json:

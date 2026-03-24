@@ -1,4 +1,4 @@
-"""Auto Kairos — AI Video Production Pipeline."""
+"""Auto Kairos -- AI Video Production Pipeline."""
 try:
     from importlib.metadata import version
     __version__ = version("auto-kairos")

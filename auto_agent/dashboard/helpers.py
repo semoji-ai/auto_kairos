@@ -7,7 +7,7 @@ from typing import Optional
 
 
 def resolve_project_by_slug(slug: str) -> Optional[dict]:
-    """slug → project dict. 대시보드 라우터 공통 헬퍼 (Supabase 대응)."""
+    """slug -> project dict. 대시보드 라우터 공통 헬퍼 (Supabase 대응)."""
     from auto_agent.db.project_manager import ProjectManager
     pm = ProjectManager()
     return pm.get_project(slug=slug)
@@ -176,11 +176,11 @@ def _check_step_outputs_exist(step: dict, output_dir: str) -> bool:
     out_path = Path(output_dir)
     found = 0
     for o in outputs:
-        # output/{project}/audio/ → audio/ 로 변환
+        # output/{project}/audio/ -> audio/ 로 변환
         cleaned = o
         if "output/{project}/" in cleaned:
             cleaned = cleaned.split("output/{project}/", 1)[1]
-        # 글로브/템플릿 패턴 ({N}, {NNN}, {topic} 등) → 부모 디렉토리만 확인
+        # 글로브/템플릿 패턴 ({N}, {NNN}, {topic} 등) -> 부모 디렉토리만 확인
         if "{" in cleaned:
             parent = cleaned.split("{")[0].rstrip("/")
             if parent:
@@ -216,7 +216,7 @@ def get_pipeline_progress(output_dir: str, data_dir: str,
     # DB 이력에서 각 스텝의 최신 상태를 추출
     step_status_map: dict[str, str] = {}
     if db_runs:
-        for run in reversed(db_runs):  # 오래된 것부터 → 최신이 덮어씀
+        for run in reversed(db_runs):  # 오래된 것부터 -> 최신이 덮어씀
             step_key = run.get("step", "")
             status = run.get("status", "")
             if step_key and status:
@@ -247,7 +247,7 @@ def get_pipeline_progress(output_dir: str, data_dir: str,
             elif step_id in running_steps:
                 s_status = "running"
             elif step_id not in step_status_map and _check_step_outputs_exist(step, output_dir):
-                # DB 레코드 없지만 산출물 존재 → completed 추론
+                # DB 레코드 없지만 산출물 존재 -> completed 추론
                 s_status = "completed"
             else:
                 s_status = "pending"
@@ -278,7 +278,7 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
     """씬의 레이아웃을 결정. Remotion CreativeScene.resolveLayout과 동일 로직.
 
     Returns:
-        (layout_name, is_explicit) — is_explicit이 True면 AI 지정, False면 자동 추론.
+        (layout_name, is_explicit) -- is_explicit이 True면 AI 지정, False면 자동 추론.
     """
     # 맵씬이면 무조건 map
     map_scene = scene.get("mapScene") or {}
@@ -357,7 +357,7 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
                               tts_results: Optional[dict] = None) -> list:
     """씬 목록에 이미지/오디오 URL + TTS 정보 + 레이아웃을 추가.
 
-    project_dir_name: output 디렉토리명 (uuid_{slug} 형식) — URL 구성에 사용.
+    project_dir_name: output 디렉토리명 (uuid_{slug} 형식) -- URL 구성에 사용.
     """
     tts_map = {}
     if tts_results:
@@ -393,7 +393,7 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
 
 
 def format_headline(headline: str) -> str:
-    """{{텍스트}} → <span class="accent-text">텍스트</span> 변환."""
+    """{{텍스트}} -> <span class="accent-text">텍스트</span> 변환."""
     if not headline:
         return ""
     return re.sub(r'\{\{(.+?)\}\}', r'<span class="accent-text">\1</span>', headline)
@@ -418,7 +418,7 @@ def _esc(text: str) -> str:
 
 
 def _format_headline_preview(headline: str, accent: str) -> str:
-    """{{텍스트}} → accent 색상 span. 줄바꿈 처리."""
+    """{{텍스트}} -> accent 색상 span. 줄바꿈 처리."""
     if not headline:
         return ""
     h = _esc(headline)
@@ -430,7 +430,7 @@ def _format_headline_preview(headline: str, accent: str) -> str:
     return h.replace("\\n", "<br>").replace("\n", "<br>")
 
 
-# ISO 3166-1 alpha-2 → 국기 이모지
+# ISO 3166-1 alpha-2 -> 국기 이모지
 def _flag_emoji(code: str) -> str:
     if not code or len(code) != 2:
         return ""
@@ -494,7 +494,7 @@ def render_scene_preview(scene: dict) -> str:
         if not headline_text:
             return ""
         cls = "sp-headline" if size == "normal" else "sp-headline sp-sm"
-        # accent 크기 / base 크기 비율 — Remotion: accent 108~132, base 60~72
+        # accent 크기 / base 크기 비율 -- Remotion: accent 108~132, base 60~72
         parts = re.split(r'(\{\{.+?\}\})', headline_text)
         has_accent = any(p.startswith("{{") for p in parts)
         inner = ""
@@ -580,11 +580,11 @@ def render_scene_preview(scene: dict) -> str:
         html += f'<div class="sp-map-type" style="color:{accent}">{_esc(map_type)}</div>'
         html += '</div>'
 
-    # ── headline_only: Remotion — headline만, items 숨김 (itemCount=0) ──
+    # ── headline_only: Remotion -- headline만, items 숨김 (itemCount=0) ──
     elif layout == "headline_only":
         html += _render_headline(headline)
 
-    # ── counter: Remotion — {{숫자}} 각각 크게, emphasis=count/number ──
+    # ── counter: Remotion -- {{숫자}} 각각 크게, emphasis=count/number ──
     elif layout == "counter":
         # 여러 {{}} 지원 (Remotion multi-counter: 최대 4개)
         matches = re.findall(r'\{\{([^}]+)\}\}', headline)
@@ -599,15 +599,15 @@ def render_scene_preview(scene: dict) -> str:
         if rest:
             html += f'<div class="sp-sub">{_esc(rest)}</div>'
 
-    # ── quote: Remotion — QuoteMark + 인용문 + source, 배경 portrait ──
+    # ── quote: Remotion -- QuoteMark + 인용문 + source, 배경 portrait ──
     elif layout == "quote":
         quote_text = items[0] if items else headline
         html += f'<div class="sp-quote-mark" style="color:{accent}">"</div>'
         html += f'<div class="sp-quote" style="border-color:{accent}">{_esc_br(quote_text)}</div>'
         if source:
-            html += f'<div class="sp-quote-source">— {_esc(source)}</div>'
+            html += f'<div class="sp-quote-source">-- {_esc(source)}</div>'
 
-    # ── items_list: Remotion — 카드형(이미지 있으면), spotlight 마지막 항목 ──
+    # ── items_list: Remotion -- 카드형(이미지 있으면), spotlight 마지막 항목 ──
     elif layout == "items_list":
         if show_hl:
             html += _render_headline(headline, "sm")
@@ -625,7 +625,7 @@ def render_scene_preview(scene: dict) -> str:
             html += f'<div class="sp-item sp-more">+{len(items)-8}</div>'
         html += '</div>'
 
-    # ── items_grid: Remotion — 2~3열 그리드 ──
+    # ── items_grid: Remotion -- 2~3열 그리드 ──
     elif layout == "items_grid":
         if show_hl:
             html += _render_headline(headline, "sm")
@@ -641,7 +641,7 @@ def render_scene_preview(scene: dict) -> str:
             html += f'<div class="sp-grid-cell sp-more">+{len(items)-9}</div>'
         html += '</div>'
 
-    # ── bar: Remotion — 수평 바 차트 ──
+    # ── bar: Remotion -- 수평 바 차트 ──
     elif layout == "bar":
         if show_hl:
             html += _render_headline(headline, "sm")
@@ -662,7 +662,7 @@ def render_scene_preview(scene: dict) -> str:
             )
         html += '</div>'
 
-    # ── split: Remotion — 좌우 비교, VS 표시, 이미지 지원 ──
+    # ── split: Remotion -- 좌우 비교, VS 표시, 이미지 지원 ──
     elif layout == "split":
         if show_hl:
             html += _render_headline(headline, "sm")
@@ -681,7 +681,7 @@ def render_scene_preview(scene: dict) -> str:
                 html += f'<div class="sp-vs" style="color:{accent}">VS</div>'
         html += '</div>'
 
-    # ── person_card: Remotion — 인물 이미지 + 이름 + status ──
+    # ── person_card: Remotion -- 인물 이미지 + 이름 + status ──
     elif layout == "person_card":
         if show_hl:
             html += _render_headline(headline, "sm")
@@ -701,7 +701,7 @@ def render_scene_preview(scene: dict) -> str:
                          f'{badge}<div class="sp-pname">{_esc(item)}</div>{desc}</div>')
         html += '</div>'
 
-    # ── pie / line: Remotion — 차트 ──
+    # ── pie / line: Remotion -- 차트 ──
     elif layout in ("pie", "line"):
         if headline:
             html += _render_headline(headline, "sm")
@@ -733,7 +733,7 @@ def render_scene_preview(scene: dict) -> str:
                     html += f'<div class="sp-item">{badge}{_esc(item)}</div>'
                 html += '</div>'
 
-    # ── flow: Remotion — StepBadge + Connector, 4이하=가로, 5+=세로 ──
+    # ── flow: Remotion -- StepBadge + Connector, 4이하=가로, 5+=세로 ──
     elif layout == "flow":
         if show_hl:
             html += _render_headline(headline, "sm")
@@ -742,7 +742,7 @@ def render_scene_preview(scene: dict) -> str:
         html += f'<div class="{cls}">'
         for i, item in enumerate(items[:6]):
             if i > 0:
-                arrow = "↓" if is_vertical else "→"
+                arrow = "v" if is_vertical else "->"
                 html += f'<span class="sp-connector" style="color:{accent}">{arrow}</span>'
             badge = _badge(i)
             is_active = (i == len(items[:6]) - 1)
@@ -750,7 +750,7 @@ def render_scene_preview(scene: dict) -> str:
             html += f'<span class="sp-step" style="{active_style}">{badge}<span class="sp-step-num" style="color:{accent}">{i+1}</span>{_esc(item)}</span>'
         html += '</div>'
 
-    # ── timeline: Remotion — TimelineDot + 연결선 + 텍스트, 마지막 active ──
+    # ── timeline: Remotion -- TimelineDot + 연결선 + 텍스트, 마지막 active ──
     elif layout == "timeline":
         if show_hl:
             html += _render_headline(headline, "sm")
@@ -770,7 +770,7 @@ def render_scene_preview(scene: dict) -> str:
                      f'</div>')
         html += '</div>'
 
-    # ── metric_spotlight / icon_stat: Remotion — 큰 수치 + 레이블 ──
+    # ── metric_spotlight / icon_stat: Remotion -- 큰 수치 + 레이블 ──
     elif layout in ("metric_spotlight", "icon_stat"):
         m = re.search(r'\{\{([^}]+)\}\}', headline)
         num_text = m.group(1) if m else (str(values[0]) + unit if values else "")
@@ -783,7 +783,7 @@ def render_scene_preview(scene: dict) -> str:
         if len(values) > 2:
             html += f'<div class="sp-sparkline" style="border-color:{accent}"></div>'
 
-    # ── metric_wall: Remotion — 2x2 그리드 ──
+    # ── metric_wall: Remotion -- 2x2 그리드 ──
     elif layout == "metric_wall":
         cols = 2 if len(items) <= 2 else (3 if len(items) <= 3 else 2)
         html += f'<div class="sp-metric-grid" style="grid-template-columns:repeat({cols},1fr)">'
@@ -795,7 +795,7 @@ def render_scene_preview(scene: dict) -> str:
                      f'<div class="sp-metric-label">{_esc(item)}</div></div>')
         html += '</div>'
 
-    # ── before_after: Remotion — BEFORE + Connector + AFTER ──
+    # ── before_after: Remotion -- BEFORE + Connector + AFTER ──
     elif layout == "before_after":
         if show_hl:
             html += _render_headline(headline, "sm")
@@ -807,10 +807,10 @@ def render_scene_preview(scene: dict) -> str:
             desc = _desc(i)
             html += f'<div class="sp-split-half"><div class="sp-tiny" style="color:{accent}">{labels[i]}</div>{img}{badge}<div>{_esc(items[i])}</div>{desc}</div>'
             if i == 0:
-                html += f'<div class="sp-vs" style="color:{accent}">→</div>'
+                html += f'<div class="sp-vs" style="color:{accent}">-></div>'
         html += '</div>'
 
-    # ── rank_list: Remotion — RankBadge + MiniBar ──
+    # ── rank_list: Remotion -- RankBadge + MiniBar ──
     elif layout == "rank_list":
         if show_hl:
             html += _render_headline(headline, "sm")
@@ -831,7 +831,7 @@ def render_scene_preview(scene: dict) -> str:
                      f'</div>')
         html += '</div>'
 
-    # ── stacked_progress: Remotion — ProgressBar 수직 스택 ──
+    # ── stacked_progress: Remotion -- ProgressBar 수직 스택 ──
     elif layout == "stacked_progress":
         if show_hl:
             html += _render_headline(headline, "sm")
@@ -849,7 +849,7 @@ def render_scene_preview(scene: dict) -> str:
                      f'</div>')
         html += '</div>'
 
-    # ── card_carousel / hero_with_context: Remotion — 카드 나열 ──
+    # ── card_carousel / hero_with_context: Remotion -- 카드 나열 ──
     elif layout in ("card_carousel", "hero_with_context"):
         html += _render_headline(headline)
         if items:
@@ -861,15 +861,15 @@ def render_scene_preview(scene: dict) -> str:
                 html += f'<div class="sp-card">{img}{badge}<div>{_esc(item)}</div>{desc}</div>'
             html += '</div>'
 
-    # ── quote_portrait: Remotion — 인물 이미지 + 인용문 ──
+    # ── quote_portrait: Remotion -- 인물 이미지 + 인용문 ──
     elif layout == "quote_portrait":
         html += f'<div class="sp-quote-mark" style="color:{accent}">"</div>'
         quote_text = items[0] if items else headline
         html += f'<div class="sp-quote" style="border-color:{accent};font-style:italic">{_esc_br(quote_text)}</div>'
         if source:
-            html += f'<div class="sp-quote-source">— {_esc(source)}</div>'
+            html += f'<div class="sp-quote-source">-- {_esc(source)}</div>'
 
-    # ── annotated_chart: Remotion — bar + annotation ──
+    # ── annotated_chart: Remotion -- bar + annotation ──
     elif layout == "annotated_chart":
         if headline:
             html += _render_headline(headline, "sm")
@@ -887,7 +887,7 @@ def render_scene_preview(scene: dict) -> str:
         html += '</div>'
 
     else:
-        # 기타 레이아웃 — fallback
+        # 기타 레이아웃 -- fallback
         if headline:
             html += _render_headline(headline, "sm")
         if items:
@@ -906,7 +906,7 @@ def render_scene_preview(scene: dict) -> str:
 def get_scene_image_candidates(project_dir_name: str, scene_num: int, output_dir: str) -> list:
     """씬의 이미지 후보 목록 반환 (search/ 폴더에서 scene_NNN_01~05 검색).
 
-    project_dir_name: output 디렉토리명 (uuid_{slug} 형식) — URL 구성에 사용.
+    project_dir_name: output 디렉토리명 (uuid_{slug} 형식) -- URL 구성에 사용.
 
     Returns:
         [{"rank": 1, "url": "/output/.../scene_001_01.png", "filename": "...", "selected": True}, ...]
@@ -923,7 +923,7 @@ def get_scene_image_candidates(project_dir_name: str, scene_num: int, output_dir
         for f in sorted(search_dir.glob(f"{scene_key}_*")):
             if f.suffix.lower() not in valid_exts:
                 continue
-            # scene_001_01.png → rank 1
+            # scene_001_01.png -> rank 1
             stem = f.stem  # scene_001_01
             parts = stem.rsplit("_", 1)
             if len(parts) == 2:
@@ -955,7 +955,7 @@ def get_scene_image_candidates(project_dir_name: str, scene_num: int, output_dir
             for asset in registry.get("assets", []):
                 if asset.get("scene") == scene_key:
                     selected_rank = asset.get("selected_rank", 1)
-                    # 후보에 메타데이터 보강 (rank → candidate dict)
+                    # 후보에 메타데이터 보강 (rank -> candidate dict)
                     cand_by_rank = {c["rank"]: c for c in candidates}
                     for cand_meta in asset.get("candidates", []):
                         c = cand_by_rank.get(cand_meta.get("rank"))
@@ -978,7 +978,7 @@ def get_scene_image_candidates(project_dir_name: str, scene_num: int, output_dir
 def get_recent_images(project_dir_name: str, output_dir: str, limit: int = 3) -> list:
     """최근 이미지 파일 URL 목록.
 
-    project_dir_name: output 디렉토리명 (uuid_{slug} 형식) — URL 구성에 사용.
+    project_dir_name: output 디렉토리명 (uuid_{slug} 형식) -- URL 구성에 사용.
     """
     img_dir = Path(output_dir) / "images"
     if not img_dir.exists():

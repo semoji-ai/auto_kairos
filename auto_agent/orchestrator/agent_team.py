@@ -68,7 +68,7 @@ class AgentTeam:
         self._total_cost = 0.0
 
     def _calc_chapters(self, chars: int) -> int:
-        """목표 분량 → 챕터 수."""
+        """목표 분량 -> 챕터 수."""
         avg_per_chapter = 800
         n = max(1, round(chars / avg_per_chapter))
         return min(n, 20)
@@ -182,7 +182,7 @@ class AgentTeam:
 
         research = {
             "topic": self.topic,
-            "summary": f"{self.topic} — {len(all_episodes)}개 에피소드, {len(all_stats)}개 데이터포인트",
+            "summary": f"{self.topic} -- {len(all_episodes)}개 에피소드, {len(all_stats)}개 데이터포인트",
             "episodes": all_episodes,
             "statistics": all_stats,
             "key_figures": unique_figures,
@@ -437,7 +437,7 @@ JSON 형식으로만 출력하세요 (episodes, statistics 포함)."""
         return results
 
     def _run_sub_writer(self, chapters: list, style_guide: dict, research: dict) -> dict:
-        """서브작가 — 할당된 챕터들을 집필."""
+        """서브작가 -- 할당된 챕터들을 집필."""
         # 해당 챕터에 필요한 에피소드만 추출
         needed_titles = set()
         for ch in chapters:
@@ -521,7 +521,7 @@ JSON 형식으로만 출력하세요 (episodes, statistics 포함)."""
 2. **중복 제거**: 같은 내용이 여러 챕터에 나오면 한 곳만 남김
 3. **연결 매끄럽게**: 챕터 간 전환이 자연스러운지 확인, 필요시 수정
 4. **분량 확인**: 전체 {self.target_length}자 목표. 부족하면 보강, 초과하면 다듬기
-5. **스토리 아크**: 도입→전개→결말이 자연스러운지
+5. **스토리 아크**: 도입->전개->결말이 자연스러운지
 
 ## 출력
 수정된 전체 원고를 챕터별로 출력하세요. ## Chapter N: 제목 형식 유지."""

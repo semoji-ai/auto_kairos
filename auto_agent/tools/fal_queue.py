@@ -1,4 +1,4 @@
-"""FAL AI queue 비동기 클라이언트 — submit_batch / poll_all."""
+"""FAL AI queue 비동기 클라이언트 -- submit_batch / poll_all."""
 from __future__ import annotations
 import os
 import logging
@@ -17,7 +17,7 @@ except ImportError:
 
 
 def _ensure_fal_key():
-    """FAL_API_KEY → FAL_KEY 자동 매핑."""
+    """FAL_API_KEY -> FAL_KEY 자동 매핑."""
     if not os.environ.get("FAL_KEY") and os.environ.get("FAL_API_KEY"):
         os.environ["FAL_KEY"] = os.environ["FAL_API_KEY"]
 
@@ -49,7 +49,7 @@ def submit_batch(jobs: list[FalJob]) -> list[str]:
     for job in jobs:
         handle = fal_client.submit(job.endpoint, arguments=job.arguments)
         request_ids.append(handle.request_id)
-        logger.debug("submitted job %d → %s", job.idx, handle.request_id)
+        logger.debug("submitted job %d -> %s", job.idx, handle.request_id)
     return request_ids
 
 

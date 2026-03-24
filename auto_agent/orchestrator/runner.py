@@ -1,5 +1,5 @@
 """
-파이프라인 오케스트레이터 (Python Runner — No LLM)
+파이프라인 오케스트레이터 (Python Runner -- No LLM)
 
 pipeline.json을 읽고 순차/병렬 실행.
 정상 흐름은 100% 규칙 기반. 에러 시 Haiku 판단 위임.
@@ -98,7 +98,7 @@ _MSG_MAP = {
 
 
 def _step_label(step_name: str, event: str = "start") -> str:
-    """step_name → 한글 메시지 변환. event: 'start' | 'done' | 'fail'"""
+    """step_name -> 한글 메시지 변환. event: 'start' | 'done' | 'fail'"""
     labels = _MSG_MAP.get(step_name)
     if not labels:
         return step_name
@@ -109,6 +109,11 @@ def _step_label(step_name: str, event: str = "start") -> str:
         return done_label
     else:  # fail
         return f"{start_label} 실패"
+
+
+def _posix(p) -> str:
+    """Path를 forward-slash 문자열로 변환 (Windows 호환)."""
+    return str(p).replace("\\", "/")
 
 
 class ProgressFileMonitor:
@@ -259,7 +264,7 @@ class PipelineRunner:
         self.sync = self._init_sync()
 
     def _init_sync(self):
-        """Supabase 동기화 — 파이프라인 중에는 비활성. 완료 후 프로젝트 단위로 동기화."""
+        """Supabase 동기화 -- 파이프라인 중에는 비활성. 완료 후 프로젝트 단위로 동기화."""
         # 파이프라인 실행 중 매 스텝 동기화 비활성
         return None
 
@@ -307,7 +312,7 @@ class PipelineRunner:
             if voice:
                 config["voice_id"] = voice["voice_id"]
                 config["voice_settings"] = voice["voice_settings"]
-                print(f"    voice_id 자동 설정: {ws} → {voice['voice_id']}")
+                print(f"    voice_id 자동 설정: {ws} -> {voice['voice_id']}")
 
         return config
 
@@ -327,7 +332,7 @@ class PipelineRunner:
         found_start = from_step is None
 
         print(f"{'=' * 60}")
-        print(f"Pipeline Runner — {self.project_slug}")
+        print(f"Pipeline Runner -- {self.project_slug}")
         print(f"Config: art_style={self.state.config.get('art_style', 'N/A')}")
         print(f"        voice_id={self.state.config.get('voice_id', 'N/A')}")
         print(f"{'=' * 60}\n")
@@ -426,7 +431,7 @@ class PipelineRunner:
                     if _all_md:
                         (self.project_dir / "research_report.md").write_text(
                             "\n\n---\n\n".join(_all_md), encoding="utf-8")
-                    print(f"    [MERGE] RESEARCH 내부 report → 루트 복사 완료 ({len(_all_md)}섹션)")
+                    print(f"    [MERGE] RESEARCH 내부 report -> 루트 복사 완료 ({len(_all_md)}섹션)")
                     return
                 break
         research_dir = self.project_dir / "RESEARCH"
@@ -549,7 +554,7 @@ class PipelineRunner:
         out_path = self.project_dir / "research_report.json"
         out_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
 
-        # .md 버전도 생성 (대시보드 fallback용) — 전체 보고서 + Explorer 원본
+        # .md 버전도 생성 (대시보드 fallback용) -- 전체 보고서 + Explorer 원본
         md_path = self.project_dir / "research_report.md"
         all_sections = sections + agent_sections
         md_text = "\n\n---\n\n".join(s["content"] for s in all_sections)
@@ -563,17 +568,17 @@ class PipelineRunner:
         """리서치 보충: 검증 실패 시 누락된 부분만 타겟으로 단일 Claude 호출 후 병합.
 
         Returns:
-            True  — 보충 성공 (report_path 업데이트됨)
-            False — 보충 실패 (report_path 변경 없음)
+            True  -- 보충 성공 (report_path 업데이트됨)
+            False -- 보충 실패 (report_path 변경 없음)
         """
-        _notify("Director", f"리서치 보충 시작 — 누락: {gap_reason[:60]}",
+        _notify("Director", f"리서치 보충 시작 -- 누락: {gap_reason[:60]}",
                 phase=self.state.current_phase, project=self.project_slug, level="info")
         print(f"    [보충] 리서치 보충 시작: {gap_reason[:80]}", flush=True)
 
         try:
             data = json.loads(report_path.read_text(encoding="utf-8"))
         except Exception as e:
-            print(f"    [WARN] 보충 실패 — 리포트 읽기 오류: {e}")
+            print(f"    [WARN] 보충 실패 -- 리포트 읽기 오류: {e}")
             return False
 
         supplement_prompt = (
@@ -599,7 +604,7 @@ class PipelineRunner:
                 [cli_path, "--print", "--output-format", "json",
                  "--model", "claude-sonnet-4-6", "--max-turns", "1",
                  "--tools", ""],
-                input=supplement_prompt, capture_output=True, text=True,
+                input=supplement_prompt, capture_output=True, text=True, encoding="utf-8",
                 cwd=str(self.project_dir), timeout=60,
                 env={**os.environ, "CLAUDECODE": ""},
             )
@@ -622,7 +627,7 @@ class PipelineRunner:
 
             secs = len(data["sections"])
             srcs = len(data["sources"])
-            print(f"    [보충] 완료 — {len(new_sections)}섹션 추가 → 총 {secs}섹션, {srcs}소스", flush=True)
+            print(f"    [보충] 완료 -- {len(new_sections)}섹션 추가 -> 총 {secs}섹션, {srcs}소스", flush=True)
             _notify("Director", f"리서치 보충 완료: +{len(new_sections)}섹션 추가",
                     phase=self.state.current_phase, project=self.project_slug, level="success")
             return True
@@ -675,15 +680,15 @@ class PipelineRunner:
                 proc = subprocess.run(
                     [cli_path, "--print", "--output-format", "json",
                      "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
-                    input=verify_prompt, capture_output=True, text=True,
+                    input=verify_prompt, capture_output=True, text=True, encoding="utf-8",
                     cwd=str(self.project_dir), timeout=30,
                     env={**os.environ, "CLAUDECODE": ""},
                 )
                 verify_result = self._extract_json_from_cli_output(proc.stdout)
                 if verify_result and verify_result.get("valid"):
                     reason = verify_result.get("reason", "")
-                    print(f"    [검증] 리서치: {sections}섹션, {sources}소스, 주제 일치 ✓ ({reason})")
-                    _notify("Director", f"리서치 검증 통과: {sections}섹션, {sources}소스 — {reason}",
+                    print(f"    [검증] 리서치: {sections}섹션, {sources}소스, 주제 일치 [OK] ({reason})")
+                    _notify("Director", f"리서치 검증 통과: {sections}섹션, {sources}소스 -- {reason}",
                             phase=self.state.current_phase, project=self.project_slug, level="success")
                     # 볼트 기록
                     if self.vault.enabled:
@@ -694,7 +699,7 @@ class PipelineRunner:
                     return StepResult(step_id=step_id, status="completed")
                 elif verify_result:
                     reason = verify_result.get("reason", "주제 불일치")
-                    print(f"    [검증] 리서치: 주제 불일치 ✗ ({reason})")
+                    print(f"    [검증] 리서치: 주제 불일치 [FAIL] ({reason})")
                     # ── 보충 리서치 시도 (최대 1회) ──────────────────────────
                     supplement_ok = self._supplement_research(
                         report_path=report_path,
@@ -717,7 +722,7 @@ class PipelineRunner:
                             proc2 = subprocess.run(
                                 [cli_path, "--print", "--output-format", "json",
                                  "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
-                                input=verify2_prompt, capture_output=True, text=True,
+                                input=verify2_prompt, capture_output=True, text=True, encoding="utf-8",
                                 cwd=str(self.project_dir), timeout=30,
                                 env={**os.environ, "CLAUDECODE": ""},
                             )
@@ -726,8 +731,8 @@ class PipelineRunner:
                                 r2 = verify2.get("reason", "")
                                 secs2 = len(data2.get("sections", []))
                                 srcs2 = len(data2.get("sources", []))
-                                print(f"    [검증] 보충 후 재검증 ✓ ({r2})")
-                                _notify("Director", f"리서치 보충 완료: {secs2}섹션, {srcs2}소스 — {r2}",
+                                print(f"    [검증] 보충 후 재검증 [OK] ({r2})")
+                                _notify("Director", f"리서치 보충 완료: {secs2}섹션, {srcs2}소스 -- {r2}",
                                         phase=self.state.current_phase, project=self.project_slug, level="success")
                                 if self.vault.enabled:
                                     try:
@@ -737,7 +742,7 @@ class PipelineRunner:
                                 return StepResult(step_id=step_id, status="completed")
                             else:
                                 r2 = (verify2 or {}).get("reason", "보충 후에도 불일치")
-                                print(f"    [검증] 보충 후 재검증 ✗ ({r2})")
+                                print(f"    [검증] 보충 후 재검증 [FAIL] ({r2})")
                         except Exception as e2:
                             print(f"    [WARN] 보충 재검증 실패 ({e2})")
                     return StepResult(step_id=step_id, status="failed", error=f"리서치 주제 불일치: {reason}")
@@ -745,7 +750,7 @@ class PipelineRunner:
                 print(f"    [WARN] LLM 검증 실패 ({e}), 구조 검증만 통과")
 
             # LLM 검증 실패해도 구조 검증 통과면 진행
-            print(f"    [검증] 리서치: {sections}섹션, {sources}소스 ✓ (구조 검증)")
+            print(f"    [검증] 리서치: {sections}섹션, {sources}소스 [OK] (구조 검증)")
             _notify("Director", f"리서치 검증: {sections}섹션, {sources}소스",
                     phase=self.state.current_phase, project=self.project_slug, level="success")
             return StepResult(step_id=step_id, status="completed")
@@ -757,14 +762,14 @@ class PipelineRunner:
                 text = ms_path.read_text(encoding="utf-8")
                 chars = len(text)
                 has_scene_marker = "## Scene" in text
-                print(f"    [검증] 원고: {chars}자, 씬마커={'있음 ✗' if has_scene_marker else '없음 ✓'}")
+                print(f"    [검증] 원고: {chars}자, 씬마커={'있음 [FAIL]' if has_scene_marker else '없음 [OK]'}")
                 _notify("Director", f"원고 검증: {chars}자",
                         phase=self.state.current_phase, project=self.project_slug, level="success")
             else:
                 return StepResult(step_id=step_id, status="failed", error="final_manuscript.md 미생성")
 
         elif step_id == "step_4":
-            # 팩트체크 결과 확인 — adjusted 항목 원고 자동 반영
+            # 팩트체크 결과 확인 -- adjusted 항목 원고 자동 반영
             report_path = self.project_dir / "factcheck_report.json"
             if report_path.exists():
                 try:
@@ -773,8 +778,8 @@ class PipelineRunner:
                     adjusted = [c for c in claims if c.get("status") == "adjusted" or c.get("action") == "adjust"]
 
                     if adjusted:
-                        print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 발견 — 원고 자동 수정")
-                        _notify("Director", f"팩트체크 수정 권장 {len(adjusted)}건 → 원고 자동 반영",
+                        print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 발견 -- 원고 자동 수정")
+                        _notify("Director", f"팩트체크 수정 권장 {len(adjusted)}건 -> 원고 자동 반영",
                                 phase=self.state.current_phase, project=self.project_slug, level="warning")
 
                         ms_path = self.project_dir / "final_manuscript.md"
@@ -786,16 +791,16 @@ class PipelineRunner:
                                 corrected = item.get("corrected_text", "") or item.get("suggestion", "")
                                 if original and corrected and original in text:
                                     text = text.replace(original, corrected)
-                                    print(f"    [수정] \"{original[:30]}\" → \"{corrected[:30]}\"")
+                                    print(f"    [수정] \"{original[:30]}\" -> \"{corrected[:30]}\"")
                                     applied += 1
                             ms_path.write_text(text, encoding="utf-8")
                             if applied:
                                 _notify("Director", f"원고 수정 완료: {applied}건 반영",
                                         phase=self.state.current_phase, project=self.project_slug, level="success")
                             else:
-                                print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 중 원고 내 매칭 없음 — 수동 확인 필요")
+                                print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 중 원고 내 매칭 없음 -- 수동 확인 필요")
                     else:
-                        print(f"    [팩트체크] 수정 권장 항목 없음 ✓")
+                        print(f"    [팩트체크] 수정 권장 항목 없음 [OK]")
                 except Exception as e:
                     print(f"    [WARN] 팩트체크 보고서 파싱 실패: {e}")
 
@@ -807,7 +812,7 @@ class PipelineRunner:
                     data = json.loads(specs_path.read_text(encoding="utf-8"))
                     n_scenes = len(data.get("scenes", []))
                     if n_scenes > 0:
-                        print(f"    [검증] 씬 분해: {n_scenes}씬 ✓")
+                        print(f"    [검증] 씬 분해: {n_scenes}씬 [OK]")
                     else:
                         return StepResult(step_id=step_id, status="failed", error="scene_specs.json에 씬 0개")
                 except Exception:
@@ -828,18 +833,18 @@ class PipelineRunner:
                 step_name = step.get("name", step["id"])
                 # gate step이면 파이프라인 중단
                 if step.get("gate"):
-                    print(f"\n  GATE FAILED: {step['id']} — 파이프라인 중단")
-                    _notify("Director", f"파이프라인 중단 — {_step_label(step_name, 'fail')}", phase=self.state.current_phase, project=self.project_slug, level="error")
+                    print(f"\n  GATE FAILED: {step['id']} -- 파이프라인 중단")
+                    _notify("Director", f"파이프라인 중단 -- {_step_label(step_name, 'fail')}", phase=self.state.current_phase, project=self.project_slug, level="error")
                     self.state.failed_steps.append(step["id"])
                     return
                 # non-blocking이면 계속
                 if step.get("blocking") is False:
-                    print(f"  [WARN] {step['id']} failed (non-blocking) — 계속 진행")
-                    _notify("Director", f"{_step_label(step_name, 'fail')} (non-blocking) — 계속 진행", phase=self.state.current_phase, project=self.project_slug, level="warning")
+                    print(f"  [WARN] {step['id']} failed (non-blocking) -- 계속 진행")
+                    _notify("Director", f"{_step_label(step_name, 'fail')} (non-blocking) -- 계속 진행", phase=self.state.current_phase, project=self.project_slug, level="warning")
                     self.state.failed_steps.append(step["id"])
                 else:
-                    print(f"\n  STEP FAILED: {step['id']} — 파이프라인 중단")
-                    _notify("Director", f"{_step_label(step_name, 'fail')} — 파이프라인 중단", phase=self.state.current_phase, project=self.project_slug, level="error")
+                    print(f"\n  STEP FAILED: {step['id']} -- 파이프라인 중단")
+                    _notify("Director", f"{_step_label(step_name, 'fail')} -- 파이프라인 중단", phase=self.state.current_phase, project=self.project_slug, level="error")
                     self.state.failed_steps.append(step["id"])
                     return
             else:
@@ -1019,7 +1024,7 @@ class PipelineRunner:
     # ─────────────────────────────────────
 
     def _run_chunked_parallel(self, step: dict) -> StepResult:
-        """챕터별 병렬 처리. scene_specs.json을 챕터로 분할 → 병렬 LLM 호출 → 병합."""
+        """챕터별 병렬 처리. scene_specs.json을 챕터로 분할 -> 병렬 LLM 호출 -> 병합."""
         step_id = step["id"]
         step_name = step.get("name", step_id)
         agent_name = step.get("agent", "visual-composer")
@@ -1030,7 +1035,7 @@ class PipelineRunner:
         if not specs_path.exists():
             decomp_path = self.project_dir / "scene_decomposition.json"
             if decomp_path.exists():
-                # step_6(creative_direction)은 scene_decomposition → scene_specs 변환
+                # step_6(creative_direction)은 scene_decomposition -> scene_specs 변환
                 # decomposition을 scene_specs 초기 구조로 변환
                 decomp = json.loads(decomp_path.read_text(encoding="utf-8"))
                 original_specs = self._decomp_to_specs(decomp)
@@ -1038,7 +1043,7 @@ class PipelineRunner:
                     json.dumps(original_specs, ensure_ascii=False, indent=2),
                     encoding="utf-8",
                 )
-                _notify("Director", f"scene_decomposition → scene_specs 변환 완료 ({len(original_specs.get('scenes', []))}씬)",
+                _notify("Director", f"scene_decomposition -> scene_specs 변환 완료 ({len(original_specs.get('scenes', []))}씬)",
                         phase=self.state.current_phase, project=self.project_slug)
             else:
                 return StepResult(step_id=step_id, status="failed",
@@ -1049,7 +1054,7 @@ class PipelineRunner:
 
         # chapter 필드 없으면 폴백 (agent step으로 위임)
         if chapters is None:
-            _notify(agent_name, "chapter 필드 없음 → 단일 호출로 전환합니다",
+            _notify(agent_name, "chapter 필드 없음 -> 단일 호출로 전환합니다",
                     phase=self.state.current_phase, project=self.project_slug, level="warning")
             return self._run_agent_step(step)
 
@@ -1143,7 +1148,7 @@ class PipelineRunner:
                 except Exception:
                     pass
 
-        # 최종 실패 챕터 → 볼트 에러 기록
+        # 최종 실패 챕터 -> 볼트 에러 기록
         for ch_num, ch_result in failed_chapters.items():
             ch_scenes = chapters[ch_num]
             scene_nums = [s.get("sceneNumber", 0) for s in ch_scenes]
@@ -1190,7 +1195,7 @@ class PipelineRunner:
             msg = f"{label} 병합 완료 ({succeeded}/{n_chapters} 챕터, {elapsed:.1f}s)"
             level = "success"
         elif succeeded > 0:
-            msg = f"{label} 병합 완료 ({succeeded}/{n_chapters} 챕터, {failed_count} 실패 — 이전 데이터 유지)"
+            msg = f"{label} 병합 완료 ({succeeded}/{n_chapters} 챕터, {failed_count} 실패 -- 이전 데이터 유지)"
             level = "warning"
         else:
             msg = f"{label} 전체 실패 ({n_chapters} 챕터)"
@@ -1257,8 +1262,8 @@ class PipelineRunner:
                             json.dumps(specs_check, ensure_ascii=False, indent=2),
                             encoding="utf-8",
                         )
-                        print(f"    [검증] creative 빈 씬 {fixed}개 → cinematic 자동 할당")
-                        _notify("Director", f"creative 빈 씬 {fixed}개 발견 → cinematic 자동 할당",
+                        print(f"    [검증] creative 빈 씬 {fixed}개 -> cinematic 자동 할당")
+                        _notify("Director", f"creative 빈 씬 {fixed}개 발견 -> cinematic 자동 할당",
                                 phase=self.state.current_phase, project=self.project_slug, level="warning")
 
             # ── 자동 매니페스트 빌드 + 썸네일 캡처 ──
@@ -1333,7 +1338,7 @@ class PipelineRunner:
 <output_format>
 결과를 scene_specs와 동일한 JSON 구조로, scenes 배열에 이 챕터의 씬들만 포함하여 작성하세요.
 **반드시 Write 도구를 사용하여** 아래 경로에 저장하세요:
-{tmp_path}
+{_posix(tmp_path)}
 
 특히 imageAsset의 searchQuery 필드를 반드시 채워주세요.
 모든 씬에 적절한 이미지 검색어를 영어로 작성해야 합니다.
@@ -1355,7 +1360,7 @@ class PipelineRunner:
             proc = subprocess.Popen(
                 cmd, cwd=str(self.project_dir), env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True,
+                stderr=subprocess.PIPE, text=True, encoding="utf-8",
             )
             try:
                 stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
@@ -1383,7 +1388,7 @@ class PipelineRunner:
                 cost_info=cost_info, duration_sec=elapsed,
             )
 
-        # 4. 결과 파싱: 파일 우선 → stdout 폴백
+        # 4. 결과 파싱: 파일 우선 -> stdout 폴백
         updated_scenes = chapter_scenes  # 기본값
         try:
             if tmp_path.exists() and tmp_path.stat().st_size > 100:
@@ -1414,7 +1419,7 @@ class PipelineRunner:
             cost_info=cost_info, duration_sec=elapsed,
         )
 
-    # 1턴 전용 프롬프트 파일 매핑 (step_name → 프롬프트 파일명)
+    # 1턴 전용 프롬프트 파일 매핑 (step_name -> 프롬프트 파일명)
     SINGLE_CALL_PROMPTS = {
         "creative_direction": "creative-direction.md",
         "asset_advisory": "asset-advisory.md",
@@ -1438,7 +1443,7 @@ class PipelineRunner:
         """1턴 전용 프롬프트 파일 로드 + 변수 치환 + 아트스타일 오버라이드."""
         chapter_num = step.get("_chapter_num", 0)
 
-        # 프롬프트 템플릿 로드 (중앙 규칙 → 로컬 fallback)
+        # 프롬프트 템플릿 로드 (중앙 규칙 -> 로컬 fallback)
         prompt_key = f"prompts/single-call/{prompt_file}"
         template = self.rule_manager.load(prompt_key)
 
@@ -1491,7 +1496,7 @@ class PipelineRunner:
         return ""
 
     def _load_skill_file(self, key: str) -> str:
-        """스킬 파일 1개 로드. 로컬 DATA_DIR 우선 → 중앙 규칙 fallback. 없으면 빈 문자열."""
+        """스킬 파일 1개 로드. 로컬 DATA_DIR 우선 -> 중앙 규칙 fallback. 없으면 빈 문자열."""
         # 로컬 파일 우선 (Supabase 캐시보다 로컬 수정 우선)
         local_path = DATA_DIR / key
         if local_path.exists():
@@ -1519,7 +1524,7 @@ class PipelineRunner:
                     if ref_content:
                         content += f"\n\n{ref_content}"
             else:
-                # 전체 references — 로컬 디렉토리에서 glob (캐시에선 파일 목록 불가)
+                # 전체 references -- 로컬 디렉토리에서 glob (캐시에선 파일 목록 불가)
                 ref_dir = DATA_DIR / "skills" / "shared" / skill_name / "references"
                 if ref_dir.exists():
                     for ref_file in sorted(ref_dir.glob("*.md")):
@@ -1545,7 +1550,7 @@ class PipelineRunner:
         chapter_num = step.get("_chapter_num", 0)
         chapter_specs_path = step.get("_chapter_specs_path", "")
 
-        # 에이전트 스킬 (중앙 규칙 → 로컬 fallback)
+        # 에이전트 스킬 (중앙 규칙 -> 로컬 fallback)
         agent_skill = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
 
         # 공유 스킬 수집
@@ -1570,7 +1575,7 @@ class PipelineRunner:
             if fpath.exists():
                 context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:50000]}\n</file>\n"
 
-        # final_manuscript.md — 해당 챕터 구간만 추출
+        # final_manuscript.md -- 해당 챕터 구간만 추출
         manuscript_path = self.project_dir / "final_manuscript.md"
         if manuscript_path.exists():
             full_ms = manuscript_path.read_text(encoding="utf-8")
@@ -1585,8 +1590,8 @@ class PipelineRunner:
 
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
-작업 디렉토리: {self.project_dir}
-워크스페이스: {get_workspace_dir()}
+작업 디렉토리: {_posix(self.project_dir)}
+워크스페이스: {_posix(get_workspace_dir())}
 챕터: {chapter_num} (챕터별 병렬 처리 모드)
 </system_context>
 
@@ -1608,7 +1613,7 @@ class PipelineRunner:
 </chapter_scene_specs>
 
 <task>
-Step: {step.get("id", "")} — {step.get("name", "")}
+Step: {step.get("id", "")} -- {step.get("name", "")}
 {step.get("description", "")}
 {step.get("notes", "")}
 
@@ -1642,7 +1647,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
     @staticmethod
     def _decomp_to_specs(decomp: dict) -> dict:
-        """scene_decomposition.json → scene_specs.json 초기 구조 변환."""
+        """scene_decomposition.json -> scene_specs.json 초기 구조 변환."""
         scenes = []
         for s in decomp.get("scenes", []):
             scene = {
@@ -1746,7 +1751,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 [sys.executable, "-m", "auto_agent.scripts.build_manifest",
                  pid, storage_key, str(self.project_dir)],
                 cwd=str(get_workspace_dir()),
-                capture_output=True, text=True, timeout=120,
+                capture_output=True, text=True, encoding="utf-8", timeout=120,
             )
             if result.returncode == 0:
                 print("    [AUTO] 매니페스트 빌드 완료")
@@ -1757,7 +1762,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             print(f"    [WARN] 매니페스트 빌드 에러: {e}")
             return
 
-        # 썸네일 캡처 비활성화 — 필요 시 대시보드에서 수동 실행
+        # 썸네일 캡처 비활성화 -- 필요 시 대시보드에서 수동 실행
         return
 
         # [비활성화] 2. 변경된 씬의 기존 썸네일 무효화
@@ -1777,7 +1782,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             _thumb_env = get_env_with_node()
             node = shutil.which("node", path=_thumb_env.get("PATH"))
             if not node:
-                print("    [SKIP] Node.js 없음 — 썸네일 캡처 스킵")
+                print("    [SKIP] Node.js 없음 -- 썸네일 캡처 스킵")
                 return
 
             script = get_workspace_dir() / "remotion" / "generate-thumbnails.mjs"
@@ -1798,7 +1803,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     break
 
             if not manifest_path:
-                print("    [SKIP] 매니페스트 없음 — 썸네일 캡처 스킵")
+                print("    [SKIP] 매니페스트 없음 -- 썸네일 캡처 스킵")
                 return
 
             _notify("Director", f"썸네일 캡처 시작합니다 ({invalidated}씬 무효화됨)",
@@ -1808,7 +1813,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 [node, str(script), str(manifest_path), str(self.project_dir),
                  "--width=480"],
                 cwd=str(script.parent),
-                capture_output=True, text=True,
+                capture_output=True, text=True, encoding="utf-8",
                 timeout=300,
             )
             if result.returncode == 0:
@@ -1832,7 +1837,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         art_style_rel = config.get("art_style")
 
         if not art_style_rel:
-            _notify("System", "아트스타일 미설정 — config에 art_style을 설정해주세요",
+            _notify("System", "아트스타일 미설정 -- config에 art_style을 설정해주세요",
                     phase=self.state.current_phase, project=self.project_slug,
                     level="error")
             print("    [PREFLIGHT] 아트스타일 config 미설정")
@@ -1847,7 +1852,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             _notify("System", f"아트스타일 '{style_name}' 확인 완료: {resolved}",
                     phase=self.state.current_phase, project=self.project_slug,
                     level="info")
-            print(f"    [PREFLIGHT] 아트스타일 '{style_name}' → {resolved}")
+            print(f"    [PREFLIGHT] 아트스타일 '{style_name}' -> {resolved}")
         else:
             _notify("System", f"아트스타일 파일 없음: {art_style_rel}",
                     phase=self.state.current_phase, project=self.project_slug,
@@ -1883,7 +1888,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                             phase=self.state.current_phase, project=self.project_slug,
                             level="warning")
                 except Exception:
-                    _notify("System", f"기준 캐릭터 '{char_id}' 복원 실패 — 이미지 재생성 필요",
+                    _notify("System", f"기준 캐릭터 '{char_id}' 복원 실패 -- 이미지 재생성 필요",
                             phase=self.state.current_phase, project=self.project_slug,
                             level="error")
 
@@ -1954,7 +1959,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 # ── 재시도 여부 판단 ──
                 _is_timeout = "타임아웃" in (result.error or "")
                 _retryable  = self._is_retryable_error(result.error)
-                _consec_timeout = _is_timeout and _prev_timeout  # 연속 타임아웃 → 중단
+                _consec_timeout = _is_timeout and _prev_timeout  # 연속 타임아웃 -> 중단
 
                 if not _retryable or _consec_timeout or _attempt >= max_attempts - 1:
                     break  # 더 이상 재시도 없음
@@ -1962,7 +1967,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 # 재시도 대기: 타임아웃이면 즉시, 그 외 지수 백오프(15s / 45s)
                 _wait = 0 if _is_timeout else 15 * (3 ** _attempt)
                 _retry_label = (
-                    f"재시도 {_attempt + 1}/{max_attempts - 1} — "
+                    f"재시도 {_attempt + 1}/{max_attempts - 1} -- "
                     f"{(result.error or '')[:50]} "
                     f"({'즉시' if _wait == 0 else f'{_wait}초 후'})"
                 )
@@ -2026,7 +2031,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                         print(f"    [WARN] Supabase 동기화 실패: {sync_err}")
             else:
                 self.pm.fail_pipeline_run(run_id, result.error)
-                print(f"FAIL ({elapsed:.1f}s) — {result.error[:80]}")
+                print(f"FAIL ({elapsed:.1f}s) -- {result.error[:80]}")
                 _notify(_agent_label, f"{_step_label(step_name, 'fail')}: {result.error[:60]}", phase=self.state.current_phase, project=self.project_slug, level="error")
 
             return result
@@ -2034,15 +2039,15 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         except Exception as e:
             elapsed = time.time() - t0
             self.pm.fail_pipeline_run(run_id, str(e))
-            print(f"ERROR ({elapsed:.1f}s) — {e}")
+            print(f"ERROR ({elapsed:.1f}s) -- {e}")
             _notify(_agent_label, f"{_step_label(step_name, 'fail')}: {str(e)[:60]}", phase=self.state.current_phase, project=self.project_slug, level="error")
             return StepResult(step_id=step_id, status="failed",
                               duration_sec=elapsed, error=str(e))
 
     def _run_single_call_step(self, step: dict) -> StepResult:
-        """단일 호출 step — CLI 1턴 모드 (도구 없음, stdout JSON 파싱).
+        """단일 호출 step -- CLI 1턴 모드 (도구 없음, stdout JSON 파싱).
 
-        입력 파일을 프롬프트에 인라인 주입 → LLM 1턴 → stdout에서 JSON 파싱 → 파일 저장.
+        입력 파일을 프롬프트에 인라인 주입 -> LLM 1턴 -> stdout에서 JSON 파싱 -> 파일 저장.
         도구(Read/Write) 없이 실행하므로 multi-turn 오버헤드 제거.
         """
         step_id = step["id"]
@@ -2071,7 +2076,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     output_files=[str(self._resolve_output_path(o)) for o in outputs],
                 )
 
-        # 프롬프트 빌드 — 1턴 전용 프롬프트가 있으면 사용
+        # 프롬프트 빌드 -- 1턴 전용 프롬프트가 있으면 사용
         step_name = step.get("name", "")
         prompt_file = self.SINGLE_CALL_PROMPTS.get(step_name)
         if prompt_file:
@@ -2084,7 +2089,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
             template = self.rule_manager.load(f"prompts/single-call/{prompt_file}")
             art_style_override = self._load_art_style_override(step_name)
-            # chapter_specs_json — motion_planning은 축약 데이터만 필요
+            # chapter_specs_json -- motion_planning은 축약 데이터만 필요
             specs_path = self._resolve_output_path("scene_specs.json")
             if specs_path.exists():
                 if step_name == "motion_planning":
@@ -2142,7 +2147,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 }}
 </output_format>"""
 
-        # CLI 실행 (도구 비활성, 3턴 — stdout으로 JSON 직접 출력)
+        # CLI 실행 (도구 비활성, 3턴 -- stdout으로 JSON 직접 출력)
         cli_path = self._find_claude_cli()
         cmd = [
             cli_path, "--print",
@@ -2164,7 +2169,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             proc = subprocess.Popen(
                 cmd, cwd=str(self.project_dir), env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True,
+                stderr=subprocess.PIPE, text=True, encoding="utf-8",
             )
             stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
         except subprocess.TimeoutExpired:
@@ -2244,7 +2249,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         try:
             cli_output = json.loads(stdout)
             if isinstance(cli_output, dict):
-                # CLI 메타데이터 감지 — "type":"result" + "subtype" 존재하면 래퍼
+                # CLI 메타데이터 감지 -- "type":"result" + "subtype" 존재하면 래퍼
                 if cli_output.get("type") == "result" and "subtype" in cli_output:
                     # result 필드에서 실제 텍스트 추출
                     result = cli_output.get("result", "")
@@ -2257,11 +2262,11 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                         )
                     else:
                         text = ""
-                    # result가 비어있으면 → LLM이 도구만 사용하고 텍스트 출력 안 한 것
+                    # result가 비어있으면 -> LLM이 도구만 사용하고 텍스트 출력 안 한 것
                     if not text.strip():
                         return None
                 else:
-                    # CLI 래퍼가 아닌 순수 JSON → 그대로 반환
+                    # CLI 래퍼가 아닌 순수 JSON -> 그대로 반환
                     return cli_output
             elif isinstance(cli_output, str):
                 text = cli_output
@@ -2287,14 +2292,14 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                         parsed = json.loads(text[start:end + 1])
                         # CLI 메타데이터를 실수로 파싱한 건 아닌지 검증
                         if isinstance(parsed, dict) and parsed.get("type") == "result" and "duration_ms" in parsed:
-                            return None  # CLI 메타데이터 → 실패
+                            return None  # CLI 메타데이터 -> 실패
                         return parsed
                     except json.JSONDecodeError:
                         continue
         return None
 
     def _run_agent_step(self, step: dict) -> StepResult:
-        """에이전트 step → Claude CLI 서브프로세스 호출.
+        """에이전트 step -> Claude CLI 서브프로세스 호출.
 
         기본 실행 방식은 CLI (`claude` 바이너리).
         에이전트 루프(multi-turn tool_use)가 필요한 작업은 CLI에서 처리.
@@ -2319,12 +2324,12 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             for out in outputs:
                 out_path = self._resolve_output_path(out)
                 if out.endswith("/"):
-                    # 디렉토리 출력 → 해당 디렉토리 자체가 존재하고 안에 파일이 있어야
+                    # 디렉토리 출력 -> 해당 디렉토리 자체가 존재하고 안에 파일이 있어야
                     if not (out_path.exists() and out_path.is_dir() and any(out_path.iterdir())):
                         all_exist = False
                         break
                 elif "{" in out:
-                    # 패턴 경로 → 해당 디렉토리 안에 파일이 있어야
+                    # 패턴 경로 -> 해당 디렉토리 안에 파일이 있어야
                     if not (out_path.parent.exists() and out_path.parent.is_dir() and any(out_path.parent.glob(out_path.name.replace("{", "*").replace("}", "*")))):
                         all_exist = False
                         break
@@ -2333,7 +2338,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     break
 
             if all_exist and outputs:
-                print(f"[resume] 출력 파일 존재 → 스킵", flush=True)
+                print(f"[resume] 출력 파일 존재 -> 스킵", flush=True)
                 return StepResult(
                     step_id=step_id, status="completed",
                     output_files=[str(self._resolve_output_path(o)) for o in outputs],
@@ -2401,7 +2406,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         for tool in allowed_tools:
             cmd.extend(["--allowedTools", tool])
 
-        print(f"\n    → CLI {agent} (model={model}, max_turns={max_turns}, "
+        print(f"\n    -> CLI {agent} (model={model}, max_turns={max_turns}, "
               f"budget=${budget})", flush=True)
 
         # 5. 서브프로세스 실행 (Popen + 프로그레스 모니터링)
@@ -2426,7 +2431,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True,
+                text=True, encoding="utf-8",
             )
             try:
                 stdout, stderr = proc.communicate(input=prompt_text, timeout=timeout_sec)
@@ -2496,7 +2501,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             )
 
     def _run_module_step(self, step: dict) -> StepResult:
-        """모듈 step → Python 스크립트 또는 shell 명령 실행."""
+        """모듈 step -> Python 스크립트 또는 shell 명령 실행."""
         step_id = step["id"]
         module_name = step["module"]
 
@@ -2521,7 +2526,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             "tts-generator": "scripts/generate_tts.py",
             "image-generator": "scripts/generate_images.py",
             "image_batch": "modules/image_batch_module.py",
-            # "image-sourcer": "scripts/source_images.py",  # 제거 — image-searcher/image-painter 에이전트로 분리
+            # "image-sourcer": "scripts/source_images.py",  # 제거 -- image-searcher/image-painter 에이전트로 분리
             "subtitle-sync": "scripts/generate_subtitles.py",
             "tts-verifier": "scripts/verify_tts.py",
             "data-validator": "scripts/validate_data.py",
@@ -2572,7 +2577,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 cwd=ws,
                 env=env,
                 capture_output=True,
-                text=True,
+                text=True, encoding="utf-8",
                 timeout=1800,  # 30분 타임아웃
             )
 
@@ -2614,7 +2619,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             return StepResult(step_id=step_id, status="failed",
                               error="No command specified")
 
-        # 플레이스홀더 치환 — {project}는 디렉토리명(uuid_slug) 사용
+        # 플레이스홀더 치환 -- {project}는 디렉토리명(uuid_slug) 사용
         project_dir_name = Path(self.project_dir).name
         command = command.replace("{project}", project_dir_name)
         command = command.replace("{composition}", self._resolve_composition())
@@ -2631,17 +2636,17 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     "--output", f"--props={manifest_props} --output"
                 )
 
-        # Node.js PATH 보장 (npx, node 등) — get_env_with_node()로 플랫폼 중립적으로 처리
+        # Node.js PATH 보장 (npx, node 등) -- get_env_with_node()로 플랫폼 중립적으로 처리
         node_env = get_env_with_node()
         env["PATH"] = node_env.get("PATH", env.get("PATH", ""))
 
         try:
             result = subprocess.run(
                 command, shell=True,
-                cwd=str(get_workspace_dir()),
+                cwd=_posix(get_workspace_dir()),
                 env=env,
                 capture_output=True,
-                text=True,
+                text=True, encoding="utf-8",
                 timeout=1800,  # 30분 (렌더링)
             )
 
@@ -2688,7 +2693,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # 소스 추출
         sources = []
         for src in report.get("sources", [])[:10]:
-            sources.append(f"[{src.get('grade', '')}] {src.get('title', '')} — {src.get('url', '')}")
+            sources.append(f"[{src.get('grade', '')}] {src.get('title', '')} -- {src.get('url', '')}")
 
         self.vault.save_research_result(
             topic=topic,
@@ -2714,6 +2719,28 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             "PATH에 claude가 있는지 확인하거나 CLAUDE_CLI 환경변수를 설정하세요."
         )
 
+    def _build_existing_images_context(self, agent_name: str) -> str:
+        """image-painter/image-searcher: 기존 이미지 목록을 프롬프트에 주입 -> 스킵 유도."""
+        if agent_name not in ("image-painter", "image-searcher", "image-sourcer"):
+            return ""
+        images_dir = self.project_dir / "images"
+        if not images_dir.exists():
+            return ""
+        existing = sorted(
+            list(images_dir.glob("scene_*_gen_*.png"))
+            + list(images_dir.glob("scene_*_search_*.jpg"))
+            + list(images_dir.glob("scene_*_search_*.png"))
+        )
+        if not existing:
+            return ""
+        lines = [f"- {p.name}" for p in existing]
+        return (
+            "<existing_images>\n"
+            "The following scenes already have images generated. SKIP these scenes.\n"
+            + "\n".join(lines)
+            + "\n</existing_images>"
+        )
+
     def _build_agent_prompt(self, step: dict) -> str:
         """에이전트 호출용 자기 완결적 프롬프트 구성.
 
@@ -2721,7 +2748,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         """
         agent_name = step["agent"]
 
-        # 1. Agent SKILL.md 읽기 (중앙 규칙 → 로컬 fallback)
+        # 1. Agent SKILL.md 읽기 (중앙 규칙 -> 로컬 fallback)
         agent_skill = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
 
         # 2. 공유 스킬 수집 (step + agents.json 병합, 중복 제거)
@@ -2753,12 +2780,12 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         input_lines = []
         for inp in inputs:
             resolved = self._resolve_output_path(inp)
-            tag = "✓" if resolved.exists() else "✗ MISSING"
-            input_lines.append(f"- {inp}: {resolved} [{tag}]")
+            tag = "[OK]" if resolved.exists() else "[FAIL] MISSING"
+            input_lines.append(f"- {inp}: {_posix(resolved)} [{tag}]")
         for inp in optional_inputs:
             resolved = self._resolve_output_path(inp)
-            tag = "✓" if resolved.exists() else "없음 (선택)"
-            input_lines.append(f"- {inp}: {resolved} [{tag}]")
+            tag = "[OK]" if resolved.exists() else "없음 (선택)"
+            input_lines.append(f"- {inp}: {_posix(resolved)} [{tag}]")
 
         # 4. 출력 파일 경로
         outputs = step.get("output", [])
@@ -2767,7 +2794,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         output_lines = []
         for out in outputs:
             resolved = self._resolve_output_path(out)
-            output_lines.append(f"- {out}: {resolved}")
+            output_lines.append(f"- {out}: {_posix(resolved)}")
 
         # 5. 컨텍스트 메모리 주입
         context_memory_block = self.context_memory.build_context_prompt(
@@ -2784,7 +2811,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 if vault_block:
                     vault_chars = len(vault_block)
                     print(f"    [VaultRAG] 리서치용 볼트 지식 주입: {vault_chars}자", flush=True)
-                    _notify("System", f"볼트에서 기존 리서치 {vault_chars}자 발견 → 프롬프트에 주입",
+                    _notify("System", f"볼트에서 기존 리서치 {vault_chars}자 발견 -> 프롬프트에 주입",
                             phase=self.state.current_phase, project=self.project_slug, level="info")
                 else:
                     print("    [VaultRAG] 리서치용 볼트 지식 없음", flush=True)
@@ -2792,7 +2819,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 vault_block = self.vault.search_for_manuscript(topic, category)
                 if vault_block:
                     print(f"    [VaultRAG] 원고용 볼트 지식 주입: {len(vault_block)}자", flush=True)
-                    _notify("System", f"볼트에서 관련 원고 패턴 발견 → 프롬프트에 주입",
+                    _notify("System", f"볼트에서 관련 원고 패턴 발견 -> 프롬프트에 주입",
                             phase=self.state.current_phase, project=self.project_slug, level="info")
 
         # 7. 프로젝트 config 주입
@@ -2812,8 +2839,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # 8. 프롬프트 조립
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
-작업 디렉토리: {self.project_dir}
-워크스페이스: {get_workspace_dir()}
+작업 디렉토리: {_posix(self.project_dir)}
+워크스페이스: {_posix(get_workspace_dir())}
 </system_context>
 
 <project_config>
@@ -2821,8 +2848,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 목표 나레이션 글자 수: 약 {target_chars}자 (±10%)
 아트스타일: {art_style}
 문체 스타일: {writing_style}
-{"**이로미즘 문체 필수 적용** — writing-style-iromism 스킬의 규칙을 반드시 따르세요." if writing_style == "iromism" else ""}
-{"**세모지 문체 필수 적용** — writing-style-semoji 스킬의 규칙을 반드시 따르세요." if writing_style == "semoji" else ""}
+{"**이로미즘 문체 필수 적용** -- writing-style-iromism 스킬의 규칙을 반드시 따르세요." if writing_style == "iromism" else ""}
+{"**세모지 문체 필수 적용** -- writing-style-semoji 스킬의 규칙을 반드시 따르세요." if writing_style == "semoji" else ""}
 </project_config>
 
 <agent_skill>
@@ -2836,7 +2863,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 {vault_block}
 
 <task>
-Step: {step.get("id", "")} — {step.get("name", "")}
+Step: {step.get("id", "")} -- {step.get("name", "")}
 {step.get("description", "")}
 {step.get("notes", "")}
 
@@ -2849,9 +2876,11 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 모든 출력 파일을 성공적으로 생성하면 작업 완료입니다.
 </task>
 
+{self._build_existing_images_context(agent_name)}
+
 <progress_reporting>
 작업 진행 상황을 아래 파일에 기록하세요. 대시보드 메신저에 실시간으로 표시됩니다.
-파일 경로: {self.project_dir / f".progress_{step.get('id', '')}.jsonl"}
+파일 경로: {_posix(self.project_dir / f".progress_{step.get('id', '')}.jsonl")}
 
 Write 도구로 기록하되, 기존 내용 뒤에 append하세요 (기존 내용을 지우지 마세요).
 한 줄에 하나의 JSON:
@@ -2860,16 +2889,16 @@ Write 도구로 기록하되, 기존 내용 뒤에 append하세요 (기존 내�
 level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
 
 보고 시점과 내용:
-1. 작업 시작 → 무엇을 하려는지 ("코카콜라 초기 역사 리서치 시작")
-2. 병렬 태스크 배포 시 → 각 에이전트가 무엇을 조사할지 개별 선언 필수:
+1. 작업 시작 -> 무엇을 하려는지 ("코카콜라 초기 역사 리서치 시작")
+2. 병렬 태스크 배포 시 -> 각 에이전트가 무엇을 조사할지 개별 선언 필수:
    예: {{"agent": "Explorer-1", "text": "테슬라 초기 반도체 역사 조사 시작합니다", "level": "info"}}
    예: {{"agent": "Explorer-2", "text": "글로벌 반도체 시장 동향 조사 시작합니다", "level": "info"}}
-   — 배포 후 즉시 각 Explorer별 시작 메시지를 기록하세요
-3. 병렬 태스크가 하나씩 완료될 때마다 → 해당 태스크의 핵심 발견 서머리
-   예: {{"agent": "Explorer-1", "text": "초기 역사: 1886년 존 펨버턴이 발명, 약국에서 5센트에 판매 — 에피소드 3개", "level": "success"}}
-   예: {{"agent": "Explorer-3", "text": "마케팅: 산타클로스 캠페인(1931), I'd Like to Buy the World a Coke(1971) — 에피소드 4개", "level": "success"}}
-4. 전체 완료 시 → 통합 결과 요약 ("리서치 완료: 에피소드 12개, 통계 8건, 주요인물 5명")
-5. 실패/재시도 시 → 무슨 문제인지, 어떻게 대응하는지
+   -- 배포 후 즉시 각 Explorer별 시작 메시지를 기록하세요
+3. 병렬 태스크가 하나씩 완료될 때마다 -> 해당 태스크의 핵심 발견 서머리
+   예: {{"agent": "Explorer-1", "text": "초기 역사: 1886년 존 펨버턴이 발명, 약국에서 5센트에 판매 -- 에피소드 3개", "level": "success"}}
+   예: {{"agent": "Explorer-3", "text": "마케팅: 산타클로스 캠페인(1931), I'd Like to Buy the World a Coke(1971) -- 에피소드 4개", "level": "success"}}
+4. 전체 완료 시 -> 통합 결과 요약 ("리서치 완료: 에피소드 12개, 통계 8건, 주요인물 5명")
+5. 실패/재시도 시 -> 무슨 문제인지, 어떻게 대응하는지
 
 중요: 병렬 서브태스크(Task 도구)를 사용할 때, 각 태스크가 완료되면 즉시 해당 결과를 progress 파일에 기록하세요.
 톤: 자연어로 간결하게. 기술적 명령어나 파일 경로 대신 사람이 읽을 수 있는 내용 위주.
@@ -2879,7 +2908,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         return prompt
 
     def _load_agents_config(self) -> dict:
-        """agents.json 로드 (캐시). 중앙 규칙 → 로컬 fallback."""
+        """agents.json 로드 (캐시). 중앙 규칙 -> 로컬 fallback."""
         if not hasattr(self, "_agents_cache"):
             try:
                 self._agents_cache = self.rule_manager.load_json("agents.json")
@@ -2947,7 +2976,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         """일시적 오류(재시도 가능) vs 구조적 오류(재시도 불필요) 판별.
 
         구조적 오류 키워드: API 키 문제, 파일/CLI 없음, 내용 검증 실패,
-        JSON 파싱 오류, 설정 오류 — 재시도해도 동일하게 실패할 것들.
+        JSON 파싱 오류, 설정 오류 -- 재시도해도 동일하게 실패할 것들.
         """
         if not error:
             return False
@@ -2974,7 +3003,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
 
         build_manifest.py가 remotion/public/manifests/{fname}.json에 저장하므로
         여기서 찾아 --props 인자로 전달한다.
-        없으면 None 반환 → 공유 manifest.json 사용 (기존 동작)
+        없으면 None 반환 -> 공유 manifest.json 사용 (기존 동작)
         """
         ws = get_workspace_dir()
         manifests_dir = ws / "remotion" / "public" / "manifests"
@@ -3055,13 +3084,13 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         return (tokens_in * price_in + tokens_out * price_out) / 1_000_000
 
     def _resolve_output_path(self, output_template: str) -> Path:
-        """output 경로 템플릿 해석. {project} → 디렉토리명(uuid_slug) 치환.
+        """output 경로 템플릿 해석. {project} -> 디렉토리명(uuid_slug) 치환.
 
         경로 조합 기준:
-        - 절대경로 → 그대로 사용
-        - output/{dir_name}/... → project_dir 기준으로 dir_name 이후 부분만 추출
-        - output/... (dir_name 없음) → PROJECT_ROOT 기준 (레거시 경로)
-        - 그 외 상대경로 → project_dir 기준
+        - 절대경로 -> 그대로 사용
+        - output/{dir_name}/... -> project_dir 기준으로 dir_name 이후 부분만 추출
+        - output/... (dir_name 없음) -> PROJECT_ROOT 기준 (레거시 경로)
+        - 그 외 상대경로 -> project_dir 기준
         """
         # {project} 플레이스홀더는 실제 디렉토리명(uuid_slug) 기준으로 치환
         dir_name = Path(self.project_dir).name
@@ -3069,7 +3098,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         resolved = resolved.replace("{output_video}", self._resolve_video_output_filename())
         path = Path(resolved)
         if not path.is_absolute():
-            # output/{dir_name}/... 형태 → project_dir 기준으로 변환 (DB 경로 지원)
+            # output/{dir_name}/... 형태 -> project_dir 기준으로 변환 (DB 경로 지원)
             prefix = f"output/{dir_name}/"
             if resolved.startswith(prefix):
                 return self.project_dir / resolved[len(prefix):]
@@ -3077,7 +3106,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
             legacy_prefix = f"output/{self.project_slug}/"
             if resolved.startswith(legacy_prefix):
                 return self.project_dir / resolved[len(legacy_prefix):]
-            # output/ 접두사가 있으나 slug 불포함 → 워크스페이스 루트 기준 (레거시)
+            # output/ 접두사가 있으나 slug 불포함 -> 워크스페이스 루트 기준 (레거시)
             if resolved.startswith("output/"):
                 return PROJECT_ROOT / resolved
             # 그 외는 프로젝트 디렉토리 기준
@@ -3109,7 +3138,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
                     return False
                 data = json.loads(target.read_text(encoding="utf-8"))
                 field = check.get("field", "")
-                # "scenes[].imageAsset" → scenes 배열 내 아무 원소에 imageAsset이 있으면 True
+                # "scenes[].imageAsset" -> scenes 배열 내 아무 원소에 imageAsset이 있으면 True
                 if "[]." in field:
                     array_key, item_key = field.split("[].", 1)
                     items = data.get(array_key, [])
@@ -3117,7 +3146,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
                 # 단순 키
                 return bool(data.get(field))
 
-        # condition_check 미정의 → 입력 파일 존재 여부로 폴백
+        # condition_check 미정의 -> 입력 파일 존재 여부로 폴백
         inputs = step.get("input", [])
         if isinstance(inputs, str):
             inputs = [inputs]
@@ -3164,7 +3193,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         # 메신저 알림
         level = "success" if failed == 0 else "warning"
         cost_str = f" (${total_usd:.4f})" if total_usd > 0 else ""
-        _notify("Director", f"파이프라인 완료 — {completed}/{total} 성공{cost_str}", phase="pipeline", project=self.project_slug, level=level)
+        _notify("Director", f"파이프라인 완료 -- {completed}/{total} 성공{cost_str}", phase="pipeline", project=self.project_slug, level=level)
 
         # 상태 파일 저장
         state_path = self.project_dir / "pipeline_state.json"

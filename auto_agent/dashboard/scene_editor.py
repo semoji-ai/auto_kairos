@@ -2,9 +2,9 @@
 씬 레이아웃 에디터 API.
 
 3가지 저장 모드:
-  1. 저장만 ($0) — JSON 직접 패치
-  2. 저장+보정 (~$0.03) — Haiku 1회 호출로 정합성 수정
-  3. 미리보기 ($0) — 변경 사항 diff만 반환
+  1. 저장만 ($0) -- JSON 직접 패치
+  2. 저장+보정 (~$0.03) -- Haiku 1회 호출로 정합성 수정
+  3. 미리보기 ($0) -- 변경 사항 diff만 반환
 """
 import json
 from pathlib import Path
@@ -51,7 +51,7 @@ async def rebuild_manifest(slug: str):
         env = {**os.environ}
         result = subprocess.run(
             args,
-            capture_output=True, text=True, timeout=120,
+            capture_output=True, text=True, encoding="utf-8", timeout=120,
             env=env,
         )
         if result.returncode == 0:
@@ -63,7 +63,7 @@ async def rebuild_manifest(slug: str):
 
 # ─── 썸네일 (Remotion renderStill) ───
 
-_thumbnail_tasks: dict = {}  # slug → asyncio.Task
+_thumbnail_tasks: dict = {}  # slug -> asyncio.Task
 
 
 @manifest_router.get("/thumbnails/scene/{scene_num}")
@@ -84,7 +84,7 @@ async def get_scene_thumbnail(slug: str, scene_num: int):
             headers={"Cache-Control": "public, max-age=300"},
         )
 
-    # 썸네일 아직 없음 → 1x1 transparent PNG (placeholder)
+    # 썸네일 아직 없음 -> 1x1 transparent PNG (placeholder)
     import base64
     PIXEL = base64.b64decode(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPj/HwADBwIAMCbHYQAAAABJRU5ErkJggg=="
@@ -130,7 +130,7 @@ async def generate_thumbnails(slug: str):
         subprocess.run(
             [python, "-m", "auto_agent.scripts.build_manifest",
              "--project", output_dir],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True, text=True, encoding="utf-8", timeout=60,
             cwd=str(workspace),
         )
         # 다시 탐색
@@ -275,7 +275,7 @@ async def get_scene_images(slug: str, scene_num: int):
 
 @router.post("/scenes/{scene_num}/select-image")
 async def select_scene_image(slug: str, scene_num: int, request: Request):
-    """씬 이미지 선택 — scene_specs의 imagePath를 선택한 URL로 교체."""
+    """씬 이미지 선택 -- scene_specs의 imagePath를 선택한 URL로 교체."""
     project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
@@ -337,7 +337,7 @@ async def get_scene_list(slug: str):
 @router.get("/manifest-meta")
 async def get_editor_manifest_meta(slug: str):
     """에디터용 매니페스트 메타 데이터 (fps, resolution, font 등).
-    로컬 manifest → 로컬 scene_specs → 기본값 순서로 탐색."""
+    로컬 manifest -> 로컬 scene_specs -> 기본값 순서로 탐색."""
     project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
@@ -422,7 +422,7 @@ def _inject_image_url(project: dict, scene: dict, scene_num: int):
 
 
 def _transform_map_scene(scene: dict):
-    """mapScene 좌표 변환: scene_specs [lat,lng] → MapLibre [lng,lat].
+    """mapScene 좌표 변환: scene_specs [lat,lng] -> MapLibre [lng,lat].
 
     build_manifest.py와 동일한 변환을 적용하여 스토리보드 썸네일에서도
     맵이 올바르게 렌더링되도록 한다.
@@ -434,7 +434,7 @@ def _transform_map_scene(scene: dict):
         ms["mapStyle"] = "modern_clean"
     if not ms.get("mapType"):
         ms["mapType"] = "location_reveal"
-    # markers 변환: {lat, lng, label} → {coordinates: [lng, lat], label}
+    # markers 변환: {lat, lng, label} -> {coordinates: [lng, lat], label}
     if ms.get("markers"):
         converted = []
         for mk in ms["markers"]:
@@ -449,7 +449,7 @@ def _transform_map_scene(scene: dict):
             else:
                 converted.append(mk)
         ms["markers"] = converted
-    # center: [lat, lng] → [lng, lat]
+    # center: [lat, lng] -> [lng, lat]
     if ms.get("center") and len(ms["center"]) == 2:
         ms["center"] = [ms["center"][1], ms["center"][0]]
     # camera keyframes 자동 생성

@@ -159,7 +159,7 @@ def _score_relevance(query: str, title: str, description: str) -> float:
 
 def _score_source(source: str, source_domain: str) -> float:
     """소스 신뢰도 점수 (0~15). 워터마크 도메인이면 감점."""
-    # 워터마크 유명 스톡사이트 → 감점
+    # 워터마크 유명 스톡사이트 -> 감점
     for wm_domain in WATERMARK_DOMAINS:
         if wm_domain in source_domain:
             return -20.0  # 페널티
@@ -231,7 +231,7 @@ def detect_watermark(image_path: str) -> bool:
             # 그레이스케일 변환
             gray_center = center_crop.mean(axis=2)
 
-            # 라플라시안(간이) — 고주파 에지 밀도 측정
+            # 라플라시안(간이) -- 고주파 에지 밀도 측정
             # 워터마크 텍스트는 에지가 많고 반복적
             dx = np.diff(gray_center, axis=1)
             dy = np.diff(gray_center, axis=0)
@@ -252,7 +252,7 @@ def detect_watermark(image_path: str) -> bool:
             bottom_std = gray_bottom.std()
             # 하단이 균일한 색상(바) + 약간의 텍스트 에지
             if bottom_std < 20.0:
-                # 균일한 바 영역 — 에지가 있는지 확인
+                # 균일한 바 영역 -- 에지가 있는지 확인
                 dx_b = np.abs(np.diff(gray_bottom, axis=1))
                 if dx_b.mean() > 3.0:
                     return True
@@ -297,12 +297,12 @@ def filter_watermarked(images: List[SearchedImage]) -> List[SearchedImage]:
         if not img.local_path:
             filtered.append(img)
             continue
-        # Wikimedia Commons는 자체 라이선스 데이터 제공 — 워터마크 없음, 감지 스킵
+        # Wikimedia Commons는 자체 라이선스 데이터 제공 -- 워터마크 없음, 감지 스킵
         if img.source == "wikimedia":
             filtered.append(img)
             continue
         if detect_watermark(img.local_path):
-            print(f"    [WM] 워터마크 감지 — 제외: {Path(img.local_path).name}", file=sys.stderr)
+            print(f"    [WM] 워터마크 감지 -- 제외: {Path(img.local_path).name}", file=sys.stderr)
             # 워터마크 이미지 파일 삭제
             try:
                 Path(img.local_path).unlink(missing_ok=True)
@@ -537,7 +537,7 @@ class ImageSearcher:
     def search_and_download(self, query: str, limit: int = 5,
                             source: str = "wikimedia",
                             preferred_aspect: str = "16:9") -> List[SearchedImage]:
-        """검색 → 스코어링 → 상위 N개 다운로드 → 워터마크 필터링.
+        """검색 -> 스코어링 -> 상위 N개 다운로드 -> 워터마크 필터링.
 
         전체 검색 결과(메타데이터)는 self.last_all_ranked에 보관된다.
         다운로드하지 않은 후보도 thumbnail_url로 접근 가능.
@@ -584,7 +584,7 @@ class ImageSearcher:
 
     def search_waterfall(self, query: str, limit: int = 3,
                          preferred_aspect: str = "16:9") -> List[SearchedImage]:
-        """워터폴 폴백: wikimedia → serper → pixabay.
+        """워터폴 폴백: wikimedia -> serper -> pixabay.
         모든 소스에서 후보를 모아 통합 랭킹."""
         all_candidates: List[SearchedImage] = []
 
@@ -678,9 +678,9 @@ class ImageSearcher:
     def search_for_scene_specs(self, scene_specs_path: Path, output_dir: Path) -> dict:
         """scene_specs.json의 imageAsset 기반 이미지 검색+다운로드
 
-        source="wikimedia" → search_wikimedia → download
-        source="search" → search_serper → download
-        워터폴 폴백: wikimedia 실패 → serper → pixabay
+        source="wikimedia" -> search_wikimedia -> download
+        source="search" -> search_serper -> download
+        워터폴 폴백: wikimedia 실패 -> serper -> pixabay
 
         Returns:
             {scene_number: {local_path, license, source_url, source}}
@@ -738,9 +738,9 @@ class ImageSearcher:
                     "height": best.height,
                     "score": best_score,
                 }
-                print(f"    → {best.local_path} (score={best_score}, {best.width}x{best.height})", file=sys.stderr)
+                print(f"    -> {best.local_path} (score={best_score}, {best.width}x{best.height})", file=sys.stderr)
             else:
-                print(f"    → 이미지 없음", file=sys.stderr)
+                print(f"    -> 이미지 없음", file=sys.stderr)
 
         self.images_dir = saved_images_dir
         return results
@@ -758,7 +758,7 @@ def _cli_main():
     p_search.add_argument("--query", required=True, help="검색 키워드")
     p_search.add_argument("--source", default="wikimedia",
                           choices=["serper", "wikimedia", "pixabay", "waterfall"],
-                          help="검색 소스 (waterfall: wikimedia→serper→pixabay)")
+                          help="검색 소스 (waterfall: wikimedia->serper->pixabay)")
     p_search.add_argument("--output", required=True, help="다운로드 디렉터리")
     p_search.add_argument("--count", type=int, default=5, help="결과 수")
 

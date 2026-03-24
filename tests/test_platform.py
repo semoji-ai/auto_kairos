@@ -1,5 +1,5 @@
 # tests/test_platform.py
-"""platform.py 단위 테스트 — platform.py 작성 전에 먼저 작성"""
+"""platform.py 단위 테스트 -- platform.py 작성 전에 먼저 작성"""
 import os
 import sys
 from pathlib import Path
@@ -43,7 +43,7 @@ def test_get_node_bin_dir_found():
     """현재 환경에서 node 탐색 성공"""
     import shutil
     if not shutil.which("node"):
-        pytest.skip("node가 설치되지 않은 환경 — 탐색 불가")
+        pytest.skip("node가 설치되지 않은 환경 -- 탐색 불가")
     from auto_agent.utils.platform import get_node_bin_dir
     result = get_node_bin_dir()
     assert result.exists()

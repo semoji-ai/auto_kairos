@@ -1,5 +1,5 @@
 """
-오디오 에셋 관리 — selected 기반 (image_assets.py와 동일 패턴).
+오디오 에셋 관리 -- selected 기반 (image_assets.py와 동일 패턴).
 
 audio/audio_assets.json 구조:
 {

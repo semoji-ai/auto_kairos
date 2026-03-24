@@ -1,5 +1,5 @@
 """
-이미지 에셋 관리 — selected 기반.
+이미지 에셋 관리 -- selected 기반.
 
 images/image_assets.json 구조:
 {

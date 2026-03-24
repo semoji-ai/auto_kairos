@@ -1,4 +1,4 @@
-"""캐릭터 글로벌 라이브러리 — PNG tEXt 메타데이터 + SQLite 인덱스."""
+"""캐릭터 글로벌 라이브러리 -- PNG tEXt 메타데이터 + SQLite 인덱스."""
 from __future__ import annotations
 import hashlib
 import logging
@@ -174,7 +174,7 @@ class CharacterLibrary:
         return dest
 
     def rebuild_index(self) -> int:
-        """LIBRARY_DIR 스캔 → PNG tEXt에서 DB 재구성. 복구된 레코드 수 반환."""
+        """LIBRARY_DIR 스캔 -> PNG tEXt에서 DB 재구성. 복구된 레코드 수 반환."""
         count = 0
         for png_path in sorted(self.library_dir.glob("*.png")):
             meta = read_png_metadata(png_path)

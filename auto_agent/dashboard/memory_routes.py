@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/p/{slug}/memory", tags=["memory"])
 
 
 def _get_memory(slug: str) -> tuple:
-    """프로젝트 → ContextMemory 인스턴스 반환."""
+    """프로젝트 -> ContextMemory 인스턴스 반환."""
     project = resolve_project_by_slug(slug)
     if not project:
         return None, None

@@ -29,7 +29,7 @@ def _load_dotenv():
     """프로젝트 루트의 .env 파일에서 환경변수를 로드"""
     env_path = get_workspace_dir() / ".env"
     if env_path.exists():
-        with open(env_path, "r") as f:
+        with open(env_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
@@ -48,7 +48,7 @@ try:
 except ImportError:
     FAL_AVAILABLE = False
 
-# FAL_API_KEY → FAL_KEY 자동 매핑 (.env 호환)
+# FAL_API_KEY -> FAL_KEY 자동 매핑 (.env 호환)
 if not os.environ.get("FAL_KEY") and os.environ.get("FAL_API_KEY"):
     os.environ["FAL_KEY"] = os.environ["FAL_API_KEY"]
 
@@ -86,7 +86,7 @@ ANATOMY_RULES = (
 FLAT_STAGING_RULES = (
     "**FLAT STAGING COMPOSITION (CRITICAL):**\n"
     "- The BACKGROUND MUST fill the ENTIRE canvas edge-to-edge with NO empty space, NO margins, NO borders\n"
-    "- The background covers 100% of the image area — every pixel must be part of the scene\n"
+    "- The background covers 100% of the image area -- every pixel must be part of the scene\n"
     "- ALL characters MUST face the CAMERA directly (frontal view)\n"
     "- Characters are arranged SIDE BY SIDE on a FLAT PLANE, like figures placed on a stage\n"
     "- NO perspective depth, NO 3D space, NO foreshortening\n"
@@ -95,7 +95,7 @@ FLAT_STAGING_RULES = (
     "- NO dynamic angles: no over-the-shoulder, no low angle, no high angle\n"
     "- Camera is ALWAYS straight-on, eye-level, centered\n"
     "- Characters stand or sit in STATIC, symmetrical poses facing forward\n"
-    "- Think of it as a DIORAMA stage — full background + characters placed in front\n"
+    "- Think of it as a DIORAMA stage -- full background + characters placed in front\n"
     "- Characters can overlap slightly but maintain their flat, frontal orientation\n\n"
 )
 
@@ -116,7 +116,7 @@ def _load_art_style(style_path: str) -> Dict[str, Any]:
     """art_style.json 로드. reference_image 상대경로를 절대경로로 해석."""
     with open(style_path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    # reference_image가 상대경로이면 art_style.json 위치 기준 → 패키지 data 기준 순서로 해석
+    # reference_image가 상대경로이면 art_style.json 위치 기준 -> 패키지 data 기준 순서로 해석
     ref = data.get("reference_image", "")
     if ref and not Path(ref).is_absolute():
         # 1) art_style.json이 있는 디렉토리 기준
@@ -144,7 +144,7 @@ def _get_style_json_str(art_style: dict) -> str:
 
 
 def _filter_text_descriptions(prompt: str) -> str:
-    """텍스트 관련 설명 필터링 — 이미지에 텍스트가 렌더링되지 않도록"""
+    """텍스트 관련 설명 필터링 -- 이미지에 텍스트가 렌더링되지 않도록"""
     logo_protected = {}
     placeholder_idx = [0]
 
@@ -340,7 +340,7 @@ def generate_character(
     if person_photo and Path(person_photo).exists():
         image_urls.append(_image_to_data_uri(person_photo))
 
-    # 프롬프트 구성 — 스타일 우선, NO TEXT는 끝에
+    # 프롬프트 구성 -- 스타일 우선, NO TEXT는 끝에
     parts = []
 
     # 1) 스타일 톤 세팅
@@ -354,7 +354,7 @@ def generate_character(
     if critical_reqs:
         parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs) + "\n\n")
 
-    # 4) 스타일 복사 지시 — 기준 이미지의 전체 느낌을 자연스럽게 따를 것
+    # 4) 스타일 복사 지시 -- 기준 이미지의 전체 느낌을 자연스럽게 따를 것
     if len(image_urls) >= 2:
         parts.append(
             "**REFERENCE IMAGE GUIDE:**\n"
@@ -404,7 +404,7 @@ def _build_character_fal_input(
     """캐릭터 FAL 입력 빌드. generate_character()와 동일한 로직, _call_fal 직전에서 중단.
 
     Returns:
-        (endpoint, fal_input) — fal_queue.submit_batch()에 전달할 값
+        (endpoint, fal_input) -- fal_queue.submit_batch()에 전달할 값
     """
     art_style = _load_art_style(style_path)
     style_json_str = _get_style_json_str(art_style)
@@ -662,7 +662,7 @@ def generate_scene_flat(
     if characters_info:
         structured_lines.append(f"Character: {characters_info}")
     if background:
-        structured_lines.append(f"Background: {background} — fills entire canvas edge-to-edge, no empty space")
+        structured_lines.append(f"Background: {background} -- fills entire canvas edge-to-edge, no empty space")
     structured_lines.append("Camera: Front view, eye-level, centered, flat composition")
     if has_character_refs:
         structured_lines.append(
@@ -678,7 +678,7 @@ def generate_scene_flat(
 
     parts.append(
         "**Flat staging rules:**\n"
-        "- BACKGROUND fills the ENTIRE image — no blank areas, no visible borders or margins\n"
+        "- BACKGROUND fills the ENTIRE image -- no blank areas, no visible borders or margins\n"
         "- Characters arranged LEFT to RIGHT, facing camera\n"
         "- Main character in CENTER, supporting characters on sides\n"
         "- Background is a single flat layer behind all characters, extending to ALL edges\n"
@@ -691,7 +691,7 @@ def generate_scene_flat(
         f"aspect ratio {aspect_ratio}\n"
         "No text or speech bubbles.\n"
         "Draw characters with consistent proportions.\n"
-        "FLAT 2D composition only — no 3D rendering, no perspective."
+        "FLAT 2D composition only -- no 3D rendering, no perspective."
     )
 
     parts.append(
@@ -725,7 +725,7 @@ def _build_scene_fal_input(
     Args:
         scene: scene_specs.json의 씬 딕셔너리
         project_dir: 프로젝트 디렉토리 (art_style.json 경로 탐색용)
-        char_paths: {char_id: Path | None} — None이면 해당 캐릭터 참조 없이 생성
+        char_paths: {char_id: Path | None} -- None이면 해당 캐릭터 참조 없이 생성
         style_path: art_style.json 경로. None이면 project_dir/art_style.json 사용.
     """
     if style_path is None:
@@ -800,7 +800,7 @@ def _build_scene_fal_input(
         if characters_info:
             struct.append(f"Character: {characters_info}")
         if background:
-            struct.append(f"Background: {background} — fills entire canvas edge-to-edge, no empty space")
+            struct.append(f"Background: {background} -- fills entire canvas edge-to-edge, no empty space")
         struct.append("Camera: Front view, eye-level, centered, flat composition")
         parts.append("\n".join(struct))
         parts.append(
@@ -815,7 +815,7 @@ def _build_scene_fal_input(
         return endpoint, fal_input
 
     else:
-        # cinematic — generate_scene 로직 재사용 (char_path_strs 있음)
+        # cinematic -- generate_scene 로직 재사용 (char_path_strs 있음)
         art_style = _load_art_style(style_path)
         style_json_str = _get_style_json_str(art_style)
         scene_style_desc = art_style.get("scene_style_description", "")
@@ -903,7 +903,7 @@ def _build_viz_fal_input(
         f"**Context:** {thematic_context}\n"
         f"**Visual mood:** {viz_mood}\n\n"
         "**CRITICAL BACKGROUND REQUIREMENTS:**\n"
-        "- This is a BACKGROUND image — data/charts will be overlaid on top\n"
+        "- This is a BACKGROUND image -- data/charts will be overlaid on top\n"
         "- Use SOFT, MUTED, slightly desaturated colors\n"
         "- Keep the CENTER area relatively EMPTY and SIMPLE\n"
         "- Place decorative elements toward EDGES and CORNERS\n"
@@ -1007,7 +1007,7 @@ def generate_viz_background(
         f"**Context:** {thematic_context}\n"
         f"**Visual mood:** {viz_mood}\n\n"
         "**CRITICAL BACKGROUND REQUIREMENTS:**\n"
-        "- This is a BACKGROUND image — data/charts will be overlaid on top\n"
+        "- This is a BACKGROUND image -- data/charts will be overlaid on top\n"
         "- Use SOFT, MUTED, slightly desaturated colors\n"
         "- Keep the CENTER area relatively EMPTY and SIMPLE\n"
         "- Place decorative elements toward EDGES and CORNERS\n"

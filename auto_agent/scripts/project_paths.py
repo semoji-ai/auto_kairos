@@ -1,5 +1,5 @@
 """
-프로젝트 출력 디렉토리 관리 유틸리티 (v3 — 이중 루트 + DB 연동)
+프로젝트 출력 디렉토리 관리 유틸리티 (v3 -- 이중 루트 + DB 연동)
 
 모든 scripts/*.py 에서 공통으로 사용.
 output/{project_name}/ 구조를 통일한다.
@@ -25,7 +25,7 @@ from typing import Optional
 
 from auto_agent.paths import get_workspace_dir, get_data_dir, PACKAGE_DIR, DATA_DIR
 
-# 하위 호환: PROJECT_ROOT → WORKSPACE_DIR
+# 하위 호환: PROJECT_ROOT -> WORKSPACE_DIR
 PROJECT_ROOT = get_workspace_dir()
 
 
@@ -198,7 +198,7 @@ def get_manifest_path() -> Path:
     result = _try_db_project()
     if result:
         project_dir, pid = result
-        # project_dir.name은 output_dir의 basename → {uuid}_{slug} 형식
+        # project_dir.name은 output_dir의 basename -> {uuid}_{slug} 형식
         dir_name = project_dir.name
         fname = _get_manifest_filename(dir_name, fallback=f"{dir_name}.json")
         return manifests_dir / fname

@@ -17,7 +17,7 @@ from auto_agent.db.project_manager import ProjectManager
 
 
 def scan_scene_number(filename: str):
-    """파일명에서 씬 번호 추출. scene_003.mp3 → 3"""
+    """파일명에서 씬 번호 추출. scene_003.mp3 -> 3"""
     m = re.search(r"scene_(\d+)", filename)
     return int(m.group(1)) if m else None
 
@@ -80,9 +80,9 @@ def migrate_project(pm: ProjectManager, slug: str, name: str) -> int:
         dest_path = output_dir / filename
 
         if root_path.exists():
-            # 루트 → output 디렉토리로 복사 (최신 버전)
+            # 루트 -> output 디렉토리로 복사 (최신 버전)
             shutil.copy2(root_path, dest_path)
-            print(f"  [COPY] {filename}: root → output/{slug}/")
+            print(f"  [COPY] {filename}: root -> output/{slug}/")
 
             # v001으로 버전 등록
             pm.save_version(
@@ -230,7 +230,7 @@ def migrate_project(pm: ProjectManager, slug: str, name: str) -> int:
     iran_manifest = PROJECT_ROOT / "remotion" / "public" / "iran_war_2026_manifest.json"
     if iran_manifest.exists():
         shutil.copy2(iran_manifest, manifest_dest)
-        print(f"  [MANIFEST] Iran war manifest → manifests/{slug}.json")
+        print(f"  [MANIFEST] Iran war manifest -> manifests/{slug}.json")
 
     return project_id
 

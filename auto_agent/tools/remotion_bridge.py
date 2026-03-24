@@ -3,7 +3,7 @@ Remotion 렌더링 브릿지
 
 auto_kairos의 remotion_bridge.py에서 이관.
 Python 파이프라인과 Remotion(Node.js) 사이의 인터페이스.
-storyboard + narration + subtitles → remotion_manifest.json → 영상 렌더링.
+storyboard + narration + subtitles -> remotion_manifest.json -> 영상 렌더링.
 """
 import json
 import shutil
@@ -81,7 +81,7 @@ class RemotionBridge:
             str(audio_path),
         ]
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=10)
             return float(result.stdout.strip())
         except (ValueError, subprocess.TimeoutExpired):
             return 0.0
@@ -137,7 +137,7 @@ class RemotionBridge:
         design_spec: Optional[Dict] = None,
         design_tokens: Optional[Dict] = None,
     ) -> Path:
-        """storyboard + narration + subtitles → remotion_manifest.json"""
+        """storyboard + narration + subtitles -> remotion_manifest.json"""
         with open(storyboard_path, "r", encoding="utf-8") as f:
             storyboard = json.load(f)
 
@@ -188,19 +188,19 @@ class RemotionBridge:
             if viz_type and viz_data:
                 raw_items = viz_data.get("items", [])
                 # items가 객체 리스트인 경우 문자열로 변환
-                # e.g. {year, event, detail} → "event — detail"
+                # e.g. {year, event, detail} -> "event -- detail"
                 flat_items = []
                 flat_values = viz_data.get("values", [])
                 for item in raw_items:
                     if isinstance(item, dict):
-                        # timeline용: year→values, event+detail→items
+                        # timeline용: year->values, event+detail->items
                         year = item.get("year", "")
                         event = item.get("event", "")
                         detail = item.get("detail", "")
                         label = item.get("label", "")
                         value = item.get("value", "")
                         if year and event:
-                            flat_items.append(f"{event} — {detail}" if detail else event)
+                            flat_items.append(f"{event} -- {detail}" if detail else event)
                             if not flat_values or len(flat_values) < len(flat_items):
                                 flat_values.append(str(year))
                         elif label:
@@ -225,8 +225,8 @@ class RemotionBridge:
 
             entry = {
                 "sceneNumber": scene_num,
-                "imagePath": str(image_path.resolve()) if image_path.exists() else "",
-                "audioPath": str(audio_path.resolve()) if audio_path.exists() else "",
+                "imagePath": image_path.resolve().as_posix() if image_path.exists() else "",
+                "audioPath": audio_path.resolve().as_posix() if audio_path.exists() else "",
                 "audioDurationSec": round(audio_duration, 3),
                 "subtitles": subtitles,
                 "visualization": visualization,
@@ -258,7 +258,7 @@ class RemotionBridge:
                 if candidate.exists():
                     bgm_resolved = candidate
             if bgm_resolved.exists():
-                bgm = {"path": str(bgm_resolved.resolve()), "volume": bgm_volume, "loop": True}
+                bgm = {"path": bgm_resolved.resolve().as_posix(), "volume": bgm_volume, "loop": True}
 
         # designTokens 로드: 파라미터 > design_tokens.json 파일 > 없음
         resolved_tokens = design_tokens
@@ -317,7 +317,7 @@ class RemotionBridge:
         if not (self.remotion_dir / "node_modules").exists():
             subprocess.run(
                 [get_npm_cmd(), "install"], cwd=str(self.remotion_dir),
-                capture_output=True, text=True, timeout=120, env=node_env,
+                capture_output=True, text=True, encoding="utf-8", timeout=120, env=node_env,
             )
 
         # Supabase 전용 모드: 심볼릭 링크 불필요 (이미지/오디오 모두 Supabase URL)
@@ -333,8 +333,8 @@ class RemotionBridge:
 
         def _to_relative(abs_path: str) -> str:
             if abs_path and abs_path.startswith(output_abs):
-                return "project" + abs_path[len(output_abs):]
-            return abs_path
+                return ("project" + abs_path[len(output_abs):]).replace("\\", "/")
+            return abs_path.replace("\\", "/") if abs_path else abs_path
 
         for scene in render_manifest.get("scenes", []):
             for key in ("imagePath", "audioPath"):
@@ -345,7 +345,7 @@ class RemotionBridge:
         def _to_public_relative(abs_path: str) -> str:
             """public/ 디렉토리 기준 상대경로 변환"""
             if abs_path and abs_path.startswith(public_abs):
-                return abs_path[len(public_abs) + 1:]  # "assets/file.mp3"
+                return abs_path[len(public_abs) + 1:].replace("\\", "/")
             return _to_relative(abs_path)
 
         bgm = render_manifest.get("bgm")
@@ -376,8 +376,8 @@ class RemotionBridge:
 
         cmd = [
             get_npx_cmd(), "remotion", "render",
-            "KairosVideo", str(output_path.resolve()),
-            "--props", str(render_manifest_path.resolve()),
+            "KairosVideo", output_path.resolve().as_posix(),
+            "--props", render_manifest_path.resolve().as_posix(),
             "--codec", "h264",
             "--crf", str(self.crf),
             "--concurrency", str(concurrency),
@@ -386,7 +386,7 @@ class RemotionBridge:
         try:
             result = subprocess.run(
                 cmd, cwd=str(self.remotion_dir),
-                capture_output=True, text=True, timeout=1800, env=node_env,
+                capture_output=True, text=True, encoding="utf-8", timeout=1800, env=node_env,
             )
             if result.returncode == 0:
                 print(f"  Remotion 렌더링 완료: {output_path}")

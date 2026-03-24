@@ -1,9 +1,9 @@
 """
 음악 분석 - Gemini(가사+감정) + Whisper(타임스탬프) 하이브리드
 
-Step 1: Whisper  → 단어별 정밀 타임스탬프
-Step 2: Gemini   → 정확한 가사 + 감정 (타임스탬프 요청 안 함)
-Step 3: Align    → Gemini 가사를 Whisper 타임라인에 fuzzy match로 붙이기
+Step 1: Whisper  -> 단어별 정밀 타임스탬프
+Step 2: Gemini   -> 정확한 가사 + 감정 (타임스탬프 요청 안 함)
+Step 3: Align    -> Gemini 가사를 Whisper 타임라인에 fuzzy match로 붙이기
 
 사용법: python3 scripts/test_gemini_audio.py <오디오파일경로>
 """
@@ -51,7 +51,7 @@ def whisper_transcribe(audio_path: str) -> dict:
         {"word": w.word, "start": round(w.start, 3), "end": round(w.end, 3)}
         for w in (result.words or [])
     ]
-    print(f"    → {len(words)}개 단어 추출 / 총 길이 {result.duration:.1f}초")
+    print(f"    -> {len(words)}개 단어 추출 / 총 길이 {result.duration:.1f}초")
     return {"duration": result.duration or 0, "words": words}
 
 
@@ -125,7 +125,7 @@ def gemini_analyze(audio_path: str) -> dict:
         raw = "\n".join(raw.split("\n")[1:-1])
 
     result = json.loads(raw)
-    print(f"    → {len(result.get('segments', []))}개 세그먼트 추출")
+    print(f"    -> {len(result.get('segments', []))}개 세그먼트 추출")
     return result
 
 
@@ -137,7 +137,7 @@ def _normalize(text: str) -> str:
 
 
 def build_char_timeline(words: list) -> list:
-    """단어 타임스탬프 → 문자 단위 타임라인
+    """단어 타임스탬프 -> 문자 단위 타임라인
     반환: [(char, start_sec, end_sec), ...]
     """
     timeline = []
@@ -200,7 +200,7 @@ def align_lyrics_to_timestamps(gemini_segments: list, whisper_words: list) -> li
             "notes":   seg.get("notes", ""),
         })
 
-    print(f"    → {len(result)}개 세그먼트 정렬 완료")
+    print(f"    -> {len(result)}개 세그먼트 정렬 완료")
     return result
 
 

@@ -22,7 +22,7 @@ from auto_agent.supabase_client import get_supabase, supabase_enabled
 # 로컬 data/ 디렉토리 (fallback)
 DATA_DIR = Path(__file__).parent / "data"
 
-# 규칙 파일 → rule_type 매핑
+# 규칙 파일 -> rule_type 매핑
 RULE_MANIFEST = {
     # 1턴 프롬프트
     "prompts/single-call/creative-direction.md": "prompt",
@@ -71,7 +71,7 @@ def _checksum(content: str) -> str:
 
 
 def _normalize(content: str) -> str:
-    """CRLF → LF 통일."""
+    """CRLF -> LF 통일."""
     return content.replace("\r\n", "\n")
 
 
@@ -83,11 +83,11 @@ class RuleManager:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._enabled = supabase_enabled()
 
-    # ── Fetch (중앙 → 로컬 캐시) ──
+    # ── Fetch (중앙 -> 로컬 캐시) ──
 
     def fetch_all(self) -> int:
-        """중앙에서 전체 규칙 fetch → 로컬 캐시 저장. 변경된 파일 수 리턴."""
-        # 로컬 기반 운영 — Supabase 동기화 비활성화
+        """중앙에서 전체 규칙 fetch -> 로컬 캐시 저장. 변경된 파일 수 리턴."""
+        # 로컬 기반 운영 -- Supabase 동기화 비활성화
         return 0
 
         if not self._enabled:
@@ -117,10 +117,10 @@ class RuleManager:
 
         return changed
 
-    # ── Load (캐시 → fallback 로컬) ──
+    # ── Load (캐시 -> fallback 로컬) ──
 
     def load(self, key: str) -> str:
-        """규칙 로드. 로컬 data/ 우선 → 캐시 fallback."""
+        """규칙 로드. 로컬 data/ 우선 -> 캐시 fallback."""
         # 1순위: 로컬 data/ (수정 반영 보장)
         local_path = DATA_DIR / PurePosixPath(key)
         if local_path.exists():
@@ -137,13 +137,13 @@ class RuleManager:
         """JSON 규칙 로드."""
         return json.loads(self.load(key))
 
-    # ── Push (로컬 → 중앙) ──
+    # ── Push (로컬 -> 중앙) ──
 
     def push(self, key: str, content: str, updated_by: str = "system",
              description: str = "") -> dict:
         """규칙을 중앙에 push + 버전 기록."""
         if not self._enabled:
-            raise RuntimeError("Supabase 미연결 — push 불가")
+            raise RuntimeError("Supabase 미연결 -- push 불가")
 
         content = _normalize(content)
         cs = _checksum(content)
@@ -215,7 +215,7 @@ class RuleManager:
     def rollback(self, key: str, version: int) -> dict:
         """특정 버전으로 롤백."""
         if not self._enabled:
-            raise RuntimeError("Supabase 미연결 — rollback 불가")
+            raise RuntimeError("Supabase 미연결 -- rollback 불가")
 
         sb = get_supabase()
         ver_resp = (sb.table("rule_versions")
@@ -265,5 +265,5 @@ class RuleManager:
     # ── Internal ──
 
     def _cache_path(self, key: str) -> Path:
-        """key → 로컬 캐시 경로 변환."""
+        """key -> 로컬 캐시 경로 변환."""
         return self.cache_dir / PurePosixPath(key)

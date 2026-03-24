@@ -182,7 +182,7 @@ class SessionManager:
                     capture_output=True,
                 )
             else:
-                # SIGTERM → 2초 대기 → SIGKILL
+                # SIGTERM -> 2초 대기 -> SIGKILL
                 os.killpg(os.getpgid(pid), signal.SIGTERM)
                 time.sleep(2)
                 if _is_process_alive(pid):
@@ -276,7 +276,7 @@ class SessionManager:
                     if session["status"] == "running" and _is_process_alive(session["pid"]):
                         time.sleep(0.3)
                     else:
-                        # 프로세스 종료 — 남은 내용 읽고 끝
+                        # 프로세스 종료 -- 남은 내용 읽고 끝
                         remaining = f.read()
                         if remaining:
                             for l in remaining.splitlines():

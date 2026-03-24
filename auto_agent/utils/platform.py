@@ -1,6 +1,6 @@
 # auto_agent/utils/platform.py
 """
-플랫폼 추상화 유틸 — Node.js 탐색, 명령어, PATH 처리
+플랫폼 추상화 유틸 -- Node.js 탐색, 명령어, PATH 처리
 
 사용법:
     from auto_agent.utils.platform import get_env_with_node, get_npx_cmd
@@ -29,7 +29,7 @@ def is_macos() -> bool:
 def is_wsl() -> bool:
     """/proc/version에서 'microsoft' 문자열로 WSL 감지. 파일 없으면 False."""
     try:
-        return "microsoft" in Path("/proc/version").read_text().lower()
+        return "microsoft" in Path("/proc/version").read_text(encoding="utf-8").lower()
     except (FileNotFoundError, PermissionError):
         return False
 
@@ -43,12 +43,12 @@ def get_node_bin_dir() -> Path:
 
     탐색 순서:
         1. NODEJS_BIN_DIR 환경변수 (팀원 수동 오버라이드)
-        2. shutil.which("node") → 부모 디렉토리
-        3. nvm — ~/.nvm/alias/default → 버전 디렉토리, 없으면 최신 버전
-        4. volta — ~/.volta/bin
-        5. brew — /opt/homebrew/bin, /usr/local/bin
-        5.5. 로컬 nodejs 설치 — ~/local/nodejs/node-v*/bin
-        6. Windows 시스템 경로 — C:/Program Files/nodejs, AppData nvm-windows
+        2. shutil.which("node") -> 부모 디렉토리
+        3. nvm -- ~/.nvm/alias/default -> 버전 디렉토리, 없으면 최신 버전
+        4. volta -- ~/.volta/bin
+        5. brew -- /opt/homebrew/bin, /usr/local/bin
+        5.5. 로컬 nodejs 설치 -- ~/local/nodejs/node-v*/bin
+        6. Windows 시스템 경로 -- C:/Program Files/nodejs, AppData nvm-windows
 
     Returns:
         Path: node 바이너리가 있는 디렉토리
@@ -57,7 +57,7 @@ def get_node_bin_dir() -> Path:
         EnvironmentError: Node.js를 찾을 수 없을 때 (설치 안내 포함)
 
     Note:
-        @lru_cache(maxsize=1) — 첫 탐색 결과를 캐싱.
+        @lru_cache(maxsize=1) -- 첫 탐색 결과를 캐싱.
         테스트에서는 get_node_bin_dir.cache_clear()로 리셋할 것.
     """
     node_exe = "node.exe" if is_windows() else "node"
@@ -78,7 +78,7 @@ def get_node_bin_dir() -> Path:
     nvm_alias = Path.home() / ".nvm" / "alias" / "default"
     if nvm_alias.exists():
         try:
-            default_ver = nvm_alias.read_text().strip()
+            default_ver = nvm_alias.read_text(encoding="utf-8").strip()
             nvm_bin = Path.home() / ".nvm" / "versions" / "node" / default_ver / "bin"
             if (nvm_bin / node_exe).exists():
                 return nvm_bin

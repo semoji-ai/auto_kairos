@@ -1,5 +1,5 @@
 """
-Vault RAG — Obsidian 볼트 기반 지식 검색 + 축적 시스템
+Vault RAG -- Obsidian 볼트 기반 지식 검색 + 축적 시스템
 
 파이프라인의 각 단계에서:
   - 리서치 전: 기존 주제/방법론/소스를 검색하여 에이전트 컨텍스트에 주입
@@ -27,7 +27,7 @@ class VaultRAG:
         self.vault_dir = vault_dir or VAULT_DIR
         self.enabled = self.vault_dir.exists()
         if not self.enabled:
-            print(f"[VaultRAG] 볼트 미발견: {self.vault_dir} — 비활성")
+            print(f"[VaultRAG] 볼트 미발견: {self.vault_dir} -- 비활성")
 
     # ─────────────────────────────────────
     # 검색 (리서치/원고 전)
@@ -465,7 +465,7 @@ recurrence: 1
         return results[:max_results]
 
     def search_backlinks(self, filename: str, max_results: int = 10) -> list:
-        """위키링크 역추적 — 이 파일을 [[참조]]하는 다른 파일 찾기.
+        """위키링크 역추적 -- 이 파일을 [[참조]]하는 다른 파일 찾기.
 
         Returns:
             [(Path, link_context), ...]
@@ -501,7 +501,7 @@ recurrence: 1
         return results[:max_results]
 
     def _resolve_content_dir(self, category: str) -> Optional[Path]:
-        """카테고리명 → 콘텐츠 디렉토리 매핑."""
+        """카테고리명 -> 콘텐츠 디렉토리 매핑."""
         mapping = {
             "brand": self.vault_dir / "02-content" / "brand",
             "브랜드": self.vault_dir / "02-content" / "brand",

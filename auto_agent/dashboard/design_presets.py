@@ -1,5 +1,5 @@
 """
-디자인 프리셋 API — 테마/컬러/애니메이션 설정을 저장·불러오기·적용
+디자인 프리셋 API -- 테마/컬러/애니메이션 설정을 저장·불러오기·적용
 프리셋 저장 위치: workspace/.auto_agent/design_presets/*.json
 """
 import json
@@ -177,7 +177,7 @@ BUILTIN_PRESETS = {
 
 
 def _slug_from_name(name: str) -> str:
-    """프리셋 이름 → 파일명 슬러그."""
+    """프리셋 이름 -> 파일명 슬러그."""
     import re
     s = re.sub(r"[^\w\s-]", "", name.strip().lower())
     return re.sub(r"[\s-]+", "_", s)[:60]
@@ -280,7 +280,7 @@ async def delete_preset(preset_id: str):
 
 @router.post("/api/p/{slug}/apply-preset")
 async def apply_preset_to_project(slug: str, request: Request):
-    """프리셋을 프로젝트에 적용 — scene_specs.json의 meta + 전체 씬 기본값 업데이트."""
+    """프리셋을 프로젝트에 적용 -- scene_specs.json의 meta + 전체 씬 기본값 업데이트."""
     body = await request.json()
     preset_id = body.get("preset_id", "")
 
@@ -380,7 +380,7 @@ async def save_design_preset_to_project(slug: str, request: Request):
     if "meta" not in specs:
         specs["meta"] = {}
 
-    # meta 업데이트 (designPreset만 — 씬 데이터 건드리지 않음)
+    # meta 업데이트 (designPreset만 -- 씬 데이터 건드리지 않음)
     specs["meta"]["designPreset"] = design_preset
     if video_theme:
         specs["meta"]["videoTheme"] = video_theme

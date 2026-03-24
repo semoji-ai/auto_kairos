@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/p/{slug}/pipeline", tags=["sse"])
 
 
 async def _event_generator(project_dir: Path, request: Request):
-    """pipeline_state.json 변경 감지 → SSE 이벤트 전송."""
+    """pipeline_state.json 변경 감지 -> SSE 이벤트 전송."""
     state_path = project_dir / "pipeline_state.json"
     last_mtime = 0.0
     last_content = ""

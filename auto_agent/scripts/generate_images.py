@@ -1,16 +1,16 @@
 """
 Image Asset Generation Script
-통합 이미지 생성 파이프라인: 캐릭터 → 검색 이미지 → 씬 이미지 → 시각화 배경
+통합 이미지 생성 파이프라인: 캐릭터 -> 검색 이미지 -> 씬 이미지 -> 시각화 배경
 
 패턴: scripts/generate_tts.py와 동일한 skip-if-exists + 결과 JSON 저장
 
 이미지 폴더 구조:
   images/
-  ├── search/          ← 검색 이미지 원본 (scene_NNN.{ext})
-  ├── generated/       ← AI 생성 이미지 원본 (scene_NNN.png)
-  ├── viz_bg/          ← 시각화 배경
-  ├── scene_NNN.png    ← 최종 이미지 (search/ 또는 generated/에서 복사)
-  └── image_assets.json ← 에셋 레지스트리
+  ├── search/          <- 검색 이미지 원본 (scene_NNN.{ext})
+  ├── generated/       <- AI 생성 이미지 원본 (scene_NNN.png)
+  ├── viz_bg/          <- 시각화 배경
+  ├── scene_NNN.png    <- 최종 이미지 (search/ 또는 generated/에서 복사)
+  └── image_assets.json <- 에셋 레지스트리
 """
 import json
 import os
@@ -48,7 +48,7 @@ def step_1_generate_characters(output_dir: Path, style_path: str):
     if not character_plan.exists():
         character_plan = PROJECT_ROOT / "character_plan.json"
     if not character_plan.exists():
-        print("[Step 1] character_plan.json 없음 — 스킵")
+        print("[Step 1] character_plan.json 없음 -- 스킵")
         return
 
     print("[Step 1] 캐릭터 생성 시작...")
@@ -95,7 +95,7 @@ def step_2_search_images(output_dir: Path, specs: dict):
             })
 
     if not search_scenes:
-        print("[Step 2] 검색 대상 없음 — 스킵")
+        print("[Step 2] 검색 대상 없음 -- 스킵")
         return {"searched": 0, "total": 0}
 
     print(f"[Step 2] 이미지 검색 시작: {len(search_scenes)}개")
@@ -208,7 +208,7 @@ def step_2_search_images(output_dir: Path, specs: dict):
                     "downloaded": rank_idx <= len(candidates),
                 })
 
-            print(f"  [OK] {scene_key} ({elapsed:.1f}s) — {best['source']} "
+            print(f"  [OK] {scene_key} ({elapsed:.1f}s) -- {best['source']} "
                   f"score={best['score']} {len(candidates)}개 다운로드 / {len(all_ranked_meta)}개 후보")
             return scene_key, {
                 "success": True,
@@ -290,7 +290,7 @@ def step_3_generate_scene_images(output_dir: Path, style_path: str):
     if not scene_plan.exists():
         scene_plan = PROJECT_ROOT / "scene_plan.json"
     if not scene_plan.exists():
-        print("[Step 3] scene_plan.json 없음 — 스킵")
+        print("[Step 3] scene_plan.json 없음 -- 스킵")
         return
 
     # generated/ 서브폴더에 생성
@@ -359,7 +359,7 @@ def step_4_generate_standalone_images(output_dir: Path, style_path: str, specs: 
         })
 
     if not standalone:
-        print("[Step 4] 단발 이미지 생성 대상 없음 — 스킵")
+        print("[Step 4] 단발 이미지 생성 대상 없음 -- 스킵")
         return
 
     print(f"[Step 4] 단발 이미지 생성: {len(standalone)}개")
@@ -409,7 +409,7 @@ def step_5_generate_viz_backgrounds(output_dir: Path, style_path: str):
     scene_specs_path = SCENE_SPECS
 
     if not Path(style_path).exists():
-        print("[Step 5] art_style.json 없음 — 스킵")
+        print("[Step 5] art_style.json 없음 -- 스킵")
         return
 
     print("[Step 5] 시각화 배경 생성 시작...")
@@ -440,7 +440,7 @@ def step_6_save_licenses(output_dir: Path, search_licenses: list):
             existing.append(lic)
 
     license_path.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"[Step 6] 라이선스 저장: {len(existing)}개 항목 → {license_path}")
+    print(f"[Step 6] 라이선스 저장: {len(existing)}개 항목 -> {license_path}")
 
 
 def step_7_build_asset_registry(output_dir: Path, search_result: dict):
@@ -522,12 +522,12 @@ def step_7_build_asset_registry(output_dir: Path, search_result: dict):
 
     registry_path = images_dir / "image_assets.json"
     registry_path.write_text(json.dumps(registry, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"[Step 7] 에셋 레지스트리: {len(assets)}개 항목 → {registry_path}")
+    print(f"[Step 7] 에셋 레지스트리: {len(assets)}개 항목 -> {registry_path}")
 
 
 def _resolve_art_style(output_dir: Path) -> str:
     """art_style 경로 해석: resolve_art_style_path() 통합 resolve."""
-    # 1) DB config → resolve_art_style_path
+    # 1) DB config -> resolve_art_style_path
     try:
         from auto_agent.db.connection import db_exists
         if db_exists():
@@ -565,16 +565,16 @@ def _resolve_art_style(output_dir: Path) -> str:
 
 
 def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
-    """0단계: 프리플라이트 — 아트스타일 + 캐릭터 이미지 검증.
+    """0단계: 프리플라이트 -- 아트스타일 + 캐릭터 이미지 검증.
 
     Returns:
-        (통과 여부, 최종 style_path) — 자동 프로비저닝 시 경로 변경 가능
+        (통과 여부, 최종 style_path) -- 자동 프로비저닝 시 경로 변경 가능
     """
     print("[Step 0] 프리플라이트 검증...")
     errors = []
     warnings = []
 
-    # 1) 아트스타일 파일 검증 — 중앙 참조로 resolve
+    # 1) 아트스타일 파일 검증 -- 중앙 참조로 resolve
     style_file = Path(style_path)
     if not style_file.exists():
         print("  [AUTO] 아트스타일 경로 resolve 시도...")
@@ -590,8 +590,8 @@ def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
 
     if not style_file.exists():
         errors.append(f"아트스타일 파일 없음: {style_path}")
-        errors.append("  → 'auto-agent config set art_style <스타일경로> --project <slug>' 로 설정하세요")
-        errors.append("  → 'auto-agent style list' 로 사용 가능한 스타일 목록 확인")
+        errors.append("  -> 'auto-agent config set art_style <스타일경로> --project <slug>' 로 설정하세요")
+        errors.append("  -> 'auto-agent style list' 로 사용 가능한 스타일 목록 확인")
     else:
         try:
             style_data = json.loads(style_file.read_text(encoding="utf-8"))
@@ -635,7 +635,7 @@ def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
                     if not photo_path.exists():
                         photo_path = PROJECT_ROOT / person_photo
                     if not photo_path.exists():
-                        warnings.append(f"실존 인물 참조 사진 없음: {char.get('name', '?')} → {person_photo}")
+                        warnings.append(f"실존 인물 참조 사진 없음: {char.get('name', '?')} -> {person_photo}")
 
                 # 이미 생성된 캐릭터 이미지 확인
                 for variant in char.get("variants", []):
@@ -647,7 +647,7 @@ def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
         except json.JSONDecodeError as e:
             warnings.append(f"character_plan.json 파싱 실패: {e}")
     else:
-        print("  [INFO] character_plan.json 없음 — 캐릭터 생성 스킵 예정")
+        print("  [INFO] character_plan.json 없음 -- 캐릭터 생성 스킵 예정")
 
     # 3) 이미지 에셋 필요 씬 카운트
     scenes = specs.get("scenes", [])
@@ -667,7 +667,7 @@ def step_0_preflight(output_dir: Path, style_path: str, specs: dict) -> tuple:
         for e in errors:
             print(f"  [ERROR] {e}")
         print()
-        print("[Step 0] 프리플라이트 실패 — 위 오류를 해결한 뒤 다시 실행하세요.")
+        print("[Step 0] 프리플라이트 실패 -- 위 오류를 해결한 뒤 다시 실행하세요.")
         return False, style_path
 
     print("[Step 0] 프리플라이트 통과")

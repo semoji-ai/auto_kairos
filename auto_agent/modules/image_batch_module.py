@@ -59,13 +59,13 @@ def run_batch(
 
     # ── 입력 로드 ──
     style_path = str(project_dir / "art_style.json")
-    art_style  = json.loads((project_dir / "art_style.json").read_text())
+    art_style  = json.loads((project_dir / "art_style.json").read_text(encoding="utf-8"))
     art_style_id = art_style.get("id", "default")
 
     char_plan_path = project_dir / "character_plan.json"
     characters = []
     if char_plan_path.exists():
-        characters = json.loads(char_plan_path.read_text()).get("characters", [])
+        characters = json.loads(char_plan_path.read_text(encoding="utf-8")).get("characters", [])
 
     # ── Phase 1: 캐릭터 배치 ──
     char_paths: dict[str, Optional[Path]] = {}
@@ -115,7 +115,7 @@ def run_batch(
                 except Exception as e:
                     logger.warning("캐릭터 저장 실패 (%s): %s", char_id, e)
             else:
-                _progress(f"캐릭터 생성 실패: {char['name']} — {result.error}", level="warning")
+                _progress(f"캐릭터 생성 실패: {char['name']} -- {result.error}", level="warning")
 
         fal_queue.poll_all(jobs, request_ids, on_done=on_char_done)
 
@@ -128,7 +128,7 @@ def run_batch(
     scene_specs_path = project_dir / "scene_specs.json"
     scenes_success, scenes_fail = 0, 0
     if scene_specs_path.exists():
-        scene_specs = json.loads(scene_specs_path.read_text())
+        scene_specs = json.loads(scene_specs_path.read_text(encoding="utf-8"))
         images_dir  = project_dir / "images"
         images_dir.mkdir(exist_ok=True)
 

@@ -116,7 +116,7 @@ class KoreanTTSPreprocessor:
         '세': '세',
     }
 
-    # English abbreviations → Korean pronunciation
+    # English abbreviations -> Korean pronunciation
     ENGLISH_ABBR = {
         # Finance/Investment
         'SPIVA': '스피바',
@@ -159,9 +159,9 @@ class KoreanTTSPreprocessor:
     def _strip_markdown_markers(self, text: str) -> str:
         """마크다운 강조 마커(**볼드**, *이탤릭*)를 제거.
         원고에서 **볼드**는 영상 연출 힌트이므로 TTS/자막에서는 제거한다."""
-        # **볼드** → 볼드
+        # **볼드** -> 볼드
         stripped = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
-        # *이탤릭* → 이탤릭 (단, ** 처리 후 남은 단일 * 만)
+        # *이탤릭* -> 이탤릭 (단, ** 처리 후 남은 단일 * 만)
         stripped = re.sub(r'(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)', r'\1', stripped)
         if stripped != text:
             self.changes.append("마크다운 강조 마커 제거")
@@ -183,7 +183,7 @@ class KoreanTTSPreprocessor:
         # Step 0: 마크다운 강조 마커 제거 (TTS/자막에 포함되면 안 됨)
         result = self._strip_markdown_markers(result)
 
-        # Process in order: English → punctuation → numbers → units → special cases
+        # Process in order: English -> punctuation -> numbers -> units -> special cases
         result = self._convert_english(result)
         result = self._normalize_punctuation(result)
         result = self._convert_numbers(result)
@@ -201,48 +201,48 @@ class KoreanTTSPreprocessor:
 
     def _convert_english(self, text: str) -> str:
         """Convert English abbreviations and words to Korean pronunciation."""
-        # Handle S&P500+조사 first: "S&P500이" → "에스앤피오백 이"
+        # Handle S&P500+조사 first: "S&P500이" -> "에스앤피오백 이"
         pattern_sp500_josa = r'S&P\s*500(은|는|이|가|을|를|에서|에게|에|으로|로|와|과|의|도|만|까지|부터)'
         match = re.search(pattern_sp500_josa, text)
         if match:
             josa = match.group(1)
-            self.changes.append(f'S&P500{josa} → 에스앤피오백 {josa}')
+            self.changes.append(f'S&P500{josa} -> 에스앤피오백 {josa}')
             text = re.sub(pattern_sp500_josa, f'에스앤피오백 \\1', text)
         else:
             # Handle S&P500 without 조사
             pattern_sp500 = r'S&P\s*500'
             if re.search(pattern_sp500, text):
-                self.changes.append('S&P500 → 에스앤피오백')
+                self.changes.append('S&P500 -> 에스앤피오백')
                 text = re.sub(pattern_sp500, '에스앤피오백', text)
 
         # Handle abbreviations (longest first)
         for eng, kor in sorted(self.ENGLISH_ABBR.items(), key=lambda x: -len(x[0])):
             pattern = re.compile(r'(?<![A-Za-z&])' + re.escape(eng) + r'(?![A-Za-z])')
             if pattern.search(text):
-                self.changes.append(f'{eng} → {kor}')
+                self.changes.append(f'{eng} -> {kor}')
                 text = pattern.sub(kor, text)
 
         # Handle specific English words
         for eng, kor in self.ENGLISH_WORDS.items():
             if eng in text:
-                self.changes.append(f'{eng} → {kor}')
+                self.changes.append(f'{eng} -> {kor}')
                 text = text.replace(eng, kor)
 
         return text
 
     def _normalize_punctuation(self, text: str) -> str:
         """Normalize punctuation for TTS."""
-        # Em dash → comma with pause
-        if '—' in text:
-            self.changes.append('— → ,')
-            text = text.replace('—', ',')
-        # Ellipsis → period
+        # Em dash -> comma with pause
+        if '\u2014' in text:
+            self.changes.append('em-dash -> ,')
+            text = text.replace('\u2014', ',')
+        # Ellipsis -> period
         if '...' in text:
-            self.changes.append('... → .')
+            self.changes.append('... -> .')
             text = text.replace('...', '.')
-        # Semicolon → comma
+        # Semicolon -> comma
         if ';' in text:
-            self.changes.append('; → ,')
+            self.changes.append('; -> ,')
             text = text.replace(';', ',')
         return text
 
@@ -255,7 +255,7 @@ class KoreanTTSPreprocessor:
         def replace_year(match):
             year = int(match.group(1))
             korean = KoreanNumberConverter.number_to_korean(year)
-            change = f"{match.group(0)} → {korean}년"
+            change = f"{match.group(0)} -> {korean}년"
             self.changes.append(change)
             return korean + '년'
 
@@ -268,7 +268,7 @@ class KoreanTTSPreprocessor:
             day = int(match.group(2))
             korean_month = KoreanNumberConverter.number_to_korean(month)
             korean_day = KoreanNumberConverter.number_to_korean(day)
-            change = f"{match.group(0)} → {korean_month}월 {korean_day}일"
+            change = f"{match.group(0)} -> {korean_month}월 {korean_day}일"
             self.changes.append(change)
             return korean_month + '월 ' + korean_day + '일'
 
@@ -282,7 +282,7 @@ class KoreanTTSPreprocessor:
                 num = int(num_str)
                 unit = match.group(2)
                 korean_num = KoreanNumberConverter.number_to_korean(num)
-                change = f"{match.group(0)} → {korean_num}{unit}"
+                change = f"{match.group(0)} -> {korean_num}{unit}"
                 self.changes.append(change)
                 return korean_num + unit
             except:
@@ -304,7 +304,7 @@ class KoreanTTSPreprocessor:
                 korean = f"{korean_int}쩜{korean_dec}"
             else:
                 korean = KoreanNumberConverter.number_to_korean(int(num_str))
-            change = f"{match.group(0)} → {korean}퍼센트"
+            change = f"{match.group(0)} -> {korean}퍼센트"
             self.changes.append(change)
             return korean + '퍼센트'
 
@@ -315,7 +315,7 @@ class KoreanTTSPreprocessor:
         def replace_age(match):
             num = int(match.group(1))
             korean = KoreanNumberConverter.number_to_korean(num)
-            change = f"{match.group(0)} → {korean}세"
+            change = f"{match.group(0)} -> {korean}세"
             self.changes.append(change)
             return korean + '세'
 
@@ -338,7 +338,7 @@ class KoreanTTSPreprocessor:
                 else:
                     num = int(num_str)
                     korean = KoreanNumberConverter.number_to_korean(num)
-                change = f"{match.group(0)} → {korean}{unit}"
+                change = f"{match.group(0)} -> {korean}{unit}"
                 self.changes.append(change)
                 return korean + unit
             except:
@@ -351,7 +351,7 @@ class KoreanTTSPreprocessor:
         def replace_n_year(match):
             num = int(match.group(1))
             korean = KoreanNumberConverter.number_to_korean(num)
-            change = f"{match.group(0)} → {korean}년"
+            change = f"{match.group(0)} -> {korean}년"
             self.changes.append(change)
             return korean + '년'
 
@@ -371,7 +371,7 @@ class KoreanTTSPreprocessor:
             try:
                 num = int(num_str)
                 korean_num = KoreanNumberConverter.number_to_korean(num)
-                change = f"{match.group(0)} → {korean_num}{unit}"
+                change = f"{match.group(0)} -> {korean_num}{unit}"
                 self.changes.append(change)
                 return korean_num + unit
             except:
@@ -383,16 +383,16 @@ class KoreanTTSPreprocessor:
         """
         Prevent 된소리화 (palatalization - merger of consonants).
         Examples:
-        - '삼배' → '삼 배' (not merged to 쌤배)
-        - '사배' → '사 배' (not merged to 싸배)
+        - '삼배' -> '삼 배' (not merged to 쌤배)
+        - '사배' -> '사 배' (not merged to 싸배)
 
         This is important for TTS to maintain proper pronunciation boundaries.
         """
         # Insert space before problematic suffixes to prevent sound merging
         palatalization_patterns = [
             # Before 배 (times/multiplier)
-            (r'(?<=[삼])배', ' 배'),  # 삼배 → 삼 배
-            (r'(?<=[사])배', ' 배'),  # 사배 → 사 배
+            (r'(?<=[삼])배', ' 배'),  # 삼배 -> 삼 배
+            (r'(?<=[사])배', ' 배'),  # 사배 -> 사 배
             # Could add more patterns as needed
         ]
 
@@ -410,13 +410,13 @@ class KoreanTTSPreprocessor:
         """
         Prevent 연음 (rendaku/연음).
         Rules:
-        - '억원' → '어-권'
-        - '한 모금' → '한 / 모금'
+        - '억원' -> '어-권'
+        - '한 모금' -> '한 / 모금'
         """
-        # Handle 억원 → 어-권
+        # Handle 억원 -> 어-권
         pattern_rendaku = r'억원'
         if pattern_rendaku in text:
-            change = "억원 → 어-권 (연음 차단)"
+            change = "억원 -> 어-권 (연음 차단)"
             self.changes.append(change)
             text = text.replace('억원', '어-권')
 
@@ -428,7 +428,7 @@ class KoreanTTSPreprocessor:
 
         for original_form, processed_form in rendaku_cases:
             if original_form in text:
-                change = f"{original_form} → {processed_form} (연음 차단)"
+                change = f"{original_form} -> {processed_form} (연음 차단)"
                 self.changes.append(change)
                 text = text.replace(original_form, processed_form)
 
@@ -438,8 +438,8 @@ class KoreanTTSPreprocessor:
         """
         Handle special price and measurement formats.
         Rules:
-        - "파운드당 5센트" → "파운드당 오센트"
-        - "6온스" → "육온스"
+        - "파운드당 5센트" -> "파운드당 오센트"
+        - "6온스" -> "육온스"
         """
         # 가격 단위 처리 (가 vs 조사 가 구분)
         # This is more complex and requires context analysis

@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/p/{slug}", tags=["json-editor"])
 
 
 def _set_nested(data: dict, key_path: str, value):
-    """중첩 키 지원. 'scenes[0].layout' → data["scenes"][0]["layout"]."""
+    """중첩 키 지원. 'scenes[0].layout' -> data["scenes"][0]["layout"]."""
     keys = []
     for part in key_path.replace("]", "").split("."):
         if "[" in part:

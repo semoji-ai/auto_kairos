@@ -2,8 +2,8 @@
 Supabase 클라이언트 싱글톤.
 
 환경변수:
-  SUPABASE_URL  — 프로젝트 URL (https://xxx.supabase.co)
-  SUPABASE_KEY  — anon 또는 service_role 키
+  SUPABASE_URL  -- 프로젝트 URL (https://xxx.supabase.co)
+  SUPABASE_KEY  -- anon 또는 service_role 키
 """
 from __future__ import annotations
 

@@ -151,8 +151,8 @@ class TTSPreprocessor:
         return text
 
     def _hyphenate_numbers(self, text: str) -> str:
-        """다자리 숫자를 자릿값 하이픈으로 분리 (예: 546만명 → 5백-4십-6만명)"""
-        # 콤마 제거 (69,000 → 69000)
+        """다자리 숫자를 자릿값 하이픈으로 분리 (예: 546만명 -> 5백-4십-6만명)"""
+        # 콤마 제거 (69,000 -> 69000)
         text = re.sub(r'(\d),(\d{3})', r'\1\2', text)
         text = re.sub(r'(\d),(\d{3})', r'\1\2', text)
 
@@ -168,7 +168,7 @@ class TTSPreprocessor:
             while tmp > 0:
                 digit = tmp % 10
                 if digit > 0:
-                    # 일십/일백/일천 → 십/백/천 (digit 1이고 단위가 있을 때 '일' 생략)
+                    # 일십/일백/일천 -> 십/백/천 (digit 1이고 단위가 있을 때 '일' 생략)
                     if digit == 1 and pos > 0:
                         parts.append(units[pos])
                     else:
@@ -213,14 +213,14 @@ class TTSPreprocessor:
         return text
 
     def _korean_pronunciation_fix(self, text: str) -> str:
-        # 가격(價) '가' → '까'
+        # 가격(價) '가' -> '까'
         text = text.replace('장난감', '장난깜')
         text = text.replace('신기록', '신끼록')
         # 삼만/삼천/삼백 발음 오류 방지
         text = re.sub(r"(?<!')삼만", "'삼'만", text)
         text = re.sub(r"(?<!')삼천", "'삼'천", text)
         text = re.sub(r"(?<!')삼백", "'삼'백", text)
-        # 복합어 발음 교정: 최고지도자 → TTS가 '최고지도자'를 한 덩어리로 너무 빨리 읽음
+        # 복합어 발음 교정: 최고지도자 -> TTS가 '최고지도자'를 한 덩어리로 너무 빨리 읽음
         text = text.replace('최고지도자', '최-고-지도자')
         # 금액 연음 (제거: 오히려 어색함)
         return text
@@ -336,7 +336,7 @@ class ElevenLabsClient:
 
         def process_scene(scene):
             nonlocal completed_count
-            # scene_number 필드가 없으면 scene_id에서 추출 (scene_001 → 1)
+            # scene_number 필드가 없으면 scene_id에서 추출 (scene_001 -> 1)
             scene_number = scene.get("scene_number")
             if scene_number is None:
                 scene_id = scene.get("scene_id", "scene_000")

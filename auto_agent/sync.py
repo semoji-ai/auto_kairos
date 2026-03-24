@@ -1,11 +1,11 @@
 """
 Supabase 동기화 모듈.
 
-push (로컬 → Supabase):
+push (로컬 -> Supabase):
   스텝 완료 후 자동 호출, 또는 CLI에서 수동 실행
   auto-agent sync --project <slug>
 
-pull (Supabase → 로컬):
+pull (Supabase -> 로컬):
   웹에서 수정한 에셋을 로컬로 다운로드
   auto-agent pull --project <slug>
 """
@@ -275,7 +275,7 @@ class SyncManager:
                 )
 
     # ──────────────────────────────────────────
-    # push: 로컬 전체 → Supabase (CLI용)
+    # push: 로컬 전체 -> Supabase (CLI용)
     # ──────────────────────────────────────────
     def push_all(self, project_data: dict) -> dict:
         """로컬 프로젝트의 주요 파일을 모두 Supabase에 업로드.
@@ -324,7 +324,7 @@ class SyncManager:
         return {"project_id": remote_pid, "uploaded": uploaded, "skipped": skipped}
 
     # ──────────────────────────────────────────
-    # pull: Supabase → 로컬
+    # pull: Supabase -> 로컬
     # ──────────────────────────────────────────
     def pull(self, asset_types: Optional[list[str]] = None) -> dict:
         """Supabase에서 프로젝트 에셋을 로컬로 다운로드.
@@ -362,12 +362,12 @@ class SyncManager:
 
         for asset in assets_resp.data:
             storage_path = asset["file_path"]
-            # storage_path: "proj-xxx/scene_specs.json" → 로컬: project_dir/scene_specs.json
+            # storage_path: "proj-xxx/scene_specs.json" -> 로컬: project_dir/scene_specs.json
             rel = storage_path.removeprefix(f"{storage_key}/")
             local_path = self.project_dir / rel
             local_path.parent.mkdir(parents=True, exist_ok=True)
 
-            # checksum 비교 — 로컬 파일이 이미 최신이면 스킵
+            # checksum 비교 -- 로컬 파일이 이미 최신이면 스킵
             if local_path.exists() and asset.get("checksum"):
                 local_hash = _sha256(local_path)
                 if local_hash == asset["checksum"]:
@@ -390,7 +390,7 @@ class SyncManager:
 # 유틸리티
 # ──────────────────────────────────────────
 def _to_storage_key(slug: str) -> str:
-    """slug → ASCII-safe Storage 키."""
+    """slug -> ASCII-safe Storage 키."""
     import re
     import unicodedata
     normalized = unicodedata.normalize("NFKD", slug)
@@ -400,7 +400,7 @@ def _to_storage_key(slug: str) -> str:
     ascii_str = re.sub(r"-+", "-", ascii_str).strip("-").lower()
     alpha_count = sum(1 for c in ascii_str if c.isalpha())
     if alpha_count < 3:
-        # 한글 전용 slug → 짧은 해시 폴백
+        # 한글 전용 slug -> 짧은 해시 폴백
         h = hashlib.md5(slug.encode()).hexdigest()[:10]
         ascii_str = f"proj-{h}"
     return ascii_str
@@ -435,7 +435,7 @@ def _infer_asset_type(path: Path) -> str:
 
 
 def _extract_scene_number(filename: str) -> Optional[int]:
-    """파일명에서 씬 번호 추출. scene_003_bg.jpg → 3."""
+    """파일명에서 씬 번호 추출. scene_003_bg.jpg -> 3."""
     import re
     m = re.search(r"scene[_\-]?(\d{1,3})", filename, re.IGNORECASE)
     if m:

@@ -21,7 +21,7 @@ def project_dir(tmp_path):
         "reference_image": "",
         "scene_style_description": "cartoon",
         "technical": {"critical_requirements": []},
-    }))
+    }), encoding="utf-8")
 
     (d / "character_plan.json").write_text(json.dumps({
         "characters": [
@@ -33,7 +33,7 @@ def project_dir(tmp_path):
                 "person_photo": None,
             }
         ]
-    }))
+    }), encoding="utf-8")
 
     (d / "scene_specs.json").write_text(json.dumps({
         "scenes": [
@@ -44,7 +44,7 @@ def project_dir(tmp_path):
                 "characters": ["char_001"],
             }
         ]
-    }))
+    }), encoding="utf-8")
     return d
 
 

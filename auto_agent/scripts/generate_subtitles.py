@@ -1,8 +1,8 @@
 """
-Subtitle Sync Script — Hybrid (WhisperX + Gemini)
+Subtitle Sync Script -- Hybrid (WhisperX + Gemini)
 
 1차: WhisperX forced alignment (정밀 word-level)
-2차: 품질 검증 → 실패 시 Gemini segment timestamps로 교정
+2차: 품질 검증 -> 실패 시 Gemini segment timestamps로 교정
 """
 import json
 import os
@@ -347,7 +347,7 @@ def main():
         model_a, metadata = whisperx.load_align_model(language_code="ko", device=device)
         print("Model loaded.")
     else:
-        print("WhisperX unavailable — proportional fallback mode")
+        print("WhisperX unavailable -- proportional fallback mode")
 
     # Gemini 클라이언트 (fallback용)
     api_key = os.getenv("GOOGLE_API_KEY")
@@ -401,7 +401,7 @@ def main():
             display_lines = fix_decimal_splits(display_lines)
             display_lines = fix_quote_splits(display_lines)
 
-            # TTS 라인 분할 (narration_tts — 실제 음성과 일치)
+            # TTS 라인 분할 (narration_tts -- 실제 음성과 일치)
             tts_lines = smart_split(narration_tts)
             tts_lines = fix_decimal_splits(tts_lines)
             tts_lines = fix_quote_splits(tts_lines)
@@ -425,7 +425,7 @@ def main():
 
             # === 2차: 품질 검증 ===
             if not check_alignment_quality(entries, duration):
-                # WhisperX 실패 → Gemini fallback
+                # WhisperX 실패 -> Gemini fallback
                 if gemini_client:
                     try:
                         gemini_words = get_gemini_word_timestamps(gemini_client, audio_path, narration_tts)
@@ -455,7 +455,7 @@ def main():
                 for j, entry in enumerate(entries):
                     entry["text"] = display_lines[j]
             else:
-                # 라인 수 불일치 → 전체 시간을 디스플레이 라인에 비례 분배
+                # 라인 수 불일치 -> 전체 시간을 디스플레이 라인에 비례 분배
                 total_chars = sum(len(l.replace(' ', '')) for l in display_lines)
                 t_start = entries[0]["startSec"]
                 t_total = entries[-1]["endSec"] - t_start

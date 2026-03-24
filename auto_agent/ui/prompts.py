@@ -1,4 +1,4 @@
-"""인터랙티브 프롬프트 — questionary 기반."""
+"""인터랙티브 프롬프트 -- questionary 기반."""
 
 import json
 from pathlib import Path
@@ -84,7 +84,7 @@ def prompt_art_style() -> str:
 
     choices = [
         Choice(
-            f"{s['name']}  —  {s['description'][:50]}" if s["description"] else s["name"],
+            f"{s['name']}  --  {s['description'][:50]}" if s["description"] else s["name"],
             value=s["path"],
         )
         for s in styles
@@ -150,7 +150,7 @@ def prompt_project_create() -> dict:
     Returns:
         {name, slug, topic, theme, art_style, voice_id, voice_settings}
     """
-    print_header("auto-agent — 새 프로젝트 만들기")
+    print_header("auto-agent -- 새 프로젝트 만들기")
 
     name = _ask_or_abort(
         questionary.text(

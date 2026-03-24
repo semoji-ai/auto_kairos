@@ -1,5 +1,5 @@
 """
-Duplicate Check — N-gram 기반 원고 중복 감지
+Duplicate Check -- N-gram 기반 원고 중복 감지
 
 pipeline.json phase_2 step_3: final_manuscript.md 내 반복 문장/구절 탐지
 blocking=false이므로 실패해도 파이프라인 계속 진행.
@@ -53,7 +53,7 @@ def main():
     manuscript = project_dir / "final_manuscript.md"
 
     if not manuscript.exists():
-        print(f"WARNING: {manuscript} not found — 스킵")
+        print(f"WARNING: {manuscript} not found -- 스킵")
         sys.exit(0)
 
     print(f"Duplicate Check: {manuscript}")

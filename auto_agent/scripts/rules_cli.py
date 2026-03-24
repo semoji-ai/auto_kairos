@@ -2,9 +2,9 @@
 규칙 중앙 관리 CLI.
 
 사용법:
-    python -m auto_agent.scripts.rules_cli push_all          # 로컬 전체 → 중앙
+    python -m auto_agent.scripts.rules_cli push_all          # 로컬 전체 -> 중앙
     python -m auto_agent.scripts.rules_cli push <key>        # 단일 파일 push
-    python -m auto_agent.scripts.rules_cli fetch             # 중앙 → 로컬 캐시
+    python -m auto_agent.scripts.rules_cli fetch             # 중앙 -> 로컬 캐시
     python -m auto_agent.scripts.rules_cli list <key>        # 버전 히스토리
     python -m auto_agent.scripts.rules_cli rollback <key> <version>
     python -m auto_agent.scripts.rules_cli diff <key>        # 로컬 vs 중앙 비교
@@ -56,7 +56,7 @@ def main():
     elif args.command == "push":
         local_path = DATA_DIR / PurePosixPath(args.key)
         if not local_path.exists():
-            print(f"ERROR: 파일 없음 — {local_path}")
+            print(f"ERROR: 파일 없음 -- {local_path}")
             sys.exit(1)
         content = local_path.read_text(encoding="utf-8")
         result = rm.push(args.key, content, updated_by="cli")
@@ -73,7 +73,7 @@ def main():
 
     elif args.command == "rollback":
         result = rm.rollback(args.key, args.version)
-        print(f"롤백 완료: {args.key} → v{args.version}")
+        print(f"롤백 완료: {args.key} -> v{args.version}")
 
     elif args.command == "diff":
         local_path = DATA_DIR / PurePosixPath(args.key)

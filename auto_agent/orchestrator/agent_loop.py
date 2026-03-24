@@ -72,8 +72,8 @@ class AgentLoop:
         """에이전트 루프 실행.
 
         1. prompt를 user 메시지로 전송
-        2. tool_use 응답 → 도구 실행 → 결과 반환 → 반복
-        3. end_turn → 완료
+        2. tool_use 응답 -> 도구 실행 -> 결과 반환 -> 반복
+        3. end_turn -> 완료
         4. 매 턴 gateway 감시 + 예산 체크
         """
         tools = filter_tools_for_agent(config.allowed_tools)
@@ -212,7 +212,7 @@ class AgentLoop:
                         result_text = f"ERROR: {e}"
                     except Exception as e:
                         result_text = (
-                            f"ERROR: 도구 실행 실패 — "
+                            f"ERROR: 도구 실행 실패 -- "
                             f"{type(e).__name__}: {e}"
                         )
 

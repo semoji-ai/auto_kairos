@@ -53,7 +53,7 @@ def search_wikimedia(query: str, limit: int = 8) -> list:
         # 1920px 썸네일 URL 생성
         thumb_1920 = ""
         if thumb_url and "/thumb/" in thumb_url:
-            # .../thumb/a/aa/file.jpg/800px-file.jpg → .../thumb/a/aa/file.jpg/1920px-file.jpg
+            # .../thumb/a/aa/file.jpg/800px-file.jpg -> .../thumb/a/aa/file.jpg/1920px-file.jpg
             parts = thumb_url.rsplit("/", 1)
             if len(parts) == 2:
                 filename_part = parts[1]

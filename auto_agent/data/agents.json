@@ -6,7 +6,7 @@
     "_comment_team_a": "===== Team A: 리서치팀 =====",
     "research-orchestrator": {
       "description": "deep-research-kit 실행 + 리서치 결과 표준 포맷(research_report.json) 변환",
-      "model": "claude-opus-4-6",
+      "model": "claude-sonnet-4-5-20250929",
       "max_turns": 70,
       "allowed_tools": [
         "Read",
@@ -103,13 +103,15 @@
       "model": "claude-sonnet-4-5-20250929",
       "max_turns": 30,
       "allowed_tools": ["Read", "Write", "Bash", "Glob"],
+      "skills": ["shared/image-generation"],
       "notes": "검색 도구: wikimedia_search, serper_search, download_image. 생성은 하지 않음."
     },
     "image-painter": {
-      "description": "이미지 생성 에이전트(윤화가). source=generate 씬의 FAL.ai 이미지 생성. 캐릭터 분석→캐릭터 생성→씬 이미지 생성.",
+      "description": "이미지 생성 에이전트(윤화가). source=generate 씬의 FAL.ai 이미지 생성. 캐릭터 분석->캐릭터 생성->씬 이미지 생성.",
       "model": "claude-sonnet-4-5-20250929",
       "max_turns": 40,
       "allowed_tools": ["Read", "Write", "Bash", "Glob"],
+      "skills": ["shared/image-generation"],
       "notes": "생성 도구: image_generate (scene/character). 검색은 하지 않음. 항상 /edit 엔드포인트 + reference_image 첨부."
     },
     "tts-verifier": {

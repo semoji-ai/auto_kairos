@@ -1,11 +1,11 @@
 """
-Data Validation — 전 단계 데이터 정합성 검증
+Data Validation -- 전 단계 데이터 정합성 검증
 
-pipeline.json phase_5 step_10: gate=true → 실패 시 파이프라인 중단
+pipeline.json phase_5 step_10: gate=true -> 실패 시 파이프라인 중단
 검증 항목:
-  - scene_specs ↔ audio 파일 매칭
+  - scene_specs <-> audio 파일 매칭
   - 시각화 데이터 완전성
-  - 자막 타이밍 ↔ 오디오 길이 일치
+  - 자막 타이밍 <-> 오디오 길이 일치
   - 아이콘명 Lucide 존재 확인
   - 이미지 에셋 파일 존재 확인
 """
@@ -29,7 +29,7 @@ def _load_lucide_icons() -> set:
 
 class ValidationReport:
     def __init__(self):
-        self.errors = []     # critical — 파이프라인 중단
+        self.errors = []     # critical -- 파이프라인 중단
         self.warnings = []   # non-critical
 
     def error(self, category: str, message: str):
@@ -49,7 +49,7 @@ class ValidationReport:
 
 
 def validate_audio_matching(report: ValidationReport, specs: dict, project_dir: Path):
-    """scene_specs ↔ audio 파일 매칭 검증."""
+    """scene_specs <-> audio 파일 매칭 검증."""
     audio_dir = project_dir / "audio"
     scenes = specs.get("scenes", [])
 
@@ -151,7 +151,7 @@ def validate_icons(report: ValidationReport, specs: dict):
     """아이콘명 Lucide 존재 확인."""
     lucide_icons = _load_lucide_icons()
     if not lucide_icons:
-        report.warn("icons", "Lucide 아이콘 목록 로드 실패 — 검증 스킵")
+        report.warn("icons", "Lucide 아이콘 목록 로드 실패 -- 검증 스킵")
         return
 
     scenes = specs.get("scenes", [])

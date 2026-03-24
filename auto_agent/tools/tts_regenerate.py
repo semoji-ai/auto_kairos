@@ -84,7 +84,7 @@ def regenerate_tts(project_dir: Path, scene_number: int, corrected_text: str = N
                  "--scene", str(scene_number)],
                 cwd=str(project_dir.parent),
                 env={**os.environ, "PROJECT_NAME": project_dir.name},
-                capture_output=True, text=True, timeout=60,
+                capture_output=True, text=True, encoding="utf-8", timeout=60,
             )
             if result.returncode == 0:
                 return {"success": True, "scene": scene_number, "method": "generate_tts script"}

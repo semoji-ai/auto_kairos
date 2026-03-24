@@ -97,6 +97,7 @@ def render_still(frame: int, output_path: str, remotion_dir: str) -> bool:
             cwd=remotion_dir,
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=120,
             env=get_env_with_node(),
         )
@@ -136,7 +137,7 @@ def main():
         if arg == "--scene" and i + 1 < len(sys.argv):
             target_scene = int(sys.argv[i + 1])
 
-    # 프레임 계산 — 모든 씬
+    # 프레임 계산 -- 모든 씬
     scene_frames = calc_scene_frames(manifest)
 
     # 타겟 필터 (--scene 옵션 시)
@@ -157,13 +158,13 @@ def main():
     print(f"시각적 QA 스틸 캡처: {len(check_targets)}개 씬")
     print(f"출력 디렉토리: {output_dir}")
 
-    # 병렬 렌더링 (최대 4 workers — Remotion CLI 프로세스 부하 고려)
+    # 병렬 렌더링 (최대 4 workers -- Remotion CLI 프로세스 부하 고려)
     results = []
 
     def _render_one(t):
         num = t["sceneNumber"]
         still_path = str(output_dir / f"scene_{num:03d}.png")
-        print(f"  [Scene {num}] frame={t['midFrame']} → {Path(still_path).name}")
+        print(f"  [Scene {num}] frame={t['midFrame']} -> {Path(still_path).name}")
         ok = render_still(t["midFrame"], still_path, remotion_dir)
 
         scene_meta = specs_meta.get(num, {})

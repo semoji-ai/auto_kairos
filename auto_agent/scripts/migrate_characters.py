@@ -30,7 +30,7 @@ def migrate(output_root: Path, dry_run: bool = False) -> None:
             continue
 
         if dry_run:
-            print(f"  [DRY] {meta['character_name']} / {meta.get('art_style')} — {char_png.name}")
+            print(f"  [DRY] {meta['character_name']} / {meta.get('art_style')} -- {char_png.name}")
         else:
             record = lib.register(char_png, meta)
             print(f"  [REG] id={record.id} {record.name} / {record.art_style}")

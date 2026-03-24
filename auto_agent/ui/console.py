@@ -1,6 +1,7 @@
-"""Rich Console 래퍼 — 브랜드 테마 + 공통 출력 헬퍼."""
+"""Rich Console 래퍼 -- 브랜드 테마 + 공통 출력 헬퍼."""
 
 import sys
+import os
 
 from rich.console import Console
 from rich.panel import Panel
@@ -17,7 +18,15 @@ AUTO_AGENT_THEME = Theme(
     }
 )
 
-console = Console(theme=AUTO_AGENT_THEME)
+if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+
+console = Console(theme=AUTO_AGENT_THEME, force_terminal=True)
 
 
 def print_header(title: str):
@@ -30,7 +39,7 @@ def print_error(msg: str):
 
 
 def print_success(msg: str):
-    console.print(f"[success]  ✓ [/success] {msg}")
+    console.print(f"[success]  [OK] [/success] {msg}")
 
 
 def print_warning(msg: str):

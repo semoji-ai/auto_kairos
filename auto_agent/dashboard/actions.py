@@ -139,6 +139,7 @@ async def execute_action(slug: str, action_name: str, request: Request):
             env=env,
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=120,
         )
 
@@ -162,7 +163,7 @@ async def execute_action(slug: str, action_name: str, request: Request):
                 next_cmd = [sys.executable, str(next_script)]
                 chain_result = subprocess.run(
                     next_cmd, cwd=str(get_workspace_dir()),
-                    env=env, capture_output=True, text=True, timeout=300,
+                    env=env, capture_output=True, text=True, encoding="utf-8", timeout=300,
                 )
                 chain_results.append({
                     "action": next_action,

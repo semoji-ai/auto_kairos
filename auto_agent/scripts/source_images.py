@@ -1,9 +1,9 @@
 """
-이미지 소싱 스크립트 — 검색/생성 병렬 실행.
+이미지 소싱 스크립트 -- 검색/생성 병렬 실행.
 
 source별로 분류:
-  - search 씬 → 위키미디어 검색 → Sonnet 판단 → 다운로드
-  - generate 씬 → 캐릭터 분석 → 캐릭터 생성 → FAL.ai 씬 이미지 생성
+  - search 씬 -> 위키미디어 검색 -> Sonnet 판단 -> 다운로드
+  - generate 씬 -> 캐릭터 분석 -> 캐릭터 생성 -> FAL.ai 씬 이미지 생성
 두 트랙이 병렬 실행.
 """
 import base64
@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 
 
 def phase_a_character_analysis(scene_specs: dict, output_dir: Path, style_path: str = None) -> Optional[Path]:
-    """generate 씬에서 2씬+ 등장 캐릭터 식별 → character_plan.json 생성."""
+    """generate 씬에서 2씬+ 등장 캐릭터 식별 -> character_plan.json 생성."""
     scenes = scene_specs.get("scenes", [])
     gen_scenes = [
         s for s in scenes
@@ -29,7 +29,7 @@ def phase_a_character_analysis(scene_specs: dict, output_dir: Path, style_path: 
         or s.get("visualization", {}).get("creative", {}).get("layout") == "cinematic"
     ]
     if not gen_scenes:
-        print("[Phase A] generate 씬 없음 — 캐릭터 분석 스킵")
+        print("[Phase A] generate 씬 없음 -- 캐릭터 분석 스킵")
         return None
 
     person_scenes = {}  # {name: [scene_numbers]}
@@ -65,11 +65,11 @@ def phase_a_character_analysis(scene_specs: dict, output_dir: Path, style_path: 
 
     recurring = {name: sns for name, sns in person_scenes.items() if len(sns) >= 2}
     if not recurring:
-        print("[Phase A] 2씬+ 등장 캐릭터 없음 — 캐릭터 생성 스킵")
+        print("[Phase A] 2씬+ 등장 캐릭터 없음 -- 캐릭터 생성 스킵")
         return None
 
     for name, sns in recurring.items():
-        print(f"[Phase A] 캐릭터 감지: {name} → {len(sns)}씬 ({sns})")
+        print(f"[Phase A] 캐릭터 감지: {name} -> {len(sns)}씬 ({sns})")
 
     characters = []
     for name, sns in recurring.items():
@@ -95,7 +95,7 @@ def phase_a_character_analysis(scene_specs: dict, output_dir: Path, style_path: 
 # ═══════════════════════════════════════════
 
 def _run_search_track(search_scenes: list, img_dir: Path, project_dir: Path, log_fn):
-    """search 씬: 위키미디어 검색 → Sonnet 판단 → 다운로드."""
+    """search 씬: 위키미디어 검색 -> Sonnet 판단 -> 다운로드."""
     if not search_scenes:
         return 0
 
@@ -115,7 +115,7 @@ def _run_search_track(search_scenes: list, img_dir: Path, project_dir: Path, log
 
         existing = list(img_dir.glob(f"scene_{sn:03d}.*")) + list(img_dir.glob(f"scene_{sn:03d}_*.*"))
         if any(f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") for f in existing):
-            log_fn("image-search", f"씬{sn} 이미 존재 → 스킵")
+            log_fn("image-search", f"씬{sn} 이미 존재 -> 스킵")
             continue
 
         candidates = search_wikimedia(query, 8)
@@ -123,11 +123,11 @@ def _run_search_track(search_scenes: list, img_dir: Path, project_dir: Path, log
         if not candidates:
             fallback = img.get("fallbackQuery", "")
             if fallback:
-                log_fn("image-search", f"씬{sn} 0건 → fallback: \"{fallback[:40]}\"")
+                log_fn("image-search", f"씬{sn} 0건 -> fallback: \"{fallback[:40]}\"")
                 candidates = search_wikimedia(fallback, 8)
         search_results[sn] = candidates
         save_candidates(sn, query, candidates, str(img_dir))
-        log_fn("image-search", f"씬{sn} 검색: \"{query[:40]}\" → {len(candidates)}건")
+        log_fn("image-search", f"씬{sn} 검색: \"{query[:40]}\" -> {len(candidates)}건")
         time.sleep(0.5)
 
     if not search_results:
@@ -138,7 +138,7 @@ def _run_search_track(search_scenes: list, img_dir: Path, project_dir: Path, log
     downloaded = 0
     for sn, candidates in search_results.items():
         if not candidates:
-            log_fn("image-search", f"씬{sn} 검색 결과 없음 → 스킵", "warning")
+            log_fn("image-search", f"씬{sn} 검색 결과 없음 -> 스킵", "warning")
             continue
 
         # 가로형(16:9 호환) 이미지 우선 선택
@@ -154,7 +154,7 @@ def _run_search_track(search_scenes: list, img_dir: Path, project_dir: Path, log
 
         url = best.get("thumbnail_1920_url", "") or best.get("original_url", "")
         if not url:
-            log_fn("image-search", f"씬{sn} URL 없음 → 스킵", "warning")
+            log_fn("image-search", f"씬{sn} URL 없음 -> 스킵", "warning")
             continue
 
         fname = next_filename(img_dir, sn, "search", Path(url).suffix or ".jpg")
@@ -165,7 +165,7 @@ def _run_search_track(search_scenes: list, img_dir: Path, project_dir: Path, log
                         title=best.get("title", ""), license=best.get("license", ""),
                         source_url=url)
             downloaded += 1
-            log_fn("image-search", f"씬{sn} 다운로드 완료 ✓", "success")
+            log_fn("image-search", f"씬{sn} 다운로드 완료 OK", "success")
         else:
             log_fn("image-search", f"씬{sn} 다운로드 실패", "warning")
         time.sleep(1)
@@ -194,11 +194,14 @@ def _sonnet_judge(scenes: list, search_results: dict) -> list:
 
     try:
         import re
-        cli_path = str(Path.home() / ".local/bin/claude")
+        import shutil as _shutil
+        cli_path = _shutil.which("claude")
+        if not cli_path:
+            cli_path = str(Path.home() / ".local" / "bin" / "claude")
         proc = subprocess.run(
             [cli_path, "--print", "--output-format", "json",
              "--model", "claude-sonnet-4-5-20250929", "--max-turns", "1"],
-            input=prompt, capture_output=True, text=True, timeout=180,
+            input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=180,
             env={**os.environ, "CLAUDECODE": ""},
         )
         result_text = proc.stdout.strip()
@@ -237,7 +240,7 @@ def _image_to_data_uri(path: str) -> str:
 
 
 def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, specs: dict, log_fn):
-    """generate 씬: 캐릭터 분석 → 캐릭터 생성 → FAL.ai 씬 이미지 생성."""
+    """generate 씬: 캐릭터 분석 -> 캐릭터 생성 -> FAL.ai 씬 이미지 생성."""
     if not gen_scenes:
         return 0
 
@@ -284,7 +287,7 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
     except Exception:
         style_arg = ""
 
-    # 3. FAL_KEY 설정 (FAL_API_KEY → FAL_KEY 매핑)
+    # 3. FAL_KEY 설정 (FAL_API_KEY -> FAL_KEY 매핑)
     if not os.environ.get("FAL_KEY") and os.environ.get("FAL_API_KEY"):
         os.environ["FAL_KEY"] = os.environ["FAL_API_KEY"]
 
@@ -328,7 +331,7 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
         existing = list(img_dir.glob(f"scene_{sn:03d}.*")) + list(img_dir.glob(f"scene_{sn:03d}_*.*"))
         if any(f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") for f in existing):
             if not retry:
-                log_fn("image-gen", f"씬{sn} 이미 존재 → 스킵")
+                log_fn("image-gen", f"씬{sn} 이미 존재 -> 스킵")
             return None
 
         fname = next_filename(img_dir, sn, "gen", ".png")
@@ -354,7 +357,7 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
             style_instruction = (
                 "FIRST image = ART STYLE reference. "
                 "Match the exact same drawing style, thick outlines, flat colors, and overall visual tone. "
-                "The characters and scene content must follow the prompt below — "
+                "The characters and scene content must follow the prompt below -- "
                 "draw the people/objects described in the prompt, not the ones in the reference image."
             )
         full_prompt = f"{style_desc}\n\n{style_instruction}\n\n{prompt}" if style_desc else f"{style_instruction}\n\n{prompt}"
@@ -375,7 +378,7 @@ def _run_generate_track(gen_scenes: list, img_dir: Path, project_dir: Path, spec
                 resp.raise_for_status()
                 (img_dir / fname).write_bytes(resp.content)
                 add_version(img_dir, sn, fname, "generate", prompt=prompt[:200], art_style=style_arg)
-                log_fn("image-gen", f"씬{sn} 생성 완료 ✓", "success")
+                log_fn("image-gen", f"씬{sn} 생성 완료 OK", "success")
                 return sn
             else:
                 log_fn("image-gen", f"씬{sn} {'재시도 ' if retry else ''}실패: 결과 없음", "warning")

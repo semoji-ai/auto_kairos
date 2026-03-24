@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Agent Messenger — 에이전트 간 메시지를 실시간 SSE로 전송.
+Agent Messenger -- 에이전트 간 메시지를 실시간 SSE로 전송.
 
 사용법 (백엔드):
     from auto_agent.dashboard.agent_messenger import messenger, post_message
@@ -126,7 +126,7 @@ async def _sse_generator(request: Request, queue: asyncio.Queue, project: str = 
 
 @router.get("/stream")
 async def message_stream(request: Request, project: str = ""):
-    """SSE 스트림 — 에이전트 메시지 실시간 수신. project 파라미터로 필터링."""
+    """SSE 스트림 -- 에이전트 메시지 실시간 수신. project 파라미터로 필터링."""
     queue = asyncio.Queue(maxsize=100)
     _subscribers.append(queue)
 

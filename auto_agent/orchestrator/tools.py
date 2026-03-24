@@ -102,7 +102,7 @@ TOOL_SCHEMAS = [
     },
 ]
 
-# Claude CLI 도구명 → API 도구명 매핑
+# Claude CLI 도구명 -> API 도구명 매핑
 CLI_TO_API_TOOL_MAP = {
     "Read": "read_file",
     "Write": "write_file",
@@ -132,7 +132,7 @@ class ToolExecutor:
     def execute(self, tool_name: str, tool_input: dict) -> str:
         handler = getattr(self, f"_exec_{tool_name}", None)
         if not handler:
-            return f"ERROR: 알 수 없는 도구 — {tool_name}"
+            return f"ERROR: 알 수 없는 도구 -- {tool_name}"
         return handler(tool_input)
 
     def _validate_path(self, path_str: str) -> Path:
@@ -147,9 +147,9 @@ class ToolExecutor:
     def _exec_read_file(self, inp: dict) -> str:
         path = self._validate_path(inp["path"])
         if not path.exists():
-            return f"ERROR: 파일 없음 — {path}"
+            return f"ERROR: 파일 없음 -- {path}"
         if not path.is_file():
-            return f"ERROR: 파일이 아님 — {path}"
+            return f"ERROR: 파일이 아님 -- {path}"
         content = path.read_text(encoding="utf-8")
         if len(content) > 500_000:
             return (
@@ -219,7 +219,7 @@ def _call_web_search(query: str) -> str:
         resp.raise_for_status()
         data = resp.json()
     except requests.RequestException as e:
-        return f"ERROR: 검색 실패 — {e}"
+        return f"ERROR: 검색 실패 -- {e}"
 
     results = []
     for item in data.get("organic", [])[:10]:
@@ -232,7 +232,7 @@ def _call_web_search(query: str) -> str:
 
 
 def _call_web_fetch(url: str) -> str:
-    """URL 내용 fetch + HTML→텍스트 변환."""
+    """URL 내용 fetch + HTML->텍스트 변환."""
     try:
         resp = requests.get(
             url,

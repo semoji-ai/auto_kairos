@@ -1,5 +1,5 @@
 """
-Preflight Check — 환경 의존성 검증
+Preflight Check -- 환경 의존성 검증
 
 pipeline.json phase_0 step_0: API 키, node, ffmpeg, Remotion, Lucide 검증
 """
@@ -18,44 +18,44 @@ def check_env_var(name: str, required: bool = True) -> bool:
         print(f"  [OK] {name}")
         return True
     if required:
-        print(f"  [FAIL] {name} — 미설정")
+        print(f"  [FAIL] {name} -- 미설정")
         return False
-    print(f"  [SKIP] {name} — 선택적 (미설정)")
+    print(f"  [SKIP] {name} -- 선택적 (미설정)")
     return True
 
 
 def check_command(name: str, version_flag: str = "--version") -> bool:
     path = shutil.which(name)
     if not path:
-        print(f"  [FAIL] {name} — 설치되지 않음")
+        print(f"  [FAIL] {name} -- 설치되지 않음")
         return False
     try:
         result = subprocess.run(
             [name, version_flag],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True, text=True, encoding="utf-8", timeout=10,
         )
         version = result.stdout.strip().split("\n")[0] or result.stderr.strip().split("\n")[0]
-        print(f"  [OK] {name} — {version}")
+        print(f"  [OK] {name} -- {version}")
         return True
     except Exception as e:
-        print(f"  [WARN] {name} — 경로 확인됨 ({path}), 버전 확인 실패: {e}")
+        print(f"  [WARN] {name} -- 경로 확인됨 ({path}), 버전 확인 실패: {e}")
         return True
 
 
 def check_node_version() -> bool:
     try:
         result = subprocess.run(
-            ["node", "--version"], capture_output=True, text=True, timeout=10,
+            ["node", "--version"], capture_output=True, text=True, encoding="utf-8", timeout=10,
         )
         version = result.stdout.strip()
         major = int(version.lstrip("v").split(".")[0])
         if major >= 18:
             print(f"  [OK] node {version}")
             return True
-        print(f"  [FAIL] node {version} — v18+ 필요")
+        print(f"  [FAIL] node {version} -- v18+ 필요")
         return False
     except Exception:
-        print("  [FAIL] node — 설치되지 않음")
+        print("  [FAIL] node -- 설치되지 않음")
         return False
 
 
@@ -65,7 +65,7 @@ def check_npm_package(name: str) -> bool:
     if node_modules.exists():
         print(f"  [OK] {name}")
         return True
-    print(f"  [FAIL] {name} — remotion/node_modules에 없음")
+    print(f"  [FAIL] {name} -- remotion/node_modules에 없음")
     return False
 
 
@@ -105,7 +105,7 @@ def main():
             __import__(pkg.replace("-", "_"))
             print(f"  [OK] {pkg}")
         except ImportError:
-            print(f"  [WARN] {pkg} — 미설치")
+            print(f"  [WARN] {pkg} -- 미설치")
 
     print(f"\n{'=' * 40}")
     if errors:

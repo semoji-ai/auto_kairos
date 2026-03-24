@@ -182,7 +182,7 @@ class ProjectStorage:
 
 
 def get_project_storage(slug: str) -> ProjectStorage:
-    """slug → ProjectStorage 인스턴스."""
+    """slug -> ProjectStorage 인스턴스."""
     sb = get_supabase()
     resp = sb.table("projects").select("id, storage_key").eq("slug", slug).execute()
     if not resp.data:

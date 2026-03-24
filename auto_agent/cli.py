@@ -1,5 +1,5 @@
 """
-auto-agent — AI 영상 제작 파이프라인 CLI
+auto-agent -- AI 영상 제작 파이프라인 CLI
 
 사용법:
   auto-agent --version                          # 버전
@@ -12,8 +12,8 @@ auto-agent — AI 영상 제작 파이프라인 CLI
   auto-agent voice list|add|remove              # 음성 프리셋 관리
   auto-agent font list|set|reset               # 폰트 관리
   auto-agent bg start|stop|status|logs|list    # 백그라운드 파이프라인
-  auto-agent sync --project <slug>             # 로컬 → Supabase 동기화
-  auto-agent pull --project <slug>             # Supabase → 로컬 다운로드
+  auto-agent sync --project <slug>             # 로컬 -> Supabase 동기화
+  auto-agent pull --project <slug>             # Supabase -> 로컬 다운로드
   auto-agent version list|rollback              # 버전 관리
   auto-agent assets [--type audio]              # 에셋 조회
   auto-agent cleanup [--execute]                # 클린업
@@ -43,7 +43,7 @@ from auto_agent.ui import (
 
 
 def cmd_init(args):
-    """워크스페이스 초기화 (신규 또는 v2→v3 업그레이드)."""
+    """워크스페이스 초기화 (신규 또는 v2->v3 업그레이드)."""
     if not args:
         print_error("Usage: auto-kairos init <workspace-path> [--upgrade]")
         console.print("  예시: auto-kairos init ~/my-video-project")
@@ -55,10 +55,10 @@ def cmd_init(args):
     workspace = Path(clean_args[0]).resolve()
     template_dir = get_package_dir() / "remotion_template"
 
-    print_header(f"Auto Kairos v3 — {'업그레이드' if upgrade_mode else '워크스페이스 초기화'}")
+    print_header(f"Auto Kairos v3 -- {'업그레이드' if upgrade_mode else '워크스페이스 초기화'}")
     console.print(f"  경로: [accent]{workspace}[/accent]")
     if upgrade_mode:
-        console.print(f"  모드: [yellow]v2→v3 업그레이드 (기존 데이터 보존)[/yellow]\n")
+        console.print(f"  모드: [yellow]v2->v3 업그레이드 (기존 데이터 보존)[/yellow]\n")
     else:
         console.print("")
 
@@ -113,7 +113,7 @@ def cmd_init(args):
         )
         console.print("  [accent]CREATE[/accent] .env.example")
 
-    # 4. CLAUDE.md 생성/업데이트 (Claude Code 연동 — 템플릿 복사)
+    # 4. CLAUDE.md 생성/업데이트 (Claude Code 연동 -- 템플릿 복사)
     claude_md = workspace / "CLAUDE.md"
     template = get_data_dir() / "CLAUDE.md.template"
     if upgrade_mode or not claude_md.exists():
@@ -122,7 +122,7 @@ def cmd_init(args):
                 # 기존 백업
                 backup = workspace / "CLAUDE.md.v2.bak"
                 shutil.copy2(claude_md, backup)
-                console.print(f"  [yellow]BACKUP[/yellow] CLAUDE.md → CLAUDE.md.v2.bak")
+                console.print(f"  [yellow]BACKUP[/yellow] CLAUDE.md -> CLAUDE.md.v2.bak")
             shutil.copy2(template, claude_md)
             console.print(f"  [accent]{'UPDATE' if upgrade_mode else 'CREATE'}[/accent] CLAUDE.md (v3)")
         else:
@@ -181,6 +181,7 @@ def cmd_init(args):
                 cwd=str(remotion_dest),
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 env=get_env_with_node(),
             )
             if result.returncode == 0:
@@ -262,43 +263,43 @@ def cmd_studio(args):
 
 
 def cmd_project(args):
-    """프로젝트 관리 — db.cli에 위임."""
+    """프로젝트 관리 -- db.cli에 위임."""
     from auto_agent.db.cli import cmd_project as _cmd_project
     _cmd_project(args)
 
 
 def cmd_config(args):
-    """프로젝트 설정 — db.cli에 위임."""
+    """프로젝트 설정 -- db.cli에 위임."""
     from auto_agent.db.cli import cmd_config as _cmd_config
     _cmd_config(args)
 
 
 def cmd_version(args):
-    """버전 관리 — db.cli에 위임."""
+    """버전 관리 -- db.cli에 위임."""
     from auto_agent.db.cli import cmd_version as _cmd_version
     _cmd_version(args)
 
 
 def cmd_assets(args):
-    """에셋 조회 — db.cli에 위임."""
+    """에셋 조회 -- db.cli에 위임."""
     from auto_agent.db.cli import cmd_assets as _cmd_assets
     _cmd_assets(args)
 
 
 def cmd_cleanup(args):
-    """클린업 — db.cli에 위임."""
+    """클린업 -- db.cli에 위임."""
     from auto_agent.db.cli import cmd_cleanup as _cmd_cleanup
     _cmd_cleanup(args)
 
 
 def cmd_costs(args):
-    """비용 요약 — db.cli에 위임."""
+    """비용 요약 -- db.cli에 위임."""
     from auto_agent.db.cli import cmd_costs as _cmd_costs
     _cmd_costs(args)
 
 
 def cmd_dashboard(args):
-    """웹 대시보드 — db.cli에 위임."""
+    """웹 대시보드 -- db.cli에 위임."""
     from auto_agent.db.cli import cmd_dashboard as _cmd_dashboard
     _cmd_dashboard(args)
 
@@ -396,7 +397,7 @@ def cmd_style(args):
             dest = styles_dir / f"{Path(filename).stem}_base{src.suffix}"
             shutil.copy2(src, dest)
             saved_ref_image = f"artstyle/styles/{dest.name}"
-            console.print(f"  [accent]COPY[/accent] 기준 이미지 → {dest}")
+            console.print(f"  [accent]COPY[/accent] 기준 이미지 -> {dest}")
 
         style_json = {
             "name": data["name"],
@@ -418,7 +419,7 @@ def cmd_style(args):
             json.dumps(style_json, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
-        print_success(f"아트스타일 추가됨: [accent]{data['name']}[/accent] → {filepath}")
+        print_success(f"아트스타일 추가됨: [accent]{data['name']}[/accent] -> {filepath}")
         if saved_ref_image:
             print_success(f"  기준 이미지: {saved_ref_image}")
 
@@ -577,7 +578,7 @@ def cmd_font(args):
         pm.update_config(project["id"], font_family=font_name)
         is_bundled = fm.is_bundled(font_name)
         source = "번들" if is_bundled else "시스템"
-        print_success(f"폰트 설정: [accent]{font_name}[/accent] ({source})  —  프로젝트: {project['name']}")
+        print_success(f"폰트 설정: [accent]{font_name}[/accent] ({source})  --  프로젝트: {project['name']}")
         if not is_bundled:
             console.print("  [dim]렌더링 머신에도 이 폰트가 설치되어 있어야 합니다.[/dim]")
 
@@ -589,7 +590,7 @@ def cmd_font(args):
             return
 
         pm.update_config(project["id"], font_family=DEFAULT_FONT)
-        print_success(f"폰트 초기화: [accent]{DEFAULT_FONT}[/accent]  —  프로젝트: {project['name']}")
+        print_success(f"폰트 초기화: [accent]{DEFAULT_FONT}[/accent]  --  프로젝트: {project['name']}")
 
     else:
         print_error(f"알 수 없는 서브커맨드: {args[0]}")
@@ -810,11 +811,11 @@ def cmd_update(args):
     """최신 버전으로 업데이트."""
     import importlib.metadata
 
-    print_header("auto-agent — 업데이트")
+    print_header("auto-agent -- 업데이트")
 
     # 패키지 설치 위치에서 Git repo 경로 탐색
     pkg_dir = get_package_dir()
-    repo_dir = pkg_dir.parent  # auto_agent/ → repo root
+    repo_dir = pkg_dir.parent  # auto_agent/ -> repo root
 
     git_dir = repo_dir / ".git"
     if not git_dir.exists():
@@ -835,6 +836,7 @@ def cmd_update(args):
         cwd=str(repo_dir),
         capture_output=True,
         text=True,
+        encoding="utf-8",
     )
 
     if result.returncode != 0:
@@ -864,7 +866,7 @@ def cmd_update(args):
     else:
         pip_cmd += [str(repo_dir)]
 
-    result = subprocess.run(pip_cmd, capture_output=True, text=True)
+    result = subprocess.run(pip_cmd, capture_output=True, text=True, encoding="utf-8")
 
     if result.returncode != 0:
         print_error(f"pip install 실패: {result.stderr.strip()[:300]}")
@@ -875,22 +877,23 @@ def cmd_update(args):
         [sys.executable, "-c", "from auto_agent import __version__; print(__version__)"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
     )
     new_version = result.stdout.strip() if result.returncode == 0 else "?"
 
     if new_version != current:
-        print_success(f"업데이트 완료! v{current} → [accent]v{new_version}[/accent]")
+        print_success(f"업데이트 완료! v{current} -> [accent]v{new_version}[/accent]")
     else:
         print_success(f"재설치 완료 (v{new_version})")
 
 
 def cmd_sync(args):
-    """로컬 → Supabase 동기화 (push) — Supabase 미설정 시 비활성."""
+    """로컬 -> Supabase 동기화 (push) -- Supabase 미설정 시 비활성."""
     print_warning("Supabase 동기화가 비활성화되어 있습니다. .env에서 SUPABASE_URL/KEY를 설정하세요.")
 
 
 def cmd_pull(args):
-    """Supabase → 로컬 다운로드 (pull) — Supabase 미설정 시 비활성."""
+    """Supabase -> 로컬 다운로드 (pull) -- Supabase 미설정 시 비활성."""
     print_warning("Supabase 동기화가 비활성화되어 있습니다. .env에서 SUPABASE_URL/KEY를 설정하세요.")
 
 
@@ -943,8 +946,8 @@ def _print_banner():
         ("version list|rollback", "버전 관리"),
         ("assets", "에셋 조회"),
         ("costs", "비용 요약"),
-        ("sync --project <slug>", "로컬 → Supabase 동기화"),
-        ("pull --project <slug>", "Supabase → 로컬 다운로드"),
+        ("sync --project <slug>", "로컬 -> Supabase 동기화"),
+        ("pull --project <slug>", "Supabase -> 로컬 다운로드"),
         ("dashboard", "웹 대시보드"),
         ("update", "최신 버전으로 업데이트"),
     ]

@@ -110,6 +110,6 @@ class GatewayMonitor:
             if len(set(recent)) == 1:
                 raise GatewayIntervention(
                     f"[{self.agent_name}] Error loop: "
-                    f"동일 에러 {n}회 반복 — {error_msg[:100]}",
+                    f"동일 에러 {n}회 반복 -- {error_msg[:100]}",
                     level=4,
                 )

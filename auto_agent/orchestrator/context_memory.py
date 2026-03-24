@@ -191,6 +191,6 @@ class ContextMemory:
 
 
 def _step_order(step_id: str) -> int:
-    """step_id에서 순서 번호 추출. 'step_6' → 6, 'step_8b' → 8."""
+    """step_id에서 순서 번호 추출. 'step_6' -> 6, 'step_8b' -> 8."""
     m = re.search(r"step_(\d+)", step_id)
     return int(m.group(1)) if m else 999

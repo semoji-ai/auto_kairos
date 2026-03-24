@@ -3,7 +3,7 @@ Manifest Builder Script (로컬 중심)
 Combines scene_specs.json + motion_plan.json + audio durations + subtitles
 into Remotion SceneManifest format (manifest.json).
 
-에셋 참조: 로컬 파일 → Remotion staticFile() 상대 경로.
+에셋 참조: 로컬 파일 -> Remotion staticFile() 상대 경로.
 Supabase는 프로젝트 config 조회에만 사용 (오프라인 시 fallback).
 """
 import json
@@ -29,7 +29,7 @@ def _probe_mp3_duration_local(path: Path) -> float:
 
 
 def _load_project_config(project_id: str, project_dir: str = None) -> dict:
-    """프로젝트 config 로드. 로컬 ProjectManager → Supabase fallback."""
+    """프로젝트 config 로드. 로컬 ProjectManager -> Supabase fallback."""
     # 1. 로컬 ProjectManager에서 로드
     try:
         from auto_agent.db.project_manager import ProjectManager
@@ -112,15 +112,20 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     # ── Remotion public 디렉토리에 프로젝트 심볼릭 링크 ──
     remotion_public = workspace / "remotion" / "public"
 
-    # 프로젝트 slug로 심볼릭 링크 (output/{slug} → remotion/public/project)
+    # 프로젝트 slug로 심볼릭 링크 (output/{slug} -> remotion/public/project)
     project_link = remotion_public / "project"
     if project_link.exists() or project_link.is_symlink():
         project_link.unlink()
     try:
         project_link.symlink_to(out_dir.resolve())
-        print(f"    [LINK] remotion/public/project → {out_dir}")
+        print(f"    [LINK] remotion/public/project -> {out_dir}")
     except OSError:
-        print(f"    [WARN] 심볼릭 링크 실패, 복사 대신 사용")
+        import shutil as _shutil
+        if out_dir.is_dir():
+            if project_link.exists():
+                _shutil.rmtree(project_link)
+            _shutil.copytree(out_dir, project_link)
+        print(f"    [WARN] symlink failed, copied instead: {project_link}")
 
     # 하위 호환: assets/{storage_key} 심볼릭 링크도 유지
     if storage_key:
@@ -130,7 +135,12 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             try:
                 asset_dir.symlink_to(out_dir.resolve())
             except OSError:
-                pass
+                import shutil as _shutil
+                if out_dir.is_dir():
+                    if asset_dir.exists():
+                        _shutil.rmtree(asset_dir)
+                    _shutil.copytree(out_dir, asset_dir)
+                    print(f"    [WARN] symlink failed, copied instead: {asset_dir}")
 
     def link_asset(src: Path, dest_subdir: str, dest_name: str) -> str:
         """로컬 에셋의 staticFile 상대 경로 반환. project/ 기준."""
@@ -153,7 +163,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         num = scene.get("sceneNumber") or scene["scene_number"]
         scene_key = f"scene_{num:03d}"
 
-        # Audio — 로컬 파일 링크
+        # Audio -- 로컬 파일 링크
         audio_src = out_dir / "audio" / f"{scene_key}.mp3"
         audio_path = link_asset(audio_src, "audio", f"{scene_key}.mp3")
 
@@ -165,7 +175,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             specs_fps = specs.get("meta", {}).get("fps", 30)
             audio_duration = scene["durationFrames"] / specs_fps
 
-        # Image — 로컬 파일 링크
+        # Image -- 로컬 파일 링크
         image_path = ""
         for ext in (".jpg", ".jpeg", ".png", ".webp"):
             img_src = out_dir / "images" / f"{scene_key}{ext}"
@@ -242,7 +252,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                     "opacity": ia.get("opacity", 0.4),
                 }
 
-        # cinematic_overlay → cinematicOverlay 변환
+        # cinematic_overlay -> cinematicOverlay 변환
         co = viz.get("cinematic_overlay") or viz.get("cinematicOverlay")
         if co:
             entry.setdefault("visualization", {})["cinematicOverlay"] = {
@@ -257,7 +267,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 ms["mapStyle"] = map_theme
             if not ms.get("mapType"):
                 ms["mapType"] = "location_reveal"
-            # markers 변환: {lat, lng, label} → {coordinates: [lng, lat], label}
+            # markers 변환: {lat, lng, label} -> {coordinates: [lng, lat], label}
             if ms.get("markers"):
                 converted = []
                 for mk in ms["markers"]:
@@ -371,7 +381,7 @@ if __name__ == "__main__":
         idx = sys.argv.index("--local")
         if idx + 1 < len(sys.argv):
             local_dir = sys.argv[idx + 1]
-            # build_manifest_local: scene_specs.json → manifest.json (로컬 전용)
+            # build_manifest_local: scene_specs.json -> manifest.json (로컬 전용)
             from pathlib import Path
             out = Path(local_dir)
             specs_path = out / "scene_specs.json"

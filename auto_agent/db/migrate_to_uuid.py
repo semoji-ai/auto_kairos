@@ -60,15 +60,15 @@ def migrate(dry_run: bool = False):
         old_manifest = workspace / "remotion" / "public" / "manifests" / f"{slug}.json"
         new_manifest = workspace / "remotion" / "public" / "manifests" / f"{uuid}_{slug}.json"
 
-        print(f"\n[{pid}] {slug} → {uuid}_{slug}")
+        print(f"\n[{pid}] {slug} -> {uuid}_{slug}")
 
         # 폴더 rename
         if old_dir.exists() and not new_dir.exists():
             if dry_run:
-                print(f"  [DRY-RUN] mv {old_dir.name} → {new_dir.name}")
+                print(f"  [DRY-RUN] mv {old_dir.name} -> {new_dir.name}")
             else:
                 old_dir.rename(new_dir)
-                print(f"  [RENAME] {old_dir.name} → {new_dir.name}")
+                print(f"  [RENAME] {old_dir.name} -> {new_dir.name}")
             rollback_log.append({"type": "dir", "old": str(old_dir), "new": str(new_dir)})
         elif new_dir.exists():
             print(f"  [SKIP] 이미 마이그레이션됨: {new_dir.name}")
@@ -78,10 +78,10 @@ def migrate(dry_run: bool = False):
         # 매니페스트 rename
         if old_manifest.exists() and not new_manifest.exists():
             if dry_run:
-                print(f"  [DRY-RUN] mv {old_manifest.name} → {new_manifest.name}")
+                print(f"  [DRY-RUN] mv {old_manifest.name} -> {new_manifest.name}")
             else:
                 old_manifest.rename(new_manifest)
-                print(f"  [RENAME] {old_manifest.name} → {new_manifest.name}")
+                print(f"  [RENAME] {old_manifest.name} -> {new_manifest.name}")
             rollback_log.append({"type": "manifest", "old": str(old_manifest), "new": str(new_manifest)})
 
         # DB 업데이트
@@ -98,7 +98,7 @@ def migrate(dry_run: bool = False):
     # 4. rollback 정보 저장
     if not dry_run and rollback_log:
         rollback_path = workspace / "output" / "_migration_rollback.json"
-        rollback_path.write_text(json.dumps(rollback_log, indent=2, ensure_ascii=False))
+        rollback_path.write_text(json.dumps(rollback_log, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"\n[ROLLBACK] 복원 정보: {rollback_path}")
 
     # 5. 검증
@@ -107,8 +107,8 @@ def migrate(dry_run: bool = False):
     for row in conn.execute("SELECT id, uuid, slug, output_dir FROM projects ORDER BY id"):
         p = dict(row)
         exists = Path(p["output_dir"]).exists()
-        status = "✓" if exists else "✗ 폴더 없음"
-        print(f"  [{p['id']}] {p['uuid']}_{p['slug']} — {status}")
+        status = "[OK]" if exists else "[FAIL] 폴더 없음"
+        print(f"  [{p['id']}] {p['uuid']}_{p['slug']} -- {status}")
     conn.close()
 
 

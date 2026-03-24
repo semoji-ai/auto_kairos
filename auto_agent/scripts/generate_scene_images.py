@@ -5,8 +5,8 @@ scene_specs.json에서 imageAsset이 있는 씬을 찾아
 FAL AI nano-banana-2로 이미지를 생성한다.
 
 캐릭터 레퍼런스:
-  - characters/investor.png → 메인 투자자 (PERSON 씬)
-  - characters/warren_buffett.png → 워런 버핏 (Scene 1)
+  - characters/investor.png -> 메인 투자자 (PERSON 씬)
+  - characters/warren_buffett.png -> 워런 버핏 (Scene 1)
 """
 import json
 import sys
@@ -66,7 +66,7 @@ def main():
 
         # 이미 생성된 이미지가 있으면 건너뛰기
         if output_path.exists():
-            print(f"  Scene {num}: EXISTS — skip")
+            print(f"  Scene {num}: EXISTS -- skip")
             continue
 
         # 캐릭터 매핑
@@ -120,7 +120,7 @@ def main():
 
         try:
             if t["characters"]:
-                # 캐릭터 레퍼런스가 있는 씬 → generate_scene (cinematic)
+                # 캐릭터 레퍼런스가 있는 씬 -> generate_scene (cinematic)
                 result = generate_scene(
                     prompt=query,
                     output_path=output,
@@ -130,7 +130,7 @@ def main():
                     aspect_ratio=t["aspect_ratio"],
                 )
             else:
-                # 오브젝트 씬 → generate_scene_flat
+                # 오브젝트 씬 -> generate_scene_flat
                 result = generate_scene_flat(
                     prompt=query,
                     output_path=output,
@@ -141,14 +141,14 @@ def main():
             if result.get("success"):
                 w = result.get("width", 0)
                 h = result.get("height", 0)
-                print(f"  OK — {w}x{h}")
+                print(f"  OK -- {w}x{h}")
                 success += 1
             else:
-                print(f"  FAIL — {result.get('error', 'unknown')}")
+                print(f"  FAIL -- {result.get('error', 'unknown')}")
                 fail += 1
 
         except Exception as e:
-            print(f"  ERROR — {e}")
+            print(f"  ERROR -- {e}")
             fail += 1
 
     print(f"\n완료: 성공 {success}, 실패 {fail} / 총 {total}")
