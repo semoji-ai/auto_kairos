@@ -107,12 +107,12 @@
       "notes": "검색 도구: wikimedia_search, serper_search, download_image. 생성은 하지 않음."
     },
     "image-painter": {
-      "description": "이미지 생성 에이전트(윤화가). source=generate 씬의 FAL.ai 이미지 생성. 캐릭터 분석→캐릭터 생성→씬 이미지 생성.",
+      "description": "이미지 생성 에이전트(윤화가). source=generate 씬의 FAL.ai 이미지 생성. 캐릭터 분석→캐릭터 생성→씬 이미지 병렬 생성.",
       "model": "claude-sonnet-4-5-20250929",
-      "max_turns": 40,
-      "allowed_tools": ["Read", "Write", "Bash", "Glob"],
+      "max_turns": 50,
+      "allowed_tools": ["Read", "Write", "Bash", "Glob", "Task"],
       "skills": ["shared/image-generation"],
-      "notes": "생성 도구: image_generate (scene/character). 검색은 하지 않음. 항상 /edit 엔드포인트 + reference_image 첨부."
+      "notes": "Task 도구로 씬 이미지를 병렬 생성. 캐릭터는 선행 순차 생성 후 씬을 Task로 분배. 각 Task에 아트스타일 경로와 프롬프트 규칙을 반드시 전달."
     },
     "tts-verifier": {
       "model": "claude-sonnet-4-5-20250929",
