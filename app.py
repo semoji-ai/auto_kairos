@@ -890,7 +890,7 @@ async def auto_prompt(slug: str, scene_num: int):
         cli_path = shutil.which("claude") or str(Path.home() / ".local/bin/claude")
         proc = subprocess.run(
             [cli_path, "--print", "--model", "claude-sonnet-4-5-20250929", "--max-turns", "1"],
-            input=prompt_input, capture_output=True, text=True, timeout=30,
+            input=prompt_input, capture_output=True, text=True, encoding="utf-8", timeout=30,
             env={**dict(os.environ), "CLAUDECODE": ""},
         )
         result_text = proc.stdout.strip()
@@ -944,7 +944,7 @@ async def generate_image(request: Request, slug: str, scene_num: int):
         if style_path:
             cmd.extend(["--style", style_path])
         env = {**dict(os.environ), "PROJECT_NAME": slug}
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120,
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=120,
                                 cwd=str(get_workspace_dir()), env=env)
         if result.returncode == 0:
             res = _json.loads(result.stdout)
@@ -1428,6 +1428,7 @@ def _setup_studio_project(slug: str):
             timeout=120,
             capture_output=True,
             text=True,
+            encoding="utf-8",
         )
 
         # 빌드된 manifest를 메인으로 복사
@@ -1469,10 +1470,10 @@ def _ensure_studio_ready() -> Optional[str]:
                 [npm_cmd, "install"],
                 cwd=str(REMOTION_DIR),
                 env=_get_node_env(),
-                capture_output=True, text=True, timeout=120,
+                capture_output=True, text=True, encoding="utf-8", timeout=120,
             )
             if result.returncode != 0:
-                return f"npm install 실패: {result.stderr[:300]}"
+                return f"npm install failed: {result.stderr[:300]}"
         except Exception as e:
             return f"npm install 에러: {e}"
 

@@ -1,8 +1,6 @@
 {
-  "id": "quirky_cartoon",
   "name": "Quirky Hand-drawn Cartoon",
   "description": "개성있는 낙서 스타일 만화. 느슨하고 유머러스한 손그림 느낌",
-  "channel": "이로미즘",
   "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",
   "scene_style_description": "Loose quirky hand-drawn cartoon, doodle style, thick wobbly lines, bright flat colors, human characters only.",
   "style": {
@@ -24,47 +22,7 @@
     "scene_style": "Loose quirky hand-drawn cartoon illustration. Human characters with large heads and small bodies, thick uneven lines. Playful humorous doodle style. No aliens or monsters — always human."
   },
   "prompt_overrides": {
-    "creative-direction": "## ⚠️ 이로미즘 연출 필수 규칙 (반드시 준수)\n\n### 기본 원칙\n이 스타일은 cinematic(일러스트 풀스크린)이 주력이다. 대부분의 씬은 cinematic으로 만들되, **내용이 요구하면 반드시 다른 레이아웃을 써라.**\n\n### cinematic 대신 다른 레이아웃을 써야 하는 경우\n나레이션의 **내용**을 보고 판단한다. 아래 상황에서는 cinematic으로 만들면 정보가 전달되지 않는다:\n- 구체적 수치를 비교하는 내용 → 차트(bar, line, pie 등)가 훨씬 효과적\n- 지리적 위치가 핵심인 내용 → mapScene으로 보여줘야 이해됨\n- 인물의 발언을 직접 인용하는 내용 → quote_portrait가 임팩트 있음\n- 전후 변화를 대비하는 내용 → before_after로 시각화\n- 순서/프로세스를 설명하는 내용 → flow, timeline\n- 핵심 메시지 하나를 강렬하게 전달해야 하는 내용 → hero_with_context, metric_spotlight\n\n이건 비율이 아니라 내용 기반 판단이다. 수치가 나오면 차트, 장소가 나오면 지도. 단, 나레이션에 숫자가 잠깐 언급되는 정도라면 굳이 차트를 만들 필요 없다 — 데이터가 씬의 핵심일 때만.\n\n### cinematic은 절대 100%가 될 수 없다\n어떤 영상이든 차트/지도/인용이 필요한 순간이 있다. 전부 cinematic이면 단조롭고 정보 전달이 약해진다.\n\n### headline_only, items_grid, icon_stat, metric_wall은 사용 금지\n이 스타일과 맞지 않는다.\n\n### cinematic 씬 규칙\n- layout=\"cinematic\" + imageAsset={\"source\":\"generate\", \"placement\":\"fullscreen\"} 필수 세트\n- placement는 반드시 \"fullscreen\", opacity는 생략 (1.0 기본)\n- items, values, itemIcons는 비워둠 (이미지만으로 전달)\n- cinematic_overlay로 말풍선/감탄부호/캡션 오버레이 가능 (선택)\n\n### 에셋 규칙\n- 이미지는 generate(AI 생성) 우선. 실사는 보도현장/공식발표 등 실사가 압도적으로 효과적인 경우에만.\n- imageAsset.source는 가능하면 generate로 설정.\n\n### 톤\n- 유머러스하고 위트 있는 톤 유지\n- mood는 dramatic보다 playful 선호\n- headline을 쓸 때는 말장난이나 과장된 비유 활용"
-  },
-  "image": {
-    "staging": "cinematic",
-    "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",
-    "scene_style_description": "Loose quirky hand-drawn cartoon, doodle style, thick wobbly lines, bright flat colors, human characters only.",
-    "style": {
-      "art_style": "Loose, quirky hand-drawn cartoon illustration",
-      "linework": {
-        "outline": "Thick and uneven black lines, scribbly and wobbly as if drawn quickly by hand",
-        "variation": "Not smooth, slightly misaligned strokes, playful and imperfect feel"
-      },
-      "shapes": "Basic geometric forms, slightly distorted. Characters have large heads and small bodies in a fun cartoonish way",
-      "color_palette": "Bright and simple colors, flat digital fill, some areas spilling outside the outlines",
-      "shading": "Almost none, simple flat fills only",
-      "character_design": "Human characters drawn in a loose doodle style. Big round heads, round eyes with white sclera and black pupils (like the reference image), small body. Exaggerated but recognizably human expressions. Silly and comical poses. Always clearly human — no aliens or monsters. Eyes must always have visible white area around the pupil.",
-      "mood_and_tone": "Playful, humorous, and whimsical, like a doodle-style cartoon",
-      "background": "Simple stage or props drawn roughly and minimally"
-    },
-    "critical_requirements": [],
-    "prompt_language": "ko"
-  },
-  "voice": {
-    "voice_id": "9Sj8ugvpK1DmcAXyvi3a",
-    "voice_settings": {
-      "stability": 1.0,
-      "similarity_boost": 0.6,
-      "style": 0.9,
-      "speed": 1.1
-    }
-  },
-  "creative": {
-    "headline_frequency": "20-30%",
-    "mood_palette": ["dramatic", "suspense", "contemplative", "informative"],
-    "preferred_layouts": ["cinematic", "before_after", "rank_list", "timeline", "flow", "metric_spotlight"]
-  },
-  "scenes": {
-    "density": "moderate",
-    "min_duration_sec": 4,
-    "max_duration_sec": 15,
-    "prefer_split_on": ["전환어", "감정 전환", "시각적 전환"]
-  },
-  "guidelines": "이로미즘은 시네마틱 내러티브 중심. 극적 전개와 여백을 중시한다. 텍스트보다 이미지가 강한 임팩트를 줄 때 cinematic 사용. 통계/비교는 before_after나 rank_list로."
+    "creative-direction": "## 이로미즘 연출 가이드\n\n### 레이아웃 방향\n- cinematic 레이아웃을 선호합니다. 일러스트가 화면을 채우는 연출이 이 스타일의 강점입니다.\n- 단, 내용에 따라 차트, 비교표, 맵, 인용문 등 다양한 레이아웃을 자유롭게 활용하세요.\n- 데이터가 핵심인 씬은 적절한 차트/표 레이아웃이 더 효과적입니다.\n\n### cinematic 씬 규칙\n- layout=\"cinematic\" 사용 시 placement=\"fullscreen\", opacity는 생략 (1.0 기본)\n- cinematic_overlay로 말풍선/감탄부호/캡션 오버레이 가능 (선택)\n\n### 이미지 소스\n- AI 생성(generate) 일러스트가 이 스타일과 잘 어울리지만, 실사 사진이 더 효과적인 씬에서는 search/wikimedia를 적극 활용하세요.\n- 보도 현장, 실제 인물, 역사적 장면 등은 실사가 더 강력합니다.\n\n### 톤\n- 유머러스하고 위트 있는 톤 유지\n- mood는 dramatic보다 playful 선호\n- headline을 쓸 때는 말장난이나 과장된 비유 활용",
+    "asset-advisory": "이로미즘 스타일은 AI 생성 일러스트와 잘 어울리지만, 실사가 더 적합한 씬(보도 현장, 실제 인물, 역사적 장면 등)에서는 search/wikimedia를 사용하세요. 내용에 맞는 최적의 소스를 선택하되, imageAsset.source는 Creative Direction이 결정한 값을 유지하고 query 품질 보강에 집중하세요."
+  }
 }

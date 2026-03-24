@@ -6,7 +6,7 @@
     "_comment_team_a": "===== Team A: 리서치팀 =====",
     "research-orchestrator": {
       "description": "deep-research-kit 실행 + 리서치 결과 표준 포맷(research_report.json) 변환",
-      "model": "claude-opus-4-6",
+      "model": "claude-sonnet-4-5-20250929",
       "max_turns": 70,
       "allowed_tools": [
         "Read",
@@ -297,8 +297,8 @@
         "reason": "원고→씬 분할은 구조적 창작 판단"
       },
       "step_6c": {
-        "model": "claude-opus-4-6",
-        "reason": "데이터 보강+모션 설계는 정밀 작업"
+        "model": "claude-haiku-4-5-20251001",
+        "reason": "데이터 보강은 수치 채우기 — Haiku로 충분"
       },
       "step_11b": {
         "model": "claude-opus-4-6",
