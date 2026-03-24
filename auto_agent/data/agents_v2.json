@@ -1,0 +1,156 @@
+{
+  "$schema": "./docs/agents-schema.json",
+  "version": "4.0",
+  "description": "Auto Agent V4 에이전트 정의 — 3단계 파이프라인용",
+
+  "agents": {
+    "research-orchestrator": {
+      "description": "심층 리서치 탐색 전담. Explorer 병렬 배포 → 탐색 완료 → 종료.",
+      "model": "claude-opus-4-6",
+      "max_turns": 70,
+      "budget": "$2.5",
+      "max_duration_minutes": 20,
+      "allowed_tools": ["Read", "Write", "Glob", "WebSearch", "WebFetch", "Task"],
+      "skill_file": "agents/research-orchestrator/SKILL.md",
+      "shared_skills": ["shared/research-format"],
+      "notes": "기존과 동일. Stage 1에서 사용."
+    },
+
+    "script-director": {
+      "description": "원고 작성 + 씬 분할 + 시각 연출 + 모션 설계를 통합 수행하는 핵심 에이전트",
+      "model": "claude-opus-4-6",
+      "max_turns": 80,
+      "budget": "$4.0",
+      "max_duration_minutes": 30,
+      "allowed_tools": ["Read", "Write", "Glob"],
+      "skill_file": "agents/script-director/SKILL.md",
+      "shared_skills": [
+        "shared/writing-style",
+        "shared/writing-style-semoji",
+        "shared/writing-style-iromism",
+        "shared/motion-presets",
+        "shared/remotion-design-system"
+      ],
+      "chunked_parallel": {
+        "split_by": "chapter",
+        "max_parallel": 3,
+        "merge_strategy": "concat_scenes_renumber"
+      },
+      "notes": "Stage 2 핵심. 기존 write-manuscript + visual-composer 4개 Phase 통합. 챕터별 병렬 처리 지원."
+    },
+
+    "fact-verifier": {
+      "description": "원고 내 주요 주장 교차 검증",
+      "model": "claude-sonnet-4-5-20250514",
+      "max_turns": 20,
+      "budget": "$0.5",
+      "max_duration_minutes": 10,
+      "allowed_tools": ["Read", "WebSearch"],
+      "skill_file": "agents/fact-verifier/SKILL.md",
+      "notes": "Stage 2에서 비차단 실행. 기존과 동일."
+    },
+
+    "qa-reviewer": {
+      "description": "렌더링 전후 품질 검수",
+      "model": "claude-sonnet-4-5-20250514",
+      "max_turns": 25,
+      "budget": "$0.5",
+      "max_duration_minutes": 5,
+      "allowed_tools": ["Read", "Glob"],
+      "skill_file": "agents/qa-reviewer/SKILL.md",
+      "shared_skills": [
+        "shared/remotion-design-system",
+        "shared/motion-presets"
+      ],
+      "notes": "Stage 3에서 pre/post render 2회 실행."
+    }
+  },
+
+  "modules": {
+    "preflight": {
+      "description": "환경 검증 (API키, Node, ffmpeg, Remotion)",
+      "type": "python",
+      "notes": "기존과 동일."
+    },
+    "tts_generator": {
+      "description": "ElevenLabs TTS 음성 생성",
+      "type": "python",
+      "api": "ElevenLabs (primary) / Gemini TTS (fallback)",
+      "notes": "기존과 동일."
+    },
+    "subtitle_sync": {
+      "description": "WhisperX forced alignment 자막 정렬",
+      "type": "python",
+      "notes": "기존과 동일."
+    },
+    "image_batch_module": {
+      "description": "이미지 배치 생성/검색 (캐릭터 + 씬)",
+      "type": "python",
+      "api": "FAL.ai (generate) / Serper (search)",
+      "internal_agents": ["character-planner"],
+      "notes": "기존과 동일. 내부에서 character-planner 에이전트 호출."
+    },
+    "data_validator": {
+      "description": "데이터 정합성 검증 (scene↔audio↔subtitle↔image)",
+      "type": "python",
+      "gate": true,
+      "notes": "기존과 동일."
+    },
+    "manifest_builder": {
+      "description": "scene_specs v5 → Remotion manifest 변환",
+      "type": "python",
+      "notes": "v5 플랫 스키마 지원 추가. motion preset → 구체적 애니메이션 파라미터 변환. durationFrames를 오디오 길이에서 자동 계산. 전환 효과 자동 결정."
+    },
+    "video_assembler": {
+      "description": "Remotion CLI 렌더링 실행",
+      "type": "remotion",
+      "resolution": "1920x1080",
+      "fps": 30,
+      "notes": "기존과 동일."
+    }
+  },
+
+  "internal_agents": {
+    "character-planner": {
+      "description": "캐릭터 라이브러리 조회 + 생성 계획",
+      "model": "claude-sonnet-4-5-20250514",
+      "max_turns": 20,
+      "notes": "image_batch_module 내부에서만 호출. 외부 노출 안 함."
+    }
+  },
+
+  "gateway": {
+    "model": "claude-haiku-4-5-20251001",
+    "poll_interval_sec": 2,
+    "detection": ["timeout", "repetition", "token_explosion", "no_progress", "error_loop"],
+    "recovery_levels": ["warning", "restart", "shrink_restart", "skip_notify"],
+    "notes": "기존과 동일."
+  },
+
+  "summary": {
+    "v3_agents": 8,
+    "v4_agents": 4,
+    "removed": [
+      "write-manuscript (script-director에 통합)",
+      "visual-composer (script-director에 통합)",
+      "image-searcher (image_batch_module에 흡수)",
+      "image-painter (image_batch_module에 흡수)",
+      "tts-verifier (QA에 통합)"
+    ],
+    "v3_shared_skills": 16,
+    "v4_shared_skills": 8,
+    "removed_skills": [
+      "scene-segmentation (script-director에 내장)",
+      "creative-direction (script-director에 내장)",
+      "asset-advisory (script-director에 간소화 내장)",
+      "data-mapping (script-director에 내장)",
+      "chart-mapping (script-director에 내장)",
+      "overlay-selection (미사용 제거)",
+      "motion-rhythm (motion-presets로 대체)",
+      "outline-template (별도 outline 불필요)"
+    ],
+    "new_skills": [
+      "motion-presets (모션 그래픽 프리셋 15종)"
+    ]
+  }
+}
