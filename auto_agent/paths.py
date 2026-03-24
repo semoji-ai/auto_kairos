@@ -37,6 +37,9 @@ def get_workspace_dir() -> Path:
     # 2. AUTO_AGENT_WORKSPACE 환경 변수
     env = os.getenv("AUTO_AGENT_WORKSPACE")
     if env:
+        # MSYS/Git Bash path translation: /c/Users/... -> C:/Users/...
+        if sys.platform == "win32" and len(env) >= 3 and env[0] == '/' and env[2] == '/':
+            env = env[1].upper() + ':' + env[2:]
         p = Path(env).resolve()
         if p.exists():
             return p

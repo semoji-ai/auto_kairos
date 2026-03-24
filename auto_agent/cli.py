@@ -143,6 +143,7 @@ def cmd_init(args):
                         "Bash(auto-kairos *)",
                         "Bash(auto-agent *)",
                         "Bash(python3 *)",
+                        "Bash(python *)",
                         "Bash(npm *)",
                         "Bash(npx remotion *)",
                         "Bash(cd *)",

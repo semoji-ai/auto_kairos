@@ -1971,7 +1971,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     f"{(result.error or '')[:50]} "
                     f"({'즉시' if _wait == 0 else f'{_wait}초 후'})"
                 )
-                print(f"\n    ↻ {_retry_label}", flush=True)
+                print(f"\n    [RETRY] {_retry_label}", flush=True)
                 _notify(
                     _agent_label, _retry_label,
                     phase=self.state.current_phase, project=self.project_slug,
@@ -2643,7 +2643,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         try:
             result = subprocess.run(
                 command, shell=True,
-                cwd=_posix(get_workspace_dir()),
+                cwd=str(get_workspace_dir()),
                 env=env,
                 capture_output=True,
                 text=True, encoding="utf-8",

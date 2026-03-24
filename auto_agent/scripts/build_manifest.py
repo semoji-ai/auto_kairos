@@ -114,7 +114,12 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
 
     # 프로젝트 slug로 심볼릭 링크 (output/{slug} -> remotion/public/project)
     project_link = remotion_public / "project"
-    if project_link.exists() or project_link.is_symlink():
+    if project_link.is_symlink():
+        project_link.unlink()
+    elif project_link.exists() and project_link.is_dir():
+        import shutil
+        shutil.rmtree(project_link)
+    elif project_link.exists():
         project_link.unlink()
     try:
         project_link.symlink_to(out_dir.resolve())
@@ -130,6 +135,13 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     # 하위 호환: assets/{storage_key} 심볼릭 링크도 유지
     if storage_key:
         asset_dir = remotion_public / "assets" / storage_key
+        if asset_dir.is_symlink():
+            asset_dir.unlink()
+        elif asset_dir.exists() and asset_dir.is_dir():
+            import shutil
+            shutil.rmtree(asset_dir)
+        elif asset_dir.exists():
+            asset_dir.unlink()
         if not asset_dir.exists() and not asset_dir.is_symlink():
             asset_dir.parent.mkdir(parents=True, exist_ok=True)
             try:
