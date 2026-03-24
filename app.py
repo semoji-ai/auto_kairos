@@ -844,18 +844,42 @@ async def auto_prompt(slug: str, scene_num: int):
     concept = (scene.get("visualization") or {}).get("creative", {}).get("concept", "")
     mood = (scene.get("visualization") or {}).get("creative", {}).get("mood", "")
 
+    # 아트스타일 scene_style_description 가져오기
+    import json as _json
+    config = project.get("config", {})
+    if isinstance(config, str):
+        config = _json.loads(config)
+    art_style_path = config.get("art_style", "")
+    style_desc = ""
+    if art_style_path:
+        try:
+            style_json = _json.loads((get_workspace_dir() / art_style_path).read_text(encoding="utf-8"))
+            style_desc = style_json.get("scene_style_description", "")
+        except Exception:
+            pass
+
     prompt_input = (
-        f"씬 제목: {title}\n나레이션: {narration}\n연출 컨셉: {concept}\n무드: {mood}\n\n"
-        f"위 씬의 스틸컷 이미지 프롬프트를 작성하세요.\n"
-        f"규칙:\n"
-        f"- 정적인 스틸컷 묘사만 (동작/움직임 금지)\n"
-        f"- 텍스트 요소 금지\n"
-        f"- 주체 + 배경 + 구도 + 분위기 포함\n"
-        f"- 프롬프트만 출력하세요. 설명 없이."
+        f"씬 제목: {title}\n나레이션: {narration}\n연출 컨셉: {concept}\n무드: {mood}\n"
+        f"아트스타일: {style_desc}\n\n"
+        f"위 씬의 이미지 생성 프롬프트를 아래 구조화 포맷으로 작성하세요.\n"
+        f"프롬프트만 출력하세요. 설명이나 마크다운 없이.\n\n"
+        f"포맷 규칙:\n"
+        f"- 【스타일】 아트스타일 한 줄 설명\n"
+        f"- 【상황】 정적인 스틸컷 묘사 (동작/움직임 표현 금지, 텍스트 요소 금지)\n"
+        f"- 【배경】 시대, 장소, 시간대, 분위기\n"
+        f"- 【등장 캐릭터】 인물이 있을 때만 — 외모, 복장, 표정, 자세 (선택)\n"
+        f"- 【카메라 앵글】 샷 사이즈 + 앵글 + 구도\n\n"
+        f"예시:\n"
+        f"【스타일】 Loose quirky hand-drawn cartoon, doodle style, thick wobbly lines, bright flat colors\n"
+        f"【상황】 부두에 모인 사람들이 손가락질하며 비웃고 있지만, 증기선은 굴뚝에서 연기를 힘차게 뿜으며 출발한다\n"
+        f"【배경】 1807년 뉴욕 항구, 나무 부두, 맑은 낮\n"
+        f"【등장 캐릭터】 군중(19세기 복장) - 조롱하는 표정. 풀턴(단정한 정장) - 배 위에서 팔짱 끼고 자신감 넘치는 미소\n"
+        f"【카메라 앵글】 미디엄샷, 비웃는 군중과 출발하는 배가 동시에 잡히는 구도"
     )
 
     try:
-        cli_path = str(Path.home() / ".local/bin/claude")
+        import shutil
+        cli_path = shutil.which("claude") or str(Path.home() / ".local/bin/claude")
         proc = subprocess.run(
             [cli_path, "--print", "--model", "claude-sonnet-4-5-20250929", "--max-turns", "1"],
             input=prompt_input, capture_output=True, text=True, timeout=30,

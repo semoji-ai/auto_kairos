@@ -1,6 +1,6 @@
 """
 Image Asset Generation Script
-통합 이미지 생성 파이프라인: 캐릭터 → 검색 이미지 → 씬 이미지 → 시각화 배경
+통합 이미지 생성 파이프라인: 캐릭터 → 검색 이미지 → 씬 이미지
 
 패턴: scripts/generate_tts.py와 동일한 skip-if-exists + 결과 JSON 저장
 
@@ -8,7 +8,6 @@ Image Asset Generation Script
   images/
   ├── search/          ← 검색 이미지 원본 (scene_NNN.{ext})
   ├── generated/       ← AI 생성 이미지 원본 (scene_NNN.png)
-  ├── viz_bg/          ← 시각화 배경
   ├── scene_NNN.png    ← 최종 이미지 (search/ 또는 generated/에서 복사)
   └── image_assets.json ← 에셋 레지스트리
 """
@@ -402,26 +401,6 @@ def step_4_generate_standalone_images(output_dir: Path, style_path: str, specs: 
     print(f"[Step 4] 완료: {ok}/{len(standalone)} 생성")
 
 
-def step_5_generate_viz_backgrounds(output_dir: Path, style_path: str):
-    """5단계: 시각화 배경 이미지 생성"""
-    from auto_agent.skills.image_gen import generate_viz_backgrounds
-
-    scene_specs_path = SCENE_SPECS
-
-    if not Path(style_path).exists():
-        print("[Step 5] art_style.json 없음 — 스킵")
-        return
-
-    print("[Step 5] 시각화 배경 생성 시작...")
-    result = generate_viz_backgrounds(
-        scene_specs_path=scene_specs_path,
-        style_path=style_path,
-        output_dir=output_dir,
-    )
-    print(f"[Step 5] 완료: {result.get('generated', 0)}/{result.get('total', 0)} 생성")
-    return result
-
-
 def step_6_save_licenses(output_dir: Path, search_licenses: list):
     """6단계: 라이선스 메타데이터 저장"""
     if not search_licenses:
@@ -722,10 +701,6 @@ def main():
     step_4_generate_standalone_images(output_dir, style_path, specs)
     print()
 
-    # Step 5: 시각화 배경 생성
-    step_5_generate_viz_backgrounds(output_dir, style_path)
-    print()
-
     # Step 6: 라이선스 메타데이터 저장
     step_6_save_licenses(output_dir, search_licenses)
 
@@ -735,20 +710,17 @@ def main():
     # 결과 요약
     images_dir = output_dir / "images"
     char_dir = output_dir / "characters"
-    viz_dir = output_dir / "images" / "viz_bg"
     search_dir = output_dir / "images" / "search"
     generated_dir = output_dir / "images" / "generated"
 
     image_count = len(list(images_dir.glob("scene_*.png"))) + len(list(images_dir.glob("scene_*.jpg"))) if images_dir.exists() else 0
     char_count = len(list(char_dir.glob("*.png"))) if char_dir.exists() else 0
-    viz_count = len(list(viz_dir.glob("*.png"))) if viz_dir.exists() else 0
     search_count = len(list(search_dir.glob("scene_*"))) if search_dir.exists() else 0
     gen_count = len(list(generated_dir.glob("scene_*"))) if generated_dir.exists() else 0
 
     summary = {
         "total_images": image_count,
         "total_characters": char_count,
-        "total_viz_backgrounds": viz_count,
         "search_images": search_count,
         "generated_images": gen_count,
         "output_dir": str(output_dir),
@@ -757,7 +729,6 @@ def main():
     print(f"\n=== 이미지 생성 완료 ===")
     print(f"  씬 이미지: {image_count}개 (검색: {search_count}, 생성: {gen_count})")
     print(f"  캐릭터: {char_count}개")
-    print(f"  시각화 배경: {viz_count}개")
 
     summary_path = output_dir / "image_gen_results.json"
     summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -831,23 +802,6 @@ def _upload_assets_to_supabase(output_dir: Path):
                     project_id=pid,
                     local_path=img,
                     asset_type="character",
-                )
-                uploaded += 1
-            except Exception:
-                pass
-
-    # 시각화 배경 업로드
-    viz_dir = output_dir / "images" / "viz_bg"
-    if viz_dir.exists():
-        for img in sorted(viz_dir.glob("*.png")):
-            m = re.match(r"scene_(\d{3})", img.stem)
-            scene_num = int(m.group(1)) if m else None
-            try:
-                sync.register_asset(
-                    project_id=pid,
-                    local_path=img,
-                    asset_type="viz_bg",
-                    scene_number=scene_num,
                 )
                 uploaded += 1
             except Exception:

@@ -915,6 +915,8 @@ class PipelineRunner:
                 if result.status == "completed":
                     completed_ids.add(step["id"])
                     self.state.completed_steps.append(step["id"])
+                elif result.status == "skipped":
+                    self.state.skipped_steps.append(step["id"])
                 elif step.get("blocking") is not False:
                     self.state.failed_steps.append(step["id"])
 
@@ -2687,7 +2689,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             return
 
         report = json.loads(report_path.read_text(encoding="utf-8"))
-        topic = report.get("topic", self.project_slug)
+        topic = report.get("topic") or self.project.get("topic") or self.project_slug
         category = self.vault._detect_category(topic)
 
         # 요약 추출
@@ -2729,6 +2731,24 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         raise FileNotFoundError(
             "Claude CLI를 찾을 수 없습니다. "
             "PATH에 claude가 있는지 확인하거나 CLAUDE_CLI 환경변수를 설정하세요."
+        )
+
+    def _build_existing_images_context(self, agent_name: str) -> str:
+        """image-painter/image-searcher용: 기존 이미지 목록을 프롬프트에 주입."""
+        if agent_name not in ("image-painter", "image-searcher"):
+            return ""
+        images_dir = self.project_dir / "images"
+        if not images_dir.exists():
+            return ""
+        existing = sorted(images_dir.glob("scene_*_gen_*.png"))
+        if not existing:
+            return ""
+        lines = [f"- {p.name}" for p in existing]
+        return (
+            "<existing_images>\n"
+            "아래 씬은 이미 이미지가 생성되어 있습니다. 이 씬들은 건너뛰세요.\n"
+            + "\n".join(lines)
+            + "\n</existing_images>"
         )
 
     def _build_agent_prompt(self, step: dict) -> str:
@@ -2794,7 +2814,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # 6. 볼트 지식 주입 (Vault RAG)
         vault_block = ""
         if self.vault.enabled:
-            topic = self.state.config.get("topic", self.project_slug)
+            topic = self.project.get("topic") or self.state.config.get("topic", self.project_slug)
             category = self.vault._detect_category(topic)
             if agent_name in ("research-orchestrator",):
                 vault_block = self.vault.search_for_research(topic, category)
@@ -2865,6 +2885,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
 모든 출력 파일을 성공적으로 생성하면 작업 완료입니다.
 </task>
+
+{self._build_existing_images_context(agent_name)}
 
 <progress_reporting>
 작업 진행 상황을 아래 파일에 기록하세요. 대시보드 메신저에 실시간으로 표시됩니다.

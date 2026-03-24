@@ -201,27 +201,13 @@
           "depends_on": "step_7"
         },
         {
-          "id": "step_8b_legacy",
-          "name": "image_asset_sourcing_legacy",
-          "description": "이미지 소싱 레거시 — Claude CLI image-painter 에이전트 방식 (롤백용 보존)",
-          "type": "agent",
-          "agent": "image-painter",
-          "skip": true,
-          "input": ["scene_specs.json", "art_style.json"],
-          "output": ["images/image_assets.json"]
-        },
-        {
           "id": "step_8b",
           "name": "image_asset_sourcing",
-          "description": "이미지 배치 생성 — 캐릭터 라이브러리 조회 → FAL queue 배치 제출 → 폴링",
-          "type": "module",
-          "module": "image_batch",
-          "input": [
-            "character_plan.json",
-            "scene_specs.json",
-            "art_style.json"
-          ],
-          "output": ["images/image_assets.json", "characters/"]
+          "description": "이미지 소싱 — Claude CLI image-painter 에이전트 방식",
+          "type": "agent",
+          "agent": "image-painter",
+          "input": ["scene_specs.json", "art_style.json"],
+          "output": ["images/image_assets.json"]
         },
         {
           "id": "step_9",
