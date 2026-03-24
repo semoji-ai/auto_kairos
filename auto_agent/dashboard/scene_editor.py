@@ -414,11 +414,13 @@ def _inject_image_url(project: dict, scene: dict, scene_num: int):
     url = get_scene_image_url(_dir_name, scene_num, _out_dir)
 
     if url:
-        placement = (scene.get("imageAsset") or {}).get("placement", "background")
-        if scene.get("visualization"):
-            scene["vizBackgroundPath"] = url
-        else:
+        # imageAsset.source가 있으면 씬 이미지 (imagePath)
+        # 없으면 시각화 배경 (vizBackgroundPath)
+        has_image_asset = bool((scene.get("imageAsset") or {}).get("source"))
+        if has_image_asset:
             scene["imagePath"] = url
+        else:
+            scene["vizBackgroundPath"] = url
 
 
 def _transform_map_scene(scene: dict):
