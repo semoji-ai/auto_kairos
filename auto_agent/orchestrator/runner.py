@@ -417,7 +417,8 @@ class PipelineRunner:
             if phase_id == "stage_2" and "step_2" in self.state.completed_steps:
                 try:
                     pid = str(self.project.get("id", self.project_slug))
-                    storage_key = self.sync.storage_key if self.sync else self.project_slug
+                    dir_name = Path(self.project_dir).name if self.project_dir else self.project_slug
+                    storage_key = dir_name
                     result = subprocess.run(
                         [sys.executable, "-m", "auto_agent.scripts.build_manifest",
                          pid, storage_key, str(self.project_dir)],
