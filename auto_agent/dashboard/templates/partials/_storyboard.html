@@ -121,10 +121,69 @@ function filterImages(btn) {
 
 function openSceneDetail(slug, sceneNum) {
   var overlay = document.getElementById('scene-detail-overlay');
-  document.getElementById('scene-detail-content').innerHTML = '<div class="empty">Loading...</div>';
+  var content = document.getElementById('scene-detail-content');
+  content.innerHTML = '<div class="empty">Loading...</div>';
   overlay.classList.add('open');
-  htmx.ajax('GET', '/api/p/' + slug + '/storyboard/scene/' + sceneNum, {
-    target: '#scene-detail-content', swap: 'innerHTML'
+
+  // manifest에서 씬 데이터 + /api/p/{slug}/scenes에서 원고 가져오기
+  Promise.all([
+    fetchManifest(),
+    fetch('/api/p/' + encodeURIComponent(slug) + '/scenes').then(function(r) { return r.json(); })
+  ]).then(function(results) {
+    var manifest = results[0];
+    var scenesData = (results[1].scenes || []);
+    var mScene = null, sScene = null;
+    if (manifest && manifest.scenes) {
+      for (var i = 0; i < manifest.scenes.length; i++) {
+        if (manifest.scenes[i].sceneNumber === sceneNum) { mScene = manifest.scenes[i]; break; }
+      }
+    }
+    for (var j = 0; j < scenesData.length; j++) {
+      if (scenesData[j].sceneNumber === sceneNum) { sScene = scenesData[j]; break; }
+    }
+    if (!mScene && !sScene) { content.innerHTML = '<div class="empty">씬을 찾을 수 없습니다</div>'; return; }
+
+    var imgUrl = (mScene && mScene.imagePath) || (sScene && sScene._image_url) || '';
+    var audioUrl = (mScene && mScene.audioPath) || (sScene && sScene._audio_url) || '';
+    var narration = sScene ? (sScene.narration || '') : '';
+    var title = sScene ? (sScene.title || '') : '';
+    var chapter = sScene ? (sScene.chapter || '') : '';
+    var layout = sScene ? (sScene.layout || '') : '';
+    var mood = sScene ? (sScene.mood || '') : '';
+    var motion = sScene ? (sScene.motion || '') : '';
+
+    var html = '<div class="scene-detail">';
+    html += '<div class="scene-detail-header">';
+    html += '<h2>Scene ' + sceneNum + (title ? ' — ' + title : '') + '</h2>';
+    if (chapter) html += '<span class="ch-tag">Ch' + chapter + '</span>';
+    html += '</div>';
+
+    // 큰 프리뷰 이미지
+    if (imgUrl) {
+      html += '<div style="margin:12px 0;text-align:center">';
+      html += '<img src="' + imgUrl + '" style="max-width:100%;max-height:60vh;border-radius:8px;object-fit:contain">';
+      html += '</div>';
+    }
+
+    // 메타 태그
+    html += '<div class="tags" style="margin:8px 0">';
+    if (layout) html += '<span class="layout-badge">' + layout + '</span>';
+    if (motion) html += '<span class="viz-badge">🎬 ' + motion + '</span>';
+    if (mood) html += '<span class="mood-badge">' + mood + '</span>';
+    html += '</div>';
+
+    // 나레이션
+    if (narration) {
+      html += '<div class="section"><h4>Narration</h4>';
+      html += '<div class="narration-full">' + narration.replace(/\n/g, '<br>') + '</div>';
+      if (audioUrl) html += '<div style="margin-top:8px"><audio controls preload="none" src="' + audioUrl + '"></audio></div>';
+      html += '</div>';
+    }
+
+    html += '</div>';
+    content.innerHTML = html;
+  }).catch(function() {
+    content.innerHTML = '<div class="empty">로드 실패</div>';
   });
 }
 
