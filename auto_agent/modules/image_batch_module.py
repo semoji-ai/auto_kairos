@@ -31,7 +31,11 @@ _PROGRESS_FILE: Optional[Path] = None
 
 
 def _progress(msg: str, level: str = "info") -> None:
-    print(f"[image_batch] {msg}", flush=True)
+    # Windows cp949 인코딩 에러 방지 - 출력 불가 문자는 ? 대체
+    try:
+        print(f"[image_batch] {msg}", flush=True)
+    except UnicodeEncodeError:
+        print(f"[image_batch] {msg.encode('ascii', errors='replace').decode()}", flush=True)
     if _PROGRESS_FILE:
         with open(_PROGRESS_FILE, "a", encoding="utf-8") as f:
             f.write(json.dumps({"message": msg, "level": level}) + "\n")
@@ -69,7 +73,7 @@ def run_batch(
     # ── 입력 로드 ──
     style_json_path = project_dir / "art_style.json"
     if not style_json_path.exists():
-        _progress("art_style.json 누락 — 이미지 생성 스킵", level="error")
+        _progress("art_style.json 누락 - 이미지 생성 스킵", level="error")
         return {"chars_reused": 0, "chars_generated": 0, "scenes_success": 0,
                 "scenes_fail": 0, "scenes_skipped": 0, "status": "failed",
                 "error": "art_style.json 누락"}
@@ -131,7 +135,7 @@ def run_batch(
                     logger.warning("캐릭터 저장 실패 (%s): %s", char_id, e)
             else:
                 char_paths[char_id] = None
-                _progress(f"캐릭터 생성 실패: {char['name']} — {result.error}", level="warning")
+                _progress(f"캐릭터 생성 실패: {char['name']} - {result.error}", level="warning")
 
         fal_queue.poll_all(jobs, request_ids, on_done=on_char_done)
 
@@ -154,7 +158,7 @@ def run_batch(
                 continue
             scene_num = scene.get("sceneNumber", 0)
             if image_assets.has_generated_version(images_dir, scene_num):
-                _progress(f"씬 {scene_num} 이미 생성됨 — 스킵")
+                _progress(f"씬 {scene_num} 이미 생성됨 - 스킵")
                 skipped += 1
                 continue
             scene_char_paths = {

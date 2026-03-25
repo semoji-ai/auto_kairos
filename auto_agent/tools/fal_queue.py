@@ -68,9 +68,9 @@ def poll_all(
         raise RuntimeError("fal_client 미설치. pip install fal-client")
     _ensure_fal_key()
 
-    # pending: {request_id: (job, retry_count)}
-    pending: dict[str, tuple[FalJob, int]] = {
-        rid: (job, 0) for rid, job in zip(request_ids, jobs)
+    # pending: {request_id: (job, retry_count, endpoint)}
+    pending: dict[str, tuple[FalJob, int, str]] = {
+        rid: (job, 0, job.endpoint) for rid, job in zip(request_ids, jobs)
     }
     all_results: list[FalResult] = []
     start = time.time()
@@ -78,9 +78,9 @@ def poll_all(
     while pending and (time.time() - start) < timeout:
         time.sleep(poll_interval)
         for req_id in list(pending):
-            job, retry_count = pending[req_id]
+            job, retry_count, endpoint = pending[req_id]
             try:
-                status_obj = fal_client.status(req_id)
+                status_obj = fal_client.status(endpoint, req_id)
                 status = status_obj.status
             except Exception as e:
                 logger.warning("status 조회 실패 (req=%s): %s", req_id, e)
@@ -88,7 +88,7 @@ def poll_all(
 
             if status == "COMPLETED":
                 try:
-                    raw = fal_client.result(req_id)
+                    raw = fal_client.result(endpoint, req_id)
                     result = FalResult(
                         idx=job.idx,
                         success=True,
@@ -113,7 +113,7 @@ def poll_all(
                     try:
                         new_handle = fal_client.submit(job.endpoint, arguments=job.arguments)
                         del pending[req_id]
-                        pending[new_handle.request_id] = (job, retry_count + 1)
+                        pending[new_handle.request_id] = (job, retry_count + 1, endpoint)
                         logger.info("job %d 재제출 (retry %d): %s", job.idx, retry_count + 1, new_handle.request_id)
                     except Exception as e:
                         logger.warning("재제출 실패 (job %d): %s", job.idx, e)
@@ -134,7 +134,7 @@ def poll_all(
                     all_results.append(result)
 
     # timeout 초과 잔여
-    for req_id, (job, _) in pending.items():
+    for req_id, (job, _, _ep) in pending.items():
         result = FalResult(idx=job.idx, success=False, error="timeout")
         try:
             on_done(result)
