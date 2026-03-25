@@ -94,6 +94,16 @@ templates.env.filters["format_headline"] = format_headline
 USE_SUPABASE = False  # 로컬 DB 기반으로 전환
 
 
+@app.get("/p/background/{file_path:path}")
+async def proxy_background_no_slug(file_path: str):
+    """Remotion 번들이 /p/background/... 로 요청하는 배경 이미지 서빙."""
+    from fastapi.responses import FileResponse
+    bg_file = workspace / "remotion" / "public" / "background" / file_path
+    if bg_file.exists() and bg_file.is_file():
+        return FileResponse(str(bg_file))
+    return JSONResponse({"error": "not found"}, status_code=404)
+
+
 @app.get("/p/{slug}/background/{file_path:path}")
 async def proxy_background_under_project(slug: str, file_path: str):
     """Remotion 번들이 /p/{slug}/background/... 로 요청하는 배경 이미지 서빙."""
