@@ -249,12 +249,14 @@ A와 B는 동시 실행.
 │     clothing, or pose from the reference image."    │
 │    (아트스타일만 참조. 얼굴/의상/포즈 복사 절대 금지) │
 │                                                     │
-│ 5. 실제 장면 묘사                                     │
-│    scene.imageAsset.prompt (한글 장면 묘사)           │
-│    없으면 narration 기반 영어 장면 묘사               │
+│ 5. 실제 장면 묘사 (⚠️ 재작성 금지)                     │
+│    scene.imageAsset.prompt를 그대로 사용한다.         │
+│    요약/변형/재작성/의역 절대 금지.                    │
+│    prompt가 없을 때만 narration 기반 영어 장면 묘사.   │
 │                                                     │
 │ 6. 카메라/배경 구조화 정보                            │
-│    "Medium shot, 3/4 angle, modern office, night"   │
+│    scene.imageAsset.background, camera를 그대로 사용. │
+│    없을 때만 기본값 적용.                              │
 │                                                     │
 │ 7. 컴포지션 규칙                                     │
 │    (캐릭터 위치, 시선 방향, 여백 등)                  │
@@ -496,6 +498,7 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 - ❌ scene_specs.json의 나레이션 텍스트 수정 (TTS 전처리만 허용)
 - ❌ TTS 텍스트 끝에 `...`, `…`, 말줄임표 추가 금지 — 원본 narration 그대로 전달
 - ❌ TTS 텍스트에 원본에 없는 단어/문장/기호 추가 금지
+- ❌ imageAsset.prompt/background/camera 재작성/요약/의역 금지 — 그대로 사용
 - ❌ scene_specs.json의 layout/motion/mood/headline 필드 수정 (에셋 조립만 담당)
 - ❌ **이미지 파일 삭제** (버전 번호로 관리, CLAUDE.md §11)
 - ❌ 3회 이상 재생성/재검색 반복 (무한루프 방지)
