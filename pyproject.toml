@@ -17,13 +17,20 @@ dependencies = [
     "rich>=13.0",
     "questionary>=2.0",
     "Pillow>=10.0",
+    "mutagen>=1.47",
+    "fal-client>=0.4",
+    "elevenlabs>=1.0",
 ]
 
 [project.optional-dependencies]
-dashboard = ["fastapi", "uvicorn", "jinja2", "websockets"]
+dashboard = ["fastapi<1.0", "uvicorn", "jinja2", "python-multipart", "websockets"]
+subtitle = ["whisperx", "matplotlib"]
 sync = ["supabase>=2.0"]
 rag = ["sentence-transformers>=2.7", "chromadb>=0.5"]
-all = ["fastapi", "uvicorn", "jinja2", "websockets", "supabase>=2.0"]
+all = [
+    "fastapi<1.0", "uvicorn", "jinja2", "python-multipart", "websockets",
+    "whisperx", "matplotlib",
+]
 
 [project.scripts]
 auto-kairos = "auto_agent.cli:main"
