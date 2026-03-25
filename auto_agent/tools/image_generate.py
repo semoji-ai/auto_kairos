@@ -747,10 +747,11 @@ def _build_scene_fal_input(
         )
 
     # 일반 씬
-    prompt          = scene.get("imageAsset", {}).get("prompt") or scene.get("imageAsset", {}).get("query") or scene.get("narration", "")
-    characters_info = scene.get("imageAsset", {}).get("charactersInfo", "")
-    background      = scene.get("imageAsset", {}).get("background", "")
-    camera          = scene.get("imageAsset", {}).get("camera", "")
+    _ia = scene.get("imageAsset") or {}
+    prompt          = _ia.get("prompt") or _ia.get("query") or scene.get("narration", "")
+    characters_info = _ia.get("charactersInfo", "")
+    background      = _ia.get("background", "")
+    camera          = _ia.get("camera", "")
     aspect_ratio    = image_asset.get("aspectRatio", "16:9")
     staging         = image_asset.get("stagingStyle", "cinematic")
 

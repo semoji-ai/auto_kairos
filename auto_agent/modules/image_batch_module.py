@@ -150,7 +150,7 @@ def run_batch(
 
         scene_jobs: list[tuple[dict, FalJob]] = []
         for scene in scene_specs.get("scenes", []):
-            if scene.get("imageAsset", {}).get("source") != "generate":
+            if (scene.get("imageAsset") or {}).get("source") != "generate":
                 continue
             scene_num = scene.get("sceneNumber", 0)
             if image_assets.has_generated_version(images_dir, scene_num):
