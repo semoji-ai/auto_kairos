@@ -116,15 +116,6 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
   const fps = meta?.fps || 30;
   const vizData = resolveVisualization(scene);
 
-  // 디버그
-  if (typeof console !== "undefined") {
-    console.log(`[Thumb #${scene.sceneNumber}]`, {
-      accent: preset.colors.accent,
-      artStyle: preset.artStyle,
-      metaArtStyle: meta?.artStyle,
-    });
-  }
-
   // ── 맵 씬 ──
   if (scene.mapScene) {
     const bgPath = scene.mapScene.prerenderedBg?.imagePath;

@@ -7,7 +7,6 @@
 import React from "react";
 import { AbsoluteFill, Img } from "remotion";
 import { CreativeScene } from "../simple/CreativeScene";
-import { MapSceneRenderer } from "../map/MapSceneRenderer";
 import { DesignPresetProvider, useDesignPreset } from "../design";
 import { buildFontFamily } from "../design/fonts";
 import type { SceneEntry, SceneManifest } from "../types/manifest";
@@ -19,8 +18,8 @@ interface Props {
 
 const resolveUrl = (path: string): string => {
   if (!path) return "";
-  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("/")) return path;
-  return "/" + path;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return path;
 };
 
 /* ── 이미지 배경 ── */
@@ -117,30 +116,14 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
   const fps = meta?.fps || 30;
   const vizData = resolveVisualization(scene);
 
-  // 디버그
-  if (typeof console !== "undefined") {
-    console.log(`[Thumb #${scene.sceneNumber}]`, {
-      accent: preset.colors.accent,
-      artStyle: preset.artStyle,
-      metaArtStyle: meta?.artStyle,
-    });
-  }
-
-  const defaultBg = preset.defaultBackground;
-
   // ── 맵 씬 ──
   if (scene.mapScene) {
-    const dur = Math.ceil((scene.audioDurationSec || 5) * fps);
-    return (
-      <MapSceneRenderer
-        data={scene.mapScene}
-        durationInFrames={dur}
-        fps={fps}
-      />
-    );
+    const bgPath = scene.mapScene.prerenderedBg?.imagePath;
+    return <MapPlaceholder data={scene.mapScene} bg={bgPath} />;
   }
 
   // ── 일반 씬 ──
+  const defaultBg = preset.defaultBackground;
   const hasImage = !!(scene.imagePath || scene.vizBackgroundPath || defaultBg);
   const placement = scene.imageAsset?.placement ?? "background";
   const defaultOpacity = (placement === "background") ? 0.35 : 1.0;

@@ -5,7 +5,7 @@
  * layout, headline, items, mood, reveal, emphasis, placement 등
  * 실제 시스템 속성을 직접 편집 → 렌더 결과가 그대로 반영
  */
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import { Player, type PlayerRef } from "@remotion/player";
 import { SingleScenePlayer } from "./SingleScenePlayer";
 import { ItemsEditor } from "./ItemsEditor";
@@ -48,13 +48,15 @@ interface Props {
 }
 
 /* ── 스타일 상수 ── */
+import { resolvePreset } from "../design/resolvePreset";
+
 const PANEL_BG = "#18181B";
 const FORM_BG = "#1E1E22";
 const INPUT_BG = "rgba(255,255,255,0.05)";
 const BORDER = "rgba(255,255,255,0.1)";
 const TEXT = "#E4E4E7";
 const MUTED = "#71717A";
-const ACCENT = "#F59E0B";
+const DEFAULT_ACCENT = "#F59E0B";
 
 const labelStyle: React.CSSProperties = {
   fontSize: 11, color: MUTED, marginBottom: 3, display: "block",
@@ -79,8 +81,34 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
   const playerRef = useRef<PlayerRef>(null);
   const [showImagePicker, setShowImagePicker] = useState(false);
 
-  const viz = scene.visualization || {} as VisualizationData;
-  const creative = viz.creative || {} as CreativeDirection;
+  // 디자인 프리셋에서 accent 추출
+  const _preset = useMemo(() => resolvePreset(meta || {}), [meta?.artStyle, meta?.videoTheme]);
+  const ACCENT = _preset.colors?.accent || DEFAULT_ACCENT;
+
+  // 플랫 스키마: scene.* 에서 직접 읽기
+  const s = scene as any;
+  const viz = {
+    items: s.items || [],
+    values: s.values || [],
+    unit: s.unit || "",
+    source: s.source || "",
+    itemIcons: s.icons || [],
+    itemFlags: s.flags || [],
+  } as any;
+  const creative = {
+    layout: s.layout || s.sceneType || "",
+    headline: s.headline || "",
+    mood: s.mood || "informative",
+    motion: s.motion || s.motionPreset || "",
+    reveal: "fade_in",
+    emphasis: "none",
+    headlineOffsetX: 0,
+    headlineOffsetY: 0,
+    itemsOffsetX: 0,
+    itemsOffsetY: 0,
+    sourceOffsetX: 0,
+    sourceOffsetY: 0,
+  } as any;
 
   const fps = meta?.fps || 30;
   const canvasW = meta?.resolution?.width || 1920;
