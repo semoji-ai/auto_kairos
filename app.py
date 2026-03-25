@@ -761,6 +761,13 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
                         break
                 specs_path.write_text(_json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
             _setup_studio_project(slug)
+            # 매니페스트 리빌드 (오디오 길이 변경 반영)
+            try:
+                from auto_agent.scripts.build_manifest import build_manifest
+                dir_name = Path(out_dir).name
+                build_manifest(str(project.get("id", "")), dir_name, out_dir)
+            except Exception as me:
+                print(f"[WARN] TTS 재생성 후 매니페스트 리빌드 실패: {me}", flush=True)
             return JSONResponse({"ok": True, "file": fname, "voice_id": voice_id, "size": output_path.stat().st_size})
         else:
             return JSONResponse({"error": "생성 실패 — 파일 미생성"}, 500)
