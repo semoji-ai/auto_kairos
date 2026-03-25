@@ -233,6 +233,7 @@
               '</div>' +
               '<button class="btn-candidates" onclick="loadCandidates(' + num + ',this)">🔍 후보 검색</button>' +
               '<button class="btn-gen-toggle" onclick="toggleGenerate(' + num + ',this)">🎨 이미지 생성</button>' +
+              '<button class="btn-paste-url" onclick="togglePasteUrl(' + num + ')">📎 URL 붙여넣기</button>' +
             '</div>' +
           '</div>' +
           '<div class="candidates-panel" id="candidates-' + num + '">' +
@@ -250,6 +251,13 @@
               '<button class="btn-generate" id="gen-btn-' + num + '" onclick="generateImage(' + num + ')">🎨 생성하기</button>' +
             '</div>' +
             '<div class="gen-status" id="gen-status-' + num + '"></div>' +
+          '</div>' +
+          '<div class="paste-url-panel" id="paste-url-' + num + '" style="display:none;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:6px;margin-top:4px">' +
+            '<div style="display:flex;gap:6px;align-items:center">' +
+              '<input type="text" class="paste-url-input" id="paste-url-input-' + num + '" placeholder="이미지 URL을 붙여넣으세요" style="flex:1;padding:6px 10px;border-radius:4px;background:rgba(0,0,0,0.3);color:#E4E4E7;border:1px solid rgba(255,255,255,0.1);font-size:11px">' +
+              '<button class="btn-generate" onclick="applyPastedUrl(' + num + ')">적용</button>' +
+            '</div>' +
+            '<div class="paste-url-status" id="paste-url-status-' + num + '" style="font-size:10px;color:var(--text-muted);margin-top:4px"></div>' +
           '</div>';
         list.appendChild(row);
         // 버전 목록 자동 로드
@@ -383,6 +391,40 @@
       panel.classList.add('open');
       btn.textContent = '접기';
     }
+  };
+
+  window.togglePasteUrl = function(sceneNum) {
+    var panel = document.getElementById('paste-url-' + sceneNum);
+    panel.style.display = panel.style.display === 'none' ? '' : 'none';
+    if (panel.style.display !== 'none') {
+      document.getElementById('paste-url-input-' + sceneNum).focus();
+    }
+  };
+
+  window.applyPastedUrl = function(sceneNum) {
+    var input = document.getElementById('paste-url-input-' + sceneNum);
+    var status = document.getElementById('paste-url-status-' + sceneNum);
+    var url = (input.value || '').trim();
+    if (!url) { status.textContent = 'URL을 입력하세요'; return; }
+    status.textContent = '다운로드 중...';
+    fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sceneNum, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url: url})
+    }).then(function(r) { return r.json(); }).then(function(res) {
+      if (res.ok || res.selected || res.file) {
+        status.innerHTML = '<span style="color:#86EFAC">적용 완료</span>';
+        input.value = '';
+        // 이미지 갱신
+        var imgEl = document.querySelector('#img-' + sceneNum);
+        if (imgEl) imgEl.src = '/output/' + dirName + '/images/scene_' + String(sceneNum).padStart(3,'0') + '.jpg?t=' + Date.now();
+        loadVersions(sceneNum);
+      } else {
+        status.innerHTML = '<span style="color:#FCA5A5">실패: ' + (res.error || '알 수 없는 오류') + '</span>';
+      }
+    }).catch(function(e) {
+      status.innerHTML = '<span style="color:#FCA5A5">오류: ' + e.message + '</span>';
+    });
   };
 
   window.autoPrompt = function(sceneNum) {
