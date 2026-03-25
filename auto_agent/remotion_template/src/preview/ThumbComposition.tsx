@@ -130,9 +130,27 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
   const defaultOpacity = (placement === "background") ? 0.35 : 1.0;
   const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
   const imgSrc = scene.vizBackgroundPath || scene.imagePath || defaultBg || "";
+  const vizLayout = vizData?.layout || scene.visualization?.creative?.layout || "";
   const isFullscreen = hasImage && placement === "fullscreen";
   const isCenter = hasImage && placement === "center";
   const isSide = hasImage && (placement === "left" || placement === "right");
+
+  // quote_portrait: 이미지를 CreativeScene 내부에서 처리 (side 배치 안 함)
+  if (vizLayout === "quote_portrait" && hasImage) {
+    const qpViz = { ...vizData, imageSrc: resolveUrl(imgSrc), imageAssetPlacement: placement };
+    return (
+      <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
+        {defaultBg && !imgSrc.includes("scene_") && <ImageBg src={defaultBg} opacity={0.15} />}
+        <CreativeScene
+          data={qpViz}
+          subtitles={scene.subtitles}
+          fps={fps}
+          hasImageBackground={false}
+          imageAssetPlacement={placement}
+        />
+      </AbsoluteFill>
+    );
+  }
 
   if (isFullscreen) {
     return (

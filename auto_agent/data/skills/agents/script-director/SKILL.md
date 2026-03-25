@@ -181,6 +181,12 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 - `camera`: 카메라 앵글/구도 (generate용, 영어 권장)
 - `placement`: `"fullscreen"` (cinematic) 또는 `"background"` (데이터 위에 배경)
 
+**quote_portrait 레이아웃 필수 규칙:**
+- `layout: "quote_portrait"` 사용 시 반드시 `imageAsset` 설정
+- `source: "search"`, `query: "인물 영문 이름"`, `placement: "left"` 또는 `"right"`
+- items[0]에 인용문 텍스트, source에 출처
+- 예: `{ "source": "search", "query": "Elon Musk", "placement": "left" }`
+
 **금지:**
 - 아트스타일 키워드 (`cartoon style`, `thick wobbly lines` 등) — 도구가 art_style.json에서 자동 주입
 - 동작/움직임 표현 (`~하는 모습`, `running`, `transitioning`)
