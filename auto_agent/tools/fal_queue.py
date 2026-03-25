@@ -49,7 +49,7 @@ def submit_batch(jobs: list[FalJob]) -> list[str]:
     for job in jobs:
         handle = fal_client.submit(job.endpoint, arguments=job.arguments)
         request_ids.append(handle.request_id)
-        logger.debug("submitted job %d → %s", job.idx, handle.request_id)
+        print(f"[fal_queue] submitted job {job.idx}: endpoint={job.endpoint}, req_id={handle.request_id}", flush=True)
     return request_ids
 
 
@@ -83,7 +83,7 @@ def poll_all(
                 status_obj = fal_client.status(endpoint, req_id)
                 status = status_obj.status
             except Exception as e:
-                logger.warning("status 조회 실패 (req=%s): %s", req_id, e)
+                print(f"[fal_queue] status 조회 실패: endpoint={endpoint}, req_id={req_id}, error={e}", flush=True)
                 continue
 
             if status == "COMPLETED":
