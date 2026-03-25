@@ -59,31 +59,46 @@ tts_tool.generate(
 ```
 
 ### 2. `image_tool`
-```python
-image_tool.search(
-    query: str,
-    style_hint: str = "",         # "dramatic", "calm" 등 분위기 힌트
-    count: int = 3,               # 후보 수
-    aspect_ratio: str = "16:9",   # placement 기반 ratio (아래 매핑 참조)
-) → [{ path: str, score: float, description: str }]
 
+#### ⭐ 배치 생성 (필수 — 개별 generate() 호출 금지)
+```python
+image_tool.generate_batch(
+    scenes: list[dict],           # scene_specs.scenes 중 imageAsset.source=="generate"인 씬 목록
+) → { success: int, failed: int, results: list }
+```
+**모든 generate 씬을 한 번에 제출합니다.** FAL.ai 서버에서 병렬 처리되어 20씬도 3~5분에 완료.
+씬마다 `image_tool.generate()`를 개별 호출하면 20~40분 걸리므로 **절대 금지**.
+
+#### 배치 검색
+```python
+image_tool.search_batch(
+    scenes: list[dict],           # scene_specs.scenes 중 imageAsset.source=="search"인 씬 목록
+) → { success: int, failed: int, results: list }
+```
+
+#### 개별 도구 (재생성/보정용으로만 사용)
+```python
 image_tool.generate(
-    prompt: str,                  # ⚠️ 반드시 아래 "프롬프트 조합 규칙"에 따라 구성
-    image_urls: list[str] = [],   # 참조 이미지 (스타일 base / 캐릭터 ref)
-    aspect_ratio: str = "16:9",   # placement 기반 ratio (아래 매핑 참조)
-    resolution: str = "1K",       # "0.5K", "1K", "2K"
+    prompt: str,                  # ⚠️ imageAsset.prompt 한글 원문 그대로 (번역/요약 금지)
+    aspect_ratio: str = "16:9",
 ) → { path: str, description: str }
 
+image_tool.search(
+    query: str,                   # imageAsset.query 영문 원문 그대로
+    count: int = 3,
+    aspect_ratio: str = "16:9",
+) → [{ path: str, score: float, description: str }]
+
 image_tool.generate_character(
-    prompt: str,                  # 캐릭터 묘사 프롬프트
-    style_base_url: str,          # 아트스타일 base_image (필수)
-    person_photo_url: str = None, # 실존 인물 참조 사진 (선택)
-    aspect_ratio: str = "1:1",    # 캐릭터는 항상 1:1
+    prompt: str,                  # 캐릭터 묘사 프롬프트 (한글 그대로)
+    style_base_url: str,
+    person_photo_url: str = None,
+    aspect_ratio: str = "1:1",
 ) → { path: str, description: str }
 
 image_tool.evaluate(
     image_path: str,
-    criteria: str,                # "이 이미지가 '긴박한 전쟁 장면'에 적합한가?"
+    criteria: str,
 ) → { score: float, reason: str }
 ```
 
@@ -183,12 +198,13 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
 | cinematic_fade | speed -0.1 (천천히, 이미지에 집중) |
 | count_and_grow | 숫자 부분에서 잠시 pause |
 
-### Phase B: 에셋 생성 (병렬 실행)
+### Phase B: TTS 생성 + 이미지 검수
 
-계획을 바탕으로 에셋을 생성합니다. **독립적인 작업은 병렬로.**
+⚠️ **이미지는 step_3a(image_batch)에서 이미 생성/검색 완료된 상태입니다.**
+에이전트는 이미지를 새로 생성하지 않고, **검수 + 실패분 재생성**만 합니다.
 
 ```
-병렬 그룹 A (TTS):
+TTS 작업:
   1. 나레이션 전처리 (숫자→한국어, 발음교정)
      ⚠️ 전처리 시 절대 금지:
      - 끝에 ... 또는 … 추가 금지
@@ -197,13 +213,11 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
   2. 씬별 TTS 생성 (mood/motion 기반 파라미터)
   3. 자막 정렬 (WhisperX)
 
-병렬 그룹 B (이미지):
-  1. 캐릭터 플래닝 (2씬 이상 등장 인물 추출)
-  2. 캐릭터 이미지 생성 (generate_character)
-  3. 씬별 이미지 생성/검색 (캐릭터 ref 포함)
-
-A와 B는 동시 실행.
-단, 그룹 B 내부에서 캐릭터 이미지는 씬 이미지보다 먼저 생성해야 함.
+이미지 검수 (이미 생성된 이미지 확인):
+  1. images/ 폴더에서 각 씬 이미지 존재 확인
+  2. image_tool.evaluate()로 품질 검수
+  3. 실패분만 image_tool.generate()로 개별 재생성 (최대 2회)
+  ※ 정상 이미지는 재생성하지 않음
 ```
 
 #### placement → aspect_ratio 매핑 (절대 규칙)
@@ -224,29 +238,40 @@ A와 B는 동시 실행.
 ✅ fullscreen → "16:9", side → "3:4", badge → "1:1"
 ```
 
-#### 이미지 프롬프트 — 도구가 자동 조합 (에이전트는 원문만 전달)
+#### 이미지 프롬프트 — 절대 규칙 (위반 시 품질 저하)
 
-⚠️ **아트스타일, 참조 이미지, NO TEXT 규칙 등은 `image_tool.generate()` 내부에서 자동 추가됩니다.**
-에이전트는 `imageAsset.prompt`/`background`/`camera` 원문만 전달하세요.
+⚠️⚠️⚠️ **에이전트는 scene_specs.json의 imageAsset 필드를 있는 그대로 전달만 합니다.**
 
 ```
+# ✅ 올바른 사용 — generate_batch로 일괄 제출
+image_tool.generate_batch(scenes=[generate 씬 목록])
+
+# ✅ 재생성 시 — prompt 원문 그대로
 image_tool.generate(
-    prompt = scene.imageAsset.prompt,     # 한글 장면 묘사 그대로
-    aspect_ratio = placement 기반 매핑,   # fullscreen→16:9 등
+    prompt = scene["imageAsset"]["prompt"],   # 한글 원문 그대로. 번역/요약/변형 금지
+    aspect_ratio = "16:9",
+)
+
+# ❌ 절대 금지 — 에이전트가 prompt를 가공
+image_tool.generate(
+    prompt = "A dramatic scene of war...",    # 영어 번역 금지
+    prompt = "전쟁 장면",                      # 요약 금지
+    prompt = "quirky cartoon style, ...",      # 스타일 키워드 금지
 )
 ```
 
-**도구 내부에서 자동 처리되는 것:**
+**도구 내부에서 자동 처리되는 것 (에이전트가 절대 건드리지 않음):**
+- 한글→영어 번역
 - art_style.json의 scene_style_description + style/technical 스펙
 - critical_requirements
 - 참조 이미지 매칭 지시 + NO TEXT 규칙
-- 한글→영어 자동 번역
 
-**에이전트가 하면 안 되는 것:**
-- ❌ prompt에 아트스타일 키워드 넣기 (도구가 처리)
-- ❌ prompt를 영어로 번역 (도구가 처리)
-- ❌ prompt를 재작성/요약/변형 (원문 그대로)
-- ❌ NO TEXT, style description 등을 prompt에 직접 넣기
+**에이전트 금지 사항 (반복 강조):**
+- ❌ prompt를 영어로 번역하지 마세요 — 도구가 자동 번역합니다
+- ❌ prompt를 요약/재작성하지 마세요 — scene_specs 원문 그대로 전달
+- ❌ prompt에 아트스타일 키워드 넣지 마세요 — 도구가 art_style.json에서 주입
+- ❌ prompt에 "NO TEXT" 등 규칙을 넣지 마세요 — 도구가 자동 추가
+- ❌ 씬마다 generate() 개별 호출하지 마세요 — generate_batch() 사용
 
 ##### 캐릭터 생성
 

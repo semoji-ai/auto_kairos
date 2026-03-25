@@ -112,16 +112,24 @@
       "execution": "agent_orchestrated",
       "steps": [
         {
-          "id": "step_3",
+          "id": "step_3a",
+          "name": "image_batch",
+          "description": "이미지 배치 생성/검색. FAL.ai 병렬 제출로 전체 씬 이미지를 한 번에 처리.",
+          "type": "module",
+          "module": "image_batch",
+          "input": ["scene_specs.json", "art_style.json"],
+          "output": ["images/", "characters/", "images/image_assets.json"],
+          "notes": "runner가 직접 실행. assembly-director보다 먼저 실행하여 이미지를 준비."
+        },
+        {
+          "id": "step_3b",
           "name": "assembly",
-          "description": "scene_specs의 mood/motion을 해석하여 TTS 파라미터 조정, 이미지 생성/검수, 매니페스트 빌드, 렌더링까지 일괄 수행",
+          "description": "TTS + 자막 + 이미지 검수 + 매니페스트 + 렌더링. 이미지는 이미 생성됨.",
           "agent": "assembly-director",
-          "input": ["scene_specs.json", "art_style.json", "project_config"],
+          "input": ["scene_specs.json", "art_style.json", "project_config", "images/"],
           "output": [
             "audio/scene_{NNN}.mp3",
             "subtitles/scene_{NNN}.srt",
-            "images/image_assets.json",
-            "characters/",
             "remotion/public/manifest.json",
             "{output_video}.mp4",
             "assembly_report.json"
@@ -141,7 +149,7 @@
             "shared/image-generation",
             "shared/image-prompt-rules"
           ],
-          "notes": "에이전트가 모듈을 도구로 사용. 기존 step_3a~step_6b (9스텝)를 에이전트 1명이 판단하며 실행. Phase A(분석+계획) → Phase B(에셋 병렬 생성) → Phase C(검수+보정) → Phase D(매니페스트) → Phase E(렌더링+최종검수)."
+          "notes": "이미지는 step_3a에서 이미 생성됨. 에이전트는 TTS 생성 + 이미지 검수(실패분 재생성) + 매니페스트 + 렌더링에 집중."
         }
       ],
       "checkpoint": {

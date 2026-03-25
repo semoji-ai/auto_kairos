@@ -86,7 +86,8 @@ _MSG_MAP = {
     "duplicate_check":            ("중복 감지",            "중복 감지 완료"),
     "data_mapping":               ("데이터 매핑",           "데이터 매핑 완료"),
     "fact_check":                 ("팩트 체크",            "팩트 체크 완료"),
-    # phase_3
+    # stage_3
+    "image_batch":                ("이미지 배치 생성",      "이미지 배치 완료"),
     "scene_decomposition":        ("씬 분할",              "씬 분할 완료"),
     "creative_direction":         ("창의적 연출 + 에셋 설계", "창의적 연출 + 에셋 설계 완료"),
     "data_enrichment_and_motion": ("데이터 보강/모션 설계",  "데이터 보강/모션 설계 완료"),
@@ -2565,7 +2566,6 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             "duplicate-checker": "scripts/duplicate_check.py",
             "tts-preprocess": "tools/korean_tts_preprocessor.py",
             "tts-generator": "scripts/generate_tts.py",
-            "image-generator": "scripts/generate_images.py",
             "image_batch": "modules/image_batch_module.py",
             "subtitle-sync": "scripts/generate_subtitles.py",
             "data-validator": "scripts/validate_data.py",

@@ -43,8 +43,8 @@ ALLOWED_ACTIONS = {
         "cost": 0.01,
     },
     "image_search": {
-        "description": "이미지 검색 (Serper API, ~$0.01)",
-        "module": "scripts/generate_images.py",
+        "description": "이미지 배치 생성/검색",
+        "module": "modules/image_batch_module.py",
         "cost": 0.01,
     },
     "layout_check": {
