@@ -739,7 +739,7 @@ def _build_scene_fal_input(
         creative = scene.get("creative") or {}
         viz      = scene.get("visualization") or {}
         return _build_viz_fal_input(
-            viz_title=creative.get("headline", scene.get("title", "")),
+            viz_title=image_asset.get("prompt") or creative.get("headline", scene.get("title", "")),
             viz_type=viz.get("type", ""),
             thematic_context=scene.get("narration", ""),
             style_path=style_path,

@@ -353,7 +353,7 @@ def step_4_generate_standalone_images(output_dir: Path, style_path: str, specs: 
         placement = asset.get("placement", "background")
         standalone.append({
             "scene_number": scene_num,
-            "prompt": asset.get("query", s.get("title", "")),
+            "prompt": asset.get("prompt") or asset.get("query") or s.get("narration", ""),
             "placement": placement,
         })
 
