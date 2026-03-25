@@ -22,10 +22,20 @@ auto-agent — AI 영상 제작 파이프라인 CLI
   auto-agent update                             # 최신 버전으로 업데이트
 """
 import json
+import os
+import platform
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+# Windows cp949 인코딩 문제 — 모든 모듈 import 전에 UTF-8 강제
+if platform.system() == "Windows":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 from auto_agent import __version__
 from auto_agent.paths import get_package_dir, get_data_dir, get_workspace_dir

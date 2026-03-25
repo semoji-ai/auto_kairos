@@ -16,6 +16,7 @@ pipeline.json을 읽고 순차/병렬 실행.
 """
 import json
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -27,6 +28,14 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
+
+# Windows cp949 인코딩 문제 — 모든 출력을 UTF-8로 강제
+if platform.system() == "Windows":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 from auto_agent.paths import get_workspace_dir, get_data_dir, PACKAGE_DIR, DATA_DIR
 from auto_agent.orchestrator.context_memory import ContextMemory
