@@ -3463,19 +3463,20 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           const qpSide = data.imageAssetPlacement === "right" ? "right" : "left";
           const quoteContent = (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center",
+                          alignItems: "center", textAlign: "center",
                           padding: "40px 48px", ...useFadeRise(15, 20) }}>
               <span style={{
                 fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
                 lineHeight: 0.8, fontFamily: "Georgia, serif", userSelect: "none",
               }}>&ldquo;</span>
               <div style={{ fontSize: T.itemText, fontWeight: 500, color: C.text,
-                            lineHeight: 1.6, fontStyle: "italic", margin: "8px 0 16px" }}>
+                            lineHeight: 1.6, fontStyle: "italic", margin: "8px 0 16px",
+                            textAlign: "center" }}>
                 {items[0] || headline || ""}
               </div>
               <span style={{
                 fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
                 lineHeight: 0.8, fontFamily: "Georgia, serif", userSelect: "none",
-                alignSelf: "flex-end",
               }}>&rdquo;</span>
               {data.source && (
                 <div style={{ fontSize: T.sourceText, color: C.textMuted, marginTop: 12 }}>— {data.source}</div>
