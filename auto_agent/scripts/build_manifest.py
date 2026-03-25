@@ -362,6 +362,12 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                     "placement": ia.get("placement", "background"),
                     "opacity": ia.get("opacity", 0.4),
                 }
+            # 검색 이미지 출처
+            if ia.get("source_url"):
+                entry["imageSource"] = {
+                    "url": ia["source_url"],
+                    "title": ia.get("source_title", ""),
+                }
 
         # cinematic_overlay → cinematicOverlay 변환
         co = viz.get("cinematic_overlay") or viz.get("cinematicOverlay")

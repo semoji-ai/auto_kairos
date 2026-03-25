@@ -105,7 +105,7 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 □ items 1개짜리 씬 없는가 (headline에 통합)
 □ cinematic 씬이 전체의 10~15% 이내인가
 □ 감정 곡선이 자연스러운가 (dramatic→informative→dramatic 같은 급변 없이)
-□ 모든 수치의 source가 있는가
+□ 차트/그래프/데이터 씬에만 source가 있는가 (cinematic/quote 등 데이터 없는 씬에는 source 넣지 말 것)
 ```
 
 ---
@@ -130,7 +130,7 @@ research_report.json을 읽고 3막 구조를 설계합니다.
       "items": ["항목1", "항목2", "항목3"],
       "values": [100, 200, 300],
       "unit": "억 달러",
-      "source": "출처 (2024)",
+      "source": "출처 (2024)",  // ← 차트/그래프/데이터 씬에만. cinematic/quote 등은 null
       "icons": ["trending-up", "dollar-sign", "zap"],
       "flags": [],
 

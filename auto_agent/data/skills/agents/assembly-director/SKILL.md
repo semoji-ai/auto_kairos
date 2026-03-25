@@ -354,6 +354,19 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 - source=search인 씬을 generate로 대체하지 마라. 실사가 필요한 이유가 있다.
 - 검색 실패 시에만 generate fallback 허용 (3회 검색 시도 후)
 
+### 검색 이미지 출처 업데이트 (필수)
+
+`image_tool.search()` 결과에 `source_url`이 포함됩니다.
+검색 이미지를 사용한 씬의 `imageAsset`에 출처를 기록하세요:
+
+```python
+# 검색 결과에서 source_url 추출 후 scene_specs 업데이트
+scene["imageAsset"]["source_url"] = search_result["source_url"]
+scene["imageAsset"]["source_title"] = search_result["title"]
+```
+
+이 출처는 영상에서 "출처: Wikimedia Commons" 등으로 표시됩니다.
+
 ### 저장 경로
 
 - AI 생성 이미지: `images/generated/scene_001.png`
