@@ -29,7 +29,33 @@ def _load(images_dir: Path) -> dict:
     path = images_dir / "image_assets.json"
     if path.exists():
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            # 표준 포맷
+            if "scenes" in raw:
+                return raw
+            # assembly-director 레거시 포맷: {"assets": [{"scene": "scene_001", ...}]}
+            if "assets" in raw:
+                scenes = []
+                for a in raw["assets"]:
+                    scene_key = a.get("scene", "")
+                    # "scene_003" → 3
+                    num_str = scene_key.replace("scene_", "").lstrip("0") or "0"
+                    try:
+                        num = int(num_str)
+                    except ValueError:
+                        continue
+                    version = {
+                        "file": Path(a.get("final", a.get("origin", ""))).name,
+                        "type": a.get("type", "generated"),
+                    }
+                    scenes.append({
+                        "sceneNumber": num,
+                        "selected": version["file"],
+                        "versions": [version],
+                    })
+                scenes.sort(key=lambda x: x["sceneNumber"])
+                return {"scenes": scenes}
+            return raw
         except Exception:
             pass
     return {"scenes": []}

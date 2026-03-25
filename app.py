@@ -679,11 +679,15 @@ async def image_versions(slug: str, scene_num: int):
     out_dir = project.get("output_dir", "")
     dir_name = Path(out_dir).name if out_dir else slug
     img_dir = Path(out_dir) / "images"
-    scene_data = get_scene_versions(img_dir, scene_num)
-    # URL 추가
-    for v in scene_data.get("versions", []):
-        v["url"] = f"/output/{dir_name}/images/{v['file']}"
-    return JSONResponse(scene_data)
+    try:
+        scene_data = get_scene_versions(img_dir, scene_num)
+        # URL 추가
+        for v in scene_data.get("versions", []):
+            if v.get("file"):
+                v["url"] = f"/output/{dir_name}/images/{v['file']}"
+        return JSONResponse(scene_data)
+    except Exception:
+        return JSONResponse({"sceneNumber": scene_num, "selected": None, "versions": []})
 
 
 @app.post("/api/p/{slug}/tts/regenerate/{scene_num}")
