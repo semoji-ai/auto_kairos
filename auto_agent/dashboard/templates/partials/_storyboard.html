@@ -119,73 +119,8 @@ function filterImages(btn) {
   }
 }
 
-function openSceneDetail(slug, sceneNum) {
-  var overlay = document.getElementById('scene-detail-overlay');
-  var content = document.getElementById('scene-detail-content');
-  content.innerHTML = '<div class="empty">Loading...</div>';
-  overlay.classList.add('open');
-
-  // manifest에서 씬 데이터 + /api/p/{slug}/scenes에서 원고 가져오기
-  Promise.all([
-    fetchManifest(),
-    fetch('/api/p/' + encodeURIComponent(slug) + '/scenes').then(function(r) { return r.json(); })
-  ]).then(function(results) {
-    var manifest = results[0];
-    var scenesData = (results[1].scenes || []);
-    var mScene = null, sScene = null;
-    if (manifest && manifest.scenes) {
-      for (var i = 0; i < manifest.scenes.length; i++) {
-        if (manifest.scenes[i].sceneNumber === sceneNum) { mScene = manifest.scenes[i]; break; }
-      }
-    }
-    for (var j = 0; j < scenesData.length; j++) {
-      if (scenesData[j].sceneNumber === sceneNum) { sScene = scenesData[j]; break; }
-    }
-    if (!mScene && !sScene) { content.innerHTML = '<div class="empty">씬을 찾을 수 없습니다</div>'; return; }
-
-    var imgUrl = (mScene && mScene.imagePath) || (sScene && sScene._image_url) || '';
-    var audioUrl = (mScene && mScene.audioPath) || (sScene && sScene._audio_url) || '';
-    var narration = sScene ? (sScene.narration || '') : '';
-    var title = sScene ? (sScene.title || '') : '';
-    var chapter = sScene ? (sScene.chapter || '') : '';
-    var layout = sScene ? (sScene.layout || '') : '';
-    var mood = sScene ? (sScene.mood || '') : '';
-    var motion = sScene ? (sScene.motion || '') : '';
-
-    var html = '<div class="scene-detail">';
-    html += '<div class="scene-detail-header">';
-    html += '<h2>Scene ' + sceneNum + (title ? ' — ' + title : '') + '</h2>';
-    if (chapter) html += '<span class="ch-tag">Ch' + chapter + '</span>';
-    html += '</div>';
-
-    // 큰 프리뷰 이미지
-    if (imgUrl) {
-      html += '<div style="margin:12px 0;text-align:center">';
-      html += '<img src="' + imgUrl + '" style="max-width:100%;max-height:60vh;border-radius:8px;object-fit:contain">';
-      html += '</div>';
-    }
-
-    // 메타 태그
-    html += '<div class="tags" style="margin:8px 0">';
-    if (layout) html += '<span class="layout-badge">' + layout + '</span>';
-    if (motion) html += '<span class="viz-badge">🎬 ' + motion + '</span>';
-    if (mood) html += '<span class="mood-badge">' + mood + '</span>';
-    html += '</div>';
-
-    // 나레이션
-    if (narration) {
-      html += '<div class="section"><h4>Narration</h4>';
-      html += '<div class="narration-full">' + narration.replace(/\n/g, '<br>') + '</div>';
-      if (audioUrl) html += '<div style="margin-top:8px"><audio controls preload="none" src="' + audioUrl + '"></audio></div>';
-      html += '</div>';
-    }
-
-    html += '</div>';
-    content.innerHTML = html;
-  }).catch(function() {
-    content.innerHTML = '<div class="empty">로드 실패</div>';
-  });
-}
+// openSceneDetail은 IIFE 안에서 정의 (fetchMeta/fetchScene 접근 위해)
+// 아래 IIFE에서 window.openSceneDetail로 노출
 
 function closeSceneDetail() {
   document.getElementById('scene-detail-overlay').classList.remove('open');
@@ -291,6 +226,72 @@ function resizePreview(val) {
     }, 300);
     setTimeout(function() { clearInterval(checkInterval); }, 5000);
   }
+
+  // ── 상세보기: Remotion Player로 큰 프리뷰 + 원고 ──
+  window.openSceneDetail = function(slug, sceneNum) {
+    var overlay = document.getElementById('scene-detail-overlay');
+    var content = document.getElementById('scene-detail-content');
+    content.innerHTML = '<div class="empty">Loading...</div>';
+    overlay.classList.add('open');
+
+    Promise.all([
+      fetchMeta(),
+      fetchScene(sceneNum),
+      fetch('/api/p/' + encodeURIComponent(slug) + '/scenes').then(function(r) { return r.json(); }).catch(function() { return {}; })
+    ]).then(function(results) {
+      var meta = results[0];
+      var mScene = results[1];
+      var scenesData = (results[2].scenes || []);
+      var sScene = null;
+      for (var j = 0; j < scenesData.length; j++) {
+        if (scenesData[j].sceneNumber === sceneNum) { sScene = scenesData[j]; break; }
+      }
+      if (!mScene && !sScene) { content.innerHTML = '<div class="empty">씬을 찾을 수 없습니다</div>'; return; }
+
+      var narration = sScene ? (sScene.narration || '') : '';
+      var title = sScene ? (sScene.title || '') : (mScene ? '' : '');
+      var chapter = sScene ? (sScene.chapter || '') : '';
+      var layout = sScene ? (sScene.layout || '') : '';
+      var mood = sScene ? (sScene.mood || '') : '';
+      var motion = sScene ? (sScene.motion || '') : '';
+      var audioUrl = (mScene && mScene.audioPath) || (sScene && sScene._audio_url) || '';
+
+      var html = '<div class="scene-detail">';
+      html += '<div class="scene-detail-header">';
+      html += '<h2>Scene ' + sceneNum + (title ? ' \u2014 ' + title : '') + '</h2>';
+      if (chapter) html += '<span class="ch-tag">Ch' + chapter + '</span>';
+      html += '</div>';
+
+      // Remotion Player 마운트 영역 (스토리보드 카드와 동일 렌더링)
+      html += '<div id="detail-player-mount" style="width:100%;aspect-ratio:16/9;background:#111;border-radius:8px;overflow:hidden;margin:12px 0"></div>';
+
+      // 메타 태그
+      html += '<div class="tags" style="margin:8px 0">';
+      if (layout) html += '<span class="layout-badge">' + layout + '</span>';
+      if (motion) html += '<span class="viz-badge">\uD83C\uDFAC ' + motion + '</span>';
+      if (mood) html += '<span class="mood-badge">' + mood + '</span>';
+      html += '</div>';
+
+      // 나레이션 + 오디오
+      if (narration) {
+        html += '<div class="section"><h4>Narration</h4>';
+        html += '<div class="narration-full">' + narration.replace(/\n/g, '<br>') + '</div>';
+        if (audioUrl) html += '<div style="margin-top:8px"><audio controls preload="none" src="' + audioUrl + '"></audio></div>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+      content.innerHTML = html;
+
+      // Remotion Player 마운트
+      var mountEl = document.getElementById('detail-player-mount');
+      if (mountEl && mScene && window.mountSceneThumb) {
+        window.mountSceneThumb(mountEl, mScene, meta);
+      }
+    }).catch(function() {
+      content.innerHTML = '<div class="empty">로드 실패</div>';
+    });
+  };
 })();
 
 function generateThumbnails(slug, btn) {
