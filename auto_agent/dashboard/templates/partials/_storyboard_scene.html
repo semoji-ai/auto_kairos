@@ -3,7 +3,7 @@
   <div class="scene-detail-header">
     <h2>Scene {{ scene.sceneNumber }} — {{ scene.title }}</h2>
     <span class="ch-tag">Ch{{ scene.chapter }}</span>
-    {% if scene._tts_duration %}<span class="duration-tag">{{ "%.1f"|format(scene._tts_duration) }}s</span>{% else %}<span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 60) }}s</span>{% endif %}
+    {% if scene._tts_duration %}<span class="duration-tag">{{ "%.1f"|format(scene._tts_duration) }}s</span>{% elif scene.durationFrames %}<span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 60) }}s</span>{% endif %}
     <!-- 탭 전환 -->
     <div class="scene-tab-bar" style="margin-left:auto;display:flex;gap:4px">
       <button class="scene-tab" data-tab="editor" onclick="switchSceneTab('editor',this)">편집</button>
@@ -186,10 +186,10 @@
 
   {# v5: 최상위 items/values 우선, v4: visualization 내부 fallback #}
   {% set _viz = scene.visualization if scene.visualization is mapping else {} %}
-  {% set viz_items = scene.get('items', []) or _viz.get('items', []) %}
-  {% set viz_values = scene.get('values', []) or _viz.get('values', []) %}
-  {% set viz_unit = scene.get('unit', '') or _viz.get('unit', '') %}
-  {% set viz_source = scene.get('source', '') or _viz.get('source', '') %}
+  {% set viz_items = scene['items'] if 'items' in scene and scene['items'] is iterable and scene['items'] is not string else (_viz['items'] if 'items' in _viz and _viz['items'] else []) %}
+  {% set viz_values = scene['values'] if 'values' in scene and scene['values'] is iterable and scene['values'] is not string else (_viz['values'] if 'values' in _viz and _viz['values'] else []) %}
+  {% set viz_unit = scene['unit'] if 'unit' in scene and scene['unit'] else (_viz['unit'] if 'unit' in _viz else '') %}
+  {% set viz_source = scene['source'] if 'source' in scene and scene['source'] else (_viz['source'] if 'source' in _viz else '') %}
   {% if viz_items %}
   <div class="section">
     <h4>Visualization Data</h4>
