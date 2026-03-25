@@ -97,15 +97,30 @@ try {
     Write-Warn "pip install 실패 — 수동 설치 필요: pip install -e `".[all]`""
 }
 
-# 추가 의존성
-pip install python-multipart mutagen matplotlib 2>$null | Out-Null
-
-# whisperx 확인
-try {
-    python -c "import whisperx" 2>$null
-    Write-Info "WhisperX 설치됨"
-} catch {
-    Write-Warn "WhisperX 미설치 — 자막에 필요 (선택: pip install whisperx)"
+# 개별 의존성 확인 + 누락 시 재설치
+$packages = @(
+    @{name="whisperx"; label="WhisperX (자막)"},
+    @{name="fal_client"; label="FAL Client (이미지 생성)"; pip="fal-client"},
+    @{name="elevenlabs"; label="ElevenLabs (TTS)"},
+    @{name="matplotlib"; label="matplotlib (WhisperX 의존성)"},
+    @{name="mutagen"; label="mutagen (MP3 분석)"},
+    @{name="multipart"; label="python-multipart (대시보드)"; pip="python-multipart"}
+)
+foreach ($pkg in $packages) {
+    try {
+        python -c "import $($pkg.name)" 2>$null
+        Write-Info "$($pkg.label) 설치됨"
+    } catch {
+        $pipName = if ($pkg.pip) { $pkg.pip } else { $pkg.name }
+        Write-Warn "$($pkg.label) 미설치 → 설치 중..."
+        pip install $pipName 2>$null | Out-Null
+        try {
+            python -c "import $($pkg.name)" 2>$null
+            Write-Info "$($pkg.label) 설치 완료"
+        } catch {
+            Write-Warn "$($pkg.label) 설치 실패 — 수동 설치 필요: pip install $pipName"
+        }
+    }
 }
 Pop-Location
 
