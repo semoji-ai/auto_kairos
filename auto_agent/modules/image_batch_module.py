@@ -239,7 +239,7 @@ def run_batch(
                         import shutil as _sh
                         _sh.copy2(best.local_path, dest)
                         image_assets.add_version(images_dir, scene_num, filename, "search",
-                                                 source_url=best.source_url, license_info=best.license)
+                                                 source_url=best.source_page, license_info=best.license)
                         search_success += 1
                         _progress(f"씬 {scene_num} 검색 완료: {filename}")
                     else:
