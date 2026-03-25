@@ -405,7 +405,7 @@ class PipelineRunner:
                         [sys.executable, "-m", "auto_agent.scripts.build_manifest",
                          pid, storage_key, str(self.project_dir)],
                         cwd=str(get_workspace_dir()),
-                        capture_output=True, text=True, timeout=120,
+                        capture_output=True, text=True, encoding="utf-8", timeout=120,
                     )
                     if result.returncode == 0:
                         print("    [AUTO] Stage 2 완료 → 매니페스트 빌드 완료")
@@ -616,7 +616,7 @@ class PipelineRunner:
                 [cli_path, "--print", "--output-format", "json",
                  "--model", "claude-sonnet-4-6", "--max-turns", "1",
                  "--tools", ""],
-                input=supplement_prompt, capture_output=True, text=True,
+                input=supplement_prompt, capture_output=True, text=True, encoding="utf-8",
                 cwd=str(self.project_dir), timeout=60,
                 env={**os.environ, "CLAUDECODE": ""},
             )
@@ -692,7 +692,7 @@ class PipelineRunner:
                 proc = subprocess.run(
                     [cli_path, "--print", "--output-format", "json",
                      "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
-                    input=verify_prompt, capture_output=True, text=True,
+                    input=verify_prompt, capture_output=True, text=True, encoding="utf-8",
                     cwd=str(self.project_dir), timeout=30,
                     env={**os.environ, "CLAUDECODE": ""},
                 )
@@ -734,7 +734,7 @@ class PipelineRunner:
                             proc2 = subprocess.run(
                                 [cli_path, "--print", "--output-format", "json",
                                  "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
-                                input=verify2_prompt, capture_output=True, text=True,
+                                input=verify2_prompt, capture_output=True, text=True, encoding="utf-8",
                                 cwd=str(self.project_dir), timeout=30,
                                 env={**os.environ, "CLAUDECODE": ""},
                             )
@@ -1396,7 +1396,7 @@ class PipelineRunner:
             proc = subprocess.Popen(
                 cmd, cwd=str(self.project_dir), env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True,
+                stderr=subprocess.PIPE, text=True, encoding="utf-8",
             )
             try:
                 stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
@@ -1786,7 +1786,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 [sys.executable, "-m", "auto_agent.scripts.build_manifest",
                  pid, storage_key, str(self.project_dir)],
                 cwd=str(get_workspace_dir()),
-                capture_output=True, text=True, timeout=120,
+                capture_output=True, text=True, encoding="utf-8", timeout=120,
             )
             if result.returncode == 0:
                 print("    [AUTO] 매니페스트 빌드 완료")
@@ -1848,7 +1848,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 [node, str(script), str(manifest_path), str(self.project_dir),
                  "--width=480"],
                 cwd=str(script.parent),
-                capture_output=True, text=True,
+                capture_output=True, text=True, encoding="utf-8",
                 timeout=300,
             )
             if result.returncode == 0:
@@ -2182,7 +2182,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             proc = subprocess.Popen(
                 cmd, cwd=str(self.project_dir), env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True,
+                stderr=subprocess.PIPE, text=True, encoding="utf-8",
             )
             stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
         except subprocess.TimeoutExpired:
@@ -2437,7 +2437,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True,
+                text=True, encoding="utf-8",
             )
             try:
                 stdout, stderr = proc.communicate(input=prompt_text, timeout=timeout_sec)
@@ -2581,7 +2581,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 cwd=ws,
                 env=env,
                 capture_output=True,
-                text=True,
+                text=True, encoding="utf-8",
                 timeout=1800,  # 30분 타임아웃
             )
 
@@ -2650,7 +2650,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 cwd=str(get_workspace_dir()),
                 env=env,
                 capture_output=True,
-                text=True,
+                text=True, encoding="utf-8",
                 timeout=1800,  # 30분 (렌더링)
             )
 
