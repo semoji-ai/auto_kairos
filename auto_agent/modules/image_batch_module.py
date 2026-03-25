@@ -228,7 +228,8 @@ def run_batch(
 
             _progress(f"씬 {scene_num} 검색: {query[:40]}")
             try:
-                results = searcher.search_and_download(query, limit=3, preferred_aspect="16:9")
+                # search_waterfall: wikimedia -> serper -> pixabay 순서 폴백
+                results = searcher.search_waterfall(query, limit=3, preferred_aspect="16:9")
                 if results:
                     best = results[0]
                     if best.local_path and Path(best.local_path).exists():
