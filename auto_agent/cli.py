@@ -905,12 +905,26 @@ def cmd_pull(args):
 
 
 def cmd_vault(args):
-    """볼트 인덱스 관리: index / stats / search."""
-    from auto_agent.orchestrator.vault_rag import VAULT_DIR
+    """볼트 관리: sync / index / stats / search."""
+    from auto_agent.orchestrator.vault_rag import VAULT_DIR, VaultRAG
 
     sub = args[0] if args else "stats"
 
-    if sub == "index":
+    if sub == "sync":
+        vault = VaultRAG()
+        result = vault.sync_local_to_vault()
+        if result.get("error"):
+            print_error(result["error"])
+        elif result.get("synced", 0) > 0:
+            print_success(f"로컬 → NAS 동기화 완료: {result['synced']}개 파일")
+            cleaned = vault.cleanup_local_vault()
+            if cleaned > 0:
+                print_success(f"로컬 폴백 정리: {cleaned}개 파일 삭제")
+        else:
+            print_success("동기화할 파일 없음 (로컬 폴백 비어있음)")
+        return
+
+    elif sub == "index":
         force = "--force" in args
         try:
             from auto_agent.orchestrator.vault_indexer import VaultIndexer

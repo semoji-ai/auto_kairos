@@ -341,6 +341,14 @@ class PipelineRunner:
         print(f"{'=' * 60}\n")
         _notify("Director", "파이프라인 시작합니다", phase="pipeline", project=self.project_slug, level="info")
 
+        # 볼트 동기화: NAS 재연결 시 로컬 폴백 → NAS 자동 동기화
+        try:
+            sync_result = self.vault.sync_local_to_vault()
+            if sync_result.get("synced", 0) > 0:
+                self.vault.cleanup_local_vault()
+        except Exception:
+            pass
+
         # 프로젝트 상태 업데이트
         self.pm.update_project(self.project["id"], status="in_progress")
 

@@ -26,22 +26,102 @@ def _resolve_vault_dir() -> Path:
     if projects_path.exists():
         return projects_path
     if desktop_path.exists():
-        print("[VaultRAG] 경고: ~/Desktop/kairos-vault 사용 중. ~/Projects/로 이전을 권장합니다.")
         return desktop_path
     return projects_path  # 기본값 (미존재 시 비활성)
+
+
+def _local_vault_dir() -> Path:
+    """로컬 폴백 볼트 경로. NAS 끊김 시 여기에 저장."""
+    from auto_agent.paths import get_workspace_dir
+    return get_workspace_dir() / ".vault-local"
 
 
 VAULT_DIR = _resolve_vault_dir()
 
 
 class VaultRAG:
-    """Obsidian 볼트 검색 + 저장 인터페이스."""
+    """Obsidian 볼트 검색 + 저장 인터페이스.
+
+    NAS 볼트 + 로컬 폴백:
+    - NAS 연결됨 → NAS 볼트에 저장/검색
+    - NAS 끊김 → 로컬 폴백(.vault-local/)에 저장
+    - NAS 재연결 → sync_local_to_vault()로 로컬 → NAS 동기화
+    """
 
     def __init__(self, vault_dir: Optional[Path] = None):
         self.vault_dir = vault_dir or VAULT_DIR
-        self.enabled = self.vault_dir.exists()
+        self.local_vault = _local_vault_dir()
+        self.enabled = self._check_enabled()
+        self._nas_available = self.vault_dir.exists()
         if not self.enabled:
             print(f"[VaultRAG] 볼트 미발견: {self.vault_dir} -- 비활성")
+        elif not self._nas_available:
+            print(f"[VaultRAG] NAS 볼트 미연결 → 로컬 폴백: {self.local_vault}")
+
+    def _check_enabled(self) -> bool:
+        """NAS 또는 로컬 폴백 중 하나라도 있으면 활성."""
+        if self.vault_dir.exists():
+            return True
+        # 로컬 폴백이라도 사용 가능하면 활성
+        self.local_vault.mkdir(parents=True, exist_ok=True)
+        return True
+
+    @property
+    def active_vault(self) -> Path:
+        """현재 사용할 볼트 경로. NAS 우선, 폴백으로 로컬."""
+        if self.vault_dir.exists():
+            return self.vault_dir
+        return self.local_vault
+
+    # ─────────────────────────────────────
+    # NAS ↔ 로컬 동기화
+    # ─────────────────────────────────────
+
+    def sync_local_to_vault(self) -> dict:
+        """로컬 폴백에 쌓인 파일을 NAS 볼트로 동기화.
+        NAS 재연결 후 호출. 신규/변경 파일만 복사."""
+        import shutil
+        if not self.vault_dir.exists():
+            return {"error": "NAS 볼트 미연결", "synced": 0}
+        if not self.local_vault.exists():
+            return {"synced": 0, "message": "로컬 폴백 비어있음"}
+
+        synced = 0
+        for local_file in self.local_vault.rglob("*"):
+            if local_file.is_dir():
+                continue
+            relative = local_file.relative_to(self.local_vault)
+            nas_file = self.vault_dir / relative
+            # NAS에 없거나 로컬이 더 최신이면 복사
+            if not nas_file.exists() or local_file.stat().st_mtime > nas_file.stat().st_mtime:
+                nas_file.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(local_file), str(nas_file))
+                synced += 1
+
+        if synced > 0:
+            print(f"[VaultRAG] 로컬 → NAS 동기화: {synced}개 파일")
+        return {"synced": synced}
+
+    def cleanup_local_vault(self) -> int:
+        """동기화 완료 후 로컬 폴백 정리. NAS에 존재하는 파일만 삭제."""
+        if not self.vault_dir.exists() or not self.local_vault.exists():
+            return 0
+        removed = 0
+        for local_file in list(self.local_vault.rglob("*")):
+            if local_file.is_dir():
+                continue
+            relative = local_file.relative_to(self.local_vault)
+            nas_file = self.vault_dir / relative
+            if nas_file.exists():
+                local_file.unlink()
+                removed += 1
+        # 빈 디렉토리 정리
+        for d in sorted(self.local_vault.rglob("*"), reverse=True):
+            if d.is_dir() and not any(d.iterdir()):
+                d.rmdir()
+        if removed > 0:
+            print(f"[VaultRAG] 로컬 폴백 정리: {removed}개 파일 삭제")
+        return removed
 
     # ─────────────────────────────────────
     # 검색 (리서치/원고 전)
@@ -200,7 +280,7 @@ class VaultRAG:
         if not self.enabled:
             return None
 
-        topics_dir = self.vault_dir / "02-research" / "topics"
+        topics_dir = self.active_vault / "02-research" / "topics"
         topics_dir.mkdir(parents=True, exist_ok=True)
 
         safe_name = re.sub(r'[/\\:*?"<>|]', '_', topic)
@@ -250,7 +330,7 @@ topic: {topic}
             return None
 
         vault_project_name = self._get_vault_project_name(project_slug)
-        project_dir = self.vault_dir / "07-projects" / vault_project_name
+        project_dir = self.active_vault / "07-projects" / vault_project_name
         project_dir.mkdir(parents=True, exist_ok=True)
 
         filepath = project_dir / "retro.md"
@@ -295,7 +375,7 @@ topic: {topic}
         if not self.enabled:
             return None
 
-        errors_dir = self.vault_dir / "08-dev" / "errors"
+        errors_dir = self.active_vault / "08-dev" / "errors"
         errors_dir.mkdir(parents=True, exist_ok=True)
 
         today = datetime.now().strftime("%Y-%m-%d")
