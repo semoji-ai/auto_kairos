@@ -830,18 +830,23 @@ class PipelineRunner:
                         _notify("Director", f"백팩트가 {len(adjusted)}건 잡았어! 원고 자동 수정 들어간다",
                                 phase=self.state.current_phase, project=self.project_slug, level="warning")
 
-                        ms_path = self.project_dir / "final_manuscript.md"
-                        if ms_path.exists():
-                            text = ms_path.read_text(encoding="utf-8")
+                        # scene_specs.json의 narration에서 매칭+치환
+                        specs_path = self.project_dir / "scene_specs.json"
+                        if specs_path.exists():
+                            specs = json.loads(specs_path.read_text(encoding="utf-8"))
                             applied = 0
                             for item in adjusted:
                                 original = item.get("original_text", "") or item.get("claim", "")
                                 corrected = item.get("corrected_text", "") or item.get("suggestion", "")
-                                if original and corrected and original in text:
-                                    text = text.replace(original, corrected)
-                                    print(f"    [수정] \"{original[:30]}\" → \"{corrected[:30]}\"")
-                                    applied += 1
-                            ms_path.write_text(text, encoding="utf-8")
+                                if not original or not corrected:
+                                    continue
+                                for scene in specs.get("scenes", []):
+                                    narr = scene.get("narration", "")
+                                    if original in narr:
+                                        scene["narration"] = narr.replace(original, corrected)
+                                        print(f"    [수정] 씬#{scene.get('sceneNumber')}: \"{original[:30]}\" → \"{corrected[:30]}\"")
+                                        applied += 1
+                            specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
                             if applied:
                                 _notify("Director", f"한작가 원고 수정 완료! {applied}건 반영됨",
                                         phase=self.state.current_phase, project=self.project_slug, level="success")
