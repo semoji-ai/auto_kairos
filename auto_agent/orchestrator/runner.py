@@ -40,7 +40,7 @@ if platform.system() == "Windows":
 from auto_agent.paths import get_workspace_dir, get_data_dir, PACKAGE_DIR, DATA_DIR
 from auto_agent.orchestrator.context_memory import ContextMemory
 from auto_agent.orchestrator.vault_rag import VaultRAG
-from auto_agent.utils.platform import get_env_with_node
+from auto_agent.utils.platform import get_env_with_node, subprocess_kwargs
 
 # ── Agent Messenger 브릿지 ──
 _MESSENGER_URL = "http://localhost:8080/api/agent-messages/send"
@@ -426,6 +426,7 @@ class PipelineRunner:
                          pid, storage_key, str(self.project_dir)],
                         cwd=str(get_workspace_dir()),
                         capture_output=True, text=True, encoding="utf-8", timeout=120,
+                        **subprocess_kwargs(),
                     )
                     if result.returncode == 0:
                         print("    [AUTO] Stage 2 완료 → 매니페스트 빌드 완료")
@@ -639,6 +640,7 @@ class PipelineRunner:
                 input=supplement_prompt, capture_output=True, text=True, encoding="utf-8",
                 cwd=str(self.project_dir), timeout=60,
                 env={**os.environ, "CLAUDECODE": ""},
+                **subprocess_kwargs(),
             )
             supplement = self._extract_json_from_cli_output(proc.stdout)
             if not supplement:
@@ -715,6 +717,7 @@ class PipelineRunner:
                     input=verify_prompt, capture_output=True, text=True, encoding="utf-8",
                     cwd=str(self.project_dir), timeout=30,
                     env={**os.environ, "CLAUDECODE": ""},
+                    **subprocess_kwargs(),
                 )
                 verify_result = self._extract_json_from_cli_output(proc.stdout)
                 if verify_result and verify_result.get("valid"):
@@ -757,6 +760,7 @@ class PipelineRunner:
                                 input=verify2_prompt, capture_output=True, text=True, encoding="utf-8",
                                 cwd=str(self.project_dir), timeout=30,
                                 env={**os.environ, "CLAUDECODE": ""},
+                                **subprocess_kwargs(),
                             )
                             verify2 = self._extract_json_from_cli_output(proc2.stdout)
                             if verify2 and verify2.get("valid"):
@@ -1417,7 +1421,7 @@ class PipelineRunner:
         env["SEARCH_ENGINE"] = self.state.config.get("search_engine", "")
         env.pop("CLAUDECODE", None)
 
-        _popen_flags = {"creationflags": subprocess.CREATE_NO_WINDOW} if platform.system() == "Windows" else {}
+        _popen_flags = subprocess_kwargs()
         try:
             proc = subprocess.Popen(
                 cmd, cwd=str(self.project_dir), env=env,
@@ -1814,6 +1818,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                  pid, storage_key, str(self.project_dir)],
                 cwd=str(get_workspace_dir()),
                 capture_output=True, text=True, encoding="utf-8", timeout=120,
+                **subprocess_kwargs(),
             )
             if result.returncode == 0:
                 print("    [AUTO] 매니페스트 빌드 완료")
@@ -1877,6 +1882,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 cwd=str(script.parent),
                 capture_output=True, text=True, encoding="utf-8",
                 timeout=300,
+                **subprocess_kwargs(),
             )
             if result.returncode == 0:
                 # 생성된 썸네일 수 파악
@@ -2205,7 +2211,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         env.pop("CLAUDECODE", None)
 
         t0 = time.time()
-        _popen_flags2 = {"creationflags": subprocess.CREATE_NO_WINDOW} if platform.system() == "Windows" else {}
+        _popen_flags2 = subprocess_kwargs()
         try:
             proc = subprocess.Popen(
                 cmd, cwd=str(self.project_dir), env=env,
@@ -2463,7 +2469,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # 프롬프트를 stdin으로 전달
         prompt_text = prompt_file.read_text(encoding="utf-8")
 
-        _popen_flags3 = {"creationflags": subprocess.CREATE_NO_WINDOW} if platform.system() == "Windows" else {}
+        _popen_flags3 = subprocess_kwargs()
         try:
             proc = subprocess.Popen(
                 cmd,
@@ -2618,6 +2624,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 capture_output=True,
                 text=True, encoding="utf-8",
                 timeout=1800,  # 30분 타임아웃
+                **subprocess_kwargs(),
             )
 
             if result.returncode == 0:
@@ -2687,6 +2694,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 capture_output=True,
                 text=True, encoding="utf-8",
                 timeout=1800,  # 30분 (렌더링)
+                **subprocess_kwargs(),
             )
 
             if result.returncode == 0:

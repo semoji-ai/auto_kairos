@@ -34,6 +34,23 @@ def is_wsl() -> bool:
         return False
 
 
+# ─── subprocess 헬퍼 ─────────────────────────────────────────────────────────
+
+import subprocess as _subprocess
+
+
+def subprocess_kwargs(**kwargs) -> dict:
+    """Windows에서 콘솔 창이 뜨지 않도록 creationflags를 자동 추가.
+
+    사용법:
+        subprocess.run(cmd, **subprocess_kwargs(capture_output=True, text=True))
+        subprocess.Popen(cmd, **subprocess_kwargs(stdout=PIPE, stderr=PIPE))
+    """
+    if is_windows():
+        kwargs.setdefault("creationflags", _subprocess.CREATE_NO_WINDOW)
+    return kwargs
+
+
 # ─── Node.js 탐색 ──────────────────────────────────────────────────────────────
 
 @functools.lru_cache(maxsize=1)
