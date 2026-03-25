@@ -225,6 +225,11 @@
                 (background ? '<div><strong>배경:</strong> ' + esc(background) + '</div>' : '') +
                 (camera ? '<div><strong>카메라:</strong> ' + esc(camera) + '</div>' : '') +
                 (placement ? '<div><strong>배치:</strong> ' + placement + (opacity ? ' · opacity ' + opacity : '') + '</div>' : '') +
+              (s._image_source ? '<div class="asset-source-info">' +
+                '<strong>출처:</strong> ' + esc(s._image_source) +
+                (s._image_license ? ' · ' + esc(s._image_license) : '') +
+                (s._image_source_url ? ' · <a href="' + esc(s._image_source_url) + '" target="_blank" rel="noopener" style="color:#60A5FA">원본</a>' : '') +
+              '</div>' : '') +
               '</div>' +
               '<button class="btn-candidates" onclick="loadCandidates(' + num + ',this)">🔍 후보 검색</button>' +
               '<button class="btn-gen-toggle" onclick="toggleGenerate(' + num + ',this)">🎨 이미지 생성</button>' +

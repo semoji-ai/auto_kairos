@@ -177,13 +177,17 @@ def _score_source(source: str, source_domain: str) -> float:
 
 
 def score_image(img: SearchedImage, query: str, preferred_aspect: str = "16:9") -> float:
-    """이미지 종합 스코어 (0~100). 높을수록 좋음."""
+    """이미지 종합 스코어 (0~100). 높을수록 좋음. relevance 0이면 -50 페널티."""
+    relevance = _score_relevance(query, img.title, img.description)
     s = 0.0
     s += _score_resolution(img.width, img.height)
     s += _score_aspect_ratio(img.width, img.height, preferred_aspect)
     s += _score_license(img.license, img.source)
-    s += _score_relevance(query, img.title, img.description)
+    s += relevance
     s += _score_source(img.source, img.source_domain)
+    # 쿼리 키워드가 제목/설명에 하나도 없으면 무관한 이미지 → 대폭 감점
+    if relevance == 0.0 and query.strip():
+        s -= 50.0
     return round(s, 1)
 
 

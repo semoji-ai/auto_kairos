@@ -119,7 +119,7 @@ research_report.json을 읽고 3막 구조를 설계합니다.
     {
       "sceneNumber": 1,
       "chapter": 1,
-      "title": "씬 제목 (내부용)",
+      "title": "씬 고유 제목 (챕터 접두사 금지 — '프롤로그:', 'Ch1:' 등 넣지 말 것. chapter 필드로 분리됨)",
       "narration": "나레이션 텍스트",
 
       "layout": "items_grid",
@@ -142,7 +142,7 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 }
 ```
 
-### imageAsset 구조 (이미지가 필요한 씬만)
+### imageAsset 구조 — source: "generate" (AI 생성)
 
 ```json
 {
@@ -156,17 +156,36 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 }
 ```
 
+### imageAsset 구조 — source: "search" (실물 검색)
+
+```json
+{
+  "imageAsset": {
+    "source": "search",
+    "query": "TSMC semiconductor fab cleanroom",
+    "placement": "background"
+  }
+}
+```
+
 **imageAsset 필드 규칙:**
 - `source`: `"generate"` (AI 생성) 또는 `"search"` (실물 검색)
-- `prompt`: **한글로** 장면 묘사. 주체 + 상황 + 분위기. 스타일 키워드 넣지 말 것 (도구가 아트스타일 자동 적용)
-- `background`: 배경/장소 묘사 (한글 또는 영어)
-- `camera`: 카메라 앵글/구도 (영어 권장: "Wide shot", "Close-up", "Aerial view" 등)
+- `prompt` (generate용): **한글로** 장면 묘사. 주체 + 상황 + 분위기. 스타일 키워드 넣지 말 것
+- `query` (search용): **영문 2~4단어**. Wikimedia Commons 검색용이라 짧고 핵심적인 키워드가 가장 잘 됨
+  - 좋은 예: `"TSMC fab"`, `"Strait of Hormuz"`, `"Jensen Huang"`
+  - 나쁜 예: `"반도체 공장"` (한글 검색 결과 부족), `"TSMC semiconductor fabrication plant cleanroom aerial view"` (너무 길면 0건)
+  - 인물: 풀네임만 (`"Jensen Huang"`, `"Donald Trump"`)
+  - 장소: 고유명사 (`"Strait of Hormuz"`, `"Wall Street"`)
+  - 사물: 핵심 명사 1~2개 (`"semiconductor wafer"`, `"oil tanker"`)
+- `background`: 배경/장소 묘사 (generate용)
+- `camera`: 카메라 앵글/구도 (generate용, 영어 권장)
 - `placement`: `"fullscreen"` (cinematic) 또는 `"background"` (데이터 위에 배경)
 
 **금지:**
 - 아트스타일 키워드 (`cartoon style`, `thick wobbly lines` 등) — 도구가 art_style.json에서 자동 주입
 - 동작/움직임 표현 (`~하는 모습`, `running`, `transitioning`)
 - 텍스트 요소 (`글자가 보이는`, `sign saying`)
+- search query에 한글 사용 (검색 결과 부족)
 
 ```
 

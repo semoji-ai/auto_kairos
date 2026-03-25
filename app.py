@@ -555,8 +555,19 @@ async def api_scenes_by_slug(slug: str):
     _art_style = _meta.get("artStyle", "")
     enriched = enrich_scenes_with_media(scenes, dir_name, out_dir, tts,
                                         project_accent=_proj_accent, art_style=_art_style)
-    if enriched:
-        print(f"[DEBUG] 씬1 _image_url={enriched[0].get('_image_url')}", flush=True)
+    # image_assets.json에서 출처/라이선스 정보 병합
+    img_assets = load_project_json(out_dir, "image_assets.json")
+    if img_assets:
+        img_map = {}
+        for ia in img_assets.get("images", []):
+            img_map[ia.get("scene_number")] = ia
+        for s in enriched:
+            ia = img_map.get(s.get("sceneNumber"))
+            if ia:
+                s["_image_source"] = ia.get("source", "")
+                s["_image_license"] = ia.get("license", "")
+                s["_image_source_url"] = ia.get("source_url", "")
+                s["_image_title"] = ia.get("title", "")
     return JSONResponse(content={"scenes": enriched})
 
 
