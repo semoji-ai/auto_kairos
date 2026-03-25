@@ -34,7 +34,18 @@ ls output/*_<slug>/research_report.json
 ```
 research_report.json이 없으면: "Stage 1(리서치)이 아직 완료되지 않았습니다. `/kairos-research <slug>`를 먼저 실행하세요."
 
-3. **Stage 2 실행**:
+3. **대시보드 확인 + 자동 실행**:
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ 2>/dev/null
+```
+- 200이면: 대시보드 이미 실행 중
+- 아니면: 백그라운드로 시작
+```bash
+nohup python3 -m auto_agent.cli dashboard > /tmp/kairos-dashboard.log 2>&1 &
+```
+사용자에게 알려주세요: "대시보드를 시작했습니다: http://localhost:8080"
+
+4. **Stage 2 실행**:
 ```bash
 python3 -m auto_agent.cli bg start --project <slug> --from step_2
 ```

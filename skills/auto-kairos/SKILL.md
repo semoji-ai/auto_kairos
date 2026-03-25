@@ -32,7 +32,19 @@ export PATH="$NODE_DIR:$PATH"
 cd $KAIROS_HOME
 ```
 
-3. **프로젝트 준비**:
+3. **대시보드 확인 + 자동 실행**:
+포트 8080이 열려있는지 확인하고, 없으면 백그라운드로 대시보드를 시작합니다.
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ 2>/dev/null
+```
+- 200이면: 대시보드 이미 실행 중
+- 아니면: 대시보드를 백그라운드로 시작
+```bash
+nohup python3 -m auto_agent.cli dashboard > /tmp/kairos-dashboard.log 2>&1 &
+```
+사용자에게 알려주세요: "대시보드를 시작했습니다: http://localhost:8080"
+
+4. **프로젝트 준비**:
 
 기존 프로젝트 slug가 주어진 경우:
 ```bash
@@ -53,14 +65,14 @@ python3 -m auto_agent.cli config set --project <slug> writing_style iromism
 python3 -m auto_agent.cli config set --project <slug> duration_minutes 1
 ```
 
-4. **전체 파이프라인 실행**:
+5. **전체 파이프라인 실행**:
 ```bash
 python3 -m auto_agent.cli bg start --project <slug>
 ```
 
 이 명령은 Stage 1 → Stage 2 → Stage 3을 자동으로 순차 실행합니다.
 
-5. **진행 모니터링** — 로그를 주기적으로 확인하고 사용자에게 진행 상황을 알려주세요:
+6. **진행 모니터링** — 로그를 주기적으로 확인하고 사용자에게 진행 상황을 알려주세요:
 
 ```bash
 tail -20 $KAIROS_HOME/output/*_<slug>/logs/pipeline_*.log
@@ -72,7 +84,7 @@ tail -20 $KAIROS_HOME/output/*_<slug>/logs/pipeline_*.log
 - `[팩트체크]` → 팩트체크 완료
 - `Pipeline Complete` → 전체 완료
 
-6. **각 Stage 완료 시 사용자에게 보고**:
+7. **각 Stage 완료 시 사용자에게 보고**:
 
 **Stage 1 완료 시:**
 > 리서치 완료 — N섹션, N소스. Stage 2(원고+연출) 진행 중...

@@ -34,7 +34,20 @@ export PATH="$NODE_DIR:$PATH"
 cd $KAIROS_HOME
 ```
 
-3. **프로젝트 존재 확인**:
+4. **대시보드 확인 + 자동 실행**:
+포트 8080이 열려있는지 확인하고, 없으면 백그라운드로 대시보드를 시작합니다.
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ 2>/dev/null
+```
+- 200이면: 대시보드 이미 실행 중
+- 아니면: 대시보드를 백그라운드로 시작
+```bash
+nohup python3 -m auto_agent.cli dashboard > /tmp/kairos-dashboard.log 2>&1 &
+```
+사용자에게 알려주세요: "대시보드를 시작했습니다: http://localhost:8080"
+
+
+4. **프로젝트 존재 확인**:
 ```bash
 python3 -m auto_agent.cli project info --project <slug>
 ```
@@ -44,21 +57,21 @@ python3 -m auto_agent.cli project info --project <slug>
 python3 -m auto_agent.cli project create "<name>" --topic "<topic>"
 ```
 
-4. **Stage 1 실행** (백그라운드):
+5. **Stage 1 실행** (백그라운드):
 ```bash
 python3 -m auto_agent.cli bg start --project <slug>
 ```
 
 파이프라인이 step_0(환경검증) → step_1(리서치)를 순차 실행합니다.
 
-5. **로그 모니터링** — 30초 간격으로 확인:
+6. **로그 모니터링** — 30초 간격으로 확인:
 ```bash
 tail -20 $KAIROS_HOME/output/*_<slug>/logs/pipeline_*.log
 ```
 
-6. **완료 확인** — 로그에 `[검증] 리서치:` 메시지가 나오면 Stage 1 완료.
+7. **완료 확인** — 로그에 `[검증] 리서치:` 메시지가 나오면 Stage 1 완료.
 
-7. **결과 보고**:
+8. **결과 보고**:
 ```bash
 python3 -c "
 import json
@@ -70,7 +83,7 @@ for s in data.get('sections', []):
 "
 ```
 
-8. **다음 단계 안내**:
+9. **다음 단계 안내**:
 > Stage 1 완료. `/kairos-write <slug>` 로 Stage 2(원고+연출)를 진행할 수 있습니다.
 
 ## 주의사항
