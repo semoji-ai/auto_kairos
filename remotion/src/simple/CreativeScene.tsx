@@ -3098,7 +3098,12 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
       {/* Main content */}
       <div
-        style={{
+        style={layout === "quote_portrait" ? {
+          position: "relative",
+          zIndex: 2,
+          width: "100%",
+          height: "100%",
+        } : {
           position: "relative",
           zIndex: 2,
           width: "100%",
