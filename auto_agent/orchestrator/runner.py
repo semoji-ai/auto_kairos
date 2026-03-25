@@ -339,7 +339,7 @@ class PipelineRunner:
         print(f"Config: art_style={self.state.config.get('art_style', 'N/A')}")
         print(f"        voice_id={self.state.config.get('voice_id', 'N/A')}")
         print(f"{'=' * 60}\n")
-        _notify("Director", "파이프라인 시작합니다", phase="pipeline", project=self.project_slug, level="info")
+        _notify("Director", "좋아, 오늘도 한 편 찍어보자! 파이프라인 시작", phase="pipeline", project=self.project_slug, level="info")
 
         # 볼트 동기화: NAS 재연결 시 로컬 폴백 → NAS 자동 동기화
         try:
@@ -388,7 +388,7 @@ class PipelineRunner:
             print(f"{'─' * 40}\n")
 
             self.state.current_phase = phase_id
-            _notify("Director", f"{phase_name} 시작합니다 ({len(steps)}개 스텝)", phase=phase_id, project=self.project_slug)
+            _notify("Director", f"{phase_name} 들어갑니다! ({len(steps)}개 스텝)", phase=phase_id, project=self.project_slug)
 
             if dry_run:
                 for step in steps:
@@ -601,7 +601,7 @@ class PipelineRunner:
             True  — 보충 성공 (report_path 업데이트됨)
             False — 보충 실패 (report_path 변경 없음)
         """
-        _notify("Director", f"리서치 보충 시작 — 누락: {gap_reason[:60]}",
+        _notify("Director", f"홍탐정, 빠진 부분 있어! 보충 조사 나가 — {gap_reason[:60]}",
                 phase=self.state.current_phase, project=self.project_slug, level="info")
         print(f"    [보충] 리서치 보충 시작: {gap_reason[:80]}", flush=True)
 
@@ -679,7 +679,7 @@ class PipelineRunner:
                     print(f"    [WARN] 리서치 병합 실패: {e}")
 
             if not report_path.exists():
-                _notify("Director", "리서치 검증 실패: 보고서 없음",
+                _notify("Director", "홍탐정, 보고서가 없잖아! 리서치 검증 실패",
                         phase=self.state.current_phase, project=self.project_slug, level="error")
                 return StepResult(step_id=step_id, status="failed", error="research_report.json 미생성")
 
@@ -718,7 +718,7 @@ class PipelineRunner:
                 if verify_result and verify_result.get("valid"):
                     reason = verify_result.get("reason", "")
                     print(f"    [검증] 리서치: {sections}섹션, {sources}소스, 주제 일치 ✓ ({reason})")
-                    _notify("Director", f"리서치 검증 통과: {sections}섹션, {sources}소스 — {reason}",
+                    _notify("Director", f"홍탐정 수고했어! {sections}섹션, {sources}소스 확보 — {reason}",
                             phase=self.state.current_phase, project=self.project_slug, level="success")
                     # 볼트 기록
                     if self.vault.enabled:
@@ -781,7 +781,7 @@ class PipelineRunner:
 
             # LLM 검증 실패해도 구조 검증 통과면 진행
             print(f"    [검증] 리서치: {sections}섹션, {sources}소스 ✓ (구조 검증)")
-            _notify("Director", f"리서치 검증: {sections}섹션, {sources}소스",
+            _notify("Director", f"홍탐정 보고서 확인! {sections}섹션, {sources}소스",
                     phase=self.state.current_phase, project=self.project_slug, level="success")
             return StepResult(step_id=step_id, status="completed")
 
@@ -800,7 +800,7 @@ class PipelineRunner:
                         has_flat = all(k in sample for k in ("narration", "layout", "motion"))
                         schema_tag = f"v{version} 플랫" if has_flat else f"v{version}"
                         print(f"    [검증] 원고+연출: {n_scenes}씬, {schema_tag} 스키마 ✓")
-                        _notify("Director", f"원고+연출 검증: {n_scenes}씬, {schema_tag}",
+                        _notify("Director", f"한작가 잘 썼어! {n_scenes}씬 완성, {schema_tag}",
                                 phase=self.state.current_phase, project=self.project_slug, level="success")
                     else:
                         return StepResult(step_id=step_id, status="failed", error="scene_specs.json에 씬 0개")
@@ -827,7 +827,7 @@ class PipelineRunner:
 
                     if adjusted:
                         print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 발견 — 원고 자동 수정")
-                        _notify("Director", f"팩트체크 수정 권장 {len(adjusted)}건 → 원고 자동 반영",
+                        _notify("Director", f"백팩트가 {len(adjusted)}건 잡았어! 원고 자동 수정 들어간다",
                                 phase=self.state.current_phase, project=self.project_slug, level="warning")
 
                         ms_path = self.project_dir / "final_manuscript.md"
@@ -843,7 +843,7 @@ class PipelineRunner:
                                     applied += 1
                             ms_path.write_text(text, encoding="utf-8")
                             if applied:
-                                _notify("Director", f"원고 수정 완료: {applied}건 반영",
+                                _notify("Director", f"한작가 원고 수정 완료! {applied}건 반영됨",
                                         phase=self.state.current_phase, project=self.project_slug, level="success")
                             else:
                                 print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 중 원고 내 매칭 없음 — 수동 확인 필요")
@@ -869,13 +869,13 @@ class PipelineRunner:
                 # gate step이면 파이프라인 중단
                 if step.get("gate"):
                     print(f"\n  GATE FAILED: {step['id']} — 파이프라인 중단")
-                    _notify("Director", f"파이프라인 중단 — {_step_label(step_name, 'fail')}", phase=self.state.current_phase, project=self.project_slug, level="error")
+                    _notify("Director", f"이런... {_step_label(step_name, 'fail')} 문제 발생. 파이프라인 중단!", phase=self.state.current_phase, project=self.project_slug, level="error")
                     self.state.failed_steps.append(step["id"])
                     return
                 # non-blocking이면 계속
                 if step.get("blocking") is False:
                     print(f"  [WARN] {step['id']} failed (non-blocking) — 계속 진행")
-                    _notify("Director", f"{_step_label(step_name, 'fail')} (non-blocking) — 계속 진행", phase=self.state.current_phase, project=self.project_slug, level="warning")
+                    _notify("Director", f"{_step_label(step_name, 'fail')} 실패했지만 괜찮아, 계속 간다!", phase=self.state.current_phase, project=self.project_slug, level="warning")
                     self.state.failed_steps.append(step["id"])
                 else:
                     print(f"\n  STEP FAILED: {step['id']} — 파이프라인 중단")
@@ -1795,7 +1795,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
     def _auto_build_and_capture(self, chapter_results: dict, chapters: dict):
         """병합 완료 후 자동 매니페스트 빌드. (썸네일 캡처 비활성화)"""
-        _notify("Director", "매니페스트 빌드 시작합니다",
+        _notify("Director", "조피디, 매니페스트 조립 시작해",
                 phase=self.state.current_phase, project=self.project_slug)
 
         # 1. 매니페스트 빌드
@@ -3223,7 +3223,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         # 메신저 알림
         level = "success" if failed == 0 else "warning"
         cost_str = f" (${total_usd:.4f})" if total_usd > 0 else ""
-        _notify("Director", f"파이프라인 완료 — {completed}/{total} 성공{cost_str}", phase="pipeline", project=self.project_slug, level=level)
+        _notify("Director", f"촬영 끝! {completed}/{total} 성공{cost_str}", phase="pipeline", project=self.project_slug, level=level)
 
         # 상태 파일 저장
         state_path = self.project_dir / "pipeline_state.json"
