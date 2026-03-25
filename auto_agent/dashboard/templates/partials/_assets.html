@@ -196,6 +196,8 @@
         var imgUrl = s._image_url || '';
         var source = img.source || '';
         var query = img.prompt || img.query || '';
+        var background = img.background || '';
+        var camera = img.camera || '';
         var layout = s.layout || ((s.visualization || {}).creative || {}).layout || '';
         var mood = s.mood || ((s.visualization || {}).creative || {}).mood || '';
         var placement = img.placement || '';
@@ -219,7 +221,9 @@
               '<div class="asset-title">' + esc(s.title || '') + '</div>' +
               (layout ? '<span class="asset-layout">' + esc(layout) + (mood ? ' · ' + mood : '') + '</span>' : '') +
               '<div class="asset-detail">' +
-                (query ? '<div><strong>쿼리:</strong> ' + esc(query) + '</div>' : '') +
+                (query ? '<div><strong>장면:</strong> ' + esc(query) + '</div>' : '') +
+                (background ? '<div><strong>배경:</strong> ' + esc(background) + '</div>' : '') +
+                (camera ? '<div><strong>카메라:</strong> ' + esc(camera) + '</div>' : '') +
                 (placement ? '<div><strong>배치:</strong> ' + placement + (opacity ? ' · opacity ' + opacity : '') + '</div>' : '') +
               '</div>' +
               '<button class="btn-candidates" onclick="loadCandidates(' + num + ',this)">🔍 후보 검색</button>' +
