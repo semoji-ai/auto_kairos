@@ -31,7 +31,11 @@
         <div class="sb-title">
           <span class="scene-num">Scene {{ scene.sceneNumber }}</span>
           <span class="ch-tag">Ch{{ scene.chapter }}</span>
+          {% if scene.layout == 'quote_portrait' and scene['items'] is defined and scene['items'] %}
+          <span class="sb-scene-title" data-headline>"{{ scene['items'][0][:40] }}" — {{ scene.source or '' }}</span>
+          {% else %}
           <span class="sb-scene-title" data-headline>{{ scene.title }}</span>
+          {% endif %}
         </div>
         <div class="sb-meta">
           {% if scene._tts_duration %}<span class="duration-tag">{{ "%.1f"|format(scene._tts_duration) }}s</span>{% elif scene.durationFrames %}<span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 60) }}s</span>{% endif %}
