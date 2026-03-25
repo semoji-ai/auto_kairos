@@ -191,7 +191,9 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             if _ast_path.exists():
                 try:
                     _ast_data = json.loads(_ast_path.read_text(encoding="utf-8"))
-                    default_background = (_ast_data.get("design_tokens") or {}).get("defaultBackground", "")
+                    _bg = (_ast_data.get("design_tokens") or {}).get("defaultBackground", "")
+                    # 절대경로 보장: "background/..." → "/background/..."
+                    default_background = ("/" + _bg) if _bg and not _bg.startswith("/") else _bg
                 except Exception:
                     pass
                 break
