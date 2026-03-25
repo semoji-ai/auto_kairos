@@ -834,19 +834,6 @@ class PipelineRunner:
                 except Exception as e:
                     print(f"    [WARN] 팩트체크 보고서 파싱 실패: {e}")
 
-        elif step_id == "step_5":
-            # 씬 분해 검증: scene_specs.json에 scenes 존재
-            specs_path = self.project_dir / "scene_specs.json"
-            if specs_path.exists():
-                try:
-                    data = json.loads(specs_path.read_text(encoding="utf-8"))
-                    n_scenes = len(data.get("scenes", []))
-                    if n_scenes > 0:
-                        print(f"    [검증] 씬 분해: {n_scenes}씬 ✓")
-                    else:
-                        return StepResult(step_id=step_id, status="failed", error="scene_specs.json에 씬 0개")
-                except Exception:
-                    return StepResult(step_id=step_id, status="failed", error="scene_specs.json 파싱 실패")
 
         return result  # 기본: 원래 결과 유지
 
@@ -1074,7 +1061,7 @@ class PipelineRunner:
         """챕터별 병렬 처리. scene_specs.json을 챕터로 분할 → 병렬 LLM 호출 → 병합."""
         step_id = step["id"]
         step_name = step.get("name", step_id)
-        agent_name = step.get("agent", "visual-composer")
+        agent_name = step.get("agent", "script-director")
         label = _step_label(step_name, "start").replace(" 시작합니다", "")
 
         # scene_specs 로드 (없으면 scene_decomposition.json에서 폴백)
@@ -1348,7 +1335,7 @@ class PipelineRunner:
         """
         step_id = step["id"]
         step_name = step.get("name", step_id)
-        agent_name = step.get("agent", "visual-composer")
+        agent_name = step.get("agent", "script-director")
         label = _step_label(step_name, "start").replace(" 시작합니다", "")
 
         n_scenes = len(chapter_scenes)
@@ -1472,9 +1459,7 @@ class PipelineRunner:
     # single_call 및 chunked_parallel agent 스텝 모두에서 사용
     # (step_6 creative_direction은 agent 타입이지만 동일한 프롬프트 로딩 경로 사용)
     SINGLE_CALL_PROMPTS = {
-        "creative_direction": "creative-direction.md",
         "data_enrichment": "data-enrichment.md",
-        "motion_planning": "motion-planning.md",
         "tts_preprocess": "tts-preprocess.md",
     }
 
@@ -2139,31 +2124,9 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
             template = self.rule_manager.load(f"prompts/single-call/{prompt_file}")
             art_style_override = self._load_art_style_override(step_name)
-            # chapter_specs_json — motion_planning은 축약 데이터만 필요
             specs_path = self._resolve_output_path("scene_specs.json")
             if specs_path.exists():
-                if step_name == "motion_planning":
-                    # 씬별 sceneNumber, chapter, title, durationFrames, creative.reveal/mood만 추출
-                    full = json.loads(specs_path.read_text(encoding="utf-8"))
-                    compact_scenes = []
-                    for s in full.get("scenes", []):
-                        cr = s.get("visualization", {}).get("creative", {})
-                        compact_scenes.append({
-                            "sceneNumber": s.get("sceneNumber"),
-                            "chapter": s.get("chapter"),
-                            "title": s.get("title", ""),
-                            "durationFrames": s.get("durationFrames", 150),
-                            "reveal": cr.get("reveal", ""),
-                            "emphasis": cr.get("emphasis", ""),
-                            "mood": cr.get("mood", ""),
-                            "hasChart": bool(s.get("visualization", {}).get("chartConfig")),
-                            "hasImage": bool(s.get("imageAsset")),
-                            "hasMap": bool(s.get("mapScene")),
-                            "itemCount": len(s.get("visualization", {}).get("items", [])),
-                        })
-                    chapter_specs_json = json.dumps({"scenes": compact_scenes}, ensure_ascii=False, indent=2)
-                else:
-                    chapter_specs_json = specs_path.read_text(encoding="utf-8")[:80000]
+                chapter_specs_json = specs_path.read_text(encoding="utf-8")[:80000]
             else:
                 chapter_specs_json = "{}"
 
@@ -2422,17 +2385,10 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             # 10분 이상은 agents.json 기본값 + 넉넉한 타임아웃
             else:
                 timeout_sec = max(timeout_sec, 1500)
-        elif agent in ("write-manuscript",):
-            if duration_min <= 1:
-                max_turns = min(max_turns, 25)
-                timeout_sec = min(timeout_sec, 600)
-            elif duration_min <= 3:
-                max_turns = min(max_turns, 35)
-                timeout_sec = min(timeout_sec, 900)
-        elif agent in ("image-painter", "image-searcher"):
-            # 씬 수에 비례해 타임아웃 스케일링: 씬당 ~45초 + 베이스 300s
+        elif agent == "assembly-director":
+            # 씬 수에 비례해 타임아웃 스케일링: 씬당 ~60초 + 베이스 600s
             scene_count = self._count_image_scenes()
-            scaled = 300 + scene_count * 45
+            scaled = 600 + scene_count * 60
             timeout_sec = max(timeout_sec, scaled)
 
         # 2. 프롬프트 빌드 (컨텍스트 메모리 포함)
@@ -2576,9 +2532,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             "tts-generator": "scripts/generate_tts.py",
             "image-generator": "scripts/generate_images.py",
             "image_batch": "modules/image_batch_module.py",
-            # "image-sourcer": "scripts/source_images.py",  # 제거 — image-searcher/image-painter 에이전트로 분리
             "subtitle-sync": "scripts/generate_subtitles.py",
-            "tts-verifier": "scripts/verify_tts.py",
             "data-validator": "scripts/validate_data.py",
             "manifest-builder": "scripts/build_manifest.py",
             "layout-check": "scripts/layout_check.py",
@@ -2843,7 +2797,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                             phase=self.state.current_phase, project=self.project_slug, level="info")
                 else:
                     print("    [VaultRAG] 리서치용 볼트 지식 없음", flush=True)
-            elif agent_name in ("write-manuscript",):
+            elif agent_name in ("script-director",):
                 vault_block = self.vault.search_for_manuscript(topic, category)
                 if vault_block:
                     print(f"    [VaultRAG] 원고용 볼트 지식 주입: {len(vault_block)}자", flush=True)
@@ -3008,7 +2962,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         step_name = step.get("name", "")
 
         # 네트워크 의존성 높은 스텝: 최초 1회 + 재시도 2회 = 총 3회
-        if agent in ("image-painter", "image-searcher") or step_name == "image_asset_sourcing":
+        if agent == "assembly-director" or step_name == "assembly":
             return 3
         if step_name in ("tts", "voice_generation", "tts_generation"):
             return 3

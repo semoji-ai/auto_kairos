@@ -21,11 +21,10 @@ SNIPPET_HALF = 5_000  # chars (앞/뒤)
 
 CATEGORY_MAP = {
     "research-orchestrator": "research_decision",
-    "write-manuscript": "narrative_structure",
-    "visual-composer": "visual_design",
+    "script-director": "narrative_structure",
+    "assembly-director": "asset_production",
     "character-planner": "character_design",
     "fact-verifier": "fact_check",
-    "qa-reviewer": "quality_check",
 }
 
 

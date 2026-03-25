@@ -24,43 +24,25 @@ DATA_DIR = Path(__file__).parent / "data"
 
 # 규칙 파일 → rule_type 매핑
 RULE_MANIFEST = {
-    # 스텝 전용 프롬프트
-    "prompts/single-call/creative-direction.md": "prompt",
-    "prompts/single-call/data-enrichment.md": "prompt",
     # 파이프라인 설정
     "pipeline.json": "pipeline",
     "agents.json": "agent_config",
     # 에이전트 스킬
-    "skills/agents/character-planner/SKILL.md": "skill",
-    "skills/agents/fact-verifier/SKILL.md": "skill",
-    "skills/agents/qa-reviewer/SKILL.md": "skill",
     "skills/agents/research-orchestrator/SKILL.md": "skill",
-    "skills/agents/visual-composer/SKILL.md": "skill",
-    "skills/agents/write-manuscript/SKILL.md": "skill",
-    # 공유 스킬 (플랫 파일)
-    "skills/shared/chart-mapping.md": "skill",
-    "skills/shared/data-mapping.md": "skill",
-    "skills/shared/image-generation.md": "skill",
-    "skills/shared/korean-tts-rules.md": "skill",
-    "skills/shared/motion-rhythm.md": "skill",
-    "skills/shared/outline-template.md": "skill",
-    "skills/shared/remotion-design-system.md": "skill",
-    "skills/shared/research-format.md": "skill",
-    "skills/shared/scene-segmentation.md": "skill",
-    "skills/shared/tts-verification.md": "skill",
+    "skills/agents/script-director/SKILL.md": "skill",
+    "skills/agents/fact-verifier/SKILL.md": "skill",
+    "skills/agents/assembly-director/SKILL.md": "skill",
+    "skills/agents/character-planner/SKILL.md": "skill",
+    # 공유 스킬
     "skills/shared/writing-style.md": "skill",
     "skills/shared/writing-style-iromism.md": "skill",
     "skills/shared/writing-style-semoji.md": "skill",
-    "skills/shared/research-requirements-semoji.md": "skill",
-    # 공유 스킬 (디렉토리)
-    "skills/shared/asset-advisory/SKILL.md": "skill",
-    "skills/shared/asset-advisory/references/examples.md": "skill",
-    "skills/shared/asset-advisory/references/perspectives.md": "skill",
-    "skills/shared/asset-advisory/references/cross-review.md": "skill",
-    "skills/shared/creative-direction/SKILL.md": "skill",
-    "skills/shared/creative-direction/references/process.md": "skill",
-    "skills/shared/creative-direction/references/patterns.md": "skill",
-    "skills/shared/creative-direction/references/examples-palette.md": "skill",
+    "skills/shared/motion-presets.md": "skill",
+    "skills/shared/remotion-design-system.md": "skill",
+    "skills/shared/korean-tts-rules.md": "skill",
+    "skills/shared/image-generation.md": "skill",
+    "skills/shared/image-prompt-rules.md": "skill",
+    "skills/shared/research-format.md": "skill",
 }
 
 
