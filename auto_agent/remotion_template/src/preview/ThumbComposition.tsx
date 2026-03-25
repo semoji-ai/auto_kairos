@@ -18,8 +18,9 @@ interface Props {
 
 const resolveUrl = (path: string): string => {
   if (!path) return "";
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  return path;
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("/")) return path;
+  // 상대경로 → 절대경로 (대시보드 컨텍스트에서 /background/, /output/ 등 접근)
+  return "/" + path;
 };
 
 /* ── 이미지 배경 ── */
