@@ -183,6 +183,19 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     video_theme = cfg.get("video_theme", "dark")
     map_theme = cfg.get("map_theme", "modern_clean")
 
+    # art_style.json에서 배경 이미지 경로 읽기
+    default_background = ""
+    if art_style:
+        for _ast_dir in (out_dir / "artstyle" / "styles", workspace / "auto_agent" / "data" / "artstyle" / "styles"):
+            _ast_path = _ast_dir / f"{art_style}.json"
+            if _ast_path.exists():
+                try:
+                    _ast_data = json.loads(_ast_path.read_text(encoding="utf-8"))
+                    default_background = (_ast_data.get("design_tokens") or {}).get("defaultBackground", "")
+                except Exception:
+                    pass
+                break
+
     # image_assets.json → {sceneNumber: selected_filename} 룩업
     image_assets_lookup = {}
     image_assets_path = out_dir / "images" / "image_assets.json"
@@ -435,6 +448,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             "videoTheme": video_theme,
             **({"artStyle": art_style} if art_style else {}),
             **({"designPreset": design_preset} if design_preset else {}),
+            **({"defaultBackground": default_background} if default_background else {}),
         },
         "scenes": scenes,
         "bgm": None,

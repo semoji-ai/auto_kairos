@@ -213,11 +213,12 @@ TTS 작업:
   2. 씬별 TTS 생성 (mood/motion 기반 파라미터)
   3. 자막 정렬 (WhisperX)
 
-이미지 검수 (이미 생성된 이미지 확인):
-  1. images/ 폴더에서 각 씬 이미지 존재 확인
-  2. image_tool.evaluate()로 품질 검수
-  3. 실패분만 image_tool.generate()로 개별 재생성 (최대 2회)
-  ※ 정상 이미지는 재생성하지 않음
+이미지 처리:
+  1. generate 씬: step_3a에서 이미 생성됨 - images/ 폴더에서 확인
+  2. search 씬: image_tool.search()로 개별 검색 (배치 아님 - 레이트 리밋)
+  3. image_tool.evaluate()로 품질 검수
+  4. 실패분만 image_tool.generate() 또는 search()로 재시도 (최대 2회)
+  ※ 이미 존재하는 정상 이미지는 재생성하지 않음
 ```
 
 #### placement → aspect_ratio 매핑 (절대 규칙)
