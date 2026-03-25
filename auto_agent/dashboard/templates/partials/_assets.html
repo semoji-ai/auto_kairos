@@ -167,7 +167,7 @@
 
       list.innerHTML = '';
       // 버전 목록 로드
-      function loadVersions(sceneNum) {
+      window.loadVersions = function loadVersions(sceneNum) {
         fetch('/api/p/' + encodeURIComponent(slug) + '/images/versions/' + sceneNum)
           .then(function(r) { return r.json(); })
           .then(function(data) {
