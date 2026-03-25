@@ -111,8 +111,7 @@ def run_batch(
 
     if to_generate:
         jobs = [job for _, job in to_generate]
-        _progress(f"캐릭터 {len(jobs)}개 FAL 제출 중...")
-        request_ids = fal_queue.submit_batch(jobs)
+        _progress(f"캐릭터 {len(jobs)}개 FAL 배치 시작...")
 
         def on_char_done(result):
             char, _ = to_generate[result.idx]
@@ -137,7 +136,7 @@ def run_batch(
                 char_paths[char_id] = None
                 _progress(f"캐릭터 생성 실패: {char['name']} - {result.error}", level="warning")
 
-        fal_queue.poll_all(jobs, request_ids, on_done=on_char_done)
+        fal_queue.run_batch(jobs, on_done=on_char_done, max_workers=10)
 
     _progress(
         f"캐릭터 완료: 재사용 {len(reused)}개, 신규 생성 {len(to_generate)}개, "
@@ -176,8 +175,7 @@ def run_batch(
 
         if scene_jobs:
             jobs = [job for _, job in scene_jobs]
-            _progress(f"씬 {len(jobs)}개 FAL 제출 중...")
-            request_ids = fal_queue.submit_batch(jobs)
+            _progress(f"씬 {len(jobs)}개 FAL 배치 시작...")
 
             def on_scene_done(result):
                 nonlocal scenes_success, scenes_fail
@@ -199,7 +197,7 @@ def run_batch(
                     _progress(f"씬 {scene_num} 생성 실패: {result.error}", level="warning")
                     scenes_fail += 1
 
-            fal_queue.poll_all(jobs, request_ids, on_done=on_scene_done)
+            fal_queue.run_batch(jobs, on_done=on_scene_done, max_workers=10)
 
     _progress(f"씬 완료: 성공 {scenes_success}개, 실패 {scenes_fail}개, 스킵 {skipped}개")
 

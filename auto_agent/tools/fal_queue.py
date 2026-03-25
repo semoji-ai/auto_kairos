@@ -1,10 +1,10 @@
-"""FAL AI queue 비동기 클라이언트 — submit_batch / poll_all."""
+"""FAL AI 배치 클라이언트 - subscribe 동기식 + ThreadPoolExecutor 병렬."""
 from __future__ import annotations
 import os
 import logging
-import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ except ImportError:
 
 
 def _ensure_fal_key():
-    """FAL_API_KEY → FAL_KEY 자동 매핑."""
+    """FAL_API_KEY -> FAL_KEY 자동 매핑."""
     if not os.environ.get("FAL_KEY") and os.environ.get("FAL_API_KEY"):
         os.environ["FAL_KEY"] = os.environ["FAL_API_KEY"]
 
@@ -37,20 +37,75 @@ class FalResult:
     error: str | None = None
 
 
-def submit_batch(jobs: list[FalJob]) -> list[str]:
-    """모든 job을 FAL queue에 제출. request_id 목록 반환."""
+def _run_single(job: FalJob, max_retries: int = 2) -> FalResult:
+    """단일 job을 subscribe(동기)로 실행. 실패 시 재시도."""
+    for attempt in range(max_retries + 1):
+        try:
+            raw = fal_client.subscribe(job.endpoint, arguments=job.arguments)
+            images = raw.get("images", [])
+            return FalResult(idx=job.idx, success=True, images=images)
+        except Exception as e:
+            print(f"[fal_queue] job {job.idx} 실패 (attempt {attempt+1}/{max_retries+1}): {e}", flush=True)
+            if attempt >= max_retries:
+                return FalResult(idx=job.idx, success=False, error=str(e))
+    return FalResult(idx=job.idx, success=False, error="max_retries 초과")
+
+
+def run_batch(
+    jobs: list[FalJob],
+    on_done: Optional[Callable[[FalResult], None]] = None,
+    max_workers: int = 10,
+    max_retries: int = 2,
+) -> list[FalResult]:
+    """subscribe 동기식 + ThreadPoolExecutor 병렬 실행.
+
+    Args:
+        jobs: FAL 작업 목록
+        on_done: 각 job 완료 시 콜백 (optional)
+        max_workers: 동시 실행 수 (기본 5)
+        max_retries: 실패 시 재시도 횟수 (기본 2)
+    """
     if not jobs:
         return []
     if not FAL_AVAILABLE:
         raise RuntimeError("fal_client 미설치. pip install fal-client")
     _ensure_fal_key()
 
-    request_ids: list[str] = []
-    for job in jobs:
-        handle = fal_client.submit(job.endpoint, arguments=job.arguments)
-        request_ids.append(handle.request_id)
-        print(f"[fal_queue] submitted job {job.idx}: endpoint={job.endpoint}, req_id={handle.request_id}", flush=True)
-    return request_ids
+    print(f"[fal_queue] {len(jobs)}개 job 배치 시작 (workers={max_workers})", flush=True)
+    all_results: list[FalResult] = []
+
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = {
+            pool.submit(_run_single, job, max_retries): job
+            for job in jobs
+        }
+        for future in as_completed(futures):
+            job = futures[future]
+            try:
+                result = future.result()
+            except Exception as e:
+                result = FalResult(idx=job.idx, success=False, error=str(e))
+
+            all_results.append(result)
+            status = "OK" if result.success else f"FAIL: {result.error}"
+            print(f"[fal_queue] job {result.idx} {status}", flush=True)
+
+            if on_done:
+                try:
+                    on_done(result)
+                except Exception as cb_err:
+                    logger.warning("on_done 콜백 실패 (job %d): %s", result.idx, cb_err)
+
+    success = sum(1 for r in all_results if r.success)
+    print(f"[fal_queue] 배치 완료: {success}/{len(jobs)} 성공", flush=True)
+    return all_results
+
+
+# --- 하위 호환 ---
+# image_batch_module.py에서 submit_batch + poll_all 호출하던 코드 호환
+def submit_batch(jobs: list[FalJob]) -> list[str]:
+    """하위 호환용. run_batch()를 사용하세요."""
+    return [f"compat-{job.idx}" for job in jobs]
 
 
 def poll_all(
@@ -61,85 +116,5 @@ def poll_all(
     timeout: float = 3600.0,
     max_retries: int = 2,
 ) -> list[FalResult]:
-    """모든 request_id 폴링. 완료마다 on_done 콜백 호출."""
-    if not jobs:
-        return []
-    if not FAL_AVAILABLE:
-        raise RuntimeError("fal_client 미설치. pip install fal-client")
-    _ensure_fal_key()
-
-    # pending: {request_id: (job, retry_count, endpoint)}
-    pending: dict[str, tuple[FalJob, int, str]] = {
-        rid: (job, 0, job.endpoint) for rid, job in zip(request_ids, jobs)
-    }
-    all_results: list[FalResult] = []
-    start = time.time()
-
-    while pending and (time.time() - start) < timeout:
-        time.sleep(poll_interval)
-        for req_id in list(pending):
-            job, retry_count, endpoint = pending[req_id]
-            try:
-                status_obj = fal_client.status(endpoint, req_id)
-                status = status_obj.status
-            except Exception as e:
-                print(f"[fal_queue] status 조회 실패: endpoint={endpoint}, req_id={req_id}, error={e}", flush=True)
-                continue
-
-            if status == "COMPLETED":
-                try:
-                    raw = fal_client.result(endpoint, req_id)
-                    result = FalResult(
-                        idx=job.idx,
-                        success=True,
-                        images=raw.get("images", []),
-                    )
-                    try:
-                        on_done(result)
-                    except Exception as cb_err:
-                        logger.warning("on_done 콜백 실패 (job %d): %s", job.idx, cb_err)
-                    all_results.append(result)
-                except Exception as e:
-                    result = FalResult(idx=job.idx, success=False, error=str(e))
-                    try:
-                        on_done(result)
-                    except Exception:
-                        pass
-                    all_results.append(result)
-                del pending[req_id]
-
-            elif status == "FAILED":
-                if retry_count < max_retries:
-                    try:
-                        new_handle = fal_client.submit(job.endpoint, arguments=job.arguments)
-                        del pending[req_id]
-                        pending[new_handle.request_id] = (job, retry_count + 1, endpoint)
-                        logger.info("job %d 재제출 (retry %d): %s", job.idx, retry_count + 1, new_handle.request_id)
-                    except Exception as e:
-                        logger.warning("재제출 실패 (job %d): %s", job.idx, e)
-                        del pending[req_id]
-                        result = FalResult(idx=job.idx, success=False, error=f"재제출 실패: {e}")
-                        try:
-                            on_done(result)
-                        except Exception:
-                            pass
-                        all_results.append(result)
-                else:
-                    del pending[req_id]
-                    result = FalResult(idx=job.idx, success=False, error="max_retries 초과")
-                    try:
-                        on_done(result)
-                    except Exception:
-                        pass
-                    all_results.append(result)
-
-    # timeout 초과 잔여
-    for req_id, (job, _, _ep) in pending.items():
-        result = FalResult(idx=job.idx, success=False, error="timeout")
-        try:
-            on_done(result)
-        except Exception:
-            pass
-        all_results.append(result)
-
-    return all_results
+    """하위 호환용. 내부에서 run_batch()로 위임."""
+    return run_batch(jobs, on_done=on_done, max_retries=max_retries)
