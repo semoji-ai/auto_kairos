@@ -199,7 +199,62 @@ def run_batch(
 
             fal_queue.run_batch(jobs, on_done=on_scene_done, max_workers=10)
 
-    _progress(f"씬 완료: 성공 {scenes_success}개, 실패 {scenes_fail}개, 스킵 {skipped}개")
+    # ── Phase 3: search 씬 순차 처리 (레이트 리밋 때문에 배치 안 함) ──
+    search_success, search_fail, search_skipped = 0, 0, 0
+    if scene_specs_path.exists():
+        from auto_agent.tools.image_search import ImageSearcher
+        searcher = ImageSearcher(images_dir=images_dir)
+
+        for scene in scene_specs.get("scenes", []):
+            ia = scene.get("imageAsset") or {}
+            if ia.get("source") != "search":
+                continue
+            scene_num = scene.get("sceneNumber", 0)
+            # 이미 이미지 있으면 스킵
+            if image_assets.has_generated_version(images_dir, scene_num):
+                search_skipped += 1
+                continue
+            # scene_NNN_search_*.* 파일 존재 확인
+            existing = list(images_dir.glob(f"scene_{scene_num:03d}_search_*.*"))
+            if existing:
+                search_skipped += 1
+                continue
+
+            query = ia.get("query") or ia.get("prompt") or ""
+            if not query:
+                _progress(f"씬 {scene_num} search 쿼리 없음 - 스킵", level="warning")
+                search_fail += 1
+                continue
+
+            _progress(f"씬 {scene_num} 검색: {query[:40]}")
+            try:
+                results = searcher.search_and_download(query, limit=3, preferred_aspect="16:9")
+                if results:
+                    best = results[0]
+                    if best.local_path and Path(best.local_path).exists():
+                        ext = Path(best.local_path).suffix or ".jpg"
+                        filename = image_assets.next_filename(images_dir, scene_num, "search", ext)
+                        dest = images_dir / filename
+                        import shutil as _sh
+                        _sh.copy2(best.local_path, dest)
+                        image_assets.add_version(images_dir, scene_num, filename, "search",
+                                                 source_url=best.source_url, license_info=best.license)
+                        search_success += 1
+                        _progress(f"씬 {scene_num} 검색 완료: {filename}")
+                    else:
+                        search_fail += 1
+                        _progress(f"씬 {scene_num} 다운로드 실패", level="warning")
+                else:
+                    search_fail += 1
+                    _progress(f"씬 {scene_num} 검색 결과 없음: {query[:40]}", level="warning")
+            except Exception as e:
+                search_fail += 1
+                _progress(f"씬 {scene_num} 검색 에러: {e}", level="warning")
+
+        if search_success + search_fail > 0:
+            _progress(f"검색 완료: 성공 {search_success}개, 실패 {search_fail}개, 스킵 {search_skipped}개")
+
+    _progress(f"씬 완료: 생성 {scenes_success}개 + 검색 {search_success}개, 실패 {scenes_fail + search_fail}개, 스킵 {skipped + search_skipped}개")
 
     total_attempted = scenes_success + scenes_fail
     summary = {
