@@ -272,14 +272,8 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
                 context["research_md"] = md_text
 
     elif tab == "manuscript":
-        text = _load_text("final_manuscript.md")
-        context["chapters"] = parse_manuscript_chapters(text) if text else []
-        tts = _load_json("tts_results.json")
-        tts_map = {}
-        if tts:
-            for r in tts.get("results", []):
-                tts_map[r["scene"]] = r
-        context["tts_map"] = tts_map
+        specs = _load_json("scene_specs.json")
+        context["scenes"] = specs.get("scenes", []) if specs else []
 
     elif tab == "storyboard":
         specs = _load_json("scene_specs.json")
