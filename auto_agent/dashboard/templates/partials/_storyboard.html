@@ -160,17 +160,8 @@ function resizePreview(val) {
       .catch(function() { return null; });
   }
 
-  // manifest 경로(project/...)를 대시보드 경로(/output/dir_name/...)로 변환
-  function rewritePaths(scene) {
-    var prefix = '/output/' + dirName + '/';
-    if (scene.imagePath && scene.imagePath.startsWith('project/')) {
-      scene.imagePath = prefix + scene.imagePath.replace('project/', '');
-    }
-    if (scene.vizBackgroundPath && scene.vizBackgroundPath.startsWith('project/')) {
-      scene.vizBackgroundPath = prefix + scene.vizBackgroundPath.replace('project/', '');
-    }
-    return scene;
-  }
+  // 경로 rewrite는 서버(/api/manifest)에서 처리됨 — 클라이언트 변환 불필요
+  function rewritePaths(scene) { return scene; }
 
   function fetchScene(num) {
     if (sceneCache[num]) return Promise.resolve(sceneCache[num]);
