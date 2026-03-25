@@ -1401,11 +1401,13 @@ class PipelineRunner:
         env["SEARCH_ENGINE"] = self.state.config.get("search_engine", "")
         env.pop("CLAUDECODE", None)
 
+        _popen_flags = {"creationflags": subprocess.CREATE_NO_WINDOW} if platform.system() == "Windows" else {}
         try:
             proc = subprocess.Popen(
                 cmd, cwd=str(self.project_dir), env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE, text=True, encoding="utf-8",
+                **_popen_flags,
             )
             try:
                 stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
@@ -2187,11 +2189,13 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         env.pop("CLAUDECODE", None)
 
         t0 = time.time()
+        _popen_flags2 = {"creationflags": subprocess.CREATE_NO_WINDOW} if platform.system() == "Windows" else {}
         try:
             proc = subprocess.Popen(
                 cmd, cwd=str(self.project_dir), env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE, text=True, encoding="utf-8",
+                **_popen_flags2,
             )
             stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
         except subprocess.TimeoutExpired:
@@ -2438,6 +2442,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # 프롬프트를 stdin으로 전달
         prompt_text = prompt_file.read_text(encoding="utf-8")
 
+        _popen_flags3 = {"creationflags": subprocess.CREATE_NO_WINDOW} if platform.system() == "Windows" else {}
         try:
             proc = subprocess.Popen(
                 cmd,
@@ -2447,6 +2452,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True, encoding="utf-8",
+                **_popen_flags3,
             )
             try:
                 stdout, stderr = proc.communicate(input=prompt_text, timeout=timeout_sec)

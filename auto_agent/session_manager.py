@@ -137,7 +137,7 @@ class SessionManager:
 
         if platform.system() == "Windows":
             kwargs["creationflags"] = (
-                subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+                subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW
             )
         else:
             kwargs["start_new_session"] = True
