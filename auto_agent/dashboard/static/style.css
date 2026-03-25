@@ -588,7 +588,7 @@ tr:hover { background: var(--surface2); }
 }
 .sb-preview {
   flex-shrink: 0;
-  width: var(--sb-preview-w, 280px);
+  width: var(--sb-preview-w, 480px);
   cursor: pointer;
 }
 .sb-preview:hover { opacity: 0.85; }
