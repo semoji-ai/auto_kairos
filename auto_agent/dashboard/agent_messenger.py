@@ -64,6 +64,8 @@ def post_message(
     skip_persist: bool = False,
 ):
     """에이전트 메시지를 큐에 추가하고 모든 SSE 구독자에게 전달."""
+    if not text or not text.strip():
+        return  # 빈 메시지 무시
     global _msg_id, _messages, _initialized
     if not _initialized:
         _messages = _load_persisted()
