@@ -79,10 +79,10 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    - motion: 프리셋 이름 하나 (shared/motion-presets 참조)
    - mood: 감정 톤 7종 중 선택
 
-3. 데이터 매핑 (해당 시)
-   - research_report.json에서 정확한 수치 가져오기
-   - items, values, unit, source 즉시 채우기
-   - 파이 차트: 합계 100% 검증
+3. 데이터 매핑 (가볍게)
+   - items 항목명만 적어두면 OK (수치는 data-mapper가 후속 보강)
+   - 리서치에서 바로 보이는 수치는 채워도 됨
+   - 빈 values/unit/source는 data-mapper가 채움
 
 4. 에셋 결정 (필요 시)
    - imageAsset: 실물 이미지가 임팩트를 높일 때만

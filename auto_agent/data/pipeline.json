@@ -80,6 +80,15 @@
           "notes": "기존 step_2(원고) + step_5(씬분할) + step_6(크리에이티브) + step_6c(데이터보강) + step_6d(모션) 통합. scene_specs.json v5 플랫 스키마 출력."
         },
         {
+          "id": "step_2_data",
+          "name": "data_mapping",
+          "description": "scene_specs의 데이터 필드(items/values/unit/source/chartConfig) 보강. 리서치 데이터 정확히 매핑.",
+          "agent": "data-mapper",
+          "input": ["scene_specs.json", "research_report.json"],
+          "output": ["scene_specs.json"],
+          "notes": "script-director가 비워둔 데이터 필드를 리서치에서 정확히 매핑. sonnet 급 경량 에이전트."
+        },
+        {
           "id": "step_2b",
           "name": "fact_check",
           "description": "원고 내 주요 주장 교차 검증",

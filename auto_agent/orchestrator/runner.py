@@ -84,6 +84,7 @@ _MSG_MAP = {
     "outline_and_manuscript":     ("아웃라인/원고 작성",    "아웃라인/원고 작성 완료"),
     # phase_2
     "duplicate_check":            ("중복 감지",            "중복 감지 완료"),
+    "data_mapping":               ("데이터 매핑",           "데이터 매핑 완료"),
     "fact_check":                 ("팩트 체크",            "팩트 체크 완료"),
     # phase_3
     "scene_decomposition":        ("씬 분할",              "씬 분할 완료"),
@@ -2412,6 +2413,11 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             # 10분 이상은 agents.json 기본값 + 넉넉한 타임아웃
             else:
                 timeout_sec = max(timeout_sec, 1500)
+        elif agent == "script-director":
+            # 분량별 스케일링: 분당 180초 + 베이스 600초
+            # 5분→1500s(25분), 10분→2400s(40분), 15분→3300s(55분)
+            scaled = 600 + duration_min * 180
+            timeout_sec = max(timeout_sec, scaled)
         elif agent == "assembly-director":
             # 씬 수에 비례해 타임아웃 스케일링: 씬당 ~60초 + 베이스 600s
             scene_count = self._count_image_scenes()

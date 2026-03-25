@@ -187,12 +187,12 @@ class ProjectManager:
         try:
             if status:
                 rows = conn.execute(
-                    "SELECT * FROM projects WHERE status = ? ORDER BY updated_at DESC",
+                    "SELECT * FROM projects WHERE status = ? ORDER BY created_at DESC",
                     (status,),
                 ).fetchall()
             else:
                 rows = conn.execute(
-                    "SELECT * FROM projects ORDER BY updated_at DESC"
+                    "SELECT * FROM projects ORDER BY created_at DESC"
                 ).fetchall()
             return [dict(r) for r in rows]
         finally:

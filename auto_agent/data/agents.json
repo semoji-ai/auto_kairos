@@ -20,7 +20,7 @@
       "model": "opus",
       "max_turns": 80,
       "budget": "$4.0",
-      "max_duration_minutes": 30,
+      "max_duration_minutes": 45,
       "allowed_tools": ["Read", "Write", "Glob"],
       "skill_file": "agents/script-director/SKILL.md",
       "shared_skills": [
@@ -36,6 +36,17 @@
         "merge_strategy": "concat_scenes_renumber"
       },
       "notes": "Stage 2 핵심. 기존 write-manuscript + visual-composer 4개 Phase 통합. 챕터별 병렬 처리 지원."
+    },
+
+    "data-mapper": {
+      "description": "scene_specs의 데이터 필드(items/values/unit/source/chartConfig)를 리서치 데이터에서 정확히 매핑",
+      "model": "sonnet",
+      "max_turns": 30,
+      "budget": "$0.5",
+      "max_duration_minutes": 15,
+      "allowed_tools": ["Read", "Write"],
+      "skill_file": "agents/data-mapper/SKILL.md",
+      "notes": "Stage 2 Pass 2. script-director가 비워둔 데이터 필드를 research_report.json에서 매핑."
     },
 
     "fact-verifier": {
