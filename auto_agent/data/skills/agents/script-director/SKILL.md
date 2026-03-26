@@ -264,16 +264,33 @@ layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면
 
 **imageAsset 필드 규칙:**
 - `source`: `"generate"` (AI 생성) 또는 `"search"` (실물 검색)
-- `prompt` (generate용): **한글로** 장면 묘사. 주체 + 상황 + 분위기. 스타일 키워드 넣지 말 것
-- `query` (search용): **영문 2~4단어**. Wikimedia Commons 검색용이라 짧고 핵심적인 키워드가 가장 잘 됨
-  - 좋은 예: `"TSMC fab"`, `"Strait of Hormuz"`, `"Jensen Huang"`
-  - 나쁜 예: `"반도체 공장"` (한글 검색 결과 부족), `"TSMC semiconductor fabrication plant cleanroom aerial view"` (너무 길면 0건)
+- `placement`: 배치 방식. **aspect_ratio는 시스템이 placement에서 자동 결정**
+
+**generate prompt 작성 규칙 — 스틸컷 이미지 연출:**
+
+prompt는 **비디오의 첫 프레임이 될 스틸컷 이미지**를 생성하기 위한 것입니다.
+
+포함할 요소:
+- 프레임 구성: 인물과 배경의 배치, 화면 구도
+- 인물 자세와 표정: 정적인 자세, 얼굴 방향, 표정 (인물이 있는 경우)
+- 배경 요소: 시대, 장소를 나타내는 정적인 배경 요소
+- 색감과 분위기: 전체적인 색조, 조명, 무드
+- 소품 배치: 화면 내 소품의 위치와 상태
+
+금지 표현: "~로 전환", "~가 움직이며", "~하는 모습", "~가 펼쳐지며" (동작/움직임)
+권장 표현: "~한 자세로", "~를 배경으로", "~가 놓인", "~한 표정의", "~가 배치된" (정적 상태)
+
+※ 반드시 사람이 등장해야 하는 것은 아닙니다. 원고 내용에 따라 풍경, 사물, 시설 등 인물 없는 씬 연출도 가능합니다.
+※ 한글로 작성. 아트스타일 키워드 넣지 말 것 (시스템이 자동 추가)
+
+- `background`: 배경/장소 묘사 (시대, 장소, 시간대, 분위기)
+- `camera`: 카메라 앵글/구도 (영어 권장: "Medium shot, low angle", "Wide shot, aerial view" 등)
+
+**search query 작성 규칙:**
+- **영문 2~4단어**. Wikimedia Commons 검색용이라 짧고 핵심적인 키워드
   - 인물: 풀네임만 (`"Jensen Huang"`, `"Donald Trump"`)
   - 장소: 고유명사 (`"Strait of Hormuz"`, `"Wall Street"`)
   - 사물: 핵심 명사 1~2개 (`"semiconductor wafer"`, `"oil tanker"`)
-- `background`: 배경/장소 묘사 (generate용)
-- `camera`: 카메라 앵글/구도 (generate용, 영어 권장)
-- `placement`: 배치 방식. **aspect_ratio는 시스템이 placement에서 자동 결정**
 
 **placement → aspect_ratio 자동 매핑:**
 
