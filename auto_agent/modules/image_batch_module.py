@@ -238,6 +238,11 @@ def run_batch(
                         dest = images_dir / filename
                         import shutil as _sh
                         _sh.copy2(best.local_path, dest)
+                        # 해시명 임시 파일 정리
+                        try:
+                            Path(best.local_path).unlink(missing_ok=True)
+                        except Exception:
+                            pass
                         image_assets.add_version(images_dir, scene_num, filename, "search",
                                                  source_url=best.source_page, license_info=best.license)
                         search_success += 1
