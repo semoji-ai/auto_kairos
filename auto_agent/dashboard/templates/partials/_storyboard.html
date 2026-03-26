@@ -3,14 +3,12 @@
 <script src="/static/scene-thumb.js?v={{ range(100000)|random }}"></script>
 <script src="/static/scene-editor.js?v={{ range(100000)|random }}"></script>
 {% if scenes %}
+<div class="sb-art-style-bar" id="sb-art-style-bar"></div>
 <div class="storyboard-filter">
   <button class="btn btn-accent chapter-btn active" onclick="filterStoryboard(0, this)">All</button>
   {% for ch in chapters_list %}
   <button class="btn chapter-btn" onclick="filterStoryboard({{ ch }}, this)">Ch{{ ch }}</button>
   {% endfor %}
-  <button class="btn chapter-btn" onclick="filterImages(this)">Images Only</button>
-  <button class="btn chapter-btn" id="gen-thumb-btn" onclick="generateThumbnails('{{ slug }}', this)" title="Remotion 캡처로 정확한 프리뷰 생성">Capture</button>
-  <span id="thumb-status" style="font-size:10px;color:var(--text-muted);margin-left:4px"></span>
   <span class="sb-size-control">
     <label>Size</label>
     <input type="range" min="200" max="720" value="480" step="20" oninput="resizePreview(this.value)">
@@ -96,9 +94,11 @@
           {% if img.source == 'search' %}
           <span class="sb-prompt-label">검색</span> <span class="sb-prompt-text">{{ img.query or '' }}</span>
           {% elif img.source == 'generate' %}
-          <span class="sb-prompt-label">생성</span> <span class="sb-prompt-text">{{ (img.prompt or '')[:60] }}{% if img.prompt and img.prompt|length > 60 %}...{% endif %}</span>
+          <span class="sb-prompt-label">생성</span> <span class="sb-prompt-text" title="{{ img.prompt or '' }}">{{ img.prompt or '' }}</span>
           {% endif %}
           {% if img.placement %}<span class="sb-prompt-placement">{{ img.placement }}</span>{% endif %}
+          {% if img.background %}<div class="sb-prompt-detail">배경: {{ img.background }}</div>{% endif %}
+          {% if img.camera %}<div class="sb-prompt-detail">카메라: {{ img.camera }}</div>{% endif %}
         </div>
         {% endif %}
         <div class="sb-image-row">
@@ -255,6 +255,17 @@ function resizePreview(val) {
       if (!el.dataset.mounted) observer.observe(el);
     });
   }
+
+  // 아트스타일 바 로드
+  fetch('/api/p/' + encodeURIComponent(slug) + '/art-style')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var bar = document.getElementById('sb-art-style-bar');
+      if (!bar) return;
+      var current = data.current_info || {};
+      bar.innerHTML = '<span class="style-label">🎨 아트스타일</span>' +
+        '<span class="style-name">' + (current.name || '미설정') + '</span>';
+    }).catch(function() {});
 
   // 이미지 버전 그리드 자동 로드
   function loadAllImageGrids() {
@@ -665,7 +676,11 @@ function sbSelectVersion(sn, file) {
 .sb-image-area { margin-top: 8px; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
 .sb-image-prompt { font-size: 10px; color: #A1A1AA; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
 .sb-prompt-label { font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 3px; background: rgba(96,165,250,0.15); color: #60A5FA; }
-.sb-prompt-text { color: #D4D4D8; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-prompt-text { color: #D4D4D8; flex: 1; line-height: 1.4; }
+.sb-prompt-detail { font-size: 9px; color: #71717A; margin-top: 2px; }
+.sb-art-style-bar { display: flex; align-items: center; gap: 10px; padding: 6px 12px; margin-bottom: 8px; background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.15); border-radius: 8px; font-size: 11px; }
+.sb-art-style-bar .style-label { color: #C084FC; font-weight: 600; }
+.sb-art-style-bar .style-name { color: #E4E4E7; }
 .sb-prompt-placement { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,0.06); color: #A1A1AA; }
 .sb-image-row { display: flex; align-items: center; gap: 6px; }
 .sb-image-grid { display: flex; gap: 3px; flex-wrap: wrap; flex: 1; }
