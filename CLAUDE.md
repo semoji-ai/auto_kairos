@@ -65,8 +65,15 @@ auto-agent config set --project <slug> duration_minutes 2
 
 ### 1. Remotion 수정 시 반드시 양쪽 동기화
 - `remotion/src/` 수정 → `auto_agent/remotion_template/src/`에도 반드시 동일 수정
-- 대시보드 반영 시 `cd remotion && npm run build:editor` 필수
+- 대시보드 반영 시 `cd remotion && npx vite build --config vite.thumb.config.ts && npx vite build --config vite.editor.config.ts` 필수
 - **절대 한쪽만 수정하고 끝내지 말 것**
+
+### 1-1. 씬 렌더링 단일 소스 — SceneRenderer.tsx
+- **모든 씬 렌더링은 `remotion/src/components/SceneRenderer.tsx`의 `SceneRendererInner`를 사용**
+- 스토리보드(ThumbComposition), 스튜디오(SingleScenePlayer), 씬에디터(SceneEditorPanel), Remotion Studio(SimpleVideo) 4뷰 모두 동일 렌더러
+- 이미지 배치(fullscreen/side/center/background), 배경 텍스처, placeholder 등 모든 분기가 SceneRenderer에 집중
+- **CreativeScene은 순수 텍스트/데이터 렌더링만 담당** — 이미지 처리를 직접 하지 않음
+- 레이아웃/이미지 수정 시 **SceneRenderer.tsx 한 곳만 수정** — ThumbComposition/SingleScenePlayer/SimpleVideo에 중복 코드 넣지 말 것
 
 ### 2. 새 파일 추가 시 패키지 데이터 체크
 - 스킬(.md), 스크립트(.js), 아트스타일(.json) 등 새 파일 추가 시:
