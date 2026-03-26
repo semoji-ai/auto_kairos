@@ -666,7 +666,7 @@ function sbLoadImageGrid(sn) {
       var selectUrl = thumb; // 1920px CDN thumbnail (rate limit 없음)
       if (!thumb) return;
       html += '<div class="sb-grid-thumb candidate" '
-        + 'onclick="sbSelectCandidate(' + sn + ',\'' + selectUrl.replace(/'/g, "\\'") + '\')" '
+        + 'onclick="sbSelectCandidate(' + sn + ',decodeURIComponent(\'' + encodeURIComponent(selectUrl) + '\'))" '
         + 'title="🌐 ' + (c.title || '').substring(0, 30) + '">'
         + '<img src="' + thumb + '" loading="lazy">'
         + '</div>';
