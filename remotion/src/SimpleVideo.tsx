@@ -366,7 +366,7 @@ const SubtitleBar: React.FC<{ text: string; theme: PresetColors }> = ({ text, th
       <div
         style={{
           marginBottom: 40,
-          width: 990,
+          width: 1200,
           display: "flex",
           alignItems: "stretch",
         }}
