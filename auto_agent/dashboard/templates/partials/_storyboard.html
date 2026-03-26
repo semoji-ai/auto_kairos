@@ -91,12 +91,19 @@
         {% if scene.imageAsset %}
         <div class="sb-image-prompt">
           {% set img = scene.imageAsset %}
-          {% if img.source == 'search' %}
-          <span class="sb-prompt-label">검색</span> <span class="sb-prompt-text">{{ img.query or '' }}</span>
-          {% elif img.source == 'generate' %}
-          <span class="sb-prompt-label">생성</span> <span class="sb-prompt-text" title="{{ img.prompt or '' }}">{{ img.prompt or '' }}</span>
+          <div class="sb-image-prompt-header">
+            {% if img.source == 'search' %}
+            <span class="sb-prompt-label">검색</span>
+            {% elif img.source == 'generate' %}
+            <span class="sb-prompt-label">생성</span>
+            {% endif %}
+            {% if img.placement %}<span class="sb-prompt-placement">{{ img.placement }}</span>{% endif %}
+          </div>
+          {% if img.source == 'search' and img.query %}
+          <div class="sb-prompt-text">{{ img.query }}</div>
+          {% elif img.source == 'generate' and img.prompt %}
+          <div class="sb-prompt-text">{{ img.prompt }}</div>
           {% endif %}
-          {% if img.placement %}<span class="sb-prompt-placement">{{ img.placement }}</span>{% endif %}
           {% if img.background %}<div class="sb-prompt-detail">배경: {{ img.background }}</div>{% endif %}
           {% if img.camera %}<div class="sb-prompt-detail">카메라: {{ img.camera }}</div>{% endif %}
         </div>
@@ -674,10 +681,12 @@ function sbSelectVersion(sn, file) {
 .sb-version-thumb:hover { opacity: 1; }
 .sb-version-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .sb-image-area { margin-top: 8px; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
-.sb-image-prompt { font-size: 10px; color: #A1A1AA; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
-.sb-prompt-label { font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 3px; background: rgba(96,165,250,0.15); color: #60A5FA; }
-.sb-prompt-text { color: #D4D4D8; flex: 1; line-height: 1.4; }
-.sb-prompt-detail { font-size: 9px; color: #71717A; margin-top: 2px; }
+.sb-image-prompt { font-size: 12px; color: #A1A1AA; margin-bottom: 6px; }
+.sb-image-prompt-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.sb-prompt-label { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; background: rgba(96,165,250,0.15); color: #60A5FA; flex-shrink: 0; }
+.sb-prompt-placement { font-size: 10px; padding: 2px 6px; border-radius: 3px; background: rgba(255,255,255,0.06); color: #A1A1AA; flex-shrink: 0; }
+.sb-prompt-text { color: #D4D4D8; font-size: 12px; line-height: 1.5; }
+.sb-prompt-detail { font-size: 11px; color: #71717A; margin-top: 3px; }
 .sb-art-style-bar { display: flex; align-items: center; gap: 10px; padding: 6px 12px; margin-bottom: 8px; background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.15); border-radius: 8px; font-size: 11px; }
 .sb-art-style-bar .style-label { color: #C084FC; font-weight: 600; }
 .sb-art-style-bar .style-name { color: #E4E4E7; }
