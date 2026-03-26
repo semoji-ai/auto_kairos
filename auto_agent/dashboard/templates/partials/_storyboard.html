@@ -88,9 +88,10 @@
         </div>
       </div>
 
-      {# 이미지 에셋 패널 (접이식) #}
-      <div class="sb-asset-controls">
-        <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">🖼️ 이미지</button>
+      {# 이미지 버전 그리드 (항상 보임) + 도구 버튼 #}
+      <div class="sb-image-section">
+        <div class="sb-image-grid" id="sb-img-grid-{{ scene.sceneNumber }}"></div>
+        <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">🖼️ +</button>
       </div>
       <div class="sb-asset-panel" id="sb-asset-{{ scene.sceneNumber }}" style="display:none">
         <div class="sb-asset-actions">
@@ -239,6 +240,15 @@ function resizePreview(val) {
       if (!el.dataset.mounted) observer.observe(el);
     });
   }
+
+  // 이미지 버전 그리드 자동 로드
+  function loadAllImageGrids() {
+    document.querySelectorAll('.sb-image-grid').forEach(function(el) {
+      var sn = parseInt(el.id.replace('sb-img-grid-', ''));
+      if (sn) sbLoadImageGrid(sn);
+    });
+  }
+  setTimeout(loadAllImageGrids, 500);
 
   // scene-thumb.js는 동기 로드이므로 즉시 사용 가능
   if (window.mountSceneThumb) {
@@ -478,7 +488,7 @@ function sbApplyUrl(sn) {
     if (res.ok || res.selected) {
       status.innerHTML = '<span style="color:#86EFAC">적용 완료</span>';
       input.value = '';
-      sbLoadVersions(sn);
+      sbLoadVersions(sn); sbLoadImageGrid(sn);
       // 프리뷰 갱신 — 마운트된 씬 리로드
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
       if (mount) { mount.dataset.mounted = ''; tryMount(mount); }
@@ -514,7 +524,7 @@ function sbSelectCandidate(sn, url) {
     body: JSON.stringify({url: url})
   }).then(function(r) { return r.json(); }).then(function(res) {
     if (res.ok || res.selected) {
-      sbLoadVersions(sn);
+      sbLoadVersions(sn); sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
       if (mount) { mount.dataset.mounted = ''; tryMount(mount); }
     }
@@ -542,13 +552,36 @@ function sbGenerateImage(sn) {
   }).then(function(r) { return r.json(); }).then(function(res) {
     if (res.ok) {
       status.innerHTML = '<span style="color:#86EFAC">생성 완료</span>';
-      sbLoadVersions(sn);
+      sbLoadVersions(sn); sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
       if (mount) { mount.dataset.mounted = ''; tryMount(mount); }
     } else {
       status.innerHTML = '<span style="color:#FCA5A5">' + (res.error || '실패') + '</span>';
     }
   }).catch(function(e) { status.textContent = '에러: ' + e.message; });
+}
+
+function sbLoadImageGrid(sn) {
+  var grid = document.getElementById('sb-img-grid-' + sn);
+  if (!grid) return;
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/versions/' + sn)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var versions = data.versions || [];
+      var selected = data.selected || '';
+      if (!versions.length) { grid.innerHTML = ''; return; }
+      var html = '';
+      versions.forEach(function(v) {
+        var isSel = v.file === selected;
+        var typeIcon = v.type === 'generate' ? '🎨' : '🔍';
+        html += '<div class="sb-grid-thumb' + (isSel ? ' selected' : '') + '" '
+          + 'onclick="sbSelectVersion(' + sn + ',\'' + v.file + '\')" '
+          + 'title="' + typeIcon + ' ' + v.file + '">'
+          + '<img src="' + v.url + '" loading="lazy">'
+          + '</div>';
+      });
+      grid.innerHTML = html;
+    }).catch(function() {});
 }
 
 function sbLoadVersions(sn) {
@@ -577,7 +610,7 @@ function sbSelectVersion(sn, file) {
     body: JSON.stringify({file: file})
   }).then(function(r) { return r.json(); }).then(function(res) {
     if (res.ok) {
-      sbLoadVersions(sn);
+      sbLoadVersions(sn); sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
       if (mount) { mount.dataset.mounted = ''; tryMount(mount); }
     }
@@ -610,6 +643,12 @@ function sbSelectVersion(sn, file) {
 .sb-version-thumb.selected { border-color: #F59E0B; opacity: 1; }
 .sb-version-thumb:hover { opacity: 1; }
 .sb-version-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.sb-image-section { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.sb-image-grid { display: flex; gap: 3px; flex-wrap: wrap; flex: 1; }
+.sb-grid-thumb { width: 44px; height: 33px; border-radius: 3px; overflow: hidden; cursor: pointer; border: 2px solid transparent; opacity: 0.5; transition: all 0.15s; }
+.sb-grid-thumb.selected { border-color: #F59E0B; opacity: 1; }
+.sb-grid-thumb:hover { opacity: 0.9; }
+.sb-grid-thumb img { width: 100%; height: 100%; object-fit: cover; }
 </style>
 
 {% else %}
