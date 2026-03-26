@@ -87,6 +87,32 @@
           <span class="tts-status" id="tts-status-{{ scene.sceneNumber }}"></span>
         </div>
       </div>
+
+      {# 이미지 에셋 패널 (접이식) #}
+      <div class="sb-asset-controls">
+        <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">🖼️ 이미지</button>
+      </div>
+      <div class="sb-asset-panel" id="sb-asset-{{ scene.sceneNumber }}" style="display:none">
+        <div class="sb-asset-actions">
+          <button onclick="sbSearchImage({{ scene.sceneNumber }})">🔍 검색</button>
+          <button onclick="sbTogglePasteUrl({{ scene.sceneNumber }})">📎 URL</button>
+          <button onclick="sbToggleGenerate({{ scene.sceneNumber }})">🎨 생성</button>
+        </div>
+        <div class="sb-asset-paste" id="sb-paste-{{ scene.sceneNumber }}" style="display:none">
+          <input type="text" id="sb-paste-input-{{ scene.sceneNumber }}" placeholder="이미지 URL 붙여넣기" class="sb-paste-input">
+          <button onclick="sbApplyUrl({{ scene.sceneNumber }})">적용</button>
+          <span id="sb-paste-status-{{ scene.sceneNumber }}" class="sb-paste-status"></span>
+        </div>
+        <div class="sb-asset-gen" id="sb-gen-{{ scene.sceneNumber }}" style="display:none">
+          <textarea id="sb-gen-prompt-{{ scene.sceneNumber }}" placeholder="이미지 프롬프트..." rows="2" class="sb-gen-textarea"></textarea>
+          <div class="sb-gen-actions">
+            <button onclick="sbAutoPrompt({{ scene.sceneNumber }})">✨ 자동</button>
+            <button onclick="sbGenerateImage({{ scene.sceneNumber }})">🎨 생성</button>
+          </div>
+          <span id="sb-gen-status-{{ scene.sceneNumber }}" class="sb-gen-status"></span>
+        </div>
+        <div class="sb-asset-versions" id="sb-versions-{{ scene.sceneNumber }}"></div>
+      </div>
     </div>
   </div>
   {% endfor %}
@@ -176,7 +202,7 @@ function resizePreview(val) {
     });
   }
 
-  function tryMount(el) {
+  window.tryMount = function tryMount(el) {
     if (el.dataset.mounted) return;
     if (!window.mountSceneThumb) return;
     var num = parseInt(el.dataset.sceneNum);
@@ -420,8 +446,174 @@ function regenTts(sn) {
   })
   .catch(function(e) { btn.disabled = false; status.textContent = '에러: ' + e.message; });
 }
+
+// ── 이미지 에셋 패널 (스토리보드 통합) ──
+function toggleAssetPanel(sn) {
+  var panel = document.getElementById('sb-asset-' + sn);
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+  if (panel.style.display !== 'none') sbLoadVersions(sn);
+}
+
+function sbTogglePasteUrl(sn) {
+  var el = document.getElementById('sb-paste-' + sn);
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+  if (el.style.display !== 'none') document.getElementById('sb-paste-input-' + sn).focus();
+}
+
+function sbToggleGenerate(sn) {
+  var el = document.getElementById('sb-gen-' + sn);
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
+function sbApplyUrl(sn) {
+  var input = document.getElementById('sb-paste-input-' + sn);
+  var status = document.getElementById('sb-paste-status-' + sn);
+  var url = (input.value || '').trim();
+  if (!url) { status.textContent = 'URL을 입력하세요'; return; }
+  status.textContent = '다운로드 중...';
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sn, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({url: url})
+  }).then(function(r) { return r.json(); }).then(function(res) {
+    if (res.ok || res.selected) {
+      status.innerHTML = '<span style="color:#86EFAC">적용 완료</span>';
+      input.value = '';
+      sbLoadVersions(sn);
+      // 프리뷰 갱신 — 마운트된 씬 리로드
+      var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
+      if (mount) { mount.dataset.mounted = ''; tryMount(mount); }
+    } else {
+      status.innerHTML = '<span style="color:#FCA5A5">' + (res.error || '실패') + '</span>';
+    }
+  }).catch(function(e) { status.innerHTML = '<span style="color:#FCA5A5">' + e.message + '</span>'; });
+}
+
+function sbSearchImage(sn) {
+  var panel = document.getElementById('sb-versions-' + sn);
+  panel.innerHTML = '<div style="font-size:10px;color:#888;padding:8px">검색 중...</div>';
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sn + '?source=wikimedia')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var candidates = data.candidates || [];
+      if (!candidates.length) { panel.innerHTML = '<div style="font-size:10px;color:#888;padding:8px">검색 결과 없음</div>'; return; }
+      var html = '<div class="sb-candidates">';
+      candidates.forEach(function(c) {
+        var thumb = c.thumbnail_url || c.url || '';
+        html += '<div class="sb-candidate" onclick="sbSelectCandidate(' + sn + ',\'' + (c.url || '').replace(/'/g, "\\'") + '\')" title="' + (c.title || '') + '">';
+        html += '<img src="' + thumb + '" loading="lazy">';
+        html += '</div>';
+      });
+      html += '</div>';
+      panel.innerHTML = html;
+    }).catch(function() { panel.innerHTML = '<div style="font-size:10px;color:#f66;padding:8px">검색 실패</div>'; });
+}
+
+function sbSelectCandidate(sn, url) {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sn, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({url: url})
+  }).then(function(r) { return r.json(); }).then(function(res) {
+    if (res.ok || res.selected) {
+      sbLoadVersions(sn);
+      var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
+      if (mount) { mount.dataset.mounted = ''; tryMount(mount); }
+    }
+  });
+}
+
+function sbAutoPrompt(sn) {
+  var textarea = document.getElementById('sb-gen-prompt-' + sn);
+  var status = document.getElementById('sb-gen-status-' + sn);
+  status.textContent = '프롬프트 생성 중...';
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/auto-prompt/' + sn, { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { textarea.value = d.prompt || ''; status.textContent = ''; })
+    .catch(function() { status.textContent = '실패'; });
+}
+
+function sbGenerateImage(sn) {
+  var prompt = document.getElementById('sb-gen-prompt-' + sn).value;
+  var status = document.getElementById('sb-gen-status-' + sn);
+  if (!prompt.trim()) { status.textContent = '프롬프트를 입력하세요'; return; }
+  status.textContent = '생성 중...';
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/generate/' + sn, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({prompt: prompt, mode: 'scene'})
+  }).then(function(r) { return r.json(); }).then(function(res) {
+    if (res.ok) {
+      status.innerHTML = '<span style="color:#86EFAC">생성 완료</span>';
+      sbLoadVersions(sn);
+      var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
+      if (mount) { mount.dataset.mounted = ''; tryMount(mount); }
+    } else {
+      status.innerHTML = '<span style="color:#FCA5A5">' + (res.error || '실패') + '</span>';
+    }
+  }).catch(function(e) { status.textContent = '에러: ' + e.message; });
+}
+
+function sbLoadVersions(sn) {
+  var panel = document.getElementById('sb-versions-' + sn);
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/versions/' + sn)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var versions = data.versions || [];
+      var selected = data.selected || '';
+      if (!versions.length) { panel.innerHTML = ''; return; }
+      var html = '<div class="sb-versions-row">';
+      versions.forEach(function(v) {
+        var isSel = v.file === selected;
+        html += '<div class="sb-version-thumb' + (isSel ? ' selected' : '') + '" onclick="sbSelectVersion(' + sn + ',\'' + v.file + '\')">';
+        html += '<img src="' + v.url + '" loading="lazy">';
+        html += '</div>';
+      });
+      html += '</div>';
+      panel.innerHTML = html;
+    }).catch(function() {});
+}
+
+function sbSelectVersion(sn, file) {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sn, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({file: file})
+  }).then(function(r) { return r.json(); }).then(function(res) {
+    if (res.ok) {
+      sbLoadVersions(sn);
+      var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
+      if (mount) { mount.dataset.mounted = ''; tryMount(mount); }
+    }
+  });
+}
 </script>
 
+<style>
+.sb-asset-controls { margin-top: 4px; }
+.sb-asset-controls button { font-size: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #A1A1AA; border-radius: 4px; padding: 2px 8px; cursor: pointer; }
+.sb-asset-controls button:hover { background: rgba(255,255,255,0.1); color: #E4E4E7; }
+.sb-asset-panel { margin-top: 6px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px; }
+.sb-asset-actions { display: flex; gap: 4px; margin-bottom: 6px; }
+.sb-asset-actions button { font-size: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #D4D4D8; border-radius: 4px; padding: 3px 10px; cursor: pointer; }
+.sb-asset-actions button:hover { background: rgba(255,255,255,0.12); }
+.sb-paste-input { flex: 1; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); color: #E4E4E7; border: 1px solid rgba(255,255,255,0.1); font-size: 10px; }
+.sb-asset-paste { display: flex; gap: 4px; align-items: center; margin-bottom: 6px; }
+.sb-asset-paste button { font-size: 10px; background: rgba(59,130,246,0.2); border: none; color: #60A5FA; border-radius: 4px; padding: 3px 10px; cursor: pointer; }
+.sb-paste-status { font-size: 9px; color: #888; }
+.sb-gen-textarea { width: 100%; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); color: #E4E4E7; border: 1px solid rgba(255,255,255,0.1); font-size: 10px; resize: vertical; }
+.sb-gen-actions { display: flex; gap: 4px; margin-top: 4px; }
+.sb-gen-actions button { font-size: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #D4D4D8; border-radius: 4px; padding: 3px 10px; cursor: pointer; }
+.sb-gen-status { font-size: 9px; color: #888; display: block; margin-top: 4px; }
+.sb-candidates { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.sb-candidate { width: 60px; height: 45px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; }
+.sb-candidate:hover { border-color: rgba(255,255,255,0.3); }
+.sb-candidate img { width: 100%; height: 100%; object-fit: cover; }
+.sb-versions-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.sb-version-thumb { width: 50px; height: 38px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; opacity: 0.6; }
+.sb-version-thumb.selected { border-color: #F59E0B; opacity: 1; }
+.sb-version-thumb:hover { opacity: 1; }
+.sb-version-thumb img { width: 100%; height: 100%; object-fit: cover; }
+</style>
+
 {% else %}
+<div class="empty">No scene specs found. Run the pipeline first.</div>
+{% endif %}
 <div class="empty">No scene specs found. Run the pipeline first.</div>
 {% endif %}
