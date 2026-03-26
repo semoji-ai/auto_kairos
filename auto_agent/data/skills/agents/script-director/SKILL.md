@@ -117,13 +117,31 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    - motion: 프리셋 이름 하나 (shared/motion-presets 참조)
    - mood: 감정 톤 7종 중 선택
 
-6. headline 작성 — "텍스트 강조가 필요한가?"
-   - headline이 필요한 상황: 핵심 수치/키워드를 시각적으로 크게 강조할 때
-   - headline_only: 텍스트 한 줄로 강렬하게 전달 (96px)
-   - items와 함께: 데이터 위 제목 역할 (48px)
-   - 배경 이미지와 함께: 분위기 있는 강조
-   - {{}} 로 accent 색상 강조 (씬당 최대 2개)
-   - headline이 필요 없으면 빈 문자열 — title이 fallback
+6. headline + source 작성
+
+   headline과 items 함께 쓸 때 — 역할 분리 (중복 금지):
+   - headline = 이 씬의 "제목" (수치를 headline에 넣지 말 것)
+   - items = 실제 데이터 항목 (values와 1:1)
+   - source = 데이터 출처
+   - 예: headline="국가별 반도체 점유율", items=["한국","미국"], values=[45,28], source="IDC (2025)"
+
+   차트/그래프 씬:
+   - headline = 차트 제목 (필수)
+   - source = 데이터 출처 (필수)
+   - 예: headline="AI 데이터센터 전력 소비 추이", source="IEA (2025)"
+
+   headline_only (텍스트 한 줄 강조):
+   - headline만 사용 (items 없음)
+   - {{}} 로 accent 강조 (씬당 최대 2개)
+   - 예: headline="AI는 {{전기}}를 먹고 있습니다"
+
+   quote_portrait (인용문):
+   - items[0] = 인용문 텍스트
+   - source = "화자명, 발언 맥락" (일반 출처와 다른 용도)
+   - headline = 빈 문자열 (인용문 자체가 메인)
+   - imageAsset: source="search", query="인물 영문명", placement="left"
+   - 예: items=["AI가 소비하는 전력은 곧 국가 단위가 될 것입니다"]
+         source="샘 올트먼, 2024년 미 상원 청문회"
 ```
 
 #### 연출 의도 → 레이아웃 매핑
