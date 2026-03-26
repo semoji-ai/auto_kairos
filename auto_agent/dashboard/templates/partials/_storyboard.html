@@ -558,8 +558,12 @@ function sbSearchImage(sn) {
     panel.id = resultId;
     assetPanel.appendChild(panel);
   }
+  // 커스텀 쿼리 입력 프롬프트
+  var defaultQ = prompt('검색어를 입력하세요 (영문 권장):', '');
+  if (defaultQ === null) return;
+  var qParam = defaultQ ? '&q=' + encodeURIComponent(defaultQ) : '';
   panel.innerHTML = '<div style="font-size:11px;color:#888;padding:6px">검색 중...</div>';
-  fetch('/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sn + '?source=wikimedia')
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sn + '?source=wikimedia' + qParam)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var candidates = data.candidates || [];
