@@ -6,16 +6,21 @@
  * 수정은 여기서만 하면 3뷰가 동일하게 반영됨.
  */
 import React from "react";
-import { AbsoluteFill, Img } from "remotion";
+import { AbsoluteFill, Img, staticFile } from "remotion";
 import { CreativeScene } from "../simple/CreativeScene";
 import { useDesignPreset } from "../design";
 import { buildFontFamily } from "../design/fonts";
 
-/** URL이면 그대로, 상대경로면 / 접두사 */
+/** URL/절대경로면 그대로, 상대경로면 staticFile() 사용 (Remotion Studio 호환) */
 export const resolveUrl = (path: string): string => {
   if (!path) return "";
-  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("/")) return path;
-  return "/" + path;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  // /background/... → staticFile("background/...") (Remotion Studio에서 public/ 기준)
+  if (path.startsWith("/background/")) return staticFile(path.slice(1));
+  // /output/... → 대시보드 StaticFiles 마운트 (절대경로 그대로)
+  if (path.startsWith("/")) return path;
+  // 상대경로 → staticFile
+  return staticFile(path);
 };
 
 /** v5 플랫 스키마 → visualization 블록 조립 (v4 호환) */
