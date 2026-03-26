@@ -49,38 +49,44 @@ export const ImageBg: React.FC<{ src: string; opacity: number }> = ({ src, opaci
 
 /* ── Side 이미지 레이아웃 ── */
 const SideLayout: React.FC<{
-  src: string; placement: "left" | "right"; opacity: number; children: React.ReactNode;
-}> = ({ src, placement, opacity, children }) => {
+  src: string; placement: "left" | "right"; opacity: number; defaultBg?: string; children: React.ReactNode;
+}> = ({ src, placement, opacity, defaultBg, children }) => {
   const preset = useDesignPreset();
   const bgColor = preset.colors?.bg || "#0A0A0A";
   const isLeft = placement === "left";
   const hasSrc = !!src;
   return (
-    <AbsoluteFill style={{ display: "flex", flexDirection: isLeft ? "row" : "row-reverse" }}>
-      <div style={{
-        flex: "0 0 40%", position: "relative", overflow: "hidden",
-        backgroundColor: hasSrc ? "transparent" : "rgba(255,255,255,0.04)",
-      }}>
-        {hasSrc ? (
-          <Img src={resolveUrl(src)} style={{
-            width: "100%", height: "100%", objectFit: "cover",
-            objectPosition: "center top", opacity,
-          }} />
-        ) : (
-          <div style={{ width: "100%", height: "100%", display: "flex",
-                        alignItems: "center", justifyContent: "center" }}>
-            <div style={{ fontSize: 80, opacity: 0.2 }}>👤</div>
-          </div>
-        )}
-        {/* 그라데이션 페이드 — preset bg 색상 사용 */}
+    <AbsoluteFill>
+      {/* 전체 배경 텍스처 */}
+      {defaultBg && <ImageBg src={defaultBg} opacity={0.15} />}
+      <AbsoluteFill style={{ display: "flex", flexDirection: isLeft ? "row" : "row-reverse" }}>
+        {/* 이미지 영역 — 세로 꽉 채움 */}
         <div style={{
-          position: "absolute", inset: 0,
-          background: isLeft
-            ? `linear-gradient(to right, transparent 50%, ${bgColor} 100%)`
-            : `linear-gradient(to left, transparent 50%, ${bgColor} 100%)`,
-        }} />
-      </div>
-      <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>{children}</div>
+          flex: "0 0 40%", position: "relative", overflow: "hidden",
+        }}>
+          {hasSrc ? (
+            <Img src={resolveUrl(src)} style={{
+              width: "100%", height: "100%", objectFit: "cover",
+              objectPosition: "center top", opacity,
+            }} />
+          ) : (
+            <div style={{ width: "100%", height: "100%", display: "flex",
+                          alignItems: "center", justifyContent: "center",
+                          backgroundColor: "rgba(255,255,255,0.06)" }}>
+              <div style={{ fontSize: 80, opacity: 0.2 }}>👤</div>
+            </div>
+          )}
+          {/* 그라데이션 페이드 */}
+          <div style={{
+            position: "absolute", inset: 0,
+            background: isLeft
+              ? `linear-gradient(to right, transparent 50%, ${bgColor} 100%)`
+              : `linear-gradient(to left, transparent 50%, ${bgColor} 100%)`,
+          }} />
+        </div>
+        {/* 콘텐츠 영역 */}
+        <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>{children}</div>
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };
@@ -164,8 +170,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   if (placement === "left" || placement === "right") {
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-        {defaultBg && <ImageBg src={defaultBg} opacity={0.15} />}
-        <SideLayout src={hasSceneImage ? imgSrc : ""} placement={placement} opacity={imgOpacity}>
+        <SideLayout src={hasSceneImage ? imgSrc : ""} placement={placement} opacity={imgOpacity} defaultBg={defaultBg}>
           <CreativeScene
             data={vizData}
             subtitles={scene.subtitles}
