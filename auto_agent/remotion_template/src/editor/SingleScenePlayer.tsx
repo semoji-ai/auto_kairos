@@ -31,8 +31,8 @@ const SingleSceneInner: React.FC<Props> = ({ scene, meta }) => {
   const fontFamily = buildFontFamily(preset);
   const fps = meta?.fps || 30;
   const durationInFrames = scene.audioDurationSec
-    ? Math.max(Math.ceil(scene.audioDurationSec * fps), 150)
-    : 150;
+    ? Math.max(Math.ceil(scene.audioDurationSec * fps) + 2, 1)
+    : 90; // TTS 없으면 3초
 
   // 맵 씬 → MapSceneRenderer
   if (scene.mapScene) {
