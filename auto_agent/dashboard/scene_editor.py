@@ -378,20 +378,46 @@ async def get_editor_manifest_meta(slug: str):
 
 @router.get("/scenes/{scene_num}")
 async def get_scene_for_editor(slug: str, scene_num: int):
-    """에디터용 씬 데이터 + 레이아웃 제약 정보."""
+    """에디터용 씬 데이터 — manifest 우선, scene_specs fallback."""
+    import json as _json
     project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
+    # 1. manifest에서 읽기 (Remotion Studio와 동일 데이터)
+    from auto_agent.paths import get_workspace_dir
+    out_dir = project.get("output_dir", "")
+    dir_name = Path(out_dir).name if out_dir else project.get("slug", "")
+    manifest_path = get_workspace_dir() / "remotion" / "public" / "manifests" / f"{dir_name}.json"
+    if manifest_path.exists():
+        try:
+            mdata = _json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest = mdata.get("manifest", mdata)
+            for mscene in manifest.get("scenes", []):
+                if mscene.get("sceneNumber") == scene_num:
+                    # manifest 경로 rewrite: project/ → /output/{dir}/
+                    prefix = f"/output/{dir_name}/"
+                    for key in ("imagePath", "vizBackgroundPath", "audioPath"):
+                        val = mscene.get(key, "")
+                        if val and val.startswith("project/"):
+                            mscene[key] = prefix + val[len("project/"):]
+                    layout = (mscene.get("visualization") or {}).get("layout", mscene.get("sceneType", ""))
+                    constraints = LAYOUT_CONSTRAINTS.get(layout, {})
+                    return JSONResponse(
+                        {"scene": mscene, "constraints": constraints, "layout": layout},
+                        headers={"Cache-Control": "no-store"},
+                    )
+        except Exception:
+            pass
+
+    # 2. fallback: scene_specs에서 읽기
     specs = _load_specs(project)
     if not specs:
         return JSONResponse({"error": "scene_specs.json 없음"}, status_code=404)
 
     for scene in specs.get("scenes", []):
         if scene["sceneNumber"] == scene_num:
-            # 이미지 URL 주입 (scene_specs에는 메타만 있음)
             _inject_image_url(project, scene, scene_num)
-            # 맵 씬 좌표 변환 (build_manifest와 동일)
             _transform_map_scene(scene)
             layout = scene.get("layout", "")
             constraints = LAYOUT_CONSTRAINTS.get(layout, {})
