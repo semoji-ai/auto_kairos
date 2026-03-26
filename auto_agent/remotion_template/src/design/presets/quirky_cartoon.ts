@@ -1,5 +1,5 @@
 import type { DesignPresetOverride } from "../types";
-import tokensJson from "../../../../auto_agent/data/artstyle/styles/quirky_cartoon.json";
+import tokensJson from "../../../../data/artstyle/styles/quirky_cartoon.json";
 
 const tokens = (tokensJson as any).design_tokens || {};
 
