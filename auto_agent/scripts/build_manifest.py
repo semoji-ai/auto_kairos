@@ -385,9 +385,12 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             if layout == "cinematic":
                 entry["imageAsset"] = {"placement": "fullscreen", "opacity": 1.0}
             else:
+                p = ia.get("placement", "background")
+                # left/right/center/fullscreen은 opacity 1.0, background만 0.35
+                default_op = 0.35 if p == "background" else 1.0
                 entry["imageAsset"] = {
-                    "placement": ia.get("placement", "background"),
-                    "opacity": ia.get("opacity", 0.4),
+                    "placement": p,
+                    "opacity": ia.get("opacity", default_op),
                 }
             # 검색 이미지 출처
             if ia.get("source_url"):
