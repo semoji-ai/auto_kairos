@@ -1398,9 +1398,10 @@ tr:hover { background: var(--surface2); }
   margin-top: 8px;
 }
 .audio-player audio { height: 32px; flex: 1; max-width: 400px; }
-audio::-webkit-media-controls-panel { background: #2A2A2E; }
+audio::-webkit-media-controls-panel { background: #3A3A40; }
 audio::-webkit-media-controls-current-time-display,
-audio::-webkit-media-controls-time-remaining-display { color: #A1A1AA; }
+audio::-webkit-media-controls-time-remaining-display { color: #D4D4D8; }
+audio::-webkit-media-controls-play-button { filter: brightness(1.5); }
 
 /* Accent text highlight */
 .accent-text { color: var(--accent); font-weight: 600; }
