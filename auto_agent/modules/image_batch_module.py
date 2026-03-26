@@ -334,14 +334,28 @@ def run_tts_batch(project_dir: Path) -> dict:
             timeout=1800,
             **subprocess_kwargs(),
         )
-        if result.returncode == 0:
-            _progress("TTS 배치 완료")
-            return {"status": "completed"}
-        else:
+        if result.returncode != 0:
             _progress(f"TTS 실패: {result.stderr[:200]}", level="warning")
             return {"status": "failed", "error": result.stderr[:200]}
+        _progress("TTS 배치 완료 - 자막 정렬 시작...")
+
+        # TTS 완료 후 자막 정렬 (WhisperX)
+        sub_result = _sp.run(
+            [sys.executable, "-m", "auto_agent.scripts.generate_subtitles", str(project_dir)],
+            cwd=str(project_dir.parent.parent),
+            env=env,
+            capture_output=True, text=True, encoding="utf-8",
+            timeout=600,
+            **subprocess_kwargs(),
+        )
+        if sub_result.returncode == 0:
+            _progress("자막 정렬 완료")
+        else:
+            _progress(f"자막 정렬 실패: {sub_result.stderr[:200]}", level="warning")
+
+        return {"status": "completed"}
     except Exception as e:
-        _progress(f"TTS 에러: {e}", level="warning")
+        _progress(f"TTS/자막 에러: {e}", level="warning")
         return {"status": "failed", "error": str(e)}
 
 
