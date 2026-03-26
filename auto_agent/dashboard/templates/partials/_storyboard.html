@@ -548,7 +548,7 @@ function sbApplyUrl(sn) {
     if (res.ok || res.selected) {
       status.innerHTML = '<span style="color:#86EFAC">적용 완료</span>';
       input.value = '';
-      sbLoadVersions(sn); sbLoadImageGrid(sn);
+      sbLoadImageGrid(sn);
       // 프리뷰 갱신 — 마운트된 씬 리로드
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
       if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
@@ -594,7 +594,7 @@ function sbSelectCandidate(sn, url) {
     body: JSON.stringify({url: url})
   }).then(function(r) { return r.json(); }).then(function(res) {
     if (res.ok || res.selected) {
-      sbLoadVersions(sn); sbLoadImageGrid(sn);
+      sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
       if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
     }
@@ -622,7 +622,7 @@ function sbGenerateImage(sn) {
   }).then(function(r) { return r.json(); }).then(function(res) {
     if (res.ok) {
       status.innerHTML = '<span style="color:#86EFAC">생성 완료</span>';
-      sbLoadVersions(sn); sbLoadImageGrid(sn);
+      sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
       if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
     } else {
@@ -638,11 +638,10 @@ function sbLoadImageGrid(sn) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var versions = data.versions || [];
-      var selected = data.selected || '';
       if (!versions.length) { grid.innerHTML = ''; return; }
       var html = '';
       versions.forEach(function(v) {
-        var isSel = v.file === selected;
+        var isSel = v.selected || false;
         var typeIcon = v.type === 'generate' ? '🎨' : '🔍';
         html += '<div class="sb-grid-thumb' + (isSel ? ' selected' : '') + '" '
           + 'onclick="sbSelectVersion(' + sn + ',\'' + v.file + '\')" '
@@ -655,23 +654,7 @@ function sbLoadImageGrid(sn) {
 }
 
 function sbLoadVersions(sn) {
-  var panel = document.getElementById('sb-versions-' + sn);
-  fetch('/api/p/' + encodeURIComponent(slug) + '/images/versions/' + sn)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var versions = data.versions || [];
-      var selected = data.selected || '';
-      if (!versions.length) { panel.innerHTML = ''; return; }
-      var html = '<div class="sb-versions-row">';
-      versions.forEach(function(v) {
-        var isSel = v.file === selected;
-        html += '<div class="sb-version-thumb' + (isSel ? ' selected' : '') + '" onclick="sbSelectVersion(' + sn + ',\'' + v.file + '\')">';
-        html += '<img src="' + v.url + '" loading="lazy">';
-        html += '</div>';
-      });
-      html += '</div>';
-      panel.innerHTML = html;
-    }).catch(function() {});
+  // 그리드(sbLoadImageGrid)로 통합 — 별도 버전 목록 불필요
 }
 
 function sbSelectVersion(sn, file) {
@@ -680,7 +663,7 @@ function sbSelectVersion(sn, file) {
     body: JSON.stringify({file: file})
   }).then(function(r) { return r.json(); }).then(function(res) {
     if (res.ok) {
-      sbLoadVersions(sn); sbLoadImageGrid(sn);
+      sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
       if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
       // 매니페스트 재빌드 → Remotion Studio + 스토리보드 일괄 반영
