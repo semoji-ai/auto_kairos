@@ -662,8 +662,8 @@ function sbLoadImageGrid(sn) {
     // 검색 후보 (미다운로드 — thumbnail_url 표시, 클릭 시 다운로드)
     var localFiles = new Set(versions.map(function(v) { return v.file; }));
     candidates.forEach(function(c) {
-      var thumb = c.thumbnail_url || c.url || '';
-      var selectUrl = thumb; // thumbnail URL 사용 (CDN, rate limit 없음)
+      var thumb = c.thumbnail_1920_url || c.thumbnail_url || c.url || '';
+      var selectUrl = thumb; // 1920px CDN thumbnail (rate limit 없음)
       if (!thumb) return;
       html += '<div class="sb-grid-thumb candidate" '
         + 'onclick="sbSelectCandidate(' + sn + ',\'' + selectUrl.replace(/'/g, "\\'") + '\')" '
