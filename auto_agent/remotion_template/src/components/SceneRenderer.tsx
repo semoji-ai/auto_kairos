@@ -51,12 +51,14 @@ export const ImageBg: React.FC<{ src: string; opacity: number }> = ({ src, opaci
 const SideLayout: React.FC<{
   src: string; placement: "left" | "right"; opacity: number; children: React.ReactNode;
 }> = ({ src, placement, opacity, children }) => {
+  const preset = useDesignPreset();
+  const bgColor = preset.colors?.bg || "#0A0A0A";
   const isLeft = placement === "left";
   const hasSrc = !!src;
   return (
     <AbsoluteFill style={{ display: "flex", flexDirection: isLeft ? "row" : "row-reverse" }}>
       <div style={{
-        flex: "0 0 35%", position: "relative", overflow: "hidden",
+        flex: "0 0 40%", position: "relative", overflow: "hidden",
         backgroundColor: hasSrc ? "transparent" : "rgba(255,255,255,0.04)",
       }}>
         {hasSrc ? (
@@ -70,12 +72,12 @@ const SideLayout: React.FC<{
             <div style={{ fontSize: 80, opacity: 0.2 }}>👤</div>
           </div>
         )}
-        {/* 그라데이션 페이드 */}
+        {/* 그라데이션 페이드 — preset bg 색상 사용 */}
         <div style={{
           position: "absolute", inset: 0,
           background: isLeft
-            ? "linear-gradient(to right, transparent 50%, var(--bg-color, #0A0A0A) 100%)"
-            : "linear-gradient(to left, transparent 50%, var(--bg-color, #0A0A0A) 100%)",
+            ? `linear-gradient(to right, transparent 50%, ${bgColor} 100%)`
+            : `linear-gradient(to left, transparent 50%, ${bgColor} 100%)`,
         }} />
       </div>
       <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>{children}</div>
