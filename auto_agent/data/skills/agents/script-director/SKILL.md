@@ -109,10 +109,9 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    | 로고 + 수치 | 기업/브랜드 비교 | — | logo_grid |
 
    ⚠️ placement 규칙:
-   - left/right: **인용문(quote_portrait)에만** 사용. 인물 사진 + 인용문 조합.
-     items에 데이터가 있으면 left/right 쓰지 말 것 → background 사용
-   - background: 데이터 씬에 맥락/분위기 배경. 가장 범용적.
-     **items가 있는 씬에 이미지를 넣을 때는 거의 항상 background**
+   - left/right: 이미지의 주체가 명확할 때 (인물, 제품, 건물 등)
+     인용문 + 인물, 인물 + 데이터, 제품 + 스펙 등
+   - background: 분위기/맥락 배경. 주체가 아닌 풍경/시설/추상 이미지
    - fullscreen: cinematic 전환/도입/여운. items 없는 씬에만.
 
    ⚠️ 이미지 적극 사용:
@@ -199,7 +198,7 @@ layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면
 □ quote_portrait에 source가 "화자명, 발언 맥락" 형태인가
 □ imageAsset이 전체 씬의 40~50%에 사용되었는가 (데이터 씬에도 배경 적극 사용)
 □ headline만 있는 씬(headline_only)이 5~10% 이내인가 (숫자는 values로)
-□ left/right placement가 인용문에만 사용되었는가 (데이터는 background)
+□ left/right placement가 주체 있는 이미지(인물/제품)에만 사용되었는가
 □ 콘텐츠 구조가 다양한가 (items만, items+이미지, headline만, 인용문 등 골고루)
 ```
 
