@@ -3,7 +3,12 @@
 <script src="/static/scene-thumb.js?v={{ range(100000)|random }}"></script>
 <script src="/static/scene-editor.js?v={{ range(100000)|random }}"></script>
 {% if scenes %}
-<div class="sb-art-style-bar" id="sb-art-style-bar"></div>
+<div class="sb-top-bar">
+  <div class="sb-art-style-bar" id="sb-art-style-bar"></div>
+  <button class="btn-design-toggle" onclick="toggleDesignPanel()">🎨 Design</button>
+</div>
+<div class="sb-main-layout">
+<div class="sb-main-content">
 <div class="storyboard-filter">
   <button class="btn btn-accent chapter-btn active" onclick="filterStoryboard(0, this)">All</button>
   {% for ch in chapters_list %}
@@ -509,6 +514,11 @@ function regenTts(sn) {
 }
 
 // ── 이미지 에셋 패널 (스토리보드 통합) ──
+function toggleDesignPanel() {
+  var panel = document.getElementById('sb-design-panel');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
 function sbChangeArtStyle(path) {
   fetch('/api/p/' + encodeURIComponent(slug) + '/art-style', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -743,7 +753,38 @@ function sbSelectVersion(sn, file) {
 .sb-grid-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .sb-grid-thumb.candidate { border: 2px dashed rgba(96,165,250,0.4); opacity: 0.7; }
 .sb-grid-thumb.candidate:hover { border-color: #60A5FA; opacity: 1; }
+
+/* 디자인 패널 + 레이아웃 */
+.sb-top-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.sb-top-bar .sb-art-style-bar { flex: 1; }
+.btn-design-toggle { font-size: 11px; background: rgba(168,85,247,0.15); color: #C084FC; border: 1px solid rgba(168,85,247,0.3); border-radius: 6px; padding: 4px 12px; cursor: pointer; white-space: nowrap; }
+.btn-design-toggle:hover { background: rgba(168,85,247,0.25); }
+.sb-main-layout { display: flex; gap: 0; }
+.sb-main-content { flex: 1; min-width: 0; }
+.sb-design-panel { flex: 0 0 380px; border-left: 1px solid rgba(255,255,255,0.06); overflow-y: auto; max-height: calc(100vh - 120px); background: var(--surface1, #141414); }
+.sb-design-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.sb-design-header h3 { margin: 0; font-size: 14px; }
+.sb-design-body { padding: 0; }
+.sb-design-body .design-page { padding: 12px 14px; }
+.sb-design-body .design-layout { flex-direction: column; }
+.sb-design-body .design-preview { display: none; }
 </style>
+
+
+</div><!-- /sb-main-content -->
+
+<!-- 디자인 패널 (오른쪽 접이식) -->
+<div class="sb-design-panel" id="sb-design-panel" style="display:none">
+  <div class="sb-design-header">
+    <h3>Design System</h3>
+    <button onclick="toggleDesignPanel()" style="background:none;border:none;color:#A1A1AA;cursor:pointer;font-size:16px">✕</button>
+  </div>
+  <div class="sb-design-body">
+    {% include "partials/_design.html" %}
+  </div>
+</div>
+
+</div><!-- /sb-main-layout -->
 
 {% else %}
 <div class="empty">No scene specs found. Run the pipeline first.</div>

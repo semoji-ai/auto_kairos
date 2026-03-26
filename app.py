@@ -235,7 +235,6 @@ TAB_TEMPLATES = {
     "studio": "partials/_studio.html",
     "versions": "partials/_versions.html",
     "costs": "partials/_costs.html",
-    "design": "partials/_design.html",
     "agent": "partials/_agent.html",
 }
 

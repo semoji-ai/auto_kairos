@@ -18,7 +18,6 @@
   <a href="#" data-tab="manuscript" class="content-tab {% if tab == 'manuscript' %}active{% endif %}" onclick="switchTab('manuscript', this); return false;">원고</a>
   <a href="#" data-tab="storyboard" class="content-tab {% if tab == 'storyboard' %}active{% endif %}" onclick="switchTab('storyboard', this); return false;">스토리보드</a>
   <a href="#" data-tab="studio" class="content-tab {% if tab == 'studio' %}active{% endif %}" onclick="switchTab('studio', this); return false;">Studio</a>
-  <a href="#" data-tab="design" class="content-tab {% if tab == 'design' %}active{% endif %}" onclick="switchTab('design', this); return false;">Design</a>
   <a href="#" data-tab="versions" class="content-tab {% if tab == 'versions' %}active{% endif %}" onclick="switchTab('versions', this); return false;">Versions</a>
   <span class="content-tab-divider"></span>
   <a href="#" data-tab="agent" class="content-tab {% if tab == 'agent' %}active{% endif %}" onclick="switchTab('agent', this); return false;">Agent</a>
@@ -34,8 +33,6 @@
   {% include "partials/_studio.html" %}
 {% elif tab == 'versions' %}
   {% include "partials/_versions.html" %}
-{% elif tab == 'design' %}
-  {% include "partials/_design.html" %}
 {% elif tab == 'agent' %}
   {% include "partials/_agent.html" %}
 {% endif %}
