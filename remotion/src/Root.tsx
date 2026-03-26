@@ -119,7 +119,11 @@ async function loadManifest(
 function calcTotalFrames(manifest: SceneManifest): number {
   const fps = manifest.meta.fps || 30;
   const totalFrames = manifest.scenes.reduce(
-    (acc, s) => acc + Math.max(Math.ceil(s.audioDurationSec * fps) + 7, s.audioDurationSec > 0 ? 1 : 90),
+    (acc, s) => {
+      const raw = Math.ceil(s.audioDurationSec * fps);
+      const pad = Math.max(Math.round(raw * 0.02), 3);
+      return acc + Math.max(raw + pad, s.audioDurationSec > 0 ? 1 : 90);
+    },
     0,
   );
   return Math.max(totalFrames, 150);
