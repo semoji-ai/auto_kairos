@@ -266,22 +266,102 @@ def run_batch(
         if search_success + search_fail > 0:
             _progress(f"검색 완료: 성공 {search_success}개, 실패 {search_fail}개, 스킵 {search_skipped}개")
 
-    _progress(f"씬 완료: 생성 {scenes_success}개 + 검색 {search_success}개, 실패 {scenes_fail + search_fail}개, 스킵 {skipped + search_skipped}개")
+    _progress(f"이미지 완료: 생성 {scenes_success}개 + 검색 {search_success}개, 실패 {scenes_fail + search_fail}개, 스킵 {skipped + search_skipped}개")
 
-    total_attempted = scenes_success + scenes_fail
+    # ── Phase 4: search 실패 → generate fallback ──
+    if search_fail > 0 and scene_specs_path.exists():
+        _progress(f"검색 실패 {search_fail}개 씬 → generate fallback 시도")
+        fallback_jobs: list[tuple[dict, FalJob]] = []
+        for scene in scene_specs.get("scenes", []):
+            ia = scene.get("imageAsset") or {}
+            if ia.get("source") != "search":
+                continue
+            scene_num = scene.get("sceneNumber", 0)
+            # 이미 성공한 씬은 스킵
+            gen_dir = images_dir / "generated"
+            search_dir_path = images_dir / "search"
+            has_any = (
+                image_assets.has_generated_version(images_dir, scene_num) or
+                list(search_dir_path.glob(f"scene_{scene_num:03d}_search_*.*")) if search_dir_path.exists() else False
+            )
+            if has_any:
+                continue
+            prompt = ia.get("query") or ia.get("prompt") or scene.get("narration", "")
+            if not prompt:
+                continue
+            try:
+                endpoint, arguments = _build_scene_fal_input(scene, project_dir, {})
+                fallback_jobs.append((scene, FalJob(idx=len(fallback_jobs), endpoint=endpoint, arguments=arguments)))
+            except Exception:
+                pass
+
+        if fallback_jobs:
+            gen_dir = images_dir / "generated"
+            gen_dir.mkdir(exist_ok=True)
+            jobs = [job for _, job in fallback_jobs]
+            _progress(f"fallback generate {len(jobs)}개 시작...")
+
+            def on_fallback_done(result):
+                nonlocal scenes_success, scenes_fail
+                sc, _ = fallback_jobs[result.idx]
+                sn = sc.get("sceneNumber", 0)
+                if result.success and result.images:
+                    url = result.images[0].get("url", "")
+                    fname = image_assets.next_filename(images_dir, sn, "gen", ".png")
+                    dest = gen_dir / fname
+                    try:
+                        _save_image_from_url(url, dest)
+                        image_assets.add_version(images_dir, sn, "generated/" + fname, "generate")
+                        scenes_success += 1
+                        _progress(f"씬 {sn} fallback 생성 완료: {fname}")
+                    except Exception:
+                        scenes_fail += 1
+                else:
+                    _progress(f"씬 {sn} fallback 생성 실패", level="warning")
+
+            fal_queue.run_batch(jobs, on_done=on_fallback_done, max_workers=10)
+
+    _progress(f"전체 완료: 생성 {scenes_success}개 + 검색 {search_success}개")
+
+    total_attempted = scenes_success + scenes_fail + search_success + search_fail
     summary = {
         "chars_reused":    len(reused),
         "chars_generated": len(to_generate),
-        "scenes_success":  scenes_success,
-        "scenes_fail":     scenes_fail,
-        "scenes_skipped":  skipped,
+        "scenes_success":  scenes_success + search_success,
+        "scenes_fail":     scenes_fail + search_fail,
+        "scenes_skipped":  skipped + search_skipped,
     }
-    # 시도한 씬 중 절반 이상 실패 시 전체 실패로 처리
-    if total_attempted > 0 and scenes_fail > total_attempted * 0.5:
+    if total_attempted > 0 and (scenes_fail + search_fail) > total_attempted * 0.5:
         summary["status"] = "failed"
-        summary["error"] = f"이미지 생성 대량 실패: {scenes_fail}/{total_attempted}"
+        summary["error"] = f"이미지 대량 실패: {scenes_fail + search_fail}/{total_attempted}"
         _progress(summary["error"], level="error")
     return summary
+
+
+def run_tts_batch(project_dir: Path) -> dict:
+    """TTS 배치 생성 — generate_tts.py를 subprocess로 실행."""
+    _progress("TTS 배치 시작...")
+    try:
+        import subprocess as _sp
+        from auto_agent.utils.platform import subprocess_kwargs
+        env = {**os.environ, "PROJECT_DIR": str(project_dir)}
+        result = _sp.run(
+            [sys.executable, "-m", "auto_agent.scripts.generate_tts", str(project_dir)],
+            cwd=str(project_dir.parent.parent),
+            env=env,
+            capture_output=True, text=True, encoding="utf-8",
+            timeout=1800,
+            **subprocess_kwargs(),
+        )
+        if result.returncode == 0:
+            _progress("TTS 배치 완료")
+            return {"status": "completed"}
+        else:
+            _progress(f"TTS 실패: {result.stderr[:200]}", level="warning")
+            return {"status": "failed", "error": result.stderr[:200]}
+    except Exception as e:
+        _progress(f"TTS 에러: {e}", level="warning")
+        return {"status": "failed", "error": str(e)}
 
 
 def main():
@@ -298,9 +378,18 @@ def main():
         _PROGRESS_FILE = Path(progress_path)
 
     try:
-        summary = run_batch(project_dir)
-        summary["status"] = "completed"
-        print(json.dumps(summary, ensure_ascii=False))
+        # 이미지 배치와 TTS를 병렬 실행
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            img_future = pool.submit(run_batch, project_dir)
+            tts_future = pool.submit(run_tts_batch, project_dir)
+
+            img_summary = img_future.result()
+            tts_result = tts_future.result()
+
+        img_summary["tts_status"] = tts_result.get("status", "unknown")
+        img_summary["status"] = "completed"
+        print(json.dumps(img_summary, ensure_ascii=False))
     except Exception as e:
         logger.exception("image_batch_module 실행 실패")
         print(json.dumps({"status": "failed", "error": str(e)}))
