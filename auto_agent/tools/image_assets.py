@@ -27,18 +27,19 @@ _file_lock = threading.Lock()
 
 def _load(images_dir: Path) -> dict:
     path = images_dir / "image_assets.json"
+    result = {"scenes": []}
+
     if path.exists():
         try:
             raw = json.loads(path.read_text(encoding="utf-8"))
             # 표준 포맷
-            if "scenes" in raw:
-                return raw
+            if "scenes" in raw and isinstance(raw["scenes"], list):
+                result = raw
             # assembly-director 레거시 포맷: {"assets": [{"scene": "scene_001", ...}]}
-            if "assets" in raw:
+            elif "assets" in raw:
                 scenes = []
                 for a in raw["assets"]:
                     scene_key = a.get("scene", "")
-                    # "scene_003" → 3
                     num_str = scene_key.replace("scene_", "").lstrip("0") or "0"
                     try:
                         num = int(num_str)
@@ -54,11 +55,59 @@ def _load(images_dir: Path) -> dict:
                         "versions": [version],
                     })
                 scenes.sort(key=lambda x: x["sceneNumber"])
-                return {"scenes": scenes}
-            return raw
+                result = {"scenes": scenes}
+            # 숫자 키 dict 레거시: {"1": {...}, "3": {...}}
+            elif all(k.isdigit() for k in raw.keys()):
+                # 이 포맷은 빈 버전이 많으므로 무시하고 파일 스캔으로 넘어감
+                pass
         except Exception:
             pass
-    return {"scenes": []}
+
+    # 파일 시스템 자동 스캔: image_assets.json에 없는 이미지를 자동 등록
+    if images_dir.exists():
+        registered = {}
+        for s in result["scenes"]:
+            for v in s.get("versions", []):
+                registered[v.get("file", "")] = True
+
+        # images/ 루트 + images/generated/ 스캔
+        scan_dirs = [(images_dir, ""), ]
+        gen_dir = images_dir / "generated"
+        if gen_dir.exists():
+            scan_dirs.append((gen_dir, "generated/"))
+
+        for scan_dir, prefix in scan_dirs:
+            for f in sorted(scan_dir.glob("scene_*")):
+                if f.suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp"):
+                    continue
+                rel = prefix + f.name
+                if rel in registered:
+                    continue
+                # scene_001.png → scene_num=1
+                name_part = f.stem  # scene_001 or scene_001_gen_02
+                num_str = name_part.split("_")[1] if "_" in name_part else ""
+                try:
+                    num = int(num_str)
+                except ValueError:
+                    continue
+                vtype = "generate" if "gen" in name_part or prefix == "generated/" else "search"
+                # 해당 씬 찾거나 생성
+                scene_entry = None
+                for s in result["scenes"]:
+                    if s["sceneNumber"] == num:
+                        scene_entry = s
+                        break
+                if not scene_entry:
+                    scene_entry = {"sceneNumber": num, "selected": None, "versions": []}
+                    result["scenes"].append(scene_entry)
+                scene_entry["versions"].append({"file": rel, "type": vtype})
+                if not scene_entry["selected"]:
+                    scene_entry["selected"] = rel
+                registered[rel] = True
+
+        result["scenes"].sort(key=lambda x: x["sceneNumber"])
+
+    return result
 
 
 def _save(images_dir: Path, data: dict):
