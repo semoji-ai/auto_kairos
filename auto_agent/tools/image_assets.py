@@ -140,7 +140,7 @@ def _load(images_dir: Path) -> dict:
 
 
 def _normalize_paths(data: dict):
-    """모든 file 경로를 / 로 정규화 (Windows \ 방지)."""
+    r"""모든 file 경로를 / 로 정규화 (Windows \ 방지)."""
     for s in data.get("scenes", []):
         for img in s.get("images", []):
             if img.get("file"):
