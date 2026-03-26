@@ -98,7 +98,7 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
   } as any;
   const creative = {
     layout: s.layout || s.sceneType || "",
-    headline: s.headline || s.title || "",
+    headline: s.layout === "quote_portrait" ? "" : (s.headline || s.title || ""),
     mood: s.mood || "informative",
     motion: s.motion || s.motionPreset || "",
     reveal: "fade_in",

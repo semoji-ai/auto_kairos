@@ -3126,15 +3126,16 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           paddingBottom: `${L.scenePadding[0] + 100}px`,
         }}
       >
-        {/* Badges */}
-        {badges.length > 0 && (
+        {/* Badges — quote_portrait/cinematic は스킵 */}
+        {layout !== "quote_portrait" && layout !== "cinematic" && badges.length > 0 && (
           <BadgeRow
             badges={badges}
             delay={Math.max((headlineDelays[0] || 0) - 10, 0)}
           />
         )}
 
-        {/* Headline lines */}
+        {/* Headline lines — quote_portrait는 자체 인용문 레이아웃 사용, cinematic은 이미지만 */}
+        {layout !== "quote_portrait" && layout !== "cinematic" && (
         <div
           style={{
             textAlign: "center",
@@ -3166,9 +3167,10 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             );
           })}
         </div>
+        )}
 
-        {/* Tags */}
-        {tags.length > 0 && (
+        {/* Tags — quote_portrait는 스킵 */}
+        {layout !== "quote_portrait" && tags.length > 0 && (
           <TagRow
             tags={tags}
             delay={Math.max(...headlineDelays, 0) + 15}
