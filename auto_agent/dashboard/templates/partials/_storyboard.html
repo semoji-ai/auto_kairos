@@ -761,14 +761,15 @@ function sbSelectVersion(sn, file) {
 .btn-design-toggle:hover { background: rgba(168,85,247,0.25); }
 .sb-main-layout { display: flex; gap: 0; }
 .sb-main-content { flex: 1; min-width: 0; }
-.sb-design-panel { flex: 0 0 380px; border-left: 1px solid rgba(255,255,255,0.06); overflow-y: auto; max-height: calc(100vh - 120px); background: var(--surface1, #141414); }
+.sb-design-panel { flex: 0 0 560px; border-left: 1px solid rgba(255,255,255,0.06); overflow-y: auto; max-height: calc(100vh - 120px); background: var(--surface1, #141414); }
 .sb-design-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
 .sb-design-header h3 { margin: 0; font-size: 14px; }
 .sb-design-body { padding: 0; }
 .sb-design-body .design-page { padding: 12px 14px; }
-.sb-design-body .design-layout { flex-direction: column; }
-.sb-design-body .design-preview { width: 100%; }
-.sb-design-body .design-preview iframe { height: 300px; }
+.sb-design-body .design-layout { display: flex; flex-direction: row; gap: 12px; }
+.sb-design-body .design-editor { flex: 1; min-width: 0; }
+.sb-design-body .design-preview { flex: 1; min-width: 0; }
+.sb-design-body .design-preview iframe { height: 100%; min-height: 400px; }
 </style>
 
 
