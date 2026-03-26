@@ -163,20 +163,10 @@ function resizePreview(val) {
 
   function fetchScene(num) {
     if (sceneCache[num]) return Promise.resolve(sceneCache[num]);
-    // manifest에서 씬 데이터 가져오기 (visualization 블록 포함)
-    return fetchManifest().then(function(manifest) {
-      if (manifest && manifest.scenes) {
-        var scene = manifest.scenes.find(function(s) { return s.sceneNumber === num; });
-        if (scene) {
-          sceneCache[num] = rewritePaths(JSON.parse(JSON.stringify(scene)));
-          return sceneCache[num];
-        }
-      }
-      // fallback: editor API
-      return fetch('/api/p/' + slug + '/editor/scenes/' + num)
-        .then(function(r) { return r.json(); })
-        .then(function(d) { sceneCache[num] = d.scene; return d.scene; });
-    });
+    // editor API 단일 소스 — 스토리보드/스튜디오/씬에디터 모두 동일 데이터
+    return fetch('/api/p/' + slug + '/editor/scenes/' + num)
+      .then(function(r) { return r.json(); })
+      .then(function(d) { sceneCache[num] = d.scene; return d.scene; });
   }
 
   function tryMount(el) {
