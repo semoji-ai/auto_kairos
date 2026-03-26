@@ -795,8 +795,7 @@ def _build_scene_fal_input(
         if has_char:
             parts.append(
                 "**Character Reference Rules:**\n"
-                "- Use reference images ONLY for face appearance\n"
-                "- Do NOT copy the hairstyle or clothing from reference images!\n"
+                "- Use reference images for face and clothing appearance\n"
                 "- ALL characters MUST face FORWARD (frontal view)"
             )
         elif not has_char and image_urls:
@@ -864,9 +863,8 @@ def _build_scene_fal_input(
         elif char_path_strs:
             parts.append(
                 "**Character Reference Rules:**\n"
-                "- Use reference images ONLY for face appearance\n"
+                "- Use reference images for face and clothing appearance\n"
                 "- Do NOT copy the pose from reference images!\n"
-                "- Do NOT copy the hairstyle or clothing from reference images!\n"
                 "- Maintain consistent eye, nose, mouth, and body proportions"
             )
         struct = []
