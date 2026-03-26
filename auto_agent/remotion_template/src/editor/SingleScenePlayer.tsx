@@ -145,11 +145,11 @@ const SingleSceneInner: React.FC<Props> = ({ scene, meta }) => {
 
   // quote_portrait: 이미지를 CreativeScene 내부에서 처리
   const vizLayout = vizData?.layout || scene.visualization?.creative?.layout || "";
-  if (vizLayout === "quote_portrait" && hasImage) {
-    const qpViz = { ...vizData, imageSrc: resolveUrl(imgSrc), imageAssetPlacement: placement };
+  if (vizLayout === "quote_portrait") {
+    const qpViz = { ...vizData, imageSrc: hasImage ? resolveUrl(imgSrc) : "", imageAssetPlacement: placement };
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-        {defaultBg && !imgSrc?.includes("scene_") && <ImageBg src={defaultBg} opacity={0.15} />}
+        {defaultBg && <ImageBg src={defaultBg} opacity={0.15} />}
         <CreativeScene
           data={qpViz}
           subtitles={scene.subtitles || []}

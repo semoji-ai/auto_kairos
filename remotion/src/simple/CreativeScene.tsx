@@ -3492,7 +3492,6 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             <div style={{ flex: "0 0 40%", position: "relative", overflow: "hidden" }}>
               <Img src={qpImageSrc} style={{
                 width: "100%", height: "100%", objectFit: "cover",
-                filter: "brightness(0.85)",
               }} />
               <div style={{
                 position: "absolute", inset: 0,
