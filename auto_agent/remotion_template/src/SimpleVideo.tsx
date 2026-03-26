@@ -24,6 +24,7 @@ const resolveAsset = (path: string): string =>
 import { CreativeScene } from "./simple/CreativeScene";
 import { CanvasScene } from "./simple/CanvasScene";
 import { MapSceneRenderer } from "./map/MapSceneRenderer";
+import { SceneRendererInner } from "./components/SceneRenderer";
 import { DesignPresetProvider, useDesignPreset } from "./design";
 import { usePresetFonts, buildFontFamily } from "./design/fonts";
 import type { PresetColors } from "./design/types";
@@ -95,13 +96,11 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
           >
             <AbsoluteFill>
               {(scene as any)._canvas?.layers ? (
-                /* === 캔버스 씬: 의회식 크론 자유 캔버스 렌더링 === */
                 <CanvasScene
                   canvas={(scene as any)._canvas}
                   durationInFrames={dur}
                 />
               ) : scene.mapScene ? (
-                /* === 맵 씬: 맵만 전체 표시 (마커 포함) === */
                 <FadeWrap duration={dur} fade={10}>
                   <MapSceneRenderer
                     data={scene.mapScene}
@@ -110,102 +109,9 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
                   />
                 </FadeWrap>
               ) : (
-                /* === 일반 씬: 이미지 배경/에셋 + CreativeScene === */
-                (() => {
-                  const placement = scene.imageAsset?.placement ?? "background";
-                  // left, right, center, fullscreen은 기본 opacity 1 / background만 0.35
-                  const defaultOpacity = (placement === "background") ? 0.35 : 1.0;
-                  const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
-                  const imgSrc = scene.vizBackgroundPath || scene.imagePath || defaultBg;
-                  const isSidePlacement = hasImage && (placement === "left" || placement === "right");
-                  const isFullscreen = hasImage && placement === "fullscreen";
-                  const isCenter = hasImage && placement === "center";
-
-                  if (isFullscreen) {
-                    return (
-                      <>
-                        <ImageBackground
-                          src={imgSrc}
-                          duration={dur}
-                          kenBurns={scene.kenBurns}
-                          opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9}
-                        />
-                        <FadeWrap duration={dur} fade={10}>
-                          <CreativeScene
-                            data={scene.visualization}
-                            subtitles={scene.subtitles}
-                            fps={fps}
-                            hasImageBackground={true}
-                            imageAssetPlacement="fullscreen"
-                          />
-                        </FadeWrap>
-                      </>
-                    );
-                  }
-
-                  if (isCenter) {
-                    return (
-                      <CenterImageLayout
-                        src={imgSrc}
-                        opacity={imgOpacity}
-                        duration={dur}
-                      >
-                        <FadeWrap duration={dur} fade={10}>
-                          <CreativeScene
-                            data={scene.visualization}
-                            subtitles={scene.subtitles}
-                            fps={fps}
-                            hasImageBackground={false}
-                            imageAssetPlacement="center"
-                          />
-                        </FadeWrap>
-                      </CenterImageLayout>
-                    );
-                  }
-
-                  if (isSidePlacement) {
-                    return (
-                      <SideImageLayout
-                        src={imgSrc}
-                        placement={placement as "left" | "right"}
-                        opacity={imgOpacity}
-                        duration={dur}
-                      >
-                        <FadeWrap duration={dur} fade={10}>
-                          <CreativeScene
-                            data={scene.visualization}
-                            subtitles={scene.subtitles}
-                            fps={fps}
-                            hasImageBackground={false}
-                            imageAssetPlacement={placement}
-                          />
-                        </FadeWrap>
-                      </SideImageLayout>
-                    );
-                  }
-
-                  return (
-                    <>
-                      {hasImage && (
-                        <ImageBackground
-                          src={imgSrc}
-                          duration={dur}
-                          kenBurns={scene.kenBurns}
-                          opacity={imgOpacity}
-                        />
-                      )}
-                      <FadeWrap duration={dur} fade={10}>
-                        <CreativeScene
-                          data={scene.visualization}
-                          subtitles={scene.subtitles}
-                          fps={fps}
-                          hasImageBackground={hasImage}
-                          imageAssetPlacement={placement}
-                        />
-                      </FadeWrap>
-                    </>
-                  );
-                })()
+                <FadeWrap duration={dur} fade={10}>
+                  <SceneRendererInner scene={scene} fps={fps} />
+                </FadeWrap>
               )}
               {scene.audioPath ? (
                 <Audio src={resolveAsset(scene.audioPath)} />
