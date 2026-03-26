@@ -128,7 +128,16 @@ def _load(images_dir: Path) -> dict:
     return result
 
 
+def _normalize_paths(data: dict):
+    """모든 file 경로를 / 로 정규화 (Windows \ 방지)."""
+    for s in data.get("scenes", []):
+        for img in s.get("images", []):
+            if img.get("file"):
+                img["file"] = img["file"].replace("\\", "/")
+
+
 def _save(images_dir: Path, data: dict):
+    _normalize_paths(data)
     path = images_dir / "image_assets.json"
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -155,6 +164,7 @@ def has_generated_version(images_dir: Path, scene_num: int) -> bool:
 def add_version(images_dir: Path, scene_num: int, file_name: str,
                 version_type: str, auto_select: bool = True, **meta) -> dict:
     """이미지 등록. auto_select=True면 이 이미지를 selected로. 스레드 안전."""
+    file_name = file_name.replace("\\", "/")
     with _file_lock:
         data = _load(images_dir)
         scene = _get_scene(data, scene_num)
@@ -174,6 +184,7 @@ def add_version(images_dir: Path, scene_num: int, file_name: str,
 
 def select_version(images_dir: Path, scene_num: int, file_name: str) -> bool:
     """selected 변경 — 해당 파일을 selected, 나머지 해제. 스레드 안전."""
+    file_name = file_name.replace("\\", "/")
     with _file_lock:
         data = _load(images_dir)
         scene = _get_scene(data, scene_num)
