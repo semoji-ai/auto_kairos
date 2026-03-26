@@ -83,12 +83,24 @@ def search_wikimedia(query: str, limit: int = 8) -> list:
 
 
 def download_image(url: str, output_path: str) -> dict:
-    """이미지 다운로드. 원본 또는 1920px 썸네일."""
-    import time
+    """이미지 다운로드. 1080px 리사이즈 우선 (rate limit 방지)."""
+    import time, re
+    # 원본 URL → 1080px 썸네일 URL 변환 시도 (Wikimedia CDN)
+    download_url = url
+    if "wikimedia.org" in url and "/commons/" in url:
+        # /commons/thumb/a/ab/File.jpg/800px-File.jpg → 1080px
+        if "/thumb/" in url:
+            download_url = re.sub(r'/\d+px-', '/1080px-', url)
+        elif "/commons/" in url and "/thumb/" not in url:
+            # 원본 → 썸네일 URL 생성
+            parts = url.split("/commons/")
+            if len(parts) == 2:
+                fname = parts[1].split("/")[-1]
+                download_url = url.replace("/commons/", "/commons/thumb/") + f"/1080px-{fname}"
     try:
         # rate limit 방지 재시도
         for attempt in range(3):
-            resp = requests.get(url, headers=HEADERS, timeout=30)
+            resp = requests.get(download_url, headers=HEADERS, timeout=30)
             if resp.status_code == 429:
                 wait = 3 * (attempt + 1)
                 print(f"429 rate limit, {wait}초 대기...", file=sys.stderr)
