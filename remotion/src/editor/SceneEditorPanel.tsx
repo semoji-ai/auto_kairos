@@ -119,23 +119,13 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
     : (scene as any).durationFrames || fps * 5;
   const durationInFrames = Math.max(1, rawDuration);
 
-  /* ── 업데이트 헬퍼 ── */
-  const updateViz = useCallback((patch: Partial<VisualizationData>) => {
-    setScene(prev => ({
-      ...prev,
-      visualization: { ...(prev.visualization || {} as VisualizationData), ...patch },
-    }));
+  /* ── 업데이트 헬퍼 (플랫 스키마: scene.* 최상위 필드 직접 업데이트) ── */
+  const updateViz = useCallback((patch: Record<string, any>) => {
+    setScene(prev => ({ ...prev, ...patch }));
   }, []);
 
-  const updateCreative = useCallback((patch: Partial<CreativeDirection>) => {
-    setScene(prev => {
-      const oldViz = prev.visualization || {} as VisualizationData;
-      const oldCreative = oldViz.creative || {} as CreativeDirection;
-      return {
-        ...prev,
-        visualization: { ...oldViz, creative: { ...oldCreative, ...patch } },
-      };
-    });
+  const updateCreative = useCallback((patch: Record<string, any>) => {
+    setScene(prev => ({ ...prev, ...patch }));
   }, []);
 
   const updateImageAsset = useCallback((patch: Partial<NonNullable<SceneEntry["imageAsset"]>>) => {
@@ -216,7 +206,7 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
           <select
             style={selectStyle}
             value={creative.layout || ""}
-            onChange={e => updateCreative({ layout: e.target.value } as any)}
+            onChange={e => updateCreative({ layout: e.target.value })}
           >
             <option value="">자동 (데이터 기반)</option>
             {LAYOUT_OPTIONS.map(l => <option key={l} value={l}>{l}</option>)}
