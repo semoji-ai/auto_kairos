@@ -1318,7 +1318,8 @@ const ItemsList: React.FC<{
   itemIcons?: string[];
   itemFlags?: string[];
   itemStatuses?: Array<"positive" | "negative" | "neutral" | "warning">;
-}> = ({ items, delays, headlineDelays, moodCfg, emphasis, concept, images, itemIcons, itemFlags, itemStatuses }) => {
+  motionConfig?: MotionConfig;
+}> = ({ items, delays, headlineDelays, moodCfg, emphasis, concept, images, itemIcons, itemFlags, itemStatuses, motionConfig }) => {
   const C = useC();
   const T = usePresetTypo();
   const L = usePresetLayout();
@@ -1421,11 +1422,31 @@ const ItemsList: React.FC<{
     >
       {items.map((item, i) => {
         const d = delays[i] || 0;
-        const opacity = interpolate(frame, [d, d + 15], [0, 1], clamp);
-        const slideX = interpolate(frame, [d, d + 15], [-20, 0], {
-          ...clamp,
-          easing: ease,
-        });
+        const entrDur = motionConfig?.entrance.duration || 15;
+        const entrType = motionConfig?.entrance.type || "fadeSlide";
+        let opacity: number, slideX = 0, scaleVal = 1, extraT = "";
+        if (entrType === "bounce") {
+          opacity = interpolate(frame, [d, d + entrDur * 0.3], [0, 1], clamp);
+          const bp = interpolate(frame, [d, d + entrDur], [0, 1], clamp);
+          scaleVal = bp < 0.5 ? interpolate(bp, [0, 0.5], [0.3, 1.15], clamp) : interpolate(bp, [0.5, 1], [1.15, 1], clamp);
+        } else if (entrType === "scale" || entrType === "spring") {
+          opacity = interpolate(frame, [d, d + entrDur * 0.4], [0, 1], clamp);
+          scaleVal = interpolate(frame, [d, d + entrDur], [0.5, 1], { ...clamp, easing: Easing.out(Easing.exp) });
+        } else {
+          opacity = interpolate(frame, [d, d + entrDur], [0, 1], clamp);
+          slideX = interpolate(frame, [d, d + entrDur], [-20, 0], { ...clamp, easing: ease });
+        }
+        if (motionConfig?.emphasis && frame > d + entrDur) {
+          const eD = d + entrDur + (motionConfig.emphasis.delay || 0);
+          const eDur = motionConfig.emphasis.duration || 20;
+          if (motionConfig.emphasis.type === "shake") {
+            const sp = interpolate(frame, [eD, eD + eDur], [0, 1], clamp);
+            if (sp > 0 && sp < 1) extraT = ` translateX(${Math.sin(sp * Math.PI * 6) * (motionConfig.emphasis.intensity || 4) * (1 - sp)}px)`;
+          } else if (motionConfig.emphasis.type === "pulse") {
+            const pp = interpolate(frame, [eD, eD + eDur], [0, 1], clamp);
+            if (pp > 0) scaleVal *= 1 + Math.sin(pp * Math.PI * 2) * 0.03;
+          }
+        }
         const isLast = i === items.length - 1;
         const spotlight = hasSpotlightHint && isLast;
 
@@ -1434,7 +1455,7 @@ const ItemsList: React.FC<{
             key={i}
             style={{
               opacity,
-              transform: `translateX(${slideX}px)`,
+              transform: `translateX(${slideX}px) scale(${scaleVal})${extraT}`,
               display: "flex",
               alignItems: "center",
               gap: 14,
@@ -3242,6 +3263,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             itemIcons={data.itemIcons}
             itemFlags={data.itemFlags}
             itemStatuses={data.itemStatuses}
+            motionConfig={motionPreset ? motionConfig : undefined}
           />
         )}
 
