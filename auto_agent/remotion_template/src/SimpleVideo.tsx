@@ -54,9 +54,9 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
   let offset = 0;
   const timing = manifest.scenes.map((scene) => {
     // MP3 인코딩 패딩 + ffprobe 반올림 오차 보상: 2프레임 여유
-    // TTS 있으면 TTS 길이 + 2프레임, 없으면 최소 3초 (90프레임)
+    // TTS 있으면 TTS 길이 + 15프레임 여유, 없으면 최소 3초 (90프레임)
     const minFrames = scene.audioDurationSec > 0 ? 1 : 90;
-    const dur = Math.max(Math.ceil(scene.audioDurationSec * fps) + 2, minFrames);
+    const dur = Math.max(Math.ceil(scene.audioDurationSec * fps) + 15, minFrames);
     const from = offset;
     offset += dur;
     return { scene, from, dur };
