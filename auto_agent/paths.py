@@ -49,3 +49,17 @@ def get_workspace_dir() -> Path:
 # 모듈 레벨 상수 (자주 쓰이므로 미리 해석)
 PACKAGE_DIR = get_package_dir()
 DATA_DIR = get_data_dir()
+
+
+def get_vault_dir() -> Path:
+    """Obsidian 볼트 디렉토리 (KAIROS_VAULT_DIR 환경변수)."""
+    env = os.getenv("KAIROS_VAULT_DIR")
+    if not env:
+        raise EnvironmentError(
+            "KAIROS_VAULT_DIR 환경변수가 설정되지 않았습니다. "
+            ".env 파일에 KAIROS_VAULT_DIR=/path/to/kairos-vault 를 추가하세요."
+        )
+    p = Path(env).resolve()
+    if not p.exists():
+        raise FileNotFoundError(f"볼트 디렉토리를 찾을 수 없습니다: {p}")
+    return p
