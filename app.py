@@ -638,8 +638,9 @@ async def image_candidates(slug: str, scene_num: int, q: str = "", source: str =
     if not query:
         return JSONResponse({"candidates": [], "query": ""})
 
-    # 검색 실행
+    # 검색 실행 — wikimedia 우선, 결과 없으면 serper fallback
     candidates = []
+    used_source = source
     if source == "serper":
         try:
             from auto_agent.tools.serper_search import search_images
@@ -649,9 +650,18 @@ async def image_candidates(slug: str, scene_num: int, q: str = "", source: str =
     else:
         from auto_agent.tools.wikimedia_search import search_wikimedia, save_candidates
         candidates = search_wikimedia(query, 8)
-        save_candidates(scene_num, query, candidates, str(Path(out_dir) / "images"))
+        # wikimedia 결과 없으면 serper fallback
+        if not candidates:
+            try:
+                from auto_agent.tools.serper_search import search_images
+                candidates = search_images(query, 12)
+                used_source = "serper"
+            except Exception:
+                pass
+        if candidates:
+            save_candidates(scene_num, query, candidates, str(Path(out_dir) / "images"))
 
-    return JSONResponse({"query": query, "candidates": candidates, "cached": False, "source": source})
+    return JSONResponse({"query": query, "candidates": candidates, "cached": False, "source": used_source})
 
 
 @app.post("/api/p/{slug}/images/select/{scene_num}")
