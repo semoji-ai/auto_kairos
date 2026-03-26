@@ -88,10 +88,23 @@
         </div>
       </div>
 
-      {# 이미지 버전 그리드 (항상 보임) + 도구 버튼 #}
-      <div class="sb-image-section">
-        <div class="sb-image-grid" id="sb-img-grid-{{ scene.sceneNumber }}"></div>
-        <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">이미지</button>
+      {# 이미지 영역 #}
+      <div class="sb-image-area">
+        {% if scene.imageAsset %}
+        <div class="sb-image-prompt">
+          {% set img = scene.imageAsset %}
+          {% if img.source == 'search' %}
+          <span class="sb-prompt-label">검색</span> <span class="sb-prompt-text">{{ img.query or '' }}</span>
+          {% elif img.source == 'generate' %}
+          <span class="sb-prompt-label">생성</span> <span class="sb-prompt-text">{{ (img.prompt or '')[:60] }}{% if img.prompt and img.prompt|length > 60 %}...{% endif %}</span>
+          {% endif %}
+          {% if img.placement %}<span class="sb-prompt-placement">{{ img.placement }}</span>{% endif %}
+        </div>
+        {% endif %}
+        <div class="sb-image-row">
+          <div class="sb-image-grid" id="sb-img-grid-{{ scene.sceneNumber }}"></div>
+          <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">이미지</button>
+        </div>
       </div>
       <div class="sb-asset-panel" id="sb-asset-{{ scene.sceneNumber }}" style="display:none">
         <div class="sb-asset-actions">
@@ -649,7 +662,12 @@ function sbSelectVersion(sn, file) {
 .sb-version-thumb.selected { border-color: #F59E0B; opacity: 1; }
 .sb-version-thumb:hover { opacity: 1; }
 .sb-version-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.sb-image-section { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.sb-image-area { margin-top: 8px; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
+.sb-image-prompt { font-size: 10px; color: #A1A1AA; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.sb-prompt-label { font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 3px; background: rgba(96,165,250,0.15); color: #60A5FA; }
+.sb-prompt-text { color: #D4D4D8; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-prompt-placement { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,0.06); color: #A1A1AA; }
+.sb-image-row { display: flex; align-items: center; gap: 6px; }
 .sb-image-grid { display: flex; gap: 3px; flex-wrap: wrap; flex: 1; }
 .sb-grid-thumb { width: 80px; height: 60px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; opacity: 0.5; transition: all 0.15s; }
 .sb-grid-thumb.selected { border-color: #F59E0B; opacity: 1; }
