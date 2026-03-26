@@ -1051,12 +1051,12 @@ const ItemsGrid: React.FC<{
   reveal: string;
   itemIcons?: string[];
   itemFlags?: string[];
-}> = ({ items, delays, headlineDelays, moodCfg, reveal, itemIcons, itemFlags }) => {
+  motionConfig?: MotionConfig;
+}> = ({ items, delays, headlineDelays, moodCfg, reveal, itemIcons, itemFlags, motionConfig }) => {
   const C = useC();
   const T = usePresetTypo();
   const L = usePresetLayout();
   const frame = useCurrentFrame();
-  // 4개: 4열(한줄) 또는 2x2, 5~8개: 3열, 9+: 3열
   const cols = items.length === 4 ? (items.some(it => it.length > 8) ? 2 : 4)
     : items.length >= 5 ? 3 : items.length >= 3 ? 3 : 2;
   const isFlash = reveal === "stagger_then_flash";
@@ -1064,6 +1064,8 @@ const ItemsGrid: React.FC<{
   const flashGlow = isFlash
     ? interpolate(frame, [allDone, allDone + 4, allDone + 30], [0, 1, 0.3], clamp)
     : 0;
+  const entranceDur = motionConfig?.entrance.duration || 15;
+  const entranceType = motionConfig?.entrance.type || "fadeRise";
 
   return (
     <div
@@ -1078,11 +1080,37 @@ const ItemsGrid: React.FC<{
     >
       {items.map((item, i) => {
         const d = delays[i] || 0;
-        const opacity = interpolate(frame, [d, d + 15], [0, 1], clamp);
-        const rise = interpolate(frame, [d, d + 15], [12, 0], {
-          ...clamp,
-          easing: ease,
-        });
+        // entrance type별 애니메이션
+        let opacity: number, rise: number, scaleVal = 1, extraTransform = "";
+        if (entranceType === "bounce") {
+          opacity = interpolate(frame, [d, d + entranceDur * 0.3], [0, 1], clamp);
+          const bounceP = interpolate(frame, [d, d + entranceDur], [0, 1], clamp);
+          scaleVal = bounceP < 0.5 ? interpolate(bounceP, [0, 0.5], [0.3, 1.15], clamp) : interpolate(bounceP, [0.5, 1], [1.15, 1], clamp);
+          rise = 0;
+        } else if (entranceType === "scale" || entranceType === "spring") {
+          opacity = interpolate(frame, [d, d + entranceDur * 0.4], [0, 1], clamp);
+          scaleVal = interpolate(frame, [d, d + entranceDur], [0.5, 1], { ...clamp, easing: Easing.out(Easing.exp) });
+          rise = 0;
+        } else if (entranceType === "overshoot") {
+          opacity = interpolate(frame, [d, d + entranceDur * 0.3], [0, 1], clamp);
+          rise = interpolate(frame, [d, d + entranceDur], [-30, 0], { ...clamp, easing: Easing.out(Easing.back(1.5)) });
+        } else {
+          // fadeRise (기본)
+          opacity = interpolate(frame, [d, d + entranceDur], [0, 1], clamp);
+          rise = interpolate(frame, [d, d + entranceDur], [12, 0], { ...clamp, easing: ease });
+        }
+        // emphasis 후처리
+        if (motionConfig?.emphasis && frame > d + entranceDur) {
+          const eD = d + entranceDur + (motionConfig.emphasis.delay || 0);
+          const eDur = motionConfig.emphasis.duration || 20;
+          if (motionConfig.emphasis.type === "shake") {
+            const sp = interpolate(frame, [eD, eD + eDur], [0, 1], clamp);
+            if (sp > 0 && sp < 1) extraTransform = ` translateX(${Math.sin(sp * Math.PI * 6) * (motionConfig.emphasis.intensity || 4) * (1 - sp)}px)`;
+          } else if (motionConfig.emphasis.type === "pulse") {
+            const pp = interpolate(frame, [eD, eD + eDur], [0, 1], clamp);
+            if (pp > 0) scaleVal *= 1 + Math.sin(pp * Math.PI * 2) * 0.03;
+          }
+        }
         const borderGlow =
           flashGlow > 0
             ? `0 0 20px rgba(${moodCfg.accentRgb},${flashGlow})`
@@ -1093,7 +1121,7 @@ const ItemsGrid: React.FC<{
             key={i}
             style={{
               opacity,
-              transform: `translateY(${rise}px)`,
+              transform: `translateY(${rise}px) scale(${scaleVal})${extraTransform}`,
               padding: "14px 16px",
               borderRadius: 10,
               border: `1px solid ${moodCfg.accent}${flashGlow > 0 ? "88" : "33"}`,
@@ -3197,6 +3225,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             reveal={reveal}
             itemIcons={data.itemIcons}
             itemFlags={data.itemFlags}
+            motionConfig={motionPreset ? motionConfig : undefined}
           />
         )}
 
