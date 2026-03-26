@@ -2680,9 +2680,14 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
     countUp: "number", shake: "none", glitch: "none", pulse: "none",
     glow: "number", bounce: "none", lineExpand: "none", none: "none",
   };
-  const emphasis: string = motionPreset
+  const _resolvedLayout = resolveLayout(data, creative);
+  let emphasis: string = motionPreset
     ? (_emphasisToEmphasis[motionConfig.emphasis?.type || "none"] || creative.emphasis || "none")
     : (creative.emphasis || "none");
+  // counter/metric_spotlight → 자동으로 number emphasis (countUp 활성화)
+  if ((_resolvedLayout === "counter" || _resolvedLayout === "metric_spotlight") && emphasis === "none") {
+    emphasis = "number";
+  }
 
   const headlineTransform = (creative.headlineOffsetX || creative.headlineOffsetY)
     ? `translate(${creative.headlineOffsetX || 0}px, ${creative.headlineOffsetY || 0}px)` : undefined;
