@@ -11,7 +11,7 @@ import sys
 import requests
 
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
-HEADERS = {"User-Agent": "KairosAgent/3.1 (educational video production)"}
+HEADERS = {"User-Agent": "KairosAgent/3.1 (https://github.com/jleavens01/auto_kairos; educational video production) Python/requests"}
 
 
 def search_wikimedia(query: str, limit: int = 8) -> list:
