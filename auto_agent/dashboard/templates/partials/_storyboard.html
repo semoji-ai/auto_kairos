@@ -659,12 +659,14 @@ function sbLoadImageGrid(sn) {
         + '<img src="' + v.url + '" loading="lazy">'
         + '</div>';
     });
-    // 검색 후보 (미다운로드 — thumbnail_url 표시, 클릭 시 다운로드)
-    var localFiles = new Set(versions.map(function(v) { return v.file; }));
+    // 검색 후보 (미다운로드 — 중복 제거 + 로컬에 없는 것만)
+    var seenUrls = new Set();
+    var localTitles = new Set(versions.map(function(v) { return (v.file || '').split('/').pop().replace(/_search_\d+|_gen_\d+/g, ''); }));
     candidates.forEach(function(c) {
       var thumb = c.thumbnail_1920_url || c.thumbnail_url || c.url || '';
-      var selectUrl = thumb; // 1920px CDN thumbnail (rate limit 없음)
-      if (!thumb) return;
+      if (!thumb || seenUrls.has(thumb)) return;
+      seenUrls.add(thumb);
+      var selectUrl = thumb;
       html += '<div class="sb-grid-thumb candidate" '
         + 'onclick="sbSelectCandidate(' + sn + ',decodeURIComponent(\'' + encodeURIComponent(selectUrl) + '\'))" '
         + 'title="🌐 ' + (c.title || '').substring(0, 30) + '">'
