@@ -143,197 +143,178 @@ def run_batch(
         f"성공 {sum(1 for v in char_paths.values() if v is not None)}개"
     )
 
-    # ── Phase 2: 씬 배치 ──
+    # ── 씬 데이터 로드 ──
     scene_specs_path = project_dir / "scene_specs.json"
-    scenes_success, scenes_fail, skipped = 0, 0, 0
-    if scene_specs_path.exists():
-        scene_specs = json.loads(scene_specs_path.read_text(encoding="utf-8"))
-        images_dir  = project_dir / "images"
-        images_dir.mkdir(exist_ok=True)
+    if not scene_specs_path.exists():
+        return {"chars_reused": len(reused), "chars_generated": len(to_generate),
+                "scenes_success": 0, "scenes_fail": 0, "scenes_skipped": 0}
 
+    scene_specs = json.loads(scene_specs_path.read_text(encoding="utf-8"))
+    images_dir = project_dir / "images"
+    images_dir.mkdir(exist_ok=True)
+
+    # ── Phase 2 + 3 병렬: generate 배치 + search 순차 ──
+    from concurrent.futures import ThreadPoolExecutor
+
+    def _run_generate():
+        """generate 씬 FAL 배치."""
+        success, fail, skip = 0, 0, 0
         scene_jobs: list[tuple[dict, FalJob]] = []
         for scene in scene_specs.get("scenes", []):
             if (scene.get("imageAsset") or {}).get("source") != "generate":
                 continue
             scene_num = scene.get("sceneNumber", 0)
             if image_assets.has_generated_version(images_dir, scene_num):
-                _progress(f"씬 {scene_num} 이미 생성됨 - 스킵")
-                skipped += 1
+                skip += 1
                 continue
-            scene_char_paths = {
-                cid: char_paths.get(cid)
-                for cid in scene.get("characters", [])
-            }
+            scene_char_paths = {cid: char_paths.get(cid) for cid in scene.get("characters", [])}
             try:
-                endpoint, arguments = _build_scene_fal_input(
-                    scene, project_dir, scene_char_paths
-                )
+                endpoint, arguments = _build_scene_fal_input(scene, project_dir, scene_char_paths)
                 scene_jobs.append((scene, FalJob(idx=len(scene_jobs), endpoint=endpoint, arguments=arguments)))
             except Exception as e:
                 logger.warning("씬 %s 입력 빌드 실패: %s", scene.get("sceneNumber"), e)
-                scenes_fail += 1
+                fail += 1
 
         if scene_jobs:
             jobs = [job for _, job in scene_jobs]
-            _progress(f"씬 {len(jobs)}개 FAL 배치 시작...")
+            _progress(f"generate {len(jobs)}개 FAL 배치 시작...")
 
-            def on_scene_done(result):
-                nonlocal scenes_success, scenes_fail
-                scene, _ = scene_jobs[result.idx]
-                scene_num = scene.get("sceneNumber", result.idx + 1)
+            def on_done(result):
+                nonlocal success, fail
+                sc, _ = scene_jobs[result.idx]
+                sn = sc.get("sceneNumber", result.idx + 1)
                 if result.success and result.images:
-                    url      = result.images[0].get("url", "")
-                    gen_dir  = images_dir / "generated"
+                    gen_dir = images_dir / "generated"
                     gen_dir.mkdir(exist_ok=True)
-                    filename = image_assets.next_filename(images_dir, scene_num, "gen", ".png")
-                    dest     = gen_dir / filename
+                    fname = image_assets.next_filename(images_dir, sn, "gen", ".png")
                     try:
-                        _save_image_from_url(url, dest)
-                        image_assets.add_version(images_dir, scene_num, "generated/" + filename, "generate")
-                        scenes_success += 1
-                        _progress(f"씬 {scene_num} 저장 완료: {filename}")
-                    except Exception as e:
-                        logger.warning("씬 %s 저장 실패: %s", scene_num, e)
-                        scenes_fail += 1
+                        _save_image_from_url(result.images[0].get("url", ""), gen_dir / fname)
+                        image_assets.add_version(images_dir, sn, "generated/" + fname, "generate")
+                        success += 1
+                        _progress(f"씬 {sn} 생성 완료: {fname}")
+                    except Exception:
+                        fail += 1
                 else:
-                    _progress(f"씬 {scene_num} 생성 실패: {result.error}", level="warning")
-                    scenes_fail += 1
+                    _progress(f"씬 {sn} 생성 실패: {result.error}", level="warning")
+                    fail += 1
 
-            fal_queue.run_batch(jobs, on_done=on_scene_done, max_workers=10)
+            fal_queue.run_batch(jobs, on_done=on_done, max_workers=10)
+        return {"success": success, "fail": fail, "skip": skip}
 
-    # ── Phase 3: search 씬 순차 처리 (레이트 리밋 때문에 배치 안 함) ──
-    search_success, search_fail, search_skipped = 0, 0, 0
-    if scene_specs_path.exists():
+    def _run_search():
+        """search 씬 순차 검색 + 실패 시 generate fallback."""
+        import shutil as _sh
+        success, fail, skip = 0, 0, 0
+        failed_scenes = []
+
         from auto_agent.tools.image_search import ImageSearcher
-        _search_dl_dir = images_dir / "search"
-        _search_dl_dir.mkdir(exist_ok=True)
-        searcher = ImageSearcher(images_dir=_search_dl_dir)
+        search_dl_dir = images_dir / "search"
+        search_dl_dir.mkdir(exist_ok=True)
+        searcher = ImageSearcher(images_dir=search_dl_dir)
 
         for scene in scene_specs.get("scenes", []):
             ia = scene.get("imageAsset") or {}
             if ia.get("source") != "search":
                 continue
             scene_num = scene.get("sceneNumber", 0)
-            # 이미 이미지 있으면 스킵
             if image_assets.has_generated_version(images_dir, scene_num):
-                search_skipped += 1
+                skip += 1
                 continue
-            # scene_NNN_search_*.* 파일 존재 확인
-            existing = list(images_dir.glob(f"scene_{scene_num:03d}_search_*.*"))
+            existing = list(search_dl_dir.glob(f"scene_{scene_num:03d}_search_*.*"))
             if existing:
-                search_skipped += 1
+                skip += 1
                 continue
-
             query = ia.get("query") or ia.get("prompt") or ""
             if not query:
-                _progress(f"씬 {scene_num} search 쿼리 없음 - 스킵", level="warning")
-                search_fail += 1
+                fail += 1
                 continue
 
             _progress(f"씬 {scene_num} 검색: {query[:40]}")
             try:
-                # search_waterfall: wikimedia -> serper -> pixabay 순서 폴백
                 results = searcher.search_waterfall(query, limit=3, preferred_aspect="16:9")
-                if results:
+                if results and results[0].local_path and Path(results[0].local_path).exists():
                     best = results[0]
-                    if best.local_path and Path(best.local_path).exists():
-                        ext = Path(best.local_path).suffix or ".jpg"
-                        search_dir = images_dir / "search"
-                        search_dir.mkdir(exist_ok=True)
-                        filename = image_assets.next_filename(images_dir, scene_num, "search", ext)
-                        dest = search_dir / filename
-                        import shutil as _sh
-                        _sh.copy2(best.local_path, dest)
-                        # 해시명 임시 파일 정리
-                        try:
-                            Path(best.local_path).unlink(missing_ok=True)
-                        except Exception:
-                            pass
-                        image_assets.add_version(images_dir, scene_num, "search/" + filename, "search",
-                                                 source_url=best.source_page, license_info=best.license)
-                        search_success += 1
-                        _progress(f"씬 {scene_num} 검색 완료: {filename}")
-                    else:
-                        search_fail += 1
-                        _progress(f"씬 {scene_num} 다운로드 실패", level="warning")
+                    ext = Path(best.local_path).suffix or ".jpg"
+                    fname = image_assets.next_filename(images_dir, scene_num, "search", ext)
+                    dest = search_dl_dir / fname
+                    _sh.copy2(best.local_path, dest)
+                    try:
+                        Path(best.local_path).unlink(missing_ok=True)
+                    except Exception:
+                        pass
+                    image_assets.add_version(images_dir, scene_num, "search/" + fname, "search",
+                                             source_url=best.source_page, license_info=best.license)
+                    success += 1
+                    _progress(f"씬 {scene_num} 검색 완료: {fname}")
                 else:
-                    search_fail += 1
-                    _progress(f"씬 {scene_num} 검색 결과 없음: {query[:40]}", level="warning")
+                    fail += 1
+                    failed_scenes.append(scene)
+                    _progress(f"씬 {scene_num} 검색 실패 - fallback 예정", level="warning")
             except Exception as e:
-                search_fail += 1
+                fail += 1
+                failed_scenes.append(scene)
                 _progress(f"씬 {scene_num} 검색 에러: {e}", level="warning")
 
-        if search_success + search_fail > 0:
-            _progress(f"검색 완료: 성공 {search_success}개, 실패 {search_fail}개, 스킵 {search_skipped}개")
+        # search 실패 → generate fallback
+        if failed_scenes:
+            _progress(f"검색 실패 {len(failed_scenes)}개 → generate fallback")
+            fb_jobs: list[tuple[dict, FalJob]] = []
+            for sc in failed_scenes:
+                try:
+                    ep, args = _build_scene_fal_input(sc, project_dir, {})
+                    fb_jobs.append((sc, FalJob(idx=len(fb_jobs), endpoint=ep, arguments=args)))
+                except Exception:
+                    pass
+            if fb_jobs:
+                gen_dir = images_dir / "generated"
+                gen_dir.mkdir(exist_ok=True)
+                jobs = [j for _, j in fb_jobs]
 
-    _progress(f"이미지 완료: 생성 {scenes_success}개 + 검색 {search_success}개, 실패 {scenes_fail + search_fail}개, 스킵 {skipped + search_skipped}개")
+                def on_fb(result):
+                    nonlocal success, fail
+                    sc2, _ = fb_jobs[result.idx]
+                    sn = sc2.get("sceneNumber", 0)
+                    if result.success and result.images:
+                        fname = image_assets.next_filename(images_dir, sn, "gen", ".png")
+                        try:
+                            _save_image_from_url(result.images[0].get("url", ""), gen_dir / fname)
+                            image_assets.add_version(images_dir, sn, "generated/" + fname, "generate")
+                            success += 1
+                            fail -= 1  # 실패에서 성공으로 전환
+                            _progress(f"씬 {sn} fallback 생성 완료")
+                        except Exception:
+                            pass
+                    else:
+                        _progress(f"씬 {sn} fallback 실패", level="warning")
 
-    # ── Phase 4: search 실패 → generate fallback ──
-    if search_fail > 0 and scene_specs_path.exists():
-        _progress(f"검색 실패 {search_fail}개 씬 → generate fallback 시도")
-        fallback_jobs: list[tuple[dict, FalJob]] = []
-        for scene in scene_specs.get("scenes", []):
-            ia = scene.get("imageAsset") or {}
-            if ia.get("source") != "search":
-                continue
-            scene_num = scene.get("sceneNumber", 0)
-            # 이미 성공한 씬은 스킵
-            gen_dir = images_dir / "generated"
-            search_dir_path = images_dir / "search"
-            has_any = (
-                image_assets.has_generated_version(images_dir, scene_num) or
-                list(search_dir_path.glob(f"scene_{scene_num:03d}_search_*.*")) if search_dir_path.exists() else False
-            )
-            if has_any:
-                continue
-            prompt = ia.get("query") or ia.get("prompt") or scene.get("narration", "")
-            if not prompt:
-                continue
-            try:
-                endpoint, arguments = _build_scene_fal_input(scene, project_dir, {})
-                fallback_jobs.append((scene, FalJob(idx=len(fallback_jobs), endpoint=endpoint, arguments=arguments)))
-            except Exception:
-                pass
+                fal_queue.run_batch(jobs, on_done=on_fb, max_workers=10)
 
-        if fallback_jobs:
-            gen_dir = images_dir / "generated"
-            gen_dir.mkdir(exist_ok=True)
-            jobs = [job for _, job in fallback_jobs]
-            _progress(f"fallback generate {len(jobs)}개 시작...")
+        return {"success": success, "fail": fail, "skip": skip}
 
-            def on_fallback_done(result):
-                nonlocal scenes_success, scenes_fail
-                sc, _ = fallback_jobs[result.idx]
-                sn = sc.get("sceneNumber", 0)
-                if result.success and result.images:
-                    url = result.images[0].get("url", "")
-                    fname = image_assets.next_filename(images_dir, sn, "gen", ".png")
-                    dest = gen_dir / fname
-                    try:
-                        _save_image_from_url(url, dest)
-                        image_assets.add_version(images_dir, sn, "generated/" + fname, "generate")
-                        scenes_success += 1
-                        _progress(f"씬 {sn} fallback 생성 완료: {fname}")
-                    except Exception:
-                        scenes_fail += 1
-                else:
-                    _progress(f"씬 {sn} fallback 생성 실패", level="warning")
+    # ── 병렬 실행: generate + search ──
+    _progress("이미지 generate + search 병렬 시작...")
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        gen_future = pool.submit(_run_generate)
+        search_future = pool.submit(_run_search)
+        gen_result = gen_future.result()
+        search_result = search_future.result()
 
-            fal_queue.run_batch(jobs, on_done=on_fallback_done, max_workers=10)
+    total_success = gen_result["success"] + search_result["success"]
+    total_fail = gen_result["fail"] + search_result["fail"]
+    total_skip = gen_result["skip"] + search_result["skip"]
+    _progress(f"이미지 완료: 생성 {gen_result['success']}개 + 검색 {search_result['success']}개, 실패 {total_fail}개, 스킵 {total_skip}개")
 
-    _progress(f"전체 완료: 생성 {scenes_success}개 + 검색 {search_success}개")
-
-    total_attempted = scenes_success + scenes_fail + search_success + search_fail
     summary = {
         "chars_reused":    len(reused),
         "chars_generated": len(to_generate),
-        "scenes_success":  scenes_success + search_success,
-        "scenes_fail":     scenes_fail + search_fail,
-        "scenes_skipped":  skipped + search_skipped,
+        "scenes_success":  total_success,
+        "scenes_fail":     total_fail,
+        "scenes_skipped":  total_skip,
     }
-    if total_attempted > 0 and (scenes_fail + search_fail) > total_attempted * 0.5:
+    total_attempted = total_success + total_fail
+    if total_attempted > 0 and total_fail > total_attempted * 0.5:
         summary["status"] = "failed"
-        summary["error"] = f"이미지 대량 실패: {scenes_fail + search_fail}/{total_attempted}"
+        summary["error"] = f"이미지 대량 실패: {total_fail}/{total_attempted}"
         _progress(summary["error"], level="error")
     return summary
 
