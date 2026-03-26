@@ -1883,6 +1883,8 @@ const BarDisplay: React.FC<{
   countedValues: number[];
   glowOpacity: number;
   hasImageBg?: boolean;
+  subtitles?: SubtitleEntry[];
+  fps?: number;
 }> = ({
   items,
   values,
@@ -1895,12 +1897,19 @@ const BarDisplay: React.FC<{
   countedValues,
   glowOpacity,
   hasImageBg,
+  subtitles,
+  fps = 30,
 }) => {
   const C = useC();
   const T = usePresetTypo();
   const L = usePresetLayout();
   const frame = useCurrentFrame();
   const hasNegative = values.some((v) => v < 0);
+
+  // 자막 동기화: 아이템별 등장 딜레이
+  const itemDelays = (subtitles && subtitles.length > 0)
+    ? computeItemSubtitleDelays(subtitles, items, fps)
+    : items.map((_, i) => 15 + i * 10);  // fallback: 고정 딜레이
   const maxVal = Math.max(...values, 1);
   const NEG_COLOR = "#EF4444";
   // 마이너스 포함: 0축 위치를 전체 범위(min~max) 대비로 계산
@@ -1971,7 +1980,7 @@ const BarDisplay: React.FC<{
           }}
         >
           {items.map((label, i) => {
-            const d = 15 + i * 10;
+            const d = itemDelays[i] || (15 + i * 10);
             const val = values[i] || 0;
             const isNeg = val < 0;
             // barProgress: 0→1 애니메이션 (비율은 바 너비에서 적용)
@@ -2987,6 +2996,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         countedValues={countedValues}
         glowOpacity={glowOpacity}
         hasImageBg={hasImageBackground}
+        subtitles={subtitles}
+        fps={fps}
       />
     );
   }
