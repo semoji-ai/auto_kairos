@@ -84,8 +84,8 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    - 리서치에서 바로 보이는 수치는 채워도 됨
    - 빈 values/unit/source는 data-mapper가 채움
 
-4. 에셋 결정 (필요 시)
-   - imageAsset: 실물 이미지가 임팩트를 높일 때만
+4. 에셋 결정 (적극적으로)
+   - imageAsset: 전체 씬의 30~50%에 사용 (아래 가이드 참조)
    - mapScene: 지리적 이벤트일 때만
    - chartConfig: 데이터 비교/추세일 때만
 ```
@@ -106,6 +106,7 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 □ cinematic 씬이 전체의 10~15% 이내인가
 □ 감정 곡선이 자연스러운가 (dramatic→informative→dramatic 같은 급변 없이)
 □ 차트/그래프/데이터 씬에만 source가 있는가 (cinematic/quote 등 데이터 없는 씬에는 source 넣지 말 것)
+□ imageAsset이 전체 씬의 30~50%에 사용되었는가 (너무 적으면 시각적 밀도 부족)
 ```
 
 ---
@@ -180,6 +181,29 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 - `background`: 배경/장소 묘사 (generate용)
 - `camera`: 카메라 앵글/구도 (generate용, 영어 권장)
 - `placement`: `"fullscreen"` (cinematic) 또는 `"background"` (데이터 위에 배경)
+
+**imageAsset 사용 비율 가이드 (전체 씬의 30~50%):**
+
+| 상황 | imageAsset | source | placement |
+|------|-----------|--------|-----------|
+| cinematic 씬 | **필수** | generate 또는 search | `"fullscreen"` |
+| quote_portrait 씬 | **필수** | search (인물 사진) | `"left"` 또는 `"right"` |
+| 데이터 씬 + 관련 실물 존재 | **적극 권장** | search | `"background"` |
+| 데이터 씬 + 실물 없음 | 생략 OK | — | — |
+| 순수 텍스트/수치 씬 | 생략 OK | — | — |
+
+**데이터 씬 배경 이미지 예시:**
+- items_grid "주요 반도체 기업" → `{ "source": "search", "query": "semiconductor wafer", "placement": "background" }`
+- counter "수출액 500억 달러" → `{ "source": "search", "query": "container port", "placement": "background" }`
+- bar "국가별 점유율" → `{ "source": "search", "query": "world map trade", "placement": "background" }`
+
+배경 이미지는 opacity가 자동으로 낮게(0.15~0.35) 적용되어 데이터 가독성을 해치지 않습니다.
+cinematic/quote_portrait 외에도 **데이터 씬에 관련 실사 배경**을 넣으면 시각적 밀도가 크게 향상됩니다.
+
+**source 선택 기준:**
+- 실존 인물/장소/사물/사건 → `"search"` (Wikimedia/Google에서 실물 사진)
+- 추상적 장면, 가상 상황, 예술적 분위기 → `"generate"` (AI 생성)
+- 판단이 애매하면 `"search"` 우선 (실물이 더 신뢰감)
 
 **quote_portrait 레이아웃 필수 규칙:**
 - `layout: "quote_portrait"` 사용 시 반드시 `imageAsset` 설정
