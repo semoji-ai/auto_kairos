@@ -99,19 +99,20 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
   } as any;
   const _layout = s.layout || s.sceneType || v.layout || "";
   const _headline = s.headline || v.headline || "";
+  const vc = v.creative || {};
   const creative = {
     layout: _layout,
     headline: _layout === "quote_portrait" ? "" : (_headline || s.title || v.title || ""),
     mood: s.mood || v.mood || "informative",
     motion: s.motion || s.motionPreset || v.motionPreset || "",
-    reveal: "fade_in",
-    emphasis: "none",
-    headlineOffsetX: 0,
-    headlineOffsetY: 0,
-    itemsOffsetX: 0,
-    itemsOffsetY: 0,
-    sourceOffsetX: 0,
-    sourceOffsetY: 0,
+    reveal: vc.reveal || "fade_in",
+    emphasis: vc.emphasis || "none",
+    headlineOffsetX: vc.headlineOffsetX || 0,
+    headlineOffsetY: vc.headlineOffsetY || 0,
+    itemsOffsetX: vc.itemsOffsetX || 0,
+    itemsOffsetY: vc.itemsOffsetY || 0,
+    sourceOffsetX: vc.sourceOffsetX || 0,
+    sourceOffsetY: vc.sourceOffsetY || 0,
   } as any;
 
   const fps = meta?.fps || 30;
@@ -123,12 +124,30 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
   const durationInFrames = Math.max(1, rawDuration);
 
   /* ── 업데이트 헬퍼 (플랫 + visualization 양쪽 동기화) ── */
+  const OFFSET_KEYS = new Set(["headlineOffsetX","headlineOffsetY","itemsOffsetX","itemsOffsetY","sourceOffsetX","sourceOffsetY"]);
+
   const updateField = useCallback((patch: Record<string, any>) => {
     setScene(prev => {
       const next = { ...prev, ...patch };
-      // visualization 블록에도 동기화 (SceneRendererInner가 resolveVisualization에서 읽음)
       const oldViz = prev.visualization || {};
-      next.visualization = { ...oldViz, ...patch };
+
+      // 오프셋 필드는 visualization.creative 안에 넣어야 CreativeScene이 읽음
+      const offsetPatch: Record<string, any> = {};
+      const vizPatch: Record<string, any> = {};
+      for (const [k, v] of Object.entries(patch)) {
+        if (OFFSET_KEYS.has(k)) {
+          offsetPatch[k] = v;
+        } else {
+          vizPatch[k] = v;
+        }
+      }
+
+      const oldCreative = (oldViz as any).creative || {};
+      next.visualization = {
+        ...oldViz,
+        ...vizPatch,
+        creative: { ...oldCreative, ...offsetPatch },
+      };
       return next;
     });
   }, []);
