@@ -795,8 +795,18 @@ def _build_scene_fal_input(
         if has_char:
             parts.append(
                 "**Character Reference Rules:**\n"
-                "- Use reference images ONLY for face and clothing appearance\n"
+                "- Use reference images ONLY for face appearance\n"
+                "- Do NOT copy the hairstyle or clothing from reference images!\n"
                 "- ALL characters MUST face FORWARD (frontal view)"
+            )
+        elif not has_char and image_urls:
+            # base reference image만 있는 경우
+            parts.append(
+                "**🚫 CRITICAL: Reference Image Restrictions 🚫**\n"
+                "The attached reference image is ONLY for art style reference.\n"
+                "- ✅ COPY: Color palette, lighting, texture, brush strokes, mood\n"
+                "- ❌ NEVER COPY: Any character's hairstyle, clothing, face, or appearance\n"
+                "- Create completely NEW characters based on the scene description"
             )
         struct = []
         if characters_info:
@@ -826,9 +836,11 @@ def _build_scene_fal_input(
         ref_image = art_style.get("reference_image", "")
 
         image_urls = [_image_to_data_uri(cp) for cp in char_path_strs]
+        is_base_ref = False
         # 캐릭터 참조 없으면 스타일 base 이미지를 참조로 사용
         if not image_urls and ref_image and Path(ref_image).exists():
             image_urls = [_image_to_data_uri(ref_image)]
+            is_base_ref = True
 
         prompt = _enrich_historical_context(prompt, historical_period)
         scene_desc = _filter_text_descriptions(prompt)
@@ -840,11 +852,21 @@ def _build_scene_fal_input(
         if critical_reqs:
             parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs))
         parts.append(scene_desc)
-        if char_path_strs:
+        if is_base_ref:
+            parts.append(
+                "**🚫 CRITICAL: Reference Image Restrictions 🚫**\n"
+                "The attached reference image is ONLY for art style reference.\n"
+                "- ✅ COPY: Color palette, lighting, texture, brush strokes, mood, art technique\n"
+                "- ❌ NEVER COPY: Any person, character, hairstyle, clothing, face, or body from the reference image\n"
+                "- ❌ ABSOLUTELY FORBIDDEN: Do NOT use the reference image character's hairstyle, outfit, or appearance\n"
+                "- Create completely NEW characters based on the scene description"
+            )
+        elif char_path_strs:
             parts.append(
                 "**Character Reference Rules:**\n"
-                "- Use reference images ONLY for face and clothing appearance\n"
+                "- Use reference images ONLY for face appearance\n"
                 "- Do NOT copy the pose from reference images!\n"
+                "- Do NOT copy the hairstyle or clothing from reference images!\n"
                 "- Maintain consistent eye, nose, mouth, and body proportions"
             )
         struct = []
