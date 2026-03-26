@@ -1812,7 +1812,7 @@ const LogoGridLayout: React.FC<{
                       color: brandColor,
                     }}
                   >
-                    {val}{unit}
+                    {fmtNum(val)}{unit}
                   </div>
                 )}
               </div>
@@ -2064,7 +2064,7 @@ const BarDisplay: React.FC<{
                   {(() => {
                     const sign = hasNegative && !isNeg ? "+" : "";
                     const prefix = unit === "$" || unit === "₩" ? unit : "";
-                    return `${prefix}${sign}${val.toLocaleString()}`;
+                    return `${prefix}${sign}${fmtNum(val)}`;
                   })()}
                 </div>
               </div>
@@ -2372,7 +2372,7 @@ const LineChartDisplay: React.FC<{
                       fontWeight={700}
                       fill={C.text}
                     >
-                      {values[i]}{unit}
+                      {fmtNum(values[i])}{unit}
                     </text>
                   )}
                 </g>
@@ -3288,7 +3288,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, ...useScale(15) }}>
             <MetricCard
               label={items[0] || data.title || ""}
-              value={values.length > 0 ? `${values[0]}${data.unit || ""}` : ""}
+              value={values.length > 0 ? `${fmtNum(values[0])}${data.unit || ""}` : ""}
               change={items[1]}
               trend={values.length > 1 ? (values[1] > 0 ? "up" : "down") : undefined}
             />
@@ -3576,7 +3576,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                       <MiniBar
                         value={values[i] || 0}
                         maxValue={maxVal}
-                        label={`${item}  ${values[i] != null ? values[i] : ""}${data.unit || ""}`}
+                        label={`${item}  ${values[i] != null ? fmtNum(values[i]) : ""}${data.unit || ""}`}
                         color={moodCfg.accent}
                         height={10}
                       />
