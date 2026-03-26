@@ -270,8 +270,15 @@ function resizePreview(val) {
       var bar = document.getElementById('sb-art-style-bar');
       if (!bar) return;
       var current = data.current_info || {};
+      var styles = data.available || [];
+      var options = styles.map(function(s) {
+        var sel = s.path === data.current ? ' selected' : '';
+        return '<option value="' + s.path + '"' + sel + '>' + s.name + '</option>';
+      }).join('');
       bar.innerHTML = '<span class="style-label">🎨 아트스타일</span>' +
-        '<span class="style-name">' + (current.name || '미설정') + '</span>';
+        '<select onchange="sbChangeArtStyle(this.value)" style="padding:3px 8px;border-radius:4px;background:rgba(0,0,0,0.3);color:#E4E4E7;border:1px solid rgba(255,255,255,0.1);font-size:10px">' +
+        '<option value="">미설정</option>' + options + '</select>' +
+        '<span class="style-name">' + (current.name || '') + '</span>';
     }).catch(function() {});
 
   // 이미지 버전 그리드 자동 로드
@@ -491,6 +498,15 @@ function regenTts(sn) {
 }
 
 // ── 이미지 에셋 패널 (스토리보드 통합) ──
+function sbChangeArtStyle(path) {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/art-style', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({art_style: path})
+  }).then(function(r) { return r.json(); }).then(function() {
+    location.reload();
+  }).catch(function() {});
+}
+
 function toggleAssetPanel(sn) {
   var panel = document.getElementById('sb-asset-' + sn);
   panel.style.display = panel.style.display === 'none' ? '' : 'none';
@@ -532,13 +548,22 @@ function sbApplyUrl(sn) {
 }
 
 function sbSearchImage(sn) {
-  var panel = document.getElementById('sb-versions-' + sn);
-  panel.innerHTML = '<div style="font-size:10px;color:#888;padding:8px">검색 중...</div>';
+  // 검색 결과 패널 — sb-asset-panel 안에 동적 생성
+  var assetPanel = document.getElementById('sb-asset-' + sn);
+  if (!assetPanel) return;
+  var resultId = 'sb-search-results-' + sn;
+  var panel = document.getElementById(resultId);
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = resultId;
+    assetPanel.appendChild(panel);
+  }
+  panel.innerHTML = '<div style="font-size:11px;color:#888;padding:6px">검색 중...</div>';
   fetch('/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sn + '?source=wikimedia')
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var candidates = data.candidates || [];
-      if (!candidates.length) { panel.innerHTML = '<div style="font-size:10px;color:#888;padding:8px">검색 결과 없음</div>'; return; }
+      if (!candidates.length) { panel.innerHTML = '<div style="font-size:11px;color:#888;padding:6px">검색 결과 없음</div>'; return; }
       var html = '<div class="sb-candidates">';
       candidates.forEach(function(c) {
         var thumb = c.thumbnail_url || c.url || '';
@@ -548,7 +573,7 @@ function sbSearchImage(sn) {
       });
       html += '</div>';
       panel.innerHTML = html;
-    }).catch(function() { panel.innerHTML = '<div style="font-size:10px;color:#f66;padding:8px">검색 실패</div>'; });
+    }).catch(function() { panel.innerHTML = '<div style="font-size:11px;color:#f66;padding:6px">검색 실패</div>'; });
 }
 
 function sbSelectCandidate(sn, url) {
