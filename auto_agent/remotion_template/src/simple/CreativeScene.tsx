@@ -3113,6 +3113,9 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           zIndex: 2,
           width: "100%",
           height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         } : {
           position: "relative",
           zIndex: 2,
@@ -3513,11 +3516,12 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             </div>
           );
           const imagePanel = (
-            <div style={{ flex: "0 0 40%", position: "relative", overflow: "hidden",
+            <div style={{ flex: "0 0 35%", position: "relative", overflow: "hidden",
                           backgroundColor: qpImageSrc ? "transparent" : "rgba(255,255,255,0.03)" }}>
               {qpImageSrc ? (
                 <Img src={qpImageSrc} style={{
                   width: "100%", height: "100%", objectFit: "cover",
+                  objectPosition: "center top",
                 }} />
               ) : (
                 <div style={{ width: "100%", height: "100%", display: "flex",
@@ -3528,15 +3532,15 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               <div style={{
                 position: "absolute", inset: 0,
                 background: qpSide === "left"
-                  ? "linear-gradient(to right, transparent 60%, " + C.bg + " 100%)"
-                  : "linear-gradient(to left, transparent 60%, " + C.bg + " 100%)",
+                  ? "linear-gradient(to right, transparent 50%, " + C.bg + " 100%)"
+                  : "linear-gradient(to left, transparent 50%, " + C.bg + " 100%)",
               }} />
             </div>
           );
 
           return (
             <div style={{ display: "flex", flexDirection: qpSide === "right" ? "row-reverse" : "row",
-                          width: "100%", height: "100%", alignItems: "stretch" }}>
+                          width: "100%", height: "100%", alignItems: "stretch", gap: 0 }}>
               {imagePanel}
               {quoteContent}
             </div>
