@@ -115,9 +115,20 @@
       </div>
       <div class="sb-asset-panel" id="sb-asset-{{ scene.sceneNumber }}" style="display:none">
         <div class="sb-asset-actions">
-          <button onclick="sbSearchImage({{ scene.sceneNumber }})">🔍 검색</button>
+          <button onclick="sbToggleSearch({{ scene.sceneNumber }})">🔍 검색</button>
           <button onclick="sbTogglePasteUrl({{ scene.sceneNumber }})">📎 URL</button>
           <button onclick="sbToggleGenerate({{ scene.sceneNumber }})">🎨 생성</button>
+        </div>
+        <div class="sb-asset-search" id="sb-search-{{ scene.sceneNumber }}" style="display:none">
+          <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+            <input type="text" id="sb-search-input-{{ scene.sceneNumber }}" placeholder="검색어 (영문 권장)" class="sb-paste-input" style="flex:1">
+            <select id="sb-search-source-{{ scene.sceneNumber }}" style="padding:3px 6px;border-radius:4px;background:rgba(0,0,0,0.3);color:#E4E4E7;border:1px solid rgba(255,255,255,0.1);font-size:10px">
+              <option value="wikimedia">Wikimedia</option>
+              <option value="serper">Google</option>
+            </select>
+            <button onclick="sbDoSearch({{ scene.sceneNumber }})" class="sb-asset-actions" style="font-size:10px;padding:3px 10px;border-radius:4px;background:rgba(59,130,246,0.2);border:none;color:#60A5FA;cursor:pointer">검색</button>
+          </div>
+          <div id="sb-search-results-{{ scene.sceneNumber }}"></div>
         </div>
         <div class="sb-asset-paste" id="sb-paste-{{ scene.sceneNumber }}" style="display:none">
           <input type="text" id="sb-paste-input-{{ scene.sceneNumber }}" placeholder="이미지 URL 붙여넣기" class="sb-paste-input">
@@ -547,23 +558,19 @@ function sbApplyUrl(sn) {
   }).catch(function(e) { status.innerHTML = '<span style="color:#FCA5A5">' + e.message + '</span>'; });
 }
 
-function sbSearchImage(sn) {
-  // 검색 결과 패널 — sb-asset-panel 안에 동적 생성
-  var assetPanel = document.getElementById('sb-asset-' + sn);
-  if (!assetPanel) return;
-  var resultId = 'sb-search-results-' + sn;
-  var panel = document.getElementById(resultId);
-  if (!panel) {
-    panel = document.createElement('div');
-    panel.id = resultId;
-    assetPanel.appendChild(panel);
-  }
-  // 커스텀 쿼리 입력 프롬프트
-  var defaultQ = prompt('검색어를 입력하세요 (영문 권장):', '');
-  if (defaultQ === null) return;
-  var qParam = defaultQ ? '&q=' + encodeURIComponent(defaultQ) : '';
+function sbToggleSearch(sn) {
+  var el = document.getElementById('sb-search-' + sn);
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+  if (el.style.display !== 'none') document.getElementById('sb-search-input-' + sn).focus();
+}
+
+function sbDoSearch(sn) {
+  var query = document.getElementById('sb-search-input-' + sn).value.trim();
+  var source = document.getElementById('sb-search-source-' + sn).value;
+  var panel = document.getElementById('sb-search-results-' + sn);
+  var qParam = query ? '&q=' + encodeURIComponent(query) : '';
   panel.innerHTML = '<div style="font-size:11px;color:#888;padding:6px">검색 중...</div>';
-  fetch('/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sn + '?source=wikimedia' + qParam)
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sn + '?source=' + source + qParam)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var candidates = data.candidates || [];
