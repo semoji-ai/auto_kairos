@@ -183,11 +183,13 @@ def run_batch(
                 scene_num = scene.get("sceneNumber", result.idx + 1)
                 if result.success and result.images:
                     url      = result.images[0].get("url", "")
+                    gen_dir  = images_dir / "generated"
+                    gen_dir.mkdir(exist_ok=True)
                     filename = image_assets.next_filename(images_dir, scene_num, "gen", ".png")
-                    dest     = images_dir / filename
+                    dest     = gen_dir / filename
                     try:
                         _save_image_from_url(url, dest)
-                        image_assets.add_version(images_dir, scene_num, filename, "generate")
+                        image_assets.add_version(images_dir, scene_num, "generated/" + filename, "generate")
                         scenes_success += 1
                         _progress(f"씬 {scene_num} 저장 완료: {filename}")
                     except Exception as e:
@@ -203,7 +205,9 @@ def run_batch(
     search_success, search_fail, search_skipped = 0, 0, 0
     if scene_specs_path.exists():
         from auto_agent.tools.image_search import ImageSearcher
-        searcher = ImageSearcher(images_dir=images_dir)
+        _search_dl_dir = images_dir / "search"
+        _search_dl_dir.mkdir(exist_ok=True)
+        searcher = ImageSearcher(images_dir=_search_dl_dir)
 
         for scene in scene_specs.get("scenes", []):
             ia = scene.get("imageAsset") or {}
@@ -234,8 +238,10 @@ def run_batch(
                     best = results[0]
                     if best.local_path and Path(best.local_path).exists():
                         ext = Path(best.local_path).suffix or ".jpg"
+                        search_dir = images_dir / "search"
+                        search_dir.mkdir(exist_ok=True)
                         filename = image_assets.next_filename(images_dir, scene_num, "search", ext)
-                        dest = images_dir / filename
+                        dest = search_dir / filename
                         import shutil as _sh
                         _sh.copy2(best.local_path, dest)
                         # 해시명 임시 파일 정리
@@ -243,7 +249,7 @@ def run_batch(
                             Path(best.local_path).unlink(missing_ok=True)
                         except Exception:
                             pass
-                        image_assets.add_version(images_dir, scene_num, filename, "search",
+                        image_assets.add_version(images_dir, scene_num, "search/" + filename, "search",
                                                  source_url=best.source_page, license_info=best.license)
                         search_success += 1
                         _progress(f"씬 {scene_num} 검색 완료: {filename}")

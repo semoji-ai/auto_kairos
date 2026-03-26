@@ -75,6 +75,9 @@ def _load(images_dir: Path) -> dict:
         gen_dir = images_dir / "generated"
         if gen_dir.exists():
             scan_dirs.append((gen_dir, "generated/"))
+        search_dir = images_dir / "search"
+        if search_dir.exists():
+            scan_dirs.append((search_dir, "search/"))
 
         for scan_dir, prefix in scan_dirs:
             for f in sorted(scan_dir.glob("scene_*")):
