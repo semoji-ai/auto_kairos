@@ -33,13 +33,15 @@ auto-agent bg list                             # 전체 세션
 ```
 
 ### 스텝 ID
-| 스텝 | 이름 | 에이전트 |
-|------|------|---------|
+| 스텝 | 이름 | 에이전트/모듈 |
+|------|------|-------------|
 | step_0 | environment_check | preflight (모듈) |
 | step_1 | deep_research | research-orchestrator |
 | step_2 | script_and_direct | script-director |
+| step_2_data | data_mapping | data-mapper |
 | step_2b | fact_check | fact-verifier (비차단) |
-| step_3 | assembly | assembly-director |
+| step_3a | image_batch | image_batch_module (모듈) |
+| step_3b | assembly | assembly-director |
 
 ### 프로젝트 설정
 ```

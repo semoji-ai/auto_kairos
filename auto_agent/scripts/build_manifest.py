@@ -233,6 +233,11 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         image_path = ""
         selected_file = image_assets_lookup.get(num)
         if selected_file:
+            # 절대경로가 들어온 경우 → 상대 파일명만 추출
+            selected_file = selected_file.replace("\\", "/")
+            if "/" in selected_file and not selected_file.startswith(("generated/", "search/")):
+                # C:/Users/.../images/scene_001.png → scene_001.png
+                selected_file = Path(selected_file).name
             img_src = out_dir / "images" / selected_file
             if img_src.exists():
                 image_path = link_asset(img_src, "images", selected_file)

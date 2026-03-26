@@ -364,6 +364,7 @@ class PipelineRunner:
             if only_step:
                 target = [s for s in steps if s["id"] == only_step]
                 if not target:
+                    # 이 phase에 없으면 다음 phase에서 찾기
                     continue
                 steps = target
                 found_start = True
@@ -437,6 +438,15 @@ class PipelineRunner:
 
             if only_step:
                 break
+
+        # --only/--from으로 지정한 step이 없으면 경고
+        if only_step and not found_start:
+            all_ids = []
+            for ph in self.pipeline.get("phases", []):
+                for s in ph.get("steps", []):
+                    all_ids.append(s["id"])
+            print(f"\n  [ERROR] step '{only_step}'를 찾을 수 없습니다.", flush=True)
+            print(f"  사용 가능한 step ID: {', '.join(all_ids)}", flush=True)
 
         self._finish()
 
