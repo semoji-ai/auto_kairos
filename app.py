@@ -233,7 +233,6 @@ TAB_TEMPLATES = {
     "manuscript": "partials/_manuscript.html",
     "storyboard": "partials/_storyboard.html",
     "studio": "partials/_studio.html",
-    "assets": "partials/_assets.html",
     "versions": "partials/_versions.html",
     "costs": "partials/_costs.html",
     "design": "partials/_design.html",

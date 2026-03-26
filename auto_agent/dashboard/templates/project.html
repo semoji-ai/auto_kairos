@@ -17,7 +17,6 @@
   <a href="#" data-tab="research" class="content-tab {% if tab == 'research' %}active{% endif %}" onclick="switchTab('research', this); return false;">Research</a>
   <a href="#" data-tab="manuscript" class="content-tab {% if tab == 'manuscript' %}active{% endif %}" onclick="switchTab('manuscript', this); return false;">원고</a>
   <a href="#" data-tab="storyboard" class="content-tab {% if tab == 'storyboard' %}active{% endif %}" onclick="switchTab('storyboard', this); return false;">스토리보드</a>
-  <a href="#" data-tab="assets" class="content-tab {% if tab == 'assets' %}active{% endif %}" onclick="switchTab('assets', this); return false;">Assets</a>
   <a href="#" data-tab="studio" class="content-tab {% if tab == 'studio' %}active{% endif %}" onclick="switchTab('studio', this); return false;">Studio</a>
   <a href="#" data-tab="design" class="content-tab {% if tab == 'design' %}active{% endif %}" onclick="switchTab('design', this); return false;">Design</a>
   <a href="#" data-tab="versions" class="content-tab {% if tab == 'versions' %}active{% endif %}" onclick="switchTab('versions', this); return false;">Versions</a>
@@ -33,8 +32,6 @@
   {% include "partials/_storyboard.html" %}
 {% elif tab == 'studio' %}
   {% include "partials/_studio.html" %}
-{% elif tab == 'assets' %}
-  {% include "partials/_assets.html" %}
 {% elif tab == 'versions' %}
   {% include "partials/_versions.html" %}
 {% elif tab == 'design' %}
