@@ -166,6 +166,7 @@ function resizePreview(val) {
   var dirName = '{{ dir_name|default(slug) }}';
   var metaCache = null;
   var sceneCache = {};
+  window._sceneCache = sceneCache;
 
   function fetchMeta() {
     if (metaCache) return Promise.resolve(metaCache);
@@ -492,7 +493,7 @@ function sbApplyUrl(sn) {
       sbLoadVersions(sn); sbLoadImageGrid(sn);
       // 프리뷰 갱신 — 마운트된 씬 리로드
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
-      if (mount) { mount.dataset.refresh = '1'; sceneCache[sn] = null; tryMount(mount); }
+      if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
     } else {
       status.innerHTML = '<span style="color:#FCA5A5">' + (res.error || '실패') + '</span>';
     }
@@ -527,7 +528,7 @@ function sbSelectCandidate(sn, url) {
     if (res.ok || res.selected) {
       sbLoadVersions(sn); sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
-      if (mount) { mount.dataset.refresh = '1'; sceneCache[sn] = null; tryMount(mount); }
+      if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
     }
   });
 }
@@ -555,7 +556,7 @@ function sbGenerateImage(sn) {
       status.innerHTML = '<span style="color:#86EFAC">생성 완료</span>';
       sbLoadVersions(sn); sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
-      if (mount) { mount.dataset.refresh = '1'; sceneCache[sn] = null; tryMount(mount); }
+      if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
     } else {
       status.innerHTML = '<span style="color:#FCA5A5">' + (res.error || '실패') + '</span>';
     }
@@ -613,7 +614,7 @@ function sbSelectVersion(sn, file) {
     if (res.ok) {
       sbLoadVersions(sn); sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
-      if (mount) { mount.dataset.refresh = '1'; sceneCache[sn] = null; tryMount(mount); }
+      if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
       // 매니페스트 재빌드 → Remotion Studio + 스토리보드 일괄 반영
       fetch('/api/p/' + encodeURIComponent(slug) + '/rebuild-manifest', { method: 'POST' }).catch(function(){});
       // manifest 캐시 무효화
