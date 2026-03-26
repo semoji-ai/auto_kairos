@@ -578,7 +578,8 @@ function sbDoSearch(sn) {
       var html = '<div class="sb-candidates">';
       candidates.forEach(function(c) {
         var thumb = c.thumbnail_url || c.url || '';
-        html += '<div class="sb-candidate" onclick="sbSelectCandidate(' + sn + ',\'' + (c.url || '').replace(/'/g, "\\'") + '\')" title="' + (c.title || '') + '">';
+        var selectUrl = c.original_url || c.url || c.thumbnail_url || '';
+        html += '<div class="sb-candidate" onclick="sbSelectCandidate(' + sn + ',\'' + selectUrl.replace(/'/g, "\\'") + '\')" title="' + (c.title || '') + '">';
         html += '<img src="' + thumb + '" loading="lazy">';
         html += '</div>';
       });
