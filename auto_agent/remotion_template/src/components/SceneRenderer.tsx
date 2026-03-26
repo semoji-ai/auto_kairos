@@ -85,8 +85,8 @@ const SideLayout: React.FC<{
           <div style={{
             position: "absolute", inset: 0,
             background: isLeft
-              ? `linear-gradient(to right, transparent 50%, ${bgColor} 100%)`
-              : `linear-gradient(to left, transparent 50%, ${bgColor} 100%)`,
+              ? `linear-gradient(to right, transparent 80%, ${bgColor} 100%)`
+              : `linear-gradient(to left, transparent 80%, ${bgColor} 100%)`,
           }} />
         </div>
         {/* 콘텐츠 영역 */}
