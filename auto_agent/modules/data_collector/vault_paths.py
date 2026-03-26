@@ -82,3 +82,28 @@ def ensure_vault_structure():
     obsidianignore = vault_root() / ".obsidianignore"
     if not obsidianignore.exists():
         obsidianignore.write_text(".collector/\n.lance/\n", encoding="utf-8")
+
+    # 템플릿 파일 생성
+    video_template = templates_dir() / "video-note.md"
+    if not video_template.exists():
+        video_template.write_text(
+            "---\n"
+            'video_id: ""\n'
+            "channel:\n"
+            "project_slug:\n"
+            "published:\n"
+            'duration: ""\n'
+            "---\n"
+            "\n"
+            "## 성과\n"
+            "| 지표 | 7일 | 28일 | 현재 |\n"
+            "|------|-----|------|------|\n"
+            "| 조회수 | | | |\n"
+            "| CTR | | | |\n"
+            "| 평균 시청 지속 | | | |\n"
+            "\n"
+            "## 유입 경로\n"
+            "\n"
+            "## 연결\n",
+            encoding="utf-8",
+        )

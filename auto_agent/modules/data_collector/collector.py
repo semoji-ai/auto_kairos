@@ -9,6 +9,7 @@ from typing import Dict, List
 from auto_agent.paths import get_vault_dir
 from .dedup import DedupManager
 from .discord_notifier import DiscordNotifier
+from .vault_paths import ensure_vault_structure
 from .vault_writer import VaultWriter
 from .youtube_collector import YouTubeCollector
 
@@ -42,6 +43,9 @@ class DataCollector:
             client_secret=os.getenv("YOUTUBE_CLIENT_SECRET", ""),
             refresh_token=os.getenv("YOUTUBE_REFRESH_TOKEN", ""),
         )
+
+        # 볼트 기본 구조 + 템플릿 자동 생성
+        ensure_vault_structure()
 
     # ── 전체 수집 ──
 
