@@ -108,9 +108,20 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    | 인용문 + 인물 이미지 | 발언 인용 | left/right | quote_portrait |
    | 로고 + 수치 | 기업/브랜드 비교 | — | logo_grid |
 
-   ※ items가 있어도 이미지를 함께 쓸 수 있음 (background/side)
-   ※ headline이 있어도 이미지를 함께 쓸 수 있음
-   ※ imageAsset은 전체 씬의 30~50%에 사용
+   ⚠️ placement 규칙:
+   - left/right: **인용문(quote_portrait)에만** 사용. 인물 사진 + 인용문 조합.
+     items에 데이터가 있으면 left/right 쓰지 말 것 → background 사용
+   - background: 데이터 씬에 맥락/분위기 배경. 가장 범용적.
+     **items가 있는 씬에 이미지를 넣을 때는 거의 항상 background**
+   - fullscreen: cinematic 전환/도입/여운. items 없는 씬에만.
+
+   ⚠️ 이미지 적극 사용:
+   - items가 있는 데이터 씬에도 관련 실사 배경 적극 사용
+   - "반도체 점유율" → background에 반도체 공장
+   - "전력 소비 추이" → background에 데이터센터
+   - imageAsset은 전체 씬의 **40~50%**에 사용 (items만 있는 씬은 단조로움)
+   - items가 있어도 이미지를 함께 쓸 수 있음 (background)
+   - headline이 있어도 이미지를 함께 쓸 수 있음 (background)
 
 5. motion + mood 결정
    - layout은 적지 않음 — 시스템이 콘텐츠 구조를 보고 자동 결정
@@ -131,10 +142,15 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    - source = 데이터 출처 (필수)
    - 예: headline="AI 데이터센터 전력 소비 추이", source="IEA (2025)"
 
-   headline_only (텍스트 한 줄 강조):
-   - headline만 사용 (items 없음)
+   ⚠️ headline_only 사용 제한:
+   - headline만 쓰는 씬은 전체의 **5~10% 이내** (50씬 기준 3~5개)
+   - 숫자 강조({{415}} TWh)는 headline_only가 아닌 items+values로 표현
+     → values=[415], unit="TWh" 로 채우면 시스템이 counter/metric_spotlight 선택
+   - headline_only는 정말 텍스트만으로 전달해야 하는 경우에만:
+     "전력이 곧 {{국력}}이다" 같은 선언/격언형
+   - {{숫자}}를 쓸 때: 반드시 values에도 해당 숫자를 넣을 것
+     → headline="{{415}} TWh", values=[415], unit="TWh"
    - {{}} 로 accent 강조 (씬당 최대 2개)
-   - 예: headline="AI는 {{전기}}를 먹고 있습니다"
 
    quote_portrait (인용문):
    - items[0] = 인용문 텍스트
@@ -181,7 +197,9 @@ layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면
 □ 감정 곡선이 자연스러운가 (dramatic→informative→dramatic 같은 급변 없이)
 □ 차트/그래프 씬에 headline(제목)과 source(출처)가 있는가
 □ quote_portrait에 source가 "화자명, 발언 맥락" 형태인가
-□ imageAsset이 전체 씬의 30~50%에 사용되었는가
+□ imageAsset이 전체 씬의 40~50%에 사용되었는가 (데이터 씬에도 배경 적극 사용)
+□ headline만 있는 씬(headline_only)이 5~10% 이내인가 (숫자는 values로)
+□ left/right placement가 인용문에만 사용되었는가 (데이터는 background)
 □ 콘텐츠 구조가 다양한가 (items만, items+이미지, headline만, 인용문 등 골고루)
 ```
 
