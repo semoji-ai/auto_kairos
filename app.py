@@ -682,17 +682,19 @@ async def select_image(request: Request, slug: str, scene_num: int):
     if not url:
         return JSONResponse({"error": "url or file required"}, 400)
 
-    # URL 다운로드
+    # URL 다운로드 → images/search/ 에 저장
     from auto_agent.tools.wikimedia_search import download_image
     from urllib.parse import urlparse
     ext = Path(urlparse(url).path).suffix or ".jpg"
+    search_dir = img_dir / "search"
+    search_dir.mkdir(parents=True, exist_ok=True)
     fname = next_filename(img_dir, scene_num, "search", ext)
-    result = download_image(url, str(img_dir / fname))
+    result = download_image(url, str(search_dir / fname))
 
     if result.get("success"):
         title = body.get("title", "")
         license_info = body.get("license", "")
-        add_version(img_dir, scene_num, fname, "search",
+        add_version(img_dir, scene_num, "search/" + fname, "search",
                     query=body.get("query", ""), source_url=url,
                     title=title, license=license_info)
         _update_scene_specs_src(out_dir, slug, scene_num)
@@ -997,9 +999,11 @@ async def generate_image(request: Request, slug: str, scene_num: int):
     img_dir = Path(out_dir) / "images"
     img_dir.mkdir(parents=True, exist_ok=True)
 
-    # 버전 파일명 생성
+    # 버전 파일명 생성 → images/generated/
+    gen_dir = img_dir / "generated"
+    gen_dir.mkdir(parents=True, exist_ok=True)
     fname = next_filename(img_dir, scene_num, "gen", ".png")
-    output_path = str(img_dir / fname)
+    output_path = str(gen_dir / fname)
 
     # FAL.ai 호출
     try:
@@ -1013,7 +1017,7 @@ async def generate_image(request: Request, slug: str, scene_num: int):
         if result.returncode == 0:
             res = _json.loads(result.stdout)
             # image_assets에 버전 추가 + selected 설정
-            add_version(img_dir, scene_num, fname, "generate",
+            add_version(img_dir, scene_num, "generated/" + fname, "generate",
                         prompt=prompt[:200], art_style=art_style, mode=mode)
             _update_scene_specs_src(out_dir, slug, scene_num)
             _setup_studio_project(slug)
