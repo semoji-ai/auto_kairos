@@ -53,33 +53,27 @@ def get_file_status(output_dir: str) -> dict:
 
 
 def get_scene_image_url(project_dir_name: str, scene_num: int, output_dir: str) -> Optional[str]:
-    """씬 이미지 URL 반환 (/output/ 마운트 기준).
-
-    project_dir_name: output 디렉토리명 (uuid_{slug} 형식, e.g. "b3cef462_이로미즘_양자컴퓨터_1min")
-    """
+    """씬 이미지 URL 반환 (/output/ 마운트 기준). image_assets.json의 selected 우선."""
     img_dir = Path(output_dir) / "images"
-    # 1) scene_NNN.{ext} — 루트 → generated/ 순 탐색
-    for subdir in ("", "generated/"):
+
+    # 1) image_assets.json에서 selected 파일
+    from auto_agent.tools.image_assets import get_selected
+    selected = get_selected(img_dir, scene_num)
+    if selected and (img_dir / selected).exists():
+        return f"/output/{project_dir_name}/images/{selected}"
+
+    # 2) 파일 시스템 탐색 fallback
+    for subdir in ("", "generated/", "search/"):
         for ext in (".jpg", ".jpeg", ".png", ".webp"):
             img = img_dir / f"{subdir}scene_{scene_num:03d}{ext}"
             if img.exists():
                 return f"/output/{project_dir_name}/images/{subdir}scene_{scene_num:03d}{ext}"
-    # 2) image_assets.json의 selected 파일
-    assets_path = img_dir / "image_assets.json"
-    if assets_path.exists():
-        try:
-            data = json.loads(assets_path.read_text(encoding="utf-8"))
-            for s in data.get("scenes", []):
-                if s.get("sceneNumber") == scene_num and s.get("selected"):
-                    selected = s["selected"]
-                    if (img_dir / selected).exists():
-                        return f"/output/{project_dir_name}/images/{selected}"
-        except Exception:
-            pass
-    # 3) scene_NNN_search_*.* 또는 scene_NNN_gen_*.* (아무거나)
-    for f in sorted(img_dir.glob(f"scene_{scene_num:03d}_*.*")):
-        if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
-            return f"/output/{project_dir_name}/images/{f.name}"
+    for sub in ("generated", "search"):
+        sub_dir = img_dir / sub
+        if sub_dir.exists():
+            for f in sorted(sub_dir.glob(f"scene_{scene_num:03d}_*.*")):
+                if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                    return f"/output/{project_dir_name}/images/{sub}/{f.name}"
     return None
 
 

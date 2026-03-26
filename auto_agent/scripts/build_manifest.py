@@ -206,9 +206,16 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             ia_data = json.loads(image_assets_path.read_text(encoding="utf-8"))
             for entry in ia_data.get("scenes", []):
                 sn = entry.get("sceneNumber")
-                sel = entry.get("selected")
-                if sn and sel:
-                    image_assets_lookup[sn] = sel
+                # 새 포맷: images[].selected
+                for img in entry.get("images", []):
+                    if img.get("selected"):
+                        image_assets_lookup[sn] = img["file"]
+                        break
+                # 구 포맷 호환: selected 문자열
+                if sn not in image_assets_lookup:
+                    sel = entry.get("selected")
+                    if sn and sel:
+                        image_assets_lookup[sn] = sel
         except Exception:
             pass
 

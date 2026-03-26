@@ -1,27 +1,29 @@
 """
-이미지 에셋 관리 — selected 기반.
+이미지 에셋 관리 — image_assets.json (단일 DB)
 
 images/image_assets.json 구조:
 {
   "scenes": [
     {
       "sceneNumber": 1,
-      "selected": "scene_001_search_01.jpg",
-      "versions": [
-        {"file": "scene_001_search_01.jpg", "type": "search", "query": "...", "source_url": "...", "license": "..."},
-        {"file": "scene_001_gen_01.png", "type": "generate", "prompt": "...", "art_style": "..."}
+      "images": [
+        {"file": "generated/scene_001_gen_01.png", "type": "generate", "selected": true, "prompt": "..."},
+        {"file": "generated/scene_001_gen_02.png", "type": "generate", "selected": false},
+        {"file": "search/scene_001_search_01.jpg", "type": "search", "selected": false, "source_url": "...", "license": "..."}
       ]
     }
   ]
 }
+
+- selected: true인 이미지가 스토리보드/렌더링에 사용
+- 파일 복사 없음 — selected 필드 토글만
+- 검색/생성/URL 모두 images[]에 등록
 """
 import json
-import shutil
 import threading
 from pathlib import Path
 from typing import Optional
 
-# 멀티스레드 환경에서 image_assets.json 동시 쓰기 방지
 _file_lock = threading.Lock()
 
 
@@ -32,10 +34,27 @@ def _load(images_dir: Path) -> dict:
     if path.exists():
         try:
             raw = json.loads(path.read_text(encoding="utf-8"))
-            # 표준 포맷
+
+            # 새 포맷: images[] with selected boolean
             if "scenes" in raw and isinstance(raw["scenes"], list):
-                result = raw
-            # assembly-director 레거시 포맷: {"assets": [{"scene": "scene_001", ...}]}
+                first_scene = raw["scenes"][0] if raw["scenes"] else {}
+                if "images" in first_scene:
+                    # 이미 새 포맷
+                    result = raw
+                elif "versions" in first_scene:
+                    # 구 포맷 → 새 포맷 마이그레이션
+                    for s in raw["scenes"]:
+                        selected_file = s.get("selected", "")
+                        images = []
+                        for v in s.get("versions", []):
+                            img = {**v, "selected": v.get("file", "") == selected_file}
+                            images.append(img)
+                        s["images"] = images
+                        s.pop("versions", None)
+                        s.pop("selected", None)
+                    result = raw
+
+            # assembly-director 레거시: {"assets": [...]}
             elif "assets" in raw:
                 scenes = []
                 for a in raw["assets"]:
@@ -45,39 +64,33 @@ def _load(images_dir: Path) -> dict:
                         num = int(num_str)
                     except ValueError:
                         continue
-                    version = {
-                        "file": Path(a.get("final", a.get("origin", ""))).name,
-                        "type": a.get("type", "generated"),
-                    }
+                    fname = Path(a.get("final", a.get("origin", ""))).name
                     scenes.append({
                         "sceneNumber": num,
-                        "selected": version["file"],
-                        "versions": [version],
+                        "images": [{"file": fname, "type": a.get("type", "generate"), "selected": True}],
                     })
                 scenes.sort(key=lambda x: x["sceneNumber"])
                 result = {"scenes": scenes}
+
             # 숫자 키 dict 레거시: {"1": {...}, "3": {...}}
             elif all(k.isdigit() for k in raw.keys()):
-                # 이 포맷은 빈 버전이 많으므로 무시하고 파일 스캔으로 넘어감
-                pass
+                pass  # 파일 스캔으로 처리
+
         except Exception:
             pass
 
-    # 파일 시스템 자동 스캔: image_assets.json에 없는 이미지를 자동 등록
+    # 파일 시스템 자동 스캔: DB에 없는 이미지를 자동 등록
     if images_dir.exists():
-        registered = {}
+        registered = set()
         for s in result["scenes"]:
-            for v in s.get("versions", []):
-                registered[v.get("file", "")] = True
+            for img in s.get("images", []):
+                registered.add(img.get("file", ""))
 
-        # images/ 루트 + images/generated/ 스캔
-        scan_dirs = [(images_dir, ""), ]
-        gen_dir = images_dir / "generated"
-        if gen_dir.exists():
-            scan_dirs.append((gen_dir, "generated/"))
-        search_dir = images_dir / "search"
-        if search_dir.exists():
-            scan_dirs.append((search_dir, "search/"))
+        scan_dirs = [(images_dir, "")]
+        for sub in ("generated", "search"):
+            sub_dir = images_dir / sub
+            if sub_dir.exists():
+                scan_dirs.append((sub_dir, sub + "/"))
 
         for scan_dir, prefix in scan_dirs:
             for f in sorted(scan_dir.glob("scene_*")):
@@ -86,27 +99,29 @@ def _load(images_dir: Path) -> dict:
                 rel = prefix + f.name
                 if rel in registered:
                     continue
-                # scene_001.png → scene_num=1
-                name_part = f.stem  # scene_001 or scene_001_gen_02
+                name_part = f.stem
                 num_str = name_part.split("_")[1] if "_" in name_part else ""
                 try:
                     num = int(num_str)
                 except ValueError:
                     continue
                 vtype = "generate" if "gen" in name_part or prefix == "generated/" else "search"
-                # 해당 씬 찾거나 생성
+
                 scene_entry = None
                 for s in result["scenes"]:
                     if s["sceneNumber"] == num:
                         scene_entry = s
                         break
                 if not scene_entry:
-                    scene_entry = {"sceneNumber": num, "selected": None, "versions": []}
+                    scene_entry = {"sceneNumber": num, "images": []}
                     result["scenes"].append(scene_entry)
-                scene_entry["versions"].append({"file": rel, "type": vtype})
-                if not scene_entry["selected"]:
-                    scene_entry["selected"] = rel
-                registered[rel] = True
+
+                # 다른 이미지가 없으면 첫 번째를 selected
+                has_selected = any(img.get("selected") for img in scene_entry["images"])
+                scene_entry["images"].append({
+                    "file": rel, "type": vtype, "selected": not has_selected,
+                })
+                registered.add(rel)
 
         result["scenes"].sort(key=lambda x: x["sceneNumber"])
 
@@ -122,53 +137,58 @@ def _get_scene(data: dict, scene_num: int) -> dict:
     for s in data["scenes"]:
         if s["sceneNumber"] == scene_num:
             return s
-    scene = {"sceneNumber": scene_num, "selected": None, "versions": []}
+    scene = {"sceneNumber": scene_num, "images": []}
     data["scenes"].append(scene)
     data["scenes"].sort(key=lambda x: x["sceneNumber"])
     return scene
 
 
 def has_generated_version(images_dir: Path, scene_num: int) -> bool:
-    """해당 씬에 이미 generate 타입 버전이 있는지 확인."""
+    """해당 씬에 이미 generate 타입이 있는지."""
     data = _load(images_dir)
     for s in data["scenes"]:
         if s["sceneNumber"] == scene_num:
-            return any(v.get("type") == "generate" for v in s.get("versions", []))
+            return any(img.get("type") == "generate" for img in s.get("images", []))
     return False
 
 
 def add_version(images_dir: Path, scene_num: int, file_name: str,
                 version_type: str, auto_select: bool = True, **meta) -> dict:
-    """버전 추가. auto_select=True면 자동으로 selected 설정. 스레드 안전."""
+    """이미지 등록. auto_select=True면 이 이미지를 selected로. 스레드 안전."""
     with _file_lock:
         data = _load(images_dir)
         scene = _get_scene(data, scene_num)
 
-        version = {"file": file_name, "type": version_type, **meta}
-        scene["versions"].append(version)
+        img_entry = {"file": file_name, "type": version_type, "selected": False, **meta}
 
         if auto_select:
-            scene["selected"] = file_name
-            _update_selected_link(images_dir, scene_num, file_name)
+            # 기존 selected 해제
+            for img in scene["images"]:
+                img["selected"] = False
+            img_entry["selected"] = True
 
+        scene["images"].append(img_entry)
         _save(images_dir, data)
-        return version
+        return img_entry
 
 
 def select_version(images_dir: Path, scene_num: int, file_name: str) -> bool:
-    """selected 변경. 스레드 안전."""
+    """selected 변경 — 해당 파일을 selected, 나머지 해제. 스레드 안전."""
     with _file_lock:
         data = _load(images_dir)
         scene = _get_scene(data, scene_num)
 
-        found = any(v["file"] == file_name for v in scene["versions"])
-        if not found:
-            return False
+        found = False
+        for img in scene["images"]:
+            if img["file"] == file_name:
+                img["selected"] = True
+                found = True
+            else:
+                img["selected"] = False
 
-        scene["selected"] = file_name
-        _update_selected_link(images_dir, scene_num, file_name)
-        _save(images_dir, data)
-        return True
+        if found:
+            _save(images_dir, data)
+        return found
 
 
 def get_selected(images_dir: Path, scene_num: int) -> Optional[str]:
@@ -176,16 +196,26 @@ def get_selected(images_dir: Path, scene_num: int) -> Optional[str]:
     data = _load(images_dir)
     for s in data["scenes"]:
         if s["sceneNumber"] == scene_num:
-            return s.get("selected")
+            for img in s.get("images", []):
+                if img.get("selected"):
+                    return img["file"]
     return None
 
 
 def get_scene_versions(images_dir: Path, scene_num: int) -> dict:
-    """씬의 모든 버전 + selected 정보."""
+    """씬의 모든 이미지 + selected 정보. (API 호환용)"""
     data = _load(images_dir)
     for s in data["scenes"]:
         if s["sceneNumber"] == scene_num:
-            return s
+            # API 호환: selected 파일명 + versions 형태로 변환
+            selected = None
+            versions = []
+            for img in s.get("images", []):
+                v = {**img}
+                if img.get("selected"):
+                    selected = img["file"]
+                versions.append(v)
+            return {"sceneNumber": scene_num, "selected": selected, "versions": versions}
     return {"sceneNumber": scene_num, "selected": None, "versions": []}
 
 
@@ -195,27 +225,14 @@ def get_all_scenes(images_dir: Path) -> list:
     return data["scenes"]
 
 
-def _update_selected_link(images_dir: Path, scene_num: int, file_name: str):
-    """selected 파일을 scene_NNN.{ext}로 복사 (Remotion/helpers 호환)."""
-    src = images_dir / file_name
-    if not src.exists():
-        return
-
-    # 기존 scene_NNN.* 제거
-    for old in images_dir.glob(f"scene_{scene_num:03d}.*"):
-        if old.name != file_name and old.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
-            old.unlink()
-
-    # scene_NNN.{ext}로 복사 (파일명이 이미 scene_NNN이면 스킵)
-    expected = f"scene_{scene_num:03d}{src.suffix}"
-    if src.name != expected:
-        dst = images_dir / expected
-        shutil.copy2(src, dst)
-
-
 def next_filename(images_dir: Path, scene_num: int, version_type: str, ext: str = ".png") -> str:
-    """다음 버전 파일명 생성. scene_001_search_01.jpg, scene_001_gen_02.png ..."""
+    """다음 버전 파일명 생성. scene_001_search_01.jpg 등."""
     prefix = f"scene_{scene_num:03d}_{version_type}_"
-    existing = list(images_dir.glob(f"{prefix}*"))
+    # generated/ 또는 search/ 폴더에서 기존 파일 수 확인
+    sub_dir = images_dir / ("generated" if version_type == "gen" else "search")
+    if sub_dir.exists():
+        existing = list(sub_dir.glob(f"{prefix}*"))
+    else:
+        existing = list(images_dir.glob(f"{prefix}*"))
     num = len(existing) + 1
     return f"{prefix}{num:02d}{ext}"
