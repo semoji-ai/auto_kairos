@@ -78,27 +78,52 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    - 한 문장으로 연출 의도 작성
    - 예: "1,132 숫자가 카운트업되며 레고 세트의 정밀한 공학적 재현을 수치로 강조한다"
    - 예: "샘 올트먼의 발언을 인용하며 AI 전력 위기의 심각성을 전달한다"
-   - 이 concept이 items/에셋/layout 모든 결정의 기준
+   - 이 concept이 이후 모든 결정의 기준
 
-3. items + 에셋 결정 — "무엇을 보여줄까?"
-   - concept에서 보여줘야 할 데이터/인물/장소/사물 추출
+3. 콘텐츠 추출 — "무엇을 보여줄까?"
+   concept에서 보여줘야 할 데이터/인물/장소/사물을 추출:
    - items: 화면에 표시할 항목 목록
    - values/unit: 수치 데이터 (data-mapper가 후속 보강)
-   - imageAsset: 실물 사진이 임팩트를 높이면 적극 사용 (전체 30~50%)
-   - chartConfig: 추세/비교 데이터면 차트
-   - mapScene: 지리적 이벤트면 지도
-   - logo_grid: 기업/브랜드 비교면 로고 그리드
+   - imageAsset: 실물 사진 (인물/장소/사물)
+   - chartConfig: 차트 데이터
+   - mapScene: 지리적 이벤트
 
-4. layout + 연출 결정 — "어떻게 보여줄까?"
-   - items/에셋 구성에 맞는 layout 선택 (아래 연출 의도→레이아웃 매핑 참조)
+4. 표현 방식 판단 — "어떤 조합이 가장 효과적인가?"
+   추출한 콘텐츠를 어떤 조합으로 보여줄지 판단:
+
+   ┌─────────────────────────────────────────────────────┐
+   │ items만?  items+이미지?  이미지만?  headline만?      │
+   │ headline+items?  headline+이미지?  인용문+인물?       │
+   └─────────────────────────────────────────────────────┘
+
+   | 조합 | 언제 | placement | 예시 |
+   |------|------|-----------|------|
+   | items만 | 순수 데이터 비교, 수치 나열 | — | bar, items_grid |
+   | items + 배경 이미지 | 데이터 + 분위기/맥락 | background | items_grid + 반도체 공장 배경 |
+   | items + side 이미지 | 인물/제품과 데이터 함께 | left/right | items_list + 인물 사진 |
+   | 이미지만 | 분위기 전환, 여운, 도입 | fullscreen | cinematic |
+   | headline만 | 핵심 메시지 한 줄 강조 | — | headline_only |
+   | headline + items | 제목 + 하위 데이터 | — | hero_with_context |
+   | headline + 배경 이미지 | 강조 텍스트 + 분위기 | background | headline_only + 배경 |
+   | 인용문 + 인물 이미지 | 발언 인용 | left/right | quote_portrait |
+   | 로고 + 수치 | 기업/브랜드 비교 | — | logo_grid |
+
+   ※ items가 있어도 이미지를 함께 쓸 수 있음 (background/side)
+   ※ headline이 있어도 이미지를 함께 쓸 수 있음
+   ※ imageAsset은 전체 씬의 30~50%에 사용
+
+5. layout + 연출 결정 — "어떻게 보여줄까?"
+   4번에서 결정한 조합에 맞는 layout 선택 (아래 매핑 참조)
    - motion: 프리셋 이름 하나 (shared/motion-presets 참조)
    - mood: 감정 톤 7종 중 선택
 
-5. headline 결정 — "강조가 필요한가?"
-   - 핵심 수치나 키워드를 {{}} 로 감싸서 accent 강조
-   - headline이 필요 없는 씬은 빈 문자열 (title이 fallback)
-   - items가 있는 씬에서 headline은 제목 역할 (48px)
-   - items가 없는 씬에서 headline은 메인 텍스트 (96px)
+6. headline 작성 — "텍스트 강조가 필요한가?"
+   - headline이 필요한 상황: 핵심 수치/키워드를 시각적으로 크게 강조할 때
+   - headline_only: 텍스트 한 줄로 강렬하게 전달 (96px)
+   - items와 함께: 데이터 위 제목 역할 (48px)
+   - 배경 이미지와 함께: 분위기 있는 강조
+   - {{}} 로 accent 색상 강조 (씬당 최대 2개)
+   - headline이 필요 없으면 빈 문자열 — title이 fallback
 ```
 
 #### 연출 의도 → 레이아웃 매핑
