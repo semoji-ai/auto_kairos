@@ -125,6 +125,17 @@ def _load(images_dir: Path) -> dict:
 
         result["scenes"].sort(key=lambda x: x["sceneNumber"])
 
+    # 중복 제거 (같은 file이 여러 번 등록된 경우)
+    for s in result["scenes"]:
+        seen = set()
+        deduped = []
+        for img in s.get("images", []):
+            f = img.get("file", "")
+            if f not in seen:
+                seen.add(f)
+                deduped.append(img)
+        s["images"] = deduped
+
     return result
 
 
@@ -168,6 +179,15 @@ def add_version(images_dir: Path, scene_num: int, file_name: str,
     with _file_lock:
         data = _load(images_dir)
         scene = _get_scene(data, scene_num)
+
+        # 중복 방지: 같은 파일이 이미 있으면 선택만 변경
+        for existing in scene["images"]:
+            if existing["file"] == file_name:
+                if auto_select:
+                    for img in scene["images"]:
+                        img["selected"] = img["file"] == file_name
+                    _save(images_dir, data)
+                return existing
 
         img_entry = {"file": file_name, "type": version_type, "selected": False, **meta}
 
