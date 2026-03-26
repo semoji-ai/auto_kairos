@@ -810,7 +810,20 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
                         break
                 specs_path.write_text(_json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
             _setup_studio_project(slug)
-            # 매니페스트 리빌드 (오디오 길이 변경 반영)
+            # 자막 재정렬 (WhisperX)
+            try:
+                sub_result = subprocess.run(
+                    [sys.executable, "-m", "auto_agent.scripts.generate_subtitles", out_dir],
+                    cwd=str(get_workspace_dir()),
+                    capture_output=True, text=True, encoding="utf-8", timeout=120,
+                )
+                if sub_result.returncode == 0:
+                    print(f"[TTS] 씬 {scene_num} 자막 재정렬 완료", flush=True)
+                else:
+                    print(f"[WARN] 자막 재정렬 실패: {sub_result.stderr[:100]}", flush=True)
+            except Exception as se:
+                print(f"[WARN] 자막 재정렬 에러: {se}", flush=True)
+            # 매니페스트 리빌드 (오디오 길이 + 자막 변경 반영)
             try:
                 from auto_agent.scripts.build_manifest import build_manifest
                 dir_name = Path(out_dir).name

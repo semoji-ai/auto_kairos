@@ -127,6 +127,15 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
       {sub && subtitleConfig.visible !== false && (
         <SubtitleBar text={sub} theme={preset.colors} />
       )}
+
+      {/* BGM */}
+      {manifest.bgm && manifest.bgm.path && (
+        <Audio
+          src={resolveAsset(manifest.bgm.path)}
+          volume={manifest.bgm.volume ?? 0.15}
+          loop
+        />
+      )}
     </AbsoluteFill>
   );
 };
