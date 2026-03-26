@@ -154,11 +154,15 @@ const VALID_LAYOUTS = new Set<LayoutType>([
 
 function resolveLayout(data: any, creative: any): LayoutType {
   // ── 0순위: 명시적 layout 지정 (씬에디터에서 수동 변경 시) ──
-  if (data.layout && VALID_LAYOUTS.has(data.layout)) {
-    return data.layout;
-  }
-  if (creative.layout && VALID_LAYOUTS.has(creative.layout)) {
-    return creative.layout;
+  const explicit = data.layout || creative.layout || "";
+  if (explicit && VALID_LAYOUTS.has(explicit)) {
+    // bar/pie/line인데 values가 없으면 items_grid로 전환
+    const values: number[] = data.values || [];
+    if ((explicit === "bar" || explicit === "pie" || explicit === "line") && values.length === 0) {
+      const items: string[] = data.items || [];
+      return items.length >= 3 ? "items_grid" : items.length >= 1 ? "items_list" : "headline_only";
+    }
+    return explicit as LayoutType;
   }
 
   // ── 1순위: 콘텐츠 구조 기반 자동 결정 ──
