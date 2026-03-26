@@ -3487,66 +3487,31 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           </div>
         )}
 
-        {/* Quote Portrait — 인물 이미지 (좌 40%) + 인용문 (우 60% 세로가운데) */}
-        {layout === "quote_portrait" && (() => {
-          const qpImageSrc = data.imageSrc || data.images?.[0] || "";
-          const qpSide = data.imageAssetPlacement === "right" ? "right" : "left";
-          const quoteContent = (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center",
-                          alignItems: "center", textAlign: "center",
-                          padding: "60px 48px", height: "100%" }}>
-              <div style={useFadeRise(15, 20)}>
-                <span style={{
-                  fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
-                  lineHeight: 0.8, fontFamily: "Georgia, serif", userSelect: "none",
-                }}>&ldquo;</span>
-                <div style={{ fontSize: T.itemText, fontWeight: 500, color: C.text,
-                              lineHeight: 1.6, fontStyle: "italic", margin: "8px 0 16px",
-                              textAlign: "center" }}>
-                  {items[0] || headline || ""}
-                </div>
-                <span style={{
-                  fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
-                  lineHeight: 0.8, fontFamily: "Georgia, serif", userSelect: "none",
-                }}>&rdquo;</span>
-                {data.source && (
-                  <div style={{ fontSize: T.sourceText, color: C.textMuted, marginTop: 12 }}>— {data.source}</div>
-                )}
+        {/* Quote Portrait — 인용문 텍스트만 (이미지는 SceneRenderer SideLayout에서 처리) */}
+        {layout === "quote_portrait" && (
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "center",
+                        alignItems: "center", textAlign: "center",
+                        padding: "40px 48px", width: "100%", height: "100%" }}>
+            <div style={useFadeRise(15, 20)}>
+              <span style={{
+                fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
+                lineHeight: 0.8, fontFamily: "Georgia, serif", userSelect: "none",
+              }}>&ldquo;</span>
+              <div style={{ fontSize: T.itemText, fontWeight: 500, color: C.text,
+                            lineHeight: 1.6, fontStyle: "italic", margin: "8px 0 16px",
+                            textAlign: "center" }}>
+                {items[0] || headline || ""}
               </div>
-            </div>
-          );
-          const imagePanel = (
-            <div style={{ flex: "0 0 35%", position: "relative", overflow: "hidden",
-                          backgroundColor: qpImageSrc ? "transparent" : "rgba(255,255,255,0.03)" }}>
-              {qpImageSrc ? (
-                <Img src={qpImageSrc} style={{
-                  width: "100%", height: "100%", objectFit: "cover",
-                  objectPosition: "center top",
-                }} />
-              ) : (
-                <div style={{ width: "100%", height: "100%", display: "flex",
-                              alignItems: "center", justifyContent: "center",
-                              backgroundColor: "rgba(255,255,255,0.06)" }}>
-                  <div style={{ fontSize: 80, opacity: 0.2 }}>👤</div>
-                </div>
+              <span style={{
+                fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
+                lineHeight: 0.8, fontFamily: "Georgia, serif", userSelect: "none",
+              }}>&rdquo;</span>
+              {data.source && (
+                <div style={{ fontSize: T.sourceText, color: C.textMuted, marginTop: 12 }}>— {data.source}</div>
               )}
-              <div style={{
-                position: "absolute", inset: 0,
-                background: qpSide === "left"
-                  ? "linear-gradient(to right, transparent 50%, " + C.bg + " 100%)"
-                  : "linear-gradient(to left, transparent 50%, " + C.bg + " 100%)",
-              }} />
             </div>
-          );
-
-          return (
-            <div style={{ display: "flex", flexDirection: qpSide === "right" ? "row-reverse" : "row",
-                          width: "100%", height: "100%", alignItems: "stretch", gap: 0 }}>
-              {imagePanel}
-              {quoteContent}
-            </div>
-          );
-        })()}
+          </div>
+        )}
 
         {/* Annotated Chart — chartConfig.type에 따라 line/pie/bar 렌더링 */}
         {layout === "annotated_chart" && items.length >= 2 && (() => {
