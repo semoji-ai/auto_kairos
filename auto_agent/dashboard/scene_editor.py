@@ -40,11 +40,13 @@ async def rebuild_manifest(slug: str):
     import subprocess, shutil
     python = shutil.which("python3") or shutil.which("python") or "python3"
 
-    # 로컬 모드: output 디렉토리에서 직접 빌드
+    # project_id로 빌드 (DB config에서 art_style 등 로드)
     out_dir = project.get("output_dir", "")
     if not out_dir:
         return JSONResponse({"error": "output_dir 없음"}, status_code=400)
-    args = [python, "-m", "auto_agent.scripts.build_manifest", "--local", out_dir]
+    project_id = str(project.get("id", ""))
+    storage_key = Path(out_dir).name if out_dir else slug
+    args = [python, "-m", "auto_agent.scripts.build_manifest", project_id, storage_key, out_dir]
 
     try:
         import os
