@@ -3525,8 +3525,9 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 }} />
               ) : (
                 <div style={{ width: "100%", height: "100%", display: "flex",
-                              alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ fontSize: 64, opacity: 0.15 }}>👤</div>
+                              alignItems: "center", justifyContent: "center",
+                              backgroundColor: "rgba(255,255,255,0.06)" }}>
+                  <div style={{ fontSize: 80, opacity: 0.2 }}>👤</div>
                 </div>
               )}
               <div style={{
