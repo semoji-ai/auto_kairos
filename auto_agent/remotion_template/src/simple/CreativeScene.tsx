@@ -28,6 +28,16 @@ const resolveAsset = (path: string): string =>
     : staticFile(path);
 
 import { useDesignPreset, usePresetColors, usePresetTypo, usePresetLayout } from "../design";
+
+/** 숫자 포맷: 연도(1000~2999)는 그대로, 나머지는 세 자리 콤마 */
+const fmtNum = (v: number | string | null | undefined): string => {
+  if (v == null) return "";
+  const n = typeof v === "string" ? parseFloat(v) : v;
+  if (isNaN(n)) return String(v);
+  // 연도 판별: 1000~2999 정수
+  if (Number.isInteger(n) && n >= 1000 && n <= 2999) return String(n);
+  return n.toLocaleString();
+};
 import { resolveSceneMotion, type MotionConfig } from "../utils/resolveMotion";
 
 import {
@@ -532,7 +542,7 @@ const EmphasisAccentText: React.FC<{
   const T = usePresetTypo();
   const isCountEmphasis = emphasis === "number" || emphasis === "count";
   const accentSize = accentFontSizeOverride || T.headlineAccent;
-  const baseSize = T.headlineBase;
+  const baseSize = accentFontSizeOverride ? Math.round(accentFontSizeOverride * 0.6) : T.headlineBase;
   const sizeDiff = accentSize - baseSize;
 
   const parts = text.split(/(\{\{[^}]+\}\})/g);
@@ -1070,7 +1080,7 @@ const ItemsGrid: React.FC<{
         gap: L.itemsGap,
         width: "100%",
         maxWidth: L.maxContentWidth,
-        marginTop: L.sectionMarginTop,
+        margin: `${L.sectionMarginTop}px auto 0`,
       }}
     >
       {items.map((item, i) => {
@@ -1385,7 +1395,7 @@ const ItemsList: React.FC<{
         gap: 12,
         width: "100%",
         maxWidth: L.maxContentWidth,
-        marginTop: L.sectionMarginTop,
+        margin: `${L.sectionMarginTop}px auto 0`,
       }}
     >
       {items.map((item, i) => {
@@ -3151,6 +3161,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 totalLines={lines.length}
                 accentOffset={accentOffset}
                 motionConfig={motionPreset ? motionConfig : undefined}
+                accentFontSizeOverride={items.length > 0 ? 80 : undefined}
               />
             );
           })}
@@ -3293,7 +3304,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         {layout === "metric_wall" && items.length >= 2 && (() => {
           // 가장 긴 텍스트 기준으로 카드 최소 너비 계산
           const maxLabelLen = Math.max(...items.map(it => it.length));
-          const maxValueLen = Math.max(...values.map((v, i) => `${v}${data.unit || ""}`.length), 0);
+          const maxValueLen = Math.max(...values.map((v, i) => `${fmtNum(v)}${data.unit || ""}`.length), 0);
           const cardMinW = Math.max(maxLabelLen * 22, maxValueLen * 80) + 48;
           const cols = Math.min(items.length, Math.max(1, Math.floor(1824 / (cardMinW + 50))));
           const gridW = cols * cardMinW + (cols - 1) * 50;
@@ -3308,7 +3319,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 <div key={i} style={useFadeRise(staggerDelay(i, 8, 12), 15)}>
                   <MetricCard
                     label={item}
-                    value={values[i] != null ? `${values[i]}${data.unit || ""}` : ""}
+                    value={values[i] != null ? `${fmtNum(values[i])}${data.unit || ""}` : ""}
                     style={{ width: "100%" }}
                   />
                 </div>
@@ -3333,7 +3344,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                   </div>
                   {values[i] != null && (
                     <span style={{ fontSize: 24, fontWeight: 700, color: i === 0 ? moodCfg.accent : C.textMuted }}>
-                      {values[i]}{data.unit || ""}
+                      {fmtNum(values[i])}{data.unit || ""}
                     </span>
                   )}
                 </div>
@@ -3370,23 +3381,32 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         )}
 
         {/* Comparison Table — 다차원 비교 */}
-        {layout === "comparison_table" && items.length >= 2 && (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${Math.min(items.length, 4)}, 1fr)`,
-            gap: 16, width: "100%",
-          }}>
-            {items.map((item, i) => (
-              <div key={i} style={useFadeRise(staggerDelay(i, 8, 12), 15)}>
-                <ComparisonCell
-                  label={item}
-                  value={values[i] != null ? `${values[i]}${data.unit || ""}` : ""}
-                  style={{ width: "100%" }}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        {layout === "comparison_table" && items.length >= 2 && (() => {
+          // metric_wall과 동일한 카드 크기 계산
+          const maxLabelLen = Math.max(...items.map(it => it.length));
+          const maxValueLen = Math.max(...values.map((v, i) => `${fmtNum(v)}${data.unit || ""}`.length), 0);
+          const cardMinW = Math.max(maxLabelLen * 22, maxValueLen * 80) + 48;
+          const cols = Math.min(items.length, Math.max(1, Math.floor(1824 / (cardMinW + 50))));
+          const gridW = cols * cardMinW + (cols - 1) * 50;
+          return (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${cols}, ${cardMinW}px)`,
+              gap: 50, width: gridW, margin: "0 auto",
+              justifyContent: "center",
+            }}>
+              {items.map((item, i) => (
+                <div key={i} style={useFadeRise(staggerDelay(i, 8, 12), 15)}>
+                  <ComparisonCell
+                    label={item}
+                    value={values[i] != null ? `${fmtNum(values[i])}${data.unit || ""}` : ""}
+                    style={{ width: "100%" }}
+                  />
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Icon Stat — 단일 통계 + 아이콘 */}
         {layout === "icon_stat" && (
@@ -3396,7 +3416,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             )}
             {values[0] != null && (
               <div style={{ fontSize: 60, fontWeight: 800, color: moodCfg.accent }}>
-                {values[0]}{data.unit || ""}
+                {fmtNum(values[0])}{data.unit || ""}
               </div>
             )}
             {items[0] && (
@@ -3414,7 +3434,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 <div key={i} style={useFadeRise(staggerDelay(i, 10, 12), 15)}>
                   <ProgressBar
                     progress={values[i] != null ? values[i] / maxVal : 0}
-                    label={`${item} — ${values[i] != null ? values[i] : 0}${data.unit || ""}`}
+                    label={`${item} — ${values[i] != null ? fmtNum(values[i]) : 0}${data.unit || ""}`}
                     color={i === 0 ? moodCfg.accent : `${moodCfg.accent}88`}
                   />
                 </div>
