@@ -273,22 +273,35 @@ layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면
   - 사물: 핵심 명사 1~2개 (`"semiconductor wafer"`, `"oil tanker"`)
 - `background`: 배경/장소 묘사 (generate용)
 - `camera`: 카메라 앵글/구도 (generate용, 영어 권장)
-- `placement`: `"fullscreen"` (cinematic) 또는 `"background"` (데이터 위에 배경)
+- `placement`: 배치 방식. **aspect_ratio는 시스템이 placement에서 자동 결정**
 
-**imageAsset 사용 비율 가이드 (전체 씬의 30~50%):**
+**placement → aspect_ratio 자동 매핑:**
 
-| 상황 | imageAsset | source | placement |
-|------|-----------|--------|-----------|
-| cinematic 씬 | **필수** | generate 또는 search | `"fullscreen"` |
-| quote_portrait 씬 | **필수** | search (인물 사진) | `"left"` 또는 `"right"` |
-| 데이터 씬 + 관련 실물 존재 | **적극 권장** | search | `"background"` |
-| 데이터 씬 + 실물 없음 | 생략 OK | — | — |
-| 순수 텍스트/수치 씬 | 생략 OK | — | — |
+| placement | aspect_ratio | 용도 |
+|-----------|-------------|------|
+| `"fullscreen"` | 16:9 | 화면 전체. cinematic/도입/전환 |
+| `"background"` | 16:9 | 데이터 뒤 배경 (opacity 자동 낮춤) |
+| `"left"` / `"right"` | 3:4 (세로) | 인물/제품/건물 + 옆에 텍스트/데이터 |
+| `"center"` | 4:3 또는 1:1 | 중앙 배치 제품/사물 |
 
-**데이터 씬 배경 이미지 예시:**
-- items_grid "주요 반도체 기업" → `{ "source": "search", "query": "semiconductor wafer", "placement": "background" }`
-- counter "수출액 500억 달러" → `{ "source": "search", "query": "container port", "placement": "background" }`
-- bar "국가별 점유율" → `{ "source": "search", "query": "world map trade", "placement": "background" }`
+**imageAsset 사용 비율 가이드 (전체 씬의 40~50%):**
+
+| 상황 | source | placement | 예시 |
+|------|--------|-----------|------|
+| 분위기 전환/도입/여운 | generate 또는 search | `"fullscreen"` | cinematic 풍경 |
+| 인물 인용 | search | `"left"` / `"right"` | 인물 사진 + 인용문 |
+| 인물/제품 + 데이터 | search 또는 generate | `"left"` / `"right"` | CEO 사진 + 실적 데이터 |
+| 제품/사물 중앙 배치 | search 또는 generate | `"center"` | 원자로 모형 + 설명 |
+| 데이터 + 분위기 배경 | search | `"background"` | 데이터센터 배경 + 전력 수치 |
+| 수치 강조 + 분위기 | generate | `"background"` | 카운터 + 분위기 배경 |
+| 순수 텍스트/수치 | 생략 OK | — | — |
+
+**이미지 예시:**
+- 인물 + 데이터: `{ "source": "search", "query": "Jensen Huang", "placement": "left" }`
+- 제품 중앙: `{ "source": "search", "query": "SMR reactor", "placement": "center" }`
+- 데이터 배경: `{ "source": "search", "query": "data center", "placement": "background" }`
+- 분위기 생성: `{ "source": "generate", "prompt": "미래형 원자로가 초록빛 들판에...", "placement": "fullscreen" }`
+- 인물 생성: `{ "source": "generate", "prompt": "비즈니스 정장 입은 CEO 실루엣", "placement": "left" }`
 
 배경 이미지는 opacity가 자동으로 낮게(0.15~0.35) 적용되어 데이터 가독성을 해치지 않습니다.
 cinematic/quote_portrait 외에도 **데이터 씬에 관련 실사 배경**을 넣으면 시각적 밀도가 크게 향상됩니다.
