@@ -549,9 +549,10 @@ function sbApplyUrl(sn) {
       status.innerHTML = '<span style="color:#86EFAC">적용 완료</span>';
       input.value = '';
       sbLoadImageGrid(sn);
-      // 프리뷰 갱신 — 마운트된 씬 리로드
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
       if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
+      fetch('/api/p/' + encodeURIComponent(slug) + '/rebuild-manifest', { method: 'POST' }).catch(function(){});
+      if (window._manifestCache) window._manifestCache = null;
     } else {
       status.innerHTML = '<span style="color:#FCA5A5">' + (res.error || '실패') + '</span>';
     }
@@ -597,6 +598,9 @@ function sbSelectCandidate(sn, url) {
       sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
       if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
+      // 매니페스트 재빌드 + 캐시 무효화
+      fetch('/api/p/' + encodeURIComponent(slug) + '/rebuild-manifest', { method: 'POST' }).catch(function(){});
+      if (window._manifestCache) window._manifestCache = null;
     }
   });
 }
@@ -625,6 +629,8 @@ function sbGenerateImage(sn) {
       sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
       if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
+      fetch('/api/p/' + encodeURIComponent(slug) + '/rebuild-manifest', { method: 'POST' }).catch(function(){});
+      if (window._manifestCache) window._manifestCache = null;
     } else {
       status.innerHTML = '<span style="color:#FCA5A5">' + (res.error || '실패') + '</span>';
     }
