@@ -904,6 +904,74 @@ def cmd_pull(args):
     print_warning("Supabase 동기화가 비활성화되어 있습니다. .env에서 SUPABASE_URL/KEY를 설정하세요.")
 
 
+def cmd_collect(args):
+    """데이터 수집 (YouTube, 트렌드, 소셜)."""
+    from auto_agent.modules.data_collector.collector import DataCollector
+
+    print_header("Auto Agent — 데이터 수집")
+    collector = DataCollector()
+
+    if not args or "--all" in args:
+        collector.collect_all()
+        print_success("전체 수집 완료")
+    elif "--youtube" in args:
+        collector.collect_youtube()
+        print_success("YouTube 수집 완료")
+    else:
+        print_error("Usage: auto-agent collect [--all|--youtube|--trends|--social]")
+
+
+def cmd_link(args):
+    """프로젝트에 YouTube 영상 ID 연결."""
+    project_slug = None
+    video_id = None
+
+    for i, arg in enumerate(args):
+        if arg == "--project" and i + 1 < len(args):
+            project_slug = args[i + 1]
+        elif arg == "--video-id" and i + 1 < len(args):
+            video_id = args[i + 1]
+
+    if not project_slug or not video_id:
+        print_error("Usage: auto-agent link --project <slug> --video-id <id>")
+        sys.exit(1)
+
+    from auto_agent.db.project_manager import link_video, get_project_by_slug
+    from auto_agent.modules.data_collector.collector import DataCollector
+
+    link_video(project_slug, video_id)
+
+    project = get_project_by_slug(project_slug)
+    channel = project.get("channel", "이로미즘") if project else "이로미즘"
+
+    collector = DataCollector()
+    collector.register_video_tracking(video_id, project_slug, channel)
+
+    print_success(f"영상 연결 완료: {project_slug} ← {video_id}")
+    print_success("성과 추적 등록: +1d, +3d, +7d, +28d")
+
+
+def cmd_watchlist(args):
+    """경쟁 채널 워치리스트 관리."""
+    from auto_agent.paths import get_vault_dir
+
+    vault = get_vault_dir()
+    watchlist_path = vault / "channels" / "_watchlist.md"
+
+    if not args:
+        if watchlist_path.exists():
+            console.print(watchlist_path.read_text(encoding="utf-8"))
+        else:
+            print_warning("워치리스트가 없습니다.")
+        return
+
+    subcmd = args[0]
+    if subcmd in ("approve", "remove") and len(args) > 1:
+        print_warning(f"'{subcmd}' 기능은 Phase 1b에서 구현 예정입니다.")
+    else:
+        print_error("Usage: auto-agent watchlist [approve|remove] <채널명>")
+
+
 def cmd_vault(args):
     """볼트 관리: sync / index / stats / search."""
     from auto_agent.orchestrator.vault_rag import VAULT_DIR, VaultRAG
@@ -1002,6 +1070,9 @@ COMMANDS = {
     "font": cmd_font,
     "bg": cmd_bg,
     "vault": cmd_vault,
+    "collect": cmd_collect,
+    "link": cmd_link,
+    "watchlist": cmd_watchlist,
     "sync": cmd_sync,
     "pull": cmd_pull,
     "update": cmd_update,
