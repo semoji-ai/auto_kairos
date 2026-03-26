@@ -226,15 +226,39 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
         flex: "0 0 320px", background: FORM_BG, borderLeft: `1px solid ${BORDER}`,
         overflowY: "auto", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 14,
       }}>
-        {/* Layout */}
+        {/* Concept */}
         <div>
-          <label style={labelStyle}>Layout</label>
+          <label style={labelStyle}>Concept</label>
+          <textarea
+            style={{ ...inputStyle, minHeight: 48, resize: "vertical", lineHeight: 1.4, fontSize: 11 }}
+            value={(s.concept || v.concept || "") as string}
+            onChange={e => updateField({ concept: e.target.value })}
+            placeholder="이 씬의 연출 의도..."
+            rows={2}
+          />
+        </div>
+
+        {/* Narration */}
+        <div>
+          <label style={labelStyle}>Narration</label>
+          <textarea
+            style={{ ...inputStyle, minHeight: 56, resize: "vertical", lineHeight: 1.4 }}
+            value={(s.narration || "") as string}
+            onChange={e => updateField({ narration: e.target.value })}
+            placeholder="나레이션 텍스트..."
+            rows={2}
+          />
+        </div>
+
+        {/* Layout (자동 결정 + 수동 오버라이드) */}
+        <div>
+          <label style={labelStyle}>Layout <span style={{ fontSize: 9, color: MUTED, fontWeight: 400 }}>(자동 결정, 수동 변경 가능)</span></label>
           <select
             style={selectStyle}
             value={creative.layout || ""}
             onChange={e => updateCreative({ layout: e.target.value })}
           >
-            <option value="">자동 (데이터 기반)</option>
+            <option value="">자동 (콘텐츠 기반)</option>
             {LAYOUT_OPTIONS.map(l => <option key={l} value={l}>{l}</option>)}
           </select>
         </div>
@@ -262,11 +286,11 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
             style={inputStyle}
             value={viz.title || ""}
             onChange={e => updateViz({ title: e.target.value })}
-            placeholder="시각화 타이틀..."
+            placeholder="씬 제목..."
           />
         </div>
 
-        {/* Items — headline_only 등 items 불필요 레이아웃에서만 숨김 */}
+        {/* Items */}
         {!["headline_only", "counter", "quote", "icon_stat", "quote_portrait"].includes(creative.layout || "") && (
           <div>
             <label style={labelStyle}>Items ({(viz.items || []).length})</label>
