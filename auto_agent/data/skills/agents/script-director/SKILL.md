@@ -74,21 +74,52 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    - 대화체, 짧은 문장 (40자 이내), 능동태
    - 100자 이내 (quirky_cartoon은 80자)
 
-2. "이걸 어떻게 보여줄까?" 즉시 결정
-   - layout: 24종 중 가장 적합한 것
+2. concept 결정 — "이 씬에서 뭘 보여줄까?"
+   - 한 문장으로 연출 의도 작성
+   - 예: "1,132 숫자가 카운트업되며 레고 세트의 정밀한 공학적 재현을 수치로 강조한다"
+   - 예: "샘 올트먼의 발언을 인용하며 AI 전력 위기의 심각성을 전달한다"
+   - 이 concept이 items/에셋/layout 모든 결정의 기준
+
+3. items + 에셋 결정 — "무엇을 보여줄까?"
+   - concept에서 보여줘야 할 데이터/인물/장소/사물 추출
+   - items: 화면에 표시할 항목 목록
+   - values/unit: 수치 데이터 (data-mapper가 후속 보강)
+   - imageAsset: 실물 사진이 임팩트를 높이면 적극 사용 (전체 30~50%)
+   - chartConfig: 추세/비교 데이터면 차트
+   - mapScene: 지리적 이벤트면 지도
+   - logo_grid: 기업/브랜드 비교면 로고 그리드
+
+4. layout + 연출 결정 — "어떻게 보여줄까?"
+   - items/에셋 구성에 맞는 layout 선택 (아래 연출 의도→레이아웃 매핑 참조)
    - motion: 프리셋 이름 하나 (shared/motion-presets 참조)
    - mood: 감정 톤 7종 중 선택
 
-3. 데이터 매핑 (가볍게)
-   - items 항목명만 적어두면 OK (수치는 data-mapper가 후속 보강)
-   - 리서치에서 바로 보이는 수치는 채워도 됨
-   - 빈 values/unit/source는 data-mapper가 채움
-
-4. 에셋 결정 (적극적으로)
-   - imageAsset: 전체 씬의 30~50%에 사용 (아래 가이드 참조)
-   - mapScene: 지리적 이벤트일 때만
-   - chartConfig: 데이터 비교/추세일 때만
+5. headline 결정 — "강조가 필요한가?"
+   - 핵심 수치나 키워드를 {{}} 로 감싸서 accent 강조
+   - headline이 필요 없는 씬은 빈 문자열 (title이 fallback)
+   - items가 있는 씬에서 headline은 제목 역할 (48px)
+   - items가 없는 씬에서 headline은 메인 텍스트 (96px)
 ```
+
+#### 연출 의도 → 레이아웃 매핑
+
+| 연출 의도 | 추천 layout | items 예시 |
+|-----------|------------|-----------|
+| 핵심 숫자 하나를 극적으로 | `counter`, `metric_spotlight` | values[0]에 숫자 |
+| 여러 항목 나열/비교 | `items_grid`, `items_list` | 3~6개 항목 |
+| 두 가지 극적 비교 | `before_after`, `split` | 2개 항목 |
+| 순위/랭킹 | `rank_list` | items + values (내림차순) |
+| 추세/변화 차트 | `bar`, `line`, `pie` | items + values + chartConfig |
+| 기업/브랜드 비교 | `logo_grid` | 기업명 items (로고 자동 매핑) |
+| 타임라인/흐름 | `timeline`, `flow` | 시간순 항목 |
+| 인물 인용 | `quote_portrait` | items[0]=인용문, source=화자 |
+| 분위기 전환/여운 | `cinematic` | imageAsset fullscreen |
+| 텍스트만 강조 | `headline_only` | headline에 {{}} 강조 |
+| 단일 통계 + 아이콘 | `icon_stat` | values[0] + icons[0] |
+| 점유율/진행률 비교 | `stacked_progress` | items + values (%) |
+| 정보 카드 나열 | `card_carousel` | 3~4개 카드 |
+| 큰 헤드라인 + 부연 | `hero_with_context` | headline + items |
+| 표 형태 비교 | `comparison_table`, `metric_wall` | items + values |
 
 ### Step 3: 전체 검증 (5분)
 
@@ -120,8 +151,9 @@ research_report.json을 읽고 3막 구조를 설계합니다.
     {
       "sceneNumber": 1,
       "chapter": 1,
-      "title": "씬 고유 제목 (챕터 접두사 금지 — '프롤로그:', 'Ch1:' 등 넣지 말 것. chapter 필드로 분리됨)",
+      "title": "씬 고유 제목 (챕터 접두사 금지)",
       "narration": "나레이션 텍스트",
+      "concept": "이 씬의 연출 의도 한 문장 — items/에셋/layout 결정의 기준",
 
       "layout": "items_grid",
       "motion": "stagger_wave",
