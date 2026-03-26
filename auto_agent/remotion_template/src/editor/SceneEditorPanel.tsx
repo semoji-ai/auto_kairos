@@ -85,22 +85,25 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
   const _preset = useMemo(() => resolvePreset(meta || {}), [meta?.artStyle, meta?.videoTheme]);
   const ACCENT = _preset.colors?.accent || DEFAULT_ACCENT;
 
-  // 플랫 스키마: scene.* 에서 직접 읽기
+  // 플랫 스키마 + visualization 블록 fallback
   const s = scene as any;
+  const v = s.visualization || {};
   const viz = {
-    items: s.items || [],
-    values: s.values || [],
-    unit: s.unit || "",
-    source: s.source || "",
-    title: s.title || "",
-    itemIcons: s.icons || [],
-    itemFlags: s.flags || [],
+    items: s.items || v.items || [],
+    values: s.values || v.values || [],
+    unit: s.unit ?? v.unit ?? "",
+    source: s.source ?? v.source ?? "",
+    title: s.title || v.title || "",
+    itemIcons: s.icons || v.itemIcons || [],
+    itemFlags: s.flags || v.itemFlags || [],
   } as any;
+  const _layout = s.layout || s.sceneType || v.layout || "";
+  const _headline = s.headline || v.headline || "";
   const creative = {
-    layout: s.layout || s.sceneType || "",
-    headline: s.layout === "quote_portrait" ? "" : (s.headline || s.title || ""),
-    mood: s.mood || "informative",
-    motion: s.motion || s.motionPreset || "",
+    layout: _layout,
+    headline: _layout === "quote_portrait" ? "" : (_headline || s.title || v.title || ""),
+    mood: s.mood || v.mood || "informative",
+    motion: s.motion || s.motionPreset || v.motionPreset || "",
     reveal: "fade_in",
     emphasis: "none",
     headlineOffsetX: 0,
@@ -119,14 +122,18 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
     : (scene as any).durationFrames || fps * 5;
   const durationInFrames = Math.max(1, rawDuration);
 
-  /* ── 업데이트 헬퍼 (플랫 스키마: scene.* 최상위 필드 직접 업데이트) ── */
-  const updateViz = useCallback((patch: Record<string, any>) => {
-    setScene(prev => ({ ...prev, ...patch }));
+  /* ── 업데이트 헬퍼 (플랫 + visualization 양쪽 동기화) ── */
+  const updateField = useCallback((patch: Record<string, any>) => {
+    setScene(prev => {
+      const next = { ...prev, ...patch };
+      // visualization 블록에도 동기화 (SceneRendererInner가 resolveVisualization에서 읽음)
+      const oldViz = prev.visualization || {};
+      next.visualization = { ...oldViz, ...patch };
+      return next;
+    });
   }, []);
-
-  const updateCreative = useCallback((patch: Record<string, any>) => {
-    setScene(prev => ({ ...prev, ...patch }));
-  }, []);
+  const updateViz = updateField;
+  const updateCreative = updateField;
 
   const updateImageAsset = useCallback((patch: Partial<NonNullable<SceneEntry["imageAsset"]>>) => {
     setScene(prev => ({
