@@ -366,7 +366,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         if scene_layout:
             entry["sceneType"] = scene_layout
 
-        if scene.get("imageAsset") and image_path:
+        if scene.get("imageAsset"):
             ia = scene["imageAsset"]
             # cinematic 레이아웃은 무조건 fullscreen + opacity 1
             layout = scene_layout or viz.get("creative", {}).get("layout", "")
