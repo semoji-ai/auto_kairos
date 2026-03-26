@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS projects (
     scene_count     INTEGER DEFAULT 0,
     total_duration_sec REAL DEFAULT 0.0,
     channel         TEXT DEFAULT NULL,                   -- "이로미즘" | "세모지" | NULL
+    video_id        TEXT DEFAULT NULL,                   -- 게시된 YouTube 영상 ID
     config          TEXT,                                -- JSON: 프로젝트별 설정 오버라이드
     output_dir      TEXT NOT NULL,                       -- "output/미국_이란_전쟁_2026"
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),

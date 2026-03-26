@@ -77,6 +77,34 @@ def resolve_art_style_path(art_style: str, project_dir: Path = None) -> Optional
     return None
 
 
+def _migrate_add_video_id(conn) -> None:
+    """video_id 컬럼이 없으면 ALTER TABLE로 추가 (마이그레이션 헬퍼)."""
+    cols = [row[1] for row in conn.execute("PRAGMA table_info(projects)").fetchall()]
+    if "video_id" not in cols:
+        conn.execute("ALTER TABLE projects ADD COLUMN video_id TEXT DEFAULT NULL")
+
+
+def link_video(project_slug: str, video_id: str) -> None:
+    """프로젝트에 YouTube 영상 ID 연결 (모듈 레벨 편의 함수)."""
+    from .connection import get_db_path
+    pm = ProjectManager(get_db_path())
+    pm.link_video(project_slug, video_id)
+
+
+def get_linked_videos() -> List[dict]:
+    """video_id가 연결된 프로젝트 목록 (모듈 레벨 편의 함수)."""
+    from .connection import get_db_path
+    pm = ProjectManager(get_db_path())
+    return pm.get_linked_videos()
+
+
+def get_project_by_slug(slug: str) -> Optional[dict]:
+    """slug로 프로젝트 조회 (모듈 레벨 편의 함수)."""
+    from .connection import get_db_path
+    pm = ProjectManager(get_db_path())
+    return pm.get_project(slug=slug)
+
+
 class ProjectManager:
     """프로젝트 CRUD, 에셋 등록, 파이프라인 추적, 버전 관리."""
 
@@ -723,6 +751,31 @@ class ProjectManager:
                 (asset_id, source, source_url, license_type, attribution, title),
             )
             return cur.lastrowid
+
+    # ─────────────────────────────────────
+    # YouTube 영상 연결
+    # ─────────────────────────────────────
+
+    def link_video(self, project_slug: str, video_id: str) -> None:
+        """프로젝트에 YouTube 영상 ID 연결."""
+        with transaction(self.db_path) as conn:
+            _migrate_add_video_id(conn)
+            conn.execute(
+                "UPDATE projects SET video_id = ? WHERE slug = ?",
+                (video_id, project_slug),
+            )
+
+    def get_linked_videos(self) -> List[dict]:
+        """video_id가 연결된 프로젝트 목록 반환."""
+        conn = get_connection(self.db_path)
+        try:
+            _migrate_add_video_id(conn)
+            rows = conn.execute(
+                "SELECT * FROM projects WHERE video_id IS NOT NULL ORDER BY updated_at DESC"
+            ).fetchall()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
 
     def get_licenses(self, project_id: int) -> List[dict]:
         """프로젝트의 모든 라이선스 정보."""
