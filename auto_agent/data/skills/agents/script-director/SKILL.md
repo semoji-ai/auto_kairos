@@ -112,8 +112,9 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    ※ headline이 있어도 이미지를 함께 쓸 수 있음
    ※ imageAsset은 전체 씬의 30~50%에 사용
 
-5. layout + 연출 결정 — "어떻게 보여줄까?"
-   4번에서 결정한 조합에 맞는 layout 선택 (아래 매핑 참조)
+5. motion + mood 결정
+   - layout은 적지 않음 — 시스템이 콘텐츠 구조를 보고 자동 결정
+   - 씬에디터에서 수동 변경 가능
    - motion: 프리셋 이름 하나 (shared/motion-presets 참조)
    - mood: 감정 톤 7종 중 선택
 
@@ -144,25 +145,25 @@ research_report.json을 읽고 3막 구조를 설계합니다.
          source="샘 올트먼, 2024년 미 상원 청문회"
 ```
 
-#### 연출 의도 → 레이아웃 매핑
+#### 콘텐츠 구조 → 자동 레이아웃 참고 (시스템이 결정)
 
-| 연출 의도 | 추천 layout | items 예시 |
-|-----------|------------|-----------|
-| 핵심 숫자 하나를 극적으로 | `counter`, `metric_spotlight` | values[0]에 숫자 |
-| 여러 항목 나열/비교 | `items_grid`, `items_list` | 3~6개 항목 |
-| 두 가지 극적 비교 | `before_after`, `split` | 2개 항목 |
-| 순위/랭킹 | `rank_list` | items + values (내림차순) |
-| 추세/변화 차트 | `bar`, `line`, `pie` | items + values + chartConfig |
-| 기업/브랜드 비교 | `logo_grid` | 기업명 items (로고 자동 매핑) |
-| 타임라인/흐름 | `timeline`, `flow` | 시간순 항목 |
-| 인물 인용 | `quote_portrait` | items[0]=인용문, source=화자 |
-| 분위기 전환/여운 | `cinematic` | imageAsset fullscreen |
-| 텍스트만 강조 | `headline_only` | headline에 {{}} 강조 |
-| 단일 통계 + 아이콘 | `icon_stat` | values[0] + icons[0] |
-| 점유율/진행률 비교 | `stacked_progress` | items + values (%) |
-| 정보 카드 나열 | `card_carousel` | 3~4개 카드 |
-| 큰 헤드라인 + 부연 | `hero_with_context` | headline + items |
-| 표 형태 비교 | `comparison_table`, `metric_wall` | items + values |
+layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면 시스템이 자동으로 적절한 레이아웃을 선택한다는 참고 가이드:
+
+| 이렇게 채우면 | 시스템이 선택 | 비고 |
+|-------------|-------------|------|
+| items 0개 + headline {{}} | headline_only | 텍스트 강조 |
+| items 0개 + imageAsset fullscreen | cinematic | 이미지 전환/여운 |
+| items 1개 + 인용문 + imageAsset left | quote_portrait | 인물 인용 |
+| items 1개 + values 1개 + icons 1개 | icon_stat | 단일 통계 |
+| headline {{숫자}} + values 1개 | counter | 빅넘버 강조 |
+| items 2개 + values 2개 | before_after | 극적 비교 |
+| items 3~6개 + values | bar 또는 items_grid | 데이터 비교 |
+| items 3~6개 + values 없음 | items_list | 항목 나열 |
+| items + chartConfig.type="pie" | pie | 파이 차트 |
+| items + chartConfig.type="line" | line | 라인 차트 |
+| items + flags (국가코드) | items_grid + 국기 | 국가별 비교 |
+| headline + items (보조) | hero_with_context | 헤드라인 + 부연 |
+| items + imageAsset side | items_list + 이미지 | 데이터 + 맥락 |
 
 ### Step 3: 전체 검증 (5분)
 
@@ -170,17 +171,18 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 
 ```
 검증 체크리스트:
-□ 같은 layout 3회 연속 없는가
+□ 모든 씬에 concept이 있는가
 □ 같은 motion 3회 연속 없는가
 □ 같은 mood 5회 연속 없는가
-□ headline 사용이 전체의 20~30% 이내인가
-□ headline과 items 중복 없는가
+□ headline과 items에 수치 중복이 없는가
 □ {{}} accent가 씬당 최대 2개인가
-□ items 1개짜리 씬 없는가 (headline에 통합)
-□ cinematic 씬이 전체의 10~15% 이내인가
+□ items 1개짜리 씬이 적절한가 (icon_stat/quote_portrait 외에는 지양)
+□ imageAsset fullscreen 씬이 전체의 10~15% 이내인가
 □ 감정 곡선이 자연스러운가 (dramatic→informative→dramatic 같은 급변 없이)
-□ 차트/그래프/데이터 씬에만 source가 있는가 (cinematic/quote 등 데이터 없는 씬에는 source 넣지 말 것)
-□ imageAsset이 전체 씬의 30~50%에 사용되었는가 (너무 적으면 시각적 밀도 부족)
+□ 차트/그래프 씬에 headline(제목)과 source(출처)가 있는가
+□ quote_portrait에 source가 "화자명, 발언 맥락" 형태인가
+□ imageAsset이 전체 씬의 30~50%에 사용되었는가
+□ 콘텐츠 구조가 다양한가 (items만, items+이미지, headline만, 인용문 등 골고루)
 ```
 
 ---
@@ -196,9 +198,8 @@ research_report.json을 읽고 3막 구조를 설계합니다.
       "chapter": 1,
       "title": "씬 고유 제목 (챕터 접두사 금지)",
       "narration": "나레이션 텍스트",
-      "concept": "이 씬의 연출 의도 한 문장 — items/에셋/layout 결정의 기준",
+      "concept": "이 씬의 연출 의도 한 문장 — 콘텐츠/에셋 결정의 기준",
 
-      "layout": "items_grid",
       "motion": "stagger_wave",
       "mood": "informative",
 

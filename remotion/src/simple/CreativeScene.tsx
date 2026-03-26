@@ -153,87 +153,72 @@ const VALID_LAYOUTS = new Set<LayoutType>([
 ]);
 
 function resolveLayout(data: any, creative: any): LayoutType {
-  // ── 0순위: v5 플랫 스키마 — data.layout 직접 지정 ──
+  // ── 0순위: 명시적 layout 지정 (씬에디터에서 수동 변경 시) ──
   if (data.layout && VALID_LAYOUTS.has(data.layout)) {
     return data.layout;
   }
-  // ── 1순위: creative.layout 직접 지정 (의도 기반) ──
   if (creative.layout && VALID_LAYOUTS.has(creative.layout)) {
     return creative.layout;
   }
 
-  // ── 2순위: chartConfig / displayMode ──
-  if (creative.displayMode === "logo_grid") return "logo_grid";
-  const chartType = data.chartConfig?.type || creative.chartConfig?.type;
-  if (creative.displayMode === "pie_chart" || chartType === "pie") return "pie";
-  if (creative.displayMode === "line_chart" || chartType === "line") return "line";
-  if (chartType === "bar") return "bar";
-
-  // ── 3순위: 데이터 구조 기반 추론 (fallback) ──
-  return inferFromDataStructure(data, creative);
+  // ── 1순위: 콘텐츠 구조 기반 자동 결정 ──
+  return inferFromContent(data, creative);
 }
 
-/** 기존 detectLayout 로직 — creative.layout이 없을 때만 사용되는 fallback */
-function inferFromDataStructure(data: any, creative: any): LayoutType {
-  const reveal: string = creative.reveal || "fade_in";
-  const emphasis: string = creative.emphasis || "none";
+/** 콘텐츠 구조 기반 레이아웃 자동 결정 */
+function inferFromContent(data: any, creative: any): LayoutType {
   const items: string[] = data.items || [];
   const values: number[] = data.values || [];
-  const headline: string = creative.headline || "";
+  const headline: string = data.headline || creative.headline || "";
+  const chartType = data.chartConfig?.type || creative.chartConfig?.type;
+  const hasImageAsset = !!(data.imageAsset || creative.imageAsset);
+  const placement = (data.imageAsset || creative.imageAsset || {}).placement || "";
+  const icons: string[] = data.icons || data.itemIcons || [];
 
-  // 인용문
-  if (
-    emphasis === "quote" ||
-    (items.length === 1 && /["""']/.test(items[0]))
-  ) {
-    return "quote";
-  }
+  // 차트 — chartConfig가 있으면 차트 종류로
+  if (chartType === "pie") return "pie";
+  if (chartType === "line") return "line";
+  if (chartType === "bar") return "bar";
 
-  // 비교/VS
-  if (reveal === "split_reveal") return "split";
-  if (emphasis === "contrast" && items.length === 2) return "split";
+  // 인용문 — items 1개 + imageAsset left/right
+  if (items.length === 1 && (placement === "left" || placement === "right")) return "quote_portrait";
+  if (items.length === 1 && /["""']/.test(items[0])) return "quote";
 
-  // 인물 카드
-  if (emphasis === "person" && items.length >= 2) return "person_card";
+  // cinematic — items 없고 이미지 fullscreen
+  if (items.length === 0 && placement === "fullscreen") return "cinematic";
 
-  // 카운터/빅넘버
-  if (emphasis === "number" || emphasis === "count") {
+  // icon_stat — items 1개 + values 1개 + icon
+  if (items.length === 1 && values.length === 1 && icons.length >= 1) return "icon_stat";
+
+  // counter — headline에 {{숫자}} + values 1개
+  if (values.length === 1 && items.length <= 1) {
     const accentMatch = headline.match(/\{\{([^}]+)\}\}/);
     if (accentMatch) {
       const num = extractNumber(accentMatch[1]);
       if (num > 0) return "counter";
     }
+    if (items.length === 1) return "metric_spotlight";
   }
 
-  // 시퀀스/프로세스
-  if (emphasis === "sequence" && items.length >= 2) return "items_list";
+  // 2항목 비교
+  if (items.length === 2 && values.length >= 2) return "before_after";
 
-  // 바 차트
-  if (
-    items.length >= 3 &&
-    values.length >= 3 &&
-    items.length === values.length &&
-    emphasis !== "keyword" &&
-    emphasis !== "sequence"
-  ) {
-    return "bar";
-  }
+  // 3~6항목 + values → bar
+  if (items.length >= 3 && values.length >= 3 && items.length === values.length) return "bar";
 
-  // 아이템 그리드/리스트
-  if (items.length >= 3) {
-    const headlineLower = headline.toLowerCase();
-    const itemsAreData = items.some(
-      (item) => item.length > 1 && !headlineLower.includes(item.toLowerCase()),
-    );
-    if (itemsAreData) {
-      return items.length >= 6 ? "items_grid" : "items_list";
-    }
-  }
+  // 3~6항목 + values 없음 → items_list
+  if (items.length >= 3 && values.length === 0) return "items_list";
 
-  // 2항목 + 2값
-  if (items.length === 2 && values.length >= 2) return "items_list";
+  // 3~6항목 + values (개수 불일치) → items_grid
+  if (items.length >= 3) return "items_grid";
 
-  // 기본
+  // headline + items (보조) → hero_with_context
+  if (headline && items.length >= 1) return "hero_with_context";
+
+  // headline만 → headline_only
+  if (headline) return "headline_only";
+
+  // 기본 fallback
   return "headline_only";
 }
 
