@@ -171,7 +171,6 @@ function inferFromContent(data: any, creative: any): LayoutType {
   const values: number[] = data.values || [];
   const headline: string = data.headline || creative.headline || "";
   const chartType = data.chartConfig?.type || creative.chartConfig?.type;
-  const hasImageAsset = !!(data.imageAsset || creative.imageAsset);
   const placement = (data.imageAsset || creative.imageAsset || {}).placement || "";
   const icons: string[] = data.icons || data.itemIcons || [];
 
@@ -180,46 +179,55 @@ function inferFromContent(data: any, creative: any): LayoutType {
   if (chartType === "line") return "line";
   if (chartType === "bar") return "bar";
 
-  // 인용문 — items 1개 + imageAsset left/right
-  if (items.length === 1 && (placement === "left" || placement === "right")) return "quote_portrait";
-  if (items.length === 1 && /["""']/.test(items[0])) return "quote";
-
   // cinematic — items 없고 이미지 fullscreen
   if (items.length === 0 && placement === "fullscreen") return "cinematic";
+
+  // 인용문 — items 1개 + imageAsset left/right + values 없음
+  if (items.length === 1 && values.length === 0 && (placement === "left" || placement === "right")) return "quote_portrait";
+  if (items.length === 1 && /["""']/.test(items[0])) return "quote";
+
+  // counter — headline에 {{숫자}}
+  if (headline) {
+    const accentMatch = headline.match(/\{\{([^}]+)\}\}/);
+    if (accentMatch) {
+      const num = extractNumber(accentMatch[1]);
+      if (num > 0 && items.length <= 1) return "counter";
+    }
+  }
 
   // icon_stat — items 1개 + values 1개 + icon
   if (items.length === 1 && values.length === 1 && icons.length >= 1) return "icon_stat";
 
-  // counter — headline에 {{숫자}} + values 1개
-  if (values.length === 1 && items.length <= 1) {
-    const accentMatch = headline.match(/\{\{([^}]+)\}\}/);
-    if (accentMatch) {
-      const num = extractNumber(accentMatch[1]);
-      if (num > 0) return "counter";
-    }
-    if (items.length === 1) return "metric_spotlight";
-  }
+  // metric_spotlight — items 1개 + values 1개
+  if (items.length === 1 && values.length === 1) return "metric_spotlight";
+
+  // metric_spotlight — items 1개 + values 0개 (단일 항목)
+  if (items.length === 1 && values.length === 0) return "metric_spotlight";
 
   // 2항목 비교
   if (items.length === 2 && values.length >= 2) return "before_after";
+  if (items.length === 2) return "split";
 
-  // 3~6항목 + values → bar
+  // 3~6항목 + values 매칭 → bar
   if (items.length >= 3 && values.length >= 3 && items.length === values.length) return "bar";
 
   // 3~6항목 + values 없음 → items_list
   if (items.length >= 3 && values.length === 0) return "items_list";
 
-  // 3~6항목 + values (개수 불일치) → items_grid
+  // 3~6항목 → items_grid
   if (items.length >= 3) return "items_grid";
 
-  // headline + items (보조) → hero_with_context
+  // headline + items → hero_with_context
   if (headline && items.length >= 1) return "hero_with_context";
 
-  // headline만 → headline_only
-  if (headline) return "headline_only";
+  // 이미지만 있는 씬 (items/headline 없음) → cinematic
+  if (placement) return "cinematic";
 
-  // 기본 fallback
-  return "headline_only";
+  // headline만 있음 (items 없음) — 정말 텍스트만
+  if (headline) return "counter";
+
+  // 최종 fallback — 빈 씬 (narration만)
+  return "items_list";
 }
 
 /* ================================================================

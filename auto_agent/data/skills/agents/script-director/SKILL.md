@@ -122,9 +122,8 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    - items가 있어도 이미지를 함께 쓸 수 있음 (background)
    - headline이 있어도 이미지를 함께 쓸 수 있음 (background)
 
-5. motion + mood 결정
-   - layout은 적지 않음 — 시스템이 콘텐츠 구조를 보고 자동 결정
-   - 씬에디터에서 수동 변경 가능
+5. layout + motion + mood 결정
+   - layout: 콘텐츠 구조에 맞는 레이아웃 선택 (위 매핑 참조)
    - motion: 프리셋 이름 하나 (shared/motion-presets 참조)
    - mood: 감정 톤 7종 중 선택
 
@@ -217,6 +216,7 @@ layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면
       "narration": "나레이션 텍스트",
       "concept": "이 씬의 연출 의도 한 문장 — 콘텐츠/에셋 결정의 기준",
 
+      "layout": "bar",
       "motion": "stagger_wave",
       "mood": "informative",
 
