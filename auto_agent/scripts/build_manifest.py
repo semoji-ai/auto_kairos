@@ -228,10 +228,12 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         audio_src = out_dir / "audio" / f"{scene_key}.mp3"
         audio_path = link_asset(audio_src, "audio", f"{scene_key}.mp3")
 
-        # Duration: tts_results > 로컬 MP3 probe > durationFrames/fps
-        audio_duration = tts_results.get(num, {}).get("duration", 0.0)
-        if not audio_duration and audio_src.exists():
+        # Duration: 로컬 MP3 probe > tts_results > durationFrames/fps
+        audio_duration = 0.0
+        if audio_src.exists():
             audio_duration = _probe_mp3_duration_local(audio_src)
+        if not audio_duration:
+            audio_duration = tts_results.get(num, {}).get("duration", 0.0)
         if not audio_duration and scene.get("durationFrames"):
             specs_fps = specs.get("meta", {}).get("fps", 30)
             audio_duration = scene["durationFrames"] / specs_fps

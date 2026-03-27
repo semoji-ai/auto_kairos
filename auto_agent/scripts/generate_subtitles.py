@@ -336,6 +336,21 @@ def main():
         data = json.load(f)
 
     scenes = data["scenes"]
+
+    # --scene N 옵션: 특정 씬만 처리 (TTS 재생성 시 전체 재처리 방지)
+    target_scene = None
+    argv = sys.argv[1:]
+    for idx, arg in enumerate(argv):
+        if arg == "--scene" and idx + 1 < len(argv):
+            target_scene = int(argv[idx + 1])
+            break
+    if target_scene is not None:
+        scenes = [s for s in scenes if (s.get("sceneNumber") or s.get("scene_number")) == target_scene]
+        # 대상 씬의 기존 SRT 삭제하여 재생성 강제
+        srt_target = SUBTITLE_DIR / f"scene_{target_scene:03d}.srt"
+        if srt_target.exists():
+            srt_target.unlink()
+
     total = len(scenes)
     all_subtitles = []
 

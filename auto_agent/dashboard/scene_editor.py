@@ -63,6 +63,25 @@ async def rebuild_manifest(slug: str):
         return {"ok": False, "error": str(e)}
 
 
+def _rebuild_manifest_sync(project: dict) -> None:
+    """매니페스트 동기 리빌드 (이미지/오디오 변경 즉시 반영용)."""
+    import subprocess, shutil, os
+    out_dir = project.get("output_dir", "")
+    if not out_dir:
+        return
+    python = shutil.which("python3") or shutil.which("python") or "python3"
+    project_id = str(project.get("id", ""))
+    storage_key = Path(out_dir).name
+    try:
+        subprocess.run(
+            [python, "-m", "auto_agent.scripts.build_manifest", project_id, storage_key, out_dir],
+            capture_output=True, text=True, encoding="utf-8", timeout=30,
+            env={**os.environ},
+        )
+    except Exception as e:
+        print(f"[WARN] 에디터 매니페스트 리빌드 실패: {e}")
+
+
 # ─── 썸네일 (Remotion renderStill) ───
 
 _thumbnail_tasks: dict = {}  # slug → asyncio.Task
@@ -83,7 +102,7 @@ async def get_scene_thumbnail(slug: str, scene_num: int):
         return FileResponse(
             thumb_path,
             media_type="image/png",
-            headers={"Cache-Control": "public, max-age=300"},
+            headers={"Cache-Control": "public, max-age=10"},
         )
 
     # 썸네일 아직 없음 → 1x1 transparent PNG (placeholder)
@@ -307,6 +326,9 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
     specs_path.write_text(
         json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+
+    # 매니페스트 리빌드 (이미지 변경 즉시 반영)
+    _rebuild_manifest_sync(project)
 
     return {"ok": True, "image_url": image_url}
 
@@ -592,6 +614,11 @@ async def save_scene(slug: str, scene_num: int, request: Request):
             json.dumps(specs, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
+
+    # 이미지/오디오 관련 필드 변경 시 매니페스트 리빌드
+    _MANIFEST_FIELDS = {"imagePath", "vizBackgroundPath", "imageAsset", "narration_tts"}
+    if diff.keys() & _MANIFEST_FIELDS:
+        _rebuild_manifest_sync(project)
 
     return {
         "ok": True,

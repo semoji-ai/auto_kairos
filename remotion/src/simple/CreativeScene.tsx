@@ -3296,10 +3296,11 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             <div style={{
               display: "flex",
               flexDirection: isHorizontal ? "row" : "column",
-              alignItems: "center",
+              alignItems: isHorizontal ? "center" : "flex-start",
               justifyContent: "center",
               gap: 0,
-              width: "100%",
+              width: isHorizontal ? "100%" : "auto",
+              margin: "0 auto",
             }}>
               {items.map((item, i) => (
                 <React.Fragment key={i}>

@@ -811,7 +811,7 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
             # 자막 재정렬 (WhisperX)
             try:
                 sub_result = subprocess.run(
-                    [sys.executable, "-m", "auto_agent.scripts.generate_subtitles", out_dir],
+                    [sys.executable, "-m", "auto_agent.scripts.generate_subtitles", out_dir, "--scene", str(scene_num)],
                     cwd=str(get_workspace_dir()),
                     capture_output=True, text=True, encoding="utf-8", timeout=120,
                 )
