@@ -271,8 +271,69 @@ def cmd_studio(args):
     )
 
 
+def _create_from_plan(plan_path_str: str):
+    """기획안 마크다운에서 프로젝트 자동 생성."""
+    from auto_agent.paths import get_vault_dir
+
+    vault = get_vault_dir()
+    plan_path = vault / plan_path_str if not Path(plan_path_str).is_absolute() else Path(plan_path_str)
+
+    if not plan_path.exists():
+        print_error(f"기획안을 찾을 수 없습니다: {plan_path}")
+        sys.exit(1)
+
+    content = plan_path.read_text(encoding="utf-8")
+
+    # frontmatter 파싱
+    channel = "이로미즘"
+    topic = ""
+    if content.startswith("---"):
+        parts = content.split("---", 2)
+        if len(parts) >= 3:
+            fm = parts[1]
+            for line in fm.split("\n"):
+                if line.startswith("channel:"):
+                    channel = line.split(":", 1)[1].strip()
+
+    # 주제 추출 (## 주제: 라인)
+    for line in content.split("\n"):
+        if line.startswith("## 주제:"):
+            topic = line.replace("## 주제:", "").strip()
+            break
+
+    if not topic:
+        print_error("기획안에서 주제를 찾을 수 없습니다 (## 주제: 형식 필요)")
+        sys.exit(1)
+
+    # 프로젝트 생성 (기존 create 로직 재사용)
+    slug = topic.replace(" ", "_").replace("/", "_")[:50]
+    console.print(f"  주제: [accent]{topic}[/accent]")
+    console.print(f"  채널: [accent]{channel}[/accent]")
+    console.print(f"  슬러그: [accent]{slug}[/accent]")
+
+    # 기획안 status 업데이트
+    updated = content.replace("status: proposed", "status: approved")
+    plan_path.write_text(updated, encoding="utf-8")
+    print_success(f"기획안 승인됨: {plan_path.name}")
+
+    return topic, channel, slug
+
+
 def cmd_project(args):
-    """프로젝트 관리 — db.cli에 위임."""
+    """프로젝트 관리 — db.cli에 위임. --from-plan 지원."""
+    if "--from-plan" in args:
+        idx = args.index("--from-plan")
+        if idx + 1 < len(args):
+            plan_path = args[idx + 1]
+            topic, channel, slug = _create_from_plan(plan_path)
+            # 기존 create 로직에 위임
+            from auto_agent.db.cli import cmd_project as _cmd_project
+            _cmd_project(["create", slug, topic])
+            return
+        else:
+            print_error("--from-plan 뒤에 기획안 경로를 지정하세요.")
+            sys.exit(1)
+
     from auto_agent.db.cli import cmd_project as _cmd_project
     _cmd_project(args)
 
@@ -1068,6 +1129,98 @@ def _parse_project_flag(args):
     return None
 
 
+def cmd_plan(args):
+    """주제 기획 (Stage 0 — trend-analyst)."""
+    from auto_agent.modules.agent_runner import AgentRunner
+
+    channel = "이로미즘"
+    seed = None
+
+    for i, arg in enumerate(args):
+        if arg == "--channel" and i + 1 < len(args):
+            channel = args[i + 1]
+        elif arg == "--seed" and i + 1 < len(args):
+            seed = args[i + 1]
+
+    mode = "시드 모드" if seed else "자율 모드"
+    print_header(f"Auto Agent — 주제 기획 ({mode})")
+    console.print(f"  채널: [accent]{channel}[/accent]")
+    if seed:
+        console.print(f"  시드: [accent]{seed}[/accent]")
+
+    runner = AgentRunner()
+    result = runner.run_trend_analyst(channel=channel, seed=seed)
+
+    if result["status"] == "success":
+        print_success("기획안 생성 완료")
+        import os
+        webhook = os.getenv("DISCORD_WEBHOOK_URL", "")
+        if webhook:
+            from auto_agent.modules.data_collector.discord_notifier import DiscordNotifier
+            notifier = DiscordNotifier(webhook_url=webhook)
+            notifier.send(f"📋 **{channel} 기획안 생성 완료** ({mode})\n→ 볼트 insights/planning/ 확인")
+    else:
+        print_error(f"기획안 생성 실패: {result.get('stderr', '')[:200]}")
+
+
+def cmd_analyze(args):
+    """성과 분석 (Stage 4 — performance-analyst)."""
+    from auto_agent.modules.agent_runner import AgentRunner
+
+    channel = "이로미즘"
+    video_id = None
+    weekly = False
+
+    for i, arg in enumerate(args):
+        if arg == "--channel" and i + 1 < len(args):
+            channel = args[i + 1]
+        elif arg == "--video" and i + 1 < len(args):
+            video_id = args[i + 1]
+        elif arg == "--weekly":
+            weekly = True
+
+    if not video_id and not weekly:
+        print_error("Usage: auto-agent analyze [--video <id> | --weekly] --channel <name>")
+        sys.exit(1)
+
+    mode = "weekly" if weekly else "video"
+    label = "주간 리뷰" if weekly else f"영상 분석 ({video_id})"
+    print_header(f"Auto Agent — {label}")
+    console.print(f"  채널: [accent]{channel}[/accent]")
+
+    runner = AgentRunner()
+    result = runner.run_performance_analyst(mode=mode, channel=channel, video_id=video_id)
+
+    if result["status"] == "success":
+        print_success(f"{label} 완료")
+        import os
+        webhook = os.getenv("DISCORD_WEBHOOK_URL", "")
+        if webhook:
+            from auto_agent.modules.data_collector.discord_notifier import DiscordNotifier
+            notifier = DiscordNotifier(webhook_url=webhook)
+            notifier.send(f"📊 **{channel} {label} 완료**\n→ 볼트 확인")
+    else:
+        print_error(f"분석 실패: {result.get('stderr', '')[:200]}")
+
+
+def cmd_cron(args):
+    """cron 스케줄 설정 (인텔리전스 루프)."""
+    if not args or args[0] == "setup":
+        workspace = str(get_workspace_dir())
+        python = sys.executable
+        from auto_agent.scripts.setup_cron import setup_cron
+        setup_cron(workspace, python)
+    elif args[0] == "list":
+        import subprocess
+        result = subprocess.run(["crontab", "-l"], capture_output=True, text=True)
+        console.print(result.stdout if result.returncode == 0 else "crontab 비어있음")
+    elif args[0] == "remove":
+        from auto_agent.scripts.setup_cron import remove_cron
+        remove_cron()
+    else:
+        print_error("Usage: auto-agent cron [setup|list|remove]")
+
+
 COMMANDS = {
     "init": cmd_init,
     "run": cmd_run,
@@ -1087,6 +1240,9 @@ COMMANDS = {
     "collect": cmd_collect,
     "link": cmd_link,
     "watchlist": cmd_watchlist,
+    "plan": cmd_plan,
+    "analyze": cmd_analyze,
+    "cron": cmd_cron,
     "sync": cmd_sync,
     "pull": cmd_pull,
     "update": cmd_update,
