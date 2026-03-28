@@ -954,20 +954,34 @@ def cmd_link(args):
 def cmd_watchlist(args):
     """경쟁 채널 워치리스트 관리."""
     from auto_agent.paths import get_vault_dir
+    from auto_agent.modules.data_collector.watchlist_parser import WatchlistParser
 
     vault = get_vault_dir()
-    watchlist_path = vault / "channels" / "_watchlist.md"
+    parser = WatchlistParser(vault)
 
     if not args:
+        watchlist_path = vault / "channels" / "_watchlist.md"
         if watchlist_path.exists():
             console.print(watchlist_path.read_text(encoding="utf-8"))
         else:
-            print_warning("워치리스트가 없습니다.")
+            print_warning("워치리스트가 없습니다. channels/_watchlist.md를 생성하세요.")
         return
 
     subcmd = args[0]
-    if subcmd in ("approve", "remove") and len(args) > 1:
-        print_warning(f"'{subcmd}' 기능은 Phase 1b에서 구현 예정입니다.")
+    if subcmd == "approve" and len(args) > 1:
+        channel_name = args[1]
+        try:
+            parser.approve(channel_name)
+            print_success(f"채널 승격 완료: {channel_name} (trial → active)")
+        except ValueError as e:
+            print_error(str(e))
+    elif subcmd == "remove" and len(args) > 1:
+        channel_name = args[1]
+        try:
+            parser.remove(channel_name)
+            print_success(f"채널 제거 완료: {channel_name} → archived")
+        except ValueError as e:
+            print_error(str(e))
     else:
         print_error("Usage: auto-agent watchlist [approve|remove] <채널명>")
 

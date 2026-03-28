@@ -211,5 +211,7 @@ class DataCollector:
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def _load_watchlist(self) -> List[Dict]:
-        """_watchlist.md에서 active + trial 채널 목록 추출. Phase 1b에서 구현."""
-        return []
+        """_watchlist.md에서 active + trial 채널 목록 추출."""
+        from .watchlist_parser import WatchlistParser
+        parser = WatchlistParser(self._vault_dir)
+        return parser.get_trackable()
