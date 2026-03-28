@@ -60,6 +60,37 @@
       "notes": "Stage 2에서 비차단 실행. v4: scene_specs.json의 narration에서 주장 추출."
     },
 
+    "trend-analyst": {
+      "description": "채널 데이터 + 시장 트렌드 교차 분석으로 주제 기획안 생성",
+      "model": "sonnet",
+      "max_turns": 40,
+      "budget": "$2.0",
+      "max_duration_minutes": 15,
+      "allowed_tools": ["Read", "Write", "Glob", "Grep"],
+      "skill_file": "agents/trend-analyst/SKILL.md",
+      "shared_skills": [
+        "shared/writing-style-iromism",
+        "shared/writing-style-semoji",
+        "shared/market-analysis"
+      ],
+      "notes": "Stage 0. 파이프라인 외부 독립 실행. 볼트를 working_dir로 사용."
+    },
+
+    "performance-analyst": {
+      "description": "영상 성과 + 시장 동향 분석, Stage 0 피드백 생성",
+      "model": "sonnet",
+      "max_turns": 50,
+      "budget": "$1.5",
+      "max_duration_minutes": 20,
+      "allowed_tools": ["Read", "Write", "Glob", "Grep"],
+      "skill_file": "agents/performance-analyst/SKILL.md",
+      "shared_skills": [
+        "shared/channel-metrics",
+        "shared/market-analysis"
+      ],
+      "notes": "Stage 4. 파이프라인 외부 독립 실행. 볼트를 working_dir로 사용."
+    },
+
     "assembly-director": {
       "description": "scene_specs의 창의적 의도를 해석하며 TTS/이미지/매니페스트를 조립하고 렌더링까지 수행",
       "model": "opus",
@@ -152,8 +183,10 @@
     "agents": [
       "research-orchestrator (Stage 1: 리서치)",
       "script-director (Stage 2: 원고+연출)",
-      "assembly-director (Stage 3: 에셋 조립+렌더링)"
+      "assembly-director (Stage 3: 에셋 조립+렌더링)",
+      "trend-analyst (Stage 0: 주제 기획)",
+      "performance-analyst (Stage 4: 성과 분석)"
     ],
-    "architecture": "3 에이전트 × 6 모듈(도구). 에이전트가 판단, 모듈이 실행."
+    "architecture": "5 에이전트 × 6 모듈(도구). Stage 0/4는 볼트 기반 독립 실행."
   }
 }

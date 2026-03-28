@@ -33,6 +33,8 @@ RULE_MANIFEST = {
     "skills/agents/fact-verifier/SKILL.md": "skill",
     "skills/agents/assembly-director/SKILL.md": "skill",
     "skills/agents/character-planner/SKILL.md": "skill",
+    "skills/agents/trend-analyst/SKILL.md": "skill",
+    "skills/agents/performance-analyst/SKILL.md": "skill",
     # 공유 스킬
     "skills/shared/writing-style.md": "skill",
     "skills/shared/writing-style-iromism.md": "skill",
@@ -43,6 +45,8 @@ RULE_MANIFEST = {
     "skills/shared/image-generation.md": "skill",
     "skills/shared/image-prompt-rules.md": "skill",
     "skills/shared/research-format.md": "skill",
+    "skills/shared/market-analysis.md": "skill",
+    "skills/shared/channel-metrics.md": "skill",
 }
 
 
