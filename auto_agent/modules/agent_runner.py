@@ -21,8 +21,16 @@ class AgentRunner:
         self._data_dir = get_data_dir()
         self._agents_config = self._load_agents_config()
 
-    def run_trend_analyst(self, channel: str, seed: Optional[str] = None) -> Dict:
+    def run_trend_analyst(self, channel: str, seed: Optional[str] = None,
+                          autoresearch: bool = False, max_rounds: int = 5) -> Dict:
         """trend-analyst 에이전트 실행."""
+        if autoresearch:
+            from auto_agent.modules.auto_research_loop import AutoResearchLoop
+            loop = AutoResearchLoop(channel=channel, max_rounds=max_rounds, seed=seed)
+            prompt = loop.build_loop_prompt()
+            config = self._agents_config.get("agents", {}).get("trend-analyst", {})
+            # autoresearch는 웹 검색 필요
+            return self._run_agent(prompt, config, extra_tools=["WebSearch", "WebFetch"])
         prompt = self.build_trend_analyst_prompt(channel, seed)
         config = self._agents_config.get("agents", {}).get("trend-analyst", {})
         return self._run_agent(prompt, config)
@@ -114,13 +122,15 @@ Stage 0 피드백을 insights/feedback/ 에 저장하세요."""
 
     # ── Claude CLI 실행 ──
 
-    def _run_agent(self, prompt: str, config: Dict) -> Dict:
+    def _run_agent(self, prompt: str, config: Dict,
+                   extra_tools: Optional[List[str]] = None) -> Dict:
         """Claude CLI로 에이전트 실행."""
         model = config.get("model", "sonnet")
         max_turns = config.get("max_turns", 30)
         timeout = config.get("max_duration_minutes", 15) * 60
 
-        cmd = self._build_claude_cmd(model=model, max_turns=max_turns)
+        cmd = self._build_claude_cmd(model=model, max_turns=max_turns,
+                                     extra_tools=extra_tools)
 
         env = os.environ.copy()
         env.pop("CLAUDECODE", None)
@@ -151,10 +161,13 @@ Stage 0 피드백을 insights/feedback/ 에 저장하세요."""
         except Exception as e:
             return {"status": "error", "returncode": -1, "stdout": "", "stderr": str(e)}
 
-    def _build_claude_cmd(self, model: str, max_turns: int) -> List[str]:
+    def _build_claude_cmd(self, model: str, max_turns: int,
+                          extra_tools: Optional[List[str]] = None) -> List[str]:
         """Claude CLI 명령어 빌드."""
         cli_path = self._find_claude_cli()
         tools = ["Read", "Write", "Glob", "Grep"]
+        if extra_tools:
+            tools.extend(extra_tools)
         cmd = [
             cli_path, "--print", "--output-format", "json",
             "--model", model, "--max-turns", str(max_turns),

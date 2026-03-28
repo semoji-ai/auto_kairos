@@ -1135,21 +1135,38 @@ def cmd_plan(args):
 
     channel = "이로미즘"
     seed = None
+    autoresearch = False
+    max_rounds = 5
 
     for i, arg in enumerate(args):
         if arg == "--channel" and i + 1 < len(args):
             channel = args[i + 1]
         elif arg == "--seed" and i + 1 < len(args):
             seed = args[i + 1]
+        elif arg == "--autoresearch":
+            autoresearch = True
+        elif arg == "--rounds" and i + 1 < len(args):
+            max_rounds = int(args[i + 1])
 
-    mode = "시드 모드" if seed else "자율 모드"
+    if autoresearch:
+        mode = f"AutoResearch ({max_rounds}라운드)"
+    elif seed:
+        mode = "시드 모드"
+    else:
+        mode = "자율 모드"
+
     print_header(f"Auto Agent — 주제 기획 ({mode})")
     console.print(f"  채널: [accent]{channel}[/accent]")
     if seed:
         console.print(f"  시드: [accent]{seed}[/accent]")
+    if autoresearch:
+        console.print(f"  모드: [accent]카파시 AutoResearch 루프[/accent]")
 
     runner = AgentRunner()
-    result = runner.run_trend_analyst(channel=channel, seed=seed)
+    result = runner.run_trend_analyst(
+        channel=channel, seed=seed,
+        autoresearch=autoresearch, max_rounds=max_rounds,
+    )
 
     if result["status"] == "success":
         print_success("기획안 생성 완료")
