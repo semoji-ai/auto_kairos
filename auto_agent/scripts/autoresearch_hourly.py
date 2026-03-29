@@ -97,11 +97,26 @@ def run_single_round(channel: str, round_num: int, total: int):
 
     notify_discord(f"🔍 **AutoResearch 라운드 {round_num}/{total}** 시작 ({channel}, {now})")
 
+    # 과정 알림 — 중복 방지를 위해 최근 메시지 추적
+    progress_buffer = []
+    last_notify_time = [time.time()]
+
+    def on_progress(message: str):
+        progress_buffer.append(message)
+        logger.info("[라운드 %d] %s", round_num, message)
+        # 30초마다 묶어서 전송 (도배 방지)
+        if time.time() - last_notify_time[0] >= 30 and progress_buffer:
+            batch = "\n".join(progress_buffer[-5:])  # 최근 5개만
+            notify_discord(f"📡 **라운드 {round_num}/{total}** 진행 중:\n{batch}")
+            progress_buffer.clear()
+            last_notify_time[0] = time.time()
+
     runner = AgentRunner()
     result = runner.run_trend_analyst(
         channel=channel,
         autoresearch=True,
         max_rounds=1,  # 1라운드씩 (래칫이 이전 결과 이어감)
+        on_progress=on_progress,
     )
 
     if result["status"] == "success":

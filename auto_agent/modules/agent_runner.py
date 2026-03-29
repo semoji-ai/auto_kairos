@@ -22,7 +22,8 @@ class AgentRunner:
         self._agents_config = self._load_agents_config()
 
     def run_trend_analyst(self, channel: str, seed: Optional[str] = None,
-                          autoresearch: bool = False, max_rounds: int = 5) -> Dict:
+                          autoresearch: bool = False, max_rounds: int = 5,
+                          on_progress: Optional[callable] = None) -> Dict:
         """trend-analyst 에이전트 실행."""
         if autoresearch:
             from auto_agent.modules.auto_research_loop import AutoResearchLoop
@@ -30,10 +31,12 @@ class AgentRunner:
             prompt = loop.build_loop_prompt()
             config = self._agents_config.get("agents", {}).get("trend-analyst", {})
             # autoresearch는 웹 검색 필요
-            return self._run_agent(prompt, config, extra_tools=["WebSearch", "WebFetch"])
+            return self._run_agent(prompt, config,
+                                   extra_tools=["WebSearch", "WebFetch"],
+                                   on_progress=on_progress)
         prompt = self.build_trend_analyst_prompt(channel, seed)
         config = self._agents_config.get("agents", {}).get("trend-analyst", {})
-        return self._run_agent(prompt, config)
+        return self._run_agent(prompt, config, on_progress=on_progress)
 
     def run_performance_analyst(
         self, mode: str, channel: str, video_id: Optional[str] = None
@@ -123,18 +126,34 @@ Stage 0 피드백을 insights/feedback/ 에 저장하세요."""
     # ── Claude CLI 실행 ──
 
     def _run_agent(self, prompt: str, config: Dict,
-                   extra_tools: Optional[List[str]] = None) -> Dict:
-        """Claude CLI로 에이전트 실행."""
+                   extra_tools: Optional[List[str]] = None,
+                   on_progress: Optional[callable] = None) -> Dict:
+        """Claude CLI로 에이전트 실행.
+
+        Args:
+            on_progress: 콜백 함수(message: str). 스트리밍 이벤트 발생 시 호출.
+        """
         model = config.get("model", "sonnet")
         max_turns = config.get("max_turns", 30)
         timeout = config.get("max_duration_minutes", 15) * 60
 
-        cmd = self._build_claude_cmd(model=model, max_turns=max_turns,
-                                     extra_tools=extra_tools)
+        streaming = on_progress is not None
+        cmd = self._build_claude_cmd(
+            model=model, max_turns=max_turns,
+            extra_tools=extra_tools,
+            streaming=streaming,
+        )
 
         env = os.environ.copy()
         env.pop("CLAUDECODE", None)
 
+        if streaming:
+            return self._run_agent_streaming(cmd, prompt, env, timeout, on_progress)
+        else:
+            return self._run_agent_batch(cmd, prompt, env, timeout)
+
+    def _run_agent_batch(self, cmd, prompt, env, timeout) -> Dict:
+        """배치 모드 — 결과만 반환."""
         try:
             proc = subprocess.Popen(
                 cmd,
@@ -149,22 +168,7 @@ Stage 0 피드백을 insights/feedback/ 에 저장하세요."""
             )
             stdout, stderr = proc.communicate(input=prompt, timeout=timeout)
 
-            # JSON 출력에서 토큰 사용량 파싱
-            usage = {}
-            try:
-                cli_result = json.loads(stdout)
-                usage = {
-                    "total_cost_usd": cli_result.get("total_cost_usd", 0),
-                    "duration_ms": cli_result.get("duration_ms", 0),
-                    "num_turns": cli_result.get("num_turns", 0),
-                    "input_tokens": cli_result.get("usage", {}).get("input_tokens", 0),
-                    "output_tokens": cli_result.get("usage", {}).get("output_tokens", 0),
-                    "cache_read_tokens": cli_result.get("usage", {}).get("cache_read_input_tokens", 0),
-                    "cache_creation_tokens": cli_result.get("usage", {}).get("cache_creation_input_tokens", 0),
-                }
-            except (json.JSONDecodeError, AttributeError):
-                pass
-
+            usage = self._parse_usage_from_json(stdout)
             return {
                 "status": "success" if proc.returncode == 0 else "error",
                 "returncode": proc.returncode,
@@ -178,15 +182,127 @@ Stage 0 피드백을 insights/feedback/ 에 저장하세요."""
         except Exception as e:
             return {"status": "error", "returncode": -1, "stdout": "", "stderr": str(e)}
 
+    def _run_agent_streaming(self, cmd, prompt, env, timeout, on_progress) -> Dict:
+        """스트리밍 모드 — 과정을 on_progress 콜백으로 전달."""
+        import threading
+
+        try:
+            proc = subprocess.Popen(
+                cmd,
+                cwd=str(self._vault_dir),
+                env=env,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                **subprocess_kwargs(),
+            )
+            # stdin에 프롬프트 전달 후 닫기
+            proc.stdin.write(prompt)
+            proc.stdin.close()
+
+            # stderr를 별도 스레드로 수집
+            stderr_lines = []
+            def read_stderr():
+                for line in proc.stderr:
+                    stderr_lines.append(line)
+            t = threading.Thread(target=read_stderr, daemon=True)
+            t.start()
+
+            # stdout에서 stream-json 이벤트 파싱
+            last_result = None
+            for line in proc.stdout:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+
+                etype = event.get("type", "")
+
+                # 도구 호출 감지
+                if etype == "assistant" and "tool_use" in str(event.get("message", {}).get("content", "")):
+                    content = event.get("message", {}).get("content", [])
+                    for block in content:
+                        if isinstance(block, dict) and block.get("type") == "tool_use":
+                            tool = block.get("name", "")
+                            inp = block.get("input", {})
+                            if tool == "WebSearch":
+                                query = inp.get("query", inp.get("pattern", ""))
+                                on_progress(f"🔍 WebSearch: {query[:80]}")
+                            elif tool == "WebFetch":
+                                url = inp.get("url", "")[:80]
+                                on_progress(f"🌐 WebFetch: {url}")
+                            elif tool == "Write":
+                                path = inp.get("file_path", "")
+                                fname = Path(path).name if path else ""
+                                on_progress(f"📝 Write: {fname}")
+                            elif tool == "Glob":
+                                pattern = inp.get("pattern", "")
+                                on_progress(f"📂 Glob: {pattern[:60]}")
+
+                # 최종 결과
+                if etype == "result":
+                    last_result = event
+
+            proc.wait(timeout=30)
+            t.join(timeout=5)
+
+            usage = {}
+            if last_result:
+                usage = {
+                    "total_cost_usd": last_result.get("total_cost_usd", 0),
+                    "duration_ms": last_result.get("duration_ms", 0),
+                    "num_turns": last_result.get("num_turns", 0),
+                    "input_tokens": last_result.get("usage", {}).get("input_tokens", 0),
+                    "output_tokens": last_result.get("usage", {}).get("output_tokens", 0),
+                    "cache_read_tokens": last_result.get("usage", {}).get("cache_read_input_tokens", 0),
+                    "cache_creation_tokens": last_result.get("usage", {}).get("cache_creation_input_tokens", 0),
+                }
+
+            return {
+                "status": "success" if proc.returncode == 0 else "error",
+                "returncode": proc.returncode,
+                "stdout": json.dumps(last_result) if last_result else "",
+                "stderr": "".join(stderr_lines),
+                "usage": usage,
+            }
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            return {"status": "timeout", "returncode": -1, "stdout": "", "stderr": "timeout"}
+        except Exception as e:
+            return {"status": "error", "returncode": -1, "stdout": "", "stderr": str(e)}
+
+    def _parse_usage_from_json(self, stdout: str) -> Dict:
+        """JSON 출력에서 토큰 사용량 파싱."""
+        try:
+            cli_result = json.loads(stdout)
+            return {
+                "total_cost_usd": cli_result.get("total_cost_usd", 0),
+                "duration_ms": cli_result.get("duration_ms", 0),
+                "num_turns": cli_result.get("num_turns", 0),
+                "input_tokens": cli_result.get("usage", {}).get("input_tokens", 0),
+                "output_tokens": cli_result.get("usage", {}).get("output_tokens", 0),
+                "cache_read_tokens": cli_result.get("usage", {}).get("cache_read_input_tokens", 0),
+                "cache_creation_tokens": cli_result.get("usage", {}).get("cache_creation_input_tokens", 0),
+            }
+        except (json.JSONDecodeError, AttributeError):
+            return {}
+
     def _build_claude_cmd(self, model: str, max_turns: int,
-                          extra_tools: Optional[List[str]] = None) -> List[str]:
+                          extra_tools: Optional[List[str]] = None,
+                          streaming: bool = False) -> List[str]:
         """Claude CLI 명령어 빌드."""
         cli_path = self._find_claude_cli()
         tools = ["Read", "Write", "Glob", "Grep"]
         if extra_tools:
             tools.extend(extra_tools)
+        output_format = "stream-json" if streaming else "json"
         cmd = [
-            cli_path, "--print", "--output-format", "json",
+            cli_path, "--print", "--output-format", output_format,
             "--model", model, "--max-turns", str(max_turns),
         ]
         for tool in tools:
