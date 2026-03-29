@@ -25,7 +25,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from dotenv import load_dotenv
 load_dotenv(PROJECT_ROOT / ".env")
 
-DISCORD_NOTIFY_CHANNEL = os.getenv("DISCORD_SOLUTIONER_CHANNEL_ID", "1487476019559534642")
+DISCORD_NOTIFY_CHANNEL = os.getenv("DISCORD_SOLUTIONER_CHANNEL_ID", "1486738313468706987")
 
 
 def build_study_prompt() -> str:
@@ -140,7 +140,7 @@ def run_study():
 
 
 def send_digest():
-    """디스코드에 일일 요약 전송."""
+    """디스코드에 스레드 단위로 일일 요약 전송."""
     from auto_agent.modules.discord_bot_notify import DiscordBotNotify
 
     vault_dir = os.getenv("KAIROS_VAULT_DIR", "")
@@ -153,29 +153,63 @@ def send_digest():
 
     content = daily_file.read_text(encoding="utf-8")
 
-    # 요약 추출 (## 📊 요약 섹션)
-    summary = ""
-    in_summary = False
-    for line in content.split("\n"):
-        if "📊 요약" in line or "📊 Summary" in line:
-            in_summary = True
-        elif in_summary and line.startswith("##"):
-            break
-        elif in_summary:
-            summary += line + "\n"
+    # 섹션별 추출
+    discoveries = []
+    combos = []
+    summary_text = ""
 
-    # 새 발견 수 추출
-    new_count = content.count("### [")
-    combo_count = content.count("💡") - 1 if "💡" in content else 0
+    current_section = None
+    current_item = []
+
+    for line in content.split("\n"):
+        if "## 🆕 새 발견" in line:
+            current_section = "discovery"
+        elif "## 💡 조합 아이디어" in line:
+            current_section = "combo"
+        elif "## 📊 요약" in line:
+            current_section = "summary"
+        elif current_section == "discovery" and line.startswith("### ["):
+            discoveries.append(line.replace("### ", ""))
+        elif current_section == "combo" and line.startswith("- **["):
+            combos.append(line)
+        elif current_section == "summary" and not line.startswith("##"):
+            summary_text += line + "\n"
 
     bot = DiscordBotNotify(channel_id=DISCORD_NOTIFY_CHANNEL)
-    bot.send_to_channel(
-        f"📚 **Solutioner Daily Digest** ({today})\n\n"
-        f"🆕 새 발견: {new_count}개\n"
-        f"💡 조합 아이디어: {max(0, combo_count)}개\n\n"
-        f"{summary[:1500]}\n"
-        f"→ 상세: solutioner/daily/{today}.md"
-    )
+
+    # 스레드 생성
+    thread_name = f"[{today}] Solutioner Daily Study"
+    thread_id = bot.create_thread(thread_name)
+
+    if thread_id:
+        # 새 발견
+        if discoveries:
+            disc_text = "\n".join(discoveries[:12])
+            bot.send_to_thread(f"🆕 **새 발견 ({len(discoveries)}개)**\n\n{disc_text}")
+
+        # 조합 아이디어
+        if combos:
+            combo_text = "\n".join(combos)
+            bot.send_to_thread(f"💡 **조합 아이디어 ({len(combos)}개)**\n\n{combo_text}")
+
+        # 요약
+        bot.send_to_thread(f"📊 **요약**\n{summary_text[:1500]}\n→ 상세: solutioner/daily/{today}.md")
+
+        # 채널에도 완료 알림
+        bot.send_to_channel(
+            f"📚 **[{today}] Solutioner Daily Study 완료** — "
+            f"발견 {len(discoveries)}개, 조합 {len(combos)}개 "
+            f"→ 스레드에서 확인"
+        )
+    else:
+        # 스레드 생성 실패 시 채널에 직접
+        bot.send_to_channel(
+            f"📚 **Solutioner Daily Digest** ({today})\n\n"
+            f"🆕 새 발견: {len(discoveries)}개\n"
+            f"💡 조합 아이디어: {len(combos)}개\n\n"
+            f"{summary_text[:1500]}\n"
+            f"→ 상세: solutioner/daily/{today}.md"
+        )
 
 
 def main():
