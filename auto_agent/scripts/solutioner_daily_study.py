@@ -63,7 +63,8 @@ def build_study_prompt() -> str:
 ## 출력
 
 ### 1. 일일 로그 파일
-`{sol_dir}/daily/{today}.md` 에 저장:
+**⚠️ 기존 파일이 있으면 먼저 읽고, 기존 내용 아래에 새 발견을 추가(append)하세요. 덮어쓰지 마세요.**
+`{sol_dir}/daily/{today}.md` 에 저장 (누적):
 
 ```markdown
 ---
