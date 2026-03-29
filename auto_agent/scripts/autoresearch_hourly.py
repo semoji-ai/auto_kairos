@@ -105,10 +105,28 @@ def run_single_round(channel: str, round_num: int, total: int):
     )
 
     if result["status"] == "success":
-        logger.info("라운드 %d 완료 (성공)", round_num)
+        usage = result.get("usage", {})
+        cost = usage.get("total_cost_usd", 0)
+        input_tok = usage.get("input_tokens", 0)
+        output_tok = usage.get("output_tokens", 0)
+        cache_read = usage.get("cache_read_tokens", 0)
+        duration = usage.get("duration_ms", 0) / 1000
+        turns = usage.get("num_turns", 0)
+
+        logger.info(
+            "라운드 %d 완료 (성공) — $%.4f, %d턴, %.0fs, in:%d out:%d cache:%d",
+            round_num, cost, turns, duration, input_tok, output_tok, cache_read,
+        )
+
         summary = format_results_summary(channel)
+        usage_line = (
+            f"\n💰 **비용:** ${cost:.4f} | **턴:** {turns} | **시간:** {duration:.0f}s\n"
+            f"📊 **토큰:** input {input_tok:,} / output {output_tok:,} / cache {cache_read:,}"
+        ) if cost > 0 else ""
+
         notify_discord(
-            f"✅ **AutoResearch 라운드 {round_num}/{total} 완료** ({channel})\n\n{summary}"
+            f"✅ **AutoResearch 라운드 {round_num}/{total} 완료** ({channel})"
+            f"{usage_line}\n\n{summary}"
         )
     elif result["status"] == "timeout":
         logger.warning("라운드 %d 타임아웃", round_num)

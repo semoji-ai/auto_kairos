@@ -149,11 +149,28 @@ Stage 0 피드백을 insights/feedback/ 에 저장하세요."""
             )
             stdout, stderr = proc.communicate(input=prompt, timeout=timeout)
 
+            # JSON 출력에서 토큰 사용량 파싱
+            usage = {}
+            try:
+                cli_result = json.loads(stdout)
+                usage = {
+                    "total_cost_usd": cli_result.get("total_cost_usd", 0),
+                    "duration_ms": cli_result.get("duration_ms", 0),
+                    "num_turns": cli_result.get("num_turns", 0),
+                    "input_tokens": cli_result.get("usage", {}).get("input_tokens", 0),
+                    "output_tokens": cli_result.get("usage", {}).get("output_tokens", 0),
+                    "cache_read_tokens": cli_result.get("usage", {}).get("cache_read_input_tokens", 0),
+                    "cache_creation_tokens": cli_result.get("usage", {}).get("cache_creation_input_tokens", 0),
+                }
+            except (json.JSONDecodeError, AttributeError):
+                pass
+
             return {
                 "status": "success" if proc.returncode == 0 else "error",
                 "returncode": proc.returncode,
                 "stdout": stdout,
                 "stderr": stderr,
+                "usage": usage,
             }
         except subprocess.TimeoutExpired:
             proc.kill()
