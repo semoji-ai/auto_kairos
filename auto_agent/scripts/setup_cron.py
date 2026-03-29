@@ -8,16 +8,16 @@ MARKER_START = "# === KAIROS INTELLIGENCE LOOP START ==="
 MARKER_END = "# === KAIROS INTELLIGENCE LOOP END ==="
 
 CRON_ENTRIES = [
-    # KST 05:30 = UTC 20:30 (전일)
-    '30 20 * * * cd {workspace} && {python} -m auto_agent.cli collect --all >> {log_dir}/collect.log 2>&1',
-    # KST 06:00 이로미즘 = UTC 21:00 (전일)
-    '0 21 * * * cd {workspace} && {python} -m auto_agent.cli plan --channel 이로미즘 >> {log_dir}/plan-iromism.log 2>&1',
-    # KST 06:10 세모지 = UTC 21:10 (전일)
-    '10 21 * * * cd {workspace} && {python} -m auto_agent.cli plan --channel 세모지 >> {log_dir}/plan-semoji.log 2>&1',
-    # 일요일 KST 06:00 이로미즘 주간 리뷰 = UTC 21:00 (토요일)
-    '0 21 * * 6 cd {workspace} && {python} -m auto_agent.cli analyze --weekly --channel 이로미즘 >> {log_dir}/weekly-iromism.log 2>&1',
-    # 일요일 KST 06:10 세모지 주간 리뷰 = UTC 21:10 (토요일)
-    '10 21 * * 6 cd {workspace} && {python} -m auto_agent.cli analyze --weekly --channel 세모지 >> {log_dir}/weekly-semoji.log 2>&1',
+    # KST 06:00 데이터 수집
+    '0 6 * * * cd {workspace} && {python} -m auto_agent.cli collect --all >> {log_dir}/collect.log 2>&1',
+    # KST 06:30 AutoResearch 이로미즘 (10라운드, 대기 없음)
+    '30 6 * * * cd {workspace} && {python} {workspace}/auto_agent/scripts/autoresearch_hourly.py 이로미즘 10 10 >> {log_dir}/autoresearch-iromism.log 2>&1',
+    # KST 09:00 AutoResearch 세모지 (10라운드, 대기 없음)
+    '0 9 * * * cd {workspace} && {python} {workspace}/auto_agent/scripts/autoresearch_hourly.py 세모지 10 10 >> {log_dir}/autoresearch-semoji.log 2>&1',
+    # 일요일 KST 11:00 이로미즘 주간 리뷰
+    '0 11 * * 0 cd {workspace} && {python} -m auto_agent.cli analyze --weekly --channel 이로미즘 >> {log_dir}/weekly-iromism.log 2>&1',
+    # 일요일 KST 11:30 세모지 주간 리뷰
+    '30 11 * * 0 cd {workspace} && {python} -m auto_agent.cli analyze --weekly --channel 세모지 >> {log_dir}/weekly-semoji.log 2>&1',
 ]
 
 
