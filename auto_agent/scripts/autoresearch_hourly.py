@@ -154,13 +154,6 @@ def run_single_round(channel: str, round_num: int, total: int):
             f"✅ **라운드 {round_num}/{total} 완료**"
             f"{usage_line}\n\n{summary}"
         )
-
-        # 산출물 상세 내용 전송
-        from auto_agent.modules.study_report import report_study_results
-        vault_dir = os.getenv("KAIROS_VAULT_DIR", "")
-        notifier = get_notifier()
-        if notifier and notifier.thread_id:
-            report_study_results(notifier, vault_dir, f"AutoResearch {channel}", round_num, total)
     elif result["status"] == "timeout":
         logger.warning("라운드 %d 타임아웃", round_num)
         notify_discord(f"⏱️ **라운드 {round_num}/{total}** 타임아웃")
