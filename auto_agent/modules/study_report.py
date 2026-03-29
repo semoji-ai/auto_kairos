@@ -6,12 +6,32 @@ from typing import Optional
 
 
 def summarize_vault_file(file_path: str, max_chars: int = 1800) -> str:
-    """볼트 마크다운 파일의 핵심 내용을 요약 추출."""
+    """볼트 파일(마크다운/JSON)의 핵심 내용을 요약 추출."""
+    import json as _json
     p = Path(file_path)
     if not p.exists():
         return ""
 
     content = p.read_text(encoding="utf-8")
+
+    # JSON 파일 (autoresearch 결과)
+    if p.suffix == ".json":
+        try:
+            data = _json.loads(content)
+            candidates = data.get("candidates", [])
+            ratchet = data.get("ratchet_score", 0)
+            lines_out = [f"📄 **{p.name}** (래칫: {ratchet}, 후보: {len(candidates)}개)\n"]
+            for c in candidates[:5]:
+                score = c.get("topic_score", 0)
+                title = c.get("title", "")
+                hook = c.get("hook", "")
+                lines_out.append(f"**{c.get('rank','?')}. [{score}점] {title}**")
+                if hook:
+                    lines_out.append(f"  > {hook}")
+            return "\n".join(lines_out)[:max_chars]
+        except (_json.JSONDecodeError, AttributeError):
+            return f"📄 {p.name} ({len(content):,}자)"
+
     lines = content.split("\n")
 
     # 제목 추출
@@ -69,12 +89,35 @@ def find_new_or_updated_files(vault_dir: str, category: str, since_minutes: int 
     return sorted(result)
 
 
+def find_new_or_updated_files_in(target_dir: str, since_minutes: int = 30) -> list:
+    """특정 디렉토리에서 최근 N분 내 생성/수정된 파일 찾기."""
+    import time
+    cutoff = time.time() - since_minutes * 60
+    target = Path(target_dir)
+
+    if not target.exists():
+        return []
+
+    result = []
+    for f in target.rglob("*.md"):
+        if f.stat().st_mtime >= cutoff:
+            result.append(str(f))
+    for f in target.rglob("*.json"):
+        if f.stat().st_mtime >= cutoff:
+            result.append(str(f))
+    return sorted(result)
+
+
 def report_study_results(notifier, vault_dir: str, round_topic: str, round_num: int, total: int):
     """라운드 완료 후 생성/수정된 파일 내용을 스레드에 보고."""
     # 최근 30분 내 변경된 파일 찾기
     all_files = []
+    # solutioner 디렉토리
     for cat in ["models", "tools", "patterns", "solutions", "daily"]:
         all_files.extend(find_new_or_updated_files(vault_dir, cat, since_minutes=30))
+    # insights/planning 디렉토리 (AutoResearch 산출물)
+    all_files.extend(find_new_or_updated_files_in(
+        str(Path(vault_dir) / "insights" / "planning"), since_minutes=30))
 
     if not all_files:
         notifier.send_to_thread(f"📝 **라운드 {round_num}/{total} 결과**: 파일 변경 없음")
