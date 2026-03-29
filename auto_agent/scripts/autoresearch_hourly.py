@@ -28,7 +28,7 @@ from dotenv import load_dotenv
 load_dotenv(PROJECT_ROOT / ".env")
 
 # Discord 알림 채널 ID (Stage 0/4 결과용)
-DISCORD_NOTIFY_CHANNEL = os.getenv("DISCORD_STAGE0_CHANNEL_ID", "1487476019559534642")
+DISCORD_NOTIFY_CHANNEL = os.getenv("DISCORD_STAGE0_CHANNEL_ID", "1486738313468706987")
 
 # 알림 인스턴스 (전역)
 _notifier = None
