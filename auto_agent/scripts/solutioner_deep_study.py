@@ -192,6 +192,9 @@ def run_study_round(round_info: dict, notifier) -> dict:
     if result["status"] == "success":
         logger.info("라운드 %d 완료 — $%.4f, %.0fs", round_num, cost, duration)
         notifier.send_to_thread(f"✅ **라운드 {round_num}/3 완료**: {topic}\n💰 ${cost:.4f} | ⏱️ {duration:.0f}s")
+        # 결과 상세 보고
+        from auto_agent.modules.study_report import report_study_results
+        report_study_results(notifier, vault_dir, topic, round_num, 3)
     elif result["status"] == "timeout":
         logger.warning("라운드 %d 타임아웃", round_num)
         notifier.send_to_thread(f"⏱️ **라운드 {round_num}/3 타임아웃**: {topic}")
@@ -242,6 +245,9 @@ def main():
         f"- `patterns/global-ai-video-cases.md`\n"
         f"- `solutions/auto-kairos-roadmap.md`"
     )
+
+    from auto_agent.modules.study_report import report_index_update
+    report_index_update(bot, os.getenv("KAIROS_VAULT_DIR", ""))
 
     bot.send_to_channel(
         f"✅ **[{today}] Solutioner 심화 학습 완료** — "

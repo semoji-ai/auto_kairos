@@ -277,6 +277,9 @@ def run_study_round(round_info: dict, notifier) -> dict:
             f"✅ **라운드 {round_num}/10 완료**: {topic}\n"
             f"💰 ${cost:.4f} | ⏱️ {duration:.0f}s"
         )
+        # 결과 상세 보고
+        from auto_agent.modules.study_report import report_study_results
+        report_study_results(notifier, vault_dir, topic, round_num, 10)
     elif result["status"] == "timeout":
         logger.warning("라운드 %d 타임아웃", round_num)
         notifier.send_to_thread(f"⏱️ **라운드 {round_num}/10 타임아웃**: {topic}")
@@ -317,13 +320,16 @@ def main():
 
     logger.info("=== 초기 학습 완료 (%d/10 성공, $%.4f) ===", success, total_cost)
 
-    # 스레드에 최종 결과
+    # 스레드에 최종 결과 + 인덱스 현황
     bot.send_to_thread(
         f"🎉 **Solutioner 초기 학습 완료!**\n\n"
         f"성공: {success}/10 라운드\n"
         f"총 비용: ${total_cost:.4f}\n"
         f"→ 볼트 solutioner/ 확인"
     )
+
+    from auto_agent.modules.study_report import report_index_update
+    report_index_update(bot, os.getenv("KAIROS_VAULT_DIR", ""))
 
     # 채널에도 알림
     bot.send_to_channel(
