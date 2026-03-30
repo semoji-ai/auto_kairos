@@ -988,6 +988,18 @@ def cmd_collect(args):
         except Exception as e:
             print_warning(f"yt-dlp 수집 실패: {e}")
 
+        # YouTube Analytics (우리 채널 성과)
+        try:
+            from auto_agent.modules.data_collector.youtube_analytics import YouTubeAnalytics
+            for ch in ["iromism", "semoji"]:
+                console.print(f"  [dim]{ch} Analytics 수집...[/dim]")
+                yt = YouTubeAnalytics(ch)
+                data = yt.save_to_vault(vault)
+                if data.get("info"):
+                    print_success(f"{ch}: 구독자 {data['info']['subscribers']:,}")
+        except Exception as e:
+            print_warning(f"YouTube Analytics: {e}")
+
         # 기존 DataCollector도 실행
         try:
             from auto_agent.modules.data_collector.collector import DataCollector
