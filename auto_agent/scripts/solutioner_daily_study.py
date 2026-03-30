@@ -123,7 +123,7 @@ def run_study():
     prompt = build_study_prompt()
 
     runner = AgentRunner()
-    config = {"model": "sonnet", "max_turns": 30, "max_duration_minutes": 15}
+    config = {"model": "opus", "max_turns": 40, "max_duration_minutes": 25}
 
     result = runner._run_agent(
         prompt, config,
