@@ -253,6 +253,28 @@ def main():
             f"스레드에서 상세 결과 확인"
         )
 
+    # 팀 서버 웹훅으로 기획안 전송
+    send_to_team_webhook(channel, final_summary)
+
+
+def send_to_team_webhook(channel: str, summary: str):
+    """팀 서버 Discord 웹훅으로 기획안 + 크리에이티브 브리프 전송."""
+    webhook = os.getenv("TEAM_DISCORD_WEBHOOK_URL", "")
+    if not webhook:
+        return
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    msg = f"📋 **[{today}] {channel} AutoResearch 기획안**\n\n{summary}"
+
+    try:
+        import requests
+        chunks = [msg[i:i+1900] for i in range(0, len(msg), 1900)]
+        for chunk in chunks:
+            requests.post(webhook, json={"content": chunk}, timeout=10)
+        logger.info("팀 웹훅 전송 완료")
+    except Exception as e:
+        logger.warning("팀 웹훅 전송 실패: %s", e)
+
 
 if __name__ == "__main__":
     main()
