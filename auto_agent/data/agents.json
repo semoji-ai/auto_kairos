@@ -65,7 +65,7 @@
       "model": "sonnet",
       "max_turns": 40,
       "budget": "$2.0",
-      "max_duration_minutes": 20,
+      "max_duration_minutes": 25,
       "allowed_tools": ["Read", "Write", "Glob", "Grep"],
       "skill_file": "agents/trend-analyst/SKILL.md",
       "shared_skills": [

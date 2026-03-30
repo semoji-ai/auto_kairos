@@ -139,18 +139,14 @@ class AutoResearchLoop:
 {f"## 기존 후보 (이전 실행에서 발견)" if existing_candidates else ""}
 {existing_candidates}
 
-## 최종 출력 — MERGE 규칙 (중요!)
+## 최종 출력 — MERGE 규칙 (간결하게!)
 
-모든 라운드 완료 후 결과를 저장하세요.
+결과 파일: `insights/planning/{today}-{self._channel}-autoresearch.json`
 
-**⚠️ 기존 파일이 있으면 반드시 먼저 읽고, 기존 candidates에 새 candidates를 병합(merge)하세요.**
-- 기존 파일: `insights/planning/{today}-{self._channel}-autoresearch.json`
-- 있으면: 기존 JSON을 읽고, 기존 candidates + 새 candidates 합침
-- 중복 제거: 같은 title이면 점수가 높은 쪽 유지
-- ratchet_score: 기존과 새 것 중 높은 값 유지
-- 없으면: 새로 생성
+**기존 파일이 있으면:** 읽고 → 기존 candidates + 새 candidates 합침 → 같은 title은 높은 점수 유지 → Top 10만 남기고 나머지 삭제 → 저장
+**없으면:** 새로 생성
 
-1. **insights/planning/{today}-{self._channel}-autoresearch.json** — 구조화된 후보 데이터 (누적)
+1. **insights/planning/{today}-{self._channel}-autoresearch.json**
 ```json
 {{
   "date": "{today}",
