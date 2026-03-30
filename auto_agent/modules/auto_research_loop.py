@@ -64,12 +64,12 @@ SCORING_PROMPT = """## 주제 점수 산정 기준
 ### 최종 점수
 topic_score = trend_velocity × competition_gap × channel_fit (최대 1000)
 
-### 래칫 규칙 (Top 5 교체 방식)
-- 기존 후보 풀의 **Top 5 중 최저 점수**가 래칫 기준
-- 새 후보가 래칫 이상이면 Top 5에 진입 (최저 점수 후보를 밀어냄)
-- 래칫은 새로운 Top 5의 최저 점수로 갱신
-- 초기 ratchet_score = 0 (후보가 5개 미만이면 무조건 추가)
-- 이 방식으로 후반 라운드에서도 Top 5가 계속 갱신됨
+### 선정 규칙 (매일 새로 + 옵션 C)
+- **매일 0에서 새로 시작** — 어제 결과는 "참고"로만 제공됨
+- 어제 결과 중 시의성 지난 주제(deadline 경과)는 자동 제거
+- evergreen 주제(시의성 무관)는 별도 "후보 풀"로 보관
+- **선정 사유(selection_reason)**를 반드시 포함 — 왜 이 주제인지, 어제 대비 변화
+- Top 5 이내 진입 기준으로 경쟁
 """
 
 
@@ -116,7 +116,7 @@ class AutoResearchLoop:
 2. **후보 생성**: 3-5개 주제 후보를 생성 (제목 + 차별화 각도 + 핵심 훅)
 3. **경쟁 분석**: 각 후보에 대해 YouTube 검색으로 기존 영상 확인
 4. **점수 산정**: 아래 기준으로 topic_score 계산
-5. **래칫 필터**: Top 5 최저 점수({self._ratchet_score}) 이상이면 Top 5에 진입 (최저를 밀어냄)
+5. **Top 5 선정**: 점수 상위 5개 선정 + 각각 selection_reason(선정 사유) 작성
 6. **다음 라운드**: 이전 라운드에서 높은 점수 영역을 더 깊이 탐색
 
 ### 라운드 간 전략:
@@ -139,12 +139,22 @@ class AutoResearchLoop:
 {f"## 기존 후보 (이전 실행에서 발견)" if existing_candidates else ""}
 {existing_candidates}
 
-## 최종 출력 — MERGE 규칙 (간결하게!)
+## 최종 출력 — 옵션 C 규칙
 
 결과 파일: `insights/planning/{today}-{self._channel}-autoresearch.json`
 
-**기존 파일이 있으면:** 읽고 → 기존 candidates + 새 candidates 합침 → 같은 title은 높은 점수 유지 → Top 10만 남기고 나머지 삭제 → 저장
-**없으면:** 새로 생성
+**매일 새로 생성합니다. 어제 파일은 건드리지 마세요.**
+- 오늘 탐색한 후보만 포함
+- 시의성 지난 주제(deadline 경과)는 포함하지 않음
+- 각 후보에 `selection_reason`(선정 사유) 필수
+- 각 후보에 `topic_type`: "timely"(시의성) 또는 "evergreen"(상시) 분류
+
+**제거된 주제도 기록:**
+```json
+"removed": [
+  {{"title": "WGBI 75조원", "reason": "D+3 시의성 소멸", "original_score": 900}}
+]
+```
 
 1. **insights/planning/{today}-{self._channel}-autoresearch.json**
 ```json
@@ -166,6 +176,8 @@ class AutoResearchLoop:
       "sources": ["검색에서 발견한 근거 URL"],
       "competition_videos": ["경쟁 영상 제목 + 채널 + 조회수"],
       "round_discovered": 1,
+      "topic_type": "timely | evergreen",
+      "selection_reason": "왜 이 주제를 선정했는지 (어제 대비 변화, 트렌드 근거, 경쟁 상황 등)",
       "creative_brief": {{
         "core_angle": "이 주제를 왜 이 각도로 다뤄야 하는지 한 줄",
         "tone": "영상 톤 (긴박감/유머/감동/분석적 등)",
@@ -219,11 +231,15 @@ class AutoResearchLoop:
         if not planning_dir.exists():
             return ""
 
-        # 최근 7일간의 autoresearch 결과 검색 (NAS NFD 인코딩 대응)
+        # 어제 결과를 "참고"로 제공 (NAS NFD 인코딩 대응)
         import unicodedata
+        from datetime import timedelta
         channel_nfc = unicodedata.normalize("NFC", self._channel)
-        candidates = []
-        all_scores = []
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+        yesterday_candidates = []
+        evergreen_pool = []
+
         for f in sorted(
             [x for x in planning_dir.glob("*-autoresearch.json")
              if channel_nfc in unicodedata.normalize("NFC", x.name)],
@@ -231,26 +247,45 @@ class AutoResearchLoop:
         ):
             try:
                 data = json.loads(f.read_text(encoding="utf-8"))
+                file_date = data.get("date", "")
+                if file_date == today:
+                    continue  # 오늘 파일은 스킵
+
                 for c in data.get("candidates", []):
                     score = c.get("topic_score", 0)
-                    all_scores.append(score)
-                    candidates.append(f"- [{score}점] {c['title']} — {c.get('angle', '')}")
+                    title = c.get("title", "")
+                    brief = c.get("creative_brief", {})
+                    urgency = brief.get("urgency", c.get("urgent_flag", ""))
+                    reason = c.get("selection_reason", "")
+
+                    # 시의성 감쇠: deadline 지난 주제 제거
+                    if urgency and ("D-" in str(urgency) or "발행 필수" in str(urgency)):
+                        yesterday_candidates.append(
+                            f"- ⏰ [{score}점] {title} — 시의성 주제 (확인 필요: {urgency})"
+                        )
+                    else:
+                        evergreen_pool.append(
+                            f"- 🌿 [{score}점] {title}"
+                        )
                 break  # 최근 1개만
             except (json.JSONDecodeError, KeyError):
                 continue
 
-        # Top 5 최저 점수를 래칫으로 설정
-        if all_scores:
-            top5_scores = sorted(all_scores, reverse=True)[:5]
-            self._ratchet_score = top5_scores[-1] if len(top5_scores) >= 5 else 0
+        # 래칫은 0에서 시작 (매일 새로)
+        self._ratchet_score = 0
 
-        if candidates:
-            top5_text = "\n".join(candidates[:5])
-            return (
-                f"이전 Top 5 후보:\n{top5_text}\n\n"
-                f"래칫 점수: {self._ratchet_score} (Top 5 최저 — 이 점수 이상이면 진입 가능)"
-            )
-        return ""
+        parts = []
+        if yesterday_candidates or evergreen_pool:
+            parts.append("## 어제 결과 (참고용 — 새로 판단하세요)")
+            if yesterday_candidates:
+                parts.append("### 시의성 주제 (deadline 확인 후 유효하면 유지, 지났으면 제거)")
+                parts.extend(yesterday_candidates[:5])
+            if evergreen_pool:
+                parts.append("### Evergreen 후보 풀 (시의성 무관, 필요 시 재선정)")
+                parts.extend(evergreen_pool[:5])
+            parts.append("\n**⚠️ 오늘은 0에서 새로 시작합니다. 어제 결과는 참고만 하세요.**")
+
+        return "\n".join(parts)
 
     def _load_skill(self, relative_path: str) -> str:
         path = self._data_dir / "skills" / relative_path
