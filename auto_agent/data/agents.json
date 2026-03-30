@@ -62,10 +62,10 @@
 
     "trend-analyst": {
       "description": "채널 데이터 + 시장 트렌드 교차 분석으로 주제 기획안 생성",
-      "model": "sonnet",
-      "max_turns": 40,
-      "budget": "$2.0",
-      "max_duration_minutes": 25,
+      "model": "opus",
+      "max_turns": 50,
+      "budget": "$5.0",
+      "max_duration_minutes": 30,
       "allowed_tools": ["Read", "Write", "Glob", "Grep"],
       "skill_file": "agents/trend-analyst/SKILL.md",
       "shared_skills": [
