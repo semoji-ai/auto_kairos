@@ -64,10 +64,12 @@ SCORING_PROMPT = """## 주제 점수 산정 기준
 ### 최종 점수
 topic_score = trend_velocity × competition_gap × channel_fit (최대 1000)
 
-### 래칫 규칙
-- 현재 라운드 최고 점수(ratchet_score)보다 높은 후보만 풀에 추가
-- 초기 ratchet_score = 0
-- 각 라운드 후 최고 점수로 ratchet 갱신
+### 래칫 규칙 (Top 5 교체 방식)
+- 기존 후보 풀의 **Top 5 중 최저 점수**가 래칫 기준
+- 새 후보가 래칫 이상이면 Top 5에 진입 (최저 점수 후보를 밀어냄)
+- 래칫은 새로운 Top 5의 최저 점수로 갱신
+- 초기 ratchet_score = 0 (후보가 5개 미만이면 무조건 추가)
+- 이 방식으로 후반 라운드에서도 Top 5가 계속 갱신됨
 """
 
 
@@ -114,7 +116,7 @@ class AutoResearchLoop:
 2. **후보 생성**: 3-5개 주제 후보를 생성 (제목 + 차별화 각도 + 핵심 훅)
 3. **경쟁 분석**: 각 후보에 대해 YouTube 검색으로 기존 영상 확인
 4. **점수 산정**: 아래 기준으로 topic_score 계산
-5. **래칫 필터**: ratchet_score({self._ratchet_score}) 이상만 후보 풀에 추가
+5. **래칫 필터**: Top 5 최저 점수({self._ratchet_score}) 이상이면 Top 5에 진입 (최저를 밀어냄)
 6. **다음 라운드**: 이전 라운드에서 높은 점수 영역을 더 깊이 탐색
 
 ### 라운드 간 전략:
@@ -201,6 +203,7 @@ class AutoResearchLoop:
         import unicodedata
         channel_nfc = unicodedata.normalize("NFC", self._channel)
         candidates = []
+        all_scores = []
         for f in sorted(
             [x for x in planning_dir.glob("*-autoresearch.json")
              if channel_nfc in unicodedata.normalize("NFC", x.name)],
@@ -208,19 +211,25 @@ class AutoResearchLoop:
         ):
             try:
                 data = json.loads(f.read_text(encoding="utf-8"))
-                for c in data.get("candidates", [])[:3]:
-                    candidates.append(f"- [{c['topic_score']}점] {c['title']} — {c['angle']}")
-                if candidates:
-                    self._ratchet_score = max(
-                        self._ratchet_score,
-                        max(c.get("topic_score", 0) for c in data.get("candidates", [{"topic_score": 0}]))
-                    )
+                for c in data.get("candidates", []):
+                    score = c.get("topic_score", 0)
+                    all_scores.append(score)
+                    candidates.append(f"- [{score}점] {c['title']} — {c.get('angle', '')}")
                 break  # 최근 1개만
             except (json.JSONDecodeError, KeyError):
                 continue
 
+        # Top 5 최저 점수를 래칫으로 설정
+        if all_scores:
+            top5_scores = sorted(all_scores, reverse=True)[:5]
+            self._ratchet_score = top5_scores[-1] if len(top5_scores) >= 5 else 0
+
         if candidates:
-            return "이전 고점수 후보:\n" + "\n".join(candidates) + f"\n\n래칫 점수: {self._ratchet_score} (이 점수 이상만 추가)"
+            top5_text = "\n".join(candidates[:5])
+            return (
+                f"이전 Top 5 후보:\n{top5_text}\n\n"
+                f"래칫 점수: {self._ratchet_score} (Top 5 최저 — 이 점수 이상이면 진입 가능)"
+            )
         return ""
 
     def _load_skill(self, relative_path: str) -> str:
