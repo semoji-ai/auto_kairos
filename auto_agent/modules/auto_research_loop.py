@@ -197,9 +197,15 @@ class AutoResearchLoop:
         if not planning_dir.exists():
             return ""
 
-        # 최근 7일간의 autoresearch 결과 검색
+        # 최근 7일간의 autoresearch 결과 검색 (NAS NFD 인코딩 대응)
+        import unicodedata
+        channel_nfc = unicodedata.normalize("NFC", self._channel)
         candidates = []
-        for f in sorted(planning_dir.glob(f"*-{self._channel}-autoresearch.json"), reverse=True):
+        for f in sorted(
+            [x for x in planning_dir.glob("*-autoresearch.json")
+             if channel_nfc in unicodedata.normalize("NFC", x.name)],
+            reverse=True,
+        ):
             try:
                 data = json.loads(f.read_text(encoding="utf-8"))
                 for c in data.get("candidates", [])[:3]:

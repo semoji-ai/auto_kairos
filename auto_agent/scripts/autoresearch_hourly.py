@@ -74,11 +74,18 @@ def notify_discord(message: str, to_thread: bool = True):
 
 def format_results_summary(channel: str) -> str:
     """최신 autoresearch 결과를 요약 메시지로 포맷."""
+    import unicodedata
     from auto_agent.paths import get_vault_dir
     vault = get_vault_dir()
     planning_dir = vault / "insights" / "planning"
 
-    files = sorted(planning_dir.glob(f"*-{channel}-autoresearch.json"), reverse=True)
+    # NAS NFD 인코딩 대응 — 모든 파일을 NFC로 비교
+    channel_nfc = unicodedata.normalize("NFC", channel)
+    files = sorted(
+        [f for f in planning_dir.glob("*-autoresearch.json")
+         if channel_nfc in unicodedata.normalize("NFC", f.name)],
+        reverse=True,
+    )
     if not files:
         return ""
 
