@@ -165,13 +165,37 @@ class AutoResearchLoop:
       "topic_score": 504,
       "sources": ["검색에서 발견한 근거 URL"],
       "competition_videos": ["경쟁 영상 제목 + 채널 + 조회수"],
-      "round_discovered": 1
+      "round_discovered": 1,
+      "creative_brief": {{
+        "core_angle": "이 주제를 왜 이 각도로 다뤄야 하는지 한 줄",
+        "tone": "영상 톤 (긴박감/유머/감동/분석적 등)",
+        "target_audience": "타겟 시청자 (연령/관심사)",
+        "differentiation": "경쟁 채널과 어떻게 차별화하는지",
+        "recommended_structure": "추천 구성 (3막/연대기/미스터리 등)",
+        "recommended_length": "추천 영상 길이",
+        "key_data_points": ["반드시 포함해야 할 핵심 데이터/팩트"],
+        "urgency": "시의성 (D-N, 언제까지 발행해야 유효한지)"
+      }}
     }}
   ]
 }}
 ```
 
 2. **insights/planning/{today}-{self._channel}-기획안.md** — 상위 3개 기획안 (마크다운, 병합된 전체 후보 기준 재정렬)
+
+각 기획안에 반드시 **크리에이티브 브리프** 포함:
+```
+📋 크리에이티브 브리프:
+  - 핵심 앵글: 왜 이 각도인지
+  - 톤: 채널 성격에 맞는 톤 지정
+  - 타겟 시청자: 연령/관심사
+  - 차별화: 경쟁 채널 대비 우리만의 포인트
+  - 추천 구성: 몇 막, 어떤 흐름
+  - 추천 길이: 몇 분
+  - 핵심 데이터: 반드시 포함할 팩트/수치
+  - 긴급도: 언제까지 발행해야 유효한지
+```
+이 브리프가 있으면 팀원이 Stage 1~3을 돌릴 때 방향성을 잃지 않습니다.
 
 {skill_content}
 
