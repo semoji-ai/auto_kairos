@@ -966,20 +966,51 @@ def cmd_pull(args):
 
 
 def cmd_collect(args):
-    """데이터 수집 (YouTube, 트렌드, 소셜)."""
-    from auto_agent.modules.data_collector.collector import DataCollector
+    """데이터 수집 (YouTube, 트렌드, 경쟁채널)."""
+    from auto_agent.paths import get_vault_dir
 
     print_header("Auto Agent — 데이터 수집")
-    collector = DataCollector()
 
     if not args or "--all" in args:
-        collector.collect_all()
+        # yt-dlp로 경쟁 채널 + 트렌딩 수집
+        try:
+            from auto_agent.modules.data_collector.ytdlp_collector import YtdlpCollector
+            vault = get_vault_dir()
+            ytdlp = YtdlpCollector(vault)
+
+            console.print("  [dim]경쟁 채널 수집 (yt-dlp)...[/dim]")
+            comp_result = ytdlp.collect_competitors(vault / "channels" / "_watchlist.md")
+            print_success(f"경쟁 채널: {comp_result['collected']}개 영상 수집")
+
+            console.print("  [dim]트렌딩 수집 (yt-dlp)...[/dim]")
+            trending = ytdlp.collect_trending()
+            print_success(f"트렌딩: {len(trending)}개 영상 수집")
+        except Exception as e:
+            print_warning(f"yt-dlp 수집 실패: {e}")
+
+        # 기존 DataCollector도 실행
+        try:
+            from auto_agent.modules.data_collector.collector import DataCollector
+            collector = DataCollector()
+            collector.collect_all()
+        except Exception as e:
+            print_warning(f"DataCollector: {e}")
+
         print_success("전체 수집 완료")
-    elif "--youtube" in args:
-        collector.collect_youtube()
-        print_success("YouTube 수집 완료")
+    elif "--competitors" in args:
+        from auto_agent.modules.data_collector.ytdlp_collector import YtdlpCollector
+        vault = get_vault_dir()
+        ytdlp = YtdlpCollector(vault)
+        result = ytdlp.collect_competitors(vault / "channels" / "_watchlist.md")
+        print_success(f"경쟁 채널: {result['collected']}개 영상 수집")
+    elif "--trending" in args:
+        from auto_agent.modules.data_collector.ytdlp_collector import YtdlpCollector
+        vault = get_vault_dir()
+        ytdlp = YtdlpCollector(vault)
+        trending = ytdlp.collect_trending()
+        print_success(f"트렌딩: {len(trending)}개 영상 수집")
     else:
-        print_error("Usage: auto-agent collect [--all|--youtube|--trends|--social]")
+        print_error("Usage: auto-agent collect [--all|--competitors|--trending]")
 
 
 def cmd_link(args):
