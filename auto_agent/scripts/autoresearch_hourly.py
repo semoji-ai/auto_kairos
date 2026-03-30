@@ -200,14 +200,41 @@ def main():
         f"날짜: {today}"
     )
 
+    no_improvement_count = 0
+    prev_top5 = set()
+    actual_rounds = 0
+
     for i in range(1, total_rounds + 1):
         run_single_round(channel, i, total_rounds)
+        actual_rounds = i
+
+        # Early stopping: Top 5 변화 감지
+        current_summary = format_results_summary(channel)
+        current_top5 = set()
+        for line in current_summary.split("\n"):
+            if line.startswith("**") and "점]" in line:
+                current_top5.add(line.strip())
+
+        if current_top5 == prev_top5 and i > 1:
+            no_improvement_count += 1
+            logger.info("라운드 %d: Top 5 변화 없음 (%d회 연속)", i, no_improvement_count)
+        else:
+            no_improvement_count = 0
+        prev_top5 = current_top5
+
+        if no_improvement_count >= 2:
+            logger.info("=== Early Stopping: 2라운드 연속 Top 5 변화 없음 → 종료 ===")
+            notify_discord(
+                f"⏹️ **Early Stopping** — 2라운드 연속 Top 5 변화 없음\n"
+                f"라운드 {i}/{total_rounds}에서 조기 종료"
+            )
+            break
 
         if i < total_rounds:
             logger.info("다음 라운드까지 %d분 대기...", interval_sec // 60)
             time.sleep(interval_sec)
 
-    logger.info("=== AutoResearch 전체 완료 (%d라운드) ===", total_rounds)
+    logger.info("=== AutoResearch 전체 완료 (%d라운드) ===", actual_rounds)
     final_summary = format_results_summary(channel)
 
     # 최종 결과는 스레드 + 채널 양쪽에 전송
