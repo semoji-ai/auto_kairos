@@ -1,9 +1,9 @@
 {
   "project_slug": "배의-역사",
   "pid": 26053,
-  "status": "running",
+  "status": "completed",
   "started_at": "2026-03-31T19:31:44.686499",
-  "finished_at": null,
+  "finished_at": "2026-03-31T19:58:27.771480",
   "log_file": "/Users/jleavens_macmini/Projects/auto_kairos_v3/output/31150e7d_배의-역사/logs/pipeline_20260331_193144.log",
   "from_step": null,
   "only_step": "step_2_review",
