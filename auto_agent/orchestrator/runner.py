@@ -3102,16 +3102,42 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             "- 씬 삭제(remove_scene): 해당 씬 JSON 블록 전체를 Edit으로 빈 문자열로 교체",
             "- 씬 분할(split_scene): 기존 씬 JSON 블록을 2개 씬 블록으로 Edit 교체",
             "",
-            "**수정 지시 (각 씬별):**",
+            "**⚠️ 우선순위 규칙: major 이슈만 이번 라운드에서 수정. minor는 다음 라운드.**",
+            "- major 이슈 2~3건만 Edit으로 수정하세요",
+            "- minor 이슈는 이번에 건드리지 마세요 (다음 리뷰에서 다시 나옴)",
+            "- 한 라운드에 전부 고치려 하면 품질이 떨어집니다",
+            "",
+            "**수정 지시 (major 우선):**",
         ]
+        # major 이슈 먼저, minor는 참고용으로 표시
+        major_revisions = []
+        minor_revisions = []
         for rev in revisions:
+            # revision에 severity가 없으면 scene_reviews에서 찾기
+            sn = rev.get("sceneNumber", 0)
+            sr = next((s for s in scene_reviews if s.get("sceneNumber") == sn), {})
+            has_major = any(i.get("severity") == "major" for i in sr.get("issues", []))
+            if has_major:
+                major_revisions.append(rev)
+            else:
+                minor_revisions.append(rev)
+
+        for rev in major_revisions:
             sn = rev.get("sceneNumber", "?")
             action = rev.get("action", "modify")
             changes = rev.get("changes", {})
             lines.append(f"")
-            lines.append(f"### 씬 {sn}: {action}")
+            lines.append(f"### 🔴 씬 {sn}: {action} (major — 이번 라운드 수정)")
             for key, val in changes.items():
                 lines.append(f'  - `"{key}"`: `{json.dumps(val, ensure_ascii=False)}`')
+
+        if minor_revisions:
+            lines.append("")
+            lines.append("**참고 (minor — 다음 라운드):**")
+            for rev in minor_revisions:
+                sn = rev.get("sceneNumber", "?")
+                action = rev.get("action", "modify")
+                lines.append(f"- 씬 {sn}: {action} (다음 라운드에서 처리)")
 
         lines.append("")
         lines.append("**씬별 이슈 (수정 근거):**")
@@ -3120,7 +3146,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             if issues:
                 sn = sr.get("sceneNumber", "?")
                 for issue in issues:
-                    lines.append(f"- 씬 {sn} [{issue.get('severity', '')}]: {issue.get('description', '')}")
+                    marker = "🔴" if issue.get("severity") == "major" else "🟡"
+                    lines.append(f"- {marker} 씬 {sn} [{issue.get('severity', '')}]: {issue.get('description', '')}")
                     if issue.get("suggestion"):
                         lines.append(f"  → 제안: {issue['suggestion']}")
 
