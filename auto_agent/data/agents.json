@@ -21,7 +21,7 @@
       "max_turns": 80,
       "budget": "$4.0",
       "max_duration_minutes": 45,
-      "allowed_tools": ["Read", "Write", "Glob"],
+      "allowed_tools": ["Read", "Write", "Edit", "Glob"],
       "skill_file": "agents/script-director/SKILL.md",
       "shared_skills": [
         "shared/writing-style",

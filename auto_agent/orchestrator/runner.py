@@ -3080,7 +3080,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         specs_path = self.project_dir / "scene_specs.json"
 
         lines = [
-            "⚠️⚠️⚠️ **수정 모드 — 반드시 scene_specs.json을 수정하여 저장하세요** ⚠️⚠️⚠️",
+            "⚠️⚠️⚠️ **수정 모드 — Edit 도구로 scene_specs.json의 변경 부분만 수정하세요** ⚠️⚠️⚠️",
             "",
             f"이전 평가: 시청자 {overall.get('viewer_score', '?')}점 / 전문가 {overall.get('expert_score', '?')}점 / 종합 {overall.get('combined_score', '?')}점",
             f"판정: {overall.get('verdict', '?')} — {overall.get('summary', '')}",
@@ -3088,8 +3088,20 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             "**작업 순서 (반드시 따르세요):**",
             f"1. Read 도구로 `{specs_path}` 읽기",
             f"2. Read 도구로 `{feedback_path}` 읽기 (이슈 상세 확인)",
-            "3. 아래 수정 지시에 따라 JSON 수정",
-            f"4. Write 도구로 수정된 전체 JSON을 `{specs_path}`에 저장",
+            "3. 아래 수정 지시에 따라 **Edit 도구**로 변경 부분만 수정 (전체 Write 금지!)",
+            "",
+            "**⚠️ Edit 도구 사용법 (필수):**",
+            "- 전체 파일을 Write로 다시 쓰지 마세요 — 토큰 낭비 + 오류 위험",
+            "- Edit 도구의 old_string에 변경할 부분의 원본 텍스트를 넣고, new_string에 수정된 텍스트를 넣으세요",
+            "- 예시: motion 변경",
+            '  old_string: `"motion": "fade_rise"`',
+            '  new_string: `"motion": "cinematic_fade"`',
+            "- 예시: 나레이션 재작성",
+            '  old_string: `"narration": "기존 나레이션 텍스트"`',
+            '  new_string: `"narration": "새로운 나레이션 텍스트"`',
+            "- 씬 추가(add_scene): 기존 씬 뒤에 새 씬 JSON 블록을 Edit으로 삽입",
+            "- 씬 삭제(remove_scene): 해당 씬 JSON 블록 전체를 Edit으로 빈 문자열로 교체",
+            "- 씬 분할(split_scene): 기존 씬 JSON 블록을 2개 씬 블록으로 Edit 교체",
             "",
             "**수정 지시 (각 씬별):**",
         ]
@@ -3115,10 +3127,11 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
         lines.append("")
         lines.append("**필수 규칙:**")
-        lines.append("- 문제 씬만 수정하고, 정상 씬(이슈 없는 씬)은 절대 건드리지 마세요")
-        lines.append("- scenes 배열의 다른 씬은 원본 그대로 유지")
-        lines.append(f"- 수정 완료 후 반드시 Write 도구로 `{specs_path}`에 저장")
-        lines.append("- 저장하지 않으면 작업이 무효입니다")
+        lines.append("- **Edit 도구**로 변경 부분만 수정. Write로 전체 파일 재작성 금지")
+        lines.append("- 문제 씬만 수정하고, 정상 씬은 절대 건드리지 마세요")
+        lines.append("- 수정할 때마다 Edit 도구 호출. 여러 씬이면 여러 번 Edit")
+        lines.append(f"- 대상 파일: `{specs_path}`")
+        lines.append("- Edit을 한 번도 안 하면 작업이 무효입니다")
         return "\n".join(lines)
 
     def _build_agent_prompt(self, step: dict) -> str:
