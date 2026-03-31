@@ -33,7 +33,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 class QwenIntern:
     """Qwen 3.5 로컬 모델 A/B 테스트."""
 
-    def __init__(self, model_name: str = "qwen3:8b"):
+    def __init__(self, model_name: str = "qwen3.5:8b"):
         self._model = model_name
         self._ollama_url = "http://localhost:11434"
 
@@ -140,7 +140,7 @@ class QwenIntern:
         logger.info("결과 저장: %s", out)
 
 
-def setup_ollama_model(model: str = "qwen3:8b"):
+def setup_ollama_model(model: str = "qwen3.5:8b"):
     """ollama에서 Qwen 모델 다운로드."""
     logger.info("Qwen 모델 다운로드: %s", model)
     proc = subprocess.run(
