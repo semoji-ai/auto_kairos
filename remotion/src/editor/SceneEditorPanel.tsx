@@ -13,11 +13,12 @@ import { ImageSelector } from "./ImageSelector";
 import type { SceneEntry, SceneManifest, VisualizationData, CreativeDirection } from "../types/manifest";
 
 const LAYOUT_OPTIONS = [
-  "headline_only", "items_grid", "items_list", "person_card", "counter",
+  "cinematic", "headline_only", "items_grid", "items_list", "person_card", "counter",
   "quote", "split", "bar", "logo_grid", "pie", "line",
   "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
   "comparison_table", "before_after", "icon_stat", "stacked_progress",
   "card_carousel", "hero_with_context", "quote_portrait", "annotated_chart",
+  "bar_horizontal", "donut",
 ] as const;
 
 const MOOD_OPTIONS = [
@@ -256,7 +257,12 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
           <select
             style={selectStyle}
             value={creative.layout || ""}
-            onChange={e => updateCreative({ layout: e.target.value })}
+            onChange={e => {
+              const val = e.target.value;
+              const patch: Record<string, string> = { layout: val };
+              if (val === "cinematic") patch.placement = "fullscreen";
+              updateCreative(patch);
+            }}
           >
             <option value="">자동 (콘텐츠 기반)</option>
             {LAYOUT_OPTIONS.map(l => <option key={l} value={l}>{l}</option>)}
