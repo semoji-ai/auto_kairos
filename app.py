@@ -236,6 +236,8 @@ TAB_TEMPLATES = {
     "versions": "partials/_versions.html",
     "costs": "partials/_costs.html",
     "agent": "partials/_agent.html",
+    "upload_info": "partials/_upload_info.html",
+    "multiformat": "partials/_multiformat.html",
 }
 
 # ─────────────────────────────
@@ -318,6 +320,18 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
     elif tab == "studio":
         # Studio 탭 진입 시 해당 프로젝트 매니페스트 자동 설정
         _setup_studio_project(slug)
+
+    elif tab == "upload_info":
+        raw = _load_json("upload_info.json")
+        context["upload_info"] = raw.get("data", raw) if raw else None
+
+    elif tab == "multiformat":
+        context["multiformat"] = _load_json("multiformat_report.json")
+        # 실제 콘텐츠 파일 로드
+        context["blog_content"] = _load_text("blog.md")
+        context["card_news"] = _load_json("card_news.json")
+        context["threads"] = _load_json("threads.json")
+        context["shorts_manifest"] = _load_json("shorts_manifest.json")
 
     elif tab == "assets":
         context["asset_counts"] = pm.get_asset_counts(project_id)

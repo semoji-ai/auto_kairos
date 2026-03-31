@@ -1,0 +1,114 @@
+<!-- Upload Info 탭 — 제목/썸네일/더보기/해시태그/타임스탬프 (확인+편집) -->
+{% if upload_info %}
+<div style="padding:16px; max-width:1200px;">
+
+  <!-- 제목 3종 -->
+  <div class="card" style="margin-bottom:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="margin:0; font-size:18px; color:var(--accent, #F7D94C);">제목 후보</h3>
+      <button class="btn btn-sm" onclick="saveUploadField('titles')" style="font-size:12px; padding:4px 12px;">저장</button>
+    </div>
+    {% for title in upload_info.get('titles', []) %}
+    <div style="display:flex; align-items:center; gap:12px; margin:8px 0;">
+      <span style="font-size:12px; font-weight:700; color:{% if loop.index == 1 %}#F7D94C{% elif loop.index == 2 %}#4ECDC4{% else %}#FF6B6B{% endif %}; min-width:60px;">{{ title.get('type', '') }}</span>
+      <input type="text" class="upload-title-input" data-index="{{ loop.index0 }}"
+        value="{{ title.get('title', '') }}"
+        style="flex:1; padding:8px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-size:15px; font-weight:600;">
+    </div>
+    {% endfor %}
+    {% if not upload_info.get('titles') %}
+    <div style="color:#666; font-style:italic;">제목 미생성 — step_3c 실행 필요</div>
+    {% endif %}
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+    <!-- 더보기란 (Description) -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="margin:0; font-size:16px; color:var(--accent, #F7D94C);">더보기란</h3>
+        <button class="btn btn-sm" onclick="saveUploadField('description')" style="font-size:12px; padding:4px 12px;">저장</button>
+      </div>
+      <textarea id="upload-description"
+        style="width:100%; min-height:200px; padding:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#ccc; font-size:13px; line-height:1.6; resize:vertical; font-family:inherit;">{{ upload_info.get('description', '') }}</textarea>
+    </div>
+
+    <!-- 타임스탬프 + 해시태그 -->
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="margin:0 0 12px; font-size:16px; color:var(--accent, #F7D94C);">타임스탬프</h3>
+        <div style="font-family:monospace; font-size:13px; line-height:2; color:#ccc;">
+        {% for ts in upload_info.get('timestamps', []) %}
+          <div style="display:flex; gap:12px;">
+            <input type="text" value="{{ ts.get('time', '') }}" style="width:60px; padding:4px 8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:#F7D94C; font-family:monospace; font-size:13px; text-align:center;">
+            <input type="text" value="{{ ts.get('label', '') }}" style="flex:1; padding:4px 8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:#ccc; font-size:13px;">
+          </div>
+        {% endfor %}
+        </div>
+        {% if not upload_info.get('timestamps') %}
+        <div style="color:#666; font-style:italic;">타임스탬프 미생성</div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 12px; font-size:16px; color:var(--accent, #F7D94C);">해시태그</h3>
+        <div id="hashtag-container" style="display:flex; flex-wrap:wrap; gap:8px;">
+        {% for tag in upload_info.get('hashtags', []) %}
+          <span style="padding:4px 12px; background:rgba(247,217,76,0.15); border-radius:16px; font-size:13px; color:#F7D94C; cursor:pointer;" onclick="this.remove()">{{ tag }} ×</span>
+        {% endfor %}
+        </div>
+        <input type="text" id="new-hashtag" placeholder="#새태그 입력 후 Enter"
+          style="margin-top:8px; width:100%; padding:6px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#ccc; font-size:13px;"
+          onkeydown="if(event.key==='Enter'){addHashtag(this.value);this.value='';}">
+        {% if not upload_info.get('hashtags') %}
+        <div style="color:#666; font-style:italic;">해시태그 미생성</div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 썸네일 스펙 -->
+  <div class="card" style="margin-top:20px;">
+    <h3 style="margin:0 0 12px; font-size:16px; color:var(--accent, #F7D94C);">썸네일 후보</h3>
+    {% if upload_info.get('thumbnails') %}
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;">
+      {% for thumb in upload_info.get('thumbnails', []) %}
+      <div style="padding:12px; background:rgba(255,255,255,0.04); border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+        <div style="font-size:14px; font-weight:700; color:#ccc; margin-bottom:8px;">Variant {{ thumb.get('variant', '') }}</div>
+        <div style="font-size:12px; color:#888;">씬 {{ (thumb.get('scene_index', 0) or 0) + 1 }}</div>
+        <div style="font-size:12px; color:#aaa; margin-top:4px;">{{ thumb.get('headline', '') }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="color:#666; font-style:italic;">썸네일 스펙 미생성 — 이미지 배치 완료 후 자동 선택</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+function addHashtag(tag) {
+  if (!tag.trim()) return;
+  if (!tag.startsWith('#')) tag = '#' + tag;
+  const container = document.getElementById('hashtag-container');
+  const span = document.createElement('span');
+  span.style.cssText = 'padding:4px 12px;background:rgba(247,217,76,0.15);border-radius:16px;font-size:13px;color:#F7D94C;cursor:pointer;';
+  span.textContent = tag + ' ×';
+  span.onclick = () => span.remove();
+  container.appendChild(span);
+}
+function saveUploadField(field) {
+  // TODO: API call to save
+  alert('저장 API 연결 예정: ' + field);
+}
+</script>
+
+{% else %}
+<div style="padding:40px; text-align:center; color:#666;">
+  <div style="font-size:48px; margin-bottom:16px;">📋</div>
+  <div style="font-size:16px;">upload_info.json이 아직 생성되지 않았습니다.</div>
+  <div style="font-size:13px; margin-top:8px; color:#555;">파이프라인 step_3c 완료 후 자동 생성됩니다.</div>
+</div>
+{% endif %}

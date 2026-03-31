@@ -358,9 +358,16 @@ function resizePreview(val) {
       // Remotion Player 마운트 영역 (스토리보드 카드와 동일 렌더링)
       html += '<div id="detail-player-mount" style="width:100%;aspect-ratio:16/9;background:#111;border-radius:8px;overflow:hidden;margin:12px 0"></div>';
 
-      // 메타 태그
-      html += '<div class="tags" style="margin:8px 0">';
-      if (layout) html += '<span class="layout-badge">' + layout + '</span>';
+      // 레이아웃 셀렉터 + 메타 태그
+      var layoutOptions = ['cinematic','items_grid','items_list','counter','bar','pie','line','flow','timeline','hero_with_context','quote_portrait','metric_spotlight','rank_list','before_after','annotated_chart','headline_only','person_card','card_carousel','bar_horizontal','donut'];
+      html += '<div style="display:flex;align-items:center;gap:12px;margin:10px 0">';
+      html += '<label style="font-size:12px;color:#888;min-width:50px">Layout</label>';
+      html += '<select id="layout-select" onchange="updateSceneLayout(\'' + slug + '\',' + sceneNum + ',this.value)" style="padding:4px 8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:#fff;font-size:12px">';
+      html += '<option value=""' + (!layout ? ' selected' : '') + '>auto</option>';
+      for (var li = 0; li < layoutOptions.length; li++) {
+        html += '<option value="' + layoutOptions[li] + '"' + (layout === layoutOptions[li] ? ' selected' : '') + '>' + layoutOptions[li] + '</option>';
+      }
+      html += '</select>';
       if (motion) html += '<span class="viz-badge">\uD83C\uDFAC ' + motion + '</span>';
       if (mood) html += '<span class="mood-badge">' + mood + '</span>';
       html += '</div>';
@@ -787,6 +794,37 @@ function sbSelectVersion(sn, file) {
 </div>
 
 </div><!-- /sb-main-layout -->
+
+<script>
+function updateSceneLayout(slug, sceneNum, layout) {
+  var body = { layout: layout };
+  // cinematic이면 imageAsset.placement도 fullscreen으로
+  if (layout === 'cinematic') {
+    body.imageAsset = { placement: 'fullscreen' };
+  }
+  fetch('/api/p/' + encodeURIComponent(slug) + '/scenes/' + sceneNum, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok || d.updated) {
+      // 매니페스트 재빌드
+      fetch('/api/p/' + encodeURIComponent(slug) + '/rebuild-manifest', { method: 'POST' });
+      // 프리뷰 새로고침
+      var mountEl = document.getElementById('detail-player-mount');
+      if (mountEl && window.mountSceneThumb) {
+        // manifest 다시 로드 후 리마운트
+        fetch('/api/p/' + encodeURIComponent(slug) + '/manifest-meta')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var scene = data.manifest.scenes.find(function(s) { return s.sceneNumber === sceneNum; });
+            if (scene) window.mountSceneThumb(mountEl, scene, data.manifest.meta);
+          });
+      }
+    }
+  }).catch(function(e) { console.error('layout update failed:', e); });
+}
+</script>
 
 {% else %}
 <div class="empty">No scene specs found. Run the pipeline first.</div>

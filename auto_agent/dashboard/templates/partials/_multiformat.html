@@ -1,0 +1,147 @@
+<!-- Multiformat 탭 — 숏폼/블로그/카드뉴스/스레드 (확인+편집) -->
+<style>
+.mf-section { margin-bottom:24px; }
+.mf-section h3 { margin:0 0 12px; font-size:18px; display:flex; align-items:center; gap:8px; }
+.mf-badge { font-size:11px; padding:2px 8px; border-radius:10px; font-weight:600; }
+.mf-badge.ready { background:rgba(78,205,196,0.2); color:#4ECDC4; }
+.mf-badge.complete { background:rgba(78,205,196,0.3); color:#4ECDC4; }
+.mf-badge.pending { background:rgba(255,255,255,0.1); color:#888; }
+.mf-content-box { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:16px; max-height:400px; overflow-y:auto; }
+.mf-post { padding:12px; margin:8px 0; background:rgba(255,255,255,0.03); border-radius:6px; border-left:3px solid; }
+.mf-slide { padding:12px; margin:8px 0; background:rgba(255,255,255,0.03); border-radius:8px; }
+.mf-editable { width:100%; background:transparent; border:1px solid transparent; color:#ccc; font-size:13px; line-height:1.6; padding:4px; border-radius:4px; resize:vertical; font-family:inherit; }
+.mf-editable:focus { border-color:rgba(247,217,76,0.3); outline:none; background:rgba(255,255,255,0.03); }
+</style>
+
+{% if multiformat or blog_content or card_news or threads or shorts_manifest %}
+<div style="padding:16px; max-width:1400px;">
+
+  <!-- 탭 네비게이션 -->
+  <div style="display:flex; gap:8px; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
+    <button class="btn mf-tab active" onclick="showMfTab('shorts', this)" style="font-size:13px;">📱 Shorts</button>
+    <button class="btn mf-tab" onclick="showMfTab('blog', this)" style="font-size:13px;">📝 Blog</button>
+    <button class="btn mf-tab" onclick="showMfTab('cardnews', this)" style="font-size:13px;">🗞️ Card News</button>
+    <button class="btn mf-tab" onclick="showMfTab('threads', this)" style="font-size:13px;">🧵 Threads</button>
+  </div>
+
+  <!-- Shorts -->
+  <div id="mf-shorts" class="mf-panel">
+    <div class="mf-section">
+      {% if shorts_manifest %}
+      <h3 style="color:#FF6B6B;">Shorts
+        <span class="mf-badge ready">{{ multiformat.shorts.status if multiformat and multiformat.shorts else 'ready' }}</span>
+        <span style="font-size:12px; color:#888; margin-left:auto;">{{ shorts_manifest.get('target_duration_sec', 0) }}초 / {{ shorts_manifest.get('resolution', '') }}</span>
+      </h3>
+      <div class="mf-content-box">
+        {% for scene in shorts_manifest.get('selected_scenes', []) %}
+        <div class="mf-post" style="border-color:#FF6B6B;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:12px; font-weight:700; color:#FF6B6B;">씬 {{ scene.get('original_scene_number', '') }} → #{{ scene.get('shorts_order', '') }}</span>
+            <span style="font-size:11px; color:#888;">{{ scene.get('duration_sec', 0) }}초</span>
+          </div>
+          <div style="font-size:13px; font-weight:600; color:#ddd; margin-bottom:4px;">{{ scene.get('title', '') }}</div>
+          <textarea class="mf-editable" rows="2">{{ scene.get('narration', '') }}</textarea>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="color:#666; font-style:italic; padding:20px;">Shorts 미생성</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Blog -->
+  <div id="mf-blog" class="mf-panel" style="display:none;">
+    <div class="mf-section">
+      {% if blog_content %}
+      <h3 style="color:#4ECDC4;">Blog
+        <span class="mf-badge complete">complete</span>
+        <span style="font-size:12px; color:#888; margin-left:auto;">{{ multiformat.blog.word_count if multiformat and multiformat.blog else '' }} words</span>
+      </h3>
+      <textarea class="mf-editable" style="min-height:500px; font-size:14px; line-height:1.8; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:20px;">{{ blog_content }}</textarea>
+      {% else %}
+      <div style="color:#666; font-style:italic; padding:20px;">Blog 미생성</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Card News -->
+  <div id="mf-cardnews" class="mf-panel" style="display:none;">
+    <div class="mf-section">
+      {% if card_news %}
+      <h3 style="color:#F7D94C;">Card News
+        <span class="mf-badge ready">{{ card_news.get('total_slides', 0) }}장</span>
+        <span style="font-size:12px; color:#888; margin-left:auto;">{{ card_news.get('size', '1080x1080') }}</span>
+      </h3>
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px;">
+        {% for slide in card_news.get('slides', []) %}
+        <div class="mf-slide" style="border:1px solid rgba(247,217,76,0.15);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:11px; font-weight:700; color:#F7D94C;">{{ slide.get('slide_number', '') }}/{{ card_news.get('total_slides', 0) }}</span>
+            <span style="font-size:11px; color:#888;">{{ slide.get('title', '') }}</span>
+          </div>
+          <div style="font-size:14px; font-weight:700; color:#ddd; margin-bottom:6px;">{{ slide.get('headline', '') }}</div>
+          <textarea class="mf-editable" rows="3">{{ slide.get('body', '') }}</textarea>
+          {% if slide.get('data_point') %}
+          <div style="font-size:11px; color:#4ECDC4; margin-top:6px;">📊 {{ slide.get('data_point', '') }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="color:#666; font-style:italic; padding:20px;">Card News 미생성</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Threads -->
+  <div id="mf-threads" class="mf-panel" style="display:none;">
+    <div class="mf-section">
+      {% if threads %}
+      <h3 style="color:#9B59B6;">Threads
+        <span class="mf-badge complete">{{ threads.get('total_posts', 0) }}개</span>
+      </h3>
+      <div class="mf-content-box">
+        {% for post in threads.get('posts', []) %}
+        <div class="mf-post" style="border-color:{% if post.get('type') == 'hook' %}#FF6B6B{% elif post.get('type') == 'closer' %}#F7D94C{% else %}#9B59B6{% endif %};">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:11px; font-weight:700; color:#9B59B6;">#{{ post.get('post_number', '') }} {{ post.get('type', '') }}</span>
+            {% if post.get('referenced_scene') %}
+            <span style="font-size:11px; color:#888;">씬 {{ post.get('referenced_scene', '') }}</span>
+            {% endif %}
+          </div>
+          <textarea class="mf-editable" rows="4">{{ post.get('text', '') }}</textarea>
+          {% if post.get('hashtags') %}
+          <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
+            {% for tag in post.get('hashtags', []) %}
+            <span style="font-size:11px; color:#9B59B6; background:rgba(155,89,182,0.15); padding:2px 8px; border-radius:10px;">{{ tag }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="color:#666; font-style:italic; padding:20px;">Threads 미생성</div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showMfTab(panel, btn) {
+  document.querySelectorAll('.mf-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.mf-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('mf-' + panel).style.display = 'block';
+  btn.classList.add('active');
+}
+</script>
+
+{% else %}
+<div style="padding:40px; text-align:center; color:#666;">
+  <div style="font-size:48px; margin-bottom:16px;">🎬</div>
+  <div style="font-size:16px;">멀티포맷 콘텐츠가 아직 생성되지 않았습니다.</div>
+  <div style="font-size:13px; margin-top:8px; color:#555;">파이프라인 step_3d 완료 후 자동 생성됩니다.</div>
+</div>
+{% endif %}
