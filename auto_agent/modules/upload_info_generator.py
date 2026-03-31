@@ -85,9 +85,12 @@ class UploadInfoGenerator:
         for i, scene in enumerate(scenes):
             # 챕터 변경 감지
             chapter = scene.get("chapter", scene.get("headline", ""))
-            if chapter and chapter != prev_chapter and i > 0:
+            chapter_str = str(chapter) if chapter is not None else ""
+            if chapter_str and chapter_str != str(prev_chapter) and i > 0:
                 time_str = self._sec_to_timestamp(current_sec)
-                timestamps.append({"time": time_str, "label": chapter[:30]})
+                # 챕터가 숫자면 headline에서 라벨 추출
+                label = scene.get("headline", "") or f"챕터 {chapter_str}"
+                timestamps.append({"time": time_str, "label": str(label)[:30]})
             prev_chapter = chapter
 
             # 시간 누적
@@ -113,12 +116,39 @@ class UploadInfoGenerator:
 
     def _generate_titles(self, scenes: List[Dict]) -> List[Dict]:
         """제목 3종 (A/B/C) — 씬 데이터에서 추출."""
-        # 핵심 headline 추출
-        headlines = [s.get("headline", "") for s in scenes if s.get("headline")]
-        topic = scenes[0].get("topic", headlines[0] if headlines else "")
+        import re
+
+        # 핵심 headline 추출 ({{변수}} 제거, 빈 값 제외)
+        clean_headlines = []
+        for s in scenes:
+            h = s.get("headline", "")
+            if h and not h.startswith("{{"):
+                cleaned = re.sub(r"\{\{.*?\}\}", "", h).strip()
+                if cleaned and len(cleaned) > 2:
+                    clean_headlines.append(cleaned)
+
+        # headline이 없으면 narration 첫 문장에서 추출
+        if not clean_headlines:
+            for s in scenes:
+                narr = s.get("narration", "")
+                if narr:
+                    first_sentence = narr.split(".")[0].split("?")[0].split("!")[0]
+                    if len(first_sentence) > 5:
+                        clean_headlines.append(first_sentence[:40])
+                        break
+
+        # 프로젝트 제목 추출
+        topic = clean_headlines[0] if clean_headlines else "주제"
+
+        # manuscript에서 프로젝트 제목 찾기
+        manuscript_path = self._project_dir / "final_manuscript.md"
+        if manuscript_path.exists():
+            first_line = manuscript_path.read_text(encoding="utf-8").split("\n")[0]
+            if first_line.startswith("#"):
+                topic = first_line.lstrip("# ").strip()[:40]
 
         return [
-            {"type": "A_숫자형", "title": f"{topic}"},
+            {"type": "A_숫자형", "title": topic},
             {"type": "B_반전형", "title": f"당신이 몰랐던 {topic}의 진실"},
             {"type": "C_공감형", "title": f"{topic}, 왜 지금 중요한가"},
         ]
@@ -143,40 +173,97 @@ class UploadInfoGenerator:
 """
 
     def _generate_hashtags(self, scenes: List[Dict]) -> List[str]:
-        """해시태그 자동 생성."""
+        """해시태그 자동 생성 — {{변수}} 필터링."""
+        import re
         tags = set()
+
         for s in scenes:
+            # items에서 추출
             for item in s.get("items", []):
                 if isinstance(item, dict):
                     label = item.get("label", "")
-                    if label and len(label) < 15:
+                    if label and len(label) < 15 and "{{" not in label:
                         tags.add(f"#{label.replace(' ', '')}")
+
+            # headline에서 추출 ({{변수}} 제외)
             headline = s.get("headline", "")
             if headline:
-                # 핵심 키워드 추출 (간단하게)
-                for word in headline.split():
-                    if len(word) >= 2 and not word.startswith("#"):
+                cleaned = re.sub(r"\{\{.*?\}\}", "", headline).strip()
+                for word in cleaned.split():
+                    if len(word) >= 2 and "{{" not in word and "}}" not in word:
                         tags.add(f"#{word}")
                         if len(tags) >= 10:
                             break
+
+        # narration에서 핵심 키워드 보충
+        if len(tags) < 5:
+            for s in scenes:
+                narr = s.get("narration", "")
+                # 따옴표 안의 고유명사 추출
+                quoted = re.findall(r"['\"]([^'\"]{2,10})['\"]", narr)
+                for q in quoted:
+                    if "{{" not in q:
+                        tags.add(f"#{q.replace(' ', '')}")
+
+        # manuscript 제목에서 추가
+        manuscript_path = self._project_dir / "final_manuscript.md"
+        if manuscript_path.exists() and len(tags) < 5:
+            first_line = manuscript_path.read_text(encoding="utf-8").split("\n")[0]
+            for word in first_line.lstrip("# ").split():
+                if len(word) >= 2:
+                    tags.add(f"#{word}")
+
         return list(tags)[:10]
 
     def _generate_thumbnail_specs(self, scenes: List[Dict]) -> List[Dict]:
-        """썸네일 3종 스펙 — Remotion 렌더링용."""
-        # 가장 임팩트 있는 씬 찾기
-        impact_scenes = sorted(
-            [s for s in scenes if s.get("imageAsset", {}).get("path")],
-            key=lambda x: x.get("trend_velocity", 5),
-            reverse=True,
-        )[:3]
-
+        """썸네일 3종 스펙 — 실제 이미지 파일에서 찾기."""
+        import re
         specs = []
-        for i, scene in enumerate(impact_scenes):
-            specs.append({
-                "variant": chr(65 + i),  # A, B, C
-                "scene_index": scenes.index(scene),
-                "image_path": scene.get("imageAsset", {}).get("path", ""),
-                "headline": scene.get("headline", ""),
-                "resolution": {"width": 1280, "height": 720},
-            })
+
+        # 1. images/ 디렉토리에서 실제 이미지 파일 찾기
+        images_dir = self._project_dir / "images"
+        image_files = []
+        if images_dir.exists():
+            for subdir in ["generated", "search"]:
+                sub = images_dir / subdir
+                if sub.exists():
+                    for f in sorted(sub.iterdir()):
+                        if f.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
+                            image_files.append(f)
+
+        # 2. scene_specs의 imageAsset.path에서도 찾기
+        for s in scenes:
+            img = s.get("imageAsset")
+            if isinstance(img, dict) and img.get("path"):
+                p = self._project_dir / img["path"]
+                if p.exists() and p not in image_files:
+                    image_files.append(p)
+
+        # 3. 상위 3개 선택 (가운데 씬들이 보통 핵심)
+        if image_files:
+            # 첫 번째, 가운데, 마지막에서 선택
+            selected = []
+            if len(image_files) >= 3:
+                selected = [
+                    image_files[0],
+                    image_files[len(image_files) // 2],
+                    image_files[-1],
+                ]
+            else:
+                selected = image_files[:3]
+
+            for i, img_path in enumerate(selected):
+                # 해당 이미지의 씬 번호 추출
+                match = re.search(r"scene_(\d+)", img_path.name)
+                scene_idx = int(match.group(1)) - 1 if match else i
+                headline = scenes[scene_idx].get("headline", "") if scene_idx < len(scenes) else ""
+
+                specs.append({
+                    "variant": chr(65 + i),  # A, B, C
+                    "scene_index": scene_idx,
+                    "image_path": str(img_path),
+                    "headline": headline,
+                    "resolution": {"width": 1280, "height": 720},
+                })
+
         return specs
