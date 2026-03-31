@@ -1,0 +1,11 @@
+{
+  "project_slug": "sunk-cost-fallacy",
+  "pid": 84752,
+  "status": "completed",
+  "started_at": "2026-03-26T07:59:55.930817",
+  "finished_at": "2026-03-26T08:20:39.532582",
+  "log_file": "/Users/hannah/Projects/auto_kairos_v3/output/3f02ed55_sunk-cost-fallacy/logs/pipeline_20260326_075955.log",
+  "from_step": null,
+  "only_step": "step_1",
+  "exit_code": null
+}

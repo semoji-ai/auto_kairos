@@ -1,0 +1,11 @@
+{
+  "project_slug": "us-tariff-round2",
+  "pid": 3961,
+  "status": "completed",
+  "started_at": "2026-03-26T09:11:40.178894",
+  "finished_at": "2026-03-26T09:25:26.879846",
+  "log_file": "/Users/hannah/Projects/auto_kairos_v3/output/39b4ca37_us-tariff-round2/logs/pipeline_20260326_091140.log",
+  "from_step": null,
+  "only_step": "step_2",
+  "exit_code": null
+}

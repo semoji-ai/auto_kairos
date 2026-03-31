@@ -1,0 +1,11 @@
+{
+  "project_slug": "ai-power-crisis",
+  "pid": 62481,
+  "status": "completed",
+  "started_at": "2026-03-26T12:56:10.871027",
+  "finished_at": "2026-03-26T15:10:21.193635",
+  "log_file": "/Users/hannah/Projects/auto_kairos_v3/output/e260ff45_ai-power-crisis/logs/pipeline_20260326_125610.log",
+  "from_step": null,
+  "only_step": "step_2",
+  "exit_code": null
+}

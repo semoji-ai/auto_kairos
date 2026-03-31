@@ -110,6 +110,11 @@ def build_analysis_prompt(scripts_summary: str, youtube_data: str) -> str:
 
 당신은 YouTube 콘텐츠 분석 전문가입니다. 세모지 채널의 원고와 성과 데이터를 교차 분석하세요.
 
+## ⚠️ 중요 주의사항
+- **한글 원고가 오리지널**입니다. 영어 원고는 별도 번역 프로젝트의 번역본이므로 분석에서 제외하세요.
+- "영어→한글 전환"이 아닙니다. 처음부터 한글로 작성됨.
+- 영어 원고와 한글 원고가 같은 Drive에 섞여 있으니 혼동하지 마세요.
+
 ## 원고 데이터 (Google Drive에서 추출)
 {scripts_summary}
 
@@ -234,7 +239,7 @@ def main():
     analysis_dir.mkdir(parents=True, exist_ok=True)
 
     runner = AgentRunner()
-    config = {"model": "sonnet", "max_turns": 50, "max_duration_minutes": 25}
+    config = {"model": "opus", "max_turns": 50, "max_duration_minutes": 30}
     result = runner._run_agent(prompt, config, extra_tools=["WebSearch", "WebFetch"])
 
     usage = result.get("usage", {})

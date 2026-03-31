@@ -1,0 +1,11 @@
+{
+  "project_slug": "배의역사_2min_test",
+  "pid": 21340,
+  "status": "completed",
+  "started_at": "2026-03-25T00:25:33.076710",
+  "finished_at": "2026-03-26T08:00:04.595495",
+  "log_file": "/Users/hannah/Projects/auto_kairos_v3/output/c56ccdab_배의역사_2min_test/logs/pipeline_20260325_002533.log",
+  "from_step": null,
+  "only_step": null,
+  "exit_code": null
+}

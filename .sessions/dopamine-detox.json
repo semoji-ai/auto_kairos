@@ -1,0 +1,11 @@
+{
+  "project_slug": "dopamine-detox",
+  "pid": 84747,
+  "status": "completed",
+  "started_at": "2026-03-26T07:59:55.596898",
+  "finished_at": "2026-03-26T08:20:39.247080",
+  "log_file": "/Users/hannah/Projects/auto_kairos_v3/output/20dfd402_dopamine-detox/logs/pipeline_20260326_075955.log",
+  "from_step": null,
+  "only_step": "step_1",
+  "exit_code": null
+}

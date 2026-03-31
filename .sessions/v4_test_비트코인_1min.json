@@ -1,0 +1,11 @@
+{
+  "project_slug": "v4_test_비트코인_1min",
+  "pid": 80466,
+  "status": "completed",
+  "started_at": "2026-03-24T22:02:58.730251",
+  "finished_at": "2026-03-26T08:00:04.599618",
+  "log_file": "/Users/hannah/Projects/auto_kairos_v3/output/17e7dd6c_v4_test_비트코인_1min/logs/pipeline_20260324_220258.log",
+  "from_step": "step_2",
+  "only_step": null,
+  "exit_code": null
+}
