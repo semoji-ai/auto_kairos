@@ -35,6 +35,8 @@ RULE_MANIFEST = {
     "skills/agents/character-planner/SKILL.md": "skill",
     "skills/agents/trend-analyst/SKILL.md": "skill",
     "skills/agents/performance-analyst/SKILL.md": "skill",
+    "skills/agents/upload-info-generator/SKILL.md": "skill",
+    "skills/agents/multiformat-director/SKILL.md": "skill",
     # 공유 스킬
     "skills/shared/writing-style.md": "skill",
     "skills/shared/writing-style-iromism.md": "skill",
