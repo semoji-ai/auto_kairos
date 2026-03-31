@@ -222,6 +222,99 @@ class PipelineState:
 
 
 # ═══════════════════════════════════════
+# Hook Manager — 코드 레벨 가드레일
+# ═══════════════════════════════════════
+
+class HookManager:
+    """파이프라인 단계별 pre/post 훅 관리.
+
+    settings.json 훅 대신 코드 레벨에서 직접 실행.
+    가드 훅은 위반 시 ValueError를 raise.
+    """
+
+    def __init__(self):
+        self._pre_step: dict[str, list] = {}
+        self._post_step: dict[str, list] = {}
+        self._pre_tool: dict[str, list] = {}  # tool_name → [guard_fn, ...]
+
+    def register_pre_step(self, step_id: str, fn):
+        self._pre_step.setdefault(step_id, []).append(fn)
+
+    def register_post_step(self, step_id: str, fn):
+        self._post_step.setdefault(step_id, []).append(fn)
+
+    def register_pre_tool(self, tool_name: str, fn):
+        self._pre_tool.setdefault(tool_name, []).append(fn)
+
+    def run_pre_step(self, step_id: str, context: dict):
+        for fn in self._pre_step.get(step_id, []):
+            fn(context)
+
+    def run_post_step(self, step_id: str, context: dict):
+        for fn in self._post_step.get(step_id, []):
+            fn(context)
+
+    def run_pre_tool(self, tool_name: str, tool_input: dict):
+        for fn in self._pre_tool.get(tool_name, []):
+            fn(tool_input)
+
+
+def _build_default_hooks() -> HookManager:
+    """기본 가드레일 훅 등록."""
+    hm = HookManager()
+
+    # ── guard: 이미지 삭제 차단 (CLAUDE.md §9) ──
+    def guard_image_delete(tool_input: dict):
+        cmd = tool_input.get("command", "")
+        if re.search(r"\brm\b", cmd):
+            img_patterns = [r"scene_\d+", r"\.png\b", r"\.jpg\b", r"\.webp\b", r"_gen_\d+"]
+            for p in img_patterns:
+                if re.search(p, cmd, re.IGNORECASE):
+                    raise ValueError(f"이미지 삭제 차단: {cmd[:100]}")
+    hm.register_pre_tool("Bash", guard_image_delete)
+
+    # ── guard: scene_specs 중첩 구조 차단 ──
+    def guard_scene_specs_schema(tool_input: dict):
+        content = tool_input.get("content", "")
+        if '"visualization"' in content and '"creative"' in content:
+            raise ValueError("scene_specs에 visualization.creative 중첩 구조 사용 금지 — 플랫 스키마 사용")
+    hm.register_pre_tool("Write", guard_scene_specs_schema)
+
+    # ── guard: 이미지 프롬프트 규칙 (아트스타일 키워드 금지) ──
+    def guard_image_prompt(tool_input: dict):
+        content = json.dumps(tool_input, ensure_ascii=False) if isinstance(tool_input, dict) else str(tool_input)
+        # imageAsset.prompt에 아트스타일 키워드 삽입 금지
+        blocked = ["semoji style", "quirky cartoon", "flat staging", "2D illustration"]
+        lower = content.lower()
+        for kw in blocked:
+            if kw in lower and "imageAsset" in content:
+                raise ValueError(f"이미지 프롬프트에 아트스타일 키워드 금지: {kw}")
+    hm.register_pre_tool("Write", guard_image_prompt)
+
+    # ── guard: 이미지 버저닝 (덮어쓰기 금지) ──
+    def guard_image_versioning(tool_input: dict):
+        cmd = tool_input.get("command", "")
+        # cp 또는 mv로 기존 이미지 덮어쓰기 감지
+        if re.search(r"\b(cp|mv)\b.*scene_\d+.*_gen_01\.png", cmd):
+            raise ValueError("기존 이미지 덮어쓰기 금지 — 새 버전 번호 사용 (_gen_02, _gen_03)")
+    hm.register_pre_tool("Bash", guard_image_versioning)
+
+    # ── pre-step: upload_info는 manifest 필요 ──
+    def pre_upload_info(context: dict):
+        project_dir = Path(context.get("project_dir", ""))
+        if project_dir.exists():
+            has_manifest = (
+                (project_dir / "manifest.json").exists()
+                or (project_dir / "remotion" / "public" / "manifest.json").exists()
+            )
+            if not has_manifest:
+                raise ValueError("upload_info 생성에 manifest.json 필요 — step_3b 완료 후 실행")
+    hm.register_pre_step("step_3c", pre_upload_info)
+
+    return hm
+
+
+# ═══════════════════════════════════════
 # 오케스트레이터
 # ═══════════════════════════════════════
 
@@ -267,6 +360,7 @@ class PipelineRunner:
         self.context_memory = ContextMemory(self.project_dir)
         self.vault = VaultRAG()
         self.sync = self._init_sync()
+        self.hooks = _build_default_hooks()
 
     def _init_sync(self):
         """Supabase 동기화 — 파이프라인 중에는 비활성. 완료 후 프로젝트 단위로 동기화."""
@@ -1994,6 +2088,17 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         if step.get("chunked_parallel"):
             return self._run_chunked_parallel(step)
 
+        # ── Pre-step 훅 실행 ──
+        try:
+            self.hooks.run_pre_step(step_id, {
+                "project_dir": str(self.project_dir),
+                "step_id": step_id,
+                "step_name": step_name,
+            })
+        except ValueError as e:
+            print(f"  [HOOK] {step_id} pre-step 차단: {e}")
+            return StepResult(step_id=step_id, status="failed", error=f"Hook 차단: {e}")
+
         # 이미지 소싱 전 아트스타일/캐릭터 프리플라이트
         if step_name == "image_asset_sourcing":
             self._ensure_art_style_and_characters()
@@ -2062,6 +2167,17 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             result.duration_sec = elapsed
 
             if result.status == "completed":
+                # ── Post-step 훅 실행 ──
+                try:
+                    self.hooks.run_post_step(step_id, {
+                        "project_dir": str(self.project_dir),
+                        "step_id": step_id,
+                        "step_name": step_name,
+                        "duration_sec": elapsed,
+                    })
+                except ValueError as hook_err:
+                    print(f"  [HOOK] {step_id} post-step 경고: {hook_err}")
+
                 cost = result.cost_info
                 self.pm.complete_pipeline_run(
                     run_id,
@@ -2582,6 +2698,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             "tts-preprocess": "tools/korean_tts_preprocessor.py",
             "tts-generator": "scripts/generate_tts.py",
             "image_batch": "modules/image_batch_module.py",
+            "upload_info_generator": "modules/upload_info_generator.py",
             "subtitle-sync": "scripts/generate_subtitles.py",
             "data-validator": "scripts/validate_data.py",
             "manifest-builder": "scripts/build_manifest.py",

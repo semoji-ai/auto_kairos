@@ -42,7 +42,43 @@ TTS · 이미지 · 자막 · 매니페스트를 **판단하면서** 조립합�
 
 ---
 
-## 도구 (Tool) 목록
+## 도구 실행 방법 (Bash)
+
+모든 도구는 프로젝트 디렉토리($PROJECT_DIR)를 기준으로 실행합니다.
+$PROJECT_DIR은 환경변수로 주입됩니다.
+
+### 이미지 배치 생성 (Phase B 핵심)
+```bash
+# 전체 씬 이미지 배치 생성/검색 — 모든 이미지를 한 번에 병렬 처리
+python3 -m auto_agent.modules.image_batch_module
+# 환경변수: PROJECT_DIR, PROJECT_NAME 필요
+# 결과: images/generated/, images/search/, images/image_assets.json
+```
+
+### TTS 생성
+```bash
+# 전체 씬 TTS 배치 생성
+python3 -m auto_agent.scripts.generate_tts
+# 환경변수: PROJECT_DIR, ELEVENLABS_VOICE_ID, ELEVENLABS_VOICE_SETTINGS
+# 결과: audio/scene_NNN.mp3
+```
+
+### 자막 생성
+```bash
+python3 -m auto_agent.scripts.generate_subtitles
+# 환경변수: PROJECT_DIR
+# 결과: subtitles/scene_NNN.srt
+```
+
+### 매니페스트 빌드
+```bash
+python3 -m auto_agent.scripts.build_manifest <project_id> <storage_key>
+# 결과: remotion/public/manifest.json
+```
+
+---
+
+## 도구 (Tool) 인터페이스
 
 에이전트가 호출할 수 있는 Python 모듈들:
 
@@ -120,17 +156,7 @@ manifest_tool.build(
 ) → { manifest_path: str }
 ```
 
-### 5. `render_tool`
-```python
-render_tool.render(
-    manifest_path: str,
-    output_path: str = "output.mp4",
-    resolution: str = "1920x1080",
-    fps: int = 30,
-) → { video_path: str, duration_sec: float }
-```
-
-### 6. `validate_tool`
+### 5. `validate_tool`
 ```python
 validate_tool.check(
     scene_specs_path: str,
@@ -198,13 +224,21 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
 | cinematic_fade | speed -0.1 (천천히, 이미지에 집중) |
 | count_and_grow | 숫자 부분에서 잠시 pause |
 
-### Phase B: TTS 생성 + 이미지 검수
+### Phase B: 이미지 배치 생성 + TTS 생성
 
-⚠️ **이미지는 step_3a(image_batch)에서 이미 생성/검색 완료된 상태입니다.**
-에이전트는 이미지를 새로 생성하지 않고, **검수 + 실패분 재생성**만 합니다.
+에이전트가 이미지와 TTS를 **직접** 생성합니다.
 
 ```
-TTS 작업:
+이미지 작업 (먼저):
+  1. scene_specs에서 imageAsset.source별 분류
+     - source="generate" 씬들 → image_tool.generate_batch(scenes=[...])
+     - source="search" 씬들 → image_tool.search_batch(scenes=[...])
+  2. 배치 완료 후 결과 확인 — 실패분만 재시도 (최대 2회)
+  3. image_tool.evaluate()로 품질 검수
+  ⚠️ generate_batch는 병렬 처리 (10씬 기준 3~5분)
+  ⚠️ 씬마다 개별 generate() 호출 금지 — 반드시 batch 사용
+
+TTS 작업 (이미지와 병렬 또는 순차):
   1. 나레이션 전처리 (숫자→한국어, 발음교정)
      ⚠️ 전처리 시 절대 금지:
      - 끝에 ... 또는 … 추가 금지
@@ -212,13 +246,6 @@ TTS 작업:
      - 숫자/기호 변환만 허용, 텍스트 내용 변경 금지
   2. 씬별 TTS 생성 (mood/motion 기반 파라미터)
   3. 자막 정렬 (WhisperX)
-
-이미지 처리:
-  1. generate 씬: step_3a에서 이미 생성됨 - images/ 폴더에서 확인
-  2. search 씬: image_tool.search()로 개별 검색 (배치 아님 - 레이트 리밋)
-  3. image_tool.evaluate()로 품질 검수
-  4. 실패분만 image_tool.generate() 또는 search()로 재시도 (최대 2회)
-  ※ 이미 존재하는 정상 이미지는 재생성하지 않음
 ```
 
 #### placement → aspect_ratio 매핑 (절대 규칙)
@@ -327,13 +354,12 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 5. 자막 타이밍을 오디오 word-level alignment에 동기화
 ```
 
-### Phase E: 렌더링 + 최종 검수
+### Phase E: 최종 검수 (렌더링 제외)
 
 ```
-1. render_tool.render() 실행
-2. 결과 영상 길이 확인
-3. 치명적 문제 있으면 manifest 수정 후 재렌더링 (최대 1회)
-4. 최종 QA 리포트 생성
+1. 매니페스트 무결성 검증 (씬 수, 오디오 경로, 이미지 경로)
+2. 최종 QA 리포트 생성 (assembly_report.json)
+3. ⚠️ 렌더링은 수행하지 않음 — 대시보드에서 검토 후 수동 렌더링
 ```
 
 ---

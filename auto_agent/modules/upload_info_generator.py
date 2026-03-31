@@ -267,3 +267,38 @@ class UploadInfoGenerator:
                 })
 
         return specs
+
+
+if __name__ == "__main__":
+    """CLI 실행: python -m auto_agent.modules.upload_info_generator
+
+    환경변수:
+      PROJECT_DIR: 프로젝트 디렉토리 경로 (필수)
+    """
+    import os
+    import sys
+
+    project_dir = os.environ.get("PROJECT_DIR")
+    if not project_dir:
+        print("ERROR: PROJECT_DIR 환경변수 필요", file=sys.stderr)
+        sys.exit(1)
+
+    project_path = Path(project_dir)
+    if not project_path.exists():
+        print(f"ERROR: 프로젝트 디렉토리 없음: {project_path}", file=sys.stderr)
+        sys.exit(1)
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+    gen = UploadInfoGenerator(project_path)
+    result = gen.generate()
+
+    if result.get("status") == "error":
+        print(f"ERROR: {result.get('message', 'unknown')}", file=sys.stderr)
+        sys.exit(1)
+
+    # upload_info.json 저장
+    output_path = project_path / "upload_info.json"
+    output_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"upload_info.json 생성 완료: {output_path}")
+    sys.exit(0)

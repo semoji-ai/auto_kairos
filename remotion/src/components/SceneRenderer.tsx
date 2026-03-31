@@ -46,11 +46,14 @@ export const resolveVisualization = (scene: any): any => {
 };
 
 /* ── 이미지 배경 ── */
-export const ImageBg: React.FC<{ src: string; opacity: number }> = ({ src, opacity }) => (
-  <AbsoluteFill style={{ zIndex: 0, overflow: "hidden" }}>
-    <Img src={resolveUrl(src)} style={{ width: "100%", height: "100%", objectFit: "cover", opacity }} />
-  </AbsoluteFill>
-);
+export const ImageBg: React.FC<{ src: string; opacity: number }> = ({ src, opacity }) => {
+  if (!src) return null;
+  return (
+    <AbsoluteFill style={{ zIndex: 0, overflow: "hidden" }}>
+      <Img src={resolveUrl(src)} style={{ width: "100%", height: "100%", objectFit: "cover", opacity }} />
+    </AbsoluteFill>
+  );
+};
 
 /* ── Side 이미지 레이아웃 ── */
 const SideLayout: React.FC<{
@@ -105,10 +108,10 @@ const CenterLayout: React.FC<{
       flex: "0 0 45%", display: "flex", alignItems: "center",
       justifyContent: "center", padding: "16px 40px", position: "relative",
     }}>
-      <Img src={resolveUrl(src)} style={{
+      {src ? <Img src={resolveUrl(src)} style={{
         maxWidth: "70%", maxHeight: "100%", objectFit: "contain",
         opacity, borderRadius: 16, filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.6))",
-      }} />
+      }} /> : null}
     </div>
     <div style={{ flex: 1, position: "relative" }}>{children}</div>
   </AbsoluteFill>

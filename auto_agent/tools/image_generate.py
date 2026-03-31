@@ -83,21 +83,6 @@ ANATOMY_RULES = (
     "- Focus detail on 1-3 main characters only\n\n"
 )
 
-FLAT_STAGING_RULES = (
-    "**FLAT STAGING COMPOSITION (CRITICAL):**\n"
-    "- The BACKGROUND MUST fill the ENTIRE canvas edge-to-edge with NO empty space, NO margins, NO borders\n"
-    "- The background covers 100% of the image area — every pixel must be part of the scene\n"
-    "- ALL characters MUST face the CAMERA directly (frontal view)\n"
-    "- Characters are arranged SIDE BY SIDE on a FLAT PLANE, like figures placed on a stage\n"
-    "- NO perspective depth, NO 3D space, NO foreshortening\n"
-    "- Background is a FULL-BLEED flat backdrop that extends to all edges of the image\n"
-    "- Characters should look like they are PLACED on the scene, not acting within it\n"
-    "- NO dynamic angles: no over-the-shoulder, no low angle, no high angle\n"
-    "- Camera is ALWAYS straight-on, eye-level, centered\n"
-    "- Characters stand or sit in STATIC, symmetrical poses facing forward\n"
-    "- Think of it as a DIORAMA stage — full background + characters placed in front\n"
-    "- Characters can overlap slightly but maintain their flat, frontal orientation\n\n"
-)
 
 
 # ── 유틸리티 ──
@@ -595,123 +580,8 @@ def generate_scene(
     return _save_fal_result(result, output_path)
 
 
-# ── 평면 연출 장면 생성 (flat staging) ──
-
-def generate_scene_flat(
-    prompt: str,
-    output_path: str,
-    style_path: str,
-    characters: Optional[List[str]] = None,
-    characters_info: Optional[str] = None,
-    background: Optional[str] = None,
-    aspect_ratio: str = "16:9",
-) -> dict:
-    """평면 연출 장면 이미지 생성 (flat staging)
-
-    세모지 등 2D 플랫 스타일용. 캐릭터가 정면으로 배치되고,
-    배경 위에 평면적으로 나열되는 연출 방식.
-    """
-    art_style = _load_art_style(style_path)
-    style_json_str = _get_style_json_str(art_style)
-    scene_style_desc = art_style.get("scene_style_description", "")
-    historical_period = art_style.get("historical_period", "")
-    ref_image = art_style.get("reference_image", "")
-    critical_reqs = art_style.get("technical", {}).get("critical_requirements", [])
-
-    image_urls = []
-    has_character_refs = False
-
-    if characters and any(Path(c).exists() for c in characters):
-        for char_path in characters:
-            if Path(char_path).exists():
-                image_urls.append(_image_to_data_uri(char_path))
-        has_character_refs = True
-    if not has_character_refs and ref_image and Path(ref_image).exists():
-        image_urls.append(_image_to_data_uri(ref_image))
-
-    prompt = _enrich_historical_context(prompt, historical_period)
-    scene_description = _filter_text_descriptions(prompt)
-
-    parts = []
-    if scene_style_desc:
-        parts.append(scene_style_desc)
-    parts.append(style_json_str)
-    if critical_reqs:
-        parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs))
-    parts.append(FLAT_STAGING_RULES)
-    parts.append(scene_description)
-
-    if has_character_refs:
-        parts.append(
-            "**Character Reference Rules:**\n"
-            "- Use reference images ONLY for face and clothing appearance\n"
-            "- Do NOT copy the pose from reference images\n"
-            "- ALL characters MUST face FORWARD (frontal view)\n"
-            "- Maintain consistent eye, nose, mouth, and body proportions"
-        )
-    elif image_urls:
-        parts.append(
-            "**STYLE REFERENCE ONLY:**\n"
-            "The attached reference image is ONLY for art style reference.\n"
-            "- COPY: Color palette, line style, lighting, texture, shading\n"
-            "- NEVER COPY: Any person, character, figure, face from the reference\n"
-            "- Create entirely NEW characters based on the scene description"
-        )
-
-    structured_lines = []
-    if characters_info:
-        structured_lines.append(f"Character: {characters_info}")
-    if background:
-        structured_lines.append(f"Background: {background} — fills entire canvas edge-to-edge, no empty space")
-    structured_lines.append("Camera: Front view, eye-level, centered, flat composition")
-    if has_character_refs:
-        structured_lines.append(
-            "**Important: Maintain character body proportions, "
-            "ALL characters face forward, flat 2D arrangement"
-        )
-    else:
-        structured_lines.append(
-            "**Important: Maintain natural body proportions, "
-            "ALL characters face forward, flat 2D arrangement"
-        )
-    parts.append("\n".join(structured_lines))
-
-    parts.append(
-        "**Flat staging rules:**\n"
-        "- BACKGROUND fills the ENTIRE image — no blank areas, no visible borders or margins\n"
-        "- Characters arranged LEFT to RIGHT, facing camera\n"
-        "- Main character in CENTER, supporting characters on sides\n"
-        "- Background is a single flat layer behind all characters, extending to ALL edges\n"
-        "- No overlapping that obscures character faces\n"
-        "- Even spacing between characters\n"
-        "- All characters at the same scale (no size-based depth cues)"
-    )
-
-    parts.append(
-        f"aspect ratio {aspect_ratio}\n"
-        "No text or speech bubbles.\n"
-        "Draw characters with consistent proportions.\n"
-        "FLAT 2D composition only — no 3D rendering, no perspective."
-    )
-
-    parts.append(
-        "IMPORTANT: Do NOT include any text, letters, numbers, words, captions, watermarks, "
-        "signatures, or any written characters in the image. The image must be completely text-free."
-    )
-
-    full_prompt = "\n\n".join(parts)
-    full_prompt = _translate_to_english(full_prompt)
-
-    endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_GENERATE
-    fal_input = {
-        "prompt": full_prompt,
-        "aspect_ratio": aspect_ratio,
-    }
-    if image_urls:
-        fal_input["image_urls"] = image_urls
-
-    result = _call_fal(endpoint, fal_input)
-    return _save_fal_result(result, output_path)
+# generate_scene_flat은 cinematic으로 통일 — 하위 호환용 alias
+generate_scene_flat = generate_scene
 
 
 def _build_scene_fal_input(
@@ -753,7 +623,6 @@ def _build_scene_fal_input(
     background      = _ia.get("background", "")
     camera          = _ia.get("camera", "")
     aspect_ratio    = image_asset.get("aspectRatio", "16:9")
-    staging         = image_asset.get("stagingStyle", "cinematic")
 
     # 유효한 캐릭터 경로만 추출
     char_path_strs: list[str] = []
@@ -762,135 +631,70 @@ def _build_scene_fal_input(
             if cp and Path(cp).exists():
                 char_path_strs.append(str(cp))
 
-    if staging == "flat":
-        # generate_scene_flat 로직 — staging이 명시적으로 flat일 때만 적용
-        # (캐릭터 없을 때도 cinematic이면 cinematic 규칙 사용)
-        art_style = _load_art_style(style_path)
-        style_json_str = _get_style_json_str(art_style)
-        scene_style_desc = art_style.get("scene_style_description", "")
-        historical_period = art_style.get("historical_period", "")
-        ref_image = art_style.get("reference_image", "")
-        critical_reqs = art_style.get("technical", {}).get("critical_requirements", [])
+    # cinematic 통일 (flat staging 제거됨)
+    art_style = _load_art_style(style_path)
+    style_json_str = _get_style_json_str(art_style)
+    scene_style_desc = art_style.get("scene_style_description", "")
+    historical_period = art_style.get("historical_period", "")
+    critical_reqs = art_style.get("technical", {}).get("critical_requirements", [])
+    ref_image = art_style.get("reference_image", "")
 
-        image_urls: list[str] = []
-        has_char = False
+    image_urls = [_image_to_data_uri(cp) for cp in char_path_strs]
+    is_base_ref = False
+    if not image_urls and ref_image and Path(ref_image).exists():
+        image_urls = [_image_to_data_uri(ref_image)]
+        is_base_ref = True
+
+    prompt = _enrich_historical_context(prompt, historical_period)
+    scene_desc = _filter_text_descriptions(prompt)
+
+    parts = []
+    if scene_style_desc:
+        parts.append(scene_style_desc)
+    parts.append(style_json_str)
+    if critical_reqs:
+        parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs))
+    parts.append(scene_desc)
+    if is_base_ref:
+        parts.append(
+            "**🚫 CRITICAL: Reference Image Restrictions 🚫**\n"
+            "The attached reference image is ONLY for art style reference.\n"
+            "- ✅ COPY: Color palette, lighting, texture, brush strokes, mood, art technique\n"
+            "- ❌ NEVER COPY: Any person, character, hairstyle, clothing, face, or body from the reference image\n"
+            "- ❌ ABSOLUTELY FORBIDDEN: Do NOT use the reference image character's hairstyle, outfit, or appearance\n"
+            "- Create completely NEW characters based on the scene description"
+        )
+    elif char_path_strs:
+        parts.append(
+            "**Character Reference Rules:**\n"
+            "- Use reference images for face and clothing appearance\n"
+            "- Do NOT copy the pose from reference images!\n"
+            "- Maintain consistent eye, nose, mouth, and body proportions"
+        )
+    struct = []
+    if characters_info:
+        struct.append(f"Character: {characters_info}")
+    if background:
+        struct.append(f"Background: {background}")
+    if camera:
+        struct.append(f"Camera: {camera}")
+    if struct:
         if char_path_strs:
-            for cp in char_path_strs:
-                image_urls.append(_image_to_data_uri(cp))
-            has_char = True
-        elif ref_image and Path(ref_image).exists():
-            image_urls.append(_image_to_data_uri(ref_image))
-
-        prompt = _enrich_historical_context(prompt, historical_period)
-        scene_desc = _filter_text_descriptions(prompt)
-
-        parts = []
-        if scene_style_desc:
-            parts.append(scene_style_desc)
-        parts.append(style_json_str)
-        if critical_reqs:
-            parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs))
-        parts.append(FLAT_STAGING_RULES)
-        parts.append(scene_desc)
-        if has_char:
-            parts.append(
-                "**Character Reference Rules:**\n"
-                "- Use reference images for face and clothing appearance\n"
-                "- ALL characters MUST face FORWARD (frontal view)"
+            struct.append(
+                "**Important: Maintain character body proportions, "
+                "refer to reference image for each character's face"
             )
-        elif not has_char and image_urls:
-            # base reference image만 있는 경우
-            parts.append(
-                "**🚫 CRITICAL: Reference Image Restrictions 🚫**\n"
-                "The attached reference image is ONLY for art style reference.\n"
-                "- ✅ COPY: Color palette, lighting, texture, brush strokes, mood\n"
-                "- ❌ NEVER COPY: Any character's hairstyle, clothing, face, or appearance\n"
-                "- Create completely NEW characters based on the scene description"
-            )
-        struct = []
-        if characters_info:
-            struct.append(f"Character: {characters_info}")
-        if background:
-            struct.append(f"Background: {background} — fills entire canvas edge-to-edge, no empty space")
-        struct.append("Camera: Front view, eye-level, centered, flat composition")
         parts.append("\n".join(struct))
-        parts.append(
-            "IMPORTANT: Do NOT include any text, letters, numbers, words, captions, "
-            "watermarks, signatures, or any written characters in the image."
-        )
-        full_prompt = _translate_to_english("\n\n".join(parts))
-        endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_GENERATE
-        fal_input: dict = {"prompt": full_prompt, "aspect_ratio": aspect_ratio}
-        if image_urls:
-            fal_input["image_urls"] = image_urls
-        return endpoint, fal_input
-
-    else:
-        # cinematic — generate_scene 로직 재사용
-        art_style = _load_art_style(style_path)
-        style_json_str = _get_style_json_str(art_style)
-        scene_style_desc = art_style.get("scene_style_description", "")
-        historical_period = art_style.get("historical_period", "")
-        critical_reqs = art_style.get("technical", {}).get("critical_requirements", [])
-        ref_image = art_style.get("reference_image", "")
-
-        image_urls = [_image_to_data_uri(cp) for cp in char_path_strs]
-        is_base_ref = False
-        # 캐릭터 참조 없으면 스타일 base 이미지를 참조로 사용
-        if not image_urls and ref_image and Path(ref_image).exists():
-            image_urls = [_image_to_data_uri(ref_image)]
-            is_base_ref = True
-
-        prompt = _enrich_historical_context(prompt, historical_period)
-        scene_desc = _filter_text_descriptions(prompt)
-
-        parts = []
-        if scene_style_desc:
-            parts.append(scene_style_desc)
-        parts.append(style_json_str)
-        if critical_reqs:
-            parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs))
-        parts.append(scene_desc)
-        if is_base_ref:
-            parts.append(
-                "**🚫 CRITICAL: Reference Image Restrictions 🚫**\n"
-                "The attached reference image is ONLY for art style reference.\n"
-                "- ✅ COPY: Color palette, lighting, texture, brush strokes, mood, art technique\n"
-                "- ❌ NEVER COPY: Any person, character, hairstyle, clothing, face, or body from the reference image\n"
-                "- ❌ ABSOLUTELY FORBIDDEN: Do NOT use the reference image character's hairstyle, outfit, or appearance\n"
-                "- Create completely NEW characters based on the scene description"
-            )
-        elif char_path_strs:
-            parts.append(
-                "**Character Reference Rules:**\n"
-                "- Use reference images for face and clothing appearance\n"
-                "- Do NOT copy the pose from reference images!\n"
-                "- Maintain consistent eye, nose, mouth, and body proportions"
-            )
-        struct = []
-        if characters_info:
-            struct.append(f"Character: {characters_info}")
-        if background:
-            struct.append(f"Background: {background}")
-        if camera:
-            struct.append(f"Camera: {camera}")
-        if struct:
-            if char_path_strs:
-                struct.append(
-                    "**Important: Maintain character body proportions, "
-                    "refer to reference image for each character's face"
-                )
-            parts.append("\n".join(struct))
-        parts.append(
-            "IMPORTANT: Do NOT include any text, letters, numbers, words, captions, "
-            "watermarks, signatures, or any written characters in the image."
-        )
-        full_prompt = _translate_to_english("\n\n".join(parts))
-        endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_GENERATE
-        fal_input: dict = {"prompt": full_prompt, "aspect_ratio": aspect_ratio}
-        if image_urls:
-            fal_input["image_urls"] = image_urls
-        return endpoint, fal_input
+    parts.append(
+        "IMPORTANT: Do NOT include any text, letters, numbers, words, captions, "
+        "watermarks, signatures, or any written characters in the image."
+    )
+    full_prompt = _translate_to_english("\n\n".join(parts))
+    endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_GENERATE
+    fal_input: dict = {"prompt": full_prompt, "aspect_ratio": aspect_ratio}
+    if image_urls:
+        fal_input["image_urls"] = image_urls
+    return endpoint, fal_input
 
 
 def _build_viz_fal_input(

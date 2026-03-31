@@ -33,7 +33,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 class QwenIntern:
     """Qwen 3.5 로컬 모델 A/B 테스트."""
 
-    def __init__(self, model_name: str = "qwen3.5:8b"):
+    def __init__(self, model_name: str = "qwen3.5:latest"):
         self._model = model_name
         self._ollama_url = "http://localhost:11434"
 
@@ -49,7 +49,7 @@ class QwenIntern:
         except Exception:
             return False
 
-    def generate(self, prompt: str, max_tokens: int = 4096) -> str:
+    def generate(self, prompt: str, max_tokens: int = 8192) -> str:
         """Qwen으로 텍스트 생성."""
         import requests
         try:
@@ -57,16 +57,48 @@ class QwenIntern:
                 f"{self._ollama_url}/api/generate",
                 json={
                     "model": self._model,
-                    "prompt": prompt,
+                    "prompt": f"/no_think\n{prompt}",
                     "stream": False,
                     "options": {"num_predict": max_tokens},
                 },
-                timeout=300,
+                timeout=600,
             )
-            return resp.json().get("response", "")
+            data = resp.json()
+            # Qwen 3.5 forced thinking 모드: response가 비어있으면 thinking 필드 사용
+            result = data.get("response", "")
+            if not result.strip() and data.get("thinking"):
+                result = self._extract_final_answer(data["thinking"])
+            return result
         except Exception as e:
             logger.error("Qwen 생성 실패: %s", e)
             return ""
+
+    @staticmethod
+    def _extract_final_answer(thinking: str) -> str:
+        """Qwen thinking 출력에서 최종 답변 추출.
+
+        Qwen 3.5는 thinking 안에 'Final Answer:' 또는 마지막 코드블록/리스트를 포함.
+        최종 답변 패턴을 찾아 반환, 없으면 마지막 50%를 반환.
+        """
+        import re
+        # 패턴 1: "Final Answer:" 이후
+        for marker in ["Final Answer:", "**Final Answer", "최종 답변:", "**최종 답변"]:
+            idx = thinking.find(marker)
+            if idx != -1:
+                return thinking[idx + len(marker):].strip().lstrip(":").lstrip("*").strip()
+
+        # 패턴 2: 번호 매기기 리스트 (1. 2. 3.) — 마지막 리스트 블록
+        lines = thinking.split("\n")
+        last_list_start = -1
+        for i, line in enumerate(lines):
+            if re.match(r"^\s*1[\.\)]\s", line):
+                last_list_start = i
+        if last_list_start >= 0:
+            return "\n".join(lines[last_list_start:]).strip()
+
+        # 패턴 3: 후반부 반환 (thinking의 앞부분은 분석, 뒷부분이 답변)
+        half = len(thinking) // 2
+        return thinking[half:].strip()
 
     def run_ab_test(self, task_name: str, prompt: str,
                     claude_result: str) -> Dict:
@@ -140,7 +172,7 @@ class QwenIntern:
         logger.info("결과 저장: %s", out)
 
 
-def setup_ollama_model(model: str = "qwen3.5:8b"):
+def setup_ollama_model(model: str = "qwen3.5:latest"):
     """ollama에서 Qwen 모델 다운로드."""
     logger.info("Qwen 모델 다운로드: %s", model)
     proc = subprocess.run(

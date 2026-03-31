@@ -1596,12 +1596,15 @@ async def studio_start(request: Request):
     if slug:
         _setup_studio_project(slug)
 
-    npx_cmd = _get_npx_cmd()
     try:
         env = _get_node_env()
         env["BROWSER"] = "none"  # 자동 브라우저 열기 방지
+        # Node 25 호환: npx symlink 깨짐 → remotion-cli.js 직접 실행
+        from auto_agent.utils.platform import find_node
+        node_bin = find_node() or "node"
+        cli_js = REMOTION_DIR / "node_modules" / "@remotion" / "cli" / "remotion-cli.js"
         _studio_proc = subprocess.Popen(
-            [npx_cmd, "remotion", "studio", "--port", str(STUDIO_PORT)],
+            [node_bin, str(cli_js), "studio", "src/index.ts", "--port", str(STUDIO_PORT)],
             cwd=str(REMOTION_DIR),
             env=env,
             stdout=subprocess.DEVNULL,

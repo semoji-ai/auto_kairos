@@ -60,16 +60,20 @@ export const ThumbnailComposition: React.FC<ThumbnailProps> = ({
   return (
     <AbsoluteFill>
       {/* 배경 이미지 */}
-      <AbsoluteFill>
-        <Img
-          src={backgroundImage}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-          }}
-        />
-      </AbsoluteFill>
+      {backgroundImage ? (
+        <AbsoluteFill>
+          <Img
+            src={backgroundImage}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+        </AbsoluteFill>
+      ) : (
+        <AbsoluteFill style={{ backgroundColor: "#1a1a2e" }} />
+      )}
 
       {/* 어두운 오버레이 (텍스트 가독성) */}
       <AbsoluteFill
