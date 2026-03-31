@@ -21,7 +21,7 @@ class ImageTool:
         self._project_dir = project_dir
         self._art_style = art_style
         self._style_config = self._load_style(art_style)
-        self._executor = ThreadPoolExecutor(max_workers=4)
+        self._executor = ThreadPoolExecutor(max_workers=10)
 
     def _load_style(self, style_name: str) -> Dict:
         """아트스타일 프리셋 자동 로드."""
