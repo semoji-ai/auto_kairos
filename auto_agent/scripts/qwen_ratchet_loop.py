@@ -91,8 +91,8 @@ def main():
             logger.error(f"[{task_name}] 에러: {e}")
 
     # 래칫 업데이트
+    today_avg = sum(round_scores) / len(round_scores) if round_scores else 0
     if round_scores:
-        today_avg = sum(round_scores) / len(round_scores)
         prev_best = ratchet.get("best_avg_score", 0)
 
         if today_avg >= prev_best:
@@ -114,7 +114,54 @@ def main():
 
         _save_ratchet(ratchet, ratchet_path)
 
-    logger.info(f"=== Qwen 래칫 학습 종료: {len(results)}/{len(tasks)} 완료 ===")
+    today_avg_final = today_avg if round_scores else 0
+    logger.info(f"=== Qwen 래칫 라운드 완료: {len(results)}/{len(tasks)}, avg={today_avg_final:.1f} ===")
+    return today_avg_final
+
+
+def run_continuous(max_hours: int = 8, interval_min: int = 90):
+    """연속 래칫 루프 — max_hours 동안 interval_min 간격으로 반복.
+
+    매일 22:00 시작 → 06:00까지 ~5라운드 자동 실행.
+    """
+    logger.info(f"=== Qwen 연속 래칫 시작 (최대 {max_hours}시간, {interval_min}분 간격) ===")
+
+    from auto_agent.scripts.qwen_intern_ab_test import QwenIntern
+    intern = QwenIntern()
+    if not intern.is_available():
+        logger.error("Qwen 사용 불가")
+        sys.exit(1)
+
+    vault_dir = Path(os.environ.get(
+        "KAIROS_VAULT_DIR",
+        os.path.expanduser("~/Desktop/kairos-vault"),
+    ))
+
+    start_time = time.time()
+    max_seconds = max_hours * 3600
+    round_num = 0
+
+    while time.time() - start_time < max_seconds:
+        round_num += 1
+        logger.info(f"--- 래칫 라운드 {round_num} ---")
+
+        try:
+            avg = main()
+            logger.info(f"라운드 {round_num} 완료: avg={avg:.1f}")
+        except Exception as e:
+            logger.error(f"라운드 {round_num} 실패: {e}")
+
+        elapsed_hours = (time.time() - start_time) / 3600
+        logger.info(f"경과: {elapsed_hours:.1f}시간 / {max_hours}시간")
+
+        if time.time() - start_time + interval_min * 60 > max_seconds:
+            logger.info("다음 라운드 시간 부족 → 종료")
+            break
+
+        logger.info(f"다음 라운드까지 {interval_min}분 대기...")
+        time.sleep(interval_min * 60)
+
+    logger.info(f"=== Qwen 연속 래칫 종료: {round_num}라운드 완료 ===")
 
 
 def _load_ratchet(path: Path) -> dict:
@@ -133,4 +180,8 @@ def _save_ratchet(ratchet: dict, path: Path):
 
 
 if __name__ == "__main__":
-    main()
+    # --once 플래그가 있으면 1회만, 없으면 연속 루프 (8시간, 90분 간격)
+    if "--once" in sys.argv:
+        main()
+    else:
+        run_continuous(max_hours=8, interval_min=90)
