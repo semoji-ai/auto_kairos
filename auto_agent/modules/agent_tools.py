@@ -32,21 +32,25 @@ class ImageTool:
         return {}
 
     def generate_scene(self, scene_num: int, prompt: str,
-                        source: str = "generate") -> Dict:
+                        source: str = "generate",
+                        scene_dict: Optional[Dict] = None) -> Dict:
         """단일 씬 이미지 생성/검색.
 
         에이전트는 이것만 호출:
           image_tool.generate_scene(3, "한글 장면 묘사", "generate")
 
         Tool이 자동 처리:
-          - 아트스타일 프리셋 조합
-          - reference_image 첨부
+          - 기존 _build_scene_fal_input 함수로 프롬프트 조합
+          - 아트스타일 + reference_image + 캐릭터 + 구조화 프롬프트
           - FAL.ai 호출 (generate) 또는 Serper 검색 (search)
           - 버전 관리 (_gen_01, _gen_02)
           - 결과 반환
+
+        Args:
+            scene_dict: scene_specs의 씬 딕셔너리 (있으면 기존 모듈 방식 사용)
         """
         if source == "generate":
-            return self._generate(scene_num, prompt)
+            return self._generate(scene_num, prompt, scene_dict)
         elif source == "search":
             return self._search(scene_num, prompt)
         else:
@@ -72,6 +76,7 @@ class ImageTool:
             future = self._executor.submit(
                 self.generate_scene,
                 s["scene"], s["prompt"], s.get("source", "generate"),
+                s.get("scene_dict"),
             )
             futures.append((s["scene"], future))
 
@@ -90,64 +95,54 @@ class ImageTool:
                      len(results))
         return results
 
-    def _generate(self, scene_num: int, prompt: str) -> Dict:
-        """FAL.ai로 이미지 생성 — 아트스타일 자동 조합."""
-        style = self._style_config
-
-        # 최종 프롬프트 조합
-        style_desc = style.get("scene_style_description", "")
-        full_prompt = f"{style_desc} {prompt}" if style_desc else prompt
-
-        # 네거티브 프롬프트
-        requirements = style.get("technical", {}).get("critical_requirements", [])
-        negative = ", ".join(requirements) if requirements else ""
-
-        # reference_image
-        ref_image = style.get("reference_image", "")
-
-        # 버전 관리
+    def _generate(self, scene_num: int, prompt: str,
+                   scene_dict: Optional[Dict] = None) -> Dict:
+        """FAL.ai로 이미지 생성 — 기존 _build_scene_fal_input 활용."""
         output_path = self._get_versioned_path(scene_num)
-
         logger.info("씬 %d 생성: %s...", scene_num, prompt[:50])
 
-        # FAL.ai API 호출
         try:
             import fal_client
-            ref_path = Path(__file__).parent.parent / "data" / ref_image if ref_image else None
+            from auto_agent.tools.image_generate import _build_scene_fal_input
+            from auto_agent.modules.image_batch_module import _save_image_from_url
 
-            fal_input = {
-                "prompt": full_prompt,
-                "negative_prompt": negative,
-                "aspect_ratio": "16:9",
-                "resolution": "1K",
-                "num_images": 1,
-            }
-            if ref_path and ref_path.exists():
-                import base64
-                img_data = base64.b64encode(ref_path.read_bytes()).decode()
-                fal_input["image_url"] = f"data:image/jpeg;base64,{img_data}"
+            if scene_dict:
+                # 기존 모듈의 프롬프트 조합 함수 사용 (아트스타일+캐릭터+구조화 프롬프트)
+                endpoint, arguments = _build_scene_fal_input(
+                    scene_dict, self._project_dir
+                )
+            else:
+                # scene_dict 없으면 간단 모드 (프롬프트만)
+                style = self._style_config
+                style_desc = style.get("scene_style_description", "")
+                endpoint = "fal-ai/nano-banana-2"
+                arguments = {
+                    "prompt": f"{style_desc} {prompt}" if style_desc else prompt,
+                    "negative_prompt": ", ".join(
+                        style.get("technical", {}).get("critical_requirements", [])
+                    ),
+                    "aspect_ratio": "16:9",
+                    "resolution": "1K",
+                    "num_images": 1,
+                }
 
-            result = fal_client.subscribe(
-                "fal-ai/nano-banana-2",
-                arguments=fal_input,
-            )
+            result = fal_client.subscribe(endpoint, arguments=arguments)
 
             if result and result.get("images"):
                 img_url = result["images"][0]["url"]
-                from auto_agent.modules.image_batch_module import _save_image_from_url
                 _save_image_from_url(img_url, output_path)
                 return {
                     "scene": scene_num, "status": "success", "source": "generate",
-                    "path": str(output_path), "prompt_used": full_prompt[:200],
-                    "style": style.get("id", "unknown"),
+                    "path": str(output_path), "endpoint": endpoint,
                 }
         except Exception as e:
             logger.error("씬 %d FAL.ai 실패: %s", scene_num, e)
+            return {
+                "scene": scene_num, "status": "error", "source": "generate",
+                "error": str(e),
+            }
 
-        return {
-            "scene": scene_num, "status": "error", "source": "generate",
-            "path": str(output_path), "error": str(e) if 'e' in dir() else "unknown",
-        }
+        return {"scene": scene_num, "status": "error", "source": "generate"}
 
     def _search(self, scene_num: int, prompt: str) -> Dict:
         """이미지 검색 (Serper API)."""
