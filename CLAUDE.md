@@ -137,6 +137,32 @@ auto-agent config set --project <slug> duration_minutes 2
 - `imageAsset.prompt`로 장면 묘사 (한글), 아트스타일 키워드 넣지 않음
 - `imageAsset.source`를 반드시 존중 (search/generate)
 
+## 볼트 기억 시스템
+
+NAS 볼트(`/Volumes/kairos/kairos_vault/kairos-vault/09-memory/`)에 세션 기억을 저장.
+
+### 세션 시작 시 (필수)
+```
+볼트 09-memory/sessions/ 에서 최근 3개 세션 요약 읽기
+→ 이전 작업 컨텍스트 복원
+→ 미해결 문제 확인
+```
+
+### 세션 종료 시 (필수)
+```
+볼트 09-memory/sessions/{date}-{topic}.md 에 저장:
+- 완료한 작업
+- 미해결 문제
+- 다음 우선순위
+- 내린 설계 결정 (중요한 건 decisions/에도 별도 저장)
+```
+
+### 설계 결정 시
+```
+볼트 09-memory/decisions/{date}-{title}.md 에 기록:
+- 결정 내용 + 근거 + 래칫 검증 결과 + 롤백 조건
+```
+
 ## 에러 볼트 워크플로우
 
 에러를 해결할 때마다:
