@@ -86,7 +86,24 @@
           "agent": "script-reviewer",
           "input": ["scene_specs.json", "research_report.json"],
           "output": ["review_feedback.json"],
-          "notes": "AutoResearch 래칫 방식. 85점 이상 PASS, 70~84 REVISE(문제 씬만 수정), 최대 2회 루프. Early stop 90점."
+          "notes": "AutoResearch 래칫 방식. 85점 이상 PASS, 70~84 REVISE, 최대 2회 루프."
+        },
+        {
+          "id": "step_2_revise",
+          "name": "script_revise",
+          "description": "리뷰 피드백 기반 원고/연출 수정 — script-director가 직접 재작성",
+          "agent": "script-director",
+          "conditional": "review_verdict_revise",
+          "input": ["scene_specs.json", "review_feedback.json", "research_report.json"],
+          "output": ["scene_specs.json"],
+          "skills": [
+            "shared/writing-style",
+            "shared/writing-style-semoji",
+            "shared/writing-style-iromism",
+            "shared/motion-presets",
+            "shared/remotion-design-system"
+          ],
+          "notes": "review_feedback.json의 REVISE 판정 시에만 실행. 문제 씬만 수정, 나머지 유지. 래칫으로 퇴보 방지."
         },
         {
           "id": "step_2_data",

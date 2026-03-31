@@ -2892,6 +2892,44 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             "PATH에 claude가 있는지 확인하거나 CLAUDE_CLI 환경변수를 설정하세요."
         )
 
+    def _build_revision_instruction(self, step: dict) -> str:
+        """리뷰 피드백 기반 수정 모드 지시문 생성."""
+        if step.get("conditional") != "review_verdict_revise":
+            return ""
+        feedback_path = self.project_dir / "review_feedback.json"
+        if not feedback_path.exists():
+            return ""
+        feedback = json.loads(feedback_path.read_text(encoding="utf-8"))
+        overall = feedback.get("overall", {})
+        revisions = feedback.get("revision_instructions", [])
+        scene_reviews = feedback.get("scene_reviews", [])
+
+        lines = [
+            "⚠️ **수정 모드** — 리뷰어 피드백 기반 재작성",
+            f"이전 평가: 시청자 {overall.get('viewer_score', '?')}점 / 전문가 {overall.get('expert_score', '?')}점 / 종합 {overall.get('combined_score', '?')}점",
+            f"판정: {overall.get('verdict', '?')} — {overall.get('summary', '')}",
+            "",
+            "**수정 지시:**",
+        ]
+        for rev in revisions:
+            sn = rev.get("sceneNumber", "?")
+            action = rev.get("action", "modify")
+            changes = json.dumps(rev.get("changes", {}), ensure_ascii=False)
+            lines.append(f"- 씬 {sn}: {action} → {changes}")
+
+        lines.append("")
+        lines.append("**씬별 주요 이슈:**")
+        for sr in scene_reviews:
+            issues = sr.get("issues", [])
+            if issues:
+                sn = sr.get("sceneNumber", "?")
+                for issue in issues:
+                    lines.append(f"- 씬 {sn} [{issue.get('severity', '')}] {issue.get('description', '')}")
+
+        lines.append("")
+        lines.append("**규칙:** 문제 씬만 수정하고, 정상 씬은 그대로 유지. 전체 scene_specs.json을 다시 저장.")
+        return "\n".join(lines)
+
     def _build_agent_prompt(self, step: dict) -> str:
         """에이전트 호출용 자기 완결적 프롬프트 구성.
 
@@ -3024,6 +3062,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 출력 파일 (반드시 아래 경로에 저장):
 {chr(10).join(output_lines)}
 
+{self._build_revision_instruction(step)}
 모든 출력 파일을 성공적으로 생성하면 작업 완료입니다.
 </task>
 
@@ -3298,6 +3337,23 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
 
         condition_check가 없으면 입력 파일 존재 여부로 판단.
         """
+        cond = step.get("conditional", "")
+
+        # 래칫 리뷰 판정 조건: review_feedback.json의 verdict가 REVISE인 경우만 실행
+        if cond == "review_verdict_revise":
+            feedback_path = self.project_dir / "review_feedback.json"
+            if not feedback_path.exists():
+                print(f"    [조건] review_feedback.json 없음 → 스킵")
+                return False
+            feedback = json.loads(feedback_path.read_text(encoding="utf-8"))
+            verdict = feedback.get("overall", {}).get("verdict", "")
+            if verdict == "REVISE":
+                print(f"    [조건] 리뷰 판정 REVISE → 수정 실행")
+                return True
+            else:
+                print(f"    [조건] 리뷰 판정 {verdict} → 스킵 (수정 불필요)")
+                return False
+
         check = step.get("condition_check")
 
         if check:
