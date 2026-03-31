@@ -2968,14 +2968,39 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 score = obj if isinstance(obj, (int, float)) else 0
                 verdict = feedback.get("overall", {}).get("verdict", "UNKNOWN")
 
-            print(f"    [래칫 R{round_num}] 점수: {score} / 목표: {pass_threshold} → {verdict}", flush=True)
-            _notify("System", f"래칫 R{round_num}: {score}점 ({verdict})",
+            # 씬별 이슈 요약
+            issue_summary = ""
+            if feedback_path.exists():
+                scene_reviews = feedback.get("scene_reviews", [])
+                issue_lines = []
+                for sr in scene_reviews:
+                    issues = sr.get("issues", [])
+                    if issues:
+                        sn = sr.get("sceneNumber", "?")
+                        for iss in issues:
+                            issue_lines.append(f"씬{sn}[{iss.get('severity','')}] {iss.get('description','')[:80]}")
+                if issue_lines:
+                    issue_summary = "\n".join(issue_lines[:6])  # 최대 6건
+
+            overall_summary = feedback.get("overall", {}).get("summary", "") if feedback_path.exists() else ""
+            viewer = feedback.get("overall", {}).get("viewer_score", 0) if feedback_path.exists() else 0
+            expert = feedback.get("overall", {}).get("expert_score", 0) if feedback_path.exists() else 0
+
+            print(f"    [래칫 R{round_num}] 점수: {score} (시청자:{viewer}/전문가:{expert}) / 목표: {pass_threshold} → {verdict}", flush=True)
+            _notify("script-reviewer",
+                    f"래칫 R{round_num}: {score}점 (시청자:{viewer} 전문가:{expert}) → {verdict}\n{overall_summary}",
                     phase=self.state.current_phase, project=self.project_slug,
-                    level="success" if score >= pass_threshold else "warning")
+                    level="success" if score >= pass_threshold else "warning",
+                    data={"score": score, "viewer": viewer, "expert": expert, "verdict": verdict})
+            if issue_summary:
+                _notify("script-reviewer", f"이슈:\n{issue_summary}",
+                        phase=self.state.current_phase, project=self.project_slug, level="info")
 
             # ── 3. PASS 체크 ──
             if score >= pass_threshold:
                 print(f"    [래칫] PASS! {score}점 ≥ {pass_threshold}", flush=True)
+                _notify("script-reviewer", f"✅ PASS! R{round_num}에서 {score}점 달성 (목표 {pass_threshold})",
+                        phase=self.state.current_phase, project=self.project_slug, level="success")
                 best_score = score
                 best_specs = specs_path.read_text(encoding="utf-8") if specs_path.exists() else best_specs
                 break
