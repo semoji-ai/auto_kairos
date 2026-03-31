@@ -118,7 +118,8 @@ class ImageTool:
             fal_input = {
                 "prompt": full_prompt,
                 "negative_prompt": negative,
-                "image_size": {"width": 1920, "height": 1080},
+                "aspect_ratio": "16:9",
+                "resolution": "1K",
                 "num_images": 1,
             }
             if ref_path and ref_path.exists():
