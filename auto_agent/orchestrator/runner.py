@@ -3015,15 +3015,14 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 best_specs = specs_path.read_text(encoding="utf-8") if specs_path.exists() else best_specs
                 break
 
-            # ── 4. 래칫 비교 (퇴보 방지) ──
+            # ── 4. 래칫 비교 (퇴보 방지 — 채택 안 함 + 계속 진행) ──
             if score < best_score and round_num > 1:
-                print(f"    [래칫] 점수 하락 ({score} < {best_score}) → 이전 버전 복원", flush=True)
+                print(f"    [래칫] 점수 하락 ({score} < {best_score}) → 수정 채택 안 함, 이전 버전 복원 후 계속", flush=True)
                 specs_path.write_text(best_specs, encoding="utf-8")
-                _notify("System", f"래칫 보호: {score}점 < {best_score}점 → 이전 버전 복원",
+                _notify("System", f"래칫: {score}점 < {best_score}점 → 채택 안 함 (이전 버전 유지). 새 이슈로 다시 수정",
                         phase=self.state.current_phase, project=self.project_slug, level="warning")
-                break
-
-            if score > best_score:
+                # break 하지 않음 — 새 이슈가 나왔으므로 다시 수정 시도
+            elif score > best_score:
                 best_score = score
                 best_specs = specs_path.read_text(encoding="utf-8") if specs_path.exists() else best_specs
 
