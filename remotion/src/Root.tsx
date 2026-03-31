@@ -4,6 +4,9 @@ import { Composition, Folder, staticFile } from "remotion";
 import { SceneEditor } from "./SceneEditor";
 import { kairosVideoSchema, sceneEditorSchema } from "./types/schema";
 import { SimpleVideo } from "./SimpleVideo";
+import { ThumbnailComposition } from "./ThumbnailComposition";
+import { ShortsComposition } from "./ShortsComposition";
+import { CardNewsComposition } from "./CardNewsComposition";
 import type { SceneManifest, SubtitleConfig } from "./types/manifest";
 
 /**
@@ -137,6 +140,61 @@ const SCENE_SLOTS = Array.from({ length: 80 }, (_, i) => i + 1);
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Thumbnail — 썸네일 컴포지션 (배경 이미지 + 텍스트 오버레이) */}
+      <Composition
+        id="Thumbnail"
+        component={ThumbnailComposition}
+        durationInFrames={1}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          backgroundImage: "",
+          title: "썸네일 제목",
+          subtitle: "",
+          channelName: "",
+          titlePosition: "bottom-left" as const,
+          fontSize: 72,
+          fontColor: "#FFFFFF",
+          shadowColor: "rgba(0,0,0,0.8)",
+          overlayOpacity: 0.3,
+        }}
+      />
+
+      {/* Shorts — 세로형 숏폼 (1080×1920) */}
+      <Composition
+        id="Shorts"
+        component={ShortsComposition}
+        durationInFrames={1800}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          scenes: [],
+          channelName: "SEMOJI",
+          ctaText: "전체 영상은 채널에서!",
+        }}
+      />
+
+      {/* CardNews — 정사각형 카드뉴스 (1080×1080) */}
+      <Composition
+        id="CardNews"
+        component={CardNewsComposition}
+        durationInFrames={1}
+        fps={30}
+        width={1080}
+        height={1080}
+        defaultProps={{
+          title: "카드뉴스 제목",
+          body: "",
+          pageNumber: 1,
+          totalPages: 10,
+          channelName: "SEMOJI",
+          isCover: false,
+          isCTA: false,
+        }}
+      />
+
       {/* SimpleVideo — 기본 영상 컴포지션 */}
       <Composition
         id="SimpleVideo"
