@@ -1,0 +1,11 @@
+{
+  "project_slug": "AI역사-10min",
+  "pid": 31879,
+  "status": "completed",
+  "started_at": "2026-03-31T22:43:21.475362",
+  "finished_at": "2026-03-31T23:27:43.278485",
+  "log_file": "/Users/jleavens_macmini/Projects/auto_kairos_v3/output/07cecd9a_AI역사-10min/logs/pipeline_20260331_224321.log",
+  "from_step": null,
+  "only_step": "step_2_review",
+  "exit_code": null
+}

@@ -1,0 +1,11 @@
+{
+  "project_slug": "래칫-테스트-10min",
+  "pid": 28843,
+  "status": "failed",
+  "started_at": "2026-03-31T21:06:42.745020",
+  "finished_at": "2026-03-31T21:32:00.540081",
+  "log_file": "/Users/jleavens_macmini/Projects/auto_kairos_v3/output/9cef704c_래칫-테스트-10min/logs/pipeline_20260331_210642.log",
+  "from_step": null,
+  "only_step": null,
+  "exit_code": null
+}
