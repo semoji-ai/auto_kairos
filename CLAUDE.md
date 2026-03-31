@@ -156,6 +156,7 @@ NAS 볼트(`/Volumes/kairos/kairos_vault/kairos-vault/09-memory/`)에 세션 기
 - 다음 우선순위
 - 내린 설계 결정 (중요한 건 decisions/에도 별도 저장)
 ```
+- 세션 종료 시 인덱스 리빌드: `python3 -m auto_agent.modules.memory_index build`
 
 ### 설계 결정 시
 ```

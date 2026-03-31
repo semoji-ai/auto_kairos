@@ -7,7 +7,7 @@ WORKSPACE_DIR: 사용자 워크스페이스 (읽기/쓰기 — output, .env, DB,
 워크스페이스 결정 우선순위:
   1. --workspace <path> CLI 인자
   2. AUTO_AGENT_WORKSPACE 환경 변수
-  3. 현재 작업 디렉토리 (CWD)
+  3. 패키지 위치 기반 (auto_agent/ 의 부모 디렉토리)
 """
 import os
 import sys
@@ -42,8 +42,8 @@ def get_workspace_dir() -> Path:
             return p
         raise FileNotFoundError(f"Workspace not found: {p}")
 
-    # 3. CWD
-    return Path.cwd()
+    # 3. 패키지 위치 기반 — auto_agent/ 의 부모가 프로젝트 루트
+    return get_package_dir().parent
 
 
 # 모듈 레벨 상수 (자주 쓰이므로 미리 해석)
