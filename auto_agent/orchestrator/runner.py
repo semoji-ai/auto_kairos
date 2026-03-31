@@ -3066,30 +3066,48 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         revisions = feedback.get("revision_instructions", [])
         scene_reviews = feedback.get("scene_reviews", [])
 
+        specs_path = self.project_dir / "scene_specs.json"
+
         lines = [
-            "⚠️ **수정 모드** — 리뷰어 피드백 기반 재작성",
+            "⚠️⚠️⚠️ **수정 모드 — 반드시 scene_specs.json을 수정하여 저장하세요** ⚠️⚠️⚠️",
+            "",
             f"이전 평가: 시청자 {overall.get('viewer_score', '?')}점 / 전문가 {overall.get('expert_score', '?')}점 / 종합 {overall.get('combined_score', '?')}점",
             f"판정: {overall.get('verdict', '?')} — {overall.get('summary', '')}",
             "",
-            "**수정 지시:**",
+            "**작업 순서 (반드시 따르세요):**",
+            f"1. Read 도구로 `{specs_path}` 읽기",
+            f"2. Read 도구로 `{feedback_path}` 읽기 (이슈 상세 확인)",
+            "3. 아래 수정 지시에 따라 JSON 수정",
+            f"4. Write 도구로 수정된 전체 JSON을 `{specs_path}`에 저장",
+            "",
+            "**수정 지시 (각 씬별):**",
         ]
         for rev in revisions:
             sn = rev.get("sceneNumber", "?")
             action = rev.get("action", "modify")
-            changes = json.dumps(rev.get("changes", {}), ensure_ascii=False)
-            lines.append(f"- 씬 {sn}: {action} → {changes}")
+            changes = rev.get("changes", {})
+            lines.append(f"")
+            lines.append(f"### 씬 {sn}: {action}")
+            for key, val in changes.items():
+                lines.append(f'  - `"{key}"`: `{json.dumps(val, ensure_ascii=False)}`')
 
         lines.append("")
-        lines.append("**씬별 주요 이슈:**")
+        lines.append("**씬별 이슈 (수정 근거):**")
         for sr in scene_reviews:
             issues = sr.get("issues", [])
             if issues:
                 sn = sr.get("sceneNumber", "?")
                 for issue in issues:
-                    lines.append(f"- 씬 {sn} [{issue.get('severity', '')}] {issue.get('description', '')}")
+                    lines.append(f"- 씬 {sn} [{issue.get('severity', '')}]: {issue.get('description', '')}")
+                    if issue.get("suggestion"):
+                        lines.append(f"  → 제안: {issue['suggestion']}")
 
         lines.append("")
-        lines.append("**규칙:** 문제 씬만 수정하고, 정상 씬은 그대로 유지. 전체 scene_specs.json을 다시 저장.")
+        lines.append("**필수 규칙:**")
+        lines.append("- 문제 씬만 수정하고, 정상 씬(이슈 없는 씬)은 절대 건드리지 마세요")
+        lines.append("- scenes 배열의 다른 씬은 원본 그대로 유지")
+        lines.append(f"- 수정 완료 후 반드시 Write 도구로 `{specs_path}`에 저장")
+        lines.append("- 저장하지 않으면 작업이 무효입니다")
         return "\n".join(lines)
 
     def _build_agent_prompt(self, step: dict) -> str:
