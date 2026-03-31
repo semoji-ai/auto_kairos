@@ -1,7 +1,6 @@
 {
   "$schema": "./docs/agents-schema.json",
   "description": "Auto Agent 에이전트 정의 — 3단계 파이프라인용",
-
   "agents": {
     "research-orchestrator": {
       "description": "심층 리서치 탐색 전담. Explorer 병렬 배포 → 탐색 완료 → 종료.",
@@ -9,19 +8,32 @@
       "max_turns": 70,
       "budget": "$2.5",
       "max_duration_minutes": 20,
-      "allowed_tools": ["Read", "Write", "Glob", "WebSearch", "WebFetch", "Task"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Glob",
+        "WebSearch",
+        "WebFetch",
+        "Task"
+      ],
       "skill_file": "agents/research-orchestrator/SKILL.md",
-      "shared_skills": ["shared/research-format"],
+      "shared_skills": [
+        "shared/research-format"
+      ],
       "notes": "기존과 동일. Stage 1에서 사용."
     },
-
     "script-director": {
       "description": "원고 작성 + 씬 분할 + 시각 연출 + 모션 설계를 통합 수행하는 핵심 에이전트",
       "model": "opus",
       "max_turns": 80,
       "budget": "$4.0",
       "max_duration_minutes": 45,
-      "allowed_tools": ["Read", "Write", "Edit", "Glob"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Glob"
+      ],
       "skill_file": "agents/script-director/SKILL.md",
       "shared_skills": [
         "shared/writing-style",
@@ -37,25 +49,30 @@
       },
       "notes": "Stage 2 핵심. 기존 write-manuscript + visual-composer 4개 Phase 통합. 챕터별 병렬 처리 지원."
     },
-
     "data-mapper": {
       "description": "scene_specs의 데이터 필드(items/values/unit/source/chartConfig)를 리서치 데이터에서 정확히 매핑",
       "model": "sonnet",
       "max_turns": 30,
       "budget": "$0.5",
       "max_duration_minutes": 15,
-      "allowed_tools": ["Read", "Write"],
+      "allowed_tools": [
+        "Read",
+        "Write"
+      ],
       "skill_file": "agents/data-mapper/SKILL.md",
       "notes": "Stage 2 Pass 2. script-director가 비워둔 데이터 필드를 research_report.json에서 매핑."
     },
-
     "script-reviewer": {
       "description": "원고+연출 검수 — 시청자 리뷰어 + 콘텐츠 전문가 2관점 평가 + 래칫 게이트",
       "model": "sonnet",
       "max_turns": 30,
       "budget": "$1.0",
       "max_duration_minutes": 15,
-      "allowed_tools": ["Read", "Write", "Bash"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
       "skill_file": "agents/script-reviewer/SKILL.md",
       "shared_skills": [
         "shared/writing-style",
@@ -64,25 +81,32 @@
       ],
       "notes": "Stage 2 래칫. 시청자(이탈예측) + 전문가(시각화적합성) 2관점 평가. 85점 이상 PASS."
     },
-
     "fact-verifier": {
       "description": "원고 내 주요 주장 교차 검증",
       "model": "sonnet",
       "max_turns": 20,
       "budget": "$0.5",
       "max_duration_minutes": 10,
-      "allowed_tools": ["Read", "Write", "WebSearch"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "WebSearch"
+      ],
       "skill_file": "agents/fact-verifier/SKILL.md",
       "notes": "Stage 2에서 비차단 실행. v4: scene_specs.json의 narration에서 주장 추출."
     },
-
     "trend-analyst": {
       "description": "채널 데이터 + 시장 트렌드 교차 분석으로 주제 기획안 생성",
       "model": "opus",
       "max_turns": 50,
       "budget": "$5.0",
       "max_duration_minutes": 30,
-      "allowed_tools": ["Read", "Write", "Glob", "Grep"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Glob",
+        "Grep"
+      ],
       "skill_file": "agents/trend-analyst/SKILL.md",
       "shared_skills": [
         "shared/writing-style-iromism",
@@ -91,14 +115,18 @@
       ],
       "notes": "Stage 0. 파이프라인 외부 독립 실행. 볼트를 working_dir로 사용."
     },
-
     "performance-analyst": {
       "description": "영상 성과 + 시장 동향 분석, Stage 0 피드백 생성",
       "model": "sonnet",
       "max_turns": 50,
       "budget": "$1.5",
       "max_duration_minutes": 20,
-      "allowed_tools": ["Read", "Write", "Glob", "Grep"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Glob",
+        "Grep"
+      ],
       "skill_file": "agents/performance-analyst/SKILL.md",
       "shared_skills": [
         "shared/channel-metrics",
@@ -106,14 +134,18 @@
       ],
       "notes": "Stage 4. 파이프라인 외부 독립 실행. 볼트를 working_dir로 사용."
     },
-
     "assembly-director": {
       "description": "scene_specs의 창의적 의도를 해석하며 TTS/이미지/매니페스트를 조립하고 렌더링까지 수행",
       "model": "opus",
       "max_turns": 60,
       "budget": "$5.0",
       "max_duration_minutes": 40,
-      "allowed_tools": ["Read", "Write", "Glob", "Bash"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Glob",
+        "Bash"
+      ],
       "skill_file": "agents/assembly-director/SKILL.md",
       "shared_skills": [
         "shared/motion-presets",
@@ -123,51 +155,100 @@
         "shared/image-prompt-rules"
       ],
       "tools": {
-        "tts_tool": { "module": "tts_generator", "description": "TTS 음성 생성 (speed/stability/style 조절 가능)" },
-        "image_tool": { "module": "image_batch_module", "description": "이미지 생성/검색/평가" },
-        "subtitle_tool": { "module": "subtitle_sync", "description": "WhisperX 자막 정렬" },
-        "manifest_tool": { "module": "manifest_builder", "description": "Remotion 매니페스트 빌드" },
-        "render_tool": { "module": "video_assembler", "description": "Remotion 영상 렌더링" },
-        "validate_tool": { "module": "data_validator", "description": "데이터 정합성 검증" }
+        "tts_tool": {
+          "module": "tts_generator",
+          "description": "TTS 음성 생성 (speed/stability/style 조절 가능)"
+        },
+        "image_tool": {
+          "module": "image_batch_module",
+          "description": "이미지 생성/검색/평가"
+        },
+        "subtitle_tool": {
+          "module": "subtitle_sync",
+          "description": "WhisperX 자막 정렬"
+        },
+        "manifest_tool": {
+          "module": "manifest_builder",
+          "description": "Remotion 매니페스트 빌드"
+        },
+        "render_tool": {
+          "module": "video_assembler",
+          "description": "Remotion 영상 렌더링"
+        },
+        "validate_tool": {
+          "module": "data_validator",
+          "description": "데이터 정합성 검증"
+        }
       },
       "notes": "Stage 3 핵심. 기존 9스텝(TTS전처리~최종검수)을 에이전트 1명이 모듈을 도구로 사용하며 판단+실행. mood/motion에 따라 TTS 파라미터 조정, 이미지 품질 판단 후 재생성, 타이밍 보정 등 창의적 조립."
     },
-
     "upload-info-generator": {
       "description": "썸네일 3종 + 제목 3종 + 더보기란(타임스탬프) 자동 생성",
       "model": "sonnet",
       "max_turns": 20,
       "budget": "$0.5",
       "max_duration_minutes": 10,
-      "allowed_tools": ["Read", "Write", "Glob"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Glob"
+      ],
       "skill_file": "agents/upload-info-generator/SKILL.md",
       "notes": "Stage 3-1. 본편 렌더링 후 실행."
     },
-
     "multiformat-director": {
       "description": "본편에서 숏폼/블로그/카드뉴스/스레드 4개 포맷 병렬 생성",
       "model": "sonnet",
       "max_turns": 30,
       "budget": "$2.0",
       "max_duration_minutes": 20,
-      "allowed_tools": ["Read", "Write", "Glob", "Bash"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Glob",
+        "Bash"
+      ],
       "skill_file": "agents/multiformat-director/SKILL.md",
-      "sub_agents": ["shorts-maker", "blog-writer", "card-news-maker", "thread-writer"],
+      "sub_agents": [
+        "shorts-maker",
+        "blog-writer",
+        "card-news-maker",
+        "thread-writer"
+      ],
       "notes": "Stage 3-2. upload-info 완료 후 실행. 서브에이전트 4개 병렬."
     },
-
     "kairos-admin-agent": {
       "description": "작업 로그 수집 → 버그/취향/패턴 분류 → PR/스킬 자동 업데이트",
       "model": "opus",
       "max_turns": 40,
       "budget": "$3.0",
       "max_duration_minutes": 20,
-      "allowed_tools": ["Read", "Write", "Glob", "Grep", "Bash"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Glob",
+        "Grep",
+        "Bash"
+      ],
       "skill_file": "agents/kairos-admin/SKILL.md",
       "notes": "파이프라인 외부 독립 실행. 작업 로그 기반 자기 개선."
+    },
+    "threads-publisher": {
+      "description": "세모지 Threads 콘텐츠 기획+작성 — 매일 5-6개 AI 영상 제작 과정 공유",
+      "model": "sonnet",
+      "max_turns": 20,
+      "budget": "$0.5",
+      "max_duration_minutes": 10,
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "WebSearch"
+      ],
+      "skill_file": "agents/threads-publisher/SKILL.md",
+      "notes": "운영 계층. 매일 KST 07:00 자동 실행. 볼트 세션 로그 → 포스트 생성."
     }
   },
-
   "modules": {
     "preflight": {
       "description": "환경 검증 (API키, Node, ffmpeg, Remotion)",
@@ -189,7 +270,9 @@
       "description": "이미지 배치 생성/검색 (캐릭터 + 씬)",
       "type": "python",
       "api": "FAL.ai (generate) / Serper (search)",
-      "internal_agents": ["character-planner"],
+      "internal_agents": [
+        "character-planner"
+      ],
       "notes": "기존과 동일. 내부에서 character-planner 에이전트 호출."
     },
     "data_validator": {
@@ -211,7 +294,6 @@
       "notes": "기존과 동일."
     }
   },
-
   "internal_agents": {
     "character-planner": {
       "description": "캐릭터 라이브러리 조회 + 생성 계획",
@@ -220,15 +302,24 @@
       "notes": "image_batch_module 내부에서만 호출. 외부 노출 안 함."
     }
   },
-
   "gateway": {
     "model": "haiku",
     "poll_interval_sec": 2,
-    "detection": ["timeout", "repetition", "token_explosion", "no_progress", "error_loop"],
-    "recovery_levels": ["warning", "restart", "shrink_restart", "skip_notify"],
+    "detection": [
+      "timeout",
+      "repetition",
+      "token_explosion",
+      "no_progress",
+      "error_loop"
+    ],
+    "recovery_levels": [
+      "warning",
+      "restart",
+      "shrink_restart",
+      "skip_notify"
+    ],
     "notes": "기존과 동일."
   },
-
   "summary": {
     "agents": [
       "trend-analyst (Stage 0: 주제 기획 — Opus AutoResearch)",
