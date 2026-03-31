@@ -2506,14 +2506,16 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             outputs = [outputs]
 
         # 출력 파일이 이미 존재하면 스킵 (resume 지원)
-        # 단, 디렉토리 경로(images/ 등)는 해당 디렉토리 안에 실제 파일이 있어야 스킵
+        # skip_resume=True인 경우 resume 체크 비활성화 (래칫 루프 등)
         inputs = step.get("input", [])
         if isinstance(inputs, str):
             inputs = [inputs]
         input_set = set(inputs)
         has_inplace_output = any(out in input_set for out in outputs)
 
-        if not has_inplace_output:
+        if step.get("skip_resume"):
+            pass  # 래칫 루프 등 강제 재실행
+        elif not has_inplace_output:
             all_exist = True
             for out in outputs:
                 out_path = self._resolve_output_path(out)
@@ -2941,13 +2943,16 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             _notify("System", f"래칫 R{round_num}/{max_rounds}: 리뷰 시작",
                     phase=self.state.current_phase, project=self.project_slug)
 
-            # ── 1. 리뷰 실행 ──
+            # ── 1. 리뷰 실행 (skip_resume로 강제 재실행) ──
+            # 라운드별 피드백 파일 (히스토리 보존)
+            round_feedback = self.project_dir / f"review_feedback_r{round_num}.json"
             review_step = {
                 "id": f"{step_id}_review_r{round_num}",
                 "name": f"review_r{round_num}",
                 "agent": reviewer_agent,
                 "input": step.get("input", []),
-                "output": ["review_feedback.json"],
+                "output": [f"review_feedback.json"],
+                "skip_resume": True,
             }
             review_result = self._run_agent_step(review_step)
             self._accumulate_cost(total_cost, review_result.cost_info)
@@ -2955,6 +2960,11 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             if review_result.status != "completed":
                 print(f"    [래칫] R{round_num} 리뷰 실패: {review_result.error}")
                 break
+
+            # 라운드별 히스토리 저장 (review_feedback.json → review_feedback_rN.json 복사)
+            if feedback_path.exists():
+                import shutil
+                shutil.copy2(feedback_path, round_feedback)
 
             # ── 2. 점수 확인 ──
             score = 0
@@ -3032,6 +3042,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 "input": ["scene_specs.json", "review_feedback.json", "research_report.json"],
                 "output": ["scene_specs.json"],
                 "skills": step.get("skills", []),
+                "skip_resume": True,
             }
             revise_result = self._run_agent_step(revise_step)
             self._accumulate_cost(total_cost, revise_result.cost_info)
