@@ -81,21 +81,18 @@
         },
         {
           "id": "step_2_review",
-          "name": "script_review",
-          "description": "원고+연출 검수 — 시청자 리뷰어 + 콘텐츠 전문가 2관점 평가 + 래칫 게이트",
-          "agent": "script-reviewer",
+          "name": "script_review_loop",
+          "description": "래칫 리뷰-수정 루프 — 리뷰어 평가 → 작성자 수정 → 재평가, 90점 이상까지 반복 (최대 3회)",
+          "type": "ratchet_loop",
+          "reviewer_agent": "script-reviewer",
+          "reviser_agent": "script-director",
           "input": ["scene_specs.json", "research_report.json"],
-          "output": ["review_feedback.json"],
-          "notes": "AutoResearch 래칫 방식. 85점 이상 PASS, 70~84 REVISE, 최대 2회 루프."
-        },
-        {
-          "id": "step_2_revise",
-          "name": "script_revise",
-          "description": "리뷰 피드백 기반 원고/연출 수정 — script-director가 직접 재작성",
-          "agent": "script-director",
-          "conditional": "review_verdict_revise",
-          "input": ["scene_specs.json", "review_feedback.json", "research_report.json"],
-          "output": ["scene_specs.json"],
+          "output": ["scene_specs.json", "review_feedback.json"],
+          "ratchet": {
+            "pass_threshold": 90,
+            "max_rounds": 3,
+            "score_field": "overall.combined_score"
+          },
           "skills": [
             "shared/writing-style",
             "shared/writing-style-semoji",
@@ -103,7 +100,7 @@
             "shared/motion-presets",
             "shared/remotion-design-system"
           ],
-          "notes": "review_feedback.json의 REVISE 판정 시에만 실행. 문제 씬만 수정, 나머지 유지. 래칫으로 퇴보 방지."
+          "notes": "runner가 루프 직접 관리. 리뷰어(Sonnet) → 수정자(Opus) → 재리뷰 사이클. 점수 하락 시 이전 버전 복원."
         },
         {
           "id": "step_2_data",

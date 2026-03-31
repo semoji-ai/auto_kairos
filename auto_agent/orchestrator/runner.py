@@ -2123,6 +2123,27 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         _prev_timeout = False
 
         try:
+            # 래칫 루프 타입은 별도 처리
+            if step_type == "ratchet_loop":
+                result = self._run_ratchet_loop(step)
+                elapsed = time.time() - t0
+                result.duration_sec = elapsed
+                if result.status == "completed":
+                    cost = result.cost_info
+                    self.pm.complete_pipeline_run(
+                        run_id,
+                        cost_tokens_in=cost.get("tokens_in", 0),
+                        cost_tokens_out=cost.get("tokens_out", 0),
+                        cost_usd=cost.get("cost_usd", 0.0),
+                    )
+                    cost_str = f" ${cost['cost_usd']:.4f}" if cost.get("cost_usd") else ""
+                    print(f"OK ({elapsed:.1f}s{cost_str})")
+                    _notify(_agent_label, f"{_step_label(step_name, 'done')} ({elapsed:.1f}s{cost_str})", phase=self.state.current_phase, project=self.project_slug, level="success")
+                else:
+                    self.pm.fail_pipeline_run(run_id, result.error or "ratchet loop failed")
+                    print(f"FAIL ({result.error})")
+                return result
+
             for _attempt in range(max_attempts):
                 if step_type == "single_call":
                     result = self._run_single_call_step(step)
@@ -2891,6 +2912,122 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             "Claude CLI를 찾을 수 없습니다. "
             "PATH에 claude가 있는지 확인하거나 CLAUDE_CLI 환경변수를 설정하세요."
         )
+
+    def _run_ratchet_loop(self, step: dict) -> StepResult:
+        """래칫 리뷰-수정 루프.
+
+        1. reviewer 평가 → review_feedback.json
+        2. 점수 < pass_threshold → reviser 수정 → scene_specs.json
+        3. 재평가 (래칫: 이전 점수 이하면 이전 버전 복원)
+        4. max_rounds까지 반복
+        """
+        step_id = step["id"]
+        ratchet_cfg = step.get("ratchet", {})
+        pass_threshold = ratchet_cfg.get("pass_threshold", 90)
+        max_rounds = ratchet_cfg.get("max_rounds", 3)
+        score_field = ratchet_cfg.get("score_field", "overall.combined_score")
+
+        reviewer_agent = step.get("reviewer_agent")
+        reviser_agent = step.get("reviser_agent")
+        feedback_path = self.project_dir / "review_feedback.json"
+        specs_path = self.project_dir / "scene_specs.json"
+
+        total_cost = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0}
+        best_score = 0
+        best_specs = specs_path.read_text(encoding="utf-8") if specs_path.exists() else ""
+
+        for round_num in range(1, max_rounds + 1):
+            print(f"\n    [래칫 R{round_num}/{max_rounds}] 리뷰 시작...", flush=True)
+            _notify("System", f"래칫 R{round_num}/{max_rounds}: 리뷰 시작",
+                    phase=self.state.current_phase, project=self.project_slug)
+
+            # ── 1. 리뷰 실행 ──
+            review_step = {
+                "id": f"{step_id}_review_r{round_num}",
+                "name": f"review_r{round_num}",
+                "agent": reviewer_agent,
+                "input": step.get("input", []),
+                "output": ["review_feedback.json"],
+            }
+            review_result = self._run_agent_step(review_step)
+            self._accumulate_cost(total_cost, review_result.cost_info)
+
+            if review_result.status != "completed":
+                print(f"    [래칫] R{round_num} 리뷰 실패: {review_result.error}")
+                break
+
+            # ── 2. 점수 확인 ──
+            score = 0
+            verdict = "UNKNOWN"
+            if feedback_path.exists():
+                feedback = json.loads(feedback_path.read_text(encoding="utf-8"))
+                # score_field 파싱 (예: "overall.combined_score")
+                obj = feedback
+                for key in score_field.split("."):
+                    obj = obj.get(key, {}) if isinstance(obj, dict) else 0
+                score = obj if isinstance(obj, (int, float)) else 0
+                verdict = feedback.get("overall", {}).get("verdict", "UNKNOWN")
+
+            print(f"    [래칫 R{round_num}] 점수: {score} / 목표: {pass_threshold} → {verdict}", flush=True)
+            _notify("System", f"래칫 R{round_num}: {score}점 ({verdict})",
+                    phase=self.state.current_phase, project=self.project_slug,
+                    level="success" if score >= pass_threshold else "warning")
+
+            # ── 3. PASS 체크 ──
+            if score >= pass_threshold:
+                print(f"    [래칫] PASS! {score}점 ≥ {pass_threshold}", flush=True)
+                best_score = score
+                best_specs = specs_path.read_text(encoding="utf-8") if specs_path.exists() else best_specs
+                break
+
+            # ── 4. 래칫 비교 (퇴보 방지) ──
+            if score < best_score and round_num > 1:
+                print(f"    [래칫] 점수 하락 ({score} < {best_score}) → 이전 버전 복원", flush=True)
+                specs_path.write_text(best_specs, encoding="utf-8")
+                _notify("System", f"래칫 보호: {score}점 < {best_score}점 → 이전 버전 복원",
+                        phase=self.state.current_phase, project=self.project_slug, level="warning")
+                break
+
+            if score > best_score:
+                best_score = score
+                best_specs = specs_path.read_text(encoding="utf-8") if specs_path.exists() else best_specs
+
+            # ── 5. 마지막 라운드면 수정 불필요 ──
+            if round_num >= max_rounds:
+                print(f"    [래칫] 최대 라운드 도달 ({max_rounds}회). 현재 최고: {best_score}점", flush=True)
+                break
+
+            # ── 6. 수정 실행 ──
+            print(f"    [래칫 R{round_num}] 수정 시작...", flush=True)
+            revise_step = {
+                "id": f"{step_id}_revise_r{round_num}",
+                "name": f"revise_r{round_num}",
+                "agent": reviser_agent,
+                "conditional": "review_verdict_revise",
+                "input": ["scene_specs.json", "review_feedback.json", "research_report.json"],
+                "output": ["scene_specs.json"],
+                "skills": step.get("skills", []),
+            }
+            revise_result = self._run_agent_step(revise_step)
+            self._accumulate_cost(total_cost, revise_result.cost_info)
+
+            if revise_result.status != "completed":
+                print(f"    [래칫] R{round_num} 수정 실패: {revise_result.error}")
+                # 수정 실패해도 이전 최고 버전은 유지
+                break
+
+        return StepResult(
+            step_id=step_id,
+            status="completed",
+            cost_info=total_cost,
+        )
+
+    @staticmethod
+    def _accumulate_cost(total: dict, cost: dict):
+        """비용 정보 누적."""
+        total["tokens_in"] += cost.get("tokens_in", 0)
+        total["tokens_out"] += cost.get("tokens_out", 0)
+        total["cost_usd"] += cost.get("cost_usd", 0.0)
 
     def _build_revision_instruction(self, step: dict) -> str:
         """리뷰 피드백 기반 수정 모드 지시문 생성."""
