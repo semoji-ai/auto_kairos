@@ -101,7 +101,7 @@ class QwenIntern:
         return thinking[half:].strip()
 
     def run_ab_test(self, task_name: str, prompt: str,
-                    claude_result: str) -> Dict:
+                    claude_result: Optional[str] = None) -> Optional[Dict]:
         """A/B 테스트 실행 + 자동 평가."""
         logger.info("A/B 테스트 시작: %s", task_name)
 
@@ -110,55 +110,89 @@ class QwenIntern:
         qwen_result = self.generate(prompt)
         qwen_time = time.time() - start
 
-        if not qwen_result:
+        if not qwen_result or len(qwen_result.strip()) < 10:
+            return None
+
+        # A안: Claude 생성 (없으면 직접 생성)
+        if not claude_result:
+            try:
+                import subprocess
+                cli_result = subprocess.run(
+                    ["claude", "--print", "--model", "claude-sonnet-4-6",
+                     "--max-turns", "1", "-p", prompt],
+                    capture_output=True, text=True, timeout=120,
+                )
+                claude_result = cli_result.stdout.strip() if cli_result.returncode == 0 else ""
+            except Exception as e:
+                logger.warning("Claude 생성 실패: %s", e)
+                claude_result = ""
+
+        if not claude_result:
+            # Claude 없이 Qwen만 평가
             return {
                 "task": task_name,
-                "status": "qwen_failed",
-                "claude_result": claude_result[:500],
+                "status": "qwen_only",
+                "qwen_time_sec": qwen_time,
+                "qwen_result": qwen_result[:1000],
+                "evaluation": {"scores_b": {}, "winner": "B_only", "feedback_for_b": ""},
             }
 
         # 자동 평가: Claude가 양쪽을 채점
-        eval_prompt = f"""두 AI 모델의 결과를 비교 평가하세요.
+        eval_prompt = f"""두 AI 모델의 결과를 비교 평가하세요. 반드시 JSON만 출력하세요.
 
 ## 과제: {task_name}
 
 ## A안 (Claude):
-{claude_result[:3000]}
+{claude_result[:2000]}
 
 ## B안 (Qwen):
-{qwen_result[:3000]}
+{qwen_result[:2000]}
 
 ## 평가 기준 (각 1~10점):
-1. 정확성 — 사실이 맞는지
-2. 깊이 — 분석이 얼마나 깊은지
-3. 창의성 — 새로운 관점이 있는지
-4. 실용성 — 바로 활용 가능한지
-5. 한국어 품질 — 자연스러운 한국어인지
+1. accuracy — 사실이 맞는지
+2. depth — 분석이 얼마나 깊은지
+3. creativity — 새로운 관점이 있는지
+4. practicality — 바로 활용 가능한지
+5. korean — 자연스러운 한국어인지
 
-## 출력 형식 (JSON):
-{{
-  "scores_a": {{"accuracy": N, "depth": N, "creativity": N, "practicality": N, "korean": N}},
-  "scores_b": {{"accuracy": N, "depth": N, "creativity": N, "practicality": N, "korean": N}},
-  "total_a": N,
-  "total_b": N,
-  "winner": "A" 또는 "B",
-  "percentage_b": N (B가 A의 몇 %인지),
-  "feedback_for_b": "B안 개선 포인트"
-}}
+다음 JSON만 출력하세요 (설명 없이):
+{{"scores_a": {{"accuracy": 0, "depth": 0, "creativity": 0, "practicality": 0, "korean": 0}}, "scores_b": {{"accuracy": 0, "depth": 0, "creativity": 0, "practicality": 0, "korean": 0}}, "winner": "A", "feedback_for_b": ""}}
 """
-        # Claude로 평가
-        from auto_agent.modules.agent_runner import AgentRunner
-        runner = AgentRunner()
-        eval_config = {"model": "sonnet", "max_turns": 5, "max_duration_minutes": 5}
-        eval_result = runner._run_agent(eval_prompt, eval_config)
+        try:
+            import subprocess
+            eval_run = subprocess.run(
+                ["claude", "--print", "--model", "claude-haiku-4-5-20251001",
+                 "--max-turns", "1", "-p", eval_prompt],
+                capture_output=True, text=True, timeout=60,
+            )
+            eval_text = eval_run.stdout.strip() if eval_run.returncode == 0 else ""
+
+            # JSON 파싱
+            eval_data = {}
+            if eval_text:
+                # JSON 블록 추출
+                import re
+                json_match = re.search(r'\{[^{}]*"scores_a"[^{}]*\{[^{}]*\}[^{}]*"scores_b"[^{}]*\{[^{}]*\}[^{}]*\}', eval_text, re.DOTALL)
+                if json_match:
+                    eval_data = json.loads(json_match.group())
+                else:
+                    # 전체가 JSON일 수 있음
+                    try:
+                        eval_data = json.loads(eval_text)
+                    except json.JSONDecodeError:
+                        eval_data = {"raw": eval_text[:500]}
+
+        except Exception as e:
+            logger.error("평가 실패: %s", e)
+            eval_data = {"error": str(e)}
 
         return {
             "task": task_name,
             "status": "completed",
-            "qwen_time_sec": qwen_time,
-            "qwen_result_preview": qwen_result[:500],
-            "claude_result_preview": claude_result[:500],
-            "evaluation": eval_result.get("stdout", "")[:2000],
+            "qwen_time_sec": round(qwen_time, 1),
+            "qwen_result": qwen_result[:1000],
+            "claude_result": claude_result[:1000],
+            "evaluation": eval_data,
         }
 
     def save_result(self, result: Dict, vault_dir: Path):
