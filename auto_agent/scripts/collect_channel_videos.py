@@ -33,13 +33,15 @@ CHANNELS = {
     "semoji": {
         "id": "UCCsGPRmHOXhF4WTYs7ght9g",
         "name": "세모지(세상의모든지식)",
-        "vault_path": "channels/semoji/videos",
+        "vault_path": "channels/semoji/videos",  # 채널별 인덱스
+        "analysis_path": "03-analysis/videos",   # 볼트 표준 위키링크 경로
         "categories": ["brand-encyclopedia", "knowledge-encyclopedia", "person-encyclopedia"],
     },
     "iromism": {
         "id": "UCOZmOXsWpJVoIBhqmVvfjhQ",
         "name": "이로미즘",
         "vault_path": "channels/iromism/videos",
+        "analysis_path": "03-analysis/videos",
         "categories": ["economy", "geopolitics", "analysis"],
     },
 }
@@ -64,6 +66,8 @@ def collect_channel(channel_key: str, max_videos: int = 100):
     channel_id = config["id"]
     vault_path = VAULT_DIR / config["vault_path"]
     vault_path.mkdir(parents=True, exist_ok=True)
+    # 볼트 표준 경로 (03-analysis/videos/{VIDEO_ID}/)
+    analysis_base = VAULT_DIR / config.get("analysis_path", "03-analysis/videos")
 
     logger.info(f"=== {config['name']} 영상 수집 시작 (최대 {max_videos}개) ===")
 
@@ -126,10 +130,12 @@ def collect_channel(channel_key: str, max_videos: int = 100):
         body += f"조회수: **{views:,}** ({view_tier})\n"
         body += f"길이: {round(duration/60, 1)}분\n\n"
 
-        if wikilinks:
+        # 위키링크 (VIDEO_ID 기반 — 볼트 표준)
+        related_ids = _find_related_ids(title, videos, vid)
+        if related_ids:
             body += "## 관련 영상\n"
-            for wl in wikilinks:
-                body += f"- [[{wl}]]\n"
+            for rid, rtitle in related_ids:
+                body += f"- [[{rid}]] — {rtitle[:40]}\n"
             body += "\n"
 
         body += "## 분석\n\n"
@@ -159,6 +165,13 @@ def collect_channel(channel_key: str, max_videos: int = 100):
         else:
             md_path.write_text(content, encoding="utf-8")
             created += 1
+
+        # 03-analysis/videos/{VIDEO_ID}/ 에도 저장 (볼트 표준 위키링크 경로)
+        analysis_dir = analysis_base / vid
+        analysis_dir.mkdir(parents=True, exist_ok=True)
+        analysis_md = analysis_dir / f"{vid}.md"
+        if not analysis_md.exists() or "status: stub" in (analysis_md.read_text(encoding="utf-8") if analysis_md.exists() else ""):
+            analysis_md.write_text(content, encoding="utf-8")
 
     # 인덱스 업데이트
     _update_index(vault_path, config["name"], videos)
@@ -221,6 +234,21 @@ def _view_tier(views: int) -> str:
     if views >= 50_000: return "good"
     if views >= 10_000: return "normal"
     return "low"
+
+
+def _find_related_ids(title: str, videos: list, current_id: str) -> list:
+    """VIDEO_ID + 제목 반환 (위키링크용)."""
+    keywords = set(re.findall(r'[가-힣]{2,}', title))
+    related = []
+    for v in videos:
+        if v.get("id") == current_id:
+            continue
+        other_title = v.get("title", "")
+        other_keywords = set(re.findall(r'[가-힣]{2,}', other_title))
+        overlap = keywords & other_keywords
+        if len(overlap) >= 2:
+            related.append((v.get("id", ""), other_title))
+    return related[:5]
 
 
 def _find_related(title: str, videos: list, current_id: str) -> list:
