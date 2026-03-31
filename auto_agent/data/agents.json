@@ -115,6 +115,40 @@
         "validate_tool": { "module": "data_validator", "description": "데이터 정합성 검증" }
       },
       "notes": "Stage 3 핵심. 기존 9스텝(TTS전처리~최종검수)을 에이전트 1명이 모듈을 도구로 사용하며 판단+실행. mood/motion에 따라 TTS 파라미터 조정, 이미지 품질 판단 후 재생성, 타이밍 보정 등 창의적 조립."
+    },
+
+    "upload-info-generator": {
+      "description": "썸네일 3종 + 제목 3종 + 더보기란(타임스탬프) 자동 생성",
+      "model": "sonnet",
+      "max_turns": 20,
+      "budget": "$0.5",
+      "max_duration_minutes": 10,
+      "allowed_tools": ["Read", "Write", "Glob"],
+      "skill_file": "agents/upload-info-generator/SKILL.md",
+      "notes": "Stage 3-1. 본편 렌더링 후 실행."
+    },
+
+    "multiformat-director": {
+      "description": "본편에서 숏폼/블로그/카드뉴스/스레드 4개 포맷 병렬 생성",
+      "model": "sonnet",
+      "max_turns": 30,
+      "budget": "$2.0",
+      "max_duration_minutes": 20,
+      "allowed_tools": ["Read", "Write", "Glob", "Bash"],
+      "skill_file": "agents/multiformat-director/SKILL.md",
+      "sub_agents": ["shorts-maker", "blog-writer", "card-news-maker", "thread-writer"],
+      "notes": "Stage 3-2. upload-info 완료 후 실행. 서브에이전트 4개 병렬."
+    },
+
+    "kairos-admin-agent": {
+      "description": "작업 로그 수집 → 버그/취향/패턴 분류 → PR/스킬 자동 업데이트",
+      "model": "opus",
+      "max_turns": 40,
+      "budget": "$3.0",
+      "max_duration_minutes": 20,
+      "allowed_tools": ["Read", "Write", "Glob", "Grep", "Bash"],
+      "skill_file": "agents/kairos-admin/SKILL.md",
+      "notes": "파이프라인 외부 독립 실행. 작업 로그 기반 자기 개선."
     }
   },
 
@@ -181,12 +215,15 @@
 
   "summary": {
     "agents": [
+      "trend-analyst (Stage 0: 주제 기획 — Opus AutoResearch)",
       "research-orchestrator (Stage 1: 리서치)",
       "script-director (Stage 2: 원고+연출)",
       "assembly-director (Stage 3: 에셋 조립+렌더링)",
-      "trend-analyst (Stage 0: 주제 기획)",
-      "performance-analyst (Stage 4: 성과 분석)"
+      "upload-info-generator (Stage 3-1: 썸네일+제목+더보기란)",
+      "multiformat-director (Stage 3-2: 숏폼/블로그/카드뉴스/스레드)",
+      "performance-analyst (Stage 4: 성과 분석)",
+      "kairos-admin-agent (관리: 작업 로그→PR→자기 개선)"
     ],
-    "architecture": "5 에이전트 × 6 모듈(도구). Stage 0/4는 볼트 기반 독립 실행."
+    "architecture": "8 에이전트 × 6 모듈(도구). Stage 0/4/Admin은 볼트 기반 독립 실행. Stage 3-2는 4개 서브에이전트 병렬."
   }
 }
