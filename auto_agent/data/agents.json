@@ -49,6 +49,22 @@
       "notes": "Stage 2 Pass 2. script-director가 비워둔 데이터 필드를 research_report.json에서 매핑."
     },
 
+    "script-reviewer": {
+      "description": "원고+연출 검수 — 시청자 리뷰어 + 콘텐츠 전문가 2관점 평가 + 래칫 게이트",
+      "model": "sonnet",
+      "max_turns": 30,
+      "budget": "$1.0",
+      "max_duration_minutes": 15,
+      "allowed_tools": ["Read", "Write", "Bash"],
+      "skill_file": "agents/script-reviewer/SKILL.md",
+      "shared_skills": [
+        "shared/writing-style",
+        "shared/motion-presets",
+        "shared/remotion-design-system"
+      ],
+      "notes": "Stage 2 래칫. 시청자(이탈예측) + 전문가(시각화적합성) 2관점 평가. 85점 이상 PASS."
+    },
+
     "fact-verifier": {
       "description": "원고 내 주요 주장 교차 검증",
       "model": "sonnet",
