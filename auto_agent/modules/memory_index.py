@@ -35,6 +35,8 @@ INDEX_DIRS = [
     VAULT_DIR / "insights" / "performance",
     VAULT_DIR / "insights" / "feedback",
     VAULT_DIR / "insights" / "planning",
+    VAULT_DIR / "channels" / "semoji" / "videos",
+    VAULT_DIR / "channels" / "iromism" / "videos",
 ]
 
 
