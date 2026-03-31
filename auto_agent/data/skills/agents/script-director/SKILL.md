@@ -262,6 +262,37 @@ layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면
 }
 ```
 
+**characters 배열 — 인물 일관성 규칙 (필수):**
+
+각 씬에 등장하는 인물을 `characters` 배열로 명시합니다.
+
+```json
+{
+  "sceneNumber": 4,
+  "characters": ["berta_benz", "son_1", "son_2"],
+  "imageAsset": {
+    "prompt": "베르타 벤츠(Bertha Benz), 긴 드레스를 입은 30대 여성이 차량 엔진을 수리하는 장면..."
+  }
+}
+```
+
+규칙:
+- **나레이션에 인물명이 없어도** 이전 씬에서 맥락상 동일 인물이 이어지면 `characters`에 반드시 포함
+- 한국어 나레이션은 주어 생략이 자연스럽지만, `characters` 배열과 `imageAsset.prompt`는 기계가 읽는 필드이므로 **항상 명시적**
+- `imageAsset.prompt`에 인물이 등장하면 **이름 + 외모 특징**(나이, 성별, 의상, 체형)을 반드시 포함
+- 인물 ID는 영문 snake_case (예: `berta_benz`, `jensen_huang`, `narrator_male`)
+- 같은 인물이 여러 씬에 걸쳐 등장하면 동일 ID를 일관되게 사용
+
+예시 — 주어 생략 시 맥락 추론:
+```
+씬 3 나레이션: "베르타 벤츠, 남편 몰래 새벽에 두 아들과 106km를 달립니다"
+씬 3 characters: ["berta_benz", "son_1", "son_2"]
+
+씬 4 나레이션: "모자핀으로 막힌 연료관을 뚫고, 가터벨트로 점화장치를 수리했습니다"
+씬 4 characters: ["berta_benz", "son_1", "son_2"]  ← 나레이션에 이름 없지만 맥락상 동일인
+씬 4 imageAsset.prompt: "베르타 벤츠(Bertha Benz), 긴 드레스를 입은 30대 여성이 차량 엔진..."
+```
+
 **imageAsset 필드 규칙:**
 - `source`: `"generate"` (AI 생성) 또는 `"search"` (실물 검색)
 - `placement`: 배치 방식. **aspect_ratio는 시스템이 placement에서 자동 결정**
