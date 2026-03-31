@@ -116,7 +116,52 @@ def main():
 
     today_avg_final = today_avg if round_scores else 0
     logger.info(f"=== Qwen 래칫 라운드 완료: {len(results)}/{len(tasks)}, avg={today_avg_final:.1f} ===")
+
+    # 디스코드 웹훅 보고
+    _send_webhook_report(results, ratchet, today_avg_final, len(tasks))
+
     return today_avg_final
+
+
+def _send_webhook_report(results: list, ratchet: dict, avg_score: float, total_tasks: int):
+    """Qwen 래칫 학습 결과를 디스코드 웹훅으로 보고."""
+    import requests as _req
+
+    webhook_url = os.environ.get("QWEN_DISCORD_WEBHOOK_URL", "")
+    if not webhook_url:
+        return
+
+    best = ratchet.get("best_avg_score", 0)
+    total_rounds = ratchet.get("total_rounds", 0)
+    improved = avg_score >= best
+
+    # 각 태스크별 상세 결과
+    task_lines = []
+    for r in results:
+        task = r.get("task", "?")
+        eval_data = r.get("evaluation", {})
+        winner = eval_data.get("winner", "?")
+        scores_b = eval_data.get("scores_b", {})
+        qwen_text = r.get("qwen_result", "")[:200] if r.get("qwen_result") else ""
+
+        score_str = " / ".join(f"{k}:{v}" for k, v in scores_b.items()) if scores_b else "N/A"
+        task_lines.append(f"**[{task}]** winner={winner}\n점수: {score_str}\nQwen: `{qwen_text}...`")
+
+    report = (
+        f"## 🤖 Qwen 래칫 학습 보고\n\n"
+        f"**라운드:** {total_rounds} | **평균:** {avg_score:.1f}점 | "
+        f"**최고:** {best:.1f}점 {'📈 갱신!' if improved else ''}\n"
+        f"**완료:** {len(results)}/{total_tasks} 태스크\n\n"
+        + "\n\n".join(task_lines)
+    )
+
+    try:
+        _req.post(webhook_url, json={
+            "content": report[:2000],
+        }, timeout=10)
+        logger.info("디스코드 웹훅 전송 완료")
+    except Exception as e:
+        logger.warning(f"웹훅 전송 실패: {e}")
 
 
 def run_continuous(max_hours: int = 8, interval_min: int = 90):
