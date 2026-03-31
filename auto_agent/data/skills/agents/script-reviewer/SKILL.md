@@ -91,10 +91,23 @@ AutoResearch 래칫 방식: 이전 버전 대비 개선된 부분만 채택, 퇴
 ### Phase 3: 수정 지시서 (REVISE인 경우만)
 
 ```
-문제 씬별로:
+씬 내부 수정:
   - 어떤 항목에서 감점되었는지
-  - 구체적 수정 방향 (막연한 "더 좋게"가 아니라 "씬 4의 layout을 items_grid→bar로 변경")
+  - 구체적 수정 방향 ("씬 4의 layout을 items_grid→bar로 변경")
   - 수정 후 예상 점수
+
+구조 수정 (필요 시):
+  - split_scene: 정보 과밀 씬 → 2씬으로 분리
+  - merge_scenes: 내용 겹치는 씬 → 1씬으로 통합
+  - add_scene: 앞뒤 문맥 연결이 끊기는 곳에 브릿지 씬 추가
+  - remove_scene: 분량 초과 시 가장 약한 씬 삭제
+  - reorder: 인과관계 어긋난 씬 순서 변경
+
+흐름 검증 (모든 수정 후):
+  - 앞뒤 문맥이 매끄럽게 연결되는지
+  - 인과관계가 성립하는지 (원인→결과 순서)
+  - 시간순이 자연스러운지 (시간 점프 시 전환 신호 필요)
+  - 분량 기준 준수 (목표 글자 수 ±10%)
 
 → review_feedback.json 저장
 ```
@@ -125,6 +138,19 @@ AutoResearch 래칫 방식: 이전 버전 대비 개선된 부분만 채택, 퇴
       "strengths": ["강한 도입부 — 호기심 유발"]
     },
     {
+      "sceneNumber": 3,
+      "viewer_score": 65,
+      "expert_score": 70,
+      "issues": [
+        {
+          "category": "structure",
+          "severity": "major",
+          "description": "페니키아(기원전 1200년)와 바이킹(1000년)이 한 씬에 2000년 압축 — 시청자 혼란",
+          "suggestion": "split_scene: 씬 3을 '고대 항해(페니키아)'와 '바이킹 시대'로 분리"
+        }
+      ]
+    },
+    {
       "sceneNumber": 4,
       "viewer_score": 60,
       "expert_score": 75,
@@ -134,18 +160,27 @@ AutoResearch 래칫 방식: 이전 버전 대비 개선된 부분만 채택, 퇴
           "severity": "major",
           "description": "씬 3에서 씬 4로의 전환이 갑작스러움 — 연결 문장 필요",
           "suggestion": "씬 3 끝에 전환 문구 추가 또는 씬 4 도입부 수정"
-        },
-        {
-          "category": "visualization",
-          "severity": "minor",
-          "description": "수치 비교 내용인데 layout이 headline_only — bar 차트가 더 효과적",
-          "suggestion": "layout: 'bar', values: [106, 45], items: ['총 주행거리', '직선거리']"
         }
       ],
       "strengths": ["역사적 디테일이 풍부"]
     }
   ],
   "revision_instructions": [
+    {
+      "sceneNumber": 3,
+      "action": "split_scene",
+      "reason": "2000년 시간 점프를 2씬으로 분리하여 자연스러운 흐름",
+      "new_scenes": [
+        {"title": "고대 항해 — 페니키아", "narration_hint": "기원전 1200년, 페니키아인들이..."},
+        {"title": "바이킹의 바다", "narration_hint": "2000년 뒤, 바이킹들은..."}
+      ]
+    },
+    {
+      "sceneNumber": 7,
+      "action": "remove_scene",
+      "reason": "분량 초과 방지. 씬 3 분리로 1씬 추가되므로 가장 약한 씬 제거",
+      "condition": "split_scene으로 총 씬 수 증가 시에만"
+    },
     {
       "sceneNumber": 4,
       "action": "modify",
@@ -155,7 +190,18 @@ AutoResearch 래칫 방식: 이전 버전 대비 개선된 부분만 채택, 퇴
         "items": ["총 주행거리(km)", "직선거리(km)"]
       }
     }
-  ]
+  ],
+  "flow_check": {
+    "transitions_ok": ["씬1→씬2", "씬4→씬5", "씬5→씬6"],
+    "transitions_weak": [
+      {"from": 2, "to": 3, "issue": "이집트에서 페니키아로 시간 점프 — '수백 년 뒤' 전환 신호 필요"},
+      {"from": 6, "to": 7, "issue": "타이타닉 비극에서 컨테이너 혁명으로 급전환 — 연결 문장 필요"}
+    ],
+    "causality_ok": true,
+    "total_narration_chars": 420,
+    "target_chars": 400,
+    "within_budget": true
+  }
 }
 ```
 
