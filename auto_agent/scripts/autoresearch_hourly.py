@@ -334,7 +334,7 @@ def send_to_team_webhook(channel: str, summary: str):
 
     content = planning_file.read_text(encoding="utf-8")
     body = re.sub(r'^---[\s\S]*?---\s*', '', content).strip()
-    topics = re.split(r'\n(?=## \d+위)', body)
+    topics = re.split(r'\n(?=## (?:\d+위|기획안 \d+))', body)
 
     try:
         for topic_block in topics:
@@ -356,8 +356,8 @@ def _extract_compact_brief(topic_block: str) -> str:
     import re
     lines = topic_block.strip().split("\n")
 
-    # 제목
-    title_m = re.match(r'## \d+위\.\s*(.+)', lines[0])
+    # 제목 (## 1위. or ## 기획안 1: 형식 모두 지원)
+    title_m = re.match(r'## (?:\d+위\.\s*|기획안 \d+:\s*)(.+)', lines[0])
     title = title_m.group(1).strip()[:80] if title_m else lines[0].lstrip("# ").strip()[:80]
 
     # 점수
