@@ -50,24 +50,27 @@ class QwenIntern:
             return False
 
     def generate(self, prompt: str, max_tokens: int = 8192) -> str:
-        """Qwen으로 텍스트 생성."""
+        """Qwen으로 텍스트 생성 (chat API + think=false)."""
         import requests
         try:
             resp = requests.post(
-                f"{self._ollama_url}/api/generate",
+                f"{self._ollama_url}/api/chat",
                 json={
                     "model": self._model,
-                    "prompt": f"/no_think\n{prompt}",
+                    "messages": [{"role": "user", "content": prompt}],
                     "stream": False,
+                    "think": False,
                     "options": {"num_predict": max_tokens},
                 },
                 timeout=600,
             )
             data = resp.json()
-            # Qwen 3.5 forced thinking 모드: response가 비어있으면 thinking 필드 사용
-            result = data.get("response", "")
-            if not result.strip() and data.get("thinking"):
-                result = self._extract_final_answer(data["thinking"])
+            result = data.get("message", {}).get("content", "")
+            # fallback: thinking 필드에만 응답이 있는 경우
+            if not result.strip():
+                thinking = data.get("message", {}).get("thinking", "")
+                if thinking:
+                    result = self._extract_final_answer(thinking)
             return result
         except Exception as e:
             logger.error("Qwen 생성 실패: %s", e)

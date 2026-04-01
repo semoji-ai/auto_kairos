@@ -61,14 +61,14 @@ def _get_session_todo() -> str:
             if line.startswith("## ") or line.startswith("# "):
                 in_section = False
             elif line.strip():
-                todo_lines.append(f"  {line.strip()[:80]}")
+                todo_lines.append(f"  {line.strip()}")
 
     if not todo_lines:
         return ""
 
     session_date = latest.stem[:10]
     header = f"📋 **세션 기반 TODO** (최근: {session_date})\n"
-    return header + "\n".join(todo_lines[:15])
+    return header + "\n".join(todo_lines)
 
 
 def _get_todo_md_items() -> str:
@@ -100,10 +100,8 @@ def _get_todo_md_items() -> str:
     for section, items in sections.items():
         if items:
             result.append(f"**{section}**")
-            for item in items[:3]:
-                result.append(f"  • {item[:80]}")
-            if len(items) > 3:
-                result.append(f"  ... 외 {len(items)-3}개")
+            for item in items:
+                result.append(f"  • {item}")
 
     return "\n".join(result)
 

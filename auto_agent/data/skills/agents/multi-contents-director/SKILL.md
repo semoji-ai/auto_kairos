@@ -32,6 +32,17 @@ allowed_tools:
 
 ---
 
+## ⚠️ 실행 규칙
+
+1. **모든 Phase를 완주해야 한다** — 쇼츠만 만들고 끝내지 말 것
+2. **이미 완성된 파일은 스킵** — 출력 디렉토리에 해당 파일이 있으면 다음 Phase로
+3. **JSON은 한 번에 Write** — 하나의 JSON을 여러 턴에 걸쳐 구성하지 말 것
+4. **Phase 순서**: 쇼츠(Phase 2) → 카드뉴스(Phase 3) → 블로그(Phase 4) → 스레드(Phase 5) → SNS 스케줄(Phase 6)
+5. **턴 배분**: 쇼츠 15턴, 카드뉴스 10턴, 블로그 10턴, 스레드 5턴, 스케줄 3턴 이내
+6. **JSON 값 규칙**: 숫자 범위는 반드시 문자열 (`"3-5"` O, `3-5` X). 유효한 JSON만 Write
+
+---
+
 ## 작업 흐름
 
 ### Phase 1: 롱폼 분석
@@ -118,14 +129,14 @@ allowed_tools:
 
 ```
 {project}/multi-contents/
-├── shorts_manifest.json    — Remotion 렌더링용
-├── reels_meta.json         — Instagram 메타데이터
-├── tiktok_meta.json        — TikTok 메타데이터
-├── card_news.json          — Remotion 렌더링용
-├── blog.md                 — SEO 블로그
-├── threads_post.json       — Threads 체인
-└── sns_schedule.json       — 전체 스케줄
+├── shorts_manifest.json    — 쇼츠/릴스/틱톡 통합 (플랫폼별 제목/해시태그/캡션 포함)
+├── card_news.json          — 카드뉴스 10장 (커버+본문+CTA)
+├── blog.md                 — SEO 블로그 (메타태그, H1/H2, 이미지 삽입)
+├── threads_post.json       — Threads 체인 (메인+답글 3~4개)
+└── sns_schedule.json       — 전체 SNS 스케줄 (플랫폼×시간×빈도)
 ```
+
+reels_meta/tiktok_meta는 별도 파일 불필요 — shorts_manifest에 플랫폼별 정보가 통합됨.
 
 ---
 

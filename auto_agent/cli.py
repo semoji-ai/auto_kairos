@@ -1580,9 +1580,20 @@ def cmd_multi_contents(args):
     if upload_text:
         prompt_parts.append(f"# upload_info.json\n```json\n{upload_text}\n```")
 
+    # 기존 완료 파일 스캔
+    existing = [f.name for f in multi_dir.iterdir() if f.is_file()] if multi_dir.exists() else []
+    resume_note = ""
+    if existing:
+        resume_note = (
+            f"\n\n## 이미 완성된 파일 (스킵)\n"
+            f"{', '.join(existing)}\n"
+            f"위 파일은 이미 완성되었으므로 건너뛰고, 아직 생성되지 않은 파일부터 진행하세요."
+        )
+
     prompt_parts.append(
         f"\n프로젝트 '{slug}'의 멀티포맷 콘텐츠를 생성하세요. "
         f"출력 경로: {multi_dir}"
+        f"{resume_note}"
     )
     prompt = "\n\n".join(prompt_parts)
 
@@ -1596,7 +1607,7 @@ def cmd_multi_contents(args):
             cli_path, "-p", prompt,
             "--allowedTools", "Read", "Write", "Edit", "Bash", "Glob", "Grep",
             "--model", "claude-sonnet-4-5-20250929",
-            "--max-turns", "40",
+            "--max-turns", "80",
         ],
         cwd=str(project_dir),
         env={**os.environ},
@@ -1605,9 +1616,31 @@ def cmd_multi_contents(args):
     if result.returncode == 0:
         print_success("멀티포맷 콘텐츠 생성 완료!")
         console.print(f"  결과: [accent]{multi_dir}[/accent]")
+        # JSON 유효성 검사
+        _validate_multi_contents(multi_dir)
     else:
         print_error(f"multi-contents-director 실행 실패 (exit code: {result.returncode})")
         sys.exit(1)
+
+
+def _validate_multi_contents(multi_dir: Path):
+    """multi-contents 출력 JSON 파일 유효성 검사."""
+    import json as _json
+    for f in multi_dir.glob("*.json"):
+        try:
+            _json.loads(f.read_text(encoding="utf-8"))
+            console.print(f"  ✓ {f.name}")
+        except _json.JSONDecodeError as e:
+            print_warning(f"  ✗ {f.name} — JSON 에러: {e}")
+
+    expected = ["shorts_manifest.json", "card_news.json", "threads_post.json", "sns_schedule.json"]
+    missing = [n for n in expected if not (multi_dir / n).exists()]
+    if missing:
+        print_warning(f"  미생성 파일: {', '.join(missing)}")
+    if (multi_dir / "blog.md").exists():
+        console.print(f"  ✓ blog.md")
+    else:
+        print_warning(f"  ✗ blog.md 미생성")
 
 
 def _run_pipeline(slug: str):
