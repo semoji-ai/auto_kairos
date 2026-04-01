@@ -76,6 +76,50 @@ class QwenIntern:
             logger.error("Qwen 생성 실패: %s", e)
             return ""
 
+    def generate_vision(self, prompt: str, image_path: str, max_tokens: int = 2000) -> str:
+        """Qwen 비전으로 이미지 분석 (chat API + think=false)."""
+        import base64
+        import requests
+        from pathlib import Path
+
+        img_path = Path(image_path)
+        if not img_path.exists():
+            logger.error("이미지 파일 없음: %s", image_path)
+            return ""
+
+        # 이미지를 base64로 인코딩
+        img_b64 = base64.b64encode(img_path.read_bytes()).decode("utf-8")
+        ext = img_path.suffix.lower().lstrip(".")
+        mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+                "webp": "image/webp", "gif": "image/gif"}.get(ext, "image/png")
+
+        try:
+            resp = requests.post(
+                f"{self._ollama_url}/api/chat",
+                json={
+                    "model": self._model,
+                    "messages": [{
+                        "role": "user",
+                        "content": prompt,
+                        "images": [img_b64],
+                    }],
+                    "stream": False,
+                    "think": False,
+                    "options": {"num_predict": max_tokens},
+                },
+                timeout=600,
+            )
+            data = resp.json()
+            result = data.get("message", {}).get("content", "")
+            if not result.strip():
+                thinking = data.get("message", {}).get("thinking", "")
+                if thinking:
+                    result = self._extract_final_answer(thinking)
+            return result
+        except Exception as e:
+            logger.error("Qwen 비전 실패: %s", e)
+            return ""
+
     @staticmethod
     def _extract_final_answer(thinking: str) -> str:
         """Qwen thinking 출력에서 최종 답변 추출.

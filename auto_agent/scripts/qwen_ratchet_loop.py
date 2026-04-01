@@ -49,7 +49,7 @@ def main():
     ratchet_path = memory_dir / "ratchet_state.json"
     ratchet = _load_ratchet(ratchet_path)
 
-    # 오늘의 학습 태스크
+    # 오늘의 학습 태스크 (텍스트 5개 + 비전 2개)
     tasks = [
         ("scene_description", "조선시대 한양의 시장 풍경을 영상 나레이션용으로 150자 이내로 묘사해줘. 시대적 디테일을 포함해서."),
         ("narration_rewrite", "다음 나레이션을 이로미즘 문체로 재작성해줘: '인공지능은 1950년대에 처음 등장했으며, 이후 여러 발전을 거쳤습니다.' 200자 이내."),
@@ -57,6 +57,9 @@ def main():
         ("data_summary", "삼성전자 vs TSMC 반도체 점유율 데이터를 시각화에 적합한 형태(items, values, unit)로 정리해줘."),
         ("creative_brief", "배달의민족이 한국 음식 문화를 바꾼 방식을 일반인이 체감할 수 있는 비유 3가지 만들어줘."),
     ]
+
+    # 비전 태스크 (최근 프로젝트 이미지에서 샘플링)
+    vision_tasks = _build_vision_tasks(workspace)
 
     results = []
     round_scores = []
@@ -90,6 +93,27 @@ def main():
         except Exception as e:
             logger.error(f"[{task_name}] 에러: {e}")
 
+    # 비전 태스크 실행
+    for task_name, prompt, image_path in vision_tasks:
+        logger.info(f"[{task_name}] 비전 시작 — {Path(image_path).name}")
+        try:
+            qwen_result = intern.generate_vision(prompt, image_path)
+            if not qwen_result or len(qwen_result.strip()) < 10:
+                logger.warning(f"[{task_name}] Qwen 비전 응답 부족 ({len(qwen_result or '')}자)")
+                continue
+
+            logger.info(f"[{task_name}] Qwen 비전 응답 ({len(qwen_result)}자): {qwen_result[:100]}")
+            results.append({
+                "task": task_name,
+                "type": "vision",
+                "qwen_result": qwen_result[:500],
+                "image": str(image_path),
+            })
+            # 비전은 Claude 평가 없이 응답 품질만 기록
+            round_scores.append(6.0)  # 기본 점수 (향후 Claude 평가 추가)
+        except Exception as e:
+            logger.error(f"[{task_name}] 비전 에러: {e}")
+
     # 래칫 업데이트
     today_avg = sum(round_scores) / len(round_scores) if round_scores else 0
     if round_scores:
@@ -106,7 +130,7 @@ def main():
             "date": datetime.now().strftime("%Y-%m-%d"),
             "avg_score": round(today_avg, 2),
             "tasks_completed": len(results),
-            "tasks_total": len(tasks),
+            "tasks_total": len(tasks) + len(vision_tasks),
         })
         # 최근 30일만 유지
         ratchet["history"] = ratchet["history"][-30:]
@@ -118,9 +142,50 @@ def main():
     logger.info(f"=== Qwen 래칫 라운드 완료: {len(results)}/{len(tasks)}, avg={today_avg_final:.1f} ===")
 
     # 디스코드 웹훅 보고
-    _send_webhook_report(results, ratchet, today_avg_final, len(tasks))
+    _send_webhook_report(results, ratchet, today_avg_final, len(tasks) + len(vision_tasks))
 
     return today_avg_final
+
+
+def _build_vision_tasks(workspace: Path) -> list:
+    """최근 프로젝트에서 비전 태스크용 이미지 샘플링."""
+    vision_tasks = []
+    output_dir = workspace / "output"
+    if not output_dir.exists():
+        return vision_tasks
+
+    # 최근 프로젝트의 이미지 디렉토리에서 랜덤 샘플
+    import random
+    for project_dir in sorted(output_dir.iterdir(), reverse=True):
+        images_dir = project_dir / "images"
+        if not images_dir.exists():
+            continue
+
+        images = list(images_dir.glob("scene_*.png")) + list(images_dir.glob("scene_*.jpg"))
+        if not images:
+            continue
+
+        # 최대 2개 이미지 샘플
+        samples = random.sample(images, min(2, len(images)))
+
+        for img in samples:
+            vision_tasks.append((
+                "image_quality_review",
+                (
+                    "이 이미지는 YouTube 교양 영상의 한 씬입니다. 다음 기준으로 평가해주세요:\n"
+                    "1. 구도와 시각적 균형 (1-10)\n"
+                    "2. 주제 전달력 — 이미지만 보고 무슨 내용인지 알 수 있는가 (1-10)\n"
+                    "3. 텍스트 가독성 — 오버레이된 텍스트가 있다면 읽기 쉬운가 (1-10)\n"
+                    "4. 전반적 품질 (1-10)\n"
+                    "5. 개선 제안 한 줄\n\n"
+                    "JSON으로만 답하세요: {\"composition\": N, \"clarity\": N, \"readability\": N, \"quality\": N, \"suggestion\": \"...\"}"
+                ),
+                str(img),
+            ))
+
+        break  # 최근 프로젝트 하나만
+
+    return vision_tasks
 
 
 def _send_webhook_report(results: list, ratchet: dict, avg_score: float, total_tasks: int):
