@@ -3160,6 +3160,54 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         lines.append("- Edit을 한 번도 안 하면 작업이 무효입니다")
         return "\n".join(lines)
 
+    def _load_creative_brief(self) -> str:
+        """볼트 insights/planning/에서 프로젝트 주제와 매칭되는 기획안 로드."""
+        try:
+            vault_dir = Path(os.environ.get("KAIROS_VAULT_DIR", ""))
+            if not vault_dir.exists():
+                return ""
+            planning_dir = vault_dir / "insights" / "planning"
+            if not planning_dir.exists():
+                return ""
+
+            topic = self.state.config.get("topic", self.project_slug)
+            # 채널 감지
+            writing_style = self.state.config.get("writing_style", "")
+            channel = "세모지" if writing_style == "semoji" else "이로미즘" if writing_style == "iromism" else ""
+
+            # 최신 기획안에서 주제 검색
+            best_match = None
+            best_score = 0
+            for md in sorted(planning_dir.glob("*.md"), reverse=True):
+                content = md.read_text(encoding="utf-8")
+                # 주제 키워드 매칭
+                topic_keywords = set(re.findall(r'[가-힣]{2,}', topic))
+                content_keywords = set(re.findall(r'[가-힣]{2,}', content[:2000]))
+                overlap = len(topic_keywords & content_keywords)
+                # 채널 매칭 보너스
+                if channel and channel in content:
+                    overlap += 5
+                if overlap > best_score:
+                    best_score = overlap
+                    best_match = content
+
+            if best_match and best_score >= 3:
+                # 크리에이티브 브리프 섹션만 추출
+                brief_start = best_match.find("크리에이티브 브리프")
+                if brief_start == -1:
+                    brief_start = best_match.find("### 📋")
+                if brief_start == -1:
+                    brief_start = best_match.find("왜 지금인가")
+
+                if brief_start >= 0:
+                    # 해당 주제의 브리프 블록 추출 (최대 2000자)
+                    return best_match[brief_start:brief_start + 2000]
+                return best_match[:2000]
+
+        except Exception as e:
+            logger.warning(f"기획안 로드 실패: {e}")
+        return ""
+
     def _build_agent_prompt(self, step: dict) -> str:
         """에이전트 호출용 자기 완결적 프롬프트 구성.
 
@@ -3240,6 +3288,12 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     print(f"    [VaultRAG] 원고용 볼트 지식 주입: {len(vault_block)}자", flush=True)
                     _notify("System", f"볼트에서 관련 원고 패턴 발견 → 프롬프트에 주입",
                             phase=self.state.current_phase, project=self.project_slug, level="info")
+
+        # 6.5. 볼트 기획안(크리에이티브 브리프) 주입
+        creative_brief = self._load_creative_brief()
+        if creative_brief:
+            vault_block += f"\n\n<creative_brief>\n{creative_brief}\n</creative_brief>\n"
+            print(f"    [기획안] 크리에이티브 브리프 주입: {len(creative_brief)}자", flush=True)
 
         # 7. 프로젝트 config 주입
         config = self.state.config or {}
