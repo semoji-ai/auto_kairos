@@ -360,8 +360,8 @@ def _extract_compact_brief(topic_block: str) -> str:
     title_m = re.match(r'## (?:\d+위\.\s*|기획안 \d+:\s*)(.+)', lines[0])
     title = title_m.group(1).strip()[:80] if title_m else lines[0].lstrip("# ").strip()[:80]
 
-    # 점수
-    score_m = re.search(r'topic_score:\s*(\d+)', topic_block)
+    # 점수 (Topic Score: 900 또는 topic_score: 900 형식)
+    score_m = re.search(r'[Tt]opic.?[Ss]core:?\s*(\d+)', topic_block)
     score = score_m.group(1) if score_m else "?"
 
     # 왜 지금 — 첫 2줄만
