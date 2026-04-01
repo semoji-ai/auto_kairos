@@ -1569,12 +1569,35 @@ def cmd_multi_contents(args):
     if upload_info.exists():
         upload_text = upload_info.read_text(encoding="utf-8")
 
+    # 5.5. TTS 결과에서 씬별 duration 추출 (쇼츠 타임코드 기반 분할용)
+    tts_results_path = project_dir / "tts_results.json"
+    scene_duration_text = ""
+    if tts_results_path.exists():
+        tts_data = json.loads(tts_results_path.read_text(encoding="utf-8"))
+        tts_lines = []
+        cumulative = 0.0
+        for r in tts_data.get("results", []):
+            sn = r.get("scene", 0)
+            dur = r.get("duration", 0)
+            tts_lines.append(f"씬{sn}: {dur:.1f}초 (누적: {cumulative:.0f}-{cumulative+dur:.0f}초)")
+            cumulative += dur
+        if tts_lines:
+            scene_duration_text = (
+                f"# 씬별 오디오 길이 (TTS 기준)\n"
+                f"총 {cumulative:.0f}초 ({cumulative/60:.1f}분)\n\n"
+                + "\n".join(tts_lines)
+                + "\n\n⚠️ 쇼츠 분할 시 반드시 이 duration을 참고하여 30~60초 구간으로 묶으세요.\n"
+                  "씬 수가 아닌 **실제 오디오 길이 합산**이 30~60초가 되어야 합니다."
+            )
+
     # 6. 프롬프트 구성
     prompt_parts = [
         f"# SKILL\n{skill_text}",
         f"# scene_specs.json\n```json\n{specs_text}\n```",
         f"# manifest.json\n```json\n{manifest_text}\n```",
     ]
+    if scene_duration_text:
+        prompt_parts.append(scene_duration_text)
     if research_text:
         prompt_parts.append(f"# research_report.json\n```json\n{research_text}\n```")
     if upload_text:
