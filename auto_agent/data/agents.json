@@ -247,6 +247,21 @@
       ],
       "skill_file": "agents/threads-publisher/SKILL.md",
       "notes": "운영 계층. 매일 KST 07:00 자동 실행. 볼트 세션 로그 → 포스트 생성."
+    },
+    "multi-contents-director": {
+      "description": "롱폼 기반 멀티포맷 + SNS 스케줄 + 플랫폼별 최적화",
+      "model": "sonnet",
+      "max_turns": 40,
+      "budget": "$2.0",
+      "max_duration_minutes": 20,
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "Edit"
+      ],
+      "skill_file": "agents/multi-contents-director/SKILL.md",
+      "notes": "별도 명령어 /multi-contents로 실행. Stage 3 완료 후."
     }
   },
   "modules": {
