@@ -2972,14 +2972,25 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             # ── 1. 리뷰 실행 (skip_resume로 강제 재실행) ──
             # 라운드별 피드백 파일 (히스토리 보존)
             round_feedback = self.project_dir / f"review_feedback_r{round_num}.json"
+
+            # 이전 리뷰 피드백을 입력에 포함 (재심 규칙용)
+            review_inputs = list(step.get("input", []))
+            prev_review_context = ""
+            if round_num > 1 and feedback_path.exists():
+                review_inputs.append("review_feedback.json")
+                prev_review_context = feedback_path.read_text(encoding="utf-8")
+
             review_step = {
                 "id": f"{step_id}_review_r{round_num}",
                 "name": f"review_r{round_num}",
                 "agent": reviewer_agent,
-                "input": step.get("input", []),
+                "input": review_inputs,
                 "output": [f"review_feedback.json"],
                 "skip_resume": True,
             }
+            # 재심 컨텍스트를 프롬프트에 주입
+            if prev_review_context:
+                review_step["_previous_review"] = prev_review_context
             review_result = self._run_agent_step(review_step)
             self._accumulate_cost(total_cost, review_result.cost_info)
 
@@ -3089,6 +3100,23 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         total["tokens_in"] += cost.get("tokens_in", 0)
         total["tokens_out"] += cost.get("tokens_out", 0)
         total["cost_usd"] += cost.get("cost_usd", 0.0)
+
+    @staticmethod
+    def _build_previous_review_context(step: dict) -> str:
+        """이전 리뷰 피드백을 재심 컨텍스트로 주입 (리뷰어 일관성 보장)."""
+        prev_review = step.get("_previous_review", "")
+        if not prev_review:
+            return ""
+
+        return (
+            "<previous_review>\n"
+            "⚠️ 재심 규칙: 아래는 이전 라운드의 리뷰입니다.\n"
+            "- 수정되지 않은 씬은 이전 viewer_score, expert_score를 그대로 사용하세요.\n"
+            "- 수정된 씬만 새로 채점하세요.\n"
+            "- 미수정 씬에도 개선 제안(issues)은 새로 추가할 수 있습니다.\n\n"
+            f"{prev_review}\n"
+            "</previous_review>\n"
+        )
 
     def _build_revision_instruction(self, step: dict) -> str:
         """리뷰 피드백 기반 수정 모드 지시문 생성."""
@@ -3372,6 +3400,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 출력 파일 (반드시 아래 경로에 저장):
 {chr(10).join(output_lines)}
 
+{self._build_previous_review_context(step)}
 {self._build_revision_instruction(step)}
 모든 출력 파일을 성공적으로 생성하면 작업 완료입니다.
 </task>
