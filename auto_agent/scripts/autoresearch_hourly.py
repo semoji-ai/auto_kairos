@@ -258,7 +258,62 @@ def main():
 
 
 def send_to_team_webhook(channel: str, summary: str):
-    """팀 서버 Discord 웹훅으로 기획안 + 크리에이티브 브리프 전송."""
+    """팀 서버 Discord에 기획안을 주제별 스레드로 전송."""
+    import time as _time
+
+    # 1. 봇 토큰 기반 스레드 전송 시도
+    team_channel = os.getenv("TEAM_DISCORD_CHANNEL_ID", "")
+    if team_channel:
+        try:
+            from auto_agent.modules.discord_bot_notify import DiscordBotNotify
+            bot = DiscordBotNotify(channel_id=team_channel)
+
+            today = datetime.now().strftime("%Y-%m-%d")
+
+            # 볼트에서 기획안 .md 파일 읽기
+            vault_dir = Path(os.environ.get("KAIROS_VAULT_DIR", ""))
+            planning_file = vault_dir / "insights" / "planning" / f"{today}-{channel}-기획안.md"
+
+            if not planning_file.exists():
+                # fallback: 요약만 전송
+                bot.send_to_channel(f"📋 **[{today}] {channel} AutoResearch 기획안**\n\n{summary}")
+                logger.info("팀 채널 전송 완료 (요약)")
+                return
+
+            content = planning_file.read_text(encoding="utf-8")
+
+            # 주제별로 분할 (## 1위, ## 2위 등)
+            import re
+            topics = re.split(r'\n(?=## \d+위)', content)
+
+            # 요약 메시지
+            bot.send_to_channel(f"📋 **[{today}] {channel} AutoResearch 기획안** — {len(topics)-1}개 주제")
+            _time.sleep(0.5)
+
+            for topic_block in topics[1:]:  # 첫 번째는 프론트매터
+                # 제목 추출
+                title_match = re.match(r'## \d+위\.\s*(.+)', topic_block.strip())
+                title = title_match.group(1)[:80] if title_match else "기획안"
+
+                # 스레드 생성
+                thread_id = bot.create_thread(f"[{channel}] {title}")
+                if thread_id:
+                    # 본문을 1900자 청크로 분할하여 스레드에 전송
+                    chunks = [topic_block[i:i+1800] for i in range(0, len(topic_block), 1800)]
+                    for chunk in chunks:
+                        bot.send_to_thread(chunk)
+                        _time.sleep(0.3)
+                else:
+                    bot.send_to_channel(f"**{title}**\n{topic_block[:500]}")
+
+                _time.sleep(0.5)
+
+            logger.info("팀 채널 스레드 전송 완료")
+            return
+        except Exception as e:
+            logger.warning("스레드 전송 실패, 웹훅 fallback: %s", e)
+
+    # 2. fallback: 웹훅 (기존 방식)
     webhook = os.getenv("TEAM_DISCORD_WEBHOOK_URL", "")
     if not webhook:
         return
