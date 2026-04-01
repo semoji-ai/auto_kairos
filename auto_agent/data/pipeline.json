@@ -90,7 +90,7 @@
           "output": ["scene_specs.json", "review_feedback.json"],
           "ratchet": {
             "pass_threshold": 90,
-            "max_rounds": 5,
+            "max_rounds": 3,
             "score_field": "overall.combined_score"
           },
           "skills": [
