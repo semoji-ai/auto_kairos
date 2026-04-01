@@ -135,20 +135,9 @@
       "execution": "agent_orchestrated",
       "steps": [
         {
-          "id": "step_3a",
-          "name": "image_batch",
-          "description": "이미지 배치 생성/검색 — 에이전트 모드에서는 스킵 (assembly-director가 직접 처리)",
-          "type": "module",
-          "module": "image_batch",
-          "skip": true,
-          "input": ["scene_specs.json", "art_style.json"],
-          "output": ["images/", "characters/", "images/image_assets.json"],
-          "notes": "에이전트 모드: skip=true. assembly-director가 image_tool로 직접 생성."
-        },
-        {
           "id": "step_3b",
           "name": "assembly",
-          "description": "TTS + 자막 + 이미지 검수 + 매니페스트 + 렌더링. 이미지는 이미 생성됨.",
+          "description": "에이전트가 이미지+TTS+자막+매니페스트를 직접 처리. 렌더링은 대시보드에서 수동.",
           "agent": "assembly-director",
           "input": ["scene_specs.json", "art_style.json", "project_config", "images/"],
           "output": [
