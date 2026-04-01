@@ -442,10 +442,21 @@ class PipelineRunner:
         duration = config.get("duration_minutes", "?")
         brief_loaded = "✅" if self._load_creative_brief() else "❌"
 
+        # baseTheme 확인
+        art_style_path = self.project_dir / "art_style.json"
+        base_theme = "N/A"
+        if art_style_path.exists():
+            try:
+                ast = json.loads(art_style_path.read_text(encoding="utf-8"))
+                base_theme = ast.get("design_tokens", {}).get("baseTheme", "❌ 미설정")
+            except Exception:
+                pass
+
         start_msg = (
             f"🎬 **파이프라인 시작**\n\n"
             f"**주제:** {topic}\n"
             f"**아트스타일:** {art_style}\n"
+            f"**베이스테마:** {base_theme}\n"
             f"**문체:** {writing_style}\n"
             f"**분량:** {duration}분\n"
             f"**기획안:** {brief_loaded}"

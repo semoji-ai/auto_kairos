@@ -70,5 +70,37 @@
     "max_duration_sec": 12,
     "prefer_split_on": ["주제 전환", "데이터 단위"]
   },
+  "design_tokens": {
+    "baseTheme": "light",
+    "defaultBackground": "",
+    "colors": {
+      "bg": "#FAFAFA",
+      "fg": "#1A1A2E",
+      "accent": "#4A90D9",
+      "accentRgb": "74,144,217",
+      "accentBg": "rgba(74,144,217,0.08)",
+      "accentBorder": "rgba(74,144,217,0.3)",
+      "accentSoft": "rgba(74,144,217,0.15)",
+      "cardBg": "rgba(74,144,217,0.06)",
+      "cardBorder": "rgba(74,144,217,0.2)"
+    },
+    "moods": {
+      "dramatic": { "accent": "#E74C3C", "accentRgb": "231,76,60" },
+      "informative": { "accent": "#4A90D9", "accentRgb": "74,144,217" },
+      "contemplative": { "accent": "#8E7CC3", "accentRgb": "142,124,195" },
+      "triumphant": { "accent": "#F5A623", "accentRgb": "245,166,35" },
+      "somber": { "accent": "#7F8C8D", "accentRgb": "127,140,141" },
+      "urgent": { "accent": "#E74C3C", "accentRgb": "231,76,60" },
+      "suspense": { "accent": "#34495E", "accentRgb": "52,73,94" }
+    },
+    "font": {
+      "headline": "'Pretendard', 'Noto Sans KR', sans-serif",
+      "body": "'Pretendard', 'Noto Sans KR', sans-serif"
+    },
+    "card": "bordered",
+    "circleBadge": "50%",
+    "imageBadge": "12px",
+    "iconBadge": "12px"
+  },
   "guidelines": "세모지는 정보 전달 중심. 친근한 설명체, 데이터 시각화 적극 활용. cinematic staging으로 장면 연출."
 }
