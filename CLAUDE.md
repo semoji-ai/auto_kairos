@@ -139,30 +139,54 @@ auto-agent config set --project <slug> duration_minutes 2
 
 ## 볼트 기억 시스템
 
-NAS 볼트(`/Volumes/kairos/kairos_vault/kairos-vault/09-memory/`)에 세션 기억을 저장.
+NAS 볼트(`$KAIROS_VAULT_DIR/09-memory/`)에 3계층 기억 저장.
+벡터 인덱스 3개 컬렉션: memory(기억), analysis(분석), research(리서치).
 
 ### 세션 시작 시 (필수)
+```bash
+# 벡터 검색으로 관련 기억 로드 (최근 3개가 아닌 관련도 순)
+python3 -m auto_agent.modules.memory_index search "작업 맥락 키워드" --col memory
+python3 -m auto_agent.modules.memory_index recall "프로젝트 맥락"
 ```
-볼트 09-memory/sessions/ 에서 최근 3개 세션 요약 읽기
-→ 이전 작업 컨텍스트 복원
-→ 미해결 문제 확인
-```
+- 특정 프로젝트: `search "배의역사 래칫" --col memory`
+- 경쟁 분석: `search "세모지 경쟁" --col analysis`
+- 영상 데이터: `search "삼성 역사" --col research`
 
 ### 세션 종료 시 (필수)
 ```
 볼트 09-memory/sessions/{date}-{topic}.md 에 저장:
-- 완료한 작업
-- 미해결 문제
-- 다음 우선순위
-- 내린 설계 결정 (중요한 건 decisions/에도 별도 저장)
+프론트매터 필수:
+  title: "핵심 키워드 풍부하게"
+  tags: [session, 프로젝트명, 핵심기술, 핵심결과]
+  projects: [프로젝트-slug-1, 프로젝트-slug-2]
+  keywords: [래칫 84→87.5, Write→Edit, 수치/결과 포함]
+본문:
+  - 완료한 작업
+  - 미해결 문제
+  - 다음 우선순위
+  - 내린 설계 결정
 ```
 - 세션 종료 시 인덱스 리빌드: `python3 -m auto_agent.modules.memory_index build`
+
+### 세션 저장 규칙 (검색 정확도 향상)
+- **프론트매터 tags에 프로젝트명 포함** (배의역사, 구다이글로벌 등)
+- **keywords에 수치 포함** (래칫 87.5, 68씬, $1.91)
+- **projects 배열에 slug 나열** (검색 시 프로젝트별 필터 가능)
+- 제목을 "Stage 3 모드"가 아닌 "Stage 3 에이전트 모드 + 래칫 리뷰 + 배의역사 87.5점"처럼 키워드 풍부하게
 
 ### 설계 결정 시
 ```
 볼트 09-memory/decisions/{date}-{title}.md 에 기록:
 - 결정 내용 + 근거 + 래칫 검증 결과 + 롤백 조건
 ```
+
+### 검색 컬렉션 가이드
+| 목적 | 컬렉션 | 예시 |
+|------|--------|------|
+| 이전 작업 회상 | memory | "래칫 리뷰 점수" |
+| 채널/경쟁 분석 | analysis | "세모지 경쟁채널" |
+| 영상/리서치 데이터 | research | "삼성 역사 조회수" |
+| 크로스 도메인 | all | "구다이글로벌 전체" |
 
 ## 에러 볼트 워크플로우
 
