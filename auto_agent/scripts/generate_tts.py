@@ -70,8 +70,39 @@ VOICE_ID, VOICE_SETTINGS = _resolve_voice_config()
 from auto_agent.scripts.project_paths import PROJECT_ROOT, get_project_dir
 
 
+def _preprocess_tts_text(text: str) -> str:
+    """TTS 전처리 — 숫자→한국어, 발음 교정."""
+    try:
+        from auto_agent.tools.korean_tts_preprocessor import preprocess_for_tts
+        return preprocess_for_tts(text)
+    except ImportError:
+        pass
+    try:
+        from auto_agent.tools.elevenlabs import TTSPreprocessor
+        return TTSPreprocessor().preprocess(text, "ko")
+    except (ImportError, Exception):
+        pass
+    # fallback: 기본 숫자 변환만
+    import re
+    # 쉼표 숫자 (1,514 → 천오백십사)
+    def _num_to_kr(m):
+        n = int(m.group().replace(",", ""))
+        if n >= 100_000_000:
+            return f"{n // 100_000_000}억"
+        if n >= 10_000:
+            return f"{n // 10_000}만"
+        if n >= 1_000:
+            return f"{n // 1_000}천"
+        return str(n)
+    text = re.sub(r'[\d,]+', _num_to_kr, text)
+    return text
+
+
 def generate_tts(text: str, output_path: Path) -> float:
     """Send text to ElevenLabs API and save MP3. Returns estimated duration."""
+    # 전처리 적용
+    text = _preprocess_tts_text(text)
+
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}?output_format=mp3_44100_128"
     headers = {"Content-Type": "application/json", "xi-api-key": API_KEY}
     body = {"text": text, "model_id": MODEL_ID, "voice_settings": VOICE_SETTINGS}

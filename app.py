@@ -795,6 +795,13 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
         if not api_key:
             return JSONResponse({"error": "ELEVENLABS_API_KEY 미설정"}, 500)
 
+        # TTS 전처리 (숫자→한국어, 발음 교정)
+        try:
+            from auto_agent.scripts.generate_tts import _preprocess_tts_text
+            text = _preprocess_tts_text(text)
+        except ImportError:
+            pass
+
         voice_settings = {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": True}
         resp = _requests.post(
             f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
