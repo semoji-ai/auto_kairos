@@ -20,6 +20,7 @@ auto-agent — AI 영상 제작 파이프라인 CLI
   auto-agent costs                              # 비용 요약
   auto-agent dashboard [--port 8080]            # 웹 대시보드
   auto-agent update                             # 최신 버전으로 업데이트
+  auto-agent auto-kairos                        # 원클릭 영상 제작
 """
 import json
 import os
@@ -1281,6 +1282,238 @@ def cmd_cron(args):
         print_error("Usage: auto-agent cron [setup|list|remove]")
 
 
+def cmd_auto_kairos(args):
+    """원클릭 영상 제작 — 스타일 선택 → 주제 선택 → 프로젝트 생성 → 파이프라인 실행."""
+    from auto_agent.scripts.project_paths import slugify
+
+    # ── 채널↔아트스타일 매핑 ──
+    CHANNEL_STYLES = {
+        "이로미즘": "quirky_cartoon",
+        "세모지": "semoji",
+    }
+
+    print_header("Auto Kairos — 원클릭 영상 제작")
+    console.print()
+
+    dur = None  # 커스텀 모드에서만 사용
+
+    # ═══════════════════════════════════════════════
+    # Step 1: 아트스타일 선택
+    # ═══════════════════════════════════════════════
+    styles_dir = get_data_dir() / "artstyle" / "styles"
+    style_files = sorted(styles_dir.glob("*.json"))
+    style_map = {}
+    for sf in style_files:
+        try:
+            d = json.loads(sf.read_text(encoding="utf-8"))
+            style_map[sf.stem] = d.get("name", sf.stem)
+        except Exception:
+            pass
+
+    console.print("  [bold]Step 1.[/bold] 아트스타일 선택\n")
+    console.print("    1. 이로미즘 (quirky_cartoon)")
+    console.print("    2. 세모지 (semoji)")
+    console.print("    3. 커스텀 (직접 지정)")
+    console.print()
+
+    choice = input("  선택 [1/2/3, 기본=1]: ").strip() or "1"
+
+    if choice == "1":
+        channel = "이로미즘"
+        art_style = "quirky_cartoon"
+        writing_style = "iromism"
+    elif choice == "2":
+        channel = "세모지"
+        art_style = "semoji"
+        writing_style = "semoji"
+    elif choice == "3":
+        channel = None
+        art_style = None
+        writing_style = None
+        # 커스텀: 스타일 목록 표시
+        console.print("\n  사용 가능한 스타일:")
+        style_keys = list(style_map.keys())
+        for i, key in enumerate(style_keys, 1):
+            console.print(f"    {i}. {style_map[key]} ({key})")
+        sidx = input(f"\n  스타일 번호 [1-{len(style_keys)}]: ").strip()
+        try:
+            art_style = style_keys[int(sidx) - 1]
+        except (ValueError, IndexError):
+            print_error("잘못된 선택입니다.")
+            sys.exit(1)
+    else:
+        print_error(f"잘못된 선택: {choice}")
+        sys.exit(1)
+
+    console.print(f"\n  → 스타일: [accent]{art_style}[/accent]"
+                  + (f"  채널: [accent]{channel}[/accent]" if channel else ""))
+    console.print()
+
+    # ═══════════════════════════════════════════════
+    # Step 2: 주제 선택
+    # ═══════════════════════════════════════════════
+    topic = None
+    plan_path = None
+
+    if channel in ("이로미즘", "세모지"):
+        # 2A: 볼트 기획안에서 추천 주제 로드
+        console.print(f"  [bold]Step 2.[/bold] 주제 선택 ({channel} 추천)\n")
+        candidates = _load_vault_candidates(channel)
+
+        if candidates:
+            for i, c in enumerate(candidates[:5], 1):
+                score = c.get("topic_score", c.get("score", "?"))
+                title = c.get("title", "")
+                brief = c.get("creative_brief", {})
+                angle = brief.get("core_angle", c.get("angle", ""))[:60]
+                urgency = brief.get("urgency", "")
+                console.print(f"    [bold]{i}.[/bold] [{score}점] {title}")
+                if angle:
+                    console.print(f"       [dim]{angle}...[/dim]")
+                if urgency:
+                    console.print(f"       [yellow]{urgency}[/yellow]")
+                console.print()
+
+            console.print(f"    {len(candidates[:5]) + 1}. 직접 입력")
+            console.print()
+            tidx = input(f"  선택 [1-{len(candidates[:5]) + 1}, 기본=1]: ").strip() or "1"
+
+            try:
+                idx = int(tidx) - 1
+                if 0 <= idx < len(candidates[:5]):
+                    selected = candidates[idx]
+                    topic = selected.get("title", "")
+                    # 기획안 경로 찾기
+                    plan_path = _find_plan_path(channel)
+                else:
+                    topic = None  # 직접 입력으로
+            except (ValueError, IndexError):
+                topic = None
+
+        if not topic:
+            topic = input("  주제를 입력하세요: ").strip()
+            if not topic:
+                print_error("주제가 필요합니다.")
+                sys.exit(1)
+    else:
+        # 2B: 커스텀 — 직접 입력
+        console.print("  [bold]Step 2.[/bold] 주제 및 설정\n")
+        topic = input("  주제를 입력하세요: ").strip()
+        if not topic:
+            print_error("주제가 필요합니다.")
+            sys.exit(1)
+        dur = input("  영상 길이 (분, 기본=10): ").strip() or "10"
+
+    console.print(f"\n  → 주제: [accent]{topic}[/accent]")
+    console.print()
+
+    # ═══════════════════════════════════════════════
+    # Step 3: 프로젝트 생성 + 파이프라인 실행
+    # ═══════════════════════════════════════════════
+    console.print("  [bold]Step 3.[/bold] 프로젝트 생성 & 파이프라인 시작\n")
+
+    slug = slugify(topic)
+    config = {"art_style": art_style}
+    if writing_style:
+        config["writing_style"] = writing_style
+    if choice == "3" and dur:
+        try:
+            config["duration_minutes"] = int(dur)
+        except ValueError:
+            pass
+
+    # DB에 프로젝트 생성
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+
+    # 중복 체크
+    existing = pm.get_project(slug=slug)
+    if existing:
+        console.print(f"  [yellow]기존 프로젝트 발견: {slug}[/yellow]")
+        overwrite = input("  덮어쓰고 새로 실행할까요? [y/N]: ").strip().lower()
+        if overwrite != "y":
+            console.print("  기존 프로젝트로 파이프라인 실행합니다.")
+            _run_pipeline(slug)
+            return
+
+    pid = pm.create_project(
+        name=topic[:50],
+        slug=slug,
+        topic=topic,
+        config=config,
+        channel=channel,
+    )
+    print_success(f"프로젝트 생성: [accent]{slug}[/accent]")
+
+    # 파이프라인 실행
+    _run_pipeline(slug)
+
+
+def _load_vault_candidates(channel: str) -> list:
+    """볼트 insights/planning/ 에서 최신 autoresearch JSON의 candidates를 로드."""
+    try:
+        from auto_agent.paths import get_vault_dir
+        vault = get_vault_dir()
+    except Exception:
+        # 환경변수 미설정 시 하드코딩 폴백
+        vault = Path("/Volumes/kairos/kairos_vault/kairos-vault")
+
+    planning_dir = vault / "insights" / "planning"
+    if not planning_dir.exists():
+        return []
+
+    # 채널명으로 필터링, 날짜 내림차순
+    channel_tag = "이로미즘" if channel == "이로미즘" else "세모지"
+    research_files = sorted(
+        planning_dir.glob(f"*-{channel_tag}-autoresearch.json"),
+        reverse=True,
+    )
+
+    if not research_files:
+        return []
+
+    latest = research_files[0]
+    try:
+        data = json.loads(latest.read_text(encoding="utf-8"))
+        candidates = data.get("candidates", [])
+        # topic_score 내림차순 정렬
+        candidates.sort(key=lambda c: c.get("topic_score", 0), reverse=True)
+        return candidates[:5]
+    except Exception:
+        return []
+
+
+def _find_plan_path(channel: str) -> str | None:
+    """최신 기획안 마크다운 경로 반환."""
+    try:
+        from auto_agent.paths import get_vault_dir
+        vault = get_vault_dir()
+    except Exception:
+        vault = Path("/Volumes/kairos/kairos_vault/kairos-vault")
+
+    planning_dir = vault / "insights" / "planning"
+    if not planning_dir.exists():
+        return None
+
+    channel_tag = "이로미즘" if channel == "이로미즘" else "세모지"
+    plan_files = sorted(
+        planning_dir.glob(f"*-{channel_tag}-기획안.md"),
+        reverse=True,
+    )
+    return str(plan_files[0]) if plan_files else None
+
+
+def _run_pipeline(slug: str):
+    """파이프라인을 백그라운드로 실행."""
+    console.print()
+    console.print("  파이프라인을 시작합니다...")
+    console.print(f"  [dim]auto-agent run --project {slug}[/dim]\n")
+
+    from auto_agent.orchestrator.runner import PipelineRunner
+    runner = PipelineRunner(slug)
+    runner.run()
+
+
 COMMANDS = {
     "init": cmd_init,
     "run": cmd_run,
@@ -1306,6 +1539,7 @@ COMMANDS = {
     "sync": cmd_sync,
     "pull": cmd_pull,
     "update": cmd_update,
+    "auto-kairos": cmd_auto_kairos,
     "skill-path": lambda args: print(get_data_dir()),
 }
 
@@ -1332,6 +1566,7 @@ def _print_banner():
         ("pull --project <slug>", "Supabase → 로컬 다운로드"),
         ("dashboard", "웹 대시보드"),
         ("update", "최신 버전으로 업데이트"),
+        ("auto-kairos", "원클릭 영상 제작 (스타일→주제→실행)"),
     ]
     for cmd, desc in cmds:
         console.print(f"  [accent]auto-agent {cmd:<28}[/accent] {desc}")
