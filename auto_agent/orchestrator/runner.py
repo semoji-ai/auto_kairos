@@ -435,7 +435,22 @@ class PipelineRunner:
         print(f"Config: art_style={self.state.config.get('art_style', 'N/A')}")
         print(f"        voice_id={self.state.config.get('voice_id', 'N/A')}")
         print(f"{'=' * 60}\n")
-        _notify("Director", "좋아, 오늘도 한 편 찍어보자! 파이프라인 시작", phase="pipeline", project=self.project_slug, level="info")
+        config = self.state.config or {}
+        topic = config.get("topic", self.project_slug)
+        art_style = config.get("art_style", "N/A")
+        writing_style = config.get("writing_style", "N/A")
+        duration = config.get("duration_minutes", "?")
+        brief_loaded = "✅" if self._load_creative_brief() else "❌"
+
+        start_msg = (
+            f"🎬 **파이프라인 시작**\n\n"
+            f"**주제:** {topic}\n"
+            f"**아트스타일:** {art_style}\n"
+            f"**문체:** {writing_style}\n"
+            f"**분량:** {duration}분\n"
+            f"**기획안:** {brief_loaded}"
+        )
+        _notify("Director", start_msg, phase="pipeline", project=self.project_slug, level="info")
 
         # 볼트 동기화: NAS 재연결 시 로컬 폴백 → NAS 자동 동기화
         try:
