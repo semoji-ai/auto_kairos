@@ -165,27 +165,13 @@
         {
           "id": "step_3c",
           "name": "upload_info",
-          "description": "YouTube 업로드 정보 생성 — 제목 3종 + 썸네일 스펙 3종 + 타임스탬프 + 더보기란 + 해시태그",
+          "description": "YouTube 업로드 정보 생성 — 제목 3종 + 썸네일 스펙 + 타임스탬프 + 해시태그",
           "type": "module",
           "module": "upload_info_generator",
           "input": ["scene_specs.json", "manifest.json"],
           "output": ["upload_info.json"],
           "blocking": false,
-          "notes": "본편 렌더링 완료 후 실행. 실패해도 파이프라인 계속."
-        },
-        {
-          "id": "step_3d",
-          "name": "multiformat",
-          "description": "숏폼 + 블로그 + 카드뉴스 + 스레드 — 본편에서 멀티포맷 파생",
-          "agent": "multiformat-director",
-          "input": ["scene_specs.json", "upload_info.json", "research_report.json"],
-          "output": ["multiformat_report.json"],
-          "blocking": false,
-          "skills": [
-            "shared/motion-presets",
-            "shared/remotion-design-system"
-          ],
-          "notes": "본편 완성 후 비차단 실행. 4개 서브에이전트 병렬 (shorts/blog/cardnews/threads)."
+          "notes": "본편 완료 후 실행. 멀티포맷은 /multi-contents 명령어로 별도 실행."
         }
       ],
       "checkpoint": {
