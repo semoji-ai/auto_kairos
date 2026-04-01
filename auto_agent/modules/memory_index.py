@@ -23,7 +23,7 @@ from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-VAULT_DIR = Path("/Volumes/kairos/kairos_vault/kairos-vault")
+VAULT_DIR = Path(os.environ.get("KAIROS_VAULT_DIR", "/Volumes/kairos/kairos_vault/kairos-vault"))
 MEMORY_DIR = VAULT_DIR / "09-memory"
 CHROMA_DIR = MEMORY_DIR / ".chroma"
 

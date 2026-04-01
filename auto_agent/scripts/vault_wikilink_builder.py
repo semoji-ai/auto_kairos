@@ -22,10 +22,7 @@ from typing import Dict, List, Set, Tuple
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-VAULT_DIR = Path(os.environ.get(
-    "KAIROS_VAULT_DIR",
-    "/Volumes/kairos/kairos_vault/kairos-vault",
-))
+VAULT_DIR = Path(os.environ.get("KAIROS_VAULT_DIR", os.path.expanduser("~/Desktop/kairos-vault")))
 
 # 스캔 대상 디렉토리
 SCAN_DIRS = [
