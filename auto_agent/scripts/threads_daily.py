@@ -167,7 +167,7 @@ def _send_webhook(posts_data: dict):
     """디스코드 웹훅으로 포스트 미리보기 전송."""
     import requests
 
-    webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "")
+    webhook_url = os.environ.get("THREADS_DISCORD_WEBHOOK_URL", "")
     if not webhook_url:
         return
 
