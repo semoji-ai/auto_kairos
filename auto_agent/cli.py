@@ -1522,19 +1522,20 @@ def cmd_multi_contents(args):
         sys.exit(1)
 
     slug = project["slug"]
-    workspace = get_workspace_dir()
-    project_dir = workspace / "output" / slug
+    project_dir = Path(project["output_dir"])
 
     # 2. 필수 파일 존재 확인
     scene_specs = project_dir / "scene_specs.json"
-    manifest = project_dir / "manifest.json"
+    manifest = project_dir / "remotion" / "public" / "manifest.json"
+    if not manifest.exists():
+        manifest = project_dir / "manifest.json"
 
     if not scene_specs.exists():
         print_error(f"scene_specs.json 이 없습니다: {scene_specs}")
         console.print("  파이프라인 Stage 2까지 먼저 실행하세요.")
         sys.exit(1)
     if not manifest.exists():
-        print_error(f"manifest.json 이 없습니다: {manifest}")
+        print_error(f"manifest.json 이 없습니다")
         console.print("  파이프라인 Stage 3까지 먼저 실행하세요.")
         sys.exit(1)
 
