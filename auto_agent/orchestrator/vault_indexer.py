@@ -9,13 +9,14 @@ VaultIndexer — kairos-vault .md 파일을 Chroma DB에 벡터 인덱싱.
 """
 import hashlib
 import json
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-# ~/.kairos/ 기본 저장 경로
-_KAIROS_DIR = Path.home() / ".kairos"
+# KAIROS_DIR 환경변수 우선, 없으면 ~/.kairos/
+_KAIROS_DIR = Path(os.environ.get("KAIROS_DIR", str(Path.home() / ".kairos")))
 DEFAULT_CHROMA_DIR = _KAIROS_DIR / "vault_chroma"
 DEFAULT_HASH_CACHE = _KAIROS_DIR / "vault_index_hashes.json"
 COLLECTION_NAME = "kairos_vault"
