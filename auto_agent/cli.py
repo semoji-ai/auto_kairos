@@ -21,6 +21,7 @@ auto-agent — AI 영상 제작 파이프라인 CLI
   auto-agent dashboard [--port 8080]            # 웹 대시보드
   auto-agent update                             # 최신 버전으로 업데이트
   auto-agent auto-kairos                        # 원클릭 영상 제작
+  auto-agent multi-contents --project <slug>    # 멀티포맷 콘텐츠 생성
 """
 import json
 import os
@@ -1503,6 +1504,111 @@ def _find_plan_path(channel: str) -> str | None:
     return str(plan_files[0]) if plan_files else None
 
 
+def cmd_multi_contents(args):
+    """멀티포맷 콘텐츠 생성 — 쇼츠/블로그/카드뉴스/스레드 + SNS 스케줄."""
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="auto-agent multi-contents")
+    parser.add_argument("--project", required=True, help="프로젝트 slug 또는 uuid")
+    parsed = parser.parse_args(args)
+
+    # 1. 프로젝트 resolve
+    from auto_agent.db.project_manager import ProjectManager
+
+    pm = ProjectManager()
+    project = pm.resolve_project(parsed.project)
+    if not project:
+        print_error(f"프로젝트를 찾을 수 없습니다: {parsed.project}")
+        sys.exit(1)
+
+    slug = project["slug"]
+    workspace = get_workspace_dir()
+    project_dir = workspace / "output" / slug
+
+    # 2. 필수 파일 존재 확인
+    scene_specs = project_dir / "scene_specs.json"
+    manifest = project_dir / "manifest.json"
+
+    if not scene_specs.exists():
+        print_error(f"scene_specs.json 이 없습니다: {scene_specs}")
+        console.print("  파이프라인 Stage 2까지 먼저 실행하세요.")
+        sys.exit(1)
+    if not manifest.exists():
+        print_error(f"manifest.json 이 없습니다: {manifest}")
+        console.print("  파이프라인 Stage 3까지 먼저 실행하세요.")
+        sys.exit(1)
+
+    # 3. multi-contents 출력 디렉토리 생성
+    multi_dir = project_dir / "multi-contents"
+    multi_dir.mkdir(parents=True, exist_ok=True)
+
+    print_header("Multi-Contents — 멀티포맷 콘텐츠 생성")
+    console.print(f"  프로젝트: [accent]{slug}[/accent]")
+    console.print(f"  출력 경로: [accent]{multi_dir}[/accent]")
+    console.print()
+
+    # 4. 스킬 파일 로드
+    skill_path = get_data_dir() / "skills" / "agents" / "multi-contents-director" / "SKILL.md"
+    if not skill_path.exists():
+        print_error(f"스킬 파일을 찾을 수 없습니다: {skill_path}")
+        sys.exit(1)
+    skill_text = skill_path.read_text(encoding="utf-8")
+
+    # 5. 입력 파일들 수집
+    specs_text = scene_specs.read_text(encoding="utf-8")
+    manifest_text = manifest.read_text(encoding="utf-8")
+
+    research_report = project_dir / "research_report.json"
+    research_text = ""
+    if research_report.exists():
+        research_text = research_report.read_text(encoding="utf-8")
+
+    upload_info = project_dir / "upload_info.json"
+    upload_text = ""
+    if upload_info.exists():
+        upload_text = upload_info.read_text(encoding="utf-8")
+
+    # 6. 프롬프트 구성
+    prompt_parts = [
+        f"# SKILL\n{skill_text}",
+        f"# scene_specs.json\n```json\n{specs_text}\n```",
+        f"# manifest.json\n```json\n{manifest_text}\n```",
+    ]
+    if research_text:
+        prompt_parts.append(f"# research_report.json\n```json\n{research_text}\n```")
+    if upload_text:
+        prompt_parts.append(f"# upload_info.json\n```json\n{upload_text}\n```")
+
+    prompt_parts.append(
+        f"\n프로젝트 '{slug}'의 멀티포맷 콘텐츠를 생성하세요. "
+        f"출력 경로: {multi_dir}"
+    )
+    prompt = "\n\n".join(prompt_parts)
+
+    # 7. Claude CLI 실행
+    cli_path = shutil.which("claude") or os.environ.get("CLAUDE_CLI", "claude")
+    console.print("  [accent]Claude CLI[/accent] multi-contents-director 실행 중...")
+    console.print()
+
+    result = subprocess.run(
+        [
+            cli_path, "-p", prompt,
+            "--allowedTools", "Read", "Write", "Edit", "Bash", "Glob", "Grep",
+            "--model", "claude-sonnet-4-5-20250929",
+            "--max-turns", "40",
+        ],
+        cwd=str(project_dir),
+        env={**os.environ},
+    )
+
+    if result.returncode == 0:
+        print_success("멀티포맷 콘텐츠 생성 완료!")
+        console.print(f"  결과: [accent]{multi_dir}[/accent]")
+    else:
+        print_error(f"multi-contents-director 실행 실패 (exit code: {result.returncode})")
+        sys.exit(1)
+
+
 def _run_pipeline(slug: str):
     """파이프라인을 백그라운드로 실행."""
     console.print()
@@ -1540,6 +1646,7 @@ COMMANDS = {
     "pull": cmd_pull,
     "update": cmd_update,
     "auto-kairos": cmd_auto_kairos,
+    "multi-contents": cmd_multi_contents,
     "skill-path": lambda args: print(get_data_dir()),
 }
 
@@ -1567,6 +1674,7 @@ def _print_banner():
         ("dashboard", "웹 대시보드"),
         ("update", "최신 버전으로 업데이트"),
         ("auto-kairos", "원클릭 영상 제작 (스타일→주제→실행)"),
+        ("multi-contents --project <slug>", "멀티포맷 콘텐츠 (쇼츠/블로그/카드뉴스)"),
     ]
     for cmd, desc in cmds:
         console.print(f"  [accent]auto-agent {cmd:<28}[/accent] {desc}")
