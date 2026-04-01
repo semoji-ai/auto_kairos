@@ -165,10 +165,18 @@ def main():
     print(f"Output: {OUTPUT_DIR}")
     print()
 
+    specs_updated = False
     for i, scene in enumerate(scenes):
         num = scene.get("sceneNumber") or scene["scene_number"]
-        # Use narration_tts (pre-processed) if available, else original narration
-        text = scene.get("narration_tts", scene.get("narration", ""))
+        # Use narration_tts (pre-processed) if available, else preprocess narration
+        if scene.get("narration_tts"):
+            text = scene["narration_tts"]
+        else:
+            raw = scene.get("narration", "")
+            text = _preprocess_tts_text(raw) if raw else ""
+            if text and text != raw:
+                scene["narration_tts"] = text
+                specs_updated = True
 
         if not text or not text.strip():
             print(f"  [{i+1}/{total}] Scene {num}: SKIP (empty narration)")
@@ -194,6 +202,12 @@ def main():
         except Exception as e:
             print(f"  [{i+1}/{total}] Scene {num}: ERROR - {e}")
             results.append({"scene": num, "status": "error", "error": str(e)})
+
+    # narration_tts가 업데이트되었으면 scene_specs 저장
+    if specs_updated:
+        with open(scene_specs_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f"  → scene_specs.json에 narration_tts 저장 완료")
 
     # Save results
     total_duration = sum(r.get("duration", 0) for r in results)

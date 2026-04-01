@@ -795,12 +795,8 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
         if not api_key:
             return JSONResponse({"error": "ELEVENLABS_API_KEY 미설정"}, 500)
 
-        # TTS 전처리 (숫자→한국어, 발음 교정)
-        try:
-            from auto_agent.scripts.generate_tts import _preprocess_tts_text
-            text = _preprocess_tts_text(text)
-        except ImportError:
-            pass
+        # 대시보드 재생성: 사용자가 입력한 텍스트 그대로 전송 (전처리 안 함)
+        # 처음 표시되는 텍스트가 이미 전처리된 narration_tts이므로, 사용자 수정본을 존중
 
         voice_settings = {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": True}
         resp = _requests.post(
