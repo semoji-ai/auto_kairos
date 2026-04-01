@@ -334,25 +334,58 @@ def send_to_team_webhook(channel: str, summary: str):
 
         try:
             import requests as _req
+            import time as _time
+
             # 요약 메시지
             _req.post(webhook, json={"content":
-                f"📋 **[{today}] {channel} AutoResearch 기획안** — {len(topics)}개 주제"
+                f"📋 **[{today}] {channel} AutoResearch 기획안** — {len(topics)}개 주제\n"
+                f"복사해서 `/auto-kairos`에 붙여넣기 가능합니다."
             }, timeout=10)
+            _time.sleep(0.3)
 
-            import time as _time
             for topic_block in topics:
                 if not topic_block.strip():
                     continue
-                # 1900자씩 분할 전송
-                chunks = [topic_block[i:i+1800] for i in range(0, len(topic_block), 1800)]
-                for chunk in chunks:
-                    _req.post(webhook, json={"content": chunk}, timeout=10)
-                    _time.sleep(0.3)
-                # 주제 구분선
-                _req.post(webhook, json={"content": "━━━━━━━━━━━━━━━━━━━━"}, timeout=10)
-                _time.sleep(0.3)
 
-            logger.info("팀 웹훅 전송 완료 (전체 브리프)")
+                # 핵심만 추출: 제목 + 왜 지금 + 핵심 앵글 + 필수 에피소드 + 추천
+                lines = topic_block.strip().split("\n")
+                brief_lines = []
+                in_section = False
+                for line in lines:
+                    # 제목 (## N위)
+                    if line.startswith("## "):
+                        brief_lines.append(f"**{line.lstrip('#').strip()}**")
+                        continue
+                    # 점수 줄
+                    if "topic_score" in line:
+                        brief_lines.append(line.strip())
+                        continue
+                    # 핵심 섹션 감지
+                    lower = line.lower()
+                    if any(k in lower for k in ["왜 지금", "왜 이 주제", "핵심 앵글", "핵심앵글",
+                                                  "필수 에피소드", "반드시 다뤄", "이야기 포인트",
+                                                  "추천 길이", "추천 구성", "긴급도"]):
+                        in_section = True
+                        brief_lines.append(line.strip())
+                        continue
+                    if in_section:
+                        if line.startswith("### ") and not any(k in line.lower() for k in
+                                ["앵글", "에피소드", "포인트", "추천", "긴급"]):
+                            in_section = False
+                            continue
+                        if line.strip():
+                            brief_lines.append(line.strip())
+
+                brief = "\n".join(brief_lines)
+                if brief:
+                    chunks = [brief[i:i+1800] for i in range(0, len(brief), 1800)]
+                    for chunk in chunks:
+                        _req.post(webhook, json={"content": chunk}, timeout=10)
+                        _time.sleep(0.3)
+                    _req.post(webhook, json={"content": "━━━━━━━━━━━━━━━━━━━━"}, timeout=10)
+                    _time.sleep(0.3)
+
+            logger.info("팀 웹훅 전송 완료 (핵심 브리프)")
         except Exception as e:
             logger.warning("팀 웹훅 전송 실패: %s", e)
     else:
