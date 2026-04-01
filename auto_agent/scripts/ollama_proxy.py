@@ -40,47 +40,132 @@ class AnthropicProxyHandler(BaseHTTPRequestHandler):
         max_tokens = body.get("max_tokens", 2000)
         system = body.get("system", "")
 
+        # Anthropic tools → Ollama tools 변환
+        anthropic_tools = body.get("tools", [])
+        ollama_tools = []
+        for t in anthropic_tools:
+            ollama_tools.append({
+                "type": "function",
+                "function": {
+                    "name": t.get("name", ""),
+                    "description": t.get("description", ""),
+                    "parameters": t.get("input_schema", {}),
+                },
+            })
+
         # system 메시지 처리
         ollama_messages = []
         if system:
             ollama_messages.append({"role": "system", "content": system})
+
         for m in messages:
-            ollama_messages.append({
-                "role": m.get("role", "user"),
-                "content": m.get("content", "") if isinstance(m.get("content"), str)
-                else " ".join(b.get("text", "") for b in m.get("content", []) if b.get("type") == "text"),
-            })
+            role = m.get("role", "user")
+            content = m.get("content", "")
+
+            if role == "assistant" and isinstance(content, list):
+                # Anthropic 형식: content 배열에 text + tool_use 블록
+                text_parts = []
+                for block in content:
+                    if block.get("type") == "text":
+                        text_parts.append(block.get("text", ""))
+                    elif block.get("type") == "tool_use":
+                        # tool_use → Ollama tool_calls로 변환
+                        ollama_messages.append({
+                            "role": "assistant",
+                            "content": " ".join(text_parts) if text_parts else "",
+                            "tool_calls": [{
+                                "id": block.get("id", ""),
+                                "function": {
+                                    "name": block.get("name", ""),
+                                    "arguments": block.get("input", {}),
+                                },
+                            }],
+                        })
+                        text_parts = []
+                if text_parts:
+                    ollama_messages.append({"role": "assistant", "content": " ".join(text_parts)})
+            elif role == "user" and isinstance(content, list):
+                # tool_result 블록 처리
+                for block in content:
+                    if block.get("type") == "tool_result":
+                        ollama_messages.append({
+                            "role": "tool",
+                            "content": block.get("content", "") if isinstance(block.get("content"), str)
+                            else json.dumps(block.get("content", "")),
+                        })
+                    elif block.get("type") == "text":
+                        ollama_messages.append({"role": "user", "content": block.get("text", "")})
+            else:
+                ollama_messages.append({
+                    "role": role,
+                    "content": content if isinstance(content, str)
+                    else " ".join(b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text"),
+                })
 
         # Ollama 호출
         import requests
         try:
             start = time.time()
+            ollama_payload = {
+                "model": self.server.ollama_model,
+                "messages": ollama_messages,
+                "stream": False,
+                "think": False,
+                "options": {"num_predict": max_tokens},
+            }
+            if ollama_tools:
+                ollama_payload["tools"] = ollama_tools
+
             resp = requests.post(
                 f"{OLLAMA_URL}/api/chat",
-                json={
-                    "model": self.server.ollama_model,
-                    "messages": ollama_messages,
-                    "stream": False,
-                    "think": False,
-                    "options": {"num_predict": max_tokens},
-                },
+                json=ollama_payload,
                 timeout=600,
             )
             elapsed = time.time() - start
             data = resp.json()
-            content = data.get("message", {}).get("content", "")
-            eval_count = data.get("eval_count", len(content) // 4)
+            msg = data.get("message", {})
+            content = msg.get("content", "")
+            tool_calls = msg.get("tool_calls", [])
+            eval_count = data.get("eval_count", max(len(content) // 4, 1))
 
-            logger.info(f"[{elapsed:.1f}s] {eval_count}tok → {len(content)}자")
+            # Anthropic Messages API 형식으로 응답 빌드
+            response_content = []
+            stop_reason = "end_turn"
 
-            # Anthropic Messages API 형식으로 응답
+            if content:
+                response_content.append({"type": "text", "text": content})
+
+            if tool_calls:
+                stop_reason = "tool_use"
+                for tc in tool_calls:
+                    func = tc.get("function", {})
+                    tool_id = tc.get("id", f"toolu_{int(time.time()*1000)}")
+                    args = func.get("arguments", {})
+                    if isinstance(args, str):
+                        try:
+                            args = json.loads(args)
+                        except json.JSONDecodeError:
+                            args = {"raw": args}
+                    response_content.append({
+                        "type": "tool_use",
+                        "id": tool_id,
+                        "name": func.get("name", ""),
+                        "input": args,
+                    })
+
+            if not response_content:
+                response_content.append({"type": "text", "text": ""})
+
+            tool_info = f", tools={len(tool_calls)}" if tool_calls else ""
+            logger.info(f"[{elapsed:.1f}s] {eval_count}tok → {len(content)}자{tool_info}")
+
             response = {
                 "id": f"msg_{int(time.time()*1000)}",
                 "type": "message",
                 "role": "assistant",
-                "content": [{"type": "text", "text": content}],
+                "content": response_content,
                 "model": self.server.ollama_model,
-                "stop_reason": "end_turn",
+                "stop_reason": stop_reason,
                 "usage": {
                     "input_tokens": data.get("prompt_eval_count", 0),
                     "output_tokens": eval_count,
