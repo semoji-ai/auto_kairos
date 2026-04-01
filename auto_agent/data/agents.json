@@ -84,9 +84,9 @@
     "fact-verifier": {
       "description": "원고 내 주요 주장 교차 검증",
       "model": "sonnet",
-      "max_turns": 20,
-      "budget": "$0.5",
-      "max_duration_minutes": 10,
+      "max_turns": 40,
+      "budget": "$1.0",
+      "max_duration_minutes": 20,
       "allowed_tools": [
         "Read",
         "Write",
