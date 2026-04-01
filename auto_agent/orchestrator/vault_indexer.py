@@ -99,8 +99,9 @@ class VaultIndexer:
         반환: 추가된 청크 수
         """
         self._ensure_initialized()
-        relative = path.relative_to(vault_dir)
-        top_folder = relative.parts[0] if len(relative.parts) > 1 else ""
+        # Windows 백슬래시 → 슬래시로 정규화 (ChromaDB 호환)
+        relative = str(path.relative_to(vault_dir)).replace("\\", "/")
+        top_folder = relative.split("/")[0] if "/" in relative else ""
 
         # frontmatter 파싱
         text = path.read_text(encoding="utf-8")
