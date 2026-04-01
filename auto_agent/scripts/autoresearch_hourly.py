@@ -313,92 +313,113 @@ def send_to_team_webhook(channel: str, summary: str):
         except Exception as e:
             logger.warning("스레드 전송 실패, 웹훅 fallback: %s", e)
 
-    # 2. fallback: 웹훅 (주제별 브리프 포함)
+    # 2. 웹훅 — 주제당 1메시지, 압축 브리프
     webhook = os.getenv("TEAM_DISCORD_WEBHOOK_URL", "")
     if not webhook:
         return
 
-    today = datetime.now().strftime("%Y-%m-%d")
+    import re
+    import time as _time
+    import requests as _req
 
-    # 볼트 기획안에서 주제별 전체 브리프 읽기
+    today = datetime.now().strftime("%Y-%m-%d")
     vault_dir = Path(os.environ.get("KAIROS_VAULT_DIR", ""))
     planning_file = vault_dir / "insights" / "planning" / f"{today}-{channel}-기획안.md"
 
-    if planning_file.exists():
-        import re
-        content = planning_file.read_text(encoding="utf-8")
-        # 프론트매터 제거
-        body = re.sub(r'^---[\s\S]*?---\s*', '', content).strip()
-        # 주제별 분할
-        topics = re.split(r'\n(?=## \d+위)', body)
+    if not planning_file.exists():
+        _req.post(webhook, json={"content":
+            f"📋 **[{today}] {channel} AutoResearch 기획안**\n\n{summary}"
+        }, timeout=10)
+        return
 
-        try:
-            import requests as _req
-            import time as _time
+    content = planning_file.read_text(encoding="utf-8")
+    body = re.sub(r'^---[\s\S]*?---\s*', '', content).strip()
+    topics = re.split(r'\n(?=## \d+위)', body)
 
-            # 요약 메시지
-            _req.post(webhook, json={"content":
-                f"📋 **[{today}] {channel} AutoResearch 기획안** — {len(topics)}개 주제\n"
-                f"복사해서 `/auto-kairos`에 붙여넣기 가능합니다."
-            }, timeout=10)
-            _time.sleep(0.3)
+    try:
+        for topic_block in topics:
+            if not topic_block.strip() or not topic_block.strip().startswith("## "):
+                continue
 
-            for topic_block in topics:
-                if not topic_block.strip():
-                    continue
+            msg = _extract_compact_brief(topic_block)
+            if msg:
+                _req.post(webhook, json={"content": msg[:1900]}, timeout=10)
+                _time.sleep(1)  # rate limit 방지
 
-                # 핵심만 추출: 제목 + 왜 지금 + 핵심 앵글 + 필수 에피소드 + 추천
-                lines = topic_block.strip().split("\n")
-                brief_lines = []
-                in_section = False
-                for line in lines:
-                    # 제목 (## N위)
-                    if line.startswith("## "):
-                        brief_lines.append(f"**{line.lstrip('#').strip()}**")
-                        continue
-                    # 점수 줄
-                    if "topic_score" in line:
-                        brief_lines.append(line.strip())
-                        continue
-                    # 핵심 섹션 감지
-                    lower = line.lower()
-                    if any(k in lower for k in ["왜 지금", "왜 이 주제", "핵심 앵글", "핵심앵글",
-                                                  "필수 에피소드", "반드시 다뤄", "이야기 포인트",
-                                                  "추천 길이", "추천 구성", "긴급도"]):
-                        in_section = True
-                        brief_lines.append(line.strip())
-                        continue
-                    if in_section:
-                        if line.startswith("### ") and not any(k in line.lower() for k in
-                                ["앵글", "에피소드", "포인트", "추천", "긴급"]):
-                            in_section = False
-                            continue
-                        if line.strip():
-                            brief_lines.append(line.strip())
+        logger.info("팀 웹훅 전송 완료 (압축 브리프)")
+    except Exception as e:
+        logger.warning("팀 웹훅 전송 실패: %s", e)
 
-                brief = "\n".join(brief_lines)
-                if brief:
-                    chunks = [brief[i:i+1800] for i in range(0, len(brief), 1800)]
-                    for chunk in chunks:
-                        _req.post(webhook, json={"content": chunk}, timeout=10)
-                        _time.sleep(0.3)
-                    _req.post(webhook, json={"content": "━━━━━━━━━━━━━━━━━━━━"}, timeout=10)
-                    _time.sleep(0.3)
 
-            logger.info("팀 웹훅 전송 완료 (핵심 브리프)")
-        except Exception as e:
-            logger.warning("팀 웹훅 전송 실패: %s", e)
-    else:
-        # 기획안 파일 없으면 요약만
-        msg = f"📋 **[{today}] {channel} AutoResearch 기획안**\n\n{summary}"
-        try:
-            import requests as _req
-            chunks = [msg[i:i+1900] for i in range(0, len(msg), 1900)]
-            for chunk in chunks:
-                _req.post(webhook, json={"content": chunk}, timeout=10)
-            logger.info("팀 웹훅 전송 완료 (요약)")
-        except Exception as e:
-            logger.warning("팀 웹훅 전송 실패: %s", e)
+def _extract_compact_brief(topic_block: str) -> str:
+    """기획안 블록에서 복붙 가능한 압축 브리프 추출."""
+    import re
+    lines = topic_block.strip().split("\n")
+
+    # 제목
+    title_m = re.match(r'## \d+위\.\s*(.+)', lines[0])
+    title = title_m.group(1).strip()[:80] if title_m else lines[0].lstrip("# ").strip()[:80]
+
+    # 점수
+    score_m = re.search(r'topic_score:\s*(\d+)', topic_block)
+    score = score_m.group(1) if score_m else "?"
+
+    # 왜 지금 — 첫 2줄만
+    why_lines = []
+    in_why = False
+    for line in lines:
+        if "왜 지금" in line or "왜 이 주제" in line:
+            in_why = True
+            continue
+        if in_why:
+            if line.startswith("###") or line.startswith("## "):
+                break
+            if line.strip().startswith("-") and len(why_lines) < 2:
+                why_lines.append(line.strip()[:80])
+
+    # 핵심 앵글 — 한 줄
+    angle = ""
+    for line in lines:
+        if "핵심 앵글" in line and ":" in line:
+            angle = line.split(":", 1)[-1].strip()[:100]
+            break
+
+    # 필수 에피소드 — 연도+사건만, 최대 6개
+    episodes = []
+    in_ep = False
+    for line in lines:
+        if "반드시 다뤄" in line or "필수 에피소드" in line:
+            in_ep = True
+            continue
+        if in_ep:
+            if line.startswith("###") or "추천 구성" in line or "추천 길이" in line:
+                break
+            if line.strip().startswith("-"):
+                ep = line.strip().lstrip("- ").split("—")[0].strip()[:60]
+                if ep and len(episodes) < 6:
+                    episodes.append(f"- {ep}")
+
+    # 추천 길이 + 긴급도
+    length = ""
+    urgency = ""
+    for line in lines:
+        if "추천 길이" in line and ":" in line:
+            length = line.split(":", 1)[-1].strip()[:20]
+        if "긴급도" in line and ":" in line:
+            urgency = line.split(":", 1)[-1].strip()[:20]
+
+    # 조립
+    msg = f"**[{score}점] {title}**\n"
+    if why_lines:
+        msg += "\n".join(why_lines) + "\n"
+    if angle:
+        msg += f"**앵글:** {angle}\n"
+    if episodes:
+        msg += "**에피소드:**\n" + "\n".join(episodes) + "\n"
+    if length or urgency:
+        msg += f"**길이:** {length}" + (f" | **긴급:** {urgency}" if urgency else "")
+
+    return msg
 
 
 if __name__ == "__main__":
