@@ -313,22 +313,59 @@ def send_to_team_webhook(channel: str, summary: str):
         except Exception as e:
             logger.warning("스레드 전송 실패, 웹훅 fallback: %s", e)
 
-    # 2. fallback: 웹훅 (기존 방식)
+    # 2. fallback: 웹훅 (주제별 브리프 포함)
     webhook = os.getenv("TEAM_DISCORD_WEBHOOK_URL", "")
     if not webhook:
         return
 
     today = datetime.now().strftime("%Y-%m-%d")
-    msg = f"📋 **[{today}] {channel} AutoResearch 기획안**\n\n{summary}"
 
-    try:
-        import requests
-        chunks = [msg[i:i+1900] for i in range(0, len(msg), 1900)]
-        for chunk in chunks:
-            requests.post(webhook, json={"content": chunk}, timeout=10)
-        logger.info("팀 웹훅 전송 완료")
-    except Exception as e:
-        logger.warning("팀 웹훅 전송 실패: %s", e)
+    # 볼트 기획안에서 주제별 전체 브리프 읽기
+    vault_dir = Path(os.environ.get("KAIROS_VAULT_DIR", ""))
+    planning_file = vault_dir / "insights" / "planning" / f"{today}-{channel}-기획안.md"
+
+    if planning_file.exists():
+        import re
+        content = planning_file.read_text(encoding="utf-8")
+        # 프론트매터 제거
+        body = re.sub(r'^---[\s\S]*?---\s*', '', content).strip()
+        # 주제별 분할
+        topics = re.split(r'\n(?=## \d+위)', body)
+
+        try:
+            import requests as _req
+            # 요약 메시지
+            _req.post(webhook, json={"content":
+                f"📋 **[{today}] {channel} AutoResearch 기획안** — {len(topics)}개 주제"
+            }, timeout=10)
+
+            import time as _time
+            for topic_block in topics:
+                if not topic_block.strip():
+                    continue
+                # 1900자씩 분할 전송
+                chunks = [topic_block[i:i+1800] for i in range(0, len(topic_block), 1800)]
+                for chunk in chunks:
+                    _req.post(webhook, json={"content": chunk}, timeout=10)
+                    _time.sleep(0.3)
+                # 주제 구분선
+                _req.post(webhook, json={"content": "━━━━━━━━━━━━━━━━━━━━"}, timeout=10)
+                _time.sleep(0.3)
+
+            logger.info("팀 웹훅 전송 완료 (전체 브리프)")
+        except Exception as e:
+            logger.warning("팀 웹훅 전송 실패: %s", e)
+    else:
+        # 기획안 파일 없으면 요약만
+        msg = f"📋 **[{today}] {channel} AutoResearch 기획안**\n\n{summary}"
+        try:
+            import requests as _req
+            chunks = [msg[i:i+1900] for i in range(0, len(msg), 1900)]
+            for chunk in chunks:
+                _req.post(webhook, json={"content": chunk}, timeout=10)
+            logger.info("팀 웹훅 전송 완료 (요약)")
+        except Exception as e:
+            logger.warning("팀 웹훅 전송 실패: %s", e)
 
 
 if __name__ == "__main__":
