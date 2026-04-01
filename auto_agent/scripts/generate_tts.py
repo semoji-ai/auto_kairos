@@ -71,11 +71,15 @@ from auto_agent.scripts.project_paths import PROJECT_ROOT, get_project_dir
 
 
 def _preprocess_tts_text(text: str) -> str:
-    """TTS 전처리 — 숫자→한국어, 발음 교정."""
+    """TTS 전처리 — 숫자→한국어, 영어약어→한국어, 발음 교정, 마크다운 제거."""
     try:
-        from auto_agent.tools.korean_tts_preprocessor import preprocess_for_tts
-        return preprocess_for_tts(text)
-    except ImportError:
+        from auto_agent.tools.korean_tts_preprocessor import KoreanTTSPreprocessor
+        preprocessor = KoreanTTSPreprocessor()
+        result, changes = preprocessor.process_text(text)
+        if changes:
+            logging.getLogger(__name__).debug("TTS 전처리: %s", changes)
+        return result
+    except (ImportError, Exception):
         pass
     try:
         from auto_agent.tools.elevenlabs import TTSPreprocessor
