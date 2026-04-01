@@ -173,9 +173,59 @@ def _load_pipeline_logs(workspace: Path) -> str:
 
 
 def _send_webhook(posts_data: dict):
-    """디스코드 웹훅으로 포스트 미리보기 전송."""
-    import requests
+    """디스코드에 포스트별 스레드로 전송 — 체인 구조 미리보기."""
+    import time as _time
 
+    # 봇 토큰 기반 스레드 전송 시도
+    threads_channel = os.environ.get("THREADS_DISCORD_CHANNEL_ID", "")
+    if threads_channel:
+        try:
+            from auto_agent.modules.discord_bot_notify import DiscordBotNotify
+            bot = DiscordBotNotify(channel_id=threads_channel)
+
+            posts = posts_data.get("posts", [])
+            today = posts_data.get("date", datetime.now().strftime("%Y-%m-%d"))
+
+            # 요약 메시지
+            bot.send_to_channel(f"## 📱 Threads 포스트 ({today}) — {len(posts)}개")
+            _time.sleep(0.5)
+
+            for i, p in enumerate(posts, 1):
+                category = p.get("category", "")
+                scheduled = p.get("scheduled_time", "")
+                main_text = p.get("main_text", "")
+                replies = p.get("replies", [])
+                hashtags = " ".join(p.get("hashtags", []))
+
+                # 메인 포스트 → 디스코드 스레드 생성
+                thread_name = f"#{i} [{category}] {scheduled}"
+                thread_id = bot.create_thread(thread_name)
+
+                if thread_id:
+                    # 메인 글
+                    bot.send_to_thread(f"**메인 글:**\n{main_text}\n{hashtags}")
+                    _time.sleep(0.3)
+
+                    # 답글 체인
+                    for j, reply in enumerate(replies, 1):
+                        bot.send_to_thread(f"**답글 {j}:**\n{reply}")
+                        _time.sleep(0.3)
+                else:
+                    # 스레드 생성 실패 → 채널에 직접
+                    bot.send_to_channel(
+                        f"**#{i} [{category}] {scheduled}**\n"
+                        f"{main_text[:300]}\n{hashtags}"
+                    )
+
+                _time.sleep(0.5)  # rate limit 방지
+
+            logger.info("디스코드 스레드 전송 완료")
+            return
+        except Exception as e:
+            logger.warning(f"스레드 전송 실패, 웹훅 fallback: {e}")
+
+    # fallback: 웹훅 (단일 메시지)
+    import requests as _req
     webhook_url = os.environ.get("THREADS_DISCORD_WEBHOOK_URL", "")
     if not webhook_url:
         return
@@ -184,11 +234,11 @@ def _send_webhook(posts_data: dict):
     preview = f"## 📱 오늘의 Threads 포스트 ({len(posts)}개)\n\n"
     for i, p in enumerate(posts, 1):
         preview += f"**{i}. [{p.get('category', '')}] {p.get('scheduled_time', '')}**\n"
-        preview += f"{p.get('text', '')[:150]}\n"
+        preview += f"{p.get('main_text', '')[:150]}\n"
         preview += f"{' '.join(p.get('hashtags', []))}\n\n"
 
     try:
-        requests.post(webhook_url, json={"content": preview[:2000]}, timeout=10)
+        _req.post(webhook_url, json={"content": preview[:2000]}, timeout=10)
         logger.info("디스코드 웹훅 전송 완료")
     except Exception as e:
         logger.warning(f"웹훅 전송 실패: {e}")
