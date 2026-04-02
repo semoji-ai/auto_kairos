@@ -3452,7 +3452,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               <ComparisonCell
                 label="BEFORE"
                 value={items[0]}
-                sublabel={values[0] != null ? `${values[0]}${data.unit || ""}` : undefined}
+                sublabel={values[0] != null ? `${fmtNum(values[0])}${data.unit || ""}` : undefined}
                 variant="before"
                 style={{ minWidth: 200 }}
               />
@@ -3464,7 +3464,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               <ComparisonCell
                 label="AFTER"
                 value={items[1]}
-                sublabel={values[1] != null ? `${values[1]}${data.unit || ""}` : undefined}
+                sublabel={values[1] != null ? `${fmtNum(values[1])}${data.unit || ""}` : undefined}
                 variant="after"
                 style={{ minWidth: 200 }}
               />
