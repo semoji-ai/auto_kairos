@@ -247,20 +247,27 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
    → 고유 캐릭터 목록 + 등장 횟수 카운트
    → 2씬 미만은 스킵
 
-2. 실제 인물인 경우: 위키미디어에서 실제 사진 검색
-   image_tool.search(query="천주혁 CEO", source="wikimedia")
+2. 아트스타일 정보 로드 (art_style.json):
+   → style_prompt: "photorealistic, highly detailed..." 등 스타일 프롬프트
+   → style_base_url: 아트스타일 기준 이미지 (IP-Adapter 참조)
+
+3. 실제 인물인 경우: 위키미디어에서 실제 사진 검색
+   image_tool.search(query="천주혁 CEO portrait", source="wikimedia")
    → person_photo_url로 전달 → 얼굴 유사도 향상
 
-3. 캐릭터별 초상화 생성:
+4. 캐릭터별 초상화 생성 (아트스타일 프롬프트 + 기준 이미지 + 캐릭터 프롬프트):
    image_tool.generate_character(
-     prompt="천주혁(구다이글로벌 대표, 38세), 한국 남성, 정장 차림, 자신감 있는 표정, 상반신",
+     prompt="천주혁(구다이글로벌 대표, 38세), 한국 남성, 정장 차림, 자신감 있는 표정, 상반신, {style_prompt}",
      style_base_url=<아트스타일 기준 이미지>,
      person_photo_url=<위키미디어 실제 사진 또는 null>,
      aspect_ratio="1:1"
    )
 
-4. images/characters/{캐릭터이름}.png 저장
-   ⚠️ 이후 씬 이미지 생성 시 IP-Adapter로 자동 참조됨
+5. images/characters/{캐릭터이름}.png 저장
+
+⚠️ 씬 이미지 생성 시 캐릭터 활용 규칙:
+  - 캐릭터 이미지 있음 → "외양은 참조 이미지 그대로, 동작/포즈만 기술"
+  - 캐릭터 이미지 없음 → "텍스트로 외모/의상/나이 직접 상세 묘사"
 ```
 
 **B-2. 씬 이미지 배치 생성** (캐릭터 완료 후)
