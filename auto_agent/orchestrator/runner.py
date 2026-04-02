@@ -374,6 +374,54 @@ def _build_default_hooks() -> HookManager:
 
     hm.register_post_step("step_2", post_validate_image_assets)
 
+    # ── post-step: 캐릭터 이미지 생성 검증 (step_3b 완료 후) ──
+    def post_validate_character_images(context: dict):
+        project_dir = Path(context.get("project_dir", ""))
+        specs_path = project_dir / "scene_specs.json"
+        if not specs_path.exists():
+            return
+
+        specs = json.loads(specs_path.read_text(encoding="utf-8"))
+        scenes = specs.get("scenes", [])
+
+        # 2씬+ 등장 캐릭터 추출
+        char_counts = {}
+        for scene in scenes:
+            for char in scene.get("characters", []):
+                if isinstance(char, str):
+                    char_counts[char] = char_counts.get(char, 0) + 1
+        recurring = {c: n for c, n in char_counts.items() if n >= 2}
+
+        if not recurring:
+            return
+
+        # 캐릭터 이미지 파일 확인
+        char_dir = project_dir / "images" / "characters"
+        missing = []
+        found = []
+        for char_name in recurring:
+            # 이름에서 괄호 앞부분 추출 → 파일명
+            base_name = char_name.split("(")[0].strip()
+            matches = list(char_dir.glob(f"*{base_name}*")) if char_dir.exists() else []
+            if matches:
+                found.append(char_name)
+            else:
+                missing.append(f"{char_name} ({recurring[char_name]}씬)")
+
+        if missing:
+            print(f"\n    ⚠️ [캐릭터 이미지 훅] 2씬+ 캐릭터 중 이미지 미생성: {len(missing)}명", flush=True)
+            for m in missing[:5]:
+                print(f"      - {m}", flush=True)
+            _notify("System",
+                    f"캐릭터 이미지 미생성 {len(missing)}명:\n" + "\n".join(missing[:5]) +
+                    "\n→ assembly-director가 Phase B-1에서 생성해야 합니다",
+                    phase=context.get("phase", ""), project=context.get("project", ""),
+                    level="warning")
+        if found:
+            print(f"    ✓ [캐릭터 이미지 훅] {len(found)}명 생성 확인: {', '.join(found[:5])}", flush=True)
+
+    hm.register_post_step("step_3b", post_validate_character_images)
+
     # ── pre-step: upload_info는 manifest 필요 ──
     def pre_upload_info(context: dict):
         project_dir = Path(context.get("project_dir", ""))
