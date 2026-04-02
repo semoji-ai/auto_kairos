@@ -63,8 +63,10 @@ Thumbs.db
 *.swp
 *.swo
 
-# Claude Code
-.claude/
+# Claude Code (commands/skills는 공유, 나머지는 로컬)
+.claude/*
+!.claude/commands/
+!.claude/skills/
 
 # Legacy source (패키지 이전 원본 — auto_agent/에 복사됨)
 /orchestrator/
