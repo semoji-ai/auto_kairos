@@ -230,6 +230,44 @@ Ch5. 더 큰 도전 → Ch6. 클라이맥스 → Ch7. 레거시/마무리
 - 챕터당 **1~3회**
 - 남용 금지 — 정말 강조할 때만 사용
 
+---
+
+## 9. 세모지 연출 규칙 (Layout + 이미지)
+
+### 데이터 시각화 적극 활용
+세모지는 **수치와 팩트 중심** 채널이다. 모든 챕터에 최소 1개 이상의 데이터 레이아웃을 포함한다.
+
+| Layout | 용도 | 필수 데이터 |
+|--------|------|-----------|
+| `items_list` | 리스트형 정보 나열 | items 배열 |
+| `counter` | 핵심 숫자 강조 (매출, 성장률) | values + unit |
+| `icon_stat` | 아이콘 + 수치 조합 | items + values + icon |
+| `bar` / `pie` | 비교/비중 차트 | items + values + unit |
+| `before_after` | 변화 비교 (인수 전/후) | items(2개) + values(2개) |
+| `metric_wall` | 핵심 지표 모아보기 | items + values 복수 |
+| `timeline` | 시간순 사건 나열 | items(연도+사건) |
+
+### 이미지 생성/검색 적극 활용 (fullscreen + background)
+세모지는 **텍스트만 있는 씬을 최소화**한다. 가능하면 모든 씬에 이미지를 배치한다.
+
+**이미지 배치 규칙:**
+- **cinematic 씬 (챕터 도입/전환/클라이맥스)**: `layout: cinematic` + `imageAsset.placement: fullscreen`
+  → 인물 장면, 제품 이미지, 역사적 순간 묘사
+- **데이터 씬**: `imageAsset.placement: background` + 데이터 오버레이
+  → 배경에 관련 이미지를 깔고 그 위에 차트/숫자
+- **인물 등장 씬**: `imageAsset.source: search` + 인물/브랜드 로고 검색
+  → 실제 인물 사진, 브랜드 로고, 제품 사진은 검색 이미지 우선
+
+**imageAsset.source 선택 기준:**
+- `search`: 실존 인물, 브랜드 로고, 실제 제품, 실제 건물/장소
+- `generate`: 역사적 장면 재현, 추상적 개념, 분위기 이미지
+
+**목표 비율:**
+- 이미지 있는 씬: **70% 이상**
+- fullscreen cinematic: 챕터당 1~2씬
+- background + 데이터: 데이터 씬의 50%
+- 텍스트만 있는 씬 (headline_only): **15% 이하**
+
 ### 파이프라인 처리
 - **TTS**: `korean_tts_preprocessor.py`가 `**` 마커를 자동 제거 → 자막에 포함 안 됨
 - **visual-composer**: 볼드 문장 감지 → `emphasis: "keyword"`, `reveal: "dramatic_pause"` 등 극적 연출 적용
