@@ -32,9 +32,15 @@ logger = logging.getLogger(__name__)
 class CharacterLibrary:
     """아트스타일별 캐릭터 이미지 라이브러리."""
 
-    def __init__(self, vault_dir: Optional[str] = None):
-        self._vault = Path(vault_dir or os.environ.get("KAIROS_VAULT_DIR", ""))
-        self._lib_dir = self._vault / "character-library"
+    def __init__(self, library_dir: Optional[str] = None):
+        # 우선순위: 인자 → CHARACTER_LIBRARY_DIR → KAIROS_VAULT_DIR/character-library
+        if library_dir:
+            self._lib_dir = Path(library_dir)
+        elif os.environ.get("CHARACTER_LIBRARY_DIR"):
+            self._lib_dir = Path(os.environ["CHARACTER_LIBRARY_DIR"])
+        else:
+            vault = Path(os.environ.get("KAIROS_VAULT_DIR", ""))
+            self._lib_dir = vault / "character-library"
         self._index_path = self._lib_dir / "index.json"
         self._index = self._load_index()
 
