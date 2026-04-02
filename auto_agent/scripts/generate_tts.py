@@ -29,7 +29,7 @@ _DEFAULT_VOICE_SETTINGS = {
 
 
 def _resolve_voice_config() -> tuple:
-    """voice_id, voice_settings 해석: DB config → .env → 기본값."""
+    """voice_id, voice_settings 해석: DB → pipeline_state → .env → 기본값."""
     voice_id = None
     voice_settings = None
 
@@ -47,7 +47,32 @@ def _resolve_voice_config() -> tuple:
     except Exception:
         pass
 
-    # 2) .env 폴백
+    # 2) pipeline_state.json config 폴백 (runner가 writing_style에서 매핑한 voice_id)
+    if not voice_id:
+        try:
+            from pathlib import Path
+            output_dir = Path(os.environ.get("PROJECT_OUTPUT_DIR", ""))
+            if not output_dir.exists():
+                # 활성 프로젝트의 output_dir 찾기
+                from auto_agent.db.connection import db_exists
+                if db_exists():
+                    from auto_agent.db.project_manager import ProjectManager
+                    pm = ProjectManager()
+                    project = pm.get_active_project()
+                    if project:
+                        output_dir = Path(project.get("output_dir", ""))
+            state_file = output_dir / "pipeline_state.json"
+            if state_file.exists():
+                state = json.loads(state_file.read_text(encoding="utf-8"))
+                config = state.get("config", {})
+                voice_id = config.get("voice_id")
+                vs = config.get("voice_settings")
+                if vs:
+                    voice_settings = vs
+        except Exception:
+            pass
+
+    # 3) .env 폴백
     if not voice_id:
         voice_id = os.getenv("ELEVENLABS_VOICE_ID", _DEFAULT_VOICE_ID)
 
