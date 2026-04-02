@@ -47,9 +47,11 @@
 ```
 
 타임스탬프 계산:
-- manifest.json의 각 씬 durationFrames ÷ fps = 초
-- 챕터 구분: scene_specs의 chapter 필드 또는 narration 흐름에서 추출
+- tts_results.json의 각 씬 duration → 누적 시간 계산
+- 챕터 구분: scene_specs의 chapter 필드 기준
 - 누적 시간 → MM:SS 형식
+- ⚠️ **챕터 제목 필수** — "챕터 2" 같은 번호만 쓰지 말 것. scene_specs에서 해당 챕터의 title 또는 첫 씬의 headline/concept에서 제목 추출
+- ⚠️ `{{텍스트}}` 형태의 Remotion 마크업은 **반드시 제거** — 더보기란에 `{{`, `}}` 포함 금지. 순수 텍스트만 사용
 
 ### 3. 해시태그
 - 주제 키워드 5~10개
@@ -58,6 +60,8 @@
 
 ## 규칙
 - 제목은 40자 이내 (모바일 최적화)
+- 제목에 핵심 수치를 반드시 포함 (예: "3억→10조", "1위") — 수치 누락 금지
 - 썸네일 텍스트는 7단어 이내
 - 타임스탬프는 실제 오디오 길이 기반 (추정 금지)
+- `{{}}` Remotion 마크업 제거 필수 — 순수 텍스트만
 - creative_brief가 있으면 톤/앵글을 반영
