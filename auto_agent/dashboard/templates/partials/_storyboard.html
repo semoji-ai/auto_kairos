@@ -52,6 +52,8 @@
         {% set _motion = scene.motion or '' %}
         {% if _motion %}<span class="viz-badge">🎬 {{ _motion }}</span>{% endif %}
         {% if _mood %}<span class="mood-badge">{{ _mood }}</span>{% endif %}
+        {# 캐릭터 배지 #}
+        {% if scene.characters %}{% for char in scene.characters %}<span class="char-badge">👤 {{ char }}</span>{% endfor %}{% endif %}
         {# v4 호환: reveal/emphasis 배지 #}
         {% if not _motion and scene.visualization and scene.visualization.creative %}
         {% if scene.visualization.creative.reveal %}<span class="viz-badge">{{ scene.visualization.creative.reveal }}</span>{% endif %}
