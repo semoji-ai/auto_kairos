@@ -299,6 +299,81 @@ def _build_default_hooks() -> HookManager:
             raise ValueError("기존 이미지 덮어쓰기 금지 — 새 버전 번호 사용 (_gen_02, _gen_03)")
     hm.register_pre_tool("Bash", guard_image_versioning)
 
+    # ── post-step: 캐릭터 이름 규칙 검증 (step_2 완료 후) ──
+    def post_validate_characters(context: dict):
+        project_dir = Path(context.get("project_dir", ""))
+        specs_path = project_dir / "scene_specs.json"
+        if not specs_path.exists():
+            return
+
+        specs = json.loads(specs_path.read_text(encoding="utf-8"))
+        scenes = specs.get("scenes", [])
+
+        # 캐릭터 이름 수집 및 검증
+        all_chars = {}  # {char_name: [scene_numbers]}
+        issues = []
+
+        for scene in scenes:
+            sn = scene.get("sceneNumber", 0)
+            for char in scene.get("characters", []):
+                if not isinstance(char, str):
+                    continue
+                all_chars.setdefault(char, []).append(sn)
+
+                # 규칙 1: 괄호 안에 역할/시대/국적 정보 필수
+                if "(" not in char or ")" not in char:
+                    issues.append(
+                        f"씬{sn} 캐릭터 '{char}' — 역할 정보 누락. "
+                        f"형식: '이름(역할/시대)' 예: '천주혁(구다이글로벌 대표)'"
+                    )
+
+        # 규칙 2: 동일 인물 동일 문자열 확인
+        name_base = {}  # {이름부분: [전체문자열들]}
+        for char in all_chars:
+            base = char.split("(")[0].strip()
+            name_base.setdefault(base, set()).add(char)
+        for base, variants in name_base.items():
+            if len(variants) > 1:
+                issues.append(
+                    f"캐릭터 '{base}' 불일치: {variants} — 동일 인물은 동일 문자열 필수"
+                )
+
+        if issues:
+            print(f"\n    ⚠️ [캐릭터 훅] {len(issues)}건 위반:", flush=True)
+            for issue in issues[:5]:
+                print(f"      - {issue}", flush=True)
+            # 경고만 — 차단하지 않음 (래칫에서 리뷰어가 잡도록)
+            _notify("System", f"캐릭터 규칙 위반 {len(issues)}건:\n" + "\n".join(issues[:3]),
+                    phase=context.get("phase", ""), project=context.get("project", ""),
+                    level="warning")
+        elif all_chars:
+            print(f"    ✓ [캐릭터 훅] {len(all_chars)}명 검증 통과", flush=True)
+
+    hm.register_post_step("step_2", post_validate_characters)
+
+    # ── post-step: imageAsset 누락 검증 (step_2 완료 후) ──
+    def post_validate_image_assets(context: dict):
+        project_dir = Path(context.get("project_dir", ""))
+        specs_path = project_dir / "scene_specs.json"
+        if not specs_path.exists():
+            return
+
+        specs = json.loads(specs_path.read_text(encoding="utf-8"))
+        scenes = specs.get("scenes", [])
+        total = len(scenes)
+        with_image = sum(1 for s in scenes if s.get("imageAsset") and s["imageAsset"].get("source"))
+        ratio = with_image / total * 100 if total else 0
+
+        if ratio < 50:
+            print(f"\n    ⚠️ [이미지 훅] 이미지 연출 비율 {ratio:.0f}% ({with_image}/{total}) — 70% 이상 권장", flush=True)
+            _notify("System", f"이미지 연출 비율 낮음: {with_image}/{total}씬 ({ratio:.0f}%) — 70% 이상 권장",
+                    phase=context.get("phase", ""), project=context.get("project", ""),
+                    level="warning")
+        else:
+            print(f"    ✓ [이미지 훅] 이미지 연출 {with_image}/{total}씬 ({ratio:.0f}%)", flush=True)
+
+    hm.register_post_step("step_2", post_validate_image_assets)
+
     # ── pre-step: upload_info는 manifest 필요 ──
     def pre_upload_info(context: dict):
         project_dir = Path(context.get("project_dir", ""))
