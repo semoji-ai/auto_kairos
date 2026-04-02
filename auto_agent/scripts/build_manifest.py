@@ -457,6 +457,33 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     # Manifest 조립
     topic = specs.get("topic", storage_key)
     design_preset = specs.get("meta", {}).get("designPreset", None)
+    # art_style.json의 design_tokens fallback (프로젝트 로컬 → 패키지)
+    if not design_preset:
+        _proj_ast = out_dir / "art_style.json"
+        _ast_dt = None
+        if _proj_ast.exists():
+            try:
+                _ast_dt = json.loads(_proj_ast.read_text(encoding="utf-8")).get("design_tokens")
+            except Exception:
+                pass
+        if not _ast_dt and art_style:
+            for _d in (out_dir / "artstyle" / "styles", workspace / "auto_agent" / "data" / "artstyle" / "styles"):
+                _p = _d / f"{art_style}.json"
+                if _p.exists():
+                    try:
+                        _ast_dt = json.loads(_p.read_text(encoding="utf-8")).get("design_tokens")
+                    except Exception:
+                        pass
+                    break
+        if _ast_dt:
+            design_preset = {
+                "baseTheme": _ast_dt.get("baseTheme", "dark"),
+                "colors": {
+                    "bg": _ast_dt.get("bg", ""),
+                    "accent": _ast_dt.get("accent", ""),
+                },
+                "mood_accents": _ast_dt.get("mood_accents", {}),
+            }
     manifest = {
         "meta": {
             "topic": topic,
