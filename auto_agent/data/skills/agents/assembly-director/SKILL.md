@@ -260,8 +260,15 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
    image_tool.search(query="천주혁 CEO portrait", source="wikimedia")
    → person_photo_url로 전달 → 얼굴 유사도 향상
 
-4. 캐릭터별 초상화 생성 (아트스타일 프롬프트 + 기준 이미지 + 캐릭터 프롬프트):
-   ⚠️ 순차 생성 — 첫 캐릭터 결과가 좋으면 이후 캐릭터 생성 시 참조로 추가
+4. 캐릭터별 초상화 생성:
+   ⚠️ 동일 인물 나이 변형 순서:
+     a) 가장 많이 등장하는 나이대를 **기준 캐릭터**로 먼저 생성
+        예: 천주혁(30대) — 출연 30씬 = 기준
+     b) 나이 변형은 기준 이미지를 참조로 첨부하며 생성
+        예: 천주혁(20대 후반) ← 기준 이미지 + "same person, late 20s, slightly younger"
+        예: 천주혁(20대 초반) ← 기준 이미지 + "same person, early 20s, college student"
+     c) IP-Adapter가 얼굴 특징 유지, 나이/스타일만 변형
+   ⚠️ 다른 인물끼리도 순차 — 첫 캐릭터 결과를 이후 캐릭터에 스타일 참조로 누적
    image_tool.generate_character(
      prompt="천주혁(구다이글로벌 대표, 38세), 한국 남성, 정장 차림, 자신감 있는 표정, 상반신, {style_prompt}",
      style_base_url=<아트스타일 기준 이미지>,
