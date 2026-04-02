@@ -224,41 +224,78 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
 | cinematic_fade | speed -0.1 (천천히, 이미지에 집중) |
 | count_and_grow | 숫자 부분에서 잠시 pause |
 
-### Phase B: 캐릭터 생성 + 이미지 배치 생성 + TTS 생성
+### Phase B: 에셋 생성 (이미지 트랙 + 오디오 트랙 병렬)
 
-에이전트가 캐릭터 · 이미지 · TTS를 **직접** 생성합니다.
+에이전트가 이미지와 오디오를 **병렬로** 생성합니다.
 
 ```
-캐릭터 작업 (가장 먼저):
-  1. scene_specs 전체에서 characters 배열 수집 → 고유 캐릭터 목록 추출
-  2. 캐릭터별 초상화 생성:
-     image_tool.generate_character(
-       prompt="천주혁(구다이글로벌 대표, 38세), 한국 남성, 정장, 자신감 있는 표정, 상반신",
-       style_base_url=<아트스타일 참조 이미지>,
-       aspect_ratio="1:1"
-     )
-  3. images/characters/{캐릭터이름}.png 저장
-  4. ⚠️ 생성된 캐릭터 이미지는 이후 씬 이미지 생성 시 자동 첨부됨
-     (image_generate.py의 characters 파라미터 → IP-Adapter 참조)
+┌─ 트랙 A: 이미지 ──────────────────┐  ┌─ 트랙 B: 오디오 ──────────────┐
+│ B-1. 캐릭터 생성 (2씬+ 출연만)     │  │ B-4. TTS 전처리               │
+│ B-2. 씬 이미지 배치 생성           │  │ B-5. TTS 배치 생성            │
+│ B-3. 이미지 품질 검수              │  │ B-6. TTS 검증 + 자막 정렬     │
+└────────────────────────────────────┘  └────────────────────────────────┘
+                    ↓ 합류 ↓
+              B-7. 데이터 검증 (validate_tool)
+```
 
-이미지 작업 (캐릭터 생성 완료 후):
-  1. scene_specs에서 imageAsset.source별 분류
-     - source="generate" 씬들 → image_tool.generate_batch(scenes=[...])
-       ⚠️ 해당 씬의 characters에 매칭되는 캐릭터 이미지가 자동 첨부됨
-     - source="search" 씬들 → image_tool.search_batch(scenes=[...])
-  2. 배치 완료 후 결과 확인 — 실패분만 재시도 (최대 2회)
-  3. image_tool.evaluate()로 품질 검수
-  ⚠️ generate_batch는 병렬 처리 (10씬 기준 3~5분)
-  ⚠️ 씬마다 개별 generate() 호출 금지 — 반드시 batch 사용
+**B-1. 캐릭터 생성** (트랙 A 시작 — 이미지 배치 전에 반드시 완료)
 
-TTS 작업 (이미지와 병렬 또는 순차):
-  1. 나레이션 전처리 (숫자→한국어, 발음교정)
-     ⚠️ 전처리 시 절대 금지:
-     - 끝에 ... 또는 … 추가 금지
-     - 원본에 없는 단어/문장 추가 금지
-     - 숫자/기호 변환만 허용, 텍스트 내용 변경 금지
-  2. 씬별 TTS 생성 (mood/motion 기반 파라미터)
-  3. 자막 정렬 (WhisperX)
+```
+조건: 2씬 이상 등장하는 캐릭터만 생성 (1회 출연은 불필요)
+
+1. scene_specs 전체에서 characters 배열 수집
+   → 고유 캐릭터 목록 + 등장 횟수 카운트
+   → 2씬 미만은 스킵
+
+2. 실제 인물인 경우: 위키미디어에서 실제 사진 검색
+   image_tool.search(query="천주혁 CEO", source="wikimedia")
+   → person_photo_url로 전달 → 얼굴 유사도 향상
+
+3. 캐릭터별 초상화 생성:
+   image_tool.generate_character(
+     prompt="천주혁(구다이글로벌 대표, 38세), 한국 남성, 정장 차림, 자신감 있는 표정, 상반신",
+     style_base_url=<아트스타일 기준 이미지>,
+     person_photo_url=<위키미디어 실제 사진 또는 null>,
+     aspect_ratio="1:1"
+   )
+
+4. images/characters/{캐릭터이름}.png 저장
+   ⚠️ 이후 씬 이미지 생성 시 IP-Adapter로 자동 참조됨
+```
+
+**B-2. 씬 이미지 배치 생성** (캐릭터 완료 후)
+
+```
+1. scene_specs에서 imageAsset.source별 분류
+   - source="generate" → image_tool.generate_batch(scenes=[...])
+     ⚠️ 해당 씬의 characters에 매칭되는 캐릭터 이미지가 자동 첨부됨
+   - source="search" → image_tool.search_batch(scenes=[...])
+2. 실패분 재시도 (최대 2회)
+⚠️ generate_batch 사용 필수 — 개별 generate() 호출 금지
+```
+
+**B-3. 이미지 품질 검수**
+```
+image_tool.evaluate()로 주요 씬 검수
+```
+
+**B-4. TTS 전처리** (트랙 B — 이미지와 병렬 가능)
+```
+나레이션 전처리 (숫자→한국어, 발음교정)
+⚠️ 전처리 절대 금지:
+  - 끝에 ... 또는 … 추가 금지
+  - 원본에 없는 단어/문장 추가 금지
+  - 숫자/기호 변환만 허용
+```
+
+**B-5. TTS 배치 생성**
+```
+씬별 TTS 생성 (mood/motion 기반 파라미터)
+```
+
+**B-6. TTS 검증 + 자막 정렬**
+```
+WhisperX로 자막 정렬 (타임스탬프)
 ```
 
 #### placement → aspect_ratio 매핑 (절대 규칙)
