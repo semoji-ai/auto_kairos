@@ -45,11 +45,28 @@ from auto_agent.utils.platform import get_env_with_node, subprocess_kwargs
 # ── Agent Messenger 브릿지 ──
 _MESSENGER_URL = "http://localhost:8080/api/agent-messages/send"
 
+# 에이전트 별명 매핑 — 대시보드 메신저에서 사용
+AGENT_NICKNAMES = {
+    "Director": "봉감독",
+    "research-orchestrator": "홍탐정",
+    "script-director": "한작가",
+    "script-reviewer": "심사관",
+    "data-mapper": "데이터팀",
+    "fact-verifier": "팩트체커",
+    "assembly-director": "조피디",
+    "upload-info-generator": "업로드팀",
+    "multiformat-director": "멀티팀",
+    "System": "시스템",
+    "Runner": "봉감독",
+}
+
 def _notify(agent: str, text: str, phase: str = "", project: str = "", level: str = "info", data: dict = None):
-    """파이프라인 진행 상황을 대시보드 메신저로 전송. 파일 영속 + HTTP POST."""
+    """파이프라인 진행 상황을 대시보드 메신저로 전송. 파일 영속 + HTTP POST.
+    agent 이름은 자동으로 별명으로 변환됩니다."""
     import time as _time
+    nickname = AGENT_NICKNAMES.get(agent, agent)
     msg = {
-        "agent": agent, "text": text, "phase": phase,
+        "agent": nickname, "text": text, "phase": phase,
         "project": project, "level": level, "data": data or {},
         "timestamp": _time.time(),
     }
@@ -858,7 +875,7 @@ class PipelineRunner:
             True  — 보충 성공 (report_path 업데이트됨)
             False — 보충 실패 (report_path 변경 없음)
         """
-        _notify("Director", f"홍탐정, 빠진 부분 있어! 보충 조사 나가 — {gap_reason[:60]}",
+        _notify("research-orchestrator", f"빠진 부분 있어! 보충 조사 나가 — {gap_reason[:60]}",
                 phase=self.state.current_phase, project=self.project_slug, level="info")
         print(f"    [보충] 리서치 보충 시작: {gap_reason[:80]}", flush=True)
 
@@ -936,7 +953,7 @@ class PipelineRunner:
                     print(f"    [WARN] 리서치 병합 실패: {e}")
 
             if not report_path.exists():
-                _notify("Director", "홍탐정, 보고서가 없잖아! 리서치 검증 실패",
+                _notify("research-orchestrator", "보고서가 없잖아! 리서치 검증 실패",
                         phase=self.state.current_phase, project=self.project_slug, level="error")
                 return StepResult(step_id=step_id, status="failed", error="research_report.json 미생성")
 
@@ -976,7 +993,7 @@ class PipelineRunner:
                 if verify_result and verify_result.get("valid"):
                     reason = verify_result.get("reason", "")
                     print(f"    [검증] 리서치: {sections}섹션, {sources}소스, 주제 일치 ✓ ({reason})")
-                    _notify("Director", f"홍탐정 수고했어! {sections}섹션, {sources}소스 확보 — {reason}",
+                    _notify("research-orchestrator", f"리서치 완료! {sections}섹션, {sources}소스 확보 — {reason}",
                             phase=self.state.current_phase, project=self.project_slug, level="success")
                     # 볼트 기록
                     if self.vault.enabled:
@@ -1040,7 +1057,7 @@ class PipelineRunner:
 
             # LLM 검증 실패해도 구조 검증 통과면 진행
             print(f"    [검증] 리서치: {sections}섹션, {sources}소스 ✓ (구조 검증)")
-            _notify("Director", f"홍탐정 보고서 확인! {sections}섹션, {sources}소스",
+            _notify("research-orchestrator", f"보고서 확인! {sections}섹션, {sources}소스",
                     phase=self.state.current_phase, project=self.project_slug, level="success")
             return StepResult(step_id=step_id, status="completed")
 
@@ -1059,7 +1076,7 @@ class PipelineRunner:
                         has_flat = all(k in sample for k in ("narration", "layout", "motion"))
                         schema_tag = f"v{version} 플랫" if has_flat else f"v{version}"
                         print(f"    [검증] 원고+연출: {n_scenes}씬, {schema_tag} 스키마 ✓")
-                        _notify("Director", f"한작가 잘 썼어! {n_scenes}씬 완성, {schema_tag}",
+                        _notify("script-director", f"원고 완성! {n_scenes}씬 완성, {schema_tag}",
                                 phase=self.state.current_phase, project=self.project_slug, level="success")
                     else:
                         return StepResult(step_id=step_id, status="failed", error="scene_specs.json에 씬 0개")
@@ -1107,7 +1124,7 @@ class PipelineRunner:
                                         applied += 1
                             specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
                             if applied:
-                                _notify("Director", f"한작가 원고 수정 완료! {applied}건 반영됨",
+                                _notify("script-director", f"원고 수정 완료! {applied}건 반영됨",
                                         phase=self.state.current_phase, project=self.project_slug, level="success")
                             else:
                                 print(f"    [팩트체크] 수정 권장 {len(adjusted)}건 중 원고 내 매칭 없음 — 수동 확인 필요")
@@ -2059,7 +2076,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
     def _auto_build_and_capture(self, chapter_results: dict, chapters: dict):
         """병합 완료 후 자동 매니페스트 빌드. (썸네일 캡처 비활성화)"""
-        _notify("Director", "조피디, 매니페스트 조립 시작해",
+        _notify("assembly-director", "매니페스트 조립 시작해",
                 phase=self.state.current_phase, project=self.project_slug)
 
         # 1. 매니페스트 빌드
