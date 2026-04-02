@@ -2,6 +2,14 @@
 auto_agent 프로젝트 관리 대시보드.
 FastAPI + Jinja2 + htmx + xterm.js.
 """
+# .env 로드 (TTS/이미지 API 키 등 — 대시보드에서 재생성 시 필요)
+try:
+    from pathlib import Path as _P
+    from dotenv import load_dotenv
+    load_dotenv(_P(__file__).resolve().parent / ".env", override=True)
+except Exception:
+    pass
+
 import asyncio
 import json
 import os

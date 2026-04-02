@@ -377,6 +377,16 @@ def cmd_costs(args):
 
 def cmd_dashboard(args):
     """웹 대시보드 실행."""
+    # .env 로드 필수 (TTS/이미지 API 키 등)
+    try:
+        from dotenv import load_dotenv
+        from auto_agent.paths import get_workspace_dir
+        env_path = get_workspace_dir() / ".env"
+        if env_path.exists():
+            load_dotenv(env_path, override=True)
+    except Exception:
+        pass
+
     port = 8080
     if "--port" in args:
         idx = args.index("--port")
