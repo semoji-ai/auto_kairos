@@ -224,14 +224,27 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
 | cinematic_fade | speed -0.1 (천천히, 이미지에 집중) |
 | count_and_grow | 숫자 부분에서 잠시 pause |
 
-### Phase B: 이미지 배치 생성 + TTS 생성
+### Phase B: 캐릭터 생성 + 이미지 배치 생성 + TTS 생성
 
-에이전트가 이미지와 TTS를 **직접** 생성합니다.
+에이전트가 캐릭터 · 이미지 · TTS를 **직접** 생성합니다.
 
 ```
-이미지 작업 (먼저):
+캐릭터 작업 (가장 먼저):
+  1. scene_specs 전체에서 characters 배열 수집 → 고유 캐릭터 목록 추출
+  2. 캐릭터별 초상화 생성:
+     image_tool.generate_character(
+       prompt="천주혁(구다이글로벌 대표, 38세), 한국 남성, 정장, 자신감 있는 표정, 상반신",
+       style_base_url=<아트스타일 참조 이미지>,
+       aspect_ratio="1:1"
+     )
+  3. images/characters/{캐릭터이름}.png 저장
+  4. ⚠️ 생성된 캐릭터 이미지는 이후 씬 이미지 생성 시 자동 첨부됨
+     (image_generate.py의 characters 파라미터 → IP-Adapter 참조)
+
+이미지 작업 (캐릭터 생성 완료 후):
   1. scene_specs에서 imageAsset.source별 분류
      - source="generate" 씬들 → image_tool.generate_batch(scenes=[...])
+       ⚠️ 해당 씬의 characters에 매칭되는 캐릭터 이미지가 자동 첨부됨
      - source="search" 씬들 → image_tool.search_batch(scenes=[...])
   2. 배치 완료 후 결과 확인 — 실패분만 재시도 (최대 2회)
   3. image_tool.evaluate()로 품질 검수
