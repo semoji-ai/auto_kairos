@@ -295,7 +295,9 @@ tr:hover { background: var(--surface2); }
   margin-right: 4px;
 }
 .char-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 11px;
@@ -303,6 +305,13 @@ tr:hover { background: var(--surface2); }
   background: rgba(59, 130, 246, 0.15);
   color: #60A5FA;
   margin-right: 4px;
+}
+.char-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(59, 130, 246, 0.3);
 }
 .img-badge {
   display: inline-block;

@@ -372,6 +372,9 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
     thumb_dir = Path(output_dir) / "thumbnails" if output_dir else None
     has_thumbs = thumb_dir and thumb_dir.exists()
 
+    # 캐릭터별 첫 등장 씬 이미지 매핑 (1차 패스)
+    char_thumb_map = {}  # {char_id: image_url}
+
     for scene in scenes:
         sn = scene["sceneNumber"]
         scene["_image_url"] = get_scene_image_url(project_dir_name, sn, output_dir)
@@ -389,9 +392,20 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         if has_thumbs:
             thumb_path = thumb_dir / f"scene_{str(sn).zfill(3)}.png"
             if thumb_path.exists():
-                # 썸네일 API URL은 slug 기반 라우터를 사용 (slug만 필요)
                 slug_part = project_dir_name.split("_", 1)[-1] if "_" in project_dir_name else project_dir_name
                 scene["_thumbnail_url"] = f"/api/p/{slug_part}/thumbnails/scene/{sn}"
+
+        # 캐릭터별 첫 등장 이미지 수집
+        for char_id in scene.get("characters", []):
+            if char_id not in char_thumb_map and scene["_image_url"]:
+                char_thumb_map[char_id] = scene["_image_url"]
+
+    # 캐릭터 썸네일을 각 씬에 주입 (2차 패스)
+    for scene in scenes:
+        scene["_char_thumbs"] = {}
+        for char_id in scene.get("characters", []):
+            if char_id in char_thumb_map:
+                scene["_char_thumbs"][char_id] = char_thumb_map[char_id]
 
     return scenes
 
