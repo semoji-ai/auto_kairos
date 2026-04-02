@@ -472,11 +472,40 @@ def generate_scene(
     image_urls = []
     has_character_refs = False
 
+    # 1. 명시적 캐릭터 경로가 있으면 사용
     if characters and any(Path(c).exists() for c in characters):
         for char_path in characters:
             if Path(char_path).exists():
                 image_urls.append(_image_to_data_uri(char_path))
         has_character_refs = True
+
+    # 2. 캐릭터 경로 없으면 프로젝트 로컬 + 라이브러리에서 자동 검색
+    if not has_character_refs and characters:
+        project_dir = os.environ.get("PROJECT_DIR", "")
+        art_style_name = art_style.get("name", "")
+        if project_dir:
+            local_char_dir = Path(project_dir) / "images" / "characters"
+            for char_name in characters:
+                if not isinstance(char_name, str):
+                    continue
+                name_base = char_name.split("(")[0].strip()
+                # 로컬 검색
+                local_matches = list(local_char_dir.glob(f"*{name_base}*")) if local_char_dir.exists() else []
+                if local_matches:
+                    image_urls.append(_image_to_data_uri(str(local_matches[0])))
+                    has_character_refs = True
+                elif art_style_name:
+                    # 라이브러리 검색
+                    try:
+                        from auto_agent.modules.character_library import CharacterLibrary
+                        lib = CharacterLibrary()
+                        lib_path = lib.find_for_scene(char_name, art_style_name)
+                        if lib_path:
+                            image_urls.append(_image_to_data_uri(lib_path))
+                            has_character_refs = True
+                    except Exception:
+                        pass
+
     if not has_character_refs and ref_image and Path(ref_image).exists():
         image_urls.append(_image_to_data_uri(ref_image))
 
