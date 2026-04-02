@@ -294,6 +294,28 @@ tr:hover { background: var(--surface2); }
   color: #A78BFA;
   margin-right: 4px;
 }
+.sb-context-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.08);
+  border-left: 3px solid rgba(59, 130, 246, 0.4);
+  font-size: 11px;
+}
+.sb-bg-context {
+  color: #93C5FD;
+}
+.sb-first-bg {
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(34, 197, 94, 0.2);
+  color: #86EFAC;
+  font-size: 10px;
+  font-weight: 600;
+}
 .char-badge {
   display: inline-flex;
   align-items: center;

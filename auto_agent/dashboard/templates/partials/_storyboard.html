@@ -93,6 +93,14 @@
         </div>
       </div>
 
+      {# 배경 컨텍스트 + 캐릭터 #}
+      {% if scene.background_context %}
+      <div class="sb-context-bar">
+        <span class="sb-bg-context">🎬 {{ scene.background_context }}</span>
+        {% if scene.is_first_of_background %}<span class="sb-first-bg">첫 장면</span>{% endif %}
+      </div>
+      {% endif %}
+
       {# 이미지 영역 #}
       <div class="sb-image-area">
         {% if scene.imageAsset %}
