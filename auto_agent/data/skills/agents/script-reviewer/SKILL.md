@@ -62,7 +62,8 @@ AutoResearch 래칫 방식: 이전 버전 대비 개선된 부분만 채택, 퇴
 | 항목 | 기준 | 배점 |
 |------|------|------|
 | **시각화 적합성** | layout 선택이 내용에 맞는가 (수치→차트, 인물→quote_portrait 등) | 15 |
-| **이미지 연출** | imageAsset placement/source가 씬 의도와 맞는가, cinematic 남발 아닌가 | 15 |
+| **이미지 연출** | imageAsset이 70%+ 씬에 있는가, placement/source가 씬 의도와 맞는가, cinematic 남발 아닌가 | 10 |
+| **캐릭터 일관성** | characters 이름이 '이름(역할)' 형식인가, 동일 인물이 동일 문자열인가, background_context 연계가 맞는가 | 5 |
 
 **시장 경쟁력 (10점)**
 
