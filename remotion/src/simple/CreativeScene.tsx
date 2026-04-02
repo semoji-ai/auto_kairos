@@ -1422,15 +1422,19 @@ const ItemsList: React.FC<{
     );
   }
 
-  // 이미지 없으면 기존 세로 리스트
+  // 이미지 없으면 기존 세로 리스트 — 가장 긴 텍스트 기준 너비
+  // 텍스트 길이 기반 너비 계산 (가장 긴 아이템 + 좌우 5% 여백)
+  const maxTextLen = Math.max(...items.map(t => t.length));
+  // 한글 1자 ≈ fontSize, 영문 ≈ 0.6*fontSize. 보수적으로 0.85 적용 + 아이콘/배지 여백
+  const estimatedTextWidth = maxTextLen * (T.itemText || 20) * 0.85 + 80; // 80px = 아이콘+패딩
+  const fitWidth = Math.min(Math.max(estimatedTextWidth * 1.1, 300), L.maxContentWidth); // 좌우 5% 여백 = 1.1배
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
         gap: 12,
-        width: "100%",
-        maxWidth: L.maxContentWidth,
+        width: fitWidth,
         margin: `${L.sectionMarginTop}px auto 0`,
       }}
     >

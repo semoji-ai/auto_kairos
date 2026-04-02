@@ -1113,6 +1113,16 @@ const ItemsGrid: React.FC<{
           } else if (motionConfig.emphasis.type === "pulse") {
             const pp = interpolate(frame, [eD, eD + eDur], [0, 1], clamp);
             if (pp > 0) scaleVal *= 1 + Math.sin(pp * Math.PI * 2) * 0.03;
+          } else if (motionConfig.emphasis.type === "glitch") {
+            const gp = interpolate(frame, [eD, eD + eDur], [0, 1], clamp);
+            if (gp > 0 && gp < 1) {
+              const glitchX = Math.sin(gp * Math.PI * 12) * (motionConfig.emphasis.intensity || 6) * (1 - gp);
+              const glitchY = Math.cos(gp * Math.PI * 8) * 2 * (1 - gp);
+              extraTransform = ` translate(${glitchX}px, ${glitchY}px)`;
+            }
+          } else if (motionConfig.emphasis.type === "bounce") {
+            const bp = interpolate(frame, [eD, eD + eDur], [0, 1], clamp);
+            if (bp > 0) scaleVal *= 1 + Math.abs(Math.sin(bp * Math.PI * 3)) * 0.06 * (1 - bp);
           }
         }
         const borderGlow =
@@ -1412,15 +1422,19 @@ const ItemsList: React.FC<{
     );
   }
 
-  // 이미지 없으면 기존 세로 리스트
+  // 이미지 없으면 기존 세로 리스트 — 가장 긴 텍스트 기준 너비
+  // 텍스트 길이 기반 너비 계산 (가장 긴 아이템 + 좌우 5% 여백)
+  const maxTextLen = Math.max(...items.map(t => t.length));
+  // 한글 1자 ≈ fontSize, 영문 ≈ 0.6*fontSize. 보수적으로 0.85 적용 + 아이콘/배지 여백
+  const estimatedTextWidth = maxTextLen * (T.itemText || 20) * 0.85 + 80; // 80px = 아이콘+패딩
+  const fitWidth = Math.min(Math.max(estimatedTextWidth * 1.1, 300), L.maxContentWidth); // 좌우 5% 여백 = 1.1배
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
         gap: 12,
-        width: "100%",
-        maxWidth: L.maxContentWidth,
+        width: fitWidth,
         margin: `${L.sectionMarginTop}px auto 0`,
       }}
     >
@@ -1449,6 +1463,14 @@ const ItemsList: React.FC<{
           } else if (motionConfig.emphasis.type === "pulse") {
             const pp = interpolate(frame, [eD, eD + eDur], [0, 1], clamp);
             if (pp > 0) scaleVal *= 1 + Math.sin(pp * Math.PI * 2) * 0.03;
+          } else if (motionConfig.emphasis.type === "glitch") {
+            const gp = interpolate(frame, [eD, eD + eDur], [0, 1], clamp);
+            if (gp > 0 && gp < 1) {
+              extraT = ` translate(${Math.sin(gp * Math.PI * 12) * (motionConfig.emphasis.intensity || 6) * (1 - gp)}px, ${Math.cos(gp * Math.PI * 8) * 2 * (1 - gp)}px)`;
+            }
+          } else if (motionConfig.emphasis.type === "bounce") {
+            const bp = interpolate(frame, [eD, eD + eDur], [0, 1], clamp);
+            if (bp > 0) scaleVal *= 1 + Math.abs(Math.sin(bp * Math.PI * 3)) * 0.06 * (1 - bp);
           }
         }
         const isLast = i === items.length - 1;
@@ -2690,8 +2712,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
     : (creative.reveal || "fade_in");
 
   const _emphasisToEmphasis: Record<string, string> = {
-    countUp: "number", shake: "none", glitch: "none", pulse: "none",
-    glow: "number", bounce: "none", lineExpand: "none", none: "none",
+    countUp: "number", shake: "shake", glitch: "glitch", pulse: "pulse",
+    glow: "number", bounce: "bounce", lineExpand: "lineExpand", none: "none",
   };
   const _resolvedLayout = resolveLayout(data, creative);
   let emphasis: string = motionPreset
@@ -3762,6 +3784,20 @@ const LineReveal: React.FC<{
       const glowP = interpolate(frame, [emphDelay, emphDelay + emphDur], [0, 0.6], clamp);
       if (glowP > 0) {
         extraStyle = { textShadow: `0 0 ${20 + glowP * 40}px rgba(${moodCfg.accentRgb},${glowP})` };
+      }
+    } else if (motionConfig.emphasis.type === "glitch") {
+      const gp = interpolate(frame, [emphDelay, emphDelay + emphDur], [0, 1], clamp);
+      if (gp > 0 && gp < 1) {
+        const glitchX = Math.sin(gp * Math.PI * 12) * (motionConfig.emphasis.intensity || 8) * (1 - gp);
+        const glitchY = Math.cos(gp * Math.PI * 8) * 3 * (1 - gp);
+        transform = (transform || "") + ` translate(${glitchX}px, ${glitchY}px)`;
+        extraStyle = { textShadow: `${glitchX * 0.5}px 0 rgba(255,0,0,${0.5 * (1 - gp)}), ${-glitchX * 0.5}px 0 rgba(0,255,255,${0.5 * (1 - gp)})` };
+      }
+    } else if (motionConfig.emphasis.type === "bounce") {
+      const bp = interpolate(frame, [emphDelay, emphDelay + emphDur], [0, 1], clamp);
+      if (bp > 0) {
+        const bounceScale = 1 + Math.abs(Math.sin(bp * Math.PI * 3)) * 0.08 * (1 - bp);
+        transform = (transform || "") + ` scale(${bounceScale})`;
       }
     }
   }
