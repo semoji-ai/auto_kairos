@@ -65,9 +65,9 @@
     "script-reviewer": {
       "description": "원고+연출 검수 — 시청자 리뷰어 + 콘텐츠 전문가 2관점 평가 + 래칫 게이트",
       "model": "sonnet",
-      "max_turns": 30,
-      "budget": "$1.0",
-      "max_duration_minutes": 15,
+      "max_turns": 50,
+      "budget": "$2.0",
+      "max_duration_minutes": 20,
       "allowed_tools": [
         "Read",
         "Write",
