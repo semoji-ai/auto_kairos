@@ -23,10 +23,15 @@ import logging
 import os
 import re
 import shutil
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_path(p) -> str:
+    """Windows backslash → forward slash (JSON/index 저장용)."""
+    return str(p).replace("\\", "/")
 
 
 class CharacterLibrary:
@@ -167,7 +172,7 @@ class CharacterLibrary:
             "role": role,
             "age_group": age_group,
             "art_style": art_style,
-            "path": str(dest),
+            "path": _normalize_path(dest),
             "source_project": project,
         }
 
@@ -181,7 +186,7 @@ class CharacterLibrary:
         self._index["characters"].append(entry)
         self._save_index()
 
-        return str(dest)
+        return _normalize_path(dest)
 
     def get_project_characters(self, project_dir: str, art_style: str) -> dict:
         """프로젝트의 scene_specs에서 2씬+ 캐릭터를 추출하고 라이브러리에서 매칭.
@@ -234,5 +239,5 @@ class CharacterLibrary:
             "role": role,
             "age_group": age_group,
             "art_style": art_style,
-            "path": str(path),
+            "path": _normalize_path(path),
         }
