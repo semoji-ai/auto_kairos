@@ -226,6 +226,12 @@ layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면
 □ 동일 장소/시간대 연속 씬에 background_context가 있는가
 □ 첫 씬에 is_first_of_background: true 설정했는가
 
+[로고/플래그/아이콘]
+□ 브랜드/기업 소개 씬에 로고(imageAsset.source=search, 브랜드 로고 검색)를 사용했는가
+□ 국가별 시장/진출 씬에 flags(국가코드)를 배정했는가
+  예: 미국 진출 → flags: ["US"], 중국+일본 비교 → flags: ["CN", "JP"]
+□ 데이터 씬에 적절한 icons를 배정했는가 (trending-up, dollar-sign 등)
+
 [기존 규칙]
 □ 같은 motion 3회 연속 없는가
 □ 같은 mood 5회 연속 없는가
