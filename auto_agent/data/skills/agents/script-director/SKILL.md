@@ -207,21 +207,32 @@ layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면
 모든 씬 작성 후 전체를 한 번 훑습니다.
 
 ```
-검증 체크리스트:
-□ 모든 씬에 concept이 있는가
+⚠️ Pre-Write 검증 체크리스트 — scene_specs.json을 Write하기 전에 반드시 확인:
+
+[캐릭터] (훅으로 차단됨)
+□ 나레이션에서 인물이 행위/발언하는 씬에 characters 배정했는가
+  → "그는", "대표는" 등 대명사로 지칭되는 씬도 포함
+  → 동일 인물은 전체에서 동일 문자열 (1글자라도 다르면 별개로 인식)
+□ characters 이름이 "이름(역할, 나이대)" 형식인가
+□ 캐릭터가 불필요한 씬(데이터만, 클로징)에는 안 넣었는가
+
+[이미지] (훅으로 차단됨)
+□ imageAsset 비율이 70~85% 범위인가 (50% 미만 차단, 100% 금지)
+  → 인물/장소/전환 씬: 반드시 배정
+  → 데이터 씬: 선택 (background으로 깔면 좋음)
+  → 클로징/브릿지: 불필요
+
+[배경 연계]
+□ 동일 장소/시간대 연속 씬에 background_context가 있는가
+□ 첫 씬에 is_first_of_background: true 설정했는가
+
+[기존 규칙]
 □ 같은 motion 3회 연속 없는가
 □ 같은 mood 5회 연속 없는가
-□ headline과 items에 수치 중복이 없는가
 □ {{}} accent가 씬당 최대 2개인가
-□ items 1개짜리 씬이 적절한가 (icon_stat/quote_portrait 외에는 지양)
-□ imageAsset fullscreen 씬이 전체의 10~15% 이내인가
-□ 감정 곡선이 자연스러운가 (dramatic→informative→dramatic 같은 급변 없이)
-□ 차트/그래프 씬에 headline(제목)과 source(출처)가 있는가
-□ quote_portrait에 source가 "화자명, 발언 맥락" 형태인가
-□ imageAsset이 전체 씬의 40~50%에 사용되었는가 (데이터 씬에도 배경 적극 사용)
-□ headline만 있는 씬(headline_only)이 5~10% 이내인가 (숫자는 values로)
-□ left/right placement가 주체 있는 이미지(인물/제품)에만 사용되었는가
-□ 콘텐츠 구조가 다양한가 (items만, items+이미지, headline만, 인용문 등 골고루)
+□ imageAsset fullscreen이 전체의 10~15% 이내인가
+□ 감정 곡선이 자연스러운가
+□ 콘텐츠 구조가 다양한가
 ```
 
 ---

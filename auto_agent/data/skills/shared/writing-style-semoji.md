@@ -247,26 +247,33 @@ Ch5. 더 큰 도전 → Ch6. 클라이맥스 → Ch7. 레거시/마무리
 | `metric_wall` | 핵심 지표 모아보기 | items + values 복수 |
 | `timeline` | 시간순 사건 나열 | items(연도+사건) |
 
-### 이미지 생성/검색 적극 활용 (fullscreen + background)
-세모지는 **텍스트만 있는 씬을 최소화**한다. 가능하면 모든 씬에 이미지를 배치한다.
+### 이미지 배치 — 필요/선택/불필요 3단계
 
-**이미지 배치 규칙:**
-- **cinematic 씬 (챕터 도입/전환/클라이맥스)**: `layout: cinematic` + `imageAsset.placement: fullscreen`
-  → 인물 장면, 제품 이미지, 역사적 순간 묘사
-- **데이터 씬**: `imageAsset.placement: background` + 데이터 오버레이
-  → 배경에 관련 이미지를 깔고 그 위에 차트/숫자
-- **인물 등장 씬**: `imageAsset.source: search` + 인물/브랜드 로고 검색
-  → 실제 인물 사진, 브랜드 로고, 제품 사진은 검색 이미지 우선
+모든 씬에 무조건 넣지 말 것. 100% 강제 금지. 씬 성격에 따라 판단한다.
+
+**⚠️ 필요 (반드시 imageAsset 배정):**
+- 인물이 등장하는 씬 (characters 있음) → fullscreen 또는 side
+- cinematic/감성 전환 씬 → fullscreen
+- 챕터 도입부 → fullscreen (시각적 전환)
+- 장소/시대가 바뀌는 씬 (background_context 변경) → fullscreen 또는 background
+- 제품/브랜드/건물이 언급되는 씬 → search
+
+**선택 (background으로 깔면 좋지만 없어도 됨):**
+- 데이터 중심 (bar, counter, items_list) → background에 관련 이미지
+- 수치 비교/나열 → 없어도 차트만으로 충분할 수 있음
+
+**불필요 (imageAsset 없어도 됨):**
+- 순수 텍스트 마무리 (클로징 멘트)
+- headline_only 짧은 전환 씬
+- 데이터만으로 충분한 씬 (metric_wall, 단순 counter)
+
+**결과 비율: 70~85%가 자연스러움**
+- 50% 미만 → 시각적으로 단조로움 (훅에서 차단)
+- 100% → 억지 이미지로 오히려 산만 (금지)
 
 **imageAsset.source 선택 기준:**
 - `search`: 실존 인물, 브랜드 로고, 실제 제품, 실제 건물/장소
-- `generate`: 역사적 장면 재현, 추상적 개념, 분위기 이미지
-
-**목표 비율:**
-- 이미지 있는 씬: **70% 이상**
-- fullscreen cinematic: 챕터당 1~2씬
-- background + 데이터: 데이터 씬의 50%
-- 텍스트만 있는 씬 (headline_only): **15% 이하**
+- `generate`: 역사적 장면 재현, 추상적 개념, 분위기 이미지, 캐릭터 등장 장면
 
 ### 파이프라인 처리
 - **TTS**: `korean_tts_preprocessor.py`가 `**` 마커를 자동 제거 → 자막에 포함 안 됨

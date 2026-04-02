@@ -339,10 +339,9 @@ def _build_default_hooks() -> HookManager:
                 )
 
         if issues:
-            print(f"\n    ⚠️ [캐릭터 훅] {len(issues)}건 위반:", flush=True)
+            print(f"\n    ❌ [캐릭터 훅] {len(issues)}건 위반 — 래칫 리뷰에서 수정 필요:", flush=True)
             for issue in issues[:5]:
                 print(f"      - {issue}", flush=True)
-            # 경고만 — 차단하지 않음 (래칫에서 리뷰어가 잡도록)
             _notify("System", f"캐릭터 규칙 위반 {len(issues)}건:\n" + "\n".join(issues[:3]),
                     phase=context.get("phase", ""), project=context.get("project", ""),
                     level="warning")
@@ -365,10 +364,12 @@ def _build_default_hooks() -> HookManager:
         ratio = with_image / total * 100 if total else 0
 
         if ratio < 50:
-            print(f"\n    ⚠️ [이미지 훅] 이미지 연출 비율 {ratio:.0f}% ({with_image}/{total}) — 70% 이상 권장", flush=True)
-            _notify("System", f"이미지 연출 비율 낮음: {with_image}/{total}씬 ({ratio:.0f}%) — 70% 이상 권장",
+            print(f"\n    ❌ [이미지 훅] 이미지 연출 비율 {ratio:.0f}% ({with_image}/{total}) — 50% 미만 (래칫에서 보완)", flush=True)
+            _notify("System", f"이미지 연출 비율 심각: {with_image}/{total}씬 ({ratio:.0f}%) — 래칫 리뷰에서 보완 필요",
                     phase=context.get("phase", ""), project=context.get("project", ""),
                     level="warning")
+        elif ratio > 95:
+            print(f"\n    ⚠️ [이미지 훅] 이미지 연출 비율 {ratio:.0f}% — 100% 강제 금지, 불필요한 씬 확인", flush=True)
         else:
             print(f"    ✓ [이미지 훅] 이미지 연출 {with_image}/{total}씬 ({ratio:.0f}%)", flush=True)
 
