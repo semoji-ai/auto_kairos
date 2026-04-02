@@ -292,28 +292,77 @@ layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면
 ```json
 {
   "sceneNumber": 4,
-  "characters": ["berta_benz", "son_1", "son_2"],
+  "characters": ["천주혁(구다이글로벌 대표, 38세)"],
+  "background_context": "회의실 낮 - IPO 준비 회의",
+  "is_first_of_background": true,
   "imageAsset": {
-    "prompt": "베르타 벤츠(Bertha Benz), 긴 드레스를 입은 30대 여성이 차량 엔진을 수리하는 장면..."
+    "source": "generate",
+    "prompt": "현대적 회의실에서 프레젠테이션하는 38세 한국 남성 CEO, 정장 차림, 자신감 있는 표정",
+    "placement": "fullscreen"
   }
 }
 ```
 
+**캐릭터 이름 형식 (⚠️ 훅으로 검증됨):**
+- **한국어 이름(역할/시대/국적)** 형식 필수
+- 괄호 안에 역할+시대 정보가 있어야 이미지 생성 시 정확한 외양 표현 가능
+- 나이가 중요하면 포함: `"천주혁(구다이글로벌 대표, 38세)"`
+
+```
+✅ "천주혁(구다이글로벌 대표)"
+✅ "이순신(조선시대 장군)"
+✅ "상인(17세기 네덜란드 무역상)"
+✅ "김강일(조선미녀 창업자, 40대)"
+❌ "천주혁"          ← 역할 정보 없음
+❌ "상인"            ← 어느 시대/국가인지 불명
+❌ "CEO"            ← 구체적이지 않음
+```
+
+- 같은 인물은 **전체 씬에서 동일 문자열** 사용 (1글자라도 다르면 별개 인물로 인식)
+- **나레이션에 인물명이 없어도** 맥락상 동일 인물이면 `characters`에 반드시 포함
+
+**background_context — 배경 상황 연계 규칙:**
+
+동일 배경에서 이어지는 씬들의 시각적 일관성을 보장합니다.
+
+```
+씬8:  background_context: "2016년 서울 사무실 - 창업 시작"
+      is_first_of_background: true   ← 이 배경의 첫 씬 (전체 구도 설정)
+씬9:  background_context: "2016년 서울 사무실 - 창업 시작"
+      is_first_of_background: false  ← 같은 배경 (앵글만 변경)
+씬10: background_context: "2018년 중국 공장 - 한한령"
+      is_first_of_background: true   ← 새 배경
+```
+
 규칙:
-- **나레이션에 인물명이 없어도** 이전 씬에서 맥락상 동일 인물이 이어지면 `characters`에 반드시 포함
-- 한국어 나레이션은 주어 생략이 자연스럽지만, `characters` 배열과 `imageAsset.prompt`는 기계가 읽는 필드이므로 **항상 명시적**
-- `imageAsset.prompt`에 인물이 등장하면 **이름 + 외모 특징**(나이, 성별, 의상, 체형)을 반드시 포함
-- 인물 ID는 영문 snake_case (예: `berta_benz`, `jensen_huang`, `narrator_male`)
-- 같은 인물이 여러 씬에 걸쳐 등장하면 동일 ID를 일관되게 사용
+- 동일 `background_context` 씬들은 **동일 캐릭터 풀** 사용
+- 첫 씬(`is_first_of_background: true`): 메인 배경 설정 (전체 구도, 분위기, 조명)
+- 이후 씬: 같은 배경에서 **클로즈업/세부 앵글**로 변화
+- 배경이 바뀌면 반드시 `is_first_of_background: true`
+
+**imageAsset — 모든 씬에 이미지 연출 작성 (⚠️ 훅으로 비율 검증됨):**
+
+모든 씬에 `imageAsset`을 작성합니다. 데이터 중심 씬이어도 배경 이미지를 깔 수 있습니다.
+
+```
+목표: 이미지 있는 씬 70% 이상
+- cinematic 씬 (챕터 도입/전환/클라이맥스): placement: "fullscreen"
+- 데이터 씬: placement: "background" (차트 뒤에 이미지)
+- 인물 등장: source: "search" (실존 인물/브랜드) 또는 source: "generate" (역사 재현)
+```
 
 예시 — 주어 생략 시 맥락 추론:
 ```
 씬 3 나레이션: "베르타 벤츠, 남편 몰래 새벽에 두 아들과 106km를 달립니다"
-씬 3 characters: ["berta_benz", "son_1", "son_2"]
+씬 3 characters: ["베르타 벤츠(19세기 독일 여성, 30대)"]
+씬 3 background_context: "1888년 독일 시골길 - 새벽 주행"
+씬 3 is_first_of_background: true
 
 씬 4 나레이션: "모자핀으로 막힌 연료관을 뚫고, 가터벨트로 점화장치를 수리했습니다"
-씬 4 characters: ["berta_benz", "son_1", "son_2"]  ← 나레이션에 이름 없지만 맥락상 동일인
-씬 4 imageAsset.prompt: "베르타 벤츠(Bertha Benz), 긴 드레스를 입은 30대 여성이 차량 엔진..."
+씬 4 characters: ["베르타 벤츠(19세기 독일 여성, 30대)"]  ← 나레이션에 이름 없지만 맥락상 동일인
+씬 4 background_context: "1888년 독일 시골길 - 새벽 주행"
+씬 4 is_first_of_background: false  ← 같은 배경
+씬 4 imageAsset.prompt: "19세기 독일 시골길에서 차량 엔진을 수리하는 30대 여성, 긴 드레스 차림"
 ```
 
 **imageAsset 필드 규칙:**
