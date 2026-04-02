@@ -314,7 +314,11 @@ def send_to_team_webhook(channel: str, summary: str):
             logger.warning("스레드 전송 실패, 웹훅 fallback: %s", e)
 
     # 2. 웹훅 — 주제당 1메시지, 압축 브리프
-    webhook = os.getenv("TEAM_DISCORD_WEBHOOK_URL", "")
+    # 채널별 웹훅 분기
+    if "세모지" in channel or "semoji" in channel.lower():
+        webhook = os.getenv("SEMOJI_TEAM_WEBHOOK_URL", os.getenv("TEAM_DISCORD_WEBHOOK_URL", ""))
+    else:
+        webhook = os.getenv("TEAM_DISCORD_WEBHOOK_URL", "")
     if not webhook:
         return
 
