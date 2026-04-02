@@ -380,15 +380,23 @@ def _build_default_hooks() -> HookManager:
         with_image = sum(1 for s in scenes if s.get("imageAsset") and s["imageAsset"].get("source"))
         ratio = with_image / total * 100 if total else 0
 
-        if ratio < 50:
-            print(f"\n    ❌ [이미지 훅] 이미지 연출 비율 {ratio:.0f}% ({with_image}/{total}) — 50% 미만 (래칫에서 보완)", flush=True)
-            _notify("System", f"이미지 연출 비율 심각: {with_image}/{total}씬 ({ratio:.0f}%) — 래칫 리뷰에서 보완 필요",
+        # imageAsset.prompt는 100% 필수 (장면 연출)
+        with_prompt = sum(1 for s in scenes if (s.get("imageAsset") or {}).get("prompt"))
+        prompt_ratio = with_prompt / total * 100 if total else 0
+
+        if prompt_ratio < 100:
+            missing = [str(s.get("sceneNumber", "?")) for s in scenes
+                       if not (s.get("imageAsset") or {}).get("prompt")]
+            print(f"\n    ❌ [이미지 훅] 장면 연출(prompt) 미작성: {len(missing)}씬 — 씬{','.join(missing[:10])}", flush=True)
+            _notify("System",
+                    f"장면 연출 미작성 {len(missing)}씬 (100% 필수): 씬{','.join(missing[:10])}",
                     phase=context.get("phase", ""), project=context.get("project", ""),
                     level="warning")
-        elif ratio > 95:
-            print(f"\n    ⚠️ [이미지 훅] 이미지 연출 비율 {ratio:.0f}% — 100% 강제 금지, 불필요한 씬 확인", flush=True)
         else:
-            print(f"    ✓ [이미지 훅] 이미지 연출 {with_image}/{total}씬 ({ratio:.0f}%)", flush=True)
+            print(f"    ✓ [이미지 훅] 장면 연출 100% ({with_prompt}/{total}씬)", flush=True)
+
+        # source 배정 비율 (참고용)
+        print(f"    ℹ️ [이미지 훅] source 배정: {with_image}/{total}씬 ({ratio:.0f}%)", flush=True)
 
     hm.register_post_step("step_2", post_validate_image_assets)
 

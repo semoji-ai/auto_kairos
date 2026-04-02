@@ -247,29 +247,40 @@ Ch5. 더 큰 도전 → Ch6. 클라이맥스 → Ch7. 레거시/마무리
 | `metric_wall` | 핵심 지표 모아보기 | items + values 복수 |
 | `timeline` | 시간순 사건 나열 | items(연도+사건) |
 
-### 이미지 배치 — 필요/선택/불필요 3단계
+### 이미지 연출 — 2단계 구조 (기본 연출 100% + 우선순위 배정)
 
-모든 씬에 무조건 넣지 말 것. 100% 강제 금지. 씬 성격에 따라 판단한다.
+**⚠️ 1단계: 모든 씬에 `imageAsset.prompt` (장면 연출) 작성 = 100% 필수**
 
-**⚠️ 필요 (반드시 imageAsset 배정):**
-- 인물이 등장하는 씬 (characters 있음) → fullscreen 또는 side
-- cinematic/감성 전환 씬 → fullscreen
-- 챕터 도입부 → fullscreen (시각적 전환)
-- 장소/시대가 바뀌는 씬 (background_context 변경) → fullscreen 또는 background
-- 제품/브랜드/건물이 언급되는 씬 → search
+어떤 레이아웃이든 상관없이, 모든 씬에 `imageAsset.prompt`로 해당 장면의 시각적 묘사를 작성한다.
+데이터 씬이어도, 클로징 씬이어도, "이 장면을 이미지로 그린다면 어떤 장면인가"를 작성한다.
 
-**선택 (background으로 깔면 좋지만 없어도 됨):**
-- 데이터 중심 (bar, counter, items_list) → background에 관련 이미지
-- 수치 비교/나열 → 없어도 차트만으로 충분할 수 있음
+```json
+// 데이터 씬이어도 장면 연출 작성
+{
+  "layout": "bar",
+  "items": ["2021년", "2022년", "2023년"],
+  "values": [30, 413, 1396],
+  "imageAsset": {
+    "source": "generate",
+    "prompt": "가파르게 상승하는 매출 그래프 앞에서 자신감 있게 서 있는 30대 한국 남성 CEO",
+    "placement": "background"
+  }
+}
+```
 
-**불필요 (imageAsset 없어도 됨):**
-- 순수 텍스트 마무리 (클로징 멘트)
-- headline_only 짧은 전환 씬
-- 데이터만으로 충분한 씬 (metric_wall, 단순 counter)
+**2단계: 매니페스트 반영 우선순위 배정**
 
-**결과 비율: 70~85%가 자연스러움**
-- 50% 미만 → 시각적으로 단조로움 (훅에서 차단)
-- 100% → 억지 이미지로 오히려 산만 (금지)
+모든 씬에 장면 연출이 있지만, 최종 영상에서는 씬 성격에 맞는 방식이 우선된다:
+
+| 씬 성격 | 최종 반영 우선순위 | imageAsset 역할 |
+|---------|-----------------|----------------|
+| cinematic (감성/전환) | **이미지 생성 우선** | fullscreen |
+| 인물 등장 | **이미지 생성/검색 우선** | fullscreen 또는 side |
+| 데이터 (bar/counter/items) | **데이터 레이아웃 우선** | background (배경으로 깔림) |
+| 맵씬 | **지도 우선** | background |
+| headline_only | **텍스트 우선** | background (있으면 깔림) |
+
+→ 사용자가 대시보드에서 우선순위를 전환할 수 있음 (이미지 생성 ↔ 데이터 레이아웃)
 
 **imageAsset.source 선택 기준:**
 - `search`: 실존 인물, 브랜드 로고, 실제 제품, 실제 건물/장소
