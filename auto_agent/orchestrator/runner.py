@@ -3535,7 +3535,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
     def _load_creative_brief(self) -> str:
         """볼트 insights/planning/에서 프로젝트 주제와 매칭되는 기획안 로드."""
         try:
-            vault_dir = Path(os.environ.get("KAIROS_VAULT_DIR", ""))
+            vault_dir = self.vault.vault_dir if self.vault.enabled else Path(os.environ.get("KAIROS_VAULT_DIR", ""))
             if not vault_dir.exists():
                 return ""
             planning_dir = vault_dir / "insights" / "planning"
