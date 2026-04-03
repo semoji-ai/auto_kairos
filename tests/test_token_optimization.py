@@ -112,3 +112,79 @@ class TestContextMemoryHelper:
 
         cm = ContextMemory(tmp_path)
         assert cm.has_entries_for_predecessors("step_3b") is False
+
+
+class TestResearchDigest:
+    """research_digest.json 생성 테스트."""
+
+    def test_generate_digest_creates_file(self, tmp_path):
+        """research_report.json이 있으면 digest가 생성됨."""
+        from auto_agent.orchestrator.runner import PipelineRunner
+
+        report = {
+            "topic": "AI 반도체",
+            "summary": "AI 반도체 시장 개요",
+            "sections": [
+                {"title": "시장 규모", "content": "글로벌 AI 반도체 시장은 2025년 800억 달러 규모입니다."}
+            ],
+            "sources": [
+                {"title": "IDC Report", "url": "https://example.com", "quality_grade": "A"}
+            ],
+        }
+        report_path = tmp_path / "research_report.json"
+        report_path.write_text(json.dumps(report, ensure_ascii=False), encoding="utf-8")
+
+        runner = PipelineRunner.__new__(PipelineRunner)
+        runner.project_dir = tmp_path
+        runner.project_slug = "test-project"
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps({
+            "topic": "AI 반도체",
+            "core_thesis": "AI 반도체 시장이 급성장 중",
+            "key_facts": [{"fact": "2025년 800억 달러", "source": "IDC", "confidence": "high"}],
+            "statistics": [{"label": "시장 규모", "value": 800, "unit": "억 달러", "source": "IDC"}],
+            "episodes": [],
+            "timeline": [],
+            "sources": [{"title": "IDC Report", "url": "https://example.com", "reliability": "high"}],
+        }, ensure_ascii=False))]
+
+        mock_anthropic_module = MagicMock()
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = mock_response
+        mock_anthropic_module.Anthropic.return_value = mock_client
+
+        import sys
+        with patch.dict(sys.modules, {"anthropic": mock_anthropic_module}):
+            runner._generate_research_digest()
+
+        digest_path = tmp_path / "research_digest.json"
+        assert digest_path.exists()
+        digest = json.loads(digest_path.read_text(encoding="utf-8"))
+        assert digest["topic"] == "AI 반도체"
+        assert len(digest["key_facts"]) > 0
+        assert len(digest["statistics"]) > 0
+
+    def test_generate_digest_fallback_on_failure(self, tmp_path):
+        """Anthropic API 실패 시 research_report.json을 digest로 복사."""
+        from auto_agent.orchestrator.runner import PipelineRunner
+
+        report = {"topic": "test", "summary": "test", "sections": [], "sources": []}
+        report_path = tmp_path / "research_report.json"
+        report_path.write_text(json.dumps(report), encoding="utf-8")
+
+        runner = PipelineRunner.__new__(PipelineRunner)
+        runner.project_dir = tmp_path
+        runner.project_slug = "test-project"
+
+        import sys
+        mock_anthropic_module = MagicMock()
+        mock_anthropic_module.Anthropic.side_effect = Exception("API error")
+
+        with patch.dict(sys.modules, {"anthropic": mock_anthropic_module}):
+            runner._generate_research_digest()
+
+        digest_path = tmp_path / "research_digest.json"
+        assert digest_path.exists()
+        digest = json.loads(digest_path.read_text(encoding="utf-8"))
+        assert digest["topic"] == "test"

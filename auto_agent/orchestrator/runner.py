@@ -3770,7 +3770,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
             theme, "SimpleVideo"
         )
 
-    def _resolve_manifest_props(self) -> str | None:
+    def _resolve_manifest_props(self) -> Optional[str]:
         """프로젝트 전용 manifest 파일 경로 반환 (remotion/ 기준 상대경로).
 
         build_manifest.py가 remotion/public/manifests/{fname}.json에 저장하므로
