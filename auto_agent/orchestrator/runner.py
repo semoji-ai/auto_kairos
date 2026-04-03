@@ -876,67 +876,100 @@ class PipelineRunner:
                 phase=self.state.current_phase, project=self.project_slug, level="success")
 
     def _generate_research_digest(self):
-        """research_report.json → research_digest.json 축약본 생성 (Sonnet 1회).
+        """research_report.json → research_digest.json 축약본 생성 (Python 추출).
 
-        실패 시 research_report.json을 그대로 복사 (fallback).
+        LLM 없이 구조화된 데이터에서 핵심 팩트/수치/출처만 추출.
+        토큰 최적화를 위해 서사 텍스트는 제거하고 데이터만 보존.
         """
+        import re
+
         report_path = self.project_dir / "research_report.json"
         digest_path = self.project_dir / "research_digest.json"
+        print(f"    [DIGEST] report_path={report_path}, exists={report_path.exists()}", flush=True)
 
         if not report_path.exists():
+            print("    [DIGEST] research_report.json 없음 → 스킵", flush=True)
             return
 
-        report_text = report_path.read_text(encoding="utf-8")
-
-        digest_prompt = (
-            "아래 리서치 보고서를 정형 축약본(digest)으로 변환하세요.\n"
-            "원본의 모든 수치, 출처, 에피소드를 빠짐없이 포함하되, "
-            "서사적 설명은 제거하고 구조화된 JSON으로 출력하세요.\n\n"
-            f"<research_report>\n{report_text}\n</research_report>\n\n"
-            "출력 JSON 스키마:\n"
-            "{\n"
-            '  "topic": "string",\n'
-            '  "core_thesis": "핵심 논지 2-3문장",\n'
-            '  "key_facts": [{"fact": "string", "source": "string", "confidence": "high|medium|low"}],\n'
-            '  "statistics": [{"label": "string", "value": "number|string", "unit": "string", "source": "string"}],\n'
-            '  "episodes": [{"title": "string", "summary": "1-2문장", "characters": ["string"]}],\n'
-            '  "timeline": [{"date": "string", "event": "string"}],\n'
-            '  "sources": [{"title": "string", "url": "string", "reliability": "high|medium|low"}]\n'
-            "}\n\n"
-            "JSON만 출력하세요. 다른 텍스트 없이."
-        )
-
         try:
-            cli_path = self._find_claude_cli()
-            proc = subprocess.run(
-                [cli_path, "--print", "--output-format", "json",
-                 "--model", "claude-sonnet-4-6", "--max-turns", "1"],
-                input=digest_prompt, capture_output=True, text=True, encoding="utf-8",
-                cwd=str(self.project_dir), timeout=300,
-                env={**os.environ, "CLAUDECODE": ""},
-                **subprocess_kwargs(),
-            )
-            digest_data = self._extract_json_from_cli_output(proc.stdout)
-            if not digest_data:
-                # CLI output에서 JSON 추출 실패 — 원본 텍스트에서 직접 파싱 시도
-                raw = proc.stdout.strip()
-                if raw.startswith("{"):
-                    digest_data = json.loads(raw)
-                else:
-                    raise ValueError(f"CLI에서 JSON 추출 실패: {raw[:200]}")
-
-            digest_path.write_text(
-                json.dumps(digest_data, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-            print(f"    [DIGEST] research_digest.json 생성 완료 "
-                  f"(facts: {len(digest_data.get('key_facts', []))}, "
-                  f"stats: {len(digest_data.get('statistics', []))})", flush=True)
-
+            data = json.loads(report_path.read_text(encoding="utf-8"))
         except Exception as e:
-            print(f"    [DIGEST] 생성 실패 ({e}) → research_report.json fallback", flush=True)
-            import shutil
-            shutil.copy2(report_path, digest_path)
+            print(f"    [DIGEST] JSON 파싱 실패: {e}", flush=True)
+            return
+
+        # 숫자/통계 패턴
+        stat_pattern = re.compile(r'\d+[\d,.]*\s*(%|명|원|달러|조|억|만|배|위|년|개|건|시간|분|초|kg|km|톤|대|편)')
+
+        topic = data.get("topic", self.project_slug)
+        summary = data.get("summary", "")
+
+        # 1) key_facts: 각 섹션에서 핵심 내용 추출
+        key_facts = []
+        for section in data.get("sections", []):
+            title = section.get("title", "")
+            content = section.get("content", "")
+            # 섹션 제목 + 첫 2문장을 fact로 추출
+            sentences = [s.strip() for s in re.split(r'[.。]\s*', content) if len(s.strip()) > 20]
+            for sent in sentences[:3]:
+                key_facts.append({
+                    "fact": sent[:200],
+                    "section": title,
+                    "confidence": "high",
+                })
+
+        # 2) statistics: 숫자가 포함된 문장 추출
+        statistics = []
+        all_text = summary + " " + " ".join(
+            s.get("content", "") for s in data.get("sections", [])
+        )
+        for sentence in re.split(r'[.。]\s*', all_text):
+            matches = stat_pattern.findall(sentence)
+            if matches and len(sentence.strip()) > 10:
+                statistics.append({
+                    "text": sentence.strip()[:200],
+                    "values": matches[:5],
+                })
+        # 중복 제거 + 상위 30개
+        seen = set()
+        unique_stats = []
+        for s in statistics:
+            key = s["text"][:50]
+            if key not in seen:
+                seen.add(key)
+                unique_stats.append(s)
+        statistics = unique_stats[:30]
+
+        # 3) sources: 그대로 복사 (URL, 제목 보존)
+        sources = []
+        for src in data.get("sources", []):
+            sources.append({
+                "title": src.get("title", ""),
+                "url": src.get("url", ""),
+                "reliability": src.get("reliability", "medium"),
+            })
+
+        # 4) digest 조립
+        digest = {
+            "topic": topic,
+            "core_thesis": summary[:500] if summary else "",
+            "key_facts": key_facts[:30],
+            "statistics": statistics,
+            "sources": sources,
+            "section_titles": [s.get("title", "") for s in data.get("sections", [])],
+            "total_sections": len(data.get("sections", [])),
+            "total_sources": len(sources),
+        }
+
+        digest_path.write_text(
+            json.dumps(digest, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        report_size = report_path.stat().st_size
+        digest_size = digest_path.stat().st_size
+        ratio = round(digest_size / report_size * 100, 1) if report_size > 0 else 0
+        print(f"    [DIGEST] research_digest.json 생성 완료 "
+              f"(facts: {len(key_facts)}, stats: {len(statistics)}, "
+              f"sources: {len(sources)}, 축약률: {ratio}%)", flush=True)
 
     def _supplement_research(self, report_path: Path, topic: str, gap_reason: str) -> bool:
         """리서치 보충: 검증 실패 시 누락된 부분만 타겟으로 단일 Claude 호출 후 병합.
@@ -1075,7 +1108,7 @@ class PipelineRunner:
                     try:
                         self._generate_research_digest()
                     except Exception as e:
-                        print(f"    [WARN] digest 생성 실패: {e}")
+                        print(f"    [WARN] digest 생성 실패: {e}", flush=True)
                     return StepResult(step_id=step_id, status="completed")
                 elif verify_result:
                     reason = verify_result.get("reason", "주제 불일치")
