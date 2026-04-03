@@ -18,16 +18,19 @@ from typing import List, Optional
 
 
 def _resolve_vault_dir() -> Path:
-    """볼트 경로 결정. 환경변수 → Projects → Desktop 순으로 시도."""
+    """볼트 경로 결정. 환경변수 → NAS → Projects → Desktop 순으로 시도."""
     if env := os.environ.get("KAIROS_VAULT_DIR"):
         return Path(env)
+    nas_path = Path("/Volumes/kairos/kairos_vault/kairos-vault")
     projects_path = Path.home() / "Projects" / "kairos-vault"
     desktop_path = Path.home() / "Desktop" / "kairos-vault"
+    if nas_path.exists():
+        return nas_path
     if projects_path.exists():
         return projects_path
     if desktop_path.exists():
         return desktop_path
-    return projects_path  # 기본값 (미존재 시 비활성)
+    return nas_path  # 기본값 (NAS 마운트 대기)
 
 
 def _local_vault_dir() -> Path:
