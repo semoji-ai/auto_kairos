@@ -128,3 +128,4 @@ sampleScript/
 .venv/
 .credentials/
 logs/
+.worktrees/
