@@ -188,6 +188,14 @@ class ContextMemory:
                 break
         self.save(memory)
 
+    def has_entries_for_predecessors(self, current_step_id: str) -> bool:
+        """현재 step 이전에 수집된 엔트리가 있는지 확인."""
+        memory = self.load()
+        return any(
+            _step_order(e["step_id"]) < _step_order(current_step_id)
+            for e in memory.get("entries", [])
+        )
+
 
 def _step_order(step_id: str) -> int:
     """step_id에서 순서 번호 추출. 'step_6' → 6, 'step_8b' → 8."""
