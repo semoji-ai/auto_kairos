@@ -108,13 +108,12 @@ _MSG_MAP = {
     "scene_decomposition":        ("씬 분할",              "씬 분할 완료"),
     "creative_direction":         ("창의적 연출 + 에셋 설계", "창의적 연출 + 에셋 설계 완료"),
     "data_enrichment_and_motion": ("데이터 보강/모션 설계",  "데이터 보강/모션 설계 완료"),
-    # phase_4
+    # stage_3 내부 (assembly-director 서브태스크)
     "tts_preprocess":             ("TTS 전처리",           "TTS 전처리 완료"),
     "tts_generation":             ("음성 생성",            "음성 생성 완료"),
     "image_asset_sourcing":       ("이미지 소싱",           "이미지 소싱 완료"),
     "subtitle_sync":              ("자막 동기화",           "자막 동기화 완료"),
     "tts_verification":           ("TTS 발음 검증",         "TTS 발음 검증 완료"),
-    # phase_5
     "data_validation":            ("데이터 정합성 검증",     "데이터 검증 통과"),
     "manifest_building":          ("매니페스트 빌드",        "매니페스트 빌드 완료"),
     "still_capture":              ("스틸 프레임 캡처",       "스틸 프레임 캡처 완료"),
@@ -876,6 +875,62 @@ class PipelineRunner:
         _notify("Runner", f"리서치 병합 완료: {len(sections)}섹션, {len(sources)}소스",
                 phase=self.state.current_phase, project=self.project_slug, level="success")
 
+    def _generate_research_digest(self):
+        """research_report.json → research_digest.json 축약본 생성 (Sonnet 1회).
+
+        실패 시 research_report.json을 그대로 복사 (fallback).
+        """
+        report_path = self.project_dir / "research_report.json"
+        digest_path = self.project_dir / "research_digest.json"
+
+        if not report_path.exists():
+            return
+
+        report_text = report_path.read_text(encoding="utf-8")
+
+        try:
+            import anthropic
+
+            client = anthropic.Anthropic()
+            response = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=4096,
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        "아래 리서치 보고서를 정형 축약본(digest)으로 변환하세요.\n"
+                        "원본의 모든 수치, 출처, 에피소드를 빠짐없이 포함하되, "
+                        "서사적 설명은 제거하고 구조화된 JSON으로 출력하세요.\n\n"
+                        f"<research_report>\n{report_text}\n</research_report>\n\n"
+                        "출력 JSON 스키마:\n"
+                        "{\n"
+                        '  "topic": "string",\n'
+                        '  "core_thesis": "핵심 논지 2-3문장",\n'
+                        '  "key_facts": [{"fact": "string", "source": "string", "confidence": "high|medium|low"}],\n'
+                        '  "statistics": [{"label": "string", "value": "number|string", "unit": "string", "source": "string"}],\n'
+                        '  "episodes": [{"title": "string", "summary": "1-2문장", "characters": ["string"]}],\n'
+                        '  "timeline": [{"date": "string", "event": "string"}],\n'
+                        '  "sources": [{"title": "string", "url": "string", "reliability": "high|medium|low"}]\n'
+                        "}\n\n"
+                        "JSON만 출력하세요. 다른 텍스트 없이."
+                    ),
+                }],
+            )
+
+            digest_data = json.loads(response.content[0].text)
+            digest_path.write_text(
+                json.dumps(digest_data, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            print(f"    [DIGEST] research_digest.json 생성 완료 "
+                  f"(facts: {len(digest_data.get('key_facts', []))}, "
+                  f"stats: {len(digest_data.get('statistics', []))})")
+
+        except Exception as e:
+            print(f"    [DIGEST] 생성 실패 ({e}) → research_report.json fallback")
+            import shutil
+            shutil.copy2(report_path, digest_path)
+
     def _supplement_research(self, report_path: Path, topic: str, gap_reason: str) -> bool:
         """리서치 보충: 검증 실패 시 누락된 부분만 타겟으로 단일 Claude 호출 후 병합.
 
@@ -1009,6 +1064,11 @@ class PipelineRunner:
                             self._vault_save_research({"agent": "research-orchestrator"}, result)
                         except Exception as ve:
                             print(f"    [WARN] 볼트 축적 실패: {ve}")
+                    # digest 생성 (토큰 최적화)
+                    try:
+                        self._generate_research_digest()
+                    except Exception as e:
+                        print(f"    [WARN] digest 생성 실패: {e}")
                     return StepResult(step_id=step_id, status="completed")
                 elif verify_result:
                     reason = verify_result.get("reason", "주제 불일치")
@@ -1053,6 +1113,11 @@ class PipelineRunner:
                                         self._vault_save_research({"agent": "research-orchestrator"}, result)
                                     except Exception as ve:
                                         print(f"    [WARN] 볼트 축적 실패: {ve}")
+                                # digest 생성 (토큰 최적화)
+                                try:
+                                    self._generate_research_digest()
+                                except Exception as e:
+                                    print(f"    [WARN] digest 생성 실패: {e}")
                                 return StepResult(step_id=step_id, status="completed")
                             else:
                                 r2 = (verify2 or {}).get("reason", "보충 후에도 불일치")
@@ -1067,6 +1132,11 @@ class PipelineRunner:
             print(f"    [검증] 리서치: {sections}섹션, {sources}소스 ✓ (구조 검증)")
             _notify("research-orchestrator", f"보고서 확인! {sections}섹션, {sources}소스",
                     phase=self.state.current_phase, project=self.project_slug, level="success")
+            # digest 생성 (토큰 최적화)
+            try:
+                self._generate_research_digest()
+            except Exception as e:
+                print(f"    [WARN] digest 생성 실패: {e}")
             return StepResult(step_id=step_id, status="completed")
 
         elif step_id == "step_2":
