@@ -888,46 +888,53 @@ class PipelineRunner:
 
         report_text = report_path.read_text(encoding="utf-8")
 
+        digest_prompt = (
+            "아래 리서치 보고서를 정형 축약본(digest)으로 변환하세요.\n"
+            "원본의 모든 수치, 출처, 에피소드를 빠짐없이 포함하되, "
+            "서사적 설명은 제거하고 구조화된 JSON으로 출력하세요.\n\n"
+            f"<research_report>\n{report_text}\n</research_report>\n\n"
+            "출력 JSON 스키마:\n"
+            "{\n"
+            '  "topic": "string",\n'
+            '  "core_thesis": "핵심 논지 2-3문장",\n'
+            '  "key_facts": [{"fact": "string", "source": "string", "confidence": "high|medium|low"}],\n'
+            '  "statistics": [{"label": "string", "value": "number|string", "unit": "string", "source": "string"}],\n'
+            '  "episodes": [{"title": "string", "summary": "1-2문장", "characters": ["string"]}],\n'
+            '  "timeline": [{"date": "string", "event": "string"}],\n'
+            '  "sources": [{"title": "string", "url": "string", "reliability": "high|medium|low"}]\n'
+            "}\n\n"
+            "JSON만 출력하세요. 다른 텍스트 없이."
+        )
+
         try:
-            import anthropic
-
-            client = anthropic.Anthropic()
-            response = client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=4096,
-                messages=[{
-                    "role": "user",
-                    "content": (
-                        "아래 리서치 보고서를 정형 축약본(digest)으로 변환하세요.\n"
-                        "원본의 모든 수치, 출처, 에피소드를 빠짐없이 포함하되, "
-                        "서사적 설명은 제거하고 구조화된 JSON으로 출력하세요.\n\n"
-                        f"<research_report>\n{report_text}\n</research_report>\n\n"
-                        "출력 JSON 스키마:\n"
-                        "{\n"
-                        '  "topic": "string",\n'
-                        '  "core_thesis": "핵심 논지 2-3문장",\n'
-                        '  "key_facts": [{"fact": "string", "source": "string", "confidence": "high|medium|low"}],\n'
-                        '  "statistics": [{"label": "string", "value": "number|string", "unit": "string", "source": "string"}],\n'
-                        '  "episodes": [{"title": "string", "summary": "1-2문장", "characters": ["string"]}],\n'
-                        '  "timeline": [{"date": "string", "event": "string"}],\n'
-                        '  "sources": [{"title": "string", "url": "string", "reliability": "high|medium|low"}]\n'
-                        "}\n\n"
-                        "JSON만 출력하세요. 다른 텍스트 없이."
-                    ),
-                }],
+            cli_path = self._find_claude_cli()
+            proc = subprocess.run(
+                [cli_path, "--print", "--output-format", "json",
+                 "--model", "claude-sonnet-4-6", "--max-turns", "1"],
+                input=digest_prompt, capture_output=True, text=True, encoding="utf-8",
+                cwd=str(self.project_dir), timeout=120,
+                env={**os.environ, "CLAUDECODE": ""},
+                **subprocess_kwargs(),
             )
+            digest_data = self._extract_json_from_cli_output(proc.stdout)
+            if not digest_data:
+                # CLI output에서 JSON 추출 실패 — 원본 텍스트에서 직접 파싱 시도
+                raw = proc.stdout.strip()
+                if raw.startswith("{"):
+                    digest_data = json.loads(raw)
+                else:
+                    raise ValueError(f"CLI에서 JSON 추출 실패: {raw[:200]}")
 
-            digest_data = json.loads(response.content[0].text)
             digest_path.write_text(
                 json.dumps(digest_data, ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )
             print(f"    [DIGEST] research_digest.json 생성 완료 "
                   f"(facts: {len(digest_data.get('key_facts', []))}, "
-                  f"stats: {len(digest_data.get('statistics', []))})")
+                  f"stats: {len(digest_data.get('statistics', []))})", flush=True)
 
         except Exception as e:
-            print(f"    [DIGEST] 생성 실패 ({e}) → research_report.json fallback")
+            print(f"    [DIGEST] 생성 실패 ({e}) → research_report.json fallback", flush=True)
             import shutil
             shutil.copy2(report_path, digest_path)
 

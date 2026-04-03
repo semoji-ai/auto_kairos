@@ -118,8 +118,9 @@ class TestResearchDigest:
     """research_digest.json 생성 테스트."""
 
     def test_generate_digest_creates_file(self, tmp_path):
-        """research_report.json이 있으면 digest가 생성됨."""
+        """CLI 호출 성공 시 digest가 생성됨."""
         from auto_agent.orchestrator.runner import PipelineRunner
+        import subprocess
 
         report = {
             "topic": "AI 반도체",
@@ -138,8 +139,7 @@ class TestResearchDigest:
         runner.project_dir = tmp_path
         runner.project_slug = "test-project"
 
-        mock_response = MagicMock()
-        mock_response.content = [MagicMock(text=json.dumps({
+        digest_json = json.dumps({
             "topic": "AI 반도체",
             "core_thesis": "AI 반도체 시장이 급성장 중",
             "key_facts": [{"fact": "2025년 800억 달러", "source": "IDC", "confidence": "high"}],
@@ -147,15 +147,15 @@ class TestResearchDigest:
             "episodes": [],
             "timeline": [],
             "sources": [{"title": "IDC Report", "url": "https://example.com", "reliability": "high"}],
-        }, ensure_ascii=False))]
+        }, ensure_ascii=False)
 
-        mock_anthropic_module = MagicMock()
-        mock_client = MagicMock()
-        mock_client.messages.create.return_value = mock_response
-        mock_anthropic_module.Anthropic.return_value = mock_client
+        mock_proc = MagicMock()
+        mock_proc.stdout = json.dumps({"result": digest_json})
+        mock_proc.returncode = 0
 
-        import sys
-        with patch.dict(sys.modules, {"anthropic": mock_anthropic_module}):
+        with patch.object(runner, '_find_claude_cli', return_value='/usr/bin/claude'), \
+             patch.object(runner, '_extract_json_from_cli_output', return_value=json.loads(digest_json)), \
+             patch('subprocess.run', return_value=mock_proc):
             runner._generate_research_digest()
 
         digest_path = tmp_path / "research_digest.json"
@@ -166,7 +166,7 @@ class TestResearchDigest:
         assert len(digest["statistics"]) > 0
 
     def test_generate_digest_fallback_on_failure(self, tmp_path):
-        """Anthropic API 실패 시 research_report.json을 digest로 복사."""
+        """CLI 실패 시 research_report.json을 digest로 복사."""
         from auto_agent.orchestrator.runner import PipelineRunner
 
         report = {"topic": "test", "summary": "test", "sections": [], "sources": []}
@@ -177,11 +177,7 @@ class TestResearchDigest:
         runner.project_dir = tmp_path
         runner.project_slug = "test-project"
 
-        import sys
-        mock_anthropic_module = MagicMock()
-        mock_anthropic_module.Anthropic.side_effect = Exception("API error")
-
-        with patch.dict(sys.modules, {"anthropic": mock_anthropic_module}):
+        with patch.object(runner, '_find_claude_cli', side_effect=Exception("CLI not found")):
             runner._generate_research_digest()
 
         digest_path = tmp_path / "research_digest.json"
