@@ -912,7 +912,7 @@ class PipelineRunner:
                 [cli_path, "--print", "--output-format", "json",
                  "--model", "claude-sonnet-4-6", "--max-turns", "1"],
                 input=digest_prompt, capture_output=True, text=True, encoding="utf-8",
-                cwd=str(self.project_dir), timeout=120,
+                cwd=str(self.project_dir), timeout=300,
                 env={**os.environ, "CLAUDECODE": ""},
                 **subprocess_kwargs(),
             )
