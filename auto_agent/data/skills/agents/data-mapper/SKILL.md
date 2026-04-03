@@ -18,7 +18,7 @@ script-director가 작성한 scene_specs.json의 **데이터 필드**를 researc
 ## 입력
 
 - `scene_specs.json` — 원고+연출 완성본. 데이터 필드가 비어있거나 불완전할 수 있음
-- `research_report.json` — 리서치 결과 (statistics, episodes, key_figures, timeline)
+- `research_digest.json` — 리서치 축약본 (statistics, key_facts, episodes, timeline). 정형화된 수치/출처를 이 파일에서 매핑.
 
 ## 출력
 
@@ -41,7 +41,7 @@ script-director가 작성한 scene_specs.json의 **데이터 필드**를 researc
 
 ### Step 2: 리서치 데이터 매핑
 
-`research_report.json`에서 정확한 수치를 찾아 매핑합니다.
+`research_digest.json`에서 정확한 수치를 찾아 매핑합니다. statistics 배열의 label/value/unit/source를 그대로 사용하세요.
 
 **규칙:**
 - 리서치에 있는 수치만 사용 (추측/계산 금지)
