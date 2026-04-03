@@ -1863,10 +1863,16 @@ class PipelineRunner:
 
         # 컨텍스트 파일 빌드
         context_block = ""
-        for fname in ["research_report.json", "outline.json"]:
+        # 리서치 컨텍스트: digest 우선, 없으면 report fallback
+        for fname in ["research_digest.json", "research_report.json"]:
             fpath = self.project_dir / fname
             if fpath.exists():
                 context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:50000]}\n</file>\n"
+                break
+        # outline은 별도
+        outline_path = self.project_dir / "outline.json"
+        if outline_path.exists():
+            context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:50000]}\n</file>\n'
 
         manuscript_path = self.project_dir / "final_manuscript.md"
         if manuscript_path.exists():
@@ -1984,10 +1990,16 @@ class PipelineRunner:
 
         # 공통 컨텍스트 파일
         context_block = ""
-        for fname in ["research_report.json", "outline.json"]:
+        # 리서치 컨텍스트: digest 우선, 없으면 report fallback
+        for fname in ["research_digest.json", "research_report.json"]:
             fpath = self.project_dir / fname
             if fpath.exists():
                 context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:50000]}\n</file>\n"
+                break
+        # outline은 별도
+        outline_path = self.project_dir / "outline.json"
+        if outline_path.exists():
+            context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:50000]}\n</file>\n'
 
         # final_manuscript.md — 해당 챕터 구간만 추출
         manuscript_path = self.project_dir / "final_manuscript.md"
@@ -3210,6 +3222,25 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             # 재심 컨텍스트를 프롬프트에 주입
             if prev_review_context:
                 review_step["_previous_review"] = prev_review_context
+
+            # Delta review: R2+ 에서는 변경 씬만 전달
+            if round_num > 1 and best_specs:
+                curr_specs = specs_path.read_text(encoding="utf-8") if specs_path.exists() else ""
+                if curr_specs:
+                    try:
+                        delta = self._compute_scene_delta(best_specs, curr_specs)
+                        review_step["_scene_delta"] = json.dumps(delta, ensure_ascii=False)
+                        # scene_specs.json을 input에서 제거 (delta로 대체)
+                        review_step["input"] = [
+                            inp for inp in review_step["input"]
+                            if inp != "scene_specs.json"
+                        ]
+                        print(f"    [래칫 R{round_num}] delta 모드: "
+                              f"변경 {len(delta['changed_scenes'])}씬, "
+                              f"추가 {len(delta['added_scenes'])}씬, "
+                              f"삭제 {len(delta['removed_scene_numbers'])}씬")
+                    except Exception as e:
+                        print(f"    [래칫 R{round_num}] delta 계산 실패 ({e}) → 전체 전달")
             review_result = self._run_agent_step(review_step)
             self._accumulate_cost(total_cost, review_result.cost_info)
 
@@ -3294,7 +3325,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 "name": f"revise_r{round_num}",
                 "agent": reviser_agent,
                 "conditional": "review_verdict_revise",
-                "input": ["scene_specs.json", "review_feedback.json", "research_report.json"],
+                "input": ["scene_specs.json", "review_feedback.json", "research_digest.json"],
                 "output": ["scene_specs.json"],
                 "skills": step.get("skills", []),
                 "skip_resume": True,
@@ -3321,6 +3352,41 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         total["cost_usd"] += cost.get("cost_usd", 0.0)
 
     @staticmethod
+    def _compute_scene_delta(prev_specs_json: str, curr_specs_json: str) -> dict:
+        """이전/현재 scene_specs 비교 → 변경 씬 추출."""
+        prev = json.loads(prev_specs_json)
+        curr = json.loads(curr_specs_json)
+
+        if isinstance(prev, dict):
+            prev = prev.get("scenes", prev.get("data", []))
+        if isinstance(curr, dict):
+            curr = curr.get("scenes", curr.get("data", []))
+
+        prev_map = {s["sceneNumber"]: s for s in prev}
+        curr_map = {s["sceneNumber"]: s for s in curr}
+
+        changed = []
+        added = []
+        removed = []
+
+        for sn, scene in curr_map.items():
+            if sn not in prev_map:
+                added.append(scene)
+            elif scene != prev_map[sn]:
+                changed.append(scene)
+
+        for sn in prev_map:
+            if sn not in curr_map:
+                removed.append(sn)
+
+        return {
+            "changed_scenes": changed,
+            "added_scenes": added,
+            "removed_scene_numbers": removed,
+            "unchanged_count": len(curr_map) - len(changed) - len(added),
+        }
+
+    @staticmethod
     def _build_previous_review_context(step: dict) -> str:
         """이전 리뷰 피드백을 재심 컨텍스트로 주입 (리뷰어 일관성 보장)."""
         prev_review = step.get("_previous_review", "")
@@ -3336,6 +3402,32 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             f"{prev_review}\n"
             "</previous_review>\n"
         )
+
+    @staticmethod
+    def _build_scene_delta_context(step: dict) -> str:
+        """R2+ 리뷰에서 변경 씬 delta를 프롬프트에 주입."""
+        delta_json = step.get("_scene_delta", "")
+        if not delta_json:
+            return ""
+
+        delta = json.loads(delta_json)
+        lines = [
+            "<scene_delta>",
+            "⚠️ 이번 라운드는 delta 모드입니다. 아래 변경/추가된 씬만 재평가하세요.",
+            f"미변경 씬 {delta['unchanged_count']}개는 이전 점수를 그대로 유지합니다.",
+            "",
+        ]
+        if delta["changed_scenes"]:
+            lines.append("## 변경된 씬:")
+            lines.append(json.dumps(delta["changed_scenes"], ensure_ascii=False, indent=2))
+        if delta["added_scenes"]:
+            lines.append("## 추가된 씬:")
+            lines.append(json.dumps(delta["added_scenes"], ensure_ascii=False, indent=2))
+        if delta["removed_scene_numbers"]:
+            lines.append(f"## 삭제된 씬 번호: {delta['removed_scene_numbers']}")
+
+        lines.append("</scene_delta>")
+        return "\n".join(lines)
 
     def _build_revision_instruction(self, step: dict) -> str:
         """리뷰 피드백 기반 수정 모드 지시문 생성."""
@@ -3517,12 +3609,22 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         if isinstance(optional_inputs, str):
             optional_inputs = [optional_inputs]
 
+        # context_replaces 체크
+        context_replaces = set(step.get("context_replaces", []))
+
         input_lines = []
         for inp in inputs:
+            if inp in context_replaces:
+                if self.context_memory.has_entries_for_predecessors(step.get("id", "")):
+                    print(f"    [context_replaces] {inp} → context_memory로 대체")
+                    continue
             resolved = self._resolve_output_path(inp)
             tag = "✓" if resolved.exists() else "✗ MISSING"
             input_lines.append(f"- {inp}: {resolved} [{tag}]")
         for inp in optional_inputs:
+            if inp in context_replaces:
+                if self.context_memory.has_entries_for_predecessors(step.get("id", "")):
+                    continue
             resolved = self._resolve_output_path(inp)
             tag = "✓" if resolved.exists() else "없음 (선택)"
             input_lines.append(f"- {inp}: {resolved} [{tag}]")
@@ -3613,6 +3715,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 {step.get("description", "")}
 {step.get("notes", "")}
 
+{self._build_scene_delta_context(step)}
 입력 파일:
 {chr(10).join(input_lines) if input_lines else "- 없음"}
 

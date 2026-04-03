@@ -188,3 +188,50 @@ class TestResearchDigest:
         assert digest_path.exists()
         digest = json.loads(digest_path.read_text(encoding="utf-8"))
         assert digest["topic"] == "test"
+
+
+class TestSceneDelta:
+    """_compute_scene_delta 테스트."""
+
+    def test_detects_changed_scene(self):
+        from auto_agent.orchestrator.runner import PipelineRunner
+
+        prev = [{"sceneNumber": 1, "narration": "old"}, {"sceneNumber": 2, "narration": "same"}]
+        curr = [{"sceneNumber": 1, "narration": "new"}, {"sceneNumber": 2, "narration": "same"}]
+
+        delta = PipelineRunner._compute_scene_delta(json.dumps(prev), json.dumps(curr))
+        assert len(delta["changed_scenes"]) == 1
+        assert delta["changed_scenes"][0]["sceneNumber"] == 1
+        assert delta["unchanged_count"] == 1
+
+    def test_detects_added_scene(self):
+        from auto_agent.orchestrator.runner import PipelineRunner
+
+        prev = [{"sceneNumber": 1, "narration": "a"}]
+        curr = [{"sceneNumber": 1, "narration": "a"}, {"sceneNumber": 2, "narration": "b"}]
+
+        delta = PipelineRunner._compute_scene_delta(json.dumps(prev), json.dumps(curr))
+        assert len(delta["added_scenes"]) == 1
+        assert delta["added_scenes"][0]["sceneNumber"] == 2
+        assert delta["unchanged_count"] == 1
+
+    def test_detects_removed_scene(self):
+        from auto_agent.orchestrator.runner import PipelineRunner
+
+        prev = [{"sceneNumber": 1, "narration": "a"}, {"sceneNumber": 2, "narration": "b"}]
+        curr = [{"sceneNumber": 1, "narration": "a"}]
+
+        delta = PipelineRunner._compute_scene_delta(json.dumps(prev), json.dumps(curr))
+        assert delta["removed_scene_numbers"] == [2]
+        assert delta["unchanged_count"] == 1
+
+    def test_no_changes(self):
+        from auto_agent.orchestrator.runner import PipelineRunner
+
+        scenes = [{"sceneNumber": 1, "narration": "a"}, {"sceneNumber": 2, "narration": "b"}]
+
+        delta = PipelineRunner._compute_scene_delta(json.dumps(scenes), json.dumps(scenes))
+        assert len(delta["changed_scenes"]) == 0
+        assert len(delta["added_scenes"]) == 0
+        assert len(delta["removed_scene_numbers"]) == 0
+        assert delta["unchanged_count"] == 2
