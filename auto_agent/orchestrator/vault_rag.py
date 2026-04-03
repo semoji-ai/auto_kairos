@@ -53,6 +53,7 @@ class VaultRAG:
         self.local_vault = _local_vault_dir()
         self.enabled = self._check_enabled()
         self._nas_available = self.vault_dir.exists()
+        self._search_cache: dict[str, str] = {}
         if not self.enabled:
             print(f"[VaultRAG] 볼트 미발견: {self.vault_dir} -- 비활성")
         elif not self._nas_available:
@@ -127,13 +128,10 @@ class VaultRAG:
     # 검색 (리서치/원고 전)
     # ─────────────────────────────────────
 
-    def search_for_research(self, topic: str, category: str = "", channel: str = None) -> str:
+    def _do_search_for_research(self, topic: str, category: str = "", channel: str = None) -> str:
         """리서치 시작 전: 관련 기존 지식을 검색하여 컨텍스트 텍스트 반환.
         channel: "이로미즘" | "세모지" | None(전체)
         """
-        if not self.enabled:
-            return ""
-
         sections = []
 
         # Phase 2: 시맨틱 검색 우선 시도 (채널 필터 적용)
@@ -212,13 +210,21 @@ class VaultRAG:
             + "\n</vault_knowledge>"
         )
 
-    def search_for_manuscript(self, topic: str, category: str = "", channel: str = None) -> str:
+    def search_for_research(self, topic: str, category: str = "", channel: str = None) -> str:
+        """리서치 검색 래퍼 - 캐싱 처리."""
+        if not self.enabled:
+            return ""
+        cache_key = f"research:{topic}:{category}:{channel or ''}"
+        if cache_key in self._search_cache:
+            return self._search_cache[cache_key]
+        result = self._do_search_for_research(topic, category, channel=channel)
+        self._search_cache[cache_key] = result
+        return result
+
+    def _do_search_for_manuscript(self, topic: str, category: str = "", channel: str = None) -> str:
         """원고 작성 전: 서사 패턴/문체 DNA를 검색하여 컨텍스트 텍스트 반환.
         channel: "이로미즘" | "세모지" | None(전체)
         """
-        if not self.enabled:
-            return ""
-
         sections = []
 
         # Phase 2: 시맨틱 검색 우선 (01-patterns 폴더 + 채널 필터)
@@ -268,6 +274,17 @@ class VaultRAG:
             + "\n".join(sections)
             + "\n</vault_patterns>"
         )
+
+    def search_for_manuscript(self, topic: str, category: str = "", channel: str = None) -> str:
+        """원고 검색 래퍼 - 캐싱 처리."""
+        if not self.enabled:
+            return ""
+        cache_key = f"manuscript:{topic}:{category}:{channel or ''}"
+        if cache_key in self._search_cache:
+            return self._search_cache[cache_key]
+        result = self._do_search_for_manuscript(topic, category, channel=channel)
+        self._search_cache[cache_key] = result
+        return result
 
     # ─────────────────────────────────────
     # 축적 (리서치/원고 후)
