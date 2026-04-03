@@ -59,7 +59,7 @@
 |----------|-------|------|------|------|
 | research-orchestrator | 1 | opus | 주제/기획안 | research_report.json |
 | script-director | 2 | opus | research_report.json | scene_specs.json |
-| data-mapper | 2 | sonnet | scene_specs + research | scene_specs.json (데이터) |
+| data-mapper | 2 | sonnet | scene_specs + research_digest | scene_specs.json (데이터) |
 | script-reviewer | 2 | sonnet | scene_specs.json | review_feedback.json |
 | fact-verifier | 2 | sonnet | scene_specs.json | factcheck_report.json |
 | assembly-director | 3 | opus | scene_specs.json | TTS + 이미지 + 자막 + 영상 |
@@ -69,7 +69,7 @@
 ### 데이터 흐름
 
 ```
-볼트(NAS) → Stage 0 기획안 → Stage 1 리서치 → Stage 2 원고+연출 → Stage 3 조립+렌더링 → Stage 4 성과분석 → 볼트
+볼트(NAS) → Stage 0 기획안 → Stage 1 리서치 → research_digest → Stage 2 원고+연출 → Stage 3 조립+렌더링 → Stage 4 성과분석 → 볼트
                                                     ↑ 래칫 루프 (최대 3라운드)
 ```
 

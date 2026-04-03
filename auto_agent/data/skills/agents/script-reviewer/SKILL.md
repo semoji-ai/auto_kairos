@@ -80,12 +80,20 @@ AutoResearch 래칫 방식: 이전 버전 대비 개선된 부분만 채택, 퇴
 ### Phase 1: 평가
 
 ```
-1. scene_specs.json 읽기
-2. research_report.json 읽기 (팩트 대조용)
+1. scene_specs.json 읽기 (delta 모드에서는 `<scene_delta>` 블록의 변경 씬만 대상)
+2. research_digest.json 읽기 (팩트 대조용 — 핵심 팩트/통계 축약본)
 3. 이전 리뷰(previous_review)가 있으면 반드시 읽기
 4. 씬별로 시청자 + 전문가 관점 평가
 5. 씬별 점수 + 구체적 피드백 생성
 ```
+
+### ⚠️ Delta 모드 (R2+ 자동 적용)
+
+프롬프트에 `<scene_delta>` 블록이 있으면 delta 모드입니다:
+- `<scene_delta>` 안의 변경/추가된 씬만 재채점합니다
+- 미변경 씬은 이전 리뷰의 점수를 그대로 사용합니다
+- scene_specs.json 전체를 다시 읽을 필요 없습니다
+- 삭제된 씬 번호가 있으면 overall 점수 계산에서 제외합니다
 
 ### ⚠️ 재심 규칙 (2라운드 이상 필수)
 

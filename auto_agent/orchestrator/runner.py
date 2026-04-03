@@ -108,13 +108,12 @@ _MSG_MAP = {
     "scene_decomposition":        ("씬 분할",              "씬 분할 완료"),
     "creative_direction":         ("창의적 연출 + 에셋 설계", "창의적 연출 + 에셋 설계 완료"),
     "data_enrichment_and_motion": ("데이터 보강/모션 설계",  "데이터 보강/모션 설계 완료"),
-    # phase_4
+    # stage_3 내부 (assembly-director 서브태스크)
     "tts_preprocess":             ("TTS 전처리",           "TTS 전처리 완료"),
     "tts_generation":             ("음성 생성",            "음성 생성 완료"),
     "image_asset_sourcing":       ("이미지 소싱",           "이미지 소싱 완료"),
     "subtitle_sync":              ("자막 동기화",           "자막 동기화 완료"),
     "tts_verification":           ("TTS 발음 검증",         "TTS 발음 검증 완료"),
-    # phase_5
     "data_validation":            ("데이터 정합성 검증",     "데이터 검증 통과"),
     "manifest_building":          ("매니페스트 빌드",        "매니페스트 빌드 완료"),
     "still_capture":              ("스틸 프레임 캡처",       "스틸 프레임 캡처 완료"),
@@ -876,6 +875,102 @@ class PipelineRunner:
         _notify("Runner", f"리서치 병합 완료: {len(sections)}섹션, {len(sources)}소스",
                 phase=self.state.current_phase, project=self.project_slug, level="success")
 
+    def _generate_research_digest(self):
+        """research_report.json → research_digest.json 축약본 생성 (Python 추출).
+
+        LLM 없이 구조화된 데이터에서 핵심 팩트/수치/출처만 추출.
+        토큰 최적화를 위해 서사 텍스트는 제거하고 데이터만 보존.
+        """
+        import re
+
+        report_path = self.project_dir / "research_report.json"
+        digest_path = self.project_dir / "research_digest.json"
+        print(f"    [DIGEST] report_path={report_path}, exists={report_path.exists()}", flush=True)
+
+        if not report_path.exists():
+            print("    [DIGEST] research_report.json 없음 → 스킵", flush=True)
+            return
+
+        try:
+            data = json.loads(report_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"    [DIGEST] JSON 파싱 실패: {e}", flush=True)
+            return
+
+        # 숫자/통계 패턴
+        stat_pattern = re.compile(r'\d+[\d,.]*\s*(%|명|원|달러|조|억|만|배|위|년|개|건|시간|분|초|kg|km|톤|대|편)')
+
+        topic = data.get("topic", self.project_slug)
+        summary = data.get("summary", "")
+
+        # 1) key_facts: 각 섹션에서 핵심 내용 추출
+        key_facts = []
+        for section in data.get("sections", []):
+            title = section.get("title", "")
+            content = section.get("content", "")
+            # 섹션 제목 + 첫 2문장을 fact로 추출
+            sentences = [s.strip() for s in re.split(r'[.。]\s*', content) if len(s.strip()) > 20]
+            for sent in sentences[:3]:
+                key_facts.append({
+                    "fact": sent[:200],
+                    "section": title,
+                    "confidence": "high",
+                })
+
+        # 2) statistics: 숫자가 포함된 문장 추출
+        statistics = []
+        all_text = summary + " " + " ".join(
+            s.get("content", "") for s in data.get("sections", [])
+        )
+        for sentence in re.split(r'[.。]\s*', all_text):
+            matches = stat_pattern.findall(sentence)
+            if matches and len(sentence.strip()) > 10:
+                statistics.append({
+                    "text": sentence.strip()[:200],
+                    "values": matches[:5],
+                })
+        # 중복 제거 + 상위 30개
+        seen = set()
+        unique_stats = []
+        for s in statistics:
+            key = s["text"][:50]
+            if key not in seen:
+                seen.add(key)
+                unique_stats.append(s)
+        statistics = unique_stats[:30]
+
+        # 3) sources: 그대로 복사 (URL, 제목 보존)
+        sources = []
+        for src in data.get("sources", []):
+            sources.append({
+                "title": src.get("title", ""),
+                "url": src.get("url", ""),
+                "reliability": src.get("reliability", "medium"),
+            })
+
+        # 4) digest 조립
+        digest = {
+            "topic": topic,
+            "core_thesis": summary[:500] if summary else "",
+            "key_facts": key_facts[:30],
+            "statistics": statistics,
+            "sources": sources,
+            "section_titles": [s.get("title", "") for s in data.get("sections", [])],
+            "total_sections": len(data.get("sections", [])),
+            "total_sources": len(sources),
+        }
+
+        digest_path.write_text(
+            json.dumps(digest, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        report_size = report_path.stat().st_size
+        digest_size = digest_path.stat().st_size
+        ratio = round(digest_size / report_size * 100, 1) if report_size > 0 else 0
+        print(f"    [DIGEST] research_digest.json 생성 완료 "
+              f"(facts: {len(key_facts)}, stats: {len(statistics)}, "
+              f"sources: {len(sources)}, 축약률: {ratio}%)", flush=True)
+
     def _supplement_research(self, report_path: Path, topic: str, gap_reason: str) -> bool:
         """리서치 보충: 검증 실패 시 누락된 부분만 타겟으로 단일 Claude 호출 후 병합.
 
@@ -1009,6 +1104,11 @@ class PipelineRunner:
                             self._vault_save_research({"agent": "research-orchestrator"}, result)
                         except Exception as ve:
                             print(f"    [WARN] 볼트 축적 실패: {ve}")
+                    # digest 생성 (토큰 최적화)
+                    try:
+                        self._generate_research_digest()
+                    except Exception as e:
+                        print(f"    [WARN] digest 생성 실패: {e}", flush=True)
                     return StepResult(step_id=step_id, status="completed")
                 elif verify_result:
                     reason = verify_result.get("reason", "주제 불일치")
@@ -1053,6 +1153,11 @@ class PipelineRunner:
                                         self._vault_save_research({"agent": "research-orchestrator"}, result)
                                     except Exception as ve:
                                         print(f"    [WARN] 볼트 축적 실패: {ve}")
+                                # digest 생성 (토큰 최적화)
+                                try:
+                                    self._generate_research_digest()
+                                except Exception as e:
+                                    print(f"    [WARN] digest 생성 실패: {e}")
                                 return StepResult(step_id=step_id, status="completed")
                             else:
                                 r2 = (verify2 or {}).get("reason", "보충 후에도 불일치")
@@ -1067,6 +1172,11 @@ class PipelineRunner:
             print(f"    [검증] 리서치: {sections}섹션, {sources}소스 ✓ (구조 검증)")
             _notify("research-orchestrator", f"보고서 확인! {sections}섹션, {sources}소스",
                     phase=self.state.current_phase, project=self.project_slug, level="success")
+            # digest 생성 (토큰 최적화)
+            try:
+                self._generate_research_digest()
+            except Exception as e:
+                print(f"    [WARN] digest 생성 실패: {e}")
             return StepResult(step_id=step_id, status="completed")
 
         elif step_id == "step_2":
@@ -1793,10 +1903,16 @@ class PipelineRunner:
 
         # 컨텍스트 파일 빌드
         context_block = ""
-        for fname in ["research_report.json", "outline.json"]:
+        # 리서치 컨텍스트: digest 우선, 없으면 report fallback
+        for fname in ["research_digest.json", "research_report.json"]:
             fpath = self.project_dir / fname
             if fpath.exists():
                 context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:50000]}\n</file>\n"
+                break
+        # outline은 별도
+        outline_path = self.project_dir / "outline.json"
+        if outline_path.exists():
+            context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:50000]}\n</file>\n'
 
         manuscript_path = self.project_dir / "final_manuscript.md"
         if manuscript_path.exists():
@@ -1914,10 +2030,16 @@ class PipelineRunner:
 
         # 공통 컨텍스트 파일
         context_block = ""
-        for fname in ["research_report.json", "outline.json"]:
+        # 리서치 컨텍스트: digest 우선, 없으면 report fallback
+        for fname in ["research_digest.json", "research_report.json"]:
             fpath = self.project_dir / fname
             if fpath.exists():
                 context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:50000]}\n</file>\n"
+                break
+        # outline은 별도
+        outline_path = self.project_dir / "outline.json"
+        if outline_path.exists():
+            context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:50000]}\n</file>\n'
 
         # final_manuscript.md — 해당 챕터 구간만 추출
         manuscript_path = self.project_dir / "final_manuscript.md"
@@ -3140,6 +3262,25 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             # 재심 컨텍스트를 프롬프트에 주입
             if prev_review_context:
                 review_step["_previous_review"] = prev_review_context
+
+            # Delta review: R2+ 에서는 변경 씬만 전달
+            if round_num > 1 and best_specs:
+                curr_specs = specs_path.read_text(encoding="utf-8") if specs_path.exists() else ""
+                if curr_specs:
+                    try:
+                        delta = self._compute_scene_delta(best_specs, curr_specs)
+                        review_step["_scene_delta"] = json.dumps(delta, ensure_ascii=False)
+                        # scene_specs.json을 input에서 제거 (delta로 대체)
+                        review_step["input"] = [
+                            inp for inp in review_step["input"]
+                            if inp != "scene_specs.json"
+                        ]
+                        print(f"    [래칫 R{round_num}] delta 모드: "
+                              f"변경 {len(delta['changed_scenes'])}씬, "
+                              f"추가 {len(delta['added_scenes'])}씬, "
+                              f"삭제 {len(delta['removed_scene_numbers'])}씬")
+                    except Exception as e:
+                        print(f"    [래칫 R{round_num}] delta 계산 실패 ({e}) → 전체 전달")
             review_result = self._run_agent_step(review_step)
             self._accumulate_cost(total_cost, review_result.cost_info)
 
@@ -3224,7 +3365,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 "name": f"revise_r{round_num}",
                 "agent": reviser_agent,
                 "conditional": "review_verdict_revise",
-                "input": ["scene_specs.json", "review_feedback.json", "research_report.json"],
+                "input": ["scene_specs.json", "review_feedback.json", "research_digest.json"],
                 "output": ["scene_specs.json"],
                 "skills": step.get("skills", []),
                 "skip_resume": True,
@@ -3251,6 +3392,41 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         total["cost_usd"] += cost.get("cost_usd", 0.0)
 
     @staticmethod
+    def _compute_scene_delta(prev_specs_json: str, curr_specs_json: str) -> dict:
+        """이전/현재 scene_specs 비교 → 변경 씬 추출."""
+        prev = json.loads(prev_specs_json)
+        curr = json.loads(curr_specs_json)
+
+        if isinstance(prev, dict):
+            prev = prev.get("scenes", prev.get("data", []))
+        if isinstance(curr, dict):
+            curr = curr.get("scenes", curr.get("data", []))
+
+        prev_map = {s["sceneNumber"]: s for s in prev}
+        curr_map = {s["sceneNumber"]: s for s in curr}
+
+        changed = []
+        added = []
+        removed = []
+
+        for sn, scene in curr_map.items():
+            if sn not in prev_map:
+                added.append(scene)
+            elif scene != prev_map[sn]:
+                changed.append(scene)
+
+        for sn in prev_map:
+            if sn not in curr_map:
+                removed.append(sn)
+
+        return {
+            "changed_scenes": changed,
+            "added_scenes": added,
+            "removed_scene_numbers": removed,
+            "unchanged_count": len(curr_map) - len(changed) - len(added),
+        }
+
+    @staticmethod
     def _build_previous_review_context(step: dict) -> str:
         """이전 리뷰 피드백을 재심 컨텍스트로 주입 (리뷰어 일관성 보장)."""
         prev_review = step.get("_previous_review", "")
@@ -3266,6 +3442,32 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             f"{prev_review}\n"
             "</previous_review>\n"
         )
+
+    @staticmethod
+    def _build_scene_delta_context(step: dict) -> str:
+        """R2+ 리뷰에서 변경 씬 delta를 프롬프트에 주입."""
+        delta_json = step.get("_scene_delta", "")
+        if not delta_json:
+            return ""
+
+        delta = json.loads(delta_json)
+        lines = [
+            "<scene_delta>",
+            "⚠️ 이번 라운드는 delta 모드입니다. 아래 변경/추가된 씬만 재평가하세요.",
+            f"미변경 씬 {delta['unchanged_count']}개는 이전 점수를 그대로 유지합니다.",
+            "",
+        ]
+        if delta["changed_scenes"]:
+            lines.append("## 변경된 씬:")
+            lines.append(json.dumps(delta["changed_scenes"], ensure_ascii=False, indent=2))
+        if delta["added_scenes"]:
+            lines.append("## 추가된 씬:")
+            lines.append(json.dumps(delta["added_scenes"], ensure_ascii=False, indent=2))
+        if delta["removed_scene_numbers"]:
+            lines.append(f"## 삭제된 씬 번호: {delta['removed_scene_numbers']}")
+
+        lines.append("</scene_delta>")
+        return "\n".join(lines)
 
     def _build_revision_instruction(self, step: dict) -> str:
         """리뷰 피드백 기반 수정 모드 지시문 생성."""
@@ -3366,7 +3568,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
     def _load_creative_brief(self) -> str:
         """볼트 insights/planning/에서 프로젝트 주제와 매칭되는 기획안 로드."""
         try:
-            vault_dir = Path(os.environ.get("KAIROS_VAULT_DIR", ""))
+            vault_dir = self.vault.vault_dir if self.vault.enabled else Path(os.environ.get("KAIROS_VAULT_DIR", ""))
             if not vault_dir.exists():
                 return ""
             planning_dir = vault_dir / "insights" / "planning"
@@ -3447,12 +3649,22 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         if isinstance(optional_inputs, str):
             optional_inputs = [optional_inputs]
 
+        # context_replaces 체크
+        context_replaces = set(step.get("context_replaces", []))
+
         input_lines = []
         for inp in inputs:
+            if inp in context_replaces:
+                if self.context_memory.has_entries_for_predecessors(step.get("id", "")):
+                    print(f"    [context_replaces] {inp} → context_memory로 대체")
+                    continue
             resolved = self._resolve_output_path(inp)
             tag = "✓" if resolved.exists() else "✗ MISSING"
             input_lines.append(f"- {inp}: {resolved} [{tag}]")
         for inp in optional_inputs:
+            if inp in context_replaces:
+                if self.context_memory.has_entries_for_predecessors(step.get("id", "")):
+                    continue
             resolved = self._resolve_output_path(inp)
             tag = "✓" if resolved.exists() else "없음 (선택)"
             input_lines.append(f"- {inp}: {resolved} [{tag}]")
@@ -3543,6 +3755,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 {step.get("description", "")}
 {step.get("notes", "")}
 
+{self._build_scene_delta_context(step)}
 입력 파일:
 {chr(10).join(input_lines) if input_lines else "- 없음"}
 
@@ -3700,7 +3913,7 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
             theme, "SimpleVideo"
         )
 
-    def _resolve_manifest_props(self) -> str | None:
+    def _resolve_manifest_props(self) -> Optional[str]:
         """프로젝트 전용 manifest 파일 경로 반환 (remotion/ 기준 상대경로).
 
         build_manifest.py가 remotion/public/manifests/{fname}.json에 저장하므로
