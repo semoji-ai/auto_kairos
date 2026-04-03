@@ -8,16 +8,61 @@
 """
 
 import json
+import os
 import re
+import shutil
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+from auto_agent.utils.platform import subprocess_kwargs
 
 HAIKU_MODEL = "claude-haiku-4-5-20251001"
 MAX_COLLECT_FILES = 5
 MAX_FILE_SIZE = 50_000  # bytes
 MAX_SNIPPET_LENGTH = 10_000  # chars
 SNIPPET_HALF = 5_000  # chars (앞/뒤)
+
+def _find_claude_cli() -> str:
+    """Claude CLI 바이너리 경로 탐색. 못 찾으면 빈 문자열."""
+    env_cli = os.environ.get("CLAUDE_CLI")
+    if env_cli and Path(env_cli).exists():
+        return env_cli
+    result = shutil.which("claude")
+    return result or ""
+
+
+def _extract_json_result(cli_stdout: str) -> dict:
+    """Claude CLI --output-format json 출력에서 JSON dict 추출."""
+    if not cli_stdout.strip():
+        return {}
+    try:
+        parsed = json.loads(cli_stdout)
+        # CLI json format: {"result": "..."} or direct content
+        if isinstance(parsed, dict):
+            result_text = parsed.get("result", "")
+            if result_text:
+                # result 안에 JSON이 있으면 파싱
+                try:
+                    return json.loads(result_text)
+                except (json.JSONDecodeError, TypeError):
+                    return {"summary": str(result_text)[:200], "key_facts": [], "decisions": []}
+            # 직접 summary/key_facts 키가 있으면 그대로
+            if "summary" in parsed:
+                return parsed
+        return {}
+    except json.JSONDecodeError:
+        # raw text에서 JSON 블록 추출 시도
+        text = cli_stdout.strip()
+        start = text.find("{")
+        if start >= 0:
+            try:
+                return json.loads(text[start:])
+            except json.JSONDecodeError:
+                pass
+        return {}
+
 
 CATEGORY_MAP = {
     "research-orchestrator": "research_decision",
@@ -61,12 +106,7 @@ class ContextMemory:
         agent_name: str,
         output_files: list,
     ):
-        """step 완료 후 Haiku 단일 호출로 핵심 요약 수집.
-
-        비용: ~$0.02 (Haiku, 입력 ~2K tokens, 출력 ~500 tokens)
-        """
-        import anthropic
-
+        """step 완료 후 Haiku CLI 호출로 핵심 요약 수집."""
         file_snippets = []
         for fp in output_files[:MAX_COLLECT_FILES]:
             p = Path(fp)
@@ -83,34 +123,36 @@ class ContextMemory:
         if not file_snippets:
             return
 
-        client = anthropic.Anthropic()
-        response = client.messages.create(
-            model=HAIKU_MODEL,
-            max_tokens=1024,
-            messages=[
-                {
-                    "role": "user",
-                    "content": (
-                        f"파이프라인 step '{step_id}' ({agent_name})의 "
-                        f"출력물입니다.\n"
-                        f"핵심 의사결정과 발견 사항을 JSON으로 요약하세요.\n\n"
-                        f"{chr(10).join(file_snippets)}\n\n"
-                        f'출력: {{"summary": "2-3문장", '
-                        f'"key_facts": [{{"fact": "...", "source": "..."}}], '
-                        f'"decisions": ["..."]}}'
-                    ),
-                }
-            ],
+        prompt = (
+            f"파이프라인 step '{step_id}' ({agent_name})의 "
+            f"출력물입니다.\n"
+            f"핵심 의사결정과 발견 사항을 JSON으로 요약하세요.\n\n"
+            f"{chr(10).join(file_snippets)}\n\n"
+            f'출력: {{"summary": "2-3문장", '
+            f'"key_facts": [{{"fact": "...", "source": "..."}}], '
+            f'"decisions": ["..."]}}'
         )
 
+        cli_path = _find_claude_cli()
+        if not cli_path:
+            return
+
         try:
-            entry_data = json.loads(response.content[0].text)
-        except (json.JSONDecodeError, IndexError):
-            entry_data = {
-                "summary": response.content[0].text[:200],
-                "key_facts": [],
-                "decisions": [],
-            }
+            proc = subprocess.run(
+                [cli_path, "--print", "--output-format", "json",
+                 "--model", HAIKU_MODEL, "--max-turns", "1"],
+                input=prompt, capture_output=True, text=True, encoding="utf-8",
+                cwd=str(self.project_dir), timeout=60,
+                env={**os.environ, "CLAUDECODE": ""},
+                **subprocess_kwargs(),
+            )
+            # CLI JSON output에서 result 추출
+            entry_data = _extract_json_result(proc.stdout)
+        except Exception:
+            return
+
+        if not entry_data:
+            return
 
         entry = {
             "step_id": step_id,
