@@ -17,20 +17,23 @@ from pathlib import Path
 from typing import List, Optional
 
 
+# NAS 마운트 경로 — 모듈 상수로 분리하여 테스트에서 monkeypatch 가능하게 함
+_NAS_VAULT_PATH = Path("/Volumes/kairos/kairos_vault/kairos-vault")
+
+
 def _resolve_vault_dir() -> Path:
     """볼트 경로 결정. 환경변수 → NAS → Projects → Desktop 순으로 시도."""
     if env := os.environ.get("KAIROS_VAULT_DIR"):
         return Path(env)
-    nas_path = Path("/Volumes/kairos/kairos_vault/kairos-vault")
     projects_path = Path.home() / "Projects" / "kairos-vault"
     desktop_path = Path.home() / "Desktop" / "kairos-vault"
-    if nas_path.exists():
-        return nas_path
+    if _NAS_VAULT_PATH.exists():
+        return _NAS_VAULT_PATH
     if projects_path.exists():
         return projects_path
     if desktop_path.exists():
         return desktop_path
-    return nas_path  # 기본값 (NAS 마운트 대기)
+    return _NAS_VAULT_PATH  # 기본값 (NAS 마운트 대기)
 
 
 def _local_vault_dir() -> Path:
@@ -295,39 +298,88 @@ class VaultRAG:
 
     def save_research_result(self, topic: str, category: str,
                              summary: str, key_facts: List[str],
-                             sources: List[str]) -> Optional[Path]:
-        """리서치 완료 후: 핵심 팩트/소스를 볼트에 축적."""
+                             sources: List[str],
+                             raw_notes: Optional[List[tuple]] = None) -> Optional[Path]:
+        """리서치 완료 후: 핵심 팩트/소스를 볼트에 축적.
+
+        llm-wiki-research-policy 적용 — raw + topics(snapshot) 구조로 저장:
+        - 02-research/raw/<topic_slug>/<run_id>/source_notes/<i>.md  ← Explorer 노트들 (raw_notes 인자)
+        - 02-research/raw/<topic_slug>/<run_id>/run_summary.md       ← 이 run의 요약
+        - 02-research/topics/<topic_slug>.md                          ← 호환성 snapshot
+
+        Args:
+            raw_notes: [(filename, content), ...] Explorer가 RESEARCH/에 만든 raw 노트.
+                       None이면 raw/ 저장 스킵하고 topics/만 저장 (구버전 호환).
+        """
         if not self.enabled:
             return None
 
+        from datetime import datetime
+        topic_slug = re.sub(r'[/\\:*?"<>|\s]+', '_', topic).strip('_').lower()[:60]
+        run_id = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+        # ── 1. raw/<topic_slug>/<run_id>/ 저장 ──
+        if raw_notes:
+            try:
+                raw_dir = self.active_vault / "02-research" / "raw" / topic_slug / run_id
+                source_notes_dir = raw_dir / "source_notes"
+                source_notes_dir.mkdir(parents=True, exist_ok=True)
+                for fname, body in raw_notes:
+                    safe_fname = re.sub(r'[/\\:*?"<>|]', '_', fname)
+                    if not safe_fname.endswith('.md'):
+                        safe_fname += '.md'
+                    (source_notes_dir / safe_fname).write_text(body, encoding="utf-8")
+
+                # run_summary.md
+                run_summary = (
+                    f"---\n"
+                    f"topic: {topic}\n"
+                    f"topic_slug: {topic_slug}\n"
+                    f"run_id: {run_id}\n"
+                    f"category: {category}\n"
+                    f"date: {datetime.now().strftime('%Y-%m-%d')}\n"
+                    f"source_count: {len(sources)}\n"
+                    f"note_count: {len(raw_notes)}\n"
+                    f"tags: [research, raw, {category}]\n"
+                    f"---\n\n"
+                    f"# {topic} — Run {run_id}\n\n"
+                    f"## 요약\n{summary}\n\n"
+                    f"## 핵심 팩트\n"
+                    + "".join(f"- {f}\n" for f in key_facts)
+                    + f"\n## 출처\n"
+                    + "".join(f"- {s}\n" for s in sources)
+                    + f"\n## Source Notes\n"
+                    + "".join(f"- [[{Path(n[0]).stem}]]\n" for n in raw_notes)
+                )
+                (raw_dir / "run_summary.md").write_text(run_summary, encoding="utf-8")
+                print(f"[VaultRAG] raw 저장: {raw_dir} ({len(raw_notes)}개 노트)")
+            except Exception as e:
+                print(f"[VaultRAG] raw 저장 실패 (무시): {e}")
+
+        # ── 2. topics/<topic_slug>.md (호환성 snapshot) ──
         topics_dir = self.active_vault / "02-research" / "topics"
         topics_dir.mkdir(parents=True, exist_ok=True)
-
         safe_name = re.sub(r'[/\\:*?"<>|]', '_', topic)
         filepath = topics_dir / f"{safe_name}.md"
 
-        content = f"""---
-tags: [research, {category}]
-date: {datetime.now().strftime('%Y-%m-%d')}
-topic: {topic}
----
-
-# {topic}
-
-## 요약
-{summary}
-
-## 핵심 팩트
-"""
-        for fact in key_facts:
-            content += f"- {fact}\n"
-
-        content += "\n## 출처\n"
-        for src in sources:
-            content += f"- {src}\n"
-
+        content = (
+            f"---\n"
+            f"tags: [research, snapshot, {category}]\n"
+            f"date: {datetime.now().strftime('%Y-%m-%d')}\n"
+            f"topic: {topic}\n"
+            f"topic_slug: {topic_slug}\n"
+            f"latest_run: {run_id}\n"
+            f"---\n\n"
+            f"# {topic}\n\n"
+            f"> snapshot of latest run: {run_id} (raw at `02-research/raw/{topic_slug}/{run_id}/`)\n\n"
+            f"## 요약\n{summary}\n\n"
+            f"## 핵심 팩트\n"
+            + "".join(f"- {f}\n" for f in key_facts)
+            + f"\n## 출처\n"
+            + "".join(f"- {s}\n" for s in sources)
+        )
         filepath.write_text(content, encoding="utf-8")
-        print(f"[VaultRAG] 리서치 결과 저장: {filepath}")
+        print(f"[VaultRAG] topics snapshot 저장: {filepath}")
         return filepath
 
     def _get_vault_project_name(self, project_slug: str) -> str:

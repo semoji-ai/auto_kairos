@@ -47,12 +47,31 @@ TTS · 이미지 · 자막 · 매니페스트를 **판단하면서** 조립합�
 모든 도구는 프로젝트 디렉토리($PROJECT_DIR)를 기준으로 실행합니다.
 $PROJECT_DIR은 환경변수로 주입됩니다.
 
-### 이미지 배치 생성 (Phase B 핵심)
+### 이미지 배치 생성 (Phase B-2)
 ```bash
 # 전체 씬 이미지 배치 생성/검색 — 모든 이미지를 한 번에 병렬 처리
 python3 -m auto_agent.modules.image_batch_module
 # 환경변수: PROJECT_DIR, PROJECT_NAME 필요
 # 결과: images/generated/, images/search/, images/image_assets.json
+```
+
+### 단일 씬 이미지 재생성 (Phase B-3 검수 후)
+배치 결과 검수 중 품질 미달 씬 발견 시 단일 재생성에 사용합니다.
+```bash
+# 장면 이미지 재생성 (cinematic — fullscreen, 16:9)
+python3 -m auto_agent.tools.image_generate scene \
+  --prompt "한글 프롬프트 (scene_specs imageAsset.prompt 그대로)" \
+  --output "images/generated/scene_NNN_gen_VV.png" \
+  --style "art_style.json" \
+  --aspect-ratio 16:9
+# 새 버전(_gen_02, _gen_03 등)으로 생성 — 기존 파일 절대 삭제 금지
+# 생성 후 image_assets.json의 selected 필드만 새 버전으로 전환
+
+# 캐릭터 재생성 (1:1)
+python3 -m auto_agent.tools.image_generate character \
+  --prompt "캐릭터 묘사" \
+  --output "images/characters/{name}.png" \
+  --style "art_style.json"
 ```
 
 ### TTS 생성
@@ -94,49 +113,42 @@ tts_tool.generate(
 ) → { path: str, duration_sec: float, duration_frames: int }
 ```
 
-### 2. `image_tool`
+### 2. `image_tool` — Bash 명령으로 호출
 
-#### ⭐ 배치 생성 (필수 — 개별 generate() 호출 금지)
-```python
-image_tool.generate_batch(
-    scenes: list[dict],           # scene_specs.scenes 중 imageAsset.source=="generate"인 씬 목록
-) → { success: int, failed: int, results: list }
+이미지 도구는 두 가지 진입점을 가집니다:
+
+#### ⭐ 배치 생성 (Phase B-2 핵심 — 개별 호출 금지)
+```bash
+python3 -m auto_agent.modules.image_batch_module
 ```
-**모든 generate 씬을 한 번에 제출합니다.** FAL.ai 서버에서 병렬 처리되어 20씬도 3~5분에 완료.
-씬마다 `image_tool.generate()`를 개별 호출하면 20~40분 걸리므로 **절대 금지**.
+- scene_specs.json을 자체적으로 읽어 모든 generate/search 씬을 **병렬 처리**
+- FAL.ai 배치 + Wikimedia/Serper 검색 워터폴
+- 결과: `images/generated/`, `images/search/`, `images/image_assets.json`
+- 환경변수: `PROJECT_DIR`, `PROJECT_NAME` 필요
+- ⚠️ **개별 씬을 하나씩 생성하면 20씬에 20~40분**, 배치는 **3~5분**
 
-#### 배치 검색
-```python
-image_tool.search_batch(
-    scenes: list[dict],           # scene_specs.scenes 중 imageAsset.source=="search"인 씬 목록
-) → { success: int, failed: int, results: list }
+#### 단일 씬 재생성 (Phase B-3 검수 후 — 품질 미달 씬에 한해)
+```bash
+python3 -m auto_agent.tools.image_generate scene \
+  --prompt "<scene_specs imageAsset.prompt 한글 원문 그대로 — 번역/요약 금지>" \
+  --output "images/generated/scene_NNN_gen_VV.png" \
+  --style "art_style.json" \
+  --aspect-ratio 16:9
+```
+- 새 버전(`_gen_02`, `_gen_03`)으로 생성 — **기존 파일 절대 삭제 금지** (CLAUDE.md §11)
+- 생성 후 `image_assets.json`의 `selected` 필드만 새 버전으로 전환
+- `--aspect-ratio`는 placement 매핑 표 준수 (fullscreen/background → 16:9, side → 3:4, badge → 1:1)
+
+#### 캐릭터 재생성
+```bash
+python3 -m auto_agent.tools.image_generate character \
+  --prompt "<캐릭터 묘사>" \
+  --output "images/characters/{name}.png" \
+  --style "art_style.json"
 ```
 
-#### 개별 도구 (재생성/보정용으로만 사용)
-```python
-image_tool.generate(
-    prompt: str,                  # ⚠️ imageAsset.prompt 한글 원문 그대로 (번역/요약 금지)
-    aspect_ratio: str = "16:9",
-) → { path: str, description: str }
-
-image_tool.search(
-    query: str,                   # imageAsset.query 영문 원문 그대로
-    count: int = 3,
-    aspect_ratio: str = "16:9",
-) → [{ path: str, score: float, description: str }]
-
-image_tool.generate_character(
-    prompt: str,                  # 캐릭터 묘사 프롬프트 (한글 그대로)
-    style_base_url: str,
-    person_photo_url: str = None,
-    aspect_ratio: str = "1:1",
-) → { path: str, description: str }
-
-image_tool.evaluate(
-    image_path: str,
-    criteria: str,
-) → { score: float, reason: str }
-```
+#### 품질 검수 — LLM의 핵심 가치
+이미지 평가는 **별도 도구가 아니라 어셈블 디렉터(LLM) 자신**이 합니다. Read 도구로 이미지 파일을 직접 열어 멀티모달로 검수하세요. 자세한 흐름은 아래 "Phase B-3" 참조.
 
 ### 3. `subtitle_tool`
 ```python
@@ -256,29 +268,20 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
    → style_prompt: 스타일 프롬프트
    → style_base_url: 아트스타일 기준 이미지 (IP-Adapter 참조)
 
-3. 실제 인물인 경우: 위키미디어에서 실제 사진 검색
-   image_tool.search(query="천주혁 CEO portrait", source="wikimedia")
-   → person_photo_url로 전달 → 얼굴 유사도 향상
+3. 실제 인물인 경우: `character_plan.json`의 각 캐릭터에 `person_photo` 필드를 채워둠 (위키미디어 URL 등)
+   → image_batch_module이 IP-Adapter 참조로 자동 활용
 
-4. 캐릭터별 초상화 생성:
-   ⚠️ 동일 인물 나이 변형 순서:
-     a) 가장 많이 등장하는 나이대를 **기준 캐릭터**로 먼저 생성
-        예: 천주혁(30대) — 출연 30씬 = 기준
-     b) 나이 변형은 기준 이미지를 참조로 첨부하며 생성
-        예: 천주혁(20대 후반) ← 기준 이미지 + "same person, late 20s, slightly younger"
-        예: 천주혁(20대 초반) ← 기준 이미지 + "same person, early 20s, college student"
-     c) IP-Adapter가 얼굴 특징 유지, 나이/스타일만 변형
-   ⚠️ 다른 인물끼리도 순차 — 첫 캐릭터 결과를 이후 캐릭터에 스타일 참조로 누적
-   image_tool.generate_character(
-     prompt="천주혁(구다이글로벌 대표, 38세), 한국 남성, 정장 차림, 자신감 있는 표정, 상반신, {style_prompt}",
-     style_base_url=<아트스타일 기준 이미지>,
-     person_photo_url=<위키미디어 실제 사진 또는 null>,
-     aspect_ratio="1:1"
-   )
+4. 캐릭터 생성 실행 — 캐릭터/씬 모두 image_batch_module이 일괄 처리:
+   ```bash
+   python3 -m auto_agent.modules.image_batch_module
+   ```
+   - 내부 동작: character_plan.json 읽기 → 라이브러리 재사용 검색 → 신규는 FAL 배치 생성
+   - 캐릭터 라이브러리에 자동 등록(NAS) — 다른 프로젝트에서 재활용 가능
+   - 동일 인물 나이 변형은 character_plan.json 작성 시 별도 캐릭터로 분리해서 등록
 
-5. images/characters/{캐릭터이름}.png 저장
-   → ⭐ 캐릭터 라이브러리에 자동 등록 (NAS)
-   → 다른 프로젝트에서 동일 인물 재활용 가능
+5. 결과 확인:
+   - `images/characters/{캐릭터이름}.png` 생성됨
+   - 실패 시 `character_plan.json` 수정 후 재실행 (재사용 캐릭터는 스킵됨)
 
 ⚠️ 씬 이미지 생성 시 캐릭터 활용 규칙:
   - 캐릭터 이미지 있음 → "외양은 참조 이미지 그대로, 동작/포즈만 기술"
@@ -288,17 +291,55 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
 **B-2. 씬 이미지 배치 생성** (캐릭터 완료 후)
 
 ```
-1. scene_specs에서 imageAsset.source별 분류
-   - source="generate" → image_tool.generate_batch(scenes=[...])
-     ⚠️ 해당 씬의 characters에 매칭되는 캐릭터 이미지가 자동 첨부됨
-   - source="search" → image_tool.search_batch(scenes=[...])
-2. 실패분 재시도 (최대 2회)
-⚠️ generate_batch 사용 필수 — 개별 generate() 호출 금지
+1. Bash 한 번으로 모든 씬 일괄 처리:
+   python3 -m auto_agent.modules.image_batch_module
+   → image_batch_module이 scene_specs를 자체적으로 읽어
+     generate(FAL 병렬) + search(Wikimedia/Serper 워터폴) 모두 처리
+   → images/generated/, images/search/, images/image_assets.json 생성
+2. 실패분이 있으면 같은 명령으로 재실행 (최대 2회) — 이미 성공한 씬은 스킵됨
+⚠️ 절대 개별 씬을 하나씩 생성하지 말 것 — 20씬 기준 20~40분 vs 배치 3~5분
 ```
 
-**B-3. 이미지 품질 검수**
+**B-3. ⭐ 이미지 품질 검수 (LLM의 핵심 가치 단계)**
+
+배치 생성은 결정적이지만 품질은 LLM이 직접 보고 판단해야 합니다.
+**모든 selected 이미지를 Read 도구로 멀티모달 검수**합니다 (Sonnet/Opus는 vision 지원).
+
 ```
-image_tool.evaluate()로 주요 씬 검수
+1. images/image_assets.json 읽기 → 각 씬의 selected 이미지 파일 경로 수집
+
+2. 각 이미지에 대해 Read 도구로 직접 열기 (Read는 PNG/JPG 멀티모달 지원):
+   Read(file_path="images/generated/scene_002_gen_01.png")
+   → LLM이 실제 이미지를 보면서 평가
+
+3. 검수 체크리스트 (각 씬):
+   ┌─ 캐릭터 일관성: 다른 씬의 동일 인물과 외양이 일치하는가? (얼굴, 의상, 나이대)
+   ├─ prompt 의도 매칭: scene_specs.imageAsset.prompt가 묘사한 내용이 보이는가?
+   ├─ placement 적합성:
+   │   • cinematic/fullscreen → 인물/오브젝트가 잘리지 않고 화면을 채우는가?
+   │   • side(3:4) → 좌/우 배치 시 자연스러운가?
+   │   • badge(1:1) → 원형 크롭 시 핵심이 가운데 있는가?
+   ├─ 품질: 워터마크, 흐림, 잘못된 객체, 한국어 텍스트(이미지 안에 한글 들어가면 보통 깨짐)
+   └─ search 이미지 한정: 출처가 신뢰 가능한가? (스톡 워터마크, 저작권 의심 도메인)
+
+4. 재생성 판단:
+   - 위 항목 1개 이상 실패 → 재생성 대상
+   - 미세한 문제만 있고 영상에 큰 영향 없음 → 통과 (시간 절약)
+   - 핵심 씬(시작/엔딩/중요 발화 씬)은 기준 더 엄격하게
+
+5. 재생성 실행 (단일 씬, 새 버전):
+   - generate 씬 → python3 -m auto_agent.tools.image_generate scene \
+                     --prompt "<imageAsset.prompt 한글 원문>" \
+                     --output "images/generated/scene_NNN_gen_02.png" \
+                     --style art_style.json --aspect-ratio <placement에 맞는 값>
+   - search 씬 → 다른 검색어로 image_batch_module 재실행, 그래도 안 되면 generate fallback
+
+6. image_assets.json 업데이트:
+   - 새 버전 파일 정보 추가 (versions 배열)
+   - selected 필드만 새 _gen_02 / _search_02로 전환
+   - ⚠️ 기존 _gen_01 파일 절대 삭제 금지
+
+7. 재생성된 씬은 다시 Read로 검수 — 통과까지 최대 2회 반복, 그래도 미달이면 원본 유지하고 quality_notes에 기록
 ```
 
 **B-4. TTS 전처리** (트랙 B — 이미지와 병렬 가능)
@@ -342,22 +383,24 @@ WhisperX로 자막 정렬 (타임스탬프)
 
 ⚠️⚠️⚠️ **에이전트는 scene_specs.json의 imageAsset 필드를 있는 그대로 전달만 합니다.**
 
+```bash
+# ✅ 올바른 사용 — 배치 생성 (Phase B-2)
+python3 -m auto_agent.modules.image_batch_module
+# image_batch_module이 scene_specs.json을 읽어 imageAsset.prompt를 그대로 사용
+
+# ✅ Phase B-3 검수 후 단일 재생성 — prompt 원문 그대로
+python3 -m auto_agent.tools.image_generate scene \
+  --prompt "<scene_specs.imageAsset.prompt 한글 원문>" \
+  --output "images/generated/scene_NNN_gen_02.png" \
+  --style "art_style.json" \
+  --aspect-ratio 16:9
 ```
-# ✅ 올바른 사용 — generate_batch로 일괄 제출
-image_tool.generate_batch(scenes=[generate 씬 목록])
 
-# ✅ 재생성 시 — prompt 원문 그대로
-image_tool.generate(
-    prompt = scene["imageAsset"]["prompt"],   # 한글 원문 그대로. 번역/요약/변형 금지
-    aspect_ratio = "16:9",
-)
-
+```
 # ❌ 절대 금지 — 에이전트가 prompt를 가공
-image_tool.generate(
-    prompt = "A dramatic scene of war...",    # 영어 번역 금지
-    prompt = "전쟁 장면",                      # 요약 금지
-    prompt = "quirky cartoon style, ...",      # 스타일 키워드 금지
-)
+--prompt "A dramatic scene of war..."   # 영어 번역 금지
+--prompt "전쟁 장면"                     # 요약 금지
+--prompt "quirky cartoon style, ..."     # 스타일 키워드 금지
 ```
 
 **도구 내부에서 자동 처리되는 것 (에이전트가 절대 건드리지 않음):**
@@ -371,17 +414,16 @@ image_tool.generate(
 - ❌ prompt를 요약/재작성하지 마세요 — scene_specs 원문 그대로 전달
 - ❌ prompt에 아트스타일 키워드 넣지 마세요 — 도구가 art_style.json에서 주입
 - ❌ prompt에 "NO TEXT" 등 규칙을 넣지 마세요 — 도구가 자동 추가
-- ❌ 씬마다 generate() 개별 호출하지 마세요 — generate_batch() 사용
+- ❌ 씬마다 단일 generate를 N번 돌리지 마세요 — Phase B-2 배치 한 번 + Phase B-3 검수 후 미달 씬만 단일 재생성
 
 ##### 캐릭터 생성
 
-```
-image_tool.generate_character(
-    prompt = "캐릭터 묘사 (나이, 체형, 의상, 머리, 표정)",
-    style_base_url = art_style.json의 base_image,
-    person_photo_url = 실존 인물 참조 사진 (선택),
-    aspect_ratio = "1:1",
-)
+캐릭터는 `character_plan.json`을 작성하면 image_batch_module이 자동으로 처리합니다 (Phase B-1 참조). 필요 시 단일 재생성:
+```bash
+python3 -m auto_agent.tools.image_generate character \
+  --prompt "캐릭터 묘사 (나이, 체형, 의상, 머리, 표정)" \
+  --output "images/characters/{name}.png" \
+  --style "art_style.json"
 ```
 도구 내부에서 스타일 스펙 + 참조 매칭 + NO TEXT 자동 추가.
 
@@ -396,9 +438,9 @@ TTS 검수:
   - 총 영상 길이가 목표 ±20% 이상 → 전체 speed 미세 조정
 
 이미지 검수:
-  - 생성/검색된 이미지 품질 평가 (image_tool.evaluate)
-  - score < 0.5 → 다른 prompt로 재시도 (최대 2회)
-  - cinematic 씬 이미지 없으면 → 반드시 생성
+  - Phase B-3 흐름 그대로 — Read 도구로 이미지를 직접 보면서 검수
+  - 캐릭터 일관성/prompt 의도/placement/품질 체크 → 미달 시 재생성 (최대 2회)
+  - cinematic 씬에 이미지 없으면 → 반드시 생성
 
 타이밍 검수:
   - TTS 길이 기반 durationFrames 계산
@@ -473,23 +515,15 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 ### imageAsset.source 존중 (필수)
 
 **scene_specs의 `imageAsset.source` 필드를 반드시 따라야 한다.**
-- `source: "generate"` → `image_tool.generate()` 사용 (AI 생성)
-- `source: "search"` → `image_tool.search()` 사용 (실사 검색)
+- `source: "generate"` → image_batch_module이 FAL.ai로 AI 생성
+- `source: "search"` → image_batch_module이 Wikimedia/Serper 워터폴 검색
 - source=search인 씬을 generate로 대체하지 마라. 실사가 필요한 이유가 있다.
-- 검색 실패 시에만 generate fallback 허용 (3회 검색 시도 후)
+- 검색 실패 시에만 generate fallback 허용 (image_batch_module이 자동 처리)
 
 ### 검색 이미지 출처 업데이트 (필수)
 
-`image_tool.search()` 결과에 `source_url`이 포함됩니다.
-검색 이미지를 사용한 씬의 `imageAsset`에 출처를 기록하세요:
-
-```python
-# 검색 결과에서 source_url 추출 후 scene_specs 업데이트
-scene["imageAsset"]["source_url"] = search_result["source_url"]
-scene["imageAsset"]["source_title"] = search_result["title"]
-```
-
-이 출처는 영상에서 "출처: Wikimedia Commons" 등으로 표시됩니다.
+image_batch_module이 검색 결과의 `source_url`을 `image_assets.json`에 자동 기록합니다.
+Phase B-3 검수 또는 Phase D 매니페스트 빌드 시 출처가 영상에 "출처: Wikimedia Commons" 등으로 자동 표시됩니다. 에이전트가 별도로 source_url을 옮겨 적을 필요는 없습니다.
 
 ### 저장 경로
 
@@ -544,14 +578,14 @@ scene["imageAsset"]["source_title"] = search_result["title"]
 ### 이미지 평가 + 재생성 프로세스
 
 ```
-1. 이미지 생성/검색
-2. image_tool.evaluate()로 품질 평가
-   - score >= 0.5 → 채택
-   - score < 0.5 → prompt 수정 후 재시도
+1. 이미지 생성/검색 (Phase B-2 — image_batch_module 1회 실행)
+2. LLM이 Read 도구로 이미지 직접 검수 (Phase B-3)
+   - 캐릭터 일관성/prompt 의도/placement/품질 통과 → 채택
+   - 미달 → 단일 재생성 (image_generate.py CLI)
 3. 재시도 최대 2회 (총 3회 시도)
-4. 3회 후에도 score < 0.5:
-   - cinematic 씬 → 반드시 재시도 (generate로 전환)
-   - 일반 씬 → 이미지 없이 진행
+4. 3회 후에도 미달:
+   - cinematic 씬 → 반드시 재시도 (search→generate fallback)
+   - 일반 씬 → 원본 유지 + quality_notes에 기록
 5. 새 이미지는 기존 파일 삭제 없이 버전 번호로 생성
 ```
 

@@ -76,8 +76,20 @@ skills:
 - Explorer 수를 줄일 수 있음
 
 ## 출력
-- `RESEARCH/` 디렉토리에 Explorer별 .md 파일
+- `RESEARCH/` 디렉토리에 Explorer별 .md 파일 (immutable raw 노트)
 - progress 파일에 실시간 진행 메시지
+
+## 볼트 저장 (llm-wiki-research-policy)
+
+장기 저장은 파이프라인 runner가 자동으로 처리합니다. 에이전트는 **`RESEARCH/<explorer>.md`만 잘 채우면** runner가 다음을 자동 수행합니다:
+
+- `KAIROS_VAULT_DIR/02-research/raw/<topic_slug>/<run_id>/source_notes/` ← Explorer별 raw 노트 복사
+- `KAIROS_VAULT_DIR/02-research/raw/<topic_slug>/<run_id>/run_summary.md` ← 요약
+- `KAIROS_VAULT_DIR/02-research/topics/<topic_slug>.md` ← snapshot (호환성 유지)
+
+**에이전트 책임**: Explorer 노트의 품질만 신경. 폴더 저장은 신경 쓰지 마세요.
+
+**참조**: `KAIROS_VAULT_DIR/02-research/llm-wiki-research-policy.md`
 
 ## 주의사항
 - 원본 데이터를 왜곡하지 않는다

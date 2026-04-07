@@ -325,14 +325,10 @@ def generate_character(
     if person_photo and Path(person_photo).exists():
         image_urls.append(_image_to_data_uri(person_photo))
 
-    # 프롬프트 구성 — 스타일 우선, NO TEXT는 끝에
+    # 프롬프트 구성 — 구조화된 style spec이 톤까지 모두 설명함 (scene_style_desc 중복 제거)
     parts = []
 
-    # 1) 스타일 톤 세팅
-    if scene_style_desc:
-        parts.append(scene_style_desc + "\n\n")
-
-    # 2) 스타일 JSON 스펙
+    # 스타일 JSON 스펙
     parts.append(f"Style specification: {style_json_str}\n\n")
 
     # 3) critical_requirements
@@ -406,9 +402,8 @@ def _build_character_fal_input(
     if person_photo and Path(person_photo).exists():
         image_urls.append(_image_to_data_uri(person_photo))
 
+    # 구조화된 style spec이 톤까지 모두 설명함 (scene_style_desc 중복 제거)
     parts = []
-    if scene_style_desc:
-        parts.append(scene_style_desc + "\n\n")
     parts.append(f"Style specification: {style_json_str}\n\n")
     if critical_reqs:
         parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs) + "\n\n")
@@ -513,13 +508,8 @@ def generate_scene(
     prompt = _enrich_historical_context(prompt, historical_period)
     scene_description = _filter_text_descriptions(prompt)
 
-    # 프롬프트 구성
+    # 프롬프트 구성 — 구조화된 style spec이 톤까지 모두 설명함 (scene_style_desc 중복 제거)
     parts = []
-
-    # 스타일 scene_style_description 프리펜드 (kairos 방식)
-    if scene_style_desc:
-        parts.append(scene_style_desc)
-
     parts.append(style_json_str)
 
     # critical_requirements 추가 (semoji 등)
@@ -677,9 +667,8 @@ def _build_scene_fal_input(
     prompt = _enrich_historical_context(prompt, historical_period)
     scene_desc = _filter_text_descriptions(prompt)
 
+    # 구조화된 style spec이 톤까지 모두 설명함 (scene_style_desc 중복 제거)
     parts = []
-    if scene_style_desc:
-        parts.append(scene_style_desc)
     parts.append(style_json_str)
     if critical_reqs:
         parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs))
@@ -758,9 +747,8 @@ def _build_viz_fal_input(
         "icon_flow": "flowing process, connected steps",
     }.get(viz_type, "abstract decorative background")
 
+    # 구조화된 style spec이 톤까지 모두 설명함 (scene_style_desc 중복 제거)
     parts = []
-    if scene_style_desc:
-        parts.append(scene_style_desc)
     parts.append(style_json_str)
     parts.append(
         f"Create a decorative BACKGROUND illustration for a data visualization.\n\n"
@@ -862,9 +850,8 @@ def generate_viz_background(
         "icon_flow": "flowing process, connected steps",
     }.get(viz_type, "abstract decorative background")
 
+    # 구조화된 style spec이 톤까지 모두 설명함 (scene_style_desc 중복 제거)
     parts = []
-    if scene_style_desc:
-        parts.append(scene_style_desc)
     parts.append(style_json_str)
     parts.append(
         f"Create a decorative BACKGROUND illustration for a data visualization.\n\n"

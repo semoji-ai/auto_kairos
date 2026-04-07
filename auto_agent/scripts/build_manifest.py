@@ -388,8 +388,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 entry["imageAsset"] = {"placement": "fullscreen", "opacity": 1.0}
             else:
                 p = ia.get("placement", "background")
-                # left/right/center/fullscreen은 opacity 1.0, background만 0.35
-                default_op = 0.35 if p == "background" else 1.0
+                default_op = 1.0
                 entry["imageAsset"] = {
                     "placement": p,
                     "opacity": ia.get("opacity", default_op),
@@ -476,13 +475,13 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                         pass
                     break
         if _ast_dt:
+            # design_tokens 구조가 이미 DesignPresetOverride와 호환되므로 그대로 사용
+            # (이전 코드는 _ast_dt.get("accent") 등 잘못된 키로 빈 문자열을 만들어
+            #  resolvePreset deepMerge에서 DEFAULT_PRESET 앰버를 빈 값으로 덮어쓰는 버그)
             design_preset = {
-                "baseTheme": _ast_dt.get("baseTheme", "dark"),
-                "colors": {
-                    "bg": _ast_dt.get("bg", ""),
-                    "accent": _ast_dt.get("accent", ""),
-                },
-                "mood_accents": _ast_dt.get("mood_accents", {}),
+                k: v for k, v in _ast_dt.items()
+                if k in ("baseTheme", "defaultBackground", "colors", "moods",
+                         "layout", "map", "subtitle", "fonts", "typography")
             }
     manifest = {
         "meta": {

@@ -100,7 +100,7 @@ auto-agent dashboard                                    # http://localhost:8080
 | step_3b | assembly-director | TTS + 이미지 + 자막 + 매니페스트 |
 | step_3c | upload-info-generator | 썸네일 + 제목 |
 
-> step_3a (image_batch)는 삭제됨 — assembly-director가 직접 이미지 생성
+> step_3a는 별도 파이프라인 스텝이 아님 — assembly-director가 Phase B-2에서 `image_batch_module`을 Bash로 직접 호출하고, Phase B-3에서 LLM이 결과 이미지를 멀티모달로 검수·재생성한다.
 
 ### Claude Code 슬래시 스킬
 
@@ -174,6 +174,7 @@ output/{uuid}_{slug}/
 | pipeline.json | `auto_agent/data/pipeline.json` | 파이프라인 스텝 |
 | SKILL.md | `auto_agent/data/skills/agents/{name}/SKILL.md` | 에이전트 스킬 |
 | 아트스타일 | `auto_agent/data/artstyle/styles/*.json` | design_tokens |
+| 구글 드라이브 공유 | `/Users/jleavens_macmini/Projects/googleDrice_shared` | 로컬↔구글드라이브 공유 폴더 (파일 공유 시 여기에 저장) |
 
 ## 9. 트러블슈팅
 

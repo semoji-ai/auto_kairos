@@ -83,7 +83,29 @@ def _extract_wikilinks(text: str) -> list[str]:
 
 
 def build_index(collection_key: str = None):
-    """볼트 파일을 chromadb에 벡터 인덱싱. 컬렉션별 또는 전체."""
+    """볼트 파일을 vector DB에 인덱싱.
+
+    DEPRECATED — vault_indexer로 통합됨. 이 함수는 vault_indexer.VaultIndexer로 위임합니다.
+    별도의 09-memory/.chroma 컬렉션을 만들지 않고 ~/.kairos/vault_chroma 단일 인덱스 사용.
+    `collection_key` 인자는 무시됩니다 (단일 컬렉션이라 의미 없음).
+    """
+    print(
+        "[memory_index] DEPRECATED — vault_indexer로 위임 "
+        "(02-research/{raw,wiki,topics,...} 등 볼트 전체를 단일 컬렉션에 인덱싱)",
+        flush=True,
+    )
+    from pathlib import Path as _P
+    from auto_agent.orchestrator.vault_indexer import VaultIndexer
+    indexer = VaultIndexer()
+    stats = indexer.index_all(_P(VAULT_DIR), force=False)
+    print(f"[vault_indexer] 변경분 인덱싱: indexed={stats.get('indexed', 0)}, "
+          f"skipped={stats.get('skipped', 0)}, errors={stats.get('errors', 0)}, "
+          f"total_chunks={stats.get('total_chunks', 0)}", flush=True)
+    return
+
+
+def _legacy_build_index_unused(collection_key: str = None):
+    """레거시 — 이전 구현. 호출되지 않음. 나중에 정리 가능."""
     try:
         import chromadb
         from sentence_transformers import SentenceTransformer

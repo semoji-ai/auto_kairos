@@ -19,6 +19,46 @@ PRESETS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── 기본 내장 프리셋 ──
 BUILTIN_PRESETS = {
+    "iromism": {
+        "name": "이로미즘 (Iromism)",
+        "description": "이로미즘 채널 기본 — 다크 + 앰버골드 + quirky_cartoon",
+        "builtin": True,
+        "global": {
+            "videoTheme": "dark",
+            "artStyle": "quirky_cartoon",
+            "accentColor": "#F59E0B",
+            "vizFont": "Pretendard",
+        },
+        "defaults": {
+            "mood": "dramatic",
+            "reveal": "stagger",
+            "emphasis": "keyword",
+            "layout": "",
+        },
+        "animation": {
+            "stagger": 8,
+            "itemDuration": 20,
+            "easing": "easeOut",
+            "titleFadeIn": 15,
+        },
+        "designPreset": {
+            "baseTheme": "dark",
+            "colors": {
+                "accent": "#F59E0B",
+                "accentRgb": "245,158,11",
+                "accentBg": "rgba(245,158,11,0.08)",
+                "accentBorder": "rgba(245,158,11,0.3)",
+                "accentSoft": "rgba(245,158,11,0.15)",
+                "cardBg": "rgba(245,158,11,0.06)",
+                "cardBorder": "rgba(245,158,11,0.25)",
+            },
+            "fonts": {
+                "body": {"family": "Pretendard", "fallback": "'Apple SD Gothic Neo', sans-serif"},
+            },
+            "map": {"defaultTheme": "warm_earth"},
+            "subtitle": {"keywordColor": "#F59E0B"},
+        },
+    },
     "dark_cinematic": {
         "name": "Dark Cinematic",
         "description": "어두운 배경 + 앰버 액센트, 극적 연출",

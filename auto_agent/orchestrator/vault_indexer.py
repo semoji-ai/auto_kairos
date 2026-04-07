@@ -101,7 +101,8 @@ class VaultIndexer:
         self._ensure_initialized()
         # Windows 백슬래시 → 슬래시로 정규화 (ChromaDB 호환)
         relative = str(path.relative_to(vault_dir)).replace("\\", "/")
-        top_folder = relative.split("/")[0] if "/" in relative else ""
+        parts = relative.split("/")
+        top_folder = parts[0] if len(parts) > 1 else ""
 
         # frontmatter 파싱
         text = path.read_text(encoding="utf-8")
@@ -123,6 +124,19 @@ class VaultIndexer:
         # 채널 추출 (이로미즘/세모지)
         channel = _extract_channel(tags)
 
+        # research_role: 02-research/{raw,wiki,topics,manifests,methodology,sources}/...
+        # llm-wiki-research-policy 적용 — 서브폴더별 역할 구분
+        research_role = ""
+        if top_folder == "02-research" and len(parts) >= 2:
+            sub = parts[1]
+            if sub in ("raw", "wiki", "topics", "manifests", "methodology", "sources"):
+                research_role = sub
+
+        # 본문 키워드 추출 — # 헤딩 텍스트 + **굵은글씨**
+        # llm-wiki 키워드 인덱싱 첫 단계: 정적 추출 (LLM 호출 없음)
+        keywords = self._extract_keywords(body)
+        keywords_str = ",".join(keywords[:30])  # 상위 30개
+
         # Chroma upsert
         ids = [f"{relative}#{i}" for i in range(len(chunks))]
         metadatas = [
@@ -131,12 +145,40 @@ class VaultIndexer:
                 "folder": top_folder,
                 "tags": ",".join(tags),
                 "channel": channel,
+                "research_role": research_role,
+                "keywords": keywords_str,
                 "chunk_index": i,
             }
             for i in range(len(chunks))
         ]
         self._collection.upsert(documents=chunks, ids=ids, metadatas=metadatas)
         return len(chunks)
+
+    def _extract_keywords(self, body: str) -> list[str]:
+        """본문에서 정적 키워드 추출 — # 헤딩 텍스트 + **굵은글씨**.
+
+        llm-wiki 키워드 인덱싱의 첫 단계 (LLM 호출 없는 정적 추출).
+        문서별 핵심 어휘를 metadata로 노출하여 검색 시 키워드 매칭에 활용.
+        """
+        keywords: list[str] = []
+        seen: set[str] = set()
+
+        # 1. 헤딩 텍스트 (# 1~6 레벨)
+        for m in re.finditer(r'^\s{0,3}#{1,6}\s+(.+?)\s*$', body, re.MULTILINE):
+            kw = m.group(1).strip()
+            # 너무 긴 헤딩은 잘라서, 너무 짧은 건 스킵
+            if 2 <= len(kw) <= 80 and kw.lower() not in seen:
+                keywords.append(kw)
+                seen.add(kw.lower())
+
+        # 2. **굵은글씨** (인라인 강조)
+        for m in re.finditer(r'\*\*([^*\n]{2,40})\*\*', body):
+            kw = m.group(1).strip()
+            if kw and kw.lower() not in seen:
+                keywords.append(kw)
+                seen.add(kw.lower())
+
+        return keywords
 
     def get_stats(self) -> dict:
         """인덱스 통계."""

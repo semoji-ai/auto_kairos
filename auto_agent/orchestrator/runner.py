@@ -574,6 +574,22 @@ class PipelineRunner:
         dry_run: bool = False,
     ):
         """파이프라인 전체 또는 부분 실행."""
+        # 볼트 인덱스 자동 빌드 — 변경된 .md 파일만 재인덱싱 (해시 캐시 활용)
+        # 매 실행마다 보장: 새 노트가 추가되면 다음 파이프라인에서 즉시 검색 가능
+        if self.vault.enabled:
+            try:
+                from auto_agent.orchestrator.vault_indexer import VaultIndexer
+                indexer = VaultIndexer()
+                stats = indexer.index_all(self.vault.vault_dir, force=False)
+                if stats.get("indexed", 0) > 0:
+                    print(
+                        f"[VaultIndexer] 변경분 인덱싱: +{stats['indexed']} 파일, "
+                        f"총 {stats.get('total_chunks', 0)} 청크",
+                        flush=True,
+                    )
+            except Exception as e:
+                print(f"[VaultIndexer] 자동 빌드 실패 (무시): {e}", flush=True)
+
         phases = self.pipeline.get("phases", [])
         skip_until = from_step
         found_start = from_step is None
@@ -3188,14 +3204,26 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         for src in report.get("sources", [])[:10]:
             sources.append(f"[{src.get('grade', '')}] {src.get('title', '')} — {src.get('url', '')}")
 
+        # raw notes — RESEARCH/ 디렉토리의 Explorer .md 파일들 (llm-wiki-research-policy)
+        raw_notes: list[tuple] = []
+        research_dir = self.project_dir / "RESEARCH"
+        if research_dir.exists():
+            for md_file in sorted(research_dir.glob("*.md")):
+                try:
+                    body = md_file.read_text(encoding="utf-8")
+                    raw_notes.append((md_file.name, body))
+                except Exception as e:
+                    print(f"    [VaultRAG] raw 노트 읽기 실패 {md_file.name}: {e}")
+
         self.vault.save_research_result(
             topic=topic,
             category=category,
             summary=summary,
             key_facts=key_facts,
             sources=sources,
+            raw_notes=raw_notes if raw_notes else None,
         )
-        print(f"    [VaultRAG] 리서치 결과 볼트 축적 완료: {topic}")
+        print(f"    [VaultRAG] 리서치 결과 볼트 축적 완료: {topic} (raw {len(raw_notes)}개)")
 
     def _find_claude_cli(self) -> str:
         """Claude CLI 바이너리 경로 탐색."""
@@ -3575,7 +3603,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             if not planning_dir.exists():
                 return ""
 
-            topic = self.state.config.get("topic", self.project_slug)
+            topic = self.project.get("topic") or self.state.config.get("topic", self.project_slug)
             # 채널 감지
             writing_style = self.state.config.get("writing_style", "")
             channel = "세모지" if writing_style == "semoji" else "이로미즘" if writing_style == "iromism" else ""
@@ -3684,25 +3712,20 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         )
 
         # 6. 볼트 지식 주입 (Vault RAG)
+        # research-orchestrator만 볼트 리서치 재활용. script-director에 원고 패턴
+        # 주입은 사용자가 비활성화하기로 결정 (의도와 다른 문체 영향).
         vault_block = ""
-        if self.vault.enabled:
-            topic = self.state.config.get("topic", self.project_slug)
+        if self.vault.enabled and agent_name == "research-orchestrator":
+            topic = self.project.get("topic") or self.state.config.get("topic", self.project_slug)
             category = self.vault._detect_category(topic)
-            if agent_name in ("research-orchestrator",):
-                vault_block = self.vault.search_for_research(topic, category)
-                if vault_block:
-                    vault_chars = len(vault_block)
-                    print(f"    [VaultRAG] 리서치용 볼트 지식 주입: {vault_chars}자", flush=True)
-                    _notify("System", f"볼트에서 기존 리서치 {vault_chars}자 발견 → 프롬프트에 주입",
-                            phase=self.state.current_phase, project=self.project_slug, level="info")
-                else:
-                    print("    [VaultRAG] 리서치용 볼트 지식 없음", flush=True)
-            elif agent_name in ("script-director",):
-                vault_block = self.vault.search_for_manuscript(topic, category)
-                if vault_block:
-                    print(f"    [VaultRAG] 원고용 볼트 지식 주입: {len(vault_block)}자", flush=True)
-                    _notify("System", f"볼트에서 관련 원고 패턴 발견 → 프롬프트에 주입",
-                            phase=self.state.current_phase, project=self.project_slug, level="info")
+            vault_block = self.vault.search_for_research(topic, category)
+            if vault_block:
+                vault_chars = len(vault_block)
+                print(f"    [VaultRAG] 리서치용 볼트 지식 주입: {vault_chars}자", flush=True)
+                _notify("System", f"볼트에서 기존 리서치 {vault_chars}자 발견 → 프롬프트에 주입",
+                        phase=self.state.current_phase, project=self.project_slug, level="info")
+            else:
+                print("    [VaultRAG] 리서치용 볼트 지식 없음", flush=True)
 
         # 6.5. 볼트 기획안(크리에이티브 브리프) 주입
         creative_brief = self._load_creative_brief()

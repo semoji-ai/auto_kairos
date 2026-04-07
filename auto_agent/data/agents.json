@@ -160,8 +160,8 @@
           "description": "TTS 음성 생성 (speed/stability/style 조절 가능)"
         },
         "image_tool": {
-          "module": "image_batch_module",
-          "description": "이미지 생성/검색/평가"
+          "module": "image_batch_module + image_generate",
+          "description": "배치 생성/검색은 image_batch_module, 단일 재생성은 image_generate.py CLI, 품질 평가는 LLM이 Read 도구로 직접 수행"
         },
         "subtitle_tool": {
           "module": "subtitle_sync",
