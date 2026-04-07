@@ -116,6 +116,31 @@ class KoreanTTSPreprocessor:
         '세': '세',
     }
 
+    # 영문 단위 → 한글 (TTS가 km, kg 등을 영문 그대로 읽지 못함)
+    # 매칭 시 공백 허용, 단위 뒤 알파벳 금지(부분 매칭 방지)
+    ENGLISH_UNIT_MAP = [
+        # 길이/거리 (긴 것부터)
+        ('km', '킬로미터'),
+        ('cm', '센티미터'),
+        ('mm', '밀리미터'),
+        ('nm', '나노미터'),
+        # 무게
+        ('kg', '킬로그램'),
+        ('mg', '밀리그램'),
+        # 부피
+        ('ml', '밀리리터'),
+        # 단일 문자 단위 (마지막에)
+        ('m',  '미터'),
+        ('g',  '그램'),
+        ('L',  '리터'),
+        ('l',  '리터'),
+    ]
+
+    # 한글 카운터 단위 (한자어 수사로 읽음)
+    # "13척" → "십삼척", "5채" → "오채"
+    KOREAN_COUNTER_UNITS = ['척', '채', '권', '편', '쪽', '호', '회', '차', '층', '동', '호선',
+                             '점', '발', '명', '인', '대', '병', '잔', '그릇', '마리']
+
     # English abbreviations → Korean pronunciation
     ENGLISH_ABBR = {
         # Finance/Investment
@@ -157,15 +182,71 @@ class KoreanTTSPreprocessor:
         self.changes: List[str] = []
 
     def _strip_markdown_markers(self, text: str) -> str:
-        """마크다운 강조 마커(**볼드**, *이탤릭*)를 제거.
+        """마크다운 강조 마커(**볼드**, *이탤릭*, `code`, [[wiki]], [text](url))를 제거.
         원고에서 **볼드**는 영상 연출 힌트이므로 TTS/자막에서는 제거한다."""
+        original = text
+        # [text](url) → text
+        text = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', text)
+        # [[wikilink]] → wikilink
+        text = re.sub(r'\[\[([^\]]+)\]\]', r'\1', text)
+        # `code` → code
+        text = re.sub(r'`([^`]+)`', r'\1', text)
         # **볼드** → 볼드
-        stripped = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
+        text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
         # *이탤릭* → 이탤릭 (단, ** 처리 후 남은 단일 * 만)
-        stripped = re.sub(r'(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)', r'\1', stripped)
-        if stripped != text:
+        text = re.sub(r'(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)', r'\1', text)
+        if text != original:
             self.changes.append("마크다운 강조 마커 제거")
-        return stripped
+        return text
+
+    def _convert_english_units(self, text: str) -> str:
+        """영문 단위(km, kg, %, m 등)를 한글로 변환.
+        숫자가 앞에 있는 경우만 매치 — '5km' → '5킬로미터'.
+        단위 뒤가 알파벳이면 매치 안 함 (부분 매칭 방지)."""
+        for eng_unit, kor_unit in self.ENGLISH_UNIT_MAP:
+            # 숫자(쉼표/소수점 포함) 직후 + 단위 + (뒤에 영문자 없음)
+            pattern = re.compile(
+                r'(\d[\d,]*(?:\.\d+)?)\s*' + re.escape(eng_unit) + r'(?![A-Za-z])'
+            )
+            def _repl(m, _eu=eng_unit, _ku=kor_unit):
+                num_str = m.group(1).replace(',', '')
+                # 숫자도 한자어로 변환 (소수점 지원)
+                try:
+                    if '.' in num_str:
+                        int_part, dec_part = num_str.split('.')
+                        korean_int = (
+                            KoreanNumberConverter.number_to_korean(int(int_part))
+                            if int_part != '0' else '영'
+                        )
+                        korean_dec = ''.join(
+                            KoreanNumberConverter.SINO_ONES[int(d)] if int(d) > 0 else '영'
+                            for d in dec_part
+                        )
+                        korean = f"{korean_int}쩜{korean_dec}"
+                    else:
+                        korean = KoreanNumberConverter.number_to_korean(int(num_str))
+                except Exception:
+                    korean = m.group(1)
+                self.changes.append(f"{m.group(0)} → {korean}{_ku}")
+                return f"{korean}{_ku}"
+            text = pattern.sub(_repl, text)
+        return text
+
+    def _convert_counter_units(self, text: str) -> str:
+        """한글 카운터 단위(척, 채, 권 등)에 붙은 숫자를 한자어 수사로 변환.
+        예: '13척' → '십삼척', '133척' → '백삼십삼척'."""
+        units_alt = '|'.join(re.escape(u) for u in self.KOREAN_COUNTER_UNITS)
+        pattern = re.compile(r'(\d+)(' + units_alt + r')')
+        def _repl(m):
+            try:
+                num = int(m.group(1))
+                unit = m.group(2)
+                korean = KoreanNumberConverter.number_to_korean(num)
+                self.changes.append(f"{m.group(0)} → {korean}{unit}")
+                return f"{korean}{unit}"
+            except Exception:
+                return m.group(0)
+        return pattern.sub(_repl, text)
 
     def process_text(self, text: str) -> tuple[str, List[str]]:
         """
@@ -183,10 +264,14 @@ class KoreanTTSPreprocessor:
         # Step 0: 마크다운 강조 마커 제거 (TTS/자막에 포함되면 안 됨)
         result = self._strip_markdown_markers(result)
 
-        # Process in order: English → punctuation → numbers → units → special cases
+        # Process in order: English → punctuation → English units → numbers → counters → KR units → special cases
         result = self._convert_english(result)
         result = self._normalize_punctuation(result)
+        # 영문 단위(km/kg/%) → 한글 (숫자 변환 전에 수행 — 변환 후 단어 단위로 처리)
+        result = self._convert_english_units(result)
         result = self._convert_numbers(result)
+        # 한글 카운터(척/채/권/...)에 남은 숫자를 한자어로
+        result = self._convert_counter_units(result)
         result = self._handle_units(result)
         result = self._prevent_palatalization(result)
         result = self._prevent_rendaku(result)

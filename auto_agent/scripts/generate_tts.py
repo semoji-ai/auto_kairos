@@ -3,13 +3,19 @@ TTS Audio Generation Script
 Reads scene_specs.json, sends narration_tts to ElevenLabs API, saves audio files.
 """
 import json
+import logging
 import os
+import re
 import sys
 import time
 from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 # Load .env
 from auto_agent.paths import get_workspace_dir; load_dotenv(get_workspace_dir() / ".env")
@@ -95,43 +101,47 @@ VOICE_ID, VOICE_SETTINGS = _resolve_voice_config()
 from auto_agent.scripts.project_paths import PROJECT_ROOT, get_project_dir
 
 
-def _preprocess_tts_text(text: str) -> str:
-    """TTS 전처리 — 숫자→한국어, 영어약어→한국어, 발음 교정, 마크다운 제거."""
-    try:
-        from auto_agent.tools.korean_tts_preprocessor import KoreanTTSPreprocessor
-        preprocessor = KoreanTTSPreprocessor()
-        result, changes = preprocessor.process_text(text)
-        if changes:
-            logging.getLogger(__name__).debug("TTS 전처리: %s", changes)
-        return result
-    except (ImportError, Exception):
-        pass
-    try:
-        from auto_agent.tools.elevenlabs import TTSPreprocessor
-        return TTSPreprocessor().preprocess(text, "ko")
-    except (ImportError, Exception):
-        pass
-    # fallback: 기본 숫자 변환만
-    import re
-    # 쉼표 숫자 (1,514 → 천오백십사)
-    def _num_to_kr(m):
-        n = int(m.group().replace(",", ""))
-        if n >= 100_000_000:
-            return f"{n // 100_000_000}억"
-        if n >= 10_000:
-            return f"{n // 10_000}만"
-        if n >= 1_000:
-            return f"{n // 1_000}천"
-        return str(n)
-    text = re.sub(r'[\d,]+', _num_to_kr, text)
-    return text
+# 의심 패턴: 변환되지 않은 숫자/영문 단어/마크다운이 잔존하면 재처리 트리거
+_SUSPECT_PATTERNS = [
+    re.compile(r'\d+'),                # 임의의 숫자
+    re.compile(r'[A-Za-z]{2,}'),       # 영문 단어 2글자 이상
+    re.compile(r'\*\*'),               # 마크다운 볼드
+]
+
+
+def _is_suspect(text: str) -> list:
+    """의심 패턴 잔존 여부 검사. 발견된 패턴 리스트 반환 (빈 리스트 = OK)."""
+    if not text:
+        return []
+    found = []
+    for pat in _SUSPECT_PATTERNS:
+        m = pat.search(text)
+        if m:
+            found.append(m.group(0))
+    return found
+
+
+def _preprocess_tts_text(text: str) -> tuple:
+    """TTS 전처리 — 숫자→한국어, 영어약어→한국어, 발음 교정, 마크다운 제거.
+
+    Returns:
+        (processed_text, changes_list). silent failure 없음 — 예외는 위로 전파.
+    """
+    if not text:
+        return text, []
+    from auto_agent.tools.korean_tts_preprocessor import KoreanTTSPreprocessor
+    preprocessor = KoreanTTSPreprocessor()
+    result, changes = preprocessor.process_text(text)
+    if changes:
+        logger.info("TTS 전처리 (%d 변환): %s", len(changes), changes)
+    return result, changes
 
 
 def generate_tts(text: str, output_path: Path) -> float:
-    """Send text to ElevenLabs API and save MP3. Returns estimated duration."""
-    # 전처리 적용
-    text = _preprocess_tts_text(text)
+    """Send text to ElevenLabs API and save MP3. Returns estimated duration.
 
+    NOTE: 호출자가 이미 전처리한 text를 넘겨야 함 (이중 전처리 방지).
+    """
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}?output_format=mp3_44100_128"
     headers = {"Content-Type": "application/json", "xi-api-key": API_KEY}
     body = {"text": text, "model_id": MODEL_ID, "voice_settings": VOICE_SETTINGS}
@@ -195,20 +205,42 @@ def main():
     print()
 
     specs_updated = False
+    preprocess_log = []  # 씬별 (original, processed, changes) 기록
     for i, scene in enumerate(scenes):
         num = scene.get("sceneNumber") or scene["scene_number"]
-        # Use narration_tts (pre-processed) if available, else preprocess narration
-        if scene.get("narration_tts"):
-            text = scene["narration_tts"]
+        raw = scene.get("narration", "") or ""
+        existing_tts = scene.get("narration_tts") or ""
+
+        # 정책 (B): LLM이 채운 narration_tts가 있고, 의심 패턴 잔존 없으면 그대로 사용.
+        # 의심 패턴 발견 또는 미생성 → raw narration을 Python으로 전처리.
+        scene_changes: list = []
+        if existing_tts and not _is_suspect(existing_tts):
+            text = existing_tts
+            logger.info("Scene %s: 기존 narration_tts 사용 (검증 통과)", num)
         else:
-            raw = scene.get("narration", "")
-            text = _preprocess_tts_text(raw) if raw else ""
-            if text and text != raw:
-                scene["narration_tts"] = text
-                specs_updated = True
+            if existing_tts:
+                suspects = _is_suspect(existing_tts)
+                logger.warning(
+                    "Scene %s: narration_tts 의심 패턴 %s — raw로 재처리",
+                    num, suspects,
+                )
+            if not raw:
+                text = ""
+            else:
+                text, scene_changes = _preprocess_tts_text(raw)
+                if text and text != raw:
+                    scene["narration_tts"] = text
+                    specs_updated = True
+
+        preprocess_log.append({
+            "scene": num,
+            "original": raw,
+            "processed": text,
+            "changes": scene_changes,
+        })
 
         if not text or not text.strip():
-            print(f"  [{i+1}/{total}] Scene {num}: SKIP (empty narration)")
+            logger.warning("[%d/%d] Scene %s: SKIP (empty narration)", i + 1, total, num)
             results.append({"scene": num, "status": "skipped", "duration": 0})
             continue
 
@@ -252,6 +284,7 @@ def main():
         "errors": err_count,
         "total_duration_sec": round(total_duration, 2),
         "results": results,
+        "preprocessing": preprocess_log,
     }
 
     with open(project_dir / "tts_results.json", "w", encoding="utf-8") as f:

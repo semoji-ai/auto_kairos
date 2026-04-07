@@ -59,16 +59,47 @@
       "execution": "sequential",
       "steps": [
         {
-          "id": "step_2",
-          "name": "script_and_direct",
-          "description": "원고 작성과 시각 연출을 동시에 수행. 챕터별 병렬 처리 가능.",
+          "id": "step_2_outline",
+          "name": "outline_design",
+          "description": "분량에 맞는 막/챕터 구조 + 핵심 메시지 + 감정 곡선을 outline.json으로 설계 (씬 작성 전 단일 호출)",
           "agent": "script-director",
+          "mode": "outline",
+          "input": ["research_report.json", "art_style.json", "project_config"],
+          "output": ["outline.json"],
+          "skills": [
+            "shared/writing-style",
+            "shared/writing-style-semoji",
+            "shared/writing-style-iromism"
+          ],
+          "notes": "단일 에이전트 다단계 모드 1단계. 분량 1분→1챕터, 3분→1~2챕터, 5분→2~3챕터, 10분→3~4챕터로 적절히 결정. 각 챕터에 narrative_role/key_beats/emotional_arc 명시."
+        },
+        {
+          "id": "step_2_manuscript",
+          "name": "manuscript_writing",
+          "description": "outline 기반 한 호흡 manuscript 작성 (prose only, 씬 분할/연출 X). 참조 원고 + vault 유사 영상 강제 주입으로 매력 보장.",
+          "agent": "script-director",
+          "mode": "manuscript",
+          "input": ["outline.json", "research_report.json", "research_digest.json", "project_config"],
+          "output": ["final_manuscript.md"],
+          "skills": [
+            "shared/writing-style",
+            "shared/writing-style-semoji",
+            "shared/writing-style-iromism"
+          ],
+          "notes": "단일 에이전트 다단계 모드 1.5단계. 매력적인 prose 작성에만 집중. layout/motion/imageAsset 결정 X (다음 step에서 처리). runner가 writing-style-iromism의 참조 원고 + vault semantic search 결과 주입."
+        },
+        {
+          "id": "step_2",
+          "name": "script_split_and_direct",
+          "description": "final_manuscript.md를 의미 단위로 자르고 각 씬에 layout/motion/mood/imageAsset 결정. narration은 manuscript에서 substring으로 가져옴 (재작성 금지).",
+          "agent": "script-director",
+          "mode": "chapters",
           "chunked_parallel": {
             "split_by": "chapter",
             "max_parallel": 3,
             "merge_strategy": "concat_scenes_renumber"
           },
-          "input": ["research_report.json", "art_style.json", "project_config"],
+          "input": ["outline.json", "final_manuscript.md", "research_report.json", "art_style.json", "project_config"],
           "output": ["scene_specs.json"],
           "skills": [
             "shared/writing-style",
@@ -77,7 +108,24 @@
             "shared/motion-presets",
             "shared/remotion-design-system"
           ],
-          "notes": "기존 step_2(원고) + step_5(씬분할) + step_6(크리에이티브) + step_6c(데이터보강) + step_6d(모션) 통합. scene_specs.json v5 플랫 스키마 출력."
+          "notes": "final_manuscript.md의 prose를 의미 단위로 분할 + 각 씬에 layout/motion/mood/imageAsset/headline 결정. ⚠️ narration 재작성 금지 — manuscript에서 substring으로만 가져옴 (post-validation hook 검증)."
+        },
+        {
+          "id": "step_2_consistency",
+          "name": "narrative_consistency",
+          "description": "병렬로 작성된 챕터들의 내러티브 단절/중복/감정 곡선 점프를 검토하고 보정 (씬 간 연결어, 트랜지션, 씬 수 최적화)",
+          "agent": "script-director",
+          "mode": "consistency",
+          "input": ["scene_specs.json", "outline.json", "research_report.json"],
+          "output": ["scene_specs.json"],
+          "skills": [
+            "shared/writing-style",
+            "shared/writing-style-semoji",
+            "shared/writing-style-iromism",
+            "shared/motion-presets",
+            "shared/remotion-design-system"
+          ],
+          "notes": "단일 에이전트 다단계 모드 3단계. chunked_parallel 후 merge된 scene_specs를 outline 기준으로 재검토. 1분 영상에서 7씬 → 4~6씬 자연 수렴 유도."
         },
         {
           "id": "step_2_review",

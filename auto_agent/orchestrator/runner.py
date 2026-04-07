@@ -1513,18 +1513,18 @@ class PipelineRunner:
                 _notify("Director", f"scene_decomposition → scene_specs 변환 완료 ({len(original_specs.get('scenes', []))}씬)",
                         phase=self.state.current_phase, project=self.project_slug)
             else:
-                # scene_specs 생성 단계 → 단일 agent 호출로 전환
-                _notify(agent_name, "scene_specs 없음 → 단일 agent 호출로 전환",
+                # scene_specs 생성 단계 (script-director 첫 호출) — 자연스러운 시작 알림
+                _notify(agent_name, "Stage 2 시작",
                         phase=self.state.current_phase, project=self.project_slug, level="info")
                 return self._run_agent_step(step)
         else:
             original_specs = json.loads(specs_path.read_text(encoding="utf-8"))
         chapters = self._split_by_chapter(original_specs)
 
-        # chapter 필드 없으면 폴백 (agent step으로 위임)
+        # chapter 필드 없으면 단일 instance로 진행 (정상 흐름)
         if chapters is None:
-            _notify(agent_name, "chapter 필드 없음 → 단일 호출로 전환합니다",
-                    phase=self.state.current_phase, project=self.project_slug, level="warning")
+            _notify(agent_name, "Stage 2 시작",
+                    phase=self.state.current_phase, project=self.project_slug, level="info")
             return self._run_agent_step(step)
 
         n_chapters = len(chapters)
@@ -1823,6 +1823,11 @@ class PipelineRunner:
         env = os.environ.copy()
         env["PROJECT_NAME"] = self.project_slug
         env["SEARCH_ENGINE"] = self.state.config.get("search_engine", "")
+        # 스텝의 mode 필드를 에이전트에 전달 (예: script-director의 outline/chapters/consistency)
+        _mode = step.get("mode")
+        if _mode and agent_name == "script-director":
+            env["SCRIPT_DIRECTOR_MODE"] = _mode
+            env["SCRIPT_DIRECTOR_CHAPTER"] = str(chapter_num)
         env.pop("CLAUDECODE", None)
 
         _popen_flags = subprocess_kwargs()
@@ -2070,11 +2075,16 @@ class PipelineRunner:
         # 컨텍스트 메모리
         context_memory_block = self.context_memory.build_context_prompt(step.get("id", ""))
 
+        _mode_line = ""
+        _step_mode = step.get("mode")
+        if _step_mode:
+            _mode_line = f"\nSCRIPT_DIRECTOR_MODE: {_step_mode}\nSCRIPT_DIRECTOR_CHAPTER: {chapter_num}"
+
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
 작업 디렉토리: {self.project_dir}
 워크스페이스: {get_workspace_dir()}
-챕터: {chapter_num} (챕터별 병렬 처리 모드)
+챕터: {chapter_num} (챕터별 병렬 처리 모드){_mode_line}
 </system_context>
 
 <agent_skill>
@@ -2919,6 +2929,10 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         # 5. 서브프로세스 실행 (Popen + 프로그레스 모니터링)
         env = os.environ.copy()
         env["PROJECT_NAME"] = self.project_slug
+        # 스텝의 mode 필드를 에이전트에 전달 (script-director 단일 에이전트 다단계 모드)
+        _mode = step.get("mode")
+        if _mode and agent == "script-director":
+            env["SCRIPT_DIRECTOR_MODE"] = _mode
         # Claude Code 중첩 세션 방지 해제
         env.pop("CLAUDECODE", None)
 
@@ -3641,6 +3655,104 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             logger.warning(f"기획안 로드 실패: {e}")
         return ""
 
+    def _build_manuscript_reference_block(self) -> str:
+        """script-director manuscript 모드 전용 — 매력적인 prose 작성을 위한 강제 reference 블록.
+
+        2개 source를 강하게 주입:
+        1. writing-style-iromism.md / writing-style-semoji.md의 "참조 원고" 섹션 통째
+        2. vault semantic search로 유사 주제 과거 영상 원고 (1~2편, top match)
+
+        목적: 추상적 규칙이 아닌 실제 예시로 톤/리듬/후킹 패턴을 학습시킨다.
+        """
+        writing_style = self.state.config.get("writing_style", "")
+        if not writing_style:
+            return ""
+
+        sections: list[str] = []
+
+        # ── 1. 참조 원고 (writing-style-iromism.md 의 ⭐ 참조 원고 섹션) ──
+        try:
+            style_skill_path = (
+                Path(__file__).parent.parent
+                / "data" / "skills" / "shared"
+                / f"writing-style-{writing_style}.md"
+            )
+            if style_skill_path.exists():
+                style_text = style_skill_path.read_text(encoding="utf-8")
+                # "## ⭐ 참조 원고" 섹션부터 다음 ## 까지 추출
+                ref_start = style_text.find("⭐ 참조 원고")
+                if ref_start == -1:
+                    ref_start = style_text.find("## 참조 원고")
+                if ref_start == -1:
+                    ref_start = style_text.find("참조 원고")
+                if ref_start >= 0:
+                    # 다음 ## 헤더까지 (또는 끝까지)
+                    next_h = style_text.find("\n## ", ref_start + 10)
+                    ref_section = (
+                        style_text[ref_start:next_h] if next_h > 0 else style_text[ref_start:]
+                    )
+                    # 너무 길면 자름 (max 8000자)
+                    if len(ref_section) > 8000:
+                        ref_section = ref_section[:8000] + "\n\n[... 이하 생략 ...]"
+                    sections.append(
+                        f"## 참조 원고 ({writing_style} 스타일 — 톤/리듬/후킹 패턴을 그대로 따르세요)\n\n{ref_section}"
+                    )
+        except Exception as e:
+            logger.warning(f"참조 원고 로드 실패: {e}")
+
+        # ── 2. vault semantic search — 유사 주제의 매력적인 과거 영상 원고 ──
+        try:
+            if self.vault.enabled:
+                topic = self.project.get("topic") or self.project_slug
+                # 채널별 폴더 매핑 (있으면 해당 채널 우선)
+                channel_folder = None
+                if writing_style == "iromism":
+                    channel_folder = "channels/이로미즘"
+                elif writing_style == "semoji":
+                    channel_folder = "channels/세모지"
+                # 1차: 채널 폴더 + scripts 우선
+                similar = self.vault.semantic_search(
+                    query=topic,
+                    top_k=5,
+                    folder_filter=None,  # 채널 폴더 필터는 너무 좁아 일단 전체에서
+                )
+                # research_role이 raw/wiki/topics인 것만 (분석 노트 우선)
+                # 그리고 채널 폴더 또는 02-research/topics 우선
+                preferred = []
+                fallback = []
+                for r in similar:
+                    f = r.get("file", "")
+                    if channel_folder and channel_folder in f:
+                        preferred.append(r)
+                    elif "02-research/topics" in f or "channels/" in f:
+                        fallback.append(r)
+                top_examples = (preferred + fallback)[:2]
+                if top_examples:
+                    examples_md = "## vault 유사 주제 (참고 — 톤/구조 학습용)\n\n"
+                    for r in top_examples:
+                        examples_md += (
+                            f"### {r.get('file', '?')}  (score={r.get('score', 0):.3f})\n"
+                            f"{r.get('snippet', '')[:600]}\n\n"
+                        )
+                    sections.append(examples_md)
+                    print(
+                        f"    [Manuscript] vault 유사 영상 {len(top_examples)}편 주입",
+                        flush=True,
+                    )
+        except Exception as e:
+            logger.warning(f"vault 유사 영상 검색 실패: {e}")
+
+        if not sections:
+            return ""
+
+        return (
+            "<manuscript_references>\n"
+            "⚠️ 매력적인 prose 작성을 위한 강제 reference입니다.\n"
+            "이 톤/리듬/후킹 패턴을 그대로 따르세요. 추상적 규칙이 아니라 실제 예시입니다.\n\n"
+            + "\n".join(sections)
+            + "\n</manuscript_references>"
+        )
+
     def _build_agent_prompt(self, step: dict) -> str:
         """에이전트 호출용 자기 완결적 프롬프트 구성.
 
@@ -3731,7 +3843,14 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         creative_brief = self._load_creative_brief()
         if creative_brief:
             vault_block += f"\n\n<creative_brief>\n{creative_brief}\n</creative_brief>\n"
-            print(f"    [기획안] 크리에이티브 브리프 주입: {len(creative_brief)}자", flush=True)
+            print(f"    [기획단] 크리에이티브 브리프 주입: {len(creative_brief)}자", flush=True)
+
+        # 6.7. manuscript mode 전용 — 참조 원고 + vault 유사 영상 강제 주입
+        # script-director가 manuscript 작성 시 매력적인 prose를 위한 강한 anchor
+        if agent_name == "script-director" and step.get("mode") == "manuscript":
+            ref_block = self._build_manuscript_reference_block()
+            if ref_block:
+                vault_block += "\n\n" + ref_block
 
         # 7. 프로젝트 config 주입
         config = self.state.config or {}
@@ -3748,10 +3867,15 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         target_chars = {1: 400, 3: 1200, 5: 2000, 10: 4000}.get(duration_min, duration_min * 400)
 
         # 8. 프롬프트 조립
+        _mode_line = ""
+        _step_mode = step.get("mode")
+        if _step_mode:
+            _mode_line = f"\nSCRIPT_DIRECTOR_MODE: {_step_mode}"
+
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
 작업 디렉토리: {self.project_dir}
-워크스페이스: {get_workspace_dir()}
+워크스페이스: {get_workspace_dir()}{_mode_line}
 </system_context>
 
 <project_config>

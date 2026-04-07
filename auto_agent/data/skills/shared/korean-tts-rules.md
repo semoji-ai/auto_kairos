@@ -5,6 +5,13 @@ description: 한국어 TTS 전처리 — 숫자/기호/발음 변환 규칙 (1�
 
 # Korean TTS 전처리 규칙
 
+> ⚠️ **2026-04 변경**: TTS 전처리는 기본적으로 Python `KoreanTTSPreprocessor`가
+> 결정적으로 처리합니다 (`auto_agent/tools/korean_tts_preprocessor.py`).
+> data-mapper 등 에이전트는 **narration_tts를 직접 채우지 마세요** —
+> generate_tts.py가 빈 필드를 자동으로 채웁니다. 이미 채워져 있어도
+> 의심 패턴(\d+, [A-Za-z]{2,}, **)이 있으면 raw narration으로 재처리됩니다.
+> 이 규칙 문서는 코드 이식의 source-of-truth로 유지되며, 향후 LLM 호출은 폐지 예정입니다.
+
 한국어 나레이션 텍스트를 TTS 엔진(ElevenLabs)이 자연스럽게 읽을 수 있도록 변환합니다.
 
 **실행 방식**: Claude Code 1턴 호출 (문맥 기반 판단이 필요한 변환을 정확하게 수행)
