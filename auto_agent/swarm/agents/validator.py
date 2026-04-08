@@ -65,14 +65,16 @@ class ValidatorAgent(BaseAgent):
         # uncited_character paragraphs >= 이 값이면 validator fail
         # 1~2는 휴리스틱 false positive 가능성 있어 warning만, 3+ 부터는 진짜 누락으로 판정
         self.uncited_char_fail_threshold = uncited_char_fail_threshold
-        # 마지막 검증 시점의 content hash (manuscript + character_register)
-        # 길이 비교는 stale state 위험 — 길이 동일하면서 내용 바뀐 케이스를 못 잡음
+        # 마지막 검증 시점의 content hash (manuscript + character_register + outline_state)
+        # outline_state도 추적 — writer가 status를 drafting→complete로 바꾸는 순간을 포착해서
+        # supervisor 블록(meta.status="done" transition)이 정확히 한 번 더 돌도록 보장.
         self._last_manuscript_hash = ""
         self._last_register_hash = ""
+        self._last_outline_state_hash = ""
         self._last_violations_count = -1
 
     async def step(self) -> bool:
-        # 1. manuscript 변경 감지 (content hash 기반 — 길이 동일해도 내용 바뀐 케이스 잡음)
+        # 1. manuscript / register / outline_state 변경 감지 (content hash 기반)
         manuscript = self.workspace.read_text("manuscript.md")
         if not manuscript:
             return False
@@ -80,16 +82,20 @@ class ValidatorAgent(BaseAgent):
         manuscript_hash = hashlib.sha256(manuscript.encode("utf-8")).hexdigest()
         register_text = self.workspace.read_text("character_register.json")
         register_hash = hashlib.sha256(register_text.encode("utf-8")).hexdigest() if register_text else ""
+        outline_state_text = self.workspace.read_text("outline_state.json")
+        outline_state_hash = hashlib.sha256(outline_state_text.encode("utf-8")).hexdigest() if outline_state_text else ""
 
         if (
             manuscript_hash == self._last_manuscript_hash
             and register_hash == self._last_register_hash
+            and outline_state_hash == self._last_outline_state_hash
         ):
-            # manuscript도 register도 변화 없음 — idle
+            # 세 파일 모두 변화 없음 — idle
             return False
 
         self._last_manuscript_hash = manuscript_hash
         self._last_register_hash = register_hash
+        self._last_outline_state_hash = outline_state_hash
 
         # 2. claims.jsonl 읽기 (가능한 fact pool)
         all_claims = self.workspace.all_jsonl("claims.jsonl")
