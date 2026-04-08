@@ -166,8 +166,15 @@ class WriterAgent(BaseAgent):
         skill_text = skill_text.replace("WORKSPACE_PATH", workspace_str)
 
         # claims를 inline 표시 (writer가 어떤 fact가 있는지 한눈에)
+        # 새 schema: source_urls (list), legacy: source_url (string) — 둘 다 처리
+        def _first_src(c):
+            urls = c.get("source_urls")
+            if isinstance(urls, list) and urls:
+                return urls[0]
+            return c.get("source_url", "")
         claims_summary = "\n".join(
-            f"  - [{c.get('id', '?')}] {c.get('text', '')[:120]} (src: {c.get('source_url', '')[:60]})"
+            f"  - [{c.get('id', '?')}]{'✓✓' if c.get('cross_checked') else ''} "
+            f"{c.get('text', '')[:120]} (src: {_first_src(c)[:60]})"
             for c in claims[:50]
         )
         if len(claims) > 50:

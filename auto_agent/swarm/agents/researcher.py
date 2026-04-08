@@ -62,7 +62,7 @@ class ResearcherAgent(BaseAgent):
         model: str = "claude-sonnet-4-6",
         idle_sec: float = 2.0,
         max_iterations: int = 30,
-        timeout_per_query_sec: int = 150,  # 빠른 루프 모드 (FAST researcher)
+        timeout_per_query_sec: int = 180,  # 빠른 루프 + cross-check + 이미지 수집 (2026-04-09: 150 → 180)
     ):
         super().__init__(
             agent_id=instance_id,
@@ -135,10 +135,37 @@ class ResearcherAgent(BaseAgent):
         # 5. claims.jsonl에 추출된 fact 추가 + findings.jsonl에 메타 기록
         claims = parsed.get("claims", [])
         valid_claims = []
+        cross_checked_count = 0
+        image_candidates_total = 0
         for claim in claims:
-            # 환각 방지: source_url + source_quote 모두 있어야 함
-            if not claim.get("source_url") or not claim.get("source_quote"):
+            # 환각 방지: source_urls(list) 또는 source_url(string) + source_quote 필수
+            # 새 schema: source_urls (list of url), legacy: source_url (string)
+            source_urls = claim.get("source_urls")
+            if not source_urls:
+                # legacy fallback: source_url (string) → wrap to list
+                legacy_url = claim.get("source_url")
+                if legacy_url:
+                    source_urls = [legacy_url] if isinstance(legacy_url, str) else list(legacy_url)
+                    claim["source_urls"] = source_urls
+                else:
+                    continue
+            if not isinstance(source_urls, list) or not source_urls:
                 continue
+            if not claim.get("source_quote"):
+                continue
+            # source_url legacy 필드도 backward-compat용으로 항상 채움 (1번째 url)
+            claim.setdefault("source_url", source_urls[0])
+            # cross_checked: 명시되지 않으면 source_urls 길이로 추론
+            if "cross_checked" not in claim:
+                claim["cross_checked"] = len(source_urls) >= 2
+            if claim.get("cross_checked"):
+                cross_checked_count += 1
+            # image_candidates 정규화 (없으면 빈 배열)
+            img_cands = claim.get("image_candidates") or []
+            if not isinstance(img_cands, list):
+                img_cands = []
+            claim["image_candidates"] = img_cands
+            image_candidates_total += len(img_cands)
             # claim id 부여 (instance prefix)
             new_id = _next_claim_id(self.workspace, self.agent_id)
             claim["id"] = new_id
@@ -154,6 +181,8 @@ class ResearcherAgent(BaseAgent):
             "completed_at": datetime.now(timezone.utc).isoformat(),
             "claim_ids": valid_claims,
             "claims_count": len(valid_claims),
+            "cross_checked_count": cross_checked_count,
+            "image_candidates_total": image_candidates_total,
             "rejected_count": len(claims) - len(valid_claims),
             "not_found": parsed.get("not_found", []),
             "elapsed_sec": result.elapsed_sec,
@@ -193,7 +222,9 @@ class ResearcherAgent(BaseAgent):
 
 <task>
 위 query를 처리하세요.
-WebSearch + WebFetch로 source를 찾고, 모든 fact에 source_url + source_quote를 명시합니다.
+WebSearch + WebFetch (최대 2회)로 주 source + cross-check source를 찾고, 모든 fact에
+source_urls(list) + source_quote를 명시합니다. 핵심 fact는 가능하면 2개 source로 cross-check
+(cross_checked: true). 시각화 가능한 fact는 image_candidates에 Wikimedia 이미지 url 수집.
 완료되면 단일 JSON 객체로 응답하세요. 다른 텍스트는 출력하지 마세요.
 </task>
 """

@@ -186,18 +186,28 @@ def compile_swarm(
 
     # 6. research_report.json — 기존 파이프라인 호환 (script-director chapters 모드가 input으로 사용)
     # claims를 sources/episodes/key_facts 형식으로 변환
+    # 새 schema: source_urls (list), legacy: source_url (string) — 둘 다 처리
+    def _claim_urls(c):
+        urls = c.get("source_urls")
+        if isinstance(urls, list) and urls:
+            return urls
+        legacy = c.get("source_url")
+        if legacy:
+            return [legacy] if isinstance(legacy, str) else list(legacy)
+        return []
+
     if claims or findings or episodes or characters:
         sources_seen = set()
         sources_list = []
         for c in claims:
-            src_url = c.get("source_url", "")
-            if src_url and src_url not in sources_seen:
-                sources_seen.add(src_url)
-                sources_list.append({
-                    "title": c.get("source_title", c.get("text", "")[:60]),
-                    "url": src_url,
-                    "grade": "primary" if c.get("confidence") == "high" else "secondary",
-                })
+            for src_url in _claim_urls(c):
+                if src_url and src_url not in sources_seen:
+                    sources_seen.add(src_url)
+                    sources_list.append({
+                        "title": c.get("source_title", c.get("text", "")[:60]),
+                        "url": src_url,
+                        "grade": "primary" if c.get("confidence") == "high" else "secondary",
+                    })
 
         report = {
             "topic": outline.get("topic", "") if outline else "",
@@ -207,8 +217,11 @@ def compile_swarm(
                 {
                     "id": c.get("id", ""),
                     "text": c.get("text", ""),
-                    "source": c.get("source_url", ""),
+                    "sources": _claim_urls(c),       # 새 schema (list)
+                    "source": (_claim_urls(c) or [""])[0],  # legacy 호환 (1번째)
                     "confidence": c.get("confidence", "medium"),
+                    "cross_checked": bool(c.get("cross_checked")),
+                    "image_candidates": c.get("image_candidates") or [],
                 }
                 for c in claims
             ],
