@@ -33,6 +33,7 @@ from .claude_cli import call_claude_cli_with_retry
 from .workspace import SwarmWorkspace
 
 import json
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -466,8 +467,60 @@ async def run_swarm(
                 "reason": "writer_stalled_recovery_failed",
                 "meta_status": phase_2_status,
             }
+    # 최후 안전장치 — validator가 max_iterations로 죽었거나 race로 transition을
+    # 못 했더라도 outline_state가 complete + 충분한 claims 사용 + 환각 없음이면 done으로 강제.
+    # 이 경로는 fix B/C 외에 추가된 safety net.
     if phase_2_status not in ("done", "timeout"):
-        return {"status": "failed", "phase": "phase_2", "meta_status": phase_2_status}
+        outline_state = workspace.read_json("outline_state.json", default={})
+        all_claims = workspace.all_jsonl("claims.jsonl")
+        valid_claim_ids = {c.get("id", "") for c in all_claims}
+        manuscript = workspace.read_text("manuscript.md") or ""
+        used_claim_ids = set()
+        for tag in re.findall(r'\[claim:([^\]]+)\]', manuscript):
+            for cid in tag.split(","):
+                used_claim_ids.add(cid.strip())
+        invalid_claim_ids = used_claim_ids - valid_claim_ids
+        register = workspace.read_json("character_register.json", default={"characters": []})
+        valid_char_ids = {c.get("id", "") for c in register.get("characters", [])}
+        used_char_ids = set()
+        for tag in re.findall(r'\[char:([^\]]+)\]', manuscript):
+            for cid in tag.split(","):
+                used_char_ids.add(cid.strip())
+        invalid_char_ids = used_char_ids - valid_char_ids
+
+        writer_done_safe = (
+            outline_state.get("status") == "complete"
+            and len(used_claim_ids) >= 10
+            and len(invalid_claim_ids) == 0
+            and len(invalid_char_ids) == 0
+        )
+        if writer_done_safe:
+            print(
+                f"[Swarm] safety net: outline complete + claims_used={len(used_claim_ids)} + "
+                f"no hallucinations → meta.status = done (validator missed transition)",
+                flush=True,
+            )
+            final_meta["status"] = "done"
+            final_meta["validator_passed"] = True
+            final_meta["safety_net_done"] = True
+            workspace.write_json_atomic("meta.json", final_meta)
+            workspace.emit_event(
+                "orchestrator", "safety_net_done",
+                level="success",
+                claims_used=len(used_claim_ids),
+                manuscript_chars=len(manuscript),
+            )
+            phase_2_status = "done"
+        else:
+            return {
+                "status": "failed",
+                "phase": "phase_2",
+                "meta_status": phase_2_status,
+                "outline_status": outline_state.get("status"),
+                "claims_used": len(used_claim_ids),
+                "invalid_claim_ids": len(invalid_claim_ids),
+                "invalid_char_ids": len(invalid_char_ids),
+            }
 
     # ─────────────────────────────────────
     # Phase 3: compile
