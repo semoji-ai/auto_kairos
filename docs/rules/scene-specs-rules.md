@@ -6,6 +6,10 @@
 - `imageAsset.prompt`로 장면 묘사 (한글), 아트스타일 키워드 넣지 않음
 - `imageAsset.source`를 반드시 존중 (search/generate)
 
+## counter / number_spotlight 규칙
+- **단일 단위** (예: 26%, 46만 명, 7시간) → `number_spotlight` + `values` 카운팅
+- **복합 단위** (예: 6시간 50분, 1분 30초) → `headline` 텍스트 표시만, `values: []`, `unit: null`
+
 ## mapScene 좌표
 - scene_specs: `[위도, 경도]` (LLM 자연 순서)
 - Remotion/MapLibre: `[경도, 위도]` — build_manifest.py가 swap 담당

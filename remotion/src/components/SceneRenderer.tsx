@@ -137,7 +137,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const hasSceneImage = !!sceneImage;
   const hasAnyImage = hasSceneImage || !!defaultBg;
   const placement = scene.imageAsset?.placement ?? "background";
-  const defaultOpacity = (placement === "background") ? 0.35 : 1.0;
+  const defaultOpacity = 1.0;
   const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
   const imgSrc = sceneImage || defaultBg || "";
 

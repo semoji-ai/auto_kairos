@@ -1,0 +1,283 @@
+<!-- Swarm Live partial — manuscript 탭 안의 swarm canvas -->
+<link rel="stylesheet" href="/static/swarm_canvas.css">
+
+<div class="swarm-live-container" data-workspace="{{ swarm_workspace_path }}">
+  <div class="swarm-live-header">
+    <div class="swarm-live-title">
+      <span class="swarm-topic">{{ swarm_meta.topic if swarm_meta else (outline.topic if outline else '—') }}</span>
+      <span class="swarm-meta-line">
+        <span id="sl-phase" class="badge phase">{{ swarm_meta.status if swarm_meta else 'idle' }}</span>
+        <span id="sl-elapsed" class="elapsed">—</span>
+      </span>
+    </div>
+    <div class="swarm-live-controls">
+      {% if swarm_running %}
+      <button id="sl-stop-btn" class="btn danger" onclick="slStopSwarm()">■ Stop</button>
+      <span class="running-dot">●</span>
+      {% else %}
+      <button id="sl-restart-btn" class="btn" onclick="msStartSwarm()">↻ Swarm 다시 작성</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="canvas-grid">
+    <aside class="researcher-column left">
+      <div class="researcher-card" data-rid="R1"><div class="r-id">R1</div><div class="r-status">idle</div><div class="r-claims">0 claims</div><div class="r-last-q"></div></div>
+      <div class="researcher-card" data-rid="R2"><div class="r-id">R2</div><div class="r-status">idle</div><div class="r-claims">0 claims</div><div class="r-last-q"></div></div>
+      <div class="researcher-card" data-rid="R3"><div class="r-id">R3</div><div class="r-status">idle</div><div class="r-claims">0 claims</div><div class="r-last-q"></div></div>
+    </aside>
+
+    <main class="manuscript-canvas">
+      <div class="canvas-meta">
+        <span id="manuscript-chars">0 chars</span>
+        <span id="manuscript-iter">iter 0</span>
+        <span id="manuscript-status">idle</span>
+      </div>
+      <div id="manuscript-text" class="manuscript-text">{% if swarm_final_manuscript %}{{ swarm_final_manuscript }}{% else %}(swarm 진행 시 여기에 실시간으로 작성됩니다){% endif %}</div>
+      <div class="canvas-footer">
+        <span id="char-tags">char tags: 0</span>
+        <span id="claim-tags">claim tags: 0</span>
+      </div>
+    </main>
+
+    <aside class="researcher-column right">
+      <div class="researcher-card" data-rid="R4"><div class="r-id">R4</div><div class="r-status">idle</div><div class="r-claims">0 claims</div><div class="r-last-q"></div></div>
+      <div class="researcher-card" data-rid="R5"><div class="r-id">R5</div><div class="r-status">idle</div><div class="r-claims">0 claims</div><div class="r-last-q"></div></div>
+      <div class="validator-card" id="validator-card">
+        <div class="v-id">validator</div>
+        <div class="v-status">waiting</div>
+        <div class="v-metric">citation: <b id="v-citation">—</b></div>
+        <div class="v-metric">claims invalid: <b id="v-claims-invalid">—</b></div>
+        <div class="v-metric">chars invalid: <b id="v-chars-invalid">—</b></div>
+        <div class="v-metric">uncited char: <b id="v-uncited-char">—</b></div>
+        <div class="v-passes" id="v-passes">○</div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="log-feed">
+    <div class="log-feed-header">활동 로그</div>
+    <div id="log-feed-list" class="log-feed-list"></div>
+  </section>
+
+  <svg id="plane-layer" class="plane-layer" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<style>
+/* manuscript 탭 안의 swarm — 큰 페이지 padding 제거, 컨테이너 base 톤 유지 */
+.swarm-live-container { background: var(--bg-bone, #F5F1EA); padding: 16px; border-radius: 10px; position: relative; }
+.swarm-live-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #E7E1D7; margin-bottom: 16px; }
+.swarm-live-title { display: flex; align-items: baseline; gap: 12px; }
+.swarm-live-title .swarm-topic { font-size: 16px; font-weight: 600; font-family: "Noto Serif KR", serif; }
+.swarm-live-title .swarm-meta-line { display: flex; gap: 6px; align-items: center; }
+.swarm-live-controls { display: flex; gap: 8px; align-items: center; }
+.ms-swarm-cta { display: flex; align-items: center; gap: 12px; padding: 16px; background: #FFFBEB; border: 1px dashed #FCD34D; border-radius: 10px; margin-bottom: 16px; }
+.ms-cta-btn { padding: 10px 20px; background: #D97706; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ms-cta-btn:hover { background: #B45309; }
+.ms-cta-note { font-size: 11px; color: #92400E; }
+.ms-toggle .running-dot { color: #10B981; font-size: 10px; margin-left: 6px; animation: pulse 1.5s ease infinite; }
+</style>
+
+<script>
+(function() {
+  const container = document.querySelector('.swarm-live-container');
+  if (!container) return;
+  let workspace = container.dataset.workspace || '';
+  if (!workspace) return;
+
+  let evtSource = null;
+  let startTs = null;
+  let elapsedTimer = null;
+
+  const $ = (id) => document.getElementById(id);
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  function fmtElapsed(sec) {
+    if (sec < 60) return `${sec}s`;
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}m ${s}s`;
+  }
+  function startElapsed() {
+    if (elapsedTimer) clearInterval(elapsedTimer);
+    startTs = Date.now();
+    elapsedTimer = setInterval(() => {
+      const sec = Math.floor((Date.now() - startTs) / 1000);
+      $('sl-elapsed').textContent = fmtElapsed(sec);
+    }, 1000);
+  }
+  function stopElapsed() {
+    if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; }
+  }
+
+  function stripTags(text) {
+    return text
+      .replace(/\[claim:[^\]]+\]/g, '')
+      .replace(/\[char:[^\]]+\]/g, '')
+      .replace(/\[TODO:[^\]]+\]/g, '')
+      .replace(/  +/g, ' ');
+  }
+
+  function countTags(text) {
+    const claims = (text.match(/\[claim:[^\]]+\]/g) || []).length;
+    const chars = (text.match(/\[char:[^\]]+\]/g) || []).length;
+    $('claim-tags').textContent = `claim tags: ${claims}`;
+    $('char-tags').textContent = `char tags: ${chars}`;
+  }
+
+  function updateResearcher(rid, patch) {
+    const card = container.querySelector(`.researcher-card[data-rid="${rid}"]`);
+    if (!card) return;
+    if (patch.status) card.querySelector('.r-status').textContent = patch.status;
+    if (patch.claims !== undefined) card.querySelector('.r-claims').textContent = `${patch.claims} claims`;
+    if (patch.last_q !== undefined) card.querySelector('.r-last-q').textContent = patch.last_q || '';
+    if (patch.active !== undefined) card.classList.toggle('active', !!patch.active);
+  }
+  function bumpResearcherClaims(rid) {
+    const el = container.querySelector(`.researcher-card[data-rid="${rid}"] .r-claims`);
+    if (!el) return;
+    const cur = parseInt(el.textContent, 10) || 0;
+    el.textContent = `${cur + 1} claims`;
+  }
+
+  function applyValidator(v) {
+    $('v-citation').textContent = (v.citation_rate ?? '—');
+    $('v-claims-invalid').textContent = (v.claims_invalid ?? '—');
+    $('v-chars-invalid').textContent = (v.chars_invalid ?? '—');
+    $('v-uncited-char').textContent = (v.uncited_char_paragraphs ?? '—');
+    const passes = !!v.passes;
+    const pe = $('v-passes');
+    pe.textContent = passes ? '✓' : '○';
+    pe.classList.toggle('passes', passes);
+    container.querySelector('#validator-card .v-status').textContent = passes ? 'passes' : 'checking';
+  }
+
+  function appendLog(entry) {
+    const list = $('log-feed-list');
+    const div = document.createElement('div');
+    div.className = `log-entry level-${entry.level || 'info'}`;
+    const time = (entry.ts || '').slice(11, 19);
+    const payload = entry.payload ? JSON.stringify(entry.payload).slice(0, 80) : '';
+    div.innerHTML = `<span class="l-time">${time}</span><span class="l-agent">${escapeHtml(entry.agent || '?')}</span><span class="l-event">${escapeHtml(entry.event || '')}</span><span class="l-payload">${escapeHtml(payload)}</span>`;
+    list.prepend(div);
+    while (list.children.length > 100) list.lastChild.remove();
+  }
+
+  function flyPaperPlane(fromEl, toEl) {
+    if (!fromEl || !toEl) return;
+    const fr = fromEl.getBoundingClientRect();
+    const tr = toEl.getBoundingClientRect();
+    const x1 = fr.left + fr.width / 2;
+    const y1 = fr.top + fr.height / 2;
+    const x2 = tr.left + tr.width / 2;
+    const y2 = tr.top + tr.height / 2;
+    const svg = $('plane-layer');
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M 0 0 L 18 -6 L 12 0 L 18 6 Z');
+    path.setAttribute('class', 'plane');
+    g.appendChild(path);
+    g.setAttribute('transform', `translate(${x1},${y1})`);
+    svg.appendChild(g);
+    const dur = 700;
+    const t0 = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - t0) / dur);
+      const e = 1 - Math.pow(1 - t, 3);
+      const x = x1 + (x2 - x1) * e;
+      const y = y1 + (y2 - y1) * e;
+      const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+      g.setAttribute('transform', `translate(${x},${y}) rotate(${angle})`);
+      g.style.opacity = (1 - t * 0.3).toString();
+      if (t < 1) requestAnimationFrame(step);
+      else {
+        g.style.transition = 'opacity 0.3s';
+        g.style.opacity = '0';
+        setTimeout(() => svg.removeChild(g), 300);
+        const text = $('manuscript-text');
+        text.style.background = '#FCD34D33';
+        setTimeout(() => { text.style.background = ''; }, 600);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function applySnapshot(snap) {
+    if (snap.meta?.status) $('sl-phase').textContent = snap.meta.status;
+    if (snap.manuscript) {
+      $('manuscript-text').textContent = stripTags(snap.manuscript);
+      $('manuscript-chars').textContent = `${snap.manuscript.length} chars`;
+    }
+    if (snap.outline_state) {
+      $('manuscript-iter').textContent = `iter ${snap.outline_state.iteration || 0}`;
+      $('manuscript-status').textContent = snap.outline_state.status || 'idle';
+    }
+    (snap.researchers || []).forEach(r => updateResearcher(r.id, { claims: r.claims, last_q: r.last_q }));
+    if (snap.status?.validator) applyValidator(snap.status.validator);
+    countTags(snap.manuscript || '');
+    if (snap.running && !startTs) startElapsed();
+  }
+
+  function connectSSE() {
+    if (evtSource) { evtSource.close(); }
+    const url = `/api/swarm/events?workspace=${encodeURIComponent(workspace)}`;
+    evtSource = new EventSource(url);
+
+    evtSource.addEventListener('snapshot', (e) => applySnapshot(JSON.parse(e.data)));
+    evtSource.addEventListener('agent_event', (e) => {
+      const ev = JSON.parse(e.data);
+      appendLog(ev);
+      const m = (ev.agent || '').match(/^R\d+$/);
+      if (m) {
+        if (ev.event === 'claimed_query') {
+          updateResearcher(ev.agent, { status: 'searching', last_q: ev.payload?.target || '', active: true });
+        } else if (ev.event === 'research_completed') {
+          updateResearcher(ev.agent, { status: 'idle', active: false });
+        }
+      }
+      if (ev.agent === 'orchestrator' && ev.event === 'swarm_started') {
+        $('sl-phase').textContent = 'phase_1';
+        startElapsed();
+      }
+      if (ev.event === 'swarm_completed' || ev.event === 'phase_2_timeout' || ev.event === 'writer_stalled') {
+        stopElapsed();
+      }
+    });
+    evtSource.addEventListener('claim_added', (e) => {
+      const c = JSON.parse(e.data);
+      bumpResearcherClaims(c.researcher);
+      const fromCard = container.querySelector(`.researcher-card[data-rid="${c.researcher}"]`);
+      const toCanvas = container.querySelector('.manuscript-canvas');
+      flyPaperPlane(fromCard, toCanvas);
+    });
+    evtSource.addEventListener('manuscript_updated', (e) => {
+      const m = JSON.parse(e.data);
+      $('manuscript-text').textContent = stripTags(m.full_text);
+      $('manuscript-chars').textContent = `${m.chars} chars`;
+      countTags(m.full_text);
+    });
+    evtSource.addEventListener('writer_state', (e) => {
+      const s = JSON.parse(e.data);
+      $('manuscript-iter').textContent = `iter ${s.iteration || 0}`;
+      $('manuscript-status').textContent = s.status || 'drafting';
+    });
+    evtSource.addEventListener('validator_status', (e) => {
+      const s = JSON.parse(e.data);
+      if (s.validator) applyValidator(s.validator);
+    });
+    evtSource.addEventListener('swarm_ended', () => {
+      stopElapsed();
+    });
+  }
+
+  // Stop swarm
+  window.slStopSwarm = function() {
+    if (!confirm('swarm을 중지할까요?')) return;
+    fetch(`/api/swarm/stop?workspace=${encodeURIComponent(workspace)}`, {method: 'POST'})
+      .then(() => location.reload());
+  };
+
+  // 초기 연결
+  connectSSE();
+})();
+</script>

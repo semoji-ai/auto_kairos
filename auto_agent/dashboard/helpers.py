@@ -511,8 +511,7 @@ def render_scene_preview(scene: dict, project_accent: str = None, art_style: str
     image_url = scene.get("_image_url", "")
     img_asset = scene.get("imageAsset") or {}
     placement = img_asset.get("placement", "background")
-    # Remotion과 동일: background=0.35, 나머지(fullscreen/center/side)=0.9
-    _default_opacity = 0.35 if placement == "background" else 0.9
+    _default_opacity = 1.0
     img_opacity = img_asset.get("opacity", _default_opacity)
     # fullscreen은 Remotion과 동일하게 최소 0.9 보장
     if placement == "fullscreen" and img_opacity < 0.8:
