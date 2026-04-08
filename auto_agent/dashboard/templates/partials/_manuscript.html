@@ -1,32 +1,163 @@
-<!-- 원고 탭 — scene_specs.json의 챕터별 나레이션 표시 -->
-{% if scenes %}
-<div class="ms-view">
-  <div class="ms-stats">
-    {% set total_chars = scenes|map(attribute='narration')|select('string')|map('length')|sum %}
-    <span class="ms-stat">{{ scenes|length }}씬</span>
-    <span class="ms-stat">{{ total_chars|default(0) }}자</span>
-    <span class="ms-stat">~{{ "%.1f"|format(total_chars / 500) }}분</span>
+<!-- 원고 탭 — Swarm Live + final_manuscript.md (한 호흡 prose) + scene_specs.json (씬별) toggle -->
+
+<!-- 데이터 우선순위 기반 기본 활성 토글:
+     1) swarm 진행 중 또는 결과 있음 → swarm
+     2) swarm 결과 prose만 있음 → swarm
+     3) final_manuscript.md 있음 → prose
+     4) scene_specs만 있음 → scenes
+-->
+{% set has_swarm = swarm_workspace or swarm_final_manuscript %}
+{% set has_prose = final_manuscript|length > 0 %}
+{% set has_scenes = scenes|length > 0 %}
+{% set default_view = 'swarm' if has_swarm else ('prose' if has_prose else 'scenes') %}
+
+{% if has_swarm or has_prose or has_scenes %}
+<div class="ms-view"
+     data-swarm-workspace="{{ swarm_workspace_path or '' }}"
+     data-swarm-topic="{{ project.topic if project else (outline.topic if outline else '') }}"
+     data-swarm-duration="{{ project.duration_minutes if project and project.duration_minutes else (outline.duration_min if outline else '1') }}"
+     data-swarm-style="{{ project.writing_style if project and project.writing_style else 'iromism' }}">
+  <!-- Swarm 시작 버튼 (swarm 데이터 없는 프로젝트에도 표시 — 새로 시작 가능) -->
+  {% if not has_swarm %}
+  <div class="ms-swarm-cta">
+    <button class="ms-cta-btn" onclick="msStartSwarm()">🐝 Swarm으로 작성</button>
+    <span class="ms-cta-note">실시간 multi-agent 협업 (research + write + validate). 기존 산출물은 보존됩니다.</span>
+  </div>
+  {% endif %}
+
+  <!-- View toggle: swarm | prose | scenes -->
+  <div class="ms-toggle">
+    {% if has_swarm %}
+    <button class="ms-tab {% if default_view == 'swarm' %}active{% endif %}" data-view="swarm" onclick="msSwitchView('swarm')">
+      🐝 Swarm Live
+      {% if swarm_running %}<span class="running-dot">●</span>{% endif %}
+    </button>
+    {% endif %}
+    {% if has_prose %}
+    <button class="ms-tab {% if default_view == 'prose' %}active{% endif %}" data-view="prose" onclick="msSwitchView('prose')">한 호흡 원고</button>
+    {% endif %}
+    {% if has_scenes %}
+    <button class="ms-tab {% if default_view == 'scenes' %}active{% endif %}" data-view="scenes" onclick="msSwitchView('scenes')">씬별 보기</button>
+    {% endif %}
   </div>
 
-  {% set ns = namespace(current_chapter=0) %}
-  {% for scene in scenes %}
-    {% if scene.chapter != ns.current_chapter %}
-      {% set ns.current_chapter = scene.chapter %}
-      <div class="ms-chapter">Chapter {{ scene.chapter }}</div>
-    {% endif %}
-    <div class="ms-scene">
-      <div class="ms-scene-header">
-        <span class="ms-scene-num">#{{ scene.sceneNumber }}</span>
-        {% if scene.title %}<span class="ms-scene-title">{{ scene.title }}</span>{% endif %}
-        {% set layout = scene.layout or scene.get('_layout', '') %}
-        {% set mood = scene.mood or '' %}
-        {% if layout %}<span class="ms-badge ms-layout">{{ layout }}</span>{% endif %}
-        {% if mood %}<span class="ms-badge ms-mood">{{ mood }}</span>{% endif %}
-      </div>
-      <div class="ms-narration">{{ scene.narration or '' }}</div>
+  {% if has_swarm %}
+  <!-- Swarm Live view -->
+  <div id="ms-swarm-view" class="ms-swarm-view" {% if default_view != 'swarm' %}style="display:none"{% endif %}>
+    {% include "partials/_swarm_live.html" %}
+  </div>
+  {% endif %}
+
+  {% if has_prose %}
+  <!-- Prose view: final_manuscript.md 한 호흡 -->
+  <div id="ms-prose-view" class="ms-prose-view" {% if default_view != 'prose' %}style="display:none"{% endif %}>
+    <div class="ms-stats">
+      {% set ms_chars = final_manuscript|length %}
+      <span class="ms-stat">final_manuscript.md</span>
+      <span class="ms-stat">{{ ms_chars }}자</span>
+      <span class="ms-stat">~{{ "%.1f"|format(ms_chars / 400) }}분</span>
+      {% if outline and outline.get('chapters') %}
+      <span class="ms-stat">{{ outline.chapters|length }}챕터 outline</span>
+      {% endif %}
     </div>
-  {% endfor %}
+
+    {% if outline and outline.get('core_thesis') %}
+    <div class="ms-thesis">
+      <div class="ms-thesis-label">core thesis</div>
+      <div class="ms-thesis-text">{{ outline.core_thesis }}</div>
+    </div>
+    {% endif %}
+
+    <div class="ms-prose">{{ final_manuscript }}</div>
+  </div>
+  {% endif %}
+
+  {% if has_scenes %}
+  <!-- Scenes view: scene_specs.json 씬별 -->
+  <div id="ms-scenes-view" class="ms-scenes-view" {% if default_view != 'scenes' %}style="display:none"{% endif %}>
+    <div class="ms-stats">
+      {% set total_chars = scenes|map(attribute='narration')|select('string')|map('length')|sum %}
+      <span class="ms-stat">{{ scenes|length }}씬</span>
+      <span class="ms-stat">{{ total_chars|default(0) }}자</span>
+      <span class="ms-stat">~{{ "%.1f"|format(total_chars / 500) }}분</span>
+    </div>
+
+    {% set ns = namespace(current_chapter=0) %}
+    {% for scene in scenes %}
+      {% if scene.chapter != ns.current_chapter %}
+        {% set ns.current_chapter = scene.chapter %}
+        <div class="ms-chapter">Chapter {{ scene.chapter }}</div>
+      {% endif %}
+      <div class="ms-scene">
+        <div class="ms-scene-header">
+          <span class="ms-scene-num">#{{ scene.sceneNumber }}</span>
+          {% if scene.title %}<span class="ms-scene-title">{{ scene.title }}</span>{% endif %}
+          {% set layout = scene.layout or scene.get('_layout', '') %}
+          {% set mood = scene.mood or '' %}
+          {% if layout %}<span class="ms-badge ms-layout">{{ layout }}</span>{% endif %}
+          {% if mood %}<span class="ms-badge ms-mood">{{ mood }}</span>{% endif %}
+        </div>
+        <div class="ms-narration">{{ scene.narration or '' }}</div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 </div>
+
+<script>
+function msSwitchView(view) {
+  document.querySelectorAll('.ms-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === view);
+  });
+  const swarm = document.getElementById('ms-swarm-view');
+  const prose = document.getElementById('ms-prose-view');
+  const scenes = document.getElementById('ms-scenes-view');
+  if (swarm) swarm.style.display = view === 'swarm' ? 'block' : 'none';
+  if (prose) prose.style.display = view === 'prose' ? 'block' : 'none';
+  if (scenes) scenes.style.display = view === 'scenes' ? 'block' : 'none';
+}
+
+// Swarm 시작 (manuscript 탭의 CTA 버튼에서 호출)
+function msStartSwarm() {
+  const container = document.querySelector('[data-swarm-workspace]');
+  if (!container) {
+    alert('swarm workspace 정보 없음');
+    return;
+  }
+  const workspace = container.dataset.swarmWorkspace;
+  const projectTopic = container.dataset.swarmTopic || '';
+  const projectDuration = container.dataset.swarmDuration || '1';
+  const projectStyle = container.dataset.swarmStyle || 'iromism';
+  const confirmMsg = `swarm으로 새 원고를 작성합니다.\n\n` +
+    `주제: ${projectTopic}\n분량: ${projectDuration}분\n문체: ${projectStyle}\n\n` +
+    `기존 final_manuscript.md, scene_specs.json은 보존됩니다.\n` +
+    `결과는 swarm_final_manuscript.md로 저장됩니다.\n\n진행할까요?`;
+  if (!confirm(confirmMsg)) return;
+  fetch('/api/swarm/start', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      topic: projectTopic,
+      duration: parseInt(projectDuration, 10) || 1,
+      writing_style: projectStyle,
+      workspace_dir: workspace,
+      n_researchers: 5,
+      timeout: 1800,
+      safe_mode: true,
+    }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'started') {
+      // Swarm Live 토글로 자동 전환 + 페이지 reload (canvas 표시)
+      location.reload();
+    } else {
+      alert('swarm 시작 실패: ' + JSON.stringify(data));
+    }
+  })
+  .catch(err => alert('swarm 시작 에러: ' + err.message));
+}
+</script>
 
 <style>
 .ms-view { padding: 16px 20px; max-width: 800px; }
@@ -55,6 +186,46 @@
 .ms-narration {
   font-size: 14px; line-height: 1.8; color: #D4D4D8;
   padding-left: 28px;
+}
+
+/* View toggle */
+.ms-toggle {
+  display: flex; gap: 4px; margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0;
+}
+.ms-tab {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 13px; padding: 10px 16px; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  font-family: inherit;
+}
+.ms-tab:hover { color: #D4D4D8; }
+.ms-tab.active {
+  color: var(--accent, #F59E0B);
+  border-bottom-color: var(--accent, #F59E0B);
+  font-weight: 600;
+}
+
+/* Prose view */
+.ms-prose-view { padding-top: 4px; }
+.ms-thesis {
+  background: rgba(245,158,11,0.06);
+  border-left: 3px solid var(--accent, #F59E0B);
+  padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;
+}
+.ms-thesis-label {
+  font-size: 10px; color: var(--accent, #F59E0B);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 4px; font-weight: 600;
+}
+.ms-thesis-text {
+  font-size: 14px; color: #E4E4E7; line-height: 1.5;
+}
+.ms-prose {
+  font-size: 15px; line-height: 1.95; color: #E4E4E7;
+  white-space: pre-wrap; word-break: keep-all;
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  padding: 8px 4px;
 }
 </style>
 {% else %}

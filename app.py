@@ -53,6 +53,7 @@ from auto_agent.dashboard.helpers import (
 from auto_agent.dashboard.actions import router as actions_router
 from auto_agent.dashboard.json_editor import router as json_editor_router
 from auto_agent.dashboard.sse import router as sse_router
+from auto_agent.dashboard.swarm_sse import router as swarm_sse_router
 from auto_agent.dashboard.memory_routes import router as memory_router
 from auto_agent.dashboard.vault_routes import router as vault_router
 from auto_agent.dashboard.scene_editor import router as scene_editor_router
@@ -65,6 +66,7 @@ app = FastAPI(title="Auto Agent Dashboard")
 app.include_router(actions_router)
 app.include_router(json_editor_router)
 app.include_router(sse_router)
+app.include_router(swarm_sse_router)
 app.include_router(memory_router)
 app.include_router(vault_router)
 app.include_router(scene_editor_router)
@@ -310,6 +312,37 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
     elif tab == "manuscript":
         specs = _load_json("scene_specs.json")
         context["scenes"] = specs.get("scenes", []) if specs else []
+        # final_manuscript.md (Phase 1 manuscript step 산출물 — prose 한 호흡)
+        context["final_manuscript"] = _load_text("final_manuscript.md") or ""
+        # outline.json — 챕터 구조 같이 표시
+        context["outline"] = _load_json("outline.json") or {}
+
+        # ── Swarm 컨텍스트 (manuscript 탭 통합) ─────────────
+        # workspace는 project.output_dir/swarm_workspace/ 에 위치
+        # 결과는 project.output_dir/swarm_*.{md,json} 에 저장 (safe_mode)
+        out_dir_path = Path(out_dir)
+        swarm_workspace = out_dir_path / "swarm_workspace"
+        swarm_meta = None
+        swarm_status = None
+        if swarm_workspace.exists():
+            try:
+                meta_path = swarm_workspace / "meta.json"
+                if meta_path.exists():
+                    swarm_meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                status_path = swarm_workspace / "status.json"
+                if status_path.exists():
+                    swarm_status = json.loads(status_path.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        context["swarm_workspace"] = str(swarm_workspace) if swarm_workspace.exists() else ""
+        context["swarm_workspace_path"] = str(swarm_workspace)  # 항상 노출 (Start 시 사용)
+        context["swarm_meta"] = swarm_meta
+        context["swarm_status"] = swarm_status
+        # swarm 진행 중인지: meta.status가 종료 상태가 아니면 running 가정
+        running_states = {"phase_1", "phase_2", "running"}
+        context["swarm_running"] = bool(swarm_meta and swarm_meta.get("status") in running_states)
+        # swarm 결과 prose
+        context["swarm_final_manuscript"] = _load_text("swarm_final_manuscript.md") or ""
 
     elif tab == "storyboard":
         specs = _load_json("scene_specs.json")
@@ -371,6 +404,21 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
 async def vault_search_page(request: Request):
     """볼트 시맨틱 검색 페이지."""
     return templates.TemplateResponse("vault_search.html", {"request": request})
+
+
+@app.get("/swarm", response_class=HTMLResponse)
+async def swarm_canvas_page(request: Request, workspace: str = "", topic: str = ""):
+    """Swarm canvas — 실시간 multi-agent 활동 시각화 페이지.
+
+    URL 파라미터:
+      - workspace: swarm workspace 디렉토리 경로 (없으면 Start 모달에서 새로 만듦)
+      - topic: 표시용 topic (선택)
+    """
+    return templates.TemplateResponse("swarm_canvas.html", {
+        "request": request,
+        "workspace": workspace,
+        "topic": topic,
+    })
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -634,7 +682,7 @@ async def image_candidates(slug: str, scene_num: int, q: str = "", source: str =
         if candidates_path.exists():
             try:
                 import json as _json
-                data = _json.loads(candidates_path.read_text(encoding="utf-8"))
+                data = json.loads(candidates_path.read_text(encoding="utf-8"))
                 for s in data.get("scenes", []):
                     if s.get("sceneNumber") == scene_num:
                         return JSONResponse({"query": s.get("query", ""), "candidates": s.get("candidates", []), "cached": True, "source": "cached"})
@@ -781,7 +829,7 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
     # voice_id 결정
     config = project.get("config", {})
     if isinstance(config, str):
-        config = _json.loads(config)
+        config = json.loads(config)
 
     STYLE_VOICE = {
         "semoji": "W7FnAxJNpD5WGjrF5GLp",
@@ -826,7 +874,7 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
             # narration_tts 업데이트
             specs_path = Path(out_dir) / "scene_specs.json"
             if specs_path.exists():
-                specs = _json.loads(specs_path.read_text(encoding="utf-8"))
+                specs = json.loads(specs_path.read_text(encoding="utf-8"))
                 for s in specs.get("scenes", []):
                     if s.get("sceneNumber") == scene_num:
                         s["narration_tts"] = text
@@ -929,7 +977,7 @@ def _update_scene_specs_src(out_dir: str, slug: str, scene_num: int):
     dir_name = Path(out_dir).name if out_dir else slug
     specs_path = Path(out_dir) / "scene_specs.json"
     if specs_path.exists():
-        specs = _json.loads(specs_path.read_text(encoding="utf-8"))
+        specs = json.loads(specs_path.read_text(encoding="utf-8"))
         for s in specs.get("scenes", []):
             if s.get("sceneNumber") == scene_num:
                 if not s.get("imageAsset"):
@@ -968,12 +1016,12 @@ async def auto_prompt(slug: str, scene_num: int):
     import json as _json
     config = project.get("config", {})
     if isinstance(config, str):
-        config = _json.loads(config)
+        config = json.loads(config)
     art_style_path = config.get("art_style", "")
     style_desc = ""
     if art_style_path:
         try:
-            style_json = _json.loads((get_workspace_dir() / art_style_path).read_text(encoding="utf-8"))
+            style_json = json.loads((get_workspace_dir() / art_style_path).read_text(encoding="utf-8"))
             style_desc = style_json.get("scene_style_description", "")
         except Exception:
             pass
@@ -1008,7 +1056,7 @@ async def auto_prompt(slug: str, scene_num: int):
         result_text = proc.stdout.strip()
         import json as _json
         try:
-            cli_out = _json.loads(result_text)
+            cli_out = json.loads(result_text)
             if isinstance(cli_out, dict) and "result" in cli_out:
                 result_text = cli_out["result"]
                 if isinstance(result_text, list):
@@ -1037,7 +1085,7 @@ async def generate_image(request: Request, slug: str, scene_num: int):
     import json as _json
     config = project.get("config", {})
     if isinstance(config, str):
-        config = _json.loads(config)
+        config = json.loads(config)
     art_style = config.get("art_style", "")
     style_path = str(get_workspace_dir() / art_style) if art_style else ""
 
@@ -1061,7 +1109,7 @@ async def generate_image(request: Request, slug: str, scene_num: int):
         result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=120,
                                 cwd=str(get_workspace_dir()), env=env)
         if result.returncode == 0:
-            res = _json.loads(result.stdout)
+            res = json.loads(result.stdout)
             # image_assets에 버전 추가 + selected 설정
             add_version(img_dir, scene_num, "generated/" + fname, "generate",
                         prompt=prompt[:200], art_style=art_style, mode=mode)
@@ -1084,7 +1132,7 @@ async def get_art_style(slug: str):
         return JSONResponse({"error": "not found"}, 404)
     config = project.get("config", {})
     if isinstance(config, str):
-        config = _json.loads(config)
+        config = json.loads(config)
     current = config.get("art_style", "")
 
     # 현재 스타일 정보
@@ -1093,7 +1141,7 @@ async def get_art_style(slug: str):
         style_path = get_workspace_dir() / current
         if style_path.exists():
             try:
-                current_info = _json.loads(style_path.read_text(encoding="utf-8"))
+                current_info = json.loads(style_path.read_text(encoding="utf-8"))
                 # 참조 이미지 URL — output 디렉토리명(uuid_{slug}) 기반
                 ref = current_info.get("reference_image", "")
                 if ref:
@@ -1107,7 +1155,7 @@ async def get_art_style(slug: str):
     styles = []
     for p in sorted(Path("artstyle/styles").glob("*.json")):
         try:
-            d = _json.loads(p.read_text(encoding="utf-8"))
+            d = json.loads(p.read_text(encoding="utf-8"))
             styles.append({"path": f"artstyle/styles/{p.name}", "name": d.get("name", p.stem), "file": p.name})
         except Exception:
             styles.append({"path": f"artstyle/styles/{p.name}", "name": p.stem, "file": p.name})
@@ -1127,7 +1175,7 @@ async def set_art_style(request: Request, slug: str):
     new_style = body.get("art_style", "")
     config = project.get("config", {})
     if isinstance(config, str):
-        config = _json.loads(config)
+        config = json.loads(config)
     config["art_style"] = new_style
     pm.set_config(project["id"], config)
     return JSONResponse({"ok": True, "art_style": new_style})
