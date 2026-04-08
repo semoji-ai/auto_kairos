@@ -372,8 +372,39 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
     thumb_dir = Path(output_dir) / "thumbnails" if output_dir else None
     has_thumbs = thumb_dir and thumb_dir.exists()
 
-    # 캐릭터별 첫 등장 씬 이미지 매핑 (1차 패스)
-    char_thumb_map = {}  # {char_id: image_url}
+    # 캐릭터 시트 이미지 매핑 — character_plan.json에서 로드
+    # 키: name / name_en / 모든 variant_id (씬의 characters 필드와 어떤 형태로 매칭될지 모르니 다 등록)
+    # 값: /output/{dir}/{output_path} (variant_id 기준 첫 variant의 output)
+    char_thumb_map: dict = {}
+    if output_dir:
+        plan_path = Path(output_dir) / "character_plan.json"
+        if plan_path.exists():
+            try:
+                import json as _json
+                plan = _json.loads(plan_path.read_text(encoding="utf-8"))
+                for c in plan.get("characters", []) or []:
+                    variants = c.get("variants") or []
+                    if not variants:
+                        continue
+                    # 첫 variant의 output 경로 사용 (예: "characters/variant_id.png")
+                    first_out = variants[0].get("output") or ""
+                    if not first_out:
+                        continue
+                    # 실제 파일 존재 확인 (없으면 깨진 링크 방지)
+                    abs_path = Path(output_dir) / first_out
+                    if not abs_path.exists():
+                        continue
+                    sheet_url = f"/output/{project_dir_name}/{first_out}"
+                    # 다양한 키로 등록 (씬의 characters 필드 형식이 일정치 않을 수 있음)
+                    for key in (c.get("name"), c.get("name_en")):
+                        if key:
+                            char_thumb_map.setdefault(key, sheet_url)
+                    for v in variants:
+                        vid = v.get("variant_id")
+                        if vid:
+                            char_thumb_map.setdefault(vid, sheet_url)
+            except Exception:
+                pass
 
     for scene in scenes:
         sn = scene["sceneNumber"]
@@ -395,12 +426,8 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
                 slug_part = project_dir_name.split("_", 1)[-1] if "_" in project_dir_name else project_dir_name
                 scene["_thumbnail_url"] = f"/api/p/{slug_part}/thumbnails/scene/{sn}"
 
-        # 캐릭터별 첫 등장 이미지 수집
-        for char_id in scene.get("characters", []):
-            if char_id not in char_thumb_map and scene["_image_url"]:
-                char_thumb_map[char_id] = scene["_image_url"]
-
-    # 캐릭터 썸네일을 각 씬에 주입 (2차 패스)
+    # 캐릭터 썸네일을 각 씬에 주입 — character_plan.json 기반의 character sheet만 사용.
+    # 씬 이미지를 캐릭터 썸네일로 폴백하지 않음 (대시보드 깨짐 원인이었음).
     for scene in scenes:
         scene["_char_thumbs"] = {}
         for char_id in scene.get("characters", []):
