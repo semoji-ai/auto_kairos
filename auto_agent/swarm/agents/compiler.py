@@ -26,17 +26,33 @@ logger = logging.getLogger(__name__)
 
 
 # manuscript.md의 [claim:cXXX] 태그 추출용 정규식
-CLAIM_TAG_RE = re.compile(r'\[claim:(c\d+)\]')
+# claim id는 R1_c001 같이 instance prefix가 있고, 여러 id가 콤마로 묶일 수 있음
+# 예: [claim:R1_c001], [claim:R3_c001,R3_c003]
+CLAIM_TAG_RE = re.compile(r'\[claim:([^\]]+)\]')
 
 
 def strip_claim_tags(text: str) -> str:
     """manuscript.md에서 [claim:cXXX] 태그 제거 → 깨끗한 prose."""
-    return CLAIM_TAG_RE.sub('', text).replace('  ', ' ')
+    cleaned = CLAIM_TAG_RE.sub('', text)
+    # 연속 공백 정리 (여러 변형)
+    cleaned = re.sub(r'  +', ' ', cleaned)  # 다중 공백 → 1
+    cleaned = re.sub(r' \.', '.', cleaned)  # 마침표 앞 공백
+    cleaned = re.sub(r' ,', ',', cleaned)
+    return cleaned
 
 
 def extract_used_claims(text: str) -> List[str]:
-    """manuscript에서 사용된 claim_id 목록 추출."""
-    return list(set(CLAIM_TAG_RE.findall(text)))
+    """manuscript에서 사용된 claim_id 목록 추출.
+
+    [claim:R1_c001,R1_c002] 같이 콤마로 묶인 id들도 분리해서 모두 반환.
+    """
+    used: List[str] = []
+    for tag_content in CLAIM_TAG_RE.findall(text):
+        for cid in tag_content.split(','):
+            cid = cid.strip()
+            if cid:
+                used.append(cid)
+    return list(set(used))
 
 
 def compile_swarm(
