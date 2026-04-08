@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
@@ -32,12 +33,19 @@ class BaseAgent(ABC):
         *,
         idle_sec: float = 2.0,
         max_iterations: int = 100,
+        max_seconds: float = 3600.0,
     ):
         self.agent_id = agent_id  # 예: "writer", "R1", "R2", "miner_1"
         self.role = role  # 예: "writer", "researcher", "episode_miner"
         self.workspace = workspace
         self.idle_sec = idle_sec
+        # max_iterations: 무한 루프 방지용 최후 안전망 (시간 보호장치 외에).
         self.max_iterations = max_iterations
+        # max_seconds: agent가 살아있을 최대 시간. 1시간 default.
+        # writer/validator는 실제 작업이 길어질 수 있으므로 phase 2 timeout과 같이 시간으로 보호.
+        # max_iterations와 둘 중 먼저 도달하는 것이 종료 트리거.
+        self.max_seconds = max_seconds
+        self._started_at: float = 0.0
         self._stopped = False
         self._iter = 0
 
@@ -61,10 +69,28 @@ class BaseAgent(ABC):
         return meta.get("status") in ("done", "stopped", "failed")
 
     async def run(self) -> None:
-        """worker 메인 루프. orchestrator가 이걸 asyncio.create_task로 감쌈."""
+        """worker 메인 루프. orchestrator가 이걸 asyncio.create_task로 감쌈.
+
+        종료 조건 (먼저 도달하는 것):
+        - self._stopped (orchestrator가 stop() 호출)
+        - self.is_done() (workspace meta.status가 종결 상태)
+        - max_iterations 도달 (무한 루프 방지)
+        - max_seconds 도달 (시간 기반 보호장치)
+        """
         self.workspace.emit_event(self.agent_id, "agent_started", role=self.role)
+        self._started_at = time.time()
         try:
             while not self._stopped and self._iter < self.max_iterations:
+                # 시간 보호장치 — max_seconds 도달 시 종료
+                elapsed = time.time() - self._started_at
+                if elapsed >= self.max_seconds:
+                    self.workspace.emit_event(
+                        self.agent_id, "agent_max_seconds_reached",
+                        level="warning",
+                        elapsed_sec=int(elapsed),
+                        max_seconds=int(self.max_seconds),
+                    )
+                    break
                 if self.is_done():
                     break
                 try:
@@ -84,4 +110,5 @@ class BaseAgent(ABC):
             self.workspace.emit_event(
                 self.agent_id, "agent_stopped",
                 iterations=self._iter,
+                elapsed_sec=int(time.time() - self._started_at),
             )

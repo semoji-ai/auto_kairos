@@ -50,7 +50,8 @@ class ValidatorAgent(BaseAgent):
         workspace: SwarmWorkspace,
         *,
         idle_sec: float = 4.0,
-        max_iterations: int = 200,
+        max_iterations: int = 100000,  # 사실상 무한 — 시간 보호장치(max_seconds)에 의존
+        max_seconds: float = 3600.0,   # 1시간 (사용자 결정: 옵션 2 시간 기반)
         target_citation_rate: float = 0.6,
         uncited_char_fail_threshold: int = 3,
     ):
@@ -60,6 +61,7 @@ class ValidatorAgent(BaseAgent):
             workspace=workspace,
             idle_sec=idle_sec,
             max_iterations=max_iterations,
+            max_seconds=max_seconds,
         )
         self.target_citation_rate = target_citation_rate
         # uncited_character paragraphs >= 이 값이면 validator fail
