@@ -257,8 +257,9 @@ async def run_swarm(
     n_researchers: int = 5,
     timeout_sec: int = 1800,
     skeleton_model: str = "claude-opus-4-6",
-    # 2026-04-08: sonnet overloaded → opus 임시 사용
-    researcher_model: str = "claude-opus-4-6",
+    # 2026-04-08 (저녁): sonnet 복귀 확인 → researcher default를 sonnet으로 되돌림.
+    # claude_cli sonnet→opus 자동 fallback 가드가 있어서 다시 overload 와도 안전.
+    researcher_model: str = "claude-sonnet-4-6",
     writer_model: str = "claude-opus-4-6",
     safe_mode: bool = False,
 ) -> Dict[str, Any]:

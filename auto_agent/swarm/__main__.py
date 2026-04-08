@@ -37,8 +37,9 @@ def main() -> int:
     parser.add_argument("--creative-brief-file", default="", help="creative brief 파일 경로 (선택)")
     parser.add_argument("--reference-file", default="", help="참조 원고 파일 경로 (선택)")
     parser.add_argument("--skeleton-model", default="claude-opus-4-6")
-    # 2026-04-08: sonnet overloaded → opus
-    parser.add_argument("--researcher-model", default="claude-opus-4-6")
+    # 2026-04-08 (저녁): sonnet 복귀 확인 → researcher default를 sonnet으로 되돌림.
+    # claude_cli sonnet→opus 자동 fallback 가드가 있어서 다시 overload 와도 안전.
+    parser.add_argument("--researcher-model", default="claude-sonnet-4-6")
     parser.add_argument("--writer-model", default="claude-opus-4-6")
     parser.add_argument(
         "--safe-mode",

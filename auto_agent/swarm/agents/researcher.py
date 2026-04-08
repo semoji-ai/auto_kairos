@@ -56,9 +56,10 @@ class ResearcherAgent(BaseAgent):
         workspace: SwarmWorkspace,
         instance_id: str,
         *,
-        # 2026-04-08: sonnet이 현재 overloaded (229초 후 529 패턴 확인됨).
-        # 임시로 opus 사용. sonnet 안정화되면 sonnet으로 복귀하거나 fallback 패턴 도입.
-        model: str = "claude-opus-4-6",
+        # 2026-04-08 (저녁): sonnet 복귀 확인 (단발 8s 정상 응답).
+        # default를 sonnet으로 되돌림. claude_cli.call_claude_cli_with_retry 안에
+        # sonnet→opus 자동 fallback 가드가 있어서 다시 overload 와도 안전.
+        model: str = "claude-sonnet-4-6",
         idle_sec: float = 2.0,
         max_iterations: int = 30,
         timeout_per_query_sec: int = 150,  # 빠른 루프 모드 (FAST researcher)
