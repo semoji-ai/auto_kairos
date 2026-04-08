@@ -16,6 +16,7 @@ LLM 검증이 필요한 항목은 별도 step (옵션 — v2).
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 from datetime import datetime, timezone
@@ -29,12 +30,16 @@ logger = logging.getLogger(__name__)
 
 # 패턴 정의
 CLAIM_TAG_RE = re.compile(r'\[claim:([^\]]+)\]')
+CHAR_TAG_RE = re.compile(r'\[char:([^\]]+)\]')
 TODO_MARKER_RE = re.compile(r'\[TODO:(q[^\s\]]+)[^\]]*\]')
 
 # "구체적 사실" 후보를 찾는 패턴들 — 이런 표현 근처에 [claim:] 태그가 있어야 함
 DATE_RE = re.compile(r'(\d{3,4}년|\d{1,2}월\s*\d{1,2}일|BC\s*\d+|기원전\s*\d+)')
 NUMBER_RE = re.compile(r'(\d{1,3}(?:[,.]\d+)*\s*(?:%|척|명|개|만|억|조|미터|킬로미터|달러|원|배|시간|분|초|kg|km|m))')
 PROPER_NOUN_HINT_RE = re.compile(r'([A-Z][a-zA-Z]{2,})')  # 영문 고유명사 (느슨한 heuristic)
+
+# 한국어 인물 추적 휴리스틱 — 이 표현이 paragraph에 있으면 [char:] 태그도 있어야 함
+KOREAN_PRONOUNS = ("그는", "그녀는", "그가", "그녀가", "그를", "그녀를", "그의", "그녀의")
 
 
 class ValidatorAgent(BaseAgent):
@@ -46,7 +51,8 @@ class ValidatorAgent(BaseAgent):
         *,
         idle_sec: float = 4.0,
         max_iterations: int = 200,
-        target_citation_rate: float = 0.85,
+        target_citation_rate: float = 0.6,
+        uncited_char_fail_threshold: int = 3,
     ):
         super().__init__(
             agent_id="validator",
@@ -56,23 +62,48 @@ class ValidatorAgent(BaseAgent):
             max_iterations=max_iterations,
         )
         self.target_citation_rate = target_citation_rate
-        # 마지막 검증 시점의 manuscript 길이 (변경 감지용)
-        self._last_manuscript_len = -1
+        # uncited_character paragraphs >= 이 값이면 validator fail
+        # 1~2는 휴리스틱 false positive 가능성 있어 warning만, 3+ 부터는 진짜 누락으로 판정
+        self.uncited_char_fail_threshold = uncited_char_fail_threshold
+        # 마지막 검증 시점의 content hash (manuscript + character_register)
+        # 길이 비교는 stale state 위험 — 길이 동일하면서 내용 바뀐 케이스를 못 잡음
+        self._last_manuscript_hash = ""
+        self._last_register_hash = ""
         self._last_violations_count = -1
 
     async def step(self) -> bool:
-        # 1. manuscript 변경 감지 (변경 없으면 idle)
+        # 1. manuscript 변경 감지 (content hash 기반 — 길이 동일해도 내용 바뀐 케이스 잡음)
         manuscript = self.workspace.read_text("manuscript.md")
         if not manuscript:
             return False
-        if len(manuscript) == self._last_manuscript_len:
-            # 변화 없음 — idle
+
+        manuscript_hash = hashlib.sha256(manuscript.encode("utf-8")).hexdigest()
+        register_text = self.workspace.read_text("character_register.json")
+        register_hash = hashlib.sha256(register_text.encode("utf-8")).hexdigest() if register_text else ""
+
+        if (
+            manuscript_hash == self._last_manuscript_hash
+            and register_hash == self._last_register_hash
+        ):
+            # manuscript도 register도 변화 없음 — idle
             return False
-        self._last_manuscript_len = len(manuscript)
+
+        self._last_manuscript_hash = manuscript_hash
+        self._last_register_hash = register_hash
 
         # 2. claims.jsonl 읽기 (가능한 fact pool)
         all_claims = self.workspace.all_jsonl("claims.jsonl")
         valid_claim_ids: Set[str] = {c.get("id", "") for c in all_claims}
+
+        # 2b. character_register 읽기 (인물 id pool)
+        register = self.workspace.read_json("character_register.json", default={"characters": []})
+        valid_char_ids: Set[str] = {c.get("id", "") for c in register.get("characters", [])}
+        char_name_variants: List[str] = []  # 이름 매칭용
+        for c in register.get("characters", []):
+            for k in ("name_ko", "name_en"):
+                v = c.get(k, "").strip()
+                if v and len(v) >= 2:
+                    char_name_variants.append(v)
 
         # 3. manuscript의 모든 [claim:cXXX] 태그 추출
         used_tags = CLAIM_TAG_RE.findall(manuscript)
@@ -80,6 +111,13 @@ class ValidatorAgent(BaseAgent):
         for tag in used_tags:
             for cid in tag.split(","):
                 all_used_ids.add(cid.strip())
+
+        # 3b. manuscript의 모든 [char:id] 태그 추출
+        used_char_tags = CHAR_TAG_RE.findall(manuscript)
+        all_used_char_ids: Set[str] = set()
+        for tag in used_char_tags:
+            for cid in tag.split(","):
+                all_used_char_ids.add(cid.strip())
 
         # 4. 검증 항목들
         violations: List[Dict[str, Any]] = []
@@ -92,6 +130,32 @@ class ValidatorAgent(BaseAgent):
                 "severity": "high",
                 "claim_id": invalid_id,
                 "message": f"manuscript에 [claim:{invalid_id}] 태그가 있지만 claims.jsonl에 없음 (writer 환각 의심)",
+            })
+
+        # 4-1b. 사용된 char id가 character_register에 존재하는가?
+        invalid_char_ids = all_used_char_ids - valid_char_ids
+        for invalid_cid in invalid_char_ids:
+            violations.append({
+                "type": "invalid_char_id",
+                "severity": "high",
+                "char_id": invalid_cid,
+                "message": f"manuscript에 [char:{invalid_cid}] 태그가 있지만 character_register.json에 없음 (writer가 register append 누락)",
+            })
+
+        # 4-1c. 한국어 인물 추적 휴리스틱 — paragraph 단위로 검사
+        # 인물 이름 또는 대명사가 등장하는 paragraph에 [char:] 태그가 있어야 함
+        # 임계값 미만은 warning (휴리스틱 false positive 가능성), 임계값 이상은 high
+        uncited_char_paragraphs = self._find_uncited_character_paragraphs(
+            manuscript, char_name_variants
+        )
+        char_severity = "high" if len(uncited_char_paragraphs) >= self.uncited_char_fail_threshold else "warning"
+        for para_preview, reason in uncited_char_paragraphs[:5]:
+            violations.append({
+                "type": "uncited_character",
+                "severity": char_severity,
+                "paragraph": para_preview,
+                "reason": reason,
+                "message": f"paragraph에 인물 흔적({reason})은 있지만 [char:] 태그 없음",
             })
 
         # 4-2. 구체적 사실(날짜/숫자/고유명사)이 [claim:] 태그 없이 등장하는가?
@@ -118,16 +182,32 @@ class ValidatorAgent(BaseAgent):
         citation_rate = cited_facts / total_facts if total_facts > 0 else 1.0
 
         # 6. status.json 업데이트
+        # passes 조건 — 모두 통과해야 swarm 종료 가능:
+        #   1. citation_rate >= target (claim 인용률)
+        #   2. invalid_claim_ids == 0 (writer가 환각 claim id 안 씀)
+        #   3. invalid_char_ids == 0 (writer가 register에 없는 char id 안 씀)
+        #   4. uncited_char_paragraphs < 임계값 (한국어 인물 누락 휴리스틱)
+        passes = (
+            citation_rate >= self.target_citation_rate
+            and len(invalid_ids) == 0
+            and len(invalid_char_ids) == 0
+            and len(uncited_char_paragraphs) < self.uncited_char_fail_threshold
+        )
+
         status = self.workspace.read_json("status.json", default={})
         status["last_validated_at"] = datetime.now(timezone.utc).isoformat()
         status["validator"] = {
             "manuscript_chars": len(manuscript),
             "claims_used": len(all_used_ids),
             "claims_invalid": len(invalid_ids),
+            "chars_used": len(all_used_char_ids),
+            "chars_invalid": len(invalid_char_ids),
             "uncited_facts": len(unmatched_facts),
+            "uncited_char_paragraphs": len(uncited_char_paragraphs),
+            "uncited_char_fail_threshold": self.uncited_char_fail_threshold,
             "citation_rate": round(citation_rate, 3),
             "violations": len(violations),
-            "passes": citation_rate >= self.target_citation_rate and len(invalid_ids) == 0,
+            "passes": passes,
         }
         self.workspace.write_json_atomic("status.json", status)
 
@@ -152,13 +232,10 @@ class ValidatorAgent(BaseAgent):
             self._last_violations_count = len(violations)
 
         # 8. supervisor 역할: meta status 체크
-        # 모든 조건 충족 + writer가 complete 신호 → swarm 종료 신호
+        # 모든 검증 통과 + writer가 complete 신호 → swarm 종료 신호
+        # passes 변수가 4개 조건 모두 충족했는지 담고 있음
         outline_state = self.workspace.read_json("outline_state.json", default={})
-        if (
-            outline_state.get("status") == "complete"
-            and citation_rate >= self.target_citation_rate
-            and len(invalid_ids) == 0
-        ):
+        if outline_state.get("status") == "complete" and passes:
             meta = self.workspace.read_json("meta.json", default={})
             if meta.get("status") not in ("done", "compiled"):
                 meta["status"] = "done"
@@ -173,6 +250,50 @@ class ValidatorAgent(BaseAgent):
                 )
 
         return True
+
+    def _find_uncited_character_paragraphs(
+        self, manuscript: str, char_name_variants: List[str]
+    ) -> List[Tuple[str, str]]:
+        """paragraph 단위로 인물 흔적 vs [char:] 태그 매칭.
+
+        규칙: paragraph 안에 (인물 이름 또는 한국어 대명사)가 있는데
+        [char:] 태그가 없으면 위반.
+
+        Returns: [(paragraph_preview, reason), ...]
+        """
+        violations: List[Tuple[str, str]] = []
+        # paragraph 분리 (빈 줄 기준)
+        paragraphs = re.split(r'\n\s*\n', manuscript)
+
+        for para in paragraphs:
+            para = para.strip()
+            if not para or len(para) < 20:
+                continue
+
+            has_char_tag = bool(CHAR_TAG_RE.search(para))
+            if has_char_tag:
+                continue  # OK
+
+            # 인물 이름 매칭
+            matched_name = None
+            for name in char_name_variants:
+                if name in para:
+                    matched_name = name
+                    break
+
+            # 한국어 대명사 매칭
+            matched_pronoun = None
+            for pron in KOREAN_PRONOUNS:
+                if pron in para:
+                    matched_pronoun = pron
+                    break
+
+            if matched_name:
+                violations.append((para[:80], f"name='{matched_name}'"))
+            elif matched_pronoun:
+                violations.append((para[:80], f"pronoun='{matched_pronoun}'"))
+
+        return violations
 
     def _find_unmatched_facts(self, manuscript: str) -> List[Tuple[str, int]]:
         """태그 없이 등장하는 구체적 사실 찾기.

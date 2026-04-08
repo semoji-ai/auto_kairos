@@ -56,10 +56,12 @@ class ResearcherAgent(BaseAgent):
         workspace: SwarmWorkspace,
         instance_id: str,
         *,
-        model: str = "claude-sonnet-4-6",
+        # 2026-04-08: sonnet이 현재 overloaded (229초 후 529 패턴 확인됨).
+        # 임시로 opus 사용. sonnet 안정화되면 sonnet으로 복귀하거나 fallback 패턴 도입.
+        model: str = "claude-opus-4-6",
         idle_sec: float = 2.0,
         max_iterations: int = 30,
-        timeout_per_query_sec: int = 240,
+        timeout_per_query_sec: int = 150,  # 빠른 루프 모드 (FAST researcher)
     ):
         super().__init__(
             agent_id=instance_id,
@@ -88,12 +90,12 @@ class ResearcherAgent(BaseAgent):
         # 2. prompt 빌드
         prompt = self._build_prompt(task)
 
-        # 3. claude CLI 호출
+        # 3. claude CLI 호출 — 빠른 루프: max_turns 5로 제한, single source 정책
         result = await call_claude_cli_with_retry(
             prompt,
             model=self.model,
             allowed_tools=["WebSearch", "WebFetch", "Read", "Write"],
-            max_turns=15,
+            max_turns=5,  # FAST mode: WebSearch 1~2 + WebFetch 1 + Write 1 = 3~4 turns
             timeout_sec=self.timeout_per_query_sec,
             project_dir=self.workspace.dir,
             max_retries=1,
@@ -104,11 +106,17 @@ class ResearcherAgent(BaseAgent):
                 self.agent_id, "research_failed",
                 level="warning",
                 q_id=q_id,
-                error=result.error,
+                error=result.error[:300],
                 elapsed_sec=result.elapsed_sec,
             )
-            # query는 다시 pending으로 — 다른 researcher가 retry
-            self.workspace.complete_task(q_id, completer=self.agent_id, status="failed", error=result.error)
+            # status="failed"로 마크. claim_task가 fail_count로 retry 가능 여부 판단.
+            # max_retries(기본 2)까지 다른 researcher가 자동 retry. 그 후엔 영구 포기.
+            self.workspace.complete_task(
+                q_id,
+                completer=self.agent_id,
+                status="failed",
+                error=result.error[:200],
+            )
             return True
 
         # 4. JSON 파싱

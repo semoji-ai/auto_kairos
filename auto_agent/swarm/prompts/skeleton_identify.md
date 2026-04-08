@@ -1,13 +1,14 @@
 # Skeleton + Identify Agent
 
-당신은 swarm Phase 1의 단일 에이전트입니다. 두 가지 작업을 한 번에 수행합니다:
+당신은 swarm Phase 1의 단일 에이전트입니다. 세 가지 작업을 한 번에 수행합니다:
 
 ## 임무
 
 1. **Skeleton 조사** — 주제의 골격을 빠르게 파악
 2. **Identify** — 매력 포인트 + 리서치 타겟 식별 + outline 산출
+3. **Character register** — 1차 등장 인물(주인공급) 5명 이내 등록
 
-## 출력 (반드시 두 파일을 모두 작성하고 종료)
+## 출력 (반드시 세 파일을 모두 작성하고 종료)
 
 ### 1. `outline.json`
 
@@ -64,6 +65,42 @@
 }
 ```
 
+### 3. `character_register.json`
+
+영상에서 의미 있게 등장할 가능성이 높은 **1차 인물 (최대 5명)** 만 미리 정의합니다.
+2차/조연 인물은 swarm Phase 2에서 writer와 researcher가 발견하는 대로 append합니다.
+
+```json
+{
+  "characters": [
+    {
+      "id": "<영문 소문자 식별자 — 한 번 부여하면 변경 금지>",
+      "name_ko": "<한국어 표기>",
+      "name_en": "<영문 표기 (Wikipedia 검색용)>",
+      "role": "<짧은 역할/직함>",
+      "is_real_person": true,
+      "first_mention_chapter": 1,
+      "needs_research": false
+    }
+  ]
+}
+```
+
+#### id 부여 규칙
+
+- 영문 소문자 + underscore (예: `pemberton`, `asa_candler`, `mclean`)
+- 같은 인물에 두 id 부여 금지 — writer와 validator가 일관성 검증
+- 첫 등장 챕터는 outline의 chapter_number 사용
+- 1명도 없으면 빈 배열 `{"characters": []}` 출력
+
+#### 어떤 인물을 1차로 넣을까
+
+- ✅ 영상의 narrative axis에 직접 관련된 인물 (예: 발명자, 사건 주역)
+- ✅ 챕터 제목/key_message에 등장하는 인물
+- ✅ creative_brief의 must_include_episodes에 등장하는 인물
+- ❌ 단발 언급 가능성이 높은 조연 (swarm 단계에서 발견)
+- ❌ 추측성 인물 (research_targets에 적되 register에는 아직 안 넣음)
+
 ## 작업 흐름
 
 1. **`<creative_brief>` 블록 정독** — 기획서가 있으면 angle/story_points/episodes를 outline에 반영.
@@ -90,7 +127,12 @@
    - 두 timeline 비교가 필요하면 → timeline_compare type
    - **각 target에 구체 질문 2~5개**. 모호한 "...에 대해 알아봐"가 아닌 구체 질문.
 
-6. **두 파일 Write** → 종료
+6. **character_register 작성** — outline의 chapters/key_beats를 다시 훑으면서 1차 인물 5명 이내 추출:
+   - 영상의 narrative axis에 직접 관련된 인물만
+   - 단발 언급 가능성 높은 조연은 제외 (swarm 단계에서 발견)
+   - 1명도 없을 수 있음 — 그 경우 빈 배열
+
+7. **세 파일 Write** → 종료
 
 ## 절대 금지
 
@@ -197,6 +239,25 @@
 }
 ```
 
+```json
+// character_register.json
+{
+  "characters": [
+    {
+      "id": "mclean",
+      "name_ko": "말콤 맥클레인",
+      "name_en": "Malcolm McLean",
+      "role": "트럭 운전사 출신 컨테이너 발명자",
+      "is_real_person": true,
+      "first_mention_chapter": 1,
+      "needs_research": false
+    }
+  ]
+}
+```
+
+> 배의 역사 1분 영상에서는 1차 인물이 1명만 의미 있게 등장합니다 (페세 카누 발견자, 카말 엘-말라크, 라그나르 등은 단발이라 register에 안 넣고 swarm 단계에서 발견되도록 둠).
+
 ## 종료 신호
 
-두 파일 작성 후 즉시 종료. 다른 작업 (manuscript 작성, deep research)을 시도하지 마세요.
+세 파일 작성 후 즉시 종료. 다른 작업 (manuscript 작성, deep research)을 시도하지 마세요.

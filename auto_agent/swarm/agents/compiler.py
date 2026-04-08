@@ -25,15 +25,17 @@ from ..workspace import SwarmWorkspace
 logger = logging.getLogger(__name__)
 
 
-# manuscript.md의 [claim:cXXX] 태그 추출용 정규식
+# manuscript.md의 [claim:cXXX] / [char:id] 태그 추출용 정규식
 # claim id는 R1_c001 같이 instance prefix가 있고, 여러 id가 콤마로 묶일 수 있음
-# 예: [claim:R1_c001], [claim:R3_c001,R3_c003]
+# 예: [claim:R1_c001], [claim:R3_c001,R3_c003], [char:pemberton]
 CLAIM_TAG_RE = re.compile(r'\[claim:([^\]]+)\]')
+CHAR_TAG_RE = re.compile(r'\[char:([^\]]+)\]')
 
 
 def strip_claim_tags(text: str) -> str:
-    """manuscript.md에서 [claim:cXXX] 태그 제거 → 깨끗한 prose."""
+    """manuscript.md에서 [claim:cXXX] + [char:id] 태그 제거 → 깨끗한 prose."""
     cleaned = CLAIM_TAG_RE.sub('', text)
+    cleaned = CHAR_TAG_RE.sub('', cleaned)
     # 연속 공백 정리 (여러 변형)
     cleaned = re.sub(r'  +', ' ', cleaned)  # 다중 공백 → 1
     cleaned = re.sub(r' \.', '.', cleaned)  # 마침표 앞 공백
@@ -55,16 +57,42 @@ def extract_used_claims(text: str) -> List[str]:
     return list(set(used))
 
 
+def extract_used_characters(text: str) -> List[str]:
+    """manuscript에서 사용된 char_id 목록 추출."""
+    used: List[str] = []
+    for tag_content in CHAR_TAG_RE.findall(text):
+        for cid in tag_content.split(','):
+            cid = cid.strip()
+            if cid:
+                used.append(cid)
+    return list(set(used))
+
+
 def compile_swarm(
     workspace: SwarmWorkspace,
     output_dir: Path,
+    *,
+    safe_mode: bool = False,
 ) -> Dict[str, Any]:
     """swarm 결과를 기존 파이프라인 호환 형식으로 변환.
+
+    Args:
+      workspace: swarm workspace
+      output_dir: 산출물 디렉토리
+      safe_mode: True면 기존 파이프라인 파일(final_manuscript.md, outline.json,
+                 research_report.json)을 덮어쓰지 않고 swarm_* prefix로 저장.
+                 dashboard에서 manuscript 탭 통합 시 레거시 프로젝트 보호용.
+                 False (기본)면 기존 위치에 직접 저장 (CLI/standalone 사용).
 
     Returns: 변환 결과 summary (counts + status)
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    # safe_mode 파일명 결정
+    manuscript_filename = "swarm_final_manuscript.md" if safe_mode else "final_manuscript.md"
+    outline_filename = "swarm_outline.json" if safe_mode else "outline.json"
+    report_filename = "swarm_research_report.json" if safe_mode else "research_report.json"
 
     workspace.emit_event("compiler", "started")
 
@@ -73,22 +101,26 @@ def compile_swarm(
         "manuscript_clean_chars": 0,
         "claims_total": 0,
         "claims_used": 0,
+        "characters_total": 0,
+        "characters_used": 0,
         "findings_count": 0,
         "episodes_count": 0,
         "queries_count": 0,
         "outputs": [],
     }
 
-    # 1. final_manuscript.md (claim 태그 제거 버전)
+    # 1. final_manuscript.md (claim + char 태그 제거 버전)
     manuscript_raw = workspace.read_text("manuscript.md")
     if manuscript_raw:
         manuscript_clean = strip_claim_tags(manuscript_raw)
         used_claims = extract_used_claims(manuscript_raw)
-        target_path = output_dir / "final_manuscript.md"
+        used_characters = extract_used_characters(manuscript_raw)
+        target_path = output_dir / manuscript_filename
         target_path.write_text(manuscript_clean, encoding="utf-8")
         summary["manuscript_chars"] = len(manuscript_raw)
         summary["manuscript_clean_chars"] = len(manuscript_clean)
         summary["claims_used"] = len(used_claims)
+        summary["characters_used"] = len(used_characters)
         summary["outputs"].append(str(target_path))
         # 원본도 보존
         (output_dir / "swarm_manuscript_with_tags.md").write_text(manuscript_raw, encoding="utf-8")
@@ -96,7 +128,7 @@ def compile_swarm(
     # 2. outline.json — workspace에서 그대로 복사
     outline = workspace.read_json("outline.json")
     if outline:
-        target_path = output_dir / "outline.json"
+        target_path = output_dir / outline_filename
         target_path.write_text(json.dumps(outline, ensure_ascii=False, indent=2), encoding="utf-8")
         summary["outputs"].append(str(target_path))
 
@@ -128,9 +160,33 @@ def compile_swarm(
             encoding="utf-8",
         )
 
+    # 5b. character_register.json — 그대로 복사 + 사용 횟수 카운트
+    register = workspace.read_json("character_register.json", default={"characters": []})
+    characters = register.get("characters", []) if isinstance(register, dict) else []
+    summary["characters_total"] = len(characters)
+    if characters:
+        # manuscript에서 각 char_id 등장 횟수
+        char_counts: Dict[str, int] = {}
+        if manuscript_raw:
+            for tag_content in CHAR_TAG_RE.findall(manuscript_raw):
+                for cid in tag_content.split(','):
+                    cid = cid.strip()
+                    if cid:
+                        char_counts[cid] = char_counts.get(cid, 0) + 1
+        # register에 mention_count 주입
+        for c in characters:
+            cid = c.get("id", "")
+            c["mention_count"] = char_counts.get(cid, 0)
+
+        (output_dir / "swarm_character_register.json").write_text(
+            json.dumps({"characters": characters, "total": len(characters)},
+                       ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
     # 6. research_report.json — 기존 파이프라인 호환 (script-director chapters 모드가 input으로 사용)
     # claims를 sources/episodes/key_facts 형식으로 변환
-    if claims or findings or episodes:
+    if claims or findings or episodes or characters:
         sources_seen = set()
         sources_list = []
         for c in claims:
@@ -165,12 +221,13 @@ def compile_swarm(
                 }
                 for ep in episodes
             ],
+            "characters": characters,  # mention_count 포함된 character_register
             "compiled_from": "swarm",
         }
-        (output_dir / "research_report.json").write_text(
+        (output_dir / report_filename).write_text(
             json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
         )
-        summary["outputs"].append(str(output_dir / "research_report.json"))
+        summary["outputs"].append(str(output_dir / report_filename))
 
     # 7. research_queue 통계
     queries = workspace.all_jsonl("research_queue.jsonl")
@@ -195,6 +252,8 @@ def compile_swarm(
         manuscript_chars=summary["manuscript_chars"],
         claims_total=summary["claims_total"],
         claims_used=summary["claims_used"],
+        characters_total=summary["characters_total"],
+        characters_used=summary["characters_used"],
         outputs_count=len(summary["outputs"]),
     )
 

@@ -55,7 +55,11 @@ class SkeletonIdentifyAgent(BaseAgent):
     async def step(self) -> bool:
         """단일 호출 — outline.json + research_targets.json 작성."""
         # 이미 산출물이 있으면 skip
-        if self.workspace.exists("outline.json") and self.workspace.exists("research_targets.json"):
+        if (
+            self.workspace.exists("outline.json")
+            and self.workspace.exists("research_targets.json")
+            and self.workspace.exists("character_register.json")
+        ):
             self.workspace.emit_event(self.agent_id, "skipped", reason="outputs exist")
             self.stop()
             return False
@@ -94,9 +98,19 @@ class SkeletonIdentifyAgent(BaseAgent):
             self.stop()
             return False
 
+        # character_register.json은 누락되어도 빈 파일로 생성 (agent가 깜빡한 경우 fallback)
+        if not self.workspace.exists("character_register.json"):
+            self.workspace.write_json_atomic("character_register.json", {"characters": []})
+            self.workspace.emit_event(
+                self.agent_id, "character_register_fallback",
+                level="info",
+                reason="agent did not write character_register.json — initialized empty",
+            )
+
         # 검증 — JSON 파싱 OK?
         outline = self.workspace.read_json("outline.json")
         targets = self.workspace.read_json("research_targets.json")
+        register = self.workspace.read_json("character_register.json", default={"characters": []})
         if not isinstance(outline, dict) or "chapters" not in outline:
             self.workspace.emit_event(
                 self.agent_id, "invalid_outline",
@@ -112,16 +126,22 @@ class SkeletonIdentifyAgent(BaseAgent):
             )
             self.stop()
             return False
+        if not isinstance(register, dict) or "characters" not in register:
+            # 잘못된 형식이면 빈 register로 덮어쓰기
+            self.workspace.write_json_atomic("character_register.json", {"characters": []})
+            register = {"characters": []}
 
         n_chapters = len(outline.get("chapters", []))
         n_targets = len(targets.get("targets", []))
         n_beats = sum(len(c.get("key_beats", [])) for c in outline.get("chapters", []))
+        n_characters = len(register.get("characters", []))
         self.workspace.emit_event(
             self.agent_id, "completed",
             level="success",
             chapters=n_chapters,
             beats=n_beats,
             targets=n_targets,
+            characters=n_characters,
             cost_usd=result.cost_usd,
             elapsed_sec=result.elapsed_sec,
         )
@@ -191,12 +211,14 @@ duration_minutes: {self.duration_min}
 </skill>
 
 <task>
-지금 즉시 다음 두 파일을 작성하고 종료하세요:
+지금 즉시 다음 세 파일을 작성하고 종료하세요:
 1. {self.workspace.dir}/outline.json
 2. {self.workspace.dir}/research_targets.json
+3. {self.workspace.dir}/character_register.json
 
 skill의 출력 형식과 절대 규칙을 정확히 따르세요.
 WebSearch + WebFetch로 골격만 빠르게 조사. 깊은 연구는 다음 phase의 다른 agent가 합니다.
-두 파일을 모두 Write 도구로 저장하면 즉시 종료합니다.
+character_register는 1차 인물(주인공급) 5명 이내만 — 의미 있는 인물이 없으면 빈 배열도 OK.
+세 파일을 모두 Write 도구로 저장하면 즉시 종료합니다.
 </task>
 """

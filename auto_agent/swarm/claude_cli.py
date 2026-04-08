@@ -7,6 +7,12 @@
 - timeout + retry
 - JSON 출력 파싱
 - cost/token 통계 추출
+
+⚠️ 2026-04-08: subprocess 호출은 sync subprocess.run을 asyncio.to_thread로 감싸 사용.
+이전에는 asyncio.create_subprocess_exec을 사용했으나 Python 3.9 + macOS에서
+큰 prompt + max_turns 높은 케이스에서 stdin/stdout PIPE 데드락이 재현되었음
+(writer가 1.9~180s 사이에 exit 1로 죽는 패턴). subprocess.run은 OS-level pipe
+draining을 안전하게 처리해서 같은 호출이 정상 동작.
 """
 from __future__ import annotations
 
@@ -16,6 +22,7 @@ import logging
 import os
 import re
 import shutil
+import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -23,9 +30,14 @@ logger = logging.getLogger(__name__)
 
 
 # ── 글로벌 semaphore (모든 swarm agent가 공유) ──
-# 환경변수 SWARM_MAX_PARALLEL로 조정 가능
-# Claude Max200 ($200) 기준 8 제안. 다른 플랜은 조정.
-_DEFAULT_MAX_PARALLEL = int(os.environ.get("SWARM_MAX_PARALLEL", "8"))
+# 환경변수 SWARM_MAX_PARALLEL로 조정 가능.
+#
+# 2026-04-08: 8 → 3 으로 하향 조정.
+# 이유: Anthropic API 529 Overloaded 에러가 5+ 동시 호출에서 빈번 발생.
+# Web search heavy query는 inference 시간이 길어 동시 호출 부하가 매우 큼.
+# Claude Max200 ($200) 플랜에서도 5명 동시 webfetch는 부하 → 3 권장.
+# 더 늘리려면 환경변수 SWARM_MAX_PARALLEL=N 사용.
+_DEFAULT_MAX_PARALLEL = int(os.environ.get("SWARM_MAX_PARALLEL", "3"))
 _global_semaphore: Optional[asyncio.Semaphore] = None
 
 
@@ -158,22 +170,24 @@ async def call_claude_cli(
     async with sem:
         start = time.time()
         try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdin=asyncio.subprocess.PIPE,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=cwd,
-                env=env,
-            )
-            try:
-                stdout_bytes, stderr_bytes = await asyncio.wait_for(
-                    proc.communicate(input=prompt.encode("utf-8")),
+            # 2026-04-08: asyncio.create_subprocess_exec → subprocess.run via to_thread.
+            # asyncio + PIPE 조합이 큰 prompt에서 stdin/stdout 데드락을 일으켜
+            # writer가 1.9~180s 안에 즉시 fail하던 문제 fix.
+            def _run_sync() -> subprocess.CompletedProcess:
+                return subprocess.run(
+                    cmd,
+                    input=prompt.encode("utf-8"),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    cwd=cwd,
+                    env=env,
                     timeout=timeout_sec,
+                    check=False,
                 )
-            except asyncio.TimeoutError:
-                proc.kill()
-                await proc.communicate()
+
+            try:
+                completed = await asyncio.to_thread(_run_sync)
+            except subprocess.TimeoutExpired:
                 return ClaudeCLIResult(
                     success=False,
                     text="",
@@ -181,15 +195,15 @@ async def call_claude_cli(
                     elapsed_sec=time.time() - start,
                 )
 
-            stdout = stdout_bytes.decode("utf-8", errors="replace")
-            stderr = stderr_bytes.decode("utf-8", errors="replace")
+            stdout = completed.stdout.decode("utf-8", errors="replace") if completed.stdout else ""
+            stderr = completed.stderr.decode("utf-8", errors="replace") if completed.stderr else ""
             elapsed = time.time() - start
 
-            if proc.returncode != 0:
+            if completed.returncode != 0:
                 return ClaudeCLIResult(
                     success=False,
                     text="",
-                    error=f"exit {proc.returncode}: {stderr[:500]}",
+                    error=f"exit {completed.returncode}: {stderr[:500]}",
                     raw_stdout=stdout,
                     elapsed_sec=elapsed,
                 )
@@ -202,6 +216,24 @@ async def call_claude_cli(
                 or parsed.get("raw_text", "")
             )
             usage = parsed.get("usage", {}) or {}
+
+            # ⚠️ 핵심: claude CLI는 returncode 0으로 종료해도 stdout JSON에
+            # is_error: true가 들어올 수 있음. 이 케이스는 진짜 실패.
+            # 예: API Error 529 Overloaded → claude CLI는 정상 종료처럼 보이지만
+            #     result 필드에 에러 메시지가 들어있고 num_turns=1이며 비용 0.
+            is_api_error = bool(parsed.get("is_error", False))
+            if is_api_error:
+                # API 에러 텍스트를 error 필드로 노출 → retry 판단에 사용
+                error_text = text[:500] if text else "is_error=true (no message)"
+                return ClaudeCLIResult(
+                    success=False,
+                    text="",
+                    error=f"api_error: {error_text}",
+                    raw_stdout=stdout,
+                    elapsed_sec=elapsed,
+                    cost_usd=parsed.get("total_cost_usd", 0.0),
+                )
+
             return ClaudeCLIResult(
                 success=True,
                 text=text,
@@ -220,30 +252,119 @@ async def call_claude_cli(
             )
 
 
+# ── Sonnet → Opus 자동 전환 (model overload 회피) ──
+#
+# 2026-04-08: Anthropic sonnet 서버 overload 패턴 (220초 후 529)이 빈번해서
+# sonnet 호출이 retryable error를 1번이라도 만나면 다음 retry부터는 opus로 전환.
+# 한 swarm run 안에서 overload를 한 번 만난 모델은 잠시 "기피 모델"로 마킹되어
+# 같은 retry 사이클 내에서 재시도하지 않음.
+#
+# 사용자가 명시적으로 model을 지정한 경우에도 overload면 fallback 우선.
+# fallback 후에도 실패하면 최종 결과 반환.
+SONNET_ALIASES = {
+    "claude-sonnet-4-6",
+    "claude-sonnet-4-5",
+    "sonnet",
+}
+OPUS_FALLBACK_MODEL = "claude-opus-4-6"
+
+
+def _is_sonnet(model: str) -> bool:
+    m = model.lower()
+    return any(alias in m for alias in SONNET_ALIASES)
+
+
+def _is_overload_retryable(error: str) -> bool:
+    """retryable + overload-class 에러인지 (model fallback 트리거 조건)."""
+    err_lower = error.lower()
+    return (
+        "timeout" in err_lower
+        or "529" in err_lower
+        or "overloaded" in err_lower
+        or "503" in err_lower
+        or "500 " in err_lower
+        or "service unavailable" in err_lower
+    )
+
+
 async def call_claude_cli_with_retry(
     prompt: str,
     *,
     max_retries: int = 2,
-    backoff_sec: float = 5.0,
+    backoff_sec: float = 30.0,
+    enable_model_fallback: bool = True,
+    fallback_model: str = OPUS_FALLBACK_MODEL,
     **kwargs: Any,
 ) -> ClaudeCLIResult:
-    """retry + exponential backoff. timeout이나 transient error 대응."""
+    """retry + exponential backoff + model fallback.
+
+    timeout / rate limit / API overload 대응:
+    - retryable 에러는 backoff 후 재시도 (최대 max_retries회)
+    - sonnet에서 overload-class 에러가 발생하면 다음 시도부터 opus로 전환
+      (enable_model_fallback=True일 때)
+
+    fallback_model: sonnet overload 시 전환할 대체 모델 (기본 opus-4-6).
+    enable_model_fallback=False면 동일 모델로만 재시도.
+    """
+    current_model = kwargs.get("model", "default")
+    swapped = False  # 한 번 swap한 후에는 다시 원래 모델로 돌아가지 않음
     last_result: Optional[ClaudeCLIResult] = None
     for attempt in range(max_retries + 1):
         result = await call_claude_cli(prompt, **kwargs)
         if result.success:
+            if swapped:
+                logger.info(
+                    "CLI fallback success: model=%s (original sonnet → opus)",
+                    kwargs.get("model"),
+                )
             return result
         last_result = result
-        # rate limit 또는 timeout만 retry. 다른 에러는 즉시 실패.
+        # 다음 에러는 모두 retry 대상:
+        #   - timeout
+        #   - rate limit / 429
+        #   - api_error: ... 529 / overloaded / overloaded_error
+        #   - api_error: ... 503 (service unavailable)
+        #   - api_error: ... 500 (internal server error)
+        err_lower = result.error.lower()
         is_retryable = (
-            "timeout" in result.error.lower()
-            or "rate limit" in result.error.lower()
-            or "429" in result.error
+            "timeout" in err_lower
+            or "rate limit" in err_lower
+            or "429" in err_lower
+            or "529" in err_lower
+            or "overloaded" in err_lower
+            or "503" in err_lower
+            or "500 " in err_lower
+            or "service unavailable" in err_lower
+            or err_lower.startswith("api_error:")
         )
         if not is_retryable:
             return result
+
+        # ── Model fallback 판단 ──
+        # sonnet에서 overload-class 에러가 났고 아직 swap 안 했으면 다음 시도부터 opus
+        if (
+            enable_model_fallback
+            and not swapped
+            and _is_sonnet(current_model)
+            and _is_overload_retryable(result.error)
+        ):
+            logger.warning(
+                "CLI model fallback: %s → %s (overload error: %s)",
+                current_model, fallback_model, result.error[:200]
+            )
+            kwargs["model"] = fallback_model
+            current_model = fallback_model
+            swapped = True
+            # backoff 짧게 (다른 모델이라 즉시 재시도해도 OK)
+            if attempt < max_retries:
+                await asyncio.sleep(2.0)
+                continue
+
         if attempt < max_retries:
             wait = backoff_sec * (2 ** attempt)
-            logger.warning("CLI retry %d/%d after %.1fs: %s", attempt + 1, max_retries, wait, result.error)
+            logger.warning(
+                "CLI retry %d/%d after %.1fs (model=%s): %s",
+                attempt + 1, max_retries, wait, current_model, result.error[:200]
+            )
             await asyncio.sleep(wait)
     return last_result or ClaudeCLIResult(success=False, text="", error="unknown")

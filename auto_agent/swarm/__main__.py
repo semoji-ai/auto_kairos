@@ -37,8 +37,15 @@ def main() -> int:
     parser.add_argument("--creative-brief-file", default="", help="creative brief 파일 경로 (선택)")
     parser.add_argument("--reference-file", default="", help="참조 원고 파일 경로 (선택)")
     parser.add_argument("--skeleton-model", default="claude-opus-4-6")
-    parser.add_argument("--researcher-model", default="claude-sonnet-4-6")
+    # 2026-04-08: sonnet overloaded → opus
+    parser.add_argument("--researcher-model", default="claude-opus-4-6")
     parser.add_argument("--writer-model", default="claude-opus-4-6")
+    parser.add_argument(
+        "--safe-mode",
+        action="store_true",
+        help="기존 파이프라인 산출물(final_manuscript.md, outline.json, research_report.json)을 "
+             "덮어쓰지 않고 swarm_* prefix로 저장. dashboard 통합 시 레거시 프로젝트 보호용.",
+    )
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -72,6 +79,7 @@ def main() -> int:
         skeleton_model=args.skeleton_model,
         researcher_model=args.researcher_model,
         writer_model=args.writer_model,
+        safe_mode=args.safe_mode,
     ))
 
     print(f"\n[Swarm Result] status={result.get('status')}, phase={result.get('phase')}")

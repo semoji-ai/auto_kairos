@@ -13,6 +13,7 @@
     ├── manuscript.md           (writer만 write, atomic rename)
     ├── outline.json            (skeleton+identify만 write, write-once)
     ├── research_targets.json   (skeleton+identify만 write, write-once)
+    ├── character_register.json (skeleton 초기화 + writer append, atomic rename)
     ├── outline_state.json      (writer만 write, atomic rename — 진행 추적)
     ├── research_queue.jsonl    (writer가 append, researcher는 read+claim)
     ├── findings.jsonl          (researcher가 append, 모두 read)
@@ -43,6 +44,7 @@ FILE_OWNERSHIP: Dict[str, tuple[str, str]] = {
     "manuscript.md":          ("writer",             "atomic_rename"),
     "outline.json":           ("skeleton_identify",  "write_once"),
     "research_targets.json":  ("skeleton_identify",  "write_once"),
+    "character_register.json":("writer_or_skeleton", "atomic_rename"),  # skeleton 초기화 + writer append
     "outline_state.json":     ("writer",             "atomic_rename"),
     "research_queue.jsonl":   ("writer",             "append"),  # writer만 add
     "findings.jsonl":         ("researcher",         "append"),  # 여러 researcher가 append (race-free, append는 atomic)
@@ -184,33 +186,69 @@ class SwarmWorkspace:
         self,
         queue_filename: str,
         claimer: str,
+        *,
+        max_retries: int = 2,
     ) -> Optional[Dict[str, Any]]:
-        """research_queue.jsonl에서 status=pending 첫 task를 atomic claim.
+        """research_queue.jsonl에서 잡을 수 있는 첫 task를 atomic claim.
 
-        구현: queue 전체를 읽고 → 첫 pending 찾고 → status_overrides.jsonl에 claim 이벤트 append.
-        실제 queue 파일은 안 변경 (writer만 소유). claim 상태는 별도 파일로 추적.
+        잡을 수 있는 task:
+          - 한 번도 claim 안 됨 (pending)
+          - failed이지만 retry_count < max_retries (다른 researcher가 다시 시도)
+
+        잡을 수 없는 task:
+          - 현재 다른 claimer가 처리 중 (claimed)
+          - 이미 성공 (completed)
+          - failed인데 retry_count >= max_retries (영구 포기)
+
+        구현: queue 전체를 읽고 → 잡을 수 있는 첫 task 찾고 → status_overrides에 claim append.
         """
         # 1. queue 전체 읽기
         records = self.all_jsonl(queue_filename)
         if not records:
             return None
 
-        # 2. 이미 claim된 것들 조회 (status_overrides.jsonl)
+        # 2. status_overrides에서 각 task의 최신 상태 + retry 카운트 집계
         overrides_file = "status_overrides.jsonl"
         overrides = self.all_jsonl(overrides_file)
-        claimed_ids = {o["task_id"] for o in overrides if o.get("status") == "claimed"}
-        completed_ids = {o["task_id"] for o in overrides if o.get("status") == "completed"}
+        # task_id → 최신 status, fail_count
+        task_state: Dict[str, Dict[str, Any]] = {}
+        for o in overrides:
+            tid = o.get("task_id", "")
+            if not tid:
+                continue
+            if tid not in task_state:
+                task_state[tid] = {"status": "pending", "fail_count": 0}
+            status = o.get("status", "")
+            task_state[tid]["status"] = status  # 최신 status
+            if status == "failed" or status == "parse_failed":
+                task_state[tid]["fail_count"] += 1
 
-        # 3. 첫 pending 찾기
+        # 3. 잡을 수 있는 첫 task 찾기
         for task in records:
             tid = task.get("id")
-            if not tid or tid in claimed_ids or tid in completed_ids:
+            if not tid:
                 continue
+            state = task_state.get(tid, {"status": "pending", "fail_count": 0})
+            cur_status = state["status"]
+            fail_count = state["fail_count"]
+
+            # claimed/completed는 skip
+            if cur_status == "claimed":
+                continue
+            if cur_status == "completed":
+                continue
+            # failed이지만 retry 가능?
+            if cur_status in ("failed", "parse_failed"):
+                if fail_count >= max_retries:
+                    continue  # 영구 포기
+                # else: 잡을 수 있음
+
             # 4. claim event append (atomic)
             self.append_jsonl(overrides_file, {
                 "task_id": tid,
                 "status": "claimed",
                 "claimer": claimer,
+                "retry_attempt": fail_count,
             })
             return task
         return None
@@ -232,6 +270,36 @@ class SwarmWorkspace:
             if o.get("task_id") == task_id:
                 return o.get("status", "pending")
         return "pending"
+
+    # ─────────────────────────────────────
+    # Character register — atomic append (writer가 새 인물 발견 시)
+    # ─────────────────────────────────────
+
+    def append_character(self, character: Dict[str, Any]) -> bool:
+        """character_register.json에 atomic append.
+
+        race-free: read → modify → write_atomic (rename).
+        같은 id가 이미 있으면 skip하고 False 반환.
+
+        character 필수 필드: id, name_ko
+        선택 필드: name_en, role, is_real_person, first_mention_chapter,
+                  discovered_by, needs_research
+        """
+        cid = character.get("id", "").strip()
+        if not cid:
+            return False
+        register = self.read_json("character_register.json", default={"characters": []})
+        if not isinstance(register, dict) or "characters" not in register:
+            register = {"characters": []}
+        existing_ids = {c.get("id", "") for c in register.get("characters", [])}
+        if cid in existing_ids:
+            return False  # 이미 있음
+        # 기본 필드 채우기
+        character.setdefault("is_real_person", True)
+        character.setdefault("needs_research", False)
+        register["characters"].append(character)
+        self.write_json_atomic("character_register.json", register)
+        return True
 
     # ─────────────────────────────────────
     # Tail watcher — agent의 polling loop에서 사용

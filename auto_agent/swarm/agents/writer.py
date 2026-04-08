@@ -161,6 +161,10 @@ class WriterAgent(BaseAgent):
         skill_path = Path(__file__).parent.parent / "prompts" / "writer.md"
         skill_text = skill_path.read_text(encoding="utf-8") if skill_path.exists() else ""
 
+        # WORKSPACE_PATH placeholder를 실제 경로로 치환 (helper CLI 명령에 사용)
+        workspace_str = str(self.workspace.dir)
+        skill_text = skill_text.replace("WORKSPACE_PATH", workspace_str)
+
         # claims를 inline 표시 (writer가 어떤 fact가 있는지 한눈에)
         claims_summary = "\n".join(
             f"  - [{c.get('id', '?')}] {c.get('text', '')[:120]} (src: {c.get('source_url', '')[:60]})"
@@ -168,6 +172,16 @@ class WriterAgent(BaseAgent):
         )
         if len(claims) > 50:
             claims_summary += f"\n  ... ({len(claims) - 50}개 더)"
+
+        # character_register 로드 (인물 id pool)
+        register = self.workspace.read_json("character_register.json", default={"characters": []})
+        characters = register.get("characters", [])
+        character_summary = "\n".join(
+            f"  - id={c.get('id', '?')} | {c.get('name_ko', '')} ({c.get('name_en', '')}) — {c.get('role', '')}"
+            for c in characters
+        )
+        if not character_summary:
+            character_summary = "  (아직 없음 — 필요하면 register에 직접 append)"
 
         ref_block = ""
         if self.reference_examples:
@@ -182,8 +196,11 @@ class WriterAgent(BaseAgent):
         return f"""<system_context>
 당신은 swarm Phase 2의 writer.
 역할: outline에 따라 claim-tagged manuscript 작성.
-워크스페이스: {self.workspace.dir}
+workspace_path: {self.workspace.dir}
 현재 iteration: {state.get('iteration', 0) + 1}
+
+⚠️ 모든 helper CLI 명령에서 workspace_path 인자는 위 경로를 그대로 사용:
+   --workspace {self.workspace.dir}
 </system_context>
 
 <project_config>
@@ -208,6 +225,13 @@ target_chars: 약 {target_chars}자 (±10%)
 
 {claims_summary if claims else "(아직 없음 — 첫 claim 도착 대기 중)"}
 </available_claims>
+
+<character_register>
+manuscript에서 [char:id] 태그로 사용 가능한 인물 id pool.
+register에 없는 인물은 character_register.json에 직접 append 후 사용.
+
+{character_summary}
+</character_register>
 
 <current_manuscript>
 {manuscript[:5000] if manuscript else "(빈 상태 — 첫 작업)"}
