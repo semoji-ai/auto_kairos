@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="swarm-canvas-page" data-workspace="{{ workspace }}">
+<div class="swarm-canvas-page energy-theme" data-workspace="{{ workspace }}">
   <header class="swarm-header">
     <div class="swarm-title">
       <span class="swarm-topic" id="swarm-topic">{{ topic or '—' }}</span>
@@ -21,54 +21,113 @@
     </div>
   </header>
 
-  <div class="canvas-grid">
-    <!-- LEFT — researchers 1~3 -->
-    <aside class="researcher-column left">
-      <div class="researcher-card" data-rid="R1"><div class="r-id">R1</div><div class="r-status">idle</div><div class="r-claims">0 claims</div><div class="r-last-q"></div></div>
-      <div class="researcher-card" data-rid="R2"><div class="r-id">R2</div><div class="r-status">idle</div><div class="r-claims">0 claims</div><div class="r-last-q"></div></div>
-      <div class="researcher-card" data-rid="R3"><div class="r-id">R3</div><div class="r-status">idle</div><div class="r-claims">0 claims</div><div class="r-last-q"></div></div>
-    </aside>
-
-    <!-- CENTER — manuscript canvas -->
-    <main class="manuscript-canvas">
+  <!-- ───── 원고 캔버스 (60%) ───── -->
+  <section class="manuscript-canvas-v2" id="manuscript-canvas">
+    <div class="canvas-header">
+      <h2 class="canvas-title">📜 원고 캔버스</h2>
       <div class="canvas-meta">
         <span id="manuscript-chars">0 chars</span>
+        <span class="dot">·</span>
         <span id="manuscript-iter">iter 0</span>
+        <span class="dot">·</span>
         <span id="manuscript-status">drafting</span>
+        <span class="dot">·</span>
+        <span id="beats-progress">beats: ○○○○○</span>
       </div>
-      <div id="manuscript-text" class="manuscript-text">(빈 상태 — Start Swarm을 눌러주세요)</div>
-      <div class="canvas-footer">
-        <span id="char-tags">char tags: 0</span>
-        <span id="claim-tags">claim tags: 0</span>
-      </div>
-    </main>
+    </div>
+    <div id="manuscript-text" class="manuscript-text">
+      <span class="placeholder">에너지가 응결되어 글이 되기를 기다리는 중...</span>
+    </div>
+    <div class="canvas-footer">
+      <span id="char-tags">char tags: 0</span>
+      <span class="dot">·</span>
+      <span id="claim-tags">claim tags: 0</span>
+    </div>
+  </section>
 
-    <!-- RIGHT — researchers 4~5 + validator -->
-    <aside class="researcher-column right">
-      <div class="researcher-card" data-rid="R4"><div class="r-id">R4</div><div class="r-status">idle</div><div class="r-claims">0 claims</div><div class="r-last-q"></div></div>
-      <div class="researcher-card" data-rid="R5"><div class="r-id">R5</div><div class="r-status">idle</div><div class="r-claims">0 claims</div><div class="r-last-q"></div></div>
-      <div class="validator-card" id="validator-card">
-        <div class="v-id">validator</div>
-        <div class="v-status">waiting</div>
-        <div class="v-metric">citation: <b id="v-citation">—</b></div>
-        <div class="v-metric">claims invalid: <b id="v-claims-invalid">—</b></div>
-        <div class="v-metric">chars invalid: <b id="v-chars-invalid">—</b></div>
-        <div class="v-metric">uncited char: <b id="v-uncited-char">—</b></div>
-        <div class="v-passes" id="v-passes">○</div>
+  <!-- ───── 리서치 캔버스 (40%) ───── -->
+  <section class="research-canvas" id="research-canvas">
+    <div class="canvas-header">
+      <h2 class="canvas-title">🔬 리서치 캔버스</h2>
+      <div class="research-stats">
+        <span id="research-claim-total">claims: 0</span>
+        <span class="dot">·</span>
+        <span id="research-cross">cross: 0</span>
+        <span class="dot">·</span>
+        <span id="research-images">images: 0</span>
       </div>
-    </aside>
-  </div>
+    </div>
+    <div class="researcher-grid">
+      <div class="researcher-cell" data-rid="R1">
+        <div class="generator">
+          <div class="generator-pulse"></div>
+          <div class="generator-core">R1</div>
+        </div>
+        <div class="r-label">리서처</div>
+        <div class="r-status">idle</div>
+        <div class="orb-area" data-rid="R1"></div>
+      </div>
+      <div class="researcher-cell" data-rid="R2">
+        <div class="generator">
+          <div class="generator-pulse"></div>
+          <div class="generator-core">R2</div>
+        </div>
+        <div class="r-label">리서처</div>
+        <div class="r-status">idle</div>
+        <div class="orb-area" data-rid="R2"></div>
+      </div>
+      <div class="researcher-cell" data-rid="R3">
+        <div class="generator">
+          <div class="generator-pulse"></div>
+          <div class="generator-core">R3</div>
+        </div>
+        <div class="r-label">리서처</div>
+        <div class="r-status">idle</div>
+        <div class="orb-area" data-rid="R3"></div>
+      </div>
+      <div class="researcher-cell" data-rid="R4">
+        <div class="generator">
+          <div class="generator-pulse"></div>
+          <div class="generator-core">R4</div>
+        </div>
+        <div class="r-label">리서처</div>
+        <div class="r-status">idle</div>
+        <div class="orb-area" data-rid="R4"></div>
+      </div>
+      <div class="researcher-cell" data-rid="R5">
+        <div class="generator">
+          <div class="generator-pulse"></div>
+          <div class="generator-core">R5</div>
+        </div>
+        <div class="r-label">리서처</div>
+        <div class="r-status">idle</div>
+        <div class="orb-area" data-rid="R5"></div>
+      </div>
+    </div>
+  </section>
 
-  <!-- BOTTOM — log feed -->
+  <!-- ───── Validator (footer 한 줄) ───── -->
+  <footer class="validator-bar" id="validator-card">
+    <span class="v-id">⚖️ Validator</span>
+    <span class="v-passes" id="v-passes">○</span>
+    <span class="v-status">checking</span>
+    <span class="v-spacer"></span>
+    <span class="v-metric">citation: <b id="v-citation">—</b></span>
+    <span class="v-metric">claims invalid: <b id="v-claims-invalid">—</b></span>
+    <span class="v-metric">chars invalid: <b id="v-chars-invalid">—</b></span>
+    <span class="v-metric">uncited char: <b id="v-uncited-char">—</b></span>
+  </footer>
+
+  <!-- ───── 활동 로그 (오른쪽 하단) ───── -->
   <section class="log-feed">
     <div class="log-feed-header">활동 로그</div>
     <div id="log-feed-list" class="log-feed-list"></div>
   </section>
 
-  <!-- Paper plane animations layer -->
-  <svg id="plane-layer" class="plane-layer" xmlns="http://www.w3.org/2000/svg"></svg>
+  <!-- ───── Energy particle layer (SVG overlay) ───── -->
+  <svg id="energy-layer" class="energy-layer" xmlns="http://www.w3.org/2000/svg"></svg>
 
-  <!-- Start modal -->
+  <!-- ───── Start modal ───── -->
   <div id="start-modal" class="modal" style="display:none">
     <div class="modal-content">
       <h3>Start Swarm</h3>
