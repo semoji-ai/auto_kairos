@@ -163,13 +163,31 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
    - `imageAsset` (`source: generate|search`, `prompt`, `placement`)
    - `headline` (필요 시) — 단, narration의 숫자/단어와 중복 금지
    - 데이터 필드(items/values/source/chartConfig)는 placeholder만, data-mapper가 후속 보강
-6. **headline 중복 금지**: 씬의 layout이 metric_spotlight/counter/before_after처럼 숫자를 강조하면, headline에 같은 숫자를 또 넣지 마세요. 화면에서 두 번 보입니다.
+6. **⚠️⚠️ headline ↔ values 중복 금지 (절대 규칙)**:
+   - layout이 `metric_spotlight` / `counter` / `before_after` / `bar_compare` / `pie_breakdown`처럼 **숫자를 시각적으로 표시**하는 경우, **headline에 같은 숫자를 절대 넣지 마세요**. 화면에 같은 숫자가 두 번 보여 시각적 노이즈 발생.
+   - **잘못된 예** (씬 5 v3 케이스):
+     ```
+     layout: metric_spotlight
+     headline: "세계 무역의 {{80%}}는 바다 위에"   ← ❌ "80%" 중복
+     values: [80], unit: "%"                       ← values가 이미 80% 표시
+     ```
+   - **올바른 예**:
+     ```
+     layout: metric_spotlight
+     headline: "세계 무역의 항구"                   ← 제목/맥락만
+     values: [80], unit: "%"
+     ```
+   - **headline의 역할**: 제목/맥락/시점 (예: "1955년", "산타마리아호", "다윈의 발견")
+   - **values의 역할**: 실제 수치 (값은 layout이 시각적으로 표현)
+   - 두 역할을 혼동하지 마세요. 숫자가 시각화되는 layout이면 headline은 비워두거나 텍스트만.
+   - script-reviewer가 자동 검사 → 위반 시 점수 감점.
 
 **금지:**
 - ❌ narration 재작성 (manuscript에서 substring으로만)
 - ❌ manuscript에 없는 새 문장 추가
 - ❌ outline의 챕터 의도 임의 변경
 - ❌ 다른 챕터의 씬 작성
+- ❌ headline에 values와 같은 숫자 (위 절대 규칙)
 
 **post-validation**: scene_specs.json 작성 후 runner의 hook이 각 씬의 narration이 manuscript의 substring인지 자동 검증합니다. 불일치 시 이 단계 fail → 재작성.
 

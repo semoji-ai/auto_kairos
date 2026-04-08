@@ -30,6 +30,48 @@ def format_srt_time(seconds: float) -> str:
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 
+def parse_srt_time(s: str) -> float:
+    """SRT 타임코드 → 초. 예: '00:01:23,456' → 83.456"""
+    h, m, rest = s.split(':')
+    sec, ms = rest.split(',')
+    return int(h) * 3600 + int(m) * 60 + int(sec) + int(ms) / 1000
+
+
+def parse_srt(content: str) -> List[Dict]:
+    """SRT 파일 내용을 entries로 파싱.
+
+    Returns: [{"index", "text", "startSec", "endSec"}, ...]
+    멱등성 — 기존 SRT를 다시 읽을 때 사용 (subtitles.json 재생성).
+    """
+    entries: List[Dict] = []
+    blocks = re.split(r'\n\s*\n', content.strip())
+    for block in blocks:
+        lines = [ln for ln in block.strip().split('\n') if ln.strip()]
+        if len(lines) < 3:
+            continue
+        try:
+            idx = int(lines[0].strip())
+        except ValueError:
+            continue
+        time_line = lines[1].strip()
+        if ' --> ' not in time_line:
+            continue
+        try:
+            start_str, end_str = time_line.split(' --> ')
+            start_sec = parse_srt_time(start_str.strip())
+            end_sec = parse_srt_time(end_str.strip())
+        except Exception:
+            continue
+        text = '\n'.join(lines[2:]).strip()
+        entries.append({
+            "index": idx,
+            "text": text,
+            "startSec": round(start_sec, 3),
+            "endSec": round(end_sec, 3),
+        })
+    return entries
+
+
 # Korean josa/clause patterns for natural splitting
 JOSA_PATTERNS = re.compile(r'(?<=[가-힣])(은|는|이|가|을|를|에서|에게|으로|로|와|과|의|도|만|까지|부터|보다|마저|조차|밖에)')
 CLAUSE_PATTERNS = re.compile(r'(지만|는데|면서|하고|하며|고서|어서|아서|니까|으니|때문에|위해|위해서)')
@@ -394,7 +436,27 @@ def main():
             continue
 
         if srt_path.exists():
-            print(f"  [{i+1}/{total}] Scene {num}: EXISTS")
+            # 멱등성: SRT가 이미 있어도 all_subtitles에 추가해서 subtitles.json이
+            # 빈 배열로 저장되지 않도록 함. 이전 버그: continue로 빠져 all_subtitles 비었음 →
+            # subtitles.json {"scenes":[]} → manifest scene.subtitles 빈 배열.
+            try:
+                existing_srt = srt_path.read_text(encoding="utf-8")
+                existing_entries = parse_srt(existing_srt)
+                if existing_entries:
+                    # duration 추정: 마지막 entry endSec
+                    duration = existing_entries[-1]["endSec"]
+                    all_subtitles.append({
+                        "sceneNumber": num,
+                        "audioDurationSec": round(duration, 3),
+                        "entries": existing_entries,
+                        "wordCount": 0,
+                        "source": "existing_srt",
+                    })
+                    print(f"  [{i+1}/{total}] Scene {num}: EXISTS (재파싱 {len(existing_entries)}줄)")
+                else:
+                    print(f"  [{i+1}/{total}] Scene {num}: EXISTS (parse failed)")
+            except Exception as e:
+                print(f"  [{i+1}/{total}] Scene {num}: EXISTS (재파싱 실패: {e})")
             continue
 
         try:

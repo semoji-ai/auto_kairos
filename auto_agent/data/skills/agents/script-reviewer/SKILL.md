@@ -61,7 +61,7 @@ AutoResearch 래칫 방식: 이전 버전 대비 개선된 부분만 채택, 퇴
 
 | 항목 | 기준 | 배점 |
 |------|------|------|
-| **시각화 적합성** | layout 선택이 내용에 맞는가 (수치→차트, 인물→quote_portrait 등) | 15 |
+| **시각화 적합성** | layout 선택이 내용에 맞는가 (수치→차트, 인물→quote_portrait 등). ⚠️ **headline ↔ values 중복 검사**: layout이 `metric_spotlight`/`counter`/`before_after`처럼 숫자를 시각적으로 강조하면 같은 숫자가 headline에 들어가면 안 됨 (화면에 두 번 표시). headline은 '제목/맥락'만, 숫자는 values가 표시. 한 씬 위반 시 이 항목 -5점, 2개 이상 -10점 | 15 |
 | **이미지 연출** | **모든 씬에 imageAsset.prompt가 있는가** (100% 필수), placement/source가 씬 의도와 맞는가 | 10 |
 | **캐릭터 일관성** | characters 이름이 '이름(역할)' 형식인가, 동일 인물이 동일 문자열인가, background_context 연계가 맞는가 | 5 |
 

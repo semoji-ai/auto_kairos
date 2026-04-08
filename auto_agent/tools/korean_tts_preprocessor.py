@@ -331,33 +331,151 @@ class KoreanTTSPreprocessor:
             text = text.replace(';', ',')
         return text
 
+    # ── 날짜 연음 규칙 (korean-tts-rules.md §4) ──
+    # 연도: 1/6/7/8로 끝나면 "년" → "련"
+    YEAR_LIAISON_DIGITS = {1, 6, 7, 8}
+
+    # 월 특수 발음 (구어/낭독 표준)
+    MONTH_LIAISON = {
+        1: '이뤌', 2: '이월', 3: '삼월', 4: '사월', 5: '오월',
+        6: '유월', 7: '칠뤌', 8: '파뤌', 9: '구월',
+        10: '시월', 11: '시비뤌', 12: '시비월',
+    }
+
+    # 일 특수 발음 (1~31)
+    # 21~31은 "이십-이릴" 같이 십의 자리 + 하이픈 + 일의 자리 발음 패턴
+    DAY_LIAISON = {
+        1: '이릴', 2: '이일', 3: '삼일', 4: '사일', 5: '오일',
+        6: '유길', 7: '칠일', 8: '파릴', 9: '구일',
+        10: '시빌', 11: '시비릴', 12: '시비일', 13: '십삼일', 14: '십사일',
+        15: '시보일', 16: '십육일', 17: '십칠일', 18: '십팔일', 19: '십구일',
+        20: '이십일',
+        21: '이십-이릴', 22: '이십-이일', 23: '이십-삼일', 24: '이십-사일',
+        25: '이십-오일', 26: '이십-유길', 27: '이십-칠일', 28: '이십-파릴',
+        29: '이십-구일', 30: '삼십일',
+        31: '삼십-이릴',
+    }
+
+    @classmethod
+    def _hyphenate_year(cls, year: int) -> str:
+        """연도를 음절 단위로 하이픈 분할 + 1/6/7/8 끝이면 '련' 발음.
+
+        3자리(100~999) + 4자리(1000~9999) 지원.
+        예:
+            845  → 팔백-사십-오년
+            1955 → 천-구백-오십-오년
+            1956 → 천-구백-오십-륙련
+            1597 → 천-오백-구십-칠련
+            2024 → 이천-이십-사년
+            2001 → 이천-일련
+            1876 → 천-팔백-칠십-륙련
+            1990 → 천-구백-구십년
+        """
+        if year < 100 or year > 9999:
+            # 범위 밖은 fallback
+            return KoreanNumberConverter.number_to_korean(year) + '년'
+
+        thousands = year // 1000
+        hundreds = (year % 1000) // 100
+        tens = (year % 100) // 10
+        ones = year % 10
+
+        parts: list[str] = []
+        # 천 (4자리만)
+        if thousands > 0:
+            parts.append('천' if thousands == 1 else KoreanNumberConverter.SINO_ONES[thousands] + '천')
+        # 백
+        if hundreds > 0:
+            parts.append('백' if hundreds == 1 else KoreanNumberConverter.SINO_ONES[hundreds] + '백')
+        # 십
+        if tens > 0:
+            parts.append('십' if tens == 1 else KoreanNumberConverter.SINO_ONES[tens] + '십')
+
+        # 일의 자리 — 6은 "륙"으로 변환 (련 규칙과 함께)
+        if ones > 0:
+            ones_char = KoreanNumberConverter.SINO_ONES[ones]
+            if ones == 6:
+                ones_char = '륙'  # 천구백오십육 → 천-구백-오십-륙
+            parts.append(ones_char + ('련' if ones in cls.YEAR_LIAISON_DIGITS else '년'))
+        else:
+            # 일의 자리가 0이면 십의 자리 끝에 년 붙임 (예: 1990 → 천-구백-구십년)
+            parts[-1] = parts[-1] + '년'
+
+        return '-'.join(parts)
+
     def _convert_numbers(self, text: str) -> str:
         """Convert all numeric formats to Korean text."""
         original = text
 
-        # Pattern 1: Year format (예: 1893년)
-        pattern_year = r'(\d{4})년'
+        # Pattern 1a: 쉼표 있는 연도 (예: 4,600년 전) — 쉼표 제거 후 처리
+        pattern_year_comma = r'(\d{1,2}),(\d{3})년'
+        def replace_year_comma(match):
+            year = int(match.group(1) + match.group(2))
+            if 100 <= year <= 9999:
+                korean = self._hyphenate_year(year)
+            else:
+                korean = KoreanNumberConverter.number_to_korean(year) + '년'
+            change = f"{match.group(0)} → {korean}"
+            self.changes.append(change)
+            return korean
+
+        text = re.sub(pattern_year_comma, replace_year_comma, text)
+
+        # Pattern 1b: Year format (예: 845년, 1955년) — 3~4 자리 연도 + 하이픈 + 연음
+        pattern_year = r'(\d{3,4})년'
         def replace_year(match):
             year = int(match.group(1))
-            korean = KoreanNumberConverter.number_to_korean(year)
-            change = f"{match.group(0)} → {korean}년"
+            korean = self._hyphenate_year(year)
+            change = f"{match.group(0)} → {korean}"
             self.changes.append(change)
-            return korean + '년'
+            return korean
 
         text = re.sub(pattern_year, replace_year, text)
 
-        # Pattern 2: Date format (예: 5월 31일)
+        # Pattern 2: Date format (예: 5월 31일) — 월/일 특수 발음 적용
         pattern_date = r'(\d{1,2})월\s*(\d{1,2})일'
         def replace_date(match):
             month = int(match.group(1))
             day = int(match.group(2))
-            korean_month = KoreanNumberConverter.number_to_korean(month)
-            korean_day = KoreanNumberConverter.number_to_korean(day)
-            change = f"{match.group(0)} → {korean_month}월 {korean_day}일"
+            korean_month = self.MONTH_LIAISON.get(month) or (
+                KoreanNumberConverter.number_to_korean(month) + '월'
+            )
+            korean_day = self.DAY_LIAISON.get(day) or (
+                KoreanNumberConverter.number_to_korean(day) + '일'
+            )
+            change = f"{match.group(0)} → {korean_month}-{korean_day}"
             self.changes.append(change)
-            return korean_month + '월 ' + korean_day + '일'
+            return f"{korean_month}-{korean_day}"
 
         text = re.sub(pattern_date, replace_date, text)
+
+        # Pattern 2b: 단독 월 (날짜 패턴 안 잡힌 것)
+        pattern_month_only = r'(\d{1,2})월(?!\s*\d)'
+        def replace_month(match):
+            month = int(match.group(1))
+            korean_month = self.MONTH_LIAISON.get(month) or (
+                KoreanNumberConverter.number_to_korean(month) + '월'
+            )
+            change = f"{match.group(0)} → {korean_month}"
+            self.changes.append(change)
+            return korean_month
+
+        text = re.sub(pattern_month_only, replace_month, text)
+
+        # Pattern 2c: 단독 일 (날짜 패턴 안 잡힌 것)
+        pattern_day_only = r'(?<![\d-])(\d{1,2})일(?![\dㄱ-힣])'
+        def replace_day(match):
+            day = int(match.group(1))
+            if day < 1 or day > 31:
+                return match.group(0)
+            korean_day = self.DAY_LIAISON.get(day) or (
+                KoreanNumberConverter.number_to_korean(day) + '일'
+            )
+            change = f"{match.group(0)} → {korean_day}"
+            self.changes.append(change)
+            return korean_day
+
+        text = re.sub(pattern_day_only, replace_day, text)
 
         # Pattern 3: Gallons, ounces (예: 7,968갤런)
         pattern_units = r'([\d,]+)([갤온센달파])'
