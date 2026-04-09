@@ -113,7 +113,7 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
    - 10분 → 약 4000자
 6. **이로미즘 톤** (writing_style이 iromism이면): 자문자답, 도발적 후킹, 일상 비유, 현장감 서술, 독자 호칭("여러분"), 격식체 + 감정 어미 혼용. 참조 원고의 리듬을 모방.
 7. **숫자, 인용, 장면**: 리서치(research_digest)의 vivid detail을 인용해 prose에 박아 넣으세요. 평이한 fact 나열 X.
-8. **씬을 의식하지 마세요** — 다음 모드(chapters)가 자연스럽게 자를 수 있도록 의미 단위(약 8~15초 분량의 문장 클러스터)가 자연스럽게 형성되면 충분합니다.
+8. **씬을 의식하지 마세요** — 다음 모드(chapters)가 자연스럽게 자를 수 있도록 의미 단위(약 5~10초 분량, 25~50자 클러스터)가 자연스럽게 형성되면 충분합니다.
 
 **final_manuscript.md 형식 예시 (1분 영상):**
 ```markdown
@@ -148,7 +148,7 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 
 **해야 할 일:**
 
-1. **final_manuscript.md를 먼저 Read** — 전체 prose를 한 호흡으로 읽으면서 의미 단위(8~15초 분량)를 머릿속에 분할합니다.
+1. **final_manuscript.md를 먼저 Read** — 전체 prose를 한 호흡으로 읽으면서 의미 단위(5~10초 분량, 25~55자)를 머릿속에 분할합니다.
 2. **outline.json의 자기 챕터**(`SCRIPT_DIRECTOR_CHAPTER`)에 해당하는 manuscript 구간을 찾습니다.
 3. **씬 분할 — substring으로만**:
    - manuscript의 문장들을 의미 단위로 묶어 씬을 만듭니다.
@@ -688,7 +688,7 @@ cinematic/quote_portrait 외에도 **데이터 씬에 관련 실사 배경**을 
 - 전환어: "한편", "그런데", "그러나", "이어서", "반면", "동시에"
 - 새 인물 2명 이상 등장
 - 시간/장소 전환
-- 100자 초과 (quirky_cartoon: 80자)
+- **65자 초과** (quirky_cartoon/iromism: **55자 초과**) — 한국어 5자/초 기준 약 12~13초
 - 화면이 바뀌어야 하는 순간: 질문→답변, 서스펜스→공개
 
 ---
@@ -697,9 +697,9 @@ cinematic/quote_portrait 외에도 **데이터 씬에 관련 실사 배경**을 
 
 | art_style | 문체 스킬 | 글자 수 상한 | 특징 |
 |-----------|----------|------------|------|
-| semoji | writing-style-semoji | 100자 | 개념당 1씬, 이모지 활용 |
-| quirky_cartoon | writing-style-iromism | 80자 | 교양 있는 수다 톤, 10~80자 리듬 교차 |
-| 그 외 | writing-style | 100자 | 대화체, 능동태 |
+| semoji | writing-style-semoji | 65자 | 개념당 1씬, 이모지 활용 |
+| quirky_cartoon | writing-style-iromism | 55자 | 교양 있는 수다 톤, 10~55자 리듬 교차 |
+| 그 외 | writing-style | 65자 | 대화체, 능동태 |
 
 ---
 
