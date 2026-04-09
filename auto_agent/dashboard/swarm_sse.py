@@ -89,27 +89,51 @@ def _build_snapshot(workspace: Path) -> Dict[str, Any]:
     outline = _safe_read_json(workspace / "outline.json") or {}
     register = _safe_read_json(workspace / "character_register.json") or {"characters": []}
     manuscript = _safe_read_text(workspace / "manuscript.md")
+    # manuscript.md 없으면 draft.md 표시 (Phase 3 완료, Phase 5 미시작 상태)
+    draft = _safe_read_text(workspace / "draft.md") if not manuscript else ""
 
-    # claims 카운트 + researcher 분포
+    # research_targets.json에서 tid → target 이름 매핑
+    rt = _safe_read_json(workspace / "research_targets.json") or {}
+    tid_to_target: Dict[str, str] = {}
+    for t in rt.get("targets", []):
+        tid_to_target[t["id"]] = t.get("target", t["id"])
+    # research_queue에서도 q_id → target 추출 (E_R 타겟)
+    queue_path = workspace / "research_queue.jsonl"
+    queue, _ = _read_jsonl_lines(queue_path, 0)
+    qid_to_target: Dict[str, str] = {q["id"]: q.get("target", q["id"]) for q in queue if "id" in q}
+
+    # claims — 필수 필드만 추려서 snapshot 크기 절감
     claims_path = workspace / "claims.jsonl"
-    claims, _ = _read_jsonl_lines(claims_path, 0)
-    findings_path = workspace / "findings.jsonl"
-    findings, _ = _read_jsonl_lines(findings_path, 0)
-
+    claims_raw, _ = _read_jsonl_lines(claims_path, 0)
+    claims = []
     researchers: Dict[str, Dict[str, Any]] = {}
-    for c in claims:
+    for c in claims_raw:
+        qid = c.get("q_id", "")
+        # tid 추출: t001_q01 → t001
+        import re as _re
+        tm = _re.match(r"^(t\d+|[^_]+)_q\d+", qid)
+        tid = tm.group(1) if tm else qid
+        target = tid_to_target.get(tid) or qid_to_target.get(qid) or qid
+        claims.append({
+            "id": c.get("id"),
+            "text": c.get("text", ""),
+            "q_id": qid,
+            "target": target,
+            "researcher": c.get("researcher", "?"),
+            "cross_checked": c.get("cross_checked", False),
+        })
         rid = c.get("researcher", "?")
         if rid not in researchers:
             researchers[rid] = {"id": rid, "claims": 0, "last_q": ""}
         researchers[rid]["claims"] += 1
+
+    findings_path = workspace / "findings.jsonl"
+    findings, _ = _read_jsonl_lines(findings_path, 0)
     for f in findings:
         rid = f.get("researcher", "?")
         if rid in researchers:
             researchers[rid]["last_q"] = f.get("q_id", "")
 
-    # research_queue pending count
-    queue_path = workspace / "research_queue.jsonl"
-    queue, _ = _read_jsonl_lines(queue_path, 0)
     overrides_path = workspace / "status_overrides.jsonl"
     overrides, _ = _read_jsonl_lines(overrides_path, 0)
     completed_ids = {o["task_id"] for o in overrides if o.get("status") == "completed"}
@@ -132,7 +156,8 @@ def _build_snapshot(workspace: Path) -> Dict[str, Any]:
         },
         "characters": register.get("characters", []),
         "manuscript": manuscript,
-        "manuscript_chars": len(manuscript),
+        "draft": draft,
+        "manuscript_chars": len(manuscript) or len(draft),
         "claims": claims,
         "claims_total": len(claims),
         "findings_total": len(findings),

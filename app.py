@@ -403,7 +403,7 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
 @app.get("/vault/search", response_class=HTMLResponse)
 async def vault_search_page(request: Request):
     """볼트 시맨틱 검색 페이지."""
-    return templates.TemplateResponse("vault_search.html", {"request": request})
+    return templates.TemplateResponse(request, "vault_search.html")
 
 
 @app.get("/swarm", response_class=HTMLResponse)
@@ -414,8 +414,7 @@ async def swarm_canvas_page(request: Request, workspace: str = "", topic: str = 
       - workspace: swarm workspace 디렉토리 경로 (없으면 Start 모달에서 새로 만듦)
       - topic: 표시용 topic (선택)
     """
-    return templates.TemplateResponse("swarm_canvas.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "swarm_canvas.html", {
         "workspace": workspace,
         "topic": topic,
     })
@@ -428,8 +427,7 @@ async def index(request: Request):
     projects = pm.list_projects()
     for p in projects:
         p["asset_counts"] = pm.get_asset_counts(p["id"])
-    return templates.TemplateResponse("projects.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "projects.html", {
         "projects": projects,
     })
 
@@ -443,8 +441,8 @@ async def project_by_slug(request: Request, slug: str, tab: str = "research"):
         return HTMLResponse("Project not found", status_code=404)
 
     context = _load_tab_data(pm, project, tab)
-    context["request"] = request
-    return templates.TemplateResponse("project.html", context)
+    context.pop("request", None)
+    return templates.TemplateResponse(request, "project.html", context)
 
 
 @app.get("/projects/{project_id}", response_class=HTMLResponse)
@@ -504,8 +502,8 @@ async def project_tab_by_slug(request: Request, slug: str, tab: str):
         return HTMLResponse("Not found", status_code=404)
 
     context = _load_tab_data(pm, project, tab)
-    context["request"] = request
-    return templates.TemplateResponse(TAB_TEMPLATES[tab], context)
+    context.pop("request", None)
+    return templates.TemplateResponse(request, TAB_TEMPLATES[tab], context)
 
 
 @app.get("/api/projects/{project_id}/tab/{tab}", response_class=HTMLResponse)
@@ -517,8 +515,8 @@ async def project_tab_content(request: Request, project_id: int, tab: str):
         return HTMLResponse("Not found", status_code=404)
 
     context = _load_tab_data(pm, project, tab)
-    context["request"] = request
-    return templates.TemplateResponse(TAB_TEMPLATES[tab], context)
+    context.pop("request", None)
+    return templates.TemplateResponse(request, TAB_TEMPLATES[tab], context)
 
 
 # ─────────────────────────────
@@ -568,8 +566,7 @@ async def storyboard_scene_detail_by_slug(request: Request, slug: str, scene_num
                 scene_subs = sub
                 break
 
-    return templates.TemplateResponse("partials/_storyboard_scene.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "partials/_storyboard_scene.html", {
         "scene": scene,
         "subtitles": scene_subs,
         "slug": slug,

@@ -186,6 +186,14 @@ class WriterAgent(BaseAgent):
         workspace_str = str(self.workspace.dir)
         skill_text = skill_text.replace("WORKSPACE_PATH", workspace_str)
 
+        # writing_style별 문체 가이드 로드 (단일 소스)
+        style_path = (
+            Path(__file__).parent.parent.parent
+            / "data" / "skills" / "shared"
+            / f"writing-style-{self.writing_style}.md"
+        )
+        style_text = style_path.read_text(encoding="utf-8") if style_path.exists() else ""
+
         ref_block = ""
         if self.reference_examples:
             ref_block = f"\n<reference_examples>\n{self.reference_examples}\n</reference_examples>\n"
@@ -224,6 +232,7 @@ target_chars: 약 {target_chars}자 (±10%)
 <skill>
 {skill_text}
 </skill>
+{f'<writing_style_guide>{chr(10)}{style_text}{chr(10)}</writing_style_guide>' if style_text else ''}
 """
 
     def _build_dynamic_prompt(

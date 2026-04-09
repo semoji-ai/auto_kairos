@@ -505,23 +505,30 @@
   function applySnapshot(snap) {
     if (snap.outline?.topic) $('swarm-topic').textContent = snap.outline.topic;
     if (snap.meta?.status) $('swarm-phase').textContent = snap.meta.status;
-    if (snap.manuscript) {
-      const stripped = stripTags(snap.manuscript);
+
+    // manuscript 우선, 없으면 draft fallback
+    const manuscriptContent = snap.manuscript || snap.draft || '';
+    const isDraft = !snap.manuscript && !!snap.draft;
+    if (manuscriptContent) {
+      const stripped = stripTags(manuscriptContent);
       lastManuscriptStripped = "";
       applyManuscript(stripped);
-      $('manuscript-chars').textContent = `${snap.manuscript.length} chars`;
+      const label = isDraft ? '(초고)' : '';
+      $('manuscript-chars').textContent = `${manuscriptContent.length} chars ${label}`.trim();
+      if (isDraft) $('manuscript-status').textContent = 'draft';
     }
+
     if (snap.outline_state) {
       $('manuscript-iter').textContent = `iter ${snap.outline_state.iteration || 0}`;
-      $('manuscript-status').textContent = snap.outline_state.status || 'drafting';
+      if (!isDraft) $('manuscript-status').textContent = snap.outline_state.status || 'drafting';
       updateBeats(snap.outline_state);
     }
     if (snap.status?.validator) applyValidator(snap.status.validator);
-    countTags(snap.manuscript || '');
+    countTags(manuscriptContent);
     setRunning(!!snap.running);
 
-    // 기존 claims가 있으면 라인 복원 (snapshot 복원)
-    if (Array.isArray(snap.claims)) {
+    // 기존 claims 복원 — 리서치 캔버스 섹션/라인 재구성
+    if (Array.isArray(snap.claims) && snap.claims.length > 0) {
       snap.claims.forEach(c => applyClaimToLine(c));
     }
   }
@@ -540,15 +547,19 @@
     evtSource.addEventListener('agent_event', (e) => {
       const ev = JSON.parse(e.data);
       appendLog(ev);
-      const m = (ev.agent || '').match(/^R\d+$/);
-      if (m) {
+      // R1..R5 또는 E_R1..E_R5 (Phase 4 targeted researchers) 모두 처리
+      // E_R1 → 커서 슬롯 R1 재사용
+      const agentId = ev.agent || '';
+      const rMatch = agentId.match(/^(?:E_)?(R\d+)$/);
+      if (rMatch) {
+        const cursorSlot = rMatch[1]; // E_R1 → "R1", R2 → "R2"
         if (ev.event === 'claimed_query') {
           const p = ev.payload || {};
           const qid = p.q_id || p.query_id || p.qid;
           const target = p.target || p.query || qid;
-          setResearcherActive(ev.agent, true, qid, target);
+          setResearcherActive(cursorSlot, true, qid, target);
         } else if (ev.event === 'research_completed') {
-          setResearcherActive(ev.agent, false);
+          setResearcherActive(cursorSlot, false);
         }
       }
       if (ev.agent === 'writer' && ev.event === 'step_completed') {
