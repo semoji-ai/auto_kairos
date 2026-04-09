@@ -115,7 +115,19 @@ function msSwitchView(view) {
   if (swarm) swarm.style.display = view === 'swarm' ? 'block' : 'none';
   if (prose) prose.style.display = view === 'prose' ? 'block' : 'none';
   if (scenes) scenes.style.display = view === 'scenes' ? 'block' : 'none';
+  // swarm canvas는 전체 너비 필요 — #tab-content padding 제거
+  const tabContent = document.getElementById('tab-content');
+  if (tabContent) tabContent.classList.toggle('swarm-fullwidth', view === 'swarm');
 }
+// 초기 상태 적용 (default_view가 swarm인 경우 — style 속성 없거나 display:block)
+(function() {
+  const swarm = document.getElementById('ms-swarm-view');
+  const isVisible = swarm && swarm.style.display !== 'none';
+  if (isVisible) {
+    const tabContent = document.getElementById('tab-content');
+    if (tabContent) tabContent.classList.add('swarm-fullwidth');
+  }
+})();
 
 // Swarm 시작 (manuscript 탭의 CTA 버튼에서 호출)
 function msStartSwarm() {
