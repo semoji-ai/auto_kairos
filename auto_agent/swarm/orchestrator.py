@@ -112,10 +112,15 @@ async def _writer_only_recovery(
         # key_beats는 보통 string 리스트 (id가 아닌 설명문)이라 그대로 인덱스로
         beats_pending = [f"beat_{i}" for i in range(len(beats_pending))]
 
+    # recovery는 beat 전체를 한 번에 써야 하므로 최근 30개 + 앞쪽 5개(초반 context)
+    # claims[:60] 대신 최근 30개로 축소. 오래된 claims는 이미 manuscript에 반영됨.
+    recovery_claims = claims[:5] + claims[-25:] if len(claims) > 30 else claims
     claims_summary = "\n".join(
         f"  - [{c.get('id','?')}] {c.get('text','')[:130]}"
-        for c in claims[:60]
+        for c in recovery_claims
     )
+    if len(claims) > 30:
+        claims_summary = f"(전체 {len(claims)}개 중 대표 {len(recovery_claims)}개)\n" + claims_summary
     char_summary = "\n".join(
         f"  - id={c.get('id','?')} | {c.get('name_ko','')} ({c.get('name_en','')})"
         for c in characters
@@ -126,14 +131,12 @@ async def _writer_only_recovery(
     target_chars = {1: 400, 3: 1200, 5: 2000, 10: 4000}.get(duration_min, duration_min * 400)
     ref_block = f"\n<reference_examples>\n{reference_examples}\n</reference_examples>\n" if reference_examples else ""
 
-    prompt = f"""<system_context>
-당신은 swarm Phase 2의 writer (RECOVERY mode).
+    # stable system prompt (캐시 대상): outline, project config, reference
+    system_prompt = f"""당신은 swarm Phase 2의 writer (RECOVERY mode).
 역할: 부분 작성된 manuscript를 한 번의 호출로 **완성**하기.
 workspace_path: {workspace.dir}
 
-⚠️ Recovery mode: 평소 1 step에 1~2 문장만 쓰지만, 지금은 **남은 beats 전부를 한 번에 작성**해야 합니다.
-이 호출이 끝나면 swarm 종료입니다. 추가 step 없습니다.
-</system_context>
+⚠️ Recovery mode: 남은 beats 전부를 한 번에 작성해야 합니다. 추가 step 없습니다.
 
 <project_config>
 topic: {topic}
@@ -145,8 +148,10 @@ target_chars: 약 {target_chars}자 (±10%)
 <outline>
 {json.dumps(outline, ensure_ascii=False, indent=2)[:3000]}
 </outline>
+"""
 
-<current_manuscript>
+    # dynamic prompt: state, claims, manuscript (단발 호출이라 캐시 효과는 작지만 구조 통일)
+    prompt = f"""<current_manuscript>
 {manuscript if manuscript else "(빈 상태 — 처음부터 작성)"}
 </current_manuscript>
 
@@ -191,17 +196,18 @@ target_chars: 약 {target_chars}자 (±10%)
     workspace.emit_event(
         "orchestrator", "recovery_call_start",
         level="info",
-        prompt_chars=len(prompt),
+        prompt_chars=len(prompt) + len(system_prompt),
         claims_count=len(claims),
         manuscript_chars=len(manuscript),
     )
 
     result = await call_claude_cli_with_retry(
         prompt,
+        system_prompt=system_prompt,
         model=writer_model,
         allowed_tools=["Read", "Write", "Edit", "Glob", "Bash"],
-        max_turns=30,
-        timeout_sec=400,
+        max_turns=20,  # 30→20: beat 전체를 한 번에 쓰는 작업 — 20 turns으로 충분
+        timeout_sec=300,  # 400→300s
         project_dir=workspace.dir,
         max_retries=1,
     )

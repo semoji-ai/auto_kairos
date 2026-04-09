@@ -88,12 +88,13 @@ class ResearcherAgent(BaseAgent):
             type=task.get("type", ""),
         )
 
-        # 2. prompt 빌드
-        prompt = self._build_prompt(task)
+        # 2. prompt 빌드 — skill은 system_prompt (캐시), query는 dynamic (user prompt)
+        system_prompt, prompt = self._build_prompts(task)
 
         # 3. claude CLI 호출 — 빠른 루프: max_turns 5로 제한, single source 정책
         result = await call_claude_cli_with_retry(
             prompt,
+            system_prompt=system_prompt,
             model=self.model,
             allowed_tools=["WebSearch", "WebFetch", "Read", "Write"],
             max_turns=5,  # FAST mode: WebSearch 1~2 + WebFetch 1 + Write 1 = 3~4 turns
@@ -202,23 +203,28 @@ class ResearcherAgent(BaseAgent):
         )
         return True
 
-    def _build_prompt(self, task: Dict[str, Any]) -> str:
+    def _build_prompts(self, task: Dict[str, Any]):
+        """(system_prompt, user_prompt) 반환.
+
+        system_prompt: researcher skill text (모든 query에 공통 → 캐시 대상).
+            동일 researcher instance는 query마다 같은 skill을 사용 → cache hit.
+        user_prompt: query-specific 컨텍스트 (매 query마다 다름).
+        """
         skill_path = Path(__file__).parent.parent / "prompts" / "researcher.md"
         skill_text = skill_path.read_text(encoding="utf-8") if skill_path.exists() else ""
 
-        return f"""<system_context>
-당신은 swarm Phase 2의 researcher (instance: {self.agent_id}).
+        system_prompt = f"""당신은 swarm Phase 2의 researcher (instance: {self.agent_id}).
 역할: query 1개를 source-tied claim들로 답함. 환각 절대 금지.
 워크스페이스: {self.workspace.dir}
-</system_context>
-
-<query>
-{json.dumps(task, ensure_ascii=False, indent=2)}
-</query>
 
 <skill>
 {skill_text}
 </skill>
+"""
+
+        user_prompt = f"""<query>
+{json.dumps(task, ensure_ascii=False, indent=2)}
+</query>
 
 <task>
 위 query를 처리하세요.
@@ -228,6 +234,7 @@ source_urls(list) + source_quote를 명시합니다. 핵심 fact는 가능하면
 완료되면 단일 JSON 객체로 응답하세요. 다른 텍스트는 출력하지 마세요.
 </task>
 """
+        return system_prompt, user_prompt
 
     def _parse_research_output(self, text: str, q_id: str) -> Optional[Dict[str, Any]]:
         """LLM 응답에서 JSON 추출. 마크다운 펜스 + 부분 매칭 지원."""

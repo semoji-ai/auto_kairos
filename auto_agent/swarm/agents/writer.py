@@ -91,12 +91,15 @@ class WriterAgent(BaseAgent):
             # 첫 step — claims 도착 대기
             return False  # idle, will retry after sleep
 
-        # 4. prompt 빌드
-        prompt = self._build_prompt(outline, state, claims, manuscript)
+        # 4. prompt 빌드 — stable system prompt (캐시 대상) + dynamic user prompt
+        # outline이 바뀌지 않는 한 system_prompt는 모든 step에서 동일 → cache hit
+        system_prompt = self._build_system_prompt(outline)
+        prompt = self._build_dynamic_prompt(state, claims, len(manuscript))
 
         # 5. claude CLI 호출
         result = await call_claude_cli_with_retry(
             prompt,
+            system_prompt=system_prompt,
             model=self.model,
             allowed_tools=["Read", "Write", "Edit", "Glob", "Bash"],
             max_turns=15,
@@ -151,44 +154,19 @@ class WriterAgent(BaseAgent):
 
         return True
 
-    def _build_prompt(
-        self,
-        outline: Dict[str, Any],
-        state: Dict[str, Any],
-        claims: List[Dict[str, Any]],
-        manuscript: str,
-    ) -> str:
+    def _build_system_prompt(self, outline: Dict[str, Any]) -> str:
+        """Step 간에 변하지 않는 안정적인 컨텍스트 → --system-prompt-file로 전달.
+
+        Claude CLI가 동일 내용을 ephemeral 5분 캐시로 보관.
+        writer step 2..N은 이 부분 토큰을 cache_read_input_tokens로 처리 → 비용 절감.
+
+        포함: skill text, outline JSON, reference_examples, creative_brief, project_config
+        제외: outline_state, claims, manuscript (step마다 변함 → dynamic prompt로)
+        """
         skill_path = Path(__file__).parent.parent / "prompts" / "writer.md"
         skill_text = skill_path.read_text(encoding="utf-8") if skill_path.exists() else ""
-
-        # WORKSPACE_PATH placeholder를 실제 경로로 치환 (helper CLI 명령에 사용)
         workspace_str = str(self.workspace.dir)
         skill_text = skill_text.replace("WORKSPACE_PATH", workspace_str)
-
-        # claims를 inline 표시 (writer가 어떤 fact가 있는지 한눈에)
-        # 새 schema: source_urls (list), legacy: source_url (string) — 둘 다 처리
-        def _first_src(c):
-            urls = c.get("source_urls")
-            if isinstance(urls, list) and urls:
-                return urls[0]
-            return c.get("source_url", "")
-        claims_summary = "\n".join(
-            f"  - [{c.get('id', '?')}]{'✓✓' if c.get('cross_checked') else ''} "
-            f"{c.get('text', '')[:120]} (src: {_first_src(c)[:60]})"
-            for c in claims[:50]
-        )
-        if len(claims) > 50:
-            claims_summary += f"\n  ... ({len(claims) - 50}개 더)"
-
-        # character_register 로드 (인물 id pool)
-        register = self.workspace.read_json("character_register.json", default={"characters": []})
-        characters = register.get("characters", [])
-        character_summary = "\n".join(
-            f"  - id={c.get('id', '?')} | {c.get('name_ko', '')} ({c.get('name_en', '')}) — {c.get('role', '')}"
-            for c in characters
-        )
-        if not character_summary:
-            character_summary = "  (아직 없음 — 필요하면 register에 직접 append)"
 
         ref_block = ""
         if self.reference_examples:
@@ -200,15 +178,12 @@ class WriterAgent(BaseAgent):
 
         target_chars = {1: 400, 3: 1200, 5: 2000, 10: 4000}.get(self.duration_min, self.duration_min * 400)
 
-        return f"""<system_context>
-당신은 swarm Phase 2의 writer.
+        return f"""당신은 swarm Phase 2의 writer.
 역할: outline에 따라 claim-tagged manuscript 작성.
-workspace_path: {self.workspace.dir}
-현재 iteration: {state.get('iteration', 0) + 1}
+workspace_path: {workspace_str}
 
 ⚠️ 모든 helper CLI 명령에서 workspace_path 인자는 위 경로를 그대로 사용:
-   --workspace {self.workspace.dir}
-</system_context>
+   --workspace {workspace_str}
 
 <project_config>
 topic: {self.topic}
@@ -216,22 +191,82 @@ duration_minutes: {self.duration_min}
 writing_style: {self.writing_style}
 target_chars: 약 {target_chars}자 (±10%)
 </project_config>
-
 {creative_brief_block}{ref_block}
-
 <outline>
 {json.dumps(outline, ensure_ascii=False, indent=2)[:3000]}
 </outline>
 
-<outline_state>
-{json.dumps(state, ensure_ascii=False, indent=2)}
-</outline_state>
+<skill>
+{skill_text}
+</skill>
+"""
 
-<available_claims>
-지금까지 researcher들이 추가한 source-tied facts. 이것만 사용 가능.
+    def _build_dynamic_prompt(
+        self,
+        state: Dict[str, Any],
+        claims: List[Dict[str, Any]],
+        manuscript_chars: int = 0,
+    ) -> str:
+        """Step마다 바뀌는 동적 컨텍스트 — stdin으로 전달 (캐시 불가 부분).
+
+        P1 compaction:
+        - claims: 최근 10개만 (전체 개수는 표시).
+        - manuscript: prompt에서 제거 — writer가 매 step 시작 시 Read로 직접 전체 확인.
+        - state: 핵심 필드만 추출 (beats_done/pending, current_beat, unresolved_todos).
+        """
+        def _first_src(c):
+            urls = c.get("source_urls")
+            if isinstance(urls, list) and urls:
+                return urls[0]
+            return c.get("source_url", "")
+
+        # 최근 10개 claims만 — 오래된 것은 이미 사용됐거나 현재 beat과 무관
+        recent_claims = claims[-10:] if len(claims) > 10 else claims
+        claims_summary = "\n".join(
+            f"  - [{c.get('id', '?')}]{'✓✓' if c.get('cross_checked') else ''} "
+            f"{c.get('text', '')[:120]} (src: {_first_src(c)[:60]})"
+            for c in recent_claims
+        )
+        if len(claims) > 10:
+            claims_summary = f"(전체 {len(claims)}개 중 최근 10개)\n" + claims_summary
+
+        # state 핵심 필드만 (전체 JSON 불필요)
+        state_compact = {
+            "status": state.get("status", "drafting"),
+            "iteration": state.get("iteration", 0) + 1,
+            "current_beat": state.get("current_beat"),
+            "beats_done": state.get("beats_done", []),
+            "beats_pending": state.get("beats_pending", []),
+            "unresolved_todos": state.get("unresolved_todos", []),
+            "manuscript_chars": state.get("manuscript_chars", 0),
+        }
+
+        register = self.workspace.read_json("character_register.json", default={"characters": []})
+        characters = register.get("characters", [])
+        character_summary = "\n".join(
+            f"  - id={c.get('id', '?')} | {c.get('name_ko', '')} ({c.get('name_en', '')}) — {c.get('role', '')}"
+            for c in characters
+        )
+        if not character_summary:
+            character_summary = "  (아직 없음 — 필요하면 register에 직접 append)"
+
+        manuscript_status = f"{manuscript_chars}자 작성됨" if manuscript_chars else "빈 상태 (첫 작업)"
+
+        return f"""<current_state>
+iteration: {state_compact['iteration']}
+status: {state_compact['status']}
+current_beat: {state_compact['current_beat']}
+beats_done: {state_compact['beats_done']}
+beats_pending: {state_compact['beats_pending']}
+unresolved_todos: {state_compact['unresolved_todos']}
+manuscript_chars: {state_compact['manuscript_chars']} ({manuscript_status})
+</current_state>
+
+<recent_claims>
+지금까지 추가된 source-tied facts (최근 순). 이것만 사용 가능.
 
 {claims_summary if claims else "(아직 없음 — 첫 claim 도착 대기 중)"}
-</available_claims>
+</recent_claims>
 
 <character_register>
 manuscript에서 [char:id] 태그로 사용 가능한 인물 id pool.
@@ -240,17 +275,10 @@ register에 없는 인물은 character_register.json에 직접 append 후 사용
 {character_summary}
 </character_register>
 
-<current_manuscript>
-{manuscript[:5000] if manuscript else "(빈 상태 — 첫 작업)"}
-</current_manuscript>
-
-<skill>
-{skill_text}
-</skill>
-
 <task>
 이번 step의 작업:
-1. outline_state를 보고 다음 우선순위 결정 (TODO 해결 / 새 beat / 종료).
+0. **manuscript.md를 Read로 전체 확인** (현재 내용 파악 + 연속성/중복 방지).
+1. current_state를 보고 다음 우선순위 결정 (TODO 해결 / 새 beat / 종료).
 2. **단 1~3 문장 또는 1 beat만** 작성/수정. 한 번에 통째 rewrite 금지.
 3. fact는 [claim:cXXX] 태그 필수. claim 없으면 [TODO:qXXX] 마커 + research_queue.jsonl append.
 4. manuscript.md 업데이트 (Write 또는 Edit).
@@ -258,6 +286,7 @@ register에 없는 인물은 character_register.json에 직접 append 후 사용
 6. 모든 beat 완료 + 모든 TODO 해결 시 outline_state.status를 "complete"로.
 7. 그 외엔 작업 후 종료 (이 step 끝).
 
+📌 recent_claims는 최근 10개만 제공됨. 이전 claims가 필요하면 claims.jsonl을 Read로 직접 확인.
 ⚠️ 한 step의 작업이 끝나면 즉시 종료. 다음 turn은 다른 step에서 진행.
 </task>
 """

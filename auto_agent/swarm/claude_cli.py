@@ -122,6 +122,7 @@ def _parse_cli_json(stdout: str) -> Dict[str, Any]:
 async def call_claude_cli(
     prompt: str,
     *,
+    system_prompt: str = "",
     model: str = "default",
     allowed_tools: Optional[List[str]] = None,
     max_turns: int = 30,
@@ -133,7 +134,10 @@ async def call_claude_cli(
     """Claude CLI를 single-shot으로 호출 (semaphore 보호).
 
     Args:
-        prompt: 전체 prompt (system context + skill + task 모두 포함된 문자열)
+        prompt: 동적 컨텍스트 (state, claims, manuscript 등 step마다 바뀌는 부분)
+        system_prompt: 안정적인 컨텍스트 (skill, outline, reference 등). 제공 시
+            임시 파일로 저장해 --system-prompt-file로 전달 → Claude CLI가 자동으로
+            ephemeral 5분 캐시 적용. 동일 내용이면 2번째 호출부터 cache hit.
         model: 모델 이름 또는 alias ("default", "claude-opus-4-6", "claude-sonnet-4-6")
         allowed_tools: 허용 도구 목록 (Read/Write/Bash/WebSearch 등)
         max_turns: 최대 turn 수
@@ -144,6 +148,7 @@ async def call_claude_cli(
     Returns:
         ClaudeCLIResult — success/text/cost/tokens
     """
+    import tempfile
     import time
 
     cli = cli_path or find_claude_cli()
@@ -165,6 +170,22 @@ async def call_claude_cli(
         env.update(env_extra)
 
     cwd = str(project_dir) if project_dir else None
+
+    # system_prompt가 제공되면 임시 파일로 저장 → --system-prompt-file
+    # Claude CLI가 ephemeral 5분 캐시를 자동 적용함.
+    # 동일한 내용이면 content hash 기준으로 cache hit → step 2..N 토큰 절감.
+    _tmpfile: Optional[str] = None
+    if system_prompt:
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".md", delete=False, encoding="utf-8"
+            ) as f:
+                f.write(system_prompt)
+                _tmpfile = f.name
+            cmd.extend(["--system-prompt-file", _tmpfile])
+        except Exception as e:
+            logger.warning("system_prompt 임시 파일 생성 실패, 인라인으로 진행: %s", e)
+            _tmpfile = None
 
     sem = get_semaphore()
     async with sem:
@@ -250,6 +271,13 @@ async def call_claude_cli(
                 error=f"{type(e).__name__}: {e}",
                 elapsed_sec=time.time() - start,
             )
+        finally:
+            # 임시 system-prompt 파일 정리
+            if _tmpfile:
+                try:
+                    os.unlink(_tmpfile)
+                except OSError:
+                    pass
 
 
 # ── Sonnet → Opus 자동 전환 (model overload 회피) ──
