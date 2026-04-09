@@ -159,7 +159,7 @@ class WriterAgent(BaseAgent):
             self.agent_id, "step_completed",
             level="info",
             iteration=new_state["iteration"],
-            chars=manuscript_chars,
+            chars=output_chars,
             claims_used=len(all_used),
             todo_count=len(todo_markers),
             cost_usd=result.cost_usd,
