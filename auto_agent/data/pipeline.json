@@ -130,7 +130,7 @@
         {
           "id": "step_2_review",
           "name": "script_review_loop",
-          "description": "래칫 리뷰-수정 루프 — 리뷰어 평가 → 작성자 수정 → 재평가, 90점 이상까지 반복 (최대 3회)",
+          "description": "래칫 리뷰-수정 루프 — 리뷰어 평가 → 작성자 수정 → 재평가, 90점 이상까지 반복 (최대 2회)",
           "type": "ratchet_loop",
           "reviewer_agent": "script-reviewer",
           "reviser_agent": "script-director",
@@ -138,7 +138,7 @@
           "output": ["scene_specs.json", "review_feedback.json"],
           "ratchet": {
             "pass_threshold": 90,
-            "max_rounds": 3,
+            "max_rounds": 2,
             "score_field": "overall.combined_score"
           },
           "skills": [

@@ -1,12 +1,29 @@
 # Skeleton + Identify Agent
 
-당신은 swarm Phase 1의 단일 에이전트입니다. 세 가지 작업을 한 번에 수행합니다:
+당신은 swarm Phase 1의 단일 에이전트입니다. 네 가지 작업을 한 번에 수행합니다:
 
 ## 임무
 
-1. **Skeleton 조사** — 주제의 골격을 빠르게 파악
-2. **Identify** — 매력 포인트 + 리서치 타겟 식별 + outline 산출
-3. **Character register** — 1차 등장 인물(주인공급) 5명 이내 등록
+1. **주제 유형 분류** — topic_type 결정 (아래 유형 목록 참고)
+2. **Skeleton 조사** — 주제의 골격을 빠르게 파악
+3. **Identify** — 매력 포인트 + backbone 리서치 타겟 식별 + outline 산출
+4. **Character register** — 1차 등장 인물(주인공급) 5명 이내 등록
+
+## 주제 유형 (topic_type)
+
+| 유형 | 설명 | 기본 내러티브 구조 |
+|------|------|------------------|
+| `company_history` | 기업/조직의 역사 | 훅 → 시대맥락 → 창업자 → 창업순간 → 초기위기 → 성장전환점 → 빅이슈 → 현재 |
+| `biography` | 인물 중심 서사 | 훅 → 출생배경 → 유년기 → 형성경험 → 돌파구 → 전성기 → 유산 |
+| `scientific_discovery` | 과학/기술 발견·발명 | 훅 → 문제제기 → 실패들 → 핵심통찰 → 발견순간 → 증명 → 파급 |
+| `historical_event` | 역사적 사건 | 훅 → 맥락 → 핵심인물 → 긴장고조 → 클라이맥스 → 여파 → 의미 |
+| `social_phenomenon` | 사회·문화 현상 | 훅 → 현황 → 기원 → 확산 과정 → 핵심 사례 → 이면/논쟁 → 전망 |
+| `comparison` | 두 대상 비교 | 훅 → A 소개 → B 소개 → 비교 포인트 1~3 → 역전/반전 → 시사점 |
+| `general` | 기타 | 훅 → 배경 → 핵심 사실 나열 → 의미 |
+
+⚠️ topic_type은 **기본 내러티브 구조**를 제시합니다.
+실제 최적 구조는 Phase 4의 Opus 편집자가 초고를 보고 재설계합니다.
+여기서는 시간순(chronological) 구조로 outline을 작성하세요.
 
 ## 출력 (반드시 세 파일을 모두 작성하고 종료)
 
@@ -15,6 +32,7 @@
 ```json
 {
   "topic": "<주제>",
+  "topic_type": "company_history | biography | scientific_discovery | historical_event | social_phenomenon | comparison | general",
   "core_thesis": "<한 줄 핵심 메시지 — 시청자가 영상 보고 가지고 갈 단 하나>",
   "tone": "dramatic | informative | contemplative | playful",
   "tone_anchors": [
@@ -44,9 +62,13 @@
 
 ### 2. `research_targets.json`
 
+⚠️ **Backbone 모드** — target 당 질문 **최대 2개**. 총 target **8개 이하**.
+깊은 리서치는 Phase 4 편집자가 초고를 보고 직접 요청합니다.
+
 ```json
 {
   "topic": "<주제>",
+  "backbone": true,
   "targets": [
     {
       "id": "t001",
@@ -54,16 +76,21 @@
       "target": "<구체적 대상>",
       "for_beat": "<chapter X, beat Y>",
       "angle": "<왜 이 각도로 봐야 하는지>",
-      "depth": "biographical | episode_mining | timeline | overview",
+      "depth": "overview",
+      "backbone": true,
       "questions": [
-        "<이 target에 대해 답해야 할 구체 질문 1>",
-        "<질문 2>",
-        "..."
+        "<가장 핵심적인 사실 질문 1>",
+        "<핵심 질문 2 — 선택>"
       ]
     }
   ]
 }
 ```
+
+**backbone 질문 선택 기준:**
+- 이 beat를 쓰기 위해 **반드시** 알아야 하는 핵심 사실만
+- "누가, 언제, 무슨 일이" 수준의 skeleton 정보
+- 에피소드 디테일, 동시대 증언 등 깊은 내용은 제외 (편집자가 필요하면 나중에 요청)
 
 ### 3. `character_register.json`
 
@@ -105,13 +132,19 @@
 
 1. **`<creative_brief>` 블록 정독** — 기획서가 있으면 angle/story_points/episodes를 outline에 반영.
 
-2. **빠른 web search** — 주제의 골격을 파악:
+2. **주제 유형 분류** — topic_type을 결정하고 outline.json에 기록.
+   - "다이소의 역사" → `company_history`
+   - "갈릴레오 갈릴레이" → `biography`
+   - 명확하지 않으면 `general`
+
+3. **빠른 web search** — 주제의 골격을 파악:
    - 위키피디아 개요
    - "A brief history of <topic>" 같은 overview 자료
    - 핵심 인물 / 사건 / 시기 / 장소 추출
-   - **이 단계는 깊지 말고 빠르게**. 깊은 조사는 다음 phase의 researcher 몫.
+   - **이 단계는 깊지 말고 빠르게**. 깊은 조사는 Phase 4 편집자가 요청.
 
-3. **outline 작성** — 분량(`duration_min`)에 맞춰 chapters/beats 결정:
+4. **outline 작성** — topic_type의 기본 구조를 참고하되 시간순(chronological)으로 작성.
+   분량(`duration_min`)에 맞춰 chapters/beats 결정:
    - 1분 → 1챕터, 4~6 beats
    - 3분 → 1~2챕터, 8~12 beats
    - 5분 → 2~3챕터, 12~18 beats
@@ -120,12 +153,10 @@
 
 4. **참조 원고에서 tone_anchors 추출** — `<reference_examples>` 블록이 있으면 그 안에서 톤 특징 단어/구를 5~10개 뽑아 tone_anchors에 넣음.
 
-5. **research_targets 식별** — 각 beat에 대해:
-   - "이 beat를 매력적으로 만들려면 무엇을 알아야 하나?"
-   - 인물이면 → biographical + episode_mining
-   - 사건이면 → who/when/where/why + 동시대 증언
-   - 두 timeline 비교가 필요하면 → timeline_compare type
-   - **각 target에 구체 질문 2~5개**. 모호한 "...에 대해 알아봐"가 아닌 구체 질문.
+5. **backbone research_targets 식별** — ⚠️ 총 8개 이하, 질문 1~2개씩.
+   - "이 beat를 초고로 쓰기 위해 최소한 알아야 하는 것은?"
+   - skeleton 사실 (누가, 언제, 무슨 일) 수준만
+   - 에피소드 디테일, 동시대 반응, 구체 수치는 편집자가 나중에 요청
 
 6. **character_register 작성** — outline의 chapters/key_beats를 다시 훑으면서 1차 인물 5명 이내 추출:
    - 영상의 narrative axis에 직접 관련된 인물만

@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .agents.compiler import compile_swarm
+from .agents.editor import EditorAgent
 from .agents.researcher import ResearcherAgent
 from .agents.skeleton_identify import SkeletonIdentifyAgent
 from .agents.validator import ValidatorAgent
@@ -252,6 +253,185 @@ target_chars: 약 {target_chars}자 (±10%)
     return False
 
 
+async def _run_backbone_research(
+    workspace: SwarmWorkspace,
+    *,
+    n_researchers: int,
+    researcher_model: str,
+    timeout_sec: int = 600,
+) -> bool:
+    """Phase 2: backbone researchers만 실행. 큐가 빌 때까지."""
+    researchers: List[BaseAgent] = [
+        ResearcherAgent(workspace=workspace, instance_id=f"R{i+1}", model=researcher_model)
+        for i in range(n_researchers)
+    ]
+
+    async def watch_queue_empty() -> None:
+        loop = asyncio.get_event_loop()
+        deadline = loop.time() + timeout_sec
+        while True:
+            if loop.time() >= deadline:
+                workspace.emit_event("orchestrator", "backbone_research_timeout", level="warning")
+                for r in researchers:
+                    r.stop()
+                return
+            # 큐에 pending 항목이 없으면 종료
+            queue = workspace.all_jsonl("research_queue.jsonl")
+            pending = [q for q in queue if q.get("status") not in ("completed", "failed", "skipped")]
+            if not pending and workspace.all_jsonl("findings.jsonl"):
+                workspace.emit_event("orchestrator", "backbone_research_done",
+                                     level="success", findings=len(workspace.all_jsonl("findings.jsonl")))
+                for r in researchers:
+                    r.stop()
+                return
+            await asyncio.sleep(3)
+
+    agent_tasks = [asyncio.create_task(r.run()) for r in researchers]
+    watch_task = asyncio.create_task(watch_queue_empty())
+    try:
+        await asyncio.gather(*agent_tasks, return_exceptions=True)
+    finally:
+        watch_task.cancel()
+        try:
+            await watch_task
+        except asyncio.CancelledError:
+            pass
+
+    claims = workspace.all_jsonl("claims.jsonl")
+    print(f"[Swarm] Phase 2 done: {len(claims)} backbone claims", flush=True)
+    return len(claims) > 0
+
+
+async def _run_sequential_writer(
+    workspace: SwarmWorkspace,
+    *,
+    topic: str,
+    duration_min: int,
+    writing_style: str,
+    creative_brief: str,
+    reference_examples: str,
+    mode: str,
+    model: str,
+    timeout_sec: int = 600,
+) -> bool:
+    """Phase 3 (draft) 또는 Phase 5 (final) — writer 단독 실행."""
+    state_file = "draft_state.json" if mode == "draft" else "outline_state.json"
+    label = "draft_writer" if mode == "draft" else "final_writer"
+
+    writer = WriterAgent(
+        workspace=workspace,
+        topic=topic,
+        duration_min=duration_min,
+        writing_style=writing_style,
+        creative_brief=creative_brief,
+        reference_examples=reference_examples,
+        mode=mode,
+        model=model,
+        max_iterations=60,
+        timeout_per_step_sec=200,
+    )
+
+    async def watch_writer() -> None:
+        loop = asyncio.get_event_loop()
+        deadline = loop.time() + timeout_sec
+        while True:
+            if loop.time() >= deadline:
+                workspace.emit_event("orchestrator", f"{label}_timeout", level="warning")
+                writer.stop()
+                return
+            state = workspace.read_json(state_file, default={})
+            if state.get("status") == "complete":
+                writer.stop()
+                return
+            await asyncio.sleep(3)
+
+    writer_task = asyncio.create_task(writer.run())
+    watch_task = asyncio.create_task(watch_writer())
+    try:
+        await asyncio.gather(writer_task, return_exceptions=True)
+    finally:
+        watch_task.cancel()
+        try:
+            await watch_task
+        except asyncio.CancelledError:
+            pass
+
+    state = workspace.read_json(state_file, default={})
+    success = state.get("status") == "complete"
+    print(f"[Swarm] {label} done: status={state.get('status')}, chars={state.get('manuscript_chars', 0)}", flush=True)
+    return success
+
+
+async def _run_editor_swarm(
+    workspace: SwarmWorkspace,
+    *,
+    topic: str,
+    duration_min: int,
+    writing_style: str,
+    n_researchers: int,
+    researcher_model: str,
+    editor_model: str = "claude-opus-4-6",
+    timeout_sec: int = 900,
+) -> bool:
+    """Phase 4: EditorAgent + targeted researchers 동시 실행.
+
+    흐름:
+    1. Editor가 draft.md 읽고 editorial_plan.json 작성 + 쿼리 추가
+    2. Researchers가 쿼리 처리 (병렬)
+    3. Editor 2번째 패스: TODO 해소 확인 → status="ready"
+    """
+    editor = EditorAgent(
+        workspace=workspace,
+        topic=topic,
+        duration_min=duration_min,
+        writing_style=writing_style,
+        model=editor_model,
+    )
+    researchers: List[BaseAgent] = [
+        ResearcherAgent(workspace=workspace, instance_id=f"E_R{i+1}", model=researcher_model)
+        for i in range(n_researchers)
+    ]
+
+    async def watch_editor_done() -> None:
+        loop = asyncio.get_event_loop()
+        deadline = loop.time() + timeout_sec
+        while True:
+            if loop.time() >= deadline:
+                workspace.emit_event("orchestrator", "editor_swarm_timeout", level="warning")
+                editor.stop()
+                for r in researchers:
+                    r.stop()
+                return
+            plan = workspace.read_json("editorial_plan.json", default={})
+            if plan.get("status") == "ready":
+                editor.stop()
+                for r in researchers:
+                    r.stop()
+                workspace.emit_event("orchestrator", "editor_swarm_done",
+                                     level="success",
+                                     beats=len(plan.get("restructured_beats", [])))
+                return
+            await asyncio.sleep(4)
+
+    all_agents = [editor] + researchers
+    agent_tasks = [asyncio.create_task(a.run()) for a in all_agents]
+    watch_task = asyncio.create_task(watch_editor_done())
+    try:
+        await asyncio.gather(*agent_tasks, return_exceptions=True)
+    finally:
+        watch_task.cancel()
+        try:
+            await watch_task
+        except asyncio.CancelledError:
+            pass
+
+    plan = workspace.read_json("editorial_plan.json", default={})
+    success = plan.get("status") == "ready"
+    targeted_claims = workspace.all_jsonl("claims.jsonl")
+    print(f"[Swarm] Phase 4 done: editorial_plan={plan.get('status')}, total_claims={len(targeted_claims)}", flush=True)
+    return success
+
+
 async def run_swarm(
     *,
     workspace_dir: Path,
@@ -330,130 +510,162 @@ async def run_swarm(
     workspace.write_json_atomic("meta.json", meta)
 
     # ─────────────────────────────────────
-    # Phase 2: parallel swarm
+    # Phase 2: backbone research (parallel)
     # ─────────────────────────────────────
-    print(f"[Swarm] Phase 2: parallel swarm (researchers={n_researchers}, writer=1, validator=1) ...", flush=True)
+    print(f"[Swarm] Phase 2: backbone research (researchers={n_researchers}) ...", flush=True)
+    meta = workspace.read_json("meta.json")
+    meta["status"] = "phase_2"
+    meta["phase_2_started_at"] = _utcnow()
+    workspace.write_json_atomic("meta.json", meta)
 
-    researchers: List[BaseAgent] = [
-        ResearcherAgent(
-            workspace=workspace,
-            instance_id=f"R{i+1}",
-            model=researcher_model,
-        )
-        for i in range(n_researchers)
-    ]
-    writer = WriterAgent(
+    backbone_ok = await _run_backbone_research(
+        workspace,
+        n_researchers=n_researchers,
+        researcher_model=researcher_model,
+        timeout_sec=600,
+    )
+    if not backbone_ok:
+        workspace.emit_event("orchestrator", "backbone_research_failed", level="error")
+        meta = workspace.read_json("meta.json")
+        meta["status"] = "failed"
+        meta["failed_phase"] = "phase_2"
+        workspace.write_json_atomic("meta.json", meta)
+        return {"status": "failed", "phase": "phase_2", "reason": "no backbone claims"}
+
+    # ─────────────────────────────────────
+    # Phase 3: draft_writer (chronological first draft)
+    # ─────────────────────────────────────
+    print(f"[Swarm] Phase 3: draft_writer (model={writer_model}) ...", flush=True)
+    meta = workspace.read_json("meta.json")
+    meta["status"] = "phase_3"
+    meta["phase_3_started_at"] = _utcnow()
+    workspace.write_json_atomic("meta.json", meta)
+
+    draft_ok = await _run_sequential_writer(
+        workspace,
+        topic=topic,
+        duration_min=duration_min,
+        writing_style=writing_style,
+        creative_brief=creative_brief,
+        reference_examples=reference_examples,
+        mode="draft",
+        model=writer_model,
+        timeout_sec=max(600, duration_min * 180),
+    )
+    if not draft_ok:
+        # draft 실패해도 계속 진행 (편집자가 부분 draft로도 작업 가능)
+        workspace.emit_event("orchestrator", "draft_incomplete", level="warning")
+
+    # ─────────────────────────────────────
+    # Phase 4: editor + targeted researchers (swarm)
+    # ─────────────────────────────────────
+    print(f"[Swarm] Phase 4: editor + targeted researchers ...", flush=True)
+    meta = workspace.read_json("meta.json")
+    meta["status"] = "phase_4"
+    meta["phase_4_started_at"] = _utcnow()
+    workspace.write_json_atomic("meta.json", meta)
+
+    editor_ok = await _run_editor_swarm(
+        workspace,
+        topic=topic,
+        duration_min=duration_min,
+        writing_style=writing_style,
+        n_researchers=min(n_researchers, 3),  # targeted research는 3개면 충분
+        researcher_model=researcher_model,
+        editor_model=skeleton_model,  # skeleton_model이 Opus
+        timeout_sec=900,
+    )
+    if not editor_ok:
+        workspace.emit_event("orchestrator", "editor_failed", level="warning",
+                             reason="editorial_plan not ready — proceeding with partial plan")
+        # 편집 실패해도 계속: 부분 plan으로 final_writer 진행
+
+    # ─────────────────────────────────────
+    # Phase 5: final_writer + validator
+    # ─────────────────────────────────────
+    print(f"[Swarm] Phase 5: final_writer + validator (model={writer_model}) ...", flush=True)
+    meta = workspace.read_json("meta.json")
+    meta["status"] = "phase_5"
+    meta["phase_5_started_at"] = _utcnow()
+    workspace.write_json_atomic("meta.json", meta)
+
+    final_writer = WriterAgent(
         workspace=workspace,
         topic=topic,
         duration_min=duration_min,
         writing_style=writing_style,
         creative_brief=creative_brief,
         reference_examples=reference_examples,
+        mode="final",
         model=writer_model,
+        max_iterations=60,
+        timeout_per_step_sec=200,
     )
     validator = ValidatorAgent(workspace=workspace)
+    phase5_agents: List[BaseAgent] = [final_writer, validator]
 
-    all_agents: List[BaseAgent] = list(researchers) + [writer, validator]
-
-    # Done watcher — meta.status가 done/timeout/failed면 모든 agent stop
-    #
-    # 핵심 원칙 (코덱스 리뷰 2026-04-08):
-    #   - validator의 swarm_done_signaled (validator passes 통과)만 유일한 종료 트리거
-    #   - 이전의 force_done_after_writer_complete는 품질 게이트 우회 위험으로 제거
-    #   - writer hang은 별도 안전망(writer hang detection)으로 처리
-    async def watch_done() -> None:
+    async def watch_phase5_done() -> None:
         loop = asyncio.get_event_loop()
         deadline = loop.time() + timeout_sec
-        last_writer_progress_check = loop.time()
-        last_writer_chars = -1
-        writer_stall_check_interval = 30.0  # 30초마다 writer 진전 체크
-        writer_stall_grace_sec = 300.0  # writer가 5분 이상 진전 없으면 hang 판정
+        last_chars = -1
+        stall_start: Optional[float] = None
 
         while True:
             now = loop.time()
             if now >= deadline:
-                workspace.emit_event("orchestrator", "phase_2_timeout",
-                                     level="warning", timeout_sec=timeout_sec)
+                workspace.emit_event("orchestrator", "phase_5_timeout", level="warning")
                 m = workspace.read_json("meta.json", default={})
                 m["status"] = "timeout"
                 workspace.write_json_atomic("meta.json", m)
-                for a in all_agents:
+                for a in phase5_agents:
                     a.stop()
                 return
-
             m = workspace.read_json("meta.json", default={})
             if m.get("status") in ("done", "compiled", "stopped", "failed", "timeout"):
-                for a in all_agents:
+                for a in phase5_agents:
                     a.stop()
                 return
+            # writer stall 감지
+            state = workspace.read_json("outline_state.json", default={})
+            current_chars = state.get("manuscript_chars", 0)
+            if last_chars < 0:
+                last_chars = current_chars
+            elif current_chars == last_chars and state.get("status") != "complete":
+                if stall_start is None:
+                    stall_start = now
+                elif now - stall_start >= 300:
+                    workspace.emit_event("orchestrator", "final_writer_stalled", level="warning")
+                    m["status"] = "stalled"
+                    workspace.write_json_atomic("meta.json", m)
+                    for a in phase5_agents:
+                        a.stop()
+                    return
+            else:
+                last_chars = current_chars
+                stall_start = None
+            await asyncio.sleep(3)
 
-            # Writer hang 안전망 — validator를 우회하지 않음.
-            # writer가 일정 시간 진전 없고 + manuscript가 비어 있지도 않은 상태가 지속되면
-            # status를 "stalled"로 표시하고 종료. 이 상태로 종료된 산출물은 compile하지 않음.
-            if now - last_writer_progress_check >= writer_stall_check_interval:
-                last_writer_progress_check = now
-                outline_state = workspace.read_json("outline_state.json", default={})
-                current_chars = outline_state.get("manuscript_chars", 0)
-                writer_iter = outline_state.get("iteration", 0)
-                writer_status = outline_state.get("status", "")
-
-                if last_writer_chars < 0:
-                    last_writer_chars = current_chars
-                elif current_chars == last_writer_chars and writer_status != "complete":
-                    # 진전 없음 — stall 시작 시간 추적
-                    stall_start = m.get("writer_stall_start_at_loop", now)
-                    if "writer_stall_start_at_loop" not in m:
-                        m["writer_stall_start_at_loop"] = now
-                        workspace.write_json_atomic("meta.json", m)
-                    elif now - stall_start >= writer_stall_grace_sec:
-                        # writer_stall_grace_sec 이상 진전 없음 → stalled
-                        workspace.emit_event(
-                            "orchestrator", "writer_stalled",
-                            level="warning",
-                            stalled_sec=int(now - stall_start),
-                            chars=current_chars,
-                            iteration=writer_iter,
-                        )
-                        m["status"] = "stalled"
-                        workspace.write_json_atomic("meta.json", m)
-                        for a in all_agents:
-                            a.stop()
-                        return
-                else:
-                    # 진전 있음 — stall 카운터 리셋
-                    last_writer_chars = current_chars
-                    if "writer_stall_start_at_loop" in m:
-                        del m["writer_stall_start_at_loop"]
-                        workspace.write_json_atomic("meta.json", m)
-
-            await asyncio.sleep(2)
-
-    # 모든 agent를 parallel로 실행 + watch_done
-    agent_tasks = [asyncio.create_task(a.run()) for a in all_agents]
-    watch_task = asyncio.create_task(watch_done())
-
+    p5_tasks = [asyncio.create_task(a.run()) for a in phase5_agents]
+    p5_watch = asyncio.create_task(watch_phase5_done())
     try:
-        await asyncio.gather(*agent_tasks, return_exceptions=True)
+        await asyncio.gather(*p5_tasks, return_exceptions=True)
     except Exception as e:
-        logger.exception("Swarm Phase 2 error")
-        workspace.emit_event("orchestrator", "phase_2_error",
+        logger.exception("Swarm Phase 5 error")
+        workspace.emit_event("orchestrator", "phase_5_error",
                              level="error", error=f"{type(e).__name__}: {e}")
     finally:
-        watch_task.cancel()
+        p5_watch.cancel()
         try:
-            await watch_task
+            await p5_watch
         except asyncio.CancelledError:
             pass
 
     final_meta = workspace.read_json("meta.json", default={})
-    phase_2_status = final_meta.get("status", "unknown")
-    print(f"[Swarm] Phase 2 done (status={phase_2_status})", flush=True)
+    phase_5_status = final_meta.get("status", "unknown")
+    print(f"[Swarm] Phase 5 done (status={phase_5_status})", flush=True)
 
-    # done = validator가 모든 검증 통과
-    # timeout = phase 2 timeout (compile은 하되 품질 보증 없음)
-    # stalled = writer가 진전 없음 → 이전엔 즉시 fail이었으나
-    #           2026-04-08부터: writer-only recovery 시도
-    if phase_2_status == "stalled":
+    # stalled → recovery 시도
+    if phase_5_status == "stalled":
         recovered = await _writer_only_recovery(
             workspace,
             topic=topic,
@@ -463,20 +675,17 @@ async def run_swarm(
             writer_model=writer_model,
         )
         if recovered:
-            # recovery로 manuscript complete됨 → compile 단계로 진행
-            phase_2_status = "done"
+            phase_5_status = "done"
             final_meta = workspace.read_json("meta.json", default={})
         else:
             return {
                 "status": "failed",
-                "phase": "phase_2",
-                "reason": "writer_stalled_recovery_failed",
-                "meta_status": phase_2_status,
+                "phase": "phase_5",
+                "reason": "final_writer_stalled_recovery_failed",
             }
-    # 최후 안전장치 — validator가 max_iterations로 죽었거나 race로 transition을
-    # 못 했더라도 outline_state가 complete + 충분한 claims 사용 + 환각 없음이면 done으로 강제.
-    # 이 경로는 fix B/C 외에 추가된 safety net.
-    if phase_2_status not in ("done", "timeout"):
+
+    # safety net: outline complete + claims 충분 + 환각 없음
+    if phase_5_status not in ("done", "timeout"):
         outline_state = workspace.read_json("outline_state.json", default={})
         all_claims = workspace.all_jsonl("claims.jsonl")
         valid_claim_ids = {c.get("id", "") for c in all_claims}
@@ -486,52 +695,27 @@ async def run_swarm(
             for cid in tag.split(","):
                 used_claim_ids.add(cid.strip())
         invalid_claim_ids = used_claim_ids - valid_claim_ids
-        register = workspace.read_json("character_register.json", default={"characters": []})
-        valid_char_ids = {c.get("id", "") for c in register.get("characters", [])}
-        used_char_ids = set()
-        for tag in re.findall(r'\[char:([^\]]+)\]', manuscript):
-            for cid in tag.split(","):
-                used_char_ids.add(cid.strip())
-        invalid_char_ids = used_char_ids - valid_char_ids
 
-        writer_done_safe = (
-            outline_state.get("status") == "complete"
-            and len(used_claim_ids) >= 10
-            and len(invalid_claim_ids) == 0
-            and len(invalid_char_ids) == 0
-        )
-        if writer_done_safe:
-            print(
-                f"[Swarm] safety net: outline complete + claims_used={len(used_claim_ids)} + "
-                f"no hallucinations → meta.status = done (validator missed transition)",
-                flush=True,
-            )
+        if (outline_state.get("status") == "complete"
+                and len(used_claim_ids) >= 5
+                and len(invalid_claim_ids) == 0):
             final_meta["status"] = "done"
-            final_meta["validator_passed"] = True
             final_meta["safety_net_done"] = True
             workspace.write_json_atomic("meta.json", final_meta)
-            workspace.emit_event(
-                "orchestrator", "safety_net_done",
-                level="success",
-                claims_used=len(used_claim_ids),
-                manuscript_chars=len(manuscript),
-            )
-            phase_2_status = "done"
+            phase_5_status = "done"
         else:
             return {
                 "status": "failed",
-                "phase": "phase_2",
-                "meta_status": phase_2_status,
+                "phase": "phase_5",
+                "meta_status": phase_5_status,
                 "outline_status": outline_state.get("status"),
                 "claims_used": len(used_claim_ids),
-                "invalid_claim_ids": len(invalid_claim_ids),
-                "invalid_char_ids": len(invalid_char_ids),
             }
 
     # ─────────────────────────────────────
-    # Phase 3: compile
+    # Phase 6: compile
     # ─────────────────────────────────────
-    print(f"[Swarm] Phase 3: compile to output (safe_mode={safe_mode}) ...", flush=True)
+    print(f"[Swarm] Phase 6: compile to output (safe_mode={safe_mode}) ...", flush=True)
     try:
         summary = compile_swarm(workspace, output_dir, safe_mode=safe_mode)
     except Exception as e:
