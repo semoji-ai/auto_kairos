@@ -133,6 +133,7 @@ def _build_snapshot(workspace: Path) -> Dict[str, Any]:
         "characters": register.get("characters", []),
         "manuscript": manuscript,
         "manuscript_chars": len(manuscript),
+        "claims": claims,
         "claims_total": len(claims),
         "findings_total": len(findings),
         "queue_total": len(queue),

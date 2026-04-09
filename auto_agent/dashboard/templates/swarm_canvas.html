@@ -57,53 +57,16 @@
         <span id="research-images">images: 0</span>
       </div>
     </div>
-    <div class="researcher-grid">
-      <div class="researcher-cell" data-rid="R1">
-        <div class="generator">
-          <div class="generator-pulse"></div>
-          <div class="generator-core">R1</div>
-        </div>
-        <div class="r-label">리서처</div>
-        <div class="r-status">idle</div>
-        <div class="orb-area" data-rid="R1"></div>
-      </div>
-      <div class="researcher-cell" data-rid="R2">
-        <div class="generator">
-          <div class="generator-pulse"></div>
-          <div class="generator-core">R2</div>
-        </div>
-        <div class="r-label">리서처</div>
-        <div class="r-status">idle</div>
-        <div class="orb-area" data-rid="R2"></div>
-      </div>
-      <div class="researcher-cell" data-rid="R3">
-        <div class="generator">
-          <div class="generator-pulse"></div>
-          <div class="generator-core">R3</div>
-        </div>
-        <div class="r-label">리서처</div>
-        <div class="r-status">idle</div>
-        <div class="orb-area" data-rid="R3"></div>
-      </div>
-      <div class="researcher-cell" data-rid="R4">
-        <div class="generator">
-          <div class="generator-pulse"></div>
-          <div class="generator-core">R4</div>
-        </div>
-        <div class="r-label">리서처</div>
-        <div class="r-status">idle</div>
-        <div class="orb-area" data-rid="R4"></div>
-      </div>
-      <div class="researcher-cell" data-rid="R5">
-        <div class="generator">
-          <div class="generator-pulse"></div>
-          <div class="generator-core">R5</div>
-        </div>
-        <div class="r-label">리서처</div>
-        <div class="r-status">idle</div>
-        <div class="orb-area" data-rid="R5"></div>
-      </div>
+    <div class="research-doc" id="research-doc">
+      <div class="canvas-empty-hint">5명이 함께 채워가는 공유 문서...</div>
+      <!-- target 섹션과 쿼리 라인은 동적 생성 -->
     </div>
+    <!-- 리서처 커서 — research-canvas 직접 자식, position:absolute로 dock(우상단)/active(라인 위) 모드 전환 -->
+    <div class="researcher-cursor idle" data-rid="R1"><span class="cursor-label">R1</span></div>
+    <div class="researcher-cursor idle" data-rid="R2"><span class="cursor-label">R2</span></div>
+    <div class="researcher-cursor idle" data-rid="R3"><span class="cursor-label">R3</span></div>
+    <div class="researcher-cursor idle" data-rid="R4"><span class="cursor-label">R4</span></div>
+    <div class="researcher-cursor idle" data-rid="R5"><span class="cursor-label">R5</span></div>
   </section>
 
   <!-- ───── Validator (footer 한 줄) ───── -->

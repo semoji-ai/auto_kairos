@@ -21,8 +21,66 @@
   let researcherClaimCount = { R1: 0, R2: 0, R3: 0, R4: 0, R5: 0 };
   let crossCount = 0;
   let imageCount = 0;
-  // claim id → DOM orb element (인용 연결선 발사 시 위치 lookup용)
-  const orbsById = new Map();
+  // v3: 인라인 문서 모드
+  // q_id → 쿼리 라인 DOM, target_id → 섹션 DOM, claim_id → q_id
+  const linesByQid = new Map();
+  const sectionsByTid = new Map();
+  const qidByClaimId = new Map();
+  // 이미지 dedupe (target_id → { urls, fnames, captionTokenSets })
+  // 3-단계: (1) URL 정확 일치 (2) 정규화 파일명 일치 (Wikimedia 썸네일/리사이즈 흡수)
+  // (3) 캡션 토큰 Jaccard ≥ 0.55 (다른 언어/다른 해상도 흡수)
+  const seenImagesByTid = new Map();
+  function getSeen(tid) {
+    let s = seenImagesByTid.get(tid);
+    if (!s) {
+      s = { urls: new Set(), fnames: new Set(), captionSets: [] };
+      seenImagesByTid.set(tid, s);
+    }
+    return s;
+  }
+  function imageFingerprint(url) {
+    try {
+      const u = new URL(url);
+      const parts = u.pathname.split('/').filter(Boolean);
+      let last = parts[parts.length - 1] || '';
+      // Wikimedia 썸네일: /thumb/.../base.jpg/NNNpx-base.jpg → "base.jpg"
+      last = last.replace(/^\d+px-/, '');
+      return decodeURIComponent(last).toLowerCase();
+    } catch { return ''; }
+  }
+  function captionTokens(caption) {
+    if (!caption) return new Set();
+    const norm = caption.toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+      .split(/\s+/)
+      .filter(w => w.length >= 2);
+    return new Set(norm);
+  }
+  function jaccard(a, b) {
+    if (a.size === 0 || b.size === 0) return 0;
+    let inter = 0;
+    for (const t of a) if (b.has(t)) inter++;
+    return inter / (a.size + b.size - inter);
+  }
+  function isDuplicateImage(seen, url, caption) {
+    if (seen.urls.has(url)) return true;
+    const fp = imageFingerprint(url);
+    if (fp && seen.fnames.has(fp)) return true;
+    const tokens = captionTokens(caption);
+    if (tokens.size >= 2) {
+      for (const ct of seen.captionSets) {
+        if (jaccard(tokens, ct) >= 0.4) return true;
+      }
+    }
+    return false;
+  }
+  function rememberImage(seen, url, caption) {
+    seen.urls.add(url);
+    const fp = imageFingerprint(url);
+    if (fp) seen.fnames.add(fp);
+    const tokens = captionTokens(caption);
+    if (tokens.size > 0) seen.captionSets.push(tokens);
+  }
 
   const $ = (id) => document.getElementById(id);
   const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -121,45 +179,202 @@
     return tokens;
   }
 
-  // ── researcher / orbs ───────
-  function setResearcherActive(rid, active) {
-    const cell = document.querySelector(`.researcher-cell[data-rid="${rid}"]`);
-    if (!cell) return;
-    cell.classList.toggle('active', !!active);
-    const status = cell.querySelector('.r-status');
-    if (status) status.textContent = active ? 'researching...' : 'idle';
+  // ── v3: 인라인 문서 모드 ───────
+  // q_id 패턴: "t001_q03" → target_id "t001"
+  function parseTid(qid) {
+    if (!qid) return "?";
+    const m = String(qid).match(/^(t\d+|[^_]+)_q\d+/);
+    return m ? m[1] : qid;
   }
 
-  function spawnEnergyOrb(claim) {
-    const rid = claim.researcher || "R1";
-    const area = document.querySelector(`.orb-area[data-rid="${rid}"]`);
-    if (!area) return null;
+  function ensureSection(tid, targetText) {
+    let section = sectionsByTid.get(tid);
+    if (!section) {
+      const doc = $('research-doc');
+      if (!doc) return null;
+      doc.classList.add('has-content');
+      section = document.createElement('div');
+      section.className = 'target-section';
+      section.dataset.tid = tid;
+      section.innerHTML = `<div class="target-header">${escapeHtml(targetText || tid)}</div>`;
+      sectionsByTid.set(tid, section);
+      doc.appendChild(section);
+    }
+    // target text hoist: 더 풍부한 헤더로 업그레이드 (tid가 fallback이었던 경우)
+    if (targetText && targetText !== tid) {
+      const header = section.querySelector('.target-header');
+      if (header && (header.textContent === tid || !section.dataset.headerHoisted)) {
+        header.textContent = targetText;
+        section.dataset.headerHoisted = "1";
+      }
+    }
+    return section;
+  }
 
+  function spawnQueryLine(qid, targetText, rid) {
+    if (!qid) return null;
+    if (linesByQid.has(qid)) return linesByQid.get(qid);
+    const tid = parseTid(qid);
+    const section = ensureSection(tid, targetText);
+    if (!section) return null;
+    const line = document.createElement('div');
+    line.className = 'qline active';
+    line.dataset.qid = qid;
+    line.innerHTML = `
+      <span class="qline-bullet"></span>
+      <span class="qline-text"><span class="placeholder">${escapeHtml(rid || '·')} researching...</span></span>
+    `;
+    section.appendChild(line);
+    linesByQid.set(qid, line);
+    return line;
+  }
+
+  function moveCursorToLine(rid, line) {
+    const cursor = document.querySelector(`.researcher-cursor[data-rid="${rid}"]`);
+    if (!cursor || !line) return;
+    cursor.classList.remove('idle');
+    cursor.classList.add('active');
+    const canvas = document.getElementById('research-canvas');
+    if (!canvas) return;
+    const cRect = canvas.getBoundingClientRect();
+    const lineRect = line.getBoundingClientRect();
+    // canvas 좌표계 (cursor는 canvas의 직접 자식)
+    const x = (lineRect.left - cRect.left) + 4;
+    const y = (lineRect.top - cRect.top) + (lineRect.height / 2) - 11;
+    cursor.style.right = 'auto';
+    cursor.style.left = `${x}px`;
+    cursor.style.top = `${y}px`;
+  }
+
+  function setCursorIdle(rid) {
+    const cursor = document.querySelector(`.researcher-cursor[data-rid="${rid}"]`);
+    if (!cursor) return;
+    cursor.classList.remove('active');
+    cursor.classList.add('idle');
+    // dock 위치는 CSS .idle[data-rid] 규칙이 처리, 인라인 스타일 제거
+    cursor.style.left = '';
+    cursor.style.top = '';
+    cursor.style.right = '';
+  }
+
+  function fillLineWithFact(line, factText, rid) {
+    if (!line) return;
+    const textEl = line.querySelector('.qline-text');
+    if (!textEl) return;
+    textEl.innerHTML = '';
+    const trimmed = (factText || '').trim().slice(0, 200);
+    const words = splitWords(trimmed);
+    words.forEach((w, i) => {
+      const span = document.createElement('span');
+      span.className = 'word';
+      span.textContent = w;
+      span.style.animationDelay = `${Math.min(i * 0.03, 0.9)}s`;
+      textEl.appendChild(span);
+    });
+    if (rid) {
+      const ridEl = document.createElement('span');
+      ridEl.className = 'qline-rid';
+      ridEl.textContent = rid;
+      textEl.appendChild(ridEl);
+    }
+    line.classList.remove('active');
+    line.classList.add('completed');
+  }
+
+  function ensureMarkers(line) {
+    let m = line.querySelector('.qline-markers');
+    if (!m) {
+      m = document.createElement('span');
+      m.className = 'qline-markers';
+      line.appendChild(m);
+    }
+    return m;
+  }
+
+  function applyClaimToLine(claim) {
+    const rid = claim.researcher || "R1";
     researcherClaimCount[rid] = (researcherClaimCount[rid] || 0) + 1;
     if (claim.cross_checked) crossCount += 1;
-    if (Array.isArray(claim.image_candidates)) imageCount += claim.image_candidates.length;
+    const imgs = Array.isArray(claim.image_candidates) ? claim.image_candidates.length : 0;
+    if (imgs) imageCount += imgs;
     updateResearchStats();
 
-    const orb = document.createElement('div');
-    orb.className = 'energy-orb' + (claim.cross_checked ? ' cross-checked' : '');
-    orb.dataset.rid = rid;
-    orb.dataset.claimId = claim.id || '';
+    const qid = claim.q_id || claim.query_id || claim.id;
+    if (!qid) return;
+    let line = linesByQid.get(qid);
+    if (!line) line = spawnQueryLine(qid, claim.target || qid, rid);
+    if (!line) return;
 
-    const tip = document.createElement('div');
-    tip.className = 'tip';
-    const text = claim.text ? claim.text.slice(0, 200) : '';
-    const sources = (claim.source_urls || (claim.source_url ? [claim.source_url] : []));
-    const sourceLine = sources.slice(0, 2).map(u => {
-      try { return new URL(u).hostname.replace('www.', ''); } catch { return u.slice(0, 30); }
-    }).join(' + ');
-    tip.innerHTML = `<div style="font-weight:600;color:var(--energy-cyan);margin-bottom:4px">${escapeHtml(claim.id || '?')}${claim.cross_checked ? ' ✓✓' : ''}</div>
-                     <div style="margin-bottom:6px">${escapeHtml(text)}</div>
-                     <div style="font-size:10px;color:var(--ink-low)">${escapeHtml(sourceLine)}</div>`;
-    orb.appendChild(tip);
+    if (claim.id) qidByClaimId.set(claim.id, qid);
 
-    area.appendChild(orb);
-    if (claim.id) orbsById.set(claim.id, orb);
-    return orb;
+    // 첫 claim의 text로 라인 채움
+    if (!line.dataset.filled && claim.text) {
+      line.dataset.filled = "1";
+      fillLineWithFact(line, claim.text, rid);
+    }
+    // 인라인 마커 (cross_checked만 텍스트, 이미지는 실제 inline render)
+    const markers = ensureMarkers(line);
+    let crossN = parseInt(line.dataset.crossN || '0', 10);
+    if (claim.cross_checked) crossN += 1;
+    line.dataset.crossN = String(crossN);
+    let inner = '';
+    if (crossN > 0) inner += `<span class="m-cross">✓✓${crossN > 1 ? '×' + crossN : ''}</span>`;
+    markers.innerHTML = inner;
+
+    // 인라인 이미지 — 이제 target(섹션) 단위로 통합 갤러리에 렌더
+    // dedupe: target 단위 3-단계 (URL/파일명/캡션 Jaccard)
+    if (Array.isArray(claim.image_candidates) && claim.image_candidates.length > 0) {
+      const tid = parseTid(qid);
+      const seen = getSeen(tid);
+      const section = sectionsByTid.get(tid);
+      if (!section) return;
+      let strip = section.querySelector('.target-images');
+      if (!strip) {
+        strip = document.createElement('div');
+        strip.className = 'target-images';
+        // 헤더 바로 아래에 삽입
+        const header = section.querySelector('.target-header');
+        if (header && header.nextSibling) section.insertBefore(strip, header.nextSibling);
+        else section.appendChild(strip);
+      }
+      claim.image_candidates.forEach(img => {
+        if (!img || !img.url) return;
+        if (isDuplicateImage(seen, img.url, img.caption)) return;
+        rememberImage(seen, img.url, img.caption);
+        const wrap = document.createElement('a');
+        wrap.className = 'qline-img';
+        wrap.dataset.imgUrl = img.url;
+        wrap.href = img.source || img.url;
+        wrap.target = '_blank';
+        wrap.rel = 'noopener noreferrer';
+        wrap.title = (img.caption || '') + (img.license ? ' — ' + img.license : '');
+        const im = document.createElement('img');
+        im.src = img.url;
+        im.alt = img.caption || '';
+        im.loading = 'lazy';
+        im.referrerPolicy = 'no-referrer';
+        // 깨진 이미지는 wrap 자체를 숨김 + dedupe set에서 빼지 않음 (재시도 방지)
+        im.addEventListener('error', () => { wrap.style.display = 'none'; }, { once: true });
+        wrap.appendChild(im);
+        if (img.caption) {
+          const cap = document.createElement('span');
+          cap.className = 'qline-img-cap';
+          cap.textContent = img.caption.slice(0, 60);
+          wrap.appendChild(cap);
+        }
+        strip.appendChild(wrap);
+      });
+    }
+  }
+
+  function setResearcherActive(rid, active, qid, target) {
+    if (active) {
+      let line = qid ? linesByQid.get(qid) : null;
+      if (!line && qid) line = spawnQueryLine(qid, target || qid, rid);
+      if (line) moveCursorToLine(rid, line);
+    } else {
+      setCursorIdle(rid);
+    }
   }
 
   function updateResearchStats() {
@@ -169,11 +384,12 @@
     $('research-images').textContent = `images: ${imageCount}`;
   }
 
-  // ── energy particle flow (orb → manuscript) ─────
+  // ── energy particle flow (card → manuscript) ─────
   // SVG 곡선을 따라 작은 원 입자를 0.1s 간격으로 보내고, 도착 시 원고 위치에서 burst
-  function flowEnergyToManuscript(orbEl, color) {
-    if (!orbEl) return;
-    const fr = orbEl.getBoundingClientRect();
+  function flowEnergyToManuscript(srcEl, color) {
+    if (!srcEl) return;
+    srcEl.classList.add('cited');
+    const fr = srcEl.getBoundingClientRect();
     const tEl = $('manuscript-text');
     const tr = tEl.getBoundingClientRect();
     // 도착 위치: manuscript canvas 하단 (가장 마지막 단어 자리 가정)
@@ -304,9 +520,9 @@
     countTags(snap.manuscript || '');
     setRunning(!!snap.running);
 
-    // 기존 claims가 있으면 모두 orb로 spawn (snapshot 복원)
+    // 기존 claims가 있으면 라인 복원 (snapshot 복원)
     if (Array.isArray(snap.claims)) {
-      snap.claims.forEach(c => spawnEnergyOrb(c));
+      snap.claims.forEach(c => applyClaimToLine(c));
     }
   }
 
@@ -327,7 +543,10 @@
       const m = (ev.agent || '').match(/^R\d+$/);
       if (m) {
         if (ev.event === 'claimed_query') {
-          setResearcherActive(ev.agent, true);
+          const p = ev.payload || {};
+          const qid = p.q_id || p.query_id || p.qid;
+          const target = p.target || p.query || qid;
+          setResearcherActive(ev.agent, true, qid, target);
         } else if (ev.event === 'research_completed') {
           setResearcherActive(ev.agent, false);
         }
@@ -348,20 +567,25 @@
 
     evtSource.addEventListener('claim_added', (e) => {
       const c = JSON.parse(e.data);
-      spawnEnergyOrb(c);
+      applyClaimToLine(c);
     });
 
     evtSource.addEventListener('manuscript_updated', (e) => {
       const m = JSON.parse(e.data);
       const stripped = stripTags(m.full_text);
-      // 새로 등장한 claim id가 있으면 → 해당 orb에서 에너지 흐름 발사
+      // 새로 등장한 claim id가 있으면 → 해당 라인에서 에너지 흐름 발사
       const newIds = extractClaimIds(m.full_text);
       newIds.forEach(id => {
-        const orb = orbsById.get(id);
-        if (orb && !orb.dataset.flowed) {
-          orb.dataset.flowed = "1";
-          const color = getComputedStyle(orb).getPropertyValue('--orb-color').trim() || '#00d4ff';
-          flowEnergyToManuscript(orb, color);
+        const qid = qidByClaimId.get(id);
+        if (!qid) return;
+        const line = linesByQid.get(qid);
+        if (line && !line.dataset.flowed) {
+          line.dataset.flowed = "1";
+          const ridEl = line.querySelector('.qline-rid');
+          const rid = ridEl ? ridEl.textContent.trim() : 'R1';
+          const cursor = document.querySelector(`.researcher-cursor[data-rid="${rid}"]`);
+          const color = cursor ? getComputedStyle(cursor).getPropertyValue('--cursor-color').trim() : '#00d4ff';
+          flowEnergyToManuscript(line, color || '#00d4ff');
         }
       });
       // 단어 단위 typing 적용
