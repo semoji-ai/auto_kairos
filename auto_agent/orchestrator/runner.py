@@ -481,17 +481,9 @@ class PipelineRunner:
 
         self.project_slug = project_slug
 
-        # 중앙 규칙 관리자 초기화 + fetch
+        # 중앙 규칙 관리자 초기화
         from auto_agent.rule_manager import RuleManager
-        from auto_agent.supabase_client import supabase_enabled
         self.rule_manager = RuleManager()
-        if supabase_enabled():
-            try:
-                changed = self.rule_manager.fetch_all()
-                if changed:
-                    print(f"[Rules] 중앙 규칙 {changed}개 갱신됨")
-            except Exception as e:
-                print(f"[Rules] 중앙 규칙 fetch 실패 (로컬 fallback): {e}")
 
         self.pipeline = self._load_pipeline()
         self.pm = self._get_project_manager()
@@ -509,16 +501,10 @@ class PipelineRunner:
         self.project_dir.mkdir(parents=True, exist_ok=True)
         self.context_memory = ContextMemory(self.project_dir)
         self.vault = VaultRAG()
-        self.sync = self._init_sync()
         self.hooks = _build_default_hooks()
 
-    def _init_sync(self):
-        """Supabase 동기화 — 파이프라인 중에는 비활성. 완료 후 프로젝트 단위로 동기화."""
-        # 파이프라인 실행 중 매 스텝 동기화 비활성
-        return None
-
     def _load_pipeline(self) -> dict:
-        # 로컬 DATA_DIR 우선 (Supabase 캐시보다 로컬 수정 우선)
+        # 로컬 DATA_DIR 우선
         path = DATA_DIR / "pipeline.json"
         if path.exists():
             with open(path, "r", encoding="utf-8") as f:
@@ -1512,8 +1498,6 @@ class PipelineRunner:
                     json.dumps(original_specs, ensure_ascii=False, indent=2),
                     encoding="utf-8",
                 )
-                _notify("Director", f"scene_decomposition → scene_specs 변환 완료 ({len(original_specs.get('scenes', []))}씬)",
-                        phase=self.state.current_phase, project=self.project_slug)
             else:
                 # scene_specs 생성 단계 (script-director 첫 호출) — 자연스러운 시작 알림
                 _notify(agent_name, "Stage 2 시작",
@@ -1532,11 +1516,8 @@ class PipelineRunner:
         n_chapters = len(chapters)
         total_scenes = len(original_specs.get("scenes", []))
 
-        # ── 중간 동기화 ① scene_count 업데이트 ──
         try:
             self.pm.update_project(self.project["id"], scene_count=total_scenes)
-            _notify("Director", f"DB 업데이트: scene_count={total_scenes}",
-                    phase=self.state.current_phase, project=self.project_slug, level="info")
         except Exception:
             pass
 
@@ -1580,17 +1561,6 @@ class PipelineRunner:
                         error=str(e),
                     )
                 chapter_results[ch_num] = ch_result
-
-                # ── 중간 동기화 ② 챕터 완료 시 부분 업로드 ──
-                if ch_result.status == "completed" and self.sync:
-                    try:
-                        partial = self._merge_chapter_results(original_specs, chapter_results)
-                        self.sync.upload_json("scene_specs.json", partial)
-                        done_count = sum(1 for r in chapter_results.values() if r.status == "completed")
-                        _notify("Director", f"Supabase 동기화: scene_specs 업데이트 ({done_count}/{n_chapters} 챕터)",
-                                phase=self.state.current_phase, project=self.project_slug, level="info")
-                    except Exception:
-                        pass
 
         # 실패 챕터 재시도 (max 2회)
         failed_chapters = {
@@ -1684,24 +1654,6 @@ class PipelineRunner:
                 cost_tokens_out=total_cost.get("tokens_out", 0),
                 cost_usd=total_cost.get("cost_usd", 0.0),
             )
-            # Supabase 동기화
-            if self.sync:
-                try:
-                    self.sync.sync_step(
-                        step=step, phase=self.state.current_phase,
-                        status="completed",
-                        output_files=[str(specs_path)],
-                        cost_info=total_cost,
-                        project_data=dict(self.project),
-                        duration_sec=elapsed,
-                    )
-                    _notify("Director", "Supabase 동기화 완료",
-                            phase=self.state.current_phase, project=self.project_slug, level="success")
-                except Exception as sync_err:
-                    print(f"    [WARN] Supabase 동기화 실패: {sync_err}")
-                    _notify("Director", f"Supabase 동기화 실패: {str(sync_err)[:50]}",
-                            phase=self.state.current_phase, project=self.project_slug, level="warning")
-
             # ── creative 빈 씬 검증 + 자동 수정 (creative_direction 완료 후) ──
             if step_name == "creative_direction":
                 specs_path_check = self.project_dir / "scene_specs.json"
@@ -1774,10 +1726,6 @@ class PipelineRunner:
         label = _step_label(step_name, "start").replace(" 시작합니다", "")
 
         n_scenes = len(chapter_scenes)
-        _notify(agent_name,
-                f"{label} 시작합니다 (Ch{chapter_num}, {n_scenes}씬)",
-                phase=self.state.current_phase, project=self.project_slug)
-
         t0 = time.time()
 
         # 1. 챕터 전용 축소 scene_specs 임시 파일 생성
@@ -1886,11 +1834,6 @@ class PipelineRunner:
                 if llm_scenes:
                     updated_scenes = self._merge_llm_response(chapter_scenes, llm_scenes)
 
-        _notify(agent_name,
-                f"{label} 완료 (Ch{chapter_num}, {elapsed:.1f}s)",
-                phase=self.state.current_phase, project=self.project_slug,
-                level="success")
-
         return ChapterResult(
             chapter=chapter_num, status="completed",
             scenes=updated_scenes,
@@ -1980,7 +1923,7 @@ class PipelineRunner:
 
     def _load_skill_file(self, key: str) -> str:
         """스킬 파일 1개 로드. 로컬 DATA_DIR 우선 → 중앙 규칙 fallback. 없으면 빈 문자열."""
-        # 로컬 파일 우선 (Supabase 캐시보다 로컬 수정 우선)
+        # 로컬 파일 우선
         local_path = DATA_DIR / key
         if local_path.exists():
             try:
@@ -2345,9 +2288,6 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
         if resolved:
             style_name = config.get("style_name", resolved.stem)
-            _notify("System", f"아트스타일 '{style_name}' 확인 완료: {resolved}",
-                    phase=self.state.current_phase, project=self.project_slug,
-                    level="info")
             print(f"    [PREFLIGHT] 아트스타일 '{style_name}' → {resolved}")
         else:
             _notify("System", f"아트스타일 파일 없음: {art_style_rel}",
@@ -2373,20 +2313,9 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             if img_path.exists():
                 continue
 
-            # Supabase Storage에서 다운로드 시도
-            storage_url = info.get("storage_url")
-            if storage_url:
-                try:
-                    import urllib.request
-                    img_path.parent.mkdir(parents=True, exist_ok=True)
-                    urllib.request.urlretrieve(storage_url, str(img_path))
-                    _notify("System", f"기준 캐릭터 '{char_id}' 이미지 복원했습니다",
-                            phase=self.state.current_phase, project=self.project_slug,
-                            level="warning")
-                except Exception:
-                    _notify("System", f"기준 캐릭터 '{char_id}' 복원 실패 — 이미지 재생성 필요",
-                            phase=self.state.current_phase, project=self.project_slug,
-                            level="error")
+            _notify("System", f"기준 캐릭터 '{char_id}' 이미지 없음 — 재생성 필요",
+                    phase=self.state.current_phase, project=self.project_slug,
+                    level="warning")
 
     # ─────────────────────────────────────
     # Step 실행
@@ -2552,22 +2481,6 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                         self._vault_save_research(step, result)
                     except Exception as vault_err:
                         print(f"    [WARN] 볼트 축적 실패: {vault_err}")
-
-                # Supabase 동기화
-                if self.sync:
-                    try:
-                        self.sync.sync_step(
-                            step=step,
-                            phase=self.state.current_phase,
-                            status="completed",
-                            output_files=result.output_files or [],
-                            cost_info=cost,
-                            project_data=dict(self.project),
-                            duration_sec=elapsed,
-                        )
-                        print(f"    [SYNC] Supabase 동기화 완료")
-                    except Exception as sync_err:
-                        print(f"    [WARN] Supabase 동기화 실패: {sync_err}")
             else:
                 self.pm.fail_pipeline_run(run_id, result.error)
                 print(f"FAIL ({elapsed:.1f}s) — {result.error[:80]}")
@@ -3545,8 +3458,6 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
         for round_num in range(1, max_rounds + 1):
             print(f"\n    [래칫 R{round_num}/{max_rounds}] 리뷰 시작...", flush=True)
-            _notify("System", f"래칫 R{round_num}/{max_rounds}: 리뷰 시작",
-                    phase=self.state.current_phase, project=self.project_slug)
 
             # ── 1. 리뷰 실행 (skip_resume로 강제 재실행) ──
             # 라운드별 피드백 파일 (히스토리 보존)
@@ -3654,7 +3565,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             if score < best_score and round_num > 1:
                 print(f"    [래칫] 점수 하락 ({score} < {best_score}) → 수정 채택 안 함, 이전 버전 복원 후 계속", flush=True)
                 specs_path.write_text(best_specs, encoding="utf-8")
-                _notify("System", f"래칫: {score}점 < {best_score}점 → 채택 안 함 (이전 버전 유지). 새 이슈로 다시 수정",
+                _notify("System", f"래칫 R{round_num}: {score}점 → {best_score}점 미달, 이전 버전 복원",
                         phase=self.state.current_phase, project=self.project_slug, level="warning")
                 # break 하지 않음 — 새 이슈가 나왔으므로 다시 수정 시도
             elif score > best_score:
@@ -4100,8 +4011,6 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             if vault_block:
                 vault_chars = len(vault_block)
                 print(f"    [VaultRAG] 리서치용 볼트 지식 주입: {vault_chars}자", flush=True)
-                _notify("System", f"볼트에서 기존 리서치 {vault_chars}자 발견 → 프롬프트에 주입",
-                        phase=self.state.current_phase, project=self.project_slug, level="info")
             else:
                 print("    [VaultRAG] 리서치용 볼트 지식 없음", flush=True)
 
