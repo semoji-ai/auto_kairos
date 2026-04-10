@@ -2361,6 +2361,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         print(f"  [{step_id}] {step_name} ... ", end="", flush=True)
         _agent_label = step.get("agent") or step.get("module", "System")
         _notify(_agent_label, _step_label(step_name, "start"), phase=self.state.current_phase, project=self.project_slug)
+        self._emit_pipeline_event("step_started", {"step_name": step_name, "agent": _agent_label})
 
         # DB 파이프라인 기록 시작
         run_id = self.pm.start_pipeline_run(
@@ -2463,6 +2464,12 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 cost_str = f" ${cost['cost_usd']:.4f}" if cost.get("cost_usd") else ""
                 print(f"OK ({elapsed:.1f}s{cost_str})")
                 _notify(_agent_label, f"{_step_label(step_name, 'done')} ({elapsed:.1f}s{cost_str})", phase=self.state.current_phase, project=self.project_slug, level="success")
+                self._emit_pipeline_event("step_completed", {
+                    "step_name": step_name,
+                    "agent": _agent_label,
+                    "duration_sec": elapsed,
+                    "cost_usd": cost.get("cost_usd", 0.0),
+                })
 
                 # 컨텍스트 메모리 수집 (에이전트 step만)
                 if step.get("agent") and result.output_files:
@@ -2493,6 +2500,12 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             self.pm.fail_pipeline_run(run_id, str(e))
             print(f"ERROR ({elapsed:.1f}s) — {e}")
             _notify(_agent_label, f"{_step_label(step_name, 'fail')}: {str(e)[:60]}", phase=self.state.current_phase, project=self.project_slug, level="error")
+            self._emit_pipeline_event("step_failed", {
+                "step_name": step_name,
+                "agent": _agent_label,
+                "duration_sec": elapsed,
+                "error": str(e)[:200],
+            })
             return StepResult(step_id=step_id, status="failed",
                               duration_sec=elapsed, error=str(e))
 
@@ -4467,11 +4480,59 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
         )
         print(f"\nState saved: {state_path}")
 
+        # 파이프라인 완료 이벤트 emit
+        self._emit_pipeline_event("pipeline_finished", {
+            "completed": completed,
+            "failed": failed,
+            "total": total,
+        })
+
         # 프로젝트 상태 업데이트
         if failed == 0:
             self.pm.update_project(self.project["id"], status="completed")
         else:
             self.pm.update_project(self.project["id"], status="failed")
+
+    # ─────────────────────────────────────────────────────────────
+    # 실시간 이벤트 emit (dashboard SSE가 tailing)
+    # ─────────────────────────────────────────────────────────────
+
+    def _emit_pipeline_event(self, event_type: str, payload: dict) -> None:
+        """pipeline_events.jsonl에 이벤트를 append하고 pipeline_live.json을 갱신."""
+        try:
+            events_path = self.project_dir / "pipeline_events.jsonl"
+            live_path = self.project_dir / "pipeline_live.json"
+
+            entry = {
+                "ts": datetime.now().isoformat(),
+                "event": event_type,
+                "step": self.state.current_step,
+                "phase": self.state.current_phase,
+                "completed": self.state.completed_steps,
+                "failed": self.state.failed_steps,
+                **payload,
+            }
+
+            # JSONL append (atomic enough for single writer)
+            with open(events_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+            # live state snapshot (overwrite — dashboard polls this)
+            live_state = {
+                "ts": entry["ts"],
+                "current_step": self.state.current_step,
+                "current_phase": self.state.current_phase,
+                "completed_steps": self.state.completed_steps,
+                "failed_steps": self.state.failed_steps,
+                "skipped_steps": self.state.skipped_steps,
+                "started_at": self.state.started_at,
+            }
+            live_path.write_text(
+                json.dumps(live_state, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        except Exception:
+            pass  # 이벤트 emit 실패는 파이프라인 중단하지 않음
 
 
 # ═══════════════════════════════════════

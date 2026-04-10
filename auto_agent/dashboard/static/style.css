@@ -1778,3 +1778,282 @@ body.terminal-open .main-content {
   .terminal-panel.open { width: 100vw; }
   body.terminal-open .main-content { margin-right: 0; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Energy Theme — 파이프라인 스트리밍 UI
+   스웜 브랜치 swarm_canvas.css에서 이식 (2026-04-10)
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --energy-cyan:   #00d4ff;
+  --energy-violet: #7c3aed;
+  --energy-gold:   #fbbf24;
+  --energy-rose:   #f472b6;
+  --energy-mint:   #34d399;
+  --energy-bg-deep: #0a0e27;
+  --energy-bg-mid:  #141934;
+  --energy-bg-card: #1a1f3a;
+  --energy-ink:     #f5f1e8;
+  --energy-ink-mid: #a8aec5;
+  --energy-ink-low: #6b7290;
+  --energy-line:    rgba(168,174,197,0.12);
+}
+
+/* ── 단어 fade-in 애니메이션 ── */
+@keyframes word-energize {
+  0%   { opacity:0; transform:translateY(4px); filter:blur(2px); text-shadow:0 0 12px var(--energy-cyan); }
+  60%  { opacity:1; text-shadow:0 0 18px var(--energy-cyan); }
+  100% { opacity:1; transform:translateY(0); filter:none; text-shadow:none; }
+}
+.word-new {
+  display: inline;
+  opacity: 0;
+  animation: word-energize 0.45s ease forwards;
+}
+
+/* ── 점등 펄스 ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity:1; text-shadow:0 0 12px var(--energy-mint); }
+  50%       { opacity:0.3; }
+}
+.running-dot { color:var(--energy-mint); animation:pulse-dot 1.5s ease infinite; }
+
+/* ── 파이프라인 스텝 그리드 ── */
+.pipeline-stream-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+  align-items: start;
+  padding: 20px;
+}
+
+/* ── 스텝 사이드바 ── */
+.step-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.step-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--energy-line);
+  background: var(--energy-bg-card);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-size: 12px;
+}
+.step-card.running {
+  border-color: var(--energy-cyan);
+  box-shadow: 0 0 16px rgba(0,212,255,0.2);
+}
+.step-card.completed {
+  border-color: rgba(52,211,153,0.4);
+  background: rgba(52,211,153,0.06);
+}
+.step-card.failed {
+  border-color: rgba(244,63,94,0.4);
+  background: rgba(244,63,94,0.05);
+}
+.step-card.skipped {
+  opacity: 0.4;
+}
+
+.step-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 1px solid var(--energy-line);
+  background: rgba(255,255,255,0.05);
+  color: var(--energy-ink-mid);
+}
+.step-card.running   .step-icon { border-color:var(--energy-cyan);  color:var(--energy-cyan);  background:rgba(0,212,255,0.1); }
+.step-card.completed .step-icon { border-color:var(--energy-mint);  color:var(--energy-mint);  background:rgba(52,211,153,0.1); }
+.step-card.failed    .step-icon { border-color:#f43f5e; color:#f43f5e; background:rgba(244,63,94,0.1); }
+
+.step-info { flex:1; min-width:0; }
+.step-id   { font-size:10px; color:var(--energy-ink-low); font-family:monospace; }
+.step-name { font-size:12px; color:var(--energy-ink-mid); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.step-card.running   .step-name { color:var(--energy-cyan); }
+.step-card.completed .step-name { color:var(--energy-mint); }
+.step-card.failed    .step-name { color:#f43f5e; }
+
+.step-dur { font-size:10px; color:var(--energy-ink-low); white-space:nowrap; }
+
+/* ── 스트리밍 캔버스 ── */
+.stream-canvas {
+  background: var(--energy-bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--energy-line);
+  display: flex;
+  flex-direction: column;
+  min-height: 600px;
+  overflow: hidden;
+  position: relative;
+}
+.stream-canvas::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse at center top, rgba(0,212,255,0.05), transparent 60%);
+  pointer-events:none;
+}
+
+.stream-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--energy-line);
+  position: relative;
+  z-index: 1;
+}
+.stream-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--energy-ink-mid);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.stream-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--energy-ink-low);
+}
+
+.stream-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  font-family: "Noto Serif KR","본명조",serif;
+  font-size: 16px;
+  line-height: 1.9;
+  color: var(--energy-ink);
+  white-space: pre-wrap;
+  word-break: keep-all;
+  position: relative;
+  z-index: 1;
+}
+.stream-body .placeholder {
+  color: var(--energy-ink-low);
+  font-style: italic;
+  font-family: -apple-system,"Pretendard",sans-serif;
+  font-size: 14px;
+}
+
+/* ── 탭 토글 (스텝 이벤트 / 원고 / 씬스펙) ── */
+.stream-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 8px 12px 0;
+  border-bottom: 1px solid var(--energy-line);
+  position: relative;
+  z-index: 1;
+}
+.stream-tab {
+  padding: 6px 14px;
+  font-size: 11px;
+  color: var(--energy-ink-low);
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  transition: color 0.15s, background 0.15s;
+}
+.stream-tab:hover { color: var(--energy-ink-mid); background: rgba(255,255,255,0.04); }
+.stream-tab.active {
+  color: var(--energy-cyan);
+  background: rgba(0,212,255,0.08);
+  border-color: var(--energy-line);
+}
+
+/* ── 이벤트 로그 피드 ── */
+.event-log {
+  padding: 12px 20px;
+  font-family: -apple-system,"Pretendard",sans-serif;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.event-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 5px 8px;
+  border-radius: 6px;
+  animation: word-energize 0.3s ease forwards;
+}
+.event-row:hover { background: rgba(255,255,255,0.03); }
+.event-ts { font-size:10px; color:var(--energy-ink-low); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.event-type { font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px; white-space:nowrap; }
+.event-type.started  { background:rgba(0,212,255,0.15); color:var(--energy-cyan); }
+.event-type.completed{ background:rgba(52,211,153,0.15); color:var(--energy-mint); }
+.event-type.failed   { background:rgba(244,63,94,0.15); color:#f43f5e; }
+.event-type.info     { background:rgba(168,174,197,0.1); color:var(--energy-ink-mid); }
+.event-body { color:var(--energy-ink-mid); flex:1; min-width:0; }
+
+/* ── 씬스펙 카드 리스트 ── */
+.scene-stream-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  font-family: -apple-system,"Pretendard",sans-serif;
+}
+.scene-stream-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--energy-line);
+  border-radius: 10px;
+  padding: 12px 16px;
+  animation: word-energize 0.4s ease forwards;
+}
+.scene-stream-num  { font-size:10px; color:var(--energy-gold); font-weight:600; margin-bottom:4px; }
+.scene-stream-narr { font-size:13px; line-height:1.7; color:var(--energy-ink-mid); }
+
+/* ── 스켈레톤/아웃라인 카드 ── */
+.skeleton-stream {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: -apple-system,"Pretendard",sans-serif;
+}
+.skeleton-event-card {
+  padding: 10px 14px;
+  background: rgba(0,212,255,0.05);
+  border: 1px solid rgba(0,212,255,0.15);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--energy-ink-mid);
+  animation: word-energize 0.35s ease forwards;
+}
+.skeleton-event-card .se-label {
+  font-size:10px; font-weight:600; color:var(--energy-cyan); margin-bottom:3px;
+}
+
+/* ── 파이프라인 페이즈 구분선 ── */
+.phase-divider {
+  font-size:10px; font-weight:600;
+  letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--energy-ink-low);
+  padding: 4px 0 4px 4px;
+  margin-top: 4px;
+  border-top: 1px solid var(--energy-line);
+}
+
+/* 반응형 */
+@media (max-width: 900px) {
+  .pipeline-stream-layout { grid-template-columns: 1fr; }
+}

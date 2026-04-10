@@ -1,63 +1,525 @@
-<!-- Pipeline 탭 -->
-{% if pipeline_progress and pipeline_progress.phases %}
-<div class="pipeline-steps">
-  {% for phase in pipeline_progress.phases %}
-  <div class="pipeline-step {{ phase.status }}">
-    <div class="circle">{% if phase.status == 'completed' %}&#10003;{% elif phase.status == 'running' %}&#9654;{% elif phase.status == 'failed' %}&#10007;{% else %}{{ loop.index }}{% endif %}</div>
-    <div class="step-label">{{ phase.name }}</div>
-    {% if not loop.last %}<div class="connector"></div>{% endif %}
-  </div>
-  {% endfor %}
-</div>
+<!-- Pipeline 탭 — Energy theme 스트리밍 UI -->
+<!-- SSE: /api/p/{slug}/pipeline/events (스텝 이벤트) -->
+<!-- SSE: /api/p/{slug}/pipeline/stream (파일 내용) -->
 
-{% for phase in pipeline_progress.phases %}
-<div class="card collapsible" onclick="this.classList.toggle('open')">
-  <h3>
-    <span class="badge badge-{{ phase.status }}">{{ phase.status }}</span>
-    &nbsp; {{ phase.name }}
-    <span class="collapse-arrow">&#9660;</span>
-  </h3>
-  <div class="collapse-content">
-    <table>
-      <thead><tr><th>Step</th><th>Name</th><th>Type</th><th>Status</th></tr></thead>
-      <tbody>
-      {% for step in phase.steps %}
-      <tr>
-        <td>{{ step.id }}</td>
-        <td>{{ step.name }}</td>
-        <td>{{ step.get('type', '-') }}</td>
-        <td><span class="badge badge-{{ step.status }}">{{ step.status }}</span></td>
-      </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-{% endfor %}
-{% endif %}
+<div class="pipeline-stream-layout" id="pipeline-stream-root">
+
+  <!-- ── 왼쪽: 스텝 사이드바 ── -->
+  <div class="step-sidebar" id="step-sidebar">
+
+    <!-- Stage 1 -->
+    <div class="phase-divider">Stage 1 — 리서치</div>
+
+    <div class="step-card" id="sc-step_0" data-step="step_0">
+      <div class="step-icon">✓</div>
+      <div class="step-info">
+        <div class="step-id">step_0</div>
+        <div class="step-name">Preflight 검증</div>
+      </div>
+    </div>
+
+    <div class="step-card" id="sc-step_1a" data-step="step_1a">
+      <div class="step-icon">1a</div>
+      <div class="step-info">
+        <div class="step-id">step_1a</div>
+        <div class="step-name">Skeleton Researcher</div>
+      </div>
+      <div class="step-dur" id="dur-step_1a"></div>
+    </div>
+
+    <div class="step-card" id="sc-step_1b" data-step="step_1b">
+      <div class="step-icon">1b</div>
+      <div class="step-info">
+        <div class="step-id">step_1b</div>
+        <div class="step-name">Flesh Researcher</div>
+      </div>
+      <div class="step-dur" id="dur-step_1b"></div>
+    </div>
+
+    <!-- Stage 2 -->
+    <div class="phase-divider">Stage 2 — 원고 + 연출</div>
+
+    <div class="step-card" id="sc-step_2_draft" data-step="step_2_draft">
+      <div class="step-icon">2d</div>
+      <div class="step-info">
+        <div class="step-id">step_2_draft</div>
+        <div class="step-name">Draft Writer</div>
+      </div>
+      <div class="step-dur" id="dur-step_2_draft"></div>
+    </div>
+
+    <div class="step-card" id="sc-step_2_target" data-step="step_2_target">
+      <div class="step-icon">2t</div>
+      <div class="step-info">
+        <div class="step-id">step_2_target</div>
+        <div class="step-name">Targeted Researcher</div>
+      </div>
+      <div class="step-dur" id="dur-step_2_target"></div>
+    </div>
+
+    <div class="step-card" id="sc-step_2_manuscript" data-step="step_2_manuscript">
+      <div class="step-icon">2m</div>
+      <div class="step-info">
+        <div class="step-id">step_2_manuscript</div>
+        <div class="step-name">Script Director (원고)</div>
+      </div>
+      <div class="step-dur" id="dur-step_2_manuscript"></div>
+    </div>
+
+    <div class="step-card" id="sc-step_2" data-step="step_2">
+      <div class="step-icon">2</div>
+      <div class="step-info">
+        <div class="step-id">step_2</div>
+        <div class="step-name">Script Director (씬)</div>
+      </div>
+      <div class="step-dur" id="dur-step_2"></div>
+    </div>
+
+    <div class="step-card" id="sc-step_2_consistency" data-step="step_2_consistency">
+      <div class="step-icon">2c</div>
+      <div class="step-info">
+        <div class="step-id">step_2_consistency</div>
+        <div class="step-name">Consistency 보정</div>
+      </div>
+      <div class="step-dur" id="dur-step_2_consistency"></div>
+    </div>
+
+    <div class="step-card" id="sc-step_2_review" data-step="step_2_review">
+      <div class="step-icon">⚙</div>
+      <div class="step-info">
+        <div class="step-id">step_2_review</div>
+        <div class="step-name">래칫 리뷰 루프</div>
+      </div>
+      <div class="step-dur" id="dur-step_2_review"></div>
+    </div>
+
+    <div class="step-card" id="sc-step_2_data" data-step="step_2_data">
+      <div class="step-icon">2D</div>
+      <div class="step-info">
+        <div class="step-id">step_2_data</div>
+        <div class="step-name">Data Mapper</div>
+      </div>
+      <div class="step-dur" id="dur-step_2_data"></div>
+    </div>
+
+    <div class="step-card" id="sc-step_2b" data-step="step_2b">
+      <div class="step-icon">2b</div>
+      <div class="step-info">
+        <div class="step-id">step_2b</div>
+        <div class="step-name">Fact Verifier</div>
+      </div>
+      <div class="step-dur" id="dur-step_2b"></div>
+    </div>
+
+    <!-- Stage 3 -->
+    <div class="phase-divider">Stage 3 — 에셋 + 렌더링</div>
+
+    <div class="step-card" id="sc-step_3b" data-step="step_3b">
+      <div class="step-icon">3b</div>
+      <div class="step-info">
+        <div class="step-id">step_3b</div>
+        <div class="step-name">Assembly Director</div>
+      </div>
+      <div class="step-dur" id="dur-step_3b"></div>
+    </div>
+
+    <div class="step-card" id="sc-step_3c" data-step="step_3c">
+      <div class="step-icon">3c</div>
+      <div class="step-info">
+        <div class="step-id">step_3c</div>
+        <div class="step-name">Upload Info Generator</div>
+      </div>
+      <div class="step-dur" id="dur-step_3c"></div>
+    </div>
+
+  </div><!-- /step-sidebar -->
+
+  <!-- ── 오른쪽: 스트리밍 캔버스 ── -->
+  <div class="stream-canvas" id="stream-canvas">
+
+    <!-- 탭 바 -->
+    <div class="stream-tabs">
+      <div class="stream-tab active" data-panel="events" onclick="switchStreamPanel('events', this)">이벤트 로그</div>
+      <div class="stream-tab" data-panel="manuscript" onclick="switchStreamPanel('manuscript', this)">📜 원고</div>
+      <div class="stream-tab" data-panel="scenes" onclick="switchStreamPanel('scenes', this)">🎬 씬스펙</div>
+      <div class="stream-tab" data-panel="skeleton" onclick="switchStreamPanel('skeleton', this)">🦴 리서치</div>
+    </div>
+
+    <!-- 헤더 -->
+    <div class="stream-header">
+      <span class="stream-title" id="stream-step-label">파이프라인 대기 중</span>
+      <div class="stream-meta">
+        <span id="stream-status-dot" style="color:var(--energy-ink-low)">●</span>
+        <span id="stream-elapsed">—</span>
+        <span id="stream-chars" style="display:none"></span>
+      </div>
+    </div>
+
+    <!-- 이벤트 로그 패널 -->
+    <div id="panel-events" class="event-log" style="flex:1;overflow-y:auto;">
+      <div class="event-row">
+        <span class="event-ts">—</span>
+        <span class="event-type info">대기</span>
+        <span class="event-body">파이프라인 시작을 기다리는 중...</span>
+      </div>
+    </div>
+
+    <!-- 원고 패널 -->
+    <div id="panel-manuscript" class="stream-body" style="display:none;">
+      <span class="placeholder">원고가 생성되면 여기에 실시간으로 표시됩니다.</span>
+    </div>
+
+    <!-- 씬스펙 패널 -->
+    <div id="panel-scenes" class="scene-stream-list" style="display:none; flex:1; overflow-y:auto;">
+      <div style="color:var(--energy-ink-low);font-family:sans-serif;font-size:13px;">
+        씬이 생성되면 여기에 표시됩니다.
+      </div>
+    </div>
+
+    <!-- 리서치/스켈레톤 패널 -->
+    <div id="panel-skeleton" class="skeleton-stream" style="display:none; flex:1; overflow-y:auto;">
+      <div style="color:var(--energy-ink-low);font-family:sans-serif;font-size:13px;">
+        리서치 결과가 생성되면 여기에 표시됩니다.
+      </div>
+    </div>
+
+  </div><!-- /stream-canvas -->
+
+</div><!-- /pipeline-stream-layout -->
 
 {% if runs %}
-<div class="card">
-  <h3>Execution History</h3>
-  <table>
+<!-- 실행 이력 -->
+<div class="card" style="margin:0 20px 20px;background:var(--energy-bg-card);">
+  <h3 style="font-size:13px;margin:0 0 10px;color:var(--energy-ink-mid);">실행 이력</h3>
+  <table style="font-size:11px;">
     <thead>
-      <tr><th>Phase</th><th>Step</th><th>Agent/Module</th><th>Status</th><th>Duration</th><th>Cost</th><th>Time</th></tr>
+      <tr>
+        <th>Phase</th><th>Step</th><th>Agent</th><th>Status</th><th>Duration</th><th>Cost</th><th>Time</th>
+      </tr>
     </thead>
     <tbody>
     {% for r in runs %}
     <tr>
       <td>{{ r.phase }}</td>
-      <td>{{ r.step_name or r.step }}</td>
+      <td style="font-family:monospace">{{ r.step_name or r.step }}</td>
       <td>{{ r.agent_or_module or '-' }}</td>
       <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
       <td>{% if r.duration_sec %}{{ "%.1f"|format(r.duration_sec) }}s{% else %}-{% endif %}</td>
       <td>{% if r.cost_usd %}${{ "%.4f"|format(r.cost_usd) }}{% else %}-{% endif %}</td>
-      <td style="font-size:12px;color:var(--text-muted)">{{ (r.started_at or r.created_at)[:16] }}</td>
+      <td style="color:var(--energy-ink-low)">{{ (r.started_at or r.created_at or '')[:16] }}</td>
     </tr>
     {% endfor %}
     </tbody>
   </table>
 </div>
-{% else %}
-<div class="empty">No pipeline runs recorded yet.</div>
 {% endif %}
+
+<script>
+(function () {
+  const slug = "{{ slug }}";
+  if (!slug) return;
+
+  // ── 스텝 메타 (정렬 순서 + 라벨) ──
+  const STEP_META = {
+    step_0:            { label:"Preflight",             icon:"✓" },
+    step_1a:           { label:"Skeleton Researcher",   icon:"1a" },
+    step_1b:           { label:"Flesh Researcher",      icon:"1b" },
+    step_2_draft:      { label:"Draft Writer",          icon:"2d" },
+    step_2_target:     { label:"Targeted Researcher",   icon:"2t" },
+    step_2_manuscript: { label:"Script Director (원고)", icon:"2m" },
+    step_2:            { label:"Script Director (씬)",   icon:"2"  },
+    step_2_consistency:{ label:"Consistency 보정",       icon:"2c" },
+    step_2_review:     { label:"래칫 리뷰",               icon:"⚙"  },
+    step_2_data:       { label:"Data Mapper",           icon:"2D" },
+    step_2b:           { label:"Fact Verifier",         icon:"2b" },
+    step_3b:           { label:"Assembly Director",     icon:"3b" },
+    step_3c:           { label:"Upload Info",           icon:"3c" },
+  };
+
+  let currentPanel = 'events';
+  let startTs = null;
+  let elapsedTimer = null;
+  let lastManuscriptText = "";
+
+  // ── 패널 전환 ──
+  window.switchStreamPanel = function(panelId, tabEl) {
+    document.querySelectorAll('.stream-tab').forEach(t => t.classList.remove('active'));
+    if (tabEl) tabEl.classList.add('active');
+    ['events','manuscript','scenes','skeleton'].forEach(id => {
+      const el = document.getElementById('panel-' + id);
+      if (el) el.style.display = id === panelId ? (id === 'events' ? 'flex' : 'block') : 'none';
+    });
+    currentPanel = panelId;
+    // events 패널은 flex-direction:column이라 flex 필요
+    const evEl = document.getElementById('panel-events');
+    if (evEl && panelId === 'events') evEl.style.display = 'flex';
+  };
+
+  // ── 스텝 카드 상태 업데이트 ──
+  function setStepStatus(stepId, status, durText) {
+    const card = document.getElementById('sc-' + stepId);
+    if (!card) return;
+    card.className = 'step-card ' + status;
+    const iconEl = card.querySelector('.step-icon');
+    if (iconEl) {
+      if (status === 'completed') iconEl.textContent = '✓';
+      else if (status === 'failed') iconEl.textContent = '✗';
+      else if (status === 'running') iconEl.innerHTML = '<span class="running-dot">●</span>';
+      else iconEl.textContent = (STEP_META[stepId] || {}).icon || stepId.slice(-2);
+    }
+    if (durText) {
+      const durEl = document.getElementById('dur-' + stepId);
+      if (durEl) durEl.textContent = durText;
+    }
+  }
+
+  // ── 이벤트 로그에 행 추가 ──
+  function addEventRow(ts, type, body) {
+    const feed = document.getElementById('panel-events');
+    if (!feed) return;
+    const row = document.createElement('div');
+    row.className = 'event-row';
+    const time = ts ? ts.slice(11,19) : new Date().toTimeString().slice(0,8);
+    row.innerHTML = `<span class="event-ts">${time}</span>
+      <span class="event-type ${type}">${type}</span>
+      <span class="event-body">${escapeHtml(body)}</span>`;
+    // 빈 placeholder 제거
+    const placeholder = feed.querySelector('.event-row:first-child .event-type.info');
+    if (placeholder && placeholder.textContent === '대기') feed.innerHTML = '';
+    feed.appendChild(row);
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ── 현재 스텝 헤더 갱신 ──
+  function setStreamLabel(label, running) {
+    const el = document.getElementById('stream-step-label');
+    if (el) el.textContent = label;
+    const dot = document.getElementById('stream-status-dot');
+    if (dot) {
+      dot.textContent = '●';
+      dot.style.color = running ? 'var(--energy-cyan)' : 'var(--energy-mint)';
+      if (running) dot.style.animation = 'pulse-dot 1.5s ease infinite';
+      else dot.style.animation = '';
+    }
+  }
+
+  // ── elapsed 타이머 ──
+  function startElapsed() {
+    if (elapsedTimer) clearInterval(elapsedTimer);
+    startTs = Date.now();
+    elapsedTimer = setInterval(() => {
+      const sec = Math.floor((Date.now() - startTs) / 1000);
+      const el = document.getElementById('stream-elapsed');
+      if (el) el.textContent = sec < 60 ? sec + 's' : Math.floor(sec/60) + 'm ' + (sec%60) + 's';
+    }, 1000);
+  }
+  function stopElapsed() {
+    if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; }
+    const el = document.getElementById('stream-elapsed');
+    if (el) el.textContent = '—';
+  }
+
+  // ── 원고 word-by-word 갱신 ──
+  function applyManuscript(text) {
+    const el = document.getElementById('panel-manuscript');
+    if (!el) return;
+
+    // 글자수 표시
+    const ch = document.getElementById('stream-chars');
+    if (ch) { ch.style.display = ''; ch.textContent = text.length + '자'; }
+
+    if (!text) {
+      el.innerHTML = '<span class="placeholder">원고가 생성되면 여기에 실시간으로 표시됩니다.</span>';
+      lastManuscriptText = "";
+      return;
+    }
+
+    // 이전 텍스트가 prefix가 아닌 경우 → 통째로 렌더
+    if (lastManuscriptText && text.startsWith(lastManuscriptText)) {
+      const newPart = text.slice(lastManuscriptText.length);
+      if (!newPart.trim()) { lastManuscriptText = text; return; }
+      const words = newPart.split(/(\s+)/);
+      const frag = document.createDocumentFragment();
+      words.forEach((w) => {
+        if (!w) return;
+        if (/^\s+$/.test(w)) {
+          frag.appendChild(document.createTextNode(w));
+        } else {
+          const span = document.createElement('span');
+          span.className = 'word-new';
+          span.textContent = w;
+          frag.appendChild(span);
+        }
+      });
+      el.appendChild(frag);
+    } else {
+      // 전체 재렌더 (초기 스냅샷)
+      el.textContent = text;
+    }
+    lastManuscriptText = text;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  // ── 씬스펙 갱신 ──
+  function applyScenes(data) {
+    const el = document.getElementById('panel-scenes');
+    if (!el) return;
+    const scenes = data.scenes || [];
+    if (!scenes.length) return;
+    el.innerHTML = '';
+    scenes.forEach((scene) => {
+      const card = document.createElement('div');
+      card.className = 'scene-stream-card';
+      card.innerHTML = `<div class="scene-stream-num">#${scene.sceneNumber || '?'}  ${escapeHtml(scene.title || '')}</div>
+        <div class="scene-stream-narr">${escapeHtml((scene.narration || '').slice(0, 200))}${(scene.narration||'').length>200?'…':''}</div>`;
+      el.appendChild(card);
+    });
+  }
+
+  // ── 스켈레톤/아웃라인 갱신 ──
+  function applySkeletonData(data, label) {
+    const el = document.getElementById('panel-skeleton');
+    if (!el) return;
+    const card = document.createElement('div');
+    card.className = 'skeleton-event-card';
+    card.innerHTML = `<div class="se-label">${escapeHtml(label)}</div>
+      <div>${escapeHtml(JSON.stringify(data, null, 2).slice(0, 400))}</div>`;
+    if (el.querySelector('div[style]')) el.innerHTML = ''; // 초기 placeholder 제거
+    el.appendChild(card);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  // ── snapshot 적용 ──
+  function applySnapshot(snap) {
+    (snap.completed || []).forEach(id => setStepStatus(id, 'completed'));
+    (snap.failed   || []).forEach(id => setStepStatus(id, 'failed'));
+    (snap.skipped  || []).forEach(id => setStepStatus(id, 'skipped'));
+    if (snap.current_step) {
+      if (!snap.finished_at) {
+        setStepStatus(snap.current_step, 'running');
+        setStreamLabel((STEP_META[snap.current_step] || {}).label || snap.current_step, true);
+        startElapsed();
+      }
+    }
+    if (snap.finished_at) {
+      stopElapsed();
+      setStreamLabel('파이프라인 완료', false);
+    }
+  }
+
+  // ── SSE: 파이프라인 이벤트 ──
+  const evtSrc = new EventSource(`/api/p/${slug}/pipeline/events`);
+
+  evtSrc.addEventListener('snapshot', (e) => {
+    const snap = JSON.parse(e.data);
+    applySnapshot(snap);
+    if (snap.status === 'waiting') {
+      addEventRow(null, 'info', '파이프라인 시작 전 — 실행 대기 중');
+    }
+  });
+
+  evtSrc.addEventListener('live_update', (e) => {
+    const d = JSON.parse(e.data);
+    (d.completed || []).forEach(id => setStepStatus(id, 'completed'));
+    (d.failed    || []).forEach(id => setStepStatus(id, 'failed'));
+    (d.skipped   || []).forEach(id => setStepStatus(id, 'skipped'));
+  });
+
+  evtSrc.addEventListener('step_event', (e) => {
+    const entry = JSON.parse(e.data);
+    const evType = entry.event || 'info';
+    const stepName = entry.step_name || entry.step || '';
+    const agent = entry.agent || '';
+
+    if (evType === 'step_started') {
+      setStepStatus(entry.step, 'running');
+      setStreamLabel(stepName || agent, true);
+      startElapsed();
+      addEventRow(entry.ts, 'started', `${stepName} 시작 (${agent})`);
+    } else if (evType === 'step_completed') {
+      setStepStatus(entry.step, 'completed');
+      const dur = entry.duration_sec ? ` ${entry.duration_sec.toFixed(1)}s` : '';
+      const cost = entry.cost_usd ? ` $${entry.cost_usd.toFixed(4)}` : '';
+      const durEl = document.getElementById('dur-' + entry.step);
+      if (durEl && dur) durEl.textContent = dur.trim();
+      stopElapsed();
+      addEventRow(entry.ts, 'completed', `${stepName} 완료${dur}${cost}`);
+    } else if (evType === 'step_failed') {
+      setStepStatus(entry.step, 'failed');
+      stopElapsed();
+      addEventRow(entry.ts, 'failed', `${stepName} 실패 — ${entry.error || ''}`);
+    } else if (evType === 'pipeline_finished') {
+      stopElapsed();
+      setStreamLabel('파이프라인 완료', false);
+      addEventRow(entry.ts, 'completed', '파이프라인 전체 완료');
+    }
+  });
+
+  evtSrc.addEventListener('pipeline_finished', (e) => {
+    const d = JSON.parse(e.data);
+    stopElapsed();
+    setStreamLabel('파이프라인 완료', false);
+    (d.completed || []).forEach(id => setStepStatus(id, 'completed'));
+    (d.failed    || []).forEach(id => setStepStatus(id, 'failed'));
+    addEventRow(null, 'completed', '파이프라인 완료');
+  });
+
+  evtSrc.onerror = () => {
+    addEventRow(null, 'info', 'SSE 연결 끊김 — 재연결 중...');
+  };
+
+  // ── SSE: 파일 스트림 ──
+  const fileSrc = new EventSource(`/api/p/${slug}/pipeline/stream`);
+
+  fileSrc.addEventListener('manuscript_updated', (e) => {
+    const d = JSON.parse(e.data);
+    applyManuscript(d.text || '');
+    // 원고 탭으로 자동 전환 (현재 events 탭인 경우만)
+    if (currentPanel === 'events') {
+      switchStreamPanel('manuscript', document.querySelector('.stream-tab[data-panel="manuscript"]'));
+    }
+  });
+
+  fileSrc.addEventListener('draft_updated', (e) => {
+    const d = JSON.parse(e.data);
+    // draft.md → 원고 패널에 표시 (final_manuscript 없는 동안)
+    if (!lastManuscriptText) {
+      applyManuscript(d.text || '');
+    }
+    addEventRow(null, 'info', `초고 업데이트 (${d.chars || 0}자)`);
+  });
+
+  fileSrc.addEventListener('scene_specs_updated', (e) => {
+    const d = JSON.parse(e.data);
+    applyScenes(d.data || {});
+    addEventRow(null, 'info', `씬스펙 업데이트 (${(d.data && d.data.scenes ? d.data.scenes.length : 0)}씬)`);
+  });
+
+  fileSrc.addEventListener('skeleton_updated', (e) => {
+    const d = JSON.parse(e.data);
+    applySkeletonData(d.data || {}, '스켈레톤');
+    addEventRow(null, 'info', '스켈레톤 생성 완료');
+  });
+
+  fileSrc.addEventListener('outline_updated', (e) => {
+    const d = JSON.parse(e.data);
+    applySkeletonData(d.data || {}, '아웃라인');
+    addEventRow(null, 'info', '아웃라인 생성 완료');
+  });
+
+  fileSrc.addEventListener('review_updated', (e) => {
+    addEventRow(null, 'info', '래칫 리뷰 완료');
+  });
+
+  fileSrc.addEventListener('claims_updated', (e) => {
+    addEventRow(null, 'info', '타겟 클레임 업데이트');
+  });
+
+  fileSrc.onerror = () => {};
+
+})();
+</script>
