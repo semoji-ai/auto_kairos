@@ -337,8 +337,7 @@ async def chartagent_page(request: Request):
 
 @router.post("/api/chartagent/generate")
 async def chartagent_generate():
-    if not CHARTAGENT_ROOT.exists():
-        return JSONResponse({"ok": False, "error": "chartagent 프로젝트를 찾을 수 없습니다."})
+    # CHARTAGENT_ROOT 없어도 _generate_chartagent_dashboard_sync 내부에서 자동 클론
     out_dir = get_workspace_dir() / "chartagent_dashboard"
     result = await asyncio.to_thread(_generate_chartagent_dashboard_sync, out_dir)
     return JSONResponse(result)
