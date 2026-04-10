@@ -91,6 +91,20 @@ auto-agent multi-contents --project <slug>              # 멀티포맷 (Stage 3 
 auto-agent dashboard                                    # http://localhost:8080
 ```
 
+### 대시보드 직접 실행 (uvicorn)
+
+```bash
+# 올바른 방법 — 루트 app.py가 진짜 대시보드
+python -m uvicorn app:app --host 0.0.0.0 --port 8080
+
+# 잘못된 방법 — auto_agent.dashboard.app:app 은 존재하지 않음
+```
+
+- **루트 `app.py`** = 실제 대시보드 엔트리 포인트
+- `auto_agent/dashboard/` 폴더의 템플릿/라우터를 서빙
+- 탭: 리서치 / 원고 / 스토리보드 / 스튜디오 / 업로드 / 멀티 / 버전 / 에이전트 / 파이프라인
+- 대시보드는 1개, 별도의 "구버전"은 없음
+
 ### 스텝 ID
 
 | 스텝 | 에이전트/모듈 | 설명 |
