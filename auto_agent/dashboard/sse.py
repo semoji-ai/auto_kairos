@@ -171,6 +171,18 @@ async def _file_stream_generator(project_dir: Path, request: Request):
         p = project_dir / rel
         mtimes[rel] = p.stat().st_mtime if p.exists() else 0.0
 
+    # chapter_facts/ 폴더 내 파일 mtime 기록
+    chapter_facts_dir = project_dir / "chapter_facts"
+    chapter_mtimes: dict[str, float] = {}
+
+    def _scan_chapter_facts() -> dict[str, float]:
+        if not chapter_facts_dir.exists():
+            return {}
+        return {
+            str(p): p.stat().st_mtime
+            for p in sorted(chapter_facts_dir.glob("*.json"))
+        }
+
     # 초기 스냅샷: 이미 존재하는 파일은 즉시 전송
     for rel, event_type, is_text in _WATCH_FILES:
         p = project_dir / rel
@@ -184,6 +196,17 @@ async def _file_stream_generator(project_dir: Path, request: Request):
                 data = json.loads(p.read_text(encoding="utf-8"))
                 msg = {"type": event_type, "data": data}
             yield f"event: {event_type}\ndata: {json.dumps(msg, ensure_ascii=False)}\n\n"
+        except Exception:
+            pass
+
+    # chapter_facts/ 초기 스냅샷
+    chapter_mtimes = _scan_chapter_facts()
+    for path_str, _ in chapter_mtimes.items():
+        p = Path(path_str)
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            msg = {"type": "chapter_facts_updated", "chapter": p.stem, "data": data}
+            yield f"event: chapter_facts_updated\ndata: {json.dumps(msg, ensure_ascii=False)}\n\n"
         except Exception:
             pass
 
@@ -208,6 +231,19 @@ async def _file_stream_generator(project_dir: Path, request: Request):
                     yield f"event: {event_type}\ndata: {json.dumps(msg, ensure_ascii=False)}\n\n"
             except Exception:
                 pass
+
+        # chapter_facts/ 폴더 변경 감지 (신규 파일 + 기존 파일 수정)
+        current = _scan_chapter_facts()
+        for path_str, mtime in current.items():
+            if mtime != chapter_mtimes.get(path_str, 0.0):
+                chapter_mtimes[path_str] = mtime
+                p = Path(path_str)
+                try:
+                    data = json.loads(p.read_text(encoding="utf-8"))
+                    msg = {"type": "chapter_facts_updated", "chapter": p.stem, "data": data}
+                    yield f"event: chapter_facts_updated\ndata: {json.dumps(msg, ensure_ascii=False)}\n\n"
+                except Exception:
+                    pass
 
         await asyncio.sleep(2.0)
 

@@ -539,6 +539,32 @@
 
   fileSrc.addEventListener('review_updated', e => addEventRow(null, 'info', '래칫 리뷰 완료'));
   fileSrc.addEventListener('claims_updated', e => addEventRow(null, 'info', '타겟 클레임 업데이트'));
+
+  // chapter_facts/ 폴더 — 챕터별 리서치 완료 시 실시간 표시
+  fileSrc.addEventListener('chapter_facts_updated', e => {
+    const d = JSON.parse(e.data);
+    const chapter = d.chapter || '?';
+    const data = d.data || {};
+    const body = document.getElementById('skeleton-body');
+    if (body) {
+      const existingId = 'chapter-card-' + chapter;
+      let card = document.getElementById(existingId);
+      if (!card) {
+        card = document.createElement('div');
+        card.id = existingId;
+        card.style.cssText = 'margin-bottom:8px;padding:8px;background:rgba(0,220,255,0.06);border-radius:6px;border:1px solid rgba(0,220,255,0.15);';
+        if (body.querySelector('span')) body.innerHTML = '';
+        body.appendChild(card);
+      }
+      const claimCount = (data.claims || data.facts || []).length;
+      card.innerHTML = `<div style="font-size:10px;font-weight:700;color:var(--energy-cyan);margin-bottom:4px;">📄 ${escapeHtml(chapter)}</div>
+        <div style="font-size:11px;color:var(--energy-ink-mid);">클레임 ${claimCount}개 수집 완료</div>
+        <pre style="font-size:10px;white-space:pre-wrap;color:var(--energy-ink-low);margin:4px 0 0;max-height:80px;overflow:hidden;">${escapeHtml(JSON.stringify(data, null, 2).slice(0,300))}</pre>`;
+      body.scrollTop = body.scrollHeight;
+    }
+    addEventRow(null, 'info', `챕터 리서치 완료: ${chapter}`);
+  });
+
   fileSrc.onerror = () => {};
 
 })();
