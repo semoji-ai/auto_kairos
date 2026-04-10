@@ -2,6 +2,52 @@
   "$schema": "./docs/agents-schema.json",
   "description": "Auto Agent 에이전트 정의 — 3단계 파이프라인용",
   "agents": {
+    "skeleton-researcher": {
+      "description": "Wikipedia + 권위 소스 → 타임라인/핵심인물/챕터 골격 확립. flesh-researcher를 위한 research_focus 질문 생성.",
+      "model": "sonnet",
+      "max_turns": 30,
+      "budget": "$0.8",
+      "max_duration_minutes": 15,
+      "allowed_tools": ["Read", "Write", "WebSearch", "WebFetch"],
+      "skill_file": "agents/skeleton-researcher/SKILL.md",
+      "notes": "Stage 1 Phase 0. 세부 팩트 리서치 X — 뼈대만."
+    },
+    "flesh-researcher": {
+      "description": "outline.json 챕터별 세부 팩트 수집. Task 도구로 챕터별 병렬 배포 → chapter_facts/",
+      "model": "sonnet",
+      "max_turns": 50,
+      "budget": "$2.0",
+      "max_duration_minutes": 25,
+      "allowed_tools": ["Read", "Write", "Glob", "WebSearch", "WebFetch", "Task"],
+      "skill_file": "agents/flesh-researcher/SKILL.md",
+      "notes": "Stage 1 Phase 1. research-orchestrator 패턴으로 챕터별 병렬 탐색."
+    },
+    "draft-writer": {
+      "description": "outline + chapter_facts → 초고(draft.md) + 리서치 질문(research_questions.json). 쓰면서 WHY/HOW 질문 생성.",
+      "model": "opus",
+      "max_turns": 60,
+      "budget": "$3.0",
+      "max_duration_minutes": 35,
+      "use_sdk": true,
+      "allowed_tools": ["Read", "Write", "Glob"],
+      "skill_file": "agents/draft-writer/SKILL.md",
+      "shared_skills": [
+        "shared/writing-style",
+        "shared/writing-style-semoji",
+        "shared/writing-style-iromism"
+      ],
+      "notes": "Stage 2 Phase 2. SDK 모드 (prompt caching). 로컬 파일만 접근."
+    },
+    "targeted-researcher": {
+      "description": "research_questions.json → 정밀 웹 리서치로 WHY/HOW 질문 답변 → targeted_claims.json",
+      "model": "sonnet",
+      "max_turns": 40,
+      "budget": "$1.5",
+      "max_duration_minutes": 20,
+      "allowed_tools": ["Read", "Write", "WebSearch", "WebFetch"],
+      "skill_file": "agents/targeted-researcher/SKILL.md",
+      "notes": "Stage 2 Phase 3. draft-writer의 의문 사항을 정밀 리서치로 해결."
+    },
     "research-orchestrator": {
       "description": "심층 리서치 탐색 전담. Explorer 병렬 배포 → 탐색 완료 → 종료.",
       "model": "sonnet",

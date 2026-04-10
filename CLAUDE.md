@@ -57,20 +57,24 @@
 
 | 에이전트 | Stage | 모델 | 입력 | 출력 |
 |----------|-------|------|------|------|
-| research-orchestrator | 1 | opus | 주제/기획안 | research_report.json |
-| script-director | 2 | opus | research_report.json | scene_specs.json |
-| data-mapper | 2 | sonnet | scene_specs + research_digest | scene_specs.json (데이터) |
-| script-reviewer | 2 | sonnet | scene_specs.json | review_feedback.json |
-| fact-verifier | 2 | sonnet | scene_specs.json | factcheck_report.json |
-| assembly-director | 3 | opus | scene_specs.json | TTS + 이미지 + 자막 + 영상 |
-| upload-info-generator | 3-1 | sonnet | scene_specs + manifest | upload_info.json |
+| skeleton-researcher | 1a | opus | 주제/기획안 | skeleton.json + outline.json |
+| flesh-researcher | 1b | opus | outline.json | chapter_facts/ |
+| draft-writer | 2_draft | opus | outline.json + chapter_facts/ | draft.md + research_questions.json |
+| targeted-researcher | 2_target | sonnet | research_questions.json | targeted_claims.json |
+| script-director (manuscript) | 2_manuscript | opus | draft.md + targeted_claims.json | final_manuscript.md |
+| script-director (chapters) | 2 | opus | final_manuscript.md | scene_specs.json |
+| data-mapper | 2_data | sonnet | scene_specs + targeted_claims | scene_specs.json (데이터) |
+| script-reviewer | 2_review | sonnet | scene_specs.json | review_feedback.json |
+| fact-verifier | 2b | sonnet | scene_specs.json | factcheck_report.json |
+| assembly-director | 3b | opus | scene_specs.json | TTS + 이미지 + 자막 + 영상 |
+| upload-info-generator | 3c | sonnet | scene_specs + manifest | upload_info.json |
 | multi-contents-director | — | sonnet | scene_specs + manifest | 쇼츠/블로그/카드뉴스/스레드 |
 
 ### 데이터 흐름
 
 ```
-볼트(NAS) → Stage 0 기획안 → Stage 1 리서치 → research_digest → Stage 2 원고+연출 → Stage 3 조립+렌더링 → Stage 4 성과분석 → 볼트
-                                                    ↑ 래칫 루프 (최대 3라운드)
+볼트(NAS) → Stage 0 기획안 → skeleton → chapter_facts/ → draft.md → targeted_claims → final_manuscript → scene_specs → Stage 3 조립+렌더링 → Stage 4 성과분석 → 볼트
+                                                                                                                  ↑ 래칫 루프 (최대 3라운드)
 ```
 
 ---
@@ -92,9 +96,14 @@ auto-agent dashboard                                    # http://localhost:8080
 | 스텝 | 에이전트/모듈 | 설명 |
 |------|-------------|------|
 | step_0 | preflight | API키, Node, ffmpeg 검증 |
-| step_1 | research-orchestrator | 심층 리서치 |
-| step_2 | script-director | 원고 + 씬 분할 + 연출 |
-| step_2_data | data-mapper | 리서치 데이터 매핑 |
+| step_1a | skeleton-researcher | Wikipedia → 내러티브 골격 + outline.json |
+| step_1b | flesh-researcher | 챕터별 세부 팩트 수집 → chapter_facts/ |
+| step_2_draft | draft-writer | 초고 + WHY/HOW 질문 목록 |
+| step_2_target | targeted-researcher | 정밀 웹 리서치 → targeted_claims.json |
+| step_2_manuscript | script-director (manuscript) | 최종 원고 prose 작성 |
+| step_2 | script-director (chapters) | 씬 분할 + 연출 결정 |
+| step_2_consistency | script-director (consistency) | 내러티브 흐름 보정 |
+| step_2_data | data-mapper | 데이터 필드 매핑 |
 | step_2_review | ratchet_loop | 래칫 리뷰 (90점, 최대 3라운드) |
 | step_2b | fact-verifier (비차단) | 팩트체크 |
 | step_3b | assembly-director | TTS + 이미지 + 자막 + 매니페스트 |

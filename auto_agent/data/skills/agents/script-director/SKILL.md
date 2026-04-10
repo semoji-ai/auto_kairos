@@ -92,7 +92,14 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 
 ### 모드 1.5: Manuscript Mode (`SCRIPT_DIRECTOR_MODE=manuscript`)
 
-**입력:** `outline.json` (필수, 컨텍스트에 인라인됨), `research_digest.json`, `<creative_brief>`, **`<reference_examples>` 참조 원고 블록 (필수)**, **`<vault_similar_videos>` 유사 영상 블록 (있으면)**
+**입력:**
+- `outline.json` (필수) — 챕터 구조 + 핵심 beats
+- `draft.md` (필수) — draft-writer가 작성한 초고. `[[Q:qXXX]]` 마킹 포함
+- `targeted_claims.json` (필수) — 타겟 리서처가 답변한 WHY/HOW 질문들
+- `<creative_brief>` (있으면)
+- `<reference_examples>` 참조 원고 블록 (필수)
+- `<vault_similar_videos>` 유사 영상 블록 (있으면)
+
 **출력:** `final_manuscript.md` 한 개. **씬 구분 없는 한 호흡 prose**.
 
 **이 모드의 단 하나의 임무 — 매력적인 prose 작성**
@@ -102,18 +109,39 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 
 **해야 할 일:**
 
-1. **outline.json을 먼저 Read** — `core_thesis`, `chapters[*].key_beats`, `emotional_arc`, `tone`을 머릿속에 새깁니다.
-2. **`<reference_examples>` 블록을 정독** — 이 톤/리듬/후킹 패턴을 그대로 따라야 합니다. 추상적 규칙이 아니라 실제 예시.
-3. **`<vault_similar_videos>` 블록이 있으면** 그 안의 매력 패턴(특히 첫 문장의 후킹, 전환부 연결어, 마지막 문장의 여운)을 참고합니다.
-4. **단일 흐름으로 작성** — 1막→2막→3막을 연결된 한 호흡으로. 씬 구분 표시(##, --, [씬1] 등) 절대 X. 단순 마크다운 본문.
-5. **분량**: project_config의 `duration_minutes` × 약 200~250자 (한국어 기준, 분당 약 80~100단어 발화 속도)
+1. **파일 읽기 순서**:
+   ```
+   Read("outline.json")          ← 챕터 구조, key_beats, emotional_arc
+   Read("draft.md")              ← 초고 흐름 + [[Q:qXXX]] 마킹 위치 파악
+   Read("targeted_claims.json")  ← 각 질문의 answer, evidence, confidence
+   ```
+
+2. **targeted_claims.json로 [[Q:qXXX]] 해소**:
+   - draft.md의 각 `[[Q:qXXX]]` 마킹을 찾아 `targeted_claims.json`에서 해당 `question_id`의 답변을 확인합니다.
+   - `confidence: "high"` 또는 `"medium"`: 그 answer/evidence를 prose에 자연스럽게 통합하세요.
+   - `confidence: "low"` 또는 `answer: null`: 그 부분은 단정 표현 없이 우회하거나 제거하세요. 확인 못 한 사실을 창작하지 마세요.
+   - 최종 원고에는 `[[Q:qXXX]]` 마킹을 남기지 마세요.
+
+3. **draft.md는 뼈대, 최종 원고는 살붙이기**:
+   - draft.md의 사실 흐름과 챕터 순서를 존중하되, prose를 완전히 재작성해 매력적으로 만드세요.
+   - 타겟 리서치의 구체적 수치/인용/에피소드를 직접 박아 넣으세요.
+   - `[[Q:qXXX]]`가 있던 자리에 실제 답변이 들어가면서 prose가 더 풍부해져야 합니다.
+
+4. **`<reference_examples>` 블록을 정독** — 이 톤/리듬/후킹 패턴을 그대로 따라야 합니다. 추상적 규칙이 아니라 실제 예시.
+
+5. **`<vault_similar_videos>` 블록이 있으면** 그 안의 매력 패턴(특히 첫 문장의 후킹, 전환부 연결어, 마지막 문장의 여운)을 참고합니다.
+
+6. **단일 흐름으로 작성** — 1막→2막→3막을 연결된 한 호흡으로. 씬 구분 표시(##, --, [씬1] 등) 절대 X. 단순 마크다운 본문.
+
+7. **분량**: project_config의 `duration_minutes` × 약 200~250자 (한국어 기준, 분당 약 80~100단어 발화 속도)
    - 1분 → 약 400자
    - 3분 → 약 1200자
    - 5분 → 약 2000자
    - 10분 → 약 4000자
-6. **이로미즘 톤** (writing_style이 iromism이면): 자문자답, 도발적 후킹, 일상 비유, 현장감 서술, 독자 호칭("여러분"), 격식체 + 감정 어미 혼용. 참조 원고의 리듬을 모방.
-7. **숫자, 인용, 장면**: 리서치(research_digest)의 vivid detail을 인용해 prose에 박아 넣으세요. 평이한 fact 나열 X.
-8. **씬을 의식하지 마세요** — 다음 모드(chapters)가 자연스럽게 자를 수 있도록 의미 단위(약 8~15초 분량의 문장 클러스터)가 자연스럽게 형성되면 충분합니다.
+
+8. **이로미즘 톤** (writing_style이 iromism이면): 자문자답, 도발적 후킹, 일상 비유, 현장감 서술, 독자 호칭("여러분"), 격식체 + 감정 어미 혼용. 참조 원고의 리듬을 모방.
+
+9. **씬을 의식하지 마세요** — 다음 모드(chapters)가 자연스럽게 자를 수 있도록 의미 단위(약 8~15초 분량의 문장 클러스터)가 자연스럽게 형성되면 충분합니다.
 
 **final_manuscript.md 형식 예시 (1분 영상):**
 ```markdown
@@ -131,6 +159,8 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 - ❌ JSON 출력 (이 모드는 마크다운만)
 - ❌ outline에 없는 새로운 thesis나 챕터 발산
 - ❌ 참조 원고를 무시하고 자기 톤대로 쓰기
+- ❌ targeted_claims에 없는 사실 창작 (confidence:low는 우회)
+- ❌ 최종 원고에 `[[Q:qXXX]]` 마킹 잔존
 
 **모드 1.5에서 작업이 끝나면 즉시 final_manuscript.md만 Write하고 종료하세요.**
 
