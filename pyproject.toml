@@ -29,6 +29,11 @@ dashboard = ["fastapi<1.0", "uvicorn", "jinja2", "python-multipart", "websockets
 subtitle = ["whisperx", "matplotlib"]
 sync = ["supabase>=2.0"]
 rag = ["sentence-transformers>=2.7", "chromadb>=0.5"]
+agents = [
+    # 로컬 에이전트 — pip install -e 로 설치 필요
+    # pip install -e /Users/jleavens_macmini/Projects/fontagent
+    # pip install -e /Users/jleavens_macmini/Projects/chartagent/src
+]
 all = [
     "fastapi<1.0", "uvicorn", "jinja2", "python-multipart", "websockets",
     "whisperx", "matplotlib",

@@ -72,6 +72,8 @@ app.include_router(manifest_router)
 app.include_router(design_presets_router)
 from auto_agent.dashboard.agent_messenger import router as messenger_router
 app.include_router(messenger_router)
+from auto_agent.dashboard.tools_routes import router as tools_router
+app.include_router(tools_router)
 
 DASHBOARD_DIR = Path(__file__).parent / "auto_agent" / "dashboard"
 DATA_DIR = get_data_dir()
@@ -93,6 +95,11 @@ if _bg_dir.exists():
 output_dir = workspace / "output"
 if output_dir.exists():
     app.mount("/output", StaticFiles(directory=str(output_dir)), name="output")
+
+# chartagent 정적 대시보드 서빙 (/chartagent-dash/ → workspace/chartagent_dashboard/)
+_chartagent_dash_dir = workspace / "chartagent_dashboard"
+_chartagent_dash_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/chartagent-dash", StaticFiles(directory=str(_chartagent_dash_dir), html=True), name="chartagent-dash")
 
 templates = Jinja2Templates(directory=str(DASHBOARD_DIR / "templates"))
 # Jinja2 필터 등록

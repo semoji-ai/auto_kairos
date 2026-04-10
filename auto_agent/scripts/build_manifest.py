@@ -483,6 +483,51 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 if k in ("baseTheme", "defaultBackground", "colors", "moods",
                          "layout", "map", "subtitle", "fonts", "typography")
             }
+
+    # chartagent_style.json이 있으면 design_preset에 병합
+    # (chartagent 스타일 명세서 → Remotion viz 컴포넌트에 자동 적용)
+    _chartagent_style_path = out_dir / "charts" / "chartagent_style.json"
+    if _chartagent_style_path.exists():
+        try:
+            _chartagent_style = json.loads(_chartagent_style_path.read_text(encoding="utf-8"))
+            _chartagent_preset = {
+                k: v for k, v in _chartagent_style.items()
+                if k in ("baseTheme", "colors", "moods", "fonts", "palette",
+                         "fontSizes", "radius", "chartagent")
+            }
+            if design_preset:
+                # 기존 design_preset 위에 chartagent 스타일 병합 (accent 등 덮어씀)
+                from auto_agent.modules.chartagent_adapter import merge_chartagent_into_design_tokens
+                design_preset = merge_chartagent_into_design_tokens(
+                    design_preset, _chartagent_style
+                )
+            else:
+                design_preset = _chartagent_preset
+        except Exception:
+            pass
+
+    # fontagent: 폰트 선택 위임 — DesignPreset.fonts 흡수
+    # (CreativeScene + 자막 + chartagent viz 컴포넌트 모두 이 폰트를 사용)
+    try:
+        from auto_agent.modules.fontagent_adapter import get_project_fonts
+        _dominant_mood = specs.get("meta", {}).get("mood", "informative")
+        if not _dominant_mood:
+            # scene_specs에서 대표 mood 추출 (가장 많이 등장한 mood)
+            from collections import Counter as _Counter
+            _mood_counts = _Counter(
+                s.get("mood") or "informative"
+                for s in specs.get("scenes", [])
+                if isinstance(s, dict)
+            )
+            _dominant_mood = _mood_counts.most_common(1)[0][0] if _mood_counts else "informative"
+        _fontagent_fonts = get_project_fonts(mood=_dominant_mood)
+        if _fontagent_fonts:
+            design_preset = design_preset or {}
+            # 기존 fonts를 fontagent가 선택한 폰트로 덮어씀 (단일 권한)
+            design_preset["fonts"] = _fontagent_fonts
+    except Exception:
+        pass
+
     manifest = {
         "meta": {
             "topic": topic,
