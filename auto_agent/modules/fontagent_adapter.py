@@ -23,10 +23,14 @@ CreativeScene, 자막, chartagent viz 컴포넌트 모두 이 어댑터를 통�
 from __future__ import annotations
 
 import json
+import logging
 import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # 환경변수 우선, 없으면 ~/Projects/fontagent 기본값
 FONTAGENT_ROOT = Path(os.environ.get("FONTAGENT_ROOT", Path.home() / "Projects" / "fontagent"))
@@ -176,6 +180,12 @@ def get_project_fonts(
     DesignPreset.fonts 형식 dict (비어 있으면 fontagent 실패)
     """
     if not FONTAGENT_ROOT.exists():
+        logger.debug("fontagent 루트 없음 — 기본 폰트 사용: %s", FONTAGENT_ROOT)
+        return {}
+
+    vault_dir = FONTAGENT_ROOT / "vault"
+    if not vault_dir.exists() or not any(vault_dir.iterdir()):
+        logger.debug("fontagent vault 비어있음 — 폰트 추천 생략")
         return {}
 
     try:
@@ -183,7 +193,8 @@ def get_project_fonts(
         if not rec:
             return {}
         return fonts_to_design_preset(rec, fallback=fallback)
-    except Exception:
+    except Exception as e:
+        logger.warning("fontagent 폰트 추천 실패 (기본 폰트 사용): %s", e)
         return {}
 
 
@@ -201,7 +212,7 @@ def _recommend_use_case(
 ) -> list[dict[str, Any]]:
     """fontagent CLI recommend-use-case 호출 → results 반환."""
     cmd = [
-        "python3", "-m", "fontagent.cli",
+        sys.executable, "-m", "fontagent.cli",
         "--root", str(FONTAGENT_ROOT),
         "recommend-use-case",
         "--medium", medium,
@@ -223,10 +234,25 @@ def _recommend_use_case(
             timeout=30,
         )
         if result.returncode != 0:
+            logger.warning(
+                "fontagent recommend-use-case 실패 (returncode=%d) — %s",
+                result.returncode,
+                result.stderr[:200] if result.stderr else "(stderr 없음)",
+            )
             return []
         data = json.loads(result.stdout)
         return data.get("results", [])
-    except Exception:
+    except json.JSONDecodeError as e:
+        logger.warning("fontagent 응답 JSON 파싱 실패: %s", e)
+        return []
+    except subprocess.TimeoutExpired:
+        logger.warning("fontagent CLI 타임아웃 (30s) — vault 준비 안 됐을 가능성")
+        return []
+    except FileNotFoundError:
+        logger.warning("fontagent CLI 실행 불가 — python 환경 확인 필요: %s", cmd[0])
+        return []
+    except Exception as e:
+        logger.warning("fontagent CLI 예외: %s", e)
         return []
 
 
