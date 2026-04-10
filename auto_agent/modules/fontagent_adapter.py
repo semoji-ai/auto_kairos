@@ -23,12 +23,13 @@ CreativeScene, 자막, chartagent viz 컴포넌트 모두 이 어댑터를 통�
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from pathlib import Path
 from typing import Any
 
-# fontagent 프로젝트 루트
-FONTAGENT_ROOT = Path("/Users/jleavens_macmini/Projects/fontagent")
+# 환경변수 우선, 없으면 ~/Projects/fontagent 기본값
+FONTAGENT_ROOT = Path(os.environ.get("FONTAGENT_ROOT", Path.home() / "Projects" / "fontagent"))
 
 # mood → fontagent tone 매핑
 _MOOD_TO_TONE: dict[str, str] = {

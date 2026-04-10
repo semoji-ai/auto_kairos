@@ -9,6 +9,7 @@ chartagent: 정적 HTML 갤러리 생성 → /chartagent-dash/ 경로로 서빙
 from __future__ import annotations
 
 import asyncio
+import os
 import subprocess
 import socket
 import threading
@@ -22,8 +23,9 @@ from auto_agent.paths import get_workspace_dir
 
 router = APIRouter(prefix="/tools", tags=["tools"])
 
-FONTAGENT_ROOT = Path("/Users/jleavens_macmini/Projects/fontagent")
-CHARTAGENT_ROOT = Path("/Users/jleavens_macmini/Projects/chartagent")
+# 환경변수 우선, 없으면 ~/Projects/{name} 기본값
+FONTAGENT_ROOT = Path(os.environ.get("FONTAGENT_ROOT", Path.home() / "Projects" / "fontagent"))
+CHARTAGENT_ROOT = Path(os.environ.get("CHARTAGENT_ROOT", Path.home() / "Projects" / "chartagent"))
 FONTAGENT_PORT = 8123
 
 _fontagent_proc: subprocess.Popen | None = None

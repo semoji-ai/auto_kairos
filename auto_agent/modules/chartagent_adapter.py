@@ -317,7 +317,7 @@ def run_chartagent_for_scene(
     task_path.write_text(json.dumps(chart_task, ensure_ascii=False, indent=2), encoding="utf-8")
 
     import os
-    chartagent_src = Path("/Users/jleavens_macmini/Projects/chartagent/src")
+    chartagent_src = Path(os.environ.get("CHARTAGENT_ROOT", Path.home() / "Projects" / "chartagent")) / "src"
     env = {**os.environ}
     pythonpath = str(chartagent_src)
     if "PYTHONPATH" in env:
