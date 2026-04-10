@@ -3136,6 +3136,24 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         # 프롬프트를 stdin으로 전달
         prompt_text = prompt_file.read_text(encoding="utf-8")
 
+        # 원고 생성 스텝은 stream-json 모드로 실시간 스트리밍
+        _STREAMING_STEPS = {"step_2_draft", "step_2_manuscript"}
+        stream_file: Optional[Path] = None
+        if step_id in _STREAMING_STEPS:
+            # --output-format json → stream-json 으로 교체
+            stream_cmd = []
+            i = 0
+            while i < len(cmd):
+                if cmd[i] == "--output-format" and i + 1 < len(cmd) and cmd[i+1] == "json":
+                    stream_cmd.extend(["--output-format", "stream-json"])
+                    i += 2
+                else:
+                    stream_cmd.append(cmd[i])
+                    i += 1
+            cmd = stream_cmd
+            stream_file = self.project_dir / ".manuscript_stream.md"
+            stream_file.write_text("", encoding="utf-8")  # 초기화
+
         _popen_flags3 = subprocess_kwargs()
         try:
             proc = subprocess.Popen(
@@ -3148,15 +3166,71 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 text=True, encoding="utf-8",
                 **_popen_flags3,
             )
-            try:
-                stdout, stderr = proc.communicate(input=prompt_text, timeout=timeout_sec)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                proc.communicate()
-                return StepResult(
-                    step_id=step_id, status="failed",
-                    error=f"Claude CLI 타임아웃 ({timeout_sec}s)",
-                )
+
+            if stream_file is not None:
+                # 스트리밍 모드: 스레드로 stdin/stdout/stderr 동시 처리
+                stdout_lines: list[str] = []
+                stderr_lines: list[str] = []
+                accumulated_text: list[str] = []
+
+                def _write_stdin():
+                    try:
+                        proc.stdin.write(prompt_text)
+                        proc.stdin.close()
+                    except Exception:
+                        pass
+
+                def _read_stdout():
+                    for line in proc.stdout:
+                        stdout_lines.append(line)
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            data = json.loads(line)
+                            if data.get("type") == "assistant":
+                                for block in data.get("message", {}).get("content", []):
+                                    if block.get("type") == "text":
+                                        accumulated_text.append(block["text"])
+                                        try:
+                                            stream_file.write_text(
+                                                "".join(accumulated_text), encoding="utf-8"
+                                            )
+                                        except Exception:
+                                            pass
+                        except (json.JSONDecodeError, KeyError):
+                            pass
+
+                def _read_stderr():
+                    for line in proc.stderr:
+                        stderr_lines.append(line)
+
+                t_in = threading.Thread(target=_write_stdin, daemon=True)
+                t_out = threading.Thread(target=_read_stdout, daemon=True)
+                t_err = threading.Thread(target=_read_stderr, daemon=True)
+                t_in.start(); t_out.start(); t_err.start()
+                try:
+                    proc.wait(timeout=timeout_sec)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait()
+                    return StepResult(
+                        step_id=step_id, status="failed",
+                        error=f"Claude CLI 타임아웃 ({timeout_sec}s)",
+                    )
+                t_in.join(); t_out.join(timeout=5); t_err.join(timeout=5)
+                stdout = "".join(stdout_lines)
+                stderr = "".join(stderr_lines)
+            else:
+                try:
+                    stdout, stderr = proc.communicate(input=prompt_text, timeout=timeout_sec)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.communicate()
+                    return StepResult(
+                        step_id=step_id, status="failed",
+                        error=f"Claude CLI 타임아웃 ({timeout_sec}s)",
+                    )
 
             # subprocess.run 호환 객체 생성
             class _Result:

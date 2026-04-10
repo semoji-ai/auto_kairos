@@ -153,13 +153,14 @@ async def _event_generator(project_dir: Path, request: Request):
 
 # 감시 대상 파일 목록 (경로 상대, 이벤트 type, 텍스트 여부)
 _WATCH_FILES: list[tuple[str, str, bool]] = [
-    ("skeleton.json",          "skeleton_updated",     False),
-    ("outline.json",           "outline_updated",      False),
-    ("draft.md",               "draft_updated",        True),
-    ("final_manuscript.md",    "manuscript_updated",   True),
-    ("scene_specs.json",       "scene_specs_updated",  False),
-    ("review_feedback.json",   "review_updated",       False),
-    ("targeted_claims.json",   "claims_updated",       False),
+    ("skeleton.json",            "skeleton_updated",           False),
+    ("outline.json",             "outline_updated",            False),
+    (".manuscript_stream.md",    "manuscript_stream_updated",  True),
+    ("draft.md",                 "draft_updated",              True),
+    ("final_manuscript.md",      "manuscript_updated",         True),
+    ("scene_specs.json",         "scene_specs_updated",        False),
+    ("review_feedback.json",     "review_updated",             False),
+    ("targeted_claims.json",     "claims_updated",             False),
 ]
 
 

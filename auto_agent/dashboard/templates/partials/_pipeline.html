@@ -256,6 +256,9 @@
   font-size: 13px;
   line-height: 1.6;
 }
+#manuscript-body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+}
 </style>
 
 <script>
@@ -507,6 +510,12 @@
 
   // ── SSE: 파일 스트림 ──
   const fileSrc = new EventSource(`/api/p/${slug}/pipeline/stream`);
+
+  // 실시간 스트리밍 (stream-json 모드 — 원고 생성 중)
+  fileSrc.addEventListener('manuscript_stream_updated', e => {
+    const d = JSON.parse(e.data);
+    if (d.text) applyManuscript(d.text);
+  });
 
   fileSrc.addEventListener('manuscript_updated', e => {
     const d = JSON.parse(e.data);
