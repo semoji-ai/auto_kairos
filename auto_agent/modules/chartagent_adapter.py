@@ -324,7 +324,8 @@ def run_chartagent_for_scene(
         pythonpath = f"{pythonpath}:{env['PYTHONPATH']}"
     env["PYTHONPATH"] = pythonpath
 
-    # chartagent CLI를 python3.12으로 직접 실행
+    # chartagent CLI를 현재 Python으로 직접 실행 (python3.12 하드코딩 제거)
+    import sys as _sys
     runner_script = (
         "import sys;"
         f" sys.path.insert(0, r'{chartagent_src}');"
@@ -334,7 +335,7 @@ def run_chartagent_for_scene(
         " from chartagent.cli import main; main()"
     )
     result = subprocess.run(
-        ["python3.12", "-c", runner_script],
+        [_sys.executable, "-c", runner_script],
         capture_output=True,
         text=True,
         env=env,

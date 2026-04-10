@@ -9,12 +9,16 @@ chartagent: 정적 HTML 갤러리 생성 → /chartagent-dash/ 경로로 서빙
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import subprocess
 import socket
+import sys
 import threading
 import time
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -52,24 +56,28 @@ def _start_fontagent_sync() -> bool:
         if _fontagent_is_running():
             return True
         try:
+            log_path = FONTAGENT_ROOT / "fontagent_serve.log"
+            log_fh = open(log_path, "a")
             _fontagent_proc = subprocess.Popen(
                 [
-                    "python3", "-m", "fontagent.cli",
+                    sys.executable, "-m", "fontagent.cli",
                     "--root", str(FONTAGENT_ROOT),
                     "serve",
                     "--host", "127.0.0.1",
                     "--port", str(FONTAGENT_PORT),
                 ],
                 cwd=str(FONTAGENT_ROOT),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                stdout=log_fh,
+                stderr=log_fh,
             )
             for _ in range(40):
                 if _fontagent_is_running():
                     return True
                 time.sleep(0.1)
+            logger.warning("fontagent 서버 시작 타임아웃 — 로그: %s", log_path)
             return False
-        except Exception:
+        except Exception as e:
+            logger.error("fontagent 시작 실패: %s", e)
             return False
 
 
