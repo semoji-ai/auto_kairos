@@ -28,6 +28,7 @@
       "max_turns": 80,
       "budget": "$4.0",
       "max_duration_minutes": 45,
+      "use_sdk": true,
       "allowed_tools": [
         "Read",
         "Write",

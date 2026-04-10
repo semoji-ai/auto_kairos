@@ -40,6 +40,8 @@ if platform.system() == "Windows":
 from auto_agent.paths import get_workspace_dir, get_data_dir, PACKAGE_DIR, DATA_DIR
 from auto_agent.orchestrator.context_memory import ContextMemory
 from auto_agent.orchestrator.vault_rag import VaultRAG
+from auto_agent.orchestrator.claude_client import CachingClaudeClient
+from auto_agent.orchestrator.local_tools import LOCAL_TOOL_SCHEMAS, handle_local_tool
 from auto_agent.utils.platform import get_env_with_node, subprocess_kwargs
 
 # ── Agent Messenger 브릿지 ──
@@ -2662,53 +2664,59 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 }}
 </output_format>"""
 
-        # CLI 실행 (도구 비활성, 3턴 — stdout으로 JSON 직접 출력)
-        cli_path = self._find_claude_cli()
-        cmd = [
-            cli_path, "--print",
-            "--output-format", "json",
-            "--model", target_model,
-            "--max-turns", "3",
-            "--tools", "",
-        ]
-
-        timeout_sec = self._get_agent_timeout(agent) if agent else 900
-        print(f"[single_call 1턴] model={target_model}", flush=True)
-
-        env = os.environ.copy()
-        env["PROJECT_NAME"] = self.project_slug
-        env.pop("CLAUDECODE", None)
-
+        # SDK 단일 호출 (prompt caching 적용)
+        print(f"[single_call SDK] model={target_model}", flush=True)
         t0 = time.time()
-        _popen_flags2 = subprocess_kwargs()
+
+        # SKILL.md + shared_skills → static (캐시), 나머지 → dynamic
+        agent_skill = self._load_skill_file(f"skills/agents/{agent}/SKILL.md") if agent else ""
+        agents_config = self._load_agents_config()
+        agent_def_sc = agents_config.get("subagents", {}).get(agent, {})
+        skill_names_sc = list(step.get("skills", []))
+        for s in agent_def_sc.get("skills", []):
+            if s not in skill_names_sc:
+                skill_names_sc.append(s)
+        shared_skills_sc = ""
+        for sn in skill_names_sc:
+            c = self._load_shared_skill(sn)
+            if c:
+                shared_skills_sc += f"\n\n## {sn}\n\n{c}"
+
+        static_system_sc = (
+            (f"<agent_skill>\n{agent_skill}\n</agent_skill>" if agent_skill else "")
+            + (f"\n\n<shared_skills>{shared_skills_sc}\n</shared_skills>" if shared_skills_sc else "")
+        )
+        # static이 없으면 빈 dynamic 하나로 처리
+        dynamic_system_sc = ""
+        user_message_sc = prompt
+
         try:
-            proc = subprocess.Popen(
-                cmd, cwd=str(self.project_dir), env=env,
-                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True, encoding="utf-8",
-                **_popen_flags2,
+            sdk_client = CachingClaudeClient()
+            response_text, usage = sdk_client.call_single(
+                model=target_model,
+                static_system=static_system_sc,
+                dynamic_system=dynamic_system_sc,
+                user_message=user_message_sc,
+                max_tokens=8192,
             )
-            stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.communicate()
-            return StepResult(step_id=step_id, status="failed",
-                              error=f"타임아웃 ({timeout_sec}s)")
-        except FileNotFoundError:
-            return StepResult(step_id=step_id, status="failed",
-                              error="Claude CLI를 찾을 수 없습니다")
+        except Exception as exc:
+            return StepResult(step_id=step_id, status="failed", error=str(exc))
 
         elapsed = time.time() - t0
-        cost_info = self._parse_claude_cost(stdout, stderr)
+        cache_read = usage.get("cache_read_input_tokens", 0)
+        cache_write = usage.get("cache_creation_input_tokens", 0)
+        print(
+            f"    [SDK] elapsed={elapsed:.1f}s in={usage['input_tokens']:,} "
+            f"out={usage['output_tokens']:,} cache_read={cache_read:,} cache_write={cache_write:,}",
+            flush=True,
+        )
 
-        if proc.returncode != 0:
-            error = stderr[:300] or stdout[:300]
-            return StepResult(step_id=step_id, status="failed",
-                              error=f"CLI exit {proc.returncode}: {error}",
-                              cost_info=cost_info, duration_sec=elapsed)
+        # SDK 응답 → 기존 JSON 파싱 로직 재사용
+        elapsed = time.time() - t0
+        cost_info = {}
 
-        # stdout에서 JSON 추출
-        content = self._extract_json_from_cli_output(stdout)
+        # SDK 텍스트에서 JSON 추출 (마크다운 코드블록 포함 처리)
+        content = self._extract_json_from_cli_output(response_text)
         if not content:
             # 파일이 이미 존재하면 (이전 실행 등) 성공 처리
             all_exist = all(
@@ -2815,6 +2823,247 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                         continue
         return None
 
+    # ── SDK 모드 (prompt caching) ─────────────────────────────────────────
+
+    def _build_sdk_prompt_parts(self, step: dict) -> tuple[str, str, str]:
+        """프롬프트를 캐시 가능한 세 부분으로 분리.
+
+        Returns:
+            (static_system, dynamic_system, user_task)
+            - static_system : SKILL.md + shared_skills  → cache_control 적용
+            - dynamic_system: system_context + project_config + progress_reporting
+            - user_task     : vault_block + task + context_memory
+        """
+        agent_name = step["agent"]
+
+        # 1. SKILL.md + shared_skills (정적 — 캐시 대상)
+        agent_skill = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
+        skill_names = list(step.get("skills", []))
+        agents_config = self._load_agents_config()
+        agent_def = agents_config.get("subagents", {}).get(agent_name, {})
+        for s in agent_def.get("skills", []):
+            if s not in skill_names:
+                skill_names.append(s)
+        skill_refs = agent_def.get("skill_refs", {})
+        shared_skills_text = ""
+        for skill_name in skill_names:
+            content = self._load_shared_skill(skill_name, skill_refs.get(skill_name))
+            if content:
+                shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
+
+        static_system = (
+            f"<agent_skill>\n{agent_skill}\n</agent_skill>"
+            + (f"\n\n<shared_skills>{shared_skills_text}\n</shared_skills>" if shared_skills_text else "")
+        )
+
+        # 2. dynamic system (호출마다 달라지는 컨텍스트)
+        config = self.state.config
+        duration_min = config.get("duration_minutes", 10)
+        target_chars = {1: 400, 3: 1200, 5: 2000, 10: 4000}.get(duration_min, duration_min * 400)
+        art_style = config.get("art_style", "")
+        writing_style = config.get("writing_style", "")
+        _mode_line = f"\nSCRIPT_DIRECTOR_MODE: {step['mode']}" if step.get("mode") else ""
+
+        progress_path = self.project_dir / f".progress_{step.get('id', '')}.jsonl"
+        dynamic_system = f"""<system_context>
+프로젝트: {self.project_slug}
+작업 디렉토리: {self.project_dir}
+워크스페이스: {get_workspace_dir()}{_mode_line}
+</system_context>
+
+<project_config>
+영상 분량: {duration_min}분
+목표 나레이션 글자 수: 약 {target_chars}자 (±10%)
+아트스타일: {art_style}
+문체 스타일: {writing_style}
+{"**이로미즘 문체 필수 적용** — writing-style-iromism 스킬의 규칙을 반드시 따르세요." if writing_style == "iromism" else ""}
+{"**세모지 문체 필수 적용** — writing-style-semoji 스킬의 규칙을 반드시 따르세요." if writing_style == "semoji" else ""}
+</project_config>
+
+<progress_reporting>
+작업 진행 상황을 아래 파일에 기록하세요. 대시보드에 실시간으로 표시됩니다.
+파일 경로: {progress_path}
+Write 도구로 기록하되, 기존 내용 뒤에 append하세요 (기존 내용을 지우지 마세요).
+한 줄에 하나의 JSON: {{"agent": "에이전트이름", "text": "자연어 메시지", "level": "info"}}
+level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
+</progress_reporting>"""
+
+        # 3. user task (vault + task + context_memory)
+        vault_block = ""
+        if self.vault.enabled and agent_name == "research-orchestrator":
+            topic = self.state.config.get("topic", self.project_slug)
+            category = self.state.config.get("category", "")
+            vault_block = self.vault.search_for_research(topic, category)
+
+        creative_brief = self.state.config.get("creative_brief", "")
+        if creative_brief:
+            vault_block += f"\n\n<creative_brief>\n{creative_brief}\n</creative_brief>"
+
+        # manuscript 모드: 참조 원고 주입
+        if agent_name == "script-director" and step.get("mode") == "manuscript":
+            ref_block = self._build_manuscript_reference_block()
+            if ref_block:
+                vault_block += "\n\n" + ref_block
+
+        # 입출력 경로
+        inputs = step.get("input", [])
+        if isinstance(inputs, str):
+            inputs = [inputs]
+        input_lines = []
+        for inp in inputs:
+            resolved = self._resolve_output_path(inp)
+            tag = "✓" if resolved.exists() else "✗ MISSING"
+            input_lines.append(f"- {inp}: {resolved} [{tag}]")
+
+        outputs = step.get("output", [])
+        if isinstance(outputs, str):
+            outputs = [outputs]
+        output_lines = [
+            f"- {out}: {self._resolve_output_path(out)}" for out in outputs
+        ]
+
+        context_memory_block = self.context_memory.build_context_prompt(step.get("id", ""))
+
+        user_task = f"""{vault_block}
+
+<task>
+Step: {step.get("id", "")} — {step.get("name", "")}
+{step.get("description", "")}
+{step.get("notes", "")}
+
+입력 파일:
+{chr(10).join(input_lines) if input_lines else "- 없음"}
+
+출력 파일 (반드시 아래 경로에 저장):
+{chr(10).join(output_lines)}
+
+{self._build_previous_review_context(step)}
+{self._build_revision_instruction(step)}
+모든 출력 파일을 성공적으로 생성하면 작업 완료입니다.
+</task>
+
+{context_memory_block}"""
+
+        return static_system, dynamic_system, user_task
+
+    def _run_sdk_single_step(
+        self,
+        step_id: str,
+        static_system: str,
+        dynamic_system: str,
+        user_task: str,
+        model: str,
+        outputs: list,
+        timeout_sec: float = 300,
+    ) -> "StepResult":
+        """도구 없는 단일 SDK 호출 (fact-verifier, digest 생성 등)."""
+        import time as _time
+        t0 = _time.time()
+        client = CachingClaudeClient()
+        try:
+            text, usage = client.call_single(
+                model=model,
+                static_system=static_system,
+                dynamic_system=dynamic_system,
+                user_message=user_task,
+                max_tokens=8192,
+            )
+        except Exception as exc:
+            return StepResult(step_id=step_id, status="failed", error=str(exc))
+
+        elapsed = _time.time() - t0
+        cache_read = usage.get("cache_read_input_tokens", 0)
+        cache_write = usage.get("cache_creation_input_tokens", 0)
+        print(
+            f"    [SDK single] model={model} elapsed={elapsed:.1f}s "
+            f"in={usage['input_tokens']:,} out={usage['output_tokens']:,} "
+            f"cache_read={cache_read:,} cache_write={cache_write:,}",
+            flush=True,
+        )
+
+        output_files = [str(self._resolve_output_path(o)) for o in outputs if "{" not in o]
+        return StepResult(
+            step_id=step_id,
+            status="completed",
+            output_files=output_files,
+            duration_sec=elapsed,
+        )
+
+    def _run_sdk_agent_step(
+        self,
+        step: dict,
+        step_id: str,
+        model: str,
+        max_turns: int,
+        static_system: str,
+        dynamic_system: str,
+        user_task: str,
+        outputs: list,
+        timeout_sec: float = 1800,
+    ) -> "StepResult":
+        """멀티턴 SDK 에이전트 루프 (로컬 파일 도구: Read/Write/Edit/Glob)."""
+        import time as _time
+        t0 = _time.time()
+        client = CachingClaudeClient()
+
+        progress_path = self.project_dir / f".progress_{step_id}.jsonl"
+        monitor = ProgressFileMonitor(progress_path, self.project_slug, self.state.current_phase)
+        monitor.start()
+
+        def on_tool_call(tool_name: str, tool_input: dict) -> None:
+            print(f"      [tool] {tool_name} {str(tool_input)[:80]}", flush=True)
+
+        try:
+            _text, usage = client.call_agent(
+                model=model,
+                static_system=static_system,
+                dynamic_system=dynamic_system,
+                initial_message=user_task,
+                tools=LOCAL_TOOL_SCHEMAS,
+                tool_handler=handle_local_tool,
+                max_turns=max_turns,
+                on_tool_call=on_tool_call,
+            )
+        except Exception as exc:
+            monitor.stop()
+            return StepResult(step_id=step_id, status="failed", error=str(exc))
+        finally:
+            monitor.stop()
+
+        elapsed = _time.time() - t0
+        cache_read = usage.get("cache_read_input_tokens", 0)
+        cache_write = usage.get("cache_creation_input_tokens", 0)
+        print(
+            f"    [SDK agent] model={model} turns≤{max_turns} elapsed={elapsed:.1f}s "
+            f"in={usage['input_tokens']:,} out={usage['output_tokens']:,} "
+            f"cache_read={cache_read:,} cache_write={cache_write:,}",
+            flush=True,
+        )
+
+        # 출력 파일 존재 확인
+        all_exist = all(
+            self._resolve_output_path(o).exists()
+            for o in outputs if "{" not in o
+        ) if outputs else True
+
+        if not all_exist:
+            missing = [o for o in outputs if not self._resolve_output_path(o).exists()]
+            return StepResult(
+                step_id=step_id, status="failed",
+                error=f"출력 파일 미생성: {missing}",
+                duration_sec=elapsed,
+            )
+
+        output_files = [str(self._resolve_output_path(o)) for o in outputs if "{" not in o]
+        return StepResult(
+            step_id=step_id,
+            status="completed",
+            output_files=output_files,
+            duration_sec=elapsed,
+        )
+
+    # ── CLI 모드 (기존) ──────────────────────────────────────────────────
+
     def _run_agent_step(self, step: dict) -> StepResult:
         """에이전트 step → Claude CLI 서브프로세스 호출.
 
@@ -2863,9 +3112,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     output_files=[str(self._resolve_output_path(o)) for o in outputs],
                 )
 
-        # ── Claude CLI 서브프로세스 실행 ──
+        # ── 에이전트 설정 ──
 
-        # 1. 에이전트 설정
         agents_config = self._load_agents_config()
         agent_def = agents_config.get("subagents", {}).get(agent, {})
         if not agent_def:
@@ -2879,6 +3127,24 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         allowed_tools = agent_def.get("allowed_tools", ["Read", "Write", "Glob"])
         budget = self._get_agent_budget(agent)
         timeout_sec = self._get_agent_timeout(agent)
+
+        # ── SDK 모드 라우팅 (use_sdk: true 에이전트) ──
+        if agent_def.get("use_sdk", False):
+            static_system, dynamic_system, user_task = self._build_sdk_prompt_parts(step)
+            print(f"\n    → SDK {agent} (model={model}, max_turns={max_turns})", flush=True)
+            return self._run_sdk_agent_step(
+                step=step,
+                step_id=step_id,
+                model=model,
+                max_turns=max_turns,
+                static_system=static_system,
+                dynamic_system=dynamic_system,
+                user_task=user_task,
+                outputs=outputs,
+                timeout_sec=timeout_sec,
+            )
+
+        # ── Claude CLI 서브프로세스 실행 ──
 
         # 분량별 리서치 스케일링 (duration_minutes 기반)
         duration_min = self.state.config.get("duration_minutes", 10)
