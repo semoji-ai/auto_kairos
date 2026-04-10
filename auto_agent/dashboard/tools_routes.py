@@ -32,8 +32,37 @@ FONTAGENT_ROOT = Path(os.environ.get("FONTAGENT_ROOT", Path.home() / "Projects" 
 CHARTAGENT_ROOT = Path(os.environ.get("CHARTAGENT_ROOT", Path.home() / "Projects" / "chartagent"))
 FONTAGENT_PORT = 8123
 
+FONTAGENT_REPO = "https://github.com/semoji-ai/fontagent.git"
+CHARTAGENT_REPO = "https://github.com/semoji-ai/chartagent.git"
+
 _fontagent_proc: subprocess.Popen | None = None
 _fontagent_lock = threading.Lock()
+
+
+def _clone_and_install(repo_url: str, target_dir: Path, pip_target: Path) -> bool:
+    """리포 클론 + pip install -e 실행. 성공 시 True."""
+    try:
+        if not target_dir.exists():
+            logger.info("클론 중: %s → %s", repo_url, target_dir)
+            result = subprocess.run(
+                ["git", "clone", repo_url, str(target_dir)],
+                capture_output=True, text=True, timeout=120,
+            )
+            if result.returncode != 0:
+                logger.error("git clone 실패: %s", result.stderr[:500])
+                return False
+        logger.info("pip install -e %s", pip_target)
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "--break-system-packages", "-e", str(pip_target)],
+            capture_output=True, text=True, timeout=120,
+        )
+        if result.returncode != 0:
+            logger.error("pip install 실패: %s", result.stderr[:500])
+            return False
+        return True
+    except Exception as e:
+        logger.error("클론/설치 실패: %s", e)
+        return False
 
 
 def _fontagent_is_running() -> bool:
@@ -46,12 +75,15 @@ def _fontagent_is_running() -> bool:
 
 
 def _start_fontagent_sync() -> bool:
-    """fontagent 서버 시작. 이미 실행 중이면 True 반환."""
+    """fontagent 서버 시작. 없으면 자동 클론 후 시작."""
     global _fontagent_proc
     if _fontagent_is_running():
         return True
     if not FONTAGENT_ROOT.exists():
-        return False
+        logger.info("fontagent 미설치 — 자동 클론+설치 시작")
+        ok = _clone_and_install(FONTAGENT_REPO, FONTAGENT_ROOT, FONTAGENT_ROOT)
+        if not ok:
+            return False
     with _fontagent_lock:
         if _fontagent_is_running():
             return True
@@ -82,8 +114,13 @@ def _start_fontagent_sync() -> bool:
 
 
 def _generate_chartagent_dashboard_sync(out_dir: Path) -> dict:
-    """chartagent 대시보드 정적 HTML 생성."""
+    """chartagent 대시보드 정적 HTML 생성. 없으면 자동 클론 후 생성."""
     out_dir.mkdir(parents=True, exist_ok=True)
+    if not CHARTAGENT_ROOT.exists():
+        logger.info("chartagent 미설치 — 자동 클론+설치 시작")
+        ok = _clone_and_install(CHARTAGENT_REPO, CHARTAGENT_ROOT, CHARTAGENT_ROOT / "src")
+        if not ok:
+            return {"ok": False, "error": "chartagent 자동 설치 실패. git/pip 로그를 확인하세요."}
     try:
         from chartagent.runners.dashboard_runner import write_chartagent_dashboard
         write_chartagent_dashboard(out_dir)
