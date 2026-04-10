@@ -22,6 +22,7 @@
   <a href="#" data-tab="multiformat" class="content-tab {% if tab == 'multiformat' %}active{% endif %}" onclick="switchTab('multiformat', this); return false;">Multi</a>
   <a href="#" data-tab="versions" class="content-tab {% if tab == 'versions' %}active{% endif %}" onclick="switchTab('versions', this); return false;">Versions</a>
   <span class="content-tab-divider"></span>
+  <a href="#" data-tab="pipeline" class="content-tab {% if tab == 'pipeline' %}active{% endif %}" onclick="switchTab('pipeline', this); return false;">Pipeline</a>
   <a href="#" data-tab="agent" class="content-tab {% if tab == 'agent' %}active{% endif %}" onclick="switchTab('agent', this); return false;">Agent</a>
 </nav>
 <div id="tab-content">
@@ -39,6 +40,8 @@
   {% include "partials/_upload_info.html" %}
 {% elif tab == 'multiformat' %}
   {% include "partials/_multiformat.html" %}
+{% elif tab == 'pipeline' %}
+  {% include "partials/_pipeline.html" %}
 {% elif tab == 'agent' %}
   {% include "partials/_agent.html" %}
 {% endif %}
