@@ -104,6 +104,8 @@ def _start_fontagent_sync() -> bool:
             )
             for _ in range(40):
                 if _fontagent_is_running():
+                    # vault가 비어있으면 백그라운드로 scan --system 실행
+                    _scan_vault_if_empty()
                     return True
                 time.sleep(0.1)
             logger.warning("fontagent 서버 시작 타임아웃 — 로그: %s", log_path)
@@ -111,6 +113,30 @@ def _start_fontagent_sync() -> bool:
         except Exception as e:
             logger.error("fontagent 시작 실패: %s", e)
             return False
+
+
+def _scan_vault_if_empty():
+    """vault가 비어있으면 백그라운드로 scan --system 실행."""
+    try:
+        vault_dir = FONTAGENT_ROOT / "vault"
+        if vault_dir.exists() and any(vault_dir.iterdir()):
+            return  # vault에 데이터 있으면 스킵
+        logger.info("fontagent vault 비어있음 — 백그라운드로 scan --system 시작")
+        scan_log = FONTAGENT_ROOT / "fontagent_scan.log"
+        scan_fh = open(scan_log, "a")
+        subprocess.Popen(
+            [
+                sys.executable, "-m", "fontagent.cli",
+                "--root", str(FONTAGENT_ROOT),
+                "scan", "--system",
+            ],
+            cwd=str(FONTAGENT_ROOT),
+            stdout=scan_fh,
+            stderr=scan_fh,
+        )
+        logger.info("scan --system 백그라운드 실행 시작 — 로그: %s", scan_log)
+    except Exception as e:
+        logger.warning("vault scan 실패 (무시): %s", e)
 
 
 def _generate_chartagent_dashboard_sync(out_dir: Path) -> dict:
