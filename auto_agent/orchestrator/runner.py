@@ -3531,7 +3531,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         step_id = step["id"]
         ratchet_cfg = step.get("ratchet", {})
         pass_threshold = ratchet_cfg.get("pass_threshold", 90)
-        max_rounds = ratchet_cfg.get("max_rounds", 3)
+        max_rounds = ratchet_cfg.get("max_rounds", 2)
         score_field = ratchet_cfg.get("score_field", "overall.combined_score")
 
         reviewer_agent = step.get("reviewer_agent")
