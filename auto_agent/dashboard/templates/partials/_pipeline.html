@@ -140,9 +140,9 @@
     <!-- 탭 바 -->
     <div class="stream-tabs">
       <div class="stream-tab active" data-panel="events" onclick="switchStreamPanel('events', this)">이벤트 로그</div>
+      <div class="stream-tab" data-panel="skeleton" onclick="switchStreamPanel('skeleton', this)">🦴 리서치</div>
       <div class="stream-tab" data-panel="manuscript" onclick="switchStreamPanel('manuscript', this)">📜 원고</div>
       <div class="stream-tab" data-panel="scenes" onclick="switchStreamPanel('scenes', this)">🎬 씬스펙</div>
-      <div class="stream-tab" data-panel="skeleton" onclick="switchStreamPanel('skeleton', this)">🦴 리서치</div>
     </div>
 
     <!-- 헤더 -->
@@ -308,19 +308,27 @@
   }
 
   // ── elapsed 타이머 ──
-  function startElapsed() {
+  function startElapsed(fromTs) {
     if (elapsedTimer) clearInterval(elapsedTimer);
-    startTs = Date.now();
+    // fromTs가 있으면 실제 파이프라인 시작 시각 기준으로 계산 (새로고침 후에도 정확)
+    startTs = fromTs ? new Date(fromTs).getTime() : Date.now();
     elapsedTimer = setInterval(() => {
       const sec = Math.floor((Date.now() - startTs) / 1000);
       const el = document.getElementById('stream-elapsed');
       if (el) el.textContent = sec < 60 ? sec + 's' : Math.floor(sec/60) + 'm ' + (sec%60) + 's';
     }, 1000);
   }
-  function stopElapsed() {
+  function stopElapsed(fromTs) {
     if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; }
     const el = document.getElementById('stream-elapsed');
-    if (el) el.textContent = '—';
+    if (el) {
+      if (fromTs && startTs) {
+        const sec = Math.floor((new Date(fromTs).getTime() - startTs) / 1000);
+        el.textContent = sec < 60 ? sec + 's' : Math.floor(sec/60) + 'm ' + (sec%60) + 's';
+      } else {
+        el.textContent = '—';
+      }
+    }
   }
 
   // ── 원고 word-by-word 갱신 ──
@@ -402,11 +410,12 @@
       if (!snap.finished_at) {
         setStepStatus(snap.current_step, 'running');
         setStreamLabel((STEP_META[snap.current_step] || {}).label || snap.current_step, true);
-        startElapsed();
+        // 새로고침 후에도 실제 시작 시각 기준으로 elapsed 복원
+        startElapsed(snap.started_at || null);
       }
     }
     if (snap.finished_at) {
-      stopElapsed();
+      stopElapsed(snap.finished_at);
       setStreamLabel('파이프라인 완료', false);
     }
   }
@@ -438,7 +447,7 @@
     if (evType === 'step_started') {
       setStepStatus(entry.step, 'running');
       setStreamLabel(stepName || agent, true);
-      startElapsed();
+      startElapsed(entry.ts || null);
       addEventRow(entry.ts, 'started', `${stepName} 시작 (${agent})`);
     } else if (evType === 'step_completed') {
       setStepStatus(entry.step, 'completed');
@@ -446,7 +455,7 @@
       const cost = entry.cost_usd ? ` $${entry.cost_usd.toFixed(4)}` : '';
       const durEl = document.getElementById('dur-' + entry.step);
       if (durEl && dur) durEl.textContent = dur.trim();
-      stopElapsed();
+      stopElapsed(entry.ts || null);
       addEventRow(entry.ts, 'completed', `${stepName} 완료${dur}${cost}`);
     } else if (evType === 'step_failed') {
       setStepStatus(entry.step, 'failed');
