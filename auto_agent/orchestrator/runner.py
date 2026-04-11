@@ -28,6 +28,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
+from zoneinfo import ZoneInfo
 
 # Windows cp949 인코딩 문제 — 모든 출력을 UTF-8로 강제
 if platform.system() == "Windows":
@@ -2465,8 +2466,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 if not _retryable or _consec_timeout or _attempt >= max_attempts - 1:
                     break  # 더 이상 재시도 없음
 
-                # 재시도 대기: 타임아웃이면 즉시, 그 외 지수 백오프(15s / 45s)
-                _wait = 0 if _is_timeout else 15 * (3 ** _attempt)
+                # 재시도 대기: 타임아웃은 즉시, rate-limit은 reset 시각 반영
+                _wait = self._compute_retry_wait(result.error or "", _attempt, _is_timeout)
                 _retry_label = (
                     f"재시도 {_attempt + 1}/{max_attempts - 1} — "
                     f"{(result.error or '')[:50]} "
@@ -3090,7 +3091,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 error=f"agents.json에 '{agent}' 정의 없음",
             )
 
-        model = agent_def.get("model", "claude-sonnet-4-5-20250929")
+        model = step.get("model") or agent_def.get("model", "claude-sonnet-4-5-20250929")
         max_turns = agent_def.get("max_turns", 30)
         allowed_tools = agent_def.get("allowed_tools", ["Read", "Write", "Glob"])
         budget = self._get_agent_budget(agent)
@@ -3178,8 +3179,9 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         # 프롬프트를 stdin으로 전달
         prompt_text = prompt_file.read_text(encoding="utf-8")
 
-        # 원고 생성 스텝은 stream-json 모드로 실시간 스트리밍
-        _STREAMING_STEPS = {"step_2_draft", "step_2_manuscript"}
+        # 원고/씬 생성 스텝은 stream-json 모드로 실시간 스트리밍
+        # step_2: json 모드에서 대형 JSON 직렬화 시 exit_code=143 발생 → stream-json으로 전환
+        _STREAMING_STEPS = {"step_2_draft", "step_2_manuscript", "step_2"}
         stream_file: Optional[Path] = None
         if step_id in _STREAMING_STEPS:
             # --output-format json → stream-json 으로 교체
@@ -3188,6 +3190,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             while i < len(cmd):
                 if cmd[i] == "--output-format" and i + 1 < len(cmd) and cmd[i+1] == "json":
                     stream_cmd.extend(["--output-format", "stream-json"])
+                    if "--verbose" not in stream_cmd:
+                        stream_cmd.append("--verbose")
                     i += 2
                 else:
                     stream_cmd.append(cmd[i])
@@ -3316,7 +3320,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 output_files=found, cost_info=cost_info,
             )
         elif missing:
-            detail = result.stderr[:300] if result.stderr else result.stdout[:300] if result.stdout else ""
+            detail = self._extract_cli_error_message(result.stdout, result.stderr)[:500]
             return StepResult(
                 step_id=step_id, status="failed",
                 error=f"출력 파일 미생성: {missing}. "
@@ -3324,7 +3328,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 cost_info=cost_info,
             )
         else:
-            error = result.stderr[:500] or result.stdout[-500:]
+            error = self._extract_cli_error_message(result.stdout, result.stderr)[:1000]
             return StepResult(
                 step_id=step_id, status="failed",
                 error=f"CLI exit {result.returncode}: {error}",
@@ -3583,6 +3587,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         total_cost = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0}
         best_score = 0
         best_specs = specs_path.read_text(encoding="utf-8") if specs_path.exists() else ""
+        passed = False
 
         for round_num in range(1, max_rounds + 1):
             print(f"\n    [래칫 R{round_num}/{max_rounds}] 리뷰 시작...", flush=True)
@@ -3633,7 +3638,12 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
             if review_result.status != "completed":
                 print(f"    [래칫] R{round_num} 리뷰 실패: {review_result.error}")
-                break
+                return StepResult(
+                    step_id=step_id,
+                    status="failed",
+                    error=f"리뷰 실패(R{round_num}): {review_result.error}",
+                    cost_info=total_cost,
+                )
 
             # 라운드별 히스토리 저장 (review_feedback.json → review_feedback_rN.json 복사)
             if feedback_path.exists():
@@ -3687,6 +3697,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                         phase=self.state.current_phase, project=self.project_slug, level="success")
                 best_score = score
                 best_specs = specs_path.read_text(encoding="utf-8") if specs_path.exists() else best_specs
+                passed = True
                 break
 
             # ── 4. 래칫 비교 (퇴보 방지 — 채택 안 함 + 계속 진행) ──
@@ -3722,8 +3733,15 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
             if revise_result.status != "completed":
                 print(f"    [래칫] R{round_num} 수정 실패: {revise_result.error}")
-                # 수정 실패해도 이전 최고 버전은 유지
-                break
+                return StepResult(
+                    step_id=step_id,
+                    status="failed",
+                    error=f"수정 실패(R{round_num}): {revise_result.error}",
+                    cost_info=total_cost,
+                )
+
+        if not passed and best_specs and specs_path.exists():
+            specs_path.write_text(best_specs, encoding="utf-8")
 
         return StepResult(
             step_id=step_id,
@@ -4349,6 +4367,103 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         err_lower = error.lower()
         return not any(kw in err_lower for kw in NON_RETRYABLE)
 
+    @staticmethod
+    def _parse_cli_result_wrapper(raw: str) -> Optional[dict]:
+        """Claude CLI result wrapper 파싱.
+
+        지원 형식:
+        - --output-format json: stdout 전체가 단일 JSON
+        - --output-format stream-json: 여러 JSON line 중 마지막 result line
+        """
+        if not raw:
+            return None
+
+        text = raw.strip()
+        if not text:
+            return None
+
+        try:
+            data = json.loads(text)
+            if isinstance(data, dict) and data.get("type") == "result":
+                return data
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+        last_result = None
+        for line in text.splitlines():
+            line = line.strip()
+            if not line or not line.startswith("{"):
+                continue
+            try:
+                data = json.loads(line)
+            except (json.JSONDecodeError, TypeError):
+                continue
+            if isinstance(data, dict) and data.get("type") == "result":
+                last_result = data
+        return last_result
+
+    @classmethod
+    def _extract_cli_error_message(cls, stdout: str, stderr: str) -> str:
+        """Claude CLI wrapper의 result 필드에서 읽을 수 있는 에러 메시지 추출."""
+        for raw in (stdout, stderr):
+            wrapper = cls._parse_cli_result_wrapper(raw)
+            if not wrapper:
+                continue
+            result = wrapper.get("result", "")
+            if isinstance(result, str) and result.strip():
+                return result.strip()
+
+        return (stderr or stdout[-1000:] or stdout[:1000]).strip()
+
+    @staticmethod
+    def _extract_rate_limit_wait_seconds(error: str) -> Optional[int]:
+        """'resets 8pm (Asia/Seoul)' 메시지에서 재시도 대기 시간 추출."""
+        if not error:
+            return None
+
+        m = re.search(
+            r"resets?\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s*\(([^)]+)\)",
+            error,
+            re.IGNORECASE,
+        )
+        if not m:
+            return None
+
+        hour = int(m.group(1))
+        minute = int(m.group(2) or "0")
+        ampm = m.group(3).lower()
+        tz_name = m.group(4).strip()
+
+        if ampm == "pm" and hour != 12:
+            hour += 12
+        if ampm == "am" and hour == 12:
+            hour = 0
+
+        try:
+            now = datetime.now(ZoneInfo(tz_name))
+        except Exception:
+            return None
+
+        reset = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        delta = int((reset - now).total_seconds())
+        if delta < 0:
+            return 5
+        if delta <= 3600:
+            return delta + 5
+        return None
+
+    def _compute_retry_wait(self, error: str, attempt: int, is_timeout: bool) -> int:
+        """에러 유형에 따른 재시도 대기 시간 계산."""
+        if is_timeout:
+            return 0
+
+        err_lower = (error or "").lower()
+        if "you've hit your limit" in err_lower or "rate limit" in err_lower:
+            parsed = self._extract_rate_limit_wait_seconds(error or "")
+            return parsed if parsed is not None else 60
+
+        return 15 * (3 ** attempt)
+
     def _resolve_composition(self) -> str:
         """프로젝트 theme에 따른 Remotion Composition ID 반환."""
         theme = self.project.get("theme", "simple")
@@ -4392,22 +4507,22 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         """Claude CLI 출력에서 비용 정보 파싱."""
         cost_info = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0}
 
-        # JSON 모드 (--output-format json)
-        try:
-            data = json.loads(stdout)
-            if isinstance(data, dict):
-                usage = data.get("usage", {})
-                cost_info["tokens_in"] = usage.get("input_tokens", 0)
-                cost_info["tokens_out"] = usage.get("output_tokens", 0)
-                cost_info["cost_usd"] = data.get("cost_usd", 0.0)
-                model = data.get("model", "")
-                if cost_info["cost_usd"] == 0 and cost_info["tokens_in"] > 0:
-                    cost_info["cost_usd"] = self._estimate_cost(
-                        cost_info["tokens_in"], cost_info["tokens_out"], model
-                    )
-                return cost_info
-        except (json.JSONDecodeError, TypeError):
-            pass
+        for raw in (stdout, stderr):
+            wrapper = self._parse_cli_result_wrapper(raw)
+            if not wrapper:
+                continue
+            usage = wrapper.get("usage", {}) or {}
+            cost_info["tokens_in"] = usage.get("input_tokens", 0)
+            cost_info["tokens_out"] = usage.get("output_tokens", 0)
+            cost_info["cost_usd"] = (
+                wrapper.get("cost_usd", 0.0) or wrapper.get("total_cost_usd", 0.0)
+            )
+            model = wrapper.get("model", "")
+            if cost_info["cost_usd"] == 0 and cost_info["tokens_in"] > 0:
+                cost_info["cost_usd"] = self._estimate_cost(
+                    cost_info["tokens_in"], cost_info["tokens_out"], model
+                )
+            return cost_info
 
         # Text 모드 폴백: stderr/stdout에서 정규식 파싱
         combined = stdout + "\n" + stderr

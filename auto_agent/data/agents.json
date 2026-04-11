@@ -36,7 +36,7 @@
     },
     "draft-writer": {
       "description": "outline + chapter_facts → 초고(draft.md) + 리서치 질문(research_questions.json). 쓰면서 WHY/HOW 질문 생성.",
-      "model": "opus",
+      "model": "sonnet",
       "max_turns": 60,
       "budget": "$3.0",
       "max_duration_minutes": 35,

@@ -103,6 +103,7 @@
           "name": "script_split_and_direct",
           "description": "final_manuscript.md를 의미 단위로 자르고 각 씬에 layout/motion/mood/imageAsset 결정. narration은 manuscript에서 substring으로 가져옴 (재작성 금지).",
           "agent": "script-director",
+          "model": "sonnet",
           "mode": "chapters",
           "chunked_parallel": {
             "split_by": "chapter",
@@ -121,6 +122,7 @@
         {
           "id": "step_2_consistency",
           "name": "narrative_consistency",
+          "skip": true,
           "description": "병렬로 작성된 챕터들의 내러티브 단절/중복/감정 곡선 점프를 검토하고 보정 (씬 간 연결어, 트랜지션, 씬 수 최적화)",
           "agent": "script-director",
           "mode": "consistency",
@@ -136,6 +138,7 @@
         {
           "id": "step_2_review",
           "name": "script_review_loop",
+          "skip": true,
           "description": "래칫 리뷰-수정 루프 — 리뷰어 평가 → 작성자 수정 → 재평가, 90점 이상까지 반복 (최대 3회)",
           "type": "ratchet_loop",
           "reviewer_agent": "script-reviewer",
