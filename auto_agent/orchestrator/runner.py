@@ -2840,7 +2840,6 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         writing_style = config.get("writing_style", "")
         _mode_line = f"\nSCRIPT_DIRECTOR_MODE: {step['mode']}" if step.get("mode") else ""
 
-        progress_path = self.project_dir / f".progress_{step.get('id', '')}.jsonl"
         dynamic_system = f"""<system_context>
 프로젝트: {self.project_slug}
 작업 디렉토리: {self.project_dir}
@@ -2856,9 +2855,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 {"**세모지 문체 필수 적용** — writing-style-semoji 스킬의 규칙을 반드시 따르세요." if writing_style == "semoji" else ""}
 </project_config>
 
-<progress_reporting>
-5분마다 → {progress_path} | {{"agent":"..","text":"[진행률%] 완료/다음","level":"info"}}
-</progress_reporting>"""
+{self._build_progress_block(step.get('id', ''))}"""
 
         # 3. user task (vault + task + context_memory)
         vault_block = ""
@@ -3779,6 +3776,15 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "unchanged_count": len(curr_map) - len(changed) - len(added),
         }
 
+    def _build_progress_block(self, step_id: str) -> str:
+        """progress_reporting 블록 생성 (프롬프트 공유 템플릿)."""
+        path = self.project_dir / f".progress_{step_id}.jsonl"
+        return (
+            f"<progress_reporting>\n"
+            f'5분마다 → {path} | {{"agent":"..","text":"[진행률%] 완료/다음","level":"info"}}\n'
+            f"</progress_reporting>"
+        )
+
     @staticmethod
     def _build_previous_review_context(step: dict) -> str:
         """이전 리뷰 피드백을 재심 컨텍스트로 주입 (리뷰어 일관성 보장)."""
@@ -4231,9 +4237,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 모든 출력 파일을 성공적으로 생성하면 작업 완료입니다.
 </task>
 
-<progress_reporting>
-5분마다 → {self.project_dir / f".progress_{step.get('id', '')}.jsonl"} | {{"agent":"..","text":"[진행률%] 완료/다음","level":"info"}}
-</progress_reporting>
+{self._build_progress_block(step.get('id', ''))}
 
 {context_memory_block}"""
         return prompt
