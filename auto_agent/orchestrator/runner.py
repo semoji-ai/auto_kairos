@@ -111,7 +111,6 @@ _MSG_MAP = {
     "creative_direction":         ("창의적 연출 + 에셋 설계", "창의적 연출 + 에셋 설계 완료"),
     "data_enrichment_and_motion": ("데이터 보강/모션 설계",  "데이터 보강/모션 설계 완료"),
     # stage_3 내부 (assembly-director 서브태스크)
-    "tts_preprocess":             ("TTS 전처리",           "TTS 전처리 완료"),
     "tts_generation":             ("음성 생성",            "음성 생성 완료"),
     "image_asset_sourcing":       ("이미지 소싱",           "이미지 소싱 완료"),
     "subtitle_sync":              ("자막 동기화",           "자막 동기화 완료"),
@@ -1845,7 +1844,6 @@ class PipelineRunner:
     # (step_6 creative_direction은 agent 타입이지만 동일한 프롬프트 로딩 경로 사용)
     SINGLE_CALL_PROMPTS = {
         "data_enrichment": "data-enrichment.md",
-        "tts_preprocess": "tts-preprocess.md",
     }
 
     _WRITING_STYLE_SKILLS = frozenset({"writing-style-semoji", "writing-style-iromism"})
@@ -3355,7 +3353,6 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         script_map = {
             "preflight": "scripts/preflight_check.py",
             "duplicate-checker": "scripts/duplicate_check.py",
-            "tts-preprocess": "tools/korean_tts_preprocessor.py",
             "tts-generator": "scripts/generate_tts.py",
             "image_batch": "modules/image_batch_module.py",
             "upload_info_generator": "modules/upload_info_generator.py",
