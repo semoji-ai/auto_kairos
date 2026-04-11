@@ -1873,12 +1873,12 @@ class PipelineRunner:
         for fname in ["research_digest.json", "research_report.json"]:
             fpath = self.project_dir / fname
             if fpath.exists():
-                context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:50000]}\n</file>\n"
+                context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:20000]}\n</file>\n"
                 break
         # outline은 별도
         outline_path = self.project_dir / "outline.json"
         if outline_path.exists():
-            context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:50000]}\n</file>\n'
+            context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:15000]}\n</file>\n'
 
         manuscript_path = self.project_dir / "final_manuscript.md"
         if manuscript_path.exists():
@@ -2000,12 +2000,12 @@ class PipelineRunner:
         for fname in ["research_digest.json", "research_report.json"]:
             fpath = self.project_dir / fname
             if fpath.exists():
-                context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:50000]}\n</file>\n"
+                context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:20000]}\n</file>\n"
                 break
         # outline은 별도
         outline_path = self.project_dir / "outline.json"
         if outline_path.exists():
-            context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:50000]}\n</file>\n'
+            context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:15000]}\n</file>\n'
 
         # final_manuscript.md — 해당 챕터 구간만 추출
         manuscript_path = self.project_dir / "final_manuscript.md"
@@ -2550,13 +2550,13 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             for inp in inputs:
                 inp_path = self._resolve_output_path(inp)
                 if inp_path.exists():
-                    context_block += f"\n<file name=\"{inp}\">\n{inp_path.read_text(encoding='utf-8')[:80000]}\n</file>\n"
+                    context_block += f"\n<file name=\"{inp}\">\n{inp_path.read_text(encoding='utf-8')[:30000]}\n</file>\n"
 
             template = self.rule_manager.load(f"prompts/single-call/{prompt_file}")
             art_style_override = self._load_art_style_override(step_name)
             specs_path = self._resolve_output_path("scene_specs.json")
             if specs_path.exists():
-                chapter_specs_json = specs_path.read_text(encoding="utf-8")[:80000]
+                chapter_specs_json = specs_path.read_text(encoding="utf-8")[:30000]
             else:
                 chapter_specs_json = "{}"
 
@@ -2807,11 +2807,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 </project_config>
 
 <progress_reporting>
-작업 진행 상황을 아래 파일에 기록하세요. 대시보드에 실시간으로 표시됩니다.
-파일 경로: {progress_path}
-Write 도구로 기록하되, 기존 내용 뒤에 append하세요 (기존 내용을 지우지 마세요).
-한 줄에 하나의 JSON: {{"agent": "에이전트이름", "text": "자연어 메시지", "level": "info"}}
-level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
+작업 10분 초과 시 5분마다 진행상황 보고. 형식: [진행률%] 완료내용 / 다음작업
+파일: {progress_path} | JSON: {{"agent": "이름", "text": "메시지", "level": "info"}}
 </progress_reporting>"""
 
         # 3. user task (vault + task + context_memory)
@@ -2822,7 +2819,8 @@ level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
             vault_block = self.vault.search_for_research(topic, category)
 
         creative_brief = self.state.config.get("creative_brief", "")
-        if creative_brief:
+        _skip_brief_steps = {"data-mapper", "fact-verifier", "assembly-director"}
+        if creative_brief and agent_name not in _skip_brief_steps:
             vault_block += f"\n\n<creative_brief>\n{creative_brief}\n</creative_brief>"
 
         # manuscript 모드: 참조 원고 주입
@@ -3955,9 +3953,9 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                     ref_section = (
                         style_text[ref_start:next_h] if next_h > 0 else style_text[ref_start:]
                     )
-                    # 너무 길면 자름 (max 8000자)
-                    if len(ref_section) > 8000:
-                        ref_section = ref_section[:8000] + "\n\n[... 이하 생략 ...]"
+                    # 너무 길면 자름 (max 3000자)
+                    if len(ref_section) > 3000:
+                        ref_section = ref_section[:3000] + "\n\n[... 이하 생략 ...]"
                     sections.append(
                         f"## 참조 원고 ({writing_style} 스타일 — 톤/리듬/후킹 패턴을 그대로 따르세요)\n\n{ref_section}"
                     )
@@ -3990,13 +3988,14 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                         preferred.append(r)
                     elif "02-research/topics" in f or "channels/" in f:
                         fallback.append(r)
-                top_examples = (preferred + fallback)[:2]
+                top_examples = (preferred + fallback)[:1]  # 최대 1개
                 if top_examples:
                     examples_md = "## vault 유사 주제 (참고 — 톤/구조 학습용)\n\n"
                     for r in top_examples:
+                        snippet = r.get('snippet', '')[:2000]  # 최대 2000자
                         examples_md += (
                             f"### {r.get('file', '?')}  (score={r.get('score', 0):.3f})\n"
-                            f"{r.get('snippet', '')[:600]}\n\n"
+                            f"{snippet}\n\n"
                         )
                     sections.append(examples_md)
                     print(
@@ -4102,8 +4101,10 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 print("    [VaultRAG] 리서치용 볼트 지식 없음", flush=True)
 
         # 6.5. 볼트 기획안(크리에이티브 브리프) 주입
+        # data-mapper / fact-verifier / assembly-director는 brief 불필요 — 토큰 절약
+        _skip_brief_agents = {"data-mapper", "fact-verifier", "assembly-director"}
         creative_brief = self._load_creative_brief()
-        if creative_brief:
+        if creative_brief and agent_name not in _skip_brief_agents:
             vault_block += f"\n\n<creative_brief>\n{creative_brief}\n</creative_brief>\n"
             print(f"    [기획단] 크리에이티브 브리프 주입: {len(creative_brief)}자", flush=True)
 
@@ -4177,29 +4178,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 </task>
 
 <progress_reporting>
-작업 진행 상황을 아래 파일에 기록하세요. 대시보드 메신저에 실시간으로 표시됩니다.
-파일 경로: {self.project_dir / f".progress_{step.get('id', '')}.jsonl"}
-
-Write 도구로 기록하되, 기존 내용 뒤에 append하세요 (기존 내용을 지우지 마세요).
-한 줄에 하나의 JSON:
-{{"agent": "에이전트이름", "text": "자연어 메시지", "level": "info"}}
-
-level: "info" (일반), "success" (완료/성과), "warning" (주의사항)
-
-보고 시점과 내용:
-1. 작업 시작 → 무엇을 하려는지 ("코카콜라 초기 역사 리서치 시작")
-2. 병렬 태스크 배포 시 → 각 에이전트가 무엇을 조사할지 개별 선언 필수:
-   예: {{"agent": "Explorer-1", "text": "테슬라 초기 반도체 역사 조사 시작합니다", "level": "info"}}
-   예: {{"agent": "Explorer-2", "text": "글로벌 반도체 시장 동향 조사 시작합니다", "level": "info"}}
-   — 배포 후 즉시 각 Explorer별 시작 메시지를 기록하세요
-3. 병렬 태스크가 하나씩 완료될 때마다 → 해당 태스크의 핵심 발견 서머리
-   예: {{"agent": "Explorer-1", "text": "초기 역사: 1886년 존 펨버턴이 발명, 약국에서 5센트에 판매 — 에피소드 3개", "level": "success"}}
-   예: {{"agent": "Explorer-3", "text": "마케팅: 산타클로스 캠페인(1931), I'd Like to Buy the World a Coke(1971) — 에피소드 4개", "level": "success"}}
-4. 전체 완료 시 → 통합 결과 요약 ("리서치 완료: 에피소드 12개, 통계 8건, 주요인물 5명")
-5. 실패/재시도 시 → 무슨 문제인지, 어떻게 대응하는지
-
-중요: 병렬 서브태스크(Task 도구)를 사용할 때, 각 태스크가 완료되면 즉시 해당 결과를 progress 파일에 기록하세요.
-톤: 자연어로 간결하게. 기술적 명령어나 파일 경로 대신 사람이 읽을 수 있는 내용 위주.
+작업 10분 초과 시 5분마다 진행상황 보고. 형식: [진행률%] 완료내용 / 다음작업
+파일: {self.project_dir / f".progress_{step.get('id', '')}.jsonl"} | JSON: {{"agent": "이름", "text": "메시지", "level": "info"}}
 </progress_reporting>
 
 {context_memory_block}"""

@@ -173,12 +173,26 @@ class ContextMemory:
     # ─── Runner 통합: 다음 에이전트에 주입 ───
 
     def build_context_prompt(self, current_step_id: str) -> str:
-        """현재 step 이전의 모든 컨텍스트를 프롬프트 문자열로 변환."""
+        """현재 step 이전의 컨텍스트를 프롬프트 문자열로 변환.
+
+        최근 3스텝 + 총 2500자 제한으로 토큰 사용량 억제.
+        manual_notes는 항상 포함.
+        """
         memory = self.load()
         entries = memory.get("entries", [])
         notes = memory.get("manual_notes", [])
 
-        if not entries and not notes:
+        # 현재 스텝보다 이전 항목만, step_order 역순(최신→오래된) 정렬
+        prev_entries = [
+            e for e in entries
+            if _step_order(e["step_id"]) < _step_order(current_step_id)
+        ]
+        # 최신 3개만 유지
+        prev_entries = sorted(prev_entries, key=lambda e: _step_order(e["step_id"]), reverse=True)[:3]
+        # 출력 순서는 오름차순(오래된 것 먼저)
+        prev_entries = list(reversed(prev_entries))
+
+        if not prev_entries and not notes:
             return ""
 
         lines = [
@@ -187,9 +201,7 @@ class ContextMemory:
             "",
         ]
 
-        for entry in entries:
-            if _step_order(entry["step_id"]) >= _step_order(current_step_id):
-                continue
+        for entry in prev_entries:
             lines.append(f"### {entry['step_id']} ({entry['agent']})")
             lines.append(entry.get("summary", ""))
             for d in entry.get("decisions", []):
@@ -207,7 +219,53 @@ class ContextMemory:
             lines.append("")
 
         lines.append("</context_memory>")
-        return "\n".join(lines)
+        result = "\n".join(lines)
+
+        # 총 2500자 초과 시 앞쪽 엔트리부터 제거 (manual_notes 보존)
+        MAX_CHARS = 2500
+        if len(result) > MAX_CHARS:
+            # notes 블록만 보존하면서 재구성
+            note_lines: list[str] = []
+            if notes:
+                note_lines = ["### 수동 메모 (운영자)"]
+                for note in notes:
+                    note_lines.append(f"  - {note['note']}")
+                note_lines.append("")
+
+            # 엔트리를 최신→오래된 순으로 추가하면서 2500자 초과 전까지만 유지
+            kept: list[list[str]] = []
+            notes_text = "\n".join(note_lines)
+            budget = MAX_CHARS - len(notes_text) - 80  # 헤더/푸터 여유
+
+            for entry in reversed(prev_entries):
+                entry_lines = [f"### {entry['step_id']} ({entry['agent']})"]
+                entry_lines.append(entry.get("summary", ""))
+                for d in entry.get("decisions", []):
+                    entry_lines.append(f"  - 결정: {d}")
+                for f_item in entry.get("key_facts", []):
+                    entry_lines.append(
+                        f"  - 데이터: {f_item['fact']} [{f_item.get('source', '')}]"
+                    )
+                entry_lines.append("")
+                entry_text = "\n".join(entry_lines)
+                if len(entry_text) <= budget:
+                    kept.insert(0, entry_lines)
+                    budget -= len(entry_text)
+                else:
+                    break
+
+            rebuilt = [
+                "<context_memory>",
+                "이전 파이프라인 단계에서 축적된 의사결정과 발견:",
+                "",
+            ]
+            for el in kept:
+                rebuilt.extend(el)
+            rebuilt.extend(note_lines)
+            rebuilt.append("</context_memory>")
+            result = "\n".join(rebuilt)
+
+        return result
 
     # ─── 웹 UI: 수동 메모 ───
 
