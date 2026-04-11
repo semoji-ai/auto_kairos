@@ -688,6 +688,10 @@ class PipelineRunner:
             # phase 끝나면 checkpoint 확인
             self._check_checkpoint(phase_id, steps)
 
+            # stage_1 완료 후 editorial_brief alignment 검증
+            if phase_id == "stage_1":
+                self._check_brief_alignment()
+
             # stage_2 완료 후 매니페스트 자동 빌드 (대시보드 스토리보드용)
             if phase_id == "stage_2" and "step_2" in self.state.completed_steps:
                 try:
@@ -2863,8 +2867,13 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             category = self.state.config.get("category", "")
             vault_block = self.vault.search_for_research(topic, category)
 
-        creative_brief = self.state.config.get("creative_brief", "")
         _skip_brief_steps = {"data-mapper", "fact-verifier", "assembly-director"}
+        # editorial_brief.json 주입 (기획 의도 상위 컨텍스트)
+        editorial_brief = self._load_editorial_brief()
+        if editorial_brief and agent_name not in _skip_brief_steps:
+            vault_block += f"\n\n<editorial_brief>\n{editorial_brief}\n\n⚠️ 이 brief는 모든 리서치·원고·연출 결정의 상위 컨텍스트입니다.\n- real_topic을 중심에 두고, hook_angle은 도입부에만 사용하세요\n- excluded_angles에 해당하는 방향으로 흘러가지 마세요\n- core_question에 대한 답변이 콘텐츠의 핵심이어야 합니다\n</editorial_brief>"
+
+        creative_brief = self.state.config.get("creative_brief", "")
         if creative_brief and agent_name not in _skip_brief_steps:
             vault_block += f"\n\n<creative_brief>\n{creative_brief}\n</creative_brief>"
 
@@ -3356,6 +3365,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         # 모듈별 스크립트 매핑 (PACKAGE_DIR 기준)
         script_map = {
             "preflight": "scripts/preflight_check.py",
+            "editorial_brief": "modules/editorial_brief_module.py",
             "duplicate-checker": "scripts/duplicate_check.py",
             "tts-generator": "scripts/generate_tts.py",
             "image_batch": "modules/image_batch_module.py",
@@ -3939,6 +3949,27 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         lines.append("- Edit을 한 번도 안 하면 작업이 무효입니다")
         return "\n".join(lines)
 
+    def _load_editorial_brief(self) -> str:
+        """프로젝트 디렉토리의 editorial_brief.json 로드 → 문자열 변환."""
+        try:
+            brief_path = self.project_dir / "editorial_brief.json"
+            if brief_path.exists():
+                data = json.loads(brief_path.read_text(encoding="utf-8"))
+                lines = [
+                    f"core_question: {data.get('core_question', '')}",
+                    f"real_topic: {data.get('real_topic', '')}",
+                    f"hook_angle: {data.get('hook_angle', '')}",
+                    f"supporting_case: {data.get('supporting_case', '')}",
+                    f"excluded_angles: {', '.join(data.get('excluded_angles', []))}",
+                    f"audience_takeaway: {data.get('audience_takeaway', '')}",
+                    f"tone_goal: {data.get('tone_goal', '')}",
+                    f"success_criteria: {'; '.join(data.get('success_criteria', []))}",
+                ]
+                return "\n".join(lines)
+        except Exception as e:
+            print(f"[editorial_brief] 로드 실패: {e}", flush=True)
+        return ""
+
     def _load_creative_brief(self) -> str:
         """볼트 insights/planning/에서 프로젝트 주제와 매칭되는 기획안 로드."""
         try:
@@ -4175,9 +4206,15 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             else:
                 print("    [VaultRAG] 리서치용 볼트 지식 없음", flush=True)
 
-        # 6.5. 볼트 기획안(크리에이티브 브리프) 주입
-        # data-mapper / fact-verifier / assembly-director는 brief 불필요 — 토큰 절약
+        # 6.5. editorial_brief.json 주입 (기획 의도 고정)
+        # 우선순위: creative_brief보다 editorial_brief가 상위 컨텍스트
         _skip_brief_agents = {"data-mapper", "fact-verifier", "assembly-director"}
+        editorial_brief = self._load_editorial_brief()
+        if editorial_brief and agent_name not in _skip_brief_agents:
+            vault_block += f"\n\n<editorial_brief>\n{editorial_brief}\n\n⚠️ 이 brief는 모든 리서치·원고·연출 결정의 상위 컨텍스트입니다.\n- real_topic을 중심에 두고, hook_angle은 도입부에만 사용하세요\n- excluded_angles에 해당하는 방향으로 흘러가지 마세요\n- core_question에 대한 답변이 콘텐츠의 핵심이어야 합니다\n</editorial_brief>\n"
+            print(f"    [기획의도] editorial_brief 주입: core_question={editorial_brief.split(chr(10))[0]}", flush=True)
+
+        # 6.5b. 볼트 기획안(크리에이티브 브리프) 주입 — editorial_brief 이후 보조 컨텍스트
         creative_brief = self._load_creative_brief()
         if creative_brief and agent_name not in _skip_brief_agents:
             vault_block += f"\n\n<creative_brief>\n{creative_brief}\n</creative_brief>\n"
@@ -4646,6 +4683,68 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 return True
 
         return True  # 입력 정보도 없으면 실행
+
+    def _check_brief_alignment(self):
+        """Stage 1 완료 후 outline.json과 editorial_brief.json의 정렬 검증.
+
+        비차단 — 경고만 출력. 심각한 드리프트 시 사용자가 수동 개입 가능.
+        """
+        brief_path = self.project_dir / "editorial_brief.json"
+        outline_path = self.project_dir / "outline.json"
+
+        if not brief_path.exists():
+            return  # editorial_brief 없으면 스킵
+        if not outline_path.exists():
+            return  # outline 없으면 스킵
+
+        try:
+            brief = json.loads(brief_path.read_text(encoding="utf-8"))
+            outline = json.loads(outline_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"    [alignment] 파일 읽기 실패: {e}", flush=True)
+            return
+
+        real_topic = brief.get("real_topic", "")
+        excluded = brief.get("excluded_angles", [])
+        core_q = brief.get("core_question", "")
+        chapters = outline.get("chapters", [])
+
+        if not chapters:
+            return
+
+        print(f"\n  ★ BRIEF ALIGNMENT CHECK (Stage 1 완료)", flush=True)
+        print(f"    core_question: {core_q}", flush=True)
+        print(f"    real_topic: {real_topic}", flush=True)
+
+        # 챕터 제목 목록
+        chapter_titles = [ch.get("title", "") for ch in chapters]
+        print(f"    chapters: {chapter_titles}", flush=True)
+
+        # 간단 키워드 검사 — excluded_angles 키워드가 챕터에 많이 나타나는지
+        warnings = []
+        real_topic_kw = set(w for w in real_topic.split() if len(w) > 1)
+        outline_text = " ".join(chapter_titles + [ch.get("narrative_role", "") for ch in chapters])
+
+        for exc in excluded:
+            exc_kw = set(w for w in exc.split() if len(w) > 1)
+            if exc_kw and any(kw in outline_text for kw in exc_kw):
+                warnings.append(f"⚠️ excluded_angle 감지: '{exc}' → 챕터 제목에 관련 키워드 존재")
+
+        # real_topic 키워드가 outline에 전혀 없으면 경고
+        if real_topic_kw and not any(kw in outline_text for kw in real_topic_kw):
+            warnings.append(f"⚠️ real_topic '{real_topic}' 키워드가 outline 챕터에서 발견되지 않음 — 드리프트 위험")
+
+        if warnings:
+            print(f"\n    [ALIGNMENT WARN] brief와 outline 정렬 이슈:", flush=True)
+            for w in warnings:
+                print(f"      {w}", flush=True)
+            print(f"\n    → Stage 2 진행 전 outline.json 검토 권장", flush=True)
+            _notify("System", f"⚠️ Brief alignment 이슈 {len(warnings)}건 — outline 검토 필요",
+                    phase="stage_1", project=self.project_slug, level="warning")
+        else:
+            print(f"    ✅ alignment OK — outline이 editorial_brief 방향과 일치", flush=True)
+
+        print()
 
     def _check_checkpoint(self, phase_id: str, steps: List[dict]):
         """checkpoint 확인. 인터랙티브 모드에서 사용자 검토 유도."""

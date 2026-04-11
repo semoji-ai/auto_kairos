@@ -2,6 +2,19 @@
   "$schema": "./docs/agents-schema.json",
   "description": "Auto Agent 에이전트 정의 — 3단계 파이프라인용",
   "agents": {
+    "brief-interviewer": {
+      "description": "영상 주제 분석 → editorial_brief.json 생성. 기획 의도(core_question/real_topic/hook_angle/excluded_angles)를 확정해 Stage 1~2 전 과정의 상위 컨텍스트로 고정.",
+      "model": "sonnet",
+      "max_turns": 10,
+      "budget": "$0.2",
+      "max_duration_minutes": 5,
+      "allowed_tools": [
+        "Read",
+        "Write"
+      ],
+      "skill_file": "agents/brief-interviewer/SKILL.md",
+      "notes": "phase_0 step_0b. editorial_brief.json이 이미 존재하면 스킵. /auto-kairos 스킬에서 CLI 인터뷰로 생성된 경우도 스킵."
+    },
     "skeleton-researcher": {
       "description": "Wikipedia + 권위 소스 → 타임라인/핵심인물/챕터 골격 확립. flesh-researcher를 위한 research_focus 질문 생성.",
       "model": "sonnet",

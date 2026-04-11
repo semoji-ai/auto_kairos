@@ -24,6 +24,17 @@
             "remotion CLI",
             "lucide-react installed"
           ]
+        },
+        {
+          "id": "step_0b",
+          "name": "editorial_interview",
+          "description": "기획 의도 고정 — topic 분석으로 editorial_brief.json 생성. core_question/real_topic/hook_angle/excluded_angles 확정. 이미 존재하면 스킵.",
+          "type": "module",
+          "module": "editorial_brief",
+          "resumable": true,
+          "input": ["project_config"],
+          "output": ["editorial_brief.json"],
+          "notes": "editorial_brief.json이 이미 있으면 스킵. /auto-kairos 스킬 CLI 인터뷰 또는 AI 초안 생성 양쪽 지원. 생성된 brief는 Stage 1~2 모든 에이전트에 <editorial_brief> 태그로 주입됨."
         }
       ]
     },

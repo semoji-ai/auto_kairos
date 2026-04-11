@@ -58,7 +58,56 @@ ls $KAIROS_VAULT_DIR/insights/planning/*기획안.md 2>/dev/null | tail -10
 
 각 프리셋의 JSON을 읽어서 channel, image.staging, guidelines의 첫 문장을 표시한다.
 
-### 4단계: 설정 확인
+### 4단계: Editorial Brief 인터뷰 (기획 의도 고정)
+
+아트스타일 선택 후, 파이프라인 시작 전에 **기획 의도를 고정**한다.
+
+아래 5개 항목을 순서대로 질문한다 (5개만으로도 충분):
+
+```
+📋 기획 의도를 명확히 해둘게요 (5개 질문, 빠르게):
+
+1) 이 영상이 답해야 하는 핵심 질문 하나는?
+   (예: "10억원 성과급을 받으면 실제 얼마를 손에 쥐는가?")
+
+2) 이 콘텐츠의 진짜 주제는? (hook 사례 말고 실제 설명 대상)
+   (예: "대한민국 근로소득세와 실수령 구조")
+
+3) 어떤 사례/기사/장면으로 도입부를 열 건가요?
+   (예: "하이닉스 성과급 10억 예측 기사")
+
+4) 이 영상이 절대 이쪽으로 흘러가면 안 되는 방향은?
+   (예: "SK하이닉스 기업사 / 반도체 산업 서사 중심")
+
+5) 시청자가 다 보고 나서 가져가야 할 핵심 인식은?
+   (예: "성과급은 세전 숫자와 실수령 체감이 완전히 다르다")
+```
+
+답변을 받으면 `editorial_brief.json`을 생성한다:
+
+```python
+import json
+from pathlib import Path
+
+brief = {
+    "core_question": "{1번 답변}",
+    "real_topic": "{2번 답변}",
+    "hook_angle": "{3번 답변}",
+    "supporting_case": "{3번 답변에서 추출한 사례}",
+    "excluded_angles": ["{4번 답변}"],
+    "audience_takeaway": "{5번 답변}",
+    "tone_goal": "{아트스타일에서 자동 결정: quirky_cartoon→충격형, semoji→정보형}",
+    "success_criteria": [
+        "시청자가 핵심 개념을 직관적으로 이해한다",
+        "사례보다 본질 설명이 중심에 남는다"
+    ],
+    "_generated_by": "cli_interview"
+}
+```
+
+프로젝트 생성 후 `{output_dir}/editorial_brief.json`에 저장한다.
+
+### 6단계: 설정 확인 (기존 4단계)
 
 선택한 프리셋 JSON에서 자동으로 가져올 값:
 - `writing_style`: 프리셋의 channel로 매핑 (이로미즘→iromism, 세모지→semoji, 없으면 직접 질문)
@@ -70,6 +119,8 @@ ls $KAIROS_VAULT_DIR/insights/planning/*기획안.md 2>/dev/null | tail -10
 ```
 설정 확인:
   주제: {topic}
+  핵심 질문: {core_question}
+  진짜 주제: {real_topic}
   분량: {duration}분
   아트스타일: {preset_name}
   문체: {writing_style}
@@ -78,7 +129,7 @@ ls $KAIROS_VAULT_DIR/insights/planning/*기획안.md 2>/dev/null | tail -10
   시작할까요? (Y/n)
 ```
 
-### 5단계: 프로젝트 생성
+### 7단계: 프로젝트 생성 (기존 5단계)
 
 Bash로 실행:
 ```bash
@@ -106,7 +157,35 @@ print(f'id={pid} slug={p[\"slug\"]} uuid={p.get(\"uuid\",\"\")}')
 
 **CLAUDE.md 규칙 준수**: config에 art_style, writing_style, duration_minutes 반드시 포함.
 
-### 6단계: 파이프라인 백그라운드 실행
+### 8단계: editorial_brief.json 저장 (기존 6단계 전)
+
+프로젝트 생성 후, 4단계에서 받은 brief 답변을 파일로 저장한다:
+
+```bash
+.venv/bin/python -c "
+import json
+from pathlib import Path
+output_dir = Path('{output_dir}')
+output_dir.mkdir(parents=True, exist_ok=True)
+brief = {
+    'core_question': '{core_question}',
+    'real_topic': '{real_topic}',
+    'hook_angle': '{hook_angle}',
+    'supporting_case': '{supporting_case}',
+    'excluded_angles': {excluded_angles_json},
+    'audience_takeaway': '{audience_takeaway}',
+    'tone_goal': '{tone_goal}',
+    'success_criteria': ['시청자가 핵심 개념을 직관적으로 이해한다', '사례보다 본질 설명이 중심에 남는다'],
+    '_generated_by': 'cli_interview'
+}
+(output_dir / 'editorial_brief.json').write_text(json.dumps(brief, ensure_ascii=False, indent=2), encoding='utf-8')
+print('editorial_brief.json 저장 완료')
+"
+```
+
+output_dir은 `pm.get_project(pid)['output_dir']`에서 가져온다.
+
+### 9단계: 파이프라인 백그라운드 실행 (기존 6단계)
 
 ```bash
 export PATH="/Users/hannah/local/nodejs/node-v22.14.0-darwin-x64/bin:$PATH"
@@ -114,7 +193,7 @@ set -a && source .env && set +a
 .venv/bin/python -m auto_agent.cli bg start --project {slug}
 ```
 
-### 7단계: 진행 상황 안내
+### 10단계: 진행 상황 안내 (기존 7단계)
 
 사용자에게 알려줄 것:
 - 대시보드 URL: `http://localhost:8000`

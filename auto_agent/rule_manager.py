@@ -28,6 +28,7 @@ RULE_MANIFEST = {
     "pipeline.json": "pipeline",
     "agents.json": "agent_config",
     # 에이전트 스킬
+    "skills/agents/brief-interviewer/SKILL.md": "skill",
     "skills/agents/research-orchestrator/SKILL.md": "skill",
     "skills/agents/script-director/SKILL.md": "skill",
     "skills/agents/fact-verifier/SKILL.md": "skill",
