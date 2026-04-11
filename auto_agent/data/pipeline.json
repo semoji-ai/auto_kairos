@@ -96,7 +96,7 @@
           "skills": [
             "shared/writing-style"
           ],
-          "notes": "단일 에이전트 다단계 모드 1.5단계. 매력적인 prose 작성에만 집중. layout/motion/imageAsset 결정 X (다음 step에서 처리). runner가 writing-style-iromism의 참조 원고 + vault semantic search 결과 주입."
+          "notes": "단일 에이전트 다단계 모드 1.5단계. 매력적인 prose 작성에만 집중. layout/motion/imageAsset 결정 X (다음 step에서 처리). runner가 active writing_style의 참조 원고 + vault semantic search 결과 주입."
         },
         {
           "id": "step_2",
