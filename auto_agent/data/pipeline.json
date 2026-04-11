@@ -42,9 +42,20 @@
     {
       "id": "stage_1",
       "name": "리서치",
-      "description": "2단계 리서치: 뼈대(skeleton) → 챕터별 살붙이기(flesh)",
+      "description": "3단계 리서치: 소스 수집(ingest) → 뼈대(skeleton) → 챕터 프로젝션(projection)",
       "execution": "sequential",
       "steps": [
+        {
+          "id": "step_1_ingest",
+          "name": "source_ingest",
+          "description": "ResearchAgent 기반 소스 수집. editorial_brief의 real_topic/core_question 기준으로 vault 02-research에 raw sources + wiki + claims 저장.",
+          "type": "module",
+          "module": "source_ingest",
+          "resumable": true,
+          "input": ["editorial_brief.json", "project_config"],
+          "output": ["source_ingest_status.json"],
+          "notes": "LLM_WIKI_RESEARCH_DIR = $KAIROS_VAULT_DIR/02-research. vault에 이미 usable wiki가 있으면 스킵. 출력은 vault에 저장 (project_dir 아님). ResearchAgent SKILL 기반 Claude CLI 에이전트 실행."
+        },
         {
           "id": "step_1a",
           "name": "skeleton_research",
@@ -53,17 +64,18 @@
           "input": ["project_config"],
           "output": ["skeleton.json", "outline.json"],
           "resumable": true,
-          "notes": "세부 팩트 리서치 X. 뼈대와 챕터 구조(outline.json)만 확정. flesh-researcher를 위한 research_focus 질문 포함."
+          "notes": "세부 팩트 리서치 X. 뼈대와 챕터 구조(outline.json)만 확정. chapter_projection을 위한 research_focus 질문 포함."
         },
         {
           "id": "step_1b",
-          "name": "flesh_research",
-          "description": "outline.json 챕터별 세부 팩트 수집. Task 도구로 챕터별 병렬 배포.",
-          "agent": "flesh-researcher",
-          "input": ["outline.json", "skeleton.json"],
-          "output": ["chapter_facts/"],
+          "name": "chapter_projection",
+          "description": "vault wiki/claims + outline.json 기반 챕터별 facts 프로젝션. chapter_facts/를 canonical store(vault)에서 파생된 writer-facing view로 생성.",
+          "type": "module",
+          "module": "chapter_projection",
           "resumable": true,
-          "notes": "출력은 chapter_facts/ 디렉토리. chapter_facts/chapter_{N}.json 형식. 이미 존재하는 챕터 파일은 스킵."
+          "input": ["outline.json", "source_ingest_status.json"],
+          "output": ["chapter_facts/"],
+          "notes": "vault 02-research/wiki/<slug>/ + manifests/<slug>/claims.jsonl 읽어 chapter_facts/chapter_{N}.json 생성. claim_ids, source_ids 필드 포함. vault wiki 없으면 기본 구조만 생성 (fallback). 이미 존재하는 챕터 파일은 스킵."
         }
       ],
       "checkpoint": {

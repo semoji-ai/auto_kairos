@@ -110,8 +110,9 @@ python -m uvicorn app:app --host 0.0.0.0 --port 8080
 | 스텝 | 에이전트/모듈 | 설명 |
 |------|-------------|------|
 | step_0 | preflight | API키, Node, ffmpeg 검증 |
+| step_1_ingest | source_ingest_module | ResearchAgent → vault 02-research raw/wiki/claims 수집 |
 | step_1a | skeleton-researcher | Wikipedia → 내러티브 골격 + outline.json |
-| step_1b | flesh-researcher | 챕터별 세부 팩트 수집 → chapter_facts/ |
+| step_1b | chapter_projection_module | vault wiki/claims + outline → chapter_facts/ (claim_ids/source_ids 포함) |
 | step_2_draft | draft-writer | 초고 + WHY/HOW 질문 목록 |
 | step_2_target | targeted-researcher | 정밀 웹 리서치 → targeted_claims.json |
 | step_2_manuscript | script-director (manuscript) | 최종 원고 prose 작성 |

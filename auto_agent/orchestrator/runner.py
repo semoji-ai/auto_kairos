@@ -3366,6 +3366,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         script_map = {
             "preflight": "scripts/preflight_check.py",
             "editorial_brief": "modules/editorial_brief_module.py",
+            "source_ingest": "modules/source_ingest_module.py",
+            "chapter_projection": "modules/chapter_projection_module.py",
             "duplicate-checker": "scripts/duplicate_check.py",
             "tts-generator": "scripts/generate_tts.py",
             "image_batch": "modules/image_batch_module.py",
