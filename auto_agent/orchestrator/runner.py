@@ -1848,6 +1848,17 @@ class PipelineRunner:
         "tts_preprocess": "tts-preprocess.md",
     }
 
+    _WRITING_STYLE_SKILLS = frozenset({"writing-style-semoji", "writing-style-iromism"})
+
+    def _filter_writing_style_skills(self, skill_names: list) -> list:
+        """비활성 writing style 스킬 제거. project_config.writing_style 기준으로 하나만 유지."""
+        writing_style = (self.state.config or {}).get("writing_style", "")
+        active = f"writing-style-{writing_style}" if writing_style else None
+        return [
+            s for s in skill_names
+            if s not in self._WRITING_STYLE_SKILLS or s == active
+        ]
+
     def _build_chapter_prompt(self, step: dict, chapter_specs: dict) -> str:
         """챕터별 병렬 처리용 프롬프트 빌드."""
         step_name = step.get("name", "")
@@ -1867,18 +1878,31 @@ class PipelineRunner:
         prompt_key = f"prompts/single-call/{prompt_file}"
         template = self.rule_manager.load(prompt_key)
 
-        # 컨텍스트 파일 빌드
+        # 컨텍스트 파일 빌드 (챕터 스코프)
         context_block = ""
-        # 리서치 컨텍스트: digest 우선, 없으면 report fallback
-        for fname in ["research_digest.json", "research_report.json"]:
-            fpath = self.project_dir / fname
-            if fpath.exists():
-                context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:20000]}\n</file>\n"
-                break
-        # outline은 별도
+        # 리서치: 챕터별 facts 우선 (compact), 없으면 digest fallback
+        chapter_facts_path = self.project_dir / "chapter_facts" / f"chapter_{chapter_num}.json"
+        if chapter_facts_path.exists():
+            context_block += f'\n<file name="chapter_facts/chapter_{chapter_num}.json">\n{chapter_facts_path.read_text(encoding="utf-8")[:10000]}\n</file>\n'
+        else:
+            for fname in ["research_digest.json", "research_report.json"]:
+                fpath = self.project_dir / fname
+                if fpath.exists():
+                    context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:20000]}\n</file>\n"
+                    break
+        # outline: 해당 챕터 슬라이스만 추출
         outline_path = self.project_dir / "outline.json"
         if outline_path.exists():
-            context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:15000]}\n</file>\n'
+            try:
+                outline_data = json.loads(outline_path.read_text(encoding="utf-8"))
+                chapters = outline_data.get("chapters", [])
+                chapter_entry = next((c for c in chapters if c.get("id") == chapter_num), None)
+                if chapter_entry:
+                    context_block += f'\n<file name="outline.json (챕터 {chapter_num} 슬라이스)">\n{json.dumps(chapter_entry, ensure_ascii=False, indent=2)}\n</file>\n'
+                else:
+                    context_block += f'\n<file name="outline.json">\n{json.dumps(outline_data, ensure_ascii=False, indent=2)[:8000]}\n</file>\n'
+            except Exception:
+                context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:8000]}\n</file>\n'
 
         manuscript_path = self.project_dir / "final_manuscript.md"
         if manuscript_path.exists():
@@ -1987,6 +2011,7 @@ class PipelineRunner:
             if s not in skill_names:
                 skill_names.append(s)
 
+        skill_names = self._filter_writing_style_skills(skill_names)
         skill_refs = agent_def.get("skill_refs", {})
         shared_skills_text = ""
         for skill_name in skill_names:
@@ -1994,18 +2019,31 @@ class PipelineRunner:
             if content:
                 shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
 
-        # 공통 컨텍스트 파일
+        # 공통 컨텍스트 파일 (챕터 스코프 — 글로벌 전체 반복 금지)
         context_block = ""
-        # 리서치 컨텍스트: digest 우선, 없으면 report fallback
-        for fname in ["research_digest.json", "research_report.json"]:
-            fpath = self.project_dir / fname
-            if fpath.exists():
-                context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:20000]}\n</file>\n"
-                break
-        # outline은 별도
+        # 리서치: 챕터별 facts 우선 (compact), 없으면 digest fallback
+        chapter_facts_path = self.project_dir / "chapter_facts" / f"chapter_{chapter_num}.json"
+        if chapter_facts_path.exists():
+            context_block += f'\n<file name="chapter_facts/chapter_{chapter_num}.json">\n{chapter_facts_path.read_text(encoding="utf-8")[:10000]}\n</file>\n'
+        else:
+            for fname in ["research_digest.json", "research_report.json"]:
+                fpath = self.project_dir / fname
+                if fpath.exists():
+                    context_block += f"\n<file name=\"{fname}\">\n{fpath.read_text(encoding='utf-8')[:20000]}\n</file>\n"
+                    break
+        # outline: 해당 챕터 슬라이스만 추출
         outline_path = self.project_dir / "outline.json"
         if outline_path.exists():
-            context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:15000]}\n</file>\n'
+            try:
+                outline_data = json.loads(outline_path.read_text(encoding="utf-8"))
+                chapters = outline_data.get("chapters", [])
+                chapter_entry = next((c for c in chapters if c.get("id") == chapter_num), None)
+                if chapter_entry:
+                    context_block += f'\n<file name="outline.json (챕터 {chapter_num} 슬라이스)">\n{json.dumps(chapter_entry, ensure_ascii=False, indent=2)}\n</file>\n'
+                else:
+                    context_block += f'\n<file name="outline.json">\n{json.dumps(outline_data, ensure_ascii=False, indent=2)[:8000]}\n</file>\n'
+            except Exception:
+                context_block += f'\n<file name="outline.json">\n{outline_path.read_text(encoding="utf-8")[:8000]}\n</file>\n'
 
         # final_manuscript.md — 해당 챕터 구간만 추출
         manuscript_path = self.project_dir / "final_manuscript.md"
@@ -2770,6 +2808,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         for s in agent_def.get("skills", []):
             if s not in skill_names:
                 skill_names.append(s)
+        skill_names = self._filter_writing_style_skills(skill_names)
         skill_refs = agent_def.get("skill_refs", {})
         shared_skills_text = ""
         for skill_name in skill_names:
@@ -4035,6 +4074,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 skill_names.append(s)
 
         # skill_refs: 에이전트별 필요한 references만 선택 로드
+        skill_names = self._filter_writing_style_skills(skill_names)
         skill_refs = agent_def.get("skill_refs", {})
 
         shared_skills_text = ""
