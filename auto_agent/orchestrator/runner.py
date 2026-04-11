@@ -1851,13 +1851,16 @@ class PipelineRunner:
     _WRITING_STYLE_SKILLS = frozenset({"writing-style-semoji", "writing-style-iromism"})
 
     def _filter_writing_style_skills(self, skill_names: list) -> list:
-        """비활성 writing style 스킬 제거. project_config.writing_style 기준으로 하나만 유지."""
+        """비활성 writing style 스킬 제거 + 활성 스킬 자동 주입."""
         writing_style = (self.state.config or {}).get("writing_style", "")
         active = f"writing-style-{writing_style}" if writing_style else None
-        return [
+        filtered = [
             s for s in skill_names
             if s not in self._WRITING_STYLE_SKILLS or s == active
         ]
+        if active and active not in filtered:
+            filtered.append(active)
+        return filtered
 
     def _build_chapter_prompt(self, step: dict, chapter_specs: dict) -> str:
         """챕터별 병렬 처리용 프롬프트 빌드."""
@@ -2013,10 +2016,14 @@ class PipelineRunner:
 
         skill_names = self._filter_writing_style_skills(skill_names)
         skill_refs = agent_def.get("skill_refs", {})
+        skill_limits = agent_def.get("skill_limits", {})
         shared_skills_text = ""
         for skill_name in skill_names:
             content = self._load_shared_skill(skill_name, skill_refs.get(skill_name))
             if content:
+                limit = skill_limits.get(skill_name)
+                if limit and len(content) > limit:
+                    content = content[:limit]
                 shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
 
         # 공통 컨텍스트 파일 (챕터 스코프 — 글로벌 전체 반복 금지)
@@ -2810,10 +2817,14 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 skill_names.append(s)
         skill_names = self._filter_writing_style_skills(skill_names)
         skill_refs = agent_def.get("skill_refs", {})
+        skill_limits = agent_def.get("skill_limits", {})
         shared_skills_text = ""
         for skill_name in skill_names:
             content = self._load_shared_skill(skill_name, skill_refs.get(skill_name))
             if content:
+                limit = skill_limits.get(skill_name)
+                if limit and len(content) > limit:
+                    content = content[:limit]
                 shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
 
         static_system = (
@@ -2846,8 +2857,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 </project_config>
 
 <progress_reporting>
-작업 10분 초과 시 5분마다 진행상황 보고. 형식: [진행률%] 완료내용 / 다음작업
-파일: {progress_path} | JSON: {{"agent": "이름", "text": "메시지", "level": "info"}}
+5분마다 → {progress_path} | {{"agent":"..","text":"[진행률%] 완료/다음","level":"info"}}
 </progress_reporting>"""
 
         # 3. user task (vault + task + context_memory)
@@ -4076,11 +4086,15 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         # skill_refs: 에이전트별 필요한 references만 선택 로드
         skill_names = self._filter_writing_style_skills(skill_names)
         skill_refs = agent_def.get("skill_refs", {})
+        skill_limits = agent_def.get("skill_limits", {})
 
         shared_skills_text = ""
         for skill_name in skill_names:
             content = self._load_shared_skill(skill_name, skill_refs.get(skill_name))
             if content:
+                limit = skill_limits.get(skill_name)
+                if limit and len(content) > limit:
+                    content = content[:limit]
                 shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
 
         # 3. 입력 파일 경로
@@ -4218,8 +4232,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 </task>
 
 <progress_reporting>
-작업 10분 초과 시 5분마다 진행상황 보고. 형식: [진행률%] 완료내용 / 다음작업
-파일: {self.project_dir / f".progress_{step.get('id', '')}.jsonl"} | JSON: {{"agent": "이름", "text": "메시지", "level": "info"}}
+5분마다 → {self.project_dir / f".progress_{step.get('id', '')}.jsonl"} | {{"agent":"..","text":"[진행률%] 완료/다음","level":"info"}}
 </progress_reporting>
 
 {context_memory_block}"""

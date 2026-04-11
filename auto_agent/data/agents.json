@@ -106,6 +106,9 @@
         "shared/motion-presets",
         "shared/remotion-design-system"
       ],
+      "skill_limits": {
+        "remotion-design-system": 10000
+      },
       "chunked_parallel": {
         "split_by": "chapter",
         "max_parallel": 3,
@@ -215,6 +218,9 @@
         "shared/image-generation",
         "shared/image-prompt-rules"
       ],
+      "skill_limits": {
+        "remotion-design-system": 5000
+      },
       "tools": {
         "tts_tool": {
           "module": "tts_generator",

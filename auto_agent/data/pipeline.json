@@ -94,9 +94,7 @@
           "input": ["outline.json", "draft.md", "targeted_claims.json", "project_config"],
           "output": ["final_manuscript.md"],
           "skills": [
-            "shared/writing-style",
-            "shared/writing-style-semoji",
-            "shared/writing-style-iromism"
+            "shared/writing-style"
           ],
           "notes": "단일 에이전트 다단계 모드 1.5단계. 매력적인 prose 작성에만 집중. layout/motion/imageAsset 결정 X (다음 step에서 처리). runner가 writing-style-iromism의 참조 원고 + vault semantic search 결과 주입."
         },
@@ -115,8 +113,6 @@
           "output": ["scene_specs.json"],
           "skills": [
             "shared/writing-style",
-            "shared/writing-style-semoji",
-            "shared/writing-style-iromism",
             "shared/motion-presets",
             "shared/remotion-design-system"
           ],
@@ -132,8 +128,6 @@
           "output": ["scene_specs.json"],
           "skills": [
             "shared/writing-style",
-            "shared/writing-style-semoji",
-            "shared/writing-style-iromism",
             "shared/motion-presets",
             "shared/remotion-design-system"
           ],
@@ -155,8 +149,6 @@
           },
           "skills": [
             "shared/writing-style",
-            "shared/writing-style-semoji",
-            "shared/writing-style-iromism",
             "shared/motion-presets",
             "shared/remotion-design-system"
           ],
