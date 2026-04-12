@@ -163,9 +163,20 @@ def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
     if (package_dir / "tools" / "news_rss_lane.py").exists():
         lane_note = f"""
 **토큰 절약 우선 수집 도구 (WebSearch 전에 먼저 사용):**
+
+### 뉴스 RSS 수집 규칙 (중요)
+주제를 그대로 쿼리로 쓰지 말고 **반드시 3종으로 분해**하여 각각 호출:
+1. **브랜드명/인물명**: 핵심 고유명사 (예: "바세린", "Chesebrough")
+2. **현재 시장 관련**: 기업·카테고리 키워드 (예: "유니레버 바세린", "석유젤리 시장")
+3. **영문 버전**: 한국어 주제의 영문 병행 (예: "Vaseline Unilever")
+
+"바세린의 역사"처럼 주제 전체를 그대로 쿼리로 넣으면 뉴스 결과가 거의 없습니다.
+
 ```bash
-# 뉴스 RSS (Naver, 연합뉴스, Google News)
-python3 {package_dir}/tools/news_rss_lane.py "{{query}}" --limit 10 --ko-only
+# 뉴스 RSS — 쿼리 분해 후 각각 호출 (ko/en 분리)
+python3 {package_dir}/tools/news_rss_lane.py "브랜드명또는인물명" --limit 10 --ko-only
+python3 {package_dir}/tools/news_rss_lane.py "현재시장관련단어" --limit 10 --ko-only
+python3 {package_dir}/tools/news_rss_lane.py "EnglishKeyword" --limit 10 --en-only
 
 # Wikipedia
 python3 {package_dir}/tools/wikipedia_lane.py "{{query}}" --limit 5 --content
@@ -173,7 +184,12 @@ python3 {package_dir}/tools/wikipedia_lane.py "{{query}}" --limit 5 --content
 # 학술 논문 (CrossRef)
 python3 {package_dir}/tools/crossref_lane.py "{{query}}" --limit 5
 ```
-위 도구들을 먼저 사용하고, 커버되지 않는 부분만 WebSearch/WebFetch로 보완하세요.
+
+### 뉴스 소스 처리 규칙
+- `confidence: blocked` 항목은 제외 (유튜브, 블로그, SNS 등 저신뢰 소스)
+- 동일 이벤트를 다룬 유사 제목 기사는 1건만 유지 (중복 제거)
+- 뉴스 소스는 **총 15건 이하**만 chapter_facts에 포함 (컨텍스트 과적재 방지)
+- 위 도구들로 커버되지 않는 부분만 WebSearch/WebFetch로 보완하세요.
 """
 
     # Claude CLI 프롬프트 구성
