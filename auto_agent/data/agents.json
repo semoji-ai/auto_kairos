@@ -16,7 +16,7 @@
       "notes": "phase_0 step_0b. editorial_brief.json이 이미 존재하면 스킵. /auto-kairos 스킬에서 CLI 인터뷰로 생성된 경우도 스킵."
     },
     "skeleton-researcher": {
-      "description": "Wikipedia + 권위 소스 → 타임라인/핵심인물/챕터 골격 확립. flesh-researcher를 위한 research_focus 질문 생성.",
+      "description": "ingest 결과(vault wiki/claims)만 읽어 타임라인/핵심인물/챕터 골격을 구조화하는 vault reader. 기본 파이프라인에서는 module이 우선이고, 이 에이전트는 수동 fallback 용도.",
       "model": "sonnet",
       "max_turns": 30,
       "budget": "$0.8",
@@ -24,11 +24,10 @@
       "allowed_tools": [
         "Read",
         "Write",
-        "WebSearch",
-        "WebFetch"
+        "Glob"
       ],
       "skill_file": "agents/skeleton-researcher/SKILL.md",
-      "notes": "Stage 1 Phase 0. 세부 팩트 리서치 X — 뼈대만."
+      "notes": "Stage 1 수동 fallback. 외부 검색 금지. ingest 산출물(vault wiki/claims)만 사용."
     },
     "flesh-researcher": {
       "description": "outline.json 챕터별 세부 팩트 수집. Task 도구로 챕터별 병렬 배포 → chapter_facts/",

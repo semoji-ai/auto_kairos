@@ -59,12 +59,13 @@
         {
           "id": "step_1a",
           "name": "skeleton_research",
-          "description": "Wikipedia + 권위 소스로 주제의 내러티브 골격 확립. 타임라인/핵심인물/챕터구조 설계.",
-          "agent": "skeleton-researcher",
-          "input": ["project_config"],
+          "description": "vault wiki/claims 기반으로 주제의 내러티브 골격 확립. 타임라인/핵심인물/챕터구조를 deterministic하게 생성.",
+          "type": "module",
+          "module": "skeleton_from_vault",
+          "input": ["editorial_brief.json", "project_config", "source_ingest_status.json"],
           "output": ["skeleton.json", "outline.json"],
           "resumable": true,
-          "notes": "세부 팩트 리서치 X. 뼈대와 챕터 구조(outline.json)만 확정. chapter_projection을 위한 research_focus 질문 포함."
+          "notes": "외부 검색 금지. source_ingest_status.json이 completed/skipped_existing여야 실행. vault 02-research/wiki/<slug>/ + manifests/<slug>/claims.jsonl에서 skeleton/outline을 파생 생성. progress: wiki/claims/timeline/key figures/outline 단계별 기록."
         },
         {
           "id": "step_1b",

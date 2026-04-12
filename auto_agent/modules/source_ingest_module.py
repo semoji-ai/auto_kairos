@@ -14,10 +14,51 @@ import subprocess
 import sys
 from pathlib import Path
 
-# ResearchAgent 경로 (Codex에서 만든 기존 프로젝트)
-RESEARCH_AGENT_DIR = Path(os.environ.get("RESEARCH_AGENT_DIR", "/Users/jleavens_macmini/Projects/researchagent"))
-LAUNCHER = RESEARCH_AGENT_DIR / "scripts" / "research_launcher.py"
-VAULT_SCRIPT = RESEARCH_AGENT_DIR / "scripts" / "research_vault.py"
+from auto_agent.modules.research_entity_hub import (
+    resolve_existing_entity_slug,
+    resolve_topic_to_entity_section,
+)
+
+def _candidate_research_agent_dirs() -> list[Path]:
+    """ResearchAgent 설치 후보 경로를 우선순위대로 반환."""
+    repo_projects_dir = Path(__file__).resolve().parents[3]
+    env_dir = os.environ.get("RESEARCH_AGENT_DIR", "").strip()
+    candidates = []
+    if env_dir:
+        candidates.append(Path(env_dir).expanduser())
+    candidates.extend(
+        [
+            repo_projects_dir / "ResearchAgent",
+            repo_projects_dir / "researchagent",
+            Path("/Users/jleavens_macmini/Projects/ResearchAgent"),
+            Path("/Users/jleavens_macmini/Projects/researchagent"),
+        ]
+    )
+    deduped: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = str(candidate)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(candidate)
+    return deduped
+
+
+def _resolve_research_agent_paths(candidate_dirs: list[Path] | tuple[Path, ...] | None = None) -> tuple[Path, Path, Path]:
+    """ResearchAgent 디렉터리와 launcher/vault script 경로를 해석."""
+    checked: list[str] = []
+    for research_agent_dir in candidate_dirs or _candidate_research_agent_dirs():
+        launcher = research_agent_dir / "scripts" / "research_launcher.py"
+        vault_script = research_agent_dir / "scripts" / "research_vault.py"
+        checked.append(str(launcher))
+        if launcher.exists() and vault_script.exists():
+            return research_agent_dir.resolve(), launcher.resolve(), vault_script.resolve()
+    checked_block = "\n  - ".join(checked) if checked else "(none)"
+    raise FileNotFoundError(
+        "ResearchAgent launcher를 찾지 못했습니다. 확인한 경로:\n"
+        f"  - {checked_block}"
+    )
 
 
 def _get_research_root() -> Path:
@@ -47,11 +88,7 @@ def _slug(text: str) -> str:
 
 def _resolve_slug(research_root: Path, topic_slug: str) -> str:
     """vault에서 실제로 존재하는 slug 반환. 하이픈↔언더스코어 둘 다 확인."""
-    alt_slug = topic_slug.replace("-", "_") if "-" in topic_slug else topic_slug.replace("_", "-")
-    for candidate in [topic_slug, alt_slug]:
-        if (research_root / "wiki" / candidate).exists():
-            return candidate
-    return topic_slug  # 없으면 원본 반환
+    return resolve_existing_entity_slug(research_root, topic_slug)
 
 
 def _section_wiki_usable(research_root: Path, entity_slug: str, section_slug: str) -> bool:
@@ -104,14 +141,15 @@ def _topic_wiki_usable(research_root: Path, topic_slug: str) -> bool:
     return len(content) >= 500
 
 
-def _run_launcher(args: list, research_root: Path) -> dict:
+def _run_launcher(args: list, research_root: Path, research_agent_dir: Path, launcher: Path) -> dict:
     """research_launcher.py 호출 → JSON 결과 파싱."""
     env = os.environ.copy()
     env["LLM_WIKI_RESEARCH_DIR"] = str(research_root)
+    env["RESEARCH_AGENT_DIR"] = str(research_agent_dir)
 
-    cmd = [sys.executable, str(LAUNCHER)] + args + ["--vault-dir", str(research_root)]
+    cmd = [sys.executable, str(launcher)] + args + ["--vault-dir", str(research_root)]
     print(f"[source_ingest] 실행: {' '.join(cmd[:6])}...", flush=True)
-    result = subprocess.run(cmd, capture_output=True, text=True, env=env, cwd=str(RESEARCH_AGENT_DIR))
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env, cwd=str(research_agent_dir))
     if result.returncode != 0:
         print(f"[source_ingest] STDERR: {result.stderr[-500:]}", flush=True)
     try:
@@ -123,8 +161,13 @@ def _run_launcher(args: list, research_root: Path) -> dict:
 def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
                          research_root: Path, project_dir: Path,
                          core_question: str = "", excluded_angles: list = None,
-                         entity_slug: str = "", section_slug: str = "") -> bool:
+                         entity_slug: str = "", section_slug: str = "",
+                         research_agent_dir: Path | None = None,
+                         launcher: Path | None = None,
+                         vault_script: Path | None = None) -> bool:
     """Claude CLI로 ResearchAgent 실행 (자율 수집 루프)."""
+    if research_agent_dir is None or launcher is None or vault_script is None:
+        research_agent_dir, launcher, vault_script = _resolve_research_agent_paths()
     must_answer = core_question or f"{topic}의 핵심 구조와 맥락"
     exclude_str = "; ".join(excluded_angles or [])
 
@@ -154,7 +197,7 @@ def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
         session_brief = f"# Research Session Brief\ntopic: {topic}\nquery: {query}\nmust_answer: {must_answer}"
 
     # ResearchAgent SKILL.md 읽기
-    skill_path = RESEARCH_AGENT_DIR / "SKILL.md"
+    skill_path = research_agent_dir / "SKILL.md"
     skill_content = skill_path.read_text(encoding="utf-8") if skill_path.exists() else ""
 
     # 프로젝트 루트에서 lane 도구 경로 확인
@@ -225,8 +268,8 @@ python3 {package_dir}/tools/crossref_lane.py "{{query}}" --limit 5
 5. research_launcher.py ingest-bundle 및 finalize-session 호출로 마무리
 
 research root 경로: {research_root}
-research_vault.py 경로: {VAULT_SCRIPT}
-research_launcher.py 경로: {LAUNCHER}
+research_vault.py 경로: {vault_script}
+research_launcher.py 경로: {launcher}
 
 모든 파일을 위 research root 아래에 저장하세요. 완료되면 "RESEARCH_COMPLETE"를 출력하세요.
 """
@@ -247,7 +290,7 @@ research_launcher.py 경로: {LAUNCHER}
 
     env = os.environ.copy()
     env["LLM_WIKI_RESEARCH_DIR"] = str(research_root)
-    env["RESEARCH_AGENT_DIR"] = str(RESEARCH_AGENT_DIR)
+    env["RESEARCH_AGENT_DIR"] = str(research_agent_dir)
 
     print(f"[source_ingest] Claude CLI 리서치 에이전트 시작 (max-turns=30)...", flush=True)
     proc = subprocess.run(
@@ -266,8 +309,8 @@ research_launcher.py 경로: {LAUNCHER}
         print(f"[source_ingest] 에이전트 출력 마지막 500자: {output[-500:]}", flush=True)
 
     # 완료 여부와 관계없이 ingest-bundle + finalize-session 호출
-    _run_launcher(["ingest-bundle", "--topic", topic, "--run-id", run_id, "--refresh"], research_root)
-    _run_launcher(["finalize-session", "--topic", topic, "--run-id", run_id], research_root)
+    _run_launcher(["ingest-bundle", "--topic", topic, "--run-id", run_id, "--refresh"], research_root, research_agent_dir, launcher)
+    _run_launcher(["finalize-session", "--topic", topic, "--run-id", run_id], research_root, research_agent_dir, launcher)
 
     return True
 
@@ -326,6 +369,19 @@ def main():
 
     print(f"[source_ingest] research root: {research_root}", flush=True)
 
+    resolved = resolve_topic_to_entity_section(
+        research_root,
+        topic_slug=topic_slug,
+        entity_slug=entity_slug,
+        section_slug=section_slug,
+    )
+    if resolved.entity_slug:
+        entity_slug = resolved.entity_slug
+    if resolved.section_slug and not section_slug:
+        section_slug = resolved.section_slug
+    if entity_slug:
+        print(f"[source_ingest] canonical entity_slug: {entity_slug}, section_slug: {section_slug}", flush=True)
+
     # 3. 이미 usable한 wiki가 있으면 스킵
     # Wikipedia 스타일(entity_slug/section_slug) 우선 체크, 없으면 레거시 topic_slug 체크
     wiki_exists = False
@@ -345,7 +401,7 @@ def main():
 
     if wiki_exists:
         # 어떤 run을 사용할지 source_ingest_status.json에 기록
-        manifest_slug = skip_entity_slug or topic_slug
+        manifest_slug = skip_entity_slug or _resolve_slug(research_root, topic_slug)
         latest_run_file = research_root / "manifests" / manifest_slug / "latest_run.txt"
         run_id = latest_run_file.read_text(encoding="utf-8").strip() if latest_run_file.exists() else "unknown"
         status = {
@@ -363,8 +419,10 @@ def main():
         sys.exit(0)
 
     # 4. ResearchAgent launcher — prepare-session
-    if not LAUNCHER.exists():
-        print(f"[source_ingest] ResearchAgent launcher 없음: {LAUNCHER}", flush=True)
+    try:
+        research_agent_dir, launcher, vault_script = _resolve_research_agent_paths()
+    except FileNotFoundError as exc:
+        print(f"[source_ingest] {exc}", flush=True)
         sys.exit(1)
 
     excluded_str = "; ".join(excluded_angles) if excluded_angles else ""
@@ -379,7 +437,7 @@ def main():
         prepare_args += ["--must-answer", core_question]
     prepare_args += ["--downstream-use", "youtube-script"]
 
-    result = _run_launcher(prepare_args, research_root)
+    result = _run_launcher(prepare_args, research_root, research_agent_dir, launcher)
     run_id = result.get("run_id", "")
 
     if not run_id:
@@ -423,6 +481,9 @@ def main():
         excluded_angles=excluded_angles,
         entity_slug=entity_slug,
         section_slug=section_slug,
+        research_agent_dir=research_agent_dir,
+        launcher=launcher,
+        vault_script=vault_script,
     )
 
     # 6. 완료 상태 기록 (실제 vault slug 보정)

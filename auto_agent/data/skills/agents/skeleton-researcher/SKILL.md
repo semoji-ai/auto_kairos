@@ -2,119 +2,110 @@
 
 ## 역할
 
-Wikipedia + 2~3개 권위 있는 소스로 주제의 **내러티브 골격**을 확립합니다.
-세부 팩트 리서치는 하지 않습니다. 타임라인·핵심 인물·챕터 구조만 잡아줍니다.
-이 구조를 기반으로 flesh-researcher가 챕터별 세부 리서치를 수행합니다.
+`step_1_ingest`가 이미 만든 canonical research store를 읽어 `skeleton.json`, `outline.json`을 구조화합니다.
+
+핵심 원칙:
+- 외부 검색 금지
+- 입력은 vault wiki / claims만 사용
+- collect once, derive many
+
+기본 파이프라인에서는 Python module `skeleton_from_vault`가 우선입니다. 이 스킬은 수동 fallback 또는 구조 확인용입니다.
 
 ---
 
-## 실행 순서
+## 입력
 
-### Step 1. Wikipedia 탐색
+- `source_ingest_status.json`
+- `editorial_brief.json`
+- `project_config.json`
+- vault:
+  - `wiki/<slug>/overview.md`
+  - `wiki/<slug>/timeline.md`
+  - `wiki/<slug>/entities.md`
+  - `manifests/<slug>/claims.jsonl`
+  - `manifests/<slug>/sources.jsonl`
 
-```
-WebSearch: "{주제} wikipedia" (영문 우선, 국문 병행)
-WebFetch: Wikipedia 페이지 → 전체 내용 파악
-```
+---
 
-확인할 것:
-- 전체 타임라인 (날짜별 사건)
-- 핵심 인물 (이름, 역할, 관계)
-- 전환점이 된 에피소드
-- 일반적인 챕터 구분 (도입/성장/위기/전환 등)
+## 허용 도구
 
-### Step 2. 권위 소스 2~3개 추가 확인
+- `Read`
+- `Write`
+- `Glob`
 
-```
-WebSearch: "{주제} history overview" 또는 "{주제} brand story" (주제 특성에 맞게)
-WebFetch: 주요 소스 1~2개 원문 확인
-```
+금지:
+- `WebSearch`
+- `WebFetch`
 
-목적: Wikipedia를 검증하고 놓친 핵심 에피소드 보완
+---
+
+## 작업 순서
+
+### Step 1. ingest 결과 확인
+
+- `source_ingest_status.json.status`가 `completed` 또는 `skipped_existing`인지 확인
+- 아니면 실패로 종료
+
+### Step 2. vault 페이지 파싱
+
+우선순위:
+1. `overview.md`
+2. `timeline.md`
+3. `entities.md`
+4. `claims.jsonl`
+
+해야 할 일:
+- Summary bullets 추출
+- timeline event 정리
+- key figures 정리
+- key episodes 후보 정리
+- source provenance 유지
 
 ### Step 3. skeleton.json 작성
 
-```json
-{
-  "topic": "주제명",
-  "timeline": [
-    {
-      "year": "1886",
-      "event": "코카콜라 최초 제조",
-      "significance": "창업의 시작점"
-    }
-  ],
-  "key_figures": [
-    {
-      "name": "존 펨버턴",
-      "name_en": "John Stith Pemberton",
-      "role": "창업자",
-      "period": "1831~1888",
-      "significance": "코카콜라 원조 레시피 개발"
-    }
-  ],
-  "key_episodes": [
-    {
-      "title": "남북전쟁 부상과 모르핀 중독",
-      "period": "1865",
-      "narrative_role": "코카콜라 탄생의 직접적 원인",
-      "emotional_hook": "영웅의 추락과 절박한 탈출구"
-    }
-  ],
-  "sources": [
-    { "title": "Wikipedia: Coca-Cola", "url": "...", "reliability": "medium" }
-  ]
-}
-```
+최소 포함:
+- `topic`
+- `topic_slug`
+- `entity_slug`
+- `section_slug`
+- `timeline`
+- `key_figures`
+- `key_episodes`
+- `sources`
 
 ### Step 4. outline.json 작성
 
-skeleton의 타임라인과 에피소드를 바탕으로 **콘텐츠 챕터 구조**를 설계합니다.
-영상 분량(project_config의 duration_minutes)에 맞게 챕터 수를 조정하세요.
+해야 할 일:
+- 영상 분량에 맞춰 챕터 수 결정
+- timeline/key_episodes를 챕터 단위로 묶기
+- `chapters[].key_points`
+- `chapters[].purpose`
+- `chapters[].research_focus`
+- `flow_notes`
+생성
 
-```json
-{
-  "topic": "주제명",
-  "total_chapters": 5,
-  "chapters": [
-    {
-      "id": 1,
-      "title": "한 사내아이의 탄생",
-      "narrative_role": "intro",
-      "time_period": "1831~1860",
-      "key_beats": [
-        "펨버턴의 출생과 성장 배경",
-        "톰소니언 의학 입문",
-        "약국 창업과 화학 회사 설립"
-      ],
-      "research_focus": [
-        "펨버턴의 어린 시절 세부 정보 (출생지, 학교, 가족)",
-        "톰소니언 의학이란 무엇인가? 당시 미국에서의 인기와 논란",
-        "1855년 약국과 1860년 화학 회사의 규모와 사업 내용"
-      ],
-      "emotional_arc": "꿈 많은 청년 → 성공한 사업가"
-    }
-  ]
-}
-```
-
-**research_focus 작성 원칙:**
-- 챕터당 3~5개 질문
-- "왜?", "어떻게?", "구체적으로 얼마나?" 형식
-- flesh-researcher가 웹 검색으로 답할 수 있는 질문으로 작성
+주의:
+- 새로운 사실을 만들지 말 것
+- 이미 ingest에서 확인되지 않은 에피소드를 추가하지 말 것
+- scene_specs 수준으로 과도하게 내려가지 말 것
 
 ---
 
-## 금지 사항
+## 진행 로그
 
-- ❌ 세부 팩트를 직접 작성하지 말 것 (flesh-researcher 몫)
-- ❌ 챕터당 research_focus 5개 초과 금지 (flesh-researcher 부담)
-- ❌ 아직 확인되지 않은 에피소드를 outline에 넣지 말 것
-- ❌ scene_specs 형식으로 출력 금지 (prose outline만)
+가능하면 아래 단위로 진행을 남깁니다.
+
+- ingest 결과 로드 중
+- wiki overview 파싱 중
+- claims manifest 읽는 중
+- timeline 정리 중
+- key figures 추출 중
+- outline 생성 중
+- skeleton 저장 완료
 
 ---
 
 ## 출력 파일
 
-- `skeleton.json` — 타임라인 + 핵심 인물 + 에피소드 목록
-- `outline.json` — 챕터 구조 + research_focus 질문 목록
+- `skeleton.json`
+- `outline.json`
