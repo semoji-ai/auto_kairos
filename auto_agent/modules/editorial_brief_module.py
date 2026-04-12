@@ -16,6 +16,8 @@ from pathlib import Path
 BRIEF_SCHEMA = {
     "core_question": "이 영상이 답해야 하는 단 하나의 질문",
     "real_topic": "이 콘텐츠의 진짜 주제 (후킹용 사례가 아닌 실제 설명 대상)",
+    "entity_slug": "핵심 엔티티 slug — vault wiki 최상위 폴더명 (예: '바세린의 역사' → '바세린'). 한글 소문자, 공백 없음, 언더스코어 허용",
+    "section_slug": "이 콘텐츠의 각도/섹션 slug (예: '역사', '효능', '제조'). 한글 소문자, 공백 없음",
     "hook_angle": "처음 5~15초를 여는 도입 장치 (어떤 사례/기사/장면으로 시작하는가)",
     "supporting_case": "본론을 설명하기 위해 끌어오는 사례/회사/인물/기사",
     "excluded_angles": ["절대 벗어나면 안 되는 방향 1", "절대 벗어나면 안 되는 방향 2"],
@@ -50,6 +52,8 @@ def generate_brief_from_topic(topic: str, writing_style: str = "") -> dict:
 
 핵심 원칙:
 - real_topic: 후킹용 사례가 아닌 '진짜 설명하려는 주제'. 예) "SK하이닉스 성과급" → 진짜 주제는 "대한민국 근로소득세 구조"일 수 있음
+- entity_slug: 핵심 엔티티의 vault 저장 slug. Wikipedia처럼 최상위 엔티티명. 예) "바세린의 역사" → "바세린", "SK하이닉스 성과급 논란" → "SK하이닉스". 한글 소문자, 공백 대신 언더스코어, 특수문자 없음
+- section_slug: 이 콘텐츠의 각도/섹션. 예) "바세린의 역사" → "역사", "바세린 효능" → "효능". 한글 소문자, 공백 없음
 - hook_angle: 시청자를 끌어들이는 도입 장치 (사례/기사/충격적 사실)
 - excluded_angles: 이 콘텐츠가 빠지면 안 되는 방향 — 사례가 본론을 잡아먹는 현상 방지
 - core_question: 시청자가 이 영상을 다 보고 나서 "아, 이 질문의 답을 얻었다"고 느껴야 할 질문
@@ -58,6 +62,8 @@ def generate_brief_from_topic(topic: str, writing_style: str = "") -> dict:
 {{
   "core_question": "...",
   "real_topic": "...",
+  "entity_slug": "...",
+  "section_slug": "...",
   "hook_angle": "...",
   "supporting_case": "...",
   "excluded_angles": ["...", "..."],
@@ -88,9 +94,18 @@ def generate_brief_from_topic(topic: str, writing_style: str = "") -> dict:
 
 def _default_brief(topic: str) -> dict:
     """API 실패 시 기본 brief (topic 기반 최소 구조)."""
+    import re
+    # 간단한 entity_slug 추출: 첫 명사구 (조사/어미 제거)
+    entity = re.sub(r"(의|을|를|이|가|은|는|와|과|에서|에|로|으로)\s.*$", "", topic).strip()
+    entity_slug = re.sub(r"\s+", "_", entity.lower())
+    # section_slug: 마지막 단어
+    parts = topic.split()
+    section_slug = parts[-1].lower() if len(parts) > 1 else "overview"
     return {
         "core_question": f"{topic}에 대해 시청자가 가장 궁금해하는 핵심 질문은?",
         "real_topic": topic,
+        "entity_slug": entity_slug,
+        "section_slug": section_slug,
         "hook_angle": f"{topic} 관련 충격적이거나 흥미로운 사실로 시작",
         "supporting_case": f"{topic} 관련 대표 사례",
         "excluded_angles": ["주제와 직접 관련 없는 기업/인물 서사 중심 전개"],

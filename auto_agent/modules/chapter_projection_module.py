@@ -41,9 +41,19 @@ def _slug(text: str) -> str:
     return s[:60].strip("-")
 
 
+def _resolve_slug(research_root: Path, topic_slug: str) -> str:
+    """vault에서 실제로 존재하는 slug 반환. 하이픈↔언더스코어 둘 다 확인."""
+    alt_slug = topic_slug.replace("-", "_") if "-" in topic_slug else topic_slug.replace("_", "-")
+    for candidate in [topic_slug, alt_slug]:
+        if (research_root / "wiki" / candidate).exists():
+            return candidate
+    return topic_slug  # 없으면 원본 반환
+
+
 def _load_wiki(research_root: Path, topic_slug: str) -> dict[str, str]:
-    """vault wiki 페이지 로드 → {filename: content}."""
-    wiki_dir = research_root / "wiki" / topic_slug
+    """vault wiki 페이지 로드 → {filename: content}. 하이픈↔언더스코어 둘 다 체크."""
+    slug = _resolve_slug(research_root, topic_slug)
+    wiki_dir = research_root / "wiki" / slug
     pages = {}
     if not wiki_dir.exists():
         return pages
@@ -53,8 +63,9 @@ def _load_wiki(research_root: Path, topic_slug: str) -> dict[str, str]:
 
 
 def _load_claims(research_root: Path, topic_slug: str) -> list[dict]:
-    """vault claims.jsonl 로드 → list of claim dicts."""
-    claims_file = research_root / "manifests" / topic_slug / "claims.jsonl"
+    """vault claims.jsonl 로드 → list of claim dicts. 하이픈↔언더스코어 둘 다 체크."""
+    slug = _resolve_slug(research_root, topic_slug)
+    claims_file = research_root / "manifests" / slug / "claims.jsonl"
     if not claims_file.exists():
         return []
     claims = []
@@ -69,8 +80,9 @@ def _load_claims(research_root: Path, topic_slug: str) -> list[dict]:
 
 
 def _load_sources(research_root: Path, topic_slug: str) -> list[dict]:
-    """vault sources.jsonl 로드 → list of source dicts."""
-    sources_file = research_root / "manifests" / topic_slug / "sources.jsonl"
+    """vault sources.jsonl 로드 → list of source dicts. 하이픈↔언더스코어 둘 다 체크."""
+    slug = _resolve_slug(research_root, topic_slug)
+    sources_file = research_root / "manifests" / slug / "sources.jsonl"
     if not sources_file.exists():
         return []
     sources = []
@@ -250,6 +262,7 @@ def main():
         topic = os.environ.get("PROJECT_NAME", "unknown")
 
     topic_slug = _slug(topic)
+    entity_slug = ""
 
     # 3. source_ingest_status.json에서 실제 slug 읽기 (더 정확)
     status_path = project_dir / "source_ingest_status.json"
@@ -258,10 +271,22 @@ def main():
             status = json.loads(status_path.read_text(encoding="utf-8"))
             topic_slug = status.get("topic_slug", topic_slug)
             topic = status.get("topic", topic)
+            entity_slug = status.get("entity_slug", "")
         except Exception:
             pass
 
-    print(f"[chapter_projection] 주제: {topic} ({topic_slug})", flush=True)
+    # editorial_brief.json에서도 entity_slug 읽기 (status.json보다 우선)
+    brief_path = project_dir / "editorial_brief.json"
+    if brief_path.exists():
+        try:
+            brief = json.loads(brief_path.read_text(encoding="utf-8"))
+            entity_slug = brief.get("entity_slug", entity_slug)
+        except Exception:
+            pass
+
+    # vault 검색에 사용할 slug 결정 (entity_slug 우선, 없으면 topic_slug)
+    vault_slug = entity_slug if entity_slug else topic_slug
+    print(f"[chapter_projection] 주제: {topic} (vault_slug: {vault_slug})", flush=True)
 
     # 4. vault wiki/claims 로드
     research_root = _get_research_root()
@@ -270,9 +295,9 @@ def main():
     sources: list[dict] = []
 
     if research_root:
-        wiki_pages = _load_wiki(research_root, topic_slug)
-        claims = _load_claims(research_root, topic_slug)
-        sources = _load_sources(research_root, topic_slug)
+        wiki_pages = _load_wiki(research_root, vault_slug)
+        claims = _load_claims(research_root, vault_slug)
+        sources = _load_sources(research_root, vault_slug)
         print(f"[chapter_projection] vault wiki: {len(wiki_pages)}페이지, claims: {len(claims)}개", flush=True)
     else:
         print("[chapter_projection] vault 없음 — wiki 없이 진행", flush=True)

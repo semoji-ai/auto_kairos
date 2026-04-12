@@ -45,10 +45,53 @@ def _slug(text: str) -> str:
     return s[:60].strip("-")
 
 
+def _resolve_slug(research_root: Path, topic_slug: str) -> str:
+    """vault에서 실제로 존재하는 slug 반환. 하이픈↔언더스코어 둘 다 확인."""
+    alt_slug = topic_slug.replace("-", "_") if "-" in topic_slug else topic_slug.replace("_", "-")
+    for candidate in [topic_slug, alt_slug]:
+        if (research_root / "wiki" / candidate).exists():
+            return candidate
+    return topic_slug  # 없으면 원본 반환
+
+
+def _section_wiki_usable(research_root: Path, entity_slug: str, section_slug: str) -> bool:
+    """Wikipedia 스타일 wiki에서 해당 섹션 파일이 이미 usable한지 확인."""
+    # entity_slug 폴더 존재 + section 파일 또는 overview.md 확인
+    entity_dir = research_root / "wiki" / entity_slug
+    if not entity_dir.exists():
+        # 하이픈↔언더스코어 변형도 확인
+        alt_entity = entity_slug.replace("-", "_") if "-" in entity_slug else entity_slug.replace("_", "-")
+        entity_dir = research_root / "wiki" / alt_entity
+        if not entity_dir.exists():
+            return False
+        entity_slug = alt_entity
+
+    # 섹션 파일: {section_slug}.md 또는 overview.md
+    section_file = entity_dir / f"{section_slug}.md"
+    overview_file = entity_dir / "overview.md"
+    target_file = section_file if section_file.exists() else overview_file
+
+    if not target_file.exists():
+        return False
+
+    content = target_file.read_text(encoding="utf-8")
+    if len(content) < 300:
+        return False
+
+    # claims도 확인
+    claims_file = research_root / "manifests" / entity_slug / "claims.jsonl"
+    if claims_file.exists():
+        lines = [l for l in claims_file.read_text(encoding="utf-8").splitlines() if l.strip()]
+        return len(lines) >= 3
+
+    return len(content) >= 500
+
+
 def _topic_wiki_usable(research_root: Path, topic_slug: str) -> bool:
-    """vault에 이미 usable한 wiki가 있는지 확인."""
-    wiki_overview = research_root / "wiki" / topic_slug / "overview.md"
-    claims_file = research_root / "manifests" / topic_slug / "claims.jsonl"
+    """vault에 이미 usable한 wiki가 있는지 확인. 하이픈↔언더스코어 둘 다 체크. (레거시 호환)"""
+    slug = _resolve_slug(research_root, topic_slug)
+    wiki_overview = research_root / "wiki" / slug / "overview.md"
+    claims_file = research_root / "manifests" / slug / "claims.jsonl"
     if not wiki_overview.exists():
         return False
     # claims.jsonl에 최소 3개 이상의 claim이 있으면 usable
@@ -79,18 +122,36 @@ def _run_launcher(args: list, research_root: Path) -> dict:
 
 def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
                          research_root: Path, project_dir: Path,
-                         core_question: str = "", excluded_angles: list = None) -> bool:
+                         core_question: str = "", excluded_angles: list = None,
+                         entity_slug: str = "", section_slug: str = "") -> bool:
     """Claude CLI로 ResearchAgent 실행 (자율 수집 루프)."""
     must_answer = core_question or f"{topic}의 핵심 구조와 맥락"
     exclude_str = "; ".join(excluded_angles or [])
 
-    # 세션 번들 읽기
-    session_brief_path = research_root / "raw" / topic_slug / run_id / "artifacts" / "session_bundle" / "session_brief.md"
-    if not session_brief_path.exists():
-        print(f"[source_ingest] session_brief.md 없음: {session_brief_path}", flush=True)
-        return False
+    # Wikipedia 스타일 wiki 경로 결정
+    if entity_slug and section_slug:
+        wiki_save_path = research_root / "wiki" / entity_slug
+        wiki_path_note = f"""
+**Wikipedia 스타일 wiki 저장 경로:**
+- entity 폴더: {wiki_save_path}/
+- 이 콘텐츠 섹션 파일: {wiki_save_path}/{section_slug}.md
+- 공통 파일: {wiki_save_path}/overview.md, claims.md, entities.md, timeline.md
+- manifests: {research_root}/manifests/{entity_slug}/claims.jsonl
 
-    session_brief = session_brief_path.read_text(encoding="utf-8")
+**중요:** wiki 파일을 `{research_root}/wiki/{entity_slug}/` 아래에 저장하세요.
+기존 섹션 파일({wiki_save_path}/*.md)이 있으면 내용을 보완하세요 (덮어쓰기 금지).
+"""
+    else:
+        wiki_save_path = research_root / "wiki" / topic_slug
+        wiki_path_note = f"wiki 저장 경로: {wiki_save_path}/"
+
+    # 세션 번들 읽기 (없으면 빈 문자열로 계속 진행)
+    session_brief_path = research_root / "raw" / topic_slug / run_id / "artifacts" / "session_bundle" / "session_brief.md"
+    if session_brief_path.exists():
+        session_brief = session_brief_path.read_text(encoding="utf-8")
+    else:
+        print(f"[source_ingest] session_brief.md 없음 — 기본 프롬프트로 수집 진행: {session_brief_path}", flush=True)
+        session_brief = f"# Research Session Brief\ntopic: {topic}\nquery: {query}\nmust_answer: {must_answer}"
 
     # ResearchAgent SKILL.md 읽기
     skill_path = RESEARCH_AGENT_DIR / "SKILL.md"
@@ -136,13 +197,15 @@ python3 {package_dir}/tools/crossref_lane.py "{{query}}" --limit 5
 - must_answer: {must_answer}
 - excluded_angles: {exclude_str}
 
+{wiki_path_note}
+
 {lane_note}
 
 **작업:**
 1. 위 lane 도구 우선 → 부족한 부분만 WebSearch/WebFetch fallback
 2. 각 소스를 source note로 정규화 (research_vault.py register-source 사용)
 3. 핵심 claim 추출 및 검증 (research_vault.py append-claim 사용)
-4. wiki 페이지 작성 (overview.md, claims.md, entities.md, timeline.md)
+4. wiki 페이지 작성 (위 wiki 저장 경로에 따라 파일 배치)
 5. research_launcher.py ingest-bundle 및 finalize-session 호출로 마무리
 
 research root 경로: {research_root}
@@ -205,6 +268,8 @@ def main():
     core_question = ""
     excluded_angles = []
     real_topic = ""
+    entity_slug = ""
+    section_slug = ""
 
     if brief_path.exists():
         try:
@@ -213,6 +278,8 @@ def main():
             topic = real_topic or brief.get("_topic", "")
             core_question = brief.get("core_question", "")
             excluded_angles = brief.get("excluded_angles", [])
+            entity_slug = brief.get("entity_slug", "")
+            section_slug = brief.get("section_slug", "")
         except Exception as e:
             print(f"[source_ingest] editorial_brief 로드 실패: {e}", flush=True)
 
@@ -231,6 +298,8 @@ def main():
 
     print(f"[source_ingest] 주제: {topic}", flush=True)
     print(f"[source_ingest] slug: {topic_slug}", flush=True)
+    if entity_slug:
+        print(f"[source_ingest] entity_slug: {entity_slug}, section_slug: {section_slug}", flush=True)
 
     # 2. research root 확인
     try:
@@ -242,14 +311,32 @@ def main():
     print(f"[source_ingest] research root: {research_root}", flush=True)
 
     # 3. 이미 usable한 wiki가 있으면 스킵
-    if _topic_wiki_usable(research_root, topic_slug):
-        print(f"[source_ingest] vault에 이미 usable wiki 존재 — 스킵: {topic_slug}", flush=True)
+    # Wikipedia 스타일(entity_slug/section_slug) 우선 체크, 없으면 레거시 topic_slug 체크
+    wiki_exists = False
+    skip_entity_slug = entity_slug
+    skip_section_slug = section_slug
+
+    if entity_slug and section_slug:
+        wiki_exists = _section_wiki_usable(research_root, entity_slug, section_slug)
+        if wiki_exists:
+            print(f"[source_ingest] vault에 이미 usable wiki 존재 (Wikipedia 스타일) — 스킵: {entity_slug}/{section_slug}", flush=True)
+    if not wiki_exists:
+        wiki_exists = _topic_wiki_usable(research_root, topic_slug)
+        if wiki_exists:
+            skip_entity_slug = _resolve_slug(research_root, topic_slug)
+            skip_section_slug = ""
+            print(f"[source_ingest] vault에 이미 usable wiki 존재 (레거시) — 스킵: {skip_entity_slug}", flush=True)
+
+    if wiki_exists:
         # 어떤 run을 사용할지 source_ingest_status.json에 기록
-        latest_run_file = research_root / "manifests" / topic_slug / "latest_run.txt"
+        manifest_slug = skip_entity_slug or topic_slug
+        latest_run_file = research_root / "manifests" / manifest_slug / "latest_run.txt"
         run_id = latest_run_file.read_text(encoding="utf-8").strip() if latest_run_file.exists() else "unknown"
         status = {
             "topic": topic,
             "topic_slug": topic_slug,
+            "entity_slug": skip_entity_slug,
+            "section_slug": skip_section_slug,
             "run_id": run_id,
             "research_root": str(research_root),
             "status": "skipped_existing",
@@ -298,6 +385,8 @@ def main():
     status = {
         "topic": topic,
         "topic_slug": topic_slug,
+        "entity_slug": entity_slug,
+        "section_slug": section_slug,
         "run_id": run_id,
         "research_root": str(research_root),
         "status": "collecting",
@@ -316,9 +405,23 @@ def main():
         project_dir=project_dir,
         core_question=core_question,
         excluded_angles=excluded_angles,
+        entity_slug=entity_slug,
+        section_slug=section_slug,
     )
 
-    # 6. 완료 상태 기록
+    # 6. 완료 상태 기록 (실제 vault slug 보정)
+    if entity_slug:
+        # Wikipedia 스타일: entity_slug 기반 실제 경로 확인
+        actual_entity = entity_slug
+        alt = entity_slug.replace("-", "_") if "-" in entity_slug else entity_slug.replace("_", "-")
+        if (research_root / "wiki" / alt).exists() and not (research_root / "wiki" / entity_slug).exists():
+            actual_entity = alt
+        status["entity_slug"] = actual_entity
+    else:
+        actual_slug = _resolve_slug(research_root, topic_slug)
+        if actual_slug != topic_slug:
+            print(f"[source_ingest] vault slug 보정: {topic_slug} → {actual_slug}", flush=True)
+        status["topic_slug"] = actual_slug
     status["status"] = "completed" if success else "partial"
     (project_dir / "source_ingest_status.json").write_text(
         json.dumps(status, ensure_ascii=False, indent=2), encoding="utf-8"

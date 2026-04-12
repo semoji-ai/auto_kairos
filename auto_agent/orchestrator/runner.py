@@ -656,6 +656,24 @@ class PipelineRunner:
             if not steps:
                 continue
 
+            # stage_1 시작 전 editorial_brief.json 자동 생성 (없을 경우)
+            if phase_id == "stage_1" and not only_step:
+                brief_path = Path(self.project_dir) / "editorial_brief.json"
+                if not brief_path.exists():
+                    print(f"\n  [editorial_brief] editorial_brief.json 없음 — step_0b 자동 실행", flush=True)
+                    step_0b_def = None
+                    for ph in self.pipeline.get("phases", []):
+                        for s in ph.get("steps", []):
+                            if s["id"] == "step_0b":
+                                step_0b_def = s
+                                break
+                        if step_0b_def:
+                            break
+                    if step_0b_def:
+                        self._execute_step(step_0b_def)
+                    else:
+                        print("  [editorial_brief] step_0b 정의를 찾을 수 없음 — 스킵", flush=True)
+
             print(f"\n{'─' * 40}")
             print(f"Phase: {phase_name} ({phase_id})")
             print(f"Execution: {execution}")
