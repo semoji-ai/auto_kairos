@@ -1521,7 +1521,14 @@ class PipelineRunner:
                     encoding="utf-8",
                 )
             else:
-                # scene_specs 생성 단계 (script-director 첫 호출) — 자연스러운 시작 알림
+                # scene_specs 없음 — final_manuscript.md에서 # Ch N. 챕터 분할 시도
+                manuscript_path = self.project_dir / "final_manuscript.md"
+                if manuscript_path.exists():
+                    ms_text = manuscript_path.read_text(encoding="utf-8")
+                    ms_chapters = self._split_manuscript_by_chapter(ms_text)
+                    if ms_chapters:
+                        return self._run_chunked_from_manuscript(step, ms_chapters)
+                # 원고도 없거나 마커 없음 — 단일 에이전트 실행
                 _notify(agent_name, "Stage 2 시작",
                         phase=self.state.current_phase, project=self.project_slug, level="info")
                 return self._run_agent_step(step)
@@ -2128,25 +2135,355 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         return prompt
 
     def _extract_chapter_manuscript(self, full_text: str, chapter_num: int) -> str:
-        """원고에서 해당 챕터 구간만 추출."""
-        # 챕터 헤딩 패턴
-        pattern = re.compile(
-            rf"^(#{{1,3}})\s*(챕터|Chapter|장)\s*{chapter_num}\b",
+        """원고에서 해당 챕터 구간만 추출.
+
+        지원 패턴:
+          - # Ch1. 제목  (신규 — Opus 마커)
+          - # 챕터 1 / Chapter 1 / 장 1  (구형)
+        """
+        # 신규 패턴: # Ch{N}. 또는 # Ch {N}.
+        new_pattern = re.compile(
+            rf"^#\s+Ch\s*{chapter_num}[.\s]",
             re.MULTILINE | re.IGNORECASE,
         )
-        match = pattern.search(full_text)
+        match = new_pattern.search(full_text)
+
+        # 구형 패턴 fallback
+        if not match:
+            old_pattern = re.compile(
+                rf"^(#{{1,3}})\s*(챕터|Chapter|장)\s*{chapter_num}\b",
+                re.MULTILINE | re.IGNORECASE,
+            )
+            match = old_pattern.search(full_text)
+
         if not match:
             return full_text[:10000]
 
         start = match.start()
-        next_pattern = re.compile(
+
+        # 다음 챕터 경계 탐색 (신규 + 구형 통합)
+        next_new = re.compile(
+            rf"^#\s+Ch\s*{chapter_num + 1}[.\s]",
+            re.MULTILINE | re.IGNORECASE,
+        )
+        next_old = re.compile(
             rf"^(#{{1,3}})\s*(챕터|Chapter|장)\s*{chapter_num + 1}\b",
             re.MULTILINE | re.IGNORECASE,
         )
-        next_match = next_pattern.search(full_text, start + 1)
-        end = next_match.start() if next_match else len(full_text)
+        m_new = next_new.search(full_text, start + 1)
+        m_old = next_old.search(full_text, start + 1)
+        candidates = [m for m in (m_new, m_old) if m]
+        end = min(m.start() for m in candidates) if candidates else len(full_text)
 
         return full_text[start:end][:15000]
+
+    def _split_manuscript_by_chapter(self, full_text: str) -> dict:
+        """원고를 # Ch N. 마커 기준으로 챕터별 텍스트 dict로 분할.
+
+        Returns:
+            {chapter_num (int): chapter_text (str), ...}
+            마커가 없으면 빈 dict 반환.
+        """
+        # # Ch1. / # Ch 1. / # Ch1  형식 지원
+        pattern = re.compile(r"^#\s+Ch\s*(\d+)[.\s]", re.MULTILINE | re.IGNORECASE)
+        matches = list(pattern.finditer(full_text))
+        if not matches:
+            return {}
+
+        chapters: dict = {}
+        for i, m in enumerate(matches):
+            ch_num = int(m.group(1))
+            start = m.start()
+            end = matches[i + 1].start() if i + 1 < len(matches) else len(full_text)
+            chapters[ch_num] = full_text[start:end]
+        return chapters
+
+    def _run_chunked_from_manuscript(self, step: dict, ms_chapters: dict) -> StepResult:
+        """final_manuscript.md의 # Ch N. 마커 기반 챕터별 병렬 scene_specs 생성.
+
+        scene_specs.json이 아직 없는 최초 chapters 모드 실행에서 호출된다.
+        각 챕터 텍스트를 agent에 전달 → 씬 생성 → 병합.
+        """
+        step_id = step["id"]
+        step_name = step.get("name", step_id)
+        agent_name = step.get("agent", "script-director")
+        label = _step_label(step_name, "start").replace(" 시작합니다", "")
+
+        n_chapters = len(ms_chapters)
+        specs_path = self.project_dir / "scene_specs.json"
+
+        _notify(agent_name, f"{label} 시작합니다 ({n_chapters} 챕터 병렬, 원고 마커 기반)",
+                phase=self.state.current_phase, project=self.project_slug)
+        print(f"  [{step_id}] {step_name} ({n_chapters} 챕터 병렬, 원고 마커 기반) ... ", flush=True)
+
+        self.state.current_step = step_id
+        run_id = self.pm.start_pipeline_run(
+            project_id=self.project["id"],
+            phase=self.state.current_phase,
+            step=step_id,
+            step_name=step_name,
+            agent_or_module=agent_name,
+        )
+
+        t0 = time.time()
+        chapter_results: dict = {}
+        total_cost: dict = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0}
+
+        workers = min(n_chapters, 10)
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = {}
+            for ch_num, ch_text in ms_chapters.items():
+                fut = pool.submit(
+                    self._execute_manuscript_chapter,
+                    step, ch_num, ch_text,
+                )
+                futures[fut] = ch_num
+
+            for fut in as_completed(futures):
+                ch_num = futures[fut]
+                try:
+                    ch_result = fut.result()
+                except Exception as e:
+                    ch_result = ChapterResult(chapter=ch_num, status="failed", error=str(e))
+                chapter_results[ch_num] = ch_result
+
+        # 실패 챕터 재시도
+        failed_chapters = {ch: r for ch, r in chapter_results.items() if r.status == "failed"}
+        for retry in range(1, 3):
+            if not failed_chapters:
+                break
+            for ch_num in list(failed_chapters.keys()):
+                _notify(agent_name, f"{label} Ch{ch_num} 재시도합니다 ({retry}/2)",
+                        phase=self.state.current_phase, project=self.project_slug)
+                time.sleep(5)
+                try:
+                    ch_result = self._execute_manuscript_chapter(step, ch_num, ms_chapters[ch_num])
+                    if ch_result.status == "completed":
+                        chapter_results[ch_num] = ch_result
+                        del failed_chapters[ch_num]
+                except Exception:
+                    pass
+
+        # 비용 합산
+        for ch_result in chapter_results.values():
+            for k in ("tokens_in", "tokens_out", "cost_usd"):
+                total_cost[k] += ch_result.cost_info.get(k, 0)
+
+        # 전체 씬 병합 + 씬 번호 재부여
+        all_scenes: list = []
+        for ch_num in sorted(chapter_results.keys()):
+            ch_result = chapter_results[ch_num]
+            if ch_result.status == "completed" and ch_result.scenes:
+                all_scenes.extend(ch_result.scenes)
+
+        # sceneNumber 재부여 (챕터별 결과가 각자 1부터 시작할 수 있으므로)
+        for i, scene in enumerate(all_scenes, start=1):
+            scene["sceneNumber"] = i
+
+        merged = {"scenes": all_scenes}
+        specs_path.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        # 임시 파일 정리
+        for ch_num in ms_chapters:
+            tmp = self.project_dir / f".scene_specs_ch{ch_num}_{step_name}.json"
+            tmp.unlink(missing_ok=True)
+
+        elapsed = time.time() - t0
+        succeeded = sum(1 for r in chapter_results.values() if r.status == "completed")
+        failed_count = n_chapters - succeeded
+
+        if failed_count == 0:
+            msg = f"{label} 병합 완료 ({succeeded}/{n_chapters} 챕터, {elapsed:.1f}s)"
+            level = "success"
+        elif succeeded > 0:
+            msg = f"{label} 부분 완료 ({succeeded}/{n_chapters} 챕터, {failed_count} 실패)"
+            level = "warning"
+        else:
+            msg = f"{label} 전체 실패 ({n_chapters} 챕터)"
+            level = "error"
+
+        _notify(agent_name, msg, phase=self.state.current_phase, project=self.project_slug, level=level)
+        print(f"    {msg}")
+
+        if succeeded > 0:
+            self.pm.complete_pipeline_run(
+                run_id,
+                cost_tokens_in=total_cost.get("tokens_in", 0),
+                cost_tokens_out=total_cost.get("tokens_out", 0),
+                cost_usd=total_cost.get("cost_usd", 0.0),
+            )
+            self._auto_build_and_capture(chapter_results, {ch: [] for ch in ms_chapters})
+            return StepResult(
+                step_id=step_id, status="completed",
+                duration_sec=elapsed,
+                output_files=[str(specs_path)],
+                cost_info=total_cost,
+            )
+        else:
+            self.pm.fail_pipeline_run(run_id, "전체 챕터 실패")
+            return StepResult(
+                step_id=step_id, status="failed",
+                duration_sec=elapsed,
+                error=f"전체 {n_chapters} 챕터 실패",
+                cost_info=total_cost,
+            )
+
+    def _execute_manuscript_chapter(
+        self,
+        step: dict,
+        chapter_num: int,
+        chapter_text: str,
+    ) -> ChapterResult:
+        """원고 챕터 텍스트 기반 씬 생성. scene_specs가 없는 최초 실행에 사용."""
+        step_id = step["id"]
+        step_name = step.get("name", step_id)
+        agent_name = step.get("agent", "script-director")
+
+        t0 = time.time()
+        tmp_filename = f".scene_specs_ch{chapter_num}_{step_name}.json"
+        tmp_path = self.project_dir / tmp_filename
+
+        # 에이전트 스킬 로드
+        agent_skill = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
+        skill_names = list(step.get("skills", []))
+        agents_config = self._load_agents_config()
+        agent_def = agents_config.get("subagents", {}).get(agent_name, {})
+        for s in agent_def.get("skills", []):
+            if s not in skill_names:
+                skill_names.append(s)
+        skill_names = self._filter_writing_style_skills(skill_names)
+        skill_refs = agent_def.get("skill_refs", {})
+        skill_limits = agent_def.get("skill_limits", {})
+        shared_skills_text = ""
+        for skill_name in skill_names:
+            content = self._load_shared_skill(skill_name, skill_refs.get(skill_name))
+            if content:
+                limit = skill_limits.get(skill_name)
+                if limit and len(content) > limit:
+                    content = content[:limit]
+                shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
+
+        # outline 챕터 슬라이스
+        context_block = ""
+        outline_path = self.project_dir / "outline.json"
+        if outline_path.exists():
+            try:
+                outline_data = json.loads(outline_path.read_text(encoding="utf-8"))
+                chapters = outline_data.get("chapters", [])
+                chapter_entry = next((c for c in chapters if c.get("id") == chapter_num), None)
+                if chapter_entry:
+                    context_block += f'\n<file name="outline.json (챕터 {chapter_num})">\n{json.dumps(chapter_entry, ensure_ascii=False, indent=2)}\n</file>\n'
+            except Exception:
+                pass
+
+        context_memory_block = self.context_memory.build_context_prompt(step.get("id", ""))
+        _mode = step.get("mode", "chapters")
+
+        prompt = f"""<system_context>
+프로젝트: {self.project_slug}
+작업 디렉토리: {self.project_dir}
+챕터: {chapter_num} (원고 마커 기반 병렬 처리 모드)
+SCRIPT_DIRECTOR_MODE: {_mode}
+SCRIPT_DIRECTOR_CHAPTER: {chapter_num}
+</system_context>
+
+<agent_skill>
+{agent_skill}
+</agent_skill>
+
+<shared_skills>
+{shared_skills_text}
+</shared_skills>
+
+{context_block}
+
+<chapter_manuscript>
+아래는 챕터 {chapter_num}의 원고 텍스트입니다.
+`---` 마커가 씬 경계입니다. 각 씬 블록을 하나의 씬으로 처리하세요.
+`<!-- chars: -->` 태그는 등장 캐릭터 ID입니다.
+
+{chapter_text}
+</chapter_manuscript>
+
+<output_format>
+위 원고의 `---` 경계 기준으로 씬을 분할하고, 각 씬에 layout/motion/mood/headline/imageAsset을 결정하세요.
+narration은 해당 씬 블록의 텍스트(주석 제거)를 그대로 사용하세요.
+chapter 필드는 {chapter_num}으로 설정하세요.
+결과를 아래 경로에 JSON으로 저장하세요:
+{tmp_path}
+
+JSON 구조: {{"scenes": [씬 배열]}}
+</output_format>
+
+{context_memory_block}"""
+
+        model = step.get("single_call_model", "claude-opus-4-6")
+        timeout_sec = self._get_agent_timeout(agent_name)
+
+        cli_path = self._find_claude_cli()
+        cmd = [
+            cli_path, "--print", "--output-format", "json",
+            "--model", model, "--max-turns", "10",
+            "--allowedTools", "Read", "--allowedTools", "Write",
+        ]
+        env = os.environ.copy()
+        env["PROJECT_NAME"] = self.project_slug
+        env["SCRIPT_DIRECTOR_MODE"] = _mode
+        env["SCRIPT_DIRECTOR_CHAPTER"] = str(chapter_num)
+        env.pop("CLAUDECODE", None)
+
+        _popen_flags = subprocess_kwargs()
+        try:
+            proc = subprocess.Popen(
+                cmd, cwd=str(self.project_dir), env=env,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, text=True, encoding="utf-8",
+                **_popen_flags,
+            )
+            try:
+                stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.communicate()
+                return ChapterResult(chapter=chapter_num, status="failed",
+                                     error=f"CLI 타임아웃 ({timeout_sec}s)")
+        except FileNotFoundError:
+            return ChapterResult(chapter=chapter_num, status="failed",
+                                 error="Claude CLI를 찾을 수 없습니다")
+
+        elapsed = time.time() - t0
+        cost_info = self._parse_claude_cost(stdout, stderr)
+
+        if proc.returncode != 0:
+            error = stderr[:300] or stdout[:300]
+            return ChapterResult(chapter=chapter_num, status="failed",
+                                 error=f"CLI exit {proc.returncode}: {error}",
+                                 cost_info=cost_info, duration_sec=elapsed)
+
+        # 결과 파싱
+        scenes = []
+        try:
+            if tmp_path.exists() and tmp_path.stat().st_size > 50:
+                data = json.loads(tmp_path.read_text(encoding="utf-8"))
+                scenes = data.get("scenes", [])
+        except Exception:
+            pass
+
+        if not scenes:
+            content = self._extract_json_from_cli_output(stdout)
+            if content:
+                scenes = content.get("scenes", [])
+
+        if not scenes:
+            return ChapterResult(chapter=chapter_num, status="failed",
+                                 error="씬 데이터 없음", cost_info=cost_info, duration_sec=elapsed)
+
+        # chapter 필드 보정
+        for scene in scenes:
+            scene["chapter"] = chapter_num
+
+        return ChapterResult(chapter=chapter_num, status="completed",
+                             scenes=scenes, cost_info=cost_info, duration_sec=elapsed)
 
     @staticmethod
     def _decomp_to_specs(decomp: dict) -> dict:
