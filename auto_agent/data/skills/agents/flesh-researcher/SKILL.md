@@ -34,6 +34,22 @@ Task 지시문 예시:
 ### Step 3. 각 Task의 리서치 방법
 
 각 research_focus 질문마다:
+
+**토큰 절약 우선 방법 (권장):**
+```bash
+# Wikipedia 참조가 필요하면:
+python3 -m auto_agent.tools.wikipedia_lane "{키워드}" --limit 3 --content
+
+# 최신 뉴스/동향이 필요하면:
+python3 -m auto_agent.tools.news_rss_lane "{키워드}" --limit 5
+
+# 학술 자료/도서가 필요하면:
+python3 -m auto_agent.tools.crossref_lane "{키워드}" --limit 5
+```
+
+lane 도구로 URL 목록 확보 후 `WebFetch`로 원문만 선택 확인하면 토큰을 절약할 수 있습니다.
+
+**기존 방법 (폴백 또는 심층 탐색 시):**
 1. `WebSearch: "{질문 핵심 키워드}"` — 관련 소스 탐색
 2. `WebFetch: {주요 소스 URL}` — 원문 확인
 3. 수치/날짜/인용구 추출

@@ -158,13 +158,74 @@ def _run_launcher(args: list, research_root: Path, research_agent_dir: Path, lau
         return {"stdout": result.stdout, "stderr": result.stderr, "returncode": result.returncode}
 
 
+def _count_manifest_records(path: Path) -> int:
+    if not path.exists():
+        return 0
+    return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+
+
+def _validate_ingest_completion(
+    *,
+    research_root: Path,
+    topic_slug: str,
+    entity_slug: str = "",
+    section_slug: str = "",
+    finalize_payload: dict | None = None,
+) -> dict:
+    finalized = finalize_payload or {}
+    run_state = finalized.get("run_state") or {}
+    snapshot = finalized.get("snapshot") or {}
+    status = finalized.get("status") or {}
+
+    canonical_slug = resolve_existing_entity_slug(research_root, entity_slug or topic_slug)
+    claims_path = research_root / "manifests" / canonical_slug / "claims.jsonl"
+    sources_path = research_root / "manifests" / canonical_slug / "sources.jsonl"
+    claim_count = _count_manifest_records(claims_path)
+    source_count = _count_manifest_records(sources_path)
+
+    if entity_slug and section_slug:
+        wiki_usable = _section_wiki_usable(research_root, canonical_slug, section_slug)
+    else:
+        wiki_usable = _topic_wiki_usable(research_root, topic_slug)
+
+    readiness = str(snapshot.get("specialist_readiness") or "")
+    run_stage = str(run_state.get("stage") or "")
+    run_status = str(run_state.get("status") or "")
+    next_step = str(status.get("recommended_next_step") or "")
+
+    issues: list[str] = []
+    if claim_count < 3:
+        issues.append(f"claim_count={claim_count} < 3")
+    if not wiki_usable:
+        issues.append("wiki not usable")
+    if run_stage != "packaging" or run_status != "completed":
+        issues.append(f"finalize-session not completed ({run_stage or 'n/a'}/{run_status or 'n/a'})")
+    if readiness not in {"usable", "strong"}:
+        issues.append(f"specialist_readiness={readiness or 'n/a'}")
+    if next_step and next_step != "complete":
+        issues.append(f"recommended_next_step={next_step}")
+
+    return {
+        "success": not issues,
+        "canonical_slug": canonical_slug,
+        "claim_count": claim_count,
+        "source_count": source_count,
+        "wiki_usable": wiki_usable,
+        "readiness": readiness,
+        "run_stage": run_stage,
+        "run_status": run_status,
+        "recommended_next_step": next_step,
+        "issues": issues,
+    }
+
+
 def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
                          research_root: Path, project_dir: Path,
                          core_question: str = "", excluded_angles: list = None,
                          entity_slug: str = "", section_slug: str = "",
                          research_agent_dir: Path | None = None,
                          launcher: Path | None = None,
-                         vault_script: Path | None = None) -> bool:
+                         vault_script: Path | None = None) -> dict:
     """Claude CLI로 ResearchAgent 실행 (자율 수집 루프)."""
     if research_agent_dir is None or launcher is None or vault_script is None:
         research_agent_dir, launcher, vault_script = _resolve_research_agent_paths()
@@ -309,10 +370,43 @@ research_launcher.py 경로: {launcher}
         print(f"[source_ingest] 에이전트 출력 마지막 500자: {output[-500:]}", flush=True)
 
     # 완료 여부와 관계없이 ingest-bundle + finalize-session 호출
-    _run_launcher(["ingest-bundle", "--topic", topic, "--run-id", run_id, "--refresh"], research_root, research_agent_dir, launcher)
-    _run_launcher(["finalize-session", "--topic", topic, "--run-id", run_id], research_root, research_agent_dir, launcher)
+    ingest_payload = _run_launcher(
+        ["ingest-bundle", "--topic", topic, "--run-id", run_id, "--refresh"],
+        research_root,
+        research_agent_dir,
+        launcher,
+    )
+    finalize_payload = _run_launcher(
+        ["finalize-session", "--topic", topic, "--run-id", run_id],
+        research_root,
+        research_agent_dir,
+        launcher,
+    )
+    validation = _validate_ingest_completion(
+        research_root=research_root,
+        topic_slug=topic_slug,
+        entity_slug=entity_slug,
+        section_slug=section_slug,
+        finalize_payload=finalize_payload,
+    )
+    if validation["success"]:
+        print(
+            f"[source_ingest] post-check 통과: claims={validation['claim_count']}, "
+            f"sources={validation['source_count']}, readiness={validation['readiness']}",
+            flush=True,
+        )
+    else:
+        print(
+            "[source_ingest] post-check 실패: " + "; ".join(validation["issues"]),
+            flush=True,
+        )
 
-    return True
+    return {
+        "success": validation["success"],
+        "ingest_payload": ingest_payload,
+        "finalize_payload": finalize_payload,
+        "validation": validation,
+    }
 
 
 def main():
@@ -470,7 +564,7 @@ def main():
     )
 
     # 5. Claude CLI 에이전트로 실제 수집 실행
-    success = _run_research_agent(
+    outcome = _run_research_agent(
         topic=topic,
         topic_slug=topic_slug,
         query=query,
@@ -485,6 +579,8 @@ def main():
         launcher=launcher,
         vault_script=vault_script,
     )
+    success = bool(outcome.get("success"))
+    validation = outcome.get("validation") or {}
 
     # 6. 완료 상태 기록 (실제 vault slug 보정)
     if entity_slug:
@@ -500,12 +596,14 @@ def main():
             print(f"[source_ingest] vault slug 보정: {topic_slug} → {actual_slug}", flush=True)
         status["topic_slug"] = actual_slug
     status["status"] = "completed" if success else "partial"
+    if validation:
+        status["validation"] = validation
     (project_dir / "source_ingest_status.json").write_text(
         json.dumps(status, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
     print(f"[source_ingest] 완료 — vault: {research_root / 'wiki' / topic_slug}", flush=True)
-    sys.exit(0)
+    sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":

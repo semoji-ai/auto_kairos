@@ -1,4 +1,8 @@
-# TTS 전처리 — 1턴 호출 프롬프트
+> **[DEPRECATED]** 이 프롬프트는 더 이상 사용되지 않습니다.
+> 한국어 TTS 전처리(narration_tts 채우기)는 **assembly-director B-4**에서 직접 수행합니다.
+> runner.py에서 이 파일을 참조하는 경로는 제거되었습니다 (커밋 34f0699).
+
+# TTS 전처리 — 1턴 호출 프롬프트 (DEPRECATED)
 
 scene_specs.json의 각 씬 narration 텍스트를 TTS 엔진이 자연스럽게 읽을 수 있도록 변환하세요.
 

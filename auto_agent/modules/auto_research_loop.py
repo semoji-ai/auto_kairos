@@ -86,28 +86,42 @@ class AutoResearchLoop:
         self._ratchet_score: float = 0
         self._round = 0
 
-    def build_loop_prompt(self) -> str:
+    def build_loop_prompt(self, provider: str = "claude") -> str:
         """전체 루프를 실행하는 에이전트 프롬프트 생성."""
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         directive = self._load_directive()
         skill_content = self._load_skill("agents/trend-analyst/SKILL.md")
         shared_skills = self._load_shared_skills(["market-analysis"])
         existing_candidates = self._load_existing_candidates()
+        provider = (provider or "claude").strip().lower()
+        if provider == "codex":
+            loop_protocol = f"""## Codex Vault-Only Ratchet Protocol
 
-        seed_instruction = ""
-        if self._seed:
-            seed_instruction = f"""
-## 시드 키워드
-"{self._seed}" — 이 키워드를 출발점으로 관련 주제를 탐색하되,
-파생 주제와 다른 각도도 포함하세요."""
+당신은 자율 주제 탐색 에이전트입니다. 외부 웹 검색 없이 **볼트 안의 자료만** 사용하세요.
+아래 루프를 {self._max_rounds}회 반복하세요.
 
-        return f"""# AutoResearch Loop — Stage 0 주제 탐색
+### 매 라운드 수행 절차:
+1. **스캔**: `market/trends/`, `insights/feedback/`, `channels/{self._channel}/videos/`, `channels/competitors/`를 읽어 핵심 신호를 정리
+2. **후보 생성**: 3-5개 주제 후보를 생성 (제목 + 차별화 각도 + 핵심 훅)
+3. **증거 연결**: 각 후보에 대해 볼트 파일 근거를 붙임
+4. **점수 산정**: 아래 기준으로 topic_score 계산
+5. **Top 5 선정**: 점수 상위 5개 선정 + 각각 selection_reason 작성
+6. **다음 라운드**: 이전 라운드 고득점 영역만 더 정밀하게 다듬음
 
-날짜: {today}
-채널: {self._channel}
-최대 라운드: {self._max_rounds}
-
-## 카파시 AutoResearch 프로토콜
+### 라운드 간 전략:
+- 라운드 1: 넓게 스캔
+- 라운드 2-3: 고점수 영역 정교화
+- 라운드 4-5: 최고 후보의 채널 적합성/차별화 문장 정제
+"""
+            skill_tail = """## 핵심 운영 규칙
+- 볼트 안의 파일만 읽고 판단하세요.
+- 주제 후보는 3-5개만 남기세요.
+- 각 후보는 topic_score, selection_reason, creative_brief를 포함해야 합니다.
+- 마크다운 기획안은 원고가 아니라 방향 제시여야 합니다.
+- 필수 에피소드는 4-5개만 유지하고 연결 이유를 명시하세요.
+"""
+        else:
+            loop_protocol = f"""## 카파시 AutoResearch 프로토콜
 
 당신은 자율 주제 탐색 에이전트입니다. 아래 루프를 {self._max_rounds}회 반복하세요.
 
@@ -123,6 +137,25 @@ class AutoResearchLoop:
 - 라운드 1: 넓게 스캔 (다양한 카테고리)
 - 라운드 2-3: 고점수 영역 심화 (관련 키워드 파생)
 - 라운드 4-5: 최고 후보 정밀 검증 (경쟁 영상 실제 조회수 확인)
+"""
+            skill_tail = f"""{skill_content}
+
+{shared_skills}"""
+
+        seed_instruction = ""
+        if self._seed:
+            seed_instruction = f"""
+## 시드 키워드
+"{self._seed}" — 이 키워드를 출발점으로 관련 주제를 탐색하되,
+파생 주제와 다른 각도도 포함하세요."""
+
+        return f"""# AutoResearch Loop — Stage 0 주제 탐색
+
+날짜: {today}
+채널: {self._channel}
+최대 라운드: {self._max_rounds}
+
+{loop_protocol}
 {seed_instruction}
 
 {SCORING_PROMPT}
@@ -228,10 +261,106 @@ class AutoResearchLoop:
 ```
 이 브리프가 있으면 Stage 1 리서치가 방향을 잃지 않고, Stage 2 원고가 구체적 에피소드를 포함합니다.
 
-{skill_content}
-
-{shared_skills}
+{skill_tail}
 """
+
+    def build_codex_round_prompt(
+        self,
+        round_number: int,
+        current_candidates: List[Dict],
+        ratchet_score: float,
+        packet_path: Path,
+    ) -> str:
+        """Codex용 라운드별 compact prompt."""
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        directive = self._load_directive()
+        seed_instruction = f'시드 키워드: "{self._seed}"\n' if self._seed else ""
+        current_summary = self._summarize_candidates(current_candidates)
+
+        return f"""# Stage 0 Codex Ratchet Round {round_number}
+
+날짜: {today}
+채널: {self._channel}
+라운드: {round_number}/{self._max_rounds}
+현재 ratchet_score: {ratchet_score}
+{seed_instruction}
+
+## 목표
+볼트 자료만 읽고, 이 채널에 맞는 주제 후보 3-5개를 뽑아 점수화하세요.
+단순 인기 키워드 나열이 아니라 `trigger_keyword -> knowledge_anchor -> bridge_reason` 구조로 후보를 만드세요.
+이번 라운드는 **최종 응답으로 JSON만 반환**하면 됩니다.
+
+## 읽을 입력 파일
+아래 실제 vault 패킷 파일 **하나만** 읽으세요.
+`{packet_path}`
+
+## 파일 사용 규칙
+- 위 패킷 파일 외 추가 파일 읽기 금지
+- raw 디렉터리 탐색 금지
+- 외부 웹 검색 금지
+
+## 채널 지시문
+{directive}
+
+## 현재까지의 상위 후보
+{current_summary}
+
+## 점수 기준
+{SCORING_PROMPT}
+
+## 작성 규칙
+- 볼트 요약에 나온 파일 경로를 `sources`에 남길 것
+- 후보는 3-5개만
+- 같은 의미의 후보를 중복으로 만들지 말 것
+- `trigger_keyword`, `knowledge_anchor`, `bridge_reason`, `timing_window`를 모두 채울 것
+- `selection_reason`은 한 문장 이상
+- `creative_brief.story_points`는 3개 이상
+- `must_include_episodes`는 2개 이상
+
+## 최종 응답 형식
+설명 없이 JSON만 반환:
+{{
+  "round": {round_number},
+  "channel": "{self._channel}",
+  "candidates": [
+    {{
+      "title": "주제 제목",
+      "trigger_keyword": "실시간 화제 키워드",
+      "knowledge_anchor": "깊이 있게 설명할 대상",
+      "bridge_reason": "왜 이 트리거에서 이 앵커로 넘어오는지",
+      "timing_window": "지금 바로 | 3일 내 | 1주 내 | evergreen",
+      "angle": "차별화 각도",
+      "hook": "핵심 훅",
+      "trend_velocity": 8,
+      "competition_gap": 7,
+      "channel_fit": 9,
+      "topic_score": 504,
+      "topic_type": "timely",
+      "selection_reason": "왜 이번 라운드에서 유효한 후보인지",
+      "sources": ["볼트 파일명 또는 경로"],
+      "creative_brief": {{
+        "core_angle": "핵심 앵글",
+        "tone": "톤",
+        "story_points": ["1막", "2막", "3막"],
+        "must_include_episodes": ["에피소드 A", "에피소드 B"],
+        "recommended_length": "추천 영상 길이",
+        "urgency": "긴급도"
+      }}
+    }}
+  ]
+}}
+"""
+
+    def _summarize_candidates(self, current_candidates: List[Dict]) -> str:
+        if not current_candidates:
+            return "없음"
+        lines = []
+        for idx, candidate in enumerate(current_candidates[:5], start=1):
+            title = candidate.get("title", "")
+            score = candidate.get("topic_score", 0)
+            reason = candidate.get("selection_reason", "")
+            lines.append(f"{idx}. [{score}] {title} — {reason[:120]}")
+        return "\n".join(lines)
 
     def _load_directive(self) -> str:
         """채널별 research_directive.md 로드. 없으면 기본값."""

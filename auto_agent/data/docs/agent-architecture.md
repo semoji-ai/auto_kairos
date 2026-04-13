@@ -57,7 +57,7 @@ shared/remotion-design-system ──→ visual-composer, qa-reviewer
 shared/scene-types ─────────────→ visual-composer, write-manuscript, qa-reviewer
 shared/writing-style ───────────→ write-manuscript, qa-reviewer
 shared/motion-rhythm ───────────→ visual-composer, qa-reviewer
-shared/korean-tts-rules ────────→ tts-preprocess 모듈
+shared/korean-tts-rules ────────→ assembly-director (B-4)
 shared/data-mapping ────────────→ visual-composer, qa-reviewer
 shared/research-format ─────────→ research-orchestrator
 shared/outline-template ────────→ write-manuscript
@@ -289,12 +289,11 @@ Phase 4: 모션 설계 (기존 Motion Choreographer 흡수)
 ## Team D: 에셋 생산 + 조립팀 (모듈 기반)
 
 이미지 생성, TTS, 자막, 검증, 렌더링을 **독립 모듈**로 운영합니다.
-TTS Preprocessor는 LLM 에이전트에서 Python 모듈로 전환 (규칙 기반, LLM 불필요).
+한국어 TTS 전처리(`narration_tts` 필드 채우기)는 **assembly-director B-4**에서 수행합니다 (문맥 기반 판단 필요).
 
 | # | 모듈 | 역할 | 기술 | 타입 |
 |---|------|------|------|------|
-| D1 | **TTS Preprocessor** | 한국어 TTS 전처리 (발음 교정, 숫자 변환) | Python 스크립트 | 모듈 |
-| D2 | **TTS Generator** | 씬별 나레이션 음성 생성 | ElevenLabs / Gemini TTS | API 모듈 |
+| D1 | **TTS Generator** | 씬별 나레이션 음성 생성 (narration_tts는 assembly-director B-4에서 준비됨) | ElevenLabs / Gemini TTS | API 모듈 |
 | D3 | **Subtitle Sync** | Whisper 기반 단어 레벨 타임스탬프 | OpenAI Whisper | API 모듈 |
 | D4 | **Image Generator** | image_scene 타입 씬용 이미지 생성/검색 | Gemini Image / Serper | API 모듈 |
 | D5 | **Data Validator** | 전 단계 데이터 정합성 검증 | Python | 모듈 |
@@ -413,11 +412,10 @@ Phase 3: 씬 설계 (순차)
      │           → motion_plan.json
      │
 Phase 4: 에셋 생산 ─── 병렬 그룹 B ─────────────────
-     │  ├─ Step 6a: TTS Preprocessor (모듈) → narration_tts
-     │  ├─ Step 6b: TTS Generator → audio/scene_*.mp3
-     │  ├─ Step 6c: Image Generator → images/ (3-5개)
-     │  ├─ Step 6d: Character Generator → characters/
-     │  └─ Step 6e: Subtitle Sync → subtitles/scene_*.srt
+     │  ├─ Step 6a: TTS Generator → audio/scene_*.mp3
+     │  ├─ Step 6b: Image Generator → images/ (3-5개)
+     │  ├─ Step 6c: Character Generator → characters/
+     │  └─ Step 6d: Subtitle Sync → subtitles/scene_*.srt
      │
 Phase 5: 조립 + 검수 (순차)
      │  Step 7:  Data Validator (정합성 검증)
@@ -462,8 +460,8 @@ character_plan.json              ┌───────────┼──�
         │                                    │
         │                    ┌───────────────┼───────────────┐
         ▼                    ▼               ▼               ▼
-Image Generator        TTS Module      Image Generator   Subtitle Sync
-(캐릭터 생성)          + TTS Gen       (씬 이미지)
+Image Generator        TTS Generator   Image Generator   Subtitle Sync
+(캐릭터 생성)          (TTS 생성)      (씬 이미지)
         │                    │               │               │
         └────────┬───────────┴───────────────┘               │
                  ▼                                           │
@@ -506,7 +504,7 @@ Image Generator        TTS Module      Image Generator   Subtitle Sync
 | **opus-4-6** | 창작/전략 판단. 핵심 파이프라인 에이전트 | Research Orchestrator, Write Manuscript, **Visual Composer** |
 | **sonnet-4-5** | 분석/처리. 보조 에이전트 | Character Planner, Fact Verifier, **QA Reviewer** |
 | **haiku-4-5** | 감시/판단. 상시 실행 | **Gateway** (에이전트 상태 점검, stuck 탐지) |
-| **Non-LLM** | 결정론적 작업 | TTS Preprocessor, TTS Generator, Subtitle Sync, Image Generator, Data Validator, Video Assembler, Duplicate Checker, Detail Researcher |
+| **Non-LLM** | 결정론적 작업 | TTS Generator, Subtitle Sync, Image Generator, Data Validator, Video Assembler, Duplicate Checker, Detail Researcher |
 
 ### Visual Composer에 opus를 사용하는 이유
 
@@ -547,4 +545,4 @@ tailwindcss                 — 유틸리티 CSS
 | 스킬 재사용성 | 0% (1:1) | 다대다 |
 | 파이프라인 단계 수 | 16 steps | 11 steps |
 | 흡수된 에이전트 | — | research-synthesizer, outline-builder, scene-decomposer, data-enricher, motion-choreographer |
-| 모듈로 전환 | — | tts-preprocess (LLM→Python) |
+| TTS 전처리 주체 변경 | — (별도 모듈) | assembly-director B-4 (문맥 기반 LLM 수행) |

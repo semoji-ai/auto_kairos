@@ -1,0 +1,14 @@
+{
+  "name": "minimax-proxy",
+  "version": "1.0.0",
+  "description": "MiniMax → Anthropic API 호환 프록시",
+  "main": "server.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "*",
+    "express": "^4.18.0"
+  }
+}

@@ -17,6 +17,11 @@ import re
 import sys
 from pathlib import Path
 
+from auto_agent.modules.research_entity_hub import (
+    resolve_existing_entity_slug,
+    resolve_topic_to_entity_section,
+)
+
 
 def _get_research_root() -> Path | None:
     """LLM Wiki research root 경로 반환. 없으면 None."""
@@ -43,11 +48,7 @@ def _slug(text: str) -> str:
 
 def _resolve_slug(research_root: Path, topic_slug: str) -> str:
     """vault에서 실제로 존재하는 slug 반환. 하이픈↔언더스코어 둘 다 확인."""
-    alt_slug = topic_slug.replace("-", "_") if "-" in topic_slug else topic_slug.replace("_", "-")
-    for candidate in [topic_slug, alt_slug]:
-        if (research_root / "wiki" / candidate).exists():
-            return candidate
-    return topic_slug  # 없으면 원본 반환
+    return resolve_existing_entity_slug(research_root, topic_slug)
 
 
 def _load_wiki(research_root: Path, topic_slug: str) -> dict[str, str]:
@@ -285,11 +286,20 @@ def main():
             pass
 
     # vault 검색에 사용할 slug 결정 (entity_slug 우선, 없으면 topic_slug)
+    research_root = _get_research_root()
+    resolved = resolve_topic_to_entity_section(
+        research_root,
+        topic_slug=topic_slug,
+        entity_slug=entity_slug,
+        section_slug="",
+    ) if research_root else None
+    if resolved and resolved.entity_slug:
+        entity_slug = resolved.entity_slug
+
     vault_slug = entity_slug if entity_slug else topic_slug
     print(f"[chapter_projection] 주제: {topic} (vault_slug: {vault_slug})", flush=True)
 
     # 4. vault wiki/claims 로드
-    research_root = _get_research_root()
     wiki_pages: dict[str, str] = {}
     claims: list[dict] = []
     sources: list[dict] = []

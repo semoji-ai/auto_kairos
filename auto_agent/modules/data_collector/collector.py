@@ -9,6 +9,7 @@ from typing import Dict, List
 from auto_agent.paths import get_vault_dir
 from .dedup import DedupManager
 from .discord_notifier import DiscordNotifier
+from .signal_feed_collector import SignalFeedCollector
 from .vault_paths import ensure_vault_structure
 from .vault_writer import VaultWriter
 from .youtube_collector import YouTubeCollector
@@ -28,6 +29,7 @@ class DataCollector:
 
         self._dedup = DedupManager(collector_dir=self._collector_dir)
         self._writer = VaultWriter(vault_dir=self._vault_dir, dedup=self._dedup)
+        self._signal_feeds = SignalFeedCollector(vault_dir=self._vault_dir)
 
         webhook_url = os.getenv("DISCORD_WEBHOOK_URL", "")
         self._notifier = DiscordNotifier(webhook_url=webhook_url)
@@ -54,6 +56,7 @@ class DataCollector:
         errors = []
         for source, fn in [
             ("youtube", self._collect_youtube),
+            ("signals", self._collect_signal_feeds),
             ("video_tracking", self._collect_video_tracking),
         ]:
             try:
@@ -69,6 +72,10 @@ class DataCollector:
     def collect_youtube(self):
         """YouTube 수집만 (CLI용)."""
         self._collect_youtube()
+
+    def collect_signals(self):
+        """외부 신호 수집만 (CLI용)."""
+        self._collect_signal_feeds()
 
     # ── YouTube 수집 ──
 
@@ -135,6 +142,11 @@ class DataCollector:
         self._dedup.set_watermark(
             "competitors", "global", {"last_fetch": datetime.now(timezone.utc).isoformat()}
         )
+
+    def _collect_signal_feeds(self):
+        """뉴스/소셜/커뮤니티 신호 수집."""
+        result = self._signal_feeds.collect_all()
+        logger.info("signal feeds collected: %d items", result.get("collected", 0))
 
     # ── 영상 추적 ──
 

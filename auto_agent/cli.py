@@ -29,6 +29,7 @@ import platform
 import shutil
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # Windows cp949 인코딩 문제 — 모든 모듈 import 전에 UTF-8 강제
@@ -968,10 +969,23 @@ def cmd_pull(args):
 
 
 def cmd_collect(args):
-    """데이터 수집 (YouTube, 트렌드, 경쟁채널)."""
+    """데이터 수집 (YouTube, 트렌드, 경쟁채널, 외부 신호)."""
     from auto_agent.paths import get_vault_dir
 
     print_header("Auto Agent — 데이터 수집")
+    signal_import = None
+    signal_import_url = None
+    signal_target = "market/social"
+    signal_name = None
+    for i, arg in enumerate(args):
+        if arg == "--signals-import" and i + 1 < len(args):
+            signal_import = args[i + 1]
+        elif arg == "--signals-import-url" and i + 1 < len(args):
+            signal_import_url = args[i + 1]
+        elif arg == "--target" and i + 1 < len(args):
+            signal_target = args[i + 1]
+        elif arg == "--name" and i + 1 < len(args):
+            signal_name = args[i + 1]
 
     if not args or "--all" in args:
         # yt-dlp로 경쟁 채널 + 트렌딩 수집
@@ -1023,8 +1037,24 @@ def cmd_collect(args):
         ytdlp = YtdlpCollector(vault)
         trending = ytdlp.collect_trending()
         print_success(f"트렌딩: {len(trending)}개 영상 수집")
+    elif "--signals" in args:
+        from auto_agent.modules.data_collector.collector import DataCollector
+        collector = DataCollector()
+        collector.collect_signals()
+        print_success("외부 신호 수집 완료")
+    elif signal_import:
+        from pathlib import Path
+        from auto_agent.modules.data_collector.signal_feed_collector import SignalFeedCollector
+        collector = SignalFeedCollector(vault_dir=get_vault_dir())
+        output = collector.import_snapshot(Path(signal_import), signal_target)
+        print_success(f"외부 신호 snapshot import 완료: {output}")
+    elif signal_import_url:
+        from auto_agent.modules.data_collector.signal_feed_collector import SignalFeedCollector
+        collector = SignalFeedCollector(vault_dir=get_vault_dir())
+        output = collector.import_snapshot_url(signal_import_url, signal_target, name=signal_name)
+        print_success(f"외부 신호 URL import 완료: {output}")
     else:
-        print_error("Usage: auto-agent collect [--all|--competitors|--trending]")
+        print_error("Usage: auto-agent collect [--all|--competitors|--trending|--signals|--signals-import <file> --target <market/social|market/communities|market/news> | --signals-import-url <url> --target <market/social|market/communities|market/news> [--name <snapshot-name>]]")
 
 
 def cmd_link(args):
@@ -1182,6 +1212,7 @@ def cmd_plan(args):
     seed = None
     autoresearch = False
     max_rounds = 5
+    provider = None
 
     for i, arg in enumerate(args):
         if arg == "--channel" and i + 1 < len(args):
@@ -1192,6 +1223,8 @@ def cmd_plan(args):
             autoresearch = True
         elif arg == "--rounds" and i + 1 < len(args):
             max_rounds = int(args[i + 1])
+        elif arg == "--provider" and i + 1 < len(args):
+            provider = args[i + 1]
 
     if autoresearch:
         mode = f"AutoResearch ({max_rounds}라운드)"
@@ -1202,12 +1235,14 @@ def cmd_plan(args):
 
     print_header(f"Auto Agent — 주제 기획 ({mode})")
     console.print(f"  채널: [accent]{channel}[/accent]")
+    if provider:
+        console.print(f"  provider: [accent]{provider}[/accent]")
     if seed:
         console.print(f"  시드: [accent]{seed}[/accent]")
     if autoresearch:
         console.print(f"  모드: [accent]카파시 AutoResearch 루프[/accent]")
 
-    runner = AgentRunner()
+    runner = AgentRunner(provider=provider)
     result = runner.run_trend_analyst(
         channel=channel, seed=seed,
         autoresearch=autoresearch, max_rounds=max_rounds,
@@ -1215,12 +1250,7 @@ def cmd_plan(args):
 
     if result["status"] == "success":
         print_success("기획안 생성 완료")
-        import os
-        webhook = os.getenv("DISCORD_WEBHOOK_URL", "")
-        if webhook:
-            from auto_agent.modules.data_collector.discord_notifier import DiscordNotifier
-            notifier = DiscordNotifier(webhook_url=webhook)
-            notifier.send(f"📋 **{channel} 기획안 생성 완료** ({mode})\n→ 볼트 insights/planning/ 확인")
+        _notify_plan_result(channel, mode)
     else:
         print_error(f"기획안 생성 실패: {result.get('stderr', '')[:200]}")
 
@@ -1232,6 +1262,7 @@ def cmd_analyze(args):
     channel = "이로미즘"
     video_id = None
     weekly = False
+    provider = None
 
     for i, arg in enumerate(args):
         if arg == "--channel" and i + 1 < len(args):
@@ -1240,6 +1271,8 @@ def cmd_analyze(args):
             video_id = args[i + 1]
         elif arg == "--weekly":
             weekly = True
+        elif arg == "--provider" and i + 1 < len(args):
+            provider = args[i + 1]
 
     if not video_id and not weekly:
         print_error("Usage: auto-agent analyze [--video <id> | --weekly] --channel <name>")
@@ -1249,8 +1282,10 @@ def cmd_analyze(args):
     label = "주간 리뷰" if weekly else f"영상 분석 ({video_id})"
     print_header(f"Auto Agent — {label}")
     console.print(f"  채널: [accent]{channel}[/accent]")
+    if provider:
+        console.print(f"  provider: [accent]{provider}[/accent]")
 
-    runner = AgentRunner()
+    runner = AgentRunner(provider=provider)
     result = runner.run_performance_analyst(mode=mode, channel=channel, video_id=video_id)
 
     if result["status"] == "success":
@@ -1452,6 +1487,8 @@ def cmd_auto_kairos(args):
 
 def _load_vault_candidates(channel: str) -> list:
     """볼트 insights/planning/ 에서 최신 autoresearch JSON의 candidates를 로드."""
+    import unicodedata
+
     try:
         from auto_agent.paths import get_vault_dir
         vault = get_vault_dir()
@@ -1464,9 +1501,13 @@ def _load_vault_candidates(channel: str) -> list:
         return []
 
     # 채널명으로 필터링, 날짜 내림차순
-    channel_tag = "이로미즘" if channel == "이로미즘" else "세모지"
+    channel_tag = unicodedata.normalize("NFC", channel)
     research_files = sorted(
-        planning_dir.glob(f"*-{channel_tag}-autoresearch.json"),
+        [
+            path for path in planning_dir.glob("*-autoresearch.json")
+            if channel_tag in unicodedata.normalize("NFC", path.name)
+        ],
+        key=lambda path: (path.stat().st_mtime, str(path)),
         reverse=True,
     )
 
@@ -1482,6 +1523,58 @@ def _load_vault_candidates(channel: str) -> list:
         return candidates[:5]
     except Exception:
         return []
+
+
+def _format_autoresearch_summary(channel: str, candidates: list, limit: int = 5) -> str:
+    today = datetime.now().strftime("%Y-%m-%d")
+    lines = [f"📋 **[{today}] {channel} AutoResearch 결과**", ""]
+    for idx, candidate in enumerate(candidates[:limit], start=1):
+        score = candidate.get("topic_score", 0)
+        title = candidate.get("title", "")
+        hook = candidate.get("hook", "")
+        bridge = candidate.get("bridge_reason", "")
+        timing = candidate.get("timing_window", "")
+        lines.append(f"**{idx}. [{score}점] {title}**")
+        if hook:
+            lines.append(f"훅: {hook}")
+        if timing:
+            lines.append(f"타이밍: {timing}")
+        if bridge:
+            lines.append(f"브리지: {bridge[:220]}")
+        lines.append("")
+    return "\n".join(lines).strip()
+
+
+def _notify_plan_result(channel: str, mode: str) -> None:
+    webhook = os.getenv("DISCORD_WEBHOOK_URL", "")
+    if not webhook:
+        return
+
+    summary = _format_autoresearch_summary(channel, _load_vault_candidates(channel))
+    completion = f"📋 **{channel} 기획안 생성 완료** ({mode})\n→ 볼트 insights/planning/ 확인"
+
+    stage0_channel_id = (
+        os.getenv("DISCORD_STAGE0_CHANNEL_ID", "").strip()
+        or os.getenv("TEAM_DISCORD_CHANNEL_ID", "").strip()
+    )
+    if stage0_channel_id:
+        try:
+            from auto_agent.modules.discord_bot_notify import DiscordBotNotify
+            bot = DiscordBotNotify(channel_id=stage0_channel_id)
+            thread_name = f"[{datetime.now().strftime('%Y-%m-%d')}] {channel} AutoResearch"
+            thread_id = bot.create_thread(thread_name)
+            if thread_id:
+                bot.send_to_thread(summary)
+                bot.send_to_channel(f"✅ **{channel} 기획안 생성 완료** — 스레드에서 상세 결과 확인")
+                return
+        except Exception:
+            pass
+
+    from auto_agent.modules.data_collector.discord_notifier import DiscordNotifier
+    notifier = DiscordNotifier(webhook_url=webhook)
+    notifier.send(completion)
+    if summary:
+        notifier.send(summary)
 
 
 def _find_plan_path(channel: str) -> str | None:

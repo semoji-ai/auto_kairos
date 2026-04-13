@@ -57,7 +57,7 @@
 
 | 에이전트 | Stage | 모델 | 입력 | 출력 |
 |----------|-------|------|------|------|
-| skeleton-researcher | 1a | opus | 주제/기획안 | skeleton.json + outline.json |
+| skeleton-from-vault | 1a | module | vault wiki/claims + ingest status | skeleton.json + outline.json |
 | flesh-researcher | 1b | opus | outline.json | chapter_facts/ |
 | draft-writer | 2_draft | opus | outline.json + chapter_facts/ | draft.md + research_questions.json |
 | targeted-researcher | 2_target | sonnet | research_questions.json | targeted_claims.json |
@@ -111,7 +111,7 @@ python -m uvicorn app:app --host 0.0.0.0 --port 8080
 |------|-------------|------|
 | step_0 | preflight | API키, Node, ffmpeg 검증 |
 | step_1_ingest | source_ingest_module | ResearchAgent → vault 02-research raw/wiki/claims 수집 |
-| step_1a | skeleton-researcher | Wikipedia → 내러티브 골격 + outline.json |
+| step_1a | skeleton_from_vault_module | vault wiki/claims → 내러티브 골격 + outline.json |
 | step_1b | chapter_projection_module | vault wiki/claims + outline → chapter_facts/ (claim_ids/source_ids 포함) |
 | step_2_draft | draft-writer | 초고 + WHY/HOW 질문 목록 |
 | step_2_target | targeted-researcher | 정밀 웹 리서치 → targeted_claims.json |

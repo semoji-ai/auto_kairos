@@ -1,15 +1,22 @@
 # 시장 분석 스킬 (Market Analysis)
 
 ## 역할
-YouTube 트렌드, 검색량 데이터, 경쟁 채널 공개 데이터를 교차 분석하여
+YouTube 트렌드, 뉴스, 소셜/커뮤니티 신호, 경쟁 채널 공개 데이터를 교차 분석하여
 주제의 시장성과 타이밍을 평가한다.
 
 ## 분석 프레임워크
 
 ### 1. 트렌드 신호 감지
 - `market/trends/` 디렉토리의 일일 트렌드 노트 확인
+- `market/news/`, `market/social/`, `market/communities/` 의 최신 신호 확인
 - 검색량 급등 키워드 (전주 대비 +50% 이상) 식별
 - 지속적 상승 트렌드 vs 일시적 스파이크 구분
+
+### 1-1. 브리지 후보 탐색
+- 실시간 화제 키워드(`trigger_keyword`)를 먼저 잡는다
+- 우리 채널이 깊게 풀 수 있는 지식 앵커(`knowledge_anchor`)를 붙인다
+- 두 요소가 왜 연결되는지 `bridge_reason`을 설명한다
+- `timing_window`를 판단한다
 
 ### 2. 경쟁 채널 갭 분석
 - `channels/competitors/` 노트에서 최근 영상 주제 확인
@@ -29,5 +36,6 @@ YouTube 트렌드, 검색량 데이터, 경쟁 채널 공개 데이터를 교차
 
 ## 출력 규칙
 - 주제별로 **왜 지금인가**, **채널 적합성**, **경쟁 상황** 3가지를 반드시 포함
+- 후보별로 `trigger_keyword`, `knowledge_anchor`, `bridge_reason`, `timing_window`를 포함
 - 위키링크(`[[노트명]]`)로 근거 연결
 - 예상 조회수는 유사 영상 성과 기반으로 범위 제시 (단정 금지)

@@ -291,7 +291,7 @@ research_report.json ──→ outline.json + final_manuscript.md
       "chapter": "number (필수)",
       "title": "string (필수)",
       "narration": "string — 원본 나레이션 (필수)",
-      "narration_tts": "string — TTS 전처리된 나레이션 (tts-preprocess 모듈 후 추가)",
+      "narration_tts": "string — TTS 전처리된 나레이션 (assembly-director B-4에서 채움)",
       "tts_changes": [
         {
           "original": "string",
@@ -366,7 +366,7 @@ research_report.json ──→ outline.json + final_manuscript.md
 - `visualization.creative` 필수 (모든 씬에)
 - `visualization.creative.reveal` 같은 값 3회 연속 금지
 - `map_scene`은 `visualization` 대신 `mapScene` 필드 사용 (둘 중 하나는 반드시 존재)
-- `narration_tts`는 tts-preprocess 모듈 실행 이후에만 존재
+- `narration_tts`는 assembly-director B-4 실행 이후에만 존재 (generate_tts.py가 의심 패턴 감지 시 Python KoreanTTSPreprocessor로 재처리)
 
 ---
 

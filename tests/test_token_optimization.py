@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 import pytest
+from types import SimpleNamespace
 
 
 class TestVaultRAGCache:
@@ -231,3 +232,155 @@ class TestSceneDelta:
         assert len(delta["added_scenes"]) == 0
         assert len(delta["removed_scene_numbers"]) == 0
         assert delta["unchanged_count"] == 2
+
+
+class TestRunnerCliParsing:
+    def test_parse_claude_cost_from_stream_json_result_line(self):
+        from auto_agent.orchestrator.runner import PipelineRunner
+
+        runner = PipelineRunner.__new__(PipelineRunner)
+        stdout = "\n".join([
+            json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "partial"}]}}),
+            json.dumps({
+                "type": "result",
+                "subtype": "success",
+                "is_error": False,
+                "total_cost_usd": 0.1234,
+                "usage": {"input_tokens": 111, "output_tokens": 222},
+                "model": "claude-opus-4-5-20250514",
+            }),
+        ])
+
+        cost = runner._parse_claude_cost(stdout, "")
+        assert cost["tokens_in"] == 111
+        assert cost["tokens_out"] == 222
+        assert cost["cost_usd"] == 0.1234
+
+    def test_extract_rate_limit_wait_seconds(self):
+        from auto_agent.orchestrator.runner import PipelineRunner
+
+        wait = PipelineRunner._extract_rate_limit_wait_seconds(
+            "You've hit your limit · resets 8pm (Asia/Seoul)"
+        )
+        assert wait is not None
+        assert wait >= 0
+
+    def test_extract_cli_error_message_from_result_wrapper(self):
+        from auto_agent.orchestrator.runner import PipelineRunner
+
+        stdout = "\n".join([
+            json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "partial"}]}}),
+            json.dumps({
+                "type": "result",
+                "subtype": "success",
+                "is_error": True,
+                "result": "You've hit your limit · resets 8pm (Asia/Seoul)",
+                "usage": {"input_tokens": 0, "output_tokens": 0},
+            }),
+        ])
+
+        msg = PipelineRunner._extract_cli_error_message(stdout, "")
+        assert "You've hit your limit" in msg
+
+
+class TestRatchetLoopFailure:
+    def test_ratchet_loop_fails_when_review_fails(self, tmp_path):
+        from auto_agent.orchestrator.runner import PipelineRunner, StepResult
+
+        (tmp_path / "scene_specs.json").write_text("[]", encoding="utf-8")
+
+        runner = PipelineRunner.__new__(PipelineRunner)
+        runner.project_dir = tmp_path
+        runner.project_slug = "test-project"
+        runner.state = SimpleNamespace(current_phase="stage_2")
+
+        runner._run_agent_step = MagicMock(return_value=StepResult(
+            step_id="review",
+            status="failed",
+            error="You've hit your limit · resets 8pm (Asia/Seoul)",
+            cost_info={"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0},
+        ))
+
+        step = {
+            "id": "step_2_review",
+            "reviewer_agent": "script-reviewer",
+            "reviser_agent": "script-director",
+            "input": ["scene_specs.json"],
+            "ratchet": {"pass_threshold": 90, "max_rounds": 2},
+        }
+
+        result = runner._run_ratchet_loop(step)
+        assert result.status == "failed"
+        assert "리뷰 실패" in result.error
+
+    def test_ratchet_loop_keeps_best_version_when_score_stays_below_threshold(self, tmp_path):
+        from auto_agent.orchestrator.runner import PipelineRunner, StepResult
+
+        original_specs = [{"sceneNumber": 1, "narration": "best-version"}]
+        degraded_specs = [{"sceneNumber": 1, "narration": "degraded-version"}]
+
+        (tmp_path / "scene_specs.json").write_text(
+            json.dumps(original_specs, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        (tmp_path / "review_feedback.json").write_text(
+            json.dumps({
+                "overall": {
+                    "combined_score": 82,
+                    "viewer_score": 84,
+                    "expert_score": 80,
+                    "verdict": "REVISE",
+                    "summary": "still weak",
+                },
+                "scene_reviews": [],
+            }, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+        runner = PipelineRunner.__new__(PipelineRunner)
+        runner.project_dir = tmp_path
+        runner.project_slug = "test-project"
+        runner.state = SimpleNamespace(current_phase="stage_2")
+        def fake_run(step_payload):
+            step_id = step_payload["id"]
+            if step_id.endswith("review_r1"):
+                return StepResult(
+                    step_id="review_1",
+                    status="completed",
+                    output_files=[str(tmp_path / "review_feedback.json")],
+                    cost_info={"tokens_in": 10, "tokens_out": 20, "cost_usd": 0.01},
+                )
+            if step_id.endswith("revise_r1"):
+                (tmp_path / "scene_specs.json").write_text(
+                    json.dumps(degraded_specs, ensure_ascii=False),
+                    encoding="utf-8",
+                )
+                return StepResult(
+                    step_id="revise_1",
+                    status="completed",
+                    output_files=[str(tmp_path / "scene_specs.json")],
+                    cost_info={"tokens_in": 30, "tokens_out": 40, "cost_usd": 0.02},
+                )
+            if step_id.endswith("review_r2"):
+                return StepResult(
+                    step_id="review_2",
+                    status="completed",
+                    output_files=[str(tmp_path / "review_feedback.json")],
+                    cost_info={"tokens_in": 50, "tokens_out": 60, "cost_usd": 0.03},
+                )
+            raise AssertionError(f"unexpected step: {step_id}")
+
+        runner._run_agent_step = MagicMock(side_effect=fake_run)
+
+        step = {
+            "id": "step_2_review",
+            "reviewer_agent": "script-reviewer",
+            "reviser_agent": "script-director",
+            "input": ["scene_specs.json"],
+            "ratchet": {"pass_threshold": 90, "max_rounds": 2},
+        }
+
+        result = runner._run_ratchet_loop(step)
+        assert result.status == "completed"
+        restored = json.loads((tmp_path / "scene_specs.json").read_text(encoding="utf-8"))
+        assert restored == original_specs

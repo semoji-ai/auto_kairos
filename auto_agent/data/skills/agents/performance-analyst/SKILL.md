@@ -127,6 +127,7 @@ tags: [performance, weekly-review]
 2. **패턴 발견**: 주제/길이/썸네일 등 유의미한 상관관계
 3. **경쟁 채널 동향**: 주목할 변화 + trial 추가/제거 제안
 4. **Stage 0 피드백**: 다음 주 기획에 반영할 교훈
+5. **브리지 패턴 회고**: 어떤 trigger_keyword → knowledge_anchor 조합이 먹혔는지
 
 ### Stage 0 피드백 (`insights/feedback/`)
 ```yaml
@@ -143,6 +144,7 @@ tags: [feedback, stage0]
 2. **성과 안 좋았던 주제 유형**: 피해야 할 패턴
 3. **경쟁 채널에서 배울 점**: 경쟁자의 성공 패턴
 4. **추천 주제 방향**: 다음 주 기획에 반영할 인사이트
+5. **브리지 패턴**: `winning_bridge_patterns`, `losing_bridge_patterns`, `title_trigger_patterns`, `competitor_lessons`
 
 ---
 

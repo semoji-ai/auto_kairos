@@ -24,8 +24,14 @@ def competitors_dir() -> Path:
 def trends_dir() -> Path:
     return vault_root() / "market" / "trends"
 
+def news_dir() -> Path:
+    return vault_root() / "market" / "news"
+
 def social_dir() -> Path:
     return vault_root() / "market" / "social"
+
+def communities_dir() -> Path:
+    return vault_root() / "market" / "communities"
 
 def topics_dir() -> Path:
     return vault_root() / "topics"
@@ -68,7 +74,9 @@ def ensure_vault_structure():
         channel_dir("세모지") / "videos",
         competitors_dir(),
         trends_dir(),
+        news_dir(),
         social_dir(),
+        communities_dir(),
         topics_dir(),
         planning_dir(),
         feedback_dir(),
