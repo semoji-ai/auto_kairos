@@ -423,6 +423,117 @@ async def project_detail(request: Request, project_id: int, tab: str = "research
 # Manuscript 편집 API
 # ─────────────────────────────
 
+@app.get("/api/p/{slug}/research/canvas")
+async def research_canvas(slug: str):
+    """리서치 캔버스용 데이터 반환.
+
+    Returns:
+        outline: 챕터 목록 (flow bar용)
+        claims: outline 챕터별 그룹핑된 claims
+        sources: 소스 목록
+        skeleton: skeleton.json 요약
+    """
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "project not found"}, 404)
+    out_dir = Path(project.get("output_dir", ""))
+
+    # outline 로드
+    outline_data: dict = {}
+    outline_path = out_dir / "outline.json"
+    if outline_path.exists():
+        try:
+            outline_data = json.loads(outline_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    # skeleton 로드
+    skeleton_data: dict = {}
+    skeleton_path = out_dir / "skeleton.json"
+    if skeleton_path.exists():
+        try:
+            skeleton_data = json.loads(skeleton_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    # claims.jsonl 로드 (research/ 폴더 탐색)
+    research_root = out_dir / "research"
+    claims: list[dict] = []
+    sources: list[dict] = []
+
+    def _load_jsonl(p: Path) -> list[dict]:
+        if not p.exists():
+            return []
+        result = []
+        for line in p.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                result.append(json.loads(line))
+            except Exception:
+                pass
+        return result
+
+    if research_root.exists():
+        manifests_dir = research_root / "manifests"
+        if manifests_dir.exists():
+            for topic_dir in sorted(manifests_dir.iterdir()):
+                if topic_dir.is_dir():
+                    claims.extend(_load_jsonl(topic_dir / "claims.jsonl"))
+                    sources.extend(_load_jsonl(topic_dir / "sources.jsonl"))
+
+    # outline 챕터 기준으로 claims 그룹핑
+    chapters = outline_data.get("chapters", [])
+    chapter_map: dict[int, str] = {}
+    for ch in chapters:
+        ch_id = ch.get("id") or ch.get("chapter") or 0
+        ch_title = ch.get("title") or ch.get("name") or f"Chapter {ch_id}"
+        chapter_map[int(ch_id)] = ch_title
+
+    # claims를 챕터 키워드 기반 매핑 (chapter 필드 or 순서)
+    # claims에 chapter 필드가 있으면 사용, 없으면 unassigned
+    grouped: dict[str, list[dict]] = {}
+    for c in claims:
+        ch_key = str(c.get("chapter", ""))
+        if not ch_key:
+            ch_key = "unassigned"
+        if ch_key not in grouped:
+            grouped[ch_key] = []
+        grouped[ch_key].append({
+            "claim_id": c.get("claim_id", ""),
+            "claim": c.get("claim", ""),
+            "kind": c.get("kind", "factual"),
+            "confidence": c.get("confidence", "medium"),
+            "evidence": c.get("evidence", ""),
+            "status": c.get("status", ""),
+        })
+
+    # unassigned claims는 순서대로 챕터에 배분 (챕터 없을 때 fallback)
+    if "unassigned" in grouped and chapters:
+        unassigned = grouped.pop("unassigned")
+        chunk = max(1, len(unassigned) // max(1, len(chapters)))
+        for i, ch in enumerate(chapters):
+            ch_id = str(ch.get("id") or i + 1)
+            start = i * chunk
+            end = start + chunk if i < len(chapters) - 1 else len(unassigned)
+            if ch_id not in grouped:
+                grouped[ch_id] = []
+            grouped[ch_id].extend(unassigned[start:end])
+
+    return JSONResponse({
+        "outline": outline_data,
+        "skeleton": skeleton_data,
+        "chapters": chapters,
+        "grouped_claims": grouped,
+        "chapter_map": chapter_map,
+        "sources": sources[:50],
+        "total_claims": len(claims),
+        "total_sources": len(sources),
+    })
+
+
 @app.get("/api/p/{slug}/manuscript/raw")
 async def manuscript_raw(slug: str):
     """원고 raw 텍스트 반환."""

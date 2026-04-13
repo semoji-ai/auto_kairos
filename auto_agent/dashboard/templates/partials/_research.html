@@ -1,241 +1,557 @@
-<!-- Research 탭 -->
-{% if research and (research.episodes or research.sections) %}
-<div class="research-layout">
-  <div class="research-sidebar">
-    <div class="sidebar-title">목차</div>
-    {% if research.summary %}
-    <a href="#" class="sidebar-item active" onclick="showSection('summary', this); return false;">요약</a>
-    {% endif %}
-    {% if research.episodes %}
-    <a href="#" class="sidebar-item" onclick="showSection('episodes', this); return false;">에피소드 ({{ research.episodes|length }})</a>
-    {% endif %}
-    {% if research.key_figures %}
-    <a href="#" class="sidebar-item" onclick="showSection('figures', this); return false;">주요 인물 ({{ research.key_figures|length }})</a>
-    {% endif %}
-    {% if research.timeline %}
-    <a href="#" class="sidebar-item" onclick="showSection('timeline', this); return false;">타임라인 ({{ research.timeline|length }})</a>
-    {% endif %}
-    {% if research.statistics %}
-    <a href="#" class="sidebar-item" onclick="showSection('statistics', this); return false;">통계 ({{ research.statistics|length }})</a>
-    {% endif %}
-    {% if research.comparisons %}
-    <a href="#" class="sidebar-item" onclick="showSection('comparisons', this); return false;">비교 분석 ({{ research.comparisons|length }})</a>
-    {% endif %}
-    {% if research.sources %}
-    <a href="#" class="sidebar-item" onclick="showSection('sources', this); return false;">출처 ({{ research.sources|length }})</a>
-    {% endif %}
-    {# 레거시 sections 호환 #}
-    {% if research.sections %}
-    {% for section in research.sections %}
-    <a href="#" class="sidebar-item" onclick="showSection('sec-{{ loop.index }}', this); return false;">{{ section.title }}</a>
-    {% endfor %}
-    {% endif %}
+<!-- Research + Manuscript 2패널 캔버스 -->
+<div class="rc-wrap" id="rc-wrap" data-slug="{{ slug }}">
+
+  <!-- ── 상단 Outline Flow Bar ── -->
+  <div class="rc-flow-bar" id="rc-flow-bar">
+    <div class="rc-flow-loading">아웃라인 로딩 중...</div>
   </div>
 
-  <div class="research-content">
-    {# 요약 #}
-    {% if research.summary %}
-    <div id="rs-summary" class="research-section">
-      <h2>{{ research.topic or '리서치 요약' }}</h2>
-      <div class="subsection">
-        <p class="content-text" style="white-space:pre-line">{{ research.summary }}</p>
-      </div>
-    </div>
-    {% endif %}
+  <!-- ── 2패널 메인 ── -->
+  <div class="rc-panels">
 
-    {# 에피소드 #}
-    {% if research.episodes %}
-    <div id="rs-episodes" class="research-section hidden">
-      <h2>에피소드</h2>
-      {% for ep in research.episodes %}
-      <div class="subsection">
-        <h3>{{ ep.title or '에피소드 ' ~ loop.index }}</h3>
-        {% if ep.subtopic or ep.period %}<span class="badge" style="margin-bottom:8px;display:inline-block">{{ ep.subtopic or ep.period }}</span>{% endif %}
-        <p class="content-text" style="color:var(--text-muted)">{{ ep.content or '' }}</p>
-        {% if ep.narrative_draft %}
-        <p class="content-text" style="white-space:pre-line;margin-top:8px">{{ ep.narrative_draft }}</p>
-        {% endif %}
-        {% if ep.must_include %}
-        <div class="key-facts" style="margin-top:8px">
-          <h4 style="font-size:11px;color:var(--accent)">필수 팩트</h4>
-          <ul style="font-size:12px">
-          {% for fact in ep.must_include %}
-            <li>{{ fact.fact if fact is mapping else fact }}</li>
-          {% endfor %}
-          </ul>
-        </div>
-        {% endif %}
-        {% if ep.sources %}
-        <div class="sources">
-          <span class="sources-label">Sources:</span>
-          {% for s in ep.sources %}
-            {% if s is mapping %}
-            <a href="{{ s.url }}" target="_blank" class="source-tag">{{ s.title or s.url }}</a>
-            {% else %}
-            <span class="source-tag">{{ s }}</span>
-            {% endif %}
-          {% endfor %}
-        </div>
-        {% endif %}
+    <!-- 왼쪽: Research Canvas -->
+    <div class="rc-panel rc-panel-research" id="rc-research-panel">
+      <div class="rc-panel-header">
+        <span class="rc-panel-title">Research Canvas</span>
+        <span class="rc-claim-count" id="rc-claim-count">— claims</span>
+        <span class="rc-live-dot" id="rc-live-dot" title="실시간 스트리밍"></span>
       </div>
-      {% endfor %}
+      <div class="rc-panel-body" id="rc-claims-body">
+        <div class="rc-empty">리서치 데이터를 불러오는 중...</div>
+      </div>
     </div>
-    {% endif %}
 
-    {# 주요 인물 #}
-    {% if research.key_figures %}
-    <div id="rs-figures" class="research-section hidden">
-      <h2>주요 인물</h2>
-      <div class="data-table-wrap">
-        <table class="data-table">
-          <thead><tr><th>인물</th><th>역할/설명</th><th>기간</th></tr></thead>
-          <tbody>
-          {% for fig in research.key_figures %}
-          <tr>
-            <td style="font-weight:600">{{ fig.name or fig }}</td>
-            <td>{{ fig.role or fig.get('description', '') }}</td>
-            <td style="color:var(--text-muted)">{{ fig.period or '' }}</td>
-          </tr>
-          {% endfor %}
-          </tbody>
-        </table>
+    <!-- 오른쪽: Manuscript Canvas -->
+    <div class="rc-panel rc-panel-manuscript" id="rc-manuscript-panel">
+      <div class="rc-panel-header">
+        <span class="rc-panel-title">Manuscript Canvas</span>
+        <span class="rc-ms-badge" id="rc-ms-badge">—</span>
+      </div>
+      <div class="rc-panel-body" id="rc-ms-body">
+        <div class="rc-empty">원고 데이터를 불러오는 중...</div>
       </div>
     </div>
-    {% endif %}
 
-    {# 타임라인 #}
-    {% if research.timeline %}
-    <div id="rs-timeline" class="research-section hidden">
-      <h2>타임라인</h2>
-      <div class="timeline-list">
-        {% for event in research.timeline %}
-        <div class="subsection" style="border-left:2px solid var(--accent);padding-left:12px;margin-bottom:12px">
-          <span style="color:var(--accent);font-weight:600;font-size:13px">{{ event.year or event.date or event.period or '' }}</span>
-          <p class="content-text" style="margin-top:4px">{{ event.event or event.description or event }}</p>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-    {# 통계 #}
-    {% if research.statistics %}
-    <div id="rs-statistics" class="research-section hidden">
-      <h2>통계</h2>
-      <div class="data-table-wrap">
-        <table class="data-table">
-          <thead><tr><th>항목</th><th>수치</th><th>출처/비고</th></tr></thead>
-          <tbody>
-          {% for stat in research.statistics %}
-          <tr>
-            <td>{{ stat.label or stat.get('metric', '') }}</td>
-            <td style="font-weight:600">{{ stat.value or '' }}</td>
-            <td style="color:var(--text-muted);font-size:12px">{{ stat.source or stat.get('note', '') }}</td>
-          </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    {% endif %}
-
-    {# 비교 분석 #}
-    {% if research.comparisons %}
-    <div id="rs-comparisons" class="research-section hidden">
-      <h2>비교 분석</h2>
-      {% for comp in research.comparisons %}
-      <div class="subsection">
-        <h3>{{ comp.title or '비교 ' ~ loop.index }}</h3>
-        {% if comp.data is iterable and comp.data is not string %}
-        <div class="data-table-wrap">
-          <table class="data-table">
-            {% if comp.data and comp.data[0] is mapping %}
-            <thead><tr>{% for h in comp.data[0].keys() %}<th>{{ h }}</th>{% endfor %}</tr></thead>
-            <tbody>
-            {% for row in comp.data %}
-            <tr>{% for v in row.values() %}<td>{{ v }}</td>{% endfor %}</tr>
-            {% endfor %}
-            </tbody>
-            {% endif %}
-          </table>
-        </div>
-        {% endif %}
-        {% if comp.insight %}<p class="content-text" style="margin-top:8px;color:var(--accent)">{{ comp.insight }}</p>{% endif %}
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    {# 출처 #}
-    {% if research.sources %}
-    <div id="rs-sources" class="research-section hidden">
-      <h2>출처</h2>
-      {% if research.source_grades %}
-      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-        {% for grade, count in research.source_grades.items() %}
-        <span class="badge">{{ grade }}: {{ count }}건</span>
-        {% endfor %}
-      </div>
-      {% endif %}
-      <div class="data-table-wrap">
-        <table class="data-table">
-          <thead><tr><th>제목</th><th>등급</th><th>URL</th></tr></thead>
-          <tbody>
-          {% for s in research.sources %}
-          <tr>
-            <td>{{ s.title or s }}</td>
-            <td>{{ s.grade or '' }}</td>
-            <td>{% if s.url %}<a href="{{ s.url }}" target="_blank" style="font-size:11px">{{ s.url[:60] }}{% if s.url|length > 60 %}...{% endif %}</a>{% endif %}</td>
-          </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    {% endif %}
-
-    {# 레거시 sections 호환 #}
-    {% if research.sections %}
-    {% for section in research.sections %}
-    <div id="rs-sec-{{ loop.index }}" class="research-section hidden">
-      <h2>{{ section.title }}</h2>
-      {% if section.content %}
-      <div class="subsection">
-        <p class="content-text" style="white-space:pre-line">{{ section.content }}</p>
-      </div>
-      {% endif %}
-      {% if section.subsections %}
-      {% for sub in section.subsections %}
-      <div class="subsection">
-        <h3>{{ sub.title }}</h3>
-        {% if sub.content %}<p class="content-text">{{ sub.content }}</p>{% endif %}
-      </div>
-      {% endfor %}
-      {% endif %}
-    </div>
-    {% endfor %}
-    {% endif %}
   </div>
 </div>
+
+<style>
+/* ── 전체 레이아웃 ── */
+.rc-wrap {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  overflow: hidden;
+}
+
+/* ── Outline Flow Bar ── */
+.rc-flow-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+  min-height: 48px;
+}
+.rc-flow-bar::-webkit-scrollbar { display: none; }
+.rc-flow-loading { font-size: 12px; color: var(--text-muted); }
+
+.rc-chapter-chip {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  cursor: pointer;
+}
+.rc-chip-label {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.rc-chip-label:hover,
+.rc-chip-label.active {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.rc-chip-arrow {
+  width: 24px;
+  text-align: center;
+  color: var(--border);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* ── 2패널 ── */
+.rc-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.rc-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+.rc-panel:last-child { border-right: none; }
+
+.rc-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.rc-panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+.rc-claim-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--surface2);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.rc-live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+  margin-left: auto;
+  transition: background 0.3s;
+}
+.rc-live-dot.streaming {
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e88;
+  animation: pulse-dot 1.5s infinite;
+}
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.rc-ms-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text-muted);
+}
+.rc-ms-badge.draft { background: rgba(59,130,246,0.15); color: #93C5FD; }
+.rc-ms-badge.final { background: rgba(34,197,94,0.15); color: #86EFAC; }
+
+.rc-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* ── Chapter Section (Research) ── */
+.rc-ch-section { margin-bottom: 24px; }
+.rc-ch-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  padding: 6px 0 8px;
+  border-bottom: 1px solid rgba(245,158,11,0.2);
+  margin-bottom: 10px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 1;
+}
+
+/* ── Claim Card ── */
+.rc-claim {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  animation: claim-in 0.3s ease;
+}
+@keyframes claim-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rc-claim:last-child { border-bottom: none; }
+
+.rc-claim-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+.rc-claim-dot.high   { background: #22c55e; }
+.rc-claim-dot.medium { background: #f59e0b; }
+.rc-claim-dot.low    { background: #6b7280; }
+
+.rc-claim-body { flex: 1; min-width: 0; }
+.rc-claim-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #D4D4D8;
+  word-break: keep-all;
+}
+.rc-claim-meta {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.rc-tag {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.rc-tag-kind     { background: rgba(99,102,241,0.15); color: #A5B4FC; }
+.rc-tag-high     { background: rgba(34,197,94,0.12); color: #86EFAC; }
+.rc-tag-medium   { background: rgba(245,158,11,0.12); color: #FCD34D; }
+.rc-tag-low      { background: rgba(107,114,128,0.15); color: #9CA3AF; }
+.rc-tag-verified { background: rgba(34,197,94,0.08); color: #6EE7B7; }
+
+/* ── Manuscript Canvas ── */
+.rc-ms-chapter {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 24px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(245,158,11,0.2);
+}
+.rc-ms-chapter:first-child { margin-top: 0; }
+.rc-ms-paragraph {
+  font-size: 14px;
+  line-height: 1.85;
+  color: #D4D4D8;
+  margin-bottom: 14px;
+  word-break: keep-all;
+}
+.rc-ms-divider {
+  border: none;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+  margin: 12px 0;
+}
+
+/* ── Empty ── */
+.rc-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 20px 0;
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .rc-panels { grid-template-columns: 1fr; }
+  .rc-wrap { height: auto; }
+}
+</style>
 
 <script>
-function showSection(id, el) {
-  document.querySelectorAll('.research-section').forEach(function(s) { s.classList.add('hidden'); });
-  var target = document.getElementById('rs-' + id);
-  if (target) target.classList.remove('hidden');
-  document.querySelectorAll('.research-sidebar .sidebar-item').forEach(function(a) { a.classList.remove('active'); });
-  el.classList.add('active');
-}
+(function() {
+  var slug = document.getElementById('rc-wrap').dataset.slug;
+  var claimsBody = document.getElementById('rc-claims-body');
+  var msBody = document.getElementById('rc-ms-body');
+  var flowBar = document.getElementById('rc-flow-bar');
+  var countEl = document.getElementById('rc-claim-count');
+  var liveDot = document.getElementById('rc-live-dot');
+  var msBadge = document.getElementById('rc-ms-badge');
+
+  var chapterMap = {};
+  var claimsByChapter = {};
+  var totalClaims = 0;
+
+  // ── 1. outline + claims 초기 로드 ──
+  fetch('/api/p/' + slug + '/research/canvas')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      chapterMap = d.chapter_map || {};
+      renderFlowBar(d.chapters || []);
+      claimsByChapter = d.grouped_claims || {};
+      totalClaims = d.total_claims || 0;
+      renderClaims();
+      countEl.textContent = totalClaims + ' claims';
+    })
+    .catch(function() {
+      claimsBody.innerHTML = '<div class="rc-empty">리서치 데이터가 없습니다</div>';
+      flowBar.innerHTML = '<div class="rc-flow-loading">아웃라인 없음</div>';
+    });
+
+  // ── 2. 원고 로드 (final → draft 순) ──
+  fetch('/api/p/' + slug + '/manuscript/raw')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.text && d.text.trim()) {
+        renderManuscript(d.text);
+        msBadge.textContent = '최종원고';
+        msBadge.className = 'rc-ms-badge final';
+      } else {
+        fetchDraft();
+      }
+    })
+    .catch(function() { fetchDraft(); });
+
+  function fetchDraft() {
+    // draft.md는 별도 엔드포인트 없으므로 pipeline status로 확인
+    msBody.innerHTML = '<div class="rc-empty">원고 준비 중</div>';
+    msBadge.textContent = '대기중';
+    msBadge.className = 'rc-ms-badge';
+  }
+
+  // ── Outline Flow Bar ──
+  function renderFlowBar(chapters) {
+    if (!chapters || !chapters.length) {
+      flowBar.innerHTML = '<div class="rc-flow-loading">아웃라인 없음</div>';
+      return;
+    }
+    flowBar.innerHTML = '';
+    chapters.forEach(function(ch, i) {
+      var id = String(ch.id || ch.chapter || i + 1);
+      var title = ch.title || ch.name || ('Ch' + id);
+
+      var chip = document.createElement('div');
+      chip.className = 'rc-chapter-chip';
+
+      var label = document.createElement('span');
+      label.className = 'rc-chip-label';
+      label.textContent = 'Ch' + id + '. ' + (title.length > 12 ? title.slice(0,12) + '…' : title);
+      label.dataset.chId = id;
+      label.onclick = function() { scrollToChapter(id, label); };
+
+      chip.appendChild(label);
+
+      if (i < chapters.length - 1) {
+        var arrow = document.createElement('span');
+        arrow.className = 'rc-chip-arrow';
+        arrow.textContent = '›';
+        chip.appendChild(arrow);
+      }
+
+      flowBar.appendChild(chip);
+    });
+  }
+
+  // ── Claims 렌더링 ──
+  function renderClaims() {
+    if (!Object.keys(claimsByChapter).length) {
+      claimsBody.innerHTML = '<div class="rc-empty">수집된 claim이 없습니다</div>';
+      return;
+    }
+    claimsBody.innerHTML = '';
+
+    var keys = Object.keys(claimsByChapter).sort(function(a, b) {
+      return (parseInt(a) || 999) - (parseInt(b) || 999);
+    });
+
+    keys.forEach(function(chId) {
+      var claims = claimsByChapter[chId];
+      if (!claims || !claims.length) return;
+      claimsBody.appendChild(buildChapterSection(chId, claims));
+    });
+  }
+
+  function buildChapterSection(chId, claims) {
+    var section = document.createElement('div');
+    section.className = 'rc-ch-section';
+    section.id = 'rc-ch-' + chId;
+
+    var chTitle = chapterMap[chId] || chapterMap[parseInt(chId)] || '';
+    var titleEl = document.createElement('div');
+    titleEl.className = 'rc-ch-title';
+    titleEl.textContent = chTitle ? ('Ch' + chId + '. ' + chTitle) : ('Chapter ' + chId);
+    section.appendChild(titleEl);
+
+    claims.forEach(function(c) {
+      section.appendChild(buildClaimCard(c));
+    });
+    return section;
+  }
+
+  function buildClaimCard(c) {
+    var conf = c.confidence || 'medium';
+    var dotClass = conf === 'high' ? 'high' : conf === 'medium' ? 'medium' : 'low';
+
+    var card = document.createElement('div');
+    card.className = 'rc-claim';
+
+    var dot = document.createElement('div');
+    dot.className = 'rc-claim-dot ' + dotClass;
+
+    var body = document.createElement('div');
+    body.className = 'rc-claim-body';
+
+    var text = document.createElement('div');
+    text.className = 'rc-claim-text';
+    text.textContent = c.claim || '';
+
+    var meta = document.createElement('div');
+    meta.className = 'rc-claim-meta';
+
+    if (c.kind) {
+      var t1 = document.createElement('span');
+      t1.className = 'rc-tag rc-tag-kind';
+      t1.textContent = c.kind;
+      meta.appendChild(t1);
+    }
+    var t2 = document.createElement('span');
+    t2.className = 'rc-tag rc-tag-' + dotClass;
+    t2.textContent = conf;
+    meta.appendChild(t2);
+
+    if (c.status === 'verified') {
+      var t3 = document.createElement('span');
+      t3.className = 'rc-tag rc-tag-verified';
+      t3.textContent = '✓';
+      meta.appendChild(t3);
+    }
+
+    body.appendChild(text);
+    body.appendChild(meta);
+    card.appendChild(dot);
+    card.appendChild(body);
+    return card;
+  }
+
+  // ── Manuscript 렌더링 ──
+  function renderManuscript(text) {
+    msBody.innerHTML = '';
+    var lines = text.split('\n');
+    var currentPara = [];
+
+    function flushPara() {
+      if (!currentPara.length) return;
+      var joined = currentPara.join(' ').trim();
+      if (!joined) { currentPara = []; return; }
+      var p = document.createElement('div');
+      p.className = 'rc-ms-paragraph';
+      p.textContent = joined;
+      msBody.appendChild(p);
+      currentPara = [];
+    }
+
+    lines.forEach(function(line) {
+      if (/^#\s+(Ch\d+|챕터\s*\d+)/i.test(line)) {
+        flushPara();
+        var h = document.createElement('div');
+        h.className = 'rc-ms-chapter';
+        h.textContent = line.replace(/^#+\s*/, '');
+        msBody.appendChild(h);
+      } else if (line.trim() === '---') {
+        flushPara();
+        var hr = document.createElement('hr');
+        hr.className = 'rc-ms-divider';
+        msBody.appendChild(hr);
+      } else if (line.trim().startsWith('<!--')) {
+        // chars 주석 스킵
+      } else if (line.trim() === '') {
+        flushPara();
+      } else {
+        currentPara.push(line.trim());
+      }
+    });
+    flushPara();
+  }
+
+  // ── 챕터 칩 클릭 → 양쪽 패널 스크롤 ──
+  function scrollToChapter(chId, labelEl) {
+    var target = document.getElementById('rc-ch-' + chId);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.rc-chip-label').forEach(function(el) {
+      el.classList.remove('active');
+    });
+    if (labelEl) labelEl.classList.add('active');
+  }
+
+  // ── 3. SSE: claims 실시간 ──
+  var claimsEv = new EventSource('/api/p/' + slug + '/pipeline/research/claims/stream');
+
+  claimsEv.addEventListener('claims_snapshot', function(e) {
+    try {
+      var d = JSON.parse(e.data);
+      if (d.total > totalClaims) {
+        totalClaims = d.total;
+        countEl.textContent = totalClaims + ' claims';
+      }
+    } catch(err) {}
+  });
+
+  claimsEv.addEventListener('claims_new', function(e) {
+    try {
+      var d = JSON.parse(e.data);
+      var newClaims = d.claims || [];
+      if (!newClaims.length) return;
+
+      liveDot.classList.add('streaming');
+      setTimeout(function() { liveDot.classList.remove('streaming'); }, 2000);
+      totalClaims += newClaims.length;
+      countEl.textContent = totalClaims + ' claims';
+
+      newClaims.forEach(function(c) {
+        var chId = String(c.chapter || 'unassigned');
+        var section = document.getElementById('rc-ch-' + chId);
+        if (!section) {
+          section = buildChapterSection(chId, []);
+          claimsBody.appendChild(section);
+        }
+        section.appendChild(buildClaimCard(c));
+      });
+    } catch(err) {}
+  });
+
+  // ── 4. SSE: 원고 업데이트 ──
+  var msEv = new EventSource('/api/p/' + slug + '/pipeline/stream');
+
+  msEv.addEventListener('manuscript_updated', function(e) {
+    try {
+      var d = JSON.parse(e.data);
+      if (d.text) {
+        renderManuscript(d.text);
+        msBadge.textContent = '최종원고';
+        msBadge.className = 'rc-ms-badge final';
+      }
+    } catch(err) {}
+  });
+
+  msEv.addEventListener('draft_updated', function(e) {
+    try {
+      var d = JSON.parse(e.data);
+      if (d.text) {
+        renderManuscript(d.text);
+        msBadge.textContent = '초고';
+        msBadge.className = 'rc-ms-badge draft';
+      }
+    } catch(err) {}
+  });
+
+  msEv.addEventListener('outline_updated', function(e) {
+    try {
+      var d = JSON.parse(e.data);
+      if (d.data && d.data.chapters) {
+        renderFlowBar(d.data.chapters);
+        d.data.chapters.forEach(function(ch) {
+          var id = String(ch.id || ch.chapter || '');
+          if (id) chapterMap[id] = ch.title || ch.name || '';
+        });
+      }
+    } catch(err) {}
+  });
+
+})();
 </script>
-{% elif research_md %}
-<!-- Markdown fallback 렌더링 -->
-<div class="research-layout">
-  <div class="research-content" style="max-width:100%">
-    <div class="research-section">
-      <div class="content-text md-render" style="white-space:pre-line; line-height:1.8; font-size:13px">{{ research_md }}</div>
-    </div>
-  </div>
-</div>
-{% else %}
-<div class="empty">리서치 보고서가 없습니다. 파이프라인을 먼저 실행하세요.</div>
-{% endif %}

@@ -134,6 +134,91 @@ def _count_manifest_records(path: Path) -> int:
     return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
 
 
+def _generate_overview_from_claims(
+    wiki_dir: Path,
+    claims_path: Path,
+    sources_path: Path,
+    topic: str,
+    topic_slug: str,
+) -> None:
+    """claims.jsonl + sources.jsonl 에서 overview.md 자동 생성.
+
+    overview.md가 플레이스홀더(300바이트 이하)인 경우에만 실행.
+    """
+    overview_path = wiki_dir / "overview.md"
+    if overview_path.exists() and overview_path.stat().st_size > 300:
+        return  # 이미 내용 있음
+
+    claims: list[dict] = []
+    if claims_path.exists():
+        for line in claims_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                claims.append(json.loads(line))
+            except Exception:
+                pass
+
+    sources: list[dict] = []
+    if sources_path.exists():
+        for line in sources_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                sources.append(json.loads(line))
+            except Exception:
+                pass
+
+    if not claims:
+        return
+
+    # 신뢰도별 분류
+    high = [c for c in claims if c.get("confidence") == "high"]
+    medium = [c for c in claims if c.get("confidence") == "medium"]
+    low_conf = [c for c in claims if c.get("confidence") not in ("high", "medium")]
+
+    lines = [
+        f"---",
+        f'doc_type: "wiki-page"',
+        f'topic: "{topic}"',
+        f'topic_slug: "{topic_slug}"',
+        f'page_type: "overview"',
+        f'auto_generated: true',
+        f"---",
+        f"",
+        f"# {topic} Overview",
+        f"",
+        f"## Summary",
+        f"- 총 {len(claims)}개 claim, {len(sources)}개 소스 수집",
+        f"- 신뢰도 high: {len(high)}개 / medium: {len(medium)}개 / 기타: {len(low_conf)}개",
+        f"",
+        f"## Key Claims (High Confidence)",
+    ]
+    for c in high[:15]:
+        lines.append(f"- {c.get('claim', '')}")
+    if medium:
+        lines.append("")
+        lines.append("## Additional Claims (Medium Confidence)")
+        for c in medium[:10]:
+            lines.append(f"- {c.get('claim', '')}")
+    if sources:
+        lines.append("")
+        lines.append("## Sources")
+        for s in sources[:10]:
+            title = s.get("title") or s.get("url") or ""
+            url = s.get("url") or ""
+            if url and title != url:
+                lines.append(f"- [{title}]({url})")
+            elif title:
+                lines.append(f"- {title}")
+
+    wiki_dir.mkdir(parents=True, exist_ok=True)
+    overview_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"[source_ingest] overview.md 자동 생성 완료 (claims={len(claims)}, sources={len(sources)})", flush=True)
+
+
 def _validate_ingest_completion(
     *,
     research_root: Path,
@@ -332,6 +417,21 @@ research_launcher.py 경로: {launcher}
         research_agent_dir,
         launcher,
     )
+    # overview.md 자동 생성 (플레이스홀더인 경우)
+    canonical_slug = resolve_existing_entity_slug(research_root, entity_slug or topic_slug)
+    _wiki_dir = research_root / "wiki" / canonical_slug
+    if not _wiki_dir.exists():
+        _alt = canonical_slug.replace("-", "_") if "-" in canonical_slug else canonical_slug.replace("_", "-")
+        _wiki_dir = research_root / "wiki" / _alt
+    _alt_slug = canonical_slug.replace("-", "_") if "-" in canonical_slug else canonical_slug.replace("_", "-")
+    _claims_p = research_root / "manifests" / canonical_slug / "claims.jsonl"
+    if not _claims_p.exists():
+        _claims_p = research_root / "manifests" / _alt_slug / "claims.jsonl"
+    _sources_p = research_root / "manifests" / canonical_slug / "sources.jsonl"
+    if not _sources_p.exists():
+        _sources_p = research_root / "manifests" / _alt_slug / "sources.jsonl"
+    _generate_overview_from_claims(_wiki_dir, _claims_p, _sources_p, topic, topic_slug)
+
     validation = _validate_ingest_completion(
         research_root=research_root,
         topic_slug=topic_slug,

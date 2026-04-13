@@ -250,6 +250,70 @@ async def _file_stream_generator(project_dir: Path, request: Request):
 
 
 # ─────────────────────────────────────────────────────────────
+# Research claims 실시간 스트리밍
+# ─────────────────────────────────────────────────────────────
+
+async def _claims_stream_generator(project_dir: Path, request: Request):
+    """research/manifests/**/claims.jsonl tail — 새 claim 실시간 전송."""
+    # 초기 offset 수집
+    offsets: dict[str, int] = {}
+
+    def _find_claims_files() -> list[Path]:
+        research = project_dir / "research" / "manifests"
+        if not research.exists():
+            return []
+        return list(research.glob("*/claims.jsonl"))
+
+    # 초기 스냅샷 전송
+    all_claims = []
+    for p in _find_claims_files():
+        try:
+            text = p.read_text(encoding="utf-8")
+            offsets[str(p)] = len(text.encode("utf-8"))
+            for line in text.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    all_claims.append(json.loads(line))
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    yield f"event: claims_snapshot\ndata: {json.dumps({'claims': all_claims, 'total': len(all_claims)}, ensure_ascii=False)}\n\n"
+
+    while True:
+        if await request.is_disconnected():
+            break
+
+        new_claims = []
+        for p in _find_claims_files():
+            key = str(p)
+            try:
+                data = p.read_bytes()
+                prev_offset = offsets.get(key, 0)
+                if len(data) > prev_offset:
+                    new_text = data[prev_offset:].decode("utf-8", errors="ignore")
+                    offsets[key] = len(data)
+                    for line in new_text.splitlines():
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            new_claims.append(json.loads(line))
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+        if new_claims:
+            yield f"event: claims_new\ndata: {json.dumps({'claims': new_claims, 'count': len(new_claims)}, ensure_ascii=False)}\n\n"
+
+        await asyncio.sleep(1.5)
+
+
+# ─────────────────────────────────────────────────────────────
 # Routes
 # ─────────────────────────────────────────────────────────────
 
@@ -286,6 +350,27 @@ async def pipeline_stream(slug: str, request: Request):
     project_dir = Path(project["output_dir"])
     return StreamingResponse(
         _file_stream_generator(project_dir, request),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.get("/research/claims/stream")
+async def research_claims_stream(slug: str, request: Request):
+    """SSE: claims.jsonl 실시간 스트림 (리서치 캔버스용)."""
+    project = resolve_project_by_slug(slug)
+    if not project:
+        return StreamingResponse(
+            iter([f"data: {json.dumps({'error': '프로젝트 없음'})}\n\n"]),
+            media_type="text/event-stream",
+        )
+    project_dir = Path(project["output_dir"])
+    return StreamingResponse(
+        _claims_stream_generator(project_dir, request),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
