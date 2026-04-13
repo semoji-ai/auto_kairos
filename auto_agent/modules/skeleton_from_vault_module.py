@@ -456,6 +456,138 @@ def _clean_sentence(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip(" -")
 
 
+def _build_outline_with_llm(
+    topic: str,
+    brief: dict,
+    skeleton: dict,
+    duration_minutes: int,
+) -> dict | None:
+    """Opus LLM을 호출해 editorial_brief + skeleton 기반 outline을 생성한다.
+
+    Returns:
+        outline dict (chapters 포함) or None (실패 시 fallback)
+    """
+    import subprocess
+    chapter_count = _chapter_count_for_duration(duration_minutes)
+    core_question = brief.get("core_question", "")
+    hook_angle = brief.get("hook_angle", "").strip()
+    audience_takeaway = brief.get("audience_takeaway", "")
+    excluded_angles = brief.get("excluded_angles", [])
+    tone_goal = brief.get("tone_goal", "해설형")
+
+    timeline = skeleton.get("timeline", [])
+    key_figures = skeleton.get("key_figures", [])
+    key_episodes = skeleton.get("key_episodes", [])
+    summary_bullets = skeleton.get("summary_bullets", [])
+
+    timeline_text = "\n".join(
+        f"- {item.get('year', '')} {item.get('event', '')}".strip()
+        for item in timeline[:10]
+        if item.get("event")
+    )
+    figures_text = "\n".join(
+        f"- {item.get('name', '')} ({item.get('role', '')})".strip()
+        for item in key_figures[:6]
+        if item.get("name")
+    )
+    episodes_text = "\n".join(
+        f"- {item.get('title', '')}: {item.get('narrative_role', '')}".strip()
+        for item in key_episodes[:8]
+        if item.get("title")
+    )
+
+    prompt = f"""당신은 유튜브 영상 아웃라인 설계자입니다.
+
+아래 editorial brief와 skeleton 리서치를 바탕으로, {duration_minutes}분 분량 영상의 아웃라인을 설계하세요.
+
+## Editorial Brief
+- 주제: {topic}
+- 핵심 질문: {core_question}
+- 후크 앵글: {hook_angle}
+- 시청자 takeaway: {audience_takeaway}
+- 톤/목표: {tone_goal}
+- 제외할 관점: {', '.join(excluded_angles) if excluded_angles else '없음'}
+
+## Skeleton 리서치 결과
+### 타임라인
+{timeline_text or '(아직 없음)'}
+
+### 핵심 인물/기관
+{figures_text or '(아직 없음)'}
+
+### 핵심 에피소드
+{episodes_text or '(아직 없음)'}
+
+### 요약
+{chr(10).join(f'- {b}' for b in summary_bullets[:5]) if summary_bullets else '(아직 없음)'}
+
+## 요구사항
+- 챕터 수: {chapter_count}개
+- 각 챕터는 서사 흐름(도입 → 전개 → 전환 → 결론)에 맞게 설계
+- 챕터 제목은 구체적이고 짧게 (20자 이내, 주제/내용 중심)
+- research_focus: 다음 리서치 단계에서 반드시 찾아야 할 사실 기반 질문 3개
+  - 전환점/사건 질문 1개
+  - 날짜·수치·규모 질문 1개
+  - 인물·기관·WHY/HOW 질문 1개
+- purpose: 이 챕터가 전체 서사에서 하는 역할 (1~2문장)
+
+## 출력 형식 (JSON만, 다른 텍스트 없이)
+{{
+  "title": "{topic}",
+  "core_question": "{core_question}",
+  "target_duration_minutes": {duration_minutes},
+  "chapters": [
+    {{
+      "chapter_number": 1,
+      "title": "챕터 제목",
+      "act": 1,
+      "purpose": "이 챕터가 전체 서사에서 하는 역할",
+      "duration_ratio": 0.20,
+      "research_focus": [
+        "전환점/사건 질문",
+        "날짜·수치·규모 질문",
+        "인물·기관·WHY/HOW 질문"
+      ],
+      "key_points": []
+    }}
+  ]
+}}
+"""
+
+    try:
+        claude_bin = "claude"
+        cmd = [
+            claude_bin,
+            "--model", "claude-opus-4-6",
+            "--max-turns", "1",
+            "--output-format", "text",
+        ]
+        env = os.environ.copy()
+        env.pop("CLAUDECODE", None)
+        proc = subprocess.run(
+            cmd,
+            input=prompt,
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=120,
+        )
+        output = proc.stdout or ""
+        # JSON 추출
+        json_match = re.search(r'\{[\s\S]*\}', output)
+        if json_match:
+            data = json.loads(json_match.group())
+            if data.get("chapters"):
+                _progress(f"Opus outline 생성 완료: {len(data['chapters'])}개 챕터")
+                return data
+        _progress(f"Opus outline 파싱 실패 — fallback 사용. 출력: {output[:200]}", level="warn")
+    except subprocess.TimeoutExpired:
+        _progress("Opus outline 타임아웃 — fallback 사용", level="warn")
+    except Exception as e:
+        _progress(f"Opus outline 오류: {e} — fallback 사용", level="warn")
+    return None
+
+
 def _build_outline(
     topic: str,
     core_question: str,
@@ -721,16 +853,24 @@ def build_skeleton_and_outline(project_dir: Path) -> tuple[dict, dict]:
     }
 
     duration_minutes = int(config.get("duration_minutes") or 10)
-    _progress("outline 생성 중")
-    outline = _build_outline(
+    _progress("outline 생성 중 (Opus)")
+    outline = _build_outline_with_llm(
         topic=topic,
-        core_question=brief.get("core_question", ""),
+        brief=brief,
+        skeleton=skeleton,
         duration_minutes=duration_minutes,
-        summary_bullets=summary_bullets,
-        timeline=timeline,
-        key_figures=key_figures,
-        key_episodes=key_episodes,
     )
+    if outline is None:
+        _progress("Opus outline 실패 — Python fallback 사용")
+        outline = _build_outline(
+            topic=topic,
+            core_question=brief.get("core_question", ""),
+            duration_minutes=duration_minutes,
+            summary_bullets=summary_bullets,
+            timeline=timeline,
+            key_figures=key_figures,
+            key_episodes=key_episodes,
+        )
     return skeleton, outline
 
 
