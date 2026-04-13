@@ -381,7 +381,7 @@ research_launcher.py 경로: {launcher}
         "--max-turns", "50",
         "--output-format", "text",
         "--allowedTools",
-        "Bash,Read,Write,Glob,Grep,WebFetch,WebSearch",
+        "Bash,Read,Write,Glob,Grep,WebFetch,WebSearch,Task,mcp__lane__wikipedia_search,mcp__lane__news_search,mcp__lane__academic_search",
     ]
 
     env = os.environ.copy()

@@ -8,11 +8,11 @@ description: 리서치 에이전트용 검색 도구 사용 규칙 — lane/rss/
 ## 우선순위 (토큰 절약)
 
 ```
-1순위: wikipedia_lane   — 주제 개요, 역사, 인물 정보
-2순위: news_rss_lane    — 최신 뉴스, 시장 동향
-3순위: crossref_lane    — 학술 논문, 통계 출처
-4순위: WebSearch        — 위 도구로 커버 안 되는 경우만
-5순위: WebFetch         — 특정 URL 본문이 필요할 때만
+1순위: mcp__lane__wikipedia_search — 주제 개요, 역사, 인물 정보
+2순위: mcp__lane__news_search      — 최신 뉴스, 시장 동향
+3순위: mcp__lane__academic_search  — 학술 논문, 통계 출처
+4순위: WebSearch                   — 위 도구로 커버 안 되는 경우만
+5순위: WebFetch                    — 특정 URL 본문이 필요할 때만
 ```
 
 **이유**: lane 도구는 LLM 검색 토큰 없이 구조화된 데이터를 바로 반환합니다. WebSearch는 LLM이 직접 쿼리를 소비하므로 꼭 필요한 경우만 사용하세요.
