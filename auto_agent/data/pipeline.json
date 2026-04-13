@@ -182,6 +182,14 @@
           "notes": "runner가 루프 직접 관리. 리뷰어(Sonnet) → 수정자(Opus) → 재리뷰 사이클. 점수 하락 시 이전 버전 복원."
         },
         {
+          "id": "step_2_vault_sync",
+          "name": "vault_sync",
+          "description": "output/research wiki/manifests를 볼트 02-research로 merge. 볼트 마운트 실패 시 경고만.",
+          "module": "vault_sync",
+          "input": ["source_ingest_status.json"],
+          "output": []
+        },
+        {
           "id": "step_2_data",
           "name": "data_mapping",
           "description": "scene_specs의 데이터 필드(items/values/unit/source/chartConfig) 보강. 리서치 데이터 정확히 매핑.",

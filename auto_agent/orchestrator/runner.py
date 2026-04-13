@@ -3385,6 +3385,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "preflight": "scripts/preflight_check.py",
             "editorial_brief": "modules/editorial_brief_module.py",
             "source_ingest": "modules/source_ingest_module.py",
+            "vault_sync": "modules/vault_sync_module.py",
             "skeleton_from_vault": "modules/skeleton_from_vault_module.py",
             "chapter_projection": "modules/chapter_projection_module.py",
             "duplicate-checker": "scripts/duplicate_check.py",
