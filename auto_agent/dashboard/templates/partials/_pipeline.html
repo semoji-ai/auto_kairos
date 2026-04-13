@@ -49,32 +49,36 @@
     <span id="stream-chars" style="display:none;font-size:11px;color:var(--energy-ink-low);margin-left:auto;"></span>
   </div>
 
-  <!-- ── 3. 2분할 캔버스: Research | Manuscript ── -->
-  <div id="split-view" style="display:flex;flex:1;min-height:0;gap:0;">
+  <!-- ── 3. 2분할 캔버스: rc-wrap 그대로 ── -->
+  <div id="split-view" style="flex:1;min-height:0;overflow:hidden;">
+    <div class="rc-wrap" id="rc-wrap" data-slug="{{ slug }}">
+      <div class="rc-panels">
 
-    <!-- 왼쪽: Research Canvas -->
-    <div class="rc-panel rc-panel-research" id="rc-research-panel" style="border-right:1px solid var(--energy-bg-card);">
-      <div class="rc-panel-header">
-        <span class="rc-panel-title">Research Canvas</span>
-        <span class="rc-claim-count" id="rc-claim-count">— claims</span>
-        <span class="rc-live-dot" id="rc-live-dot" title="실시간 스트리밍"></span>
-      </div>
-      <div class="rc-panel-body" id="rc-claims-body">
-        <div class="rc-empty">리서치 데이터를 불러오는 중...</div>
+        <!-- 왼쪽: Research Canvas -->
+        <div class="rc-panel rc-panel-research" id="rc-research-panel">
+          <div class="rc-panel-header">
+            <span class="rc-panel-title">Research Canvas</span>
+            <span class="rc-claim-count" id="rc-claim-count">— claims</span>
+            <span class="rc-live-dot" id="rc-live-dot" title="실시간 스트리밍"></span>
+          </div>
+          <div class="rc-panel-body" id="rc-claims-body">
+            <div class="rc-empty">리서치 데이터를 불러오는 중...</div>
+          </div>
+        </div>
+
+        <!-- 오른쪽: Manuscript Canvas -->
+        <div class="rc-panel rc-panel-manuscript" id="rc-manuscript-panel">
+          <div class="rc-panel-header">
+            <span class="rc-panel-title">Manuscript Canvas</span>
+            <span class="rc-ms-badge" id="rc-ms-badge">—</span>
+          </div>
+          <div class="rc-panel-body" id="rc-ms-body">
+            <div class="rc-empty">원고가 생성되면 여기에 표시됩니다.</div>
+          </div>
+        </div>
+
       </div>
     </div>
-
-    <!-- 오른쪽: Manuscript Canvas -->
-    <div class="rc-panel rc-panel-manuscript" id="rc-manuscript-panel">
-      <div class="rc-panel-header">
-        <span class="rc-panel-title">Manuscript Canvas</span>
-        <span class="rc-ms-badge" id="rc-ms-badge">—</span>
-      </div>
-      <div class="rc-panel-body" id="manuscript-body">
-        <div class="rc-empty">원고가 생성되면 여기에 표시됩니다.</div>
-      </div>
-    </div>
-
   </div>
 
   <!-- ── 4b. 씬스펙 뷰 (탭 전환) ── -->
@@ -214,40 +218,54 @@
   border-color: var(--energy-cyan);
 }
 
-/* ── Research + Manuscript 캔버스 패널 ── */
-.rc-panel {
-  flex: 1;
+/* ── Research + Manuscript 캔버스 (_research.html 동일) ── */
+.rc-wrap {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
+.rc-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.rc-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+.rc-panel:last-child { border-right: none; }
 .rc-panel-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 .rc-panel-title {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--energy-ink-low);
+  color: var(--text-muted);
 }
 .rc-claim-count {
   font-size: 11px;
-  color: var(--energy-ink-low);
-  background: rgba(255,255,255,0.06);
-  padding: 1px 8px;
+  color: var(--text-muted);
+  background: var(--surface2);
+  padding: 2px 8px;
   border-radius: 8px;
 }
 .rc-live-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.15);
+  background: var(--border);
   margin-left: auto;
   transition: background 0.3s;
 }
@@ -256,50 +274,50 @@
   box-shadow: 0 0 6px #22c55e88;
   animation: pulse-dot 1.5s infinite;
 }
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 .rc-ms-badge {
   font-size: 10px;
-  padding: 1px 8px;
+  padding: 2px 8px;
   border-radius: 8px;
-  background: rgba(255,255,255,0.06);
-  color: var(--energy-ink-low);
+  background: var(--surface2);
+  color: var(--text-muted);
 }
 .rc-ms-badge.draft { background: rgba(59,130,246,0.15); color: #93C5FD; }
 .rc-ms-badge.final { background: rgba(34,197,94,0.15);  color: #86EFAC; }
 .rc-panel-body {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 14px;
+  padding: 16px;
 }
-/* claim 섹션 */
-.rc-ch-section { margin-bottom: 20px; }
+.rc-ch-section { margin-bottom: 24px; }
 .rc-ch-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--energy-cyan);
-  padding: 4px 0 6px;
-  border-bottom: 1px solid rgba(0,220,255,0.15);
-  margin-bottom: 8px;
+  color: var(--accent);
+  padding: 6px 0 8px;
+  border-bottom: 1px solid rgba(245,158,11,0.2);
+  margin-bottom: 10px;
   position: sticky;
   top: 0;
-  background: var(--energy-bg, #0d0d14);
+  background: var(--bg);
   z-index: 1;
 }
 .rc-claim {
   display: flex;
-  gap: 8px;
-  padding: 6px 0;
+  gap: 10px;
+  padding: 8px 0;
   border-bottom: 1px solid rgba(255,255,255,0.04);
+  animation: claim-in 0.3s ease;
 }
-.rc-claim:last-child { border-bottom: none; }
 @keyframes claim-in {
-  from { opacity: 0; transform: translateY(3px); }
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.rc-claim { animation: claim-in 0.25s ease; }
+.rc-claim:last-child { border-bottom: none; }
 .rc-claim-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
-  margin-top: 6px;
+  margin-top: 7px;
   flex-shrink: 0;
 }
 .rc-claim-dot.high   { background: #22c55e; }
@@ -307,16 +325,16 @@
 .rc-claim-dot.low    { background: #6b7280; }
 .rc-claim-body { flex: 1; min-width: 0; }
 .rc-claim-text {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
-  color: var(--energy-ink-mid, #a0a0b8);
+  color: #D4D4D8;
   word-break: keep-all;
 }
-.rc-claim-meta { display: flex; gap: 5px; margin-top: 3px; flex-wrap: wrap; }
+.rc-claim-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
 .rc-tag {
   font-size: 9px;
-  padding: 1px 5px;
-  border-radius: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
   font-weight: 500;
 }
 .rc-tag-kind     { background: rgba(99,102,241,0.15); color: #A5B4FC; }
@@ -324,34 +342,35 @@
 .rc-tag-medium   { background: rgba(245,158,11,0.12); color: #FCD34D; }
 .rc-tag-low      { background: rgba(107,114,128,0.15);color: #9CA3AF; }
 .rc-tag-verified { background: rgba(34,197,94,0.08);  color: #6EE7B7; }
-/* 원고 */
 .rc-ms-chapter {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--energy-cyan);
-  margin: 20px 0 8px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid rgba(0,220,255,0.15);
+  color: var(--accent);
+  margin: 24px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(245,158,11,0.2);
 }
 .rc-ms-chapter:first-child { margin-top: 0; }
 .rc-ms-paragraph {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.85;
-  color: var(--energy-ink-mid, #a0a0b8);
-  margin-bottom: 10px;
+  color: #D4D4D8;
+  margin-bottom: 14px;
   word-break: keep-all;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
 }
 .rc-ms-divider {
   border: none;
-  border-top: 1px dashed rgba(255,255,255,0.08);
-  margin: 10px 0;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+  margin: 12px 0;
 }
 .rc-empty {
-  font-size: 12px;
-  color: var(--energy-ink-low);
+  font-size: 13px;
+  color: var(--text-muted);
   padding: 20px 0;
   text-align: center;
+}
+@media (max-width: 900px) {
+  .rc-panels { grid-template-columns: 1fr; }
 }
 </style>
 
@@ -380,162 +399,6 @@
   let startTs = null;
   let elapsedTimer = null;
   let lastManuscriptText = "";
-
-  // ── RC 캔버스 상태 ──
-  let rcChapterMap = {};
-  let rcClaimsByChapter = {};
-  let rcTotalClaims = 0;
-
-  // RC: 초기 데이터 로드
-  fetch('/api/p/' + slug + '/research/canvas')
-    .then(r => r.json())
-    .then(d => {
-      rcChapterMap = d.chapter_map || {};
-      rcClaimsByChapter = d.grouped_claims || {};
-      rcTotalClaims = d.total_claims || 0;
-      rcRenderClaims();
-      const cnt = document.getElementById('rc-claim-count');
-      if (cnt) cnt.textContent = rcTotalClaims + ' claims';
-    })
-    .catch(() => {});
-
-  // RC: 원고 초기 로드
-  fetch('/api/p/' + slug + '/manuscript/raw')
-    .then(r => r.json())
-    .then(d => {
-      if (d.text && d.text.trim()) {
-        rcRenderManuscript(d.text);
-        const b = document.getElementById('rc-ms-badge');
-        if (b) { b.textContent = '최종원고'; b.className = 'rc-ms-badge final'; }
-      }
-    })
-    .catch(() => {});
-
-  function rcRenderClaims() {
-    const body = document.getElementById('rc-claims-body');
-    if (!body) return;
-    const keys = Object.keys(rcClaimsByChapter).sort((a,b) => (parseInt(a)||999)-(parseInt(b)||999));
-    if (!keys.length) { body.innerHTML = '<div class="rc-empty">수집된 claim이 없습니다</div>'; return; }
-    body.innerHTML = '';
-    keys.forEach(chId => {
-      const claims = rcClaimsByChapter[chId];
-      if (!claims || !claims.length) return;
-      body.appendChild(rcBuildChapterSection(chId, claims));
-    });
-  }
-
-  function rcBuildChapterSection(chId, claims) {
-    const section = document.createElement('div');
-    section.className = 'rc-ch-section';
-    section.id = 'rc-ch-' + chId;
-    const chTitle = rcChapterMap[chId] || rcChapterMap[parseInt(chId)] || '';
-    const titleEl = document.createElement('div');
-    titleEl.className = 'rc-ch-title';
-    titleEl.textContent = chTitle ? ('Ch' + chId + '. ' + chTitle) : ('Chapter ' + chId);
-    section.appendChild(titleEl);
-    claims.forEach(c => section.appendChild(rcBuildClaimCard(c)));
-    return section;
-  }
-
-  function rcBuildClaimCard(c) {
-    const conf = c.confidence || 'medium';
-    const dotClass = conf === 'high' ? 'high' : conf === 'medium' ? 'medium' : 'low';
-    const card = document.createElement('div');
-    card.className = 'rc-claim';
-    const dot = document.createElement('div');
-    dot.className = 'rc-claim-dot ' + dotClass;
-    const body = document.createElement('div');
-    body.className = 'rc-claim-body';
-    const text = document.createElement('div');
-    text.className = 'rc-claim-text';
-    text.textContent = c.claim || '';
-    const meta = document.createElement('div');
-    meta.className = 'rc-claim-meta';
-    if (c.kind) {
-      const t1 = document.createElement('span');
-      t1.className = 'rc-tag rc-tag-kind';
-      t1.textContent = c.kind;
-      meta.appendChild(t1);
-    }
-    const t2 = document.createElement('span');
-    t2.className = 'rc-tag rc-tag-' + dotClass;
-    t2.textContent = conf;
-    meta.appendChild(t2);
-    if (c.status === 'verified') {
-      const t3 = document.createElement('span');
-      t3.className = 'rc-tag rc-tag-verified';
-      t3.textContent = '✓';
-      meta.appendChild(t3);
-    }
-    body.appendChild(text);
-    body.appendChild(meta);
-    card.appendChild(dot);
-    card.appendChild(body);
-    return card;
-  }
-
-  function rcRenderManuscript(text) {
-    const msBody = document.getElementById('manuscript-body');
-    if (!msBody) return;
-    msBody.innerHTML = '';
-    const lines = text.split('\n');
-    let currentPara = [];
-    function flushPara() {
-      if (!currentPara.length) return;
-      const joined = currentPara.join(' ').trim();
-      if (!joined) { currentPara = []; return; }
-      const p = document.createElement('div');
-      p.className = 'rc-ms-paragraph';
-      p.textContent = joined;
-      msBody.appendChild(p);
-      currentPara = [];
-    }
-    lines.forEach(line => {
-      if (/^#\s+(Ch\d+|챕터\s*\d+)/i.test(line)) {
-        flushPara();
-        const h = document.createElement('div');
-        h.className = 'rc-ms-chapter';
-        h.textContent = line.replace(/^#+\s*/, '');
-        msBody.appendChild(h);
-      } else if (line.trim() === '---') {
-        flushPara();
-        const hr = document.createElement('hr');
-        hr.className = 'rc-ms-divider';
-        msBody.appendChild(hr);
-      } else if (line.trim().startsWith('<!--')) {
-        // skip
-      } else if (line.trim() === '') {
-        flushPara();
-      } else {
-        currentPara.push(line.trim());
-      }
-    });
-    flushPara();
-  }
-
-  // RC: claims SSE
-  const claimsSrc = registerSse(new EventSource(`/api/p/${slug}/pipeline/research/claims/stream`));
-  claimsSrc.addEventListener('claims_new', e => {
-    try {
-      const d = JSON.parse(e.data);
-      const newClaims = d.claims || [];
-      if (!newClaims.length) return;
-      const liveDot = document.getElementById('rc-live-dot');
-      if (liveDot) { liveDot.classList.add('streaming'); setTimeout(() => liveDot.classList.remove('streaming'), 2000); }
-      rcTotalClaims += newClaims.length;
-      const cnt = document.getElementById('rc-claim-count');
-      if (cnt) cnt.textContent = rcTotalClaims + ' claims';
-      const claimsBody = document.getElementById('rc-claims-body');
-      if (!claimsBody) return;
-      newClaims.forEach(c => {
-        const chId = String(c.chapter || 'unassigned');
-        let section = document.getElementById('rc-ch-' + chId);
-        if (!section) { section = rcBuildChapterSection(chId, []); claimsBody.appendChild(section); }
-        section.appendChild(rcBuildClaimCard(c));
-      });
-    } catch(err) {}
-  });
-  claimsSrc.onerror = () => {};
 
   // ── 뷰 전환 (split ↔ scenes) ──
   window.setContentView = function(view, tabEl) {
@@ -614,10 +477,45 @@
   // ── 원고 갱신 ──
   function applyManuscript(text) {
     if (!text) return;
-    rcRenderManuscript(text);
     lastManuscriptText = text;
     const ch = document.getElementById('stream-chars');
     if (ch) { ch.style.display = ''; ch.textContent = text.length + '자'; }
+    const msBody = document.getElementById('rc-ms-body');
+    if (!msBody) return;
+    msBody.innerHTML = '';
+    const lines = text.split('\n');
+    let para = [];
+    function flush() {
+      if (!para.length) return;
+      const t = para.join(' ').trim();
+      if (!t) { para = []; return; }
+      const p = document.createElement('div');
+      p.className = 'rc-ms-paragraph';
+      p.textContent = t;
+      msBody.appendChild(p);
+      para = [];
+    }
+    lines.forEach(line => {
+      if (/^#\s+(Ch\d+|챕터\s*\d+)/i.test(line)) {
+        flush();
+        const h = document.createElement('div');
+        h.className = 'rc-ms-chapter';
+        h.textContent = line.replace(/^#+\s*/, '');
+        msBody.appendChild(h);
+      } else if (line.trim() === '---') {
+        flush();
+        const hr = document.createElement('hr');
+        hr.className = 'rc-ms-divider';
+        msBody.appendChild(hr);
+      } else if (line.trim().startsWith('<!--')) {
+        // skip
+      } else if (line.trim() === '') {
+        flush();
+      } else {
+        para.push(line.trim());
+      }
+    });
+    flush();
   }
 
   // ── 씬스펙 갱신 ──
@@ -636,17 +534,8 @@
     });
   }
 
-  // ── 스켈레톤/아웃라인 → chapter_map 갱신 ──
-  function applySkeletonSummary(data, label) {
-    const chapters = data.chapters || data.outline || data.sections || [];
-    if (Array.isArray(chapters)) {
-      chapters.forEach((ch, i) => {
-        const id = String(ch.id || ch.chapter || i + 1);
-        const title = typeof ch === 'string' ? ch : (ch.title || ch.name || '');
-        rcChapterMap[id] = title;
-      });
-    }
-  }
+  // ── 스켈레톤/아웃라인 이벤트 로그 ──
+  function applySkeletonSummary(data, label) { /* research canvas가 처리 */ }
 
   // ── snapshot 적용 ──
   function applySnapshot(snap) {
@@ -774,6 +663,126 @@
   });
 
   fileSrc.onerror = () => {};
+
+})();
+
+// ── Research Canvas IIFE (_research.html과 동일, msEv 제외) ──
+(function() {
+  var slug = document.getElementById('rc-wrap').dataset.slug;
+  var claimsBody = document.getElementById('rc-claims-body');
+  var countEl = document.getElementById('rc-claim-count');
+  var liveDot = document.getElementById('rc-live-dot');
+  var msBadge = document.getElementById('rc-ms-badge');
+
+  var chapterMap = {};
+  var claimsByChapter = {};
+  var totalClaims = 0;
+
+  // 1. outline + claims 초기 로드
+  fetch('/api/p/' + slug + '/research/canvas')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      chapterMap = d.chapter_map || {};
+      claimsByChapter = d.grouped_claims || {};
+      totalClaims = d.total_claims || 0;
+      renderClaims();
+      if (countEl) countEl.textContent = totalClaims + ' claims';
+    })
+    .catch(function() {
+      if (claimsBody) claimsBody.innerHTML = '<div class="rc-empty">리서치 데이터가 없습니다</div>';
+    });
+
+  function renderClaims() {
+    if (!claimsBody) return;
+    var keys = Object.keys(claimsByChapter).sort(function(a,b){ return (parseInt(a)||999)-(parseInt(b)||999); });
+    if (!keys.length) { claimsBody.innerHTML = '<div class="rc-empty">수집된 claim이 없습니다</div>'; return; }
+    claimsBody.innerHTML = '';
+    keys.forEach(function(chId) {
+      var claims = claimsByChapter[chId];
+      if (!claims || !claims.length) return;
+      claimsBody.appendChild(buildChapterSection(chId, claims));
+    });
+  }
+
+  function buildChapterSection(chId, claims) {
+    var section = document.createElement('div');
+    section.className = 'rc-ch-section';
+    section.id = 'rc-ch-' + chId;
+    var chTitle = chapterMap[chId] || chapterMap[parseInt(chId)] || '';
+    var titleEl = document.createElement('div');
+    titleEl.className = 'rc-ch-title';
+    titleEl.textContent = chTitle ? ('Ch' + chId + '. ' + chTitle) : ('Chapter ' + chId);
+    section.appendChild(titleEl);
+    claims.forEach(function(c) { section.appendChild(buildClaimCard(c)); });
+    return section;
+  }
+
+  function buildClaimCard(c) {
+    var conf = c.confidence || 'medium';
+    var dotClass = conf === 'high' ? 'high' : conf === 'medium' ? 'medium' : 'low';
+    var card = document.createElement('div');
+    card.className = 'rc-claim';
+    var dot = document.createElement('div');
+    dot.className = 'rc-claim-dot ' + dotClass;
+    var body = document.createElement('div');
+    body.className = 'rc-claim-body';
+    var text = document.createElement('div');
+    text.className = 'rc-claim-text';
+    text.textContent = c.claim || '';
+    var meta = document.createElement('div');
+    meta.className = 'rc-claim-meta';
+    if (c.kind) {
+      var t1 = document.createElement('span');
+      t1.className = 'rc-tag rc-tag-kind';
+      t1.textContent = c.kind;
+      meta.appendChild(t1);
+    }
+    var t2 = document.createElement('span');
+    t2.className = 'rc-tag rc-tag-' + dotClass;
+    t2.textContent = conf;
+    meta.appendChild(t2);
+    if (c.status === 'verified') {
+      var t3 = document.createElement('span');
+      t3.className = 'rc-tag rc-tag-verified';
+      t3.textContent = '✓';
+      meta.appendChild(t3);
+    }
+    body.appendChild(text);
+    body.appendChild(meta);
+    card.appendChild(dot);
+    card.appendChild(body);
+    return card;
+  }
+
+  // 2. SSE: claims 실시간
+  var claimsEv = registerSse(new EventSource('/api/p/' + slug + '/pipeline/research/claims/stream'));
+
+  claimsEv.addEventListener('claims_snapshot', function(e) {
+    try {
+      var d = JSON.parse(e.data);
+      if (d.total > totalClaims) {
+        totalClaims = d.total;
+        if (countEl) countEl.textContent = totalClaims + ' claims';
+      }
+    } catch(err) {}
+  });
+
+  claimsEv.addEventListener('claims_new', function(e) {
+    try {
+      var d = JSON.parse(e.data);
+      var newClaims = d.claims || [];
+      if (!newClaims.length) return;
+      if (liveDot) { liveDot.classList.add('streaming'); setTimeout(function(){ liveDot.classList.remove('streaming'); }, 2000); }
+      totalClaims += newClaims.length;
+      if (countEl) countEl.textContent = totalClaims + ' claims';
+      newClaims.forEach(function(c) {
+        var chId = String(c.chapter || 'unassigned');
+        var section = document.getElementById('rc-ch-' + chId);
+        if (!section) { section = buildChapterSection(chId, []); if (claimsBody) claimsBody.appendChild(section); }
+        section.appendChild(buildClaimCard(c));
+      });
+    } catch(err) {}
+  });
 
 })();
 </script>
