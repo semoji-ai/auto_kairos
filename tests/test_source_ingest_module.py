@@ -4,6 +4,7 @@ import pytest
 
 from auto_agent.modules.source_ingest_module import (
     _resolve_research_agent_paths,
+    _seed_from_vault,
     _validate_ingest_completion,
 )
 
@@ -38,6 +39,42 @@ def test_resolve_research_agent_paths_reports_checked_candidates(tmp_path):
     assert "ResearchAgent launcher를 찾지 못했습니다" in message
     assert str(tmp_path / "ResearchAgent" / "scripts" / "research_launcher.py") in message
     assert str(tmp_path / "researchagent" / "scripts" / "research_launcher.py") in message
+
+
+def test_seed_from_vault_copies_wiki_and_manifests(tmp_path):
+    """볼트에 wiki/manifests가 있으면 output/research로 복사한다."""
+    vault_root = tmp_path / "vault_research"
+    output_root = tmp_path / "output_research"
+    (vault_root / "wiki" / "우주_여행").mkdir(parents=True)
+    (vault_root / "wiki" / "우주_여행" / "overview.md").write_text("# 우주 여행", encoding="utf-8")
+    (vault_root / "manifests" / "우주_여행").mkdir(parents=True)
+    (vault_root / "manifests" / "우주_여행" / "claims.jsonl").write_text('{"claim":"test"}\n', encoding="utf-8")
+
+    _seed_from_vault(output_root, vault_root, ["우주_여행"])
+
+    assert (output_root / "wiki" / "우주_여행" / "overview.md").exists()
+    assert (output_root / "manifests" / "우주_여행" / "claims.jsonl").exists()
+
+
+def test_seed_from_vault_graceful_when_vault_missing(tmp_path):
+    """볼트가 없거나 slug가 없으면 경고만 출력하고 계속 진행한다."""
+    vault_root = tmp_path / "nonexistent_vault"
+    output_root = tmp_path / "output_research"
+
+    _seed_from_vault(output_root, vault_root, ["없는_slug"])
+    assert True
+
+
+def test_seed_from_vault_skips_raw_directory(tmp_path):
+    """볼트 raw/ 폴더는 복사하지 않는다."""
+    vault_root = tmp_path / "vault_research"
+    (vault_root / "raw" / "우주_여행").mkdir(parents=True)
+    (vault_root / "raw" / "우주_여행" / "run1").mkdir()
+    output_root = tmp_path / "output_research"
+
+    _seed_from_vault(output_root, vault_root, ["우주_여행"])
+
+    assert not (output_root / "raw").exists()
 
 
 def test_validate_ingest_completion_fails_when_claims_missing(tmp_path):

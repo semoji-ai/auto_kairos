@@ -82,6 +82,26 @@ def _get_vault_research_root() -> Path:
     raise RuntimeError("KAIROS_VAULT_DIR 환경변수가 설정되어 있지 않습니다.")
 
 
+def _seed_from_vault(output_research_root: Path, vault_research_root: Path, slugs: list[str]) -> None:
+    """볼트 wiki/manifests → output/research 로 seed 복사. 실패 시 경고만."""
+    import shutil
+    for subdir in ("wiki", "manifests"):
+        for slug in slugs:
+            if not slug:
+                continue
+            src = vault_research_root / subdir / slug
+            if not src.exists():
+                continue
+            dst = output_research_root / subdir / slug
+            try:
+                if dst.exists():
+                    shutil.rmtree(dst)
+                shutil.copytree(src, dst)
+                print(f"[source_ingest] seed: {src} → {dst}", flush=True)
+            except Exception as e:
+                print(f"[source_ingest] seed 복사 실패 (무시): {src} → {e}", flush=True)
+
+
 def _slug(text: str) -> str:
     """topic 텍스트 → URL-safe slug."""
     import re
