@@ -468,7 +468,18 @@ def _build_outline(
     chapter_count = _chapter_count_for_duration(duration_minutes)
     chapter_chunks = _chunk_list(timeline or key_episodes, chapter_count)
     if not any(chapter_chunks):
-        chapter_chunks = _chunk_list(summary_bullets, chapter_count)
+        # summary_bullets(core_question/hook_angle)는 챕터 제목으로 부적합 — topic 기반 기본 챕터 이름 사용
+        default_chapter_names = [
+            f"{topic}의 배경과 출발점",
+            f"{topic}의 성장과 전환점",
+            f"{topic}의 현재적 의미",
+            f"{topic}의 핵심 사례",
+            f"{topic}의 교훈과 전망",
+        ]
+        chapter_chunks = _chunk_list(
+            [{"title": name} for name in default_chapter_names[:chapter_count]],
+            chapter_count,
+        )
 
     title = topic
     duration_sec = max(60, duration_minutes * 60)
@@ -516,18 +527,21 @@ def _build_outline(
             scene_hints.append({"type": "text_highlight", "note": f"시기: {time_periods[0]}"})
         if idx != 1 and time_periods:
             scene_hints.append({"type": "timeline", "note": "핵심 전환점 정리"})
+        # 짧은 키워드 추출 (챕터 제목 전체를 질문에 반복하면 매칭률 저하)
+        _title_keyword = chapter_title.split("의 ")[-1] if "의 " in chapter_title else chapter_title
+        _title_keyword = _title_keyword[:20]
         focus_questions = [
-            f"{chapter_title}에서 서사를 바꾸는 핵심 전환점과 사건은 무엇인가?",
-            f"{chapter_title}에서 초고에 반드시 넣어야 할 날짜·기간·수치는 무엇인가?",
+            f"{_title_keyword} 관련 서사를 바꾼 핵심 전환점과 사건은?",
+            f"{_title_keyword} 관련 초고에 넣어야 할 날짜·기간·수치는?",
         ]
         if purpose and purpose != chapter_title:
-            focus_questions.append(f"{chapter_title}가 왜 중요했고 어떤 전략·배경으로 이어졌는가? {purpose[:120]}")
+            focus_questions.append(f"{_title_keyword}이 왜 중요했고 어떤 전략·배경으로 이어졌는가?")
         elif idx == 1:
-            focus_questions.append(f"{chapter_title}가 이후 전개 전체의 출발점이 되는 이유는 무엇인가?")
+            focus_questions.append(f"{_title_keyword}이 이후 전개의 출발점이 된 이유는?")
         elif idx == chapter_count:
-            focus_questions.append(f"{chapter_title}가 현재적 의미나 takeaway로 이어지는 이유는 무엇인가?")
+            focus_questions.append(f"{_title_keyword}의 현재적 의미와 takeaway는?")
         else:
-            focus_questions.append(f"{chapter_title}에서 핵심 인물·기관은 누구이며 어떤 역할을 했는가?")
+            focus_questions.append(f"{_title_keyword} 관련 핵심 인물·기관은 누구이며 어떤 역할을 했는가?")
         dedup_focus = []
         seen_focus = set()
         for question in focus_questions:

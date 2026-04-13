@@ -865,9 +865,13 @@ research_launcher.py 경로: {launcher}
             if not supplement_ok:
                 print(f"[source_ingest] 보강 라운드 {round_num} 실패 — 중단", flush=True)
                 break
-            # ingest-bundle 재실행 후 재검증
+            # ingest-bundle + finalize-session 재실행 후 재검증
             ingest_payload = _run_launcher(
                 ["ingest-bundle", "--topic", topic, "--run-id", run_id, "--refresh"],
+                research_root, research_agent_dir, launcher,
+            )
+            finalize_payload = _run_launcher(
+                ["finalize-session", "--topic", topic, "--run-id", run_id],
                 research_root, research_agent_dir, launcher,
             )
             validation = _validate_ingest_completion(
