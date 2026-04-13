@@ -3578,7 +3578,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         {layout === "quote_portrait" && (
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "center",
                         alignItems: "center", textAlign: "center",
-                        padding: "40px 48px", width: "100%", height: "100%" }}>
+                        padding: "40px 48px 40px 48px", width: "100%", height: "100%" }}>
             <div style={useFadeRise(15, 20)}>
               <span style={{
                 fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
