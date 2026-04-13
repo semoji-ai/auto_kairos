@@ -13,6 +13,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 DEFAULT_CLAUDE_MODEL = "sonnet"
 
@@ -144,6 +145,97 @@ def _count_manifest_records(path: Path) -> int:
     return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
 
 
+def _load_jsonl(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    rows: list[dict[str, Any]] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except Exception:
+            continue
+        if isinstance(row, dict):
+            rows.append(row)
+    return rows
+
+
+def _normalize_text(value: Any) -> str:
+    return " ".join(str(value or "").split()).strip()
+
+
+def _build_chapter_research_slots(chapter: dict[str, Any]) -> list[dict[str, str]]:
+    title = _normalize_text(chapter.get("title", ""))
+    purpose = _normalize_text(chapter.get("purpose", ""))
+    time_period = _normalize_text(chapter.get("time_period", ""))
+    research_focus = [
+        _normalize_text(item)
+        for item in chapter.get("research_focus", [])
+        if _normalize_text(item)
+    ]
+    key_points = [
+        _normalize_text(item)
+        for item in chapter.get("key_points", [])
+        if _normalize_text(item)
+    ]
+    context_base = purpose or " / ".join(key_points[:2]) or title
+    slots = [
+        {
+            "kind": "transition",
+            "prompt": f"{title}에서 서사를 바꾸는 핵심 사건·전환점은 무엇인가? {context_base}".strip(),
+        },
+        {
+            "kind": "date_number",
+            "prompt": f"{title}에서 초고에 반드시 넣어야 할 날짜·기간·숫자는 무엇인가? {time_period}".strip(),
+        },
+        {
+            "kind": "actor",
+            "prompt": f"{title}를 움직인 핵심 인물·기관·주체는 누구이며 각자의 역할은 무엇인가?".strip(),
+        },
+        {
+            "kind": "why_how",
+            "prompt": f"{title}가 왜 중요했고 어떻게 다음 단계로 이어졌는가? {context_base}".strip(),
+        },
+    ]
+    for question in research_focus[:3]:
+        slots.append({"kind": "outline_focus", "prompt": question})
+    deduped: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for slot in slots:
+        prompt = _normalize_text(slot.get("prompt", ""))
+        if not prompt or prompt in seen:
+            continue
+        seen.add(prompt)
+        deduped.append({"kind": slot.get("kind", ""), "prompt": prompt})
+    return deduped
+
+
+def _build_outline_requirements(outline: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if not isinstance(outline, dict):
+        return []
+    chapters = outline.get("chapters", [])
+    requirements: list[dict[str, Any]] = []
+    for idx, chapter in enumerate(chapters, start=1):
+        if not isinstance(chapter, dict):
+            continue
+        chapter_number = chapter.get("chapter_number", idx)
+        title = _normalize_text(chapter.get("title", f"챕터 {chapter_number}"))
+        purpose = _normalize_text(chapter.get("purpose", ""))
+        requirements.append(
+            {
+                "chapter_number": chapter_number,
+                "title": title,
+                "purpose": purpose,
+                "time_period": _normalize_text(chapter.get("time_period", "")),
+                "research_focus": [slot["prompt"] for slot in _build_chapter_research_slots(chapter)],
+                "required_slot_kinds": [slot["kind"] for slot in _build_chapter_research_slots(chapter)],
+            }
+        )
+    return requirements
+
+
 def _generate_overview_from_claims(
     wiki_dir: Path,
     claims_path: Path,
@@ -236,6 +328,7 @@ def _validate_ingest_completion(
     entity_slug: str = "",
     section_slug: str = "",
     finalize_payload: dict | None = None,
+    outline_requirements: list[dict[str, Any]] | None = None,
 ) -> dict:
     finalized = finalize_payload or {}
     run_state = finalized.get("run_state") or {}
@@ -243,22 +336,28 @@ def _validate_ingest_completion(
     status = finalized.get("status") or {}
 
     canonical_slug = resolve_existing_entity_slug(research_root, entity_slug or topic_slug)
-    # manifests slug는 wiki slug와 다를 수 있음 (하이픈↔언더스코어) — 양쪽 모두 확인
     alt_slug = canonical_slug.replace("-", "_") if "-" in canonical_slug else canonical_slug.replace("_", "-")
+
     def _best_manifest_path(filename: str) -> Path:
         primary = research_root / "manifests" / canonical_slug / filename
         alt = research_root / "manifests" / alt_slug / filename
         return primary if primary.exists() else alt
+
     claims_path = _best_manifest_path("claims.jsonl")
     sources_path = _best_manifest_path("sources.jsonl")
-    claim_count = _count_manifest_records(claims_path)
-    source_count = _count_manifest_records(sources_path)
+    claims = _load_jsonl(claims_path)
+    sources = _load_jsonl(sources_path)
+    claim_count = len(claims)
+    source_count = len(sources)
 
     wiki_dir = research_root / "wiki" / canonical_slug
     if not wiki_dir.exists():
         alt = canonical_slug.replace("-", "_") if "-" in canonical_slug else canonical_slug.replace("_", "-")
         wiki_dir = research_root / "wiki" / alt
     overview = wiki_dir / "overview.md"
+    timeline = wiki_dir / "timeline.md"
+    entities = wiki_dir / "entities.md"
+    claims_md = wiki_dir / "claims.md"
     wiki_usable = overview.exists() and overview.stat().st_size > 300 if overview.exists() else False
     if not wiki_usable and claim_count >= 3:
         wiki_usable = True
@@ -268,15 +367,155 @@ def _validate_ingest_completion(
     run_status = str(run_state.get("status") or "")
     next_step = str(status.get("recommended_next_step") or "")
 
+    outline_requirements = outline_requirements or []
+    joined_claim_text = "\n".join(
+        _normalize_text(
+            " ".join(
+                str(item.get(key, ""))
+                for key in (
+                    "claim",
+                    "statement",
+                    "claim_text",
+                    "evidence",
+                    "kind",
+                )
+            )
+        )
+        for item in claims
+    ).lower()
+    joined_source_text = "\n".join(
+        _normalize_text(
+            " ".join(
+                str(item.get(key, ""))
+                for key in (
+                    "title",
+                    "summary",
+                    "source_kind",
+                    "author",
+                    "key_points",
+                )
+            )
+        )
+        for item in sources
+    ).lower()
+    chapter_readiness: list[dict[str, Any]] = []
+    critical_unresolved: list[str] = []
+    covered_question_count = 0
+    total_question_count = 0
+    chapter_ready_count = 0
+    for requirement in outline_requirements:
+        chapter_title = _normalize_text(requirement.get("title", ""))
+        prompts = [
+            _normalize_text(item)
+            for item in requirement.get("research_focus", [])
+            if _normalize_text(item)
+        ]
+        total_question_count += len(prompts)
+        chapter_blob = " ".join([chapter_title, _normalize_text(requirement.get("purpose", "")), _normalize_text(requirement.get("time_period", ""))]).lower()
+        matched_prompts = 0
+        matched_slot_kinds: set[str] = set()
+        for prompt in prompts:
+            prompt_tokens = [token for token in prompt.lower().replace("?", " ").split() if len(token) >= 2]
+            if any(token in joined_claim_text or token in joined_source_text for token in prompt_tokens[:8]):
+                matched_prompts += 1
+        title_tokens = [token for token in chapter_blob.split() if len(token) >= 2]
+        related_claims = []
+        for item in claims:
+            text = _normalize_text(
+                " ".join(
+                    str(item.get(key, ""))
+                    for key in ("claim", "statement", "claim_text", "evidence")
+                )
+            ).lower()
+            if any(token in text for token in title_tokens[:8]):
+                related_claims.append(item)
+                continue
+            if chapter_blob and chapter_blob in text:
+                related_claims.append(item)
+        related_source_ids = {
+            source_id
+            for claim in related_claims
+            for source_id in claim.get("source_ids", [])
+            if source_id
+        }
+        joined_related = "\n".join(
+            _normalize_text(
+                " ".join(
+                    str(item.get(key, ""))
+                    for key in ("claim", "statement", "claim_text", "evidence")
+                )
+            )
+            for item in related_claims
+        ).lower()
+        kind_patterns = {
+            "transition": ("전환", "분기", "전개", "확장", "변화", "출발"),
+            "date_number": ("19", "20", "년", "월", "개", "엔", "%", "점포"),
+            "actor": ("창업자", "대표", "회장", "회사", "산업", "주체", "기관"),
+            "why_how": ("왜", "어떻게", "전략", "의미", "배경", "이유"),
+        }
+        for kind, patterns in kind_patterns.items():
+            if any(pattern in joined_related for pattern in patterns):
+                matched_slot_kinds.add(kind)
+        draft_blockers: list[str] = []
+        if len(related_claims) < 2:
+            draft_blockers.append("관련 claim 부족")
+        if len(related_source_ids) < 1:
+            draft_blockers.append("관련 source 부족")
+        if matched_prompts < max(1, min(2, len(prompts))):
+            draft_blockers.append("research_focus coverage 부족")
+        if len(matched_slot_kinds) < 3:
+            draft_blockers.append("전환점/숫자/인물/WHY-HOW 슬롯 coverage 부족")
+        chapter_ready = not draft_blockers and matched_prompts >= max(1, len(prompts) // 2)
+        if chapter_ready:
+            chapter_ready_count += 1
+        else:
+            if matched_prompts < max(1, len(prompts) // 2):
+                draft_blockers.append("must-answer coverage 부족")
+            critical_unresolved.append(f"{chapter_title}: {', '.join(dict.fromkeys(draft_blockers))}")
+        covered_question_count += matched_prompts
+        chapter_readiness.append(
+            {
+                "chapter_number": requirement.get("chapter_number"),
+                "title": chapter_title,
+                "claim_count": len(related_claims),
+                "source_count": len(related_source_ids),
+                "matched_question_count": matched_prompts,
+                "total_question_count": len(prompts),
+                "matched_slot_kinds": sorted(matched_slot_kinds),
+                "draft_ready": chapter_ready,
+                "draft_blockers": draft_blockers,
+            }
+        )
+
+    must_answer_coverage = round(
+        covered_question_count / total_question_count, 4
+    ) if total_question_count else 1.0
+    required_ready_chapters = len(outline_requirements)
+    if len(outline_requirements) >= 5:
+        required_ready_chapters = len(outline_requirements) - 1
+    draft_ready = bool(outline_requirements) and chapter_ready_count >= required_ready_chapters
+    if not outline_requirements:
+        draft_ready = claim_count >= 4 and source_count >= 2 and wiki_usable
+
     issues: list[str] = []
-    if claim_count < 3:
-        issues.append(f"claim_count={claim_count} < 3")
+    if claim_count < 4:
+        issues.append(f"claim_count={claim_count} < 4")
+    if source_count < 2:
+        issues.append(f"source_count={source_count} < 2")
     if not wiki_usable:
         issues.append("wiki not usable")
-    # finalize-session 상태는 참고만 — wiki+claims가 충분하면 통과
-    # (ResearchAgent 내부 상태 관리 불일치로 인한 false negative 방지)
+    if not timeline.exists() or timeline.stat().st_size <= 120:
+        issues.append("timeline not usable")
+    if not entities.exists() or entities.stat().st_size <= 80:
+        issues.append("entities not usable")
+    if not claims_md.exists() or claims_md.stat().st_size <= 120:
+        issues.append("claims wiki not usable")
     if run_stage != "packaging" or run_status != "completed":
-        print(f"[source_ingest] 참고: finalize-session 상태 = {run_stage or 'n/a'}/{run_status or 'n/a'} (wiki+claims 충분하면 통과)", flush=True)
+        issues.append(f"finalize-session not completed: {run_stage or 'n/a'}/{run_status or 'n/a'}")
+    if must_answer_coverage < 0.6:
+        issues.append(f"must_answer_coverage={must_answer_coverage:.2f} < 0.60")
+    if outline_requirements and not draft_ready:
+        issues.append("chapter coverage not draft-ready")
 
     return {
         "success": not issues,
@@ -289,7 +528,118 @@ def _validate_ingest_completion(
         "run_status": run_status,
         "recommended_next_step": next_step,
         "issues": issues,
+        "draft_ready": draft_ready,
+        "chapter_readiness": chapter_readiness,
+        "must_answer_coverage": must_answer_coverage,
+        "critical_unresolved": critical_unresolved,
     }
+
+
+def _supplement_weak_chapters(
+    topic: str,
+    topic_slug: str,
+    critical_unresolved: list[str],
+    chapter_map: dict,
+    research_root: Path,
+    research_agent_dir: Path,
+    vault_script: Path,
+    launcher: Path,
+    run_id: str,
+    entity_slug: str = "",
+) -> bool:
+    """약한 챕터만 타겟으로 LLM 보강 리서치를 실행하고 claim/source를 추가한다.
+
+    Returns:
+        True  — 보강 실행 완료 (claim 추가 여부와 무관)
+        False — 실행 자체 실패
+    """
+    # 챕터별 미해결 질문 수집
+    target_chapters = []
+    for entry in critical_unresolved:
+        # entry 형식: "챕터제목: blocker1, blocker2"
+        chapter_title = entry.split(":")[0].strip()
+        req = chapter_map.get(chapter_title, {})
+        questions = req.get("research_focus", [])
+        target_chapters.append({
+            "title": chapter_title,
+            "purpose": req.get("purpose", ""),
+            "questions": questions[:6],
+            "blockers": entry,
+        })
+
+    chapter_lines = []
+    for ch in target_chapters:
+        chapter_lines.append(f"\n### {ch['title']}")
+        if ch["purpose"]:
+            chapter_lines.append(f"목적: {ch['purpose']}")
+        chapter_lines.append(f"부족한 항목: {ch['blockers']}")
+        if ch["questions"]:
+            chapter_lines.append("반드시 답해야 할 질문:")
+            for q in ch["questions"]:
+                chapter_lines.append(f"  - {q}")
+
+    chapters_text = "\n".join(chapter_lines)
+
+    prompt = f"""당신은 리서치 보강 에이전트입니다.
+
+주제: {topic}
+
+아래 챕터들이 초고를 쓰기에 부족한 리서치 상태입니다.
+해당 챕터에 필요한 정보만 집중적으로 조사하여 claim과 source를 추가하세요.
+
+{chapters_text}
+
+**작업 지침:**
+1. WebSearch / WebFetch로 각 챕터의 질문에 답하는 정보를 수집합니다.
+2. 수집한 내용을 research_vault.py append-claim으로 claim에 추가합니다.
+   - claim에는 chapter_title, evidence, source_url을 포함하세요.
+3. 출처는 research_vault.py register-source로 등록합니다.
+4. 각 챕터당 최소 전환점/날짜·수치/인물·기관/WHY·HOW 중 부족한 슬롯 1개 이상을 채우세요.
+5. 정보를 찾지 못한 경우는 그냥 넘어가고 찾은 것만 추가하세요.
+
+research root: {research_root}
+research_vault.py: {vault_script}
+topic_slug: {topic_slug}
+entity_slug: {entity_slug or topic_slug}
+
+완료 후 "SUPPLEMENT_COMPLETE"를 출력하세요.
+"""
+
+    claude_bin = "claude"
+    claude_model = _get_claude_model()
+    cmd = [
+        claude_bin,
+        "--model", claude_model,
+        "--max-turns", "20",
+        "--output-format", "text",
+        "--allowedTools",
+        "Bash,Read,Write,WebFetch,WebSearch,mcp__lane__wikipedia_search,mcp__lane__news_search",
+    ]
+    env = os.environ.copy()
+    env["LLM_WIKI_RESEARCH_DIR"] = str(research_root)
+    env["RESEARCH_AGENT_DIR"] = str(research_agent_dir)
+
+    try:
+        proc = subprocess.run(
+            cmd,
+            input=prompt,
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=600,  # 10분
+        )
+        output = proc.stdout or ""
+        if "SUPPLEMENT_COMPLETE" in output:
+            print("[source_ingest] 보강 에이전트 완료 신호 확인", flush=True)
+        else:
+            print(f"[source_ingest] 보강 에이전트 마지막 300자: {output[-300:]}", flush=True)
+        return True
+    except subprocess.TimeoutExpired:
+        print("[source_ingest] 보강 에이전트 타임아웃 (10분)", flush=True)
+        return False
+    except Exception as e:
+        print(f"[source_ingest] 보강 에이전트 오류: {e}", flush=True)
+        return False
 
 
 def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
@@ -309,14 +659,18 @@ def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
     outline_chapters = outline.get("chapters", []) if isinstance(outline, dict) else []
     outline_lines = []
     outline_questions = []
+    chapter_requirements = _build_outline_requirements(outline)
+    chapter_contract_lines = []
     for chapter in outline_chapters[:6]:
         title = chapter.get("title", "")
         purpose = chapter.get("purpose", "")
         if title:
             outline_lines.append(f"- {title}: {purpose}".strip())
-        for question in chapter.get("research_focus", [])[:2]:
-            if question:
-                outline_questions.append(question)
+    for requirement in chapter_requirements[:6]:
+        title = requirement.get("title", "")
+        chapter_contract_lines.append(f"- {title}: 초고 2~4문단을 쓸 수 있도록 전환점·숫자·주체·WHY/HOW 근거를 확보")
+        for question in requirement.get("research_focus", [])[:4]:
+            outline_questions.append(question)
 
     # Wikipedia 스타일 wiki 경로 결정
     if entity_slug and section_slug:
@@ -344,12 +698,14 @@ def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
         session_brief = f"# Research Session Brief\ntopic: {topic}\nquery: {query}\nmust_answer: {must_answer}"
 
     outline_brief = ""
-    if outline_lines or outline_questions:
+    if outline_lines or outline_questions or chapter_contract_lines:
         outline_brief = "\n<outline_brief>\n"
         if outline_lines:
             outline_brief += "## 초기 아웃라인\n" + "\n".join(outline_lines[:6]) + "\n"
+        if chapter_contract_lines:
+            outline_brief += "## 챕터별 수집 계약\n" + "\n".join(chapter_contract_lines[:6]) + "\n"
         if outline_questions:
-            outline_brief += "## 이 리서치에서 반드시 답해야 할 질문\n" + "\n".join(f"- {q}" for q in outline_questions[:10]) + "\n"
+            outline_brief += "## 이 리서치에서 반드시 답해야 할 질문\n" + "\n".join(f"- {q}" for q in outline_questions[:18]) + "\n"
         outline_brief += "</outline_brief>\n"
 
     # ResearchAgent SKILL.md 읽기
@@ -390,11 +746,13 @@ def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
 
 **작업:**
 1. search_tools_skill 우선순위에 따라 lane 도구 먼저 사용 → 부족한 부분만 WebSearch/WebFetch fallback
-2. 초기 outline의 chapter/research_focus를 조사 가이드로 사용하여, 챕터별로 필요한 전환점/연도/수치/인물을 우선 수집
-3. 각 소스를 source note로 정규화 (research_vault.py register-source 사용)
-4. 핵심 claim 추출 및 검증 (research_vault.py append-claim 사용)
-5. wiki 페이지 작성 (위 wiki 저장 경로에 따라 파일 배치)
-6. research_launcher.py ingest-bundle 및 finalize-session 호출로 마무리
+2. 초기 outline의 chapter/research_focus를 조사 가이드로 사용하되, 각 챕터마다 초고 2~4문단을 쓸 수 있는 factual anchors를 확보합니다.
+3. 각 챕터마다 최소한 전환점/사건, 날짜·기간·숫자, 핵심 인물·기관, WHY/HOW(원인·전략·의미) 근거를 1개 이상 확보하려고 시도합니다.
+4. 찾지 못한 슬롯은 그냥 넘기지 말고 source note나 wiki/questions에 unresolved로 남겨서 나중 단계가 좁은 후속 리서치만 하게 만듭니다.
+5. 각 소스를 source note로 정규화 (research_vault.py register-source 사용)
+6. 핵심 claim 추출 및 검증 (research_vault.py append-claim 사용)
+7. wiki 페이지 작성 (위 wiki 저장 경로에 따라 파일 배치)
+8. research_launcher.py ingest-bundle 및 finalize-session 호출로 마무리
 
 research root 경로: {research_root}
 research_vault.py 경로: {vault_script}
@@ -472,6 +830,7 @@ research_launcher.py 경로: {launcher}
         entity_slug=entity_slug,
         section_slug=section_slug,
         finalize_payload=finalize_payload,
+        outline_requirements=chapter_requirements,
     )
     if validation["success"]:
         print(
@@ -484,6 +843,53 @@ research_launcher.py 경로: {launcher}
             "[source_ingest] post-check 실패: " + "; ".join(validation["issues"]),
             flush=True,
         )
+        # 약한 챕터만 LLM 보강 (최대 2라운드)
+        critical = validation.get("critical_unresolved", [])
+        chapter_map = {r.get("title", ""): r for r in chapter_requirements}
+        for round_num in range(1, 3):
+            if not critical:
+                break
+            print(f"[source_ingest] 보강 라운드 {round_num}: {len(critical)}개 챕터 타겟 리서치", flush=True)
+            supplement_ok = _supplement_weak_chapters(
+                topic=topic,
+                topic_slug=topic_slug,
+                critical_unresolved=critical,
+                chapter_map=chapter_map,
+                research_root=research_root,
+                research_agent_dir=research_agent_dir,
+                vault_script=vault_script,
+                launcher=launcher,
+                run_id=run_id,
+                entity_slug=entity_slug,
+            )
+            if not supplement_ok:
+                print(f"[source_ingest] 보강 라운드 {round_num} 실패 — 중단", flush=True)
+                break
+            # ingest-bundle 재실행 후 재검증
+            ingest_payload = _run_launcher(
+                ["ingest-bundle", "--topic", topic, "--run-id", run_id, "--refresh"],
+                research_root, research_agent_dir, launcher,
+            )
+            validation = _validate_ingest_completion(
+                research_root=research_root,
+                topic_slug=topic_slug,
+                entity_slug=entity_slug,
+                section_slug=section_slug,
+                finalize_payload=finalize_payload,
+                outline_requirements=chapter_requirements,
+            )
+            if validation["success"]:
+                print(
+                    f"[source_ingest] 보강 후 통과 (라운드 {round_num}): "
+                    f"claims={validation['claim_count']}, sources={validation['source_count']}",
+                    flush=True,
+                )
+                break
+            critical = validation.get("critical_unresolved", [])
+            print(
+                f"[source_ingest] 보강 라운드 {round_num} 후에도 미통과: {'; '.join(validation['issues'])}",
+                flush=True,
+            )
 
     return {
         "success": validation["success"],
@@ -576,15 +982,22 @@ def main():
     must_answers = []
     if core_question:
         must_answers.append(core_question)
-    if isinstance(outline, dict):
-        for chapter in outline.get("chapters", [])[:6]:
-            title = chapter.get("title", "")
-            if title:
-                must_answers.append(f"{title}에서 꼭 확인할 전환점은 무엇인가?")
-            for q in chapter.get("research_focus", [])[:2]:
-                if q:
-                    must_answers.append(q)
-    for item in must_answers[:12]:
+    hook_angle = brief.get("hook_angle", "") if brief_path.exists() else ""
+    if hook_angle:
+        must_answers.append(f"이 주제를 어떤 관점으로 해석해야 하는가? {hook_angle}")
+    outline_requirements = _build_outline_requirements(outline)
+    for requirement in outline_requirements[:6]:
+        for question in requirement.get("research_focus", [])[:5]:
+            must_answers.append(question)
+    deduped_must_answers = []
+    seen_must_answers: set[str] = set()
+    for item in must_answers:
+        normalized = _normalize_text(item)
+        if not normalized or normalized in seen_must_answers:
+            continue
+        seen_must_answers.add(normalized)
+        deduped_must_answers.append(normalized)
+    for item in deduped_must_answers[:24]:
         prepare_args += ["--must-answer", item]
     prepare_args += ["--downstream-use", "youtube-script-outline-guided"]
 

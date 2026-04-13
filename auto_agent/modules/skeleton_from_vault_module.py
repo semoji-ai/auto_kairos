@@ -516,6 +516,26 @@ def _build_outline(
             scene_hints.append({"type": "text_highlight", "note": f"시기: {time_periods[0]}"})
         if idx != 1 and time_periods:
             scene_hints.append({"type": "timeline", "note": "핵심 전환점 정리"})
+        focus_questions = [
+            f"{chapter_title}에서 서사를 바꾸는 핵심 전환점과 사건은 무엇인가?",
+            f"{chapter_title}에서 초고에 반드시 넣어야 할 날짜·기간·수치는 무엇인가?",
+        ]
+        if purpose and purpose != chapter_title:
+            focus_questions.append(f"{chapter_title}가 왜 중요했고 어떤 전략·배경으로 이어졌는가? {purpose[:120]}")
+        elif idx == 1:
+            focus_questions.append(f"{chapter_title}가 이후 전개 전체의 출발점이 되는 이유는 무엇인가?")
+        elif idx == chapter_count:
+            focus_questions.append(f"{chapter_title}가 현재적 의미나 takeaway로 이어지는 이유는 무엇인가?")
+        else:
+            focus_questions.append(f"{chapter_title}에서 핵심 인물·기관은 누구이며 어떤 역할을 했는가?")
+        dedup_focus = []
+        seen_focus = set()
+        for question in focus_questions:
+            normalized = _clean_sentence(question)
+            if not normalized or normalized in seen_focus:
+                continue
+            seen_focus.add(normalized)
+            dedup_focus.append(normalized)
         chapters.append(
             {
                 "chapter_number": idx,
@@ -527,10 +547,7 @@ def _build_outline(
                 "episodes": episode_titles[:3],
                 "scene_hints": scene_hints[:3],
                 "image_scenes": [],
-                "research_focus": [
-                    f"{chapter_title}의 핵심 맥락을 한 문장으로 정리할 수 있는가?",
-                    f"{chapter_title}에서 반드시 보존해야 할 수치/연도는 무엇인가?",
-                ],
+                "research_focus": dedup_focus[:3],
                 "emotional_arc": "도입" if idx == 1 else "확장" if idx < chapter_count else "정리",
                 "time_period": " ~ ".join(dict.fromkeys(time_periods))[:80],
             }

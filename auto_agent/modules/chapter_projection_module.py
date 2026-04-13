@@ -97,6 +97,36 @@ def _load_sources(research_root: Path, topic_slug: str) -> list[dict]:
     return sources
 
 
+def _normalize_text(value: str) -> str:
+    return re.sub(r"\s+", " ", value or "").strip()
+
+
+def _chapter_research_slots(chapter: dict) -> list[str]:
+    title = _normalize_text(chapter.get("title", ""))
+    purpose = _normalize_text(chapter.get("purpose", ""))
+    focus = [
+        _normalize_text(item)
+        for item in chapter.get("research_focus", [])
+        if _normalize_text(item)
+    ]
+    slots = [
+        f"{title}에서 서사를 바꾸는 핵심 전환점은 무엇인가?",
+        f"{title}에서 꼭 넣어야 할 날짜·기간·수치는 무엇인가?",
+        f"{title}의 핵심 인물·기관은 누구이며 어떤 역할을 했는가?",
+        f"{title}가 왜 중요했고 어떻게 다음 단계로 이어졌는가? {purpose}".strip(),
+    ]
+    slots.extend(focus[:3])
+    deduped = []
+    seen = set()
+    for item in slots:
+        normalized = _normalize_text(item)
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        deduped.append(normalized)
+    return deduped
+
+
 def _generate_chapter_facts_via_api(
     chapter: dict,
     wiki_pages: dict[str, str],
@@ -147,7 +177,8 @@ def _generate_chapter_facts_via_api(
     # source_ids 목록
     source_ids = [s.get("source_id", "") for s in sources[:20]]
 
-    prompt = f"""리서치 자료를 바탕으로 아래 챕터의 facts를 정리해주세요.
+    chapter_slots = _chapter_research_slots(chapter)
+    prompt = f"""리서치 자료를 바탕으로 아래 챕터의 writer-facing evidence pack을 정리해주세요.
 
 **주제:** {topic}
 **실제 설명 주제(real_topic):** {real_topic or topic}
@@ -156,13 +187,21 @@ def _generate_chapter_facts_via_api(
 **챕터 {chapter_idx}: {chapter_title}**
 챕터 포커스: {chapter_focus}
 
+**이 챕터에서 커버해야 할 질문 슬롯:**
+{"".join(f"- {slot}\n" for slot in chapter_slots[:6])}
+
 **Wiki 자료:**
 {wiki_text[:4000]}
 
 **관련 Claim 목록:**
 {claims_text}
 
-위 자료를 바탕으로 이 챕터에 필요한 핵심 facts를 JSON으로 정리하세요.
+위 자료를 바탕으로 이 챕터를 2~4문단으로 쓸 수 있게 JSON을 구성하세요.
+- key_facts는 초고에 바로 쓸 수 있는 사실 앵커를 최소 3개 시도
+- timeline_anchors는 시간 순서상 전환점 정리
+- supporting_claims는 이 챕터와 직접 연결되는 claim_id 목록
+- chapter_question_coverage는 위 질문 슬롯 중 무엇이 커버됐는지 기록
+- 아직 비는 부분은 evidence_gaps에, 초고를 막는 공백은 draft_blockers에 분리
 
 반드시 아래 형식으로만 응답하세요 (JSON만, 설명 없이):
 {{
@@ -176,8 +215,15 @@ def _generate_chapter_facts_via_api(
       "source_ids": ["source_id_1"]
     }}
   ],
+  "timeline_anchors": ["시간순 전환점 1"],
   "key_entities": ["주요 인물/기관/사건"],
   "key_numbers": ["중요 수치/날짜"],
+  "supporting_claims": ["claim_id_1"],
+  "chapter_question_coverage": [
+    {{"question": "질문 슬롯", "covered": true, "evidence": "근거 요약"}}
+  ],
+  "evidence_gaps": ["추가 보강이 필요하지만 초고는 가능한 공백"],
+  "draft_blockers": ["초고를 쓰기 어렵게 만드는 핵심 공백"],
   "narrative_role": "이 챕터가 전체 이야기에서 하는 역할",
   "claim_ids": [],
   "source_ids": []
@@ -209,14 +255,54 @@ def _generate_chapter_facts_via_api(
 def _fallback_chapter_facts(chapter: dict, claims: list[dict]) -> dict:
     """API 실패 시 기본 chapter_facts 구조."""
     chapter_idx = chapter.get("index", chapter.get("chapter_number", 1))
+    chapter_title = chapter.get("title", f"챕터 {chapter_idx}")
+    slots = _chapter_research_slots(chapter)
+    related_claims = []
+    title_tokens = [token for token in _normalize_text(chapter_title).lower().split() if len(token) >= 2]
+    for claim in claims[:12]:
+        text = _normalize_text(
+            " ".join(
+                str(claim.get(key, ""))
+                for key in ("claim", "statement", "claim_text", "evidence")
+            )
+        ).lower()
+        if any(token in text for token in title_tokens[:6]):
+            related_claims.append(claim)
+    supporting_claim_ids = [claim.get("claim_id", "") for claim in related_claims if claim.get("claim_id")]
+    key_facts = []
+    for claim in related_claims[:3]:
+        fact = _normalize_text(claim.get("claim") or claim.get("statement") or claim.get("claim_text") or "")
+        if not fact:
+            continue
+        key_facts.append(
+            {
+                "fact": fact,
+                "detail": _normalize_text(claim.get("evidence", "")),
+                "claim_ids": [claim.get("claim_id", "")] if claim.get("claim_id") else [],
+                "source_ids": [source_id for source_id in claim.get("source_ids", []) if source_id],
+            }
+        )
+    draft_blockers = []
+    if len(key_facts) < 2:
+        draft_blockers.append("관련 claim이 부족해 초고 factual anchor가 얕음")
+    if len(slots) >= 3:
+        draft_blockers.append("질문 슬롯 커버 여부를 후속 리서치로 다시 확인 필요")
     return {
         "chapter": chapter_idx,
-        "title": chapter.get("title", f"챕터 {chapter_idx}"),
-        "key_facts": [],
+        "title": chapter_title,
+        "key_facts": key_facts,
+        "timeline_anchors": [item["fact"] for item in key_facts[:2]],
         "key_entities": [],
         "key_numbers": [],
-        "narrative_role": chapter.get("description", ""),
-        "claim_ids": [],
+        "supporting_claims": supporting_claim_ids[:8],
+        "chapter_question_coverage": [
+            {"question": slot, "covered": False, "evidence": "fallback only"}
+            for slot in slots[:4]
+        ],
+        "evidence_gaps": slots[:4],
+        "draft_blockers": draft_blockers,
+        "narrative_role": chapter.get("description", chapter.get("purpose", "")),
+        "claim_ids": supporting_claim_ids[:10],
         "source_ids": [],
         "_source": "fallback",
     }

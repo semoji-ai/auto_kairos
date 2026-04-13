@@ -153,6 +153,16 @@ RESEARCH/{topic}_{timestamp}/
 - [ ] key_figures에 인물 최소 3명
 - [ ] timeline에 시간순 사건 최소 5개
 
+### Stage 1 fresh research 경량 게이트
+
+Stage 1 fresh research는 deep-research 전체 보고서 수준까지 갈 필요는 없지만, 최소한 `draft-writer`가 초고를 시작할 수 있을 정도의 밀도는 확보해야 합니다.
+
+- [ ] 각 챕터마다 factual anchors 최소 3개 시도
+- [ ] 각 챕터마다 전환점/사건, 날짜·기간·수치, 핵심 인물·기관, WHY/HOW 슬롯 중 3종 이상 커버
+- [ ] 각 챕터의 `research_focus` 질문에 최소 1개 이상 근거 연결
+- [ ] `draft_blockers`는 소수 챕터에만 남고, 대부분의 챕터는 초고 작성 가능 상태
+- [ ] unresolved는 모두 버리지 말고 `evidence_gaps` / 후속 질문으로 구조화
+
 ---
 
 ## 3. 변환 규칙
