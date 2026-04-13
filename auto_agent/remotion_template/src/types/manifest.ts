@@ -166,6 +166,13 @@ export interface VisualizationData {
   descriptions?: string[];    // tech_tree/slide_profile/slide_definition 등: 부가 설명
   profileName?: string;       // slide_profile: 인물/개체 이름
   profileSubtitle?: string;   // slide_profile: 직함/부제
+  chartStyle?: "pie" | "donut";
+  orientation?: "vertical" | "horizontal";
+  withPortrait?: boolean;
+  portraitPlacement?: "left" | "right";
+  itemIcons?: string[];
+  itemFlags?: string[];
+  logoMap?: Record<string, string>;
   /** Creative Direction v4.0 — 씬별 창의적 연출 */
   creative?: CreativeDirection;
   /** 시네마틱 씬 오버레이 (말풍선/감탄부호/캡션) */

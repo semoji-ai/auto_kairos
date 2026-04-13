@@ -32,7 +32,9 @@ export const resolveVisualization = (scene: any): any => {
   // v5 플랫: 최상위 필드에서 visualization 조립
   const viz: any = {};
   for (const k of ["layout", "headline", "items", "values", "unit", "source",
-                     "icons", "flags", "chartConfig", "title"]) {
+                     "icons", "flags", "chartConfig", "title", "chartStyle",
+                     "orientation", "withPortrait", "portraitPlacement", "itemIcons",
+                     "itemFlags", "logoMap"]) {
     if (scene[k] != null) viz[k] = scene[k];
   }
   if (scene.mood || scene.motion) {

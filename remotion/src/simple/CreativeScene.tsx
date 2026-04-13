@@ -156,9 +156,9 @@ function resolveLayout(data: any, creative: any): LayoutType {
   // ── 0순위: 명시적 layout 지정 (씬에디터에서 수동 변경 시) ──
   const explicit = data.layout || creative.layout || "";
   if (explicit && VALID_LAYOUTS.has(explicit)) {
-    // bar/pie/line인데 values가 없으면 items_grid로 전환
+    // bar/pie/line 계열인데 values가 없으면 items_grid로 전환
     const values: number[] = data.values || [];
-    if ((explicit === "bar" || explicit === "pie" || explicit === "line") && values.length === 0) {
+    if ((explicit === "bar" || explicit === "bar_horizontal" || explicit === "pie" || explicit === "donut" || explicit === "line") && values.length === 0) {
       const items: string[] = data.items || [];
       return items.length >= 3 ? "items_grid" : items.length >= 1 ? "items_list" : "headline_only";
     }
@@ -167,6 +167,39 @@ function resolveLayout(data: any, creative: any): LayoutType {
 
   // ── 1순위: 콘텐츠 구조 기반 자동 결정 ──
   return inferFromContent(data, creative);
+}
+
+function normalizeLayoutOptions(data: any, creative: any) {
+  const resolvedLayout = resolveLayout(data, creative);
+  const imagePlacement = (data.imageAsset || creative.imageAsset || {}).placement;
+  const items: string[] = data.items || [];
+  const values: number[] = data.values || [];
+  const isAutoPortraitQuote =
+    resolvedLayout === "quote" &&
+    items.length === 1 &&
+    values.length === 0 &&
+    (imagePlacement === "left" || imagePlacement === "right");
+  const legacyOptions =
+    resolvedLayout === "donut"
+      ? { layout: "pie" as LayoutType, chartStyle: "donut" as const }
+      : resolvedLayout === "bar_horizontal"
+        ? { layout: "bar" as LayoutType, orientation: "horizontal" as const }
+        : resolvedLayout === "quote_portrait" || isAutoPortraitQuote
+          ? {
+              layout: "quote" as LayoutType,
+              withPortrait: true,
+              portraitPlacement: imagePlacement || "right",
+            }
+          : { layout: resolvedLayout };
+
+  return {
+    layout: legacyOptions.layout,
+    chartStyle: data.chartStyle ?? creative.chartStyle ?? legacyOptions.chartStyle,
+    orientation: data.orientation ?? creative.orientation ?? legacyOptions.orientation,
+    withPortrait: data.withPortrait ?? creative.withPortrait ?? legacyOptions.withPortrait,
+    portraitPlacement:
+      data.portraitPlacement ?? creative.portraitPlacement ?? legacyOptions.portraitPlacement,
+  };
 }
 
 /** 콘텐츠 구조 기반 레이아웃 자동 결정 */
@@ -187,7 +220,7 @@ function inferFromContent(data: any, creative: any): LayoutType {
   if (items.length === 0 && placement === "fullscreen") return "cinematic";
 
   // 인용문 — items 1개 + imageAsset left/right + values 없음
-  if (items.length === 1 && values.length === 0 && (placement === "left" || placement === "right")) return "quote_portrait";
+  if (items.length === 1 && values.length === 0 && (placement === "left" || placement === "right")) return "quote";
   if (items.length === 1 && /["""']/.test(items[0])) return "quote";
 
   // counter — headline에 {{숫자}}
@@ -2715,12 +2748,21 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
     countUp: "number", shake: "shake", glitch: "glitch", pulse: "pulse",
     glow: "number", bounce: "bounce", lineExpand: "lineExpand", none: "none",
   };
-  const _resolvedLayout = resolveLayout(data, creative);
+  const normalizedLayoutOptions = normalizeLayoutOptions(data, creative);
+  const layout = normalizedLayoutOptions.layout;
+  const chartStyle = normalizedLayoutOptions.chartStyle || "pie";
+  const orientation = normalizedLayoutOptions.orientation || "vertical";
+  const withPortrait = normalizedLayoutOptions.withPortrait ?? false;
+  const isQuotePortrait = layout === "quote" && withPortrait;
+  const isPieLayout = layout === "pie" && (chartStyle === "pie" || chartStyle === "donut");
+  const isHorizontalBarLayout = layout === "bar" && orientation === "horizontal";
+  const isVerticalBarLayout = layout === "bar" && orientation !== "horizontal";
+  const portraitPlacement = normalizedLayoutOptions.portraitPlacement || "right";
   let emphasis: string = motionPreset
     ? (_emphasisToEmphasis[motionConfig.emphasis?.type || "none"] || creative.emphasis || "none")
     : (creative.emphasis || "none");
   // counter/metric_spotlight → 자동으로 number emphasis (countUp 활성화)
-  if ((_resolvedLayout === "counter" || _resolvedLayout === "metric_spotlight") && emphasis === "none") {
+  if ((layout === "counter" || layout === "metric_spotlight") && emphasis === "none") {
     emphasis = "number";
   }
 
@@ -2737,7 +2779,6 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const moodCfg = motionPreset
     ? { ..._rawMoodCfg, speed: _rawMoodCfg.speed * motionConfig.speedFactor }
     : _rawMoodCfg;
-  const layout = resolveLayout(data, creative);
   const lines = headline.split("\n").filter((l: string) => l.trim());
 
   // === 타이밍 ===
@@ -2846,26 +2887,22 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
   const sourceFade = useFade(Math.max(...allDelays, 0) + 50, 15, 0.8);
 
+  const headlineClean = headline.replace(/\{\{|\}\}/g, "");
+  const quoteTitle = data.title || creative.title || "";
+  const headlineHasBreak = headline.includes("\n") || headline.includes("\\n");
+  const rawQuoteText = items[0] || data.quote || quoteTitle || "";
+  const isNameOnly = rawQuoteText.length > 0 && rawQuoteText.length <= 10 && !rawQuoteText.includes(" ");
+  const quoteText = (!rawQuoteText || isNameOnly || headlineHasBreak) ? headlineClean : rawQuoteText;
+  const quoteSource = (isNameOnly && !source) ? rawQuoteText : source;
+
   // === Layout routing ===
 
   // Quote
-  if (layout === "quote") {
-    // headline에 줄바꿈(\n)이 있으면 우선 사용 (줄바꿈이 의도된 표시 텍스트)
-    const headlineClean = headline.replace(/\{\{|\}\}/g, "");
-    const headlineHasBreak = headline.includes("\n") || headline.includes("\\n");
-    const rawQuoteItems = items.length > 0 ? items : (data.quote ? [data.quote] : []);
-    const isNameOnly = rawQuoteItems.length === 1 && rawQuoteItems[0].length <= 10 && !rawQuoteItems[0].includes(" ");
-    const quoteItems = (rawQuoteItems.length === 0 || isNameOnly)
-      ? [headlineClean]
-      : headlineHasBreak
-        ? [headlineClean]
-        : rawQuoteItems;
-    // 화자 이름이 items에 잘못 들어왔으면 source로 사용
-    const effectiveSource = (isNameOnly && !source) ? rawQuoteItems[0] : source;
+  if (layout === "quote" && !isQuotePortrait) {
     return (
       <QuoteDisplay
-        items={quoteItems}
-        source={effectiveSource}
+        items={[quoteText]}
+        source={quoteSource}
         moodCfg={moodCfg}
         reveal={reveal}
         speed={moodCfg.speed}
@@ -2895,8 +2932,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
     );
   }
 
-  // Pie chart
-  if (layout === "pie" || layout === "donut") {
+  // Pie / Donut chart
+  if (isPieLayout) {
     return (
       <PieChartDisplay
         items={items}
@@ -2907,7 +2944,11 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         source={source}
         mood={mood}
         hasImageBg={hasImageBackground}
-        chartConfig={{ ...creative.chartConfig, showTotal: layout === "donut" ? true : creative.chartConfig?.showTotal }}
+        chartConfig={{
+          ...creative.chartConfig,
+          chartStyle,
+          showTotal: chartStyle === "donut" ? true : creative.chartConfig?.showTotal,
+        }}
       />
     );
   }
@@ -2950,7 +2991,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   }
 
   // Horizontal Bar chart
-  if (layout === "bar_horizontal") {
+  if (isHorizontalBarLayout) {
     const maxVal = Math.max(...values.map(Math.abs), 1);
     return (
       <AbsoluteFill style={{ backgroundColor: hasImageBackground ? "transparent" : C.bg, fontFamily: "inherit" }}>
@@ -3008,7 +3049,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   }
 
   // Bar chart
-  if (layout === "bar") {
+  if (isVerticalBarLayout) {
     return (
       <BarDisplay
         items={items}
@@ -3183,8 +3224,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         <FlashOverlay flashAt={flashAt} accentRgb={moodCfg.accentRgb} />
       )}
 
-      {/* Quote mark — quote_portrait는 레이아웃 내부에 좌우 따옴표가 있으므로 제외 */}
-      {emphasis === "quote" && layout !== "quote_portrait" && (
+      {/* Quote mark — portrait quote는 레이아웃 내부에 좌우 따옴표가 있으므로 제외 */}
+      {emphasis === "quote" && !(isQuotePortrait) && (
         <div style={{ position: "relative", zIndex: 2 }}>
           <QuoteMark color={moodCfg.accent} delay={headlineDelays[0] || 0} />
         </div>
@@ -3192,7 +3233,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
       {/* Main content */}
       <div
-        style={layout === "quote_portrait" ? {
+        style={isQuotePortrait ? {
           position: "relative",
           zIndex: 2,
           width: "100%",
@@ -3213,16 +3254,16 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           paddingBottom: `${L.scenePadding[0] + 100}px`,
         }}
       >
-        {/* Badges — quote_portrait/cinematic は스킵 */}
-        {layout !== "quote_portrait" && layout !== "cinematic" && badges.length > 0 && (
+        {/* Badges — portrait quote/cinematic 는 스킵 */}
+        {!(isQuotePortrait) && layout !== "cinematic" && badges.length > 0 && (
           <BadgeRow
             badges={badges}
             delay={Math.max((headlineDelays[0] || 0) - 10, 0)}
           />
         )}
 
-        {/* Headline lines — quote_portrait는 자체 인용문 레이아웃 사용, cinematic은 이미지만 */}
-        {layout !== "quote_portrait" && layout !== "cinematic" && (
+        {/* Headline lines — portrait quote는 자체 인용문 레이아웃 사용, cinematic은 이미지만 */}
+        {!(isQuotePortrait) && layout !== "cinematic" && (
         <div
           style={{
             textAlign: "center",
@@ -3256,8 +3297,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         </div>
         )}
 
-        {/* Tags — quote_portrait는 스킵 */}
-        {layout !== "quote_portrait" && tags.length > 0 && (
+        {/* Tags — portrait quote는 스킵 */}
+        {!(isQuotePortrait) && tags.length > 0 && (
           <TagRow
             tags={tags}
             delay={Math.max(...headlineDelays, 0) + 15}
@@ -3575,10 +3616,10 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         )}
 
         {/* Quote Portrait — 인용문 텍스트만 (이미지는 SceneRenderer SideLayout에서 처리) */}
-        {layout === "quote_portrait" && (
+        {isQuotePortrait && (
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "center",
                         alignItems: "center", textAlign: "center",
-                        padding: "40px 48px", width: "100%", height: "100%" }}>
+                        padding: portraitPlacement === "left" ? "40px 48px 40px 80px" : "40px 80px 40px 48px", width: "100%", height: "100%" }}>
             <div style={useFadeRise(15, 20)}>
               <span style={{
                 fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
@@ -3587,14 +3628,14 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               <div style={{ fontSize: T.itemText, fontWeight: 500, color: C.text,
                             lineHeight: 1.6, fontStyle: "italic", margin: "8px 0 16px",
                             textAlign: "center" }}>
-                {items[0] || headline || ""}
+                {quoteText}
               </div>
               <span style={{
                 fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
                 lineHeight: 0.8, fontFamily: "Georgia, serif", userSelect: "none",
               }}>&rdquo;</span>
-              {data.source && (
-                <div style={{ fontSize: T.sourceText, color: C.textMuted, marginTop: 12 }}>— {data.source}</div>
+              {quoteSource && (
+                <div style={{ fontSize: T.sourceText, color: C.textMuted, marginTop: 12 }}>— {quoteSource}</div>
               )}
             </div>
           </div>
