@@ -235,40 +235,10 @@ def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
     skill_path = research_agent_dir / "SKILL.md"
     skill_content = skill_path.read_text(encoding="utf-8") if skill_path.exists() else ""
 
-    # 프로젝트 루트에서 lane 도구 경로 확인
+    # shared/search-tools 스킬 읽기 (lane 도구 사용 규칙 단일 소스)
     package_dir = Path(__file__).parent.parent
-    lane_note = ""
-    if (package_dir / "tools" / "news_rss_lane.py").exists():
-        lane_note = f"""
-**토큰 절약 우선 수집 도구 (WebSearch 전에 먼저 사용):**
-
-### 뉴스 RSS 수집 규칙 (중요)
-주제를 그대로 쿼리로 쓰지 말고 **반드시 3종으로 분해**하여 각각 호출:
-1. **브랜드명/인물명**: 핵심 고유명사 (예: "바세린", "Chesebrough")
-2. **현재 시장 관련**: 기업·카테고리 키워드 (예: "유니레버 바세린", "석유젤리 시장")
-3. **영문 버전**: 한국어 주제의 영문 병행 (예: "Vaseline Unilever")
-
-"바세린의 역사"처럼 주제 전체를 그대로 쿼리로 넣으면 뉴스 결과가 거의 없습니다.
-
-```bash
-# 뉴스 RSS — 쿼리 분해 후 각각 호출 (ko/en 분리)
-python3 {package_dir}/tools/news_rss_lane.py "브랜드명또는인물명" --limit 10 --ko-only
-python3 {package_dir}/tools/news_rss_lane.py "현재시장관련단어" --limit 10 --ko-only
-python3 {package_dir}/tools/news_rss_lane.py "EnglishKeyword" --limit 10 --en-only
-
-# Wikipedia
-python3 {package_dir}/tools/wikipedia_lane.py "{{query}}" --limit 5 --content
-
-# 학술 논문 (CrossRef)
-python3 {package_dir}/tools/crossref_lane.py "{{query}}" --limit 5
-```
-
-### 뉴스 소스 처리 규칙
-- `confidence: blocked` 항목은 제외 (유튜브, 블로그, SNS 등 저신뢰 소스)
-- 동일 이벤트를 다룬 유사 제목 기사는 1건만 유지 (중복 제거)
-- 뉴스 소스는 **총 15건 이하**만 chapter_facts에 포함 (컨텍스트 과적재 방지)
-- 위 도구들로 커버되지 않는 부분만 WebSearch/WebFetch로 보완하세요.
-"""
+    search_tools_skill_path = package_dir / "data" / "skills" / "shared" / "search-tools.md"
+    search_tools_content = search_tools_skill_path.read_text(encoding="utf-8") if search_tools_skill_path.exists() else ""
 
     # Claude CLI 프롬프트 구성
     prompt = f"""당신은 LLM Wiki Research 에이전트입니다.
@@ -278,6 +248,10 @@ python3 {package_dir}/tools/crossref_lane.py "{{query}}" --limit 5
 <skill>
 {skill_content}
 </skill>
+
+<search_tools_skill>
+{search_tools_content}
+</search_tools_skill>
 
 <session_brief>
 {session_brief}
@@ -293,10 +267,8 @@ python3 {package_dir}/tools/crossref_lane.py "{{query}}" --limit 5
 
 {wiki_path_note}
 
-{lane_note}
-
 **작업:**
-1. 위 lane 도구 우선 → 부족한 부분만 WebSearch/WebFetch fallback
+1. search_tools_skill 우선순위에 따라 lane 도구 먼저 사용 → 부족한 부분만 WebSearch/WebFetch fallback
 2. 각 소스를 source note로 정규화 (research_vault.py register-source 사용)
 3. 핵심 claim 추출 및 검증 (research_vault.py append-claim 사용)
 4. wiki 페이지 작성 (위 wiki 저장 경로에 따라 파일 배치)
@@ -316,8 +288,8 @@ research_launcher.py 경로: {launcher}
     claude_bin = "claude"
     cmd = [
         claude_bin,
-        "--model", "claude-opus-4-6",
-        "--max-turns", "30",
+        "--model", "claude-sonnet-4-6",
+        "--max-turns", "50",
         "--output-format", "text",
         "--allowedTools",
         "Bash,Read,Write,Glob,Grep,WebFetch,WebSearch",
@@ -327,7 +299,7 @@ research_launcher.py 경로: {launcher}
     env["LLM_WIKI_RESEARCH_DIR"] = str(research_root)
     env["RESEARCH_AGENT_DIR"] = str(research_agent_dir)
 
-    print(f"[source_ingest] Claude CLI 리서치 에이전트 시작 (max-turns=30)...", flush=True)
+    print(f"[source_ingest] Claude CLI 리서치 에이전트 시작 (sonnet, max-turns=50)...", flush=True)
     proc = subprocess.run(
         cmd,
         input=prompt,
