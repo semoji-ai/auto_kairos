@@ -14,10 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from auto_agent.modules.research_entity_hub import (
-    resolve_existing_entity_slug,
-    resolve_topic_to_entity_section,
-)
+from auto_agent.modules.research_entity_hub import resolve_existing_entity_slug
 
 def _candidate_research_agent_dirs() -> list[Path]:
     """ResearchAgent 설치 후보 경로를 우선순위대로 반환."""
@@ -480,63 +477,17 @@ def main():
     if entity_slug:
         print(f"[source_ingest] entity_slug: {entity_slug}, section_slug: {section_slug}", flush=True)
 
-    # 2. research root 확인
-    try:
-        research_root = _get_research_root()
-    except RuntimeError as e:
-        print(f"[source_ingest] 오류: {e}", flush=True)
-        sys.exit(1)
-
+    # 2. research root = output/<uuid>/research/ (볼트 아님)
+    research_root = _get_research_root(project_dir)
     print(f"[source_ingest] research root: {research_root}", flush=True)
 
-    resolved = resolve_topic_to_entity_section(
-        research_root,
-        topic_slug=topic_slug,
-        entity_slug=entity_slug,
-        section_slug=section_slug,
-    )
-    if resolved.entity_slug:
-        entity_slug = resolved.entity_slug
-    if resolved.section_slug and not section_slug:
-        section_slug = resolved.section_slug
-    if entity_slug:
-        print(f"[source_ingest] canonical entity_slug: {entity_slug}, section_slug: {section_slug}", flush=True)
-
-    # 3. 이미 usable한 wiki가 있으면 스킵
-    # Wikipedia 스타일(entity_slug/section_slug) 우선 체크, 없으면 레거시 topic_slug 체크
-    wiki_exists = False
-    skip_entity_slug = entity_slug
-    skip_section_slug = section_slug
-
-    if entity_slug and section_slug:
-        wiki_exists = _section_wiki_usable(research_root, entity_slug, section_slug)
-        if wiki_exists:
-            print(f"[source_ingest] vault에 이미 usable wiki 존재 (Wikipedia 스타일) — 스킵: {entity_slug}/{section_slug}", flush=True)
-    if not wiki_exists:
-        wiki_exists = _topic_wiki_usable(research_root, topic_slug)
-        if wiki_exists:
-            skip_entity_slug = _resolve_slug(research_root, topic_slug)
-            skip_section_slug = ""
-            print(f"[source_ingest] vault에 이미 usable wiki 존재 (레거시) — 스킵: {skip_entity_slug}", flush=True)
-
-    if wiki_exists:
-        # 어떤 run을 사용할지 source_ingest_status.json에 기록
-        manifest_slug = skip_entity_slug or _resolve_slug(research_root, topic_slug)
-        latest_run_file = research_root / "manifests" / manifest_slug / "latest_run.txt"
-        run_id = latest_run_file.read_text(encoding="utf-8").strip() if latest_run_file.exists() else "unknown"
-        status = {
-            "topic": topic,
-            "topic_slug": topic_slug,
-            "entity_slug": skip_entity_slug,
-            "section_slug": skip_section_slug,
-            "run_id": run_id,
-            "research_root": str(research_root),
-            "status": "skipped_existing",
-        }
-        (project_dir / "source_ingest_status.json").write_text(
-            json.dumps(status, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
-        sys.exit(0)
+    # 3. 볼트에서 기존 wiki/manifests seed 복사 (없으면 graceful skip)
+    try:
+        vault_research_root = _get_vault_research_root()
+        seed_slugs = [s for s in [entity_slug, topic_slug] if s]
+        _seed_from_vault(research_root, vault_research_root, seed_slugs)
+    except RuntimeError as e:
+        print(f"[source_ingest] 볼트 seed 스킵 (KAIROS_VAULT_DIR 없음): {e}", flush=True)
 
     # 4. ResearchAgent launcher — prepare-session
     try:
@@ -608,19 +559,7 @@ def main():
     success = bool(outcome.get("success"))
     validation = outcome.get("validation") or {}
 
-    # 6. 완료 상태 기록 (실제 vault slug 보정)
-    if entity_slug:
-        # Wikipedia 스타일: entity_slug 기반 실제 경로 확인
-        actual_entity = entity_slug
-        alt = entity_slug.replace("-", "_") if "-" in entity_slug else entity_slug.replace("_", "-")
-        if (research_root / "wiki" / alt).exists() and not (research_root / "wiki" / entity_slug).exists():
-            actual_entity = alt
-        status["entity_slug"] = actual_entity
-    else:
-        actual_slug = _resolve_slug(research_root, topic_slug)
-        if actual_slug != topic_slug:
-            print(f"[source_ingest] vault slug 보정: {topic_slug} → {actual_slug}", flush=True)
-        status["topic_slug"] = actual_slug
+    # 6. 완료 상태 기록
     status["status"] = "completed" if success else "partial"
     if validation:
         status["validation"] = validation
@@ -628,7 +567,7 @@ def main():
         json.dumps(status, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
-    print(f"[source_ingest] 완료 — vault: {research_root / 'wiki' / topic_slug}", flush=True)
+    print(f"[source_ingest] 완료 — research: {research_root / 'wiki' / topic_slug}", flush=True)
     sys.exit(0 if success else 1)
 
 
