@@ -109,59 +109,6 @@ def _slug(text: str) -> str:
     return s[:60].strip("-")
 
 
-def _resolve_slug(research_root: Path, topic_slug: str) -> str:
-    """vault에서 실제로 존재하는 slug 반환. 하이픈↔언더스코어 둘 다 확인."""
-    return resolve_existing_entity_slug(research_root, topic_slug)
-
-
-def _section_wiki_usable(research_root: Path, entity_slug: str, section_slug: str) -> bool:
-    """Wikipedia 스타일 wiki에서 해당 섹션 파일이 이미 usable한지 확인."""
-    # entity_slug 폴더 존재 + section 파일 또는 overview.md 확인
-    entity_dir = research_root / "wiki" / entity_slug
-    if not entity_dir.exists():
-        # 하이픈↔언더스코어 변형도 확인
-        alt_entity = entity_slug.replace("-", "_") if "-" in entity_slug else entity_slug.replace("_", "-")
-        entity_dir = research_root / "wiki" / alt_entity
-        if not entity_dir.exists():
-            return False
-        entity_slug = alt_entity
-
-    # 섹션 파일: {section_slug}.md 또는 overview.md
-    section_file = entity_dir / f"{section_slug}.md"
-    overview_file = entity_dir / "overview.md"
-    target_file = section_file if section_file.exists() else overview_file
-
-    if not target_file.exists():
-        return False
-
-    content = target_file.read_text(encoding="utf-8")
-    if len(content) < 300:
-        return False
-
-    # claims도 확인
-    claims_file = research_root / "manifests" / entity_slug / "claims.jsonl"
-    if claims_file.exists():
-        lines = [l for l in claims_file.read_text(encoding="utf-8").splitlines() if l.strip()]
-        return len(lines) >= 3
-
-    return len(content) >= 500
-
-
-def _topic_wiki_usable(research_root: Path, topic_slug: str) -> bool:
-    """vault에 이미 usable한 wiki가 있는지 확인. 하이픈↔언더스코어 둘 다 체크. (레거시 호환)"""
-    slug = _resolve_slug(research_root, topic_slug)
-    wiki_overview = research_root / "wiki" / slug / "overview.md"
-    claims_file = research_root / "manifests" / slug / "claims.jsonl"
-    if not wiki_overview.exists():
-        return False
-    # claims.jsonl에 최소 3개 이상의 claim이 있으면 usable
-    if claims_file.exists():
-        lines = [l for l in claims_file.read_text(encoding="utf-8").splitlines() if l.strip()]
-        if len(lines) >= 3:
-            return True
-    # overview가 있고 내용이 500자 이상이면 usable
-    content = wiki_overview.read_text(encoding="utf-8")
-    return len(content) >= 500
 
 
 def _run_launcher(args: list, research_root: Path, research_agent_dir: Path, launcher: Path) -> dict:
@@ -206,10 +153,14 @@ def _validate_ingest_completion(
     claim_count = _count_manifest_records(claims_path)
     source_count = _count_manifest_records(sources_path)
 
-    if entity_slug and section_slug:
-        wiki_usable = _section_wiki_usable(research_root, canonical_slug, section_slug)
-    else:
-        wiki_usable = _topic_wiki_usable(research_root, topic_slug)
+    wiki_dir = research_root / "wiki" / canonical_slug
+    if not wiki_dir.exists():
+        alt = canonical_slug.replace("-", "_") if "-" in canonical_slug else canonical_slug.replace("_", "-")
+        wiki_dir = research_root / "wiki" / alt
+    overview = wiki_dir / "overview.md"
+    wiki_usable = overview.exists() and overview.stat().st_size > 300 if overview.exists() else False
+    if not wiki_usable and claim_count >= 3:
+        wiki_usable = True
 
     readiness = str(snapshot.get("specialist_readiness") or "")
     run_stage = str(run_state.get("stage") or "")
