@@ -514,7 +514,7 @@
   }
 
   // RC: claims SSE
-  const claimsSrc = new EventSource(`/api/p/${slug}/pipeline/research/claims/stream`);
+  const claimsSrc = registerSse(new EventSource(`/api/p/${slug}/pipeline/research/claims/stream`));
   claimsSrc.addEventListener('claims_new', e => {
     try {
       const d = JSON.parse(e.data);
@@ -665,7 +665,7 @@
   }
 
   // ── SSE: 파이프라인 이벤트 ──
-  const evtSrc = new EventSource(`/api/p/${slug}/pipeline/events`);
+  const evtSrc = registerSse(new EventSource(`/api/p/${slug}/pipeline/events`));
 
   evtSrc.addEventListener('snapshot', e => {
     const snap = JSON.parse(e.data);
@@ -720,7 +720,7 @@
   evtSrc.onerror = () => addEventRow(null, 'info', 'SSE 연결 끊김 — 재연결 중...');
 
   // ── SSE: 파일 스트림 ──
-  const fileSrc = new EventSource(`/api/p/${slug}/pipeline/stream`);
+  const fileSrc = registerSse(new EventSource(`/api/p/${slug}/pipeline/stream`));
 
   // 실시간 스트리밍 (stream-json 모드 — 원고 생성 중)
   fileSrc.addEventListener('manuscript_stream_updated', e => {

@@ -381,7 +381,7 @@
   }
 
   // ── 3. SSE: claims 실시간 ──
-  var claimsEv = new EventSource('/api/p/' + slug + '/pipeline/research/claims/stream');
+  var claimsEv = registerSse(new EventSource('/api/p/' + slug + '/pipeline/research/claims/stream'));
 
   claimsEv.addEventListener('claims_snapshot', function(e) {
     try {
@@ -417,7 +417,7 @@
   });
 
   // ── 4. SSE: 원고 업데이트 ──
-  var msEv = new EventSource('/api/p/' + slug + '/pipeline/stream');
+  var msEv = registerSse(new EventSource('/api/p/' + slug + '/pipeline/stream'));
 
   msEv.addEventListener('manuscript_updated', function(e) {
     try {

@@ -165,7 +165,7 @@
   function connect() {
     var streamUrl = '/api/agent-messages/stream';
     if (projectSlug) streamUrl += '?project=' + encodeURIComponent(projectSlug);
-    es = new EventSource(streamUrl);
+    es = registerSse(new EventSource(streamUrl));
     es.onopen = function() {
       statusEl.textContent = '연결됨';
       statusEl.className = 'agent-badge online';

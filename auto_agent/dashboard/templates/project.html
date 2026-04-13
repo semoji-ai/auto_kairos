@@ -52,7 +52,23 @@
 <script>
 var PROJECT_SLUG = '{{ slug }}';
 
+// 전역 SSE 풀 — 각 파셜이 열 때 등록, switchTab이 닫음
+window._ssePool = window._ssePool || [];
+
+window.registerSse = function(src) {
+  window._ssePool.push(src);
+  return src;
+};
+
+function _closeAllSse() {
+  window._ssePool.forEach(function(s) {
+    try { s.close(); } catch(e) {}
+  });
+  window._ssePool = [];
+}
+
 function switchTab(tab, el) {
+  _closeAllSse();
   document.querySelectorAll('.content-tabs .content-tab').forEach(function(a) { a.classList.remove('active'); });
   el.classList.add('active');
   htmx.ajax('GET', '/api/p/' + PROJECT_SLUG + '/tab/' + tab, {
