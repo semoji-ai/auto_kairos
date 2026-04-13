@@ -138,6 +138,52 @@ type LayoutType =
   | "bar_horizontal"    // 가로 바 차트 (항목별 비교, 긴 라벨에 적합)
   | "donut";            // 도넛 차트 (점유율, 중앙에 총합 표시)
 
+const HEADLINE_PRIMARY_LAYOUTS: LayoutType[] = ["headline_only"];
+const INLINE_SUPPORT_HEADLINE_LAYOUTS: LayoutType[] = [
+  "metric_spotlight",
+  "before_after",
+  "metric_wall",
+  "comparison_table",
+  "icon_stat",
+];
+const ITEM_PRIMARY_LAYOUTS: LayoutType[] = [
+  "items_grid",
+  "items_list",
+  "person_card",
+  "flow",
+  "timeline",
+  "rank_list",
+  "comparison_table",
+  "before_after",
+  "stacked_progress",
+  "card_carousel",
+];
+const VALUE_PRIMARY_LAYOUTS: LayoutType[] = [
+  "counter",
+  "bar",
+  "logo_grid",
+  "pie",
+  "line",
+  "metric_spotlight",
+  "metric_wall",
+  "icon_stat",
+  "annotated_chart",
+  "bar_horizontal",
+  "donut",
+];
+
+type LayoutHierarchy = "headline" | "item" | "value" | "neutral";
+
+const getLayoutHierarchy = (layout: LayoutType): LayoutHierarchy => {
+  if (HEADLINE_PRIMARY_LAYOUTS.includes(layout)) return "headline";
+  if (ITEM_PRIMARY_LAYOUTS.includes(layout)) return "item";
+  if (VALUE_PRIMARY_LAYOUTS.includes(layout)) return "value";
+  return "neutral";
+};
+
+const usesSupportHeadline = (layout: LayoutType): boolean => getLayoutHierarchy(layout) !== "headline";
+const usesInlineSupportHeadline = (layout: LayoutType): boolean => INLINE_SUPPORT_HEADLINE_LAYOUTS.includes(layout);
+
 /* ================================================================
    Layout Resolution — 의도 기반 (creative.layout 직접 지정) + 데이터 추론 fallback
    ================================================================ */
@@ -156,9 +202,9 @@ function resolveLayout(data: any, creative: any): LayoutType {
   // ── 0순위: 명시적 layout 지정 (씬에디터에서 수동 변경 시) ──
   const explicit = data.layout || creative.layout || "";
   if (explicit && VALID_LAYOUTS.has(explicit)) {
-    // bar/pie/line인데 values가 없으면 items_grid로 전환
+    // bar/pie/line 계열인데 values가 없으면 items_grid로 전환
     const values: number[] = data.values || [];
-    if ((explicit === "bar" || explicit === "pie" || explicit === "line") && values.length === 0) {
+    if ((explicit === "bar" || explicit === "bar_horizontal" || explicit === "pie" || explicit === "donut" || explicit === "line") && values.length === 0) {
       const items: string[] = data.items || [];
       return items.length >= 3 ? "items_grid" : items.length >= 1 ? "items_list" : "headline_only";
     }
@@ -167,6 +213,39 @@ function resolveLayout(data: any, creative: any): LayoutType {
 
   // ── 1순위: 콘텐츠 구조 기반 자동 결정 ──
   return inferFromContent(data, creative);
+}
+
+function normalizeLayoutOptions(data: any, creative: any) {
+  const resolvedLayout = resolveLayout(data, creative);
+  const imagePlacement = (data.imageAsset || creative.imageAsset || {}).placement;
+  const items: string[] = data.items || [];
+  const values: number[] = data.values || [];
+  const isAutoPortraitQuote =
+    resolvedLayout === "quote" &&
+    items.length === 1 &&
+    values.length === 0 &&
+    (imagePlacement === "left" || imagePlacement === "right");
+  const legacyOptions =
+    resolvedLayout === "donut"
+      ? { layout: "pie" as LayoutType, chartStyle: "donut" as const }
+      : resolvedLayout === "bar_horizontal"
+        ? { layout: "bar" as LayoutType, orientation: "horizontal" as const }
+        : resolvedLayout === "quote_portrait" || isAutoPortraitQuote
+          ? {
+              layout: "quote" as LayoutType,
+              withPortrait: true,
+              portraitPlacement: imagePlacement || "right",
+            }
+          : { layout: resolvedLayout };
+
+  return {
+    layout: legacyOptions.layout,
+    chartStyle: data.chartStyle ?? creative.chartStyle ?? legacyOptions.chartStyle,
+    orientation: data.orientation ?? creative.orientation ?? legacyOptions.orientation,
+    withPortrait: data.withPortrait ?? creative.withPortrait ?? legacyOptions.withPortrait,
+    portraitPlacement:
+      data.portraitPlacement ?? creative.portraitPlacement ?? legacyOptions.portraitPlacement,
+  };
 }
 
 /** 콘텐츠 구조 기반 레이아웃 자동 결정 */
@@ -187,7 +266,7 @@ function inferFromContent(data: any, creative: any): LayoutType {
   if (items.length === 0 && placement === "fullscreen") return "cinematic";
 
   // 인용문 — items 1개 + imageAsset left/right + values 없음
-  if (items.length === 1 && values.length === 0 && (placement === "left" || placement === "right")) return "quote_portrait";
+  if (items.length === 1 && values.length === 0 && (placement === "left" || placement === "right")) return "quote";
   if (items.length === 1 && /["""']/.test(items[0])) return "quote";
 
   // counter — headline에 {{숫자}}
@@ -1706,6 +1785,46 @@ const LOGO_IMAGE_PATH: Record<string, string> = {
   microsoft: "logos/microsoft.svg",
 };
 
+const renderItemLeadVisual = ({
+  flag,
+  icon,
+  logo,
+  flagLabel,
+  flagWidth = 100,
+  iconSize = 36,
+  logoSize = 40,
+  iconFilled = false,
+}: {
+  flag?: string;
+  icon?: string;
+  logo?: string;
+  flagLabel?: string;
+  flagWidth?: number;
+  iconSize?: number;
+  logoSize?: number;
+  iconFilled?: boolean;
+}): React.ReactNode => {
+  if (flag) {
+    return <FlagCard countryCode={flag} label={flagLabel} width={flagWidth} />;
+  }
+
+  if (icon) {
+    const IconComp = resolveIcon(icon);
+    if (IconComp) {
+      return <IconBadge icon={IconComp} size={iconSize} filled={iconFilled} />;
+    }
+  }
+
+  if (logo) {
+    const resolvedLogo = resolveLogo(logo);
+    if (resolvedLogo || LOGO_IMAGE_PATH[logo.toLowerCase().replace(/\s+/g, "")]) {
+      return <LogoBadge logo={logo} size={logoSize} />;
+    }
+  }
+
+  return null;
+};
+
 const LogoGridLayout: React.FC<{
   items: string[];
   values: number[];
@@ -2696,6 +2815,20 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const values: number[] = data.values || [];
   const unit: string = data.unit || "";
   const concept: string = creative.concept || "";
+  const itemIcons: string[] = data.itemIcons || data.icons || [];
+  const itemFlags: string[] = data.itemFlags || data.flags || [];
+  const itemLogos: string[] = items.map((item, i) => data.logoMap?.[item] || data.logoMap?.[String(i)] || item);
+  const getItemLeadVisual = (i: number, options?: { flagLabel?: string; flagWidth?: number; iconSize?: number; logoSize?: number; iconFilled?: boolean }) =>
+    renderItemLeadVisual({
+      flag: itemFlags[i],
+      icon: itemIcons[i],
+      logo: itemLogos[i],
+      flagLabel: options?.flagLabel,
+      flagWidth: options?.flagWidth,
+      iconSize: options?.iconSize,
+      logoSize: options?.logoSize,
+      iconFilled: options?.iconFilled,
+    });
 
   // motion preset 연동
   const motionPreset: string = data.motionPreset || "";
@@ -2715,12 +2848,21 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
     countUp: "number", shake: "shake", glitch: "glitch", pulse: "pulse",
     glow: "number", bounce: "bounce", lineExpand: "lineExpand", none: "none",
   };
-  const _resolvedLayout = resolveLayout(data, creative);
+  const normalizedLayoutOptions = normalizeLayoutOptions(data, creative);
+  const layout = normalizedLayoutOptions.layout;
+  const chartStyle = normalizedLayoutOptions.chartStyle || "pie";
+  const orientation = normalizedLayoutOptions.orientation || "vertical";
+  const withPortrait = normalizedLayoutOptions.withPortrait ?? false;
+  const isQuotePortrait = layout === "quote" && withPortrait;
+  const isPieLayout = layout === "pie" && (chartStyle === "pie" || chartStyle === "donut");
+  const isHorizontalBarLayout = layout === "bar" && orientation === "horizontal";
+  const isVerticalBarLayout = layout === "bar" && orientation !== "horizontal";
+  const portraitPlacement = normalizedLayoutOptions.portraitPlacement || "right";
   let emphasis: string = motionPreset
     ? (_emphasisToEmphasis[motionConfig.emphasis?.type || "none"] || creative.emphasis || "none")
     : (creative.emphasis || "none");
   // counter/metric_spotlight → 자동으로 number emphasis (countUp 활성화)
-  if ((_resolvedLayout === "counter" || _resolvedLayout === "metric_spotlight") && emphasis === "none") {
+  if ((layout === "counter" || layout === "metric_spotlight") && emphasis === "none") {
     emphasis = "number";
   }
 
@@ -2737,8 +2879,12 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const moodCfg = motionPreset
     ? { ..._rawMoodCfg, speed: _rawMoodCfg.speed * motionConfig.speedFactor }
     : _rawMoodCfg;
-  const layout = resolveLayout(data, creative);
   const lines = headline.split("\n").filter((l: string) => l.trim());
+  const layoutHierarchy = getLayoutHierarchy(layout);
+  const headlineIsPrimary = layoutHierarchy === "headline";
+  const supportHeadlineInline = usesInlineSupportHeadline(layout);
+  const showSupportHeadline = usesSupportHeadline(layout);
+  const showCommonSupportHeadline = showSupportHeadline && !supportHeadlineInline;
 
   // === 타이밍 ===
   const headlineLineCount = lines.length;
@@ -2846,26 +2992,59 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
   const sourceFade = useFade(Math.max(...allDelays, 0) + 50, 15, 0.8);
 
+  const renderSupportHeadline = (options?: { marginBottom?: number; maxWidth?: string }) => {
+    if (!showSupportHeadline || !headline || lines.length === 0) return null;
+    const supportFontSize = layoutHierarchy === "value"
+      ? Math.max(T.headlineSupport, T.chartTitle)
+      : T.headlineSupport;
+    const supportWeight = layoutHierarchy === "value" ? 600 : 700;
+    const supportColor = layoutHierarchy === "value" ? C.textMuted : C.textDim;
+
+    return (
+      <div
+        style={{
+          marginBottom: options?.marginBottom ?? L.sectionMarginTop,
+          textAlign: "center",
+          maxWidth: options?.maxWidth ?? L.headlineMaxWidth,
+          transform: headlineTransform,
+        }}
+      >
+        {lines.map((line, i) => (
+          <div
+            key={i}
+            style={{
+              opacity: useFade(headlineDelays[i] || 0, LINE_ANIM_DUR, 1),
+              fontSize: supportFontSize,
+              fontWeight: supportWeight,
+              color: supportColor,
+              lineHeight: 1.35,
+              letterSpacing: 0.5,
+              marginBottom: i < lines.length - 1 ? 6 : 0,
+            }}
+          >
+            <TextWithBreaks text={line.replace(/\{\{|\}\}/g, "")} />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const headlineClean = headline.replace(/\{\{|\}\}/g, "");
+  const quoteTitle = data.title || creative.title || "";
+  const headlineHasBreak = headline.includes("\n") || headline.includes("\\n");
+  const rawQuoteText = items[0] || data.quote || quoteTitle || "";
+  const isNameOnly = rawQuoteText.length > 0 && rawQuoteText.length <= 10 && !rawQuoteText.includes(" ");
+  const quoteText = (!rawQuoteText || isNameOnly || headlineHasBreak) ? headlineClean : rawQuoteText;
+  const quoteSource = (isNameOnly && !source) ? rawQuoteText : source;
+
   // === Layout routing ===
 
   // Quote
-  if (layout === "quote") {
-    // headline에 줄바꿈(\n)이 있으면 우선 사용 (줄바꿈이 의도된 표시 텍스트)
-    const headlineClean = headline.replace(/\{\{|\}\}/g, "");
-    const headlineHasBreak = headline.includes("\n") || headline.includes("\\n");
-    const rawQuoteItems = items.length > 0 ? items : (data.quote ? [data.quote] : []);
-    const isNameOnly = rawQuoteItems.length === 1 && rawQuoteItems[0].length <= 10 && !rawQuoteItems[0].includes(" ");
-    const quoteItems = (rawQuoteItems.length === 0 || isNameOnly)
-      ? [headlineClean]
-      : headlineHasBreak
-        ? [headlineClean]
-        : rawQuoteItems;
-    // 화자 이름이 items에 잘못 들어왔으면 source로 사용
-    const effectiveSource = (isNameOnly && !source) ? rawQuoteItems[0] : source;
+  if (layout === "quote" && !isQuotePortrait) {
     return (
       <QuoteDisplay
-        items={quoteItems}
-        source={effectiveSource}
+        items={[quoteText]}
+        source={quoteSource}
         moodCfg={moodCfg}
         reveal={reveal}
         speed={moodCfg.speed}
@@ -2895,8 +3074,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
     );
   }
 
-  // Pie chart
-  if (layout === "pie" || layout === "donut") {
+  // Pie / Donut chart
+  if (isPieLayout) {
     return (
       <PieChartDisplay
         items={items}
@@ -2907,7 +3086,11 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         source={source}
         mood={mood}
         hasImageBg={hasImageBackground}
-        chartConfig={{ ...creative.chartConfig, showTotal: layout === "donut" ? true : creative.chartConfig?.showTotal }}
+        chartConfig={{
+          ...creative.chartConfig,
+          chartStyle,
+          showTotal: chartStyle === "donut" ? true : creative.chartConfig?.showTotal,
+        }}
       />
     );
   }
@@ -2950,7 +3133,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   }
 
   // Horizontal Bar chart
-  if (layout === "bar_horizontal") {
+  if (isHorizontalBarLayout) {
     const maxVal = Math.max(...values.map(Math.abs), 1);
     return (
       <AbsoluteFill style={{ backgroundColor: hasImageBackground ? "transparent" : C.bg, fontFamily: "inherit" }}>
@@ -3008,7 +3191,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   }
 
   // Bar chart
-  if (layout === "bar") {
+  if (isVerticalBarLayout) {
     return (
       <BarDisplay
         items={items}
@@ -3183,8 +3366,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         <FlashOverlay flashAt={flashAt} accentRgb={moodCfg.accentRgb} />
       )}
 
-      {/* Quote mark — quote_portrait는 레이아웃 내부에 좌우 따옴표가 있으므로 제외 */}
-      {emphasis === "quote" && layout !== "quote_portrait" && (
+      {/* Quote mark — portrait quote는 레이아웃 내부에 좌우 따옴표가 있으므로 제외 */}
+      {emphasis === "quote" && !(isQuotePortrait) && (
         <div style={{ position: "relative", zIndex: 2 }}>
           <QuoteMark color={moodCfg.accent} delay={headlineDelays[0] || 0} />
         </div>
@@ -3192,7 +3375,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
       {/* Main content */}
       <div
-        style={layout === "quote_portrait" ? {
+        style={isQuotePortrait ? {
           position: "relative",
           zIndex: 2,
           width: "100%",
@@ -3213,16 +3396,16 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           paddingBottom: `${L.scenePadding[0] + 100}px`,
         }}
       >
-        {/* Badges — quote_portrait/cinematic は스킵 */}
-        {layout !== "quote_portrait" && layout !== "cinematic" && badges.length > 0 && (
+        {/* Badges — portrait quote/cinematic 는 스킵 */}
+        {!(isQuotePortrait) && layout !== "cinematic" && badges.length > 0 && (
           <BadgeRow
             badges={badges}
             delay={Math.max((headlineDelays[0] || 0) - 10, 0)}
           />
         )}
 
-        {/* Headline lines — quote_portrait는 자체 인용문 레이아웃 사용, cinematic은 이미지만 */}
-        {layout !== "quote_portrait" && layout !== "cinematic" && (
+        {/* Headline lines — portrait quote는 자체 인용문 레이아웃 사용, cinematic은 이미지만 */}
+        {!(isQuotePortrait) && layout !== "cinematic" && headlineIsPrimary && (
         <div
           style={{
             textAlign: "center",
@@ -3256,8 +3439,10 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         </div>
         )}
 
-        {/* Tags — quote_portrait는 스킵 */}
-        {layout !== "quote_portrait" && tags.length > 0 && (
+        {!(isQuotePortrait) && layout !== "cinematic" && showCommonSupportHeadline && renderSupportHeadline()}
+
+        {/* Tags — portrait quote는 스킵 */}
+        {!(isQuotePortrait) && tags.length > 0 && (
           <TagRow
             tags={tags}
             delay={Math.max(...headlineDelays, 0) + 15}
@@ -3286,8 +3471,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             headlineDelays={headlineDelays}
             moodCfg={moodCfg}
             reveal={reveal}
-            itemIcons={data.itemIcons}
-            itemFlags={data.itemFlags}
+            itemIcons={itemIcons}
+            itemFlags={itemFlags}
             motionConfig={motionPreset ? motionConfig : undefined}
           />
         )}
@@ -3302,8 +3487,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             emphasis={emphasis}
             concept={concept}
             images={data.images}
-            itemIcons={data.itemIcons}
-            itemFlags={data.itemFlags}
+            itemIcons={itemIcons}
+            itemFlags={itemFlags}
             itemStatuses={data.itemStatuses}
             motionConfig={motionPreset ? motionConfig : undefined}
           />
@@ -3377,16 +3562,18 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
         {/* Metric Spotlight — 단일 KPI 극적 강조 */}
         {layout === "metric_spotlight" && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, ...useScale(15) }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18, ...useScale(15) }}>
+            {renderSupportHeadline({ marginBottom: 8, maxWidth: "70%" })}
             <MetricCard
               label={items[0] || data.title || ""}
               value={values.length > 0 ? `${fmtNum(values[0])}${data.unit || ""}` : ""}
               change={items[1]}
               trend={values.length > 1 ? (values[1] > 0 ? "up" : "down") : undefined}
+              style={{ width: "100%", maxWidth: 720, transform: "scale(1.08)" }}
             />
             {values.length > 2 && (
-              <div style={{ opacity: useFade(30, 15) }}>
-                <Sparkline data={values} width={200} height={40} color={moodCfg.accent} />
+              <div style={{ opacity: useFade(30, 15), transform: "scale(1.05)" }}>
+                <Sparkline data={values} width={240} height={52} color={moodCfg.accent} />
               </div>
             )}
           </div>
@@ -3414,6 +3601,14 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                     value={values[i] != null ? `${fmtNum(values[i])}${data.unit || ""}` : ""}
                     style={{ width: "100%" }}
                   />
+                  {(() => {
+                    const leadVisual = getItemLeadVisual(i, { flagLabel: item, logoSize: 32 });
+                    return leadVisual ? (
+                      <div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
+                        {leadVisual}
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
               ))}
             </div>
@@ -3447,27 +3642,32 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
         {/* Before/After — 변화 전후 */}
         {layout === "before_after" && items.length >= 2 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 24, justifyContent: "center" }}>
-            <div style={useFadeSlide(15, 15, -30)}>
-              <ComparisonCell
-                label="BEFORE"
-                value={items[0]}
-                sublabel={values[0] != null ? `${fmtNum(values[0])}${data.unit || ""}` : undefined}
-                variant="before"
-                style={{ minWidth: 200 }}
-              />
-            </div>
-            <div style={{ opacity: useFade(25, 10) }}>
-              <Connector direction="right" length={48} color={moodCfg.accent} />
-            </div>
-            <div style={useFadeSlide(35, 15, 30)}>
-              <ComparisonCell
-                label="AFTER"
-                value={items[1]}
-                sublabel={values[1] != null ? `${fmtNum(values[1])}${data.unit || ""}` : undefined}
-                variant="after"
-                style={{ minWidth: 200 }}
-              />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18, width: "100%" }}>
+            {renderSupportHeadline({ marginBottom: 4, maxWidth: "72%" })}
+            <div style={{ display: "flex", alignItems: "center", gap: 28, justifyContent: "center" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, ...useFadeSlide(15, 15, -30) }}>
+                {getItemLeadVisual(0, { flagLabel: items[0], iconSize: 44, logoSize: 40 })}
+                <ComparisonCell
+                  label="BEFORE"
+                  value={items[0]}
+                  sublabel={values[0] != null ? `${fmtNum(values[0])}${data.unit || ""}` : undefined}
+                  variant="before"
+                  style={{ minWidth: 240, transform: "scale(1.06)" }}
+                />
+              </div>
+              <div style={{ opacity: useFade(25, 10), transform: "scale(1.1)" }}>
+                <Connector direction="right" length={56} color={moodCfg.accent} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, ...useFadeSlide(35, 15, 30) }}>
+                {getItemLeadVisual(1, { flagLabel: items[1], iconSize: 44, logoSize: 40 })}
+                <ComparisonCell
+                  label="AFTER"
+                  value={items[1]}
+                  sublabel={values[1] != null ? `${fmtNum(values[1])}${data.unit || ""}` : undefined}
+                  variant="after"
+                  style={{ minWidth: 240, transform: "scale(1.06)" }}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -3477,25 +3677,29 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           // metric_wall과 동일한 카드 크기 계산
           const maxLabelLen = Math.max(...items.map(it => it.length));
           const maxValueLen = Math.max(...values.map((v, i) => `${fmtNum(v)}${data.unit || ""}`.length), 0);
-          const cardMinW = Math.max(maxLabelLen * 22, maxValueLen * 80) + 48;
+          const cardMinW = Math.max(maxLabelLen * 22, maxValueLen * 88) + 64;
           const cols = Math.min(items.length, Math.max(1, Math.floor(1824 / (cardMinW + 50))));
           const gridW = cols * cardMinW + (cols - 1) * 50;
           return (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${cols}, ${cardMinW}px)`,
-              gap: 50, width: gridW, margin: "0 auto",
-              justifyContent: "center",
-            }}>
-              {items.map((item, i) => (
-                <div key={i} style={useFadeRise(staggerDelay(i, 8, 12), 15)}>
-                  <ComparisonCell
-                    label={item}
-                    value={values[i] != null ? `${fmtNum(values[i])}${data.unit || ""}` : ""}
-                    style={{ width: "100%" }}
-                  />
-                </div>
-              ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%", alignItems: "center" }}>
+              {renderSupportHeadline({ marginBottom: 0, maxWidth: "72%" })}
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${cols}, ${cardMinW}px)`,
+                gap: 50, width: gridW, margin: "0 auto",
+                justifyContent: "center",
+              }}>
+                {items.map((item, i) => (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, ...useFadeRise(staggerDelay(i, 8, 12), 15) }}>
+                    {getItemLeadVisual(i, { flagLabel: item, iconSize: 40, logoSize: 36 })}
+                    <ComparisonCell
+                      label={item}
+                      value={values[i] != null ? `${fmtNum(values[i])}${data.unit || ""}` : ""}
+                      style={{ width: "100%", transform: "scale(1.04)" }}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           );
         })()}
@@ -3503,16 +3707,17 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         {/* Icon Stat — 단일 통계 + 아이콘 */}
         {layout === "icon_stat" && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...useScale(15) }}>
+            {renderSupportHeadline({ marginBottom: 0, maxWidth: "70%" })}
             {data.itemIcons?.[0] && resolveIcon(data.itemIcons[0]) && (
-              <IconBadge icon={resolveIcon(data.itemIcons[0])!} size={72} filled />
+              <IconBadge icon={resolveIcon(data.itemIcons[0])!} size={80} filled />
             )}
             {values[0] != null && (
-              <div style={{ fontSize: 60, fontWeight: 800, color: moodCfg.accent }}>
+              <div style={{ fontSize: T.metricValue + 12, fontWeight: 800, color: moodCfg.accent, lineHeight: 1.05 }}>
                 {fmtNum(values[0])}{data.unit || ""}
               </div>
             )}
             {items[0] && (
-              <div style={{ fontSize: 24, color: C.textMuted }}>{items[0]}</div>
+              <div style={{ fontSize: T.labelText + 2, fontWeight: 600, color: C.text }}>{items[0]}</div>
             )}
           </div>
         )}
@@ -3543,11 +3748,14 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               return (
                 <div key={i} style={useFadeRise(staggerDelay(i, 10, 15), 15)}>
                   <Card style={{ minWidth: 200, maxWidth: 280, textAlign: "center" }}>
-                    {data.itemIcons?.[i] && resolveIcon(data.itemIcons[i]) && (
-                      <div style={{ marginBottom: 12 }}>
-                        <IconBadge icon={resolveIcon(data.itemIcons[i])!} size={48} />
-                      </div>
-                    )}
+                    {(() => {
+                      const leadVisual = getItemLeadVisual(i, { flagLabel: item, iconSize: 48, logoSize: 44 });
+                      return leadVisual ? (
+                        <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}>
+                          {leadVisual}
+                        </div>
+                      ) : null;
+                    })()}
                     <div style={{ fontSize: T.itemText, fontWeight: 700, color: C.text, marginBottom: desc ? 8 : 0 }}><TextWithBreaks text={item} /></div>
                     {desc && <div style={{ fontSize: T.descText, color: C.textMuted }}>{desc}</div>}
                   </Card>
@@ -3575,10 +3783,10 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         )}
 
         {/* Quote Portrait — 인용문 텍스트만 (이미지는 SceneRenderer SideLayout에서 처리) */}
-        {layout === "quote_portrait" && (
+        {isQuotePortrait && (
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "center",
                         alignItems: "center", textAlign: "center",
-                        padding: "40px 48px 40px 48px", width: "100%", height: "100%" }}>
+                        padding: portraitPlacement === "left" ? "40px 48px 40px 80px" : "40px 80px 40px 48px", width: "100%", height: "100%" }}>
             <div style={useFadeRise(15, 20)}>
               <span style={{
                 fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
@@ -3587,14 +3795,14 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               <div style={{ fontSize: T.itemText, fontWeight: 500, color: C.text,
                             lineHeight: 1.6, fontStyle: "italic", margin: "8px 0 16px",
                             textAlign: "center" }}>
-                {items[0] || headline || ""}
+                {quoteText}
               </div>
               <span style={{
                 fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
                 lineHeight: 0.8, fontFamily: "Georgia, serif", userSelect: "none",
               }}>&rdquo;</span>
-              {data.source && (
-                <div style={{ fontSize: T.sourceText, color: C.textMuted, marginTop: 12 }}>— {data.source}</div>
+              {quoteSource && (
+                <div style={{ fontSize: T.sourceText, color: C.textMuted, marginTop: 12 }}>— {quoteSource}</div>
               )}
             </div>
           </div>
@@ -3806,12 +4014,16 @@ const LineReveal: React.FC<{
   const baseFontSize = isChapterLabel ? T.splitVsText : T.headlineBase;
   const showBadge = false; // 헤드라인에 숫자 뱃지 비활성 — 시퀀스 뱃지는 items에서만 표시
 
+  const resolvedBaseFontSize = accentFontSizeOverride
+    ? Math.max(Math.round(accentFontSizeOverride * 0.58), T.chartTitle)
+    : baseFontSize;
+
   return (
     <div
       style={{
         opacity,
         transform,
-        fontSize: baseFontSize,
+        fontSize: resolvedBaseFontSize,
         fontWeight: 600,
         lineHeight:
           emphasis === "number" || emphasis === "count" ? 2.4 : 1.6,
