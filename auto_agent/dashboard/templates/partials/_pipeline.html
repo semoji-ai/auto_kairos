@@ -49,29 +49,32 @@
     <span id="stream-chars" style="display:none;font-size:11px;color:var(--energy-ink-low);margin-left:auto;"></span>
   </div>
 
-  <!-- ── 3. 스켈레톤/아웃라인 요약 컨테이너 ── -->
-  <div id="skeleton-summary-bar">
-    <div id="skeleton-summary-content" style="color:var(--energy-ink-low);font-size:12px;">
-      리서치 결과가 생성되면 여기에 표시됩니다.
-    </div>
-  </div>
-
-  <!-- ── 4a. 2분할 뷰: 리서치 | 원고 ── -->
+  <!-- ── 3. 2분할 캔버스: Research | Manuscript ── -->
   <div id="split-view" style="display:flex;flex:1;min-height:0;gap:0;">
-    <!-- 리서치 패널 -->
-    <div id="panel-skeleton" class="split-panel" style="border-right:1px solid var(--energy-bg-card);">
-      <div class="split-panel-title">리서치</div>
-      <div id="skeleton-body" class="split-scroll">
-        <span style="color:var(--energy-ink-low);font-size:12px;">스켈레톤/아웃라인이 생성되면 여기에 표시됩니다.</span>
+
+    <!-- 왼쪽: Research Canvas -->
+    <div class="rc-panel rc-panel-research" id="rc-research-panel" style="border-right:1px solid var(--energy-bg-card);">
+      <div class="rc-panel-header">
+        <span class="rc-panel-title">Research Canvas</span>
+        <span class="rc-claim-count" id="rc-claim-count">— claims</span>
+        <span class="rc-live-dot" id="rc-live-dot" title="실시간 스트리밍"></span>
+      </div>
+      <div class="rc-panel-body" id="rc-claims-body">
+        <div class="rc-empty">리서치 데이터를 불러오는 중...</div>
       </div>
     </div>
-    <!-- 원고 패널 -->
-    <div id="panel-manuscript" class="split-panel">
-      <div class="split-panel-title">원고</div>
-      <div id="manuscript-body" class="split-scroll stream-body">
-        <span class="placeholder">원고가 생성되면 여기에 실시간으로 표시됩니다.</span>
+
+    <!-- 오른쪽: Manuscript Canvas -->
+    <div class="rc-panel rc-panel-manuscript" id="rc-manuscript-panel">
+      <div class="rc-panel-header">
+        <span class="rc-panel-title">Manuscript Canvas</span>
+        <span class="rc-ms-badge" id="rc-ms-badge">—</span>
+      </div>
+      <div class="rc-panel-body" id="manuscript-body">
+        <div class="rc-empty">원고가 생성되면 여기에 표시됩니다.</div>
       </div>
     </div>
+
   </div>
 
   <!-- ── 4b. 씬스펙 뷰 (탭 전환) ── -->
@@ -211,53 +214,144 @@
   border-color: var(--energy-cyan);
 }
 
-/* ── 스켈레톤 요약 바 ── */
-#skeleton-summary-bar {
-  padding: 8px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
-  max-height: 120px;
-  overflow-y: auto;
-  flex-shrink: 0;
-}
-.skeleton-chip {
-  display: inline-block;
-  background: rgba(139,92,246,0.15);
-  color: var(--energy-violet, #8b5cf6);
-  border: 1px solid rgba(139,92,246,0.3);
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-size: 11px;
-  margin: 2px;
-}
-
-/* ── 2분할 뷰 ── */
-.split-panel {
+/* ── Research + Manuscript 캔버스 패널 ── */
+.rc-panel {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
   min-width: 0;
 }
-.split-panel-title {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--energy-ink-low);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 6px 12px 4px;
+.rc-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   flex-shrink: 0;
 }
-.split-scroll {
+.rc-panel-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--energy-ink-low);
+}
+.rc-claim-count {
+  font-size: 11px;
+  color: var(--energy-ink-low);
+  background: rgba(255,255,255,0.06);
+  padding: 1px 8px;
+  border-radius: 8px;
+}
+.rc-live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  margin-left: auto;
+  transition: background 0.3s;
+}
+.rc-live-dot.streaming {
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e88;
+  animation: pulse-dot 1.5s infinite;
+}
+.rc-ms-badge {
+  font-size: 10px;
+  padding: 1px 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: var(--energy-ink-low);
+}
+.rc-ms-badge.draft { background: rgba(59,130,246,0.15); color: #93C5FD; }
+.rc-ms-badge.final { background: rgba(34,197,94,0.15);  color: #86EFAC; }
+.rc-panel-body {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
-  font-size: 13px;
-  line-height: 1.6;
+  padding: 12px 14px;
 }
-#manuscript-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+/* claim 섹션 */
+.rc-ch-section { margin-bottom: 20px; }
+.rc-ch-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--energy-cyan);
+  padding: 4px 0 6px;
+  border-bottom: 1px solid rgba(0,220,255,0.15);
+  margin-bottom: 8px;
+  position: sticky;
+  top: 0;
+  background: var(--energy-bg, #0d0d14);
+  z-index: 1;
+}
+.rc-claim {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.rc-claim:last-child { border-bottom: none; }
+@keyframes claim-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rc-claim { animation: claim-in 0.25s ease; }
+.rc-claim-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+.rc-claim-dot.high   { background: #22c55e; }
+.rc-claim-dot.medium { background: #f59e0b; }
+.rc-claim-dot.low    { background: #6b7280; }
+.rc-claim-body { flex: 1; min-width: 0; }
+.rc-claim-text {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--energy-ink-mid, #a0a0b8);
+  word-break: keep-all;
+}
+.rc-claim-meta { display: flex; gap: 5px; margin-top: 3px; flex-wrap: wrap; }
+.rc-tag {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.rc-tag-kind     { background: rgba(99,102,241,0.15); color: #A5B4FC; }
+.rc-tag-high     { background: rgba(34,197,94,0.12);  color: #86EFAC; }
+.rc-tag-medium   { background: rgba(245,158,11,0.12); color: #FCD34D; }
+.rc-tag-low      { background: rgba(107,114,128,0.15);color: #9CA3AF; }
+.rc-tag-verified { background: rgba(34,197,94,0.08);  color: #6EE7B7; }
+/* 원고 */
+.rc-ms-chapter {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--energy-cyan);
+  margin: 20px 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(0,220,255,0.15);
+}
+.rc-ms-chapter:first-child { margin-top: 0; }
+.rc-ms-paragraph {
+  font-size: 13px;
+  line-height: 1.85;
+  color: var(--energy-ink-mid, #a0a0b8);
+  margin-bottom: 10px;
+  word-break: keep-all;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+}
+.rc-ms-divider {
+  border: none;
+  border-top: 1px dashed rgba(255,255,255,0.08);
+  margin: 10px 0;
+}
+.rc-empty {
+  font-size: 12px;
+  color: var(--energy-ink-low);
+  padding: 20px 0;
+  text-align: center;
 }
 </style>
 
@@ -286,6 +380,162 @@
   let startTs = null;
   let elapsedTimer = null;
   let lastManuscriptText = "";
+
+  // ── RC 캔버스 상태 ──
+  let rcChapterMap = {};
+  let rcClaimsByChapter = {};
+  let rcTotalClaims = 0;
+
+  // RC: 초기 데이터 로드
+  fetch('/api/p/' + slug + '/research/canvas')
+    .then(r => r.json())
+    .then(d => {
+      rcChapterMap = d.chapter_map || {};
+      rcClaimsByChapter = d.grouped_claims || {};
+      rcTotalClaims = d.total_claims || 0;
+      rcRenderClaims();
+      const cnt = document.getElementById('rc-claim-count');
+      if (cnt) cnt.textContent = rcTotalClaims + ' claims';
+    })
+    .catch(() => {});
+
+  // RC: 원고 초기 로드
+  fetch('/api/p/' + slug + '/manuscript/raw')
+    .then(r => r.json())
+    .then(d => {
+      if (d.text && d.text.trim()) {
+        rcRenderManuscript(d.text);
+        const b = document.getElementById('rc-ms-badge');
+        if (b) { b.textContent = '최종원고'; b.className = 'rc-ms-badge final'; }
+      }
+    })
+    .catch(() => {});
+
+  function rcRenderClaims() {
+    const body = document.getElementById('rc-claims-body');
+    if (!body) return;
+    const keys = Object.keys(rcClaimsByChapter).sort((a,b) => (parseInt(a)||999)-(parseInt(b)||999));
+    if (!keys.length) { body.innerHTML = '<div class="rc-empty">수집된 claim이 없습니다</div>'; return; }
+    body.innerHTML = '';
+    keys.forEach(chId => {
+      const claims = rcClaimsByChapter[chId];
+      if (!claims || !claims.length) return;
+      body.appendChild(rcBuildChapterSection(chId, claims));
+    });
+  }
+
+  function rcBuildChapterSection(chId, claims) {
+    const section = document.createElement('div');
+    section.className = 'rc-ch-section';
+    section.id = 'rc-ch-' + chId;
+    const chTitle = rcChapterMap[chId] || rcChapterMap[parseInt(chId)] || '';
+    const titleEl = document.createElement('div');
+    titleEl.className = 'rc-ch-title';
+    titleEl.textContent = chTitle ? ('Ch' + chId + '. ' + chTitle) : ('Chapter ' + chId);
+    section.appendChild(titleEl);
+    claims.forEach(c => section.appendChild(rcBuildClaimCard(c)));
+    return section;
+  }
+
+  function rcBuildClaimCard(c) {
+    const conf = c.confidence || 'medium';
+    const dotClass = conf === 'high' ? 'high' : conf === 'medium' ? 'medium' : 'low';
+    const card = document.createElement('div');
+    card.className = 'rc-claim';
+    const dot = document.createElement('div');
+    dot.className = 'rc-claim-dot ' + dotClass;
+    const body = document.createElement('div');
+    body.className = 'rc-claim-body';
+    const text = document.createElement('div');
+    text.className = 'rc-claim-text';
+    text.textContent = c.claim || '';
+    const meta = document.createElement('div');
+    meta.className = 'rc-claim-meta';
+    if (c.kind) {
+      const t1 = document.createElement('span');
+      t1.className = 'rc-tag rc-tag-kind';
+      t1.textContent = c.kind;
+      meta.appendChild(t1);
+    }
+    const t2 = document.createElement('span');
+    t2.className = 'rc-tag rc-tag-' + dotClass;
+    t2.textContent = conf;
+    meta.appendChild(t2);
+    if (c.status === 'verified') {
+      const t3 = document.createElement('span');
+      t3.className = 'rc-tag rc-tag-verified';
+      t3.textContent = '✓';
+      meta.appendChild(t3);
+    }
+    body.appendChild(text);
+    body.appendChild(meta);
+    card.appendChild(dot);
+    card.appendChild(body);
+    return card;
+  }
+
+  function rcRenderManuscript(text) {
+    const msBody = document.getElementById('manuscript-body');
+    if (!msBody) return;
+    msBody.innerHTML = '';
+    const lines = text.split('\n');
+    let currentPara = [];
+    function flushPara() {
+      if (!currentPara.length) return;
+      const joined = currentPara.join(' ').trim();
+      if (!joined) { currentPara = []; return; }
+      const p = document.createElement('div');
+      p.className = 'rc-ms-paragraph';
+      p.textContent = joined;
+      msBody.appendChild(p);
+      currentPara = [];
+    }
+    lines.forEach(line => {
+      if (/^#\s+(Ch\d+|챕터\s*\d+)/i.test(line)) {
+        flushPara();
+        const h = document.createElement('div');
+        h.className = 'rc-ms-chapter';
+        h.textContent = line.replace(/^#+\s*/, '');
+        msBody.appendChild(h);
+      } else if (line.trim() === '---') {
+        flushPara();
+        const hr = document.createElement('hr');
+        hr.className = 'rc-ms-divider';
+        msBody.appendChild(hr);
+      } else if (line.trim().startsWith('<!--')) {
+        // skip
+      } else if (line.trim() === '') {
+        flushPara();
+      } else {
+        currentPara.push(line.trim());
+      }
+    });
+    flushPara();
+  }
+
+  // RC: claims SSE
+  const claimsSrc = new EventSource(`/api/p/${slug}/pipeline/research/claims/stream`);
+  claimsSrc.addEventListener('claims_new', e => {
+    try {
+      const d = JSON.parse(e.data);
+      const newClaims = d.claims || [];
+      if (!newClaims.length) return;
+      const liveDot = document.getElementById('rc-live-dot');
+      if (liveDot) { liveDot.classList.add('streaming'); setTimeout(() => liveDot.classList.remove('streaming'), 2000); }
+      rcTotalClaims += newClaims.length;
+      const cnt = document.getElementById('rc-claim-count');
+      if (cnt) cnt.textContent = rcTotalClaims + ' claims';
+      const claimsBody = document.getElementById('rc-claims-body');
+      if (!claimsBody) return;
+      newClaims.forEach(c => {
+        const chId = String(c.chapter || 'unassigned');
+        let section = document.getElementById('rc-ch-' + chId);
+        if (!section) { section = rcBuildChapterSection(chId, []); claimsBody.appendChild(section); }
+        section.appendChild(rcBuildClaimCard(c));
+      });
+    } catch(err) {}
+  });
+  claimsSrc.onerror = () => {};
 
   // ── 뷰 전환 (split ↔ scenes) ──
   window.setContentView = function(view, tabEl) {
@@ -363,31 +613,11 @@
 
   // ── 원고 갱신 ──
   function applyManuscript(text) {
-    const el = document.getElementById('manuscript-body');
-    if (!el) return;
+    if (!text) return;
+    rcRenderManuscript(text);
+    lastManuscriptText = text;
     const ch = document.getElementById('stream-chars');
     if (ch) { ch.style.display = ''; ch.textContent = text.length + '자'; }
-    if (!text) {
-      el.innerHTML = '<span class="placeholder">원고가 생성되면 여기에 실시간으로 표시됩니다.</span>';
-      lastManuscriptText = "";
-      return;
-    }
-    if (lastManuscriptText && text.startsWith(lastManuscriptText)) {
-      const newPart = text.slice(lastManuscriptText.length);
-      if (!newPart.trim()) { lastManuscriptText = text; return; }
-      const words = newPart.split(/(\s+)/);
-      const frag = document.createDocumentFragment();
-      words.forEach(w => {
-        if (!w) return;
-        if (/^\s+$/.test(w)) { frag.appendChild(document.createTextNode(w)); }
-        else { const s = document.createElement('span'); s.className = 'word-new'; s.textContent = w; frag.appendChild(s); }
-      });
-      el.appendChild(frag);
-    } else {
-      el.textContent = text;
-    }
-    lastManuscriptText = text;
-    el.scrollTop = el.scrollHeight;
   }
 
   // ── 씬스펙 갱신 ──
@@ -406,34 +636,15 @@
     });
   }
 
-  // ── 스켈레톤/아웃라인 요약 바 갱신 ──
+  // ── 스켈레톤/아웃라인 → chapter_map 갱신 ──
   function applySkeletonSummary(data, label) {
-    const bar = document.getElementById('skeleton-summary-content');
-    if (!bar) return;
-    // 타이틀/챕터 칩 형태로 표시
-    let html = `<span class="skeleton-chip">${escapeHtml(label)}</span> `;
-    const title = data.title || data.topic || '';
-    if (title) html += `<strong style="font-size:12px;color:var(--energy-ink-mid);">${escapeHtml(title)}</strong> `;
     const chapters = data.chapters || data.outline || data.sections || [];
     if (Array.isArray(chapters)) {
-      chapters.slice(0, 10).forEach((ch, i) => {
-        const t = typeof ch === 'string' ? ch : (ch.title || ch.chapter || ch.name || JSON.stringify(ch).slice(0,40));
-        html += `<span class="skeleton-chip">${i+1}. ${escapeHtml(t)}</span>`;
+      chapters.forEach((ch, i) => {
+        const id = String(ch.id || ch.chapter || i + 1);
+        const title = typeof ch === 'string' ? ch : (ch.title || ch.name || '');
+        rcChapterMap[id] = title;
       });
-    }
-    // 기존 내용 대체
-    bar.innerHTML = html || bar.innerHTML;
-
-    // 리서치 패널 상세 추가
-    const body = document.getElementById('skeleton-body');
-    if (body) {
-      const card = document.createElement('div');
-      card.style.cssText = 'margin-bottom:8px;padding:8px;background:rgba(139,92,246,0.08);border-radius:6px;border:1px solid rgba(139,92,246,0.2);';
-      card.innerHTML = `<div style="font-size:10px;font-weight:700;color:var(--energy-violet,#8b5cf6);margin-bottom:4px;">${escapeHtml(label)}</div>
-        <pre style="font-size:11px;white-space:pre-wrap;color:var(--energy-ink-mid);margin:0;">${escapeHtml(JSON.stringify(data, null, 2).slice(0, 600))}</pre>`;
-      if (body.querySelector('span')) body.innerHTML = '';
-      body.appendChild(card);
-      body.scrollTop = body.scrollHeight;
     }
   }
 
@@ -520,11 +731,17 @@
   fileSrc.addEventListener('manuscript_updated', e => {
     const d = JSON.parse(e.data);
     applyManuscript(d.text || '');
+    const b = document.getElementById('rc-ms-badge');
+    if (b) { b.textContent = '최종원고'; b.className = 'rc-ms-badge final'; }
   });
 
   fileSrc.addEventListener('draft_updated', e => {
     const d = JSON.parse(e.data);
-    if (!lastManuscriptText) applyManuscript(d.text || '');
+    if (!lastManuscriptText) {
+      applyManuscript(d.text || '');
+      const b = document.getElementById('rc-ms-badge');
+      if (b) { b.textContent = '초고'; b.className = 'rc-ms-badge draft'; }
+    }
     addEventRow(null, 'info', `초고 업데이트 (${d.chars || 0}자)`);
   });
 
@@ -549,28 +766,10 @@
   fileSrc.addEventListener('review_updated', e => addEventRow(null, 'info', '래칫 리뷰 완료'));
   fileSrc.addEventListener('claims_updated', e => addEventRow(null, 'info', '타겟 클레임 업데이트'));
 
-  // chapter_facts/ 폴더 — 챕터별 리서치 완료 시 실시간 표시
+  // chapter_facts/ 폴더 — 챕터별 리서치 완료 이벤트 로그만
   fileSrc.addEventListener('chapter_facts_updated', e => {
     const d = JSON.parse(e.data);
     const chapter = d.chapter || '?';
-    const data = d.data || {};
-    const body = document.getElementById('skeleton-body');
-    if (body) {
-      const existingId = 'chapter-card-' + chapter;
-      let card = document.getElementById(existingId);
-      if (!card) {
-        card = document.createElement('div');
-        card.id = existingId;
-        card.style.cssText = 'margin-bottom:8px;padding:8px;background:rgba(0,220,255,0.06);border-radius:6px;border:1px solid rgba(0,220,255,0.15);';
-        if (body.querySelector('span')) body.innerHTML = '';
-        body.appendChild(card);
-      }
-      const claimCount = (data.claims || data.facts || []).length;
-      card.innerHTML = `<div style="font-size:10px;font-weight:700;color:var(--energy-cyan);margin-bottom:4px;">📄 ${escapeHtml(chapter)}</div>
-        <div style="font-size:11px;color:var(--energy-ink-mid);">클레임 ${claimCount}개 수집 완료</div>
-        <pre style="font-size:10px;white-space:pre-wrap;color:var(--energy-ink-low);margin:4px 0 0;max-height:80px;overflow:hidden;">${escapeHtml(JSON.stringify(data, null, 2).slice(0,300))}</pre>`;
-      body.scrollTop = body.scrollHeight;
-    }
     addEventRow(null, 'info', `챕터 리서치 완료: ${chapter}`);
   });
 

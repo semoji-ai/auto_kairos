@@ -1,11 +1,6 @@
 <!-- Research + Manuscript 2패널 캔버스 -->
 <div class="rc-wrap" id="rc-wrap" data-slug="{{ slug }}">
 
-  <!-- ── 상단 Outline Flow Bar ── -->
-  <div class="rc-flow-bar" id="rc-flow-bar">
-    <div class="rc-flow-loading">아웃라인 로딩 중...</div>
-  </div>
-
   <!-- ── 2패널 메인 ── -->
   <div class="rc-panels">
 
@@ -40,56 +35,8 @@
 .rc-wrap {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 80px);
   overflow: hidden;
-}
-
-/* ── Outline Flow Bar ── */
-.rc-flow-bar {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  padding: 10px 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  scrollbar-width: none;
-  flex-shrink: 0;
-  min-height: 48px;
-}
-.rc-flow-bar::-webkit-scrollbar { display: none; }
-.rc-flow-loading { font-size: 12px; color: var(--text-muted); }
-
-.rc-chapter-chip {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  cursor: pointer;
-}
-.rc-chip-label {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 14px;
-  border-radius: 20px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  white-space: nowrap;
-  transition: all 0.15s;
-  cursor: pointer;
-}
-.rc-chip-label:hover,
-.rc-chip-label.active {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.rc-chip-arrow {
-  width: 24px;
-  text-align: center;
-  color: var(--border);
-  font-size: 12px;
-  flex-shrink: 0;
 }
 
 /* ── 2패널 ── */
@@ -269,7 +216,6 @@
   var slug = document.getElementById('rc-wrap').dataset.slug;
   var claimsBody = document.getElementById('rc-claims-body');
   var msBody = document.getElementById('rc-ms-body');
-  var flowBar = document.getElementById('rc-flow-bar');
   var countEl = document.getElementById('rc-claim-count');
   var liveDot = document.getElementById('rc-live-dot');
   var msBadge = document.getElementById('rc-ms-badge');
@@ -283,7 +229,6 @@
     .then(function(r) { return r.json(); })
     .then(function(d) {
       chapterMap = d.chapter_map || {};
-      renderFlowBar(d.chapters || []);
       claimsByChapter = d.grouped_claims || {};
       totalClaims = d.total_claims || 0;
       renderClaims();
@@ -291,7 +236,6 @@
     })
     .catch(function() {
       claimsBody.innerHTML = '<div class="rc-empty">리서치 데이터가 없습니다</div>';
-      flowBar.innerHTML = '<div class="rc-flow-loading">아웃라인 없음</div>';
     });
 
   // ── 2. 원고 로드 (final → draft 순) ──
@@ -313,39 +257,6 @@
     msBody.innerHTML = '<div class="rc-empty">원고 준비 중</div>';
     msBadge.textContent = '대기중';
     msBadge.className = 'rc-ms-badge';
-  }
-
-  // ── Outline Flow Bar ──
-  function renderFlowBar(chapters) {
-    if (!chapters || !chapters.length) {
-      flowBar.innerHTML = '<div class="rc-flow-loading">아웃라인 없음</div>';
-      return;
-    }
-    flowBar.innerHTML = '';
-    chapters.forEach(function(ch, i) {
-      var id = String(ch.id || ch.chapter || i + 1);
-      var title = ch.title || ch.name || ('Ch' + id);
-
-      var chip = document.createElement('div');
-      chip.className = 'rc-chapter-chip';
-
-      var label = document.createElement('span');
-      label.className = 'rc-chip-label';
-      label.textContent = 'Ch' + id + '. ' + (title.length > 12 ? title.slice(0,12) + '…' : title);
-      label.dataset.chId = id;
-      label.onclick = function() { scrollToChapter(id, label); };
-
-      chip.appendChild(label);
-
-      if (i < chapters.length - 1) {
-        var arrow = document.createElement('span');
-        arrow.className = 'rc-chip-arrow';
-        arrow.textContent = '›';
-        chip.appendChild(arrow);
-      }
-
-      flowBar.appendChild(chip);
-    });
   }
 
   // ── Claims 렌더링 ──
@@ -469,16 +380,6 @@
     flushPara();
   }
 
-  // ── 챕터 칩 클릭 → 양쪽 패널 스크롤 ──
-  function scrollToChapter(chId, labelEl) {
-    var target = document.getElementById('rc-ch-' + chId);
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    document.querySelectorAll('.rc-chip-label').forEach(function(el) {
-      el.classList.remove('active');
-    });
-    if (labelEl) labelEl.classList.add('active');
-  }
-
   // ── 3. SSE: claims 실시간 ──
   var claimsEv = new EventSource('/api/p/' + slug + '/pipeline/research/claims/stream');
 
@@ -540,18 +441,6 @@
     } catch(err) {}
   });
 
-  msEv.addEventListener('outline_updated', function(e) {
-    try {
-      var d = JSON.parse(e.data);
-      if (d.data && d.data.chapters) {
-        renderFlowBar(d.data.chapters);
-        d.data.chapters.forEach(function(ch) {
-          var id = String(ch.id || ch.chapter || '');
-          if (id) chapterMap[id] = ch.title || ch.name || '';
-        });
-      }
-    } catch(err) {}
-  });
 
 })();
 </script>
