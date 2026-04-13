@@ -5,7 +5,7 @@
  * layout, headline, items, mood, reveal, emphasis, placement 등
  * 실제 시스템 속성을 직접 편집 → 렌더 결과가 그대로 반영
  */
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { Player, type PlayerRef } from "@remotion/player";
 import { SingleScenePlayer } from "./SingleScenePlayer";
 import { ItemsEditor } from "./ItemsEditor";
@@ -17,9 +17,63 @@ const LAYOUT_OPTIONS = [
   "quote", "split", "bar", "logo_grid", "pie", "line",
   "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
   "comparison_table", "before_after", "icon_stat", "stacked_progress",
-  "card_carousel", "hero_with_context", "quote_portrait", "annotated_chart",
-  "bar_horizontal", "donut",
+  "card_carousel", "hero_with_context", "annotated_chart",
 ] as const;
+
+const CHART_STYLE_OPTIONS = ["pie", "donut"] as const;
+const BAR_ORIENTATION_OPTIONS = ["vertical", "horizontal"] as const;
+const PORTRAIT_PLACEMENT_OPTIONS = ["right", "left"] as const;
+
+const normalizeSceneForEditor = (input: SceneEntry): SceneEntry => {
+  const scene = structuredClone(input) as any;
+  const viz = scene.visualization || {};
+  const creative = viz.creative || {};
+  const rawLayout = scene.layout || scene.sceneType || viz.layout || creative.layout || "";
+
+  const normalized = {
+    layout: rawLayout,
+    chartStyle: scene.chartStyle ?? viz.chartStyle ?? creative.chartStyle,
+    orientation: scene.orientation ?? viz.orientation ?? creative.orientation,
+    withPortrait: scene.withPortrait ?? viz.withPortrait ?? creative.withPortrait,
+    portraitPlacement: scene.portraitPlacement ?? viz.portraitPlacement ?? creative.portraitPlacement,
+  } as Record<string, any>;
+
+  if (rawLayout === "quote_portrait") {
+    normalized.layout = "quote";
+    normalized.withPortrait = true;
+    normalized.portraitPlacement = normalized.portraitPlacement || "right";
+  } else if (rawLayout === "donut") {
+    normalized.layout = "pie";
+    normalized.chartStyle = "donut";
+  } else if (rawLayout === "bar_horizontal") {
+    normalized.layout = "bar";
+    normalized.orientation = "horizontal";
+  }
+
+  scene.layout = normalized.layout;
+  scene.visualization = {
+    ...viz,
+    layout: normalized.layout,
+    chartStyle: normalized.chartStyle,
+    orientation: normalized.orientation,
+    withPortrait: normalized.withPortrait,
+    portraitPlacement: normalized.portraitPlacement,
+    creative: {
+      ...creative,
+      layout: normalized.layout,
+      chartStyle: normalized.chartStyle,
+      orientation: normalized.orientation,
+      withPortrait: normalized.withPortrait,
+      portraitPlacement: normalized.portraitPlacement,
+    },
+  };
+  if (normalized.chartStyle !== undefined) scene.chartStyle = normalized.chartStyle;
+  if (normalized.orientation !== undefined) scene.orientation = normalized.orientation;
+  if (normalized.withPortrait !== undefined) scene.withPortrait = normalized.withPortrait;
+  if (normalized.portraitPlacement !== undefined) scene.portraitPlacement = normalized.portraitPlacement;
+
+  return scene as SceneEntry;
+};
 
 const MOOD_OPTIONS = [
   "dramatic", "contemplative", "urgent", "triumphant",
@@ -76,11 +130,15 @@ const inputStyle: React.CSSProperties = {
 };
 
 export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, slug, onSaved }) => {
-  const [scene, setScene] = useState<SceneEntry>(() => structuredClone(initialScene));
+  const [scene, setScene] = useState<SceneEntry>(() => normalizeSceneForEditor(initialScene));
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string>("");
   const playerRef = useRef<PlayerRef>(null);
   const [showImagePicker, setShowImagePicker] = useState(false);
+
+  useEffect(() => {
+    setScene(normalizeSceneForEditor(initialScene));
+  }, [initialScene]);
 
   // 디자인 프리셋에서 accent 추출
   const _preset = useMemo(() => resolvePreset(meta || {}), [meta?.artStyle, meta?.videoTheme]);
@@ -103,11 +161,15 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
   const vc = v.creative || {};
   const creative = {
     layout: _layout,
-    headline: _layout === "quote_portrait" ? "" : (_headline || s.title || v.title || ""),
+    headline: _headline || s.title || v.title || "",
     mood: s.mood || v.mood || "informative",
     motion: s.motion || s.motionPreset || v.motionPreset || "",
     reveal: vc.reveal || "fade_in",
     emphasis: vc.emphasis || "none",
+    chartStyle: s.chartStyle ?? v.chartStyle ?? vc.chartStyle ?? "pie",
+    orientation: s.orientation ?? v.orientation ?? vc.orientation ?? "vertical",
+    withPortrait: s.withPortrait ?? v.withPortrait ?? vc.withPortrait ?? false,
+    portraitPlacement: s.portraitPlacement ?? v.portraitPlacement ?? vc.portraitPlacement ?? "right",
     headlineOffsetX: vc.headlineOffsetX || 0,
     headlineOffsetY: vc.headlineOffsetY || 0,
     itemsOffsetX: vc.itemsOffsetX || 0,
@@ -129,17 +191,21 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
 
   const updateField = useCallback((patch: Record<string, any>) => {
     setScene(prev => {
-      const next = { ...prev, ...patch };
+      const next = { ...prev, ...patch } as any;
       const oldViz = prev.visualization || {};
 
       // 오프셋 필드는 visualization.creative 안에 넣어야 CreativeScene이 읽음
       const offsetPatch: Record<string, any> = {};
       const vizPatch: Record<string, any> = {};
+      const creativePatch: Record<string, any> = {};
       for (const [k, v] of Object.entries(patch)) {
         if (OFFSET_KEYS.has(k)) {
           offsetPatch[k] = v;
         } else {
           vizPatch[k] = v;
+          if (["layout", "headline", "mood", "reveal", "emphasis", "chartStyle", "orientation", "withPortrait", "portraitPlacement"].includes(k)) {
+            creativePatch[k] = v;
+          }
         }
       }
 
@@ -147,7 +213,7 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
       next.visualization = {
         ...oldViz,
         ...vizPatch,
-        creative: { ...oldCreative, ...offsetPatch },
+        creative: { ...oldCreative, ...creativePatch, ...offsetPatch },
       };
       return next;
     });
@@ -259,14 +325,72 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
             value={creative.layout || ""}
             onChange={e => {
               const val = e.target.value;
-              const patch: Record<string, string> = { layout: val };
+              const patch: Record<string, any> = { layout: val };
               if (val === "cinematic") patch.placement = "fullscreen";
+              if (val === "pie" && !creative.chartStyle) patch.chartStyle = "pie";
+              if (val === "bar" && !creative.orientation) patch.orientation = "vertical";
+              if (val !== "quote") {
+                patch.withPortrait = false;
+                patch.portraitPlacement = "right";
+              }
               updateCreative(patch);
             }}
           >
             <option value="">자동 (콘텐츠 기반)</option>
             {LAYOUT_OPTIONS.map(l => <option key={l} value={l}>{l}</option>)}
           </select>
+          {creative.layout === "pie" && (
+            <div style={{ marginTop: 8 }}>
+              <label style={labelStyle}>Chart Style</label>
+              <select
+                style={selectStyle}
+                value={creative.chartStyle || "pie"}
+                onChange={e => updateCreative({ chartStyle: e.target.value })}
+              >
+                {CHART_STYLE_OPTIONS.map(option => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </div>
+          )}
+          {creative.layout === "bar" && (
+            <div style={{ marginTop: 8 }}>
+              <label style={labelStyle}>Bar Orientation</label>
+              <select
+                style={selectStyle}
+                value={creative.orientation || "vertical"}
+                onChange={e => updateCreative({ orientation: e.target.value })}
+              >
+                {BAR_ORIENTATION_OPTIONS.map(option => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </div>
+          )}
+          {creative.layout === "quote" && (
+            <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+              <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6, marginBottom: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={creative.withPortrait ?? false}
+                  onChange={e => updateCreative({
+                    withPortrait: e.target.checked,
+                    portraitPlacement: e.target.checked ? (creative.portraitPlacement || "right") : "right",
+                  })}
+                  style={{ accentColor: ACCENT }}
+                />
+                Portrait On
+              </label>
+              {creative.withPortrait && (
+                <div>
+                  <label style={labelStyle}>Portrait Placement</label>
+                  <select
+                    style={selectStyle}
+                    value={creative.portraitPlacement || "right"}
+                    onChange={e => updateCreative({ portraitPlacement: e.target.value })}
+                  >
+                    {PORTRAIT_PLACEMENT_OPTIONS.map(option => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Headline + 위치 조절 */}
@@ -309,7 +433,7 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
         </div>
 
         {/* Items */}
-        {!["headline_only", "counter", "quote", "icon_stat", "quote_portrait"].includes(creative.layout || "") && (
+        {!["headline_only", "counter", "quote", "icon_stat"].includes(creative.layout || "") && (
           <div>
             <label style={labelStyle}>Items ({(viz.items || []).length})</label>
             <ItemsEditor

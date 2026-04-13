@@ -51,6 +51,7 @@ export interface PresetFonts {
 export interface PresetTypography {
   headlineAccent: number;
   headlineBase: number;
+  headlineSupport: number;
   metricValue: number;
   itemText: number;
   descText: number;
