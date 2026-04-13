@@ -61,12 +61,18 @@ def _resolve_research_agent_paths(candidate_dirs: list[Path] | tuple[Path, ...] 
     )
 
 
-def _get_research_root() -> Path:
-    """LLM Wiki Research 저장 경로: vault 02-research."""
+def _get_research_root(project_dir: Path) -> Path:
+    """리서치 데이터 저장 경로: output/<uuid>/research/ (볼트가 아님)."""
+    root = project_dir / "research"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def _get_vault_research_root() -> Path:
+    """볼트 02-research 경로 (seed/sync 전용)."""
     vault_dir = os.environ.get("KAIROS_VAULT_DIR", "")
     if vault_dir:
         return Path(vault_dir) / "02-research"
-    # .env 파일에서 직접 읽기 시도
     env_path = Path(__file__).parent.parent.parent / ".env"
     if env_path.exists():
         for line in env_path.read_text(encoding="utf-8").splitlines():
