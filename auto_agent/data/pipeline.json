@@ -266,23 +266,6 @@
         "description": "최종 영상 + 조립 리포트 검토",
         "artifacts": ["remotion/public/manifest.json", "assembly_report.json", "upload_info.json"]
       }
-    },
-    {
-      "id": "stage_4",
-      "name": "성과 분석",
-      "description": "영상 업로드 후 성과 데이터 수집 및 분석. 외부 스케줄러(launchd)로 실행.",
-      "execution": "external_schedule",
-      "steps": [
-        {
-          "id": "step_4",
-          "name": "performance_analysis",
-          "description": "주간 성과 데이터 수집 + 볼트 회고 저장",
-          "type": "external",
-          "schedule": "weekly_monday_0630",
-          "script": "auto_agent/scripts/stage4_weekly.py",
-          "notes": "launchd로 실행. 파이프라인 runner에서 호출하지 않음."
-        }
-      ]
     }
   ],
 
