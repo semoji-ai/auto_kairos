@@ -1,10 +1,10 @@
 """
-Skeleton From Vault Module — vault wiki/claims → skeleton.json / outline.json
+Skeleton From Vault Module — brief/topic → skeleton.json / outline.json
 
 파이프라인 step_1a에서 실행:
-1. source_ingest_status.json 완료 상태 확인
-2. vault 02-research/wiki/<slug>/ + manifests/<slug>/claims.jsonl 로드
-3. timeline / key_figures / key_episodes를 deterministic하게 구조화
+1. editorial_brief.json + project_config.json 로드
+2. ingest 이전의 조사 프레임(skeleton/outline) 생성
+3. vault 02-research/wiki/<slug>/ + manifests/<slug>/claims.jsonl 이 있으면 선택적으로 참고
 4. skeleton.json, outline.json 저장
 """
 from __future__ import annotations
@@ -19,6 +19,9 @@ from auto_agent.modules.research_entity_hub import (
     resolve_existing_entity_slug,
     resolve_topic_to_entity_section,
 )
+from auto_agent.tools.wikipedia_lane import search_wikipedia, fetch_article_content
+from auto_agent.tools.news_rss_lane import search_news
+from auto_agent.tools.crossref_lane import search_academic
 
 _PROGRESS_FILE: Path | None = None
 
@@ -268,6 +271,162 @@ def _extract_sources(sources: list[dict]) -> list[dict]:
     return extracted
 
 
+def _is_seed_noise_line(line: str) -> bool:
+    lowered = (line or "").lower()
+    if not line:
+        return True
+    if lowered.startswith("title:") or lowered.startswith("url source:") or lowered.startswith("published time:"):
+        return True
+    if "upload.wikimedia.org" in lowered or "http://" in lowered or "https://" in lowered:
+        return True
+    if line.startswith("![") or line.startswith("[") or line.startswith("("):
+        return True
+    if "px-" in lowered or ".jpg" in lowered or ".png" in lowered or ".svg" in lowered:
+        return True
+    return False
+
+
+def _extract_seed_timeline_from_wiki_content(text: str) -> list[dict]:
+    entries: list[dict] = []
+    fallback_entries: list[dict] = []
+    seen: set[str] = set()
+    event_keywords = ("창립", "설립", "출점", "확장", "진출", "합작", "전환", "성장", "출발", "운영", "개점", "전개")
+    metric_keywords = ("매출액", "종업원", "자본금", "점포", "정규직", "임시직원", "본사 소재지")
+    for raw_line in text.splitlines():
+        line = _clean_sentence(raw_line)
+        if _is_seed_noise_line(line):
+            continue
+        if any(keyword in line for keyword in metric_keywords):
+            continue
+        year_match = re.search(r"(19\d{2}|20\d{2})(?:년)?", line)
+        if not year_match or len(line) < 18:
+            continue
+        event = line[:140].lstrip("* ").strip()
+        if event in seen:
+            continue
+        seen.add(event)
+        item = {
+            "year": year_match.group(1),
+            "event": event,
+            "significance": event,
+        }
+        if any(keyword in line for keyword in event_keywords):
+            entries.append(item)
+        elif year_match.group(1) < "2020":
+            fallback_entries.append(item)
+        if len(entries) >= 6:
+            break
+    return (entries + fallback_entries)[:6]
+
+
+def _extract_seed_figures_from_wiki_content(text: str) -> list[dict]:
+    figures: list[dict] = []
+    seen: set[str] = set()
+    for raw_line in text.splitlines():
+        line = _clean_sentence(raw_line)
+        if _is_seed_noise_line(line):
+            continue
+        if "창립자" in line or "회장" in line or "대표이사" in line or "핵심 인물" in line:
+            parts = re.split(r"창립자|회장|대표이사|핵심 인물", line, maxsplit=1)
+            if len(parts) < 2:
+                continue
+            name = _clean_sentence(parts[-1])[:80]
+            name = re.sub(r"\s*\([^)]*\)", "", name).strip()
+            if not name or name in seen or len(name) < 2:
+                continue
+            seen.add(name)
+            figures.append({
+                "name": name,
+                "name_en": "",
+                "role": "핵심 인물",
+                "period": "",
+                "significance": line[:160],
+            })
+        if len(figures) >= 4:
+            break
+    return figures
+
+
+def _build_seed_research(topic: str, core_question: str) -> tuple[list[str], list[dict], list[dict], list[dict]]:
+    query = core_question or topic
+    summary_bullets: list[str] = []
+    timeline: list[dict] = []
+    source_rows: list[dict] = []
+    key_figures: list[dict] = []
+
+    wiki_results = search_wikipedia(query, limit=2)
+    wiki_top = wiki_results[0] if wiki_results else {}
+    wiki_url = wiki_top.get("url", "") if isinstance(wiki_top, dict) else ""
+    wiki_content = fetch_article_content(wiki_url, char_limit=5000) if wiki_url else ""
+    if wiki_top and not wiki_top.get("error"):
+        source_rows.append({
+            "title": wiki_top.get("title", topic),
+            "url": wiki_url,
+            "reliability": "reference",
+        })
+        snippet = _clean_sentence(wiki_top.get("snippet", ""))
+        if snippet:
+            summary_bullets.append(snippet)
+
+    timeline.extend(_extract_seed_timeline_from_wiki_content(wiki_content))
+    key_figures.extend(_extract_seed_figures_from_wiki_content(wiki_content))
+
+    for line in wiki_content.splitlines():
+        line = _clean_sentence(line)
+        if _is_seed_noise_line(line):
+            continue
+        if len(summary_bullets) < 4 and 40 < len(line) < 220:
+            if line not in summary_bullets:
+                summary_bullets.append(line[:200])
+        if len(summary_bullets) >= 4:
+            break
+
+    news_results = search_news(topic, limit=3, ko_only=True)
+    for item in news_results[:2]:
+        title = _clean_sentence(item.get("title", ""))
+        if title:
+            timeline.append({"year": "", "event": title, "significance": item.get("snippet", "")[:160] or title})
+            source_rows.append({
+                "title": item.get("title", title),
+                "url": item.get("url", ""),
+                "reliability": item.get("confidence", "medium"),
+            })
+
+    academic_results = search_academic(query, limit=2, papers_only=True)
+    for item in academic_results[:1]:
+        title = _clean_sentence(item.get("title", ""))
+        if title and title not in summary_bullets:
+            summary_bullets.append(title)
+            source_rows.append({
+                "title": item.get("title", title),
+                "url": item.get("url", ""),
+                "reliability": item.get("source", "paper"),
+            })
+
+    dedup_timeline = []
+    seen_events = set()
+    metric_keywords = ("매출액", "종업원", "자본금", "점포", "정규직", "임시직원")
+    for item in timeline:
+        event = item.get("event", "")
+        if not event or event in seen_events:
+            continue
+        if any(keyword in event for keyword in metric_keywords):
+            continue
+        seen_events.add(event)
+        dedup_timeline.append(item)
+
+    dedup_figures = []
+    seen_figures = set()
+    for item in key_figures:
+        name = item.get("name", "")
+        if not name or name in seen_figures:
+            continue
+        seen_figures.add(name)
+        dedup_figures.append(item)
+
+    return summary_bullets[:6], dedup_timeline[:6], source_rows[:6], dedup_figures[:4]
+
+
 def _chapter_count_for_duration(duration_minutes: int) -> int:
     if duration_minutes <= 2:
         return 3
@@ -399,15 +558,6 @@ def _build_outline(
 
 
 def build_skeleton_and_outline(project_dir: Path) -> tuple[dict, dict]:
-    status_path = project_dir / "source_ingest_status.json"
-    if not status_path.exists():
-        raise RuntimeError("source_ingest_status.json이 없습니다.")
-
-    _progress("ingest 결과 로드 중")
-    status = _load_json(status_path)
-    if status.get("status") != "completed" and status.get("status") != "skipped_existing":
-        raise RuntimeError(f"source_ingest_status.json.status={status.get('status')} — completed 필요")
-
     brief = {}
     brief_path = project_dir / "editorial_brief.json"
     if brief_path.exists():
@@ -418,42 +568,125 @@ def build_skeleton_and_outline(project_dir: Path) -> tuple[dict, dict]:
     if config_path.exists():
         config = _load_json(config_path)
 
-    research_root = _get_research_root(status)
-    topic = brief.get("real_topic") or status.get("topic") or config.get("topic") or os.environ.get("PROJECT_NAME", "unknown")
-    topic_slug = status.get("topic_slug") or _slug(topic)
-    entity_slug = brief.get("entity_slug") or status.get("entity_slug", "")
-    section_slug = brief.get("section_slug") or status.get("section_slug", "")
-    resolved = resolve_topic_to_entity_section(research_root, topic_slug=topic_slug, entity_slug=entity_slug, section_slug=section_slug)
-    vault_slug = resolved.entity_slug or topic_slug
+    topic = brief.get("real_topic") or brief.get("_topic") or config.get("topic") or os.environ.get("PROJECT_NAME", "unknown")
+    if not topic:
+        raise RuntimeError("topic을 결정할 수 없습니다.")
 
-    _progress("wiki overview 파싱 중")
-    wiki_pages = _load_wiki_pages(research_root, vault_slug)
-    _progress("claims manifest 읽는 중")
-    claims, sources = _load_claims_and_sources(research_root, vault_slug)
-    if not wiki_pages and not claims:
-        raise RuntimeError(f"vault wiki/claims가 비어 있습니다: {vault_slug}")
+    topic_slug = _slug(topic)
+    entity_slug = brief.get("entity_slug", "")
+    section_slug = brief.get("section_slug", "")
 
-    overview_text = wiki_pages.get("overview.md", "")
-    timeline_text = wiki_pages.get("timeline.md", "")
-    entities_text = wiki_pages.get("entities.md", "")
-    summary_bullets = _extract_summary_bullets(overview_text)
+    summary_bullets = []
+    timeline = []
+    key_figures = []
+    key_episodes = []
+    sources = []
+    resolved_section_slug = section_slug
 
-    _progress("timeline 정리 중")
-    timeline = _extract_timeline_entries(timeline_text, claims)
-    _progress("key figures 추출 중")
-    key_figures = _extract_key_figures(entities_text, claims)
-    key_episodes = _extract_key_episodes(timeline, claims)
+    research_root = None
+    status_path = project_dir / "source_ingest_status.json"
+    status = _load_json(status_path) if status_path.exists() else None
+    try:
+        research_root = _get_research_root(status)
+    except Exception:
+        research_root = None
+
+    if research_root:
+        resolved = resolve_topic_to_entity_section(
+            research_root,
+            topic_slug=topic_slug,
+            entity_slug=entity_slug,
+            section_slug=section_slug,
+        )
+        vault_slug = resolved.entity_slug or entity_slug or topic_slug
+        resolved_section_slug = resolved.section_slug or section_slug
+
+        _progress("기존 wiki/claims 참고 자료 확인 중")
+        wiki_pages = _load_wiki_pages(research_root, vault_slug)
+        claims, sources = _load_claims_and_sources(research_root, vault_slug)
+
+        if wiki_pages or claims:
+            overview_text = wiki_pages.get("overview.md", "")
+            timeline_text = wiki_pages.get("timeline.md", "")
+            entities_text = wiki_pages.get("entities.md", "")
+            summary_bullets = _extract_summary_bullets(overview_text)
+            timeline = _extract_timeline_entries(timeline_text, claims)
+            key_figures = _extract_key_figures(entities_text, claims)
+            key_episodes = _extract_key_episodes(timeline, claims)
+    else:
+        vault_slug = entity_slug or topic_slug
+
+    if not summary_bullets or not timeline:
+        _progress("lane 기반 뼈대 리서치 수행 중")
+        seed_summary, seed_timeline, seed_sources, seed_figures = _build_seed_research(
+            topic=topic,
+            core_question=brief.get("core_question", "").strip(),
+        )
+        if not summary_bullets:
+            summary_bullets = seed_summary
+        if not timeline:
+            timeline = seed_timeline
+        if not sources:
+            sources = seed_sources
+        if not key_figures:
+            key_figures = seed_figures
+
+    if not summary_bullets:
+        core_question = brief.get("core_question", "").strip()
+        hook_angle = brief.get("hook_angle", "").strip()
+        excluded_angles = [a.strip() for a in brief.get("excluded_angles", []) if a and a.strip()]
+        summary_bullets = [item for item in [core_question, hook_angle] if item][:4]
+        if excluded_angles:
+            summary_bullets.append(f"제외할 관점: {', '.join(excluded_angles[:2])}")
+        if not summary_bullets:
+            summary_bullets = [f"{topic}의 핵심 구조를 먼저 설명", f"{topic}의 전환점을 따라 이야기 구성"]
+
+    if not timeline:
+        _progress("brief 기반 뼈대 리서치 프레임 구성 중")
+        duration_minutes = int(config.get("duration_minutes") or 10)
+        chapter_count = _chapter_count_for_duration(duration_minutes)
+        base_prompts = [
+            brief.get("core_question", "").strip(),
+            brief.get("hook_angle", "").strip(),
+            f"{topic}의 배경과 출발점",
+            f"{topic}의 성장과 전환점",
+            f"{topic}의 현재적 의미",
+            f"{topic}에서 꼭 검증할 숫자와 연도",
+        ]
+        prompts = [p for p in base_prompts if p]
+        for idx in range(chapter_count):
+            prompt = prompts[idx] if idx < len(prompts) else f"{topic}의 핵심 장면 {idx + 1}"
+            timeline.append(
+                {
+                    "year": "",
+                    "event": prompt,
+                    "significance": f"초기 뼈대 리서치 질문: {prompt}",
+                }
+            )
+
+    if not key_episodes:
+        key_episodes = [
+            {
+                "title": item.get("event", "")[:100],
+                "period": item.get("year", ""),
+                "narrative_role": item.get("significance", "")[:160],
+                "emotional_hook": item.get("significance", item.get("event", ""))[:160],
+            }
+            for item in timeline[:8]
+        ]
 
     skeleton = {
         "topic": topic,
         "topic_slug": topic_slug,
         "entity_slug": vault_slug,
-        "section_slug": resolved.section_slug or section_slug,
+        "section_slug": resolved_section_slug,
         "timeline": timeline,
         "key_figures": key_figures,
         "key_episodes": key_episodes,
         "sources": _extract_sources(sources),
         "summary_bullets": summary_bullets[:6],
+        "source_mode": "vault" if sources else "skeleton_research_first",
+        "research_seed_questions": [item.get("event", "") for item in timeline[:6] if item.get("event")],
     }
 
     duration_minutes = int(config.get("duration_minutes") or 10)

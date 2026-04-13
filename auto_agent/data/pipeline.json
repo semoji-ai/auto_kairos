@@ -42,30 +42,30 @@
     {
       "id": "stage_1",
       "name": "리서치",
-      "description": "3단계 리서치: 소스 수집(ingest) → 뼈대(skeleton) → 챕터 프로젝션(projection)",
+      "description": "3단계 리서치: 뼈대/아웃라인(skeleton) → 소스 수집(ingest) → 챕터 프로젝션(projection)",
       "execution": "sequential",
       "steps": [
         {
+          "id": "step_1a",
+          "name": "skeleton_research",
+          "description": "editorial_brief + project_config 기반으로 초기 내러티브 골격과 outline을 먼저 설계합니다. 외부 리서치 전 조사 프레임을 고정합니다.",
+          "type": "module",
+          "module": "skeleton_from_vault",
+          "input": ["editorial_brief.json", "project_config"],
+          "output": ["skeleton.json", "outline.json"],
+          "resumable": true,
+          "notes": "외부 검색 금지. topic/core_question/excluded_angles와 예상 길이를 바탕으로 초기 skeleton/outline을 생성합니다. ingest 이전이므로 vault wiki/claims는 선택적으로만 참고합니다. progress: brief/topic/chapters/outline 단계별 기록."
+        },
+        {
           "id": "step_1_ingest",
           "name": "source_ingest",
-          "description": "ResearchAgent 기반 소스 수집. editorial_brief의 real_topic/core_question 기준으로 vault 02-research에 raw sources + wiki + claims 저장.",
+          "description": "초기 outline을 조사 가이드로 사용해 ResearchAgent 기반 fresh research를 수행합니다. vault 02-research에 raw sources + wiki + claims 저장.",
           "type": "module",
           "module": "source_ingest",
           "resumable": true,
-          "input": ["editorial_brief.json", "project_config"],
+          "input": ["editorial_brief.json", "project_config", "outline.json"],
           "output": ["source_ingest_status.json"],
-          "notes": "LLM_WIKI_RESEARCH_DIR = $KAIROS_VAULT_DIR/02-research. vault에 이미 usable wiki가 있으면 스킵. 출력은 vault에 저장 (project_dir 아님). ResearchAgent SKILL 기반 Claude CLI 에이전트 실행."
-        },
-        {
-          "id": "step_1a",
-          "name": "skeleton_research",
-          "description": "vault wiki/claims 기반으로 주제의 내러티브 골격 확립. 타임라인/핵심인물/챕터구조를 deterministic하게 생성.",
-          "type": "module",
-          "module": "skeleton_from_vault",
-          "input": ["editorial_brief.json", "project_config", "source_ingest_status.json"],
-          "output": ["skeleton.json", "outline.json"],
-          "resumable": true,
-          "notes": "외부 검색 금지. source_ingest_status.json이 completed/skipped_existing여야 실행. vault 02-research/wiki/<slug>/ + manifests/<slug>/claims.jsonl에서 skeleton/outline을 파생 생성. progress: wiki/claims/timeline/key figures/outline 단계별 기록."
+          "notes": "LLM_WIKI_RESEARCH_DIR = $KAIROS_VAULT_DIR/02-research. 초기 outline의 chapter/research_focus를 조사 가이드로 주입합니다. vault에 이미 usable wiki가 있으면 스킵. 출력은 vault에 저장 (project_dir 아님). ResearchAgent SKILL 기반 Claude CLI 에이전트 실행."
         },
         {
           "id": "step_1b",

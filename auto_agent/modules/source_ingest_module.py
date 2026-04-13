@@ -14,6 +14,16 @@ import subprocess
 import sys
 from pathlib import Path
 
+DEFAULT_CLAUDE_MODEL = "sonnet"
+
+
+def _get_claude_model() -> str:
+    return (
+        os.environ.get("AUTO_KAIROS_CLAUDE_MODEL")
+        or os.environ.get("CLAUDE_MODEL")
+        or DEFAULT_CLAUDE_MODEL
+    )
+
 from auto_agent.modules.research_entity_hub import resolve_existing_entity_slug
 
 def _candidate_research_agent_dirs() -> list[Path]:
@@ -285,6 +295,7 @@ def _validate_ingest_completion(
 def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
                          research_root: Path, project_dir: Path,
                          core_question: str = "", excluded_angles: list = None,
+                         outline: dict | None = None,
                          entity_slug: str = "", section_slug: str = "",
                          research_agent_dir: Path | None = None,
                          launcher: Path | None = None,
@@ -294,6 +305,18 @@ def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
         research_agent_dir, launcher, vault_script = _resolve_research_agent_paths()
     must_answer = core_question or f"{topic}의 핵심 구조와 맥락"
     exclude_str = "; ".join(excluded_angles or [])
+    outline = outline or {}
+    outline_chapters = outline.get("chapters", []) if isinstance(outline, dict) else []
+    outline_lines = []
+    outline_questions = []
+    for chapter in outline_chapters[:6]:
+        title = chapter.get("title", "")
+        purpose = chapter.get("purpose", "")
+        if title:
+            outline_lines.append(f"- {title}: {purpose}".strip())
+        for question in chapter.get("research_focus", [])[:2]:
+            if question:
+                outline_questions.append(question)
 
     # Wikipedia 스타일 wiki 경로 결정
     if entity_slug and section_slug:
@@ -320,6 +343,15 @@ def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
         print(f"[source_ingest] session_brief.md 없음 — 기본 프롬프트로 수집 진행: {session_brief_path}", flush=True)
         session_brief = f"# Research Session Brief\ntopic: {topic}\nquery: {query}\nmust_answer: {must_answer}"
 
+    outline_brief = ""
+    if outline_lines or outline_questions:
+        outline_brief = "\n<outline_brief>\n"
+        if outline_lines:
+            outline_brief += "## 초기 아웃라인\n" + "\n".join(outline_lines[:6]) + "\n"
+        if outline_questions:
+            outline_brief += "## 이 리서치에서 반드시 답해야 할 질문\n" + "\n".join(f"- {q}" for q in outline_questions[:10]) + "\n"
+        outline_brief += "</outline_brief>\n"
+
     # ResearchAgent SKILL.md 읽기
     skill_path = research_agent_dir / "SKILL.md"
     skill_content = skill_path.read_text(encoding="utf-8") if skill_path.exists() else ""
@@ -345,7 +377,7 @@ def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
 <session_brief>
 {session_brief}
 </session_brief>
-
+{outline_brief}
 **중요 지침:**
 - research root: {research_root}
 - topic: {topic}
@@ -358,10 +390,11 @@ def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
 
 **작업:**
 1. search_tools_skill 우선순위에 따라 lane 도구 먼저 사용 → 부족한 부분만 WebSearch/WebFetch fallback
-2. 각 소스를 source note로 정규화 (research_vault.py register-source 사용)
-3. 핵심 claim 추출 및 검증 (research_vault.py append-claim 사용)
-4. wiki 페이지 작성 (위 wiki 저장 경로에 따라 파일 배치)
-5. research_launcher.py ingest-bundle 및 finalize-session 호출로 마무리
+2. 초기 outline의 chapter/research_focus를 조사 가이드로 사용하여, 챕터별로 필요한 전환점/연도/수치/인물을 우선 수집
+3. 각 소스를 source note로 정규화 (research_vault.py register-source 사용)
+4. 핵심 claim 추출 및 검증 (research_vault.py append-claim 사용)
+5. wiki 페이지 작성 (위 wiki 저장 경로에 따라 파일 배치)
+6. research_launcher.py ingest-bundle 및 finalize-session 호출로 마무리
 
 research root 경로: {research_root}
 research_vault.py 경로: {vault_script}
@@ -375,9 +408,10 @@ research_launcher.py 경로: {launcher}
 
     # Claude CLI 실행 (auto_agent/orchestrator/runner.py 패턴 따름 - stdin 방식)
     claude_bin = "claude"
+    claude_model = _get_claude_model()
     cmd = [
         claude_bin,
-        "--model", "claude-sonnet-4-6",
+        "--model", claude_model,
         "--max-turns", "50",
         "--output-format", "text",
         "--allowedTools",
@@ -388,7 +422,7 @@ research_launcher.py 경로: {launcher}
     env["LLM_WIKI_RESEARCH_DIR"] = str(research_root)
     env["RESEARCH_AGENT_DIR"] = str(research_agent_dir)
 
-    print(f"[source_ingest] Claude CLI 리서치 에이전트 시작 (sonnet, max-turns=50)...", flush=True)
+    print(f"[source_ingest] Claude CLI 리서치 에이전트 시작 ({claude_model}, max-turns=50)...", flush=True)
     proc = subprocess.run(
         cmd,
         input=prompt,
@@ -523,6 +557,14 @@ def main():
         print(f"[source_ingest] {exc}", flush=True)
         sys.exit(1)
 
+    outline = {}
+    outline_path = project_dir / "outline.json"
+    if outline_path.exists():
+        try:
+            outline = json.loads(outline_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"[source_ingest] outline.json 로드 실패 (무시): {e}", flush=True)
+
     excluded_str = "; ".join(excluded_angles) if excluded_angles else ""
     prepare_args = [
         "prepare-session",
@@ -531,9 +573,20 @@ def main():
     ]
     if excluded_str:
         prepare_args += ["--exclude", excluded_str]
+    must_answers = []
     if core_question:
-        prepare_args += ["--must-answer", core_question]
-    prepare_args += ["--downstream-use", "youtube-script"]
+        must_answers.append(core_question)
+    if isinstance(outline, dict):
+        for chapter in outline.get("chapters", [])[:6]:
+            title = chapter.get("title", "")
+            if title:
+                must_answers.append(f"{title}에서 꼭 확인할 전환점은 무엇인가?")
+            for q in chapter.get("research_focus", [])[:2]:
+                if q:
+                    must_answers.append(q)
+    for item in must_answers[:12]:
+        prepare_args += ["--must-answer", item]
+    prepare_args += ["--downstream-use", "youtube-script-outline-guided"]
 
     result = _run_launcher(prepare_args, research_root, research_agent_dir, launcher)
     run_id = result.get("run_id", "")
@@ -577,6 +630,7 @@ def main():
         project_dir=project_dir,
         core_question=core_question,
         excluded_angles=excluded_angles,
+        outline=outline,
         entity_slug=entity_slug,
         section_slug=section_slug,
         research_agent_dir=research_agent_dir,
