@@ -99,7 +99,7 @@ if output_dir.exists():
 # 아트스타일 이미지 서빙 (/static/artstyle/ → auto_agent/data/artstyle/styles/)
 _artstyle_dir = workspace / "auto_agent" / "data" / "artstyle" / "styles"
 if _artstyle_dir.exists():
-    app.mount("/static/artstyle", StaticFiles(directory=str(_artstyle_dir)), name="artstyle")
+    app.mount("/artstyle", StaticFiles(directory=str(_artstyle_dir)), name="artstyle")
 
 # chartagent 정적 대시보드 서빙 (/chartagent-dash/ → workspace/chartagent_dashboard/)
 _chartagent_dash_dir = workspace / "chartagent_dashboard"
@@ -478,7 +478,7 @@ async def styles_page(request: Request):
         if ref_img:
             img_path = workspace / "auto_agent" / "data" / ref_img
             if img_path.exists():
-                ref_img_url = f"/static/artstyle/{Path(ref_img).name}"
+                ref_img_url = f"/artstyle/{Path(ref_img).name}"
 
         # 아트스타일 프롬프트 전문 구성 (이미지 생성 시 실제 사용하는 텍스트)
         scene_desc = data.get("scene_style_description", "")
@@ -522,30 +522,26 @@ async def styles_page(request: Request):
     return templates.TemplateResponse(request, "styles.html", {"styles": styles})
 
 
-@app.get("/api/styles/voice-preview/{voice_id}")
-async def voice_preview(voice_id: str):
-    """ElevenLabs voice preview — 샘플 텍스트 TTS 스트리밍."""
+@app.get("/api/styles/voice-preview-url/{voice_id}")
+async def voice_preview_url(voice_id: str):
+    """ElevenLabs voice preview_url 조회 — 별도 TTS 생성 없이 제공된 샘플 오디오 URL 반환."""
     import httpx
     api_key = os.environ.get("ELEVENLABS_API_KEY", "")
     if not api_key:
         return JSONResponse({"error": "ELEVENLABS_API_KEY 미설정"}, status_code=500)
-
-    sample_text = "안녕하세요. 이 목소리로 영상을 제작합니다."
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            resp = await client.post(
-                f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream",
-                headers={"xi-api-key": api_key, "Content-Type": "application/json"},
-                json={
-                    "text": sample_text,
-                    "model_id": "eleven_multilingual_v2",
-                    "voice_settings": {"stability": 0.8, "similarity_boost": 0.9, "style": 0.5},
-                },
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                f"https://api.elevenlabs.io/v1/voices/{voice_id}",
+                headers={"xi-api-key": api_key},
             )
         if resp.status_code != 200:
             return JSONResponse({"error": f"ElevenLabs 오류 {resp.status_code}"}, status_code=502)
-        from fastapi.responses import Response
-        return Response(content=resp.content, media_type="audio/mpeg")
+        data = resp.json()
+        preview_url = data.get("preview_url", "")
+        if not preview_url:
+            return JSONResponse({"error": "preview_url 없음"}, status_code=404)
+        return JSONResponse({"preview_url": preview_url})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 

@@ -313,7 +313,7 @@ audio.voice-preview-audio:not([src=""]) { display: block; }
 
         {# ── 이미지 생성 스타일 프롬프트 ── #}
         {% if s.scene_style_description or s.style_detail_lines %}
-        <div>
+        <div class="prompt-section">
           <div class="style-section-label">
             이미지 생성 스타일 프롬프트
             <button class="prompt-toggle-btn" onclick="togglePrompt(this)" style="margin-left:8px">펼치기 ▾</button>
@@ -364,7 +364,7 @@ audio.voice-preview-audio:not([src=""]) { display: block; }
 
 <script>
 function togglePrompt(btn) {
-  const section = btn.closest('div');
+  const section = btn.closest('.prompt-section');
   const full = section.querySelector('.prompt-full');
   if (!full) return;
   const visible = full.style.display !== 'none';
@@ -373,24 +373,30 @@ function togglePrompt(btn) {
 }
 
 async function previewVoice(voiceId, btn) {
-  const audioEl = document.getElementById('audio-' + voiceId.replace(/[^a-z0-9]/gi, '_'));
-  // voice_id가 style id와 다를 수 있으므로 가장 가까운 audio 태그 찾기
   const card = btn.closest('.style-card');
   const audio = card.querySelector('audio.voice-preview-audio');
   if (!audio) return;
+
+  // 이미 로드된 경우 바로 재생
+  if (audio.src && !audio.src.endsWith('#')) {
+    audio.play();
+    return;
+  }
 
   btn.classList.add('loading');
   btn.textContent = '로딩 중...';
 
   try {
-    const resp = await fetch(`/api/styles/voice-preview/${voiceId}`);
+    // ElevenLabs /v1/voices/{voice_id} → preview_url 가져오기
+    const resp = await fetch(`/api/styles/voice-preview-url/${voiceId}`);
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       alert('미리듣기 실패: ' + (err.error || resp.status));
       return;
     }
-    const blob = await resp.blob();
-    audio.src = URL.createObjectURL(blob);
+    const { preview_url } = await resp.json();
+    audio.src = preview_url;
+    audio.style.display = 'block';
     audio.play();
   } catch(e) {
     alert('미리듣기 오류: ' + e.message);
