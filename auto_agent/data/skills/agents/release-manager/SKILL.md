@@ -210,7 +210,139 @@ Read: images/ 디렉토리 (image_assets.json 또는 파일 목록)
 
 ---
 
-## Phase 7: upload_info.json 저장
+## Phase 7: 썸네일 캔버스 초안 구성
+
+upload_info.json 저장 **전에** 실행. 에이전트가 직접 레이어 배치를 추론해 `thumbnail_canvas_state.json`을 생성한다.
+
+### 7-1. 사용 가능한 이미지 파악
+```
+Glob: {project_dir}/images/generated/*.png
+Glob: {project_dir}/images/search/*.png
+```
+- 파일명에서 씬 번호 추출 (`scene_003_gen_01.png` → 씬 3)
+- Phase 6에서 선택한 A안 `background_scene` 기준 이미지 파일명 확인
+
+### 7-2. 레이어 구성 추론
+
+**추론 기준:**
+1. **배경 이미지** — A안 background_scene의 이미지. 이미지가 밝으면 밝기 -10~-20, 어두우면 그대로
+2. **그라데이션 방향** — 오버레이 텍스트 위치에 따라:
+   - 텍스트 하단: 하단 집중 (x0=640,y0=0 → x1=640,y1=720)
+   - 텍스트 상단: 상단 집중 (x0=640,y0=720 → x1=640,y1=0)
+   - 텍스트 좌측: 좌측 집중 (x0=1280,y0=360 → x1=0,y1=360)
+   - 그라데이션 색상: 배경 이미지가 밝으면 검정 기반, 어두운 톤이면 그대로 검정 사용
+3. **텍스트 위치** — 이미지의 시각적 여백(하늘, 바닥, 측면)이 어디인지 추론해서 결정
+   - 일반 원칙: 하단 1/3 영역 (y=500~580) + 중앙 정렬
+   - 이미지 하단이 복잡하면: 상단 영역 (y=140~180)
+4. **폰트** — 채널 아트스타일의 `fonts.headline` family 사용. 아트스타일에 headline 폰트 없으면 body 폰트
+5. **비네트** — 항상 추가 (강도 50, 확산 40). 이미지 가장자리 자연스럽게 어둡게
+
+### 7-3. 레이어 JSON 규칙
+
+레이어 배열은 **위→아래 순서** (첫 번째가 화면 맨 위에 그려짐).
+일반 구성: `[텍스트레이어, 비네트레이어, 그라데이션레이어, 이미지레이어]`
+
+```json
+// 이미지 레이어 스키마
+{
+  "id": "L_img",
+  "type": "image",
+  "visible": true,
+  "locked": false,
+  "blendMode": "normal",
+  "opacity": 100,
+  "src": "/output/{dir_name}/images/generated/scene_003_gen_01.png",
+  "filename": "scene_003_gen_01.png",
+  "x": 0, "y": 0,
+  "width": 1280, "height": 720,
+  "brightness": -15,
+  "contrast": 5
+}
+
+// 그라데이션 레이어 스키마
+{
+  "id": "L_grad",
+  "type": "gradient",
+  "visible": true,
+  "locked": false,
+  "blendMode": "normal",
+  "opacity": 90,
+  "gradientType": "linear",
+  "x0": 640, "y0": 200,
+  "x1": 640, "y1": 720,
+  "stops": [
+    {"offset": 0,   "color": "rgba(0,0,0,0)"},
+    {"offset": 0.5, "color": "rgba(0,0,0,0.45)"},
+    {"offset": 1,   "color": "rgba(0,0,0,0.88)"}
+  ]
+}
+
+// 비네트 레이어 스키마
+{
+  "id": "L_vig",
+  "type": "vignette",
+  "visible": true,
+  "locked": false,
+  "blendMode": "multiply",
+  "opacity": 80,
+  "intensity": 50,
+  "spread": 40
+}
+
+// 텍스트 레이어 스키마
+{
+  "id": "L_txt",
+  "type": "text",
+  "visible": true,
+  "locked": false,
+  "blendMode": "normal",
+  "opacity": 100,
+  "text": "A안 overlay_text",
+  "x": 640,
+  "y": 560,
+  "fontFamily": "'Tenada', sans-serif",
+  "fontRole": "headline",
+  "fontSize": 100,
+  "fontWeight": "700",
+  "color": "#FFFFFF",
+  "align": "center",
+  "shadowColor": "rgba(0,0,0,0.95)",
+  "shadowBlur": 20,
+  "shadowOffsetX": 2,
+  "shadowOffsetY": 4,
+  "strokeColor": "",
+  "strokeWidth": 0
+}
+```
+
+**fontSize 가이드:**
+- 텍스트 5자 이내 → 120~140px
+- 6~10자 → 96~110px
+- 11~16자 → 72~88px
+- 17자 이상 → 58~68px
+
+### 7-4. 저장
+```python
+# 저장 경로
+{project_dir}/thumbnail_canvas_state.json
+```
+
+```json
+{
+  "layers": [ /* 위에서 구성한 레이어 배열 */ ],
+  "_meta": {
+    "generated_by": "release-manager",
+    "spec_variant": "A",
+    "scene": 3
+  }
+}
+```
+
+이미지 파일이 없으면 이 Phase 전체를 건너뛰고 upload_info.json만 저장.
+
+---
+
+## Phase 8: upload_info.json 저장
 
 ```python
 # 저장 경로
@@ -235,11 +367,12 @@ upload_info.json에 반드시 포함할 학습 루프 필드:
 저장 후 요약 출력:
 ```
 ✅ upload_info.json 생성 완료
+✅ thumbnail_canvas_state.json 생성 완료 (또는 "이미지 없어 건너뜀")
 
 📌 추천 제목: {recommended_title_text}
 📝 더보기 요약: {hook_summary 첫 문장}
 🏷️ 해시태그: {총 개수}개
-🖼️ 썸네일 스펙: A/B/C 3종
+🖼️ 썸네일 스펙: A/B/C 3종 + 캔버스 초안 구성
 ```
 
 ---

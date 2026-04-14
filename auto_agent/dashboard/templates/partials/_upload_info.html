@@ -70,7 +70,10 @@
 
   <!-- 썸네일 스펙 -->
   <div class="card" style="margin-top:20px;">
-    <h3 style="margin:0 0 12px; font-size:16px; color:var(--accent, #F7D94C);">썸네일 후보</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="margin:0; font-size:16px; color:var(--accent, #F7D94C);">썸네일 후보</h3>
+      <button class="btn btn-sm" onclick="switchTab('thumbnail_canvas', document.querySelector('[data-tab=thumbnail_canvas]'))" style="font-size:12px; padding:4px 12px;">🖼 캔버스에서 편집</button>
+    </div>
     {% if upload_info.get('thumbnails') %}
     <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;">
       {% for thumb in upload_info.get('thumbnails', []) %}

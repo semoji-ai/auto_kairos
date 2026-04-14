@@ -1,0 +1,165 @@
+/* Thumbnail Canvas 전용 스타일 */
+
+.img-source-item:hover {
+  border-color: rgba(247, 217, 76, 0.5) !important;
+}
+
+.img-source-item:active {
+  opacity: 0.7;
+  cursor: grabbing;
+}
+
+.tc-layer-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.1s;
+  font-size: 12px;
+  color: #aaa;
+  user-select: none;
+}
+
+.tc-layer-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tc-layer-item.selected {
+  background: rgba(247, 217, 76, 0.08);
+  border-color: rgba(247, 217, 76, 0.25);
+  color: #F7D94C;
+}
+
+.tc-layer-item .tc-layer-vis {
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0.7;
+  font-size: 13px;
+}
+
+.tc-layer-item .tc-layer-vis:hover {
+  opacity: 1;
+}
+
+.tc-layer-item .tc-layer-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tc-layer-item .tc-layer-del {
+  flex-shrink: 0;
+  opacity: 0;
+  cursor: pointer;
+  color: #ff6b6b;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.tc-layer-item:hover .tc-layer-del {
+  opacity: 0.6;
+}
+
+.tc-layer-item .tc-layer-del:hover {
+  opacity: 1;
+}
+
+/* 속성 패널 공통 */
+.tc-prop-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tc-prop-label {
+  font-size: 11px;
+  color: #666;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.tc-prop-input {
+  flex: 1;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  color: #ddd;
+  font-size: 12px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.tc-prop-input:focus {
+  outline: none;
+  border-color: rgba(247, 217, 76, 0.4);
+}
+
+.tc-prop-range {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+  min-width: 0;
+}
+
+.tc-prop-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #F7D94C;
+  cursor: pointer;
+}
+
+.tc-prop-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #F7D94C;
+  cursor: pointer;
+  border: none;
+}
+
+.tc-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 12px 0 6px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.tc-section-title:first-child {
+  margin-top: 0;
+  border-top: none;
+}
+
+/* 그라데이션 스톱 */
+.tc-gradient-stop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+/* 선택된 캔버스 객체 핸들 (Canvas 위에 absolute 오버레이로 그려짐) */
+#tc-canvas-wrap canvas {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}

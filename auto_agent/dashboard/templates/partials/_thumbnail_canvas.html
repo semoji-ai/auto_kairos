@@ -1,0 +1,126 @@
+<!-- Thumbnail Canvas 탭 — 이미지 + 그라데이션/비네트/텍스트 합성 편집기 -->
+<div id="thumb-canvas-root" style="display:flex; height:calc(100vh - 120px); gap:0; overflow:hidden;">
+
+  <!-- ── 좌측: 이미지 소스 패널 ── -->
+  <div id="img-source-panel" style="width:200px; flex-shrink:0; background:rgba(0,0,0,0.3); border-right:1px solid rgba(255,255,255,0.08); overflow-y:auto; padding:12px 8px;">
+    <div style="font-size:11px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; padding:0 4px;">프로젝트 이미지</div>
+    <div id="img-source-list">
+      {% if source_images %}
+        {% for img in source_images %}
+        <div class="img-source-item" draggable="true"
+          data-url="{{ img.url }}"
+          data-filename="{{ img.filename }}"
+          style="margin-bottom:6px; cursor:grab; border-radius:6px; overflow:hidden; border:2px solid transparent; transition:border-color .15s;"
+          title="{{ img.filename }}"
+          ondragstart="tcDragStart(event, '{{ img.url }}')"
+          onclick="tcAddImageLayer('{{ img.url }}', '{{ img.filename }}')"
+        >
+          <img src="{{ img.url }}" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block; pointer-events:none;">
+          <div style="font-size:10px; color:#666; padding:3px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ img.filename }}</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="color:#555; font-size:12px; padding:8px 4px;">이미지 없음<br><span style="color:#444;">스토리보드에서 이미지를 먼저 생성하세요</span></div>
+      {% endif %}
+    </div>
+    <div style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06);">
+      <label style="font-size:11px; color:#888; display:block; margin-bottom:6px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;">파일 업로드</label>
+      <input type="file" id="tc-file-upload" accept="image/*" style="display:none;" onchange="tcUploadFile(event)">
+      <button class="btn btn-sm" onclick="document.getElementById('tc-file-upload').click()" style="width:100%; font-size:11px; padding:5px 8px; background:rgba(255,255,255,0.06);">🖼 파일 선택</button>
+    </div>
+  </div>
+
+  <!-- ── 중앙: 캔버스 + 툴바 ── -->
+  <div style="flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0;">
+
+    <!-- 상단 툴바 -->
+    <div style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(0,0,0,0.2); border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0; flex-wrap:wrap;">
+      <!-- 스펙 불러오기 -->
+      {% if thumbnail_specs %}
+      <div style="display:flex; gap:4px; align-items:center;">
+        <span style="font-size:11px; color:#666; margin-right:2px;">스펙 로드:</span>
+        {% for spec in thumbnail_specs %}
+        <button class="btn btn-sm" onclick="tcLoadSpec({{ loop.index0 }})"
+          style="font-size:11px; padding:3px 10px; background:{% if loop.index == 1 %}rgba(247,217,76,0.2){% elif loop.index == 2 %}rgba(78,205,196,0.2){% else %}rgba(255,107,107,0.2){% endif %};">
+          {{ spec.variant }}안
+        </button>
+        {% endfor %}
+      </div>
+      <div style="width:1px; height:20px; background:rgba(255,255,255,0.1);"></div>
+      {% endif %}
+      <!-- 레이어 추가 -->
+      <button class="btn btn-sm" onclick="tcAddGradientLayer()" style="font-size:11px; padding:3px 10px;">＋ 그라데이션</button>
+      <button class="btn btn-sm" onclick="tcAddVignetteLayer()" style="font-size:11px; padding:3px 10px;">＋ 비네트</button>
+      <button class="btn btn-sm" onclick="tcAddTextLayer()" style="font-size:11px; padding:3px 10px;">＋ 텍스트</button>
+      <div style="flex:1;"></div>
+      <!-- 내보내기 -->
+      <span style="font-size:11px; color:#555;" id="tc-export-status"></span>
+      <button class="btn btn-sm" onclick="tcSaveState()" style="font-size:11px; padding:4px 12px; background:rgba(255,255,255,0.06);" title="레이어 상태 저장 (다음 방문 시 복원)">📌 상태 저장</button>
+      <button class="btn" onclick="tcExport()" style="font-size:12px; padding:5px 16px; background:rgba(247,217,76,0.15); color:#F7D94C; border-color:rgba(247,217,76,0.3);">💾 PNG 저장</button>
+    </div>
+
+    <!-- 캔버스 영역 -->
+    <div id="tc-canvas-wrap" style="flex:1; overflow:auto; display:flex; align-items:center; justify-content:center; background:#111; padding:16px;"
+      ondragover="event.preventDefault()"
+      ondrop="tcDrop(event)"
+    >
+      <div style="position:relative; display:inline-block; box-shadow:0 8px 48px rgba(0,0,0,0.8);">
+        <canvas id="tc-canvas" width="1280" height="720"
+          style="display:block; width:900px; height:506px; cursor:crosshair;"
+          onmousedown="tcMouseDown(event)"
+          onmousemove="tcMouseMove(event)"
+          onmouseup="tcMouseUp(event)"
+          onmouseleave="tcMouseUp(event)"
+          onmouseenter="tcMouseEnter(event)"
+        ></canvas>
+        <!-- 텍스트 편집 오버레이 (입력 시 표시) -->
+        <textarea id="tc-text-input" style="display:none; position:absolute; background:rgba(0,0,0,0.5); color:#fff; border:2px dashed #F7D94C; padding:4px 8px; font-family:inherit; resize:none; outline:none; z-index:10;" rows="2"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 우측: 레이어 패널 + 속성 패널 ── -->
+  <div style="width:280px; flex-shrink:0; background:rgba(0,0,0,0.3); border-left:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column; overflow:hidden;">
+
+    <!-- 레이어 목록 -->
+    <div style="padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0;">
+      <div style="font-size:11px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px;">레이어</div>
+      <div id="tc-layer-list" style="display:flex; flex-direction:column; gap:3px; max-height:200px; overflow-y:auto;"></div>
+    </div>
+
+    <!-- 속성 패널 -->
+    <div style="flex:1; overflow-y:auto; overflow-x:hidden; padding:10px 12px; box-sizing:border-box; min-width:0;">
+      <div style="font-size:11px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px;">속성</div>
+      <div id="tc-props-panel" style="min-width:0; overflow:hidden;">
+        <div style="color:#555; font-size:12px;">레이어를 선택하세요</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- 스펙/폰트/캔버스 상태 데이터 (JS에서 읽음) -->
+<script id="tc-specs-data" type="application/json">{{ thumbnail_specs_json | safe }}</script>
+<script id="tc-fonts-data" type="application/json">{{ project_fonts_json | safe }}</script>
+<script id="tc-canvas-state" type="application/json">{{ canvas_state_json | safe }}</script>
+<script id="tc-output-dir" type="text/plain">{{ output_dir_name }}</script>
+
+<link rel="stylesheet" href="/static/thumbnail-canvas.css">
+<script src="/static/thumbnail-canvas.js"></script>
+<script>
+  // thumbnail-canvas.js 로드 완료 후 초기화
+  // htmx 탭 전환 시에는 DOMContentLoaded가 재발생하지 않으므로
+  // script onload 이벤트 또는 폴링으로 처리
+  (function() {
+    var slug = '{{ slug }}';
+    function tryInit() {
+      if (typeof tcInit === 'function' && document.getElementById('tc-canvas')) {
+        tcInit(slug);
+      } else {
+        setTimeout(tryInit, 30);
+      }
+    }
+    tryInit();
+  })();
+</script>

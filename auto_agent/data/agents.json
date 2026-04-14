@@ -282,11 +282,11 @@
       "notes": "Stage 3 핵심. 기존 9스텝(TTS전처리~최종검수)을 에이전트 1명이 모듈을 도구로 사용하며 판단+실행. mood/motion에 따라 TTS 파라미터 조정, 이미지 품질 판단 후 재생성, 타이밍 보정 등 창의적 조립."
     },
     "release-manager": {
-      "description": "YouTube 업로드 패키지 생성 — 제목 4종·더보기란·해시태그·썸네일 스펙. 채널 플레이북 기반 전략적 작성.",
+      "description": "YouTube 업로드 패키지 생성 — 제목 4종·더보기란·해시태그·썸네일 스펙·캔버스 초안. 채널 플레이북 기반 전략적 작성.",
       "model": "sonnet",
-      "max_turns": 25,
-      "budget": "$0.8",
-      "max_duration_minutes": 15,
+      "max_turns": 32,
+      "budget": "$1.0",
+      "max_duration_minutes": 20,
       "allowed_tools": [
         "Read",
         "Write",

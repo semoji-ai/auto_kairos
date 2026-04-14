@@ -252,6 +252,7 @@ TAB_TEMPLATES = {
     "costs": "partials/_costs.html",
     "agent": "partials/_agent.html",
     "upload_info": "partials/_upload_info.html",
+    "thumbnail_canvas": "partials/_thumbnail_canvas.html",
     "multiformat": "partials/_multiformat.html",
 }
 
@@ -339,6 +340,57 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
     elif tab == "upload_info":
         raw = _load_json("upload_info.json")
         context["upload_info"] = raw.get("data", raw) if raw else None
+
+    elif tab == "thumbnail_canvas":
+        # 이미지 소스 목록
+        images_dir = Path(out_dir) / "images"
+        source_images = []
+        if images_dir.exists():
+            for subdir in ("generated", "search", ""):
+                sub = images_dir / subdir if subdir else images_dir
+                if sub.exists():
+                    for f in sorted(sub.iterdir()):
+                        if f.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"} and f.is_file():
+                            rel = f.relative_to(images_dir)
+                            source_images.append({
+                                "filename": f.name,
+                                "url": f"/output/{dir_name}/images/{rel.as_posix()}",
+                            })
+        context["source_images"] = source_images[:60]  # 최대 60개
+        # 썸네일 스펙 (upload_info.json)
+        raw_ui = _load_json("upload_info.json")
+        ui_data = (raw_ui.get("data", raw_ui) if raw_ui else {}) or {}
+        specs = ui_data.get("thumbnail_specs", [])
+        context["thumbnail_specs"] = specs
+        import json as _json
+        context["thumbnail_specs_json"] = _json.dumps(specs, ensure_ascii=False)
+        # 저장된 캔버스 상태 로드
+        canvas_state_path = Path(out_dir) / "thumbnail_canvas_state.json"
+        canvas_state = None
+        if canvas_state_path.exists():
+            try:
+                canvas_state = _json.loads(canvas_state_path.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        context["canvas_state_json"] = _json.dumps(canvas_state, ensure_ascii=False) if canvas_state else "null"
+        context["output_dir_name"] = dir_name
+        # 프로젝트 아트스타일 폰트 로드
+        artstyle = project.get("artstyle") or "quirky_cartoon"
+        artstyle_path = get_data_dir() / "artstyle" / "styles" / f"{artstyle}.json"
+        project_fonts = []
+        if artstyle_path.exists():
+            try:
+                as_data = _json.loads(artstyle_path.read_text(encoding="utf-8"))
+                raw_fonts = (as_data.get("design_tokens") or as_data).get("fonts", {})
+                for role, fd in raw_fonts.items():
+                    project_fonts.append({
+                        "role": role,
+                        "family": fd.get("family", ""),
+                        "files": fd.get("files", []),
+                    })
+            except Exception:
+                pass
+        context["project_fonts_json"] = _json.dumps(project_fonts, ensure_ascii=False)
 
     elif tab == "multiformat":
         context["multiformat"] = _load_json("multiformat_report.json")
@@ -1244,6 +1296,63 @@ async def set_art_style(request: Request, slug: str):
     config["art_style"] = new_style
     pm.set_config(project["id"], config)
     return JSONResponse({"ok": True, "art_style": new_style})
+
+
+@app.post("/api/p/{slug}/thumbnail-canvas/export")
+async def thumbnail_canvas_export(request: Request, slug: str):
+    """썸네일 캔버스 PNG 내보내기 — Base64 데이터 수신 후 파일 저장."""
+    import base64, re as _re, json as _json
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    out_dir = project.get("output_dir", "")
+    body = await request.json()
+    data_url = body.get("image_data", "")
+    filename = body.get("filename", f"thumbnail_{int(__import__('time').time())}.png")
+    # data:image/png;base64,XXXX
+    match = _re.match(r"data:image/\w+;base64,(.+)", data_url)
+    if not match:
+        return JSONResponse({"ok": False, "error": "invalid image data"})
+    img_bytes = base64.b64decode(match.group(1))
+    save_dir = Path(out_dir) / "images" / "thumbnails"
+    save_dir.mkdir(parents=True, exist_ok=True)
+    save_path = save_dir / filename
+    save_path.write_bytes(img_bytes)
+    dir_name = Path(out_dir).name if out_dir else slug
+    return JSONResponse({"ok": True, "filename": filename, "url": f"/output/{dir_name}/images/thumbnails/{filename}"})
+
+
+@app.get("/api/p/{slug}/thumbnail-canvas/state")
+async def thumbnail_canvas_state_load(slug: str):
+    """캔버스 레이어 상태 로드."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"ok": False})
+    state_path = Path(project.get("output_dir", "")) / "thumbnail_canvas_state.json"
+    if not state_path.exists():
+        return JSONResponse({"ok": False})
+    import json as _json
+    try:
+        data = _json.loads(state_path.read_text(encoding="utf-8"))
+        return JSONResponse({"ok": True, "state": data})
+    except Exception:
+        return JSONResponse({"ok": False})
+
+
+@app.post("/api/p/{slug}/thumbnail-canvas/state")
+async def thumbnail_canvas_state_save(request: Request, slug: str):
+    """캔버스 레이어 상태 저장."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"ok": False, "error": "not found"}, status_code=404)
+    body = await request.json()
+    state_path = Path(project.get("output_dir", "")) / "thumbnail_canvas_state.json"
+    import json as _json
+    state_path.write_text(_json.dumps(body, ensure_ascii=False, indent=2), encoding="utf-8")
+    return JSONResponse({"ok": True})
 
 
 @app.get("/api/p/{slug}/images/history/{scene_num}")
