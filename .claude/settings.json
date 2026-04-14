@@ -1,0 +1,89 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "WebSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c 'import json,sys; data=json.load(sys.stdin); q=((data.get(\"tool_input\") or {}).get(\"query\") or \"\").strip(); msg=(\"리서치 단계에서는 WebSearch 전에 lane MCP를 우선 사용하세요: mcp__lane__wikipedia_search(개요/역사), mcp__lane__news_search(뉴스), mcp__lane__academic_search(논문/도서). 현재 WebSearch query=\" + q[:140]); print(json.dumps({\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":msg}}))'",
+            "timeout": 5,
+            "statusMessage": "lane 우선사용 리마인드 중..."
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__lane__wikipedia_search|mcp__lane__news_search|mcp__lane__academic_search|WebSearch|WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c 'import json,sys,datetime,pathlib; data=json.load(sys.stdin); rec={\"ts\":datetime.datetime.now().isoformat(timespec=\"seconds\"),\"tool\":data.get(\"tool_name\"),\"input\":data.get(\"tool_input\",{}),\"cwd\":data.get(\"cwd\")}; p=pathlib.Path(\"/tmp/kairos_research_tool_usage.jsonl\"); p.parent.mkdir(parents=True, exist_ok=True); p.open(\"a\", encoding=\"utf-8\").write(json.dumps(rec, ensure_ascii=False)+\"\\n\")'",
+            "timeout": 5,
+            "statusMessage": "리서치 도구 사용 로그 기록 중..."
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 auto_agent/scripts/hooks/pre_project_interview.py",
+            "timeout": 5,
+            "statusMessage": "사전 인터뷰 체크 중..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -q 'CreativeScene'; then cd /Users/jleavens_macmini/Projects/auto_kairos_v3/remotion && node node_modules/vite/bin/vite.js build --config vite.thumb.config.ts --logLevel silent && node node_modules/vite/bin/vite.js build --config vite.editor.config.ts --logLevel silent; fi",
+            "timeout": 30,
+            "statusMessage": "스토리보드 JS 리빌드 중..."
+          },
+          {
+            "type": "command",
+            "command": "PROJECT_DIR=$(echo \"$TOOL_INPUT\" | python3 -c \"import sys,json,re; t=sys.stdin.read(); m=re.search(r'/output/[^\\\"\\']*scene_specs\\.json', t); print(m.group(0).rsplit('/',1)[0] if m else '')\"); if [ -n \"$PROJECT_DIR\" ] && [ -f \"$PROJECT_DIR/scene_specs.json\" ]; then /Users/jleavens_macmini/Projects/auto_kairos_v3/.venv/bin/python -m auto_agent.scripts.validate_tts_preprocessing \"$PROJECT_DIR\" || echo 'TTS 전처리 검증 실패 — generate_tts.py 재실행 필요' >&2; fi",
+            "timeout": 15,
+            "statusMessage": "scene_specs.json TTS 전처리 검증 중..."
+          },
+          {
+            "type": "command",
+            "command": "PROJECT_DIR=$(echo \"$TOOL_INPUT\" | python3 -c \"import sys,json,re; t=sys.stdin.read(); m=re.search(r'/output/[^\\\"\\']*scene_specs\\.json', t); print(m.group(0).rsplit('/',1)[0] if m else '')\"); if [ -n \"$PROJECT_DIR\" ] && [ -f \"$PROJECT_DIR/scene_specs.json\" ] && [ -f \"$PROJECT_DIR/final_manuscript.md\" ]; then /Users/jleavens_macmini/Projects/auto_kairos_v3/.venv/bin/python -m auto_agent.scripts.validate_narration_from_manuscript \"$PROJECT_DIR\" || echo 'narration 재작성 발견 — chapters 모드는 manuscript에서 substring으로만 가져와야 합니다' >&2; fi",
+            "timeout": 10,
+            "statusMessage": "scene_specs narration ↔ manuscript 일치 검증 중..."
+          }
+        ]
+      }
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "lane"
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "mcp__plugin_discord_discord__*"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(rm -r *)"
+    ],
+    "additionalDirectories": [
+      "/Users/jleavens_macmini"
+    ]
+  }
+}

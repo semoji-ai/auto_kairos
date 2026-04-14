@@ -183,6 +183,48 @@ def main():
     else:
         print("  [SKIP] AUTO_AGENT_PROJECT_DIR not set")
 
+    # 6. Project config 필수값 검증 — 인터뷰에서 설정되어야 할 항목들
+    print("\n[Project Config — 사전 인터뷰 결과]")
+    project_slug = os.getenv("PROJECT_NAME", "")
+    if project_slug:
+        try:
+            from auto_agent.db.project_manager import ProjectManager
+            pm = ProjectManager()
+            proj = pm.get_project(slug=project_slug)
+            cfg = pm.get_config(proj["id"]) if proj else {}
+            required_cfg = {
+                "art_style": "아트스타일 (사전 인터뷰 A단계)",
+                "writing_style": "문체 (사전 인터뷰 A단계)",
+            }
+            optional_cfg = {
+                "voice_id": "보이스 ID",
+                "duration_minutes": "영상 분량",
+                "video_theme": "테마(dark/light)",
+            }
+            for key, label in required_cfg.items():
+                if cfg.get(key):
+                    print(f"  [OK] {key} = {cfg[key]}")
+                else:
+                    print(f"  [FAIL] {key} 미설정 — {label}이 누락됐습니다. 사전 인터뷰를 완료하세요.")
+                    errors += 1
+            for key, label in optional_cfg.items():
+                val = cfg.get(key)
+                if val:
+                    print(f"  [OK] {key} = {val}")
+                else:
+                    print(f"  [WARN] {key} 미설정 — {label} (선택적)")
+            # editorial_brief.json 존재 확인
+            if proj and proj.get("output_dir"):
+                brief_path = Path(proj["output_dir"]) / "editorial_brief.json"
+                if brief_path.exists():
+                    print("  [OK] editorial_brief.json — 기획 의도 고정됨")
+                else:
+                    print("  [WARN] editorial_brief.json 없음 — 사전 인터뷰 B단계(기획 인터뷰)를 완료하세요")
+        except Exception as e:
+            print(f"  [WARN] config 검증 오류: {e}")
+    else:
+        print("  [SKIP] PROJECT_NAME not set")
+
     print(f"\n{'=' * 40}")
     if errors:
         print(f"FAIL: {errors}개 필수 항목 미충족")
