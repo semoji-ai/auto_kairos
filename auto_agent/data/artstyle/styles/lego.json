@@ -54,14 +54,33 @@
   },
   "creative": {
     "headline_frequency": "20-30%",
-    "mood_palette": ["dramatic", "suspense", "contemplative", "informative"],
-    "preferred_layouts": ["cinematic", "before_after", "rank_list", "timeline", "flow", "metric_spotlight"]
+    "mood_palette": [
+      "dramatic",
+      "suspense",
+      "contemplative",
+      "informative"
+    ],
+    "preferred_layouts": [
+      "cinematic",
+      "before_after",
+      "rank_list",
+      "timeline",
+      "flow",
+      "metric_spotlight"
+    ]
   },
   "scenes": {
     "density": "moderate",
     "min_duration_sec": 4,
     "max_duration_sec": 15,
-    "prefer_split_on": ["전환어", "감정 전환", "시각적 전환"]
+    "prefer_split_on": [
+      "전환어",
+      "감정 전환",
+      "시각적 전환"
+    ]
   },
-  "guidelines": "레고 미니피규어 스타일. 모든 캐릭터와 오브젝트는 레고 블록 조합으로 표현. 포토리얼 플라스틱 질감."
+  "guidelines": "레고 미니피규어 스타일. 모든 캐릭터와 오브젝트는 레고 블록 조합으로 표현. 포토리얼 플라스틱 질감.",
+  "subtitle": {
+    "max_chars_per_line": 28
+  }
 }

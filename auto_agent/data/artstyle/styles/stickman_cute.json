@@ -49,14 +49,30 @@
   },
   "creative": {
     "headline_frequency": "15-25%",
-    "mood_palette": ["informative", "playful", "lighthearted"],
-    "preferred_layouts": ["cinematic", "items_list", "flow", "timeline", "counter"]
+    "mood_palette": [
+      "informative",
+      "playful",
+      "lighthearted"
+    ],
+    "preferred_layouts": [
+      "cinematic",
+      "items_list",
+      "flow",
+      "timeline",
+      "counter"
+    ]
   },
   "scenes": {
     "density": "moderate",
     "min_duration_sec": 4,
     "max_duration_sec": 12,
-    "prefer_split_on": ["주제 전환", "감정 전환"]
+    "prefer_split_on": [
+      "주제 전환",
+      "감정 전환"
+    ]
   },
-  "guidelines": "깔끔한 손그림 스틱맨 스타일. 미니멀 배경, 밝고 친근한 톤."
+  "guidelines": "깔끔한 손그림 스틱맨 스타일. 미니멀 배경, 밝고 친근한 톤.",
+  "subtitle": {
+    "max_chars_per_line": 28
+  }
 }

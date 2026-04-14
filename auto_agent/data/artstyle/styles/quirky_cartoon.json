@@ -78,7 +78,8 @@
       "boxShadow": "0 4px 16px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2)",
       "bottomOffset": 80,
       "maxWidth": "90%",
-      "lineHeight": 1.4
+      "lineHeight": 1.4,
+      "max_chars_per_line": 25
     },
     "fonts": {
       "body": {

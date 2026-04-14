@@ -358,7 +358,17 @@ narration_tts 작성과 동시에 자막 라인 분할도 수행합니다.
 generate_subtitles.py는 이 필드가 있으면 rule-based smart_split() 대신 우선 사용합니다.
 
 **분할 규칙:**
-- 한 라인 최대 20자 (공백 포함)
+
+**라인당 최대 글자수 — 아트스타일별 상이** (아트스타일 JSON `design_tokens.subtitle.max_chars_per_line` 참조):
+| 아트스타일 | max_chars_per_line | 이유 |
+|---|---|---|
+| quirky_cartoon (이로미즘) | **25자** | 큰 폰트(66px) + 배경박스, 줄이 짧아야 레이아웃 안정 |
+| semoji (세모지) | **30자** | 중간 폰트, 정보전달 중심 |
+| lego / stickman_cute | **28자** | 중간 |
+
+작업 시작 전 반드시 프로젝트의 아트스타일 JSON을 확인하고 해당 값을 적용할 것.
+아트스타일 JSON에 값이 없으면 기본값 **25자** 적용.
+
 - 자연스러운 의미 단위로 분할 (조사/연결어미 이후 > 절 경계 > 음절 경계)
 - 호흡이 느껴지는 지점에서 줄을 나눌 것
 - 숫자+단위는 분리하지 않음 (예: "3만 명" → 한 라인 유지)
@@ -370,7 +380,7 @@ generate_subtitles.py는 이 필드가 있으면 rule-based smart_split() 대신
   - narration == narration_tts이면 동일한 값 사용 가능
   - TTS용은 숫자 변환이 반영된 텍스트 기준으로 분할
 
-**예시:**
+**예시 (quirky_cartoon — 25자 기준):**
 narration: "전 세계 3만 명의 연구자들이 이 문제를 풀기 위해 매일 밤을 새웠다."
 subtitle_lines: ["전 세계 3만 명의 연구자들이", "이 문제를 풀기 위해", "매일 밤을 새웠다."]
 ```
