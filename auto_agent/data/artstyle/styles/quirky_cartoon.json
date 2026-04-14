@@ -164,5 +164,14 @@
   },
   "prompt_overrides": {
     "creative-direction": "## ⚠️ 이로미즘 연출 필수 규칙 (반드시 준수)\n\n### 기본 원칙\n이 스타일은 cinematic(일러스트 풀스크린)이 주력이다. 대부분의 씬은 cinematic으로 만들되, **내용이 요구하면 반드시 다른 레이아웃을 써라.**\n\n### cinematic 대신 다른 레이아웃을 써야 하는 경우\n나레이션의 **내용**을 보고 판단한다. 아래 상황에서는 cinematic으로 만들면 정보가 전달되지 않는다:\n- 구체적 수치를 비교하는 내용 → 차트(bar, line, pie 등)가 훨씬 효과적\n- 지리적 위치가 핵심인 내용 → mapScene으로 보여줘야 이해됨\n- 인물의 발언을 직접 인용하는 내용 → quote_portrait가 임팩트 있음\n- 전후 변화를 대비하는 내용 → before_after로 시각화\n- 순서/프로세스를 설명하는 내용 → flow, timeline\n- 핵심 메시지 하나를 강렬하게 전달해야 하는 내용 → hero_with_context, metric_spotlight\n\n이건 비율이 아니라 내용 기반 판단이다. 수치가 나오면 차트, 장소가 나오면 지도. 단, 나레이션에 숫자가 잠깐 언급되는 정도라면 굳이 차트를 만들 필요 없다 — 데이터가 씬의 핵심일 때만.\n\n### cinematic은 절대 100%가 될 수 없다\n어떤 영상이든 차트/지도/인용이 필요한 순간이 있다. 전부 cinematic이면 단조롭고 정보 전달이 약해진다.\n\n### headline_only, items_grid, icon_stat, metric_wall은 사용 금지\n이 스타일과 맞지 않는다.\n\n### cinematic 씬 규칙\n- layout=\"cinematic\" + imageAsset={\"placement\":\"fullscreen\"} 필수 세트 (source는 내용에 따라 generate 또는 search)\n- placement는 반드시 \"fullscreen\", opacity는 생략 (1.0 기본)\n- items, values, itemIcons는 비워둠 (이미지만으로 전달)\n- cinematic_overlay로 말풍선/감탄부호/캡션 오버레이 가능 (선택)\n\n### 에셋 규칙\n- 이미지는 내용에 따라 generate(AI 생성) 또는 search(실사 검색) 적절히 선택.\n- 인물/장소/사건 등 실사가 효과적이면 search, 추상적/상상적 장면이면 generate.\n\n### 톤\n- 유머러스하고 위트 있는 톤 유지\n- mood는 dramatic보다 playful 선호\n- headline을 쓸 때는 말장난이나 과장된 비유 활용"
+  },
+  "voice": {
+    "voice_id": "9Sj8ugvpK1DmcAXyvi3a",
+    "voice_settings": {
+      "stability": 1.0,
+      "similarity_boost": 0.6,
+      "style": 0.9,
+      "speed": 1.1
+    }
   }
 }
