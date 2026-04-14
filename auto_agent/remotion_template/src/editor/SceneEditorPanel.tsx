@@ -152,6 +152,7 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
     values: s.values || v.values || [],
     unit: s.unit ?? v.unit ?? "",
     source: s.source ?? v.source ?? "",
+    speaker: s.speaker ?? v.speaker ?? "",
     title: s.title || v.title || "",
     itemIcons: s.icons || v.itemIcons || [],
     itemFlags: s.flags || v.itemFlags || [],
@@ -432,10 +433,12 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
           />
         </div>
 
-        {/* Items */}
-        {!["headline_only", "counter", "quote", "icon_stat"].includes(creative.layout || "") && (
+        {/* Items — quote는 items[0]이 인용문, quote_portrait도 동일 */}
+        {!["headline_only", "counter", "icon_stat"].includes(creative.layout || "") && (
           <div>
-            <label style={labelStyle}>Items ({(viz.items || []).length})</label>
+            <label style={labelStyle}>
+              {creative.layout === "quote" ? `인용문 (items[0])` : `Items (${(viz.items || []).length})`}
+            </label>
             <ItemsEditor
               items={viz.items || []}
               values={viz.values || []}
@@ -632,15 +635,32 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
           </div>
         )}
 
+        {/* Speaker — quote 레이아웃 전용 */}
+        {creative.layout === "quote" && (
+          <div>
+            <label style={labelStyle}>Speaker <span style={{ fontSize: 9, color: MUTED, fontWeight: 400 }}>(화자 · 인물명)</span></label>
+            <input
+              type="text"
+              style={inputStyle}
+              value={(s.speaker || (s.visualization?.creative as any)?.speaker || "") as string}
+              onChange={e => updateField({ speaker: e.target.value })}
+              placeholder="예: 스티브 잡스, 1997"
+            />
+          </div>
+        )}
+
         {/* Source + 위치 조절 */}
         <div>
-          <label style={labelStyle}>Source</label>
+          <label style={labelStyle}>
+            Source
+            {creative.layout === "quote" && <span style={{ fontSize: 9, color: MUTED, fontWeight: 400, marginLeft: 4 }}>(통계·자료 출처, 보통 생략)</span>}
+          </label>
           <input
             type="text"
             style={inputStyle}
             value={viz.source || ""}
             onChange={e => updateViz({ source: e.target.value })}
-            placeholder="출처 / 화자, 발언 맥락..."
+            placeholder={creative.layout === "quote" ? "자료 출처 (선택)" : "출처..."}
           />
           <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 4 }}>
             <span style={{ fontSize: 8, color: MUTED }}>X</span>

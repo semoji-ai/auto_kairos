@@ -9,6 +9,7 @@ import React from "react";
 import { AbsoluteFill, Img, staticFile } from "remotion";
 import { CreativeScene } from "../simple/CreativeScene";
 import { useDesignPreset } from "../design";
+import { DEFAULT_PRESET } from "../design/defaults";
 import { buildFontFamily } from "../design/fonts";
 
 /** URL/절대경로면 그대로, 상대경로면 staticFile() 사용 (Remotion Studio 호환) */
@@ -56,14 +57,22 @@ export const ImageBg: React.FC<{ src: string; opacity: number }> = ({ src, opaci
 
 /* ── Side 이미지 레이아웃 ── */
 const SideLayout: React.FC<{
-  src: string; placement: "left" | "right"; opacity: number; defaultBg?: string; children: React.ReactNode;
-}> = ({ src, placement, opacity, defaultBg, children }) => {
+  src: string; placement: "left" | "right"; opacity: number; defaultBg?: string; mood?: string; children: React.ReactNode;
+}> = ({ src, placement, opacity, defaultBg, mood, children }) => {
   const preset = useDesignPreset();
   const bgColor = preset.colors?.bg || "#0A0A0A";
   const isLeft = placement === "left";
   const hasSrc = !!src;
+  // mood gradient: accent 색상 기반으로 직접 생성 (DEFAULT_PRESET 다크 그라데이션은 너무 어두움)
+  const moodKey = mood || "dramatic";
+  const moodEntry = preset.moods?.[moodKey as keyof typeof preset.moods]
+    ?? DEFAULT_PRESET.moods[moodKey as keyof typeof DEFAULT_PRESET.moods];
+  const accentRgb = moodEntry?.accentRgb ?? "245,158,11";
+  const moodGradient = `radial-gradient(ellipse 90% 70% at 50% 40%, rgba(${accentRgb},0.45) 0%, rgba(${accentRgb},0.12) 60%, ${bgColor} 100%)`;
   return (
     <AbsoluteFill>
+      {/* mood 그라데이션 배경 */}
+      <div style={{ position: "absolute", inset: 0, background: moodGradient, zIndex: 0 }} />
       {/* 전체 배경 텍스처 */}
       {defaultBg && <ImageBg src={defaultBg} opacity={0.15} />}
       <AbsoluteFill style={{ display: "flex", flexDirection: isLeft ? "row" : "row-reverse" }}>
@@ -91,7 +100,7 @@ const SideLayout: React.FC<{
               : `linear-gradient(to left, transparent 80%, ${bgColor} 100%)`,
           }} />
         </div>
-        {/* 콘텐츠 영역 */}
+        {/* 콘텐츠 영역 — 투명: CreativeScene의 MoodBackground가 배경 담당 */}
         <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>{children}</div>
       </AbsoluteFill>
     </AbsoluteFill>
@@ -176,8 +185,8 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   // ── side (left/right) — 이미지 없어도 placement가 side면 진입 (placeholder 표시) ──
   if (placement === "left" || placement === "right") {
     return (
-      <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-        <SideLayout src={hasSceneImage ? imgSrc : ""} placement={placement} opacity={imgOpacity} defaultBg={defaultBg}>
+      <AbsoluteFill style={{ fontFamily }}>
+        <SideLayout src={hasSceneImage ? imgSrc : ""} placement={placement} opacity={imgOpacity} defaultBg={defaultBg} mood={scene.mood || vizData?.mood}>
           <CreativeScene
             data={vizData}
             subtitles={scene.subtitles}

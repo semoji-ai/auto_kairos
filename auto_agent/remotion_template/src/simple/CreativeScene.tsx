@@ -11,7 +11,7 @@
  * Overlays: spotlight + flash
  * Whisper 자막 타임스탬프 동기화 지원
  */
-import React, { useRef, useLayoutEffect, useState } from "react";
+import React, { useRef, useLayoutEffect, useState, useEffect } from "react";
 import {
   AbsoluteFill,
   Img,
@@ -28,6 +28,7 @@ const resolveAsset = (path: string): string =>
     : staticFile(path);
 
 import { useDesignPreset, usePresetColors, usePresetTypo, usePresetLayout } from "../design";
+import { DEFAULT_PRESET } from "../design/defaults";
 
 /** 숫자 포맷: 연도(1000~2999)는 그대로, 나머지는 세 자리 콤마 */
 const fmtNum = (v: number | string | null | undefined): string => {
@@ -435,10 +436,11 @@ function getMoodConfigFromPreset(
   };
 }
 
-/** preset-aware mood gradient: preset.moods[mood].gradient 우선 */
+/** preset-aware mood gradient: preset.moods[mood].gradient 우선, 없으면 DEFAULT_PRESET fallback */
 function getMoodGradient(mood: string, preset: ReturnType<typeof useDesignPreset>): string {
   return preset.moods[mood]?.gradient
-    ?? `radial-gradient(ellipse 80% 60% at 50% 40%, ${preset.colors.bg} 0%, ${preset.colors.bg} 70%)`;
+    ?? DEFAULT_PRESET.moods[mood as keyof typeof DEFAULT_PRESET.moods]?.gradient
+    ?? `radial-gradient(ellipse 80% 60% at 50% 40%, #1a1005 0%, ${preset.colors.bg || "#0A0A0A"} 70%)`;
 }
 
 /* ================================================================
@@ -1616,6 +1618,30 @@ const ItemsList: React.FC<{
    QuoteDisplay — 인용문 전용 레이아웃
    ================================================================ */
 
+const GYEONGGI_FONT_FAMILY = "경기천년바탕체";
+
+/** 경기천년바탕 폰트 로딩 훅 — FontFace 직접 로드 (editor/thumb 양쪽 호환) */
+function useGyeonggiFont(): void {
+  useEffect(() => {
+    // 이미 로드됐으면 스킵
+    if (document.fonts.check(`16px "${GYEONGGI_FONT_FAMILY}"`)) return;
+    const faces = [
+      { file: "fonts/GyeonggiMillenniumBatang-Regular.ttf", weight: "400" },
+      { file: "fonts/GyeonggiMillenniumBatang-Bold.ttf", weight: "700" },
+    ];
+    faces.forEach(async ({ file, weight }) => {
+      try {
+        const url = staticFile(file);
+        const face = new FontFace(GYEONGGI_FONT_FAMILY, `url('${url}')`, { weight, style: "normal" });
+        const loaded = await face.load();
+        document.fonts.add(loaded);
+      } catch {
+        // fallback serif
+      }
+    });
+  }, []);
+}
+
 const QuoteDisplay: React.FC<{
   items: string[];
   source: string;
@@ -1632,10 +1658,12 @@ const QuoteDisplay: React.FC<{
   const s = (f: number) => Math.round(f / speed);
   const quoteText = items[0] || "";
 
+  useGyeonggiFont();
+
   // typewriter effect
   const isTypewriter = reveal === "typewriter";
   const charCount = quoteText.length;
-  const typeLen = Math.max(charCount * 2, 1); // 0 방지
+  const typeLen = Math.max(charCount * 2, 1);
   const visibleChars = isTypewriter
     ? Math.floor(
         interpolate(frame, [s(10), s(10) + typeLen], [0, charCount], clamp),
@@ -1651,7 +1679,7 @@ const QuoteDisplay: React.FC<{
     easing: ease,
   });
 
-  const markOpacity = interpolate(frame, [s(3), s(10)], [0, 0.25], clamp);
+  const markOpacity = interpolate(frame, [s(3), s(10)], [0, 0.6], clamp);
   const sourceOpacity = interpolate(
     frame,
     [s(10) + (isTypewriter ? charCount * 2 + 10 : 25), s(10) + (isTypewriter ? charCount * 2 + 25 : 40)],
@@ -1659,11 +1687,11 @@ const QuoteDisplay: React.FC<{
     clamp,
   );
 
-  const portraitSrc = portrait
-    ? resolveAsset(portrait)
-    : null;
-
+  const portraitSrc = portrait ? resolveAsset(portrait) : null;
   const portraitOpacity = interpolate(frame, [0, 20], [0, 1], clamp);
+
+  const quoteFontSize = T.quoteText;
+  const markFontSize = T.quoteMarkSize * 1.2;
 
   return (
     <AbsoluteFill>
@@ -1689,7 +1717,6 @@ const QuoteDisplay: React.FC<{
               filter: "blur(2px) grayscale(0.4)",
             }}
           />
-          {/* Vignette overlay for text readability */}
           <div
             style={{
               position: "absolute",
@@ -1710,54 +1737,84 @@ const QuoteDisplay: React.FC<{
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          padding: "80px 60px",
+          padding: "80px 100px",
         }}
       >
-        {/* Quote mark decoration */}
+        {/* Quote text box — inline-grid 3행: 여는따옴표(좌) / 텍스트 / 닫는따옴표(우) */}
         <div
           style={{
-            fontSize: T.quoteMarkSize,
-            fontWeight: 800,
+            display: "inline-grid",
+            gridTemplateRows: "auto auto auto auto",
+            opacity: quoteOpacity,
+            transform: `translateY(${quoteRise}px)`,
+          }}
+        >
+          {/* 1행: 여는 따옴표 — 왼쪽 정렬 */}
+          <div style={{
+            justifySelf: "start",
+            fontSize: markFontSize,
+            fontWeight: 700,
+            fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
             color: moodCfg.accent,
             opacity: markOpacity,
             lineHeight: 1,
-            marginBottom: -30,
+            marginBottom: "-0.8em",
+            marginLeft: "-0.6em",
             userSelect: "none",
-          }}
-        >
-          &ldquo;
-        </div>
+          }}>&ldquo;</div>
 
-        {/* Quote text */}
-        <div
-          style={{
-            opacity: quoteOpacity,
-            transform: `translateY(${quoteRise}px)`,
-            fontSize: T.quoteText,
-            fontWeight: 600,
+          {/* 2행: 인용 텍스트 */}
+          <div style={{
+            fontSize: quoteFontSize,
+            fontWeight: 400,
+            fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
             color: C.text,
             textAlign: "center",
-            maxWidth: "80%",
-            lineHeight: 1.7,
-            fontStyle: "italic",
+            lineHeight: 1.65,
             whiteSpace: "pre-line",
-          }}
-        >
-          {displayText}
-          {isTypewriter && visibleChars < charCount && (
-            <span
-              style={{
+            wordBreak: "keep-all",
+          }}>
+            {displayText}
+            {isTypewriter && visibleChars < charCount && (
+              <span style={{
                 display: "inline-block",
                 width: 3,
                 height: "1em",
                 backgroundColor: moodCfg.accent,
                 marginLeft: 2,
                 opacity: frame % 20 < 10 ? 1 : 0,
-              }}
-            />
+              }} />
+            )}
+          </div>
+
+          {/* 3행: 닫는 따옴표 — 오른쪽 정렬 */}
+          <div style={{
+            justifySelf: "end",
+            fontSize: markFontSize,
+            fontWeight: 700,
+            fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+            color: moodCfg.accent,
+            opacity: markOpacity,
+            lineHeight: 1,
+            marginRight: "-0.6em",
+            userSelect: "none",
+          }}>&rdquo;</div>
+
+          {/* 4행: 스피커/출처 — 오른쪽 정렬 */}
+          {source && (
+            <div style={{
+              justifySelf: "center",
+              marginTop: "-1.6em",
+              opacity: sourceOpacity,
+              fontSize: T.sourceText,
+              color: C.textMuted,
+              fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+              letterSpacing: "0.05em",
+            }}>
+              — {source}
+            </div>
           )}
         </div>
-
       </div>
     </AbsoluteFill>
   );
@@ -2994,9 +3051,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
   const renderSupportHeadline = (options?: { marginBottom?: number; maxWidth?: string }) => {
     if (!showSupportHeadline || !headline || lines.length === 0) return null;
-    const supportFontSize = layoutHierarchy === "value"
-      ? Math.max(T.headlineSupport, T.chartTitle)
-      : T.headlineSupport;
+    const supportFontSize = T.chartTitle;
     const supportWeight = layoutHierarchy === "value" ? 600 : 700;
     const supportColor = layoutHierarchy === "value" ? C.textMuted : C.textDim;
 
@@ -3035,7 +3090,9 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const rawQuoteText = items[0] || data.quote || quoteTitle || "";
   const isNameOnly = rawQuoteText.length > 0 && rawQuoteText.length <= 10 && !rawQuoteText.includes(" ");
   const quoteText = (!rawQuoteText || isNameOnly || headlineHasBreak) ? headlineClean : rawQuoteText;
-  const quoteSource = (isNameOnly && !source) ? rawQuoteText : source;
+  // speaker 필드 우선, 없으면 source 폴백 (출처와 화자 구분)
+  const speaker: string = data.speaker || creative.speaker || "";
+  const quoteSource = speaker || (isNameOnly && !source) ? (speaker || rawQuoteText) : source;
 
   // === Layout routing ===
 
@@ -3353,10 +3410,12 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const useFullWidth = hasImageBackground || hasAssetSide || imageAssetPlacement === "fullscreen" || imageAssetPlacement === "center";
   const contentWidth = useFullWidth ? "100%" : "90%";
 
+  const isSidePlacement = imageAssetPlacement === "left" || imageAssetPlacement === "right";
+
   return (
-    <AbsoluteFill style={{ backgroundColor: hasImageBackground ? "transparent" : C.bg, fontFamily: "inherit" }}>
+    <AbsoluteFill style={{ backgroundColor: (hasImageBackground || isSidePlacement) ? "transparent" : C.bg, fontFamily: "inherit" }}>
       <div style={{ width: contentWidth, height: "100%", margin: "0 auto", position: "relative" }}>
-      <MoodBackground mood={mood} transparent={hasImageBackground} />
+      {!isSidePlacement && <MoodBackground mood={mood} transparent={hasImageBackground} />}
 
       {/* Spotlight overlay */}
       {reveal === "spotlight" && <SpotlightOverlay speed={moodCfg.speed} />}
@@ -3644,28 +3703,30 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         {layout === "before_after" && items.length >= 2 && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18, width: "100%" }}>
             {renderSupportHeadline({ marginBottom: 4, maxWidth: "72%" })}
-            <div style={{ display: "flex", alignItems: "center", gap: 28, justifyContent: "center" }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, ...useFadeSlide(15, 15, -30) }}>
-                {getItemLeadVisual(0, { flagLabel: items[0], iconSize: 44, logoSize: 40 })}
+            <div style={{ display: "flex", alignItems: "center", gap: 48, justifyContent: "center" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...useFadeSlide(15, 15, -30) }}>
+                {getItemLeadVisual(0, { flagLabel: items[0], iconSize: 56, logoSize: 52 })}
                 <ComparisonCell
                   label="BEFORE"
                   value={items[0]}
                   sublabel={values[0] != null ? `${fmtNum(values[0])}${data.unit || ""}` : undefined}
                   variant="before"
-                  style={{ minWidth: 240, transform: "scale(1.06)" }}
+                  size="lg"
+                  style={{ minWidth: 480 }}
                 />
               </div>
-              <div style={{ opacity: useFade(25, 10), transform: "scale(1.1)" }}>
-                <Connector direction="right" length={56} color={moodCfg.accent} />
+              <div style={{ opacity: useFade(25, 10), transform: "scale(1.3)" }}>
+                <Connector direction="right" length={64} color={moodCfg.accent} />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, ...useFadeSlide(35, 15, 30) }}>
-                {getItemLeadVisual(1, { flagLabel: items[1], iconSize: 44, logoSize: 40 })}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...useFadeSlide(35, 15, 30) }}>
+                {getItemLeadVisual(1, { flagLabel: items[1], iconSize: 56, logoSize: 52 })}
                 <ComparisonCell
                   label="AFTER"
                   value={items[1]}
                   sublabel={values[1] != null ? `${fmtNum(values[1])}${data.unit || ""}` : undefined}
                   variant="after"
-                  style={{ minWidth: 240, transform: "scale(1.06)" }}
+                  size="lg"
+                  style={{ minWidth: 480 }}
                 />
               </div>
             </div>
@@ -3787,22 +3848,54 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "center",
                         alignItems: "center", textAlign: "center",
                         padding: portraitPlacement === "left" ? "40px 48px 40px 80px" : "40px 80px 40px 48px", width: "100%", height: "100%" }}>
-            <div style={useFadeRise(15, 20)}>
+            <div style={{ ...useFadeRise(15, 20), display: "inline-grid", gridTemplateRows: "auto auto auto auto" }}>
+              {/* 1행: 여는 따옴표 — 왼쪽 정렬 */}
               <span style={{
-                fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
-                lineHeight: 0.8, fontFamily: "Georgia, serif", userSelect: "none",
+                justifySelf: "start",
+                fontSize: T.quoteMarkSize * 1.2,
+                fontWeight: 700,
+                color: moodCfg.accent,
+                opacity: 0.6,
+                lineHeight: 1,
+                marginBottom: "-0.8em",
+                marginLeft: "-0.6em",
+                fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+                userSelect: "none",
               }}>&ldquo;</span>
-              <div style={{ fontSize: T.itemText, fontWeight: 500, color: C.text,
-                            lineHeight: 1.6, fontStyle: "italic", margin: "8px 0 16px",
-                            textAlign: "center" }}>
+              {/* 2행: 텍스트 */}
+              <div style={{
+                fontSize: T.quoteText,
+                fontWeight: 400,
+                fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+                color: C.text,
+                lineHeight: 1.65,
+                whiteSpace: "pre-line",
+                wordBreak: "keep-all",
+                textAlign: "center",
+              }}>
                 {quoteText}
               </div>
+              {/* 3행: 닫는 따옴표 — 오른쪽 정렬 */}
               <span style={{
-                fontSize: 64, fontWeight: 900, color: moodCfg.accent, opacity: 0.3,
-                lineHeight: 0.8, fontFamily: "Georgia, serif", userSelect: "none",
+                justifySelf: "end",
+                fontSize: T.quoteMarkSize * 1.2,
+                fontWeight: 700,
+                color: moodCfg.accent,
+                opacity: 0.6,
+                lineHeight: 1,
+                marginRight: "-0.6em",
+                fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+                userSelect: "none",
               }}>&rdquo;</span>
+              {/* 4행: 스피커/출처 — 오른쪽 정렬 */}
               {quoteSource && (
-                <div style={{ fontSize: T.sourceText, color: C.textMuted, marginTop: 12 }}>— {quoteSource}</div>
+                <div style={{
+                  justifySelf: "center",
+                  fontSize: T.sourceText,
+                  color: C.textMuted,
+                  marginTop: "-1.6em",
+                  fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+                }}>— {quoteSource}</div>
               )}
             </div>
           </div>

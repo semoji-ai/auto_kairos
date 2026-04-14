@@ -1021,8 +1021,9 @@ export const ComparisonCell: React.FC<{
   value: string;
   sublabel?: string;
   variant?: "before" | "after" | "neutral";
+  size?: "md" | "lg";
   style?: React.CSSProperties;
-}> = ({ label, value, sublabel, variant = "neutral", style }) => {
+}> = ({ label, value, sublabel, variant = "neutral", size = "md", style }) => {
   const C = useC();
   const V = usePresetVariants();
   const valueColor = variant === "after" ? C.positive : variant === "before" ? C.textMuted : C.accent;
@@ -1031,13 +1032,16 @@ export const ComparisonCell: React.FC<{
     : V.comparisonCell === "accent-top"
     ? { backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`, borderTop: `3px solid ${valueColor}` }
     : { backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}` };
+  const isLg = size === "lg";
   return (
     <div style={{
-      borderRadius: 12, padding: "16px 20px", textAlign: "center", ...cellStyle, ...style,
+      borderRadius: isLg ? 20 : 12,
+      padding: isLg ? "28px 40px" : "16px 20px",
+      textAlign: "center", ...cellStyle, ...style,
     }}>
-      <div style={{ fontSize: 24, color: C.textMuted, marginBottom: 6 }}><TextWithBreaks text={label} /></div>
-      <div style={{ fontSize: 48, fontWeight: 800, color: valueColor, lineHeight: 1.1 }}><TextWithBreaks text={value} /></div>
-      {sublabel && <div style={{ fontSize: 24, color: C.textMuted, marginTop: 4 }}><TextWithBreaks text={sublabel} /></div>}
+      <div style={{ fontSize: isLg ? 36 : 24, color: C.textMuted, marginBottom: isLg ? 12 : 6 }}><TextWithBreaks text={label} /></div>
+      <div style={{ fontSize: isLg ? 64 : 48, fontWeight: 700, color: valueColor, lineHeight: 1.2 }}><TextWithBreaks text={value} /></div>
+      {sublabel && <div style={{ fontSize: isLg ? 120 : 48, fontWeight: 800, color: valueColor, lineHeight: 1.05, marginTop: isLg ? 8 : 4 }}><TextWithBreaks text={sublabel} /></div>}
     </div>
   );
 };
