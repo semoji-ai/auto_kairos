@@ -138,7 +138,7 @@ export interface SceneRendererProps {
 export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 30 }) => {
   const preset = useDesignPreset();
   const fontFamily = buildFontFamily(preset);
-  const fontVars = getFontCSSVars(preset.fonts);
+  const fontVars = getFontCSSVars(preset.fonts) as React.CSSProperties;
   const vizData = resolveVisualization(scene);
 
   const defaultBg = preset.defaultBackground;
