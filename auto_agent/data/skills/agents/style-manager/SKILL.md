@@ -248,11 +248,11 @@ git commit -m "style: {id} 아트스타일 추가/수정"
 
 ## 현재 등록된 스타일
 
-| ID | 채널 | 테마 | 자막폰트 | max_chars |
-|----|------|------|----------|-----------|
-| `quirky_cartoon` | 이로미즘 | dark | EunpyeongSagaDogseoText | 25 |
-| `semoji` | 세모지 | light | Pretendard | 30 |
-| `lego` | 최후의경제학 | dark | Pretendard | 28 |
-| `stickman_cute` | (미배정) | dark | Pretendard | 28 |
+| ID | name | 채널 | 문체 | 테마 | 자막폰트 | max_chars |
+|----|------|------|------|------|----------|-----------|
+| `quirky_cartoon` | 이로미즘 | 이로미즘 | iromism | dark | EunpyeongSagaDogseoText | 25 |
+| `semoji` | 세모지스타일 | 세모지 | semoji | light | Pretendard | 30 |
+| `lego` | Photorealistic LEGO | 최후의경제학 | neutral | dark | Pretendard | 28 |
+| `stickman_cute` | Stickman Cute | (미배정) | neutral | dark | Pretendard | 28 |
 
 새 스타일 추가 시 이 표도 업데이트할 것.

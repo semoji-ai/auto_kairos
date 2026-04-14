@@ -223,5 +223,6 @@
       "lineHeight": 1.4,
       "max_chars_per_line": 28
     }
-  }
+  },
+  "writing_style": "neutral"
 }

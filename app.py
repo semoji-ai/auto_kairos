@@ -516,6 +516,7 @@ async def styles_page(request: Request):
             "scene_style_description": scene_desc,
             "style_detail_lines": style_lines,
             "critical_requirements": critical,
+            "writing_style": data.get("writing_style", ""),
             "guidelines": data.get("guidelines", ""),
         })
 

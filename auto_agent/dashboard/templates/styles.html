@@ -208,7 +208,10 @@ audio.voice-preview-audio:not([src=""]) { display: block; }
         {% endif %}
         <div class="style-card-title">
           <h2>{{ s.name }}</h2>
-          {% if s.channel %}<span class="channel-badge">{{ s.channel }}</span>{% endif %}
+          <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+            {% if s.channel %}<span class="channel-badge">{{ s.channel }}</span>{% endif %}
+            {% if s.writing_style %}<span class="channel-badge" style="background:rgba(255,255,255,0.05);color:#71717A;border-color:rgba(255,255,255,0.1)">✍ {{ s.writing_style }}</span>{% endif %}
+          </div>
           <div class="style-id">{{ s.id }}</div>
         </div>
         <span class="theme-badge {{ s.base_theme }}">{{ s.base_theme }}</span>
