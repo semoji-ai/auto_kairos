@@ -74,5 +74,87 @@
   "guidelines": "깔끔한 손그림 스틱맨 스타일. 미니멀 배경, 밝고 친근한 톤.",
   "subtitle": {
     "max_chars_per_line": 28
+  },
+  "design_tokens": {
+    "baseTheme": "dark",
+    "defaultBackground": "",
+    "colors": {
+      "accent": "#10B981",
+      "accentRgb": "16,185,129",
+      "accentBg": "rgba(16,185,129,0.08)",
+      "accentBorder": "rgba(16,185,129,0.3)",
+      "accentSoft": "rgba(16,185,129,0.15)",
+      "cardBg": "rgba(16,185,129,0.06)",
+      "cardBorder": "rgba(16,185,129,0.25)"
+    },
+    "layout": {
+      "gap": 20
+    },
+    "map": {
+      "defaultTheme": "clean_white"
+    },
+    "fonts": {
+      "body": {
+        "family": "Pretendard",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/Pretendard-Regular.otf",
+            "weight": "400"
+          },
+          {
+            "file": "fonts/Pretendard-Bold.otf",
+            "weight": "700"
+          }
+        ]
+      },
+      "headline": {
+        "family": "Tenada",
+        "fallback": "sans-serif",
+        "files": [
+          {
+            "file": "fonts/Tenada.woff2",
+            "weight": "400"
+          }
+        ]
+      },
+      "value": {
+        "family": "Barlow Condensed",
+        "fallback": "sans-serif",
+        "files": [
+          {
+            "file": "fonts/BarlowCondensed-Bold.ttf",
+            "weight": "700"
+          }
+        ]
+      },
+      "subtitle": {
+        "family": "Pretendard",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/Pretendard-Bold.otf",
+            "weight": "700"
+          }
+        ]
+      }
+    },
+    "subtitle": {
+      "fontSize": 52,
+      "fontFamily": "Pretendard",
+      "fontWeight": 700,
+      "color": "#FFFFFF",
+      "strokeWidth": 0,
+      "strokeColor": "transparent",
+      "keywordColor": "#10B981",
+      "keywordStrokeColor": "transparent",
+      "backgroundColor": "rgba(0,0,0,0.7)",
+      "borderRadius": 8,
+      "boxShadow": "0 2px 8px rgba(0,0,0,0.3)",
+      "bottomOffset": 60,
+      "maxWidth": "90%",
+      "lineHeight": 1.4,
+      "max_chars_per_line": 28
+    }
   }
 }

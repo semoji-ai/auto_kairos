@@ -76,6 +76,7 @@ Thumbs.db
 !/scripts/setup_remotion.py
 !/scripts/setup_fonts.sh
 !/scripts/mac-mini-setup.sh
+!/scripts/generate_presets.py
 /src/
 /dashboard/
 /skills/
@@ -102,6 +103,11 @@ Thumbs.db
 !/remotion/public/fonts/
 /remotion/public/fonts/GyeonggiMillenniumBatang-Regular.ttf
 /remotion/public/fonts/GyeonggiMillenniumBatang-Bold.ttf
+!/remotion/src/
+/remotion/src/*
+!/remotion/src/design/
+/remotion/src/design/*
+!/remotion/src/design/presets/
 
 # Misc temp files
 *.mp3

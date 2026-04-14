@@ -82,5 +82,88 @@
   "guidelines": "레고 미니피규어 스타일. 모든 캐릭터와 오브젝트는 레고 블록 조합으로 표현. 포토리얼 플라스틱 질감.",
   "subtitle": {
     "max_chars_per_line": 28
+  },
+  "design_tokens": {
+    "baseTheme": "dark",
+    "defaultBackground": "",
+    "colors": {
+      "accent": "#EF4444",
+      "accentRgb": "239,68,68",
+      "accentBg": "rgba(239,68,68,0.08)",
+      "accentBorder": "rgba(239,68,68,0.3)",
+      "accentSoft": "rgba(239,68,68,0.15)",
+      "cardBg": "rgba(239,68,68,0.06)",
+      "cardBorder": "rgba(239,68,68,0.25)"
+    },
+    "layout": {
+      "cardRadius": 12,
+      "gap": 24
+    },
+    "map": {
+      "defaultTheme": "minimal_light"
+    },
+    "fonts": {
+      "body": {
+        "family": "Pretendard",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/Pretendard-Regular.otf",
+            "weight": "400"
+          },
+          {
+            "file": "fonts/Pretendard-Bold.otf",
+            "weight": "700"
+          }
+        ]
+      },
+      "headline": {
+        "family": "Tenada",
+        "fallback": "sans-serif",
+        "files": [
+          {
+            "file": "fonts/Tenada.woff2",
+            "weight": "400"
+          }
+        ]
+      },
+      "value": {
+        "family": "Barlow Condensed",
+        "fallback": "sans-serif",
+        "files": [
+          {
+            "file": "fonts/BarlowCondensed-Bold.ttf",
+            "weight": "700"
+          }
+        ]
+      },
+      "subtitle": {
+        "family": "Pretendard",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/Pretendard-Bold.otf",
+            "weight": "700"
+          }
+        ]
+      }
+    },
+    "subtitle": {
+      "fontSize": 54,
+      "fontFamily": "Pretendard",
+      "fontWeight": 700,
+      "color": "#FFFFFF",
+      "strokeWidth": 0,
+      "strokeColor": "transparent",
+      "keywordColor": "#EF4444",
+      "keywordStrokeColor": "transparent",
+      "backgroundColor": "rgba(0,0,0,0.75)",
+      "borderRadius": 8,
+      "boxShadow": "0 2px 12px rgba(0,0,0,0.4)",
+      "bottomOffset": 60,
+      "maxWidth": "90%",
+      "lineHeight": 1.4,
+      "max_chars_per_line": 28
+    }
   }
 }

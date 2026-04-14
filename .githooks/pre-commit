@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# pre-commit hook — artstyle JSON 수정 시 TS 프리셋 자동 재생성
+# 활성화: git config core.hooksPath .githooks
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+VENV_PYTHON="$REPO_ROOT/.venv/bin/python"
+
+# 스테이지된 파일 중 artstyle JSON이 있는지 확인
+CHANGED_STYLES=$(git diff --cached --name-only | grep 'auto_agent/data/artstyle/styles/.*\.json' || true)
+
+if [ -z "$CHANGED_STYLES" ]; then
+    exit 0
+fi
+
+echo ""
+echo "  아트스타일 JSON 변경 감지 → TS 프리셋 자동 재생성..."
+
+if [ ! -f "$VENV_PYTHON" ]; then
+    echo "  [WARN] .venv/bin/python 없음 — generate_presets.py 수동 실행 필요"
+    exit 0
+fi
+
+"$VENV_PYTHON" "$REPO_ROOT/scripts/generate_presets.py"
+
+# 생성된 TS 파일을 커밋에 자동 포함
+git add \
+    "$REPO_ROOT/remotion/src/design/presets/" \
+    "$REPO_ROOT/auto_agent/remotion_template/src/design/presets/" \
+    2>/dev/null || true
+
+echo "  TS 프리셋 재생성 완료."

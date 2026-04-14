@@ -185,6 +185,15 @@ echo ""
 echo "🔤 폰트 설치"
 bash "$PROJECT_DIR/scripts/setup_fonts.sh"
 
+# ── 아트스타일 TS 프리셋 동기화 ──
+echo ""
+echo "🎨 아트스타일 TS 프리셋 동기화"
+if [ -f "$PROJECT_DIR/.venv/bin/python" ]; then
+    "$PROJECT_DIR/.venv/bin/python" "$PROJECT_DIR/scripts/generate_presets.py"
+else
+    echo "  [SKIP] .venv 없음 — pip install 후 scripts/generate_presets.py 실행"
+fi
+
 # ── 완료 ──
 echo ""
 echo "================================"

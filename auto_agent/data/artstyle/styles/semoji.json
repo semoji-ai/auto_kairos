@@ -137,7 +137,67 @@
     "imageBadge": "12px",
     "iconBadge": "12px",
     "subtitle": {
-      "max_chars_per_line": 30
+      "max_chars_per_line": 30,
+      "fontSize": 52,
+      "fontFamily": "Pretendard",
+      "fontWeight": 700,
+      "color": "#1A1A2E",
+      "strokeWidth": 0,
+      "strokeColor": "transparent",
+      "keywordColor": "#4A90D9",
+      "keywordStrokeColor": "transparent",
+      "backgroundColor": "rgba(255,255,255,0.92)",
+      "borderRadius": 8,
+      "boxShadow": "0 2px 12px rgba(0,0,0,0.15)",
+      "bottomOffset": 60,
+      "maxWidth": "92%",
+      "lineHeight": 1.4
+    },
+    "fonts": {
+      "body": {
+        "family": "Pretendard",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/Pretendard-Regular.otf",
+            "weight": "400"
+          },
+          {
+            "file": "fonts/Pretendard-Bold.otf",
+            "weight": "700"
+          }
+        ]
+      },
+      "headline": {
+        "family": "Pretendard",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/Pretendard-Bold.otf",
+            "weight": "700"
+          }
+        ]
+      },
+      "value": {
+        "family": "Barlow Condensed",
+        "fallback": "sans-serif",
+        "files": [
+          {
+            "file": "fonts/BarlowCondensed-Bold.ttf",
+            "weight": "700"
+          }
+        ]
+      },
+      "subtitle": {
+        "family": "Pretendard",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/Pretendard-Bold.otf",
+            "weight": "700"
+          }
+        ]
+      }
     }
   },
   "guidelines": "세모지는 정보 전달 중심. 친근한 설명체, 데이터 시각화 적극 활용. cinematic staging으로 장면 연출."

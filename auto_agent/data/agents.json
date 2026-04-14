@@ -361,6 +361,20 @@
       ],
       "skill_file": "agents/multi-contents-director/SKILL.md",
       "notes": "별도 명령어 /multi-contents로 실행. Stage 3 완료 후."
+    },
+    "style-manager": {
+      "description": "아트스타일 JSON 단일 소스 관리 — 신규 스타일 추가, 기존 수정, TS 프리셋 동기화, 검증.",
+      "model": "sonnet",
+      "max_turns": 20,
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Glob"
+      ],
+      "skill_file": "agents/style-manager/SKILL.md",
+      "notes": "스타일 추가·수정 시 전용 에이전트로만 처리. TS 프리셋 직접 편집 금지."
     }
   },
   "modules": {
