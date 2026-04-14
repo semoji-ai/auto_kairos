@@ -535,6 +535,89 @@ def _validate_ingest_completion(
     }
 
 
+def _build_research_query_with_llm(
+    topic: str,
+    brief: dict,
+    outline: dict,
+) -> str | None:
+    """Opus를 호출해 outline 기반 최적 검색 쿼리를 생성한다.
+
+    Returns:
+        query 문자열 or None (실패 시 fallback)
+    """
+    core_question = brief.get("core_question", "")
+    hook_angle = brief.get("hook_angle", "")
+    chapters = outline.get("chapters", []) if isinstance(outline, dict) else []
+
+    chapter_lines = []
+    for ch in chapters[:6]:
+        title = ch.get("title", "")
+        purpose = ch.get("purpose", "")
+        focus = ch.get("research_focus", [])
+        if title:
+            chapter_lines.append(f"- 챕터 {ch.get('chapter_number','')}: {title}")
+            if purpose:
+                chapter_lines.append(f"  역할: {purpose}")
+            for q in focus[:2]:
+                chapter_lines.append(f"  질문: {q}")
+
+    chapters_text = "\n".join(chapter_lines)
+
+    prompt = f"""다음 유튜브 영상 기획을 바탕으로, 이 영상의 리서치에 가장 효과적인 검색 쿼리를 만들어주세요.
+
+## 주제
+{topic}
+
+## 핵심 질문
+{core_question}
+
+## 후크 앵글
+{hook_angle}
+
+## 챕터 구조
+{chapters_text}
+
+## 요구사항
+- 검색 엔진/Wikipedia/뉴스에서 이 영상에 필요한 사실·수치·전환점을 가장 잘 찾을 수 있는 쿼리
+- 너무 포괄적이지 않고, 챕터 구조에서 공통으로 필요한 핵심 키워드 중심
+- 한국어 또는 영어 중 더 효과적인 언어 선택
+- 쿼리 하나만 출력 (설명 없이 쿼리 텍스트만)
+
+쿼리:"""
+
+    try:
+        cmd = [
+            "claude",
+            "--model", "claude-opus-4-6",
+            "--max-turns", "1",
+            "--output-format", "text",
+        ]
+        env = os.environ.copy()
+        env.pop("CLAUDECODE", None)
+        proc = subprocess.run(
+            cmd,
+            input=prompt,
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=60,
+        )
+        output = (proc.stdout or "").strip()
+        # 앞뒤 불필요한 텍스트 제거 (첫 줄만 사용)
+        lines = [l.strip() for l in output.splitlines() if l.strip()]
+        query = lines[0] if lines else ""
+        # 너무 길거나 너무 짧으면 fallback
+        if 5 <= len(query) <= 200:
+            print(f"[source_ingest] Opus 쿼리 생성: {query}", flush=True)
+            return query
+        print(f"[source_ingest] Opus 쿼리 부적절 (len={len(query)}) — fallback 사용", flush=True)
+    except subprocess.TimeoutExpired:
+        print("[source_ingest] Opus 쿼리 생성 타임아웃 — fallback 사용", flush=True)
+    except Exception as e:
+        print(f"[source_ingest] Opus 쿼리 생성 오류: {e} — fallback 사용", flush=True)
+    return None
+
+
 def _supplement_weak_chapters(
     topic: str,
     topic_slug: str,
@@ -941,7 +1024,20 @@ def main():
         topic = project_name or "unknown-topic"
 
     topic_slug = _slug(topic)
-    query = core_question or topic
+
+    # research_queries.json에서 메인 쿼리 읽기 (step_1_strategy 산출물)
+    query = None
+    _queries_path = project_dir / "research_queries.json"
+    if _queries_path.exists():
+        try:
+            _rq = json.loads(_queries_path.read_text(encoding="utf-8"))
+            query = _rq.get("main_query", "")
+            if query:
+                print(f"[source_ingest] 전략가 쿼리 사용: {query}", flush=True)
+        except Exception:
+            pass
+    if not query:
+        query = core_question or topic
 
     print(f"[source_ingest] 주제: {topic}", flush=True)
     print(f"[source_ingest] slug: {topic_slug}", flush=True)

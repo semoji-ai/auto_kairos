@@ -29,6 +29,19 @@
       "skill_file": "agents/skeleton-researcher/SKILL.md",
       "notes": "Stage 1 수동 fallback. 외부 검색 금지. ingest 산출물(vault wiki/claims)만 사용."
     },
+    "research-strategist": {
+      "description": "editorial_brief + skeleton 기반으로 outline / research_queries / hook_strategy를 설계하는 전략가. 챕터 서사 흐름, 검색 쿼리, 훅 전략을 한 번에 결정.",
+      "model": "opus",
+      "max_turns": 5,
+      "budget": "$0.5",
+      "max_duration_minutes": 5,
+      "allowed_tools": [
+        "Read",
+        "Write"
+      ],
+      "skill_file": "agents/research-strategist/SKILL.md",
+      "notes": "step_1_strategy. skeleton.json + editorial_brief.json → outline.json + research_queries.json + hook_strategy.json. 외부 검색 없음."
+    },
     "flesh-researcher": {
       "description": "outline.json 챕터별 세부 팩트 수집. Task 도구로 챕터별 병렬 배포 → chapter_facts/",
       "model": "sonnet",

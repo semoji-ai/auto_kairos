@@ -720,7 +720,7 @@ def _build_outline(
     }
 
 
-def build_skeleton_and_outline(project_dir: Path) -> tuple[dict, dict]:
+def build_skeleton_and_outline(project_dir: Path) -> dict:
     brief = {}
     brief_path = project_dir / "editorial_brief.json"
     if brief_path.exists():
@@ -852,26 +852,7 @@ def build_skeleton_and_outline(project_dir: Path) -> tuple[dict, dict]:
         "research_seed_questions": [item.get("event", "") for item in timeline[:6] if item.get("event")],
     }
 
-    duration_minutes = int(config.get("duration_minutes") or 10)
-    _progress("outline 생성 중 (Opus)")
-    outline = _build_outline_with_llm(
-        topic=topic,
-        brief=brief,
-        skeleton=skeleton,
-        duration_minutes=duration_minutes,
-    )
-    if outline is None:
-        _progress("Opus outline 실패 — Python fallback 사용")
-        outline = _build_outline(
-            topic=topic,
-            core_question=brief.get("core_question", ""),
-            duration_minutes=duration_minutes,
-            summary_bullets=summary_bullets,
-            timeline=timeline,
-            key_figures=key_figures,
-            key_episodes=key_episodes,
-        )
-    return skeleton, outline
+    return skeleton
 
 
 def main() -> None:
@@ -884,20 +865,18 @@ def main() -> None:
     skeleton_path = project_dir / "skeleton.json"
     outline_path = project_dir / "outline.json"
 
-    if skeleton_path.exists() and outline_path.exists():
-        _progress("skeleton.json / outline.json 이미 존재 — 스킵")
+    if skeleton_path.exists():
+        _progress("skeleton.json 이미 존재 — 스킵")
         sys.exit(0)
 
     try:
-        skeleton, outline = build_skeleton_and_outline(project_dir)
+        skeleton = build_skeleton_and_outline(project_dir)
     except Exception as exc:
         _progress(str(exc), level="error")
         sys.exit(1)
 
     skeleton_path.write_text(json.dumps(skeleton, ensure_ascii=False, indent=2), encoding="utf-8")
-    outline_path.write_text(json.dumps(outline, ensure_ascii=False, indent=2), encoding="utf-8")
     _progress("skeleton 저장 완료")
-    _progress("outline 저장 완료")
     sys.exit(0)
 
 

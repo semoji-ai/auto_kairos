@@ -42,19 +42,29 @@
     {
       "id": "stage_1",
       "name": "리서치",
-      "description": "3단계 리서치: 뼈대/아웃라인(skeleton) → 소스 수집(ingest) → 챕터 프로젝션(projection)",
+      "description": "4단계 리서치: 뼈대(skeleton) → 전략(strategy) → 소스 수집(ingest) → 챕터 프로젝션(projection)",
       "execution": "sequential",
       "steps": [
         {
           "id": "step_1a",
           "name": "skeleton_research",
-          "description": "editorial_brief + project_config 기반으로 초기 내러티브 골격과 outline을 먼저 설계합니다. 외부 리서치 전 조사 프레임을 고정합니다.",
+          "description": "editorial_brief + project_config 기반으로 초기 내러티브 골격(skeleton.json)을 생성합니다. 타임라인/핵심인물/에피소드를 구조화하여 전략가 에이전트에 전달.",
           "type": "module",
           "module": "skeleton_from_vault",
           "input": ["editorial_brief.json", "project_config"],
-          "output": ["skeleton.json", "outline.json"],
+          "output": ["skeleton.json"],
           "resumable": true,
-          "notes": "외부 검색 금지. topic/core_question/excluded_angles와 예상 길이를 바탕으로 초기 skeleton/outline을 생성합니다. ingest 이전이므로 vault wiki/claims는 선택적으로만 참고합니다. progress: brief/topic/chapters/outline 단계별 기록."
+          "notes": "외부 검색은 lane 도구 기반 seed research만 허용. outline은 생성하지 않음 — step_1_strategy에서 Opus가 담당."
+        },
+        {
+          "id": "step_1_strategy",
+          "name": "research_strategy",
+          "description": "editorial_brief + skeleton을 읽고 Opus가 outline / research_queries / hook_strategy를 설계합니다. 이후 ingest의 조사 방향과 훅 전략을 확정.",
+          "agent": "research-strategist",
+          "resumable": true,
+          "input": ["editorial_brief.json", "skeleton.json"],
+          "output": ["outline.json", "research_queries.json", "hook_strategy.json"],
+          "notes": "외부 검색 없음. Read/Write만 사용. outline.json이 이미 존재하면 스킵."
         },
         {
           "id": "step_1_ingest",
