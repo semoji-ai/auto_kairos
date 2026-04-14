@@ -38,14 +38,21 @@ export function usePresetFonts(): void {
   useEffect(() => {
     const load = async () => {
       const f = preset.fonts;
+      console.log("[fonts] preset.fonts =", JSON.stringify({
+        body: f.body?.family,
+        headline: f.headline?.family,
+        value: f.value?.family,
+        mono: f.mono?.family,
+      }));
       await loadFontDef(f.body);
       if (f.headline) await loadFontDef(f.headline);
       if (f.value)    await loadFontDef(f.value);
       if (f.mono)     await loadFontDef(f.mono);
-      if (f.title)    await loadFontDef(f.title); // deprecated but still supported
+      if (f.title)    await loadFontDef(f.title);
+      console.log("[fonts] loaded ✓");
       continueRender(handle);
     };
-    load().catch(() => continueRender(handle));
+    load().catch((e) => { console.error("[fonts] load error", e); continueRender(handle); });
   }, [handle]);
 }
 

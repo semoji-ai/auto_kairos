@@ -590,6 +590,12 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     with open(legacy_path, "w", encoding="utf-8") as f:
         json.dump(props, f, ensure_ascii=False, indent=2)
 
+    # output 디렉토리의 manifest.json도 동기화 (씬에디터가 이 파일을 우선 읽음)
+    output_manifest = out_dir / "remotion" / "public" / "manifest.json"
+    if output_manifest.parent.exists():
+        with open(output_manifest, "w", encoding="utf-8") as f:
+            json.dump(props, f, ensure_ascii=False, indent=2)
+
 
     total_duration = sum(s["audioDurationSec"] for s in scenes)
     audio_count = sum(1 for s in scenes if s["audioPath"])

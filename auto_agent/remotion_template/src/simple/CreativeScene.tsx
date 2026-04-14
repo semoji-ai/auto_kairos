@@ -90,6 +90,10 @@ import {
   useTypewriter,
   useSpringValue,
   TextWithBreaks,
+  fadeRise,
+  fadeSlide,
+  fadeVal,
+  scaleAnim,
 } from "./BuildingBlocks";
 
 /* ================================================================
@@ -2943,7 +2947,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const layoutHierarchy = getLayoutHierarchy(layout);
   const headlineIsPrimary = layoutHierarchy === "headline";
   const supportHeadlineInline = usesInlineSupportHeadline(layout);
-  const showHeadlineField: boolean = creative.showHeadline !== false;
+  const showHeadlineField: boolean = creative.showHeadline !== false; // 기본 true, false로 끌 수 있음
   const showSupportHeadline = usesSupportHeadline(layout);
   const showCommonSupportHeadline = showSupportHeadline && !supportHeadlineInline;
 
@@ -3583,11 +3587,11 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             }}>
               {items.map((item, i) => (
                 <React.Fragment key={i}>
-                  <div style={{ ...useFadeRise(staggerDelay(i, 10, 15), 15) }}>
+                  <div style={{ ...fadeRise(frame, staggerDelay(i, 10, 15), 15) }}>
                     <StepBadge step={i + 1} label={item} active={i === items.length - 1} />
                   </div>
                   {i < items.length - 1 && (
-                    <div style={{ opacity: useFade(staggerDelay(i, 10, 15) + 8, 10) }}>
+                    <div style={{ opacity: fadeVal(frame, staggerDelay(i, 10, 15) + 8, 10) }}>
                       <Connector direction={isHorizontal ? "right" : "down"} length={isHorizontal ? 48 : 32} color={moodCfg.accent} />
                     </div>
                   )}
@@ -3612,7 +3616,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             {items.map((item, i) => {
               const desc = (data.descriptions || [])[i] || "";
               const isLast = i === items.length - 1;
-              const anim = useFadeRise(staggerDelay(i, 12, 15), 15);
+              const anim = fadeRise(frame, staggerDelay(i, 12, 15), 15);
               return (
                 <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, position: "relative", zIndex: 1, flex: 1, ...anim }}>
                   <div style={{
@@ -3634,7 +3638,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
         {/* Metric Spotlight — 단일 KPI 극적 강조 */}
         {layout === "metric_spotlight" && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18, ...useScale(15) }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18, ...scaleAnim(frame, 15) }}>
             {renderSupportHeadline({ marginBottom: 8, maxWidth: "70%" })}
             <MetricCard
               label={items[0] || data.title || ""}
@@ -3644,7 +3648,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               style={{ width: "100%", maxWidth: 720, transform: "scale(1.08)" }}
             />
             {values.length > 2 && (
-              <div style={{ opacity: useFade(30, 15), transform: "scale(1.05)" }}>
+              <div style={{ opacity: fadeVal(frame, 30, 15), transform: "scale(1.05)" }}>
                 <Sparkline data={values} width={240} height={52} color={moodCfg.accent} />
               </div>
             )}
@@ -3667,7 +3671,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               justifyContent: "center",
             }}>
               {items.map((item, i) => (
-                <div key={i} style={useFadeRise(staggerDelay(i, 8, 12), 15)}>
+                <div key={i} style={fadeRise(frame, staggerDelay(i, 8, 12), 15)}>
                   <MetricCard
                     label={item}
                     value={values[i] != null ? `${fmtNum(values[i])}${data.unit || ""}` : ""}
@@ -3693,7 +3697,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             {items.map((item, i) => {
               const maxVal = Math.max(...(values.length ? values : [1]));
               return (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, ...useFadeRise(staggerDelay(i, 10, 12), 15) }}>
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, ...fadeRise(frame, staggerDelay(i, 10, 12), 15) }}>
                   <RankBadge rank={i + 1} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 24, fontWeight: 600, color: C.text, marginBottom: 6 }}><TextWithBreaks text={item} /></div>
@@ -3717,7 +3721,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18, width: "100%" }}>
             {renderSupportHeadline({ marginBottom: 4, maxWidth: "72%" })}
             <div style={{ display: "flex", alignItems: "center", gap: 48, justifyContent: "center" }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...useFadeSlide(15, 15, -30) }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...fadeSlide(frame, 15, 15, -30) }}>
                 {getItemLeadVisual(0, { flagLabel: items[0], iconSize: 56, logoSize: 52 })}
                 <ComparisonCell
                   label="BEFORE"
@@ -3728,10 +3732,10 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                   style={{ minWidth: 480 }}
                 />
               </div>
-              <div style={{ opacity: useFade(25, 10), transform: "scale(1.3)" }}>
+              <div style={{ opacity: fadeVal(frame, 25, 10), transform: "scale(1.3)" }}>
                 <Connector direction="right" length={64} color={moodCfg.accent} />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...useFadeSlide(35, 15, 30) }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...fadeSlide(frame, 35, 15, 30) }}>
                 {getItemLeadVisual(1, { flagLabel: items[1], iconSize: 56, logoSize: 52 })}
                 <ComparisonCell
                   label="AFTER"
@@ -3764,7 +3768,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 justifyContent: "center",
               }}>
                 {items.map((item, i) => (
-                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, ...useFadeRise(staggerDelay(i, 8, 12), 15) }}>
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, ...fadeRise(frame, staggerDelay(i, 8, 12), 15) }}>
                     {getItemLeadVisual(i, { flagLabel: item, iconSize: 40, logoSize: 36 })}
                     <ComparisonCell
                       label={item}
@@ -3780,7 +3784,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
         {/* Icon Stat — 단일 통계 + 아이콘 */}
         {layout === "icon_stat" && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...useScale(15) }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...scaleAnim(frame, 15) }}>
             {renderSupportHeadline({ marginBottom: 0, maxWidth: "70%" })}
             {data.itemIcons?.[0] && resolveIcon(data.itemIcons[0]) && (
               <IconBadge icon={resolveIcon(data.itemIcons[0])!} size={80} filled />
@@ -3802,7 +3806,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             {items.map((item, i) => {
               const maxVal = Math.max(...(values.length ? values : [100]));
               return (
-                <div key={i} style={useFadeRise(staggerDelay(i, 10, 12), 15)}>
+                <div key={i} style={fadeRise(frame, staggerDelay(i, 10, 12), 15)}>
                   <ProgressBar
                     progress={values[i] != null ? values[i] / maxVal : 0}
                     label={`${item} — ${values[i] != null ? fmtNum(values[i]) : 0}${data.unit || ""}`}
@@ -3820,7 +3824,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             {items.map((item, i) => {
               const desc = (data.descriptions || [])[i] || "";
               return (
-                <div key={i} style={useFadeRise(staggerDelay(i, 10, 15), 15)}>
+                <div key={i} style={fadeRise(frame, staggerDelay(i, 10, 15), 15)}>
                   <Card style={{ minWidth: 200, maxWidth: 280, textAlign: "center" }}>
                     {(() => {
                       const leadVisual = getItemLeadVisual(i, { flagLabel: item, iconSize: 48, logoSize: 44 });
@@ -3845,7 +3849,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             {items.length > 0 && (
               <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
                 {items.map((item, i) => (
-                  <div key={i} style={useFadeRise(staggerDelay(i, 8, 30), 15)}>
+                  <div key={i} style={fadeRise(frame, staggerDelay(i, 8, 30), 15)}>
                     <Card style={{ padding: "12px 20px" }}>
                       <TextWithBreaks text={item} style={{ fontSize: T.labelText, color: C.textMuted }} />
                     </Card>
@@ -3861,7 +3865,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "center",
                         alignItems: "center", textAlign: "center",
                         padding: portraitPlacement === "left" ? "40px 48px 40px 80px" : "40px 80px 40px 48px", width: "100%", height: "100%" }}>
-            <div style={{ ...useFadeRise(15, 20), display: "inline-grid", gridTemplateRows: "auto auto auto auto" }}>
+            <div style={{ ...fadeRise(frame, 15, 20), display: "inline-grid", gridTemplateRows: "auto auto auto auto" }}>
               {/* 1행: 여는 따옴표 — 왼쪽 정렬 */}
               <span style={{
                 justifySelf: "start",
@@ -3955,7 +3959,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 {items.map((item, i) => {
                   const maxVal = Math.max(...(values.length ? values : [1]));
                   return (
-                    <div key={i} style={useFadeRise(staggerDelay(i, 10, 12), 15)}>
+                    <div key={i} style={fadeRise(frame, staggerDelay(i, 10, 12), 15)}>
                       <MiniBar
                         value={values[i] || 0}
                         maxValue={maxVal}
@@ -3969,7 +3973,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               </div>
               {/* 주석 */}
               {data.annotations?.map((ann: { text: string; index?: number }, i: number) => (
-                <div key={i} style={{ opacity: useFade(staggerDelay(i, 8, 40), 12), paddingLeft: 48 }}>
+                <div key={i} style={{ opacity: fadeVal(frame, staggerDelay(i, 8, 40), 12), paddingLeft: 48 }}>
                   <AnnotationLine text={ann.text} width={80} color={moodCfg.accent} />
                 </div>
               ))}
@@ -4030,15 +4034,19 @@ const LineReveal: React.FC<{
   const dur = motionConfig?.entrance.duration || 18;
   const entranceType = motionConfig?.entrance.type || "";
 
+  // 모든 애니메이션 훅을 무조건 최상위에서 호출 (Rules of Hooks 준수)
+  const bounceAnim = useBounceIn(delay, dur);
+  const springVal = useSpringValue(delay, motionConfig?.entrance.springConfig);
+  const fadeSlideAnim = useFadeSlide(delay, dur, motionConfig?.entrance.rise || 20);
+
   let opacity: number;
   let transform: string;
   let extraStyle: React.CSSProperties = {};
 
   // motionConfig가 있으면 entrance.type 기반 애니메이션
   if (entranceType === "bounce") {
-    const b = useBounceIn(delay, dur);
-    opacity = b.opacity as number;
-    transform = b.transform as string;
+    opacity = bounceAnim.opacity as number;
+    transform = bounceAnim.transform as string;
   } else if (entranceType === "scale" || entranceType === "overshoot") {
     opacity = interpolate(frame, [delay, delay + dur], [0, 1], clamp);
     const s = entranceType === "overshoot"
@@ -4046,13 +4054,11 @@ const LineReveal: React.FC<{
       : interpolate(frame, [delay, delay + dur], [0.6, 1], { ...clamp, easing: Easing.out(Easing.exp) });
     transform = `scale(${s})`;
   } else if (entranceType === "spring") {
-    const sv = useSpringValue(delay, motionConfig?.entrance.springConfig);
     opacity = interpolate(frame, [delay, delay + 8], [0, 1], clamp);
-    transform = `scale(${0.5 + sv * 0.5})`;
+    transform = `scale(${0.5 + springVal * 0.5})`;
   } else if (entranceType === "fadeSlide") {
-    const fs = useFadeSlide(delay, dur, motionConfig?.entrance.rise || 20);
-    opacity = fs.opacity as number;
-    transform = fs.transform as string;
+    opacity = fadeSlideAnim.opacity as number;
+    transform = fadeSlideAnim.transform as string;
   } else if (entranceType === "typewriter") {
     opacity = interpolate(frame, [delay, delay + 5], [0, 1], clamp);
     transform = "";

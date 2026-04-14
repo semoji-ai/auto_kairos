@@ -273,6 +273,43 @@ export function staggerDelay(index: number, gap = 8, base = 0) {
 }
 
 /* ================================================================
+   순수 함수 애니메이션 유틸 — .map() 안이나 조건 블록에서 사용
+   (useCurrentFrame 없이 frame을 직접 인자로 받음)
+   ================================================================ */
+
+export function fadeRise(frame: number, delay: number, dur = 20, rise = 25) {
+  const f = frame - delay;
+  const d = Math.max(dur, 1);
+  return {
+    opacity: interpolate(f, [0, d], [0, 1], { ...clamp, easing: ease }),
+    transform: `translateY(${interpolate(f, [0, d], [rise, 0], { ...clamp, easing: ease })}px)`,
+  };
+}
+
+export function fadeSlide(frame: number, delay: number, dur = 15, slide = 20) {
+  const f = frame - delay;
+  const d = Math.max(dur, 1);
+  return {
+    opacity: interpolate(f, [0, d], [0, 1], { ...clamp, easing: ease }),
+    transform: `translateX(${interpolate(f, [0, d], [slide, 0], { ...clamp, easing: ease })}px)`,
+  };
+}
+
+export function fadeVal(frame: number, delay: number, dur = 15, to = 1) {
+  const d = Math.max(dur, 1);
+  return interpolate(frame, [delay, delay + d], [0, to], clamp);
+}
+
+export function scaleAnim(frame: number, delay: number, dur = 20) {
+  const f = frame - delay;
+  const d = Math.max(dur, 1);
+  return {
+    opacity: interpolate(f, [0, d], [0, 1], { ...clamp, easing: ease }),
+    transform: `scale(${interpolate(f, [0, d], [0.85, 1], { ...clamp, easing: ease })})`,
+  };
+}
+
+/* ================================================================
    Accent Text Parser
    ================================================================ */
 
