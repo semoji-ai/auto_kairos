@@ -1620,29 +1620,8 @@ const ItemsList: React.FC<{
    QuoteDisplay — 인용문 전용 레이아웃
    ================================================================ */
 
-const GYEONGGI_FONT_FAMILY = "경기천년바탕체";
-
-/** 경기천년바탕 폰트 로딩 훅 — FontFace 직접 로드 (editor/thumb 양쪽 호환) */
-function useGyeonggiFont(): void {
-  useEffect(() => {
-    // 이미 로드됐으면 스킵
-    if (document.fonts.check(`16px "${GYEONGGI_FONT_FAMILY}"`)) return;
-    const faces = [
-      { file: "fonts/GyeonggiMillenniumBatang-Regular.ttf", weight: "400" },
-      { file: "fonts/GyeonggiMillenniumBatang-Bold.ttf", weight: "700" },
-    ];
-    faces.forEach(async ({ file, weight }) => {
-      try {
-        const url = staticFile(file);
-        const face = new FontFace(GYEONGGI_FONT_FAMILY, `url('${url}')`, { weight, style: "normal" });
-        const loaded = await face.load();
-        document.fonts.add(loaded);
-      } catch {
-        // fallback serif
-      }
-    });
-  }, []);
-}
+// mono 폰트는 usePresetFonts()가 --font-mono CSS var로 주입 — 별도 로딩 불필요
+const GYEONGGI_FONT_FAMILY = "var(--font-mono, 'GyeonggiMillenniumBatang', serif)";
 
 const QuoteDisplay: React.FC<{
   items: string[];
@@ -1659,8 +1638,6 @@ const QuoteDisplay: React.FC<{
   const frame = useCurrentFrame();
   const s = (f: number) => Math.round(f / speed);
   const quoteText = items[0] || "";
-
-  useGyeonggiFont();
 
   // typewriter effect
   const isTypewriter = reveal === "typewriter";
@@ -1756,7 +1733,7 @@ const QuoteDisplay: React.FC<{
             justifySelf: "start",
             fontSize: markFontSize,
             fontWeight: 700,
-            fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+            fontFamily: GYEONGGI_FONT_FAMILY,
             color: moodCfg.accent,
             opacity: markOpacity,
             lineHeight: 1,
@@ -1769,7 +1746,7 @@ const QuoteDisplay: React.FC<{
           <div style={{
             fontSize: quoteFontSize,
             fontWeight: 400,
-            fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+            fontFamily: GYEONGGI_FONT_FAMILY,
             color: C.text,
             textAlign: "center",
             lineHeight: 1.65,
@@ -1794,7 +1771,7 @@ const QuoteDisplay: React.FC<{
             justifySelf: "end",
             fontSize: markFontSize,
             fontWeight: 700,
-            fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+            fontFamily: GYEONGGI_FONT_FAMILY,
             color: moodCfg.accent,
             opacity: markOpacity,
             lineHeight: 1,
@@ -1810,7 +1787,7 @@ const QuoteDisplay: React.FC<{
               opacity: sourceOpacity,
               fontSize: T.sourceText,
               color: C.textMuted,
-              fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+              fontFamily: GYEONGGI_FONT_FAMILY,
               letterSpacing: "0.05em",
             }}>
               — {source}
@@ -3876,14 +3853,14 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 lineHeight: 1,
                 marginBottom: "-0.8em",
                 marginLeft: "-0.6em",
-                fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+                fontFamily: GYEONGGI_FONT_FAMILY,
                 userSelect: "none",
               }}>&ldquo;</span>
               {/* 2행: 텍스트 */}
               <div style={{
                 fontSize: T.quoteText,
                 fontWeight: 400,
-                fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+                fontFamily: GYEONGGI_FONT_FAMILY,
                 color: C.text,
                 lineHeight: 1.65,
                 whiteSpace: "pre-line",
@@ -3901,7 +3878,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 opacity: 0.6,
                 lineHeight: 1,
                 marginRight: "-0.6em",
-                fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+                fontFamily: GYEONGGI_FONT_FAMILY,
                 userSelect: "none",
               }}>&rdquo;</span>
               {/* 4행: 스피커/출처 — 오른쪽 정렬 */}
@@ -3911,7 +3888,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                   fontSize: T.sourceText,
                   color: C.textMuted,
                   marginTop: "-1.6em",
-                  fontFamily: `'${GYEONGGI_FONT_FAMILY}', serif`,
+                  fontFamily: GYEONGGI_FONT_FAMILY,
                 }}>— {quoteSource}</div>
               )}
             </div>
