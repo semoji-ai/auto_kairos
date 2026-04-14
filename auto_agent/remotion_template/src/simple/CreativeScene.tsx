@@ -1677,18 +1677,23 @@ const QuoteDisplay: React.FC<{
   const quoteFontSize = T.quoteText;
   const markFontSize = T.quoteMarkSize * 1.2;
 
+  // quote 전용 배경: 밝은 다크 그라데이션 (mood 글로우 없음)
+  const quoteBg = `radial-gradient(ellipse 120% 100% at 50% 40%, #232323 0%, #111111 55%, #0a0a0a 100%)`;
+
   return (
     <AbsoluteFill>
-      <MoodBackground mood={mood} transparent={hasImageBg || !!portrait} />
+      {/* 배경: 이미지/hasImageBg 있으면 투명, 없으면 밝은 다크 */}
+      {!hasImageBg && !portraitSrc && (
+        <div style={{ position: "absolute", inset: 0, background: quoteBg, zIndex: 0 }} />
+      )}
 
-      {/* Portrait as background image */}
+      {/* Portrait as background image — 전체 화면 깔고 중앙 페이드 */}
       {portraitSrc && (
         <div
           style={{
             position: "absolute",
             inset: 0,
             zIndex: 0,
-            opacity: portraitOpacity * 0.3,
             overflow: "hidden",
           }}
         >
@@ -1698,14 +1703,25 @@ const QuoteDisplay: React.FC<{
               width: "100%",
               height: "100%",
               objectFit: "cover",
-              filter: "blur(2px) grayscale(0.4)",
+              objectPosition: "center top",
+              opacity: portraitOpacity * 0.25,
+              filter: "blur(1px) grayscale(0.5)",
             }}
           />
+          {/* 중앙 페이드: 텍스트 가독성 확보 */}
           <div
             style={{
               position: "absolute",
               inset: 0,
-              background: `radial-gradient(ellipse at center, transparent 30%, ${C.bg} 80%)`,
+              background: `radial-gradient(ellipse 80% 70% at 50% 50%, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.2) 60%, transparent 100%)`,
+            }}
+          />
+          {/* 테두리 어둡게 */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: `radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)`,
             }}
           />
         </div>

@@ -144,7 +144,14 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const sceneImage = scene.imagePath || scene.vizBackgroundPath || "";
   const hasSceneImage = !!sceneImage;
   const hasAnyImage = hasSceneImage || !!defaultBg;
-  const placement = scene.imageAsset?.placement ?? "background";
+
+  // quote / quote_portrait 씬은 QuoteDisplay가 portrait를 배경으로 처리하므로
+  // SideLayout을 쓰지 않고 항상 background 경로로 라우팅
+  const layout = vizData?.layout || "";
+  const isQuoteLayout = layout === "quote" || layout === "quote_portrait";
+
+  const rawPlacement = scene.imageAsset?.placement ?? "background";
+  const placement = isQuoteLayout ? "background" : rawPlacement;
   const defaultOpacity = (placement === "background") ? 0.35 : 1.0;
   const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
   const imgSrc = sceneImage || defaultBg || "";
