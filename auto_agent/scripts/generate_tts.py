@@ -197,6 +197,18 @@ def main():
         data = json.load(f)
 
     scenes = data["scenes"]
+
+    # --scene N 옵션: 특정 씬만 처리 (대시보드 수동 재생성)
+    target_scene = None
+    argv = sys.argv[1:]
+    for idx, arg in enumerate(argv):
+        if arg == "--scene" and idx + 1 < len(argv):
+            target_scene = int(argv[idx + 1])
+            break
+    if target_scene is not None:
+        scenes = [s for s in scenes if (s.get("sceneNumber") or s.get("scene_number")) == target_scene]
+        print(f"--scene {target_scene}: {len(scenes)}개 씬만 처리")
+
     total = len(scenes)
     results = []
 

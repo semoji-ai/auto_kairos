@@ -160,6 +160,8 @@ async def execute_action(slug: str, action_name: str, request: Request):
                         for srt in sub_dir.glob(f"scene_{sn:03d}.*"):
                             srt.unlink()
                 next_cmd = [sys.executable, str(next_script)]
+                if body.get("scene_number"):
+                    next_cmd.extend(["--scene", str(body["scene_number"])])
                 chain_result = subprocess.run(
                     next_cmd, cwd=str(get_workspace_dir()),
                     env=env, capture_output=True, text=True, encoding="utf-8", timeout=300,

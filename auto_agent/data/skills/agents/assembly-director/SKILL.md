@@ -342,7 +342,7 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
 7. 재생성된 씬은 다시 Read로 검수 — 통과까지 최대 2회 반복, 그래도 미달이면 원본 유지하고 quality_notes에 기록
 ```
 
-**B-4. TTS 전처리** (트랙 B — 이미지와 병렬 가능)
+**B-4. TTS 전처리 + 자막 사전 분할** (트랙 B — 이미지와 병렬 가능)
 ```
 shared/korean-tts-rules 스킬을 참고하여 각 씬의 narration_tts 필드를 직접 채웁니다.
 문맥 기반 판단(금액 연음, 날짜 발음, 영어 약어 등)이 필요하므로 에이전트가 수행합니다.
@@ -351,6 +351,28 @@ shared/korean-tts-rules 스킬을 참고하여 각 씬의 narration_tts 필드�
   - 끝에 ... 또는 … 추가 금지
   - 원본에 없는 단어/문장 추가 금지
   - 숫자/기호 변환만 허용 (narration 내용 변경 금지)
+
+### 자막 사전 분할 (subtitle_lines / subtitle_lines_tts)
+
+narration_tts 작성과 동시에 자막 라인 분할도 수행합니다.
+generate_subtitles.py는 이 필드가 있으면 rule-based smart_split() 대신 우선 사용합니다.
+
+**분할 규칙:**
+- 한 라인 최대 20자 (공백 포함)
+- 자연스러운 의미 단위로 분할 (조사/연결어미 이후 > 절 경계 > 음절 경계)
+- 호흡이 느껴지는 지점에서 줄을 나눌 것
+- 숫자+단위는 분리하지 않음 (예: "3만 명" → 한 라인 유지)
+- 인용구/강조는 한 라인 안에 완결
+
+**필드 작성 방법 (scene_specs.json Edit):**
+- `subtitle_lines`: narration(원문)을 라인 단위 배열로 분할
+- `subtitle_lines_tts`: narration_tts(TTS용)를 라인 단위 배열로 분할
+  - narration == narration_tts이면 동일한 값 사용 가능
+  - TTS용은 숫자 변환이 반영된 텍스트 기준으로 분할
+
+**예시:**
+narration: "전 세계 3만 명의 연구자들이 이 문제를 풀기 위해 매일 밤을 새웠다."
+subtitle_lines: ["전 세계 3만 명의 연구자들이", "이 문제를 풀기 위해", "매일 밤을 새웠다."]
 ```
 
 **B-5. TTS 배치 생성**

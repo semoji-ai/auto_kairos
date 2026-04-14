@@ -474,14 +474,24 @@ def main():
                 audio = None
 
             # 디스플레이용 라인 분할 (원본 narration)
-            display_lines = smart_split(narration)
-            display_lines = fix_decimal_splits(display_lines)
-            display_lines = fix_quote_splits(display_lines)
+            # subtitle_lines 필드가 있으면 에이전트가 미리 분할한 결과를 사용 (우선)
+            pre_split = scene.get("subtitle_lines")
+            if pre_split and isinstance(pre_split, list) and len(pre_split) > 0:
+                display_lines = [l.strip() for l in pre_split if l.strip()]
+            else:
+                display_lines = smart_split(narration)
+                display_lines = fix_decimal_splits(display_lines)
+                display_lines = fix_quote_splits(display_lines)
 
             # TTS 라인 분할 (narration_tts — 실제 음성과 일치)
-            tts_lines = smart_split(narration_tts)
-            tts_lines = fix_decimal_splits(tts_lines)
-            tts_lines = fix_quote_splits(tts_lines)
+            # subtitle_lines_tts 필드가 있으면 에이전트 사전 분할 결과 사용
+            pre_split_tts = scene.get("subtitle_lines_tts")
+            if pre_split_tts and isinstance(pre_split_tts, list) and len(pre_split_tts) > 0:
+                tts_lines = [l.strip() for l in pre_split_tts if l.strip()]
+            else:
+                tts_lines = smart_split(narration_tts)
+                tts_lines = fix_decimal_splits(tts_lines)
+                tts_lines = fix_quote_splits(tts_lines)
 
             # === 1차: WhisperX forced alignment (narration_tts로 alignment) ===
             if WHISPERX_AVAILABLE:
