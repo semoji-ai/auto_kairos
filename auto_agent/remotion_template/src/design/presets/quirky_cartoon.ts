@@ -8,6 +8,7 @@ export const QUIRKY_CARTOON_PRESET: DesignPresetOverride = {
   baseTheme: tokens.baseTheme || "dark",
   defaultBackground: tokens.defaultBackground,
   colors: tokens.colors,
+  fonts: tokens.fonts,
   moods: tokens.moods,
   layout: tokens.layout,
   map: tokens.map,
