@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% block title %}아트스타일 관리{% endblock %}
+
+{% block head %}
+<style>
+/* ── 페이지 레이아웃 ── */
+.styles-page { padding: 24px 32px; max-width: 1200px; }
+.styles-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.styles-header h1 { font-size: 22px; font-weight: 700; color: #E4E4E7; margin: 0; }
+.styles-header .hint { font-size: 12px; color: #71717A; }
+
+/* ── 스타일 카드 그리드 ── */
+.styles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); gap: 24px; }
+
+.style-card {
+  background: #18181B;
+  border: 1px solid #27272A;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.style-card:hover { border-color: var(--card-accent); }
+
+/* 카드 상단 헤더 배너 */
+.style-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #27272A;
+  background: rgba(0,0,0,0.3);
+}
+.style-card-thumb {
+  width: 72px; height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 2px solid #27272A;
+  background: #27272A;
+  flex-shrink: 0;
+}
+.style-card-thumb-placeholder {
+  width: 72px; height: 72px;
+  border-radius: 10px;
+  border: 2px solid #27272A;
+  background: #27272A;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: #52525B;
+  flex-shrink: 0;
+}
+.style-card-title { flex: 1; min-width: 0; }
+.style-card-title h2 { font-size: 16px; font-weight: 700; color: #E4E4E7; margin: 0 0 4px; }
+.style-card-title .channel-badge {
+  display: inline-block;
+  font-size: 11px; padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(var(--card-accent-rgb),0.12);
+  color: var(--card-accent);
+  border: 1px solid rgba(var(--card-accent-rgb),0.25);
+}
+.style-card-title .style-id { font-size: 11px; color: #52525B; margin-top: 4px; font-family: monospace; }
+.theme-badge {
+  font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase;
+}
+.theme-badge.dark { background: #1C1C1E; color: #A1A1AA; border: 1px solid #3F3F46; }
+.theme-badge.light { background: #F4F4F5; color: #52525B; border: 1px solid #D4D4D8; }
+
+/* 카드 바디 */
+.style-card-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+
+/* 섹션 공통 */
+.style-section-label {
+  font-size: 10px; font-weight: 700; color: #52525B;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+
+/* 컬러 팔레트 */
+.color-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.color-swatch {
+  width: 28px; height: 28px; border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: default; position: relative;
+}
+.color-swatch:hover::after {
+  content: attr(data-label);
+  position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+  background: #0A0A0B; color: #E4E4E7; font-size: 10px;
+  padding: 3px 6px; border-radius: 4px; white-space: nowrap;
+  border: 1px solid #27272A; pointer-events: none; z-index: 10;
+}
+.mood-swatches { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.mood-chip {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; color: #A1A1AA;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #27272A; border-radius: 4px;
+  padding: 3px 7px;
+}
+.mood-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* 폰트셋 */
+.font-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.font-table th {
+  text-align: left; color: #52525B; font-weight: 600;
+  padding: 0 8px 6px 0; border-bottom: 1px solid #27272A; font-size: 11px;
+}
+.font-table td { padding: 5px 8px 5px 0; color: #A1A1AA; vertical-align: middle; }
+.font-table tr:not(:last-child) td { border-bottom: 1px solid #1C1C1E; }
+.font-role-badge {
+  font-size: 10px; padding: 2px 6px; border-radius: 3px;
+  background: rgba(255,255,255,0.05); color: #71717A;
+  font-family: monospace;
+}
+.font-family-name { color: #E4E4E7; font-weight: 500; }
+.font-file { font-family: monospace; font-size: 10px; color: #3F3F46; }
+.font-exists-ok { color: #10B981; font-size: 11px; }
+.font-exists-missing { color: #EF4444; font-size: 11px; }
+
+/* 자막 설정 */
+.subtitle-preview {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  display: inline-block;
+  max-width: 100%;
+}
+.subtitle-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.subtitle-meta-item { font-size: 11px; color: #71717A; }
+.subtitle-meta-item span { color: #A1A1AA; }
+
+/* 보이스 */
+.voice-row { display: flex; align-items: center; gap: 10px; }
+.voice-id-code {
+  font-family: monospace; font-size: 12px; color: #A1A1AA;
+  background: rgba(255,255,255,0.04); border: 1px solid #27272A;
+  border-radius: 5px; padding: 4px 10px; flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.voice-preview-btn {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; padding: 5px 12px; border-radius: 6px;
+  background: rgba(255,255,255,0.05); border: 1px solid #27272A;
+  color: #A1A1AA; cursor: pointer; white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.voice-preview-btn:hover { background: rgba(255,255,255,0.09); color: #E4E4E7; }
+.voice-preview-btn.loading { opacity: 0.5; pointer-events: none; }
+audio.voice-preview-audio { height: 28px; width: 100%; margin-top: 8px; display: none; }
+audio.voice-preview-audio:not([src=""]) { display: block; }
+
+/* 이미지 스타일 프롬프트 */
+.prompt-box {
+  font-size: 11px; color: #71717A; line-height: 1.6;
+  background: rgba(0,0,0,0.25); border: 1px solid #27272A;
+  border-radius: 6px; padding: 10px 12px;
+  max-height: 80px; overflow-y: auto;
+}
+.requirements-list { margin: 6px 0 0; padding-left: 14px; }
+.requirements-list li { font-size: 11px; color: #52525B; line-height: 1.6; }
+
+/* 가이드라인 */
+.guidelines-text {
+  font-size: 12px; color: #71717A; line-height: 1.6;
+  font-style: italic;
+}
+
+/* 빈 상태 */
+.styles-empty { padding: 60px; text-align: center; color: #52525B; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="styles-page">
+  <div class="styles-header">
+    <h1>🎨 아트스타일 관리</h1>
+    <span class="hint">auto_agent/data/artstyle/styles/*.json 단일 소스 — 수정 후 <code>scripts/generate_presets.py</code> 실행</span>
+  </div>
+
+  {% if styles %}
+  <div class="styles-grid">
+    {% for s in styles %}
+    <div class="style-card" style="--card-accent: {{ s.accent }}; --card-accent-rgb: {{ s.accent_rgb }};">
+
+      {# ── 카드 헤더 ── #}
+      <div class="style-card-header">
+        {% if s.ref_img_url %}
+          <img class="style-card-thumb" src="{{ s.ref_img_url }}" alt="{{ s.name }}">
+        {% else %}
+          <div class="style-card-thumb-placeholder">🎨</div>
+        {% endif %}
+        <div class="style-card-title">
+          <h2>{{ s.name }}</h2>
+          {% if s.channel %}<span class="channel-badge">{{ s.channel }}</span>{% endif %}
+          <div class="style-id">{{ s.id }}</div>
+        </div>
+        <span class="theme-badge {{ s.base_theme }}">{{ s.base_theme }}</span>
+      </div>
+
+      <div class="style-card-body">
+
+        {# ── 컬러 테마 ── #}
+        <div>
+          <div class="style-section-label">컬러 테마</div>
+          <div class="color-row">
+            {% for key, hex in s.colors.items() %}
+              {% if hex and hex.startswith('#') %}
+              <div class="color-swatch" style="background:{{ hex }}" data-label="{{ key }}: {{ hex }}"></div>
+              {% endif %}
+            {% endfor %}
+          </div>
+          {% if s.moods %}
+          <div class="mood-swatches">
+            {% for mood_name, mood in s.moods.items() %}
+            <div class="mood-chip">
+              <div class="mood-dot" style="background:{{ mood.accent }}"></div>
+              {{ mood_name }}
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        {# ── 폰트셋 ── #}
+        {% if s.font_files %}
+        <div>
+          <div class="style-section-label">폰트셋</div>
+          <table class="font-table">
+            <thead>
+              <tr>
+                <th>role</th><th>family</th><th>file</th><th>w</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ff in s.font_files %}
+              <tr>
+                <td><span class="font-role-badge">{{ ff.role }}</span></td>
+                <td><span class="font-family-name">{{ ff.family }}</span></td>
+                <td><span class="font-file">{{ ff.file }}</span></td>
+                <td style="color:#52525B">{{ ff.weight }}</td>
+                <td>
+                  {% if ff.exists %}
+                    <span class="font-exists-ok">✓</span>
+                  {% else %}
+                    <span class="font-exists-missing" title="파일 없음 — setup_fonts.sh 실행">✗</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+
+        {# ── 자막 설정 ── #}
+        {% if s.subtitle %}
+        <div>
+          <div class="style-section-label">자막 설정</div>
+          <div class="subtitle-preview" style="
+            font-family: '{{ s.subtitle.fontFamily }}', sans-serif;
+            font-size: {{ [s.subtitle.fontSize // 2, 14] | max }}px;
+            font-weight: {{ s.subtitle.fontWeight or 700 }};
+            color: {{ s.subtitle.color or '#fff' }};
+            background: {{ s.subtitle.backgroundColor or 'rgba(0,0,0,0.75)' }};
+            border-radius: {{ s.subtitle.borderRadius or 8 }}px;
+          ">예시: 이 채널에서 가장 중요한 <span style="color:{{ s.subtitle.keywordColor or s.accent }}">키워드</span>입니다</div>
+          <div class="subtitle-meta">
+            <div class="subtitle-meta-item">폰트 <span>{{ s.subtitle.fontFamily }}</span></div>
+            <div class="subtitle-meta-item">크기 <span>{{ s.subtitle.fontSize }}px</span></div>
+            <div class="subtitle-meta-item">최대 <span>{{ s.subtitle.max_chars_per_line or '—' }}자/줄</span></div>
+            <div class="subtitle-meta-item">여백 <span>bottom {{ s.subtitle.bottomOffset or 60 }}px</span></div>
+          </div>
+        </div>
+        {% endif %}
+
+        {# ── 보이스 ── #}
+        <div>
+          <div class="style-section-label">보이스</div>
+          <div class="voice-row">
+            <div class="voice-id-code">{{ s.voice_id or '(미설정)' }}</div>
+            {% if s.voice_id and s.voice_id != 'default' %}
+            <button class="voice-preview-btn" onclick="previewVoice('{{ s.voice_id }}', this)">
+              ▶ 미리듣기
+            </button>
+            {% endif %}
+          </div>
+          {% if s.voice_settings %}
+          <div class="subtitle-meta" style="margin-top:6px">
+            {% for k, v in s.voice_settings.items() %}
+            <div class="subtitle-meta-item">{{ k }} <span>{{ v }}</span></div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <audio class="voice-preview-audio" id="audio-{{ s.id }}" controls></audio>
+        </div>
+
+        {# ── 이미지 스타일 프롬프트 ── #}
+        {% if s.scene_style_description %}
+        <div>
+          <div class="style-section-label">이미지 생성 스타일</div>
+          <div class="prompt-box">{{ s.scene_style_description }}</div>
+          {% if s.critical_requirements %}
+          <ul class="requirements-list">
+            {% for req in s.critical_requirements %}
+            <li>{{ req }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {# ── 가이드라인 ── #}
+        {% if s.guidelines %}
+        <div>
+          <div class="style-section-label">에이전트 가이드라인</div>
+          <div class="guidelines-text">{{ s.guidelines }}</div>
+        </div>
+        {% endif %}
+
+      </div>{# /card-body #}
+    </div>{# /style-card #}
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="styles-empty">
+    등록된 아트스타일이 없습니다.<br>
+    <code>auto_agent/data/artstyle/styles/</code> 에 JSON 파일을 추가하세요.
+  </div>
+  {% endif %}
+</div>
+
+<script>
+async function previewVoice(voiceId, btn) {
+  const audioEl = document.getElementById('audio-' + voiceId.replace(/[^a-z0-9]/gi, '_'));
+  // voice_id가 style id와 다를 수 있으므로 가장 가까운 audio 태그 찾기
+  const card = btn.closest('.style-card');
+  const audio = card.querySelector('audio.voice-preview-audio');
+  if (!audio) return;
+
+  btn.classList.add('loading');
+  btn.textContent = '로딩 중...';
+
+  try {
+    const resp = await fetch(`/api/styles/voice-preview/${voiceId}`);
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      alert('미리듣기 실패: ' + (err.error || resp.status));
+      return;
+    }
+    const blob = await resp.blob();
+    audio.src = URL.createObjectURL(blob);
+    audio.play();
+  } catch(e) {
+    alert('미리듣기 오류: ' + e.message);
+  } finally {
+    btn.classList.remove('loading');
+    btn.textContent = '▶ 미리듣기';
+  }
+}
+</script>
+{% endblock %}

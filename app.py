@@ -96,6 +96,11 @@ output_dir = workspace / "output"
 if output_dir.exists():
     app.mount("/output", StaticFiles(directory=str(output_dir)), name="output")
 
+# 아트스타일 이미지 서빙 (/static/artstyle/ → auto_agent/data/artstyle/styles/)
+_artstyle_dir = workspace / "auto_agent" / "data" / "artstyle" / "styles"
+if _artstyle_dir.exists():
+    app.mount("/static/artstyle", StaticFiles(directory=str(_artstyle_dir)), name="artstyle")
+
 # chartagent 정적 대시보드 서빙 (/chartagent-dash/ → workspace/chartagent_dashboard/)
 _chartagent_dash_dir = workspace / "chartagent_dashboard"
 _chartagent_dash_dir.mkdir(parents=True, exist_ok=True)
@@ -430,6 +435,97 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
 async def vault_search_page(request: Request):
     """볼트 시맨틱 검색 페이지."""
     return templates.TemplateResponse(request, "vault_search.html", {})
+
+
+@app.get("/styles", response_class=HTMLResponse)
+async def styles_page(request: Request):
+    """아트스타일 관리 페이지."""
+    styles_dir = workspace / "auto_agent" / "data" / "artstyle" / "styles"
+    fonts_dir = workspace / "remotion" / "public" / "fonts"
+    styles = []
+    for json_path in sorted(styles_dir.glob("*.json")):
+        try:
+            data = json.loads(json_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        dt = data.get("design_tokens", {})
+        fonts = dt.get("fonts", {})
+        subtitle = dt.get("subtitle", {})
+        colors = dt.get("colors", {})
+        voice = data.get("voice", {})
+        image = data.get("image", {})
+
+        # 폰트 파일 존재 여부 확인
+        font_files = []
+        for role, fdef in fonts.items():
+            for ff in fdef.get("files", []):
+                fname = Path(ff["file"]).name
+                exists = (fonts_dir / fname).exists()
+                font_files.append({
+                    "role": role,
+                    "family": fdef.get("family", ""),
+                    "file": fname,
+                    "weight": ff.get("weight", "400"),
+                    "exists": exists,
+                })
+
+        # 레퍼런스 이미지 URL
+        ref_img = data.get("reference_image", "") or image.get("reference_image", "")
+        ref_img_url = None
+        if ref_img:
+            img_path = workspace / "auto_agent" / "data" / ref_img
+            if img_path.exists():
+                ref_img_url = f"/static/artstyle/{Path(ref_img).name}"
+
+        styles.append({
+            "id": data.get("id", json_path.stem),
+            "name": data.get("name", json_path.stem),
+            "description": data.get("description", ""),
+            "channel": data.get("channel"),
+            "base_theme": dt.get("baseTheme", "dark"),
+            "accent": colors.get("accent", "#888"),
+            "accent_rgb": colors.get("accentRgb", "136,136,136"),
+            "colors": colors,
+            "moods": dt.get("moods", {}),
+            "voice_id": voice.get("voice_id", ""),
+            "voice_settings": voice.get("voice_settings", {}),
+            "font_files": font_files,
+            "subtitle": subtitle,
+            "ref_img_url": ref_img_url,
+            "scene_style_description": image.get("scene_style_description", ""),
+            "critical_requirements": image.get("critical_requirements", []),
+            "guidelines": data.get("guidelines", ""),
+        })
+
+    return templates.TemplateResponse(request, "styles.html", {"styles": styles})
+
+
+@app.get("/api/styles/voice-preview/{voice_id}")
+async def voice_preview(voice_id: str):
+    """ElevenLabs voice preview — 샘플 텍스트 TTS 스트리밍."""
+    import httpx
+    api_key = os.environ.get("ELEVENLABS_API_KEY", "")
+    if not api_key:
+        return JSONResponse({"error": "ELEVENLABS_API_KEY 미설정"}, status_code=500)
+
+    sample_text = "안녕하세요. 이 목소리로 영상을 제작합니다."
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            resp = await client.post(
+                f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream",
+                headers={"xi-api-key": api_key, "Content-Type": "application/json"},
+                json={
+                    "text": sample_text,
+                    "model_id": "eleven_multilingual_v2",
+                    "voice_settings": {"stability": 0.8, "similarity_boost": 0.9, "style": 0.5},
+                },
+            )
+        if resp.status_code != 200:
+            return JSONResponse({"error": f"ElevenLabs 오류 {resp.status_code}"}, status_code=502)
+        from fastapi.responses import Response
+        return Response(content=resp.content, media_type="audio/mpeg")
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 @app.get("/", response_class=HTMLResponse)
