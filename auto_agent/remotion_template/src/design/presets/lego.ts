@@ -66,6 +66,20 @@ export const LEGO_PRESET: DesignPresetOverride = {
         },
       ],
     },
+    mono: {
+      family: "GyeonggiMillenniumBatang",
+      fallback: "serif",
+      files: [
+        {
+          file: "fonts/GyeonggiMillenniumBatang-Regular.ttf",
+          weight: "400",
+        },
+        {
+          file: "fonts/GyeonggiMillenniumBatang-Bold.ttf",
+          weight: "700",
+        },
+      ],
+    },
   },
   subtitle: {
     fontSize: 54,

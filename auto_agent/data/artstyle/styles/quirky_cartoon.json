@@ -64,23 +64,6 @@
     "map": {
       "defaultTheme": "warm_earth"
     },
-    "subtitle": {
-      "fontSize": 66,
-      "fontFamily": "EunpyeongSagaDogseoText",
-      "fontWeight": 400,
-      "color": "#1A1A1A",
-      "strokeWidth": 0,
-      "strokeColor": "transparent",
-      "keywordColor": "#C05000",
-      "keywordStrokeColor": "transparent",
-      "backgroundColor": "#FFF8E7",
-      "borderRadius": 10,
-      "boxShadow": "0 4px 16px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2)",
-      "bottomOffset": 80,
-      "maxWidth": "90%",
-      "lineHeight": 1.4,
-      "max_chars_per_line": 25
-    },
     "fonts": {
       "body": {
         "family": "Pretendard",
@@ -140,6 +123,23 @@
           }
         ]
       }
+    },
+    "subtitle": {
+      "fontSize": 66,
+      "fontFamily": "EunpyeongSagaDogseoText",
+      "fontWeight": 400,
+      "color": "#1A1A1A",
+      "strokeWidth": 0,
+      "strokeColor": "transparent",
+      "keywordColor": "#C05000",
+      "keywordStrokeColor": "transparent",
+      "backgroundColor": "#FFF8E7",
+      "borderRadius": 10,
+      "boxShadow": "0 4px 16px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2)",
+      "bottomOffset": 80,
+      "maxWidth": "90%",
+      "lineHeight": 1.4,
+      "max_chars_per_line": 25
     }
   },
   "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",

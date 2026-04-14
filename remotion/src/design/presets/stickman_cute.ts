@@ -16,6 +16,7 @@ export const STICKMANCUTE_PRESET: DesignPresetOverride = {
   },
   layout: {
     gap: 20,
+    cardRadius: 16,
   },
   map: {
     defaultTheme: "clean_white",
@@ -61,6 +62,20 @@ export const STICKMANCUTE_PRESET: DesignPresetOverride = {
       files: [
         {
           file: "fonts/Pretendard-Bold.otf",
+          weight: "700",
+        },
+      ],
+    },
+    mono: {
+      family: "GyeonggiMillenniumBatang",
+      fallback: "serif",
+      files: [
+        {
+          file: "fonts/GyeonggiMillenniumBatang-Regular.ttf",
+          weight: "400",
+        },
+        {
+          file: "fonts/GyeonggiMillenniumBatang-Bold.ttf",
           weight: "700",
         },
       ],

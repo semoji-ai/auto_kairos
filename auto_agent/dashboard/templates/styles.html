@@ -150,13 +150,30 @@ audio.voice-preview-audio { height: 28px; width: 100%; margin-top: 8px; display:
 audio.voice-preview-audio:not([src=""]) { display: block; }
 
 /* 이미지 스타일 프롬프트 */
-.prompt-box {
-  font-size: 11px; color: #71717A; line-height: 1.6;
+.prompt-summary {
+  font-size: 12px; color: #A1A1AA; line-height: 1.6;
+  background: rgba(0,0,0,0.25); border: 1px solid #27272A;
+  border-radius: 6px; padding: 8px 12px;
+}
+.prompt-full {
+  margin-top: 6px;
   background: rgba(0,0,0,0.25); border: 1px solid #27272A;
   border-radius: 6px; padding: 10px 12px;
-  max-height: 80px; overflow-y: auto;
 }
-.requirements-list { margin: 6px 0 0; padding-left: 14px; }
+.prompt-line {
+  font-size: 11px; color: #71717A; line-height: 1.7;
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.prompt-line:last-child { border-bottom: none; }
+.prompt-toggle-btn {
+  font-size: 10px; padding: 1px 6px; border-radius: 3px;
+  background: rgba(255,255,255,0.05); border: 1px solid #3F3F46;
+  color: #71717A; cursor: pointer;
+}
+.prompt-toggle-btn:hover { color: #A1A1AA; }
+.prompt-requirements-label { font-size: 10px; color: #52525B; margin-top: 8px; }
+.requirements-list { margin: 4px 0 0; padding-left: 14px; }
 .requirements-list li { font-size: 11px; color: #52525B; line-height: 1.6; }
 
 /* 가이드라인 */
@@ -294,12 +311,27 @@ audio.voice-preview-audio:not([src=""]) { display: block; }
           <audio class="voice-preview-audio" id="audio-{{ s.id }}" controls></audio>
         </div>
 
-        {# ── 이미지 스타일 프롬프트 ── #}
-        {% if s.scene_style_description %}
+        {# ── 이미지 생성 스타일 프롬프트 ── #}
+        {% if s.scene_style_description or s.style_detail_lines %}
         <div>
-          <div class="style-section-label">이미지 생성 스타일</div>
-          <div class="prompt-box">{{ s.scene_style_description }}</div>
+          <div class="style-section-label">
+            이미지 생성 스타일 프롬프트
+            <button class="prompt-toggle-btn" onclick="togglePrompt(this)" style="margin-left:8px">펼치기 ▾</button>
+          </div>
+          {# 한 줄 요약 (항상 표시) #}
+          {% if s.scene_style_description %}
+          <div class="prompt-summary">{{ s.scene_style_description }}</div>
+          {% endif %}
+          {# 전문 (토글) #}
+          {% if s.style_detail_lines %}
+          <div class="prompt-full" style="display:none">
+            {% for line in s.style_detail_lines %}
+            <div class="prompt-line">{{ line }}</div>
+            {% endfor %}
+          </div>
+          {% endif %}
           {% if s.critical_requirements %}
+          <div class="prompt-requirements-label">⚠ 필수 요건</div>
           <ul class="requirements-list">
             {% for req in s.critical_requirements %}
             <li>{{ req }}</li>
@@ -331,6 +363,15 @@ audio.voice-preview-audio:not([src=""]) { display: block; }
 </div>
 
 <script>
+function togglePrompt(btn) {
+  const section = btn.closest('div');
+  const full = section.querySelector('.prompt-full');
+  if (!full) return;
+  const visible = full.style.display !== 'none';
+  full.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? '펼치기 ▾' : '접기 ▴';
+}
+
 async function previewVoice(voiceId, btn) {
   const audioEl = document.getElementById('audio-' + voiceId.replace(/[^a-z0-9]/gi, '_'));
   // voice_id가 style id와 다를 수 있으므로 가장 가까운 audio 태그 찾기

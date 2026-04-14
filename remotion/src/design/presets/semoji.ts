@@ -14,6 +14,13 @@ export const SEMOJI_PRESET: DesignPresetOverride = {
     cardBg: "rgba(74,144,217,0.06)",
     cardBorder: "rgba(74,144,217,0.2)",
   },
+  layout: {
+    cardRadius: 16,
+    gap: 28,
+  },
+  map: {
+    defaultTheme: "warm_earth",
+  },
   fonts: {
     body: {
       family: "Pretendard",
@@ -55,6 +62,20 @@ export const SEMOJI_PRESET: DesignPresetOverride = {
       files: [
         {
           file: "fonts/Pretendard-Bold.otf",
+          weight: "700",
+        },
+      ],
+    },
+    mono: {
+      family: "GyeonggiMillenniumBatang",
+      fallback: "serif",
+      files: [
+        {
+          file: "fonts/GyeonggiMillenniumBatang-Regular.ttf",
+          weight: "400",
+        },
+        {
+          file: "fonts/GyeonggiMillenniumBatang-Bold.ttf",
           weight: "700",
         },
       ],

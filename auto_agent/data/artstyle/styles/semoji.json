@@ -88,8 +88,6 @@
     "baseTheme": "light",
     "defaultBackground": "",
     "colors": {
-      "bg": "#FAFAFA",
-      "fg": "#1A1A2E",
       "accent": "#4A90D9",
       "accentRgb": "74,144,217",
       "accentBg": "rgba(74,144,217,0.08)",
@@ -101,57 +99,53 @@
     "moods": {
       "dramatic": {
         "accent": "#E74C3C",
-        "accentRgb": "231,76,60"
-      },
-      "informative": {
-        "accent": "#4A90D9",
-        "accentRgb": "74,144,217"
-      },
-      "contemplative": {
-        "accent": "#8E7CC3",
-        "accentRgb": "142,124,195"
-      },
-      "triumphant": {
-        "accent": "#F5A623",
-        "accentRgb": "245,166,35"
-      },
-      "somber": {
-        "accent": "#7F8C8D",
-        "accentRgb": "127,140,141"
+        "accentRgb": "231,76,60",
+        "speed": 1.2,
+        "glow": 0.6
       },
       "urgent": {
         "accent": "#E74C3C",
-        "accentRgb": "231,76,60"
+        "accentRgb": "231,76,60",
+        "speed": 1.5,
+        "glow": 0.8
+      },
+      "somber": {
+        "accent": "#7F8C8D",
+        "accentRgb": "127,140,141",
+        "speed": 0.7,
+        "glow": 0.2
+      },
+      "informative": {
+        "accent": "#4A90D9",
+        "accentRgb": "74,144,217",
+        "speed": 1.0,
+        "glow": 0.3
+      },
+      "contemplative": {
+        "accent": "#8E7CC3",
+        "accentRgb": "142,124,195",
+        "speed": 0.6,
+        "glow": 0.2
       },
       "suspense": {
         "accent": "#34495E",
-        "accentRgb": "52,73,94"
+        "accentRgb": "52,73,94",
+        "speed": 0.8,
+        "glow": 0.5
+      },
+      "triumphant": {
+        "accent": "#F5A623",
+        "accentRgb": "245,166,35",
+        "speed": 1.0,
+        "glow": 0.5
       }
     },
-    "font": {
-      "headline": "'Pretendard', 'Noto Sans KR', sans-serif",
-      "body": "'Pretendard', 'Noto Sans KR', sans-serif"
+    "layout": {
+      "cardRadius": 16,
+      "gap": 28
     },
-    "card": "bordered",
-    "circleBadge": "50%",
-    "imageBadge": "12px",
-    "iconBadge": "12px",
-    "subtitle": {
-      "max_chars_per_line": 30,
-      "fontSize": 52,
-      "fontFamily": "Pretendard",
-      "fontWeight": 700,
-      "color": "#1A1A2E",
-      "strokeWidth": 0,
-      "strokeColor": "transparent",
-      "keywordColor": "#4A90D9",
-      "keywordStrokeColor": "transparent",
-      "backgroundColor": "rgba(255,255,255,0.92)",
-      "borderRadius": 8,
-      "boxShadow": "0 2px 12px rgba(0,0,0,0.15)",
-      "bottomOffset": 60,
-      "maxWidth": "92%",
-      "lineHeight": 1.4
+    "map": {
+      "defaultTheme": "warm_earth"
     },
     "fonts": {
       "body": {
@@ -197,7 +191,38 @@
             "weight": "700"
           }
         ]
+      },
+      "mono": {
+        "family": "GyeonggiMillenniumBatang",
+        "fallback": "serif",
+        "files": [
+          {
+            "file": "fonts/GyeonggiMillenniumBatang-Regular.ttf",
+            "weight": "400"
+          },
+          {
+            "file": "fonts/GyeonggiMillenniumBatang-Bold.ttf",
+            "weight": "700"
+          }
+        ]
       }
+    },
+    "subtitle": {
+      "max_chars_per_line": 30,
+      "fontSize": 52,
+      "fontFamily": "Pretendard",
+      "fontWeight": 700,
+      "color": "#1A1A2E",
+      "strokeWidth": 0,
+      "strokeColor": "transparent",
+      "keywordColor": "#4A90D9",
+      "keywordStrokeColor": "transparent",
+      "backgroundColor": "rgba(255,255,255,0.92)",
+      "borderRadius": 8,
+      "boxShadow": "0 2px 12px rgba(0,0,0,0.15)",
+      "bottomOffset": 60,
+      "maxWidth": "92%",
+      "lineHeight": 1.4
     }
   },
   "guidelines": "세모지는 정보 전달 중심. 친근한 설명체, 데이터 시각화 적극 활용. cinematic staging으로 장면 연출."

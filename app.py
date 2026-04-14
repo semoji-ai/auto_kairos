@@ -453,11 +453,14 @@ async def styles_page(request: Request):
         subtitle = dt.get("subtitle", {})
         colors = dt.get("colors", {})
         voice = data.get("voice", {})
-        image = data.get("image", {})
 
-        # 폰트 파일 존재 여부 확인
+        # 폰트 파일 존재 여부 확인 (role 순서 고정)
+        role_order = ["body", "headline", "value", "mono", "subtitle"]
         font_files = []
-        for role, fdef in fonts.items():
+        for role in role_order:
+            fdef = fonts.get(role)
+            if not fdef:
+                continue
             for ff in fdef.get("files", []):
                 fname = Path(ff["file"]).name
                 exists = (fonts_dir / fname).exists()
@@ -469,13 +472,30 @@ async def styles_page(request: Request):
                     "exists": exists,
                 })
 
-        # 레퍼런스 이미지 URL
-        ref_img = data.get("reference_image", "") or image.get("reference_image", "")
+        # 레퍼런스 이미지 URL — 최상위 reference_image 필드 사용
+        ref_img = data.get("reference_image", "")
         ref_img_url = None
         if ref_img:
             img_path = workspace / "auto_agent" / "data" / ref_img
             if img_path.exists():
                 ref_img_url = f"/static/artstyle/{Path(ref_img).name}"
+
+        # 아트스타일 프롬프트 전문 구성 (이미지 생성 시 실제 사용하는 텍스트)
+        scene_desc = data.get("scene_style_description", "")
+        style_obj = data.get("style", {})
+        # style 섹션을 읽기 좋은 블록으로 조립
+        style_lines = []
+        if style_obj.get("art_style"):
+            style_lines.append(style_obj["art_style"])
+        for key in ["linework", "shapes", "color_palette", "shading", "character_design",
+                    "mood_and_tone", "background"]:
+            val = style_obj.get(key)
+            if isinstance(val, dict):
+                style_lines.append(f"{key}: " + " / ".join(f"{k}: {v}" for k, v in val.items()))
+            elif isinstance(val, str) and val:
+                style_lines.append(f"{key}: {val}")
+        technical = data.get("technical", {})
+        critical = technical.get("critical_requirements", [])
 
         styles.append({
             "id": data.get("id", json_path.stem),
@@ -487,13 +507,15 @@ async def styles_page(request: Request):
             "accent_rgb": colors.get("accentRgb", "136,136,136"),
             "colors": colors,
             "moods": dt.get("moods", {}),
+            "layout": dt.get("layout", {}),
             "voice_id": voice.get("voice_id", ""),
             "voice_settings": voice.get("voice_settings", {}),
             "font_files": font_files,
             "subtitle": subtitle,
             "ref_img_url": ref_img_url,
-            "scene_style_description": image.get("scene_style_description", ""),
-            "critical_requirements": image.get("critical_requirements", []),
+            "scene_style_description": scene_desc,
+            "style_detail_lines": style_lines,
+            "critical_requirements": critical,
             "guidelines": data.get("guidelines", ""),
         })
 
