@@ -40,7 +40,12 @@
     </div>
   </div>
 
-  <!-- ── 2. 뷰 전환 탭 + 스켈레톤 컨테이너 ── -->
+  <!-- ── 2. 스켈레톤 바 ── -->
+  <div id="skeleton-bar" style="display:none;">
+    <div id="skeleton-bar-inner"></div>
+  </div>
+
+  <!-- ── 3. 뷰 전환 탭 ── -->
   <div id="pipeline-ctrl-bar">
     <div class="pctrl-tabs">
       <button class="pctrl-tab active" onclick="setContentView('split', this)">리서치 + 원고</button>
@@ -186,6 +191,76 @@
   gap: 8px;
   margin-left: auto;
   padding-left: 12px;
+}
+
+/* ── 스켈레톤 바 ── */
+#skeleton-bar {
+  padding: 8px 16px;
+  background: rgba(245,158,11,0.04);
+  border-bottom: 1px solid rgba(245,158,11,0.12);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+#skeleton-bar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+}
+.sk-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(245,158,11,0.6);
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.sk-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.sk-section + .sk-section::before {
+  content: '·';
+  color: rgba(255,255,255,0.15);
+  margin: 0 2px;
+}
+.sk-chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  color: #A1A1AA;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sk-fig {
+  background: rgba(139,92,246,0.12);
+  color: #C4B5FD;
+}
+.sk-timeline {
+  gap: 6px;
+}
+.sk-tl-item {
+  font-size: 11px;
+  color: #A1A1AA;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.sk-yr {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(245,158,11,0.7);
+  background: rgba(245,158,11,0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
 }
 
 /* ── 컨트롤 바 ── */
@@ -535,7 +610,47 @@
   }
 
   // ── 스켈레톤/아웃라인 이벤트 로그 ──
-  function applySkeletonSummary(data, label) { /* research canvas가 처리 */ }
+  function applySkeletonSummary(data, label) {
+    var bar = document.getElementById('skeleton-bar');
+    var inner = document.getElementById('skeleton-bar-inner');
+    if (!bar || !inner) return;
+
+    var bullets = data.summary_bullets || [];
+    var timeline = (data.timeline || []).slice(0, 5);
+    var figures = (data.key_figures || []).slice(0, 4);
+
+    var html = '<div class="sk-label">' + label + '</div>';
+
+    if (bullets.length) {
+      html += '<div class="sk-section">';
+      bullets.forEach(function(b) {
+        html += '<span class="sk-chip">' + _esc(b) + '</span>';
+      });
+      html += '</div>';
+    }
+    if (timeline.length) {
+      html += '<div class="sk-section sk-timeline">';
+      timeline.forEach(function(t) {
+        var yr = t.year ? ('<span class="sk-yr">' + _esc(t.year) + '</span>') : '';
+        html += '<span class="sk-tl-item">' + yr + _esc(t.event || '') + '</span>';
+      });
+      html += '</div>';
+    }
+    if (figures.length) {
+      html += '<div class="sk-section">';
+      figures.forEach(function(f) {
+        html += '<span class="sk-chip sk-fig">' + _esc(f.name || '') + '</span>';
+      });
+      html += '</div>';
+    }
+
+    inner.innerHTML = html;
+    bar.style.display = 'block';
+  }
+
+  function _esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
 
   // ── snapshot 적용 ──
   function applySnapshot(snap) {

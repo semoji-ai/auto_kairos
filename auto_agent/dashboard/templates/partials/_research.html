@@ -110,7 +110,7 @@
 }
 
 /* ── Chapter Section (Research) ── */
-.rc-ch-section { margin-bottom: 24px; }
+.rc-ch-section { margin-bottom: 28px; }
 .rc-ch-title {
   font-size: 12px;
   font-weight: 700;
@@ -122,6 +122,41 @@
   top: 0;
   background: var(--bg);
   z-index: 1;
+}
+
+/* ── Chapter Purpose ── */
+.rc-ch-purpose {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  line-height: 1.5;
+  opacity: 0.7;
+}
+
+/* ── Research Focus Questions ── */
+.rc-focus-wrap {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rc-focus-q {
+  font-size: 11px;
+  color: rgba(245,158,11,0.55);
+  padding: 3px 8px;
+  border-left: 2px solid rgba(245,158,11,0.2);
+  background: rgba(245,158,11,0.04);
+  border-radius: 0 4px 4px 0;
+  line-height: 1.5;
+}
+
+/* ── Claims Wrap & Waiting ── */
+.rc-claims-wrap { min-height: 24px; }
+.rc-ch-waiting {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 6px 0;
+  opacity: 0.5;
 }
 
 /* ── Claim Card ── */
@@ -221,6 +256,7 @@
   var msBadge = document.getElementById('rc-ms-badge');
 
   var chapterMap = {};
+  var chapterDetails = {};  // chapter_number → {title, purpose, research_focus}
   var claimsByChapter = {};
   var totalClaims = 0;
 
@@ -231,7 +267,15 @@
       chapterMap = d.chapter_map || {};
       claimsByChapter = d.grouped_claims || {};
       totalClaims = d.total_claims || 0;
-      renderClaims();
+
+      // 챕터 상세 정보 저장 (research_focus 포함)
+      var chapters = d.chapters || [];
+      chapters.forEach(function(ch) {
+        var num = ch.chapter_number || ch.id || 0;
+        chapterDetails[String(num)] = ch;
+      });
+
+      renderOutlineFirst(chapters);
       countEl.textContent = totalClaims + ' claims';
     })
     .catch(function() {
@@ -259,39 +303,93 @@
     msBadge.className = 'rc-ms-badge';
   }
 
-  // ── Claims 렌더링 ──
-  function renderClaims() {
-    if (!Object.keys(claimsByChapter).length) {
-      claimsBody.innerHTML = '<div class="rc-empty">수집된 claim이 없습니다</div>';
-      return;
-    }
+  // ── Outline-first 렌더링 ──
+  function renderOutlineFirst(chapters) {
     claimsBody.innerHTML = '';
 
+    if (!chapters || !chapters.length) {
+      // outline 없으면 기존 claims-only 렌더
+      renderClaimsOnly();
+      return;
+    }
+
+    chapters.forEach(function(ch) {
+      var num = String(ch.chapter_number || ch.id || '');
+      claimsBody.appendChild(buildChapterSection(num, claimsByChapter[num] || [], ch));
+    });
+
+    // unassigned claims
+    if (claimsByChapter['unassigned'] && claimsByChapter['unassigned'].length) {
+      claimsBody.appendChild(buildChapterSection('unassigned', claimsByChapter['unassigned'], null));
+    }
+  }
+
+  function renderClaimsOnly() {
+    if (!Object.keys(claimsByChapter).length) {
+      claimsBody.innerHTML = '<div class="rc-empty">아웃라인이 생성되면 여기에 표시됩니다</div>';
+      return;
+    }
     var keys = Object.keys(claimsByChapter).sort(function(a, b) {
       return (parseInt(a) || 999) - (parseInt(b) || 999);
     });
-
     keys.forEach(function(chId) {
       var claims = claimsByChapter[chId];
       if (!claims || !claims.length) return;
-      claimsBody.appendChild(buildChapterSection(chId, claims));
+      claimsBody.appendChild(buildChapterSection(chId, claims, null));
     });
   }
 
-  function buildChapterSection(chId, claims) {
+  function buildChapterSection(chId, claims, chData) {
     var section = document.createElement('div');
     section.className = 'rc-ch-section';
     section.id = 'rc-ch-' + chId;
 
-    var chTitle = chapterMap[chId] || chapterMap[parseInt(chId)] || '';
+    // 챕터 헤더
+    var chTitle = (chData && chData.title) || chapterMap[chId] || chapterMap[parseInt(chId)] || '';
     var titleEl = document.createElement('div');
     titleEl.className = 'rc-ch-title';
-    titleEl.textContent = chTitle ? ('Ch' + chId + '. ' + chTitle) : ('Chapter ' + chId);
+    titleEl.textContent = chId !== 'unassigned'
+      ? (chTitle ? ('Ch' + chId + '. ' + chTitle) : ('Chapter ' + chId))
+      : '미분류';
     section.appendChild(titleEl);
 
+    // purpose
+    if (chData && chData.purpose) {
+      var purposeEl = document.createElement('div');
+      purposeEl.className = 'rc-ch-purpose';
+      purposeEl.textContent = chData.purpose;
+      section.appendChild(purposeEl);
+    }
+
+    // research_focus 질문 (claims 없을 때 placeholder로)
+    var focus = (chData && chData.research_focus) || [];
+    if (focus.length && !claims.length) {
+      var focusWrap = document.createElement('div');
+      focusWrap.className = 'rc-focus-wrap';
+      focus.forEach(function(q) {
+        var qEl = document.createElement('div');
+        qEl.className = 'rc-focus-q';
+        qEl.textContent = '? ' + q;
+        focusWrap.appendChild(qEl);
+      });
+      section.appendChild(focusWrap);
+    }
+
+    // claims
+    var claimsWrap = document.createElement('div');
+    claimsWrap.className = 'rc-claims-wrap';
+    claimsWrap.id = 'rc-claims-' + chId;
     claims.forEach(function(c) {
-      section.appendChild(buildClaimCard(c));
+      claimsWrap.appendChild(buildClaimCard(c));
     });
+    if (!claims.length) {
+      var waiting = document.createElement('div');
+      waiting.className = 'rc-ch-waiting';
+      waiting.textContent = '리서치 대기 중...';
+      claimsWrap.appendChild(waiting);
+    }
+    section.appendChild(claimsWrap);
+
     return section;
   }
 
@@ -406,12 +504,17 @@
 
       newClaims.forEach(function(c) {
         var chId = String(c.chapter || 'unassigned');
-        var section = document.getElementById('rc-ch-' + chId);
-        if (!section) {
-          section = buildChapterSection(chId, []);
+        var claimsWrap = document.getElementById('rc-claims-' + chId);
+        if (!claimsWrap) {
+          // 챕터 섹션 자체가 없으면 새로 생성
+          var section = buildChapterSection(chId, [], chapterDetails[chId] || null);
           claimsBody.appendChild(section);
+          claimsWrap = document.getElementById('rc-claims-' + chId);
         }
-        section.appendChild(buildClaimCard(c));
+        // "대기 중" 메시지 제거
+        var waiting = claimsWrap.querySelector('.rc-ch-waiting');
+        if (waiting) waiting.remove();
+        claimsWrap.appendChild(buildClaimCard(c));
       });
     } catch(err) {}
   });

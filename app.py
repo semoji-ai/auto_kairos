@@ -488,7 +488,7 @@ async def research_canvas(slug: str):
     chapters = outline_data.get("chapters", [])
     chapter_map: dict[int, str] = {}
     for ch in chapters:
-        ch_id = ch.get("id") or ch.get("chapter") or 0
+        ch_id = ch.get("chapter_number") or ch.get("id") or ch.get("chapter") or 0
         ch_title = ch.get("title") or ch.get("name") or f"Chapter {ch_id}"
         chapter_map[int(ch_id)] = ch_title
 
@@ -515,7 +515,7 @@ async def research_canvas(slug: str):
         unassigned = grouped.pop("unassigned")
         chunk = max(1, len(unassigned) // max(1, len(chapters)))
         for i, ch in enumerate(chapters):
-            ch_id = str(ch.get("id") or i + 1)
+            ch_id = str(ch.get("chapter_number") or ch.get("id") or i + 1)
             start = i * chunk
             end = start + chunk if i < len(chapters) - 1 else len(unassigned)
             if ch_id not in grouped:
