@@ -615,8 +615,8 @@ async def save_scene(slug: str, scene_num: int, request: Request):
             encoding="utf-8",
         )
 
-    # 이미지/오디오 관련 필드 변경 시 매니페스트 리빌드
-    _MANIFEST_FIELDS = {"imagePath", "vizBackgroundPath", "imageAsset", "narration_tts"}
+    # 이미지/오디오/visualization 변경 시 매니페스트 리빌드
+    _MANIFEST_FIELDS = {"imagePath", "vizBackgroundPath", "imageAsset", "narration_tts", "visualization"}
     if diff.keys() & _MANIFEST_FIELDS:
         _rebuild_manifest_sync(project)
 

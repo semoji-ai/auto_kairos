@@ -4,6 +4,9 @@ import { Composition, Folder, staticFile } from "remotion";
 import { SceneEditor } from "./SceneEditor";
 import { kairosVideoSchema, sceneEditorSchema } from "./types/schema";
 import { SimpleVideo } from "./SimpleVideo";
+import { ThumbnailComposition } from "./ThumbnailComposition";
+import { ShortsComposition } from "./ShortsComposition";
+import { CardNewsComposition } from "./CardNewsComposition";
 import type { SceneManifest, SubtitleConfig } from "./types/manifest";
 
 /**
@@ -84,12 +87,12 @@ const fallbackManifest: SceneManifest = {
  * Studio: public/manifest.json (대시보드가 자동 생성)
  * Render: --props 로 전달된 manifest (절대경로)
  */
-async function loadManifest(
+async function loadManifestFull(
   propsManifest: SceneManifest,
-): Promise<SceneManifest> {
+): Promise<{ manifest: SceneManifest; subtitleConfig?: SubtitleConfig }> {
   // CLI render: --props로 실제 프로젝트 데이터가 전달된 경우 (절대경로)
   if (propsManifest.meta.topic !== "(No project loaded)") {
-    return propsManifest;
+    return { manifest: propsManifest };
   }
 
   // Studio 모드: manifest.json 시도
@@ -101,16 +104,16 @@ async function loadManifest(
       if (resp.ok) {
         const data = await resp.json();
         if (data.manifest && data.manifest.meta) {
-          return data.manifest as SceneManifest;
+          return { manifest: data.manifest as SceneManifest, subtitleConfig: data.subtitleConfig };
         }
-        return data as SceneManifest;
+        return { manifest: data as SceneManifest };
       }
     } catch {
       // 파일 없음 → 다음 시도
     }
   }
 
-  return propsManifest;
+  return { manifest: propsManifest };
 }
 
 /**
@@ -137,7 +140,7 @@ const SCENE_SLOTS = Array.from({ length: 80 }, (_, i) => i + 1);
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* SimpleVideo — 기본 영상 컴포지션 */}
+      {/* ── 본편 ── */}
       <Composition
         id="SimpleVideo"
         component={SimpleVideo}
@@ -151,7 +154,7 @@ export const RemotionRoot: React.FC = () => {
           subtitleConfig: DEFAULT_SUBTITLE_CONFIG,
         }}
         calculateMetadata={async ({ props }) => {
-          const manifest = await loadManifest(props.manifest);
+          const { manifest, subtitleConfig } = await loadManifestFull(props.manifest);
           const fps = manifest.meta.fps || 30;
           return {
             durationInFrames: calcTotalFrames(manifest),
@@ -160,13 +163,13 @@ export const RemotionRoot: React.FC = () => {
             height: manifest.meta.resolution?.height || 1080,
             props: {
               manifest,
-              subtitleConfig: props.subtitleConfig,
+              subtitleConfig: subtitleConfig ?? props.subtitleConfig,
             },
           };
         }}
       />
 
-      {/* 씬별 개별 편집 컴포지션 */}
+      {/* ── 씬별 개별 편집 ── */}
       <Folder name="Scenes">
         {SCENE_SLOTS.map((sceneNum) => (
           <Composition
@@ -184,7 +187,7 @@ export const RemotionRoot: React.FC = () => {
               subtitleConfig: DEFAULT_SUBTITLE_CONFIG,
             }}
             calculateMetadata={async ({ props }) => {
-              const manifest = await loadManifest(props.manifest);
+              const { manifest, subtitleConfig } = await loadManifestFull(props.manifest);
               const fps = manifest.meta.fps || 30;
               const scene = manifest.scenes.find(
                 (s) => s.sceneNumber === props.sceneNumber,
@@ -200,12 +203,67 @@ export const RemotionRoot: React.FC = () => {
                 props: {
                   manifest,
                   sceneNumber: props.sceneNumber,
-                  subtitleConfig: props.subtitleConfig,
+                  subtitleConfig: subtitleConfig ?? props.subtitleConfig,
                 },
               };
             }}
           />
         ))}
+      </Folder>
+
+      {/* ── 멀티포맷 (본편과 격리) ── */}
+      <Folder name="Formats">
+        <Composition
+          id="Thumbnail"
+          component={ThumbnailComposition}
+          durationInFrames={1}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{
+            backgroundImage: "",
+            title: "썸네일 제목",
+            subtitle: "",
+            channelName: "",
+            titlePosition: "bottom-left" as const,
+            fontSize: 72,
+            fontColor: "#FFFFFF",
+            shadowColor: "rgba(0,0,0,0.8)",
+            overlayOpacity: 0.3,
+          }}
+        />
+
+        <Composition
+          id="Shorts"
+          component={ShortsComposition}
+          durationInFrames={1800}
+          fps={30}
+          width={1080}
+          height={1920}
+          defaultProps={{
+            scenes: [],
+            channelName: "SEMOJI",
+            ctaText: "전체 영상은 채널에서!",
+          }}
+        />
+
+        <Composition
+          id="CardNews"
+          component={CardNewsComposition}
+          durationInFrames={1}
+          fps={30}
+          width={1080}
+          height={1080}
+          defaultProps={{
+            title: "카드뉴스 제목",
+            body: "",
+            pageNumber: 1,
+            totalPages: 10,
+            channelName: "SEMOJI",
+            isCover: false,
+            isCTA: false,
+          }}
+        />
       </Folder>
     </>
   );

@@ -47,6 +47,7 @@ export interface PresetFonts {
   headline?: FontDef;  // 헤드라인/타이틀 전용 (display 폰트)
   value?: FontDef;     // 숫자/지표 전용 (tabular/condensed)
   mono?: FontDef;      // 장식 따옴표 등 (시스템 폰트 가능, files: [])
+  subtitle?: FontDef;  // 자막 전용 폰트
   /** @deprecated headline 사용 권장 */
   title?: FontDef;
   quote?: { family: string };

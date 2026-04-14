@@ -105,6 +105,9 @@ export interface SceneEntry {
   imageAsset?: {
     placement: "fullscreen" | "background" | "center" | "left" | "right" | "inline";
     opacity: number;
+    offsetX?: number;   // 0~100, objectPosition X (기본 50 = center)
+    offsetY?: number;   // 0~100, objectPosition Y (기본 50 = center)
+    scale?: number;     // 배율 (기본 1.0)
     itemImages?: boolean;
   };
 
@@ -311,6 +314,9 @@ export interface SubtitleConfig {
   bottomOffset: number;       // 하단 오프셋 px (기본 30)
   maxWidth: string;           // 최대 너비 (기본 "85%")
   lineHeight: number;         // 줄간격 (기본 1.5)
+  backgroundColor?: string;   // 자막 배경색 (기본 "rgba(0,0,0,0.8)")
+  borderRadius?: number;      // 배경 라운드 px (기본 50)
+  boxShadow?: string;         // 배경 그림자
 }
 
 export interface OverlayItem {

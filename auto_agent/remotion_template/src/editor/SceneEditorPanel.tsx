@@ -611,6 +611,36 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
                 style={{ width: "100%", accentColor: ACCENT }}
               />
             </div>
+            <div>
+              <label style={labelStyle}>Image X ({scene.imageAsset?.offsetX ?? 50}%)</label>
+              <input
+                type="range"
+                min="0" max="100" step="1"
+                value={scene.imageAsset?.offsetX ?? 50}
+                onChange={e => updateImageAsset({ offsetX: parseFloat(e.target.value) })}
+                style={{ width: "100%", accentColor: ACCENT }}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Image Y ({scene.imageAsset?.offsetY ?? 50}%)</label>
+              <input
+                type="range"
+                min="0" max="100" step="1"
+                value={scene.imageAsset?.offsetY ?? 50}
+                onChange={e => updateImageAsset({ offsetY: parseFloat(e.target.value) })}
+                style={{ width: "100%", accentColor: ACCENT }}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Image Scale ({((scene.imageAsset?.scale ?? 1) * 100).toFixed(0)}%)</label>
+              <input
+                type="range"
+                min="0.5" max="2.0" step="0.05"
+                value={scene.imageAsset?.scale ?? 1}
+                onChange={e => updateImageAsset({ scale: parseFloat(e.target.value) })}
+                style={{ width: "100%", accentColor: ACCENT }}
+              />
+            </div>
           </>
         )}
 

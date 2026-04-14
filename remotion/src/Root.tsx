@@ -87,12 +87,12 @@ const fallbackManifest: SceneManifest = {
  * Studio: public/manifest.json (대시보드가 자동 생성)
  * Render: --props 로 전달된 manifest (절대경로)
  */
-async function loadManifest(
+async function loadManifestFull(
   propsManifest: SceneManifest,
-): Promise<SceneManifest> {
+): Promise<{ manifest: SceneManifest; subtitleConfig?: SubtitleConfig }> {
   // CLI render: --props로 실제 프로젝트 데이터가 전달된 경우 (절대경로)
   if (propsManifest.meta.topic !== "(No project loaded)") {
-    return propsManifest;
+    return { manifest: propsManifest };
   }
 
   // Studio 모드: manifest.json 시도
@@ -104,16 +104,16 @@ async function loadManifest(
       if (resp.ok) {
         const data = await resp.json();
         if (data.manifest && data.manifest.meta) {
-          return data.manifest as SceneManifest;
+          return { manifest: data.manifest as SceneManifest, subtitleConfig: data.subtitleConfig };
         }
-        return data as SceneManifest;
+        return { manifest: data as SceneManifest };
       }
     } catch {
       // 파일 없음 → 다음 시도
     }
   }
 
-  return propsManifest;
+  return { manifest: propsManifest };
 }
 
 /**
@@ -154,7 +154,7 @@ export const RemotionRoot: React.FC = () => {
           subtitleConfig: DEFAULT_SUBTITLE_CONFIG,
         }}
         calculateMetadata={async ({ props }) => {
-          const manifest = await loadManifest(props.manifest);
+          const { manifest, subtitleConfig } = await loadManifestFull(props.manifest);
           const fps = manifest.meta.fps || 30;
           return {
             durationInFrames: calcTotalFrames(manifest),
@@ -163,7 +163,7 @@ export const RemotionRoot: React.FC = () => {
             height: manifest.meta.resolution?.height || 1080,
             props: {
               manifest,
-              subtitleConfig: props.subtitleConfig,
+              subtitleConfig: subtitleConfig ?? props.subtitleConfig,
             },
           };
         }}
@@ -187,7 +187,7 @@ export const RemotionRoot: React.FC = () => {
               subtitleConfig: DEFAULT_SUBTITLE_CONFIG,
             }}
             calculateMetadata={async ({ props }) => {
-              const manifest = await loadManifest(props.manifest);
+              const { manifest, subtitleConfig } = await loadManifestFull(props.manifest);
               const fps = manifest.meta.fps || 30;
               const scene = manifest.scenes.find(
                 (s) => s.sceneNumber === props.sceneNumber,
@@ -203,7 +203,7 @@ export const RemotionRoot: React.FC = () => {
                 props: {
                   manifest,
                   sceneNumber: props.sceneNumber,
-                  subtitleConfig: props.subtitleConfig,
+                  subtitleConfig: subtitleConfig ?? props.subtitleConfig,
                 },
               };
             }}

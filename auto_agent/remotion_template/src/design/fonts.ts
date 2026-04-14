@@ -45,6 +45,7 @@ export function usePresetFonts(): void {
       if (f.headline) await loadFontDef(f.headline);
       if (f.value)    await loadFontDef(f.value);
       if (f.mono)     await loadFontDef(f.mono);
+      if (f.subtitle) await loadFontDef(f.subtitle);
       if (f.title)    await loadFontDef(f.title);
       continueRender(handle);
     };

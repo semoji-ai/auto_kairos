@@ -1,5 +1,14 @@
 # Remotion 규칙
 
+## ⚠️ 1순위 체크: 씬 렌더링 3뷰 분기 금지
+**스토리보드 / 스튜디오 / 씬에디터가 다르게 보이면 반드시 `SceneRendererInner` 분기가 생긴 것.**
+
+- `SceneEditor.tsx`, `SingleScenePlayer.tsx`, `ThumbComposition.tsx` 는 **모두 `SceneRendererInner` 하나만 호출**해야 함
+- 씬 관련 컴포넌트(ImageBackground, SideImageLayout, FadeWrap 등)를 **SceneEditor.tsx에 새로 추가하는 것 절대 금지** — SceneRenderer.tsx에 추가할 것
+- `SceneEditor.tsx`를 수정할 때 반드시 확인: `SceneRendererInner`를 거치는가? 직접 `CreativeScene`이나 이미지 컴포넌트를 호출하면 즉시 분기
+- `portraitPlacement`와 `imageAsset.placement`는 항상 일치해야 함 — SceneRendererInner가 SideLayout 라우팅 시 동기화하지만, 데이터 생성 시점에도 일치시킬 것
+- 폰트(`usePresetFonts`)는 `SceneRendererInner` 안에서 호출 — 진입점마다 따로 호출하지 말 것
+
 ## 양쪽 동기화 필수
 - `remotion/src/` 수정 → `auto_agent/remotion_template/src/`에도 반드시 동일 수정
 - 대시보드 반영 시 `cd remotion && npx vite build --config vite.thumb.config.ts && npx vite build --config vite.editor.config.ts` 필수

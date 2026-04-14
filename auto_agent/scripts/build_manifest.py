@@ -41,6 +41,17 @@ def _load_project_config(project_id: str, project_dir: str = None) -> dict:
             config = pm.get_config(pid)
         except (ValueError, TypeError):
             proj = pm.get_project(slug=str(project_id))
+            # UUID 접두사(8자리hex_) 제거 후 재시도
+            if not proj:
+                parts = str(project_id).split("_", 1)
+                if len(parts) == 2 and len(parts[0]) == 8:
+                    proj = pm.get_project(slug=parts[1])
+            # output_dir 경로 매칭으로 재시도
+            if not proj and project_dir:
+                for p in (pm.list_projects() or []):
+                    if str(p.get("output_dir", "")).rstrip("/") == str(project_dir).rstrip("/"):
+                        proj = p
+                        break
             config = pm.get_config(proj["id"]) if proj else None
         if config:
             return config
@@ -393,10 +404,17 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             else:
                 p = ia.get("placement", "background")
                 default_op = 1.0
-                entry["imageAsset"] = {
+                image_asset: dict = {
                     "placement": p,
                     "opacity": ia.get("opacity", default_op),
                 }
+                if ia.get("offsetX") is not None:
+                    image_asset["offsetX"] = ia["offsetX"]
+                if ia.get("offsetY") is not None:
+                    image_asset["offsetY"] = ia["offsetY"]
+                if ia.get("scale") is not None:
+                    image_asset["scale"] = ia["scale"]
+                entry["imageAsset"] = image_asset
             # 검색 이미지 출처
             if ia.get("source_url"):
                 entry["imageSource"] = {
@@ -460,33 +478,46 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     # Manifest 조립
     topic = specs.get("topic", storage_key)
     design_preset = specs.get("meta", {}).get("designPreset", None)
-    # art_style.json의 design_tokens fallback (프로젝트 로컬 → 패키지)
+    # art_style.json의 design_tokens (패키지 기본값 → 로컬 오버라이드 딥머지)
     if not design_preset:
-        _proj_ast = out_dir / "art_style.json"
-        _ast_dt = None
-        if _proj_ast.exists():
-            try:
-                _ast_dt = json.loads(_proj_ast.read_text(encoding="utf-8")).get("design_tokens")
-            except Exception:
-                pass
-        if not _ast_dt and art_style:
+        _PRESET_KEYS = ("baseTheme", "defaultBackground", "colors", "moods",
+                        "layout", "map", "subtitle", "fonts", "typography")
+
+        def _deep_merge(base: dict, override: dict) -> dict:
+            result = dict(base)
+            for k, v in override.items():
+                if isinstance(v, dict) and isinstance(result.get(k), dict):
+                    result[k] = _deep_merge(result[k], v)
+                else:
+                    result[k] = v
+            return result
+
+        # 1) 패키지 기본값 로드
+        _pkg_dt = None
+        if art_style:
             for _d in (out_dir / "artstyle" / "styles", workspace / "auto_agent" / "data" / "artstyle" / "styles"):
                 _p = _d / f"{art_style}.json"
                 if _p.exists():
                     try:
-                        _ast_dt = json.loads(_p.read_text(encoding="utf-8")).get("design_tokens")
+                        _pkg_dt = json.loads(_p.read_text(encoding="utf-8")).get("design_tokens")
                     except Exception:
                         pass
                     break
+
+        # 2) 로컬 오버라이드 로드
+        _local_dt = None
+        _proj_ast = out_dir / "art_style.json"
+        if _proj_ast.exists():
+            try:
+                _local_dt = json.loads(_proj_ast.read_text(encoding="utf-8")).get("design_tokens")
+            except Exception:
+                pass
+
+        # 3) 딥머지: 패키지 기본 → 로컬 오버라이드
+        _ast_dt = _deep_merge(_pkg_dt or {}, _local_dt or {}) or None
+
         if _ast_dt:
-            # design_tokens 구조가 이미 DesignPresetOverride와 호환되므로 그대로 사용
-            # (이전 코드는 _ast_dt.get("accent") 등 잘못된 키로 빈 문자열을 만들어
-            #  resolvePreset deepMerge에서 DEFAULT_PRESET 앰버를 빈 값으로 덮어쓰는 버그)
-            design_preset = {
-                k: v for k, v in _ast_dt.items()
-                if k in ("baseTheme", "defaultBackground", "colors", "moods",
-                         "layout", "map", "subtitle", "fonts", "typography")
-            }
+            design_preset = {k: v for k, v in _ast_dt.items() if k in _PRESET_KEYS}
 
     # chartagent_style.json이 있으면 design_preset에 병합
     # (chartagent 스타일 명세서 → Remotion viz 컴포넌트에 자동 적용)
@@ -548,19 +579,23 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         "bgm": None,
     }
 
+    _subtitle_override = (design_preset or {}).get("subtitle", {})
     subtitle_config = {
         "visible": True,
-        "fontFamily": font_family,
-        "fontSize": 44,
-        "fontWeight": 700,
-        "color": "#FFFFFF",
-        "strokeColor": "#3D3B2F",
-        "strokeWidth": 2,
-        "keywordColor": "#F7D94C",
-        "keywordStrokeColor": "#5A4B00",
-        "bottomOffset": 30,
-        "maxWidth": "85%",
-        "lineHeight": 1.5,
+        "fontFamily": _subtitle_override.get("fontFamily", font_family),
+        "fontSize": _subtitle_override.get("fontSize", 44),
+        "fontWeight": _subtitle_override.get("fontWeight", 700),
+        "color": _subtitle_override.get("color", "#FFFFFF"),
+        "strokeColor": _subtitle_override.get("strokeColor", "#3D3B2F"),
+        "strokeWidth": _subtitle_override.get("strokeWidth", 2),
+        "keywordColor": _subtitle_override.get("keywordColor", "#F7D94C"),
+        "keywordStrokeColor": _subtitle_override.get("keywordStrokeColor", "#5A4B00"),
+        "bottomOffset": _subtitle_override.get("bottomOffset", 30),
+        "maxWidth": _subtitle_override.get("maxWidth", "85%"),
+        "lineHeight": _subtitle_override.get("lineHeight", 1.5),
+        **({ "backgroundColor": _subtitle_override["backgroundColor"] } if "backgroundColor" in _subtitle_override else {}),
+        **({ "borderRadius": _subtitle_override["borderRadius"] } if "borderRadius" in _subtitle_override else {}),
+        **({ "boxShadow": _subtitle_override["boxShadow"] } if "boxShadow" in _subtitle_override else {}),
     }
 
     props = {"manifest": manifest, "subtitleConfig": subtitle_config}

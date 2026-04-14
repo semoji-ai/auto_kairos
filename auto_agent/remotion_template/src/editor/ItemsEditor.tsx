@@ -117,11 +117,13 @@ export const ItemsEditor: React.FC<Props> = ({
           <span style={{ color: accent, fontSize: 11, fontWeight: 700, minWidth: 16 }}>{i + 1}</span>
           <textarea
             value={item}
-            onChange={(e) => updateItem(i, e.target.value)}
-            rows={item.includes("\n") ? item.split("\n").length : 1}
-            onKeyDown={(e) => {
-              // Shift+Enter로 줄바꿈 (기본 Enter도 줄바꿈 — textarea 기본 동작)
+            onChange={(e) => {
+              updateItem(i, e.target.value);
+              // 높이 자동 조절
+              e.target.style.height = "auto";
+              e.target.style.height = e.target.scrollHeight + "px";
             }}
+            rows={Math.max(1, item.split("\n").length)}
             style={{
               flex: 1,
               background: "transparent",

@@ -10,7 +10,7 @@ import { AbsoluteFill, Img, staticFile } from "remotion";
 import { CreativeScene } from "../simple/CreativeScene";
 import { useDesignPreset } from "../design";
 import { DEFAULT_PRESET } from "../design/defaults";
-import { buildFontFamily } from "../design/fonts";
+import { buildFontFamily, usePresetFonts } from "../design/fonts";
 
 /** URL/절대경로면 그대로, 상대경로면 staticFile() 사용 (Remotion Studio 호환) */
 export const resolveUrl = (path: string): string => {
@@ -49,16 +49,26 @@ export const resolveVisualization = (scene: any): any => {
 };
 
 /* ── 이미지 배경 ── */
-export const ImageBg: React.FC<{ src: string; opacity: number }> = ({ src, opacity }) => (
+export const ImageBg: React.FC<{
+  src: string; opacity: number;
+  offsetX?: number; offsetY?: number; scale?: number;
+}> = ({ src, opacity, offsetX = 50, offsetY = 50, scale = 1.0 }) => (
   <AbsoluteFill style={{ zIndex: 0, overflow: "hidden" }}>
-    <Img src={resolveUrl(src)} style={{ width: "100%", height: "100%", objectFit: "cover", opacity }} />
+    <Img src={resolveUrl(src)} style={{
+      width: "100%", height: "100%", objectFit: "cover", opacity,
+      objectPosition: `${offsetX}% ${offsetY}%`,
+      transform: scale !== 1.0 ? `scale(${scale})` : undefined,
+      transformOrigin: `${offsetX}% ${offsetY}%`,
+    }} />
   </AbsoluteFill>
 );
 
 /* ── Side 이미지 레이아웃 ── */
 const SideLayout: React.FC<{
-  src: string; placement: "left" | "right"; opacity: number; defaultBg?: string; mood?: string; children: React.ReactNode;
-}> = ({ src, placement, opacity, defaultBg, mood, children }) => {
+  src: string; placement: "left" | "right"; opacity: number; defaultBg?: string; mood?: string;
+  offsetX?: number; offsetY?: number; scale?: number;
+  children: React.ReactNode;
+}> = ({ src, placement, opacity, defaultBg, mood, offsetX = 50, offsetY = 50, scale = 1.0, children }) => {
   const preset = useDesignPreset();
   const bgColor = preset.colors?.bg || "#0A0A0A";
   const isLeft = placement === "left";
@@ -79,11 +89,19 @@ const SideLayout: React.FC<{
         {/* 이미지 영역 — 세로 꽉 채움 */}
         <div style={{
           flex: "0 0 40%", position: "relative", overflow: "hidden",
+          WebkitMaskImage: isLeft
+            ? `linear-gradient(to right, black 65%, transparent 100%)`
+            : `linear-gradient(to left, black 65%, transparent 100%)`,
+          maskImage: isLeft
+            ? `linear-gradient(to right, black 65%, transparent 100%)`
+            : `linear-gradient(to left, black 65%, transparent 100%)`,
         }}>
           {hasSrc ? (
             <Img src={resolveUrl(src)} style={{
               width: "100%", height: "100%", objectFit: "cover",
-              objectPosition: "center top", opacity,
+              objectPosition: `${offsetX}% ${offsetY}%`, opacity,
+              transform: scale !== 1.0 ? `scale(${scale})` : undefined,
+              transformOrigin: `${offsetX}% ${offsetY}%`,
             }} />
           ) : (
             <div style={{ width: "100%", height: "100%", display: "flex",
@@ -92,13 +110,6 @@ const SideLayout: React.FC<{
               <div style={{ fontSize: 80, opacity: 0.2 }}>👤</div>
             </div>
           )}
-          {/* 그라데이션 페이드 */}
-          <div style={{
-            position: "absolute", inset: 0,
-            background: isLeft
-              ? `linear-gradient(to right, transparent 80%, ${bgColor} 100%)`
-              : `linear-gradient(to left, transparent 80%, ${bgColor} 100%)`,
-          }} />
         </div>
         {/* 콘텐츠 영역 — 투명: CreativeScene의 MoodBackground가 배경 담당 */}
         <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>{children}</div>
@@ -109,8 +120,10 @@ const SideLayout: React.FC<{
 
 /* ── Center 이미지 레이아웃 ── */
 const CenterLayout: React.FC<{
-  src: string; opacity: number; children: React.ReactNode;
-}> = ({ src, opacity, children }) => (
+  src: string; opacity: number;
+  offsetX?: number; offsetY?: number; scale?: number;
+  children: React.ReactNode;
+}> = ({ src, opacity, offsetX = 50, offsetY = 50, scale = 1.0, children }) => (
   <AbsoluteFill style={{ display: "flex", flexDirection: "column" }}>
     <div style={{
       flex: "0 0 45%", display: "flex", alignItems: "center",
@@ -119,6 +132,8 @@ const CenterLayout: React.FC<{
       <Img src={resolveUrl(src)} style={{
         maxWidth: "70%", maxHeight: "100%", objectFit: "contain",
         opacity, borderRadius: 16, filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.6))",
+        objectPosition: `${offsetX}% ${offsetY}%`,
+        transform: scale !== 1.0 ? `scale(${scale})` : undefined,
       }} />
     </div>
     <div style={{ flex: 1, position: "relative" }}>{children}</div>
@@ -137,6 +152,7 @@ export interface SceneRendererProps {
  */
 export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 30 }) => {
   const preset = useDesignPreset();
+  usePresetFonts();
   const fontFamily = buildFontFamily(preset);
   const vizData = resolveVisualization(scene);
 
@@ -145,15 +161,19 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const hasSceneImage = !!sceneImage;
   const hasAnyImage = hasSceneImage || !!defaultBg;
   const placement = scene.imageAsset?.placement ?? "background";
-  const defaultOpacity = (placement === "background") ? 0.35 : 1.0;
+  const isQuoteLayout = (vizData?.layout === "quote" || vizData?.creative?.layout === "quote" || scene.visualization?.layout === "quote");
+  const defaultOpacity = (placement === "background") ? (isQuoteLayout ? 1.0 : 0.35) : 1.0;
   const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
+  const imgOffsetX = scene.imageAsset?.offsetX ?? 50;
+  const imgOffsetY = scene.imageAsset?.offsetY ?? 50;
+  const imgScale   = scene.imageAsset?.scale   ?? 1.0;
   const imgSrc = sceneImage || defaultBg || "";
 
   // ── fullscreen ──
   if (hasAnyImage && placement === "fullscreen") {
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-        <ImageBg src={imgSrc} opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9} />
+        <ImageBg src={imgSrc} opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} />
         <CreativeScene
           data={vizData}
           subtitles={scene.subtitles}
@@ -169,7 +189,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   if (hasSceneImage && placement === "center") {
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-        <CenterLayout src={imgSrc} opacity={imgOpacity}>
+        <CenterLayout src={imgSrc} opacity={imgOpacity} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale}>
           <CreativeScene
             data={vizData}
             subtitles={scene.subtitles}
@@ -184,11 +204,15 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
 
   // ── side (left/right) — 이미지 없어도 placement가 side면 진입 (placeholder 표시) ──
   if (placement === "left" || placement === "right") {
+    // imageAsset.placement가 portrait의 실제 위치 — creative.portraitPlacement와 동기화
+    const sideVizData = vizData?.creative
+      ? { ...vizData, creative: { ...vizData.creative, portraitPlacement: placement, withPortrait: true } }
+      : vizData;
     return (
       <AbsoluteFill style={{ fontFamily }}>
-        <SideLayout src={hasSceneImage ? imgSrc : ""} placement={placement} opacity={imgOpacity} defaultBg={defaultBg} mood={scene.mood || vizData?.mood}>
+        <SideLayout src={hasSceneImage ? imgSrc : ""} placement={placement} opacity={imgOpacity} defaultBg={defaultBg} mood={scene.mood || vizData?.mood} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale}>
           <CreativeScene
-            data={vizData}
+            data={sideVizData}
             subtitles={scene.subtitles}
             fps={fps}
             hasImageBackground={false}
@@ -202,7 +226,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   // ── background (기본) ──
   return (
     <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-      {hasAnyImage && <ImageBg src={imgSrc} opacity={imgOpacity} />}
+      {hasAnyImage && <ImageBg src={imgSrc} opacity={imgOpacity} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} />}
       <CreativeScene
         data={vizData}
         subtitles={scene.subtitles}

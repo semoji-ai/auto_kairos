@@ -42,7 +42,7 @@ export const SubtitleOverlay: React.FC<Props> = ({ subtitles, fps, config }) => 
     fontFamily: config.fontFamily,
     color: config.color,
     WebkitTextStroke: `${config.strokeWidth}px ${config.strokeColor}`,
-    textShadow: "2px 2px 6px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 0, 0, 0.3)",
+    textShadow: config.strokeWidth > 0 ? "2px 2px 6px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 0, 0, 0.3)" : "none",
     paintOrder: "stroke fill",
     letterSpacing: "0.02em",
   };
@@ -62,9 +62,10 @@ export const SubtitleOverlay: React.FC<Props> = ({ subtitles, fps, config }) => 
           maxWidth: config.maxWidth,
           textAlign: "center",
           lineHeight: config.lineHeight,
-          backgroundColor: "rgba(0, 0, 0, 0.8)",
+          backgroundColor: config.backgroundColor ?? "rgba(0, 0, 0, 0.8)",
           padding: `${Math.round(config.fontSize * 0.2)}px ${Math.round(config.fontSize * 0.5)}px`,
-          borderRadius: 50,
+          borderRadius: config.borderRadius ?? 50,
+          boxShadow: config.boxShadow,
         }}
       >
         {activeSub.words && activeSub.words.length > 0

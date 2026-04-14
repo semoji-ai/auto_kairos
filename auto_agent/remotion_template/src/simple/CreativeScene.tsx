@@ -2839,7 +2839,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = (props) => {
       {source && (
         <div style={{
           position: "absolute",
-          bottom: 130,
+          bottom: 16,
           right: 40,
           fontSize: 22,
           color: "rgba(255,255,255,0.4)",
