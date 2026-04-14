@@ -48,7 +48,7 @@
 └─────────────────┘         │ Stage 3: 에셋 조립 + 렌더링       │
         ↑                   │ assembly-director                │
         │                   │ → TTS + 이미지 + 자막 + 영상      │
-        │                   │ upload-info-generator → 썸네일/제목│
+        │                   │ release-manager → 업로드 패키지    │
         └───────────────────│ /multi-contents → 쇼츠/블로그/etc │
           성과 데이터 피드백   └─────────────────────────────────┘
 ```
@@ -67,7 +67,7 @@
 | script-reviewer | 2_review | sonnet | scene_specs.json | review_feedback.json |
 | fact-verifier | 2b | sonnet | scene_specs.json | factcheck_report.json |
 | assembly-director | 3b | opus | scene_specs.json | TTS + 이미지 + 자막 + 영상 |
-| upload-info-generator | 3c | sonnet | scene_specs + manifest | upload_info.json |
+| release-manager | 3c | sonnet | scene_specs + manifest + final_manuscript | upload_info.json |
 | multi-contents-director | — | sonnet | scene_specs + manifest | 쇼츠/블로그/카드뉴스/스레드 |
 
 ### 데이터 흐름
@@ -122,7 +122,7 @@ python -m uvicorn app:app --host 0.0.0.0 --port 8080
 | step_2_review | ratchet_loop | 래칫 리뷰 (90점, 최대 3라운드) |
 | step_2b | fact-verifier (비차단) | 팩트체크 |
 | step_3b | assembly-director | TTS + 이미지 + 자막 + 매니페스트 |
-| step_3c | upload-info-generator | 썸네일 + 제목 |
+| step_3c | release-manager | 제목 4종·더보기란·해시태그·썸네일 스펙 (채널 플레이북 기반) |
 
 > step_3a는 별도 파이프라인 스텝이 아님 — assembly-director가 Phase B-2에서 `image_batch_module`을 Bash로 직접 호출하고, Phase B-3에서 LLM이 결과 이미지를 멀티모달로 검수·재생성한다.
 

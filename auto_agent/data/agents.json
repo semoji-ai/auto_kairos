@@ -281,19 +281,19 @@
       },
       "notes": "Stage 3 핵심. 기존 9스텝(TTS전처리~최종검수)을 에이전트 1명이 모듈을 도구로 사용하며 판단+실행. mood/motion에 따라 TTS 파라미터 조정, 이미지 품질 판단 후 재생성, 타이밍 보정 등 창의적 조립."
     },
-    "upload-info-generator": {
-      "description": "썸네일 3종 + 제목 3종 + 더보기란(타임스탬프) 자동 생성",
+    "release-manager": {
+      "description": "YouTube 업로드 패키지 생성 — 제목 4종·더보기란·해시태그·썸네일 스펙. 채널 플레이북 기반 전략적 작성.",
       "model": "sonnet",
-      "max_turns": 20,
-      "budget": "$0.5",
-      "max_duration_minutes": 10,
+      "max_turns": 25,
+      "budget": "$0.8",
+      "max_duration_minutes": 15,
       "allowed_tools": [
         "Read",
         "Write",
         "Glob"
       ],
-      "skill_file": "agents/upload-info-generator/SKILL.md",
-      "notes": "Stage 3-1. 본편 렌더링 후 실행."
+      "skill_file": "agents/release-manager/SKILL.md",
+      "notes": "Stage 3-1. 본편 렌더링 후 실행. upload-info-generator 대체."
     },
     "multiformat-director": {
       "description": "본편에서 숏폼/블로그/카드뉴스/스레드 4개 포맷 병렬 생성",
@@ -440,7 +440,7 @@
       "research-orchestrator (Stage 1: 리서치)",
       "script-director (Stage 2: 원고+연출)",
       "assembly-director (Stage 3: 에셋 조립+렌더링)",
-      "upload-info-generator (Stage 3-1: 썸네일+제목+더보기란)",
+      "release-manager (Stage 3-1: 업로드 패키지 — 제목·더보기·해시태그·썸네일 스펙)",
       "multiformat-director (Stage 3-2: 숏폼/블로그/카드뉴스/스레드)",
       "performance-analyst (Stage 4: 성과 분석)",
       "kairos-admin-agent (관리: 작업 로그→PR→자기 개선)"

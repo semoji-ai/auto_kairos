@@ -51,6 +51,43 @@ python3 -m auto_agent.modules.data_collector.youtube_analytics
 3. 기획안(`insights/planning/`)의 예상 성과와 비교
 4. 채널 평균 대비 상대 평가
 5. 영상 노트에 분석 결과 추가
+6. **채널 플레이북 갱신** (아래 "플레이북 갱신 규칙" 참조)
+
+### 플레이북 갱신 규칙
+
+영상 성과 분석 후 반드시 `playbook_updater`를 호출하여 학습 데이터를 누적한다.
+
+**필수 조건:**
+- 해당 영상의 `upload_info.json`에 `uploaded_title_type` 필드가 있어야 함
+- 7일 조회수(`views_7d`) 확보 후 기록 (업로드 +7일 이후)
+
+**호출 방법:**
+```bash
+python3 -m auto_agent.modules.playbook_updater \
+  --channel {채널ID: quirky_cartoon | semoji} \
+  --video-id {YouTube 영상 ID} \
+  --title "{실제 업로드한 제목}" \
+  --title-type {uploaded_title_type 값} \
+  --views-7d {7일 조회수} \
+  [--views-28d {28일 조회수}] \
+  [--ctr-7d {7일 CTR %}] \
+  [--ctr-28d {28일 CTR %}] \
+  [--avg-view-duration-pct {평균 시청 지속률 %}] \
+  [--tags "#태그1 #태그2 ..."] \
+  [--notes "제목 타입 효과 등 메모"]
+```
+
+**CTR 데이터 출처:**
+- YouTube Studio → 분석 → 도달범위 → 노출 클릭률
+- Analytics API 미지원 — YouTube Studio에서 직접 확인 후 입력
+
+**기록 타이밍:**
+- +7일: views_7d, ctr_7d 기록 (필수)
+- +28일: views_28d, ctr_28d 추가 기록 (권장)
+
+**주간 종합 리뷰 시 추가 작업:**
+- 해당 주 갱신된 `performance_by_type` 확인
+- 고성과 타입이 바뀌었으면 Stage 0 피드백에 포함
 
 ### 경쟁 채널 모니터링 (매주)
 1. watchlist 채널의 최근 영상 수집 (yt-dlp)

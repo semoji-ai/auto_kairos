@@ -264,13 +264,13 @@
         {
           "id": "step_3c",
           "name": "upload_info",
-          "description": "YouTube 업로드 정보 생성 — 제목 3종 + 썸네일 스펙 + 타임스탬프 + 해시태그",
-          "type": "module",
-          "module": "upload_info_generator",
-          "input": ["scene_specs.json", "manifest.json"],
+          "description": "YouTube 업로드 패키지 생성 — 제목 4종·더보기란·해시태그·썸네일 스펙 (채널 플레이북 기반)",
+          "type": "agent",
+          "agent": "release-manager",
+          "input": ["scene_specs.json", "manifest.json", "final_manuscript.md"],
           "output": ["upload_info.json"],
           "blocking": false,
-          "notes": "본편 완료 후 실행. 멀티포맷은 /multi-contents 명령어로 별도 실행."
+          "notes": "본편 완료 후 실행. release-manager 에이전트가 channel_playbook.json 참조하여 전략적으로 생성. 멀티포맷은 /multi-contents 명령어로 별도 실행."
         }
       ],
       "checkpoint": {

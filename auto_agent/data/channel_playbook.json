@@ -1,0 +1,144 @@
+{
+  "_comment": "채널별 업로드 전략 플레이북. release-manager 에이전트가 참조·갱신. performance-analyst가 성과 피드백을 기록.",
+  "_version": "1.0",
+  "_last_updated": "2026-04-14",
+  "channels": {
+    "quirky_cartoon": {
+      "channel_name": "이로미즘",
+      "youtube_handle": "@iromism",
+      "description": "개성있는 낙서 스타일 만화. 유머·위트 중심 지식 콘텐츠.",
+      "title_strategy": {
+        "rules": [
+          "40자 이내 (모바일 최적화)",
+          "핵심 수치 또는 반전 사실 포함 필수",
+          "말장난·과장 비유 적극 활용 (채널 톤)",
+          "숫자는 구체적으로 — '수조원' 보다 '3조 7천억'",
+          "의문형 제목 효과적 (예: '왜 아무도 이걸 안 알려줬을까?')"
+        ],
+        "patterns": {
+          "numeric_hook": "숫자형 — 구체 수치로 규모 전달 (예: '1672년부터 시작된 153년의 역사')",
+          "reversal_hook": "반전형 — 상식 뒤집기 (예: '전기차가 먼저였다')",
+          "empathy_hook": "공감형 — 시청자 관점 (예: '당신이 매일 쓰는 것의 충격적 진실')",
+          "curiosity_hook": "호기심형 — 질문으로 끌어들이기 (예: '왜 아무도 이걸 안 가르쳐줬을까')"
+        },
+        "learned_patterns": [],
+        "performance_by_type": {}
+      },
+      "description_template": {
+        "structure": [
+          "hook_summary",
+          "timestamps",
+          "channel_footer"
+        ],
+        "hook_summary_rules": [
+          "2~3문장, 100~150자",
+          "영상의 가장 놀라운 사실 또는 핵심 질문으로 시작",
+          "첫 narration 그대로 붙이기 금지 — 반드시 재작성",
+          "시청 욕구를 자극하는 표현 사용"
+        ],
+        "channel_footer": "📺 이로미즘 — 세상의 모든 것을 재미있게\n🔔 구독·알림 설정하면 새 영상 놓치지 않아요!",
+        "hashtag_position": "description 마지막"
+      },
+      "hashtag_strategy": {
+        "count": "10~15개",
+        "rules": [
+          "채널 고정 태그 항상 포함: #이로미즘 #애니메이션 #지식",
+          "주제 핵심 키워드 3~5개",
+          "검색 유입용 구체 키워드 포함 (예: #자동차역사 #전기차역사)",
+          "트렌드 키워드 1~2개 (너무 동떨어지면 제외)",
+          "해시태그에 {{}} 마크업 절대 포함 금지"
+        ],
+        "fixed_tags": [
+          "#이로미즘",
+          "#애니메이션",
+          "#지식",
+          "#역사"
+        ],
+        "learned_high_performance_tags": []
+      },
+      "thumbnail_strategy": {
+        "rules": [
+          "텍스트는 5단어 이내, 화면 1/3 이상 차지",
+          "인물/캐릭터가 있으면 감정 표정 강조",
+          "대비가 강한 색상 조합",
+          "숫자는 크게 강조",
+          "배경 이미지와 텍스트 색상 대비 확보"
+        ],
+        "learned_patterns": []
+      }
+    },
+    "semoji": {
+      "channel_name": "세모지",
+      "youtube_handle": "@semoji",
+      "description": "심플하고 귀여운 2D 플랫 디자인. 정보 전달 중심.",
+      "title_strategy": {
+        "rules": [
+          "40자 이내",
+          "친근하고 명확한 설명체",
+          "데이터·수치 강조",
+          "과장보다 신뢰감 있는 표현 선호"
+        ],
+        "patterns": {
+          "numeric_hook": "숫자형 — 데이터로 신뢰 획득",
+          "explanation_hook": "설명형 — '~의 모든 것', '~를 알아보자'",
+          "ranking_hook": "랭킹형 — 'TOP 5', '1위부터 10위까지'"
+        },
+        "learned_patterns": [],
+        "performance_by_type": {}
+      },
+      "description_template": {
+        "structure": [
+          "hook_summary",
+          "timestamps",
+          "channel_footer"
+        ],
+        "hook_summary_rules": [
+          "2~3문장, 100~150자",
+          "핵심 정보/데이터 중심으로 요약",
+          "친근하고 정확한 톤"
+        ],
+        "channel_footer": "📺 세모지 — 세상의 모든 지식\n🔔 구독·알림 설정하면 새 영상 놓치지 않아요!",
+        "hashtag_position": "description 마지막"
+      },
+      "hashtag_strategy": {
+        "count": "10~15개",
+        "rules": [
+          "채널 고정 태그 항상 포함: #세모지 #지식 #정보",
+          "주제 핵심 키워드 3~5개",
+          "검색 유입용 구체 키워드 포함",
+          "해시태그에 {{}} 마크업 절대 포함 금지"
+        ],
+        "fixed_tags": [
+          "#세모지",
+          "#지식",
+          "#정보",
+          "#교육"
+        ],
+        "learned_high_performance_tags": []
+      },
+      "thumbnail_strategy": {
+        "rules": [
+          "깔끔하고 심플한 구성",
+          "캐릭터 표정으로 감정 전달",
+          "파스텔 톤 배경 활용",
+          "텍스트는 간결하게"
+        ],
+        "learned_patterns": []
+      }
+    }
+  },
+  "_schema": {
+    "performance_feedback_fields": {
+      "video_id": "YouTube 영상 ID",
+      "title_used": "실제 사용한 제목",
+      "title_type": "numeric_hook | reversal_hook | empathy_hook | curiosity_hook",
+      "ctr_7d": "7일 CTR (%)",
+      "ctr_28d": "28일 CTR (%)",
+      "avg_view_duration_pct": "평균 시청 지속률 (%)",
+      "views_7d": "7일 조회수",
+      "views_28d": "28일 조회수",
+      "top_tags": "성과 기여 추정 태그 목록",
+      "notes": "분석 메모"
+    }
+  }
+}
