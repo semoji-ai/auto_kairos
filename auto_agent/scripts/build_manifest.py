@@ -653,8 +653,6 @@ if __name__ == "__main__":
         idx = sys.argv.index("--local")
         if idx + 1 < len(sys.argv):
             local_dir = sys.argv[idx + 1]
-            # build_manifest_local: scene_specs.json → manifest.json (로컬 전용)
-            from pathlib import Path
             out = Path(local_dir)
             specs_path = out / "scene_specs.json"
             if not specs_path.exists():
@@ -674,6 +672,26 @@ if __name__ == "__main__":
             print("Usage: build_manifest.py <project_id> <storage_key> [project_dir]")
             sys.exit(1)
     else:
-        print("Usage: build_manifest.py <project_id> <storage_key> [project_dir]")
-        print("       build_manifest.py --local <output_dir>")
-        sys.exit(1)
+        # 인자 없는 경우: PROJECT_NAME 환경변수로 대시보드 체인 지원
+        _slug = os.environ.get("PROJECT_NAME", "").strip()
+        if _slug:
+            try:
+                from auto_agent.db.project_manager import ProjectManager as _PM
+                _pm = _PM()
+                _proj = _pm.get_project(slug=_slug)
+                if not _proj:
+                    print(f"[build_manifest] 프로젝트 없음: {_slug}")
+                    sys.exit(1)
+                _out_dir = _proj.get("output_dir", "")
+                if not _out_dir:
+                    print(f"[build_manifest] output_dir 없음: {_slug}")
+                    sys.exit(1)
+                build_manifest(_slug, _slug, _out_dir)
+            except Exception as e:
+                print(f"[build_manifest] 오류: {e}")
+                sys.exit(1)
+        else:
+            print("Usage: build_manifest.py <project_id> <storage_key> [project_dir]")
+            print("       build_manifest.py --local <output_dir>")
+            print("       PROJECT_NAME=<slug> build_manifest.py  (대시보드 체인용)")
+            sys.exit(1)
