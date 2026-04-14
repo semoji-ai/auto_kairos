@@ -1218,9 +1218,9 @@ const ItemsGrid: React.FC<{
               opacity,
               transform: `translateY(${rise}px) scale(${scaleVal})${extraTransform}`,
               padding: "14px 16px",
-              borderRadius: 10,
-              border: `1px solid ${moodCfg.accent}${flashGlow > 0 ? "88" : "33"}`,
-              backgroundColor: `rgba(${moodCfg.accentRgb},0.06)`,
+              borderRadius: 16,
+              border: `2px solid ${moodCfg.accent}${flashGlow > 0 ? "FF" : "BB"}`,
+              backgroundColor: "rgba(0,0,0,0.4)",
               textAlign: "center",
               fontSize: T.itemText,
               fontWeight: 600,
@@ -1304,9 +1304,9 @@ const PersonCardRow: React.FC<{
               flexDirection: "column",
               alignItems: "center",
               width: cardW,
-              borderRadius: 14,
-              backgroundColor: "rgba(255,255,255,0.04)",
-              border: `1px solid ${isNegative ? "#EF4444" + "55" : moodCfg.accent + "33"}`,
+              borderRadius: 16,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              border: `2px solid ${isNegative ? "#EF4444BB" : moodCfg.accent + "BB"}`,
               overflow: "hidden",
             }}
           >
@@ -1463,11 +1463,9 @@ const ItemsList: React.FC<{
                 transform: `translateY(${slideY}px)`,
                 display: "flex",
                 flexDirection: "column",
-                borderRadius: L.cardRadius,
-                backgroundColor: spotlight
-                  ? `rgba(${moodCfg.accentRgb},0.12)`
-                  : "rgba(255,255,255,0.04)",
-                border: `1px solid ${spotlight ? moodCfg.accent : moodCfg.accent + "33"}`,
+                borderRadius: 16,
+                backgroundColor: "rgba(0,0,0,0.4)",
+                border: `2px solid ${spotlight ? moodCfg.accent : moodCfg.accent + "BB"}`,
                 width: items.length <= 3 ? 260 : 200,
                 overflow: "hidden",
               }}
@@ -1566,12 +1564,12 @@ const ItemsList: React.FC<{
               display: "flex",
               alignItems: "center",
               gap: 14,
-              padding: "12px 20px",
-              borderRadius: 10,
+              padding: "12px 28px",
+              borderRadius: 50,
               backgroundColor: spotlight
-                ? `rgba(${moodCfg.accentRgb},0.12)`
-                : "rgba(255,255,255,0.03)",
-              borderLeft: `3px solid ${spotlight ? moodCfg.accent : moodCfg.accent + "44"}`,
+                ? `rgba(${moodCfg.accentRgb},0.15)`
+                : "rgba(0,0,0,0.4)",
+              border: `2px solid ${spotlight ? moodCfg.accent : moodCfg.accent + "BB"}`,
             }}
           >
             {/* 국기가 있으면 국기 우선 (아이콘 숨김), 없으면 아이콘 */}
@@ -2461,7 +2459,12 @@ const PieChartDisplay: React.FC<{
           </svg>
 
           {/* Legend */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{
+            display: "flex", flexDirection: "column", gap: 12,
+            backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)",
+            borderRadius: 16, padding: "20px 24px",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}>
             {displayItems.map((item, i) => {
               const delay = 20 + i * 6;
               const labelFade = interpolate(frame, [delay, delay + 12], [0, 1], clamp);
@@ -2940,6 +2943,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const layoutHierarchy = getLayoutHierarchy(layout);
   const headlineIsPrimary = layoutHierarchy === "headline";
   const supportHeadlineInline = usesInlineSupportHeadline(layout);
+  const showHeadlineField: boolean = creative.showHeadline !== false;
   const showSupportHeadline = usesSupportHeadline(layout);
   const showCommonSupportHeadline = showSupportHeadline && !supportHeadlineInline;
 
@@ -3049,6 +3053,9 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
   const sourceFade = useFade(Math.max(...allDelays, 0) + 50, 15, 0.8);
 
+  // hook은 조건 밖에서 항상 호출 (map 안에서 useFade 호출 금지 → 미리 계산)
+  const supportLineOpacities = lines.map((_, i) => useFade(headlineDelays[i] || 0, LINE_ANIM_DUR, 1)); // eslint-disable-line react-hooks/rules-of-hooks
+
   const renderSupportHeadline = (options?: { marginBottom?: number; maxWidth?: string }) => {
     if (!showSupportHeadline || !headline || lines.length === 0) return null;
     const supportFontSize = T.chartTitle;
@@ -3062,13 +3069,16 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           textAlign: "center",
           maxWidth: options?.maxWidth ?? L.headlineMaxWidth,
           transform: headlineTransform,
+          visibility: showHeadlineField ? "visible" : "hidden",
+          height: showHeadlineField ? undefined : 0,
+          overflow: "hidden",
         }}
       >
         {lines.map((line, i) => (
           <div
             key={i}
             style={{
-              opacity: useFade(headlineDelays[i] || 0, LINE_ANIM_DUR, 1),
+              opacity: supportLineOpacities[i] ?? 0,
               fontSize: supportFontSize,
               fontWeight: supportWeight,
               color: supportColor,
@@ -3470,6 +3480,9 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             textAlign: "center",
             maxWidth: "95%",
             transform: headlineTransform,
+            visibility: showHeadlineField ? "visible" : "hidden",
+            height: showHeadlineField ? undefined : 0,
+            overflow: "hidden",
           }}
         >
           {lines.map((line: string, i: number) => {

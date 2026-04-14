@@ -1,7 +1,7 @@
 // remotion/src/design/fonts.ts
 import { useState, useEffect } from "react";
 import { delayRender, continueRender, staticFile } from "remotion";
-import type { FontDef } from "./types";
+import type { FontDef, PresetFonts } from "./types";
 import { useDesignPreset } from "./DesignPresetContext";
 
 const resolveUrl = (path: string): string =>
@@ -16,6 +16,7 @@ const isSystemFont = (family: string): boolean => {
 };
 
 async function loadFontDef(def: FontDef): Promise<void> {
+  if (!def.files || def.files.length === 0) return; // 시스템 폰트
   if (isSystemFont(def.family)) return;
   await Promise.all(
     def.files.map(async (f) => {
@@ -36,25 +37,55 @@ export function usePresetFonts(): void {
 
   useEffect(() => {
     const load = async () => {
-      // body 폰트
-      await loadFontDef(preset.fonts.body);
-      // title 폰트 (있으면)
-      if (preset.fonts.title) {
-        await loadFontDef(preset.fonts.title);
-      }
+      const f = preset.fonts;
+      await loadFontDef(f.body);
+      if (f.headline) await loadFontDef(f.headline);
+      if (f.value)    await loadFontDef(f.value);
+      if (f.mono)     await loadFontDef(f.mono);
+      if (f.title)    await loadFontDef(f.title); // deprecated but still supported
       continueRender(handle);
     };
     load().catch(() => continueRender(handle));
   }, [handle]);
 }
 
+/** CSS custom properties for all font roles — inject at root container */
+export function getFontCSSVars(fonts: PresetFonts): Record<string, string> {
+  const body     = fonts.body;
+  const headline = fonts.headline ?? fonts.body;
+  const value    = fonts.value    ?? fonts.body;
+  const mono     = fonts.mono     ?? { family: "Georgia", fallback: "serif" };
+  return {
+    "--font-body":     `'${body.family}', ${body.fallback}`,
+    "--font-headline": `'${headline.family}', ${headline.fallback}`,
+    "--font-value":    `'${value.family}', ${value.fallback}`,
+    "--font-mono":     `'${mono.family}', ${mono.fallback}`,
+  };
+}
+
 /** 프리셋에서 CSS font-family 문자열 생성 */
-export function buildFontFamily(preset: { fonts: { body: FontDef; title?: FontDef } }): string {
+export function buildFontFamily(preset: { fonts: Pick<PresetFonts, "body"> }): string {
   const body = preset.fonts.body;
   return `'${body.family}', ${body.fallback}`;
 }
 
-export function buildTitleFontFamily(preset: { fonts: { body: FontDef; title?: FontDef } }): string {
+export function buildHeadlineFontFamily(fonts: PresetFonts): string {
+  const f = fonts.headline ?? fonts.body;
+  return `'${f.family}', ${f.fallback}`;
+}
+
+export function buildValueFontFamily(fonts: PresetFonts): string {
+  const f = fonts.value ?? fonts.body;
+  return `'${f.family}', ${f.fallback}`;
+}
+
+export function buildMonoFontFamily(fonts: PresetFonts): string {
+  const f = fonts.mono ?? { family: "Georgia", fallback: "serif" };
+  return `'${f.family}', ${f.fallback}`;
+}
+
+/** @deprecated headline 사용 권장 */
+export function buildTitleFontFamily(preset: { fonts: Pick<PresetFonts, "body" | "title"> }): string {
   const title = preset.fonts.title || preset.fonts.body;
   return `'${title.family}', ${title.fallback}`;
 }

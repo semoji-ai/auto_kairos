@@ -54,7 +54,7 @@ import { DEFAULT_PRESET } from "../design";
    Design Tokens — DesignPreset Context 기반
    ================================================================ */
 
-export const FONT = "'Pretendard', sans-serif";
+export const FONT = "var(--font-body, 'Pretendard', sans-serif)";
 
 export type VideoThemeName = "dark" | "white";
 
@@ -899,9 +899,9 @@ export const MetricCard: React.FC<{
   const C = useC();
   const V = usePresetVariants();
   const metricStyles: Record<string, React.CSSProperties> = {
-    bordered: { backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}` },
-    filled: { backgroundColor: C.accentSoft, border: "none" },
-    glass: { backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid rgba(255,255,255,0.1)`, backdropFilter: "blur(10px)" },
+    bordered: { backgroundColor: "rgba(0,0,0,0.4)", border: `2px solid ${C.accent}BB` },
+    filled: { backgroundColor: "rgba(0,0,0,0.4)", border: `2px solid ${C.accent}BB` },
+    glass: { backgroundColor: "rgba(0,0,0,0.4)", border: `2px solid ${C.accent}BB`, backdropFilter: "blur(10px)" },
     minimal: { backgroundColor: "transparent", border: "none", padding: "12px 0" },
   };
   const ms = metricStyles[V.metricCard] || metricStyles.bordered;
@@ -910,12 +910,12 @@ export const MetricCard: React.FC<{
   return (
     <div style={{
       backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`,
-      borderRadius: 12, padding: "16px 20px", minWidth: 180, textAlign: "center", ...ms, ...style,
+      borderRadius: 12, padding: "24px 32px", minWidth: 180, textAlign: "center", ...ms, ...style,
     }}>
-      <div style={{ fontSize: 30, color: C.textMuted, marginBottom: 6 }}><TextWithBreaks text={label} /></div>
-      <div style={{ fontSize: 60, fontWeight: 800, color: C.accent, lineHeight: 1.1 }}><TextWithBreaks text={value} /></div>
+      <div style={{ fontSize: 40, color: C.textMuted, marginBottom: 10 }}><TextWithBreaks text={label} /></div>
+      <div style={{ fontSize: 100, fontWeight: 800, color: C.accent, lineHeight: 1.05 }}><TextWithBreaks text={value} /></div>
       {change && (
-        <div style={{ fontSize: 18, color: trendColor, marginTop: 6, fontWeight: 600 }}>
+        <div style={{ fontSize: 28, color: trendColor, marginTop: 10, fontWeight: 600 }}>
           {trendArrow} {change}
         </div>
       )}
@@ -1027,12 +1027,14 @@ export const ComparisonCell: React.FC<{
   const C = useC();
   const V = usePresetVariants();
   const valueColor = variant === "after" ? C.positive : variant === "before" ? C.textMuted : C.accent;
-  const cellStyle: React.CSSProperties = V.comparisonCell === "filled"
-    ? { backgroundColor: C.accentSoft, border: "none" }
-    : V.comparisonCell === "accent-top"
-    ? { backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}`, borderTop: `3px solid ${valueColor}` }
-    : { backgroundColor: C.cardBg, border: `1px solid ${C.cardBorder}` };
   const isLg = size === "lg";
+  const lgBg = "rgba(0,0,0,0.4)";
+  const lgBorder = `2px solid ${valueColor}`;
+  const cellStyle: React.CSSProperties = V.comparisonCell === "filled"
+    ? { backgroundColor: isLg ? lgBg : C.accentSoft, border: isLg ? lgBorder : "none" }
+    : V.comparisonCell === "accent-top"
+    ? { backgroundColor: isLg ? lgBg : C.cardBg, border: isLg ? lgBorder : `1px solid ${C.cardBorder}`, ...(!isLg ? { borderTop: `3px solid ${valueColor}` } : {}) }
+    : { backgroundColor: isLg ? lgBg : C.cardBg, border: isLg ? lgBorder : `1px solid ${C.cardBorder}` };
   return (
     <div style={{
       borderRadius: isLg ? 20 : 12,
@@ -1086,7 +1088,7 @@ export const QuoteMark: React.FC<{
   return (
     <span style={{
       fontSize: qSize, fontWeight: 900, color: color ?? C.accent, opacity: 0.3, lineHeight: 0.8,
-      fontFamily: "Georgia, serif", userSelect: "none", ...style,
+      fontFamily: "var(--font-mono, 'Georgia', serif)", userSelect: "none", ...style,
     }}>
       &ldquo;
     </span>

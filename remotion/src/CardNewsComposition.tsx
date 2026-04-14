@@ -67,7 +67,7 @@ export const CardNewsComposition: React.FC<CardNewsProps> = ({
               textAlign: "center",
               lineHeight: 1.3,
               wordBreak: "keep-all",
-              fontFamily: "'Pretendard', 'Noto Sans KR', sans-serif",
+              fontFamily: "var(--font-body, 'Pretendard', 'Noto Sans KR', sans-serif)",
               textShadow: "2px 2px 8px rgba(0,0,0,0.8)",
             }}
           >
@@ -79,7 +79,7 @@ export const CardNewsComposition: React.FC<CardNewsProps> = ({
               fontSize: 24,
               color: accentColor,
               fontWeight: 600,
-              fontFamily: "'Pretendard', 'Noto Sans KR', sans-serif",
+              fontFamily: "var(--font-body, 'Pretendard', 'Noto Sans KR', sans-serif)",
             }}
           >
             @{channelName}
@@ -101,10 +101,10 @@ export const CardNewsComposition: React.FC<CardNewsProps> = ({
           padding: 60,
         }}
       >
-        <div style={{ fontSize: 48, fontWeight: 900, color: "#FFFFFF", textAlign: "center", fontFamily: "'Pretendard', sans-serif" }}>
+        <div style={{ fontSize: 48, fontWeight: 900, color: "#FFFFFF", textAlign: "center", fontFamily: "var(--font-body, 'Pretendard', sans-serif)" }}>
           {title || "전체 영상 보러가기"}
         </div>
-        <div style={{ marginTop: 24, fontSize: 28, color: "#FFFFFF", opacity: 0.9, fontFamily: "'Pretendard', sans-serif" }}>
+        <div style={{ marginTop: 24, fontSize: 28, color: "#FFFFFF", opacity: 0.9, fontFamily: "var(--font-body, 'Pretendard', sans-serif)" }}>
           @{channelName}
         </div>
       </AbsoluteFill>
@@ -132,7 +132,7 @@ export const CardNewsComposition: React.FC<CardNewsProps> = ({
         {/* 상단 바 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
           <div style={{ width: 60, height: 4, backgroundColor: accentColor, borderRadius: 2 }} />
-          <div style={{ fontSize: 16, color: "#999", fontFamily: "'Pretendard', sans-serif" }}>
+          <div style={{ fontSize: 16, color: "#999", fontFamily: "var(--font-body, 'Pretendard', sans-serif)" }}>
             {pageNumber}/{totalPages}
           </div>
         </div>
@@ -146,7 +146,7 @@ export const CardNewsComposition: React.FC<CardNewsProps> = ({
             lineHeight: 1.3,
             marginBottom: 24,
             wordBreak: "keep-all",
-            fontFamily: "'Pretendard', 'Noto Sans KR', sans-serif",
+            fontFamily: "var(--font-body, 'Pretendard', 'Noto Sans KR', sans-serif)",
           }}
         >
           {title}
@@ -162,7 +162,7 @@ export const CardNewsComposition: React.FC<CardNewsProps> = ({
               lineHeight: 1.6,
               flex: 1,
               wordBreak: "keep-all",
-              fontFamily: "'Pretendard', 'Noto Sans KR', sans-serif",
+              fontFamily: "var(--font-body, 'Pretendard', 'Noto Sans KR', sans-serif)",
             }}
           >
             {body}
@@ -170,7 +170,7 @@ export const CardNewsComposition: React.FC<CardNewsProps> = ({
         )}
 
         {/* 하단 채널명 */}
-        <div style={{ fontSize: 16, color: "#999", textAlign: "right", fontFamily: "'Pretendard', sans-serif" }}>
+        <div style={{ fontSize: 16, color: "#999", textAlign: "right", fontFamily: "var(--font-body, 'Pretendard', sans-serif)" }}>
           @{channelName}
         </div>
       </AbsoluteFill>

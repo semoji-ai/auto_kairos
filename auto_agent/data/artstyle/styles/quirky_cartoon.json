@@ -66,6 +66,56 @@
     },
     "subtitle": {
       "keywordColor": "#F59E0B"
+    },
+    "fonts": {
+      "body": {
+        "family": "Pretendard",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/Pretendard-Regular.otf",
+            "weight": "400"
+          },
+          {
+            "file": "fonts/Pretendard-Bold.otf",
+            "weight": "700"
+          }
+        ]
+      },
+      "headline": {
+        "family": "Tenada",
+        "fallback": "sans-serif",
+        "files": [
+          {
+            "file": "fonts/Tenada.woff2",
+            "weight": "400"
+          }
+        ]
+      },
+      "value": {
+        "family": "Barlow Condensed",
+        "fallback": "sans-serif",
+        "files": [
+          {
+            "file": "fonts/BarlowCondensed-Bold.ttf",
+            "weight": "700"
+          }
+        ]
+      },
+      "mono": {
+        "family": "GyeonggiMillenniumBatang",
+        "fallback": "serif",
+        "files": [
+          {
+            "file": "fonts/GyeonggiMillenniumBatang-Regular.ttf",
+            "weight": "400"
+          },
+          {
+            "file": "fonts/GyeonggiMillenniumBatang-Bold.ttf",
+            "weight": "700"
+          }
+        ]
+      }
     }
   },
   "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",

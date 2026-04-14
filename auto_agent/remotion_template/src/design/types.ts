@@ -44,6 +44,10 @@ export interface PresetColors {
 
 export interface PresetFonts {
   body: FontDef;
+  headline?: FontDef;  // 헤드라인/타이틀 전용 (display 폰트)
+  value?: FontDef;     // 숫자/지표 전용 (tabular/condensed)
+  mono?: FontDef;      // 장식 따옴표 등 (시스템 폰트 가능, files: [])
+  /** @deprecated headline 사용 권장 */
   title?: FontDef;
   quote?: { family: string };
 }
@@ -51,7 +55,6 @@ export interface PresetFonts {
 export interface PresetTypography {
   headlineAccent: number;
   headlineBase: number;
-  headlineSupport: number;
   metricValue: number;
   itemText: number;
   descText: number;

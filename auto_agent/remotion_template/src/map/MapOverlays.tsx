@@ -292,7 +292,7 @@ export const MarkerOverlay: React.FC<MarkerOverlayProps> = ({
                   fontSize: mt.labelFontSize,
                   fontWeight: mt.labelFontWeight,
                   color: mt.labelColor,
-                  fontFamily: mt.labelFontFamily ?? "'Pretendard', sans-serif",
+                  fontFamily: mt.labelFontFamily ?? "var(--font-body, 'Pretendard', sans-serif)",
                   whiteSpace: "nowrap",
                   boxShadow: mt.labelShadow,
                   textShadow: "none",

@@ -273,6 +273,8 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         viz = scene.get("visualization")
         if is_flat:
             # 플랫: 최상위 필드에서 visualization 블록 조립
+            # 기존 visualization.creative는 에디터 저장값(showHeadline 등)이 있으므로 보존
+            _old_creative = (scene.get("visualization") or {}).get("creative", {})
             viz = {}
             for k in ("layout", "headline", "items", "values", "unit", "source",
                        "icons", "flags", "chartConfig", "title"):
@@ -280,6 +282,8 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                     viz[k] = scene[k]
             viz.setdefault("items", [])
             viz.setdefault("values", [])
+            if _old_creative:
+                viz["creative"] = _old_creative
         elif not viz:
             _skip = {"scene_number", "sceneNumber", "narration", "narration_tts",
                      "durationFrames", "sceneType", "transition", "vizAnimation",

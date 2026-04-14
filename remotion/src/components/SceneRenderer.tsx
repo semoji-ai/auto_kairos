@@ -10,7 +10,7 @@ import { AbsoluteFill, Img, staticFile } from "remotion";
 import { CreativeScene } from "../simple/CreativeScene";
 import { useDesignPreset } from "../design";
 import { DEFAULT_PRESET } from "../design/defaults";
-import { buildFontFamily } from "../design/fonts";
+import { buildFontFamily, getFontCSSVars } from "../design/fonts";
 
 /** URL/절대경로면 그대로, 상대경로면 staticFile() 사용 (Remotion Studio 호환) */
 export const resolveUrl = (path: string): string => {
@@ -138,6 +138,7 @@ export interface SceneRendererProps {
 export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 30 }) => {
   const preset = useDesignPreset();
   const fontFamily = buildFontFamily(preset);
+  const fontVars = getFontCSSVars(preset.fonts);
   const vizData = resolveVisualization(scene);
 
   const defaultBg = preset.defaultBackground;
@@ -152,7 +153,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   // ── fullscreen ──
   if (hasAnyImage && placement === "fullscreen") {
     return (
-      <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
+      <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily, ...fontVars }}>
         <ImageBg src={imgSrc} opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9} />
         <CreativeScene
           data={vizData}
@@ -168,7 +169,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   // ── center ──
   if (hasSceneImage && placement === "center") {
     return (
-      <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
+      <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily, ...fontVars }}>
         <CenterLayout src={imgSrc} opacity={imgOpacity}>
           <CreativeScene
             data={vizData}
@@ -185,7 +186,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   // ── side (left/right) — 이미지 없어도 placement가 side면 진입 (placeholder 표시) ──
   if (placement === "left" || placement === "right") {
     return (
-      <AbsoluteFill style={{ fontFamily }}>
+      <AbsoluteFill style={{ fontFamily, ...fontVars }}>
         <SideLayout src={hasSceneImage ? imgSrc : ""} placement={placement} opacity={imgOpacity} defaultBg={defaultBg} mood={scene.mood || vizData?.mood}>
           <CreativeScene
             data={vizData}
@@ -201,7 +202,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
 
   // ── background (기본) ──
   return (
-    <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
+    <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily, ...fontVars }}>
       {hasAnyImage && <ImageBg src={imgSrc} opacity={imgOpacity} />}
       <CreativeScene
         data={vizData}

@@ -177,6 +177,7 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
     itemsOffsetY: vc.itemsOffsetY || 0,
     sourceOffsetX: vc.sourceOffsetX || 0,
     sourceOffsetY: vc.sourceOffsetY || 0,
+    showHeadline: vc.showHeadline !== false,
   } as any;
 
   const fps = meta?.fps || 30;
@@ -204,7 +205,7 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
           offsetPatch[k] = v;
         } else {
           vizPatch[k] = v;
-          if (["layout", "headline", "mood", "reveal", "emphasis", "chartStyle", "orientation", "withPortrait", "portraitPlacement"].includes(k)) {
+          if (["layout", "headline", "mood", "reveal", "emphasis", "chartStyle", "orientation", "withPortrait", "portraitPlacement", "showHeadline"].includes(k)) {
             creativePatch[k] = v;
           }
         }
@@ -396,7 +397,18 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
 
         {/* Headline + 위치 조절 */}
         <div>
-          <label style={labelStyle}>Headline</label>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+            <label style={labelStyle}>Headline</label>
+            <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer", fontSize: 10, color: MUTED }}>
+              <input
+                type="checkbox"
+                checked={creative.showHeadline !== false}
+                onChange={e => updateCreative({ showHeadline: e.target.checked })}
+                style={{ accentColor: ACCENT, width: 12, height: 12 }}
+              />
+              표시
+            </label>
+          </div>
           <textarea
             style={{ ...inputStyle, minHeight: 56, resize: "vertical", lineHeight: 1.4 }}
             value={creative.headline || ""}

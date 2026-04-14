@@ -94,7 +94,7 @@ export const ShortsComposition: React.FC<ShortsProps> = ({
                     color: "#FFFFFF",
                     lineHeight: 1.5,
                     wordBreak: "keep-all",
-                    fontFamily: "'Pretendard', 'Noto Sans KR', sans-serif",
+                    fontFamily: "var(--font-body, 'Pretendard', 'Noto Sans KR', sans-serif)",
                     whiteSpace: "pre-wrap",
                   }}
                 >
@@ -137,7 +137,7 @@ export const ShortsComposition: React.FC<ShortsProps> = ({
               textAlign: "center",
               lineHeight: 1.3,
               wordBreak: "keep-all",
-              fontFamily: "'Pretendard', 'Noto Sans KR', sans-serif",
+              fontFamily: "var(--font-body, 'Pretendard', 'Noto Sans KR', sans-serif)",
               whiteSpace: "pre-wrap",
             }}
           >
@@ -163,7 +163,7 @@ export const ShortsComposition: React.FC<ShortsProps> = ({
               fontWeight: 600,
               color: "#FFFFFF",
               opacity: 0.5,
-              fontFamily: "'Pretendard', 'Noto Sans KR', sans-serif",
+              fontFamily: "var(--font-body, 'Pretendard', 'Noto Sans KR', sans-serif)",
             }}
           >
             {channelName}
