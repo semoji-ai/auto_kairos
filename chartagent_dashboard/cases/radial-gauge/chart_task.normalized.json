@@ -1,0 +1,34 @@
+{
+  "task_id": "radial-gauge",
+  "request_origin": "manual",
+  "goal": "show circular gauge",
+  "question": "원형 게이지로 목표 달성률을 보여라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "목표 달성률",
+    "label": "OKR 달성률",
+    "value": 74,
+    "unit": "%"
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Strategy tracker"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

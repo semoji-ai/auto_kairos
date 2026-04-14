@@ -1,0 +1,45 @@
+{
+  "task_id": "fact-table",
+  "request_origin": "manual",
+  "goal": "fact lookup",
+  "question": "",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "핵심 정보",
+    "headers": [
+      "항목",
+      "값"
+    ],
+    "rows": [
+      [
+        "설립",
+        "2019"
+      ],
+      [
+        "직원 수",
+        "42명"
+      ]
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Company profile"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

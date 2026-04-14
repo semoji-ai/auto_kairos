@@ -1,0 +1,14 @@
+{
+  "task_id": "radial-gauge",
+  "goal": "show circular gauge",
+  "question": "원형 게이지로 목표 달성률을 보여라",
+  "dataset": {
+    "title": "목표 달성률",
+    "label": "OKR 달성률",
+    "value": 74,
+    "unit": "%"
+  },
+  "source_hints": [
+    "Strategy tracker"
+  ]
+}

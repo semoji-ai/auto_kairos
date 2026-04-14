@@ -1,0 +1,50 @@
+{
+  "task_id": "dashboard-reference-broadcast_signal-base-hatch-fact-table",
+  "request_origin": "manual",
+  "goal": "fact lookup for hatch treatment set",
+  "question": "빗금 treatment 세트에서도 팩트 테이블을 유지하라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "프로덕트 팩트",
+    "headers": [
+      "항목",
+      "값"
+    ],
+    "rows": [
+      [
+        "출시",
+        "2021"
+      ],
+      [
+        "고객사",
+        "2,400+"
+      ],
+      [
+        "시장",
+        "B2B SaaS"
+      ]
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Pattern reference set",
+    "Fact lookup sheet"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "broadcast_signal",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

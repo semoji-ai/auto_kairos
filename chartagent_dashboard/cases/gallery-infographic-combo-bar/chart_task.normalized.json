@@ -1,0 +1,47 @@
+{
+  "task_id": "gallery-infographic-combo-bar",
+  "request_origin": "manual",
+  "goal": "show gallery infographic bar",
+  "question": "갤러리 인포그래픽 스타일로 줄무늬 막대를 보여라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "전시형 확장 시나리오",
+    "unit": "만",
+    "items": [
+      {
+        "label": "Core",
+        "value": 21
+      },
+      {
+        "label": "Growth",
+        "value": 16
+      },
+      {
+        "label": "Edge",
+        "value": 9,
+        "note": "Projected scenario"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Exhibition poster test"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

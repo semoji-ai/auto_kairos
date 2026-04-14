@@ -1,0 +1,46 @@
+{
+  "shape": "label_value_list",
+  "title": "제품 판매량",
+  "unit": "만",
+  "records": [
+    {
+      "label": "A",
+      "value": 18.0,
+      "unit": "만",
+      "note": "",
+      "full_label": "A",
+      "display_label": "A"
+    },
+    {
+      "label": "B",
+      "value": 14.0,
+      "unit": "만",
+      "note": "",
+      "full_label": "B",
+      "display_label": "B"
+    },
+    {
+      "label": "C",
+      "value": 9.0,
+      "unit": "만",
+      "note": "",
+      "full_label": "C",
+      "display_label": "C"
+    },
+    {
+      "label": "D",
+      "value": 6.0,
+      "unit": "만",
+      "note": "",
+      "full_label": "D",
+      "display_label": "D"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 4,
+    "record_count_after": 4,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "shape": "label_value_list",
+  "title": "핵심 KPI",
+  "unit": "",
+  "records": [
+    {
+      "label": "가입자",
+      "value": 320.0,
+      "unit": "만",
+      "note": "",
+      "full_label": "가입자",
+      "display_label": "가입자"
+    },
+    {
+      "label": "매출",
+      "value": 128.0,
+      "unit": "억",
+      "note": "",
+      "full_label": "매출",
+      "display_label": "매출"
+    },
+    {
+      "label": "영업이익",
+      "value": 19.0,
+      "unit": "억",
+      "note": "",
+      "full_label": "영업이익",
+      "display_label": "영업이익"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 3,
+    "record_count_after": 3,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

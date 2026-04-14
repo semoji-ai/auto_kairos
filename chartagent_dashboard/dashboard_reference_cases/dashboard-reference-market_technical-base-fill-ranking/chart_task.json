@@ -1,0 +1,34 @@
+{
+  "task_id": "dashboard-reference-market_technical-base-fill-ranking",
+  "goal": "show ranking",
+  "question": "어떤 채널이 지금 가장 큰가?",
+  "theme_set": "market_technical",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "채널 점유 점수",
+    "unit": "pt",
+    "items": [
+      {
+        "label": "Organic Search",
+        "value": 42
+      },
+      {
+        "label": "Enterprise Sales",
+        "value": 31
+      },
+      {
+        "label": "Lifecycle Email",
+        "value": 21
+      },
+      {
+        "label": "Partner Network",
+        "value": 14
+      }
+    ]
+  },
+  "source_hints": [
+    "Reference gallery benchmark",
+    "Channel mix model"
+  ]
+}

@@ -1,0 +1,29 @@
+# ChartAgent Notes
+
+- task_id: warning-case
+- chart_family: annotated_chart
+- chart_variant: bar_callout
+- theme_set: neutral_white
+- theme: editorial
+- visual_mode: editorial
+- layout_preset: feature_stage
+- reference_profile: financial_times_editorial
+- style_combo_preset: neutral_system
+- pattern_format_preset: None
+- source_ref: vercel
+- source_ref: apple
+- source_ref: notion
+- why: The dataset compares named categories with numeric values.
+- why: Labels are long enough that horizontal bars will read better than vertical bars.
+- why: The task also calls for an explicit callout rather than a raw ranking alone.
+- warning: Source note is missing; render should include an explicit provenance placeholder.
+- warning: Source note is missing.
+- warning: Mixed units are present without an explicit explanation.
+- warning: Some labels are long enough to risk overflow.
+- warning: Unsupported annotation target for this family: slice
+- warning: `question` is empty; chart title will fall back to the goal or dataset title.
+- warning: No `source_hints` were provided; source-note output may be thin.
+- warning: Source note is missing.
+- warning: Mixed units are present without an explicit explanation.
+- warning: Some labels are long enough to risk overflow.
+- warning: Unsupported annotation target for this family: slice

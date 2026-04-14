@@ -1,0 +1,24 @@
+{
+  "task_id": "fact-table",
+  "goal": "fact lookup",
+  "dataset": {
+    "title": "핵심 정보",
+    "headers": [
+      "항목",
+      "값"
+    ],
+    "rows": [
+      [
+        "설립",
+        "2019"
+      ],
+      [
+        "직원 수",
+        "42명"
+      ]
+    ]
+  },
+  "source_hints": [
+    "Company profile"
+  ]
+}

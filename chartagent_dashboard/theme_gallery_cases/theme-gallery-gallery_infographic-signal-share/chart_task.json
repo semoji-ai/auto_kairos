@@ -1,0 +1,48 @@
+{
+  "task_id": "theme-gallery-gallery_infographic-signal-share",
+  "goal": "show composition",
+  "question": "유입 비중은 어떻게 나뉘는가?",
+  "theme_set": "gallery_infographic",
+  "theme_overrides": {
+    "accent_color": "#fb923c",
+    "accent_alt_color": "#67e8f9",
+    "panel_color": "#0f1a31",
+    "plot_bg_color": "#0b1426",
+    "pattern_density": "high",
+    "stroke_width": 6.0,
+    "outline_width": 3.2,
+    "source_mode": "edge_rail",
+    "source_opacity": 0.92,
+    "label_weight": 720
+  },
+  "theme_reset": {},
+  "dataset": {
+    "title": "유입 비중",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 46,
+        "unit": "%"
+      },
+      {
+        "label": "Paid",
+        "value": 28,
+        "unit": "%"
+      },
+      {
+        "label": "Partner",
+        "value": 16,
+        "unit": "%"
+      },
+      {
+        "label": "Newsletter",
+        "value": 10,
+        "unit": "%"
+      }
+    ]
+  },
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Acquisition mix model"
+  ]
+}

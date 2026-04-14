@@ -1,0 +1,33 @@
+{
+  "task_id": "dashboard-reference-editorial_outline-base-hatch-fact-table",
+  "goal": "fact lookup for hatch treatment set",
+  "question": "빗금 treatment 세트에서도 팩트 테이블을 유지하라",
+  "theme_set": "editorial_outline",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "프로덕트 팩트",
+    "headers": [
+      "항목",
+      "값"
+    ],
+    "rows": [
+      [
+        "출시",
+        "2021"
+      ],
+      [
+        "고객사",
+        "2,400+"
+      ],
+      [
+        "시장",
+        "B2B SaaS"
+      ]
+    ]
+  },
+  "source_hints": [
+    "Pattern reference set",
+    "Fact lookup sheet"
+  ]
+}

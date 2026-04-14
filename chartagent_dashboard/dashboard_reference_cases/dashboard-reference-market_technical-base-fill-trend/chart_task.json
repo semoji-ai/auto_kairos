@@ -1,0 +1,35 @@
+{
+  "task_id": "dashboard-reference-market_technical-base-fill-trend",
+  "goal": "show trend",
+  "question": "수익 흐름은 어떻게 변했는가?",
+  "theme_set": "market_technical",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "ARR 추이",
+    "x_label": "연도",
+    "y_label": "ARR",
+    "points": [
+      {
+        "x": "2021",
+        "y": 12
+      },
+      {
+        "x": "2022",
+        "y": 19
+      },
+      {
+        "x": "2023",
+        "y": 31
+      },
+      {
+        "x": "2024",
+        "y": 46
+      }
+    ]
+  },
+  "source_hints": [
+    "Reference gallery benchmark",
+    "Revenue trend model"
+  ]
+}

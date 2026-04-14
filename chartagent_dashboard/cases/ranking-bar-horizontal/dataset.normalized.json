@@ -1,0 +1,38 @@
+{
+  "shape": "label_value_list",
+  "title": "시장 점유 점수",
+  "unit": "점",
+  "records": [
+    {
+      "label": "대한민국",
+      "value": 42.0,
+      "unit": "점",
+      "note": "",
+      "full_label": "대한민국",
+      "display_label": "대한민국"
+    },
+    {
+      "label": "일본",
+      "value": 28.0,
+      "unit": "점",
+      "note": "",
+      "full_label": "일본",
+      "display_label": "일본"
+    },
+    {
+      "label": "대만",
+      "value": 17.0,
+      "unit": "점",
+      "note": "",
+      "full_label": "대만",
+      "display_label": "대만"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 3,
+    "record_count_after": 3,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

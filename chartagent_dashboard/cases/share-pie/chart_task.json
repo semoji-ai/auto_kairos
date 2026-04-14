@@ -1,0 +1,28 @@
+{
+  "task_id": "share-pie",
+  "goal": "show composition with pie chart",
+  "question": "파이 차트로 유입 비중을 보여라",
+  "dataset": {
+    "title": "유입 비중",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 52,
+        "unit": "%"
+      },
+      {
+        "label": "Paid",
+        "value": 28,
+        "unit": "%"
+      },
+      {
+        "label": "Partner",
+        "value": 20,
+        "unit": "%"
+      }
+    ]
+  },
+  "source_hints": [
+    "Channel report"
+  ]
+}

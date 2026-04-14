@@ -1,0 +1,187 @@
+{
+  "task_id": "dashboard-reference-gallery_infographic-base-fill-metric-wall",
+  "chart_family": "metric_wall",
+  "base_chart_family": null,
+  "chart_variant": "kpi_cards",
+  "title_mode": "question_first",
+  "title_text": "핵심 KPI를 카드 벽으로 요약하라",
+  "subtitle_text": "",
+  "annotation_strategy": "minimal",
+  "label_strategy": "compact",
+  "legend_strategy": "implicit",
+  "axis_strategy": "none",
+  "color_strategy": "single_accent",
+  "style_spec": {
+    "theme_set": "gallery_infographic",
+    "theme_set_label": "Gallery Infographic",
+    "theme_set_description": "Decorative infographic surface with stronger visual character.",
+    "theme_artwork_signature": [
+      "decorative surface identity",
+      "gallery-like spacing",
+      "bold pattern presence"
+    ],
+    "theme_source_refs": [
+      "pinterest",
+      "claude",
+      "editorial_infographics"
+    ],
+    "theme_name": "editorial",
+    "visual_mode": "editorial",
+    "density": "compact",
+    "emphasis_level": "medium",
+    "tone": "warm",
+    "layout_preset": "hero_panel",
+    "legend_placement": "implicit",
+    "reference_profile": "financial_times_editorial",
+    "reference_label": "Financial Times Editorial",
+    "reference_archetype": "Warm editorial charts with restrained hierarchy",
+    "style_combo_preset": "gallery_infographic",
+    "style_combo_label": "Gallery Infographic",
+    "style_combo_description": "Decorative but readable infographic treatment with bolder pattern identity.",
+    "pattern_format_preset": null,
+    "pattern_format_label": null,
+    "pattern_format_scope": null,
+    "layout_tokens": {
+      "title_y": 52,
+      "subtitle_y": 82,
+      "content_top_with_subtitle": 126,
+      "content_top_without_subtitle": 110,
+      "plot_left": 60,
+      "plot_right": 60,
+      "plot_bottom": 80,
+      "annotation_rail_width": 0,
+      "annotation_rail_gap": 20
+    },
+    "motif_tokens": {
+      "guide_line_count": 1,
+      "guide_dasharray": null,
+      "guide_opacity": 0.2,
+      "guide_stroke_width": 1,
+      "axis_stroke_width": 2,
+      "primary_stroke_width": 4,
+      "marker_style": "none",
+      "marker_radius": 5,
+      "bar_radius": 14,
+      "annotation_style": "soft_card",
+      "annotation_radius": 16,
+      "annotation_connector_dasharray": "4 4",
+      "candlestick_wick_width": 2,
+      "candlestick_body_stroke_width": 0,
+      "pattern_kind_default": "crosshatch_light",
+      "pattern_spacing": 10,
+      "pattern_opacity": 0.4,
+      "pattern_stroke_width": 1.25,
+      "patterned_outline_width": 2.4,
+      "outline_only_width": 2.2,
+      "range_outline_width": 1.55,
+      "legend_swatch_radius": 6
+    },
+    "component_tokens": {
+      "pattern_mode": "outline_plus_hatch",
+      "label_weight": 650,
+      "source_mode": "bottom_left",
+      "source_opacity": 0.8,
+      "table_header_weight": 700,
+      "table_cell_padding": 16,
+      "table_row_divider_opacity": 0.18
+    },
+    "pattern_policy": {
+      "enabled": false,
+      "reason": "unsupported_family",
+      "target_mode": "none",
+      "pattern_kind": "",
+      "fill_treatment": "solid"
+    },
+    "theme_tokens": {
+      "bg": "#fff6ea",
+      "panel": "#fff0de",
+      "panel_alt": "#ffe8cc",
+      "plot_bg": "#fff8ef",
+      "text_primary": "#2a1d16",
+      "text_secondary": "#5f463c",
+      "text_muted": "#8a6f63",
+      "grid": "#d8cfc4",
+      "grid_strong": "#baa78f",
+      "accent": "#7c3aed",
+      "accent_alt": "#0f766e",
+      "positive": "#0f766e",
+      "negative": "#b91c1c",
+      "neutral": "#57534e",
+      "track": "#efe7db",
+      "annotation_fill": "#ffedd5",
+      "annotation_stroke": "#c2410c",
+      "header_fill": "#ffe4c1",
+      "series": [
+        "#7c3aed",
+        "#0f766e",
+        "#ea580c",
+        "#db2777",
+        "#2563eb",
+        "#ca8a04"
+      ],
+      "card_fills": [
+        "#fff1df",
+        "#f7ebda",
+        "#fff6e7",
+        "#f8efe7"
+      ],
+      "font_title": "'Space Grotesk', 'Pretendard', 'Apple SD Gothic Neo', sans-serif",
+      "font_body": "'IBM Plex Sans KR', 'Pretendard', 'Apple SD Gothic Neo', sans-serif",
+      "font_mono": "'SFMono-Regular', 'JetBrains Mono', monospace",
+      "title_size": 30,
+      "subtitle_size": 18,
+      "body_size": 16,
+      "tick_size": 14,
+      "source_size": 14,
+      "stat_size": 72,
+      "radius_card": 28,
+      "radius_chip": 16
+    },
+    "theme_overrides": {},
+    "theme_reset": {}
+  },
+  "source_strategy": "source_note",
+  "source_note_text": "Source: Reference gallery benchmark",
+  "annotations": [
+    {
+      "target": "card",
+      "label": "Active Seats",
+      "value": 320.0
+    },
+    {
+      "target": "card",
+      "label": "ARR",
+      "value": 128.0
+    },
+    {
+      "target": "card",
+      "label": "Gross Margin",
+      "value": 71.0
+    }
+  ],
+  "font_roles": {
+    "chart_title": "chart_title",
+    "chart_subtitle": "chart_subtitle",
+    "axis_label": "axis_label",
+    "axis_tick": "axis_tick",
+    "legend_label": "legend_label",
+    "value_label": "value_label",
+    "callout_label": "callout_label",
+    "table_header": "table_header",
+    "table_cell": "table_cell",
+    "source_note": "source_note"
+  },
+  "render_hints": {
+    "backend": "svg",
+    "preferred_width": 960,
+    "preferred_height": 520,
+    "normalized_shape": "label_value_list"
+  },
+  "table_fallback": "fact_table",
+  "why": [
+    "A small set of KPIs is better shown as a metric wall than as ranked bars."
+  ],
+  "warnings": [
+    "Mixed units are present without an explicit explanation."
+  ]
+}

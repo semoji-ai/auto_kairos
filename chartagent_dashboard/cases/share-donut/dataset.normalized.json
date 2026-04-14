@@ -1,0 +1,38 @@
+{
+  "shape": "share_breakdown",
+  "title": "점유율",
+  "unit": "",
+  "records": [
+    {
+      "label": "A",
+      "value": 46.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "A",
+      "display_label": "A"
+    },
+    {
+      "label": "B",
+      "value": 34.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "B",
+      "display_label": "B"
+    },
+    {
+      "label": "C",
+      "value": 20.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "C",
+      "display_label": "C"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 3,
+    "record_count_after": 3,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

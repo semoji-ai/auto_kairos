@@ -1,0 +1,44 @@
+{
+  "task_id": "theme-gallery-gallery_infographic-signal-fact-table",
+  "goal": "fact lookup",
+  "question": "핵심 사실을 빠르게 읽게 하라",
+  "theme_set": "gallery_infographic",
+  "theme_overrides": {
+    "accent_color": "#fb923c",
+    "accent_alt_color": "#67e8f9",
+    "panel_color": "#0f1a31",
+    "plot_bg_color": "#0b1426",
+    "pattern_density": "high",
+    "stroke_width": 6.0,
+    "outline_width": 3.2,
+    "source_mode": "edge_rail",
+    "source_opacity": 0.92,
+    "label_weight": 720
+  },
+  "theme_reset": {},
+  "dataset": {
+    "title": "프로덕트 팩트",
+    "headers": [
+      "항목",
+      "값"
+    ],
+    "rows": [
+      [
+        "출시",
+        "2021"
+      ],
+      [
+        "고객사",
+        "2,400+"
+      ],
+      [
+        "시장",
+        "B2B SaaS"
+      ]
+    ]
+  },
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Fact lookup sheet"
+  ]
+}

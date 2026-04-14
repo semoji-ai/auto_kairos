@@ -1,0 +1,49 @@
+{
+  "task_id": "theme-gallery-market_technical-rounded-trend",
+  "goal": "show trend",
+  "question": "수익 흐름은 어떻게 변했는가?",
+  "theme_set": "market_technical",
+  "theme_overrides": {
+    "accent_color": "#8b5cf6",
+    "accent_alt_color": "#14b8a6",
+    "panel_color": "#f7efe5",
+    "plot_bg_color": "#f4eadb",
+    "corner_radius": 34,
+    "chip_radius": 22,
+    "bar_gap": 0.24,
+    "table_cell_padding": 22,
+    "source_mode": "bottom_left",
+    "source_opacity": 0.84,
+    "pattern_density": "low",
+    "title_scale": 1.06
+  },
+  "theme_reset": {},
+  "dataset": {
+    "title": "연도별 ARR",
+    "unit": "억",
+    "x_label": "연도",
+    "y_label": "ARR",
+    "points": [
+      {
+        "x": "2021",
+        "y": 12
+      },
+      {
+        "x": "2022",
+        "y": 19
+      },
+      {
+        "x": "2023",
+        "y": 31
+      },
+      {
+        "x": "2024",
+        "y": 46
+      }
+    ]
+  },
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Revenue trend model"
+  ]
+}

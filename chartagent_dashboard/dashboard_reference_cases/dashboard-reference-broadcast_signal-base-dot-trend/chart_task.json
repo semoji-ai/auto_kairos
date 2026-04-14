@@ -1,0 +1,35 @@
+{
+  "task_id": "dashboard-reference-broadcast_signal-base-dot-trend",
+  "goal": "show trend for accessibility review",
+  "question": "색맹 접근성 세트에서도 추세선을 유지하라",
+  "theme_set": "broadcast_signal",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "접근성 ARR 추이",
+    "x_label": "연도",
+    "y_label": "ARR",
+    "points": [
+      {
+        "x": "2021",
+        "y": 12
+      },
+      {
+        "x": "2022",
+        "y": 19
+      },
+      {
+        "x": "2023",
+        "y": 31
+      },
+      {
+        "x": "2024",
+        "y": 46
+      }
+    ]
+  },
+  "source_hints": [
+    "Accessibility review",
+    "Trend baseline"
+  ]
+}

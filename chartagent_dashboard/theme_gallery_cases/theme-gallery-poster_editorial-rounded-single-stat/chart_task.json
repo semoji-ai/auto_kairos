@@ -1,0 +1,31 @@
+{
+  "task_id": "theme-gallery-poster_editorial-rounded-single-stat",
+  "goal": "headline single stat",
+  "question": "하나의 핵심 숫자를 크게 강조하라",
+  "theme_set": "poster_editorial",
+  "theme_overrides": {
+    "accent_color": "#8b5cf6",
+    "accent_alt_color": "#14b8a6",
+    "panel_color": "#f7efe5",
+    "plot_bg_color": "#f4eadb",
+    "corner_radius": 34,
+    "chip_radius": 22,
+    "bar_gap": 0.24,
+    "table_cell_padding": 22,
+    "source_mode": "bottom_left",
+    "source_opacity": 0.84,
+    "pattern_density": "low",
+    "title_scale": 1.06
+  },
+  "theme_reset": {},
+  "dataset": {
+    "title": "이번 분기 핵심 수치",
+    "label": "분기 ARR",
+    "value": 38,
+    "unit": "억"
+  },
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Hero stat treatment"
+  ]
+}

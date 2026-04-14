@@ -1,0 +1,28 @@
+{
+  "task_id": "metric-wall-kpi",
+  "goal": "headline kpi summary",
+  "question": "핵심 KPI 요약",
+  "dataset": {
+    "title": "핵심 KPI",
+    "items": [
+      {
+        "label": "매출",
+        "value": 128,
+        "unit": "억"
+      },
+      {
+        "label": "영업이익",
+        "value": 19,
+        "unit": "억"
+      },
+      {
+        "label": "가입자",
+        "value": 320,
+        "unit": "만"
+      }
+    ]
+  },
+  "source_hints": [
+    "Quarterly summary"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "task_id": "broadcast-signal-combo-bar",
+  "request_origin": "manual",
+  "goal": "show breaking signal chart",
+  "question": "속보형 시그널 그래픽처럼 예상치를 강하게 표시하라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "속보형 유입 시그널",
+    "unit": "만",
+    "items": [
+      {
+        "label": "Core",
+        "value": 21
+      },
+      {
+        "label": "Growth",
+        "value": 16
+      },
+      {
+        "label": "Edge",
+        "value": 9,
+        "note": "Projected scenario"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Breaking desk"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

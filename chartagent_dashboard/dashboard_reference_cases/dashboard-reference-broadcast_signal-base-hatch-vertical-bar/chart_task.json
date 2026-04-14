@@ -1,0 +1,36 @@
+{
+  "task_id": "dashboard-reference-broadcast_signal-base-hatch-vertical-bar",
+  "goal": "show vertical forecast bars with hatch pattern",
+  "question": "빗금 패턴으로 지역별 실적을 세로 막대로 비교하라",
+  "theme_set": "broadcast_signal",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "지역별 예상 실적",
+    "unit": "억",
+    "items": [
+      {
+        "label": "KR",
+        "value": 19
+      },
+      {
+        "label": "US",
+        "value": 27,
+        "note": "Projected Q4"
+      },
+      {
+        "label": "JP",
+        "value": 15
+      },
+      {
+        "label": "EU",
+        "value": 22,
+        "note": "Projected Q4"
+      }
+    ]
+  },
+  "source_hints": [
+    "Pattern reference set",
+    "Regional planning board"
+  ]
+}

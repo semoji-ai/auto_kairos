@@ -1,0 +1,46 @@
+{
+  "task_id": "theme-gallery-gallery_infographic-signal-single-stat",
+  "request_origin": "manual",
+  "goal": "headline single stat",
+  "question": "하나의 핵심 숫자를 크게 강조하라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "이번 분기 핵심 수치",
+    "label": "분기 ARR",
+    "value": 38,
+    "unit": "억"
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Hero stat treatment"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "gallery_infographic",
+  "theme_overrides": {
+    "accent_color": "#fb923c",
+    "accent_alt_color": "#67e8f9",
+    "panel_color": "#0f1a31",
+    "plot_bg_color": "#0b1426",
+    "pattern_density": "high",
+    "stroke_width": 6.0,
+    "outline_width": 3.2,
+    "source_mode": "edge_rail",
+    "source_opacity": 0.92,
+    "label_weight": 720
+  },
+  "theme_reset": {}
+}

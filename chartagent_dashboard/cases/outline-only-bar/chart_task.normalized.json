@@ -1,0 +1,47 @@
+{
+  "task_id": "outline-only-bar",
+  "request_origin": "manual",
+  "goal": "show preliminary estimate",
+  "question": "속을 채우지 않은 테두리 막대로 잠정치를 보여라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "채널별 잠정 유입",
+    "unit": "만",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 18
+      },
+      {
+        "label": "Paid",
+        "value": 14
+      },
+      {
+        "label": "Partner",
+        "value": 11,
+        "note": "Preliminary channel total"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Draft planning sheet"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

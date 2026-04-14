@@ -1,0 +1,61 @@
+{
+  "task_id": "distribution-histogram",
+  "request_origin": "manual",
+  "goal": "show distribution",
+  "question": "점수 분포를 구간별로 보여라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "시험 점수 분포",
+    "shape": "distribution_bins",
+    "x_label": "점수 구간",
+    "y_label": "응답 수",
+    "bins": [
+      {
+        "start": 0,
+        "end": 10,
+        "count": 2
+      },
+      {
+        "start": 10,
+        "end": 20,
+        "count": 5
+      },
+      {
+        "start": 20,
+        "end": 30,
+        "count": 11
+      },
+      {
+        "start": 30,
+        "end": 40,
+        "count": 18
+      },
+      {
+        "start": 40,
+        "end": 50,
+        "count": 14
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Distribution sample"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

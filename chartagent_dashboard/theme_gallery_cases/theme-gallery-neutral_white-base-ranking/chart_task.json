@@ -1,0 +1,36 @@
+{
+  "task_id": "theme-gallery-neutral_white-base-ranking",
+  "goal": "show ranking",
+  "question": "어떤 채널이 다음 분기 성장을 주도할까?",
+  "theme_set": "neutral_white",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "성장 채널 전망 점수",
+    "unit": "pt",
+    "items": [
+      {
+        "label": "Organic SEO",
+        "value": 420
+      },
+      {
+        "label": "Influencers",
+        "value": 270,
+        "note": "forecast"
+      },
+      {
+        "label": "Newsletters",
+        "value": 180
+      },
+      {
+        "label": "Enterprise",
+        "value": 130,
+        "note": "forecast"
+      }
+    ]
+  },
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Forecast planning model"
+  ]
+}

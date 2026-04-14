@@ -1,0 +1,8 @@
+{
+  "shape": "single_value",
+  "title": "이행률",
+  "unit": "%",
+  "label": "로드맵 이행률",
+  "value": 61.0,
+  "source_notes": []
+}

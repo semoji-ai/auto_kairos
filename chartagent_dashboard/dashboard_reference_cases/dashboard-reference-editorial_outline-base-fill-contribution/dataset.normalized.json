@@ -1,0 +1,46 @@
+{
+  "shape": "share_breakdown",
+  "title": "성장 기여도",
+  "unit": "",
+  "records": [
+    {
+      "label": "Acquisition",
+      "value": 39.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Acquisition",
+      "display_label": "Acquisition"
+    },
+    {
+      "label": "Activation",
+      "value": 27.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Activation",
+      "display_label": "Activation"
+    },
+    {
+      "label": "Expansion",
+      "value": 21.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Expansion",
+      "display_label": "Expansion"
+    },
+    {
+      "label": "Referral",
+      "value": 13.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Referral",
+      "display_label": "Referral"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 4,
+    "record_count_after": 4,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

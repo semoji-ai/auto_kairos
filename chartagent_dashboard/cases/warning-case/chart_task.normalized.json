@@ -1,0 +1,46 @@
+{
+  "task_id": "warning-case",
+  "request_origin": "manual",
+  "goal": "show ranking",
+  "question": "",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "items": [
+      {
+        "label": "아주아주긴카테고리이름테스트A",
+        "value": 10,
+        "unit": "%"
+      },
+      {
+        "label": "아주아주긴카테고리이름테스트B",
+        "value": 8,
+        "unit": "건"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {
+    "annotations": [
+      {
+        "target": "slice"
+      }
+    ]
+  },
+  "source_hints": [],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

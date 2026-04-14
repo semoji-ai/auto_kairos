@@ -1,0 +1,18 @@
+{
+  "task_id": "dashboard-reference-editorial_outline-base-dot-single-stat",
+  "goal": "headline single stat for accessibility review",
+  "question": "접근성 세트에서도 핵심 숫자를 유지하라",
+  "theme_set": "editorial_outline",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "이번 분기 핵심 수치",
+    "label": "분기 ARR",
+    "value": 38,
+    "unit": "억"
+  },
+  "source_hints": [
+    "Accessibility review",
+    "Hero stat treatment"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "task_id": "timeline-table",
+  "request_origin": "manual",
+  "goal": "compare milestones",
+  "question": "",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "주요 연혁",
+    "headers": [
+      "연도",
+      "사건",
+      "영향"
+    ],
+    "rows": [
+      [
+        "2021",
+        "출시",
+        "초기 진입"
+      ],
+      [
+        "2022",
+        "확장",
+        "사용자 증가"
+      ],
+      [
+        "2023",
+        "흑자 전환",
+        "수익성 개선"
+      ]
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Company timeline"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

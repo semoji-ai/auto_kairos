@@ -1,0 +1,50 @@
+{
+  "task_id": "vertical-bar",
+  "request_origin": "manual",
+  "goal": "show ranking",
+  "question": "짧은 레이블은 세로 막대로 비교하라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "제품 판매량",
+    "unit": "만",
+    "items": [
+      {
+        "label": "A",
+        "value": 18
+      },
+      {
+        "label": "B",
+        "value": 14
+      },
+      {
+        "label": "C",
+        "value": 9
+      },
+      {
+        "label": "D",
+        "value": 6
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Sales snapshot"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

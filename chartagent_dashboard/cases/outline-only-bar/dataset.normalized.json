@@ -1,0 +1,38 @@
+{
+  "shape": "label_value_list",
+  "title": "채널별 잠정 유입",
+  "unit": "만",
+  "records": [
+    {
+      "label": "Organic",
+      "value": 18.0,
+      "unit": "만",
+      "note": "",
+      "full_label": "Organic",
+      "display_label": "Organic"
+    },
+    {
+      "label": "Paid",
+      "value": 14.0,
+      "unit": "만",
+      "note": "",
+      "full_label": "Paid",
+      "display_label": "Paid"
+    },
+    {
+      "label": "Partner",
+      "value": 11.0,
+      "unit": "만",
+      "note": "Preliminary channel total",
+      "full_label": "Partner",
+      "display_label": "Partner"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 3,
+    "record_count_after": 3,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

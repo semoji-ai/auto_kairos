@@ -1,0 +1,46 @@
+{
+  "shape": "label_value_list",
+  "title": "접근성 채널 점유 점수",
+  "unit": "pt",
+  "records": [
+    {
+      "label": "Organic Search",
+      "value": 42.0,
+      "unit": "pt",
+      "note": "",
+      "full_label": "Organic Search",
+      "display_label": "Organic Search"
+    },
+    {
+      "label": "Enterprise Sales",
+      "value": 31.0,
+      "unit": "pt",
+      "note": "",
+      "full_label": "Enterprise Sales",
+      "display_label": "Enterprise..."
+    },
+    {
+      "label": "Lifecycle Email",
+      "value": 21.0,
+      "unit": "pt",
+      "note": "",
+      "full_label": "Lifecycle Email",
+      "display_label": "Lifecycle E..."
+    },
+    {
+      "label": "Partner Network",
+      "value": 14.0,
+      "unit": "pt",
+      "note": "",
+      "full_label": "Partner Network",
+      "display_label": "Partner Net..."
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 4,
+    "record_count_after": 4,
+    "max_categories": 8,
+    "label_shortening_applied": true
+  }
+}

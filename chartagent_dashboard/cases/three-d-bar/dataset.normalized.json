@@ -1,0 +1,38 @@
+{
+  "shape": "label_value_list",
+  "title": "제품군 비교",
+  "unit": "점",
+  "records": [
+    {
+      "label": "A",
+      "value": 16.0,
+      "unit": "점",
+      "note": "",
+      "full_label": "A",
+      "display_label": "A"
+    },
+    {
+      "label": "B",
+      "value": 12.0,
+      "unit": "점",
+      "note": "",
+      "full_label": "B",
+      "display_label": "B"
+    },
+    {
+      "label": "C",
+      "value": 10.0,
+      "unit": "점",
+      "note": "",
+      "full_label": "C",
+      "display_label": "C"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 3,
+    "record_count_after": 3,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

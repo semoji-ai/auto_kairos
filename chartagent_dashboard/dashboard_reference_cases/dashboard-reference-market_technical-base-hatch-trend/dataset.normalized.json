@@ -1,0 +1,34 @@
+{
+  "shape": "time_series",
+  "title": "예상 ARR 추이",
+  "unit": "",
+  "x_label": "연도",
+  "y_label": "ARR",
+  "points": [
+    {
+      "x": "2021",
+      "y": 12.0,
+      "unit": "",
+      "note": ""
+    },
+    {
+      "x": "2022",
+      "y": 19.0,
+      "unit": "",
+      "note": ""
+    },
+    {
+      "x": "2023",
+      "y": 31.0,
+      "unit": "",
+      "note": ""
+    },
+    {
+      "x": "2024",
+      "y": 46.0,
+      "unit": "",
+      "note": ""
+    }
+  ],
+  "source_notes": []
+}

@@ -1,0 +1,50 @@
+{
+  "task_id": "dashboard-reference-poster_editorial-base-hatch-contribution",
+  "request_origin": "manual",
+  "goal": "show stacked progress range",
+  "question": "빗금 구간으로 누적 기여도를 보여라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "기여도 범위",
+    "items": [
+      {
+        "label": "Baseline",
+        "value": 44,
+        "unit": "%"
+      },
+      {
+        "label": "Upside",
+        "value": 31,
+        "unit": "%",
+        "note": "Confidence range"
+      },
+      {
+        "label": "Stretch",
+        "value": 25,
+        "unit": "%"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Pattern reference set",
+    "Planning range"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "poster_editorial",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

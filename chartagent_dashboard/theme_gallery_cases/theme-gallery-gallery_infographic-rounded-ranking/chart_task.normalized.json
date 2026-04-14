@@ -1,0 +1,66 @@
+{
+  "task_id": "theme-gallery-gallery_infographic-rounded-ranking",
+  "request_origin": "manual",
+  "goal": "show ranking",
+  "question": "어떤 채널이 다음 분기 성장을 주도할까?",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "성장 채널 전망 점수",
+    "unit": "pt",
+    "items": [
+      {
+        "label": "Organic SEO",
+        "value": 420
+      },
+      {
+        "label": "Influencers",
+        "value": 270,
+        "note": "forecast"
+      },
+      {
+        "label": "Newsletters",
+        "value": 180
+      },
+      {
+        "label": "Enterprise",
+        "value": 130,
+        "note": "forecast"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Forecast planning model"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "gallery_infographic",
+  "theme_overrides": {
+    "accent_color": "#8b5cf6",
+    "accent_alt_color": "#14b8a6",
+    "panel_color": "#f7efe5",
+    "plot_bg_color": "#f4eadb",
+    "corner_radius": 34,
+    "chip_radius": 22,
+    "bar_gap": 0.24,
+    "table_cell_padding": 22,
+    "source_mode": "bottom_left",
+    "source_opacity": 0.84,
+    "pattern_density": "low",
+    "title_scale": 1.06
+  },
+  "theme_reset": {}
+}

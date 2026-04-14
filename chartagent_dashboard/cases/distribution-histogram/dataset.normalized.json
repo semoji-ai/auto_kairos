@@ -1,0 +1,50 @@
+{
+  "shape": "distribution_bins",
+  "title": "시험 점수 분포",
+  "unit": "",
+  "x_label": "점수 구간",
+  "y_label": "응답 수",
+  "bins": [
+    {
+      "label": "0-10",
+      "start": 0.0,
+      "end": 10.0,
+      "count": 2.0,
+      "unit": "",
+      "note": ""
+    },
+    {
+      "label": "10-20",
+      "start": 10.0,
+      "end": 20.0,
+      "count": 5.0,
+      "unit": "",
+      "note": ""
+    },
+    {
+      "label": "20-30",
+      "start": 20.0,
+      "end": 30.0,
+      "count": 11.0,
+      "unit": "",
+      "note": ""
+    },
+    {
+      "label": "30-40",
+      "start": 30.0,
+      "end": 40.0,
+      "count": 18.0,
+      "unit": "",
+      "note": ""
+    },
+    {
+      "label": "40-50",
+      "start": 40.0,
+      "end": 50.0,
+      "count": 14.0,
+      "unit": "",
+      "note": ""
+    }
+  ],
+  "source_notes": []
+}

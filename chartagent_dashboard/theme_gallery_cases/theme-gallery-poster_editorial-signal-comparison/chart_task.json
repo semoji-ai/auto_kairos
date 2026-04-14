@@ -1,0 +1,52 @@
+{
+  "task_id": "theme-gallery-poster_editorial-signal-comparison",
+  "goal": "compare features",
+  "question": "세 플랜은 무엇이 다른가?",
+  "theme_set": "poster_editorial",
+  "theme_overrides": {
+    "accent_color": "#fb923c",
+    "accent_alt_color": "#67e8f9",
+    "panel_color": "#0f1a31",
+    "plot_bg_color": "#0b1426",
+    "pattern_density": "high",
+    "stroke_width": 6.0,
+    "outline_width": 3.2,
+    "source_mode": "edge_rail",
+    "source_opacity": 0.92,
+    "label_weight": 720
+  },
+  "theme_reset": {},
+  "dataset": {
+    "title": "플랜 비교",
+    "headers": [
+      "플랜",
+      "월 요금",
+      "AI 크레딧",
+      "협업 좌석"
+    ],
+    "rows": [
+      [
+        "Starter",
+        "9,900",
+        "50",
+        "1"
+      ],
+      [
+        "Pro",
+        "24,900",
+        "250",
+        "5"
+      ],
+      [
+        "Scale",
+        "59,000",
+        "Unlimited",
+        "20"
+      ]
+    ]
+  },
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Pricing comparison"
+  ]
+}

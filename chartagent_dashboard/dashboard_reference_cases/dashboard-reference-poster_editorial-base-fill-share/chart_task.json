@@ -1,0 +1,37 @@
+{
+  "task_id": "dashboard-reference-poster_editorial-base-fill-share",
+  "goal": "show composition",
+  "question": "유입 비중은 어떻게 나뉘는가?",
+  "theme_set": "poster_editorial",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "유입 비중",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 46,
+        "unit": "%"
+      },
+      {
+        "label": "Paid",
+        "value": 28,
+        "unit": "%"
+      },
+      {
+        "label": "Partner",
+        "value": 16,
+        "unit": "%"
+      },
+      {
+        "label": "Newsletter",
+        "value": 10,
+        "unit": "%"
+      }
+    ]
+  },
+  "source_hints": [
+    "Reference gallery benchmark",
+    "Acquisition mix model"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "task_id": "ranking-bar-horizontal",
+  "goal": "show ranking",
+  "question": "어떤 카테고리가 가장 큰가?",
+  "dataset": {
+    "title": "시장 점유 점수",
+    "unit": "점",
+    "items": [
+      {
+        "label": "대한민국",
+        "value": 42
+      },
+      {
+        "label": "일본",
+        "value": 28
+      },
+      {
+        "label": "대만",
+        "value": 17
+      }
+    ]
+  },
+  "source_hints": [
+    "Internal benchmark"
+  ]
+}

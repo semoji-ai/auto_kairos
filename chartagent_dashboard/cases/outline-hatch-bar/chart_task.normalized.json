@@ -1,0 +1,47 @@
+{
+  "task_id": "outline-hatch-bar",
+  "request_origin": "manual",
+  "goal": "show forecast as outline hatch",
+  "question": "속을 채우지 않고 테두리와 빗금으로 예상치를 표시하라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "채널별 예상 유입",
+    "unit": "만",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 18
+      },
+      {
+        "label": "Paid",
+        "value": 14
+      },
+      {
+        "label": "Partner",
+        "value": 11,
+        "note": "Projected 2026 pipeline"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Forecast visual test"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

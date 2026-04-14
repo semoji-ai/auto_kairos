@@ -1,0 +1,36 @@
+{
+  "task_id": "dashboard-reference-dashboard_analytical-base-hatch-ranking",
+  "goal": "show forecast as outline hatch",
+  "question": "빗금 패턴으로 예상 채널을 비교하라",
+  "theme_set": "dashboard_analytical",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "예상 채널 점유 점수",
+    "unit": "pt",
+    "items": [
+      {
+        "label": "Organic Search",
+        "value": 44
+      },
+      {
+        "label": "Enterprise Sales",
+        "value": 34,
+        "note": "Projected 2026 pipeline"
+      },
+      {
+        "label": "Lifecycle Email",
+        "value": 24
+      },
+      {
+        "label": "Partner Network",
+        "value": 18,
+        "note": "Projected 2026 pipeline"
+      }
+    ]
+  },
+  "source_hints": [
+    "Pattern reference set",
+    "Forecast visual test"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "task_id": "share-pie",
+  "request_origin": "manual",
+  "goal": "show composition with pie chart",
+  "question": "파이 차트로 유입 비중을 보여라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "유입 비중",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 52,
+        "unit": "%"
+      },
+      {
+        "label": "Paid",
+        "value": 28,
+        "unit": "%"
+      },
+      {
+        "label": "Partner",
+        "value": 20,
+        "unit": "%"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Channel report"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

@@ -1,0 +1,34 @@
+{
+  "task_id": "dashboard-reference-broadcast_signal-base-dot-vertical-bar",
+  "goal": "show category comparison for accessibility",
+  "question": "색맹 접근성을 위해 지역별 실적을 세로 막대로 비교하라",
+  "theme_set": "broadcast_signal",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "접근성 지역 실적",
+    "unit": "억",
+    "items": [
+      {
+        "label": "KR",
+        "value": 18
+      },
+      {
+        "label": "US",
+        "value": 24
+      },
+      {
+        "label": "JP",
+        "value": 13
+      },
+      {
+        "label": "EU",
+        "value": 20
+      }
+    ]
+  },
+  "source_hints": [
+    "Accessibility review",
+    "Color blind safe comparison"
+  ]
+}

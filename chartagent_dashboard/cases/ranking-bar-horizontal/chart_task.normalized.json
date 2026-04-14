@@ -1,0 +1,46 @@
+{
+  "task_id": "ranking-bar-horizontal",
+  "request_origin": "manual",
+  "goal": "show ranking",
+  "question": "어떤 카테고리가 가장 큰가?",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "시장 점유 점수",
+    "unit": "점",
+    "items": [
+      {
+        "label": "대한민국",
+        "value": 42
+      },
+      {
+        "label": "일본",
+        "value": 28
+      },
+      {
+        "label": "대만",
+        "value": 17
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Internal benchmark"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

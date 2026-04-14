@@ -1,0 +1,26 @@
+{
+  "shape": "row_column_table",
+  "title": "프로덕트 팩트",
+  "headers": [
+    "항목",
+    "값"
+  ],
+  "rows": [
+    [
+      "출시",
+      "2021"
+    ],
+    [
+      "고객사",
+      "2,400+"
+    ],
+    [
+      "시장",
+      "B2B SaaS"
+    ]
+  ],
+  "numeric_column_indexes": [
+    1
+  ],
+  "source_notes": []
+}

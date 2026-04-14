@@ -1,0 +1,32 @@
+{
+  "task_id": "broadcast-line",
+  "goal": "news trend recap",
+  "question": "속보 그래픽처럼 실시간 추세를 보여라",
+  "dataset": {
+    "title": "실시간 지표",
+    "unit": "%",
+    "x_label": "시점",
+    "y_label": "변화율",
+    "points": [
+      {
+        "x": "09:00",
+        "y": 14
+      },
+      {
+        "x": "10:00",
+        "y": 17
+      },
+      {
+        "x": "11:00",
+        "y": 12
+      },
+      {
+        "x": "12:00",
+        "y": 19
+      }
+    ]
+  },
+  "source_hints": [
+    "Live desk"
+  ]
+}

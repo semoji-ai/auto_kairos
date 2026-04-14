@@ -1,0 +1,29 @@
+{
+  "task_id": "range-hatch-progress",
+  "goal": "show range estimate",
+  "question": "투명 범위 해치로 구간 추정을 누적 프로그레스로 보여라",
+  "dataset": {
+    "title": "전환 구성 범위",
+    "items": [
+      {
+        "label": "Baseline",
+        "value": 44,
+        "unit": "%"
+      },
+      {
+        "label": "Upside",
+        "value": 31,
+        "unit": "%",
+        "note": "Confidence range"
+      },
+      {
+        "label": "Stretch",
+        "value": 25,
+        "unit": "%"
+      }
+    ]
+  },
+  "source_hints": [
+    "Planning envelope"
+  ]
+}

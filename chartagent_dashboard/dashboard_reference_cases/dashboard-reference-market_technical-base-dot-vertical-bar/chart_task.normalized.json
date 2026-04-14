@@ -1,0 +1,51 @@
+{
+  "task_id": "dashboard-reference-market_technical-base-dot-vertical-bar",
+  "request_origin": "manual",
+  "goal": "show category comparison for accessibility",
+  "question": "색맹 접근성을 위해 지역별 실적을 세로 막대로 비교하라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "접근성 지역 실적",
+    "unit": "억",
+    "items": [
+      {
+        "label": "KR",
+        "value": 18
+      },
+      {
+        "label": "US",
+        "value": 24
+      },
+      {
+        "label": "JP",
+        "value": 13
+      },
+      {
+        "label": "EU",
+        "value": 20
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Accessibility review",
+    "Color blind safe comparison"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "market_technical",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

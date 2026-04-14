@@ -1,0 +1,48 @@
+{
+  "task_id": "annotated-line-peak",
+  "request_origin": "manual",
+  "goal": "show trend with peak callout",
+  "question": "정점 구간을 강조하라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "연도별 매출",
+    "unit": "억",
+    "x_label": "연도",
+    "y_label": "매출",
+    "points": [
+      {
+        "x": "2021",
+        "y": 12
+      },
+      {
+        "x": "2022",
+        "y": 30
+      },
+      {
+        "x": "2023",
+        "y": 19
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Annual report"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

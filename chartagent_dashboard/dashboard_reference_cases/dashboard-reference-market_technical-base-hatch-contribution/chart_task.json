@@ -1,0 +1,33 @@
+{
+  "task_id": "dashboard-reference-market_technical-base-hatch-contribution",
+  "goal": "show stacked progress range",
+  "question": "빗금 구간으로 누적 기여도를 보여라",
+  "theme_set": "market_technical",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "기여도 범위",
+    "items": [
+      {
+        "label": "Baseline",
+        "value": 44,
+        "unit": "%"
+      },
+      {
+        "label": "Upside",
+        "value": 31,
+        "unit": "%",
+        "note": "Confidence range"
+      },
+      {
+        "label": "Stretch",
+        "value": 25,
+        "unit": "%"
+      }
+    ]
+  },
+  "source_hints": [
+    "Pattern reference set",
+    "Planning range"
+  ]
+}

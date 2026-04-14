@@ -1,0 +1,37 @@
+{
+  "task_id": "dashboard-reference-editorial_outline-base-fill-contribution",
+  "goal": "show stacked progress share",
+  "question": "누적 구성 바로 단계별 기여도를 보여라",
+  "theme_set": "editorial_outline",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "성장 기여도",
+    "items": [
+      {
+        "label": "Acquisition",
+        "value": 39,
+        "unit": "%"
+      },
+      {
+        "label": "Activation",
+        "value": 27,
+        "unit": "%"
+      },
+      {
+        "label": "Expansion",
+        "value": 21,
+        "unit": "%"
+      },
+      {
+        "label": "Referral",
+        "value": 13,
+        "unit": "%"
+      }
+    ]
+  },
+  "source_hints": [
+    "Reference gallery benchmark",
+    "Growth funnel model"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "shape": "label_value_list",
+  "title": "",
+  "unit": "",
+  "records": [
+    {
+      "label": "아주아주긴카테고리이름테스트A",
+      "value": 10.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "아주아주긴카테고리이름테스트A",
+      "display_label": "아주아주긴카테고리이름..."
+    },
+    {
+      "label": "아주아주긴카테고리이름테스트B",
+      "value": 8.0,
+      "unit": "건",
+      "note": "",
+      "full_label": "아주아주긴카테고리이름테스트B",
+      "display_label": "아주아주긴카테고리이름..."
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 2,
+    "record_count_after": 2,
+    "max_categories": 8,
+    "label_shortening_applied": true
+  }
+}

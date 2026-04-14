@@ -1,0 +1,27 @@
+{
+  "task_id": "forecast-pattern-bar",
+  "goal": "show ranking with projection marker",
+  "question": "예상치가 포함된 막대를 비교하라",
+  "dataset": {
+    "title": "채널별 신규 유입",
+    "unit": "만",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 18
+      },
+      {
+        "label": "Paid",
+        "value": 14
+      },
+      {
+        "label": "Partner",
+        "value": 11,
+        "note": "Projected 2026 pipeline"
+      }
+    ]
+  },
+  "source_hints": [
+    "Growth planning memo"
+  ]
+}

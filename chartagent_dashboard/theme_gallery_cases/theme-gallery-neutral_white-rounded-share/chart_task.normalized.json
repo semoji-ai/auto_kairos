@@ -1,0 +1,67 @@
+{
+  "task_id": "theme-gallery-neutral_white-rounded-share",
+  "request_origin": "manual",
+  "goal": "show composition",
+  "question": "유입 비중은 어떻게 나뉘는가?",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "유입 비중",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 46,
+        "unit": "%"
+      },
+      {
+        "label": "Paid",
+        "value": 28,
+        "unit": "%"
+      },
+      {
+        "label": "Partner",
+        "value": 16,
+        "unit": "%"
+      },
+      {
+        "label": "Newsletter",
+        "value": 10,
+        "unit": "%"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Acquisition mix model"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "neutral_white",
+  "theme_overrides": {
+    "accent_color": "#8b5cf6",
+    "accent_alt_color": "#14b8a6",
+    "panel_color": "#f7efe5",
+    "plot_bg_color": "#f4eadb",
+    "corner_radius": 34,
+    "chip_radius": 22,
+    "bar_gap": 0.24,
+    "table_cell_padding": 22,
+    "source_mode": "bottom_left",
+    "source_opacity": 0.84,
+    "pattern_density": "low",
+    "title_scale": 1.06
+  },
+  "theme_reset": {}
+}

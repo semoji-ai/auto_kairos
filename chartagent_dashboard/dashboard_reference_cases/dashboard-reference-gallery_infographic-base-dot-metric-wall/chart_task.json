@@ -1,0 +1,32 @@
+{
+  "task_id": "dashboard-reference-gallery_infographic-base-dot-metric-wall",
+  "goal": "headline kpi summary for accessibility review",
+  "question": "접근성 세트에서도 KPI 카드 벽을 유지하라",
+  "theme_set": "gallery_infographic",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "핵심 KPI",
+    "items": [
+      {
+        "label": "ARR",
+        "value": 128,
+        "unit": "억"
+      },
+      {
+        "label": "Gross Margin",
+        "value": 71,
+        "unit": "%"
+      },
+      {
+        "label": "Active Seats",
+        "value": 320,
+        "unit": "만"
+      }
+    ]
+  },
+  "source_hints": [
+    "Accessibility review",
+    "Executive KPI wall"
+  ]
+}

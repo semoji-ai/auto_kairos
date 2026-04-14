@@ -1,0 +1,46 @@
+{
+  "shape": "share_breakdown",
+  "title": "유입 비중 패턴 테스트",
+  "unit": "",
+  "records": [
+    {
+      "label": "Organic",
+      "value": 42.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Organic",
+      "display_label": "Organic"
+    },
+    {
+      "label": "Paid",
+      "value": 27.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Paid",
+      "display_label": "Paid"
+    },
+    {
+      "label": "Partner",
+      "value": 19.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Partner",
+      "display_label": "Partner"
+    },
+    {
+      "label": "Newsletter",
+      "value": 12.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Newsletter",
+      "display_label": "Newsletter"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 4,
+    "record_count_after": 4,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "task_id": "broadcast-signal-combo-bar",
+  "goal": "show breaking signal chart",
+  "question": "속보형 시그널 그래픽처럼 예상치를 강하게 표시하라",
+  "dataset": {
+    "title": "속보형 유입 시그널",
+    "unit": "만",
+    "items": [
+      {
+        "label": "Core",
+        "value": 21
+      },
+      {
+        "label": "Growth",
+        "value": 16
+      },
+      {
+        "label": "Edge",
+        "value": 9,
+        "note": "Projected scenario"
+      }
+    ]
+  },
+  "source_hints": [
+    "Breaking desk"
+  ]
+}

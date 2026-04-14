@@ -1,0 +1,48 @@
+{
+  "task_id": "share-donut",
+  "request_origin": "manual",
+  "goal": "show composition",
+  "question": "점유 비중은 어떻게 나뉘는가?",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "점유율",
+    "items": [
+      {
+        "label": "A",
+        "value": 46,
+        "unit": "%"
+      },
+      {
+        "label": "B",
+        "value": 34,
+        "unit": "%"
+      },
+      {
+        "label": "C",
+        "value": 20,
+        "unit": "%"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Market summary"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

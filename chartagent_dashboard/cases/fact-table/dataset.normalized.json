@@ -1,0 +1,22 @@
+{
+  "shape": "row_column_table",
+  "title": "핵심 정보",
+  "headers": [
+    "항목",
+    "값"
+  ],
+  "rows": [
+    [
+      "설립",
+      "2019"
+    ],
+    [
+      "직원 수",
+      "42명"
+    ]
+  ],
+  "numeric_column_indexes": [
+    1
+  ],
+  "source_notes": []
+}

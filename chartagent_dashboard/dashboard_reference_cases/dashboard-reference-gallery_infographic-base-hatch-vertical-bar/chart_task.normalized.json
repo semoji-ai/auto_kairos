@@ -1,0 +1,53 @@
+{
+  "task_id": "dashboard-reference-gallery_infographic-base-hatch-vertical-bar",
+  "request_origin": "manual",
+  "goal": "show vertical forecast bars with hatch pattern",
+  "question": "빗금 패턴으로 지역별 실적을 세로 막대로 비교하라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "지역별 예상 실적",
+    "unit": "억",
+    "items": [
+      {
+        "label": "KR",
+        "value": 19
+      },
+      {
+        "label": "US",
+        "value": 27,
+        "note": "Projected Q4"
+      },
+      {
+        "label": "JP",
+        "value": 15
+      },
+      {
+        "label": "EU",
+        "value": 22,
+        "note": "Projected Q4"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Pattern reference set",
+    "Regional planning board"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "gallery_infographic",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

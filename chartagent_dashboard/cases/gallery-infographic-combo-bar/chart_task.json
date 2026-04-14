@@ -1,0 +1,27 @@
+{
+  "task_id": "gallery-infographic-combo-bar",
+  "goal": "show gallery infographic bar",
+  "question": "갤러리 인포그래픽 스타일로 줄무늬 막대를 보여라",
+  "dataset": {
+    "title": "전시형 확장 시나리오",
+    "unit": "만",
+    "items": [
+      {
+        "label": "Core",
+        "value": 21
+      },
+      {
+        "label": "Growth",
+        "value": 16
+      },
+      {
+        "label": "Edge",
+        "value": 9,
+        "note": "Projected scenario"
+      }
+    ]
+  },
+  "source_hints": [
+    "Exhibition poster test"
+  ]
+}

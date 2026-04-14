@@ -1,0 +1,28 @@
+{
+  "task_id": "stacked-progress",
+  "goal": "show stacked progress share",
+  "question": "누적 프로그레스 바로 구성 비중을 보여라",
+  "dataset": {
+    "title": "채널 구성",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 52,
+        "unit": "%"
+      },
+      {
+        "label": "Paid",
+        "value": 28,
+        "unit": "%"
+      },
+      {
+        "label": "Partner",
+        "value": 20,
+        "unit": "%"
+      }
+    ]
+  },
+  "source_hints": [
+    "Channel report"
+  ]
+}

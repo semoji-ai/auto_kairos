@@ -1,0 +1,33 @@
+{
+  "task_id": "comparison-table",
+  "goal": "compare features",
+  "question": "세 옵션은 무엇이 다른가?",
+  "dataset": {
+    "title": "플랜 비교",
+    "headers": [
+      "플랜",
+      "월 요금",
+      "저장 용량"
+    ],
+    "rows": [
+      [
+        "Basic",
+        "9,900",
+        "100GB"
+      ],
+      [
+        "Pro",
+        "19,900",
+        "1TB"
+      ],
+      [
+        "Enterprise",
+        "49,900",
+        "무제한"
+      ]
+    ]
+  },
+  "source_hints": [
+    "Pricing page"
+  ]
+}

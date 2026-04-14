@@ -1,0 +1,28 @@
+{
+  "task_id": "percentage-progress",
+  "goal": "show progress",
+  "question": "트랙별 진행률을 프로그레스 바로 비교하라",
+  "dataset": {
+    "title": "프로젝트 진행률",
+    "items": [
+      {
+        "label": "기획",
+        "value": 92,
+        "unit": "%"
+      },
+      {
+        "label": "개발",
+        "value": 68,
+        "unit": "%"
+      },
+      {
+        "label": "QA",
+        "value": 41,
+        "unit": "%"
+      }
+    ]
+  },
+  "source_hints": [
+    "Project board"
+  ]
+}

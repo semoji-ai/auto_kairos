@@ -1,0 +1,38 @@
+{
+  "shape": "label_value_list",
+  "title": "핵심 KPI",
+  "unit": "",
+  "records": [
+    {
+      "label": "Active Seats",
+      "value": 320.0,
+      "unit": "만",
+      "note": "",
+      "full_label": "Active Seats",
+      "display_label": "Active Seats"
+    },
+    {
+      "label": "ARR",
+      "value": 128.0,
+      "unit": "억",
+      "note": "",
+      "full_label": "ARR",
+      "display_label": "ARR"
+    },
+    {
+      "label": "Gross Margin",
+      "value": 71.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Gross Margin",
+      "display_label": "Gross Margin"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 3,
+    "record_count_after": 3,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

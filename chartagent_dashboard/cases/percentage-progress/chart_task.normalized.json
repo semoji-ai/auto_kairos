@@ -1,0 +1,48 @@
+{
+  "task_id": "percentage-progress",
+  "request_origin": "manual",
+  "goal": "show progress",
+  "question": "트랙별 진행률을 프로그레스 바로 비교하라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "프로젝트 진행률",
+    "items": [
+      {
+        "label": "기획",
+        "value": 92,
+        "unit": "%"
+      },
+      {
+        "label": "개발",
+        "value": 68,
+        "unit": "%"
+      },
+      {
+        "label": "QA",
+        "value": 41,
+        "unit": "%"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Project board"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

@@ -1,0 +1,33 @@
+{
+  "task_id": "dashboard-reference-neutral_white-base-fill-fact-table",
+  "goal": "fact lookup",
+  "question": "핵심 사실을 빠르게 읽게 하라",
+  "theme_set": "neutral_white",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "프로덕트 팩트",
+    "headers": [
+      "항목",
+      "값"
+    ],
+    "rows": [
+      [
+        "출시",
+        "2021"
+      ],
+      [
+        "고객사",
+        "2,400+"
+      ],
+      [
+        "시장",
+        "B2B SaaS"
+      ]
+    ]
+  },
+  "source_hints": [
+    "Reference gallery benchmark",
+    "Fact lookup sheet"
+  ]
+}

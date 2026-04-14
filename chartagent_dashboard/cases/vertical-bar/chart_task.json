@@ -1,0 +1,30 @@
+{
+  "task_id": "vertical-bar",
+  "goal": "show ranking",
+  "question": "짧은 레이블은 세로 막대로 비교하라",
+  "dataset": {
+    "title": "제품 판매량",
+    "unit": "만",
+    "items": [
+      {
+        "label": "A",
+        "value": 18
+      },
+      {
+        "label": "B",
+        "value": 14
+      },
+      {
+        "label": "C",
+        "value": 9
+      },
+      {
+        "label": "D",
+        "value": 6
+      }
+    ]
+  },
+  "source_hints": [
+    "Sales snapshot"
+  ]
+}

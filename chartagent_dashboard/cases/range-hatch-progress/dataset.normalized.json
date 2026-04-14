@@ -1,0 +1,38 @@
+{
+  "shape": "share_breakdown",
+  "title": "전환 구성 범위",
+  "unit": "",
+  "records": [
+    {
+      "label": "Baseline",
+      "value": 44.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Baseline",
+      "display_label": "Baseline"
+    },
+    {
+      "label": "Upside",
+      "value": 31.0,
+      "unit": "%",
+      "note": "Confidence range",
+      "full_label": "Upside",
+      "display_label": "Upside"
+    },
+    {
+      "label": "Stretch",
+      "value": 25.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Stretch",
+      "display_label": "Stretch"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 3,
+    "record_count_after": 3,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

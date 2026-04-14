@@ -1,0 +1,37 @@
+{
+  "task_id": "dashboard-reference-gallery_infographic-base-dot-share",
+  "goal": "show composition for accessibility",
+  "question": "색맹 접근성을 위해 점무늬 패턴으로 비중을 구분하라",
+  "theme_set": "gallery_infographic",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "접근성 비중 테스트",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 38,
+        "unit": "%"
+      },
+      {
+        "label": "Paid",
+        "value": 26,
+        "unit": "%"
+      },
+      {
+        "label": "Partner",
+        "value": 21,
+        "unit": "%"
+      },
+      {
+        "label": "Newsletter",
+        "value": 15,
+        "unit": "%"
+      }
+    ]
+  },
+  "source_hints": [
+    "Accessibility review",
+    "Color blind safe share chart"
+  ]
+}

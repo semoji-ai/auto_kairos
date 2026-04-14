@@ -1,0 +1,37 @@
+{
+  "task_id": "dashboard-reference-poster_editorial-base-dot-contribution",
+  "goal": "show stacked progress for accessibility",
+  "question": "점무늬 패턴으로 단계별 누적 기여도를 구분하라",
+  "theme_set": "poster_editorial",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "접근성 구성 바",
+    "items": [
+      {
+        "label": "Acquisition",
+        "value": 36,
+        "unit": "%"
+      },
+      {
+        "label": "Activation",
+        "value": 33,
+        "unit": "%"
+      },
+      {
+        "label": "Expansion",
+        "value": 19,
+        "unit": "%"
+      },
+      {
+        "label": "Referral",
+        "value": 12,
+        "unit": "%"
+      }
+    ]
+  },
+  "source_hints": [
+    "Accessibility review",
+    "Color blind safe progress chart"
+  ]
+}

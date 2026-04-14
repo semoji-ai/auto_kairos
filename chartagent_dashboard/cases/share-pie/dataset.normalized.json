@@ -1,0 +1,38 @@
+{
+  "shape": "share_breakdown",
+  "title": "유입 비중",
+  "unit": "",
+  "records": [
+    {
+      "label": "Organic",
+      "value": 52.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Organic",
+      "display_label": "Organic"
+    },
+    {
+      "label": "Paid",
+      "value": 28.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Paid",
+      "display_label": "Paid"
+    },
+    {
+      "label": "Partner",
+      "value": 20.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "Partner",
+      "display_label": "Partner"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 3,
+    "record_count_after": 3,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

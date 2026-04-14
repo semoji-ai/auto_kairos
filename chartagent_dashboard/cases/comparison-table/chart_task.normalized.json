@@ -1,0 +1,53 @@
+{
+  "task_id": "comparison-table",
+  "request_origin": "manual",
+  "goal": "compare features",
+  "question": "세 옵션은 무엇이 다른가?",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "플랜 비교",
+    "headers": [
+      "플랜",
+      "월 요금",
+      "저장 용량"
+    ],
+    "rows": [
+      [
+        "Basic",
+        "9,900",
+        "100GB"
+      ],
+      [
+        "Pro",
+        "19,900",
+        "1TB"
+      ],
+      [
+        "Enterprise",
+        "49,900",
+        "무제한"
+      ]
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Pricing page"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

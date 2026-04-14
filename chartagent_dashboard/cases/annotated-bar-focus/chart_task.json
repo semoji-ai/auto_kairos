@@ -1,0 +1,35 @@
+{
+  "task_id": "annotated-bar-focus",
+  "goal": "show ranking",
+  "dataset": {
+    "items": [
+      {
+        "label": "A",
+        "value": 10,
+        "unit": "점"
+      },
+      {
+        "label": "B",
+        "value": 8,
+        "unit": "점"
+      },
+      {
+        "label": "C",
+        "value": 4,
+        "unit": "점"
+      }
+    ]
+  },
+  "constraints": {
+    "annotations": [
+      {
+        "target": "bar",
+        "match_label": "B",
+        "label": "중점 비교"
+      }
+    ]
+  },
+  "source_hints": [
+    "Synthetic"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "task_id": "three-d-bar",
+  "request_origin": "manual",
+  "goal": "입체 막대 그래프로 비교하라",
+  "question": "입체 막대 스타일로 제품군을 비교하라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "제품군 비교",
+    "unit": "점",
+    "items": [
+      {
+        "label": "A",
+        "value": 16
+      },
+      {
+        "label": "B",
+        "value": 12
+      },
+      {
+        "label": "C",
+        "value": 10
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Creative direction memo"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

@@ -1,0 +1,34 @@
+{
+  "task_id": "semi-donut-gauge",
+  "request_origin": "manual",
+  "goal": "show half gauge",
+  "question": "반원 게이지로 이행률을 보여라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "이행률",
+    "label": "로드맵 이행률",
+    "value": 61,
+    "unit": "%"
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Roadmap tracker"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

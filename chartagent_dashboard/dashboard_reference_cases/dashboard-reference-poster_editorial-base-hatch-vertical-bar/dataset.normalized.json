@@ -1,0 +1,46 @@
+{
+  "shape": "label_value_list",
+  "title": "지역별 예상 실적",
+  "unit": "억",
+  "records": [
+    {
+      "label": "US",
+      "value": 27.0,
+      "unit": "억",
+      "note": "Projected Q4",
+      "full_label": "US",
+      "display_label": "US"
+    },
+    {
+      "label": "EU",
+      "value": 22.0,
+      "unit": "억",
+      "note": "Projected Q4",
+      "full_label": "EU",
+      "display_label": "EU"
+    },
+    {
+      "label": "KR",
+      "value": 19.0,
+      "unit": "억",
+      "note": "",
+      "full_label": "KR",
+      "display_label": "KR"
+    },
+    {
+      "label": "JP",
+      "value": 15.0,
+      "unit": "억",
+      "note": "",
+      "full_label": "JP",
+      "display_label": "JP"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 4,
+    "record_count_after": 4,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

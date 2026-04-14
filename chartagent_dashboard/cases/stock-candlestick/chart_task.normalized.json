@@ -1,0 +1,64 @@
+{
+  "task_id": "stock-candlestick",
+  "request_origin": "manual",
+  "goal": "show stock movement",
+  "question": "주가 움직임을 시가고가저가종가로 보이라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "주가 흐름",
+    "shape": "ohlc_series",
+    "x_label": "날짜",
+    "y_label": "가격",
+    "candles": [
+      {
+        "x": "04-01",
+        "open": 101,
+        "high": 110,
+        "low": 98,
+        "close": 108
+      },
+      {
+        "x": "04-02",
+        "open": 108,
+        "high": 112,
+        "low": 103,
+        "close": 105
+      },
+      {
+        "x": "04-03",
+        "open": 105,
+        "high": 118,
+        "low": 104,
+        "close": 116
+      },
+      {
+        "x": "04-04",
+        "open": 116,
+        "high": 120,
+        "low": 111,
+        "close": 113
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Market sample"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

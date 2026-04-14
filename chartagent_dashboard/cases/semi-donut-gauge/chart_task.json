@@ -1,0 +1,14 @@
+{
+  "task_id": "semi-donut-gauge",
+  "goal": "show half gauge",
+  "question": "반원 게이지로 이행률을 보여라",
+  "dataset": {
+    "title": "이행률",
+    "label": "로드맵 이행률",
+    "value": 61,
+    "unit": "%"
+  },
+  "source_hints": [
+    "Roadmap tracker"
+  ]
+}

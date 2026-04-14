@@ -1,0 +1,34 @@
+{
+  "task_id": "dashboard-reference-editorial_outline-base-dot-ranking",
+  "goal": "show ranking for accessibility",
+  "question": "색맹 접근성을 위해 점무늬 패턴으로 채널을 비교하라",
+  "theme_set": "editorial_outline",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "접근성 채널 점유 점수",
+    "unit": "pt",
+    "items": [
+      {
+        "label": "Organic Search",
+        "value": 42
+      },
+      {
+        "label": "Enterprise Sales",
+        "value": 31
+      },
+      {
+        "label": "Lifecycle Email",
+        "value": 21
+      },
+      {
+        "label": "Partner Network",
+        "value": 14
+      }
+    ]
+  },
+  "source_hints": [
+    "Accessibility review",
+    "Color blind safe chart"
+  ]
+}

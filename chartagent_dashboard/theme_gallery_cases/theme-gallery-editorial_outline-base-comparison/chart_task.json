@@ -1,0 +1,41 @@
+{
+  "task_id": "theme-gallery-editorial_outline-base-comparison",
+  "goal": "compare features",
+  "question": "세 플랜은 무엇이 다른가?",
+  "theme_set": "editorial_outline",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "플랜 비교",
+    "headers": [
+      "플랜",
+      "월 요금",
+      "AI 크레딧",
+      "협업 좌석"
+    ],
+    "rows": [
+      [
+        "Starter",
+        "9,900",
+        "50",
+        "1"
+      ],
+      [
+        "Pro",
+        "24,900",
+        "250",
+        "5"
+      ],
+      [
+        "Scale",
+        "59,000",
+        "Unlimited",
+        "20"
+      ]
+    ]
+  },
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Pricing comparison"
+  ]
+}

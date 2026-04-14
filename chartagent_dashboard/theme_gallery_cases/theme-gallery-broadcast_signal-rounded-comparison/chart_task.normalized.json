@@ -1,0 +1,71 @@
+{
+  "task_id": "theme-gallery-broadcast_signal-rounded-comparison",
+  "request_origin": "manual",
+  "goal": "compare features",
+  "question": "세 플랜은 무엇이 다른가?",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "플랜 비교",
+    "headers": [
+      "플랜",
+      "월 요금",
+      "AI 크레딧",
+      "협업 좌석"
+    ],
+    "rows": [
+      [
+        "Starter",
+        "9,900",
+        "50",
+        "1"
+      ],
+      [
+        "Pro",
+        "24,900",
+        "250",
+        "5"
+      ],
+      [
+        "Scale",
+        "59,000",
+        "Unlimited",
+        "20"
+      ]
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Pricing comparison"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "broadcast_signal",
+  "theme_overrides": {
+    "accent_color": "#8b5cf6",
+    "accent_alt_color": "#14b8a6",
+    "panel_color": "#f7efe5",
+    "plot_bg_color": "#f4eadb",
+    "corner_radius": 34,
+    "chip_radius": 22,
+    "bar_gap": 0.24,
+    "table_cell_padding": 22,
+    "source_mode": "bottom_left",
+    "source_opacity": 0.84,
+    "pattern_density": "low",
+    "title_scale": 1.06
+  },
+  "theme_reset": {}
+}

@@ -1,0 +1,32 @@
+{
+  "task_id": "timeline-table",
+  "goal": "compare milestones",
+  "dataset": {
+    "title": "주요 연혁",
+    "headers": [
+      "연도",
+      "사건",
+      "영향"
+    ],
+    "rows": [
+      [
+        "2021",
+        "출시",
+        "초기 진입"
+      ],
+      [
+        "2022",
+        "확장",
+        "사용자 증가"
+      ],
+      [
+        "2023",
+        "흑자 전환",
+        "수익성 개선"
+      ]
+    ]
+  },
+  "source_hints": [
+    "Company timeline"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "shape": "label_value_list",
+  "title": "성장 채널 전망 점수",
+  "unit": "pt",
+  "records": [
+    {
+      "label": "Organic SEO",
+      "value": 420.0,
+      "unit": "pt",
+      "note": "",
+      "full_label": "Organic SEO",
+      "display_label": "Organic SEO"
+    },
+    {
+      "label": "Influencers",
+      "value": 270.0,
+      "unit": "pt",
+      "note": "forecast",
+      "full_label": "Influencers",
+      "display_label": "Influencers"
+    },
+    {
+      "label": "Newsletters",
+      "value": 180.0,
+      "unit": "pt",
+      "note": "",
+      "full_label": "Newsletters",
+      "display_label": "Newsletters"
+    },
+    {
+      "label": "Enterprise",
+      "value": 130.0,
+      "unit": "pt",
+      "note": "forecast",
+      "full_label": "Enterprise",
+      "display_label": "Enterprise"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 4,
+    "record_count_after": 4,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

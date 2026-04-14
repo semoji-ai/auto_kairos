@@ -1,0 +1,49 @@
+{
+  "task_id": "range-hatch-progress",
+  "request_origin": "manual",
+  "goal": "show range estimate",
+  "question": "투명 범위 해치로 구간 추정을 누적 프로그레스로 보여라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "전환 구성 범위",
+    "items": [
+      {
+        "label": "Baseline",
+        "value": 44,
+        "unit": "%"
+      },
+      {
+        "label": "Upside",
+        "value": 31,
+        "unit": "%",
+        "note": "Confidence range"
+      },
+      {
+        "label": "Stretch",
+        "value": 25,
+        "unit": "%"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Planning envelope"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

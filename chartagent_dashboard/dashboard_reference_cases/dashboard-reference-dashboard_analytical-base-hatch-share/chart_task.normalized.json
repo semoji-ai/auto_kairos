@@ -1,0 +1,54 @@
+{
+  "task_id": "dashboard-reference-dashboard_analytical-base-hatch-share",
+  "request_origin": "manual",
+  "goal": "show composition with hatch pattern",
+  "question": "빗금 패턴으로 비중을 구분하라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "유입 비중 패턴 테스트",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 42,
+        "unit": "%"
+      },
+      {
+        "label": "Paid",
+        "value": 27,
+        "unit": "%"
+      },
+      {
+        "label": "Partner",
+        "value": 19,
+        "unit": "%"
+      },
+      {
+        "label": "Newsletter",
+        "value": 12,
+        "unit": "%"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Pattern reference set",
+    "Hatch composition test"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "dashboard_analytical",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

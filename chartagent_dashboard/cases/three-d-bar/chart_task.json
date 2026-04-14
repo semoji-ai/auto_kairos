@@ -1,0 +1,26 @@
+{
+  "task_id": "three-d-bar",
+  "goal": "입체 막대 그래프로 비교하라",
+  "question": "입체 막대 스타일로 제품군을 비교하라",
+  "dataset": {
+    "title": "제품군 비교",
+    "unit": "점",
+    "items": [
+      {
+        "label": "A",
+        "value": 16
+      },
+      {
+        "label": "B",
+        "value": 12
+      },
+      {
+        "label": "C",
+        "value": 10
+      }
+    ]
+  },
+  "source_hints": [
+    "Creative direction memo"
+  ]
+}

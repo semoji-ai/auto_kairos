@@ -1,0 +1,32 @@
+{
+  "task_id": "theme-gallery-poster_editorial-base-metric-wall",
+  "goal": "headline kpi summary",
+  "question": "핵심 KPI를 카드 벽으로 요약하라",
+  "theme_set": "poster_editorial",
+  "theme_overrides": {},
+  "theme_reset": {},
+  "dataset": {
+    "title": "핵심 KPI",
+    "items": [
+      {
+        "label": "ARR",
+        "value": 128,
+        "unit": "억"
+      },
+      {
+        "label": "Gross Margin",
+        "value": 71,
+        "unit": "%"
+      },
+      {
+        "label": "Active Seats",
+        "value": 320,
+        "unit": "만"
+      }
+    ]
+  },
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Executive KPI wall"
+  ]
+}

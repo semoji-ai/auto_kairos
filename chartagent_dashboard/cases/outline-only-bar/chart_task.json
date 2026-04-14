@@ -1,0 +1,27 @@
+{
+  "task_id": "outline-only-bar",
+  "goal": "show preliminary estimate",
+  "question": "속을 채우지 않은 테두리 막대로 잠정치를 보여라",
+  "dataset": {
+    "title": "채널별 잠정 유입",
+    "unit": "만",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 18
+      },
+      {
+        "label": "Paid",
+        "value": 14
+      },
+      {
+        "label": "Partner",
+        "value": 11,
+        "note": "Preliminary channel total"
+      }
+    ]
+  },
+  "source_hints": [
+    "Draft planning sheet"
+  ]
+}

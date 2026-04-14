@@ -1,0 +1,25 @@
+{
+  "task_id": "warning-case",
+  "goal": "show ranking",
+  "dataset": {
+    "items": [
+      {
+        "label": "아주아주긴카테고리이름테스트A",
+        "value": 10,
+        "unit": "%"
+      },
+      {
+        "label": "아주아주긴카테고리이름테스트B",
+        "value": 8,
+        "unit": "건"
+      }
+    ]
+  },
+  "constraints": {
+    "annotations": [
+      {
+        "target": "slice"
+      }
+    ]
+  }
+}

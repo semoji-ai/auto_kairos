@@ -1,0 +1,38 @@
+{
+  "shape": "label_value_list",
+  "title": "세그먼트 확장 시나리오",
+  "unit": "만",
+  "records": [
+    {
+      "label": "Core",
+      "value": 21.0,
+      "unit": "만",
+      "note": "",
+      "full_label": "Core",
+      "display_label": "Core"
+    },
+    {
+      "label": "Growth",
+      "value": 16.0,
+      "unit": "만",
+      "note": "",
+      "full_label": "Growth",
+      "display_label": "Growth"
+    },
+    {
+      "label": "Edge",
+      "value": 9.0,
+      "unit": "만",
+      "note": "Projected scenario",
+      "full_label": "Edge",
+      "display_label": "Edge"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 3,
+    "record_count_after": 3,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "task_id": "share-donut",
+  "goal": "show composition",
+  "question": "점유 비중은 어떻게 나뉘는가?",
+  "dataset": {
+    "title": "점유율",
+    "items": [
+      {
+        "label": "A",
+        "value": 46,
+        "unit": "%"
+      },
+      {
+        "label": "B",
+        "value": 34,
+        "unit": "%"
+      },
+      {
+        "label": "C",
+        "value": 20,
+        "unit": "%"
+      }
+    ]
+  },
+  "source_hints": [
+    "Market summary"
+  ]
+}

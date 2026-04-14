@@ -1,0 +1,54 @@
+{
+  "task_id": "theme-gallery-dashboard_analytical-base-share",
+  "request_origin": "manual",
+  "goal": "show composition",
+  "question": "유입 비중은 어떻게 나뉘는가?",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "유입 비중",
+    "items": [
+      {
+        "label": "Organic",
+        "value": 46,
+        "unit": "%"
+      },
+      {
+        "label": "Paid",
+        "value": 28,
+        "unit": "%"
+      },
+      {
+        "label": "Partner",
+        "value": 16,
+        "unit": "%"
+      },
+      {
+        "label": "Newsletter",
+        "value": 10,
+        "unit": "%"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Theme gallery benchmark",
+    "Acquisition mix model"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "dashboard_analytical",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

@@ -186,8 +186,9 @@ _FONTAGENT_PAGE = """<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FontAgent</title>
-  <link rel="stylesheet" href="/static/style.css">
   <style>
+    *, *::before, *::after {{ box-sizing: border-box; }}
+    html, body {{ margin:0; padding:0; width:100%; height:100%; }}
     .tools-page {{ display:flex; flex-direction:column; height:100vh; margin:0; padding:0; background:#09090b; color:#e4e4e7; }}
     .tools-header {{ padding:14px 20px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; gap:12px; flex-wrap:wrap; flex-shrink:0; }}
     .tools-header h2 {{ margin:0; font-size:17px; font-weight:700; }}

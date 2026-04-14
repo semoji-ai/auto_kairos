@@ -1,0 +1,27 @@
+{
+  "task_id": "editorial-outline-combo-bar",
+  "goal": "show outline editorial treatment",
+  "question": "에디토리얼 아웃라인 스타일로 테두리와 빗금 막대를 보여라",
+  "dataset": {
+    "title": "세그먼트 확장 시나리오",
+    "unit": "만",
+    "items": [
+      {
+        "label": "Core",
+        "value": 21
+      },
+      {
+        "label": "Growth",
+        "value": 16
+      },
+      {
+        "label": "Edge",
+        "value": 9,
+        "note": "Projected scenario"
+      }
+    ]
+  },
+  "source_hints": [
+    "Magazine layout test"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "task_id": "dashboard-reference-market_technical-base-fill-contribution",
+  "request_origin": "manual",
+  "goal": "show stacked progress share",
+  "question": "누적 구성 바로 단계별 기여도를 보여라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "성장 기여도",
+    "items": [
+      {
+        "label": "Acquisition",
+        "value": 39,
+        "unit": "%"
+      },
+      {
+        "label": "Activation",
+        "value": 27,
+        "unit": "%"
+      },
+      {
+        "label": "Expansion",
+        "value": 21,
+        "unit": "%"
+      },
+      {
+        "label": "Referral",
+        "value": 13,
+        "unit": "%"
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Reference gallery benchmark",
+    "Growth funnel model"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "market_technical",
+  "theme_overrides": {},
+  "theme_reset": {}
+}

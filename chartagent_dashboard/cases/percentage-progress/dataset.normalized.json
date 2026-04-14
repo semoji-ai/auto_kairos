@@ -1,0 +1,38 @@
+{
+  "shape": "label_value_list",
+  "title": "프로젝트 진행률",
+  "unit": "",
+  "records": [
+    {
+      "label": "기획",
+      "value": 92.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "기획",
+      "display_label": "기획"
+    },
+    {
+      "label": "개발",
+      "value": 68.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "개발",
+      "display_label": "개발"
+    },
+    {
+      "label": "QA",
+      "value": 41.0,
+      "unit": "%",
+      "note": "",
+      "full_label": "QA",
+      "display_label": "QA"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 3,
+    "record_count_after": 3,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

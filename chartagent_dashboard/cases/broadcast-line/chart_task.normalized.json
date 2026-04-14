@@ -1,0 +1,52 @@
+{
+  "task_id": "broadcast-line",
+  "request_origin": "manual",
+  "goal": "news trend recap",
+  "question": "속보 그래픽처럼 실시간 추세를 보여라",
+  "preferred_output": [
+    "chart_spec",
+    "svg"
+  ],
+  "dataset": {
+    "title": "실시간 지표",
+    "unit": "%",
+    "x_label": "시점",
+    "y_label": "변화율",
+    "points": [
+      {
+        "x": "09:00",
+        "y": 14
+      },
+      {
+        "x": "10:00",
+        "y": 17
+      },
+      {
+        "x": "11:00",
+        "y": 12
+      },
+      {
+        "x": "12:00",
+        "y": 19
+      }
+    ]
+  },
+  "context": {},
+  "constraints": {},
+  "source_hints": [
+    "Live desk"
+  ],
+  "citation_requirements": {
+    "required": false,
+    "style": "",
+    "placement": "source_note"
+  },
+  "fallback_policy": {
+    "prefer_table_when_ambiguous": true,
+    "allow_chart_without_source": false,
+    "max_categories": 8
+  },
+  "theme_set": "",
+  "theme_overrides": {},
+  "theme_reset": {}
+}
