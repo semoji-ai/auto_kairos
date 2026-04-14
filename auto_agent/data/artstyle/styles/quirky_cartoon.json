@@ -1,5 +1,5 @@
 {
-  "name": "Quirky Hand-drawn Cartoon",
+  "name": "이로미즘",
   "description": "개성있는 낙서 스타일 만화. 느슨하고 유머러스한 손그림 느낌",
   "design_tokens": {
     "baseTheme": "dark",
@@ -173,5 +173,6 @@
       "style": 0.9,
       "speed": 1.1
     }
-  }
+  },
+  "id": "quirky_cartoon"
 }
