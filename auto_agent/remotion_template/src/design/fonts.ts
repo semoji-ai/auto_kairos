@@ -7,17 +7,20 @@ import { useDesignPreset } from "./DesignPresetContext";
 const resolveUrl = (path: string): string =>
   path.startsWith("http://") || path.startsWith("https://") ? path : staticFile(path);
 
-const isSystemFont = (family: string): boolean => {
-  try {
-    return document.fonts.check(`16px "${family}"`);
-  } catch {
-    return false;
+/** 이미 document.fonts에 로드된 폰트 패밀리인지 확인 */
+const isFontAlreadyLoaded = (family: string): boolean => {
+  const norm = family.toLowerCase();
+  for (const ff of document.fonts) {
+    if (ff.family.replace(/['"]/g, "").toLowerCase() === norm && ff.status === "loaded") {
+      return true;
+    }
   }
+  return false;
 };
 
 async function loadFontDef(def: FontDef): Promise<void> {
-  if (!def.files || def.files.length === 0) return; // 시스템 폰트
-  if (isSystemFont(def.family)) return;
+  if (!def.files || def.files.length === 0) return; // 파일 없음 = 시스템 폰트
+  if (isFontAlreadyLoaded(def.family)) return;      // 이미 로드됨
   await Promise.all(
     def.files.map(async (f) => {
       const face = new FontFace(def.family, `url('${resolveUrl(f.file)}')`, {
