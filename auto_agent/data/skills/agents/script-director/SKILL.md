@@ -532,7 +532,7 @@ layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면
       "items": ["항목1", "항목2", "항목3"],
       "values": [100, 200, 300],
       "unit": "억 달러",
-      "source": "출처 (2024)",  // ← 차트/그래프/데이터 씬에만. cinematic/quote 등은 null
+      "source": "출처 (2024)",  // ← 차트/그래프/데이터 씬에만. cinematic/quote_portrait 등은 null
       "icons": ["trending-up", "dollar-sign", "zap"],
       "flags": [],
 

@@ -392,21 +392,26 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
 
         # layout 필드 (v5 최상위 또는 v4 creative 내부)
         scene_layout = scene.get("layout") or viz.get("layout") or viz.get("creative", {}).get("layout", "")
+        # quote는 레거시 → quote_portrait로 정규화
+        if scene_layout == "quote":
+            scene_layout = "quote_portrait"
         if scene_layout:
             entry["sceneType"] = scene_layout
 
         if scene.get("imageAsset"):
             ia = scene["imageAsset"]
-            # cinematic 레이아웃은 무조건 fullscreen + opacity 1
+            # cinematic/quote 레이아웃은 무조건 opacity 1
             layout = scene_layout or viz.get("creative", {}).get("layout", "")
+            _is_quote = layout in ("quote", "quote_portrait")
             if layout == "cinematic":
                 entry["imageAsset"] = {"placement": "fullscreen", "opacity": 1.0}
             else:
                 p = ia.get("placement", "background")
-                default_op = 1.0
+                # quote/quote_portrait는 배경 이미지 항상 100%
+                opacity = 1.0 if _is_quote else ia.get("opacity", 1.0)
                 image_asset: dict = {
                     "placement": p,
-                    "opacity": ia.get("opacity", default_op),
+                    "opacity": opacity,
                 }
                 if ia.get("offsetX") is not None:
                     image_asset["offsetX"] = ia["offsetX"]

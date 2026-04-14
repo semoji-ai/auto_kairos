@@ -320,7 +320,7 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
     headline = scene.get("headline") or creative.get("headline", "")
 
     if emphasis == "quote" or (len(items) == 1 and re.search(r'["""\']', items[0])):
-        return "quote", False
+        return "quote_portrait", False
     if reveal == "split_reveal":
         return "split", False
     if emphasis == "contrast" and len(items) == 2:
@@ -650,8 +650,8 @@ def render_scene_preview(scene: dict, project_accent: str = None, art_style: str
         if rest:
             html += f'<div class="sp-sub">{_esc(rest)}</div>'
 
-    # ── quote: Remotion — QuoteMark + 인용문 + source, 배경 portrait ──
-    elif layout == "quote":
+    # ── quote_portrait (레거시 quote 포함): QuoteMark + 인용문 + source ──
+    elif layout in ("quote", "quote_portrait"):
         quote_text = items[0] if items else headline
         html += f'<div class="sp-quote-mark" style="color:{accent}">"</div>'
         html += f'<div class="sp-quote" style="border-color:{accent}">{_esc_br(quote_text)}</div>'

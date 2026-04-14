@@ -161,7 +161,14 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const hasSceneImage = !!sceneImage;
   const hasAnyImage = hasSceneImage || !!defaultBg;
   const placement = scene.imageAsset?.placement ?? "background";
-  const isQuoteLayout = (vizData?.layout === "quote" || vizData?.creative?.layout === "quote" || scene.visualization?.layout === "quote");
+  // quote는 레거시 — build_manifest에서 quote_portrait로 정규화됨. 렌더러는 둘 다 동일 처리
+  const isQuoteLayout = (
+    ["quote", "quote_portrait"].includes(vizData?.layout) ||
+    ["quote", "quote_portrait"].includes(vizData?.creative?.layout) ||
+    ["quote", "quote_portrait"].includes(scene.visualization?.layout) ||
+    ["quote", "quote_portrait"].includes(scene.layout) ||
+    ["quote", "quote_portrait"].includes(scene.sceneType)
+  );
   const defaultOpacity = (placement === "background") ? (isQuoteLayout ? 1.0 : 0.35) : 1.0;
   const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
   const imgOffsetX = scene.imageAsset?.offsetX ?? 50;
