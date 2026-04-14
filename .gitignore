@@ -72,8 +72,10 @@ Thumbs.db
 # Legacy source (패키지 이전 원본 — auto_agent/에 복사됨)
 /orchestrator/
 /db/
-/scripts/
+/scripts/*
 !/scripts/setup_remotion.py
+!/scripts/setup_fonts.sh
+!/scripts/mac-mini-setup.sh
 /src/
 /dashboard/
 /skills/
@@ -92,7 +94,14 @@ Thumbs.db
 # Root node
 /package.json
 /package-lock.json
-/remotion/
+# remotion/ 전체 무시하되 폰트 폴더는 예외
+# (gitignore 제약: 상위 무시 시 중간 경로도 모두 예외 처리 필요)
+/remotion/*
+!/remotion/public/
+/remotion/public/*
+!/remotion/public/fonts/
+/remotion/public/fonts/GyeonggiMillenniumBatang-Regular.ttf
+/remotion/public/fonts/GyeonggiMillenniumBatang-Bold.ttf
 
 # Misc temp files
 *.mp3

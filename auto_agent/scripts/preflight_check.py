@@ -174,7 +174,61 @@ def main():
         except ImportError:
             print(f"  [WARN] {pkg} -- 미설치")
 
-    # 5. Preset validation (if project dir is known)
+    # 5. 폰트 파일 검증 (누락 시 FontAgent로 자동 설치 시도)
+    print("\n[Fonts]")
+    fonts_dir = PROJECT_ROOT / "remotion" / "public" / "fonts"
+    required_fonts = [
+        ("GyeonggiMillenniumBatang-Regular.ttf", "gongu-13288410", "경기천년바탕_Regular.ttf"),
+        ("GyeonggiMillenniumBatang-Bold.ttf", "gongu-13288409", "경기천년바탕_Bold.ttf"),
+    ]
+    for dst_name, font_id, src_name in required_fonts:
+        target = fonts_dir / dst_name
+        if target.exists():
+            print(f"  [OK] {dst_name}")
+            continue
+        # FontAgent로 자동 설치 시도
+        try:
+            import tempfile
+            import shutil as _sh
+            from fontagent.cli import run_install  # type: ignore
+            tmp = Path(tempfile.mkdtemp())
+            run_install(font_id, str(tmp))
+            src = tmp / src_name
+            if src.exists():
+                fonts_dir.mkdir(parents=True, exist_ok=True)
+                _sh.copy(src, target)
+                # remotion_template 동기화
+                tmpl = PROJECT_ROOT / "auto_agent" / "remotion_template" / "public" / "fonts" / dst_name
+                if not tmpl.exists():
+                    _sh.copy(target, tmpl)
+                print(f"  [AUTO] {dst_name} -- FontAgent로 설치 완료")
+            else:
+                raise FileNotFoundError(src)
+            _sh.rmtree(tmp, ignore_errors=True)
+        except Exception:
+            # CLI fallback
+            try:
+                import tempfile, shutil as _sh
+                tmp = Path(tempfile.mkdtemp())
+                result = subprocess.run(
+                    [sys.executable, "-m", "fontagent.cli", "install", font_id, "--output-dir", str(tmp)],
+                    capture_output=True, text=True, timeout=60,
+                )
+                src = tmp / src_name
+                if result.returncode == 0 and src.exists():
+                    fonts_dir.mkdir(parents=True, exist_ok=True)
+                    _sh.copy(src, target)
+                    tmpl = PROJECT_ROOT / "auto_agent" / "remotion_template" / "public" / "fonts" / dst_name
+                    if not tmpl.exists():
+                        _sh.copy(target, tmpl)
+                    print(f"  [AUTO] {dst_name} -- FontAgent CLI로 설치 완료")
+                else:
+                    print(f"  [WARN] {dst_name} -- 누락됨. 설치: bash scripts/setup_fonts.sh")
+                _sh.rmtree(tmp, ignore_errors=True)
+            except Exception as e2:
+                print(f"  [WARN] {dst_name} -- 누락됨. 설치: bash scripts/setup_fonts.sh ({e2})")
+
+    # 6. Preset validation (if project dir is known)
     print("\n[Preset Validation]")
     project_dir = os.getenv("AUTO_AGENT_PROJECT_DIR", "")
     if project_dir:

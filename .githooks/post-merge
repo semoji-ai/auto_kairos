@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# post-merge hook — git pull/merge 후 자동 실행
+# 활성화: git config core.hooksPath .githooks
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+VENV_PYTHON="$REPO_ROOT/.venv/bin/python"
+
+# 누락된 대용량 폰트 확인
+FONT_CHECK="$REPO_ROOT/remotion/public/fonts/GyeonggiMillenniumBatang-Regular.ttf"
+if [ ! -f "$FONT_CHECK" ]; then
+    echo ""
+    echo "  누락된 폰트 감지 — 자동 설치를 시작합니다..."
+
+    # FontAgent가 설치된 환경이면 preflight_check가 처리
+    if [ -f "$VENV_PYTHON" ] && "$VENV_PYTHON" -c "import fontagent" 2>/dev/null; then
+        "$VENV_PYTHON" -m auto_agent.scripts.preflight_check 2>&1 | grep -E "^\s+\[(OK|AUTO|WARN|FAIL)\] .*(ttf|otf|woff)" || true
+    else
+        bash "$REPO_ROOT/scripts/setup_fonts.sh"
+    fi
+fi
