@@ -38,36 +38,15 @@ export function usePresetFonts(): void {
   useEffect(() => {
     const load = async () => {
       const f = preset.fonts;
-      console.log("[fonts] preset.fonts =", JSON.stringify({
-        body: f.body?.family,
-        headline: f.headline?.family,
-        value: f.value?.family,
-        mono: f.mono?.family,
-      }));
       await loadFontDef(f.body);
       if (f.headline) await loadFontDef(f.headline);
       if (f.value)    await loadFontDef(f.value);
       if (f.mono)     await loadFontDef(f.mono);
       if (f.title)    await loadFontDef(f.title);
-      console.log("[fonts] loaded ✓");
       continueRender(handle);
     };
     load().catch((e) => { console.error("[fonts] load error", e); continueRender(handle); });
   }, [handle]);
-}
-
-/** CSS custom properties for all font roles — inject at root container */
-export function getFontCSSVars(fonts: PresetFonts): Record<string, string> {
-  const body     = fonts.body;
-  const headline = fonts.headline ?? fonts.body;
-  const value    = fonts.value    ?? fonts.body;
-  const mono     = fonts.mono     ?? { family: "Georgia", fallback: "serif" };
-  return {
-    "--font-body":     `'${body.family}', ${body.fallback}`,
-    "--font-headline": `'${headline.family}', ${headline.fallback}`,
-    "--font-value":    `'${value.family}', ${value.fallback}`,
-    "--font-mono":     `'${mono.family}', ${mono.fallback}`,
-  };
 }
 
 /** 프리셋에서 CSS font-family 문자열 생성 */

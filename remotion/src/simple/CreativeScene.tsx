@@ -622,6 +622,8 @@ const EmphasisAccentText: React.FC<{
 }) => {
   const C = useC();
   const T = usePresetTypo();
+  const { fonts } = useDesignPreset();
+  const valueFont = `'${(fonts.value ?? fonts.body).family}', ${(fonts.value ?? fonts.body).fallback}`;
   const isCountEmphasis = emphasis === "number" || emphasis === "count";
   const accentSize = accentFontSizeOverride || T.headlineAccent;
   const baseSize = accentFontSizeOverride ? Math.round(accentFontSizeOverride * 0.6) : T.headlineBase;
@@ -654,6 +656,7 @@ const EmphasisAccentText: React.FC<{
         style={{
           fontSize: accentSize,
           fontWeight: 800,
+          fontFamily: valueFont,
           color: moodCfg.accent,
           lineHeight: 1.2,
           textShadow: shouldCountUp
@@ -692,6 +695,7 @@ const EmphasisAccentText: React.FC<{
               style={{
                 fontSize: accentSize,
                 fontWeight: 800,
+                fontFamily: valueFont,
                 color: moodCfg.accent,
                 lineHeight: 1.2,
                 verticalAlign: "baseline",
@@ -1620,8 +1624,7 @@ const ItemsList: React.FC<{
    QuoteDisplay — 인용문 전용 레이아웃
    ================================================================ */
 
-// mono 폰트는 usePresetFonts()가 --font-mono CSS var로 주입 — 별도 로딩 불필요
-const GYEONGGI_FONT_FAMILY = "var(--font-mono, 'GyeonggiMillenniumBatang', serif)";
+// GYEONGGI_FONT_FAMILY는 QuoteDisplay 내부에서 useDesignPreset()으로 대체됨 (아래 참조)
 
 const QuoteDisplay: React.FC<{
   items: string[];
@@ -1635,6 +1638,8 @@ const QuoteDisplay: React.FC<{
 }> = ({ items, source, moodCfg, reveal, speed, mood, hasImageBg, portrait }) => {
   const C = useC();
   const T = usePresetTypo();
+  const { fonts } = useDesignPreset();
+  const GYEONGGI_FONT_FAMILY = `'${(fonts.mono ?? fonts.body).family}', ${(fonts.mono ?? fonts.body).fallback}`;
   const frame = useCurrentFrame();
   const s = (f: number) => Math.round(f / speed);
   const quoteText = items[0] || "";
@@ -2842,6 +2847,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 }) => {
   const C = useC(); // 테마 컨텍스트에서 색상 팔레트 읽기 (dark/white)
   const preset = useDesignPreset();
+  const monoFont = `'${(preset.fonts.mono ?? preset.fonts.body).family}', ${(preset.fonts.mono ?? preset.fonts.body).fallback}`;
   const T = preset.typography;
   const L = preset.layout;
   const frame = useCurrentFrame();
@@ -3853,14 +3859,14 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 lineHeight: 1,
                 marginBottom: "-0.8em",
                 marginLeft: "-0.6em",
-                fontFamily: GYEONGGI_FONT_FAMILY,
+                fontFamily: monoFont,
                 userSelect: "none",
               }}>&ldquo;</span>
               {/* 2행: 텍스트 */}
               <div style={{
                 fontSize: T.quoteText,
                 fontWeight: 400,
-                fontFamily: GYEONGGI_FONT_FAMILY,
+                fontFamily: monoFont,
                 color: C.text,
                 lineHeight: 1.65,
                 whiteSpace: "pre-line",
@@ -3878,7 +3884,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 opacity: 0.6,
                 lineHeight: 1,
                 marginRight: "-0.6em",
-                fontFamily: GYEONGGI_FONT_FAMILY,
+                fontFamily: monoFont,
                 userSelect: "none",
               }}>&rdquo;</span>
               {/* 4행: 스피커/출처 — 오른쪽 정렬 */}
@@ -3888,7 +3894,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                   fontSize: T.sourceText,
                   color: C.textMuted,
                   marginTop: "-1.6em",
-                  fontFamily: GYEONGGI_FONT_FAMILY,
+                  fontFamily: monoFont,
                 }}>— {quoteSource}</div>
               )}
             </div>
@@ -4007,6 +4013,8 @@ const LineReveal: React.FC<{
   motionConfig,
 }) => {
   const T = usePresetTypo();
+  const { fonts } = useDesignPreset();
+  const headlineFont = `'${(fonts.headline ?? fonts.body).family}', ${(fonts.headline ?? fonts.body).fallback}`;
   const frame = useCurrentFrame();
   const dur = motionConfig?.entrance.duration || 18;
   const entranceType = motionConfig?.entrance.type || "";
@@ -4114,6 +4122,7 @@ const LineReveal: React.FC<{
         transform,
         fontSize: resolvedBaseFontSize,
         fontWeight: 600,
+        fontFamily: headlineFont,
         lineHeight:
           emphasis === "number" || emphasis === "count" ? 2.4 : 1.6,
         marginBottom: lineIndex < totalLines - 1 ? 8 : 0,
