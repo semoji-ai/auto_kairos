@@ -269,7 +269,7 @@ def next_filename(images_dir: Path, scene_num: int, version_type: str, ext: str 
     return f"{prefix}{num:02d}{ext}"
 
 
-def set_qa_result(images_dir: Path, scene_num: int, passed: bool, issues: list | None = None) -> None:
+def set_qa_result(images_dir: Path, scene_num: int, passed: bool, issues: Optional[list] = None) -> None:
     """QA 결과를 image_assets.json에 기록. Thread-safe.
 
     Args:
@@ -290,7 +290,7 @@ def set_qa_result(images_dir: Path, scene_num: int, passed: bool, issues: list |
         _save(images_dir, data)
 
 
-def get_qa_result(images_dir: Path, scene_num: int) -> dict | None:
+def get_qa_result(images_dir: Path, scene_num: int) -> Optional[dict]:
     """qa 필드 반환. qa 기록 없으면 None.
 
     Returns:
