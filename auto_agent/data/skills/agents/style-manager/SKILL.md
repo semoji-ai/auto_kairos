@@ -254,5 +254,6 @@ git commit -m "style: {id} 아트스타일 추가/수정"
 | `semoji` | 세모지스타일 | 세모지 | semoji | light | Pretendard | 30 |
 | `lego` | Photorealistic LEGO | 최후의경제학 | neutral | dark | Pretendard | 28 |
 | `stickman_cute` | Stickman Cute | (미배정) | neutral | dark | Pretendard | 28 |
+| `semoji_3D` | 세모지3D | 세상의모든지식 | semoji | light | G마켓 산스 | 30 |
 
 새 스타일 추가 시 이 표도 업데이트할 것.

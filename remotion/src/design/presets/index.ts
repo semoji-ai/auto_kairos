@@ -4,11 +4,13 @@ import type { DesignPresetOverride } from "../types";
 import { LEGO_PRESET } from "./lego";
 import { QUIRKYCARTOON_PRESET } from "./quirky_cartoon";
 import { SEMOJI_PRESET } from "./semoji";
+import { SEMOJI3D_PRESET } from "./semoji_3D";
 import { STICKMANCUTE_PRESET } from "./stickman_cute";
 
 export const ART_PRESETS: Record<string, DesignPresetOverride> = {
   lego: LEGO_PRESET,
   quirky_cartoon: QUIRKYCARTOON_PRESET,
   semoji: SEMOJI_PRESET,
+  semoji_3D: SEMOJI3D_PRESET,
   stickman_cute: STICKMANCUTE_PRESET,
 };

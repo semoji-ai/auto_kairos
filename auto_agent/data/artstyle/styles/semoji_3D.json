@@ -1,0 +1,245 @@
+{
+  "id": "semoji_3D",
+  "name": "세모지3D",
+  "description": "세상의모든지식 채널 3D 아트스타일. 프리미엄 디자이너 토이 감성의 3D 캐릭터 일러스트",
+  "channel": "세상의모든지식",
+  "reference_image": "artstyle/styles/semoji_3D_base.png",
+  "scene_style_description": "The attached image is a 3D stylized character illustration with a premium designer-toy aesthetic, smooth matte surfaces.",
+  "style": {
+    "art_style": "3D stylized character illustration with a premium designer-toy aesthetic. Smooth opaque surfaces with a soft matte finish, like high-quality PVC or ABS plastic figurines.",
+    "modeling": {
+      "surface": "Ultra-smooth, seamless opaque surfaces with a velvety matte finish. No gloss, no translucency, no iridescence. Skin has a uniform smooth plastic feel. Clothing and accessories share the same consistent matte material with no fabric texture or wrinkles.",
+      "detail_level": "Minimal geometric detail. Clean simplified forms. Hair is sculpted as thick rounded tubular shapes, not individual strands. Accessories are cleanly modeled with sharp but rounded edges."
+    },
+    "shapes": "Limbs are short and thick, hands simplified into rounded forms. Overall silhouette is compact and chunky.",
+    "color_palette": "Warm peachy skin tones with soft gradient transitions. Clothing and accessories in clean solid pastels. Colors are rich but not oversaturated, with gentle warm undertones throughout.",
+    "shading": "Soft diffused studio lighting with very gentle shadows. Smooth tonal transitions across rounded forms. No specular highlights or reflections on skin or clothing. Accessories like glasses may have minimal subtle reflectivity. Soft ambient occlusion in crevices only.",
+    "character_design": "Friendly and approachable faces with minimal features: small dot-like eyes, simple curved brows, a tiny nose, and a subtle closed-mouth smile. Hair is sculpted as a single smooth mass with soft volume, no individual strands.",
+    "mood_and_tone": "Warm, friendly, and refined. Clean modern aesthetic with a cozy, tactile quality. Feels like a carefully crafted collectible figure you want to pick up and hold.",
+    "background": "Clean solid color backdrop with no gradients or textures. Soft even lighting with no visible light source or ground shadows."
+  },
+  "technical": {
+    "no_text": true,
+    "resolution": "High-quality 3D render with soft depth of field and anti-aliased edges. Diffused studio lighting with minimal shadow contrast.",
+    "critical_requirements": [
+      "3D stylized render, smooth matte PVC/ABS figurine aesthetic",
+      "NO fabric texture, NO individual hair strands, NO gloss or reflections on skin",
+      "Soft diffused studio lighting, NO specular highlights",
+      "Clean solid color backdrop, NO gradients or ground shadows",
+      "Compact chunky proportions, simplified rounded forms"
+    ]
+  },
+  "image": {
+    "staging": "cinematic",
+    "reference_image": "artstyle/styles/semoji_3D_base.png",
+    "scene_style_description": "The attached image is a 3D stylized character illustration with a premium designer-toy aesthetic, smooth matte surfaces.",
+    "style": {
+      "art_style": "3D stylized character illustration with a premium designer-toy aesthetic. Smooth opaque surfaces with a soft matte finish, like high-quality PVC or ABS plastic figurines.",
+      "modeling": {
+        "surface": "Ultra-smooth, seamless opaque surfaces with a velvety matte finish. No gloss, no translucency, no iridescence. Skin has a uniform smooth plastic feel. Clothing and accessories share the same consistent matte material with no fabric texture or wrinkles.",
+        "detail_level": "Minimal geometric detail. Clean simplified forms. Hair is sculpted as thick rounded tubular shapes, not individual strands. Accessories are cleanly modeled with sharp but rounded edges."
+      },
+      "shapes": "Limbs are short and thick, hands simplified into rounded forms. Overall silhouette is compact and chunky.",
+      "color_palette": "Warm peachy skin tones with soft gradient transitions. Clothing and accessories in clean solid pastels. Colors are rich but not oversaturated, with gentle warm undertones throughout.",
+      "shading": "Soft diffused studio lighting with very gentle shadows. Smooth tonal transitions across rounded forms. No specular highlights or reflections on skin or clothing. Accessories like glasses may have minimal subtle reflectivity. Soft ambient occlusion in crevices only.",
+      "character_design": "Friendly and approachable faces with minimal features: small dot-like eyes, simple curved brows, a tiny nose, and a subtle closed-mouth smile. Hair is sculpted as a single smooth mass with soft volume, no individual strands.",
+      "mood_and_tone": "Warm, friendly, and refined. Clean modern aesthetic with a cozy, tactile quality. Feels like a carefully crafted collectible figure you want to pick up and hold.",
+      "background": "Clean solid color backdrop with no gradients or textures. Soft even lighting with no visible light source or ground shadows."
+    },
+    "critical_requirements": [
+      "3D stylized render, smooth matte PVC/ABS figurine aesthetic",
+      "NO fabric texture, NO individual hair strands, NO gloss or reflections on skin",
+      "Soft diffused studio lighting, NO specular highlights",
+      "Clean solid color backdrop, NO gradients or ground shadows",
+      "Compact chunky proportions, simplified rounded forms"
+    ],
+    "prompt_language": "ko"
+  },
+  "voice": {
+    "voice_id": "W7FnAxJNpD5WGjrF5GLp",
+    "voice_settings": {
+      "stability": 1.0,
+      "similarity_boost": 0.9,
+      "style": 0.9,
+      "speed": 1.1
+    }
+  },
+  "creative": {
+    "headline_frequency": "10-20%",
+    "mood_palette": [
+      "informative",
+      "contemplative",
+      "triumphant"
+    ],
+    "preferred_layouts": [
+      "items_grid",
+      "items_list",
+      "counter",
+      "bar",
+      "pie",
+      "flow"
+    ]
+  },
+  "scenes": {
+    "density": "high",
+    "min_duration_sec": 3,
+    "max_duration_sec": 12,
+    "prefer_split_on": [
+      "주제 전환",
+      "데이터 단위"
+    ]
+  },
+  "design_tokens": {
+    "baseTheme": "light",
+    "defaultBackground": "",
+    "colors": {
+      "accent": "#4A90D9",
+      "accentRgb": "74,144,217",
+      "accentBg": "rgba(74,144,217,0.08)",
+      "accentBorder": "rgba(74,144,217,0.3)",
+      "accentSoft": "rgba(74,144,217,0.15)",
+      "cardBg": "rgba(74,144,217,0.06)",
+      "cardBorder": "rgba(74,144,217,0.2)"
+    },
+    "moods": {
+      "dramatic": {
+        "accent": "#E74C3C",
+        "accentRgb": "231,76,60",
+        "speed": 1.2,
+        "glow": 0.6
+      },
+      "urgent": {
+        "accent": "#E74C3C",
+        "accentRgb": "231,76,60",
+        "speed": 1.5,
+        "glow": 0.8
+      },
+      "somber": {
+        "accent": "#7F8C8D",
+        "accentRgb": "127,140,141",
+        "speed": 0.7,
+        "glow": 0.2
+      },
+      "informative": {
+        "accent": "#4A90D9",
+        "accentRgb": "74,144,217",
+        "speed": 1.0,
+        "glow": 0.3
+      },
+      "contemplative": {
+        "accent": "#8E7CC3",
+        "accentRgb": "142,124,195",
+        "speed": 0.6,
+        "glow": 0.2
+      },
+      "suspense": {
+        "accent": "#34495E",
+        "accentRgb": "52,73,94",
+        "speed": 0.8,
+        "glow": 0.5
+      },
+      "triumphant": {
+        "accent": "#F5A623",
+        "accentRgb": "245,166,35",
+        "speed": 1.0,
+        "glow": 0.5
+      }
+    },
+    "layout": {
+      "cardRadius": 16,
+      "gap": 28
+    },
+    "map": {
+      "defaultTheme": "warm_earth"
+    },
+    "chartagent": {
+      "theme_set": "gallery_infographic",
+      "theme_overrides": {
+        "pattern_mode": "outline_plus_hatch"
+      }
+    },
+    "fonts": {
+      "body": {
+        "family": "SB 어그로체",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/SBAggroOTF-M.otf",
+            "weight": "500"
+          },
+          {
+            "file": "fonts/SBAggroOTF-B.otf",
+            "weight": "700"
+          }
+        ]
+      },
+      "headline": {
+        "family": "카페24 써라운드",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/Cafe24Ssurround.ttf",
+            "weight": "700"
+          }
+        ]
+      },
+      "value": {
+        "family": "배민 연성체",
+        "fallback": "sans-serif",
+        "files": [
+          {
+            "file": "fonts/BMYeonsung.ttf",
+            "weight": "400"
+          }
+        ]
+      },
+      "subtitle": {
+        "family": "G마켓 산스",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/GmarketSansMedium.ttf",
+            "weight": "500"
+          },
+          {
+            "file": "fonts/GmarketSansBold.ttf",
+            "weight": "700"
+          }
+        ]
+      },
+      "mono": {
+        "family": "GyeonggiMillenniumBatang",
+        "fallback": "serif",
+        "files": [
+          {
+            "file": "fonts/GyeonggiMillenniumBatang-Regular.ttf",
+            "weight": "400"
+          },
+          {
+            "file": "fonts/GyeonggiMillenniumBatang-Bold.ttf",
+            "weight": "700"
+          }
+        ]
+      }
+    },
+    "subtitle": {
+      "max_chars_per_line": 30,
+      "fontSize": 52,
+      "fontFamily": "G마켓 산스",
+      "fontWeight": 400,
+      "color": "#FFFFFF",
+      "strokeWidth": 0,
+      "strokeColor": "transparent",
+      "keywordColor": "#4A90D9",
+      "keywordStrokeColor": "transparent",
+      "backgroundColor": "rgba(0,0,0,0.85)",
+      "borderRadius": 8,
+      "boxShadow": "0 2px 12px rgba(0,0,0,0.15)",
+      "bottomOffset": 60,
+      "maxWidth": "92%",
+      "lineHeight": 1.4
+    }
+  },
+  "guidelines": "세모지3D는 정보 전달 중심. 친근한 설명체, 데이터 시각화 적극 활용. 3D 프리미엄 피규어 감성으로 cinematic staging 연출.",
+  "writing_style": "semoji"
+}
