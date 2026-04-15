@@ -267,3 +267,37 @@ def next_filename(images_dir: Path, scene_num: int, version_type: str, ext: str 
         existing = list(images_dir.glob(f"{prefix}*"))
     num = len(existing) + 1
     return f"{prefix}{num:02d}{ext}"
+
+
+def set_qa_result(images_dir: Path, scene_num: int, passed: bool, issues: list | None = None) -> None:
+    """QA 결과를 image_assets.json에 기록. Thread-safe.
+
+    Args:
+        images_dir: images/ 디렉토리 경로
+        scene_num: 씬 번호
+        passed: True=통과, False=미달
+        issues: 미달 이유 목록 (passed=False일 때)
+    """
+    from datetime import datetime
+    with _file_lock:
+        data = _load(images_dir)
+        scene = _get_scene(data, scene_num)
+        scene["qa"] = {
+            "passed": passed,
+            "issues": issues or [],
+            "checked_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
+        }
+        _save(images_dir, data)
+
+
+def get_qa_result(images_dir: Path, scene_num: int) -> dict | None:
+    """qa 필드 반환. qa 기록 없으면 None.
+
+    Returns:
+        {"passed": bool, "issues": list, "checked_at": str} 또는 None
+    """
+    data = _load(images_dir)
+    for s in data["scenes"]:
+        if s["sceneNumber"] == scene_num:
+            return s.get("qa") or None
+    return None
