@@ -1207,7 +1207,7 @@ def _parse_project_flag(args):
     return None
 
 
-def cmd_plan(args):
+def cmd_plan_trend(args):
     """주제 기획 (Stage 0 — trend-analyst)."""
     from auto_agent.modules.agent_runner import AgentRunner
 
@@ -1600,6 +1600,59 @@ def _find_plan_path(channel: str) -> str | None:
     return str(plan_files[0]) if plan_files else None
 
 
+def cmd_plan(args):
+    """auto-agent plan — 파이프라인 외부 기획안 생성"""
+    import argparse
+    parser = argparse.ArgumentParser(prog="auto-agent plan")
+    parser.add_argument("--topic", required=True, help="영상 주제")
+    parser.add_argument("--project", required=True, help="프로젝트 slug")
+    parser.add_argument("--style", default="", dest="writing_style", help="문체 스타일 (예: semoji)")
+    parser.add_argument("--channel", default="", help="채널명")
+    parser.add_argument("--overwrite", action="store_true", help="기존 editorial_brief.json 덮어쓰기")
+    parsed = parser.parse_args(args)
+
+    from auto_agent.modules.content_planner_module import (
+        generate_planner_brief,
+        validate_brief,
+        save_brief,
+    )
+
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project = pm.resolve_project(parsed.project)
+    if not project:
+        console.print(f"[red]프로젝트를 찾을 수 없습니다: {parsed.project}[/red]")
+        return
+
+    project_dir = Path(project["output_dir"])
+
+    console.print(f"[blue]기획안 생성 중...[/blue] 주제: {parsed.topic}")
+    brief = generate_planner_brief(
+        topic=parsed.topic,
+        writing_style=parsed.writing_style,
+        channel=parsed.channel,
+    )
+
+    errors = validate_brief(brief)
+    if errors:
+        console.print(f"[yellow]검증 경고:[/yellow] {errors}")
+
+    try:
+        path = save_brief(brief, project_dir, overwrite=parsed.overwrite)
+        console.print(f"[green]기획안 저장 완료:[/green] {path}")
+        console.print(f"  core_question: {brief.get('core_question', '')}")
+        console.print(f"  tone_goal: {brief.get('tone_goal', '')}")
+        must_cover = brief.get("must_cover", [])
+        if must_cover:
+            console.print(f"  must_cover ({len(must_cover)}개):")
+            for item in must_cover:
+                console.print(f"    - {item}")
+        console.print()
+        console.print(f"[dim]다음 단계: auto-agent run --project {parsed.project}[/dim]")
+    except FileExistsError as e:
+        console.print(f"[red]{e}[/red]")
+
+
 def cmd_series(args):
     """장편 시리즈 모드: plan, run."""
     import argparse
@@ -1968,6 +2021,7 @@ COMMANDS = {
     "link": cmd_link,
     "watchlist": cmd_watchlist,
     "plan": cmd_plan,
+    "plan-trend": cmd_plan_trend,
     "analyze": cmd_analyze,
     "cron": cmd_cron,
     "sync": cmd_sync,
