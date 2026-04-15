@@ -54,7 +54,7 @@
     <span id="stream-chars" style="display:none;font-size:11px;color:var(--energy-ink-low);margin-left:auto;"></span>
   </div>
 
-  <!-- ── 3. 2분할 캔버스: rc-wrap 그대로 ── -->
+  <!-- ── 3. 3분할 캔버스 ── -->
   <div id="split-view" style="flex:1;min-height:0;overflow:hidden;">
     <div class="rc-wrap" id="rc-wrap" data-slug="{{ slug }}">
       <div class="rc-panels">
@@ -71,7 +71,7 @@
           </div>
         </div>
 
-        <!-- 오른쪽: Manuscript Canvas -->
+        <!-- 중앙: Manuscript Canvas (순수 원고 본문만) -->
         <div class="rc-panel rc-panel-manuscript" id="rc-manuscript-panel">
           <div class="rc-panel-header">
             <span class="rc-panel-title">Manuscript Canvas</span>
@@ -79,6 +79,17 @@
           </div>
           <div class="rc-panel-body" id="rc-ms-body">
             <div class="rc-empty">원고가 생성되면 여기에 표시됩니다.</div>
+          </div>
+        </div>
+
+        <!-- 오른쪽: Agent Status Panel -->
+        <div class="rc-panel rc-panel-status" id="rc-status-panel">
+          <div class="rc-panel-header">
+            <span class="rc-panel-title">Agent Status</span>
+            <span class="rc-status-badge" id="rc-status-badge">대기</span>
+          </div>
+          <div class="rc-panel-body" id="rc-status-body">
+            <div class="rc-empty">에이전트 진행 상황이 여기에 표시됩니다.</div>
           </div>
         </div>
 
@@ -302,7 +313,7 @@
 }
 .rc-panels {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1.2fr 0.8fr;
   gap: 0;
   flex: 1;
   overflow: hidden;
@@ -359,6 +370,23 @@
 }
 .rc-ms-badge.draft { background: rgba(59,130,246,0.15); color: #93C5FD; }
 .rc-ms-badge.final { background: rgba(34,197,94,0.15);  color: #86EFAC; }
+.rc-status-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 8px;
+  background: var(--surface2); color: var(--text-muted);
+}
+.rc-status-badge.running { background: rgba(245,158,11,0.15); color: #FCD34D; }
+.rc-status-badge.done    { background: rgba(34,197,94,0.15);  color: #86EFAC; }
+.rc-status-item {
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px; line-height: 1.6; color: var(--text-muted);
+}
+.rc-status-item:last-child { border-bottom: none; }
+.rc-status-item strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 11px; }
+.rc-status-item pre {
+  font-size: 11px; white-space: pre-wrap; word-break: break-word;
+  background: var(--surface2); border-radius: 4px; padding: 6px 8px; margin: 4px 0 0;
+  color: #A1A1AA;
+}
 .rc-panel-body {
   flex: 1;
   overflow-y: auto;
@@ -557,8 +585,50 @@
     if (ch) { ch.style.display = ''; ch.textContent = text.length + '자'; }
     const msBody = document.getElementById('rc-ms-body');
     if (!msBody) return;
-    msBody.innerHTML = '';
+
+    // ── 에이전트 메타 블록 분리 ──
+    // "**작성 결과 요약:**", "**주의:**" 등 에이전트 상태 텍스트를 Status Panel로 분리
+    const META_PATTERNS = [
+      /^\*\*(작성 결과 요약|주의|참고|NOTE|WARNING|WARN|INFO|summary)[:：]/i,
+      /^\[source_ingest\]|\[draft.writer\]|\[script.director\]|\[chapter_facts\]/i,
+      /^알려진 사실 기반으로|^확인이 필요한 항목|^research_questions\.json/i,
+    ];
+    const SUMMARY_START = /^\*\*(작성 결과 요약|주의|참고)[:：]/i;
+
     const lines = text.split('\n');
+    const manuscriptLines = [];
+    const statusBlocks = [];
+    let inMetaBlock = false;
+    let currentMeta = [];
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (SUMMARY_START.test(trimmed)) {
+        inMetaBlock = true;
+        if (currentMeta.length) statusBlocks.push(currentMeta.join('\n'));
+        currentMeta = [trimmed];
+      } else if (inMetaBlock) {
+        if (trimmed === '' && currentMeta.length > 3) {
+          // 빈 줄 2회 연속이면 블록 종료로 간주
+          statusBlocks.push(currentMeta.join('\n'));
+          currentMeta = [];
+          inMetaBlock = false;
+        } else {
+          currentMeta.push(line);
+        }
+      } else if (META_PATTERNS.some(p => p.test(trimmed))) {
+        statusBlocks.push(trimmed);
+      } else {
+        manuscriptLines.push(line);
+      }
+    });
+    if (currentMeta.length) statusBlocks.push(currentMeta.join('\n'));
+
+    // Status Panel 업데이트
+    _applyStatusBlocks(statusBlocks);
+
+    // Manuscript Canvas — 순수 원고만
+    msBody.innerHTML = '';
     let para = [];
     function flush() {
       if (!para.length) return;
@@ -570,7 +640,7 @@
       msBody.appendChild(p);
       para = [];
     }
-    lines.forEach(line => {
+    manuscriptLines.forEach(line => {
       if (/^#\s+(Ch\d+|챕터\s*\d+)/i.test(line)) {
         flush();
         const h = document.createElement('div');
@@ -591,6 +661,24 @@
       }
     });
     flush();
+  }
+
+  // ── Status Panel 채우기 ──
+  function _applyStatusBlocks(blocks) {
+    const body = document.getElementById('rc-status-body');
+    const badge = document.getElementById('rc-status-badge');
+    if (!body || !blocks.length) return;
+    body.innerHTML = '';
+    blocks.forEach((block, i) => {
+      const item = document.createElement('div');
+      item.className = 'rc-status-item';
+      const lines = block.split('\n');
+      const title = lines[0].replace(/\*\*/g, '').trim();
+      const rest = lines.slice(1).join('\n').trim();
+      item.innerHTML = `<strong>${escapeHtml(title)}</strong>${rest ? '<pre>' + escapeHtml(rest) + '</pre>' : ''}`;
+      body.appendChild(item);
+    });
+    if (badge) { badge.textContent = '업데이트됨'; badge.className = 'rc-status-badge done'; }
   }
 
   // ── 씬스펙 갱신 ──
@@ -741,11 +829,9 @@
 
   fileSrc.addEventListener('draft_updated', e => {
     const d = JSON.parse(e.data);
-    if (!lastManuscriptText) {
-      applyManuscript(d.text || '');
-      const b = document.getElementById('rc-ms-badge');
-      if (b) { b.textContent = '초고'; b.className = 'rc-ms-badge draft'; }
-    }
+    applyManuscript(d.text || '');
+    const b = document.getElementById('rc-ms-badge');
+    if (b) { b.textContent = '초고'; b.className = 'rc-ms-badge draft'; }
     addEventRow(null, 'info', `초고 업데이트 (${d.chars || 0}자)`);
   });
 
