@@ -331,7 +331,9 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
         _meta = specs.get("meta", {}) if specs else {}
         _dp_accent = (_meta.get("designPreset") or {}).get("colors", {}).get("accent")
         _proj_accent = _dp_accent or _meta.get("accentColor")
-        _art_style = _meta.get("artStyle", "")
+        _art_style_raw = _meta.get("artStyle", "")
+        # "artstyle/styles/semoji_3D.json" → "semoji_3D"
+        _art_style = Path(_art_style_raw).stem if _art_style_raw else ""
         scenes = enrich_scenes_with_media(scenes, dir_name, out_dir, tts,
                                           project_accent=_proj_accent, art_style=_art_style)
         context["scenes"] = scenes
@@ -1014,7 +1016,8 @@ async def api_scenes_by_slug(slug: str):
     _meta = specs.get("meta", {}) if specs else {}
     _dp_accent = (_meta.get("designPreset") or {}).get("colors", {}).get("accent")
     _proj_accent = _dp_accent or _meta.get("accentColor")
-    _art_style = _meta.get("artStyle", "")
+    _art_style_raw = _meta.get("artStyle", "")
+    _art_style = Path(_art_style_raw).stem if _art_style_raw else ""
     enriched = enrich_scenes_with_media(scenes, dir_name, out_dir, tts,
                                         project_accent=_proj_accent, art_style=_art_style)
     # image_assets.json에서 출처/라이선스 정보 병합
