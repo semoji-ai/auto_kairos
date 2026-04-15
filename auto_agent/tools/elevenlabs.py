@@ -442,7 +442,6 @@ class ElevenLabsClient:
             gemini_voice=self.gemini_voice if self.tts_provider == "gemini" else "",
         )
 
-        from ..core.project_paths import ProjectPaths
-        result_path = ProjectPaths(output_dir).narration_result
+        result_path = output_dir / "tts_results.json"
         narration_result.save(result_path)
         return narration_result

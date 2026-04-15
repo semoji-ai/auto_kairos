@@ -1664,6 +1664,117 @@ def cmd_series(args):
             console.print(f"  [red]실패: EP{result['episodes_failed']}[/red]")
 
 
+def cmd_tts(args):
+    """TTS 전처리 → 생성 → 자막 생성 일괄 실행."""
+    import argparse
+    import os
+
+    parser = argparse.ArgumentParser(prog="auto-agent tts")
+    parser.add_argument("--project", required=True, help="프로젝트 slug 또는 uuid")
+    parser.add_argument("--skip-existing", action="store_true", default=True,
+                        help="이미 생성된 씬 스킵 (기본 on)")
+    parser.add_argument("--force", action="store_true",
+                        help="기존 TTS·자막 파일 무시하고 전체 재생성")
+    parser.add_argument("--workers", type=int, default=3, help="병렬 TTS 생성 수 (기본 3)")
+    parser.add_argument("--tts-only", action="store_true", help="TTS 생성만 (자막 생성 스킵)")
+    parser.add_argument("--subtitle-only", action="store_true", help="자막 생성만 (TTS 스킵)")
+    parsed = parser.parse_args(args)
+
+    # 프로젝트 경로 resolve
+    from auto_agent.db.connection import db_exists
+    project_dir = None
+    if db_exists():
+        from auto_agent.db.project_manager import ProjectManager
+        pm = ProjectManager()
+        project = pm.resolve_project(parsed.project)
+        if project:
+            project_dir = Path(project["output_dir"])
+    if not project_dir:
+        from auto_agent.paths import get_workspace_dir
+        project_dir = get_workspace_dir() / "output" / parsed.project
+    if not project_dir.exists():
+        console.print(f"[red]프로젝트 디렉토리 없음: {project_dir}[/red]")
+        return
+
+    skip_existing = not parsed.force
+
+    # ── Phase A: TTS 생성 ──────────────────────────────────────────────────
+    if not parsed.subtitle_only:
+        import json
+        from auto_agent.tools.elevenlabs import ElevenLabsClient
+
+        scene_specs_path = project_dir / "scene_specs.json"
+        if not scene_specs_path.exists():
+            console.print(f"[red]scene_specs.json 없음: {scene_specs_path}[/red]")
+            return
+        scene_specs = json.loads(scene_specs_path.read_text(encoding="utf-8"))
+        scenes_raw = scene_specs.get("scenes", scene_specs) if isinstance(scene_specs, dict) else scene_specs
+
+        def _make_scene_entry(s, i):
+            """narration → original (TTSPreprocessor 적용),
+               narration_tts → processed (에이전트 전처리 완료, TTSPreprocessor 스킵)."""
+            narration = s.get("narration", "")
+            narration_tts = s.get("narration_tts", "")
+            entry = {
+                "scene_number": s.get("sceneNumber", i + 1),
+                "original_script_text": narration,
+            }
+            if narration_tts.strip():
+                entry["processed_script_text"] = narration_tts
+            return entry
+
+        storyboard = {
+            "project_title": scene_specs.get("title", parsed.project) if isinstance(scene_specs, dict) else parsed.project,
+            "scenes": [
+                _make_scene_entry(s, i)
+                for i, s in enumerate(scenes_raw)
+                if s.get("narration", "").strip()
+            ],
+        }
+        total = len(storyboard["scenes"])
+        console.print(f"\n[accent]TTS 생성[/accent] — {total}개 씬 (workers={parsed.workers}, skip_existing={skip_existing})")
+
+        # 임시 스토리보드 파일 저장 후 generate_from_storyboard 호출
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as tf:
+            json.dump(storyboard, tf, ensure_ascii=False)
+            tmp_path = Path(tf.name)
+
+        try:
+            client = ElevenLabsClient()
+            result = client.generate_from_storyboard(
+                storyboard_path=tmp_path,
+                output_dir=project_dir,
+                skip_existing=skip_existing,
+                max_workers=parsed.workers,
+            )
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+        ok = sum(1 for r in result.tts_results if r.status == "completed")
+        ts_count = sum(1 for r in result.tts_results if r.alignment_path)
+        console.print(f"  완료: {ok}/{total}  타임스탬프: {ts_count}개")
+        for r in result.tts_results:
+            ts = "✓ ts" if r.alignment_path else "  --"
+            status = "✓" if r.status == "completed" else "✗"
+            console.print(f"  [{status}] 씬 {r.scene_number:03d}  {r.duration:.2f}s  {ts}")
+
+    # ── Phase B: 자막 생성 ────────────────────────────────────────────────
+    if not parsed.tts_only:
+        import subprocess, sys
+        console.print(f"\n[accent]자막 생성[/accent]")
+        env = os.environ.copy()
+        env["PROJECT_DIR"] = str(project_dir)
+        proc = subprocess.run(
+            [sys.executable, "-m", "auto_agent.scripts.generate_subtitles"],
+            env=env,
+        )
+        if proc.returncode != 0:
+            console.print("[red]자막 생성 실패[/red]")
+        else:
+            console.print("[green]자막 생성 완료[/green]")
+
+
 def cmd_multi_contents(args):
     """멀티포맷 콘텐츠 생성 — 쇼츠/블로그/카드뉴스/스레드 + SNS 스케줄."""
     import argparse
@@ -1865,6 +1976,7 @@ COMMANDS = {
     "auto-kairos": cmd_auto_kairos,
     "multi-contents": cmd_multi_contents,
     "series": cmd_series,
+    "tts": cmd_tts,
     "skill-path": lambda args: print(get_data_dir()),
 }
 
@@ -1893,6 +2005,7 @@ def _print_banner():
         ("update", "최신 버전으로 업데이트"),
         ("auto-kairos", "원클릭 영상 제작 (스타일→주제→실행)"),
         ("multi-contents --project <slug>", "멀티포맷 콘텐츠 (쇼츠/블로그/카드뉴스)"),
+        ("tts --project <slug>", "TTS 전처리·생성·자막 일괄 실행"),
     ]
     for cmd, desc in cmds:
         console.print(f"  [accent]auto-agent {cmd:<28}[/accent] {desc}")
