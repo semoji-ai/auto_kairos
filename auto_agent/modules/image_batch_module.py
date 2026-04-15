@@ -378,6 +378,38 @@ def run_batch(
 
                 fal_queue.run_batch(jobs, on_done=on_fb, max_workers=10)
 
+        # ── personImages: person_card 개인 사진 ──
+        for scene in scene_specs.get("scenes", []):
+            person_specs = scene.get("personImages")
+            if not person_specs:
+                continue
+            scene_num = scene.get("sceneNumber", 0)
+            scene_key_p = f"scene_{scene_num:03d}"
+            for pi, pspec in enumerate(person_specs, start=1):
+                dest_name = f"{scene_key_p}_person_{pi:02d}.jpg"
+                dest_path = search_dl_dir / dest_name
+                if dest_path.exists():
+                    continue
+                query = pspec.get("query", "")
+                if not query:
+                    continue
+                _progress(f"씬 {scene_num} 인물{pi} 검색: {query[:50]}")
+                try:
+                    results = searcher.search_waterfall(query, limit=3, preferred_aspect="1:1")
+                    if results and results[0].local_path and Path(results[0].local_path).exists():
+                        import shutil as _sh2
+                        _sh2.copy2(results[0].local_path, dest_path)
+                        try:
+                            Path(results[0].local_path).unlink(missing_ok=True)
+                        except Exception:
+                            pass
+                        success += 1
+                        _progress(f"씬 {scene_num} 인물{pi} 완료: {dest_name}")
+                    else:
+                        _progress(f"씬 {scene_num} 인물{pi} 검색 실패", level="warning")
+                except Exception as e:
+                    _progress(f"씬 {scene_num} 인물{pi} 에러: {e}", level="warning")
+
         return {"success": success, "fail": fail, "skip": skip}
 
     # ── 병렬 실행: generate + search ──

@@ -35,7 +35,7 @@ export const resolveVisualization = (scene: any): any => {
   for (const k of ["layout", "headline", "items", "values", "unit", "source",
                      "icons", "flags", "chartConfig", "title", "chartStyle",
                      "orientation", "withPortrait", "portraitPlacement", "itemIcons",
-                     "itemFlags", "logoMap"]) {
+                     "itemFlags", "logoMap", "images"]) {
     if (scene[k] != null) viz[k] = scene[k];
   }
   if (scene.mood || scene.motion) {
@@ -140,6 +140,23 @@ const CenterLayout: React.FC<{
   </AbsoluteFill>
 );
 
+/* ── 텍스처 오버레이 (최상위 레이어) ── */
+const TextureOverlay: React.FC<{ src: string; blendMode?: string; opacity?: number }> = ({
+  src, blendMode = "multiply", opacity = 0.2,
+}) => (
+  <AbsoluteFill style={{ pointerEvents: "none" }}>
+    <Img
+      src={resolveUrl(src)}
+      style={{
+        width: "100%", height: "100%",
+        objectFit: "cover",
+        mixBlendMode: blendMode as React.CSSProperties["mixBlendMode"],
+        opacity,
+      }}
+    />
+  </AbsoluteFill>
+);
+
 /* ── 공통 인터페이스 ── */
 export interface SceneRendererProps {
   scene: any;
@@ -157,6 +174,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const vizData = resolveVisualization(scene);
 
   const defaultBg = preset.defaultBackground;
+  const textureCfg = (preset as any).texture as { src: string; blendMode?: string; opacity?: number } | undefined;
   const sceneImage = scene.imagePath || scene.vizBackgroundPath || "";
   const hasSceneImage = !!sceneImage;
   const hasAnyImage = hasSceneImage || !!defaultBg;
@@ -190,6 +208,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
           hasImageBackground={true}
           imageAssetPlacement="fullscreen"
         />
+        {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
   }
@@ -207,13 +226,13 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
             imageAssetPlacement="center"
           />
         </CenterLayout>
+        {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
   }
 
   // ── side (left/right) — 이미지 없어도 placement가 side면 진입 (placeholder 표시) ──
   if (placement === "left" || placement === "right") {
-    // imageAsset.placement가 portrait의 실제 위치 — creative.portraitPlacement와 동기화
     const sideVizData = vizData?.creative
       ? { ...vizData, creative: { ...vizData.creative, portraitPlacement: placement, withPortrait: true } }
       : vizData;
@@ -228,6 +247,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
             imageAssetPlacement={placement}
           />
         </SideLayout>
+        {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
   }
@@ -243,6 +263,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
         hasImageBackground={hasAnyImage}
         imageAssetPlacement={placement}
       />
+      {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
     </AbsoluteFill>
   );
 };

@@ -372,6 +372,17 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 "easing": viz_anim.get("easing", "easeOut"),
             }
 
+        # person_card 개인 사진 — scene_NNN_person_01.jpg, _02, _03 ...
+        person_images: list = []
+        for pi in range(1, 10):
+            for ext in (".jpg", ".jpeg", ".png", ".webp"):
+                p_src = out_dir / "images" / f"{scene_key}_person_{pi:02d}{ext}"
+                if p_src.exists():
+                    person_images.append(link_asset(p_src, "images", f"{scene_key}_person_{pi:02d}{ext}"))
+                    break
+            else:
+                break  # 파일 없으면 중단
+
         entry = {
             "sceneNumber": num,
             "imagePath": image_path,
@@ -383,6 +394,8 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             "transition": transition,
             "vizAnimation": viz_animation,
         }
+        if person_images:
+            entry["images"] = person_images
 
         # motionPreset, mood 필드 추가
         if motion_preset:

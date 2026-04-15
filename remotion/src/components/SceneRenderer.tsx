@@ -35,7 +35,7 @@ export const resolveVisualization = (scene: any): any => {
   for (const k of ["layout", "headline", "items", "values", "unit", "source",
                      "icons", "flags", "chartConfig", "title", "chartStyle",
                      "orientation", "withPortrait", "portraitPlacement", "itemIcons",
-                     "itemFlags", "logoMap"]) {
+                     "itemFlags", "logoMap", "images"]) {
     if (scene[k] != null) viz[k] = scene[k];
   }
   if (scene.mood || scene.motion) {
