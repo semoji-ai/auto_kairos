@@ -227,7 +227,7 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
    - `layout`, `motion`, `mood`, `imageAsset`, `headline` 결정
    - characters 필드에 인물이 있으면 imageAsset.prompt에 해당 인물을 묘사에 포함
 5. **각 씬에 연출 결정** (이 모드의 진짜 작업):
-   - `layout` (cinematic, counter, before_after, items_list, headline_only, hero_with_context, metric_spotlight 등)
+   - `layout` (cinematic, counter, before_after, items_list, headline_only, items_grid, metric_spotlight 등)
    - `motion` (motion preset 이름)
    - `mood` (dramatic, contemplative, urgent, suspense, triumphant, informative, somber)
    - `imageAsset` (`source: generate|search`, `prompt`, `placement`)
@@ -392,7 +392,7 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    | items + side 이미지 | 인물/제품과 데이터 함께 | left/right | items_list + 인물 사진 |
    | 이미지만 | 분위기 전환, 여운, 도입 | fullscreen | cinematic |
    | headline만 | 핵심 메시지 한 줄 강조 | — | headline_only |
-   | headline + items | 제목 + 하위 데이터 | — | hero_with_context |
+   | headline + items | 제목 + 하위 데이터 | — | items_grid |
    | headline + 배경 이미지 | 강조 텍스트 + 분위기 | background | headline_only + 배경 |
    | 인용문 + 인물 이미지 | 발언 인용 | left/right | quote_portrait |
    | 로고 + 수치 | 기업/브랜드 비교 | — | logo_grid |
@@ -465,7 +465,7 @@ layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면
 | items + chartConfig.type="pie" | pie | 파이 차트 |
 | items + chartConfig.type="line" | line | 라인 차트 |
 | items + flags (국가코드) | items_grid + 국기 | 국가별 비교 |
-| headline + items (보조) | hero_with_context | 헤드라인 + 부연 |
+| headline + items (보조) | items_grid | 헤드라인 + 부연 |
 | items + imageAsset side | items_list + 이미지 | 데이터 + 맥락 |
 
 ### Step 3: 전체 검증 (5분)

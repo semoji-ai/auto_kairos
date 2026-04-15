@@ -222,7 +222,9 @@ durationFrames = base + padding
 - "이 기업들의 비중 차이" → `pie`
 - "이 기업들의 순위" → `rank_list`
 
-### 레이아웃 타입 (24개)
+> **Deprecated layout**: `hero_with_context` is deprecated — use `items_grid` instead. 레거시 데이터는 자동으로 `items_grid`로 alias 처리됩니다.
+
+### 레이아웃 타입 (23개)
 
 **기본 11개** (기존):
 
@@ -254,7 +256,6 @@ durationFrames = base + padding
 | `icon_stat` | 단일 통계 + 아이콘 | itemIcons[0], values[0] |
 | `stacked_progress` | 점유율/진행률 비교 | items + values (ProgressBar 스택) |
 | `card_carousel` | 정보 카드 나열 | items + descriptions, itemIcons |
-| `hero_with_context` | 큰 헤드라인 + 부연 카드 | headline + items (보조 정보) |
 | `quote_portrait` | 인물 사진 + 인용문 | images[0], items[0] (인용문) |
 | `annotated_chart` | 차트 + 주석 | items + values + annotations[] |
 

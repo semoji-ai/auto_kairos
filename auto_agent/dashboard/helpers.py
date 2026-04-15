@@ -275,6 +275,16 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
     Returns:
         (layout_name, is_explicit) — is_explicit이 True면 AI 지정, False면 자동 추론.
     """
+    # hero_with_context는 items_grid의 alias (레거시 데이터 호환)
+    if scene.get("layout") == "hero_with_context":
+        scene = {**scene, "layout": "items_grid"}
+    viz = scene.get("visualization") or {}
+    creative_check = viz.get("creative") or {}
+    if creative_check.get("layout") == "hero_with_context":
+        creative_check = {**creative_check, "layout": "items_grid"}
+        viz = {**viz, "creative": creative_check}
+        scene = {**scene, "visualization": viz}
+
     # 맵씬이면 무조건 map
     map_scene = scene.get("mapScene") or {}
     if map_scene and map_scene.get("markers"):
@@ -907,8 +917,8 @@ def render_scene_preview(scene: dict, project_accent: str = None, art_style: str
                      f'</div>')
         html += '</div>'
 
-    # ── card_carousel / hero_with_context: Remotion — 카드 나열 ──
-    elif layout in ("card_carousel", "hero_with_context"):
+    # ── card_carousel: Remotion — 카드 나열 ──
+    elif layout in ("card_carousel",):
         html += _render_headline(headline)
         if items:
             html += '<div class="sp-cards">'

@@ -136,7 +136,6 @@ Remotion 렌더러가 구체적인 애니메이션 조합으로 변환합니다.
 | logo_grid | stagger_wave | fade_rise | dramatic_shake |
 | cinematic | cinematic_fade | (유일) | 다른 모든 것 |
 | card_carousel | stagger_wave | build_sequence | number_spotlight |
-| hero_with_context | fade_rise | type_and_draw | split_compare |
 | comparison_table | stagger_wave | split_compare | cinematic_fade |
 | icon_stat | number_spotlight | fade_rise | glitch_alert |
 | stacked_progress | count_and_grow | stagger_wave | type_and_draw |

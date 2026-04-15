@@ -136,7 +136,7 @@ type LayoutType =
   | "icon_stat"         // IconBadge 중앙 + 큰 수치 + 트렌드 (단일 통계)
   | "stacked_progress"  // ProgressBar 수직 스택 (점유율 비교)
   | "card_carousel"     // Card 3-4장 수평 스태거 (정보 카드)
-  | "hero_with_context" // 큰 헤드라인 + 작은 부연 카드들
+  | "hero_with_context" // @deprecated → items_grid로 통합
   | "quote_portrait"    // ImageBadge 큰 사이즈 + QuoteMark + 인용문
   | "annotated_chart"   // bar/pie/line + AnnotationLine + Callout
   | "cinematic"         // 이미지 풀스크린 + Ken Burns, 텍스트 없음 (나레이션만)
@@ -204,6 +204,10 @@ const VALID_LAYOUTS = new Set<LayoutType>([
 ]);
 
 function resolveLayout(data: any, creative: any): LayoutType {
+  // hero_with_context는 items_grid의 alias
+  if (data.layout === "hero_with_context") data = { ...data, layout: "items_grid" };
+  if (creative.layout === "hero_with_context") creative = { ...creative, layout: "items_grid" };
+
   // ── 0순위: 명시적 layout 지정 (씬에디터에서 수동 변경 시) ──
   const explicit = data.layout || creative.layout || "";
   if (explicit && VALID_LAYOUTS.has(explicit)) {
@@ -305,8 +309,8 @@ function inferFromContent(data: any, creative: any): LayoutType {
   // 3~6항목 → items_grid
   if (items.length >= 3) return "items_grid";
 
-  // headline + items → hero_with_context
-  if (headline && items.length >= 1) return "hero_with_context";
+  // headline + items → items_grid
+  if (headline && items.length >= 1) return "items_grid";
 
   // 이미지만 있는 씬 (items/headline 없음) → cinematic
   if (placement) return "cinematic";
@@ -3839,23 +3843,6 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 </div>
               );
             })}
-          </div>
-        )}
-
-        {/* Hero with Context — 큰 헤드라인 + 부연 카드 */}
-        {layout === "hero_with_context" && items.length >= 1 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 24, width: "100%", alignItems: "center" }}>
-            {items.length > 0 && (
-              <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-                {items.map((item, i) => (
-                  <div key={i} style={fadeRise(frame, staggerDelay(i, 8, 30), 15)}>
-                    <Card style={{ padding: "12px 20px" }}>
-                      <TextWithBreaks text={item} style={{ fontSize: T.labelText, color: C.textMuted }} />
-                    </Card>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 

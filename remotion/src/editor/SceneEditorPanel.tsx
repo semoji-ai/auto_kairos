@@ -17,7 +17,7 @@ const LAYOUT_OPTIONS = [
   "quote", "split", "bar", "logo_grid", "pie", "line",
   "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
   "comparison_table", "before_after", "icon_stat", "stacked_progress",
-  "card_carousel", "hero_with_context", "annotated_chart",
+  "card_carousel", "annotated_chart",
 ] as const;
 
 const CHART_STYLE_OPTIONS = ["pie", "donut"] as const;
