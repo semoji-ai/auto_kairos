@@ -27,7 +27,7 @@ const resolveAsset = (path: string): string =>
     ? path
     : staticFile(path);
 
-import { useDesignPreset, usePresetColors, usePresetTypo, usePresetLayout } from "../design";
+import { useDesignPreset, usePresetColors, usePresetTypo, usePresetLayout, usePresetVariants } from "../design";
 import { DEFAULT_PRESET } from "../design/defaults";
 
 /** 숫자 포맷: 연도(1000~2999)는 그대로, 나머지는 세 자리 콤마 */
@@ -1430,7 +1430,9 @@ const ItemsList: React.FC<{
   const C = useC();
   const T = usePresetTypo();
   const L = usePresetLayout();
+  const V = usePresetVariants();
   const frame = useCurrentFrame();
+  const accentFilled = V.itemsList === "accent-filled";
   const showBadge = emphasis === "sequence" || emphasis === "person";
   const hasImages = images && images.length > 0;
   const conceptLower = concept.toLowerCase();
@@ -1578,40 +1580,49 @@ const ItemsList: React.FC<{
               gap: 14,
               padding: "12px 28px",
               borderRadius: 50,
-              backgroundColor: spotlight
-                ? `rgba(${moodCfg.accentRgb},0.15)`
-                : "rgba(0,0,0,0.4)",
-              border: `2px solid ${spotlight ? moodCfg.accent : moodCfg.accent + "BB"}`,
+              backgroundColor: accentFilled
+                ? moodCfg.accent
+                : spotlight
+                  ? `rgba(${moodCfg.accentRgb},0.15)`
+                  : "rgba(0,0,0,0.4)",
+              border: accentFilled
+                ? "none"
+                : `2px solid ${spotlight ? moodCfg.accent : moodCfg.accent + "BB"}`,
             }}
           >
-            {/* 국기가 있으면 국기 우선 (아이콘 숨김), 없으면 아이콘 */}
-            {itemFlags?.[i] ? (
-              <FlagCard countryCode={itemFlags[i]} width={100} />
-            ) : itemIcons?.[i] ? (() => {
-              const Ic = resolveIcon(itemIcons[i]);
-              return Ic ? <IconBadge icon={Ic} size={36} /> : null;
-            })() : null}
-            {/* Per-item status dot */}
-            {itemStatuses?.[i] && (
-              <StatusDot status={itemStatuses[i]} />
-            )}
-            {/* Sequence/person badge (fallback) */}
-            {showBadge && !itemIcons?.[i] && !itemFlags?.[i] && !itemStatuses?.[i] && (
-              <CircleBadge
-                text={
-                  emphasis === "person"
-                    ? item.charAt(0)
-                    : String(i + 1)
-                }
-                size={36}
-                filled={spotlight}
-              />
+            {/* accent-filled 모드: 아이콘/배지 숨김 */}
+            {!accentFilled && (
+              <>
+                {/* 국기가 있으면 국기 우선 (아이콘 숨김), 없으면 아이콘 */}
+                {itemFlags?.[i] ? (
+                  <FlagCard countryCode={itemFlags[i]} width={100} />
+                ) : itemIcons?.[i] ? (() => {
+                  const Ic = resolveIcon(itemIcons[i]);
+                  return Ic ? <IconBadge icon={Ic} size={36} /> : null;
+                })() : null}
+                {/* Per-item status dot */}
+                {itemStatuses?.[i] && (
+                  <StatusDot status={itemStatuses[i]} />
+                )}
+                {/* Sequence/person badge (fallback) */}
+                {showBadge && !itemIcons?.[i] && !itemFlags?.[i] && !itemStatuses?.[i] && (
+                  <CircleBadge
+                    text={
+                      emphasis === "person"
+                        ? item.charAt(0)
+                        : String(i + 1)
+                    }
+                    size={36}
+                    filled={spotlight}
+                  />
+                )}
+              </>
             )}
             <span
               style={{
                 fontSize: T.itemText,
                 fontWeight: spotlight ? 700 : 500,
-                color: spotlight ? moodCfg.accent : C.text,
+                color: accentFilled ? "#ffffff" : spotlight ? moodCfg.accent : C.text,
                 flex: 1,
               }}
             >

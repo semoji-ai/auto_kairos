@@ -114,5 +114,6 @@ export const SEMOJI_PRESET: DesignPresetOverride = {
   },
   variants: {
     comparisonCell: "none" as const,
+    itemsList: "accent-filled" as const,
   },
 };
