@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Series Plan",
+  "description": "장편 시리즈 사전 기획 스키마",
+  "type": "object",
+  "required": ["series_id", "title", "channel", "writing_style", "total_episodes", "series_angle", "episodes"],
+  "properties": {
+    "series_id": {"type": "string", "description": "시리즈 식별자 (slug). 예: lg_brand_encyclopedia"},
+    "title": {"type": "string", "description": "시리즈 전체 제목"},
+    "channel": {"type": "string", "description": "유튜브 채널명"},
+    "writing_style": {"type": "string", "description": "artstyle writing_style 값"},
+    "total_episodes": {"type": "integer", "description": "총 편수"},
+    "series_angle": {"type": "string", "description": "시리즈 전체 서사 방향"},
+    "series_hook": {"type": "string", "description": "시리즈 전체를 관통하는 핵심 질문 또는 긴장감"},
+    "key_entities": {"type": "array", "items": {"type": "string"}, "description": "핵심 인물/기업/사건 목록"},
+    "episodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["episode_number", "title", "scope_start", "scope_end", "core_question", "key_events", "key_persons"],
+        "properties": {
+          "episode_number": {"type": "integer"},
+          "title": {"type": "string"},
+          "scope_start": {"type": "string"},
+          "scope_end": {"type": "string"},
+          "core_question": {"type": "string"},
+          "key_events": {"type": "array", "items": {"type": "string"}},
+          "key_persons": {"type": "array", "items": {"type": "string"}},
+          "handoff_to_next": {"type": "string"},
+          "do_not_cover": {"type": "array", "items": {"type": "string"}},
+          "episode_brief_path": {"type": "string"},
+          "project_slug": {"type": "string"}
+        }
+      }
+    }
+  }
+}
