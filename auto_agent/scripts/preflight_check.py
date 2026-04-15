@@ -9,7 +9,40 @@ import subprocess
 import sys
 from pathlib import Path
 
+import json
+
 from auto_agent.scripts.project_paths import PROJECT_ROOT
+
+
+def _ensure_lane_mcp() -> None:
+    """lane MCP가 ~/.claude.json에 없으면 자동 등록."""
+    claude_json = Path.home() / ".claude.json"
+    venv_python = str(PROJECT_ROOT / ".venv" / "bin" / "python")
+    if not Path(venv_python).exists():
+        venv_python = sys.executable
+
+    entry = {
+        "command": venv_python,
+        "args": ["-m", "auto_agent.tools.mcp_lane_server"],
+    }
+
+    try:
+        cfg = json.loads(claude_json.read_text(encoding="utf-8")) if claude_json.exists() else {}
+    except Exception:
+        cfg = {}
+
+    existing = cfg.get("mcpServers", {}).get("lane")
+    if existing == entry:
+        print("  [OK] lane MCP 전역 등록 확인됨")
+        return
+
+    cfg.setdefault("mcpServers", {})["lane"] = entry
+    try:
+        claude_json.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+        action = "UPDATE" if existing else "REGISTER"
+        print(f"  [OK] lane MCP 전역 {action} 완료 → {venv_python}")
+    except Exception as e:
+        print(f"  [WARN] lane MCP 등록 실패: {e}")
 
 
 def check_env_var(name: str, required: bool = True) -> bool:
@@ -278,6 +311,9 @@ def main():
             print(f"  [WARN] config 검증 오류: {e}")
     else:
         print("  [SKIP] PROJECT_NAME not set")
+
+    # Lane MCP 전역 등록 확인 및 자동 등록
+    _ensure_lane_mcp()
 
     print(f"\n{'=' * 40}")
     if errors:
