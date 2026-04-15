@@ -55,6 +55,42 @@ from auto_agent.ui import (
 )
 
 
+def _register_lane_mcp_global(workspace: Path) -> None:
+    """lane MCP 서버를 ~/.claude.json 전역 설정에 등록.
+
+    이미 등록돼 있으면 python 경로만 현재 venv로 갱신한다.
+    """
+    import sys as _sys
+    claude_json = Path.home() / ".claude.json"
+
+    # 현재 venv의 python 경로 (없으면 sys.executable)
+    venv_python = str(Path(workspace) / ".venv" / "bin" / "python")
+    if not Path(venv_python).exists():
+        venv_python = _sys.executable
+
+    entry = {
+        "command": venv_python,
+        "args": ["-m", "auto_agent.tools.mcp_lane_server"],
+    }
+
+    try:
+        cfg = json.loads(claude_json.read_text(encoding="utf-8")) if claude_json.exists() else {}
+    except Exception:
+        cfg = {}
+
+    cfg.setdefault("mcpServers", {})
+    existing = cfg["mcpServers"].get("lane", {})
+
+    if existing == entry:
+        console.print("  [dim]SKIP[/dim] lane MCP 전역 등록 (이미 최신)")
+        return
+
+    cfg["mcpServers"]["lane"] = entry
+    claude_json.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    action = "UPDATE" if existing else "CREATE"
+    console.print(f"  [accent]{action}[/accent] ~/.claude.json — lane MCP 전역 등록 ({venv_python})")
+
+
 def cmd_init(args):
     """워크스페이스 초기화 (신규 또는 v2→v3 업그레이드)."""
     if not args:
@@ -172,7 +208,10 @@ def cmd_init(args):
     else:
         console.print("  [dim]SKIP[/dim] .claude/settings.json (이미 존재)")
 
-    # 6. DB 초기화
+    # 6. Lane MCP 전역 등록 (~/.claude.json)
+    _register_lane_mcp_global(workspace)
+
+    # 7. DB 초기화
     db_path = workspace / "auto_agent.db"
     if not db_path.exists():
         import os
@@ -183,7 +222,7 @@ def cmd_init(args):
     else:
         console.print("  [dim]SKIP[/dim] auto_agent.db (이미 존재)")
 
-    # 7. npm install
+    # 8. npm install
     remotion_pkg = remotion_dest / "package.json"
     remotion_nm = remotion_dest / "node_modules"
     if remotion_pkg.exists() and (not remotion_nm.exists() or upgrade_mode):
