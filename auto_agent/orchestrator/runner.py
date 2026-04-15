@@ -95,6 +95,29 @@ def _notify(agent: str, text: str, phase: str = "", project: str = "", level: st
         pass
 
 
+def _filter_steps_until(steps: list[dict], stop_after: str | None) -> list[dict]:
+    """stop_after step_id까지만 포함한 steps 리스트를 반환한다.
+
+    Parameters
+    ----------
+    steps      : 파이프라인 전체 steps (평탄화된 리스트)
+    stop_after : 마지막으로 실행할 step id. None이면 전체 반환.
+
+    Raises
+    ------
+    ValueError : stop_after step_id가 steps에 없는 경우
+    """
+    if stop_after is None:
+        return steps
+
+    ids = [s["id"] for s in steps]
+    if stop_after not in ids:
+        raise ValueError(f"stop_after '{stop_after}' 를 steps에서 찾을 수 없습니다. 유효한 step id: {ids}")
+
+    cutoff = ids.index(stop_after)
+    return steps[: cutoff + 1]
+
+
 # ── 메신저 한글 메시지 매핑 ──
 _MSG_MAP = {
     # phase_0
@@ -560,6 +583,7 @@ class PipelineRunner:
         from_step: str = None,
         only_step: str = None,
         dry_run: bool = False,
+        stop_after_step: str = None,
     ):
         """파이프라인 전체 또는 부분 실행."""
         # 볼트 인덱스 자동 빌드 — 변경된 .md 파일만 재인덱싱 (해시 캐시 활용)
@@ -579,6 +603,14 @@ class PipelineRunner:
                 print(f"[VaultIndexer] 자동 빌드 실패 (무시): {e}", flush=True)
 
         phases = self.pipeline.get("phases", [])
+
+        # --until 필터 적용: stop_after_step이 지정된 경우 허용 step id 집합을 미리 계산
+        _until_allowed: set | None = None
+        if stop_after_step:
+            _all_steps = [s for ph in phases for s in ph.get("steps", [])]
+            _filtered = _filter_steps_until(_all_steps, stop_after=stop_after_step)
+            _until_allowed = {s["id"] for s in _filtered}
+
         skip_until = from_step
         found_start = from_step is None
 
@@ -631,6 +663,10 @@ class PipelineRunner:
             phase_name = phase.get("name", phase_id)
             execution = phase.get("execution", "sequential")
             steps = phase.get("steps", [])
+
+            # --until 필터: 허용된 step id만 포함
+            if _until_allowed is not None:
+                steps = [s for s in steps if s["id"] in _until_allowed]
 
             # --only 모드: 해당 step만 실행
             if only_step:
