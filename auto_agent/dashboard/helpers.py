@@ -395,6 +395,13 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
                 slug_part = project_dir_name.split("_", 1)[-1] if "_" in project_dir_name else project_dir_name
                 scene["_thumbnail_url"] = f"/api/p/{slug_part}/thumbnails/scene/{sn}"
 
+        # QA 결과 병합
+        from auto_agent.tools.image_assets import get_qa_result
+        sn_key = scene.get("sceneNumber") or scene.get("scene_number") or (scenes.index(scene) + 1)
+        qa_result = get_qa_result(Path(output_dir) / "images", sn_key)
+        if qa_result:
+            scene["qa"] = qa_result
+
         # 캐릭터별 첫 등장 이미지 수집
         for char_id in scene.get("characters", []):
             if char_id not in char_thumb_map and scene["_image_url"]:
