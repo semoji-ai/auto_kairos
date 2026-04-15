@@ -606,7 +606,7 @@ class PipelineRunner:
 
         # --until 필터 적용: stop_after_step이 지정된 경우 허용 step id 집합을 미리 계산
         _until_allowed: set | None = None
-        if stop_after_step:
+        if stop_after_step is not None:
             _all_steps = [s for ph in phases for s in ph.get("steps", [])]
             _filtered = _filter_steps_until(_all_steps, stop_after=stop_after_step)
             _until_allowed = {s["id"] for s in _filtered}

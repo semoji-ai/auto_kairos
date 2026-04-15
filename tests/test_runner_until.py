@@ -43,3 +43,10 @@ def test_stop_after_unknown_raises():
     steps = _make_steps()
     with pytest.raises(ValueError, match="stop_after"):
         _filter_steps_until(steps, stop_after="step_999")
+
+def test_stop_after_last_step_returns_all():
+    """stop_after가 마지막 step이면 전체를 반환해야 한다."""
+    from auto_agent.orchestrator.runner import _filter_steps_until
+    steps = _make_steps()
+    result = _filter_steps_until(steps, stop_after="step_3b")
+    assert len(result) == len(steps)
