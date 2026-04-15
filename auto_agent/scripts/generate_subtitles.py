@@ -139,6 +139,52 @@ def smart_split(text: str) -> List[str]:
     return [l for l in lines if l]
 
 
+def chars_to_words(sidecar: dict) -> list:
+    """ElevenLabs 문자 타임스탬프 → 단어 단위 타임스탬프 변환.
+
+    공백 또는 문자 배열 끝에서 단어 경계로 분리.
+    match_lines_to_timestamps()와 호환되는 형식으로 반환.
+    """
+    chars = sidecar.get("characters", [])
+    starts = sidecar.get("character_start_times_seconds", [])
+    ends = sidecar.get("character_end_times_seconds", [])
+
+    if not chars or len(chars) != len(starts) or len(chars) != len(ends):
+        return []
+
+    words = []
+    word_chars = []
+    word_start = None
+    word_end = None
+
+    for i, ch in enumerate(chars):
+        if ch == " ":
+            if word_chars:
+                words.append({
+                    "word": "".join(word_chars),
+                    "start": round(word_start, 3),
+                    "end": round(word_end, 3),
+                })
+                word_chars = []
+                word_start = None
+                word_end = None
+        else:
+            if word_start is None:
+                word_start = starts[i]
+            word_chars.append(ch)
+            word_end = ends[i]
+
+    # 마지막 단어 처리
+    if word_chars:
+        words.append({
+            "word": "".join(word_chars),
+            "start": round(word_start, 3),
+            "end": round(word_end, 3),
+        })
+
+    return words
+
+
 def match_lines_to_timestamps(lines: List[str], words: List[Dict], audio_duration: float) -> List[Dict]:
     """Match subtitle lines to word-level timestamps via fuzzy text matching."""
     if not words:
@@ -473,6 +519,20 @@ def main():
                     duration = max(len(narration_tts) * 0.07, 3.0)  # 글자당 70ms 추정
                 audio = None
 
+            # === 0차: ElevenLabs 사이드카 타임스탬프 (최우선) ===
+            sidecar_path = audio_path.with_name(audio_path.stem + ".timestamps.json")
+            elevenlabs_words = []
+            if sidecar_path.exists():
+                try:
+                    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+                    elevenlabs_words = chars_to_words(sidecar)
+                    # 사이드카에서 duration도 읽기 (가장 정확)
+                    end_times = sidecar.get("character_end_times_seconds", [])
+                    if end_times:
+                        duration = round(end_times[-1], 3)
+                except Exception as e:
+                    print(f"    사이드카 로드 실패: {e}")
+
             # 디스플레이용 라인 분할 (원본 narration)
             # subtitle_lines 필드가 있으면 에이전트가 미리 분할한 결과를 사용 (우선)
             pre_split = scene.get("subtitle_lines")
@@ -493,25 +553,28 @@ def main():
                 tts_lines = fix_decimal_splits(tts_lines)
                 tts_lines = fix_quote_splits(tts_lines)
 
-            # === 1차: WhisperX forced alignment (narration_tts로 alignment) ===
-            if WHISPERX_AVAILABLE:
+            # === 1차: ElevenLabs 사이드카 or WhisperX forced alignment ===
+            if elevenlabs_words:
+                words = elevenlabs_words
+                entries = match_lines_to_timestamps(tts_lines, words, duration)
+                source = "elevenlabs"
+            elif WHISPERX_AVAILABLE:
                 segments = [{"text": narration_tts, "start": 0.0, "end": duration}]
                 result = whisperx.align(segments, model_a, metadata, audio, device, return_char_alignments=False)
+                words = []
+                for seg in result.get("segments", []):
+                    for w in seg.get("words", []):
+                        if "start" in w and "end" in w:
+                            words.append({"word": w["word"], "start": w["start"], "end": w["end"]})
+                entries = match_lines_to_timestamps(tts_lines, words, duration)
+                source = "whisperx"
             else:
-                result = {"segments": []}
+                words = []
+                entries = match_lines_to_timestamps(tts_lines, [], duration)
+                source = "proportional"
 
-            words = []
-            for seg in result.get("segments", []):
-                for w in seg.get("words", []):
-                    if "start" in w and "end" in w:
-                        words.append({"word": w["word"], "start": w["start"], "end": w["end"]})
-
-            # TTS 라인으로 타임스탬프 매칭 (음성과 텍스트가 일치하므로 정확)
-            entries = match_lines_to_timestamps(tts_lines, words, duration)
-            source = "whisperx" if WHISPERX_AVAILABLE else "proportional"
-
-            # === 2차: 품질 검증 ===
-            if not check_alignment_quality(entries, duration):
+            # === 2차: 품질 검증 (ElevenLabs는 신뢰 — whisperx만 검증) ===
+            if source != "elevenlabs" and not check_alignment_quality(entries, duration):
                 # WhisperX 실패 → Gemini fallback
                 if gemini_client:
                     try:
@@ -534,7 +597,7 @@ def main():
                     entries = match_lines_to_timestamps(tts_lines, [], duration)
                     source = "proportional"
                     proportional_fallback += 1
-            else:
+            elif source == "whisperx":
                 whisperx_ok += 1
 
             # 디스플레이 텍스트로 교체 (타임스탬프는 유지)
