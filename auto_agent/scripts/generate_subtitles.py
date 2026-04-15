@@ -108,7 +108,15 @@ def find_split_points(text: str) -> List[Tuple[int, int]]:
 
 
 def smart_split(text: str) -> List[str]:
-    """Split text into lines of max MAX_CHARS_PER_LINE chars at natural boundaries."""
+    """Split text into lines of max MAX_CHARS_PER_LINE chars at natural boundaries.
+
+    분할 우선순위:
+    1. 문장 끝(마침표/느낌표/물음표) — 30자 초과해도 문장 완결 후 분할
+    2. 쉼표
+    3. 절 접속어 (지만, 는데, 면서...)
+    4. 조사 경계
+    5. 공백/강제 분할
+    """
     if len(text) <= MAX_CHARS_PER_LINE:
         return [text.strip()]
 
@@ -120,6 +128,18 @@ def smart_split(text: str) -> List[str]:
             lines.append(remaining.strip())
             break
 
+        # 1순위: 30자 이내 문장 끝 (마침표/느낌표/물음표)
+        sentence_end = re.search(r'[.!?](?!\d)', remaining[:MAX_CHARS_PER_LINE])
+        if sentence_end:
+            pos = sentence_end.end()
+            # 닫는 따옴표가 바로 뒤에 오면 함께 포함
+            if pos < len(remaining) and remaining[pos] in '"\u201D\u300D':
+                pos += 1
+            lines.append(remaining[:pos].strip())
+            remaining = remaining[pos:].strip()
+            continue
+
+        # 2순위: MAX_CHARS_PER_LINE + 10 범위 내 자연 분할점 탐색
         split_points = find_split_points(remaining[:MAX_CHARS_PER_LINE + 10])
         valid_points = [(pos, pri) for pos, pri in split_points
                         if 5 <= pos <= MAX_CHARS_PER_LINE + 5]
@@ -128,6 +148,7 @@ def smart_split(text: str) -> List[str]:
             best = min(valid_points, key=lambda x: (x[1], -x[0]))
             pos = best[0]
         else:
+            # 강제 분할: 공백 우선
             pos = MAX_CHARS_PER_LINE
             space_pos = remaining[:MAX_CHARS_PER_LINE].rfind(' ')
             if space_pos > 10:
@@ -255,16 +276,6 @@ def match_lines_to_timestamps(lines: List[str], words: List[Dict], audio_duratio
     # 자막 간 갭 제거: 각 자막의 endSec = 다음 자막의 startSec
     for j in range(len(entries) - 1):
         entries[j]["endSec"] = entries[j + 1]["startSec"]
-
-    # 씬 내 자막 전환 선행 offset (첫 자막 제외, 0.3초 앞당김)
-    SUBTITLE_LEAD_OFFSET = 0.3
-    for j in range(1, len(entries)):
-        entries[j]["startSec"] = round(max(
-            entries[j - 1]["startSec"] + 0.1,  # 이전 자막과 최소 0.1초 간격 보장
-            entries[j]["startSec"] - SUBTITLE_LEAD_OFFSET,
-        ), 3)
-        # 이전 자막의 endSec도 맞춰줌
-        entries[j - 1]["endSec"] = entries[j]["startSec"]
 
     return entries
 
