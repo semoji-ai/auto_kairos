@@ -2,11 +2,7 @@ import pytest
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-REQUIRED_FIELDS = [
-    "core_question", "real_topic", "entity_slug", "section_slug",
-    "hook_angle", "excluded_angles", "tone_goal", "success_criteria",
-    "must_cover", "key_persons",
-]
+from auto_agent.modules.content_planner_module import REQUIRED_BRIEF_FIELDS as REQUIRED_FIELDS
 
 def test_validate_brief_valid():
     from auto_agent.modules.content_planner_module import validate_brief
@@ -55,3 +51,16 @@ def test_default_brief_has_must_cover():
     assert "must_cover" in brief
     assert isinstance(brief["must_cover"], list)
     assert "key_persons" in brief
+
+def test_default_brief_empty_topic():
+    from auto_agent.modules.content_planner_module import _default_planner_brief
+    brief = _default_planner_brief("")
+    assert brief["entity_slug"] != ""
+    assert brief["real_topic"] != ""
+
+def test_default_brief_special_chars():
+    from auto_agent.modules.content_planner_module import _default_planner_brief
+    brief = _default_planner_brief("C++ 역사")
+    # slug에 + 가 포함되면 안 됨
+    assert "+" not in brief["entity_slug"]
+    assert "+" not in brief["section_slug"]

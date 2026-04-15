@@ -55,6 +55,10 @@ def save_brief(
             f"editorial_brief.json 이미 존재: {path}\n"
             "--overwrite 플래그를 사용하면 덮어씁니다."
         )
+    # 검증 경고 (차단하지 않음 — 수동 편집용 부분 저장 허용)
+    errors = validate_brief(brief)
+    if errors:
+        print(f"[content_planner] 경고: 불완전한 brief 저장 — {errors}", flush=True)
     output_dir.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(brief, ensure_ascii=False, indent=2), encoding="utf-8")
     return path
@@ -72,10 +76,12 @@ def generate_planner_brief(
     try:
         import anthropic
     except ImportError:
+        print("[content_planner] anthropic 패키지 없음 — 기본 초안 반환", flush=True)
         return _default_planner_brief(topic)
 
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
+        print("[content_planner] ANTHROPIC_API_KEY 없음 — 기본 초안 반환", flush=True)
         return _default_planner_brief(topic)
 
     style_hint = ""
@@ -121,11 +127,13 @@ def generate_planner_brief(
             messages=[{"role": "user", "content": prompt}],
         )
         raw = resp.content[0].text.strip()
+        # 마크다운 코드 블록 제거
         if "```" in raw:
-            import re
-            m = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
-            if m:
-                raw = m.group(1)
+            lines = raw.split("\n")
+            # 첫 줄(```json 또는 ```) 과 마지막 줄(```) 제거
+            start = 1 if lines[0].strip().startswith("```") else 0
+            end = -1 if lines[-1].strip() == "```" else len(lines)
+            raw = "\n".join(lines[start:end]).strip()
         return json.loads(raw)
     except Exception as e:
         print(f"[content_planner] Claude API 오류: {e} — 기본 초안 반환", flush=True)
@@ -135,10 +143,16 @@ def generate_planner_brief(
 def _default_planner_brief(topic: str) -> dict[str, Any]:
     """API 없을 때 최소 뼈대 초안."""
     import re
-    entity = re.sub(r"(의|을|를|이|가|은|는|와|과|에서|에|로|으로)\s.*$", "", topic).strip()
-    entity_slug = re.sub(r"\s+", "_", entity.lower())
+    topic = topic.strip()
+    if not topic:
+        topic = "미지정주제"
+    entity = re.sub(r"(의|을|를|이|가|은|는|와|과|에서|에|로|으로)\s.*$", "", topic).strip() or topic
+    # 특수문자 제거 후 슬러그 생성
+    entity_slug = re.sub(r"[^\w가-힣]", "_", entity.lower()).strip("_") or "unknown"
+    entity_slug = re.sub(r"_+", "_", entity_slug)
     parts = topic.split()
-    section_slug = parts[-1].lower() if len(parts) > 1 else "overview"
+    raw_section = parts[-1].lower() if len(parts) > 1 else "overview"
+    section_slug = re.sub(r"[^\w가-힣]", "_", raw_section).strip("_") or "overview"
     return {
         "core_question": f"{topic}의 핵심 질문 (수동 입력 필요)",
         "real_topic": topic,
