@@ -28,6 +28,41 @@
 }
 .style-card:hover { border-color: var(--card-accent); }
 
+/* ── Light 테마 카드 오버라이드 ── */
+.style-card.light {
+  background: #FFFFFF;
+  border-color: #E4E4E7;
+}
+.style-card.light:hover { border-color: var(--card-accent); }
+.style-card.light .style-card-header { background: rgba(0,0,0,0.03); border-bottom-color: #E4E4E7; }
+.style-card.light .style-card-thumb { border-color: #E4E4E7; background: #F4F4F5; }
+.style-card.light .style-card-thumb-placeholder { border-color: #E4E4E7; background: #F4F4F5; color: #A1A1AA; }
+.style-card.light .style-card-title h2 { color: #18181B; }
+.style-card.light .style-card-title .style-id { color: #A1A1AA; }
+.style-card.light .style-section-label { color: #A1A1AA; }
+.style-card.light .font-table th { color: #A1A1AA; border-bottom-color: #E4E4E7; }
+.style-card.light .font-table td { color: #52525B; }
+.style-card.light .font-table tr:not(:last-child) td { border-bottom-color: #F4F4F5; }
+.style-card.light .font-role-badge { background: rgba(0,0,0,0.04); color: #A1A1AA; }
+.style-card.light .font-family-name { color: #18181B; }
+.style-card.light .font-file { color: #C4C4C8; }
+.style-card.light .color-swatch { border-color: rgba(0,0,0,0.08); }
+.style-card.light .color-swatch:hover::after { background: #18181B; border-color: #E4E4E7; }
+.style-card.light .mood-chip { color: #52525B; background: rgba(0,0,0,0.03); border-color: #E4E4E7; }
+.style-card.light .voice-id-code { background: rgba(0,0,0,0.03); border-color: #E4E4E7; color: #52525B; }
+.style-card.light .voice-preview-btn { background: rgba(0,0,0,0.04); border-color: #E4E4E7; color: #71717A; }
+.style-card.light .voice-preview-btn:hover { background: rgba(0,0,0,0.08); color: #18181B; }
+.style-card.light .subtitle-meta-item { color: #A1A1AA; }
+.style-card.light .subtitle-meta-item span { color: #52525B; }
+.style-card.light .prompt-summary { background: rgba(0,0,0,0.03); border-color: #E4E4E7; color: #52525B; }
+.style-card.light .prompt-full { background: rgba(0,0,0,0.02); border-color: #E4E4E7; }
+.style-card.light .prompt-line { color: #71717A; border-bottom-color: rgba(0,0,0,0.04); }
+.style-card.light .prompt-toggle-btn { background: rgba(0,0,0,0.04); border-color: #E4E4E7; color: #A1A1AA; }
+.style-card.light .prompt-toggle-btn:hover { color: #52525B; }
+.style-card.light .prompt-requirements-label { color: #A1A1AA; }
+.style-card.light .requirements-list li { color: #A1A1AA; }
+.style-card.light .guidelines-text { color: #71717A; }
+
 /* 카드 상단 헤더 배너 */
 .style-card-header {
   display: flex;
@@ -213,7 +248,7 @@ audio.voice-preview-audio:not([src=""]) { display: block; }
   {% if styles %}
   <div class="styles-grid">
     {% for s in styles %}
-    <div class="style-card" style="--card-accent: {{ s.accent }}; --card-accent-rgb: {{ s.accent_rgb }};">
+    <div class="style-card {{ s.base_theme }}" style="--card-accent: {{ s.accent }}; --card-accent-rgb: {{ s.accent_rgb }};">
 
       {# ── 카드 헤더 ── #}
       <div class="style-card-header">

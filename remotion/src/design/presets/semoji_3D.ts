@@ -27,6 +27,10 @@ export const SEMOJI3D_PRESET: DesignPresetOverride = {
       fallback: "'Apple SD Gothic Neo', sans-serif",
       files: [
         {
+          file: "fonts/SBAggroOTF-L.otf",
+          weight: "300",
+        },
+        {
           file: "fonts/SBAggroOTF-M.otf",
           weight: "500",
         },
