@@ -1,4 +1,4 @@
-<!-- Studio 탭 — Remotion Studio 풀스크린 + 씬 편집 모달 -->
+<!-- Studio 탭 — Remotion Studio + 자막 사이드 패널 -->
 <div class="studio-container" id="studio-container">
   <!-- 상단 툴바 -->
   <div class="studio-toolbar">
@@ -16,9 +16,20 @@
     </div>
   </div>
 
-  <!-- Remotion Studio iframe (풀스크린) -->
+  <!-- Remotion Studio iframe + 자막 사이드 패널 -->
   <div class="studio-frame-wrapper" id="studio-frame-wrapper" style="display:none;">
     <iframe id="studio-iframe" src="about:blank" class="studio-iframe" allow="autoplay"></iframe>
+    <div class="studio-subtitle-side" id="studio-subtitle-side">
+      <div class="subtitle-side-header">
+        <span class="subtitle-side-title">자막</span>
+        <span class="subtitle-hint">Enter: 분리 &nbsp;|&nbsp; Backspace(줄 처음): 병합</span>
+      </div>
+      <div id="studio-subtitle-panel" class="studio-subtitle-panel"></div>
+      <div class="subtitle-side-footer">
+        <button class="btn btn-sm btn-accent" id="btn-subtitle-save">저장</button>
+        <span id="subtitle-save-status" style="font-size:11px;"></span>
+      </div>
+    </div>
   </div>
 
   <div class="studio-placeholder" id="studio-placeholder">
@@ -40,16 +51,7 @@
       </div>
     </div>
     <div class="edit-modal-body">
-      <div class="edit-modal-tabs">
-        <button class="edit-tab active" data-tab="scene">씬 편집</button>
-        <button class="edit-tab" data-tab="subtitle">자막</button>
-      </div>
-      <div class="edit-tab-content" id="tab-scene">
-        <div id="scene-editor-root" class="scene-editor-root"></div>
-      </div>
-      <div class="edit-tab-content" id="tab-subtitle" style="display:none;">
-        <div id="subtitle-panel" class="subtitle-panel"></div>
-      </div>
+      <div id="scene-editor-root" class="scene-editor-root"></div>
     </div>
   </div>
 </div>
@@ -78,8 +80,56 @@
 .studio-actions { display: flex; gap: 6px; }
 .btn-sm { font-size: 11px; padding: 3px 10px; }
 
-.studio-frame-wrapper { flex: 1; border-radius: 0 0 8px 8px; overflow: hidden; border: 1px solid var(--border); border-top: none; }
-.studio-iframe { width: 100%; height: 100%; border: none; background: #000; }
+/* iframe + 사이드 패널 나란히 */
+.studio-frame-wrapper {
+  flex: 1; display: flex; flex-direction: row;
+  border: 1px solid var(--border); border-top: none;
+  border-radius: 0 0 8px 8px; overflow: hidden;
+}
+.studio-iframe { flex: 1; border: none; background: #000; min-width: 0; }
+
+/* ── 자막 사이드 패널 ── */
+.studio-subtitle-side {
+  width: 300px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  border-left: 1px solid var(--border);
+  background: var(--surface1, #18181b);
+}
+.subtitle-side-header {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.subtitle-side-title { font-size: 12px; font-weight: 700; color: var(--accent); }
+.subtitle-hint { font-size: 10px; color: var(--text-muted); }
+
+.studio-subtitle-panel {
+  flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 5px;
+}
+
+.subtitle-side-footer {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-top: 1px solid var(--border); flex-shrink: 0;
+}
+
+/* ── SRT 블록 ── */
+.srt-block {
+  display: flex; gap: 6px; align-items: flex-start;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 5px; padding: 5px 7px;
+  transition: border-color 0.15s;
+}
+.srt-block:focus-within { border-color: var(--accent); }
+.srt-timecode {
+  font-size: 9px; color: var(--text-muted); white-space: pre;
+  font-family: monospace; min-width: 90px; padding-top: 2px; flex-shrink: 0;
+}
+.srt-text {
+  flex: 1; font-size: 13px; color: var(--text); outline: none;
+  white-space: pre-wrap; word-break: break-all; min-height: 18px;
+}
+.subtitle-empty { color: var(--text-muted); font-size: 12px; padding: 20px 8px; text-align: center; }
+.subtitle-save-ok { color: var(--success); }
+.subtitle-save-err { color: var(--error); }
 
 .studio-placeholder {
   flex: 1; display: flex; flex-direction: column;
@@ -119,54 +169,8 @@
 }
 .btn-close:hover { background: rgba(239,68,68,0.15); color: #EF4444; border-color: rgba(239,68,68,0.3); }
 
-.edit-modal-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-.edit-tab-content { flex: 1; overflow: hidden; }
-.edit-tab-content#tab-scene { display: flex; flex-direction: column; }
-.edit-tab-content#tab-scene .scene-editor-root { width: 100%; height: 100%; }
-.subtitle-panel { height: 100%; }
-
-/* ── 편집 모달 탭 ── */
-.edit-modal-tabs {
-  display: flex; gap: 4px; padding: 8px 12px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;
-}
-.edit-tab {
-  background: none; border: none; color: var(--text-muted);
-  font-size: 12px; font-weight: 600; padding: 4px 12px 8px;
-  cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s;
-}
-.edit-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.edit-tab:hover:not(.active) { color: var(--text); }
-
-/* ── 자막 패널 ── */
-.subtitle-panel {
-  display: flex; flex-direction: column; height: 100%;
-  padding: 12px; gap: 8px; overflow-y: auto; box-sizing: border-box;
-}
-.subtitle-toolbar {
-  display: flex; justify-content: space-between; align-items: center;
-  flex-shrink: 0;
-}
-.subtitle-hint { font-size: 11px; color: var(--text-muted); }
-.srt-blocks { display: flex; flex-direction: column; gap: 6px; flex: 1; overflow-y: auto; }
-.srt-block {
-  display: flex; gap: 8px; align-items: flex-start;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 6px; padding: 6px 8px;
-  transition: border-color 0.15s;
-}
-.srt-block:focus-within { border-color: var(--accent); }
-.srt-timecode {
-  font-size: 10px; color: var(--text-muted); white-space: pre;
-  font-family: monospace; min-width: 110px; padding-top: 2px;
-}
-.srt-text {
-  flex: 1; font-size: 14px; color: var(--text); outline: none;
-  white-space: pre-wrap; word-break: break-all; min-height: 20px;
-}
-.subtitle-empty { color: var(--text-muted); font-size: 13px; padding: 24px; text-align: center; }
-.subtitle-save-ok { color: var(--success); font-size: 11px; }
-.subtitle-save-err { color: var(--error); font-size: 11px; }
+.edit-modal-body { flex: 1; overflow: hidden; }
+.edit-modal-body .scene-editor-root { width: 100%; height: 100%; }
 </style>
 
 <!-- scene-editor.js 번들 (일반 씬용) -->
@@ -180,7 +184,8 @@
 <script>
 // ── SubtitleEditor ──────────────────────────────────
 var SubtitleEditor = (function() {
-  var _slug = '', _sceneNum = 0, _words = [], _entries = [], _panel = null;
+  var _slug = '', _sceneNum = 0, _words = [], _entries = [];
+  var _panel = null, _saveBtn = null, _saveStatus = null;
 
   function fmtTime(sec) {
     var h = Math.floor(sec / 3600);
@@ -218,11 +223,10 @@ var SubtitleEditor = (function() {
   }
 
   function renderBlocks() {
-    var blocksEl = _panel.querySelector('.srt-blocks');
-    if (!blocksEl) return;
-    blocksEl.innerHTML = '';
+    if (!_panel) return;
+    _panel.innerHTML = '';
     if (!_entries.length) {
-      blocksEl.innerHTML = '<div class="subtitle-empty">자막 없음 — TTS 생성 후 자막을 먼저 생성하세요.</div>';
+      _panel.innerHTML = '<div class="subtitle-empty">자막 없음<br>TTS 생성 후 자막을 먼저 생성하세요.</div>';
       return;
     }
     _entries.forEach(function(entry, idx) {
@@ -244,6 +248,7 @@ var SubtitleEditor = (function() {
         _entries[idx].text = txt.textContent || '';
       });
 
+      // Enter → 분리
       txt.addEventListener('keydown', function(e) {
         if (e.key !== 'Enter') return;
         e.preventDefault();
@@ -267,19 +272,18 @@ var SubtitleEditor = (function() {
         _entries.forEach(function(e, i) { e.index = i + 1; });
         renderBlocks();
         setTimeout(function() {
-          var nextBlock = blocksEl.querySelectorAll('.srt-text')[idx + 1];
-          if (nextBlock) {
-            nextBlock.focus();
+          var nextTxt = _panel.querySelectorAll('.srt-text')[idx + 1];
+          if (nextTxt) {
+            nextTxt.focus();
             var r = document.createRange();
-            r.setStart(nextBlock.firstChild || nextBlock, 0);
+            r.setStart(nextTxt.firstChild || nextTxt, 0);
             r.collapse(true);
-            var s = window.getSelection();
-            s.removeAllRanges();
-            s.addRange(r);
+            var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
           }
         }, 0);
       });
 
+      // Backspace at start → 병합
       txt.addEventListener('keydown', function(e) {
         if (e.key !== 'Backspace' || idx === 0) return;
         var sel = window.getSelection();
@@ -299,33 +303,31 @@ var SubtitleEditor = (function() {
         _entries.forEach(function(e, i) { e.index = i + 1; });
         renderBlocks();
         setTimeout(function() {
-          var prevBlock = blocksEl.querySelectorAll('.srt-text')[idx - 1];
-          if (prevBlock && prevBlock.firstChild) {
+          var prevTxt = _panel.querySelectorAll('.srt-text')[idx - 1];
+          if (prevTxt && prevTxt.firstChild) {
             var r = document.createRange();
-            var textNode = prevBlock.firstChild;
-            var pos = prevOrigLen;
-            r.setStart(textNode, Math.min(pos, textNode.length));
+            r.setStart(prevTxt.firstChild, Math.min(prevOrigLen, prevTxt.firstChild.length));
             r.collapse(true);
-            var s = window.getSelection();
-            s.removeAllRanges();
-            s.addRange(r);
+            var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
           }
         }, 0);
       });
 
       block.appendChild(tc);
       block.appendChild(txt);
-      blocksEl.appendChild(block);
+      _panel.appendChild(block);
     });
   }
 
-  function load(slug, sceneNum, panel) {
+  function load(slug, sceneNum, panel, saveBtn, saveStatus) {
     _slug = slug;
     _sceneNum = sceneNum;
     _panel = panel;
-    panel.innerHTML = '<div class="subtitle-toolbar"><span class="subtitle-hint">Enter: 분리 &nbsp;|&nbsp; Backspace(줄 처음): 병합</span><button class="btn btn-sm btn-accent" id="btn-subtitle-save">저장</button></div><div class="srt-blocks"><div class="subtitle-empty">로딩 중...</div></div>';
+    _saveBtn = saveBtn;
+    _saveStatus = saveStatus;
 
-    panel.querySelector('#btn-subtitle-save').addEventListener('click', save);
+    panel.innerHTML = '<div class="subtitle-empty">로딩 중...</div>';
+    if (saveStatus) saveStatus.textContent = '';
 
     fetch('/api/p/' + slug + '/subtitles/' + sceneNum)
       .then(function(r) { return r.json(); })
@@ -335,14 +337,15 @@ var SubtitleEditor = (function() {
         renderBlocks();
       })
       .catch(function() {
-        panel.querySelector('.srt-blocks').innerHTML = '<div class="subtitle-empty">로딩 실패</div>';
+        panel.innerHTML = '<div class="subtitle-empty">로딩 실패</div>';
       });
   }
 
   function save() {
-    var btn = _panel.querySelector('#btn-subtitle-save');
-    btn.disabled = true;
-    btn.textContent = '저장 중...';
+    if (!_saveBtn) return;
+    _saveBtn.disabled = true;
+    _saveBtn.textContent = '저장 중...';
+    if (_saveStatus) _saveStatus.textContent = '';
     fetch('/api/p/' + _slug + '/subtitles/' + _sceneNum, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -350,28 +353,26 @@ var SubtitleEditor = (function() {
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      btn.disabled = false;
-      btn.textContent = '저장';
-      if (data.ok) {
-        var ok = document.createElement('span');
-        ok.className = 'subtitle-save-ok';
-        ok.textContent = ' ✓ 저장됨';
-        btn.parentNode.appendChild(ok);
-        setTimeout(function() { if (ok.parentNode) ok.remove(); }, 2000);
+      _saveBtn.disabled = false;
+      _saveBtn.textContent = '저장';
+      if (_saveStatus) {
+        _saveStatus.className = 'subtitle-save-ok';
+        _saveStatus.textContent = '✓ 저장됨';
+        setTimeout(function() { if (_saveStatus) _saveStatus.textContent = ''; }, 2000);
       }
     })
     .catch(function() {
-      btn.disabled = false;
-      btn.textContent = '저장';
-      var err = document.createElement('span');
-      err.className = 'subtitle-save-err';
-      err.textContent = ' ✗ 저장 실패';
-      btn.parentNode.appendChild(err);
-      setTimeout(function() { if (err.parentNode) err.remove(); }, 3000);
+      _saveBtn.disabled = false;
+      _saveBtn.textContent = '저장';
+      if (_saveStatus) {
+        _saveStatus.className = 'subtitle-save-err';
+        _saveStatus.textContent = '✗ 실패';
+        setTimeout(function() { if (_saveStatus) _saveStatus.textContent = ''; }, 3000);
+      }
     });
   }
 
-  return { load: load };
+  return { load: load, save: save };
 })();
 // ── SubtitleEditor END ──────────────────────────────
 
@@ -383,7 +384,7 @@ var SubtitleEditor = (function() {
   var _meta = null;
   var _currentIdx = 0;
   var _checkTimer = null;
-  var _dirty = false; // 모달에서 수정이 있었는지
+  var _dirty = false;
 
   // DOM refs
   var elDot = document.getElementById('studio-dot');
@@ -400,6 +401,16 @@ var SubtitleEditor = (function() {
   var elModalPrev = document.getElementById('modal-prev');
   var elModalNext = document.getElementById('modal-next');
   var elCloseModal = document.getElementById('btn-close-modal');
+  var elSubtitlePanel = document.getElementById('studio-subtitle-panel');
+  var elSubtitleSaveBtn = document.getElementById('btn-subtitle-save');
+  var elSubtitleSaveStatus = document.getElementById('subtitle-save-status');
+
+  // ── 자막 로드 (씬 번호 기준) ──
+  function loadSubtitlePanel(sceneNum) {
+    SubtitleEditor.load(SLUG, sceneNum, elSubtitlePanel, elSubtitleSaveBtn, elSubtitleSaveStatus);
+  }
+
+  elSubtitleSaveBtn.addEventListener('click', function() { SubtitleEditor.save(); });
 
   // ── Studio 상태 ──
   function updateStudioUI(data) {
@@ -413,6 +424,8 @@ var SubtitleEditor = (function() {
       elFrameWrapper.style.display = '';
       if (elIframe.src === 'about:blank') elIframe.src = 'http://localhost:' + data.port;
       if (!_checkTimer) _checkTimer = setInterval(checkStatus, 15000);
+      // Studio 준비 완료 → 자막 패널 초기 로드
+      loadSubtitlePanel(parseInt(elNumInput.value) || 1);
     } else {
       elDot.className = 'status-dot stopped';
       elStatusText.textContent = '중지됨';
@@ -430,7 +443,6 @@ var SubtitleEditor = (function() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.running) {
-        // manifest가 교체되었으므로 iframe 강제 새로고침 (캐시 버스터)
         var baseUrl = 'http://localhost:' + (data.port || _studioPort);
         elIframe.src = baseUrl + '?t=' + Date.now();
         updateStudioUI({running: true, port: data.port || _studioPort});
@@ -494,18 +506,14 @@ var SubtitleEditor = (function() {
     var icon = s.hasMap ? '🌐 ' : '';
     elModalTitle.textContent = icon + 'Scene ' + num + (s.title ? ' — ' + s.title.replace(/\{\{|\}\}/g, '').substring(0, 40) : '');
 
-    // 에디터 초기화
     if (window.unmountSceneEditor) window.unmountSceneEditor();
     if (window._mapEditorDestroy) { window._mapEditorDestroy(); window._mapEditorDestroy = null; }
     elRoot.innerHTML = '<div style="padding:40px;text-align:center;color:#888">로딩 중...</div>';
 
-    // 씬 데이터 로드
     fetch('/api/p/' + SLUG + '/editor/scenes/' + num)
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (!data.scene) return;
-
-        // mapScene 분기: 맵 에디터 vs 일반 에디터
         if (data.scene.mapScene && data.scene.mapScene.mapType) {
           if (window.renderMapEditor) {
             window.renderMapEditor(elRoot, data.scene, num, SLUG, _meta);
@@ -525,12 +533,8 @@ var SubtitleEditor = (function() {
         }
       });
 
-    // 탭 초기화 — 씬 편집 탭으로 리셋
-    _switchTab('scene');
     elOverlay.classList.add('open');
   }
-
-  // 편집 버튼 → 씬 그리드 열기
 
   function closeModal() {
     elOverlay.classList.remove('open');
@@ -552,16 +556,11 @@ var SubtitleEditor = (function() {
     }
   }
 
-  // ── 모달 내 씬 전환 ──
   function modalNav(delta) {
     var newIdx = _currentIdx + delta;
-    if (newIdx >= 0 && newIdx < _scenes.length) {
-      // 현재 씬에 수정이 있었으면 dirty 유지
-      openModal(newIdx);
-    }
+    if (newIdx >= 0 && newIdx < _scenes.length) openModal(newIdx);
   }
 
-  // ── 저장 이벤트 감지 ──
   document.addEventListener('scene-editor-saved', function() {
     _dirty = true;
     loadScenes();
@@ -569,44 +568,33 @@ var SubtitleEditor = (function() {
 
   // ── 이벤트 바인딩 ──
   elEdit.addEventListener('click', editByNum);
-  elNumInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') editByNum(); });
+
+  // 씬 번호 변경 → 자막 패널도 갱신
+  elNumInput.addEventListener('change', function() {
+    var num = parseInt(elNumInput.value);
+    if (num && num > 0) loadSubtitlePanel(num);
+  });
+  elNumInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') editByNum();
+  });
 
   elModalPrev.addEventListener('click', function() { modalNav(-1); });
   elModalNext.addEventListener('click', function() { modalNav(1); });
   elCloseModal.addEventListener('click', closeModal);
 
-  // ESC 처리
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && elOverlay.classList.contains('open')) { closeModal(); return; }
     if (elOverlay.classList.contains('open')) return;
   });
 
-  // 편집 모달 바깥 클릭
   elOverlay.addEventListener('click', function(e) { if (e.target === elOverlay) closeModal(); });
 
-  // ── Remotion Studio에서 현재 씬 자동 감지 (postMessage) ──
   window.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'remotion-scene' && e.data.sceneNumber) {
-      elNumInput.value = e.data.sceneNumber;
+      var num = e.data.sceneNumber;
+      elNumInput.value = num;
+      loadSubtitlePanel(num);
     }
-  });
-
-  // ── 탭 전환 ──
-  var _activeTab = 'scene';
-  function _switchTab(name) {
-    _activeTab = name;
-    document.querySelectorAll('.edit-tab').forEach(function(btn) {
-      btn.classList.toggle('active', btn.dataset.tab === name);
-    });
-    document.getElementById('tab-scene').style.display = name === 'scene' ? '' : 'none';
-    document.getElementById('tab-subtitle').style.display = name === 'subtitle' ? '' : 'none';
-    if (name === 'subtitle') {
-      var sceneNum = (_scenes[_currentIdx] || {}).sceneNumber || (_currentIdx + 1);
-      SubtitleEditor.load(SLUG, sceneNum, document.getElementById('subtitle-panel'));
-    }
-  }
-  document.querySelectorAll('.edit-tab').forEach(function(btn) {
-    btn.addEventListener('click', function() { _switchTab(btn.dataset.tab); });
   });
 
   // ── 초기화 ──
