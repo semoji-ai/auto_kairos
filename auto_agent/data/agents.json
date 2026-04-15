@@ -398,6 +398,18 @@
         "Write",
         "Glob"
       ]
+    },
+    "content-planner": {
+      "description": "파이프라인 외부에서 기획안(editorial_brief.json)을 작성하는 에이전트",
+      "model": "opus",
+      "max_turns": 25,
+      "skills": ["agents/content-planner"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash"
+      ]
     }
   },
   "modules": {
