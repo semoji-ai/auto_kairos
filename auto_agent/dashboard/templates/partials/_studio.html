@@ -363,6 +363,11 @@ var SubtitleEditor = (function() {
     .catch(function() {
       btn.disabled = false;
       btn.textContent = '저장';
+      var err = document.createElement('span');
+      err.className = 'subtitle-save-err';
+      err.textContent = ' ✗ 저장 실패';
+      btn.parentNode.appendChild(err);
+      setTimeout(function() { if (err.parentNode) err.remove(); }, 3000);
     });
   }
 
