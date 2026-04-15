@@ -1071,6 +1071,7 @@ class PipelineRunner:
             cli_path = self._find_claude_cli()
             proc = subprocess.run(
                 [cli_path, "--print", "--output-format", "json",
+                 "--dangerouslySkipPermissions",
                  "--model", "claude-sonnet-4-6", "--max-turns", "1"],
                 input=supplement_prompt, capture_output=True, text=True, encoding="utf-8",
                 cwd=str(self.project_dir), timeout=180,
@@ -1148,6 +1149,7 @@ class PipelineRunner:
                 cli_path = self._find_claude_cli()
                 proc = subprocess.run(
                     [cli_path, "--print", "--output-format", "json",
+                     "--dangerouslySkipPermissions",
                      "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
                     input=verify_prompt, capture_output=True, text=True, encoding="utf-8",
                     cwd=str(self.project_dir), timeout=30,
@@ -1196,6 +1198,7 @@ class PipelineRunner:
                         try:
                             proc2 = subprocess.run(
                                 [cli_path, "--print", "--output-format", "json",
+                                 "--dangerouslySkipPermissions",
                                  "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
                                 input=verify2_prompt, capture_output=True, text=True, encoding="utf-8",
                                 cwd=str(self.project_dir), timeout=30,
@@ -1831,6 +1834,7 @@ class PipelineRunner:
         cli_path = self._find_claude_cli()
         cmd = [
             cli_path, "--print", "--output-format", "json",
+            "--dangerouslySkipPermissions",
             "--model", model, "--max-turns", "5",
             "--allowedTools", "Read", "--allowedTools", "Write",
         ]
@@ -2459,6 +2463,7 @@ JSON 구조: {{"scenes": [씬 배열]}}
         cli_path = self._find_claude_cli()
         cmd = [
             cli_path, "--print", "--output-format", "json",
+            "--dangerouslySkipPermissions",
             "--model", model, "--max-turns", "10",
             "--allowedTools", "Read", "--allowedTools", "Write",
         ]
@@ -3552,6 +3557,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "--output-format", "json",
             "--model", model,
             "--max-turns", str(max_turns),
+            "--dangerouslySkipPermissions",
         ]
 
         # 허용 도구 설정

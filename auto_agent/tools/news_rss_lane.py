@@ -19,10 +19,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
+from typing import Optional
 from urllib.parse import quote_plus, urlparse
 from urllib.request import Request, urlopen
 from xml.etree import ElementTree as ET
+
+# RSS media 네임스페이스
+_MEDIA_NS = "http://search.yahoo.com/mrss/"
+_CONTENT_NS = "http://purl.org/rss/1.0/modules/content/"
 
 _UA = "KairosAgent/3.1 (educational video production) Python/urllib"
 
@@ -111,6 +117,43 @@ def _fetch_text(url: str) -> str:
         return resp.read().decode("utf-8")
 
 
+def _extract_image_from_item(item: ET.Element) -> Optional[str]:
+    """RSS <item>에서 이미지 URL 추출 (media:content > enclosure > og:image 순)."""
+    # 1. media:content (Yahoo Media RSS)
+    media_content = item.find(f"{{{_MEDIA_NS}}}content")
+    if media_content is not None:
+        url = media_content.get("url", "")
+        medium = media_content.get("medium", "")
+        if url and (medium == "image" or "image" in media_content.get("type", "")):
+            return url
+        if url and any(url.lower().endswith(ext) for ext in (".jpg", ".jpeg", ".png", ".webp")):
+            return url
+
+    # 2. media:thumbnail
+    media_thumb = item.find(f"{{{_MEDIA_NS}}}thumbnail")
+    if media_thumb is not None:
+        url = media_thumb.get("url", "")
+        if url:
+            return url
+
+    # 3. enclosure (팟캐스트/일부 뉴스)
+    enclosure = item.find("enclosure")
+    if enclosure is not None:
+        enc_type = enclosure.get("type", "")
+        url = enclosure.get("url", "")
+        if url and enc_type.startswith("image/"):
+            return url
+
+    # 4. description 내 <img src="..."> 파싱
+    desc = item.findtext("description") or ""
+    if desc:
+        m = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', desc, re.IGNORECASE)
+        if m:
+            return m.group(1)
+
+    return None
+
+
 def _split_google_title(raw: str) -> tuple[str, str]:
     """'기사 제목 - 언론사' 형식에서 제목과 언론사를 분리."""
     if " - " not in raw:
@@ -152,7 +195,7 @@ def search_google_news_rss(query: str, *, limit: int = 8) -> list[dict]:
             continue
         seen_urls.add(key)
         seen_titles.append(title)
-        results.append({
+        record: dict = {
             "title": title,
             "url": url,
             "published_at": (item.findtext("pubDate") or "").strip(),
@@ -161,7 +204,12 @@ def search_google_news_rss(query: str, *, limit: int = 8) -> list[dict]:
             "kind": "news",
             "source": "google_news_rss",
             "query": query,
-        })
+        }
+        img_url = _extract_image_from_item(item)
+        if img_url:
+            record["image_url"] = img_url
+            record["image_source"] = "news_rss"
+        results.append(record)
 
     return results
 
@@ -200,7 +248,7 @@ def search_korean_news_rss(query: str, *, limit: int = 8) -> list[dict]:
                 continue
             seen_urls.add(key)
             seen_titles.append(title)
-            results.append({
+            record: dict = {
                 "title": title,
                 "url": url,
                 "published_at": (item.findtext("pubDate") or "").strip(),
@@ -210,7 +258,12 @@ def search_korean_news_rss(query: str, *, limit: int = 8) -> list[dict]:
                 "kind": "news",
                 "source": source["name"],
                 "query": query,
-            })
+            }
+            img_url = _extract_image_from_item(item)
+            if img_url:
+                record["image_url"] = img_url
+                record["image_source"] = "news_rss"
+            results.append(record)
 
     return results
 

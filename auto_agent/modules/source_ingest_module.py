@@ -730,6 +730,7 @@ def _run_research_agent(topic: str, topic_slug: str, query: str, run_id: str,
                          core_question: str = "", excluded_angles: list = None,
                          outline: dict | None = None,
                          entity_slug: str = "", section_slug: str = "",
+                         raw_slug: str = "",
                          research_agent_dir: Path | None = None,
                          launcher: Path | None = None,
                          vault_script: Path | None = None) -> dict:
@@ -880,14 +881,16 @@ research_launcher.py 경로: {launcher}
         print(f"[source_ingest] 에이전트 출력 마지막 500자: {output[-500:]}", flush=True)
 
     # 완료 여부와 관계없이 ingest-bundle + finalize-session 호출
+    # raw_slug: entity_slug(pokemon) 우선 — run 디렉토리가 raw/{raw_slug}/{run_id}/로 저장됨
+    _bundle_topic = raw_slug or entity_slug or topic
     ingest_payload = _run_launcher(
-        ["ingest-bundle", "--topic", topic, "--run-id", run_id, "--refresh"],
+        ["ingest-bundle", "--topic", _bundle_topic, "--run-id", run_id, "--refresh"],
         research_root,
         research_agent_dir,
         launcher,
     )
     finalize_payload = _run_launcher(
-        ["finalize-session", "--topic", topic, "--run-id", run_id],
+        ["finalize-session", "--topic", _bundle_topic, "--run-id", run_id],
         research_root,
         research_agent_dir,
         launcher,
@@ -950,11 +953,11 @@ research_launcher.py 경로: {launcher}
                 break
             # ingest-bundle + finalize-session 재실행 후 재검증
             ingest_payload = _run_launcher(
-                ["ingest-bundle", "--topic", topic, "--run-id", run_id, "--refresh"],
+                ["ingest-bundle", "--topic", _bundle_topic, "--run-id", run_id, "--refresh"],
                 research_root, research_agent_dir, launcher,
             )
             finalize_payload = _run_launcher(
-                ["finalize-session", "--topic", topic, "--run-id", run_id],
+                ["finalize-session", "--topic", _bundle_topic, "--run-id", run_id],
                 research_root, research_agent_dir, launcher,
             )
             validation = _validate_ingest_completion(
@@ -978,12 +981,129 @@ research_launcher.py 경로: {launcher}
                 flush=True,
             )
 
+    # 이미지 URL 수집 + 중복 제거 → image_manifest.jsonl
+    _collect_research_images(
+        research_root=research_root,
+        run_id=run_id,
+        topic_slug=topic_slug,
+        entity_slug=entity_slug,
+    )
+
     return {
         "success": validation["success"],
         "ingest_payload": ingest_payload,
         "finalize_payload": finalize_payload,
         "validation": validation,
     }
+
+
+def _collect_research_images(
+    research_root: Path,
+    run_id: str,
+    topic_slug: str,
+    entity_slug: str = "",
+) -> None:
+    """
+    수집된 sources.jsonl + claims.jsonl에서 image_url 필드를 긁어
+    image_manifest.jsonl로 저장 (pHash 기반 중복 제거 포함).
+    """
+    try:
+        from auto_agent.tools.image_dedup import collect_and_dedup
+    except ImportError as e:
+        print(f"[source_ingest] image_dedup 모듈 로드 실패 — 이미지 수집 건너뜀: {e}", flush=True)
+        return
+
+    slug = entity_slug or topic_slug
+    alt_slug = slug.replace("-", "_") if "-" in slug else slug.replace("_", "-")
+
+    # 이미지 URL 수집 대상 파일들
+    candidate_files: list[Path] = []
+
+    # 1. run 폴더의 source_manifest.jsonl
+    run_dir = research_root / "raw" / (entity_slug or topic_slug) / run_id
+    for fname in ("source_manifest.jsonl", "image_manifest.jsonl"):
+        p = run_dir / fname
+        if p.exists():
+            candidate_files.append(p)
+
+    # 2. manifests/<slug>/sources.jsonl
+    for s in (slug, alt_slug):
+        p = research_root / "manifests" / s / "sources.jsonl"
+        if p.exists():
+            candidate_files.append(p)
+            break
+
+    image_records: list[dict] = []
+    seen_urls: set[str] = set()
+
+    for fpath in candidate_files:
+        try:
+            with fpath.open(encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    rec = json.loads(line)
+                    url = (rec.get("image_url") or rec.get("thumbnail_url") or "").strip()
+                    if not url or url in seen_urls:
+                        continue
+                    seen_urls.add(url)
+                    image_records.append({
+                        "image_url": url,
+                        "title": rec.get("title", ""),
+                        "source_url": rec.get("url", ""),
+                        "image_source": rec.get("image_source", "unknown"),
+                        "image_license": rec.get("image_license", ""),
+                        "publisher": rec.get("publisher", ""),
+                        "kind": rec.get("kind", ""),
+                    })
+        except Exception as e:
+            print(f"[source_ingest] 이미지 레코드 파싱 실패 ({fpath.name}): {e}", flush=True)
+
+    if not image_records:
+        print("[source_ingest] 수집된 이미지 URL 없음 — image_manifest.jsonl 생성 건너뜀", flush=True)
+        return
+
+    print(f"[source_ingest] 이미지 URL {len(image_records)}개 수집 → 중복 제거 중...", flush=True)
+
+    try:
+        unique = collect_and_dedup(
+            image_records,
+            hamming_threshold=8,
+            download_hash=True,
+            verbose=False,
+        )
+    except Exception as e:
+        print(f"[source_ingest] 이미지 중복 제거 실패: {e} — 원본 그대로 저장", flush=True)
+        unique = image_records
+
+    # image_manifest.jsonl 저장 (run 폴더 + manifests 폴더 양쪽)
+    out_path = run_dir / "image_manifest.jsonl"
+    try:
+        with out_path.open("w", encoding="utf-8") as f:
+            for rec in unique:
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        print(
+            f"[source_ingest] image_manifest.jsonl 저장: {len(unique)}개 "
+            f"(중복 {len(image_records) - len(unique)}개 제거) → {out_path}",
+            flush=True,
+        )
+    except Exception as e:
+        print(f"[source_ingest] image_manifest.jsonl 저장 실패: {e}", flush=True)
+
+    # manifests/<slug>/images.jsonl 에도 동기화
+    for s in (slug, alt_slug):
+        manifest_dir = research_root / "manifests" / s
+        if manifest_dir.exists():
+            images_p = manifest_dir / "images.jsonl"
+            try:
+                with images_p.open("w", encoding="utf-8") as f:
+                    for rec in unique:
+                        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                print(f"[source_ingest] manifests/{s}/images.jsonl 동기화 완료", flush=True)
+            except Exception as e:
+                print(f"[source_ingest] images.jsonl 동기화 실패: {e}", flush=True)
+            break
 
 
 def main():
@@ -1123,6 +1243,16 @@ def main():
 
     print(f"[source_ingest] 세션 준비 완료: run_id={run_id}", flush=True)
 
+    # run_id로 실제 run 디렉토리를 직접 찾음 — topic/entity slug 불일치 문제 원천 차단
+    # raw/*/{run_id}/ 패턴으로 glob해서 실제 부모 slug를 사용
+    raw_slug = entity_slug or topic_slug  # fallback
+    _run_dirs = list(research_root.glob(f"raw/*/{run_id}"))
+    if _run_dirs:
+        raw_slug = _run_dirs[0].parent.name
+        print(f"[source_ingest] run 디렉토리 확인: raw/{raw_slug}/{run_id}", flush=True)
+    else:
+        print(f"[source_ingest] run 디렉토리 미발견 — fallback: raw/{raw_slug}/{run_id}", flush=True)
+
     # source_ingest_status.json 초기 기록
     status = {
         "topic": topic,
@@ -1150,6 +1280,7 @@ def main():
         outline=outline,
         entity_slug=entity_slug,
         section_slug=section_slug,
+        raw_slug=raw_slug,
         research_agent_dir=research_agent_dir,
         launcher=launcher,
         vault_script=vault_script,

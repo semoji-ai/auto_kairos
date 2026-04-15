@@ -54,7 +54,7 @@
     <span id="stream-chars" style="display:none;font-size:11px;color:var(--energy-ink-low);margin-left:auto;"></span>
   </div>
 
-  <!-- ── 3. 3분할 캔버스 ── -->
+  <!-- ── 3. 2분할 캔버스 ── -->
   <div id="split-view" style="flex:1;min-height:0;overflow:hidden;">
     <div class="rc-wrap" id="rc-wrap" data-slug="{{ slug }}">
       <div class="rc-panels">
@@ -71,7 +71,7 @@
           </div>
         </div>
 
-        <!-- 중앙: Manuscript Canvas (순수 원고 본문만) -->
+        <!-- 오른쪽: Manuscript Canvas -->
         <div class="rc-panel rc-panel-manuscript" id="rc-manuscript-panel">
           <div class="rc-panel-header">
             <span class="rc-panel-title">Manuscript Canvas</span>
@@ -79,17 +79,6 @@
           </div>
           <div class="rc-panel-body" id="rc-ms-body">
             <div class="rc-empty">원고가 생성되면 여기에 표시됩니다.</div>
-          </div>
-        </div>
-
-        <!-- 오른쪽: Agent Status Panel -->
-        <div class="rc-panel rc-panel-status" id="rc-status-panel">
-          <div class="rc-panel-header">
-            <span class="rc-panel-title">Agent Status</span>
-            <span class="rc-status-badge" id="rc-status-badge">대기</span>
-          </div>
-          <div class="rc-panel-body" id="rc-status-body">
-            <div class="rc-empty">에이전트 진행 상황이 여기에 표시됩니다.</div>
           </div>
         </div>
 
@@ -104,13 +93,29 @@
     </div>
   </div>
 
-  <!-- ── 5. 이벤트 로그 (하단 고정) ── -->
-  <div id="panel-events" class="event-log" style="max-height:180px;border-top:1px solid var(--energy-bg-card);">
-    <div class="event-row">
-      <span class="event-ts">—</span>
-      <span class="event-type info">대기</span>
-      <span class="event-body">파이프라인 시작을 기다리는 중...</span>
+  <!-- ── 5. 하단 바: 이벤트 로그 + Agent Status ── -->
+  <div id="bottom-bar" style="display:flex;flex-direction:row;border-top:1px solid var(--energy-bg-card);flex-shrink:0;max-height:200px;min-height:120px;">
+
+    <!-- 5a. 이벤트 로그 -->
+    <div id="panel-events" class="event-log" style="flex:1;min-width:0;overflow-y:auto;border-right:1px solid var(--energy-bg-card);">
+      <div class="event-row">
+        <span class="event-ts">—</span>
+        <span class="event-type info">대기</span>
+        <span class="event-body">파이프라인 시작을 기다리는 중...</span>
+      </div>
     </div>
+
+    <!-- 5b. Agent Status -->
+    <div id="rc-status-panel" style="width:280px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;">
+      <div class="rc-panel-header" style="padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">
+        <span class="rc-panel-title" style="font-size:11px;">Agent Status</span>
+        <span class="rc-status-badge" id="rc-status-badge" style="margin-left:auto;">대기</span>
+      </div>
+      <div id="rc-status-body" style="flex:1;overflow-y:auto;padding:4px 0;">
+        <div class="rc-empty" style="font-size:11px;padding:8px 12px;">에이전트 진행 상황이 여기에 표시됩니다.</div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -313,7 +318,7 @@
 }
 .rc-panels {
   display: grid;
-  grid-template-columns: 1fr 1.2fr 0.8fr;
+  grid-template-columns: 1fr 1.2fr;
   gap: 0;
   flex: 1;
   overflow: hidden;
@@ -392,6 +397,51 @@
   overflow-y: auto;
   padding: 16px;
 }
+/* ── 스켈레톤/아웃라인 메타 섹션 ── */
+.rc-meta-section {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: rgba(245,158,11,0.04);
+  border: 1px solid rgba(245,158,11,0.15);
+  border-radius: 8px;
+}
+.rc-meta-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+.rc-meta-bullets { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.rc-meta-bullet {
+  font-size: 12px;
+  color: #D4D4D8;
+  line-height: 1.5;
+  padding-left: 12px;
+  position: relative;
+}
+.rc-meta-bullet::before { content: '•'; position: absolute; left: 0; color: var(--accent); }
+.rc-meta-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.rc-meta-chip {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(245,158,11,0.1);
+  color: #FCD34D;
+  white-space: nowrap;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rc-meta-chip-tl { background: rgba(99,102,241,0.12); color: #A5B4FC; }
+.rc-meta-chip-fig { background: rgba(34,197,94,0.10); color: #86EFAC; }
+.rc-outline-list { display: flex; flex-direction: column; gap: 6px; }
+.rc-outline-row { display: flex; gap: 6px; align-items: baseline; }
+.rc-outline-num { font-size: 10px; color: var(--accent); font-weight: 700; min-width: 22px; flex-shrink: 0; }
+.rc-outline-text { font-size: 12px; color: #D4D4D8; line-height: 1.5; font-weight: 500; }
+.rc-outline-summary { font-size: 11px; color: #71717A; line-height: 1.4; margin-top: 2px; padding-left: 28px; }
+/* ── */
 .rc-ch-section { margin-bottom: 24px; }
 .rc-ch-title {
   font-size: 12px;
@@ -474,6 +524,8 @@
 }
 @media (max-width: 900px) {
   .rc-panels { grid-template-columns: 1fr; }
+  #bottom-bar { flex-direction: column; max-height: 300px; }
+  #rc-status-panel { width: 100% !important; border-right: none; border-top: 1px solid var(--energy-bg-card); }
 }
 </style>
 
@@ -740,6 +792,119 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
+  // ── 스켈레톤을 Research Canvas 상단에 표시 ──
+  function applySkeletonToCanvas(data, label) {
+    var claimsBody = document.getElementById('rc-claims-body');
+    if (!claimsBody) return;
+
+    var existing = document.getElementById('rc-skeleton-section');
+    if (existing) existing.remove();
+
+    var sec = document.createElement('div');
+    sec.id = 'rc-skeleton-section';
+    sec.className = 'rc-meta-section';
+
+    var titleEl = document.createElement('div');
+    titleEl.className = 'rc-meta-title';
+    titleEl.textContent = '📋 스켈레톤';
+    sec.appendChild(titleEl);
+
+    var bullets = data.summary_bullets || [];
+    if (bullets.length) {
+      var bullEl = document.createElement('div');
+      bullEl.className = 'rc-meta-bullets';
+      bullets.forEach(function(b) {
+        var li = document.createElement('div');
+        li.className = 'rc-meta-bullet';
+        li.textContent = b;
+        bullEl.appendChild(li);
+      });
+      sec.appendChild(bullEl);
+    }
+
+    var timeline = (data.timeline || []).slice(0, 6);
+    if (timeline.length) {
+      var tlEl = document.createElement('div');
+      tlEl.className = 'rc-meta-chips';
+      timeline.forEach(function(t) {
+        var chip = document.createElement('span');
+        chip.className = 'rc-meta-chip rc-meta-chip-tl';
+        chip.textContent = (t.year ? t.year + ' ' : '') + (t.event || '');
+        tlEl.appendChild(chip);
+      });
+      sec.appendChild(tlEl);
+    }
+
+    var figures = (data.key_figures || []).slice(0, 5);
+    if (figures.length) {
+      var figEl = document.createElement('div');
+      figEl.className = 'rc-meta-chips';
+      figures.forEach(function(f) {
+        var chip = document.createElement('span');
+        chip.className = 'rc-meta-chip rc-meta-chip-fig';
+        chip.textContent = f.name || '';
+        figEl.appendChild(chip);
+      });
+      sec.appendChild(figEl);
+    }
+
+    claimsBody.insertBefore(sec, claimsBody.firstChild);
+  }
+
+  // ── 아웃라인을 Research Canvas 상단에 표시 ──
+  function applyOutlineToCanvas(data) {
+    var claimsBody = document.getElementById('rc-claims-body');
+    if (!claimsBody) return;
+
+    var existing = document.getElementById('rc-outline-section');
+    if (existing) existing.remove();
+
+    var chapters = data.chapters || data.outline || [];
+    if (!chapters.length) return;
+
+    var sec = document.createElement('div');
+    sec.id = 'rc-outline-section';
+    sec.className = 'rc-meta-section';
+
+    var titleEl = document.createElement('div');
+    titleEl.className = 'rc-meta-title';
+    titleEl.textContent = '📑 아웃라인';
+    sec.appendChild(titleEl);
+
+    var listEl = document.createElement('div');
+    listEl.className = 'rc-outline-list';
+    chapters.forEach(function(ch, i) {
+      var row = document.createElement('div');
+      row.className = 'rc-outline-row';
+      var numEl = document.createElement('span');
+      numEl.className = 'rc-outline-num';
+      numEl.textContent = (ch.id || (i + 1)) + '.';
+      var textEl = document.createElement('span');
+      textEl.className = 'rc-outline-text';
+      textEl.textContent = ch.title || ch.name || ch;
+      row.appendChild(numEl);
+      row.appendChild(textEl);
+      if (ch.summary) {
+        var sumEl = document.createElement('div');
+        sumEl.className = 'rc-outline-summary';
+        sumEl.textContent = ch.summary;
+        row.appendChild(sumEl);
+      }
+      listEl.appendChild(row);
+    });
+    sec.appendChild(listEl);
+
+    // 스켈레톤 섹션 다음에 삽입 (없으면 맨 위)
+    var skelSec = document.getElementById('rc-skeleton-section');
+    if (skelSec && skelSec.nextSibling) {
+      claimsBody.insertBefore(sec, skelSec.nextSibling);
+    } else if (skelSec) {
+      claimsBody.appendChild(sec);
+    } else {
+      claimsBody.insertBefore(sec, claimsBody.firstChild);
+    }
+  }
+
   // ── snapshot 적용 ──
   function applySnapshot(snap) {
     (snap.completed || []).forEach(id => setStepStatus(id, 'completed'));
@@ -844,12 +1009,14 @@
   fileSrc.addEventListener('skeleton_updated', e => {
     const d = JSON.parse(e.data);
     applySkeletonSummary(d.data || {}, '스켈레톤');
+    applySkeletonToCanvas(d.data || {}, 'skeleton');
     addEventRow(null, 'info', '스켈레톤 생성 완료');
   });
 
   fileSrc.addEventListener('outline_updated', e => {
     const d = JSON.parse(e.data);
     applySkeletonSummary(d.data || {}, '아웃라인');
+    applyOutlineToCanvas(d.data || {});
     addEventRow(null, 'info', '아웃라인 생성 완료');
   });
 

@@ -201,8 +201,64 @@ def run_batch(
             fal_queue.run_batch(jobs, on_done=on_done, max_workers=10)
         return {"success": success, "fail": fail, "skip": skip}
 
+    def _load_research_images() -> list[dict]:
+        """project_dir 내 최신 image_manifest.jsonl 로드."""
+        research_root = project_dir / "research"
+        raw_dir = research_root / "raw"
+        images: list[dict] = []
+        if not raw_dir.exists():
+            return images
+        # 모든 run 폴더를 최신순으로 순회
+        for slug_dir in sorted(raw_dir.iterdir(), reverse=True):
+            if not slug_dir.is_dir():
+                continue
+            for run_dir in sorted(slug_dir.iterdir(), reverse=True):
+                manifest = run_dir / "image_manifest.jsonl"
+                if not manifest.exists():
+                    continue
+                for line in manifest.read_text(encoding="utf-8").splitlines():
+                    line = line.strip()
+                    if line:
+                        try:
+                            images.append(json.loads(line))
+                        except Exception:
+                            pass
+                if images:
+                    return images  # 최신 run에서 찾으면 즉시 반환
+        return images
+
+    def _match_research_image(research_images: list[dict], query: str, scene_title: str = "") -> Optional[dict]:
+        """쿼리와 씬 제목을 기반으로 리서치 이미지 중 가장 적합한 것을 반환."""
+        if not research_images or not query:
+            return None
+        q_words = set(query.lower().split())
+        t_words = set(scene_title.lower().split()) if scene_title else set()
+        best: Optional[dict] = None
+        best_score = 0
+        for img in research_images:
+            title = (img.get("title") or "").lower()
+            src_url = (img.get("source_url") or "").lower()
+            img_url = (img.get("image_url") or "")
+            if not img_url:
+                continue
+            # 실패했던 이미지는 건너뜀
+            if img.get("hash_failed"):
+                continue
+            t = set(title.split())
+            score = len(q_words & t) + len(t_words & t) * 0.5
+            # 출처 URL에 쿼리 키워드가 있으면 보너스
+            score += sum(1 for w in q_words if len(w) > 3 and w in src_url) * 0.3
+            if score > best_score:
+                best_score = score
+                best = img
+        # 최소 1개 단어 이상 겹쳐야 유효
+        return best if best_score >= 1.0 else None
+
     def _run_search():
-        """search 씬 순차 검색 + 실패 시 generate fallback."""
+        """search 씬 순차 검색 + 실패 시 generate fallback.
+
+        우선순위: 1) 리서치에서 수집된 이미지 → 2) 실시간 검색 → 3) generate fallback
+        """
         import shutil as _sh
         success, fail, skip = 0, 0, 0
         failed_scenes = []
@@ -211,6 +267,11 @@ def run_batch(
         search_dl_dir = images_dir / "search"
         search_dl_dir.mkdir(exist_ok=True)
         searcher = ImageSearcher(images_dir=search_dl_dir)
+
+        # 리서치 단계에서 수집한 이미지 목록 로드
+        research_images = _load_research_images()
+        if research_images:
+            _progress(f"리서치 이미지 {len(research_images)}개 로드 완료 — 씬 매칭 시도")
 
         for scene in scene_specs.get("scenes", []):
             ia = scene.get("imageAsset") or {}
@@ -229,6 +290,34 @@ def run_batch(
                 fail += 1
                 continue
 
+            # ── 1단계: 리서치 이미지에서 매칭 시도 ──
+            scene_title = scene.get("title", "")
+            matched = _match_research_image(research_images, query, scene_title)
+            if matched:
+                img_url = matched["image_url"]
+                try:
+                    ext = "." + img_url.split(".")[-1].split("?")[0].lower()
+                    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+                        ext = ".jpg"
+                    fname = image_assets.next_filename(images_dir, scene_num, "search", ext)
+                    dest = search_dl_dir / fname
+                    import urllib.request as _ur
+                    _ur.urlretrieve(img_url, str(dest))
+                    if dest.exists() and dest.stat().st_size > 1024:
+                        image_assets.add_version(
+                            images_dir, scene_num, "search/" + fname, "search",
+                            source_url=matched.get("source_url", img_url),
+                            license_info=matched.get("image_license", ""),
+                        )
+                        success += 1
+                        _progress(f"씬 {scene_num} 리서치 이미지 재활용: {matched.get('title','')[:40]}")
+                        continue
+                    else:
+                        dest.unlink(missing_ok=True)
+                except Exception as e:
+                    _progress(f"씬 {scene_num} 리서치 이미지 다운로드 실패 ({e}) — 실시간 검색으로 폴백", level="warning")
+
+            # ── 2단계: 실시간 검색 ──
             _progress(f"씬 {scene_num} 검색: {query[:40]}")
             try:
                 results = searcher.search_waterfall(query, limit=3, preferred_aspect="16:9")

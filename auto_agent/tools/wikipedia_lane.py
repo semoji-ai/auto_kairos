@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from typing import Optional
 from urllib.parse import quote_plus
 from urllib.request import Request, urlopen
 
@@ -40,8 +41,28 @@ def _languages_for_query(query: str) -> list[str]:
     return ["ko", "en"] if has_korean else ["en", "ko"]
 
 
-def search_wikipedia(query: str, *, limit: int = 5) -> list[dict]:
-    """Wikipedia 검색 결과 반환 (ko + en 병행)."""
+def _fetch_page_thumbnail(lang: str, title: str) -> Optional[str]:
+    """Wikipedia pageimages API로 썸네일 URL 반환 (실패 시 None)."""
+    endpoint = (
+        f"https://{lang}.wikipedia.org/w/api.php"
+        f"?action=query&titles={quote_plus(title)}"
+        f"&prop=pageimages&piprop=thumbnail&pithumbsize=600"
+        f"&format=json&utf8=1"
+    )
+    try:
+        payload = _fetch_json(endpoint)
+        pages = (payload.get("query") or {}).get("pages") or {}
+        for page in pages.values():
+            thumb = (page.get("thumbnail") or {}).get("source")
+            if thumb:
+                return thumb
+    except Exception:
+        pass
+    return None
+
+
+def search_wikipedia(query: str, *, limit: int = 5, fetch_images: bool = True) -> list[dict]:
+    """Wikipedia 검색 결과 반환 (ko + en 병행). fetch_images=True이면 썸네일 URL 포함."""
     results: list[dict] = []
     seen: set[str] = set()
 
@@ -67,14 +88,21 @@ def search_wikipedia(query: str, *, limit: int = 5) -> list[dict]:
             if not url or url in seen:
                 continue
             seen.add(url)
-            results.append({
+            record: dict = {
                 "title": title,
                 "url": url,
                 "lang": lang,
                 "snippet": str(item.get("snippet") or "").replace("<span class=\"searchmatch\">", "").replace("</span>", "").strip(),
                 "publisher": "Wikipedia",
                 "kind": "reference",
-            })
+            }
+            if fetch_images:
+                thumb = _fetch_page_thumbnail(lang, title)
+                if thumb:
+                    record["image_url"] = thumb
+                    record["image_source"] = "wikimedia"
+                    record["image_license"] = "CC"  # Wikipedia 이미지는 대부분 CC 라이선스
+            results.append(record)
             if len(results) >= limit:
                 break
 

@@ -81,6 +81,67 @@
   text-align: center;
 }
 
+/* ── 이미지 그리드 ── */
+.img-grid-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.img-grid-count { font-size: 11px; color: var(--text-muted); min-width: 60px; }
+.img-grid-search {
+  flex: 1; min-width: 140px; max-width: 260px;
+  padding: 5px 10px; border-radius: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-size: 12px; outline: none;
+}
+.img-grid-search:focus { border-color: rgba(245,158,11,0.4); }
+.img-filter-label { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; cursor: pointer; }
+
+.img-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.img-card {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  overflow: hidden; cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.img-card:hover { border-color: rgba(245,158,11,0.4); transform: translateY(-1px); }
+.img-thumb-wrap { width: 100%; aspect-ratio: 16/9; overflow: hidden; background: var(--bg); }
+.img-thumb { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.2s; }
+.img-thumb:hover { opacity: 0.85; }
+.img-card-meta { padding: 6px 8px 8px; }
+.img-card-title {
+  font-size: 10px; color: var(--text-muted); line-height: 1.4;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  margin-bottom: 4px;
+}
+.img-card-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+.img-badge {
+  font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 500;
+}
+.img-badge-src  { background: rgba(59,130,246,0.15); color: #93C5FD; }
+.img-badge-cc   { background: rgba(34,197,94,0.15);  color: #86EFAC; }
+.img-badge-lic  { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+
+/* 이미지 모달 */
+.img-modal { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+.img-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.75); }
+.img-modal-box {
+  position: relative; max-width: 90vw; max-height: 90vh;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  overflow: hidden; display: flex; flex-direction: column;
+}
+.img-modal-close {
+  position: absolute; top: 10px; right: 10px; z-index: 1;
+  background: rgba(0,0,0,0.5); border: none; color: white;
+  border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 13px;
+}
+.img-modal-img { max-width: 85vw; max-height: 75vh; object-fit: contain; display: block; }
+.img-modal-info { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.img-modal-title { font-size: 13px; color: var(--text-muted); }
+.img-modal-link { font-size: 12px; color: var(--accent, #F59E0B); text-decoration: none; white-space: nowrap; }
+.img-modal-link:hover { text-decoration: underline; }
+
 /* 마크다운 스타일 */
 .wiki-body h1 { font-size: 22px; font-weight: 700; color: #F4F4F5; margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .wiki-body h2 { font-size: 16px; font-weight: 700; color: var(--accent, #F59E0B); margin: 28px 0 10px; }
@@ -187,6 +248,12 @@
 
     content.innerHTML = '<div class="wiki-placeholder">로딩 중...</div>';
 
+    // 이미지 페이지는 별도 API 호출
+    if (page === 'images') {
+      loadImagePage();
+      return;
+    }
+
     fetch('/api/p/' + slug + '/research/wiki/' + page)
       .then(function(r) { return r.json(); })
       .then(function(d) {
@@ -208,6 +275,111 @@
       .catch(function() {
         content.innerHTML = '<div class="wiki-placeholder">페이지를 불러올 수 없습니다</div>';
       });
+  }
+
+  // ── 이미지 페이지 ──────────────────────────────────────────
+  var _imgData = null;  // 캐시
+
+  function loadImagePage() {
+    if (_imgData) { renderImageGrid(_imgData); return; }
+    content.innerHTML = '<div class="wiki-placeholder">이미지 로딩 중...</div>';
+    fetch('/api/p/' + slug + '/research/images')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        _imgData = d.images || [];
+        renderImageGrid(_imgData);
+      })
+      .catch(function() {
+        content.innerHTML = '<div class="wiki-placeholder">이미지를 불러올 수 없습니다</div>';
+      });
+  }
+
+  function renderImageGrid(images) {
+    content.innerHTML = '';
+    if (!images.length) {
+      content.innerHTML = '<div class="wiki-placeholder">수집된 이미지가 없습니다.<br><small>리서치 완료 후 자동 수집됩니다.</small></div>';
+      return;
+    }
+
+    // 헤더
+    var hdr = document.createElement('div');
+    hdr.className = 'img-grid-header';
+    hdr.innerHTML =
+      '<span class="img-grid-count">' + images.length + '개 이미지</span>' +
+      '<input class="img-grid-search" type="text" placeholder="제목·출처 검색..." oninput="filterImages(this.value)">' +
+      '<label class="img-filter-label"><input type="checkbox" id="img-cc-only" onchange="filterImages()"> CC 라이선스만</label>';
+    content.appendChild(hdr);
+
+    // 그리드
+    var grid = document.createElement('div');
+    grid.className = 'img-grid';
+    grid.id = 'img-grid';
+    images.forEach(function(img, idx) {
+      grid.appendChild(makeImageCard(img, idx));
+    });
+    content.appendChild(grid);
+  }
+
+  function makeImageCard(img, idx) {
+    var card = document.createElement('div');
+    card.className = 'img-card';
+    card.dataset.title = (img.title || '').toLowerCase();
+    card.dataset.source = (img.image_source || '').toLowerCase();
+    card.dataset.license = (img.image_license || '').toLowerCase();
+
+    var srcBadge = img.image_source === 'wikimedia' ? 'Wiki' :
+                   img.image_source === 'news_rss'  ? 'News' : img.image_source || '?';
+    var licBadge = img.image_license ? img.image_license : '';
+    var isCC = licBadge.toLowerCase().startsWith('cc');
+
+    card.innerHTML =
+      '<div class="img-thumb-wrap">' +
+        '<img class="img-thumb" src="' + escAttr(img.image_url) + '" loading="lazy" ' +
+             'onerror="this.closest(\'.img-card\').style.display=\'none\'" ' +
+             'onclick="openImgModal(\'' + escAttr(img.image_url) + '\',\'' + escAttr(img.title||'') + '\',\'' + escAttr(img.source_url||'') + '\')">' +
+      '</div>' +
+      '<div class="img-card-meta">' +
+        '<div class="img-card-title" title="' + escAttr(img.title||'') + '">' + escHtml(img.title || '(제목 없음)') + '</div>' +
+        '<div class="img-card-badges">' +
+          '<span class="img-badge img-badge-src">' + escHtml(srcBadge) + '</span>' +
+          (licBadge ? '<span class="img-badge ' + (isCC ? 'img-badge-cc' : 'img-badge-lic') + '">' + escHtml(licBadge) + '</span>' : '') +
+        '</div>' +
+      '</div>';
+    return card;
+  }
+
+  window.filterImages = function(query) {
+    query = (query || document.querySelector('.img-grid-search')?.value || '').toLowerCase();
+    var ccOnly = document.getElementById('img-cc-only')?.checked || false;
+    var cards = document.querySelectorAll('#img-grid .img-card');
+    cards.forEach(function(card) {
+      var titleMatch = !query || card.dataset.title.includes(query) || card.dataset.source.includes(query);
+      var licMatch = !ccOnly || card.dataset.license.startsWith('cc');
+      card.style.display = (titleMatch && licMatch) ? '' : 'none';
+    });
+  };
+
+  window.openImgModal = function(url, title, sourceUrl) {
+    var existing = document.getElementById('img-modal');
+    if (existing) existing.remove();
+    var modal = document.createElement('div');
+    modal.id = 'img-modal';
+    modal.className = 'img-modal';
+    modal.innerHTML =
+      '<div class="img-modal-backdrop" onclick="document.getElementById(\'img-modal\').remove()"></div>' +
+      '<div class="img-modal-box">' +
+        '<button class="img-modal-close" onclick="document.getElementById(\'img-modal\').remove()">✕</button>' +
+        '<img class="img-modal-img" src="' + escAttr(url) + '">' +
+        '<div class="img-modal-info">' +
+          (title ? '<div class="img-modal-title">' + escHtml(title) + '</div>' : '') +
+          (sourceUrl ? '<a class="img-modal-link" href="' + escAttr(sourceUrl) + '" target="_blank" rel="noopener">원본 보기 ↗</a>' : '') +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(modal);
+  };
+
+  function escAttr(s) {
+    return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   // 간단한 마크다운 → HTML 변환 (marked.js 없이)

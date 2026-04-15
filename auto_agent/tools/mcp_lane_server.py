@@ -37,6 +37,7 @@ def wikipedia_search(
     query: str,
     limit: int = 5,
     content: bool = False,
+    images: bool = True,
 ) -> str:
     """Wikipedia에서 주제 개요·역사·인물 정보를 검색합니다.
 
@@ -44,8 +45,9 @@ def wikipedia_search(
         query: 검색어 (한국어/영어 모두 가능)
         limit: 최대 결과 수 (기본 5)
         content: True면 첫 번째 결과의 본문 전문 포함 (개요·역사 조사 시 사용)
+        images: True면 각 결과의 썸네일 URL 포함 (기본 True). image_url, image_source, image_license 필드 추가됨.
     """
-    results = search_wikipedia(query, limit=limit)
+    results = search_wikipedia(query, limit=limit, fetch_images=images)
     if content and results:
         first_url = results[0].get("url", "")
         if first_url:

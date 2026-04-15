@@ -746,6 +746,61 @@ async def manuscript_save(slug: str, request: Request):
     return {"ok": True, "chars": len(text)}
 
 
+@app.get("/api/p/{slug}/research/images")
+async def research_images(slug: str):
+    """리서치 단계에서 수집된 이미지 목록 반환 (image_manifest.jsonl 기반)."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "project not found"}, 404)
+    out_dir = Path(project.get("output_dir", ""))
+    research_root = out_dir / "research"
+
+    images: list[dict] = []
+    seen: set[str] = set()
+
+    def _load_jsonl(p: Path) -> list[dict]:
+        if not p.exists():
+            return []
+        result = []
+        for line in p.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line:
+                try:
+                    result.append(json.loads(line))
+                except Exception:
+                    pass
+        return result
+
+    # 1. run 폴더의 image_manifest.jsonl (최신 run부터)
+    raw_dir = research_root / "raw"
+    if raw_dir.exists():
+        for slug_dir in sorted(raw_dir.iterdir(), reverse=True):
+            if not slug_dir.is_dir():
+                continue
+            for run_dir in sorted(slug_dir.iterdir(), reverse=True):
+                if not run_dir.is_dir():
+                    continue
+                for rec in _load_jsonl(run_dir / "image_manifest.jsonl"):
+                    url = rec.get("image_url", "")
+                    if url and url not in seen:
+                        seen.add(url)
+                        images.append(rec)
+
+    # 2. manifests/<slug>/images.jsonl 보완
+    manifests_dir = research_root / "manifests"
+    if manifests_dir.exists():
+        for topic_dir in sorted(manifests_dir.iterdir()):
+            if topic_dir.is_dir():
+                for rec in _load_jsonl(topic_dir / "images.jsonl"):
+                    url = rec.get("image_url", "")
+                    if url and url not in seen:
+                        seen.add(url)
+                        images.append(rec)
+
+    return JSONResponse({"images": images, "total": len(images)})
+
+
 @app.get("/api/p/{slug}/research/wiki")
 async def research_wiki_index(slug: str):
     """위키 페이지 목록 반환."""
