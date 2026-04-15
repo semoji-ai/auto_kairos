@@ -1077,6 +1077,10 @@ def main():
         "--topic", topic,
         "--query", query,
     ]
+    if entity_slug:
+        prepare_args += ["--entity-slug", entity_slug]
+    if section_slug:
+        prepare_args += ["--section-slug", section_slug]
     if excluded_str:
         prepare_args += ["--exclude", excluded_str]
     must_answers = []
