@@ -1600,6 +1600,70 @@ def _find_plan_path(channel: str) -> str | None:
     return str(plan_files[0]) if plan_files else None
 
 
+def cmd_series(args):
+    """장편 시리즈 모드: plan, run."""
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="auto-agent series", description="장편 시리즈 모드")
+    series_sub = parser.add_subparsers(dest="series_cmd")
+
+    # series plan
+    sp_plan = series_sub.add_parser("plan", help="시리즈 기획안 생성")
+    sp_plan.add_argument("--topic", required=True, help="시리즈 주제 (예: LG 브랜드 역사)")
+    sp_plan.add_argument("--channel", default="세모지", help="채널명")
+    sp_plan.add_argument("--style", default="semoji", dest="writing_style", help="문체 스타일")
+    sp_plan.add_argument("--episodes", type=int, default=8, dest="total_episodes", help="총 편수")
+    sp_plan.add_argument("--out", required=True, help="series_plan.json 저장 경로")
+
+    # series run
+    sp_run = series_sub.add_parser("run", help="시리즈 전편 Stage 2까지 실행")
+    sp_run.add_argument("--plan", required=True, help="series_plan.json 경로")
+    sp_run.add_argument("--output-dir", required=True, dest="output_dir", help="시리즈 출력 루트 디렉토리")
+    sp_run.add_argument("--dry-run", action="store_true", dest="dry_run", help="실제 실행 없이 구조만 생성")
+
+    parsed = parser.parse_args(args)
+
+    if not parsed.series_cmd:
+        parser.print_help()
+        return
+
+    if parsed.series_cmd == "plan":
+        from auto_agent.modules.series_planner_module import (
+            generate_series_plan_from_topic,
+            save_series_plan,
+            validate_series_plan,
+        )
+        plan = generate_series_plan_from_topic(
+            topic=parsed.topic,
+            channel=parsed.channel,
+            writing_style=parsed.writing_style,
+            total_episodes=parsed.total_episodes,
+        )
+        errors = validate_series_plan(plan)
+        if errors:
+            console.print(f"[red]기획안 검증 오류:[/red] {errors}")
+        else:
+            save_series_plan(plan, Path(parsed.out))
+            console.print(f"[green]시리즈 기획안 저장:[/green] {parsed.out}")
+            console.print(f"  편수: {plan['total_episodes']}편")
+            for ep in plan.get("episodes", []):
+                console.print(f"  EP{ep['episode_number']:02d}: {ep['title']}")
+
+    elif parsed.series_cmd == "run":
+        from auto_agent.modules.series_planner_module import load_series_plan
+        from auto_agent.orchestrator.series_runner import series_run
+        plan = load_series_plan(Path(parsed.plan))
+        result = series_run(
+            plan,
+            output_base=Path(parsed.output_dir),
+            dry_run=parsed.dry_run,
+        )
+        console.print(f"[green]시리즈 실행 완료:[/green]")
+        console.print(f"  완료: {result['episodes_completed']}편")
+        if result["episodes_failed"]:
+            console.print(f"  [red]실패: EP{result['episodes_failed']}[/red]")
+
+
 def cmd_multi_contents(args):
     """멀티포맷 콘텐츠 생성 — 쇼츠/블로그/카드뉴스/스레드 + SNS 스케줄."""
     import argparse
@@ -1800,6 +1864,7 @@ COMMANDS = {
     "update": cmd_update,
     "auto-kairos": cmd_auto_kairos,
     "multi-contents": cmd_multi_contents,
+    "series": cmd_series,
     "skill-path": lambda args: print(get_data_dir()),
 }
 
