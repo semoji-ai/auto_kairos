@@ -1,20 +1,63 @@
 #!/usr/bin/env bash
 # post-merge hook — git pull/merge 후 자동 실행
-# 활성화: git config core.hooksPath .githooks
+# 활성화: git config core.hooksPath .githooks  (install.sh가 자동 처리)
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV_PYTHON="$REPO_ROOT/.venv/bin/python"
+VENV_PIP="$REPO_ROOT/.venv/bin/pip"
 
-# 누락된 대용량 폰트 확인
+GREEN="\033[32m"; YELLOW="\033[33m"; RESET="\033[0m"
+info()  { echo -e "  ${GREEN}[✓]${RESET} $1"; }
+warn()  { echo -e "  ${YELLOW}[!]${RESET} $1"; }
+
+# git diff-tree로 이번 pull에서 변경된 파일 목록
+CHANGED=$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD 2>/dev/null || true)
+
+echo ""
+echo "  ── Auto Kairos 업데이트 확인 중..."
+
+# ── 1. Python 패키지 변경 감지 ──────────────────────────
+if echo "$CHANGED" | grep -qE "^(pyproject\.toml|requirements.*\.txt)$"; then
+    echo ""
+    warn "Python 패키지 변경 감지 — 재설치 중..."
+    if [ -f "$VENV_PIP" ]; then
+        "$VENV_PIP" install -e "$REPO_ROOT[all]" -q && info "Python 패키지 업데이트 완료"
+    else
+        python3 -m pip install -e "$REPO_ROOT[all]" -q && info "Python 패키지 업데이트 완료"
+    fi
+fi
+
+# ── 2. Node 패키지 변경 감지 ────────────────────────────
+if echo "$CHANGED" | grep -qE "^remotion/package(-lock)?\.json$"; then
+    echo ""
+    warn "Remotion 패키지 변경 감지 — npm install 중..."
+    cd "$REPO_ROOT/remotion" && npm install --silent 2>&1 | tail -1
+    info "npm install 완료"
+    cd "$REPO_ROOT"
+fi
+
+# ── 3. Remotion 소스 변경 → 번들 재빌드 ────────────────
+if echo "$CHANGED" | grep -qE "^remotion/src/"; then
+    echo ""
+    warn "Remotion 소스 변경 감지 — 번들 빌드 중..."
+    cd "$REPO_ROOT/remotion"
+    npx vite build --config vite.thumb.config.ts --silent 2>&1 | tail -1
+    npx vite build --config vite.editor.config.ts --silent 2>&1 | tail -1
+    info "Remotion 번들 빌드 완료"
+    cd "$REPO_ROOT"
+fi
+
+# ── 4. 폰트 누락 확인 ──────────────────────────────────
 FONT_CHECK="$REPO_ROOT/remotion/public/fonts/GyeonggiMillenniumBatang-Regular.ttf"
 if [ ! -f "$FONT_CHECK" ]; then
     echo ""
-    echo "  누락된 폰트 감지 — 자동 설치를 시작합니다..."
-
-    # FontAgent가 설치된 환경이면 preflight_check가 처리
+    warn "누락된 폰트 감지 — 자동 설치 중..."
     if [ -f "$VENV_PYTHON" ] && "$VENV_PYTHON" -c "import fontagent" 2>/dev/null; then
         "$VENV_PYTHON" -m auto_agent.scripts.preflight_check 2>&1 | grep -E "^\s+\[(OK|AUTO|WARN|FAIL)\] .*(ttf|otf|woff)" || true
     else
         bash "$REPO_ROOT/scripts/setup_fonts.sh"
     fi
 fi
+
+echo "  ── 완료"
+echo ""
