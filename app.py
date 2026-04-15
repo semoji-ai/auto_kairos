@@ -1722,6 +1722,82 @@ async def api_update_scene(request: Request, slug: str, scene_num: int):
     return {"ok": True, "scene_number": scene_num, "thumbnail_invalidated": True}
 
 
+@app.post("/api/p/{slug}/scenes/{scene_num}/rerun")
+async def api_rerun_scene(request: Request, slug: str, scene_num: int):
+    """씬 단위 재연출 — script-director를 해당 씬에만 실행."""
+    import subprocess, sys
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+
+    out_dir = project.get("output_dir", "")
+    if not out_dir:
+        return JSONResponse({"error": "output_dir not set"}, status_code=400)
+
+    specs_path = Path(out_dir) / "scene_specs.json"
+    if not specs_path.exists():
+        return JSONResponse({"error": "scene_specs.json not found"}, status_code=404)
+
+    specs = json.loads(specs_path.read_text(encoding="utf-8"))
+    target = next((s for s in specs.get("scenes", []) if s["sceneNumber"] == scene_num), None)
+    if not target:
+        return JSONResponse({"error": f"Scene {scene_num} not found"}, status_code=404)
+
+    # 씬 컨텍스트 구성
+    scene_ctx = json.dumps(target, ensure_ascii=False, indent=2)
+    prompt = f"""아래 씬의 연출을 다시 검토하고 개선하세요.
+씬 번호, 나레이션, 챕터는 변경하지 마세요.
+layout, mood, imageAsset, motion, headline/items 등 연출 요소만 개선합니다.
+
+현재 씬:
+{scene_ctx}
+
+반드시 씬 전체를 JSON으로만 응답하세요 (설명 없이 JSON만).
+"""
+
+    try:
+        env = os.environ.copy()
+        env.pop("CLAUDECODE", None)
+        result = subprocess.run(
+            ["claude", "--model", "claude-sonnet-4-6", "--max-turns", "3",
+             "--output-format", "text", "--no-ansi"],
+            input=prompt, capture_output=True, text=True, env=env,
+            cwd=str(get_workspace_dir()), timeout=120,
+        )
+        raw = (result.stdout or "").strip()
+        # JSON 블록 추출
+        if "```" in raw:
+            lines = raw.split("\n")
+            start = 1 if lines[0].strip().startswith("```") else 0
+            end = -1 if lines[-1].strip() == "```" else len(lines)
+            raw = "\n".join(lines[start:end]).strip()
+
+        updated_scene = json.loads(raw)
+        # sceneNumber, narration, chapter 보호
+        for protect in ("sceneNumber", "narration", "chapter"):
+            if protect in target:
+                updated_scene[protect] = target[protect]
+
+        # scene_specs.json 업데이트
+        for i, s in enumerate(specs["scenes"]):
+            if s["sceneNumber"] == scene_num:
+                specs["scenes"][i] = updated_scene
+                break
+
+        specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+        pm.save_project_json(project["id"], "scene_specs.json", specs)
+
+        return {"ok": True, "scene_number": scene_num, "narration": updated_scene.get("narration", "")}
+
+    except subprocess.TimeoutExpired:
+        return JSONResponse({"error": "재연출 타임아웃 (120s)"}, status_code=504)
+    except json.JSONDecodeError as e:
+        return JSONResponse({"error": f"JSON 파싱 실패: {e}"}, status_code=500)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.post("/projects/{project_id}/cleanup", response_class=HTMLResponse)
 async def run_cleanup(request: Request, project_id: int):
     pm = get_pm()

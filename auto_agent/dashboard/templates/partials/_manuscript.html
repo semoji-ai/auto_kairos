@@ -1,11 +1,17 @@
-<!-- 원고 탭 — scene_specs.json의 챕터별 나레이션 표시 -->
+<!-- 원고 탭 — scene_specs.json 씬 나레이션 인라인 편집 -->
 {% if scenes %}
 <div class="ms-view">
-  <div class="ms-stats">
-    {% set total_chars = scenes|map(attribute='narration')|select('string')|map('length')|sum %}
-    <span class="ms-stat">{{ scenes|length }}씬</span>
-    <span class="ms-stat">{{ total_chars|default(0) }}자</span>
-    <span class="ms-stat">~{{ "%.1f"|format(total_chars / 500) }}분</span>
+  <div class="ms-toolbar">
+    <div class="ms-stats">
+      {% set total_chars = scenes|map(attribute='narration')|select('string')|map('length')|sum %}
+      <span class="ms-stat">{{ scenes|length }}씬</span>
+      <span class="ms-stat">{{ total_chars|default(0) }}자</span>
+      <span class="ms-stat">~{{ "%.1f"|format(total_chars / 500) }}분</span>
+    </div>
+    <div class="ms-toolbar-actions">
+      <span id="ms-save-status" class="ms-save-status">—</span>
+      <button class="ms-btn ms-btn-secondary" onclick="msExportText()">텍스트 내보내기</button>
+    </div>
   </div>
 
   {% set ns = namespace(current_chapter=0) %}
@@ -14,21 +20,64 @@
       {% set ns.current_chapter = scene.chapter %}
       <div class="ms-chapter">Chapter {{ scene.chapter }}</div>
     {% endif %}
-    <div class="ms-scene">
+
+    <div class="ms-scene" data-scene="{{ scene.sceneNumber }}">
       <div class="ms-scene-header">
         <span class="ms-scene-num">#{{ scene.sceneNumber }}</span>
         {% if scene.title %}<span class="ms-scene-title">{{ scene.title }}</span>{% endif %}
+        {% if scene.mood %}<span class="ms-badge ms-mood">{{ scene.mood }}</span>{% endif %}
+        {% if scene.layout %}<span class="ms-badge ms-layout">{{ scene.layout }}</span>{% endif %}
+        <div class="ms-scene-actions">
+          <button class="ms-icon-btn ms-rerun-btn" title="이 씬 재연출" onclick="msRerunScene({{ scene.sceneNumber }}, this)">↻</button>
+          <span class="ms-dirty-dot" title="미저장 변경 있음" style="display:none">●</span>
+        </div>
       </div>
-      <div class="ms-narration">{{ scene.narration or '' }}</div>
+
+      <!-- 인라인 편집 가능한 나레이션 -->
+      <div
+        class="ms-narration"
+        contenteditable="true"
+        data-scene="{{ scene.sceneNumber }}"
+        data-original="{{ scene.narration | e }}"
+        onblur="msOnBlur(this)"
+        oninput="msOnInput(this)"
+        spellcheck="false"
+      >{{ scene.narration or '' }}</div>
+
     </div>
   {% endfor %}
 </div>
 
 <style>
-.ms-view { padding: 16px 20px; max-width: 800px; }
-.ms-stats { display: flex; gap: 12px; margin-bottom: 20px; font-size: 11px; color: var(--text-muted); }
-.ms-stat { padding: 3px 10px; background: rgba(255,255,255,0.06); border-radius: 10px; }
+.ms-view { padding: 16px 20px; max-width: 820px; }
 
+/* 툴바 */
+.ms-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+}
+.ms-stats { display: flex; gap: 8px; font-size: 11px; color: var(--text-muted); }
+.ms-stat { padding: 3px 10px; background: rgba(255,255,255,0.06); border-radius: 10px; }
+.ms-toolbar-actions { display: flex; align-items: center; gap: 10px; }
+.ms-save-status {
+  font-size: 11px; color: var(--text-muted);
+  transition: color 0.3s;
+}
+.ms-save-status.saving { color: #FCD34D; }
+.ms-save-status.saved  { color: #86EFAC; }
+.ms-save-status.error  { color: #FCA5A5; }
+
+/* 버튼 */
+.ms-btn {
+  font-size: 11px; padding: 4px 12px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted);
+  transition: background 0.15s;
+}
+.ms-btn:hover { background: var(--surface); color: var(--text); }
+.ms-btn-primary { background: rgba(245,158,11,0.15); color: #FCD34D; border-color: rgba(245,158,11,0.3); }
+.ms-btn-primary:hover { background: rgba(245,158,11,0.25); }
+
+/* 챕터 / 씬 */
 .ms-chapter {
   font-size: 18px; font-weight: 700; color: var(--accent, #F59E0B);
   margin: 32px 0 12px; padding-bottom: 8px;
@@ -38,21 +87,175 @@
 
 .ms-scene { margin-bottom: 20px; }
 .ms-scene-header {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;
 }
 .ms-scene-num { font-size: 11px; font-weight: 600; color: var(--accent, #F59E0B); min-width: 28px; }
 .ms-scene-title { font-size: 11px; color: var(--text-muted); }
-.ms-badge {
-  font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 500;
-}
+.ms-badge { font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 500; }
 .ms-layout { background: rgba(59,130,246,0.15); color: #93C5FD; }
-.ms-mood { background: rgba(245,158,11,0.15); color: #FCD34D; }
+.ms-mood   { background: rgba(245,158,11,0.15); color: #FCD34D; }
 
+/* 씬 액션 버튼 */
+.ms-scene-actions {
+  margin-left: auto; display: flex; align-items: center; gap: 6px; opacity: 0;
+  transition: opacity 0.15s;
+}
+.ms-scene:hover .ms-scene-actions { opacity: 1; }
+.ms-icon-btn {
+  font-size: 14px; padding: 2px 6px; border-radius: 4px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted);
+  line-height: 1; transition: background 0.15s;
+}
+.ms-icon-btn:hover { background: var(--surface); color: var(--text); }
+.ms-rerun-btn:hover { color: #FCD34D; border-color: rgba(245,158,11,0.4); }
+.ms-dirty-dot { font-size: 8px; color: #FCD34D; }
+
+/* 나레이션 편집 영역 */
 .ms-narration {
   font-size: 14px; line-height: 1.8; color: #D4D4D8;
-  padding-left: 28px;
+  padding: 8px 10px 8px 28px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: text;
+  min-height: 2em;
 }
+.ms-narration:hover {
+  border-color: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+}
+.ms-narration:focus {
+  border-color: rgba(245,158,11,0.4);
+  background: rgba(245,158,11,0.04);
+}
+.ms-narration.dirty {
+  border-color: rgba(245,158,11,0.3);
+}
+
+/* 재연출 진행 상태 */
+.ms-scene.rerunning .ms-narration {
+  opacity: 0.5; pointer-events: none;
+}
+.ms-scene.rerunning .ms-rerun-btn {
+  animation: spin 1s linear infinite; color: #FCD34D;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
+
+<script>
+(function() {
+  const SLUG = '{{ slug }}';
+  let saveTimer = null;
+
+  function setStatus(msg, cls) {
+    const el = document.getElementById('ms-save-status');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'ms-save-status ' + (cls || '');
+  }
+
+  // 변경 감지 → dirty 표시
+  window.msOnInput = function(el) {
+    const sceneEl = el.closest('.ms-scene');
+    const dot = sceneEl && sceneEl.querySelector('.ms-dirty-dot');
+    const orig = el.dataset.original || '';
+    const isDirty = el.innerText.trim() !== orig.trim();
+    el.classList.toggle('dirty', isDirty);
+    if (dot) dot.style.display = isDirty ? '' : 'none';
+  };
+
+  // blur 시 자동 저장
+  window.msOnBlur = function(el) {
+    const orig = el.dataset.original || '';
+    const current = el.innerText.trim();
+    if (current === orig.trim()) return;   // 변경 없음
+
+    const sceneNum = parseInt(el.dataset.scene, 10);
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => msSave(sceneNum, el, current), 300);
+  };
+
+  async function msSave(sceneNum, el, text) {
+    setStatus('저장 중...', 'saving');
+    try {
+      const res = await fetch(`/api/p/${SLUG}/scenes/${sceneNum}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ narration: text, narration_tts: text }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      // 저장 성공 → original 업데이트
+      el.dataset.original = text;
+      el.classList.remove('dirty');
+      const sceneEl = el.closest('.ms-scene');
+      const dot = sceneEl && sceneEl.querySelector('.ms-dirty-dot');
+      if (dot) dot.style.display = 'none';
+      setStatus('저장됨 ✓', 'saved');
+      setTimeout(() => setStatus('—', ''), 2500);
+    } catch(e) {
+      setStatus('저장 실패: ' + e.message, 'error');
+    }
+  }
+
+  // 씬 재연출
+  window.msRerunScene = async function(sceneNum, btn) {
+    const sceneEl = btn.closest('.ms-scene');
+    if (!sceneEl) return;
+    if (!confirm(`씬 #${sceneNum}을 script-director로 재연출하시겠습니까?\n나레이션 외 연출(layout, mood, imageAsset 등)이 다시 생성됩니다.`)) return;
+
+    sceneEl.classList.add('rerunning');
+    setStatus(`씬 #${sceneNum} 재연출 중...`, 'saving');
+
+    try {
+      const res = await fetch(`/api/p/${SLUG}/scenes/${sceneNum}/rerun`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || '재연출 실패');
+
+      // 결과 나레이션 업데이트
+      if (data.narration) {
+        const narrEl = sceneEl.querySelector('.ms-narration');
+        if (narrEl) {
+          narrEl.innerText = data.narration;
+          narrEl.dataset.original = data.narration;
+          narrEl.classList.remove('dirty');
+        }
+      }
+      setStatus(`씬 #${sceneNum} 재연출 완료 ✓`, 'saved');
+      setTimeout(() => setStatus('—', ''), 3000);
+    } catch(e) {
+      setStatus('재연출 실패: ' + e.message, 'error');
+    } finally {
+      sceneEl.classList.remove('rerunning');
+    }
+  };
+
+  // 텍스트 내보내기
+  window.msExportText = function() {
+    const lines = [];
+    document.querySelectorAll('.ms-scene').forEach(sceneEl => {
+      const num = sceneEl.dataset.scene;
+      const titleEl = sceneEl.querySelector('.ms-scene-title');
+      const narrEl = sceneEl.querySelector('.ms-narration');
+      if (titleEl) lines.push(`\n## 씬 #${num} — ${titleEl.textContent}`);
+      else lines.push(`\n## 씬 #${num}`);
+      if (narrEl) lines.push(narrEl.innerText.trim());
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `manuscript_${SLUG}.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+})();
+</script>
+
 {% else %}
-<div class="empty">원고가 없습니다. 파이프라인을 실행하세요.</div>
+<div class="empty">원고가 없습니다. Stage 2 완료 후 scene_specs.json이 생성됩니다.</div>
 {% endif %}
