@@ -300,47 +300,49 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
 ⚠️ 절대 개별 씬을 하나씩 생성하지 말 것 — 20씬 기준 20~40분 vs 배치 3~5분
 ```
 
-**B-3. ⭐ 이미지 품질 검수 (LLM의 핵심 가치 단계)**
+**B-3. ⭐ 이미지 품질 검수 (씬당 1회)**
 
-배치 생성은 결정적이지만 품질은 LLM이 직접 보고 판단해야 합니다.
-**모든 selected 이미지를 Read 도구로 멀티모달 검수**합니다 (Sonnet/Opus는 vision 지원).
+배치 생성 완료 후 각 씬을 순서대로 검수합니다. **QA 결과는 image_assets.json에 persist되므로 재시작해도 이미 검수된 씬은 스킵됩니다.**
 
-```
-1. images/image_assets.json 읽기 → 각 씬의 selected 이미지 파일 경로 수집
+### Phase B-3: QA 검수 (씬당 1회)
 
-2. 각 이미지에 대해 Read 도구로 직접 열기 (Read는 PNG/JPG 멀티모달 지원):
-   Read(file_path="images/generated/scene_002_gen_01.png")
-   → LLM이 실제 이미지를 보면서 평가
+각 씬에 대해 다음 순서로 처리한다:
 
-3. 검수 체크리스트 (각 씬):
-   ┌─ 캐릭터 일관성: 다른 씬의 동일 인물과 외양이 일치하는가? (얼굴, 의상, 나이대)
-   ├─ prompt 의도 매칭: scene_specs.imageAsset.prompt가 묘사한 내용이 보이는가?
-   ├─ placement 적합성:
-   │   • cinematic/fullscreen → 인물/오브젝트가 잘리지 않고 화면을 채우는가?
-   │   • side(3:4) → 좌/우 배치 시 자연스러운가?
-   │   • badge(1:1) → 원형 크롭 시 핵심이 가운데 있는가?
-   ├─ 품질: 워터마크, 흐림, 잘못된 객체, 한국어 텍스트(이미지 안에 한글 들어가면 보통 깨짐)
-   └─ search 이미지 한정: 출처가 신뢰 가능한가? (스톡 워터마크, 저작권 의심 도메인)
+1. QA 결과 확인 (Python 인라인 — `image_assets` 모듈에 CLI가 없으므로 아래처럼 실행):
+   ```bash
+   python3 -c "
+   from pathlib import Path
+   from auto_agent.tools.image_assets import get_qa_result
+   result = get_qa_result(Path('<images_dir>'), <scene_num>)
+   print(result)
+   "
+   ```
+   - 결과가 있으면 (qa 필드 존재, None이 아님) → **스킵** (재시작 여부 무관)
+   - 결과가 없으면 (None) → 2번으로 진행
 
-4. 재생성 판단:
-   - 위 항목 1개 이상 실패 → 재생성 대상
-   - 미세한 문제만 있고 영상에 큰 영향 없음 → 통과 (시간 절약)
-   - 핵심 씬(시작/엔딩/중요 발화 씬)은 기준 더 엄격하게
+2. Read 도구로 선택된 이미지 파일을 읽어 멀티모달 검수 (1회)
+   - 확인 항목: 프롬프트 매칭, 아트스타일 일관성, 캐릭터 의상/외형 일치
+   - 심각한 문제(텍스트 포함, 완전히 다른 장면)만 미달 처리
 
-5. 재생성 실행 (단일 씬, 새 버전):
-   - generate 씬 → python3 -m auto_agent.tools.image_generate scene \
-                     --prompt "<imageAsset.prompt 한글 원문>" \
-                     --output "images/generated/scene_NNN_gen_02.png" \
-                     --style art_style.json --aspect-ratio <placement에 맞는 값>
-   - search 씬 → 다른 검색어로 image_batch_module 재실행, 그래도 안 되면 generate fallback
+3. 통과 →
+   ```bash
+   python3 -c "
+   from pathlib import Path
+   from auto_agent.tools.image_assets import set_qa_result
+   set_qa_result(Path('<images_dir>'), <scene_num>, passed=True)
+   "
+   ```
 
-6. image_assets.json 업데이트:
-   - 새 버전 파일 정보 추가 (versions 배열)
-   - selected 필드만 새 _gen_02 / _search_02로 전환
-   - ⚠️ 기존 _gen_01 파일 절대 삭제 금지
-
-7. 재생성된 씬은 다시 Read로 검수 — 통과까지 최대 2회 반복, 그래도 미달이면 원본 유지하고 quality_notes에 기록
-```
+4. 미달 →
+   ```bash
+   python3 -c "
+   from pathlib import Path
+   from auto_agent.tools.image_assets import set_qa_result
+   set_qa_result(Path('<images_dir>'), <scene_num>, passed=False, issues=['issue1', 'issue2'])
+   "
+   ```
+   - **재생성 없음** — 미달 씬은 스토리보드에서 사용자가 수동 처리
+   - 다음 씬으로 진행
 
 **B-4. TTS 전처리 + 자막 사전 분할** (트랙 B — 이미지와 병렬 가능)
 ```
