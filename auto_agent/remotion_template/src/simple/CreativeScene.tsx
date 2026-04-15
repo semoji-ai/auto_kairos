@@ -676,7 +676,7 @@ const EmphasisAccentText: React.FC<{
   // ============================================================
   // 인라인 레이아웃: accent에 좌우 여백 추가 (사이즈 차이 클 때)
   // ============================================================
-  const accentMargin = hasMixed && sizeDiff >= 6 ? "0 12px" : undefined;
+  const accentMargin = hasMixed && sizeDiff >= 2 ? "0 16px" : undefined;
 
   return (
     <>

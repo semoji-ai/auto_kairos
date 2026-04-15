@@ -21,6 +21,12 @@ export const SEMOJI_PRESET: DesignPresetOverride = {
   map: {
     defaultTheme: "warm_earth",
   },
+  defaultBackground: "background/semoji_grid_bg.jpg",
+  texture: {
+    src: "background/63517.jpg",
+    blendMode: "multiply",
+    opacity: 0.1,
+  },
   fonts: {
     body: {
       family: "SB 어그로체",

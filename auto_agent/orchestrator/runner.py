@@ -2265,6 +2265,10 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             return {}
 
         chapters: dict = {}
+        # 첫 마커 이전 오프닝 구간 → chapter 0
+        opening = full_text[:matches[0].start()].strip()
+        if opening:
+            chapters[0] = opening
         for i, m in enumerate(matches):
             ch_num = int(m.group(1))
             start = m.start()

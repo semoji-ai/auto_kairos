@@ -21,6 +21,7 @@ export const QUIRKYCARTOON_PRESET: DesignPresetOverride = {
   map: {
     defaultTheme: "warm_earth",
   },
+  defaultBackground: "background/light-gray-distorted-square-tile-texture-background-illustration.jpg",
   fonts: {
     body: {
       family: "Pretendard",

@@ -1,0 +1,11 @@
+{
+  "project_slug": "포켓몬스터_30주년_브랜드백과사전_1편",
+  "pid": 57452,
+  "status": "running",
+  "started_at": "2026-04-15T15:55:54.548173",
+  "finished_at": null,
+  "log_file": "/Users/jleavens_macmini/Projects/auto_kairos_v3/output/9f202fb4_포켓몬스터_30주년_브랜드백과사전_1편/logs/pipeline_20260415_155554.log",
+  "from_step": null,
+  "only_step": null,
+  "exit_code": null
+}

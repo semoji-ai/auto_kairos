@@ -78,6 +78,14 @@ def build_preset_obj(dt: dict, style_id: str) -> dict:
     if map_cfg := dt.get("map"):
         preset["map"] = map_cfg
 
+    # defaultBackground
+    if db := dt.get("defaultBackground"):
+        preset["defaultBackground"] = db
+
+    # texture
+    if texture := dt.get("texture"):
+        preset["texture"] = texture
+
     # fonts (design_tokens.fonts 섹션)
     fonts = dt.get("fonts", {})
     if fonts:
