@@ -716,6 +716,30 @@ cinematic/quote_portrait 외에도 **데이터 씬에 관련 실사 배경**을 
 - 추상적 장면, 가상 상황, 예술적 분위기 → `"generate"` (AI 생성)
 - 판단이 애매하면 `"search"` 우선 (실물이 더 신뢰감)
 
+#### enable_web_search 판단 기준
+
+`imageAsset`에 `enable_web_search` 필드를 추가한다. FAL 이미지 생성 시 웹 최신 정보를 참조할지 여부를 제어한다.
+
+| 씬 유형 | enable_web_search |
+|--------|-------------------|
+| 실존 인물 등장 (정치인, 유명인, 운동선수) | `true` |
+| 실제 사건/뉴스 장면 (전쟁, 재난, 정상회담) | `true` |
+| 실제 장소 (랜드마크, 도시 전경, 특정 건물) | `true` |
+| 순수 일러스트/만화/아트 씬 | `false` |
+| 데이터 시각화, 차트 배경 | `false` |
+| 판단 불명확 | 생략 (규칙 기반 자동 판단) |
+
+**예시:**
+```json
+{
+  "imageAsset": {
+    "source": "generate",
+    "enable_web_search": true,
+    "prompt": "2026년 이란 핵시설 공습 현장, 폭발 연기..."
+  }
+}
+```
+
 **quote_portrait 레이아웃 필수 규칙:**
 - `layout: "quote_portrait"` 사용 시 반드시 `imageAsset` 설정
 - `source: "search"`, `query: "인물 영문 이름"`, `placement: "left"` 또는 `"right"`
