@@ -106,6 +106,8 @@ Thumbs.db
 /remotion/public/fonts/GyeonggiMillenniumBatang-Bold.ttf
 !/remotion/src/
 /remotion/src/*
+!/remotion/src/simple/
+!/remotion/src/components/
 !/remotion/src/design/
 /remotion/src/design/*
 !/remotion/src/design/presets/
