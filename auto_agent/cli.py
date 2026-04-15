@@ -220,6 +220,7 @@ def cmd_run(args):
     parser.add_argument("--project", required=True, help="프로젝트 slug 또는 uuid")
     parser.add_argument("--from", dest="from_step", help="이 step부터 실행")
     parser.add_argument("--only", dest="only_step", help="이 step만 실행")
+    parser.add_argument("--until", dest="until_step", help="이 step까지만 실행 (예: --until step_2b)")
     parser.add_argument("--dry-run", action="store_true", help="실행하지 않고 계획만 출력")
     parser.add_argument("--workspace", help="워크스페이스 경로")
     parsed = parser.parse_args(args)
@@ -242,6 +243,7 @@ def cmd_run(args):
     runner.run(
         from_step=parsed.from_step,
         only_step=parsed.only_step,
+        stop_after_step=getattr(parsed, "until_step", None),
         dry_run=parsed.dry_run,
     )
 
@@ -687,6 +689,7 @@ def cmd_bg(args):
         project_slug = _get_arg(args[1:], "--project")
         from_step = _get_arg(args[1:], "--from") or None
         only_step = _get_arg(args[1:], "--only") or None
+        until_step = _get_arg(args[1:], "--until") or None
 
         if not project_slug:
             # 활성 프로젝트 사용
@@ -711,7 +714,7 @@ def cmd_bg(args):
             pass
 
         try:
-            session = sm.start(project_slug, from_step=from_step, only_step=only_step)
+            session = sm.start(project_slug, from_step=from_step, only_step=only_step, stop_after_step=until_step)
             print_success(f"백그라운드 파이프라인 시작: [accent]{project_slug}[/accent]")
             console.print(f"  PID: {session['pid']}")
             console.print(f"  로그: {session['log_file']}")
