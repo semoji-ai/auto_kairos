@@ -3,6 +3,14 @@ tests/test_generate_subtitles_sidecar.py
 
 chars_to_words() 단위 테스트
 """
+import sys
+import types
+
+# dotenv stub — generate_subtitles 모듈 레벨 load_dotenv 호출 처리
+_dotenv = types.ModuleType("dotenv")
+_dotenv.load_dotenv = lambda *a, **kw: None
+sys.modules.setdefault("dotenv", _dotenv)
+
 import pytest
 from auto_agent.scripts.generate_subtitles import chars_to_words
 

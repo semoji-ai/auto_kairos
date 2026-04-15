@@ -102,12 +102,11 @@ def test_mp3_file_written(client, tmp_path):
     assert output_path.read_bytes() == FAKE_MP3
 
 
-def test_duration_from_mutagen(client, tmp_path):
-    """반환되는 duration이 mutagen에서 측정된 값인지 확인"""
+def test_duration_from_timestamps(client, tmp_path):
+    """반환되는 duration이 타임스탬프 마지막 값에서 읽혀야 함 (가장 정확)."""
     output_path = tmp_path / "scene_001.mp3"
     duration = _call_with_mocks(client, output_path, duration=7.77)
 
-    # 파일 크기 기반 추정: len(FAKE_MP3) * 8 / 128000 ≈ 0.00641 → 7.77과 달라야 함
-    size_estimate = len(FAKE_MP3) * 8 / 128000
-    assert duration == pytest.approx(7.77), "mutagen 측정값이 반환되어야 함"
-    assert duration != pytest.approx(size_estimate), "파일 크기 추정값이 아니어야 함"
+    # character_end_times_seconds 마지막 값 = 0.2
+    # 파일 크기 추정값(≈0.006)이나 mutagen mock(7.77)이 아닌 0.2여야 함
+    assert duration == pytest.approx(0.2), "타임스탬프 마지막 값이 duration으로 반환되어야 함"

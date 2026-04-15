@@ -295,12 +295,16 @@ class ElevenLabsClient:
             with open(timestamps_path, "w", encoding="utf-8") as f:
                 json.dump(sidecar, f, ensure_ascii=False, indent=2)
 
-            # mutagen으로 실제 재생 시간 측정
-            try:
-                from mutagen.mp3 import MP3
-                duration = MP3(str(output_path)).info.length
-            except Exception:
-                duration = len(audio_bytes) * 8 / 128000  # fallback
+            # 타임스탬프 마지막 값 = 실제 발화 종료 시각 (가장 정확)
+            end_times = alignment.get("character_end_times_seconds", [])
+            if end_times:
+                duration = round(end_times[-1], 3)
+            else:
+                try:
+                    from mutagen.mp3 import MP3
+                    duration = MP3(str(output_path)).info.length
+                except Exception:
+                    duration = len(audio_bytes) * 8 / 128000  # fallback
             return duration
 
         except Exception:
