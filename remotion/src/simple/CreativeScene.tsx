@@ -2882,7 +2882,11 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const values: number[] = data.values || [];
   const unit: string = data.unit || "";
   const concept: string = creative.concept || "";
-  const itemIcons: string[] = data.itemIcons || data.icons || [];
+  const _rawItemIcons: string[] = data.itemIcons || data.icons || [];
+  // 전부 있거나 전부 없거나 — 길이 불일치 시 전체 무시 (일부만 아이콘 표시 방지)
+  const itemIcons: string[] = (_rawItemIcons.length === 0 || _rawItemIcons.length === items.length || items.length === 0)
+    ? _rawItemIcons
+    : (_rawItemIcons.length === 1 ? Array(items.length).fill(_rawItemIcons[0]) : []);
   const itemFlags: string[] = data.itemFlags || data.flags || [];
   const itemLogos: string[] = items.map((item, i) => data.logoMap?.[item] || data.logoMap?.[String(i)] || item);
   const getItemLeadVisual = (i: number, options?: { flagLabel?: string; flagWidth?: number; iconSize?: number; logoSize?: number; iconFilled?: boolean }) =>
@@ -4002,6 +4006,7 @@ const LineReveal: React.FC<{
   totalLines: number;
   accentOffset?: number;
   motionConfig?: MotionConfig;
+  accentFontSizeOverride?: number;
 }> = ({
   line,
   delay,
@@ -4014,6 +4019,7 @@ const LineReveal: React.FC<{
   totalLines,
   accentOffset = 0,
   motionConfig,
+  accentFontSizeOverride,
 }) => {
   const T = usePresetTypo();
   const { fonts } = useDesignPreset();

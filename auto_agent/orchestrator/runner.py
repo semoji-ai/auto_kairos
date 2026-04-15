@@ -63,6 +63,40 @@ AGENT_NICKNAMES = {
     "Runner": "봉감독",
 }
 
+def _extract_agent_report(stdout: str, max_lines: int = 8) -> str:
+    """Claude CLI stdout에서 의미있는 보고 줄만 추려 반환."""
+    import re as _re
+    keep = []
+    skip_patterns = [
+        _re.compile(r'^\s*$'),                          # 빈 줄
+        _re.compile(r'^---+$'),                          # 구분선
+        _re.compile(r'^<!--'),                           # HTML 주석
+        _re.compile(r'^\s*[{}\[\]]'),                    # JSON 브래킷
+        _re.compile(r'^\s*"[a-z_]+"\s*:'),              # JSON 필드
+        _re.compile(r'^(chars|tokens|cost|time)\s*:', _re.I),  # 메타
+        _re.compile(r'^\s*#+\s*$'),                     # 빈 헤더
+    ]
+    good_patterns = [
+        _re.compile(r'\*\*.+\*\*'),                     # **굵은글씨** 키결정
+        _re.compile(r'^\s*[-•]\s+\S'),                  # 불릿 포인트
+        _re.compile(r'^\s*\d+\.\s+\S'),                 # 번호 목록
+        _re.compile(r'^#+ '),                            # 헤더
+        _re.compile(r'(완료|수정|발견|팩트|오류|경고|반영|변경|확인|추가|제거|이동|대체)', _re.I),
+        _re.compile(r'(수집|클레임|챕터|원고|씬|스펙|리서치|검증|통과|실패)', _re.I),
+    ]
+    for line in stdout.splitlines():
+        line = line.rstrip()
+        if len(line) > 200:
+            line = line[:200] + '…'
+        if any(p.search(line) for p in skip_patterns):
+            continue
+        if any(p.search(line) for p in good_patterns):
+            keep.append(line.strip())
+        if len(keep) >= max_lines:
+            break
+    return '\n'.join(keep)
+
+
 def _notify(agent: str, text: str, phase: str = "", project: str = "", level: str = "info", data: dict = None):
     """파이프라인 진행 상황을 대시보드 메신저로 전송. 파일 영속 + HTTP POST.
     agent 이름은 자동으로 별명으로 변환됩니다."""
@@ -3721,6 +3755,9 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 missing.append(out)
 
         if result.returncode == 0 and not missing:
+            report = _extract_agent_report(result.stdout)
+            if report:
+                _notify(agent, report, phase="", project=self.project_slug, level="info")
             return StepResult(
                 step_id=step_id, status="completed",
                 output_files=found, cost_info=cost_info,

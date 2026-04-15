@@ -695,6 +695,7 @@ entity_slug: {entity_slug or topic_slug}
         "--model", claude_model,
         "--max-turns", "20",
         "--output-format", "text",
+        "--dangerouslySkipPermissions",
         "--allowedTools",
         "Bash,Read,Write,WebFetch,WebSearch,mcp__lane__wikipedia_search,mcp__lane__news_search",
     ]
@@ -856,6 +857,7 @@ research_launcher.py 경로: {launcher}
         "--model", claude_model,
         "--max-turns", "50",
         "--output-format", "text",
+        "--dangerouslySkipPermissions",
         "--allowedTools",
         "Bash,Read,Write,Glob,Grep,WebFetch,WebSearch,Task,mcp__lane__wikipedia_search,mcp__lane__news_search,mcp__lane__academic_search",
     ]
