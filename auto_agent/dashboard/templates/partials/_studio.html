@@ -292,6 +292,7 @@ var SubtitleEditor = (function() {
         e.preventDefault();
         var prev = _entries[idx - 1];
         var curr = _entries[idx];
+        var prevOrigLen = prev.text.length;
         prev.text = (prev.text + ' ' + curr.text).trim();
         prev.endSec = curr.endSec;
         _entries.splice(idx, 1);
@@ -302,7 +303,7 @@ var SubtitleEditor = (function() {
           if (prevBlock && prevBlock.firstChild) {
             var r = document.createRange();
             var textNode = prevBlock.firstChild;
-            var pos = Math.max(0, prev.text.length - curr.text.length - 1);
+            var pos = prevOrigLen;
             r.setStart(textNode, Math.min(pos, textNode.length));
             r.collapse(true);
             var s = window.getSelection();
