@@ -91,7 +91,12 @@
   },
   "design_tokens": {
     "baseTheme": "light",
-    "defaultBackground": "",
+    "defaultBackground": "background/약설_그리드 배경.jpg",
+    "texture": {
+      "src": "background/63517.jpg",
+      "blendMode": "multiply",
+      "opacity": 0.1
+    },
     "colors": {
       "accent": "#4A90D9",
       "accentRgb": "74,144,217",
