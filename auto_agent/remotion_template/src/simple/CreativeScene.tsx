@@ -3526,7 +3526,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         </div>
         )}
 
-        {!(isQuotePortrait) && layout !== "cinematic" && showCommonSupportHeadline && renderSupportHeadline()}
+        {!(isQuotePortrait) && layout !== "cinematic" && showCommonSupportHeadline && !(layout === "counter" && values.length > 0) && renderSupportHeadline()}
 
         {/* Tags — portrait quote는 스킵 */}
         {!(isQuotePortrait) && tags.length > 0 && (
@@ -3644,6 +3644,18 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Counter — values 기반 숫자 카운트업 (headline에 {{}} 없는 경우) */}
+        {layout === "counter" && values.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18, ...scaleAnim(frame, 15) }}>
+            {renderSupportHeadline({ marginBottom: 8, maxWidth: "70%" })}
+            <MetricCard
+              label={items[0] || ""}
+              value={`${fmtNum(values[0])}${data.unit || ""}`}
+              style={{ width: "100%", maxWidth: 720, transform: "scale(1.12)" }}
+            />
           </div>
         )}
 
