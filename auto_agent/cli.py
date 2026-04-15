@@ -261,6 +261,7 @@ def cmd_run(args):
     parser.add_argument("--only", dest="only_step", help="이 step만 실행")
     parser.add_argument("--until", dest="until_step", help="이 step까지만 실행 (예: --until step_2b)")
     parser.add_argument("--dry-run", action="store_true", help="실행하지 않고 계획만 출력")
+    parser.add_argument("--force", action="store_true", help="출력 파일이 이미 있어도 강제 재실행")
     parser.add_argument("--workspace", help="워크스페이스 경로")
     parsed = parser.parse_args(args)
 
@@ -284,6 +285,7 @@ def cmd_run(args):
         only_step=parsed.only_step,
         stop_after_step=getattr(parsed, "until_step", None),
         dry_run=parsed.dry_run,
+        force=parsed.force,
     )
 
 

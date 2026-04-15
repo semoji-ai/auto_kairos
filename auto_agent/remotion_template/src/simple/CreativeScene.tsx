@@ -2887,7 +2887,11 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const itemIcons: string[] = (_rawItemIcons.length === 0 || _rawItemIcons.length === items.length || items.length === 0)
     ? _rawItemIcons
     : (_rawItemIcons.length === 1 ? Array(items.length).fill(_rawItemIcons[0]) : []);
-  const itemFlags: string[] = data.itemFlags || data.flags || [];
+  const _rawItemFlags: string[] = data.itemFlags || data.flags || [];
+  // itemIcons와 동일한 all-or-nothing + broadcast — 길이 불일치 시 전체 무시
+  const itemFlags: string[] = (_rawItemFlags.length === 0 || _rawItemFlags.length === items.length || items.length === 0)
+    ? _rawItemFlags
+    : (_rawItemFlags.length === 1 ? Array(items.length).fill(_rawItemFlags[0]) : []);
   const itemLogos: (string | undefined)[] = items.map((item, i) => data.logoMap?.[item] || data.logoMap?.[String(i)] || undefined);
   const getItemLeadVisual = (i: number, options?: { flagLabel?: string; flagWidth?: number; iconSize?: number; logoSize?: number; iconFilled?: boolean }) =>
     renderItemLeadVisual({
@@ -3599,7 +3603,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                   </div>
                   {i < items.length - 1 && (
                     <div style={{ opacity: fadeVal(frame, staggerDelay(i, 10, 15) + 8, 10) }}>
-                      <Connector direction={isHorizontal ? "right" : "down"} length={isHorizontal ? 48 : 32} color={moodCfg.accent} />
+                      <Connector direction={isHorizontal ? "right" : "down"} length={isHorizontal ? 64 : 40} color={moodCfg.accent} />
                     </div>
                   )}
                 </React.Fragment>
@@ -3625,18 +3629,18 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               const isLast = i === items.length - 1;
               const anim = fadeRise(frame, staggerDelay(i, 12, 15), 15);
               return (
-                <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, position: "relative", zIndex: 1, flex: 1, ...anim }}>
+                <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, position: "relative", zIndex: 1, flex: 1, ...anim }}>
                   <div style={{
                     width: L.timelineDotSize, height: L.timelineDotSize,
                     borderRadius: L.timelineDotSize / 2,
                     backgroundColor: isLast ? moodCfg.accent : "transparent",
-                    border: `${L.timelineConnectorWidth}px solid ${isLast ? moodCfg.accent : C.cardBorder}`,
+                    border: `3px solid ${isLast ? moodCfg.accent : C.cardBorder}`,
                     flexShrink: 0,
                   }} />
-                  <div style={{ fontSize: T.itemText, fontWeight: isLast ? 700 : 500, color: isLast ? moodCfg.accent : C.text, textAlign: "center" }}>
+                  <div style={{ fontSize: T.itemText + 4, fontWeight: isLast ? 700 : 500, color: isLast ? moodCfg.accent : C.text, textAlign: "center" }}>
                     <TextWithBreaks text={item} />
                   </div>
-                  {desc && <div style={{ fontSize: T.descText, color: C.textMuted, textAlign: "center" }}>{desc}</div>}
+                  {desc && <div style={{ fontSize: T.descText + 2, color: C.textMuted, textAlign: "center" }}>{desc}</div>}
                 </div>
               );
             })}

@@ -618,6 +618,7 @@ class PipelineRunner:
         only_step: str = None,
         dry_run: bool = False,
         stop_after_step: str = None,
+        force: bool = False,
     ):
         """파이프라인 전체 또는 부분 실행."""
         # 볼트 인덱스 자동 빌드 — 변경된 .md 파일만 재인덱싱 (해시 캐시 활용)
@@ -645,6 +646,7 @@ class PipelineRunner:
             _filtered = _filter_steps_until(_all_steps, stop_after=stop_after_step)
             _until_allowed = {s["id"] for s in _filtered}
 
+        self._force = force  # --force: resume 스킵 비활성화
         skip_until = from_step
         found_start = from_step is None
 
@@ -1105,7 +1107,7 @@ class PipelineRunner:
             cli_path = self._find_claude_cli()
             proc = subprocess.run(
                 [cli_path, "--print", "--output-format", "json",
-                 "--dangerouslySkipPermissions",
+                 "--dangerously-skip-permissions",
                  "--model", "claude-sonnet-4-6", "--max-turns", "1"],
                 input=supplement_prompt, capture_output=True, text=True, encoding="utf-8",
                 cwd=str(self.project_dir), timeout=180,
@@ -1183,7 +1185,7 @@ class PipelineRunner:
                 cli_path = self._find_claude_cli()
                 proc = subprocess.run(
                     [cli_path, "--print", "--output-format", "json",
-                     "--dangerouslySkipPermissions",
+                     "--dangerously-skip-permissions",
                      "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
                     input=verify_prompt, capture_output=True, text=True, encoding="utf-8",
                     cwd=str(self.project_dir), timeout=30,
@@ -1232,7 +1234,7 @@ class PipelineRunner:
                         try:
                             proc2 = subprocess.run(
                                 [cli_path, "--print", "--output-format", "json",
-                                 "--dangerouslySkipPermissions",
+                                 "--dangerously-skip-permissions",
                                  "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
                                 input=verify2_prompt, capture_output=True, text=True, encoding="utf-8",
                                 cwd=str(self.project_dir), timeout=30,
@@ -1553,7 +1555,7 @@ class PipelineRunner:
         for scene in merged_scenes:
             sn = scene.get("sceneNumber")
             if sn in seen:
-                logger.warning("sceneNumber %s 중복 발견 — 첫 번째만 유지", sn)
+                print(f"    [WARN] sceneNumber {sn} 중복 발견 — 첫 번째만 유지", flush=True)
             seen.add(sn)
         # 중복 제거 (첫 번째 유지)
         deduped = []
@@ -1583,7 +1585,8 @@ class PipelineRunner:
         # scene_specs 로드 (없으면 scene_decomposition.json에서 폴백)
         # scene_specs가 아직 없는 생성 단계(script-director 등)는 단일 agent로 전환
         specs_path = self.project_dir / "scene_specs.json"
-        if not specs_path.exists():
+        _force_recreate = getattr(self, "_force", False) and step.get("mode") == "chapters"
+        if not specs_path.exists() or _force_recreate:
             decomp_path = self.project_dir / "scene_decomposition.json"
             if decomp_path.exists():
                 # step_6(creative_direction)은 scene_decomposition → scene_specs 변환
@@ -1868,7 +1871,7 @@ class PipelineRunner:
         cli_path = self._find_claude_cli()
         cmd = [
             cli_path, "--print", "--output-format", "json",
-            "--dangerouslySkipPermissions",
+            "--dangerously-skip-permissions",
             "--model", model, "--max-turns", "5",
             "--allowedTools", "Read", "--allowedTools", "Write",
         ]
@@ -2501,7 +2504,7 @@ JSON 구조: {{"scenes": [씬 배열]}}
         cli_path = self._find_claude_cli()
         cmd = [
             cli_path, "--print", "--output-format", "json",
-            "--dangerouslySkipPermissions",
+            "--dangerously-skip-permissions",
             "--model", model, "--max-turns", "10",
             "--allowedTools", "Read", "--allowedTools", "Write",
         ]
@@ -2556,6 +2559,15 @@ JSON 구조: {{"scenes": [씬 배열]}}
         if not scenes:
             return ChapterResult(chapter=chapter_num, status="failed",
                                  error="씬 데이터 없음", cost_info=cost_info, duration_sec=elapsed)
+
+        # --- 블록 수 대비 씬 수 검증
+        expected_blocks = len([b for b in chapter_text.split("\n---\n") if b.strip()])
+        if expected_blocks > 1 and len(scenes) < expected_blocks:
+            return ChapterResult(
+                chapter=chapter_num, status="failed",
+                error=f"씬 누락: 원고 `---` 블록 {expected_blocks}개인데 씬 {len(scenes)}개만 생성됨. 각 블록은 1:1로 씬이 되어야 합니다.",
+                cost_info=cost_info, duration_sec=elapsed,
+            )
 
         # chapter 필드 보정
         for scene in scenes:
@@ -3497,8 +3509,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         input_set = set(inputs)
         has_inplace_output = any(out in input_set for out in outputs)
 
-        if step.get("skip_resume"):
-            pass  # 래칫 루프 등 강제 재실행
+        if step.get("skip_resume") or getattr(self, "_force", False):
+            pass  # 래칫 루프 등 강제 재실행 또는 --force 옵션
         elif not has_inplace_output:
             all_exist = True
             for out in outputs:
@@ -3595,7 +3607,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "--output-format", "json",
             "--model", model,
             "--max-turns", str(max_turns),
-            "--dangerouslySkipPermissions",
+            "--dangerously-skip-permissions",
         ]
 
         # 허용 도구 설정
@@ -4457,7 +4469,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 return best_match[:2000]
 
         except Exception as e:
-            logger.warning(f"기획안 로드 실패: {e}")
+            print(f"    [WARN] \1", flush=True)
         return ""
 
     def _build_manuscript_reference_block(self) -> str:
@@ -4503,7 +4515,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                         f"## 참조 원고 ({writing_style} 스타일 — 톤/리듬/후킹 패턴을 그대로 따르세요)\n\n{ref_section}"
                     )
         except Exception as e:
-            logger.warning(f"참조 원고 로드 실패: {e}")
+            print(f"    [WARN] \1", flush=True)
 
         # ── 2. vault semantic search — 유사 주제의 매력적인 과거 영상 원고 ──
         try:
@@ -4546,7 +4558,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                         flush=True,
                     )
         except Exception as e:
-            logger.warning(f"vault 유사 영상 검색 실패: {e}")
+            print(f"    [WARN] \1", flush=True)
 
         if not sections:
             return ""

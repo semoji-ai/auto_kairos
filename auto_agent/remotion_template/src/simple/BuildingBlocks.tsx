@@ -1027,24 +1027,27 @@ export const StepBadge: React.FC<{
   active?: boolean;
   size?: number;
   style?: React.CSSProperties;
-}> = ({ step, label, active, size = 56, style }) => {
+}> = ({ step, label, active, size, style }) => {
   const C = useC();
   const V = usePresetVariants();
-  const radius = variantRadius(V.stepBadge, size);
+  const L = usePresetLayout();
+  const T = usePresetTypo();
+  const resolvedSize = size ?? L.stepBadgeSize;
+  const radius = variantRadius(V.stepBadge, resolvedSize);
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, ...style }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 16, ...style }}>
       <div style={{
-        width: size, height: size, borderRadius: radius,
+        width: resolvedSize, height: resolvedSize, borderRadius: radius,
         backgroundColor: active ? C.accent : "transparent",
         border: `2px solid ${C.accent}`,
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: size * 0.45, fontWeight: 800,
+        fontSize: resolvedSize * 0.45, fontWeight: 800,
         color: active ? C.bg : C.accent, flexShrink: 0,
       }}>
         {step}
       </div>
       {label && (
-        <span style={{ fontSize: 28, fontWeight: 600, color: active ? C.text : C.textMuted }}>
+        <span style={{ fontSize: T.itemText, fontWeight: 600, color: active ? C.text : C.textMuted }}>
           {label}
         </span>
       )}

@@ -216,7 +216,11 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 **해야 할 일:**
 
 1. **final_manuscript.md를 Read** — `# Ch N.` 마커로 자기 챕터 구간을 찾습니다 (`SCRIPT_DIRECTOR_CHAPTER` 환경변수).
-2. **`---` 마커가 씬 경계** — `---`로 나뉜 각 블록이 하나의 씬입니다. 마커를 추가하거나 무시하지 마세요.
+   - **챕터 0 (오프닝)**: `# Ch1.` 이전의 모든 텍스트가 챕터 0입니다. `# Ch0.` 마커는 없으니 파일 맨 위부터 첫 `# Ch1.` 마커 직전까지 읽으세요.
+2. **`---` 마커가 씬 경계 (1:1 절대 규칙)** — `---`로 나뉜 각 블록은 **반드시 하나의 씬**입니다. 마커를 추가하거나 무시하거나 합치지 마세요.
+   - ⚠️ **블록이 짧아도 (한 단어, 한 문장이어도) 별도 씬으로 생성하세요.** "그런데", "(타이틀)" 같은 한 줄짜리도 독립된 씬입니다.
+   - ⚠️ **챕터 0 오프닝도 동일 규칙** — 오프닝의 모든 `---` 블록을 씬으로 변환하세요. 1개로 압축하면 절대 안 됩니다.
+   - runner가 `---` 개수와 씬 개수를 자동 검증합니다. 불일치 시 이 챕터 전체 재작성 요구.
 3. **각 씬의 narration 추출**:
    - `---`와 `---` 사이의 텍스트에서 `<!-- chars: ... -->` 주석 줄을 제거한 나머지가 narration입니다.
    - narration은 manuscript의 **substring**이어야 합니다. 한 글자도 바꾸지 마세요.
@@ -375,7 +379,7 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    - values/unit: 수치 데이터 (data-mapper가 후속 보강)
    - imageAsset: 실물 사진 (인물/장소/사물)
    - chartConfig: 차트 데이터
-   - mapScene: 지리적 이벤트
+   - mapScene: 지리적 이벤트 (아래 기준 참조 — 차트만큼 적극 사용)
 
 4. 표현 방식 판단 — "어떤 조합이 가장 효과적인가?"
    추출한 콘텐츠를 어떤 조합으로 보여줄지 판단:
@@ -427,6 +431,18 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    차트/그래프 씬:
    - headline = 차트 제목 (필수)
    - source = 데이터 출처 (필수)
+   - **chartConfig 필수** — layout이 bar/pie/line/area면 반드시 chartConfig를 함께 작성
+   - **vizType 필수** — chartagent 연동을 위해 아래 매핑대로 vizType을 추가:
+     | layout | vizType |
+     |--------|---------|
+     | bar | bar_chart |
+     | pie | pie_chart |
+     | line | line_chart |
+     | area (추이) | area_chart |
+     | rank_list | ranking_chart |
+     | before_after (수치 비교) | comparison_chart |
+     | timeline | timeline |
+   - 예: `"layout": "bar", "vizType": "bar_chart", "chartConfig": {"type": "bar"}`
    - 예: headline="AI 데이터센터 전력 소비 추이", source="IEA (2025)"
 
    ⚠️ headline_only 사용 제한:
@@ -448,22 +464,37 @@ research_report.json을 읽고 3막 구조를 설계합니다.
          source="샘 올트먼, 2024년 미 상원 청문회"
 ```
 
-#### 콘텐츠 구조 → 자동 레이아웃 참고 (시스템이 결정)
+#### ⚠️ 차트 최우선 선택 원칙
 
-layout은 적지 않아도 됩니다. 아래는 콘텐츠를 이렇게 채우면 시스템이 자동으로 적절한 레이아웃을 선택한다는 참고 가이드:
+**수치/변화/비중이 있는 씬에서 차트는 다른 레이아웃보다 항상 우선합니다.**
 
-| 이렇게 채우면 | 시스템이 선택 | 비고 |
-|-------------|-------------|------|
+아래 조건 중 하나라도 해당하면 반드시 차트 layout + chartConfig + vizType을 사용하세요:
+
+| 나레이션 내용 | 선택할 layout + vizType |
+|-------------|----------------------|
+| 수치 2개 이상 비교 (전/후, A vs B) | `bar` + `bar_chart` 또는 `before_after` + `comparison_chart` |
+| 수치 변화 추이 (연도별/기간별 증감) | `line` + `line_chart` 또는 `area` + `area_chart` |
+| 비율/점유율/퍼센테이지 (합산 ~100%) | `pie` + `pie_chart` |
+| 순위 목록 + 수치 | `rank_list` + `ranking_chart` |
+| 단일 빅넘버 강조 (수치 1개) | `counter` (차트 불필요) |
+| 수치 없는 항목 나열 | `items_list` / `items_grid` (차트 불필요) |
+
+**2개 아이템만 있어도 차트를 씁니다** — `items 2개 + values 2개`는 `before_after + comparison_chart`가 기본, 수치 비교 목적이면 `bar + bar_chart`도 가능.
+
+#### 콘텐츠 구조 → 레이아웃 참고
+
+| 이렇게 채우면 | layout | 비고 |
+|-------------|--------|------|
 | items 0개 + headline {{}} | headline_only | 텍스트 강조 |
 | items 0개 + imageAsset fullscreen | cinematic | 이미지 전환/여운 |
 | items 1개 + 인용문 + imageAsset left | quote_portrait | 인물 인용 |
 | items 1개 + values 1개 + icons 1개 | icon_stat | 단일 통계 |
 | headline {{숫자}} + values 1개 | counter | 빅넘버 강조 |
-| items 2개 + values 2개 | before_after | 극적 비교 |
-| items 3~6개 + values | bar 또는 items_grid | 데이터 비교 |
+| **items 2개+ + values + 비교/변화 목적** | **bar + chartConfig** | **차트 우선** |
+| **items + 비율/퍼센테이지** | **pie + chartConfig** | **차트 우선** |
+| **items + 시간순 증감 추이** | **line + chartConfig** | **차트 우선** |
+| items 2개 + 극적 전/후 대비 (수치 무관) | before_after | 드라마틱 연출 |
 | items 3~6개 + values 없음 | items_list | 항목 나열 |
-| items + chartConfig.type="pie" | pie | 파이 차트 |
-| items + chartConfig.type="line" | line | 라인 차트 |
 | items + flags (국가코드) | items_grid + 국기 | 국가별 비교 |
 | headline + items (보조) | items_grid | 헤드라인 + 부연 |
 | items + imageAsset side | items_list + 이미지 | 데이터 + 맥락 |
@@ -908,23 +939,130 @@ cinematic 레이아웃은 반드시 imageAsset 필요 (placement: "fullscreen", 
 
 ### mapScene
 
+#### 맵씬 결정 — 2단계 판단
+
+**1단계: 이 씬의 narration에 아래 트리거 중 하나라도 있으면 → mapScene 필수**
+
+| 트리거 | narration 예시 | → mapScene |
+|--------|---------------|-----------|
+| 구체적 지명 + 사건/창업/탄생 | "오사카 나카구 작은 창고에서" | ✅ 반드시 |
+| 도시/국가 간 이동·진출·확장 | "도쿄에서 뉴욕으로", "유럽 시장에 진출" | ✅ 반드시 |
+| 공장·본사·연구소 위치 언급 | "구마모토 반도체 공장", "시애틀 본사" | ✅ 반드시 |
+| 전국/전 세계 규모의 사건 | "일본 전역의 병원", "80개국 동시 출시" | ✅ 반드시 |
+| 나라·도시 단위 비교·점유율 | "미국 40%, 일본 30%, 유럽 20%" | ✅ 반드시 |
+| 물류·공급망·원료 산지 | "베트남 공장 → 인천항 → LA 항구" | ✅ 반드시 |
+| 역사적 영토·전쟁·식민지 | "페르시아 제국 최대 판도", "침략 경로" | ✅ 반드시 |
+| 재난·전염병·사회 이슈 발생지 | "우한에서 시작된", "멕시코 지진" | ✅ 반드시 |
+
+**2단계: 트리거가 없어도 "어디서"가 이야기의 핵심이면 mapScene 사용**
+
+- 배경이 특정 도시·국가인데 그 장소성이 서사에 의미 있을 때
+- 예: "1980년대 시부야 골목 게임 센터에서" — 지명이 분위기와 시대를 설명함
+
+**mapScene을 쓰지 말아야 할 때 (명확 기준):**
+- 장소 언급이 전혀 없는 씬 (인물 감정, 수치 단독, 제품 소개)
+- 지명이 나와도 배경색처럼 사용된 경우 ("일본의 한 회사는" — 일본이 핵심이 아님)
+- imageAsset 실사 사진이 지도보다 훨씬 강할 때 (현장 사진 = mapScene 대체 가능)
+
+---
+
+#### zoom 기준 (빠른 참조)
+
+| 범위 | zoom | 예시 |
+|------|------|------|
+| 도시 블록 (건물 수준) | 14~16 | 특정 공장·창업지·가게 |
+| 도심 전체 | 12~13 | 도쿄 시부야, 서울 강남 |
+| 도시권 | 10~11 | 수도권, 오사카권 |
+| 광역도·지방 | 7~9 | 규슈 전체, 경상도 |
+| 국가 전체 | 5~6 | 일본, 한국, 독일 |
+| 대륙·지역권 | 3~4 | 동아시아, 유럽, 북미 |
+| 글로벌 | 1~2 | 전 세계 동시 출시 |
+
+**markers 작성 원칙:**
+- 핵심 장소 1~4개만 — 지도가 복잡해지면 역효과
+- label은 한국어 짧게 ("닌텐도 본사", "포케몬 쇼크 진원지")
+- 단일 장소면 markers 1개 + zoom 높게 (12~16)
+- 여러 나라/도시 비교면 markers 복수 + zoom 낮게 (3~6)
+
+**imageAsset과 병행:**
+- mapScene 있을 때 imageAsset.placement는 보통 `"background"` (지도 위에 텍스트/데이터 레이어)
+- 장소 실사 사진이 더 효과적이면 imageAsset만 써도 됨 — 둘 중 더 강한 쪽 선택
+
 ```json
-// 지리적 이벤트일 때만
+// 단일 장소 — 도시 블록 수준
 {
-  "center": [37.5665, 126.9780],  // [위도, 경도] — LLM 자연 순서
-  "zoom": 12,
-  "markers": [{"lat": 37.5665, "lng": 126.9780, "label": "서울"}]
+  "mapScene": {
+    "center": [34.6937, 135.5023],
+    "zoom": 14,
+    "markers": [{"lat": 34.6937, "lng": 135.5023, "label": "닌텐도 창업지"}]
+  }
+}
+
+// 다국가 이동/확장
+{
+  "mapScene": {
+    "center": [35.0, 135.0],
+    "zoom": 4,
+    "markers": [
+      {"lat": 35.6762, "lng": 139.6503, "label": "도쿄 본사"},
+      {"lat": 40.7128, "lng": -74.0060, "label": "뉴욕 지사"},
+      {"lat": 51.5074, "lng": -0.1278, "label": "런던 진출"}
+    ]
+  }
+}
+
+// 국가 전체 사건
+{
+  "mapScene": {
+    "center": [36.2048, 138.2529],
+    "zoom": 5,
+    "markers": [{"lat": 36.2048, "lng": 138.2529, "label": "일본 전역"}]
+  }
 }
 ```
 
-### chartConfig
+### chartConfig + vizType
+
+차트 씬이면 두 필드를 **반드시 함께** 작성합니다.
 
 ```json
-// 데이터 시각화 씬에서만 (layout이 bar/pie/line일 때)
+// layout: "bar"인 씬 예시
 {
-  "type": "bar"  // bar | pie | line | donut
+  "layout": "bar",
+  "vizType": "bar_chart",
+  "chartConfig": { "type": "bar" },
+  "headline": "연도별 매출 성장",
+  "items": ["2020년", "2021년", "2022년", "2023년"],
+  "values": [120, 280, 650, 1400],
+  "unit": "억 원",
+  "source": "회사 연간보고서"
+}
+
+// layout: "pie"인 씬 예시
+{
+  "layout": "pie",
+  "vizType": "pie_chart",
+  "chartConfig": { "type": "pie" },
+  "headline": "글로벌 시장 점유율",
+  "items": ["A사", "B사", "C사", "기타"],
+  "values": [45, 28, 17, 10],
+  "unit": "%",
+  "source": "IDC (2024)"
+}
+
+// layout: "line"인 씬 예시
+{
+  "layout": "line",
+  "vizType": "line_chart",
+  "chartConfig": { "type": "line" },
+  "headline": "주가 추이",
+  "items": ["1월", "2월", "3월", "4월", "5월"],
+  "values": [1000, 950, 1100, 1300, 1250],
+  "unit": "엔"
 }
 ```
+
+**chartConfig.type 종류:** `bar` | `pie` | `line` | `area` | `donut`
 
 ---
 

@@ -56,6 +56,57 @@ _BASE_THEME_FALLBACK: dict[str, str] = {
 # Adapter 1: scene_specs 씬 → chart_task dict
 # ---------------------------------------------------------------------------
 
+# chartConfig.type → vizType 하위 호환 매핑 (플랫 스키마 + 레거시 visualization 모두 지원)
+_CHART_TYPE_TO_VIZ_TYPE: dict[str, str] = {
+    "bar":        "bar_chart",
+    "pie":        "pie_chart",
+    "donut":      "pie_chart",
+    "line":       "line_chart",
+    "area":       "area_chart",
+    "scatter":    "scatter_chart",
+    "ranking":    "ranking_chart",
+    "comparison": "comparison_chart",
+}
+
+# layout → vizType 자동 추론 (vizType/chartConfig 모두 없을 때 최후 fallback)
+_LAYOUT_TO_VIZ_TYPE: dict[str, str] = {
+    "bar":          "bar_chart",
+    "pie":          "pie_chart",
+    "line":         "line_chart",
+    "rank_list":    "ranking_chart",
+    "before_after": "comparison_chart",
+    "timeline":     "timeline",
+}
+
+
+def _resolve_viz_type(scene: dict[str, Any]) -> str:
+    """씬에서 vizType을 결정합니다. 우선순위: vizType > chartConfig.type > layout 추론."""
+    # 1순위: 최상위 vizType (플랫 스키마 신규 필드)
+    vt = scene.get("vizType", "")
+    if vt in CHART_VIZ_TYPES:
+        return vt
+
+    # 2순위: visualization.vizType (레거시 중첩 스키마)
+    viz = scene.get("visualization") or {}
+    vt = viz.get("vizType", "")
+    if vt in CHART_VIZ_TYPES:
+        return vt
+
+    # 3순위: chartConfig.type → vizType 변환
+    chart_cfg = scene.get("chartConfig") or viz.get("chartConfig") or {}
+    chart_type = str(chart_cfg.get("type") or "").lower()
+    if chart_type and chart_type in _CHART_TYPE_TO_VIZ_TYPE:
+        return _CHART_TYPE_TO_VIZ_TYPE[chart_type]
+
+    # 4순위: layout → vizType 추론 (values가 있을 때만)
+    layout = scene.get("layout") or viz.get("layout") or ""
+    values = scene.get("values") or viz.get("values") or []
+    if layout in _LAYOUT_TO_VIZ_TYPE and len(values) >= 2:
+        return _LAYOUT_TO_VIZ_TYPE[layout]
+
+    return ""
+
+
 def scene_to_chart_task(
     scene: dict[str, Any],
     theme_set: str = "",
@@ -65,6 +116,7 @@ def scene_to_chart_task(
     scene_specs의 씬 1개를 chartagent chart_task dict으로 변환합니다.
 
     차트가 없는 씬(vizType이 CHART_VIZ_TYPES에 없는 경우)은 None 반환.
+    vizType은 scene.vizType > chartConfig.type > layout 순으로 자동 결정됩니다.
 
     Parameters
     ----------
@@ -75,20 +127,22 @@ def scene_to_chart_task(
     -------
     chart_task dict (chartagent 입력 형식) or None
     """
-    viz = scene.get("visualization") or {}
-    viz_type = viz.get("vizType", "")
+    viz_type = _resolve_viz_type(scene)
 
     if viz_type not in CHART_VIZ_TYPES:
         return None
 
+    viz = scene.get("visualization") or {}
+
     scene_num = scene.get("sceneNumber", 0)
-    title = viz.get("title") or scene.get("title") or ""
-    items: list[Any] = viz.get("items") or []
-    values: list[Any] = viz.get("values") or []
-    unit: str = viz.get("unit") or ""
-    source: str = viz.get("source") or ""
-    descriptions: list[str] = viz.get("descriptions") or []
-    mood: str = (viz.get("creative") or {}).get("mood") or scene.get("mood") or "informative"
+    # 플랫 스키마(최상위) 우선, visualization 중첩 스키마 fallback
+    title = scene.get("title") or viz.get("title") or ""
+    items: list[Any] = scene.get("items") or viz.get("items") or []
+    values: list[Any] = scene.get("values") or viz.get("values") or []
+    unit: str = scene.get("unit") or viz.get("unit") or ""
+    source: str = scene.get("source") or viz.get("source") or ""
+    descriptions: list[str] = scene.get("descriptions") or viz.get("descriptions") or []
+    mood: str = scene.get("mood") or (viz.get("creative") or {}).get("mood") or "informative"
 
     # dataset 구성
     dataset_items: list[dict[str, Any]] = []
@@ -310,12 +364,11 @@ def run_chartagent_for_scene(
     -------
     render.svg Path or None (차트 씬 아닌 경우)
     """
-    viz = scene.get("visualization") or {}
-    viz_type = viz.get("vizType", "")
+    viz_type = _resolve_viz_type(scene)
     if viz_type not in CHART_VIZ_TYPES:
         return None
 
-    mood = (viz.get("creative") or {}).get("mood") or "informative"
+    mood = scene.get("mood") or "informative"
     dt = design_tokens or {}
     theme_set = design_tokens_to_theme(dt, mood)
     theme_overrides = (dt.get("chartagent") or {}).get("theme_overrides") or None
