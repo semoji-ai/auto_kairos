@@ -52,6 +52,14 @@
 {% block scripts %}
 <script>
 var PROJECT_SLUG = '{{ slug }}';
+// 초기 탭이 studio이면 padding 제거
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('tab') === 'studio' || '{{ tab }}' === 'studio') {
+    var tc = document.getElementById('tab-content');
+    if (tc) { tc.style.padding = '0'; tc.style.overflow = 'hidden'; }
+  }
+})();
 
 // 전역 SSE 풀 — 각 파셜이 열 때 등록, switchTab이 닫음
 window._ssePool = window._ssePool || [];
@@ -72,6 +80,15 @@ function switchTab(tab, el) {
   _closeAllSse();
   document.querySelectorAll('.content-tabs .content-tab').forEach(function(a) { a.classList.remove('active'); });
   el.classList.add('active');
+  // Studio 탭은 풀스크린 — #tab-content padding 제거
+  var tabContent = document.getElementById('tab-content');
+  if (tab === 'studio') {
+    tabContent.style.padding = '0';
+    tabContent.style.overflow = 'hidden';
+  } else {
+    tabContent.style.padding = '';
+    tabContent.style.overflow = '';
+  }
   htmx.ajax('GET', '/api/p/' + PROJECT_SLUG + '/tab/' + tab, {
     target: '#tab-content',
     swap: 'innerHTML'
