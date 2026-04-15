@@ -763,7 +763,7 @@ async def research_wiki_index(slug: str):
 
 @app.get("/api/p/{slug}/research/wiki/{page}")
 async def research_wiki_page(slug: str, page: str):
-    """위키 마크다운 파일 내용 반환 (frontmatter 제거)."""
+    """위키 마크다운 파일 내용 반환. claims 페이지는 파싱해서 구조화된 데이터로 반환."""
     import re as _re
     pm = get_pm()
     project = pm.get_project(slug=slug)
@@ -776,7 +776,33 @@ async def research_wiki_page(slug: str, page: str):
     text = wiki_file.read_text(encoding="utf-8")
     # frontmatter 제거
     text = _re.sub(r'^---\s*\n.*?\n---\s*\n', '', text, flags=_re.DOTALL)
-    return JSONResponse({"content": text.strip(), "page": page})
+    text = text.strip()
+
+    # claims 페이지는 파싱해서 카드용 구조화 데이터로 반환
+    if page == "claims":
+        claims = []
+        current = {}
+        for line in text.split("\n"):
+            line = line.strip()
+            if line.startswith("## claim_"):
+                if current.get("claim"):
+                    claims.append(current)
+                current = {}
+            elif line.startswith("- claim:"):
+                current["claim"] = line[len("- claim:"):].strip()
+            elif line.startswith("- kind:"):
+                current["kind"] = line[len("- kind:"):].strip().strip("`")
+            elif line.startswith("- confidence:"):
+                current["confidence"] = line[len("- confidence:"):].strip().strip("`")
+            elif line.startswith("- status:"):
+                current["status"] = line[len("- status:"):].strip().strip("`")
+            elif line.startswith("- evidence:"):
+                current["evidence"] = line[len("- evidence:"):].strip()
+        if current.get("claim"):
+            claims.append(current)
+        return JSONResponse({"page": page, "claims": claims})
+
+    return JSONResponse({"content": text, "page": page})
 
 
 # ─────────────────────────────

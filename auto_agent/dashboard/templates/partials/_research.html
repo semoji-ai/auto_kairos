@@ -99,6 +99,29 @@
 .wiki-body td { padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #D4D4D8; }
 .wiki-body strong { color: #F4F4F5; font-weight: 600; }
 .wiki-body em { color: #A1A1AA; }
+
+/* Claims 카드 */
+.wiki-claims-wrap { width: 100%; }
+.wiki-claims-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.wiki-claims-title { font-size: 16px; font-weight: 700; color: #F4F4F5; }
+.wiki-claims-count { font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.07); padding: 2px 9px; border-radius: 10px; }
+
+.wiki-claim-card { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.wiki-claim-card:last-child { border-bottom: none; }
+.wiki-claim-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+.conf-high { background: #22c55e; }
+.conf-med  { background: #f59e0b; }
+.conf-low  { background: #6b7280; }
+.wiki-claim-body { flex: 1; min-width: 0; }
+.wiki-claim-text { font-size: 14px; line-height: 1.75; color: #D4D4D8; word-break: keep-all; margin-bottom: 5px; }
+.wiki-claim-evidence { font-size: 12px; color: #71717A; margin-bottom: 6px; font-style: italic; }
+.wiki-claim-meta { display: flex; gap: 5px; flex-wrap: wrap; }
+.wiki-claim-tag { font-size: 10px; padding: 1px 7px; border-radius: 4px; font-weight: 500; }
+.tag-kind     { background: rgba(99,102,241,0.15); color: #A5B4FC; }
+.tag-high     { background: rgba(34,197,94,0.12);  color: #86EFAC; }
+.tag-medium   { background: rgba(245,158,11,0.12); color: #FCD34D; }
+.tag-low      { background: rgba(107,114,128,0.15);color: #9CA3AF; }
+.tag-verified { background: rgba(34,197,94,0.08);  color: #6EE7B7; }
 </style>
 
 <script>
@@ -171,10 +194,15 @@
           content.innerHTML = '<div class="wiki-placeholder">' + d.error + '</div>';
           return;
         }
+        content.innerHTML = '';
+        // claims 페이지는 카드 렌더링
+        if (d.claims !== undefined) {
+          content.appendChild(renderClaims(d.claims));
+          return;
+        }
         var body = document.createElement('div');
         body.className = 'wiki-body';
         body.innerHTML = simpleMarkdown(d.content || '');
-        content.innerHTML = '';
         content.appendChild(body);
       })
       .catch(function() {
@@ -232,6 +260,79 @@
 
   function escHtml(s) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderClaims(claims) {
+    var wrap = document.createElement('div');
+    wrap.className = 'wiki-claims-wrap';
+
+    var header = document.createElement('div');
+    header.className = 'wiki-claims-header';
+    header.innerHTML = '<span class="wiki-claims-title">주요 주장</span>'
+      + '<span class="wiki-claims-count">' + claims.length + '건</span>';
+    wrap.appendChild(header);
+
+    if (!claims.length) {
+      var empty = document.createElement('div');
+      empty.className = 'wiki-placeholder';
+      empty.textContent = '수집된 주장이 없습니다';
+      wrap.appendChild(empty);
+      return wrap;
+    }
+
+    var CONF_CLASS = { high: 'conf-high', medium: 'conf-med', low: 'conf-low' };
+    var CONF_LABEL = { high: '높음', medium: '보통', low: '낮음' };
+    var KIND_LABEL = { factual: '사실', fact: '사실', analytical: '분석', opinion: '의견', contextual: '맥락' };
+
+    claims.forEach(function(c) {
+      var conf = c.confidence || 'medium';
+      var card = document.createElement('div');
+      card.className = 'wiki-claim-card';
+
+      var dot = document.createElement('div');
+      dot.className = 'wiki-claim-dot ' + (CONF_CLASS[conf] || 'conf-med');
+
+      var body = document.createElement('div');
+      body.className = 'wiki-claim-body';
+
+      var text = document.createElement('div');
+      text.className = 'wiki-claim-text';
+      text.textContent = c.claim || '';
+      body.appendChild(text);
+
+      if (c.evidence && c.evidence !== 'n/a' && c.evidence !== '') {
+        var ev = document.createElement('div');
+        ev.className = 'wiki-claim-evidence';
+        ev.textContent = c.evidence;
+        body.appendChild(ev);
+      }
+
+      var meta = document.createElement('div');
+      meta.className = 'wiki-claim-meta';
+      if (c.kind) {
+        var k = document.createElement('span');
+        k.className = 'wiki-claim-tag tag-kind';
+        k.textContent = KIND_LABEL[c.kind] || c.kind;
+        meta.appendChild(k);
+      }
+      var cf = document.createElement('span');
+      cf.className = 'wiki-claim-tag tag-' + conf;
+      cf.textContent = CONF_LABEL[conf] || conf;
+      meta.appendChild(cf);
+      if (c.status === 'verified') {
+        var st = document.createElement('span');
+        st.className = 'wiki-claim-tag tag-verified';
+        st.textContent = '검증됨';
+        meta.appendChild(st);
+      }
+      body.appendChild(meta);
+
+      card.appendChild(dot);
+      card.appendChild(body);
+      wrap.appendChild(card);
+    });
+
+    return wrap;
   }
 })();
 </script>
