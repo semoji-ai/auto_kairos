@@ -33,6 +33,10 @@
 
 프로젝트 output_dir의 `editorial_brief.json`
 
+## CLI 단축 경로
+
+`auto-agent plan --topic X --project slug` 명령은 인터뷰 없이 topic 한 줄로 Claude API 초안을 즉시 생성하는 단축 경로다. 인터뷰 흐름(위 9개 항목)은 이 에이전트를 Claude CLI로 직접 실행할 때 사용한다.
+
 ## 주의
 
 - 이미 `editorial_brief.json`이 있으면 `--overwrite` 없이 덮어쓰지 않음

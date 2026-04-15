@@ -89,6 +89,8 @@ auto-agent run --project <slug> --only step_1           # Stage 1만
 auto-agent bg start --project <slug>                    # 백그라운드
 auto-agent multi-contents --project <slug>              # 멀티포맷 (Stage 3 후)
 auto-agent dashboard                                    # http://localhost:8080
+auto-agent plan --project <slug> --topic <주제>           # 기획안 독립 생성 (파이프라인 외부)
+auto-agent plan-trend --channel <채널>                    # trend-analyst Stage 0 (기획 트렌드 분석)
 ```
 
 ### 대시보드 직접 실행 (uvicorn)

@@ -1613,7 +1613,6 @@ def cmd_plan(args):
 
     from auto_agent.modules.content_planner_module import (
         generate_planner_brief,
-        validate_brief,
         save_brief,
     )
 
@@ -1622,7 +1621,8 @@ def cmd_plan(args):
     project = pm.resolve_project(parsed.project)
     if not project:
         console.print(f"[red]프로젝트를 찾을 수 없습니다: {parsed.project}[/red]")
-        return
+        import sys
+        sys.exit(1)
 
     project_dir = Path(project["output_dir"])
 
@@ -1632,10 +1632,6 @@ def cmd_plan(args):
         writing_style=parsed.writing_style,
         channel=parsed.channel,
     )
-
-    errors = validate_brief(brief)
-    if errors:
-        console.print(f"[yellow]검증 경고:[/yellow] {errors}")
 
     try:
         path = save_brief(brief, project_dir, overwrite=parsed.overwrite)

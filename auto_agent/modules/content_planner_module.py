@@ -47,6 +47,11 @@ def save_brief(
     Returns
     -------
     저장된 파일 Path
+
+    Notes
+    -----
+    output_dir가 존재하지 않으면 자동으로 생성된다 (parents=True).
+    프로젝트 디렉토리가 아직 없는 경우에도 안전하게 저장된다.
     """
     output_dir = Path(output_dir)
     path = output_dir / "editorial_brief.json"
