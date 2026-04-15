@@ -24,6 +24,7 @@ class TTSResult:
     processed_text: str
     audio_path: Optional[str] = None
     duration: float = 0.0
+    alignment_path: Optional[str] = None
     status: str = "pending"
     error_message: Optional[str] = None
     created_at: str = ""
@@ -267,16 +268,50 @@ class ElevenLabsClient:
         self.preprocessor = TTSPreprocessor()
 
     def _generate_tts_elevenlabs(self, text: str, output_path: Path) -> float:
+        import base64
         import requests
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{self.voice_id}?output_format=mp3_44100_128"
         headers = {"Content-Type": "application/json", "xi-api-key": self.api_key}
         body = {"text": text, "model_id": self.model_id, "voice_settings": self.voice_settings}
-        response = requests.post(url, headers=headers, json=body)
-        if not response.ok:
-            raise Exception(f"ElevenLabs API 오류: {response.status_code}")
-        with open(output_path, "wb") as f:
-            f.write(response.content)
-        return (len(response.content) * 8) / 128000
+
+        # /with-timestamps 엔드포인트 시도
+        try:
+            url_ts = f"https://api.elevenlabs.io/v1/text-to-speech/{self.voice_id}/with-timestamps?output_format=mp3_44100_128"
+            response = requests.post(url_ts, headers=headers, json=body)
+            if not response.ok:
+                raise Exception(f"with-timestamps API 오류: {response.status_code}")
+            response_json = response.json()
+            audio_bytes = base64.b64decode(response_json["audio_base64"])
+            with open(output_path, "wb") as f:
+                f.write(audio_bytes)
+
+            # 사이드카 타임스탬프 저장
+            alignment = response_json.get("alignment", {})
+            sidecar = {
+                "characters": alignment.get("characters", []),
+                "character_start_times_seconds": alignment.get("character_start_times_seconds", []),
+                "character_end_times_seconds": alignment.get("character_end_times_seconds", []),
+            }
+            timestamps_path = output_path.with_name(output_path.stem + ".timestamps.json")
+            with open(timestamps_path, "w", encoding="utf-8") as f:
+                json.dump(sidecar, f, ensure_ascii=False, indent=2)
+
+            # mutagen으로 실제 재생 시간 측정
+            try:
+                from mutagen.mp3 import MP3
+                duration = MP3(str(output_path)).info.length
+            except Exception:
+                duration = len(audio_bytes) * 8 / 128000  # fallback
+            return duration
+
+        except Exception:
+            # 폴백: 원래 엔드포인트
+            url = f"https://api.elevenlabs.io/v1/text-to-speech/{self.voice_id}?output_format=mp3_44100_128"
+            response = requests.post(url, headers=headers, json=body)
+            if not response.ok:
+                raise Exception(f"ElevenLabs API 오류: {response.status_code}")
+            with open(output_path, "wb") as f:
+                f.write(response.content)
+            return (len(response.content) * 8) / 128000
 
     def _generate_tts_gemini(self, text: str, output_path: Path) -> float:
         from google.genai import types
@@ -370,6 +405,8 @@ class ElevenLabsClient:
                     duration = self._generate_tts_gemini(processed_text, audio_path)
                 else:
                     duration = self._generate_tts_elevenlabs(processed_text, audio_path)
+                    timestamps_path = audio_path.with_name(audio_path.stem + ".timestamps.json")
+                    result.alignment_path = str(timestamps_path) if timestamps_path.exists() else None
                 result.audio_path = str(audio_path)
                 result.duration = duration
                 result.status = "completed"
