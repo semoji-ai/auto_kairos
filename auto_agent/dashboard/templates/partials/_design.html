@@ -481,8 +481,10 @@
     return h + '</select></div>';
   }
   function _fmtColor(id, label, val, disabled) {
+    // <input type="color">는 #rrggbb 형식만 허용 — transparent 등 비표준값 폴백
+    var colorVal = (val && /^#[0-9a-fA-F]{6}$/.test(val)) ? val : '#000000';
     return '<div class="form-group"><span class="form-label">' + label + '</span>'
-      + '<input class="form-input" type="color" id="' + id + '" value="' + _esc(val) + '"' + (disabled ? ' disabled' : '') + '>'
+      + '<input class="form-input" type="color" id="' + id + '" value="' + _esc(colorVal) + '"' + (disabled ? ' disabled' : '') + '>'
       + '</div>';
   }
   function _fmtRange(id, label, val, min, max, step, disabled) {
