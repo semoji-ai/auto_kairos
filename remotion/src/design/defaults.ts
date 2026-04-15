@@ -185,6 +185,7 @@ export const DEFAULT_PRESET: DesignPreset = {
     card: "bordered",
     metricCard: "bordered",
     comparisonCell: "bordered",
+    itemsList: "default",
     callout: "left-border",
     tag: "rounded",
     pill: "pill",
