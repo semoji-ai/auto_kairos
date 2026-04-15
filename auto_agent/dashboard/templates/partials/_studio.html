@@ -185,7 +185,7 @@
 // ── SubtitleEditor ──────────────────────────────────
 var SubtitleEditor = (function() {
   var _slug = '', _sceneNum = 0, _words = [], _entries = [];
-  var _panel = null, _saveBtn = null, _saveStatus = null;
+  var _panel = null, _saveBtn = null, _saveStatus = null, _onSaved = null;
 
   function fmtTime(sec) {
     var h = Math.floor(sec / 3600);
@@ -214,8 +214,8 @@ var SubtitleEditor = (function() {
       accumulated += (accumulated ? ' ' : '') + blockWords[i].word;
       if (accumulated.length >= textBefore.length) {
         bestEnd = blockWords[i].end;
-        var nextStart = i + 1 < blockWords.length ? blockWords[i + 1].start : blockWords[i].end;
-        return { firstEnd: Math.round(bestEnd * 1000) / 1000, secondStart: Math.round(nextStart * 1000) / 1000 };
+        // secondStart = firstEnd (갭 없이 바로 이어붙임)
+        return { firstEnd: Math.round(bestEnd * 1000) / 1000, secondStart: Math.round(bestEnd * 1000) / 1000 };
       }
       bestEnd = blockWords[i].end;
     }
@@ -319,12 +319,13 @@ var SubtitleEditor = (function() {
     });
   }
 
-  function load(slug, sceneNum, panel, saveBtn, saveStatus) {
+  function load(slug, sceneNum, panel, saveBtn, saveStatus, onSaved) {
     _slug = slug;
     _sceneNum = sceneNum;
     _panel = panel;
     _saveBtn = saveBtn;
     _saveStatus = saveStatus;
+    _onSaved = onSaved || null;
 
     panel.innerHTML = '<div class="subtitle-empty">로딩 중...</div>';
     if (saveStatus) saveStatus.textContent = '';
@@ -360,6 +361,7 @@ var SubtitleEditor = (function() {
         _saveStatus.textContent = '✓ 저장됨';
         setTimeout(function() { if (_saveStatus) _saveStatus.textContent = ''; }, 2000);
       }
+      if (_onSaved) _onSaved();
     })
     .catch(function() {
       _saveBtn.disabled = false;
@@ -407,7 +409,12 @@ var SubtitleEditor = (function() {
 
   // ── 자막 로드 (씬 번호 기준) ──
   function loadSubtitlePanel(sceneNum) {
-    SubtitleEditor.load(SLUG, sceneNum, elSubtitlePanel, elSubtitleSaveBtn, elSubtitleSaveStatus);
+    SubtitleEditor.load(SLUG, sceneNum, elSubtitlePanel, elSubtitleSaveBtn, elSubtitleSaveStatus, function() {
+      // 저장 성공 후 iframe 새로고침 (매니페스트 리빌드 반영)
+      if (elIframe && elIframe.src && elIframe.src !== 'about:blank') {
+        elIframe.src = elIframe.src;
+      }
+    });
   }
 
   elSubtitleSaveBtn.addEventListener('click', function() { SubtitleEditor.save(); });
