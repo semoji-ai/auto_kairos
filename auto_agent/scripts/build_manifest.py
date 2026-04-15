@@ -403,13 +403,15 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         if mood:
             entry["mood"] = mood
 
-        # layout 필드 (v5 최상위 또는 v4 creative 내부)
+        # layout 필드 — 단일 소스: 항상 최상위 "layout"으로 기록
+        # sceneType은 하위호환용 alias로만 남김
         scene_layout = scene.get("layout") or viz.get("layout") or viz.get("creative", {}).get("layout", "")
         # quote는 레거시 → quote_portrait로 정규화
         if scene_layout == "quote":
             scene_layout = "quote_portrait"
         if scene_layout:
-            entry["sceneType"] = scene_layout
+            entry["layout"] = scene_layout   # 단일 소스
+            entry["sceneType"] = scene_layout  # 하위호환 유지
 
         if scene.get("imageAsset"):
             ia = scene["imageAsset"]

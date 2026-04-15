@@ -302,14 +302,12 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
         "cinematic", "bar_horizontal", "donut",
     }
 
-    # 0순위: 플랫 스키마 — scene.layout / sceneType / visualization.layout 직접 지정
-    for _layout_key in (scene.get("layout"), scene.get("sceneType"), viz.get("layout")):
-        if _layout_key and _layout_key in VALID_LAYOUTS:
-            return _layout_key, True
-
-    # 1순위: creative.layout 직접 지정
-    if creative.get("layout") and creative["layout"] in VALID_LAYOUTS:
-        return creative["layout"], True
+    # 0순위: 명시적 layout (build_manifest가 항상 최상위에 기록)
+    # fallback 순서: scene.layout → sceneType → viz.layout → creative.layout
+    _explicit = (scene.get("layout") or scene.get("sceneType")
+                 or viz.get("layout") or creative.get("layout") or "")
+    if _explicit and _explicit in VALID_LAYOUTS:
+        return _explicit, True
 
     # 2순위: displayMode / chartConfig
     if creative.get("displayMode") == "logo_grid":
