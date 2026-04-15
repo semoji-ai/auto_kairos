@@ -21,14 +21,14 @@ import type { LucideIcon } from "lucide-react";
 import {
   Shield, Lock, ShieldCheck,
   Brain, Cpu, Code, Database, Terminal,
-  TrendingUp, Rocket, ArrowUpRight,
+  TrendingUp, TrendingDown, Rocket, ArrowUpRight, ArrowDownRight,
   MessageSquare, Mail, Globe,
   DollarSign, BarChart3, Target,
   Users, User, Building,
   Clock, Calendar, History,
   Wrench, Settings, Hammer,
   Search, Eye, Compass,
-  CheckCircle, Award, Star,
+  CheckCircle, XCircle, Award, Star,
   AlertTriangle, AlertCircle,
   BookOpen, GraduationCap, Lightbulb,
   HardDrive, Layers,
@@ -39,8 +39,17 @@ import {
   Flag, Map, MapPin,
   Plane, Ship, Truck,
   FileText, Newspaper, Mic,
-  Camera, Video, Music,
+  Camera, Video, Music, Tv, Play, Pause,
   Phone, Wifi, Radio,
+  Gamepad2, Palette, Bug, Cable, Smartphone,
+  Package, Tag, ShoppingCart, Store,
+  Banknote, PiggyBank, Coins,
+  Megaphone, Share2, ExternalLink,
+  Trophy, Medal, Ribbon,
+  Home, Car, Train,
+  Sun, Moon, CloudRain, Wind,
+  Dna, Microscope, FlaskConical, Atom,
+  Pencil, PenLine, Scissors, Ruler,
 } from "lucide-react";
 
 import * as SimpleIcons from "@icons-pack/react-simple-icons";
@@ -1253,7 +1262,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   // AI/기술
   Brain, Cpu, Code, Database, Terminal,
   // 성장/트렌드
-  TrendingUp, Rocket, ArrowUpRight,
+  TrendingUp, TrendingDown, Rocket, ArrowUpRight, ArrowDownRight,
   // 보안/안전
   Shield, Lock, ShieldCheck,
   // 통신/소통
@@ -1269,7 +1278,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   // 검색/탐구
   Search, Eye, Compass,
   // 성공/달성
-  CheckCircle, Award, Star,
+  CheckCircle, XCircle, Award, Star,
   // 경고/주의
   AlertTriangle, AlertCircle,
   // 학습/지식
@@ -1287,17 +1296,44 @@ const ICON_MAP: Record<string, LucideIcon> = {
   // 위치
   Flag, Map, MapPin,
   // 운송
-  Plane, Ship, Truck,
-  // 미디어
-  FileText, Newspaper, Mic, Camera, Video, Music,
+  Plane, Ship, Truck, Car, Train,
+  // 미디어/엔터
+  FileText, Newspaper, Mic, Camera, Video, Music, Tv, Play, Pause,
   // 통신
   Phone, Wifi, Radio,
+  // 게임/취미
+  Gamepad2, Palette, Bug, Cable, Smartphone,
+  // 쇼핑/상품
+  Package, Tag, ShoppingCart, Store,
+  // 금융
+  Banknote, PiggyBank, Coins,
+  // 마케팅/공유
+  Megaphone, Share2, ExternalLink,
+  // 수상/성취
+  Trophy, Medal, Ribbon,
+  // 자연/날씨
+  Sun, Moon, CloudRain, Wind,
+  // 과학
+  Dna, Microscope, FlaskConical, Atom,
+  // 창작
+  Pencil, PenLine, Scissors, Ruler,
+  // 홈
+  Home,
 };
 
 /** 문자열 → Lucide 아이콘 컴포넌트 */
+/** kebab-case → PascalCase: "trending-down" → "TrendingDown", "gamepad-2" → "Gamepad2" */
+function kebabToPascal(s: string): string {
+  return s.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join("");
+}
+
 export function resolveIcon(name?: string): LucideIcon | null {
   if (!name) return null;
-  return ICON_MAP[name] ?? null;
+  // 1. 직접 조회
+  if (ICON_MAP[name]) return ICON_MAP[name];
+  // 2. kebab-case → PascalCase 변환 후 조회 ("x-circle" → "XCircle")
+  const pascal = kebabToPascal(name);
+  return ICON_MAP[pascal] ?? null;
 }
 
 /** 문자열 → Simple Icons 브랜드 로고 컴포넌트 */
