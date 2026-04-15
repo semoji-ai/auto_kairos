@@ -48,15 +48,16 @@ def test_build_episode_project_slug():
     assert slug == "lg_brand_encyclopedia_ep03"
 
 def test_series_run_dry_run_creates_brief_files():
-    """dry_run=True이면 episode_brief.json 파일이 생성되어야 한다."""
+    """dry_run=True이면 episode_brief.json과 editorial_brief.json 모두 생성되어야 한다."""
     import tempfile
     from auto_agent.orchestrator.series_runner import series_run
     with tempfile.TemporaryDirectory() as tmpdir:
         series_run(SAMPLE_PLAN, output_base=Path(tmpdir), dry_run=True)
         for ep_num in [1, 2]:
             slug = f"lg_brand_encyclopedia_ep{ep_num:02d}"
-            brief_path = Path(tmpdir) / slug / "episode_brief.json"
-            assert brief_path.exists(), f"Missing: {brief_path}"
+            ep_dir = Path(tmpdir) / slug
+            assert (ep_dir / "episode_brief.json").exists(), f"Missing episode_brief: {ep_dir}"
+            assert (ep_dir / "editorial_brief.json").exists(), f"Missing editorial_brief: {ep_dir}"
 
 def test_series_run_calls_runner_for_each_episode():
     """series_run은 dry_run=False이면 각 에피소드마다 run_single_episode를 호출한다."""

@@ -68,6 +68,14 @@ def series_run(
         episode["episode_brief_path"] = str(brief_path)
         episode["project_slug"] = slug
 
+        # editorial_brief_module은 editorial_brief.json이 이미 존재하면 스킵한다.
+        # episode_brief를 미리 복사해두면 runner.py 수정 없이 scope/do_not_cover가 반영된다.
+        editorial_brief_path = ep_dir / "editorial_brief.json"
+        if not editorial_brief_path.exists():
+            editorial_brief_path.write_text(
+                json.dumps(brief, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+
         if dry_run:
             print(f"[series_runner] DRY RUN — EP{ep_num:02d}: {slug}", flush=True)
             episodes_completed += 1
