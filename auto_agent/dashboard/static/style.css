@@ -1651,7 +1651,7 @@ audio::-webkit-media-controls-play-button { filter: brightness(1.5); }
 .studio-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 48px);
+  height: calc(100vh - 42px);
   min-height: 500px;
 }
 .studio-toolbar {
