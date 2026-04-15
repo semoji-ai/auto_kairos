@@ -21,14 +21,16 @@
     <iframe id="studio-iframe" src="about:blank" class="studio-iframe" allow="autoplay"></iframe>
     <div class="studio-subtitle-side" id="studio-subtitle-side">
       <div class="subtitle-side-header">
-        <span class="subtitle-side-title">자막</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="subtitle-side-title">자막</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span id="subtitle-save-status" style="font-size:11px;"></span>
+            <button class="btn btn-sm btn-accent" id="btn-subtitle-save">저장</button>
+          </div>
+        </div>
         <span class="subtitle-hint">Enter: 분리 &nbsp;|&nbsp; Backspace(줄 처음): 병합</span>
       </div>
       <div id="studio-subtitle-panel" class="studio-subtitle-panel"></div>
-      <div class="subtitle-side-footer">
-        <button class="btn btn-sm btn-accent" id="btn-subtitle-save">저장</button>
-        <span id="subtitle-save-status" style="font-size:11px;"></span>
-      </div>
     </div>
   </div>
 
@@ -106,10 +108,6 @@
   flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 5px;
 }
 
-.subtitle-side-footer {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 10px; border-top: 1px solid var(--border); flex-shrink: 0;
-}
 
 /* ── SRT 블록 ── */
 .srt-block {
