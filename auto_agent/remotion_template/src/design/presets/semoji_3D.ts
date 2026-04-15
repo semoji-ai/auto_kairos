@@ -112,4 +112,7 @@ export const SEMOJI3D_PRESET: DesignPresetOverride = {
     maxWidth: "92%",
     lineHeight: 1.4,
   },
+  variants: {
+    comparisonCell: "none" as const,
+  },
 };

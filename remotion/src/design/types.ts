@@ -174,7 +174,7 @@ export interface ComponentVariants {
   rankBadge: "circle" | "shield" | "square";
   card: "bordered" | "filled" | "glass" | "minimal";
   metricCard: "bordered" | "filled" | "glass";
-  comparisonCell: "bordered" | "filled" | "accent-top";
+  comparisonCell: "bordered" | "filled" | "accent-top" | "none";
   callout: "left-border" | "full-border" | "highlight";
   tag: "rounded" | "pill" | "square";
   pill: "pill" | "rounded" | "square";

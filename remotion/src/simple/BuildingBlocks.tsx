@@ -1074,6 +1074,8 @@ export const ComparisonCell: React.FC<{
     ? { backgroundColor: isLg ? lgBg : C.accentSoft, border: isLg ? lgBorder : "none" }
     : V.comparisonCell === "accent-top"
     ? { backgroundColor: isLg ? lgBg : C.cardBg, border: isLg ? lgBorder : `1px solid ${C.cardBorder}`, ...(!isLg ? { borderTop: `3px solid ${valueColor}` } : {}) }
+    : V.comparisonCell === "none"
+    ? { backgroundColor: "transparent", border: "none" }
     : { backgroundColor: isLg ? lgBg : C.cardBg, border: isLg ? lgBorder : `1px solid ${C.cardBorder}` };
   return (
     <div style={{
