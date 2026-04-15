@@ -1285,6 +1285,46 @@ async def save_subtitles(request: Request, slug: str, scene_num: int):
     except KeyError as exc:
         return JSONResponse({"error": f"missing field in entry: {exc}"}, 500)
     srt_path.write_text("\n".join(lines), encoding="utf-8")
+
+    # subtitles.json 갱신
+    try:
+        import json as _json
+        subtitles_json_path = Path(out_dir) / "subtitles.json"
+        if subtitles_json_path.exists():
+            subtitles_data = _json.loads(subtitles_json_path.read_text(encoding="utf-8"))
+        else:
+            subtitles_data = {"scenes": []}
+        scenes_list = subtitles_data.get("scenes", [])
+        new_entry = {
+            "sceneNumber": scene_num,
+            "audioDurationSec": round(entries[-1]["endSec"], 3) if entries else 0,
+            "entries": entries,
+            "wordCount": sum(len(e["text"].split()) for e in entries),
+            "source": "manual_edit",
+        }
+        updated = False
+        for i, s in enumerate(scenes_list):
+            if s.get("sceneNumber") == scene_num:
+                scenes_list[i] = new_entry
+                updated = True
+                break
+        if not updated:
+            scenes_list.append(new_entry)
+        subtitles_data["scenes"] = sorted(scenes_list, key=lambda x: x.get("sceneNumber", 0))
+        subtitles_json_path.write_text(
+            _json.dumps(subtitles_data, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    except Exception as e:
+        print(f"[WARN] subtitles.json 갱신 실패: {e}", flush=True)
+
+    # 매니페스트 리빌드
+    try:
+        from auto_agent.scripts.build_manifest import build_manifest
+        dir_name = Path(out_dir).name
+        build_manifest(str(project.get("id", "")), dir_name, out_dir)
+    except Exception as e:
+        print(f"[WARN] 매니페스트 리빌드 실패: {e}", flush=True)
+
     return JSONResponse({"ok": True, "count": len(entries)})
 
 
