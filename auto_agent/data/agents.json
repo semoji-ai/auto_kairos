@@ -387,6 +387,17 @@
         "Edit",
         "Bash"
       ]
+    },
+    "series-reviewer": {
+      "description": "전체 시리즈 Stage 2 완료 후 편 간 일관성 검토 에이전트",
+      "model": "opus",
+      "max_turns": 30,
+      "skills": ["agents/series-reviewer"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Glob"
+      ]
     }
   },
   "modules": {
