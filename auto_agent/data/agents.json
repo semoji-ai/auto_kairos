@@ -375,6 +375,18 @@
       ],
       "skill_file": "agents/style-manager/SKILL.md",
       "notes": "스타일 추가·수정 시 전용 에이전트로만 처리. TS 프리셋 직접 편집 금지."
+    },
+    "series-planner": {
+      "description": "장편 시리즈 기획안(series_plan.json) 작성 에이전트",
+      "model": "opus",
+      "max_turns": 20,
+      "skills": ["agents/series-planner"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash"
+      ]
     }
   },
   "modules": {
