@@ -4765,7 +4765,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
         # 네트워크 의존성 높은 스텝: 최초 1회 + 재시도 2회 = 총 3회
         if agent == "assembly-director" or step_name == "assembly":
-            return 3
+            return 2  # 최초 1회 + 재시도 1회 (QA persist로 중복 생성 방지됨)
         if step_name in ("tts", "voice_generation", "tts_generation"):
             return 3
 
