@@ -1210,9 +1210,18 @@ async def get_tts_text(slug: str, scene_num: int):
         return JSONResponse({"error": "no specs"}, 404)
     for s in specs.get("scenes", []):
         if s.get("sceneNumber") == scene_num:
+            narration = s.get("narration", "")
+            narration_tts = s.get("narration_tts", "")
+            if not narration_tts:
+                # narration_tts 없으면 TTSPreprocessor 적용해서 반환
+                try:
+                    from auto_agent.tools.elevenlabs import TTSPreprocessor
+                    narration_tts = TTSPreprocessor().preprocess(narration, language="ko")
+                except Exception:
+                    narration_tts = narration
             return JSONResponse({
-                "text": s.get("narration_tts", s.get("narration", "")),
-                "narration": s.get("narration", ""),
+                "text": narration_tts,
+                "narration": narration,
             })
     return JSONResponse({"error": "scene not found"}, 404)
 
