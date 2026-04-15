@@ -601,6 +601,10 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         **({ "backgroundColor": _subtitle_override["backgroundColor"] } if "backgroundColor" in _subtitle_override else {}),
         **({ "borderRadius": _subtitle_override["borderRadius"] } if "borderRadius" in _subtitle_override else {}),
         **({ "boxShadow": _subtitle_override["boxShadow"] } if "boxShadow" in _subtitle_override else {}),
+        **({ "border": _subtitle_override["border"] } if "border" in _subtitle_override else {}),
+        **({ "opacity": _subtitle_override["opacity"] } if "opacity" in _subtitle_override else {}),
+        **({ "entryAnimation": _subtitle_override["entryAnimation"] } if "entryAnimation" in _subtitle_override else {}),
+        **({ "textPaddingTop": _subtitle_override["textPaddingTop"] } if "textPaddingTop" in _subtitle_override else {}),
     }
 
     props = {"manifest": manifest, "subtitleConfig": subtitle_config}

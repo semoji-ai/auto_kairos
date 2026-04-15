@@ -92,6 +92,7 @@ def build_preset_obj(dt: dict, style_id: str) -> dict:
             "strokeWidth", "strokeColor",
             "keywordColor", "keywordStrokeColor",
             "backgroundColor", "borderRadius", "boxShadow",
+            "border", "opacity", "entryAnimation", "textPaddingTop",
             "bottomOffset", "maxWidth", "lineHeight",
         ]
         sub_obj = {k: subtitle[k] for k in ts_subtitle_keys if k in subtitle}
