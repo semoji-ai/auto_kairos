@@ -603,11 +603,28 @@ def generate_scene(
 generate_scene_flat = generate_scene
 
 
+def _infer_web_search(scene: dict, is_search_fallback: bool) -> bool:
+    """enable_web_search 명시 없을 때 규칙 기반 판단.
+
+    Args:
+        scene: scene_specs.json의 씬 딕셔너리
+        is_search_fallback: image_batch_module에서 search→generate fallback으로 호출된 경우
+    """
+    if is_search_fallback:
+        return True  # 원래 실사가 필요했던 씬
+    from datetime import datetime
+    prompt = (scene.get("imageAsset") or {}).get("prompt", "")
+    current_year = datetime.now().year
+    signals = [str(current_year), str(current_year - 1)]
+    return any(s in prompt for s in signals)
+
+
 def _build_scene_fal_input(
     scene: dict,
     project_dir: Path,
     char_paths: Optional[Dict[str, Optional[Path]]] = None,
     style_path: Optional[str] = None,
+    is_search_fallback: bool = False,
 ) -> tuple[str, dict]:
     """씬 FAL 입력 빌드. (endpoint, fal_input) 반환.
 
@@ -616,6 +633,7 @@ def _build_scene_fal_input(
         project_dir: 프로젝트 디렉토리 (art_style.json 경로 탐색용)
         char_paths: {char_id: Path | None} — None이면 해당 캐릭터 참조 없이 생성
         style_path: art_style.json 경로. None이면 project_dir/art_style.json 사용.
+        is_search_fallback: search→generate fallback 씬 여부 (enable_web_search 판단에 사용)
     """
     if style_path is None:
         style_path = str(project_dir / "art_style.json")
@@ -712,6 +730,14 @@ def _build_scene_fal_input(
     fal_input: dict = {"prompt": full_prompt, "aspect_ratio": aspect_ratio}
     if image_urls:
         fal_input["image_urls"] = image_urls
+
+    # enable_web_search: 명시값 우선, 없으면 규칙 기반 판단
+    explicit_web_search = (scene.get("imageAsset") or {}).get("enable_web_search")
+    fal_input["enable_web_search"] = (
+        explicit_web_search if explicit_web_search is not None
+        else _infer_web_search(scene, is_search_fallback)
+    )
+
     return endpoint, fal_input
 
 

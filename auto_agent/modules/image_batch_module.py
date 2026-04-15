@@ -261,7 +261,7 @@ def run_batch(
             fb_jobs: list[tuple[dict, FalJob]] = []
             for sc in failed_scenes:
                 try:
-                    ep, args = _build_scene_fal_input(sc, project_dir, {})
+                    ep, args = _build_scene_fal_input(sc, project_dir, {}, is_search_fallback=True)
                     fb_jobs.append((sc, FalJob(idx=len(fb_jobs), endpoint=ep, arguments=args)))
                 except Exception:
                     pass
