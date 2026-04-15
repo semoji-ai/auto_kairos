@@ -40,7 +40,16 @@
       </div>
     </div>
     <div class="edit-modal-body">
-      <div id="scene-editor-root" class="scene-editor-root"></div>
+      <div class="edit-modal-tabs">
+        <button class="edit-tab active" data-tab="scene">씬 편집</button>
+        <button class="edit-tab" data-tab="subtitle">자막</button>
+      </div>
+      <div class="edit-tab-content" id="tab-scene">
+        <div id="scene-editor-root" class="scene-editor-root"></div>
+      </div>
+      <div class="edit-tab-content" id="tab-subtitle" style="display:none;">
+        <div id="subtitle-panel" class="subtitle-panel"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -110,8 +119,54 @@
 }
 .btn-close:hover { background: rgba(239,68,68,0.15); color: #EF4444; border-color: rgba(239,68,68,0.3); }
 
-.edit-modal-body { flex: 1; overflow: hidden; }
-.edit-modal-body .scene-editor-root { width: 100%; height: 100%; }
+.edit-modal-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.edit-tab-content { flex: 1; overflow: hidden; }
+.edit-tab-content#tab-scene { display: flex; flex-direction: column; }
+.edit-tab-content#tab-scene .scene-editor-root { width: 100%; height: 100%; }
+.subtitle-panel { height: 100%; }
+
+/* ── 편집 모달 탭 ── */
+.edit-modal-tabs {
+  display: flex; gap: 4px; padding: 8px 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;
+}
+.edit-tab {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 12px; font-weight: 600; padding: 4px 12px 8px;
+  cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s;
+}
+.edit-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.edit-tab:hover:not(.active) { color: var(--text); }
+
+/* ── 자막 패널 ── */
+.subtitle-panel {
+  display: flex; flex-direction: column; height: 100%;
+  padding: 12px; gap: 8px; overflow-y: auto; box-sizing: border-box;
+}
+.subtitle-toolbar {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-shrink: 0;
+}
+.subtitle-hint { font-size: 11px; color: var(--text-muted); }
+.srt-blocks { display: flex; flex-direction: column; gap: 6px; flex: 1; overflow-y: auto; }
+.srt-block {
+  display: flex; gap: 8px; align-items: flex-start;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 8px;
+  transition: border-color 0.15s;
+}
+.srt-block:focus-within { border-color: var(--accent); }
+.srt-timecode {
+  font-size: 10px; color: var(--text-muted); white-space: pre;
+  font-family: monospace; min-width: 110px; padding-top: 2px;
+}
+.srt-text {
+  flex: 1; font-size: 14px; color: var(--text); outline: none;
+  white-space: pre-wrap; word-break: break-all; min-height: 20px;
+}
+.subtitle-empty { color: var(--text-muted); font-size: 13px; padding: 24px; text-align: center; }
+.subtitle-save-ok { color: var(--success); font-size: 11px; }
+.subtitle-save-err { color: var(--error); font-size: 11px; }
 </style>
 
 <!-- scene-editor.js 번들 (일반 씬용) -->
@@ -123,6 +178,197 @@
 <script src="/static/map-editor.js"></script>
 
 <script>
+// ── SubtitleEditor ──────────────────────────────────
+var SubtitleEditor = (function() {
+  var _slug = '', _sceneNum = 0, _words = [], _entries = [], _panel = null;
+
+  function fmtTime(sec) {
+    var h = Math.floor(sec / 3600);
+    var m = Math.floor((sec % 3600) / 60);
+    var s = Math.floor(sec % 60);
+    var ms = Math.round((sec % 1) * 1000);
+    return (h < 10 ? '0' : '') + h + ':' +
+           (m < 10 ? '0' : '') + m + ':' +
+           (s < 10 ? '0' : '') + s + ',' +
+           (ms < 100 ? (ms < 10 ? '00' : '0') : '') + ms;
+  }
+
+  function findSplitTiming(blockText, cursorOffset, blockStartSec, blockEndSec) {
+    var blockWords = _words.filter(function(w) {
+      return w.start >= blockStartSec - 0.01 && w.end <= blockEndSec + 0.01;
+    });
+    if (!blockWords.length) {
+      var ratio = cursorOffset / (blockText.length || 1);
+      var splitSec = blockStartSec + (blockEndSec - blockStartSec) * ratio;
+      return { firstEnd: Math.round(splitSec * 1000) / 1000, secondStart: Math.round(splitSec * 1000) / 1000 };
+    }
+    var textBefore = blockText.substring(0, cursorOffset).trim();
+    var accumulated = '';
+    var bestEnd = blockStartSec;
+    for (var i = 0; i < blockWords.length; i++) {
+      accumulated += (accumulated ? ' ' : '') + blockWords[i].word;
+      if (accumulated.length >= textBefore.length) {
+        bestEnd = blockWords[i].end;
+        var nextStart = i + 1 < blockWords.length ? blockWords[i + 1].start : blockWords[i].end;
+        return { firstEnd: Math.round(bestEnd * 1000) / 1000, secondStart: Math.round(nextStart * 1000) / 1000 };
+      }
+      bestEnd = blockWords[i].end;
+    }
+    return { firstEnd: blockEndSec, secondStart: blockEndSec };
+  }
+
+  function renderBlocks() {
+    var blocksEl = _panel.querySelector('.srt-blocks');
+    if (!blocksEl) return;
+    blocksEl.innerHTML = '';
+    if (!_entries.length) {
+      blocksEl.innerHTML = '<div class="subtitle-empty">자막 없음 — TTS 생성 후 자막을 먼저 생성하세요.</div>';
+      return;
+    }
+    _entries.forEach(function(entry, idx) {
+      var block = document.createElement('div');
+      block.className = 'srt-block';
+      block.dataset.idx = idx;
+
+      var tc = document.createElement('div');
+      tc.className = 'srt-timecode';
+      tc.textContent = fmtTime(entry.startSec) + '\n→ ' + fmtTime(entry.endSec);
+
+      var txt = document.createElement('div');
+      txt.className = 'srt-text';
+      txt.contentEditable = 'true';
+      txt.spellcheck = false;
+      txt.textContent = entry.text;
+
+      txt.addEventListener('input', function() {
+        _entries[idx].text = txt.textContent || '';
+      });
+
+      txt.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        var sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+        var range = sel.getRangeAt(0);
+        var preRange = document.createRange();
+        preRange.setStart(txt, 0);
+        preRange.setEnd(range.startContainer, range.startOffset);
+        var cursorOffset = preRange.toString().length;
+
+        var entry = _entries[idx];
+        var timing = findSplitTiming(entry.text, cursorOffset, entry.startSec, entry.endSec);
+        var textBefore = entry.text.substring(0, cursorOffset).trim();
+        var textAfter = entry.text.substring(cursorOffset).trim();
+        if (!textBefore || !textAfter) return;
+
+        var newEntry = { index: 0, startSec: timing.secondStart, endSec: entry.endSec, text: textAfter };
+        _entries[idx] = { index: 0, startSec: entry.startSec, endSec: timing.firstEnd, text: textBefore };
+        _entries.splice(idx + 1, 0, newEntry);
+        _entries.forEach(function(e, i) { e.index = i + 1; });
+        renderBlocks();
+        setTimeout(function() {
+          var nextBlock = blocksEl.querySelectorAll('.srt-text')[idx + 1];
+          if (nextBlock) {
+            nextBlock.focus();
+            var r = document.createRange();
+            r.setStart(nextBlock.firstChild || nextBlock, 0);
+            r.collapse(true);
+            var s = window.getSelection();
+            s.removeAllRanges();
+            s.addRange(r);
+          }
+        }, 0);
+      });
+
+      txt.addEventListener('keydown', function(e) {
+        if (e.key !== 'Backspace' || idx === 0) return;
+        var sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+        var range = sel.getRangeAt(0);
+        var preRange = document.createRange();
+        preRange.setStart(txt, 0);
+        preRange.setEnd(range.startContainer, range.startOffset);
+        if (preRange.toString().length !== 0) return;
+        e.preventDefault();
+        var prev = _entries[idx - 1];
+        var curr = _entries[idx];
+        prev.text = (prev.text + ' ' + curr.text).trim();
+        prev.endSec = curr.endSec;
+        _entries.splice(idx, 1);
+        _entries.forEach(function(e, i) { e.index = i + 1; });
+        renderBlocks();
+        setTimeout(function() {
+          var prevBlock = blocksEl.querySelectorAll('.srt-text')[idx - 1];
+          if (prevBlock && prevBlock.firstChild) {
+            var r = document.createRange();
+            var textNode = prevBlock.firstChild;
+            var pos = Math.max(0, prev.text.length - curr.text.length - 1);
+            r.setStart(textNode, Math.min(pos, textNode.length));
+            r.collapse(true);
+            var s = window.getSelection();
+            s.removeAllRanges();
+            s.addRange(r);
+          }
+        }, 0);
+      });
+
+      block.appendChild(tc);
+      block.appendChild(txt);
+      blocksEl.appendChild(block);
+    });
+  }
+
+  function load(slug, sceneNum, panel) {
+    _slug = slug;
+    _sceneNum = sceneNum;
+    _panel = panel;
+    panel.innerHTML = '<div class="subtitle-toolbar"><span class="subtitle-hint">Enter: 분리 &nbsp;|&nbsp; Backspace(줄 처음): 병합</span><button class="btn btn-sm btn-accent" id="btn-subtitle-save">저장</button></div><div class="srt-blocks"><div class="subtitle-empty">로딩 중...</div></div>';
+
+    panel.querySelector('#btn-subtitle-save').addEventListener('click', save);
+
+    fetch('/api/p/' + slug + '/subtitles/' + sceneNum)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        _entries = data.entries || [];
+        _words = data.words || [];
+        renderBlocks();
+      })
+      .catch(function() {
+        panel.querySelector('.srt-blocks').innerHTML = '<div class="subtitle-empty">로딩 실패</div>';
+      });
+  }
+
+  function save() {
+    var btn = _panel.querySelector('#btn-subtitle-save');
+    btn.disabled = true;
+    btn.textContent = '저장 중...';
+    fetch('/api/p/' + _slug + '/subtitles/' + _sceneNum, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entries: _entries })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.disabled = false;
+      btn.textContent = '저장';
+      if (data.ok) {
+        var ok = document.createElement('span');
+        ok.className = 'subtitle-save-ok';
+        ok.textContent = ' ✓ 저장됨';
+        btn.parentNode.appendChild(ok);
+        setTimeout(function() { if (ok.parentNode) ok.remove(); }, 2000);
+      }
+    })
+    .catch(function() {
+      btn.disabled = false;
+      btn.textContent = '저장';
+    });
+  }
+
+  return { load: load };
+})();
+// ── SubtitleEditor END ──────────────────────────────
+
 (function() {
   var SLUG = '{{ slug }}';
   var DIR_NAME = '{{ dir_name|default(slug) }}';
@@ -273,6 +519,8 @@
         }
       });
 
+    // 탭 초기화 — 씬 편집 탭으로 리셋
+    _switchTab('scene');
     elOverlay.classList.add('open');
   }
 
@@ -335,6 +583,24 @@
     if (e.data && e.data.type === 'remotion-scene' && e.data.sceneNumber) {
       elNumInput.value = e.data.sceneNumber;
     }
+  });
+
+  // ── 탭 전환 ──
+  var _activeTab = 'scene';
+  function _switchTab(name) {
+    _activeTab = name;
+    document.querySelectorAll('.edit-tab').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.tab === name);
+    });
+    document.getElementById('tab-scene').style.display = name === 'scene' ? '' : 'none';
+    document.getElementById('tab-subtitle').style.display = name === 'subtitle' ? '' : 'none';
+    if (name === 'subtitle') {
+      var sceneNum = (_scenes[_currentIdx] || {}).sceneNumber || (_currentIdx + 1);
+      SubtitleEditor.load(SLUG, sceneNum, document.getElementById('subtitle-panel'));
+    }
+  }
+  document.querySelectorAll('.edit-tab').forEach(function(btn) {
+    btn.addEventListener('click', function() { _switchTab(btn.dataset.tab); });
   });
 
   // ── 초기화 ──
