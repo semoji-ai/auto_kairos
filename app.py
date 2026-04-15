@@ -1229,6 +1229,7 @@ async def get_tts_text(slug: str, scene_num: int):
 @app.get("/api/p/{slug}/subtitles/{scene_num}")
 async def get_subtitles(slug: str, scene_num: int):
     """씬의 SRT 엔트리 + timestamps.json 단어 데이터 반환."""
+    import json as _json
     pm = get_pm()
     project = pm.get_project(slug=slug)
     if not project:
@@ -1240,7 +1241,10 @@ async def get_subtitles(slug: str, scene_num: int):
     entries = []
     if srt_path.exists():
         from auto_agent.scripts.generate_subtitles import parse_srt
-        entries = parse_srt(srt_path.read_text(encoding="utf-8"))
+        try:
+            entries = parse_srt(srt_path.read_text(encoding="utf-8"))
+        except Exception:
+            entries = []
 
     words = []
     if ts_path.exists():
@@ -1272,11 +1276,14 @@ async def save_subtitles(request: Request, slug: str, scene_num: int):
 
     from auto_agent.scripts.generate_subtitles import format_srt_time
     lines = []
-    for i, e in enumerate(entries, 1):
-        lines.append(str(i))
-        lines.append(f"{format_srt_time(e['startSec'])} --> {format_srt_time(e['endSec'])}")
-        lines.append(e["text"])
-        lines.append("")
+    try:
+        for i, e in enumerate(entries, 1):
+            lines.append(str(i))
+            lines.append(f"{format_srt_time(e['startSec'])} --> {format_srt_time(e['endSec'])}")
+            lines.append(e["text"])
+            lines.append("")
+    except KeyError as exc:
+        return JSONResponse({"error": f"missing field in entry: {exc}"}, 500)
     srt_path.write_text("\n".join(lines), encoding="utf-8")
     return JSONResponse({"ok": True, "count": len(entries)})
 
