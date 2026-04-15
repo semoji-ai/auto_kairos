@@ -1,549 +1,237 @@
-<!-- Research + Manuscript 2패널 캔버스 -->
-<div class="rc-wrap" id="rc-wrap" data-slug="{{ slug }}">
-
-  <!-- ── 2패널 메인 ── -->
-  <div class="rc-panels">
-
-    <!-- 왼쪽: Research Canvas -->
-    <div class="rc-panel rc-panel-research" id="rc-research-panel">
-      <div class="rc-panel-header">
-        <span class="rc-panel-title">Research Canvas</span>
-        <span class="rc-claim-count" id="rc-claim-count">— claims</span>
-        <span class="rc-live-dot" id="rc-live-dot" title="실시간 스트리밍"></span>
-      </div>
-      <div class="rc-panel-body" id="rc-claims-body">
-        <div class="rc-empty">리서치 데이터를 불러오는 중...</div>
-      </div>
-    </div>
-
-    <!-- 오른쪽: Manuscript Canvas -->
-    <div class="rc-panel rc-panel-manuscript" id="rc-manuscript-panel">
-      <div class="rc-panel-header">
-        <span class="rc-panel-title">Manuscript Canvas</span>
-        <span class="rc-ms-badge" id="rc-ms-badge">—</span>
-      </div>
-      <div class="rc-panel-body" id="rc-ms-body">
-        <div class="rc-empty">원고 데이터를 불러오는 중...</div>
-      </div>
-    </div>
-
+<!-- Research 탭 — 위키 스타일 뷰어 -->
+<div class="wiki-wrap" id="wiki-wrap" data-slug="{{ slug }}">
+  <div class="wiki-sidebar" id="wiki-sidebar">
+    <div class="wiki-sidebar-title">Research Wiki</div>
+    <nav class="wiki-nav" id="wiki-nav">
+      <div class="wiki-nav-loading">페이지 목록 로딩 중...</div>
+    </nav>
+  </div>
+  <div class="wiki-content" id="wiki-content">
+    <div class="wiki-placeholder">왼쪽에서 페이지를 선택하세요</div>
   </div>
 </div>
 
 <style>
-/* ── 전체 레이아웃 ── */
-.rc-wrap {
+.wiki-wrap {
   display: flex;
-  flex-direction: column;
-  height: calc(100vh - 80px);
+  height: calc(100vh - 90px);
   overflow: hidden;
 }
 
-/* ── 2패널 ── */
-.rc-panels {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  flex: 1;
-  overflow: hidden;
-}
-
-.rc-panel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+.wiki-sidebar {
+  width: 180px;
+  flex-shrink: 0;
   border-right: 1px solid var(--border);
-}
-.rc-panel:last-child { border-right: none; }
-
-.rc-panel-header {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
-  background: var(--surface);
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wiki-sidebar-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  padding: 14px 16px 10px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
-.rc-panel-title {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
-}
-.rc-claim-count {
-  font-size: 11px;
-  color: var(--text-muted);
-  background: var(--surface2);
-  padding: 2px 8px;
-  border-radius: 8px;
-}
-.rc-live-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--border);
-  margin-left: auto;
-  transition: background 0.3s;
-}
-.rc-live-dot.streaming {
-  background: #22c55e;
-  box-shadow: 0 0 6px #22c55e88;
-  animation: pulse-dot 1.5s infinite;
-}
-@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-.rc-ms-badge {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 8px;
-  background: var(--surface2);
-  color: var(--text-muted);
+.wiki-nav {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px 0;
 }
-.rc-ms-badge.draft { background: rgba(59,130,246,0.15); color: #93C5FD; }
-.rc-ms-badge.final { background: rgba(34,197,94,0.15); color: #86EFAC; }
 
-.rc-panel-body {
+.wiki-nav-loading {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 12px 16px;
+}
+
+.wiki-nav-item {
+  display: block;
+  padding: 7px 16px;
+  font-size: 13px;
+  color: #A1A1AA;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background 0.15s, color 0.15s;
+  text-transform: capitalize;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.wiki-nav-item:hover { background: rgba(255,255,255,0.05); color: #E4E4E7; }
+.wiki-nav-item.active { background: rgba(245,158,11,0.12); color: var(--accent, #F59E0B); font-weight: 600; }
+
+.wiki-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 28px 36px;
+  max-width: 820px;
 }
 
-/* ── Chapter Section (Research) ── */
-.rc-ch-section { margin-bottom: 28px; }
-.rc-ch-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent);
-  padding: 6px 0 8px;
-  border-bottom: 1px solid rgba(245,158,11,0.2);
-  margin-bottom: 10px;
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-  z-index: 1;
-}
-
-/* ── Chapter Purpose ── */
-.rc-ch-purpose {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-  line-height: 1.5;
-  opacity: 0.7;
-}
-
-/* ── Research Focus Questions ── */
-.rc-focus-wrap {
-  margin-bottom: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.rc-focus-q {
-  font-size: 11px;
-  color: rgba(245,158,11,0.55);
-  padding: 3px 8px;
-  border-left: 2px solid rgba(245,158,11,0.2);
-  background: rgba(245,158,11,0.04);
-  border-radius: 0 4px 4px 0;
-  line-height: 1.5;
-}
-
-/* ── Claims Wrap & Waiting ── */
-.rc-claims-wrap { min-height: 24px; }
-.rc-ch-waiting {
-  font-size: 11px;
-  color: var(--text-muted);
-  padding: 6px 0;
-  opacity: 0.5;
-}
-
-/* ── Claim Card ── */
-.rc-claim {
-  display: flex;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  animation: claim-in 0.3s ease;
-}
-@keyframes claim-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.rc-claim:last-child { border-bottom: none; }
-
-.rc-claim-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  margin-top: 7px;
-  flex-shrink: 0;
-}
-.rc-claim-dot.high   { background: #22c55e; }
-.rc-claim-dot.medium { background: #f59e0b; }
-.rc-claim-dot.low    { background: #6b7280; }
-
-.rc-claim-body { flex: 1; min-width: 0; }
-.rc-claim-text {
-  font-size: 13px;
-  line-height: 1.6;
-  color: #D4D4D8;
-  word-break: keep-all;
-}
-.rc-claim-meta {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
-  flex-wrap: wrap;
-}
-.rc-tag {
-  font-size: 9px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-weight: 500;
-}
-.rc-tag-kind     { background: rgba(99,102,241,0.15); color: #A5B4FC; }
-.rc-tag-high     { background: rgba(34,197,94,0.12); color: #86EFAC; }
-.rc-tag-medium   { background: rgba(245,158,11,0.12); color: #FCD34D; }
-.rc-tag-low      { background: rgba(107,114,128,0.15); color: #9CA3AF; }
-.rc-tag-verified { background: rgba(34,197,94,0.08); color: #6EE7B7; }
-
-/* ── Manuscript Canvas ── */
-.rc-ms-chapter {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--accent);
-  margin: 24px 0 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(245,158,11,0.2);
-}
-.rc-ms-chapter:first-child { margin-top: 0; }
-.rc-ms-paragraph {
+.wiki-placeholder {
   font-size: 14px;
-  line-height: 1.85;
-  color: #D4D4D8;
-  margin-bottom: 14px;
-  word-break: keep-all;
-}
-.rc-ms-divider {
-  border: none;
-  border-top: 1px dashed rgba(255,255,255,0.1);
-  margin: 12px 0;
-}
-
-/* ── Empty ── */
-.rc-empty {
-  font-size: 13px;
   color: var(--text-muted);
-  padding: 20px 0;
+  margin-top: 40px;
   text-align: center;
 }
 
-/* ── Responsive ── */
-@media (max-width: 900px) {
-  .rc-panels { grid-template-columns: 1fr; }
-  .rc-wrap { height: auto; }
-}
+/* 마크다운 스타일 */
+.wiki-body h1 { font-size: 22px; font-weight: 700; color: #F4F4F5; margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.wiki-body h2 { font-size: 16px; font-weight: 700; color: var(--accent, #F59E0B); margin: 28px 0 10px; }
+.wiki-body h3 { font-size: 14px; font-weight: 600; color: #D4D4D8; margin: 20px 0 8px; }
+.wiki-body p { font-size: 14px; line-height: 1.85; color: #D4D4D8; margin-bottom: 14px; word-break: keep-all; }
+.wiki-body ul, .wiki-body ol { padding-left: 20px; margin-bottom: 14px; }
+.wiki-body li { font-size: 14px; line-height: 1.75; color: #D4D4D8; margin-bottom: 4px; }
+.wiki-body blockquote { border-left: 3px solid rgba(245,158,11,0.4); padding: 8px 16px; margin: 12px 0; background: rgba(245,158,11,0.06); border-radius: 0 6px 6px 0; }
+.wiki-body blockquote p { color: #A1A1AA; margin: 0; }
+.wiki-body code { font-family: monospace; font-size: 12px; background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 3px; color: #FCA5A5; }
+.wiki-body pre { background: rgba(0,0,0,0.3); border-radius: 6px; padding: 14px 16px; overflow-x: auto; margin-bottom: 14px; }
+.wiki-body pre code { background: none; padding: 0; color: #D4D4D8; }
+.wiki-body hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 20px 0; }
+.wiki-body table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 13px; }
+.wiki-body th { background: rgba(255,255,255,0.06); padding: 8px 12px; text-align: left; color: #A1A1AA; border-bottom: 1px solid var(--border); }
+.wiki-body td { padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #D4D4D8; }
+.wiki-body strong { color: #F4F4F5; font-weight: 600; }
+.wiki-body em { color: #A1A1AA; }
 </style>
 
 <script>
 (function() {
-  var slug = document.getElementById('rc-wrap').dataset.slug;
-  var claimsBody = document.getElementById('rc-claims-body');
-  var msBody = document.getElementById('rc-ms-body');
-  var countEl = document.getElementById('rc-claim-count');
-  var liveDot = document.getElementById('rc-live-dot');
-  var msBadge = document.getElementById('rc-ms-badge');
+  var slug = document.getElementById('wiki-wrap').dataset.slug;
+  var nav = document.getElementById('wiki-nav');
+  var content = document.getElementById('wiki-content');
+  var currentPage = null;
 
-  var chapterMap = {};
-  var chapterDetails = {};  // chapter_number → {title, purpose, research_focus}
-  var claimsByChapter = {};
-  var totalClaims = 0;
+  // 페이지 표시 순서 및 레이블 정의
+  var PAGE_LABELS = {
+    'index': '인덱스',
+    'overview': '개요',
+    'claims': '주요 주장',
+    'timeline': '타임라인',
+    'entities': '등장인물/기관',
+    'images': '이미지',
+    'questions': '연구 질문',
+    'log': '수집 로그'
+  };
+  var PAGE_ORDER = ['overview', 'claims', 'timeline', 'entities', 'images', 'questions', 'log', 'index'];
 
-  // ── 1. outline + claims 초기 로드 ──
-  fetch('/api/p/' + slug + '/research/canvas')
+  fetch('/api/p/' + slug + '/research/wiki')
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      chapterMap = d.chapter_map || {};
-      claimsByChapter = d.grouped_claims || {};
-      totalClaims = d.total_claims || 0;
+      var pages = d.pages || [];
+      if (!pages.length) {
+        nav.innerHTML = '<div class="wiki-nav-loading">위키 페이지가 없습니다</div>';
+        return;
+      }
 
-      // 챕터 상세 정보 저장 (research_focus 포함)
-      var chapters = d.chapters || [];
-      chapters.forEach(function(ch) {
-        var num = ch.chapter_number || ch.id || 0;
-        chapterDetails[String(num)] = ch;
+      // 정의된 순서로 정렬, 나머지는 뒤에
+      pages.sort(function(a, b) {
+        var ia = PAGE_ORDER.indexOf(a), ib = PAGE_ORDER.indexOf(b);
+        if (ia === -1) ia = 99;
+        if (ib === -1) ib = 99;
+        return ia - ib;
       });
 
-      renderOutlineFirst(chapters);
-      countEl.textContent = totalClaims + ' claims';
+      nav.innerHTML = '';
+      pages.forEach(function(page) {
+        var btn = document.createElement('button');
+        btn.className = 'wiki-nav-item';
+        btn.textContent = PAGE_LABELS[page] || page;
+        btn.onclick = function() { loadPage(page, btn); };
+        nav.appendChild(btn);
+      });
+
+      // 첫 번째 페이지 자동 로드
+      var firstBtn = nav.querySelector('.wiki-nav-item');
+      if (firstBtn) firstBtn.click();
     })
     .catch(function() {
-      claimsBody.innerHTML = '<div class="rc-empty">리서치 데이터가 없습니다</div>';
+      nav.innerHTML = '<div class="wiki-nav-loading">로드 실패</div>';
     });
 
-  // ── 2. 원고 로드 (final → draft 순) ──
-  fetch('/api/p/' + slug + '/manuscript/raw')
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (d.text && d.text.trim()) {
-        renderManuscript(d.text);
-        msBadge.textContent = '최종원고';
-        msBadge.className = 'rc-ms-badge final';
-      } else {
-        fetchDraft();
-      }
-    })
-    .catch(function() { fetchDraft(); });
+  function loadPage(page, btn) {
+    if (currentPage === page) return;
+    currentPage = page;
 
-  function fetchDraft() {
-    // draft.md는 별도 엔드포인트 없으므로 pipeline status로 확인
-    msBody.innerHTML = '<div class="rc-empty">원고 준비 중</div>';
-    msBadge.textContent = '대기중';
-    msBadge.className = 'rc-ms-badge';
-  }
+    nav.querySelectorAll('.wiki-nav-item').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
 
-  // ── Outline-first 렌더링 ──
-  function renderOutlineFirst(chapters) {
-    claimsBody.innerHTML = '';
+    content.innerHTML = '<div class="wiki-placeholder">로딩 중...</div>';
 
-    if (!chapters || !chapters.length) {
-      // outline 없으면 기존 claims-only 렌더
-      renderClaimsOnly();
-      return;
-    }
-
-    chapters.forEach(function(ch) {
-      var num = String(ch.chapter_number || ch.id || '');
-      claimsBody.appendChild(buildChapterSection(num, claimsByChapter[num] || [], ch));
-    });
-
-    // unassigned claims
-    if (claimsByChapter['unassigned'] && claimsByChapter['unassigned'].length) {
-      claimsBody.appendChild(buildChapterSection('unassigned', claimsByChapter['unassigned'], null));
-    }
-  }
-
-  function renderClaimsOnly() {
-    if (!Object.keys(claimsByChapter).length) {
-      claimsBody.innerHTML = '<div class="rc-empty">아웃라인이 생성되면 여기에 표시됩니다</div>';
-      return;
-    }
-    var keys = Object.keys(claimsByChapter).sort(function(a, b) {
-      return (parseInt(a) || 999) - (parseInt(b) || 999);
-    });
-    keys.forEach(function(chId) {
-      var claims = claimsByChapter[chId];
-      if (!claims || !claims.length) return;
-      claimsBody.appendChild(buildChapterSection(chId, claims, null));
-    });
-  }
-
-  function buildChapterSection(chId, claims, chData) {
-    var section = document.createElement('div');
-    section.className = 'rc-ch-section';
-    section.id = 'rc-ch-' + chId;
-
-    // 챕터 헤더
-    var chTitle = (chData && chData.title) || chapterMap[chId] || chapterMap[parseInt(chId)] || '';
-    var titleEl = document.createElement('div');
-    titleEl.className = 'rc-ch-title';
-    titleEl.textContent = chId !== 'unassigned'
-      ? (chTitle ? ('Ch' + chId + '. ' + chTitle) : ('Chapter ' + chId))
-      : '미분류';
-    section.appendChild(titleEl);
-
-    // purpose
-    if (chData && chData.purpose) {
-      var purposeEl = document.createElement('div');
-      purposeEl.className = 'rc-ch-purpose';
-      purposeEl.textContent = chData.purpose;
-      section.appendChild(purposeEl);
-    }
-
-    // research_focus 질문 (claims 없을 때 placeholder로)
-    var focus = (chData && chData.research_focus) || [];
-    if (focus.length && !claims.length) {
-      var focusWrap = document.createElement('div');
-      focusWrap.className = 'rc-focus-wrap';
-      focus.forEach(function(q) {
-        var qEl = document.createElement('div');
-        qEl.className = 'rc-focus-q';
-        qEl.textContent = '? ' + q;
-        focusWrap.appendChild(qEl);
-      });
-      section.appendChild(focusWrap);
-    }
-
-    // claims
-    var claimsWrap = document.createElement('div');
-    claimsWrap.className = 'rc-claims-wrap';
-    claimsWrap.id = 'rc-claims-' + chId;
-    claims.forEach(function(c) {
-      claimsWrap.appendChild(buildClaimCard(c));
-    });
-    if (!claims.length) {
-      var waiting = document.createElement('div');
-      waiting.className = 'rc-ch-waiting';
-      waiting.textContent = '리서치 대기 중...';
-      claimsWrap.appendChild(waiting);
-    }
-    section.appendChild(claimsWrap);
-
-    return section;
-  }
-
-  function buildClaimCard(c) {
-    var conf = c.confidence || 'medium';
-    var dotClass = conf === 'high' ? 'high' : conf === 'medium' ? 'medium' : 'low';
-
-    var card = document.createElement('div');
-    card.className = 'rc-claim';
-
-    var dot = document.createElement('div');
-    dot.className = 'rc-claim-dot ' + dotClass;
-
-    var body = document.createElement('div');
-    body.className = 'rc-claim-body';
-
-    var text = document.createElement('div');
-    text.className = 'rc-claim-text';
-    text.textContent = c.claim || '';
-
-    var meta = document.createElement('div');
-    meta.className = 'rc-claim-meta';
-
-    if (c.kind) {
-      var t1 = document.createElement('span');
-      t1.className = 'rc-tag rc-tag-kind';
-      t1.textContent = c.kind;
-      meta.appendChild(t1);
-    }
-    var t2 = document.createElement('span');
-    t2.className = 'rc-tag rc-tag-' + dotClass;
-    t2.textContent = conf;
-    meta.appendChild(t2);
-
-    if (c.status === 'verified') {
-      var t3 = document.createElement('span');
-      t3.className = 'rc-tag rc-tag-verified';
-      t3.textContent = '✓';
-      meta.appendChild(t3);
-    }
-
-    body.appendChild(text);
-    body.appendChild(meta);
-    card.appendChild(dot);
-    card.appendChild(body);
-    return card;
-  }
-
-  // ── Manuscript 렌더링 ──
-  function renderManuscript(text) {
-    msBody.innerHTML = '';
-    var lines = text.split('\n');
-    var currentPara = [];
-
-    function flushPara() {
-      if (!currentPara.length) return;
-      var joined = currentPara.join(' ').trim();
-      if (!joined) { currentPara = []; return; }
-      var p = document.createElement('div');
-      p.className = 'rc-ms-paragraph';
-      p.textContent = joined;
-      msBody.appendChild(p);
-      currentPara = [];
-    }
-
-    lines.forEach(function(line) {
-      if (/^#\s+(Ch\d+|챕터\s*\d+)/i.test(line)) {
-        flushPara();
-        var h = document.createElement('div');
-        h.className = 'rc-ms-chapter';
-        h.textContent = line.replace(/^#+\s*/, '');
-        msBody.appendChild(h);
-      } else if (line.trim() === '---') {
-        flushPara();
-        var hr = document.createElement('hr');
-        hr.className = 'rc-ms-divider';
-        msBody.appendChild(hr);
-      } else if (line.trim().startsWith('<!--')) {
-        // chars 주석 스킵
-      } else if (line.trim() === '') {
-        flushPara();
-      } else {
-        currentPara.push(line.trim());
-      }
-    });
-    flushPara();
-  }
-
-  // ── 3. SSE: claims 실시간 ──
-  var claimsEv = registerSse(new EventSource('/api/p/' + slug + '/pipeline/research/claims/stream'));
-
-  claimsEv.addEventListener('claims_snapshot', function(e) {
-    try {
-      var d = JSON.parse(e.data);
-      if (d.total > totalClaims) {
-        totalClaims = d.total;
-        countEl.textContent = totalClaims + ' claims';
-      }
-    } catch(err) {}
-  });
-
-  claimsEv.addEventListener('claims_new', function(e) {
-    try {
-      var d = JSON.parse(e.data);
-      var newClaims = d.claims || [];
-      if (!newClaims.length) return;
-
-      liveDot.classList.add('streaming');
-      setTimeout(function() { liveDot.classList.remove('streaming'); }, 2000);
-      totalClaims += newClaims.length;
-      countEl.textContent = totalClaims + ' claims';
-
-      newClaims.forEach(function(c) {
-        var chId = String(c.chapter || 'unassigned');
-        var claimsWrap = document.getElementById('rc-claims-' + chId);
-        if (!claimsWrap) {
-          // 챕터 섹션 자체가 없으면 새로 생성
-          var section = buildChapterSection(chId, [], chapterDetails[chId] || null);
-          claimsBody.appendChild(section);
-          claimsWrap = document.getElementById('rc-claims-' + chId);
+    fetch('/api/p/' + slug + '/research/wiki/' + page)
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.error) {
+          content.innerHTML = '<div class="wiki-placeholder">' + d.error + '</div>';
+          return;
         }
-        // "대기 중" 메시지 제거
-        var waiting = claimsWrap.querySelector('.rc-ch-waiting');
-        if (waiting) waiting.remove();
-        claimsWrap.appendChild(buildClaimCard(c));
+        var body = document.createElement('div');
+        body.className = 'wiki-body';
+        body.innerHTML = simpleMarkdown(d.content || '');
+        content.innerHTML = '';
+        content.appendChild(body);
+      })
+      .catch(function() {
+        content.innerHTML = '<div class="wiki-placeholder">페이지를 불러올 수 없습니다</div>';
       });
-    } catch(err) {}
-  });
+  }
 
-  // ── 4. SSE: 원고 업데이트 ──
-  var msEv = registerSse(new EventSource('/api/p/' + slug + '/pipeline/stream'));
+  // 간단한 마크다운 → HTML 변환 (marked.js 없이)
+  function simpleMarkdown(md) {
+    var html = md
+      // 코드 블록 (먼저 처리)
+      .replace(/```[\w]*\n([\s\S]*?)```/g, function(_, code) {
+        return '<pre><code>' + escHtml(code.trim()) + '</code></pre>';
+      })
+      // 제목
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+      // 인용
+      .replace(/^> (.+)$/gm, '<blockquote><p>$1</p></blockquote>')
+      // HR
+      .replace(/^---+$/gm, '<hr>')
+      // 굵게/이탤릭
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      // 인라인 코드
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      // 순서없는 목록 — 줄 단위로 처리
+      .replace(/((?:^[-*] .+\n?)+)/gm, function(block) {
+        var items = block.trim().split('\n').map(function(l) {
+          return '<li>' + l.replace(/^[-*] /, '') + '</li>';
+        }).join('');
+        return '<ul>' + items + '</ul>';
+      })
+      // 순서있는 목록
+      .replace(/((?:^\d+\. .+\n?)+)/gm, function(block) {
+        var items = block.trim().split('\n').map(function(l) {
+          return '<li>' + l.replace(/^\d+\. /, '') + '</li>';
+        }).join('');
+        return '<ol>' + items + '</ol>';
+      })
+      // 빈 줄 → 단락 구분
+      .replace(/\n{2,}/g, '\n\n');
 
-  msEv.addEventListener('manuscript_updated', function(e) {
-    try {
-      var d = JSON.parse(e.data);
-      if (d.text) {
-        renderManuscript(d.text);
-        msBadge.textContent = '최종원고';
-        msBadge.className = 'rc-ms-badge final';
-      }
-    } catch(err) {}
-  });
+    // 단락 감싸기 (h1~h6, pre, ul, ol, hr, blockquote 제외)
+    var lines = html.split('\n\n');
+    html = lines.map(function(block) {
+      if (!block.trim()) return '';
+      if (/^<(h[1-6]|pre|ul|ol|hr|blockquote)/.test(block.trim())) return block;
+      return '<p>' + block.replace(/\n/g, '<br>') + '</p>';
+    }).join('\n');
 
-  msEv.addEventListener('draft_updated', function(e) {
-    try {
-      var d = JSON.parse(e.data);
-      if (d.text) {
-        renderManuscript(d.text);
-        msBadge.textContent = '초고';
-        msBadge.className = 'rc-ms-badge draft';
-      }
-    } catch(err) {}
-  });
+    return html;
+  }
 
-
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
 })();
 </script>

@@ -18,10 +18,6 @@
       <div class="ms-scene-header">
         <span class="ms-scene-num">#{{ scene.sceneNumber }}</span>
         {% if scene.title %}<span class="ms-scene-title">{{ scene.title }}</span>{% endif %}
-        {% set layout = scene.layout or scene.get('_layout', '') %}
-        {% set mood = scene.mood or '' %}
-        {% if layout %}<span class="ms-badge ms-layout">{{ layout }}</span>{% endif %}
-        {% if mood %}<span class="ms-badge ms-mood">{{ mood }}</span>{% endif %}
       </div>
       <div class="ms-narration">{{ scene.narration or '' }}</div>
     </div>

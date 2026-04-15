@@ -746,6 +746,39 @@ async def manuscript_save(slug: str, request: Request):
     return {"ok": True, "chars": len(text)}
 
 
+@app.get("/api/p/{slug}/research/wiki")
+async def research_wiki_index(slug: str):
+    """위키 페이지 목록 반환."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "project not found"}, 404)
+    out_dir = Path(project.get("output_dir", ""))
+    wiki_dir = out_dir / "research" / "wiki" / slug
+    if not wiki_dir.exists():
+        return JSONResponse({"pages": []})
+    pages = [p.stem for p in sorted(wiki_dir.glob("*.md"))]
+    return JSONResponse({"pages": pages})
+
+
+@app.get("/api/p/{slug}/research/wiki/{page}")
+async def research_wiki_page(slug: str, page: str):
+    """위키 마크다운 파일 내용 반환 (frontmatter 제거)."""
+    import re as _re
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "project not found"}, 404)
+    out_dir = Path(project.get("output_dir", ""))
+    wiki_file = out_dir / "research" / "wiki" / slug / f"{page}.md"
+    if not wiki_file.exists():
+        return JSONResponse({"error": "not found"}, 404)
+    text = wiki_file.read_text(encoding="utf-8")
+    # frontmatter 제거
+    text = _re.sub(r'^---\s*\n.*?\n---\s*\n', '', text, flags=_re.DOTALL)
+    return JSONResponse({"content": text.strip(), "page": page})
+
+
 # ─────────────────────────────
 # HTMX Partials — 탭 콘텐츠
 # ─────────────────────────────
