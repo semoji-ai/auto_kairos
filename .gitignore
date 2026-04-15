@@ -111,6 +111,11 @@ Thumbs.db
 !/remotion/src/design/
 /remotion/src/design/*
 !/remotion/src/design/presets/
+!/remotion/src/design/resolvePreset.ts
+!/remotion/src/design/types.ts
+!/remotion/src/design/defaults.ts
+!/remotion/src/design/DesignPresetContext.tsx
+!/remotion/src/design/fonts.ts
 
 # Misc temp files
 *.mp3

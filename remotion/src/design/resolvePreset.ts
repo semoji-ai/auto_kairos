@@ -47,7 +47,6 @@ export function resolvePreset(meta: {
   // 1. artStyle 프리셋 먼저 로드 (baseTheme 확인용)
   const styleName = meta.artStyle ? extractStyleName(meta.artStyle) : undefined;
   const artPreset = styleName ? ART_PRESETS[styleName] : undefined;
-  console.log("[resolvePreset] artStyle=", meta.artStyle, "styleName=", styleName, "artPreset fonts=", (artPreset as any)?.fonts?.headline?.family);
 
   // 2. 기본 (videoTheme 또는 artPreset.baseTheme에 따라 white 오버라이드 적용)
   const base = DEFAULT_PRESET;
