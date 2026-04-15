@@ -183,6 +183,44 @@
 .tag-medium   { background: rgba(245,158,11,0.12); color: #FCD34D; }
 .tag-low      { background: rgba(107,114,128,0.15);color: #9CA3AF; }
 .tag-verified { background: rgba(34,197,94,0.08);  color: #6EE7B7; }
+
+/* 클레임 인라인 썸네일 */
+.claim-thumb-wrap {
+  width: 72px; height: 48px; flex-shrink: 0;
+  border-radius: 5px; overflow: hidden;
+  background: var(--surface2); border: 1px solid var(--border);
+  cursor: pointer;
+}
+.claim-thumb {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: opacity 0.2s;
+}
+.claim-thumb:hover { opacity: 0.8; }
+
+/* wiki 페이지 관련 이미지 스트립 */
+.wiki-img-strip {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.wiki-img-strip-label {
+  width: 100%; font-size: 10px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
+}
+.wiki-strip-thumb {
+  width: 90px; height: 60px; border-radius: 5px; overflow: hidden;
+  background: var(--surface2); border: 1px solid var(--border);
+  cursor: pointer; flex-shrink: 0;
+}
+.wiki-strip-thumb img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: opacity 0.2s;
+}
+.wiki-strip-thumb:hover img { opacity: 0.8; }
+.wiki-strip-thumb-title {
+  font-size: 9px; color: var(--text-muted); padding: 3px 5px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 </style>
 
 <script>
@@ -264,12 +302,38 @@
         content.innerHTML = '';
         // claims 페이지는 카드 렌더링
         if (d.claims !== undefined) {
-          content.appendChild(renderClaims(d.claims));
+          ensureImages().then(function() {
+            content.innerHTML = '';
+            content.appendChild(renderClaims(d.claims));
+          });
           return;
         }
         var body = document.createElement('div');
         body.className = 'wiki-body';
         body.innerHTML = simpleMarkdown(d.content || '');
+        // wiki 페이지 관련 이미지 스트립
+        ensureImages().then(function() {
+          var matches = findMatchingImages(page + ' ' + (d.content || '').slice(0, 300), 5);
+          if (matches.length) {
+            var strip = document.createElement('div');
+            strip.className = 'wiki-img-strip';
+            var lbl = document.createElement('div');
+            lbl.className = 'wiki-img-strip-label';
+            lbl.textContent = '관련 이미지';
+            strip.appendChild(lbl);
+            matches.forEach(function(img) {
+              var wrap = document.createElement('div');
+              wrap.className = 'wiki-strip-thumb';
+              wrap.innerHTML =
+                '<img src="' + escAttr(img.image_url) + '" loading="lazy" ' +
+                     'onerror="this.closest(\'.wiki-strip-thumb\').style.display=\'none\'" ' +
+                     'onclick="openImgModal(\'' + escAttr(img.image_url) + '\',\'' + escAttr(img.title||'') + '\',\'' + escAttr(img.source_url||'') + '\')">' +
+                '<div class="wiki-strip-thumb-title" title="' + escAttr(img.title||'') + '">' + escHtml(img.title||'') + '</div>';
+              strip.appendChild(wrap);
+            });
+            content.insertBefore(strip, content.firstChild);
+          }
+        });
         content.appendChild(body);
       })
       .catch(function() {
@@ -277,21 +341,48 @@
       });
   }
 
-  // ── 이미지 페이지 ──────────────────────────────────────────
-  var _imgData = null;  // 캐시
+  // ── 이미지 데이터 (캐시 + 프리로드) ──────────────────────────
+  var _imgData = null;
+  var _imgPromise = null;
+
+  function ensureImages() {
+    if (_imgData !== null) return Promise.resolve(_imgData);
+    if (_imgPromise) return _imgPromise;
+    _imgPromise = fetch('/api/p/' + slug + '/research/images')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { _imgData = d.images || []; return _imgData; })
+      .catch(function() { _imgData = []; return []; });
+    return _imgPromise;
+  }
+
+  // 백그라운드에서 미리 로드
+  ensureImages();
+
+  // ── 이미지 매칭 ───────────────────────────────────────────
+  function findMatchingImages(text, limit) {
+    limit = limit || 3;
+    if (!_imgData || !_imgData.length || !text) return [];
+    // 3자 이상 단어 추출 (한국어 포함)
+    var words = text.replace(/[^\w가-힣]/g, ' ').split(/\s+/)
+      .filter(function(w) { return w.length >= 3; })
+      .map(function(w) { return w.toLowerCase(); });
+    if (!words.length) return [];
+
+    var scored = _imgData.map(function(img) {
+      var title = (img.title || '').toLowerCase();
+      var score = words.reduce(function(s, w) {
+        return s + (title.indexOf(w) >= 0 ? 1 : 0);
+      }, 0);
+      return { img: img, score: score };
+    }).filter(function(x) { return x.score > 0; });
+
+    scored.sort(function(a, b) { return b.score - a.score; });
+    return scored.slice(0, limit).map(function(x) { return x.img; });
+  }
 
   function loadImagePage() {
-    if (_imgData) { renderImageGrid(_imgData); return; }
     content.innerHTML = '<div class="wiki-placeholder">이미지 로딩 중...</div>';
-    fetch('/api/p/' + slug + '/research/images')
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        _imgData = d.images || [];
-        renderImageGrid(_imgData);
-      })
-      .catch(function() {
-        content.innerHTML = '<div class="wiki-placeholder">이미지를 불러올 수 없습니다</div>';
-      });
+    ensureImages().then(function(imgs) { renderImageGrid(imgs); });
   }
 
   function renderImageGrid(images) {
@@ -501,6 +592,21 @@
 
       card.appendChild(dot);
       card.appendChild(body);
+
+      // 관련 이미지 썸네일 (매칭되는 이미지가 있을 때만)
+      var matched = findMatchingImages(c.claim || '', 1);
+      if (matched.length) {
+        var img = matched[0];
+        var thumbWrap = document.createElement('div');
+        thumbWrap.className = 'claim-thumb-wrap';
+        thumbWrap.title = img.title || '';
+        thumbWrap.innerHTML =
+          '<img class="claim-thumb" src="' + escAttr(img.image_url) + '" loading="lazy" ' +
+               'onerror="this.closest(\'.claim-thumb-wrap\').style.display=\'none\'" ' +
+               'onclick="openImgModal(\'' + escAttr(img.image_url) + '\',\'' + escAttr(img.title||'') + '\',\'' + escAttr(img.source_url||'') + '\')">';
+        card.appendChild(thumbWrap);
+      }
+
       wrap.appendChild(card);
     });
 

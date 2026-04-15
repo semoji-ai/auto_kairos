@@ -19,7 +19,9 @@ images/image_assets.json 구조:
 - 파일 복사 없음 — selected 필드 토글만
 - 검색/생성/URL 모두 images[]에 등록
 """
+import hashlib
 import json
+import shutil
 import threading
 from pathlib import Path
 from typing import Optional
@@ -301,3 +303,114 @@ def get_qa_result(images_dir: Path, scene_num: int) -> Optional[dict]:
         if s["sceneNumber"] == scene_num:
             return s.get("qa") or None
     return None
+
+
+# ── narration 기반 씬번호 reconciliation ──────────────────────────────────────
+
+def _narration_hash(narration: str) -> str:
+    """narration 앞 200자를 MD5 해시 (8자리). 씬 동일성 식별자."""
+    return hashlib.md5((narration or "").strip()[:200].encode("utf-8")).hexdigest()[:8]
+
+
+def reconcile_scene_numbers(
+    images_dir: Path,
+    old_scenes: list,
+    new_scenes: list,
+) -> dict:
+    """씬번호 재부여 후 image_assets.json + image_candidates.json을 narration 기반으로 재매핑.
+
+    Args:
+        images_dir: images/ 디렉토리 경로
+        old_scenes: 이전 scene_specs["scenes"] 리스트
+        new_scenes: 새 scene_specs["scenes"] 리스트
+
+    Returns:
+        {"remapped": int, "unmapped": int, "files_renamed": int}
+    """
+    # old narration_hash → old sceneNumber
+    old_hash_to_num: dict[str, int] = {}
+    for s in old_scenes:
+        h = _narration_hash(s.get("narration", ""))
+        if h:
+            old_hash_to_num[h] = s["sceneNumber"]
+
+    # new narration_hash → new sceneNumber
+    new_hash_to_num: dict[str, int] = {}
+    for s in new_scenes:
+        h = _narration_hash(s.get("narration", ""))
+        if h:
+            new_hash_to_num[h] = s["sceneNumber"]
+
+    # old sceneNumber → new sceneNumber (narration 일치 기준)
+    old_to_new: dict[int, int] = {}
+    for h, old_num in old_hash_to_num.items():
+        if h in new_hash_to_num:
+            new_num = new_hash_to_num[h]
+            if old_num != new_num:
+                old_to_new[old_num] = new_num
+
+    if not old_to_new:
+        return {"remapped": 0, "unmapped": 0, "files_renamed": 0}
+
+    stats = {"remapped": 0, "unmapped": 0, "files_renamed": 0}
+
+    # ── image_assets.json 재매핑 ──
+    assets_path = images_dir / "image_assets.json"
+    if assets_path.exists():
+        with _file_lock:
+            data = _load(images_dir)
+            changed = False
+            for scene in data["scenes"]:
+                old_num = scene["sceneNumber"]
+                if old_num not in old_to_new:
+                    # 이미 올바른 번호거나 매핑 없음
+                    if old_num not in {s["sceneNumber"] for s in new_scenes}:
+                        stats["unmapped"] += 1
+                    continue
+                new_num = old_to_new[old_num]
+                scene["sceneNumber"] = new_num
+                changed = True
+                stats["remapped"] += 1
+
+                # 파일 이름 업데이트 (scene_011_xxx → scene_018_xxx)
+                for img in scene.get("images", []):
+                    old_file = img.get("file", "")
+                    old_fname = Path(old_file).name
+                    old_prefix = f"scene_{old_num:03d}_"
+                    if old_fname.startswith(old_prefix):
+                        new_fname = f"scene_{new_num:03d}_" + old_fname[len(old_prefix):]
+                        new_rel = str(Path(old_file).parent / new_fname).replace("\\", "/")
+                        # 실제 파일 이름 변경
+                        old_abs = images_dir / old_file
+                        new_abs = images_dir / new_rel
+                        if old_abs.exists() and not new_abs.exists():
+                            new_abs.parent.mkdir(parents=True, exist_ok=True)
+                            shutil.move(str(old_abs), str(new_abs))
+                            stats["files_renamed"] += 1
+                        img["file"] = new_rel
+
+            if changed:
+                data["scenes"].sort(key=lambda x: x["sceneNumber"])
+                _save(images_dir, data)
+
+    # ── image_candidates.json 재매핑 ──
+    cands_path = images_dir / "image_candidates.json"
+    if cands_path.exists():
+        try:
+            cands_data = json.loads(cands_path.read_text(encoding="utf-8"))
+            cands_changed = False
+            for scene in cands_data.get("scenes", []):
+                old_num = scene.get("sceneNumber")
+                if old_num in old_to_new:
+                    scene["sceneNumber"] = old_to_new[old_num]
+                    cands_changed = True
+            if cands_changed:
+                cands_data["scenes"].sort(key=lambda x: x.get("sceneNumber", 0))
+                cands_path.write_text(
+                    json.dumps(cands_data, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+        except Exception as e:
+            print(f"[image_assets] image_candidates.json 재매핑 실패: {e}", flush=True)
+
+    return stats

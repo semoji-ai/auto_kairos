@@ -2351,6 +2351,15 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 total_cost[k] += ch_result.cost_info.get(k, 0)
 
         # 전체 씬 병합 + 씬 번호 재부여
+        # 덮어쓰기 전에 기존 씬 목록 백업 (이미지 reconcile에 사용)
+        old_scenes: list = []
+        if specs_path.exists():
+            try:
+                _old = json.loads(specs_path.read_text(encoding="utf-8"))
+                old_scenes = _old.get("scenes", [])
+            except Exception:
+                pass
+
         all_scenes: list = []
         for ch_num in sorted(chapter_results.keys()):
             ch_result = chapter_results[ch_num]
@@ -2363,6 +2372,18 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
         merged = {"scenes": all_scenes}
         specs_path.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        # 이미지 매핑 reconcile (씬번호 변경 시 image_assets + image_candidates 재매핑)
+        images_dir = self.project_dir / "images"
+        if old_scenes and images_dir.exists():
+            try:
+                from auto_agent.tools.image_assets import reconcile_scene_numbers
+                r_stats = reconcile_scene_numbers(images_dir, old_scenes, all_scenes)
+                if r_stats["remapped"] > 0 or r_stats["files_renamed"] > 0:
+                    print(f"    [이미지 재매핑] {r_stats['remapped']}개 씬 재매핑, "
+                          f"파일 {r_stats['files_renamed']}개 이름 변경", flush=True)
+            except Exception as e:
+                print(f"    [WARN] 이미지 재매핑 실패 (계속 진행): {e}", flush=True)
 
         # 임시 파일 정리
         for ch_num in ms_chapters:
