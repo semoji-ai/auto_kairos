@@ -302,9 +302,10 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
         "cinematic", "bar_horizontal", "donut",
     }
 
-    # 0순위: 플랫 스키마 — scene.layout 직접 지정
-    if scene.get("layout") and scene["layout"] in VALID_LAYOUTS:
-        return scene["layout"], True
+    # 0순위: 플랫 스키마 — scene.layout / sceneType / visualization.layout 직접 지정
+    for _layout_key in (scene.get("layout"), scene.get("sceneType"), viz.get("layout")):
+        if _layout_key and _layout_key in VALID_LAYOUTS:
+            return _layout_key, True
 
     # 1순위: creative.layout 직접 지정
     if creative.get("layout") and creative["layout"] in VALID_LAYOUTS:
