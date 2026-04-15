@@ -3,6 +3,13 @@
 
 {% block head %}
 <style>
+{% for ff in all_font_faces %}
+@font-face {
+  font-family: '{{ ff.family }}';
+  src: url('/fonts/{{ ff.file }}') format('{{ ff.format }}');
+  font-weight: {{ ff.weight }};
+}
+{% endfor %}
 /* ── 페이지 레이아웃 ── */
 .styles-page { padding: 24px 32px; max-width: 1200px; }
 .styles-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
@@ -255,7 +262,7 @@ audio.voice-preview-audio:not([src=""]) { display: block; }
               {% for ff in s.font_files %}
               <tr>
                 <td><span class="font-role-badge">{{ ff.role }}</span></td>
-                <td><span class="font-family-name">{{ ff.family }}</span></td>
+                <td><span class="font-family-name" style="font-family:'{{ ff.family }}',sans-serif">{{ ff.family }}</span></td>
                 <td><span class="font-file">{{ ff.file }}</span></td>
                 <td style="color:#52525B">{{ ff.weight }}</td>
                 <td>

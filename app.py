@@ -520,7 +520,27 @@ async def styles_page(request: Request):
             "guidelines": data.get("guidelines", ""),
         })
 
-    return templates.TemplateResponse(request, "styles.html", {"styles": styles})
+    # 전체 스타일에서 고유 @font-face 목록 추출
+    seen_font_files: set[str] = set()
+    all_font_faces: list[dict] = []
+    for s in styles:
+        for ff in s["font_files"]:
+            key = ff["file"]
+            if key not in seen_font_files and ff["exists"]:
+                seen_font_files.add(key)
+                ext = Path(ff["file"]).suffix.lower()
+                fmt = "opentype" if ext == ".otf" else "truetype" if ext == ".ttf" else "woff2" if ext == ".woff2" else "woff"
+                all_font_faces.append({
+                    "family": ff["family"],
+                    "weight": ff["weight"],
+                    "file": ff["file"],
+                    "format": fmt,
+                })
+
+    return templates.TemplateResponse(request, "styles.html", {
+        "styles": styles,
+        "all_font_faces": all_font_faces,
+    })
 
 
 @app.get("/api/styles/voice-preview-url/{voice_id}")

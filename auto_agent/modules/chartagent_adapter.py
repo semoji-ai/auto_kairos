@@ -56,7 +56,11 @@ _BASE_THEME_FALLBACK: dict[str, str] = {
 # Adapter 1: scene_specs 씬 → chart_task dict
 # ---------------------------------------------------------------------------
 
-def scene_to_chart_task(scene: dict[str, Any], theme_set: str = "") -> dict[str, Any] | None:
+def scene_to_chart_task(
+    scene: dict[str, Any],
+    theme_set: str = "",
+    theme_overrides: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
     """
     scene_specs의 씬 1개를 chartagent chart_task dict으로 변환합니다.
 
@@ -131,6 +135,9 @@ def scene_to_chart_task(scene: dict[str, Any], theme_set: str = "") -> dict[str,
         },
     }
 
+    if theme_overrides:
+        chart_task["theme_overrides"] = theme_overrides
+
     return chart_task
 
 
@@ -157,9 +164,10 @@ def design_tokens_to_theme(design_tokens: dict[str, Any], mood: str = "informati
     auto_kairos artstyle의 design_tokens를 chartagent theme_set 이름으로 변환합니다.
 
     매핑 우선순위:
-      1. design_tokens.colors.accent 색상 계열 분석
-      2. design_tokens.baseTheme (dark/light)
-      3. mood 기반 fallback
+      1. design_tokens.chartagent.theme_set (명시적 계약 — 최우선)
+      2. design_tokens.colors.accent 색상 계열 분석
+      3. design_tokens.baseTheme (dark/light)
+      4. mood 기반 fallback
 
     Parameters
     ----------
@@ -172,6 +180,11 @@ def design_tokens_to_theme(design_tokens: dict[str, Any], mood: str = "informati
     """
     if not design_tokens:
         return _MOOD_TO_THEME.get(mood, "dashboard_analytical")
+
+    # 1순위: 명시적 계약
+    explicit = str((design_tokens.get("chartagent") or {}).get("theme_set") or "").strip()
+    if explicit:
+        return explicit
 
     base_theme = str(design_tokens.get("baseTheme") or "").lower()
 
@@ -303,9 +316,11 @@ def run_chartagent_for_scene(
         return None
 
     mood = (viz.get("creative") or {}).get("mood") or "informative"
-    theme_set = design_tokens_to_theme(design_tokens or {}, mood)
+    dt = design_tokens or {}
+    theme_set = design_tokens_to_theme(dt, mood)
+    theme_overrides = (dt.get("chartagent") or {}).get("theme_overrides") or None
 
-    chart_task = scene_to_chart_task(scene, theme_set=theme_set)
+    chart_task = scene_to_chart_task(scene, theme_set=theme_set, theme_overrides=theme_overrides)
     if not chart_task:
         return None
 

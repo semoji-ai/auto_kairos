@@ -23,45 +23,49 @@ export const SEMOJI_PRESET: DesignPresetOverride = {
   },
   fonts: {
     body: {
-      family: "Pretendard",
+      family: "SB 어그로체",
       fallback: "'Apple SD Gothic Neo', sans-serif",
       files: [
         {
-          file: "fonts/Pretendard-Regular.otf",
-          weight: "400",
+          file: "fonts/SBAggroOTF-M.otf",
+          weight: "500",
         },
         {
-          file: "fonts/Pretendard-Bold.otf",
+          file: "fonts/SBAggroOTF-B.otf",
           weight: "700",
         },
       ],
     },
     headline: {
-      family: "Pretendard",
+      family: "카페24 써라운드",
       fallback: "'Apple SD Gothic Neo', sans-serif",
       files: [
         {
-          file: "fonts/Pretendard-Bold.otf",
+          file: "fonts/Cafe24Ssurround.ttf",
           weight: "700",
         },
       ],
     },
     value: {
-      family: "Barlow Condensed",
+      family: "배민 연성체",
       fallback: "sans-serif",
       files: [
         {
-          file: "fonts/BarlowCondensed-Bold.ttf",
-          weight: "700",
+          file: "fonts/BMYeonsung.ttf",
+          weight: "400",
         },
       ],
     },
     subtitle: {
-      family: "Pretendard",
+      family: "G마켓 산스",
       fallback: "'Apple SD Gothic Neo', sans-serif",
       files: [
         {
-          file: "fonts/Pretendard-Bold.otf",
+          file: "fonts/GmarketSansMedium.ttf",
+          weight: "500",
+        },
+        {
+          file: "fonts/GmarketSansBold.ttf",
           weight: "700",
         },
       ],
@@ -83,14 +87,14 @@ export const SEMOJI_PRESET: DesignPresetOverride = {
   },
   subtitle: {
     fontSize: 52,
-    fontFamily: "Pretendard",
-    fontWeight: 700,
-    color: "#1A1A2E",
+    fontFamily: "G마켓 산스",
+    fontWeight: 400,
+    color: "#FFFFFF",
     strokeWidth: 0,
     strokeColor: "transparent",
     keywordColor: "#4A90D9",
     keywordStrokeColor: "transparent",
-    backgroundColor: "rgba(255,255,255,0.92)",
+    backgroundColor: "rgba(0,0,0,0.85)",
     borderRadius: 8,
     boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
     bottomOffset: 60,
