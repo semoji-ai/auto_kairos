@@ -1226,6 +1226,61 @@ async def get_tts_text(slug: str, scene_num: int):
     return JSONResponse({"error": "scene not found"}, 404)
 
 
+@app.get("/api/p/{slug}/subtitles/{scene_num}")
+async def get_subtitles(slug: str, scene_num: int):
+    """씬의 SRT 엔트리 + timestamps.json 단어 데이터 반환."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    out_dir = project.get("output_dir", "")
+    srt_path = Path(out_dir) / "subtitles" / f"scene_{scene_num:03d}.srt"
+    ts_path = Path(out_dir) / "audio" / f"scene_{scene_num:03d}.timestamps.json"
+
+    entries = []
+    if srt_path.exists():
+        from auto_agent.scripts.generate_subtitles import parse_srt
+        entries = parse_srt(srt_path.read_text(encoding="utf-8"))
+
+    words = []
+    if ts_path.exists():
+        try:
+            sidecar = _json.loads(ts_path.read_text(encoding="utf-8"))
+            from auto_agent.scripts.generate_subtitles import chars_to_words
+            words = chars_to_words(sidecar)
+        except Exception:
+            words = []
+
+    return JSONResponse({"entries": entries, "words": words})
+
+
+@app.post("/api/p/{slug}/subtitles/{scene_num}")
+async def save_subtitles(request: Request, slug: str, scene_num: int):
+    """편집된 SRT 엔트리를 .srt 파일로 저장."""
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    body = await request.json()
+    entries = body.get("entries", [])
+    if not entries:
+        return JSONResponse({"error": "entries required"}, 400)
+
+    out_dir = project.get("output_dir", "")
+    srt_path = Path(out_dir) / "subtitles" / f"scene_{scene_num:03d}.srt"
+    srt_path.parent.mkdir(parents=True, exist_ok=True)
+
+    from auto_agent.scripts.generate_subtitles import format_srt_time
+    lines = []
+    for i, e in enumerate(entries, 1):
+        lines.append(str(i))
+        lines.append(f"{format_srt_time(e['startSec'])} --> {format_srt_time(e['endSec'])}")
+        lines.append(e["text"])
+        lines.append("")
+    srt_path.write_text("\n".join(lines), encoding="utf-8")
+    return JSONResponse({"ok": True, "count": len(entries)})
+
+
 def _update_scene_specs_src(out_dir: str, slug: str, scene_num: int):
     """selected 이미지로 scene_specs.imageAsset.src 업데이트."""
     from auto_agent.tools.image_assets import get_selected
