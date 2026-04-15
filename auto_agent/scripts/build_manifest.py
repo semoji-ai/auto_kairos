@@ -232,7 +232,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
 
     scenes = []
     for scene in specs["scenes"]:
-        num = scene.get("sceneNumber") or scene["scene_number"]
+        num = scene["sceneNumber"] if scene.get("sceneNumber") is not None else scene["scene_number"]
         scene_key = f"scene_{num:03d}"
 
         # Audio — 로컬 파일 링크

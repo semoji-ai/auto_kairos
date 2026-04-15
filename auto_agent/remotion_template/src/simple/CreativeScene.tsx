@@ -2888,7 +2888,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
     ? _rawItemIcons
     : (_rawItemIcons.length === 1 ? Array(items.length).fill(_rawItemIcons[0]) : []);
   const itemFlags: string[] = data.itemFlags || data.flags || [];
-  const itemLogos: string[] = items.map((item, i) => data.logoMap?.[item] || data.logoMap?.[String(i)] || item);
+  const itemLogos: (string | undefined)[] = items.map((item, i) => data.logoMap?.[item] || data.logoMap?.[String(i)] || undefined);
   const getItemLeadVisual = (i: number, options?: { flagLabel?: string; flagWidth?: number; iconSize?: number; logoSize?: number; iconFilled?: boolean }) =>
     renderItemLeadVisual({
       flag: itemFlags[i],
@@ -3793,8 +3793,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
         {layout === "icon_stat" && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...scaleAnim(frame, 15) }}>
             {renderSupportHeadline({ marginBottom: 0, maxWidth: "70%" })}
-            {data.itemIcons?.[0] && resolveIcon(data.itemIcons[0]) && (
-              <IconBadge icon={resolveIcon(data.itemIcons[0])!} size={80} filled />
+            {itemIcons[0] && resolveIcon(itemIcons[0]) && (
+              <IconBadge icon={resolveIcon(itemIcons[0])!} size={80} filled />
             )}
             {values[0] != null && (
               <div style={{ fontSize: T.metricValue + 12, fontWeight: 800, color: moodCfg.accent, lineHeight: 1.05 }}>
