@@ -503,9 +503,69 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 
 모든 씬 작성 후 전체를 한 번 훑습니다.
 
-```
-⚠️ Pre-Write 검증 체크리스트 — scene_specs.json을 Write하기 전에 반드시 확인:
+**이 단계는 두 개의 패스로 나뉩니다. 둘 다 반드시 수행하세요.**
 
+---
+
+#### Pass A: 레이아웃 감사 (원고 맥락 보존 2차 검토)
+
+원고 전체 흐름을 알고 있는 지금, 생성된 씬들을 다시 보며 레이아웃 오류를 수정합니다.
+아래 항목을 씬 번호 순서대로 훑으면서 문제 씬을 찾아 즉시 수정합니다.
+
+```
+[레이아웃 패턴 오류]
+
+□ items에 "이름 — 역할" 또는 "이름 — 직책/직업" 패턴이 2개 이상 → person_card 강제
+  예: ["타지리 사토시 — 기획", "스가모리 켄 — 디자인"] → items_list ❌, person_card ✅
+
+□ values가 있는데 layout이 items_list → 수치를 시각화하는 layout으로 교체
+  - values 2개+ + 비교 목적 → bar (+ chartConfig)
+  - values 1개 단일 강조 → counter 또는 metric_spotlight
+  - items 1개 + values 1개 → metric_spotlight
+
+□ layout이 headline_only인데 headline이 비어 있음 → 반드시 채울 것
+  - narration에서 핵심 한 줄 뽑아 headline으로 작성
+
+□ items 2개 + values 없음인데 layout이 before_after → 극적 전/후 대비 목적이 아니면 split 또는 comparison_table 재검토
+  - "이전 상태 vs 현재 상태" 서사적 대비가 명확할 때만 before_after 유지
+
+□ chart layout(bar/pie/line)에 chartConfig가 없음 → chartConfig + vizType 반드시 추가
+
+[mapScene 오용]
+
+□ mapScene이 있는데 narration에 장소가 서사의 핵심이 아닌 씬 → mapScene 제거
+  판단 기준: "이 씬에서 '어디서'가 빠지면 의미가 달라지는가?"
+  - "어디서"가 없어도 의미 전달 OK → mapScene 제거
+  - 단순 배경처럼 언급된 지명 ("도쿄에 사는 청년") → mapScene 불필요
+
+[아이콘 일관성]
+
+□ items_list/items_grid에서 icons 개수 ≠ items 개수 (단, icons 1개는 broadcast 허용)
+  - icons 2개인데 items 3개 → icons를 3개로 맞추거나 전부 제거
+  - icons는 전부 있거나 전부 없거나 (일부만 있으면 렌더 불균형)
+
+□ 아이콘 이름이 kebab-case인지 PascalCase인지 상관없음 (시스템이 자동 변환)
+  단, lucide-react에 없는 이름은 렌더 안 됨. 아래 목록 중에서만 사용:
+  Brain, Cpu, Code, Database, Terminal, TrendingUp, TrendingDown, Rocket,
+  Shield, Lock, ShieldCheck, Globe, Users, User, Building, Clock, Calendar,
+  History, Search, Eye, Compass, CheckCircle, XCircle, Award, Star,
+  AlertTriangle, AlertCircle, BookOpen, GraduationCap, Lightbulb, Swords,
+  Crown, Castle, Heart, Zap, Flame, Flag, Map, MapPin, Plane, Ship, Truck,
+  Camera, Video, Music, Tv, Play, Gamepad2, Palette, Bug, Cable, Smartphone,
+  FileText, Newspaper, Mic, Phone, Trophy, Medal, Home, Car, Train, Dna,
+  Microscope, FlaskConical, Atom, Pencil, Megaphone, Share2, TrendingDown
+
+[다양성]
+
+□ 동일 레이아웃 4씬 연속 → 중간에 다른 레이아웃 삽입 검토
+□ 동일 챕터 내 cinematic이 연속 3씬 이상 → 중간에 데이터/headline 씬 삽입
+```
+
+---
+
+#### Pass B: 기술 검증 체크리스트
+
+```
 [캐릭터] (훅으로 차단됨)
 □ 나레이션에서 인물이 행위/발언하는 씬에 characters 배정했는가
   → "그는", "대표는" 등 대명사로 지칭되는 씬도 포함
