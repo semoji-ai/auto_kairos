@@ -22,6 +22,7 @@ export const SEMOJI3D_PRESET: DesignPresetOverride = {
     defaultTheme: "warm_earth",
   },
   defaultBackground: "background/semoji_grid_bg.jpg",
+  defaultBgOpacity: 1.0,
   texture: {
     src: "background/63517.jpg",
     blendMode: "multiply",

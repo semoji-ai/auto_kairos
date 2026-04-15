@@ -201,6 +201,7 @@ export interface DesignPreset {
   artStyle?: string;
   baseTheme: "dark" | "white";
   defaultBackground?: string;  // 이미지 없는 씬의 기본 배경 이미지 경로
+  defaultBgOpacity?: number;  // 기본 배경 이미지 오퍼시티 (기본 0.35, 스타일별 오버라이드)
   texture?: { src: string; blendMode?: string; opacity?: number };  // 최상위 텍스처 오버레이
 
   colors: PresetColors;

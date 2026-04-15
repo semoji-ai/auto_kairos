@@ -187,7 +187,9 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
     ["quote", "quote_portrait"].includes(scene.layout) ||
     ["quote", "quote_portrait"].includes(scene.sceneType)
   );
-  const defaultOpacity = (placement === "background") ? (isQuoteLayout ? 1.0 : 0.35) : 1.0;
+  const defaultOpacity = (placement === "background")
+    ? (isQuoteLayout ? 1.0 : (!hasSceneImage && preset.defaultBgOpacity != null ? preset.defaultBgOpacity : 0.35))
+    : 1.0;
   const imgOpacity = scene.imageAsset?.opacity ?? defaultOpacity;
   const imgOffsetX = scene.imageAsset?.offsetX ?? 50;
   const imgOffsetY = scene.imageAsset?.offsetY ?? 50;

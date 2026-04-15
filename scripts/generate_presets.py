@@ -82,6 +82,10 @@ def build_preset_obj(dt: dict, style_id: str) -> dict:
     if db := dt.get("defaultBackground"):
         preset["defaultBackground"] = db
 
+    # defaultBgOpacity
+    if (dbo := dt.get("defaultBgOpacity")) is not None:
+        preset["defaultBgOpacity"] = dbo
+
     # texture
     if texture := dt.get("texture"):
         preset["texture"] = texture
