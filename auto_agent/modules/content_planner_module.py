@@ -17,8 +17,8 @@ from typing import Any
 
 REQUIRED_BRIEF_FIELDS = [
     "core_question", "real_topic", "entity_slug", "section_slug",
-    "hook_angle", "excluded_angles", "tone_goal", "success_criteria",
-    "must_cover", "key_persons",
+    "hook_angle", "supporting_case", "excluded_angles", "audience_takeaway",
+    "tone_goal", "success_criteria", "must_cover", "key_persons",
 ]
 
 
