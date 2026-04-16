@@ -90,6 +90,10 @@ def build_preset_obj(dt: dict, style_id: str) -> dict:
     if (di := dt.get("disableIcons")) is not None:
         preset["disableIcons"] = di
 
+    # defaultItemEntrance
+    if (die := dt.get("defaultItemEntrance")) is not None:
+        preset["defaultItemEntrance"] = die
+
     # texture
     if texture := dt.get("texture"):
         preset["texture"] = texture

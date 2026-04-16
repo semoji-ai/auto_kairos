@@ -1153,6 +1153,7 @@ const ItemsGrid: React.FC<{
   const C = useC();
   const T = usePresetTypo();
   const L = usePresetLayout();
+  const preset = useDesignPreset();
   const frame = useCurrentFrame();
   const cols = items.length === 4 ? (items.some(it => it.length > 8) ? 2 : 4)
     : items.length >= 5 ? 3 : items.length >= 3 ? 3 : 2;
@@ -1162,7 +1163,7 @@ const ItemsGrid: React.FC<{
     ? interpolate(frame, [allDone, allDone + 4, allDone + 30], [0, 1, 0.3], clamp)
     : 0;
   const entranceDur = motionConfig?.entrance.duration || 15;
-  const entranceType = motionConfig?.entrance.type || "fadeRise";
+  const entranceType = motionConfig?.entrance.type || preset.defaultItemEntrance || "fadeRise";
 
   return (
     <div
@@ -1423,6 +1424,7 @@ const ItemsList: React.FC<{
   const T = usePresetTypo();
   const L = usePresetLayout();
   const V = usePresetVariants();
+  const preset = useDesignPreset();
   const frame = useCurrentFrame();
   const accentFilled = V.itemsList === "accent-filled";
   const showBadge = emphasis === "sequence" || emphasis === "person";
@@ -1526,7 +1528,7 @@ const ItemsList: React.FC<{
       {items.map((item, i) => {
         const d = delays[i] || 0;
         const entrDur = motionConfig?.entrance.duration || 15;
-        const entrType = motionConfig?.entrance.type || "fadeSlide";
+        const entrType = motionConfig?.entrance.type || preset.defaultItemEntrance || "fadeSlide";
         let opacity: number, slideX = 0, scaleVal = 1, extraT = "";
         if (entrType === "bounce") {
           opacity = interpolate(frame, [d, d + entrDur * 0.3], [0, 1], clamp);
