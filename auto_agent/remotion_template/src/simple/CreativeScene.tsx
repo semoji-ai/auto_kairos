@@ -22,10 +22,12 @@ import {
 } from "remotion";
 
 /** staticFile 대체: 절대 URL이면 그대로, 상대경로면 staticFile() 사용 */
-const resolveAsset = (path: string): string =>
-  path.startsWith("http://") || path.startsWith("https://")
-    ? path
-    : staticFile(path);
+const resolveAsset = (path: string): string => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("/")) return path;  // /output/... 등 절대경로 그대로
+  return staticFile(path);
+};
 
 import { useDesignPreset, usePresetColors, usePresetTypo, usePresetLayout, usePresetVariants } from "../design";
 import { DEFAULT_PRESET } from "../design/defaults";
