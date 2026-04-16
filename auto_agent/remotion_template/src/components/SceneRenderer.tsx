@@ -176,7 +176,10 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
 
   const defaultBg = preset.defaultBackground;
   const textureCfg = (preset as any).texture as { src: string; blendMode?: string; opacity?: number } | undefined;
-  const sceneImage = scene.imagePath || scene.vizBackgroundPath || "";
+  const sceneLayout = scene.layout || scene.sceneType || "";
+  const isPersonCard = sceneLayout === "person_card";
+  // person_card 레이아웃은 이미지를 카드 내부에서 소비 — 배경으로 쓰지 않음
+  const sceneImage = (!isPersonCard && (scene.imagePath || scene.vizBackgroundPath)) || "";
   const hasSceneImage = !!sceneImage;
   const hasAnyImage = hasSceneImage || !!defaultBg;
   const placement = scene.imageAsset?.placement ?? "background";

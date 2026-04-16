@@ -398,6 +398,10 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         }
         if person_images:
             entry["images"] = person_images
+        elif image_path and scene.get("layout") == "person_card":
+            # person_card 레이아웃인데 개별 _person_NN 파일이 없으면
+            # 씬 이미지 자체를 images[0]에 폴백 (단체 사진 등)
+            entry["images"] = [image_path]
 
         # motionPreset, mood 필드 추가
         if motion_preset:
