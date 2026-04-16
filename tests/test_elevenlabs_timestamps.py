@@ -29,6 +29,18 @@ def make_fake_response():
     }
 
 
+def make_fake_response_normalized_only():
+    alignment = {
+        "characters": ["안", "녕"],
+        "character_start_times_seconds": [0.0, 0.1],
+        "character_end_times_seconds": [0.1, 0.2],
+    }
+    return {
+        "audio_base64": base64.b64encode(FAKE_MP3).decode(),
+        "normalized_alignment": alignment,
+    }
+
+
 @pytest.fixture()
 def client():
     return ElevenLabsClient(
@@ -53,14 +65,14 @@ def _make_mutagen_mock(duration: float):
     return mutagen_mod, mutagen_mp3_mod
 
 
-def _call_with_mocks(client, output_path, duration=3.14):
+def _call_with_mocks(client, output_path, duration=3.14, payload_factory=make_fake_response):
     fake_resp = MagicMock()
     fake_resp.ok = True
-    fake_resp.json.return_value = make_fake_response()
+    fake_resp.json.return_value = payload_factory()
 
     mutagen_mod, mutagen_mp3_mod = _make_mutagen_mock(duration)
 
-    with patch("requests.post", return_value=fake_resp):
+    with patch("requests.post", return_value=fake_resp) as post_mock:
         orig_mutagen = sys.modules.get("mutagen")
         orig_mutagen_mp3 = sys.modules.get("mutagen.mp3")
         sys.modules["mutagen"] = mutagen_mod
@@ -76,7 +88,7 @@ def _call_with_mocks(client, output_path, duration=3.14):
                 sys.modules.pop("mutagen.mp3", None)
             else:
                 sys.modules["mutagen.mp3"] = orig_mutagen_mp3
-    return result
+    return result, post_mock
 
 
 def test_sidecar_json_written(client, tmp_path):
@@ -86,6 +98,20 @@ def test_sidecar_json_written(client, tmp_path):
 
     sidecar = tmp_path / "scene_001.timestamps.json"
     assert sidecar.exists(), "사이드카 JSON 파일이 존재해야 함"
+
+    data = json.loads(sidecar.read_text(encoding="utf-8"))
+    assert data["characters"] == ["안", "녕"]
+    assert data["character_start_times_seconds"] == [0.0, 0.1]
+    assert data["character_end_times_seconds"] == [0.1, 0.2]
+
+
+def test_sidecar_json_written_from_normalized_alignment_only(client, tmp_path):
+    """alignment가 비어도 normalized_alignment만으로 사이드카가 저장되어야 함."""
+    output_path = tmp_path / "scene_001.mp3"
+    _call_with_mocks(client, output_path, payload_factory=make_fake_response_normalized_only)
+
+    sidecar = tmp_path / "scene_001.timestamps.json"
+    assert sidecar.exists(), "normalized_alignment만 있어도 사이드카 JSON 파일이 존재해야 함"
 
     data = json.loads(sidecar.read_text(encoding="utf-8"))
     assert data["characters"] == ["안", "녕"]
@@ -105,8 +131,17 @@ def test_mp3_file_written(client, tmp_path):
 def test_duration_from_timestamps(client, tmp_path):
     """반환되는 duration이 타임스탬프 마지막 값에서 읽혀야 함 (가장 정확)."""
     output_path = tmp_path / "scene_001.mp3"
-    duration = _call_with_mocks(client, output_path, duration=7.77)
+    duration, _post_mock = _call_with_mocks(client, output_path, duration=7.77)
 
     # character_end_times_seconds 마지막 값 = 0.2
     # 파일 크기 추정값(≈0.006)이나 mutagen mock(7.77)이 아닌 0.2여야 함
     assert duration == pytest.approx(0.2), "타임스탬프 마지막 값이 duration으로 반환되어야 함"
+
+
+def test_with_timestamps_requests_use_timeout(client, tmp_path):
+    """shared client는 네트워크 요청에 timeout을 넣어 script parity를 유지해야 함."""
+    output_path = tmp_path / "scene_001.mp3"
+    _duration, post_mock = _call_with_mocks(client, output_path)
+
+    timeouts = [call.kwargs.get("timeout") for call in post_mock.call_args_list]
+    assert timeouts == [60]

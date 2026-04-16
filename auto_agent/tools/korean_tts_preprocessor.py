@@ -181,6 +181,32 @@ class KoreanTTSPreprocessor:
         """Initialize the preprocessor."""
         self.changes: List[str] = []
 
+    def _basic_cleanup(self, text: str) -> str:
+        """legacy direct TTS 경로와 동일한 기본 정리 규칙."""
+        original = text
+        text = text.strip()
+        text = re.sub(r'^#\d+\s*', '', text, flags=re.MULTILINE)
+        text = re.sub(r'^(장소|시간|배경|상황):\s*.*$', '', text, flags=re.MULTILINE)
+        text = re.sub(r'\([^)]*\)', '', text)
+        text = re.sub(r'\[[^\]]*\]', '', text)
+        text = re.sub(r'\{[^}]*\}', '', text)
+        emoji_pattern = re.compile(
+            "[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF"
+            "\U0001F680-\U0001F6FF\U00002600-\U000026FF\U00002700-\U000027BF]+",
+            flags=re.UNICODE,
+        )
+        text = emoji_pattern.sub('', text)
+        text = re.sub(r"['\"][^'\"]+['\"]\.", lambda m: m.group(0)[1:-2] + ',', text)
+        text = re.sub(r'[""""\'\'\'\'「」『』《》〈〉`´]', '', text)
+        text = re.sub(r'[<>♪♫♬♭♮♯★☆♥♡※▶◀■□▲△▼▽○●◎◇◆]', '', text)
+        text = re.sub(r'[!?]{2,}', lambda m: m.group(0)[0], text)
+        text = re.sub(r'\.{3,}', '...', text)
+        text = re.sub(r'^([^:]+):\s*', r'\1. ', text, flags=re.MULTILINE)
+        text = re.sub(r'\s+', ' ', text).strip()
+        if text != original:
+            self.changes.append("기본 정리 적용")
+        return text
+
     def _strip_markdown_markers(self, text: str) -> str:
         """마크다운 강조 마커(**볼드**, *이탤릭*, `code`, [[wiki]], [text](url))를 제거.
         원고에서 **볼드**는 영상 연출 힌트이므로 TTS/자막에서는 제거한다."""
@@ -261,12 +287,16 @@ class KoreanTTSPreprocessor:
         self.changes = []
         result = text
 
+        # Step -1: legacy direct TTS 경로와 동일한 기본 정리
+        result = self._basic_cleanup(result)
+
         # Step 0: 마크다운 강조 마커 제거 (TTS/자막에 포함되면 안 됨)
         result = self._strip_markdown_markers(result)
 
-        # Process in order: English → punctuation → English units → numbers → counters → KR units → special cases
+        # Process in order: English → punctuation → ranges → English units → numbers → counters → KR units → special cases
         result = self._convert_english(result)
         result = self._normalize_punctuation(result)
+        result = self._convert_ranges(result)
         # 영문 단위(km/kg/%) → 한글 (숫자 변환 전에 수행 — 변환 후 단어 단위로 처리)
         result = self._convert_english_units(result)
         result = self._convert_numbers(result)
@@ -276,6 +306,7 @@ class KoreanTTSPreprocessor:
         result = self._prevent_palatalization(result)
         result = self._prevent_rendaku(result)
         result = self._handle_prices_and_measurements(result)
+        result = self._apply_legacy_pronunciation_guards(result)
 
         return result, self.changes
 
@@ -330,6 +361,19 @@ class KoreanTTSPreprocessor:
             self.changes.append('; → ,')
             text = text.replace(';', ',')
         return text
+
+    def _convert_ranges(self, text: str) -> str:
+        """숫자 범위 표기 `~`를 `에서`로 정규화."""
+        pattern = r'(\d+(?:\.\d+)?)\s*~\s*(\d+(?:\.\d+)?)'
+
+        def replace_range(match):
+            left = match.group(1)
+            right = match.group(2)
+            replaced = f'{left}에서{right}'
+            self.changes.append(f'{match.group(0)} → {replaced}')
+            return replaced
+
+        return re.sub(pattern, replace_range, text)
 
     # ── 날짜 연음 규칙 (korean-tts-rules.md §4) ──
     # 연도: 1/6/7/8로 끝나면 "년" → "련"
@@ -646,6 +690,30 @@ class KoreanTTSPreprocessor:
         """
         # 가격 단위 처리 (가 vs 조사 가 구분)
         # This is more complex and requires context analysis
+
+        return text
+
+    def _apply_legacy_pronunciation_guards(self, text: str) -> str:
+        """legacy direct TTS 경로에서 쓰던 발음 가드 유지."""
+        replacements = [
+            ('장난감', '장난깜'),
+            ('신기록', '신끼록'),
+            ('최고지도자', '최-고-지도자'),
+        ]
+        for original, replaced in replacements:
+            if original in text:
+                self.changes.append(f'{original} → {replaced}')
+                text = text.replace(original, replaced)
+
+        guards = [
+            (r"(?<!')삼만", "'삼'만"),
+            (r"(?<!')삼천", "'삼'천"),
+            (r"(?<!')삼백", "'삼'백"),
+        ]
+        for pattern, replaced in guards:
+            if re.search(pattern, text):
+                self.changes.append(f'{pattern} → {replaced}')
+                text = re.sub(pattern, replaced, text)
 
         return text
 

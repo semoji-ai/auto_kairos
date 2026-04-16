@@ -66,13 +66,13 @@ class TTSPreprocessor:
     def preprocess(self, text: str, language: str = "ko") -> str:
         if not text or not text.strip():
             return ""
-        processed = self._basic_cleanup(text)
         if language != "ko":
-            return processed
-        if self._needs_symbol_processing(processed):
-            processed = self._symbol_processing(processed)
-        processed = self._hyphenate_numbers(processed)
-        processed = self._korean_pronunciation_fix(processed)
+            return self._basic_cleanup(text)
+
+        from auto_agent.tools.korean_tts_preprocessor import KoreanTTSPreprocessor
+
+        shared = KoreanTTSPreprocessor()
+        processed, _changes = shared.process_text(text)
         return processed.strip()
 
     def _basic_cleanup(self, text: str) -> str:
@@ -98,7 +98,7 @@ class TTSPreprocessor:
         return processed.strip()
 
     def _needs_symbol_processing(self, text: str) -> bool:
-        return bool(re.search(r'[\d%~.·&/+=]', text))
+        return bool(re.search(r'[\d%~.·&/+=]|[A-Za-z]{2,}', text))
 
     def _number_to_korean_sino(self, num: int) -> str:
         if num == 0:
@@ -138,6 +138,7 @@ class TTSPreprocessor:
         abbreviations = {
             r'\bAI\b': '에이아이', r'\bAPI\b': '에이피아이',
             r'\bCEO\b': '씨이오', r'\bIT\b': '아이티',
+            r'(?<![A-Za-z])ETF(?![A-Za-z])': '이티에프',
             r'\bGDP\b': '지디피', r'\bIMF\b': '아이엠에프',
             r'\bOLED\b': '올레드', r'\bLED\b': '엘이디',
             r'\b5G\b': '파이브지', r'\b4G\b': '포지',
@@ -276,7 +277,7 @@ class ElevenLabsClient:
         # /with-timestamps 엔드포인트 시도
         try:
             url_ts = f"https://api.elevenlabs.io/v1/text-to-speech/{self.voice_id}/with-timestamps?output_format=mp3_44100_128"
-            response = requests.post(url_ts, headers=headers, json=body)
+            response = requests.post(url_ts, headers=headers, json=body, timeout=60)
             if not response.ok:
                 raise Exception(f"with-timestamps API 오류: {response.status_code}")
             response_json = response.json()
@@ -285,7 +286,7 @@ class ElevenLabsClient:
                 f.write(audio_bytes)
 
             # 사이드카 타임스탬프 저장
-            alignment = response_json.get("alignment", {})
+            alignment = response_json.get("alignment") or response_json.get("normalized_alignment") or {}
             sidecar = {
                 "characters": alignment.get("characters", []),
                 "character_start_times_seconds": alignment.get("character_start_times_seconds", []),
@@ -310,7 +311,7 @@ class ElevenLabsClient:
         except Exception:
             # 폴백: 원래 엔드포인트
             url = f"https://api.elevenlabs.io/v1/text-to-speech/{self.voice_id}?output_format=mp3_44100_128"
-            response = requests.post(url, headers=headers, json=body)
+            response = requests.post(url, headers=headers, json=body, timeout=60)
             if not response.ok:
                 raise Exception(f"ElevenLabs API 오류: {response.status_code}")
             with open(output_path, "wb") as f:
@@ -341,12 +342,19 @@ class ElevenLabsClient:
             wf.writeframes(audio_data)
         return len(audio_data) / (24000 * 2)
 
+    def generate_preprocessed_tts(self, processed_text: str, output_path: Path) -> float:
+        """이미 전처리된 텍스트를 사용해 TTS 생성.
+
+        script entrypoint와 direct client가 동일한 생성/타임스탬프 경로를 타게 한다.
+        """
+        if self.tts_provider == "gemini" and self.gemini_client:
+            return self._generate_tts_gemini(processed_text, output_path)
+        return self._generate_tts_elevenlabs(processed_text, output_path)
+
     def generate_tts(self, text: str, output_path: Path, language: str = "ko") -> float:
         """TTS 생성 (전처리 포함)"""
         processed = self.preprocessor.preprocess(text, language)
-        if self.tts_provider == "gemini" and self.gemini_client:
-            return self._generate_tts_gemini(processed, output_path)
-        return self._generate_tts_elevenlabs(processed, output_path)
+        return self.generate_preprocessed_tts(processed, output_path)
 
     def generate_from_storyboard(
         self, storyboard_path: Path, output_dir: Path,
