@@ -6,7 +6,7 @@
  * 수정은 여기서만 하면 3뷰가 동일하게 반영됨.
  */
 import React from "react";
-import { AbsoluteFill, Img, staticFile } from "remotion";
+import { AbsoluteFill, Img, OffthreadVideo, staticFile, useVideoConfig } from "remotion";
 import { CreativeScene } from "../simple/CreativeScene";
 import { useDesignPreset } from "../design";
 import { DEFAULT_PRESET } from "../design/defaults";
@@ -68,6 +68,36 @@ export const ImageBg: React.FC<{
     }} />
   </AbsoluteFill>
 );
+
+/* ── 비디오 배경 ── */
+export const VideoBg: React.FC<{
+  src: string;
+  opacity: number;
+  startSec?: number;
+  endSec?: number;
+  volume?: number;
+}> = ({ src, opacity, startSec = 0, volume = 0 }) => {
+  const { fps } = useVideoConfig();
+  const startFrom = Math.round(startSec * fps);
+  return (
+    <AbsoluteFill style={{ zIndex: 0, overflow: "hidden" }}>
+      <OffthreadVideo
+        src={resolveUrl(src)}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          opacity,
+        }}
+        startFrom={startFrom}
+        volume={volume}
+        muted={volume === 0}
+        playbackRate={1}
+        pauseWhenBuffering
+      />
+    </AbsoluteFill>
+  );
+};
 
 /* ── Side 이미지 레이아웃 ── */
 const SideLayout: React.FC<{
@@ -186,6 +216,21 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   // person_card 레이아웃은 이미지를 카드 내부에서 소비 — 배경으로 쓰지 않음
   const sceneImage = (!isPersonCard && (scene.imagePath || scene.vizBackgroundPath)) || "";
   const hasSceneImage = !!sceneImage;
+  // videoAsset 읽기
+  const videoPath = scene.videoPath || "";
+  const videoAssetCfg = scene.videoAsset as {
+    placement?: string;
+    startSec?: number;
+    endSec?: number;
+    opacity?: number;
+    volume?: number;
+  } | undefined;
+  const hasVideo = !!videoPath && !!videoAssetCfg;
+  const videoPlacement = videoAssetCfg?.placement ?? "background";
+  const videoOpacity = videoAssetCfg?.opacity ?? 0.7;
+  const videoStartSec = videoAssetCfg?.startSec ?? 0;
+  const videoEndSec = videoAssetCfg?.endSec;
+  const videoVolume = videoAssetCfg?.volume ?? 0;
   const hasAnyImage = hasSceneImage || !!defaultBg;
   const placement = scene.imageAsset?.placement ?? "background";
   // quote는 레거시 — build_manifest에서 quote_portrait로 정규화됨. 렌더러는 둘 다 동일 처리
@@ -207,10 +252,14 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const imgSrc = sceneImage || defaultBg || "";
 
   // ── fullscreen ──
-  if (hasAnyImage && placement === "fullscreen") {
+  if ((hasAnyImage || hasVideo) && (placement === "fullscreen" || (hasVideo && videoPlacement === "fullscreen"))) {
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-        <ImageBg src={imgSrc} opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} fit={imgFit} />
+        {hasVideo && videoPlacement === "fullscreen" ? (
+          <VideoBg src={videoPath} opacity={videoOpacity} startSec={videoStartSec} endSec={videoEndSec} volume={videoVolume} />
+        ) : (
+          <ImageBg src={imgSrc} opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} fit={imgFit} />
+        )}
         <CreativeScene
           data={vizData}
           subtitles={scene.subtitles}
@@ -265,12 +314,22 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   // ── background (기본) ──
   return (
     <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-      {hasAnyImage && <ImageBg src={imgSrc} opacity={imgOpacity} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} fit={imgFit} />}
+      {hasVideo && videoPlacement === "background" ? (
+        <VideoBg
+          src={videoPath}
+          opacity={videoOpacity}
+          startSec={videoStartSec}
+          endSec={videoEndSec}
+          volume={videoVolume}
+        />
+      ) : (
+        hasAnyImage && <ImageBg src={imgSrc} opacity={imgOpacity} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} fit={imgFit} />
+      )}
       <CreativeScene
         data={vizData}
         subtitles={scene.subtitles}
         fps={fps}
-        hasImageBackground={hasAnyImage}
+        hasImageBackground={hasAnyImage || hasVideo}
         imageAssetPlacement={placement}
       />
       {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
