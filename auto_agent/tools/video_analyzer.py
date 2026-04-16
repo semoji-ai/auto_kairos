@@ -25,7 +25,9 @@ _client: "genai.Client | None" = None
 def _get_client() -> "genai.Client":
     global _client
     if _client is None:
-        api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY", "")
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY environment variable is not set or empty")
         _client = genai.Client(api_key=api_key)
     return _client
 
@@ -71,13 +73,21 @@ def _gemini_generate_large(video_path: Path, mime_type: str) -> "gtypes.Generate
         file=str(video_path),
         config=gtypes.UploadFileConfig(mime_type=mime_type),
     )
-    for _ in range(30):
-        if uploaded.state != "PROCESSING":
+    MAX_POLL_ITERATIONS = 30
+    POLL_INTERVAL_SEC = 5
+
+    for i in range(MAX_POLL_ITERATIONS):
+        upload_result = client.files.get(name=uploaded.name)
+        if upload_result.state == "ACTIVE":
             break
-        time.sleep(2)
-        uploaded = client.files.get(name=uploaded.name)
-    if uploaded.state == "FAILED":
-        raise RuntimeError(f"Gemini 파일 업로드 실패: {uploaded.name}")
+        if upload_result.state == "FAILED":
+            raise RuntimeError(f"File upload failed: {upload_result.name}")
+        time.sleep(POLL_INTERVAL_SEC)
+    else:
+        raise TimeoutError(
+            f"File upload did not become ACTIVE after {MAX_POLL_ITERATIONS * POLL_INTERVAL_SEC}s: {uploaded.name}"
+        )
+    uploaded = upload_result
     try:
         return client.models.generate_content(
             model="gemini-2.0-flash",
@@ -96,7 +106,10 @@ def analyze_video(video_path: Path) -> dict:
     mime_map = {".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime"}
     mime_type = mime_map.get(suffix, "video/mp4")
 
-    file_size_mb = video_path.stat().st_size / (1024 * 1024)
+    try:
+        file_size_mb = video_path.stat().st_size / (1024 * 1024)
+    except OSError as e:
+        raise FileNotFoundError(f"Cannot access video file: {video_path}") from e
 
     if file_size_mb <= 19:
         video_bytes = video_path.read_bytes()
@@ -107,6 +120,6 @@ def analyze_video(video_path: Path) -> dict:
     raw = response.text.strip()
     if raw.startswith("```"):
         lines = raw.split("\n")
-        raw = "\n".join(lines[1:-1] if lines[-1] == "```" else lines[1:])
+        raw = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
 
     return json.loads(raw)
