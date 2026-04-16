@@ -23,6 +23,7 @@ export const SEMOJI3D_PRESET: DesignPresetOverride = {
   },
   defaultBackground: "background/semoji_grid_bg.jpg",
   defaultBgOpacity: 1.0,
+  disableIcons: true,
   texture: {
     src: "background/63517.jpg",
     blendMode: "multiply",
@@ -111,9 +112,5 @@ export const SEMOJI3D_PRESET: DesignPresetOverride = {
     bottomOffset: 60,
     maxWidth: "92%",
     lineHeight: 1.4,
-  },
-  variants: {
-    comparisonCell: "none" as const,
-    itemsList: "accent-filled" as const,
   },
 };

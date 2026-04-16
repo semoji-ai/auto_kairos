@@ -88,6 +88,7 @@
     "baseTheme": "light",
     "defaultBackground": "background/semoji_grid_bg.jpg",
     "defaultBgOpacity": 1.0,
+    "disableIcons": true,
     "texture": {
       "src": "background/63517.jpg",
       "blendMode": "multiply",

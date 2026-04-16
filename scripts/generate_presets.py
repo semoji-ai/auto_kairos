@@ -86,6 +86,10 @@ def build_preset_obj(dt: dict, style_id: str) -> dict:
     if (dbo := dt.get("defaultBgOpacity")) is not None:
         preset["defaultBgOpacity"] = dbo
 
+    # disableIcons
+    if (di := dt.get("disableIcons")) is not None:
+        preset["disableIcons"] = di
+
     # texture
     if texture := dt.get("texture"):
         preset["texture"] = texture

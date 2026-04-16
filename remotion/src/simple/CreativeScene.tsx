@@ -2893,7 +2893,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const values: number[] = data.values || [];
   const unit: string = data.unit || "";
   const concept: string = creative.concept || "";
-  const _rawItemIcons: string[] = data.itemIcons || data.icons || [];
+  const _rawItemIcons: string[] = preset.disableIcons ? [] : (data.itemIcons || data.icons || []);
   // 전부 있거나 전부 없거나 — 길이 불일치 시 전체 무시 (일부만 아이콘 표시 방지)
   const itemIcons: string[] = (_rawItemIcons.length === 0 || _rawItemIcons.length === items.length || items.length === 0)
     ? _rawItemIcons
