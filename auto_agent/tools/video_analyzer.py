@@ -25,9 +25,9 @@ _client: "genai.Client | None" = None
 def _get_client() -> "genai.Client":
     global _client
     if _client is None:
-        api_key = os.environ.get("GEMINI_API_KEY", "")
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
         if not api_key:
-            raise ValueError("GEMINI_API_KEY environment variable is not set or empty")
+            raise ValueError("GEMINI_API_KEY 또는 GOOGLE_API_KEY 환경변수가 설정되지 않았습니다")
         _client = genai.Client(api_key=api_key)
     return _client
 
@@ -58,7 +58,7 @@ def _gemini_generate(video_bytes: bytes, mime_type: str) -> "gtypes.GenerateCont
     """내부 헬퍼 — 테스트에서 mock 대상."""
     client = _get_client()
     return client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=[
             gtypes.Part.from_bytes(data=video_bytes, mime_type=mime_type),
             ANALYZE_PROMPT,
@@ -69,10 +69,13 @@ def _gemini_generate(video_bytes: bytes, mime_type: str) -> "gtypes.GenerateCont
 def _gemini_generate_large(video_path: Path, mime_type: str) -> "gtypes.GenerateContentResponse":
     """20MB 초과 영상용 — File API 업로드 후 분석."""
     client = _get_client()
-    uploaded = client.files.upload(
-        file=str(video_path),
-        config=gtypes.UploadFileConfig(mime_type=mime_type),
-    )
+    # str(video_path)을 직접 넘기면 비ASCII 경로에서 SDK가 ascii encode 실패.
+    # IOBase 객체로 넘기면 경로 인코딩 문제 우회 가능.
+    with open(video_path, "rb") as fh:
+        uploaded = client.files.upload(
+            file=fh,
+            config=gtypes.UploadFileConfig(mime_type=mime_type),
+        )
     MAX_POLL_ITERATIONS = 30
     POLL_INTERVAL_SEC = 5
 
@@ -90,7 +93,7 @@ def _gemini_generate_large(video_path: Path, mime_type: str) -> "gtypes.Generate
     uploaded = upload_result
     try:
         return client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=[
                 gtypes.Part.from_uri(file_uri=uploaded.uri, mime_type=mime_type),
                 ANALYZE_PROMPT,
