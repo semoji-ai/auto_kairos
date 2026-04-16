@@ -128,7 +128,9 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     # Windows에서 심볼릭 링크는 관리자 권한 필요 → 실패 시 junction 또는 복사로 폴백
     project_link = remotion_public / "project"
     if project_link.exists() or project_link.is_symlink():
-        if project_link.is_symlink() or project_link.is_junction() if hasattr(project_link, "is_junction") else False:
+        if project_link.is_symlink():
+            project_link.unlink()
+        elif hasattr(project_link, "is_junction") and project_link.is_junction():
             project_link.unlink()
         else:
             import shutil as _sh
