@@ -52,10 +52,11 @@ export const resolveVisualization = (scene: any): any => {
 export const ImageBg: React.FC<{
   src: string; opacity: number;
   offsetX?: number; offsetY?: number; scale?: number;
-}> = ({ src, opacity, offsetX = 50, offsetY = 50, scale = 1.0 }) => (
+  fit?: "cover" | "contain" | "fill";
+}> = ({ src, opacity, offsetX = 50, offsetY = 50, scale = 1.0, fit = "contain" }) => (
   <AbsoluteFill style={{ zIndex: 0, overflow: "hidden" }}>
     <Img src={resolveUrl(src)} style={{
-      width: "100%", height: "100%", objectFit: "cover", opacity,
+      width: "100%", height: "100%", objectFit: fit, opacity,
       objectPosition: `${offsetX}% ${offsetY}%`,
       transform: scale !== 1.0 ? `scale(${scale})` : undefined,
       transformOrigin: `${offsetX}% ${offsetY}%`,
@@ -194,13 +195,14 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const imgOffsetX = scene.imageAsset?.offsetX ?? 50;
   const imgOffsetY = scene.imageAsset?.offsetY ?? 50;
   const imgScale   = scene.imageAsset?.scale   ?? 1.0;
+  const imgFit     = scene.imageAsset?.fit     ?? "contain";
   const imgSrc = sceneImage || defaultBg || "";
 
   // ── fullscreen ──
   if (hasAnyImage && placement === "fullscreen") {
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-        <ImageBg src={imgSrc} opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} />
+        <ImageBg src={imgSrc} opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} fit={imgFit} />
         <CreativeScene
           data={vizData}
           subtitles={scene.subtitles}
@@ -255,7 +257,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   // ── background (기본) ──
   return (
     <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-      {hasAnyImage && <ImageBg src={imgSrc} opacity={imgOpacity} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} />}
+      {hasAnyImage && <ImageBg src={imgSrc} opacity={imgOpacity} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} fit={imgFit} />}
       <CreativeScene
         data={vizData}
         subtitles={scene.subtitles}
