@@ -1153,7 +1153,9 @@ const ItemsGrid: React.FC<{
   const C = useC();
   const T = usePresetTypo();
   const L = usePresetLayout();
+  const V = usePresetVariants();
   const preset = useDesignPreset();
+  const accentFilled = V.itemsGrid === "accent-filled";
   const frame = useCurrentFrame();
   const cols = items.length === 4 ? (items.some(it => it.length > 8) ? 2 : 4)
     : items.length >= 5 ? 3 : items.length >= 3 ? 3 : 2;
@@ -1231,17 +1233,18 @@ const ItemsGrid: React.FC<{
               opacity,
               transform: `translateY(${rise}px) scale(${scaleVal})${extraTransform}`,
               padding: "14px 16px",
-              borderRadius: 50,
-              backgroundColor: moodCfg.accent,
+              borderRadius: accentFilled ? 50 : L.cardRadius,
+              backgroundColor: accentFilled ? moodCfg.accent : C.cardBg,
+              border: accentFilled ? "none" : `2px solid ${moodCfg.accent}BB`,
               boxShadow: borderGlow,
               transition: "box-shadow 0.1s",
-              textAlign: "center",
+              textAlign: accentFilled ? "center" : "left",
               fontSize: T.itemText,
               fontWeight: 600,
-              color: "#ffffff",
+              color: accentFilled ? "#ffffff" : C.text,
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
+              alignItems: accentFilled ? "center" : "flex-start",
               justifyContent: "center",
               gap: 6,
             }}

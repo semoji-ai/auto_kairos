@@ -176,6 +176,7 @@ export interface ComponentVariants {
   metricCard: "bordered" | "filled" | "glass";
   comparisonCell: "bordered" | "filled" | "accent-top" | "none";
   itemsList: "default" | "accent-filled";
+  itemsGrid: "default" | "accent-filled";
   callout: "left-border" | "full-border" | "highlight";
   tag: "rounded" | "pill" | "square";
   pill: "pill" | "rounded" | "square";

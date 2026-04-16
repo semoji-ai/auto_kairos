@@ -174,6 +174,7 @@ script-director → scene_specs → script-reviewer 평가 (100점)
 @docs/rules/remotion-rules.md
 @docs/rules/path-env-rules.md
 @docs/rules/scene-specs-rules.md
+@docs/rules/design-system-rules.md
 
 ---
 

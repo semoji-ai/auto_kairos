@@ -119,6 +119,10 @@ def build_preset_obj(dt: dict, style_id: str) -> dict:
         if sub_obj:
             preset["subtitle"] = sub_obj
 
+    # variants (itemsList, itemsGrid 등 컴포넌트 스타일 변형)
+    if variants := dt.get("variants"):
+        preset["variants"] = variants
+
     return preset
 
 

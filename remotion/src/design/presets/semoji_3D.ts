@@ -114,4 +114,8 @@ export const SEMOJI3D_PRESET: DesignPresetOverride = {
     maxWidth: "92%",
     lineHeight: 1.4,
   },
+  variants: {
+    itemsList: "accent-filled",
+    itemsGrid: "accent-filled",
+  },
 };

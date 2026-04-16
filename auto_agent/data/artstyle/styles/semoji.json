@@ -155,6 +155,10 @@
     "map": {
       "defaultTheme": "warm_earth"
     },
+    "variants": {
+      "itemsList": "accent-filled",
+      "itemsGrid": "accent-filled"
+    },
     "chartagent": {
       "theme_set": "gallery_infographic",
       "theme_overrides": {
