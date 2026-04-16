@@ -1230,34 +1230,26 @@ const ItemsGrid: React.FC<{
               opacity,
               transform: `translateY(${rise}px) scale(${scaleVal})${extraTransform}`,
               padding: "14px 16px",
-              borderRadius: 16,
-              border: `2px solid ${moodCfg.accent}${flashGlow > 0 ? "FF" : "BB"}`,
-              backgroundColor: "rgba(0,0,0,0.4)",
+              borderRadius: 50,
+              backgroundColor: moodCfg.accent,
+              boxShadow: borderGlow,
+              transition: "box-shadow 0.1s",
               textAlign: "center",
               fontSize: T.itemText,
               fontWeight: 600,
-              color: C.text,
-              boxShadow: borderGlow,
-              transition: "box-shadow 0.1s",
+              color: "#ffffff",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
+              justifyContent: "center",
               gap: 6,
             }}
           >
-            {/* 국기가 있으면 국기 우선 (아이콘 숨김), 없으면 아이콘 */}
+            {/* 국기가 있으면 국기 우선 (아이콘 숨김), 없으면 텍스트만 */}
             {itemFlags?.[i] ? (
               <FlagCard countryCode={itemFlags[i]} label={item} width={items.length > 6 ? 120 : 160} />
             ) : (
-              <>
-                {itemIcons?.[i] && (() => {
-                  const Ic = resolveIcon(itemIcons[i]);
-                  return Ic ? (
-                    <Icon icon={Ic} size={items.length > 6 ? 20 : 24} color={moodCfg.accent} />
-                  ) : null;
-                })()}
-                <TextWithBreaks text={item} />
-              </>
+              <TextWithBreaks text={item} />
             )}
           </div>
         );
