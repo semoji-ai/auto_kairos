@@ -232,6 +232,19 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         except Exception:
             pass
 
+    # video_assets.json → {sceneNumber: videoAsset} 룩업
+    video_assets_lookup: dict = {}
+    video_assets_path = out_dir / "video_assets.json"
+    if video_assets_path.exists():
+        try:
+            va_data = json.loads(video_assets_path.read_text(encoding="utf-8"))
+            for va_entry in va_data.get("scenes", []):
+                sn = va_entry.get("sceneNumber")
+                if sn is not None:
+                    video_assets_lookup[sn] = va_entry
+        except Exception:
+            pass
+
     scenes = []
     for scene in specs["scenes"]:
         num = scene["sceneNumber"] if scene.get("sceneNumber") is not None else scene["scene_number"]
@@ -454,6 +467,23 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                     "url": ia["source_url"],
                     "title": ia.get("source_title", ""),
                 }
+
+        # Video — video_assets.json에 있으면 videoPath + videoAsset 주입
+        va_entry = video_assets_lookup.get(num)
+        if va_entry:
+            video_file = va_entry.get("videoFile", "")
+            video_src = out_dir / "video_sources" / video_file
+            video_path_str = ""
+            if video_src.exists():
+                video_path_str = link_asset(video_src, "video_sources", video_file)
+            entry["videoPath"] = video_path_str
+            entry["videoAsset"] = {
+                "placement": va_entry.get("placement", "background"),
+                "startSec": va_entry.get("startSec", 0.0),
+                "endSec": va_entry.get("endSec", None),
+                "opacity": va_entry.get("opacity", 0.7),
+                "volume": va_entry.get("volume", 0.0),
+            }
 
         # cinematic_overlay → cinematicOverlay 변환
         co = viz.get("cinematic_overlay") or viz.get("cinematicOverlay")
