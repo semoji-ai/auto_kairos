@@ -149,6 +149,12 @@ async def get_manifest_for_project(dir_name: str):
             val = scene.get(key, "")
             if val and val.startswith("project/"):
                 scene[key] = prefix + val[len("project/"):]
+        # images[] 배열도 rewrite (person_card 등)
+        if scene.get("images"):
+            scene["images"] = [
+                prefix + v[len("project/"):] if v and v.startswith("project/") else v
+                for v in scene["images"]
+            ]
     return JSONResponse(content=data)
 
 

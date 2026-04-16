@@ -425,6 +425,12 @@ async def get_scene_for_editor(slug: str, scene_num: int):
                         val = mscene.get(key, "")
                         if val and val.startswith("project/"):
                             mscene[key] = prefix + val[len("project/"):]
+                    # images[] 배열도 rewrite (person_card 등)
+                    if mscene.get("images"):
+                        mscene["images"] = [
+                            prefix + v[len("project/"):] if v and v.startswith("project/") else v
+                            for v in mscene["images"]
+                        ]
                     layout = (mscene.get("visualization") or {}).get("layout", mscene.get("sceneType", ""))
                     constraints = LAYOUT_CONSTRAINTS.get(layout, {})
                     return JSONResponse(
