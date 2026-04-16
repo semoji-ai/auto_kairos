@@ -142,20 +142,53 @@ def generate_tts(text: str, output_path: Path) -> float:
 
     NOTE: 호출자가 이미 전처리한 text를 넘겨야 함 (이중 전처리 방지).
     """
-    url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}?output_format=mp3_44100_128"
+    import base64
+
     headers = {"Content-Type": "application/json", "xi-api-key": API_KEY}
     body = {"text": text, "model_id": MODEL_ID, "voice_settings": VOICE_SETTINGS}
 
-    response = requests.post(url, headers=headers, json=body, timeout=60)
-    if not response.ok:
-        raise Exception(f"ElevenLabs API error: {response.status_code} - {response.text[:200]}")
+    # word/character alignment가 필요한 downstream(subtitles, editor)을 위해
+    # /with-timestamps 엔드포인트를 우선 사용한다.
+    try:
+        url_ts = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}/with-timestamps?output_format=mp3_44100_128"
+        response = requests.post(url_ts, headers=headers, json=body, timeout=60)
+        if not response.ok:
+            raise Exception(f"with-timestamps API error: {response.status_code} - {response.text[:200]}")
 
-    with open(output_path, "wb") as f:
-        f.write(response.content)
+        response_json = response.json()
+        audio_bytes = base64.b64decode(response_json["audio_base64"])
+        with open(output_path, "wb") as f:
+            f.write(audio_bytes)
 
-    # Estimate duration from MP3 file size (128kbps)
-    duration = (len(response.content) * 8) / 128000
-    return duration
+        alignment = response_json.get("alignment") or response_json.get("normalized_alignment") or {}
+        timestamps_path = output_path.with_name(output_path.stem + ".timestamps.json")
+        sidecar = {
+            "characters": alignment.get("characters", []),
+            "character_start_times_seconds": alignment.get("character_start_times_seconds", []),
+            "character_end_times_seconds": alignment.get("character_end_times_seconds", []),
+        }
+        with open(timestamps_path, "w", encoding="utf-8") as f:
+            json.dump(sidecar, f, ensure_ascii=False, indent=2)
+
+        end_times = sidecar["character_end_times_seconds"]
+        if end_times:
+            return round(end_times[-1], 3)
+        return (len(audio_bytes) * 8) / 128000
+
+    except Exception as e:
+        logger.warning("with-timestamps 호출 실패 — 기존 엔드포인트로 폴백: %s", e)
+        # 폴백: 기존 엔드포인트 유지
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}?output_format=mp3_44100_128"
+        response = requests.post(url, headers=headers, json=body, timeout=60)
+        if not response.ok:
+            raise Exception(f"ElevenLabs API error: {response.status_code} - {response.text[:200]}")
+
+        with open(output_path, "wb") as f:
+            f.write(response.content)
+
+        # Estimate duration from MP3 file size (128kbps)
+        duration = (len(response.content) * 8) / 128000
+        return duration
 
 
 def main():
