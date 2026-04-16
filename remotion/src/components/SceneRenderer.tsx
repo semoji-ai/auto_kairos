@@ -26,9 +26,14 @@ export const resolveUrl = (path: string): string => {
 
 /** v5 플랫 스키마 → visualization 블록 조립 (v4 호환) */
 export const resolveVisualization = (scene: any): any => {
-  // v4: scene.visualization이 이미 있으면 그대로
+  // v4: scene.visualization이 이미 있으면 그대로 반환 + top-level 보조 필드 병합
   if (scene.visualization && (scene.visualization.items || scene.visualization.creative)) {
-    return scene.visualization;
+    const viz = { ...scene.visualization };
+    // top-level images/itemIcons/itemFlags는 visualization에 없을 수 있으므로 병합
+    if (scene.images && !viz.images) viz.images = scene.images;
+    if (scene.itemIcons && !viz.itemIcons) viz.itemIcons = scene.itemIcons;
+    if (scene.itemFlags && !viz.itemFlags) viz.itemFlags = scene.itemFlags;
+    return viz;
   }
   // v5 플랫: 최상위 필드에서 visualization 조립
   const viz: any = {};
