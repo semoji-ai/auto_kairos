@@ -92,26 +92,6 @@
       "skill_file": "agents/targeted-researcher/SKILL.md",
       "notes": "Stage 2 Phase 3. draft-writer의 의문 사항을 정밀 리서치로 해결."
     },
-    "research-orchestrator": {
-      "description": "심층 리서치 탐색 전담. Explorer 병렬 배포 → 탐색 완료 → 종료.",
-      "model": "sonnet",
-      "max_turns": 70,
-      "budget": "$2.5",
-      "max_duration_minutes": 20,
-      "allowed_tools": [
-        "Read",
-        "Write",
-        "Glob",
-        "WebSearch",
-        "WebFetch",
-        "Task"
-      ],
-      "skill_file": "agents/research-orchestrator/SKILL.md",
-      "shared_skills": [
-        "shared/research-format"
-      ],
-      "notes": "기존과 동일. Stage 1에서 사용."
-    },
     "script-director": {
       "description": "원고 작성 + 씬 분할 + 시각 연출 + 모션 설계를 통합 수행하는 핵심 에이전트",
       "model": "opus",
@@ -486,7 +466,6 @@
   "summary": {
     "agents": [
       "trend-analyst (Stage 0: 주제 기획 — Opus AutoResearch)",
-      "research-orchestrator (Stage 1: 리서치)",
       "script-director (Stage 2: 원고+연출)",
       "assembly-director (Stage 3: 에셋 조립+렌더링)",
       "release-manager (Stage 3-1: 업로드 패키지 — 제목·더보기·해시태그·썸네일 스펙)",

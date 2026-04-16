@@ -171,28 +171,6 @@
           "notes": "단일 에이전트 다단계 모드 3단계. chunked_parallel 후 merge된 scene_specs를 outline 기준으로 재검토. 1분 영상에서 7씬 → 4~6씬 자연 수렴 유도."
         },
         {
-          "id": "step_2_review",
-          "name": "script_review_loop",
-          "skip": true,
-          "description": "래칫 리뷰-수정 루프 — 리뷰어 평가 → 작성자 수정 → 재평가, 90점 이상까지 반복 (최대 3회)",
-          "type": "ratchet_loop",
-          "reviewer_agent": "script-reviewer",
-          "reviser_agent": "script-director",
-          "input": ["scene_specs.json", "targeted_claims.json"],
-          "output": ["scene_specs.json", "review_feedback.json"],
-          "ratchet": {
-            "pass_threshold": 90,
-            "max_rounds": 2,
-            "score_field": "overall.combined_score"
-          },
-          "skills": [
-            "shared/writing-style",
-            "shared/motion-presets",
-            "shared/remotion-design-system"
-          ],
-          "notes": "runner가 루프 직접 관리. 리뷰어(Sonnet) → 수정자(Opus) → 재리뷰 사이클. 점수 하락 시 이전 버전 복원."
-        },
-        {
           "id": "step_2_vault_sync",
           "name": "vault_sync",
           "description": "output/research wiki/manifests를 볼트 02-research로 merge. 볼트 마운트 실패 시 경고만.",
