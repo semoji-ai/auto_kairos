@@ -375,15 +375,22 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             }
 
         # person_card 개인 사진 — scene_NNN_person_01.jpg, _02, _03 ...
+        # images/, images/search/, images/generate/ 서브디렉토리 모두 탐색
         person_images: list = []
+        subdirs = ["", "search/", "generate/"]
         for pi in range(1, 10):
-            for ext in (".jpg", ".jpeg", ".png", ".webp"):
-                p_src = out_dir / "images" / f"{scene_key}_person_{pi:02d}{ext}"
-                if p_src.exists():
-                    person_images.append(link_asset(p_src, "images", f"{scene_key}_person_{pi:02d}{ext}"))
+            found = False
+            for subdir in subdirs:
+                for ext in (".jpg", ".jpeg", ".png", ".webp"):
+                    p_src = out_dir / "images" / f"{subdir}{scene_key}_person_{pi:02d}{ext}"
+                    if p_src.exists():
+                        person_images.append(link_asset(p_src, "images", f"{subdir}{scene_key}_person_{pi:02d}{ext}"))
+                        found = True
+                        break
+                if found:
                     break
-            else:
-                break  # 파일 없으면 중단
+            if not found:
+                break  # 해당 번호 파일 없으면 중단
 
         entry = {
             "sceneNumber": num,
