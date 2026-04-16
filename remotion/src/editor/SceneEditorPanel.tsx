@@ -640,6 +640,18 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
                 onChange={e => updateImageAsset({ scale: parseFloat(e.target.value) })}
                 style={{ width: "100%", accentColor: ACCENT }} />
             </div>
+            <div>
+              <label style={labelStyle}>Image Fit</label>
+              <select
+                style={selectStyle}
+                value={scene.imageAsset?.fit || "contain"}
+                onChange={e => updateImageAsset({ fit: e.target.value as any })}
+              >
+                <option value="contain">contain (전체 보임)</option>
+                <option value="cover">cover (꽉 채움, 잘릴 수 있음)</option>
+                <option value="fill">fill (비율 무시, 꽉 채움)</option>
+              </select>
+            </div>
           </>
         )}
 
