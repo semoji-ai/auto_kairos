@@ -65,6 +65,12 @@ ACTION_CHAINS = {
     "subtitle_sync": ["build_manifest"],
 }
 
+SCENE_SCOPED_ACTIONS = {"tts_regenerate", "subtitle_sync"}
+
+
+def _supports_scene_number(action_name: str) -> bool:
+    return action_name in SCENE_SCOPED_ACTIONS
+
 
 @router.get("")
 async def list_actions(slug: str):
@@ -129,7 +135,7 @@ async def execute_action(slug: str, action_name: str, request: Request):
 
     # 씬 번호 등 추가 인자
     cmd_args = [sys.executable, str(script_path)]
-    if body.get("scene_number"):
+    if body.get("scene_number") and _supports_scene_number(action_name):
         cmd_args.extend(["--scene", str(body["scene_number"])])
 
     try:
@@ -160,7 +166,7 @@ async def execute_action(slug: str, action_name: str, request: Request):
                         for srt in sub_dir.glob(f"scene_{sn:03d}.*"):
                             srt.unlink()
                 next_cmd = [sys.executable, str(next_script)]
-                if body.get("scene_number"):
+                if body.get("scene_number") and _supports_scene_number(next_action):
                     next_cmd.extend(["--scene", str(body["scene_number"])])
                 chain_result = subprocess.run(
                     next_cmd, cwd=str(get_workspace_dir()),

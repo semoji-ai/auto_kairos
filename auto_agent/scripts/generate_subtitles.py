@@ -72,6 +72,31 @@ def parse_srt(content: str) -> List[Dict]:
     return entries
 
 
+def load_existing_subtitles(project_dir: Path) -> List[Dict]:
+    subs_path = project_dir / "subtitles.json"
+    if not subs_path.exists():
+        return []
+    try:
+        data = json.loads(subs_path.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    scenes = data.get("scenes")
+    return scenes if isinstance(scenes, list) else []
+
+
+def merge_subtitle_scenes(existing_scenes: List[Dict], updated_scenes: List[Dict]) -> List[Dict]:
+    merged = {}
+    for scene in existing_scenes or []:
+        scene_number = scene.get("sceneNumber") or scene.get("scene_number")
+        if scene_number is not None:
+            merged[int(scene_number)] = scene
+    for scene in updated_scenes or []:
+        scene_number = scene.get("sceneNumber") or scene.get("scene_number")
+        if scene_number is not None:
+            merged[int(scene_number)] = scene
+    return [merged[k] for k in sorted(merged)]
+
+
 # Korean josa/clause patterns for natural splitting
 JOSA_PATTERNS = re.compile(r'(?<=[가-힣])(은|는|이|가|을|를|에서|에게|으로|로|와|과|의|도|만|까지|부터|보다|마저|조차|밖에)')
 CLAUSE_PATTERNS = re.compile(r'(지만|는데|면서|하고|하며|고서|어서|아서|니까|으니|때문에|위해|위해서)')
@@ -450,6 +475,8 @@ def main():
         if srt_target.exists():
             srt_target.unlink()
 
+    existing_subtitles = load_existing_subtitles(project_dir) if target_scene is not None else []
+
     total = len(scenes)
     all_subtitles = []
 
@@ -655,11 +682,16 @@ def main():
             traceback.print_exc()
 
     # Write aggregate subtitles.json
+    subtitles_to_write = (
+        merge_subtitle_scenes(existing_subtitles, all_subtitles)
+        if target_scene is not None
+        else all_subtitles
+    )
     with open(project_dir / "subtitles.json", "w", encoding="utf-8") as f:
-        json.dump({"scenes": all_subtitles}, f, ensure_ascii=False, indent=2)
+        json.dump({"scenes": subtitles_to_write}, f, ensure_ascii=False, indent=2)
 
     print(f"\n{'='*50}")
-    print(f"Done: {len(all_subtitles)} subtitle files generated")
+    print(f"Done: {len(subtitles_to_write)} subtitle files generated")
     print(f"  WhisperX OK: {whisperx_ok}")
     print(f"  Gemini fallback: {gemini_fallback}")
     print(f"  Proportional fallback: {proportional_fallback}")
