@@ -117,5 +117,6 @@ export const SEMOJI3D_PRESET: DesignPresetOverride = {
   variants: {
     itemsList: "accent-filled",
     itemsGrid: "accent-filled",
+    comparisonCell: "none",
   },
 };

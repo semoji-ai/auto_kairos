@@ -157,7 +157,8 @@
     },
     "variants": {
       "itemsList": "accent-filled",
-      "itemsGrid": "accent-filled"
+      "itemsGrid": "accent-filled",
+      "comparisonCell": "none"
     },
     "chartagent": {
       "theme_set": "gallery_infographic",
