@@ -138,6 +138,73 @@ def _preprocess_tts_text(text: str) -> tuple:
     return result, changes
 
 
+def _normalize_alignment_text(text: str) -> str:
+    return re.sub(r"\s+", "", text or "")
+
+
+def _split_subtitle_lines(text: str) -> list[str]:
+    if not text or not text.strip():
+        return []
+    from auto_agent.scripts.generate_subtitles import smart_split, fix_decimal_splits, fix_quote_splits
+
+    lines = smart_split(text)
+    lines = fix_decimal_splits(lines)
+    lines = fix_quote_splits(lines)
+    return [line.strip() for line in lines if line and line.strip()]
+
+
+def _derive_subtitle_lines_tts(display_lines: list[str], narration_tts: str) -> tuple[list[str] | None, list[str]]:
+    if not display_lines or not narration_tts:
+        return None, []
+
+    derived: list[str] = []
+    changes: list[str] = []
+    for line in display_lines:
+        processed, line_changes = _preprocess_tts_text(line)
+        processed = (processed or "").strip()
+        if not processed:
+            return None, []
+        derived.append(processed)
+        changes.extend(line_changes)
+
+    if _normalize_alignment_text("".join(derived)) != _normalize_alignment_text(narration_tts):
+        return None, []
+    return derived, changes
+
+
+def _ensure_subtitle_line_contract(scene: dict, raw_text: str, tts_text: str, scene_changes: list[str]) -> bool:
+    changed = False
+    display_lines = scene.get("subtitle_lines")
+    if display_lines and isinstance(display_lines, list) and len(display_lines) > 0:
+        display_lines = [line.strip() for line in display_lines if str(line).strip()]
+    else:
+        display_lines = _split_subtitle_lines(raw_text)
+        if display_lines:
+            scene["subtitle_lines"] = display_lines
+            changed = True
+
+    if display_lines:
+        existing_tts_lines = scene.get("subtitle_lines_tts")
+        if existing_tts_lines and isinstance(existing_tts_lines, list) and len(existing_tts_lines) > 0:
+            existing_tts_lines = [line.strip() for line in existing_tts_lines if str(line).strip()]
+        else:
+            existing_tts_lines = None
+
+        derived_tts_lines, line_changes = _derive_subtitle_lines_tts(display_lines, tts_text)
+        final_tts_lines = derived_tts_lines or existing_tts_lines or _split_subtitle_lines(tts_text)
+        if final_tts_lines and scene.get("subtitle_lines_tts") != final_tts_lines:
+            scene["subtitle_lines_tts"] = final_tts_lines
+            changed = True
+        if line_changes:
+            scene_changes.extend(line_changes)
+
+    if scene_changes and scene.get("tts_changes") != scene_changes:
+        scene["tts_changes"] = scene_changes
+        changed = True
+
+    return changed
+
+
 def generate_tts(text: str, output_path: Path) -> float:
     """Send preprocessed text to the shared ElevenLabs client and save MP3."""
     from auto_agent.tools.elevenlabs import ElevenLabsClient
@@ -244,6 +311,10 @@ def main():
             "processed": text,
             "changes": scene_changes,
         })
+
+        if _ensure_subtitle_line_contract(scene, raw, text, scene_changes):
+            specs_updated = True
+            preprocess_log[-1]["changes"] = scene_changes
 
         if not text or not text.strip():
             logger.warning("[%d/%d] Scene %s: SKIP (empty narration)", i + 1, total, num)
