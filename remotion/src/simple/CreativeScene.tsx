@@ -1623,6 +1623,7 @@ const ItemsList: React.FC<{
                 fontWeight: spotlight ? 700 : 500,
                 color: accentFilled ? "#ffffff" : spotlight ? moodCfg.accent : C.text,
                 flex: 1,
+                textAlign: accentFilled ? "center" : "left",
               }}
             >
               <TextWithBreaks text={item} />
