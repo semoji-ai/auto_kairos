@@ -251,15 +251,34 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const imgFit     = scene.imageAsset?.fit     ?? "contain";
   const imgSrc = sceneImage || defaultBg || "";
 
-  // ── fullscreen ──
-  if ((hasAnyImage || hasVideo) && (placement === "fullscreen" || (hasVideo && videoPlacement === "fullscreen"))) {
+  // ── 비디오 우선 — videoAsset이 있으면 placement 분기 전에 먼저 처리 ──
+  if (hasVideo) {
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-        {hasVideo && videoPlacement === "fullscreen" ? (
-          <VideoBg src={videoPath} opacity={videoOpacity} startSec={videoStartSec} endSec={videoEndSec} volume={videoVolume} />
-        ) : (
-          <ImageBg src={imgSrc} opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} fit={imgFit} />
-        )}
+        <VideoBg
+          src={videoPath}
+          opacity={videoOpacity}
+          startSec={videoStartSec}
+          endSec={videoEndSec}
+          volume={videoVolume}
+        />
+        <CreativeScene
+          data={vizData}
+          subtitles={scene.subtitles}
+          fps={fps}
+          hasImageBackground={true}
+          imageAssetPlacement={placement}
+        />
+        {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
+      </AbsoluteFill>
+    );
+  }
+
+  // ── fullscreen ──
+  if (hasAnyImage && placement === "fullscreen") {
+    return (
+      <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
+        <ImageBg src={imgSrc} opacity={imgOpacity >= 0.8 ? imgOpacity : 0.9} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} fit={imgFit} />
         <CreativeScene
           data={vizData}
           subtitles={scene.subtitles}
@@ -314,22 +333,12 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   // ── background (기본) ──
   return (
     <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-      {hasVideo && videoPlacement === "background" ? (
-        <VideoBg
-          src={videoPath}
-          opacity={videoOpacity}
-          startSec={videoStartSec}
-          endSec={videoEndSec}
-          volume={videoVolume}
-        />
-      ) : (
-        hasAnyImage && <ImageBg src={imgSrc} opacity={imgOpacity} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} fit={imgFit} />
-      )}
+      {hasAnyImage && <ImageBg src={imgSrc} opacity={imgOpacity} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale} fit={imgFit} />}
       <CreativeScene
         data={vizData}
         subtitles={scene.subtitles}
         fps={fps}
-        hasImageBackground={hasAnyImage || hasVideo}
+        hasImageBackground={hasAnyImage}
         imageAssetPlacement={placement}
       />
       {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
