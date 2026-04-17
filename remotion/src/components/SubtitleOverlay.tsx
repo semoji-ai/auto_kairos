@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
 import type { SubtitleEntry, SubtitleConfig } from "../types/manifest";
 
 interface Props {
@@ -29,13 +29,7 @@ export const SubtitleOverlay: React.FC<Props> = ({ subtitles, fps, config }) => 
 
   if (!activeSub) return null;
 
-  const subStartFrame = Math.floor(activeSub.startSec * fps);
-  const fadeInProgress = interpolate(
-    frame,
-    [subStartFrame, subStartFrame + 5],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
+  // 자막 등장 애니메이션 없음 — 즉시 표시
 
   const baseStyle: React.CSSProperties = {
     fontSize: config.fontSize,
@@ -58,20 +52,13 @@ export const SubtitleOverlay: React.FC<Props> = ({ subtitles, fps, config }) => 
     >
       <div
         style={{
-          opacity: (config.entryAnimation === false ? 1 : fadeInProgress),
-          transform: config.entryAnimation === false ? undefined : `translateY(${interpolate(fadeInProgress, [0, 1], [8, 0])}px)`,
           maxWidth: config.maxWidth,
           textAlign: "center",
           lineHeight: config.lineHeight,
           backgroundColor: config.backgroundColor ?? "rgba(0, 0, 0, 0.8)",
-          paddingTop: Math.round(config.fontSize * 0.2) + (config.textPaddingTop ?? 0),
-          paddingBottom: Math.round(config.fontSize * 0.2),
-          paddingLeft: Math.round(config.fontSize * 0.5),
-          paddingRight: Math.round(config.fontSize * 0.5),
+          padding: `${Math.round(config.fontSize * 0.2)}px ${Math.round(config.fontSize * 0.5)}px`,
           borderRadius: config.borderRadius ?? 50,
           boxShadow: config.boxShadow,
-          border: config.border,
-          opacity: config.opacity,
         }}
       >
         {activeSub.words && activeSub.words.length > 0

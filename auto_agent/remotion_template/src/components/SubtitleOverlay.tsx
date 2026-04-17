@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
 import type { SubtitleEntry, SubtitleConfig } from "../types/manifest";
 
 interface Props {
@@ -29,13 +29,7 @@ export const SubtitleOverlay: React.FC<Props> = ({ subtitles, fps, config }) => 
 
   if (!activeSub) return null;
 
-  const subStartFrame = Math.floor(activeSub.startSec * fps);
-  const fadeInProgress = interpolate(
-    frame,
-    [subStartFrame, subStartFrame + 5],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
+  // 자막 등장 애니메이션 없음 — 즉시 표시
 
   const baseStyle: React.CSSProperties = {
     fontSize: config.fontSize,
@@ -58,8 +52,6 @@ export const SubtitleOverlay: React.FC<Props> = ({ subtitles, fps, config }) => 
     >
       <div
         style={{
-          opacity: fadeInProgress,
-          transform: `translateY(${interpolate(fadeInProgress, [0, 1], [8, 0])}px)`,
           maxWidth: config.maxWidth,
           textAlign: "center",
           lineHeight: config.lineHeight,
