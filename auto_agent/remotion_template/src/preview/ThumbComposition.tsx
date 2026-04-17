@@ -38,8 +38,19 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
     const bgPath = scene.mapScene.prerenderedBg?.imagePath;
     return <MapPlaceholder data={scene.mapScene} bg={bgPath} />;
   }
-  // 일반 씬 → 공통 렌더러 (썸네일은 videoAsset 제외 — OffthreadVideo 첫프레임 미지원)
-  const thumbScene = scene.videoAsset ? { ...scene, videoPath: "", videoAsset: undefined } : scene;
+  // 일반 씬 → 공통 렌더러
+  // 비디오 씬 썸네일: videoAsset 제거 + imageAsset을 background/0.35로 격하
+  // (fullscreen 분기 진입 방지 — 시각화 데이터가 잘 보이도록)
+  const thumbScene = scene.videoAsset
+    ? {
+        ...scene,
+        videoPath: "",
+        videoAsset: undefined,
+        imageAsset: scene.imageAsset
+          ? { ...scene.imageAsset, placement: "background", opacity: 0.35 }
+          : scene.imageAsset,
+      }
+    : scene;
   return <SceneRendererInner scene={thumbScene} fps={meta?.fps || 30} />;
 };
 
