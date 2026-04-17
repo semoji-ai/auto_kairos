@@ -47,32 +47,27 @@ def prompt_theme() -> str:
 
 
 def _scan_art_styles() -> list:
-    """패키지 + 워크스페이스의 아트스타일 JSON 스캔."""
-    from auto_agent.paths import get_data_dir, get_workspace_dir
+    """canonical package data의 아트스타일 JSON만 스캔."""
+    from auto_agent.paths import get_data_dir
 
-    seen = set()
     styles = []
+    styles_dir = get_data_dir() / "artstyle" / "styles"
+    if not styles_dir.exists():
+        return styles
 
-    for base in [get_data_dir(), get_workspace_dir()]:
-        styles_dir = base / "artstyle" / "styles"
-        if not styles_dir.exists():
+    for f in sorted(styles_dir.glob("*.json")):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            styles.append(
+                {
+                    "name": data.get("name", f.stem),
+                    "description": data.get("description", ""),
+                    "path": str(f),
+                    "filename": f.name,
+                }
+            )
+        except (json.JSONDecodeError, OSError):
             continue
-        for f in sorted(styles_dir.glob("*.json")):
-            if f.name in seen:
-                continue
-            seen.add(f.name)
-            try:
-                data = json.loads(f.read_text(encoding="utf-8"))
-                styles.append(
-                    {
-                        "name": data.get("name", f.stem),
-                        "description": data.get("description", ""),
-                        "path": str(f),
-                        "filename": f.name,
-                    }
-                )
-            except (json.JSONDecodeError, OSError):
-                continue
     return styles
 
 

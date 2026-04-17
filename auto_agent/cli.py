@@ -499,8 +499,8 @@ def cmd_style(args):
                 return
             ref_image_path = ""
 
-        # 워크스페이스에 JSON 저장
-        styles_dir = get_workspace_dir() / "artstyle" / "styles"
+        # canonical package data에 JSON 저장
+        styles_dir = get_data_dir() / "artstyle" / "styles"
         styles_dir.mkdir(parents=True, exist_ok=True)
 
         filename = data["name"].replace(" ", "_").lower() + ".json"
@@ -556,10 +556,10 @@ def cmd_style(args):
             print_error(f"스타일 '{target}' 을 찾을 수 없습니다.")
             return
 
-        # 워크스페이스 스타일만 삭제 가능
-        ws_styles = str(get_workspace_dir() / "artstyle" / "styles")
-        if not matched["path"].startswith(ws_styles):
-            print_error("기본 내장 스타일은 삭제할 수 없습니다. 워크스페이스에 추가한 스타일만 삭제 가능합니다.")
+        # canonical data dir 스타일만 삭제 가능
+        canonical_styles = str(get_data_dir() / "artstyle" / "styles")
+        if not matched["path"].startswith(canonical_styles):
+            print_error("canonical 아트스타일 디렉토리 밖의 스타일은 삭제할 수 없습니다.")
             return
 
         Path(matched["path"]).unlink()
