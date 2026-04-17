@@ -460,6 +460,17 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                     image_asset["offsetY"] = ia["offsetY"]
                 if ia.get("scale") is not None:
                     image_asset["scale"] = ia["scale"]
+                # chartagent SVG 차트: source + chartSvgPath 주입
+                if ia.get("source") == "chart" and ia.get("chartSvgPath"):
+                    image_asset["source"] = "chart"
+                    svg_abs = Path(ia["chartSvgPath"])
+                    svg_dest_name = f"scene_{num:03d}_chart.svg"
+                    if svg_abs.exists():
+                        image_asset["chartSvgPath"] = link_asset(
+                            svg_abs, "charts", svg_dest_name
+                        )
+                    else:
+                        image_asset["chartSvgPath"] = ia["chartSvgPath"]
                 entry["imageAsset"] = image_asset
             # 검색 이미지 출처
             if ia.get("source_url"):
