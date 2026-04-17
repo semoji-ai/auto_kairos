@@ -731,14 +731,30 @@ def _build_scene_fal_input(
     if image_urls:
         fal_input["image_urls"] = image_urls
 
-    # enable_web_search: 명시값 우선 → artstyle design_tokens → 규칙 기반
+    # enable_web_search: 씬 명시값 > 프로젝트 config > artstyle design_tokens > 기본값 False
     explicit_web_search = (scene.get("imageAsset") or {}).get("enable_web_search")
     if explicit_web_search is not None:
         fal_input["enable_web_search"] = explicit_web_search
     else:
-        art_style_for_ws = _load_art_style(style_path) if style_path else {}
-        style_default = art_style_for_ws.get("design_tokens", {}).get("enable_web_search")
-        fal_input["enable_web_search"] = _infer_web_search(scene, is_search_fallback, style_default)
+        # 프로젝트 config 확인 (project_dir 기반 DB 조회)
+        proj_web_search: Optional[bool] = None
+        try:
+            from auto_agent.db.project_manager import ProjectManager as _PM
+            _pm = _PM()
+            for _p in (_pm.list_projects() or []):
+                if str(_p.get("output_dir", "")).rstrip("/") == str(project_dir).rstrip("/"):
+                    _cfg = _pm.get_config(_p["id"]) or {}
+                    if "enable_web_search" in _cfg:
+                        proj_web_search = bool(_cfg["enable_web_search"])
+                    break
+        except Exception:
+            pass
+        if proj_web_search is not None:
+            fal_input["enable_web_search"] = proj_web_search
+        else:
+            art_style_for_ws = _load_art_style(style_path) if style_path else {}
+            style_default = art_style_for_ws.get("design_tokens", {}).get("enable_web_search")
+            fal_input["enable_web_search"] = _infer_web_search(scene, is_search_fallback, style_default)
 
     return endpoint, fal_input
 
