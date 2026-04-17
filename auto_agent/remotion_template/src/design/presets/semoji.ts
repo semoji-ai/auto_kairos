@@ -118,5 +118,6 @@ export const SEMOJI_PRESET: DesignPresetOverride = {
     itemsList: "accent-filled",
     itemsGrid: "accent-filled",
     comparisonCell: "none",
+    metricCard: "minimal",
   },
 };

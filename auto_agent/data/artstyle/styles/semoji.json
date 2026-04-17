@@ -158,7 +158,8 @@
     "variants": {
       "itemsList": "accent-filled",
       "itemsGrid": "accent-filled",
-      "comparisonCell": "none"
+      "comparisonCell": "none",
+      "metricCard": "minimal"
     },
     "chartagent": {
       "theme_set": "gallery_infographic",
