@@ -461,16 +461,6 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 if ia.get("scale") is not None:
                     image_asset["scale"] = ia["scale"]
                 # chartagent SVG 차트: source + chartSvgPath 주입
-                if ia.get("source") == "chart" and ia.get("chartSvgPath"):
-                    image_asset["source"] = "chart"
-                    svg_abs = Path(ia["chartSvgPath"])
-                    svg_dest_name = f"scene_{num:03d}_chart.svg"
-                    if svg_abs.exists():
-                        image_asset["chartSvgPath"] = link_asset(
-                            svg_abs, "charts", svg_dest_name
-                        )
-                    else:
-                        image_asset["chartSvgPath"] = ia["chartSvgPath"]
                 entry["imageAsset"] = image_asset
             # 검색 이미지 출처
             if ia.get("source_url"):
@@ -619,19 +609,12 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     if _chartagent_style_path.exists():
         try:
             _chartagent_style = json.loads(_chartagent_style_path.read_text(encoding="utf-8"))
-            _chartagent_preset = {
-                k: v for k, v in _chartagent_style.items()
-                if k in ("baseTheme", "colors", "moods", "fonts", "palette",
-                         "fontSizes", "radius", "chartagent")
-            }
-            if design_preset:
-                # 기존 design_preset 위에 chartagent 스타일 병합 (accent 등 덮어씀)
-                from auto_agent.modules.chartagent_adapter import merge_chartagent_into_design_tokens
-                design_preset = merge_chartagent_into_design_tokens(
-                    design_preset, _chartagent_style
-                )
-            else:
-                design_preset = _chartagent_preset
+            # 색상/테마는 artstyle이 소유 — chartagent 패턴/모티프 토큰만 주입
+            _chartagent_section = _chartagent_style.get("chartagent") or {}
+            if _chartagent_section:
+                if design_preset is None:
+                    design_preset = {}
+                design_preset["chartagent"] = _chartagent_section
         except Exception:
             pass
 

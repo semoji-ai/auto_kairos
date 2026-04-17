@@ -1,7 +1,12 @@
-"""chart_batch_module — chartagent SVG 차트 일괄 생성 모듈.
+"""chart_batch_module — chartagent 디자인 명세서 추출 모듈.
 
 scene_specs.json에서 차트 씬(bar/pie/line/timeline 등)을 찾아
-chartagent CLI로 render.svg를 생성하고, scene_specs에 chartSvgPath를 주입합니다.
+chartagent CLI로 chart_spec.json(디자인 명세서)을 생성하고,
+chartagent_style.json으로 집계합니다.
+
+chartagent는 렌더링(SVG)을 담당하지 않습니다.
+디자인 토큰(hatch 패턴, 모티프)만 추출하여 Remotion 차트 컴포넌트에 주입합니다.
+색상/accent는 artstyle이 소유하므로 chartagent_style.json에서 제외됩니다.
 
 환경변수:
   PROJECT_DIR   프로젝트 디렉토리 경로 (필수)
@@ -29,7 +34,9 @@ def _progress(msg: str) -> None:
 
 def run_chart_batch(project_dir: Path) -> dict[str, Any]:
     """
-    project_dir의 scene_specs.json에서 차트 씬을 찾아 chartagent SVG를 생성합니다.
+    project_dir의 scene_specs.json에서 차트 씬을 찾아
+    chartagent chart_spec.json(디자인 명세서)을 생성합니다.
+    SVG 렌더링은 하지 않습니다.
 
     Returns
     -------
@@ -38,7 +45,6 @@ def run_chart_batch(project_dir: Path) -> dict[str, Any]:
     from auto_agent.modules.chartagent_adapter import (
         CHART_VIZ_TYPES,
         run_chartagent_for_scene,
-        inject_chart_svg,
         save_project_chartagent_style,
         _resolve_viz_type,
     )
@@ -52,7 +58,7 @@ def run_chart_batch(project_dir: Path) -> dict[str, Any]:
     scenes: list[dict] = specs.get("scenes") or specs.get("scene_specs") or []
     meta = specs.get("meta") or {}
 
-    # 아트스타일 design_tokens 로드
+    # 아트스타일 design_tokens 로드 (theme_set / theme_overrides 결정용)
     art_style = meta.get("art_style") or meta.get("artStyle") or "semoji"
     dt: dict = {}
     styles_dir = Path(__file__).resolve().parent.parent / "data" / "artstyle" / "styles"
@@ -64,51 +70,40 @@ def run_chart_batch(project_dir: Path) -> dict[str, Any]:
     charts_dir.mkdir(parents=True, exist_ok=True)
 
     success, fail, skip = 0, 0, 0
-    updated_scenes: list[dict] = []
 
     for scene in scenes:
         scene_num = scene.get("sceneNumber", 0)
         viz_type = _resolve_viz_type(scene)
 
         if viz_type not in CHART_VIZ_TYPES:
-            updated_scenes.append(scene)
             skip += 1
             continue
 
-        # 이미 SVG가 생성된 경우 스킵
-        existing_svg = charts_dir / f"scene_{scene_num:03d}" / "render.svg"
-        if existing_svg.exists() and scene.get("imageAsset", {}).get("chartSvgPath"):
-            _progress(f"  [SKIP] 씬 {scene_num:03d} — 이미 생성됨")
-            updated_scenes.append(scene)
+        # 이미 chart_spec.json이 생성된 경우 스킵
+        existing_spec = charts_dir / f"scene_{scene_num:03d}" / "chart_spec.json"
+        if existing_spec.exists():
+            _progress(f"  [SKIP] 씬 {scene_num:03d} — chart_spec 이미 있음")
             skip += 1
             continue
 
         _progress(f"  [RUN] 씬 {scene_num:03d} ({viz_type})")
         try:
+            # run_chartagent_for_scene은 chart_spec.json + render.svg를 생성
+            # render.svg는 디자인 확인용이지만, 실제 렌더링에는 사용하지 않음
             svg_path = run_chartagent_for_scene(scene, charts_dir, design_tokens=dt)
             if svg_path is None:
-                updated_scenes.append(scene)
                 skip += 1
                 continue
 
-            updated_scene = inject_chart_svg(scene, svg_path)
-            updated_scenes.append(updated_scene)
             success += 1
-            _progress(f"  [OK] 씬 {scene_num:03d} → {svg_path.name}")
+            _progress(f"  [OK] 씬 {scene_num:03d} → chart_spec 생성")
         except Exception as e:
             logger.warning(f"씬 {scene_num:03d} chartagent 실패: {e}")
             _progress(f"  [FAIL] 씬 {scene_num:03d}: {e}")
-            updated_scenes.append(scene)
             fail += 1
 
-    # scene_specs.json 업데이트
+    # chartagent_style.json 생성 — 색상 제외, 패턴/모티프 토큰만 집계
     if success > 0:
-        key = "scenes" if "scenes" in specs else "scene_specs"
-        specs[key] = updated_scenes
-        specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
-        _progress(f"scene_specs.json 업데이트 완료 (차트 씬 {success}개 주입)")
-
-        # chartagent_style.json 생성 (가장 많이 사용된 theme_set 대표 spec)
         try:
             save_project_chartagent_style(charts_dir, base_tokens=dt)
             _progress("chartagent_style.json 저장 완료")

@@ -2085,6 +2085,81 @@ const LogoGridLayout: React.FC<{
 };
 
 /* ================================================================
+   useChartMotif — chartagent 디자인 명세서에서 패턴/모티프 토큰 읽기
+   색상은 artstyle 소유이므로 패턴/레이아웃 토큰만 반환
+   ================================================================ */
+
+interface ChartMotif {
+  patternMode: "solid" | "outline_plus_hatch" | "outline_only";
+  patternKind: string;       // "diagonal_hatch" | "cross_hatch" | "dot" | ...
+  patternSpacing: number;
+  patternOpacity: number;
+  patternStrokeWidth: number;
+  outlineWidth: number;
+  barRadius: number;
+}
+
+function useChartMotif(): ChartMotif {
+  const preset = useDesignPreset();
+  const ca = (preset as any).chartagent as Record<string, any> | undefined;
+  const motif = ca?.motif_tokens as Record<string, any> | undefined;
+  const comp  = ca?.component_tokens as Record<string, any> | undefined;
+
+  return {
+    patternMode:        (comp?.pattern_mode        ?? "solid") as ChartMotif["patternMode"],
+    patternKind:         motif?.pattern_kind_default  ?? "diagonal_hatch",
+    patternSpacing:      motif?.pattern_spacing       ?? 8,
+    patternOpacity:      motif?.pattern_opacity       ?? 0.4,
+    patternStrokeWidth:  motif?.pattern_stroke_width  ?? 1.4,
+    outlineWidth:        motif?.patterned_outline_width ?? 2.5,
+    barRadius:           motif?.bar_radius            ?? 4,
+  };
+}
+
+/** accent 색상 + 모티프 토큰으로 바 fill CSS (background + border) 생성 */
+function buildBarFill(
+  accentRgb: string,
+  motif: ChartMotif,
+  progress: number, // 0→1 애니메이션 진행도
+): React.CSSProperties {
+  if (motif.patternMode === "outline_only") {
+    return {
+      backgroundColor: "transparent",
+      border: `${motif.outlineWidth}px solid rgba(${accentRgb},${0.8 * progress})`,
+    };
+  }
+  if (motif.patternMode === "outline_plus_hatch") {
+    const angle = motif.patternKind === "cross_hatch" ? "45deg" : "135deg";
+    const sp = motif.patternSpacing;
+    const sw = motif.patternStrokeWidth;
+    const op = motif.patternOpacity * progress;
+    const hatch = `repeating-linear-gradient(
+      ${angle},
+      transparent 0px,
+      transparent ${sp - sw}px,
+      rgba(${accentRgb},${op}) ${sp - sw}px,
+      rgba(${accentRgb},${op}) ${sp}px
+    )`;
+    const hatch2 = motif.patternKind === "cross_hatch"
+      ? `, repeating-linear-gradient(
+          45deg,
+          transparent 0px,
+          transparent ${sp - sw}px,
+          rgba(${accentRgb},${op}) ${sp - sw}px,
+          rgba(${accentRgb},${op}) ${sp}px
+        )`
+      : "";
+    return {
+      backgroundImage: hatch + hatch2,
+      backgroundColor: `rgba(${accentRgb},0.06)`,
+      border: `${motif.outlineWidth}px solid rgba(${accentRgb},${0.85 * progress})`,
+    };
+  }
+  // solid (기본)
+  return { backgroundColor: `rgba(${accentRgb},${progress})` };
+}
+
+/* ================================================================
    BarDisplay — 수평 바 차트
    ================================================================ */
 
@@ -2120,6 +2195,7 @@ const BarDisplay: React.FC<{
   const C = useC();
   const T = usePresetTypo();
   const L = usePresetLayout();
+  const motif = useChartMotif();
   const frame = useCurrentFrame();
   const hasNegative = values.some((v) => v < 0);
 
@@ -2295,13 +2371,13 @@ const BarDisplay: React.FC<{
                     )}
                   </div>
                 ) : (
-                  /* 양수만: 기존 레이아웃 */
+                  /* 양수만: chartagent 모티프 적용 */
                   <div
                     style={{
                       flex: 1,
                       height: L.barHeight,
                       backgroundColor: "rgba(255,255,255,0.05)",
-                      borderRadius: L.barHeight / 2,
+                      borderRadius: motif.barRadius,
                       overflow: "hidden",
                       position: "relative",
                     }}
@@ -2310,8 +2386,8 @@ const BarDisplay: React.FC<{
                       style={{
                         width: `${barWidthPct}%`,
                         height: "100%",
-                        backgroundColor: moodCfg.accent,
-                        borderRadius: L.barHeight / 2,
+                        borderRadius: motif.barRadius,
+                        ...buildBarFill(moodCfg.accentRgb, motif, barProgress),
                       }}
                     />
                   </div>
@@ -2379,6 +2455,7 @@ const PieChartDisplay: React.FC<{
   const C = useC();
   const T = usePresetTypo();
   const L = usePresetLayout();
+  const motif = useChartMotif();
   const frame = useCurrentFrame();
   const lines = headline.split("\n").filter((l: string) => l.trim());
   const headlineFade = useFade(5, 15, 0.8);
@@ -2436,6 +2513,21 @@ const PieChartDisplay: React.FC<{
         <div style={{ display: "flex", alignItems: "center", gap: 48, width: "100%", maxWidth: L.maxContentWidth, justifyContent: "center" }}>
           {/* SVG Donut */}
           <svg width={700} height={700} viewBox="0 0 400 400" style={{ flexShrink: 0 }}>
+            {/* hatch 패턴 defs — outline_plus_hatch 모드일 때 각 슬라이스에 적용 */}
+            {motif.patternMode !== "solid" && (
+              <defs>
+                {slices.map((slice, i) => {
+                  const angle = motif.patternKind === "cross_hatch" ? 45 : 135;
+                  const sp = motif.patternSpacing;
+                  const sw = motif.patternStrokeWidth;
+                  return (
+                    <pattern key={i} id={`pie-hatch-${i}`} patternUnits="userSpaceOnUse" width={sp} height={sp} patternTransform={`rotate(${angle})`}>
+                      <line x1={0} y1={0} x2={0} y2={sp} stroke={slice.color} strokeWidth={sw} strokeOpacity={motif.patternOpacity} />
+                    </pattern>
+                  );
+                })}
+              </defs>
+            )}
             {/* 역순 렌더링: slice 0(accent)이 DOM 마지막 = 최상단 z-order → 경계 bleed 방지 */}
             {[...slices].map((_, ri) => {
               const i = slices.length - 1 - ri;
@@ -2450,6 +2542,7 @@ const PieChartDisplay: React.FC<{
               }
               if (visibleFraction <= 0) return null;
               const visibleLen = circumference * visibleFraction;
+              const useHatch = motif.patternMode !== "solid";
               return (
                 <circle
                   key={i}
@@ -2457,7 +2550,7 @@ const PieChartDisplay: React.FC<{
                   cy={cy}
                   r={r}
                   fill="none"
-                  stroke={slice.color}
+                  stroke={useHatch ? `url(#pie-hatch-${i})` : slice.color}
                   strokeWidth={strokeW}
                   strokeLinecap="butt"
                   strokeDasharray={`${visibleLen} ${circumference - visibleLen}`}

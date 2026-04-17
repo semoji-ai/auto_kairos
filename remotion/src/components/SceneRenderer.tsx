@@ -251,21 +251,6 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const imgFit     = scene.imageAsset?.fit     ?? "contain";
   const imgSrc = sceneImage || defaultBg || "";
 
-  // ── chartagent SVG 차트 — source: "chart"이면 SVG를 fullscreen 이미지로 렌더링 ──
-  const chartSvgPath: string = scene.imageAsset?.chartSvgPath || "";
-  const isChartSvg = scene.imageAsset?.source === "chart" && !!chartSvgPath;
-  if (isChartSvg) {
-    const svgSrc = chartSvgPath.startsWith("/") ? chartSvgPath : staticFile(chartSvgPath);
-    return (
-      <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
-        <AbsoluteFill>
-          <Img src={svgSrc} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-        </AbsoluteFill>
-        {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
-      </AbsoluteFill>
-    );
-  }
-
   // ── 비디오 우선 — videoAsset이 있으면 placement 분기 전에 먼저 처리 ──
   if (hasVideo) {
     return (
