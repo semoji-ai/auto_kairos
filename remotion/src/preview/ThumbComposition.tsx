@@ -38,8 +38,9 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
     const bgPath = scene.mapScene.prerenderedBg?.imagePath;
     return <MapPlaceholder data={scene.mapScene} bg={bgPath} />;
   }
-  // 일반 씬 → 공통 렌더러
-  return <SceneRendererInner scene={scene} fps={meta?.fps || 30} />;
+  // 일반 씬 → 공통 렌더러 (썸네일은 videoAsset 제외 — OffthreadVideo 첫프레임 미지원)
+  const thumbScene = scene.videoAsset ? { ...scene, videoPath: "", videoAsset: undefined } : scene;
+  return <SceneRendererInner scene={thumbScene} fps={meta?.fps || 30} />;
 };
 
 export const ThumbComposition: React.FC<Props> = ({ scene, meta }) => (
