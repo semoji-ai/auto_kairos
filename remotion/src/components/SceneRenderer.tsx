@@ -117,8 +117,8 @@ const SideLayout: React.FC<{
   const moodGradient = `radial-gradient(ellipse 90% 70% at 50% 40%, rgba(${accentRgb},0.45) 0%, rgba(${accentRgb},0.12) 60%, ${bgColor} 100%)`;
   return (
     <AbsoluteFill>
-      {/* mood 그라데이션 배경 */}
-      <div style={{ position: "absolute", inset: 0, background: moodGradient, zIndex: 0 }} />
+      {/* mood 그라데이션 배경 — disableSpotlight 프리셋이면 단색만 */}
+      <div style={{ position: "absolute", inset: 0, background: preset.disableSpotlight ? bgColor : moodGradient, zIndex: 0 }} />
       {/* 전체 배경 텍스처 */}
       {defaultBg && <ImageBg src={defaultBg} opacity={0.15} />}
       <AbsoluteFill style={{ display: "flex", flexDirection: isLeft ? "row" : "row-reverse" }}>
