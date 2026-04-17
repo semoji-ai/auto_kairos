@@ -2,12 +2,15 @@
  * ThumbComposition — 스토리보드 썸네일용
  *
  * SceneRenderer(공통 렌더러)를 사용.
- * 맵 씬만 플레이스홀더로 대체 (maplibre-gl 번들 회피).
+ * 스튜디오/씬에디터와 동일하게 맵/비디오 분기를 실제로 렌더한다.
  */
 import React from "react";
-import { AbsoluteFill, Img } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { DesignPresetProvider } from "../design";
-import { SceneRendererInner, resolveUrl } from "../components/SceneRenderer";
+import { useDesignPreset } from "../design";
+import { buildFontFamily } from "../design/fonts";
+import { SceneRendererInner } from "../components/SceneRenderer";
+import { MapSceneRenderer } from "../map/MapSceneRenderer";
 import type { SceneEntry, SceneManifest } from "../types/manifest";
 
 interface Props {
@@ -15,43 +18,29 @@ interface Props {
   meta: SceneManifest["meta"];
 }
 
-/* ── 맵 씬 플레이스홀더 ── */
-const MapPlaceholder: React.FC<{ data: any; bg?: string }> = ({ data, bg }) => (
-  <AbsoluteFill style={{
-    backgroundColor: "#1a1a2e",
-    display: "flex", flexDirection: "column",
-    alignItems: "center", justifyContent: "center",
-    position: "relative", overflow: "hidden",
-  }}>
-    {bg && <Img src={resolveUrl(bg)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.6 }} />}
-    <div style={{ position: "relative", zIndex: 1, textAlign: "center", color: "#fff" }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>🗺</div>
-      <div style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>{data?.title || "Map Scene"}</div>
-      <div style={{ fontSize: 18, opacity: 0.6 }}>{data?.mapType || ""} · {data?.mapStyle || ""}</div>
-    </div>
-  </AbsoluteFill>
-);
-
 const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
-  // 맵 씬 → 플레이스홀더
+  const preset = useDesignPreset();
+  const fontFamily = buildFontFamily(preset);
+  const fps = meta?.fps || 30;
+  const durationInFrames = scene.audioDurationSec
+    ? Math.max(Math.ceil(scene.audioDurationSec * fps), 1)
+    : 150;
+
+  // 맵 씬 → 실제 맵 렌더 (스토리보드와 스튜디오 결과 일치)
   if (scene.mapScene) {
-    const bgPath = scene.mapScene.prerenderedBg?.imagePath;
-    return <MapPlaceholder data={scene.mapScene} bg={bgPath} />;
+    return (
+      <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
+        <MapSceneRenderer
+          data={scene.mapScene}
+          durationInFrames={durationInFrames}
+          fps={fps}
+        />
+      </AbsoluteFill>
+    );
   }
-  // 일반 씬 → 공통 렌더러
-  // 비디오 씬 썸네일: videoAsset 제거 + imageAsset을 background/0.35로 격하
-  // (fullscreen 분기 진입 방지 — 시각화 데이터가 잘 보이도록)
-  const thumbScene = scene.videoAsset
-    ? {
-        ...scene,
-        videoPath: "",
-        videoAsset: undefined,
-        imageAsset: scene.imageAsset
-          ? { ...scene.imageAsset, placement: "background", opacity: 0.35 }
-          : scene.imageAsset,
-      }
-    : scene;
-  return <SceneRendererInner scene={thumbScene} fps={meta?.fps || 30} />;
+
+  // 일반 씬/비디오 씬 → 공통 렌더러 그대로 사용
+  return <SceneRendererInner scene={scene} fps={fps} />;
 };
 
 export const ThumbComposition: React.FC<Props> = ({ scene, meta }) => (

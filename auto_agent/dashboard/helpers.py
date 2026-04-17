@@ -381,6 +381,23 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
     thumb_dir = Path(output_dir) / "thumbnails" if output_dir else None
     has_thumbs = thumb_dir and thumb_dir.exists()
 
+    # manifest의 최종 layout을 우선 사용해 스토리보드 배지와 실제 렌더를 정렬
+    manifest_layout_map = {}
+    if output_dir:
+        try:
+            from auto_agent.paths import get_workspace_dir
+            manifest_path = get_workspace_dir() / "remotion" / "public" / "manifests" / f"{project_dir_name}.json"
+            if manifest_path.exists():
+                manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+                manifest = manifest_data.get("manifest", manifest_data)
+                for manifest_scene in manifest.get("scenes", []):
+                    sn = manifest_scene.get("sceneNumber")
+                    layout = manifest_scene.get("layout") or manifest_scene.get("sceneType")
+                    if sn is not None and layout:
+                        manifest_layout_map[sn] = layout
+        except Exception:
+            pass
+
     # 캐릭터별 첫 등장 씬 이미지 매핑 (1차 패스)
     char_thumb_map = {}  # {char_id: image_url}
 
@@ -391,7 +408,11 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         tts = tts_map.get(sn, {})
         scene["_tts_duration"] = tts.get("duration")
         scene["_tts_status"] = tts.get("status")
-        layout, explicit = resolve_layout(scene)
+        manifest_layout = manifest_layout_map.get(sn)
+        if manifest_layout:
+            layout, explicit = manifest_layout, True
+        else:
+            layout, explicit = resolve_layout(scene)
         scene["_layout"] = layout
         scene["_layout_explicit"] = explicit
         scene["_preview_html"] = render_scene_preview(scene, project_accent=project_accent, art_style=art_style or "")

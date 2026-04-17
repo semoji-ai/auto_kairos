@@ -1612,34 +1612,40 @@ async def generate_image(request: Request, slug: str, scene_num: int):
 async def get_art_style(slug: str):
     """프로젝트 아트스타일 정보 + 사용 가능한 스타일 목록."""
     import json as _json
+    from auto_agent.db.project_manager import resolve_art_style_path
+
     pm = get_pm()
     project = pm.get_project(slug=slug)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
-    config = project.get("config", {})
-    if isinstance(config, str):
-        config = _json.loads(config)
+    config = pm.get_config(project["id"])
     current = config.get("art_style", "")
 
-    # 현재 스타일 정보
+    # 현재 스타일 정보 — 프로젝트 로컬 복사본 우선, 없으면 canonical 스타일 사용
     current_info = {}
     if current:
-        style_path = get_workspace_dir() / current
-        if style_path.exists():
+        project_dir = Path(project.get("output_dir", ""))
+        local_style_path = project_dir / "art_style.json"
+        style_path = local_style_path if local_style_path.exists() else resolve_art_style_path(current, project_dir)
+        if style_path and style_path.exists():
             try:
                 current_info = _json.loads(style_path.read_text(encoding="utf-8"))
-                # 참조 이미지 URL — output 디렉토리명(uuid_{slug}) 기반
                 ref = current_info.get("reference_image", "")
                 if ref:
                     _art_out_dir = project.get("output_dir", "")
                     _art_dir_name = Path(_art_out_dir).name if _art_out_dir else slug
-                    current_info["reference_image_url"] = f"/output/{_art_dir_name}/artstyle/{Path(ref).name}"
+                    local_ref = Path(_art_out_dir) / Path(ref).name
+                    if local_ref.exists():
+                        current_info["reference_image_url"] = f"/output/{_art_dir_name}/{Path(ref).name}"
+                    else:
+                        current_info["reference_image_url"] = f"/artstyle/{Path(ref).name}"
             except Exception:
                 pass
 
-    # 사용 가능한 스타일 목록
+    # 사용 가능한 스타일 목록 — canonical package data 기준
     styles = []
-    for p in sorted(Path("artstyle/styles").glob("*.json")):
+    styles_dir = get_data_dir() / "artstyle" / "styles"
+    for p in sorted(styles_dir.glob("*.json")):
         try:
             d = _json.loads(p.read_text(encoding="utf-8"))
             styles.append({"path": f"artstyle/styles/{p.name}", "name": d.get("name", p.stem), "file": p.name})
@@ -1651,20 +1657,38 @@ async def get_art_style(slug: str):
 
 @app.post("/api/p/{slug}/art-style")
 async def set_art_style(request: Request, slug: str):
-    """프로젝트 아트스타일 변경."""
-    import json as _json
+    """프로젝트 아트스타일 변경 + 로컬 복사 + manifest 재빌드."""
+    from auto_agent.db.project_manager import resolve_art_style_path
+    from auto_agent.scripts.build_manifest import build_manifest
+
     pm = get_pm()
     project = pm.get_project(slug=slug)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
     body = await request.json()
     new_style = body.get("art_style", "")
-    config = project.get("config", {})
-    if isinstance(config, str):
-        config = _json.loads(config)
+    if not resolve_art_style_path(new_style, Path(project.get("output_dir", ""))):
+        return JSONResponse({"error": "invalid art_style"}, status_code=400)
+
+    config = pm.get_config(project["id"])
     config["art_style"] = new_style
     pm.set_config(project["id"], config)
-    return JSONResponse({"ok": True, "art_style": new_style})
+
+    provisioned = pm.provision_art_style(project["id"])
+    out_dir = project.get("output_dir", "")
+    dir_name = Path(out_dir).name if out_dir else slug
+    try:
+        build_manifest(str(project.get("id", "")), dir_name, out_dir)
+    except Exception as e:
+        return JSONResponse({
+            "ok": False,
+            "error": f"manifest rebuild failed: {e}",
+            "art_style": new_style,
+            "provisioned": provisioned,
+        }, status_code=500)
+
+    _setup_studio_project(slug)
+    return JSONResponse({"ok": True, "art_style": new_style, "provisioned": provisioned})
 
 
 @app.post("/api/p/{slug}/thumbnail-canvas/export")
