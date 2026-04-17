@@ -616,11 +616,7 @@ def _infer_web_search(scene: dict, is_search_fallback: bool,
         return True  # 원래 실사가 필요했던 씬
     if style_default is not None:
         return style_default  # 아트스타일 레벨 설정 우선
-    from datetime import datetime
-    prompt = (scene.get("imageAsset") or {}).get("prompt", "")
-    current_year = datetime.now().year
-    signals = [str(current_year), str(current_year - 1)]
-    return any(s in prompt for s in signals)
+    return False
 
 
 def _build_scene_fal_input(
