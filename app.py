@@ -1381,6 +1381,36 @@ async def get_subtitles(slug: str, scene_num: int):
     return JSONResponse({"entries": entries, "words": words})
 
 
+def _normalize_subtitle_entries(entries):
+    normalized = []
+    for idx, entry in enumerate(entries or []):
+        text = str(entry.get("text", "")).strip()
+        if not text:
+            continue
+        try:
+            start_sec = round(float(entry["startSec"]), 3)
+            end_sec = round(float(entry["endSec"]), 3)
+        except (KeyError, TypeError, ValueError):
+            raise KeyError(f"invalid timing in entry {idx}")
+        normalized.append({
+            "text": text,
+            "startSec": start_sec,
+            "endSec": end_sec,
+        })
+    return normalized
+
+
+def _resolve_subtitle_audio_duration(out_dir: str, scene_num: int, fallback_end_sec: float = 0.0) -> float:
+    audio_path = Path(out_dir) / "audio" / f"scene_{scene_num:03d}.mp3"
+    if audio_path.exists():
+        try:
+            from mutagen.mp3 import MP3
+            return round(MP3(str(audio_path)).info.length, 3)
+        except Exception:
+            pass
+    return round(float(fallback_end_sec or 0.0), 3)
+
+
 @app.post("/api/p/{slug}/subtitles/{scene_num}")
 async def save_subtitles(request: Request, slug: str, scene_num: int):
     """편집된 SRT 엔트리를 .srt 파일로 저장."""
@@ -1389,7 +1419,7 @@ async def save_subtitles(request: Request, slug: str, scene_num: int):
     if not project:
         return JSONResponse({"error": "not found"}, 404)
     body = await request.json()
-    entries = body.get("entries", [])
+    entries = _normalize_subtitle_entries(body.get("entries", []))
     if not entries:
         return JSONResponse({"error": "entries required"}, 400)
 
@@ -1420,7 +1450,7 @@ async def save_subtitles(request: Request, slug: str, scene_num: int):
         scenes_list = subtitles_data.get("scenes", [])
         new_entry = {
             "sceneNumber": scene_num,
-            "audioDurationSec": round(entries[-1]["endSec"], 3) if entries else 0,
+            "audioDurationSec": _resolve_subtitle_audio_duration(out_dir, scene_num, entries[-1]["endSec"]),
             "entries": entries,
             "wordCount": sum(len(e["text"].split()) for e in entries),
             "source": "manual_edit",

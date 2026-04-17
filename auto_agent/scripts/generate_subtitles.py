@@ -23,10 +23,11 @@ PAUSE_THRESHOLD = 0.25
 
 
 def format_srt_time(seconds: float) -> str:
-    h = int(seconds // 3600)
-    m = int((seconds % 3600) // 60)
-    s = int(seconds % 60)
-    ms = int((seconds % 1) * 1000)
+    total_ms = max(0, round(seconds * 1000))
+    h = total_ms // 3_600_000
+    m = (total_ms % 3_600_000) // 60_000
+    s = (total_ms % 60_000) // 1_000
+    ms = total_ms % 1_000
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 
@@ -564,10 +565,12 @@ def main():
                 try:
                     sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
                     elevenlabs_words = chars_to_words(sidecar)
-                    # 사이드카에서 duration도 읽기 (가장 정확)
+                    # 사이드카 끝 시각은 보조 정보로만 사용한다.
+                    # 실제 MP3 길이가 더 길면 scene duration은 오디오 길이를 우선 유지해야
+                    # 마지막 자막이 씬 종료 전에 사라지지 않는다.
                     end_times = sidecar.get("character_end_times_seconds", [])
                     if end_times:
-                        duration = round(end_times[-1], 3)
+                        duration = max(duration, round(end_times[-1], 3))
                 except Exception as e:
                     print(f"    사이드카 로드 실패: {e}")
 
