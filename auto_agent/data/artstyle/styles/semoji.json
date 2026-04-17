@@ -254,7 +254,8 @@
       "bottomOffset": 60,
       "maxWidth": "92%",
       "lineHeight": 1.4
-    }
+    },
+    "enable_web_search": true
   },
   "guidelines": "세모지는 정보 전달 중심. 친근한 설명체, 데이터 시각화 적극 활용. cinematic staging으로 장면 연출.",
   "writing_style": "semoji"

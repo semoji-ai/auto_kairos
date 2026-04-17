@@ -603,15 +603,19 @@ def generate_scene(
 generate_scene_flat = generate_scene
 
 
-def _infer_web_search(scene: dict, is_search_fallback: bool) -> bool:
+def _infer_web_search(scene: dict, is_search_fallback: bool,
+                      style_default: Optional[bool] = None) -> bool:
     """enable_web_search 명시 없을 때 규칙 기반 판단.
 
     Args:
         scene: scene_specs.json의 씬 딕셔너리
         is_search_fallback: image_batch_module에서 search→generate fallback으로 호출된 경우
+        style_default: artstyle design_tokens.enable_web_search 값 (None이면 미설정)
     """
     if is_search_fallback:
         return True  # 원래 실사가 필요했던 씬
+    if style_default is not None:
+        return style_default  # 아트스타일 레벨 설정 우선
     from datetime import datetime
     prompt = (scene.get("imageAsset") or {}).get("prompt", "")
     current_year = datetime.now().year
@@ -731,12 +735,14 @@ def _build_scene_fal_input(
     if image_urls:
         fal_input["image_urls"] = image_urls
 
-    # enable_web_search: 명시값 우선, 없으면 규칙 기반 판단
+    # enable_web_search: 명시값 우선 → artstyle design_tokens → 규칙 기반
     explicit_web_search = (scene.get("imageAsset") or {}).get("enable_web_search")
-    fal_input["enable_web_search"] = (
-        explicit_web_search if explicit_web_search is not None
-        else _infer_web_search(scene, is_search_fallback)
-    )
+    if explicit_web_search is not None:
+        fal_input["enable_web_search"] = explicit_web_search
+    else:
+        art_style_for_ws = _load_art_style(style_path) if style_path else {}
+        style_default = art_style_for_ws.get("design_tokens", {}).get("enable_web_search")
+        fal_input["enable_web_search"] = _infer_web_search(scene, is_search_fallback, style_default)
 
     return endpoint, fal_input
 
