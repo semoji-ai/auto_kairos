@@ -145,7 +145,7 @@ async def get_manifest_for_project(dir_name: str):
     prefix = f"/output/{dir_name}/"
     manifest = data.get("manifest", data)
     for scene in manifest.get("scenes", []):
-        for key in ("imagePath", "vizBackgroundPath", "audioPath"):
+        for key in ("imagePath", "vizBackgroundPath", "audioPath", "videoPath", "videoThumbPath"):
             val = scene.get(key, "")
             if val and val.startswith("project/"):
                 scene[key] = prefix + val[len("project/"):]
