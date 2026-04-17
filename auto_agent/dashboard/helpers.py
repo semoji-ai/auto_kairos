@@ -398,11 +398,31 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         except Exception:
             pass
 
+    # video_assets.json → {sceneNumber: videoFile} 룩업
+    video_asset_map: dict = {}
+    if output_dir:
+        va_path = Path(output_dir) / "video_assets.json"
+        if va_path.exists():
+            try:
+                va_data = json.loads(va_path.read_text(encoding="utf-8"))
+                for va in va_data.get("scenes", []):
+                    sn_va = va.get("sceneNumber")
+                    if sn_va is not None:
+                        video_asset_map[sn_va] = va
+            except Exception:
+                pass
+
     # 캐릭터별 첫 등장 씬 이미지 매핑 (1차 패스)
     char_thumb_map = {}  # {char_id: image_url}
 
     for scene in scenes:
         sn = scene["sceneNumber"]
+        # 비디오 에셋 정보 주입
+        va_entry = video_asset_map.get(sn)
+        scene["_video_file"] = va_entry.get("videoFile", "") if va_entry else ""
+        scene["_video_start_sec"] = va_entry.get("startSec", 0.0) if va_entry else None
+        scene["_video_end_sec"] = va_entry.get("endSec") if va_entry else None
+
         scene["_image_url"] = get_scene_image_url(project_dir_name, sn, output_dir)
         scene["_audio_url"] = get_scene_audio_url(project_dir_name, sn, output_dir)
         tts = tts_map.get(sn, {})

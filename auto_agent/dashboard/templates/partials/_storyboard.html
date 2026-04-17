@@ -68,7 +68,7 @@
         <span class="img-badge img-gen">🎨 생성</span>
         {% endif %}
         {% if img.placement %}<span class="img-badge img-placement">📐 {{ img.placement }}</span>{% endif %}
-        {% if scene._image_url %}<span class="img-badge img-ok">✅ 이미지</span>{% else %}<span class="img-badge img-missing">⬜ 미확보</span>{% endif %}
+        {% if scene._video_file %}<span class="img-badge img-ok" style="background:rgba(239,68,68,0.18);color:#f87171">🎬 비디오</span>{% elif scene._image_url %}<span class="img-badge img-ok">✅ 이미지</span>{% else %}<span class="img-badge img-missing">⬜ 미확보</span>{% endif %}
         {% endif %}
         {# 차트 정보 #}
         {% set _chart = scene.chartConfig or (scene.visualization.chartConfig if scene.visualization else none) %}
@@ -103,7 +103,16 @@
 
       {# 이미지 영역 #}
       <div class="sb-image-area">
-        {% if scene.imageAsset %}
+        {% if scene._video_file %}
+        <div class="sb-image-prompt" style="border-left:2px solid #f87171">
+          <div class="sb-image-prompt-header">
+            <span class="sb-prompt-label" style="color:#f87171">🎬 비디오</span>
+            {% if scene.imageAsset and scene.imageAsset.placement %}<span class="sb-prompt-placement">{{ scene.imageAsset.placement }}</span>{% endif %}
+          </div>
+          <div class="sb-prompt-text" style="font-size:10px;word-break:break-all">{{ scene._video_file }}</div>
+          <div class="sb-prompt-detail">구간: {{ scene._video_start_sec }}s{% if scene._video_end_sec %} ~ {{ scene._video_end_sec }}s{% endif %}</div>
+        </div>
+        {% elif scene.imageAsset %}
         <div class="sb-image-prompt">
           {% set img = scene.imageAsset %}
           <div class="sb-image-prompt-header">
@@ -125,7 +134,7 @@
         {% endif %}
         <div class="sb-image-row">
           <div class="sb-image-grid" id="sb-img-grid-{{ scene.sceneNumber }}"></div>
-          <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">이미지</button>
+          <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">{% if scene._video_file %}비디오{% else %}이미지{% endif %}</button>
         </div>
       </div>
       <div class="sb-asset-panel" id="sb-asset-{{ scene.sceneNumber }}" style="display:none">
