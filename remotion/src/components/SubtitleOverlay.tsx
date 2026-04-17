@@ -16,12 +16,13 @@ interface Props {
 export const SubtitleOverlay: React.FC<Props> = ({ subtitles, fps, config }) => {
   const frame = useCurrentFrame();
   const currentTimeSec = frame / fps;
+  const frameQuantumSec = fps > 0 ? 1 / fps : 0;
 
-  // 마지막 자막은 씬 끝까지 유지 (오디오+2프레임 여유분 커버)
+  // 마지막 자막은 다음 프레임 경계까지만 유지 (1초 임의 여유 금지)
   const activeSub = subtitles.find(
     (s, i) => currentTimeSec >= s.startSec && (
       i === subtitles.length - 1
-        ? currentTimeSec <= s.endSec + 1  // 마지막 자막: 1초 여유
+        ? currentTimeSec <= s.endSec + frameQuantumSec
         : currentTimeSec < s.endSec
     ),
   );
