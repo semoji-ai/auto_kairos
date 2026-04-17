@@ -408,9 +408,21 @@ var SubtitleEditor = (function() {
   // ── 자막 로드 (씬 번호 기준) ──
   function loadSubtitlePanel(sceneNum) {
     SubtitleEditor.load(SLUG, sceneNum, elSubtitlePanel, elSubtitleSaveBtn, elSubtitleSaveStatus, function() {
+      if (window.clearManifestCache) {
+        window.clearManifestCache(sceneNum, { refreshDetail: true });
+      }
+      window.dispatchEvent(new CustomEvent('storyboard:invalidate', {
+        detail: { sceneNum: sceneNum, refreshDetail: true }
+      }));
       // 저장 성공 후 iframe 새로고침 (매니페스트 리빌드 반영)
       if (elIframe && elIframe.src && elIframe.src !== 'about:blank') {
-        elIframe.src = elIframe.src;
+        try {
+          var iframeUrl = new URL(elIframe.src, window.location.origin);
+          iframeUrl.searchParams.set('t', String(Date.now()));
+          elIframe.src = iframeUrl.toString();
+        } catch (_) {
+          elIframe.src = elIframe.src;
+        }
       }
     });
   }

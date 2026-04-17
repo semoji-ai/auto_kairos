@@ -199,6 +199,7 @@ function filterImages(btn) {
 // 아래 IIFE에서 window.openSceneDetail로 노출
 
 function closeSceneDetail() {
+  window._detailSceneNum = null;
   document.getElementById('scene-detail-overlay').classList.remove('open');
 }
 
@@ -212,7 +213,18 @@ function resizePreview(val) {
   var dirName = '{{ dir_name|default(slug) }}';
   var metaCache = null;
   var sceneCache = {};
+  window._detailSceneNum = window._detailSceneNum || null;
   window._sceneCache = sceneCache;
+
+  function clearSceneCache(sceneNum) {
+    if (sceneNum === undefined || sceneNum === null) {
+      Object.keys(sceneCache).forEach(function(key) { delete sceneCache[key]; });
+    } else {
+      delete sceneCache[sceneNum];
+      delete sceneCache[String(sceneNum)];
+    }
+    window._sceneCache = sceneCache;
+  }
 
   function fetchMeta() {
     if (metaCache) return Promise.resolve(metaCache);
@@ -250,6 +262,44 @@ function resizePreview(val) {
       return null;
     });
   }
+
+  function refreshMountedScenes(sceneNum) {
+    var selector = '.sb-player-mount';
+    if (sceneNum !== undefined && sceneNum !== null) {
+      selector += '[data-scene-num="' + sceneNum + '"]';
+    }
+    document.querySelectorAll(selector).forEach(function(mount) {
+      mount.dataset.refresh = '1';
+      mount.dataset.mounted = '';
+      tryMount(mount);
+    });
+  }
+
+  window.clearManifestCache = function(sceneNum, opts) {
+    opts = opts || {};
+    manifestCache = null;
+    metaCache = null;
+    window._manifestCache = null;
+    clearSceneCache(sceneNum);
+    refreshMountedScenes(sceneNum);
+
+    if (opts.refreshDetail !== false) {
+      var overlay = document.getElementById('scene-detail-overlay');
+      if (sceneNum !== undefined && sceneNum !== null) {
+        if (window._detailSceneNum === sceneNum && overlay && overlay.classList.contains('open')) {
+          window.openSceneDetail(slug, sceneNum);
+        }
+      } else if (window._detailSceneNum && overlay && overlay.classList.contains('open')) {
+        window.openSceneDetail(slug, window._detailSceneNum);
+      }
+    }
+    return true;
+  };
+
+  window.addEventListener('storyboard:invalidate', function(ev) {
+    var detail = (ev && ev.detail) || {};
+    window.clearManifestCache(detail.sceneNum, detail);
+  });
 
   window.tryMount = function tryMount(el) {
     if (el.dataset.mounted === '1' && !el.dataset.refresh) return;
@@ -332,6 +382,7 @@ function resizePreview(val) {
 
   // ── 상세보기: Remotion Player로 큰 프리뷰 + 원고 ──
   window.openSceneDetail = function(slug, sceneNum) {
+    window._detailSceneNum = sceneNum;
     var overlay = document.getElementById('scene-detail-overlay');
     var content = document.getElementById('scene-detail-content');
     content.innerHTML = '<div class="empty">Loading...</div>';
