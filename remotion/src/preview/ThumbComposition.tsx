@@ -39,8 +39,12 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
     );
   }
 
-  // 일반 씬/비디오 씬 → 공통 렌더러 그대로 사용
-  return <SceneRendererInner scene={scene} fps={fps} />;
+  // 일반 씬 → 공통 렌더러
+  // 비디오 씬: OffthreadVideo는 캔버스 썸네일 모드에서 렌더 불가 → videoAsset 제거 후 imagePath 폴백
+  const thumbScene = scene.videoAsset
+    ? { ...scene, videoPath: "", videoAsset: undefined }
+    : scene;
+  return <SceneRendererInner scene={thumbScene} fps={fps} />;
 };
 
 export const ThumbComposition: React.FC<Props> = ({ scene, meta }) => (
