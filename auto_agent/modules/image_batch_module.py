@@ -153,6 +153,20 @@ def run_batch(
     images_dir = project_dir / "images"
     images_dir.mkdir(exist_ok=True)
 
+    # videoAsset이 확보된 씬 번호 집합 — 이미지 생성/검색 스킵용
+    _video_asset_sns: set[int] = set()
+    _va_path = project_dir / "video_assets.json"
+    if _va_path.exists():
+        try:
+            _va_data = json.loads(_va_path.read_text(encoding="utf-8"))
+            for _va in _va_data.get("scenes", []):
+                sn_ = _va.get("sceneNumber")
+                vf_ = _va.get("videoFile", "")
+                if sn_ is not None and vf_ and (project_dir / "video_sources" / vf_).exists():
+                    _video_asset_sns.add(sn_)
+        except Exception:
+            pass
+
     # ── Phase 2 + 3 병렬: generate 배치 + search 순차 ──
     from concurrent.futures import ThreadPoolExecutor
 
@@ -164,6 +178,9 @@ def run_batch(
             if (scene.get("imageAsset") or {}).get("source") != "generate":
                 continue
             scene_num = scene.get("sceneNumber", 0)
+            if scene_num in _video_asset_sns:
+                skip += 1
+                continue
             if image_assets.has_generated_version(images_dir, scene_num):
                 skip += 1
                 continue
@@ -278,6 +295,9 @@ def run_batch(
             if ia.get("source") != "search":
                 continue
             scene_num = scene.get("sceneNumber", 0)
+            if scene_num in _video_asset_sns:
+                skip += 1
+                continue
             if image_assets.has_generated_version(images_dir, scene_num):
                 skip += 1
                 continue
