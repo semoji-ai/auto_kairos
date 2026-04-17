@@ -3022,25 +3022,29 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
   // === Multi-counter: {{}}에서 최대 4개 숫자 추출 ===
   const accentMatches = [...headline.matchAll(/\{\{([^}]+)\}\}/g)];
-  const numTargets = accentMatches.map((m) => extractNumber(m[1]));
+  const isCounterLayout = layout === "counter" || layout === "metric_spotlight";
+  // counter/metric_spotlight는 values[]를 카운트업 타겟으로 직접 사용
+  const numTargets = isCounterLayout && values.length > 0
+    ? values.map((v) => (typeof v === "number" ? v : extractNumber(String(v))))
+    : accentMatches.map((m) => extractNumber(m[1]));
   const isCountEmphasis = emphasis === "number" || emphasis === "count";
 
   // 각 accent가 어느 headline 라인에 속하는지 매핑
   const COUNT_UP_DURATION = 35;
   const accentLineDelays: number[] = (() => {
     if (!isCountEmphasis) return [9999, 9999, 9999, 9999];
-    let accentI = 0;
+    // counter/metric_spotlight: 씬 시작 직후 카운트업 시작
+    if (isCounterLayout) {
+      return [5, 5, 5, 5];
+    }
     const delays: number[] = [];
     for (let li = 0; li < lines.length; li++) {
       const lineAccents = [...lines[li].matchAll(/\{\{[^}]+\}\}/g)];
       for (let _j = 0; _j < lineAccents.length; _j++) {
-        // 카운트업은 TTS 시작 시점에 완료되도록: raw TTS start - duration
         const ttsStart = headlineSubtitleStarts[li] || 0;
         delays.push(Math.max(ttsStart - COUNT_UP_DURATION, 0));
-        accentI++;
       }
     }
-    // 4개 채우기
     while (delays.length < 4) delays.push(9999);
     return delays;
   })();
@@ -3663,7 +3667,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             {renderSupportHeadline({ marginBottom: 8, maxWidth: "70%" })}
             <MetricCard
               label={items[0] || ""}
-              value={`${fmtNum(values[0])}${data.unit || ""}`}
+              value={formatWithTemplate(`${fmtNum(values[0])}${data.unit || ""}`, countedValues[0])}
               style={{ width: "100%", maxWidth: 720, transform: "scale(1.12)" }}
             />
           </div>
@@ -3675,7 +3679,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             {renderSupportHeadline({ marginBottom: 8, maxWidth: "70%" })}
             <MetricCard
               label={items[0] || data.title || ""}
-              value={values.length > 0 ? `${fmtNum(values[0])}${data.unit || ""}` : ""}
+              value={values.length > 0 ? formatWithTemplate(`${fmtNum(values[0])}${data.unit || ""}`, countedValues[0]) : ""}
               change={items[1]}
               trend={values.length > 1 ? (values[1] > 0 ? "up" : "down") : undefined}
               style={{ width: "100%", maxWidth: 720, transform: "scale(1.08)" }}
