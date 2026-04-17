@@ -90,6 +90,14 @@ def build_preset_obj(dt: dict, style_id: str) -> dict:
     if (di := dt.get("disableIcons")) is not None:
         preset["disableIcons"] = di
 
+    # disableSpotlight
+    if (ds := dt.get("disableSpotlight")) is not None:
+        preset["disableSpotlight"] = ds
+
+    # quoteReveal
+    if (qr := dt.get("quoteReveal")) is not None:
+        preset["quoteReveal"] = qr
+
     # defaultItemEntrance
     if (die := dt.get("defaultItemEntrance")) is not None:
         preset["defaultItemEntrance"] = die

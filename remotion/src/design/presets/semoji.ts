@@ -24,6 +24,8 @@ export const SEMOJI_PRESET: DesignPresetOverride = {
   defaultBackground: "background/semoji_grid_bg.jpg",
   defaultBgOpacity: 1.0,
   disableIcons: true,
+  disableSpotlight: true,
+  quoteReveal: "typewriter",
   defaultItemEntrance: "overshoot",
   countUpThreshold: 0,
   texture: {

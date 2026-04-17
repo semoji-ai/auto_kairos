@@ -207,6 +207,8 @@ export interface DesignPreset {
   disableIcons?: boolean;     // true면 모든 레이아웃에서 itemIcons 무시
   defaultItemEntrance?: "fadeRise" | "overshoot" | "bounce" | "scale" | "spring";  // items 기본 등장 애니메이션
   countUpThreshold?: number;  // 카운트업 애니메이션 최소값 (기본 100, 0이면 모든 숫자 적용)
+  disableSpotlight?: boolean; // true면 spotlight reveal 오버레이 비활성화 (인용문 글로우 제거)
+  quoteReveal?: "typewriter" | "fade";  // quote 레이아웃 기본 reveal 방식
   texture?: { src: string; blendMode?: string; opacity?: number };  // 최상위 텍스처 오버레이
 
   colors: PresetColors;

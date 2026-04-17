@@ -3138,12 +3138,13 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
 
   // Quote
   if (layout === "quote" && !isQuotePortrait) {
+    const effectiveReveal = preset.quoteReveal ?? reveal;
     return (
       <QuoteDisplay
         items={[quoteText]}
         source={quoteSource}
         moodCfg={moodCfg}
-        reveal={reveal}
+        reveal={effectiveReveal}
         speed={moodCfg.speed}
         mood={mood}
         hasImageBg={hasImageBackground}
@@ -3457,8 +3458,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
       <div style={{ width: contentWidth, height: "100%", margin: "0 auto", position: "relative" }}>
       {!isSidePlacement && <MoodBackground mood={mood} transparent={hasImageBackground} />}
 
-      {/* Spotlight overlay */}
-      {reveal === "spotlight" && <SpotlightOverlay speed={moodCfg.speed} />}
+      {/* Spotlight overlay — disableSpotlight 프리셋이면 비활성화 */}
+      {reveal === "spotlight" && !preset.disableSpotlight && <SpotlightOverlay speed={moodCfg.speed} />}
 
       {/* Flash overlay */}
       {isFlash && (
