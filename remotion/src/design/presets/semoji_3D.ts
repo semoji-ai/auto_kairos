@@ -25,6 +25,7 @@ export const SEMOJI3D_PRESET: DesignPresetOverride = {
   defaultBgOpacity: 1.0,
   disableIcons: true,
   defaultItemEntrance: "overshoot",
+  countUpThreshold: 0,
   texture: {
     src: "background/63517.jpg",
     blendMode: "multiply",

@@ -652,7 +652,7 @@ const EmphasisAccentText: React.FC<{
     const currentCountIdx = accentIdx;
     accentIdx++;
     const counted = countedValues[currentCountIdx] || 0;
-    const shouldCountUp = isCountEmphasis && isNum && num >= 100;
+    const shouldCountUp = isCountEmphasis && isNum && num >= countUpMin;
     const displayText = shouldCountUp
       ? formatWithTemplate(content, counted)
       : content;
@@ -691,7 +691,7 @@ const EmphasisAccentText: React.FC<{
           const currentCountIdx = accentIdx;
           accentIdx++;
           const counted = countedValues[currentCountIdx] || 0;
-          const shouldCountUp = isCountEmphasis && isNum && num >= 100;
+          const shouldCountUp = isCountEmphasis && isNum && num >= countUpMin;
           const displayText = shouldCountUp
             ? formatWithTemplate(content, counted)
             : content;
@@ -2880,6 +2880,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const monoFont = `'${(preset.fonts.mono ?? preset.fonts.body).family}', ${(preset.fonts.mono ?? preset.fonts.body).fallback}`;
   const T = preset.typography;
   const L = preset.layout;
+  const countUpMin = preset.countUpThreshold ?? 100;
   const frame = useCurrentFrame();
   // data가 없으면 빈 객체로 fallback
   if (!data) data = {};
@@ -3045,24 +3046,23 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   })();
 
   // 항상 4개 counter hook 호출 (React rules)
-  // >= 100인 숫자만 카운트업 (점점 올라가는 의미가 있는 큰 수치만)
   const counted0 = useCountUp(
-    isCountEmphasis && (numTargets[0] || 0) >= 100 ? accentLineDelays[0] : 9999,
+    isCountEmphasis && (numTargets[0] || 0) >= countUpMin ? accentLineDelays[0] : 9999,
     COUNT_UP_DURATION,
     numTargets[0] || 1,
   );
   const counted1 = useCountUp(
-    isCountEmphasis && (numTargets[1] || 0) >= 100 ? accentLineDelays[1] : 9999,
+    isCountEmphasis && (numTargets[1] || 0) >= countUpMin ? accentLineDelays[1] : 9999,
     COUNT_UP_DURATION,
     numTargets[1] || 1,
   );
   const counted2 = useCountUp(
-    isCountEmphasis && (numTargets[2] || 0) >= 100 ? accentLineDelays[2] : 9999,
+    isCountEmphasis && (numTargets[2] || 0) >= countUpMin ? accentLineDelays[2] : 9999,
     COUNT_UP_DURATION,
     numTargets[2] || 1,
   );
   const counted3 = useCountUp(
-    isCountEmphasis && (numTargets[3] || 0) >= 100 ? accentLineDelays[3] : 9999,
+    isCountEmphasis && (numTargets[3] || 0) >= countUpMin ? accentLineDelays[3] : 9999,
     COUNT_UP_DURATION,
     numTargets[3] || 1,
   );

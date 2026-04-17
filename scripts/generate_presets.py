@@ -94,6 +94,10 @@ def build_preset_obj(dt: dict, style_id: str) -> dict:
     if (die := dt.get("defaultItemEntrance")) is not None:
         preset["defaultItemEntrance"] = die
 
+    # countUpThreshold
+    if (cut := dt.get("countUpThreshold")) is not None:
+        preset["countUpThreshold"] = cut
+
     # texture
     if texture := dt.get("texture"):
         preset["texture"] = texture
