@@ -98,6 +98,32 @@ def merge_subtitle_scenes(existing_scenes: List[Dict], updated_scenes: List[Dict
     return [merged[k] for k in sorted(merged)]
 
 
+def _normalize_alignment_text(text: str) -> str:
+    return re.sub(r"\s+", "", text or "")
+
+
+def _preprocess_text_for_tts_alignment(text: str) -> str:
+    if not text:
+        return ""
+    try:
+        from auto_agent.tools.korean_tts_preprocessor import KoreanTTSPreprocessor
+        processed, _changes = KoreanTTSPreprocessor().process_text(text)
+        return processed.strip()
+    except Exception:
+        return (text or "").strip()
+
+
+def derive_tts_lines_from_display_lines(display_lines: List[str], narration_tts: str) -> List[str] | None:
+    if not display_lines or not narration_tts:
+        return None
+    derived = [_preprocess_text_for_tts_alignment(line) for line in display_lines]
+    if any(not line for line in derived):
+        return None
+    if _normalize_alignment_text("".join(derived)) != _normalize_alignment_text(narration_tts):
+        return None
+    return derived
+
+
 # Korean josa/clause patterns for natural splitting
 JOSA_PATTERNS = re.compile(r'(?<=[가-힣])(은|는|이|가|을|를|에서|에게|으로|로|와|과|의|도|만|까지|부터|보다|마저|조차|밖에)')
 CLAUSE_PATTERNS = re.compile(r'(지만|는데|면서|하고|하며|고서|어서|아서|니까|으니|때문에|위해|위해서)')
@@ -584,15 +610,24 @@ def main():
                 display_lines = fix_decimal_splits(display_lines)
                 display_lines = fix_quote_splits(display_lines)
 
+            derived_tts_lines = derive_tts_lines_from_display_lines(display_lines, narration_tts)
+
             # TTS 라인 분할 (narration_tts — 실제 음성과 일치)
             # subtitle_lines_tts 필드가 있으면 에이전트 사전 분할 결과 사용
             pre_split_tts = scene.get("subtitle_lines_tts")
             if pre_split_tts and isinstance(pre_split_tts, list) and len(pre_split_tts) > 0:
-                tts_lines = [l.strip() for l in pre_split_tts if l.strip()]
+                candidate_tts_lines = [l.strip() for l in pre_split_tts if l.strip()]
             else:
-                tts_lines = smart_split(narration_tts)
-                tts_lines = fix_decimal_splits(tts_lines)
-                tts_lines = fix_quote_splits(tts_lines)
+                candidate_tts_lines = smart_split(narration_tts)
+                candidate_tts_lines = fix_decimal_splits(candidate_tts_lines)
+                candidate_tts_lines = fix_quote_splits(candidate_tts_lines)
+
+            # narration → narration_tts 전처리 규칙이 만든 변형은 같은 규칙으로 역매칭한다.
+            # line count mismatch 시 비례 분배로 떨어지기 전에 display_lines 기반 전처리 매핑을 우선 사용.
+            if derived_tts_lines and len(derived_tts_lines) == len(display_lines):
+                tts_lines = derived_tts_lines
+            else:
+                tts_lines = candidate_tts_lines
 
             # === 1차: ElevenLabs 사이드카 or WhisperX forced alignment ===
             if elevenlabs_words:
