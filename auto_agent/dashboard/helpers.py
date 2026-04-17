@@ -428,11 +428,16 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         tts = tts_map.get(sn, {})
         scene["_tts_duration"] = tts.get("duration")
         scene["_tts_status"] = tts.get("status")
-        manifest_layout = manifest_layout_map.get(sn)
-        if manifest_layout:
-            layout, explicit = manifest_layout, True
+        # mapScene(markers 있음)이면 manifest layout보다 우선
+        _map_scene = scene.get("mapScene") or {}
+        if _map_scene and _map_scene.get("markers"):
+            layout, explicit = "map", True
         else:
-            layout, explicit = resolve_layout(scene)
+            manifest_layout = manifest_layout_map.get(sn)
+            if manifest_layout:
+                layout, explicit = manifest_layout, True
+            else:
+                layout, explicit = resolve_layout(scene)
         scene["_layout"] = layout
         scene["_layout_explicit"] = explicit
         scene["_preview_html"] = render_scene_preview(scene, project_accent=project_accent, art_style=art_style or "")
