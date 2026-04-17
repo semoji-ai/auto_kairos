@@ -484,6 +484,26 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 "opacity": va_entry.get("opacity", 0.7),
                 "volume": va_entry.get("volume", 0.0),
             }
+            # 비디오 첫 프레임을 썸네일용 이미지로 추출 (ffmpeg)
+            if video_src.exists():
+                import subprocess as _sp
+                thumb_dir = out_dir / "video_sources" / "thumbs"
+                thumb_dir.mkdir(parents=True, exist_ok=True)
+                thumb_file = thumb_dir / f"scene_{num:03d}.jpg"
+                start_sec = va_entry.get("startSec", 0.0)
+                if not thumb_file.exists():
+                    try:
+                        _sp.run(
+                            ["ffmpeg", "-y", "-ss", str(start_sec),
+                             "-i", str(video_src),
+                             "-frames:v", "1", "-q:v", "2",
+                             str(thumb_file)],
+                            capture_output=True, timeout=30,
+                        )
+                    except Exception:
+                        pass
+                if thumb_file.exists():
+                    entry["videoThumbPath"] = link_asset(thumb_file, "video_sources/thumbs", thumb_file.name)
 
         # cinematic_overlay → cinematicOverlay 변환
         co = viz.get("cinematic_overlay") or viz.get("cinematicOverlay")

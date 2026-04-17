@@ -40,9 +40,18 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
   }
 
   // 일반 씬 → 공통 렌더러
-  // 비디오 씬: OffthreadVideo는 캔버스 썸네일 모드에서 렌더 불가 → videoAsset 제거 후 imagePath 폴백
+  // 비디오 씬: OffthreadVideo는 캔버스 썸네일 모드에서 렌더 불가
+  // → videoThumbPath(ffmpeg 추출 첫 프레임)가 있으면 imagePath로 교체, 없으면 기존 imagePath 폴백
   const thumbScene = scene.videoAsset
-    ? { ...scene, videoPath: "", videoAsset: undefined }
+    ? {
+        ...scene,
+        imagePath: scene.videoThumbPath || scene.imagePath,
+        imageAsset: scene.videoThumbPath
+          ? { ...(scene.imageAsset ?? {}), placement: "fullscreen" as const, opacity: 1 }
+          : scene.imageAsset,
+        videoPath: "",
+        videoAsset: undefined,
+      }
     : scene;
   return <SceneRendererInner scene={thumbScene} fps={fps} />;
 };

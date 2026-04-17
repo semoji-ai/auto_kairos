@@ -122,6 +122,9 @@ export interface SceneEntry {
   /** 예고편 구간 지정 */
   trailerClip?: { startSec: number; endSec: number };
 
+  /** 비디오 씬 스토리보드 썸네일 경로 (ffmpeg 추출 첫 프레임) */
+  videoThumbPath?: string;
+
   /** 지도 씬 데이터 (위치/경로/영역/플라이스루) */
   mapScene?: MapSceneData | null;
 
