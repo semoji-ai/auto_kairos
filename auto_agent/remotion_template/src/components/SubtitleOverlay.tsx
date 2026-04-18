@@ -58,6 +58,7 @@ export const SubtitleOverlay: React.FC<Props> = ({ subtitles, fps, config }) => 
           backgroundColor: config.backgroundColor ?? "rgba(0, 0, 0, 0.8)",
           padding: `${Math.round(config.fontSize * 0.2)}px ${Math.round(config.fontSize * 0.5)}px`,
           borderRadius: config.borderRadius ?? 50,
+          border: config.border,
           boxShadow: config.boxShadow,
         }}
       >

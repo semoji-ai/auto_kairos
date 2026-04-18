@@ -143,6 +143,10 @@ export interface PresetSubtitle {
   strokeWidth: number;
   keywordColor: string;
   keywordStrokeColor: string;
+  backgroundColor?: string;
+  border?: string;
+  borderRadius?: number;
+  boxShadow?: string;
   bottomOffset: number;
   maxWidth: string;
   lineHeight: number;
