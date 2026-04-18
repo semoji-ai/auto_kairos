@@ -799,14 +799,14 @@ function sbSelectVersion(sn, file) {
 .sb-gen-actions button { font-size: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #D4D4D8; border-radius: 4px; padding: 3px 10px; cursor: pointer; }
 .sb-gen-status { font-size: 9px; color: #888; display: block; margin-top: 4px; }
 .sb-candidates { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
-.sb-candidate { width: 60px; height: 45px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; }
+.sb-candidate { width: 60px; height: 45px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; background: #111; display: flex; align-items: center; justify-content: center; }
 .sb-candidate:hover { border-color: rgba(255,255,255,0.3); }
-.sb-candidate img { width: 100%; height: 100%; object-fit: cover; }
+.sb-candidate img { width: 100%; height: 100%; object-fit: contain; }
 .sb-versions-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
-.sb-version-thumb { width: 50px; height: 38px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; opacity: 0.6; }
+.sb-version-thumb { width: 50px; height: 38px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; opacity: 0.6; background: #111; display: flex; align-items: center; justify-content: center; }
 .sb-version-thumb.selected { border-color: #F59E0B; opacity: 1; }
 .sb-version-thumb:hover { opacity: 1; }
-.sb-version-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.sb-version-thumb img { width: 100%; height: 100%; object-fit: contain; }
 .sb-image-area { margin-top: 8px; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
 .sb-image-prompt { font-size: 12px; color: #A1A1AA; margin-bottom: 6px; }
 .sb-image-prompt-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
@@ -820,10 +820,10 @@ function sbSelectVersion(sn, file) {
 .sb-prompt-placement { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,0.06); color: #A1A1AA; }
 .sb-image-row { display: flex; align-items: center; gap: 6px; }
 .sb-image-grid { display: flex; gap: 3px; flex-wrap: wrap; flex: 1; }
-.sb-grid-thumb { width: 80px; height: 60px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; opacity: 0.5; transition: all 0.15s; }
+.sb-grid-thumb { width: 80px; height: 60px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; opacity: 0.5; transition: all 0.15s; background: #111; display: flex; align-items: center; justify-content: center; }
 .sb-grid-thumb.selected { border-color: #F59E0B; opacity: 1; }
 .sb-grid-thumb:hover { opacity: 0.9; }
-.sb-grid-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.sb-grid-thumb img { width: 100%; height: 100%; object-fit: contain; }
 .sb-grid-thumb.candidate { border: 2px dashed rgba(96,165,250,0.4); opacity: 0.7; }
 .sb-grid-thumb.candidate:hover { border-color: #60A5FA; opacity: 1; }
 
@@ -861,9 +861,9 @@ function sbSelectVersion(sn, file) {
 .sb-gf-btn.active { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.4); color: #818CF8; }
 .sb-gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
 .sb-gallery-loading { font-size: 10px; color: #52525B; text-align: center; padding: 16px 0; grid-column: 1/-1; }
-.sb-gallery-item { position: relative; cursor: grab; border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.07); aspect-ratio: 16/9; background: #000; }
+.sb-gallery-item { position: relative; cursor: grab; border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.07); aspect-ratio: 16/9; background: #111; display: flex; align-items: center; justify-content: center; }
 .sb-gallery-item.selected { border-color: rgba(99,102,241,0.6); box-shadow: 0 0 0 1px rgba(99,102,241,0.4); }
-.sb-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.sb-gallery-item img { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; }
 .sb-gallery-item-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); font-size: 8px; color: #A1A1AA; text-align: center; padding: 1px 0; }
 .sb-gallery-item:active { cursor: grabbing; }
 .sb-preview.drop-hover { outline: 2px solid #818CF8; outline-offset: -2px; }
