@@ -173,7 +173,7 @@ export interface ComponentVariants {
   logoBadge: "circle" | "rounded-square" | "square";
   rankBadge: "circle" | "shield" | "square";
   card: "bordered" | "filled" | "glass" | "minimal";
-  metricCard: "bordered" | "filled" | "glass";
+  metricCard: "bordered" | "filled" | "glass" | "stroke_white";
   comparisonCell: "bordered" | "filled" | "accent-top" | "none";
   itemsList: "default" | "accent-filled";
   itemsGrid: "default" | "accent-filled";

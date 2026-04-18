@@ -214,8 +214,12 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const sceneLayout = scene.layout || scene.sceneType || "";
   const isPersonCard = sceneLayout === "person_card";
   // person_card 레이아웃은 이미지를 카드 내부에서 소비 — 배경으로 쓰지 않음
-  const sceneImage = (!isPersonCard && (scene.imagePath || scene.vizBackgroundPath)) || "";
+  // imageAsset.source === "none" 이면 이미지 없음 처리 (imagePath가 남아있어도 무시)
+  const isImageSourceNone = (scene.imageAsset as any)?.source === "none";
+  const sceneImage = (!isPersonCard && !isImageSourceNone && (scene.imagePath || scene.vizBackgroundPath)) || "";
   const hasSceneImage = !!sceneImage;
+  // source:none이면 defaultBg도 사용하지 않음
+  const effectiveDefaultBg = isImageSourceNone ? "" : (defaultBg || "");
   // videoAsset 읽기
   const videoPath = scene.videoPath || "";
   const videoAssetCfg = scene.videoAsset as {
@@ -231,7 +235,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const videoStartSec = videoAssetCfg?.startSec ?? 0;
   const videoEndSec = videoAssetCfg?.endSec;
   const videoVolume = videoAssetCfg?.volume ?? 0;
-  const hasAnyImage = hasSceneImage || !!defaultBg;
+  const hasAnyImage = hasSceneImage || !!effectiveDefaultBg;
   const placement = scene.imageAsset?.placement ?? "background";
   // quote는 레거시 — build_manifest에서 quote_portrait로 정규화됨. 렌더러는 둘 다 동일 처리
   const isQuoteLayout = (
@@ -249,7 +253,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const imgOffsetY = scene.imageAsset?.offsetY ?? 50;
   const imgScale   = scene.imageAsset?.scale   ?? 1.0;
   const imgFit     = scene.imageAsset?.fit     ?? "contain";
-  const imgSrc = sceneImage || defaultBg || "";
+  const imgSrc = sceneImage || effectiveDefaultBg || "";
 
   // ── 비디오 우선 — videoAsset이 있으면 placement 분기 전에 먼저 처리 ──
   if (hasVideo) {
@@ -316,7 +320,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
       : vizData;
     return (
       <AbsoluteFill style={{ fontFamily }}>
-        <SideLayout src={hasSceneImage ? imgSrc : ""} placement={placement} opacity={imgOpacity} defaultBg={defaultBg} mood={scene.mood || vizData?.mood} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale}>
+        <SideLayout src={hasSceneImage ? imgSrc : ""} placement={placement} opacity={imgOpacity} defaultBg={effectiveDefaultBg} mood={scene.mood || vizData?.mood} offsetX={imgOffsetX} offsetY={imgOffsetY} scale={imgScale}>
           <CreativeScene
             data={sideVizData}
             subtitles={scene.subtitles}

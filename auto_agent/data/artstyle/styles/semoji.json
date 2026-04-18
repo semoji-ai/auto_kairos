@@ -162,7 +162,7 @@
       "itemsList": "accent-filled",
       "itemsGrid": "accent-filled",
       "comparisonCell": "none",
-      "metricCard": "minimal"
+      "metricCard": "stroke_white"
     },
     "chartagent": {
       "theme_set": "gallery_infographic",

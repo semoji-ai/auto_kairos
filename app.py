@@ -1173,9 +1173,19 @@ async def image_versions(slug: str, scene_num: int):
         for v in scene_data.get("versions", []):
             if v.get("file"):
                 v["url"] = f"/output/{dir_name}/images/{v['file']}"
+        # imageAsset.source = "none" 여부 확인
+        specs = load_project_json(out_dir, "scene_specs.json")
+        is_none = False
+        if specs:
+            for s in specs.get("scenes", []):
+                if s.get("sceneNumber") == scene_num:
+                    ia = s.get("imageAsset") or {}
+                    is_none = ia.get("source") == "none"
+                    break
+        scene_data["is_none"] = is_none
         return JSONResponse(scene_data)
     except Exception:
-        return JSONResponse({"sceneNumber": scene_num, "selected": None, "versions": []})
+        return JSONResponse({"sceneNumber": scene_num, "selected": None, "versions": [], "is_none": False})
 
 
 @app.post("/api/p/{slug}/tts/regenerate/{scene_num}")

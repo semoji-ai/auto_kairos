@@ -264,9 +264,13 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             specs_fps = specs.get("meta", {}).get("fps", 30)
             audio_duration = scene["durationFrames"] / specs_fps
 
-        # Image — image_assets.json selected 우선 → 루트 → generated/ 순 탐색
+        # Image — imageAsset.source == "none" 이면 이미지 없음 (탐색 스킵)
+        _ia_source = (scene.get("imageAsset") or {}).get("source", "")
         image_path = ""
-        selected_file = image_assets_lookup.get(num)
+        if _ia_source == "none":
+            pass  # 이미지 없음 — image_path 빈 문자열 유지
+        # Image — image_assets.json selected 우선 → 루트 → generated/ 순 탐색
+        selected_file = image_assets_lookup.get(num) if _ia_source != "none" else None
         if selected_file:
             # 절대경로가 들어온 경우 → 상대 파일명만 추출
             selected_file = selected_file.replace("\\", "/")
@@ -276,7 +280,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             img_src = out_dir / "images" / selected_file
             if img_src.exists():
                 image_path = link_asset(img_src, "images", selected_file)
-        if not image_path:
+        if not image_path and _ia_source != "none":
             for subdir in ("", "generated/"):
                 if image_path:
                     break
@@ -349,7 +353,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             }
 
         # Ken Burns
-        has_image = bool(image_path) or bool(scene.get("imageAsset"))
+        has_image = bool(image_path) and _ia_source != "none"
         ken_burns = {
             "enabled": has_image,
             "zoomFactor": 1.08 if has_image else 1.0,
@@ -441,27 +445,31 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
 
         if scene.get("imageAsset"):
             ia = scene["imageAsset"]
-            # cinematic/quote 레이아웃은 무조건 opacity 1
-            layout = scene_layout or viz.get("creative", {}).get("layout", "")
-            _is_quote = layout in ("quote", "quote_portrait")
-            if layout == "cinematic":
-                entry["imageAsset"] = {"placement": "fullscreen", "opacity": 1.0}
+            # source: "none" — 이미지 없음 플래그를 매니페스트에 전달
+            if ia.get("source") == "none":
+                entry["imageAsset"] = {"placement": ia.get("placement", "background"), "opacity": ia.get("opacity", 1.0), "source": "none"}
             else:
-                p = ia.get("placement", "background")
-                # quote/quote_portrait는 배경 이미지 항상 100%
-                opacity = 1.0 if _is_quote else ia.get("opacity", 1.0)
-                image_asset: dict = {
-                    "placement": p,
-                    "opacity": opacity,
-                }
-                if ia.get("offsetX") is not None:
-                    image_asset["offsetX"] = ia["offsetX"]
-                if ia.get("offsetY") is not None:
-                    image_asset["offsetY"] = ia["offsetY"]
-                if ia.get("scale") is not None:
-                    image_asset["scale"] = ia["scale"]
-                # chartagent SVG 차트: source + chartSvgPath 주입
-                entry["imageAsset"] = image_asset
+                # cinematic/quote 레이아웃은 무조건 opacity 1
+                layout = scene_layout or viz.get("creative", {}).get("layout", "")
+                _is_quote = layout in ("quote", "quote_portrait")
+                if layout == "cinematic":
+                    entry["imageAsset"] = {"placement": "fullscreen", "opacity": 1.0}
+                else:
+                    p = ia.get("placement", "background")
+                    # quote/quote_portrait는 배경 이미지 항상 100%
+                    opacity = 1.0 if _is_quote else ia.get("opacity", 1.0)
+                    image_asset: dict = {
+                        "placement": p,
+                        "opacity": opacity,
+                    }
+                    if ia.get("offsetX") is not None:
+                        image_asset["offsetX"] = ia["offsetX"]
+                    if ia.get("offsetY") is not None:
+                        image_asset["offsetY"] = ia["offsetY"]
+                    if ia.get("scale") is not None:
+                        image_asset["scale"] = ia["scale"]
+                    # chartagent SVG 차트: source + chartSvgPath 주입
+                    entry["imageAsset"] = image_asset
             # 검색 이미지 출처
             if ia.get("source_url"):
                 entry["imageSource"] = {

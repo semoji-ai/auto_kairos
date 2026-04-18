@@ -731,7 +731,16 @@ function sbLoadImageGrid(sn) {
   ]).then(function(results) {
     var versions = results[0].versions || [];
     var candidates = results[1].candidates || [];
+    var isNoneSelected = results[0].is_none || false;
     var html = '';
+    // 이미지 없음 카드 (항상 첫 번째)
+    html += '<div class="sb-grid-thumb none-card' + (isNoneSelected ? ' selected' : '') + '" '
+      + 'onclick="sbSetNone(' + sn + ')" '
+      + 'title="이미지 없음 (source: none)" '
+      + 'style="background:rgba(239,68,68,0.10);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">'
+      + '<span style="font-size:14px">🚫</span>'
+      + '<span style="font-size:8px;color:' + (isNoneSelected ? '#EF4444' : '#71717A') + '">없음' + (isNoneSelected ? ' ✓' : '') + '</span>'
+      + '</div>';
     // 로컬 이미지 (다운로드 완료)
     versions.forEach(function(v) {
       var isSel = v.selected || false;
@@ -758,6 +767,23 @@ function sbLoadImageGrid(sn) {
     });
     grid.innerHTML = html || '';
   }).catch(function() {});
+}
+
+function sbSetNone(sn) {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/select-image', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({image_url: ''})
+  }).then(function(r) { return r.json(); }).then(function(res) {
+    if (res.ok || res.selected !== undefined) {
+      // 캐시 무효화
+      if (window._sceneCache) window._sceneCache[sn] = null;
+      sbLoadImageGrid(sn);
+      var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
+      if (mount) { mount.dataset.refresh = '1'; tryMount(mount); }
+      fetch('/api/p/' + encodeURIComponent(slug) + '/rebuild-manifest', { method: 'POST' }).catch(function(){});
+      if (window._manifestCache) window._manifestCache = null;
+    }
+  }).catch(function(){});
 }
 
 function sbLoadVersions(sn) {

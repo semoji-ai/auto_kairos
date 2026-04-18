@@ -949,8 +949,10 @@ export const MetricCard: React.FC<{
     filled: { backgroundColor: "rgba(0,0,0,0.4)", border: `2px solid ${C.accent}BB` },
     glass: { backgroundColor: "rgba(0,0,0,0.4)", border: `2px solid ${C.accent}BB`, backdropFilter: "blur(10px)" },
     minimal: { backgroundColor: "transparent", border: "none", padding: "12px 0" },
+    stroke_white: { backgroundColor: "transparent", border: "none" },
   };
   const ms = metricStyles[V.metricCard] || metricStyles.bordered;
+  const isStrokeWhite = V.metricCard === "stroke_white";
   const trendColor = trend === "up" ? C.positive : trend === "down" ? C.negative : C.textMuted;
   const trendArrow = trend === "up" ? "↑" : trend === "down" ? "↓" : "";
   return (
@@ -959,7 +961,11 @@ export const MetricCard: React.FC<{
       borderRadius: 12, padding: "24px 32px", minWidth: 180, textAlign: "center", ...ms, ...style,
     }}>
       <div style={{ fontSize: 40, color: C.textMuted, marginBottom: 10 }}><TextWithBreaks text={label} /></div>
-      <div style={{ fontSize: 100, fontWeight: 800, color: C.accent, lineHeight: 1.05 }}><TextWithBreaks text={value} /></div>
+      <div style={{
+        fontSize: 100, fontWeight: 800, lineHeight: 1.05,
+        color: isStrokeWhite ? "#ffffff" : C.accent,
+        ...(isStrokeWhite ? { WebkitTextStroke: `10px ${C.accent}`, paintOrder: "stroke fill" } : {}),
+      }}><TextWithBreaks text={value} /></div>
       {change && (
         <div style={{ fontSize: 28, color: trendColor, marginTop: 10, fontWeight: 600 }}>
           {trendArrow} {change}
