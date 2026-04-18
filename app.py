@@ -1778,6 +1778,52 @@ async def thumbnail_canvas_state_save(request: Request, slug: str):
     return JSONResponse({"ok": True})
 
 
+@app.get("/api/p/{slug}/images/all")
+async def images_all(slug: str):
+    """프로젝트의 모든 씬 이미지(selected 포함 전체 버전) 반환 — 갤러리 패널용."""
+    from auto_agent.tools.image_assets import get_scene_versions
+    pm = get_pm()
+    project = pm.get_project(slug=slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, 404)
+    out_dir = project.get("output_dir", "")
+    dir_name = Path(out_dir).name if out_dir else slug
+    img_dir = Path(out_dir) / "images"
+    assets_path = img_dir / "image_assets.json"
+    if not assets_path.exists():
+        return JSONResponse({"images": []})
+    import json as _json
+    assets = _json.loads(assets_path.read_text(encoding="utf-8"))
+    result = []
+    for entry in assets.get("scenes", []):
+        sn = entry.get("sceneNumber")
+        raw_selected = entry.get("selected", "")
+        # selected 값은 "images/search/..." 형태일 수 있음 — 파일명 부분만 비교
+        def _basename(p): return p.split("/")[-1] if p else ""
+        sel_base = _basename(raw_selected)
+        # images 키 (현행 스키마) 또는 versions 키 (구 스키마)
+        img_list = entry.get("images") or entry.get("versions") or []
+        for v in img_list:
+            fname = v.get("file", "")
+            if not fname:
+                continue
+            # fname은 "search/scene_009_search_01.jpg" 형태일 수 있음
+            rel_path = fname  # 상대 경로 그대로 URL에 사용
+            fpath = img_dir / fname
+            if not fpath.exists():
+                continue
+            fname_base = _basename(fname)
+            is_selected = (fname == raw_selected or fname_base == sel_base) if raw_selected else False
+            result.append({
+                "sceneNumber": sn,
+                "file": fname,
+                "url": f"/output/{dir_name}/images/{rel_path}",
+                "selected": is_selected,
+                "source": v.get("type", v.get("source", "")),
+            })
+    return JSONResponse({"images": result})
+
+
 @app.get("/api/p/{slug}/images/history/{scene_num}")
 async def image_history(slug: str, scene_num: int):
     """씬의 이미지 생성 히스토리."""

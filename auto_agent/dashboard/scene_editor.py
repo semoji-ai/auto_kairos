@@ -276,17 +276,77 @@ def _load_specs(project: dict):
 
 @router.get("/scenes/{scene_num}/images")
 async def get_scene_images(slug: str, scene_num: int):
-    """씬의 이미지 후보 목록."""
+    """씬의 이미지 후보 목록 — image_assets.json 신 스키마 기준 (스토리보드와 동일).
+
+    스토리보드의 /api/p/{slug}/images/versions/{scene_num}과 같은 데이터 소스를 사용.
+    "이미지 없음" 특수 항목을 첫 번째로 포함.
+    """
     project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
-    from auto_agent.dashboard.helpers import get_scene_image_candidates
     _out_dir = project.get("output_dir", "")
     _dir_name = Path(_out_dir).name if _out_dir else project.get("slug", "")
-    candidates = get_scene_image_candidates(
-        _dir_name, scene_num, _out_dir
-    )
+    img_dir = Path(_out_dir) / "images"
+
+    # "이미지 없음" 항목은 항상 첫 번째
+    candidates = [
+        {
+            "id": "__none__",
+            "url": "",
+            "file_name": "",
+            "type": "none",
+            "selected": False,
+        }
+    ]
+
+    # image_assets.json 신 스키마 로드
+    assets_path = img_dir / "image_assets.json"
+    if assets_path.exists():
+        try:
+            assets = json.loads(assets_path.read_text(encoding="utf-8"))
+            raw_selected = ""
+            for entry in assets.get("scenes", []):
+                if entry.get("sceneNumber") != scene_num:
+                    continue
+                raw_selected = entry.get("selected", "")
+                for v in entry.get("images") or entry.get("versions") or []:
+                    fname = v.get("file", "")
+                    if not fname:
+                        continue
+                    fpath = img_dir / fname
+                    if not fpath.exists():
+                        continue
+                    src_type = v.get("type") or v.get("source") or "unknown"
+                    # ImageSelector type 필드에 맞게 정규화
+                    type_map = {"search": "search", "wikimedia": "search", "generate": "generated", "generated": "generated"}
+                    candidates.append({
+                        "id": fname,
+                        "url": f"/output/{_dir_name}/images/{fname}",
+                        "file_name": fname.split("/")[-1],
+                        "type": type_map.get(src_type, src_type),
+                        "selected": False,
+                    })
+            # selected 표시
+            if raw_selected:
+                sel_base = raw_selected.split("/")[-1]
+                for c in candidates:
+                    if c["id"] == raw_selected or (c["file_name"] and c["file_name"] == sel_base):
+                        c["selected"] = True
+                        break
+            # 선택된 항목이 없으면 source: none 체크
+            if not any(c["selected"] for c in candidates[1:]):
+                # scene_specs에서 source가 none인지 확인
+                specs_path = Path(_out_dir) / "scene_specs.json"
+                if specs_path.exists():
+                    specs = json.loads(specs_path.read_text(encoding="utf-8"))
+                    for s in specs.get("scenes", []):
+                        if s.get("sceneNumber") == scene_num:
+                            if (s.get("imageAsset") or {}).get("source") == "none":
+                                candidates[0]["selected"] = True
+                            break
+        except Exception as e:
+            print(f"[WARN] editor images load error: {e}")
 
     return JSONResponse(
         {"scene_number": scene_num, "candidates": candidates},
@@ -296,41 +356,76 @@ async def get_scene_images(slug: str, scene_num: int):
 
 @router.post("/scenes/{scene_num}/select-image")
 async def select_scene_image(slug: str, scene_num: int, request: Request):
-    """씬 이미지 선택 — scene_specs의 imagePath를 선택한 URL로 교체."""
+    """씬 이미지 선택 — scene_specs + image_assets.json 동기화.
+
+    image_url == "" → source:"none" 처리 (이미지 없음).
+    """
     project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
     body = await request.json()
-    image_url = body.get("image_url")
-    if not image_url:
-        return JSONResponse({"error": "image_url 필요"}, status_code=400)
+    image_url = body.get("image_url", "")
+    is_none = (image_url == "" or image_url is None)
 
     specs = _load_specs(project)
     if not specs:
         return JSONResponse({"error": "scene_specs.json 없음"}, status_code=404)
 
-    # 해당 씬 찾아서 imagePath 업데이트
+    out_dir = project["output_dir"]
+    img_dir = Path(out_dir) / "images"
+
+    # ── scene_specs 업데이트 ──
+    found = False
     for scene in specs.get("scenes", []):
         if scene["sceneNumber"] == scene_num:
-            scene["imagePath"] = image_url
-            # vizBackgroundPath도 업데이트 (시각화 씬인 경우)
-            if scene.get("visualization"):
-                scene["vizBackgroundPath"] = image_url
+            if is_none:
+                # 이미지 없음: imagePath 제거, imageAsset.source = "none"
+                scene.pop("imagePath", None)
+                scene.pop("vizBackgroundPath", None)
+                ia = scene.get("imageAsset") or {}
+                ia["source"] = "none"
+                scene["imageAsset"] = ia
+            else:
+                scene["imagePath"] = image_url
+                if scene.get("visualization"):
+                    scene["vizBackgroundPath"] = image_url
+                # imageAsset.source가 none이었다면 복원
+                ia = scene.get("imageAsset") or {}
+                if ia.get("source") == "none":
+                    ia.pop("source", None)
+                    scene["imageAsset"] = ia
+            found = True
             break
-    else:
+
+    if not found:
         return JSONResponse({"error": f"씬 {scene_num} 없음"}, status_code=404)
 
-    # 저장
-    specs_path = Path(project["output_dir"]) / "scene_specs.json"
-    specs_path.write_text(
-        json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    specs_path = Path(out_dir) / "scene_specs.json"
+    specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # 매니페스트 리빌드 (이미지 변경 즉시 반영)
+    # ── image_assets.json selected 동기화 ──
+    assets_path = img_dir / "image_assets.json"
+    if assets_path.exists() and not is_none:
+        try:
+            assets = json.loads(assets_path.read_text(encoding="utf-8"))
+            # URL에서 파일 상대 경로 추출 (/output/{dir}/images/search/... → search/...)
+            dir_name = Path(out_dir).name
+            prefix = f"/output/{dir_name}/images/"
+            rel_path = image_url[len(prefix):] if image_url.startswith(prefix) else ""
+            if rel_path:
+                for entry in assets.get("scenes", []):
+                    if entry.get("sceneNumber") == scene_num:
+                        entry["selected"] = rel_path
+                        break
+                assets_path.write_text(json.dumps(assets, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception as e:
+            print(f"[WARN] image_assets sync failed: {e}")
+
+    # 매니페스트 리빌드
     _rebuild_manifest_sync(project)
 
-    return {"ok": True, "image_url": image_url}
+    return {"ok": True, "image_url": image_url, "is_none": is_none}
 
 
 @router.get("/scene-list")

@@ -173,11 +173,34 @@
   {% endfor %}
 </div>
 
+</div><!-- /sb-main-content -->
+<!-- 이미지 갤러리 패널 (접었다 펼쳤다) -->
+<div id="sb-gallery-panel" class="sb-gallery-panel collapsed">
+  <button class="sb-gallery-toggle" onclick="toggleGalleryPanel()" title="이미지 갤러리">
+    <span class="sb-gallery-toggle-icon">◀</span>
+  </button>
+  <div class="sb-gallery-inner">
+    <div class="sb-gallery-header">
+      <span class="sb-gallery-title">🖼 이미지 갤러리</span>
+      <button class="sb-gallery-reload" onclick="loadGallery()" title="새로고침">↺</button>
+    </div>
+    <div class="sb-gallery-filter">
+      <button class="sb-gf-btn active" data-filter="all" onclick="filterGallery('all',this)">전체</button>
+      <button class="sb-gf-btn" data-filter="selected" onclick="filterGallery('selected',this)">선택됨</button>
+      <button class="sb-gf-btn" data-filter="unselected" onclick="filterGallery('unselected',this)">미선택</button>
+    </div>
+    <div id="sb-gallery-grid" class="sb-gallery-grid">
+      <div class="sb-gallery-loading">로딩 중...</div>
+    </div>
+  </div>
+</div>
+</div><!-- .sb-main-layout end -->
+
 <!-- 씬 상세 슬라이드 패널 -->
 <div id="scene-detail-overlay" class="scene-overlay" onclick="closeSceneDetail()">
-  <div class="scene-detail-panel" onclick="event.stopPropagation()">
-    <button class="close-btn" onclick="closeSceneDetail()">&times;</button>
-    <div id="scene-detail-content">Loading...</div>
+  <div class="scene-detail-panel" onclick="event.stopPropagation()" style="position:relative;display:flex;flex-direction:column">
+    <button class="close-btn" onclick="closeSceneDetail()" style="position:absolute;top:10px;right:12px;z-index:10">&times;</button>
+    <div id="scene-detail-content" style="flex:1;height:100%;overflow:hidden">Loading...</div>
   </div>
 </div>
 
@@ -397,70 +420,43 @@ function resizePreview(val) {
     content.innerHTML = '<div class="empty">Loading...</div>';
     overlay.classList.add('open');
 
-    Promise.all([
-      fetchMeta(),
-      fetchScene(sceneNum),
-      fetch('/api/p/' + encodeURIComponent(slug) + '/scenes').then(function(r) { return r.json(); }).catch(function() { return {}; })
-    ]).then(function(results) {
-      var meta = results[0];
-      var mScene = results[1];
-      var scenesData = (results[2].scenes || []);
-      var sScene = null;
-      for (var j = 0; j < scenesData.length; j++) {
-        if (scenesData[j].sceneNumber === sceneNum) { sScene = scenesData[j]; break; }
-      }
-      if (!mScene && !sScene) { content.innerHTML = '<div class="empty">씬을 찾을 수 없습니다</div>'; return; }
+    // 씬에디터 마운트: manifest 씬 데이터 + meta 로드 후 SceneEditorPanel 렌더
+    Promise.all([fetchMeta(), fetchScene(sceneNum)])
+      .then(function(results) {
+        var meta = results[0];
+        var mScene = results[1];
+        if (!mScene) { content.innerHTML = '<div class="empty">씬을 찾을 수 없습니다</div>'; return; }
 
-      var narration = sScene ? (sScene.narration || '') : '';
-      var title = sScene ? (sScene.title || '') : (mScene ? '' : '');
-      var chapter = sScene ? (sScene.chapter || '') : '';
-      var layout = sScene ? (sScene.layout || '') : '';
-      var mood = sScene ? (sScene.mood || '') : '';
-      var motion = sScene ? (sScene.motion || '') : '';
-      var audioUrl = (mScene && mScene.audioPath) || (sScene && sScene._audio_url) || '';
+        // 씬에디터 마운트 영역
+        content.innerHTML = '<div id="sb-detail-editor-root" style="height:100%;min-height:400px"></div>';
+        var editorRoot = document.getElementById('sb-detail-editor-root');
 
-      var html = '<div class="scene-detail">';
-      html += '<div class="scene-detail-header">';
-      html += '<h2>Scene ' + sceneNum + (title ? ' \u2014 ' + title : '') + '</h2>';
-      if (chapter) html += '<span class="ch-tag">Ch' + chapter + '</span>';
-      html += '</div>';
+        // scene-editor.js의 mountSceneEditor 활용
+        if (window.mountSceneEditor) {
+          window.__SCENE_EDITOR_DATA__ = { scene: mScene, meta: meta, slug: slug };
+          window.mountSceneEditor(editorRoot);
 
-      // Remotion Player 마운트 영역 (스토리보드 카드와 동일 렌더링)
-      html += '<div id="detail-player-mount" style="width:100%;aspect-ratio:16/9;background:#111;border-radius:8px;overflow:hidden;margin:12px 0"></div>';
-
-      // 레이아웃 셀렉터 + 메타 태그
-      var layoutOptions = ['cinematic','items_grid','items_list','counter','bar','pie','line','flow','timeline','hero_with_context','quote_portrait','metric_spotlight','rank_list','before_after','annotated_chart','headline_only','person_card','card_carousel','bar_horizontal','donut'];
-      html += '<div style="display:flex;align-items:center;gap:12px;margin:10px 0">';
-      html += '<label style="font-size:12px;color:#888;min-width:50px">Layout</label>';
-      html += '<select id="layout-select" onchange="updateSceneLayout(\'' + slug + '\',' + sceneNum + ',this.value)" style="padding:4px 8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:#fff;font-size:12px">';
-      html += '<option value=""' + (!layout ? ' selected' : '') + '>auto</option>';
-      for (var li = 0; li < layoutOptions.length; li++) {
-        html += '<option value="' + layoutOptions[li] + '"' + (layout === layoutOptions[li] ? ' selected' : '') + '>' + layoutOptions[li] + '</option>';
-      }
-      html += '</select>';
-      if (motion) html += '<span class="viz-badge">\uD83C\uDFAC ' + motion + '</span>';
-      if (mood) html += '<span class="mood-badge">' + mood + '</span>';
-      html += '</div>';
-
-      // 나레이션 + 오디오
-      if (narration) {
-        html += '<div class="section"><h4>Narration</h4>';
-        html += '<div class="narration-full">' + narration.replace(/\n/g, '<br>') + '</div>';
-        if (audioUrl) html += '<div style="margin-top:8px"><audio controls preload="none" src="' + audioUrl + '"></audio></div>';
-        html += '</div>';
-      }
-
-      html += '</div>';
-      content.innerHTML = html;
-
-      // Remotion Player 마운트
-      var mountEl = document.getElementById('detail-player-mount');
-      if (mountEl && mScene && window.mountSceneThumb) {
-        window.mountSceneThumb(mountEl, mScene, meta);
-      }
-    }).catch(function() {
-      content.innerHTML = '<div class="empty">로드 실패</div>';
-    });
+          // 저장 완료 이벤트 → 스토리보드 썸네일 새로고침
+          document.addEventListener('scene-editor-saved', function onSaved(e) {
+            document.removeEventListener('scene-editor-saved', onSaved);
+            var sn = e.detail && e.detail.sceneNumber;
+            if (sn) {
+              setTimeout(function() {
+                if (window.clearManifestCache) window.clearManifestCache(sn);
+              }, 1500);
+            }
+          });
+        } else {
+          // fallback: scene-editor.js 미로드 시 기본 플레이어 표시
+          content.innerHTML =
+            '<div id="detail-player-mount" style="width:100%;aspect-ratio:16/9;background:#111;border-radius:8px;overflow:hidden"></div>';
+          var mountEl = document.getElementById('detail-player-mount');
+          if (mountEl && window.mountSceneThumb) {
+            window.mountSceneThumb(mountEl, mScene, meta);
+          }
+        }
+      })
+      .catch(function() { content.innerHTML = '<div class="empty">로드 실패</div>'; });
   };
 })();
 
@@ -847,10 +843,32 @@ function sbSelectVersion(sn, file) {
 .sb-design-body .design-editor { flex: 1; min-width: 0; }
 .sb-design-body .design-preview { flex: 1; min-width: 0; }
 .sb-design-body .design-preview iframe { height: 100%; min-height: 400px; }
+
+/* 이미지 갤러리 패널 — fixed 오버레이 방식 */
+.sb-gallery-panel { position: fixed; right: 0; top: 44px; height: calc(100vh - 44px); width: 210px; background: rgba(10,10,10,0.97); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: row; transition: width 0.2s; z-index: 90; box-shadow: -4px 0 20px rgba(0,0,0,0.5); }
+.sb-gallery-panel.collapsed { width: 28px; overflow: hidden; }
+.sb-gallery-toggle { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 28px; height: 48px; background: rgba(255,255,255,0.06); border: none; border-right: 1px solid rgba(255,255,255,0.1); color: #A1A1AA; cursor: pointer; padding: 0; z-index: 2; border-radius: 0 6px 6px 0; }
+.sb-gallery-toggle:hover { background: rgba(255,255,255,0.12); }
+.sb-gallery-toggle-icon { font-size: 10px; }
+.sb-gallery-inner { flex: 1; padding: 8px 6px 8px 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.sb-gallery-panel.collapsed .sb-gallery-inner { display: none; }
+.sb-gallery-header { display: flex; align-items: center; justify-content: space-between; }
+.sb-gallery-title { font-size: 11px; font-weight: 600; color: #E4E4E7; }
+.sb-gallery-reload { background: none; border: none; color: #71717A; cursor: pointer; font-size: 14px; padding: 0 2px; }
+.sb-gallery-reload:hover { color: #A1A1AA; }
+.sb-gallery-filter { display: flex; gap: 3px; flex-wrap: wrap; }
+.sb-gf-btn { font-size: 9px; padding: 2px 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px; color: #71717A; cursor: pointer; }
+.sb-gf-btn.active { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.4); color: #818CF8; }
+.sb-gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.sb-gallery-loading { font-size: 10px; color: #52525B; text-align: center; padding: 16px 0; grid-column: 1/-1; }
+.sb-gallery-item { position: relative; cursor: grab; border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.07); aspect-ratio: 16/9; background: #000; }
+.sb-gallery-item.selected { border-color: rgba(99,102,241,0.6); box-shadow: 0 0 0 1px rgba(99,102,241,0.4); }
+.sb-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.sb-gallery-item-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); font-size: 8px; color: #A1A1AA; text-align: center; padding: 1px 0; }
+.sb-gallery-item:active { cursor: grabbing; }
+.sb-preview.drop-hover { outline: 2px solid #818CF8; outline-offset: -2px; }
 </style>
 
-
-</div><!-- /sb-main-content -->
 
 <!-- 디자인 패널 (오른쪽 접이식) -->
 <div class="sb-design-panel" id="sb-design-panel" style="display:none">
@@ -862,8 +880,6 @@ function sbSelectVersion(sn, file) {
     {% include "partials/_design.html" %}
   </div>
 </div>
-
-</div><!-- /sb-main-layout -->
 
 <script>
 function updateSceneLayout(slug, sceneNum, layout) {
@@ -894,6 +910,146 @@ function updateSceneLayout(slug, sceneNum, layout) {
     }
   }).catch(function(e) { console.error('layout update failed:', e); });
 }
+</script>
+
+<!-- 갤러리 패널 JS -->
+<script>
+(function() {
+  var slug = '{{ slug }}';
+  var galleryData = [];
+  var currentFilter = 'all';
+  var panelOpen = false;
+
+  function toggleGalleryPanel() {
+    panelOpen = !panelOpen;
+    var panel = document.getElementById('sb-gallery-panel');
+    var icon = panel.querySelector('.sb-gallery-toggle-icon');
+    if (panelOpen) {
+      panel.classList.remove('collapsed');
+      icon.textContent = '▶';
+      if (!galleryData.length) loadGallery();
+    } else {
+      panel.classList.add('collapsed');
+      icon.textContent = '◀';
+    }
+  }
+  window.toggleGalleryPanel = toggleGalleryPanel;
+
+  function loadGallery() {
+    var grid = document.getElementById('sb-gallery-grid');
+    grid.innerHTML = '<div class="sb-gallery-loading">로딩 중...</div>';
+    fetch('/api/p/' + encodeURIComponent(slug) + '/images/all')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        galleryData = d.images || [];
+        renderGallery();
+      })
+      .catch(function(e) {
+        grid.innerHTML = '<div class="sb-gallery-loading" style="color:#f87171">로드 실패</div>';
+      });
+  }
+  window.loadGallery = loadGallery;
+
+  function filterGallery(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.sb-gf-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderGallery();
+  }
+  window.filterGallery = filterGallery;
+
+  function renderGallery() {
+    var grid = document.getElementById('sb-gallery-grid');
+    var filtered = galleryData.filter(function(img) {
+      if (currentFilter === 'selected') return img.selected;
+      if (currentFilter === 'unselected') return !img.selected;
+      return true;
+    });
+    if (!filtered.length) {
+      grid.innerHTML = '<div class="sb-gallery-loading">이미지 없음</div>';
+      return;
+    }
+    var html = filtered.map(function(img) {
+      return '<div class="sb-gallery-item' + (img.selected ? ' selected' : '') + '"'
+        + ' draggable="true"'
+        + ' data-url="' + img.url + '"'
+        + ' data-file="' + img.file + '"'
+        + ' data-scene="' + img.sceneNumber + '"'
+        + ' title="Scene ' + img.sceneNumber + ' | ' + img.file + '"'
+        + ' ondragstart="galleryDragStart(event)">'
+        + '<img src="' + img.url + '" loading="lazy">'
+        + '<div class="sb-gallery-item-label">S' + img.sceneNumber + (img.selected ? ' ✓' : '') + '</div>'
+        + '</div>';
+    }).join('');
+    grid.innerHTML = html;
+  }
+
+  function galleryDragStart(e) {
+    var item = e.currentTarget;
+    e.dataTransfer.setData('application/x-gallery-url', item.dataset.url);
+    e.dataTransfer.setData('application/x-gallery-file', item.dataset.file);
+    e.dataTransfer.setData('application/x-gallery-src-scene', item.dataset.scene);
+    e.dataTransfer.effectAllowed = 'copy';
+  }
+  window.galleryDragStart = galleryDragStart;
+
+  // 씬 카드에 드롭 존 추가
+  document.addEventListener('DOMContentLoaded', function() {
+    setupDropZones();
+  });
+  // 이미 로드됐을 경우
+  if (document.readyState !== 'loading') {
+    setTimeout(setupDropZones, 500);
+  }
+
+  function setupDropZones() {
+    document.querySelectorAll('.sb-preview').forEach(function(preview) {
+      var card = preview.closest('.sb-card');
+      if (!card) return;
+      var sceneNum = parseInt(preview.querySelector('.sb-player-mount').dataset.sceneNum, 10);
+
+      preview.addEventListener('dragover', function(e) {
+        if (e.dataTransfer.types.includes('application/x-gallery-url')) {
+          e.preventDefault();
+          preview.classList.add('drop-hover');
+        }
+      });
+      preview.addEventListener('dragleave', function() {
+        preview.classList.remove('drop-hover');
+      });
+      preview.addEventListener('drop', function(e) {
+        e.preventDefault();
+        preview.classList.remove('drop-hover');
+        var url = e.dataTransfer.getData('application/x-gallery-url');
+        var file = e.dataTransfer.getData('application/x-gallery-file');
+        if (!url) return;
+        applyGalleryImageToScene(sceneNum, url, file);
+      });
+    });
+  }
+
+  function applyGalleryImageToScene(sceneNum, url, file) {
+    // 해당 씬의 이미지로 선택 적용
+    fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sceneNum, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url, file: file }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok || d.file) {
+        // 썸네일 새로고침
+        if (window.clearManifestCache) window.clearManifestCache(sceneNum);
+        // 갤러리 데이터 새로고침
+        loadGallery();
+        // 씬 그리드도 새로고침
+        if (window.sbRefreshGrid) window.sbRefreshGrid(sceneNum);
+      }
+    })
+    .catch(function(e) { console.error('갤러리 드롭 실패:', e); });
+  }
+  window.applyGalleryImageToScene = applyGalleryImageToScene;
+})();
 </script>
 
 {% else %}
