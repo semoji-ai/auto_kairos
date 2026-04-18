@@ -98,6 +98,10 @@ def build_preset_obj(dt: dict, style_id: str) -> dict:
     if (qr := dt.get("quoteReveal")) is not None:
         preset["quoteReveal"] = qr
 
+    # headlineTypewriterTriggers
+    if (htt := dt.get("headlineTypewriterTriggers")) is not None:
+        preset["headlineTypewriterTriggers"] = htt
+
     # defaultItemEntrance
     if (die := dt.get("defaultItemEntrance")) is not None:
         preset["defaultItemEntrance"] = die

@@ -213,6 +213,7 @@ export interface DesignPreset {
   countUpThreshold?: number;  // 카운트업 애니메이션 최소값 (기본 100, 0이면 모든 숫자 적용)
   disableSpotlight?: boolean; // true면 spotlight reveal 오버레이 비활성화 (인용문 글로우 제거)
   quoteReveal?: "typewriter" | "fade";  // quote 레이아웃 기본 reveal 방식
+  headlineTypewriterTriggers?: string[];  // headline_only에서 타이핑 효과를 적용할 시작 단어 목록
   texture?: { src: string; blendMode?: string; opacity?: number; topLayer?: boolean };  // topLayer:true면 자막 위에 렌더
 
   colors: PresetColors;

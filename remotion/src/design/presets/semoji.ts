@@ -26,6 +26,12 @@ export const SEMOJI_PRESET: DesignPresetOverride = {
   disableIcons: true,
   disableSpotlight: true,
   quoteReveal: "typewriter",
+  headlineTypewriterTriggers: [
+    "그런데",
+    "그러나",
+    "하지만",
+    "한편",
+  ],
   defaultItemEntrance: "overshoot",
   countUpThreshold: 0,
   texture: {

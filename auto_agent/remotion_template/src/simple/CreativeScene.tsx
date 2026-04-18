@@ -3220,6 +3220,16 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   };
 
   const headlineClean = headline.replace(/\{\{|\}\}/g, "");
+
+  // headline_only에서 트리거 단어로 시작하면 reveal을 typewriter로 오버라이드
+  const _twTriggers: string[] = (preset as any).headlineTypewriterTriggers ?? [];
+  const _headlineFirst = headlineClean.trim();
+  const _isTwTriggered =
+    layout === "headline_only" &&
+    _twTriggers.length > 0 &&
+    _twTriggers.some((t) => _headlineFirst.startsWith(t));
+  const effectiveRevealForHeadline = _isTwTriggered ? "typewriter" : reveal;
+
   const quoteTitle = data.title || creative.title || "";
   const headlineHasBreak = headline.includes("\n") || headline.includes("\\n");
   const rawQuoteText = items[0] || data.quote || quoteTitle || "";
@@ -3621,7 +3631,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 key={i}
                 line={line}
                 delay={headlineDelays[i] || 0}
-                reveal={reveal}
+                reveal={effectiveRevealForHeadline}
                 emphasis={emphasis}
                 moodCfg={moodCfg}
                 countedValues={countedValues}
@@ -4180,7 +4190,7 @@ const LineReveal: React.FC<{
   } else if (entranceType === "fadeSlide") {
     opacity = fadeSlideAnim.opacity as number;
     transform = fadeSlideAnim.transform as string;
-  } else if (entranceType === "typewriter") {
+  } else if (entranceType === "typewriter" || reveal === "typewriter") {
     opacity = interpolate(frame, [delay, delay + 5], [0, 1], clamp);
     transform = "";
   } else if (reveal === "zoom_in") {
@@ -4243,6 +4253,15 @@ const LineReveal: React.FC<{
     }
   }
 
+  // typewriter: 라인 텍스트를 프레임에 따라 슬라이싱
+  const isTypewriterMode = entranceType === "typewriter" || reveal === "typewriter";
+  const plainLine = line.replace(/\{\{|\}\}/g, ""); // 강조 마커 제거한 순수 텍스트 길이 기준
+  const typeLen = Math.max(plainLine.length * 2, 1);
+  const visibleChars = isTypewriterMode
+    ? Math.floor(interpolate(frame, [delay + 5, delay + 5 + typeLen], [0, plainLine.length], clamp))
+    : plainLine.length;
+  const displayLine = isTypewriterMode ? line.slice(0, visibleChars) : line;
+
   const isChapterLabel = /^CHAPTER\s*\d/i.test(line.trim());
   const baseFontSize = isChapterLabel ? T.splitVsText : T.headlineBase;
   const showBadge = false; // 헤드라인에 숫자 뱃지 비활성 — 시퀀스 뱃지는 items에서만 표시
@@ -4277,7 +4296,7 @@ const LineReveal: React.FC<{
         />
       )}
       <EmphasisAccentText
-        text={line}
+        text={displayLine}
         emphasis={emphasis}
         moodCfg={moodCfg}
         countedValues={countedValues}
