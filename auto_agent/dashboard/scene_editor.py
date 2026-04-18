@@ -699,8 +699,14 @@ async def save_scene(slug: str, scene_num: int, request: Request):
     else:
         fix_log = []
 
-    # 저장
-    scenes[target_idx] = {**old_scene, **scene_data}
+    # 저장 — imageAsset은 deep merge (source:"none" 등 개별 필드 보존)
+    merged = {**old_scene, **scene_data}
+    old_ia = old_scene.get("imageAsset") or {}
+    new_ia = scene_data.get("imageAsset")
+    if new_ia is not None and old_ia:
+        # old_ia 기준으로 new_ia를 덮어씀 (old에만 있는 필드 보존)
+        merged["imageAsset"] = {**old_ia, **new_ia}
+    scenes[target_idx] = merged
     specs["scenes"] = scenes
 
     # 로컬 파일에 저장
