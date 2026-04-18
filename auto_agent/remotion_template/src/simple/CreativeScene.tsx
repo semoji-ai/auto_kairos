@@ -665,6 +665,7 @@ const EmphasisAccentText: React.FC<{
           fontFamily: valueFont,
           color: moodCfg.accent,
           lineHeight: 1.2,
+          fontVariantNumeric: "tabular-nums",
           textShadow: shouldCountUp
             ? `0 0 60px rgba(${moodCfg.accentRgb},${glowOpacity})`
             : undefined,
@@ -706,6 +707,7 @@ const EmphasisAccentText: React.FC<{
                 lineHeight: 1.2,
                 verticalAlign: "baseline",
                 margin: accentMargin,
+                fontVariantNumeric: "tabular-nums",
                 textShadow: shouldCountUp
                   ? `0 0 60px rgba(${moodCfg.accentRgb},${glowOpacity})`
                   : undefined,

@@ -964,6 +964,7 @@ export const MetricCard: React.FC<{
       <div style={{
         fontSize: 100, fontWeight: 800, lineHeight: 1.05,
         color: isStrokeWhite ? "#ffffff" : C.accent,
+        fontVariantNumeric: "tabular-nums",
         ...(isStrokeWhite ? { WebkitTextStroke: `10px ${C.accent}`, paintOrder: "stroke fill" } : {}),
       }}><TextWithBreaks text={value} /></div>
       {change && (
