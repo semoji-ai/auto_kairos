@@ -16,7 +16,7 @@ import {
 } from "remotion";
 import { CanvasScene } from "./simple/CanvasScene";
 import { MapSceneRenderer } from "./map/MapSceneRenderer";
-import { SceneRendererInner } from "./components/SceneRenderer";
+import { SceneRendererInner, TextureOverlay } from "./components/SceneRenderer";
 import { SubtitleOverlay } from "./components/SubtitleOverlay";
 import { DesignPresetProvider, useDesignPreset } from "./design";
 import { buildFontFamily } from "./design/fonts";
@@ -109,6 +109,11 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
             {subtitleConfig.visible !== false && scene.subtitles?.length > 0 && (
               <SubtitleOverlay subtitles={scene.subtitles} fps={fps} config={subtitleConfig} />
             )}
+            {/* topLayer 텍스처 — 자막 위에 렌더 (preset.texture.topLayer:true 시) */}
+            {(() => {
+              const tc = (preset as any).texture as { src: string; blendMode?: string; opacity?: number; topLayer?: boolean } | undefined;
+              return tc?.topLayer ? <TextureOverlay src={tc.src} blendMode={tc.blendMode} opacity={tc.opacity} /> : null;
+            })()}
             {scene.audioPath ? (
               <Audio src={resolveAsset(scene.audioPath)} />
             ) : null}

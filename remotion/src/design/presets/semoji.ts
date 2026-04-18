@@ -32,6 +32,7 @@ export const SEMOJI_PRESET: DesignPresetOverride = {
     src: "background/63517.jpg",
     blendMode: "multiply",
     opacity: 0.1,
+    topLayer: true,
   },
   fonts: {
     body: {
@@ -110,9 +111,9 @@ export const SEMOJI_PRESET: DesignPresetOverride = {
     strokeColor: "transparent",
     keywordColor: "#4A90D9",
     keywordStrokeColor: "transparent",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f0f0f0",
     borderRadius: 0,
-    boxShadow: "15px 15px 0px rgba(0,0,0,1)",
+    boxShadow: "5px 5px 0px rgba(0,0,0,1)",
     border: "2px solid #000000",
     bottomOffset: 110,
     maxWidth: "92%",

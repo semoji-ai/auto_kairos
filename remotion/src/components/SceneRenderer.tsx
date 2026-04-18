@@ -177,7 +177,7 @@ const CenterLayout: React.FC<{
 );
 
 /* ── 텍스처 오버레이 (최상위 레이어) ── */
-const TextureOverlay: React.FC<{ src: string; blendMode?: string; opacity?: number }> = ({
+export const TextureOverlay: React.FC<{ src: string; blendMode?: string; opacity?: number }> = ({
   src, blendMode = "multiply", opacity = 0.2,
 }) => (
   <AbsoluteFill style={{ pointerEvents: "none" }}>
@@ -210,7 +210,9 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const vizData = resolveVisualization(scene);
 
   const defaultBg = preset.defaultBackground;
-  const textureCfg = (preset as any).texture as { src: string; blendMode?: string; opacity?: number } | undefined;
+  const textureCfg = (preset as any).texture as { src: string; blendMode?: string; opacity?: number; topLayer?: boolean } | undefined;
+  // topLayer:true면 SimpleVideo 레벨에서 자막 위에 렌더 — SceneRenderer 내부에서는 스킵
+  const renderTextureHere = textureCfg && !textureCfg.topLayer;
   const sceneLayout = scene.layout || scene.sceneType || "";
   const isPersonCard = sceneLayout === "person_card";
   // person_card 레이아웃은 이미지를 카드 내부에서 소비 — 배경으로 쓰지 않음
@@ -273,7 +275,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
           hasImageBackground={true}
           imageAssetPlacement={placement}
         />
-        {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
+        {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
   }
@@ -290,7 +292,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
           hasImageBackground={true}
           imageAssetPlacement="fullscreen"
         />
-        {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
+        {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
   }
@@ -308,7 +310,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
             imageAssetPlacement="center"
           />
         </CenterLayout>
-        {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
+        {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
   }
@@ -329,7 +331,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
             imageAssetPlacement={placement}
           />
         </SideLayout>
-        {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
+        {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
   }
@@ -345,7 +347,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
         hasImageBackground={hasAnyImage}
         imageAssetPlacement={placement}
       />
-      {textureCfg && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
+      {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
     </AbsoluteFill>
   );
 };
