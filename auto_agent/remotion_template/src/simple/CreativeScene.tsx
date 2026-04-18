@@ -4260,7 +4260,8 @@ const LineReveal: React.FC<{
   const visibleChars = isTypewriterMode
     ? Math.floor(interpolate(frame, [delay + 5, delay + 5 + typeLen], [0, plainLine.length], clamp))
     : plainLine.length;
-  const displayLine = isTypewriterMode ? line.slice(0, visibleChars) : line;
+  // typewriter 모드에서는 마커({{...}}) 제거한 순수 텍스트를 슬라이싱 — 마커가 중간에 노출되는 문제 방지
+  const displayLine = isTypewriterMode ? plainLine.slice(0, visibleChars) : line;
 
   const isChapterLabel = /^CHAPTER\s*\d/i.test(line.trim());
   const baseFontSize = isChapterLabel ? T.splitVsText : T.headlineBase;
