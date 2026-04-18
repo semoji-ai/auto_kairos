@@ -569,47 +569,52 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
 
     # Manifest 조립
     topic = specs.get("topic", storage_key)
-    design_preset = specs.get("meta", {}).get("designPreset", None)
-    # art_style.json의 design_tokens (패키지 기본값 → 로컬 오버라이드 딥머지)
-    if not design_preset:
-        _PRESET_KEYS = ("baseTheme", "defaultBackground", "colors", "moods",
-                        "layout", "map", "subtitle", "fonts", "typography")
+    _meta_design_preset = specs.get("meta", {}).get("designPreset", None)
+    # art_style.json의 design_tokens를 기본값으로 로드하고,
+    # 로컬 오버라이드 → meta.designPreset 순으로 딥머지
+    _PRESET_KEYS = ("baseTheme", "defaultBackground", "defaultBgOpacity", "colors", "moods",
+                    "layout", "map", "subtitle", "fonts", "typography",
+                    "disableIcons", "disableSpotlight", "quoteReveal",
+                    "defaultItemEntrance", "countUpThreshold", "texture", "variants")
 
-        def _deep_merge(base: dict, override: dict) -> dict:
-            result = dict(base)
-            for k, v in override.items():
-                if isinstance(v, dict) and isinstance(result.get(k), dict):
-                    result[k] = _deep_merge(result[k], v)
-                else:
-                    result[k] = v
-            return result
+    def _deep_merge(base: dict, override: dict) -> dict:
+        result = dict(base)
+        for k, v in override.items():
+            if isinstance(v, dict) and isinstance(result.get(k), dict):
+                result[k] = _deep_merge(result[k], v)
+            else:
+                result[k] = v
+        return result
 
-        # 1) 패키지 기본값 로드
-        _pkg_dt = None
-        if art_style:
-            for _d in (out_dir / "artstyle" / "styles", workspace / "auto_agent" / "data" / "artstyle" / "styles"):
-                _p = _d / f"{art_style}.json"
-                if _p.exists():
-                    try:
-                        _pkg_dt = json.loads(_p.read_text(encoding="utf-8")).get("design_tokens")
-                    except Exception:
-                        pass
-                    break
+    # 1) 패키지 기본값 로드 (artstyle JSON)
+    _pkg_dt = None
+    if art_style:
+        for _d in (out_dir / "artstyle" / "styles", workspace / "auto_agent" / "data" / "artstyle" / "styles"):
+            _p = _d / f"{art_style}.json"
+            if _p.exists():
+                try:
+                    _pkg_dt = json.loads(_p.read_text(encoding="utf-8")).get("design_tokens")
+                except Exception:
+                    pass
+                break
 
-        # 2) 로컬 오버라이드 로드
-        _local_dt = None
-        _proj_ast = out_dir / "art_style.json"
-        if _proj_ast.exists():
-            try:
-                _local_dt = json.loads(_proj_ast.read_text(encoding="utf-8")).get("design_tokens")
-            except Exception:
-                pass
+    # 2) 로컬 오버라이드 로드
+    _local_dt = None
+    _proj_ast = out_dir / "art_style.json"
+    if _proj_ast.exists():
+        try:
+            _local_dt = json.loads(_proj_ast.read_text(encoding="utf-8")).get("design_tokens")
+        except Exception:
+            pass
 
-        # 3) 딥머지: 패키지 기본 → 로컬 오버라이드
-        _ast_dt = _deep_merge(_pkg_dt or {}, _local_dt or {}) or None
+    # 3) 딥머지: 패키지 기본 → 로컬 오버라이드 → meta.designPreset
+    _ast_dt = _deep_merge(_pkg_dt or {}, _local_dt or {}) or None
+    if _meta_design_preset:
+        _ast_dt = _deep_merge(_ast_dt or {}, _meta_design_preset)
 
-        if _ast_dt:
-            design_preset = {k: v for k, v in _ast_dt.items() if k in _PRESET_KEYS}
+    design_preset = None
+    if _ast_dt:
+        design_preset = {k: v for k, v in _ast_dt.items() if k in _PRESET_KEYS}
 
     # chartagent_style.json이 있으면 design_preset에 병합
     # (chartagent 스타일 명세서 → Remotion viz 컴포넌트에 자동 적용)
