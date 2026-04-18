@@ -717,8 +717,12 @@ async def save_scene(slug: str, scene_num: int, request: Request):
         )
 
     # 이미지/오디오/visualization 변경 시 매니페스트 리빌드
-    _MANIFEST_FIELDS = {"imagePath", "vizBackgroundPath", "imageAsset", "narration_tts", "visualization"}
-    if diff.keys() & _MANIFEST_FIELDS:
+    _MANIFEST_FIELDS = {"imagePath", "vizBackgroundPath", "imageAsset", "narration_tts", "visualization", "layout", "headline", "items"}
+    # imageAsset.source 변경도 감지 (이미지 없음 처리)
+    old_ia_source = (old_scene.get("imageAsset") or {}).get("source")
+    new_ia_source = (scene_data.get("imageAsset") or {}).get("source")
+    needs_rebuild = bool(diff.keys() & _MANIFEST_FIELDS) or (old_ia_source != new_ia_source)
+    if needs_rebuild:
         _rebuild_manifest_sync(project)
 
     return {

@@ -579,10 +579,15 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
           accent={ACCENT}
           forceExpanded={showImagePicker}
           onSelect={(url) => {
+            const isNone = url === "";
             setScene(prev => ({
               ...prev,
-              imagePath: url,
-              vizBackgroundPath: prev.visualization ? url : prev.vizBackgroundPath,
+              imagePath: isNone ? "" : url,
+              vizBackgroundPath: isNone ? "" : (prev.visualization ? url : prev.vizBackgroundPath),
+              imageAsset: {
+                ...(prev.imageAsset || { placement: "background", opacity: 0.4 }),
+                ...(isNone ? { source: "none" } : { source: prev.imageAsset?.source === "none" ? undefined : prev.imageAsset?.source }),
+              },
             }));
             setShowImagePicker(false);
           }}

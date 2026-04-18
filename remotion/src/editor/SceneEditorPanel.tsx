@@ -17,7 +17,7 @@ const LAYOUT_OPTIONS = [
   "quote", "split", "bar", "logo_grid", "pie", "line",
   "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
   "comparison_table", "before_after", "icon_stat", "stacked_progress",
-  "card_carousel", "annotated_chart",
+  "card_carousel", "hero_with_context", "annotated_chart",
 ] as const;
 
 const CHART_STYLE_OPTIONS = ["pie", "donut"] as const;
@@ -579,10 +579,15 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
           accent={ACCENT}
           forceExpanded={showImagePicker}
           onSelect={(url) => {
+            const isNone = url === "";
             setScene(prev => ({
               ...prev,
-              imagePath: url,
-              vizBackgroundPath: prev.visualization ? url : prev.vizBackgroundPath,
+              imagePath: isNone ? "" : url,
+              vizBackgroundPath: isNone ? "" : (prev.visualization ? url : prev.vizBackgroundPath),
+              imageAsset: {
+                ...(prev.imageAsset || { placement: "background", opacity: 0.4 }),
+                ...(isNone ? { source: "none" } : { source: prev.imageAsset?.source === "none" ? undefined : prev.imageAsset?.source }),
+              },
             }));
             setShowImagePicker(false);
           }}
@@ -612,33 +617,34 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
               />
             </div>
             <div>
-              <label style={labelStyle}>
-                Image Position &nbsp;
-                <span style={{ fontSize: 9, color: MUTED }}>
-                  X: {scene.imageAsset?.offsetX ?? 50} &nbsp; Y: {scene.imageAsset?.offsetY ?? 50}
-                </span>
-              </label>
-              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                <span style={{ fontSize: 9, color: MUTED, minWidth: 10 }}>X</span>
-                <input type="range" min={0} max={100} step={1}
-                  value={scene.imageAsset?.offsetX ?? 50}
-                  onChange={e => updateImageAsset({ offsetX: parseInt(e.target.value) })}
-                  style={{ flex: 1, accentColor: ACCENT, height: 14 }} />
-              </div>
-              <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 2 }}>
-                <span style={{ fontSize: 9, color: MUTED, minWidth: 10 }}>Y</span>
-                <input type="range" min={0} max={100} step={1}
-                  value={scene.imageAsset?.offsetY ?? 50}
-                  onChange={e => updateImageAsset({ offsetY: parseInt(e.target.value) })}
-                  style={{ flex: 1, accentColor: ACCENT, height: 14 }} />
-              </div>
+              <label style={labelStyle}>Image X ({scene.imageAsset?.offsetX ?? 50}%)</label>
+              <input
+                type="range"
+                min="0" max="100" step="1"
+                value={scene.imageAsset?.offsetX ?? 50}
+                onChange={e => updateImageAsset({ offsetX: parseFloat(e.target.value) })}
+                style={{ width: "100%", accentColor: ACCENT }}
+              />
             </div>
             <div>
-              <label style={labelStyle}>Image Scale ({((scene.imageAsset?.scale ?? 1.0) * 100).toFixed(0)}%)</label>
-              <input type="range" min={0.5} max={3.0} step={0.05}
-                value={scene.imageAsset?.scale ?? 1.0}
+              <label style={labelStyle}>Image Y ({scene.imageAsset?.offsetY ?? 50}%)</label>
+              <input
+                type="range"
+                min="0" max="100" step="1"
+                value={scene.imageAsset?.offsetY ?? 50}
+                onChange={e => updateImageAsset({ offsetY: parseFloat(e.target.value) })}
+                style={{ width: "100%", accentColor: ACCENT }}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Image Scale ({((scene.imageAsset?.scale ?? 1) * 100).toFixed(0)}%)</label>
+              <input
+                type="range"
+                min="0.5" max="2.0" step="0.05"
+                value={scene.imageAsset?.scale ?? 1}
                 onChange={e => updateImageAsset({ scale: parseFloat(e.target.value) })}
-                style={{ width: "100%", accentColor: ACCENT }} />
+                style={{ width: "100%", accentColor: ACCENT }}
+              />
             </div>
             <div>
               <label style={labelStyle}>Image Fit</label>
