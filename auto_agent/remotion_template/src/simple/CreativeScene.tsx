@@ -1457,6 +1457,8 @@ const ImagesGrid: React.FC<{
   const STAGGER = 8;
   const DURATION = 15;
 
+  if (images.length === 0) return null;
+
   const resolvedGridType = gridType || inferGridType(images.length);
   const isFeatured = resolvedGridType in FEATURED_TEMPLATES;
   const featured = isFeatured ? FEATURED_TEMPLATES[resolvedGridType] : null;
@@ -1484,10 +1486,11 @@ const ImagesGrid: React.FC<{
   }
 
   const AREA_NAMES = ["main", "sub1", "sub2", "sub3"];
+  const effectiveImages = featured ? images.slice(0, AREA_NAMES.length) : images;
 
   return (
     <div style={gridStyle}>
-      {images.map((src, i) => {
+      {effectiveImages.map((src, i) => {
         const d = delays[i] ?? i * STAGGER;
         const captionText = captions?.[i] ?? null;
         const captionDelay = d + DURATION + 5;
@@ -1532,8 +1535,8 @@ const ImagesGrid: React.FC<{
 
         return (
           <div key={i} style={cellStyle}>
-            <img
-              src={src}
+            <Img
+              src={resolveAsset(src)}
               style={{
                 width: "100%",
                 height: "100%",
