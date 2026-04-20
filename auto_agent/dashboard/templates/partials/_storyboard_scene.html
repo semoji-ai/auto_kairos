@@ -9,6 +9,7 @@
       <button class="scene-tab" data-tab="editor" onclick="switchSceneTab('editor',this)">편집</button>
       <button class="scene-tab" data-tab="info" onclick="switchSceneTab('info',this)">정보</button>
     </div>
+    <button class="btn btn-sm" onclick="openSplitEditor()" style="margin-left:8px;background:rgba(245,158,11,0.15);color:#F59E0B;border-color:rgba(245,158,11,0.3)">✂️ 씬 분할</button>
   </div>
 
   <div id="info-tab" style="display:none">
@@ -224,6 +225,19 @@
     {% endif %}
   </div>
 
+  <div id="split-editor" style="display:none;margin-top:16px;border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:16px;background:rgba(245,158,11,0.05)">
+    <div style="font-size:12px;color:#F59E0B;font-weight:600;margin-bottom:8px">✂️ 씬 분할</div>
+    <label style="font-size:11px;color:var(--text-muted)">앞 씬 나레이션</label>
+    <textarea id="split-narration-a" rows="4" style="width:100%;margin-top:4px;margin-bottom:12px;background:rgba(0,0,0,0.3);color:var(--text-primary);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;font-size:13px;resize:vertical"></textarea>
+    <div style="text-align:center;font-size:11px;color:#F59E0B;margin-bottom:12px">── 분할선 ──</div>
+    <label style="font-size:11px;color:var(--text-muted)">뒷 씬 나레이션</label>
+    <textarea id="split-narration-b" rows="4" style="width:100%;margin-top:4px;margin-bottom:16px;background:rgba(0,0,0,0.3);color:var(--text-primary);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;font-size:13px;resize:vertical"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-sm" onclick="closeSplitEditor()" style="background:rgba(255,255,255,0.05)">취소</button>
+      <button class="btn btn-sm" onclick="executeSplit()" style="background:rgba(245,158,11,0.2);color:#F59E0B;border-color:rgba(245,158,11,0.4);font-weight:600">분할 실행</button>
+    </div>
+  </div>
+
   {% if scene.imageAsset %}
   <div class="section">
     <h4>Image Asset</h4>
@@ -292,6 +306,58 @@
 </style>
 
 <script>
+function openSplitEditor() {
+  var narrationEl = document.querySelector('.narration-full');
+  var narration = narrationEl ? narrationEl.textContent : '';
+  var sentences = narration.trim().split(/(?<=[.!?。])\s+/).filter(Boolean);
+  var mid = Math.max(1, Math.floor(sentences.length / 2));
+  document.getElementById('split-narration-a').value = sentences.slice(0, mid).join(' ');
+  document.getElementById('split-narration-b').value = sentences.slice(mid).join(' ');
+  document.getElementById('split-editor').style.display = 'block';
+  document.getElementById('split-editor').scrollIntoView({behavior: 'smooth'});
+}
+
+function closeSplitEditor() {
+  document.getElementById('split-editor').style.display = 'none';
+}
+
+function executeSplit() {
+  var a = document.getElementById('split-narration-a').value.trim();
+  var b = document.getElementById('split-narration-b').value.trim();
+  if (!a || !b) {
+    alert('앞 씬과 뒷 씬 나레이션을 모두 입력해주세요.');
+    return;
+  }
+  var btn = document.querySelector('#split-editor button:last-child');
+  btn.textContent = '처리 중...';
+  btn.disabled = true;
+
+  var sceneNum = {{ scene.sceneNumber }};
+  var slug = '{{ slug }}';
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sceneNum + '/split', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({narration_a: a, narration_b: b})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(res) {
+    if (res.status === 'splitting') {
+      closeSplitEditor();
+      if (window.clearManifestCache) window.clearManifestCache(null, {refreshDetail: false});
+      alert('씬 분할 완료! 씬 ' + res.scene_a + '와 씬 ' + res.scene_b + '에 TTS+분석이 진행 중입니다.');
+    } else {
+      alert('오류: ' + (res.error || JSON.stringify(res)));
+      btn.textContent = '분할 실행';
+      btn.disabled = false;
+    }
+  })
+  .catch(function(e) {
+    alert('요청 실패: ' + e);
+    btn.textContent = '분할 실행';
+    btn.disabled = false;
+  });
+}
+
 function switchSceneTab(tab, btn) {
   btn.parentElement.querySelectorAll('.scene-tab').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
