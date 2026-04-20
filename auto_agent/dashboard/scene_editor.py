@@ -1159,60 +1159,110 @@ def _coherence_fix(old_scene: dict, new_scene: dict, diff: dict) -> dict:
         }
 
 
-@router.post("/scenes/{scene_num}/upload-image")
-async def upload_image_to_scene(slug: str, scene_num: int, file: UploadFile = File(...)):
-    """파인더/탐색기에서 드래그한 파일을 씬에 적용.
-
-    multipart/form-data로 파일을 받아 images/search/에 저장하고
-    select-image와 동일한 방식으로 scene_specs에 반영한다.
-    """
+@router.post("/scenes/{scene_num}/upload-video")
+async def upload_scene_video(slug: str, scene_num: int, file: UploadFile = File(...)):
+    """비디오 파일 드래그 업로드 → video_sources/ 복사 → video_assets.json 등록."""
     project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
-    ext = Path(file.filename).suffix.lower()
-    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
-        ext = ".jpg"
+    out_dir = Path(project["output_dir"])
+    vs_dir = out_dir / "video_sources"
+    vs_dir.mkdir(parents=True, exist_ok=True)
 
-    out_dir = project["output_dir"]
-    img_dir = Path(out_dir) / "images"
-    search_dir = img_dir / "search"
-    search_dir.mkdir(parents=True, exist_ok=True)
-
-    import re as _re
-    pattern = _re.compile(rf"scene_{scene_num:03d}_search_(\d+)\.[^.]+")
-    existing_indices = [int(m.group(1)) for f in search_dir.iterdir() if (m := pattern.match(f.name))]
-    next_idx = max(existing_indices, default=0) + 1
-
-    dest_name = f"scene_{scene_num:03d}_search_{next_idx:02d}{ext}"
-    dest_path = search_dir / dest_name
+    original_name = file.filename or f"scene_{scene_num:03d}_video.mp4"
+    dest_path = vs_dir / original_name
+    # 중복 파일명 처리
+    if dest_path.exists():
+        stem = dest_path.stem
+        suffix = dest_path.suffix
+        idx = 1
+        while dest_path.exists():
+            dest_path = vs_dir / f"{stem}_{idx}{suffix}"
+            idx += 1
     dest_path.write_bytes(await file.read())
 
-    dir_name = Path(out_dir).name
-    image_url = f"/output/{dir_name}/images/search/{dest_name}"
+    # video_assets.json 업데이트
+    va_path = out_dir / "video_assets.json"
+    va_data = {"scenes": []}
+    if va_path.exists():
+        try:
+            va_data = json.loads(va_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
 
-    # scene_specs 업데이트
+    # 기존 해당 씬 엔트리 제거 후 새로 추가
+    scenes = va_data.get("scenes", [])
+    scenes = [s for s in scenes if s.get("sceneNumber") != scene_num]
+    scenes.append({
+        "sceneNumber": scene_num,
+        "videoFile": dest_path.name,
+        "startSec": 0,
+        "endSec": None,
+        "placement": "fullscreen",
+        "opacity": 1.0,
+        "volume": 0,
+    })
+    scenes.sort(key=lambda s: s.get("sceneNumber", 0))
+    va_data["scenes"] = scenes
+    va_path.write_text(json.dumps(va_data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # scene_specs videoAsset 등록 + imageAsset 비활성화
+    specs = _load_specs(project)
+    if specs:
+        for scene in specs.get("scenes", []):
+            if scene["sceneNumber"] == scene_num:
+                scene["videoAsset"] = {
+                    "placement": "fullscreen",
+                    "startSec": 0,
+                    "endSec": None,
+                    "opacity": 1.0,
+                    "volume": 0,
+                }
+                scene.pop("imagePath", None)
+                break
+        (out_dir / "scene_specs.json").write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    _rebuild_manifest_sync(project)
+    return {"ok": True, "video_file": dest_path.name}
+
+
+@router.post("/scenes/{scene_num}/set-asset-type")
+async def set_scene_asset_type(slug: str, scene_num: int, request: Request):
+    """씬 에셋 타입 전환 — image(videoAsset 제거) / video(imageAsset 비활성화)."""
+    project = resolve_project_by_slug(slug)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+
+    body = await request.json()
+    asset_type = body.get("type", "image")  # "image" or "video"
+
+    out_dir = Path(project["output_dir"])
     specs = _load_specs(project)
     if not specs:
         return JSONResponse({"error": "scene_specs.json 없음"}, status_code=404)
 
-    found = False
     for scene in specs.get("scenes", []):
         if scene["sceneNumber"] == scene_num:
-            scene["imagePath"] = image_url
-            if scene.get("visualization"):
-                scene["vizBackgroundPath"] = image_url
-            ia = scene.get("imageAsset") or {}
-            if ia.get("source") == "none":
-                ia.pop("source", None)
+            if asset_type == "image":
+                scene.pop("videoAsset", None)
+                # video_assets.json에서도 제거
+                va_path = out_dir / "video_assets.json"
+                if va_path.exists():
+                    try:
+                        va_data = json.loads(va_path.read_text(encoding="utf-8"))
+                        va_data["scenes"] = [s for s in va_data.get("scenes", []) if s.get("sceneNumber") != scene_num]
+                        va_path.write_text(json.dumps(va_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                    except Exception:
+                        pass
+            else:
+                # video 모드: imageAsset source를 none으로 (실제 비디오 파일은 upload-video로)
+                scene.pop("imagePath", None)
+                ia = scene.get("imageAsset") or {}
+                ia["source"] = "none"
                 scene["imageAsset"] = ia
-            found = True
             break
 
-    if not found:
-        return JSONResponse({"error": f"씬 {scene_num} 없음"}, status_code=404)
-
-    specs_path = Path(out_dir) / "scene_specs.json"
-    specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    return {"ok": True, "file": dest_name, "url": image_url}
+    (out_dir / "scene_specs.json").write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+    _rebuild_manifest_sync(project)
+    return {"ok": True, "type": asset_type}

@@ -154,6 +154,10 @@
           <button onclick="sbToggleSearch({{ scene.sceneNumber }})">🔍 검색</button>
           <button onclick="sbTogglePasteUrl({{ scene.sceneNumber }})">📎 URL</button>
           <button onclick="sbToggleGenerate({{ scene.sceneNumber }})">🎨 생성</button>
+          <span class="sb-asset-type-toggle">
+            <button class="sb-type-btn{% if not scene.videoAsset %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'image', this)">🖼 이미지</button>
+            <button class="sb-type-btn{% if scene.videoAsset %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'video', this)">🎬 비디오</button>
+          </span>
         </div>
         <div class="sb-asset-search" id="sb-search-{{ scene.sceneNumber }}" style="display:none">
           <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
@@ -706,6 +710,28 @@ function sbTogglePasteUrl(sn) {
   if (el.style.display !== 'none') document.getElementById('sb-paste-input-' + sn).focus();
 }
 
+function sbSetAssetType(sn, type, btn) {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/set-asset-type', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({type: type})
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) {
+      // 버튼 active 토글
+      var toggle = btn.closest('.sb-asset-type-toggle');
+      if (toggle) toggle.querySelectorAll('.sb-type-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      if (type === 'video') {
+        window.location.reload();
+      } else {
+        fetch('/api/p/' + encodeURIComponent(slug) + '/rebuild-manifest', { method: 'POST' }).catch(function(){});
+        if (window._manifestCache) window._manifestCache = null;
+        var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
+        if (mount) { mount.dataset.refresh = '1'; if (window._sceneCache) window._sceneCache[sn] = null; tryMount(mount); }
+      }
+    }
+  }).catch(function(e) { console.error('타입 변경 실패:', e); });
+}
+
 function sbToggleGenerate(sn) {
   var el = document.getElementById('sb-gen-' + sn);
   var opening = el.style.display === 'none';
@@ -916,9 +942,12 @@ function sbSelectVersion(sn, file) {
 .btn-asset-toggle { font-size: 9px; background: rgba(96,165,250,0.15); color: #60A5FA; border: 1px solid rgba(96,165,250,0.3); border-radius: 4px; padding: 2px 8px; cursor: pointer; }
 .btn-asset-toggle:hover { background: rgba(96,165,250,0.25); }
 .sb-asset-panel { margin-top: 6px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px; }
-.sb-asset-actions { display: flex; gap: 4px; margin-bottom: 6px; }
+.sb-asset-actions { display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; align-items: center; }
 .sb-asset-actions button { font-size: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #D4D4D8; border-radius: 4px; padding: 3px 10px; cursor: pointer; }
 .sb-asset-actions button:hover { background: rgba(255,255,255,0.12); }
+.sb-asset-type-toggle { margin-left: auto; display: flex; gap: 2px; }
+.sb-type-btn { font-size: 10px; background: rgba(255,255,255,0.04) !important; border: 1px solid rgba(255,255,255,0.08) !important; color: #71717A !important; border-radius: 4px; padding: 3px 8px !important; cursor: pointer; }
+.sb-type-btn.active { background: rgba(99,102,241,0.25) !important; border-color: rgba(99,102,241,0.5) !important; color: #A5B4FC !important; }
 .sb-paste-input { flex: 1; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); color: #E4E4E7; border: 1px solid rgba(255,255,255,0.1); font-size: 10px; }
 .sb-asset-paste { display: flex; gap: 4px; align-items: center; margin-bottom: 6px; }
 .sb-asset-paste button { font-size: 10px; background: rgba(59,130,246,0.2); border: none; color: #60A5FA; border-radius: 4px; padding: 3px 10px; cursor: pointer; }
@@ -1219,10 +1248,14 @@ function updateSceneLayout(slug, sceneNum, layout) {
   }
   window.applyGalleryImageToScene = applyGalleryImageToScene;
 
+  var VIDEO_EXTS = ['mp4', 'mov', 'webm', 'avi', 'mkv'];
   function uploadFileToScene(sceneNum, file) {
+    var ext = (file.name.split('.').pop() || '').toLowerCase();
+    var isVideo = VIDEO_EXTS.indexOf(ext) !== -1;
+    var endpoint = isVideo ? 'upload-video' : 'upload-image';
     var form = new FormData();
     form.append('file', file, file.name);
-    fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sceneNum + '/upload-image', {
+    fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sceneNum + '/' + endpoint, {
       method: 'POST',
       body: form,
     })
@@ -1230,8 +1263,12 @@ function updateSceneLayout(slug, sceneNum, layout) {
     .then(function(d) {
       if (d.ok) {
         if (window.clearManifestCache) window.clearManifestCache(sceneNum);
-        loadGallery();
-        if (window.sbRefreshGrid) window.sbRefreshGrid(sceneNum);
+        if (isVideo) {
+          window.location.reload();
+        } else {
+          loadGallery();
+          if (window.sbRefreshGrid) window.sbRefreshGrid(sceneNum);
+        }
       } else {
         console.error('파일 업로드 실패:', d);
       }
