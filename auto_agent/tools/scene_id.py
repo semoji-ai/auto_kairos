@@ -10,7 +10,7 @@ def new_scene_id() -> str:
 
 def get_scene_id(scene: dict) -> str | None:
     """씬에서 sceneId 반환. 없으면 None."""
-    return scene.get("sceneId") or None
+    return scene.get("sceneId") or None  # or None: empty string도 None으로 처리
 
 
 def ensure_scene_ids(scenes: list[dict]) -> list[dict]:
