@@ -268,13 +268,15 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
           endSec={videoEndSec}
           volume={videoVolume}
         />
-        <CreativeScene
-          data={vizData}
-          subtitles={scene.subtitles}
-          fps={fps}
-          hasImageBackground={true}
-          imageAssetPlacement={placement}
-        />
+        {videoPlacement !== "fullscreen" && (
+          <CreativeScene
+            data={vizData}
+            subtitles={scene.subtitles}
+            fps={fps}
+            hasImageBackground={true}
+            imageAssetPlacement={placement}
+          />
+        )}
         {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );

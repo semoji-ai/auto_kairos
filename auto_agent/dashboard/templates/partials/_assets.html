@@ -333,7 +333,7 @@
 
   window.selectCandidate = function(sceneNum, url) {
     if (!confirm('이 이미지로 교체할까요?')) return;
-    fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sceneNum, {
+    fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sceneNum + '/select-image', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({url: url}),
@@ -351,7 +351,7 @@
   };
 
   window.selectVersion = function(sceneNum, fileName) {
-    fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sceneNum, {
+    fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sceneNum + '/select-image', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ file: fileName }),
@@ -407,7 +407,7 @@
     var url = (input.value || '').trim();
     if (!url) { status.textContent = 'URL을 입력하세요'; return; }
     status.textContent = '다운로드 중...';
-    fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sceneNum, {
+    fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sceneNum + '/select-image', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({url: url})

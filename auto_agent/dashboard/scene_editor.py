@@ -64,20 +64,27 @@ async def rebuild_manifest(slug: str):
 
 
 def _rebuild_manifest_sync(project: dict) -> None:
-    """매니페스트 동기 리빌드 (이미지/오디오 변경 즉시 반영용)."""
-    import subprocess, shutil, os
+    """매니페스트 동기 리빌드 후 manifest.json 교체."""
+    import subprocess, shutil, os, sys
     out_dir = project.get("output_dir", "")
     if not out_dir:
         return
-    python = shutil.which("python3") or shutil.which("python") or "python3"
+    python = sys.executable  # 현재 서버와 동일한 Python 사용
     project_id = str(project.get("id", ""))
-    storage_key = Path(out_dir).name
+    storage_key = project.get("storage_key") or Path(out_dir).name
     try:
         subprocess.run(
             [python, "-m", "auto_agent.scripts.build_manifest", project_id, storage_key, out_dir],
             capture_output=True, text=True, encoding="utf-8", timeout=30,
             env={**os.environ},
         )
+        # 빌드된 manifest를 manifest.json으로 복사 (Remotion Studio 즉시 반영)
+        from auto_agent.paths import get_workspace_dir
+        remotion_public = get_workspace_dir() / "remotion" / "public"
+        built = remotion_public / "manifests" / f"{storage_key}.json"
+        manifest_dst = remotion_public / "manifest.json"
+        if built.exists():
+            shutil.copy2(str(built), str(manifest_dst))
     except Exception as e:
         print(f"[WARN] 에디터 매니페스트 리빌드 실패: {e}")
 
@@ -200,6 +207,54 @@ async def generate_thumbnails(slug: str):
 
     _thumbnail_tasks[slug] = asyncio.create_task(_run())
     return {"ok": True, "status": "started"}
+
+
+@manifest_router.get("/images/all")
+async def get_all_images(slug: str):
+    """전체 이미지 갤러리 — search/ + generated/ 폴더 스캔."""
+    project = resolve_project_by_slug(slug)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+
+    out_dir = project.get("output_dir", "")
+    dir_name = Path(out_dir).name if out_dir else project.get("slug", "")
+    img_dir = Path(out_dir) / "images"
+
+    # image_assets.json에서 selected 맵 구성
+    selected_map: dict = {}
+    assets_path = img_dir / "image_assets.json"
+    if assets_path.exists():
+        try:
+            assets = json.loads(assets_path.read_text(encoding="utf-8"))
+            for entry in assets.get("scenes", []):
+                sn = entry.get("sceneNumber")
+                sel = entry.get("selected", "")
+                if sn is not None and sel:
+                    selected_map[sel] = sn
+                    selected_map[sel.split("/")[-1]] = sn
+        except Exception:
+            pass
+
+    images = []
+    for subdir, src_type in [("search", "search"), ("generated", "generated")]:
+        d = img_dir / subdir
+        if not d.exists():
+            continue
+        for f in sorted(d.iterdir()):
+            if f.suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp"):
+                continue
+            rel = f"{subdir}/{f.name}"
+            url = f"/output/{dir_name}/images/{rel}"
+            sn = selected_map.get(rel) or selected_map.get(f.name)
+            images.append({
+                "file": rel,
+                "url": url,
+                "type": src_type,
+                "sceneNumber": sn,
+                "selected": sn is not None,
+            })
+
+    return JSONResponse({"images": images}, headers={"Cache-Control": "no-store"})
 
 
 @manifest_router.get("/thumbnails/status")
@@ -365,7 +420,8 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
     body = await request.json()
-    image_url = body.get("image_url", "")
+    # image_url, url 둘 다 허용 (갤러리 드래그는 url로 전송)
+    image_url = body.get("image_url") or body.get("url", "")
     is_none = (image_url == "" or image_url is None)
 
     specs = _load_specs(project)
@@ -528,6 +584,13 @@ async def get_scene_for_editor(slug: str, scene_num: int):
                         ]
                     layout = (mscene.get("visualization") or {}).get("layout", mscene.get("sceneType", ""))
                     constraints = LAYOUT_CONSTRAINTS.get(layout, {})
+                    # narration은 manifest에 없으므로 scene_specs에서 보강
+                    if not mscene.get("narration"):
+                        specs = _load_specs(project)
+                        if specs:
+                            spec = next((s for s in specs.get("scenes", []) if s.get("sceneNumber") == scene_num), None)
+                            if spec:
+                                mscene["narration"] = spec.get("narration", "")
                     return JSONResponse(
                         {"scene": mscene, "constraints": constraints, "layout": layout},
                         headers={"Cache-Control": "no-store"},
@@ -808,11 +871,19 @@ async def split_scene(slug: str, scene_num: int, request: Request):
     # scene_specs 저장
     specs_path.write_text(_json.dumps(new_specs, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # 매니페스트 재빌드
+    # 매니페스트 재빌드 + 스튜디오용 manifest.json 갱신
     try:
         from auto_agent.scripts.build_manifest import build_manifest
+        import shutil as _shutil
         dir_name = Path(out_dir).name
-        build_manifest(str(project.get("id", "")), dir_name, out_dir)
+        storage_key = project.get("storage_key", f"proj-{slug}")
+        build_manifest(str(project.get("id", "")), storage_key, out_dir)
+        # remotion/public/manifest.json 갱신 (스튜디오 반영)
+        from app import REMOTION_DIR
+        built = REMOTION_DIR / "public" / "manifests" / f"{storage_key}.json"
+        manifest_dst = REMOTION_DIR / "public" / "manifest.json"
+        if built.exists():
+            _shutil.copy2(str(built), str(manifest_dst))
     except Exception as e:
         print(f"[WARN] 분할 후 매니페스트 리빌드 실패: {e}")
 

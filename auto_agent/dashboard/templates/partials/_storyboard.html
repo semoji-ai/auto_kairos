@@ -109,6 +109,9 @@
             <span class="sb-prompt-label" style="color:#f87171">🎬 비디오</span>
             {% if scene.imageAsset and scene.imageAsset.placement %}<span class="sb-prompt-placement">{{ scene.imageAsset.placement }}</span>{% endif %}
           </div>
+          {% if scene._video_thumb_url %}
+          <img src="{{ scene._video_thumb_url }}" alt="비디오 썸네일" style="width:100%;border-radius:4px;margin:4px 0;object-fit:cover">
+          {% endif %}
           <div class="sb-prompt-text" style="font-size:10px;word-break:break-all">{{ scene._video_file }}</div>
           <div class="sb-prompt-detail">구간: {{ scene._video_start_sec }}s{% if scene._video_end_sec %} ~ {{ scene._video_end_sec }}s{% endif %}</div>
         </div>
@@ -200,7 +203,23 @@
 <div id="scene-detail-overlay" class="scene-overlay" onclick="closeSceneDetail()">
   <div class="scene-detail-panel" onclick="event.stopPropagation()" style="position:relative;display:flex;flex-direction:column">
     <button class="close-btn" onclick="closeSceneDetail()" style="position:absolute;top:10px;right:12px;z-index:10">&times;</button>
+    <div id="split-btn-bar" style="display:none;padding:8px 12px 0;flex-shrink:0">
+      <button onclick="openSplitEditor()" style="background:rgba(245,158,11,0.15);color:#F59E0B;border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer">✂️ 씬 분할</button>
+    </div>
     <div id="scene-detail-content" style="flex:1;height:100%;overflow:hidden">Loading...</div>
+    <!-- 씬 분할 편집기 -->
+    <div id="split-editor" style="display:none;margin:0 12px 12px;border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:16px;background:rgba(245,158,11,0.05);flex-shrink:0">
+      <div style="font-size:12px;color:#F59E0B;font-weight:600;margin-bottom:8px">✂️ 씬 분할</div>
+      <label style="font-size:11px;color:#aaa">앞 씬 나레이션</label>
+      <textarea id="split-narration-a" rows="3" style="width:100%;margin-top:4px;margin-bottom:10px;background:rgba(0,0,0,0.3);color:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;font-size:12px;resize:vertical;box-sizing:border-box"></textarea>
+      <div style="text-align:center;font-size:11px;color:#F59E0B;margin-bottom:10px">── 분할선 ──</div>
+      <label style="font-size:11px;color:#aaa">뒷 씬 나레이션</label>
+      <textarea id="split-narration-b" rows="3" style="width:100%;margin-top:4px;margin-bottom:14px;background:rgba(0,0,0,0.3);color:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;font-size:12px;resize:vertical;box-sizing:border-box"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="closeSplitEditor()" style="background:rgba(255,255,255,0.05);color:#ccc;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer">취소</button>
+        <button id="split-execute-btn" onclick="executeSplit()" style="background:rgba(245,158,11,0.2);color:#F59E0B;border:1px solid rgba(245,158,11,0.4);border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer">분할 실행</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -233,6 +252,66 @@ function filterImages(btn) {
 function closeSceneDetail() {
   window._detailSceneNum = null;
   document.getElementById('scene-detail-overlay').classList.remove('open');
+  document.getElementById('split-btn-bar').style.display = 'none';
+  document.getElementById('split-editor').style.display = 'none';
+}
+
+function openSplitEditor() {
+  var slug = window._splitSlug;
+  var sceneNum = window._splitSceneNum;
+  document.getElementById('split-editor').style.display = 'block';
+  document.getElementById('split-narration-a').value = '불러오는 중...';
+  document.getElementById('split-narration-b').value = '';
+
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sceneNum)
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      var scene = res.scene || res;
+      var narration = scene.narration || '';
+      var sentences = narration.trim().split(/(?<=[.!?。])\s+/).filter(Boolean);
+      var mid = Math.max(1, Math.floor(sentences.length / 2));
+      document.getElementById('split-narration-a').value = sentences.slice(0, mid).join(' ');
+      document.getElementById('split-narration-b').value = sentences.slice(mid).join(' ');
+    })
+    .catch(function() {
+      document.getElementById('split-narration-a').value = '';
+    });
+}
+
+function closeSplitEditor() {
+  document.getElementById('split-editor').style.display = 'none';
+}
+
+function executeSplit() {
+  var a = document.getElementById('split-narration-a').value.trim();
+  var b = document.getElementById('split-narration-b').value.trim();
+  if (!a || !b) { alert('앞 씬과 뒷 씬 나레이션을 모두 입력해주세요.'); return; }
+  var btn = document.getElementById('split-execute-btn');
+  btn.textContent = '처리 중...';
+  btn.disabled = true;
+  fetch('/api/p/' + encodeURIComponent(window._splitSlug) + '/editor/scenes/' + window._splitSceneNum + '/split', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({narration_a: a, narration_b: b})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(res) {
+    if (res.status === 'splitting') {
+      closeSplitEditor();
+      closeSceneDetail();
+      if (window.clearManifestCache) window.clearManifestCache(null, {refreshDetail: false});
+      alert('씬 분할 완료! 씬 ' + res.scene_a + '와 씬 ' + res.scene_b + '에 TTS+분석이 진행 중입니다.');
+    } else {
+      alert('오류: ' + (res.error || JSON.stringify(res)));
+      btn.textContent = '분할 실행';
+      btn.disabled = false;
+    }
+  })
+  .catch(function(e) {
+    alert('요청 실패: ' + e);
+    btn.textContent = '분할 실행';
+    btn.disabled = false;
+  });
 }
 
 function resizePreview(val) {
@@ -434,6 +513,11 @@ function resizePreview(val) {
         // scene-editor.js의 mountSceneEditor 활용
         if (window.mountSceneEditor) {
           window.__SCENE_EDITOR_DATA__ = { scene: mScene, meta: meta, slug: slug };
+          window._splitSlug = slug;
+          window._splitSceneNum = sceneNum;
+          window._splitNarration = mScene.narration || '';
+          document.getElementById('split-btn-bar').style.display = 'block';
+          document.getElementById('split-editor').style.display = 'none';
           window.mountSceneEditor(editorRoot);
 
           // 저장 완료 이벤트 → 스토리보드 썸네일 새로고침
@@ -624,7 +708,7 @@ function sbApplyUrl(sn) {
   var url = (input.value || '').trim();
   if (!url) { status.textContent = 'URL을 입력하세요'; return; }
   status.textContent = '다운로드 중...';
-  fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sn, {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/select-image', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({url: url})
   }).then(function(r) { return r.json(); }).then(function(res) {
@@ -674,7 +758,7 @@ function sbDoSearch(sn) {
 
 function sbSelectCandidate(sn, url) {
   if (!confirm('이 이미지로 교체하시겠습니까?')) return;
-  fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sn, {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/select-image', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({url: url})
   }).then(function(r) { return r.json(); }).then(function(res) {
@@ -791,7 +875,7 @@ function sbLoadVersions(sn) {
 }
 
 function sbSelectVersion(sn, file) {
-  fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sn, {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/select-image', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({file: file})
   }).then(function(r) { return r.json(); }).then(function(res) {
@@ -871,26 +955,26 @@ function sbSelectVersion(sn, file) {
 .sb-design-body .design-preview iframe { height: 100%; min-height: 400px; }
 
 /* 이미지 갤러리 패널 — fixed 오버레이 방식 */
-.sb-gallery-panel { position: fixed; right: 0; top: 44px; height: calc(100vh - 44px); width: 210px; background: rgba(10,10,10,0.97); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: row; transition: width 0.2s; z-index: 90; box-shadow: -4px 0 20px rgba(0,0,0,0.5); }
+.sb-gallery-panel { position: fixed; right: 0; top: 44px; height: calc(100vh - 44px); width: 300px; background: rgba(10,10,10,0.97); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: row; transition: width 0.2s; z-index: 90; box-shadow: -4px 0 20px rgba(0,0,0,0.5); }
 .sb-gallery-panel.collapsed { width: 28px; overflow: hidden; }
 .sb-gallery-toggle { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 28px; height: 48px; background: rgba(255,255,255,0.06); border: none; border-right: 1px solid rgba(255,255,255,0.1); color: #A1A1AA; cursor: pointer; padding: 0; z-index: 2; border-radius: 0 6px 6px 0; }
 .sb-gallery-toggle:hover { background: rgba(255,255,255,0.12); }
 .sb-gallery-toggle-icon { font-size: 10px; }
-.sb-gallery-inner { flex: 1; padding: 8px 6px 8px 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.sb-gallery-inner { flex: 1; padding: 10px 8px 10px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 .sb-gallery-panel.collapsed .sb-gallery-inner { display: none; }
 .sb-gallery-header { display: flex; align-items: center; justify-content: space-between; }
-.sb-gallery-title { font-size: 11px; font-weight: 600; color: #E4E4E7; }
+.sb-gallery-title { font-size: 13px; font-weight: 600; color: #E4E4E7; }
 .sb-gallery-reload { background: none; border: none; color: #71717A; cursor: pointer; font-size: 14px; padding: 0 2px; }
 .sb-gallery-reload:hover { color: #A1A1AA; }
-.sb-gallery-filter { display: flex; gap: 3px; flex-wrap: wrap; }
-.sb-gf-btn { font-size: 9px; padding: 2px 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px; color: #71717A; cursor: pointer; }
+.sb-gallery-filter { display: flex; gap: 4px; flex-wrap: wrap; }
+.sb-gf-btn { font-size: 11px; padding: 3px 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px; color: #71717A; cursor: pointer; }
 .sb-gf-btn.active { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.4); color: #818CF8; }
-.sb-gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-.sb-gallery-loading { font-size: 10px; color: #52525B; text-align: center; padding: 16px 0; grid-column: 1/-1; }
-.sb-gallery-item { position: relative; cursor: grab; border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.07); aspect-ratio: 16/9; background: #111; display: flex; align-items: center; justify-content: center; }
-.sb-gallery-item.selected { border-color: rgba(99,102,241,0.6); box-shadow: 0 0 0 1px rgba(99,102,241,0.4); }
+.sb-gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.sb-gallery-loading { font-size: 11px; color: #52525B; text-align: center; padding: 16px 0; grid-column: 1/-1; }
+.sb-gallery-item { position: relative; cursor: grab; border-radius: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); aspect-ratio: 16/9; background: #111; display: flex; align-items: center; justify-content: center; }
+.sb-gallery-item.selected { border-color: rgba(99,102,241,0.6); box-shadow: 0 0 0 2px rgba(99,102,241,0.4); }
 .sb-gallery-item img { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; }
-.sb-gallery-item-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); font-size: 8px; color: #A1A1AA; text-align: center; padding: 1px 0; }
+.sb-gallery-item-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.75); font-size: 10px; color: #D4D4D8; text-align: center; padding: 2px 3px; }
 .sb-gallery-item:active { cursor: grabbing; }
 .sb-preview.drop-hover { outline: 2px solid #818CF8; outline-offset: -2px; }
 </style>
@@ -1056,7 +1140,7 @@ function updateSceneLayout(slug, sceneNum, layout) {
 
   function applyGalleryImageToScene(sceneNum, url, file) {
     // 해당 씬의 이미지로 선택 적용
-    fetch('/api/p/' + encodeURIComponent(slug) + '/images/select/' + sceneNum, {
+    fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sceneNum + '/select-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: url, file: file }),

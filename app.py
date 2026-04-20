@@ -1378,7 +1378,7 @@ layout, mood, imageAsset, motion, title, concept, headline/items 등 연출 요�
             env.pop("CLAUDECODE", None)
             result = subprocess.run(
                 ["claude", "--model", "claude-sonnet-4-6", "--max-turns", "3",
-                 "--output-format", "text", "--no-ansi"],
+                 "--output-format", "text"],
                 input=prompt, capture_output=True, text=True, env=env,
                 cwd=str(get_workspace_dir()), timeout=180,
             )
@@ -2058,7 +2058,7 @@ layout, mood, imageAsset, motion, headline/items 등 연출 요소만 개선합�
         env.pop("CLAUDECODE", None)
         result = subprocess.run(
             ["claude", "--model", "claude-sonnet-4-6", "--max-turns", "3",
-             "--output-format", "text", "--no-ansi"],
+             "--output-format", "text"],
             input=prompt, capture_output=True, text=True, env=env,
             cwd=str(get_workspace_dir()), timeout=120,
         )

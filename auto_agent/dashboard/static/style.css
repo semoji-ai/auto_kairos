@@ -345,15 +345,15 @@ tr:hover { background: var(--surface2); }
 }
 .img-badge {
   display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 500;
-  margin-right: 3px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 4px;
   margin-top: 3px;
 }
-.img-search { background: rgba(59,130,246,0.12); color: #60A5FA; }
-.img-gen { background: rgba(168,85,247,0.12); color: #C084FC; }
+.img-search { background: rgba(59,130,246,0.2); color: #93C5FD; border: 1px solid rgba(59,130,246,0.3); }
+.img-gen { background: rgba(168,85,247,0.2); color: #D8B4FE; border: 1px solid rgba(168,85,247,0.3); }
 .img-placement { background: rgba(107,114,128,0.12); color: #9CA3AF; }
 .img-ok { background: rgba(34,197,94,0.12); color: #22C55E; }
 .img-missing { background: rgba(239,68,68,0.12); color: #EF4444; }

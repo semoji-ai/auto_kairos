@@ -333,6 +333,10 @@ def main():
 
         try:
             duration = generate_tts(text, output_path)
+            # SRT 삭제: timestamps가 새로 생성되므로 기존 SRT는 무효
+            srt_path = OUTPUT_DIR.parent / "subtitles" / f"scene_{num:03d}.srt"
+            if srt_path.exists():
+                srt_path.unlink()
             print(f"  [{i+1}/{total}] Scene {num}: OK ({duration:.1f}s)")
             results.append({"scene": num, "status": "ok", "duration": duration, "path": str(output_path)})
             # Small delay to avoid rate limiting

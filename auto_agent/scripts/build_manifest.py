@@ -232,6 +232,20 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         except Exception:
             pass
 
+    # audio_assets.json → {sceneNumber: selected_audioFile} 룩업
+    audio_assets_lookup: dict = {}
+    audio_assets_path = out_dir / "audio" / "audio_assets.json"
+    if audio_assets_path.exists():
+        try:
+            aa_data = json.loads(audio_assets_path.read_text(encoding="utf-8"))
+            for aa_entry in aa_data.get("scenes", []):
+                sn = aa_entry.get("sceneNumber")
+                selected = aa_entry.get("selected")
+                if sn is not None and selected:
+                    audio_assets_lookup[sn] = selected
+        except Exception:
+            pass
+
     # video_assets.json → {sceneNumber: videoAsset} 룩업
     video_assets_lookup: dict = {}
     video_assets_path = out_dir / "video_assets.json"
@@ -250,9 +264,14 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         num = scene["sceneNumber"] if scene.get("sceneNumber") is not None else scene["scene_number"]
         scene_key = f"scene_{num:03d}"
 
-        # Audio — 로컬 파일 링크
-        audio_src = out_dir / "audio" / f"{scene_key}.mp3"
-        audio_path = link_asset(audio_src, "audio", f"{scene_key}.mp3")
+        # Audio — audio_assets.json selected 우선 → scene_{num}.mp3 폴백
+        selected_audio = audio_assets_lookup.get(num)
+        if selected_audio:
+            audio_src = out_dir / "audio" / selected_audio
+            audio_path = link_asset(audio_src, "audio", selected_audio)
+        else:
+            audio_src = out_dir / "audio" / f"{scene_key}.mp3"
+            audio_path = link_asset(audio_src, "audio", f"{scene_key}.mp3")
 
         # Duration: 로컬 MP3 probe > tts_results > durationFrames/fps
         audio_duration = 0.0
@@ -427,11 +446,13 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             # 씬 이미지 자체를 images[0]에 폴백 (단체 사진 등)
             entry["images"] = [image_path]
 
-        # motionPreset, mood 필드 추가
+        # motionPreset, mood, chapter 필드 추가
         if motion_preset:
             entry["motionPreset"] = motion_preset
         if mood:
             entry["mood"] = mood
+        if scene.get("chapter") is not None:
+            entry["chapter"] = scene["chapter"]
 
         # layout 필드 — 단일 소스: 항상 최상위 "layout"으로 기록
         # sceneType은 하위호환용 alias로만 남김
@@ -480,10 +501,13 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         # Video — video_assets.json에 있으면 videoPath + videoAsset 주입
         va_entry = video_assets_lookup.get(num)
         if va_entry:
+            static_path = va_entry.get("staticPath", "")  # remotion/public/ 기준 직접 경로
             video_file = va_entry.get("videoFile", "")
-            video_src = out_dir / "video_sources" / video_file
+            video_src = out_dir / "video_sources" / video_file if video_file else None
             video_path_str = ""
-            if video_src.exists():
+            if static_path:
+                video_path_str = static_path  # public/background/... 등 직접 사용
+            elif video_src and video_src.exists():
                 video_path_str = link_asset(video_src, "video_sources", video_file)
             entry["videoPath"] = video_path_str
             entry["videoAsset"] = {
@@ -494,7 +518,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 "volume": va_entry.get("volume", 0.0),
             }
             # 비디오 첫 프레임을 썸네일용 이미지로 추출 (ffmpeg)
-            if video_src.exists():
+            if video_src and video_src.exists():
                 import subprocess as _sp
                 thumb_dir = out_dir / "video_sources" / "thumbs"
                 thumb_dir.mkdir(parents=True, exist_ok=True)

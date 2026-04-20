@@ -49,14 +49,15 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
   const frame = useCurrentFrame();
 
   let offset = 0;
-  const timing = manifest.scenes.map((scene) => {
-    // scene timing authority: audioDurationSec를 프레임으로만 올림하여 사용
+  const timing: { scene: typeof manifest.scenes[0]; from: number; dur: number }[] = [];
+  for (let i = 0; i < manifest.scenes.length; i++) {
+    const scene = manifest.scenes[i];
     const minFrames = scene.audioDurationSec > 0 ? 1 : 90;
     const dur = Math.max(Math.ceil(scene.audioDurationSec * fps), minFrames);
     const from = offset;
     offset += dur;
-    return { scene, from, dur };
-  });
+    timing.push({ scene, from, dur });
+  }
 
   // ── postMessage 브릿지: 현재 씬 번호를 부모(대시보드)에 전달 ──
   useEffect(() => {

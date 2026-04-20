@@ -1849,6 +1849,23 @@ def cmd_tts(args):
             status = "✓" if r.status == "completed" else "✗"
             console.print(f"  [{status}] 씬 {r.scene_number:03d}  {r.duration:.2f}s  {ts}")
 
+        # tts_results.json 저장 (스토리보드 duration 표시용)
+        tts_results_payload = {
+            "results": [
+                {
+                    "scene": r.scene_number,
+                    "status": r.status,
+                    "duration": r.duration,
+                    "alignment_path": str(r.alignment_path) if r.alignment_path else None,
+                }
+                for r in result.tts_results
+            ]
+        }
+        tts_results_path = project_dir / "tts_results.json"
+        with open(tts_results_path, "w", encoding="utf-8") as f:
+            json.dump(tts_results_payload, f, ensure_ascii=False, indent=2)
+        console.print(f"  [dim]tts_results.json 저장완료 ({len(result.tts_results)}건)[/dim]")
+
     # ── Phase B: 자막 생성 ────────────────────────────────────────────────
     if not parsed.tts_only:
         import subprocess, sys

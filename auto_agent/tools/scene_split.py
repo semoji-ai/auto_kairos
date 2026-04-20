@@ -83,11 +83,15 @@ def renumber_files(out_dir: Path, from_scene: int, is_legacy: bool) -> None:
 
     # 역순 rename으로 충돌 방지
     for n in range(max_n, from_scene - 1, -1):
-        # audio
+        # audio mp3
         if audio_dir.exists():
             src = audio_dir / f"scene_{n:03d}.mp3"
             if src.exists():
                 src.rename(audio_dir / f"scene_{n+1:03d}.mp3")
+            # timestamps.json
+            ts = audio_dir / f"scene_{n:03d}.timestamps.json"
+            if ts.exists():
+                ts.rename(audio_dir / f"scene_{n+1:03d}.timestamps.json")
         # subtitles
         if subtitles_dir.exists():
             src = subtitles_dir / f"scene_{n:03d}.json"
@@ -103,3 +107,23 @@ def renumber_files(out_dir: Path, from_scene: int, is_legacy: bool) -> None:
             for f in list(img_search_dir.glob(f"scene_{n:03d}_*.png")) + list(img_search_dir.glob(f"scene_{n:03d}_*.jpg")):
                 new_name = f.name.replace(f"scene_{n:03d}_", f"scene_{n+1:03d}_")
                 f.rename(f.parent / new_name)
+
+    # image_assets.json selected 경로 업데이트
+    ia_path = out_dir / "images" / "image_assets.json"
+    if ia_path.exists():
+        import json as _json
+        ia = _json.loads(ia_path.read_text(encoding="utf-8"))
+        for entry in ia.get("scenes", []):
+            sel = entry.get("selected", "")
+            if not sel:
+                continue
+            # 접두어 정규화: images/search/ → search/, images/generated/ → generated/
+            import re as _re
+            sel = _re.sub(r'^images/', '', sel)
+            # scene_NNN_ 패턴이 from_scene 이상이면 +1
+            def _bump(m):
+                n = int(m.group(1))
+                return f"scene_{n+1:03d}_" if n >= from_scene else m.group(0)
+            sel = _re.sub(r'scene_(\d+)_', _bump, sel)
+            entry["selected"] = sel
+        ia_path.write_text(_json.dumps(ia, ensure_ascii=False, indent=2))

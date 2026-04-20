@@ -5,11 +5,11 @@
     <span class="ch-tag">Ch{{ scene.chapter }}</span>
     {% if scene._tts_duration %}<span class="duration-tag">{{ "%.1f"|format(scene._tts_duration) }}s</span>{% elif scene.durationFrames %}<span class="duration-tag">{{ "%.1f"|format(scene.durationFrames / 60) }}s</span>{% endif %}
     <!-- 탭 전환 -->
-    <div class="scene-tab-bar" style="margin-left:auto;display:flex;gap:4px">
+    <div class="scene-tab-bar" style="margin-left:auto;display:flex;gap:4px;align-items:center">
       <button class="scene-tab" data-tab="editor" onclick="switchSceneTab('editor',this)">편집</button>
       <button class="scene-tab" data-tab="info" onclick="switchSceneTab('info',this)">정보</button>
+      <button class="btn btn-sm" onclick="openSplitEditor()" style="margin-left:4px;background:rgba(245,158,11,0.15);color:#F59E0B;border-color:rgba(245,158,11,0.3)">✂️ 씬 분할</button>
     </div>
-    <button class="btn btn-sm" onclick="openSplitEditor()" style="margin-left:8px;background:rgba(245,158,11,0.15);color:#F59E0B;border-color:rgba(245,158,11,0.3)">✂️ 씬 분할</button>
   </div>
 
   <div id="info-tab" style="display:none">
