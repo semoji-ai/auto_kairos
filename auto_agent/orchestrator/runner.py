@@ -2101,6 +2101,9 @@ class PipelineRunner:
             chapter_ms = self._extract_chapter_manuscript(full_ms, chapter_num)
             context_block += f"\n<file name=\"final_manuscript.md (챕터 {chapter_num})\">\n{chapter_ms}\n</file>\n"
 
+        # 리서치 이미지 매니페스트 (images_grid 레이아웃 판단용)
+        context_block += self._build_research_images_context()
+
         # 아트스타일 오버라이드 로드
         art_style_override = self._load_art_style_override(step.get("name", ""))
 
@@ -2111,6 +2114,38 @@ class PipelineRunner:
         prompt = prompt.replace("{art_style_override}", art_style_override)
 
         return prompt
+
+    def _build_research_images_context(self) -> str:
+        """리서치 이미지 매니페스트를 <research_images> 태그로 요약 반환."""
+        research_root = self.project_dir / "research" / "raw"
+        if not research_root.exists():
+            return ""
+        records: list[dict] = []
+        for slug_dir in sorted(research_root.iterdir(), reverse=True):
+            if not slug_dir.is_dir():
+                continue
+            for run_dir in sorted(slug_dir.iterdir(), reverse=True):
+                manifest = run_dir / "image_manifest.jsonl"
+                if not manifest.exists():
+                    continue
+                for line in manifest.read_text(encoding="utf-8").splitlines():
+                    line = line.strip()
+                    if line:
+                        try:
+                            records.append(json.loads(line))
+                        except Exception:
+                            pass
+                if records:
+                    break
+            if records:
+                break
+        if not records:
+            return ""
+        summary = [
+            {"title": r.get("title", ""), "image_url": r.get("image_url", ""), "kind": r.get("kind", "")}
+            for r in records[:60]
+        ]
+        return f'\n<research_images>\n{json.dumps(summary, ensure_ascii=False, indent=2)}\n</research_images>\n'
 
     def _load_art_style_override(self, step_name: str) -> str:
         """아트스타일 JSON에서 prompt_overrides를 로드. 중앙 참조."""
@@ -2246,6 +2281,9 @@ class PipelineRunner:
             full_ms = manuscript_path.read_text(encoding="utf-8")
             chapter_ms = self._extract_chapter_manuscript(full_ms, chapter_num)
             context_block += f"\n<file name=\"final_manuscript.md (챕터 {chapter_num} 구간)\">\n{chapter_ms}\n</file>\n"
+
+        # 리서치 이미지 매니페스트 (images_grid 레이아웃 판단용)
+        context_block += self._build_research_images_context()
 
         # 챕터 전용 scene_specs 인라인
         chapter_specs_json = json.dumps(chapter_specs, ensure_ascii=False, indent=2)

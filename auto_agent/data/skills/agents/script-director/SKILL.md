@@ -400,6 +400,15 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    | headline + 배경 이미지 | 강조 텍스트 + 분위기 | background | headline_only + 배경 |
    | 인용문 + 인물 이미지 | 발언 인용 | left/right | quote_portrait |
    | 로고 + 수치 | 기업/브랜드 비교 | — | logo_grid |
+   | 이미지 2~4개 병렬 비교 | 동일 주제 이미지가 여러 개 있고 시각 비교가 핵심 | — | images_grid |
+
+   ⚠️ images_grid 판단 기준:
+   - `<research_images>`에 동일 주제(인물, 제품, 장소, 사건 등)의 이미지가 2개 이상 있을 때 고려
+   - items 텍스트 나열보다 이미지 병렬 배치가 더 직관적인 씬에 사용
+   - 예: "A국 vs B국 현황", "제품 3종 비교", "사건 전후 사진", "인물 3인 소개"
+   - `images` 필드에 해당 image_url들을 배열로 지정, `grid_type`은 생략 시 자동 추론
+   - `captions` 필드로 각 이미지에 간단한 레이블 추가 가능 (선택)
+   - items나 headline과 함께 쓰지 않음 — 이미지가 주인공인 씬에만 사용
 
    ⚠️ placement 규칙:
    - left/right: 이미지의 주체가 명확할 때 (인물, 제품, 건물 등)
