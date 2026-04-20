@@ -203,7 +203,7 @@ const VALID_LAYOUTS = new Set<LayoutType>([
   "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
   "comparison_table", "before_after", "icon_stat", "stacked_progress",
   "card_carousel", "hero_with_context", "quote_portrait", "annotated_chart",
-  "cinematic", "bar_horizontal", "donut",
+  "cinematic", "bar_horizontal", "donut", "images_grid",
 ]);
 
 function resolveLayout(data: any, creative: any): LayoutType {
