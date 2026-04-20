@@ -506,6 +506,89 @@ def _build_default_hooks() -> HookManager:
 
     hm.register_post_step("step_3b", post_validate_character_images)
 
+    # ── pre-step: character_plan.json 자동 생성 (step_3b 시작 전) ──
+    def pre_build_character_plan(context: dict):
+        """scene_specs에서 2씬+ 등장 캐릭터를 추출해 character_plan.json을 자동 생성.
+
+        LLM이 B-1을 건너뛰더라도 image_batch_module이 캐릭터 참조를 갖도록 보장.
+        이미 존재하는 경우 신규 캐릭터만 추가(기존 항목 보존).
+        """
+        project_dir = Path(context.get("project_dir", ""))
+        specs_path = project_dir / "scene_specs.json"
+        if not specs_path.exists():
+            return
+
+        specs = json.loads(specs_path.read_text(encoding="utf-8"))
+        scenes = specs.get("scenes", [])
+
+        # 캐릭터 등장 횟수 + 씬 목록
+        char_counts: dict[str, list[int]] = {}
+        for scene in scenes:
+            sn = scene.get("sceneNumber", 0)
+            for char in scene.get("characters", []):
+                if isinstance(char, str):
+                    char_counts.setdefault(char, []).append(sn)
+
+        # 2씬 이상 등장 캐릭터만
+        recurring = {c: sns for c, sns in char_counts.items() if len(sns) >= 2}
+        if not recurring:
+            return
+
+        plan_path = project_dir / "character_plan.json"
+        existing: dict[str, dict] = {}
+        if plan_path.exists():
+            try:
+                data = json.loads(plan_path.read_text(encoding="utf-8"))
+                for entry in data.get("characters", []):
+                    existing[entry["id"]] = entry
+            except Exception:
+                pass
+
+        added = []
+        for char_name, scene_list in recurring.items():
+            # id: 이름 괄호 앞부분, 공백→언더스코어, 소문자
+            base = char_name.split("(")[0].strip()
+            char_id = base.replace(" ", "_").lower()
+
+            if char_id in existing:
+                continue  # 이미 있으면 스킵
+
+            # 괄호 안 정보 파싱: "이름(역할, 나이대)" or "이름(역할)"
+            meta = ""
+            if "(" in char_name and ")" in char_name:
+                meta = char_name[char_name.index("(") + 1: char_name.index(")")]
+
+            # 기본 description 자동 생성 (LLM이 나중에 보강 가능)
+            description = f"{char_name} — {meta}" if meta else char_name
+            description += f". 등장씬: {scene_list}"
+
+            existing[char_id] = {
+                "id": char_id,
+                "name": char_name,
+                "description": description,
+                "tags": [meta] if meta else [],
+                "scenes": scene_list,
+                "_auto_generated": True,
+            }
+            added.append(char_name)
+
+        if added:
+            plan_path.write_text(
+                json.dumps({"characters": list(existing.values())}, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            print(f"    ✓ [캐릭터 훅] character_plan.json 자동 생성: {', '.join(added)}", flush=True)
+            _notify("System",
+                    f"character_plan.json 자동 생성 — {len(added)}명 추가:\n" +
+                    "\n".join(f"  - {c}" for c in added) +
+                    "\n\n⚠️ description을 실제 외모 묘사로 보강해야 정확한 캐릭터가 생성됩니다.",
+                    phase=context.get("phase", ""), project=context.get("project", ""),
+                    level="warning")
+        else:
+            print(f"    ✓ [캐릭터 훅] character_plan.json 이미 최신 ({len(existing)}명)", flush=True)
+
+    hm.register_pre_step("step_3b", pre_build_character_plan)
+
     # ── pre-step: upload_info는 manifest 필요 ──
     def pre_upload_info(context: dict):
         project_dir = Path(context.get("project_dir", ""))

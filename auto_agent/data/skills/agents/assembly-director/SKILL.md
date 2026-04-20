@@ -253,35 +253,32 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
 **B-1. 캐릭터 생성** (트랙 A 시작 — 이미지 배치 전에 반드시 완료)
 
 ```
+⭐ character_plan.json은 파이프라인 pre-step 훅이 scene_specs에서 자동 생성함.
+   → 네가 직접 만들 필요 없음. 단, description이 "_auto_generated": true인 항목은
+     반드시 실제 외모 묘사로 보강한 후 image_batch_module을 실행할 것.
+
 조건: 2씬 이상 등장하는 캐릭터만 생성 (1회 출연은 불필요)
 
-0. ⭐ 캐릭터 라이브러리 검색 (먼저!):
-   → CharacterLibrary에서 동일 인물 + 동일 아트스타일 + 동일 나이대 검색
-   → 있으면 프로젝트 로컬에 복사하고 생성 스킵 (재활용!)
-   → 없으면 아래 1~5 진행
+0. character_plan.json 읽기 + description 보강:
+   - Read로 `character_plan.json` 확인
+   - `_auto_generated: true` 항목 = 훅이 자동 생성한 draft
+   - 각 캐릭터의 description을 실제 외모 묘사로 교체:
+     * 얼굴형, 헤어스타일, 눈 색상, 체형, 복장 스타일
+     * 나이대, 국적 특징 (일본인/서양인 등)
+     * 예: "30대 일본 남성. 짧은 검정 머리, 둥근 얼굴, 안경 없음, 녹색 티셔츠와 청바지. 호기심 많은 표정."
+   - 실제 인물이면 `person_photo` 필드에 위키미디어 URL 추가 (IP-Adapter 참조)
+   - 동일 인물 나이 변형(청년/중년)은 별도 id로 분리
 
-1. scene_specs 전체에서 characters 배열 수집
-   → 고유 캐릭터 목록 + 등장 횟수 카운트
-   → 2씬 미만은 스킵
-
-2. 아트스타일 정보 로드 (art_style.json):
-   → style_prompt: 스타일 프롬프트
-   → style_base_url: 아트스타일 기준 이미지 (IP-Adapter 참조)
-
-3. 실제 인물인 경우: `character_plan.json`의 각 캐릭터에 `person_photo` 필드를 채워둠 (위키미디어 URL 등)
-   → image_batch_module이 IP-Adapter 참조로 자동 활용
-
-4. 캐릭터 생성 실행 — 캐릭터/씬 모두 image_batch_module이 일괄 처리:
+1. 캐릭터 생성 실행:
    ```bash
    python3 -m auto_agent.modules.image_batch_module
    ```
-   - 내부 동작: character_plan.json 읽기 → 라이브러리 재사용 검색 → 신규는 FAL 배치 생성
+   - character_plan.json 읽기 → 라이브러리 재사용 검색 → 신규는 FAL 배치 생성
    - 캐릭터 라이브러리에 자동 등록(NAS) — 다른 프로젝트에서 재활용 가능
-   - 동일 인물 나이 변형은 character_plan.json 작성 시 별도 캐릭터로 분리해서 등록
 
-5. 결과 확인:
-   - `images/characters/{캐릭터이름}.png` 생성됨
-   - 실패 시 `character_plan.json` 수정 후 재실행 (재사용 캐릭터는 스킵됨)
+2. 결과 확인:
+   - `images/characters/{캐릭터id}.png` 생성됨
+   - 실패 시 `character_plan.json` description 수정 후 재실행
 
 ⚠️ 씬 이미지 생성 시 캐릭터 활용 규칙:
   - 캐릭터 이미지 있음 → "외양은 참조 이미지 그대로, 동작/포즈만 기술"
@@ -298,6 +295,19 @@ scene_specs.json을 읽고 **에셋 조립 계획**을 세웁니다.
    → images/generated/, images/search/, images/image_assets.json 생성
 2. 실패분이 있으면 같은 명령으로 재실행 (최대 2회) — 이미 성공한 씬은 스킵됨
 ⚠️ 절대 개별 씬을 하나씩 생성하지 말 것 — 20씬 기준 20~40분 vs 배치 3~5분
+```
+
+**B-2b. 차트 디자인 명세서 생성** (이미지 배치 완료 후, B-3 전)
+
+```
+조건: scene_specs에 bar / pie / line / chart 레이아웃 씬이 1개 이상 있을 때만 실행
+
+python3 -m auto_agent.modules.chart_batch_module
+
+→ project DB config의 artstyle(semoji_3D 등)을 자동으로 읽어 chartagent 테마 연결
+→ charts/chart_spec_{씬번호}.json 생성 (Remotion이 SVG 렌더링에 사용)
+→ charts/chartagent_style.json 생성 (프로젝트 전체 차트 스타일 통일)
+→ 이미 생성된 씬은 스킵됨 — 재실행 안전
 ```
 
 **B-3. ⭐ 이미지 품질 검수 (씬당 1회)**

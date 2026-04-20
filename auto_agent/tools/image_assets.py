@@ -174,6 +174,15 @@ def has_generated_version(images_dir: Path, scene_num: int) -> bool:
     return False
 
 
+def has_search_version(images_dir: Path, scene_num: int) -> bool:
+    """해당 씬에 이미 search 타입이 image_assets에 등록되어 있는지."""
+    data = _load(images_dir)
+    for s in data["scenes"]:
+        if s["sceneNumber"] == scene_num:
+            return any(img.get("type") == "search" for img in s.get("images", []))
+    return False
+
+
 def add_version(images_dir: Path, scene_num: int, file_name: str,
                 version_type: str, auto_select: bool = True, **meta) -> dict:
     """이미지 등록. auto_select=True면 이 이미지를 selected로. 스레드 안전."""

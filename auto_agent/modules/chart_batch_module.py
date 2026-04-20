@@ -59,12 +59,35 @@ def run_chart_batch(project_dir: Path) -> dict[str, Any]:
     meta = specs.get("meta") or {}
 
     # 아트스타일 design_tokens 로드 (theme_set / theme_overrides 결정용)
-    art_style = meta.get("art_style") or meta.get("artStyle") or "semoji"
+    # 우선순위: scene_specs.meta > project DB config > 기본값 "semoji"
+    art_style_raw = meta.get("art_style") or meta.get("artStyle") or ""
+    if not art_style_raw:
+        # project DB config에서 fallback
+        try:
+            from auto_agent.db.project_manager import ProjectManager
+            pm = ProjectManager()
+            # project_dir 경로에서 slug 추출 (uuid_slug 형식)
+            slug = "_".join(project_dir.name.split("_")[1:])
+            proj = pm.get_project(slug=slug)
+            if proj:
+                cfg = proj.get("config") or {}
+                if isinstance(cfg, str):
+                    import json as _json
+                    cfg = _json.loads(cfg)
+                art_style_raw = cfg.get("art_style") or cfg.get("artstyle") or ""
+        except Exception:
+            pass
+    art_style_raw = art_style_raw or "semoji"
+    # "artstyle/styles/semoji_3D.json" 같은 경로도 스타일 이름만 추출
+    art_style = Path(art_style_raw).stem
     dt: dict = {}
     styles_dir = Path(__file__).resolve().parent.parent / "data" / "artstyle" / "styles"
     style_json = styles_dir / f"{art_style}.json"
     if style_json.exists():
         dt = json.loads(style_json.read_text(encoding="utf-8")).get("design_tokens", {})
+        _progress(f"아트스타일 로드: {art_style}")
+    else:
+        _progress(f"아트스타일 파일 없음: {art_style} — 기본 토큰 사용", level="warning")
 
     charts_dir = project_dir / "charts"
     charts_dir.mkdir(parents=True, exist_ok=True)

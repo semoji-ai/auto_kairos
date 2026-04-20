@@ -2201,6 +2201,16 @@ const BarDisplay: React.FC<{
   const frame = useCurrentFrame();
   const hasNegative = values.some((v) => v < 0);
 
+  // 레이블 너비 동적 계산: 가장 긴 레이블에 맞춰 모든 행의 바 시작점 통일
+  // 폰트 사이즈 기반으로 추정 (CJK ≈ 1em, ASCII ≈ 0.6em)
+  const _fs = typeof T.labelText === "number" ? T.labelText : parseInt(String(T.labelText)) || 16;
+  const labelWidth = Math.max(
+    ...items.map(it =>
+      [...it].reduce((s, c) => s + (c.charCodeAt(0) > 0x7f ? _fs : _fs * 0.6), 0)
+    ),
+    L.barLabelWidth,
+  ) + 12;
+
   // 자막 동기화: 아이템별 등장 딜레이
   const itemDelays = (subtitles && subtitles.length > 0)
     ? computeItemSubtitleDelays(subtitles, items, fps)
@@ -2309,7 +2319,7 @@ const BarDisplay: React.FC<{
               >
                 <div
                   style={{
-                    minWidth: L.barLabelWidth,
+                    width: labelWidth,
                     textAlign: "right",
                     fontSize: T.labelText,
                     fontWeight: 500,
@@ -2982,7 +2992,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   if (!data) data = {};
   const creative = data.creative || {};
   // 플랫 스키마: 최상위 필드 우선, creative 중첩 fallback
-  const headline: string = data.headline || creative.headline || data.title || "";
+  const headline: string = (data.headline || creative.headline || data.title || "").replace(/\\n/g, "\n");
   const mood: string = data.mood || creative.mood || "informative";
   const source: string = data.source || "";
   const items: string[] = data.items || [];

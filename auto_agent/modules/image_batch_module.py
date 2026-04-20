@@ -301,8 +301,9 @@ def run_batch(
             if image_assets.has_generated_version(images_dir, scene_num):
                 skip += 1
                 continue
-            existing = list(search_dl_dir.glob(f"scene_{scene_num:03d}_search_*.*"))
-            if existing:
+            # 파일 존재 여부가 아닌 image_assets 등록 여부로 스킵 결정
+            # (image_assets에서 제거된 씬은 파일이 있어도 새 버전으로 재검색)
+            if image_assets.has_search_version(images_dir, scene_num):
                 skip += 1
                 continue
             query = ia.get("query") or ia.get("prompt") or ""
@@ -437,7 +438,12 @@ def run_batch(
     with ThreadPoolExecutor(max_workers=2) as pool:
         gen_future = pool.submit(_run_generate)
         search_future = pool.submit(_run_search)
-        gen_result = gen_future.result()
+        # generate 실패 시 search는 계속 진행
+        try:
+            gen_result = gen_future.result()
+        except Exception as e:
+            _progress(f"generate 배치 실패 (search는 계속): {e}", level="warning")
+            gen_result = {"success": 0, "fail": 0, "skip": 0}
         search_result = search_future.result()
 
     total_success = gen_result["success"] + search_result["success"]

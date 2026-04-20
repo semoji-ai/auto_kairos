@@ -137,8 +137,9 @@ def find_split_points(text: str) -> List[Tuple[int, int]]:
         char = text[pos]
         if char == '.':
             before_digit = pos > 0 and text[pos - 1].isdigit()
-            after_digit = pos + 1 < len(text) and text[pos + 1].isdigit()
-            if before_digit and after_digit:
+            # 슬라이스 끝에서 after_digit이 False가 되는 경우를 막기 위해
+            # 앞이 숫자면 소수점으로 간주하여 분할 제외
+            if before_digit:
                 continue
         end_pos = m.end()
         if end_pos < len(text) and text[end_pos] in '"\u201D\u300D':
@@ -181,7 +182,11 @@ def smart_split(text: str) -> List[str]:
             break
 
         # 1순위: 30자 이내 문장 끝 (마침표/느낌표/물음표)
-        sentence_end = re.search(r'[.!?](?!\d)', remaining[:MAX_CHARS_PER_LINE])
+        # (?<!\d) — 앞이 숫자인 소수점(3.65)은 제외; (?!\d) — 뒤가 숫자면 제외
+        # remaining 슬라이스 끝에서 뒤 문자가 잘리는 경우를 막기 위해 +1 여유 포함 후 위치 필터
+        sentence_end = re.search(r'(?<!\d)[.!?](?!\d)', remaining[:MAX_CHARS_PER_LINE + 1])
+        if sentence_end and sentence_end.start() >= MAX_CHARS_PER_LINE:
+            sentence_end = None
         if sentence_end:
             pos = sentence_end.end()
             # 닫는 따옴표가 바로 뒤에 오면 함께 포함

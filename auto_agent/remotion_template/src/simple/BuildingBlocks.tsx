@@ -178,7 +178,8 @@ export function useCountUp(
     ...clamp,
     easing: Easing.out(Easing.exp),
   });
-  return Math.round(value);
+  const dp = (target.toString().split('.')[1] ?? '').length;
+  return dp > 0 ? parseFloat(value.toFixed(dp)) : Math.round(value);
 }
 
 /* ================================================================
@@ -962,9 +963,11 @@ export const MetricCard: React.FC<{
     }}>
       <div style={{ fontSize: 40, color: C.textMuted, marginBottom: 10 }}><TextWithBreaks text={label} /></div>
       <div style={{
-        fontSize: 100, fontWeight: 800, lineHeight: 1.05,
+        fontSize: Math.max(48, Math.min(100, Math.floor(600 / Math.max(value.length, 6)))),
+        fontWeight: 800, lineHeight: 1.05,
         color: isStrokeWhite ? "#ffffff" : C.accent,
         fontVariantNumeric: "tabular-nums",
+        whiteSpace: "nowrap",
         ...(isStrokeWhite ? { WebkitTextStroke: `10px ${C.accent}`, paintOrder: "stroke fill" } : {}),
       }}><TextWithBreaks text={value} /></div>
       {change && (
