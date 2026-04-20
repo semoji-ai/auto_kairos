@@ -1169,10 +1169,28 @@ async def image_versions(slug: str, scene_num: int):
     img_dir = Path(out_dir) / "images"
     try:
         scene_data = get_scene_versions(img_dir, scene_num)
-        # URL 추가
+        # URL 추가 — 파일이 실제로 존재하는 것만 포함
+        existing_versions = []
         for v in scene_data.get("versions", []):
             if v.get("file"):
-                v["url"] = f"/output/{dir_name}/images/{v['file']}"
+                file_path = img_dir / v["file"]
+                if file_path.exists():
+                    v["url"] = f"/output/{dir_name}/images/{v['file']}"
+                    existing_versions.append(v)
+                else:
+                    # 파일 없음 → gen_* 패턴으로 대체 탐색
+                    import glob as _glob
+                    scene_key = f"scene_{scene_num:03d}"
+                    for subdir in ("generated", "search", ""):
+                        base = img_dir / subdir if subdir else img_dir
+                        matches = sorted(base.glob(f"{scene_key}_*.png")) + sorted(base.glob(f"{scene_key}_*.jpg"))
+                        if matches:
+                            rel = (Path(subdir) / matches[0].name).as_posix() if subdir else matches[0].name
+                            v["file"] = rel
+                            v["url"] = f"/output/{dir_name}/images/{rel}"
+                            existing_versions.append(v)
+                            break
+        scene_data["versions"] = existing_versions
         # imageAsset.source = "none" 여부 확인
         specs = load_project_json(out_dir, "scene_specs.json")
         is_none = False
@@ -1291,6 +1309,111 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
             return JSONResponse({"error": "생성 실패 — 파일 미생성"}, 500)
     except Exception as e:
         return JSONResponse({"error": str(e)}, 500)
+
+
+async def _bg_split_postprocess(slug: str, project: dict, scene_a: int, scene_b: int):
+    """분할 후 백그라운드 처리: 양쪽 씬 TTS 재생성 + 씬 재분석."""
+    import asyncio as _asyncio
+    out_dir = project.get("output_dir", "")
+
+    async def _process_one(scene_num: int):
+        specs_path = Path(out_dir) / "scene_specs.json"
+        specs = json.loads(specs_path.read_text(encoding="utf-8"))
+        scene = next((s for s in specs.get("scenes", []) if s["sceneNumber"] == scene_num), None)
+        if not scene:
+            return
+
+        narration = scene.get("narration", "")
+
+        # 1. TTS 재생성
+        try:
+            config = project.get("config", {})
+            if isinstance(config, str):
+                config = json.loads(config)
+            STYLE_VOICE = {
+                "semoji": "W7FnAxJNpD5WGjrF5GLp",
+                "iromism": "9Sj8ugvpK1DmcAXyvi3a",
+                "default": "4JJwo477JUAx3HV0T7n7",
+            }
+            voice_id = config.get("voice_id") or STYLE_VOICE.get(config.get("writing_style", "default"), STYLE_VOICE["default"])
+
+            import requests as _requests
+            from auto_agent.tools.audio_assets import add_version as audio_add, next_filename as audio_next
+            audio_dir = Path(out_dir) / "audio"
+            audio_dir.mkdir(parents=True, exist_ok=True)
+            fname = audio_next(audio_dir, scene_num)
+            output_path = audio_dir / fname
+
+            voice_settings = {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": True}
+            resp = _requests.post(
+                f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
+                headers={"xi-api-key": os.environ.get("ELEVENLABS_API_KEY", ""), "Content-Type": "application/json"},
+                json={"text": narration, "model_id": "eleven_multilingual_v2", "voice_settings": voice_settings},
+                timeout=60,
+            )
+            if resp.status_code == 200:
+                output_path.write_bytes(resp.content)
+                audio_add(audio_dir, scene_num, fname, "split_tts", voice_id=voice_id, text=narration[:100])
+            # 자막 동기화
+            subprocess.run(
+                [sys.executable, "-m", "auto_agent.scripts.generate_subtitles", out_dir, "--scene", str(scene_num)],
+                cwd=str(get_workspace_dir()), capture_output=True, timeout=120,
+            )
+        except Exception as e:
+            print(f"[WARN] 분할 TTS 실패 씬{scene_num}: {e}")
+
+        # 2. 씬 재분석 (script-director)
+        try:
+            scene_ctx = json.dumps(scene, ensure_ascii=False, indent=2)
+            prompt = f"""아래 씬의 연출을 다시 검토하고 개선하세요.
+씬 번호, 나레이션, 챕터는 변경하지 마세요.
+layout, mood, imageAsset, motion, title, concept, headline/items 등 연출 요소 전체를 개선합니다.
+
+현재 씬:
+{scene_ctx}
+
+반드시 씬 전체를 JSON으로만 응답하세요 (설명 없이 JSON만).
+"""
+            env = os.environ.copy()
+            env.pop("CLAUDECODE", None)
+            result = subprocess.run(
+                ["claude", "--model", "claude-sonnet-4-6", "--max-turns", "3",
+                 "--output-format", "text", "--no-ansi"],
+                input=prompt, capture_output=True, text=True, env=env,
+                cwd=str(get_workspace_dir()), timeout=180,
+            )
+            raw = (result.stdout or "").strip()
+            if "```" in raw:
+                lines = raw.split("\n")
+                start = 1 if lines[0].strip().startswith("```") else 0
+                end = -1 if lines[-1].strip() == "```" else len(lines)
+                raw = "\n".join(lines[start:end]).strip()
+            updated = json.loads(raw)
+            # scene_specs 업데이트
+            specs2 = json.loads(specs_path.read_text(encoding="utf-8"))
+            for i, s in enumerate(specs2.get("scenes", [])):
+                if s["sceneNumber"] == scene_num:
+                    updated["sceneId"] = s.get("sceneId", updated.get("sceneId"))
+                    updated["sceneNumber"] = scene_num
+                    updated["narration"] = s["narration"]
+                    specs2["scenes"][i] = updated
+                    break
+            specs_path.write_text(json.dumps(specs2, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception as e:
+            print(f"[WARN] 분할 씬재분석 실패 씬{scene_num}: {e}")
+
+    # 양쪽 씬 병렬 처리
+    await _asyncio.gather(_process_one(scene_a), _process_one(scene_b))
+
+    # 매니페스트 재빌드
+    try:
+        from auto_agent.scripts.build_manifest import build_manifest
+        dir_name = Path(out_dir).name
+        build_manifest(str(project.get("id", "")), dir_name, out_dir)
+    except Exception as e:
+        print(f"[WARN] 분할 백그라운드 매니페스트 리빌드 실패: {e}")
+
+    print(f"[SPLIT] 백그라운드 처리 완료: 씬{scene_a}, 씬{scene_b}")
 
 
 @app.get("/api/p/{slug}/tts/versions/{scene_num}")

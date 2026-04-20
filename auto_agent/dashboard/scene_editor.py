@@ -816,6 +816,11 @@ async def split_scene(slug: str, scene_num: int, request: Request):
     except Exception as e:
         print(f"[WARN] 분할 후 매니페스트 리빌드 실패: {e}")
 
+    # 백그라운드 태스크 시작
+    import asyncio as _asyncio
+    from app import _bg_split_postprocess
+    _asyncio.create_task(_bg_split_postprocess(slug, project, scene_num, new_scene_num))
+
     return JSONResponse({
         "status": "splitting",
         "scene_a": scene_num,
