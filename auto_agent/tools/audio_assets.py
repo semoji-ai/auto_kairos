@@ -36,11 +36,20 @@ def _save(audio_dir: Path, data: dict):
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def _get_scene(data: dict, scene_num: int) -> dict:
+def _get_scene(data: dict, scene_num: int, scene_id: str | None = None) -> dict:
+    # sceneId 우선 조회
+    if scene_id:
+        for s in data["scenes"]:
+            if s.get("sceneId") == scene_id:
+                return s
+    # sceneNumber 폴백
     for s in data["scenes"]:
         if s["sceneNumber"] == scene_num:
             return s
-    scene = {"sceneNumber": scene_num, "selected": None, "versions": []}
+    # 신규 생성
+    scene: dict = {"sceneNumber": scene_num, "selected": None, "versions": []}
+    if scene_id:
+        scene["sceneId"] = scene_id
     data["scenes"].append(scene)
     data["scenes"].sort(key=lambda x: x["sceneNumber"])
     return scene
