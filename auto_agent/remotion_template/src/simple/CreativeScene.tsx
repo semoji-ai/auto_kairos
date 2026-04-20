@@ -143,7 +143,8 @@ type LayoutType =
   | "annotated_chart"   // bar/pie/line + AnnotationLine + Callout
   | "cinematic"         // 이미지 풀스크린 + Ken Burns, 텍스트 없음 (나레이션만)
   | "bar_horizontal"    // 가로 바 차트 (항목별 비교, 긴 라벨에 적합)
-  | "donut";            // 도넛 차트 (점유율, 중앙에 총합 표시)
+  | "donut"             // 도넛 차트 (점유율, 중앙에 총합 표시)
+  | "images_grid";      // 이미지 분할 그리드
 
 const HEADLINE_PRIMARY_LAYOUTS: LayoutType[] = ["headline_only"];
 const INLINE_SUPPORT_HEADLINE_LAYOUTS: LayoutType[] = [
@@ -202,7 +203,7 @@ const VALID_LAYOUTS = new Set<LayoutType>([
   "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
   "comparison_table", "before_after", "icon_stat", "stacked_progress",
   "card_carousel", "hero_with_context", "quote_portrait", "annotated_chart",
-  "cinematic", "bar_horizontal", "donut",
+  "cinematic", "bar_horizontal", "donut", "images_grid",
 ]);
 
 function resolveLayout(data: any, creative: any): LayoutType {
@@ -1403,6 +1404,163 @@ const PersonCardRow: React.FC<{
                 </span>
               )}
             </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ================================================================
+   ImagesGrid — 이미지 화면 분할 레이아웃
+   ================================================================ */
+
+type ImagesGridEntrance = "fade" | "slide" | "overshoot";
+
+const FEATURED_TEMPLATES: Record<string, { areas: string; columns: string; rows: string }> = {
+  featured_left: {
+    areas: '"main sub1" "main sub2"',
+    columns: "1fr 1fr",
+    rows: "1fr 1fr",
+  },
+  featured_right: {
+    areas: '"sub1 main" "sub2 main"',
+    columns: "1fr 1fr",
+    rows: "1fr 1fr",
+  },
+  featured_top: {
+    areas: '"main main main" "sub1 sub2 sub3"',
+    columns: "1fr 1fr 1fr",
+    rows: "1fr 1fr",
+  },
+};
+
+function parseGridType(gridType: string): { cols: number; rows: number } | null {
+  const match = gridType.match(/^(\d+)x(\d+)$/);
+  if (!match) return null;
+  return { cols: parseInt(match[1], 10), rows: parseInt(match[2], 10) };
+}
+
+function inferGridType(count: number): string {
+  const map: Record<number, string> = { 2: "2x1", 3: "3x1", 4: "2x2", 6: "3x2" };
+  return map[count] || "auto";
+}
+
+const ImagesGrid: React.FC<{
+  images: string[];
+  gridType?: string;
+  captions?: (string | null)[];
+  entrance?: ImagesGridEntrance;
+  delays: number[];
+}> = ({ images, gridType, captions, entrance = "fade", delays }) => {
+  const frame = useCurrentFrame();
+  const STAGGER = 8;
+  const DURATION = 15;
+
+  if (images.length === 0) return null;
+
+  const resolvedGridType = gridType || inferGridType(images.length);
+  const isFeatured = resolvedGridType in FEATURED_TEMPLATES;
+  const featured = isFeatured ? FEATURED_TEMPLATES[resolvedGridType] : null;
+  const parsed = !isFeatured ? parseGridType(resolvedGridType) : null;
+
+  const gridStyle: React.CSSProperties = {
+    display: "grid",
+    gap: 0,
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    inset: 0,
+  };
+
+  if (featured) {
+    gridStyle.gridTemplateAreas = featured.areas;
+    gridStyle.gridTemplateColumns = featured.columns;
+    gridStyle.gridTemplateRows = featured.rows;
+  } else if (parsed) {
+    gridStyle.gridTemplateColumns = `repeat(${parsed.cols}, 1fr)`;
+    gridStyle.gridTemplateRows = `repeat(${parsed.rows}, 1fr)`;
+  } else {
+    const autoCols = Math.ceil(Math.sqrt(images.length));
+    gridStyle.gridTemplateColumns = `repeat(${autoCols}, 1fr)`;
+  }
+
+  const AREA_NAMES = ["main", "sub1", "sub2", "sub3"];
+  const effectiveImages = featured ? images.slice(0, AREA_NAMES.length) : images;
+
+  return (
+    <div style={gridStyle}>
+      {effectiveImages.map((src, i) => {
+        const d = delays[i] ?? i * STAGGER;
+        const captionText = captions?.[i] ?? null;
+        const captionDelay = d + DURATION + 5;
+
+        let opacity = 1;
+        let transform = "none";
+
+        if (entrance === "fade") {
+          opacity = interpolate(frame, [d, d + DURATION], [0, 1], clamp);
+        } else if (entrance === "slide") {
+          opacity = interpolate(frame, [d, d + DURATION], [0, 1], clamp);
+          const translateY = interpolate(frame, [d, d + DURATION], [20, 0], {
+            ...clamp,
+            easing: Easing.out(Easing.ease),
+          });
+          transform = `translateY(${translateY}px)`;
+        } else if (entrance === "overshoot") {
+          opacity = interpolate(frame, [d, d + Math.floor(DURATION * 0.3)], [0, 1], clamp);
+          const scale = interpolate(
+            frame,
+            [d, d + DURATION],
+            [0.7, 1],
+            { ...clamp, easing: Easing.out(Easing.back(1.5)) }
+          );
+          transform = `scale(${scale})`;
+        }
+
+        const captionOpacity = captionText
+          ? interpolate(frame, [captionDelay, captionDelay + 10], [0, 1], clamp)
+          : 0;
+
+        const cellStyle: React.CSSProperties = {
+          position: "relative",
+          overflow: "hidden",
+          opacity,
+          transform,
+        };
+
+        if (featured && i < AREA_NAMES.length) {
+          cellStyle.gridArea = AREA_NAMES[i];
+        }
+
+        return (
+          <div key={i} style={cellStyle}>
+            <Img
+              src={resolveAsset(src)}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+            {captionText && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  background: "rgba(0,0,0,0.45)",
+                  color: "#fff",
+                  fontSize: 20,
+                  padding: "8px 12px",
+                  opacity: captionOpacity,
+                }}
+              >
+                {captionText}
+              </div>
+            )}
           </div>
         );
       })}
@@ -3692,6 +3850,17 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             itemIcons={itemIcons}
             itemFlags={itemFlags}
             motionConfig={motionPreset ? motionConfig : undefined}
+          />
+        )}
+
+        {/* Images grid */}
+        {layout === "images_grid" && (
+          <ImagesGrid
+            images={data.images ?? []}
+            gridType={data.grid_type}
+            captions={data.captions}
+            entrance={data.entrance ?? "fade"}
+            delays={itemDelays}
           />
         )}
 

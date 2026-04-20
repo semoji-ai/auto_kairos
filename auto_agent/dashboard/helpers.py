@@ -269,6 +269,12 @@ def get_pipeline_progress(output_dir: str, data_dir: str,
     return {"phases": phases}
 
 
+def infer_grid_type(image_count: int) -> str:
+    """이미지 수를 기반으로 grid_type을 자동 추론한다."""
+    mapping = {2: "2x1", 3: "3x1", 4: "2x2", 6: "3x2"}
+    return mapping.get(image_count, "auto")
+
+
 def resolve_layout(scene: dict) -> tuple[str, bool]:
     """씬의 레이아웃을 결정. Remotion CreativeScene.resolveLayout과 동일 로직.
 
@@ -299,7 +305,7 @@ def resolve_layout(scene: dict) -> tuple[str, bool]:
         "flow", "timeline", "metric_spotlight", "metric_wall", "rank_list",
         "comparison_table", "before_after", "icon_stat", "stacked_progress",
         "card_carousel", "hero_with_context", "quote_portrait", "annotated_chart",
-        "cinematic", "bar_horizontal", "donut",
+        "cinematic", "bar_horizontal", "donut", "images_grid",
     }
 
     # 0순위: 명시적 layout (build_manifest가 항상 최상위에 기록)
@@ -753,6 +759,26 @@ def render_scene_preview(scene: dict, project_accent: str = None, art_style: str
         if len(items) > 9:
             html += f'<div class="sp-grid-cell sp-more">+{len(items)-9}</div>'
         html += '</div>'
+
+    # ── images_grid: Remotion — 이미지 분할 그리드 ──
+    elif layout == "images_grid":
+        images = scene.get("images") or creative.get("images") or []
+        if not images:
+            logger.warning(f"images_grid 레이아웃인데 images 필드가 없습니다: scene_id={scene.get('id', '?')}")
+        grid_type = scene.get("grid_type") or creative.get("grid_type")
+        if not grid_type:
+            grid_type = infer_grid_type(len(images))
+        if show_hl:
+            html += _render_headline(headline, "sm")
+        cols = 2 if len(images) <= 4 else 3
+        html += f'<div class="sp-grid" style="grid-template-columns:repeat({cols},1fr)">'
+        for img_url in images[:6]:
+            if img_url:
+                html += f'<div class="sp-grid-cell"><img src="{_esc(img_url)}" style="width:100%;height:100%;object-fit:cover"></div>'
+            else:
+                html += '<div class="sp-grid-cell" style="background:#333"></div>'
+        html += '</div>'
+        html += f'<div class="sp-source" style="color:{accent}">{_esc(grid_type)}</div>'
 
     # ── bar: Remotion — 수평 바 차트 ──
     elif layout == "bar":
