@@ -741,6 +741,89 @@ async def save_scene(slug: str, scene_num: int, request: Request):
     }
 
 
+@router.post("/scenes/{scene_num}/split")
+async def split_scene(slug: str, scene_num: int, request: Request):
+    """씬 분할 — 1단계(즉시): 구조 변경 + 파일 rename + 매니페스트 재빌드."""
+    import json as _json
+    from datetime import datetime
+    from auto_agent.tools.scene_split import apply_split_to_specs, renumber_files
+    from auto_agent.tools.image_assets import _load as ia_load, _save as ia_save
+
+    project = resolve_project_by_slug(slug)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+
+    out_dir = project.get("output_dir", "")
+    body = await request.json()
+    narration_a = (body.get("narration_a") or "").strip()
+    narration_b = (body.get("narration_b") or "").strip()
+
+    if not narration_a or not narration_b:
+        return JSONResponse({"error": "narration_a, narration_b 모두 필요합니다"}, status_code=400)
+
+    specs_path = Path(out_dir) / "scene_specs.json"
+    if not specs_path.exists():
+        return JSONResponse({"error": "scene_specs.json 없음"}, status_code=404)
+
+    specs = _json.loads(specs_path.read_text(encoding="utf-8"))
+    target = next((s for s in specs.get("scenes", []) if s["sceneNumber"] == scene_num), None)
+    if not target:
+        return JSONResponse({"error": f"씬 {scene_num} 없음"}, status_code=404)
+
+    # 레거시 여부: sceneId가 없는 씬이 있으면 레거시
+    is_legacy = not target.get("sceneId")
+
+    # 백업
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    bak = Path(out_dir) / f"scene_specs.bak.{ts}.json"
+    bak.write_text(specs_path.read_text(encoding="utf-8"), encoding="utf-8")
+
+    # 분할 적용
+    new_specs = apply_split_to_specs(specs, scene_num, narration_a, narration_b)
+    new_scene_num = scene_num + 1
+    new_scene = next(s for s in new_specs["scenes"] if s["sceneNumber"] == new_scene_num)
+    new_scene_id = new_scene.get("sceneId", "")
+
+    # image_assets sceneNumber 동기화
+    img_dir = Path(out_dir) / "images"
+    if img_dir.exists() and (img_dir / "image_assets.json").exists():
+        ia = ia_load(img_dir)
+        for s in ia.get("scenes", []):
+            if s["sceneNumber"] >= new_scene_num and not s.get("sceneId"):
+                s["sceneNumber"] += 1
+        ia_save(img_dir, ia)
+
+    # video_assets sceneNumber 동기화
+    va_path = Path(out_dir) / "video_assets.json"
+    if va_path.exists():
+        va = _json.loads(va_path.read_text(encoding="utf-8"))
+        for s in va.get("scenes", []):
+            if s.get("sceneNumber", 0) >= new_scene_num and not s.get("sceneId"):
+                s["sceneNumber"] += 1
+        va_path.write_text(_json.dumps(va, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # 레거시 파일 rename
+    renumber_files(Path(out_dir), from_scene=new_scene_num, is_legacy=is_legacy)
+
+    # scene_specs 저장
+    specs_path.write_text(_json.dumps(new_specs, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # 매니페스트 재빌드
+    try:
+        from auto_agent.scripts.build_manifest import build_manifest
+        dir_name = Path(out_dir).name
+        build_manifest(str(project.get("id", "")), dir_name, out_dir)
+    except Exception as e:
+        print(f"[WARN] 분할 후 매니페스트 리빌드 실패: {e}")
+
+    return JSONResponse({
+        "status": "splitting",
+        "scene_a": scene_num,
+        "scene_b": new_scene_num,
+        "scene_b_id": new_scene_id,
+    })
+
+
 def _coherence_fix(old_scene: dict, new_scene: dict, diff: dict) -> dict:
     """Haiku 1회 호출로 정합성 보정.
 
