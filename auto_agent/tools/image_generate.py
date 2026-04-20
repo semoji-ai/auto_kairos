@@ -243,6 +243,63 @@ def _enrich_historical_context(prompt: str, historical_period: str) -> str:
     return prompt
 
 
+def _analyze_person_photo(photo_path: str) -> str:
+    """참조 이미지(실존 인물 사진)를 Gemini로 분석하여 외모 묘사 프롬프트 반환.
+
+    kairos-ai/analyzeCharacterImage.js 규칙:
+    - 스타일에 대한 내용 없이 오직 생김새만 묘사
+    - 헤어스타일, 눈/코/입/귀 형태, 얼굴 형태, 수염(있다면), 옷차림 포함
+    """
+    try:
+        google_api_key = os.environ.get("GOOGLE_API_KEY")
+        if not google_api_key:
+            return ""
+
+        import google.genai as genai
+        from google.genai import types as genai_types
+
+        client = genai.Client(api_key=google_api_key)
+
+        with open(photo_path, "rb") as f:
+            image_data = f.read()
+
+        suffix = Path(photo_path).suffix.lower()
+        mime_map = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
+        mime_type = mime_map.get(suffix, "image/jpeg")
+
+        analysis_prompt = (
+            "이 사람의 외모를 영어로 상세히 묘사하는 이미지 생성 프롬프트를 작성해라. "
+            "스타일에 대한 내용 없이 오직 해당 캐릭터의 생김새에 대한 정보만 담아라. "
+            "포함할 내용: 헤어스타일 디테일(색상, 길이, 결, 스타일), 눈 모양과 색상, "
+            "코와 입의 형태, 귀의 특징, 얼굴 형태(둥글다/각지다 등), "
+            "수염이 있다면 수염 묘사, 옷차림의 자세한 묘사(색상, 스타일, 패턴). "
+            "출력: 영어 묘사 프롬프트만 출력. 설명이나 서론 없이."
+        )
+
+        response = None
+        for model_name in ["gemini-2.0-flash", "gemini-2.5-flash"]:
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=[
+                        genai_types.Part.from_bytes(data=image_data, mime_type=mime_type),
+                        analysis_prompt,
+                    ],
+                )
+                break
+            except Exception:
+                continue
+
+        if not response:
+            return ""
+
+        description = response.text.strip()
+        return description
+    except Exception as e:
+        print(f"[analyze_person_photo] 분석 실패: {e}", file=sys.stderr)
+        return ""
+
+
 def _save_fal_result(result: dict, output_path: str) -> dict:
     """FAL API 결과에서 이미지를 다운로드하여 저장"""
     images = result.get("images", [])
@@ -325,39 +382,33 @@ def generate_character(
     if person_photo and Path(person_photo).exists():
         image_urls.append(_image_to_data_uri(person_photo))
 
-    # 프롬프트 구성 — 구조화된 style spec이 톤까지 모두 설명함 (scene_style_desc 중복 제거)
+    # 프롬프트 구성
     parts = []
 
     # 스타일 JSON 스펙
     parts.append(f"Style specification: {style_json_str}\n\n")
 
-    # 3) critical_requirements
+    # critical_requirements
     if critical_reqs:
         parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs) + "\n\n")
 
-    # 4) 스타일 복사 지시 — 기준 이미지의 전체 느낌을 자연스럽게 따를 것
+    # 스타일/참조 이미지 지시
     if len(image_urls) >= 2:
         parts.append(
-            "**REFERENCE IMAGE GUIDE:**\n"
-            "- FIRST image = ART STYLE reference. Match this style:\n"
-            "  • Same eye drawing style, line weight, and body proportions\n"
-            "  • Same color palette and flat shading approach\n"
-            "- SECOND image = PERSON reference for facial features only\n"
-            "- Draw the person from the second image IN THE STYLE of the first image\n\n"
+            "Image 1 = art style reference. Image 2 = person reference.\n"
+            "Draw the person from image 2 in the style of image 1: full body, facing front.\n"
+            "Match the facial features and overall look of image 2, but rendered in the art style of image 1.\n\n"
         )
     elif len(image_urls) == 1:
         parts.append(
-            "**STYLE REFERENCE:**\n"
-            "The attached image defines the art style. Match this style:\n"
-            "- Same eye drawing style, line weight, and body proportions\n"
-            "- Same color palette and flat shading approach\n"
-            "- Create a NEW character drawn in this same style\n\n"
+            "The attached image defines the art style. Match this style. "
+            "Create a NEW character in this style. "
+            "Do NOT copy the appearance of the character in the reference image.\n\n"
         )
 
-    # 5) 캐릭터 묘사
-    parts.append(f"Character illustration:\n{prompt}\n\n")
+    # 캐릭터 묘사
+    parts.append(f"Character: {prompt}\n\n")
 
-    # 6) NO TEXT (간결하게, 끝에)
     parts.append(
         "No text, letters, numbers, captions, watermarks, or speech bubbles in the image."
     )
@@ -394,37 +445,31 @@ def _build_character_fal_input(
     critical_reqs = art_style.get("technical", {}).get("critical_requirements", [])
 
     prompt = _enrich_historical_context(prompt, historical_period)
-    image_urls = []
 
+    image_urls = []
     ref_image = art_style.get("reference_image", "")
     if ref_image and Path(ref_image).exists():
         image_urls.append(_image_to_data_uri(ref_image))
     if person_photo and Path(person_photo).exists():
         image_urls.append(_image_to_data_uri(person_photo))
 
-    # 구조화된 style spec이 톤까지 모두 설명함 (scene_style_desc 중복 제거)
     parts = []
     parts.append(f"Style specification: {style_json_str}\n\n")
     if critical_reqs:
         parts.append("**CRITICAL STYLE REQUIREMENTS:**\n" + "\n".join(f"- {r}" for r in critical_reqs) + "\n\n")
     if len(image_urls) >= 2:
         parts.append(
-            "**REFERENCE IMAGE GUIDE:**\n"
-            "- FIRST image = ART STYLE reference. Match this style:\n"
-            "  • Same eye drawing style, line weight, and body proportions\n"
-            "  • Same color palette and flat shading approach\n"
-            "- SECOND image = PERSON reference for facial features only\n"
-            "- Draw the person from the second image IN THE STYLE of the first image\n\n"
+            "Image 1 = art style reference. Image 2 = person reference.\n"
+            "Draw the person from image 2 in the style of image 1: full body, facing front.\n"
+            "Match the facial features and overall look of image 2, but rendered in the art style of image 1.\n\n"
         )
     elif len(image_urls) == 1:
         parts.append(
-            "**STYLE REFERENCE:**\n"
-            "The attached image defines the art style. Match this style:\n"
-            "- Same eye drawing style, line weight, and body proportions\n"
-            "- Same color palette and flat shading approach\n"
-            "- Create a NEW character drawn in this same style\n\n"
+            "The attached image defines the art style. Match this style. "
+            "Create a NEW character in this style. "
+            "Do NOT copy the appearance of the character in the reference image.\n\n"
         )
-    parts.append(f"Character illustration:\n{prompt}\n\n")
+    parts.append(f"Character: {prompt}\n\n")
     parts.append("No text, letters, numbers, captions, watermarks, or speech bubbles in the image.")
 
     full_prompt = "".join(parts)
@@ -998,6 +1043,11 @@ def _cli_main():
     p_edit.add_argument("--aspect-ratio", default="16:9", help="종횡비")
 
     args = parser.parse_args()
+    if not hasattr(args, "command") or not args.command:
+        parser.print_help()
+        sys.exit(1)
+
+    result = {"success": False, "error": f"알 수 없는 커맨드: {args.command}"}
 
     if args.command == "character":
         result = generate_character(
@@ -1006,7 +1056,7 @@ def _cli_main():
             aspect_ratio=args.aspect_ratio,
         )
     elif args.command == "scene":
-        char_list = [c.strip() for c in args.characters.split(",")] if args.characters else None
+        char_list = [c.strip() for c in args.characters.split("|")] if args.characters else None
         result = generate_scene(
             prompt=args.prompt, output_path=args.output,
             style_path=args.style, characters=char_list,
@@ -1014,7 +1064,7 @@ def _cli_main():
             camera=args.camera, aspect_ratio=args.aspect_ratio,
         )
     elif args.command == "scene-flat":
-        char_list = [c.strip() for c in args.characters.split(",")] if args.characters else None
+        char_list = [c.strip() for c in args.characters.split("|")] if args.characters else None
         result = generate_scene_flat(
             prompt=args.prompt, output_path=args.output,
             style_path=args.style, characters=char_list,

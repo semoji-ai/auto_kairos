@@ -197,10 +197,17 @@ def _scan_and_register_output_projects() -> int:
         m = pattern.match(d.name)
         if not m:
             continue
-        if str(d) in existing:
-            continue  # 이미 등록됨
-
+        # output_dir 경로가 이미 등록된 것인지 확인 (NAS/로컬 경로 불일치 대응)
         uuid_prefix, slug = m.group(1), m.group(2)
+        if str(d) in existing:
+            continue
+        # 같은 uuid+slug의 다른 경로 버전이 이미 DB에 있으면 스킵
+        if any(Path(od).name == d.name for od in existing):
+            continue
+        # 빈 디렉토리(orphan)는 등록하지 않음
+        if not any(d.iterdir()):
+            print(f"  [SCAN] 빈 디렉토리 스킵: {d.name}")
+            continue
 
         # pipeline_state.json에서 메타 읽기
         state_path = d / "pipeline_state.json"
@@ -1736,7 +1743,17 @@ async def generate_image(request: Request, slug: str, scene_num: int):
     if isinstance(config, str):
         config = _json.loads(config)
     art_style = config.get("art_style", "")
-    style_path = str(get_workspace_dir() / art_style) if art_style else ""
+    if art_style:
+        # output_dir 내 로컬 복사본 우선, 없으면 data/ 아래 canonical 경로
+        _local = Path(out_dir) / "art_style.json"
+        if _local.exists():
+            style_path = str(_local)
+        else:
+            from auto_agent.db.project_manager import resolve_art_style_path
+            _resolved = resolve_art_style_path(art_style, Path(out_dir))
+            style_path = str(_resolved) if _resolved and _resolved.exists() else ""
+    else:
+        style_path = ""
 
     from auto_agent.tools.image_assets import add_version, next_filename
     img_dir = Path(out_dir) / "images"
@@ -1748,12 +1765,40 @@ async def generate_image(request: Request, slug: str, scene_num: int):
     fname = next_filename(img_dir, scene_num, "gen", ".png")
     output_path = str(gen_dir / fname)
 
+    # scene_specs에서 캐릭터 이미지 경로 수집
+    char_paths = []
+    try:
+        import unicodedata as _ud
+        specs_path = Path(out_dir) / "scene_specs.json"
+        char_dir = Path(out_dir) / "characters"
+        if specs_path.exists() and char_dir.exists():
+            specs_data = _json.loads(specs_path.read_text(encoding="utf-8"))
+            char_files = {_ud.normalize("NFC", f.stem): f for f in char_dir.iterdir()
+                          if f.suffix.lower() in (".png", ".jpg", ".webp") and "_bak" not in f.stem}
+            for sc in specs_data.get("scenes", []):
+                if sc["sceneNumber"] == scene_num:
+                    for char_id in sc.get("characters", []):
+                        char_key = _ud.normalize("NFC", char_id.replace(" ", "_"))
+                        match = next((f for stem, f in char_files.items()
+                                      if _ud.normalize("NFC", char_key.split("(")[0]) in stem
+                                      and "semoji_3D" in stem), None)
+                        if match:
+                            char_paths.append(str(match))
+                    break
+    except Exception as _ce:
+        import traceback as _tb
+        print(f"[char_paths error] {_tb.format_exc()}", flush=True)
+
+    print(f"[generate_image] scene={scene_num} char_paths={char_paths}", flush=True)
+
     # FAL.ai 호출
     try:
         cmd = [sys.executable, "-m", "auto_agent.tools.image_generate", mode,
                "--prompt", prompt, "--output", output_path]
         if style_path:
             cmd.extend(["--style", style_path])
+        if char_paths:
+            cmd.extend(["--characters", "|".join(char_paths)])
         env = {**dict(os.environ), "PROJECT_NAME": slug}
         result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=120,
                                 cwd=str(get_workspace_dir()), env=env)
@@ -1766,8 +1811,12 @@ async def generate_image(request: Request, slug: str, scene_num: int):
             _setup_studio_project(slug)
             return JSONResponse({"ok": True, "path": output_path, "prompt_used": prompt[:200]})
         else:
-            return JSONResponse({"error": result.stderr[:300] or result.stdout[:300]}, 500)
+            full_err = result.stderr or result.stdout
+            print(f"[image_generate error]\n{full_err}", flush=True)
+            return JSONResponse({"error": full_err[:2000]}, 500)
     except Exception as e:
+        import traceback
+        print(f"[generate_image exception]\n{traceback.format_exc()}", flush=True)
         return JSONResponse({"error": str(e)}, 500)
 
 

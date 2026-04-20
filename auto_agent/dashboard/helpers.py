@@ -418,8 +418,26 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
             except Exception:
                 pass
 
-    # 캐릭터별 첫 등장 씬 이미지 매핑 (1차 패스)
-    char_thumb_map = {}  # {char_id: image_url}
+    # 캐릭터 폴더에서 캐릭터별 이미지 매핑 ({char_id: url})
+    char_thumb_map = {}
+    if output_dir:
+        char_dir = Path(output_dir) / "characters"
+        if char_dir.exists():
+            # 파일명 룩업: 공백→언더스코어 변환 후 prefix 매칭
+            char_files = list(char_dir.iterdir())
+            import unicodedata as _ud
+            # HFS+ NFD → NFC 정규화 후 매핑
+            char_files_by_stem = {_ud.normalize("NFC", f.stem): f for f in char_files if f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")}
+            project_dir_name_local = Path(output_dir).name
+            for char_id in {c for s in scenes for c in s.get("characters", [])}:
+                char_key = _ud.normalize("NFC", char_id.replace(" ", "_"))
+                # 1순위: char_key로 시작하는 semoji_3D 파일
+                match = next((f for stem, f in char_files_by_stem.items() if stem.startswith(char_key) and "semoji_3D" in stem), None)
+                # 2순위: char_key 단순 파일
+                if not match:
+                    match = char_files_by_stem.get(char_key)
+                if match:
+                    char_thumb_map[char_id] = f"/output/{project_dir_name_local}/characters/{match.name}"
 
     for scene in scenes:
         sn = scene["sceneNumber"]
@@ -472,11 +490,6 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         qa_result = get_qa_result(Path(output_dir) / "images", sn_key)
         if qa_result:
             scene["qa"] = qa_result
-
-        # 캐릭터별 첫 등장 이미지 수집
-        for char_id in scene.get("characters", []):
-            if char_id not in char_thumb_map and scene["_image_url"]:
-                char_thumb_map[char_id] = scene["_image_url"]
 
     # 캐릭터 썸네일을 각 씬에 주입 (2차 패스)
     for scene in scenes:

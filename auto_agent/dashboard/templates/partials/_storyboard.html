@@ -7,6 +7,18 @@
   <div class="sb-art-style-bar" id="sb-art-style-bar"></div>
   <button class="btn-design-toggle" onclick="toggleDesignPanel()">🎨 Design</button>
 </div>
+
+{# ── 캐릭터 패널 ── #}
+<div class="sb-char-panel" id="sb-char-panel">
+  <div class="sb-char-panel-header">
+    <span class="sb-char-panel-title">👤 캐릭터</span>
+    <span class="sb-char-panel-subtitle" id="sb-char-subtitle"></span>
+  </div>
+  <div class="sb-char-list" id="sb-char-list">
+    <span style="color:#71717A;font-size:12px">로딩 중...</span>
+  </div>
+</div>
+
 <div class="sb-main-layout">
 <div class="sb-main-content">
 <div class="storyboard-filter">
@@ -109,9 +121,6 @@
             <span class="sb-prompt-label" style="color:#f87171">🎬 비디오</span>
             {% if scene.imageAsset and scene.imageAsset.placement %}<span class="sb-prompt-placement">{{ scene.imageAsset.placement }}</span>{% endif %}
           </div>
-          {% if scene._video_thumb_url %}
-          <img src="{{ scene._video_thumb_url }}" alt="비디오 썸네일" style="width:100%;border-radius:4px;margin:4px 0;object-fit:cover">
-          {% endif %}
           <div class="sb-prompt-text" style="font-size:10px;word-break:break-all">{{ scene._video_file }}</div>
           <div class="sb-prompt-detail">구간: {{ scene._video_start_sec }}s{% if scene._video_end_sec %} ~ {{ scene._video_end_sec }}s{% endif %}</div>
         </div>
@@ -699,7 +708,17 @@ function sbTogglePasteUrl(sn) {
 
 function sbToggleGenerate(sn) {
   var el = document.getElementById('sb-gen-' + sn);
-  el.style.display = el.style.display === 'none' ? '' : 'none';
+  var opening = el.style.display === 'none';
+  el.style.display = opening ? '' : 'none';
+  if (opening) {
+    var ta = document.getElementById('sb-gen-prompt-' + sn);
+    if (ta && !ta.value.trim()) {
+      fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/image-prompt')
+        .then(function(r) { return r.json(); })
+        .then(function(d) { if (d.prompt) ta.value = d.prompt; })
+        .catch(function(){});
+    }
+  }
 }
 
 function sbApplyUrl(sn) {
@@ -942,6 +961,26 @@ function sbSelectVersion(sn, file) {
 .sb-top-bar .sb-art-style-bar { flex: 1; }
 .btn-design-toggle { font-size: 11px; background: rgba(168,85,247,0.15); color: #C084FC; border: 1px solid rgba(168,85,247,0.3); border-radius: 6px; padding: 4px 12px; cursor: pointer; white-space: nowrap; }
 .btn-design-toggle:hover { background: rgba(168,85,247,0.25); }
+
+/* ── 캐릭터 패널 ── */
+.sb-char-panel { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; }
+.sb-char-panel-header { display: flex; flex-direction: column; gap: 2px; min-width: 64px; }
+.sb-char-panel-title { font-size: 12px; font-weight: 700; color: #A78BFA; white-space: nowrap; }
+.sb-char-panel-subtitle { font-size: 10px; color: #71717A; white-space: nowrap; }
+.sb-char-list { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+.sb-char-card { position: relative; border-radius: 8px; overflow: hidden; cursor: default; width: 72px; height: 88px; border: 1.5px solid rgba(255,255,255,0.1); flex-shrink: 0; transition: border-color 0.15s; }
+.sb-char-card:hover .sb-char-overlay { opacity: 1; }
+.sb-char-card.has-image { border-color: rgba(167,139,250,0.4); }
+.sb-char-card.no-image { border-color: rgba(239,68,68,0.35); }
+.sb-char-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sb-char-thumb-placeholder { width: 100%; height: 100%; background: rgba(239,68,68,0.1); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.sb-char-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.82) 45%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 5px 5px 4px; opacity: 0; transition: opacity 0.15s; }
+.sb-char-card.no-image .sb-char-overlay { opacity: 1; background: linear-gradient(to top, rgba(0,0,0,0.7) 60%, transparent 100%); }
+.sb-char-name { font-size: 9px; color: #F4F4F5; text-align: center; line-height: 1.3; word-break: keep-all; font-weight: 600; }
+.sb-char-tag { font-size: 8px; color: #A1A1AA; text-align: center; line-height: 1.2; margin-top: 1px; }
+.sb-char-gen-count { font-size: 8px; color: #A5B4FC; margin-top: 2px; text-align: center; }
+.sb-char-missing-badge { font-size: 8px; color: #FCA5A5; text-align: center; margin-top: 2px; }
+
 .sb-main-layout { display: flex; gap: 0; }
 .sb-main-content { flex: 1; min-width: 0; }
 .sb-design-panel { position: fixed; right: 0; top: 0; width: 65vw; height: 100vh; z-index: 100; border-left: 1px solid rgba(255,255,255,0.08); overflow-y: auto; background: var(--surface1, #141414); box-shadow: -4px 0 24px rgba(0,0,0,0.4); }
@@ -969,7 +1008,7 @@ function sbSelectVersion(sn, file) {
 .sb-gallery-filter { display: flex; gap: 4px; flex-wrap: wrap; }
 .sb-gf-btn { font-size: 11px; padding: 3px 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px; color: #71717A; cursor: pointer; }
 .sb-gf-btn.active { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.4); color: #818CF8; }
-.sb-gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.sb-gallery-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
 .sb-gallery-loading { font-size: 11px; color: #52525B; text-align: center; padding: 16px 0; grid-column: 1/-1; }
 .sb-gallery-item { position: relative; cursor: grab; border-radius: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); aspect-ratio: 16/9; background: #111; display: flex; align-items: center; justify-content: center; }
 .sb-gallery-item.selected { border-color: rgba(99,102,241,0.6); box-shadow: 0 0 0 2px rgba(99,102,241,0.4); }
@@ -1104,10 +1143,21 @@ function updateSceneLayout(slug, sceneNum, layout) {
   window.galleryDragStart = galleryDragStart;
 
   // 씬 카드에 드롭 존 추가
+  // 파인더 드래그 시 브라우저의 파일 열기 기본 동작 차단
+  document.addEventListener('dragover', function(e) {
+    if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+      e.preventDefault();
+    }
+  });
+  document.addEventListener('drop', function(e) {
+    if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+      e.preventDefault();
+    }
+  });
+
   document.addEventListener('DOMContentLoaded', function() {
     setupDropZones();
   });
-  // 이미 로드됐을 경우
   if (document.readyState !== 'loading') {
     setTimeout(setupDropZones, 500);
   }
@@ -1119,7 +1169,8 @@ function updateSceneLayout(slug, sceneNum, layout) {
       var sceneNum = parseInt(preview.querySelector('.sb-player-mount').dataset.sceneNum, 10);
 
       preview.addEventListener('dragover', function(e) {
-        if (e.dataTransfer.types.includes('application/x-gallery-url')) {
+        var types = e.dataTransfer.types;
+        if (types.includes('application/x-gallery-url') || types.includes('Files')) {
           e.preventDefault();
           preview.classList.add('drop-hover');
         }
@@ -1130,10 +1181,18 @@ function updateSceneLayout(slug, sceneNum, layout) {
       preview.addEventListener('drop', function(e) {
         e.preventDefault();
         preview.classList.remove('drop-hover');
+        // 갤러리 드래그
         var url = e.dataTransfer.getData('application/x-gallery-url');
         var file = e.dataTransfer.getData('application/x-gallery-file');
-        if (!url) return;
-        applyGalleryImageToScene(sceneNum, url, file);
+        if (url) {
+          applyGalleryImageToScene(sceneNum, url, file);
+          return;
+        }
+        // 파인더/탐색기 파일 드래그
+        var files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+          uploadFileToScene(sceneNum, files[0]);
+        }
       });
     });
   }
@@ -1159,6 +1218,81 @@ function updateSceneLayout(slug, sceneNum, layout) {
     .catch(function(e) { console.error('갤러리 드롭 실패:', e); });
   }
   window.applyGalleryImageToScene = applyGalleryImageToScene;
+
+  function uploadFileToScene(sceneNum, file) {
+    var form = new FormData();
+    form.append('file', file, file.name);
+    fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sceneNum + '/upload-image', {
+      method: 'POST',
+      body: form,
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        if (window.clearManifestCache) window.clearManifestCache(sceneNum);
+        loadGallery();
+        if (window.sbRefreshGrid) window.sbRefreshGrid(sceneNum);
+      } else {
+        console.error('파일 업로드 실패:', d);
+      }
+    })
+    .catch(function(e) { console.error('파일 업로드 오류:', e); });
+  }
+  window.uploadFileToScene = uploadFileToScene;
+})();
+</script>
+
+<script>
+// ── 캐릭터 패널 ──
+(function() {
+  function loadCharPanel() {
+    fetch('/api/p/' + encodeURIComponent(slug) + '/editor/characters')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var chars = data.characters || [];
+        var list = document.getElementById('sb-char-list');
+        var subtitle = document.getElementById('sb-char-subtitle');
+        if (!list) return;
+
+        var total = chars.length;
+        var hasImg = chars.filter(function(c) { return c.has_image; }).length;
+        subtitle.textContent = hasImg + '/' + total + ' 생성됨';
+
+        if (total === 0) {
+          list.innerHTML = '<span style="color:#71717A;font-size:12px">등록된 캐릭터 없음</span>';
+          return;
+        }
+
+        list.innerHTML = chars.map(function(c) {
+          var nameShort = c.name.split('(')[0].trim();
+          var tag = c.tags && c.tags[0] ? c.tags[0] : '';
+          var genCount = c.gen_scenes ? c.gen_scenes.length : 0;
+          var thumb = c.has_image
+            ? '<img class="sb-char-thumb" src="' + c.thumb_url + '" alt="' + nameShort + '" loading="lazy">'
+            : '<div class="sb-char-thumb-placeholder">👤</div>';
+          var badge = c.has_image
+            ? (genCount > 0 ? '<div class="sb-char-gen-count">🎨 ' + genCount + '씬</div>' : '')
+            : '<div class="sb-char-missing-badge">미생성</div>';
+          return '<div class="sb-char-card ' + (c.has_image ? 'has-image' : 'no-image') + '" title="' + c.name + '">'
+            + thumb
+            + '<div class="sb-char-overlay">'
+            + '<div class="sb-char-name">' + nameShort + '</div>'
+            + (tag ? '<div class="sb-char-tag">' + tag + '</div>' : '')
+            + badge
+            + '</div>'
+            + '</div>';
+        }).join('');
+      })
+      .catch(function(e) { console.error('캐릭터 패널 로드 실패:', e); });
+  }
+
+  // 페이지 로드 시 실행
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadCharPanel);
+  } else {
+    loadCharPanel();
+  }
+  window.loadCharPanel = loadCharPanel;
 })();
 </script>
 

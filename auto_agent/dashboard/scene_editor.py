@@ -7,9 +7,10 @@
   3. 미리보기 ($0) — 변경 사항 diff만 반환
 """
 import json
+import shutil
 from pathlib import Path
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, UploadFile, File
 from fastapi.responses import JSONResponse
 
 from auto_agent.dashboard.helpers import resolve_project_by_slug
@@ -220,7 +221,7 @@ async def get_all_images(slug: str):
     dir_name = Path(out_dir).name if out_dir else project.get("slug", "")
     img_dir = Path(out_dir) / "images"
 
-    # image_assets.json에서 selected 맵 구성
+    # image_assets.json에서 selected 맵 구성 (신 포맷 images[].selected boolean + 구 포맷 selected 문자열 모두 지원)
     selected_map: dict = {}
     assets_path = img_dir / "image_assets.json"
     if assets_path.exists():
@@ -228,8 +229,17 @@ async def get_all_images(slug: str):
             assets = json.loads(assets_path.read_text(encoding="utf-8"))
             for entry in assets.get("scenes", []):
                 sn = entry.get("sceneNumber")
+                if sn is None:
+                    continue
+                # 신 포맷: images[].selected == True 인 파일
+                for img in entry.get("images", []):
+                    if img.get("selected") and img.get("file"):
+                        f = img["file"]
+                        selected_map[f] = sn
+                        selected_map[f.split("/")[-1]] = sn
+                # 구 포맷 fallback
                 sel = entry.get("selected", "")
-                if sn is not None and sel:
+                if sel and sel not in selected_map:
                     selected_map[sel] = sn
                     selected_map[sel.split("/")[-1]] = sn
         except Exception:
@@ -422,6 +432,7 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
     body = await request.json()
     # image_url, url 둘 다 허용 (갤러리 드래그는 url로 전송)
     image_url = body.get("image_url") or body.get("url", "")
+    src_file = body.get("file", "")  # 갤러리 드래그 시 원본 파일명
     is_none = (image_url == "" or image_url is None)
 
     specs = _load_specs(project)
@@ -430,6 +441,41 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
 
     out_dir = project["output_dir"]
     img_dir = Path(out_dir) / "images"
+
+    # ── 이미지를 search/ 폴더에 로컬 저장 (갤러리 드래그 또는 외부 URL) ──
+    import re as _re
+    if not is_none:
+        search_dir = img_dir / "search"
+        search_dir.mkdir(exist_ok=True)
+        pattern = _re.compile(rf"scene_{scene_num:03d}_search_(\d+)\.[^.]+")
+        existing = [int(m.group(1)) for f in search_dir.iterdir() if (m := pattern.match(f.name))]
+        next_idx = max(existing, default=0) + 1
+        dir_name = Path(out_dir).name
+
+        if src_file:
+            # 갤러리 드래그: 로컬 파일 복사
+            src_path = img_dir / src_file
+            if src_path.exists():
+                ext = src_path.suffix
+                dest_name = f"scene_{scene_num:03d}_search_{next_idx:02d}{ext}"
+                shutil.copy2(src_path, search_dir / dest_name)
+                image_url = f"/output/{dir_name}/images/search/{dest_name}"
+        elif image_url.startswith("http://") or image_url.startswith("https://"):
+            # 외부 URL: 다운로드 후 로컬 저장
+            try:
+                import requests as _req
+                from urllib.parse import urlparse as _urlparse
+                parsed = _urlparse(image_url)
+                url_ext = Path(parsed.path).suffix.lower()
+                if url_ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+                    url_ext = ".jpg"
+                dest_name = f"scene_{scene_num:03d}_search_{next_idx:02d}{url_ext}"
+                resp = _req.get(image_url, timeout=30)
+                resp.raise_for_status()
+                (search_dir / dest_name).write_bytes(resp.content)
+                image_url = f"/output/{dir_name}/images/search/{dest_name}"
+            except Exception as e:
+                print(f"[WARN] URL 다운로드 실패: {e}")
 
     # ── scene_specs 업데이트 ──
     found = False
@@ -462,19 +508,52 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
 
     # ── image_assets.json selected 동기화 ──
     assets_path = img_dir / "image_assets.json"
-    if assets_path.exists() and not is_none:
+    if assets_path.exists():
         try:
             assets = json.loads(assets_path.read_text(encoding="utf-8"))
-            # URL에서 파일 상대 경로 추출 (/output/{dir}/images/search/... → search/...)
             dir_name = Path(out_dir).name
             prefix = f"/output/{dir_name}/images/"
-            rel_path = image_url[len(prefix):] if image_url.startswith(prefix) else ""
-            if rel_path:
-                for entry in assets.get("scenes", []):
-                    if entry.get("sceneNumber") == scene_num:
-                        entry["selected"] = rel_path
-                        break
-                assets_path.write_text(json.dumps(assets, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            # 씬 엔트리 찾기 (없으면 생성)
+            scene_entry = None
+            for entry in assets.get("scenes", []):
+                if entry.get("sceneNumber") == scene_num:
+                    scene_entry = entry
+                    break
+            if scene_entry is None:
+                scene_entry = {"sceneNumber": scene_num, "images": []}
+                assets.setdefault("scenes", []).append(scene_entry)
+                assets["scenes"].sort(key=lambda x: x.get("sceneNumber", 0))
+
+            if is_none:
+                # 이미지 없음: 모든 images[].selected = False, selected 필드 제거
+                for img in scene_entry.get("images", []):
+                    img["selected"] = False
+                scene_entry.pop("selected", None)
+            else:
+                rel_path = image_url[len(prefix):] if image_url.startswith(prefix) else ""
+                if rel_path:
+                    # 모든 기존 images[].selected = False
+                    for img in scene_entry.get("images", []):
+                        img["selected"] = False
+                    # 새 파일이 images[]에 없으면 추가
+                    existing_files = [img.get("file", "") for img in scene_entry.get("images", [])]
+                    if rel_path not in existing_files:
+                        new_type = "search" if rel_path.startswith("search/") else "generated"
+                        scene_entry.setdefault("images", []).append({
+                            "file": rel_path,
+                            "type": new_type,
+                            "selected": True,
+                        })
+                    else:
+                        for img in scene_entry.get("images", []):
+                            if img.get("file") == rel_path:
+                                img["selected"] = True
+                                break
+                    # 구 포맷 호환 (get_all_images에서 사용)
+                    scene_entry["selected"] = rel_path
+
+            assets_path.write_text(json.dumps(assets, ensure_ascii=False, indent=2), encoding="utf-8")
         except Exception as e:
             print(f"[WARN] image_assets sync failed: {e}")
 
@@ -482,6 +561,134 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
     _rebuild_manifest_sync(project)
 
     return {"ok": True, "image_url": image_url, "is_none": is_none}
+
+
+@router.post("/scenes/{scene_num}/upload-image")
+async def upload_scene_image(slug: str, scene_num: int, file: UploadFile = File(...)):
+    """파일 직접 업로드 → search/ 폴더 저장 후 select-image와 동일하게 등록."""
+    import re as _re
+    project = resolve_project_by_slug(slug)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+
+    out_dir = project["output_dir"]
+    img_dir = Path(out_dir) / "images"
+    search_dir = img_dir / "search"
+    search_dir.mkdir(parents=True, exist_ok=True)
+
+    # 다음 버전 파일명
+    pattern = _re.compile(rf"scene_{scene_num:03d}_search_(\d+)\.[^.]+")
+    existing = [int(m.group(1)) for f in search_dir.iterdir() if (m := pattern.match(f.name))]
+    next_idx = max(existing, default=0) + 1
+
+    suffix = Path(file.filename or "upload.jpg").suffix.lower()
+    if suffix not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+        suffix = ".jpg"
+    dest_name = f"scene_{scene_num:03d}_search_{next_idx:02d}{suffix}"
+    dest_path = search_dir / dest_name
+    dest_path.write_bytes(await file.read())
+
+    dir_name = Path(out_dir).name
+    image_url = f"/output/{dir_name}/images/search/{dest_name}"
+
+    # image_assets.json 등록
+    assets_path = img_dir / "image_assets.json"
+    try:
+        from auto_agent.tools.image_assets import add_version
+        add_version(img_dir, scene_num, f"search/{dest_name}", "search")
+    except Exception:
+        pass
+
+    # scene_specs imagePath 업데이트
+    specs = _load_specs(project)
+    if specs:
+        for scene in specs.get("scenes", []):
+            if scene["sceneNumber"] == scene_num:
+                scene["imagePath"] = image_url
+                ia = scene.get("imageAsset") or {}
+                if ia.get("source") == "none":
+                    ia.pop("source", None)
+                    scene["imageAsset"] = ia
+                break
+        specs_path = Path(out_dir) / "scene_specs.json"
+        specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    _rebuild_manifest_sync(project)
+    return {"ok": True, "image_url": image_url}
+
+
+@router.get("/scenes/{scene_num}/image-prompt")
+async def get_scene_image_prompt(slug: str, scene_num: int):
+    """씬의 imageAsset.prompt를 반환 — 생성 패널 미리채우기용."""
+    project = resolve_project_by_slug(slug)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    specs = _load_specs(project)
+    if not specs:
+        return JSONResponse({"prompt": ""})
+    for scene in specs.get("scenes", []):
+        if scene["sceneNumber"] == scene_num:
+            ia = scene.get("imageAsset") or {}
+            return {"prompt": ia.get("prompt", "")}
+    return {"prompt": ""}
+
+
+@router.get("/characters")
+async def get_characters(slug: str):
+    """캐릭터 패널용 — character_plan + characters 폴더 이미지 매핑."""
+    import unicodedata as _ud, re as _re
+    project = resolve_project_by_slug(slug)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+
+    out_dir = Path(project["output_dir"])
+    dir_name = out_dir.name
+
+    # character_plan.json 로드
+    cp_path = out_dir / "character_plan.json"
+    if not cp_path.exists():
+        return {"characters": []}
+    cp = json.loads(cp_path.read_text(encoding="utf-8"))
+    char_list = cp.get("characters", [])
+
+    # characters/ 폴더 이미지 맵 (NFC 정규화)
+    char_dir = out_dir / "characters"
+    char_files_by_stem: dict = {}
+    if char_dir.exists():
+        for f in char_dir.iterdir():
+            if f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"):
+                char_files_by_stem[_ud.normalize("NFC", f.stem)] = f
+
+    # scene_specs에서 캐릭터별 등장 씬(generate 타입) 수집
+    specs = _load_specs(project)
+    char_gen_scenes: dict[str, list[int]] = {}
+    if specs:
+        for s in specs.get("scenes", []):
+            ia = s.get("imageAsset") or {}
+            if ia.get("source") == "generate":
+                for c in s.get("characters", []):
+                    char_gen_scenes.setdefault(c, []).append(s["sceneNumber"])
+
+    result = []
+    for ch in char_list:
+        char_id = ch.get("name", "")
+        char_key = _ud.normalize("NFC", char_id.replace(" ", "_"))
+        # 이미지 매핑
+        match = next((f for stem, f in char_files_by_stem.items() if stem.startswith(char_key) and "semoji_3D" in stem), None)
+        if not match:
+            match = char_files_by_stem.get(char_key)
+        thumb_url = f"/output/{dir_name}/characters/{match.name}" if match else ""
+        result.append({
+            "id": ch.get("id", ""),
+            "name": char_id,
+            "tags": ch.get("tags", []),
+            "scenes": ch.get("scenes", []),
+            "gen_scenes": char_gen_scenes.get(char_id, []),
+            "thumb_url": thumb_url,
+            "has_image": bool(match),
+        })
+
+    return {"characters": result}
 
 
 @router.get("/scene-list")
@@ -950,3 +1157,62 @@ def _coherence_fix(old_scene: dict, new_scene: dict, diff: dict) -> dict:
             "scene": {**old_scene, **new_scene},
             "fixes": [f"보정 실패: {e}"],
         }
+
+
+@router.post("/scenes/{scene_num}/upload-image")
+async def upload_image_to_scene(slug: str, scene_num: int, file: UploadFile = File(...)):
+    """파인더/탐색기에서 드래그한 파일을 씬에 적용.
+
+    multipart/form-data로 파일을 받아 images/search/에 저장하고
+    select-image와 동일한 방식으로 scene_specs에 반영한다.
+    """
+    project = resolve_project_by_slug(slug)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+
+    ext = Path(file.filename).suffix.lower()
+    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+        ext = ".jpg"
+
+    out_dir = project["output_dir"]
+    img_dir = Path(out_dir) / "images"
+    search_dir = img_dir / "search"
+    search_dir.mkdir(parents=True, exist_ok=True)
+
+    import re as _re
+    pattern = _re.compile(rf"scene_{scene_num:03d}_search_(\d+)\.[^.]+")
+    existing_indices = [int(m.group(1)) for f in search_dir.iterdir() if (m := pattern.match(f.name))]
+    next_idx = max(existing_indices, default=0) + 1
+
+    dest_name = f"scene_{scene_num:03d}_search_{next_idx:02d}{ext}"
+    dest_path = search_dir / dest_name
+    dest_path.write_bytes(await file.read())
+
+    dir_name = Path(out_dir).name
+    image_url = f"/output/{dir_name}/images/search/{dest_name}"
+
+    # scene_specs 업데이트
+    specs = _load_specs(project)
+    if not specs:
+        return JSONResponse({"error": "scene_specs.json 없음"}, status_code=404)
+
+    found = False
+    for scene in specs.get("scenes", []):
+        if scene["sceneNumber"] == scene_num:
+            scene["imagePath"] = image_url
+            if scene.get("visualization"):
+                scene["vizBackgroundPath"] = image_url
+            ia = scene.get("imageAsset") or {}
+            if ia.get("source") == "none":
+                ia.pop("source", None)
+                scene["imageAsset"] = ia
+            found = True
+            break
+
+    if not found:
+        return JSONResponse({"error": f"씬 {scene_num} 없음"}, status_code=404)
+
+    specs_path = Path(out_dir) / "scene_specs.json"
+    specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return {"ok": True, "file": dest_name, "url": image_url}
