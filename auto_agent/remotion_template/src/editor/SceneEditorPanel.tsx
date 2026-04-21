@@ -205,7 +205,7 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
           offsetPatch[k] = v;
         } else {
           vizPatch[k] = v;
-          if (["layout", "headline", "mood", "reveal", "emphasis", "chartStyle", "orientation", "withPortrait", "portraitPlacement", "showHeadline"].includes(k)) {
+          if (["layout", "headline", "mood", "reveal", "emphasis", "chartStyle", "orientation", "withPortrait", "portraitPlacement", "showHeadline", "hideLabels"].includes(k)) {
             creativePatch[k] = v;
           }
         }
@@ -363,6 +363,19 @@ export const SceneEditorPanel: React.FC<Props> = ({ scene: initialScene, meta, s
               >
                 {BAR_ORIENTATION_OPTIONS.map(option => <option key={option} value={option}>{option}</option>)}
               </select>
+            </div>
+          )}
+          {creative.layout === "before_after" && (
+            <div style={{ marginTop: 8 }}>
+              <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6, marginBottom: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={!!(vc.hideLabels ?? (s as any).hideLabels)}
+                  onChange={e => updateCreative({ hideLabels: e.target.checked })}
+                  style={{ accentColor: ACCENT }}
+                />
+                BEFORE/AFTER 텍스트 숨김
+              </label>
             </div>
           )}
           {creative.layout === "quote" && (

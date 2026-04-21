@@ -3156,7 +3156,8 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const items: string[] = data.items || [];
   const values: number[] = data.values || [];
   const unit: string = data.unit || "";
-  const concept: string = creative.concept || "";
+  const concept: string = creative.concept || data.concept || "";
+  const hideLabels: boolean = !!(creative.hideLabels ?? data.hideLabels);
   const _rawItemIcons: string[] = preset.disableIcons ? [] : (data.itemIcons || data.icons || []);
   // 전부 있거나 전부 없거나 — 길이 불일치 시 전체 무시 (일부만 아이콘 표시 방지)
   const itemIcons: string[] = (_rawItemIcons.length === 0 || _rawItemIcons.length === items.length || items.length === 0)
@@ -4047,7 +4048,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...fadeSlide(frame, 15, 15, -30) }}>
                 {getItemLeadVisual(0, { flagLabel: items[0], iconSize: 56, logoSize: 52 })}
                 <ComparisonCell
-                  label="BEFORE"
+                  label={hideLabels ? "" : "BEFORE"}
                   value={items[0]}
                   sublabel={values[0] != null ? `${fmtNum(values[0])}${data.unit || ""}` : undefined}
                   variant="before"
@@ -4061,7 +4062,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...fadeSlide(frame, 35, 15, 30) }}>
                 {getItemLeadVisual(1, { flagLabel: items[1], iconSize: 56, logoSize: 52 })}
                 <ComparisonCell
-                  label="AFTER"
+                  label={hideLabels ? "" : "AFTER"}
                   value={items[1]}
                   sublabel={values[1] != null ? `${fmtNum(values[1])}${data.unit || ""}` : undefined}
                   variant="after"

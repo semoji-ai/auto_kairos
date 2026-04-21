@@ -1102,7 +1102,7 @@ export const ComparisonCell: React.FC<{
       padding: isLg ? "28px 40px" : "16px 20px",
       textAlign: "center", ...cellStyle, ...style,
     }}>
-      <div style={{ fontSize: isLg ? 36 : 24, color: C.textMuted, marginBottom: isLg ? 12 : 6 }}><TextWithBreaks text={label} /></div>
+      {label && <div style={{ fontSize: isLg ? 36 : 24, color: C.textMuted, marginBottom: isLg ? 12 : 6 }}><TextWithBreaks text={label} /></div>}
       <div style={{ fontSize: isLg ? 64 : 48, fontWeight: 700, color: valueColor, lineHeight: 1.2 }}><TextWithBreaks text={value} /></div>
       {sublabel && <div style={{ fontSize: isLg ? 120 : 48, fontWeight: 800, color: valueColor, lineHeight: 1.05, marginTop: isLg ? 8 : 4 }}><TextWithBreaks text={sublabel} /></div>}
     </div>

@@ -563,6 +563,42 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
     return {"ok": True, "image_url": image_url, "is_none": is_none}
 
 
+@router.post("/scenes/{scene_num}/select-images")
+async def select_scene_images(slug: str, scene_num: int, request: Request):
+    """person_card / images_grid용 복수 이미지 저장.
+
+    body: {"images": [url, url, ...]}
+    scene_specs.json의 해당 씬에 images[] 배열로 저장한다.
+    """
+    project = resolve_project_by_slug(slug)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+
+    body = await request.json()
+    images = body.get("images", [])
+
+    specs = _load_specs(project)
+    if not specs:
+        return JSONResponse({"error": "scene_specs.json 없음"}, status_code=404)
+
+    found = False
+    for scene in specs.get("scenes", []):
+        if scene["sceneNumber"] == scene_num:
+            scene["images"] = images
+            found = True
+            break
+
+    if not found:
+        return JSONResponse({"error": f"씬 {scene_num} 없음"}, status_code=404)
+
+    out_dir = project["output_dir"]
+    specs_path = Path(out_dir) / "scene_specs.json"
+    specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    _rebuild_manifest_sync(project)
+    return {"ok": True, "images": images}
+
+
 @router.post("/scenes/{scene_num}/upload-image")
 async def upload_scene_image(slug: str, scene_num: int, file: UploadFile = File(...)):
     """파일 직접 업로드 → search/ 폴더 저장 후 select-image와 동일하게 등록."""
@@ -791,13 +827,16 @@ async def get_scene_for_editor(slug: str, scene_num: int):
                         ]
                     layout = (mscene.get("visualization") or {}).get("layout", mscene.get("sceneType", ""))
                     constraints = LAYOUT_CONSTRAINTS.get(layout, {})
-                    # narration은 manifest에 없으므로 scene_specs에서 보강
-                    if not mscene.get("narration"):
+                    # narration/concept은 manifest에 없으므로 scene_specs에서 보강
+                    if not mscene.get("narration") or not mscene.get("concept"):
                         specs = _load_specs(project)
                         if specs:
                             spec = next((s for s in specs.get("scenes", []) if s.get("sceneNumber") == scene_num), None)
                             if spec:
-                                mscene["narration"] = spec.get("narration", "")
+                                if not mscene.get("narration"):
+                                    mscene["narration"] = spec.get("narration", "")
+                                if not mscene.get("concept"):
+                                    mscene["concept"] = spec.get("concept", "")
                     return JSONResponse(
                         {"scene": mscene, "constraints": constraints, "layout": layout},
                         headers={"Cache-Control": "no-store"},
