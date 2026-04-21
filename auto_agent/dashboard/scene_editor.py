@@ -815,7 +815,7 @@ async def get_scene_for_editor(slug: str, scene_num: int):
                 if mscene.get("sceneNumber") == scene_num:
                     # manifest 경로 rewrite: project/ → /output/{dir}/
                     prefix = f"/output/{dir_name}/"
-                    for key in ("imagePath", "vizBackgroundPath", "audioPath"):
+                    for key in ("imagePath", "vizBackgroundPath", "audioPath", "videoPath", "videoThumbPath"):
                         val = mscene.get(key, "")
                         if val and val.startswith("project/"):
                             mscene[key] = prefix + val[len("project/"):]
