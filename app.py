@@ -1331,6 +1331,7 @@ async def _bg_split_postprocess(slug: str, project: dict, scene_a: int, scene_b:
             return
 
         narration = scene.get("narration", "")
+        scene_id = scene.get("sceneId", "")
 
         # 1. TTS 재생성
         try:
@@ -1348,7 +1349,7 @@ async def _bg_split_postprocess(slug: str, project: dict, scene_a: int, scene_b:
             from auto_agent.tools.audio_assets import add_version as audio_add, next_filename as audio_next
             audio_dir = Path(out_dir) / "audio"
             audio_dir.mkdir(parents=True, exist_ok=True)
-            fname = audio_next(audio_dir, scene_num)
+            fname = audio_next(audio_dir, scene_num, scene_id=scene_id)
             output_path = audio_dir / fname
 
             voice_settings = {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": True}
@@ -1360,7 +1361,8 @@ async def _bg_split_postprocess(slug: str, project: dict, scene_a: int, scene_b:
             )
             if resp.status_code == 200:
                 output_path.write_bytes(resp.content)
-                audio_add(audio_dir, scene_num, fname, "split_tts", voice_id=voice_id, text=narration[:100])
+                audio_add(audio_dir, scene_num, fname, "split_tts",
+                          scene_id=scene_id, voice_id=voice_id, text=narration[:100])
             # 자막 동기화
             subprocess.run(
                 [sys.executable, "-m", "auto_agent.scripts.generate_subtitles", out_dir, "--scene", str(scene_num)],

@@ -56,16 +56,17 @@ def _get_scene(data: dict, scene_num: int, scene_id: str | None = None) -> dict:
 
 
 def add_version(audio_dir: Path, scene_num: int, file_name: str,
-                version_type: str, auto_select: bool = True, **meta) -> dict:
+                version_type: str, auto_select: bool = True,
+                scene_id: str = "", **meta) -> dict:
     """버전 추가."""
     data = _load(audio_dir)
-    scene = _get_scene(data, scene_num)
+    scene = _get_scene(data, scene_num, scene_id)
     version = {"file": file_name, "type": version_type, **meta}
     scene["versions"].append(version)
 
     if auto_select:
         scene["selected"] = file_name
-        _update_selected(audio_dir, scene_num, file_name)
+        _update_selected(audio_dir, scene_num, file_name, scene_id=scene_id)
 
     _save(audio_dir, data)
     return version
@@ -100,9 +101,9 @@ def get_scene_versions(audio_dir: Path, scene_num: int) -> dict:
     return {"sceneNumber": scene_num, "selected": None, "versions": []}
 
 
-def next_filename(audio_dir: Path, scene_num: int) -> str:
-    """다음 버전 파일명. scene_001_v1.mp3, scene_001_v2.mp3 ..."""
-    prefix = f"scene_{scene_num:03d}_v"
+def next_filename(audio_dir: Path, scene_num: int, scene_id: str = "") -> str:
+    """다음 버전 파일명. sceneId 있으면 {sceneId}_v1.mp3, 없으면 scene_NNN_v1.mp3."""
+    prefix = f"{scene_id}_v" if scene_id else f"scene_{scene_num:03d}_v"
     existing = list(audio_dir.glob(f"{prefix}*"))
     num = len(existing) + 1
     return f"{prefix}{num}.mp3"
