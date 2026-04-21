@@ -145,7 +145,7 @@
         </div>
         {% endif %}
         <div class="sb-image-row">
-          <div class="sb-image-grid" id="sb-img-grid-{{ scene.sceneNumber }}"></div>
+          <div class="sb-image-grid" id="sb-img-grid-{{ scene.sceneNumber }}" data-layout="{{ scene._layout }}" data-multi-images="{{ (scene.images or []) | tojson | e }}"></div>
           <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">{% if scene._video_file %}비디오{% else %}이미지{% endif %}</button>
         </div>
       </div>
@@ -850,10 +850,25 @@ function sbGenerateImage(sn) {
   }).catch(function(e) { status.textContent = '에러: ' + e.message; });
 }
 
+var _multiSel = {};  // {sceneNum: [url, url, ...]} 멀티셀렉 상태
+
+var MULTI_LAYOUTS = ['person_card', 'images_grid'];
+
+function sbIsMultiLayout(sn) {
+  var grid = document.getElementById('sb-img-grid-' + sn);
+  return grid && MULTI_LAYOUTS.includes(grid.dataset.layout);
+}
+
 function sbLoadImageGrid(sn) {
   var grid = document.getElementById('sb-img-grid-' + sn);
   if (!grid) return;
-  // 로컬 이미지 + 검색 후보(캐시) 병합
+  var isMulti = MULTI_LAYOUTS.includes(grid.dataset.layout);
+
+  // 멀티셀렉 초기 상태: data-multi-images 로드 (아직 편집 중이 아닐 때만)
+  if (isMulti && !_multiSel[sn]) {
+    try { _multiSel[sn] = JSON.parse(grid.dataset.multiImages || '[]'); } catch(e) { _multiSel[sn] = []; }
+  }
+
   Promise.all([
     fetch('/api/p/' + encodeURIComponent(slug) + '/images/versions/' + sn).then(function(r) { return r.json(); }),
     fetch('/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sn).then(function(r) { return r.json(); }).catch(function() { return {}; })
@@ -861,41 +876,104 @@ function sbLoadImageGrid(sn) {
     var versions = results[0].versions || [];
     var candidates = results[1].candidates || [];
     var isNoneSelected = results[0].is_none || false;
+    var sel = _multiSel[sn] || [];
     var html = '';
-    // 이미지 없음 카드 (항상 첫 번째)
-    html += '<div class="sb-grid-thumb none-card' + (isNoneSelected ? ' selected' : '') + '" '
-      + 'onclick="sbSetNone(' + sn + ')" '
-      + 'title="이미지 없음 (source: none)" '
-      + 'style="background:rgba(239,68,68,0.10);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">'
-      + '<span style="font-size:14px">🚫</span>'
-      + '<span style="font-size:8px;color:' + (isNoneSelected ? '#EF4444' : '#71717A') + '">없음' + (isNoneSelected ? ' ✓' : '') + '</span>'
-      + '</div>';
-    // 로컬 이미지 (다운로드 완료)
-    versions.forEach(function(v) {
-      var isSel = v.selected || false;
-      var typeIcon = v.type === 'generate' ? '🎨' : '🔍';
-      html += '<div class="sb-grid-thumb' + (isSel ? ' selected' : '') + '" '
-        + 'onclick="sbSelectVersion(' + sn + ',\'' + v.file + '\')" '
-        + 'title="' + typeIcon + ' ' + v.file + '">'
-        + '<img src="' + v.url + '" loading="lazy">'
+
+    if (isMulti) {
+      // 멀티셀렉 헤더
+      html += '<div class="sb-multi-header" style="grid-column:1/-1">'
+        + '<span class="sb-multi-count">' + sel.length + '개 선택됨</span>'
+        + '<button class="sb-multi-apply" onclick="sbApplyMultiImages(' + sn + ')">적용</button>'
+        + '<button class="sb-multi-apply" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#71717A" onclick="sbClearMultiSel(' + sn + ')">초기화</button>'
         + '</div>';
+    } else {
+      // 이미지 없음 카드 (단일 선택 모드만)
+      html += '<div class="sb-grid-thumb none-card' + (isNoneSelected ? ' selected' : '') + '" '
+        + 'onclick="sbSetNone(' + sn + ')" '
+        + 'title="이미지 없음 (source: none)" '
+        + 'style="background:rgba(239,68,68,0.10);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">'
+        + '<span style="font-size:14px">🚫</span>'
+        + '<span style="font-size:8px;color:' + (isNoneSelected ? '#EF4444' : '#71717A') + '">없음' + (isNoneSelected ? ' ✓' : '') + '</span>'
+        + '</div>';
+    }
+
+    // 로컬 이미지
+    versions.forEach(function(v) {
+      var typeIcon = v.type === 'generate' ? '🎨' : '🔍';
+      if (isMulti) {
+        var idx = sel.indexOf(v.url);
+        var isSel = idx !== -1;
+        html += '<div class="sb-grid-thumb' + (isSel ? ' multi-sel' : '') + '" '
+          + 'onclick="sbToggleMultiSel(' + sn + ',\'' + v.url.replace(/'/g, "\\'") + '\')" '
+          + 'title="' + typeIcon + ' ' + v.file + '">'
+          + '<img src="' + v.url + '" loading="lazy">'
+          + (isSel ? '<span class="sb-multi-num">' + (idx + 1) + '</span>' : '')
+          + '</div>';
+      } else {
+        var isSel = v.selected || false;
+        html += '<div class="sb-grid-thumb' + (isSel ? ' selected' : '') + '" '
+          + 'onclick="sbSelectVersion(' + sn + ',\'' + v.file + '\')" '
+          + 'title="' + typeIcon + ' ' + v.file + '">'
+          + '<img src="' + v.url + '" loading="lazy">'
+          + '</div>';
+      }
     });
-    // 검색 후보 (미다운로드 — 중복 제거 + 로컬에 없는 것만)
+
+    // 검색 후보 (미다운로드)
     var seenUrls = new Set();
-    var localTitles = new Set(versions.map(function(v) { return (v.file || '').split('/').pop().replace(/_search_\d+|_gen_\d+/g, ''); }));
     candidates.forEach(function(c) {
       var thumb = c.thumbnail_1920_url || c.thumbnail_url || c.url || '';
       if (!thumb || seenUrls.has(thumb)) return;
       seenUrls.add(thumb);
-      var selectUrl = thumb;
-      html += '<div class="sb-grid-thumb candidate" '
-        + 'onclick="sbSelectCandidate(' + sn + ',decodeURIComponent(\'' + encodeURIComponent(selectUrl) + '\'))" '
-        + 'title="🌐 ' + (c.title || '').substring(0, 30) + '">'
-        + '<img src="' + thumb + '" loading="lazy">'
-        + '</div>';
+      if (isMulti) {
+        var idx = sel.indexOf(thumb);
+        var isSel = idx !== -1;
+        html += '<div class="sb-grid-thumb candidate' + (isSel ? ' multi-sel' : '') + '" '
+          + 'onclick="sbToggleMultiSel(' + sn + ',\'' + thumb.replace(/'/g, "\\'") + '\')" '
+          + 'title="🌐 ' + (c.title || '').substring(0, 30) + '">'
+          + '<img src="' + thumb + '" loading="lazy">'
+          + (isSel ? '<span class="sb-multi-num">' + (idx + 1) + '</span>' : '')
+          + '</div>';
+      } else {
+        html += '<div class="sb-grid-thumb candidate" '
+          + 'onclick="sbSelectCandidate(' + sn + ',decodeURIComponent(\'' + encodeURIComponent(thumb) + '\'))" '
+          + 'title="🌐 ' + (c.title || '').substring(0, 30) + '">'
+          + '<img src="' + thumb + '" loading="lazy">'
+          + '</div>';
+      }
     });
+
     grid.innerHTML = html || '';
   }).catch(function() {});
+}
+
+function sbToggleMultiSel(sn, url) {
+  if (!_multiSel[sn]) _multiSel[sn] = [];
+  var sel = _multiSel[sn];
+  var idx = sel.indexOf(url);
+  if (idx === -1) { sel.push(url); } else { sel.splice(idx, 1); }
+  sbLoadImageGrid(sn);  // 리렌더
+}
+
+function sbClearMultiSel(sn) {
+  _multiSel[sn] = [];
+  sbLoadImageGrid(sn);
+}
+
+function sbApplyMultiImages(sn) {
+  var sel = _multiSel[sn] || [];
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/select-images', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({images: sel})
+  }).then(function(r) { return r.json(); }).then(function(res) {
+    if (res.ok) {
+      if (window._sceneCache) window._sceneCache[sn] = null;
+      sbLoadImageGrid(sn);
+      var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
+      if (mount) { mount.dataset.refresh = '1'; tryMount(mount); }
+      fetch('/api/p/' + encodeURIComponent(slug) + '/rebuild-manifest', { method: 'POST' }).catch(function(){});
+    }
+  }).catch(function(e) { console.error('멀티이미지 적용 실패:', e); });
 }
 
 function sbSetNone(sn) {
@@ -965,6 +1043,14 @@ function sbSelectVersion(sn, file) {
 .sb-version-thumb.selected { border-color: #F59E0B; opacity: 1; }
 .sb-version-thumb:hover { opacity: 1; }
 .sb-version-thumb img { width: 100%; height: 100%; object-fit: contain; }
+/* 멀티셀렉 모드 */
+.sb-multi-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 10px; color: #A1A1AA; }
+.sb-multi-count { font-weight: 600; color: #818CF8; }
+.sb-multi-apply { font-size: 10px; padding: 2px 10px; background: rgba(99,102,241,0.25); border: 1px solid rgba(99,102,241,0.4); color: #A5B4FC; border-radius: 4px; cursor: pointer; }
+.sb-multi-apply:hover { background: rgba(99,102,241,0.4); }
+.sb-grid-thumb { position: relative; }
+.sb-multi-num { position: absolute; top: 2px; left: 2px; background: #6366F1; color: #fff; font-size: 9px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 3px; display: flex; align-items: center; justify-content: center; padding: 0 3px; z-index: 2; pointer-events: none; }
+.sb-grid-thumb.multi-sel { border: 2px solid #6366F1 !important; box-shadow: 0 0 0 1px rgba(99,102,241,0.4); }
 .sb-image-area { margin-top: 8px; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
 .sb-image-prompt { font-size: 12px; color: #A1A1AA; margin-bottom: 6px; }
 .sb-image-prompt-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }

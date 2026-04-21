@@ -441,9 +441,12 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         }
         if person_images:
             entry["images"] = person_images
+        elif scene.get("layout") in ("person_card", "images_grid") and scene.get("images"):
+            # scene_specs에 직접 저장된 images[] (대시보드 멀티셀렉으로 지정)
+            entry["images"] = scene["images"]
         elif image_path and scene.get("layout") == "person_card":
-            # person_card 레이아웃인데 개별 _person_NN 파일이 없으면
-            # 씬 이미지 자체를 images[0]에 폴백 (단체 사진 등)
+            # person_card 레이아웃인데 개별 _person_NN 파일도, images[] 필드도 없으면
+            # 씬 이미지 자체를 images[0]에 폴백
             entry["images"] = [image_path]
 
         # motionPreset, mood, chapter 필드 추가
@@ -537,6 +540,15 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                         pass
                 if thumb_file.exists():
                     entry["videoThumbPath"] = link_asset(thumb_file, "video_sources/thumbs", thumb_file.name)
+            elif static_path:
+                # staticPath 타입: remotion/public/{folder}/{stem}_thumb.jpg 파일이 있으면 videoThumbPath로 등록
+                import re as _re2
+                _stem = _re2.sub(r'\.[^.]+$', '', static_path.split('/')[-1])
+                _folder = static_path.rsplit('/', 1)[0] if '/' in static_path else ''
+                _thumb_rel = (_folder + '/' if _folder else '') + _stem + '_thumb.jpg'
+                _static_thumb = remotion_public / _thumb_rel
+                if _static_thumb.exists():
+                    entry["videoThumbPath"] = _thumb_rel
 
         # cinematic_overlay → cinematicOverlay 변환
         co = viz.get("cinematic_overlay") or viz.get("cinematicOverlay")

@@ -1506,15 +1506,14 @@ def cmd_auto_kairos(args):
     from auto_agent.db.project_manager import ProjectManager
     pm = ProjectManager()
 
-    # 중복 체크
-    existing = pm.get_project(slug=slug)
-    if existing:
-        console.print(f"  [yellow]기존 프로젝트 발견: {slug}[/yellow]")
-        overwrite = input("  덮어쓰고 새로 실행할까요? [y/N]: ").strip().lower()
-        if overwrite != "y":
-            console.print("  기존 프로젝트로 파이프라인 실행합니다.")
-            _run_pipeline(slug)
-            return
+    # 중복 체크 — slug 충돌 시 _v2, _v3 ... 자동 버전업
+    base_slug = slug
+    version = 2
+    while pm.get_project(slug=slug):
+        slug = f"{base_slug}_v{version}"
+        version += 1
+    if slug != base_slug:
+        console.print(f"  [yellow]기존 프로젝트 발견 → 새 슬러그: {slug}[/yellow]")
 
     pid = pm.create_project(
         name=topic[:50],
