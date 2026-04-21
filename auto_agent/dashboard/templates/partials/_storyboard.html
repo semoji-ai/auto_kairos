@@ -955,6 +955,8 @@ function sbToggleMultiSel(sn, url) {
 
 function sbClearMultiSel(sn) {
   _multiSel[sn] = [];
+  var grid = document.getElementById('sb-img-grid-' + sn);
+  if (grid) grid.dataset.multiImages = '[]';
   sbLoadImageGrid(sn);
 }
 
@@ -965,6 +967,9 @@ function sbApplyMultiImages(sn) {
     body: JSON.stringify({images: sel})
   }).then(function(r) { return r.json(); }).then(function(res) {
     if (res.ok) {
+      // data-multi-images attribute를 즉시 갱신 → 탭 전환/재렌더 후에도 선택 상태 유지
+      var grid = document.getElementById('sb-img-grid-' + sn);
+      if (grid) grid.dataset.multiImages = JSON.stringify(sel);
       if (window._sceneCache) window._sceneCache[sn] = null;
       sbLoadImageGrid(sn);
       var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
