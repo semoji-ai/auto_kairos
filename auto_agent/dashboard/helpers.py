@@ -464,7 +464,8 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
             scene["_video_thumb_url"] = ""
 
         scene["_image_url"] = get_scene_image_url(project_dir_name, sn, output_dir)
-        scene["_audio_url"] = get_scene_audio_url(project_dir_name, sn, output_dir)
+        scene["_audio_url"] = get_scene_audio_url(project_dir_name, sn, output_dir,
+                                                    scene_id=scene.get("sceneId", ""))
         tts = tts_map.get(sn, {})
         scene["_tts_duration"] = tts.get("duration")
         scene["_tts_status"] = tts.get("status")
