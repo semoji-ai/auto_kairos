@@ -374,17 +374,15 @@ function resizePreview(val) {
 
   function fetchScene(num) {
     if (sceneCache[num]) return Promise.resolve(sceneCache[num]);
-    // manifest 단일 소스 — Remotion Studio와 동일 데이터
-    return fetchManifest().then(function(manifest) {
-      if (manifest && manifest.scenes) {
-        var scene = manifest.scenes.find(function(s) { return s.sceneNumber === num; });
-        if (scene) {
-          sceneCache[num] = JSON.parse(JSON.stringify(scene));
-          return sceneCache[num];
-        }
-      }
-      return null;
-    });
+    // API 엔드포인트에서 씬 로드 (concept/narration 포함)
+    return fetch('/api/p/' + slug + '/editor/scenes/' + num)
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var scene = d.scene || null;
+        if (scene) sceneCache[num] = scene;
+        return scene;
+      })
+      .catch(function() { return null; });
   }
 
   function refreshMountedScenes(sceneNum) {
