@@ -108,12 +108,14 @@ def next_filename(audio_dir: Path, scene_num: int) -> str:
     return f"{prefix}{num}.mp3"
 
 
-def _update_selected(audio_dir: Path, scene_num: int, file_name: str):
-    """selected를 scene_NNN.mp3로 복사."""
+def _update_selected(audio_dir: Path, scene_num: int, file_name: str,
+                     scene_id: str = ""):
+    """selected를 정규 파일명(sceneId.mp3 또는 scene_NNN.mp3)으로 복사."""
     src = audio_dir / file_name
     if not src.exists():
         return
-    dst = audio_dir / f"scene_{scene_num:03d}.mp3"
+    canonical = f"{scene_id}.mp3" if scene_id else f"scene_{scene_num:03d}.mp3"
+    dst = audio_dir / canonical
     if dst.exists() and dst.name != file_name:
         dst.unlink()
     if src.name != dst.name:

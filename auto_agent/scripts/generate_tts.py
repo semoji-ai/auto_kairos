@@ -321,7 +321,8 @@ def main():
             results.append({"scene": num, "status": "skipped", "duration": 0})
             continue
 
-        output_path = OUTPUT_DIR / f"scene_{num:03d}.mp3"
+        scene_id = scene.get("sceneId", "")
+        output_path = OUTPUT_DIR / (f"{scene_id}.mp3" if scene_id else f"scene_{num:03d}.mp3")
 
         # Skip if already exists
         if output_path.exists():
@@ -334,7 +335,8 @@ def main():
         try:
             duration = generate_tts(text, output_path)
             # SRT 삭제: timestamps가 새로 생성되므로 기존 SRT는 무효
-            srt_path = OUTPUT_DIR.parent / "subtitles" / f"scene_{num:03d}.srt"
+            srt_stem = scene_id if scene_id else f"scene_{num:03d}"
+            srt_path = OUTPUT_DIR.parent / "subtitles" / f"{srt_stem}.srt"
             if srt_path.exists():
                 srt_path.unlink()
             print(f"  [{i+1}/{total}] Scene {num}: OK ({duration:.1f}s)")

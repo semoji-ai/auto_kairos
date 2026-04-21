@@ -420,15 +420,21 @@ class SupabaseProjectManager:
             })
         return candidates
 
-    def get_scene_audio_url(self, project_id: str, scene_number: int) -> Optional[str]:
-        """씬 오디오 URL. 로컬 파일 우선 → Supabase fallback."""
+    def get_scene_audio_url(self, project_id: str, scene_number: int,
+                            scene_id: str = "") -> Optional[str]:
+        """씬 오디오 URL. 로컬 파일 우선 (sceneId.mp3 → scene_NNN.mp3) → Supabase fallback."""
         from pathlib import Path
         project = self.get_project(project_id)
         if project:
             out_dir = project.get("output_dir", "")
             dir_name = Path(out_dir).name if out_dir else project.get("slug", "")
             if out_dir:
-                local = Path(out_dir) / "audio" / f"scene_{scene_number:03d}.mp3"
+                audio_dir = Path(out_dir) / "audio"
+                if scene_id:
+                    p = audio_dir / f"{scene_id}.mp3"
+                    if p.exists():
+                        return f"/output/{dir_name}/audio/{scene_id}.mp3"
+                local = audio_dir / f"scene_{scene_number:03d}.mp3"
                 if local.exists():
                     return f"/output/{dir_name}/audio/scene_{scene_number:03d}.mp3"
         # Supabase fallback

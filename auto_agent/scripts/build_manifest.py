@@ -264,11 +264,16 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         num = scene["sceneNumber"] if scene.get("sceneNumber") is not None else scene["scene_number"]
         scene_key = f"scene_{num:03d}"
 
-        # Audio — audio_assets.json selected 우선 → scene_{num}.mp3 폴백
+        # Audio — audio_assets.json selected 우선 → {sceneId}.mp3 → scene_{num}.mp3 폴백
+        scene_id = scene.get("sceneId", "")
         selected_audio = audio_assets_lookup.get(num)
         if selected_audio:
             audio_src = out_dir / "audio" / selected_audio
             audio_path = link_asset(audio_src, "audio", selected_audio)
+        elif scene_id and (out_dir / "audio" / f"{scene_id}.mp3").exists():
+            audio_fname = f"{scene_id}.mp3"
+            audio_src = out_dir / "audio" / audio_fname
+            audio_path = link_asset(audio_src, "audio", audio_fname)
         else:
             audio_src = out_dir / "audio" / f"{scene_key}.mp3"
             audio_path = link_asset(audio_src, "audio", f"{scene_key}.mp3")

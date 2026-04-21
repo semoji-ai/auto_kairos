@@ -1079,8 +1079,10 @@ async def split_scene(slug: str, scene_num: int, request: Request):
     if not target:
         return JSONResponse({"error": f"씬 {scene_num} 없음"}, status_code=404)
 
-    # 레거시 여부: sceneId가 없는 씬이 있으면 레거시
-    is_legacy = not target.get("sceneId")
+    # 레거시 여부: 프로젝트 내 sceneId 없는 씬이 과반이면 레거시 (scene_NNN.mp3 rename 필요)
+    all_scenes = specs.get("scenes", [])
+    no_id_count = sum(1 for s in all_scenes if not s.get("sceneId"))
+    is_legacy = no_id_count > len(all_scenes) // 2
 
     # 백업
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1121,8 +1123,7 @@ async def split_scene(slug: str, scene_num: int, request: Request):
     try:
         from auto_agent.scripts.build_manifest import build_manifest
         import shutil as _shutil
-        dir_name = Path(out_dir).name
-        storage_key = project.get("storage_key", f"proj-{slug}")
+        storage_key = Path(out_dir).name if out_dir else f"{project.get('uuid', '')}_{slug}"
         build_manifest(str(project.get("id", "")), storage_key, out_dir)
         # remotion/public/manifest.json 갱신 (스튜디오 반영)
         from app import REMOTION_DIR

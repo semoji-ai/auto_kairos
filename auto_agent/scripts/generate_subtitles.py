@@ -538,10 +538,13 @@ def main():
 
     for i, scene in enumerate(scenes):
         num = scene.get("sceneNumber") or scene["scene_number"]
+        scene_id = scene.get("sceneId", "")
         narration = scene.get("narration", "")
         narration_tts = scene.get("narration_tts", narration)
-        audio_path = AUDIO_DIR / f"scene_{num:03d}.mp3"
-        srt_path = SUBTITLE_DIR / f"scene_{num:03d}.srt"
+        # sceneId.mp3 우선 → scene_NNN.mp3 폴백
+        audio_path = AUDIO_DIR / (f"{scene_id}.mp3" if scene_id and (AUDIO_DIR / f"{scene_id}.mp3").exists() else f"scene_{num:03d}.mp3")
+        srt_stem = scene_id if scene_id else f"scene_{num:03d}"
+        srt_path = SUBTITLE_DIR / f"{srt_stem}.srt"
 
         if not narration.strip():
             print(f"  [{i+1}/{total}] Scene {num}: SKIP (empty)")

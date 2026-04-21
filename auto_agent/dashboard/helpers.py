@@ -77,13 +77,19 @@ def get_scene_image_url(project_dir_name: str, scene_num: int, output_dir: str) 
     return None
 
 
-def get_scene_audio_url(project_dir_name: str, scene_num: int, output_dir: str) -> Optional[str]:
-    """씬 오디오 URL 반환.
+def get_scene_audio_url(project_dir_name: str, scene_num: int, output_dir: str,
+                        scene_id: str = "") -> Optional[str]:
+    """씬 오디오 URL 반환. sceneId.mp3 우선, 없으면 scene_NNN.mp3 폴백.
 
     project_dir_name: output 디렉토리명 (uuid_{slug} 형식)
     """
-    audio = Path(output_dir) / "audio" / f"scene_{scene_num:03d}.mp3"
-    if audio.exists():
+    audio_dir = Path(output_dir) / "audio"
+    if scene_id:
+        p = audio_dir / f"{scene_id}.mp3"
+        if p.exists():
+            return f"/output/{project_dir_name}/audio/{scene_id}.mp3"
+    p = audio_dir / f"scene_{scene_num:03d}.mp3"
+    if p.exists():
         return f"/output/{project_dir_name}/audio/scene_{scene_num:03d}.mp3"
     return None
 

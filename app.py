@@ -2480,7 +2480,7 @@ def _setup_studio_project(slug: str):
 
         pid = str(project["id"])
         out_dir = project.get("output_dir", "")
-        storage_key = project.get("storage_key", f"proj-{slug}")
+        storage_key = Path(out_dir).name if out_dir else f"{project.get('uuid', '')}_{slug}"
 
         # build_manifest 실행
         import shutil

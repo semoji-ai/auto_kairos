@@ -49,7 +49,9 @@ def regenerate_tts(project_dir: Path, scene_number: int, corrected_text: str = N
         if not voice_id:
             return {"success": False, "error": "ELEVENLABS_VOICE_ID 미설정"}
 
-        output_path = project_dir / "audio" / f"scene_{scene_number:03d}.mp3"
+        scene_id = scene.get("sceneId", "")
+        fname = f"{scene_id}.mp3" if scene_id else f"scene_{scene_number:03d}.mp3"
+        output_path = project_dir / "audio" / fname
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         # 기존 파일 백업
