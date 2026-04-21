@@ -264,19 +264,21 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         num = scene["sceneNumber"] if scene.get("sceneNumber") is not None else scene["scene_number"]
         scene_key = f"scene_{num:03d}"
 
-        # Audio — audio_assets.json selected 우선 → {sceneId}.mp3 → scene_{num}.mp3 폴백
+        # Audio — sceneId.mp3 우선 → audio_assets.json selected → scene_{num}.mp3 폴백
+        # sceneId 있으면 무조건 sceneId.mp3가 정본. audio_assets는 sceneId 없는 레거시용.
         scene_id = scene.get("sceneId", "")
-        selected_audio = audio_assets_lookup.get(num)
-        if selected_audio:
-            audio_src = out_dir / "audio" / selected_audio
-            audio_path = link_asset(audio_src, "audio", selected_audio)
-        elif scene_id and (out_dir / "audio" / f"{scene_id}.mp3").exists():
+        if scene_id and (out_dir / "audio" / f"{scene_id}.mp3").exists():
             audio_fname = f"{scene_id}.mp3"
             audio_src = out_dir / "audio" / audio_fname
             audio_path = link_asset(audio_src, "audio", audio_fname)
         else:
-            audio_src = out_dir / "audio" / f"{scene_key}.mp3"
-            audio_path = link_asset(audio_src, "audio", f"{scene_key}.mp3")
+            selected_audio = audio_assets_lookup.get(num)
+            if selected_audio:
+                audio_src = out_dir / "audio" / selected_audio
+                audio_path = link_asset(audio_src, "audio", selected_audio)
+            else:
+                audio_src = out_dir / "audio" / f"{scene_key}.mp3"
+                audio_path = link_asset(audio_src, "audio", f"{scene_key}.mp3")
 
         # Duration: 로컬 MP3 probe > tts_results > durationFrames/fps
         audio_duration = 0.0

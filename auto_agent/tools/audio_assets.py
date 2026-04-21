@@ -47,9 +47,9 @@ def _get_scene(data: dict, scene_num: int, scene_id: str | None = None) -> dict:
         if s["sceneNumber"] == scene_num:
             return s
     # 신규 생성
-    scene: dict = {"sceneNumber": scene_num, "selected": None, "versions": []}
-    if scene_id:
-        scene["sceneId"] = scene_id
+    scene: dict = {"sceneNumber": scene_num, "sceneId": scene_id, "selected": None, "versions": []}
+    if not scene_id:
+        scene.pop("sceneId")
     data["scenes"].append(scene)
     data["scenes"].sort(key=lambda x: x["sceneNumber"])
     return scene
