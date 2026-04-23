@@ -511,7 +511,11 @@ def _validate_ingest_completion(
     if not claims_md.exists() or claims_md.stat().st_size <= 120:
         issues.append("claims wiki not usable")
     if run_stage != "packaging" or run_status != "completed":
-        issues.append(f"finalize-session not completed: {run_stage or 'n/a'}/{run_status or 'n/a'}")
+        # claim이 충분히 있으면 finalize 상태는 경고만 — 데이터는 쓸 수 있음
+        if claim_count >= 4:
+            print(f"[source_ingest] 경고: finalize-session 미완료({run_stage}/{run_status}) — claim {claim_count}개 있으므로 계속", flush=True)
+        else:
+            issues.append(f"finalize-session not completed: {run_stage or 'n/a'}/{run_status or 'n/a'}")
     if must_answer_coverage < 0.6:
         issues.append(f"must_answer_coverage={must_answer_coverage:.2f} < 0.60")
     if outline_requirements and not draft_ready:
@@ -1299,7 +1303,13 @@ def main():
     )
 
     print(f"[source_ingest] 완료 — research: {research_root / 'wiki' / topic_slug}", flush=True)
-    sys.exit(0 if success else 1)
+    if success:
+        sys.exit(0)
+    elif validation.get("claim_count", 0) == 0:
+        print("[source_ingest] FATAL: claim 0개 — 후속 스텝 진행 불가", flush=True)
+        sys.exit(2)  # 치명적 실패: 파이프라인 중단 필요
+    else:
+        sys.exit(1)  # partial 실패: 데이터는 있으나 품질 미달
 
 
 if __name__ == "__main__":

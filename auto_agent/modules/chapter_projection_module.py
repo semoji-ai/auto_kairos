@@ -24,7 +24,26 @@ from auto_agent.modules.research_entity_hub import (
 
 
 def _get_research_root() -> Path | None:
-    """LLM Wiki research root 경로 반환. 없으면 None."""
+    """LLM Wiki research root 경로 반환. 없으면 None.
+
+    우선순위:
+    1. PROJECT_DIR/source_ingest_status.json의 research_root 필드
+    2. KAIROS_VAULT_DIR/02-research (vault fallback)
+    """
+    # 1순위: source_ingest가 기록한 실제 research_root
+    project_dir_env = os.environ.get("PROJECT_DIR", "")
+    if project_dir_env:
+        status_path = Path(project_dir_env) / "source_ingest_status.json"
+        if status_path.exists():
+            try:
+                status = json.loads(status_path.read_text(encoding="utf-8"))
+                rr = status.get("research_root", "")
+                if rr and Path(rr).exists():
+                    return Path(rr)
+            except Exception:
+                pass
+
+    # 2순위: vault fallback
     vault_dir = os.environ.get("KAIROS_VAULT_DIR", "")
     if not vault_dir:
         env_path = Path(__file__).parent.parent.parent / ".env"
@@ -461,6 +480,18 @@ def main():
         generated += 1
 
     print(f"[chapter_projection] 완료 — 생성: {generated}개, 스킵: {skipped}개", flush=True)
+
+    # 생성된 chapter_facts가 모두 빈 상태면 실패로 처리
+    if generated > 0:
+        facts_dir = project_dir / "chapter_facts"
+        all_empty = all(
+            not json.loads(p.read_text(encoding="utf-8")).get("key_facts")
+            for p in facts_dir.glob("chapter_*.json")
+        )
+        if all_empty:
+            print("[chapter_projection] FATAL: 모든 챕터 key_facts 비어 있음 — 리서치 데이터 없음", flush=True)
+            sys.exit(2)
+
     sys.exit(0)
 
 

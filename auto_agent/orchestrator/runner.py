@@ -1456,9 +1456,11 @@ class PipelineRunner:
 
             if result.status == "failed":
                 step_name = step.get("name", step["id"])
-                # gate step이면 파이프라인 중단
-                if step.get("gate"):
-                    print(f"\n  GATE FAILED: {step['id']} — 파이프라인 중단")
+                is_fatal = result.error.startswith("FATAL:")
+                # gate step 또는 FATAL 오류이면 blocking 무관하게 파이프라인 중단
+                if step.get("gate") or is_fatal:
+                    label = "GATE FAILED" if step.get("gate") else "FATAL ERROR"
+                    print(f"\n  {label}: {step['id']} — 파이프라인 중단")
                     _notify("Director", f"이런... {_step_label(step_name, 'fail')} 문제 발생. 파이프라인 중단!", phase=self.state.current_phase, project=self.project_slug, level="error")
                     self.state.failed_steps.append(step["id"])
                     return
@@ -4014,9 +4016,11 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 print(f"\n    [ERROR] {module_name} 전체 stderr:\n{result.stderr}", flush=True)
                 if result.stdout:
                     print(f"    [ERROR] {module_name} stdout 끝:\n{result.stdout[-500:]}", flush=True)
+                # exit code 2 = 치명적 실패 (claim=0 등 데이터 없음) → blocking 무관하게 gate처럼 중단
+                prefix = "FATAL: " if result.returncode == 2 else ""
                 return StepResult(
                     step_id=step_id, status="failed",
-                    error=f"Exit code {result.returncode}: {error[:1000]}",
+                    error=f"{prefix}Exit code {result.returncode}: {error[:1000]}",
                 )
         except subprocess.TimeoutExpired:
             return StepResult(
