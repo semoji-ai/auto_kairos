@@ -245,12 +245,94 @@ kairos-pd plugin status             # 원본과 diff 비교 (변경 여부 표�
 
 ---
 
+## Section 7: 스타일 매니저
+
+파이프라인 밖에서 채널별 스타일을 사전 등록·관리하는 독립 레이어. 파이프라인은 읽기만 한다.
+
+### 파일 구조
+
+```
+kairos-pd/
+  styles/
+    이로미즘/
+      style_bundle.json    ← 스타일 규칙 통합 (writing은 파일 참조)
+      writing_style.md     ← 문체 규칙 (자유 형식 마크다운)
+      characters/
+        base_ref_01.png    ← 기준 캐릭터 이미지
+        base_ref_02.png
+    세모지/
+      style_bundle.json
+      writing_style.md
+      characters/
+```
+
+### style_bundle.json 스키마
+
+```json
+{
+  "channel": "이로미즘",
+  "version": "1.0",
+  "updated_at": "2026-04-24T...",
+
+  "artstyle": {
+    "preset": "iromism_cinematic",
+    "prompt_positive": "...",
+    "prompt_negative": "...",
+    "reference_images": ["characters/base_ref_01.png"]
+  },
+
+  "voice": {
+    "id": "EXAVITQu4vr4xnSDxMaL",
+    "name": "이로미",
+    "provider": "elevenlabs"
+  },
+
+  "writing": {
+    "style_file": "writing_style.md"
+  },
+
+  "tts": {
+    "pre": ["숫자 한글 변환", "영어 발음 표기"],
+    "post": ["묵음 제거", "0.3s 페이드인"]
+  },
+
+  "image_rules": {
+    "character_extract": "...",
+    "character_generate": "...",
+    "scene_generate": "..."
+  }
+}
+```
+
+### writing_style.md
+
+문체 톤, 금지 표현, 문장 구조, 예시 문장 등을 자유롭게 마크다운으로 작성.  
+Orchestrator가 서브에이전트 실행 시 이 파일을 읽어 프롬프트에 주입한다.
+
+### CLI
+
+```bash
+kairos-pd style new 이로미즘              # 인터뷰로 신규 생성 (Claude)
+kairos-pd style list                      # 등록된 채널 목록
+kairos-pd style show 이로미즘             # 스타일 번들 출력
+kairos-pd style set 이로미즘 voice.id EXAVITQu4vr4xnSDxMaL
+kairos-pd style edit 이로미즘             # style_bundle.json 에디터로 열기
+kairos-pd style edit 이로미즘 --writing   # writing_style.md 에디터로 열기
+```
+
+### 파이프라인 연결
+
+Orchestrator가 `editorial_brief.json`의 `channel` 필드로 `styles/{channel}/style_bundle.json`과 `writing_style.md`를 로드해서, 모든 서브에이전트 실행 시 컨텍스트로 주입한다.
+
+---
+
 ## 구현 순서 (Plan 단위)
 
 | Plan | 내용 |
 |------|------|
 | Plan 1 | 스캐폴드 + task_db.py + cli.py 뼈대 + plugin_manager.py |
 | Plan 2 | Orchestrator SKILL.md + pipeline.json + 기획 인터뷰 스킬 |
-| Plan 3 | 태스크별 SKILL.md 이식 (v3 → kairos-pd) |
-| Plan 4 | 플러그인 초기 세트 (fontagent, chartagent) + update 명령 |
-| Plan 5 | 대시보드 + 엔드투엔드 테스트 |
+| Plan 3 | 스타일 매니저 (style_bundle.json + writing_style.md + style CLI) |
+| Plan 4 | 태스크별 SKILL.md 이식 (v3 → kairos-pd) |
+| Plan 5 | 플러그인 초기 세트 (fontagent, chartagent) + update 명령 |
+| Plan 6 | 대시보드 + 엔드투엔드 테스트 |
