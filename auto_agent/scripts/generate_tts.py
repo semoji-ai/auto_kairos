@@ -78,7 +78,42 @@ def _resolve_voice_config() -> tuple:
         except Exception:
             pass
 
-    # 3) .env 폴백
+    # 3) writing_style 기반 자동 매핑 (DB voice_id=None인 semoji/iromism 프로젝트)
+    if not voice_id:
+        _STYLE_VOICE_MAP = {
+            "semoji": "W7FnAxJNpD5WGjrF5GLp",
+            "semoji_3d": "W7FnAxJNpD5WGjrF5GLp",
+            "iromism": "9Sj8ugvpK1DmcAXyvi3a",
+        }
+        writing_style = os.getenv("WRITING_STYLE", "")
+        if not writing_style:
+            # PROJECT_DIR 또는 PROJECT_NAME으로 DB에서 writing_style 조회
+            try:
+                from auto_agent.db.connection import db_exists
+                if db_exists():
+                    from auto_agent.db.project_manager import ProjectManager
+                    pm = ProjectManager()
+                    slug = os.getenv("PROJECT_NAME", "")
+                    project_dir_env = os.getenv("PROJECT_DIR", "")
+                    project = None
+                    if slug:
+                        project = pm.resolve_project(slug)
+                    elif project_dir_env:
+                        from pathlib import Path as _Path
+                        _slug = _Path(project_dir_env).name.split("_", 1)[-1] if "_" in _Path(project_dir_env).name else ""
+                        if _slug:
+                            project = pm.resolve_project(_slug)
+                    if project:
+                        cfg = pm.get_config(project["id"])
+                        writing_style = cfg.get("writing_style", "")
+            except Exception:
+                pass
+        if writing_style:
+            mapped = _STYLE_VOICE_MAP.get(writing_style.lower().replace("-", "_"))
+            if mapped:
+                voice_id = mapped
+
+    # 4) .env 폴백
     if not voice_id:
         voice_id = os.getenv("ELEVENLABS_VOICE_ID", _DEFAULT_VOICE_ID)
 

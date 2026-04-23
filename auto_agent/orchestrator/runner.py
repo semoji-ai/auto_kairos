@@ -695,10 +695,11 @@ class PipelineRunner:
         if not config.get("voice_id"):
             STYLE_VOICE_MAP = {
                 "semoji": {"voice_id": "W7FnAxJNpD5WGjrF5GLp", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
+                "semoji_3d": {"voice_id": "W7FnAxJNpD5WGjrF5GLp", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
                 "iromism": {"voice_id": "9Sj8ugvpK1DmcAXyvi3a", "voice_settings": {"stability": 1.0, "similarity_boost": 0.6, "style": 0.9, "speed": 1.1}},
                 "default": {"voice_id": "4JJwo477JUAx3HV0T7n7", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
             }
-            ws = config.get("writing_style", "default")
+            ws = config.get("writing_style", "default").lower().replace("-", "_")
             voice = STYLE_VOICE_MAP.get(ws, STYLE_VOICE_MAP.get("default", {}))
             if voice:
                 config["voice_id"] = voice["voice_id"]
