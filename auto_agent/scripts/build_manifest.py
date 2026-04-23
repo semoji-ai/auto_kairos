@@ -104,6 +104,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     if motion_path.exists():
         motion = json.loads(motion_path.read_text(encoding="utf-8"))
 
+    # subtitles: 개별 SRT 파일 우선 — subtitles.json 손상과 무관하게 자막 유지
     subs_data = {"scenes": []}
     subs_path = out_dir / "subtitles.json"
     if subs_path.exists():
@@ -120,7 +121,45 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     for entry in motion.get("transition_series", []):
         motion_lookup[entry["scene_number"]] = entry
 
-    sub_lookup = {s["sceneNumber"]: s for s in subs_data.get("scenes", [])}
+    # SRT 파일 → sub_lookup 구축 (subtitles.json fallback)
+    def _parse_srt(srt_text: str) -> list[dict]:
+        import re as _re
+        entries = []
+        for block in _re.split(r"\n\n+", srt_text.strip()):
+            lines = block.strip().splitlines()
+            if len(lines) < 3:
+                continue
+            timing = lines[1] if len(lines) > 1 else ""
+            m = _re.match(r"(\d+):(\d+):(\d+),(\d+)\s*-->\s*(\d+):(\d+):(\d+),(\d+)", timing)
+            if not m:
+                continue
+            h1,m1,s1,ms1,h2,m2,s2,ms2 = (int(x) for x in m.groups())
+            start = h1*3600+m1*60+s1+ms1/1000
+            end   = h2*3600+m2*60+s2+ms2/1000
+            text  = " ".join(lines[2:]).strip()
+            if text:
+                entries.append({"text": text, "startSec": round(start,3), "endSec": round(end,3)})
+        return entries
+
+    sub_lookup: dict[int, list] = {}
+    srt_dir = out_dir / "subtitles"
+    if srt_dir.exists():
+        import re as _re2
+        for srt_file in sorted(srt_dir.glob("scene_*.srt")):
+            m = _re2.search(r"scene_(\d+)", srt_file.stem)
+            if m:
+                sn = int(m.group(1))
+                parsed = _parse_srt(srt_file.read_text(encoding="utf-8"))
+                if parsed:
+                    sub_lookup[sn] = parsed
+    # SRT 없는 씬은 subtitles.json fallback
+    for s in subs_data.get("scenes", []):
+        sn = s["sceneNumber"]
+        if sn not in sub_lookup:
+            sub_lookup[sn] = [
+                {"text": e["text"], "startSec": e["startSec"], "endSec": e["endSec"]}
+                for e in s.get("entries", [])
+            ]
 
     # ── Remotion public 디렉토리에 프로젝트 심볼릭 링크 ──
     remotion_public = workspace / "remotion" / "public"
@@ -317,13 +356,8 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                         image_path = link_asset(img_src, "images", f"{subdir}{scene_key}{ext}")
                         break
 
-        # Subtitles
-        sub_entries = []
-        if num in sub_lookup:
-            sub_entries = [
-                {"text": e["text"], "startSec": e["startSec"], "endSec": e["endSec"]}
-                for e in sub_lookup[num].get("entries", [])
-            ]
+        # Subtitles — SRT 우선, fallback subtitles.json
+        sub_entries = sub_lookup.get(num, [])
 
         # Visualization — 플랫 스키마 + 중첩 스키마 모두 지원
         is_flat = "layout" in scene and "motion" in scene  # 플랫 스키마 판별: 최상위에 layout+motion

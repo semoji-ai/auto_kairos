@@ -4,3 +4,4 @@ import { enableTailwind } from "@remotion/tailwind";
 Config.setVideoImageFormat("jpeg");
 Config.setOverwriteOutput(true);
 Config.overrideWebpackConfig(enableTailwind);
+Config.setMaxTimelineTracks(200);

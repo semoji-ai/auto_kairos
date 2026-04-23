@@ -166,7 +166,9 @@ async def execute_action(slug: str, action_name: str, request: Request):
                         for srt in sub_dir.glob(f"scene_{sn:03d}.*"):
                             srt.unlink()
                 next_cmd = [sys.executable, str(next_script)]
-                if body.get("scene_number") and _supports_scene_number(next_action):
+                # subtitle_sync는 체인 실행 시 전체 씬을 처리해야 함 —
+                # --scene 인자를 주면 subtitles.json 전체를 1개짜리로 덮어써 나머지 씬 자막이 소실됨
+                if body.get("scene_number") and _supports_scene_number(next_action) and next_action != "subtitle_sync":
                     next_cmd.extend(["--scene", str(body["scene_number"])])
                 chain_result = subprocess.run(
                     next_cmd, cwd=str(get_workspace_dir()),

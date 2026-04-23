@@ -1542,6 +1542,38 @@ def _normalize_subtitle_entries(entries):
     return normalized
 
 
+def _snap_to_word_boundary(start_sec: float, out_dir: str, scene_num: int) -> float:
+    """ElevenLabs 문자 타임스탬프에서 start_sec 이후 가장 가까운 단어 시작점으로 스냅.
+
+    숫자/영문 혼합 텍스트는 TTS 발음이 표기와 달라 텍스트 검색이 실패하므로,
+    단어 경계(공백 직후 문자) 중 start_sec에 가장 가까운 것을 선택한다.
+    """
+    import json as _json
+    ts_path = Path(out_dir) / "audio" / f"scene_{scene_num:03d}.timestamps.json"
+    if not ts_path.exists():
+        return start_sec
+    try:
+        ts = _json.loads(ts_path.read_text(encoding="utf-8"))
+        chars = ts.get("characters", [])
+        starts = ts.get("character_start_times_seconds", [])
+        if not chars or len(chars) != len(starts):
+            return start_sec
+        # 단어 시작 = 공백 다음 문자 or 첫 문자
+        word_starts = []
+        for i, ch in enumerate(chars):
+            if i == 0 or chars[i - 1] in (" ", " "):
+                word_starts.append(starts[i])
+        if not word_starts:
+            return start_sec
+        # start_sec 이후 가장 가까운 단어 시작 (±0.3s 이내만 스냅)
+        best = min(word_starts, key=lambda t: abs(t - start_sec))
+        if abs(best - start_sec) <= 0.3:
+            return round(best, 3)
+    except Exception:
+        pass
+    return start_sec
+
+
 def _resolve_subtitle_audio_duration(out_dir: str, scene_num: int, fallback_end_sec: float = 0.0) -> float:
     audio_path = Path(out_dir) / "audio" / f"scene_{scene_num:03d}.mp3"
     if audio_path.exists():
@@ -1561,11 +1593,16 @@ async def save_subtitles(request: Request, slug: str, scene_num: int):
     if not project:
         return JSONResponse({"error": "not found"}, 404)
     body = await request.json()
+    out_dir = project.get("output_dir", "")
     entries = _normalize_subtitle_entries(body.get("entries", []))
     if not entries:
         return JSONResponse({"error": "entries required"}, 400)
 
-    out_dir = project.get("output_dir", "")
+    # 단어 경계 스냅 — 숫자/영문 혼합 텍스트의 타이밍 오류 방지
+    entries = [
+        {**e, "startSec": _snap_to_word_boundary(e["startSec"], out_dir, scene_num)}
+        for e in entries
+    ]
     srt_path = Path(out_dir) / "subtitles" / f"scene_{scene_num:03d}.srt"
     srt_path.parent.mkdir(parents=True, exist_ok=True)
 
