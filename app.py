@@ -184,8 +184,10 @@ def _scan_and_register_output_projects() -> int:
             pm.delete_project(p["id"])
             print(f"  [SCAN] 폴더 없음 → DB 삭제: {Path(out).name}")
 
-    # 기존 DB 프로젝트의 output_dir 집합 (삭제 후 재조회)
-    existing = {p["output_dir"] for p in pm.list_projects() if p.get("output_dir")}
+    # 기존 DB 프로젝트의 output_dir 집합 및 uuid 집합 (삭제 후 재조회)
+    current_projects = pm.list_projects()
+    existing = {p["output_dir"] for p in current_projects if p.get("output_dir")}
+    existing_uuids = {p["uuid"] for p in current_projects if p.get("uuid")}
 
     registered = 0
     # {8자_uuid}_{slug} 패턴 디렉토리만 처리
@@ -203,6 +205,9 @@ def _scan_and_register_output_projects() -> int:
             continue
         # 같은 uuid+slug의 다른 경로 버전이 이미 DB에 있으면 스킵
         if any(Path(od).name == d.name for od in existing):
+            continue
+        # 같은 uuid가 이미 DB에 등록된 경우 스킵 (경로 불일치 케이스)
+        if uuid_prefix in existing_uuids:
             continue
         # 빈 디렉토리(orphan)는 등록하지 않음
         if not any(d.iterdir()):

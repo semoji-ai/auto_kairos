@@ -130,9 +130,19 @@ class ProjectManager:
         uuid: str = None,
         channel: str = None,
     ) -> int:
-        """프로젝트 생성. output_dir 자동 생성. 프로젝트 ID 반환."""
+        """프로젝트 생성. output_dir 자동 생성. 프로젝트 ID 반환.
+
+        uuid가 주어지면 해당 uuid로 이미 등록된 프로젝트가 있으면 그 ID를 반환 (중복 방지).
+        uuid 없이 slug만 주어진 경우, slug 중복이 있어도 새로 생성 (CLI에서 버전 관리).
+        """
         if not uuid:
             uuid = _generate_project_uuid()
+        else:
+            # uuid가 명시된 경우: 이미 등록된 프로젝트면 기존 ID 반환 (중복 등록 방지)
+            existing = self.get_project(uuid=uuid)
+            if existing:
+                return existing["id"]
+
         output_dir = get_workspace_dir() / "output" / f"{uuid}_{slug}"
         output_dir.mkdir(parents=True, exist_ok=True)
 
