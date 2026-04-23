@@ -78,7 +78,44 @@ def _resolve_voice_config() -> tuple:
         except Exception:
             pass
 
-    # 3) writing_style 기반 자동 매핑 (DB voice_id=None인 semoji/iromism 프로젝트)
+    # 3) artstyle JSON의 voice 필드 (style-manager가 관리하는 단일 소스)
+    if not voice_id:
+        try:
+            from auto_agent.db.connection import db_exists
+            art_style = None
+            if db_exists():
+                from auto_agent.db.project_manager import ProjectManager
+                pm = ProjectManager()
+                slug = os.getenv("PROJECT_NAME", "")
+                project_dir_env = os.getenv("PROJECT_DIR", "")
+                project = None
+                if slug:
+                    project = pm.resolve_project(slug)
+                elif project_dir_env:
+                    from pathlib import Path as _Path
+                    _name = _Path(project_dir_env).name
+                    _slug = _name.split("_", 1)[-1] if "_" in _name else ""
+                    if _slug:
+                        project = pm.resolve_project(_slug)
+                if project:
+                    cfg = pm.get_config(project["id"])
+                    art_style = cfg.get("art_style", "")
+            if art_style:
+                from pathlib import Path as _Path
+                # art_style이 경로 형태("artstyle/styles/semoji_3D.json")이거나 ID("semoji_3D")일 수 있음
+                _style_id = _Path(art_style).stem if "/" in art_style or art_style.endswith(".json") else art_style
+                _style_path = _Path(__file__).parent.parent / "data" / "artstyle" / "styles" / f"{_style_id}.json"
+                if _style_path.exists():
+                    _style = json.loads(_style_path.read_text(encoding="utf-8"))
+                    _voice = _style.get("voice", {})
+                    if _voice.get("voice_id"):
+                        voice_id = _voice["voice_id"]
+                        if not voice_settings and _voice.get("voice_settings"):
+                            voice_settings = _voice["voice_settings"]
+        except Exception:
+            pass
+
+    # 4) writing_style 기반 자동 매핑 (DB voice_id=None인 semoji/iromism 프로젝트)
     if not voice_id:
         _STYLE_VOICE_MAP = {
             "semoji": "W7FnAxJNpD5WGjrF5GLp",

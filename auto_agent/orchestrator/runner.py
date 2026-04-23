@@ -691,20 +691,40 @@ class PipelineRunner:
         if not config.get("art_style"):
             print("WARNING: project config에 art_style 미설정")
 
-        # voice_id 미설정 시 writing_style에서 자동 매핑
+        # voice_id 미설정 시 artstyle JSON 우선, 그 다음 writing_style 매핑
         if not config.get("voice_id"):
-            STYLE_VOICE_MAP = {
-                "semoji": {"voice_id": "W7FnAxJNpD5WGjrF5GLp", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
-                "semoji_3d": {"voice_id": "W7FnAxJNpD5WGjrF5GLp", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
-                "iromism": {"voice_id": "9Sj8ugvpK1DmcAXyvi3a", "voice_settings": {"stability": 1.0, "similarity_boost": 0.6, "style": 0.9, "speed": 1.1}},
-                "default": {"voice_id": "4JJwo477JUAx3HV0T7n7", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
-            }
-            ws = config.get("writing_style", "default").lower().replace("-", "_")
-            voice = STYLE_VOICE_MAP.get(ws, STYLE_VOICE_MAP.get("default", {}))
-            if voice:
-                config["voice_id"] = voice["voice_id"]
-                config["voice_settings"] = voice["voice_settings"]
-                print(f"    voice_id 자동 설정: {ws} → {voice['voice_id']}")
+            # 1순위: artstyle JSON의 voice 필드 (style-manager 단일 소스)
+            art_style = config.get("art_style", "")
+            if art_style:
+                from pathlib import Path as _Path
+                _style_id = _Path(art_style).stem if ("/" in art_style or art_style.endswith(".json")) else art_style
+                _style_path = DATA_DIR / "artstyle" / "styles" / f"{_style_id}.json"
+                if _style_path.exists():
+                    try:
+                        _style = json.loads(_style_path.read_text(encoding="utf-8"))
+                        _voice = _style.get("voice", {})
+                        if _voice.get("voice_id"):
+                            config["voice_id"] = _voice["voice_id"]
+                            if _voice.get("voice_settings"):
+                                config["voice_settings"] = _voice["voice_settings"]
+                            print(f"    voice_id 자동 설정 (artstyle): {_style_id} → {_voice['voice_id']}")
+                    except Exception:
+                        pass
+
+            # 2순위: writing_style 기반 하드코딩 매핑 (artstyle JSON 없는 경우 fallback)
+            if not config.get("voice_id"):
+                STYLE_VOICE_MAP = {
+                    "semoji": {"voice_id": "W7FnAxJNpD5WGjrF5GLp", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
+                    "semoji_3d": {"voice_id": "W7FnAxJNpD5WGjrF5GLp", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
+                    "iromism": {"voice_id": "9Sj8ugvpK1DmcAXyvi3a", "voice_settings": {"stability": 1.0, "similarity_boost": 0.6, "style": 0.9, "speed": 1.1}},
+                    "default": {"voice_id": "4JJwo477JUAx3HV0T7n7", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
+                }
+                ws = config.get("writing_style", "default").lower().replace("-", "_")
+                voice = STYLE_VOICE_MAP.get(ws, STYLE_VOICE_MAP.get("default", {}))
+                if voice:
+                    config["voice_id"] = voice["voice_id"]
+                    config["voice_settings"] = voice["voice_settings"]
+                    print(f"    voice_id 자동 설정 (writing_style): {ws} → {voice['voice_id']}")
 
         return config
 
