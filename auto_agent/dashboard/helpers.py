@@ -452,6 +452,13 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         scene["_video_file"] = va_entry.get("staticPath", va_entry.get("videoFile", "")) if va_entry else ""
         scene["_video_start_sec"] = va_entry.get("startSec", 0.0) if va_entry else None
         scene["_video_end_sec"] = va_entry.get("endSec") if va_entry else None
+        # video_assets.json에 항목이 있으면 videoAsset 동기화 (scene_specs에 누락된 경우 대비)
+        if va_entry and scene["_video_file"] and not scene.get("videoAsset"):
+            scene["videoAsset"] = {
+                "staticPath": scene["_video_file"],
+                "startSec": scene["_video_start_sec"],
+                "endSec": scene["_video_end_sec"],
+            }
         # 비디오 썸네일: {basename}_thumb.jpg 규칙 (/background/ 라우트 사용)
         if scene["_video_file"]:
             import re as _re

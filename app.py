@@ -1118,8 +1118,8 @@ async def image_candidates(slug: str, scene_num: int, q: str = "", source: str =
 async def select_image(request: Request, slug: str, scene_num: int):
     """이미지 선택 — URL 다운로드 또는 기존 버전 선택."""
     from auto_agent.tools.image_assets import add_version, select_version, next_filename
-    pm = get_pm()
-    project = pm.get_project(slug=slug)
+    from auto_agent.dashboard.helpers import resolve_project_by_slug
+    project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
     out_dir = project.get("output_dir", "")
@@ -1167,8 +1167,8 @@ async def select_image(request: Request, slug: str, scene_num: int):
 async def image_versions(slug: str, scene_num: int):
     """씬의 모든 이미지 버전."""
     from auto_agent.tools.image_assets import get_scene_versions
-    pm = get_pm()
-    project = pm.get_project(slug=slug)
+    from auto_agent.dashboard.helpers import resolve_project_by_slug
+    project = resolve_project_by_slug(slug)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
     out_dir = project.get("output_dir", "")

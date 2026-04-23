@@ -21,8 +21,9 @@ lsof -ti:8080 | xargs kill -9 2>/dev/null || true
 sleep 1
 
 echo "=== Dashboard Starting ==="
-echo "  Python: $(python --version)"
+PYTHON=/opt/homebrew/bin/python3.12
+echo "  Python: $($PYTHON --version)"
 echo "  Port: 8080"
 echo ""
 
-exec python -m uvicorn app:app --host 0.0.0.0 --port 8080
+exec $PYTHON -m uvicorn app:app --host 0.0.0.0 --port 8080

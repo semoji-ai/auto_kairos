@@ -432,8 +432,9 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
     body = await request.json()
     # image_url, url 둘 다 허용 (갤러리 드래그는 url로 전송)
     image_url = body.get("image_url") or body.get("url", "")
-    src_file = body.get("file", "")  # 갤러리 드래그 시 원본 파일명
-    is_none = (image_url == "" or image_url is None)
+    src_file = body.get("file", "")  # 기존 버전 선택 또는 갤러리 드래그 원본 파일명
+    # file만 있는 경우(기존 버전 직접 선택)는 is_none이 아님
+    is_none = (image_url == "" or image_url is None) and not src_file
 
     specs = _load_specs(project)
     if not specs:
@@ -453,13 +454,19 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
         dir_name = Path(out_dir).name
 
         if src_file:
-            # 갤러리 드래그: 로컬 파일 복사
             src_path = img_dir / src_file
             if src_path.exists():
-                ext = src_path.suffix
+                # 이미 images/ 하위에 있는 기존 버전이면 복사 없이 직접 선택
+                image_url = f"/output/{dir_name}/images/{src_file}"
+            else:
+                # 갤러리 드래그 등 외부 파일: search/로 복사
+                ext = Path(src_file).suffix
                 dest_name = f"scene_{scene_num:03d}_search_{next_idx:02d}{ext}"
-                shutil.copy2(src_path, search_dir / dest_name)
-                image_url = f"/output/{dir_name}/images/search/{dest_name}"
+                try:
+                    shutil.copy2(src_path, search_dir / dest_name)
+                    image_url = f"/output/{dir_name}/images/search/{dest_name}"
+                except Exception:
+                    pass
         elif image_url.startswith("http://") or image_url.startswith("https://"):
             # 외부 URL: 다운로드 후 로컬 저장
             try:
@@ -1267,6 +1274,83 @@ async def upload_scene_video(slug: str, scene_num: int, file: UploadFile = File(
     return {"ok": True, "video_file": dest_path.name}
 
 
+@router.get("/videos")
+async def list_videos(slug: str):
+    """프로젝트 video_sources/ 파일 목록."""
+    project = resolve_project_by_slug(slug)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    out_dir = Path(project["output_dir"])
+    vs_dir = out_dir / "video_sources"
+    if not vs_dir.exists():
+        return JSONResponse({"videos": []})
+    exts = {".mp4", ".mov", ".webm", ".mkv"}
+    videos = []
+    for f in sorted(vs_dir.iterdir()):
+        if f.suffix.lower() in exts:
+            dir_name = out_dir.name
+            videos.append({
+                "file": f.name,
+                "url": f"/output/{dir_name}/video_sources/{f.name}",
+                "size": f.stat().st_size,
+            })
+    return JSONResponse({"videos": videos})
+
+
+@router.post("/scenes/{scene_num}/set-video-trim")
+async def set_video_trim(slug: str, scene_num: int, request: Request):
+    """비디오 트림 구간(startSec/endSec) 및 파일 저장."""
+    project = resolve_project_by_slug(slug)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    body = await request.json()
+    video_file = body.get("videoFile", "")
+    start_sec = float(body.get("startSec", 0))
+    end_sec = body.get("endSec")
+    if end_sec is not None:
+        end_sec = float(end_sec)
+
+    out_dir = Path(project["output_dir"])
+
+    # video_assets.json 업데이트
+    va_path = out_dir / "video_assets.json"
+    va_data = {"scenes": []}
+    if va_path.exists():
+        try:
+            va_data = json.loads(va_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    scenes = va_data.get("scenes", [])
+    entry = next((s for s in scenes if s.get("sceneNumber") == scene_num), None)
+    if entry is None:
+        entry = {"sceneNumber": scene_num}
+        scenes.append(entry)
+        scenes.sort(key=lambda s: s.get("sceneNumber", 0))
+    if video_file:
+        entry["videoFile"] = video_file
+    entry["startSec"] = start_sec
+    entry["endSec"] = end_sec
+    va_data["scenes"] = scenes
+    va_path.write_text(json.dumps(va_data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # scene_specs.json videoAsset 동기화
+    specs = _load_specs(project)
+    if specs:
+        for scene in specs.get("scenes", []):
+            if scene["sceneNumber"] == scene_num:
+                va = scene.get("videoAsset") or {}
+                if video_file:
+                    va["staticPath"] = video_file
+                va["startSec"] = start_sec
+                va["endSec"] = end_sec
+                scene["videoAsset"] = va
+                break
+        (out_dir / "scene_specs.json").write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    _rebuild_manifest_sync(project)
+    return JSONResponse({"ok": True})
+
+
 @router.post("/scenes/{scene_num}/set-asset-type")
 async def set_scene_asset_type(slug: str, scene_num: int, request: Request):
     """씬 에셋 타입 전환 — image(videoAsset 제거) / video(imageAsset 비활성화)."""
@@ -1301,6 +1385,25 @@ async def set_scene_asset_type(slug: str, scene_num: int, request: Request):
                 ia = scene.get("imageAsset") or {}
                 ia["source"] = "none"
                 scene["imageAsset"] = ia
+                # video_assets.json에 기존 항목이 있으면 videoAsset 동기화
+                va_path = out_dir / "video_assets.json"
+                if va_path.exists() and not scene.get("videoAsset"):
+                    try:
+                        va_data = json.loads(va_path.read_text(encoding="utf-8"))
+                        va_entry = next((s for s in va_data.get("scenes", []) if s.get("sceneNumber") == scene_num), None)
+                        if va_entry:
+                            scene["videoAsset"] = {
+                                "staticPath": va_entry.get("videoFile", va_entry.get("staticPath", "")),
+                                "startSec": va_entry.get("startSec", 0),
+                                "endSec": va_entry.get("endSec"),
+                                "placement": va_entry.get("placement", "fullscreen"),
+                                "opacity": va_entry.get("opacity", 1.0),
+                                "volume": va_entry.get("volume", 0),
+                            }
+                    except Exception:
+                        pass
+                if not scene.get("videoAsset"):
+                    scene["videoAsset"] = {"startSec": 0, "endSec": None}
             break
 
     (out_dir / "scene_specs.json").write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")

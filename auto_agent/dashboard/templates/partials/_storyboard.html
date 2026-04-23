@@ -36,8 +36,14 @@
   {% for scene in scenes %}
   <div class="sb-card" data-chapter="{{ scene.chapter }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
     <!-- 좌측: Remotion Player 경량 임베드 -->
-    <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
-      <div class="sb-player-mount" data-scene-num="{{ scene.sceneNumber }}"></div>
+    <div class="sb-preview-wrap">
+      <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
+        <div class="sb-player-mount" data-scene-num="{{ scene.sceneNumber }}"></div>
+      </div>
+      <div class="sb-asset-type-switch">
+        <button class="sb-switch-btn{% if not scene.videoAsset %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'image', this)">🖼 이미지</button>
+        <button class="sb-switch-btn{% if scene.videoAsset %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'video', this)">🎬 비디오</button>
+      </div>
     </div>
 
     <!-- 우측: 원고 + 메타 -->
@@ -144,20 +150,41 @@
           {% if img.camera %}<div class="sb-prompt-detail">카메라: {{ img.camera }}</div>{% endif %}
         </div>
         {% endif %}
+        {% if scene.videoAsset %}
+        {# 비디오 모드: 비디오 카드 리스트 + 타임라인 트리머 #}
+        <div class="sb-video-panel" id="sb-video-panel-{{ scene.sceneNumber }}"
+             data-start="{{ scene._video_start_sec or 0 }}"
+             data-end="{{ scene._video_end_sec or '' }}"
+             data-file="{{ scene._video_file or '' }}">
+          <div class="sb-video-list" id="sb-video-list-{{ scene.sceneNumber }}">
+            <div style="font-size:10px;color:#71717A;padding:4px">비디오 로딩 중...</div>
+          </div>
+          <div class="sb-trimmer-wrap" id="sb-trimmer-{{ scene.sceneNumber }}" style="display:{% if scene._video_file %}block{% else %}none{% endif %}">
+            <div class="sb-trimmer-label">
+              <span>구간 선택</span>
+              <span class="sb-trimmer-time" id="sb-trim-time-{{ scene.sceneNumber }}">{{ "%.1f"|format(scene._video_start_sec or 0) }}s ~ {% if scene._video_end_sec %}{{ "%.1f"|format(scene._video_end_sec) }}s{% else %}끝{% endif %}</span>
+            </div>
+            <div class="sb-trimmer-track" id="sb-trim-track-{{ scene.sceneNumber }}">
+              <div class="sb-trimmer-range" id="sb-trim-range-{{ scene.sceneNumber }}"></div>
+              <div class="sb-trimmer-handle left" id="sb-trim-left-{{ scene.sceneNumber }}"></div>
+              <div class="sb-trimmer-handle right" id="sb-trim-right-{{ scene.sceneNumber }}"></div>
+            </div>
+            <button class="sb-trim-apply" onclick="sbApplyTrim({{ scene.sceneNumber }})">적용</button>
+          </div>
+        </div>
+        {% else %}
+        {# 이미지 모드: 이미지 그리드 #}
         <div class="sb-image-row">
           <div class="sb-image-grid" id="sb-img-grid-{{ scene.sceneNumber }}" data-layout="{{ scene._layout }}" data-multi-images="{{ (scene.images or []) | tojson | e }}"></div>
-          <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">{% if scene._video_file %}비디오{% else %}이미지{% endif %}</button>
+          <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">이미지</button>
         </div>
+        {% endif %}
       </div>
       <div class="sb-asset-panel" id="sb-asset-{{ scene.sceneNumber }}" style="display:none">
         <div class="sb-asset-actions">
           <button onclick="sbToggleSearch({{ scene.sceneNumber }})">🔍 검색</button>
           <button onclick="sbTogglePasteUrl({{ scene.sceneNumber }})">📎 URL</button>
           <button onclick="sbToggleGenerate({{ scene.sceneNumber }})">🎨 생성</button>
-          <span class="sb-asset-type-toggle">
-            <button class="sb-type-btn{% if not scene.videoAsset %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'image', this)">🖼 이미지</button>
-            <button class="sb-type-btn{% if scene.videoAsset %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'video', this)">🎬 비디오</button>
-          </span>
         </div>
         <div class="sb-asset-search" id="sb-search-{{ scene.sceneNumber }}" style="display:none">
           <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
@@ -715,8 +742,9 @@ function sbSetAssetType(sn, type, btn) {
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.ok) {
       // 버튼 active 토글
-      var toggle = btn.closest('.sb-asset-type-toggle');
-      if (toggle) toggle.querySelectorAll('.sb-type-btn').forEach(function(b) { b.classList.remove('active'); });
+      // 썸네일 아래 스위치 버튼 동기화
+      var switchWrap = btn.closest('.sb-asset-type-switch');
+      if (switchWrap) switchWrap.querySelectorAll('.sb-switch-btn').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
       if (type === 'video') {
         window.location.reload();
@@ -908,7 +936,7 @@ function sbLoadImageGrid(sn) {
           + (isSel ? '<span class="sb-multi-num">' + (idx + 1) + '</span>' : '')
           + '</div>';
       } else {
-        var isSel = v.selected || false;
+        var isSel = !isNoneSelected && (v.selected || false);
         html += '<div class="sb-grid-thumb' + (isSel ? ' selected' : '') + '" '
           + 'onclick="sbSelectVersion(' + sn + ',\'' + v.file + '\')" '
           + 'title="' + typeIcon + ' ' + v.file + '">'
@@ -1016,6 +1044,151 @@ function sbSelectVersion(sn, file) {
     }
   });
 }
+
+// ── 비디오 패널 ──
+function sbLoadVideoPanel(sn) {
+  var panel = document.getElementById('sb-video-panel-' + sn);
+  if (!panel) return;
+  var listEl = document.getElementById('sb-video-list-' + sn);
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/videos')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var videos = d.videos || [];
+      var currentFile = panel.dataset.file || '';
+      if (!videos.length) {
+        listEl.innerHTML = '<div style="font-size:10px;color:#71717A;padding:4px">비디오 없음 — 드래그로 업로드</div>';
+        return;
+      }
+      var html = '';
+      videos.forEach(function(v) {
+        var isSel = v.file === currentFile;
+        html += '<div class="sb-video-card' + (isSel ? ' selected' : '') + '" onclick="sbSelectVideo(' + sn + ',\'' + v.file.replace(/'/g,"\\'")+'\',\'' + v.url.replace(/'/g,"\\'")+'\' )">'
+          + '<video class="sb-video-thumb" src="' + v.url + '" muted preload="metadata"></video>'
+          + '<div class="sb-video-name">' + v.file + '</div>'
+          + '</div>';
+      });
+      listEl.innerHTML = html;
+      // 선택된 비디오 있으면 트리머 초기화
+      if (currentFile) sbInitTrimmer(sn);
+    }).catch(function() {
+      listEl.innerHTML = '<div style="font-size:10px;color:#f87171;padding:4px">로드 실패</div>';
+    });
+}
+
+function sbSelectVideo(sn, file, url) {
+  var panel = document.getElementById('sb-video-panel-' + sn);
+  panel.dataset.file = file;
+  // 비디오 카드 선택 표시
+  document.getElementById('sb-video-list-' + sn).querySelectorAll('.sb-video-card').forEach(function(c) { c.classList.remove('selected'); });
+  event.currentTarget.classList.add('selected');
+  // 트리머 표시 및 초기화
+  var trimmer = document.getElementById('sb-trimmer-' + sn);
+  trimmer.style.display = 'block';
+  panel.dataset.start = '0';
+  panel.dataset.end = '';
+  sbInitTrimmer(sn);
+}
+
+// _trimDrag 상태 저장
+var _trimDrag = {};
+
+function sbInitTrimmer(sn) {
+  var panel = document.getElementById('sb-video-panel-' + sn);
+  var track = document.getElementById('sb-trim-track-' + sn);
+  var leftH = document.getElementById('sb-trim-left-' + sn);
+  var rightH = document.getElementById('sb-trim-right-' + sn);
+  var range = document.getElementById('sb-trim-range-' + sn);
+  var timeEl = document.getElementById('sb-trim-time-' + sn);
+  if (!track || !leftH || !rightH) return;
+
+  // 비디오 duration 가져오기
+  var listEl = document.getElementById('sb-video-list-' + sn);
+  var vidEl = listEl ? listEl.querySelector('.sb-video-card.selected video') : null;
+  var duration = (vidEl && vidEl.duration) ? vidEl.duration : 60; // fallback 60s
+
+  function getVideoDuration(cb) {
+    if (vidEl) {
+      if (vidEl.readyState >= 1 && vidEl.duration) { cb(vidEl.duration); }
+      else { vidEl.onloadedmetadata = function() { cb(vidEl.duration || 60); }; vidEl.load(); }
+    } else { cb(60); }
+  }
+
+  getVideoDuration(function(dur) {
+    duration = dur;
+    var startSec = parseFloat(panel.dataset.start || '0');
+    var endSec = panel.dataset.end ? parseFloat(panel.dataset.end) : dur;
+
+    function secToPercent(s) { return Math.min(100, Math.max(0, s / duration * 100)); }
+    function percentToSec(p) { return Math.round(p / 100 * duration * 10) / 10; }
+
+    function updateUI() {
+      var lp = secToPercent(parseFloat(panel.dataset.start || '0'));
+      var rp = secToPercent(panel.dataset.end ? parseFloat(panel.dataset.end) : duration);
+      leftH.style.left = lp + '%';
+      rightH.style.left = rp + '%';
+      range.style.left = lp + '%';
+      range.style.width = (rp - lp) + '%';
+      var s = parseFloat(panel.dataset.start || '0');
+      var e = panel.dataset.end ? parseFloat(panel.dataset.end) : null;
+      timeEl.textContent = s.toFixed(1) + 's ~ ' + (e !== null ? e.toFixed(1) + 's' : '끝');
+    }
+
+    panel.dataset.start = startSec;
+    panel.dataset.end = endSec < duration ? endSec : '';
+    updateUI();
+
+    function makeDrag(handle, isLeft) {
+      handle.onmousedown = function(e) {
+        e.preventDefault();
+        var rect = track.getBoundingClientRect();
+        function onMove(ev) {
+          var pct = Math.min(100, Math.max(0, (ev.clientX - rect.left) / rect.width * 100));
+          var sec = percentToSec(pct);
+          if (isLeft) {
+            var rSec = panel.dataset.end ? parseFloat(panel.dataset.end) : duration;
+            panel.dataset.start = Math.min(sec, rSec - 0.5);
+          } else {
+            var lSec = parseFloat(panel.dataset.start || '0');
+            panel.dataset.end = Math.max(sec, lSec + 0.5);
+          }
+          updateUI();
+        }
+        function onUp() {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      };
+    }
+    makeDrag(leftH, true);
+    makeDrag(rightH, false);
+  });
+}
+
+function sbApplyTrim(sn) {
+  var panel = document.getElementById('sb-video-panel-' + sn);
+  var file = panel.dataset.file || '';
+  var startSec = parseFloat(panel.dataset.start || '0');
+  var endSec = panel.dataset.end ? parseFloat(panel.dataset.end) : null;
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/set-video-trim', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({videoFile: file, startSec: startSec, endSec: endSec})
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) {
+      if (window._manifestCache) window._manifestCache = null;
+      if (window._sceneCache) delete window._sceneCache[sn];
+      var mount = document.querySelector('.sb-player-mount[data-scene-num="' + sn + '"]');
+      if (mount) { mount.dataset.refresh = '1'; tryMount(mount); }
+    }
+  });
+}
+
+// 페이지 로드 시 비디오 패널 초기화
+document.querySelectorAll('.sb-video-panel').forEach(function(p) {
+  var sn = parseInt(p.id.replace('sb-video-panel-', ''), 10);
+  sbLoadVideoPanel(sn);
+});
 </script>
 
 <style>
@@ -1026,9 +1199,10 @@ function sbSelectVersion(sn, file) {
 .sb-asset-actions { display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; align-items: center; }
 .sb-asset-actions button { font-size: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #D4D4D8; border-radius: 4px; padding: 3px 10px; cursor: pointer; }
 .sb-asset-actions button:hover { background: rgba(255,255,255,0.12); }
-.sb-asset-type-toggle { margin-left: auto; display: flex; gap: 2px; }
-.sb-type-btn { font-size: 10px; background: rgba(255,255,255,0.04) !important; border: 1px solid rgba(255,255,255,0.08) !important; color: #71717A !important; border-radius: 4px; padding: 3px 8px !important; cursor: pointer; }
-.sb-type-btn.active { background: rgba(99,102,241,0.25) !important; border-color: rgba(99,102,241,0.5) !important; color: #A5B4FC !important; }
+.sb-asset-type-switch { display: flex; margin-top: 6px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.25); }
+.sb-switch-btn { flex: 1; font-size: 12px; padding: 6px 0; cursor: pointer; border: none; background: transparent; color: #71717A; transition: background 0.15s, color 0.15s; }
+.sb-switch-btn:first-child { border-right: 1px solid rgba(255,255,255,0.1); }
+.sb-switch-btn.active { background: rgba(99,102,241,0.35); color: #C7D2FE; font-weight: 600; }
 .sb-paste-input { flex: 1; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); color: #E4E4E7; border: 1px solid rgba(255,255,255,0.1); font-size: 10px; }
 .sb-asset-paste { display: flex; gap: 4px; align-items: center; margin-bottom: 6px; }
 .sb-asset-paste button { font-size: 10px; background: rgba(59,130,246,0.2); border: none; color: #60A5FA; border-radius: 4px; padding: 3px 10px; cursor: pointer; }
@@ -1037,6 +1211,24 @@ function sbSelectVersion(sn, file) {
 .sb-gen-actions { display: flex; gap: 4px; margin-top: 4px; }
 .sb-gen-actions button { font-size: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #D4D4D8; border-radius: 4px; padding: 3px 10px; cursor: pointer; }
 .sb-gen-status { font-size: 9px; color: #888; display: block; margin-top: 4px; }
+/* 비디오 패널 */
+.sb-video-panel { margin-top: 4px; }
+.sb-video-list { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.sb-video-card { width: 90px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; background: #111; }
+.sb-video-card:hover { border-color: rgba(255,255,255,0.3); }
+.sb-video-card.selected { border-color: #F59E0B; }
+.sb-video-thumb { width: 100%; height: 54px; object-fit: cover; display: block; }
+.sb-video-name { font-size: 8px; color: #71717A; padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 타임라인 트리머 */
+.sb-trimmer-wrap { margin-top: 6px; }
+.sb-trimmer-label { display: flex; justify-content: space-between; font-size: 9px; color: #71717A; margin-bottom: 4px; }
+.sb-trimmer-time { color: #A5B4FC; font-weight: 600; }
+.sb-trimmer-track { position: relative; height: 20px; background: rgba(255,255,255,0.06); border-radius: 4px; cursor: col-resize; user-select: none; }
+.sb-trimmer-range { position: absolute; top: 0; height: 100%; background: rgba(99,102,241,0.35); border-radius: 2px; pointer-events: none; }
+.sb-trimmer-handle { position: absolute; top: -3px; width: 10px; height: 26px; background: #818CF8; border-radius: 3px; cursor: ew-resize; transform: translateX(-50%); z-index: 2; }
+.sb-trimmer-handle:hover { background: #A5B4FC; }
+.sb-trim-apply { margin-top: 6px; font-size: 10px; padding: 3px 12px; background: rgba(99,102,241,0.25); border: 1px solid rgba(99,102,241,0.5); color: #A5B4FC; border-radius: 4px; cursor: pointer; }
+.sb-trim-apply:hover { background: rgba(99,102,241,0.4); }
 .sb-candidates { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
 .sb-candidate { width: 60px; height: 45px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; background: #111; display: flex; align-items: center; justify-content: center; }
 .sb-candidate:hover { border-color: rgba(255,255,255,0.3); }
