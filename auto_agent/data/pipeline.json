@@ -26,6 +26,21 @@
           ]
         },
         {
+          "id": "step_0c",
+          "name": "config_inspect",
+          "description": "DB config ↔ artstyle JSON ↔ 환경변수 교차 검증 및 자동 수정. voice_id 불일치/누락 자동 수정, API키 확인.",
+          "type": "agent",
+          "agent": "config-inspector",
+          "input": [
+            "project_config"
+          ],
+          "output": [
+            "config_check.json"
+          ],
+          "blocking": true,
+          "skip_resume": false
+        },
+        {
           "id": "step_0b",
           "name": "editorial_interview",
           "description": "기획 의도 고정 — topic 분석으로 editorial_brief.json 생성. core_question/real_topic/hook_angle/excluded_angles 확정. 이미 존재하면 스킵.",

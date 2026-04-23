@@ -360,7 +360,9 @@
       "description": "장편 시리즈 기획안(series_plan.json) 작성 에이전트",
       "model": "opus",
       "max_turns": 20,
-      "skills": ["agents/series-planner"],
+      "skills": [
+        "agents/series-planner"
+      ],
       "allowed_tools": [
         "Read",
         "Write",
@@ -372,7 +374,9 @@
       "description": "전체 시리즈 Stage 2 완료 후 편 간 일관성 검토 에이전트",
       "model": "opus",
       "max_turns": 30,
-      "skills": ["agents/series-reviewer"],
+      "skills": [
+        "agents/series-reviewer"
+      ],
       "allowed_tools": [
         "Read",
         "Write",
@@ -383,13 +387,29 @@
       "description": "파이프라인 외부에서 기획안(editorial_brief.json)을 작성하는 에이전트",
       "model": "opus",
       "max_turns": 25,
-      "skills": ["agents/content-planner"],
+      "skills": [
+        "agents/content-planner"
+      ],
       "allowed_tools": [
         "Read",
         "Write",
         "Edit",
         "Bash"
       ]
+    },
+    "config-inspector": {
+      "description": "파이프라인 시작 전 프로젝트 설정 교차 검증 및 자동 수정 (voice_id, art_style, env vars)",
+      "model": "sonnet",
+      "max_turns": 20,
+      "budget": "$0.2",
+      "max_duration_minutes": 5,
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "skill_file": "agents/config-inspector/SKILL.md",
+      "notes": "DB config ↔ artstyle JSON ↔ 환경변수 3방향 검증. 자동 수정 가능 항목은 즉시 수정."
     }
   },
   "modules": {
