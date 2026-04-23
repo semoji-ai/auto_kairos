@@ -1506,23 +1506,20 @@ def cmd_auto_kairos(args):
     from auto_agent.db.project_manager import ProjectManager
     pm = ProjectManager()
 
-    # 중복 체크 — slug 충돌 시 _v2, _v3 ... 자동 버전업
-    base_slug = slug
-    version = 2
-    while pm.get_project(slug=slug):
-        slug = f"{base_slug}_v{version}"
-        version += 1
-    if slug != base_slug:
-        console.print(f"  [yellow]기존 프로젝트 발견 → 새 슬러그: {slug}[/yellow]")
-
-    pid = pm.create_project(
-        name=topic[:50],
-        slug=slug,
-        topic=topic,
-        config=config,
-        channel=channel,
-    )
-    print_success(f"프로젝트 생성: [accent]{slug}[/accent]")
+    # 기존 프로젝트 재사용 — 같은 slug가 있으면 새로 만들지 않음
+    existing = pm.get_project(slug=slug)
+    if existing:
+        console.print(f"  [yellow]기존 프로젝트 재사용: {slug} (id={existing['id']})[/yellow]")
+        pid = existing["id"]
+    else:
+        pid = pm.create_project(
+            name=topic[:50],
+            slug=slug,
+            topic=topic,
+            config=config,
+            channel=channel,
+        )
+        print_success(f"프로젝트 생성: [accent]{slug}[/accent]")
 
     # 파이프라인 실행
     _run_pipeline(slug)
