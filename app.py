@@ -1333,6 +1333,13 @@ async def _bg_split_postprocess(slug: str, project: dict, scene_a: int, scene_b:
         narration = scene.get("narration", "")
         scene_id = scene.get("sceneId", "")
 
+        # 기존 SRT 삭제 — 새 나레이션에 맞게 재생성 강제
+        sub_dir = Path(out_dir) / "subtitles"
+        for _srt_name in ([f"{scene_id}.srt"] if scene_id else []) + [f"scene_{scene_num:03d}.srt"]:
+            _srt_p = sub_dir / _srt_name
+            if _srt_p.exists():
+                _srt_p.unlink()
+
         # 1. TTS 재생성
         try:
             config = project.get("config", {})
@@ -1363,10 +1370,13 @@ async def _bg_split_postprocess(slug: str, project: dict, scene_a: int, scene_b:
                 output_path.write_bytes(resp.content)
                 audio_add(audio_dir, scene_num, fname, "split_tts",
                           scene_id=scene_id, voice_id=voice_id, text=narration[:100])
-            # 자막 동기화
+            # 자막 동기화 (PROJECT_DIR 환경변수로 경로 전달)
+            _sub_env = os.environ.copy()
+            _sub_env["PROJECT_DIR"] = str(out_dir)
+            _sub_script = Path(__file__).parent / "auto_agent" / "scripts" / "generate_subtitles.py"
             subprocess.run(
-                [sys.executable, "-m", "auto_agent.scripts.generate_subtitles", out_dir, "--scene", str(scene_num)],
-                cwd=str(get_workspace_dir()), capture_output=True, timeout=120,
+                [sys.executable, str(_sub_script), "--scene", str(scene_num)],
+                cwd=str(get_workspace_dir()), env=_sub_env, capture_output=True, timeout=120,
             )
         except Exception as e:
             print(f"[WARN] 분할 TTS 실패 씬{scene_num}: {e}")

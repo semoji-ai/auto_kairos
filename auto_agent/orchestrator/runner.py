@@ -1373,6 +1373,13 @@ class PipelineRunner:
                     n_scenes = len(data.get("scenes", []))
                     version = data.get("version", "?")
                     if n_scenes > 0:
+                        # sceneId 자동 부여 (에이전트가 생성하지 않은 경우 대비)
+                        from auto_agent.tools.scene_id import ensure_scene_ids
+                        missing = [s for s in data["scenes"] if not s.get("sceneId")]
+                        if missing:
+                            ensure_scene_ids(data["scenes"])
+                            specs_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                            print(f"    [sceneId] {len(missing)}개 씬에 ID 자동 부여")
                         # 플랫 스키마 검증: narration + layout + motion 필드 존재 확인
                         sample = data["scenes"][0]
                         has_flat = all(k in sample for k in ("narration", "layout", "motion"))

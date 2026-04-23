@@ -94,9 +94,12 @@ def renumber_files(out_dir: Path, from_scene: int, is_legacy: bool) -> None:
                 ts.rename(audio_dir / f"scene_{n+1:03d}.timestamps.json")
         # subtitles
         if subtitles_dir.exists():
-            src = subtitles_dir / f"scene_{n:03d}.json"
-            if src.exists():
-                src.rename(subtitles_dir / f"scene_{n+1:03d}.json")
+            src_json = subtitles_dir / f"scene_{n:03d}.json"
+            if src_json.exists():
+                src_json.rename(subtitles_dir / f"scene_{n+1:03d}.json")
+            src_srt = subtitles_dir / f"scene_{n:03d}.srt"
+            if src_srt.exists():
+                src_srt.rename(subtitles_dir / f"scene_{n+1:03d}.srt")
         # generated images
         if img_gen_dir.exists():
             for f in list(img_gen_dir.glob(f"scene_{n:03d}_*.png")) + list(img_gen_dir.glob(f"scene_{n:03d}_*.jpg")):
