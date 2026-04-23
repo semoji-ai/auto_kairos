@@ -205,11 +205,16 @@ def smart_split(text: str) -> List[str]:
             best = min(valid_points, key=lambda x: (x[1], -x[0]))
             pos = best[0]
         else:
-            # 강제 분할: 공백 우선
-            pos = MAX_CHARS_PER_LINE
+            # 강제 분할: 단어 경계(공백) 우선 — 앞에서 찾고 없으면 뒤에서 찾음
             space_pos = remaining[:MAX_CHARS_PER_LINE].rfind(' ')
             if space_pos > 10:
                 pos = space_pos + 1
+            else:
+                fwd = remaining.find(' ', MAX_CHARS_PER_LINE)
+                if fwd != -1:
+                    pos = fwd + 1
+                else:
+                    pos = MAX_CHARS_PER_LINE
 
         lines.append(remaining[:pos].strip())
         remaining = remaining[pos:].strip()
@@ -337,6 +342,56 @@ def match_lines_to_timestamps(lines: List[str], words: List[Dict], audio_duratio
     return entries
 
 
+def apply_keyword_delay(entries: List[Dict], words: List[Dict]) -> List[Dict]:
+    """핵심 데이터(숫자/수치)가 줄 중간에 등장하면 해당 단어 타임스탬프로 자막 시작을 지연.
+
+    조건: 줄 앞에 조사/전치사만 있고 숫자 표현이 이어질 때.
+    이전 줄 endSec를 새 startSec로 연장하여 갭 없이 처리.
+    """
+    if not words or len(entries) < 2:
+        return entries
+
+    KEYWORD_RE = re.compile(r'\d[\d,]*(?:[만천백억조%명개년월일위번회달러원kmkgcm])?')
+    LEADING_JOSA = re.compile(r'^[은는이가을를의도만까지부터에서에게으로로와과\s]+')
+
+    new_entries = [dict(e) for e in entries]
+
+    for i, entry in enumerate(new_entries):
+        text = entry["text"]
+        m_keyword = KEYWORD_RE.search(text)
+        if not m_keyword:
+            continue
+        prefix = text[:m_keyword.start()]
+        if not prefix.strip():
+            continue
+        if not LEADING_JOSA.fullmatch(prefix):
+            continue
+
+        entry_start = entry["startSec"]
+        entry_end = entry["endSec"]
+        keyword_clean = re.sub(r'[^\d가-힣a-zA-Z]', '', m_keyword.group(0))
+
+        keyword_start = None
+        for w in words:
+            if w["start"] < entry_start - 0.15:
+                continue
+            if w["start"] > entry_end:
+                break
+            w_clean = re.sub(r'[^\d가-힣a-zA-Z]', '', w["word"])
+            if keyword_clean and w_clean and (keyword_clean in w_clean or w_clean in keyword_clean):
+                keyword_start = w["start"]
+                break
+
+        if keyword_start is None or keyword_start <= entry_start + 0.12:
+            continue
+
+        new_entries[i]["startSec"] = round(keyword_start, 3)
+        if i > 0:
+            new_entries[i - 1]["endSec"] = round(keyword_start, 3)
+
+    return new_entries
+
+
 def check_alignment_quality(entries: List[Dict], audio_duration: float) -> bool:
     """WhisperX alignment 품질 검증.
 
@@ -421,6 +476,29 @@ def fix_decimal_splits(lines: List[str]) -> List[str]:
         else:
             merged.append(curr)
     return merged
+
+
+def fix_dangling_connectors(lines: List[str]) -> List[str]:
+    """줄 시작에 홀로 남겨진 절 접속어를 이전 줄에 병합.
+
+    예: ["...열었는", "데, 그 결과는"] → ["...열었는데,", "그 결과는"]
+    절 접속어: 는데/지만/면서/하고/하며/고서/어서/아서/니까/으니 등이 줄 시작에 오면 이전 줄 끝에 붙임.
+    """
+    if len(lines) < 2:
+        return lines
+    CONNECTOR_PREFIX = re.compile(r'^(는데|지만|면서|하고|하며|고서|어서|아서|니까|으니|기에|므로|지라|더니)(,|\.|\s|$)')
+    merged = [lines[0]]
+    for line in lines[1:]:
+        m = CONNECTOR_PREFIX.match(line)
+        if m:
+            connector = m.group(1)
+            rest = line[len(connector):].lstrip()
+            merged[-1] = merged[-1] + connector
+            if rest:
+                merged.append(rest)
+        else:
+            merged.append(line)
+    return [l for l in merged if l.strip()]
 
 
 def fix_quote_splits(lines: List[str]) -> List[str]:
@@ -617,6 +695,7 @@ def main():
                 display_lines = smart_split(narration)
                 display_lines = fix_decimal_splits(display_lines)
                 display_lines = fix_quote_splits(display_lines)
+                display_lines = fix_dangling_connectors(display_lines)
 
             derived_tts_lines = derive_tts_lines_from_display_lines(display_lines, narration_tts)
 
@@ -629,6 +708,7 @@ def main():
                 candidate_tts_lines = smart_split(narration_tts)
                 candidate_tts_lines = fix_decimal_splits(candidate_tts_lines)
                 candidate_tts_lines = fix_quote_splits(candidate_tts_lines)
+                candidate_tts_lines = fix_dangling_connectors(candidate_tts_lines)
 
             # narration → narration_tts 전처리 규칙이 만든 변형은 같은 규칙으로 역매칭한다.
             # line count mismatch 시 비례 분배로 떨어지기 전에 display_lines 기반 전처리 매핑을 우선 사용.
@@ -641,6 +721,7 @@ def main():
             if elevenlabs_words:
                 words = elevenlabs_words
                 entries = match_lines_to_timestamps(tts_lines, words, duration)
+                entries = apply_keyword_delay(entries, words)
                 source = "elevenlabs"
             elif WHISPERX_AVAILABLE:
                 segments = [{"text": narration_tts, "start": 0.0, "end": duration}]
