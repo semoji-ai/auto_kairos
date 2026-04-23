@@ -639,6 +639,22 @@ class PipelineRunner:
             output_dir = str(get_workspace_dir() / "output" / project_slug)
         self.project_dir = Path(output_dir)
         self.project_dir.mkdir(parents=True, exist_ok=True)
+
+        # 이전 실행 상태 복원 — resume 시 completed/failed_steps 이어받기
+        state_path = self.project_dir / "pipeline_state.json"
+        if state_path.exists():
+            try:
+                prev = json.loads(state_path.read_text(encoding="utf-8"))
+                self.state.completed_steps = prev.get("completed_steps", [])
+                self.state.failed_steps = prev.get("failed_steps", [])
+                self.state.skipped_steps = prev.get("skipped_steps", [])
+                self.state.results = prev.get("results", {})
+                if self.state.completed_steps or self.state.failed_steps:
+                    n = len(self.state.completed_steps)
+                    print(f"[resume] 이전 상태 복원 — 완료 {n}개: {self.state.completed_steps}")
+            except Exception as e:
+                print(f"[resume] pipeline_state.json 로드 실패: {e}")
+
         self.context_memory = ContextMemory(self.project_dir)
         self.vault = VaultRAG()
         self.hooks = _build_default_hooks()
@@ -730,6 +746,13 @@ class PipelineRunner:
             _until_allowed = {s["id"] for s in _filtered}
 
         self._force = force  # --force: resume 스킵 비활성화
+
+        # --force 플래그: 이전 상태 무시하고 전체 재실행
+        if force:
+            self.state.completed_steps = []
+            self.state.failed_steps = []
+            self.state.skipped_steps = []
+
         skip_until = from_step
         found_start = from_step is None
 
