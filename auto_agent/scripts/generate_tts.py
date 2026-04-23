@@ -18,6 +18,7 @@ if not logger.handlers:
 
 # Load .env
 from auto_agent.paths import get_workspace_dir; load_dotenv(get_workspace_dir() / ".env")
+from auto_agent.tools.scene_id import load_scene_specs
 
 API_KEY = os.getenv("ELEVENLABS_API_KEY")
 MODEL_ID = "eleven_multilingual_v2"
@@ -254,8 +255,7 @@ def main():
     OUTPUT_DIR = project_dir / "audio"
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    with open(scene_specs_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    data = load_scene_specs(scene_specs_path)
 
     scenes = data["scenes"]
 

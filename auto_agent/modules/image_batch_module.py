@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Optional
 
 from auto_agent.tools import fal_queue as fal_queue
+from auto_agent.tools.scene_id import load_scene_specs
 from auto_agent.tools.fal_queue import FalJob
 from auto_agent.tools.character_library import CharacterLibrary
 from auto_agent.tools.image_generate import (
@@ -149,7 +150,7 @@ def run_batch(
         return {"chars_reused": len(reused), "chars_generated": len(to_generate),
                 "scenes_success": 0, "scenes_fail": 0, "scenes_skipped": 0}
 
-    scene_specs = json.loads(scene_specs_path.read_text(encoding="utf-8"))
+    scene_specs = load_scene_specs(scene_specs_path)
     images_dir = project_dir / "images"
     images_dir.mkdir(exist_ok=True)
 

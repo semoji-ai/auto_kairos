@@ -13,6 +13,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from auto_agent.paths import get_workspace_dir; load_dotenv(get_workspace_dir() / ".env")
+from auto_agent.tools.scene_id import load_scene_specs
 
 
 def _probe_mp3_duration_local(path: Path) -> float:
@@ -96,7 +97,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             sys.exit(1)
 
     # ── 로컬 파일 로드 ──
-    specs = json.loads((out_dir / "scene_specs.json").read_text(encoding="utf-8"))
+    specs = load_scene_specs(out_dir / "scene_specs.json")
 
     motion = {"transition_series": []}
     motion_path = out_dir / "motion_plan.json"
