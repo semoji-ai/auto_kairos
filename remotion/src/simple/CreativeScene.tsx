@@ -3891,7 +3891,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             <div style={{
               display: "flex",
               flexDirection: isHorizontal ? "row" : "column",
-              alignItems: isHorizontal ? "center" : "flex-start",
+              alignItems: "center",
               justifyContent: "center",
               gap: 0,
               width: isHorizontal ? "100%" : "auto",

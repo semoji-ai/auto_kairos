@@ -454,6 +454,13 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    - 예: `"layout": "bar", "vizType": "bar_chart", "chartConfig": {"type": "bar"}`
    - 예: headline="AI 데이터센터 전력 소비 추이", source="IEA (2025)"
 
+   ⚠️ headline 줄바꿈 규칙 (JSON 안전):
+   - headline에서 줄 구분이 필요할 때: `\\n` (백슬래시+n 두 글자) 사용
+   - **절대 JSON 문자열 안에 실제 개행(Enter)을 넣지 말 것** → JSONDecodeError 발생
+   - 올바른 예: `"headline": "티니핑이란\\n귀여운 작은 요정"`
+   - 잘못된 예: `"headline": "티니핑이란\n귀여운 작은 요정"` (JSON 내 실제 개행)
+   - split 레이아웃 사용 시: `\\n`으로 구분된 두 줄이 좌/우로 나뉨
+
    ⚠️ headline_only 사용 제한:
    - headline만 쓰는 씬은 전체의 **5~10% 이내** (50씬 기준 3~5개)
    - 숫자 강조({{415}} TWh)는 headline_only가 아닌 items+values로 표현

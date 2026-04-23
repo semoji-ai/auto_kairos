@@ -1059,14 +1059,35 @@ function sbLoadVideoPanel(sn) {
         listEl.innerHTML = '<div style="font-size:10px;color:#71717A;padding:4px">비디오 없음 — 드래그로 업로드</div>';
         return;
       }
-      var html = '';
-      videos.forEach(function(v) {
-        var isSel = v.file === currentFile;
-        html += '<div class="sb-video-card' + (isSel ? ' selected' : '') + '" onclick="sbSelectVideo(' + sn + ',\'' + v.file.replace(/'/g,"\\'")+'\',\'' + v.url.replace(/'/g,"\\'")+'\' )">'
+
+      // 현재 씬에 배정된 비디오 먼저, 나머지는 접혀있는 형태로
+      var currentVideo = videos.find(function(v) { return v.file === currentFile; });
+      var otherVideos = videos.filter(function(v) { return v.file !== currentFile; });
+
+      function makeCard(v, isSel) {
+        return '<div class="sb-video-card' + (isSel ? ' selected' : '') + '" onclick="sbSelectVideo(' + sn + ',\'' + v.file.replace(/'/g,"\\'")+'\',\'' + v.url.replace(/'/g,"\\'")+'\' )">'
           + '<video class="sb-video-thumb" src="' + v.url + '" muted preload="metadata"></video>'
           + '<div class="sb-video-name">' + v.file + '</div>'
           + '</div>';
-      });
+      }
+
+      var html = '';
+      if (currentVideo) {
+        html += makeCard(currentVideo, true);
+      }
+      if (otherVideos.length) {
+        var otherId = 'sb-other-videos-' + sn;
+        html += '<div style="margin-top:4px">'
+          + '<button style="font-size:9px;color:#71717A;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:2px 6px;cursor:pointer" '
+          + 'onclick="var el=document.getElementById(\'' + otherId + '\');el.style.display=el.style.display===\'none\'?\'\':\'none\'">'
+          + '다른 비디오 ' + otherVideos.length + '개 ▾</button>'
+          + '<div id="' + otherId + '" style="display:none;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">';
+        otherVideos.forEach(function(v) { html += makeCard(v, false); });
+        html += '</div></div>';
+      }
+      if (!currentVideo && !otherVideos.length) {
+        html = '<div style="font-size:10px;color:#71717A;padding:4px">비디오 없음</div>';
+      }
       listEl.innerHTML = html;
       // 선택된 비디오 있으면 트리머 초기화
       if (currentFile) sbInitTrimmer(sn);
