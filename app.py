@@ -178,18 +178,27 @@ def _scan_and_register_output_projects() -> int:
     all_projects = pm.list_projects()
 
     # 역방향 체크: output_dir 폴더가 없으면 DB에서 제거
+    # 단, output_root 자체가 현재 스캔 가능한 경우에만 삭제 (NAS 미연결 시 오삭제 방지)
     for p in all_projects:
         out = p.get("output_dir", "")
-        if out and not Path(out).exists():
+        if not out:
+            continue
+        out_path = Path(out)
+        # output_root 하위 경로인 경우만 삭제 대상 (외부 마운트 경로는 건드리지 않음)
+        try:
+            out_path.relative_to(output_root)
+        except ValueError:
+            continue
+        if not out_path.exists():
             pm.delete_project(p["id"])
-            print(f"  [SCAN] 폴더 없음 → DB 삭제: {Path(out).name}")
+            print(f"  [SCAN] 폴더 없음 → DB 삭제: {out_path.name}")
 
-    # 기존 DB 프로젝트의 output_dir 집합 및 uuid 집합 (삭제 후 재조회)
+    # uuid → DB 프로젝트 맵 (삭제 후 재조회)
     current_projects = pm.list_projects()
-    existing = {p["output_dir"] for p in current_projects if p.get("output_dir")}
-    existing_uuids = {p["uuid"] for p in current_projects if p.get("uuid")}
+    uuid_to_project = {p["uuid"]: p for p in current_projects if p.get("uuid")}
 
     registered = 0
+    updated = 0
     # {8자_uuid}_{slug} 패턴 디렉토리만 처리
     pattern = re.compile(r'^([0-9a-f]{8})_(.+)$')
 
@@ -199,16 +208,18 @@ def _scan_and_register_output_projects() -> int:
         m = pattern.match(d.name)
         if not m:
             continue
-        # output_dir 경로가 이미 등록된 것인지 확인 (NAS/로컬 경로 불일치 대응)
+
         uuid_prefix, slug = m.group(1), m.group(2)
-        if str(d) in existing:
+
+        # 이미 같은 uuid가 DB에 있는 경우 — 경로만 갱신 (다른 머신 import 대응)
+        if uuid_prefix in uuid_to_project:
+            existing_path = uuid_to_project[uuid_prefix].get("output_dir", "")
+            if existing_path != str(d):
+                pm.update_project_path(uuid_prefix, str(d))
+                updated += 1
+                print(f"  [SCAN] 경로 갱신: {d.name} ({existing_path} → {d})")
             continue
-        # 같은 uuid+slug의 다른 경로 버전이 이미 DB에 있으면 스킵
-        if any(Path(od).name == d.name for od in existing):
-            continue
-        # 같은 uuid가 이미 DB에 등록된 경우 스킵 (경로 불일치 케이스)
-        if uuid_prefix in existing_uuids:
-            continue
+
         # 빈 디렉토리(orphan)는 등록하지 않음
         if not any(d.iterdir()):
             print(f"  [SCAN] 빈 디렉토리 스킵: {d.name}")
@@ -247,9 +258,10 @@ def _scan_and_register_output_projects() -> int:
             registered += 1
             print(f"  [SCAN] 프로젝트 등록: {d.name}")
         except Exception as e:
-            # UNIQUE 제약 등 — 무시
-            print(f"  [SCAN] 등록 스킵 ({d.name}): {e}")
+            print(f"  [SCAN] 등록 실패 ({d.name}): {e}")
 
+    if updated:
+        print(f"  [SCAN] 경로 갱신: {updated}개")
     return registered
 
 
@@ -611,11 +623,15 @@ async def project_by_slug(request: Request, slug: str, tab: str = "research"):
     return templates.TemplateResponse(request, "project.html", context)
 
 
-@app.get("/projects/{project_id}", response_class=HTMLResponse)
-async def project_detail(request: Request, project_id: int, tab: str = "research"):
-    """레거시 ID 기반 → slug 리디렉트."""
+@app.get("/projects/{project_ref}", response_class=HTMLResponse)
+async def project_detail(request: Request, project_ref: str, tab: str = "research"):
+    """uuid(8자 hex) 또는 숫자 ID 기반 → slug 리디렉트."""
     pm = get_pm()
-    project = pm.get_project(project_id=project_id)
+    # 숫자면 레거시 DB id, 8자 hex면 uuid
+    if project_ref.isdigit():
+        project = pm.get_project(project_id=int(project_ref))
+    else:
+        project = pm.get_project(uuid=project_ref)
     if not project:
         return HTMLResponse("Project not found", status_code=404)
     return RedirectResponse(

@@ -120,6 +120,14 @@ class ProjectManager:
         with transaction(self.db_path) as conn:
             conn.execute("DELETE FROM projects WHERE id = ?", (project_id,))
 
+    def update_project_path(self, uuid: str, new_output_dir: str) -> None:
+        """uuid 기준으로 output_dir 경로만 갱신 (다른 머신에서 import 시 사용)."""
+        with transaction(self.db_path) as conn:
+            conn.execute(
+                "UPDATE projects SET output_dir = ? WHERE uuid = ?",
+                (new_output_dir, uuid),
+            )
+
     def create_project(
         self,
         name: str,
