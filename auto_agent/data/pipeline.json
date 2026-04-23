@@ -32,13 +32,16 @@
           "type": "module",
           "module": "editorial_brief",
           "resumable": true,
-          "input": ["project_config"],
-          "output": ["editorial_brief.json"],
+          "input": [
+            "project_config"
+          ],
+          "output": [
+            "editorial_brief.json"
+          ],
           "notes": "editorial_brief.json이 이미 있으면 스킵. /auto-kairos 스킬 CLI 인터뷰 또는 AI 초안 생성 양쪽 지원. 생성된 brief는 Stage 1~2 모든 에이전트에 <editorial_brief> 태그로 주입됨."
         }
       ]
     },
-
     {
       "id": "stage_1",
       "name": "리서치",
@@ -51,8 +54,13 @@
           "description": "editorial_brief + project_config 기반으로 초기 내러티브 골격(skeleton.json)을 생성합니다. 타임라인/핵심인물/에피소드를 구조화하여 전략가 에이전트에 전달.",
           "type": "module",
           "module": "skeleton_from_vault",
-          "input": ["editorial_brief.json", "project_config"],
-          "output": ["skeleton.json"],
+          "input": [
+            "editorial_brief.json",
+            "project_config"
+          ],
+          "output": [
+            "skeleton.json"
+          ],
           "resumable": true,
           "notes": "외부 검색은 lane 도구 기반 seed research만 허용. outline은 생성하지 않음 — step_1_strategy에서 Opus가 담당."
         },
@@ -62,8 +70,15 @@
           "description": "editorial_brief + skeleton을 읽고 Opus가 outline / research_queries / hook_strategy를 설계합니다. 이후 ingest의 조사 방향과 훅 전략을 확정.",
           "agent": "research-strategist",
           "resumable": true,
-          "input": ["editorial_brief.json", "skeleton.json"],
-          "output": ["outline.json", "research_queries.json", "hook_strategy.json"],
+          "input": [
+            "editorial_brief.json",
+            "skeleton.json"
+          ],
+          "output": [
+            "outline.json",
+            "research_queries.json",
+            "hook_strategy.json"
+          ],
           "notes": "외부 검색 없음. Read/Write만 사용. outline.json이 이미 존재하면 스킵."
         },
         {
@@ -74,8 +89,14 @@
           "module": "source_ingest",
           "blocking": false,
           "resumable": true,
-          "input": ["editorial_brief.json", "project_config", "outline.json"],
-          "output": ["source_ingest_status.json"],
+          "input": [
+            "editorial_brief.json",
+            "project_config",
+            "outline.json"
+          ],
+          "output": [
+            "source_ingest_status.json"
+          ],
           "notes": "LLM_WIKI_RESEARCH_DIR = $KAIROS_VAULT_DIR/02-research. 초기 outline의 chapter/research_focus를 조사 가이드로 주입합니다. vault에 이미 usable wiki가 있으면 스킵. 출력은 vault에 저장 (project_dir 아님). ResearchAgent SKILL 기반 Claude CLI 에이전트 실행. non-blocking — partial 수집이라도 다음 단계로 진행."
         },
         {
@@ -85,17 +106,25 @@
           "type": "module",
           "module": "chapter_projection",
           "resumable": true,
-          "input": ["outline.json", "source_ingest_status.json"],
-          "output": ["chapter_facts/"],
+          "input": [
+            "outline.json",
+            "source_ingest_status.json"
+          ],
+          "output": [
+            "chapter_facts/"
+          ],
           "notes": "vault 02-research/wiki/<slug>/ + manifests/<slug>/claims.jsonl 읽어 chapter_facts/chapter_{N}.json 생성. claim_ids, source_ids 필드 포함. vault wiki 없으면 기본 구조만 생성 (fallback). 이미 존재하는 챕터 파일은 스킵."
         }
       ],
       "checkpoint": {
         "description": "리서치 결과 검토",
-        "artifacts": ["skeleton.json", "outline.json", "chapter_facts/"]
+        "artifacts": [
+          "skeleton.json",
+          "outline.json",
+          "chapter_facts/"
+        ]
       }
     },
-
     {
       "id": "stage_2",
       "name": "원고 + 연출",
@@ -107,8 +136,15 @@
           "name": "draft_writing",
           "description": "outline + chapter_facts 기반 초고 작성. 쓰면서 WHY/HOW 질문 목록 생성.",
           "agent": "draft-writer",
-          "input": ["outline.json", "chapter_facts/", "project_config"],
-          "output": ["draft.md", "research_questions.json"],
+          "input": [
+            "outline.json",
+            "chapter_facts/",
+            "project_config"
+          ],
+          "output": [
+            "draft.md",
+            "research_questions.json"
+          ],
           "notes": "chapter_facts/ 디렉토리를 Glob으로 탐색하여 읽음. [[Q:qXXX]] 마킹 + research_questions.json 병행 생성."
         },
         {
@@ -116,8 +152,13 @@
           "name": "targeted_research",
           "description": "draft-writer의 WHY/HOW 질문을 정밀 웹 리서치로 해결.",
           "agent": "targeted-researcher",
-          "input": ["research_questions.json", "draft.md"],
-          "output": ["targeted_claims.json"],
+          "input": [
+            "research_questions.json",
+            "draft.md"
+          ],
+          "output": [
+            "targeted_claims.json"
+          ],
           "notes": "priority:high 질문 우선. 답변 못 찾으면 confidence:low로 기록."
         },
         {
@@ -126,8 +167,15 @@
           "description": "draft.md + targeted_claims.json → 최종 원고. 타겟 리서치 답변을 반영하여 원고 완성.",
           "agent": "script-director",
           "mode": "manuscript",
-          "input": ["outline.json", "draft.md", "targeted_claims.json", "project_config"],
-          "output": ["final_manuscript.md"],
+          "input": [
+            "outline.json",
+            "draft.md",
+            "targeted_claims.json",
+            "project_config"
+          ],
+          "output": [
+            "final_manuscript.md"
+          ],
           "skills": [
             "shared/writing-style"
           ],
@@ -145,8 +193,16 @@
             "max_parallel": 3,
             "merge_strategy": "concat_scenes_renumber"
           },
-          "input": ["outline.json", "final_manuscript.md", "targeted_claims.json", "art_style.json", "project_config"],
-          "output": ["scene_specs.json"],
+          "input": [
+            "outline.json",
+            "final_manuscript.md",
+            "targeted_claims.json",
+            "art_style.json",
+            "project_config"
+          ],
+          "output": [
+            "scene_specs.json"
+          ],
           "skills": [
             "shared/writing-style",
             "shared/motion-presets",
@@ -161,8 +217,14 @@
           "description": "병렬로 작성된 챕터들의 내러티브 단절/중복/감정 곡선 점프를 검토하고 보정 (씬 간 연결어, 트랜지션, 씬 수 최적화)",
           "agent": "script-director",
           "mode": "consistency",
-          "input": ["scene_specs.json", "outline.json", "targeted_claims.json"],
-          "output": ["scene_specs.json"],
+          "input": [
+            "scene_specs.json",
+            "outline.json",
+            "targeted_claims.json"
+          ],
+          "output": [
+            "scene_specs.json"
+          ],
           "skills": [
             "shared/writing-style",
             "shared/motion-presets",
@@ -175,7 +237,9 @@
           "name": "vault_sync",
           "description": "output/research wiki/manifests를 볼트 02-research로 merge. 볼트 마운트 실패 시 경고만.",
           "module": "vault_sync",
-          "input": ["source_ingest_status.json"],
+          "input": [
+            "source_ingest_status.json"
+          ],
           "output": []
         },
         {
@@ -183,8 +247,13 @@
           "name": "data_mapping",
           "description": "scene_specs의 데이터 필드(items/values/unit/source/chartConfig) 보강. 리서치 데이터 정확히 매핑.",
           "agent": "data-mapper",
-          "input": ["scene_specs.json", "targeted_claims.json"],
-          "output": ["scene_specs.json"],
+          "input": [
+            "scene_specs.json",
+            "targeted_claims.json"
+          ],
+          "output": [
+            "scene_specs.json"
+          ],
           "notes": "script-director가 비워둔 데이터 필드를 리서치에서 정확히 매핑. sonnet 급 경량 에이전트."
         },
         {
@@ -192,18 +261,24 @@
           "name": "fact_check",
           "description": "원고 내 주요 주장 교차 검증",
           "agent": "fact-verifier",
-          "input": ["scene_specs.json", "targeted_claims.json"],
-          "output": ["factcheck_report.json"],
+          "input": [
+            "scene_specs.json",
+            "targeted_claims.json"
+          ],
+          "output": [
+            "factcheck_report.json"
+          ],
           "blocking": false,
           "notes": "비차단. 실패해도 파이프라인 계속. 결과는 QA 리포트에 반영."
         }
       ],
       "checkpoint": {
         "description": "원고 + 씬 연출 검토",
-        "artifacts": ["scene_specs.json"]
+        "artifacts": [
+          "scene_specs.json"
+        ]
       }
     },
-
     {
       "id": "stage_3",
       "name": "에셋 조립 + 렌더링",
@@ -215,8 +290,15 @@
           "name": "assembly",
           "description": "에이전트가 이미지+TTS+자막+매니페스트를 직접 처리. 렌더링은 대시보드에서 수동.",
           "agent": "assembly-director",
-          "input": ["scene_specs.json", "art_style.json", "project_config", "images/"],
-          "context_replaces": ["research_report.json"],
+          "input": [
+            "scene_specs.json",
+            "art_style.json",
+            "project_config",
+            "images/"
+          ],
+          "context_replaces": [
+            "research_report.json"
+          ],
           "output": [
             "audio/scene_{NNN}.mp3",
             "subtitles/scene_{NNN}.srt",
@@ -245,19 +327,28 @@
           "description": "YouTube 업로드 패키지 생성 — 제목 4종·더보기란·해시태그·썸네일 스펙 (채널 플레이북 기반)",
           "type": "agent",
           "agent": "release-manager",
-          "input": ["scene_specs.json", "manifest.json", "final_manuscript.md"],
-          "output": ["upload_info.json"],
+          "input": [
+            "scene_specs.json",
+            "manifest.json",
+            "final_manuscript.md"
+          ],
+          "output": [
+            "upload_info.json"
+          ],
           "blocking": false,
           "notes": "본편 완료 후 실행. release-manager 에이전트가 channel_playbook.json 참조하여 전략적으로 생성. 멀티포맷은 /multi-contents 명령어로 별도 실행."
         }
       ],
       "checkpoint": {
         "description": "최종 영상 + 조립 리포트 검토",
-        "artifacts": ["remotion/public/manifest.json", "assembly_report.json", "upload_info.json"]
+        "artifacts": [
+          "remotion/public/manifest.json",
+          "assembly_report.json",
+          "upload_info.json"
+        ]
       }
     }
   ],
-
   "summary": {
     "steps": 8,
     "key_points": [

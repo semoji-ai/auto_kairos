@@ -96,7 +96,19 @@ def _resolve_voice_config() -> tuple:
     return voice_id, voice_settings
 
 
-VOICE_ID, VOICE_SETTINGS = _resolve_voice_config()
+# VOICE_ID/VOICE_SETTINGS는 generate_tts() 호출 시점에 lazy 평가
+# (모듈 import 시 DB/환경변수가 아직 준비되지 않은 경우 대비)
+_VOICE_ID: str | None = None
+_VOICE_SETTINGS: dict | None = None
+
+
+def _get_voice_config() -> tuple[str, dict]:
+    global _VOICE_ID, _VOICE_SETTINGS
+    if _VOICE_ID is None or _VOICE_SETTINGS is None:
+        _VOICE_ID, _VOICE_SETTINGS = _resolve_voice_config()
+    return _VOICE_ID, _VOICE_SETTINGS
+
+
 
 from auto_agent.scripts.project_paths import PROJECT_ROOT, get_project_dir
 
@@ -210,12 +222,13 @@ def generate_tts(text: str, output_path: Path) -> float:
     """Send preprocessed text to the shared ElevenLabs client and save MP3."""
     from auto_agent.tools.elevenlabs import ElevenLabsClient
 
+    voice_id, voice_settings = _get_voice_config()
     client = ElevenLabsClient(
         tts_provider="elevenlabs",
         elevenlabs_api_key=API_KEY,
-        voice_id=VOICE_ID,
+        voice_id=voice_id,
         model_id=MODEL_ID,
-        voice_settings=VOICE_SETTINGS,
+        voice_settings=voice_settings,
     )
     return client.generate_preprocessed_tts(text, output_path)
 

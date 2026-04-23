@@ -1466,6 +1466,19 @@ class PipelineRunner:
                     print(f"    [WARN] 팩트체크 보고서 파싱 실패: {e}")
 
 
+        # step_2_data 완료 후 scene_specs 데이터 필드 채움 여부 검증
+        if step_id == "step_2_data" and result.status == "completed":
+            specs_path = self.project_dir / "scene_specs.json"
+            if specs_path.exists():
+                try:
+                    specs = json.loads(specs_path.read_text(encoding="utf-8"))
+                    scenes = specs.get("scenes", [])
+                    filled = sum(1 for s in scenes if s.get("items") or s.get("values") or s.get("headline"))
+                    if scenes and filled == 0:
+                        print(f"    [WARN] step_2_data 완료됐으나 {len(scenes)}개 씬 모두 items/values/headline 비어 있음")
+                except Exception:
+                    pass
+
         return result  # 기본: 원래 결과 유지
 
     def _run_sequential(self, steps: List[dict]):
@@ -1984,11 +1997,15 @@ class PipelineRunner:
 </output_format>"""
 
         cli_path = self._find_claude_cli()
+        # max_turns: agents.json 설정값 사용 (기본 30, 최소 20 보장)
+        agents_config_ch = self._load_agents_config()
+        agent_def_ch = agents_config_ch.get("subagents", {}).get(agent_name, {})
+        chapter_max_turns = max(agent_def_ch.get("max_turns", 30), 20)
         cmd = [
             cli_path, "--print", "--output-format", "json",
             "--dangerously-skip-permissions",
-            "--model", model, "--max-turns", "5",
-            "--allowedTools", "Read", "--allowedTools", "Write",
+            "--model", model, "--max-turns", str(chapter_max_turns),
+            "--allowedTools", "Read", "--allowedTools", "Write", "--allowedTools", "Edit",
         ]
 
         env = os.environ.copy()
@@ -2628,6 +2645,15 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 chapter_entry = next((c for c in chapters if c.get("id") == chapter_num), None)
                 if chapter_entry:
                     context_block += f'\n<file name="outline.json (챕터 {chapter_num})">\n{json.dumps(chapter_entry, ensure_ascii=False, indent=2)}\n</file>\n'
+            except Exception:
+                pass
+
+        # chapter_facts 주입 — 리서치 데이터 전달 (stage_1 결과)
+        facts_path = self.project_dir / "chapter_facts" / f"chapter_{chapter_num:02d}.json"
+        if facts_path.exists():
+            try:
+                facts_text = facts_path.read_text(encoding="utf-8")
+                context_block += f'\n<file name="chapter_facts/chapter_{chapter_num:02d}.json">\n{facts_text}\n</file>\n'
             except Exception:
                 pass
 
@@ -3683,11 +3709,32 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                     break
 
             if all_exist and outputs:
-                print(f"[resume] 출력 파일 존재 → 스킵", flush=True)
-                return StepResult(
-                    step_id=step_id, status="completed",
-                    output_files=[str(self._resolve_output_path(o)) for o in outputs],
-                )
+                # 파일 내용 최소 검증: 빈 파일 또는 빈 JSON은 skip 불가
+                content_ok = True
+                for out in outputs:
+                    out_path = self._resolve_output_path(out)
+                    if out_path.is_file() and out_path.suffix in (".json", ".md", ".txt"):
+                        sz = out_path.stat().st_size
+                        if sz < 50:
+                            content_ok = False
+                            print(f"[resume] {out_path.name} 크기 {sz}B — 재실행", flush=True)
+                            break
+                        if out_path.suffix == ".json":
+                            try:
+                                data = json.loads(out_path.read_text(encoding="utf-8"))
+                                # scenes 배열이 있으면 비어있는지 확인
+                                if isinstance(data, dict) and "scenes" in data and not data["scenes"]:
+                                    content_ok = False
+                                    print(f"[resume] {out_path.name} scenes 빈 배열 — 재실행", flush=True)
+                                    break
+                            except Exception:
+                                pass
+                if content_ok:
+                    print(f"[resume] 출력 파일 존재 + 내용 검증 통과 → 스킵", flush=True)
+                    return StepResult(
+                        step_id=step_id, status="completed",
+                        output_files=[str(self._resolve_output_path(o)) for o in outputs],
+                    )
 
         # ── 에이전트 설정 ──
 
