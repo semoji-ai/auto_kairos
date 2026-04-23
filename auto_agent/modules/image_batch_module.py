@@ -244,6 +244,69 @@ def run_batch(
                     return images  # 최신 run에서 찾으면 즉시 반환
         return images
 
+    def _vision_select_best(candidates: list, scene: dict) -> Optional[object]:
+        """상위 후보 이미지를 Claude 비전으로 보고 씬에 가장 적합한 것을 선택."""
+        if not candidates:
+            return None
+        if len(candidates) == 1:
+            return candidates[0]
+
+        valid = [c for c in candidates if c.local_path and Path(c.local_path).exists()]
+        if not valid:
+            return None
+        if len(valid) == 1:
+            return valid[0]
+
+        import base64, subprocess as _sp, tempfile as _tf
+        narration = scene.get("narration", "")[:200]
+        query = (scene.get("imageAsset") or {}).get("query", "")
+        title = scene.get("title", "")
+
+        # 이미지 base64 인코딩
+        img_parts = []
+        for i, c in enumerate(valid[:5]):
+            try:
+                data = Path(c.local_path).read_bytes()
+                b64 = base64.b64encode(data).decode()
+                ext = Path(c.local_path).suffix.lstrip(".").lower() or "jpeg"
+                if ext == "jpg":
+                    ext = "jpeg"
+                img_parts.append((i, b64, ext, c))
+            except Exception:
+                pass
+
+        if not img_parts:
+            return valid[0]
+
+        # Claude API로 비전 선택
+        try:
+            import anthropic
+            client = anthropic.Anthropic()
+            content = []
+            for i, b64, ext, _ in img_parts:
+                content.append({"type": "text", "text": f"[이미지 {i+1}]"})
+                content.append({"type": "image", "source": {"type": "base64", "media_type": f"image/{ext}", "data": b64}})
+            content.append({"type": "text", "text": (
+                f"씬 제목: {title}\n검색 쿼리: {query}\n나레이션: {narration}\n\n"
+                f"위 {len(img_parts)}장의 이미지 중 이 씬에 가장 적합한 이미지 번호를 숫자 하나만 답하세요. (예: 2)"
+            )})
+            resp = client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=10,
+                messages=[{"role": "user", "content": content}],
+            )
+            answer = resp.content[0].text.strip()
+            import re as _re
+            m = _re.search(r"\d+", answer)
+            if m:
+                idx = int(m.group()) - 1
+                if 0 <= idx < len(img_parts):
+                    return img_parts[idx][3]
+        except Exception as e:
+            _progress(f"비전 선택 실패 ({e}) — 1순위 사용", level="warning")
+
+        return valid[0]
+
     def _match_research_image(research_images: list[dict], query: str, scene_title: str = "") -> Optional[dict]:
         """쿼리와 씬 제목을 기반으로 리서치 이미지 중 가장 적합한 것을 반환."""
         if not research_images or not query:
@@ -341,9 +404,16 @@ def run_batch(
             # ── 2단계: 실시간 검색 ──
             _progress(f"씬 {scene_num} 검색: {query[:40]}")
             try:
-                results = searcher.search_waterfall(query, limit=3, preferred_aspect="16:9")
-                if results and results[0].local_path and Path(results[0].local_path).exists():
-                    best = results[0]
+                results = searcher.search_waterfall(query, limit=5, preferred_aspect="16:9")
+                best = _vision_select_best(results, scene)
+                # 선택되지 않은 후보 임시 파일 정리
+                for r in results:
+                    if r is not best and r.local_path:
+                        try:
+                            Path(r.local_path).unlink(missing_ok=True)
+                        except Exception:
+                            pass
+                if best and best.local_path and Path(best.local_path).exists():
                     ext = Path(best.local_path).suffix or ".jpg"
                     fname = image_assets.next_filename(images_dir, scene_num, "search", ext)
                     dest = search_dl_dir / fname
