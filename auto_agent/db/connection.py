@@ -15,11 +15,28 @@ from auto_agent.paths import get_workspace_dir
 PROJECT_ROOT = get_workspace_dir()
 
 
+def _load_env_db_path():
+    """AUTO_AGENT_DB 환경변수 로드. 없으면 .env 파일에서 직접 읽음."""
+    val = os.getenv("AUTO_AGENT_DB")
+    if val:
+        return val
+    # .env 파일에서 직접 파싱 (dotenv 라이브러리 없이)
+    env_file = get_workspace_dir() / ".env"
+    if env_file.exists():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line.startswith("AUTO_AGENT_DB="):
+                return line.split("=", 1)[1].strip().strip('"').strip("'")
+    return None
+
+
 def get_db_path() -> Path:
-    """DB 경로: AUTO_AGENT_DB 환경변수 > 워크스페이스/auto_agent.db"""
-    env_path = os.getenv("AUTO_AGENT_DB")
+    """DB 경로: AUTO_AGENT_DB 환경변수 > .env 파일 > 워크스페이스/auto_agent.db"""
+    env_path = _load_env_db_path()
     if env_path:
-        return Path(env_path)
+        p = Path(env_path).expanduser()
+        p.parent.mkdir(parents=True, exist_ok=True)
+        return p
     return get_workspace_dir() / "auto_agent.db"
 
 
