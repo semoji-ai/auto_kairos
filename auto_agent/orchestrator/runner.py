@@ -774,6 +774,10 @@ class PipelineRunner:
             self.state.failed_steps = []
             self.state.skipped_steps = []
 
+        # --from 플래그: 이전 failed_steps 초기화 (이전 실패가 새 실행을 막지 않도록)
+        if from_step is not None:
+            self.state.failed_steps = []
+
         skip_until = from_step
         found_start = from_step is None
 
