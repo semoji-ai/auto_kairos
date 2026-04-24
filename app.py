@@ -167,6 +167,16 @@ def get_pm():
     return ProjectManager()
 
 
+def _find_wiki_dir(wiki_root: Path):
+    """research/wiki/ 아래 첫 번째 서브디렉토리 반환 (slug와 무관)."""
+    if not wiki_root.exists():
+        return None
+    for d in sorted(wiki_root.iterdir()):
+        if d.is_dir():
+            return d
+    return None
+
+
 def _scan_and_register_output_projects() -> int:
     """output/ 폴더를 스캔해 DB에 없는 프로젝트를 자동 등록. 등록 수 반환."""
     import re
@@ -283,7 +293,6 @@ TAB_TEMPLATES = {
     "manuscript": "partials/_manuscript.html",
     "storyboard": "partials/_storyboard.html",
     "studio": "partials/_studio.html",
-    "versions": "partials/_versions.html",
     "costs": "partials/_costs.html",
     "agent": "partials/_agent.html",
     "upload_info": "partials/_upload_info.html",
@@ -352,7 +361,18 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
 
     elif tab == "manuscript":
         specs = _load_json("scene_specs.json")
-        context["scenes"] = specs.get("scenes", []) if specs else []
+        scenes = specs.get("scenes", []) if specs else []
+        context["scenes"] = scenes
+        context["final_manuscript"] = _load_text("final_manuscript.md") or ""
+        chapters_seen: list[dict] = []
+        seen_ids: set = set()
+        for s in scenes:
+            ch = s.get("chapter")
+            ch_title = s.get("chapter_title") or s.get("chapterTitle") or ""
+            if ch is not None and ch not in seen_ids:
+                seen_ids.add(ch)
+                chapters_seen.append({"id": ch, "title": ch_title})
+        context["chapters"] = chapters_seen
 
     elif tab == "storyboard":
         specs = _load_json("scene_specs.json")
@@ -705,6 +725,34 @@ async def research_canvas(slug: str):
                     claims.extend(_load_jsonl(topic_dir / "claims.jsonl"))
                     sources.extend(_load_jsonl(topic_dir / "sources.jsonl"))
 
+    # manifests claims가 없으면 wiki claims.md 파싱으로 폴백
+    if not claims:
+        import re as _re2
+        wiki_dir = _find_wiki_dir(research_root / "wiki")
+        if wiki_dir:
+            claims_md = wiki_dir / "claims.md"
+            if claims_md.exists():
+                text = _re2.sub(r'^---\s*\n.*?\n---\s*\n', '', claims_md.read_text(encoding="utf-8"), flags=_re2.DOTALL)
+                current: dict = {}
+                for line in text.split("\n"):
+                    line = line.strip()
+                    if line.startswith("## claim_"):
+                        if current.get("claim"):
+                            claims.append(current)
+                        current = {}
+                    elif line.startswith("- claim:"):
+                        current["claim"] = line[len("- claim:"):].strip()
+                    elif line.startswith("- kind:"):
+                        current["kind"] = line[len("- kind:"):].strip().strip("`")
+                    elif line.startswith("- confidence:"):
+                        current["confidence"] = line[len("- confidence:"):].strip().strip("`")
+                    elif line.startswith("- status:"):
+                        current["status"] = line[len("- status:"):].strip().strip("`")
+                    elif line.startswith("- evidence:"):
+                        current["evidence"] = line[len("- evidence:"):].strip()
+                if current.get("claim"):
+                    claims.append(current)
+
     # outline 챕터 기준으로 claims 그룹핑
     chapters = outline_data.get("chapters", [])
     chapter_map: dict[int, str] = {}
@@ -845,8 +893,9 @@ async def research_wiki_index(slug: str):
     if not project:
         return JSONResponse({"error": "project not found"}, 404)
     out_dir = Path(project.get("output_dir", ""))
-    wiki_dir = out_dir / "research" / "wiki" / slug
-    if not wiki_dir.exists():
+    wiki_root = out_dir / "research" / "wiki"
+    wiki_dir = _find_wiki_dir(wiki_root)
+    if not wiki_dir:
         return JSONResponse({"pages": []})
     pages = [p.stem for p in sorted(wiki_dir.glob("*.md"))]
     return JSONResponse({"pages": pages})
@@ -861,8 +910,10 @@ async def research_wiki_page(slug: str, page: str):
     if not project:
         return JSONResponse({"error": "project not found"}, 404)
     out_dir = Path(project.get("output_dir", ""))
-    wiki_file = out_dir / "research" / "wiki" / slug / f"{page}.md"
-    if not wiki_file.exists():
+    wiki_root = out_dir / "research" / "wiki"
+    wiki_dir = _find_wiki_dir(wiki_root)
+    wiki_file = (wiki_dir / f"{page}.md") if wiki_dir else None
+    if not wiki_file or not wiki_file.exists():
         return JSONResponse({"error": "not found"}, 404)
     text = wiki_file.read_text(encoding="utf-8")
     # frontmatter 제거
