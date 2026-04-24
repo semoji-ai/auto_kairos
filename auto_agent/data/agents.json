@@ -2,6 +2,39 @@
   "$schema": "./docs/agents-schema.json",
   "description": "Auto Agent 에이전트 정의 — 3단계 파이프라인용",
   "agents": {
+    "brief-interviewer-auto": {
+      "description": "editorial_brief.v1.json을 LLM 자가 Q&A로 생성 (사용자 개입 없음). 각 DNA 레버에 후보 3개 생성 → 자가 평가 → 최고점 선택.",
+      "model": "sonnet",
+      "max_turns": 12,
+      "budget": "$0.3",
+      "max_duration_minutes": 6,
+      "allowed_tools": ["Read", "Write"],
+      "skill_file": "agents/brief-interviewer-auto/SKILL.md",
+      "shared_skills": ["shared/brief-dna.md"],
+      "notes": "auto 모드. brief_mode=auto 설정 시 사용. 후속 brief-reviewer 래칫 대상."
+    },
+    "brief-reviewer": {
+      "description": "editorial_brief.v{N}.json 래칫 리뷰. 5대 DNA 레버 기반 100점 채점 + REVISE 지시. Stage 2 script-reviewer 방식을 기획 단계에 이식.",
+      "model": "sonnet",
+      "max_turns": 15,
+      "budget": "$0.4",
+      "max_duration_minutes": 8,
+      "allowed_tools": ["Read", "Write"],
+      "skill_file": "agents/brief-reviewer/SKILL.md",
+      "shared_skills": ["shared/brief-dna.md"],
+      "notes": "래칫 기준 90점 PASS, 75점 미만 FAIL. 점수 단조 증가 강제."
+    },
+    "brief-deepener": {
+      "description": "editorial_brief.v{N-1} → v{N} 심화 (Stage 1 후 v2, Stage 2_draft 후 v3). 잠금 필드 유지하면서 리서치 결과로 구체성 증가.",
+      "model": "sonnet",
+      "max_turns": 20,
+      "budget": "$0.5",
+      "max_duration_minutes": 10,
+      "allowed_tools": ["Read", "Write", "Glob"],
+      "skill_file": "agents/brief-deepener/SKILL.md",
+      "shared_skills": ["shared/brief-dna.md"],
+      "notes": "LOCKED_FIELDS (core_question/real_topic/hook_angle/excluded_angles/tone_goal) 변경 금지. 점수 하락 시 runner가 이전 버전 복원."
+    },
     "brief-interviewer": {
       "description": "영상 주제 분석 → editorial_brief.json 생성. 기획 의도(core_question/real_topic/hook_angle/excluded_angles)를 확정해 Stage 1~2 전 과정의 상위 컨텍스트로 고정.",
       "model": "sonnet",

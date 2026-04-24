@@ -310,6 +310,44 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 
 ---
 
+## Editorial Brief 준수 체크리스트 (v1~v3 DNA 레버)
+
+프롬프트에 `<editorial_brief>` 태그가 있으면 **최종 잠금 버전**(우선순위: v3 > v2 > v1 > legacy)입니다.
+이 brief의 5대 DNA 레버는 원고/씬에 **반영이 강제**되며, 아래 체크리스트를 Write 직전에 자가 검증합니다.
+
+> 참조: `shared/brief-dna.md`
+
+### 5대 레버 반영 확인
+
+**manuscript 모드**:
+- [ ] `narrative_arc.entry_trend` — **도입부(Ch 1)**에 트렌드/뉴스 훅으로 반영
+- [ ] `narrative_arc.deep_knowledge` — **중간 챕터**에서 파헤쳐지는 지식으로 반영
+- [ ] `narrative_arc.present_insight` — **결론 챕터**의 착지점으로 반영
+- [ ] `human_truth.failure` — 인물형일 때 **하나 이상의 실패 에피소드**로 원고에 삽입
+- [ ] `human_truth.inner_conflict` — 회고록/인터뷰 힌트가 있으면 **직접 인용** 또는 간접 서술로 반영
+- [ ] `hidden_truth` — 원고 어디에도 빠지면 안 됨. **클라이맥스** 또는 **본문 전환점**에 반전으로 배치
+- [ ] `present_connection` — 결론 챕터에 "~이 오늘날 ~로 이어진다" 형태로 **구체 문장** 반영
+- [ ] `evidence_anchors` 중 `available` 앵커는 **최소 60% 이상** 원고에서 인용
+
+**chapters 모드** (씬 분할):
+- [ ] `hidden_truth` 반전 씬이 **단독 씬**으로 분리되어 있는가 (여러 사실과 뒤섞이지 않음)
+- [ ] `human_truth.failure` 씬이 성공 씬과 **시각적으로 구분**되는가 (mood 전환)
+- [ ] 첫 씬(Ch1 Scene 1)에 `narrative_arc.entry_trend`가 반영되는가
+- [ ] 마지막 씬에 `present_connection`이 반영되는가
+- [ ] `evidence_anchors` 수치/출처가 해당 씬의 `values` 또는 `headline`에 정확히 매핑되는가
+
+### excluded_angles 준수
+
+- [ ] `excluded_angles`에 명시된 방향으로 원고/씬이 **단 한 번도** 흘러가지 않는가
+- 위반 시: 즉시 해당 섹션 재작성 또는 제거
+
+### 검증 실패 시
+
+- manuscript: 해당 레버 반영 재시도. 3회 재시도 실패 시 주석으로 `<!-- BRIEF_VIOLATION: {field} -->` 표시 후 script-reviewer로 위임
+- chapters: 해당 씬 재분할. 시각 연출(mood/layout) 조정하여 강조
+
+---
+
 ## 역할
 
 리서치 결과를 읽고, **원고 작성과 시각 연출을 동시에** 수행합니다.
