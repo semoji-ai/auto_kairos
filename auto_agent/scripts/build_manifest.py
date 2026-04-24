@@ -622,9 +622,14 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                     else:
                         converted.append(mk)
                 ms["markers"] = converted
-            # center: scene_specs는 [lat, lng], Remotion/MapLibre는 [lng, lat]
+            # center: MapLibre는 [lng, lat] 순서 필요
+            # lat이 ±90 초과이면 [lat, lng]으로 잘못 입력된 것 → swap
+            def _ensure_lnglat(c: list) -> list:
+                if len(c) == 2 and abs(c[1]) > 90:
+                    return [c[1], c[0]]
+                return c
             if ms.get("center") and len(ms["center"]) == 2:
-                ms["center"] = [ms["center"][1], ms["center"][0]]
+                ms["center"] = _ensure_lnglat(ms["center"])
             # camera 필드 보장
             center_lnglat = ms.get("center", [0, 0])
             if not ms.get("camera"):
@@ -640,7 +645,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             else:
                 for kf in ms.get("camera", {}).get("keyframes", []):
                     if kf.get("center") and len(kf["center"]) == 2:
-                        kf["center"] = [kf["center"][1], kf["center"][0]]
+                        kf["center"] = _ensure_lnglat(kf["center"])
             entry["mapScene"] = ms
 
         scenes.append(entry)

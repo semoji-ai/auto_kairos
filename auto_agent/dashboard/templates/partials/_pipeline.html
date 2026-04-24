@@ -510,6 +510,12 @@
 </style>
 
 <script>
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
 (function () {
   const slug = "{{ slug }}";
   if (!slug) return;
@@ -569,10 +575,6 @@
     if (placeholder && placeholder.textContent === '대기') feed.innerHTML = '';
     feed.appendChild(row);
     feed.scrollTop = feed.scrollHeight;
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   // ── 현재 스텝 헤더 ──
@@ -952,8 +954,8 @@
   var totalClaims = 0;
 
   // 1. outline + claims 초기 로드
-  fetch('/api/p/' + slug + '/research/canvas')
-    .then(function(r) { return r.json(); })
+  fetch('/api/p/' + encodeURIComponent(slug) + '/research/canvas')
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(d) {
       chapterMap = d.chapter_map || {};
       claimsByChapter = d.grouped_claims || {};
@@ -963,8 +965,9 @@
       renderClaims(targetedClaims, researchQuestions);
       if (countEl) countEl.textContent = totalClaims + ' claims' + (targetedClaims.length ? ' · 타겟 ' + targetedClaims.length + '개' : '');
     })
-    .catch(function() {
-      if (claimsBody) claimsBody.innerHTML = '<div class="rc-empty">리서치 데이터가 없습니다</div>';
+    .catch(function(err) {
+      console.error('[rc] canvas fetch 실패:', err, '/api/p/' + slug + '/research/canvas');
+      if (claimsBody) claimsBody.innerHTML = '<div class="rc-empty">리서치 데이터가 없습니다 (' + err + ')</div>';
     });
 
   function renderClaims(targetedClaims, researchQuestions) {
@@ -1007,7 +1010,7 @@
             '<span class="rc-target-q-text">' + escapeHtml(qText) + '</span>' +
           '</div>' +
           '<div class="rc-target-a">' + escapeHtml(tc.answer || '') + '</div>' +
-          (tc.sources && tc.sources.length ? '<div class="rc-target-src">출처: ' + tc.sources.slice(0,3).map(escHtml).join(', ') + '</div>' : '');
+          (tc.sources && tc.sources.length ? '<div class="rc-target-src">출처: ' + tc.sources.slice(0,3).map(escapeHtml).join(', ') + '</div>' : '');
         claimsBody.appendChild(card);
       });
     }

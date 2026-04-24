@@ -244,7 +244,7 @@
   };
   var PAGE_ORDER = ['overview', 'claims', 'timeline', 'entities', 'images', 'questions', 'log', 'index', '__targeted__'];
 
-  fetch('/api/p/' + slug + '/research/wiki')
+  fetch('/api/p/' + encodeURIComponent(slug) + '/research/wiki')
     .then(function(r) { return r.json(); })
     .then(function(d) {
       var pages = d.pages || [];
@@ -305,7 +305,7 @@
       return;
     }
 
-    fetch('/api/p/' + slug + '/research/wiki/' + page)
+    fetch('/api/p/' + encodeURIComponent(slug) + '/research/wiki/' + page)
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (d.error) {
@@ -361,7 +361,7 @@
   function ensureImages() {
     if (_imgData !== null) return Promise.resolve(_imgData);
     if (_imgPromise) return _imgPromise;
-    _imgPromise = fetch('/api/p/' + slug + '/research/images')
+    _imgPromise = fetch('/api/p/' + encodeURIComponent(slug) + '/research/images')
       .then(function(r) { return r.json(); })
       .then(function(d) { _imgData = d.images || []; return _imgData; })
       .catch(function() { _imgData = []; return []; });
@@ -627,7 +627,7 @@
   }
   function loadTargetedClaimsView() {
     content.innerHTML = '<div class="wiki-placeholder">타겟 리서치 데이터 로딩 중...</div>';
-    fetch('/api/p/' + slug + '/research/canvas')
+    fetch('/api/p/' + encodeURIComponent(slug) + '/research/canvas')
       .then(function(r) { return r.json(); })
       .then(function(d) {
         var tcs = d.targeted_claims || [];
