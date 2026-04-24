@@ -239,9 +239,10 @@
     'entities': '등장인물/기관',
     'images': '이미지',
     'questions': '연구 질문',
-    'log': '수집 로그'
+    'log': '수집 로그',
+    '__targeted__': '🎯 타겟 리서치'
   };
-  var PAGE_ORDER = ['overview', 'claims', 'timeline', 'entities', 'images', 'questions', 'log', 'index'];
+  var PAGE_ORDER = ['overview', 'claims', 'timeline', 'entities', 'images', 'questions', 'log', 'index', '__targeted__'];
 
   fetch('/api/p/' + slug + '/research/wiki')
     .then(function(r) { return r.json(); })
@@ -252,6 +253,8 @@
         loadTargetedClaimsView();
         return;
       }
+      // 타겟 리서치 항목 항상 추가
+      pages = pages.concat(['__targeted__']);
 
       // 정의된 순서로 정렬, 나머지는 뒤에
       pages.sort(function(a, b) {
@@ -265,13 +268,16 @@
       pages.forEach(function(page) {
         var btn = document.createElement('button');
         btn.className = 'wiki-nav-item';
+        btn.dataset.page = page;
         btn.textContent = PAGE_LABELS[page] || page;
+        if (page === '__targeted__') btn.style.cssText = 'color:#FCD34D;border-top:1px solid rgba(245,158,11,.2);margin-top:6px;padding-top:10px;';
         btn.onclick = function() { loadPage(page, btn); };
         nav.appendChild(btn);
       });
 
-      // 첫 번째 페이지 자동 로드
-      var firstBtn = nav.querySelector('.wiki-nav-item');
+      // 타겟 리서치 버튼 우선 클릭, 없으면 첫 번째
+      var targetedBtn = Array.from(nav.querySelectorAll('.wiki-nav-item')).find(function(b) { return b.dataset.page === '__targeted__'; });
+      var firstBtn = targetedBtn || nav.querySelector('.wiki-nav-item');
       if (firstBtn) firstBtn.click();
     })
     .catch(function() {
@@ -286,6 +292,12 @@
     btn.classList.add('active');
 
     content.innerHTML = '<div class="wiki-placeholder">로딩 중...</div>';
+
+    // 타겟 리서치 페이지
+    if (page === '__targeted__') {
+      loadTargetedClaimsView();
+      return;
+    }
 
     // 이미지 페이지는 별도 API 호출
     if (page === 'images') {
