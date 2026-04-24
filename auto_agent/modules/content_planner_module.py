@@ -12,8 +12,21 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import date
 from pathlib import Path
 from typing import Any
+
+
+def _today_context() -> str:
+    """현재 날짜를 entry_trend 시의성 확보용 컨텍스트 문자열로 반환."""
+    today = date.today()
+    return (
+        f"\n\n⚠️ **현재 날짜: {today.isoformat()} (오늘)**\n"
+        f"- `narrative_arc.entry_trend`와 `hook_angle`은 반드시 **오늘 기준으로 시의성 있는** 트렌드/뉴스여야 합니다\n"
+        f"- 훈련 데이터에 있던 과거 시점(예: 2024년 뉴스)을 '현재'로 제시하지 마세요\n"
+        f"- 오늘 시점 최신 트렌드를 모를 경우, 해당 필드 status를 `needs_research`로 표시하고 "
+        f"Stage 1 deepener가 실제 최신 뉴스로 교체하도록 위임하세요"
+    )
 
 REQUIRED_BRIEF_FIELDS = [
     "core_question", "real_topic", "entity_slug", "section_slug",
@@ -112,7 +125,7 @@ def generate_planner_brief(
 
     prompt = f"""다음 유튜브 영상의 기획안을 작성하세요.
 
-주제: {topic}{style_hint}
+주제: {topic}{style_hint}{_today_context()}
 
 아래 원칙을 지켜서 JSON으로만 응답하세요 (설명 없이 JSON만):
 
@@ -222,7 +235,7 @@ def generate_auto_brief(
 
     prompt = f"""다음 유튜브 영상 주제에 대해 editorial_brief.v1.json을 생성하세요.
 
-주제: {topic}{style_hint}
+주제: {topic}{style_hint}{_today_context()}
 
 ## 단계
 

@@ -19,7 +19,7 @@ description: editorial_brief.json의 품질 레버 5종 — content-planner / br
 
 ```json
 "narrative_arc": {
-  "entry_trend": "현재 화제/트렌드 — 시청자가 지금 검색하고 있거나 뉴스에서 보는 것",
+  "entry_trend": "오늘 기준 화제/트렌드 — 시청자가 지금(프롬프트에 주입된 현재 날짜 기준) 검색하고 있거나 뉴스에서 보는 것",
   "deep_knowledge": "표면 아래의 역사/맥락/이면 — 본문에서 파헤칠 실제 지식",
   "present_insight": "과거 이야기가 오늘/미래에 갖는 의미 — 결론의 착지점"
 }
@@ -27,8 +27,9 @@ description: editorial_brief.json의 품질 레버 5종 — content-planner / br
 
 ### 구체성 기준
 
-- ✅ entry_trend: "2024년 9월 삼성전자 주가 폭락과 HBM 경쟁 뉴스"
+- ✅ entry_trend: 프롬프트에 주입된 **현재 날짜 기준** 최신 뉴스 (예: 오늘이 2026-04이면 "2026년 4월 주요 뉴스")
 - ❌ entry_trend: "반도체 산업의 현재 상황" ← 추상, 트렌드 아님
+- ❌ entry_trend: 훈련 데이터의 과거 시점(예: 오늘이 2026년인데 2024년 뉴스를 "현재"로 제시) — **오늘과 어긋나면 `needs_research` 플래그** + Stage 1 deepener가 실제 최신 뉴스로 교체
 
 - ✅ deep_knowledge: "이건희의 1993년 프랑크푸르트 선언과 반도체 도박의 실제 경위"
 - ❌ deep_knowledge: "삼성의 역사" ← 너무 광범위

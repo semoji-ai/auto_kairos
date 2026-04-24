@@ -10,7 +10,17 @@ Editorial Brief Module — 기획 의도 고정 모듈
 import json
 import os
 import sys
+from datetime import date
 from pathlib import Path
+
+
+def _today_context() -> str:
+    today = date.today()
+    return (
+        f"\n\n⚠️ **현재 날짜: {today.isoformat()} (오늘)**\n"
+        f"- hook_angle을 '현재 트렌드'로 잡을 때 **오늘 기준**으로 시의성 있게 작성\n"
+        f"- 훈련 데이터의 과거 시점을 '현재'로 제시 금지"
+    )
 
 
 BRIEF_SCHEMA = {
@@ -48,7 +58,7 @@ def generate_brief_from_topic(topic: str, writing_style: str = "") -> dict:
 
     prompt = f"""다음 영상 제작 주제를 분석해서 editorial_brief JSON을 생성하세요.
 
-주제: {topic}{style_hint}
+주제: {topic}{style_hint}{_today_context()}
 
 핵심 원칙:
 - real_topic: 후킹용 사례가 아닌 '진짜 설명하려는 주제'. 예) "SK하이닉스 성과급" → 진짜 주제는 "대한민국 근로소득세 구조"일 수 있음
