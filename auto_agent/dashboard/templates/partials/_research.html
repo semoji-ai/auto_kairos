@@ -239,18 +239,22 @@
     'entities': '등장인물/기관',
     'images': '이미지',
     'questions': '연구 질문',
-    'log': '수집 로그'
+    'log': '수집 로그',
+    '__targeted__': '🎯 타겟 리서치'
   };
-  var PAGE_ORDER = ['overview', 'claims', 'timeline', 'entities', 'images', 'questions', 'log', 'index'];
+  var PAGE_ORDER = ['overview', 'claims', 'timeline', 'entities', 'images', 'questions', 'log', 'index', '__targeted__'];
 
-  fetch('/api/p/' + slug + '/research/wiki')
+  fetch('/api/p/' + encodeURIComponent(slug) + '/research/wiki')
     .then(function(r) { return r.json(); })
     .then(function(d) {
       var pages = d.pages || [];
       if (!pages.length) {
-        nav.innerHTML = '<div class="wiki-nav-loading">위키 페이지가 없습니다</div>';
+        nav.innerHTML = '<div class="wiki-nav-loading">위키 없음</div>';
+        loadTargetedClaimsView();
         return;
       }
+      // 타겟 리서치 항목 항상 추가
+      pages = pages.concat(['__targeted__']);
 
       // 정의된 순서로 정렬, 나머지는 뒤에
       pages.sort(function(a, b) {
@@ -264,13 +268,16 @@
       pages.forEach(function(page) {
         var btn = document.createElement('button');
         btn.className = 'wiki-nav-item';
+        btn.dataset.page = page;
         btn.textContent = PAGE_LABELS[page] || page;
+        if (page === '__targeted__') btn.style.cssText = 'color:#FCD34D;border-top:1px solid rgba(245,158,11,.2);margin-top:6px;padding-top:10px;';
         btn.onclick = function() { loadPage(page, btn); };
         nav.appendChild(btn);
       });
 
-      // 첫 번째 페이지 자동 로드
-      var firstBtn = nav.querySelector('.wiki-nav-item');
+      // 타겟 리서치 버튼 우선 클릭, 없으면 첫 번째
+      var targetedBtn = Array.from(nav.querySelectorAll('.wiki-nav-item')).find(function(b) { return b.dataset.page === '__targeted__'; });
+      var firstBtn = targetedBtn || nav.querySelector('.wiki-nav-item');
       if (firstBtn) firstBtn.click();
     })
     .catch(function() {
@@ -286,13 +293,19 @@
 
     content.innerHTML = '<div class="wiki-placeholder">로딩 중...</div>';
 
+    // 타겟 리서치 페이지
+    if (page === '__targeted__') {
+      loadTargetedClaimsView();
+      return;
+    }
+
     // 이미지 페이지는 별도 API 호출
     if (page === 'images') {
       loadImagePage();
       return;
     }
 
-    fetch('/api/p/' + slug + '/research/wiki/' + page)
+    fetch('/api/p/' + encodeURIComponent(slug) + '/research/wiki/' + page)
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (d.error) {
@@ -348,7 +361,7 @@
   function ensureImages() {
     if (_imgData !== null) return Promise.resolve(_imgData);
     if (_imgPromise) return _imgPromise;
-    _imgPromise = fetch('/api/p/' + slug + '/research/images')
+    _imgPromise = fetch('/api/p/' + encodeURIComponent(slug) + '/research/images')
       .then(function(r) { return r.json(); })
       .then(function(d) { _imgData = d.images || []; return _imgData; })
       .catch(function() { _imgData = []; return []; });
@@ -612,5 +625,58 @@
 
     return wrap;
   }
+  function loadTargetedClaimsView() {
+    content.innerHTML = '<div class="wiki-placeholder">타겟 리서치 데이터 로딩 중...</div>';
+    fetch('/api/p/' + encodeURIComponent(slug) + '/research/canvas')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var tcs = d.targeted_claims || [];
+        var rqs = d.research_questions || [];
+        if (!tcs.length && !rqs.length) {
+          content.innerHTML = '<div class="wiki-placeholder">리서치 데이터가 없습니다.<br><small>파이프라인을 실행하면 자동 수집됩니다.</small></div>';
+          return;
+        }
+        var qMap = {};
+        rqs.forEach(function(q) { qMap[q.id] = q; });
+
+        var html = '<div class="tc-view">';
+        html += '<div class="tc-header">타겟 리서치 Q&A <span class="tc-count">' + tcs.length + '개</span></div>';
+        tcs.forEach(function(tc) {
+          var q = qMap[tc.question_id] || {};
+          var priority = q.priority || '';
+          var pClass = priority === 'high' ? 'high' : priority === 'medium' ? 'medium' : 'low';
+          html += '<div class="tc-card">';
+          html += '<div class="tc-q">';
+          if (priority) html += '<span class="wiki-claim-tag tag-' + pClass + '" style="margin-right:6px">' + priority + '</span>';
+          html += '<span class="tc-q-text">' + escStr(tc.question || q.question || '') + '</span></div>';
+          html += '<div class="tc-a">' + escStr(tc.answer || '') + '</div>';
+          if (tc.sources && tc.sources.length) {
+            html += '<div class="tc-src">출처: ' + tc.sources.slice(0,3).map(escStr).join(' · ') + '</div>';
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+        content.innerHTML = html;
+      })
+      .catch(function() {
+        content.innerHTML = '<div class="wiki-placeholder">데이터 로드 실패</div>';
+      });
+  }
+
+  function escStr(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
 })();
 </script>
+
+<style>
+.tc-view { padding: 20px 24px; max-width: 820px; }
+.tc-header { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 16px; }
+.tc-count { background: rgba(245,158,11,.15); color: #FCD34D; border-radius: 10px; padding: 1px 8px; font-size: 11px; margin-left: 6px; }
+.tc-card { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+.tc-q { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; }
+.tc-q-text { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.5; }
+.tc-a { font-size: 13px; color: #D4D4D8; line-height: 1.7; border-left: 2px solid rgba(245,158,11,.4); padding-left: 10px; }
+.tc-src { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+</style>

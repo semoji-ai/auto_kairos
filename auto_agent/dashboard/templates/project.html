@@ -13,6 +13,14 @@
 {% endblock %}
 
 {% block content %}
+<script>
+// registerSse는 파셜보다 먼저 정의되어야 함 (서버사이드 include 순서 때문)
+window._ssePool = window._ssePool || [];
+window.registerSse = window.registerSse || function(src) {
+  window._ssePool.push(src);
+  return src;
+};
+</script>
 <nav class="content-tabs" id="content-tabs">
   <a href="#" data-tab="pipeline" class="content-tab {% if tab == 'pipeline' %}active{% endif %}" onclick="switchTab('pipeline', this); return false;">대시보드</a>
   <a href="#" data-tab="research" class="content-tab {% if tab == 'research' %}active{% endif %}" onclick="switchTab('research', this); return false;">Research</a>

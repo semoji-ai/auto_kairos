@@ -791,6 +791,26 @@ async def research_canvas(slug: str):
                 grouped[ch_id] = []
             grouped[ch_id].extend(unassigned[start:end])
 
+    # targeted_claims.json 로드
+    targeted_claims: list[dict] = []
+    tc_path = out_dir / "targeted_claims.json"
+    if tc_path.exists():
+        try:
+            raw_tc = json.loads(tc_path.read_text(encoding="utf-8"))
+            targeted_claims = raw_tc if isinstance(raw_tc, list) else raw_tc.get("claims", raw_tc.get("targeted_claims", []))
+        except Exception:
+            pass
+
+    # research_questions.json 로드
+    research_questions: list[dict] = []
+    rq_path = out_dir / "research_questions.json"
+    if rq_path.exists():
+        try:
+            raw_rq = json.loads(rq_path.read_text(encoding="utf-8"))
+            research_questions = raw_rq if isinstance(raw_rq, list) else raw_rq.get("questions", raw_rq.get("research_questions", []))
+        except Exception:
+            pass
+
     return JSONResponse({
         "outline": outline_data,
         "skeleton": skeleton_data,
@@ -800,6 +820,8 @@ async def research_canvas(slug: str):
         "sources": sources[:50],
         "total_claims": len(claims),
         "total_sources": len(sources),
+        "targeted_claims": targeted_claims,
+        "research_questions": research_questions,
     })
 
 
@@ -2695,8 +2717,11 @@ async def studio_start(request: Request):
         env = _get_node_env()
         env["BROWSER"] = "none"  # 자동 브라우저 열기 방지
         # Node 25 호환: npx symlink 깨짐 → remotion-cli.js 직접 실행
-        from auto_agent.utils.platform import find_node
-        node_bin = find_node() or "node"
+        from auto_agent.utils.platform import get_node_bin_dir
+        try:
+            node_bin = str(get_node_bin_dir() / "node")
+        except Exception:
+            node_bin = "node"
         cli_js = REMOTION_DIR / "node_modules" / "@remotion" / "cli" / "remotion-cli.js"
         _studio_proc = subprocess.Popen(
             [node_bin, str(cli_js), "studio", "src/index.ts", "--port", str(STUDIO_PORT)],
