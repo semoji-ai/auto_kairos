@@ -632,7 +632,7 @@ async def index(request: Request):
 
 
 @app.get("/p/{slug}", response_class=HTMLResponse)
-async def project_by_slug(request: Request, slug: str, tab: str = "research"):
+async def project_by_slug(request: Request, slug: str, tab: str = "pipeline"):
     """slug 기반 프로젝트 상세 페이지."""
     pm = get_pm()
     project = pm.get_project(slug=slug)
@@ -644,7 +644,7 @@ async def project_by_slug(request: Request, slug: str, tab: str = "research"):
 
 
 @app.get("/projects/{project_ref}", response_class=HTMLResponse)
-async def project_detail(request: Request, project_ref: str, tab: str = "research"):
+async def project_detail(request: Request, project_ref: str, tab: str = "pipeline"):
     """uuid(8자 hex) 또는 숫자 ID 기반 → slug 리디렉트."""
     pm = get_pm()
     # 숫자면 레거시 DB id, 8자 hex면 uuid
