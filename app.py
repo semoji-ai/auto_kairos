@@ -791,6 +791,26 @@ async def research_canvas(slug: str):
                 grouped[ch_id] = []
             grouped[ch_id].extend(unassigned[start:end])
 
+    # targeted_claims.json 로드
+    targeted_claims: list[dict] = []
+    tc_path = out_dir / "targeted_claims.json"
+    if tc_path.exists():
+        try:
+            raw_tc = json.loads(tc_path.read_text(encoding="utf-8"))
+            targeted_claims = raw_tc if isinstance(raw_tc, list) else raw_tc.get("claims", raw_tc.get("targeted_claims", []))
+        except Exception:
+            pass
+
+    # research_questions.json 로드
+    research_questions: list[dict] = []
+    rq_path = out_dir / "research_questions.json"
+    if rq_path.exists():
+        try:
+            raw_rq = json.loads(rq_path.read_text(encoding="utf-8"))
+            research_questions = raw_rq if isinstance(raw_rq, list) else raw_rq.get("questions", raw_rq.get("research_questions", []))
+        except Exception:
+            pass
+
     return JSONResponse({
         "outline": outline_data,
         "skeleton": skeleton_data,
@@ -800,6 +820,8 @@ async def research_canvas(slug: str):
         "sources": sources[:50],
         "total_claims": len(claims),
         "total_sources": len(sources),
+        "targeted_claims": targeted_claims,
+        "research_questions": research_questions,
     })
 
 

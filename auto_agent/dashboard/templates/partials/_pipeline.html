@@ -421,6 +421,20 @@
   background: var(--bg);
   z-index: 1;
 }
+.rc-section-header {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-muted); padding: 12px 0 6px; border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.rc-section-target { color: #FCD34D; border-color: rgba(245,158,11,.3); margin-top: 16px; }
+.rc-target-card {
+  background: rgba(255,255,255,.03); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
+}
+.rc-target-q { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 6px; }
+.rc-target-q-text { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.5; }
+.rc-target-a { font-size: 13px; color: #D4D4D8; line-height: 1.7; border-left: 2px solid rgba(245,158,11,.4); padding-left: 10px; }
+.rc-target-src { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 .rc-claim {
   display: flex;
   gap: 10px;
@@ -944,23 +958,64 @@
       chapterMap = d.chapter_map || {};
       claimsByChapter = d.grouped_claims || {};
       totalClaims = d.total_claims || 0;
-      renderClaims();
-      if (countEl) countEl.textContent = totalClaims + ' claims';
+      var targetedClaims = d.targeted_claims || [];
+      var researchQuestions = d.research_questions || [];
+      renderClaims(targetedClaims, researchQuestions);
+      if (countEl) countEl.textContent = totalClaims + ' claims' + (targetedClaims.length ? ' · 타겟 ' + targetedClaims.length + '개' : '');
     })
     .catch(function() {
       if (claimsBody) claimsBody.innerHTML = '<div class="rc-empty">리서치 데이터가 없습니다</div>';
     });
 
-  function renderClaims() {
+  function renderClaims(targetedClaims, researchQuestions) {
     if (!claimsBody) return;
-    var keys = Object.keys(claimsByChapter).sort(function(a,b){ return (parseInt(a)||999)-(parseInt(b)||999); });
-    if (!keys.length) { claimsBody.innerHTML = '<div class="rc-empty">수집된 claim이 없습니다</div>'; return; }
     claimsBody.innerHTML = '';
-    keys.forEach(function(chId) {
-      var claims = claimsByChapter[chId];
-      if (!claims || !claims.length) return;
-      claimsBody.appendChild(buildChapterSection(chId, claims));
-    });
+    var keys = Object.keys(claimsByChapter).sort(function(a,b){ return (parseInt(a)||999)-(parseInt(b)||999); });
+
+    // 프레시 리서치 클레임
+    if (keys.length) {
+      var freshHeader = document.createElement('div');
+      freshHeader.className = 'rc-section-header';
+      freshHeader.textContent = '프레시 리서치 클레임';
+      claimsBody.appendChild(freshHeader);
+      keys.forEach(function(chId) {
+        var claims = claimsByChapter[chId];
+        if (claims && claims.length) claimsBody.appendChild(buildChapterSection(chId, claims));
+      });
+    }
+
+    // 타겟 리서치 Q&A
+    if (targetedClaims && targetedClaims.length) {
+      var tcHeader = document.createElement('div');
+      tcHeader.className = 'rc-section-header rc-section-target';
+      tcHeader.textContent = '타겟 리서치 Q&A (' + targetedClaims.length + '개)';
+      claimsBody.appendChild(tcHeader);
+
+      // question_id → question 텍스트 맵
+      var qMap = {};
+      (researchQuestions || []).forEach(function(q) { qMap[q.id] = q; });
+
+      targetedClaims.forEach(function(tc) {
+        var card = document.createElement('div');
+        card.className = 'rc-target-card';
+        var q = qMap[tc.question_id] || {};
+        var qText = tc.question || q.question || tc.question_id || '';
+        var priorityClass = q.priority === 'high' ? 'high' : q.priority === 'medium' ? 'medium' : 'low';
+        card.innerHTML =
+          '<div class="rc-target-q">' +
+            '<span class="rc-tag rc-tag-' + priorityClass + '" style="margin-right:6px">' + (q.priority || '?') + '</span>' +
+            '<span class="rc-target-q-text">' + escapeHtml(qText) + '</span>' +
+          '</div>' +
+          '<div class="rc-target-a">' + escapeHtml(tc.answer || '') + '</div>' +
+          (tc.sources && tc.sources.length ? '<div class="rc-target-src">출처: ' + tc.sources.slice(0,3).map(escHtml).join(', ') + '</div>' : '');
+        claimsBody.appendChild(card);
+      });
+    }
+
+    if (!keys.length && !(targetedClaims && targetedClaims.length)) {
+      claimsBody.innerHTML = '<div class="rc-empty">수집된 claim이 없습니다</div>';
+    }
+
   }
 
   function buildChapterSection(chId, claims) {
