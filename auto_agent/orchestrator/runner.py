@@ -40,6 +40,7 @@ if platform.system() == "Windows":
 
 from auto_agent.paths import get_workspace_dir, get_data_dir, PACKAGE_DIR, DATA_DIR
 from auto_agent.orchestrator.context_memory import ContextMemory
+from auto_agent.orchestrator.messenger import Messenger
 from auto_agent.orchestrator.vault_rag import VaultRAG
 from auto_agent.orchestrator.claude_client import CachingClaudeClient
 from auto_agent.orchestrator.local_tools import LOCAL_TOOL_SCHEMAS, handle_local_tool
@@ -656,6 +657,7 @@ class PipelineRunner:
                 print(f"[resume] pipeline_state.json 로드 실패: {e}")
 
         self.context_memory = ContextMemory(self.project_dir)
+        self.messenger = Messenger(self.project_dir, self.project_slug)
         self.vault = VaultRAG()
         self.hooks = _build_default_hooks()
 
@@ -803,14 +805,11 @@ class PipelineRunner:
             except Exception:
                 pass
 
-        start_msg = (
-            f"🎬 **파이프라인 시작**\n\n"
-            f"**주제:** {topic}\n"
-            f"**아트스타일:** {art_style}\n"
-            f"**베이스테마:** {base_theme}\n"
-            f"**문체:** {writing_style}\n"
-            f"**분량:** {duration}분\n"
-            f"**기획안:** {brief_loaded}"
+        start_msg = self.messenger.pipeline_start(
+            topic=topic, art_style=art_style, base_theme=base_theme,
+            writing_style=writing_style, duration_min=duration,
+            brief_loaded=brief_loaded,
+            phases_count=len(self.pipeline.get("phases", [])),
         )
         _notify("Director", start_msg, phase="pipeline", project=self.project_slug, level="info")
 
@@ -884,7 +883,7 @@ class PipelineRunner:
             print(f"{'─' * 40}\n")
 
             self.state.current_phase = phase_id
-            _notify("Director", f"{phase_name} 들어갑니다! ({len(steps)}개 스텝)", phase=phase_id, project=self.project_slug)
+            _notify("Director", self.messenger.phase_start(phase_id, phase_name, steps), phase=phase_id, project=self.project_slug)
 
             if dry_run:
                 for step in steps:
@@ -1522,17 +1521,17 @@ class PipelineRunner:
                 if step.get("gate") or is_fatal:
                     label = "GATE FAILED" if step.get("gate") else "FATAL ERROR"
                     print(f"\n  {label}: {step['id']} — 파이프라인 중단")
-                    _notify("Director", f"이런... {_step_label(step_name, 'fail')} 문제 발생. 파이프라인 중단!", phase=self.state.current_phase, project=self.project_slug, level="error")
+                    _notify("Director", self.messenger.step_failed(step["id"], result.error or "", step_name=step_name, is_blocking=True), phase=self.state.current_phase, project=self.project_slug, level="error")
                     self.state.failed_steps.append(step["id"])
                     return
                 # non-blocking이면 계속
                 if step.get("blocking") is False:
                     print(f"  [WARN] {step['id']} failed (non-blocking) — 계속 진행")
-                    _notify("Director", f"{_step_label(step_name, 'fail')} 실패했지만 괜찮아, 계속 간다!", phase=self.state.current_phase, project=self.project_slug, level="warning")
+                    _notify("Director", self.messenger.step_failed(step["id"], result.error or "", step_name=step_name, is_blocking=False), phase=self.state.current_phase, project=self.project_slug, level="warning")
                     self.state.failed_steps.append(step["id"])
                 else:
                     print(f"\n  STEP FAILED: {step['id']} — 파이프라인 중단")
-                    _notify("Director", f"{_step_label(step_name, 'fail')} — 파이프라인 중단", phase=self.state.current_phase, project=self.project_slug, level="error")
+                    _notify("Director", self.messenger.step_failed(step["id"], result.error or "", step_name=step_name, is_blocking=True), phase=self.state.current_phase, project=self.project_slug, level="error")
                     self.state.failed_steps.append(step["id"])
                     return
             else:
@@ -3088,7 +3087,9 @@ JSON 구조: {{"scenes": [씬 배열]}}
         self.state.current_step = step_id
         print(f"  [{step_id}] {step_name} ... ", end="", flush=True)
         _agent_label = step.get("agent") or step.get("module", "System")
-        _notify(_agent_label, _step_label(step_name, "start"), phase=self.state.current_phase, project=self.project_slug)
+        _start_msg = self.messenger.step_start(step_id, step_name)
+        if _start_msg:
+            _notify(_agent_label, _start_msg, phase=self.state.current_phase, project=self.project_slug)
         self._emit_pipeline_event("step_started", {"step_name": step_name, "agent": _agent_label})
 
         # DB 파이프라인 기록 시작
@@ -3170,7 +3171,7 @@ JSON 구조: {{"scenes": [씬 배열]}}
                 )
                 cost_str = f" ${cost['cost_usd']:.4f}" if cost.get("cost_usd") else ""
                 print(f"OK ({elapsed:.1f}s{cost_str})")
-                _notify(_agent_label, f"{_step_label(step_name, 'done')} ({elapsed:.1f}s{cost_str})", phase=self.state.current_phase, project=self.project_slug, level="success")
+                _notify(_agent_label, self.messenger.step_done(step_id, elapsed, step_name=step_name, cost_usd=cost.get("cost_usd", 0.0)), phase=self.state.current_phase, project=self.project_slug, level="success")
                 self._emit_pipeline_event("step_completed", {
                     "step_name": step_name,
                     "agent": _agent_label,
@@ -3198,7 +3199,7 @@ JSON 구조: {{"scenes": [씬 배열]}}
             else:
                 self.pm.fail_pipeline_run(run_id, result.error)
                 print(f"FAIL ({elapsed:.1f}s) — {result.error[:80]}")
-                _notify(_agent_label, f"{_step_label(step_name, 'fail')}: {result.error[:60]}", phase=self.state.current_phase, project=self.project_slug, level="error")
+                _notify(_agent_label, self.messenger.step_failed(step_id, result.error or "", step_name=step_name, is_blocking=step.get("blocking") is not False), phase=self.state.current_phase, project=self.project_slug, level="error")
 
             return result
 
@@ -3206,7 +3207,7 @@ JSON 구조: {{"scenes": [씬 배열]}}
             elapsed = time.time() - t0
             self.pm.fail_pipeline_run(run_id, str(e))
             print(f"ERROR ({elapsed:.1f}s) — {e}")
-            _notify(_agent_label, f"{_step_label(step_name, 'fail')}: {str(e)[:60]}", phase=self.state.current_phase, project=self.project_slug, level="error")
+            _notify(_agent_label, self.messenger.step_failed(step_id, str(e), step_name=step_name, is_blocking=step.get("blocking") is not False), phase=self.state.current_phase, project=self.project_slug, level="error")
             self._emit_pipeline_event("step_failed", {
                 "step_name": step_name,
                 "agent": _agent_label,
@@ -5310,10 +5311,19 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             print(f"  Tokens Out:{cost_summary.get('total_tokens_out', 0):,}")
         print(f"{'=' * 60}")
 
-        # 메신저 알림
+        # 메신저 알림 (산출물 + 점수 요약 포함)
         level = "success" if failed == 0 else "warning"
-        cost_str = f" (${total_usd:.4f})" if total_usd > 0 else ""
-        _notify("Director", f"촬영 끝! {completed}/{total} 성공{cost_str}", phase="pipeline", project=self.project_slug, level=level)
+        from datetime import datetime as _dt
+        _started = self.state.started_at
+        _elapsed_sec = 0
+        try:
+            if _started:
+                _elapsed_sec = (_dt.now() - _dt.fromisoformat(_started)).total_seconds()
+        except Exception:
+            pass
+        _notify("Director",
+                self.messenger.pipeline_done(completed, total, failed, total_usd, _elapsed_sec),
+                phase="pipeline", project=self.project_slug, level=level)
 
         # 상태 파일 저장
         state_path = self.project_dir / "pipeline_state.json"
