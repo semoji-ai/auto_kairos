@@ -3051,6 +3051,15 @@ JSON 구조: {{"scenes": [씬 배열]}}
             print(f"  [SKIP] {step_id}: skip=true")
             return StepResult(step_id=step_id, status="skipped")
 
+        # brief_mode=skip 일 때 brief 강화 스텝 자동 스킵 (레거시 파이프라인 호환)
+        _brief_enhancement_steps = {"step_0d", "step_1c", "step_2_target_deepen"}
+        if step_id in _brief_enhancement_steps:
+            brief_mode = (self.state.config.get("brief_mode", "")
+                          if hasattr(self.state, "config") else "")
+            if brief_mode == "skip":
+                print(f"  [SKIP] {step_id}: brief_mode=skip — 강화 스텝 생략")
+                return StepResult(step_id=step_id, status="skipped")
+
         # conditional 체크
         if step.get("conditional"):
             if not self._check_condition(step):
@@ -4030,6 +4039,11 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         # uuid 마이그레이션 후 프로젝트 디렉토리명이 {uuid}_{slug}이므로 직접 전달
         env["PROJECT_DIR"] = str(self.project_dir)
         env["SEARCH_ENGINE"] = self.state.config.get("search_engine", "")
+        # topic/writing_style을 모듈에 전달
+        if self.state.config.get("topic"):
+            env["PROJECT_TOPIC"] = self.state.config["topic"]
+        if self.state.config.get("writing_style"):
+            env["PROJECT_WRITING_STYLE"] = self.state.config["writing_style"]
 
         config = self.state.config
         if config.get("voice_id"):
@@ -4041,6 +4055,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         script_map = {
             "preflight": "scripts/preflight_check.py",
             "editorial_brief": "modules/editorial_brief_module.py",
+            "brief_review": "modules/brief_review_module.py",
+            "brief_deepener": "modules/brief_deepener_module.py",
             "source_ingest": "modules/source_ingest_module.py",
             "vault_sync": "modules/vault_sync_module.py",
             "skeleton_from_vault": "modules/skeleton_from_vault_module.py",
@@ -4405,22 +4421,78 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         return "\n".join(lines)
 
     def _load_editorial_brief(self) -> str:
-        """프로젝트 디렉토리의 editorial_brief.json 로드 → 문자열 변환."""
+        """프로젝트 디렉토리의 editorial_brief 로드 → 문자열 변환.
+
+        버전 우선순위: editorial_brief.v3.json > v2 > v1 > editorial_brief.json (legacy).
+        5대 DNA 레버(narrative_arc/human_truth/hidden_truth/present_connection/
+        evidence_anchors)도 포함되어 있으면 함께 주입.
+        """
         try:
-            brief_path = self.project_dir / "editorial_brief.json"
-            if brief_path.exists():
-                data = json.loads(brief_path.read_text(encoding="utf-8"))
-                lines = [
-                    f"core_question: {data.get('core_question', '')}",
-                    f"real_topic: {data.get('real_topic', '')}",
-                    f"hook_angle: {data.get('hook_angle', '')}",
-                    f"supporting_case: {data.get('supporting_case', '')}",
-                    f"excluded_angles: {', '.join(data.get('excluded_angles', []))}",
-                    f"audience_takeaway: {data.get('audience_takeaway', '')}",
-                    f"tone_goal: {data.get('tone_goal', '')}",
-                    f"success_criteria: {'; '.join(data.get('success_criteria', []))}",
-                ]
-                return "\n".join(lines)
+            # 최신 버전 탐색 (v3 > v2 > v1 > legacy)
+            brief_path: Path | None = None
+            picked_version = ""
+            for ver in ("v3", "v2", "v1"):
+                cand = self.project_dir / f"editorial_brief.{ver}.json"
+                if cand.exists():
+                    brief_path = cand
+                    picked_version = ver
+                    break
+            if brief_path is None:
+                legacy = self.project_dir / "editorial_brief.json"
+                if legacy.exists():
+                    brief_path = legacy
+                    picked_version = "legacy"
+
+            if brief_path is None:
+                return ""
+
+            data = json.loads(brief_path.read_text(encoding="utf-8"))
+            lines = [
+                f"version: {picked_version}",
+                f"core_question: {data.get('core_question', '')}",
+                f"real_topic: {data.get('real_topic', '')}",
+                f"hook_angle: {data.get('hook_angle', '')}",
+                f"supporting_case: {data.get('supporting_case', '')}",
+                f"excluded_angles: {', '.join(data.get('excluded_angles', []))}",
+                f"audience_takeaway: {data.get('audience_takeaway', '')}",
+                f"tone_goal: {data.get('tone_goal', '')}",
+                f"success_criteria: {'; '.join(data.get('success_criteria', []))}",
+            ]
+
+            # 5대 DNA 레버 (v1+에서만 존재)
+            arc = data.get("narrative_arc")
+            if isinstance(arc, dict):
+                lines.append(
+                    f"narrative_arc: 입구={arc.get('entry_trend', '')} | "
+                    f"본문={arc.get('deep_knowledge', '')} | "
+                    f"결론={arc.get('present_insight', '')}"
+                )
+            human = data.get("human_truth")
+            if isinstance(human, dict):
+                lines.append(
+                    f"human_truth: 성공={human.get('success', '')} | "
+                    f"실패={human.get('failure', '')} | "
+                    f"갈등={human.get('inner_conflict', '')}"
+                )
+            hidden = data.get("hidden_truth")
+            if hidden:
+                lines.append(f"hidden_truth: {hidden}")
+            pc = data.get("present_connection")
+            if pc:
+                lines.append(f"present_connection: {pc}")
+            anchors = data.get("evidence_anchors") or []
+            if anchors:
+                anchor_lines = []
+                for a in anchors[:6]:
+                    if isinstance(a, dict):
+                        anchor_lines.append(
+                            f"[{a.get('status', '?')}] {a.get('claim', '')} "
+                            f"← {a.get('source_hint', a.get('source', ''))}"
+                        )
+                if anchor_lines:
+                    lines.append("evidence_anchors:\n  - " + "\n  - ".join(anchor_lines))
+
+            return "\n".join(lines)
         except Exception as e:
             print(f"[editorial_brief] 로드 실패: {e}", flush=True)
         return ""
@@ -4702,13 +4774,17 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         if _step_mode:
             _mode_line = f"\nSCRIPT_DIRECTOR_MODE: {_step_mode}"
 
+        # topic 추출 (DB topic 컬럼 → config → slug 폴백)
+        _topic = self.project.get("topic") or config.get("topic") or self.project_slug
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
+주제(topic): {_topic}
 작업 디렉토리: {self.project_dir}
 워크스페이스: {get_workspace_dir()}{_mode_line}
 </system_context>
 
 <project_config>
+주제: {_topic}
 영상 분량: {duration_min}분
 목표 나레이션 글자 수: 약 {target_chars}자 (±10%)
 아트스타일: {art_style}

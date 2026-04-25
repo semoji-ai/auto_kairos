@@ -10,7 +10,17 @@ Editorial Brief Module — 기획 의도 고정 모듈
 import json
 import os
 import sys
+from datetime import date
 from pathlib import Path
+
+
+def _today_context() -> str:
+    today = date.today()
+    return (
+        f"\n\n⚠️ **현재 날짜: {today.isoformat()} (오늘)**\n"
+        f"- hook_angle을 '현재 트렌드'로 잡을 때 **오늘 기준**으로 시의성 있게 작성\n"
+        f"- 훈련 데이터의 과거 시점을 '현재'로 제시 금지"
+    )
 
 
 BRIEF_SCHEMA = {
@@ -48,7 +58,7 @@ def generate_brief_from_topic(topic: str, writing_style: str = "") -> dict:
 
     prompt = f"""다음 영상 제작 주제를 분석해서 editorial_brief JSON을 생성하세요.
 
-주제: {topic}{style_hint}
+주제: {topic}{style_hint}{_today_context()}
 
 핵심 원칙:
 - real_topic: 후킹용 사례가 아닌 '진짜 설명하려는 주제'. 예) "SK하이닉스 성과급" → 진짜 주제는 "대한민국 근로소득세 구조"일 수 있음
@@ -120,41 +130,54 @@ def _default_brief(topic: str) -> dict:
 
 def main():
     project_dir = Path(os.environ.get("PROJECT_DIR", "."))
-    brief_path = project_dir / "editorial_brief.json"
+    legacy_path = project_dir / "editorial_brief.json"
+    v1_path = project_dir / "editorial_brief.v1.json"
 
-    # resume: 이미 존재하면 스킵
-    if brief_path.exists():
-        print(f"[editorial_brief] 이미 존재 — 스킵: {brief_path}", flush=True)
+    # resume: v1 또는 legacy 이미 존재하면 스킵
+    if v1_path.exists() or legacy_path.exists():
+        existing = v1_path if v1_path.exists() else legacy_path
+        print(f"[editorial_brief] 이미 존재 — 스킵: {existing}", flush=True)
         sys.exit(0)
 
     # project_config에서 topic 읽기
     config_path = project_dir / "project_config.json"
     topic = ""
     writing_style = ""
+    brief_mode = ""
     if config_path.exists():
         try:
             cfg = json.loads(config_path.read_text(encoding="utf-8"))
             topic = cfg.get("topic", "")
             writing_style = cfg.get("writing_style", "")
+            brief_mode = cfg.get("brief_mode", "")
         except Exception:
             pass
 
     if not topic:
-        # DB에서 읽기 시도
         topic = os.environ.get("PROJECT_NAME", "알 수 없는 주제")
 
-    print(f"[editorial_brief] 주제: {topic}", flush=True)
+    print(f"[editorial_brief] 주제: {topic} (mode: {brief_mode or 'default'})", flush=True)
     print("[editorial_brief] AI 초안 생성 중...", flush=True)
 
-    brief = generate_brief_from_topic(topic, writing_style)
-    brief["_generated_by"] = "auto"
-    brief["_topic"] = topic
+    # brief_mode=auto면 5개 DNA 레버 포함 생성, 아니면 기본
+    if brief_mode == "auto":
+        try:
+            from auto_agent.modules.content_planner_module import generate_auto_brief
+            brief = generate_auto_brief(topic, writing_style)
+        except Exception as e:
+            print(f"[editorial_brief] auto 모드 실패 → 기본 초안 사용: {e}", flush=True)
+            brief = generate_brief_from_topic(topic, writing_style)
+    else:
+        brief = generate_brief_from_topic(topic, writing_style)
 
-    brief_path.write_text(
-        json.dumps(brief, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-    print(f"[editorial_brief] 저장 완료: {brief_path}", flush=True)
+    brief.setdefault("_generated_by", "auto")
+    brief["_topic"] = topic
+    brief["_version"] = "v1"
+
+    payload = json.dumps(brief, ensure_ascii=False, indent=2)
+    v1_path.write_text(payload, encoding="utf-8")
+    legacy_path.write_text(payload, encoding="utf-8")  # 하위 호환
+    print(f"[editorial_brief] 저장 완료: {v1_path}", flush=True)
     print(f"  core_question: {brief.get('core_question', '')}", flush=True)
     print(f"  real_topic: {brief.get('real_topic', '')}", flush=True)
     sys.exit(0)

@@ -1,0 +1,80 @@
+{
+  "score_total": 10,
+  "score_breakdown": {
+    "A_기획구체성": {
+      "total": 0,
+      "max": 40,
+      "narrative_arc": 0,
+      "human_truth": 0,
+      "hidden_truth": 0
+    },
+    "B_실행가능성": {
+      "total": 10,
+      "max": 30,
+      "must_cover": 0,
+      "evidence_anchors": 0,
+      "hook_separation": 10
+    },
+    "C_세모지DNA": {
+      "total": 0,
+      "max": 30,
+      "3단서사": 0,
+      "이면의진실": 0,
+      "현재연결": 0
+    }
+  },
+  "verdict": "FAIL",
+  "antipatterns_detected": [],
+  "antipattern_penalty": 0,
+  "field_feedback": {
+    "narrative_arc": {
+      "score": 0,
+      "max": 15,
+      "issue": "3단 서사(entry_trend/deep_knowledge/present_insight) 중 일부가 비거나 추상적",
+      "suggestion": "각 단계를 검증 가능한 사실/사건 단위로 구체화",
+      "action": "fill_concrete"
+    },
+    "human_truth": {
+      "score": 0,
+      "max": 15,
+      "issue": "성공/실패/내면갈등 3요소 중 일부 부족",
+      "suggestion": "failure는 시점·사건·원인 단위, inner_conflict는 회고록 인용 힌트 추가",
+      "action": "deepen_episode"
+    },
+    "hidden_truth": {
+      "score": 0,
+      "max": 10,
+      "issue": "반전이 약하거나 추상적 — 기존 인식 → 반전 내용 → 검증 가능성 3요건 미달",
+      "suggestion": "시청자가 이미 알고 있는 '공식 기록'을 명시하고 그것과 다른 구체적 사실 제시",
+      "action": "sharpen_reversal"
+    },
+    "must_cover": {
+      "score": 0,
+      "max": 10,
+      "issue": "막연한 키워드 다수 — 연도/수치/사건명이 부족",
+      "suggestion": "각 항목을 'YYYY년 X사건' 형식으로 구체화",
+      "action": "concretize_items"
+    },
+    "evidence_anchors": {
+      "score": 0,
+      "max": 10,
+      "issue": "needs_research 비율이 높거나 앵커 부재",
+      "suggestion": "핵심 주장(hidden_truth, present_connection)에 대한 출처를 우선 확보",
+      "action": "add_sources"
+    },
+    "present_connection": {
+      "score": 0,
+      "max": 10,
+      "issue": "과거→현재 연결이 추상적 또는 부재",
+      "suggestion": "'~이 오늘날 ~로 이어진다' 형태로 구체 인과 서술",
+      "action": "add_link"
+    }
+  },
+  "scorer": "heuristic",
+  "previous_score": 0,
+  "score_delta": 10,
+  "next_action": "full_restart",
+  "version": "v1",
+  "round": 2,
+  "reviewed_at": "2026-04-24T10:55:01"
+}

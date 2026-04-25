@@ -75,6 +75,41 @@ AutoResearch 래칫 방식: 이전 버전 대비 개선된 부분만 채택, 퇴
 
 ---
 
+## 3. Editorial Brief 준수도 (가중 내부 항목)
+
+위 두 관점 점수 **안에서** editorial_brief(v1~v3) 5대 DNA 레버 반영 여부를 **가중치로 반영**.
+총점 체계(100점)는 유지하되, 각 항목이 brief를 얼마나 구속력 있게 반영했는가로 세부 점수가 결정된다.
+
+> 참조: `shared/brief-dna.md` (5대 DNA 레버 정의)
+
+### 브리프 준수도 체크 (각 항목 발견 시 감점)
+
+- `narrative_arc` 3단 구조가 scene_specs의 챕터 배치에 반영되지 않음 → **시청자 Flow -5**
+- `human_truth` 3요소 중 failure/inner_conflict가 원고에 없음 (인물형일 때) → **깊이 vs 뻔함 -7**
+- `hidden_truth` 반전이 원고 어디에도 등장하지 않음 → **Hook -5, 깊이 vs 뻔함 -5**
+- `present_connection`이 결론 챕터에 구체적으로 반영되지 않음 → **Payoff -5**
+- `evidence_anchors`의 `available` 앵커 중 원고에서 인용 안 된 것이 50% 이상 → **데이터 정확성 -5**
+- `excluded_angles`에 명시된 방향으로 원고가 흘러감 → **깊이 vs 뻔함 -10, 흐름 -5**
+
+### 브리프 준수도 로그
+
+review_feedback.json에 다음 필드 추가:
+
+```json
+"brief_compliance": {
+  "checked_version": "v3",
+  "narrative_arc_reflected": true,
+  "human_truth_reflected": true,
+  "hidden_truth_in_script": true,
+  "present_connection_in_conclusion": false,
+  "evidence_anchors_utilized_ratio": 0.67,
+  "excluded_angles_violations": [],
+  "deduction_total": -5
+}
+```
+
+---
+
 ## 작업 흐름
 
 ### Phase 1: 평가

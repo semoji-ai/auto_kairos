@@ -5,30 +5,26 @@
     {
       "id": "phase_0",
       "name": "Preflight",
-      "description": "환경 검증",
       "execution": "sequential",
       "steps": [
         {
           "id": "step_0",
           "name": "environment_check",
-          "description": "API키, node, ffmpeg, Remotion, Lucide 의존성 검증",
+          "description": "환경/의존성 검증",
           "type": "module",
           "module": "preflight",
           "checks": [
-            "ANTHROPIC_API_KEY (optional: Claude Code 구독 시 불필요)",
             "ELEVENLABS_API_KEY",
-            "FAL_API_KEY (conditional: source=generate인 씬 있을 때)",
-            "SERPER_API_KEY (conditional: source=search인 씬 있을 때)",
+            "FAL_API_KEY (conditional)",
             "node >= 18",
             "ffmpeg",
-            "remotion CLI",
-            "lucide-react installed"
+            "remotion CLI"
           ]
         },
         {
           "id": "step_0c",
           "name": "config_inspect",
-          "description": "DB config ↔ artstyle JSON ↔ 환경변수 교차 검증 및 자동 수정. voice_id 불일치/누락 자동 수정, API키 확인.",
+          "description": "프로젝트 config 검증 + 자동 보정",
           "type": "agent",
           "agent": "config-inspector",
           "input": [
@@ -43,17 +39,37 @@
         {
           "id": "step_0b",
           "name": "editorial_interview",
-          "description": "기획 의도 고정 — topic 분석으로 editorial_brief.json 생성. core_question/real_topic/hook_angle/excluded_angles 확정. 이미 존재하면 스킵.",
-          "type": "module",
-          "module": "editorial_brief",
-          "resumable": true,
+          "description": "기획 의도 고정 — brief-interviewer-auto agent가 SKILL.md 따라 5대 DNA 레버 포함 editorial_brief.v1.json 생성",
+          "type": "agent",
+          "agent": "brief-interviewer-auto",
           "input": [
             "project_config"
           ],
           "output": [
+            "editorial_brief.v1.json",
             "editorial_brief.json"
           ],
-          "notes": "editorial_brief.json이 이미 있으면 스킵. /auto-kairos 스킬 CLI 인터뷰 또는 AI 초안 생성 양쪽 지원. 생성된 brief는 Stage 1~2 모든 에이전트에 <editorial_brief> 태그로 주입됨."
+          "blocking": true,
+          "resumable": true,
+          "max_attempts": 2,
+          "notes": "실패 시 재시도 1회. 생성된 brief는 Stage 1~2 모든 에이전트에 <editorial_brief> 태그로 주입됨."
+        },
+        {
+          "id": "step_0d",
+          "name": "brief_ratchet_v1",
+          "description": "editorial_brief.v1.json 래칫 리뷰 — brief-reviewer agent SKILL.md의 자체 3라운드 루프",
+          "type": "agent",
+          "agent": "brief-reviewer",
+          "input": [
+            "editorial_brief.v1.json"
+          ],
+          "output": [
+            "brief_review_feedback.v1.json"
+          ],
+          "blocking": false,
+          "skip_resume": true,
+          "max_attempts": 1,
+          "notes": "에이전트가 SKILL.md에 명시된 자체 래칫 루프 수행 — blocking:false로 점수 무관 파이프라인 진행."
         }
       ]
     },
@@ -129,6 +145,27 @@
             "chapter_facts/"
           ],
           "notes": "vault 02-research/wiki/<slug>/ + manifests/<slug>/claims.jsonl 읽어 chapter_facts/chapter_{N}.json 생성. claim_ids, source_ids 필드 포함. vault wiki 없으면 기본 구조만 생성 (fallback). 이미 존재하는 챕터 파일은 스킵."
+        },
+        {
+          "id": "step_1c",
+          "name": "brief_deepen_v2",
+          "description": "editorial_brief.v1 → v2 심화. Stage 1 skeleton/outline/chapter_facts를 반영하여 narrative_arc/human_truth/hidden_truth/evidence_anchors 구체화. 잠금 필드(core_question/real_topic/hook_angle 등)는 변경 금지.",
+          "type": "module",
+          "module": "brief_deepener",
+          "resumable": true,
+          "blocking": false,
+          "input": [
+            "editorial_brief.v1.json",
+            "skeleton.json",
+            "outline.json",
+            "chapter_facts/"
+          ],
+          "output": [
+            "editorial_brief.v2.json",
+            "brief_deepen_log.v2.json",
+            "brief_review_feedback.v2.json"
+          ],
+          "notes": "점수 단조 증가 강제 — v2가 v1보다 낮으면 v1 복원. brief_mode=skip일 때 자동 스킵."
         }
       ],
       "checkpoint": {
@@ -175,6 +212,26 @@
             "targeted_claims.json"
           ],
           "notes": "priority:high 질문 우선. 답변 못 찾으면 confidence:low로 기록."
+        },
+        {
+          "id": "step_2_target_deepen",
+          "name": "brief_deepen_v3",
+          "description": "editorial_brief.v2 → v3 심화 (최종 잠금). Stage 2_draft draft.md + targeted_claims.json을 반영하여 hidden_truth/present_connection/evidence_anchors 최종 확정.",
+          "type": "module",
+          "module": "brief_deepener",
+          "resumable": true,
+          "blocking": false,
+          "input": [
+            "editorial_brief.v2.json",
+            "draft.md",
+            "targeted_claims.json"
+          ],
+          "output": [
+            "editorial_brief.v3.json",
+            "brief_deepen_log.v3.json",
+            "brief_review_feedback.v3.json"
+          ],
+          "notes": "v3 = 최종 잠금 버전. 하류 에이전트(script-director manuscript/chapters)는 v3를 참조. brief_mode=skip일 때 자동 스킵."
         },
         {
           "id": "step_2_manuscript",

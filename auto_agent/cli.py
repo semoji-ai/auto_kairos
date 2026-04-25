@@ -1638,19 +1638,36 @@ def _find_plan_path(channel: str) -> str | None:
 
 
 def cmd_plan(args):
-    """auto-agent plan — 파이프라인 외부 기획안 생성"""
+    """auto-agent plan — 파이프라인 외부 기획안 생성 (v1 + 래칫)"""
     import argparse
     parser = argparse.ArgumentParser(prog="auto-agent plan")
     parser.add_argument("--topic", required=True, help="영상 주제")
     parser.add_argument("--project", required=True, help="프로젝트 slug")
     parser.add_argument("--style", default="", dest="writing_style", help="문체 스타일 (예: semoji)")
     parser.add_argument("--channel", default="", help="채널명")
-    parser.add_argument("--overwrite", action="store_true", help="기존 editorial_brief.json 덮어쓰기")
+    parser.add_argument("--overwrite", action="store_true", help="기존 editorial_brief 덮어쓰기")
+    parser.add_argument(
+        "--mode", choices=["auto", "manual", "skip"], default="auto",
+        help="auto: LLM 자가 Q&A로 5대 DNA 레버 포함 v1 생성 (기본). "
+             "manual: brief-interviewer 소크라테스 인터뷰 (사용자 대면). "
+             "skip: 레거시 간단 초안 (5대 레버 없이 빠르게 생성)."
+    )
+    parser.add_argument(
+        "--no-ratchet", action="store_true",
+        help="brief-reviewer 래칫 루프 건너뛰기 (기본: 실행)"
+    )
+    parser.add_argument(
+        "--max-rounds", type=int, default=3,
+        help="래칫 루프 최대 라운드 (기본 3)"
+    )
     parsed = parser.parse_args(args)
 
     from auto_agent.modules.content_planner_module import (
         generate_planner_brief,
+        generate_auto_brief,
         save_brief,
+        save_brief_versioned,
+        ratchet_brief_v1,
     )
 
     from auto_agent.db.project_manager import ProjectManager
@@ -1662,16 +1679,63 @@ def cmd_plan(args):
         sys.exit(1)
 
     project_dir = Path(project["output_dir"])
+    mode = parsed.mode
 
-    console.print(f"[blue]기획안 생성 중...[/blue] 주제: {parsed.topic}")
-    brief = generate_planner_brief(
-        topic=parsed.topic,
-        writing_style=parsed.writing_style,
-        channel=parsed.channel,
-    )
+    # brief_mode를 project_config.json에 기록 (하류 스텝이 참조)
+    try:
+        config_path = project_dir / "project_config.json"
+        if config_path.exists():
+            cfg = json.loads(config_path.read_text(encoding="utf-8"))
+        else:
+            cfg = {}
+        cfg["brief_mode"] = mode
+        project_dir.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
+            json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    except Exception as e:
+        console.print(f"[yellow]project_config.json 기록 실패 (계속 진행): {e}[/yellow]")
+
+    console.print(f"[blue]기획안 생성 중...[/blue] 주제: {parsed.topic} / mode: {mode}")
+
+    # 래칫 포함 실행 (auto 모드 + 래칫 활성 시)
+    if mode == "auto" and not parsed.no_ratchet:
+        feedback = ratchet_brief_v1(
+            project_dir=project_dir,
+            topic=parsed.topic,
+            mode="auto",
+            writing_style=parsed.writing_style,
+            channel=parsed.channel,
+            max_rounds=parsed.max_rounds,
+        )
+        console.print()
+        console.print(f"[green]v1 최종 점수:[/green] {feedback.get('score_total', 0)}/100")
+        console.print(f"  verdict: {feedback.get('verdict', '?')}")
+        console.print(f"  rounds: {feedback.get('round', 1)}")
+        console.print(f"  next_action: {feedback.get('next_action', '?')}")
+        console.print()
+        console.print(f"[dim]다음 단계: auto-agent run --project {parsed.project}[/dim]")
+        return
+
+    # 래칫 없이 단발 생성
+    if mode == "auto":
+        brief = generate_auto_brief(
+            topic=parsed.topic,
+            writing_style=parsed.writing_style,
+            channel=parsed.channel,
+        )
+    else:
+        # manual: 기본 planner 초안 (사용자가 이후 편집)
+        # skip: 간단 초안
+        brief = generate_planner_brief(
+            topic=parsed.topic,
+            writing_style=parsed.writing_style,
+            channel=parsed.channel,
+        )
 
     try:
-        path = save_brief(brief, project_dir, overwrite=parsed.overwrite)
+        path = save_brief_versioned(brief, project_dir, version="v1",
+                                    overwrite=parsed.overwrite)
         console.print(f"[green]기획안 저장 완료:[/green] {path}")
         console.print(f"  core_question: {brief.get('core_question', '')}")
         console.print(f"  tone_goal: {brief.get('tone_goal', '')}")

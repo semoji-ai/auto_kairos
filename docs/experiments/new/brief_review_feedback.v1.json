@@ -1,0 +1,37 @@
+{
+  "score_total": 98,
+  "score_breakdown": {
+    "A_기획구체성": {
+      "total": 40,
+      "max": 40,
+      "narrative_arc": 15,
+      "human_truth": 15,
+      "hidden_truth": 10
+    },
+    "B_실행가능성": {
+      "total": 28,
+      "max": 30,
+      "must_cover": 10,
+      "evidence_anchors": 8,
+      "hook_separation": 10
+    },
+    "C_세모지DNA": {
+      "total": 30,
+      "max": 30,
+      "3단서사": 10,
+      "이면의진실": 10,
+      "현재연결": 10
+    }
+  },
+  "verdict": "PASS",
+  "antipatterns_detected": [],
+  "antipattern_penalty": 0,
+  "field_feedback": {},
+  "scorer": "heuristic",
+  "previous_score": 0,
+  "score_delta": 98,
+  "next_action": "lock_version",
+  "version": "v1",
+  "round": 2,
+  "reviewed_at": "2026-04-24T10:55:01"
+}

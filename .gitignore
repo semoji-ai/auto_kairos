@@ -154,3 +154,4 @@ sampleScript/
 .credentials/
 logs/
 .worktrees/
+.legacy_backup_stage0/
