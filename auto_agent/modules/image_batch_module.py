@@ -172,11 +172,12 @@ def run_batch(
     from concurrent.futures import ThreadPoolExecutor
 
     def _run_generate():
-        """generate 씬 FAL 배치."""
+        """generate 씬 FAL 배치 — visual_kind=generate_image인 씬만."""
+        from auto_agent.modules.scene_helpers import get_visual_kind
         success, fail, skip = 0, 0, 0
         scene_jobs: list[tuple[dict, FalJob]] = []
         for scene in scene_specs.get("scenes", []):
-            if (scene.get("imageAsset") or {}).get("source") != "generate":
+            if get_visual_kind(scene) != "generate_image":
                 continue
             scene_num = scene.get("sceneNumber", 0)
             if scene_num in _video_asset_sns:
@@ -354,10 +355,11 @@ def run_batch(
         if research_images:
             _progress(f"리서치 이미지 {len(research_images)}개 로드 완료 — 씬 매칭 시도")
 
+        from auto_agent.modules.scene_helpers import get_visual_kind
         for scene in scene_specs.get("scenes", []):
-            ia = scene.get("imageAsset") or {}
-            if ia.get("source") != "search":
+            if get_visual_kind(scene) != "search_image":
                 continue
+            ia = scene.get("imageAsset") or {}
             scene_num = scene.get("sceneNumber", 0)
             if scene_num in _video_asset_sns:
                 skip += 1

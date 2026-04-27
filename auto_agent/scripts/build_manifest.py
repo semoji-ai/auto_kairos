@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 
 from auto_agent.paths import get_workspace_dir; load_dotenv(get_workspace_dir() / ".env")
 from auto_agent.tools.scene_id import load_scene_specs
+from auto_agent.modules.scene_helpers import get_visual_kind
 
 
 def _probe_mp3_duration_local(path: Path) -> float:
@@ -330,13 +331,14 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             specs_fps = specs.get("meta", {}).get("fps", 30)
             audio_duration = scene["durationFrames"] / specs_fps
 
-        # Image — imageAsset.source == "none" 이면 이미지 없음 (탐색 스킵)
+        # Image — visual_kind 게이트 (이미지 종류가 아니면 image_path 탐색 스킵)
+        _scene_kind = get_visual_kind(scene)
         _ia_source = (scene.get("imageAsset") or {}).get("source", "")
         image_path = ""
-        if _ia_source == "none":
+        if _scene_kind not in ("search_image", "generate_image") or _ia_source == "none":
             pass  # 이미지 없음 — image_path 빈 문자열 유지
         # Image — image_assets.json selected 우선 → 루트 → generated/ 순 탐색
-        selected_file = image_assets_lookup.get(num) if _ia_source != "none" else None
+        selected_file = image_assets_lookup.get(num) if _scene_kind in ("search_image", "generate_image") and _ia_source != "none" else None
         if selected_file:
             # 절대경로가 들어온 경우 → 상대 파일명만 추출
             selected_file = selected_file.replace("\\", "/")
@@ -346,7 +348,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             img_src = out_dir / "images" / selected_file
             if img_src.exists():
                 image_path = link_asset(img_src, "images", selected_file)
-        if not image_path and _ia_source != "none":
+        if not image_path and _scene_kind in ("search_image", "generate_image") and _ia_source != "none":
             for subdir in ("", "generated/"):
                 if image_path:
                     break
@@ -472,6 +474,7 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
 
         entry = {
             "sceneNumber": num,
+            "visualKind": _scene_kind,
             "imagePath": image_path,
             "audioPath": audio_path,
             "audioDurationSec": round(audio_duration, 3),
@@ -509,7 +512,8 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             entry["layout"] = scene_layout   # 단일 소스
             entry["sceneType"] = scene_layout  # 하위호환 유지
 
-        if scene.get("imageAsset"):
+        # imageAsset entry — visual_kind=search_image|generate_image 인 씬에만 작성
+        if _scene_kind in ("search_image", "generate_image") and scene.get("imageAsset"):
             ia = scene["imageAsset"]
             # source: "none" — 이미지 없음 플래그를 매니페스트에 전달
             if ia.get("source") == "none":
@@ -543,9 +547,9 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                     "title": ia.get("source_title", ""),
                 }
 
-        # Video — video_assets.json에 있으면 videoPath + videoAsset 주입
-        va_entry = video_assets_lookup.get(num)
-        if va_entry:
+        # Video — visual_kind=video인 씬에만 작성 (video_assets.json 또는 scene.videoAsset)
+        va_entry = video_assets_lookup.get(num) if _scene_kind == "video" else None
+        if _scene_kind == "video" and va_entry:
             static_path = va_entry.get("staticPath", "")  # remotion/public/ 기준 직접 경로
             video_file = va_entry.get("videoFile", "")
             video_src = out_dir / "video_sources" / video_file if video_file else None
@@ -601,7 +605,8 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 "position": co.get("position", "bottom_left"),
             }
 
-        if scene.get("mapScene"):
+        # mapScene entry — visual_kind=map인 씬에만 작성
+        if _scene_kind == "map" and scene.get("mapScene"):
             ms = dict(scene["mapScene"])
             if not ms.get("mapStyle"):
                 ms["mapStyle"] = map_theme

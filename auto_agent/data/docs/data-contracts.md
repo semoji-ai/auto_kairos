@@ -280,9 +280,55 @@ research_report.json ──→ outline.json + final_manuscript.md
 **생성자**: Visual Composer (Phase 2: Creative Direction + Phase 3: 데이터 보강)
 **소비자**: TTS 모듈 (나레이션 전처리), TTS Generator, Image Generator, QA Reviewer, Manifest Builder
 
+### 핵심 원칙: 2 레이어 모델 (v5)
+
+각 씬은 **단일 primary visual + 자유 overlay** 구조로 작성한다.
+이 원칙을 깨면 manifest·이미지 생성·렌더 단계에서 분기·중복·덮어쓰기 오류가 발생한다.
+
+#### Layer 1: Primary Visual (씬당 1개, 단일성 강제)
+
+`visual_kind` 필드가 단일 source of truth.
+
+| visual_kind | 사용 객체 (단 하나만) | 금지 객체 |
+|---|---|---|
+| `map` | `mapScene` | imageAsset / videoAsset / chartConfig 모두 X |
+| `chart` | `chartConfig` | imageAsset / videoAsset / mapScene 모두 X |
+| `video` | `videoAsset` | imageAsset / mapScene / chartConfig 모두 X |
+| `search_image` | `imageAsset` (source=search) | videoAsset / mapScene / chartConfig 모두 X |
+| `generate_image` | `imageAsset` (source=generate) | videoAsset / mapScene / chartConfig 모두 X |
+| `none` | — | 모두 X (텍스트만) |
+
+#### Layer 2: Text/Data Overlay (자유 조합, 단 layout 권장 매트릭스 따름)
+
+primary visual 위에 얹는 텍스트/데이터 — `visual_kind` 무관, 어떤 조합도 허용:
+- `headline`, `subtitle` — 강조 텍스트
+- `items`, `values`, `unit`, `source` — 데이터 항목
+- `captions` — video 자막 (재생 시)
+- `narration` — TTS (항상 필수)
+
+⚠️ **에디토리얼 룰**: 조합은 (1) 이해도 상승 + (2) 복잡도 ≤ 3 정보단위 통과 시에만.
+script-director SKILL.md의 layout × overlay 매트릭스 참조.
+
+#### Layer 3: Composition (`layout`)
+
+`layout`이 Layer 1+2를 어떻게 합칠지 결정. 차트 layout은 visual_kind=chart 강제 등 호환성 매트릭스는 script-director SKILL.md 참조.
+
+#### Deprecated 필드 (사본 — v5에서 제거)
+
+- `imagePath` — `imageAsset.local_path`로 흡수
+- `vizBackgroundPath` — `imageAsset.local_path`로 흡수 (placement=background)
+- 별도 `image_assets.json`, `video_assets.json` 사본 파일 — scene_specs 안으로 흡수 (캐시 전용으로 격하)
+- `asset_strategy` — `visual_kind`로 통합 (search_image/generate_image/video와 동등)
+- `asset_strategy_reason` — `visual_kind_reason`로 명칭 변경
+
+#### 단일 진입 헬퍼
+
+읽는 모든 모듈은 `auto_agent.modules.scene_helpers.get_visual_kind(scene)`만 호출.
+`imageAsset.source` 직접 검사 금지. 다른 시각 객체 직접 검사도 금지.
+
 ```json
 {
-  "version": "4.0",
+  "version": "5.0",
   "theme": "simple",
   "total_scenes": "number (필수)",
   "scenes": [
@@ -290,6 +336,8 @@ research_report.json ──→ outline.json + final_manuscript.md
       "sceneNumber": "number (필수)",
       "chapter": "number (필수)",
       "title": "string (필수)",
+      "visual_kind": "map | chart | video | search_image | generate_image | none (필수, v5)",
+      "visual_kind_reason": "string — 한 줄 근거",
       "narration": "string — 원본 나레이션 (필수)",
       "narration_tts": "string — TTS 전처리된 나레이션 (assembly-director B-4에서 채움)",
       "tts_changes": [

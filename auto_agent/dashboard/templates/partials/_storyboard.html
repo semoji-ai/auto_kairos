@@ -40,10 +40,18 @@
       <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
         <div class="sb-player-mount" data-scene-num="{{ scene.sceneNumber }}"></div>
       </div>
+      {# visual_kind에 따른 자료 타입 표시 — map/chart는 자료 토글 자체 숨김 #}
+      {% set _vk = scene.visual_kind or '' %}
+      {% if _vk in ('search_image', 'generate_image', 'video') %}
       <div class="sb-asset-type-switch">
-        <button class="sb-switch-btn{% if not scene.videoAsset %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'image', this)">🖼 이미지</button>
-        <button class="sb-switch-btn{% if scene.videoAsset %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'video', this)">🎬 비디오</button>
+        <button class="sb-switch-btn{% if _vk != 'video' %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'image', this)">🖼 이미지</button>
+        <button class="sb-switch-btn{% if _vk == 'video' %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'video', this)">🎬 비디오</button>
       </div>
+      {% elif _vk == 'map' %}
+      <div class="sb-kind-badge sb-kind-map">🗺️ 지도</div>
+      {% elif _vk == 'chart' %}
+      <div class="sb-kind-badge sb-kind-chart">📊 차트</div>
+      {% endif %}
     </div>
 
     <!-- 우측: 원고 + 메타 -->
@@ -150,8 +158,9 @@
           {% if img.camera %}<div class="sb-prompt-detail">카메라: {{ img.camera }}</div>{% endif %}
         </div>
         {% endif %}
-        {% if scene.videoAsset %}
-        {# 비디오 모드: 비디오 카드 리스트 + 타임라인 트리머 #}
+        {# visual_kind 기반 분기 — Layer 1 단일성 #}
+        {% if _vk == 'video' %}
+        {# 비디오 씬: 비디오 카드 리스트 + 타임라인 트리머 #}
         <div class="sb-video-panel" id="sb-video-panel-{{ scene.sceneNumber }}"
              data-start="{{ scene._video_start_sec or 0 }}"
              data-end="{{ scene._video_end_sec or '' }}"
@@ -172,14 +181,16 @@
             <button class="sb-trim-apply" onclick="sbApplyTrim({{ scene.sceneNumber }})">적용</button>
           </div>
         </div>
-        {% else %}
-        {# 이미지 모드: 이미지 그리드 #}
+        {% elif _vk in ('search_image', 'generate_image') %}
+        {# 이미지 씬: 이미지 그리드 + 검색·생성 패널 #}
         <div class="sb-image-row">
           <div class="sb-image-grid" id="sb-img-grid-{{ scene.sceneNumber }}" data-layout="{{ scene._layout }}" data-multi-images="{{ (scene.images or []) | tojson | e }}"></div>
           <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">이미지</button>
         </div>
         {% endif %}
+        {# map / chart / none 씬: 별도 자료 패널 없음 (mapScene/chartConfig은 미리보기에서 직접 렌더) #}
       </div>
+      {% if _vk in ('search_image', 'generate_image') %}
       <div class="sb-asset-panel" id="sb-asset-{{ scene.sceneNumber }}" style="display:none">
         <div class="sb-asset-actions">
           <button onclick="sbToggleSearch({{ scene.sceneNumber }})">🔍 검색</button>
@@ -211,6 +222,7 @@
           <span id="sb-gen-status-{{ scene.sceneNumber }}" class="sb-gen-status"></span>
         </div>
       </div>
+      {% endif %}{# sb-asset-panel — 이미지 씬에만 #}
     </div>
   </div>
   {% endfor %}
@@ -1221,6 +1233,10 @@ document.querySelectorAll('.sb-video-panel').forEach(function(p) {
 .sb-asset-actions button { font-size: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #D4D4D8; border-radius: 4px; padding: 3px 10px; cursor: pointer; }
 .sb-asset-actions button:hover { background: rgba(255,255,255,0.12); }
 .sb-asset-type-switch { display: flex; margin-top: 6px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.25); }
+.sb-kind-badge { padding: 6px 12px; text-align: center; font-size: 11px; font-weight: 600;
+                 border-radius: 6px; margin-top: 4px; }
+.sb-kind-map { background: rgba(34,197,94,0.18); color: #4ADE80; }
+.sb-kind-chart { background: rgba(168,85,247,0.18); color: #C084FC; }
 .sb-switch-btn { flex: 1; font-size: 12px; padding: 6px 0; cursor: pointer; border: none; background: transparent; color: #71717A; transition: background 0.15s, color 0.15s; }
 .sb-switch-btn:first-child { border-right: 1px solid rgba(255,255,255,0.1); }
 .sb-switch-btn.active { background: rgba(99,102,241,0.35); color: #C7D2FE; font-weight: 600; }
@@ -1632,6 +1648,184 @@ function updateSceneLayout(slug, sceneNum, layout) {
     loadCharPanel();
   }
   window.loadCharPanel = loadCharPanel;
+})();
+</script>
+
+<!-- ── 자료 검토 inline 통합 (scene-enricher 큐) ── -->
+<style>
+.sb-enrich-panel { margin: 8px 0; padding: 8px 10px; border-radius: 8px;
+                   background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.2); }
+.sb-enrich-head { display: flex; justify-content: space-between; align-items: center;
+                  font-size: 11px; margin-bottom: 6px; }
+.sb-enrich-head .ek-kind { padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 10px; }
+.sb-enrich-head .ek-kind.video { background: rgba(244,114,182,0.2); color: #F472B6; }
+.sb-enrich-head .ek-kind.image { background: rgba(96,165,250,0.2); color: #60A5FA; }
+.sb-enrich-head .ek-query { color: var(--text-muted); font-size: 10px; }
+.sb-enrich-head .ek-query code { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px; }
+.sb-enrich-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.sb-cand { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06);
+           border-radius: 6px; overflow: hidden; cursor: pointer; transition: all 0.15s; }
+.sb-cand:hover { border-color: rgba(99,102,241,0.5); }
+.sb-cand.picked { border-color: #34D399; box-shadow: 0 0 0 2px rgba(52,211,153,0.3); }
+.sb-cand .sb-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #0a0a0a; display: block; }
+.sb-cand .sb-thumb-fb { width: 100%; aspect-ratio: 16/9; display: flex; align-items: center;
+                        justify-content: center; color: rgba(255,255,255,0.15); font-size: 24px; background: #0a0a0a; }
+.sb-cand .sb-meta { padding: 4px 6px; font-size: 9px; }
+.sb-cand .sb-title { color: #E4E4E7; line-height: 1.2; margin-bottom: 2px;
+                     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+                     overflow: hidden; word-break: break-all; }
+.sb-cand .sb-foot { display: flex; justify-content: space-between; color: var(--text-muted); }
+.sb-lic-low { color: #34D399; }
+.sb-lic-high { color: #F87171; }
+.sb-lic-unknown { color: #FBBF24; }
+.sb-enrich-empty { font-size: 10px; color: var(--text-muted); padding: 4px 6px; }
+</style>
+<script>
+(function() {
+  const slug = (typeof PROJECT_SLUG !== "undefined" ? PROJECT_SLUG : "") ||
+               (window.location.pathname.split("/p/")[1] || "").split("/")[0];
+
+  function escape(s) {
+    return String(s ?? "").replace(/[<>&"']/g, c => ({
+      "<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+  function licClass(risk) {
+    return risk === "low" ? "sb-lic-low" : risk === "high" ? "sb-lic-high" : "sb-lic-unknown";
+  }
+
+  function renderCand(item, cand, idx) {
+    const isVideo = item.asset_kind === "video";
+    const thumb = cand.thumbnail || cand.thumbnail_url || cand.image_url;
+    const license = isVideo ? (cand.license?.label || "?") : (cand.license || "?");
+    const risk = isVideo ? (cand.license?.risk || "unknown") : "unknown";
+    const score = isVideo ? (cand.score?.toFixed(1) || "?") : "";
+    const meta = isVideo
+      ? `${escape(cand.channel || "")} · ${cand.duration_sec ? Math.floor(cand.duration_sec/60)+"분" : ""}`
+      : `${escape(cand.source || "")}`;
+    return `
+      <div class="sb-cand" data-cand-idx="${idx}">
+        ${thumb
+          ? `<img class="sb-thumb" src="${escape(thumb)}" loading="lazy" onerror="this.outerHTML='<div class=sb-thumb-fb>⊘</div>'">`
+          : `<div class="sb-thumb-fb">⊘</div>`}
+        <div class="sb-meta">
+          <div class="sb-title">${escape(cand.title || "")}</div>
+          <div class="sb-foot">
+            <span>${meta}</span>
+            <span class="${licClass(risk)}">${escape(license)}</span>
+          </div>
+          ${score ? `<div class="sb-foot"><span style="color:#FBBF24;font-weight:600">적합도 ${score}</span></div>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPanel(item) {
+    const cands = (item.candidates || []).map((c, i) => renderCand(item, c, i)).join("");
+    return `
+      <div class="sb-enrich-panel" data-scene-idx="${item.scene_index}" data-kind="${item.asset_kind}">
+        <div class="sb-enrich-head">
+          <span class="ek-kind ${item.asset_kind === 'video' ? 'video' : 'image'}">
+            ${item.asset_kind === 'video' ? '🎥 video' : '🖼️ image'} 검토
+          </span>
+          <span class="ek-query">쿼리 <code>${escape(item.query || "")}</code></span>
+        </div>
+        <div class="sb-enrich-grid">${cands || "<div class='sb-enrich-empty'>후보 없음</div>"}</div>
+      </div>
+    `;
+  }
+
+  async function loadAndInject() {
+    let queue = [];
+    try {
+      const r = await fetch(`/enrichment/${encodeURIComponent(slug)}/queue`);
+      const data = await r.json();
+      if (!data.exists) return;
+      queue = data.queue || [];
+    } catch (e) { return; }
+    if (!queue.length) return;
+
+    queue.forEach(item => {
+      // sceneNumber = scene_index + 1
+      const sceneNum = item.scene_index + 1;
+      // sb-preview의 data-scene-num 으로 카드 찾기
+      const mount = document.querySelector(`.sb-player-mount[data-scene-num="${sceneNum}"]`);
+      if (!mount) return;
+      const card = mount.closest(".sb-card") || mount.closest(".scene-card") || mount.parentElement.parentElement;
+      if (!card) return;
+      // 카드 내 narration 이후에 패널 삽입
+      const narr = card.querySelector(".narration");
+      if (!narr || card.querySelector(`.sb-enrich-panel[data-scene-idx="${item.scene_index}"]`)) return;
+
+      const div = document.createElement("div");
+      div.innerHTML = renderPanel(item).trim();
+      const panel = div.firstChild;
+      narr.insertAdjacentElement("afterend", panel);
+
+      panel.querySelectorAll(".sb-cand").forEach((tile, idx) => {
+        tile.addEventListener("click", async () => {
+          const cand = item.candidates[idx];
+          panel.querySelectorAll(".sb-cand").forEach(t => t.classList.remove("picked"));
+          tile.classList.add("picked");
+          const isVideo = item.asset_kind === "video";
+          try {
+            if (isVideo) {
+              // video는 별도 합성 흐름 — 메타데이터 기록만 (selection_status=user_picked)
+              const r = await fetch(`/enrichment/${encodeURIComponent(slug)}/select`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({scene_index: item.scene_index, candidate: cand}),
+              });
+              const j = await r.json();
+              if (!j.ok) throw new Error(j.detail || "선택 실패");
+            } else {
+              // search_image: 기존 select-image 엔드포인트 호출 → 다운로드 + 매니페스트 갱신
+              const url = cand.image_url;
+              const sn2 = item.scene_index + 1;
+              const r1 = await fetch(`/api/p/${encodeURIComponent(slug)}/editor/scenes/${sn2}/select-image`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({url: url}),
+              });
+              const j1 = await r1.json();
+              if (!(j1.ok || j1.selected)) throw new Error(j1.error || "이미지 적용 실패");
+              // 검토 큐에서도 제거
+              try {
+                await fetch(`/enrichment/${encodeURIComponent(slug)}/select`, {
+                  method: "POST",
+                  headers: {"Content-Type": "application/json"},
+                  body: JSON.stringify({scene_index: item.scene_index, candidate: cand}),
+                });
+              } catch (_) {}
+              // 스토리보드 이미지 갱신
+              try {
+                if (typeof sbLoadImageGrid === "function") sbLoadImageGrid(sn2);
+                const mount = document.querySelector(`.sb-player-mount[data-scene-num="${sn2}"]`);
+                if (mount) {
+                  mount.dataset.refresh = "1";
+                  if (window._sceneCache) delete window._sceneCache[sn2];
+                  if (typeof tryMount === "function") tryMount(mount);
+                }
+                fetch(`/api/p/${encodeURIComponent(slug)}/rebuild-manifest`, {method: "POST"}).catch(() => {});
+                if (window._manifestCache) window._manifestCache = null;
+              } catch (_) {}
+            }
+            setTimeout(() => panel.remove(), 400);
+          } catch (e) {
+            alert("선택 적용 실패: " + e.message);
+            tile.classList.remove("picked");
+          }
+        });
+      });
+    });
+  }
+
+  // DOM 준비 후 실행
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", loadAndInject);
+  } else {
+    loadAndInject();
+  }
 })();
 </script>
 

@@ -563,10 +563,13 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 
 검색은 **Stage 2의 step_2d (scene_enrichment)**에서 모두 끝나고, Stage 3는 비용 발생 작업(이미지 생성·TTS·렌더)에만 집중한다.
 
-scene_specs.json 도착 시점:
-- **search 씬**: `imageAsset.url`이 이미 채워져 있다 (selection_status=auto 또는 user_picked). image_batch_module은 그 url을 직접 다운로드. 재검색 X.
-- **video 씬 (세모지/세모지3D)**: `videoAsset.selected_video_id` 채워져 있음. 향후 비디오 합성 모듈 라우팅.
-- **generate 씬**: `imageAsset.prompt` 그대로 사용해 FAL.ai 생성 — Stage 3의 본 작업.
+scene_specs.json v5 — 단일 진입점 `get_visual_kind(scene)` 만 사용:
+- **`visual_kind == "search_image"`**: `imageAsset.url`이 이미 채워져 있다 (selection_status=auto 또는 user_picked). image_batch_module은 그 url을 직접 다운로드. 재검색 X.
+- **`visual_kind == "video"`**: `videoAsset.selected_video_id` 채워져 있음. 향후 비디오 합성 모듈 라우팅.
+- **`visual_kind == "generate_image"`**: `imageAsset.prompt` 그대로 사용해 FAL.ai 생성 — Stage 3의 본 작업.
+- **`visual_kind in ("map", "chart", "none")`**: 이미지·비디오 처리 모두 skip. mapScene/chartConfig는 Remotion이 직접 렌더.
+
+⚠️ Layer 1 단일성: 한 씬은 위 visual_kind 중 **정확히 1개**만 가진다. mapScene+imageAsset 같은 중복은 step_2d 검증에서 차단됨.
 
 step_2d가 검토 큐를 다 처리하기 전에는 Stage 3 진입 불가 (파이프라인 정지). Stage 3 도착 = 모든 검색·선택 완결 상태.
 

@@ -232,31 +232,20 @@ def enrich_project(project_output_dir: Path, *, dry_run: bool = False,
         "ran_at": datetime.now(timezone.utc).isoformat(),
     }
 
+    from auto_agent.modules.scene_helpers import get_visual_kind
+
     for i, scene in enumerate(scenes):
-        strategy = scene.get("asset_strategy")
-        ia_source = (scene.get("imageAsset") or {}).get("source")
+        kind = get_visual_kind(scene)
 
-        # 글로벌 분류 — 채널·art_style 무관
-        target_kind: str | None = None
-        if strategy == "video":
-            target_kind = "video"
-        elif strategy == "search_image":
-            target_kind = "search_image"
-        elif strategy == "generate":
+        # 검색 작업이 필요한 씬: video, search_image
+        # generate_image, map, chart, none 은 step_2d 대상 아님
+        if kind == "generate_image":
             summary["generate_scenes"] += 1
             continue
-        elif ia_source == "search":
-            # asset_strategy 미부여 채널 (이로미즘 등) — imageAsset.source 기준 라우팅
-            target_kind = "search_image"
-        elif ia_source == "generate":
-            summary["generate_scenes"] += 1
+        if kind not in ("video", "search_image"):
             continue
 
-        if target_kind is None:
-            # 자료 자체가 필요 없는 씬 (headline-only, 데이터 카드 등)
-            continue
-
-        if target_kind == "video":
+        if kind == "video":
             summary["video_scenes"] += 1
             entry = _enrich_video_scene(scene, i, limit=limit_per_scene)
         else:

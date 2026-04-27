@@ -462,9 +462,23 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    - items가 있어도 이미지를 함께 쓸 수 있음 (background)
    - headline이 있어도 이미지를 함께 쓸 수 있음 (background)
 
-4-1. 자료 전략 결정 — `asset_strategy` 3-way (video / search_image / generate)
+4-1. visual_kind 결정 — 단일 primary visual (필수, v5)
 
-각 씬마다 시각 자료 출처를 **반드시 셋 중 하나**로 결정합니다. 잘못 고르면 검수 시간이 늘고 결과 품질이 떨어집니다.
+각 씬은 **반드시 `visual_kind` 필드를 1개만** 부여하고, 그에 대응하는 객체 1개만 작성합니다.
+Layer 1 (primary) 단일성을 깨면 manifest·렌더 단계에서 분기가 발생해 화면이 깨집니다.
+
+| visual_kind | 사용 객체 (단 하나) | 절대 함께 두지 말 것 |
+|---|---|---|
+| `map` | `mapScene` | imageAsset / videoAsset / chartConfig |
+| `chart` | `chartConfig` | imageAsset / videoAsset / mapScene |
+| `video` | `videoAsset` | imageAsset / mapScene / chartConfig |
+| `search_image` | `imageAsset` (source=search) | videoAsset / mapScene / chartConfig |
+| `generate_image` | `imageAsset` (source=generate) | videoAsset / mapScene / chartConfig |
+| `none` | — | 모두 X (텍스트만) |
+
+자가검증: 출력 직전 각 씬에 위 표대로 **객체가 정확히 1개만** 들어있는지 확인.
+
+`visual_kind` 선택 기준:
 
 #### 🎥 video — 외부 archive 영상이 본질에 기여하는 씬
 - 실제 사건의 **움직임·소리·시간 흐름**이 핵심
@@ -494,7 +508,47 @@ research_report.json을 읽고 3막 구조를 설계합니다.
 ⚠️ 같은 인물도 씬에 따라 전략이 다름:
 - 구인회 다큐 인터뷰 영상 → `video`
 - 구인회 흑백 초상 사진 → `search_image`
-- 구인회가 직원과 회의하는 장면 (재현) → `generate`
+- 구인회가 직원과 회의하는 장면 (재현) → `generate_image`
+
+#### Layer 2 — Text/Data Overlay (자유 조합, 단 게이트 통과 시에만)
+
+primary visual 위에 얹을 텍스트/데이터:
+- `headline`, `subtitle`
+- `items`, `values`, `unit`, `source`
+- `captions` (video 자막)
+- `narration` (TTS, 항상 필수)
+
+조합 게이트 — **둘 다 통과**해야 추가:
+1. **이해도 상승**: overlay가 primary 의미를 강화 (장식·중복은 제외)
+2. **복잡도 ≤ 3 정보단위**: 한 화면에서 시청자가 처리할 정보 묶음 ≤ 3개
+
+#### Layout × Overlay 권장 매트릭스 (이걸 따르면 게이트 자동 통과)
+
+| layout | 권장 visual_kind | 권장 overlay | 금지 overlay |
+|---|---|---|---|
+| `cinematic` | image / video | (없음, 분위기 깨짐) | items |
+| `headline_only` | none / 배경 | headline 1개 | items |
+| `items_list` | image (배경) | items + source + headline 1개 | — |
+| `quote_portrait` | image (인물) | subtitle (인용) + headline | items |
+| `bar` / `pie` / `line` / `area` | **chart 필수** | headline + source | items는 차트 라벨로 흡수 |
+| `map_scene` | **map 필수** | headline + items 1~2개 | 많은 items |
+| `before_after` | image 2장 | subtitle (각 캡션) | items |
+| `timeline` | none | items + source | — |
+| `metric_spotlight` | image (배경) | values + unit + headline | items |
+| `counter` | none | values + unit | items |
+| `flow` | image (배경) | items 화살표 | source 1개까지 |
+| `images_grid` | image 2~4장 | captions (이미지 레이블) | items |
+
+> layout이 visual_kind를 강제하는 경우(`bar/pie/line/area/map_scene`)는 위 표대로 따를 것.
+> 그 외 layout은 visual_kind 자유 (none 포함).
+
+#### 자가검증 체크리스트 (출력 직전 필수)
+
+- [ ] 각 씬에 `visual_kind` 부여됨
+- [ ] Layer 1 객체가 정확히 1개 (mapScene+imageAsset 같은 중복 없음)
+- [ ] layout과 visual_kind 호환 (chart layout인데 visual_kind != chart 같은 모순 없음)
+- [ ] overlay 조합이 3 정보단위 이내
+- [ ] overlay 각각이 primary와 다른 정보·강화를 제공 (장식 추가 금지)
 
 5. layout + motion + mood 결정
    - layout: 콘텐츠 구조에 맞는 레이아웃 선택 (위 매핑 참조)

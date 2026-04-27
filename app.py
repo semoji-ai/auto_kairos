@@ -388,6 +388,13 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
         _art_style = Path(_art_style_raw).stem if _art_style_raw else ""
         scenes = enrich_scenes_with_media(scenes, dir_name, out_dir, tts,
                                           project_accent=_proj_accent, art_style=_art_style)
+        # visual_kind 주입 — Jinja 템플릿이 단일 진입점으로 분기 가능
+        try:
+            from auto_agent.modules.scene_helpers import get_visual_kind
+            for sc in scenes:
+                sc["visual_kind"] = get_visual_kind(sc)
+        except Exception:
+            pass
         context["scenes"] = scenes
         ch_set = sorted(set(s.get("chapter", 0) for s in scenes))
         context["chapters_list"] = ch_set
