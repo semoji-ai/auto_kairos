@@ -14,6 +14,12 @@ from auto_agent.paths import get_vault_dir
 
 logger = logging.getLogger(__name__)
 
+# 일부 사이트(예: ppomppu)가 비-브라우저 UA를 차단해 403 응답을 보낸다.
+_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+)
+
 
 DEFAULT_SIGNAL_FEEDS = {
     "feeds": [
@@ -171,7 +177,7 @@ class SignalFeedCollector:
         )
 
     def import_snapshot_url(self, source_url: str, target_dir: str, name: Optional[str] = None) -> Path:
-        request = urllib.request.Request(source_url, headers={"User-Agent": "auto-agent-signal-collector/1.0"})
+        request = urllib.request.Request(source_url, headers={"User-Agent": _UA})
         with urllib.request.urlopen(request, timeout=20) as response:
             payload = response.read()
             content_type = (response.getheader("content-type") or "").lower()
@@ -196,7 +202,7 @@ class SignalFeedCollector:
         return json.loads(self._config_path.read_text(encoding="utf-8"))
 
     def _fetch_feed_items(self, url: str, limit: int = 20) -> List[Dict]:
-        request = urllib.request.Request(url, headers={"User-Agent": "auto-agent-signal-collector/1.0"})
+        request = urllib.request.Request(url, headers={"User-Agent": _UA})
         with urllib.request.urlopen(request, timeout=20) as response:
             payload = response.read()
             content_type = (response.getheader("content-type") or "").lower()

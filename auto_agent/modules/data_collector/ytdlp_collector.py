@@ -149,8 +149,16 @@ last_collected: {today}
         return results
 
     def collect_trending(self, country: str = "KR", max_videos: int = 20) -> List[Dict]:
-        """YouTube 트렌딩 영상 수집."""
-        import yt_dlp
+        """YouTube 트렌딩 영상 수집.
+
+        2026-04 기준: YouTube가 공개 /feed/trending 페이지를 사실상 폐기해
+        yt-dlp 단독으로는 수집 불가. YouTube Data API 키가 살아 있을 때만 의미가 있어
+        지금은 빈 결과 + 안내 로그를 반환한다. (경쟁채널/뉴스/커뮤니티가 트렌드 신호를 대체)
+        """
+        logger.info("trending 수집 비활성화: YouTube 공개 trending 페이지 폐기됨 (Data API 필요)")
+        return []
+
+        import yt_dlp  # noqa: F401  (아래는 향후 Data API 연동 시 참고용)
 
         url = f"https://www.youtube.com/feed/trending?gl={country}"
         ydl_opts = {
