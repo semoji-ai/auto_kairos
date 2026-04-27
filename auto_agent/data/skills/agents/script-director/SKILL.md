@@ -462,6 +462,40 @@ research_report.json을 읽고 3막 구조를 설계합니다.
    - items가 있어도 이미지를 함께 쓸 수 있음 (background)
    - headline이 있어도 이미지를 함께 쓸 수 있음 (background)
 
+4-1. 자료 전략 결정 — `asset_strategy` 3-way (video / search_image / generate)
+
+각 씬마다 시각 자료 출처를 **반드시 셋 중 하나**로 결정합니다. 잘못 고르면 검수 시간이 늘고 결과 품질이 떨어집니다.
+
+#### 🎥 video — 외부 archive 영상이 본질에 기여하는 씬
+- 실제 사건의 **움직임·소리·시간 흐름**이 핵심
+  - 제품 시연·작동, 발표 무대, 공장 가동, 뉴스 보도 클립
+- 인물 인터뷰·다큐 archive 영상
+- 박물관 소장품 시연 영상, 시대 풍경 archive
+- 키워드 신호: "출시", "발표", "방송", "수출 첫 사례", "보급 운동", "시연", "기자회견"
+- 스키마: `videoAsset: { query, keywords, license_preference, duration_hint, segment_hint, placement }`
+  (imageAsset은 fallback 용으로만 보조 정의)
+
+#### 🖼️ search_image (`imageAsset.source: "search"`) — 정적 실물 사진·문서
+- 인물 초상 사진, 실물 제품 단일 컷, 광고지, 신문 1면, 박물관 소장 사진
+- 장소·건물 외관 사진, 기업 로고
+- 키워드 신호: 인물 고유명, 제품 모델명, 역사 건물, 브랜드 로고
+
+#### 🎨 generate (`imageAsset.source: "generate"`) — AI 생성 이미지
+- 일상 묘사 (1950년대 가정, 시장 풍경)
+- 재현 — 실제 archive 부재 (직원 회의실, 협상 장면, 매장 첫 오픈)
+- 감정·인용 강조 (캐릭터 발화 클로즈업, 은유적 시각)
+- 추상·전환 (떡밥 인트로, 흐름 연결, 통계 강조 카드)
+
+#### 분류 우선순위
+1. archive 영상이 명확히 있고 **움직임이 본질**이면 → `video`
+2. 정적 실물 자료(인물 사진·제품 사진·문서)가 본질이면 → `search_image`
+3. 위 둘이 약하거나 **묘사·재현이 본질**이면 → `generate`
+
+⚠️ 같은 인물도 씬에 따라 전략이 다름:
+- 구인회 다큐 인터뷰 영상 → `video`
+- 구인회 흑백 초상 사진 → `search_image`
+- 구인회가 직원과 회의하는 장면 (재현) → `generate`
+
 5. layout + motion + mood 결정
    - layout: 콘텐츠 구조에 맞는 레이아웃 선택 (위 매핑 참조)
    - motion: 프리셋 이름 하나 (shared/motion-presets 참조)
@@ -714,6 +748,23 @@ research_report.json을 읽고 3막 구조를 설계합니다.
   }
 }
 ```
+
+### videoAsset 구조 — 외부 archive 영상 (asset_strategy=video)
+
+```json
+{
+  "videoAsset": {
+    "query": "금성 A-501 라디오 1959 출시",
+    "keywords": ["금성", "A-501", "라디오", "1959", "수퍼헤테로다인"],
+    "license_preference": "any",
+    "duration_hint": {"min": 30, "max": 600},
+    "segment_hint": "라디오 외관 클로즈업 또는 작동 장면 5~10초",
+    "placement": "fullscreen"
+  }
+}
+```
+
+후속 처리: assembly-director(또는 향후 scene-enricher)가 `video_search` 도구로 후보를 가져오고, 사용자 선택 → Gemini 분석 → 매칭 segment 추출 → mp4 클립 합성으로 이어갑니다. videoAsset이 있는 씬에서는 imageAsset은 fallback 용도(검색 실패·라이선스 불가 시)로만 추가 정의합니다.
 
 **characters 배열 — 인물 일관성 규칙 (필수):**
 

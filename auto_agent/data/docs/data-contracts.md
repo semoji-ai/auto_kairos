@@ -337,6 +337,16 @@ research_report.json ──→ outline.json + final_manuscript.md
         "characters": ["string"],
         "license": "string | null"
       },
+      "videoAsset": {
+        "query": "string — yt-dlp ytsearch 쿼리 (짧고 명사 위주)",
+        "keywords": ["string — 적합도 재정렬용 토큰"],
+        "license_preference": "any | creative_commons (기본 any)",
+        "duration_hint": {"min": "number — sec", "max": "number — sec"},
+        "segment_hint": "string — 영상 내 사용 구간 가이드 (예: '제품 외관 클로즈업 5~10초')",
+        "placement": "fullscreen | background | left | right",
+        "selected_video_id": "string — 사용자 선택 후 채워짐",
+        "selected_segment": {"start": "number", "end": "number"}
+      },
       "enrichment": {
         "status": "verified | adjusted | unverified",
         "original_values": [],

@@ -370,6 +370,34 @@ def run_batch(
             if image_assets.has_search_version(images_dir, scene_num):
                 skip += 1
                 continue
+
+            # ── step_2d (scene_enricher)가 사전 선택한 url 우선 사용 ──
+            preselected_url = ia.get("url")
+            preselected_status = ia.get("selection_status")
+            if preselected_url and preselected_status in ("auto", "user_picked"):
+                try:
+                    ext = "." + preselected_url.split(".")[-1].split("?")[0].lower()
+                    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+                        ext = ".jpg"
+                    fname = image_assets.next_filename(images_dir, scene_num, "search", ext)
+                    dest = search_dl_dir / fname
+                    import urllib.request as _ur
+                    _ur.urlretrieve(preselected_url, str(dest))
+                    if dest.exists() and dest.stat().st_size > 1024:
+                        image_assets.add_version(
+                            images_dir, scene_num, "search/" + fname, "search",
+                            source_url=preselected_url,
+                            license_info=ia.get("license", ""),
+                        )
+                        success += 1
+                        _progress(f"씬 {scene_num} step_2d 선택 자료 사용: {(ia.get('source_domain') or '')[:30]}")
+                        continue
+                    else:
+                        dest.unlink(missing_ok=True)
+                        _progress(f"씬 {scene_num} 사전 url 다운로드 실패 — 재검색 fallback", level="warning")
+                except Exception as e:
+                    _progress(f"씬 {scene_num} 사전 url 처리 실패 ({e}) — 재검색 fallback", level="warning")
+
             query = ia.get("query") or ia.get("prompt") or ""
             if not query:
                 fail += 1

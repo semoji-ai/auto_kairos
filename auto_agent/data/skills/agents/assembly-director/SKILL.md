@@ -559,12 +559,39 @@ manifest_tool.build() 호출 전 에이전트가 직접 조정하는 것들:
 
 ## 이미지 생성 규칙 (절대 규칙)
 
+### Stage 책임 경계 (2026-04 변경)
+
+검색은 **Stage 2의 step_2d (scene_enrichment)**에서 모두 끝나고, Stage 3는 비용 발생 작업(이미지 생성·TTS·렌더)에만 집중한다.
+
+scene_specs.json 도착 시점:
+- **search 씬**: `imageAsset.url`이 이미 채워져 있다 (selection_status=auto 또는 user_picked). image_batch_module은 그 url을 직접 다운로드. 재검색 X.
+- **video 씬 (세모지/세모지3D)**: `videoAsset.selected_video_id` 채워져 있음. 향후 비디오 합성 모듈 라우팅.
+- **generate 씬**: `imageAsset.prompt` 그대로 사용해 FAL.ai 생성 — Stage 3의 본 작업.
+
+step_2d가 검토 큐를 다 처리하기 전에는 Stage 3 진입 불가 (파이프라인 정지). Stage 3 도착 = 모든 검색·선택 완결 상태.
+
 ### imageAsset.source 존중 (필수)
 
 **scene_specs의 `imageAsset.source` 필드를 반드시 따라야 한다.**
 - `source: "generate"` → image_batch_module이 FAL.ai로 AI 생성
-- `source: "search"` → image_batch_module이 Wikimedia/Serper 워터폴 검색
+- `source: "search"` → image_batch_module이 사전 선택된 imageAsset.url을 다운로드 (없으면 fallback 재검색)
 - source=search인 씬을 generate로 대체하지 마라. 실사가 필요한 이유가 있다.
+
+### asset_strategy 와 videoAsset (세모지/세모지3D 한정)
+
+세모지/세모지3D 채널은 step_2d(scene_enrichment)에서 씬마다 `asset_strategy`(video/search_image/generate)가 부여되고, video 라벨 씬은 `videoAsset.selected_video_id`까지 채워진 상태로 도착한다.
+
+처리 규칙:
+- `asset_strategy == "video"` AND `videoAsset.selected_video_id` 있음
+  → 향후 비디오 합성 모듈로 라우팅 (현재는 v1: imageAsset이 같이 정의돼 있으면 그걸 fallback으로 사용)
+- `asset_strategy == "video"` AND `selected_video_id` 없음 (사람 검토 미완)
+  → imageAsset.prompt 기반 generate로 fallback
+- `asset_strategy == "search_image"` AND `imageAsset.url` 있음
+  → 해당 url을 직접 사용 (이미 사용자가 선택했거나 자동 채택됨)
+- `asset_strategy == "search_image"` AND url 없음
+  → 기존 search 워터폴로 fallback
+
+→ 즉 enrichment 단계에서 url/video_id가 채워졌는지가 관건. 채워졌으면 그대로 사용, 비었으면 안전한 fallback.
 - 검색 실패 시에만 generate fallback 허용 (image_batch_module이 자동 처리)
 
 ### 검색 이미지 출처 업데이트 (필수)

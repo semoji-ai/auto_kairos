@@ -1,0 +1,210 @@
+<!-- 자료 검토 탭 — scene-enricher 검토 큐 -->
+<div class="enrich-page">
+  <div class="enrich-header">
+    <h2>자료 검토</h2>
+    <div class="enrich-actions">
+      <button id="enrich-run-btn" class="btn btn-primary">enrichment 실행</button>
+      <button id="enrich-reload-btn" class="btn">새로고침</button>
+    </div>
+  </div>
+  <div id="enrich-summary" class="enrich-summary">로드 중...</div>
+  <div id="enrich-queue" class="enrich-queue"></div>
+</div>
+
+<style>
+.enrich-page { padding: 16px 20px; }
+.enrich-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.enrich-header h2 { margin: 0; font-size: 16px; }
+.enrich-actions { display: flex; gap: 8px; }
+.btn { padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;
+       background: rgba(255,255,255,0.06); color: #E4E4E7; border: 1px solid rgba(255,255,255,0.1); }
+.btn:hover { background: rgba(255,255,255,0.12); }
+.btn-primary { background: rgba(99,102,241,0.2); color: #A5B4FC; border-color: rgba(99,102,241,0.4); }
+.btn-primary:hover { background: rgba(99,102,241,0.3); }
+
+.enrich-summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+                  font-size: 11px; padding: 10px 12px; background: rgba(255,255,255,0.03);
+                  border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); }
+.enrich-summary .stat { padding: 2px 10px; border-radius: 6px; background: rgba(255,255,255,0.06); }
+.enrich-summary .stat-auto { color: #34D399; }
+.enrich-summary .stat-review { color: #FBBF24; }
+.enrich-summary .stat-error { color: #F87171; }
+
+.enrich-queue { display: flex; flex-direction: column; gap: 14px; }
+.enrich-empty { padding: 30px; text-align: center; color: var(--text-muted); font-size: 12px; }
+
+.enrich-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+               border-radius: 10px; padding: 12px; }
+.enrich-card .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.enrich-card .scene-id { font-size: 12px; font-weight: 600; color: #D4D4D8; }
+.enrich-card .scene-headline { font-size: 11px; color: var(--text-muted); margin-left: 8px; }
+.enrich-card .kind-badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.kind-video { background: rgba(244,114,182,0.2); color: #F472B6; }
+.kind-image { background: rgba(96,165,250,0.2); color: #60A5FA; }
+.enrich-card .narration { font-size: 11px; color: #9CA3AF; line-height: 1.5; margin-bottom: 10px;
+                          padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: 6px; }
+.enrich-card .query-row { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; }
+.enrich-card .query-row code { background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; }
+
+.cands-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.cand-tile { background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden;
+             border: 1px solid rgba(255,255,255,0.06); cursor: pointer;
+             transition: all 0.15s; }
+.cand-tile:hover { border-color: rgba(99,102,241,0.5); transform: translateY(-1px); }
+.cand-tile.picked { border-color: #34D399; box-shadow: 0 0 0 2px rgba(52,211,153,0.3); }
+.cand-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #0a0a0a; display: block; }
+.cand-thumb-fallback { width: 100%; aspect-ratio: 16/9; display: flex; align-items: center;
+                       justify-content: center; color: rgba(255,255,255,0.15); font-size: 32px; background: #0a0a0a; }
+.cand-meta { padding: 8px 10px; }
+.cand-title { font-size: 11px; color: #E4E4E7; line-height: 1.3; margin-bottom: 4px;
+              display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+              overflow: hidden; }
+.cand-detail { font-size: 9px; color: var(--text-muted); display: flex; justify-content: space-between; }
+.cand-license { display: inline-block; padding: 1px 6px; border-radius: 3px; font-weight: 600; font-size: 9px; }
+.lic-low { background: rgba(52,211,153,0.15); color: #34D399; }
+.lic-high { background: rgba(248,113,113,0.15); color: #F87171; }
+.lic-unknown { background: rgba(251,191,36,0.15); color: #FBBF24; }
+.cand-score { font-weight: 600; color: #FBBF24; }
+</style>
+
+<script>
+(function() {
+  const slug = (typeof PROJECT_SLUG !== "undefined" ? PROJECT_SLUG : "") ||
+               (window.location.pathname.split("/p/")[1] || "").split("/")[0];
+
+  function escape(s) {
+    return String(s ?? "").replace(/[<>&"']/g, c => ({
+      "<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function licClass(risk) {
+    return risk === "low" ? "lic-low" : risk === "high" ? "lic-high" : "lic-unknown";
+  }
+
+  function renderCandidate(scene_index, cand, kind) {
+    const isVideo = kind === "video";
+    const thumb = cand.thumbnail || cand.thumbnail_url || cand.image_url;
+    const license = isVideo ? (cand.license?.label || "?") : (cand.license || "?");
+    const risk = isVideo ? (cand.license?.risk || "unknown") : "unknown";
+    const score = isVideo ? cand.score : null;
+    const detail = isVideo
+      ? `${escape(cand.channel || "")} · ${cand.duration_sec ? Math.floor(cand.duration_sec/60)+"분" : ""}`
+      : `${escape(cand.source || "")} · ${cand.width || "?"}×${cand.height || "?"}`;
+    return `
+      <div class="cand-tile" data-scene="${scene_index}" data-kind="${kind}">
+        ${thumb
+          ? `<img class="cand-thumb" src="${escape(thumb)}" loading="lazy" onerror="this.outerHTML='<div class=cand-thumb-fallback>⊘</div>'">`
+          : `<div class="cand-thumb-fallback">⊘</div>`}
+        <div class="cand-meta">
+          <div class="cand-title">${escape(cand.title || "")}</div>
+          <div class="cand-detail">
+            <span>${detail}</span>
+            <span class="cand-license ${licClass(risk)}">${escape(license)}</span>
+          </div>
+          ${score != null ? `<div class="cand-detail" style="margin-top:3px"><span class="cand-score">적합도 ${score.toFixed(1)}</span></div>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderItem(item) {
+    const kind = item.asset_kind === "video" ? "video" : "image";
+    const cands = (item.candidates || []).map(c => renderCandidate(item.scene_index, c, kind)).join("");
+    return `
+      <div class="enrich-card" data-scene="${item.scene_index}" data-kind="${kind}">
+        <div class="card-head">
+          <div>
+            <span class="scene-id">씬 #${item.scene_index}</span>
+            <span class="scene-headline">${escape(item.headline || "")}</span>
+          </div>
+          <span class="kind-badge ${kind === 'video' ? 'kind-video' : 'kind-image'}">${kind === 'video' ? '🎥 video' : '🖼️ search_image'}</span>
+        </div>
+        <div class="query-row">쿼리: <code>${escape(item.query || "")}</code> · top_score=${item.top_score ?? "?"}</div>
+        <div class="cands-grid">${cands || "<div class='enrich-empty'>후보 없음</div>"}</div>
+      </div>
+    `;
+  }
+
+  async function load() {
+    const sumEl = document.getElementById("enrich-summary");
+    const qEl = document.getElementById("enrich-queue");
+    sumEl.innerHTML = "로드 중...";
+    qEl.innerHTML = "";
+    try {
+      const r = await fetch(`/enrichment/${encodeURIComponent(slug)}/queue`);
+      const data = await r.json();
+      if (!data.exists || !data.summary) {
+        sumEl.innerHTML = `<span class="stat">enrichment 미실행 — 위 버튼 클릭</span>`;
+        qEl.innerHTML = `<div class="enrich-empty">enrichment_queue.json 없음. 'enrichment 실행' 버튼을 눌러주세요.</div>`;
+        return;
+      }
+      const s = data.summary;
+      sumEl.innerHTML = `
+        <span class="stat">총 ${s.total_scenes}씬</span>
+        <span class="stat">video ${s.video_scenes}</span>
+        <span class="stat">search_image ${s.search_image_scenes}</span>
+        <span class="stat">generate ${s.generate_scenes}</span>
+        <span class="stat stat-auto">자동 채택 ${s.auto_selected}</span>
+        <span class="stat stat-review">검토 대기 ${s.needs_review}</span>
+        ${s.errors ? `<span class="stat stat-error">에러 ${s.errors}</span>` : ""}
+      `;
+      const queue = data.queue || [];
+      if (!queue.length) {
+        qEl.innerHTML = `<div class="enrich-empty">검토 대기 항목 없음 ✓</div>`;
+        return;
+      }
+      qEl.innerHTML = queue.map(renderItem).join("");
+
+      qEl.querySelectorAll(".cand-tile").forEach(tile => {
+        tile.addEventListener("click", async () => {
+          const scene_index = parseInt(tile.dataset.scene);
+          const kind = tile.dataset.kind;
+          const item = queue.find(q => q.scene_index === scene_index);
+          if (!item) return;
+          // 클릭한 후보 인덱스 찾기
+          const all = Array.from(tile.parentElement.children);
+          const idx = all.indexOf(tile);
+          const cand = item.candidates[idx];
+          tile.parentElement.querySelectorAll(".cand-tile").forEach(t => t.classList.remove("picked"));
+          tile.classList.add("picked");
+          try {
+            const r = await fetch(`/enrichment/${encodeURIComponent(slug)}/select`, {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({scene_index, candidate: cand}),
+            });
+            const j = await r.json();
+            if (!j.ok) throw new Error(j.detail || "선택 실패");
+            // 카드 제거 (해당 씬은 처리 완료)
+            tile.closest(".enrich-card").style.opacity = "0.4";
+            setTimeout(load, 600);  // 새로고침
+          } catch (e) {
+            alert("선택 적용 실패: " + e.message);
+          }
+        });
+      });
+    } catch (e) {
+      sumEl.innerHTML = `<span class="stat stat-error">로드 실패: ${escape(e.message)}</span>`;
+    }
+  }
+
+  document.getElementById("enrich-run-btn").addEventListener("click", async () => {
+    const btn = document.getElementById("enrich-run-btn");
+    btn.disabled = true; btn.textContent = "실행 중...";
+    try {
+      const r = await fetch(`/enrichment/${encodeURIComponent(slug)}/run`, {method:"POST"});
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.detail || "실행 실패");
+      await load();
+    } catch (e) {
+      alert("enrichment 실패: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "enrichment 실행";
+    }
+  });
+  document.getElementById("enrich-reload-btn").addEventListener("click", load);
+
+  load();
+})();
+</script>

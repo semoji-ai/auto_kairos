@@ -32,6 +32,7 @@ RULE_MANIFEST = {
     "skills/agents/research-orchestrator/SKILL.md": "skill",
     "skills/agents/script-director/SKILL.md": "skill",
     "skills/agents/fact-verifier/SKILL.md": "skill",
+    "skills/agents/fact-fixer/SKILL.md": "skill",
     "skills/agents/assembly-director/SKILL.md": "skill",
     "skills/agents/character-planner/SKILL.md": "skill",
     "skills/agents/trend-analyst/SKILL.md": "skill",

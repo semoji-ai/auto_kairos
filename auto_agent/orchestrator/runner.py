@@ -3264,6 +3264,15 @@ JSON 구조: {{"scenes": [씬 배열]}}
                 print(f"  [SKIP] {step_id}: 조건 미충족")
                 return StepResult(step_id=step_id, status="skipped")
 
+        # art_style_filter 체크 — 특정 art_style일 때만 실행 (예: 세모지/세모지3D 전용 step_2d)
+        art_style_filter = step.get("art_style_filter")
+        if art_style_filter:
+            current = self.state.config.get("art_style", "") if hasattr(self.state, "config") else ""
+            current_id = current.replace(".json", "").split("/")[-1] if current else ""
+            if current_id not in art_style_filter:
+                print(f"  [SKIP] {step_id}: art_style={current_id} not in {art_style_filter}")
+                return StepResult(step_id=step_id, status="skipped")
+
         # chunked_parallel 분기
         if step.get("chunked_parallel"):
             return self._run_chunked_parallel(step)
@@ -4261,6 +4270,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "vault_sync": "modules/vault_sync_module.py",
             "skeleton_from_vault": "modules/skeleton_from_vault_module.py",
             "chapter_projection": "modules/chapter_projection_module.py",
+            "scene_enricher_module": "modules/scene_enricher_module.py",
             "duplicate-checker": "scripts/duplicate_check.py",
             "tts-generator": "scripts/generate_tts.py",
             "image_batch": "modules/image_batch_module.py",

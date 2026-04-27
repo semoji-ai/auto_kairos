@@ -155,6 +155,22 @@
       },
       "notes": "Stage 2 핵심. 기존 write-manuscript + visual-composer 4개 Phase 통합. 챕터별 병렬 처리 지원."
     },
+    "fact-fixer": {
+      "description": "factcheck_report.json의 adjusted/critical 권고를 final_manuscript.md + scene_specs.json에 자동 반영",
+      "model": "sonnet",
+      "max_turns": 30,
+      "budget": "$0.5",
+      "max_duration_minutes": 15,
+      "use_sdk": false,
+      "allowed_tools": [
+        "Read",
+        "Edit",
+        "Grep",
+        "Write"
+      ],
+      "skill_file": "agents/fact-fixer/SKILL.md",
+      "notes": "Stage 2 step_2c. accuracy >= 0.92 + critical=0 이면 no-op. 본문 흐름 보존 + 사실·스타일 정정만."
+    },
     "data-mapper": {
       "description": "scene_specs의 데이터 필드(items/values/unit/source/chartConfig)를 리서치 데이터에서 정확히 매핑",
       "model": "sonnet",

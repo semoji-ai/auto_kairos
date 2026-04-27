@@ -1814,6 +1814,127 @@ def cmd_series(args):
             console.print(f"  [red]실패: EP{result['episodes_failed']}[/red]")
 
 
+def cmd_video(args):
+    """씬 연출용 비디오 검색 + Gemini 분석.
+
+    하위 명령:
+      search   --query <q> [--limit 10]
+      analyze  --video-id <id> [--video-id <id2> ...] [--force]
+      list
+    """
+    import argparse
+    parser = argparse.ArgumentParser(prog="auto-agent video")
+    sub = parser.add_subparsers(dest="video_cmd")
+
+    sp = sub.add_parser("search", help="yt-dlp 검색 + 적합도 재정렬 (Gemini X)")
+    sp.add_argument("--query", required=True)
+    sp.add_argument("--limit", type=int, default=10)
+    sp.add_argument("--max-duration", type=int, default=None, help="초 단위, 이보다 길면 제외")
+    sp.add_argument("--min-duration", type=int, default=None, help="초 단위, 이보다 짧으면 제외")
+    sp.add_argument("--keywords", default=None, help="쉼표 구분 토큰 — 적합도 재정렬용")
+    sp.add_argument("--full-desc", action="store_true", help="설명 전문 표시")
+
+    sp = sub.add_parser("scene-search", help="씬 → 자동 쿼리 + 키워드 → search")
+    sp.add_argument("--project", help="프로젝트 slug")
+    sp.add_argument("--scene-specs", help="scene_specs.json 경로 (project 대신)")
+    grp = sp.add_mutually_exclusive_group(required=True)
+    grp.add_argument("--scene-id")
+    grp.add_argument("--scene-index", type=int)
+    sp.add_argument("--limit", type=int, default=10)
+    sp.add_argument("--max-duration", type=int, default=1800)
+    sp.add_argument("--min-duration", type=int, default=30)
+    sp.add_argument("--extra-query", default=None, help="자동 쿼리에 덧붙일 키워드")
+    sp.add_argument("--full-desc", action="store_true")
+
+    sp = sub.add_parser("analyze", help="선택한 video_id 다운로드 + Gemini 분석")
+    sp.add_argument("--video-id", action="append", required=True, dest="video_ids")
+    sp.add_argument("--force", action="store_true", help="캐시 무시하고 재분석")
+
+    sub.add_parser("list", help="캐시된 클립 목록")
+
+    parsed = parser.parse_args(args)
+    if not parsed.video_cmd:
+        parser.print_help()
+        return
+
+    from auto_agent.tools import video_search
+
+    def _print_results(results, full_desc=False):
+        for i, r in enumerate(results, 1):
+            risk = r["license"]["risk"]
+            risk_color = {"low": "green", "high": "red", "unknown": "yellow"}.get(risk, "white")
+            dur = r.get("duration_sec") or 0
+            mins = f"{int(dur // 60)}:{int(dur % 60):02d}" if dur else "?:??"
+            views = f"{r.get('view_count') or 0:,}"
+            score = r.get("_relevance_score")
+            score_str = f" 적합도={score:.1f}" if score is not None else ""
+            console.print(f"[bold]{i:2d}. {r['title']}[/bold]{score_str}")
+            console.print(f"    {r['channel']} · {mins} · {views} views")
+            console.print(f"    id=[cyan]{r['video_id']}[/cyan]  "
+                          f"라이선스=[{risk_color}]{r['license']['label']}[/{risk_color}] "
+                          f"({r['license']['note']})")
+            if full_desc and r.get("description_snippet"):
+                console.print(f"    [dim]{r['description_snippet']}[/dim]")
+            console.print(f"    {r['url']}\n")
+
+    if parsed.video_cmd == "search":
+        kw = set(k.strip() for k in (parsed.keywords or "").split(",") if k.strip()) or None
+        results = video_search.search(
+            parsed.query, limit=parsed.limit,
+            max_duration=parsed.max_duration,
+            min_duration=parsed.min_duration,
+            keywords=kw,
+        )
+        if not results:
+            print_warning("검색 결과 없음 (필터 후)")
+            return
+        console.print(f"\n[accent]'{parsed.query}'[/accent] — {len(results)}개 후보\n")
+        _print_results(results, full_desc=parsed.full_desc)
+        print_success("분석할 video_id 선택 후: auto-agent video analyze --video-id <id>")
+
+    elif parsed.video_cmd == "scene-search":
+        scene, results = video_search.search_for_scene(
+            project_slug=parsed.project,
+            scene_specs_path=parsed.scene_specs,
+            scene_id=parsed.scene_id,
+            scene_index=parsed.scene_index,
+            limit=parsed.limit,
+            max_duration=parsed.max_duration,
+            min_duration=parsed.min_duration,
+            extra_query=parsed.extra_query,
+        )
+        head = scene.get("headline") or scene.get("scene_id") or "(no headline)"
+        console.print(f"\n[accent]씬: {head}[/accent]")
+        narr = (scene.get("narration") or "")[:200]
+        if narr:
+            console.print(f"  [dim]{narr}[/dim]\n")
+        if not results:
+            print_warning("검색 결과 없음")
+            return
+        console.print(f"  → {len(results)}개 후보\n")
+        _print_results(results, full_desc=parsed.full_desc)
+
+    elif parsed.video_cmd == "analyze":
+        for vid in parsed.video_ids:
+            console.print(f"  [dim]{vid}: 다운로드+분석...[/dim]")
+            try:
+                result = video_search.analyze(vid, force=parsed.force)
+                scenes = result.get("analysis", {}).get("scenes", [])
+                print_success(f"{vid} 완료 — {len(scenes)} 장면")
+            except Exception as e:
+                print_error(f"{vid} 실패: {e}")
+
+    elif parsed.video_cmd == "list":
+        items = video_search.list_cached()
+        if not items:
+            console.print("[dim]캐시된 클립 없음[/dim]")
+            return
+        for it in items:
+            mark = "✓" if it["analyzed"] else "·"
+            console.print(f"  {mark} [cyan]{it['video_id']}[/cyan] {it['title'] or ''} "
+                          f"({it['license_label']}/{it['license_risk']})")
+
+
 def cmd_tts(args):
     """TTS 전처리 → 생성 → 자막 생성 일괄 실행."""
     import argparse
@@ -2144,6 +2265,7 @@ COMMANDS = {
     "auto-kairos": cmd_auto_kairos,
     "multi-contents": cmd_multi_contents,
     "series": cmd_series,
+    "video": cmd_video,
     "tts": cmd_tts,
     "skill-path": lambda args: print(get_data_dir()),
 }

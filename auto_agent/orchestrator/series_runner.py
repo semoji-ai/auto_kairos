@@ -123,6 +123,8 @@ def series_run(
             "output_dir": str(ep_dir),
             "topic": f"{series_plan['title']} {ep_num}편 — {episode['title']}",
             "writing_style": series_plan.get("writing_style", ""),
+            "art_style": series_plan.get("art_style", ""),
+            "channel": series_plan.get("channel", ""),
             "episode_brief_path": str(brief_path),
         }
 

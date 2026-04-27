@@ -74,6 +74,8 @@ from auto_agent.dashboard.agent_messenger import router as messenger_router
 app.include_router(messenger_router)
 from auto_agent.dashboard.tools_routes import router as tools_router
 app.include_router(tools_router)
+from auto_agent.dashboard.enrichment_routes import router as enrichment_router
+app.include_router(enrichment_router)
 
 DASHBOARD_DIR = Path(__file__).parent / "auto_agent" / "dashboard"
 DATA_DIR = get_data_dir()

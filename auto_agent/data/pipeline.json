@@ -341,13 +341,49 @@
             "factcheck_report.json"
           ],
           "blocking": false,
-          "notes": "비차단. 실패해도 파이프라인 계속. 결과는 QA 리포트에 반영."
+          "notes": "비차단. 결과는 fact-fixer(step_2c)와 디스코드 QA 알림에 반영."
+        },
+        {
+          "id": "step_2c",
+          "name": "fact_fix",
+          "description": "fact-check 권고를 final_manuscript + scene_specs에 자동 반영 (accuracy>=0.92이면 no-op)",
+          "agent": "fact-fixer",
+          "input": [
+            "factcheck_report.json",
+            "final_manuscript.md",
+            "scene_specs.json"
+          ],
+          "output": [
+            "final_manuscript.md",
+            "scene_specs.json",
+            "fact_fix_log.json"
+          ],
+          "blocking": false,
+          "notes": "단일 패스. 임계 미달이면 정정·익명화·출처표기·한자strip 수행. 흐름 파괴 금지."
+        },
+        {
+          "id": "step_2d",
+          "name": "scene_enrichment",
+          "description": "글로벌 자료 검색 단계 — 모든 채널의 imageAsset.source=search 씬 + 세모지/세모지3D videoAsset 후보 검색·자동 채택·검토 큐 생성",
+          "type": "module",
+          "module": "scene_enricher_module",
+          "input": [
+            "scene_specs.json"
+          ],
+          "output": [
+            "scene_specs.json",
+            "enrichment_queue.json",
+            "enrichment_summary.json"
+          ],
+          "blocking": true,
+          "notes": "Stage 2 끝에서 모든 검색 작업 마무리. 검토 큐 잔여 항목 있으면 exit 2로 정지 — 대시보드 '자료 검토' 탭에서 처리 후 --from step_3b로 재개. Stage 3는 비용 발생 작업(생성·TTS)에만 집중."
         }
       ],
       "checkpoint": {
-        "description": "원고 + 씬 연출 검토",
+        "description": "원고 + 씬 연출 + 자료 검토",
         "artifacts": [
-          "scene_specs.json"
+          "scene_specs.json",
+          "enrichment_queue.json"
         ]
       }
     },

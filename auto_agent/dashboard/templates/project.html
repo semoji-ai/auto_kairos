@@ -26,6 +26,7 @@ window.registerSse = window.registerSse || function(src) {
   <a href="#" data-tab="research" class="content-tab {% if tab == 'research' %}active{% endif %}" onclick="switchTab('research', this); return false;">Research</a>
   <a href="#" data-tab="manuscript" class="content-tab {% if tab == 'manuscript' %}active{% endif %}" onclick="switchTab('manuscript', this); return false;">원고</a>
   <a href="#" data-tab="storyboard" class="content-tab {% if tab == 'storyboard' %}active{% endif %}" onclick="switchTab('storyboard', this); return false;">스토리보드</a>
+  <a href="#" data-tab="enrichment" class="content-tab {% if tab == 'enrichment' %}active{% endif %}" onclick="switchTab('enrichment', this); return false;">자료 검토</a>
   <a href="#" data-tab="studio" class="content-tab {% if tab == 'studio' %}active{% endif %}" onclick="switchTab('studio', this); return false;">Studio</a>
   <a href="#" data-tab="upload_info" class="content-tab {% if tab == 'upload_info' %}active{% endif %}" onclick="switchTab('upload_info', this); return false;">Upload</a>
   <a href="#" data-tab="thumbnail_canvas" class="content-tab {% if tab == 'thumbnail_canvas' %}active{% endif %}" onclick="switchTab('thumbnail_canvas', this); return false;">썸네일</a>
@@ -40,6 +41,8 @@ window.registerSse = window.registerSse || function(src) {
   {% include "partials/_manuscript.html" %}
 {% elif tab == 'storyboard' %}
   {% include "partials/_storyboard.html" %}
+{% elif tab == 'enrichment' %}
+  {% include "partials/_enrichment.html" %}
 {% elif tab == 'studio' %}
   {% include "partials/_studio.html" %}
 {% elif tab == 'upload_info' %}
