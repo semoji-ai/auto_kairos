@@ -478,6 +478,40 @@ Layer 1 (primary) 단일성을 깨면 manifest·렌더 단계에서 분기가 �
 
 자가검증: 출력 직전 각 씬에 위 표대로 **객체가 정확히 1개만** 들어있는지 확인.
 
+#### visual_kind_reason 필수 출력 (자기 비평 강제)
+
+각 씬에 `visual_kind_reason` 필드(한 줄)를 함께 출력. 이 한 줄을 적는 행위가 자체 검열 게이트가 된다.
+
+**약한 근거 (재고 필요)**:
+- ❌ "narration에 장소가 언급되어서" → mapScene false-positive 신호
+- ❌ "구체 인물이 등장해서" → search/generate 결정에 부족
+- ❌ "데이터 항목이 있어서" → chart vs items_list 구분 불충분
+
+**강한 근거 (좋은 예)**:
+- ✅ "1959 A-501 라디오는 박물관 소장 실물 사진이 존재 → search_image"
+- ✅ "1962 농어촌 라디오 운동은 대한뉴스 archive 영상 가능 → video"
+- ✅ "수출국 4개국의 지리적 분포가 비교의 본질 → map (markers 4개)"
+- ✅ "감정·결심 묘사로 archive 자료 부재 → generate_image"
+
+#### Borderline 예시 (3 case)
+
+```
+narration: "1958년 10월 1일, 부산 부산진구 연지동에 금성사가 설립됐습니다"
+❌ visual_kind=map (부산진구 위치는 식별자일 뿐, 설립 자체가 subject)
+✅ visual_kind=search_image — 금성사 초기 본사 또는 1958년 LG 로고 사진
+   visual_kind_reason: "한국 최초 전자공업 회사 설립 — 실물 archive 자료 존재"
+
+narration: "1962년 태국·홍콩·이라크·그리스로 수출이 이어졌습니다"
+✅ visual_kind=map (4개국 위치 시각 비교가 본질, markers ≥ 3)
+   visual_kind_reason: "수출국 분포 — 지리적 비교가 subject"
+
+narration: "라스베이거스 CES 무대에 오른 문혁수 사장이 꺼낸 한마디"
+❌ visual_kind=map (라스베이거스는 배경 — 발표가 subject)
+✅ visual_kind=video — CES 2026 LG이노텍 키노트 archive 영상
+   또는 search_image — 문혁수 사장 발표 사진
+   visual_kind_reason: "공식 archive 영상 가능, 2026년 사건 시의성 강함"
+```
+
 `visual_kind` 선택 기준:
 
 #### 🎥 video — 외부 archive 영상이 본질에 기여하는 씬
@@ -673,12 +707,24 @@ primary visual 위에 얹을 텍스트/데이터:
 
 □ chart layout(bar/pie/line)에 chartConfig가 없음 → chartConfig + vizType 반드시 추가
 
-[mapScene 오용]
+[mapScene 오용 — 가장 흔한 false-positive]
 
-□ mapScene이 있는데 narration에 장소가 서사의 핵심이 아닌 씬 → mapScene 제거
-  판단 기준: "이 씬에서 '어디서'가 빠지면 의미가 달라지는가?"
-  - "어디서"가 없어도 의미 전달 OK → mapScene 제거
-  - 단순 배경처럼 언급된 지명 ("도쿄에 사는 청년") → mapScene 불필요
+□ visual_kind=map 결정은 다음 **두 게이트를 모두 통과**할 때만 허용:
+  GATE 1. 시청자에게 보여주려는 핵심이 "어디"인가? (위치가 subject)
+  GATE 2. 위치를 제거하면 씬의 의미가 무너지는가?
+
+  ❌ "1958년 부산 금성사 설립" — 설립이 subject, 부산은 식별자/배경
+  ❌ "라스베이거스 CES 무대" — CES 발표가 subject, 도시는 부수
+  ❌ "1907년 함안군 출생" — 인물 출생이 subject, 지명은 식별자
+  ❌ "서울 구로공단 공장 착공" — 사업 착공이 subject, 위치는 식별자
+  ✅ "호르무즈 해협의 지정학" — 해협 자체가 subject
+  ✅ "수출국 4개국 (태국·홍콩·이라크·그리스)" — 위치 비교가 본질 (markers ≥ 3)
+  ✅ "한반도 38선 형성" — 지리적 분단이 subject
+  ✅ "임진왜란 침공 경로" — 경로 추적이 본질
+
+□ visual_kind=map + 다음 layout 조합은 **자동 의심**으로 차단:
+  headline_only / cinematic / metric_spotlight / metric_wall / before_after / flow / timeline
+  → 이런 layout은 풀스크린 지도와 부조화. 99% generate_image 또는 search_image가 정답
 
 [아이콘 일관성]
 

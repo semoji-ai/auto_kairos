@@ -42,6 +42,24 @@ FORBIDDEN_PRIMARIES_FOR_KIND = {
     "none": ("imageAsset", "videoAsset", "mapScene", "chartConfig"),
 }
 
+# Layout이 visual_kind를 강제하는 경우 (mismatch면 위반)
+LAYOUT_REQUIRES_KIND = {
+    "bar": "chart",
+    "pie": "chart",
+    "line": "chart",
+    "area": "chart",
+    "map_scene": "map",
+}
+
+# visual_kind=map은 다음 layout과 부조화 — 자동 의심 (false-positive 패턴)
+MAP_FORBIDDEN_LAYOUTS = {
+    "headline_only", "cinematic", "metric_spotlight", "metric_wall",
+    "before_after", "flow", "timeline",
+}
+
+# visual_kind=chart는 chart layout 외에서 부조화 (chartConfig 있어도 차트 layout 아니면 의미 없음)
+CHART_REQUIRED_LAYOUTS = {"bar", "pie", "line", "area"}
+
 
 def get_visual_kind(scene: dict[str, Any]) -> str:
     """씬의 primary visual 종류를 반환. 단일 진입점.
@@ -121,7 +139,31 @@ def validate_scene(scene: dict[str, Any]) -> list[str]:
                 f"visual_kind={kind} 인데 imageAsset.source={ia_source!r} 불일치 (예상 {expected!r})"
             )
 
+    # Layout × visual_kind 호환 검증
+    layout = scene.get("layout") or ""
+    required_kind = LAYOUT_REQUIRES_KIND.get(layout)
+    if required_kind and kind != required_kind:
+        issues.append(
+            f"layout={layout!r}는 visual_kind={required_kind!r}를 요구하지만 현재 {kind!r}"
+        )
+
+    # map 부조화 layout (false-positive 패턴 — 위치가 subject가 아닐 가능성)
+    if kind == "map" and layout in MAP_FORBIDDEN_LAYOUTS:
+        issues.append(
+            f"visual_kind=map + layout={layout!r}는 부조화 패턴 — 위치가 subject가 아닐 가능성 높음. "
+            f"narration을 검토하고 generate_image 또는 search_image로 재분류 권장"
+        )
+
     return issues
+
+
+def suggest_visual_kind_from_layout(scene: dict[str, Any]) -> str | None:
+    """layout 기반 visual_kind 제안 (오분류 자동 정정용 휴리스틱).
+
+    layout이 visual_kind를 강제하는 경우 그 종류 반환, 그 외 None.
+    """
+    layout = scene.get("layout") or ""
+    return LAYOUT_REQUIRES_KIND.get(layout)
 
 
 def validate_scene_specs(spec: dict[str, Any]) -> dict[str, Any]:
