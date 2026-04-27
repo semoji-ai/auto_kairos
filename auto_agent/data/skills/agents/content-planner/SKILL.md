@@ -32,7 +32,40 @@
 10. **톤 목표** → `tone_goal`
 11. **성공 기준** → `success_criteria`
 
-### ⭐ 신규 5대 DNA 레버 (v1부터 필수)
+### 🔑 Lever 0 (먼저!) — coherence_spine
+
+**다른 모든 레버 작성 전에 먼저 확정.** spine 없이 narrative_arc / hidden_truth를 쓰기 시작하면 각 레버가 서로 다른 질문에 답하게 됨.
+
+```json
+"coherence_spine": {
+  "spine_question": "이 영상이 답하는 단 하나의 질문 (한 문장)",
+  "spine_answer": "그 질문에 대한 답 (한 문장, audience_takeaway와 정렬)",
+  "layer_map": {
+    "act1_hook": "1막이 spine_question을 어떤 각도로 여는가",
+    "act2_body": "2막 본문이 어떤 증거/심화를 더하는가",
+    "act3_landing": "3막이 어떤 답으로 착지하는가"
+  },
+  "must_include_links": [
+    {"item": "필수요소1", "spine_link": "spine_question 답에 어떻게 기여하는가"}
+  ]
+}
+```
+
+**작성 절차** (반드시 이 순서):
+1. spine_question 후보 2~3개 도출 → 그중 **단답 가능하며 12분 분량을 견디는 것 1개** 선택
+2. spine_answer 한 문장으로 정리 (audience_takeaway와 일치 확인)
+3. layer_map 3막 모두가 spine_question을 향해 수렴하는지 확인 (한 막이 다른 질문을 열면 — REVISE)
+4. must_cover 항목마다 spine_link 1줄 첨부 — 비어 있거나 무관하면 **다른 영상으로 분리**
+5. 그 다음에야 narrative_arc / human_truth / hidden_truth 작성 시작
+
+**자가 검증** (전부 YES여야 진행):
+- [ ] spine_question을 한 문장 답으로 채울 수 있는가?
+- [ ] 모든 막의 layer_map이 spine_question에 수렴하는가?
+- [ ] must_cover 중 spine_link가 약한 항목이 없는가? 있다면 분리 권고에 기록했는가?
+
+### ⭐ Lever 1~5 — 5대 DNA 레버 (v1부터 필수)
+
+**작성 시 강제**: hidden_truth / human_truth / present_connection 각각에 `spine_link` 1줄 첨부. 비어 있으면 그 레버는 미완성.
 
 #### 12. narrative_arc — 3단 서사
 ```json
@@ -79,10 +112,11 @@
 ## 작업 흐름
 
 1. 인터뷰로 정보 수집 (모르는 항목은 Claude가 제안, 사용자 확인)
-2. `shared/brief-dna.md` 참조하여 5대 레버 **구체성 기준** 맞춤
-3. `generate_auto_brief()` 또는 `generate_planner_brief()` 호출
-4. `save_brief_versioned(brief, output_dir, version="v1", overwrite=True)` 저장
-5. `brief-reviewer` 자동 호출 → PASS 까지 래칫 루프
+2. **coherence_spine 먼저 확정** (Lever 0) — spine_question / spine_answer / layer_map / must_include_links
+3. `shared/brief-dna.md` 참조하여 5대 레버 **구체성 기준** 맞춤 (각 레버에 spine_link 첨부)
+4. `generate_auto_brief()` 또는 `generate_planner_brief()` 호출
+5. `save_brief_versioned(brief, output_dir, version="v1", overwrite=True)` 저장
+6. `brief-reviewer` 자동 호출 → PASS 까지 래칫 루프 (spine 정합성은 블로킹 게이트)
 
 ## 출력
 
@@ -111,4 +145,5 @@ auto-agent plan --topic X --project slug --mode skip
 - ⚠️ `hidden_truth`는 **실제 반전 내용**까지 서술. 클릭베이트 금지
 - ⚠️ `evidence_anchors`의 `needs_research`는 Stage 1 deepener가 해소하므로 괜찮지만, 전체의 50% 이하로 유지
 - ⚠️ 이미 `editorial_brief.v1.json`이 있으면 `--overwrite` 없이 덮어쓰지 않음
-- ⚠️ LOCKED_FIELDS (core_question/real_topic/hook_angle/excluded_angles/tone_goal/entity_slug/section_slug)는 v2/v3 심화에서도 변경 금지 — 기획 단계에서 확정적으로 작성
+- ⚠️ LOCKED_FIELDS (core_question/real_topic/hook_angle/excluded_angles/tone_goal/entity_slug/section_slug/coherence_spine.spine_question)는 v2/v3 심화에서도 변경 금지 — 기획 단계에서 확정적으로 작성
+- ⚠️ **이중 척추 금지**: 한 영상이 두 질문에 동시 답변하려 하면 즉시 분리. must_cover에 spine_link 약한 항목이 있으면 별도 영상 후보로 기록 후 제외

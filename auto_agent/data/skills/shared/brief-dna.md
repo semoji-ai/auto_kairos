@@ -185,24 +185,94 @@ description: editorial_brief.json의 품질 레버 5종 — content-planner / br
 
 ---
 
-## 5개 레버 상호 관계
+## Lever 6. coherence_spine — 맥락 일관성 (척추)
+
+**원칙**: 영상은 **단 하나의 질문**(`spine_question`)에 답한다. 모든 막·모든 필수요소·모든 다른 레버는 그 질문의 답을 향해 **유기적으로 수렴**해야 한다. 한 영상에서 서로 다른 두 질문에 동시에 답하려 하면, 시청자가 영상을 본 뒤 "이게 무슨 영상이었지?"에 단답을 못한다.
+
+> ⚠️ 이 레버는 **다른 모든 레버보다 먼저** 확정되어야 한다. spine 없이 narrative_arc/human_truth/hidden_truth를 작성하면 각각이 다른 질문을 향하기 시작한다 — 1956억 케이스의 실패 원인.
+
+```json
+"coherence_spine": {
+  "spine_question": "이 영상이 답하는 단 하나의 질문 (한 문장)",
+  "spine_answer": "그 질문에 대한 영상의 답 (한 문장, audience_takeaway와 정렬)",
+  "layer_map": {
+    "act1_hook": "1막이 spine_question을 어떤 각도로 여는가 (1줄)",
+    "act2_body": "2막 본문이 spine_question에 어떤 증거/심화를 더하는가 (1줄)",
+    "act3_landing": "3막 결론이 spine_question에 어떤 답으로 착지하는가 (1줄)"
+  },
+  "must_include_links": [
+    {"item": "필수요소1", "spine_link": "이 요소가 spine_question에 어떻게 기여하는가 (1줄)"},
+    {"item": "필수요소2", "spine_link": "..."}
+  ]
+}
+```
+
+### 다른 레버에 spine_link 강제
+
+`coherence_spine` 자체뿐 아니라 모든 핵심 레버에 **spine_link** 필드를 첨부:
+
+```json
+"hidden_truth": {
+  "content": "...",
+  "spine_link": "이 반전이 spine_question 답에 어떻게 기여하는가"
+},
+"human_truth": { ..., "spine_link": "..." },
+"present_connection": { "content": "...", "spine_link": "..." }
+```
+
+spine_link가 비어 있거나 spine_question과 무관하면 → 그 요소는 **다른 영상**으로 분리해야 함을 의미.
+
+### 검증 질문 (전부 YES여야 통과)
+
+- [ ] `spine_question`이 **한 문장**으로 명확히 답변 가능한가? (선언형 답변이 가능한가)
+- [ ] 1막/2막/3막 각각의 `layer_map`이 spine_question을 향해 수렴하는가? (한 막이 다른 질문을 여는가?)
+- [ ] 모든 `must_cover` 항목에 spine_link가 있는가?
+- [ ] 각 spine_link를 빼면 spine_answer가 약해지는가? (NO면 그 요소는 분리 대상)
+- [ ] `hidden_truth` / `human_truth` / `present_connection`이 모두 같은 spine_question을 보강하는가? (각자 다른 질문에 답하지 않는가?)
+- [ ] 시청자가 영상을 본 뒤 "이 영상은 ___에 대한 것"의 빈칸을 **한 문장**으로 채울 수 있는가?
+
+### 안티패턴 (즉시 REVISE)
+
+- ❌ **이중 척추**: 한 영상에서 spine_question이 2개 이상 (예: "왜 자본이 쏠리는가?" + "AI 시대에 어떻게 살아남는가?" 동시 답변)
+- ❌ **층 분리**: 1막은 A 질문, 2막은 B 질문, 3막은 C 답을 내림 → 시청자 혼란
+- ❌ **장식형 필수요소**: must_cover 항목이 "주제는 맞지만 spine_question 답에는 기여 안 함" — 다른 영상으로 분리
+- ❌ **spine 사후 작성**: 다른 레버 다 채운 다음에 spine_question을 끼워맞춤 → 강제 수정 흔적이 layer_map 모순으로 드러남
+- ❌ **추상 spine**: "AI의 본질을 탐구한다" — 단답 가능한 구체 질문 아님
+
+### 1956억 케이스 적용 예시
+
+**잘못된 브리프 (실제 발생):**
+- spine_question 후보 3개가 한 브리프에 공존: A "왜 1956억이라는 자본이 한 회사에 쏠렸는가?" / B "AI 혁신은 정체기인가?" / C "AI 시대에 어떻게 살아남는가?"
+- 1막은 A를 열고, 2막은 B로 가고, 3막은 C로 착지 → 한 영상이 세 영상
+
+**spine 게이트 통과 버전 (예):**
+- spine_question: "왜 지금 1956억이 한 AI 회사에 쏠렸는가, 그것이 우리에게 무엇을 말하는가?"
+- spine_answer: "혁신 정체기에 자본이 한 곳으로 모이는 구조적 패턴이며, 과거에도 반복된 신호다"
+- C(생존 가이드)는 spine_link가 약함 → **다른 영상**으로 분리
+
+---
+
+## 6개 레버 상호 관계
 
 ```
-narrative_arc (뼈대)
-    ↑
-    │ 본문을 짜는 서사 공식
-    │
-human_truth ──┬── hidden_truth  (본문의 깊이)
-    │          │
-    │          └── 이면의 진실이 인물의 입체성을 드러냄
-    │
-    └── 결론에서 present_connection으로 착지
-                ↑
-                │ (모든 주장은)
-                │
-            evidence_anchors (전체 기반)
+                coherence_spine (척추)
+                       ↑
+                       │ 모든 레버는 이 질문에 수렴
+       ┌───────────────┼───────────────┐
+       │               │               │
+narrative_arc      human_truth      hidden_truth
+   (뼈대)         (인물 입체)       (본문 반전)
+       │               │               │
+       └───────────────┼───────────────┘
+                       │
+              present_connection (결론 착지)
+                       ↑
+                       │ (모든 주장은)
+                       │
+                evidence_anchors (전체 기반)
 ```
 
+- **coherence_spine 없으면**: 다른 5레버가 각자 다른 질문에 답하기 시작 → 한 영상이 N영상으로 분열 (1956억 케이스)
 - **narrative_arc 없으면**: 서사 구조 없는 사실 나열 → 이탈 증가
 - **human_truth 없으면**: 성공 스토리 → 평면적 → 세모지 DNA 이탈
 - **hidden_truth 없으면**: 공식 기록 반복 → 클릭/완시청 저하
@@ -215,10 +285,10 @@ human_truth ──┬── hidden_truth  (본문의 깊이)
 
 | 에이전트 | 용도 |
 |---------|------|
-| `content-planner` | 5개 레버 **초안 작성** — 각 필드별 구체성 기준 따라 작성 |
+| `content-planner` | **spine 먼저 → 5레버 작성** (각 레버에 spine_link 첨부) |
 | `brief-interviewer` (manual) | 사용자 답변을 **소크라테스식 심화** → 구체성 기준 충족시킴 |
-| `brief-interviewer-auto` | 각 레버별 **후보 3~5개 생성 → 자가 평가 → 최고점 선택** |
-| `brief-reviewer` | 5개 레버 각각에 대해 **채점 + REVISE 지시** (래칫 루프) |
-| `brief-deepener` | Stage 1/2_draft 결과로 **레버 심화** (v1→v2→v3) |
-| `script-director` (하류) | 원고·씬에 5개 레버 **반영 여부 자가 체크리스트** |
-| `script-reviewer` (하류) | 최종 원고의 **레버 준수도** 채점 |
+| `brief-interviewer-auto` | spine 후보 우선 선정 → 각 레버별 **후보 3~5개 생성 → 자가 평가 → 최고점 선택** |
+| `brief-reviewer` | 6개 레버 각각에 대해 **채점 + REVISE 지시** (spine 정합성은 블로킹 게이트) |
+| `brief-deepener` | Stage 1/2_draft 결과로 **레버 심화 + spine 재검증** (v1→v2→v3) |
+| `script-director` (하류) | 원고·씬에 6개 레버 **반영 여부 자가 체크리스트** |
+| `script-reviewer` (하류) | 최종 원고의 **레버 준수도 + spine 일관성** 채점 |

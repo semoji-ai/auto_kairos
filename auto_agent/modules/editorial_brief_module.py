@@ -34,6 +34,15 @@ BRIEF_SCHEMA = {
     "audience_takeaway": "시청자가 보고 나서 가져가야 하는 핵심 인식 (한 문장)",
     "tone_goal": "정보형 / 해설형 / 충격형 / 풍자형 등",
     "success_criteria": ["이 영상이 잘 됐다고 판단하는 기준 1", "기준 2"],
+    "coherence_spine": {
+        "spine_question": "이 영상이 답하는 단 하나의 질문 (한 문장, 단답 가능)",
+        "spine_answer": "그 질문에 대한 답 (한 문장, audience_takeaway와 정렬)",
+        "layer_map": {
+            "act1_hook": "1막이 spine_question을 어떤 각도로 여는가",
+            "act2_body": "2막 본문이 어떤 증거/심화를 더하는가",
+            "act3_landing": "3막이 어떤 답으로 착지하는가",
+        },
+    },
 }
 
 
@@ -67,6 +76,10 @@ def generate_brief_from_topic(topic: str, writing_style: str = "") -> dict:
 - hook_angle: 시청자를 끌어들이는 도입 장치 (사례/기사/충격적 사실)
 - excluded_angles: 이 콘텐츠가 빠지면 안 되는 방향 — 사례가 본론을 잡아먹는 현상 방지
 - core_question: 시청자가 이 영상을 다 보고 나서 "아, 이 질문의 답을 얻었다"고 느껴야 할 질문
+- ⭐ coherence_spine: 이 영상의 **척추**. 다른 모든 필드 작성 전에 먼저 확정.
+  · spine_question: 단답 가능한 한 문장 질문. 두 질문을 and/또는으로 묶지 말 것 (이중 척추 금지)
+  · spine_answer: 그 질문에 대한 한 문장 답 (audience_takeaway와 정렬)
+  · layer_map: 1막/2막/3막이 모두 spine_question에 수렴하도록 1줄씩 작성. 어느 한 막이 다른 질문을 열면 안 됨
 
 반드시 아래 JSON 형식으로만 응답하세요 (설명 없이 JSON만):
 {{
@@ -79,7 +92,16 @@ def generate_brief_from_topic(topic: str, writing_style: str = "") -> dict:
   "excluded_angles": ["...", "..."],
   "audience_takeaway": "...",
   "tone_goal": "...",
-  "success_criteria": ["...", "..."]
+  "success_criteria": ["...", "..."],
+  "coherence_spine": {{
+    "spine_question": "...",
+    "spine_answer": "...",
+    "layer_map": {{
+      "act1_hook": "...",
+      "act2_body": "...",
+      "act3_landing": "..."
+    }}
+  }}
 }}"""
 
     try:
@@ -125,6 +147,15 @@ def _default_brief(topic: str) -> dict:
             "시청자가 핵심 개념을 직관적으로 이해한다",
             "사례보다 본질 설명이 중심에 남는다",
         ],
+        "coherence_spine": {
+            "spine_question": f"{topic}에 대해 시청자가 답을 얻어야 할 단 하나의 질문은?",
+            "spine_answer": f"{topic}의 핵심 구조와 의미",
+            "layer_map": {
+                "act1_hook": "도입에서 spine_question을 시청자에게 명확히 던진다",
+                "act2_body": "본문에서 검증 가능한 사실로 답을 구성한다",
+                "act3_landing": "결론에서 spine_question에 한 문장 답으로 착지한다",
+            },
+        },
     }
 
 

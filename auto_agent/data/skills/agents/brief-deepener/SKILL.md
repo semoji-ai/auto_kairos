@@ -14,8 +14,16 @@
 
 ### 1. 기획 방향 유지, 구체성만 증가
 
-- `core_question`, `real_topic`, `excluded_angles`, `hook_angle`, `tone_goal` → **변경 금지**
-- `narrative_arc`, `human_truth`, `hidden_truth`, `present_connection`, `must_cover`, `evidence_anchors` → **구체화**
+- `core_question`, `real_topic`, `excluded_angles`, `hook_angle`, `tone_goal`, `coherence_spine.spine_question` → **변경 금지**
+- `narrative_arc`, `human_truth`, `hidden_truth`, `present_connection`, `must_cover`, `evidence_anchors`, `coherence_spine.layer_map`, `coherence_spine.must_include_links` → **구체화**
+
+### 1.5. spine 재검증 (필수 단계)
+
+리서치 결과로 새 사실이 들어오면서 spine_question이 흔들렸는지 확인:
+- 새 사실이 spine_question에 부합 → 해당 레버 심화에 반영
+- 새 사실이 더 강한 spine_question 후보를 시사 → **spine_question은 잠금 유지**, 새 후보는 `_spine_drift_candidates` 메타에 기록 (다음 영상 후보로)
+- must_cover에 새 항목 추가 시 반드시 `must_include_links`에 spine_link 1줄 첨부
+- spine_link가 약해진 항목(리서치로 무관함이 드러난 것)은 must_cover에서 제거 + `removed_items` 로그
 
 ### 2. 증거 기반 심화
 
@@ -175,21 +183,24 @@ Read draft.md / targeted_claims.json                       (v3)
 ### Step 5. 심화 검증 (자가 체크리스트)
 
 Write 직전 체크:
-- [ ] 잠금 필드 5개가 v{N-1}과 동일한가?
+- [ ] 잠금 필드 6개(core_question/real_topic/hook_angle/excluded_angles/tone_goal/spine_question)가 v{N-1}과 동일한가?
 - [ ] 변경된 각 필드의 **구체성이 증가**했는가? (감소 금지)
 - [ ] evidence_anchors 중 `needs_research`가 감소했는가?
 - [ ] narrative_arc 3단 구조가 유지되는가?
 - [ ] excluded_angles 방향으로 필드가 흘러가지 않는가?
+- [ ] **spine 정합 유지**: hidden_truth / human_truth / present_connection / 추가된 must_cover 항목 모두 spine_question에 수렴하는가? (리서치로 새 매력적 사실이 발견되어도 spine과 무관하면 _spine_drift_candidates로 격리)
+- [ ] layer_map 3막이 여전히 spine_question에 수렴하는가?
 
 ---
 
 ## 금지 사항
 
-- ❌ 잠금 필드 5개(core_question/real_topic/hook_angle/excluded_angles/tone_goal) 수정
+- ❌ 잠금 필드 6개(core_question/real_topic/hook_angle/excluded_angles/tone_goal/spine_question) 수정
 - ❌ narrative_arc 3단 구조 재설계
 - ❌ 리서치 근거 없이 새 주장 추가 — 모든 추가는 chapter_facts 또는 targeted_claims에서 유래
 - ❌ `needs_research` 앵커를 증거 없이 `available`로 승격
 - ❌ excluded_angles 방향으로 필드가 흘러가게 놔두기
+- ❌ 리서치로 발견된 새 사실이 매력적이라는 이유로 spine_question을 사후 변경 — 흔들리면 별도 영상 후보로 분리
 
 ---
 
