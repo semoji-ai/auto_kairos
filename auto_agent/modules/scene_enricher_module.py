@@ -280,7 +280,12 @@ def enrich_project(project_output_dir: Path, *, dry_run: bool = False,
 
 def apply_user_selection(project_output_dir: Path, scene_index: int,
                          selected_candidate: dict[str, Any]) -> None:
-    """대시보드에서 사용자가 선택한 후보를 scene_specs에 주입."""
+    """대시보드에서 사용자가 선택한 후보를 scene_specs에 주입.
+
+    visual_kind 기반 라우팅 (v5). asset_strategy는 deprecated.
+    """
+    from auto_agent.modules.scene_helpers import get_visual_kind
+
     project_output_dir = Path(project_output_dir)
     spec_path = project_output_dir / "scene_specs.json"
     spec = json.loads(spec_path.read_text(encoding="utf-8"))
@@ -288,9 +293,9 @@ def apply_user_selection(project_output_dir: Path, scene_index: int,
     if not (0 <= scene_index < len(scenes)):
         raise IndexError(f"scene_index 범위 초과: {scene_index}")
     scene = scenes[scene_index]
-    strategy = scene.get("asset_strategy")
+    kind = get_visual_kind(scene)
 
-    if strategy == "video":
+    if kind == "video":
         va = scene.get("videoAsset") or {}
         va["selected_video_id"] = selected_candidate.get("video_id")
         va["selected_url"] = selected_candidate.get("url")
@@ -300,7 +305,7 @@ def apply_user_selection(project_output_dir: Path, scene_index: int,
         va["selection_status"] = "user_picked"
         va["selection_score"] = selected_candidate.get("score")
         scene["videoAsset"] = va
-    elif strategy == "search_image":
+    elif kind == "search_image":
         ia = scene.get("imageAsset") or {}
         ia["source"] = "search"
         ia["url"] = selected_candidate.get("image_url")
@@ -310,7 +315,7 @@ def apply_user_selection(project_output_dir: Path, scene_index: int,
         ia["selection_status"] = "user_picked"
         scene["imageAsset"] = ia
     else:
-        raise ValueError(f"asset_strategy={strategy} 는 enrichment 대상 아님")
+        raise ValueError(f"visual_kind={kind} 는 enrichment 대상 아님 (search_image/video만 처리)")
 
     spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2), encoding="utf-8")
 

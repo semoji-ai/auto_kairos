@@ -1762,6 +1762,10 @@ function updateSceneLayout(slug, sceneNum, layout) {
       const panel = div.firstChild;
       narr.insertAdjacentElement("afterend", panel);
 
+      // 이 씬에 enrichment panel이 표시되는 동안에는 image-row 숨김 (중복 방지)
+      const imgRow = card.querySelector(`#sb-img-grid-${item.scene_index + 1}`)?.closest(".sb-image-row");
+      if (imgRow) imgRow.style.display = "none";
+
       panel.querySelectorAll(".sb-cand").forEach((tile, idx) => {
         tile.addEventListener("click", async () => {
           const cand = item.candidates[idx];
@@ -1810,10 +1814,15 @@ function updateSceneLayout(slug, sceneNum, layout) {
                 if (window._manifestCache) window._manifestCache = null;
               } catch (_) {}
             }
-            setTimeout(() => panel.remove(), 400);
+            // 패널 제거 + image-row 다시 표시 (선택된 이미지가 그리드에 들어감)
+            setTimeout(() => {
+              panel.remove();
+              if (imgRow) imgRow.style.display = "";
+            }, 400);
           } catch (e) {
             alert("선택 적용 실패: " + e.message);
             tile.classList.remove("picked");
+            if (imgRow) imgRow.style.display = "";
           }
         });
       });

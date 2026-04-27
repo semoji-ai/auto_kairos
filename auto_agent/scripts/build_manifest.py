@@ -349,14 +349,36 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             if img_src.exists():
                 image_path = link_asset(img_src, "images", selected_file)
         if not image_path and _scene_kind in ("search_image", "generate_image") and _ia_source != "none":
-            for subdir in ("", "generated/"):
+            for subdir in ("", "generated/", "search/"):
                 if image_path:
                     break
                 for ext in (".jpg", ".jpeg", ".png", ".webp"):
-                    img_src = out_dir / "images" / f"{subdir}{scene_key}{ext}"
-                    if img_src.exists():
-                        image_path = link_asset(img_src, "images", f"{subdir}{scene_key}{ext}")
-                        break
+                    # 루트 / generated/ 는 scene_NNN.{ext}, search/ 는 scene_NNN_search_NN.{ext}
+                    if subdir == "search/":
+                        # 가장 최신 search 파일 (번호 큰 것) 사용
+                        candidates = sorted(
+                            (out_dir / "images" / "search").glob(f"{scene_key}_search_*{ext}"),
+                            reverse=True,
+                        )
+                        if candidates:
+                            img_src = candidates[0]
+                            image_path = link_asset(img_src, "images", f"search/{img_src.name}")
+                            break
+                    else:
+                        img_src = out_dir / "images" / f"{subdir}{scene_key}{ext}"
+                        if img_src.exists():
+                            image_path = link_asset(img_src, "images", f"{subdir}{scene_key}{ext}")
+                            break
+
+        # 마지막 fallback — scene_specs.imagePath가 있으면 그대로 사용 (select-image 엔드포인트가 채움)
+        if not image_path and scene.get("imagePath"):
+            ip = scene["imagePath"]
+            # /output/{dir}/images/... 형태 → remotion staticFile 경로로 정규화
+            if "/images/" in ip:
+                rel = ip.split("/images/", 1)[1]
+                src = out_dir / "images" / rel
+                if src.exists():
+                    image_path = link_asset(src, "images", rel)
 
         # Subtitles — SRT 우선, fallback subtitles.json
         sub_entries = sub_lookup.get(num, [])
