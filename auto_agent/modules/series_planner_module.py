@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -101,17 +103,15 @@ def generate_series_plan_from_topic(
     writing_style: str = "semoji",
     total_episodes: int = 8,
 ) -> dict[str, Any]:
-    """Claude API로 topic → series_plan 초안 생성.
+    """Claude CLI로 topic → series_plan 초안 생성.
 
-    API 키 없거나 실패하면 최소 뼈대 dict 반환.
+    CLI 미설치/실패 시 최소 뼈대 dict 반환.
+    프로젝트 규칙: Anthropic API 직접 호출은 사용자 요청 시만, 기본은 Claude CLI.
     """
+    claude_bin = os.environ.get("CLAUDE_CLI_BIN", "claude")
     try:
-        import anthropic
-    except ImportError:
-        return _default_series_plan(topic, channel, writing_style, total_episodes)
-
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not api_key:
+        subprocess.run([claude_bin, "--version"], capture_output=True, timeout=5, check=True)
+    except Exception:
         return _default_series_plan(topic, channel, writing_style, total_episodes)
 
     prompt = f"""다음 유튜브 채널의 장편 브랜드백과 시리즈를 기획하세요.
@@ -154,20 +154,22 @@ def generate_series_plan_from_topic(
 }}"""
 
     try:
-        client = anthropic.Anthropic(api_key=api_key)
-        resp = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}],
+        result = subprocess.run(
+            [claude_bin, "-p", "--output-format", "text"],
+            input=prompt, capture_output=True, text=True,
+            timeout=600, encoding="utf-8",
         )
-        raw = resp.content[0].text.strip()
-        if raw.startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
-        return json.loads(raw)
+        if result.returncode != 0:
+            print(f"[series_planner] Claude CLI 실패: {result.stderr[:200]}", flush=True)
+            return _default_series_plan(topic, channel, writing_style, total_episodes)
+        raw = result.stdout.strip()
+        m = re.search(r"\{[\s\S]*\}", raw)
+        if not m:
+            print("[series_planner] CLI 응답에서 JSON 추출 실패 — 기본 플랜 반환", flush=True)
+            return _default_series_plan(topic, channel, writing_style, total_episodes)
+        return json.loads(m.group(0))
     except Exception as e:
-        print(f"[series_planner] Claude API 오류: {e} — 기본 플랜 반환", flush=True)
+        print(f"[series_planner] CLI 호출 실패: {e} — 기본 플랜 반환", flush=True)
         return _default_series_plan(topic, channel, writing_style, total_episodes)
 
 

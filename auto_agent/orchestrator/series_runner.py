@@ -31,10 +31,47 @@ def run_single_episode(
     stop_after_step: str = "step_2b",
     **kwargs,
 ) -> dict[str, Any]:
-    """단일 에피소드 Runner 실행 (테스트 모킹 진입점)."""
+    """단일 에피소드 Runner 실행 (테스트 모킹 진입점).
+
+    PipelineRunner는 DB에 등록된 project_slug 기준으로 동작하므로,
+    여기서 등록 + 시리즈가 미리 써둔 brief 파일을 실제 project output_dir로 복사한다.
+    """
+    import shutil
+    from pathlib import Path
+    from auto_agent.db.project_manager import ProjectManager
     from auto_agent.orchestrator.runner import PipelineRunner
-    runner = PipelineRunner()
-    return runner.run(project, stop_after_step=stop_after_step)
+
+    slug = project["slug"]
+    writing_style = project.get("writing_style") or "semoji"
+    art_style = project.get("art_style") or writing_style
+    channel = project.get("channel") or "세모지"
+    topic = project.get("topic") or slug
+
+    pm = ProjectManager()
+    existing = pm.get_project(slug=slug)
+    if existing:
+        pid = existing["id"]
+    else:
+        pid = pm.create_project(
+            name=topic[:50],
+            slug=slug,
+            topic=topic,
+            config={"art_style": art_style, "writing_style": writing_style},
+            channel=channel,
+        )
+
+    actual = pm.get_project(project_id=pid)
+    actual_dir = Path(actual["output_dir"])
+    actual_dir.mkdir(parents=True, exist_ok=True)
+
+    src_dir = Path(project["output_dir"])
+    if src_dir.exists() and src_dir.resolve() != actual_dir.resolve():
+        for f in src_dir.iterdir():
+            if f.is_file():
+                shutil.copy2(f, actual_dir / f.name)
+
+    runner = PipelineRunner(project_slug=slug)
+    return runner.run(stop_after_step=stop_after_step)
 
 
 def series_run(
