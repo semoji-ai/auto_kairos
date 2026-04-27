@@ -957,31 +957,53 @@ function sbLoadImageGrid(sn) {
       }
     });
 
-    // 검색 후보 (미다운로드)
+    // 검색 후보 (미다운로드) — enrichment + research 통합
     var seenUrls = new Set();
-    candidates.forEach(function(c) {
-      var thumb = c.thumbnail_1920_url || c.thumbnail_url || c.url || '';
+    candidates.forEach(function(c, cIdx) {
+      var thumb = c.thumbnail_1920_url || c.thumbnail_url || c.url || c.image_url || '';
       if (!thumb || seenUrls.has(thumb)) return;
       seenUrls.add(thumb);
+      var fromEnrich = c.from_enrichment ? ' enrich-pending' : '';
+      var badge = c.from_enrichment ? '<span class="sb-grid-badge" title="검토 대기">🆕</span>' : '';
       if (isMulti) {
         var idx = sel.indexOf(thumb);
         var isSel = idx !== -1;
-        html += '<div class="sb-grid-thumb candidate' + (isSel ? ' multi-sel' : '') + '" '
+        html += '<div class="sb-grid-thumb candidate' + fromEnrich + (isSel ? ' multi-sel' : '') + '" '
           + 'onclick="sbToggleMultiSel(' + sn + ',\'' + thumb.replace(/'/g, "\\'") + '\')" '
           + 'title="🌐 ' + (c.title || '').substring(0, 30) + '">'
           + '<img src="' + thumb + '" loading="lazy">'
+          + badge
           + (isSel ? '<span class="sb-multi-num">' + (idx + 1) + '</span>' : '')
           + '</div>';
       } else {
-        html += '<div class="sb-grid-thumb candidate" '
-          + 'onclick="sbSelectCandidate(' + sn + ',decodeURIComponent(\'' + encodeURIComponent(thumb) + '\'))" '
+        // lightbox 통일 — 데이터 attribute로 후보 정보 보관
+        html += '<div class="sb-grid-thumb candidate' + fromEnrich + '" '
+          + 'data-sn="' + sn + '" '
+          + 'data-cand-idx="' + cIdx + '" '
           + 'title="🌐 ' + (c.title || '').substring(0, 30) + '">'
           + '<img src="' + thumb + '" loading="lazy">'
+          + badge
           + '</div>';
       }
     });
 
     grid.innerHTML = html || '';
+
+    // 후보 카드 클릭 → lightbox (enrichment + research 공통 동작)
+    if (!isMulti) {
+      grid.querySelectorAll('.sb-grid-thumb.candidate').forEach(function(thumb) {
+        thumb.addEventListener('click', function() {
+          var ci = parseInt(thumb.dataset.candIdx);
+          var c = candidates[ci];
+          if (!c || typeof window.__sbOpenGridLightbox !== 'function') return;
+          window.__sbOpenGridLightbox(sn, c, candidates);
+        });
+      });
+    }
+
+    // 외부에서 candidates 접근 가능하게 보관 (lightbox 네비용)
+    if (!window._sbGridCands) window._sbGridCands = {};
+    window._sbGridCands[sn] = candidates;
   }).catch(function() {});
 }
 
@@ -1233,6 +1255,9 @@ document.querySelectorAll('.sb-video-panel').forEach(function(p) {
 .sb-asset-actions button { font-size: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #D4D4D8; border-radius: 4px; padding: 3px 10px; cursor: pointer; }
 .sb-asset-actions button:hover { background: rgba(255,255,255,0.12); }
 .sb-asset-type-switch { display: flex; margin-top: 6px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.25); }
+.sb-grid-thumb.candidate.enrich-pending { box-shadow: 0 0 0 2px rgba(99,102,241,0.5); }
+.sb-grid-badge { position: absolute; top: 2px; right: 2px; font-size: 10px;
+                 background: rgba(0,0,0,0.7); padding: 1px 4px; border-radius: 3px; }
 .sb-kind-badge { padding: 6px 12px; text-align: center; font-size: 11px; font-weight: 600;
                  border-radius: 6px; margin-top: 4px; }
 .sb-kind-map { background: rgba(34,197,94,0.18); color: #4ADE80; }
@@ -1651,8 +1676,81 @@ function updateSceneLayout(slug, sceneNum, layout) {
 })();
 </script>
 
+<!-- ── 자료 검토 lightbox 모달 (전역, 1개) ── -->
+<div id="sb-lbox" class="sb-lbox" style="display:none">
+  <div class="sb-lbox-backdrop" onclick="window.__sbCloseLbox()"></div>
+  <div class="sb-lbox-modal">
+    <button class="sb-lbox-close" onclick="window.__sbCloseLbox()">✕</button>
+    <div class="sb-lbox-main">
+      <button class="sb-lbox-nav prev" onclick="window.__sbLboxPrev()">‹</button>
+      <div class="sb-lbox-preview">
+        <img id="sb-lbox-img" alt="" style="display:none">
+        <div id="sb-lbox-fallback" style="display:none">⊘ 미리보기 불가</div>
+      </div>
+      <button class="sb-lbox-nav next" onclick="window.__sbLboxNext()">›</button>
+    </div>
+    <div class="sb-lbox-meta">
+      <div class="sb-lbox-title" id="sb-lbox-title"></div>
+      <div class="sb-lbox-detail" id="sb-lbox-detail"></div>
+      <div class="sb-lbox-actions">
+        <a id="sb-lbox-source" target="_blank" rel="noopener" class="sb-lbox-source">원본 보기 ↗</a>
+        <span style="flex:1"></span>
+        <button class="sb-lbox-cancel" onclick="window.__sbCloseLbox()">취소</button>
+        <button class="sb-lbox-confirm" id="sb-lbox-confirm">이 자료 선택</button>
+      </div>
+    </div>
+    <div class="sb-lbox-thumbs" id="sb-lbox-thumbs"></div>
+  </div>
+</div>
+
 <!-- ── 자료 검토 inline 통합 (scene-enricher 큐) ── -->
 <style>
+.sb-lbox { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; }
+.sb-lbox-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.85); }
+.sb-lbox-modal { position: relative; max-width: 92vw; max-height: 92vh; width: 1100px;
+                 background: #18181B; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
+                 display: flex; flex-direction: column; overflow: hidden; }
+.sb-lbox-close { position: absolute; top: 8px; right: 12px; z-index: 2;
+                 background: rgba(0,0,0,0.5); color: #fff; border: 0; border-radius: 50%;
+                 width: 32px; height: 32px; cursor: pointer; font-size: 16px; }
+.sb-lbox-close:hover { background: rgba(255,255,255,0.2); }
+.sb-lbox-main { display: flex; align-items: stretch; flex: 1; min-height: 0; }
+.sb-lbox-nav { background: transparent; color: #fff; border: 0; font-size: 36px; cursor: pointer;
+               padding: 0 16px; opacity: 0.5; transition: opacity 0.15s; }
+.sb-lbox-nav:hover { opacity: 1; background: rgba(255,255,255,0.05); }
+.sb-lbox-preview { flex: 1; display: flex; align-items: center; justify-content: center;
+                   background: #0a0a0a; min-height: 400px; max-height: 65vh; padding: 12px; }
+.sb-lbox-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+#sb-lbox-fallback { color: rgba(255,255,255,0.3); font-size: 48px; }
+.sb-lbox-meta { padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.06);
+                background: rgba(255,255,255,0.02); }
+.sb-lbox-title { font-size: 14px; color: #E4E4E7; font-weight: 600; margin-bottom: 4px;
+                 line-height: 1.4; }
+.sb-lbox-detail { font-size: 12px; color: #9CA3AF; margin-bottom: 10px; }
+.sb-lbox-detail .lic-low { color: #34D399; }
+.sb-lbox-detail .lic-high { color: #F87171; }
+.sb-lbox-detail .lic-unknown { color: #FBBF24; }
+.sb-lbox-detail .score { color: #FBBF24; font-weight: 600; }
+.sb-lbox-actions { display: flex; gap: 10px; align-items: center; }
+.sb-lbox-source { font-size: 11px; color: #60A5FA; text-decoration: none; padding: 4px 10px;
+                  border-radius: 4px; background: rgba(96,165,250,0.1); }
+.sb-lbox-source:hover { background: rgba(96,165,250,0.2); }
+.sb-lbox-cancel, .sb-lbox-confirm { padding: 6px 16px; border-radius: 6px; cursor: pointer;
+                                    font-size: 12px; font-weight: 600; border: 0; }
+.sb-lbox-cancel { background: rgba(255,255,255,0.06); color: #D4D4D8; }
+.sb-lbox-cancel:hover { background: rgba(255,255,255,0.12); }
+.sb-lbox-confirm { background: rgba(52,211,153,0.25); color: #34D399; border: 1px solid rgba(52,211,153,0.4); }
+.sb-lbox-confirm:hover { background: rgba(52,211,153,0.4); }
+.sb-lbox-confirm:disabled { opacity: 0.4; cursor: wait; }
+.sb-lbox-thumbs { display: flex; gap: 6px; padding: 8px 12px; border-top: 1px solid rgba(255,255,255,0.06);
+                  background: rgba(0,0,0,0.3); overflow-x: auto; }
+.sb-lbox-thumb { flex-shrink: 0; width: 80px; height: 50px; border-radius: 4px;
+                 background: #0a0a0a; cursor: pointer; opacity: 0.55;
+                 background-size: cover; background-position: center;
+                 border: 2px solid transparent; transition: all 0.15s; }
+.sb-lbox-thumb:hover { opacity: 0.85; }
+.sb-lbox-thumb.active { opacity: 1; border-color: #6366F1; }
+
 .sb-enrich-panel { margin: 8px 0; padding: 8px 10px; border-radius: 8px;
                    background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.2); }
 .sb-enrich-head { display: flex; justify-content: space-between; align-items: center;
@@ -1767,74 +1865,190 @@ function updateSceneLayout(slug, sceneNum, layout) {
       if (imgRow) imgRow.style.display = "none";
 
       panel.querySelectorAll(".sb-cand").forEach((tile, idx) => {
-        tile.addEventListener("click", async () => {
-          const cand = item.candidates[idx];
-          panel.querySelectorAll(".sb-cand").forEach(t => t.classList.remove("picked"));
-          tile.classList.add("picked");
-          const isVideo = item.asset_kind === "video";
-          try {
-            if (isVideo) {
-              // video는 별도 합성 흐름 — 메타데이터 기록만 (selection_status=user_picked)
-              const r = await fetch(`/enrichment/${encodeURIComponent(slug)}/select`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({scene_index: item.scene_index, candidate: cand}),
-              });
-              const j = await r.json();
-              if (!j.ok) throw new Error(j.detail || "선택 실패");
-            } else {
-              // search_image: 기존 select-image 엔드포인트 호출 → 다운로드 + 매니페스트 갱신
-              const url = cand.image_url;
-              const sn2 = item.scene_index + 1;
-              const r1 = await fetch(`/api/p/${encodeURIComponent(slug)}/editor/scenes/${sn2}/select-image`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({url: url}),
-              });
-              const j1 = await r1.json();
-              if (!(j1.ok || j1.selected)) throw new Error(j1.error || "이미지 적용 실패");
-              // 검토 큐에서도 제거
-              try {
-                await fetch(`/enrichment/${encodeURIComponent(slug)}/select`, {
-                  method: "POST",
-                  headers: {"Content-Type": "application/json"},
-                  body: JSON.stringify({scene_index: item.scene_index, candidate: cand}),
-                });
-              } catch (_) {}
-              // 스토리보드 이미지 갱신
-              try {
-                if (typeof sbLoadImageGrid === "function") sbLoadImageGrid(sn2);
-                const mount = document.querySelector(`.sb-player-mount[data-scene-num="${sn2}"]`);
-                if (mount) {
-                  mount.dataset.refresh = "1";
-                  if (window._sceneCache) delete window._sceneCache[sn2];
-                  if (typeof tryMount === "function") tryMount(mount);
-                }
-                fetch(`/api/p/${encodeURIComponent(slug)}/rebuild-manifest`, {method: "POST"}).catch(() => {});
-                if (window._manifestCache) window._manifestCache = null;
-              } catch (_) {}
-            }
-            // 패널 제거 + image-row 다시 표시 (선택된 이미지가 그리드에 들어감)
-            setTimeout(() => {
-              panel.remove();
-              if (imgRow) imgRow.style.display = "";
-            }, 400);
-          } catch (e) {
-            alert("선택 적용 실패: " + e.message);
-            tile.classList.remove("picked");
-            if (imgRow) imgRow.style.display = "";
-          }
+        tile.addEventListener("click", () => {
+          openLightbox(item, idx, panel, imgRow);
         });
       });
     });
   }
 
-  // DOM 준비 후 실행
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", loadAndInject);
-  } else {
-    loadAndInject();
+  // ── Lightbox 상태 + 컨트롤 ──
+  let lboxState = null;  // {item, idx, panel, imgRow, mode}
+
+  function openLightbox(item, idx, panel, imgRow) {
+    // mode: 'enrich' — enrichment-panel에서 호출
+    lboxState = {item, idx, panel, imgRow, mode: 'enrich'};
+    renderLightbox();
+    document.getElementById("sb-lbox").style.display = "flex";
   }
+
+  // sb-image-grid 후보 클릭 진입점 (enrichment + research 통합)
+  window.__sbOpenGridLightbox = function(sceneNum, cand, allCands) {
+    const idx = allCands.indexOf(cand);
+    // 가짜 item 객체 — enrichment 모드와 동일한 구조로 변환
+    const item = {
+      asset_kind: "search_image",
+      scene_index: sceneNum - 1,
+      query: "",
+      candidates: allCands,
+    };
+    lboxState = {item, idx: idx >= 0 ? idx : 0, panel: null, imgRow: null, mode: 'grid'};
+    renderLightbox();
+    document.getElementById("sb-lbox").style.display = "flex";
+  };
+
+  function renderLightbox() {
+    if (!lboxState) return;
+    const {item, idx} = lboxState;
+    const cand = item.candidates[idx];
+    const isVideo = item.asset_kind === "video";
+    const previewUrl = isVideo ? cand.thumbnail : (cand.image_url || cand.thumbnail_url);
+    const sourcePage = isVideo ? cand.url : (cand.source_page || cand.url || cand.image_url);
+
+    const imgEl = document.getElementById("sb-lbox-img");
+    const fbEl = document.getElementById("sb-lbox-fallback");
+    if (previewUrl) {
+      imgEl.src = previewUrl;
+      imgEl.style.display = "";
+      fbEl.style.display = "none";
+      imgEl.onerror = () => { imgEl.style.display = "none"; fbEl.style.display = ""; };
+    } else {
+      imgEl.style.display = "none";
+      fbEl.style.display = "";
+    }
+
+    document.getElementById("sb-lbox-title").textContent = cand.title || "(제목 없음)";
+
+    const license = isVideo ? (cand.license?.label || "?") : (cand.license || "?");
+    const risk = isVideo ? (cand.license?.risk || "unknown") : "unknown";
+    const licClass = risk === "low" ? "lic-low" : risk === "high" ? "lic-high" : "lic-unknown";
+    const detailParts = [];
+    if (isVideo) {
+      if (cand.channel) detailParts.push(`<span>${escape(cand.channel)}</span>`);
+      if (cand.duration_sec) detailParts.push(`<span>${Math.floor(cand.duration_sec/60)}분 ${Math.floor(cand.duration_sec%60)}초</span>`);
+      if (cand.view_count) detailParts.push(`<span>${cand.view_count.toLocaleString()} views</span>`);
+      if (cand.score != null) detailParts.push(`<span class="score">적합도 ${cand.score.toFixed(1)}</span>`);
+    } else {
+      if (cand.source) detailParts.push(`<span>${escape(cand.source)}</span>`);
+      if (cand.source_domain) detailParts.push(`<span>${escape(cand.source_domain)}</span>`);
+      if (cand.width && cand.height) detailParts.push(`<span>${cand.width}×${cand.height}</span>`);
+    }
+    detailParts.push(`<span class="${licClass}">라이선스: ${escape(license)}</span>`);
+    document.getElementById("sb-lbox-detail").innerHTML = detailParts.join(" · ");
+
+    const srcLink = document.getElementById("sb-lbox-source");
+    if (sourcePage) { srcLink.href = sourcePage; srcLink.style.display = ""; }
+    else { srcLink.style.display = "none"; }
+
+    // 썸네일 바
+    const thumbsEl = document.getElementById("sb-lbox-thumbs");
+    thumbsEl.innerHTML = item.candidates.map((c, i) => {
+      const thumbUrl = c.thumbnail || c.thumbnail_url || c.image_url || "";
+      return `<div class="sb-lbox-thumb${i === idx ? ' active' : ''}" data-idx="${i}"
+                style="background-image:url('${escape(thumbUrl)}')"></div>`;
+    }).join("");
+    thumbsEl.querySelectorAll(".sb-lbox-thumb").forEach(t => {
+      t.addEventListener("click", () => {
+        lboxState.idx = parseInt(t.dataset.idx);
+        renderLightbox();
+      });
+    });
+
+    // 확정 버튼
+    const confirmBtn = document.getElementById("sb-lbox-confirm");
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "이 자료 선택";
+    confirmBtn.onclick = () => commitSelection();
+  }
+
+  window.__sbCloseLbox = function() {
+    document.getElementById("sb-lbox").style.display = "none";
+    lboxState = null;
+  };
+  window.__sbLboxPrev = function() {
+    if (!lboxState) return;
+    const n = lboxState.item.candidates.length;
+    lboxState.idx = (lboxState.idx - 1 + n) % n;
+    renderLightbox();
+  };
+  window.__sbLboxNext = function() {
+    if (!lboxState) return;
+    const n = lboxState.item.candidates.length;
+    lboxState.idx = (lboxState.idx + 1) % n;
+    renderLightbox();
+  };
+
+  // 키보드 네비게이션
+  document.addEventListener("keydown", (e) => {
+    if (!lboxState) return;
+    if (e.key === "Escape") window.__sbCloseLbox();
+    else if (e.key === "ArrowLeft") window.__sbLboxPrev();
+    else if (e.key === "ArrowRight") window.__sbLboxNext();
+    else if (e.key === "Enter") commitSelection();
+  });
+
+  async function commitSelection() {
+    if (!lboxState) return;
+    const {item, idx, panel, imgRow, mode} = lboxState;
+    const cand = item.candidates[idx];
+    const isVideo = item.asset_kind === "video";
+    const btn = document.getElementById("sb-lbox-confirm");
+    btn.disabled = true; btn.textContent = "적용 중...";
+    try {
+      if (isVideo) {
+        const r = await fetch(`/enrichment/${encodeURIComponent(slug)}/select`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({scene_index: item.scene_index, candidate: cand}),
+        });
+        const j = await r.json();
+        if (!j.ok) throw new Error(j.detail || "선택 실패");
+      } else {
+        const url = cand.image_url;
+        const sn2 = item.scene_index + 1;
+        const r1 = await fetch(`/api/p/${encodeURIComponent(slug)}/editor/scenes/${sn2}/select-image`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({url: url}),
+        });
+        const j1 = await r1.json();
+        if (!(j1.ok || j1.selected)) throw new Error(j1.error || "이미지 적용 실패");
+        try {
+          await fetch(`/enrichment/${encodeURIComponent(slug)}/select`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({scene_index: item.scene_index, candidate: cand}),
+          });
+        } catch (_) {}
+        try {
+          if (typeof sbLoadImageGrid === "function") sbLoadImageGrid(sn2);
+          const mount = document.querySelector(`.sb-player-mount[data-scene-num="${sn2}"]`);
+          if (mount) {
+            mount.dataset.refresh = "1";
+            if (window._sceneCache) delete window._sceneCache[sn2];
+            if (typeof tryMount === "function") tryMount(mount);
+          }
+          fetch(`/api/p/${encodeURIComponent(slug)}/rebuild-manifest`, {method: "POST"}).catch(() => {});
+          if (window._manifestCache) window._manifestCache = null;
+        } catch (_) {}
+      }
+      // 모달 닫고 패널 제거 (enrichment 모드일 때만)
+      window.__sbCloseLbox();
+      if (mode === 'enrich' && panel) {
+        setTimeout(() => {
+          panel.remove();
+          if (imgRow) imgRow.style.display = "";
+        }, 200);
+      }
+    } catch (e) {
+      alert("선택 적용 실패: " + e.message);
+      btn.disabled = false; btn.textContent = "이 자료 선택";
+    }
+  }
+
+  // 자동 주입 비활성화 — sb-image-grid가 enrichment 후보를 흡수하므로 인라인 패널 불필요.
+  // window 함수로 노출 (혹시 수동 호출 필요 시).
+  window.__sbLoadEnrichmentInline = loadAndInject;
 })();
 </script>
 

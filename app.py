@@ -1152,14 +1152,54 @@ async def api_scenes_by_slug(slug: str):
     return JSONResponse(content={"scenes": enriched})
 
 
+def _load_enrichment_candidates_for_scene(out_dir: str, scene_num: int) -> list:
+    """enrichment_queue.json에서 특정 씬의 후보를 image-grid 호환 포맷으로 변환."""
+    queue_path = Path(out_dir) / "enrichment_queue.json"
+    if not queue_path.exists():
+        return []
+    try:
+        import json as _json
+        data = _json.loads(queue_path.read_text(encoding="utf-8"))
+        scene_index = scene_num - 1
+        for item in data.get("queue", []):
+            if item.get("scene_index") != scene_index:
+                continue
+            if item.get("asset_kind") != "search_image":
+                continue
+            out = []
+            for c in item.get("candidates", []):
+                out.append({
+                    "title": c.get("title", ""),
+                    "image_url": c.get("image_url", ""),
+                    "thumbnail_url": c.get("thumbnail_url") or c.get("image_url", ""),
+                    "source": c.get("source", ""),
+                    "source_domain": c.get("source_domain", ""),
+                    "source_page": c.get("source_page", ""),
+                    "width": c.get("width", 0),
+                    "height": c.get("height", 0),
+                    "license": c.get("license", ""),
+                    "from_enrichment": True,  # UI 마커 — 검토 대기 후보
+                })
+            return out
+    except Exception:
+        pass
+    return []
+
+
 @app.get("/api/p/{slug}/images/candidates/{scene_num}")
 async def image_candidates(slug: str, scene_num: int, q: str = "", source: str = "wikimedia"):
-    """씬의 이미지 검색 후보 반환. q=커스텀 쿼리, source=wikimedia|serper."""
+    """씬의 이미지 검색 후보 반환. q=커스텀 쿼리, source=wikimedia|serper.
+
+    응답에 enrichment_queue 항목도 병합 — 자료 검토 패널과 이미지 리스트 통합.
+    """
     pm = get_pm()
     project = pm.get_project(slug=slug)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
     out_dir = project.get("output_dir", "")
+
+    # enrichment 후보 (있으면 우선 표시)
+    enrichment_cands = _load_enrichment_candidates_for_scene(out_dir, scene_num)
 
     # 커스텀 쿼리가 없으면 저장된 후보 확인
     if not q:
@@ -1170,9 +1210,13 @@ async def image_candidates(slug: str, scene_num: int, q: str = "", source: str =
                 data = _json.loads(candidates_path.read_text(encoding="utf-8"))
                 for s in data.get("scenes", []):
                     if s.get("sceneNumber") == scene_num:
-                        return JSONResponse({"query": s.get("query", ""), "candidates": s.get("candidates", []), "cached": True, "source": "cached"})
+                        merged = enrichment_cands + s.get("candidates", [])
+                        return JSONResponse({"query": s.get("query", ""), "candidates": merged, "cached": True, "source": "cached"})
             except Exception:
                 pass
+        # cache miss but enrichment 있으면 그것만 반환
+        if enrichment_cands:
+            return JSONResponse({"query": "", "candidates": enrichment_cands, "cached": True, "source": "enrichment"})
 
     # 쿼리 결정: 커스텀 > scene_specs
     query = q
