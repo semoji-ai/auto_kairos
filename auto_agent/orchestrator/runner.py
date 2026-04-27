@@ -26,6 +26,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Dict, List, Optional
 from zoneinfo import ZoneInfo
@@ -195,6 +196,202 @@ def _step_label(step_name: str, event: str = "start") -> str:
         return done_label
     else:  # fail
         return f"{start_label} 실패"
+
+
+def _canonicalize_name_text(text: str) -> str:
+    value = re.sub(r"\([^)]*\)", "", str(text or "")).strip()
+    return re.sub(r"\s+", " ", value)
+
+
+def _strip_korean_particle(token: str) -> str:
+    text = str(token or "").strip()
+    if len(text) <= 1:
+        return text
+    if text[-1] in {"은", "는", "이", "가", "을", "를", "와", "과", "도", "의"}:
+        return text[:-1]
+    return text
+
+
+def _looks_like_person_name(candidate: str) -> bool:
+    parts = [part.strip() for part in str(candidate or "").split() if part.strip()]
+    if len(parts) != 2:
+        return False
+    banned_tokens = {
+        "대표", "창업자", "브랜드", "회사", "게임", "포켓몬", "초기", "비주얼", "동인지",
+        "잡지형", "일러스트", "일러스트레이터", "세계관", "감각", "합류", "방향", "시절",
+        "대표적", "의미", "구조", "확장", "현재", "질문", "설명형", "일반", "시청자",
+        "브랜드백과사전", "게임프리크", "이후",
+    }
+    verbish_suffixes = ("다", "며", "해", "고", "게", "된", "되는", "했다", "한다")
+    if any(part in banned_tokens for part in parts):
+        return False
+    if any(part.endswith(verbish_suffixes) for part in parts):
+        return False
+    return True
+
+
+def _extract_name_like_candidates(text: str) -> list[str]:
+    normalized = str(text or "")
+    if not normalized:
+        return []
+    candidates: list[str] = []
+    hangul_tokens = re.findall(r"[가-힣]+", normalized)
+    for first_raw, second_raw in zip(hangul_tokens, hangul_tokens[1:]):
+        first = _strip_korean_particle(first_raw)
+        second = _strip_korean_particle(second_raw)
+        candidate = _canonicalize_name_text(f"{first} {second}")
+        if _looks_like_person_name(candidate) and candidate not in candidates:
+            candidates.append(candidate)
+    for match in re.findall(r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})(?=[,.;:!?\s]|$)", normalized):
+        candidate = _canonicalize_name_text(match)
+        if candidate and candidate not in candidates:
+            candidates.append(candidate)
+    return candidates
+
+
+def _build_scene_character_pool(scene_specs: dict) -> list[dict]:
+    scenes = scene_specs.get("scenes") if isinstance(scene_specs, dict) else []
+    if not isinstance(scenes, list):
+        return []
+    pool: dict[str, set[str]] = {}
+    for scene in scenes:
+        if not isinstance(scene, dict):
+            continue
+        characters = scene.get("characters")
+        if not isinstance(characters, list):
+            continue
+        for item in characters:
+            if isinstance(item, str):
+                canonical = _canonicalize_name_text(item)
+                aliases = [canonical]
+            elif isinstance(item, dict):
+                canonical = _canonicalize_name_text(item.get("canonical_name") or item.get("name") or item.get("id") or "")
+                aliases = [
+                    _canonicalize_name_text(item.get("name") or ""),
+                    _canonicalize_name_text(item.get("canonical_name") or ""),
+                    *[_canonicalize_name_text(alias) for alias in (item.get("aliases") or []) if _canonicalize_name_text(alias)],
+                ]
+            else:
+                continue
+            if not canonical:
+                continue
+            alias_set = pool.setdefault(canonical, set())
+            alias_set.update(alias for alias in aliases if alias)
+    return [
+        {"canonical_name": canonical, "aliases": sorted(aliases)}
+        for canonical, aliases in pool.items()
+        if canonical
+    ]
+
+
+def _best_canonical_name_match(observed: str, pool: list[dict]) -> tuple[str, float] | None:
+    observed_parts = observed.split()
+    best: tuple[str, float] | None = None
+    for entity in pool:
+        canonical = str(entity.get("canonical_name") or "").strip()
+        aliases = [str(alias).strip() for alias in (entity.get("aliases") or []) if str(alias).strip()]
+        for alias in aliases:
+            alias_parts = alias.split()
+            if len(observed_parts) != len(alias_parts):
+                continue
+            if observed_parts and alias_parts and observed_parts[-1] != alias_parts[-1] and observed_parts[0] != alias_parts[0]:
+                continue
+            score = SequenceMatcher(a=observed, b=alias).ratio()
+            if best is None or score > best[1]:
+                best = (canonical or alias, score)
+    return best
+
+
+def _collect_name_mismatch_adjustments(scene_specs: dict) -> list[dict]:
+    scenes = scene_specs.get("scenes") if isinstance(scene_specs, dict) else []
+    if not isinstance(scenes, list):
+        return []
+    pool = _build_scene_character_pool(scene_specs)
+    adjustments: list[dict] = []
+    seen: set[tuple[int, str, str]] = set()
+    for scene in scenes:
+        if not isinstance(scene, dict):
+            continue
+        narration = str(scene.get("narration") or "")
+        if not narration:
+            continue
+        scene_number = int(scene.get("sceneNumber") or scene.get("scene_number") or 0)
+        for observed in _extract_name_like_candidates(narration):
+            if any(observed == alias for entity in pool for alias in entity["aliases"]):
+                continue
+            match = _best_canonical_name_match(observed, pool)
+            if match is None:
+                continue
+            canonical, score = match
+            if score < 0.8 or observed == canonical:
+                continue
+            key = (scene_number, observed, canonical)
+            if key in seen:
+                continue
+            seen.add(key)
+            adjustments.append(
+                {
+                    "id": f"name_mismatch_scene_{scene_number}_{len(adjustments) + 1}",
+                    "scene": scene_number,
+                    "type": "proper_noun",
+                    "status": "adjusted",
+                    "issue": "canonical_name_mismatch",
+                    "claim": f"고유명사 표기 `{observed}` → `{canonical}` 정정 필요",
+                    "original_text": observed,
+                    "corrected_text": canonical,
+                    "suggestion": canonical,
+                    "notes": f"scene characters의 canonical 표기와 비교했을 때 `{observed}`는 `{canonical}`와 일치하지 않습니다.",
+                }
+            )
+    return adjustments
+
+
+def _merge_name_mismatch_adjustments_into_report(report: dict, scene_specs: dict) -> dict:
+    merged = dict(report or {})
+    list_key = "claims" if "claims" in merged or "results" not in merged else "results"
+    items = merged.get(list_key)
+    if not isinstance(items, list):
+        items = []
+    adjustments = _collect_name_mismatch_adjustments(scene_specs)
+    existing_keys = {
+        (
+            int(item.get("scene") or 0),
+            str(item.get("original_text") or item.get("claim") or "").strip(),
+            str(item.get("corrected_text") or item.get("suggestion") or "").strip(),
+        )
+        for item in items
+        if isinstance(item, dict)
+    }
+    new_items = []
+    for item in adjustments:
+        key = (
+            int(item.get("scene") or 0),
+            str(item.get("original_text") or "").strip(),
+            str(item.get("corrected_text") or "").strip(),
+        )
+        if key in existing_keys:
+            continue
+        existing_keys.add(key)
+        new_items.append(item)
+    if not new_items:
+        merged[list_key] = items
+        return merged
+    items = items + new_items
+    merged[list_key] = items
+    merged["total_claims"] = max(int(merged.get("total_claims") or 0), len(items))
+    merged["adjusted"] = sum(1 for item in items if isinstance(item, dict) and (item.get("status") == "adjusted" or item.get("action") == "adjust"))
+    merged["failed"] = int(merged.get("failed") or 0) + len(new_items)
+    summary = merged.get("summary") if isinstance(merged.get("summary"), dict) else {}
+    recommendations = summary.get("recommendations") if isinstance(summary.get("recommendations"), list) else []
+    for item in new_items:
+        recommendation = f"scene_{item.get('scene')}: `{item.get('original_text')}` 표기를 `{item.get('corrected_text')}`로 통일"
+        if recommendation not in recommendations:
+            recommendations.append(recommendation)
+    summary["recommendations"] = recommendations
+    merged["summary"] = summary
+    merged["overall_verdict"] = "REVISE"
+    merged["verdict"] = "REVISE"
+    return merged
 
 
 class ProgressFileMonitor:
@@ -1454,6 +1651,10 @@ class PipelineRunner:
             if report_path.exists():
                 try:
                     report = json.loads(report_path.read_text(encoding="utf-8"))
+                    specs_path = self.project_dir / "scene_specs.json"
+                    specs = json.loads(specs_path.read_text(encoding="utf-8")) if specs_path.exists() else {"scenes": []}
+                    report = _merge_name_mismatch_adjustments_into_report(report, specs)
+                    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
                     claims = report.get("claims", report.get("results", []))
                     adjusted = [c for c in claims if c.get("status") == "adjusted" or c.get("action") == "adjust"]
 
@@ -1463,9 +1664,7 @@ class PipelineRunner:
                                 phase=self.state.current_phase, project=self.project_slug, level="warning")
 
                         # scene_specs.json의 narration에서 매칭+치환
-                        specs_path = self.project_dir / "scene_specs.json"
                         if specs_path.exists():
-                            specs = json.loads(specs_path.read_text(encoding="utf-8"))
                             applied = 0
                             for item in adjusted:
                                 original = item.get("original_text", "") or item.get("claim", "")

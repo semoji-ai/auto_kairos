@@ -18,11 +18,12 @@ research_report.json 및 웹 검색을 통해 교차 검증합니다.
 
 ## 입력
 
-- `scene_specs.json` — 검증 대상 (각 씬의 `narration` 필드에 원고 텍스트 포함)
-- `research_report.json` — 원본 리서치 데이터 (소스 정보 포함)
+- `scene_specs.json` — 검증 대상 (각 씬의 `narration` 필드에 원고 텍스트 포함, `characters` 필드의 canonical_name도 함께 확인)
+- `targeted_claims.json` 또는 동등한 claim artifact — 검증 기준이 되는 claim/출처/인물 표기
 
 > **참고**: v4 파이프라인에서는 final_manuscript.md가 없습니다.
 > scene_specs.json의 각 씬에서 `narration` 필드를 읽어 주장을 추출하세요.
+> 고유명사는 scene의 `characters[].canonical_name`, claim artifact의 canonical name / alias와 대조하세요.
 
 ## 출력
 
@@ -72,6 +73,7 @@ research_report.json 및 웹 검색을 통해 교차 검증합니다.
 | date | 특정 날짜/연도 사건 | "2024년 출시" |
 | comparison | 비교 수치 | "전년 대비 60% 성장" |
 | ranking | 순위 주장 | "세계 1위" |
+| proper_noun | 인물·브랜드·조직 고유명사 표기 | "스기모리 켄", "닌텐도", "게임 프리크" |
 
 ### 검증 방법
 
@@ -90,6 +92,12 @@ research_report.json 및 웹 검색을 통해 교차 검증합니다.
   ├─ verified: 2+ 소스에서 확인
   ├─ adjusted: 원본과 약간 차이, 수정 제안
   └─ unverified: 확인 불가
+
+4단계: 고유명사 표기 검토
+  ├─ scene_specs의 narration/characters에서 인물·브랜드 표기 추출
+  ├─ claim artifact의 canonical name / alias와 대조
+  ├─ near-miss 오표기(예: "스가모리 켄" vs "스기모리 켄")는 adjusted 또는 warning으로 기록
+  └─ 보고서 recommendations에 canonical 표기 통일안을 남김
 ```
 
 ### 심각도 기준
