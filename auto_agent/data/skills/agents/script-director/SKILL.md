@@ -707,6 +707,18 @@ primary visual 위에 얹을 텍스트/데이터:
 
 □ chart layout(bar/pie/line)에 chartConfig가 없음 → chartConfig + vizType 반드시 추가
 
+[values는 절대값으로 — 음수 카운트 부적합]
+
+□ values 배열에 음수 절대 사용 금지. 손실·감소·하락 의미는 다음으로 표현:
+  ❌ values: [-500] (counter 카운트업 비활성화 + 표시 깨짐)
+  ✅ values: [500] + items: ["손실"] + mood: "somber" + 색상으로 의미 전달
+  ✅ values: [500] + headline: "감소" + emphasis로 빨간색
+
+  근거:
+  - countUp 애니메이션은 절대값 ≥ countUpMin(100) 조건에서만 작동
+  - "−500" 같은 템플릿은 prefix를 "-"로 추출해 표시 깨짐
+  - 손실·감소 의미는 시각 신호(mood/색상/icon)가 더 직관적
+
 [mapScene 오용 — 가장 흔한 false-positive]
 
 □ visual_kind=map 결정은 다음 **두 게이트를 모두 통과**할 때만 허용:

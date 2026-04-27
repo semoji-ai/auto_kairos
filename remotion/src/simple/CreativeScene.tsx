@@ -649,11 +649,11 @@ const EmphasisAccentText: React.FC<{
   const renderAccent = (part: string, pi: number) => {
     const content = part.slice(2, -2);
     const num = extractNumber(content);
-    const isNum = !isNaN(num) && num > 0;
+    const isNum = !isNaN(num) && num !== 0;
     const currentCountIdx = accentIdx;
     accentIdx++;
     const counted = countedValues[currentCountIdx] || 0;
-    const shouldCountUp = isCountEmphasis && isNum && num >= countUpMin;
+    const shouldCountUp = isCountEmphasis && isNum && Math.abs(num) >= countUpMin;
     const displayText = shouldCountUp
       ? formatWithTemplate(content, counted)
       : content;
@@ -3314,24 +3314,24 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
     return delays;
   })();
 
-  // 항상 4개 counter hook 호출 (React rules)
+  // 항상 4개 counter hook 호출 (React rules) — 음수도 절대값 기준 카운트
   const counted0 = useCountUp(
-    isCountEmphasis && (numTargets[0] || 0) >= countUpMin ? accentLineDelays[0] : 9999,
+    isCountEmphasis && Math.abs(numTargets[0] || 0) >= countUpMin ? accentLineDelays[0] : 9999,
     COUNT_UP_DURATION,
     numTargets[0] || 1,
   );
   const counted1 = useCountUp(
-    isCountEmphasis && (numTargets[1] || 0) >= countUpMin ? accentLineDelays[1] : 9999,
+    isCountEmphasis && Math.abs(numTargets[1] || 0) >= countUpMin ? accentLineDelays[1] : 9999,
     COUNT_UP_DURATION,
     numTargets[1] || 1,
   );
   const counted2 = useCountUp(
-    isCountEmphasis && (numTargets[2] || 0) >= countUpMin ? accentLineDelays[2] : 9999,
+    isCountEmphasis && Math.abs(numTargets[2] || 0) >= countUpMin ? accentLineDelays[2] : 9999,
     COUNT_UP_DURATION,
     numTargets[2] || 1,
   );
   const counted3 = useCountUp(
-    isCountEmphasis && (numTargets[3] || 0) >= countUpMin ? accentLineDelays[3] : 9999,
+    isCountEmphasis && Math.abs(numTargets[3] || 0) >= countUpMin ? accentLineDelays[3] : 9999,
     COUNT_UP_DURATION,
     numTargets[3] || 1,
   );

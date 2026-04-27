@@ -649,11 +649,11 @@ const EmphasisAccentText: React.FC<{
   const renderAccent = (part: string, pi: number) => {
     const content = part.slice(2, -2);
     const num = extractNumber(content);
-    const isNum = !isNaN(num) && num > 0;
+    const isNum = !isNaN(num) && num !== 0;
     const currentCountIdx = accentIdx;
     accentIdx++;
     const counted = countedValues[currentCountIdx] || 0;
-    const shouldCountUp = isCountEmphasis && isNum && num >= countUpMin;
+    const shouldCountUp = isCountEmphasis && isNum && Math.abs(num) >= countUpMin;
     const displayText = shouldCountUp
       ? formatWithTemplate(content, counted)
       : content;
@@ -1268,150 +1268,6 @@ const ItemsGrid: React.FC<{
 };
 
 /* ================================================================
-   PersonCardRow — 인물 카드 가로 레이아웃
-   ================================================================ */
-
-const PersonCardRow: React.FC<{
-  items: string[];
-  delays: number[];
-  moodCfg: MoodConfig;
-  images?: string[];
-  itemStatuses?: Array<"positive" | "negative" | "neutral" | "warning">;
-}> = ({ items, delays, moodCfg, images, itemStatuses }) => {
-  const C = useC();
-  const frame = useCurrentFrame();
-  const count = items.length;
-  const cardW = count <= 3 ? 280 : count <= 4 ? 240 : 200;
-  const imgH = count <= 3 ? 280 : 240;
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: 20,
-        justifyContent: "center",
-        marginTop: 28,
-      }}
-    >
-      {items.map((item, i) => {
-        const d = delays[i] || 0;
-        const opacity = interpolate(frame, [d, d + 18], [0, 1], clamp);
-        const slideY = interpolate(frame, [d, d + 18], [30, 0], {
-          ...clamp,
-          easing: ease,
-        });
-        const img = images?.[i];
-        const imgSrc = img
-          ? resolveAsset(img)
-          : null;
-        const status = itemStatuses?.[i];
-        const isNegative = status === "negative";
-
-        return (
-          <div
-            key={i}
-            style={{
-              opacity,
-              transform: `translateY(${slideY}px)`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              width: cardW,
-              borderRadius: 16,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              border: `2px solid ${isNegative ? "#EF4444BB" : moodCfg.accent + "BB"}`,
-              overflow: "hidden",
-            }}
-          >
-            {/* Person image or silhouette */}
-            <div
-              style={{
-                width: "100%",
-                height: imgH,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: isNegative
-                  ? "rgba(239,68,68,0.08)"
-                  : "rgba(255,255,255,0.02)",
-                overflow: "hidden",
-              }}
-            >
-              {imgSrc ? (
-                <Img
-                  src={imgSrc}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    objectPosition: "center 20%",
-                    filter: isNegative ? "grayscale(0.6)" : "none",
-                  }}
-                />
-              ) : (
-                <svg
-                  width={imgH * 0.5}
-                  height={imgH * 0.5}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <circle
-                    cx="12"
-                    cy="8"
-                    r="4"
-                    fill={isNegative ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.15)"}
-                  />
-                  <path
-                    d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"
-                    fill={isNegative ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.1)"}
-                  />
-                </svg>
-              )}
-            </div>
-
-            {/* Name + status */}
-            <div
-              style={{
-                padding: "14px 10px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 6,
-                width: "100%",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: count <= 3 ? 24 : 22,
-                  fontWeight: 600,
-                  color: C.text,
-                  textAlign: "center",
-                  lineHeight: 1.3,
-                }}
-              >
-                <TextWithBreaks text={item} />
-              </span>
-              {isNegative && (
-                <span
-                  style={{
-                    fontSize: 26,
-                    fontWeight: 700,
-                    color: "#EF4444",
-                    letterSpacing: 2,
-                  }}
-                >
-                  ✕ 폭사
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-/* ================================================================
    ImagesGrid — 이미지 화면 분할 레이아웃
    ================================================================ */
 
@@ -1561,6 +1417,150 @@ const ImagesGrid: React.FC<{
                 {captionText}
               </div>
             )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ================================================================
+   PersonCardRow — 인물 카드 가로 레이아웃
+   ================================================================ */
+
+const PersonCardRow: React.FC<{
+  items: string[];
+  delays: number[];
+  moodCfg: MoodConfig;
+  images?: string[];
+  itemStatuses?: Array<"positive" | "negative" | "neutral" | "warning">;
+}> = ({ items, delays, moodCfg, images, itemStatuses }) => {
+  const C = useC();
+  const frame = useCurrentFrame();
+  const count = items.length;
+  const cardW = count <= 3 ? 280 : count <= 4 ? 240 : 200;
+  const imgH = count <= 3 ? 280 : 240;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 20,
+        justifyContent: "center",
+        marginTop: 28,
+      }}
+    >
+      {items.map((item, i) => {
+        const d = delays[i] || 0;
+        const opacity = interpolate(frame, [d, d + 18], [0, 1], clamp);
+        const slideY = interpolate(frame, [d, d + 18], [30, 0], {
+          ...clamp,
+          easing: ease,
+        });
+        const img = images?.[i];
+        const imgSrc = img
+          ? resolveAsset(img)
+          : null;
+        const status = itemStatuses?.[i];
+        const isNegative = status === "negative";
+
+        return (
+          <div
+            key={i}
+            style={{
+              opacity,
+              transform: `translateY(${slideY}px)`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              width: cardW,
+              borderRadius: 16,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              border: `2px solid ${isNegative ? "#EF4444BB" : moodCfg.accent + "BB"}`,
+              overflow: "hidden",
+            }}
+          >
+            {/* Person image or silhouette */}
+            <div
+              style={{
+                width: "100%",
+                height: imgH,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: isNegative
+                  ? "rgba(239,68,68,0.08)"
+                  : "rgba(255,255,255,0.02)",
+                overflow: "hidden",
+              }}
+            >
+              {imgSrc ? (
+                <Img
+                  src={imgSrc}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "center 20%",
+                    filter: isNegative ? "grayscale(0.6)" : "none",
+                  }}
+                />
+              ) : (
+                <svg
+                  width={imgH * 0.5}
+                  height={imgH * 0.5}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    cx="12"
+                    cy="8"
+                    r="4"
+                    fill={isNegative ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.15)"}
+                  />
+                  <path
+                    d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"
+                    fill={isNegative ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.1)"}
+                  />
+                </svg>
+              )}
+            </div>
+
+            {/* Name + status */}
+            <div
+              style={{
+                padding: "14px 10px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 6,
+                width: "100%",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: count <= 3 ? 24 : 22,
+                  fontWeight: 600,
+                  color: C.text,
+                  textAlign: "center",
+                  lineHeight: 1.3,
+                }}
+              >
+                <TextWithBreaks text={item} />
+              </span>
+              {isNegative && (
+                <span
+                  style={{
+                    fontSize: 26,
+                    fontWeight: 700,
+                    color: "#EF4444",
+                    letterSpacing: 2,
+                  }}
+                >
+                  ✕ 폭사
+                </span>
+              )}
+            </div>
           </div>
         );
       })}
@@ -2359,7 +2359,7 @@ const BarDisplay: React.FC<{
   const frame = useCurrentFrame();
   const hasNegative = values.some((v) => v < 0);
 
-  // 레이블 너비 동적 계산 — 모든 줄의 바 시작점을 동일하게 맞춤
+  // 레이블 너비 동적 계산: 가장 긴 레이블에 맞춰 모든 행의 바 시작점 통일
   // 폰트 사이즈 기반으로 추정 (CJK ≈ 1em, ASCII ≈ 0.6em)
   const _fs = typeof T.labelText === "number" ? T.labelText : parseInt(String(T.labelText)) || 16;
   const labelWidth = Math.max(
@@ -3314,24 +3314,24 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
     return delays;
   })();
 
-  // 항상 4개 counter hook 호출 (React rules)
+  // 항상 4개 counter hook 호출 (React rules) — 음수도 절대값 기준 카운트
   const counted0 = useCountUp(
-    isCountEmphasis && (numTargets[0] || 0) >= countUpMin ? accentLineDelays[0] : 9999,
+    isCountEmphasis && Math.abs(numTargets[0] || 0) >= countUpMin ? accentLineDelays[0] : 9999,
     COUNT_UP_DURATION,
     numTargets[0] || 1,
   );
   const counted1 = useCountUp(
-    isCountEmphasis && (numTargets[1] || 0) >= countUpMin ? accentLineDelays[1] : 9999,
+    isCountEmphasis && Math.abs(numTargets[1] || 0) >= countUpMin ? accentLineDelays[1] : 9999,
     COUNT_UP_DURATION,
     numTargets[1] || 1,
   );
   const counted2 = useCountUp(
-    isCountEmphasis && (numTargets[2] || 0) >= countUpMin ? accentLineDelays[2] : 9999,
+    isCountEmphasis && Math.abs(numTargets[2] || 0) >= countUpMin ? accentLineDelays[2] : 9999,
     COUNT_UP_DURATION,
     numTargets[2] || 1,
   );
   const counted3 = useCountUp(
-    isCountEmphasis && (numTargets[3] || 0) >= countUpMin ? accentLineDelays[3] : 9999,
+    isCountEmphasis && Math.abs(numTargets[3] || 0) >= countUpMin ? accentLineDelays[3] : 9999,
     COUNT_UP_DURATION,
     numTargets[3] || 1,
   );
@@ -3891,7 +3891,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             <div style={{
               display: "flex",
               flexDirection: isHorizontal ? "row" : "column",
-              alignItems: isHorizontal ? "center" : "flex-start",
+              alignItems: "center",
               justifyContent: "center",
               gap: 0,
               width: isHorizontal ? "100%" : "auto",

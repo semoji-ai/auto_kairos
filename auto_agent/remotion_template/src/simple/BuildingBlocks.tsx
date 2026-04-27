@@ -1250,9 +1250,10 @@ export function extractNumber(s: string): number {
   return parseFloat(cleaned) || 0;
 }
 
-/** 숫자에 원래 형식 적용 (접두사, 접미사, 쉼표) */
+/** 숫자에 원래 형식 적용 (접두사, 접미사, 쉼표). 음수 부호는 value에 포함된 것으로 처리 (prefix에서 제외) */
 export function formatWithTemplate(template: string, value: number): string {
-  const prefixMatch = template.match(/^([^0-9]*)/);
+  // prefix 추출 시 leading "-" 또는 "+"는 부호이므로 제외 (value 자체에 부호가 있음)
+  const prefixMatch = template.match(/^([^0-9+\-]*)/);
   const prefix = prefixMatch ? prefixMatch[1] : "";
   const suffixMatch = template.match(/[0-9][^0-9]*$/);
   const suffix = suffixMatch
