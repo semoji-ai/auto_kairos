@@ -36,6 +36,10 @@ from auto_agent.paths import get_data_dir, get_workspace_dir
 from auto_agent.supabase_client import supabase_enabled
 
 USE_SUPABASE = supabase_enabled()
+from auto_agent.dashboard.project_ref import (
+    resolve_project_ref,
+    canonical_uuid_url,
+)
 from auto_agent.dashboard.helpers import (
     load_project_json,
     load_project_text,
@@ -666,13 +670,21 @@ async def index(request: Request):
     })
 
 
-@app.get("/p/{slug}", response_class=HTMLResponse)
-async def project_by_slug(request: Request, slug: str, tab: str = "pipeline"):
-    """slug 기반 프로젝트 상세 페이지."""
+@app.get("/p/{project_ref}", response_class=HTMLResponse)
+async def project_page(request: Request, project_ref: str, tab: str = "pipeline"):
+    """프로젝트 상세 페이지. project_ref는 uuid(8자 hex) 또는 slug.
+
+    slug로 진입 시 canonical uuid URL로 301 redirect.
+    """
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return HTMLResponse("Project not found", status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""), project["uuid"]),
+            status_code=301,
+        )
 
     context = _load_tab_data(pm, project, tab)
     return templates.TemplateResponse(request, "project.html", context)
