@@ -146,6 +146,24 @@
           "notes": "spec: Phase 2. NAS 5초 헬스체크 → list vault topics → LLM 매처(haiku/sonnet)가 confidence ≥ 0.7만 반환 → wiki + manifests read-only copy. 충돌 시 .vault.md 접미사로 보존."
         },
         {
+          "id": "step_1d_wiki_compile",
+          "name": "wiki_compile",
+          "description": "raw + manifests → 프로젝트 wiki/<topic>/{overview,claims,entities,timeline,index}.md 컴파일. script-director가 글 쓸 때 참조하는 위키 빌드.",
+          "type": "module",
+          "module": "wiki_compile",
+          "blocking": false,
+          "resumable": true,
+          "input": [
+            "research/manifests/",
+            "research/raw/"
+          ],
+          "output": [
+            "research/wiki/",
+            "research/wiki_compiler_summary.json"
+          ],
+          "notes": "spec: Phase 3. claims.md/index.md는 jsonl 결정적 렌더 (LLM 안 씀). overview/entities/timeline은 sonnet으로 합성. SKIP_WIKI_SYNTHESIS=1 환경변수로 합성 건너뛰기 가능."
+        },
+        {
           "id": "step_1_ingest",
           "name": "source_ingest",
           "description": "초기 outline을 조사 가이드로 사용해 ResearchAgent 기반 fresh research를 수행합니다. vault 02-research에 raw sources + wiki + claims 저장.",

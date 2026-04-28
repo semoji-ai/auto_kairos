@@ -4272,6 +4272,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "source_ingest": "modules/source_ingest_module.py",
             "fresh_collector": "modules/fresh_collector_module.py",
             "vault_lookup": "modules/vault_lookup_module.py",
+            "wiki_compile": "modules/wiki_compiler_module.py",
             "vault_sync": "modules/vault_sync_module.py",
             "skeleton_from_vault": "modules/skeleton_from_vault_module.py",
             "chapter_projection": "modules/chapter_projection_module.py",
