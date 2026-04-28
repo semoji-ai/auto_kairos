@@ -32,6 +32,7 @@ from auto_agent.research.lanes import (
     search_openlibrary,
     search_wikipedia,
 )
+from auto_agent.research.query_planner import plan_queries
 
 
 # ─────────────────────────────────────────────
@@ -261,27 +262,40 @@ def _read_brief(project_dir: Path) -> dict:
         return {}
 
 
-def _extract_topics_from_brief(brief: dict, project_slug: str) -> list[dict]:
-    """brief에서 토픽 후보 추출. real_topic + key entities 기반."""
+def _extract_topics_from_brief(
+    brief: dict,
+    project_slug: str,
+    *,
+    planner: Any | None = None,
+) -> list[dict]:
+    """brief를 LLM이 5~10개 쿼리로 분해. 기계적 추출은 쿼리 오염을 일으켜 사용 안 함.
+
+    planner: 테스트용. None이면 query_planner.plan_queries 사용.
+    """
+    plan_fn = planner or plan_queries
+    queries = plan_fn(brief, project_slug=project_slug) or []
+
     topics: list[dict] = []
+    seen_slugs: set[str] = set()
+    for q in queries:
+        text = str(q.get("query") or "").strip()
+        if not text:
+            continue
+        slug = _slug(text)
+        if not slug or slug in seen_slugs:
+            continue
+        seen_slugs.add(slug)
+        topics.append({
+            "slug": slug,
+            "query": text,
+            "rationale": str(q.get("rationale") or ""),
+            "lang": str(q.get("lang") or "auto"),
+        })
 
-    real_topic = (brief.get("real_topic") or "").strip()
-    if real_topic:
-        topics.append({"slug": _slug(real_topic), "query": real_topic})
-
-    # entities/keywords가 있으면 추가
-    entities = brief.get("entities") or brief.get("must_include_episodes") or []
-    if isinstance(entities, list):
-        for ent in entities[:5]:
-            if isinstance(ent, str) and ent.strip():
-                slug = _slug(ent)
-                if not any(t["slug"] == slug for t in topics):
-                    topics.append({"slug": slug, "query": ent.strip()})
-
-    # 그래도 없으면 project_slug 기반 fallback
-    if not topics:
-        topics.append({"slug": _slug(project_slug), "query": project_slug.replace("_", " ")})
-
+    # planner가 비어 있으면 최후 fallback — slug 첫 토큰
+    if not topics and project_slug:
+        first = project_slug.replace("_", " ").split()[0]
+        topics.append({"slug": _slug(first), "query": first})
     return topics
 
 

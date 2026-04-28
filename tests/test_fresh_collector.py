@@ -99,22 +99,36 @@ def test_collect_topic_skips_invalid_results(tmp_path: Path):
     assert len(record["errors"]) == 1
 
 
-def test_extract_topics_from_brief_uses_real_topic_first():
-    brief = {
-        "real_topic": "유일한 박사와 유한양행",
-        "entities": ["유한양행", "유일한", "안티푸라민"],
-    }
-    topics = fc._extract_topics_from_brief(brief, "fallback_slug")
-    assert topics[0]["query"] == "유일한 박사와 유한양행"
-    # entities 추가 (first 5)
-    assert any(t["query"] == "유한양행" for t in topics)
-    assert any(t["query"] == "유일한" for t in topics)
+def test_extract_topics_uses_llm_planner_output():
+    def planner(brief, *, project_slug):
+        return [
+            {"query": "유한양행", "rationale": "회사", "lang": "ko"},
+            {"query": "유일한 박사", "rationale": "창업자", "lang": "ko"},
+            {"query": "안티푸라민 1933", "rationale": "1호", "lang": "ko"},
+        ]
+    topics = fc._extract_topics_from_brief(
+        {"real_topic": "유한양행 100주년"}, "slug", planner=planner
+    )
+    assert [t["query"] for t in topics] == ["유한양행", "유일한 박사", "안티푸라민 1933"]
+    assert all("rationale" in t and "lang" in t for t in topics)
 
 
-def test_extract_topics_falls_back_to_project_slug():
-    topics = fc._extract_topics_from_brief({}, "유한양행_100주년")
+def test_extract_topics_dedupes_by_slug():
+    def planner(brief, *, project_slug):
+        return [
+            {"query": "유한양행"},
+            {"query": "유한양행 "},  # slug 같음
+        ]
+    topics = fc._extract_topics_from_brief({}, "x", planner=planner)
     assert len(topics) == 1
-    assert topics[0]["query"] == "유한양행 100주년"
+
+
+def test_extract_topics_uses_project_slug_when_planner_empty():
+    def planner(brief, *, project_slug):
+        return []
+    topics = fc._extract_topics_from_brief({}, "유한양행_100주년", planner=planner)
+    assert len(topics) == 1
+    assert topics[0]["query"] == "유한양행"  # 슬러그 첫 토큰
 
 
 def test_collect_lanes_parallel_calls_all_4(monkeypatch):
