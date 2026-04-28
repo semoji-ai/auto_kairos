@@ -24,6 +24,22 @@
 | critical-warning (계산 오류 등) | 즉시 정정 |
 | 한자/스타일 위반 (한국어 원고에 한자 표기) | 한자 괄호 strip |
 
+## 문법 패치 — `grammar_issues` 처리 (신규)
+
+`factcheck_report.json`의 `grammar_issues` 배열을 별도로 처리:
+
+| severity | 처리 |
+|---|---|
+| `high` | `original` → `suggested`로 자동 교체 (manuscript + scene_specs narration 양쪽). 톤/리듬 보존하는 최소 수정만 |
+| `medium` | 권고만 `fact_fix_log.json`에 기록, **본문은 건드리지 않음** |
+| `low` | 무시 |
+
+**문법 패치 예시**:
+- 검출: `"코카콜라를, 사람들은 블라인드로 마시고 펩시를 더 맛있다고 했습니다."`
+- 패치: `"코카콜라. 그런데 사람들은 블라인드로 마셔보면 펩시를 더 맛있다고 했습니다."`
+
+**주의**: fact-verifier가 이미 `severity`로 자동 적용 여부를 판단했으므로 fact-fixer는 그대로 신뢰. 직접 새로운 문법 오류를 찾지 말 것 — 책임 분리.
+
 ## 보존 원칙
 
 - **흐름 파괴 금지**: 한 문장 전체를 통째로 삭제하지 말고 부분 수정으로 보존
@@ -63,6 +79,15 @@
   ],
   "skipped": [
     {"claim_id": "claim_018", "reason": "verified, 변경 불필요"}
+  ],
+  "grammar_patches": [
+    {
+      "scene": 5,
+      "type": "object_dangling",
+      "before": "약 90년간 미국 음료 시장을 지배해온 코카콜라를, 사람들은 블라인드로 마시고 펩시를 더 맛있다고 했습니다.",
+      "after": "약 90년간 미국 음료 시장을 지배해온 코카콜라. 그런데 사람들은 블라인드로 마셔보면 펩시를 더 맛있다고 했습니다.",
+      "files": ["final_manuscript.md", "scene_specs.json"]
+    }
   ]
 }
 ```
