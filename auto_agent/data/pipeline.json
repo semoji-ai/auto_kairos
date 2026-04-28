@@ -129,6 +129,23 @@
           "notes": "spec: docs/superpowers/specs/2026-04-28-research-redesign.md (Phase 1). step_1_ingest와 같이 돌면서 영상 2~3편 결과 비교 후 컷오버 결정. C(블로그/SNS) 도메인은 이미 lane에서 차단. tier_hint(A/B/unknown)만 부여, 검증 게이트는 후속 단계가 담당."
         },
         {
+          "id": "step_1_vault_lookup",
+          "name": "vault_lookup",
+          "description": "볼트(NAS 02-research/wiki)에서 매칭 토픽을 프로젝트 wiki/로 흡수. LLM 기반 slug 매칭. NAS 단절/매칭 실패 silent skip.",
+          "type": "module",
+          "module": "vault_lookup",
+          "blocking": false,
+          "resumable": true,
+          "input": [
+            "research/fresh_collector_summary.json",
+            "editorial_brief.json"
+          ],
+          "output": [
+            "research/vault_lookup.json"
+          ],
+          "notes": "spec: Phase 2. NAS 5초 헬스체크 → list vault topics → LLM 매처(haiku/sonnet)가 confidence ≥ 0.7만 반환 → wiki + manifests read-only copy. 충돌 시 .vault.md 접미사로 보존."
+        },
+        {
           "id": "step_1_ingest",
           "name": "source_ingest",
           "description": "초기 outline을 조사 가이드로 사용해 ResearchAgent 기반 fresh research를 수행합니다. vault 02-research에 raw sources + wiki + claims 저장.",
