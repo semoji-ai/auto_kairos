@@ -40,17 +40,18 @@
       <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
         <div class="sb-player-mount" data-scene-num="{{ scene.sceneNumber }}"></div>
       </div>
-      {# visual_kind에 따른 자료 타입 표시 — map/chart는 자료 토글 자체 숨김 #}
+      {# 모든 씬에 자료 타입 토글 — visual_kind가 map/chart/none이어도 변환 가능 #}
       {% set _vk = scene.visual_kind or '' %}
-      {% if _vk in ('search_image', 'generate_image', 'video') %}
       <div class="sb-asset-type-switch">
-        <button class="sb-switch-btn{% if _vk != 'video' %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'image', this)">🖼 이미지</button>
+        <button class="sb-switch-btn{% if _vk in ('search_image', 'generate_image') %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'image', this)">🖼 이미지</button>
         <button class="sb-switch-btn{% if _vk == 'video' %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'video', this)">🎬 비디오</button>
       </div>
-      {% elif _vk == 'map' %}
+      {% if _vk == 'map' %}
       <div class="sb-kind-badge sb-kind-map">🗺️ 지도</div>
       {% elif _vk == 'chart' %}
       <div class="sb-kind-badge sb-kind-chart">📊 차트</div>
+      {% elif _vk == 'none' %}
+      <div class="sb-kind-badge" style="background:rgba(113,113,122,0.18);color:#A1A1AA">∅ 없음</div>
       {% endif %}
     </div>
 

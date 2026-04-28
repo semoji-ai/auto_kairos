@@ -1401,6 +1401,9 @@ async def set_scene_asset_type(slug: str, scene_num: int, request: Request):
     for scene in specs.get("scenes", []):
         if scene["sceneNumber"] == scene_num:
             scene_id_va = scene.get("sceneId")
+            # Layer 1 단일성: image/video로 전환 시 mapScene/chartConfig는 무조건 제거
+            scene.pop("mapScene", None)
+            scene.pop("chartConfig", None)
             if asset_type == "image":
                 scene.pop("videoAsset", None)
                 # video_assets.json에서도 제거 (sceneId 우선)
