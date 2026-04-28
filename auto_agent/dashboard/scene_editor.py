@@ -1258,13 +1258,40 @@ async def upload_scene_video(slug: str, scene_num: int, file: UploadFile = File(
         except Exception:
             pass
 
-    # 해당 씬의 sceneId 조회 (분할/통합에 안전한 매핑용)
+    # 해당 씬의 sceneId 및 메타데이터 조회 — 비디오 placement 결정에 사용
     scene_id_for_va: str | None = None
+    scene_for_va: dict | None = None
     specs_for_va = _load_specs(project) or {"scenes": []}
     for sc in specs_for_va.get("scenes", []):
         if sc.get("sceneNumber") == scene_num:
             scene_id_for_va = sc.get("sceneId")
+            scene_for_va = sc
             break
+
+    # placement 결정: 기존 videoAsset.placement가 있으면 유지, 없으면 씬 콘텐츠로 자동 판정.
+    # 헤드라인/아이템/차트/맵 등 오버레이할 콘텐츠가 있으면 background, 없으면 fullscreen.
+    def _resolve_video_placement(scene: dict | None) -> str:
+        if not scene:
+            return "fullscreen"
+        existing = (scene.get("videoAsset") or {}).get("placement")
+        if existing in {"background", "fullscreen"}:
+            return existing
+        viz = scene.get("visualization") or {}
+        creative = scene.get("creative") or {}
+        has_overlay = bool(
+            scene.get("headline")
+            or scene.get("items")
+            or scene.get("chartConfig")
+            or scene.get("mapScene")
+            or viz.get("headline")
+            or viz.get("items")
+            or viz.get("values")
+            or creative.get("headline")
+            or creative.get("items")
+        )
+        return "background" if has_overlay else "fullscreen"
+
+    placement = _resolve_video_placement(scene_for_va)
 
     # 기존 해당 씬 엔트리 제거 (sceneId 우선 + sceneNumber 모두) 후 새로 추가
     scenes = va_data.get("scenes", [])
@@ -1279,7 +1306,7 @@ async def upload_scene_video(slug: str, scene_num: int, file: UploadFile = File(
         "videoFile": dest_path.name,
         "startSec": 0,
         "endSec": None,
-        "placement": "fullscreen",
+        "placement": placement,
         "opacity": 1.0,
         "volume": 0,
     })
@@ -1293,7 +1320,7 @@ async def upload_scene_video(slug: str, scene_num: int, file: UploadFile = File(
         for scene in specs.get("scenes", []):
             if scene["sceneNumber"] == scene_num:
                 scene["videoAsset"] = {
-                    "placement": "fullscreen",
+                    "placement": placement,
                     "startSec": 0,
                     "endSec": None,
                     "opacity": 1.0,
