@@ -11,32 +11,43 @@ import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, Request, UploadFile, File
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from auto_agent.dashboard.helpers import resolve_project_by_slug
+from auto_agent.dashboard.project_ref import resolve_project_ref, canonical_uuid_url
 from auto_agent.orchestrator.context_memory import HAIKU_MODEL
 
-router = APIRouter(prefix="/api/p/{slug}/editor", tags=["scene-editor"])
+router = APIRouter(prefix="/api/p/{project_ref}/editor", tags=["scene-editor"])
 
 
 # ─── 매니페스트 메타/재빌드 (에디터 외부에서 호출) ───
 
 from fastapi import APIRouter as _AR
-manifest_router = _AR(prefix="/api/p/{slug}", tags=["manifest-utils"])
+manifest_router = _AR(prefix="/api/p/{project_ref}", tags=["manifest-utils"])
 
 
 @manifest_router.get("/manifest-meta")
-async def manifest_meta(slug: str):
+async def manifest_meta(project_ref: str, request: Request):
     """매니페스트 메타 데이터 반환 (get_editor_manifest_meta로 위임)."""
-    return await get_editor_manifest_meta(slug)
+    return await get_editor_manifest_meta(project_ref, request)
 
 
 @manifest_router.post("/rebuild-manifest")
-async def rebuild_manifest(slug: str):
+async def rebuild_manifest(project_ref: str, request: Request):
     """manifest.json 재빌드 트리거."""
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     import subprocess, shutil
     python = shutil.which("python3") or shutil.which("python") or "python3"
@@ -46,7 +57,7 @@ async def rebuild_manifest(slug: str):
     if not out_dir:
         return JSONResponse({"error": "output_dir 없음"}, status_code=400)
     project_id = str(project.get("id", ""))
-    storage_key = Path(out_dir).name if out_dir else slug
+    storage_key = Path(out_dir).name if out_dir else project["slug"]
     args = [python, "-m", "auto_agent.scripts.build_manifest", project_id, storage_key, out_dir]
 
     try:
@@ -96,12 +107,22 @@ _thumbnail_tasks: dict = {}  # slug → asyncio.Task
 
 
 @manifest_router.get("/thumbnails/scene/{scene_num}")
-async def get_scene_thumbnail(slug: str, scene_num: int):
+async def get_scene_thumbnail(project_ref: str, scene_num: int, request: Request):
     """씬 썸네일 PNG 반환 (캐시). 없으면 placeholder."""
     from fastapi.responses import FileResponse
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     output_dir = project.get("output_dir", "")
     thumb_path = Path(output_dir) / "thumbnails" / f"scene_{str(scene_num).zfill(3)}.png"
@@ -127,16 +148,26 @@ async def get_scene_thumbnail(slug: str, scene_num: int):
 
 
 @manifest_router.post("/generate-thumbnails")
-async def generate_thumbnails(slug: str):
+async def generate_thumbnails(project_ref: str, request: Request):
     """Remotion renderStill로 모든 씬 썸네일 배치 생성 (비동기)."""
     import asyncio
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     output_dir = project.get("output_dir", "")
     # 디렉토리명(uuid_slug 형식) 기준으로 manifest 파일명 구성
-    dir_name = Path(output_dir).name if output_dir else slug
+    dir_name = Path(output_dir).name if output_dir else project["slug"]
 
     # manifest 경로 탐색 (여러 위치)
     from auto_agent.paths import get_workspace_dir
@@ -172,7 +203,8 @@ async def generate_thumbnails(slug: str):
         return JSONResponse({"error": "manifest.json 없음"}, status_code=404)
 
     # 이미 진행 중?
-    if slug in _thumbnail_tasks and not _thumbnail_tasks[slug].done():
+    _slug = project["slug"]
+    if _slug in _thumbnail_tasks and not _thumbnail_tasks[_slug].done():
         return {"ok": True, "status": "already_running"}
 
     async def _run():
@@ -206,16 +238,26 @@ async def generate_thumbnails(slug: str):
                 f"썸네일 생성 실패: {stderr.decode()[:500]}"
             )
 
-    _thumbnail_tasks[slug] = asyncio.create_task(_run())
+    _thumbnail_tasks[_slug] = asyncio.create_task(_run())
     return {"ok": True, "status": "started"}
 
 
 @manifest_router.get("/images/all")
-async def get_all_images(slug: str):
+async def get_all_images(project_ref: str, request: Request):
     """전체 이미지 갤러리 — search/ + generated/ 폴더 스캔."""
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     out_dir = project.get("output_dir", "")
     dir_name = Path(out_dir).name if out_dir else project.get("slug", "")
@@ -268,17 +310,28 @@ async def get_all_images(slug: str):
 
 
 @manifest_router.get("/thumbnails/status")
-async def thumbnails_status(slug: str):
+async def thumbnails_status(project_ref: str, request: Request):
     """썸네일 생성 상태 확인."""
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     output_dir = project.get("output_dir", "")
     thumb_dir = Path(output_dir) / "thumbnails"
     count = len(list(thumb_dir.glob("scene_*.png"))) if thumb_dir.exists() else 0
 
-    running = slug in _thumbnail_tasks and not _thumbnail_tasks[slug].done()
+    _slug = project["slug"]
+    running = _slug in _thumbnail_tasks and not _thumbnail_tasks[_slug].done()
 
     return {"count": count, "running": running}
 
@@ -313,7 +366,7 @@ LAYOUT_CONSTRAINTS = {
 
 
 @router.get("/meta")
-async def editor_meta(slug: str):
+async def editor_meta(project_ref: str):
     """에디터 메타데이터 (레이아웃 제약, 드롭다운 옵션 등)."""
     return {
         "layouts": LAYOUT_CONSTRAINTS,
@@ -340,15 +393,25 @@ def _load_specs(project: dict):
 
 
 @router.get("/scenes/{scene_num}/images")
-async def get_scene_images(slug: str, scene_num: int):
+async def get_scene_images(project_ref: str, scene_num: int, request: Request):
     """씬의 이미지 후보 목록 — image_assets.json 신 스키마 기준 (스토리보드와 동일).
 
-    스토리보드의 /api/p/{slug}/images/versions/{scene_num}과 같은 데이터 소스를 사용.
+    스토리보드의 /api/p/{project_ref}/images/versions/{scene_num}과 같은 데이터 소스를 사용.
     "이미지 없음" 특수 항목을 첫 번째로 포함.
     """
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     _out_dir = project.get("output_dir", "")
     _dir_name = Path(_out_dir).name if _out_dir else project.get("slug", "")
@@ -420,14 +483,24 @@ async def get_scene_images(slug: str, scene_num: int):
 
 
 @router.post("/scenes/{scene_num}/select-image")
-async def select_scene_image(slug: str, scene_num: int, request: Request):
+async def select_scene_image(project_ref: str, scene_num: int, request: Request):
     """씬 이미지 선택 — scene_specs + image_assets.json 동기화.
 
     image_url == "" → source:"none" 처리 (이미지 없음).
     """
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     body = await request.json()
     # image_url, url 둘 다 허용 (갤러리 드래그는 url로 전송)
@@ -591,15 +664,25 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
 
 
 @router.post("/scenes/{scene_num}/select-images")
-async def select_scene_images(slug: str, scene_num: int, request: Request):
+async def select_scene_images(project_ref: str, scene_num: int, request: Request):
     """person_card / images_grid용 복수 이미지 저장.
 
     body: {"images": [url, url, ...]}
     scene_specs.json의 해당 씬에 images[] 배열로 저장한다.
     """
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     body = await request.json()
     images = body.get("images", [])
@@ -627,12 +710,22 @@ async def select_scene_images(slug: str, scene_num: int, request: Request):
 
 
 @router.post("/scenes/{scene_num}/upload-image")
-async def upload_scene_image(slug: str, scene_num: int, file: UploadFile = File(...)):
+async def upload_scene_image(project_ref: str, scene_num: int, request: Request, file: UploadFile = File(...)):
     """파일 직접 업로드 → search/ 폴더 저장 후 select-image와 동일하게 등록."""
     import re as _re
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     out_dir = project["output_dir"]
     img_dir = Path(out_dir) / "images"
@@ -681,11 +774,21 @@ async def upload_scene_image(slug: str, scene_num: int, file: UploadFile = File(
 
 
 @router.get("/scenes/{scene_num}/image-prompt")
-async def get_scene_image_prompt(slug: str, scene_num: int):
+async def get_scene_image_prompt(project_ref: str, scene_num: int, request: Request):
     """씬의 imageAsset.prompt를 반환 — 생성 패널 미리채우기용."""
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
     specs = _load_specs(project)
     if not specs:
         return JSONResponse({"prompt": ""})
@@ -697,12 +800,22 @@ async def get_scene_image_prompt(slug: str, scene_num: int):
 
 
 @router.get("/characters")
-async def get_characters(slug: str):
+async def get_characters(project_ref: str, request: Request):
     """캐릭터 패널용 — character_plan + characters 폴더 이미지 매핑."""
     import unicodedata as _ud, re as _re
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     out_dir = Path(project["output_dir"])
     dir_name = out_dir.name
@@ -755,11 +868,21 @@ async def get_characters(slug: str):
 
 
 @router.get("/scene-list")
-async def get_scene_list(slug: str):
+async def get_scene_list(project_ref: str, request: Request):
     """에디터용 씬 목록 (번호 + 제목/헤드라인 요약)."""
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
     specs = _load_specs(project)
     if not specs:
         return JSONResponse({"error": "scene_specs.json 없음"}, status_code=404)
@@ -780,12 +903,22 @@ async def get_scene_list(slug: str):
 
 
 @router.get("/manifest-meta")
-async def get_editor_manifest_meta(slug: str):
+async def get_editor_manifest_meta(project_ref: str, request: Request):
     """에디터용 매니페스트 메타 데이터 (fps, resolution, font 등).
     로컬 manifest → 로컬 scene_specs → 기본값 순서로 탐색."""
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     from auto_agent.dashboard.helpers import load_project_json
     out_dir = project.get("output_dir", "")
@@ -793,7 +926,7 @@ async def get_editor_manifest_meta(slug: str):
     # 로컬 파일에서 시도 (remotion/public/manifests/{dir_name}.json 포함)
     from auto_agent.paths import get_workspace_dir
     workspace = get_workspace_dir()
-    _manifest_dir_name = Path(out_dir).name if out_dir else slug
+    _manifest_dir_name = Path(out_dir).name if out_dir else project["slug"]
     candidates = [
         Path(out_dir) / "manifest.json" if out_dir else None,
         workspace / "remotion" / "public" / "manifests" / f"{_manifest_dir_name}.json",
@@ -822,12 +955,22 @@ async def get_editor_manifest_meta(slug: str):
 
 
 @router.get("/scenes/{scene_num}")
-async def get_scene_for_editor(slug: str, scene_num: int):
+async def get_scene_for_editor(project_ref: str, scene_num: int, request: Request):
     """에디터용 씬 데이터 — manifest 우선, scene_specs fallback."""
     import json as _json
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     # 1. manifest에서 읽기 (Remotion Studio와 동일 데이터)
     from auto_agent.paths import get_workspace_dir
@@ -956,7 +1099,7 @@ def _transform_map_scene(scene: dict):
 
 
 @router.post("/scenes/{scene_num}")
-async def save_scene(slug: str, scene_num: int, request: Request):
+async def save_scene(project_ref: str, scene_num: int, request: Request):
     """씬 저장.
 
     Body:
@@ -965,9 +1108,19 @@ async def save_scene(slug: str, scene_num: int, request: Request):
         "mode": "save" | "save_fix" | "preview"
     }
     """
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     body = await request.json()
     scene_data = body.get("scene_data", {})
@@ -1078,16 +1231,25 @@ async def save_scene(slug: str, scene_num: int, request: Request):
 
 
 @router.post("/scenes/{scene_num}/split")
-async def split_scene(slug: str, scene_num: int, request: Request):
+async def split_scene(project_ref: str, scene_num: int, request: Request):
     """씬 분할 — 1단계(즉시): 구조 변경 + 파일 rename + 매니페스트 재빌드."""
     import json as _json
     from datetime import datetime
     from auto_agent.tools.scene_split import apply_split_to_specs, renumber_files
     from auto_agent.tools.image_assets import _load as ia_load, _save as ia_save
-
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     out_dir = project.get("output_dir", "")
     body = await request.json()
@@ -1150,7 +1312,7 @@ async def split_scene(slug: str, scene_num: int, request: Request):
     try:
         from auto_agent.scripts.build_manifest import build_manifest
         import shutil as _shutil
-        storage_key = Path(out_dir).name if out_dir else f"{project.get('uuid', '')}_{slug}"
+        storage_key = Path(out_dir).name if out_dir else f"{project.get('uuid', '')}_{project['slug']}"
         build_manifest(str(project.get("id", "")), storage_key, out_dir)
         # remotion/public/manifest.json 갱신 (스튜디오 반영)
         from app import REMOTION_DIR
@@ -1164,7 +1326,7 @@ async def split_scene(slug: str, scene_num: int, request: Request):
     # 백그라운드 태스크 시작
     import asyncio as _asyncio
     from app import _bg_split_postprocess
-    _asyncio.create_task(_bg_split_postprocess(slug, project, scene_num, new_scene_num))
+    _asyncio.create_task(_bg_split_postprocess(project["slug"], project, scene_num, new_scene_num))
 
     return JSONResponse({
         "status": "splitting",
@@ -1227,11 +1389,21 @@ def _coherence_fix(old_scene: dict, new_scene: dict, diff: dict) -> dict:
 
 
 @router.post("/scenes/{scene_num}/upload-video")
-async def upload_scene_video(slug: str, scene_num: int, file: UploadFile = File(...)):
+async def upload_scene_video(project_ref: str, scene_num: int, request: Request, file: UploadFile = File(...)):
     """비디오 파일 드래그 업로드 → video_sources/ 복사 → video_assets.json 등록."""
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     out_dir = Path(project["output_dir"])
     vs_dir = out_dir / "video_sources"
@@ -1308,11 +1480,21 @@ async def upload_scene_video(slug: str, scene_num: int, file: UploadFile = File(
 
 
 @router.get("/videos")
-async def list_videos(slug: str):
+async def list_videos(project_ref: str, request: Request):
     """프로젝트 video_sources/ 파일 목록."""
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
     out_dir = Path(project["output_dir"])
     vs_dir = out_dir / "video_sources"
     if not vs_dir.exists():
@@ -1331,11 +1513,21 @@ async def list_videos(slug: str):
 
 
 @router.post("/scenes/{scene_num}/set-video-trim")
-async def set_video_trim(slug: str, scene_num: int, request: Request):
+async def set_video_trim(project_ref: str, scene_num: int, request: Request):
     """비디오 트림 구간(startSec/endSec) 및 파일 저장."""
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
     body = await request.json()
     video_file = body.get("videoFile", "")
     start_sec = float(body.get("startSec", 0))
@@ -1385,11 +1577,21 @@ async def set_video_trim(slug: str, scene_num: int, request: Request):
 
 
 @router.post("/scenes/{scene_num}/set-asset-type")
-async def set_scene_asset_type(slug: str, scene_num: int, request: Request):
+async def set_scene_asset_type(project_ref: str, scene_num: int, request: Request):
     """씬 에셋 타입 전환 — image(videoAsset 제거) / video(imageAsset 비활성화)."""
-    project = resolve_project_by_slug(slug)
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     body = await request.json()
     asset_type = body.get("type", "image")  # "image" or "video"

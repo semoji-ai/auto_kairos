@@ -8,9 +8,10 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi.requests import Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from auto_agent.paths import get_workspace_dir
+from auto_agent.dashboard.project_ref import resolve_project_ref, canonical_uuid_url
 
 router = APIRouter(tags=["design-presets"])
 
@@ -318,8 +319,8 @@ async def delete_preset(preset_id: str):
     return {"ok": True}
 
 
-@router.post("/api/p/{slug}/apply-preset")
-async def apply_preset_to_project(slug: str, request: Request):
+@router.post("/api/p/{project_ref}/apply-preset")
+async def apply_preset_to_project(project_ref: str, request: Request):
     """프리셋을 프로젝트에 적용 — scene_specs.json의 meta + 전체 씬 기본값 업데이트."""
     body = await request.json()
     preset_id = body.get("preset_id", "")
@@ -340,7 +341,7 @@ async def apply_preset_to_project(slug: str, request: Request):
     if supabase_enabled():
         from auto_agent.dashboard.supabase_data import SupabaseProjectManager
         pm = SupabaseProjectManager()
-        project = pm.get_project(slug=slug)
+        project = pm.get_project(slug=project_ref)
         if not project:
             return JSONResponse({"error": "project not found"}, 404)
         specs = pm.load_project_json(project["id"], "scene_specs.json")
@@ -348,9 +349,17 @@ async def apply_preset_to_project(slug: str, request: Request):
     else:
         from auto_agent.db.project_manager import ProjectManager
         pm = ProjectManager()
-        project = pm.get_project(slug=slug)
+        project, needs_redirect = resolve_project_ref(pm, project_ref)
         if not project:
             return JSONResponse({"error": "project not found"}, 404)
+        if needs_redirect:
+            return RedirectResponse(
+                url=canonical_uuid_url(
+                    str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                    project["uuid"],
+                ),
+                status_code=307,
+            )
         out_dir = project.get("output_dir", "")
         specs = load_project_json(out_dir, "scene_specs.json")
 
@@ -386,8 +395,8 @@ async def apply_preset_to_project(slug: str, request: Request):
     return {"ok": True, "scenes_updated": len(specs.get("scenes", []))}
 
 
-@router.post("/api/p/{slug}/save-design-preset")
-async def save_design_preset_to_project(slug: str, request: Request):
+@router.post("/api/p/{project_ref}/save-design-preset")
+async def save_design_preset_to_project(project_ref: str, request: Request):
     """디자인 프리셋을 프로젝트 meta에 저장 (씬 기본값은 건드리지 않음)."""
     body = await request.json()
     design_preset = body.get("designPreset", {})
@@ -400,7 +409,7 @@ async def save_design_preset_to_project(slug: str, request: Request):
     if supabase_enabled():
         from auto_agent.dashboard.supabase_data import SupabaseProjectManager
         pm = SupabaseProjectManager()
-        project = pm.get_project(slug=slug)
+        project = pm.get_project(slug=project_ref)
         if not project:
             return JSONResponse({"error": "project not found"}, 404)
         specs = pm.load_project_json(project["id"], "scene_specs.json")
@@ -408,9 +417,17 @@ async def save_design_preset_to_project(slug: str, request: Request):
     else:
         from auto_agent.db.project_manager import ProjectManager
         pm = ProjectManager()
-        project = pm.get_project(slug=slug) or pm.resolve_project(slug)
+        project, needs_redirect = resolve_project_ref(pm, project_ref)
         if not project:
-            return JSONResponse({"error": f"project not found: {slug}"}, 404)
+            return JSONResponse({"error": f"project not found: {project_ref}"}, 404)
+        if needs_redirect:
+            return RedirectResponse(
+                url=canonical_uuid_url(
+                    str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                    project["uuid"],
+                ),
+                status_code=307,
+            )
         out_dir = project.get("output_dir", "")
         specs = load_project_json(out_dir, "scene_specs.json")
 
@@ -435,7 +452,7 @@ async def save_design_preset_to_project(slug: str, request: Request):
     try:
         from auto_agent.scripts.build_manifest import build_manifest
         pid = str(project.get("id", ""))
-        dir_name = Path(out_dir).name if out_dir else slug
+        dir_name = Path(out_dir).name if out_dir else project.get("slug", project_ref)
         build_manifest(pid, dir_name, out_dir)
     except Exception as e:
         print(f"[WARN] 매니페스트 리빌드 실패: {e}", flush=True)
