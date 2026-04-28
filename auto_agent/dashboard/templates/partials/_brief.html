@@ -1,0 +1,262 @@
+<!-- 기획안(editorial_brief) 탭 -->
+<div class="brief-page">
+  {% if not brief %}
+    <div class="brief-empty">
+      <h3>기획안이 아직 없습니다</h3>
+      <p>파이프라인의 brief 단계를 실행하거나 <code>editorial_brief.json</code> 파일이 생성되어야 합니다.</p>
+    </div>
+  {% else %}
+
+  <div class="brief-header">
+    <h2>기획안</h2>
+    <div class="brief-meta">
+      <span class="brief-version-tag">{{ brief_version or 'editorial_brief.json' }}</span>
+      {% if brief._version %}<span class="brief-version-tag">v{{ brief._version }}</span>{% endif %}
+      {% if brief_review and brief_review.verdict %}
+        <span class="brief-verdict {{ 'verdict-pass' if brief_review.verdict == 'PASS' else 'verdict-fail' }}">
+          리뷰 {{ brief_review.verdict }}{% if brief_review.overall_score %} ({{ brief_review.overall_score }}점){% endif %}
+        </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 핵심 -->
+  <section class="brief-section">
+    <h3>핵심</h3>
+    <div class="brief-grid">
+      {% if brief.core_question %}
+      <div class="brief-card brief-highlight">
+        <div class="brief-label">핵심 질문 (core_question)</div>
+        <div class="brief-value">{{ brief.core_question }}</div>
+      </div>
+      {% endif %}
+      {% if brief.real_topic %}
+      <div class="brief-card brief-highlight">
+        <div class="brief-label">진짜 주제 (real_topic)</div>
+        <div class="brief-value">{{ brief.real_topic }}</div>
+      </div>
+      {% endif %}
+      {% if brief.hook_angle %}
+      <div class="brief-card">
+        <div class="brief-label">도입 각도 (hook_angle)</div>
+        <div class="brief-value">{{ brief.hook_angle }}</div>
+      </div>
+      {% endif %}
+      {% if brief.audience_takeaway %}
+      <div class="brief-card">
+        <div class="brief-label">시청자 핵심 인식 (audience_takeaway)</div>
+        <div class="brief-value">{{ brief.audience_takeaway }}</div>
+      </div>
+      {% endif %}
+      {% if brief.tone_goal %}
+      <div class="brief-card">
+        <div class="brief-label">톤 목표 (tone_goal)</div>
+        <div class="brief-value">{{ brief.tone_goal }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- 콘텐츠 -->
+  {% if brief.supporting_case or brief.must_cover or brief.excluded_angles or brief.key_persons %}
+  <section class="brief-section">
+    <h3>콘텐츠</h3>
+    <div class="brief-grid">
+      {% if brief.supporting_case %}
+      <div class="brief-card">
+        <div class="brief-label">뒷받침 사례 (supporting_case)</div>
+        <div class="brief-value">
+          {% if brief.supporting_case is iterable and brief.supporting_case is not string %}
+            <ul class="brief-list">{% for item in brief.supporting_case %}<li>{{ item }}</li>{% endfor %}</ul>
+          {% else %}
+            {{ brief.supporting_case }}
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+      {% if brief.must_cover %}
+      <div class="brief-card">
+        <div class="brief-label">반드시 다룰 사건 (must_cover)</div>
+        <div class="brief-value">
+          {% if brief.must_cover is iterable and brief.must_cover is not string %}
+            <ul class="brief-list">{% for item in brief.must_cover %}<li>{{ item }}</li>{% endfor %}</ul>
+          {% else %}
+            {{ brief.must_cover }}
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+      {% if brief.key_persons %}
+      <div class="brief-card">
+        <div class="brief-label">핵심 인물 (key_persons)</div>
+        <div class="brief-value">
+          {% if brief.key_persons is iterable and brief.key_persons is not string %}
+            <div class="brief-tags">{% for p in brief.key_persons %}<span class="brief-tag">{{ p }}</span>{% endfor %}</div>
+          {% else %}
+            {{ brief.key_persons }}
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+      {% if brief.excluded_angles %}
+      <div class="brief-card brief-warn">
+        <div class="brief-label">⚠️ 절대 흘러가면 안 되는 방향 (excluded_angles)</div>
+        <div class="brief-value">
+          {% if brief.excluded_angles is iterable and brief.excluded_angles is not string %}
+            <ul class="brief-list">{% for item in brief.excluded_angles %}<li>{{ item }}</li>{% endfor %}</ul>
+          {% else %}
+            {{ brief.excluded_angles }}
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- 5대 DNA 레버 -->
+  {% if brief.narrative_arc or brief.human_truth or brief.hidden_truth or brief.present_connection or brief.evidence_anchors %}
+  <section class="brief-section">
+    <h3>5대 DNA 레버</h3>
+    <div class="brief-grid">
+      {% for key, label in [
+        ('narrative_arc', '서사 곡선'),
+        ('human_truth', '인간 진실'),
+        ('hidden_truth', '숨겨진 진실'),
+        ('present_connection', '현재 연결'),
+        ('evidence_anchors', '근거 앵커')
+      ] %}
+        {% set v = brief[key] %}
+        {% if v %}
+        <div class="brief-card">
+          <div class="brief-label">{{ label }} <code>{{ key }}</code></div>
+          <div class="brief-value">
+            {% if v is mapping %}
+              <pre>{{ v | tojson(indent=2) }}</pre>
+            {% elif v is iterable and v is not string %}
+              <ul class="brief-list">{% for item in v %}<li>{% if item is mapping %}<pre>{{ item | tojson(indent=2) }}</pre>{% else %}{{ item }}{% endif %}</li>{% endfor %}</ul>
+            {% else %}
+              {{ v }}
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- 성공 기준 -->
+  {% if brief.success_criteria %}
+  <section class="brief-section">
+    <h3>성공 기준</h3>
+    <div class="brief-card">
+      <div class="brief-value">
+        {% if brief.success_criteria is iterable and brief.success_criteria is not string %}
+          <ul class="brief-list">{% for item in brief.success_criteria %}<li>{{ item }}</li>{% endfor %}</ul>
+        {% else %}
+          {{ brief.success_criteria }}
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- 시리즈 정보 -->
+  {% if episode_brief %}
+  <section class="brief-section">
+    <h3>시리즈 episode_brief</h3>
+    <div class="brief-card">
+      {% if episode_brief.episode_title %}<div class="brief-label">제목</div><div class="brief-value">{{ episode_brief.episode_title }}</div>{% endif %}
+      {% if episode_brief.scope_start %}<div class="brief-label" style="margin-top:8px">scope</div><div class="brief-value">{{ episode_brief.scope_start }} ~ {{ episode_brief.scope_end }}</div>{% endif %}
+      {% if episode_brief.do_not_cover %}
+        <div class="brief-label" style="margin-top:8px">do_not_cover (다른 편 전담)</div>
+        <div class="brief-value">
+          <ul class="brief-list">{% for item in episode_brief.do_not_cover %}<li>{{ item }}</li>{% endfor %}</ul>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- 리뷰 요약 -->
+  {% if brief_review %}
+  <section class="brief-section">
+    <h3>리뷰 결과</h3>
+    <div class="brief-card">
+      {% if brief_review.summary %}<div class="brief-value">{{ brief_review.summary }}</div>{% endif %}
+      {% if brief_review.feedback %}
+        <div class="brief-label" style="margin-top:10px">피드백</div>
+        <div class="brief-value">
+          {% if brief_review.feedback is iterable and brief_review.feedback is not string %}
+            <ul class="brief-list">{% for fb in brief_review.feedback %}<li>{{ fb }}</li>{% endfor %}</ul>
+          {% else %}
+            {{ brief_review.feedback }}
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- 원본 JSON 펼치기 -->
+  <details class="brief-raw">
+    <summary>원본 JSON</summary>
+    <pre>{{ brief | tojson(indent=2) }}</pre>
+  </details>
+
+  {% endif %}
+</div>
+
+<style>
+.brief-page { padding: 16px 24px; max-width: 1100px; margin: 0 auto; }
+.brief-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.brief-empty h3 { margin: 0 0 12px; color: #D4D4D8; }
+.brief-empty code { background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 4px; }
+
+.brief-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+                padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.brief-header h2 { margin: 0; font-size: 18px; color: #F4F4F5; }
+.brief-meta { display: flex; gap: 8px; }
+.brief-version-tag { font-size: 10px; padding: 3px 10px; border-radius: 4px;
+                     background: rgba(99,102,241,0.18); color: #A5B4FC; font-weight: 600; }
+.brief-verdict { font-size: 11px; padding: 3px 10px; border-radius: 4px; font-weight: 600; }
+.verdict-pass { background: rgba(52,211,153,0.18); color: #34D399; }
+.verdict-fail { background: rgba(248,113,113,0.18); color: #F87171; }
+
+.brief-section { margin-bottom: 28px; }
+.brief-section h3 { margin: 0 0 12px; font-size: 13px; color: #C7D2FE;
+                    text-transform: uppercase; letter-spacing: 0.05em;
+                    border-left: 3px solid #6366F1; padding-left: 10px; }
+
+.brief-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+              gap: 12px; }
+.brief-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+              border-radius: 8px; padding: 12px 14px; }
+.brief-card.brief-highlight { background: rgba(99,102,241,0.08);
+                              border-color: rgba(99,102,241,0.25); }
+.brief-card.brief-warn { background: rgba(248,113,113,0.06);
+                         border-color: rgba(248,113,113,0.2); }
+.brief-label { font-size: 10px; color: var(--text-muted); margin-bottom: 6px;
+               text-transform: uppercase; letter-spacing: 0.04em; }
+.brief-label code { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px;
+                    font-size: 9px; color: #A1A1AA; }
+.brief-value { font-size: 13px; color: #E4E4E7; line-height: 1.55; }
+.brief-value pre { background: rgba(0,0,0,0.3); border-radius: 6px; padding: 8px 10px;
+                   font-size: 11px; overflow: auto; max-height: 220px; margin: 0;
+                   color: #D4D4D8; }
+.brief-list { margin: 0; padding-left: 18px; }
+.brief-list li { margin-bottom: 4px; line-height: 1.5; }
+.brief-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.brief-tag { font-size: 11px; padding: 3px 9px; border-radius: 12px;
+             background: rgba(99,102,241,0.12); color: #A5B4FC; }
+
+.brief-raw { margin-top: 30px; }
+.brief-raw summary { cursor: pointer; font-size: 11px; color: var(--text-muted);
+                     padding: 6px 10px; background: rgba(255,255,255,0.03);
+                     border-radius: 6px; }
+.brief-raw summary:hover { background: rgba(255,255,255,0.06); }
+.brief-raw pre { background: rgba(0,0,0,0.4); border-radius: 6px; padding: 12px;
+                 font-size: 11px; max-height: 500px; overflow: auto; margin-top: 10px;
+                 color: #D4D4D8; }
+</style>

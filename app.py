@@ -292,6 +292,7 @@ TAB_TEMPLATES = {
     "overview": "partials/_overview.html",
     "pipeline": "partials/_pipeline.html",
     "research": "partials/_research.html",
+    "brief": "partials/_brief.html",
     "manuscript": "partials/_manuscript.html",
     "storyboard": "partials/_storyboard.html",
     "studio": "partials/_studio.html",
@@ -352,6 +353,31 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
         context["pipeline_progress"] = get_pipeline_progress(
             out_dir, str(DATA_DIR), db_runs=context["runs"]
         )
+
+    elif tab == "brief":
+        # 최신 버전 우선: editorial_brief.v3.json > v2 > v1 > editorial_brief.json
+        brief = None
+        brief_version = None
+        for ver in ("editorial_brief.v3.json", "editorial_brief.v2.json",
+                    "editorial_brief.v1.json", "editorial_brief.json"):
+            data = _load_json(ver)
+            if data:
+                brief = data
+                brief_version = ver
+                break
+        context["brief"] = brief
+        context["brief_version"] = brief_version
+        # 리뷰 피드백 (최신 버전)
+        review_data = None
+        for ver in ("brief_review_feedback.v3.json", "brief_review_feedback.v2.json",
+                    "brief_review_feedback.v1.json"):
+            data = _load_json(ver)
+            if data:
+                review_data = data
+                break
+        context["brief_review"] = review_data
+        # 에피소드 brief (시리즈)
+        context["episode_brief"] = _load_json("episode_brief.json")
 
     elif tab == "research":
         context["research"] = _load_json("research_report.json")
