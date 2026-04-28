@@ -37,8 +37,13 @@ def verify_scene(project_dir: Path, scene_number: int) -> dict:
     if not original:
         return {"scene": scene_number, "verdict": "skip", "reason": "나레이션 없음"}
 
-    # 오디오 파일 확인
-    audio_path = project_dir / "audio" / f"scene_{scene_number:03d}.mp3"
+    # 오디오 파일 확인 — sceneId 우선 → 레거시 sceneNumber fallback
+    sid = scene.get("sceneId")
+    audio_dir = project_dir / "audio"
+    if sid and (audio_dir / f"{sid}.mp3").exists():
+        audio_path = audio_dir / f"{sid}.mp3"
+    else:
+        audio_path = audio_dir / f"scene_{scene_number:03d}.mp3"
     if not audio_path.exists():
         return {"scene": scene_number, "error": f"오디오 없음: {audio_path.name}"}
 

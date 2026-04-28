@@ -580,7 +580,12 @@ def main():
             break
     if target_scene is not None:
         scenes = [s for s in scenes if (s.get("sceneNumber") or s.get("scene_number")) == target_scene]
-        # 대상 씬의 기존 SRT 삭제하여 재생성 강제
+        # 대상 씬의 기존 SRT 삭제하여 재생성 강제 (sceneId + sceneNumber 둘 다)
+        sid_target = scenes[0].get("sceneId") if scenes else None
+        if sid_target:
+            srt_target_sid = SUBTITLE_DIR / f"scene_{sid_target}.srt"
+            if srt_target_sid.exists():
+                srt_target_sid.unlink()
         srt_target = SUBTITLE_DIR / f"scene_{target_scene:03d}.srt"
         if srt_target.exists():
             srt_target.unlink()

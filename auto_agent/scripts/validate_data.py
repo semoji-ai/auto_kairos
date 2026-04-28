@@ -74,11 +74,13 @@ def validate_subtitle_matching(report: ValidationReport, specs: dict, project_di
 
     for scene in scenes:
         num = scene.get("sceneNumber", 0)
-        audio_file = project_dir / "audio" / f"scene_{num:03d}.mp3"
-        srt_file = sub_dir / f"scene_{num:03d}.srt"
+        sid = scene.get("sceneId")
+        # sceneId 우선 → 레거시 sceneNumber fallback
+        audio_file = project_dir / "audio" / (f"{sid}.mp3" if sid and (project_dir / "audio" / f"{sid}.mp3").exists() else f"scene_{num:03d}.mp3")
+        srt_file = sub_dir / (f"{sid}.srt" if sid and (sub_dir / f"{sid}.srt").exists() else f"scene_{num:03d}.srt")
 
         if audio_file.exists() and not srt_file.exists():
-            report.warn("subtitle", f"scene_{num:03d}.srt 없음 (오디오 있음)")
+            report.warn("subtitle", f"{srt_file.name} 없음 (오디오 있음)")
 
     report.ok(f"Subtitle matching: {len(scenes)} scenes checked")
 

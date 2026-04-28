@@ -180,10 +180,11 @@ def run_batch(
             if get_visual_kind(scene) != "generate_image":
                 continue
             scene_num = scene.get("sceneNumber", 0)
+            scene_id_for_file = scene.get("sceneId")
             if scene_num in _video_asset_sns:
                 skip += 1
                 continue
-            if image_assets.has_generated_version(images_dir, scene_num):
+            if image_assets.has_generated_version(images_dir, scene_num, scene_id=scene_id_for_file):
                 skip += 1
                 continue
             scene_char_paths = {cid: char_paths.get(cid) for cid in scene.get("characters", [])}
@@ -202,13 +203,14 @@ def run_batch(
                 nonlocal success, fail
                 sc, _ = scene_jobs[result.idx]
                 sn = sc.get("sceneNumber", result.idx + 1)
+                sid = sc.get("sceneId")
                 if result.success and result.images:
                     gen_dir = images_dir / "generated"
                     gen_dir.mkdir(exist_ok=True)
-                    fname = image_assets.next_filename(images_dir, sn, "gen", ".png")
+                    fname = image_assets.next_filename(images_dir, sn, "gen", ".png", scene_id=sid)
                     try:
                         _save_image_from_url(result.images[0].get("url", ""), gen_dir / fname)
-                        image_assets.add_version(images_dir, sn, "generated/" + fname, "generate")
+                        image_assets.add_version(images_dir, sn, "generated/" + fname, "generate", scene_id=sid)
                         success += 1
                         _progress(f"씬 {sn} 생성 완료: {fname}")
                     except Exception:
@@ -361,15 +363,16 @@ def run_batch(
                 continue
             ia = scene.get("imageAsset") or {}
             scene_num = scene.get("sceneNumber", 0)
+            scene_id_for_file = scene.get("sceneId")
             if scene_num in _video_asset_sns:
                 skip += 1
                 continue
-            if image_assets.has_generated_version(images_dir, scene_num):
+            if image_assets.has_generated_version(images_dir, scene_num, scene_id=scene_id_for_file):
                 skip += 1
                 continue
             # 파일 존재 여부가 아닌 image_assets 등록 여부로 스킵 결정
             # (image_assets에서 제거된 씬은 파일이 있어도 새 버전으로 재검색)
-            if image_assets.has_search_version(images_dir, scene_num):
+            if image_assets.has_search_version(images_dir, scene_num, scene_id=scene_id_for_file):
                 skip += 1
                 continue
 
@@ -381,7 +384,7 @@ def run_batch(
                     ext = "." + preselected_url.split(".")[-1].split("?")[0].lower()
                     if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
                         ext = ".jpg"
-                    fname = image_assets.next_filename(images_dir, scene_num, "search", ext)
+                    fname = image_assets.next_filename(images_dir, scene_num, "search", ext, scene_id=scene_id_for_file)
                     dest = search_dl_dir / fname
                     import urllib.request as _ur
                     _ur.urlretrieve(preselected_url, str(dest))
@@ -390,6 +393,7 @@ def run_batch(
                             images_dir, scene_num, "search/" + fname, "search",
                             source_url=preselected_url,
                             license_info=ia.get("license", ""),
+                            scene_id=scene_id_for_file,
                         )
                         success += 1
                         _progress(f"씬 {scene_num} step_2d 선택 자료 사용: {(ia.get('source_domain') or '')[:30]}")
@@ -414,7 +418,7 @@ def run_batch(
                     ext = "." + img_url.split(".")[-1].split("?")[0].lower()
                     if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
                         ext = ".jpg"
-                    fname = image_assets.next_filename(images_dir, scene_num, "search", ext)
+                    fname = image_assets.next_filename(images_dir, scene_num, "search", ext, scene_id=scene_id_for_file)
                     dest = search_dl_dir / fname
                     import urllib.request as _ur
                     _ur.urlretrieve(img_url, str(dest))
@@ -423,6 +427,7 @@ def run_batch(
                             images_dir, scene_num, "search/" + fname, "search",
                             source_url=matched.get("source_url", img_url),
                             license_info=matched.get("image_license", ""),
+                            scene_id=scene_id_for_file,
                         )
                         success += 1
                         _progress(f"씬 {scene_num} 리서치 이미지 재활용: {matched.get('title','')[:40]}")
@@ -446,7 +451,7 @@ def run_batch(
                             pass
                 if best and best.local_path and Path(best.local_path).exists():
                     ext = Path(best.local_path).suffix or ".jpg"
-                    fname = image_assets.next_filename(images_dir, scene_num, "search", ext)
+                    fname = image_assets.next_filename(images_dir, scene_num, "search", ext, scene_id=scene_id_for_file)
                     dest = search_dl_dir / fname
                     _sh.copy2(best.local_path, dest)
                     try:
@@ -454,7 +459,8 @@ def run_batch(
                     except Exception:
                         pass
                     image_assets.add_version(images_dir, scene_num, "search/" + fname, "search",
-                                             source_url=best.source_page, license_info=best.license)
+                                             source_url=best.source_page, license_info=best.license,
+                                             scene_id=scene_id_for_file)
                     success += 1
                     _progress(f"씬 {scene_num} 검색 완료: {fname}")
                 else:

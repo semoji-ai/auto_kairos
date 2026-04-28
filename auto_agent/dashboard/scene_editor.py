@@ -443,13 +443,33 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
     out_dir = project["output_dir"]
     img_dir = Path(out_dir) / "images"
 
+    # 해당 씬의 sceneId 조회 (씬 분할/통합에 안전한 자산 매핑용)
+    scene_id_for_file: str | None = None
+    for sc in specs.get("scenes", []):
+        if sc.get("sceneNumber") == scene_num:
+            scene_id_for_file = sc.get("sceneId")
+            break
+
+    def _filename_prefix() -> str:
+        if scene_id_for_file:
+            return f"scene_{scene_id_for_file}_search_"
+        return f"scene_{scene_num:03d}_search_"
+
     # ── 이미지를 search/ 폴더에 로컬 저장 (갤러리 드래그 또는 외부 URL) ──
     import re as _re
     if not is_none:
         search_dir = img_dir / "search"
         search_dir.mkdir(exist_ok=True)
-        pattern = _re.compile(rf"scene_{scene_num:03d}_search_(\d+)\.[^.]+")
-        existing = [int(m.group(1)) for f in search_dir.iterdir() if (m := pattern.match(f.name))]
+        # sceneId + 레거시 sceneNumber 패턴 모두 카운트해 인덱스 충돌 회피
+        prefix = _filename_prefix()
+        legacy_prefix = f"scene_{scene_num:03d}_search_"
+        pat_id = _re.compile(rf"{_re.escape(prefix)}(\d+)\.[^.]+")
+        pat_num = _re.compile(rf"{_re.escape(legacy_prefix)}(\d+)\.[^.]+")
+        existing = []
+        for f in search_dir.iterdir():
+            m = pat_id.match(f.name) or (pat_num.match(f.name) if scene_id_for_file else None)
+            if m:
+                existing.append(int(m.group(1)))
         next_idx = max(existing, default=0) + 1
         dir_name = Path(out_dir).name
 
@@ -461,7 +481,7 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
             else:
                 # 갤러리 드래그 등 외부 파일: search/로 복사
                 ext = Path(src_file).suffix
-                dest_name = f"scene_{scene_num:03d}_search_{next_idx:02d}{ext}"
+                dest_name = f"{prefix}{next_idx:02d}{ext}"
                 try:
                     shutil.copy2(src_path, search_dir / dest_name)
                     image_url = f"/output/{dir_name}/images/search/{dest_name}"
@@ -476,7 +496,7 @@ async def select_scene_image(slug: str, scene_num: int, request: Request):
                 url_ext = Path(parsed.path).suffix.lower()
                 if url_ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
                     url_ext = ".jpg"
-                dest_name = f"scene_{scene_num:03d}_search_{next_idx:02d}{url_ext}"
+                dest_name = f"{prefix}{next_idx:02d}{url_ext}"
                 resp = _req.get(image_url, timeout=30)
                 resp.raise_for_status()
                 (search_dir / dest_name).write_bytes(resp.content)
@@ -1238,10 +1258,22 @@ async def upload_scene_video(slug: str, scene_num: int, file: UploadFile = File(
         except Exception:
             pass
 
-    # 기존 해당 씬 엔트리 제거 후 새로 추가
+    # 해당 씬의 sceneId 조회 (분할/통합에 안전한 매핑용)
+    scene_id_for_va: str | None = None
+    for sc in specs.get("scenes", []):
+        if sc.get("sceneNumber") == scene_num:
+            scene_id_for_va = sc.get("sceneId")
+            break
+
+    # 기존 해당 씬 엔트리 제거 (sceneId 우선 + sceneNumber 모두) 후 새로 추가
     scenes = va_data.get("scenes", [])
-    scenes = [s for s in scenes if s.get("sceneNumber") != scene_num]
+    scenes = [s for s in scenes
+              if not (
+                  (scene_id_for_va and s.get("sceneId") == scene_id_for_va)
+                  or s.get("sceneNumber") == scene_num
+              )]
     scenes.append({
+        "sceneId": scene_id_for_va,
         "sceneNumber": scene_num,
         "videoFile": dest_path.name,
         "startSec": 0,

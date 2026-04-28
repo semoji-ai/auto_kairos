@@ -102,8 +102,16 @@ class RemotionBridge:
             result[scene_num] = entries
         return result
 
-    def _load_subtitles_srt(self, subtitles_dir: Path, scene_num: int) -> List[Dict]:
-        srt_path = subtitles_dir / f"scene_{scene_num:03d}.srt"
+    def _load_subtitles_srt(self, subtitles_dir: Path, scene_num: int,
+                            scene_id: str | None = None) -> List[Dict]:
+        # sceneId 우선 (`<sceneId>.srt`) → 레거시 `scene_NNN.srt`
+        srt_path = None
+        if scene_id:
+            cand = subtitles_dir / f"{scene_id}.srt"
+            if cand.exists():
+                srt_path = cand
+        if srt_path is None:
+            srt_path = subtitles_dir / f"scene_{scene_num:03d}.srt"
         if not srt_path.exists():
             return []
         entries = []
@@ -181,8 +189,9 @@ class RemotionBridge:
                 # 오디오 없거나 0초 → 최소 5초 보장 (0초 렌더링 방지)
                 audio_duration = 5.0
 
-            # 자막
-            subtitles = subtitles_map.get(scene_num) or self._load_subtitles_srt(subtitles_dir, scene_num)
+            # 자막 — sceneId 우선
+            _sid = scene.get("sceneId") if isinstance(scene, dict) else None
+            subtitles = subtitles_map.get(scene_num) or self._load_subtitles_srt(subtitles_dir, scene_num, _sid)
 
             # 시각화
             visualization = None

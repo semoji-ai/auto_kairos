@@ -144,12 +144,23 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
 
     sub_lookup: dict[int, list] = {}
     srt_dir = out_dir / "subtitles"
+    # sceneId → sceneNumber 매핑 (자막 파일명이 sceneId 기반이면 lookup용)
+    sid_to_sn: dict[str, int] = {s.get("sceneId"): s.get("sceneNumber")
+                                 for s in specs.get("scenes", []) if s.get("sceneId")}
     if srt_dir.exists():
         import re as _re2
-        for srt_file in sorted(srt_dir.glob("scene_*.srt")):
-            m = _re2.search(r"scene_(\d+)", srt_file.stem)
-            if m:
-                sn = int(m.group(1))
+        for srt_file in sorted(srt_dir.glob("*.srt")):
+            stem = srt_file.stem
+            sn = None
+            # 1차: sceneId 단독 stem (e.g. "bdc56522.srt")
+            if _re2.match(r"^[0-9a-f]{8}$", stem) and stem in sid_to_sn:
+                sn = sid_to_sn[stem]
+            # 2차: 레거시 "scene_NNN.srt"
+            if sn is None:
+                m_num = _re2.match(r"^scene_(\d+)$", stem)
+                if m_num:
+                    sn = int(m_num.group(1))
+            if sn is not None:
                 parsed = _parse_srt(srt_file.read_text(encoding="utf-8"))
                 if parsed:
                     sub_lookup[sn] = parsed
@@ -273,27 +284,43 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         except Exception:
             pass
 
-    # audio_assets.json → {sceneNumber: selected_audioFile} 룩업
+    # audio_assets.json → {sceneNumber: selected_audioFile} 룩업 (sceneId 우선)
     audio_assets_lookup: dict = {}
     audio_assets_path = out_dir / "audio" / "audio_assets.json"
+    sid_to_sn_au: dict[str, int] = {s.get("sceneId"): s.get("sceneNumber")
+                                    for s in specs.get("scenes", []) if s.get("sceneId")}
     if audio_assets_path.exists():
         try:
             aa_data = json.loads(audio_assets_path.read_text(encoding="utf-8"))
             for aa_entry in aa_data.get("scenes", []):
-                sn = aa_entry.get("sceneNumber")
                 selected = aa_entry.get("selected")
-                if sn is not None and selected:
+                if not selected:
+                    continue
+                sid = aa_entry.get("sceneId")
+                if sid and sid in sid_to_sn_au:
+                    audio_assets_lookup[sid_to_sn_au[sid]] = selected
+                    continue
+                sn = aa_entry.get("sceneNumber")
+                if sn is not None:
                     audio_assets_lookup[sn] = selected
         except Exception:
             pass
 
-    # video_assets.json → {sceneNumber: videoAsset} 룩업
+    # video_assets.json → {sceneNumber: videoAsset} 룩업 (sceneId 우선)
     video_assets_lookup: dict = {}
     video_assets_path = out_dir / "video_assets.json"
+    sid_to_sn_va: dict[str, int] = {s.get("sceneId"): s.get("sceneNumber")
+                                    for s in specs.get("scenes", []) if s.get("sceneId")}
     if video_assets_path.exists():
         try:
             va_data = json.loads(video_assets_path.read_text(encoding="utf-8"))
             for va_entry in va_data.get("scenes", []):
+                # sceneId 우선 매핑 (분할/통합에 안전)
+                sid = va_entry.get("sceneId")
+                if sid and sid in sid_to_sn_va:
+                    video_assets_lookup[sid_to_sn_va[sid]] = va_entry
+                    continue
+                # 레거시 sceneNumber fallback
                 sn = va_entry.get("sceneNumber")
                 if sn is not None:
                     video_assets_lookup[sn] = va_entry
@@ -349,19 +376,36 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             if img_src.exists():
                 image_path = link_asset(img_src, "images", selected_file)
         if not image_path and _scene_kind in ("search_image", "generate_image") and _ia_source != "none":
-            for subdir in ("", "generated/", "search/"):
+            # sceneId 기반 파일 우선 → 분할/통합 시에도 자산 매핑 유지
+            scene_id_for_file = scene.get("sceneId")
+            search_root = out_dir / "images" / "search"
+            generated_root = out_dir / "images" / "generated"
+            for ext in (".jpg", ".jpeg", ".png", ".webp"):
                 if image_path:
                     break
-                for ext in (".jpg", ".jpeg", ".png", ".webp"):
-                    # 루트 / generated/ 는 scene_NNN.{ext}, search/ 는 scene_NNN_search_NN.{ext}
+                # 1차: sceneId 기반 (search/)
+                if scene_id_for_file:
+                    cands = sorted(search_root.glob(f"scene_{scene_id_for_file}_search_*{ext}"), reverse=True) \
+                        if search_root.exists() else []
+                    if cands:
+                        img_src = cands[0]
+                        image_path = link_asset(img_src, "images", f"search/{img_src.name}")
+                        break
+                    # sceneId 기반 (generated/)
+                    cands = sorted(generated_root.glob(f"scene_{scene_id_for_file}_gen_*{ext}"), reverse=True) \
+                        if generated_root.exists() else []
+                    if cands:
+                        img_src = cands[0]
+                        image_path = link_asset(img_src, "images", f"generated/{img_src.name}")
+                        break
+                # 2차 fallback: sceneNumber 기반 (legacy)
+                for subdir in ("", "generated/", "search/"):
                     if subdir == "search/":
-                        # 가장 최신 search 파일 (번호 큰 것) 사용
-                        candidates = sorted(
-                            (out_dir / "images" / "search").glob(f"{scene_key}_search_*{ext}"),
-                            reverse=True,
-                        )
-                        if candidates:
-                            img_src = candidates[0]
+                        cands = sorted(
+                            search_root.glob(f"{scene_key}_search_*{ext}"), reverse=True
+                        ) if search_root.exists() else []
+                        if cands:
+                            img_src = cands[0]
                             image_path = link_asset(img_src, "images", f"search/{img_src.name}")
                             break
                     else:

@@ -174,31 +174,47 @@ def _get_scene(data: dict, scene_num: int, scene_id: str | None = None) -> dict:
     return scene
 
 
-def has_generated_version(images_dir: Path, scene_num: int) -> bool:
+def _find_scene_match(scenes: list, scene_num: int, scene_id: str | None) -> dict | None:
+    """sceneId 우선 → sceneNumber 폴백."""
+    if scene_id:
+        for s in scenes:
+            if s.get("sceneId") == scene_id:
+                return s
+    for s in scenes:
+        if s.get("sceneNumber") == scene_num:
+            return s
+    return None
+
+
+def has_generated_version(images_dir: Path, scene_num: int, scene_id: str | None = None) -> bool:
     """해당 씬에 이미 generate 타입이 있는지."""
     data = _load(images_dir)
-    for s in data["scenes"]:
-        if s["sceneNumber"] == scene_num:
-            return any(img.get("type") == "generate" for img in s.get("images", []))
-    return False
+    s = _find_scene_match(data["scenes"], scene_num, scene_id)
+    if not s:
+        return False
+    return any(img.get("type") == "generate" for img in s.get("images", []))
 
 
-def has_search_version(images_dir: Path, scene_num: int) -> bool:
+def has_search_version(images_dir: Path, scene_num: int, scene_id: str | None = None) -> bool:
     """해당 씬에 이미 search 타입이 image_assets에 등록되어 있는지."""
     data = _load(images_dir)
-    for s in data["scenes"]:
-        if s["sceneNumber"] == scene_num:
-            return any(img.get("type") == "search" for img in s.get("images", []))
-    return False
+    s = _find_scene_match(data["scenes"], scene_num, scene_id)
+    if not s:
+        return False
+    return any(img.get("type") == "search" for img in s.get("images", []))
 
 
 def add_version(images_dir: Path, scene_num: int, file_name: str,
-                version_type: str, auto_select: bool = True, **meta) -> dict:
+                version_type: str, auto_select: bool = True,
+                scene_id: str | None = None, **meta) -> dict:
     """이미지 등록. auto_select=True면 이 이미지를 selected로. 스레드 안전."""
     file_name = file_name.replace("\\", "/")
     with _file_lock:
         data = _load(images_dir)
-        scene = _get_scene(data, scene_num)
+        scene = _get_scene(data, scene_num, scene_id)
+        # sceneId가 처음 부여되는 경우 기록
+        if scene_id and not scene.get("sceneId"):
+            scene["sceneId"] = scene_id
 
         # 중복 방지: 같은 파일이 이미 있으면 선택만 변경
         for existing in scene["images"]:
@@ -276,15 +292,28 @@ def get_all_scenes(images_dir: Path) -> list:
     return data["scenes"]
 
 
-def next_filename(images_dir: Path, scene_num: int, version_type: str, ext: str = ".png") -> str:
-    """다음 버전 파일명 생성. scene_001_search_01.jpg 등."""
-    prefix = f"scene_{scene_num:03d}_{version_type}_"
-    # generated/ 또는 search/ 폴더에서 기존 파일 수 확인
-    sub_dir = images_dir / ("generated" if version_type == "gen" else "search")
-    if sub_dir.exists():
-        existing = list(sub_dir.glob(f"{prefix}*"))
+def next_filename(images_dir: Path, scene_num: int, version_type: str,
+                  ext: str = ".png", scene_id: str | None = None) -> str:
+    """다음 버전 파일명 생성.
+
+    sceneId 있으면 `scene_<sceneId>_search_NN.jpg` 형식 사용 — 씬 분할/통합 시
+    파일명이 sceneNumber 변동에 영향받지 않음. 없으면 기존 `scene_NNN_*` 패턴.
+
+    기존 sceneNumber 패턴도 카운트에 포함해서 번호 충돌 회피.
+    """
+    if scene_id:
+        prefix = f"scene_{scene_id}_{version_type}_"
+        # 동일 sceneId의 기존 파일 + 마이그레이션 전 sceneNumber 패턴도 함께 카운트
+        legacy_prefix = f"scene_{scene_num:03d}_{version_type}_"
     else:
-        existing = list(images_dir.glob(f"{prefix}*"))
+        prefix = f"scene_{scene_num:03d}_{version_type}_"
+        legacy_prefix = None
+
+    sub_dir = images_dir / ("generated" if version_type == "gen" else "search")
+    search_root = sub_dir if sub_dir.exists() else images_dir
+    existing = list(search_root.glob(f"{prefix}*"))
+    if legacy_prefix:
+        existing.extend(search_root.glob(f"{legacy_prefix}*"))
     num = len(existing) + 1
     return f"{prefix}{num:02d}{ext}"
 

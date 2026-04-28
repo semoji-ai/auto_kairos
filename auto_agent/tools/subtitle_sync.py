@@ -507,13 +507,16 @@ class SubtitleSync:
                 )
                 results.append(result)
 
-                srt_path = output_dir / f"scene_{result.scene_number:03d}.srt"
+                # sceneId 우선 → 레거시 sceneNumber fallback
+                _sid = scene.get("sceneId") if isinstance(scene, dict) else None
+                _stem = _sid if _sid else f"scene_{result.scene_number:03d}"
+                srt_path = output_dir / f"{_stem}.srt"
                 with open(srt_path, "w", encoding="utf-8") as f:
                     f.write(result.to_srt())
 
                 # 단어별 타임스탬프 사이드카 JSON 저장
                 if result.raw_words:
-                    words_path = output_dir / f"scene_{result.scene_number:03d}_words.json"
+                    words_path = output_dir / f"{_stem}_words.json"
                     with open(words_path, "w", encoding="utf-8") as f:
                         json.dump({
                             "scene_number": result.scene_number,
