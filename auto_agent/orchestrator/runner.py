@@ -4308,6 +4308,18 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         monitor = ProgressFileMonitor(progress_path, self.project_slug, self.state.current_phase)
         monitor.start()
 
+        # source_ingest 동안 외부 ResearchAgent의 manifests/*/claims.jsonl을 라이브 변환
+        research_watcher = None
+        if module_name == "source_ingest":
+            from auto_agent.orchestrator.research_watcher import ResearchManifestWatcher
+            research_watcher = ResearchManifestWatcher(
+                project_dir=self.project_dir,
+                project_slug=self.project_slug,
+                notifier=_notify,
+                phase=self.state.current_phase or "stage_1",
+            )
+            research_watcher.start()
+
         # manifest-builder는 project_id + storage_key 인자 필요
         cmd = [sys.executable, str(script_path)]
         if module_name == "manifest-builder":
@@ -4353,6 +4365,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             )
         finally:
             monitor.stop()
+            if research_watcher is not None:
+                research_watcher.stop()
 
     def _resolve_video_output_filename(self) -> str:
         """{slug}_final.mp4, 이미 존재하면 _v2, _v3 ... 자동 증가."""
