@@ -683,7 +683,7 @@ async def project_page(request: Request, project_ref: str, tab: str = "pipeline"
     if needs_redirect:
         return RedirectResponse(
             url=canonical_uuid_url(str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""), project["uuid"]),
-            status_code=301,
+            status_code=307,
         )
 
     context = _load_tab_data(pm, project, tab)
@@ -731,7 +731,7 @@ async def research_canvas(request: Request, project_ref: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = Path(project.get("output_dir", ""))
 
@@ -893,20 +893,28 @@ async def manuscript_raw(request: Request, project_ref: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = project.get("output_dir", "")
     text = load_project_text(out_dir, "final_manuscript.md")
     return {"text": text or "", "chars": len(text) if text else 0}
 
 
-@app.post("/api/p/{slug}/manuscript/save")
-async def manuscript_save(slug: str, request: Request):
+@app.post("/api/p/{project_ref}/manuscript/save")
+async def manuscript_save(request: Request, project_ref: str):
     """원고 저장."""
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "project not found"}, 404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
     body = await request.json()
     text = body.get("text", "")
     if not text.strip():
@@ -928,7 +936,7 @@ async def research_images(request: Request, project_ref: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = Path(project.get("output_dir", ""))
     research_root = out_dir / "research"
@@ -991,7 +999,7 @@ async def research_wiki_index(request: Request, project_ref: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = Path(project.get("output_dir", ""))
     wiki_root = out_dir / "research" / "wiki"
@@ -1016,7 +1024,7 @@ async def research_wiki_page(request: Request, project_ref: str, page: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = Path(project.get("output_dir", ""))
     wiki_root = out_dir / "research" / "wiki"
@@ -1073,7 +1081,7 @@ async def project_tab_by_slug(request: Request, project_ref: str, tab: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     context = _load_tab_data(pm, project, tab)
     return templates.TemplateResponse(request, TAB_TEMPLATES[tab], context)
@@ -1108,7 +1116,7 @@ async def storyboard_scene_detail_by_slug(request: Request, project_ref: str, sc
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = project["output_dir"]
     pid = project["id"]
@@ -1205,7 +1213,7 @@ async def api_project_summary_by_slug(request: Request, project_ref: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     pid = project["id"]
     project["asset_counts"] = pm.get_asset_counts(pid)
@@ -1227,7 +1235,7 @@ async def api_scenes_by_slug(request: Request, project_ref: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = project.get("output_dir", "")
     specs = load_project_json(out_dir, "scene_specs.json")
@@ -1310,7 +1318,7 @@ async def image_candidates(request: Request, project_ref: str, scene_num: int, q
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = project.get("output_dir", "")
 
@@ -1377,14 +1385,23 @@ async def image_candidates(request: Request, project_ref: str, scene_num: int, q
     return JSONResponse({"query": query, "candidates": candidates, "cached": False, "source": used_source})
 
 
-@app.post("/api/p/{slug}/images/select/{scene_num}")
-async def select_image(request: Request, slug: str, scene_num: int):
+@app.post("/api/p/{project_ref}/images/select/{scene_num}")
+async def select_image(request: Request, project_ref: str, scene_num: int):
     """이미지 선택 — URL 다운로드 또는 기존 버전 선택."""
     from auto_agent.tools.image_assets import add_version, select_version, next_filename
-    from auto_agent.dashboard.helpers import resolve_project_by_slug
-    project = resolve_project_by_slug(slug)
+    pm = get_pm()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+    slug = project["slug"]
     out_dir = project.get("output_dir", "")
     img_dir = Path(out_dir) / "images"
     img_dir.mkdir(parents=True, exist_ok=True)
@@ -1440,7 +1457,7 @@ async def image_versions(request: Request, project_ref: str, scene_num: int):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = project.get("output_dir", "")
     dir_name = Path(out_dir).name if out_dir else project["slug"]
@@ -1484,14 +1501,23 @@ async def image_versions(request: Request, project_ref: str, scene_num: int):
         return JSONResponse({"sceneNumber": scene_num, "selected": None, "versions": [], "is_none": False})
 
 
-@app.post("/api/p/{slug}/tts/regenerate/{scene_num}")
-async def regenerate_tts(request: Request, slug: str, scene_num: int):
+@app.post("/api/p/{project_ref}/tts/regenerate/{scene_num}")
+async def regenerate_tts(request: Request, project_ref: str, scene_num: int):
     """씬별 TTS 재생성."""
     import json as _json
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+    slug = project["slug"]
     out_dir = project.get("output_dir", "")
     body = await request.json()
     text = body.get("text", "")
@@ -1729,7 +1755,7 @@ async def tts_versions(request: Request, project_ref: str, scene_num: int):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = project.get("output_dir", "")
     dir_name = Path(out_dir).name if out_dir else project["slug"]
@@ -1740,14 +1766,23 @@ async def tts_versions(request: Request, project_ref: str, scene_num: int):
     return JSONResponse(scene_data)
 
 
-@app.post("/api/p/{slug}/tts/select/{scene_num}")
-async def select_tts(request: Request, slug: str, scene_num: int):
+@app.post("/api/p/{project_ref}/tts/select/{scene_num}")
+async def select_tts(request: Request, project_ref: str, scene_num: int):
     """TTS 버전 선택."""
     from auto_agent.tools.audio_assets import select_version
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+    slug = project["slug"]
     body = await request.json()
     file_name = body.get("file", "")
     if not file_name:
@@ -1773,7 +1808,7 @@ async def get_tts_text(request: Request, project_ref: str, scene_num: int):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = project.get("output_dir", "")
     specs = load_project_json(out_dir, "scene_specs.json")
@@ -1811,7 +1846,7 @@ async def get_subtitles(request: Request, project_ref: str, scene_num: int):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = project.get("output_dir", "")
     srt_path = Path(out_dir) / "subtitles" / f"scene_{scene_num:03d}.srt"
@@ -1899,13 +1934,21 @@ def _resolve_subtitle_audio_duration(out_dir: str, scene_num: int, fallback_end_
     return round(float(fallback_end_sec or 0.0), 3)
 
 
-@app.post("/api/p/{slug}/subtitles/{scene_num}")
-async def save_subtitles(request: Request, slug: str, scene_num: int):
+@app.post("/api/p/{project_ref}/subtitles/{scene_num}")
+async def save_subtitles(request: Request, project_ref: str, scene_num: int):
     """편집된 SRT 엔트리를 .srt 파일로 저장."""
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
     body = await request.json()
     out_dir = project.get("output_dir", "")
     entries = _normalize_subtitle_entries(body.get("entries", []))
@@ -1997,13 +2040,21 @@ def _update_scene_specs_src(out_dir: str, slug: str, scene_num: int):
         specs_path.write_text(_json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-@app.post("/api/p/{slug}/images/auto-prompt/{scene_num}")
-async def auto_prompt(slug: str, scene_num: int):
+@app.post("/api/p/{project_ref}/images/auto-prompt/{scene_num}")
+async def auto_prompt(request: Request, project_ref: str, scene_num: int):
     """Sonnet으로 씬 컨텍스트에서 이미지 프롬프트 자동 생성."""
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
     out_dir = project.get("output_dir", "")
     specs = load_project_json(out_dir, "scene_specs.json")
     if not specs:
@@ -2077,13 +2128,22 @@ async def auto_prompt(slug: str, scene_num: int):
         return JSONResponse({"error": str(e)}, 500)
 
 
-@app.post("/api/p/{slug}/images/generate/{scene_num}")
-async def generate_image(request: Request, slug: str, scene_num: int):
+@app.post("/api/p/{project_ref}/images/generate/{scene_num}")
+async def generate_image(request: Request, project_ref: str, scene_num: int):
     """FAL.ai로 이미지 생성."""
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+    slug = project["slug"]
     out_dir = project.get("output_dir", "")
     body = await request.json()
     prompt = body.get("prompt", "")
@@ -2189,7 +2249,7 @@ async def get_art_style(request: Request, project_ref: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     config = pm.get_config(project["id"])
     current = config.get("art_style", "")
@@ -2228,16 +2288,25 @@ async def get_art_style(request: Request, project_ref: str):
     return JSONResponse({"current": current, "current_info": current_info, "available": styles})
 
 
-@app.post("/api/p/{slug}/art-style")
-async def set_art_style(request: Request, slug: str):
+@app.post("/api/p/{project_ref}/art-style")
+async def set_art_style(request: Request, project_ref: str):
     """프로젝트 아트스타일 변경 + 로컬 복사 + manifest 재빌드."""
     from auto_agent.db.project_manager import resolve_art_style_path
     from auto_agent.scripts.build_manifest import build_manifest
 
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+    slug = project["slug"]
     body = await request.json()
     new_style = body.get("art_style", "")
     if not resolve_art_style_path(new_style, Path(project.get("output_dir", ""))):
@@ -2264,14 +2333,22 @@ async def set_art_style(request: Request, slug: str):
     return JSONResponse({"ok": True, "art_style": new_style, "provisioned": provisioned})
 
 
-@app.post("/api/p/{slug}/thumbnail-canvas/export")
-async def thumbnail_canvas_export(request: Request, slug: str):
+@app.post("/api/p/{project_ref}/thumbnail-canvas/export")
+async def thumbnail_canvas_export(request: Request, project_ref: str):
     """썸네일 캔버스 PNG 내보내기 — Base64 데이터 수신 후 파일 저장."""
     import base64, re as _re, json as _json
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, 404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
     out_dir = project.get("output_dir", "")
     body = await request.json()
     data_url = body.get("image_data", "")
@@ -2285,7 +2362,7 @@ async def thumbnail_canvas_export(request: Request, slug: str):
     save_dir.mkdir(parents=True, exist_ok=True)
     save_path = save_dir / filename
     save_path.write_bytes(img_bytes)
-    dir_name = Path(out_dir).name if out_dir else slug
+    dir_name = Path(out_dir).name if out_dir else project["slug"]
     return JSONResponse({"ok": True, "filename": filename, "url": f"/output/{dir_name}/images/thumbnails/{filename}"})
 
 
@@ -2302,7 +2379,7 @@ async def thumbnail_canvas_state_load(request: Request, project_ref: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     state_path = Path(project.get("output_dir", "")) / "thumbnail_canvas_state.json"
     if not state_path.exists():
@@ -2315,13 +2392,21 @@ async def thumbnail_canvas_state_load(request: Request, project_ref: str):
         return JSONResponse({"ok": False})
 
 
-@app.post("/api/p/{slug}/thumbnail-canvas/state")
-async def thumbnail_canvas_state_save(request: Request, slug: str):
+@app.post("/api/p/{project_ref}/thumbnail-canvas/state")
+async def thumbnail_canvas_state_save(request: Request, project_ref: str):
     """캔버스 레이어 상태 저장."""
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"ok": False, "error": "not found"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
     body = await request.json()
     state_path = Path(project.get("output_dir", "")) / "thumbnail_canvas_state.json"
     import json as _json
@@ -2343,7 +2428,7 @@ async def images_all(request: Request, project_ref: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = project.get("output_dir", "")
     dir_name = Path(out_dir).name if out_dir else project["slug"]
@@ -2396,7 +2481,7 @@ async def image_history(request: Request, project_ref: str, scene_num: int):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = project.get("output_dir", "")
     dir_name = Path(out_dir).name if out_dir else project["slug"]
@@ -2413,13 +2498,21 @@ async def image_history(request: Request, project_ref: str, scene_num: int):
     return JSONResponse({"versions": versions})
 
 
-@app.put("/api/p/{slug}/scenes/{scene_num}")
-async def api_update_scene(request: Request, slug: str, scene_num: int):
+@app.put("/api/p/{project_ref}/scenes/{scene_num}")
+async def api_update_scene(request: Request, project_ref: str, scene_num: int):
     """씬 편집 → Supabase Storage에 저장."""
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
     pid = project["id"]
     out_dir = project["output_dir"]
 
@@ -2454,14 +2547,22 @@ async def api_update_scene(request: Request, slug: str, scene_num: int):
     return {"ok": True, "scene_number": scene_num, "thumbnail_invalidated": True}
 
 
-@app.post("/api/p/{slug}/scenes/{scene_num}/rerun")
-async def api_rerun_scene(request: Request, slug: str, scene_num: int):
+@app.post("/api/p/{project_ref}/scenes/{scene_num}/rerun")
+async def api_rerun_scene(request: Request, project_ref: str, scene_num: int):
     """씬 단위 재연출 — script-director를 해당 씬에만 실행."""
     import subprocess, sys
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
 
     out_dir = project.get("output_dir", "")
     if not out_dir:
@@ -2559,7 +2660,7 @@ async def get_image_candidates_by_slug(request: Request, project_ref: str, scene
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     out_dir = project["output_dir"]
     dir_name = Path(out_dir).name if out_dir else project["slug"]
@@ -2594,13 +2695,22 @@ async def get_image_candidates(project_id: int, scene_num: int, include_all: boo
     return {"scene_number": scene_num, "candidates": candidates, "all_candidates": all_candidates}
 
 
-@app.post("/api/p/{slug}/scene/{scene_num}/download-candidate")
-async def download_candidate_image(request: Request, slug: str, scene_num: int):
+@app.post("/api/p/{project_ref}/scene/{scene_num}/download-candidate")
+async def download_candidate_image(request: Request, project_ref: str, scene_num: int):
     """썸네일에서 선택한 미다운로드 후보의 원본을 다운로드 + 적용."""
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+    slug = project["slug"]
 
     body = await request.json()
     image_url = body.get("image_url", "")
@@ -2671,13 +2781,21 @@ def _load_all_candidates(output_dir: str, scene_num: int) -> list:
         return []
 
 
-@app.post("/api/p/{slug}/scene/{scene_num}/select-image")
-async def select_image_candidate_by_slug(request: Request, slug: str, scene_num: int):
+@app.post("/api/p/{project_ref}/scene/{scene_num}/select-image")
+async def select_image_candidate_by_slug(request: Request, project_ref: str, scene_num: int):
     """slug 기반 이미지 선택."""
     pm = get_pm()
-    project = pm.get_project(slug=slug)
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
     return await _do_select_image(request, project, scene_num)
 
 
@@ -2739,9 +2857,22 @@ def _is_pipeline_running(slug: str) -> bool:
     return False
 
 
-@app.post("/api/p/{slug}/pipeline/start")
-async def pipeline_start(slug: str, request: Request):
+@app.post("/api/p/{project_ref}/pipeline/start")
+async def pipeline_start(request: Request, project_ref: str):
     """파이프라인 백그라운드 실행."""
+    pm = get_pm()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+    slug = project["slug"]
     if _is_pipeline_running(slug):
         return {"ok": True, "status": "already_running"}
 
@@ -2772,9 +2903,7 @@ async def pipeline_start(slug: str, request: Request):
         cmd.extend(["--from", from_step])
 
     # output_dir에서 디렉토리명 결정 (uuid_{slug} 형식)
-    _pm = get_pm()
-    _proj = _pm.get_project(slug=slug)
-    _out_dir = _proj.get("output_dir", "") if _proj else ""
+    _out_dir = project.get("output_dir", "")
     _dir_name = Path(_out_dir).name if _out_dir else slug
     log_path = get_workspace_dir() / "output" / _dir_name / "pipeline.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -2809,7 +2938,7 @@ async def pipeline_status(request: Request, project_ref: str):
                 str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
                 project["uuid"],
             ),
-            status_code=301,
+            status_code=307,
         )
     slug = project["slug"]
     running = _is_pipeline_running(slug)
@@ -2821,9 +2950,22 @@ async def pipeline_status(request: Request, project_ref: str):
     return result
 
 
-@app.post("/api/p/{slug}/pipeline/stop")
-async def pipeline_stop(slug: str):
+@app.post("/api/p/{project_ref}/pipeline/stop")
+async def pipeline_stop(request: Request, project_ref: str):
     """파이프라인 중지."""
+    pm = get_pm()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+    slug = project["slug"]
     proc = _pipeline_procs.get(slug)
     if proc and proc.poll() is None:
         proc.terminate()
