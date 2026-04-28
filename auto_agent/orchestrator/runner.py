@@ -99,12 +99,14 @@ def _extract_agent_report(stdout: str, max_lines: int = 8) -> str:
     return '\n'.join(keep)
 
 
-def _notify(agent: str, text: str, phase: str = "", project: str = "", level: str = "info", data: dict = None):
+def _notify(agent: str, text: str, phase: str = "", project: str = "", level: str = "info", data: dict = None, kind: str = "message"):
     """파이프라인 진행 상황을 대시보드 메신저로 전송. 파일 영속 + HTTP POST.
-    agent 이름은 자동으로 별명으로 변환됩니다."""
+    agent 이름은 자동으로 별명으로 변환됩니다.
+    kind: "message"(채팅) | "doc_update"(라이브 문서 이벤트)."""
     import time as _time
     nickname = AGENT_NICKNAMES.get(agent, agent)
     msg = {
+        "kind": kind,
         "agent": nickname, "text": text, "phase": phase,
         "project": project, "level": level, "data": data or {},
         "timestamp": _time.time(),
@@ -447,6 +449,7 @@ class ProgressFileMonitor:
                         project=self.project_slug,
                         level=msg.get("level", "info"),
                         data=msg.get("data"),
+                        kind=msg.get("kind", "message"),
                     )
                 except json.JSONDecodeError:
                     pass

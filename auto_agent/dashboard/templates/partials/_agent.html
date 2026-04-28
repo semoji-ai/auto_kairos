@@ -172,7 +172,11 @@
       statusEl.className = 'agent-badge online';
     };
     es.onmessage = function(e) {
-      try { addMessage(JSON.parse(e.data)); } catch(err) {}
+      try {
+        var msg = JSON.parse(e.data);
+        if ((msg.kind || 'message') !== 'message') return;
+        addMessage(msg);
+      } catch(err) {}
     };
     es.onerror = function() {
       statusEl.textContent = '재연결 중...';

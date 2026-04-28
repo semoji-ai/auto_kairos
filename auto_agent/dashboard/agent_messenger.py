@@ -62,6 +62,7 @@ def post_message(
     level: str = "info",
     data: dict = None,
     skip_persist: bool = False,
+    kind: str = "message",
 ):
     """에이전트 메시지를 큐에 추가하고 모든 SSE 구독자에게 전달."""
     if not text or not text.strip():
@@ -76,6 +77,7 @@ def post_message(
 
     msg = {
         "id": _msg_id,
+        "kind": kind,
         "agent": agent,
         "text": text,
         "phase": phase,
@@ -143,9 +145,8 @@ async def message_stream(request: Request, project: str = ""):
     )
 
 
-@router.get("/history")
-async def message_history(limit: int = 50, project: str = ""):
-    """최근 메시지 히스토리. project 파라미터로 필터링."""
+def message_history_sync(limit: int = 50, project: str = ""):
+    """최근 메시지 히스토리 동기 조회. 내부 헬퍼."""
     global _messages, _initialized
     if not _initialized:
         _messages = _load_persisted()
@@ -156,6 +157,12 @@ async def message_history(limit: int = 50, project: str = ""):
     else:
         msgs = list(_messages)[-limit:]
     return {"messages": msgs}
+
+
+@router.get("/history")
+async def message_history(limit: int = 50, project: str = ""):
+    """최근 메시지 히스토리. project 파라미터로 필터링."""
+    return message_history_sync(limit=limit, project=project)
 
 
 @router.post("/send")
@@ -170,5 +177,6 @@ async def send_message(request: Request):
         level=body.get("level", "info"),
         data=body.get("data"),
         skip_persist=True,  # runner가 이미 파일에 기록
+        kind=body.get("kind", "message"),
     )
     return {"ok": True}
