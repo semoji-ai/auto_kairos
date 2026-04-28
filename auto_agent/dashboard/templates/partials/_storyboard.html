@@ -519,14 +519,52 @@ function resizePreview(val) {
         '<span class="style-name">' + (current.name || '') + '</span>';
     }).catch(function() {});
 
-  // 이미지 버전 그리드 자동 로드
-  function loadAllImageGrids() {
-    document.querySelectorAll('.sb-image-grid').forEach(function(el) {
-      var sn = parseInt(el.id.replace('sb-img-grid-', ''));
-      if (sn) sbLoadImageGrid(sn);
+  // 이미지 그리드 + 비디오 패널 — 화면에 들어올 때 lazy load (IntersectionObserver).
+  // 한 번 로드한 씬은 dataset.loaded='1'로 마킹하여 재호출 방지.
+  // 보이지 않는 씬은 fetch 자체 안 일어남 → 페이지 진입 시 동시 요청 폭주 해소.
+  (function() {
+    if (!('IntersectionObserver' in window)) {
+      // 폴백 — 모두 즉시 로드
+      document.querySelectorAll('.sb-image-grid').forEach(function(el) {
+        var sn = parseInt(el.id.replace('sb-img-grid-', ''));
+        if (sn) sbLoadImageGrid(sn);
+      });
+      document.querySelectorAll('.sb-video-panel').forEach(function(p) {
+        var sn = parseInt(p.id.replace('sb-video-panel-', ''), 10);
+        if (sn) sbLoadVideoPanel(sn);
+      });
+      return;
+    }
+    var io = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        if (el.dataset.loaded === '1') {
+          io.unobserve(el);
+          return;
+        }
+        if (el.classList.contains('sb-image-grid')) {
+          var sn = parseInt(el.id.replace('sb-img-grid-', ''));
+          if (sn) {
+            sbLoadImageGrid(sn);
+            el.dataset.loaded = '1';
+          }
+        } else if (el.classList.contains('sb-video-panel')) {
+          var vn = parseInt(el.id.replace('sb-video-panel-', ''), 10);
+          if (vn) {
+            sbLoadVideoPanel(vn);
+            el.dataset.loaded = '1';
+          }
+        }
+        io.unobserve(el);
+      });
+    }, { root: null, rootMargin: '200px', threshold: 0 });
+    document.querySelectorAll('.sb-image-grid, .sb-video-panel').forEach(function(el) {
+      io.observe(el);
     });
-  }
-  setTimeout(loadAllImageGrids, 500);
+    // 탭 전환 등으로 storyboard가 unmount될 때 cleanup hook
+    window._sbLazyObserver = io;
+  })();
 
   // scene-thumb.js는 동기 로드이므로 즉시 사용 가능
   if (window.mountSceneThumb) {
@@ -1081,6 +1119,54 @@ function sbSelectVersion(sn, file) {
 }
 
 // ── 비디오 패널 ──
+// 비디오 URL → 썸네일 URL (선택된 비디오 외 카드는 _thumb.jpg로 표시. 없으면 🎬 아이콘 fallback).
+function _sbThumbUrl(videoUrl) {
+  return videoUrl.replace(/\.(mp4|mov|webm|mkv)(\?.*)?$/i, '_thumb.jpg$2');
+}
+
+function _sbMakeVideoCard(sn, v, isSel) {
+  var safeFile = v.file.replace(/'/g, "\\'");
+  var safeUrl = v.url.replace(/'/g, "\\'");
+  var click = 'sbSelectVideo(' + sn + ',\'' + safeFile + '\',\'' + safeUrl + '\')';
+  // 선택된 비디오는 <video> 유지 (트리머가 duration 필요).
+  // 나머지는 <img src="_thumb.jpg"> + onerror fallback (🎬 아이콘).
+  if (isSel) {
+    return '<div class="sb-video-card selected" onclick="' + click + '">'
+      + '<video class="sb-video-thumb" src="' + v.url + '" muted preload="metadata"></video>'
+      + '<div class="sb-video-name">' + v.file + '</div>'
+      + '</div>';
+  }
+  var thumb = _sbThumbUrl(v.url);
+  return '<div class="sb-video-card" onclick="' + click + '">'
+    + '<img class="sb-video-thumb" src="' + thumb + '" loading="lazy" '
+    + 'onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),'
+    + '{className:\'sb-video-thumb\',textContent:\'🎬\','
+    + 'style:\'display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,0.05)\'}))" />'
+    + '<div class="sb-video-name">' + v.file + '</div>'
+    + '</div>';
+}
+
+// "다른 비디오" 드롭다운 lazy 렌더링 — 첫 클릭 시에만 카드 생성, 이후엔 단순 토글.
+function sbToggleOtherVideos(sn) {
+  var container = document.getElementById('sb-other-videos-' + sn);
+  if (!container) return;
+  if (container.style.display === 'none') {
+    if (container.dataset.loaded !== '1') {
+      var raw = container.dataset.others || '';
+      try {
+        var others = JSON.parse(raw);
+        var html = '';
+        others.forEach(function(v) { html += _sbMakeVideoCard(sn, v, false); });
+        container.innerHTML = html;
+        container.dataset.loaded = '1';
+      } catch(e) {}
+    }
+    container.style.display = 'flex';
+  } else {
+    container.style.display = 'none';
+  }
+}
+
 function sbLoadVideoPanel(sn) {
   var panel = document.getElementById('sb-video-panel-' + sn);
   if (!panel) return;
@@ -1095,36 +1181,29 @@ function sbLoadVideoPanel(sn) {
         return;
       }
 
-      // 현재 씬에 배정된 비디오 먼저, 나머지는 접혀있는 형태로
       var currentVideo = videos.find(function(v) { return v.file === currentFile; });
       var otherVideos = videos.filter(function(v) { return v.file !== currentFile; });
 
-      function makeCard(v, isSel) {
-        return '<div class="sb-video-card' + (isSel ? ' selected' : '') + '" onclick="sbSelectVideo(' + sn + ',\'' + v.file.replace(/'/g,"\\'")+'\',\'' + v.url.replace(/'/g,"\\'")+'\' )">'
-          + '<video class="sb-video-thumb" src="' + v.url + '" muted preload="metadata"></video>'
-          + '<div class="sb-video-name">' + v.file + '</div>'
-          + '</div>';
-      }
-
       var html = '';
       if (currentVideo) {
-        html += makeCard(currentVideo, true);
+        html += _sbMakeVideoCard(sn, currentVideo, true);
       }
       if (otherVideos.length) {
-        var otherId = 'sb-other-videos-' + sn;
+        // ⚠ 여기서는 카드를 렌더하지 않음. dataset에 직렬화만.
+        // 사용자가 "다른 비디오 N개 ▾" 클릭하면 sbToggleOtherVideos가 lazy 렌더.
+        var othersJson = JSON.stringify(otherVideos).replace(/"/g, '&quot;');
         html += '<div style="margin-top:4px">'
-          + '<button style="font-size:9px;color:#71717A;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:2px 6px;cursor:pointer" '
-          + 'onclick="var el=document.getElementById(\'' + otherId + '\');el.style.display=el.style.display===\'none\'?\'\':\'none\'">'
+          + '<button class="sb-other-videos-btn" style="font-size:9px;color:#71717A;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:2px 6px;cursor:pointer" '
+          + 'onclick="sbToggleOtherVideos(' + sn + ')">'
           + '다른 비디오 ' + otherVideos.length + '개 ▾</button>'
-          + '<div id="' + otherId + '" style="display:none;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">';
-        otherVideos.forEach(function(v) { html += makeCard(v, false); });
-        html += '</div></div>';
+          + '<div id="sb-other-videos-' + sn + '" data-others="' + othersJson + '" '
+          + 'style="display:none;flex-wrap:wrap;gap:6px;margin-top:4px"></div>'
+          + '</div>';
       }
       if (!currentVideo && !otherVideos.length) {
         html = '<div style="font-size:10px;color:#71717A;padding:4px">비디오 없음</div>';
       }
       listEl.innerHTML = html;
-      // 선택된 비디오 있으면 트리머 초기화
       if (currentFile) sbInitTrimmer(sn);
     }).catch(function() {
       listEl.innerHTML = '<div style="font-size:10px;color:#f87171;padding:4px">로드 실패</div>';
@@ -1240,11 +1319,8 @@ function sbApplyTrim(sn) {
   });
 }
 
-// 페이지 로드 시 비디오 패널 초기화
-document.querySelectorAll('.sb-video-panel').forEach(function(p) {
-  var sn = parseInt(p.id.replace('sb-video-panel-', ''), 10);
-  sbLoadVideoPanel(sn);
-});
+// 비디오 패널 초기화는 위쪽 IntersectionObserver가 담당 (lazy).
+// 화면에 들어온 씬만 fetch — 페이지 진입 시 동시 요청 ~10개 이하.
 </script>
 
 <style>
