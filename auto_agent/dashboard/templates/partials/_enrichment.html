@@ -70,7 +70,7 @@
 <script>
 (function() {
   const slug = (typeof PROJECT_SLUG !== "undefined" ? PROJECT_SLUG : "") ||
-               (window.location.pathname.split("/p/")[1] || "").split("/")[0];
+               decodeURIComponent((window.location.pathname.split("/p/")[1] || "").split("/")[0]);
 
   function escape(s) {
     return String(s ?? "").replace(/[<>&"']/g, c => ({
