@@ -2241,6 +2241,7 @@ async def api_update_scene(request: Request, slug: str, scene_num: int):
     if not project:
         return JSONResponse({"error": "not found"}, status_code=404)
     pid = project["id"]
+    out_dir = project["output_dir"]
 
     body = await request.json()
 
