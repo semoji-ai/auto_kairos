@@ -4270,6 +4270,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "brief_review": "modules/brief_review_module.py",
             "brief_deepener": "modules/brief_deepener_module.py",
             "source_ingest": "modules/source_ingest_module.py",
+            "fresh_collector": "modules/fresh_collector_module.py",
             "vault_sync": "modules/vault_sync_module.py",
             "skeleton_from_vault": "modules/skeleton_from_vault_module.py",
             "chapter_projection": "modules/chapter_projection_module.py",

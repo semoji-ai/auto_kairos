@@ -113,6 +113,22 @@
           "notes": "외부 검색 없음. Read/Write만 사용. outline.json이 이미 존재하면 스킵."
         },
         {
+          "id": "step_1_fresh",
+          "name": "fresh_collector",
+          "description": "검증 게이트 없는 라이트 lane 호출 — wikipedia/news/crossref/openlibrary 4종 병렬. 결과는 프로젝트 로컬 raw + manifests에 적재. step_1_ingest와 병행 검증 (Phase 1).",
+          "type": "module",
+          "module": "fresh_collector",
+          "blocking": false,
+          "resumable": true,
+          "input": [
+            "editorial_brief.json"
+          ],
+          "output": [
+            "research/fresh_collector_summary.json"
+          ],
+          "notes": "spec: docs/superpowers/specs/2026-04-28-research-redesign.md (Phase 1). step_1_ingest와 같이 돌면서 영상 2~3편 결과 비교 후 컷오버 결정. C(블로그/SNS) 도메인은 이미 lane에서 차단. tier_hint(A/B/unknown)만 부여, 검증 게이트는 후속 단계가 담당."
+        },
+        {
           "id": "step_1_ingest",
           "name": "source_ingest",
           "description": "초기 outline을 조사 가이드로 사용해 ResearchAgent 기반 fresh research를 수행합니다. vault 02-research에 raw sources + wiki + claims 저장.",
