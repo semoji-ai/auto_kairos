@@ -117,6 +117,21 @@ templates = Jinja2Templates(directory=str(DASHBOARD_DIR / "templates"))
 templates.env.filters["format_headline"] = format_headline
 
 
+def _static_version(rel_path: str) -> str:
+    """정적 파일의 mtime을 캐시버스터로 반환 (random 대신 — 캐시 효율화).
+
+    rel_path는 dashboard/static/ 기준 상대 경로 (예: 'scene-editor.js').
+    """
+    try:
+        f = DASHBOARD_DIR / "static" / rel_path.lstrip("/")
+        return str(int(f.stat().st_mtime))
+    except Exception:
+        return "0"
+
+
+templates.env.globals["static_version"] = _static_version
+
+
 USE_SUPABASE = False  # 로컬 DB 기반으로 전환
 
 

@@ -1,7 +1,7 @@
 <!-- Storyboard 탭 — 원고 + 미리보기 + TTS 통합 -->
 <!-- scene-thumb.js (썸네일 프리뷰) + scene-editor.js (에디터) -->
-<script src="/static/scene-thumb.js?v={{ range(100000)|random }}"></script>
-<script src="/static/scene-editor.js?v={{ range(100000)|random }}"></script>
+<script src="/static/scene-thumb.js?v={{ static_version('scene-thumb.js') }}"></script>
+<script src="/static/scene-editor.js?v={{ static_version('scene-editor.js') }}"></script>
 {% if scenes %}
 <div class="sb-top-bar">
   <div class="sb-art-style-bar" id="sb-art-style-bar"></div>
@@ -946,104 +946,151 @@ function sbLoadImageGrid(sn) {
     try { _multiSel[sn] = JSON.parse(grid.dataset.multiImages || '[]'); } catch(e) { _multiSel[sn] = []; }
   }
 
-  Promise.all([
-    fetch('/api/p/' + encodeURIComponent(slug) + '/images/versions/' + sn).then(function(r) { return r.json(); }),
-    fetch('/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sn).then(function(r) { return r.json(); }).catch(function() { return {}; })
-  ]).then(function(results) {
-    var versions = results[0].versions || [];
-    var candidates = results[1].candidates || [];
-    var isNoneSelected = results[0].is_none || false;
-    var sel = _multiSel[sn] || [];
-    var html = '';
+  // 페이지 진입 시에는 versions만 fetch. candidates는 "후보 N개 ▼" 클릭 시 lazy.
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/versions/' + sn)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var versions = d.versions || [];
+      var candidateCount = d.candidate_count || 0;  // 백엔드가 카운트만 반환해도 됨; 없으면 0
+      var isNoneSelected = d.is_none || false;
+      var sel = _multiSel[sn] || [];
+      var html = '';
 
-    if (isMulti) {
-      // 멀티셀렉 헤더
-      html += '<div class="sb-multi-header" style="grid-column:1/-1">'
-        + '<span class="sb-multi-count">' + sel.length + '개 선택됨</span>'
-        + '<button class="sb-multi-apply" onclick="sbApplyMultiImages(' + sn + ')">적용</button>'
-        + '<button class="sb-multi-apply" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#71717A" onclick="sbClearMultiSel(' + sn + ')">초기화</button>'
-        + '</div>';
-    } else {
-      // 이미지 없음 카드 (단일 선택 모드만)
-      html += '<div class="sb-grid-thumb none-card' + (isNoneSelected ? ' selected' : '') + '" '
-        + 'onclick="sbSetNone(' + sn + ')" '
-        + 'title="이미지 없음 (source: none)" '
-        + 'style="background:rgba(239,68,68,0.10);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">'
-        + '<span style="font-size:14px">🚫</span>'
-        + '<span style="font-size:8px;color:' + (isNoneSelected ? '#EF4444' : '#71717A') + '">없음' + (isNoneSelected ? ' ✓' : '') + '</span>'
-        + '</div>';
-    }
-
-    // 로컬 이미지
-    versions.forEach(function(v) {
-      var typeIcon = v.type === 'generate' ? '🎨' : '🔍';
       if (isMulti) {
-        var idx = sel.indexOf(v.url);
-        var isSel = idx !== -1;
-        html += '<div class="sb-grid-thumb' + (isSel ? ' multi-sel' : '') + '" '
-          + 'onclick="sbToggleMultiSel(' + sn + ',\'' + v.url.replace(/'/g, "\\'") + '\')" '
-          + 'title="' + typeIcon + ' ' + v.file + '">'
-          + '<img src="' + v.url + '" loading="lazy">'
-          + (isSel ? '<span class="sb-multi-num">' + (idx + 1) + '</span>' : '')
+        html += '<div class="sb-multi-header" style="grid-column:1/-1">'
+          + '<span class="sb-multi-count">' + sel.length + '개 선택됨</span>'
+          + '<button class="sb-multi-apply" onclick="sbApplyMultiImages(' + sn + ')">적용</button>'
+          + '<button class="sb-multi-apply" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#71717A" onclick="sbClearMultiSel(' + sn + ')">초기화</button>'
           + '</div>';
       } else {
-        var isSel = !isNoneSelected && (v.selected || false);
-        html += '<div class="sb-grid-thumb' + (isSel ? ' selected' : '') + '" '
-          + 'onclick="sbSelectVersion(' + sn + ',\'' + v.file + '\')" '
-          + 'title="' + typeIcon + ' ' + v.file + '">'
-          + '<img src="' + v.url + '" loading="lazy">'
+        html += '<div class="sb-grid-thumb none-card' + (isNoneSelected ? ' selected' : '') + '" '
+          + 'onclick="sbSetNone(' + sn + ')" '
+          + 'title="이미지 없음 (source: none)" '
+          + 'style="background:rgba(239,68,68,0.10);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">'
+          + '<span style="font-size:14px">🚫</span>'
+          + '<span style="font-size:8px;color:' + (isNoneSelected ? '#EF4444' : '#71717A') + '">없음' + (isNoneSelected ? ' ✓' : '') + '</span>'
           + '</div>';
       }
-    });
 
-    // 검색 후보 (미다운로드) — enrichment + research 통합
-    var seenUrls = new Set();
-    candidates.forEach(function(c, cIdx) {
-      var thumb = c.thumbnail_1920_url || c.thumbnail_url || c.url || c.image_url || '';
-      if (!thumb || seenUrls.has(thumb)) return;
-      seenUrls.add(thumb);
-      var fromEnrich = c.from_enrichment ? ' enrich-pending' : '';
-      var badge = c.from_enrichment ? '<span class="sb-grid-badge" title="검토 대기">🆕</span>' : '';
-      if (isMulti) {
-        var idx = sel.indexOf(thumb);
-        var isSel = idx !== -1;
-        html += '<div class="sb-grid-thumb candidate' + fromEnrich + (isSel ? ' multi-sel' : '') + '" '
-          + 'onclick="sbToggleMultiSel(' + sn + ',\'' + thumb.replace(/'/g, "\\'") + '\')" '
-          + 'title="🌐 ' + (c.title || '').substring(0, 30) + '">'
-          + '<img src="' + thumb + '" loading="lazy">'
-          + badge
-          + (isSel ? '<span class="sb-multi-num">' + (idx + 1) + '</span>' : '')
-          + '</div>';
-      } else {
-        // lightbox 통일 — 데이터 attribute로 후보 정보 보관
-        html += '<div class="sb-grid-thumb candidate' + fromEnrich + '" '
-          + 'data-sn="' + sn + '" '
-          + 'data-cand-idx="' + cIdx + '" '
-          + 'title="🌐 ' + (c.title || '').substring(0, 30) + '">'
-          + '<img src="' + thumb + '" loading="lazy">'
-          + badge
-          + '</div>';
-      }
-    });
-
-    grid.innerHTML = html || '';
-
-    // 후보 카드 클릭 → lightbox (enrichment + research 공통 동작)
-    if (!isMulti) {
-      grid.querySelectorAll('.sb-grid-thumb.candidate').forEach(function(thumb) {
-        thumb.addEventListener('click', function() {
-          var ci = parseInt(thumb.dataset.candIdx);
-          var c = candidates[ci];
-          if (!c || typeof window.__sbOpenGridLightbox !== 'function') return;
-          window.__sbOpenGridLightbox(sn, c, candidates);
-        });
+      // 로컬 이미지 (versions)
+      versions.forEach(function(v) {
+        var typeIcon = v.type === 'generate' ? '🎨' : '🔍';
+        if (isMulti) {
+          var idx = sel.indexOf(v.url);
+          var isSel = idx !== -1;
+          html += '<div class="sb-grid-thumb' + (isSel ? ' multi-sel' : '') + '" '
+            + 'onclick="sbToggleMultiSel(' + sn + ',\'' + v.url.replace(/'/g, "\\'") + '\')" '
+            + 'title="' + typeIcon + ' ' + v.file + '">'
+            + '<img src="' + v.url + '" loading="lazy">'
+            + (isSel ? '<span class="sb-multi-num">' + (idx + 1) + '</span>' : '')
+            + '</div>';
+        } else {
+          var isSel = !isNoneSelected && (v.selected || false);
+          html += '<div class="sb-grid-thumb' + (isSel ? ' selected' : '') + '" '
+            + 'onclick="sbSelectVersion(' + sn + ',\'' + v.file + '\')" '
+            + 'title="' + typeIcon + ' ' + v.file + '">'
+            + '<img src="' + v.url + '" loading="lazy">'
+            + '</div>';
+        }
       });
-    }
 
-    // 외부에서 candidates 접근 가능하게 보관 (lightbox 네비용)
-    if (!window._sbGridCands) window._sbGridCands = {};
-    window._sbGridCands[sn] = candidates;
-  }).catch(function() {});
+      // 후보 컨테이너 — 펼친 후 채워짐 (lazy)
+      // 카운트가 unknown(0)이면 일단 버튼만 표시; 클릭 시 fetch로 실 갯수 확인.
+      html += '<div class="sb-img-candidates-wrap" style="grid-column:1/-1;margin-top:6px">'
+        + '<button class="sb-cand-toggle" data-sn="' + sn + '" '
+        + 'onclick="sbToggleCandidates(' + sn + ')" '
+        + 'style="font-size:9px;color:#71717A;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:2px 8px;cursor:pointer">'
+        + '🌐 후보 이미지' + (candidateCount ? ' ' + candidateCount + '개' : '') + ' ▼</button>'
+        + '<div id="sb-img-candidates-' + sn + '" class="sb-img-candidates" '
+        + 'style="display:none;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:4px;margin-top:6px"></div>'
+        + '</div>';
+
+      grid.innerHTML = html || '';
+    }).catch(function() {});
+}
+
+// 후보 이미지 lazy 토글 — 첫 클릭 시 fetch + 렌더, 이후 단순 토글.
+function sbToggleCandidates(sn) {
+  var container = document.getElementById('sb-img-candidates-' + sn);
+  var btn = document.querySelector('.sb-cand-toggle[data-sn="' + sn + '"]');
+  if (!container) return;
+  var isHidden = container.style.display === 'none' || container.style.display === '';
+  if (!isHidden) {
+    container.style.display = 'none';
+    if (btn) btn.textContent = btn.textContent.replace('▲', '▼');
+    return;
+  }
+  container.style.display = 'grid';
+  if (btn) btn.textContent = btn.textContent.replace('▼', '▲');
+  if (container.dataset.loaded === '1') return;
+
+  container.innerHTML = '<div style="grid-column:1/-1;font-size:10px;color:#71717A;padding:6px">로딩...</div>';
+  fetch('/api/p/' + encodeURIComponent(slug) + '/images/candidates/' + sn)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var candidates = d.candidates || [];
+      if (!candidates.length) {
+        container.innerHTML = '<div style="grid-column:1/-1;font-size:10px;color:#71717A;padding:6px">후보 없음</div>';
+        container.dataset.loaded = '1';
+        return;
+      }
+      var grid = document.getElementById('sb-img-grid-' + sn);
+      var isMulti = grid && MULTI_LAYOUTS.includes(grid.dataset.layout);
+      var sel = _multiSel[sn] || [];
+      var seenUrls = new Set();
+      var html = '';
+      candidates.forEach(function(c, cIdx) {
+        var thumb = c.thumbnail_1920_url || c.thumbnail_url || c.url || c.image_url || '';
+        if (!thumb || seenUrls.has(thumb)) return;
+        seenUrls.add(thumb);
+        var fromEnrich = c.from_enrichment ? ' enrich-pending' : '';
+        var badge = c.from_enrichment ? '<span class="sb-grid-badge" title="검토 대기">🆕</span>' : '';
+        if (isMulti) {
+          var idx = sel.indexOf(thumb);
+          var isSel = idx !== -1;
+          html += '<div class="sb-grid-thumb candidate' + fromEnrich + (isSel ? ' multi-sel' : '') + '" '
+            + 'onclick="sbToggleMultiSel(' + sn + ',\'' + thumb.replace(/'/g, "\\'") + '\')" '
+            + 'title="🌐 ' + (c.title || '').substring(0, 30) + '">'
+            + '<img src="' + thumb + '" loading="lazy">'
+            + badge
+            + (isSel ? '<span class="sb-multi-num">' + (idx + 1) + '</span>' : '')
+            + '</div>';
+        } else {
+          html += '<div class="sb-grid-thumb candidate' + fromEnrich + '" '
+            + 'data-sn="' + sn + '" '
+            + 'data-cand-idx="' + cIdx + '" '
+            + 'title="🌐 ' + (c.title || '').substring(0, 30) + '">'
+            + '<img src="' + thumb + '" loading="lazy">'
+            + badge
+            + '</div>';
+        }
+      });
+      container.innerHTML = html;
+      container.dataset.loaded = '1';
+
+      // 후보 카드 클릭 → lightbox
+      if (!isMulti) {
+        container.querySelectorAll('.sb-grid-thumb.candidate').forEach(function(thumb) {
+          thumb.addEventListener('click', function() {
+            var ci = parseInt(thumb.dataset.candIdx);
+            var c = candidates[ci];
+            if (!c || typeof window.__sbOpenGridLightbox !== 'function') return;
+            window.__sbOpenGridLightbox(sn, c, candidates);
+          });
+        });
+      }
+
+      // 후보 카운트로 버튼 라벨 업데이트
+      if (btn && candidates.length) {
+        btn.textContent = '🌐 후보 이미지 ' + candidates.length + '개 ▲';
+      }
+
+      // lightbox 네비용
+      if (!window._sbGridCands) window._sbGridCands = {};
+      window._sbGridCands[sn] = candidates;
+    }).catch(function() {
+      container.innerHTML = '<div style="grid-column:1/-1;font-size:10px;color:#f87171;padding:6px">로드 실패</div>';
+    });
 }
 
 function sbToggleMultiSel(sn, url) {
