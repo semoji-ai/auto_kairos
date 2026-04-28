@@ -1400,29 +1400,51 @@ async def set_scene_asset_type(slug: str, scene_num: int, request: Request):
 
     for scene in specs.get("scenes", []):
         if scene["sceneNumber"] == scene_num:
+            scene_id_va = scene.get("sceneId")
             if asset_type == "image":
                 scene.pop("videoAsset", None)
-                # video_assets.json에서도 제거
+                # video_assets.json에서도 제거 (sceneId 우선)
                 va_path = out_dir / "video_assets.json"
                 if va_path.exists():
                     try:
                         va_data = json.loads(va_path.read_text(encoding="utf-8"))
-                        va_data["scenes"] = [s for s in va_data.get("scenes", []) if s.get("sceneNumber") != scene_num]
+                        va_data["scenes"] = [
+                            s for s in va_data.get("scenes", [])
+                            if not (
+                                (scene_id_va and s.get("sceneId") == scene_id_va)
+                                or s.get("sceneNumber") == scene_num
+                            )
+                        ]
                         va_path.write_text(json.dumps(va_data, ensure_ascii=False, indent=2), encoding="utf-8")
                     except Exception:
                         pass
-            else:
-                # video 모드: imageAsset source를 none으로 (실제 비디오 파일은 upload-video로)
-                scene.pop("imagePath", None)
+                # Layer 1 단일성: visual_kind를 image 종류로 (기존 imageAsset.source 따라)
                 ia = scene.get("imageAsset") or {}
-                ia["source"] = "none"
-                scene["imageAsset"] = ia
-                # video_assets.json에 기존 항목이 있으면 videoAsset 동기화
+                if ia.get("source") == "search":
+                    scene["visual_kind"] = "search_image"
+                else:
+                    # 기본: generate (작성 시 default)
+                    if ia.get("source") in (None, "none"):
+                        ia["source"] = "generate"
+                        scene["imageAsset"] = ia
+                    scene["visual_kind"] = "generate_image"
+            else:
+                # video 모드: Layer 1 단일성 — imageAsset 통째 제거 + visual_kind 변경
+                scene.pop("imagePath", None)
+                scene.pop("vizBackgroundPath", None)
+                scene.pop("imageAsset", None)
+                scene["visual_kind"] = "video"
+                # video_assets.json에 기존 항목이 있으면 videoAsset 동기화 (sceneId 우선)
                 va_path = out_dir / "video_assets.json"
                 if va_path.exists() and not scene.get("videoAsset"):
                     try:
                         va_data = json.loads(va_path.read_text(encoding="utf-8"))
-                        va_entry = next((s for s in va_data.get("scenes", []) if s.get("sceneNumber") == scene_num), None)
+                        va_entry = next(
+                            (s for s in va_data.get("scenes", [])
+                             if (scene_id_va and s.get("sceneId") == scene_id_va)
+                             or s.get("sceneNumber") == scene_num),
+                            None,
+                        )
                         if va_entry:
                             scene["videoAsset"] = {
                                 "staticPath": va_entry.get("videoFile", va_entry.get("staticPath", "")),
