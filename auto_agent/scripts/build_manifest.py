@@ -180,11 +180,23 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     # Windows에서 심볼릭 링크는 관리자 권한 필요 → 실패 시 junction 또는 복사로 폴백
     project_link = remotion_public / "project"
     if project_link.exists() or project_link.is_symlink():
+        # 정리 우선순위: symlink → junction(rmdir) → 실제 디렉토리(rmtree)
+        # Python <3.12는 is_junction() 없음 → os.rmdir 시도가 가장 안전 (junction이면 성공,
+        # 실제 디렉토리는 OSError로 떨어져 rmtree fallback. junction은 대상 보존됨)
+        cleaned = False
         if project_link.is_symlink():
-            project_link.unlink()
-        elif hasattr(project_link, "is_junction") and project_link.is_junction():
-            project_link.unlink()
-        else:
+            try:
+                project_link.unlink()
+                cleaned = True
+            except OSError:
+                pass
+        if not cleaned:
+            try:
+                os.rmdir(project_link)  # 빈 디렉토리 또는 Windows junction
+                cleaned = True
+            except OSError:
+                pass
+        if not cleaned:
             import shutil as _sh
             _sh.rmtree(project_link)
     try:
