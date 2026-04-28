@@ -154,3 +154,25 @@ DB에는 이미 `projects.uuid` (8자 hex)가 도입돼 있으므로(2026-03-19)
 - 대시보드 9개 탭 + 씬에디터 + 이미지 교체 + Stage 3 렌더 1회 회귀 통과
 - grep 카운터 0 (Phase 2 영역별 + Phase 3 정적 경로 + Phase 4 잔존)
 - CLAUDE.md 룰 추가
+
+## Phase 1 완료 기록 (2026-04-28)
+
+- 백엔드 라우트 변환:
+  - app.py: `/p/{slug}` 1개 + API GET 20개 + API POST/PUT 16개 = 37개
+  - scene_editor.py: APIRouter prefix 2개 + 핸들러 15개
+  - design_presets.py: 2개
+  - enrichment_routes.py: 3개 (`{project_slug}` → `{project_ref}`)
+  - 총 59개 entry point 전환
+- 잔여 slug 라우트: `/p/{slug}/background/{file_path:path}` 1개 (Remotion 정적 자원 — Phase 3 처리 예정)
+- 검증 결과:
+  - 단위 테스트: 9/9 PASSED (project_ref helper)
+  - 라이브 curl 검증: 7/7 PASSED (uuid 200 / slug 307 / 한글 인코딩 회귀 차단 / POST 307 method 보존)
+  - 전체 회귀: main baseline 17개 사전 실패와 완전 동일 — 신규 회귀 0
+- 커밋 시퀀스 (`feature/uuid-routing-phase1`):
+  - `8c8682e` helper + 단위 테스트
+  - `319fa0a` /p/{slug} → /p/{project_ref}
+  - `5b2cb89` API 그룹1 (GET 20개)
+  - `b9b7b73` API 그룹2 (POST 16개) + 307 통일
+  - `1d596f3` 서브 라우터 (scene_editor/design_presets/enrichment)
+  - `3992399` 방어 fix (uuid 누락 KeyError 차단)
+- 다음 단계: Phase 2 (프론트 fetch 영역별 전환)

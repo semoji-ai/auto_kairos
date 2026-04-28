@@ -14,26 +14,37 @@ import json
 import logging
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
+
+from auto_agent.dashboard.project_ref import resolve_project_ref, canonical_uuid_url
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/enrichment", tags=["enrichment"])
 
 
-def _get_project_dir(project_slug: str) -> Path:
+def _resolve_project(project_ref: str):
+    """project_ref(uuid 또는 slug) → (project, needs_redirect). project 없으면 (None, False)."""
     from auto_agent.db.project_manager import ProjectManager
     pm = ProjectManager()
-    proj = pm.get_project(slug=project_slug) or pm.get_project(uuid=project_slug)
-    if not proj:
-        raise HTTPException(404, detail=f"프로젝트 없음: {project_slug}")
-    return Path(proj["output_dir"])
+    return resolve_project_ref(pm, project_ref)
 
 
-@router.get("/{project_slug}/queue")
-def get_queue(project_slug: str):
-    out_dir = _get_project_dir(project_slug)
+@router.get("/{project_ref}/queue")
+def get_queue(project_ref: str, request: Request):
+    project, needs_redirect = _resolve_project(project_ref)
+    if not project:
+        raise HTTPException(404, detail=f"프로젝트 없음: {project_ref}")
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+    out_dir = Path(project["output_dir"])
     queue_path = out_dir / "enrichment_queue.json"
     if not queue_path.exists():
         return JSONResponse({"summary": None, "queue": [], "exists": False})
@@ -42,10 +53,21 @@ def get_queue(project_slug: str):
     return JSONResponse(data)
 
 
-@router.post("/{project_slug}/run")
-def run_enrichment(project_slug: str):
+@router.post("/{project_ref}/run")
+def run_enrichment(project_ref: str, request: Request):
     from auto_agent.modules.scene_enricher_module import enrich_project
-    out_dir = _get_project_dir(project_slug)
+    project, needs_redirect = _resolve_project(project_ref)
+    if not project:
+        raise HTTPException(404, detail=f"프로젝트 없음: {project_ref}")
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+    out_dir = Path(project["output_dir"])
     try:
         result = enrich_project(out_dir, dry_run=False)
         return JSONResponse({"ok": True, "summary": result["summary"]})
@@ -59,10 +81,21 @@ class SelectionPayload(BaseModel):
     candidate: dict
 
 
-@router.post("/{project_slug}/select")
-def select_candidate(project_slug: str, payload: SelectionPayload):
+@router.post("/{project_ref}/select")
+def select_candidate(project_ref: str, payload: SelectionPayload, request: Request):
     from auto_agent.modules.scene_enricher_module import apply_user_selection
-    out_dir = _get_project_dir(project_slug)
+    project, needs_redirect = _resolve_project(project_ref)
+    if not project:
+        raise HTTPException(404, detail=f"프로젝트 없음: {project_ref}")
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+    out_dir = Path(project["output_dir"])
     try:
         apply_user_selection(out_dir, payload.scene_index, payload.candidate)
         return JSONResponse({"ok": True})
