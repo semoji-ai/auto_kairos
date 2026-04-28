@@ -1395,11 +1395,19 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
     }
     voice_id = config.get("voice_id") or STYLE_VOICE.get(config.get("writing_style", "default"), STYLE_VOICE["default"])
 
-    # TTS 생성 — audio_assets 기반
+    # TTS 생성 — audio_assets 기반 (sceneId 우선)
     from auto_agent.tools.audio_assets import add_version, next_filename
+    # 해당 씬의 sceneId 조회 (canonical 파일명 일관성용)
+    scene_id_for_audio: str = ""
+    specs_for_sid = load_project_json(out_dir, "scene_specs.json")
+    if specs_for_sid:
+        for s in specs_for_sid.get("scenes", []):
+            if s.get("sceneNumber") == scene_num:
+                scene_id_for_audio = s.get("sceneId") or ""
+                break
     audio_dir = Path(out_dir) / "audio"
     audio_dir.mkdir(parents=True, exist_ok=True)
-    fname = next_filename(audio_dir, scene_num)
+    fname = next_filename(audio_dir, scene_num, scene_id=scene_id_for_audio)
     output_path = audio_dir / fname
 
     try:
@@ -1425,9 +1433,10 @@ async def regenerate_tts(request: Request, slug: str, scene_num: int):
             return JSONResponse({"error": f"ElevenLabs {resp.status_code}: {resp.text[:100]}"}, 500)
 
         if output_path.exists():
-            # audio_assets에 버전 등록
+            # audio_assets에 버전 등록 + canonical 파일(<sceneId>.mp3 또는 scene_NNN.mp3) 갱신
             add_version(audio_dir, scene_num, fname, "regen",
-                        voice_id=voice_id, text=text[:100])
+                        voice_id=voice_id, text=text[:100],
+                        scene_id=scene_id_for_audio)
             # narration_tts 업데이트
             specs_path = Path(out_dir) / "scene_specs.json"
             if specs_path.exists():
