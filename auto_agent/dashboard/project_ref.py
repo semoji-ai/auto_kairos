@@ -33,6 +33,8 @@ def resolve_project_ref(pm, project_ref: str) -> Tuple[Optional[dict], bool]:
     project = pm.get_project(slug=project_ref)
     if project is None:
         return None, False
+    if not project.get("uuid"):
+        return project, False
     return project, True
 
 

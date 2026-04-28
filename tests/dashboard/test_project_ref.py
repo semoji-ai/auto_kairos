@@ -46,6 +46,17 @@ def test_resolve_by_slug_returns_project_with_redirect_flag():
     pm.get_project.assert_called_once_with(slug="포켓몬")
 
 
+def test_resolve_by_slug_no_uuid_skips_redirect():
+    """uuid 없는 레거시/테스트 프로젝트는 redirect 신호 안 보냄 (KeyError 방지)."""
+    pm = MagicMock()
+    pm.get_project.return_value = {"slug": "demo", "id": 7}
+
+    project, needs_redirect = resolve_project_ref(pm, "demo")
+
+    assert project == {"slug": "demo", "id": 7}
+    assert needs_redirect is False
+
+
 def test_resolve_returns_none_when_not_found():
     pm = MagicMock()
     pm.get_project.return_value = None
