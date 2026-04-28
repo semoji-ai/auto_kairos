@@ -1260,7 +1260,8 @@ async def upload_scene_video(slug: str, scene_num: int, file: UploadFile = File(
 
     # 해당 씬의 sceneId 조회 (분할/통합에 안전한 매핑용)
     scene_id_for_va: str | None = None
-    for sc in specs.get("scenes", []):
+    specs_for_va = _load_specs(project) or {"scenes": []}
+    for sc in specs_for_va.get("scenes", []):
         if sc.get("sceneNumber") == scene_num:
             scene_id_for_va = sc.get("sceneId")
             break
