@@ -118,31 +118,76 @@
   {% if brief.narrative_arc or brief.human_truth or brief.hidden_truth or brief.present_connection or brief.evidence_anchors %}
   <section class="brief-section">
     <h3>5대 DNA 레버</h3>
-    <div class="brief-grid">
-      {% for key, label in [
-        ('narrative_arc', '서사 곡선'),
-        ('human_truth', '인간 진실'),
-        ('hidden_truth', '숨겨진 진실'),
-        ('present_connection', '현재 연결'),
-        ('evidence_anchors', '근거 앵커')
-      ] %}
-        {% set v = brief[key] %}
-        {% if v %}
-        <div class="brief-card">
-          <div class="brief-label">{{ label }} <code>{{ key }}</code></div>
-          <div class="brief-value">
-            {% if v is mapping %}
-              <pre>{{ v | tojson(indent=2) }}</pre>
-            {% elif v is iterable and v is not string %}
-              <ul class="brief-list">{% for item in v %}<li>{% if item is mapping %}<pre>{{ item | tojson(indent=2) }}</pre>{% else %}{{ item }}{% endif %}</li>{% endfor %}</ul>
-            {% else %}
-              {{ v }}
-            {% endif %}
-          </div>
+
+    {# Sub-field 한국어 라벨 매핑 #}
+    {% set _sublabels = {
+      'deep_knowledge': '심층 지식',
+      'entry_trend': '진입 트렌드',
+      'present_insight': '현재 인사이트',
+      'failure': '실패',
+      'inner_conflict': '내적 갈등',
+      'success': '성공',
+      'content': '내용',
+      'spine_link': '척추 연결',
+      'claim': '주장',
+      'source_hint': '출처 힌트',
+      'status': '상태',
+    } %}
+
+    {# 4개 단일 dict 레버 — narrative_arc / human_truth / hidden_truth / present_connection #}
+    {% for key, label in [
+      ('narrative_arc', '서사 곡선'),
+      ('human_truth', '인간 진실'),
+      ('hidden_truth', '숨겨진 진실'),
+      ('present_connection', '현재 연결')
+    ] %}
+      {% set v = brief[key] %}
+      {% if v %}
+      <div class="brief-lever">
+        <div class="brief-lever-head">
+          <span class="brief-lever-title">{{ label }}</span>
+          <code class="brief-lever-key">{{ key }}</code>
         </div>
-        {% endif %}
-      {% endfor %}
+        <div class="brief-lever-body">
+          {% if v is mapping %}
+            {% for sk, sv in v.items() %}
+              <div class="brief-sub">
+                <div class="brief-sub-label">{{ _sublabels[sk] if sk in _sublabels else sk }}</div>
+                <div class="brief-sub-value">{{ sv }}</div>
+              </div>
+            {% endfor %}
+          {% elif v is iterable and v is not string %}
+            <ul class="brief-list">{% for item in v %}<li>{{ item }}</li>{% endfor %}</ul>
+          {% else %}
+            <div class="brief-sub-value">{{ v }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+
+    {# evidence_anchors — 리스트 of dict, 카드 그리드 #}
+    {% if brief.evidence_anchors %}
+    <div class="brief-lever">
+      <div class="brief-lever-head">
+        <span class="brief-lever-title">근거 앵커</span>
+        <code class="brief-lever-key">evidence_anchors</code>
+        <span class="brief-anchor-count">{{ brief.evidence_anchors|length }}건</span>
+      </div>
+      <div class="brief-anchors">
+        {% for anchor in brief.evidence_anchors %}
+          {% set st = anchor.status if anchor.status else 'unknown' %}
+          <div class="brief-anchor-card status-{{ st }}">
+            <div class="brief-anchor-status">
+              {% if st == 'available' %}✓ 확보{% elif st == 'needs_research' %}⚠ 리서치 필요{% else %}{{ st }}{% endif %}
+            </div>
+            <div class="brief-anchor-claim">{{ anchor.claim }}</div>
+            {% if anchor.source_hint %}<div class="brief-anchor-source">출처: {{ anchor.source_hint }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
     </div>
+    {% endif %}
   </section>
   {% endif %}
 
@@ -250,6 +295,37 @@
 .brief-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .brief-tag { font-size: 11px; padding: 3px 9px; border-radius: 12px;
              background: rgba(99,102,241,0.12); color: #A5B4FC; }
+
+/* 5대 DNA 레버 — sub-field 분해 표시 */
+.brief-lever { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+               border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+.brief-lever-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+                    padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.brief-lever-title { font-size: 14px; font-weight: 600; color: #C7D2FE; }
+.brief-lever-key { font-size: 10px; padding: 2px 7px; border-radius: 4px;
+                   background: rgba(99,102,241,0.12); color: #A5B4FC; }
+.brief-anchor-count { margin-left: auto; font-size: 10px; color: var(--text-muted); }
+
+.brief-lever-body { display: flex; flex-direction: column; gap: 12px; }
+.brief-sub { padding-left: 12px; border-left: 2px solid rgba(99,102,241,0.3); }
+.brief-sub-label { font-size: 10px; color: #FBBF24; margin-bottom: 4px;
+                   text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.brief-sub-value { font-size: 13px; color: #E4E4E7; line-height: 1.6; }
+
+.brief-anchors { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                 gap: 10px; }
+.brief-anchor-card { padding: 10px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);
+                     background: rgba(0,0,0,0.2); }
+.brief-anchor-card.status-available { border-color: rgba(52,211,153,0.25);
+                                       background: rgba(52,211,153,0.05); }
+.brief-anchor-card.status-needs_research { border-color: rgba(251,191,36,0.3);
+                                            background: rgba(251,191,36,0.05); }
+.brief-anchor-status { font-size: 10px; font-weight: 600; margin-bottom: 6px;
+                       color: #A1A1AA; }
+.status-available .brief-anchor-status { color: #34D399; }
+.status-needs_research .brief-anchor-status { color: #FBBF24; }
+.brief-anchor-claim { font-size: 12px; color: #E4E4E7; line-height: 1.5; margin-bottom: 6px; }
+.brief-anchor-source { font-size: 10px; color: var(--text-muted); }
 
 .brief-raw { margin-top: 30px; }
 .brief-raw summary { cursor: pointer; font-size: 11px; color: var(--text-muted);
