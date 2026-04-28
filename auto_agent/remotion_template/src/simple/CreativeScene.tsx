@@ -3298,10 +3298,22 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const COUNT_UP_DURATION = 35;
   const accentLineDelays: number[] = (() => {
     if (!isCountEmphasis) return [9999, 9999, 9999, 9999];
-    // counter/metric_spotlight: 씬 시작 직후 카운트업 시작
-    if (isCounterLayout) {
+
+    // counter/metric_spotlight/metric_wall: items[i] 또는 values를 자막에 매칭해
+    // 자막 등장 시점에 카운트가 도달하도록 (자막이 없으면 5프레임 fallback)
+    if (isCounterLayout || layout === "metric_wall") {
+      const targets = items.length > 0 ? items : values.map((v) => String(v));
+      if (subtitles && subtitles.length > 0 && targets.length > 0) {
+        const itemSubDelays = computeItemSubtitleDelays(subtitles, targets, fps);
+        const result = itemSubDelays.map((d) =>
+          d > 0 ? Math.max(d - COUNT_UP_DURATION, 5) : 5,
+        );
+        while (result.length < 4) result.push(5);
+        return result.slice(0, 4);
+      }
       return [5, 5, 5, 5];
     }
+
     const delays: number[] = [];
     for (let li = 0; li < lines.length; li++) {
       const lineAccents = [...lines[li].matchAll(/\{\{[^}]+\}\}/g)];
