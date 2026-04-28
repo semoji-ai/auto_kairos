@@ -109,15 +109,37 @@ def post_message(
 
 # ── SSE 엔드포인트 ──
 
+def _resolve_project_filter(project_ref: str) -> str:
+    """필터 파라미터(uuid 또는 slug)를 저장된 메시지의 project(slug) 형태로 정규화.
+
+    백엔드(_notify)는 project=slug로 저장하고, 대시보드는 uuid 접두사로 쿼리하는
+    경우가 있어서 둘 다 받도록 한다. 매칭 실패 시 입력 그대로 반환.
+    """
+    if not project_ref:
+        return ""
+    from auto_agent.dashboard.project_ref import is_uuid_form
+    if not is_uuid_form(project_ref):
+        return project_ref
+    try:
+        from auto_agent.db.project_manager import ProjectManager
+        proj = ProjectManager().get_project(uuid=project_ref)
+        if proj and proj.get("slug"):
+            return proj["slug"]
+    except Exception:
+        pass
+    return project_ref
+
+
 async def _sse_generator(request: Request, queue: asyncio.Queue, project: str = ""):
     """SSE 이벤트 생성기. project가 지정되면 해당 프로젝트 메시지만 전달."""
+    project_slug = _resolve_project_filter(project)
     try:
         while True:
             if await request.is_disconnected():
                 break
             try:
                 msg = await asyncio.wait_for(queue.get(), timeout=15)
-                if project and msg.get("project", "") != project:
+                if project_slug and msg.get("project", "") != project_slug:
                     continue
                 yield f"data: {json.dumps(msg, ensure_ascii=False)}\n\n"
             except asyncio.TimeoutError:
@@ -151,8 +173,9 @@ def message_history_sync(limit: int = 50, project: str = ""):
     if not _initialized:
         _messages = _load_persisted()
         _initialized = True
-    if project:
-        filtered = [m for m in _messages if m.get("project", "") == project]
+    project_slug = _resolve_project_filter(project)
+    if project_slug:
+        filtered = [m for m in _messages if m.get("project", "") == project_slug]
         msgs = filtered[-limit:]
     else:
         msgs = list(_messages)[-limit:]
