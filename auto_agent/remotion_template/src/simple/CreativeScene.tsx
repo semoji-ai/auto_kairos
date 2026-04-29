@@ -3297,7 +3297,10 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   // 각 accent가 어느 headline 라인에 속하는지 매핑
   const COUNT_UP_DURATION = 35;
   const accentLineDelays: number[] = (() => {
-    if (!isCountEmphasis) return [9999, 9999, 9999, 9999];
+    // counter/metric_spotlight/metric_wall은 emphasis와 무관하게 자막 타이밍 기준 카운트업
+    if (!isCountEmphasis && !isCounterLayout && layout !== "metric_wall") {
+      return [9999, 9999, 9999, 9999];
+    }
 
     // counter/metric_spotlight/metric_wall: items[i] 또는 values를 자막에 매칭해
     // 자막 등장 시점에 카운트가 도달하도록 (자막이 없으면 5프레임 fallback)
@@ -3326,24 +3329,29 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
     return delays;
   })();
 
+  // counter/metric_spotlight/metric_wall은 countUpMin 게이트 무시 — values 자체가 카운트 타겟
+  const _shouldCount = (i: number): boolean => {
+    if (isCounterLayout || layout === "metric_wall") return numTargets[i] != null;
+    return isCountEmphasis && Math.abs(numTargets[i] || 0) >= countUpMin;
+  };
   // 항상 4개 counter hook 호출 (React rules) — 음수도 절대값 기준 카운트
   const counted0 = useCountUp(
-    isCountEmphasis && Math.abs(numTargets[0] || 0) >= countUpMin ? accentLineDelays[0] : 9999,
+    _shouldCount(0) ? accentLineDelays[0] : 9999,
     COUNT_UP_DURATION,
     numTargets[0] || 1,
   );
   const counted1 = useCountUp(
-    isCountEmphasis && Math.abs(numTargets[1] || 0) >= countUpMin ? accentLineDelays[1] : 9999,
+    _shouldCount(1) ? accentLineDelays[1] : 9999,
     COUNT_UP_DURATION,
     numTargets[1] || 1,
   );
   const counted2 = useCountUp(
-    isCountEmphasis && Math.abs(numTargets[2] || 0) >= countUpMin ? accentLineDelays[2] : 9999,
+    _shouldCount(2) ? accentLineDelays[2] : 9999,
     COUNT_UP_DURATION,
     numTargets[2] || 1,
   );
   const counted3 = useCountUp(
-    isCountEmphasis && Math.abs(numTargets[3] || 0) >= countUpMin ? accentLineDelays[3] : 9999,
+    _shouldCount(3) ? accentLineDelays[3] : 9999,
     COUNT_UP_DURATION,
     numTargets[3] || 1,
   );
@@ -3966,7 +3974,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             {renderSupportHeadline({ marginBottom: 8, maxWidth: "70%" })}
             <MetricCard
               label={items[0] || ""}
-              value={formatWithTemplate(`${fmtNum(values[0])}${data.unit || ""}`, countedValues[0])}
+              value={frame >= accentLineDelays[0] ? formatWithTemplate(`${fmtNum(values[0])}${data.unit || ""}`, countedValues[0]) : ""}
               style={{ width: "100%", maxWidth: 720, transform: "scale(1.12)" }}
             />
           </div>
@@ -3978,7 +3986,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
             {renderSupportHeadline({ marginBottom: 8, maxWidth: "70%" })}
             <MetricCard
               label={items[0] || data.title || ""}
-              value={values.length > 0 ? formatWithTemplate(`${fmtNum(values[0])}${data.unit || ""}`, countedValues[0]) : ""}
+              value={values.length > 0 && frame >= accentLineDelays[0] ? formatWithTemplate(`${fmtNum(values[0])}${data.unit || ""}`, countedValues[0]) : ""}
               change={items[1]}
               trend={values.length > 1 ? (values[1] > 0 ? "up" : "down") : undefined}
               style={{ width: "100%", maxWidth: 720, transform: "scale(1.08)" }}
@@ -4010,7 +4018,7 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
                 <div key={i} style={fadeRise(frame, staggerDelay(i, 8, 12), 15)}>
                   <MetricCard
                     label={item}
-                    value={values[i] != null ? `${fmtNum(values[i])}${data.unit || ""}` : ""}
+                    value={values[i] != null && frame >= (accentLineDelays[i] ?? 9999) ? formatWithTemplate(`${fmtNum(values[i])}${data.unit || ""}`, countedValues[i]) : ""}
                     style={{ width: "100%" }}
                   />
                   {(() => {
