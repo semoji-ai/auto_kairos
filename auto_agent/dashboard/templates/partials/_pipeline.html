@@ -975,11 +975,22 @@ function escapeHtml(s) {
     claimsBody.innerHTML = '';
     var keys = Object.keys(claimsByChapter).sort(function(a,b){ return (parseInt(a)||999)-(parseInt(b)||999); });
 
-    // 프레시 리서치 클레임
+    // 챕터별 클레임 (ledger + 프레시 리서치 합쳐 chapter별 그룹)
     if (keys.length) {
+      var ledgerCount = 0;
+      var totalCount = 0;
+      keys.forEach(function(chId) {
+        (claimsByChapter[chId] || []).forEach(function(c) {
+          totalCount++;
+          if (c.evidence_span || c.tier) ledgerCount++;
+        });
+      });
       var freshHeader = document.createElement('div');
       freshHeader.className = 'rc-section-header';
-      freshHeader.textContent = '프레시 리서치 클레임';
+      freshHeader.innerHTML = '챕터별 클레임 <span style="font-size:10px;color:#71717A;font-weight:400">'
+        + '— 총 ' + totalCount + '건'
+        + (ledgerCount ? ' · ✨ ledger ' + ledgerCount + '건' : '')
+        + '</span>';
       claimsBody.appendChild(freshHeader);
       keys.forEach(function(chId) {
         var claims = claimsByChapter[chId];
@@ -1037,15 +1048,34 @@ function escapeHtml(s) {
   function buildClaimCard(c) {
     var conf = c.confidence || 'medium';
     var dotClass = conf === 'high' ? 'high' : conf === 'medium' ? 'medium' : 'low';
+    // Phase 3 ledger 항목 식별 — evidence_span 또는 tier 필드 존재
+    var isLedger = !!(c.evidence_span || c.tier);
+
     var card = document.createElement('div');
-    card.className = 'rc-claim';
+    card.className = 'rc-claim' + (isLedger ? ' rc-claim-ledger' : '');
+    if (isLedger) {
+      card.style.borderLeft = '3px solid #FCD34D';
+      card.style.background = 'rgba(245,158,11,0.04)';
+    }
     var dot = document.createElement('div');
     dot.className = 'rc-claim-dot ' + dotClass;
     var body = document.createElement('div');
     body.className = 'rc-claim-body';
     var text = document.createElement('div');
     text.className = 'rc-claim-text';
-    text.textContent = c.claim || '';
+    text.innerHTML = (isLedger ? '<span style="color:#FCD34D;margin-right:4px">✨</span>' : '') + escapeHtml(c.claim || '');
+
+    // evidence_span (ledger 전용)
+    if (c.evidence_span) {
+      var ev = document.createElement('div');
+      ev.style.cssText = 'font-size:11px;color:#A1A1AA;margin-top:4px;padding-top:4px;border-top:1px dotted rgba(255,255,255,0.05);font-style:italic;line-height:1.4';
+      ev.textContent = '"' + (c.evidence_span.length > 180 ? c.evidence_span.substring(0, 180) + '...' : c.evidence_span) + '"';
+      body.appendChild(text);
+      body.appendChild(ev);
+    } else {
+      body.appendChild(text);
+    }
+
     var meta = document.createElement('div');
     meta.className = 'rc-claim-meta';
     if (c.kind) {
@@ -1053,6 +1083,13 @@ function escapeHtml(s) {
       t1.className = 'rc-tag rc-tag-kind';
       t1.textContent = c.kind;
       meta.appendChild(t1);
+    }
+    if (c.tier) {
+      var tt = document.createElement('span');
+      tt.className = 'rc-tag';
+      tt.style.cssText = 'background:rgba(34,197,94,0.15);color:#86EFAC';
+      tt.textContent = 'Tier ' + c.tier;
+      meta.appendChild(tt);
     }
     var t2 = document.createElement('span');
     t2.className = 'rc-tag rc-tag-' + dotClass;
@@ -1064,7 +1101,16 @@ function escapeHtml(s) {
       t3.textContent = '✓';
       meta.appendChild(t3);
     }
-    body.appendChild(text);
+    if (c.source_url) {
+      var srcLink = document.createElement('a');
+      srcLink.href = c.source_url;
+      srcLink.target = '_blank';
+      srcLink.rel = 'noopener';
+      srcLink.className = 'rc-tag';
+      srcLink.style.cssText = 'background:rgba(167,139,250,0.15);color:#C4B5FD;text-decoration:none';
+      srcLink.textContent = '🔗 출처';
+      meta.appendChild(srcLink);
+    }
     body.appendChild(meta);
     card.appendChild(dot);
     card.appendChild(body);
