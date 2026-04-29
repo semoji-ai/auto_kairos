@@ -288,17 +288,20 @@
         {
           "id": "step_2_manuscript",
           "name": "manuscript_writing",
-          "description": "draft.md + targeted_claims.json → 최종 원고. 타겟 리서치 답변을 반영하여 원고 완성.",
+          "description": "draft.md + targeted_claims.json → 최종 원고 + claims_ledger.jsonl. 타겟 리서치 답변을 반영하고 evidence-backed claim ledger도 동시 작성.",
           "agent": "script-director",
           "mode": "manuscript",
           "input": [
             "outline.json",
             "draft.md",
             "targeted_claims.json",
+            "research/manifests/",
+            "research/raw/",
             "project_config"
           ],
           "output": [
-            "final_manuscript.md"
+            "final_manuscript.md",
+            "research/claims_ledger.jsonl"
           ],
           "skills": [
             "shared/writing-style"

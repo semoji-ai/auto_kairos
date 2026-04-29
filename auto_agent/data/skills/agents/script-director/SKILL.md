@@ -107,6 +107,12 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 다른 모든 결정(layout, motion, mood, imageAsset, headline, items 등)은 이 모드의 책임이 **아닙니다**.
 당신은 오직 한 가지 — **시청자가 끝까지 보고 싶게 만드는 글**을 쓰는 것에 집중합니다.
 
+**📌 이 모드의 필수 산출물 — 둘 다 누락 시 실패로 처리됨:**
+- `final_manuscript.md` — 최종 prose
+- `research/claims_ledger.jsonl` — evidence-backed claim ledger (아래 절차 #2 필수 수행)
+
+---
+
 **해야 할 일:**
 
 1. **파일 읽기 순서**:
@@ -115,6 +121,43 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
    Read("draft.md")              ← 초고 흐름 + [[Q:qXXX]] 마킹 위치 파악
    Read("targeted_claims.json")  ← 각 질문의 answer, evidence, confidence
    ```
+
+2. **🔒 MUST — Evidence-backed claim ledger 작성** (`research/claims_ledger.jsonl` **필수 출력**):
+
+   본문에 박은 **검증 가능한 사실**(연도/숫자/이름/정확한 인용)에 대해 evidence span을 함께 기록합니다.
+   이 단계는 prose 작성과 **동시에** 진행하세요 — 사실을 한 줄 박을 때마다 ledger에도 한 줄 append.
+
+   **작성 절차** (fact-retriever SKILL.md의 5단계):
+     1) `research/manifests/<topic>/sources.jsonl` Read → entity/year로 후보 source_id 좁히기
+     2) `research/manifests/<topic>/claims.jsonl` 우선 매칭 (이미 검증된 자료 재사용)
+     3) `research/raw/<topic>/<run>/source_notes/<source_id>.md` Read → 30~300자 인용 span 추출
+        (paraphrase 절대 금지, 원문 그대로 복사)
+     4) claim_kind 차등 게이트 (date_or_number → A 1건 필수)
+     5) span이 chunk 원문에 substring으로 존재하는지 **자체 검증** (환각 차단)
+
+   **claims_ledger.jsonl 한 줄 형식**:
+   ```json
+   {"claim_id": "claim_<slug>_<hash>", "claim": "1933년 안티푸라민 출시", "kind": "fact:date_or_number",
+    "tier": "A", "confidence": "high", "source_id": "src_yuhan_official",
+    "source_url": "https://...", "evidence_span": "1933년 12월, 자체 개발 진통소염제 안티푸라민을...",
+    "anchor": "raw/<topic>/<run>/source_notes/src_yuhan_official.md", "used_in_chapter": 3,
+    "created_at": "2026-04-29T..."}
+   ```
+
+   **규칙**:
+   - 게이트 통과한 claim만 ledger에 추가
+   - **Tier C 소스(블로그/SNS/카페)에서 evidence 채택 절대 금지**
+   - 옛 `targeted_claims.json` 답변은 그대로 사용 가능 (이미 검증된 것으로 간주) — 단 ledger에는 source_id/anchor 명시
+   - 게이트 통과 못 한 사실은 본문에 단정적으로 쓰지 말 것 (우회하거나 제거)
+   - 모든 문장에 ledger 매칭 강제 X — 검증 가능한 사실(인물/연도/숫자)에만
+
+   **최소 기준**:
+   - 1분 영상: 최소 5건
+   - 3분 영상: 최소 10건
+   - 5분 영상: 최소 15건
+   - 10분 영상: 최소 25건
+
+   **claims_ledger.jsonl이 비어있거나 미생성 시 이 모드는 실패로 간주됩니다.**
 
 2. **targeted_claims.json로 [[Q:qXXX]] 해소**:
    - draft.md의 각 `[[Q:qXXX]]` 마킹을 찾아 `targeted_claims.json`에서 해당 `question_id`의 답변을 확인합니다.
@@ -180,26 +223,6 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 
 9. **씬을 의식하지 마세요** — 다음 모드(chapters)가 자연스럽게 자를 수 있도록 의미 단위(약 8~15초 분량의 문장 클러스터)가 자연스럽게 형성되면 충분합니다.
 
-10. **Evidence-backed claim ledger 작성** (`claims_ledger.jsonl` 신규 출력):
-    - 본문에 박은 **검증 가능한 사실**(연도/숫자/이름/정확한 인용)에 대해 evidence span을 함께 기록합니다.
-    - 작성 절차는 `auto_agent/data/skills/agents/fact-retriever/SKILL.md`의 5단계를 그대로 수행:
-      1) `manifests/<topic>/sources.jsonl` Read → entity/year로 후보 source_id 좁히기
-      2) `manifests/<topic>/claims.jsonl` 우선 매칭 (이미 검증된 자료 재사용)
-      3) raw markdown chunk Read → 30~300자 인용 span 추출 (paraphrase 금지, 원문 그대로)
-      4) claim_kind 차등 게이트 (date_or_number → A 1건 필수)
-      5) span이 chunk 원문에 substring으로 존재하는지 자체 검증 (환각 차단)
-    - 게이트 통과한 claim만 `claims_ledger.jsonl`에 한 줄씩 append:
-      ```json
-      {"claim_id": "claim_<slug>_<hash>", "claim": "1933년 안티푸라민 출시", "kind": "fact:date_or_number",
-       "tier": "A", "confidence": "high", "source_id": "src_yuhan_official",
-       "source_url": "https://...", "evidence_span": "1933년 12월, 자체 개발 진통소염제 안티푸라민을...",
-       "anchor": "raw/<topic>/<run>/source_notes/src_yuhan_official.md", "used_in_chapter": 3,
-       "created_at": "2026-04-29T..."}
-      ```
-    - 게이트 통과 못 한 사실은 **본문에 단정적으로 쓰지 말 것** (우회하거나 제거).
-    - Tier C 소스(블로그/SNS/카페)에서 evidence 채택 절대 금지.
-    - 옛 `targeted_claims.json` 답변은 그대로 사용 가능 (이미 검증된 것으로 간주).
-    - 새로 검증된 사실만 ledger에 추가하면 됨 — 모든 문장에 ledger 매칭 강제 X.
 
 **final_manuscript.md 형식 예시 (1분 영상):**
 ```markdown

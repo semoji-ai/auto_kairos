@@ -232,6 +232,7 @@
 
   // 페이지 표시 순서 및 레이블 정의
   var PAGE_LABELS = {
+    '__research_data__': '📊 수집 자료',
     'index': '인덱스',
     'overview': '개요',
     'claims': '주요 주장',
@@ -242,7 +243,7 @@
     'log': '수집 로그',
     '__targeted__': '🎯 타겟 리서치'
   };
-  var PAGE_ORDER = ['overview', 'claims', 'timeline', 'entities', 'images', 'questions', 'log', 'index', '__targeted__'];
+  var PAGE_ORDER = ['__research_data__', 'overview', 'claims', 'timeline', 'entities', 'images', 'questions', 'log', 'index', '__targeted__'];
 
   fetch('/api/p/' + encodeURIComponent(slug) + '/research/wiki')
     .then(function(r) { return r.json(); })
@@ -253,8 +254,8 @@
         loadTargetedClaimsView();
         return;
       }
-      // 타겟 리서치 항목 항상 추가
-      pages = pages.concat(['__targeted__']);
+      // 수집 자료 + 타겟 리서치 항목 항상 추가 (페이지 없어도 표시)
+      pages = ['__research_data__'].concat(pages, ['__targeted__']);
 
       // 정의된 순서로 정렬, 나머지는 뒤에
       pages.sort(function(a, b) {
@@ -275,9 +276,9 @@
         nav.appendChild(btn);
       });
 
-      // 타겟 리서치 버튼 우선 클릭, 없으면 첫 번째
-      var targetedBtn = Array.from(nav.querySelectorAll('.wiki-nav-item')).find(function(b) { return b.dataset.page === '__targeted__'; });
-      var firstBtn = targetedBtn || nav.querySelector('.wiki-nav-item');
+      // 수집 자료 버튼 우선 클릭 (가장 풍부한 데이터)
+      var dataBtn = Array.from(nav.querySelectorAll('.wiki-nav-item')).find(function(b) { return b.dataset.page === '__research_data__'; });
+      var firstBtn = dataBtn || nav.querySelector('.wiki-nav-item');
       if (firstBtn) firstBtn.click();
     })
     .catch(function() {
@@ -292,6 +293,12 @@
     btn.classList.add('active');
 
     content.innerHTML = '<div class="wiki-placeholder">로딩 중...</div>';
+
+    // 수집 자료 페이지 — 모든 sources + claims 통합 뷰
+    if (page === '__research_data__') {
+      loadResearchDataView();
+      return;
+    }
 
     // 타겟 리서치 페이지
     if (page === '__targeted__') {
@@ -625,6 +632,173 @@
 
     return wrap;
   }
+  // 📊 수집 자료 — sources를 카드 리스트로, claim 승격된 source는 하이라이트
+  function loadResearchDataView() {
+    content.innerHTML = '<div class="wiki-placeholder">수집 자료 로딩 중...</div>';
+    fetch('/api/p/' + encodeURIComponent(slug) + '/research/canvas')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var sources = d.sources || [];
+        var totalSources = d.total_sources || sources.length;
+        var allClaims = [];
+        var groupedClaims = d.claims || {};
+        Object.keys(groupedClaims).forEach(function(k) {
+          var arr = groupedClaims[k];
+          if (Array.isArray(arr)) allClaims = allClaims.concat(arr);
+        });
+
+        // source_id → claims 매핑
+        var claimsBySource = {};
+        allClaims.forEach(function(c) {
+          var sids = [];
+          // 다양한 형식 대응 (claim.source_ids, claim.evidence.source_id 등)
+          if (Array.isArray(c.source_ids)) sids = sids.concat(c.source_ids);
+          if (c.source_id) sids.push(c.source_id);
+          if (c.evidence && c.evidence.source_id) sids.push(c.evidence.source_id);
+          sids.forEach(function(sid) {
+            if (!sid) return;
+            if (!claimsBySource[sid]) claimsBySource[sid] = [];
+            claimsBySource[sid].push(c);
+          });
+        });
+
+        content.innerHTML = '';
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'padding:16px';
+
+        // 헤더
+        var header = document.createElement('div');
+        header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08)';
+        var promotedCount = sources.filter(function(s) { return claimsBySource[s.source_id]; }).length;
+        header.innerHTML =
+          '<span style="font-size:16px;font-weight:700;color:#F4F4F5">📊 수집 자료</span>' +
+          '<span style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.07);padding:2px 9px;border-radius:10px">' + totalSources + '건</span>' +
+          (promotedCount ? '<span style="font-size:11px;color:#FCD34D;background:rgba(245,158,11,0.12);padding:2px 9px;border-radius:10px">✨ 클레임 승격 ' + promotedCount + '건</span>' : '') +
+          '<span style="margin-left:auto;font-size:10px;color:var(--text-muted)">표시: ' + sources.length + ' / ' + totalSources + '</span>';
+        wrap.appendChild(header);
+
+        if (!sources.length) {
+          var empty = document.createElement('div');
+          empty.className = 'wiki-placeholder';
+          empty.textContent = '수집된 자료가 아직 없습니다';
+          wrap.appendChild(empty);
+          content.appendChild(wrap);
+          return;
+        }
+
+        // tier별 그룹핑
+        var tierGroups = { A: [], B: [], unknown: [], C: [] };
+        sources.forEach(function(s) {
+          var t = s.tier_hint || 'unknown';
+          if (!tierGroups[t]) tierGroups[t] = [];
+          tierGroups[t].push(s);
+        });
+
+        var TIER_LABEL = {
+          A: { name: 'Tier A — 위키/공식/언론', color: '#34D399' },
+          B: { name: 'Tier B — 학술/도서/1차 사료', color: '#60A5FA' },
+          unknown: { name: 'Tier unknown — 도메인 미분류', color: '#9CA3AF' },
+          C: { name: 'Tier C — 블로그/SNS (참고용만)', color: '#F87171' }
+        };
+
+        ['A', 'B', 'unknown', 'C'].forEach(function(tier) {
+          var items = tierGroups[tier];
+          if (!items || !items.length) return;
+          var info = TIER_LABEL[tier];
+
+          var section = document.createElement('div');
+          section.style.cssText = 'margin-bottom:24px';
+          var stitle = document.createElement('div');
+          stitle.style.cssText = 'font-size:12px;font-weight:600;color:' + info.color + ';margin-bottom:8px;letter-spacing:0.3px';
+          stitle.textContent = info.name + ' (' + items.length + ')';
+          section.appendChild(stitle);
+
+          items.forEach(function(s) {
+            var promoted = claimsBySource[s.source_id];
+            var card = document.createElement('div');
+            card.style.cssText =
+              'border:1px solid ' + (promoted ? 'rgba(245,158,11,0.4)' : 'rgba(255,255,255,0.08)') + ';' +
+              'background:' + (promoted ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.02)') + ';' +
+              'border-radius:6px;padding:10px 12px;margin-bottom:6px';
+
+            var topLine = document.createElement('div');
+            topLine.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+
+            var title = document.createElement('a');
+            title.href = s.url || '#';
+            title.target = '_blank';
+            title.rel = 'noopener';
+            title.style.cssText = 'font-size:13px;color:#E4E4E7;text-decoration:none;flex:1;font-weight:500';
+            title.textContent = s.title || s.source_id || '(제목 없음)';
+            topLine.appendChild(title);
+
+            if (s.lane) {
+              var lane = document.createElement('span');
+              lane.style.cssText = 'font-size:9px;color:#A1A1AA;background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:3px;font-family:monospace';
+              lane.textContent = s.lane;
+              topLine.appendChild(lane);
+            }
+
+            if (promoted) {
+              var badge = document.createElement('span');
+              badge.style.cssText = 'font-size:10px;color:#FCD34D;background:rgba(245,158,11,0.15);padding:2px 8px;border-radius:10px;font-weight:600';
+              badge.textContent = '✨ 클레임 ' + promoted.length + '건';
+              topLine.appendChild(badge);
+            }
+            card.appendChild(topLine);
+
+            // 메타 라인 (publisher, date)
+            var metaParts = [];
+            if (s.publisher) metaParts.push(s.publisher);
+            if (s.published_at) metaParts.push(s.published_at);
+            if (s.url) metaParts.push(s.url.replace(/^https?:\/\//, '').split('/')[0]);
+            if (metaParts.length) {
+              var meta = document.createElement('div');
+              meta.style.cssText = 'font-size:10px;color:#71717A;margin-top:3px';
+              meta.textContent = metaParts.join(' · ');
+              card.appendChild(meta);
+            }
+
+            // snippet
+            if (s.snippet) {
+              var snip = document.createElement('div');
+              snip.style.cssText = 'font-size:11px;color:#A1A1AA;margin-top:6px;line-height:1.5';
+              snip.textContent = s.snippet.length > 200 ? s.snippet.substring(0, 200) + '...' : s.snippet;
+              card.appendChild(snip);
+            }
+
+            // 승격된 claim 미리보기 (최대 2건)
+            if (promoted && promoted.length) {
+              var claimList = document.createElement('div');
+              claimList.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px dashed rgba(245,158,11,0.2)';
+              promoted.slice(0, 2).forEach(function(c) {
+                var line = document.createElement('div');
+                line.style.cssText = 'font-size:11px;color:#FBBF24;margin-top:3px;line-height:1.4';
+                line.textContent = '✨ ' + (c.claim || c.statement || '(클레임 텍스트 없음)');
+                claimList.appendChild(line);
+              });
+              if (promoted.length > 2) {
+                var more = document.createElement('div');
+                more.style.cssText = 'font-size:10px;color:#A1A1AA;margin-top:3px';
+                more.textContent = '+ ' + (promoted.length - 2) + '건 더';
+                claimList.appendChild(more);
+              }
+              card.appendChild(claimList);
+            }
+
+            section.appendChild(card);
+          });
+
+          wrap.appendChild(section);
+        });
+
+        content.appendChild(wrap);
+      })
+      .catch(function(err) {
+        content.innerHTML = '<div class="wiki-placeholder">수집 자료 로드 실패: ' + err + '</div>';
+      });
+  }
+
   function loadTargetedClaimsView() {
     content.innerHTML = '<div class="wiki-placeholder">타겟 리서치 데이터 로딩 중...</div>';
     fetch('/api/p/' + encodeURIComponent(slug) + '/research/canvas')
