@@ -24,14 +24,29 @@ from auto_agent.modules.research_entity_hub import (
 
 
 def _get_research_root() -> Path | None:
-    """LLM Wiki research root 경로 반환. 없으면 None.
+    """Research root 경로 반환. 없으면 None.
 
-    우선순위:
-    1. PROJECT_DIR/source_ingest_status.json의 research_root 필드
-    2. KAIROS_VAULT_DIR/02-research (vault fallback)
+    우선순위 (Phase 5 cutover 후):
+    1. PROJECT_DIR/research/ (fresh_collector + wiki_compiler가 적재한 프로젝트 로컬) ← 신규
+    2. PROJECT_DIR/source_ingest_status.json의 research_root 필드 (legacy)
+    3. KAIROS_VAULT_DIR/02-research (vault fallback)
     """
-    # 1순위: source_ingest가 기록한 실제 research_root
     project_dir_env = os.environ.get("PROJECT_DIR", "")
+
+    # 1순위: 프로젝트 로컬 research/ (Phase 1 fresh_collector 결과)
+    if project_dir_env:
+        local_research = Path(project_dir_env) / "research"
+        manifests_dir = local_research / "manifests"
+        if manifests_dir.exists():
+            try:
+                # 토픽 디렉토리가 하나라도 있으면 우선 사용
+                topic_dirs = [d for d in manifests_dir.iterdir() if d.is_dir()]
+                if topic_dirs:
+                    return local_research
+            except Exception:
+                pass
+
+    # 2순위: source_ingest legacy 경로
     if project_dir_env:
         status_path = Path(project_dir_env) / "source_ingest_status.json"
         if status_path.exists():
@@ -43,7 +58,7 @@ def _get_research_root() -> Path | None:
             except Exception:
                 pass
 
-    # 2순위: vault fallback
+    # 3순위: vault fallback
     vault_dir = os.environ.get("KAIROS_VAULT_DIR", "")
     if not vault_dir:
         env_path = Path(__file__).parent.parent.parent / ".env"
@@ -70,11 +85,46 @@ def _resolve_slug(research_root: Path, topic_slug: str) -> str:
     return resolve_existing_entity_slug(research_root, topic_slug)
 
 
+def _list_local_topics(research_root: Path) -> list[str]:
+    """프로젝트 로컬 manifests/ 디렉토리 목록 → 토픽 슬러그 리스트.
+
+    Phase 5 cutover 후 fresh_collector는 LLM이 분해한 N개 토픽을 만들기 때문에,
+    chapter_projection은 단일 entity_slug로 검색하지 말고 전체 토픽을 합쳐 사용한다.
+    """
+    manifests_dir = research_root / "manifests"
+    if not manifests_dir.exists():
+        return []
+    try:
+        return sorted([d.name for d in manifests_dir.iterdir() if d.is_dir()])
+    except Exception:
+        return []
+
+
 def _load_wiki(research_root: Path, topic_slug: str) -> dict[str, str]:
-    """vault wiki 페이지 로드 → {filename: content}. 하이픈↔언더스코어 둘 다 체크."""
+    """wiki 페이지 로드 → {filename: content}.
+
+    프로젝트 로컬 모드: manifests/ 토픽이 여러 개면 전체 wiki/<topic>/*.md를 합쳐 반환.
+    파일명 충돌 시 토픽 prefix 추가 (예: 김범수__overview.md).
+    Vault 모드(단일 토픽): 기존 동작 유지.
+    """
+    pages = {}
+    local_topics = _list_local_topics(research_root)
+    if len(local_topics) > 1:
+        # 다중 토픽 — 전체 합치기
+        for topic in local_topics:
+            wiki_dir = research_root / "wiki" / topic
+            if not wiki_dir.exists():
+                continue
+            for md_file in wiki_dir.glob("*.md"):
+                key = f"{topic}__{md_file.name}" if md_file.name in pages else md_file.name
+                if key in pages:  # 여전히 충돌 시 토픽 prefix 강제
+                    key = f"{topic}__{md_file.name}"
+                pages[key] = md_file.read_text(encoding="utf-8")
+        return pages
+
+    # 단일 토픽 (vault 또는 single-topic project)
     slug = _resolve_slug(research_root, topic_slug)
     wiki_dir = research_root / "wiki" / slug
-    pages = {}
     if not wiki_dir.exists():
         return pages
     for md_file in wiki_dir.glob("*.md"):
@@ -83,36 +133,52 @@ def _load_wiki(research_root: Path, topic_slug: str) -> dict[str, str]:
 
 
 def _load_claims(research_root: Path, topic_slug: str) -> list[dict]:
-    """vault claims.jsonl 로드 → list of claim dicts. 하이픈↔언더스코어 둘 다 체크."""
-    slug = _resolve_slug(research_root, topic_slug)
-    claims_file = research_root / "manifests" / slug / "claims.jsonl"
-    if not claims_file.exists():
-        return []
+    """claims.jsonl 로드 — 다중 토픽 모드면 전체 합쳐 반환."""
     claims = []
-    for line in claims_file.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if line:
-            try:
-                claims.append(json.loads(line))
-            except Exception:
-                pass
+    local_topics = _list_local_topics(research_root)
+    paths_to_check: list[Path] = []
+    if len(local_topics) > 1:
+        for topic in local_topics:
+            paths_to_check.append(research_root / "manifests" / topic / "claims.jsonl")
+    else:
+        slug = _resolve_slug(research_root, topic_slug)
+        paths_to_check.append(research_root / "manifests" / slug / "claims.jsonl")
+
+    for cf in paths_to_check:
+        if not cf.exists():
+            continue
+        for line in cf.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line:
+                try:
+                    claims.append(json.loads(line))
+                except Exception:
+                    pass
     return claims
 
 
 def _load_sources(research_root: Path, topic_slug: str) -> list[dict]:
-    """vault sources.jsonl 로드 → list of source dicts. 하이픈↔언더스코어 둘 다 체크."""
-    slug = _resolve_slug(research_root, topic_slug)
-    sources_file = research_root / "manifests" / slug / "sources.jsonl"
-    if not sources_file.exists():
-        return []
+    """sources.jsonl 로드 — 다중 토픽 모드면 전체 합쳐 반환."""
     sources = []
-    for line in sources_file.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if line:
-            try:
-                sources.append(json.loads(line))
-            except Exception:
-                pass
+    local_topics = _list_local_topics(research_root)
+    paths_to_check: list[Path] = []
+    if len(local_topics) > 1:
+        for topic in local_topics:
+            paths_to_check.append(research_root / "manifests" / topic / "sources.jsonl")
+    else:
+        slug = _resolve_slug(research_root, topic_slug)
+        paths_to_check.append(research_root / "manifests" / slug / "sources.jsonl")
+
+    for sf in paths_to_check:
+        if not sf.exists():
+            continue
+        for line in sf.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line:
+                try:
+                    sources.append(json.loads(line))
+                except Exception:
+                    pass
     return sources
 
 
@@ -146,6 +212,23 @@ def _chapter_research_slots(chapter: dict) -> list[str]:
     return deduped
 
 
+def _call_claude_cli(prompt: str, *, timeout: int = 120) -> str:
+    """Claude CLI subprocess 호출 — 프로젝트 표준 패턴 (anthropic SDK 대신)."""
+    import subprocess
+    claude_bin = os.environ.get("CLAUDE_CLI_BIN", "claude")
+    result = subprocess.run(
+        [claude_bin, "-p", "--output-format", "text"],
+        input=prompt,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        encoding="utf-8",
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"claude CLI exit {result.returncode}: {result.stderr[:200]}")
+    return result.stdout
+
+
 def _generate_chapter_facts_via_api(
     chapter: dict,
     wiki_pages: dict[str, str],
@@ -155,16 +238,7 @@ def _generate_chapter_facts_via_api(
     real_topic: str,
     core_question: str,
 ) -> dict:
-    """Claude API로 단일 챕터의 chapter_facts 생성."""
-    try:
-        import anthropic
-    except ImportError:
-        return _fallback_chapter_facts(chapter, claims)
-
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not api_key:
-        return _fallback_chapter_facts(chapter, claims)
-
+    """Claude CLI로 단일 챕터의 chapter_facts 생성 (프로젝트 표준 패턴)."""
     chapter_title = chapter.get("title", "")
     chapter_focus = chapter.get("focus", chapter.get("description", ""))
     chapter_idx = chapter.get("index", chapter.get("chapter_number", 1))
@@ -249,17 +323,15 @@ def _generate_chapter_facts_via_api(
 }}"""
 
     try:
-        client = anthropic.Anthropic(api_key=api_key)
-        response = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=2048,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = response.content[0].text.strip()
-        if "```" in text:
-            m = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+        text = _call_claude_cli(prompt, timeout=120).strip()
+        # JSON 블록 추출 (```json ... ``` 또는 직접 { ... })
+        m = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", text)
+        if m:
+            text = m.group(1)
+        else:
+            m = re.search(r"\{[\s\S]*\}", text)
             if m:
-                text = m.group(1)
+                text = m.group(0)
         result = json.loads(text)
         # claim_ids, source_ids 집계
         all_claim_ids = list({c["claim_id"] for c in relevant_claims if "claim_id" in c})
@@ -267,7 +339,7 @@ def _generate_chapter_facts_via_api(
         result["source_ids"] = result.get("source_ids") or source_ids[:10]
         return result
     except Exception as e:
-        print(f"[chapter_projection] 챕터 {chapter_idx} API 실패: {e}", flush=True)
+        print(f"[chapter_projection] 챕터 {chapter_idx} CLI 호출 실패: {e}", flush=True)
         return _fallback_chapter_facts(chapter, claims)
 
 
