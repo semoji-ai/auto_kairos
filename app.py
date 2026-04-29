@@ -1860,6 +1860,40 @@ async def get_tts_text(request: Request, project_ref: str, scene_num: int):
     return JSONResponse({"error": "scene not found"}, 404)
 
 
+def _scene_id_for_num(out_dir: str, scene_num: int) -> str:
+    """scene_specs.json에서 scene_num 에 해당하는 sceneId 조회 (없으면 빈 문자열)."""
+    import json as _json
+    try:
+        specs_path = Path(out_dir) / "scene_specs.json"
+        if not specs_path.exists():
+            return ""
+        specs = _json.loads(specs_path.read_text(encoding="utf-8"))
+        for s in specs.get("scenes", []):
+            if s.get("sceneNumber") == scene_num:
+                return s.get("sceneId") or ""
+    except Exception:
+        pass
+    return ""
+
+
+def _resolve_scene_file(out_dir: str, scene_num: int, subdir: str, suffix: str) -> Path:
+    """sceneId 기반 파일명을 우선 시도하고, 없으면 scene_NNN 레거시 경로 반환.
+
+    파일이 둘 다 없으면 sceneId 기반 경로를 우선해 반환 (쓰기/존재검사 양쪽에 사용)."""
+    base = Path(out_dir) / subdir
+    sid = _scene_id_for_num(out_dir, scene_num)
+    if sid:
+        cand = base / f"{sid}{suffix}"
+        if cand.exists():
+            return cand
+    legacy = base / f"scene_{scene_num:03d}{suffix}"
+    if legacy.exists():
+        return legacy
+    if sid:
+        return base / f"{sid}{suffix}"
+    return legacy
+
+
 @app.get("/api/p/{project_ref}/subtitles/{scene_num}")
 async def get_subtitles(request: Request, project_ref: str, scene_num: int):
     """씬의 SRT 엔트리 + timestamps.json 단어 데이터 반환."""
@@ -1877,8 +1911,8 @@ async def get_subtitles(request: Request, project_ref: str, scene_num: int):
             status_code=307,
         )
     out_dir = project.get("output_dir", "")
-    srt_path = Path(out_dir) / "subtitles" / f"scene_{scene_num:03d}.srt"
-    ts_path = Path(out_dir) / "audio" / f"scene_{scene_num:03d}.timestamps.json"
+    srt_path = _resolve_scene_file(out_dir, scene_num, "subtitles", ".srt")
+    ts_path = _resolve_scene_file(out_dir, scene_num, "audio", ".timestamps.json")
 
     entries = []
     if srt_path.exists():
@@ -1926,7 +1960,7 @@ def _snap_to_word_boundary(start_sec: float, out_dir: str, scene_num: int) -> fl
     단어 경계(공백 직후 문자) 중 start_sec에 가장 가까운 것을 선택한다.
     """
     import json as _json
-    ts_path = Path(out_dir) / "audio" / f"scene_{scene_num:03d}.timestamps.json"
+    ts_path = _resolve_scene_file(out_dir, scene_num, "audio", ".timestamps.json")
     if not ts_path.exists():
         return start_sec
     try:
@@ -1952,7 +1986,7 @@ def _snap_to_word_boundary(start_sec: float, out_dir: str, scene_num: int) -> fl
 
 
 def _resolve_subtitle_audio_duration(out_dir: str, scene_num: int, fallback_end_sec: float = 0.0) -> float:
-    audio_path = Path(out_dir) / "audio" / f"scene_{scene_num:03d}.mp3"
+    audio_path = _resolve_scene_file(out_dir, scene_num, "audio", ".mp3")
     if audio_path.exists():
         try:
             from mutagen.mp3 import MP3
@@ -1988,7 +2022,8 @@ async def save_subtitles(request: Request, project_ref: str, scene_num: int):
         {**e, "startSec": _snap_to_word_boundary(e["startSec"], out_dir, scene_num)}
         for e in entries
     ]
-    srt_path = Path(out_dir) / "subtitles" / f"scene_{scene_num:03d}.srt"
+    sid = _scene_id_for_num(out_dir, scene_num)
+    srt_path = Path(out_dir) / "subtitles" / (f"{sid}.srt" if sid else f"scene_{scene_num:03d}.srt")
     srt_path.parent.mkdir(parents=True, exist_ok=True)
 
     from auto_agent.scripts.generate_subtitles import format_srt_time
