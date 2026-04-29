@@ -1428,6 +1428,7 @@ function sbApplyTrim(sn) {
 .sb-char-name { font-size: 9px; color: #F4F4F5; text-align: center; line-height: 1.3; word-break: keep-all; font-weight: 600; }
 .sb-char-tag { font-size: 8px; color: #A1A1AA; text-align: center; line-height: 1.2; margin-top: 1px; }
 .sb-char-gen-count { font-size: 8px; color: #A5B4FC; margin-top: 2px; text-align: center; }
+.sb-char-scene-count { font-size: 8px; color: #FCD34D; margin-top: 1px; text-align: center; opacity: 0.85; }
 .sb-char-missing-badge { font-size: 8px; color: #FCA5A5; text-align: center; margin-top: 2px; }
 
 .sb-main-layout { display: flex; gap: 0; }
@@ -1721,21 +1722,31 @@ function updateSceneLayout(slug, sceneNum, layout) {
         }
 
         list.innerHTML = chars.map(function(c) {
-          var nameShort = c.name.split('(')[0].trim();
+          var nameShort = (c.canonical || c.name.split('(')[0].trim()).replace(/_/g, ' ');
           var tag = c.tags && c.tags[0] ? c.tags[0] : '';
+          var sceneCount = c.scene_count || (c.scenes ? c.scenes.length : 0);
           var genCount = c.gen_scenes ? c.gen_scenes.length : 0;
           var thumb = c.has_image
             ? '<img class="sb-char-thumb" src="' + c.thumb_url + '" alt="' + nameShort + '" loading="lazy">'
             : '<div class="sb-char-thumb-placeholder">👤</div>';
-          var badge = c.has_image
-            ? (genCount > 0 ? '<div class="sb-char-gen-count">🎨 ' + genCount + '씬</div>' : '')
-            : '<div class="sb-char-missing-badge">미생성</div>';
-          return '<div class="sb-char-card ' + (c.has_image ? 'has-image' : 'no-image') + '" title="' + c.name + '">'
+          // 등장 N씬 (모든 씬) — 항상 표시, 1씬이라도 보이게
+          var sceneBadge = sceneCount ? '<div class="sb-char-scene-count">📍 ' + sceneCount + '씬</div>' : '';
+          var genBadge = (c.has_image && genCount > 0)
+            ? '<div class="sb-char-gen-count">🎨 ' + genCount + '</div>'
+            : (!c.has_image ? '<div class="sb-char-missing-badge">미생성</div>' : '');
+          // tooltip에 description 다양성 노출 (canonical 통합 케이스 디버깅용)
+          var titleAttr = c.name;
+          if (c.descriptions && c.descriptions.length > 1) {
+            titleAttr = c.canonical + ' — ' + c.descriptions.length + '개 description 통합';
+          }
+          var safeTitle = String(titleAttr).replace(/"/g, '&quot;').replace(/</g, '&lt;');
+          return '<div class="sb-char-card ' + (c.has_image ? 'has-image' : 'no-image') + '" title="' + safeTitle + '">'
             + thumb
             + '<div class="sb-char-overlay">'
             + '<div class="sb-char-name">' + nameShort + '</div>'
             + (tag ? '<div class="sb-char-tag">' + tag + '</div>' : '')
-            + badge
+            + sceneBadge
+            + genBadge
             + '</div>'
             + '</div>';
         }).join('');

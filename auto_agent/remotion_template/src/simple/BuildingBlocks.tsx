@@ -360,20 +360,45 @@ export const AccentText: React.FC<{
   );
 };
 
-/** 텍스트 내 \n을 <br/>로 변환 — AccentText와 동일한 방식 */
+/** {{text}} 인라인 강조 → accent 색상 + bold span. */
+function renderInlineMarks(text: string, accentColor: string): React.ReactNode {
+  if (!text || !text.includes("{{")) return text;
+  const re = /\{\{([^}]+)\}\}/g;
+  const out: React.ReactNode[] = [];
+  let last = 0;
+  let key = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    out.push(
+      <span key={`mk${key++}`} style={{ color: accentColor, fontWeight: 800 }}>
+        {m[1]}
+      </span>
+    );
+    last = re.lastIndex;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return <>{out}</>;
+}
+
+/** 텍스트 내 \n을 <br/>로 변환 + {{...}} 인라인 강조 */
 export const TextWithBreaks: React.FC<{
   text: string;
   style?: React.CSSProperties;
 }> = ({ text, style }) => {
+  const C = useC();
   if (!text) return null;
+  const accentColor = C.accent;
   const parts = text.split("\n");
-  if (parts.length === 1) return <span style={style}>{text}</span>;
+  if (parts.length === 1) {
+    return <span style={style}>{renderInlineMarks(text, accentColor)}</span>;
+  }
   return (
     <span style={{ display: "inline-block", ...style }}>
       {parts.map((line, i) => (
         <React.Fragment key={i}>
           {i > 0 && <br />}
-          {line}
+          {renderInlineMarks(line, accentColor)}
         </React.Fragment>
       ))}
     </span>

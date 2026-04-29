@@ -820,12 +820,25 @@ async def get_characters(project_ref: str, request: Request):
     out_dir = Path(project["output_dir"])
     dir_name = out_dir.name
 
-    # character_plan.json 로드
+    def _canonical(raw_name: str) -> str:
+        """'김범수(아이위랩 창업자, 40대)' → '김범수' (괄호 앞 + 공백→_).
+
+        이름은 같은데 description이 달라 다른 캐릭터로 분리되는 버그 차단.
+        """
+        if not raw_name:
+            return ""
+        head = raw_name.split("(")[0].strip()
+        return _ud.normalize("NFC", head.replace(" ", "_"))
+
+    # character_plan.json 로드 (있으면 우선)
     cp_path = out_dir / "character_plan.json"
-    if not cp_path.exists():
-        return {"characters": []}
-    cp = json.loads(cp_path.read_text(encoding="utf-8"))
-    char_list = cp.get("characters", [])
+    char_plan_list: list[dict] = []
+    if cp_path.exists():
+        try:
+            cp = json.loads(cp_path.read_text(encoding="utf-8"))
+            char_plan_list = cp.get("characters", []) or []
+        except Exception:
+            char_plan_list = []
 
     # characters/ 폴더 이미지 맵 (NFC 정규화)
     char_dir = out_dir / "characters"
@@ -835,34 +848,86 @@ async def get_characters(project_ref: str, request: Request):
             if f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"):
                 char_files_by_stem[_ud.normalize("NFC", f.stem)] = f
 
-    # scene_specs에서 캐릭터별 등장 씬(generate 타입) 수집
+    # scene_specs에서 모든 캐릭터 등장 통계 (canonical name으로 통합)
     specs = _load_specs(project)
-    char_gen_scenes: dict[str, list[int]] = {}
+    canon_to_raw: dict[str, str] = {}     # canonical → 첫 raw 표기 (description 살림)
+    canon_to_descs: dict[str, set] = {}   # canonical → 등장한 description 집합
+    canon_scenes: dict[str, list[int]] = {}     # canonical → 모든 등장 씬
+    canon_gen_scenes: dict[str, list[int]] = {}  # canonical → generate 타입 씬만
     if specs:
         for s in specs.get("scenes", []):
+            sn = s.get("sceneNumber") or s.get("scene_number") or 0
             ia = s.get("imageAsset") or {}
-            if ia.get("source") == "generate":
-                for c in s.get("characters", []):
-                    char_gen_scenes.setdefault(c, []).append(s["sceneNumber"])
+            is_generate = ia.get("source") == "generate"
+            for raw in s.get("characters", []):
+                if not raw:
+                    continue
+                canon = _canonical(raw)
+                if canon not in canon_to_raw:
+                    canon_to_raw[canon] = raw
+                # description 부분 (괄호 안)
+                if "(" in raw and ")" in raw:
+                    desc = raw[raw.find("(") + 1:raw.rfind(")")].strip()
+                    canon_to_descs.setdefault(canon, set()).add(desc)
+                canon_scenes.setdefault(canon, []).append(sn)
+                if is_generate:
+                    canon_gen_scenes.setdefault(canon, []).append(sn)
 
+    # character_plan에 있는 항목과 합침 (canonical 기준)
+    plan_canons: set = set()
     result = []
-    for ch in char_list:
-        char_id = ch.get("name", "")
-        char_key = _ud.normalize("NFC", char_id.replace(" ", "_"))
-        # 이미지 매핑
-        match = next((f for stem, f in char_files_by_stem.items() if stem.startswith(char_key) and "semoji_3D" in stem), None)
+    for ch in char_plan_list:
+        raw_name = ch.get("name", "")
+        canon = _canonical(raw_name)
+        plan_canons.add(canon)
+        match = next((f for stem, f in char_files_by_stem.items() if stem.startswith(canon) and "semoji_3D" in stem), None)
         if not match:
-            match = char_files_by_stem.get(char_key)
+            match = char_files_by_stem.get(canon)
         thumb_url = f"/output/{dir_name}/characters/{match.name}" if match else ""
+        all_scenes = sorted(set(ch.get("scenes", []) + canon_scenes.get(canon, [])))
+        gen_scenes = sorted(set(canon_gen_scenes.get(canon, [])))
+        descs = sorted(canon_to_descs.get(canon, set()))
         result.append({
-            "id": ch.get("id", ""),
-            "name": char_id,
+            "id": ch.get("id", canon),
+            "name": raw_name or canon,
+            "canonical": canon,
             "tags": ch.get("tags", []),
-            "scenes": ch.get("scenes", []),
-            "gen_scenes": char_gen_scenes.get(char_id, []),
+            "descriptions": descs,
+            "scenes": all_scenes,
+            "gen_scenes": gen_scenes,
+            "scene_count": len(all_scenes),
             "thumb_url": thumb_url,
             "has_image": bool(match),
+            "from_plan": True,
         })
+
+    # plan에 없지만 scene_specs에만 있는 캐릭터 추가 (1씬짜리 포함, canonical로 통합)
+    for canon, raw in canon_to_raw.items():
+        if canon in plan_canons:
+            continue
+        match = next((f for stem, f in char_files_by_stem.items() if stem.startswith(canon) and "semoji_3D" in stem), None)
+        if not match:
+            match = char_files_by_stem.get(canon)
+        thumb_url = f"/output/{dir_name}/characters/{match.name}" if match else ""
+        descs = sorted(canon_to_descs.get(canon, set()))
+        all_scenes = sorted(set(canon_scenes.get(canon, [])))
+        gen_scenes = sorted(set(canon_gen_scenes.get(canon, [])))
+        result.append({
+            "id": canon,
+            "name": raw,
+            "canonical": canon,
+            "tags": [],
+            "descriptions": descs,
+            "scenes": all_scenes,
+            "gen_scenes": gen_scenes,
+            "scene_count": len(all_scenes),
+            "thumb_url": thumb_url,
+            "has_image": bool(match),
+            "from_plan": False,
+        })
+
+    # 등장 횟수 내림차순 정렬
+    result.sort(key=lambda x: (-x["scene_count"], x["canonical"]))
 
     return {"characters": result}
 
