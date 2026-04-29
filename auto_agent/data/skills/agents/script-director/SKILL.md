@@ -7,6 +7,7 @@ allowed_tools:
   - Read
   - Write
   - Glob
+  - Bash
 skills:
   - shared/writing-style
   - shared/writing-style-semoji
@@ -124,38 +125,55 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 
 2. **🔒 MUST — Evidence-backed claim ledger 작성** (`research/claims_ledger.jsonl` **필수 출력**):
 
-   본문에 박은 **검증 가능한 사실**(연도/숫자/이름/정확한 인용)에 대해 evidence span을 함께 기록합니다.
-   이 단계는 prose 작성과 **동시에** 진행하세요 — 사실을 한 줄 박을 때마다 ledger에도 한 줄 append.
+   본문에 박은 **검증 가능한 사실**(연도/숫자/이름/정확한 인용)에 대해 evidence를 ledger에 누적합니다.
 
-   **작성 절차** (fact-retriever SKILL.md의 5단계):
-     1) `research/manifests/<topic>/sources.jsonl` Read → entity/year로 후보 source_id 좁히기
-     2) `research/manifests/<topic>/claims.jsonl` 우선 매칭 (이미 검증된 자료 재사용)
-     3) `research/raw/<topic>/<run>/source_notes/<source_id>.md` Read → 30~300자 인용 span 추출
-        (paraphrase 절대 금지, 원문 그대로 복사)
-     4) claim_kind 차등 게이트 (date_or_number → A 1건 필수)
-     5) span이 chunk 원문에 substring으로 존재하는지 **자체 검증** (환각 차단)
+   **호출 방식 — fact-retriever 별도 subprocess 사용**:
 
-   **claims_ledger.jsonl 한 줄 형식**:
-   ```json
-   {"claim_id": "claim_<slug>_<hash>", "claim": "1933년 안티푸라민 출시", "kind": "fact:date_or_number",
-    "tier": "A", "confidence": "high", "source_id": "src_유한양행-위키백과_7b79447d43",
-    "source_url": "https://ko.wikipedia.org/wiki/유한양행", "evidence_span": "1933년 12월, 자체 개발 진통소염제 안티푸라민을...",
-    "anchor": "raw/<topic>/<run>/source_notes/src_유한양행-위키백과_7b79447d43.md", "used_in_chapter": 3,
-    "created_at": "2026-04-29T..."}
+   복잡한 검증 절차(sources.jsonl 탐색, raw chunk 읽기, span 추출, 환각 검증)는
+   **fact-retriever 사이드카 에이전트**에 위임하세요. script-director는 호출만.
+
+   ```python
+   # 사실이 필요한 시점에 호출 (Bash로 Python 한 줄 실행 또는 직접 import)
+   from auto_agent.research.fact_retriever import fact_retrieve
+   from pathlib import Path
+
+   result = fact_retrieve(
+       query="1933 안티푸라민 출시",
+       project_research_dir=Path("research"),  # PROJECT_DIR 기준 상대 또는 절대
+       entities=["안티푸라민", "유한양행"],
+       year=1933,
+       claim_kind="fact:date_or_number",
+   )
+   # result = {"found": true, "claim": "...", "evidence": {...}, "tier": "A", "confidence": "high"}
+   #         또는 {"found": false, "reason": "...", "warnings": [...]}
    ```
 
-   **🚨 source_id는 sources.jsonl의 진짜 값을 그대로 복사하세요 — 절대 임의 명명하지 말 것**:
-   - 옳음: `src_유한양행-위키백과_7b79447d43` (sources.jsonl에 기록된 실제 ID)
-   - 틀림: `src_wiki_yuhan` (사람이 읽기 쉽게 임의 명명 — 매칭 안 됨)
-   - 절차: `manifests/<topic>/sources.jsonl` Read → 매칭되는 엔트리의 `source_id`를 그대로 복사
-   - 없으면 ledger에 추가하지 말 것 (Tier 미상 = evidence 채택 불가)
+   `fact_retrieve()`가 다음을 자동 수행:
+   - sources.jsonl 후보 source_id 추출
+   - manifests claims.jsonl 우선 매칭
+   - raw chunk substring 강제 검증 (환각 차단)
+   - claim_kind 차등 게이트 (date_or_number → A 1건 필수 등)
+   - 외부 검증 (chunk 원문에 span 실재 확인)
+
+   `result.found === true`면 그 result를 그대로 `claims_ledger.jsonl`에 한 줄 append:
+
+   ```json
+   {"claim_id": "claim_<slug>_<hash>", "claim": "1933년 안티푸라민 출시",
+    "kind": "fact:date_or_number", "tier": "A", "confidence": "high",
+    "source_id": "src_유한양행-위키백과_7b79447d43",
+    "source_url": "https://ko.wikipedia.org/wiki/유한양행",
+    "evidence_span": "1933년 12월, 자체 개발 진통소염제 안티푸라민을...",
+    "anchor": "raw/<topic>/<run>/source_notes/src_유한양행-위키백과_7b79447d43.md",
+    "used_in_chapter": 3, "created_at": "2026-04-29T..."}
+   ```
+
+   `result.found === false`면 **본문에 그 사실을 단정적으로 쓰지 마세요**.
+   우회하거나 제거. 환각 사실 절대 금지.
 
    **규칙**:
-   - 게이트 통과한 claim만 ledger에 추가
-   - **Tier C 소스(블로그/SNS/카페)에서 evidence 채택 절대 금지**
    - 옛 `targeted_claims.json` 답변은 그대로 사용 가능 (이미 검증된 것으로 간주) — 단 ledger에는 source_id/anchor 명시
-   - 게이트 통과 못 한 사실은 본문에 단정적으로 쓰지 말 것 (우회하거나 제거)
    - 모든 문장에 ledger 매칭 강제 X — 검증 가능한 사실(인물/연도/숫자)에만
+   - 한 사실에 대해 여러 번 호출하지 말 것 (동일 query 중복 호출 금지)
 
    **최소 기준**:
    - 1분 영상: 최소 5건
