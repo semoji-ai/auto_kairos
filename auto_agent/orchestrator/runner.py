@@ -1710,6 +1710,16 @@ class PipelineRunner:
     def _run_sequential(self, steps: List[dict]):
         """순차 실행 + 사감독 검증."""
         for step in steps:
+            # legacy step 스킵 — step.legacy=true이면 ENABLE_LEGACY_INGEST=1 환경변수로만 활성화
+            if step.get("legacy") and os.environ.get("ENABLE_LEGACY_INGEST", "").strip() != "1":
+                step_id = step["id"]
+                print(f"  [{step_id}] {step.get('name', '')} ... [legacy 스킵 — ENABLE_LEGACY_INGEST=1로 활성화]", flush=True)
+                self.state.skipped_steps.append(step_id)
+                self.state.results[step_id] = {
+                    "step_id": step_id, "status": "skipped",
+                    "duration_sec": 0.0, "error": "legacy: ENABLE_LEGACY_INGEST not set",
+                }
+                continue
             result = self._execute_step(step)
 
             # 사감독 검증 + 보완
