@@ -64,8 +64,9 @@ Thumbs.db
 *.swp
 *.swo
 
-# Claude Code (commands/skills는 공유, 나머지는 로컬)
+# Claude Code (agents/commands/skills는 공유, 나머지는 로컬)
 .claude/*
+!.claude/agents/
 !.claude/commands/
 !.claude/skills/
 !.claude/settings.json
