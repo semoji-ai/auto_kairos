@@ -795,7 +795,12 @@ async def research_canvas(request: Request, project_ref: str):
                     claims.extend(_load_jsonl(topic_dir / "claims.jsonl"))
                     sources.extend(_load_jsonl(topic_dir / "sources.jsonl"))
 
-    # manifests claims가 없으면 wiki claims.md 파싱으로 폴백
+    # claims_ledger.jsonl도 읽음 (Phase 3 — script-director가 manuscript 작성 중 누적)
+    ledger_path = research_root / "claims_ledger.jsonl"
+    if ledger_path.exists():
+        claims.extend(_load_jsonl(ledger_path))
+
+    # manifests claims + ledger 모두 비어있으면 wiki claims.md 파싱으로 폴백
     if not claims:
         import re as _re2
         wiki_dir = _find_wiki_dir(research_root / "wiki")
