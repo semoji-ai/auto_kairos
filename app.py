@@ -840,7 +840,8 @@ async def research_canvas(request: Request, project_ref: str):
     # claims에 chapter 필드가 있으면 사용, 없으면 unassigned
     grouped: dict[str, list[dict]] = {}
     for c in claims:
-        ch_key = str(c.get("chapter", ""))
+        # ledger는 'used_in_chapter', 옛 형식은 'chapter'
+        ch_key = str(c.get("chapter", "") or c.get("used_in_chapter", "") or "")
         if not ch_key:
             ch_key = "unassigned"
         if ch_key not in grouped:
@@ -852,6 +853,13 @@ async def research_canvas(request: Request, project_ref: str):
             "confidence": c.get("confidence", "medium"),
             "evidence": c.get("evidence", ""),
             "status": c.get("status", ""),
+            # Phase 3 ledger 필드 (UI에서 ✨ 승격 매칭에 사용)
+            "source_id": c.get("source_id", ""),
+            "source_ids": c.get("source_ids", []),
+            "source_url": c.get("source_url", ""),
+            "evidence_span": c.get("evidence_span", ""),
+            "tier": c.get("tier", ""),
+            "used_in_chapter": c.get("used_in_chapter"),
         })
 
     # unassigned claims는 순서대로 챕터에 배분 (챕터 없을 때 fallback)

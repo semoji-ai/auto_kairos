@@ -138,11 +138,17 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
    **claims_ledger.jsonl 한 줄 형식**:
    ```json
    {"claim_id": "claim_<slug>_<hash>", "claim": "1933년 안티푸라민 출시", "kind": "fact:date_or_number",
-    "tier": "A", "confidence": "high", "source_id": "src_yuhan_official",
-    "source_url": "https://...", "evidence_span": "1933년 12월, 자체 개발 진통소염제 안티푸라민을...",
-    "anchor": "raw/<topic>/<run>/source_notes/src_yuhan_official.md", "used_in_chapter": 3,
+    "tier": "A", "confidence": "high", "source_id": "src_유한양행-위키백과_7b79447d43",
+    "source_url": "https://ko.wikipedia.org/wiki/유한양행", "evidence_span": "1933년 12월, 자체 개발 진통소염제 안티푸라민을...",
+    "anchor": "raw/<topic>/<run>/source_notes/src_유한양행-위키백과_7b79447d43.md", "used_in_chapter": 3,
     "created_at": "2026-04-29T..."}
    ```
+
+   **🚨 source_id는 sources.jsonl의 진짜 값을 그대로 복사하세요 — 절대 임의 명명하지 말 것**:
+   - 옳음: `src_유한양행-위키백과_7b79447d43` (sources.jsonl에 기록된 실제 ID)
+   - 틀림: `src_wiki_yuhan` (사람이 읽기 쉽게 임의 명명 — 매칭 안 됨)
+   - 절차: `manifests/<topic>/sources.jsonl` Read → 매칭되는 엔트리의 `source_id`를 그대로 복사
+   - 없으면 ledger에 추가하지 말 것 (Tier 미상 = evidence 채택 불가)
 
    **규칙**:
    - 게이트 통과한 claim만 ledger에 추가

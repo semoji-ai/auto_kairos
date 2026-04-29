@@ -641,25 +641,56 @@
         var sources = d.sources || [];
         var totalSources = d.total_sources || sources.length;
         var allClaims = [];
-        var groupedClaims = d.claims || {};
+        // canvas API는 grouped_claims 필드 (chapter별 그룹)로 반환
+        var groupedClaims = d.grouped_claims || d.claims || {};
         Object.keys(groupedClaims).forEach(function(k) {
           var arr = groupedClaims[k];
           if (Array.isArray(arr)) allClaims = allClaims.concat(arr);
         });
 
-        // source_id → claims 매핑
+        // URL normalize — encoding 차이 흡수 (한글 ↔ %EC%B9%B4...)
+        function _normUrl(u) {
+          if (!u) return '';
+          try { u = decodeURIComponent(u); } catch(e) {}
+          // trailing slash, fragment, query 제거
+          u = u.replace(/[#?].*$/, '').replace(/\/$/, '').toLowerCase();
+          return u;
+        }
+
+        // source_id → claims 매핑 (정확 매칭 + URL fuzzy 매칭)
         var claimsBySource = {};
+        var sourcesByUrl = {};
+        sources.forEach(function(s) {
+          if (s.url) sourcesByUrl[_normUrl(s.url)] = s.source_id;
+        });
+        var unmatchedClaims = [];  // 매칭 실패한 ledger 클레임
         allClaims.forEach(function(c) {
+          var matched = false;
+          // 1. 정확한 source_id 매칭
           var sids = [];
-          // 다양한 형식 대응 (claim.source_ids, claim.evidence.source_id 등)
           if (Array.isArray(c.source_ids)) sids = sids.concat(c.source_ids);
           if (c.source_id) sids.push(c.source_id);
           if (c.evidence && c.evidence.source_id) sids.push(c.evidence.source_id);
           sids.forEach(function(sid) {
             if (!sid) return;
+            // sources.jsonl에 실제로 있는 source_id만 매칭
+            var realSid = sources.find(function(s) { return s.source_id === sid; });
+            if (!realSid) return;
             if (!claimsBySource[sid]) claimsBySource[sid] = [];
             claimsBySource[sid].push(c);
+            matched = true;
           });
+          // 2. source_url normalize 매칭 (정확 매칭 실패 시)
+          if (!matched) {
+            var url = _normUrl(c.source_url || (c.evidence && c.evidence.url) || '');
+            if (url && sourcesByUrl[url]) {
+              var sid = sourcesByUrl[url];
+              if (!claimsBySource[sid]) claimsBySource[sid] = [];
+              claimsBySource[sid].push(c);
+              matched = true;
+            }
+          }
+          if (!matched && c.claim) unmatchedClaims.push(c);
         });
 
         content.innerHTML = '';
@@ -668,14 +699,64 @@
 
         // 헤더
         var header = document.createElement('div');
-        header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08)';
+        header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08);flex-wrap:wrap';
         var promotedCount = sources.filter(function(s) { return claimsBySource[s.source_id]; }).length;
         header.innerHTML =
           '<span style="font-size:16px;font-weight:700;color:#F4F4F5">📊 수집 자료</span>' +
           '<span style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.07);padding:2px 9px;border-radius:10px">' + totalSources + '건</span>' +
           (promotedCount ? '<span style="font-size:11px;color:#FCD34D;background:rgba(245,158,11,0.12);padding:2px 9px;border-radius:10px">✨ 클레임 승격 ' + promotedCount + '건</span>' : '') +
+          (unmatchedClaims.length ? '<span style="font-size:11px;color:#A78BFA;background:rgba(167,139,250,0.12);padding:2px 9px;border-radius:10px">📌 매칭 안 된 ledger ' + unmatchedClaims.length + '건</span>' : '') +
           '<span style="margin-left:auto;font-size:10px;color:var(--text-muted)">표시: ' + sources.length + ' / ' + totalSources + '</span>';
         wrap.appendChild(header);
+
+        // 매칭 안 된 ledger 클레임 — 별도 섹션 (UI 상단에 노출)
+        if (unmatchedClaims.length) {
+          var ulSec = document.createElement('div');
+          ulSec.style.cssText = 'margin-bottom:24px;border:1px solid rgba(167,139,250,0.3);border-radius:8px;padding:12px;background:rgba(167,139,250,0.04)';
+          var ulTitle = document.createElement('div');
+          ulTitle.style.cssText = 'font-size:12px;font-weight:600;color:#A78BFA;margin-bottom:10px';
+          ulTitle.innerHTML = '📌 출처 미매칭 ledger 클레임 (' + unmatchedClaims.length + ')'
+            + '<span style="font-weight:400;color:#71717A;font-size:10px;margin-left:8px">script-director가 임의 명명한 source_id — sources에서 매칭 실패</span>';
+          ulSec.appendChild(ulTitle);
+          unmatchedClaims.forEach(function(c) {
+            var card = document.createElement('div');
+            card.style.cssText = 'border:1px dashed rgba(167,139,250,0.2);border-radius:6px;padding:8px 10px;margin-bottom:6px';
+            var claim = document.createElement('div');
+            claim.style.cssText = 'font-size:12px;color:#E4E4E7;line-height:1.4';
+            claim.textContent = '✨ ' + (c.claim || '');
+            card.appendChild(claim);
+            var meta = document.createElement('div');
+            meta.style.cssText = 'font-size:10px;color:#71717A;margin-top:4px;display:flex;gap:10px;flex-wrap:wrap';
+            var parts = [];
+            if (c.kind) parts.push('kind: ' + c.kind);
+            if (c.tier) parts.push('tier: ' + c.tier);
+            if (c.used_in_chapter) parts.push('ch: ' + c.used_in_chapter);
+            if (c.source_id) parts.push('src_id: ' + c.source_id);
+            if (c.source_url) {
+              var a = document.createElement('a');
+              a.href = c.source_url;
+              a.target = '_blank';
+              a.rel = 'noopener';
+              a.style.cssText = 'color:#A78BFA;text-decoration:none';
+              a.textContent = '🔗 출처';
+              meta.appendChild(a);
+            }
+            parts.forEach(function(p) {
+              var s = document.createElement('span');
+              s.textContent = p;
+              meta.appendChild(s);
+            });
+            card.appendChild(meta);
+            if (c.evidence_span) {
+              var ev = document.createElement('div');
+              ev.style.cssText = 'font-size:11px;color:#A1A1AA;margin-top:4px;padding-top:4px;border-top:1px dotted rgba(255,255,255,0.05);font-style:italic';
+              ev.textContent = '"' + c.evidence_span.substring(0, 200) + (c.evidence_span.length > 200 ? '...' : '') + '"';
+              card.appendChild(ev);
+            }
+            ulSec.appendChild(card);
+          });
+          wrap.appendChild(ulSec);
+        }
 
         if (!sources.length) {
           var empty = document.createElement('div');
