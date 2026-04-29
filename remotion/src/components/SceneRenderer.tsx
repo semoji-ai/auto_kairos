@@ -277,6 +277,19 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
             imageAssetPlacement={placement}
           />
         )}
+        {videoPlacement === "fullscreen" && vizData?.source && (
+          <div style={{
+            position: "absolute",
+            bottom: 16,
+            right: 40,
+            fontSize: 22,
+            color: "rgba(255,255,255,0.4)",
+            pointerEvents: "none",
+            zIndex: 5,
+          }}>
+            출처: {vizData.source}
+          </div>
+        )}
         {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
