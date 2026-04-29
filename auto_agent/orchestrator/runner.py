@@ -99,12 +99,14 @@ def _extract_agent_report(stdout: str, max_lines: int = 8) -> str:
     return '\n'.join(keep)
 
 
-def _notify(agent: str, text: str, phase: str = "", project: str = "", level: str = "info", data: dict = None):
+def _notify(agent: str, text: str, phase: str = "", project: str = "", level: str = "info", data: dict = None, kind: str = "message"):
     """파이프라인 진행 상황을 대시보드 메신저로 전송. 파일 영속 + HTTP POST.
-    agent 이름은 자동으로 별명으로 변환됩니다."""
+    agent 이름은 자동으로 별명으로 변환됩니다.
+    kind: "message"(채팅) | "doc_update"(라이브 문서 이벤트)."""
     import time as _time
     nickname = AGENT_NICKNAMES.get(agent, agent)
     msg = {
+        "kind": kind,
         "agent": nickname, "text": text, "phase": phase,
         "project": project, "level": level, "data": data or {},
         "timestamp": _time.time(),
@@ -447,6 +449,7 @@ class ProgressFileMonitor:
                         project=self.project_slug,
                         level=msg.get("level", "info"),
                         data=msg.get("data"),
+                        kind=msg.get("kind", "message"),
                     )
                 except json.JSONDecodeError:
                     pass
@@ -1707,6 +1710,16 @@ class PipelineRunner:
     def _run_sequential(self, steps: List[dict]):
         """순차 실행 + 사감독 검증."""
         for step in steps:
+            # legacy step 스킵 — step.legacy=true이면 ENABLE_LEGACY_INGEST=1 환경변수로만 활성화
+            if step.get("legacy") and os.environ.get("ENABLE_LEGACY_INGEST", "").strip() != "1":
+                step_id = step["id"]
+                print(f"  [{step_id}] {step.get('name', '')} ... [legacy 스킵 — ENABLE_LEGACY_INGEST=1로 활성화]", flush=True)
+                self.state.skipped_steps.append(step_id)
+                self.state.results[step_id] = {
+                    "step_id": step_id, "status": "skipped",
+                    "duration_sec": 0.0, "error": "legacy: ENABLE_LEGACY_INGEST not set",
+                }
+                continue
             result = self._execute_step(step)
 
             # 사감독 검증 + 보완
@@ -4267,6 +4280,9 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "brief_review": "modules/brief_review_module.py",
             "brief_deepener": "modules/brief_deepener_module.py",
             "source_ingest": "modules/source_ingest_module.py",
+            "fresh_collector": "modules/fresh_collector_module.py",
+            "vault_lookup": "modules/vault_lookup_module.py",
+            "wiki_compile": "modules/wiki_compiler_module.py",
             "vault_sync": "modules/vault_sync_module.py",
             "skeleton_from_vault": "modules/skeleton_from_vault_module.py",
             "chapter_projection": "modules/chapter_projection_module.py",
@@ -4304,6 +4320,18 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         env["PROGRESS_FILE"] = str(progress_path)
         monitor = ProgressFileMonitor(progress_path, self.project_slug, self.state.current_phase)
         monitor.start()
+
+        # source_ingest 동안 외부 ResearchAgent의 manifests/*/claims.jsonl을 라이브 변환
+        research_watcher = None
+        if module_name == "source_ingest":
+            from auto_agent.orchestrator.research_watcher import ResearchManifestWatcher
+            research_watcher = ResearchManifestWatcher(
+                project_dir=self.project_dir,
+                project_slug=self.project_slug,
+                notifier=_notify,
+                phase=self.state.current_phase or "stage_1",
+            )
+            research_watcher.start()
 
         # manifest-builder는 project_id + storage_key 인자 필요
         cmd = [sys.executable, str(script_path)]
@@ -4350,6 +4378,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             )
         finally:
             monitor.stop()
+            if research_watcher is not None:
+                research_watcher.stop()
 
     def _resolve_video_output_filename(self) -> str:
         """{slug}_final.mp4, 이미 존재하면 _v2, _v3 ... 자동 증가."""

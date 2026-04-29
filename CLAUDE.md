@@ -112,19 +112,28 @@ python -m uvicorn app:app --host 0.0.0.0 --port 8080
 | 스텝 | 에이전트/모듈 | 설명 |
 |------|-------------|------|
 | step_0 | preflight | API키, Node, ffmpeg 검증 |
-| step_1_ingest | source_ingest_module | ResearchAgent → vault 02-research raw/wiki/claims 수집 |
-| step_1a | skeleton_from_vault_module | vault wiki/claims → 내러티브 골격 + outline.json |
-| step_1b | chapter_projection_module | vault wiki/claims + outline → chapter_facts/ (claim_ids/source_ids 포함) |
+| step_1a | skeleton_from_vault_module | 초기 내러티브 골격(skeleton.json) |
+| step_1_strategy | research-strategist | outline + research_queries + hook_strategy |
+| **step_1_fresh** | **fresh_collector_module** | **lane 4종(wiki/news/crossref/openlib) 병렬 + tier_hint** [Phase 1] |
+| **step_1_vault_lookup** | **vault_lookup_module** | **NAS 02-research에서 매칭 토픽 흡수 (LLM slug 매처)** [Phase 2] |
+| **step_1d_wiki_compile** | **wiki_compiler_module** | **raw → wiki/<topic>/{overview,claims,entities,timeline,index}.md** [Phase 3] |
+| ~~step_1_ingest~~ | source_ingest_module | **[LEGACY]** ENABLE_LEGACY_INGEST=1로만 실행. step_1_fresh+vault_lookup으로 대체됨 |
+| step_1b | chapter_projection_module | vault wiki/claims + outline → chapter_facts/ |
+| step_1c | brief_deepener | editorial_brief v1 → v2 심화 |
 | step_2_draft | draft-writer | 초고 + WHY/HOW 질문 목록 |
 | step_2_target | targeted-researcher | 정밀 웹 리서치 → targeted_claims.json |
-| step_2_manuscript | script-director (manuscript) | 최종 원고 prose 작성 |
+| step_2_target_deepen | brief_deepener | brief v2 → v3 최종 잠금 |
+| step_2_manuscript | script-director (manuscript) | 최종 원고 prose + claims_ledger.jsonl (fact-retriever 절차) |
 | step_2 | script-director (chapters) | 씬 분할 + 연출 결정 |
 | step_2_consistency | script-director (consistency) | 내러티브 흐름 보정 |
 | step_2_data | data-mapper | 데이터 필드 매핑 |
-| step_2_review | ratchet_loop | 래칫 리뷰 (90점, 최대 3라운드) |
-| step_2b | fact-verifier (비차단) | 팩트체크 |
+| step_2b | fact-verifier (비차단) | 팩트체크 + 비문 검사 (grammar_issues) |
+| step_2c | fact-fixer (비차단) | fact-verifier 권고 자동 패치 + 비문 수정 |
+| step_2d | scene_enricher | 씬 에셋 풍부화 |
 | step_3b | assembly-director | TTS + 이미지 + 자막 + 매니페스트 |
-| step_3c | release-manager | 제목 4종·더보기란·해시태그·썸네일 스펙 (채널 플레이북 기반) |
+| step_3c | release-manager | 제목 4종·더보기란·해시태그·썸네일 스펙 |
+| (외부) | **fact-retriever** | script-director가 글 쓰며 호출하는 사이드카 — evidence span 검증 [Phase 3] |
+| (외부) | **vault-sync-agent** | `auto-agent vault-sync --project <slug>` — 프로젝트 wiki/claims_ledger를 NAS 볼트로 push [Phase 4] |
 
 > step_3a는 별도 파이프라인 스텝이 아님 — assembly-director가 Phase B-2에서 `image_batch_module`을 Bash로 직접 호출하고, Phase B-3에서 LLM이 결과 이미지를 멀티모달로 검수·재생성한다.
 

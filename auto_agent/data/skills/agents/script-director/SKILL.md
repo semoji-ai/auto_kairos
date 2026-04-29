@@ -180,6 +180,27 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 
 9. **씬을 의식하지 마세요** — 다음 모드(chapters)가 자연스럽게 자를 수 있도록 의미 단위(약 8~15초 분량의 문장 클러스터)가 자연스럽게 형성되면 충분합니다.
 
+10. **Evidence-backed claim ledger 작성** (`claims_ledger.jsonl` 신규 출력):
+    - 본문에 박은 **검증 가능한 사실**(연도/숫자/이름/정확한 인용)에 대해 evidence span을 함께 기록합니다.
+    - 작성 절차는 `auto_agent/data/skills/agents/fact-retriever/SKILL.md`의 5단계를 그대로 수행:
+      1) `manifests/<topic>/sources.jsonl` Read → entity/year로 후보 source_id 좁히기
+      2) `manifests/<topic>/claims.jsonl` 우선 매칭 (이미 검증된 자료 재사용)
+      3) raw markdown chunk Read → 30~300자 인용 span 추출 (paraphrase 금지, 원문 그대로)
+      4) claim_kind 차등 게이트 (date_or_number → A 1건 필수)
+      5) span이 chunk 원문에 substring으로 존재하는지 자체 검증 (환각 차단)
+    - 게이트 통과한 claim만 `claims_ledger.jsonl`에 한 줄씩 append:
+      ```json
+      {"claim_id": "claim_<slug>_<hash>", "claim": "1933년 안티푸라민 출시", "kind": "fact:date_or_number",
+       "tier": "A", "confidence": "high", "source_id": "src_yuhan_official",
+       "source_url": "https://...", "evidence_span": "1933년 12월, 자체 개발 진통소염제 안티푸라민을...",
+       "anchor": "raw/<topic>/<run>/source_notes/src_yuhan_official.md", "used_in_chapter": 3,
+       "created_at": "2026-04-29T..."}
+      ```
+    - 게이트 통과 못 한 사실은 **본문에 단정적으로 쓰지 말 것** (우회하거나 제거).
+    - Tier C 소스(블로그/SNS/카페)에서 evidence 채택 절대 금지.
+    - 옛 `targeted_claims.json` 답변은 그대로 사용 가능 (이미 검증된 것으로 간주).
+    - 새로 검증된 사실만 ledger에 추가하면 됨 — 모든 문장에 ledger 매칭 강제 X.
+
 **final_manuscript.md 형식 예시 (1분 영상):**
 ```markdown
 인류 문명의 순서가 틀렸습니다. 우리는 농사 다음에 배를 만들었다고 생각하죠. 그런데 1955년, 네덜란드의 한 고속도로 공사장에서 크레인이 진흙 속에서 통나무 하나를 건져 올렸습니다. 길이 3미터, 약 1만 년 전의 카누였습니다.

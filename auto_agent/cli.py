@@ -2236,6 +2236,141 @@ def _run_pipeline(slug: str):
     runner.run()
 
 
+def cmd_vault_sync(args):
+    """프로젝트 wiki/claims를 볼트(02-research)로 push. Phase 4 — research-redesign spec.
+
+    옵션:
+      --project <slug|uuid>   대상 프로젝트
+      --dry-run               write 안 하고 변경사항만 출력
+      --force                 confidence 낮아도 진행
+      --queue-only            NAS 호출 안 하고 큐에만 추가
+      --process-queue         이전 큐 항목 재시도
+    """
+    import argparse
+    from auto_agent.research.vault_sync import sync_project_to_vault, SyncOptions
+    from auto_agent.research.vault_sync_queue import (
+        VaultSyncLock, enqueue, list_queue, mark_stale, pop_next, dispose,
+    )
+    from auto_agent.db.project_manager import ProjectManager
+
+    parser = argparse.ArgumentParser(prog="auto-agent vault-sync")
+    parser.add_argument("--project", help="프로젝트 slug 또는 uuid")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--force", action="store_true")
+    parser.add_argument("--queue-only", action="store_true", dest="queue_only")
+    parser.add_argument("--process-queue", action="store_true", dest="process_queue")
+    parser.add_argument("--list-queue", action="store_true", dest="list_queue_only")
+    ns = parser.parse_args(args)
+
+    # --list-queue: 큐 항목만 출력
+    if ns.list_queue_only:
+        items = list_queue()
+        if not items:
+            console.print("[dim]큐 비어있음[/dim]")
+            return
+        console.print(f"[accent]큐 항목 {len(items)}개[/accent]")
+        for p in items:
+            try:
+                data = json.loads(p.read_text(encoding="utf-8"))
+                console.print(f"  • {p.name} — {data.get('project_slug', '?')}")
+            except Exception:
+                console.print(f"  • {p.name} (parse 실패)")
+        return
+
+    # --process-queue: 큐 비우기 시도
+    if ns.process_queue:
+        marked = mark_stale(max_age_hours=24)
+        if marked:
+            console.print(f"[yellow]stale 마킹: {len(marked)}개[/yellow]")
+        items = list_queue()
+        if not items:
+            console.print("[dim]큐 비어있음[/dim]")
+            return
+        console.print(f"[accent]큐 처리 시작 — {len(items)}개[/accent]")
+        with VaultSyncLock(timeout=5) as locked:
+            if not locked:
+                print_error("다른 sync가 진행 중. 잠시 후 재시도.")
+                sys.exit(1)
+            for item_path in items:
+                try:
+                    data = json.loads(item_path.read_text(encoding="utf-8"))
+                except Exception:
+                    continue
+                slug = data.get("project_slug", "")
+                pm = ProjectManager()
+                proj = pm.get_project(slug=slug) or pm.get_project(uuid=slug)
+                if not proj:
+                    console.print(f"[yellow]  ⚠ {slug} — 프로젝트 없음, dispose[/yellow]")
+                    dispose(item_path)
+                    continue
+                proj_dir = Path(proj.get("output_dir", ""))
+                opts = SyncOptions(force=ns.force)
+                result = sync_project_to_vault(proj_dir, options=opts)
+                if result.queued:
+                    console.print(f"[yellow]  ⚠ {slug} — 다시 큐로 ({result.queue_reason})[/yellow]")
+                    continue  # dispose 안 함
+                console.print(f"[green]  ✓ {slug} — {len(result.topics)}개 토픽[/green]")
+                dispose(item_path)
+        return
+
+    # 일반 sync (--project 필수)
+    if not ns.project:
+        print_error("--project 또는 --process-queue / --list-queue 필요")
+        sys.exit(1)
+
+    pm = ProjectManager()
+    proj = pm.get_project(slug=ns.project) or pm.get_project(uuid=ns.project)
+    if not proj:
+        print_error(f"프로젝트 없음: {ns.project}")
+        sys.exit(1)
+    proj_dir = Path(proj.get("output_dir", ""))
+    if not proj_dir.exists():
+        print_error(f"프로젝트 디렉토리 없음: {proj_dir}")
+        sys.exit(1)
+
+    options = SyncOptions(
+        dry_run=ns.dry_run,
+        force=ns.force,
+        queue_only=ns.queue_only,
+    )
+
+    with VaultSyncLock(timeout=5) as locked:
+        if not locked:
+            print_error("다른 sync가 진행 중. 잠시 후 재시도.")
+            sys.exit(1)
+        console.print(f"[accent]볼트 sync 시작[/accent] — {ns.project}")
+        if ns.dry_run:
+            console.print("[dim](dry-run — 실제 write 안 함)[/dim]")
+        result = sync_project_to_vault(proj_dir, options=options)
+
+    if result.queued:
+        # 큐에 보관
+        enqueue(result.project_slug, {"reason": result.queue_reason})
+        console.print(f"[yellow]큐에 보관됨[/yellow] — {result.queue_reason}")
+        return
+
+    # 결과 출력
+    console.print(f"[green]완료[/green] — vault: {result.vault_root}")
+    for r in result.topics:
+        ent = r.get("vault_entity_slug", "?")
+        mt = r.get("match_type", "?")
+        conf = r.get("confidence", 0)
+        added = r.get("claims_appended", 0)
+        skipped = r.get("claims_skipped", 0)
+        wiki = len(r.get("wiki_pages", []))
+        runs = r.get("raw_runs_copied", 0)
+        errs = len(r.get("errors", []))
+        status = "✓" if not r.get("errors") else "⚠"
+        console.print(
+            f"  {status} {r['project_topic_slug']:30} → {ent:20} "
+            f"({mt}, {conf:.2f}) — claims +{added} ~{skipped} / wiki {wiki} / raw {runs} / err {errs}"
+        )
+    if result.errors:
+        console.print(f"[red]상위 오류 {len(result.errors)}건[/red]")
+        for e in result.errors:
+            console.print(f"  • {e}")
+
+
 COMMANDS = {
     "init": cmd_init,
     "run": cmd_run,
@@ -2252,6 +2387,7 @@ COMMANDS = {
     "font": cmd_font,
     "bg": cmd_bg,
     "vault": cmd_vault,
+    "vault-sync": cmd_vault_sync,
     "collect": cmd_collect,
     "link": cmd_link,
     "watchlist": cmd_watchlist,
