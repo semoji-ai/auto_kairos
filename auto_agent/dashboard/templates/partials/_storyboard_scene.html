@@ -215,8 +215,32 @@
   {% endif %}
 
   <div class="section">
-    <h4>Narration</h4>
-    <div class="narration-full">{{ scene.narration|replace('\n', '<br>') }}</div>
+    <h4 style="display:flex;align-items:center;gap:8px">
+      <span>Narration</span>
+      <button id="narration-edit-btn" type="button"
+              onclick="toggleNarrationEdit({{ scene.sceneNumber }})"
+              style="font-size:10px;padding:2px 8px;background:rgba(96,165,250,0.15);color:#60A5FA;border:1px solid rgba(96,165,250,0.3);border-radius:4px;cursor:pointer">
+        ✏️ 편집
+      </button>
+      {% if scene.narration_dirty %}
+      <span style="font-size:10px;color:#FCD34D;background:rgba(245,158,11,0.12);padding:2px 8px;border-radius:10px"
+            title="narration이 수정됨 — TTS 재생성 필요">
+        🔴 TTS 재생성 필요
+      </span>
+      {% endif %}
+    </h4>
+    <div id="narration-view" class="narration-full">{{ scene.narration|replace('\n', '<br>') }}</div>
+    <div id="narration-edit" style="display:none;margin-top:6px">
+      <textarea id="narration-textarea" rows="6"
+                style="width:100%;background:rgba(0,0,0,0.3);color:var(--text-primary);border:1px solid rgba(96,165,250,0.4);border-radius:6px;padding:10px;font-size:13px;line-height:1.7;resize:vertical;font-family:inherit">{{ scene.narration }}</textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+        <button onclick="cancelNarrationEdit()" style="font-size:11px;padding:4px 12px;background:rgba(255,255,255,0.05);color:var(--text-muted);border:1px solid rgba(255,255,255,0.1);border-radius:4px;cursor:pointer">취소</button>
+        <button onclick="saveNarrationEdit({{ scene.sceneNumber }})" style="font-size:11px;padding:4px 12px;background:rgba(96,165,250,0.2);color:#60A5FA;border:1px solid rgba(96,165,250,0.4);border-radius:4px;cursor:pointer;font-weight:600">저장</button>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px">
+        💡 저장 시 final_manuscript.md 자동 재생성 — TTS는 별도 재생성 필요
+      </div>
+    </div>
     {% if scene._audio_url %}
     <div class="audio-player" style="margin-top:8px">
       <audio controls preload="none" src="{{ scene._audio_url }}"></audio>
@@ -224,6 +248,61 @@
     </div>
     {% endif %}
   </div>
+
+  <script>
+  function toggleNarrationEdit(sn) {
+    var view = document.getElementById('narration-view');
+    var edit = document.getElementById('narration-edit');
+    var btn = document.getElementById('narration-edit-btn');
+    if (!view || !edit) return;
+    if (edit.style.display === 'none') {
+      view.style.display = 'none';
+      edit.style.display = 'block';
+      btn.textContent = '👁️ 보기';
+      document.getElementById('narration-textarea').focus();
+    } else {
+      cancelNarrationEdit();
+    }
+  }
+  function cancelNarrationEdit() {
+    var view = document.getElementById('narration-view');
+    var edit = document.getElementById('narration-edit');
+    var btn = document.getElementById('narration-edit-btn');
+    if (view) view.style.display = '';
+    if (edit) edit.style.display = 'none';
+    if (btn) btn.textContent = '✏️ 편집';
+  }
+  function saveNarrationEdit(sn) {
+    var ta = document.getElementById('narration-textarea');
+    if (!ta) return;
+    var text = (ta.value || '').trim();
+    if (!text) { alert('narration이 비어있습니다.'); return; }
+    var slug = (window.SLUG || (document.querySelector('[data-slug]') ? document.querySelector('[data-slug]').dataset.slug : ''));
+    fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/update-narration', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({narration: text}),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.error) {
+          alert('저장 실패: ' + d.error);
+          return;
+        }
+        // 화면 갱신
+        var view = document.getElementById('narration-view');
+        if (view) view.innerHTML = text.replace(/\n/g, '<br>');
+        cancelNarrationEdit();
+        // 사용자 알림 — manuscript 재생성됨
+        var hint = document.createElement('div');
+        hint.textContent = '✓ 저장됨 — final_manuscript.md 재생성. TTS 재생성 필요.';
+        hint.style.cssText = 'font-size:11px;color:#34D399;margin-top:6px;padding:6px 10px;background:rgba(52,211,153,0.08);border-radius:4px';
+        view.parentNode.appendChild(hint);
+        setTimeout(function() { hint.remove(); }, 4000);
+      })
+      .catch(function(err) { alert('네트워크 오류: ' + err); });
+  }
+  </script>
 
   <div id="split-editor" style="display:none;margin-top:16px;border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:16px;background:rgba(245,158,11,0.05)">
     <div style="font-size:12px;color:#F59E0B;font-weight:600;margin-bottom:8px">✂️ 씬 분할</div>

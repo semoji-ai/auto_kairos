@@ -18,7 +18,7 @@
   {% if final_manuscript %}
   <div class="ms-manuscript">
     <div class="ms-section-label">최종 원고</div>
-    <pre class="ms-manuscript-text">{{ final_manuscript }}</pre>
+    <div class="ms-manuscript-text" id="ms-manuscript-text" data-raw="{{ final_manuscript|e }}"></div>
   </div>
   {% elif scenes %}
   <div class="ms-manuscript">
@@ -42,18 +42,177 @@
 </div>
 
 <style>
-.ms-view { padding: 20px; max-width: 860px; }
-.ms-section-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
-.ms-chapters { margin-bottom: 24px; }
+.ms-view { padding: 24px; max-width: 920px; }
+.ms-section-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+.ms-chapters { margin-bottom: 28px; }
 .ms-chapter-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .ms-chapter-item { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 12px; }
 .ms-chapter-num { color: #FCD34D; font-weight: 600; }
 .ms-chapter-title { color: var(--text); }
 .ms-manuscript { margin-top: 0; }
-.ms-manuscript-text { white-space: pre-wrap; word-break: break-word; font-family: inherit; font-size: 13px; line-height: 1.8; color: var(--text); background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; }
+
+/* 본문 — 가독성 개선 (font 16px, line 1.85) */
+.ms-manuscript-text {
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--text);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px 28px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.ms-manuscript-text .ms-chapter-h {
+  font-size: 18px;
+  font-weight: 800;
+  color: #FCD34D;
+  margin: 28px 0 16px;
+  padding-left: 12px;
+  border-left: 4px solid #FCD34D;
+  letter-spacing: 0.01em;
+}
+.ms-manuscript-text .ms-chapter-h:first-child { margin-top: 0; }
+.ms-manuscript-text .ms-para {
+  margin: 12px 0;
+}
+.ms-manuscript-text .ms-scene-break {
+  text-align: center;
+  color: var(--text-muted);
+  margin: 18px 0;
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  opacity: 0.5;
+}
+.ms-manuscript-text strong {
+  color: #FCD34D;
+  font-weight: 700;
+}
+/* 캐릭터 뱃지 — 문단 끝에 인라인 또는 wrapper로 */
+.ms-char-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.ms-char-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #FCD34D;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ms-char-badge::before {
+  content: "👤";
+  font-size: 10px;
+  opacity: 0.85;
+}
+
 .ms-chapter { font-size: 12px; font-weight: 700; color: #FCD34D; margin: 16px 0 6px; padding-left: 4px; border-left: 3px solid #FCD34D; padding-left: 8px; }
-.ms-scene-row { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
-.ms-scene-num { color: var(--text-muted); min-width: 30px; flex-shrink: 0; }
-.ms-narration-text { color: var(--text); line-height: 1.6; }
+.ms-scene-row { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 14px; }
+.ms-scene-num { color: var(--text-muted); min-width: 32px; flex-shrink: 0; }
+.ms-narration-text { color: var(--text); line-height: 1.7; }
 .ms-empty { color: var(--text-muted); font-size: 13px; padding: 40px 0; text-align: center; }
 </style>
+
+<script>
+// final_manuscript markdown을 파싱해 챕터/문단/캐릭터 뱃지로 렌더링.
+// chars 마커는 직전 문단 끝에 뱃지로 부착.
+(function() {
+  var el = document.getElementById('ms-manuscript-text');
+  if (!el) return;
+  var raw = el.dataset.raw || '';
+  if (!raw) return;
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // **bold** 인라인 변환 — 다른 마크다운은 단순화
+  function inlineMd(s) {
+    return escapeHtml(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  }
+
+  // 라인 단위 파싱
+  var lines = raw.split('\n');
+  var html = '';
+  var paragraph = [];
+  var pendingChars = [];  // 다음 문단에 부착할 chars (직전 문단이 끝났을 때)
+  var inParaBuffer = '';
+
+  function flushParagraph() {
+    if (!inParaBuffer.trim() && pendingChars.length === 0) return;
+    var body = inlineMd(inParaBuffer);
+    var badges = '';
+    if (pendingChars.length) {
+      badges = '<span class="ms-char-badges">'
+        + pendingChars.map(function(c) {
+            return '<span class="ms-char-badge">' + escapeHtml(c) + '</span>';
+          }).join('')
+        + '</span>';
+      pendingChars = [];
+    }
+    html += '<div class="ms-para">' + body + badges + '</div>';
+    inParaBuffer = '';
+  }
+
+  lines.forEach(function(line) {
+    var trimmed = line.trim();
+
+    // chars 마커: <!-- chars: A, B, C -->
+    var charMatch = trimmed.match(/^<!--\s*chars:\s*([^>]+?)\s*-->$/);
+    if (charMatch) {
+      var names = charMatch[1].split(',').map(function(n) {
+        return n.trim().replace(/_/g, ' ');
+      }).filter(Boolean);
+      // 현재 진행 중인 paragraph 끝에 부착
+      if (inParaBuffer.trim()) {
+        pendingChars = pendingChars.concat(names);
+        flushParagraph();
+      } else {
+        // 빈 paragraph → 다음 paragraph에 붙임
+        pendingChars = pendingChars.concat(names);
+      }
+      return;
+    }
+
+    // 챕터 헤더: # Ch1. ...
+    if (/^#\s+/.test(trimmed)) {
+      flushParagraph();
+      var heading = trimmed.replace(/^#+\s+/, '');
+      html += '<div class="ms-chapter-h">' + inlineMd(heading) + '</div>';
+      return;
+    }
+
+    // 씬 구분: --- 또는 ___
+    if (/^(-{3,}|_{3,})$/.test(trimmed)) {
+      flushParagraph();
+      html += '<div class="ms-scene-break">— · —</div>';
+      return;
+    }
+
+    // 빈 줄: 문단 종료
+    if (!trimmed) {
+      flushParagraph();
+      return;
+    }
+
+    // 일반 라인 — paragraph buffer에 누적
+    if (inParaBuffer) inParaBuffer += '\n' + trimmed;
+    else inParaBuffer = trimmed;
+  });
+  flushParagraph();
+
+  el.innerHTML = html;
+})();
+</script>

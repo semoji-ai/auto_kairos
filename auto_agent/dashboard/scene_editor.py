@@ -1761,3 +1761,136 @@ async def set_scene_asset_type(project_ref: str, scene_num: int, request: Reques
     (out_dir / "scene_specs.json").write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
     _rebuild_manifest_sync(project)
     return {"ok": True, "type": asset_type}
+
+
+def _rebuild_manuscript_from_scenes(project: dict) -> bool:
+    """scene_specs.narration들을 합쳐 final_manuscript.md 재생성.
+
+    구조:
+      # ChN. <chapter_title>          (챕터 변경 시점에 헤더)
+      <narration>
+      <!-- chars: A, B -->            (씬에 characters 있을 때만)
+      ---                              (씬 경계)
+
+    Returns: True if rewritten, False if scene_specs 없음.
+    """
+    out_dir = Path(project.get("output_dir", ""))
+    specs_path = out_dir / "scene_specs.json"
+    if not specs_path.exists():
+        return False
+
+    try:
+        specs = json.loads(specs_path.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+
+    # outline.json에서 챕터 제목 매핑
+    chapter_titles: dict = {}
+    outline_path = out_dir / "outline.json"
+    if outline_path.exists():
+        try:
+            outline = json.loads(outline_path.read_text(encoding="utf-8"))
+            for ch in outline.get("chapters", []):
+                ch_id = ch.get("chapter_number") or ch.get("id") or ch.get("chapter") or 0
+                title = ch.get("title") or ch.get("name") or ""
+                if ch_id:
+                    chapter_titles[int(ch_id)] = title
+        except Exception:
+            pass
+
+    parts: list[str] = []
+    last_chapter = None
+    for s in specs.get("scenes", []):
+        ch = s.get("chapter")
+        if ch is not None and ch != last_chapter:
+            t = chapter_titles.get(ch, f"Chapter {ch}")
+            parts.append(f"# Ch{ch}. {t}")
+            last_chapter = ch
+        narration = (s.get("narration") or "").strip()
+        if narration:
+            parts.append(narration)
+        chars = s.get("characters") or []
+        if chars and isinstance(chars, list):
+            # 괄호 description 제거 (canonical name만)
+            cleaned = []
+            seen = set()
+            for c in chars:
+                if not c:
+                    continue
+                head = str(c).split("(")[0].strip()
+                if head and head not in seen:
+                    seen.add(head)
+                    cleaned.append(head)
+            if cleaned:
+                parts.append(f"<!-- chars: {', '.join(cleaned)} -->")
+        parts.append("---")
+
+    # 마지막 trailing --- 제거
+    while parts and parts[-1] == "---":
+        parts.pop()
+
+    manuscript = "\n\n".join(parts) + "\n"
+    (out_dir / "final_manuscript.md").write_text(manuscript, encoding="utf-8")
+    return True
+
+
+@router.post("/scenes/{scene_num}/update-narration")
+async def update_scene_narration(project_ref: str, scene_num: int, request: Request):
+    """씬 narration 인라인 편집. scene_specs 갱신 + manuscript 자동 재생성.
+
+    Body: {"narration": "<new text>"}
+    """
+    from auto_agent.db.project_manager import ProjectManager
+    pm = ProjectManager()
+    project, needs_redirect = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(
+                str(request.url.path) + (f"?{request.url.query}" if request.url.query else ""),
+                project["uuid"],
+            ),
+            status_code=307,
+        )
+
+    body = await request.json()
+    new_narration = (body.get("narration") or "").strip()
+    if not new_narration:
+        return JSONResponse({"error": "narration 비어있음"}, status_code=400)
+
+    out_dir = Path(project["output_dir"])
+    specs_path = out_dir / "scene_specs.json"
+    if not specs_path.exists():
+        return JSONResponse({"error": "scene_specs.json 없음"}, status_code=404)
+
+    specs = json.loads(specs_path.read_text(encoding="utf-8"))
+    target = None
+    for s in specs.get("scenes", []):
+        if s.get("sceneNumber") == scene_num or s.get("scene_number") == scene_num:
+            target = s
+            break
+    if not target:
+        return JSONResponse({"error": f"씬 {scene_num} 없음"}, status_code=404)
+
+    old_narration = target.get("narration", "")
+    target["narration"] = new_narration
+    # narration이 바뀌었으면 TTS dirty 마킹 (audio가 stale)
+    target["narration_dirty"] = True
+
+    specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # final_manuscript.md 자동 재생성
+    rebuilt = _rebuild_manuscript_from_scenes(project)
+
+    # manifest 재빌드 (대시보드/Remotion 즉시 반영)
+    _rebuild_manifest_sync(project)
+
+    return {
+        "ok": True,
+        "scene_num": scene_num,
+        "old_length": len(old_narration),
+        "new_length": len(new_narration),
+        "manuscript_rebuilt": rebuilt,
+        "tts_dirty": True,  # 사용자가 별도로 TTS 재생성 트리거 필요
+    }
