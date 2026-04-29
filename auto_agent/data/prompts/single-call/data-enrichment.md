@@ -7,7 +7,9 @@
 </input_scenes>
 
 <task>
-각 씬의 values/unit/source를 research_report.json 기반으로 보강하고, vizAnimation을 설정하세요.
+데이터 시각화가 있는 씬(차트, 그래프, 이미지 출처 표기가 필요한 씬)의 values/unit/source를 research_report 기반으로 보강하고, vizAnimation을 설정하세요.
+
+**순수 내러티브 씬(sceneType이 cinematic, narration 등 시각화 없는 씬)은 건드리지 마세요.** 이런 씬에 source, values, unit을 추가하지 마세요.
 
 기존 creative 필드(concept, reveal, emphasis, mood, headline)는 절대 수정하지 마세요.
 sceneNumber, chapter, narration, durationFrames, items도 수정하지 마세요.
@@ -16,10 +18,12 @@ sceneNumber, chapter, narration, durationFrames, items도 수정하지 마세요
 <data_enrichment_rules>
 ## 데이터 보강 규칙
 
+**적용 대상**: visualization에 차트/그래프/데이터가 있는 씬만. 순수 내러티브/이미지 씬은 스킵.
+
 1. research_report.json의 statistics에서 매칭되는 정확한 수치 검색
 2. values가 비어있거나 부정확하면 research_report에서 보정
 3. unit(단위) 표준화: 1,000,000,000 → "10억", $15B → "150억 달러", 0.142 → "14.2%"
-4. source(출처) 없으면 research_report.json에서 매칭하여 추가
+4. source(출처)는 **차트/그래프/데이터 시각화 씬에만** 추가. 내러티브 씬에는 source 추가 금지
 5. Pie 차트: values 합계 100% 검증, 초과 시 반올림 보정
 6. 수치를 찾을 수 없으면 원본 값 유지 (임의 수치 생성 금지)
 7. 보강된 씬에 enrichment 필드 추가:
