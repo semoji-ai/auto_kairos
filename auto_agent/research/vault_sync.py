@@ -138,6 +138,8 @@ class SyncResult:
     completed_at: str = ""
     vault_root: str = ""
     topics: list[dict] = field(default_factory=list)
+    ledger: dict = field(default_factory=dict)  # {entity_slug: appended_count}
+    ledger_unmatched: int = 0
     queued: bool = False
     queue_reason: Optional[str] = None
     errors: list[dict] = field(default_factory=list)
@@ -351,5 +353,73 @@ def sync_project_to_vault(
         except Exception as exc:
             result.errors.append({"topic": topic, "reason": str(exc)})
 
+    # claims_ledger.jsonl을 entity별로 분배해 vault manifests에 push
+    try:
+        ledger_stats, unmatched = _sync_ledger(research_dir, vault_root, result.topics, options=options)
+        result.ledger = ledger_stats
+        result.ledger_unmatched = unmatched
+    except Exception as exc:
+        result.errors.append({"phase": "ledger_sync", "reason": str(exc)})
+
     result.completed_at = _now_iso()
     return result
+
+
+def _sync_ledger(
+    research_dir: Path,
+    vault_root: Path,
+    topic_records: list[dict],
+    *,
+    options: SyncOptions = SyncOptions(),
+) -> tuple[dict[str, int], int]:
+    """claims_ledger.jsonl entry를 source_id 매칭 entity_slug로 분배해 vault에 push.
+
+    Returns:
+        (entity_slug → appended_count 딕셔너리, 매칭 실패 카운트)
+    """
+    ledger_path = research_dir / "claims_ledger.jsonl"
+    if not ledger_path.exists():
+        return {}, 0
+    ledger = _read_jsonl(ledger_path)
+    if not ledger:
+        return {}, 0
+
+    # source_id → vault entity_slug 매핑 빌드 (project sources.jsonl 기반)
+    source_to_entity: dict[str, str] = {}
+    for record in topic_records:
+        project_topic = record.get("project_topic_slug", "")
+        entity_slug = record.get("vault_entity_slug", "")
+        if not project_topic or not entity_slug:
+            continue
+        sources_path = research_dir / "manifests" / project_topic / "sources.jsonl"
+        if not sources_path.exists():
+            continue
+        for s in _read_jsonl(sources_path):
+            sid = str(s.get("source_id") or "")
+            if sid and sid not in source_to_entity:
+                source_to_entity[sid] = entity_slug
+
+    # ledger entry를 entity별로 분배
+    by_entity: dict[str, list[dict]] = {}
+    unmatched = 0
+    for c in ledger:
+        sid = str(c.get("source_id") or "")
+        entity = source_to_entity.get(sid)
+        if not entity:
+            unmatched += 1
+            continue
+        by_entity.setdefault(entity, []).append(c)
+
+    # 각 entity의 vault manifests/<entity>/claims.jsonl에 dedup-append
+    stats: dict[str, int] = {}
+    for entity, claims in by_entity.items():
+        vault_claims_path = vault_root / "manifests" / entity / "claims.jsonl"
+        if options.dry_run:
+            existing = _read_jsonl(vault_claims_path) if vault_claims_path.exists() else []
+            existing_ids = {str(c.get("claim_id", "")) for c in existing}
+            new_count = sum(1 for c in claims if str(c.get("claim_id", "")) not in existing_ids)
+            stats[entity] = new_count
+        else:
+            appended, _skipped = _dedup_claims_append(claims, vault_claims_path)
+            stats[entity] = appended
+    return stats, unmatched

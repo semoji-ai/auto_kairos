@@ -2365,6 +2365,14 @@ def cmd_vault_sync(args):
             f"  {status} {r['project_topic_slug']:30} → {ent:20} "
             f"({mt}, {conf:.2f}) — claims +{added} ~{skipped} / wiki {wiki} / raw {runs} / err {errs}"
         )
+    # ledger sync 결과 표시
+    if result.ledger or result.ledger_unmatched:
+        total_pushed = sum(result.ledger.values())
+        console.print(f"\n[accent]✨ Claims Ledger Sync[/accent] — push {total_pushed}건 / unmatched {result.ledger_unmatched}건")
+        for entity, n in sorted(result.ledger.items(), key=lambda x: -x[1]):
+            if n:
+                console.print(f"  → {entity:30} +{n}")
+
     if result.errors:
         console.print(f"[red]상위 오류 {len(result.errors)}건[/red]")
         for e in result.errors:
