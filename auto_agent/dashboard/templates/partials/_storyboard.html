@@ -104,7 +104,26 @@
         {% endif %}
       </div>
 
-      <div class="narration">{{ scene.narration }}</div>
+      <div class="narration-wrap" data-scene="{{ scene.sceneNumber }}">
+        <div class="narration-head" style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <button type="button" class="btn-narr-edit" onclick="sbToggleNarrEdit({{ scene.sceneNumber }})"
+                  style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.35);color:#60A5FA;cursor:pointer">✏️ 편집</button>
+          {% if scene.narration_dirty %}
+          <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,0.18);color:#f87171" title="narration 수정됨 — TTS 재생성 필요">🔴 TTS 재생성 필요</span>
+          {% endif %}
+        </div>
+        <div class="narration" id="sb-narr-view-{{ scene.sceneNumber }}">{{ scene.narration }}</div>
+        <div id="sb-narr-edit-{{ scene.sceneNumber }}" style="display:none">
+          <textarea id="sb-narr-text-{{ scene.sceneNumber }}" rows="5"
+                    style="width:100%;background:rgba(0,0,0,0.3);color:#E4E4E7;border:1px solid rgba(96,165,250,0.4);border-radius:6px;padding:8px;font-size:13px;line-height:1.7;resize:vertical;font-family:inherit;box-sizing:border-box">{{ scene.narration }}</textarea>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <button type="button" onclick="sbSaveNarrEdit({{ scene.sceneNumber }})"
+                    style="font-size:11px;padding:4px 12px;border-radius:4px;background:rgba(96,165,250,0.2);border:1px solid rgba(96,165,250,0.4);color:#60A5FA;cursor:pointer">저장</button>
+            <button type="button" onclick="sbCancelNarrEdit({{ scene.sceneNumber }})"
+                    style="font-size:11px;padding:4px 12px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:#9CA3AF;cursor:pointer">취소</button>
+          </div>
+        </div>
+      </div>
 
       <div class="audio-player">
         {% if scene._audio_url %}
@@ -772,6 +791,46 @@ function sbChangeArtStyle(path) {
   }).then(function(r) { return r.json(); }).then(function() {
     location.reload();
   }).catch(function() {});
+}
+
+function sbToggleNarrEdit(sn) {
+  var view = document.getElementById('sb-narr-view-' + sn);
+  var edit = document.getElementById('sb-narr-edit-' + sn);
+  if (!view || !edit) return;
+  view.style.display = 'none';
+  edit.style.display = 'block';
+  var ta = document.getElementById('sb-narr-text-' + sn);
+  if (ta) ta.focus();
+}
+function sbCancelNarrEdit(sn) {
+  var view = document.getElementById('sb-narr-view-' + sn);
+  var edit = document.getElementById('sb-narr-edit-' + sn);
+  if (!view || !edit) return;
+  var ta = document.getElementById('sb-narr-text-' + sn);
+  if (ta) ta.value = view.textContent;
+  view.style.display = '';
+  edit.style.display = 'none';
+}
+function sbSaveNarrEdit(sn) {
+  var ta = document.getElementById('sb-narr-text-' + sn);
+  if (!ta) return;
+  var text = ta.value.trim();
+  if (!text) { alert('narration이 비어있습니다.'); return; }
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/update-narration', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({narration: text})
+  })
+  .then(function(r) { return r.json().then(function(d) { return {ok: r.ok, data: d}; }); })
+  .then(function(res) {
+    if (!res.ok) { alert('저장 실패: ' + (res.data.error || res.data.detail || 'unknown')); return; }
+    var view = document.getElementById('sb-narr-view-' + sn);
+    if (view) view.textContent = text;
+    sbCancelNarrEdit(sn);
+    // 페이지 일부 갱신: dirty 배지 노출 위해 새로고침
+    setTimeout(function() { location.reload(); }, 300);
+  })
+  .catch(function(e) { alert('저장 실패: ' + e.message); });
 }
 
 function toggleAssetPanel(sn) {

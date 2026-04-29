@@ -11,6 +11,8 @@ import { calcItemDelay, msToFrames } from "../utils/syncDelay";
 import { countUpValue } from "../utils/countUp";
 import { VizShell, ANIM } from "./VizShell";
 import { VIZ_STRINGS } from "./vizI18n";
+import { useDesignPreset } from "../design";
+import { useChartMotif } from "../simple/CreativeScene";
 import type { VisualizationData, VizAnimationConfig } from "../types/manifest";
 
 interface Props {
@@ -22,6 +24,16 @@ interface Props {
 
 export const PieChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnimation }) => {
   const frame = useCurrentFrame();
+  const motif = useChartMotif();
+  const preset = useDesignPreset();
+  const palette = (preset as any).palette ?? {};
+  const colors = (preset as any).colors ?? {};
+  const sliceStroke =
+    palette.annotationStroke ||
+    palette.gridStrong ||
+    colors.cardBorder ||
+    "var(--viz-card-bg)";
+  const sliceStrokeWidth = motif.outlineWidth || 3;
   const items = data.items ?? [];
   const values = data.values ?? [];
   const total = values.reduce((a, b) => a + b, 0) || 1;
@@ -187,8 +199,8 @@ export const PieChart: React.FC<Props> = ({ data, durationInFrames, fps, vizAnim
                 innerRadius={innerRadius}
                 startAngle={90}
                 endAngle={90 - totalProgress}
-                stroke="var(--viz-card-bg)"
-                strokeWidth={3}
+                stroke={sliceStroke}
+                strokeWidth={sliceStrokeWidth}
                 isAnimationActive={false}
                 label={useLegend ? false : renderLabel}
                 labelLine={false}

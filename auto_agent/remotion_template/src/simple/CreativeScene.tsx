@@ -2249,7 +2249,7 @@ const LogoGridLayout: React.FC<{
    색상은 artstyle 소유이므로 패턴/레이아웃 토큰만 반환
    ================================================================ */
 
-interface ChartMotif {
+export interface ChartMotif {
   patternMode: "solid" | "outline_plus_hatch" | "outline_only";
   patternKind: string;       // "diagonal_hatch" | "cross_hatch" | "dot" | ...
   patternSpacing: number;
@@ -2259,7 +2259,7 @@ interface ChartMotif {
   barRadius: number;
 }
 
-function useChartMotif(): ChartMotif {
+export function useChartMotif(): ChartMotif {
   const preset = useDesignPreset();
   const ca = (preset as any).chartagent as Record<string, any> | undefined;
   const motif = ca?.motif_tokens as Record<string, any> | undefined;
