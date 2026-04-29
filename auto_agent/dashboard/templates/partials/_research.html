@@ -230,6 +230,53 @@
   var content = document.getElementById('wiki-content');
   var currentPage = null;
 
+  // 라이브 갱신: doc_update 이벤트 오면 현재 페이지 자동 refetch (debounced 1초)
+  // 백엔드에서 ResearchManifestWatcher가 manifests/claims.jsonl + claims_ledger.jsonl을
+  // 폴링하며 SSE doc_update를 흘려보냄.
+  var liveDot = null;
+  var refreshTimer = null;
+  function scheduleRefresh() {
+    if (refreshTimer) return;
+    refreshTimer = setTimeout(function() {
+      refreshTimer = null;
+      // 현재 보고 있는 페이지만 다시 그림
+      if (currentPage === '__research_data__') {
+        loadResearchDataView();
+      } else if (currentPage === '__targeted__') {
+        loadTargetedClaimsView();
+      } else if (currentPage && currentPage !== 'images') {
+        // 일반 wiki 페이지 — 현재 클릭된 nav 버튼 다시 클릭
+        var btn = nav.querySelector('.wiki-nav-item.active');
+        if (btn) {
+          var page = currentPage;
+          currentPage = null;  // loadPage early-return 우회
+          loadPage(page, btn);
+        }
+      }
+      if (liveDot) {
+        liveDot.style.background = '#34D399';
+        liveDot.style.opacity = '1';
+        setTimeout(function() { liveDot.style.opacity = '0.3'; }, 800);
+      }
+    }, 1000);  // 1초 debounce — 여러 이벤트 burst 흡수
+  }
+
+  try {
+    var es = new EventSource('/api/agent-messages/stream?project=' + encodeURIComponent(slug));
+    es.onmessage = function(e) {
+      try {
+        var msg = JSON.parse(e.data);
+        if (msg.kind !== 'doc_update') return;
+        var dt = (msg.data && msg.data.doc_type) || '';
+        // research 관련 doc_update만 캐치
+        if (dt === 'research' || dt === '') scheduleRefresh();
+      } catch (err) {}
+    };
+    es.onerror = function() { /* silent — auto reconnect */ };
+  } catch (err) {
+    console.warn('[research live] SSE 미지원:', err);
+  }
+
   // 페이지 표시 순서 및 레이블 정의
   var PAGE_LABELS = {
     '__research_data__': '📊 수집 자료',
@@ -706,8 +753,10 @@
           '<span style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.07);padding:2px 9px;border-radius:10px">' + totalSources + '건</span>' +
           (promotedCount ? '<span style="font-size:11px;color:#FCD34D;background:rgba(245,158,11,0.12);padding:2px 9px;border-radius:10px">✨ 클레임 승격 ' + promotedCount + '건</span>' : '') +
           (unmatchedClaims.length ? '<span style="font-size:11px;color:#A78BFA;background:rgba(167,139,250,0.12);padding:2px 9px;border-radius:10px">📌 매칭 안 된 ledger ' + unmatchedClaims.length + '건</span>' : '') +
+          '<span id="research-live-dot" style="width:8px;height:8px;border-radius:50%;background:#34D399;opacity:0.3;transition:opacity 0.3s" title="라이브 — doc_update 수신 시 자동 갱신"></span>' +
           '<span style="margin-left:auto;font-size:10px;color:var(--text-muted)">표시: ' + sources.length + ' / ' + totalSources + '</span>';
         wrap.appendChild(header);
+        liveDot = document.getElementById('research-live-dot');
 
         // 매칭 안 된 ledger 클레임 — 별도 섹션 (UI 상단에 노출)
         if (unmatchedClaims.length) {

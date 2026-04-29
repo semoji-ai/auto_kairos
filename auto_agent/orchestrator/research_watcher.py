@@ -22,7 +22,9 @@ class ResearchManifestWatcher:
         phase: str = "stage_1",
         poll_interval: float = 2.0,
     ):
-        self.manifests_dir = Path(project_dir) / "research" / "manifests"
+        self.research_dir = Path(project_dir) / "research"
+        self.manifests_dir = self.research_dir / "manifests"
+        self.ledger_path = self.research_dir / "claims_ledger.jsonl"
         self.project_slug = project_slug
         self.notifier = notifier
         self.phase = phase
@@ -48,16 +50,20 @@ class ResearchManifestWatcher:
             self._stop.wait(self.poll_interval)
 
     def _scan_once(self) -> None:
-        if not self.manifests_dir.exists():
-            return
-        try:
-            topic_dirs = list(self.manifests_dir.iterdir())
-        except Exception:
-            return
-        for topic_dir in topic_dirs:
-            if not topic_dir.is_dir():
-                continue
-            self._scan_file(topic_dir / "claims.jsonl", topic=topic_dir.name)
+        # 1. manifests/<topic>/claims.jsonl (Phase 1 흐름)
+        if self.manifests_dir.exists():
+            try:
+                topic_dirs = list(self.manifests_dir.iterdir())
+            except Exception:
+                topic_dirs = []
+            for topic_dir in topic_dirs:
+                if not topic_dir.is_dir():
+                    continue
+                self._scan_file(topic_dir / "claims.jsonl", topic=topic_dir.name)
+
+        # 2. research/claims_ledger.jsonl (Phase 3 — script-director 누적)
+        if self.ledger_path.exists():
+            self._scan_file(self.ledger_path, topic="_ledger")
 
     def _scan_file(self, path: Path, topic: str) -> None:
         if not path.exists():
