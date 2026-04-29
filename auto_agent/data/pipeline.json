@@ -266,6 +266,23 @@
           "notes": "priority:high 질문 우선. 답변 못 찾으면 confidence:low로 기록."
         },
         {
+          "id": "step_2_target_register",
+          "name": "targeted_sources_register",
+          "description": "targeted_claims.json의 sources를 manifests/_targeted/sources.jsonl에 등록. script-director ledger의 source_id 매칭률 향상 목적.",
+          "type": "module",
+          "module": "targeted_sources_register",
+          "blocking": false,
+          "resumable": true,
+          "input": [
+            "targeted_claims.json"
+          ],
+          "output": [
+            "research/manifests/_targeted/sources.jsonl",
+            "research/targeted_sources_register.json"
+          ],
+          "notes": "url 기반 dedup. reliability(high/medium/low)을 tier_hint(A/B/C)로 변환. lane='targeted_research', source_type='targeted'."
+        },
+        {
           "id": "step_2_target_deepen",
           "name": "brief_deepen_v3",
           "description": "editorial_brief.v2 → v3 심화 (최종 잠금). Stage 2_draft draft.md + targeted_claims.json을 반영하여 hidden_truth/present_connection/evidence_anchors 최종 확정.",
