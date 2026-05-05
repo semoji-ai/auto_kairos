@@ -54,7 +54,7 @@ export const RouteAnimation: React.FC<Props> = ({
 
   // 가시 경로 좌표 계산 (Turf.js)
   const visibleCoords = useMemo(() => {
-    if (!route || route.coordinates.length < 2) return [];
+    if (!route || !route.coordinates || route.coordinates.length < 2) return [];
     const fullLine = turf.lineString(route.coordinates);
     const totalLength = turf.length(fullLine, { units: "kilometers" });
 
@@ -132,7 +132,7 @@ export const RouteAnimation: React.FC<Props> = ({
   }
 
   /* ── RemotionMap 실시간 렌더링 (폴백) ── */
-  if (!route || route.coordinates.length < 2) {
+  if (!route || !route.coordinates || route.coordinates.length < 2) {
     return (
       <AbsoluteFill>
         <RemotionMap mapStyle={data.mapStyle} cameraState={camera} width={1920} height={1080}>

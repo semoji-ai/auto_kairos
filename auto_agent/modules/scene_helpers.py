@@ -192,6 +192,81 @@ def validate_scene_specs(spec: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# Layer 1 객체와 부속 경로 — convert_visual_kind에서 정리 대상
+_ALL_LAYER1_OBJECTS = ("imageAsset", "videoAsset", "mapScene", "chartConfig")
+_IMAGE_PATH_FIELDS = ("imagePath", "vizBackgroundPath")
+
+
+def convert_visual_kind(
+    scene: dict[str, Any],
+    target: str,
+    *,
+    default_prompt: str | None = None,
+) -> dict[str, Any]:
+    """씬을 target visual_kind로 정규화 변환.
+
+    - 금지 Layer 1 객체 제거
+    - visual_kind 필드 설정
+    - 이미지 종류: imageAsset.source/prompt 보장
+    - map/chart: 비어 있으면 최소 스켈레톤 시드
+    - layout이 target과 충돌 시 layout 비움 (사용자가 다시 고를 수 있도록)
+    - imagePath/vizBackgroundPath: 이미지 종류가 아니면 제거
+
+    같은 dict를 in-place 수정 후 반환.
+    """
+    if target not in VALID_VISUAL_KINDS:
+        raise ValueError(f"unknown target visual_kind: {target!r}")
+
+    # 1) 금지 객체 제거
+    forbidden = FORBIDDEN_PRIMARIES_FOR_KIND.get(target, ())
+    for f in forbidden:
+        scene.pop(f, None)
+
+    # 2) 이미지 경로 — 이미지 종류가 아니면 제거
+    if target not in ("search_image", "generate_image"):
+        for f in _IMAGE_PATH_FIELDS:
+            scene.pop(f, None)
+
+    # 3) 종류별 primary 객체 보장
+    if target in ("search_image", "generate_image"):
+        ia = scene.get("imageAsset") or {}
+        ia["source"] = "search" if target == "search_image" else "generate"
+        prompt = ia.get("prompt") or default_prompt or scene.get("headline") or scene.get("narration") or ""
+        if prompt and not ia.get("prompt"):
+            ia["prompt"] = prompt
+        scene["imageAsset"] = ia
+    elif target == "map":
+        if not scene.get("mapScene"):
+            scene["mapScene"] = {
+                "mapStyle": "modern_clean",
+                "markers": [],
+                "labels": [],
+            }
+    elif target == "chart":
+        if not scene.get("chartConfig"):
+            scene["chartConfig"] = {
+                "type": "bar",
+                "data": [],
+            }
+    elif target == "video":
+        # videoAsset은 사용자가 업로드/지정해야 채워짐 — 자동 시드하지 않음
+        pass
+    # target == "none" — 모두 제거됨
+
+    # 4) layout 충돌 정리 — layout이 다른 종류를 강제하면 비움
+    layout = scene.get("layout") or ""
+    required_kind = LAYOUT_REQUIRES_KIND.get(layout)
+    if required_kind and required_kind != target:
+        scene["layout"] = ""
+    # map → 일반 이미지 전환 시 map_scene 잔재 방지
+    if target != "map" and layout == "map_scene":
+        scene["layout"] = ""
+
+    # 5) visual_kind 명시
+    scene["visual_kind"] = target
+    return scene
+
+
 def iter_scenes_of_kind(scene_list: Iterable[dict[str, Any]],
                        kinds: tuple[str, ...]) -> Iterable[tuple[int, dict[str, Any]]]:
     """특정 visual_kind에 해당하는 씬만 필터링하는 헬퍼."""

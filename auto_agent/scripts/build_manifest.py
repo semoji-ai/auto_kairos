@@ -435,6 +435,9 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 src = out_dir / "images" / rel
                 if src.exists():
                     image_path = link_asset(src, "images", rel)
+            elif ip.startswith("http://") or ip.startswith("https://"):
+                # 외부 URL 직접 사용 (다운로드 실패 시 noop 대신 원격 URL 노출)
+                image_path = ip
 
         # Subtitles — SRT 우선, fallback subtitles.json
         sub_entries = sub_lookup.get(num, [])

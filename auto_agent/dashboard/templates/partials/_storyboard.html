@@ -45,14 +45,9 @@
       <div class="sb-asset-type-switch">
         <button class="sb-switch-btn{% if _vk in ('search_image', 'generate_image') %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'image', this)">🖼 이미지</button>
         <button class="sb-switch-btn{% if _vk == 'video' %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'video', this)">🎬 비디오</button>
+        <button class="sb-switch-btn{% if _vk == 'map' %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'map', this)">🗺 지도</button>
+        <button class="sb-switch-btn{% if _vk == 'chart' %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'chart', this)">📊 차트</button>
       </div>
-      {% if _vk == 'map' %}
-      <div class="sb-kind-badge sb-kind-map">🗺️ 지도</div>
-      {% elif _vk == 'chart' %}
-      <div class="sb-kind-badge sb-kind-chart">📊 차트</div>
-      {% elif _vk == 'none' %}
-      <div class="sb-kind-badge" style="background:rgba(113,113,122,0.18);color:#A1A1AA">∅ 없음</div>
-      {% endif %}
     </div>
 
     <!-- 우측: 원고 + 메타 -->
@@ -856,7 +851,8 @@ function sbSetAssetType(sn, type, btn) {
       var switchWrap = btn.closest('.sb-asset-type-switch');
       if (switchWrap) switchWrap.querySelectorAll('.sb-switch-btn').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
-      if (type === 'video') {
+      if (type === 'video' || type === 'map' || type === 'chart') {
+        // Layer 1 객체가 새로 시드되거나 layout이 비워질 수 있어 페이지 재렌더 필요
         window.location.reload();
       } else {
         fetch('/api/p/' + encodeURIComponent(slug) + '/rebuild-manifest', { method: 'POST' }).catch(function(){});
@@ -2221,7 +2217,7 @@ function updateSceneLayout(slug, sceneNum, layout) {
         const j = await r.json();
         if (!j.ok) throw new Error(j.detail || "선택 실패");
       } else {
-        const url = cand.image_url;
+        const url = cand.image_url || cand.original_url || cand.thumbnail_1920_url || cand.thumbnail_url || cand.url;
         const sn2 = item.scene_index + 1;
         const r1 = await fetch(`/api/p/${encodeURIComponent(slug)}/editor/scenes/${sn2}/select-image`, {
           method: "POST",

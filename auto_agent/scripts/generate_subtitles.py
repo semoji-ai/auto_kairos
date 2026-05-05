@@ -241,7 +241,7 @@ def chars_to_words(sidecar: dict) -> list:
     word_end = None
 
     for i, ch in enumerate(chars):
-        if ch == " ":
+        if ch in (" ", "\n", "\t", "\r"):
             if word_chars:
                 words.append({
                     "word": "".join(word_chars),

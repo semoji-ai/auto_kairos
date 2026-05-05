@@ -564,18 +564,25 @@ async def select_scene_image(project_ref: str, scene_num: int, request: Request)
             # 외부 URL: 다운로드 후 로컬 저장
             try:
                 import requests as _req
-                from urllib.parse import urlparse as _urlparse
+                from urllib.parse import urlparse as _urlparse, urlencode as _urlencode, parse_qsl as _parse_qsl, urlunparse as _urlunparse
                 parsed = _urlparse(image_url)
+                # UTM 등 추적 파라미터 제거 (Wikimedia 등에서 차단 유발)
+                clean_qs = [(k, v) for k, v in _parse_qsl(parsed.query) if not k.lower().startswith("utm")]
+                clean_url = _urlunparse(parsed._replace(query=_urlencode(clean_qs)))
                 url_ext = Path(parsed.path).suffix.lower()
                 if url_ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
                     url_ext = ".jpg"
                 dest_name = f"{prefix}{next_idx:02d}{url_ext}"
-                resp = _req.get(image_url, timeout=30)
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (compatible; AutoKairos/3.0; +https://github.com/auto-kairos)",
+                }
+                resp = _req.get(clean_url, timeout=30, headers=headers)
                 resp.raise_for_status()
                 (search_dir / dest_name).write_bytes(resp.content)
                 image_url = f"/output/{dir_name}/images/search/{dest_name}"
             except Exception as e:
-                print(f"[WARN] URL 다운로드 실패: {e}")
+                print(f"[ERROR] URL 다운로드 실패: {e}")
+                return {"ok": False, "error": f"외부 이미지 다운로드 실패: {e}"}
 
     # ── scene_specs 업데이트 ──
     found = False
@@ -1686,12 +1693,55 @@ async def set_scene_asset_type(project_ref: str, scene_num: int, request: Reques
         )
 
     body = await request.json()
-    asset_type = body.get("type", "image")  # "image" or "video"
+    asset_type = body.get("type", "image")
+    # 단축 표기 → 정식 visual_kind 매핑
+    _SHORTHAND = {
+        "image": "generate_image",  # 기존 동작과 호환 — 아래에서 imageAsset.source 보존 처리
+        "video": "video",
+        "map": "map",
+        "chart": "chart",
+        "none": "none",
+        "search_image": "search_image",
+        "generate_image": "generate_image",
+    }
+    target_kind = _SHORTHAND.get(asset_type)
+    if target_kind is None:
+        return JSONResponse({"error": f"unknown type: {asset_type}"}, status_code=400)
 
     out_dir = Path(project["output_dir"])
     specs = _load_specs(project)
     if not specs:
         return JSONResponse({"error": "scene_specs.json 없음"}, status_code=404)
+
+    # map/chart/none 전환 — 새 컨버터 위임 (아래 image/video 분기는 기존 호환 경로 유지)
+    if target_kind in ("map", "chart", "none", "search_image") or (
+        target_kind == "generate_image" and asset_type != "image"
+    ):
+        from auto_agent.modules.scene_helpers import convert_visual_kind
+
+        for scene in specs.get("scenes", []):
+            if scene["sceneNumber"] == scene_num:
+                scene_id_va = scene.get("sceneId")
+                # video_assets.json 정리 (video → 다른 종류 전환 시)
+                va_path = out_dir / "video_assets.json"
+                if va_path.exists():
+                    try:
+                        va_data = json.loads(va_path.read_text(encoding="utf-8"))
+                        va_data["scenes"] = [
+                            s for s in va_data.get("scenes", [])
+                            if not (
+                                (scene_id_va and s.get("sceneId") == scene_id_va)
+                                or s.get("sceneNumber") == scene_num
+                            )
+                        ]
+                        va_path.write_text(json.dumps(va_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                    except Exception:
+                        pass
+                convert_visual_kind(scene, target_kind)
+                break
+        (out_dir / "scene_specs.json").write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
+        _rebuild_manifest_sync(project)
+        return {"ok": True, "type": asset_type, "visual_kind": target_kind}
 
     for scene in specs.get("scenes", []):
         if scene["sceneNumber"] == scene_num:
