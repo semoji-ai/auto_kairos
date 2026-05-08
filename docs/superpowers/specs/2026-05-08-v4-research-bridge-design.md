@@ -78,22 +78,22 @@ auto_kairos_v3 (워크트리: v4-research-bridge)
 사용자 ↔ 메인 Claude (PD 역할)
         │
         ├─→ strategy-explore         → plan.md
-        ├─→ fresh-research           → research_reports/
-        ├─→ deep-research (선택)     → research_reports/ (확장)
+        ├─→ fresh-research / deep-research → research_reports/
         ├─→ wiki-organize            → wiki/
         ├─→ draft-write              → drafts/draft_v1.md
         ├─→ target-research          → research_targeted/
-        ├─→ draft-revise             → drafts/draft_v2.md
-        ├─→ fact-check               → drafts/factcheck_report.json
-        ├─→ proofread                → final_manuscript.md
+        ├─→ review-draft 래칫        (시청자 ≥ 8.0 + 전문가 PASS 도달까지 v{n}→v{n+1} 반복)
+        ├─→ fact-check + proofread   → drafts/draft_final.md
+        ├─→ (확정)                    → final_manuscript.md
+        ├─→ finalize-for-bridge      → final_manuscript_marked.md + outline.json (PD 직접 작성)
         │
         ├─→ [어댑터: v4_bridge.adapter.run(project_dir)]
         │     │
-        │     ├─ chapter_marker_agent: final_manuscript.md
-        │     │     → final_manuscript_marked.md (# Ch N. + --- + <!-- chars: -->)
-        │     ├─ plan.md + wiki/ → outline.json
-        │     ├─ research_reports/ + research_targeted/ → research_report.json
-        │     └─ art_style.json (워크트리 디폴트 또는 PD 결정값)
+        │     ├─ 입력 검증: outline.json + final_manuscript_marked.md + final_manuscript.md 존재
+        │     ├─ build_research_report(research_reports/, research_targeted/) → research_report.json
+        │     ├─ build_art_style(style_id, theme) → art_style.json
+        │     ├─ substring 검증 — marked manuscript의 본문이 final_manuscript의 substring인지 확인
+        │     └─ 4개 산출물을 _bridge/ + 프로젝트 루트 양쪽에 복사
         │
         └─→ auto-agent run --project <slug> --from step_2
               ├─ step_2 (script-director chapters) → scene_specs.json
@@ -102,7 +102,7 @@ auto_kairos_v3 (워크트리: v4-research-bridge)
               └─ step_3c (release-manager) — 무수정
 ```
 
-핵심: **어댑터는 v4 산출물 5종(plan.md, wiki/, research_reports/, research_targeted/, final_manuscript.md)을 읽어 v3 Stage 2 입력 4종(final_manuscript_marked.md, outline.json, research_report.json, art_style.json)으로 변환**한다.
+핵심: **PD가 `finalize-for-bridge` 스킬을 따라 final_manuscript_marked.md와 outline.json을 직접 작성한다. 어댑터는 입력 검증 → research_report 빌더 → art_style 빌더 → substring 검증 → 파일 복사만 담당**한다.
 
 ---
 
