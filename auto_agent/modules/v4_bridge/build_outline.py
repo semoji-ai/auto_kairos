@@ -46,11 +46,18 @@ def build_outline(plan_md: str) -> dict[str, Any]:
 # ─── Private helpers ──────────────────────────────────────────────────────────
 
 def _parse_title(text: str) -> str:
-    """Extract title from YAML frontmatter 'title:' or from first H1 heading."""
-    # YAML frontmatter
-    fm_match = re.search(r'^title:\s*(.+)$', text, re.MULTILINE)
-    if fm_match:
-        return fm_match.group(1).strip()
+    """Extract title from YAML frontmatter 'title:' or from first H1 heading.
+
+    Frontmatter is scanned first, confined to the leading ---...--- block so that
+    a 'title:' key appearing elsewhere in the document is not mistaken for metadata.
+    Falls back to the first H1 heading when no frontmatter block is present.
+    """
+    # YAML frontmatter block (leading ---\n...\n---)
+    fm = re.match(r"^---\s*\n(.*?)\n---\s*\n", text, re.DOTALL)
+    if fm:
+        m = re.search(r"^title:\s*(.+)$", fm.group(1), re.MULTILINE)
+        if m:
+            return m.group(1).strip()
 
     # Fallback: first H1 heading (e.g. # 기획안 — 주제)
     h1_match = re.search(r'^#\s+기획안\s*[—–-]\s*(.+)$', text, re.MULTILINE)
@@ -100,10 +107,14 @@ def _parse_duration_minutes(text: str) -> float:
     content = section_match.group(1)
 
     # Range: "5-10분" or "10~15분"
-    range_match = re.search(r'(\d+)\s*[-~]\s*(\d+)\s*분', content)
-    if range_match:
-        lo = float(range_match.group(1))
-        hi = float(range_match.group(2))
+    # A section may contain multiple ranges (e.g. total "5-10분" AND per-chapter "2-4분").
+    # We pick the range with the LARGEST midpoint, because total duration is always
+    # >= per-chapter duration, so the largest midpoint corresponds to the total.
+    range_matches = list(re.finditer(r'(\d+)\s*[-~]\s*(\d+)\s*분', content))
+    if range_matches:
+        best = max(range_matches, key=lambda m: (float(m.group(1)) + float(m.group(2))) / 2)
+        lo = float(best.group(1))
+        hi = float(best.group(2))
         return (lo + hi) / 2.0
 
     # Single value: "약 5분" or "5분"
@@ -175,12 +186,10 @@ def _parse_chapters(text: str) -> list[dict[str, Any]]:
         # duration_ratio: equal split by default
         duration_ratio = round(1.0 / n, 4)
 
-        # research_focus: distribute research questions across chapters
-        focus_start = i * (len(research_questions) // n) if n else 0
-        focus_end = (i + 1) * (len(research_questions) // n) if n else 0
-        if i == n - 1:  # last chapter gets remainder
-            focus_end = len(research_questions)
-        research_focus = research_questions[focus_start:focus_end]
+        # research_focus: round-robin distribution — chapter i gets questions[i::n].
+        # This ensures even distribution regardless of len(questions) % n, unlike
+        # integer-floor slicing which dumps all remainders onto the last chapter.
+        research_focus = research_questions[i::n] if n else []
 
         chapters.append({
             "chapter_number": chapter_number,

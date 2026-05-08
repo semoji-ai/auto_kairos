@@ -98,9 +98,8 @@ def test_build_outline_chapter_numbers_sequential():
 def test_build_outline_duration_ratio_sum():
     result = build_outline(PLAN_MD)
     total = sum(ch["duration_ratio"] for ch in result["chapters"])
-    # sum should be close to 1.0 (within 5%)
-    assert abs(total - 1.0) < 0.06, (
-        f"duration_ratio sum should be ~1.0, got {total:.3f}"
+    assert abs(total - 1.0) < 0.001, (
+        f"duration_ratio sum should be ~1.0, got {total:.6f}"
     )
 
 
@@ -123,3 +122,48 @@ def test_build_outline_no_chapters_section():
     result = build_outline(minimal)
     assert result["chapters"] == []
     assert isinstance(result["title"], str)
+
+
+# ─── Fix 2: round-robin research_focus distribution ──────────────────────────
+
+def test_research_focus_round_robin_under_distribution():
+    """2 questions + 3 chapters → [q0], [q1], [] (not [], [], [q0, q1])."""
+    from auto_agent.modules.v4_bridge.build_outline import build_outline
+
+    plan = (
+        "---\n"
+        "title: 테스트\n"
+        "---\n"
+        "## 한 줄 요약\n질문 분배 테스트\n\n"
+        "### 구조 가설\n"
+        "- 1막 (도입): 도입 설명\n"
+        "- 2막 (전개): 전개 설명\n"
+        "- 3막 (결말): 결말 설명\n\n"
+        "## 미해결 질문\n"
+        "- 질문A\n"
+        "- 질문B\n"
+    )
+    result = build_outline(plan)
+    chapters = result["chapters"]
+    assert len(chapters) == 3
+    assert chapters[0]["research_focus"] == ["질문A"], chapters[0]["research_focus"]
+    assert chapters[1]["research_focus"] == ["질문B"], chapters[1]["research_focus"]
+    assert chapters[2]["research_focus"] == [], chapters[2]["research_focus"]
+
+
+# ─── Fix 1: duration picks largest range ─────────────────────────────────────
+
+def test_duration_picks_largest_range():
+    """Section contains both '2-4분' and '5-10분' — result should be 7.5 (midpoint of 5-10)."""
+    from auto_agent.modules.v4_bridge.build_outline import build_outline
+
+    plan = (
+        "# 기획안 — 범위 테스트\n\n"
+        "## 분량 목표\n"
+        "총 5-10분 분량. 각 챕터당 2-4분.\n\n"
+        "## 한 줄 요약\n범위 선택 테스트\n"
+    )
+    result = build_outline(plan)
+    assert result["target_duration_minutes"] == 7.5, (
+        f"expected 7.5, got {result['target_duration_minutes']}"
+    )
