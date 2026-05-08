@@ -82,3 +82,8 @@ auto_agent = [
     "dashboard/templates/**/*",
     "dashboard/static/**/*",
 ]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: LLM을 실제로 호출하는 통합 테스트 (기본 실행에서 제외)"
+]
