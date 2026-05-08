@@ -102,12 +102,14 @@ git commit -m "chore(v4-bridge): 워크트리 + v4 스킬 동기화 + 스키마 
 
 ---
 
-## Task 1: outline.json 빌더
+## Task 1: outline.json 빌더 ~~[REVERTED]~~
+
+> **폐기 이유:** PD가 원고를 작성하는 시점에 챕터 구조를 이미 알고 있으므로, plan.md에서 LLM/정규식으로 역파싱할 필요가 없다. PD가 `finalize-for-bridge` 스킬 따라 `outline.json`을 직접 작성한다. `build_outline.py`와 관련 테스트/픽스처는 git rm으로 제거됨.
 
 **Files:**
-- Create: `auto_agent/modules/v4_bridge/build_outline.py`
-- Create: `tests/v4_bridge/test_build_outline.py`
-- Create: `tests/v4_bridge/fixtures/plan.md`
+- ~~Create: `auto_agent/modules/v4_bridge/build_outline.py`~~ (삭제됨)
+- ~~Create: `tests/v4_bridge/test_build_outline.py`~~ (삭제됨)
+- ~~Create: `tests/v4_bridge/fixtures/plan.md`~~ (삭제됨)
 
 - [ ] **Step 1: 픽스처 작성** — v4 plan.md 샘플
 
@@ -411,14 +413,16 @@ git commit -m "feat(v4-bridge): art_style.json 빌더"
 
 ---
 
-## Task 4: chapter_marker_agent (LLM 호출)
+## Task 4: chapter_marker_agent (LLM 호출) ~~[REVERTED]~~
+
+> **폐기 이유:** LLM이 narration을 변경하거나 챕터 경계를 잘못 자르는 위험이 있다. PD가 원고 작성 시점에 챕터 경계를 이미 파악하고 있으므로, LLM 에이전트 없이 PD가 `finalize-for-bridge` 스킬 따라 직접 마커를 삽입한다. `chapter_marker.py`, `chapter-marker` 에이전트 항목, 관련 테스트는 git rm으로 제거됨.
 
 **Files:**
-- Create: `auto_agent/modules/v4_bridge/chapter_marker.py`
-- Create: `auto_agent/data/skills/agents/chapter-marker/SKILL.md`
-- Modify: `auto_agent/data/agents.json` (chapter-marker 에이전트 등록)
-- Create: `tests/v4_bridge/test_chapter_marker.py`
-- Create: `tests/v4_bridge/fixtures/final_manuscript.md`
+- ~~Create: `auto_agent/modules/v4_bridge/chapter_marker.py`~~ (삭제됨)
+- ~~Create: `auto_agent/data/skills/agents/chapter-marker/SKILL.md`~~ (삭제됨)
+- ~~Modify: `auto_agent/data/agents.json`~~ (chapter-marker 항목 제거됨)
+- ~~Create: `tests/v4_bridge/test_chapter_marker.py`~~ (삭제됨)
+- ~~Create: `tests/v4_bridge/fixtures/final_manuscript.md`~~ (테스트 어댑터에서 계속 사용, 유지)
 
 - [ ] **Step 1: 에이전트 SKILL.md 작성**
 
@@ -584,11 +588,24 @@ git commit -m "feat(v4-bridge): chapter-marker 에이전트 + narration substrin
 
 ---
 
-## Task 5: adapter.py — CLI + 통합
+## Task 4-bis: finalize-for-bridge 스킬 (신규)
+
+> Task 1 + Task 4 폐기로 인한 대체. PD가 직접 outline.json + final_manuscript_marked.md를 작성할 때 따르는 가이드 스킬.
 
 **Files:**
-- Create: `auto_agent/modules/v4_bridge/adapter.py`
-- Create: `tests/v4_bridge/test_adapter.py`
+- Create: `.claude/skills/v4/finalize-for-bridge/SKILL.md`
+
+- [x] **Step 1: SKILL.md 작성** — 작성 완료. 규칙: 마커 삽입 방법, outline.json 스키마, 절차, 금지 사항, 한국어 규칙.
+
+---
+
+## Task 5: adapter.py — CLI + 통합 (단순화됨)
+
+> **변경 (리팩터):** adapter.py는 더 이상 build_outline / chapter_marker를 호출하지 않는다. PD 작성 파일(outline.json + final_manuscript_marked.md) 존재 확인 + substring 검증 + research_report 빌드 + art_style 빌드 + 복사만 수행한다.
+
+**Files:**
+- Modify: `auto_agent/modules/v4_bridge/adapter.py`
+- Modify: `tests/v4_bridge/test_adapter.py`
 
 - [ ] **Step 1: 실패 테스트**
 

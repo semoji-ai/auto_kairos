@@ -19,11 +19,12 @@ v3 컨벤션 그대로: `output/{uuid}_{slug}/`. v4 스킬에는 `--project-root
 3. (선택) 위키 정리 → `wiki/`
 4. 드래프트 → `drafts/draft_v1.md`
 5. 타겟 리서치 + 보완 → `drafts/draft_v2.md`
-6. fact-check + proofread → `final_manuscript.md`
+6. `review-draft` 래칫(시청자 점수 ≥ 8.0 + 전문가 PASS 도달까지) → fact-check → proofread → `final_manuscript.md`
+6.5. PD가 `finalize-for-bridge` 스킬을 따라 `final_manuscript_marked.md` + `outline.json` 직접 작성
 
 ## 어댑터 실행
 
-`final_manuscript.md` 확정 후:
+`final_manuscript_marked.md` + `outline.json` 작성 완료 후:
 
 ```bash
 python -m auto_agent.modules.v4_bridge.adapter --project <slug>
@@ -31,7 +32,8 @@ python -m auto_agent.modules.v4_bridge.adapter --project <slug>
 
 이 시점에 `output/{slug}/` 안에 다음이 생성됩니다:
 - `_bridge/` (작업 산출물)
-- `final_manuscript_marked.md`, `outline.json`, `research_report.json`, `art_style.json` (v3 Stage 2 입력)
+- `research_report.json`, `art_style.json` (어댑터 빌드)
+- `outline.json`, `final_manuscript.md` (PD 작성분 검증 후 복사, v3 Stage 2 입력)
 
 ## Stage 3 진입
 

@@ -108,40 +108,28 @@ auto_kairos_v3 (워크트리: v4-research-bridge)
 
 ## 4. 어댑터 책임 명세
 
-### 4.1 chapter_marker_agent (LLM 호출)
+> **설계 변경 (2026-05-08 리팩터):** outline.json + marked manuscript는 LLM이 역파싱하지 않는다. PD가 `finalize-for-bridge` 스킬을 따라 직접 작성한다. 어댑터는 research_report 빌더 + art_style 빌더 + substring 검증 + 파일 복사만 담당한다.
 
-**입력:**
-- `final_manuscript.md` (v4 산출, 마커 없음, 한 호흡 prose)
-- `plan.md` (전략·기획 확정안 — 챕터 구조 힌트)
+### 4.1 입력 검증
 
-**출력:**
-- `_bridge/final_manuscript_marked.md` — 마커 삽입된 manuscript
+어댑터는 다음 파일/디렉토리가 `<project_dir>/`에 존재하는지 확인한다:
+- `final_manuscript_marked.md` — PD가 finalize-for-bridge 스킬 따라 작성
+- `outline.json` — PD가 finalize-for-bridge 스킬 따라 작성
+- `final_manuscript.md` — 원본 원고 (substring 검증에 사용)
+- `research_reports/` — v4 fresh/deep-research 산출
+- `research_targeted/` — v4 target-research 산출
 
-**작업:**
-1. plan.md에서 챕터 개수와 의도를 읽는다
-2. final_manuscript.md의 prose를 의미 단위로 끊어 `# Ch N. <챕터 제목>` 마커 삽입
-3. 8~15초 분량(약 60~120자) 단위로 `---` 씬 경계 삽입
-4. 캐릭터가 등장하는 단락 앞에 `<!-- chars: ID1, ID2 -->` 주석 삽입 (캐릭터 ID는 wiki/characters/ 또는 plan.md에서 조회)
-
-**제약:** narration 본문은 한 글자도 바꾸지 않는다(v3 hook이 substring 검증). 마커만 삽입.
-
-**모델:** Claude (sonnet 또는 opus). 호출 방식은 v3의 다른 에이전트와 동일하게 `auto_agent/runner.py` 패턴(stdin) 사용.
-
-### 4.2 outline.json 빌더 (결정론적)
-
-**입력:** plan.md, wiki/index.md (있으면)
-
-**출력:** `_bridge/outline.json`
-
-**스키마:** v3의 기존 `outline.json` 스키마와 일치(`chapters[].title`, `chapters[].beats[]`, `creative_brief` 등). plan.md의 섹션을 정규식으로 파싱해 채운다. v3 outline.json 스키마는 워크트리 검증 단계에서 실제 샘플을 비교하여 정확한 키 목록을 잠근다.
-
-### 4.3 research_report.json 빌더 (결정론적)
+### 4.2 research_report.json 빌더 (결정론적)
 
 **입력:** research_reports/*, research_targeted/*
 
 **출력:** `_bridge/research_report.json`
 
 **스키마:** v3의 기존 `research_report.json` 스키마(`claims[]`, `sources[]`, `quotes[]` 등)에 맞춰 v4의 보고서 본문에서 추출. 가능하면 v4 보고서가 이미 JSON 부속물(`*.facts.json` 등)을 갖는지 확인하고 그것을 우선 사용. 없으면 보고서 본문에서 정규식 + 간단 LLM 호출로 추출.
+
+### 4.3 substring 검증
+
+`final_manuscript.md`(원본)과 `final_manuscript_marked.md`(PD 작성)를 비교한다. 마커(`# Ch N.`, `---`)·주석(`<!-- -->`)·공백을 제거한 후 원본 narration이 그대로 substring으로 포함되어 있어야 한다. 검증 실패 시 `ValueError`로 어댑터 실행을 중단한다.
 
 ### 4.4 art_style.json
 
@@ -159,17 +147,24 @@ auto_kairos_v3 (워크트리: v4-research-bridge)
 
 - `WORKTREE.md` — "이 워크트리에서는 v4 PD 운영. 리서치/원고는 `.claude/skills/v4/` 사용. 원고 확정 후 `python -m auto_agent.modules.v4_bridge.adapter --project <slug>` 실행 → `auto-agent run --project <slug> --from step_2`"
 
-### 5.2 어댑터 CLI
+### 5.2 finalize-for-bridge (PD 작성 단계)
+
+원고 확정 후 어댑터 호출 전에 PD가 `.claude/skills/v4/finalize-for-bridge/SKILL.md` 스킬을 따라 두 파일을 직접 작성한다:
+
+- `output/{slug}/final_manuscript_marked.md` — 마커 삽입된 원고
+- `output/{slug}/outline.json` — 챕터 메타데이터
+
+### 5.3 어댑터 CLI
 
 ```bash
 python -m auto_agent.modules.v4_bridge.adapter --project <slug>
-# 출력: output/{uuid}_{slug}/_bridge/{final_manuscript_marked.md, outline.json, research_report.json, art_style.json}
-# + output/{uuid}_{slug}/ 루트에 v3가 기대하는 위치로 심볼릭 링크 또는 복사
+# 출력: output/{uuid}_{slug}/_bridge/{outline.json, research_report.json, art_style.json, final_manuscript.md}
+# + output/{uuid}_{slug}/ 루트에 복사
 ```
 
 심볼릭 링크 vs 복사: **복사** 채택. v3 Stage 2 hook이 파일 변경을 감시하지 않고, 디버깅 시 어느 파일이 어느 시점 산출물인지 추적이 명확하다.
 
-### 5.3 Stage 3 진입
+### 5.4 Stage 3 진입
 
 `auto-agent run --project <slug> --from step_2` — 변경 없음.
 
@@ -190,7 +185,8 @@ python -m auto_agent.modules.v4_bridge.adapter --project <slug>
 
 **검증 체크리스트:**
 - [ ] v4 스킬들이 `output/{slug}/` 폴더에 정상 기록
-- [ ] 어댑터가 4개 산출물 모두 생성
+- [ ] PD가 finalize-for-bridge 스킬 따라 outline.json + final_manuscript_marked.md 직접 작성
+- [ ] 어댑터가 4개 산출물 모두 생성 (outline + marked는 PD 작성분 검증 후 복사)
 - [ ] script-director (chapters)의 narration substring hook 통과
 - [ ] step_2_consistency, step_2_data 정상 실행
 - [ ] step_3b 이미지/TTS/매니페스트 생성
@@ -204,10 +200,11 @@ python -m auto_agent.modules.v4_bridge.adapter --project <slug>
 ## 8. 위험과 미해결 질문
 
 1. **v3 outline.json / research_report.json 스키마 정확한 키 목록** — 본 설계에서는 "기존 샘플과 일치"로 가정했으나, 실제 키 누락 시 step_2_consistency가 실패할 수 있다. 구현 1단계에서 워크트리 main 브랜치의 최신 샘플 1개를 골라 스키마를 잠근다.
-2. **chapter_marker_agent 정확도** — LLM이 챕터 경계를 plan.md 의도와 다르게 자를 수 있다. 1차 검증에서 PD가 마커 결과를 직접 확인하는 단계를 두고, 정확도가 낮으면 PD가 직접 마커 편집 가능하도록 marked.md를 수정 가능 파일로 둔다.
+2. **~~chapter_marker_agent 정확도~~** — **해소됨.** LLM 역파싱을 제거하고 PD가 직접 작성하는 방식으로 전환했으므로 이 위험은 없어졌다.
 3. **research_report.json 빌더 정확도** — v4 리서치는 자유 형식 markdown 보고서를 산출한다. 정규식 추출이 약하면 LLM 추출로 대체. 1차 검증에서 측정.
 4. **vendor 충돌** — v4 vendor가 v3 본체와 다른 버전일 가능성. 충돌 시 워크트리에서는 v3 본체 우선.
 5. **Editorial Brief 경로** — v3 step_1c, step_2_target_deepen은 `editorial_brief.md`(v1~v3)를 만든다. v4에는 동등물이 명확하지 않다. plan.md가 brief를 흡수한 것으로 보고 어댑터에서 plan.md → editorial_brief.md 매핑이 필요한지 1차 검증에서 확인.
+6. **PD 마커 양식 위반 + outline 키 누락** — PD가 finalize-for-bridge 스킬을 숙지하지 않으면 outline.json 키 누락이나 marked 마커 양식 오류가 발생할 수 있다. `finalize-for-bridge SKILL.md`가 가이드 역할을 하고, 어댑터의 substring 검증이 narration 변경을 자동으로 차단하는 안전망이다. outline.json 키 누락은 step_2에서 에러로 발견된다.
 
 ---
 
