@@ -78,6 +78,7 @@ Thumbs.db
 !/scripts/setup_fonts.sh
 !/scripts/mac-mini-setup.sh
 !/scripts/generate_presets.py
+!/scripts/sync_v4_skills.sh
 /src/
 /dashboard/
 /skills/
