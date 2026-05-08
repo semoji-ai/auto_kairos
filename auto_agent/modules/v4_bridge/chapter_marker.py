@@ -102,7 +102,7 @@ def insert_markers(manuscript: str, outline: Dict[str, Any], project_dir: Path) 
         stdout, stderr = proc.communicate(input=prompt, timeout=300)
     except subprocess.TimeoutExpired:
         proc.kill()
-        proc.wait()
+        proc.communicate()
         raise RuntimeError("chapter-marker 에이전트 타임아웃 (300s)")
 
     if proc.returncode != 0:
