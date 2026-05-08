@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from auto_agent.paths import get_workspace_dir
+
 from .build_outline import build_outline
 from .build_research_report import build_research_report
 from .build_art_style import build_art_style
@@ -23,7 +25,7 @@ def _resolve_project_dir(project: str) -> Path:
         return p
 
     # slug 검색: output/*_<slug>/
-    output_dir = Path(__file__).parent.parent.parent.parent / "output"
+    output_dir = get_workspace_dir() / "output"
     if not output_dir.exists():
         raise FileNotFoundError(f"output/ 디렉토리를 찾을 수 없습니다: {output_dir}")
 
@@ -133,7 +135,12 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--theme", default="dark", choices=["dark", "light"], help="테마")
     args = parser.parse_args(argv)
 
-    project_dir = _resolve_project_dir(args.project)
+    try:
+        project_dir = _resolve_project_dir(args.project)
+    except (FileNotFoundError, ValueError) as e:
+        print(f"오류: {e}", file=sys.stderr)
+        sys.exit(1)
+
     result = run_adapter(project_dir, style_id=args.style_id, theme=args.theme)
 
     print("생성된 산출물:")

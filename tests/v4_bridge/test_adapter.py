@@ -148,8 +148,9 @@ def test_cli_missing_project_raises(tmp_path):
 
     from auto_agent.modules.v4_bridge.adapter import main
 
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(SystemExit) as exc_info:
         main(["--project", str(non_existent)])
+    assert exc_info.value.code == 1
 
 
 def test_cli_style_id_flag(tmp_path, monkeypatch):
