@@ -52,7 +52,11 @@ def test_parse_review_scores_missing_dir_returns_empty():
 
 def test_load_research_v4_aggregates_all_sections():
     result = load_research_v4(FIXTURE)
-    assert "테스트 영상 기획안" in result["plan_md"]
+    # frontmatter 제거된 본문만 포함 — body 내 "한 줄 요약" 섹션 헤더 확인
+    assert "한 줄 요약" in result["plan_md"]
+    assert "테스트 픽스처" in result["plan_md"]
+    # frontmatter는 제거됐으므로 plan_md에 없어야 함
+    assert "project_id: abc12345" not in result["plan_md"]
     assert len(result["fresh_reports"]) == 2
     assert len(result["targeted"]) == 1
     assert result["targeted"][0]["slug"] == "q-1"
