@@ -216,3 +216,116 @@
   el.innerHTML = html;
 })();
 </script>
+
+{# v4 PD 워크플로 섹션 — 조건부 노출 #}
+{% if v4_manuscript and (v4_manuscript.drafts or v4_manuscript.review_scores or v4_manuscript.final_manuscript) %}
+<section class="v4-section" id="v4-manuscript">
+  <h2 class="v4-section-title">PD 워크플로 (v4)</h2>
+
+  {% if v4_manuscript.review_scores %}
+  <div class="v4-card">
+    <h3>Review-draft 점수 추이</h3>
+    {# SVG 인라인 차트 — 외부 라이브러리 의존 없음 #}
+    <svg class="v4-score-chart" viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg">
+      {% set scores = v4_manuscript.review_scores %}
+      {% set max_v = 10 %}
+      {% set count = scores | length %}
+      <line x1="40" y1="{{ 200 - (9.0/max_v)*180 }}" x2="580" y2="{{ 200 - (9.0/max_v)*180 }}"
+            stroke="#888" stroke-dasharray="4,4" />
+      <text x="585" y="{{ 200 - (9.0/max_v)*180 + 4 }}" font-size="10" fill="#888">9.0</text>
+      <line x1="40" y1="20" x2="40" y2="200" stroke="#ccc" />
+      {% if count > 0 %}
+        {% set step = (540 / (count if count > 1 else 1)) %}
+        <polyline points="{% for s in scores %}{{ 40 + loop.index0 * step }},{{ 200 - ((s.viewer_score or 0)/max_v)*180 }} {% endfor %}"
+                  fill="none" stroke="#3b82f6" stroke-width="2" />
+        {% for s in scores %}
+          <circle cx="{{ 40 + loop.index0 * step }}" cy="{{ 200 - ((s.viewer_score or 0)/max_v)*180 }}"
+                  r="4" fill="#3b82f6" />
+          <text x="{{ 40 + loop.index0 * step }}" y="{{ 200 - ((s.viewer_score or 0)/max_v)*180 - 8 }}"
+                font-size="11" text-anchor="middle" fill="#1e3a8a">{{ s.viewer_score }}</text>
+          <text x="{{ 40 + loop.index0 * step }}" y="220" font-size="10" text-anchor="middle" fill="#666">v{{ s.version }}</text>
+        {% endfor %}
+      {% endif %}
+    </svg>
+    <table class="v4-score-table">
+      <thead><tr><th>버전</th><th>시청자</th><th>전문가</th></tr></thead>
+      <tbody>
+        {% for s in v4_manuscript.review_scores %}
+        <tr>
+          <td>v{{ s.version }}</td>
+          <td>{{ s.viewer_score or "—" }}</td>
+          <td><span class="verdict verdict-{{ (s.expert_verdict or 'pending') | lower }}">{{ s.expert_verdict or "—" }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if v4_manuscript.drafts %}
+  <div class="v4-card">
+    <h3>Drafts ({{ v4_manuscript.drafts | length }}개)</h3>
+    <div class="v4-version-selector">
+      {% set last_idx = (v4_manuscript.drafts | length) - 1 %}
+      {% for d in v4_manuscript.drafts %}
+        <button class="v4-version-btn {% if loop.index0 == last_idx %}active{% endif %}"
+                data-target="draft-{{ d.version }}">v{{ d.version }}</button>
+      {% endfor %}
+    </div>
+    <div class="v4-version-content">
+      {% for d in v4_manuscript.drafts %}
+        <div id="draft-{{ d.version }}" class="v4-content {% if loop.index0 != last_idx %}hidden{% endif %}">
+          <div class="markdown-body">{{ d.content | markdown | safe }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if v4_manuscript.final_manuscript %}
+  <div class="v4-card">
+    <h3>Final Manuscript</h3>
+    <div class="v4-final-toggle">
+      <button class="v4-final-btn active" data-target="final-prose">Prose</button>
+      {% if v4_manuscript.final_marked %}
+      <button class="v4-final-btn" data-target="final-marked">Marked (Ch + ---)</button>
+      {% endif %}
+    </div>
+    <div id="final-prose" class="v4-content">
+      <div class="markdown-body">{{ v4_manuscript.final_manuscript | markdown | safe }}</div>
+    </div>
+    {% if v4_manuscript.final_marked %}
+    <div id="final-marked" class="v4-content hidden">
+      <pre class="v4-marked-pre">{{ v4_manuscript.final_marked }}</pre>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+
+<script>
+// 버전 셀렉터 + final 토글
+document.querySelectorAll('.v4-version-selector').forEach(sel => {
+  sel.addEventListener('click', e => {
+    const btn = e.target.closest('.v4-version-btn');
+    if (!btn) return;
+    sel.querySelectorAll('.v4-version-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const parent = sel.parentElement.querySelector('.v4-version-content');
+    parent.querySelectorAll('.v4-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById(btn.dataset.target).classList.remove('hidden');
+  });
+});
+document.querySelectorAll('.v4-final-toggle').forEach(tog => {
+  tog.addEventListener('click', e => {
+    const btn = e.target.closest('.v4-final-btn');
+    if (!btn) return;
+    tog.querySelectorAll('.v4-final-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const card = tog.closest('.v4-card');
+    card.querySelectorAll(':scope > .v4-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById(btn.dataset.target).classList.remove('hidden');
+  });
+});
+</script>
+{% endif %}

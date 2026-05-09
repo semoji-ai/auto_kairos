@@ -51,9 +51,31 @@ def test_research_tab_includes_v4_section_when_files_exist(client):
     assert "q-1" in response.text  # targeted slug
 
 
-def test_manuscript_tab_returns_200(client):
+def test_manuscript_tab_includes_v4_section(client):
     response = client.get("/p/test?tab=manuscript", follow_redirects=True)
-    assert response.status_code in (200, 307, 404)
+    assert response.status_code == 200
+    assert 'id="v4-manuscript"' in response.text
+    assert "최종 원고 본문" in response.text
+    assert "8.6" in response.text
+    assert "PASS" in response.text
+    assert 'data-target="draft-1"' in response.text
+    assert 'data-target="draft-2"' in response.text
+
+
+def test_manuscript_tab_no_v4_section_when_files_missing(tmp_path, monkeypatch):
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+    (output_dir / "v3only_test").mkdir()
+    monkeypatch.chdir(tmp_path)
+    import sys
+    for key in list(sys.modules.keys()):
+        if key == "app" or key.startswith("app."):
+            del sys.modules[key]
+    import app as app_module
+    c = TestClient(app_module.app)
+    response = c.get("/project/v3only_test?tab=manuscript")
+    if response.status_code == 200:
+        assert 'id="v4-manuscript"' not in response.text
 
 
 def test_research_tab_no_v4_section_when_files_missing(tmp_path, monkeypatch):
