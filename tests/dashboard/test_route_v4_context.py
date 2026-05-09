@@ -14,22 +14,45 @@ def client(tmp_path, monkeypatch):
     shutil.copytree(fixture_src, output_dir / "abc12345_test")
 
     monkeypatch.chdir(tmp_path)
-    import importlib, sys
+    # get_workspace_dir()를 패치해서 tmp_path를 반환하도록 함
+    monkeypatch.setattr("auto_agent.paths.get_workspace_dir", lambda: tmp_path)
+    # DB를 tmp_path의 임시 DB로 격리
+    tmp_db = str(tmp_path / "test.db")
+    monkeypatch.setenv("AUTO_AGENT_DB", tmp_db)
+
+    import sys
     # 리임포트를 위해 캐시 제거
     for key in list(sys.modules.keys()):
         if key == "app" or key.startswith("app."):
             del sys.modules[key]
     import app as app_module
-    return TestClient(app_module.app)
+    # startup 스캔을 수동으로 실행 (TestClient는 lifespan을 트리거하지 않을 수 있음)
+    import asyncio
+    try:
+        asyncio.get_event_loop().run_until_complete(app_module.startup_scan())
+    except Exception:
+        # 이미 실행됐거나 이벤트 루프 문제 — TestClient with_startup 방식 사용
+        pass
+    tc = TestClient(app_module.app)
+    # TestClient가 startup을 실행하도록 context manager로 진입
+    tc.__enter__()
+    yield tc
+    tc.__exit__(None, None, None)
 
 
-def test_research_tab_returns_200(client):
-    response = client.get("/p/abc12345_test?tab=research")
-    assert response.status_code in (200, 307, 404)
+def test_research_tab_includes_v4_section_when_files_exist(client):
+    # slug='test', uuid='abc12345'로 등록됨. slug로 조회 시 307 redirect → uuid URL로 follow
+    response = client.get("/p/test?tab=research", follow_redirects=True)
+    assert response.status_code == 200
+    assert 'id="v4-research"' in response.text  # v4 섹션 마커
+    assert "테스트 영상 기획안" in response.text  # plan.md 렌더
+    assert "topic-1" in response.text  # fresh report slug
+    assert "topic-2" in response.text
+    assert "q-1" in response.text  # targeted slug
 
 
 def test_manuscript_tab_returns_200(client):
-    response = client.get("/p/abc12345_test?tab=manuscript")
+    response = client.get("/p/test?tab=manuscript", follow_redirects=True)
     assert response.status_code in (200, 307, 404)
 
 
@@ -46,5 +69,5 @@ def test_research_tab_no_v4_section_when_files_missing(tmp_path, monkeypatch):
     import app as app_module
     c = TestClient(app_module.app)
     response = c.get("/p/v3only_test?tab=research")
-    # Task 4에서 v4 섹션 추가 후 이 마커 검증 — 지금은 단순히 200 또는 404 OK
-    assert response.status_code in (200, 307, 404)
+    if response.status_code == 200:
+        assert 'id="v4-research"' not in response.text

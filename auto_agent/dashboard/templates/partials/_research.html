@@ -984,3 +984,81 @@
 .tc-a { font-size: 13px; color: #D4D4D8; line-height: 1.7; border-left: 2px solid rgba(245,158,11,.4); padding-left: 10px; }
 .tc-src { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
 </style>
+
+{# v4 PD 워크플로 섹션 — 조건부 노출 #}
+{% if v4_research and (v4_research.plan_md or v4_research.fresh_reports or v4_research.targeted) %}
+<section class="v4-section" id="v4-research">
+  <h2 class="v4-section-title">PD 워크플로 (v4)</h2>
+
+  {% if v4_research.plan_md %}
+  <div class="v4-card">
+    <h3>기획안 (plan.md)</h3>
+    <div class="markdown-body v4-mini">{{ v4_research.plan_md | markdown | safe }}</div>
+  </div>
+  {% endif %}
+
+  {% if v4_research.fresh_reports %}
+  <div class="v4-card">
+    <h3>Fresh + Deep Research ({{ v4_research.fresh_reports | length }}건)</h3>
+    <div class="v4-split">
+      <ul class="v4-list" data-target-pane="fresh">
+        {% for r in v4_research.fresh_reports %}
+          <li class="v4-list-item {% if loop.index0 == 0 %}active{% endif %}"
+              data-target="fresh-{{ loop.index0 }}">
+            {% if r.frontmatter.kind %}<span class="kind-badge kind-{{ r.frontmatter.kind }}">{{ r.frontmatter.kind }}</span>{% endif %}
+            {{ r.slug }}
+          </li>
+        {% endfor %}
+      </ul>
+      <div class="v4-detail">
+        {% for r in v4_research.fresh_reports %}
+          <div id="fresh-{{ loop.index0 }}" class="v4-content {% if loop.index0 > 0 %}hidden{% endif %}">
+            <div class="markdown-body">{{ r.content | markdown | safe }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if v4_research.targeted %}
+  <div class="v4-card">
+    <h3>Targeted Research ({{ v4_research.targeted | length }}건)</h3>
+    <div class="v4-split">
+      <ul class="v4-list" data-target-pane="targeted">
+        {% for r in v4_research.targeted %}
+          <li class="v4-list-item {% if loop.index0 == 0 %}active{% endif %}"
+              data-target="targeted-{{ loop.index0 }}">
+            {% if r.frontmatter.source %}<span class="kind-badge kind-{{ r.frontmatter.source }}">{{ r.frontmatter.source }}</span>{% endif %}
+            {{ r.slug }}
+          </li>
+        {% endfor %}
+      </ul>
+      <div class="v4-detail">
+        {% for r in v4_research.targeted %}
+          <div id="targeted-{{ loop.index0 }}" class="v4-content {% if loop.index0 > 0 %}hidden{% endif %}">
+            <div class="markdown-body">{{ r.content | markdown | safe }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+<script>
+// v4 list 클릭 시 detail pane 토글
+document.querySelectorAll('.v4-list').forEach(list => {
+  list.addEventListener('click', e => {
+    const item = e.target.closest('.v4-list-item');
+    if (!item) return;
+    const targetId = item.dataset.target;
+    list.querySelectorAll('.v4-list-item').forEach(li => li.classList.remove('active'));
+    item.classList.add('active');
+    const detailParent = list.parentElement.querySelector('.v4-detail');
+    detailParent.querySelectorAll('.v4-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById(targetId).classList.remove('hidden');
+  });
+});
+</script>
+{% endif %}
