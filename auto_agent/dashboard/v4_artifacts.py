@@ -99,19 +99,26 @@ def parse_review_scores(review_dir: Path) -> list[dict[str, Any]]:
 
 
 def load_research_v4(project_dir: Path) -> dict[str, Any]:
-    """v4 리서치 산출물 통합 로드. 키 모두 항상 존재 (없으면 빈 값)."""
+    """v4 리서치 산출물 통합 로드. 키 모두 항상 존재 (없으면 빈 값).
+
+    plan_md는 frontmatter 제거된 본문만 반환 — 마크다운 렌더링 시 YAML 헤더가
+    수평선 + 평문으로 잘못 렌더되는 것을 회피.
+    """
     return {
-        "plan_md": read_or_empty(project_dir / "plan.md"),
+        "plan_md": strip_frontmatter(read_or_empty(project_dir / "plan.md")),
         "fresh_reports": list_md_files(project_dir / "research_reports"),
         "targeted": list_md_files(project_dir / "research_targeted"),
     }
 
 
 def load_manuscript_v4(project_dir: Path) -> dict[str, Any]:
-    """v4 원고 산출물 통합 로드."""
+    """v4 원고 산출물 통합 로드.
+
+    final_manuscript / final_marked도 frontmatter 제거된 본문만 반환.
+    """
     return {
         "drafts": list_drafts(project_dir / "drafts"),
         "review_scores": parse_review_scores(project_dir / "review"),
-        "final_manuscript": read_or_empty(project_dir / "final_manuscript.md"),
-        "final_marked": read_or_empty(project_dir / "final_manuscript_marked.md"),
+        "final_manuscript": strip_frontmatter(read_or_empty(project_dir / "final_manuscript.md")),
+        "final_marked": strip_frontmatter(read_or_empty(project_dir / "final_manuscript_marked.md")),
     }
