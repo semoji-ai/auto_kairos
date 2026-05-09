@@ -371,3 +371,27 @@ async def project_page(slug: str, tab: str = "pipeline"):
 - (D) 스타일 + 회귀 테스트
 - (E) 수동 검증 (uvicorn + 브라우저)
 - (Phase 2 — 별도 plan) PD 노트 탭 추가
+
+---
+
+## 11. 측정 결과 (2026-05-09 검증)
+
+### HTTP 검증
+
+- **v4 fixture 프로젝트** (`/p/abc12345_test?tab=research`): `id="v4-research"` 마커 + `PD 워크플로 (v4)` 헤딩 + 기획안/fresh/deep/targeted slug 모두 HTML에 박힘 ✓
+- **v4 fixture 프로젝트** (`?tab=manuscript`): `id="v4-manuscript"` 마커 + `Review-draft 점수 추이` 섹션 + draft-1/draft-2 버전 셀렉터 + `viewer_score: 9.5` + `PASS` 뱃지 모두 HTML에 박힘 ✓
+- **v3-only 프로젝트** (`포켓몬스터_30주년_브랜드백과사전_1편?tab=research|manuscript`): v4 마커 0건 → graceful degradation 작동 ✓
+
+> 참고: 한컴 프로젝트가 대시보드 워크트리 DB/output에 없어 v4 fixture(`abc12345_test`)로 대체 검증. NAS 경로(`/Volumes/jleavens/...`) 미마운트 상태.
+
+### 위험 항목 점검
+
+1. 마크다운 렌더링 — `markdown` 라이브러리 사용, Jinja 필터로 등록, 정상 작동 ✓
+2. 점수 추이 차트 — SVG 인라인 채택 (외부 라이브러리 의존 0) ✓
+3. 실시간 갱신 — 페이지 새로고침 패턴 (자동 폴링 미구현, 범위 외) ✓
+4. PyYAML 의존성 — pyproject.toml dashboard/all 양쪽 추가, frontmatter 정확 파싱 ✓
+5. PD 노트 탭 — Phase 2로 이월
+
+### 시각 점검
+
+브라우저 검증은 사용자가 직접 진행 — 보라 톤 v4 섹션 + 카드/리스트/차트/뱃지 시각 확인.
