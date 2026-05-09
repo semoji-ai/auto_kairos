@@ -15,7 +15,8 @@
   </div>
   {% endif %}
 
-  {% if final_manuscript %}
+  {# v4 PD 워크플로 산출물이 있으면 이 v3 단일 표시 블록은 숨긴다 — 아래 '원고 버전' 카드에 통합됨 #}
+  {% if final_manuscript and not (v4_manuscript and v4_manuscript.final_manuscript) %}
   <div class="ms-manuscript">
     <div class="ms-section-label">최종 원고</div>
     <div class="ms-manuscript-text" id="ms-manuscript-text" data-raw="{{ final_manuscript|e }}"></div>
