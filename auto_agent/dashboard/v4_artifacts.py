@@ -36,3 +36,82 @@ def read_or_empty(path: Path) -> str:
     if not path.exists():
         return ""
     return path.read_text(encoding="utf-8")
+
+
+_DRAFT_RE = re.compile(r"^v(\d+)\.md$")
+_REVIEW_RE = re.compile(r"^review-draft-v(\d+)-")
+
+
+def list_md_files(directory: Path) -> list[dict[str, Any]]:
+    """디렉토리 내 .md 파일을 frontmatter+본문으로 분리해 반환.
+
+    파일은 슬러그(파일명 stem) 알파벳 순. 디렉토리 부재 시 빈 리스트.
+    """
+    if not directory.exists() or not directory.is_dir():
+        return []
+    out = []
+    for f in sorted(directory.glob("*.md")):
+        text = f.read_text(encoding="utf-8")
+        out.append({
+            "slug": f.stem,
+            "frontmatter": parse_frontmatter(text),
+            "content": strip_frontmatter(text),
+        })
+    return out
+
+
+def list_drafts(directory: Path) -> list[dict[str, Any]]:
+    """drafts/v{n}.md 파일을 버전 번호 순으로 반환."""
+    if not directory.exists() or not directory.is_dir():
+        return []
+    drafts = []
+    for f in directory.glob("v*.md"):
+        m = _DRAFT_RE.match(f.name)
+        if not m:
+            continue
+        text = f.read_text(encoding="utf-8")
+        drafts.append({
+            "version": int(m.group(1)),
+            "frontmatter": parse_frontmatter(text),
+            "content": strip_frontmatter(text),
+        })
+    drafts.sort(key=lambda d: d["version"])
+    return drafts
+
+
+def parse_review_scores(review_dir: Path) -> list[dict[str, Any]]:
+    """review/review-draft-v{n}-*.md 의 frontmatter에서 점수 추출."""
+    if not review_dir.exists() or not review_dir.is_dir():
+        return []
+    scores = []
+    for f in sorted(review_dir.glob("review-draft-v*.md")):
+        m = _REVIEW_RE.match(f.name)
+        if not m:
+            continue
+        fm = parse_frontmatter(f.read_text(encoding="utf-8"))
+        scores.append({
+            "version": int(m.group(1)),
+            "viewer_score": fm.get("viewer_score"),
+            "expert_verdict": fm.get("expert_verdict"),
+        })
+    scores.sort(key=lambda s: s["version"])
+    return scores
+
+
+def load_research_v4(project_dir: Path) -> dict[str, Any]:
+    """v4 리서치 산출물 통합 로드. 키 모두 항상 존재 (없으면 빈 값)."""
+    return {
+        "plan_md": read_or_empty(project_dir / "plan.md"),
+        "fresh_reports": list_md_files(project_dir / "research_reports"),
+        "targeted": list_md_files(project_dir / "research_targeted"),
+    }
+
+
+def load_manuscript_v4(project_dir: Path) -> dict[str, Any]:
+    """v4 원고 산출물 통합 로드."""
+    return {
+        "drafts": list_drafts(project_dir / "drafts"),
+        "review_scores": parse_review_scores(project_dir / "review"),
+        "final_manuscript": read_or_empty(project_dir / "final_manuscript.md"),
+        "final_marked": read_or_empty(project_dir / "final_manuscript_marked.md"),
+    }
