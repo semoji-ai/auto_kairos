@@ -1,4 +1,6 @@
 <!-- Research 탭 — 위키 스타일 뷰어 -->
+{# v4 PD 산출물이 있으면 v3 wiki 뷰어를 숨긴다 — 아래 v4 섹션이 모든 리서치를 표시 #}
+{% if not (v4_research and (v4_research.plan_md or v4_research.fresh_reports or v4_research.targeted)) %}
 <div class="wiki-wrap" id="wiki-wrap" data-slug="{{ slug }}">
   <div class="wiki-sidebar" id="wiki-sidebar">
     <div class="wiki-sidebar-title">Research Wiki</div>
@@ -10,6 +12,7 @@
     <div class="wiki-placeholder">왼쪽에서 페이지를 선택하세요</div>
   </div>
 </div>
+{% endif %}
 
 <style>
 .wiki-wrap {
