@@ -262,49 +262,49 @@
   </div>
   {% endif %}
 
-  {% if v4_manuscript.drafts %}
+  {% if v4_manuscript.drafts or v4_manuscript.final_manuscript %}
+  {% set has_marked = v4_manuscript.final_marked | length > 0 %}
+  {% set has_final = v4_manuscript.final_manuscript | length > 0 %}
+  {% set version_count = (v4_manuscript.drafts | length) + (1 if has_final else 0) + (1 if has_marked else 0) %}
   <div class="v4-card">
-    <h3>Drafts ({{ v4_manuscript.drafts | length }}개)</h3>
+    <h3>원고 버전 ({{ version_count }}개)</h3>
     <div class="v4-version-selector">
-      {% set last_idx = (v4_manuscript.drafts | length) - 1 %}
+      {% set drafts_last = (v4_manuscript.drafts | length) - 1 %}
+      {% set default_active_id = ('final-prose' if has_final else ('draft-' ~ v4_manuscript.drafts[drafts_last].version if v4_manuscript.drafts else 'none')) %}
       {% for d in v4_manuscript.drafts %}
-        <button class="v4-version-btn {% if loop.index0 == last_idx %}active{% endif %}"
+        <button class="v4-version-btn"
                 data-target="draft-{{ d.version }}">v{{ d.version }}</button>
       {% endfor %}
+      {% if has_final %}
+      <button class="v4-version-btn active" data-target="final-prose">최종</button>
+      {% endif %}
+      {% if has_marked %}
+      <button class="v4-version-btn" data-target="final-marked">마커 버전</button>
+      {% endif %}
     </div>
     <div class="v4-version-content">
       {% for d in v4_manuscript.drafts %}
-        <div id="draft-{{ d.version }}" class="v4-content {% if loop.index0 != last_idx %}hidden{% endif %}">
+        <div id="draft-{{ d.version }}" class="v4-content hidden">
           <div class="markdown-body">{{ d.content | markdown | safe }}</div>
         </div>
       {% endfor %}
-    </div>
-  </div>
-  {% endif %}
-
-  {% if v4_manuscript.final_manuscript %}
-  <div class="v4-card">
-    <h3>Final Manuscript</h3>
-    <div class="v4-final-toggle">
-      <button class="v4-final-btn active" data-target="final-prose">Prose</button>
-      {% if v4_manuscript.final_marked %}
-      <button class="v4-final-btn" data-target="final-marked">Marked (Ch + ---)</button>
+      {% if has_final %}
+        <div id="final-prose" class="v4-content">
+          <div class="markdown-body">{{ v4_manuscript.final_manuscript | markdown | safe }}</div>
+        </div>
+      {% endif %}
+      {% if has_marked %}
+        <div id="final-marked" class="v4-content hidden">
+          <pre class="v4-marked-pre">{{ v4_manuscript.final_marked }}</pre>
+        </div>
       {% endif %}
     </div>
-    <div id="final-prose" class="v4-content">
-      <div class="markdown-body">{{ v4_manuscript.final_manuscript | markdown | safe }}</div>
-    </div>
-    {% if v4_manuscript.final_marked %}
-    <div id="final-marked" class="v4-content hidden">
-      <pre class="v4-marked-pre">{{ v4_manuscript.final_marked }}</pre>
-    </div>
-    {% endif %}
   </div>
   {% endif %}
 </section>
 
 <script>
-// 버전 셀렉터 + final 토글
+// 원고 버전 셀렉터 — 한 번에 하나만 보이게
 document.querySelectorAll('.v4-version-selector').forEach(sel => {
   sel.addEventListener('click', e => {
     const btn = e.target.closest('.v4-version-btn');
@@ -313,17 +313,6 @@ document.querySelectorAll('.v4-version-selector').forEach(sel => {
     btn.classList.add('active');
     const parent = sel.parentElement.querySelector('.v4-version-content');
     parent.querySelectorAll('.v4-content').forEach(c => c.classList.add('hidden'));
-    document.getElementById(btn.dataset.target).classList.remove('hidden');
-  });
-});
-document.querySelectorAll('.v4-final-toggle').forEach(tog => {
-  tog.addEventListener('click', e => {
-    const btn = e.target.closest('.v4-final-btn');
-    if (!btn) return;
-    tog.querySelectorAll('.v4-final-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const card = tog.closest('.v4-card');
-    card.querySelectorAll(':scope > .v4-content').forEach(c => c.classList.add('hidden'));
     document.getElementById(btn.dataset.target).classList.remove('hidden');
   });
 });
