@@ -115,6 +115,12 @@ app.mount("/chartagent-dash", StaticFiles(directory=str(_chartagent_dash_dir), h
 templates = Jinja2Templates(directory=str(DASHBOARD_DIR / "templates"))
 # Jinja2 필터 등록
 templates.env.filters["format_headline"] = format_headline
+# v4 dashboard markdown filter
+import markdown as _md
+templates.env.filters["markdown"] = lambda text: _md.markdown(
+    text or "",
+    extensions=["fenced_code", "tables", "nl2br"],
+)
 
 
 def _static_version(rel_path: str) -> str:
@@ -405,6 +411,9 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
             md_text = _load_text("research_report.md")
             if md_text:
                 context["research_md"] = md_text
+        # v4 PD 워크플로 컨텍스트 — 조건부
+        from auto_agent.dashboard.v4_artifacts import load_research_v4
+        context["v4_research"] = load_research_v4(Path(out_dir))
 
     elif tab == "manuscript":
         specs = _load_json("scene_specs.json")
@@ -420,6 +429,9 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
                 seen_ids.add(ch)
                 chapters_seen.append({"id": ch, "title": ch_title})
         context["chapters"] = chapters_seen
+        # v4 PD 워크플로 컨텍스트 — 조건부
+        from auto_agent.dashboard.v4_artifacts import load_manuscript_v4
+        context["v4_manuscript"] = load_manuscript_v4(Path(out_dir))
 
     elif tab == "storyboard":
         specs = _load_json("scene_specs.json")
