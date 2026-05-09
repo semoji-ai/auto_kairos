@@ -2071,3 +2071,182 @@ body.terminal-open .main-content {
 @media (max-width: 900px) {
   .pipeline-stream-layout { grid-template-columns: 1fr; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   v4 Dashboard Compatibility — CSS Styles
+   ═══════════════════════════════════════════════════════════ */
+
+.v4-section {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px dashed #c7d2fe;
+  background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 60px);
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 1rem;
+  border-radius: 8px;
+}
+
+.v4-section-title {
+  font-size: 1.1rem;
+  color: #6d28d9;
+  margin-bottom: 1rem;
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #ede9fe;
+  border-radius: 4px;
+}
+
+.v4-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.v4-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.v4-mini {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid #f3f4f6;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.v4-split {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1rem;
+  min-height: 200px;
+}
+
+.v4-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.v4-list-item {
+  padding: 0.5rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.85rem;
+}
+
+.v4-list-item:hover {
+  background: #f9fafb;
+}
+
+.v4-list-item.active {
+  background: #ede9fe;
+  font-weight: 600;
+}
+
+.v4-detail {
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 0.75rem;
+  overflow-y: auto;
+  max-height: 400px;
+  font-size: 0.85rem;
+}
+
+.v4-content.hidden {
+  display: none;
+}
+
+.kind-badge {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.7rem;
+  border-radius: 3px;
+  margin-right: 0.4rem;
+  font-weight: 600;
+}
+
+.kind-fresh { background: #dbeafe; color: #1e40af; }
+.kind-deep { background: #fce7f3; color: #9f1239; }
+.kind-new { background: #dcfce7; color: #166534; }
+.kind-existing { background: #fef3c7; color: #92400e; }
+
+.v4-score-chart {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+}
+
+.v4-score-table {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  border-collapse: collapse;
+}
+
+.v4-score-table th, .v4-score-table td {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+
+.verdict {
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.verdict-pass { background: #dcfce7; color: #166534; }
+.verdict-conditional_pass { background: #fef3c7; color: #92400e; }
+.verdict-needs_revision { background: #fee2e2; color: #991b1b; }
+.verdict-pending { background: #f3f4f6; color: #6b7280; }
+
+.v4-version-selector, .v4-final-toggle {
+  margin-bottom: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.v4-version-btn, .v4-final-btn {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.v4-version-btn.active, .v4-final-btn.active {
+  background: #6d28d9;
+  color: #ffffff;
+  border-color: #6d28d9;
+}
+
+.v4-marked-pre {
+  background: #f3f4f6;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.markdown-body h1 { font-size: 1.2rem; margin-top: 0.75rem; }
+.markdown-body h2 { font-size: 1.05rem; margin-top: 0.6rem; color: #4b5563; }
+.markdown-body h3 { font-size: 0.95rem; margin-top: 0.5rem; color: #6b7280; }
+.markdown-body p { margin: 0.4rem 0; line-height: 1.5; }
+.markdown-body ul, .markdown-body ol { margin: 0.4rem 0; padding-left: 1.5rem; }
+.markdown-body code { background: #f3f4f6; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.85em; }
+.markdown-body pre { background: #f3f4f6; padding: 0.75rem; border-radius: 4px; overflow-x: auto; }
+.markdown-body table { border-collapse: collapse; margin: 0.5rem 0; }
+.markdown-body th, .markdown-body td { border: 1px solid #e5e7eb; padding: 0.3rem 0.5rem; }
