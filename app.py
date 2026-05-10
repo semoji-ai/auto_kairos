@@ -403,6 +403,12 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
         context["brief_review"] = review_data
         # 에피소드 brief (시리즈)
         context["episode_brief"] = _load_json("episode_brief.json")
+        # v4 PD 워크플로 plan.md fallback — editorial_brief.json이 없을 때 표시
+        if not brief:
+            from auto_agent.dashboard.v4_artifacts import load_research_v4
+            v4r = load_research_v4(Path(out_dir))
+            if v4r["plan_md"]:
+                context["v4_plan_md"] = v4r["plan_md"]
 
     elif tab == "research":
         context["research"] = _load_json("research_report.json")

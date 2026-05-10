@@ -1,6 +1,14 @@
 <!-- 기획안(editorial_brief) 탭 -->
 <div class="brief-page">
-  {% if not brief %}
+  {% if not brief and v4_plan_md %}
+    {# v4 PD 워크플로 fallback — editorial_brief.json 없지만 plan.md 있음 #}
+    <section class="v4-section" id="v4-brief">
+      <h2 class="v4-section-title">PD 워크플로 (v4) — 기획안 plan.md</h2>
+      <div class="v4-card">
+        <div class="markdown-body">{{ v4_plan_md | markdown | safe }}</div>
+      </div>
+    </section>
+  {% elif not brief %}
     <div class="brief-empty">
       <h3>기획안이 아직 없습니다</h3>
       <p>파이프라인의 brief 단계를 실행하거나 <code>editorial_brief.json</code> 파일이 생성되어야 합니다.</p>
