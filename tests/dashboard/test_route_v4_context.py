@@ -45,7 +45,8 @@ def test_research_tab_includes_v4_section_when_files_exist(client):
     response = client.get("/p/test?tab=research", follow_redirects=True)
     assert response.status_code == 200
     assert 'id="v4-research"' in response.text  # v4 섹션 마커
-    assert "한 줄 요약" in response.text  # plan.md 본문 (frontmatter 제거 후)
+    # 기획안(plan.md)은 기획안 탭으로 분리됨 — 리서치 탭은 리서치 자료만
+    assert "Fresh + Deep Research" in response.text
     assert "topic-1" in response.text  # fresh report slug
     assert "topic-2" in response.text
     assert "q-1" in response.text  # targeted slug
