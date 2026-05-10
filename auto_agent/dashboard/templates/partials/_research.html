@@ -1,6 +1,6 @@
 <!-- Research 탭 — 위키 스타일 뷰어 -->
 {# v4 PD 산출물이 있으면 v3 wiki 뷰어를 숨긴다 — 아래 v4 섹션이 모든 리서치를 표시 #}
-{% if not (v4_research and (v4_research.plan_md or v4_research.fresh_reports or v4_research.targeted)) %}
+{% if not (v4_research and (v4_research.fresh_reports or v4_research.targeted)) %}
 <div class="wiki-wrap" id="wiki-wrap" data-slug="{{ slug }}">
   <div class="wiki-sidebar" id="wiki-sidebar">
     <div class="wiki-sidebar-title">Research Wiki</div>
@@ -227,7 +227,7 @@
 </style>
 
 {# v3 wiki 스크립트는 wiki-wrap 요소가 있을 때만 실행 (v4 산출물이 있어 숨겨진 경우 null 참조 회피) #}
-{% if not (v4_research and (v4_research.plan_md or v4_research.fresh_reports or v4_research.targeted)) %}
+{% if not (v4_research and (v4_research.fresh_reports or v4_research.targeted)) %}
 <script>
 (function() {
   var slug = document.getElementById('wiki-wrap').dataset.slug;
@@ -992,16 +992,10 @@
 </style>
 
 {# v4 PD 워크플로 섹션 — 조건부 노출 #}
-{% if v4_research and (v4_research.plan_md or v4_research.fresh_reports or v4_research.targeted) %}
+{# 기획안(plan.md)은 별도 '기획안' 탭에서 표시 — 리서치 탭에서는 리서치 자료만 #}
+{% if v4_research and (v4_research.fresh_reports or v4_research.targeted) %}
 <section class="v4-section" id="v4-research">
-  <h2 class="v4-section-title">PD 워크플로 (v4)</h2>
-
-  {% if v4_research.plan_md %}
-  <div class="v4-card">
-    <h3>기획안 (plan.md)</h3>
-    <div class="markdown-body v4-mini">{{ v4_research.plan_md | markdown | safe }}</div>
-  </div>
-  {% endif %}
+  <h2 class="v4-section-title">PD 워크플로 (v4) — 리서치</h2>
 
   {% if v4_research.fresh_reports %}
   <div class="v4-card">
