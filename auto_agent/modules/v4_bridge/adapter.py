@@ -23,26 +23,44 @@ from .build_research_report import build_research_report
 from .build_art_style import build_art_style
 
 
+def _strip_frontmatter(text: str) -> str:
+    """YAML frontmatter (--- ... ---) 블록을 제거하고 본문만 반환."""
+    lines = text.splitlines()
+    if lines and lines[0].strip() == "---":
+        try:
+            end = next(i for i, l in enumerate(lines[1:], 1) if l.strip() == "---")
+            return "\n".join(lines[end + 1:])
+        except StopIteration:
+            pass
+    return text
+
+
 def _validate_substring(original: str, marked: str) -> None:
     """마커/주석/공백을 제거한 후 원본 narration이 그대로 들어 있는지 확인.
 
     실패 시 ValueError (PD가 narration을 변경했음).
     """
-    stripped_lines = [
-        line for line in marked.splitlines()
-        if not line.startswith("#")
-        and line.strip() != "---"
-        and not (line.strip().startswith("<!--") and line.strip().endswith("-->"))
-    ]
-    stripped = "\n".join(stripped_lines)
+    def _strip_markers(text: str) -> str:
+        """마커(# 헤더, --- 구분자, <!-- 주석), frontmatter 제거 후 순수 narration만 반환."""
+        text = _strip_frontmatter(text)
+        lines = [
+            line for line in text.splitlines()
+            if not line.startswith("#")
+            and line.strip() != "---"
+            and not (line.strip().startswith("<!--") and line.strip().endswith("-->"))
+        ]
+        return "\n".join(lines)
+
+    original_narration = _strip_markers(original)
+    marked_narration = _strip_markers(marked)
 
     norm = lambda s: " ".join(s.split())
-    if norm(original) not in norm(stripped):
+    if norm(original_narration) not in norm(marked_narration):
         raise ValueError(
             "final_manuscript_marked.md의 본문이 final_manuscript.md의 substring이 아닙니다.\n"
             "마커/주석/공백 외에 narration 본문이 변경된 것으로 보입니다.\n"
-            f"원본(norm) 앞 100자: {norm(original)[:100]}\n"
-            f"결과(norm) 앞 200자: {norm(stripped)[:200]}"
+            f"원본(norm) 앞 100자: {norm(original_narration)[:100]}\n"
+            f"결과(norm) 앞 200자: {norm(marked_narration)[:200]}"
         )
 
 
