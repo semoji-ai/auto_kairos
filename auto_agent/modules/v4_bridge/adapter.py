@@ -93,7 +93,7 @@ def _resolve_project_dir(project: str) -> Path:
 def run_adapter(
     project_dir: Path,
     style_id: str = "quirky_cartoon",
-    theme: str = "dark",
+    theme: str | None = None,
 ) -> dict[str, Any]:
     """v4 산출물(PD 작성 outline + marked manuscript 포함) → v3 Stage 2 입력.
 
@@ -164,6 +164,17 @@ def run_adapter(
     )
 
     # ── 5. art_style.json 빌드 ──
+    # theme=None일 때 native baseTheme 사용. 명시적 override 시 native와 불일치하면 경고 출력.
+    if theme is not None:
+        # 명시적 PD override — native와 비교
+        native = build_art_style(style_id=style_id, theme=None)
+        native_theme = native.get("design_tokens", {}).get("baseTheme")
+        if native_theme and theme != native_theme:
+            print(
+                f"⚠️ theme override: '{theme}' (PD 입력) ≠ '{native_theme}' (native for {style_id}). "
+                f"PD 입력값 사용. 의도하지 않은 경우 --theme 인자 제거 권장.",
+                file=sys.stderr,
+            )
     art_style = build_art_style(style_id=style_id, theme=theme)
 
     # ── 6. _bridge/ 에 저장 + project root 복사 ──
@@ -212,7 +223,12 @@ def main(argv: list[str] | None = None) -> None:
         help="절대경로 또는 slug (output/*_<slug>/ 자동 탐색)",
     )
     parser.add_argument("--style-id", default="quirky_cartoon", help="아트스타일 ID")
-    parser.add_argument("--theme", default="dark", choices=["dark", "light"], help="테마")
+    parser.add_argument(
+        "--theme",
+        default=None,
+        choices=["dark", "light"],
+        help="테마 override (생략 시 style의 native baseTheme 사용)",
+    )
     args = parser.parse_args(argv)
 
     try:
