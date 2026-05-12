@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 auto_agent/scripts/hooks/pre_project_interview.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/auto_agent/scripts/hooks/pre_project_interview.py\"",
             "timeout": 5,
             "statusMessage": "사전 인터뷰 체크 중..."
           }

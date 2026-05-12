@@ -678,15 +678,19 @@ const EmphasisAccentText: React.FC<{
   };
 
   // ============================================================
-  // 인라인 레이아웃: accent에 좌우 여백 추가 (사이즈 차이 클 때)
+  // 인라인 레이아웃: accent 좌우 여백 (사이즈 차이 클 때).
+  // 단, 인접 부분이 구두점으로 시작/끝나면 해당 방향 여백 제거
+  // → "1858년," 처럼 구두점이 앞 글자에 붙어 자연스러운 타이포 유지
   // ============================================================
-  const accentMargin = hasMixed && sizeDiff >= 2 ? "0 32px" : undefined;
+  const wantsMargin = hasMixed && sizeDiff >= 2;
+  const PUNCT_RE = /[\s.,!?:;)\]…」』』·]/;
+  const startsWithPunct = (s: string) => !!s && PUNCT_RE.test(s.trimStart()[0] ?? "");
+  const endsWithPunct = (s: string) => !!s && /[(\[「『·]/.test((s.trimEnd().slice(-1)) ?? "");
 
   return (
     <>
       {parts.map((part, pi) => {
         if (part.startsWith("{{") && part.endsWith("}}")) {
-          // accent span에 좌우 여백 추가
           const content = part.slice(2, -2);
           const num = extractNumber(content);
           const isNum = !isNaN(num) && num > 0;
@@ -697,6 +701,10 @@ const EmphasisAccentText: React.FC<{
           const displayText = shouldCountUp
             ? formatWithTemplate(content, counted)
             : content;
+          const prevPart = parts[pi - 1] ?? "";
+          const nextPart = parts[pi + 1] ?? "";
+          const mLeft = wantsMargin && !endsWithPunct(prevPart) ? 32 : 0;
+          const mRight = wantsMargin && !startsWithPunct(nextPart) ? 32 : 0;
           return (
             <span
               key={pi}
@@ -705,7 +713,8 @@ const EmphasisAccentText: React.FC<{
                 fontWeight: 800,
                 fontFamily: valueFont,
                 color: moodCfg.accent,
-                margin: accentMargin,
+                marginLeft: mLeft || undefined,
+                marginRight: mRight || undefined,
                 fontVariantNumeric: "tabular-nums",
                 textShadow: shouldCountUp
                   ? `0 0 60px rgba(${moodCfg.accentRgb},${glowOpacity})`
