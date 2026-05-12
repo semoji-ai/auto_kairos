@@ -689,7 +689,10 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         # mapScene entry — visual_kind=map인 씬에만 작성
         if _scene_kind == "map" and scene.get("mapScene"):
             ms = dict(scene["mapScene"])
-            if not ms.get("mapStyle"):
+            # mapStyle 권한 일원화 — script-director가 임의로 지정해도 무시하고
+            # 아트스타일(map.defaultTheme) → 글로벌 modern_clean 으로 떨어뜨림
+            ms.pop("mapStyle", None)
+            if map_theme and map_theme != "modern_clean":
                 ms["mapStyle"] = map_theme
             if not ms.get("mapType"):
                 ms["mapType"] = "location_reveal"

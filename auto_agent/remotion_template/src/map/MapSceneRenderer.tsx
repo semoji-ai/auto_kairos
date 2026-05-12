@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill } from "remotion";
 import { usePresetFonts } from "../design/fonts";
+import { useDesignPreset } from "../design";
 import type { MapSceneData } from "../types/manifest";
 import { MapThemeProvider } from "./MapThemeContext";
 import { LocationReveal } from "./LocationReveal";
@@ -25,12 +26,15 @@ export const MapSceneRenderer: React.FC<Props> = ({
   fps,
 }) => {
   usePresetFonts();
+  const preset = useDesignPreset();
+  // mapStyle 결정 우선순위: scene data → 아트스타일(preset.map.defaultTheme) → modern_clean
+  const resolvedMapStyle = data.mapStyle ?? preset.map?.defaultTheme ?? "modern_clean";
 
   const commonProps = { data, durationInFrames, fps };
 
   return (
     <AbsoluteFill style={{ filter: "brightness(1.0)" }}>
-      <MapThemeProvider theme={data.mapStyle ?? "modern_clean"}>
+      <MapThemeProvider theme={resolvedMapStyle}>
         {(() => {
           switch (data.mapType) {
             case "location_reveal":

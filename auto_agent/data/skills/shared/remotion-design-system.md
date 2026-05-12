@@ -475,20 +475,11 @@ Remotion의 `remotion/src/map/` 컴포넌트가 렌더링합니다.
 | `territory_overlay` | GeoJSON 영역 페이드인 | 세력 범위, 행정구역 |
 | `fly_through` | 키프레임 카메라 이동 | 여러 장소 순차 소개 |
 
-### mapStyle (10종)
+### mapStyle — 출력 금지 ⚠️
 
-| mapStyle | 용도 |
-|----------|------|
-| `modern_clean` | 현대 콘텐츠, 밝고 깔끔 (기본값) |
-| `minimal_light` | 미니멀 라이트 |
-| `dark_elegant` | 다크 + 골드 악센트 |
-| `blueprint` | 기술/청사진 스타일 |
-| `warm_earth` | 따뜻한 어스톤 |
-| `historical` | 역사 콘텐츠, 세피아 톤 |
-| `dark_cyber` | 기술/미래 콘텐츠, 사이버펑크 |
-| `vintage_parchment` | 빈티지 양피지 |
-| `clean_white` | 퓨어 화이트, 교육 콘텐츠 |
-| `matte_slate` | 매트 슬레이트, 데이터 시각화 |
+**`mapScene.mapStyle` 필드는 출력하지 마세요.** 지도 스타일은 아트스타일(`art_style.json`의 `design_tokens.map.defaultTheme`)에서 일괄 결정되므로 씬마다 다른 스타일을 지정하면 영상 전체 톤 일관성이 깨집니다. mapStyle 을 비워두면 자동으로 아트스타일 기본값(또는 글로벌 `modern_clean`)으로 떨어집니다.
+
+(참고: 등록된 mapStyle 종류는 modern_clean / minimal_light / dark_elegant / blueprint / warm_earth / historical / dark_cyber / vintage_parchment / clean_white / matte_slate. 결정 권한은 PD 가 아트스타일 JSON 에서.)
 
 ### mapScene 필드 스키마
 
@@ -496,7 +487,6 @@ Remotion의 `remotion/src/map/` 컴포넌트가 렌더링합니다.
 {
   "mapScene": {
     "mapType": "location_reveal",
-    "mapStyle": "historical",
     "title": "청령포 — 단종 유배지",
     "source": "강원도 영월군",
     "camera": {

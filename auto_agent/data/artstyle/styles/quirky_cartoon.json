@@ -61,9 +61,6 @@
       "cardRadius": 16,
       "gap": 28
     },
-    "map": {
-      "defaultTheme": "warm_earth"
-    },
     "fonts": {
       "body": {
         "family": "Pretendard",
