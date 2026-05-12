@@ -1,0 +1,195 @@
+{
+  "id": "quirky_cartoon",
+  "name": "Quirky Cartoon",
+  "description": "유쾌하고 역동적인 2D 카툰 스타일. 과장된 표정과 액션, 선명한 아웃라인, 밝은 색감.",
+  "channel": null,
+  "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",
+  "scene_style_description": "Bold 2D cartoon style with thick outlines, exaggerated expressions, and vibrant colors.",
+  "style": {
+    "art_style": "Bold 2D cartoon illustration",
+    "linework": {
+      "outline": "Thick black outlines, clean edges",
+      "variation": "Variable line weight for emphasis"
+    },
+    "shapes": "Rounded, exaggerated proportions",
+    "color_palette": "Vibrant, high-contrast primary colors",
+    "shading": "Flat cel shading with minimal gradients",
+    "character_design": "Large expressive eyes, exaggerated body language, simple silhouettes",
+    "mood_and_tone": "Fun, energetic, slightly irreverent",
+    "background": "Clean minimal backgrounds with bold color fills"
+  },
+  "technical": {
+    "no_text": true,
+    "resolution": "High quality 2D digital illustration",
+    "scene_style": "Bold cartoon style. Thick outlines. Vibrant colors. No photorealism."
+  },
+  "image": {
+    "staging": "cinematic",
+    "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",
+    "scene_style_description": "Bold 2D cartoon style with thick outlines, exaggerated expressions, and vibrant colors.",
+    "style": {
+      "art_style": "Bold 2D cartoon illustration",
+      "linework": {
+        "outline": "Thick black outlines",
+        "variation": "Variable line weight for emphasis"
+      },
+      "shapes": "Rounded, exaggerated proportions",
+      "color_palette": "Vibrant, high-contrast primary colors",
+      "shading": "Flat cel shading",
+      "character_design": "Large expressive eyes, exaggerated body language",
+      "mood_and_tone": "Fun, energetic",
+      "background": "Clean minimal backgrounds"
+    },
+    "critical_requirements": [],
+    "prompt_language": "ko"
+  },
+  "voice": {
+    "voice_id": "4JJwo477JUAx3HV0T7n7",
+    "voice_settings": {
+      "stability": 0.9,
+      "similarity_boost": 0.85,
+      "style": 0.8,
+      "speed": 1.05
+    }
+  },
+  "creative": {
+    "headline_frequency": "25-35%",
+    "mood_palette": [
+      "dramatic",
+      "suspense",
+      "contemplative",
+      "informative",
+      "triumphant"
+    ],
+    "preferred_layouts": [
+      "cinematic",
+      "rank_list",
+      "timeline",
+      "metric_spotlight",
+      "before_after"
+    ]
+  },
+  "scenes": {
+    "density": "moderate",
+    "min_duration_sec": 4,
+    "max_duration_sec": 12,
+    "prefer_split_on": [
+      "전환어",
+      "감정 전환",
+      "시각적 전환"
+    ]
+  },
+  "guidelines": "유쾌하고 과장된 2D 카툰. 굵은 아웃라인과 밝은 색상. 캐릭터는 크고 표현력 넘치는 눈.",
+  "subtitle": {
+    "max_chars_per_line": 28
+  },
+  "design_tokens": {
+    "baseTheme": "dark",
+    "defaultBackground": "",
+    "colors": {
+      "accent": "#FBBF24",
+      "accentRgb": "251,191,36",
+      "accentBg": "rgba(251,191,36,0.08)",
+      "accentBorder": "rgba(251,191,36,0.3)",
+      "accentSoft": "rgba(251,191,36,0.15)",
+      "cardBg": "rgba(251,191,36,0.06)",
+      "cardBorder": "rgba(251,191,36,0.25)"
+    },
+    "moods": {
+      "dramatic": {
+        "accent": "#EF4444",
+        "accentRgb": "239,68,68",
+        "speed": 1.2,
+        "glow": 0.6
+      },
+      "informative": {
+        "accent": "#FBBF24",
+        "accentRgb": "251,191,36",
+        "speed": 1.0,
+        "glow": 0.3
+      },
+      "triumphant": {
+        "accent": "#10B981",
+        "accentRgb": "16,185,129",
+        "speed": 1.0,
+        "glow": 0.5
+      },
+      "contemplative": {
+        "accent": "#FBBF24",
+        "accentRgb": "251,191,36",
+        "speed": 0.7,
+        "glow": 0.2
+      },
+      "suspense": {
+        "accent": "#8B5CF6",
+        "accentRgb": "139,92,246",
+        "speed": 0.8,
+        "glow": 0.5
+      }
+    },
+    "layout": {
+      "cardRadius": 16,
+      "gap": 20
+    },
+    "map": {
+      "defaultTheme": "minimal_light"
+    },
+    "fonts": {
+      "body": {
+        "family": "Pretendard",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          { "file": "fonts/Pretendard-Regular.otf", "weight": "400" },
+          { "file": "fonts/Pretendard-Bold.otf", "weight": "700" }
+        ]
+      },
+      "headline": {
+        "family": "Tenada",
+        "fallback": "sans-serif",
+        "files": [
+          { "file": "fonts/Tenada.woff2", "weight": "400" }
+        ]
+      },
+      "value": {
+        "family": "Barlow Condensed",
+        "fallback": "sans-serif",
+        "files": [
+          { "file": "fonts/BarlowCondensed-Bold.ttf", "weight": "700" }
+        ]
+      },
+      "subtitle": {
+        "family": "Pretendard",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          { "file": "fonts/Pretendard-Bold.otf", "weight": "700" }
+        ]
+      },
+      "mono": {
+        "family": "GyeonggiMillenniumBatang",
+        "fallback": "serif",
+        "files": [
+          { "file": "fonts/GyeonggiMillenniumBatang-Regular.ttf", "weight": "400" },
+          { "file": "fonts/GyeonggiMillenniumBatang-Bold.ttf", "weight": "700" }
+        ]
+      }
+    },
+    "subtitle": {
+      "fontSize": 54,
+      "fontFamily": "Pretendard",
+      "fontWeight": 700,
+      "color": "#FFFFFF",
+      "strokeWidth": 0,
+      "strokeColor": "transparent",
+      "keywordColor": "#FBBF24",
+      "keywordStrokeColor": "transparent",
+      "backgroundColor": "rgba(0,0,0,0.75)",
+      "borderRadius": 8,
+      "boxShadow": "0 2px 12px rgba(0,0,0,0.4)",
+      "bottomOffset": 60,
+      "maxWidth": "90%",
+      "lineHeight": 1.4,
+      "max_chars_per_line": 28
+    }
+  },
+  "writing_style": "neutral"
+}

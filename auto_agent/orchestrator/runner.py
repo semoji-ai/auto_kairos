@@ -3271,6 +3271,15 @@ JSON 구조: {{"scenes": [씬 배열]}}
                 print(f"  [SKIP] {step_id}: brief_mode=skip — 강화 스텝 생략")
                 return StepResult(step_id=step_id, status="skipped")
 
+        # v4-bridge 원작 프로젝트 (.v4_bridge_origin sentinel) — fact-check/proofread는
+        # v4 워크플로의 draft 단계에서 이미 완료됨. step_2b(fact-verifier)/step_2c(fact-fixer)
+        # 다운스트림 재검증은 중복이며 targeted_claims 컨텍스트 부족 시 회귀 위험.
+        _v4_bridge_skip_steps = {"step_2b", "step_2c"}
+        if step_id in _v4_bridge_skip_steps:
+            if (self.project_dir / ".v4_bridge_origin").exists():
+                print(f"  [SKIP] {step_id}: v4-bridge origin — fact-check/proofread는 draft 단계에서 완료")
+                return StepResult(step_id=step_id, status="skipped")
+
         # conditional 체크
         if step.get("conditional"):
             if not self._check_condition(step):

@@ -1,0 +1,41 @@
+{
+  "topic": "코카콜라의 탄생과 성장",
+  "summary": "1886년 조지아주 애틀랜타의 약사 존 스티스 펨버턴이 두통 치료제로 개발한 시럽이 세계 최대 음료 제국으로 성장한 역사. 에이사 캔들러의 마케팅 혁신, 병입 계약의 실수와 성공, 뉴코크 사태, 그리고 200개국에서 하루 20억 잔이 팔리는 현재까지의 여정.",
+  "sections": [
+    {
+      "title": "발명과 초기 역사 (1886~1900)",
+      "content": "1886년 5월 8일, 펨버턴은 코카콜라 시럽을 처음 제조했다. 첫해 판매량은 하루 평균 9잔. 약국 소다 파운틴에서 5센트에 판매. 1888년 펨버턴 사망 전 에이사 캔들러에게 사업권 매각. 캔들러는 총 2,300달러에 전체 사업권 인수."
+    },
+    {
+      "title": "전국 확장과 병입 혁명 (1900~1920)",
+      "content": "캔들러는 1899년 벤자민 토마스와 조셉 화이트헤드에게 단돈 1달러에 병입 독점권 부여. 이 계약이 후일 코카콜라 컴퍼니에 큰 재정 부담. 1916년 특유의 컨투어 병 디자인 특허 취득."
+    },
+    {
+      "title": "뉴코크 사태와 브랜드 위기 (1985)",
+      "content": "1985년 4월 23일 뉴코크 출시. 79일 만인 7월 11일 클래식 코크 복귀. 출시 당시 20만 건 이상의 항의 전화 및 편지. 이 사건은 오히려 브랜드 충성도를 강화시킨 역설적 마케팅 사례로 평가."
+    }
+  ],
+  "agent_results": [],
+  "sources": [
+    {
+      "title": "Wikipedia: The Coca-Cola Company",
+      "url": "https://en.wikipedia.org/wiki/The_Coca-Cola_Company",
+      "quality_grade": "A"
+    },
+    {
+      "title": "Mark Pendergrast - For God, Country and Coca-Cola",
+      "url": "https://www.basicbooks.com/titles/mark-pendergrast/for-god-country-and-coca-cola/9780465054394/",
+      "quality_grade": "A"
+    },
+    {
+      "title": "New Coke - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/New_Coke",
+      "quality_grade": "A"
+    }
+  ],
+  "source_grades": {
+    "A": 3
+  },
+  "agents_deployed": 3,
+  "search_mode": "deep"
+}
