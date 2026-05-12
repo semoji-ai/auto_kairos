@@ -369,26 +369,23 @@ def main():
         raw = scene.get("narration", "") or ""
         existing_tts = scene.get("narration_tts") or ""
 
-        # 정책 (B): LLM이 채운 narration_tts가 있고, 의심 패턴 잔존 없으면 그대로 사용.
-        # 의심 패턴 발견 또는 미생성 → raw narration을 Python으로 전처리.
+        # 정책: Python 전처리기를 단일 진실로 사용 — LLM 이 채운 narration_tts 는 신뢰하지 않음.
+        # 이유: LLM 은 연도 하이픈 규칙(천-팔백-십년)을 누락하기 쉬워 발음 품질이 떨어진다.
+        # raw 가 있으면 항상 전처리해서 표준형을 강제하고, 결과가 LLM 본과 다르면 narration_tts 갱신.
         scene_changes: list = []
-        if existing_tts and not _is_suspect(existing_tts):
-            text = existing_tts
-            logger.info("Scene %s: 기존 narration_tts 사용 (검증 통과)", num)
+        if not raw:
+            text = existing_tts or ""
+            if not text:
+                logger.info("Scene %s: narration/narration_tts 모두 없음 — skip", num)
         else:
-            if existing_tts:
-                suspects = _is_suspect(existing_tts)
-                logger.warning(
-                    "Scene %s: narration_tts 의심 패턴 %s — raw로 재처리",
-                    num, suspects,
-                )
-            if not raw:
-                text = ""
-            else:
-                text, scene_changes = _preprocess_tts_text(raw)
-                if text and text != raw:
-                    scene["narration_tts"] = text
-                    specs_updated = True
+            text, scene_changes = _preprocess_tts_text(raw)
+            if text and text != existing_tts:
+                if existing_tts:
+                    logger.info(
+                        "Scene %s: narration_tts 표준형으로 갱신 (LLM 본과 다름)", num,
+                    )
+                scene["narration_tts"] = text
+                specs_updated = True
 
         preprocess_log.append({
             "scene": num,
