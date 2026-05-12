@@ -22,6 +22,7 @@ export const QUIRKYCARTOON_PRESET: DesignPresetOverride = {
     defaultTheme: "warm_earth",
   },
   defaultBackground: "background/light-gray-distorted-square-tile-texture-background-illustration.jpg",
+  disableIcons: true,
   fonts: {
     body: {
       family: "Pretendard",
@@ -49,7 +50,7 @@ export const QUIRKYCARTOON_PRESET: DesignPresetOverride = {
     },
     value: {
       family: "Barlow Condensed",
-      fallback: "sans-serif",
+      fallback: "'Tenada', sans-serif",
       files: [
         {
           file: "fonts/BarlowCondensed-Bold.ttf",

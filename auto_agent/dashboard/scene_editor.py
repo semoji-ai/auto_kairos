@@ -578,7 +578,28 @@ async def select_scene_image(project_ref: str, scene_num: int, request: Request)
                 }
                 resp = _req.get(clean_url, timeout=30, headers=headers)
                 resp.raise_for_status()
-                (search_dir / dest_name).write_bytes(resp.content)
+                # 콘텐츠 검증 — PDF/HTML 등 비이미지가 .jpg 확장자로 저장되는 것 방지.
+                # PIL로 디코드 가능 여부 확인 후 JPEG/PNG로 정규화 저장.
+                try:
+                    from PIL import Image as _PILImage
+                    from io import BytesIO as _BytesIO
+                    _pil = _PILImage.open(_BytesIO(resp.content))
+                    _pil.verify()  # 손상/비이미지 감지
+                    _pil = _PILImage.open(_BytesIO(resp.content))  # verify 후 재오픈 필수
+                    if _pil.mode in ("RGBA", "P", "LA"):
+                        _pil = _pil.convert("RGB")
+                    # 원본 포맷 → 저장 포맷 매핑 (PNG는 유지, 나머지는 JPEG)
+                    if _pil.format == "PNG":
+                        dest_name = f"{prefix}{next_idx:02d}.png"
+                        _pil.save(search_dir / dest_name, "PNG", optimize=True)
+                    else:
+                        dest_name = f"{prefix}{next_idx:02d}.jpg"
+                        _pil.save(search_dir / dest_name, "JPEG", quality=90)
+                except Exception as _img_err:
+                    ctype = resp.headers.get("Content-Type", "?")
+                    raise ValueError(
+                        f"이미지 디코드 실패 (Content-Type: {ctype}): {_img_err}"
+                    )
                 image_url = f"/output/{dir_name}/images/search/{dest_name}"
             except Exception as e:
                 print(f"[ERROR] URL 다운로드 실패: {e}")

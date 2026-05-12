@@ -91,7 +91,7 @@
       },
       "value": {
         "family": "Barlow Condensed",
-        "fallback": "sans-serif",
+        "fallback": "'Tenada', sans-serif",
         "files": [
           {
             "file": "fonts/BarlowCondensed-Bold.ttf",
@@ -144,7 +144,8 @@
       "maxWidth": "90%",
       "lineHeight": 1.4,
       "max_chars_per_line": 25
-    }
+    },
+    "disableIcons": true
   },
   "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",
   "scene_style_description": "Loose quirky hand-drawn cartoon, doodle style, thick wobbly lines, bright flat colors, human characters only.",

@@ -705,8 +705,6 @@ const EmphasisAccentText: React.FC<{
                 fontWeight: 800,
                 fontFamily: valueFont,
                 color: moodCfg.accent,
-                lineHeight: 1.2,
-                verticalAlign: "baseline",
                 margin: accentMargin,
                 fontVariantNumeric: "tabular-nums",
                 textShadow: shouldCountUp
@@ -3787,7 +3785,9 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
           justifyContent: "center",
           alignItems: "center",
           padding: `${L.scenePadding[0]}px ${L.scenePadding[1]}px`,
-          paddingBottom: `${L.scenePadding[0] + 100}px`,
+          paddingBottom: layout === "headline_only"
+            ? `${L.scenePadding[0]}px`
+            : `${L.scenePadding[0] + 100}px`,
         }}
       >
         {/* Badges — portrait quote/cinematic 는 스킵 */}

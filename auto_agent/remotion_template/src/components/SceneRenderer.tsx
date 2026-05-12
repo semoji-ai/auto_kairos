@@ -254,7 +254,10 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
   const imgOffsetX = scene.imageAsset?.offsetX ?? 50;
   const imgOffsetY = scene.imageAsset?.offsetY ?? 50;
   const imgScale   = scene.imageAsset?.scale   ?? 1.0;
-  const imgFit     = scene.imageAsset?.fit     ?? "contain";
+  // 씬 이미지는 PD 의도(기본 contain)를, 텍스처 default 배경은 항상 화면을 꽉 채움(cover)
+  const imgFit: "cover" | "contain" | "fill" = hasSceneImage
+    ? (scene.imageAsset?.fit ?? "contain")
+    : "cover";
   const imgSrc = sceneImage || effectiveDefaultBg || "";
 
   // ── 비디오 우선 — videoAsset이 있으면 placement 분기 전에 먼저 처리 ──
