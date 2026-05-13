@@ -1,0 +1,68 @@
+{
+  "channel": "이로미즘",
+  "style_id": "iromism",
+  "mood": [
+    "우스꽝스러운",
+    "엉뚱한 quirky",
+    "ugly-cute homely caricature",
+    "미니멀 손그림"
+  ],
+  "illustration_mode": "cinematic_documentary_cartoon",
+  "color_palette": {
+    "primary": "Subject-driven — picked per scene to match context",
+    "secondary": "Warm scenes use warm tones, indoor scenes pick interior palettes, urban scenes use urban palettes",
+    "accent": "Selective accent matching subject (not fixed)",
+    "background": "Fully rendered environment matching scene context",
+    "note": "Palette is NOT fixed. The submarine reference happens to be navy/teal because the subject is underwater. Other subjects use other palettes."
+  },
+  "character_design_rules": {
+    "face_style": "realistic",
+    "body_proportion": "natural",
+    "consistency_priority": "high",
+    "reference_strategy": "real_photo_first"
+  },
+  "image_generation_defaults": {
+    "aspect_ratio": "16:9",
+    "negative_keywords": [
+      "cartoon",
+      "anime",
+      "low quality"
+    ],
+    "style_keywords": [
+      "cinematic",
+      "high contrast",
+      "dramatic lighting"
+    ]
+  },
+  "name": "이로미즘",
+  "description": "시네마틱 다큐 카툰. 손그림 잉크 + 짙은 무드 + 코미컬 캐릭터. Gravity Falls / Disenchantment / The Owl House 풍.",
+  "scene_style_description": "Minimalist hand-drawn comedic cartoon. Picture an indie animator drawing on cheap paper with a fountain pen — slightly crude, charmingly imperfect, deliberately UN-polished. \n\nCRITICAL — what this style is NOT: - NOT Disney concept art. NOT Pixar style. NOT a polished digital illustration. - NOT painterly. NOT photorealistic. NOT detailed digital cartoon. - NOT Gravity Falls (too rendered). NOT Inside Job (too clean). - The output should look CRUDER and MORE MINIMAL than typical AI cartoon output. \n\nCHARACTER PROPORTIONS (MUST match): - 3 head-tall body. Big square-ish round head, small narrow shoulders, short stubby legs. - Body is a simple rounded shape, NOT anatomically detailed. \nCHARACTER FACE — UGLY-CUTE QUIRKY (KEY signature): - Faces are deliberately HOMELY, AWKWARD, SLIGHTLY UGLY — character-driven, NOT pretty/handsome. - Asymmetric eyes (one bigger, one smaller, or one squinted), small black dot pupils. - Slightly bulging or droopy eyelids, weird eye spacing. - Tiny round nose bump that is OVERSIZED or SLIGHTLY OFF-CENTER (sometimes red, button-like). - Mouth as single uneven line or small lopsided shape (asymmetric grin, sideways frown, small O, overbite hint, gap-toothed grin). - Weak chin, double-chin hint, or slightly receding jaw. Pot-bellied torso. - Eyebrows as two short uneven strokes, often one raised in confusion. - Hair as simple flat shape with 1-2 strand lines, possibly thinning or messy. - NO face shading, NO blush, NO smoothing into prettiness — embrace the awkward homely charm. - \"Schmoe / homely caricature / endearingly odd\" energy — like sidekicks in 90s cartoons or Smiling Friends / Frisky Dingo / King of the Hill character archetypes. - The CHARM is deliberately UGLY-CUTE: viewers root for these awkward characters because they look gloriously imperfect. \nLINE: Thick hand-drawn ink outline with visible imperfection. Line weight varies. Outlines occasionally have small gaps or slight wobble. \nCOLOR & SHADING: - Each element gets ONE solid flat color. - Maximum ONE additional cell-shadow tone per surface (one darker patch, sharp edge). - NO gradients, NO painterly blending, NO glow, NO ambient occlusion details. - Subject-driven palette per scene — NO fixed colors. \nBACKGROUND — SIMPLE: - Background uses the SAME hand-drawn line + flat-color treatment as the characters. - Just enough environmental detail to establish location, NOT a full painted set. - 2-3 background colors max. \nCOMPOSITION: - 1 to 3 characters max per frame. - Clear focal point. - Avoid crowded scenes with many characters in the foreground. \nEXPRESSION (signature): - 엉뚱한 quirky comedic timing — mid-yelp, deadpan, surprised O mouth, cheeky asymmetric grin. - The CHARM is in expression, NOT in rendering. \nOVERALL: simple, hand-drawn, slightly crude, comedic stubby characters in a minimal environment that feels drawn, not rendered. Match the reference image's simplicity exactly.",
+  "technical": {
+    "no_text": true,
+    "resolution": "Hand-drawn TV-cartoon style with cinematic background rendering",
+    "scene_style": "Minimalist hand-drawn comedic cartoon with UGLY-CUTE homely faces. 3-head stubby characters with asymmetric weird eyes, oversized button nose, lopsided mouth — awkward charm, NOT pretty. Thick hand-drawn ink outline with visible imperfection. Flat solid colors with at most one cell-shadow tone per surface. NO gradients, NO painterly background. 1-3 characters max. Match reference image simplicity exactly.",
+    "critical_requirements": [
+      "3 head-tall body proportions — big head, small narrow shoulders, short stubby legs",
+      "UGLY-CUTE awkward homely face — asymmetric eyes (one bigger/squinted), oversized/off-center button nose, lopsided mouth (asymmetric grin or overbite hint), weak chin or double-chin hint. NOT pretty/handsome. Embrace homely caricature charm.",
+      "엉뚱한 weird face energy — schmoe / homely caricature / Smiling Friends or King of the Hill sidekick archetype",
+      "NO face shading, NO blush, NO smoothing into prettiness — keep the awkward homely look",
+      "Thick hand-drawn ink outline with visible imperfection (line weight varies, occasional small gaps)",
+      "Flat solid colors only — at most ONE cell-shadow tone per surface",
+      "NO gradients, NO painterly blending, NO ambient detail, NO glow, NO photorealistic shading",
+      "1 to 3 characters maximum per frame — avoid crowded compositions",
+      "Background uses SAME line + flat color treatment, 2-3 background colors max",
+      "엉뚱한 quirky expressions — mid-yelp, deadpan, surprised O, cheeky asymmetric grin",
+      "Color palette subject-driven per scene (NOT fixed)",
+      "STYLE TARGET: indie animator drawing on cheap paper with fountain pen — crude, charming, UN-polished",
+      "EXPLICITLY NOT: Disney concept art, Pixar, painterly digital illustration, polished modern cartoon",
+      "NO text, NO captions, NO logos, NO speech bubbles"
+    ]
+  },
+  "reference_image": "artstyle/styles/quirky_cartoon_base.jpg",
+  "reference_aesthetic": [
+    "Indie hand-drawn TV cartoon — deliberately MORE minimal than Gravity Falls or Inside Job"
+  ],
+  "reference_scenes_dir": "/Volumes/jleavens/002_intra/이로미즘/001_핵잠수함의역사/assets/images/",
+  "secondary_reference_image": "artstyle/styles/iromism_ref_character.jpg",
+  "original_motif": "Sparkly chibi mascot illustration (cute pastel whimsical) — 이로미즘 reinterprets as slightly grown-up 3-head cinematic cartoon, KEEPING the quirky 엉뚱한 expression energy."
+}

@@ -1,0 +1,292 @@
+{
+  "id": "semoji",
+  "name": "세모지스타일",
+  "description": "세상의모든지식 채널 메인 아트스타일. 심플하고 귀여운 2D 플랫 디자인",
+  "channel": "세모지",
+  "reference_image": "artstyle/styles/semoji_base.jpg",
+  "scene_style_description": "Modern editorial flat-design illustration. Picture a corporate / website hero illustration in the style of contemporary brand illustration platforms (Slack, Asana, Notion, Behance, modern explainer-video aesthetics). Friendly, approachable, professional clean.\n\nCRITICAL — what this style is NOT:\n- NOT a Disney/Pixar polished cartoon. NOT painterly digital illustration.\n- NOT a hand-drawn sketch. NOT a doodle.\n- NOT a comic book style with thick ink outlines.\n- NOT 3D rendering. NOT photorealistic.\n\nLINEWORK — borderless (CRITICAL):\n- NO black ink outlines around shapes. NO comic-style strokes.\n- All forms defined purely by flat color shapes meeting each other.\n- Edges are clean and crisp (vector style), no rough or sketchy lines.\n\nCHARACTER PROPORTIONS:\n- 3 to 3.5 head body — chibi-ish chunky proportions, NOT realistic adult, NOT extreme 2-head super-deformed.\n- Big round head with simple flat hair shape.\n- Chunky rounded torso, short stubby legs.\n- Friendly approachable silhouette — like modern brand-illustration mascots (Slack/Asana style).\n- Hands and feet are simple rounded blobs.\n\nCHARACTER FACE — extremely simplified:\n- Eyes: small black dot ovals (NO iris detail, NO highlight).\n- Nose: implied with a single subtle shadow line (or omitted entirely).\n- Mouth: a thin curved line (small smile or neutral).\n- Cheeks: optional small soft pink blush circles (semoji signature).\n- Eyebrows: thin simple strokes if needed.\n- NO realistic facial features, NO wrinkles, NO detailed iris.\n\nHAIR:\n- Flat single-color shape with at most one cell-shadow tone for depth.\n- NO individual hair strands, NO highlights.\n\nCOLOR & SHADING:\n- Flat solid block colors as the base.\n- ONE soft cell-shadow tone per surface (one slightly darker patch, soft edge — NOT hard cell shading).\n- The shadow is gentle and rounded, gives subtle dimension without breaking flatness.\n- Muted, warm, friendly palette: dusty pastel tones, soft beiges, sage greens, dusty blues.\n- NO hard gradients. NO painterly blending. NO photorealistic shading.\n\nBACKGROUND:\n- Single solid muted color (sage green, off-white, dusty rose, cream).\n- Or extremely simplified flat shapes in matching palette (no detailed environment).\n- Plenty of negative space — composition is uncluttered.\n\nCOMPOSITION:\n- Single character or 1-2 max, centered or with editorial asymmetry.\n- Clean negative space. Minimalist staging.\n- The character is the focal point, not the environment.\n\nAESTHETIC ANCHORS: Slack illustrations, Asana hero art, Notion onboarding illustrations, modern brand illustration on Behance, Headway / Insight Timer style. Friendly, calm, professional.\n",
+  "style": {
+    "art_style": "Borderless 2D flat design with simple, rounded characters",
+    "linework": {
+      "outline": "Simple, rounded, and clean lines without intricate details",
+      "variation": "Smooth, minimalist outlines with no visible strokes or rough edges"
+    },
+    "shapes": "Chubby and friendly proportions. Round faces, stout bodies, and generally cute or approachable proportions. Heads are slightly oversized in relation to the body",
+    "color_palette": "Flat, bold colors. Solid blocks of color with minimal gradients or shading. Colors are bright but slightly muted, giving a retro feel",
+    "shading": "Limited texture. Clothing and hair have a smooth, almost plastic-like appearance, with no visible fabric textures or hair strands",
+    "character_design": "Minimalist facial features. Eyes are simple dots or small ovals, with minimal to no indication of a nose or mouth beyond simple lines. Eyebrows are thick and expressive. Stylized hands with few visible fingers, feet depicted as simple ovals or block shapes"
+  },
+  "technical": {
+    "no_text": true,
+    "critical_requirements": [
+      "BORDERLESS — NO black ink outlines around any shape. Forms defined purely by flat color edges meeting",
+      "Flat solid colors with at most ONE soft cell-shadow tone per surface (rounded soft shadow, not hard cell shading)",
+      "NO gradients, NO painterly blending, NO photorealistic shading, NO 3D rendering",
+      "3 to 3.5 head chibi-ish body proportions — big round head, chunky torso, short stubby legs (NOT 5-head adult, NOT extreme 2-head)",
+      "EXTREMELY SIMPLE face: dot ovals for eyes, thin curved line for mouth, optional pink cheek blush, no detailed nose",
+      "NO realistic facial features (no wrinkles, no detailed iris, no skin texture, no individual hair strands)",
+      "Hair as flat single-color shape with at most one shadow tone",
+      "Single solid muted background OR extremely simplified flat shapes — generous negative space",
+      "Muted warm palette: dusty pastels, sage green, off-white, dusty blue, soft beige",
+      "1-2 characters max — clean editorial staging",
+      "Aesthetic anchor: modern brand illustration (Slack / Asana / Notion / Behance hero art)",
+      "EXPLICITLY NOT: Disney concept art, Pixar, painterly digital illustration, comic-book outlines, 3D, photorealistic",
+      "NO text, NO captions, NO logos, NO speech bubbles"
+    ]
+  },
+  "image": {
+    "staging": "cinematic",
+    "reference_image": "artstyle/styles/semoji_base.jpg",
+    "scene_style_description": "Modern editorial flat-design illustration. Picture a corporate / website hero illustration in the style of contemporary brand illustration platforms (Slack, Asana, Notion, Behance, modern explainer-video aesthetics). Friendly, approachable, professional clean.\n\nCRITICAL — what this style is NOT:\n- NOT a Disney/Pixar polished cartoon. NOT painterly digital illustration.\n- NOT a hand-drawn sketch. NOT a doodle.\n- NOT a comic book style with thick ink outlines.\n- NOT 3D rendering. NOT photorealistic.\n\nLINEWORK — borderless (CRITICAL):\n- NO black ink outlines around shapes. NO comic-style strokes.\n- All forms defined purely by flat color shapes meeting each other.\n- Edges are clean and crisp (vector style), no rough or sketchy lines.\n\nCHARACTER PROPORTIONS:\n- 3 to 3.5 head body — chibi-ish chunky proportions, NOT realistic adult, NOT extreme 2-head super-deformed.\n- Big round head with simple flat hair shape.\n- Chunky rounded torso, short stubby legs.\n- Friendly approachable silhouette — like modern brand-illustration mascots (Slack/Asana style).\n- Hands and feet are simple rounded blobs.\n\nCHARACTER FACE — extremely simplified:\n- Eyes: small black dot ovals (NO iris detail, NO highlight).\n- Nose: implied with a single subtle shadow line (or omitted entirely).\n- Mouth: a thin curved line (small smile or neutral).\n- Cheeks: optional small soft pink blush circles (semoji signature).\n- Eyebrows: thin simple strokes if needed.\n- NO realistic facial features, NO wrinkles, NO detailed iris.\n\nHAIR:\n- Flat single-color shape with at most one cell-shadow tone for depth.\n- NO individual hair strands, NO highlights.\n\nCOLOR & SHADING:\n- Flat solid block colors as the base.\n- ONE soft cell-shadow tone per surface (one slightly darker patch, soft edge — NOT hard cell shading).\n- The shadow is gentle and rounded, gives subtle dimension without breaking flatness.\n- Muted, warm, friendly palette: dusty pastel tones, soft beiges, sage greens, dusty blues.\n- NO hard gradients. NO painterly blending. NO photorealistic shading.\n\nBACKGROUND:\n- Single solid muted color (sage green, off-white, dusty rose, cream).\n- Or extremely simplified flat shapes in matching palette (no detailed environment).\n- Plenty of negative space — composition is uncluttered.\n\nCOMPOSITION:\n- Single character or 1-2 max, centered or with editorial asymmetry.\n- Clean negative space. Minimalist staging.\n- The character is the focal point, not the environment.\n\nAESTHETIC ANCHORS: Slack illustrations, Asana hero art, Notion onboarding illustrations, modern brand illustration on Behance, Headway / Insight Timer style. Friendly, calm, professional.\n",
+    "style": {
+      "art_style": "Borderless 2D flat design with simple, rounded characters",
+      "linework": {
+        "outline": "Simple, rounded, and clean lines without intricate details",
+        "variation": "Smooth, minimalist outlines with no visible strokes or rough edges"
+      },
+      "shapes": "Chubby and friendly proportions. Round faces, stout bodies, and generally cute or approachable proportions. Heads are slightly oversized in relation to the body",
+      "color_palette": "Flat, bold colors. Solid blocks of color with minimal gradients or shading. Colors are bright but slightly muted, giving a retro feel",
+      "shading": "Limited texture. Clothing and hair have a smooth, almost plastic-like appearance, with no visible fabric textures or hair strands",
+      "character_design": "Minimalist facial features. Eyes are simple dots or small ovals, with minimal to no indication of a nose or mouth beyond simple lines. Eyebrows are thick and expressive. Stylized hands with few visible fingers, feet depicted as simple ovals or block shapes"
+    },
+    "critical_requirements": [
+      "BORDERLESS — NO black ink outlines around any shape. Forms defined purely by flat color edges meeting",
+      "Flat solid colors with at most ONE soft cell-shadow tone per surface (rounded soft shadow, not hard cell shading)",
+      "NO gradients, NO painterly blending, NO photorealistic shading, NO 3D rendering",
+      "3 to 3.5 head chibi-ish body proportions — big round head, chunky torso, short stubby legs (NOT 5-head adult, NOT extreme 2-head)",
+      "EXTREMELY SIMPLE face: dot ovals for eyes, thin curved line for mouth, optional pink cheek blush, no detailed nose",
+      "NO realistic facial features (no wrinkles, no detailed iris, no skin texture, no individual hair strands)",
+      "Hair as flat single-color shape with at most one shadow tone",
+      "Single solid muted background OR extremely simplified flat shapes — generous negative space",
+      "Muted warm palette: dusty pastels, sage green, off-white, dusty blue, soft beige",
+      "1-2 characters max — clean editorial staging",
+      "Aesthetic anchor: modern brand illustration (Slack / Asana / Notion / Behance hero art)",
+      "EXPLICITLY NOT: Disney concept art, Pixar, painterly digital illustration, comic-book outlines, 3D, photorealistic",
+      "NO text, NO captions, NO logos, NO speech bubbles"
+    ],
+    "prompt_language": "ko"
+  },
+  "voice": {
+    "voice_id": "W7FnAxJNpD5WGjrF5GLp",
+    "voice_settings": {
+      "stability": 1.0,
+      "similarity_boost": 0.9,
+      "style": 0.9,
+      "speed": 1.1
+    }
+  },
+  "creative": {
+    "headline_frequency": "10-20%",
+    "mood_palette": [
+      "informative",
+      "contemplative",
+      "triumphant"
+    ],
+    "preferred_layouts": [
+      "items_grid",
+      "items_list",
+      "counter",
+      "bar",
+      "pie",
+      "flow"
+    ]
+  },
+  "scenes": {
+    "density": "high",
+    "min_duration_sec": 3,
+    "max_duration_sec": 12,
+    "prefer_split_on": [
+      "주제 전환",
+      "데이터 단위"
+    ]
+  },
+  "design_tokens": {
+    "baseTheme": "light",
+    "defaultBackground": "background/semoji_grid_bg.jpg",
+    "defaultBgOpacity": 1.0,
+    "disableIcons": true,
+    "disableSpotlight": true,
+    "quoteReveal": "typewriter",
+    "headlineTypewriterTriggers": [
+      "그런데",
+      "그러나",
+      "하지만",
+      "한편"
+    ],
+    "defaultItemEntrance": "overshoot",
+    "countUpThreshold": 0,
+    "texture": {
+      "src": "background/63517.jpg",
+      "blendMode": "multiply",
+      "opacity": 0.1,
+      "topLayer": true
+    },
+    "colors": {
+      "accent": "#4A90D9",
+      "accentRgb": "74,144,217",
+      "accentBg": "rgba(74,144,217,0.08)",
+      "accentBorder": "rgba(74,144,217,0.3)",
+      "accentSoft": "rgba(74,144,217,0.15)",
+      "cardBg": "rgba(74,144,217,0.06)",
+      "cardBorder": "rgba(74,144,217,0.2)"
+    },
+    "moods": {
+      "dramatic": {
+        "accent": "#E74C3C",
+        "accentRgb": "231,76,60",
+        "speed": 1.2,
+        "glow": 0.6
+      },
+      "urgent": {
+        "accent": "#E74C3C",
+        "accentRgb": "231,76,60",
+        "speed": 1.5,
+        "glow": 0.8
+      },
+      "somber": {
+        "accent": "#7F8C8D",
+        "accentRgb": "127,140,141",
+        "speed": 0.7,
+        "glow": 0.2
+      },
+      "informative": {
+        "accent": "#4A90D9",
+        "accentRgb": "74,144,217",
+        "speed": 1.0,
+        "glow": 0.3
+      },
+      "contemplative": {
+        "accent": "#8E7CC3",
+        "accentRgb": "142,124,195",
+        "speed": 0.6,
+        "glow": 0.2
+      },
+      "suspense": {
+        "accent": "#34495E",
+        "accentRgb": "52,73,94",
+        "speed": 0.8,
+        "glow": 0.5
+      },
+      "triumphant": {
+        "accent": "#F5A623",
+        "accentRgb": "245,166,35",
+        "speed": 1.0,
+        "glow": 0.5
+      }
+    },
+    "layout": {
+      "cardRadius": 16,
+      "gap": 28
+    },
+    "map": {
+      "defaultTheme": "warm_earth"
+    },
+    "variants": {
+      "itemsList": "accent-filled",
+      "itemsGrid": "accent-filled",
+      "comparisonCell": "none",
+      "metricCard": "stroke_white"
+    },
+    "chartagent": {
+      "theme_set": "gallery_infographic",
+      "theme_overrides": {
+        "pattern_mode": "outline_plus_hatch"
+      }
+    },
+    "fonts": {
+      "body": {
+        "family": "SB 어그로체",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/SBAggroOTF-L.otf",
+            "weight": "300"
+          },
+          {
+            "file": "fonts/SBAggroOTF-M.otf",
+            "weight": "500"
+          },
+          {
+            "file": "fonts/SBAggroOTF-B.otf",
+            "weight": "700"
+          }
+        ]
+      },
+      "headline": {
+        "family": "카페24 써라운드",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/Cafe24Ssurround.ttf",
+            "weight": "700"
+          }
+        ]
+      },
+      "value": {
+        "family": "배민 연성체",
+        "fallback": "sans-serif",
+        "files": [
+          {
+            "file": "fonts/BMYeonsung.ttf",
+            "weight": "400"
+          }
+        ]
+      },
+      "subtitle": {
+        "family": "G마켓 산스",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/GmarketSansMedium.ttf",
+            "weight": "500"
+          },
+          {
+            "file": "fonts/GmarketSansBold.ttf",
+            "weight": "700"
+          }
+        ]
+      },
+      "mono": {
+        "family": "GyeonggiMillenniumBatang",
+        "fallback": "serif",
+        "files": [
+          {
+            "file": "fonts/GyeonggiMillenniumBatang-Regular.ttf",
+            "weight": "400"
+          },
+          {
+            "file": "fonts/GyeonggiMillenniumBatang-Bold.ttf",
+            "weight": "700"
+          }
+        ]
+      }
+    },
+    "subtitle": {
+      "max_chars_per_line": 30,
+      "fontSize": 52,
+      "fontFamily": "G마켓 산스",
+      "fontWeight": 400,
+      "color": "#000000",
+      "strokeWidth": 0,
+      "strokeColor": "transparent",
+      "keywordColor": "#4A90D9",
+      "keywordStrokeColor": "transparent",
+      "backgroundColor": "#f0f0f0",
+      "border": "2px solid #000000",
+      "borderRadius": 0,
+      "boxShadow": "5px 5px 0px rgba(0,0,0,1)",
+      "bottomOffset": 110,
+      "maxWidth": "92%",
+      "lineHeight": 1.4
+    },
+    "enable_web_search": true
+  },
+  "guidelines": "세모지는 정보 전달 중심. 친근한 설명체, 데이터 시각화 적극 활용. cinematic staging으로 장면 연출.",
+  "writing_style": "semoji",
+  "mood": [
+    "친근",
+    "깔끔",
+    "교양",
+    "모던 에디토리얼"
+  ]
+}

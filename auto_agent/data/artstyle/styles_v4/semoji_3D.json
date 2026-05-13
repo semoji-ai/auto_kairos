@@ -1,0 +1,303 @@
+{
+  "id": "semoji_3D",
+  "name": "세모지3D",
+  "description": "세상의모든지식 채널 3D 아트스타일. 프리미엄 디자이너 토이 감성의 3D 캐릭터 일러스트",
+  "channel": "세상의모든지식",
+  "reference_image": "artstyle/styles/semoji_3D_base.png",
+  "scene_style_description": "Smooth stylized 3D animation illustration. Picture characters with SMOOTH MATTE skin/clothing surfaces, simplified rounded geometry, and soft warm ambient lighting — like Pixar Soul characters or Apple Memoji 3D but more simplified. The \"softness\" comes from rounded geometry + warm lighting, NOT from material texture.\n\nCRITICAL — what this style is NOT (avoid all these):\n- NOT clay texture, NOT sculpey, NOT pottery, NOT artisan handmade.\n- NOT stiff vinyl Funko-Pop / Pop Mart / KAWS designer collectible (too rigid, too sharp).\n- NOT fuzzy felt, NOT plush stuffed-toy, NOT fabric/cotton doll, NOT knitted material, NOT yarn.\n- NOT mirror-glossy plastic, NOT lacquered shiny finish, NOT wet-look reflection.\n- NOT photorealistic 3D, NOT realistic skin shader, NOT subsurface-scatter realistic skin.\n- The target is SMOOTH MATTE PLASTIC — like a 3D mobile game character or a polished kids' app illustration.\n\nSURFACE & MATERIAL — KEY (plastic-like 3D):\n- SMOOTH MATTE PAINTED PLASTIC surfaces — like a high-end 3D mobile-game character or a quality animated kids' app illustration. Clean injection-molded look.\n- Slight soft cell-shading (gentle gradient from key light to shadow side) — NOT flat, NOT super glossy.\n- Subtle soft sheen on highlights — looks like polished matte plastic with very gentle reflection, NOT mirror-shiny, NOT lacquered.\n- Skin: smooth matte plastic-like with very faint subsurface warmth (animated character feel).\n- Clothing: smooth painted-on solid colors, slight cell-shadow at folds — looks like painted plastic doll clothing, NOT fabric weave, NOT fuzzy felt.\n- Hair: simplified sculpted plastic shape with one base color + one cell-shadow tone — molded look.\n- All surfaces share the same \"smooth painted plastic\" material quality.\n\nCHARACTER PROPORTIONS:\n- 3 to 3.5 head body — chubby cute proportions, simplified rounded silhouette.\n- Soft rounded geometry (no sharp angles), but NOT chibi-extreme.\n\nCHARACTER FACE — RADICALLY SIMPLIFIED:\n- Eyes: ONLY two solid black dots/ovals. NO realistic iris, NO highlights, NO eyelashes.\n- Mouth: ONLY a small simple curve (smile / neutral / open). NO teeth, NO lip detail.\n- Nose: tiny subtle bump OR completely omitted.\n- Cheeks: optional very soft 3D blush dots.\n- Eyebrows: simplest single stroke OR omitted.\n- NO realistic skin texture, NO chin contour, NO nasolabial lines, NO under-eye detail.\n- NO eyewear / NO glasses unless cast sheet explicitly shows them.\n- Face must read as a STYLIZED ANIMATED CHARACTER, NOT a human portrait.\n\nHANDS & ANATOMY:\n- Hands as small rounded simplified shapes with mitten-like or simplified fingers.\n- NO realistic individual finger detail, NO knuckles, NO nails, NO realistic joint anatomy.\n- Limbs are simplified rounded volumes.\n\nCLOTHING:\n- Solid simple colors, smooth surface, simplified silhouette.\n- Very gentle ambient shadow at folds — NO realistic fabric wrinkles, NO seam detail.\n\nLIGHTING:\n- WARM AMBIENT lighting — golden hour, soft window light, gentle lamp glow.\n- Soft fill, soft shadows, dreamy nostalgic atmosphere.\n- This warm soft lighting + simplified geometry creates the \"soft\" feel — NOT fuzzy material, NOT clay, NOT plush.\n\nBACKGROUND / ENVIRONMENT:\n- Full 3D environment integrated with characters (room, field, table, street).\n- Environment uses the SAME smooth simplified 3D style as characters.\n- Cinematic scene composition, like a still from a children's animated short.\n\nCOLOR PALETTE:\n- Warm pastel, soft, nostalgic — sage green, dusty pink, pale beige, soft blue, off-white.\n- Subject-driven per scene.\n\nAESTHETIC ANCHORS: Animal Crossing 3D characters, Toca Boca 3D, mobile-game cute 3D characters, Apple Memoji (slightly softened), Pixar Soul characters at simplified fidelity, modern animated children's app art. Think SMOOTH MATTE PLASTIC 3D character — like a high-quality 3D mobile-game or app illustration. Clean, friendly, polished but NOT shiny.",
+  "style": {
+    "art_style": "3D stylized character illustration with a premium designer-toy aesthetic. Smooth opaque surfaces with a soft matte finish, like high-quality PVC or ABS plastic figurines.",
+    "modeling": {
+      "surface": "Ultra-smooth, seamless opaque surfaces with a velvety matte finish. No gloss, no translucency, no iridescence. Skin has a uniform smooth plastic feel. Clothing and accessories share the same consistent matte material with no fabric texture or wrinkles.",
+      "detail_level": "Minimal geometric detail. Clean simplified forms. Hair is sculpted as thick rounded tubular shapes, not individual strands. Accessories are cleanly modeled with sharp but rounded edges."
+    },
+    "shapes": "Limbs are short and thick, hands simplified into rounded forms. Overall silhouette is compact and chunky.",
+    "color_palette": "Warm peachy skin tones with soft gradient transitions. Clothing and accessories in clean solid pastels. Colors are rich but not oversaturated, with gentle warm undertones throughout.",
+    "shading": "Soft diffused studio lighting with very gentle shadows. Smooth tonal transitions across rounded forms. No specular highlights or reflections on skin or clothing. Accessories like glasses may have minimal subtle reflectivity. Soft ambient occlusion in crevices only.",
+    "character_design": "Friendly and approachable faces with minimal features: small dot-like eyes, simple curved brows, a tiny nose, and a subtle closed-mouth smile. Hair is sculpted as a single smooth mass with soft volume, no individual strands.",
+    "mood_and_tone": "Warm, friendly, and refined. Clean modern aesthetic with a cozy, tactile quality. Feels like a carefully crafted collectible figure you want to pick up and hold.",
+    "background": "Clean solid color backdrop with no gradients or textures. Soft even lighting with no visible light source or ground shadows."
+  },
+  "technical": {
+    "no_text": true,
+    "resolution": "High-quality 3D render with soft depth of field and anti-aliased edges. Diffused studio lighting with minimal shadow contrast.",
+    "critical_requirements": [
+      "3 to 3.5 head body — chubby cute proportions with simplified rounded geometry",
+      "SMOOTH MATTE PAINTED PLASTIC surfaces — like a 3D mobile-game character or kids' app illustration. Slight soft sheen on highlights (NOT mirror-glossy, NOT lacquered, NOT fuzzy/felt, NOT clay)",
+      "Skin: smooth matte plastic-like with very faint subsurface warmth (animated character feel, NOT photorealistic skin)",
+      "Clothing: smooth painted-plastic solid colors with slight cell-shadow at folds — like painted doll clothing, NOT fabric, NOT felt",
+      "Hair as smooth simplified sculpted shape with one color",
+      "EXTREMELY SIMPLE face: ONLY dot eyes + small smile curve. NO realistic facial structure",
+      "NO realistic skin texture, NO chin contour, NO nasolabial lines, NO under-eye detail",
+      "NO eyewear / NO glasses unless cast character sheet explicitly shows them",
+      "Hands as small rounded simplified shapes (mitten-like) — NO individual finger anatomy",
+      "WARM AMBIENT lighting (golden hour / window light / lamp glow)",
+      "Smoothness + warm lighting + simplified rounded geometry — NOT fuzzy material, NOT clay, NOT vinyl, NOT glossy",
+      "Full 3D environment integrated with characters in same smooth stylized 3D style",
+      "Cinematic scene framing — multiple characters allowed in environment",
+      "Aesthetic anchor: Animal Crossing 3D / Toca Boca 3D / Apple Memoji softened / mobile-game cute 3D / Pixar Soul simplified",
+      "EXPLICITLY NOT: fuzzy felt/plush, fabric/cotton doll, clay/sculpey/pottery, Funko Pop/KAWS/Pop Mart designer toy, glossy/lacquered plastic, photorealistic 3D",
+      "NO text, NO captions, NO logos, NO speech bubbles"
+    ]
+  },
+  "image": {
+    "staging": "cinematic",
+    "reference_image": "artstyle/styles/semoji_3D_base.png",
+    "scene_style_description": "Smooth stylized 3D animation illustration. Picture characters with SMOOTH MATTE skin/clothing surfaces, simplified rounded geometry, and soft warm ambient lighting — like Pixar Soul characters or Apple Memoji 3D but more simplified. The \"softness\" comes from rounded geometry + warm lighting, NOT from material texture.\n\nCRITICAL — what this style is NOT (avoid all these):\n- NOT clay texture, NOT sculpey, NOT pottery, NOT artisan handmade.\n- NOT stiff vinyl Funko-Pop / Pop Mart / KAWS designer collectible (too rigid, too sharp).\n- NOT fuzzy felt, NOT plush stuffed-toy, NOT fabric/cotton doll, NOT knitted material, NOT yarn.\n- NOT mirror-glossy plastic, NOT lacquered shiny finish, NOT wet-look reflection.\n- NOT photorealistic 3D, NOT realistic skin shader, NOT subsurface-scatter realistic skin.\n- The target is SMOOTH MATTE PLASTIC — like a 3D mobile game character or a polished kids' app illustration.\n\nSURFACE & MATERIAL — KEY (plastic-like 3D):\n- SMOOTH MATTE PAINTED PLASTIC surfaces — like a high-end 3D mobile-game character or a quality animated kids' app illustration. Clean injection-molded look.\n- Slight soft cell-shading (gentle gradient from key light to shadow side) — NOT flat, NOT super glossy.\n- Subtle soft sheen on highlights — looks like polished matte plastic with very gentle reflection, NOT mirror-shiny, NOT lacquered.\n- Skin: smooth matte plastic-like with very faint subsurface warmth (animated character feel).\n- Clothing: smooth painted-on solid colors, slight cell-shadow at folds — looks like painted plastic doll clothing, NOT fabric weave, NOT fuzzy felt.\n- Hair: simplified sculpted plastic shape with one base color + one cell-shadow tone — molded look.\n- All surfaces share the same \"smooth painted plastic\" material quality.\n\nCHARACTER PROPORTIONS:\n- 3 to 3.5 head body — chubby cute proportions, simplified rounded silhouette.\n- Soft rounded geometry (no sharp angles), but NOT chibi-extreme.\n\nCHARACTER FACE — RADICALLY SIMPLIFIED:\n- Eyes: ONLY two solid black dots/ovals. NO realistic iris, NO highlights, NO eyelashes.\n- Mouth: ONLY a small simple curve (smile / neutral / open). NO teeth, NO lip detail.\n- Nose: tiny subtle bump OR completely omitted.\n- Cheeks: optional very soft 3D blush dots.\n- Eyebrows: simplest single stroke OR omitted.\n- NO realistic skin texture, NO chin contour, NO nasolabial lines, NO under-eye detail.\n- NO eyewear / NO glasses unless cast sheet explicitly shows them.\n- Face must read as a STYLIZED ANIMATED CHARACTER, NOT a human portrait.\n\nHANDS & ANATOMY:\n- Hands as small rounded simplified shapes with mitten-like or simplified fingers.\n- NO realistic individual finger detail, NO knuckles, NO nails, NO realistic joint anatomy.\n- Limbs are simplified rounded volumes.\n\nCLOTHING:\n- Solid simple colors, smooth surface, simplified silhouette.\n- Very gentle ambient shadow at folds — NO realistic fabric wrinkles, NO seam detail.\n\nLIGHTING:\n- WARM AMBIENT lighting — golden hour, soft window light, gentle lamp glow.\n- Soft fill, soft shadows, dreamy nostalgic atmosphere.\n- This warm soft lighting + simplified geometry creates the \"soft\" feel — NOT fuzzy material, NOT clay, NOT plush.\n\nBACKGROUND / ENVIRONMENT:\n- Full 3D environment integrated with characters (room, field, table, street).\n- Environment uses the SAME smooth simplified 3D style as characters.\n- Cinematic scene composition, like a still from a children's animated short.\n\nCOLOR PALETTE:\n- Warm pastel, soft, nostalgic — sage green, dusty pink, pale beige, soft blue, off-white.\n- Subject-driven per scene.\n\nAESTHETIC ANCHORS: Animal Crossing 3D characters, Toca Boca 3D, mobile-game cute 3D characters, Apple Memoji (slightly softened), Pixar Soul characters at simplified fidelity, modern animated children's app art. Think SMOOTH MATTE PLASTIC 3D character — like a high-quality 3D mobile-game or app illustration. Clean, friendly, polished but NOT shiny.",
+    "style": {
+      "art_style": "3D stylized character illustration with a premium designer-toy aesthetic. Smooth opaque surfaces with a soft matte finish, like high-quality PVC or ABS plastic figurines.",
+      "modeling": {
+        "surface": "Ultra-smooth, seamless opaque surfaces with a velvety matte finish. No gloss, no translucency, no iridescence. Skin has a uniform smooth plastic feel. Clothing and accessories share the same consistent matte material with no fabric texture or wrinkles.",
+        "detail_level": "Minimal geometric detail. Clean simplified forms. Hair is sculpted as thick rounded tubular shapes, not individual strands. Accessories are cleanly modeled with sharp but rounded edges."
+      },
+      "shapes": "Limbs are short and thick, hands simplified into rounded forms. Overall silhouette is compact and chunky.",
+      "color_palette": "Warm peachy skin tones with soft gradient transitions. Clothing and accessories in clean solid pastels. Colors are rich but not oversaturated, with gentle warm undertones throughout.",
+      "shading": "Soft diffused studio lighting with very gentle shadows. Smooth tonal transitions across rounded forms. No specular highlights or reflections on skin or clothing. Accessories like glasses may have minimal subtle reflectivity. Soft ambient occlusion in crevices only.",
+      "character_design": "Friendly and approachable faces with minimal features: small dot-like eyes, simple curved brows, a tiny nose, and a subtle closed-mouth smile. Hair is sculpted as a single smooth mass with soft volume, no individual strands.",
+      "mood_and_tone": "Warm, friendly, and refined. Clean modern aesthetic with a cozy, tactile quality. Feels like a carefully crafted collectible figure you want to pick up and hold.",
+      "background": "Clean solid color backdrop with no gradients or textures. Soft even lighting with no visible light source or ground shadows."
+    },
+    "critical_requirements": [
+      "3 to 3.5 head body — chubby cute proportions with simplified rounded geometry",
+      "SMOOTH MATTE PAINTED PLASTIC surfaces — like a 3D mobile-game character or kids' app illustration. Slight soft sheen on highlights (NOT mirror-glossy, NOT lacquered, NOT fuzzy/felt, NOT clay)",
+      "Skin: smooth matte plastic-like with very faint subsurface warmth (animated character feel, NOT photorealistic skin)",
+      "Clothing: smooth painted-plastic solid colors with slight cell-shadow at folds — like painted doll clothing, NOT fabric, NOT felt",
+      "Hair as smooth simplified sculpted shape with one color",
+      "EXTREMELY SIMPLE face: ONLY dot eyes + small smile curve. NO realistic facial structure",
+      "NO realistic skin texture, NO chin contour, NO nasolabial lines, NO under-eye detail",
+      "NO eyewear / NO glasses unless cast character sheet explicitly shows them",
+      "Hands as small rounded simplified shapes (mitten-like) — NO individual finger anatomy",
+      "WARM AMBIENT lighting (golden hour / window light / lamp glow)",
+      "Smoothness + warm lighting + simplified rounded geometry — NOT fuzzy material, NOT clay, NOT vinyl, NOT glossy",
+      "Full 3D environment integrated with characters in same smooth stylized 3D style",
+      "Cinematic scene framing — multiple characters allowed in environment",
+      "Aesthetic anchor: Animal Crossing 3D / Toca Boca 3D / Apple Memoji softened / mobile-game cute 3D / Pixar Soul simplified",
+      "EXPLICITLY NOT: fuzzy felt/plush, fabric/cotton doll, clay/sculpey/pottery, Funko Pop/KAWS/Pop Mart designer toy, glossy/lacquered plastic, photorealistic 3D",
+      "NO text, NO captions, NO logos, NO speech bubbles"
+    ],
+    "prompt_language": "ko"
+  },
+  "voice": {
+    "voice_id": "W7FnAxJNpD5WGjrF5GLp",
+    "voice_settings": {
+      "stability": 1.0,
+      "similarity_boost": 0.9,
+      "style": 0.9,
+      "speed": 1.1
+    }
+  },
+  "creative": {
+    "headline_frequency": "10-20%",
+    "mood_palette": [
+      "informative",
+      "contemplative",
+      "triumphant"
+    ],
+    "preferred_layouts": [
+      "items_grid",
+      "items_list",
+      "counter",
+      "bar",
+      "pie",
+      "flow"
+    ]
+  },
+  "scenes": {
+    "density": "high",
+    "min_duration_sec": 3,
+    "max_duration_sec": 12,
+    "prefer_split_on": [
+      "주제 전환",
+      "데이터 단위"
+    ]
+  },
+  "design_tokens": {
+    "baseTheme": "light",
+    "defaultBackground": "background/semoji_grid_bg.jpg",
+    "defaultBgOpacity": 1.0,
+    "disableIcons": true,
+    "disableSpotlight": true,
+    "quoteReveal": "typewriter",
+    "headlineTypewriterTriggers": [
+      "그런데",
+      "그러나",
+      "하지만",
+      "한편"
+    ],
+    "defaultItemEntrance": "overshoot",
+    "countUpThreshold": 0,
+    "texture": {
+      "src": "background/63517.jpg",
+      "blendMode": "multiply",
+      "opacity": 0.1,
+      "topLayer": true
+    },
+    "colors": {
+      "accent": "#4A90D9",
+      "accentRgb": "74,144,217",
+      "accentBg": "rgba(74,144,217,0.08)",
+      "accentBorder": "rgba(74,144,217,0.3)",
+      "accentSoft": "rgba(74,144,217,0.15)",
+      "cardBg": "rgba(74,144,217,0.06)",
+      "cardBorder": "rgba(74,144,217,0.2)"
+    },
+    "moods": {
+      "dramatic": {
+        "accent": "#E74C3C",
+        "accentRgb": "231,76,60",
+        "speed": 1.2,
+        "glow": 0.6
+      },
+      "urgent": {
+        "accent": "#E74C3C",
+        "accentRgb": "231,76,60",
+        "speed": 1.5,
+        "glow": 0.8
+      },
+      "somber": {
+        "accent": "#7F8C8D",
+        "accentRgb": "127,140,141",
+        "speed": 0.7,
+        "glow": 0.2
+      },
+      "informative": {
+        "accent": "#4A90D9",
+        "accentRgb": "74,144,217",
+        "speed": 1.0,
+        "glow": 0.3
+      },
+      "contemplative": {
+        "accent": "#8E7CC3",
+        "accentRgb": "142,124,195",
+        "speed": 0.6,
+        "glow": 0.2
+      },
+      "suspense": {
+        "accent": "#34495E",
+        "accentRgb": "52,73,94",
+        "speed": 0.8,
+        "glow": 0.5
+      },
+      "triumphant": {
+        "accent": "#F5A623",
+        "accentRgb": "245,166,35",
+        "speed": 1.0,
+        "glow": 0.5
+      }
+    },
+    "layout": {
+      "cardRadius": 16,
+      "gap": 28
+    },
+    "map": {
+      "defaultTheme": "warm_earth"
+    },
+    "variants": {
+      "itemsList": "accent-filled",
+      "itemsGrid": "accent-filled",
+      "comparisonCell": "none",
+      "metricCard": "stroke_white"
+    },
+    "chartagent": {
+      "theme_set": "gallery_infographic",
+      "theme_overrides": {
+        "pattern_mode": "outline_plus_hatch"
+      }
+    },
+    "fonts": {
+      "body": {
+        "family": "SB 어그로체",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/SBAggroOTF-L.otf",
+            "weight": "300"
+          },
+          {
+            "file": "fonts/SBAggroOTF-M.otf",
+            "weight": "500"
+          },
+          {
+            "file": "fonts/SBAggroOTF-B.otf",
+            "weight": "700"
+          }
+        ]
+      },
+      "headline": {
+        "family": "카페24 써라운드",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/Cafe24Ssurround.ttf",
+            "weight": "700"
+          }
+        ]
+      },
+      "value": {
+        "family": "배민 연성체",
+        "fallback": "sans-serif",
+        "files": [
+          {
+            "file": "fonts/BMYeonsung.ttf",
+            "weight": "400"
+          }
+        ]
+      },
+      "subtitle": {
+        "family": "G마켓 산스",
+        "fallback": "'Apple SD Gothic Neo', sans-serif",
+        "files": [
+          {
+            "file": "fonts/GmarketSansMedium.ttf",
+            "weight": "500"
+          },
+          {
+            "file": "fonts/GmarketSansBold.ttf",
+            "weight": "700"
+          }
+        ]
+      },
+      "mono": {
+        "family": "GyeonggiMillenniumBatang",
+        "fallback": "serif",
+        "files": [
+          {
+            "file": "fonts/GyeonggiMillenniumBatang-Regular.ttf",
+            "weight": "400"
+          },
+          {
+            "file": "fonts/GyeonggiMillenniumBatang-Bold.ttf",
+            "weight": "700"
+          }
+        ]
+      }
+    },
+    "subtitle": {
+      "max_chars_per_line": 30,
+      "fontSize": 52,
+      "fontFamily": "G마켓 산스",
+      "fontWeight": 400,
+      "color": "#000000",
+      "strokeWidth": 0,
+      "strokeColor": "transparent",
+      "keywordColor": "#4A90D9",
+      "keywordStrokeColor": "transparent",
+      "backgroundColor": "#f0f0f0",
+      "border": "2px solid #000000",
+      "borderRadius": 0,
+      "boxShadow": "5px 5px 0px rgba(0,0,0,1)",
+      "bottomOffset": 110,
+      "maxWidth": "92%",
+      "lineHeight": 1.4
+    },
+    "enable_web_search": true
+  },
+  "guidelines": "세모지3D는 정보 전달 중심. 친근한 설명체, 데이터 시각화 적극 활용. 3D 프리미엄 피규어 감성으로 cinematic staging 연출.",
+  "writing_style": "semoji",
+  "mood": [
+    "따뜻",
+    "스무드 매트 플라스틱",
+    "동화적",
+    "모바일 게임 3D 톤"
+  ]
+}

@@ -58,6 +58,8 @@ def _scan_art_styles() -> list:
     for f in sorted(styles_dir.glob("*.json")):
         try:
             data = json.loads(f.read_text(encoding="utf-8"))
+            if data.get("enabled", True) is False:
+                continue  # 비활성화된 스타일 제외
             styles.append(
                 {
                     "name": data.get("name", f.stem),

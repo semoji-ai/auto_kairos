@@ -1386,6 +1386,8 @@ def cmd_auto_kairos(args):
     for sf in style_files:
         try:
             d = json.loads(sf.read_text(encoding="utf-8"))
+            if d.get("enabled", True) is False:
+                continue  # 비활성화된 스타일 제외
             style_map[sf.stem] = d.get("name", sf.stem)
         except Exception:
             pass

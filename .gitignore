@@ -78,6 +78,10 @@ Thumbs.db
 !/scripts/setup_fonts.sh
 !/scripts/mac-mini-setup.sh
 !/scripts/generate_presets.py
+!/scripts/scene_layer_animate.py
+!/scripts/scene_layer_v2.py
+!/scripts/split_characters.py
+!/scripts/extract_extras.py
 /src/
 /dashboard/
 /skills/

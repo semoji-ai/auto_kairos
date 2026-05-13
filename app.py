@@ -2356,12 +2356,14 @@ async def get_art_style(request: Request, project_ref: str):
             except Exception:
                 pass
 
-    # 사용 가능한 스타일 목록 — canonical package data 기준
+    # 사용 가능한 스타일 목록 — canonical package data 기준 (enabled=False 제외)
     styles = []
     styles_dir = get_data_dir() / "artstyle" / "styles"
     for p in sorted(styles_dir.glob("*.json")):
         try:
             d = _json.loads(p.read_text(encoding="utf-8"))
+            if d.get("enabled", True) is False:
+                continue  # 비활성화된 스타일 제외
             styles.append({"path": f"artstyle/styles/{p.name}", "name": d.get("name", p.stem), "file": p.name})
         except Exception:
             styles.append({"path": f"artstyle/styles/{p.name}", "name": p.stem, "file": p.name})
