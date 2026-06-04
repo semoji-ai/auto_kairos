@@ -50,10 +50,10 @@ source: deep-research | imported
 
 외부 실행기를 쓰지 않는다. Claude Code 내장 도구로 직접 수행:
 
-1. **fan-out**: Workflow 도구로 주제 갈래(역사/구조/논쟁/인물 등)별 병렬 리서처를 띄운다.
-   각 리서처는 WebSearch로 후보 출처를 찾고 WebFetch로 본문을 가져온다.
-2. **adversarial verify**: 핵심 주장마다 회의적 검증 에이전트를 붙여 반론 시도.
-   다수가 반박하면 주장 폐기.
+1. **fan-out**: Workflow 도구(가용 시)로 주제 갈래(역사/구조/논쟁/인물 등)별 병렬 리서처를
+   띄운다. 각 리서처는 WebSearch로 후보 출처를 찾고 WebFetch로 본문을 가져온다.
+2. **adversarial verify**: 핵심 주장마다 WebSearch로 반박 자료를 추가 검색한다.
+   반박이 확인되면 주장을 폐기하고, 입장이 갈리면 '논쟁 중'으로 표기한다.
 3. **synthesize**: 검증 통과 주장만 인용과 함께 `research_reports/{slug}.md`로 합성.
 
 Workflow 미사용 환경(경량 호출)에서는 메인 컨텍스트에서 WebSearch/WebFetch를
