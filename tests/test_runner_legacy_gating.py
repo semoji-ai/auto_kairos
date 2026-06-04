@@ -37,3 +37,8 @@ def test_non_legacy_step_never_gated():
     step = {"id": "step_2", "name": "chapters"}
     assert is_legacy_gated(step, enable_legacy=False) is False
     assert is_legacy_gated(step, enable_legacy=True) is False
+
+
+def test_build_adapter_cmd_empty_style_falls_back():
+    cmd = build_adapter_cmd("/proj/x", "styles/", None)
+    assert cmd[cmd.index("--style-id") + 1] == "quirky_cartoon"

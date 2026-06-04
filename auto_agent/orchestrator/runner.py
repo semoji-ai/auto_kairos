@@ -140,6 +140,7 @@ def build_adapter_cmd(project_dir: str, art_style: str, theme: str | None) -> li
     theme은 dark|light 만 전달, 그 외(None 포함)는 생략.
     """
     style_id = (art_style or "quirky_cartoon").replace(".json", "").split("/")[-1]
+    style_id = style_id or "quirky_cartoon"
     cmd = [
         sys.executable, "-m", "auto_agent.modules.v4_bridge.adapter",
         "--project", project_dir, "--style-id", style_id,
