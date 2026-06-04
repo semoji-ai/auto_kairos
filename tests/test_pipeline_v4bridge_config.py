@@ -44,3 +44,8 @@ def test_native_stage12_steps_are_legacy_only():
 def test_chapters_step_not_legacy():
     steps = _all_steps()
     assert not steps["step_2"].get("legacy_only")  # 씬분할은 v4-bridge 경로에서도 실행
+
+
+def test_v4bridge_output_declares_sentinel():
+    steps = _all_steps()
+    assert ".v4_bridge_origin" in steps["step_1_v4bridge"]["output"]

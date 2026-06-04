@@ -95,7 +95,8 @@
             "research_report.json",
             "targeted_claims.json",
             "art_style.json",
-            "final_manuscript.md"
+            "final_manuscript.md",
+            ".v4_bridge_origin"
           ],
           "resumable": true,
           "notes": "PD가 finalize-for-bridge로 만든 v4 산출물 전제. 어댑터가 .v4_bridge_origin sentinel을 떨궈 step_2b/2c 자동 스킵."
