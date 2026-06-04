@@ -229,6 +229,8 @@ output_dir은 `pm.get_project(pid)['output_dir']`에서 가져온다.
 
 프로젝트 디렉토리 생성 후, PD가 v4 스킬을 순서대로 진행한다:
 
+각 v4 스킬은 `.claude/skills/v4/<이름>/SKILL.md` 지침을 PD가 순서대로 읽고 수행한다.
+
 1. `strategy-explore` — 각도/훅/구조 옵션
 2. `fresh-research`(가벼운 경로) 또는 `deep-research`(깊은 경로) — research_reports/
 3. `target-research` — research_targeted/
@@ -239,7 +241,7 @@ output_dir은 `pm.get_project(pid)['output_dir']`에서 가져온다.
 ### 10단계: v3 파이프라인 (씬분할 + 소스 제작)
 
 ```bash
-auto-agent run --project {slug}
+auto-agent bg start --project {slug}
 ```
 
 - step_1_v4bridge(어댑터)가 v4 산출물을 v3 입력으로 변환
