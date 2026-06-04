@@ -225,15 +225,28 @@ print('editorial_brief.json 저장 완료')
 
 output_dir은 `pm.get_project(pid)['output_dir']`에서 가져온다.
 
-### 9단계: 파이프라인 백그라운드 실행 (기존 6단계)
+### 9단계: v4 워크플로 (PD 오케스트레이션)
+
+프로젝트 디렉토리 생성 후, PD가 v4 스킬을 순서대로 진행한다:
+
+1. `strategy-explore` — 각도/훅/구조 옵션
+2. `fresh-research`(가벼운 경로) 또는 `deep-research`(깊은 경로) — research_reports/
+3. `target-research` — research_targeted/
+4. `draft-write` — drafts/v{n}.md
+5. `proofread` — 언어 검토
+6. `finalize-for-bridge` — final_manuscript_marked.md + final_manuscript.md + outline.json
+
+### 10단계: v3 파이프라인 (씬분할 + 소스 제작)
 
 ```bash
-export PATH="/Users/hannah/local/nodejs/node-v22.14.0-darwin-x64/bin:$PATH"
-set -a && source .env && set +a
-.venv/bin/python -m auto_agent.cli bg start --project {slug}
+auto-agent run --project {slug}
 ```
 
-### 10단계: 진행 모니터링 + 단계별 보고
+- step_1_v4bridge(어댑터)가 v4 산출물을 v3 입력으로 변환
+- 네이티브 stage 1/2는 legacy_only로 자동 스킵 (ENABLE_LEGACY_V3 미설정 시)
+- step_2(씬분할) → Stage 3(조립/렌더)로 진행
+
+### 11단계: 진행 모니터링 + 단계별 보고
 
 사용자에게 즉시 안내:
 - 대시보드: `http://localhost:8080`
