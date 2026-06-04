@@ -133,6 +133,22 @@ def _notify(agent: str, text: str, phase: str = "", project: str = "", level: st
         pass
 
 
+def build_adapter_cmd(project_dir: str, art_style: str, theme: str | None) -> list[str]:
+    """v4_bridge adapter를 -m 모듈로 실행하는 커맨드 빌드.
+
+    art_style은 'styles/semoji.json' 같은 형태일 수 있어 stem만 추출.
+    theme은 dark|light 만 전달, 그 외(None 포함)는 생략.
+    """
+    style_id = (art_style or "quirky_cartoon").replace(".json", "").split("/")[-1]
+    cmd = [
+        sys.executable, "-m", "auto_agent.modules.v4_bridge.adapter",
+        "--project", project_dir, "--style-id", style_id,
+    ]
+    if theme in ("dark", "light"):
+        cmd += ["--theme", theme]
+    return cmd
+
+
 def is_legacy_gated(step: dict, enable_legacy: bool) -> bool:
     """legacy_only 스텝인데 ENABLE_LEGACY_V3가 꺼져 있으면 True(스킵 대상).
 
@@ -4323,6 +4339,9 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "video-assembler": None,  # shell command
         }
 
+        if module_name == "v4_bridge_adapter":
+            return self._run_v4_bridge_adapter(step, env)
+
         if module_name == "video-assembler":
             return self._run_shell_command(step, env)
 
@@ -4415,6 +4434,40 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         while (self.project_dir / f"{base}_v{v}.mp4").exists():
             v += 1
         return f"{base}_v{v}.mp4"
+
+    def _run_v4_bridge_adapter(self, step: dict, env: dict) -> StepResult:
+        """v4 산출물(marked manuscript + outline) → v3 입력 변환.
+
+        v4 산출물이 없으면(예: 레거시 실행) graceful skip.
+        """
+        step_id = step["id"]
+        marked = self.project_dir / "final_manuscript_marked.md"
+        if not marked.exists():
+            print(f"  [SKIP] {step_id}: v4 산출물 없음(final_manuscript_marked.md)")
+            return StepResult(step_id=step_id, status="skipped")
+
+        cmd = build_adapter_cmd(
+            str(self.project_dir),
+            self.state.config.get("art_style", ""),
+            self.state.config.get("video_theme"),
+        )
+        ws = str(get_workspace_dir())
+        env = dict(env)
+        existing = env.get("PYTHONPATH", "")
+        env["PYTHONPATH"] = (ws + os.path.pathsep + existing) if existing else ws
+
+        result = subprocess.run(
+            cmd, cwd=ws, env=env,
+            capture_output=True, text=True, encoding="utf-8",
+            timeout=600, **subprocess_kwargs(),
+        )
+        if result.returncode == 0:
+            return StepResult(step_id=step_id, status="completed")
+        print(f"\n    [ERROR] v4_bridge_adapter stderr:\n{result.stderr}", flush=True)
+        return StepResult(
+            step_id=step_id, status="failed",
+            error=result.stderr or result.stdout[-2000:],
+        )
 
     def _run_shell_command(self, step: dict, env: dict) -> StepResult:
         """shell 명령 실행 (video-assembler 등)."""
