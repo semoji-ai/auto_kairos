@@ -80,6 +80,27 @@
       "execution": "sequential",
       "steps": [
         {
+          "id": "step_1_v4bridge",
+          "name": "v4_bridge_adapter",
+          "description": "v4 워크플로 산출물(marked manuscript + outline + research_*)을 v3 Stage 2 입력(research_report.json/targeted_claims.json/art_style.json/final_manuscript.md)으로 변환. v4 산출물 없으면 graceful skip.",
+          "type": "module",
+          "module": "v4_bridge_adapter",
+          "input": [
+            "final_manuscript_marked.md",
+            "outline.json",
+            "research_reports/",
+            "research_targeted/"
+          ],
+          "output": [
+            "research_report.json",
+            "targeted_claims.json",
+            "art_style.json",
+            "final_manuscript.md"
+          ],
+          "resumable": true,
+          "notes": "PD가 finalize-for-bridge로 만든 v4 산출물 전제. 어댑터가 .v4_bridge_origin sentinel을 떨궈 step_2b/2c 자동 스킵."
+        },
+        {
           "id": "step_1a",
           "name": "skeleton_research",
           "description": "editorial_brief + project_config 기반으로 초기 내러티브 골격(skeleton.json)을 생성합니다. 타임라인/핵심인물/에피소드를 구조화하여 전략가 에이전트에 전달.",
@@ -93,6 +114,7 @@
             "skeleton.json"
           ],
           "resumable": true,
+          "legacy_only": true,
           "notes": "외부 검색은 lane 도구 기반 seed research만 허용. outline은 생성하지 않음 — step_1_strategy에서 Opus가 담당."
         },
         {
@@ -110,6 +132,7 @@
             "research_queries.json",
             "hook_strategy.json"
           ],
+          "legacy_only": true,
           "notes": "외부 검색 없음. Read/Write만 사용. outline.json이 이미 존재하면 스킵."
         },
         {
@@ -126,6 +149,7 @@
           "output": [
             "research/fresh_collector_summary.json"
           ],
+          "legacy_only": true,
           "notes": "spec: docs/superpowers/specs/2026-04-28-research-redesign.md (Phase 1). step_1_ingest와 같이 돌면서 영상 2~3편 결과 비교 후 컷오버 결정. C(블로그/SNS) 도메인은 이미 lane에서 차단. tier_hint(A/B/unknown)만 부여, 검증 게이트는 후속 단계가 담당."
         },
         {
@@ -143,6 +167,7 @@
           "output": [
             "research/vault_lookup.json"
           ],
+          "legacy_only": true,
           "notes": "spec: Phase 2. NAS 5초 헬스체크 → list vault topics → LLM 매처(haiku/sonnet)가 confidence ≥ 0.7만 반환 → wiki + manifests read-only copy. 충돌 시 .vault.md 접미사로 보존."
         },
         {
@@ -161,6 +186,7 @@
             "research/wiki/",
             "research/wiki_compiler_summary.json"
           ],
+          "legacy_only": true,
           "notes": "spec: Phase 3. claims.md/index.md는 jsonl 결정적 렌더 (LLM 안 씀). overview/entities/timeline은 sonnet으로 합성. SKIP_WIKI_SYNTHESIS=1 환경변수로 합성 건너뛰기 가능."
         },
         {
@@ -196,6 +222,7 @@
           "output": [
             "chapter_facts/"
           ],
+          "legacy_only": true,
           "notes": "vault 02-research/wiki/<slug>/ + manifests/<slug>/claims.jsonl 읽어 chapter_facts/chapter_{N}.json 생성. claim_ids, source_ids 필드 포함. vault wiki 없으면 기본 구조만 생성 (fallback). 이미 존재하는 챕터 파일은 스킵."
         },
         {
@@ -217,6 +244,7 @@
             "brief_deepen_log.v2.json",
             "brief_review_feedback.v2.json"
           ],
+          "legacy_only": true,
           "notes": "점수 단조 증가 강제 — v2가 v1보다 낮으면 v1 복원. brief_mode=skip일 때 자동 스킵."
         }
       ],
@@ -249,6 +277,7 @@
             "draft.md",
             "research_questions.json"
           ],
+          "legacy_only": true,
           "notes": "chapter_facts/ 디렉토리를 Glob으로 탐색하여 읽음. [[Q:qXXX]] 마킹 + research_questions.json 병행 생성."
         },
         {
@@ -263,6 +292,7 @@
           "output": [
             "targeted_claims.json"
           ],
+          "legacy_only": true,
           "notes": "priority:high 질문 우선. 답변 못 찾으면 confidence:low로 기록."
         },
         {
@@ -280,6 +310,7 @@
             "research/manifests/_targeted/sources.jsonl",
             "research/targeted_sources_register.json"
           ],
+          "legacy_only": true,
           "notes": "url 기반 dedup. reliability(high/medium/low)을 tier_hint(A/B/C)로 변환. lane='targeted_research', source_type='targeted'."
         },
         {
@@ -300,6 +331,7 @@
             "brief_deepen_log.v3.json",
             "brief_review_feedback.v3.json"
           ],
+          "legacy_only": true,
           "notes": "v3 = 최종 잠금 버전. 하류 에이전트(script-director manuscript/chapters)는 v3를 참조. brief_mode=skip일 때 자동 스킵."
         },
         {
@@ -323,6 +355,7 @@
           "skills": [
             "shared/writing-style"
           ],
+          "legacy_only": true,
           "notes": "단일 에이전트 다단계 모드 1.5단계. 매력적인 prose 작성에만 집중. layout/motion/imageAsset 결정 X (다음 step에서 처리). runner가 active writing_style의 참조 원고 + vault semantic search 결과 주입."
         },
         {
