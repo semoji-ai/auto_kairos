@@ -133,6 +133,15 @@ def _notify(agent: str, text: str, phase: str = "", project: str = "", level: st
         pass
 
 
+def is_legacy_gated(step: dict, enable_legacy: bool) -> bool:
+    """legacy_only 스텝인데 ENABLE_LEGACY_V3가 꺼져 있으면 True(스킵 대상).
+
+    v4-bridge가 표준 Stage 1/2 경로이므로 네이티브 v3 스텝은 기본 스킵.
+    ENABLE_LEGACY_V3=1 일 때만 네이티브 경로 복구.
+    """
+    return bool(step.get("legacy_only")) and not enable_legacy
+
+
 def _filter_steps_until(steps: list[dict], stop_after: str | None) -> list[dict]:
     """stop_after step_id까지만 포함한 steps 리스트를 반환한다.
 
@@ -3279,6 +3288,12 @@ JSON 구조: {{"scenes": [씬 배열]}}
             if (self.project_dir / ".v4_bridge_origin").exists():
                 print(f"  [SKIP] {step_id}: v4-bridge origin — fact-check/proofread는 draft 단계에서 완료")
                 return StepResult(step_id=step_id, status="skipped")
+
+        # 레거시 v3 stage 1/2 게이팅 — v4-bridge가 표준 경로.
+        # ENABLE_LEGACY_V3=1 일 때만 네이티브 스텝 실행.
+        if is_legacy_gated(step, os.environ.get("ENABLE_LEGACY_V3") == "1"):
+            print(f"  [SKIP] {step_id}: legacy_only — v4-bridge 표준 (복구: ENABLE_LEGACY_V3=1)")
+            return StepResult(step_id=step_id, status="skipped")
 
         # conditional 체크
         if step.get("conditional"):
