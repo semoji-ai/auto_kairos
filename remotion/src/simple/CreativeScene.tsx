@@ -4493,7 +4493,8 @@ const LineReveal: React.FC<{
           emphasis === "number" || emphasis === "count" ? 2.4 : 1.6,
         marginBottom: lineIndex < totalLines - 1 ? 8 : 0,
         display: "flex",
-        alignItems: "center",
+        // 강조/일반 텍스트 사이즈가 다를 때 윗정렬 어색 → baseline(하단) 정렬
+        alignItems: "baseline",
         justifyContent: "center",
         gap: showBadge ? 16 : 0,
         ...extraStyle,
