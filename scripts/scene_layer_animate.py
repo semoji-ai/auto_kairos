@@ -8,6 +8,8 @@ import argparse, json, os, subprocess, sys, time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from auto_agent.tools.codex_image import codex_generate, codex_available  # noqa: E402
 
 
 def _codex_imagegen_dir() -> Path:
@@ -115,31 +117,13 @@ def load_roster(pdir: Path) -> dict:
 
 
 def gen_image(prompt: str, out: Path, ref_images: list[Path], size: str = "1536x1024", quality: str = "medium") -> tuple[bool, str]:
-    cmd = ["python3", str(IMAGE_GEN_CLI)]
-    img_args = []
-    for r in ref_images:
-        if r and r.exists():
-            img_args += ["--image", str(r)]
-    if img_args:
-        cmd += ["edit"] + img_args
-    else:
-        cmd += ["generate"]
-    cmd += [
-        "--prompt", prompt,
-        "--no-augment",
-        "--size", size,
-        "--quality", quality,
-        "--output-format", "png",
-        "--out", str(out),
-        "--force",
-    ]
-    try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        if r.returncode == 0:
-            return (True, "")
-        return (False, (r.stderr or r.stdout)[-300:])
-    except Exception as e:
-        return (False, str(e))
+    """codex 내장 image_gen 툴로 생성/편집 (무키, codex 구독 인증).
+
+    오케스트레이터가 codex 세션을 열어 생성→회수→종료. quality는 내장 툴에
+    무의미하므로 무시하고 size만 사용(회수 후 강제 리사이즈). 이전의 fallback
+    CLI(image_gen.py, OPENAI_API_KEY 필요) 직접 호출은 폐기됨.
+    """
+    return codex_generate(prompt, out, ref_images=ref_images, size=size)
 
 
 def remove_chroma(img: Path, key_color: str = "#FF00FF") -> bool:
@@ -281,8 +265,10 @@ def main() -> None:
     args = p.parse_args()
 
     _load_env()
-    if not os.environ.get("OPENAI_API_KEY"):
-        print("ERROR: OPENAI_API_KEY missing", file=sys.stderr); sys.exit(1)
+    # codex 내장 image_gen 툴 경로(무키)로 전환됨 — OPENAI_API_KEY 불필요.
+    # codex CLI 가용성만 확인.
+    if not codex_available():
+        print("ERROR: codex CLI not found in PATH", file=sys.stderr); sys.exit(1)
 
     pdir = resolve_project_dir(args.project)
     specs = json.loads((pdir / "scene_specs.json").read_text(encoding="utf-8"))
