@@ -77,15 +77,20 @@ layers.json          # 좌표·모션 메타
 
 ## 도구
 
-- `scripts/scene_layer_v2.py` — 레이어 분리 생성 (codex imagegen 호출)
+- `auto_agent/modules/roster_builder_module.py` — **선행 필수**: 원고+scene_specs → `characters/roster.json` (인물 + scene_casts). scene_layer가 요구하는 입력.
+- `scripts/scene_layer_v2.py` — 레이어 분리 생성 (codex 내장 image_gen 툴 호출, **무키**)
 - `scripts/split_characters.py` — characters.png → 캐릭터별 cropped + bbox 메타
 - `scripts/extract_extras.py` — narration 기반 엑스트라 추출 (cast 없는 씬용)
+- `auto_agent/tools/codex_image.py` — `codex_generate()`: codex 세션 열어 생성→회수→종료 (OPENAI_API_KEY 불필요)
 - `projects/{id}/remotion/` — Remotion 합성 (Scene.tsx에서 카메라·bob 적용)
 
 ## 사용 (PD)
 
 ```bash
-# 1. 씬 레이어 분리 (단일 씬)
+# 0. (선행) 캐릭터 roster 생성 — scene_layer 입력
+python3 -m auto_agent.modules.roster_builder_module --project f793a99b
+
+# 1. 씬 레이어 분리 (단일 씬) — codex 내장 툴, API키 불필요
 python3 scripts/scene_layer_v2.py --project f793a99b --scene 5
 
 # 2. 캐릭터 컴포넌트 분리
@@ -94,6 +99,9 @@ python3 scripts/split_characters.py --project f793a99b --scenes 5
 # 3. Remotion 렌더
 cd projects/f793a99b/remotion && npx remotion render Scene005 out/scene_005.mp4
 ```
+
+> 이미지 생성은 codex CLI 내장 `image_gen` 툴(구독 인증)을 쓴다 — `OPENAI_API_KEY` 불필요.
+> `scene_layer_v2.py`는 `roster.json`(위 0단계) + `motion_plan.json`이 있어야 동작한다.
 
 ## 적용 가능 씬
 
