@@ -120,6 +120,16 @@ artstyle/styles/
 | **낙서카툰** | "1990s American comic book style, exaggerated proportions, bold lines." |
 | **스틱맨** | "Clean and charming hand-drawn stick figure illustration style with friendly, symmetric characters and positive, lighthearted mood." |
 
+### 3.4 codex image_gen 추가 규칙 (실증 — auto_kairos_adobe)
+
+> codex 내장 image_gen 경로(`scene_layer_animate.py` 등)에 적용. FAL에도 동일 원칙 권장.
+
+- **비율을 텍스트로 지시하지 말 것**: 참조 이미지(스타일 base / 캐릭터 시트)가 첨부되면 비율은 **그 이미지가 정한다.** "N등신"·"머리 = 전신의 1/X" 같은 수치를 텍스트로 넣으면 codex가 인물을 새로 그려 **비율·정체성이 깨진다**(실증). 단 스타일 텍스트와 base가 일치하면(예: iromism 3등신) 텍스트 유지 무방.
+- **첨부 이미지 라벨링 필수(explainer)**: 각 첨부가 무엇이고 어떻게 쓸지 명시 — "1번 = 스타일 ref(그림체·비율만, 인물 복사 금지), 2번 = 캐릭터 시트(이 인물·비율 그대로)". 라벨링이 없으면 거친 참조/콘티의 인물에 끌려 캐릭터가 깨짐.
+- **콘티(스토리보드) 스케치를 씬 이미지 생성에 첨부하지 말 것**: 콘티의 인물 figure가 캐릭터 비율을 끌어당김(실증). 구도는 **텍스트로** 기술. 콘티는 Seedance 비디오 생성 전용.
+- **캐릭터 생성 = base 리스타일이 가장 안정적**: "첨부 1번 이미지의 캐릭터를 OO로 변경해서 그려줘 — 비율·체형·얼굴 구조·그림체는 그대로, 헤어·의상만 변경". 정체성·비율 보존이 텍스트 묘사보다 강함.
+- **codex cwd 복사 주의**: cwd에 같은 이름 파일이 이미 있으면 codex가 새로 그리지 않고 **기존 파일을 복사**함 → 깨끗한 cwd 또는 버전 파일명 사용.
+
 ---
 
 ## 4. 스타일별 핵심 제약
