@@ -18,9 +18,6 @@ export const QUIRKYCARTOON_PRESET: DesignPresetOverride = {
     cardRadius: 16,
     gap: 28,
   },
-  map: {
-    defaultTheme: "warm_earth",
-  },
   defaultBackground: "background/light-gray-distorted-square-tile-texture-background-illustration.jpg",
   disableIcons: true,
   fonts: {

@@ -155,7 +155,7 @@ def _save(images_dir: Path, data: dict):
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def _get_scene(data: dict, scene_num: int, scene_id: str | None = None) -> dict:
+def _get_scene(data: dict, scene_num: int, scene_id: Optional[str] = None) -> dict:
     # sceneId 우선 조회
     if scene_id:
         for s in data["scenes"]:
@@ -174,7 +174,7 @@ def _get_scene(data: dict, scene_num: int, scene_id: str | None = None) -> dict:
     return scene
 
 
-def _find_scene_match(scenes: list, scene_num: int, scene_id: str | None) -> dict | None:
+def _find_scene_match(scenes: list, scene_num: int, scene_id: Optional[str]) -> Optional[dict]:
     """sceneId 우선 → sceneNumber 폴백."""
     if scene_id:
         for s in scenes:
@@ -186,7 +186,7 @@ def _find_scene_match(scenes: list, scene_num: int, scene_id: str | None) -> dic
     return None
 
 
-def has_generated_version(images_dir: Path, scene_num: int, scene_id: str | None = None) -> bool:
+def has_generated_version(images_dir: Path, scene_num: int, scene_id: Optional[str] = None) -> bool:
     """해당 씬에 이미 generate 타입이 있는지."""
     data = _load(images_dir)
     s = _find_scene_match(data["scenes"], scene_num, scene_id)
@@ -195,7 +195,7 @@ def has_generated_version(images_dir: Path, scene_num: int, scene_id: str | None
     return any(img.get("type") == "generate" for img in s.get("images", []))
 
 
-def has_search_version(images_dir: Path, scene_num: int, scene_id: str | None = None) -> bool:
+def has_search_version(images_dir: Path, scene_num: int, scene_id: Optional[str] = None) -> bool:
     """해당 씬에 이미 search 타입이 image_assets에 등록되어 있는지."""
     data = _load(images_dir)
     s = _find_scene_match(data["scenes"], scene_num, scene_id)
@@ -206,7 +206,7 @@ def has_search_version(images_dir: Path, scene_num: int, scene_id: str | None = 
 
 def add_version(images_dir: Path, scene_num: int, file_name: str,
                 version_type: str, auto_select: bool = True,
-                scene_id: str | None = None, **meta) -> dict:
+                scene_id: Optional[str] = None, **meta) -> dict:
     """이미지 등록. auto_select=True면 이 이미지를 selected로. 스레드 안전."""
     file_name = file_name.replace("\\", "/")
     with _file_lock:
@@ -293,7 +293,7 @@ def get_all_scenes(images_dir: Path) -> list:
 
 
 def next_filename(images_dir: Path, scene_num: int, version_type: str,
-                  ext: str = ".png", scene_id: str | None = None) -> str:
+                  ext: str = ".png", scene_id: Optional[str] = None) -> str:
     """다음 버전 파일명 생성.
 
     sceneId 있으면 `scene_<sceneId>_search_NN.jpg` 형식 사용 — 씬 분할/통합 시

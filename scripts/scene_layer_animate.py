@@ -8,8 +8,22 @@ import argparse, json, os, subprocess, sys, time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-IMAGE_GEN_CLI = Path("/Users/jleavens_macmini/.codex/skills/.system/imagegen/scripts/image_gen.py")
-CHROMA_CLI = Path("/Users/jleavens_macmini/.codex/skills/.system/imagegen/scripts/remove_chroma_key.py")
+
+
+def _codex_imagegen_dir() -> Path:
+    """codex imagegen 스크립트 디렉토리 해석 — 머신 독립.
+
+    우선순위: CODEX_IMAGEGEN_DIR 환경변수 → ~/.codex/.../imagegen/scripts (home 기반).
+    절대경로 하드코딩 금지 (path-env-rules). username이 다른 머신에서도 동작.
+    """
+    env = os.environ.get("CODEX_IMAGEGEN_DIR")
+    if env:
+        return Path(env).expanduser()
+    return Path.home() / ".codex" / "skills" / ".system" / "imagegen" / "scripts"
+
+
+IMAGE_GEN_CLI = _codex_imagegen_dir() / "image_gen.py"
+CHROMA_CLI = _codex_imagegen_dir() / "remove_chroma_key.py"
 
 
 def _load_env() -> None:

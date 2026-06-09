@@ -115,7 +115,7 @@ cd projects/f793a99b/remotion && npx remotion render Scene005 out/scene_005.mp4
 
 ## 의존성
 
-- codex CLI + imagegen skill (`/Users/jleavens_macmini/.codex/skills/.system/imagegen/scripts/`)
+- codex CLI + imagegen skill (`~/.codex/skills/.system/imagegen/scripts/` — 기본 home 기반, `CODEX_IMAGEGEN_DIR` 환경변수로 오버라이드 가능)
 - Python: PIL, numpy, openai
 - Node: Remotion v4
 
