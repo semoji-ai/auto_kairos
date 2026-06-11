@@ -75,6 +75,7 @@ Thumbs.db
 /db/
 /scripts/*
 !/scripts/setup_remotion.py
+!/scripts/sync_remotion_src.py
 !/scripts/setup_fonts.sh
 !/scripts/mac-mini-setup.sh
 !/scripts/generate_presets.py
@@ -160,3 +161,17 @@ sampleScript/
 logs/
 .worktrees/
 .legacy_backup_stage0/
+
+# 세션 캐시 / 로컬 도구 폴더 (2026-06-11 위생 정리)
+.sessions/
+.vault/
+.vault-local/
+.fontagent/
+.kiro/
+.cache/
+.agents/
+.auto_agent/
+fontagent_vault/
+_archive_*/
+*.db-shm
+*.db-wal
