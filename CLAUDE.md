@@ -8,7 +8,7 @@
 > 컨텍스트 압축 후에도 반드시 기억해야 할 핵심 규칙:
 > 1. **한글 + 존댓말** — 디스코드 포함 모든 채널
 > 2. **이미지 파일 삭제 절대 금지** — 버전 번호로 생성, selected 필드만 전환
-> 3. **Remotion 양쪽 동기화** — `remotion/src/` ↔ `auto_agent/remotion_template/src/`
+> 3. **Remotion 단일 소스** — `auto_agent/remotion_template/src/`만 수정, `remotion/src/` 직접 수정 금지 (`scripts/sync_remotion_src.py`로 미러링)
 > 4. **래칫 원칙** — 기존보다 명확히 우위인 방식만 채택
 > 5. **scene_specs 플랫 스키마** — 중첩 구조 사용 안 함, imageAsset.source 존중
 > 6. **경로: pathlib.Path** — 절대경로 하드코딩 금지, `get_workspace_dir()` 사용
@@ -256,7 +256,6 @@ python3 -m auto_agent.modules.memory_index build
 | 매일 07:00 | `threads_daily.py` | Threads 발행 |
 | 매시간 | `todo_reminder.py` | TODO 리마인더 |
 | 월 06:30 | `stage4_weekly.py` | Stage 4 수집 |
-| 매일 22:00 | `qwen_ratchet_loop.py` | Qwen 래칫 |
 | 월 03:00 | `memory_maintenance.py` | 기억 정리 |
 
 ## 12. 에러 볼트
