@@ -141,12 +141,24 @@ templates.env.globals["static_version"] = _static_version
 USE_SUPABASE = False  # 로컬 DB 기반으로 전환
 
 
+def _safe_background_file(file_path: str) -> Path | None:
+    """배경 폴더 내부 파일만 허용 — 경로 탈출(../) 차단."""
+    bg_root = (workspace / "remotion" / "public" / "background").resolve()
+    try:
+        bg_file = (bg_root / file_path).resolve()
+    except (OSError, ValueError):
+        return None
+    if not bg_file.is_relative_to(bg_root):
+        return None
+    return bg_file if bg_file.is_file() else None
+
+
 @app.get("/p/background/{file_path:path}")
 async def proxy_background_no_slug(file_path: str):
     """Remotion 번들이 /p/background/... 로 요청하는 배경 이미지 서빙."""
     from fastapi.responses import FileResponse
-    bg_file = workspace / "remotion" / "public" / "background" / file_path
-    if bg_file.exists() and bg_file.is_file():
+    bg_file = _safe_background_file(file_path)
+    if bg_file:
         return FileResponse(str(bg_file))
     return JSONResponse({"error": "not found"}, status_code=404)
 
@@ -155,8 +167,8 @@ async def proxy_background_no_slug(file_path: str):
 async def proxy_background_under_project(slug: str, file_path: str):
     """Remotion 번들이 /p/{slug}/background/... 로 요청하는 배경 이미지 서빙."""
     from fastapi.responses import FileResponse
-    bg_file = workspace / "remotion" / "public" / "background" / file_path
-    if bg_file.exists() and bg_file.is_file():
+    bg_file = _safe_background_file(file_path)
+    if bg_file:
         return FileResponse(str(bg_file))
     return JSONResponse({"error": "not found"}, status_code=404)
 
