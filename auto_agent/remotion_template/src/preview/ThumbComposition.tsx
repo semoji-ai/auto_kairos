@@ -47,7 +47,7 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
         ...scene,
         imagePath: scene.videoThumbPath || scene.imagePath,
         imageAsset: scene.videoThumbPath
-          ? { ...(scene.imageAsset ?? {}), placement: "fullscreen" as const, opacity: 1 }
+          ? { ...(scene.imageAsset ?? {}), source: undefined, placement: "fullscreen" as const, opacity: 1 }
           : scene.imageAsset,
         videoPath: "",
         videoAsset: undefined,

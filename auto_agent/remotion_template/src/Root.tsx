@@ -123,9 +123,9 @@ function calcTotalFrames(manifest: SceneManifest): number {
   const fps = manifest.meta.fps || 30;
   const totalFrames = manifest.scenes.reduce(
     (acc, s) => {
-      const raw = Math.ceil(s.audioDurationSec * fps);
-      const pad = Math.max(Math.round(raw * 0.02), 3);
-      return acc + Math.max(raw + pad, s.audioDurationSec > 0 ? 1 : 90);
+      const minFrames = s.audioDurationSec > 0 ? 1 : 90;
+      const dur = Math.max(Math.ceil(s.audioDurationSec * fps), minFrames);
+      return acc + dur;
     },
     0,
   );

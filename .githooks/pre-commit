@@ -5,6 +5,18 @@
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV_PYTHON="$REPO_ROOT/.venv/bin/python"
 
+# ── remotion src 드리프트 가드 ──────────────────────────────
+# 단일 소스: auto_agent/remotion_template/src (git 추적)
+# remotion/src는 파생물 — 어긋난 채 커밋하면 차단
+PYTHON_BIN="$VENV_PYTHON"
+[ -f "$PYTHON_BIN" ] || PYTHON_BIN="python3"
+if ! "$PYTHON_BIN" "$REPO_ROOT/scripts/sync_remotion_src.py" --check; then
+    echo ""
+    echo "  [BLOCK] remotion/src ↔ remotion_template/src 드리프트 상태로 커밋할 수 없습니다."
+    echo "          위 안내에 따라 동기화 후 다시 커밋하세요."
+    exit 1
+fi
+
 # 스테이지된 파일 중 artstyle JSON이 있는지 확인
 CHANGED_STYLES=$(git diff --cached --name-only | grep 'auto_agent/data/artstyle/styles/.*\.json' || true)
 

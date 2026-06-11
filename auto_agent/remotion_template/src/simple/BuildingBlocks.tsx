@@ -360,7 +360,7 @@ export const AccentText: React.FC<{
   );
 };
 
-/** {{text}} 인라인 강조 → accent 색상 + bold span. */
+/** {{text}} 인라인 강조 → accent 색상 + bold span. \\n은 호출자가 처리. */
 function renderInlineMarks(text: string, accentColor: string): React.ReactNode {
   if (!text || !text.includes("{{")) return text;
   const re = /\{\{([^}]+)\}\}/g;

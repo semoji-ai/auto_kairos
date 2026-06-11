@@ -18,8 +18,8 @@ interface SceneOverride {
   emphasis?: string;
   mood?: string;
   title?: string;
-  items?: string;
-  values?: string;
+  items?: string;      // 쉼표 구분 문자열
+  values?: string;     // 쉼표 구분 숫자
   unit?: string;
   source?: string;
   contentX?: number;
@@ -33,6 +33,7 @@ interface Props {
   override?: SceneOverride;
 }
 
+/** override props를 scene 데이터에 병합 */
 function applyOverride(scene: any, override?: SceneOverride): any {
   if (!override) return scene;
 
@@ -71,6 +72,7 @@ function applyOverride(scene: any, override?: SceneOverride): any {
     viz.values = override.values.split(",").map((s: string) => parseFloat(s.trim())).filter((n: number) => !isNaN(n));
   }
 
+  // contentX/Y → creative에 주입 (CreativeScene에서 transform 적용 가능하도록)
   if (override.contentX && override.contentX !== 0) creative.contentOffsetX = override.contentX;
   if (override.contentY && override.contentY !== 0) creative.contentOffsetY = override.contentY;
 
@@ -95,10 +97,13 @@ export const SceneEditor: React.FC<Props> = ({ manifest, sceneNumber, subtitleCo
 
   return (
     <DesignPresetProvider meta={manifest.meta}>
+      {/* SceneRendererInner — 스토리보드/스튜디오/렌더링과 동일한 렌더러 */}
       <SceneRendererInner scene={mergedScene} fps={fps} />
+      {/* 자막 오버레이 */}
       {subtitleConfig.visible !== false && mergedScene.subtitles?.length > 0 && (
         <SubtitleOverlay subtitles={mergedScene.subtitles} fps={fps} config={subtitleConfig} />
       )}
+      {/* 오디오 */}
       {mergedScene.audioPath ? <Audio src={resolveAsset(mergedScene.audioPath)} /> : null}
     </DesignPresetProvider>
   );

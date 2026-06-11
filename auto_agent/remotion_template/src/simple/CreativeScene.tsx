@@ -683,6 +683,7 @@ const EmphasisAccentText: React.FC<{
   // → "1858년," 처럼 구두점이 앞 글자에 붙어 자연스러운 타이포 유지
   // ============================================================
   const wantsMargin = hasMixed && sizeDiff >= 2;
+  // 부분의 양끝 구두점 판정 (한국어/영문 공통 통상 문장부호)
   const PUNCT_RE = /[\s.,!?:;)\]…」』』·]/;
   const startsWithPunct = (s: string) => !!s && PUNCT_RE.test(s.trimStart()[0] ?? "");
   const endsWithPunct = (s: string) => !!s && /[(\[「『·]/.test((s.trimEnd().slice(-1)) ?? "");

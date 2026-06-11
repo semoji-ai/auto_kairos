@@ -320,6 +320,10 @@ export interface SubtitleConfig {
   backgroundColor?: string;   // 자막 배경색 (기본 "rgba(0,0,0,0.8)")
   borderRadius?: number;      // 배경 라운드 px (기본 50)
   boxShadow?: string;         // 배경 그림자
+  border?: string;            // 테두리 (예: "3px solid #F59E0B")
+  opacity?: number;           // 자막바 전체 불투명도 (기본 1)
+  entryAnimation?: boolean;   // 자막 등장 모션 (페이드+슬라이드업, 기본 true)
+  textPaddingTop?: number;    // 텍스트 세로 정렬 보정 px
 }
 
 export interface OverlayItem {
