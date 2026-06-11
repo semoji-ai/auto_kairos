@@ -4617,32 +4617,6 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "</previous_review>\n"
         )
 
-    @staticmethod
-    def _build_scene_delta_context(step: dict) -> str:
-        """R2+ 리뷰에서 변경 씬 delta를 프롬프트에 주입."""
-        delta_json = step.get("_scene_delta", "")
-        if not delta_json:
-            return ""
-
-        delta = json.loads(delta_json)
-        lines = [
-            "<scene_delta>",
-            "⚠️ 이번 라운드는 delta 모드입니다. 아래 변경/추가된 씬만 재평가하세요.",
-            f"미변경 씬 {delta['unchanged_count']}개는 이전 점수를 그대로 유지합니다.",
-            "",
-        ]
-        if delta["changed_scenes"]:
-            lines.append("## 변경된 씬:")
-            lines.append(json.dumps(delta["changed_scenes"], ensure_ascii=False, indent=2))
-        if delta["added_scenes"]:
-            lines.append("## 추가된 씬:")
-            lines.append(json.dumps(delta["added_scenes"], ensure_ascii=False, indent=2))
-        if delta["removed_scene_numbers"]:
-            lines.append(f"## 삭제된 씬 번호: {delta['removed_scene_numbers']}")
-
-        lines.append("</scene_delta>")
-        return "\n".join(lines)
-
     def _build_revision_instruction(self, step: dict) -> str:
         """리뷰 피드백 기반 수정 모드 지시문 생성."""
         if step.get("conditional") != "review_verdict_revise":
@@ -5127,7 +5101,6 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 {step.get("description", "")}
 {step.get("notes", "")}
 
-{self._build_scene_delta_context(step)}
 입력 파일:
 {chr(10).join(input_lines) if input_lines else "- 없음"}
 

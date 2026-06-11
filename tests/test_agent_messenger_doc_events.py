@@ -46,7 +46,9 @@ def _install_fastapi_stub():
     sys.modules["fastapi.responses"] = responses
 
 
-_install_fastapi_stub()
+# 진짜 fastapi가 설치돼 있으면 스텁 주입 금지 — 다른 테스트의 sys.modules를 오염시킴
+if importlib.util.find_spec("fastapi") is None:
+    _install_fastapi_stub()
 
 agent_messenger = importlib.import_module("auto_agent.dashboard.agent_messenger")
 post_message = agent_messenger.post_message

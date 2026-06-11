@@ -31,8 +31,8 @@ def generate_tts_module(monkeypatch):
 
     module = importlib.reload(module)
     monkeypatch.setattr(module, "API_KEY", "test-key")
-    monkeypatch.setattr(module, "VOICE_ID", "test-voice")
-    monkeypatch.setattr(module, "VOICE_SETTINGS", {"stability": 0.5})
+    # VOICE_ID/VOICE_SETTINGS 전역은 voice 해석 체인(_get_voice_config)으로 대체됨
+    monkeypatch.setattr(module, "_get_voice_config", lambda: ("test-voice", {"stability": 0.5}))
     return module
 
 

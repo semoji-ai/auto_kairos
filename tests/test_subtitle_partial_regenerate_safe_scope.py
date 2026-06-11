@@ -122,6 +122,10 @@ def test_tts_regenerate_chain_does_not_forward_scene_flag_to_build_manifest(tmp_
 
     assert response.status_code == 200
     assert len(calls) == 3
+    # TTS 재생성 자체는 해당 씬만
     assert calls[0][-2:] == ["--scene", "2"]
-    assert calls[1][-2:] == ["--scene", "2"]
+    # subtitle_sync는 전체 씬 처리 — --scene을 주면 subtitles.json이
+    # 1개 씬으로 덮어써져 나머지 자막이 소실됨 (d8142fc 버그픽스)
+    assert "--scene" not in calls[1]
+    # build_manifest도 --scene 미전달
     assert "--scene" not in calls[2]

@@ -83,3 +83,8 @@ auto_agent = [
     "dashboard/templates/**/*",
     "dashboard/static/**/*",
 ]
+
+[tool.pytest.ini_options]
+# tests/ 만 수집 — 저장소를 넓게 훑으면 scripts/의 CLI 파일(*_test.py 등)을
+# import해 모듈 레벨 부수효과(load_dotenv 등)로 테스트가 오염됨 (2026-06-11)
+testpaths = ["tests"]

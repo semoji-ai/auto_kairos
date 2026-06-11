@@ -31,7 +31,8 @@ def test_elevenlabs_tts_preprocessor_converts_only_english_etf_to_korean_pronunc
     assert preprocessor.preprocess("아이티에프에 투자합니다") == "아이티에프에 투자합니다"
 
 
-def test_generate_tts_main_keeps_existing_hangul_etf_spelling(generate_tts_module, tmp_path, monkeypatch):
+def test_generate_tts_main_normalizes_etf_to_standard_hangul(generate_tts_module, tmp_path, monkeypatch):
+    """ETF는 '이티에프' 표준 표기로 강제 — 수기 narration_tts도 narration에서 재생성 (2026-06-11 확정)."""
     scene_specs_path = tmp_path / "scene_specs.json"
     scene_specs_path.write_text(
         json.dumps(
@@ -64,7 +65,7 @@ def test_generate_tts_main_keeps_existing_hangul_etf_spelling(generate_tts_modul
 
     generate_tts_module.main()
 
-    assert captured["text"] == "아이티에프에 투자합니다"
+    assert captured["text"] == "이티에프에 투자합니다"
 
     updated = json.loads(scene_specs_path.read_text(encoding="utf-8"))
-    assert updated["scenes"][0]["narration_tts"] == "아이티에프에 투자합니다"
+    assert updated["scenes"][0]["narration_tts"] == "이티에프에 투자합니다"

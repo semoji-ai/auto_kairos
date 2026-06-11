@@ -67,10 +67,9 @@ def test_character_reused_from_library(project_dir, tmp_path):
 
     with patch("auto_agent.modules.image_batch_module.fal_queue") as mock_fq, \
          patch("auto_agent.modules.image_batch_module._save_image_from_url") as mock_save:
-        # scene phase: submit + poll needed
+        # scene phase: run_batch(jobs, on_done=...) 가 결과를 콜백으로 전달
         scene_result = MagicMock(success=True, idx=0, images=[{"url": "http://fake/s.png", "width": 512, "height": 512}])
-        mock_fq.submit_batch.return_value = ["req-s0"]
-        mock_fq.poll_all.side_effect = lambda jobs, rids, on_done, **kw: on_done(scene_result)
+        mock_fq.run_batch.side_effect = lambda jobs, on_done=None, **kw: on_done and [on_done(scene_result)]
         mock_save.return_value = project_dir / "images" / "scene_001_gen_01.png"
         result = run_batch(project_dir, library=lib)
 
@@ -87,23 +86,16 @@ def test_character_new_generation(project_dir, tmp_path):
     char_result = MagicMock(success=True, idx=0, images=[{"url": "http://fake.com/img.png", "width": 512, "height": 512}])
     scene_result = MagicMock(success=True, idx=0, images=[{"url": "http://fake/s.png", "width": 512, "height": 512}])
 
-    submit_call_count = {"n": 0}
-    def fake_submit(jobs):
-        submit_call_count["n"] += 1
-        return [f"req-{submit_call_count['n']}"]
-
-    poll_call_count = {"n": 0}
-    def fake_poll(jobs, rids, on_done, **kw):
-        poll_call_count["n"] += 1
-        if poll_call_count["n"] == 1:
-            on_done(char_result)
-        else:
-            on_done(scene_result)
+    batch_call_count = {"n": 0}
+    def fake_run_batch(jobs, on_done=None, **kw):
+        batch_call_count["n"] += 1
+        # 1번째 배치 = 캐릭터, 2번째 = 씬
+        on_done(char_result if batch_call_count["n"] == 1 else scene_result)
+        return []
 
     with patch("auto_agent.modules.image_batch_module.fal_queue") as mock_fq, \
          patch("auto_agent.modules.image_batch_module._save_image_from_url") as mock_save:
-        mock_fq.submit_batch.side_effect = fake_submit
-        mock_fq.poll_all.side_effect = fake_poll
+        mock_fq.run_batch.side_effect = fake_run_batch
         mock_save.return_value = project_dir / "characters" / "char_001.png"
         result = run_batch(project_dir, library=lib)
 
@@ -129,13 +121,12 @@ def test_scene_batch_submitted(project_dir, tmp_path):
 
     with patch("auto_agent.modules.image_batch_module.fal_queue") as mock_fq, \
          patch("auto_agent.modules.image_batch_module._save_image_from_url") as mock_save:
-        mock_fq.submit_batch.return_value = ["req-s0"]
-        mock_fq.poll_all.side_effect = lambda jobs, rids, on_done, **kw: on_done(scene_result)
+        mock_fq.run_batch.side_effect = lambda jobs, on_done=None, **kw: on_done and [on_done(scene_result)]
         mock_save.return_value = project_dir / "images" / "scene_001_gen_01.png"
         result = run_batch(project_dir, library=lib)
 
-    # scene submitted once (char was reused)
-    assert mock_fq.submit_batch.call_count == 1
+    # scene 배치 1회만 실행 (캐릭터는 라이브러리 재사용)
+    assert mock_fq.run_batch.call_count == 1
     assert "scenes_success" in result
 
 
@@ -147,28 +138,20 @@ def test_failed_character_scene_generated_without_ref(project_dir, tmp_path):
     char_fail = MagicMock(success=False, idx=0, error="FAL error", images=[])
     scene_result = MagicMock(success=True, idx=0, images=[{"url": "http://fake/s.png", "width": 512, "height": 512}])
 
-    submit_call_count = {"n": 0}
-    def fake_submit(jobs):
-        submit_call_count["n"] += 1
-        return [f"req-{submit_call_count['n']}"]
-
-    poll_call_count = {"n": 0}
-    def fake_poll(jobs, rids, on_done, **kw):
-        poll_call_count["n"] += 1
-        if poll_call_count["n"] == 1:
-            on_done(char_fail)
-        else:
-            on_done(scene_result)
+    batch_call_count = {"n": 0}
+    def fake_run_batch(jobs, on_done=None, **kw):
+        batch_call_count["n"] += 1
+        on_done(char_fail if batch_call_count["n"] == 1 else scene_result)
+        return []
 
     with patch("auto_agent.modules.image_batch_module.fal_queue") as mock_fq, \
          patch("auto_agent.modules.image_batch_module._save_image_from_url") as mock_save:
-        mock_fq.submit_batch.side_effect = fake_submit
-        mock_fq.poll_all.side_effect = fake_poll
+        mock_fq.run_batch.side_effect = fake_run_batch
         mock_save.return_value = project_dir / "images" / "scene_001_gen_01.png"
         result = run_batch(project_dir, library=lib)
 
-    # Both character AND scene submitted (2 submit calls)
-    assert mock_fq.submit_batch.call_count == 2
+    # 캐릭터 배치 + 씬 배치 = run_batch 2회 (캐릭터 실패해도 씬은 참조 없이 진행)
+    assert mock_fq.run_batch.call_count == 2
 
 
 def test_build_char_result_path(tmp_path):

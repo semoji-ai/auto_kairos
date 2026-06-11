@@ -5,7 +5,7 @@ Step 1: Whisper  → 단어별 정밀 타임스탬프
 Step 2: Gemini   → 정확한 가사 + 감정 (타임스탬프 요청 안 함)
 Step 3: Align    → Gemini 가사를 Whisper 타임라인에 fuzzy match로 붙이기
 
-사용법: python3 scripts/test_gemini_audio.py <오디오파일경로>
+사용법: python3 scripts/gemini_audio_analyze.py <오디오파일경로>
 """
 import os
 import re
@@ -262,7 +262,7 @@ def _get_mime_type(suffix: str) -> str:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("사용법: python3 scripts/test_gemini_audio.py <오디오파일경로>")
+        print("사용법: python3 scripts/gemini_audio_analyze.py <오디오파일경로>")
         sys.exit(1)
 
     audio_path = sys.argv[1]

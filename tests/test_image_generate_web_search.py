@@ -17,13 +17,15 @@ class TestInferWebSearch:
         """search→generate fallback은 항상 True."""
         assert _infer_web_search(_scene("순수 일러스트 배경"), is_search_fallback=True) is True
 
-    def test_current_year_in_prompt_true(self):
-        """현재 연도 포함 프롬프트 → True."""
-        assert _infer_web_search(_scene(f"{CURRENT_YEAR}년 이란 핵시설 공습 현장"), is_search_fallback=False) is True
+    def test_year_in_prompt_no_longer_triggers(self):
+        """연도 감지 로직은 제거됨(5228369) — 연도가 있어도 기본 False."""
+        assert _infer_web_search(_scene(f"{CURRENT_YEAR}년 이란 핵시설 공습 현장"), is_search_fallback=False) is False
+        assert _infer_web_search(_scene(f"{PREV_YEAR}년 우크라이나 전쟁 장면"), is_search_fallback=False) is False
 
-    def test_prev_year_in_prompt_true(self):
-        """전년도 포함 프롬프트 → True."""
-        assert _infer_web_search(_scene(f"{PREV_YEAR}년 우크라이나 전쟁 장면"), is_search_fallback=False) is True
+    def test_style_default_governs(self):
+        """아트스타일 레벨 enable_web_search 설정이 있으면 그 값을 따른다."""
+        assert _infer_web_search(_scene("아무 장면"), is_search_fallback=False, style_default=True) is True
+        assert _infer_web_search(_scene("아무 장면"), is_search_fallback=False, style_default=False) is False
 
     def test_no_year_no_fallback_false(self):
         """연도 없고 fallback도 아니면 → False."""

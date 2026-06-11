@@ -108,22 +108,39 @@ doc_type: wiki-page
     )
     monkeypatch.setenv("KAIROS_VAULT_DIR", str(tmp_path / "vault"))
 
-    skeleton, outline = build_skeleton_and_outline(project_dir)
+    # outline 생성은 research-strategist 에이전트로 이관됨 — 이 함수는 skeleton만 반환
+    skeleton = build_skeleton_and_outline(project_dir)
 
     assert skeleton["entity_slug"] == "바세린"
     assert len(skeleton["timeline"]) >= 3
     assert skeleton["key_figures"][0]["name"] == "Robert Augustus Chesebrough"
-    assert outline["estimated_duration_sec"] == 300
-    assert len(outline["chapters"]) == 4
-    assert outline["chapters"][0]["title"]
+    assert skeleton["source_mode"] == "vault"
 
 
-def test_build_skeleton_and_outline_requires_completed_ingest(tmp_path):
+def test_build_skeleton_without_vault_falls_back_to_research_first(tmp_path, monkeypatch):
+    """legacy ingest 완료 요구는 제거됨 — 볼트 자료 없이도 skeleton 폴백 생성."""
     project_dir = tmp_path / "project"
     project_dir.mkdir()
     (project_dir / "source_ingest_status.json").write_text(
         json.dumps({"status": "collecting"}, ensure_ascii=False),
         encoding="utf-8",
     )
-    with pytest.raises(RuntimeError, match="completed 필요"):
-        build_skeleton_and_outline(project_dir)
+    (project_dir / "project_config.json").write_text(
+        json.dumps({"topic": "바세린의 역사"}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    # env를 지우면 repo .env의 실제 NAS 볼트로 폴백하므로, 빈 tmp 볼트를 명시
+    monkeypatch.setenv("KAIROS_VAULT_DIR", str(tmp_path / "empty_vault"))
+    # 볼트 부재 시 lane 라이브 리서치 폴백이 돌므로 네트워크 차단을 위해 mock
+    monkeypatch.setattr(
+        "auto_agent.modules.skeleton_from_vault_module._build_seed_research",
+        lambda **kwargs: ([], [], [], []),
+    )
+
+    skeleton = build_skeleton_and_outline(project_dir)
+
+    assert skeleton["topic"] == "바세린의 역사"
+    assert skeleton["source_mode"] == "skeleton_research_first"
+    # 자료가 없으면 brief 기반 뼈대 리서치 프레임으로 timeline을 채움
+    assert skeleton["timeline"]
+    assert all(item["year"] == "" for item in skeleton["timeline"])
