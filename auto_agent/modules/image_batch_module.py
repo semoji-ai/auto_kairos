@@ -28,6 +28,7 @@ from auto_agent.tools import image_assets
 from auto_agent.tools.codex_image import codex_available
 from auto_agent.tools.codex_fleet import CodexImageJob, run_codex_batch
 from auto_agent.tools.codex_prompt import build_codex_image_prompt, validate_prompt
+from auto_agent.tools.upscale import upscayl_available, upscale_image
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +87,41 @@ def _get_style_keywords(art_style: dict) -> str:
     if art_style.get("scene_style_description"):
         parts.append(art_style["scene_style_description"])
     return ". ".join(parts)
+
+
+def _should_upscale() -> bool:
+    """env IMAGE_UPSCALE(기본 1)이 '0'이면 스킵, upscayl-bin 부재 시 warn 후 스킵."""
+    if (os.environ.get("IMAGE_UPSCALE") or "1").strip() == "0":
+        return False
+    if not upscayl_available():
+        _progress("upscayl-bin 미설치 — 업스케일 스킵", level="warn")
+        return False
+    return True
+
+
+def _upscale_generated_scenes(images_dir: Path, generated_files: list) -> int:
+    """generate 성공 씬들의 PNG를 순차 업스케일 → 새 버전 등록 + selected 전환. 비차단."""
+    count = 0
+    for item in generated_files:
+        scene_num = item["scene_num"]
+        scene_id = item.get("scene_id")
+        rel_path = item["rel_path"]
+        src = images_dir / rel_path
+        if not src.is_file():
+            continue
+        out = src.with_name(f"{src.stem}_up{src.suffix or '.png'}")
+        result = upscale_image(src, out, content="illustration", scale=2)
+        if result.get("status") == "completed":
+            rel_out = str((Path(rel_path).parent / out.name)).replace("\\", "/")
+            try:
+                image_assets.add_version(images_dir, scene_num, rel_out, "generate", scene_id=scene_id)
+                count += 1
+                _progress(f"씬 {scene_num} 업스케일 완료: {out.name}")
+            except Exception as e:
+                _progress(f"씬 {scene_num} 업스케일 등록 실패 (원본 유지): {e}", level="warn")
+        else:
+            _progress(f"씬 {scene_num} 업스케일 실패 (원본 유지): {result.get('error')}", level="warn")
+    return count
 
 
 def run_batch(
@@ -253,6 +289,7 @@ def run_batch(
         """generate 씬 배치 — visual_kind=generate_image인 씬만. backend에 따라 codex 우선 + FAL 폴백."""
         from auto_agent.modules.scene_helpers import get_visual_kind
         success, fail, skip = 0, 0, 0
+        generated_files: list[dict] = []  # {"scene_num", "scene_id", "rel_path"} — 업스케일 대상
         gen_targets: list[dict] = []  # {"scene":..., "scene_char_paths":...}
         for scene in scene_specs.get("scenes", []):
             if get_visual_kind(scene) != "generate_image":
@@ -300,6 +337,7 @@ def run_batch(
                         _save_image_from_url(result.images[0].get("url", ""), gen_dir / fname)
                         image_assets.add_version(images_dir, sn, "generated/" + fname, "generate", scene_id=sid)
                         success += 1
+                        generated_files.append({"scene_num": sn, "scene_id": sid, "rel_path": "generated/" + fname})
                         _progress(f"씬 {sn} 생성 완료: {fname}")
                     except Exception:
                         fail += 1
@@ -353,6 +391,7 @@ def run_batch(
                                 last_err = e
                         if registered:
                             success += 1
+                            generated_files.append({"scene_num": sn, "scene_id": sid, "rel_path": "generated/" + fname})
                             _progress(f"씬 {sn} codex 생성 완료: {fname}")
                         else:
                             fail += 1
@@ -371,7 +410,7 @@ def run_batch(
         else:
             _fal_generate_batch(gen_targets)
 
-        return {"success": success, "fail": fail, "skip": skip}
+        return {"success": success, "fail": fail, "skip": skip, "generated_files": generated_files}
 
     def _load_research_images() -> list[dict]:
         """project_dir 내 최신 image_manifest.jsonl 로드."""
@@ -701,7 +740,7 @@ def run_batch(
             gen_result = gen_future.result()
         except Exception as e:
             _progress(f"generate 배치 실패 (search는 계속): {e}", level="warning")
-            gen_result = {"success": 0, "fail": 0, "skip": 0}
+            gen_result = {"success": 0, "fail": 0, "skip": 0, "generated_files": []}
         search_result = search_future.result()
 
     total_success = gen_result["success"] + search_result["success"]
@@ -709,12 +748,21 @@ def run_batch(
     total_skip = gen_result["skip"] + search_result["skip"]
     _progress(f"이미지 완료: 생성 {gen_result['success']}개 + 검색 {search_result['success']}개, 실패 {total_fail}개, 스킵 {total_skip}개")
 
+    # ── generate 성공 씬 순차 업스케일 (비차단) ──
+    scenes_upscaled = 0
+    generated_files = gen_result.get("generated_files") or []
+    if generated_files and _should_upscale():
+        _progress(f"업스케일 {len(generated_files)}개 순차 시작...")
+        scenes_upscaled = _upscale_generated_scenes(images_dir, generated_files)
+        _progress(f"업스케일 완료: {scenes_upscaled}/{len(generated_files)}개")
+
     summary = {
         "chars_reused":    len(reused),
         "chars_generated": len(to_generate),
         "scenes_success":  total_success,
         "scenes_fail":     total_fail,
         "scenes_skipped":  total_skip,
+        "scenes_upscaled": scenes_upscaled,
         "backend":         backend,
     }
     total_attempted = total_success + total_fail
