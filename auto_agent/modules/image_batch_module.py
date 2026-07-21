@@ -340,13 +340,28 @@ def run_batch(
                     sn = scene.get("sceneNumber", 0)
                     sid = scene.get("sceneId")
                     if res.success:
-                        try:
-                            image_assets.add_version(images_dir, sn, "generated/" + fname, "generate", scene_id=sid)
+                        # 생성 성공 + 등록 실패는 폴백 신호로 쓰지 않는다 — 1회 재시도 후에도
+                        # 실패하면 실패 카운트만 하고 고아 파일 경로를 warn 로그로 남긴다.
+                        registered = False
+                        last_err: Optional[Exception] = None
+                        for _attempt in range(2):
+                            try:
+                                image_assets.add_version(images_dir, sn, "generated/" + fname, "generate", scene_id=sid)
+                                registered = True
+                                break
+                            except Exception as e:
+                                last_err = e
+                        if registered:
                             success += 1
                             _progress(f"씬 {sn} codex 생성 완료: {fname}")
-                        except Exception:
+                        else:
                             fail += 1
-                            fal_fallback_targets.append(t)
+                            out_path = gen_dir / fname
+                            _progress(
+                                f"씬 {sn} codex 이미지 등록 실패(재시도 포함) — 고아 파일 유지: "
+                                f"{out_path} ({last_err})",
+                                level="warn",
+                            )
                     else:
                         fal_fallback_targets.append(t)
 
