@@ -7,6 +7,13 @@ from unittest.mock import MagicMock, patch
 from auto_agent.modules.image_batch_module import run_batch, _build_char_result_path
 
 
+@pytest.fixture(autouse=True)
+def _force_fal_backend():
+    """이 파일은 FAL 경로 전용 테스트 — codex CLI가 설치된 머신에서도 FAL로 강제 라우팅."""
+    with patch("auto_agent.modules.image_batch_module.codex_available", return_value=False):
+        yield
+
+
 @pytest.fixture
 def project_dir(tmp_path):
     """최소 프로젝트 구조 생성."""

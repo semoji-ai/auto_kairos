@@ -25,6 +25,9 @@ from auto_agent.tools.image_generate import (
     _build_scene_fal_input,
 )
 from auto_agent.tools import image_assets
+from auto_agent.tools.codex_image import codex_available
+from auto_agent.tools.codex_fleet import CodexImageJob, run_codex_batch
+from auto_agent.tools.codex_prompt import build_codex_image_prompt, validate_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +66,28 @@ def _build_char_result_path(project_dir: Path, char_id: str) -> Path:
     return project_dir / "characters" / f"{char_id}.png"
 
 
+def _resolve_image_backend() -> str:
+    """이미지 backend 결정: env IMAGE_BACKEND(codex|fal), 기본 codex, codex 부재 시 fal 강등."""
+    val = (os.getenv("IMAGE_BACKEND") or "codex").strip().lower()
+    if val not in {"codex", "fal"}:
+        val = "codex"
+    if val == "codex" and not codex_available():
+        _progress("codex CLI 없음 — FAL로 강등", level="warn")
+        val = "fal"
+    return val
+
+
+def _get_style_keywords(art_style: dict) -> str:
+    """art_style.json에서 codex 프롬프트용 스타일 키워드 문자열 조합."""
+    style_info = art_style.get("style", {}) or {}
+    parts = []
+    if style_info.get("art_style"):
+        parts.append(style_info["art_style"])
+    if art_style.get("scene_style_description"):
+        parts.append(art_style["scene_style_description"])
+    return ". ".join(parts)
+
+
 def run_batch(
     project_dir: Path,
     library: Optional[CharacterLibrary] = None,
@@ -87,6 +112,8 @@ def run_batch(
     if char_plan_path.exists():
         characters = json.loads(char_plan_path.read_text(encoding="utf-8")).get("characters", [])
 
+    backend = _resolve_image_backend()
+
     # ── Phase 1: 캐릭터 배치 ──
     char_paths: dict[str, Optional[Path]] = {}
     reused, to_generate = [], []
@@ -102,35 +129,44 @@ def run_batch(
             reused.append(char_id)
             _progress(f"캐릭터 재사용: {char_name}")
         else:
-            person_photo = char.get("person_photo")
+            to_generate.append((char, char.get("person_photo")))
+
+    def _register_character(char: dict, dest: Path) -> None:
+        library.register(dest, {
+            "character_name": char["name"],
+            "art_style":      art_style_id,
+            "tags":           ",".join(char.get("tags", [])),
+            "features":       char.get("description", ""),
+            "source_project": project_dir.name,
+        })
+        char_paths[char["id"]] = dest
+        _progress(f"캐릭터 저장 완료: {char['name']}")
+
+    def _run_character_fal_batch(targets: list) -> None:
+        """targets: [(char, person_photo), ...] → FAL 배치 생성."""
+        if not targets:
+            return
+        fal_jobs: list[tuple[dict, FalJob]] = []
+        for char, person_photo in targets:
             endpoint, arguments = _build_character_fal_input(
-                prompt=char.get("description", char_name),
+                prompt=char.get("description", char["name"]),
                 style_path=style_path,
                 person_photo=person_photo,
             )
-            to_generate.append((char, FalJob(idx=len(to_generate), endpoint=endpoint, arguments=arguments)))
+            fal_jobs.append((char, FalJob(idx=len(fal_jobs), endpoint=endpoint, arguments=arguments)))
 
-    if to_generate:
-        jobs = [job for _, job in to_generate]
+        jobs = [job for _, job in fal_jobs]
         _progress(f"캐릭터 {len(jobs)}개 FAL 배치 시작...")
 
         def on_char_done(result):
-            char, _ = to_generate[result.idx]
+            char, _ = fal_jobs[result.idx]
             char_id = char["id"]
             if result.success and result.images:
                 url  = result.images[0].get("url", "")
                 dest = _build_char_result_path(project_dir, char_id)
                 try:
                     _save_image_from_url(url, dest)
-                    library.register(dest, {
-                        "character_name": char["name"],
-                        "art_style":      art_style_id,
-                        "tags":           ",".join(char.get("tags", [])),
-                        "features":       char.get("description", ""),
-                        "source_project": project_dir.name,
-                    })
-                    char_paths[char_id] = dest
-                    _progress(f"캐릭터 저장 완료: {char['name']}")
+                    _register_character(char, dest)
                 except Exception as e:
                     logger.warning("캐릭터 저장 실패 (%s): %s", char_id, e)
             else:
@@ -138,6 +174,47 @@ def run_batch(
                 _progress(f"캐릭터 생성 실패: {char['name']} - {result.error}", level="warning")
 
         fal_queue.run_batch(jobs, on_done=on_char_done, max_workers=10)
+
+    if to_generate:
+        if backend == "codex":
+            style_keywords = _get_style_keywords(art_style)
+            codex_char_jobs: list[CodexImageJob] = []
+            job_char_map: dict[int, tuple] = {}
+            fal_fallback_chars: list = []
+            for i, (char, person_photo) in enumerate(to_generate):
+                desc = char.get("description", char["name"])
+                prompt, size = build_codex_image_prompt(desc, style_keywords, ar="2:3")
+                ok, msg = validate_prompt(prompt)
+                if not ok:
+                    _progress(f"캐릭터 {char['name']}: 프롬프트 검증 실패 → FAL 폴백 ({msg})", level="warn")
+                    fal_fallback_chars.append((char, person_photo))
+                    continue
+                out_path = _build_char_result_path(project_dir, char["id"])
+                ref_images = [person_photo] if person_photo else None
+                idx = len(codex_char_jobs)
+                codex_char_jobs.append(CodexImageJob(idx=idx, prompt=prompt, size=size, out_path=out_path, ref_images=ref_images))
+                job_char_map[idx] = (char, person_photo)
+
+            if codex_char_jobs:
+                _progress(f"캐릭터 {len(codex_char_jobs)}개 codex-fleet 배치 시작...")
+                for res in run_codex_batch(codex_char_jobs, on_done=lambda r: _progress(
+                        f"codex char idx={r.idx} {'OK' if r.success else 'FAIL: ' + r.error[:120]}")):
+                    char, person_photo = job_char_map[res.idx]
+                    if res.success:
+                        out_path = _build_char_result_path(project_dir, char["id"])
+                        try:
+                            _register_character(char, out_path)
+                        except Exception as e:
+                            logger.warning("캐릭터 저장 실패 (%s): %s", char["id"], e)
+                            fal_fallback_chars.append((char, person_photo))
+                    else:
+                        fal_fallback_chars.append((char, person_photo))
+
+            if fal_fallback_chars:
+                _progress(f"codex 실패 {len(fal_fallback_chars)}개 → FAL 폴백")
+                _run_character_fal_batch(fal_fallback_chars)
+        else:
+            _run_character_fal_batch(to_generate)
 
     _progress(
         f"캐릭터 완료: 재사용 {len(reused)}개, 신규 생성 {len(to_generate)}개, "
@@ -148,7 +225,8 @@ def run_batch(
     scene_specs_path = project_dir / "scene_specs.json"
     if not scene_specs_path.exists():
         return {"chars_reused": len(reused), "chars_generated": len(to_generate),
-                "scenes_success": 0, "scenes_fail": 0, "scenes_skipped": 0}
+                "scenes_success": 0, "scenes_fail": 0, "scenes_skipped": 0,
+                "backend": backend}
 
     scene_specs = load_scene_specs(scene_specs_path)
     images_dir = project_dir / "images"
@@ -172,10 +250,10 @@ def run_batch(
     from concurrent.futures import ThreadPoolExecutor
 
     def _run_generate():
-        """generate 씬 FAL 배치 — visual_kind=generate_image인 씬만."""
+        """generate 씬 배치 — visual_kind=generate_image인 씬만. backend에 따라 codex 우선 + FAL 폴백."""
         from auto_agent.modules.scene_helpers import get_visual_kind
         success, fail, skip = 0, 0, 0
-        scene_jobs: list[tuple[dict, FalJob]] = []
+        gen_targets: list[dict] = []  # {"scene":..., "scene_char_paths":...}
         for scene in scene_specs.get("scenes", []):
             if get_visual_kind(scene) != "generate_image":
                 continue
@@ -188,14 +266,26 @@ def run_batch(
                 skip += 1
                 continue
             scene_char_paths = {cid: char_paths.get(cid) for cid in scene.get("characters", [])}
-            try:
-                endpoint, arguments = _build_scene_fal_input(scene, project_dir, scene_char_paths)
-                scene_jobs.append((scene, FalJob(idx=len(scene_jobs), endpoint=endpoint, arguments=arguments)))
-            except Exception as e:
-                logger.warning("씬 %s 입력 빌드 실패: %s", scene.get("sceneNumber"), e)
-                fail += 1
+            gen_targets.append({"scene": scene, "scene_char_paths": scene_char_paths})
 
-        if scene_jobs:
+        gen_dir = images_dir / "generated"
+        gen_dir.mkdir(exist_ok=True)
+
+        def _fal_generate_batch(targets: list) -> None:
+            """기존 FAL 잡 빌드(_build_scene_fal_input) + fal_queue.run_batch 경로."""
+            nonlocal success, fail
+            scene_jobs: list[tuple[dict, FalJob]] = []
+            for t in targets:
+                scene = t["scene"]
+                try:
+                    endpoint, arguments = _build_scene_fal_input(scene, project_dir, t["scene_char_paths"])
+                    scene_jobs.append((scene, FalJob(idx=len(scene_jobs), endpoint=endpoint, arguments=arguments)))
+                except Exception as e:
+                    logger.warning("씬 %s 입력 빌드 실패: %s", scene.get("sceneNumber"), e)
+                    fail += 1
+
+            if not scene_jobs:
+                return
             jobs = [job for _, job in scene_jobs]
             _progress(f"generate {len(jobs)}개 FAL 배치 시작...")
 
@@ -205,8 +295,6 @@ def run_batch(
                 sn = sc.get("sceneNumber", result.idx + 1)
                 sid = sc.get("sceneId")
                 if result.success and result.images:
-                    gen_dir = images_dir / "generated"
-                    gen_dir.mkdir(exist_ok=True)
                     fname = image_assets.next_filename(images_dir, sn, "gen", ".png", scene_id=sid)
                     try:
                         _save_image_from_url(result.images[0].get("url", ""), gen_dir / fname)
@@ -220,6 +308,54 @@ def run_batch(
                     fail += 1
 
             fal_queue.run_batch(jobs, on_done=on_done, max_workers=10)
+
+        if backend == "codex":
+            style_keywords = _get_style_keywords(art_style)
+            codex_jobs: list[CodexImageJob] = []
+            job_target_map: dict[int, tuple] = {}
+            fal_fallback_targets: list = []
+            for t in gen_targets:
+                scene = t["scene"]
+                sn = scene.get("sceneNumber", 0)
+                sid = scene.get("sceneId")
+                desc = (scene.get("imageAsset") or {}).get("prompt", "") or scene.get("headline", "") or scene.get("narration", "")
+                prompt, size = build_codex_image_prompt(desc, style_keywords, ar="16:9")
+                ok, msg = validate_prompt(prompt)
+                if not ok:
+                    _progress(f"씬 {sn}: 프롬프트 검증 실패 → FAL 폴백 ({msg})", level="warn")
+                    fal_fallback_targets.append(t)
+                    continue
+                fname = image_assets.next_filename(images_dir, sn, "gen", ".png", scene_id=sid)
+                out_path = gen_dir / fname
+                idx = len(codex_jobs)
+                codex_jobs.append(CodexImageJob(idx=idx, prompt=prompt, size=size, out_path=out_path))
+                job_target_map[idx] = (t, fname)
+
+            if codex_jobs:
+                _progress(f"씬 {len(codex_jobs)}개 codex-fleet 배치 시작...")
+                for res in run_codex_batch(codex_jobs, on_done=lambda r: _progress(
+                        f"codex scene idx={r.idx} {'OK' if r.success else 'FAIL: ' + r.error[:120]}")):
+                    t, fname = job_target_map[res.idx]
+                    scene = t["scene"]
+                    sn = scene.get("sceneNumber", 0)
+                    sid = scene.get("sceneId")
+                    if res.success:
+                        try:
+                            image_assets.add_version(images_dir, sn, "generated/" + fname, "generate", scene_id=sid)
+                            success += 1
+                            _progress(f"씬 {sn} codex 생성 완료: {fname}")
+                        except Exception:
+                            fail += 1
+                            fal_fallback_targets.append(t)
+                    else:
+                        fal_fallback_targets.append(t)
+
+            if fal_fallback_targets:
+                _progress(f"codex 실패 {len(fal_fallback_targets)}개 → FAL 폴백")
+                _fal_generate_batch(fal_fallback_targets)
+        else:
+            _fal_generate_batch(gen_targets)
+
         return {"success": success, "fail": fail, "skip": skip}
 
     def _load_research_images() -> list[dict]:
@@ -564,6 +700,7 @@ def run_batch(
         "scenes_success":  total_success,
         "scenes_fail":     total_fail,
         "scenes_skipped":  total_skip,
+        "backend":         backend,
     }
     total_attempted = total_success + total_fail
     if total_attempted > 0 and total_fail > total_attempted * 0.5:
