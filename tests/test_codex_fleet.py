@@ -32,3 +32,13 @@ def test_auto_parallel_bounds(monkeypatch):
     monkeypatch.delenv("CODEX_IMG_PARALLEL", raising=False)
     assert 1 <= _auto_parallel(2) <= 2
     assert _auto_parallel(1000) <= 32
+
+
+@patch("auto_agent.tools.codex_fleet.codex_generate",
+       side_effect=[RuntimeError("boom"), (True, ""), (True, "")])
+def test_worker_exception_isolated(mock_gen, tmp_path):
+    results = run_codex_batch([_job(i, tmp_path) for i in range(3)])
+    assert len(results) == 3
+    assert sum(1 for r in results if r.success) == 2
+    failed = [r for r in results if not r.success]
+    assert "boom" in failed[0].error

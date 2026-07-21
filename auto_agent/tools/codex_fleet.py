@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, List, Optional
 
@@ -62,11 +62,14 @@ def run_codex_batch(
     results: List[CodexImageResult] = []
 
     def _one(job: CodexImageJob) -> CodexImageResult:
-        ok, err = codex_generate(
-            job.prompt, job.out_path,
-            ref_images=job.ref_images, size=job.size, timeout=timeout,
-        )
-        return CodexImageResult(idx=job.idx, success=ok, error=err)
+        try:
+            ok, err = codex_generate(
+                job.prompt, job.out_path,
+                ref_images=job.ref_images, size=job.size, timeout=timeout,
+            )
+            return CodexImageResult(idx=job.idx, success=ok, error=err)
+        except Exception as e:  # 워커 예외 격리 — 배치 전체 유실 방지
+            return CodexImageResult(idx=job.idx, success=False, error=str(e))
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {pool.submit(_one, j): j for j in jobs}
@@ -74,5 +77,8 @@ def run_codex_batch(
             res = fut.result()
             results.append(res)
             if on_done:
-                on_done(res)
+                try:
+                    on_done(res)
+                except Exception:
+                    pass
     return results
