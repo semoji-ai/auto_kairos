@@ -499,6 +499,24 @@ class StepResult:
     cost_info: dict = field(default_factory=dict)
 
 
+# codex로 라우팅 가능한 웹 리서치 에이전트 (토큰 절약 대상)
+CODEX_RESEARCH_AGENTS = {"flesh-researcher", "targeted-researcher"}
+
+
+def resolve_agent_provider(agent: str, agent_def: dict, project_config: dict) -> str:
+    """리서치 에이전트 provider 해석. 우선순위: 프로젝트 config > env > agents.json > claude."""
+    if agent not in CODEX_RESEARCH_AGENTS:
+        return "claude"
+    for candidate in (
+        project_config.get("research_provider"),
+        os.getenv("AUTO_AGENT_RESEARCH_PROVIDER"),
+        agent_def.get("provider"),
+    ):
+        if isinstance(candidate, str) and candidate.strip().lower() in {"claude", "codex"}:
+            return candidate.strip().lower()
+    return "claude"
+
+
 @dataclass
 class ChapterResult:
     chapter: int
@@ -3964,6 +3982,66 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
     # ── CLI 모드 (기존) ──────────────────────────────────────────────────
 
+    def _agent_output_exists(self, out: str) -> bool:
+        """출력 계약 존재 확인 — resume 체크와 동일한 규칙(디렉토리/패턴/파일)."""
+        out_path = self._resolve_output_path(out)
+        if out.endswith("/") or out.endswith("\\"):
+            return out_path.exists() and out_path.is_dir() and any(out_path.iterdir())
+        if "{" in out:
+            pattern = out_path.name.replace("{", "*").replace("}", "*")
+            return out_path.parent.exists() and out_path.parent.is_dir() and any(out_path.parent.glob(pattern))
+        return out_path.exists()
+
+    def _run_codex_agent_step(
+        self, step: dict, step_id: str, agent_def: dict,
+        prompt: str, outputs: list, timeout_sec: int,
+    ) -> StepResult:
+        """codex exec로 에이전트 스텝 실행. 실패 시 status=failed 반환(호출부가 claude 폴백)."""
+        from auto_agent.utils import codex_cli as codex_cli_util
+
+        last_msg = self.project_dir / f".codex_last_{step_id}.txt"
+        try:
+            cmd = codex_cli_util.build_codex_exec_cmd(
+                workdir=self.project_dir,
+                output_last_message=str(last_msg),
+                model=agent_def.get("codex_model"),
+                search=True,
+            )
+        except FileNotFoundError as e:
+            return StepResult(step_id=step_id, status="failed", error=str(e))
+
+        env = os.environ.copy()
+        env["PROJECT_NAME"] = self.project_slug
+        env.pop("CLAUDECODE", None)
+
+        print(f"\n    → codex {step['agent']} (search=on, timeout={timeout_sec}s)", flush=True)
+        try:
+            proc = subprocess.Popen(
+                cmd, cwd=str(self.project_dir), env=env,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                text=True, encoding="utf-8", **subprocess_kwargs(),
+            )
+            stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            return StepResult(step_id=step_id, status="failed", error=f"codex timeout ({timeout_sec}s)")
+        except Exception as e:
+            return StepResult(step_id=step_id, status="failed", error=f"codex 실행 오류: {e}")
+
+        if proc.returncode != 0:
+            return StepResult(step_id=step_id, status="failed",
+                              error=f"codex exit={proc.returncode}: {(stderr or stdout)[-400:]}")
+
+        # 산출물 검증 — 하나라도 없으면 실패 처리 (claude 폴백 유도)
+        missing = [o for o in outputs if not self._agent_output_exists(o)]
+        if missing:
+            return StepResult(step_id=step_id, status="failed",
+                              error=f"codex 산출물 미생성: {missing}")
+        return StepResult(
+            step_id=step_id, status="completed",
+            output_files=[str(self._resolve_output_path(o)) for o in outputs],
+        )
+
     def _run_agent_step(self, step: dict) -> StepResult:
         """에이전트 step → Claude CLI 서브프로세스 호출.
 
@@ -3988,22 +4066,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         if step.get("skip_resume") or getattr(self, "_force", False):
             pass  # 래칫 루프 등 강제 재실행 또는 --force 옵션
         elif not has_inplace_output:
-            all_exist = True
-            for out in outputs:
-                out_path = self._resolve_output_path(out)
-                if out.endswith("/") or out.endswith("\\"):
-                    # 디렉토리 출력 → 해당 디렉토리 자체가 존재하고 안에 파일이 있어야
-                    if not (out_path.exists() and out_path.is_dir() and any(out_path.iterdir())):
-                        all_exist = False
-                        break
-                elif "{" in out:
-                    # 패턴 경로 → 해당 디렉토리 안에 파일이 있어야
-                    if not (out_path.parent.exists() and out_path.parent.is_dir() and any(out_path.parent.glob(out_path.name.replace("{", "*").replace("}", "*")))):
-                        all_exist = False
-                        break
-                elif not out_path.exists():
-                    all_exist = False
-                    break
+            all_exist = all(self._agent_output_exists(out) for out in outputs) if outputs else True
 
             if all_exist and outputs:
                 # 파일 내용 최소 검증: 빈 파일 또는 빈 JSON은 skip 불가
@@ -4091,6 +4154,15 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
         # 2. 프롬프트 빌드 (컨텍스트 메모리 포함)
         prompt = self._build_agent_prompt(step)
+
+        # ── codex provider 분기 (웹 리서치 에이전트 토큰 절약) ──
+        provider = resolve_agent_provider(agent, agent_def, self.state.config)
+        if provider == "codex":
+            result = self._run_codex_agent_step(step, step_id, agent_def, prompt, outputs, timeout_sec)
+            if result.status == "completed":
+                return result
+            print(f"    [codex→claude 폴백] {result.error}", flush=True)
+            # 이하 기존 claude CLI 경로로 계속 진행
 
         # 3. 프롬프트를 임시 파일에 저장 (긴 프롬프트 대비)
         prompt_file = self.project_dir / f".prompt_{step_id}.md"
