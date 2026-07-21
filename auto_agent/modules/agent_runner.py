@@ -11,6 +11,7 @@ from typing import Dict, List, Optional
 
 from auto_agent.paths import get_vault_dir, get_data_dir, get_workspace_dir
 from auto_agent.utils.platform import subprocess_kwargs
+from auto_agent.utils import codex_cli as codex_cli_util
 
 logger = logging.getLogger(__name__)
 
@@ -1395,25 +1396,13 @@ Stage 0 피드백을 insights/feedback/ 에 저장하세요."""
         output_last_message: str,
         workdir: Optional[Path] = None,
     ) -> List[str]:
-        """Codex CLI 명령어 빌드."""
-        cli_path = self._find_codex_cli()
-        return [
-            cli_path,
-            "exec",
-            "-C",
-            str(workdir or self._vault_dir),
-            "--skip-git-repo-check",
-            "--ephemeral",
-            "--sandbox",
-            "workspace-write",
-            "-c",
-            f'model_reasoning_effort="{reasoning_effort}"',
-            "--json",
-            "--output-last-message",
-            output_last_message,
-            "-m",
-            model,
-        ]
+        """Codex CLI 명령어 빌드 — 공용 유틸 위임."""
+        return codex_cli_util.build_codex_exec_cmd(
+            workdir=workdir or self._vault_dir,
+            output_last_message=output_last_message,
+            model=model,
+            reasoning_effort=reasoning_effort,
+        )
 
     def _find_claude_cli(self) -> str:
         """Claude CLI 바이너리 경로."""
@@ -1424,21 +1413,12 @@ Stage 0 피드백을 insights/feedback/ 에 저장하세요."""
         raise FileNotFoundError("Claude CLI를 찾을 수 없습니다. 'claude'가 PATH에 있는지 확인하세요.")
 
     def _find_codex_cli(self) -> str:
-        """Codex CLI 바이너리 경로."""
-        import shutil
-        path = shutil.which("codex")
-        if path:
-            return path
-        raise FileNotFoundError("Codex CLI를 찾을 수 없습니다. 'codex'가 PATH에 있는지 확인하세요.")
+        """Codex CLI 바이너리 경로 — 공용 유틸 위임."""
+        return codex_cli_util.find_codex_cli()
 
     def _read_output_last_message(self, path: Optional[str], fallback: str = "") -> str:
-        if not path:
-            return fallback
-        try:
-            text = Path(path).read_text(encoding="utf-8").strip()
-            return text or fallback
-        except Exception:
-            return fallback
+        """출력 마지막 메시지 읽기 — 공용 유틸 위임."""
+        return codex_cli_util.read_output_last_message(path, fallback)
 
     def _cleanup_tempfile(self, path: Optional[str]) -> None:
         if not path:
