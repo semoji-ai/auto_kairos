@@ -30,8 +30,10 @@ _RESULT_RE = re.compile(r"RESULT_PATH=(\S+)")
 
 
 def codex_available() -> bool:
-    """이 머신에서 codex CLI를 쓸 수 있는지."""
-    return shutil.which("codex") is not None
+    """이 머신에서 codex CLI를 쓸 수 있는지 — utils/codex_cli 단일 소스 위임."""
+    from auto_agent.utils.codex_cli import codex_available as _avail
+
+    return _avail()
 
 
 def _build_instruction(prompt: str, out_path: Path, has_refs: bool) -> str:

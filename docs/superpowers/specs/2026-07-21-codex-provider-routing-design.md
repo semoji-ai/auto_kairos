@@ -51,7 +51,7 @@
 
 - `tools/codex_image.py`를 codex-fleet 패턴으로 확장 (또는 `tools/codex_fleet.py` 신설, 단건 함수 재사용):
   - `codex exec` 병렬 스폰 — ThreadPool, `PARALLEL=auto`(여유 RAM ÷ 0.4GB, HARD_CAP 32, START 3에서 램프업, 429 감지 시 성장 정지).
-  - 회수는 **claimed-set + 락**: 시작시각 이후 `~/.codex/generated_images/**/ig_*.png` 중 미회수 파일만 1:1 매칭 (mtime 최신 1장 방식의 레이스 버그 회피).
+  - 회수는 **out_path 직접 복사(1차) + 세션ID 파싱(2차)** — `codex_generate`가 세션 안에서 out_path로 직접 복사하므로 워커 간 회수 레이스 자체가 없음 (구현 시 claimed-set보다 단순·안전해 이 방식 채택. mtime 전역 스캔은 사용하지 않음).
   - 씬별 타임아웃 240s, 회수 후 PIL 강제 리사이즈(내장 툴 크기 비결정성 보정).
   - `env -u OPENAI_API_KEY` 유지 — OpenAI API 직접 호출 금지 규칙 준수.
 - **실패 씬만 FAL로 개별 폴백** (모더레이션 거부 포함). 캐릭터 배치도 동일 라우팅.
@@ -78,4 +78,4 @@
 
 - 리서치 스텝의 module 재작성 — SKILL.md/래칫 체계와 이원화되어 기각.
 - pipeline.json 스텝별 provider 플래그 — 대상이 2종뿐이라 agents.json 필드로 충분.
-- 세션ID 파싱 기반 이미지 회수 — codex 출력 포맷 버전 의존이라 claimed-set 채택.
+- mtime 전역 스캔 기반 이미지 회수 — 병렬 시 레이스 버그(codex-imagegen 스킬 문서 경고)라 비채택. 세션ID 파싱은 2차 안전망으로만 사용.
