@@ -47,11 +47,11 @@ python3 -m auto_agent.tools.news_rss_lane "{키워드}" --limit 5
 python3 -m auto_agent.tools.crossref_lane "{키워드}" --limit 5
 ```
 
-lane 도구로 URL 목록 확보 후 `WebFetch`로 원문만 선택 확인하면 토큰을 절약할 수 있습니다.
+lane 도구로 URL 목록 확보 후 웹 페이지를 열람하여 원문만 선택 확인하면 토큰을 절약할 수 있습니다.
 
 **기존 방법 (폴백 또는 심층 탐색 시):**
-1. `WebSearch: "{질문 핵심 키워드}"` — 관련 소스 탐색
-2. `WebFetch: {주요 소스 URL}` — 원문 확인
+1. 사용 가능한 웹 검색 도구로 "{질문 핵심 키워드}" 검색 — 관련 소스 탐색
+2. 주요 소스의 웹 페이지를 열람하여 원문 확인
 3. 수치/날짜/인용구 추출
 
 **검색 팁:**

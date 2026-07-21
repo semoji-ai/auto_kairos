@@ -78,6 +78,7 @@
     "flesh-researcher": {
       "description": "outline.json 챕터별 세부 팩트 수집. Task 도구로 챕터별 병렬 배포 → chapter_facts/",
       "model": "sonnet",
+      "provider": "codex",
       "max_turns": 50,
       "budget": "$2.0",
       "max_duration_minutes": 25,
@@ -113,6 +114,7 @@
     "targeted-researcher": {
       "description": "research_questions.json → 정밀 웹 리서치로 WHY/HOW 질문 답변 → targeted_claims.json",
       "model": "sonnet",
+      "provider": "codex",
       "max_turns": 40,
       "budget": "$1.5",
       "max_duration_minutes": 20,
