@@ -2381,6 +2381,34 @@ def cmd_vault_sync(args):
             console.print(f"  • {e}")
 
 
+def cmd_upscale(args):
+    """fal SeedVR 비디오 업스케일 (1080/1440/2160)."""
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="auto-agent upscale")
+    parser.add_argument("video", help="입력 비디오 경로 (mp4 등)")
+    parser.add_argument("--resolution", "-r", default="1080", choices=["1080", "1440", "2160"],
+                        help="목표 해상도 (기본 1080)")
+    parser.add_argument("--out", "-o", help="출력 경로 (기본: 입력 옆 _up{res} 접미사)")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="과금 호출 없이 페이로드 검증까지만")
+    parsed = parser.parse_args(args)
+
+    from auto_agent.tools.video_upscale import upscale_video
+
+    result = upscale_video(parsed.video, parsed.out,
+                           resolution=parsed.resolution, dry_run=parsed.dry_run)
+    if result["status"] == "failed":
+        console.print(f"[red]업스케일 실패: {result['error']}[/red]")
+        return
+    if result["status"] == "dry_run":
+        console.print(f"[accent]dry-run OK[/accent] — endpoint={result['request']['endpoint']}")
+        console.print(f"  arguments: {result['request']['arguments']}")
+        console.print(f"  출력 예정: {result['path']}")
+        return
+    console.print(f"[accent]업스케일 완료[/accent] ({result['resolution']}) → {result['path']}")
+
+
 COMMANDS = {
     "init": cmd_init,
     "run": cmd_run,
@@ -2413,6 +2441,7 @@ COMMANDS = {
     "series": cmd_series,
     "video": cmd_video,
     "tts": cmd_tts,
+    "upscale": cmd_upscale,
     "skill-path": lambda args: print(get_data_dir()),
 }
 
