@@ -41,6 +41,7 @@ if platform.system() == "Windows":
 
 from auto_agent.paths import get_workspace_dir, get_data_dir, PACKAGE_DIR, DATA_DIR
 from auto_agent.orchestrator.context_memory import ContextMemory
+from auto_agent.orchestrator.skill_slicer import slice_agent_skill
 from auto_agent.orchestrator.messenger import Messenger
 from auto_agent.orchestrator.vault_rag import VaultRAG
 from auto_agent.orchestrator.claude_client import CachingClaudeClient
@@ -2500,6 +2501,42 @@ class PipelineRunner:
             pass
         return ""
 
+    def _has_series_brief(self) -> bool:
+        """시리즈 러너가 확정한 편별 브리프가 있는지. (_series 키로 판별)"""
+        for name in ("episode_brief.json", "editorial_brief.json"):
+            path = self.project_dir / name
+            if not path.exists():
+                continue
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            if isinstance(data, dict) and data.get("_series"):
+                return True
+        return False
+
+    def _load_agent_skill(self, agent_name: str, step: dict | None = None) -> str:
+        """에이전트 SKILL.md 로드 + 실행 모드에 필요한 섹션만 슬라이싱.
+
+        script-director SKILL.md은 챕터 병렬 호출마다 재주입되므로 모드별로 줄인다.
+        (docs/token-waste-audit.md 1번 항목)
+        """
+        if not agent_name:
+            return ""
+        text = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
+        if not text:
+            return ""
+        mode = (step or {}).get("mode")
+        sliced = slice_agent_skill(text, agent_name, mode)
+        if len(sliced) < len(text):
+            saved = len(text) - len(sliced)
+            print(
+                f"    [skill_slice] {agent_name}/{mode}: {len(text):,} → {len(sliced):,}자 "
+                f"(-{saved:,})",
+                flush=True,
+            )
+        return sliced
+
     def _load_skill_file(self, key: str) -> str:
         """스킬 파일 1개 로드. 로컬 DATA_DIR 우선 → 중앙 규칙 fallback. 없으면 빈 문자열."""
         # 로컬 파일 우선
@@ -2556,7 +2593,7 @@ class PipelineRunner:
         chapter_specs_path = step.get("_chapter_specs_path", "")
 
         # 에이전트 스킬 (중앙 규칙 → 로컬 fallback)
-        agent_skill = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
+        agent_skill = self._load_agent_skill(agent_name, step)
 
         # 공유 스킬 수집
         skill_names = list(step.get("skills", []))
@@ -2896,7 +2933,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         tmp_path = self.project_dir / tmp_filename
 
         # 에이전트 스킬 로드
-        agent_skill = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
+        agent_skill = self._load_agent_skill(agent_name, step)
         skill_names = list(step.get("skills", []))
         agents_config = self._load_agents_config()
         agent_def = agents_config.get("subagents", {}).get(agent_name, {})
@@ -3315,6 +3352,14 @@ JSON 구조: {{"scenes": [씬 배열]}}
                 print(f"  [SKIP] {step_id}: brief_mode=skip — 강화 스텝 생략")
                 return StepResult(step_id=step_id, status="skipped")
 
+        # 시리즈 모드 브리프 상속 — series_plan.json에서 편별 브리프가 이미 확정됐으므로
+        # 편마다 기획 인터뷰(step_0b) + 브리프 래칫 리뷰(step_0d)를 다시 돌리지 않는다.
+        # (docs/token-waste-audit.md 2번 항목 — 편당 총비용의 약 30%)
+        _series_inherit_steps = {"step_0b", "step_0d"}
+        if step_id in _series_inherit_steps and self._has_series_brief():
+            print(f"  [SKIP] {step_id}: 시리즈 브리프 상속 (series_plan에서 확정됨)")
+            return StepResult(step_id=step_id, status="skipped")
+
         # v4-bridge 원작 프로젝트 (.v4_bridge_origin sentinel) — fact-check/proofread는
         # v4 워크플로의 draft 단계에서 이미 완료됨. step_2b(fact-verifier)/step_2c(fact-fixer)
         # 다운스트림 재검증은 중복이며 targeted_claims 컨텍스트 부족 시 회귀 위험.
@@ -3583,7 +3628,7 @@ JSON 구조: {{"scenes": [씬 배열]}}
         t0 = time.time()
 
         # SKILL.md + shared_skills → static (캐시), 나머지 → dynamic
-        agent_skill = self._load_skill_file(f"skills/agents/{agent}/SKILL.md") if agent else ""
+        agent_skill = self._load_agent_skill(agent, step)
         agents_config = self._load_agents_config()
         agent_def_sc = agents_config.get("subagents", {}).get(agent, {})
         skill_names_sc = list(step.get("skills", []))
@@ -3751,7 +3796,7 @@ JSON 구조: {{"scenes": [씬 배열]}}
         agent_name = step["agent"]
 
         # 1. SKILL.md + shared_skills (정적 — 캐시 대상)
-        agent_skill = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
+        agent_skill = self._load_agent_skill(agent_name, step)
         skill_names = list(step.get("skills", []))
         agents_config = self._load_agents_config()
         agent_def = agents_config.get("subagents", {}).get(agent_name, {})
@@ -5017,7 +5062,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         agent_name = step["agent"]
 
         # 1. Agent SKILL.md 읽기 (중앙 규칙 → 로컬 fallback)
-        agent_skill = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
+        agent_skill = self._load_agent_skill(agent_name, step)
 
         # 2. 공유 스킬 수집 (step + agents.json 병합, 중복 제거)
         skill_names = list(step.get("skills", []))
@@ -5100,7 +5145,13 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
         # 6.5. editorial_brief.json 주입 (기획 의도 고정)
         # 우선순위: creative_brief보다 editorial_brief가 상위 컨텍스트
-        _skip_brief_agents = {"data-mapper", "fact-verifier", "assembly-director"}
+        # 기획 브리프가 필요 없는 에이전트 — 기계적 매핑/검증/환경점검 계열.
+        # config-inspector는 환경 점검, brief-interviewer-auto는 브리프를 만드는
+        # 주체이므로 자기 산출물을 되받을 이유가 없다. (token-waste-audit 4번)
+        _skip_brief_agents = {
+            "data-mapper", "fact-verifier", "assembly-director",
+            "config-inspector", "brief-interviewer-auto",
+        }
         editorial_brief = self._load_editorial_brief()
         if editorial_brief and agent_name not in _skip_brief_agents:
             vault_block += f"\n\n<editorial_brief>\n{editorial_brief}\n\n⚠️ 이 brief는 모든 리서치·원고·연출 결정의 상위 컨텍스트입니다.\n- real_topic을 중심에 두고, hook_angle은 도입부에만 사용하세요\n- excluded_angles에 해당하는 방향으로 흘러가지 마세요\n- core_question에 대한 답변이 콘텐츠의 핵심이어야 합니다\n</editorial_brief>\n"
