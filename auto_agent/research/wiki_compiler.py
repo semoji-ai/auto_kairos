@@ -14,6 +14,7 @@ import json
 import os
 import re
 import subprocess
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
@@ -192,10 +193,21 @@ def _parse_synthesis_response(raw: str) -> dict:
     return out
 
 
+# 마지막 합성 호출의 메타 (프로바이더/비용). compile_topic이 결과에 실어 보낸다.
+_LAST_CALL_META: dict = {}
+
+
 def _call_claude_cli(prompt: str, *, timeout: int = 240) -> str:
+    """claude CLI 폴백. --model을 반드시 명시한다.
+
+    ⚠️ --model을 빼면 사용자 기본 모델(opus/fable)을 상속해 비용이 폭증한다.
+    위키 합성은 원문에서 사실을 추리는 기계적 작업이므로 sonnet으로 충분하다.
+    (docs/token-waste-audit.md 5번 항목)
+    """
     claude_bin = os.environ.get("CLAUDE_CLI_BIN", "claude")
+    model = os.environ.get("WIKI_COMPILE_CLAUDE_MODEL", "sonnet")
     result = subprocess.run(
-        [claude_bin, "-p", "--output-format", "text"],
+        [claude_bin, "-p", "--model", model, "--output-format", "json"],
         input=prompt,
         capture_output=True,
         text=True,
@@ -204,7 +216,69 @@ def _call_claude_cli(prompt: str, *, timeout: int = 240) -> str:
     )
     if result.returncode != 0:
         raise RuntimeError(f"claude CLI exit {result.returncode}: {result.stderr[:200]}")
-    return result.stdout
+    try:
+        payload = json.loads(result.stdout)
+        _LAST_CALL_META.update(
+            provider=f"claude:{model}",
+            cost_usd=float(payload.get("total_cost_usd") or 0),
+        )
+        return payload.get("result", "")
+    except (json.JSONDecodeError, ValueError):
+        _LAST_CALL_META.update(provider=f"claude:{model}", cost_usd=None)
+        return result.stdout
+
+
+def _call_codex(prompt: str, *, timeout: int = 600) -> str:
+    """codex exec로 위키 합성. Claude 리밋을 소모하지 않는다.
+
+    프로젝트 구조상 리서치는 codex, 집필은 Claude가 담당한다. 위키 합성은
+    수집 자료를 정리하는 리서치 작업이므로 codex가 맞다.
+    """
+    from auto_agent.utils.codex_cli import build_codex_exec_cmd
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out_path = Path(tmpdir) / "last_message.txt"
+        cmd = build_codex_exec_cmd(
+            workdir=Path(tmpdir),
+            output_last_message=str(out_path),
+            reasoning_effort="low",  # 기계적 정리 — 추론 비용 낮게
+            search=False,            # 이미 수집된 raw만 사용
+        )
+        result = subprocess.run(
+            cmd, input=prompt, capture_output=True, text=True,
+            timeout=timeout, encoding="utf-8",
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"codex exit {result.returncode}: {(result.stderr or '')[:200]}")
+        text = out_path.read_text(encoding="utf-8") if out_path.exists() else result.stdout
+    _LAST_CALL_META.update(provider="codex", cost_usd=None)  # codex는 Claude 리밋 밖
+    return text
+
+
+def _default_invoker(prompt: str) -> str:
+    """기본 합성 호출자 — codex 우선, 실패 시 claude(sonnet) 폴백."""
+    if os.environ.get("WIKI_COMPILE_PROVIDER", "codex").strip() == "claude":
+        return _call_claude_cli(prompt)
+    try:
+        return _call_codex(prompt)
+    except Exception as exc:  # codex 미설치/실패 → claude 폴백
+        print(f"    [wiki_compile] codex 실패 → claude(sonnet) 폴백: {exc}", flush=True)
+        return _call_claude_cli(prompt)
+
+
+def _wiki_is_fresh(wiki_dir: Path, manifest_dir: Path) -> bool:
+    """합성 페이지가 이미 있고 manifest보다 새로우면 True (재합성 불필요).
+
+    없으면 매 실행마다 전 토픽을 재합성해 편당 수십 분·수십만 토큰이 낭비된다.
+    """
+    pages = [wiki_dir / f"{p}.md" for p in ("overview", "entities", "timeline")]
+    if not all(p.exists() and p.stat().st_size > 0 for p in pages):
+        return False
+    newest_wiki = max(p.stat().st_mtime for p in pages)
+    manifest_files = list(manifest_dir.glob("*.jsonl")) if manifest_dir.exists() else []
+    if not manifest_files:
+        return True
+    return newest_wiki >= max(f.stat().st_mtime for f in manifest_files)
 
 
 def _read_raw_excerpts(raw_dir: Path, limit: int = 30, max_chars_per: int = 3000) -> list[str]:
@@ -244,7 +318,7 @@ def synthesize_wiki_pages(
     invoker: Callable[[str], str] | None = None,
 ) -> dict:
     """LLM이 raw 자료에서 overview / entities / timeline 합성."""
-    invoke = invoker or _call_claude_cli
+    invoke = invoker or _default_invoker
     excerpts = _read_raw_excerpts(raw_dir)
     prompt = _build_synthesis_prompt(topic_slug, sources, claims, excerpts)
     raw_response = invoke(prompt)
@@ -261,6 +335,7 @@ def compile_topic(
     *,
     invoker: Callable[[str], str] | None = None,
     skip_synthesis: bool = False,
+    force: bool = False,
 ) -> dict:
     """하나의 토픽에 대해 wiki/<topic>/{overview,claims,entities,timeline,index}.md 생성.
 
@@ -304,6 +379,15 @@ def compile_topic(
         errors.append({"reason": "sources + claims 둘 다 비어있어 synthesis 건너뜀"})
         return {"topic_slug": topic_slug, "written": written, "skipped": skipped, "errors": errors}
 
+    # 멱등성 — 이미 합성됐고 manifest가 갱신되지 않았으면 재합성하지 않는다.
+    if not force and _wiki_is_fresh(wiki_dir, research_dir / "manifests" / topic_slug):
+        skipped.extend(["overview.md", "entities.md", "timeline.md"])
+        return {
+            "topic_slug": topic_slug, "written": written, "skipped": skipped,
+            "errors": errors, "reused": True,
+        }
+
+    _LAST_CALL_META.clear()
     try:
         pages = synthesize_wiki_pages(topic_slug, raw_dir, sources, claims, invoker=invoker)
     except Exception as exc:
@@ -321,4 +405,9 @@ def compile_topic(
         target.write_text(_frontmatter(topic_slug, page_type) + body + "\n", encoding="utf-8")
         written.append(target.name)
 
-    return {"topic_slug": topic_slug, "written": written, "skipped": skipped, "errors": errors}
+    return {
+        "topic_slug": topic_slug, "written": written, "skipped": skipped, "errors": errors,
+        "reused": False,
+        "provider": _LAST_CALL_META.get("provider"),
+        "cost_usd": _LAST_CALL_META.get("cost_usd"),
+    }

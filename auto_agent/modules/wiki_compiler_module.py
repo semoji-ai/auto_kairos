@@ -88,6 +88,9 @@ def main() -> int:
             continue
         results.append(r)
         total_written += len(r.get("written", []))
+        if r.get("reused"):
+            _progress(f"토픽 '{slug}' 재사용 — 기존 wiki 유효, 합성 생략")
+            continue
         if r.get("errors"):
             _progress(
                 f"토픽 '{slug}' 부분 완료 — written={len(r['written'])}, errors={len(r['errors'])}",
@@ -96,14 +99,29 @@ def main() -> int:
         else:
             _progress(f"토픽 '{slug}' 완료 — {len(r['written'])}개 파일")
 
+    reused = sum(1 for r in results if r.get("reused"))
+    synthesized = sum(1 for r in results if r.get("reused") is False)
+    costs = [r.get("cost_usd") for r in results if isinstance(r.get("cost_usd"), (int, float))]
+    providers = sorted({r.get("provider") for r in results if r.get("provider")})
+
     summary = {
         "completed_at": _now_iso(),
         "topics": results,
         "total_files_written": total_written,
         "synthesis_skipped": skip_synth,
+        # 비용 가시화 — 이 스텝은 오랫동안 집계에서 누락돼 있었다
+        # (docs/token-waste-audit.md 5번 항목)
+        "topics_reused": reused,
+        "topics_synthesized": synthesized,
+        "providers": providers,
+        "claude_cost_usd": round(sum(costs), 4) if costs else 0.0,
     }
     _write_summary(research_dir, summary)
-    _progress(f"완료 — {len(topics)}개 토픽, 총 {total_written}개 파일 작성")
+    _progress(
+        f"완료 — {len(topics)}개 토픽 (합성 {synthesized} / 재사용 {reused}), "
+        f"총 {total_written}개 파일, provider={','.join(providers) or 'none'}, "
+        f"claude 비용 ${summary['claude_cost_usd']}"
+    )
     return 0
 
 
