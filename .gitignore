@@ -83,6 +83,7 @@ Thumbs.db
 !/scripts/scene_layer_v2.py
 !/scripts/split_characters.py
 !/scripts/check_manuscript.py
+!/scripts/apply_prose_fixes.py
 !/scripts/extract_extras.py
 /src/
 /dashboard/
