@@ -107,7 +107,8 @@ def check_markers(text: str) -> list[str]:
     issues: list[str] = []
     for m in COMMENT.finditer(text):
         body = m.group(0)[4:-3].strip()
-        if not re.match(r"(caption|chars):", body):
+        # caption = 화면 자막, chars = 인물 식별, source = 출처 주석(비렌더)
+        if not re.match(r"(caption|chars|source):", body):
             issues.append(f"  알 수 없는 마커: {body[:50]}")
     # 닫히지 않은 주석
     if text.count("<!--") != text.count("-->"):
