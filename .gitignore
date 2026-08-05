@@ -84,6 +84,7 @@ Thumbs.db
 !/scripts/split_characters.py
 !/scripts/check_manuscript.py
 !/scripts/apply_prose_fixes.py
+!/scripts/asset_audit.py
 !/scripts/extract_extras.py
 /src/
 /dashboard/
