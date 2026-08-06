@@ -2795,6 +2795,29 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
         return full_text[start:end][:15000]
 
+    def _narration_coverage(self, scenes: list[dict]) -> float | None:
+        """씬 나레이션이 원고를 얼마나 담고 있는지 비율로 돌려준다.
+
+        챕터 병렬 결과를 병합할 때 실패한 챕터가 조용히 빠지면 나레이션이
+        통째로 사라진 채 '완료'로 보고된다. 공백·마커를 제거한 글자 수로
+        원고 대비 보존율을 재서 그 사고를 잡는다.
+        """
+        ms_path = self.project_dir / "final_manuscript.md"
+        if not ms_path.exists() or not scenes:
+            return None
+        try:
+            text = ms_path.read_text(encoding="utf-8")
+            body = "\n".join(ln for ln in text.split("\n") if not ln.startswith("#"))
+            body = re.sub(r"<!--.*?-->", "", body, flags=re.DOTALL)
+            ms_chars = len(re.sub(r"[\s*\-]", "", body))
+            if ms_chars == 0:
+                return None
+            joined = " ".join(s.get("narration") or "" for s in scenes)
+            sc_chars = len(re.sub(r"[\s*\-]", "", joined))
+            return min(sc_chars / ms_chars, 1.0)
+        except Exception:
+            return None
+
     def _build_numbered_blocks(self) -> str:
         """final_manuscript.md의 나레이션 블록에 번호를 매겨 넘긴다.
 
@@ -2992,14 +3015,36 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 pass
 
         all_scenes: list = []
+        dropped: list[int] = []
         for ch_num in sorted(chapter_results.keys()):
             ch_result = chapter_results[ch_num]
             if ch_result.status == "completed" and ch_result.scenes:
                 all_scenes.extend(ch_result.scenes)
+            else:
+                dropped.append(ch_num)
+
+        if dropped:
+            # 여기서 조용히 넘어가면 나레이션이 통째로 사라진 채
+            # "완료"로 보고된다. 실제로 EP01에서 46%가 유실됐다.
+            print(f"    [경고] 챕터 {dropped} 결과 없음 — 나레이션 유실 위험", flush=True)
 
         # sceneNumber 재부여 (챕터별 결과가 각자 1부터 시작할 수 있으므로)
         for i, scene in enumerate(all_scenes, start=1):
             scene["sceneNumber"] = i
+
+        coverage = self._narration_coverage(all_scenes)
+        if coverage is not None:
+            tag = "✓" if coverage >= 0.95 else "✗"
+            print(f"    [나레이션 보존] 원고 대비 {coverage:.0%} {tag}", flush=True)
+            if coverage < 0.95:
+                return StepResult(
+                    step_id=step_id,
+                    status="failed",
+                    error=(
+                        f"나레이션 {coverage:.0%}만 반영됨 (원고 대비). "
+                        f"결과 없는 챕터: {dropped or '없음'}. scene_specs를 덮어쓰지 않았습니다."
+                    ),
+                )
 
         merged = {"scenes": all_scenes}
         specs_path.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
