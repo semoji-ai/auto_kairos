@@ -360,6 +360,22 @@
           "notes": "단일 에이전트 다단계 모드 1.5단계. 매력적인 prose 작성에만 집중. layout/motion/imageAsset 결정 X (다음 step에서 처리). runner가 active writing_style의 참조 원고 + vault semantic search 결과 주입."
         },
         {
+          "id": "step_2_plan",
+          "name": "direction_plan",
+          "description": "편 전체를 한 번에 보고 리듬·정보구조·씬 병합을 설계. chapters 모드는 챕터별 병렬이라 편 전체를 못 보므로 이 단계가 먼저 전역 판단을 내린다.",
+          "agent": "script-director",
+          "model": "sonnet",
+          "mode": "plan",
+          "input": [
+            "final_manuscript.md"
+          ],
+          "output": [
+            "direction_plan.json"
+          ],
+          "skills": [],
+          "notes": "출력은 씬당 한 줄로 작게. 이미지 프롬프트·헤드라인 문구는 여기서 쓰지 않는다(모드 2의 일). infoStructure/beat는 렌더러 중립 값이라 After Effects 연동 시 매핑 테이블만 교체하면 된다."
+        },
+        {
           "id": "step_2",
           "name": "script_split_and_direct",
           "description": "final_manuscript.md를 의미 단위로 자르고 각 씬에 layout/motion/mood/imageAsset 결정. narration은 manuscript에서 substring으로 가져옴 (재작성 금지).",

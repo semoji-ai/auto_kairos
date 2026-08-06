@@ -2795,6 +2795,96 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
         return full_text[start:end][:15000]
 
+    def _build_numbered_blocks(self) -> str:
+        """final_manuscript.md의 나레이션 블록에 번호를 매겨 넘긴다.
+
+        plan 모드가 원고를 직접 세면 오차가 난다(실측 131개를 139개로 셈).
+        번호를 확정해 주면 blocks 배열의 n이 실제 블록과 정확히 맞는다.
+        """
+        ms_path = self.project_dir / "final_manuscript.md"
+        if not ms_path.exists():
+            return ""
+        try:
+            text = ms_path.read_text(encoding="utf-8")
+            chapter = 0
+            lines_out: list[str] = []
+            n = 0
+            for raw_chunk in re.split(r"^-{3,}\s*$", text, flags=re.MULTILINE):
+                # 챕터 제목은 블록에서 제외하되 소속 챕터는 기록
+                body_lines = []
+                for ln in raw_chunk.split("\n"):
+                    m = re.match(r"^#\s+Ch\s*(\d+)", ln, re.IGNORECASE)
+                    if m:
+                        chapter = int(m.group(1))
+                        continue
+                    if ln.startswith("#"):
+                        continue
+                    body_lines.append(ln)
+                body = "\n".join(body_lines).strip()
+                if not body:
+                    continue
+                n += 1
+                flat = re.sub(r"<!--.*?-->", "", body, flags=re.DOTALL)
+                flat = re.sub(r"\s+", " ", flat).strip()
+                lines_out.append(f"{n}\t[Ch{chapter}]\t{flat}")
+            if not lines_out:
+                return ""
+            return (
+                f"\n\n<numbered_blocks total=\"{n}\">\n"
+                "번호\t챕터\t나레이션 — blocks[].n 은 반드시 이 번호를 쓰세요.\n"
+                + "\n".join(lines_out)
+                + "\n</numbered_blocks>\n"
+            )
+        except Exception:
+            return ""
+
+    def _plan_slice_for_chapter(self, chapter_num: int) -> str:
+        """direction_plan.json에서 해당 챕터가 담당하는 블록 구간만 잘라 준다.
+
+        plan은 편 전체 블록에 1부터 번호를 매기고, chapters 모드는 챕터별로
+        병렬 실행되므로 각 instance에 자기 구간만 넘겨야 한다. 챕터 안에서는
+        1부터 다시 세도록 localN을 붙인다.
+        """
+        plan_path = self.project_dir / "direction_plan.json"
+        ms_path = self.project_dir / "final_manuscript.md"
+        if not plan_path.exists() or not ms_path.exists():
+            return ""
+
+        try:
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            blocks = plan.get("blocks", [])
+            if not blocks:
+                return ""
+
+            chapters = self._split_manuscript_by_chapter(ms_path.read_text(encoding="utf-8"))
+            if not chapters:
+                return ""
+
+            def count_blocks(text: str) -> int:
+                # 챕터 제목 줄을 뺀 뒤 '---'로 나뉜 실제 나레이션 덩어리 수
+                body = "\n".join(ln for ln in text.split("\n") if not ln.startswith("#"))
+                return sum(1 for chunk in re.split(r"^-{3,}\s*$", body, flags=re.MULTILINE)
+                           if chunk.strip())
+
+            offset = 0
+            for ch in sorted(chapters):
+                n = count_blocks(chapters[ch])
+                if ch == chapter_num:
+                    mine = [b for b in blocks if offset < b.get("n", 0) <= offset + n]
+                    for b in mine:
+                        b["localN"] = b["n"] - offset
+                    if not mine:
+                        return ""
+                    return (
+                        f'\n<direction_plan chapter="{chapter_num}">\n'
+                        f"{json.dumps(mine, ensure_ascii=False, indent=1)}\n"
+                        "</direction_plan>\n"
+                    )
+                offset += n
+        except Exception:
+            return ""
+        return ""
+
     def _split_manuscript_by_chapter(self, full_text: str) -> dict:
         """원고를 # Ch N. 마커 기준으로 챕터별 텍스트 dict로 분할.
 
@@ -3006,8 +3096,10 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                     content = content[:limit]
                 shared_skills_text += f"\n\n## {skill_name}\n\n{content}"
 
+        # direction_plan 챕터 슬라이스 — 편 전체를 본 설계를 이 챕터 몫만 넘긴다
+        context_block = self._plan_slice_for_chapter(chapter_num)
+
         # outline 챕터 슬라이스
-        context_block = ""
         outline_path = self.project_dir / "outline.json"
         if outline_path.exists():
             try:
@@ -3882,6 +3974,12 @@ JSON 구조: {{"scenes": [씬 배열]}}
         writing_style = config.get("writing_style", "")
         _mode_line = f"\nSCRIPT_DIRECTOR_MODE: {step['mode']}" if step.get("mode") else ""
 
+        # plan 모드는 블록 번호를 정확히 맞춰야 하므로 원고를 세게 하지 않고
+        # 번호를 매긴 목록을 직접 준다 (직접 세게 하면 오차가 난다)
+        _plan_blocks_block = ""
+        if step.get("mode") == "plan":
+            _plan_blocks_block = self._build_numbered_blocks()
+
         dynamic_system = f"""<system_context>
 프로젝트: {self.project_slug}
 작업 디렉토리: {self.project_dir}
@@ -3897,7 +3995,7 @@ JSON 구조: {{"scenes": [씬 배열]}}
 {"**세모지 문체 필수 적용** — writing-style-semoji 스킬의 규칙을 반드시 따르세요." if writing_style == "semoji" else ""}
 </project_config>
 
-{self._build_progress_block(step.get('id', ''))}"""
+{self._build_progress_block(step.get('id', ''))}{_plan_blocks_block}"""
 
         # 3. user task (vault + task + context_memory)
         vault_block = ""

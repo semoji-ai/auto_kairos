@@ -285,6 +285,91 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 
 ---
 
+### 모드 1.8: Direction Plan Mode (`SCRIPT_DIRECTOR_MODE=plan`)
+
+**입력:** `final_manuscript.md` (전량 — 편 하나의 모든 블록)
+**출력:** `direction_plan.json` 하나
+**핵심:** 이 모드는 **편 전체를 한 번에 보는 유일한 단계**입니다.
+
+#### 왜 이 단계가 있나
+
+모드 2(chapters)는 챕터별로 **병렬 실행**되므로 각 instance는 자기 챕터만 봅니다.
+그래서 편 전체의 리듬 — 어디가 훅이고 어디가 절정인지, 같은 연출이 몇 연속인지,
+이 편의 대표 이미지를 어디에 놓을지 — 를 **아무도 판단하지 못합니다.**
+그 결과 짧은 블록이 전부 같은 레이아웃으로 떨어지는 사고가 납니다.
+
+이 모드가 그 판단을 먼저 내리고, 모드 2는 그 설계를 제약으로 받아 세부만 채웁니다.
+
+#### 출력은 작게
+
+씬당 한 줄입니다. 이미지 프롬프트나 헤드라인 문구는 **쓰지 마세요** — 그건 모드 2의 일입니다.
+당신은 **구조만** 정합니다.
+
+```json
+{
+  "totalBlocks": 139,
+  "blocks": [
+    {
+      "n": 1,
+      "beat": "hook",
+      "infoStructure": "scene",
+      "mergeWithPrev": false,
+      "keyVisual": true,
+      "note": "편 전체를 여는 장면 — 실물 자료로 강하게"
+    },
+    { "n": 2, "beat": "hook", "infoStructure": "enumeration", "mergeWithPrev": false },
+    { "n": 3, "beat": "hook", "infoStructure": "enumeration", "mergeWithPrev": true },
+    { "n": 4, "beat": "hook", "infoStructure": "enumeration", "mergeWithPrev": true }
+  ]
+}
+```
+
+#### 필드 정의
+
+| 필드 | 값 | 뜻 |
+|---|---|---|
+| `n` | 정수 | 원고의 `---` 블록 순번 (1부터). 챕터 제목 줄은 세지 않음 |
+| `beat` | `hook` / `build` / `turn` / `climax` / `close` | 이 블록이 편에서 맡은 역할 |
+| `infoStructure` | 아래 표 참조 | 정보의 구조. **렌더러 중립 값** |
+| `mergeWithPrev` | true/false | 앞 블록과 한 씬으로 합칠 것 |
+| `keyVisual` | true/false | 이 편의 대표 이미지가 될 장면 (편당 3~5개만) |
+| `note` | 문자열(선택) | 모드 2에 넘길 한 줄 지시 |
+
+#### infoStructure 값 (이 어휘만 쓸 것)
+
+| 값 | 언제 |
+|---|---|
+| `scene` | 인물의 행동·표정, 제품 공개, 행사 — 그림이 되는 순간 |
+| `enumeration` | 세 항목 이상 나열 |
+| `contrast` | 두 대상을 맞세움 ("A는 ~, 반면 B는 ~", "~가 아니라 ~") |
+| `correction` | 통념을 뒤집음 ("흔히 ~라고 합니다 / 틀렸습니다") |
+| `chronology` | 연도·날짜가 이어짐, 사건이 시간순으로 쌓임 |
+| `metric` | 수치 하나를 강조 |
+| `metric_group` | 서로 다른 지표가 동시에 제시됨 |
+| `causal` | 원인 → 결과 → 결론의 사슬 |
+| `quote` | 실존 인물의 실제 발언 |
+| `statement` | 선언·격언·반전 한 줄. **텍스트만으로 승부하는 경우** |
+
+> ⚠️ `statement`는 **전체 블록의 20%를 넘기지 마세요.** 이 값이 많으면 화면이
+> 글자 카드만 반복됩니다. 짧은 블록이라고 자동으로 `statement`가 아닙니다 —
+> "박수를 쳤습니다"는 `scene`, "1947년입니다"는 `chronology`입니다.
+
+#### 판단 순서
+
+1. **원고 전량을 읽고 편의 곡선을 먼저 잡으세요.** 훅은 어디까지고, 어디서 꺾이고,
+   절정이 어디인지. `beat`를 먼저 채웁니다.
+2. **대표 이미지 3~5개를 고르세요.** 이 편을 한 장으로 요약할 장면들입니다.
+   `keyVisual: true`는 여기에만 씁니다.
+3. **합칠 블록을 찾으세요.** 같은 장면의 연속(예: "가족의 다툼." / "서로 다른 변호사." /
+   "그리고 법정 공방.")은 `mergeWithPrev: true`로 한 씬이 되게 합니다.
+   장면 전환 접속어 단독 블록("그런데", "대신")도 다음 블록에 합칩니다.
+4. **`infoStructure`를 채우세요.** 위 표의 신호를 보고 정합니다.
+5. **마지막에 `statement` 개수를 세세요.** 20%를 넘으면 다시 보고 줄이세요.
+
+**모드 1.8에서 작업이 끝나면 즉시 direction_plan.json만 Write하고 종료하세요.**
+
+---
+
 ### 모드 2: Chapter Split + Direct Mode (`SCRIPT_DIRECTOR_MODE=chapters`)
 
 **입력:** `outline.json` (인라인), **`final_manuscript.md` (인라인 — narration 원본 단일 source)**, `research_report.json`, `art_style.json`, 챕터 전용 scene_specs (`<chapter_scene_specs>` 블록)
@@ -294,6 +379,40 @@ SCRIPT_DIRECTOR_MODE=consistency   → 모드 3: 전체 scene_specs 내러티브
 **이 모드의 임무: manuscript의 마커를 읽고 연출 결정**
 
 당신은 **글을 쓰지 않고, 씬 경계도 새로 판단하지 않습니다**. manuscript 작성 시 Opus가 이미 `---`(씬 경계)와 `<!-- chars: -->`(캐릭터)를 삽입해 뒀습니다. 이 모드는 그 마커를 그대로 읽고 **연출(layout/motion/mood/imageAsset)만 결정**합니다.
+
+#### ⚠️ direction_plan.json이 주어지면 그것이 최우선입니다
+
+`<direction_plan>` 블록이 프롬프트에 있으면, 그건 **편 전체를 보고 미리 잡아 둔 설계**입니다.
+당신은 자기 챕터만 보므로 편의 리듬을 알 수 없습니다. 설계를 따르세요.
+
+| plan의 값 | 당신이 할 일 |
+|---|---|
+| `mergeWithPrev: true` | **그 블록으로 씬을 새로 만들지 마세요.** 앞 블록의 씬에 narration을 이어 붙입니다 |
+| `infoStructure` | 아래 대응표로 `layout`을 정합니다 |
+| `keyVisual: true` | `imageAsset`에 가장 공들이세요. 이 편의 대표 이미지입니다 |
+| `beat` | `mood`와 `motion`의 강도를 여기에 맞춥니다 (hook·climax는 강하게, build는 차분하게) |
+| `note` | 그대로 반영합니다 |
+
+**infoStructure → layout 대응표**
+
+| infoStructure | layout |
+|---|---|
+| `scene` | `cinematic` |
+| `enumeration` | `items_list` (3~4개) / `items_grid` (병렬 사례) |
+| `contrast` | `split` 또는 `before_after` |
+| `correction` | `before_after` (오해 → 사실) |
+| `chronology` | `timeline` |
+| `metric` | `counter` 또는 `metric_spotlight` |
+| `metric_group` | `metric_wall` |
+| `causal` | `flow` |
+| `quote` | `quote_portrait` |
+| `statement` | `headline_only` |
+
+> `infoStructure`는 렌더러가 바뀌어도 유지되는 값이고, `layout`은 현재 렌더러(Remotion)의
+> 컴포넌트 이름입니다. **두 값을 씬에 모두 남기세요** — `infoStructure`와 `beat`를
+> scene 객체에 그대로 복사해 두면 나중에 다른 렌더러로 옮길 때 매핑만 바꾸면 됩니다.
+
+plan이 없으면 아래 기존 지침대로 스스로 판단합니다.
 
 **해야 할 일:**
 

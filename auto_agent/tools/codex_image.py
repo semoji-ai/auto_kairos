@@ -105,7 +105,10 @@ def codex_generate(
     ]
     for r in refs:
         cmd += ["-i", str(r)]
-    cmd.append(instr)
+    # `codex exec -i` accepts one or more values. Without an option terminator,
+    # the trailing prompt is consumed as another image path and Codex falls back
+    # to stdin (`No prompt provided via stdin`). Keep the prompt positional.
+    cmd += ["--", instr]
 
     env = dict(os.environ)
     env.pop("OPENAI_API_KEY", None)  # 무키 경로 강제 — codex 구독 인증만 사용

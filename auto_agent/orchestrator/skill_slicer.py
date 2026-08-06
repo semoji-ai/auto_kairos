@@ -30,6 +30,21 @@ _POLICY: dict[str, dict] = {
         ],
         "keep_steps": None,
     },
+    "plan": {
+        # 모드 1.8은 편 전체를 읽고 구조(beat/infoStructure/병합)만 정한다.
+        # 이미지 프롬프트·헤드라인 문구·차트 설정은 모드 2 소관이므로 전부 제거.
+        "mode_marker": "모드 1.8",
+        "drop_sections": [
+            "## 씬 스키마",
+            "## 에셋 결정 규칙",
+            "## 모션 프리셋 사용법",
+            "## headline 규칙",
+            "## 데이터 매핑 규칙",
+            "## 아트스타일별 분기",
+            "## 챕터별 병렬 처리",
+        ],
+        "keep_steps": [],
+    },
     "chapters": {
         "mode_marker": "모드 2",
         "drop_sections": [],
