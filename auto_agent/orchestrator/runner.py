@@ -2795,6 +2795,17 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
         return full_text[start:end][:15000]
 
+    def _plan_merge_count_for_chapter(self, chapter_num: int) -> int:
+        """direction_plan이 이 챕터에서 병합하라고 지시한 블록 수."""
+        slice_text = self._plan_slice_for_chapter(chapter_num)
+        if not slice_text:
+            return 0
+        try:
+            payload = slice_text.split(">\n", 1)[1].rsplit("\n</", 1)[0]
+            return sum(1 for b in json.loads(payload) if b.get("mergeWithPrev"))
+        except Exception:
+            return 0
+
     def _narration_coverage(self, scenes: list[dict]) -> float | None:
         """씬 나레이션이 원고를 얼마나 담고 있는지 비율로 돌려준다.
 
@@ -3269,13 +3280,36 @@ JSON 구조: {{"scenes": [씬 배열]}}
                                  error="씬 데이터 없음", cost_info=cost_info, duration_sec=elapsed)
 
         # --- 블록 수 대비 씬 수 검증
+        # direction_plan이 mergeWithPrev로 병합을 지시하면 씬 수는 블록 수보다
+        # 의도적으로 적어진다. 그때는 기대치를 낮추고, 대신 나레이션이 실제로
+        # 남아 있는지를 글자 수로 검사한다 (1:1 규칙만 믿으면 정상 병합을 실패로 본다).
         expected_blocks = len([b for b in chapter_text.split("\n---\n") if b.strip()])
+        merged_hint = self._plan_merge_count_for_chapter(chapter_num)
+        if merged_hint:
+            expected_blocks = max(expected_blocks - merged_hint, 1)
+
         if expected_blocks > 1 and len(scenes) < expected_blocks:
             return ChapterResult(
                 chapter=chapter_num, status="failed",
-                error=f"씬 누락: 원고 `---` 블록 {expected_blocks}개인데 씬 {len(scenes)}개만 생성됨. 각 블록은 1:1로 씬이 되어야 합니다.",
+                error=(
+                    f"씬 누락: 기대 {expected_blocks}씬(원고 블록 기준"
+                    + (f", 병합 {merged_hint}건 반영" if merged_hint else "")
+                    + f")인데 {len(scenes)}씬만 생성됨."
+                ),
                 cost_info=cost_info, duration_sec=elapsed,
             )
+
+        # 병합이 있었다면 나레이션 글자가 실제로 보존됐는지 확인
+        if merged_hint:
+            src = re.sub(r"<!--.*?-->", "", chapter_text, flags=re.DOTALL)
+            src = re.sub(r"[\s*\-#]", "", re.sub(r"^#.*$", "", src, flags=re.MULTILINE))
+            got = re.sub(r"[\s*\-]", "", " ".join(s.get("narration") or "" for s in scenes))
+            if src and len(got) / len(src) < 0.90:
+                return ChapterResult(
+                    chapter=chapter_num, status="failed",
+                    error=f"나레이션 유실: 원고 대비 {len(got) / len(src):.0%}만 반영됨",
+                    cost_info=cost_info, duration_sec=elapsed,
+                )
 
         # chapter 필드 보정
         for scene in scenes:
