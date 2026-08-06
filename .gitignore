@@ -87,6 +87,7 @@ Thumbs.db
 !/scripts/check_manuscript.py
 !/scripts/apply_prose_fixes.py
 !/scripts/asset_audit.py
+!/scripts/push_to_gdocs.py
 !/scripts/extract_extras.py
 /src/
 /dashboard/

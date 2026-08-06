@@ -41,14 +41,23 @@ DOC_RELS = f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 </Relationships>"""
 
 
-def _para(text: str, cid: int | None = None) -> str:
-    """문단 XML. cid가 있으면 이 문단 전체를 댓글 범위로 감싼다."""
+def _para(text: str, cid: int | None = None, heading: bool = False) -> str:
+    """문단 XML. cid가 있으면 이 문단 전체를 댓글 범위로 감싼다.
+
+    heading=True면 굵게·크게 + 위아래 여백을 준다. 챕터 제목이 본문과
+    구분되지 않으면 낭독 대본에서 장 경계를 찾을 수 없다.
+    """
     t = escape(text)
-    run = f'<w:r><w:t xml:space="preserve">{t}</w:t></w:r>' if text else ''
+    if text:
+        rpr = '<w:rPr><w:b/><w:sz w:val="30"/></w:rPr>' if heading else ''
+        run = f'<w:r>{rpr}<w:t xml:space="preserve">{t}</w:t></w:r>'
+    else:
+        run = ''
+    ppr = '<w:pPr><w:spacing w:before="360" w:after="120"/></w:pPr>' if heading else ''
     if cid is None:
-        return f'<w:p>{run}</w:p>'
+        return f'<w:p>{ppr}{run}</w:p>'
     return (
-        f'<w:p>'
+        f'<w:p>{ppr}'
         f'<w:commentRangeStart w:id="{cid}"/>'
         f'{run}'
         f'<w:commentRangeEnd w:id="{cid}"/>'
@@ -57,7 +66,8 @@ def _para(text: str, cid: int | None = None) -> str:
     )
 
 
-def build_docx(paragraphs: list[str], comments: list[tuple[int, str]], out: Path) -> Path:
+def build_docx(paragraphs: list[str], comments: list[tuple[int, str]], out: Path,
+               headings: set[int] | None = None) -> Path:
     """댓글이 달린 docx 생성.
 
     comments: (문단 인덱스, 댓글 본문) 목록. 같은 문단에 여러 개도 가능하지만
@@ -77,7 +87,10 @@ def build_docx(paragraphs: list[str], comments: list[tuple[int, str]], out: Path
             f'w:date="{now}" w:initials="AK">{lines}</w:comment>'
         )
 
-    body_xml = ''.join(_para(p, by_para.get(i)) for i, p in enumerate(paragraphs))
+    hs = headings or set()
+    body_xml = ''.join(
+        _para(p, by_para.get(i), heading=(i in hs)) for i, p in enumerate(paragraphs)
+    )
     document = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         f'<w:document xmlns:w="{W_NS}"><w:body>{body_xml}'

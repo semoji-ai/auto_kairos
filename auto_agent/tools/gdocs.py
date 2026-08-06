@@ -131,6 +131,13 @@ def delete_file(file_id: str) -> None:
 
 
 def add_comment(doc_id: str, quoted: str, content: str) -> str:
+    """⚠️ 이 댓글은 구글 문서 화면에 표시되지 않는다.
+
+    Drive API comments.create는 kix 내부 앵커를 만들지 못해 '무앵커 댓글'이 되고,
+    문서 UI에서는 보이지 않는다. 원고에 댓글을 달아야 하면
+    docx_comments.build_docx로 .docx를 만들어 Drive에 덮어쓸 것.
+    (scripts/push_to_gdocs.py 참고)
+    """
     """문서의 특정 문구에 앵커 댓글을 단다.
 
     Drive API 댓글은 anchor 좌표 규격이 문서 리비전에 묶여 있어 까다롭다.
