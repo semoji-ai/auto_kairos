@@ -100,6 +100,55 @@ def _extract_agent_report(stdout: str, max_lines: int = 8) -> str:
     return '\n'.join(keep)
 
 
+def _check_layout_balance(scenes: list[dict]) -> list[str]:
+    """연출이 headline_only로 쏠렸는지 검사해 경고 문구를 돌려준다.
+
+    step_2는 챕터별로 병렬 실행되므로 각 에이전트가 편 전체의 layout 비율을
+    볼 수 없다. 그 결과 짧은 나레이션 블록이 전부 headline_only로 떨어져
+    화면 절반이 글자 카드만 반복되는 사고가 난다. 병합 직후 여기서 센다.
+    """
+    HO_RATIO_LIMIT = 0.30   # 이 비율을 넘으면 경고 (SKILL 지침은 챕터당 20%)
+    HO_RUN_LIMIT = 2        # 연속 허용 개수
+
+    total = len(scenes)
+    if total == 0:
+        return []
+
+    layouts = [s.get("layout") for s in scenes]
+    ho = sum(1 for x in layouts if x == "headline_only")
+    ratio = ho / total
+
+    longest = run = 0
+    start = best_start = 0
+    for i, x in enumerate(layouts):
+        if x == "headline_only":
+            if run == 0:
+                start = i
+            run += 1
+            if run > longest:
+                longest, best_start = run, start
+        else:
+            run = 0
+
+    msgs: list[str] = []
+    if ratio > HO_RATIO_LIMIT:
+        msgs.append(
+            f"[연출 경고] headline_only {ho}/{total}씬 ({ratio:.0%}) — "
+            f"권장 30% 이하. 짧은 블록을 items_list/cinematic으로 묶었는지 확인"
+        )
+    if longest > HO_RUN_LIMIT:
+        msgs.append(
+            f"[연출 경고] headline_only {longest}연속 (씬 {best_start + 1}~{best_start + longest}) — "
+            f"연속 {HO_RUN_LIMIT}개 이하로 유지할 것"
+        )
+
+    used = {x for x in layouts if x}
+    if len(used) < 5:
+        msgs.append(f"[연출 경고] 레이아웃 {len(used)}종만 사용 — 구조 신호에 맞는 레이아웃 검토 필요")
+
+    return msgs
+
+
 def _notify(agent: str, text: str, phase: str = "", project: str = "", level: str = "info", data: dict = None, kind: str = "message"):
     """파이프라인 진행 상황을 대시보드 메신저로 전송. 파일 영속 + HTTP POST.
     agent 이름은 자동으로 별명으로 변환됩니다.
@@ -1677,6 +1726,11 @@ class PipelineRunner:
                         has_flat = all(k in sample for k in ("narration", "layout", "motion"))
                         schema_tag = f"v{version} 플랫" if has_flat else f"v{version}"
                         print(f"    [검증] 원고+연출: {n_scenes}씬, {schema_tag} 스키마 ✓")
+                        # 연출 편중 검사 — 짧은 블록이 전부 headline_only로 떨어지는 사고 방지.
+                        # 챕터별 병렬 실행이라 에이전트가 편 전체 비율을 볼 수 없으므로
+                        # 병합 후 여기서 한 번 센다.
+                        for line in _check_layout_balance(data["scenes"]):
+                            print(f"    {line}")
                         _notify("script-director", f"원고 완성! {n_scenes}씬 완성, {schema_tag}",
                                 phase=self.state.current_phase, project=self.project_slug, level="success")
                     else:
