@@ -90,6 +90,8 @@ Thumbs.db
 !/scripts/push_to_gdocs.py
 !/scripts/build_image_prompts.py
 !/scripts/gen_character_sheets.py
+!/scripts/assign_scene_cast.py
+!/scripts/gen_scenes.py
 !/scripts/extract_extras.py
 /src/
 /dashboard/
