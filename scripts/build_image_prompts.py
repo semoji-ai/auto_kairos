@@ -126,6 +126,10 @@ def main() -> int:
 
         # 철칙 자체검사
         issues = []
+        # search에서 전환된 씬은 prompt가 비어 있다 — 그대로 넘기면 모델이 지어낸다.
+        # EP01 씬 68(클리프행어 keyVisual)이 엉뚱한 현대 사무실로 나온 원인이었다.
+        if not (ia.get("prompt") or "").strip():
+            issues.append("프롬프트 비어 있음")
         if NEGATIVE.search(prompt):
             issues.append("네거티브 표현")
         if re.match(r"^\s*\[AR", prompt):
