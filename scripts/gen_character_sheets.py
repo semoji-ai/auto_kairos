@@ -7,6 +7,10 @@
 
 기준: artstyle/styles/semoji_character_sheet.png (세모지 공식 캐릭터 시트)
 
+실존 인물은 **실제 초상을 함께 첨부**한다(roster의 `ref`). 기준 시트가 화풍과
+레이아웃을, 초상이 얼굴 특징을 담당한다. 초상이 없는 인물은 유추이며 roster에
+`inferred: true`로 남고 화면에서 `일러스트 재현` 배지를 단다.
+
     윗줄:   전신 정면 · 전신 측면 · 전신 후면 · 얼굴 클로즈업
     아랫줄: 표정 5종 (기본 미소 · 놀람 · 낙담 · 걱정 · 활짝 웃음)
 
@@ -35,7 +39,7 @@ SHEET = """$imagegen
 새로 그리지 말고 이 시트를 고치는 겁니다.
 
 기준 시트: {base}
-
+{ref_block}
 이 캐릭터를 **{era}의 {name}({age})**로 바꾸세요.
 **레이아웃과 컷 구성은 기준 시트와 완전히 똑같이 유지합니다.**
 
@@ -62,6 +66,16 @@ SHEET = """$imagegen
 
 생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:
 {out}
+"""
+
+
+REF_BLOCK = """
+실제 인물 사진: {ref}
+
+이 사진은 **얼굴 특징의 근거**입니다. 그림체나 구도는 여기서 가져오지 마세요.
+사진에서 가져올 것은 얼굴형, 이마 넓이, 눈매의 각도와 크기, 눈썹, 코의 폭,
+입 모양, 턱선, 헤어라인, 안경과 수염의 유무뿐입니다.
+{ref_note}
 """
 
 
@@ -95,9 +109,18 @@ def main() -> int:
     for e in roster:
         look, hair = split_look(e)
         out = (args.out / f"{e['id']}_sheet.png").resolve()
-        prompt = SHEET.format(base=base, era=e.get("era", ""), name=e["name"],
-                              age=e.get("age", ""), look=look, hair=hair,
-                              outfit=e["outfit"], out=out)
+
+        ref_block = ""
+        if e.get("ref"):
+            ref = (args.roster.parent / e["ref"]).resolve()
+            if ref.exists():
+                ref_block = REF_BLOCK.format(ref=ref, ref_note=e.get("ref_note", ""))
+            else:
+                print(f"  ! {e['id']} 참조 사진 없음: {ref}")
+
+        prompt = SHEET.format(base=base, ref_block=ref_block, era=e.get("era", ""),
+                              name=e["name"], age=e.get("age", ""), look=look,
+                              hair=hair, outfit=e["outfit"], out=out)
         subprocess.run(
             ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
             stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=900,
