@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
-"""기준 캐릭터 이미지를 편집해 인물 시트를 만든다.
+"""세모지 기준 캐릭터 시트를 편집해 인물 시트를 만든다.
 
 **그림체를 말로 묘사하지 않는다.** 텍스트로 "외곽선 없음, 4등신, 면 그림자"를
-아무리 정확히 써도 등신과 대비가 어긋난다(실제로 두 번 실패). 기준 이미지를
-**편집**하라고 지시하면 비율·크기·배경·화풍이 구조적으로 보존된다.
+아무리 정확히 써도 등신과 대비가 어긋난다(실제로 세 번 실패). 기준 시트를
+**편집**하라고 지시하면 비율·레이아웃·화풍이 구조적으로 보존된다.
 
-바꾸는 것은 얼굴·머리·옷 세 가지뿐이다.
+기준: artstyle/styles/semoji_character_sheet.png (세모지 공식 캐릭터 시트)
 
-    python3 scripts/gen_character_sheets.py <roster.json> --base <base.jpg> -o <out_dir>
-    python3 scripts/gen_character_sheets.py <roster.json> --base <base.jpg> -o <out_dir> --only koo_inhoe_20s
+    윗줄:   전신 정면 · 전신 측면 · 전신 후면 · 얼굴 클로즈업
+    아랫줄: 표정 5종 (기본 미소 · 놀람 · 낙담 · 걱정 · 활짝 웃음)
+
+이 구성이 필요한 이유
+  - 후면: 뒷머리 모양이 정해지지 않으면 씬마다 다르게 나온다.
+          땋은 머리·쪽 찐 머리처럼 긴 머리는 뒤가 정보량의 대부분이다.
+  - 측면: 세모지는 외곽선 없이 면으로만 형태를 만들어, 정면만으로는
+          콧대의 그림자 면이 사라져 코가 애매해진다.
+  - 클로즈업: 씬 생성 시 얼굴 참조가 바로 된다.
+
+    python3 scripts/gen_character_sheets.py <roster.json> -o <out>
+    python3 scripts/gen_character_sheets.py <roster.json> -o <out> --only koo_inhoe_20s
 """
 
 from __future__ import annotations
@@ -19,65 +29,58 @@ import subprocess
 import sys
 from pathlib import Path
 
-PROMPT = """$imagegen
+SHEET = """$imagegen
 
-첨부한 이미지를 **편집**하세요. 새로 그리지 말고, 이 이미지를 고치는 겁니다.
+첨부한 세모지 기준 캐릭터 시트를 **편집**해 새 인물의 시트를 만드세요.
+새로 그리지 말고 이 시트를 고치는 겁니다.
 
-원본: {base}
+기준 시트: {base}
 
-이 캐릭터를 **{era}의 {name}({age})**로 바꿔 주세요.
+이 캐릭터를 **{era}의 {name}({age})**로 바꾸세요.
+**레이아웃과 컷 구성은 기준 시트와 완전히 똑같이 유지합니다.**
 
-바꿀 것은 세 가지뿐입니다.
+- 윗줄: 전신 정면 · 전신 측면 · 전신 후면 · 얼굴 클로즈업
+- 아랫줄: 표정 5종 (기본 미소 · 놀람 · 낙담 · 걱정 · 활짝 웃음)
+
+각 컷의 위치, 크기, 간격, 전신의 키와 비례를 기준 시트 그대로 두세요.
+
+바꿀 것은 세 가지입니다.
 - 얼굴: {look}
 - 머리: {hair}
 - 옷: {outfit}
 
-**나머지는 원본 그대로 두세요.** 몸의 비율과 크기, 서 있는 자세, 팔다리 길이,
-화면 안에서의 위치와 크기, 캔버스 비율, 배경색, 그림체를 전혀 건드리지 마세요.
-원본 위에 옷과 얼굴만 갈아입힌 결과여야 합니다.
+**나머지는 기준 시트 그대로입니다.** 등신 비율, 팔다리 길이, 그림체, 외곽선 처리,
+면 그림자 방식, 색면 대비, 배경색, 눈 모양, 코와 입선 처리를 전혀 건드리지 마세요.
 
-눈은 원본과 똑같이 그리세요. 작고 **완전한 원형**의 검은 점입니다.
-찌그러지거나 눌린 타원이 되지 않게, 좌우 모두 또렷한 동그라미로 유지하세요.
+후면 컷에서는 얼굴이 보이지 않으므로 **뒷머리의 형태와 옷의 뒷면 구조**로만
+이 인물을 알아볼 수 있어야 합니다. 그 두 가지를 분명하게 그리세요.
 
-얼굴 각도도 원본 그대로 두세요. 원본은 얼굴이 아주 살짝 비스듬합니다.
-그 각도라야 코가 옆선으로 또렷하게 읽힙니다. 얼굴을 정면으로 돌리면
-코가 애매해지니, 원본의 기울기를 그대로 유지하세요.
+표정 5종은 모두 같은 인물입니다. 얼굴 크기와 높이, 머리 모양, 옷깃이 같고
+표정만 다릅니다.
+
+글자는 넣지 않습니다. size는 1536x1024입니다.
 
 생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:
 {out}
 """
 
 
-def run(entry: dict, base: Path, out_dir: Path) -> bool:
-    out = out_dir / f"{entry['id']}.png"
+def split_look(entry: dict) -> tuple[str, str]:
     look = entry["look"]
-    # look 안에 머리 서술이 섞여 있으면 분리, 없으면 통째로
     hair = entry.get("hair") or ""
-    if not hair:
-        parts = [p.strip() for p in look.split(",")]
-        hair = next((p for p in parts if "머리" in p), "원본과 같은 머리")
-        look = ", ".join(p for p in parts if p != hair)
-
-    prompt = PROMPT.format(
-        base=base, era=entry.get("era", ""), name=entry["name"],
-        age=entry.get("age", ""), look=look, hair=hair,
-        outfit=entry["outfit"], out=out,
-    )
-    proc = subprocess.run(
-        ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
-        stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=900,
-    )
-    ok = out.exists()
-    print(f"  {'✓' if ok else '✗'} {entry['id']:18s} {entry['name']} {entry.get('age','')}")
-    if not ok:
-        print(f"      {proc.stderr[-160:] or proc.stdout[-160:]}")
-    return ok
+    if hair:
+        return look, hair
+    parts = [p.strip() for p in look.split(",")]
+    hair = next((p for p in parts if "머리" in p), "원본과 같은 머리")
+    return ", ".join(p for p in parts if p != hair), hair
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("roster", type=Path)
-    ap.add_argument("--base", required=True, type=Path)
+    ap.add_argument("--base", type=Path,
+                    default=Path("artstyle/styles/semoji_character_sheet.png"),
+                    help="기준 캐릭터 시트 (기본: 세모지 공식 시트)")
     ap.add_argument("-o", "--out", required=True, type=Path)
     ap.add_argument("--only", help="특정 id만")
     args = ap.parse_args()
@@ -86,9 +89,23 @@ def main() -> int:
     if args.only:
         roster = [r for r in roster if r["id"] == args.only]
     args.out.mkdir(parents=True, exist_ok=True)
+    base = args.base.resolve()
 
-    print(f"인물 시트 {len(roster)}종 생성 — 기준 {args.base.name} 편집")
-    ok = sum(run(r, args.base.resolve(), args.out.resolve()) for r in roster)
+    ok = 0
+    for e in roster:
+        look, hair = split_look(e)
+        out = (args.out / f"{e['id']}_sheet.png").resolve()
+        prompt = SHEET.format(base=base, era=e.get("era", ""), name=e["name"],
+                              age=e.get("age", ""), look=look, hair=hair,
+                              outfit=e["outfit"], out=out)
+        subprocess.run(
+            ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=900,
+        )
+        got = out.exists()
+        ok += got
+        print(f"  {'✓' if got else '✗'} {e['id']:18s} {e['name']} {e.get('age','')}")
+
     print(f"\n완료 {ok}/{len(roster)}")
     return 0 if ok == len(roster) else 1
 

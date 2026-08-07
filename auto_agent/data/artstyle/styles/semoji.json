@@ -48,7 +48,10 @@
       "Soft, muted pastel color palette with flat fills",
       "Clean, minimal, borderless design"
     ],
-    "prompt_language": "ko"
+    "prompt_language": "ko",
+    "character_sheet": "artstyle/styles/semoji_character_sheet.png",
+    "character_sheet_note": "인물 생성의 기준 자산. 전신 정면·측면·후면 + 얼굴 클로즈업 + 표정 5종. 그림체를 텍스트로 묘사하지 말고 이 시트를 첨부해 편집하라 (docs/rules/character-sheet-rules.md).",
+    "style_note": "image.style 서술은 실제 시트와 맞지 않는다. 프롬프트에 사용하지 말 것."
   },
   "voice": {
     "voice_id": "W7FnAxJNpD5WGjrF5GLp",
@@ -91,7 +94,12 @@
     "disableIcons": true,
     "disableSpotlight": true,
     "quoteReveal": "typewriter",
-    "headlineTypewriterTriggers": ["그런데", "그러나", "하지만", "한편"],
+    "headlineTypewriterTriggers": [
+      "그런데",
+      "그러나",
+      "하지만",
+      "한편"
+    ],
     "defaultItemEntrance": "overshoot",
     "countUpThreshold": 0,
     "texture": {
@@ -261,5 +269,6 @@
     "enable_web_search": true
   },
   "guidelines": "세모지는 정보 전달 중심. 친근한 설명체, 데이터 시각화 적극 활용. cinematic staging으로 장면 연출.",
-  "writing_style": "semoji"
+  "writing_style": "semoji",
+  "character_sheet": "artstyle/styles/semoji_character_sheet.png"
 }
