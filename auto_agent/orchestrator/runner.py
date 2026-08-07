@@ -2795,6 +2795,65 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
 
         return full_text[start:end][:15000]
 
+    def _chapter_skeleton(self, chapter_num: int, chapter_text: str) -> list[dict]:
+        """원고 블록을 묶어 씬 뼈대를 만든다 — narration은 코드가 채운다.
+
+        에이전트가 narration을 다시 타이핑하면 요약·누락·챕터 통째 유실이
+        생긴다(실제로 두 번 발생). 블록을 이어 붙이면 원고가 그대로 복원되므로,
+        묶기만 코드가 하면 나레이션 보존이 구조적으로 보장된다.
+        묶는 기준(mergeWithPrev)은 direction_plan이 편 전체를 보고 정한 값이다.
+        """
+        merges: set[int] = set()
+        meta: dict[int, dict] = {}
+        slice_text = self._plan_slice_for_chapter(chapter_num)
+        if slice_text:
+            try:
+                payload = slice_text.split(">\n", 1)[1].rsplit("\n</", 1)[0]
+                for b in json.loads(payload):
+                    ln = b.get("localN")
+                    if ln is None:
+                        continue
+                    if b.get("mergeWithPrev"):
+                        merges.add(ln)
+                    meta[ln] = b
+            except Exception:
+                pass
+
+        blocks: list[str] = []
+        for chunk in re.split(r"^-{3,}\s*$", chapter_text, flags=re.MULTILINE):
+            body = "\n".join(l for l in chunk.split("\n") if not l.startswith("#"))
+            if body.strip():
+                blocks.append(body.strip())
+
+        scenes: list[dict] = []
+        for i, raw in enumerate(blocks, start=1):
+            narration = re.sub(r"<!--.*?-->", "", raw, flags=re.DOTALL).strip()
+            chars = re.findall(r"<!--\s*chars:\s*(.*?)\s*-->", raw, flags=re.DOTALL)
+            captions = re.findall(r"<!--\s*caption:\s*(.*?)\s*-->", raw, flags=re.DOTALL)
+            m = meta.get(i, {})
+
+            if i in merges and scenes:
+                prev = scenes[-1]
+                prev["narration"] = (prev["narration"] + "\n\n" + narration).strip()
+                prev["_chars"] += chars
+                prev["_captions"] += captions
+                prev["_blocks"].append(i)
+                continue
+
+            scenes.append({
+                "sceneNumber": len(scenes) + 1,
+                "chapter": chapter_num,
+                "narration": narration,
+                "beat": m.get("beat"),
+                "infoStructure": m.get("infoStructure"),
+                "keyVisual": bool(m.get("keyVisual")),
+                "_note": m.get("note"),
+                "_chars": list(chars),
+                "_captions": list(captions),
+                "_blocks": [i],
+            })
+        return scenes
+
     def _plan_merge_count_for_chapter(self, chapter_num: int) -> int:
         """direction_plan이 이 챕터에서 병합하라고 지시한 블록 수."""
         slice_text = self._plan_slice_for_chapter(chapter_num)
@@ -3179,6 +3238,28 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         context_memory_block = self.context_memory.build_context_prompt(step.get("id", ""))
         _mode = step.get("mode", "chapters")
 
+        # 씬 뼈대를 코드가 만들고, 에이전트에는 표만 넘긴다.
+        skeleton = self._chapter_skeleton(chapter_num, chapter_text)
+        _rows = []
+        for s in skeleton:
+            bits = [f"{s['sceneNumber']}"]
+            if s.get("infoStructure"):
+                bits.append(f"[{s['infoStructure']}]")
+            if s.get("beat"):
+                bits.append(f"({s['beat']})")
+            if s.get("keyVisual"):
+                bits.append("★대표이미지")
+            if s.get("_chars"):
+                bits.append("인물:" + "/".join(s["_chars"]))
+            if s.get("_captions"):
+                bits.append("자막:" + " | ".join(s["_captions"]))
+            if s.get("_note"):
+                bits.append(f"지시:{s['_note']}")
+            head = " ".join(bits)
+            body = s["narration"].replace("\n", " ")
+            _rows.append(f"{head}\n    {body}")
+        scene_table = "\n".join(_rows)
+
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
 작업 디렉토리: {self.project_dir}
@@ -3197,22 +3278,35 @@ SCRIPT_DIRECTOR_CHAPTER: {chapter_num}
 
 {context_block}
 
-<chapter_manuscript>
-아래는 챕터 {chapter_num}의 원고 텍스트입니다.
-`---` 마커가 씬 경계입니다. 각 씬 블록을 하나의 씬으로 처리하세요.
-`<!-- chars: -->` 태그는 등장 캐릭터 ID입니다.
+<scene_table>
+챕터 {chapter_num}의 씬은 **이미 확정돼 있습니다**. 아래 표가 그것입니다.
+씬을 새로 나누거나 합치지 마세요. narration도 쓰지 마세요 — 이미 채워져 있습니다.
 
-{chapter_text}
-</chapter_manuscript>
+{scene_table}
+</scene_table>
 
 <output_format>
-위 원고의 `---` 경계 기준으로 씬을 분할하고, 각 씬에 layout/motion/mood/headline/imageAsset을 결정하세요.
-narration은 해당 씬 블록의 텍스트(주석 제거)를 그대로 사용하세요.
-chapter 필드는 {chapter_num}으로 설정하세요.
+위 표의 **각 씬 번호마다 연출만** 결정하세요. narration은 절대 쓰지 마세요.
+
+결정할 필드: layout, motion, mood, headline, items, values, unit, imageAsset, visual_kind 등
+(씬 스키마에서 narration을 뺀 나머지)
+
+표에 `infoStructure`가 있으면 그것이 우선입니다 — 편 전체를 보고 미리 정한 값입니다.
+`keyVisual: true`인 씬은 이 편의 대표 이미지이므로 imageAsset에 가장 공들이세요.
+`note`가 있으면 그대로 반영하세요.
+
 결과를 아래 경로에 JSON으로 저장하세요:
 {tmp_path}
 
-JSON 구조: {{"scenes": [씬 배열]}}
+JSON 구조:
+{{"scenes": [
+  {{"sceneNumber": 1, "layout": "...", "motion": "...", "mood": "...",
+    "headline": "...", "imageAsset": {{...}}}},
+  {{"sceneNumber": 2, ...}}
+]}}
+
+⚠️ sceneNumber는 표의 번호를 그대로 쓰세요. 표에 있는 모든 씬을 빠짐없이 포함하세요.
+⚠️ narration 필드를 넣으면 무시됩니다. 넣지 마세요.
 </output_format>
 
 {context_memory_block}"""
@@ -3279,37 +3373,49 @@ JSON 구조: {{"scenes": [씬 배열]}}
             return ChapterResult(chapter=chapter_num, status="failed",
                                  error="씬 데이터 없음", cost_info=cost_info, duration_sec=elapsed)
 
-        # --- 블록 수 대비 씬 수 검증
-        # direction_plan이 mergeWithPrev로 병합을 지시하면 씬 수는 블록 수보다
-        # 의도적으로 적어진다. 그때는 기대치를 낮추고, 대신 나레이션이 실제로
-        # 남아 있는지를 글자 수로 검사한다 (1:1 규칙만 믿으면 정상 병합을 실패로 본다).
-        expected_blocks = len([b for b in chapter_text.split("\n---\n") if b.strip()])
-        merged_hint = self._plan_merge_count_for_chapter(chapter_num)
-        if merged_hint:
-            expected_blocks = max(expected_blocks - merged_hint, 1)
+        # --- 에이전트가 낸 연출을 코드가 만든 뼈대에 얹는다.
+        # 뼈대의 narration은 원고 블록을 이어 붙인 것이므로 항상 100% 보존된다.
+        # 에이전트가 narration을 냈더라도 버린다.
+        DIRECTION_ONLY = {"narration", "sceneNumber", "chapter", "beat", "infoStructure",
+                          "keyVisual", "_chars", "_captions", "_blocks", "_note"}
+        by_num = {}
+        for s in scenes:
+            try:
+                by_num[int(s.get("sceneNumber"))] = s
+            except (TypeError, ValueError):
+                continue
+        # sceneNumber를 못 준 경우 순서대로 대응시킨다
+        if len(by_num) < len(skeleton) and len(scenes) == len(skeleton):
+            by_num = {i + 1: s for i, s in enumerate(scenes)}
 
-        if expected_blocks > 1 and len(scenes) < expected_blocks:
+        filled = 0
+        for sk in skeleton:
+            got = by_num.get(sk["sceneNumber"])
+            if not isinstance(got, dict):
+                continue
+            for k, v in got.items():
+                if k in DIRECTION_ONLY or v is None:
+                    continue
+                sk[k] = v
+            filled += 1
+
+        # 제작용 임시 필드 정리 + caption을 items로 승격
+        for sk in skeleton:
+            caps = sk.pop("_captions", [])
+            sk.pop("_chars", None)
+            sk.pop("_blocks", None)
+            sk.pop("_note", None)
+            if caps and not sk.get("items"):
+                sk["items"] = [c for cap in caps for c in re.split(r"\s*/\s*", cap)][:4]
+
+        if filled < len(skeleton) * 0.9:
             return ChapterResult(
                 chapter=chapter_num, status="failed",
-                error=(
-                    f"씬 누락: 기대 {expected_blocks}씬(원고 블록 기준"
-                    + (f", 병합 {merged_hint}건 반영" if merged_hint else "")
-                    + f")인데 {len(scenes)}씬만 생성됨."
-                ),
+                error=f"연출 누락: {len(skeleton)}씬 중 {filled}씬만 연출이 채워짐",
                 cost_info=cost_info, duration_sec=elapsed,
             )
 
-        # 병합이 있었다면 나레이션 글자가 실제로 보존됐는지 확인
-        if merged_hint:
-            src = re.sub(r"<!--.*?-->", "", chapter_text, flags=re.DOTALL)
-            src = re.sub(r"[\s*\-#]", "", re.sub(r"^#.*$", "", src, flags=re.MULTILINE))
-            got = re.sub(r"[\s*\-]", "", " ".join(s.get("narration") or "" for s in scenes))
-            if src and len(got) / len(src) < 0.90:
-                return ChapterResult(
-                    chapter=chapter_num, status="failed",
-                    error=f"나레이션 유실: 원고 대비 {len(got) / len(src):.0%}만 반영됨",
-                    cost_info=cost_info, duration_sec=elapsed,
-                )
+        scenes = skeleton
 
         # chapter 필드 보정
         for scene in scenes:
