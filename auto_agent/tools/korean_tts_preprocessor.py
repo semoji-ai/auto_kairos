@@ -706,10 +706,19 @@ class KoreanTTSPreprocessor:
                 self.changes.append(f'{original} → {replaced}')
                 text = text.replace(original, replaced)
 
+        # '삼천'이 '산천'으로 읽히는 것을 막는 분절 가드.
+        # 뒤에 수사·단위·조사·문장부호가 올 때만 건다 — 그래야 고유명사가 깨지지 않는다.
+        # 좁히지 않으면 '삼천리자전거'가 "'삼'천리자전거"가 된다.
+        _NUM_TAIL = (
+            r"(?=[일이사오육칠팔구십백천만억조]"          # 이어지는 수사
+            r"|[원년월일개명인대번차속톤장권편척채호회층동점발병잔]"  # 단위·조수사
+            r"|[가되말근필자푼냥섬]"                      # 옛 도량형 (가마·되·말·근·필…)
+            r"|\s|$|[.,!?)\]\"'])"
+        )
         guards = [
-            (r"(?<!')삼만", "'삼'만"),
-            (r"(?<!')삼천", "'삼'천"),
-            (r"(?<!')삼백", "'삼'백"),
+            (rf"(?<!')삼만{_NUM_TAIL}", "'삼'만"),
+            (rf"(?<!')삼천{_NUM_TAIL}", "'삼'천"),
+            (rf"(?<!')삼백{_NUM_TAIL}", "'삼'백"),
         ]
         for pattern, replaced in guards:
             if re.search(pattern, text):
