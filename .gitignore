@@ -92,6 +92,8 @@ Thumbs.db
 !/scripts/gen_character_sheets.py
 !/scripts/assign_scene_cast.py
 !/scripts/gen_scenes.py
+!/scripts/select_asset_candidates.py
+!/scripts/enforce_real_first.py
 !/scripts/extract_extras.py
 /src/
 /dashboard/
