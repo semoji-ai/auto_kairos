@@ -136,6 +136,29 @@ python3 scripts/enforce_real_first.py <project> --ledger <search_assets.json>
 
 ---
 
+## 4-1. 편 하나를 완성하는 순서 (순서가 곧 함정이다)
+
+```bash
+# 1) 나레이션 전처리 + TTS   ← 반드시 먼저
+# 2) select_asset_candidates → codex 조사 → search_assets.json
+# 3) enforce_real_first.py   --ledger
+# 4) apply_direction_fixes.py   (배지·레이아웃 정렬)
+# 5) rubric_autofill.py         (keyVisual·숫자·지도·페이싱)
+# 6) 채점
+```
+
+`_imggen/full_ep.sh`가 이 순서를 그대로 돌린다.
+
+> ⚠️ **TTS를 뒤에 두면 그 사이의 모든 수정이 날아간다.**
+> `generate_tts.py`는 시작 시점에 읽은 scene_specs를 끝에 `narration_tts`와 함께
+> 통째로 다시 쓴다. EP02·EP07에서 실제로 겪었다 — 자료 조사와 배지 작업을
+> 끝낸 뒤 TTS를 돌렸더니 전부 되돌아갔고, 재채점이 이전과 같은 점수에서
+> 멈춰 원인을 찾는 데 시간을 썼다.
+>
+> 페이싱 채점에 실측 길이가 필요하다는 점에서도 TTS가 먼저다.
+
+---
+
 ## 5. 진행 순서
 
 1. **자료 조사** — 씬별 실물 존재 여부 확인, `source` 재배정 (`scripts/asset_audit.py`)
