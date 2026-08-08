@@ -96,6 +96,9 @@ Thumbs.db
 !/scripts/enforce_real_first.py
 !/scripts/apply_direction_fixes.py
 !/scripts/rubric_autofill.py
+!/scripts/verify_flow.py
+!/scripts/match_archive.py
+!/scripts/dedupe_assets.py
 !/scripts/extract_extras.py
 /src/
 /dashboard/
