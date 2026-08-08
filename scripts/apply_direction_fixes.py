@@ -84,10 +84,25 @@ def fill_values(scene: dict) -> bool:
 
 
 # infoStructure → layout 대응표 (direction-standard 3절)
+# 표준 하나만 두면 연출 폭이 죽는다. 뜻이 통하는 대안은 허용하고, 그 밖만 고친다.
 MAP = {
     "metric": "metric_spotlight", "metric_group": "metric_wall",
     "chronology": "timeline", "enumeration": "items_list",
     "contrast": "split", "correction": "before_after", "causal": "flow",
+    "scene": "cinematic", "quote": "quote_portrait", "statement": "headline_only",
+}
+ALLOWED = {
+    "scene": {"cinematic", "split", "images_grid"},
+    "enumeration": {"items_list", "items_grid", "rank_list", "card_carousel"},
+    "contrast": {"split", "before_after", "comparison_table"},
+    "correction": {"before_after", "split"},
+    "chronology": {"timeline", "flow"},
+    "metric": {"counter", "metric_spotlight", "icon_stat", "bar"},
+    "metric_group": {"metric_wall", "bar", "bar_horizontal", "comparison_table",
+                     "pie", "donut", "stacked_progress"},
+    "causal": {"flow", "before_after", "split"},
+    "quote": {"quote_portrait"},
+    "statement": {"headline_only", "quote_portrait"},
 }
 # 이 레이아웃들은 화면에 수치나 항목을 띄울 수 있다
 CAN_SHOW = METRIC_LAYOUTS | {"timeline", "items_list", "items_grid", "split",
@@ -95,20 +110,23 @@ CAN_SHOW = METRIC_LAYOUTS | {"timeline", "items_list", "items_grid", "split",
 
 
 def align_layout(scene: dict) -> str | None:
-    """숫자가 나오는데 화면에 못 띄우는 레이아웃이면 대응표대로 바꾼다.
+    """정보 구조에 맞지 않는 레이아웃을 바로잡는다.
 
-    cinematic은 이미지 전체화면이라 텍스트가 없다. 나레이션에 수치가 있는데
-    cinematic이면 그 숫자는 화면에 뜨지 않는다(EP07 씬 14·24·34).
+    가장 나쁜 경우는 statement→cinematic이다. cinematic은 이미지 전체화면이라
+    텍스트가 없어서, 그 편이 하려는 말이 화면에 아예 뜨지 않는다(18건).
+    causal→headline_only도 마찬가지로 인과의 단계가 사라진다.
+
+    허용 대안은 건드리지 않는다. contrast를 before_after로 잡는 건 정상이다.
     """
     info = scene.get("infoStructure")
     want = MAP.get(info)
-    if not want or scene.get("layout") in CAN_SHOW:
+    if not want:
         return None
-    if not NUM.search(scene.get("narration") or ""):
+    cur = scene.get("layout")
+    if cur in ALLOWED.get(info, {want}):
         return None
-    old = scene.get("layout")
     scene["layout"] = want
-    return f"{old}→{want}"
+    return f"{cur}→{want}"
 
 
 def main() -> int:

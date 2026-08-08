@@ -96,18 +96,27 @@ python3 scripts/enforce_real_first.py <project> --ledger <search_assets.json>
 
 **infoStructure → layout 대응표**
 
-| infoStructure | layout |
-|---|---|
-| scene | cinematic |
-| enumeration | items_list / items_grid |
-| contrast | split / before_after |
-| correction | before_after (오해 → 사실) |
-| chronology | timeline (지리 이동이면 `mapScene` 오버레이를 함께 붙인다) |
-| metric | counter / metric_spotlight |
-| metric_group | metric_wall |
-| causal | flow |
-| quote | quote_portrait |
-| statement | headline_only |
+**표준 하나만 두면 연출 폭이 죽는다.** 뜻이 통하는 대안은 위반이 아니다.
+채점할 때도 아래 허용 목록에 있으면 감점하지 않는다.
+
+| infoStructure | 표준 | 허용 대안 |
+|---|---|---|
+| scene | cinematic | split, images_grid |
+| enumeration | items_list | items_grid, rank_list, card_carousel |
+| contrast | split | before_after, comparison_table |
+| correction | before_after | split |
+| chronology | timeline | flow (지리 이동이면 `mapScene`을 함께) |
+| metric | metric_spotlight | counter, icon_stat, bar |
+| metric_group | metric_wall | bar, bar_horizontal, comparison_table, pie, donut |
+| causal | flow | before_after, split |
+| quote | quote_portrait | — |
+| statement | headline_only | quote_portrait |
+
+**가장 나쁜 어긋남은 `statement → cinematic`이다**(12편에서 18건).
+cinematic은 이미지 전체화면이라 텍스트가 없어서, **그 편이 하려는 말이 화면에
+아예 뜨지 않는다.** `causal → headline_only`도 인과의 단계가 통째로 사라진다.
+
+`scripts/apply_direction_fixes.py`가 허용 목록 밖만 표준으로 되돌린다.
 
 ### 재미 30점
 

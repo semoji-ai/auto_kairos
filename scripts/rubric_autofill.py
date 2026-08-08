@@ -53,6 +53,8 @@ PLACES = {
 OVERSEAS = {"미국","중국","일본","영국","유럽","인도","폴란드","베트남","브라질",
             "독일","프랑스","러시아"}
 MOVE = re.compile(r"(진출|수출|이전|옮기|건너|나가|들어가|공략|상륙|확장|철수|물러나|향[해했]|떠나|출시|판매)")
+# 지명을 특정하지 않는 광역 이동 — 전국 순회, 방방곡곡
+NATIONWIDE = re.compile(r"(전국|방방곡곡|전역|각지|팔도)")
 
 ITEM_LAYOUTS = {"items_list", "items_grid", "timeline", "flow", "split", "before_after",
                 "comparison_table", "rank_list", "card_carousel"}
@@ -93,6 +95,17 @@ def _on_screen(scene: dict) -> str:
     parts.append(str(ov.get("text") or ""))
     return re.sub(r"[,\s]", "", " ".join(parts))
 
+
+# 한글 수사도 수치다 — '스무 명', '아흔아홉 통', '열 달'
+KO_NUM = {
+    "한":1,"두":2,"세":3,"네":4,"다섯":5,"여섯":6,"일곱":7,"여덟":8,"아홉":9,"열":10,
+    "스무":20,"스물":20,"서른":30,"마흔":40,"쉰":50,"예순":60,"일흔":70,"여든":80,
+    "아흔":90,"백":100,"천":1000,"만":10000,
+}
+KO_UNIT = "명|대|개|통|달|해|가지|곳|채|권|병|잔|척|필|가마|시간|년|월|일|배"
+KO_PHRASE = re.compile(
+    r"(?:아흔아홉|" + "|".join(sorted(KO_NUM, key=len, reverse=True)) + r")\s*(?:" + KO_UNIT + r")")
+FRACTION = re.compile(r"\d+\s*분의\s*\d+")
 
 # 날짜와 수치를 통째로 잡는다 — '2006년 5월', '1억 70만 대', '11.8밀리미터'
 PHRASE = re.compile(
@@ -150,13 +163,27 @@ def fill_numbers(scene: dict) -> str | None:
     '2006년'만으로는 '2006년 5월'이 아니다. 그리고 values에 끼워 넣으면 unit이
     어긋나므로, **표기는 items나 오버레이 같은 문자열 자리에만 넣는다.**
     """
-    phrases = [re.sub(r"\s+", " ", m.group(0)).strip()
-               for m in PHRASE.finditer(scene.get("narration") or "")]
+    narr = scene.get("narration") or ""
+    phrases = [re.sub(r"\s+", " ", m.group(0)).strip() for m in PHRASE.finditer(narr)]
+    # 한글 수사와 분수도 화면에 띄워야 인정된다
+    for m in KO_PHRASE.finditer(narr):
+        ph = re.sub(r"\s+", " ", m.group(0)).strip()
+        head = ph.split()[0] if " " in ph else ph[:2]
+        # '한 대', '두 번'처럼 하나·둘은 관용 표현이라 수치로 세지 않는다
+        if KO_NUM.get(head, 0) >= 2 or ph.endswith("배"):
+            phrases.append(ph)
+    phrases += [re.sub(r"\s+", "", m.group(0)) for m in FRACTION.finditer(narr)]
     if not phrases:
         return None
     screen = _on_screen(scene)
-    missing = [p for p in phrases
-               if _digits(p) not in screen or re.sub(r"[\d,.\s]", "", p) not in screen]
+    missing = []
+    for p in phrases:
+        d, w = _digits(p), re.sub(r"[\d,.\s]", "", p)
+        if d:
+            if d not in screen or w not in screen:
+                missing.append(p)
+        elif w not in screen:      # 순한글 수사
+            missing.append(p)
     if not missing:
         return None
     text = missing[0]
@@ -185,10 +212,19 @@ def fill_mapscene(scene: dict) -> str | None:
     if scene.get("mapScene"):
         return None
     text = " ".join(str(scene.get(f) or "") for f in ("narration", "headline"))
-    if not MOVE.search(text):
+    if not MOVE.search(text) and not NATIONWIDE.search(text):
         return None
     # 나레이션에 나온 순서가 이동 순서다
     hits = sorted((p for p in PLACES if p in text), key=text.index)
+    # '전국을 도는 홍보 트럭'처럼 지명이 없어도 지도가 이야기를 살린다
+    if NATIONWIDE.search(text) and len(hits) < 2:
+        scene["mapScene"] = {"mode": "highlight", "region": "KR",
+                             "route": [{"label": p, "at": PLACES[p]}
+                                       for p in ("서울", "대전", "광주", "부산")],
+                             "focus": None}
+        if scene.get("motion") in STATIC_MOTION:
+            scene["motion"] = "map_reveal"
+        return "전국"
     # 해외로 나가는 이야기는 출발지(한국)를 적지 않는 경우가 많다
     if len(hits) == 1 and hits[0] in OVERSEAS:
         hits = ["서울"] + hits
@@ -215,6 +251,26 @@ def audio_seconds(project: Path, scene: dict) -> float | None:
     return None
 
 
+def fill_chart(scene: dict) -> str | None:
+    """수치 둘 이상을 견주는데 차트가 없으면 차트로 보여 준다.
+
+    '100통 중 99통'이나 '약 두 배' 같은 대비는 말로만 지나가면 남지 않는다.
+    """
+    vals = [v for v in (scene.get("values") or []) if isinstance(v, (int, float))]
+    if len(vals) < 2 or scene.get("chartConfig"):
+        return None
+    if scene.get("layout") in {"bar", "bar_horizontal", "pie", "donut", "line",
+                               "metric_wall", "comparison_table", "stacked_progress",
+                               "annotated_chart"}:
+        return None
+    # 연도만 나열된 것은 비교가 아니다
+    if all(1900 <= v <= 2100 for v in vals):
+        return None
+    old = scene.get("layout")
+    scene["layout"] = "bar" if max(vals) / max(min(vals), 1) < 100 else "metric_wall"
+    return f"{scene['sceneNumber']} {old}→{scene['layout']}"
+
+
 def fill_pacing(scene: dict, project: Path | None = None) -> tuple[float, str | None]:
     """씬 길이를 확정하고, 12초를 넘는 정적 씬에 움직임을 준다.
 
@@ -230,11 +286,13 @@ def fill_pacing(scene: dict, project: Path | None = None) -> tuple[float, str | 
         n = len(re.sub(r"\s", "", scene.get("narration") or ""))
         sec = round(n / CHARS_PER_MIN * 60, 1)
         scene["estimatedDurationSec"] = sec
-    if sec <= HOLD_LIMIT_SEC or scene.get("motion") not in STATIC_MOTION:
+    if sec <= HOLD_LIMIT_SEC:
         return sec, None
+    # 12초가 넘으면 화면이 멈춘 것처럼 보인다 — 단계 등장으로 시선을 끌고 간다
+    scene["hold"] = {"staged": True, "steps": max(2, min(4, int(sec // 6)))}
     want = DYNAMIC_FOR.get(scene.get("layout"))
     if not want:
-        return sec, None
+        return sec, "hold 배분"
     old = scene.get("motion")
     scene["motion"] = want
     return sec, f"{old}→{want}"
@@ -251,12 +309,15 @@ def main() -> int:
     scenes = data.get("scenes", data)
 
     kv = fill_keyvisual(scenes)
-    ov, mp, pace, fixed = [], [], [], []
+    ov, mp, pace, fixed, charts = [], [], [], [], []
     total = 0.0
     for s in scenes:
         t = fill_numbers(s)
         if t:
             ov.append(t)
+        ch2 = fill_chart(s)
+        if ch2:
+            charts.append(ch2)
         a = align_values_items(s)
         if a:
             fixed.append(f"{s['sceneNumber']} {a}")
@@ -275,6 +336,7 @@ def main() -> int:
     print(f"    keyVisual   {kv or '이미 있음'}")
     print(f"    숫자 표기   {len(ov)}씬  {', '.join(ov[:5])}")
     print(f"    짝 정렬     {len(fixed)}씬")
+    print(f"    차트 승격    {len(charts)}씬")
     print(f"    지도        {len(mp)}씬  {'; '.join(mp[:3])}")
     print(f"    모션 보강    {len(pace)}씬 (12초 초과 정적)")
     real = sum(1 for s in scenes if s.get("durationSec"))
