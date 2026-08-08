@@ -37,7 +37,12 @@ def apply_ledger(scenes: list[dict], ledger: dict) -> dict:
         if not e or ia is None:
             continue
         if not e.get("found"):
-            ia["assetStatus"] = "missing"
+            # 실물이 없는데 search로 두면 '출처 기록'에서 계속 깎인다.
+            # 없는 자료는 코드가 만들어낼 수 없다 — 재현으로 확정하고 배지를 단다.
+            ia["source"] = "generate"
+            ia["assetStatus"] = "no_usable_asset"
+            ia["assetNote"] = e.get("reason") or e.get("desc") or "조사에서 확인되지 않음"
+            s.setdefault("badge", "일러스트 재현")
             stat["no_asset"] += 1
             continue
         lic = e.get("license")
@@ -101,6 +106,19 @@ def main() -> int:
     else:
         prev = json.loads(args.restore.read_text(encoding="utf-8"))
         stat = apply_restore(scenes, prev.get("scenes", prev))
+
+    # 조사조차 안 된 search 씬 — URL이 없으면 근거가 없는 것이다
+    orphan = 0
+    for s in scenes:
+        ia = s.get("imageAsset") or {}
+        if ia.get("source") == "search" and not ia.get("url") and not ia.get("assetCandidates"):
+            ia["source"] = "generate"
+            ia["assetStatus"] = "no_usable_asset"
+            ia["assetNote"] = "조사 대상에 들지 않았고 확인된 자료가 없음"
+            s.setdefault("badge", "일러스트 재현")
+            orphan += 1
+    if orphan:
+        stat["orphan_to_generate"] = orphan
 
     if not args.dry_run:
         spec.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")

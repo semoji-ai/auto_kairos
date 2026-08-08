@@ -95,6 +95,7 @@ Thumbs.db
 !/scripts/select_asset_candidates.py
 !/scripts/enforce_real_first.py
 !/scripts/apply_direction_fixes.py
+!/scripts/rubric_autofill.py
 !/scripts/extract_extras.py
 /src/
 /dashboard/
