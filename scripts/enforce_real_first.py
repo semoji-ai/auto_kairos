@@ -27,10 +27,17 @@ FREE = {"public_domain", "cc_by", "cc_by_sa", "cc0", "kogl_type1", "kogl_type2"}
 # 실물은 있으나 권리 협의가 필요 — 실물 우선이므로 search로 두고 협의 대상에 올린다
 NEGOTIABLE = {"permission_required", "press_quote"}
 
+# 제작자가 사용 권한을 확보했거나 사용하기로 결정한 권리자.
+# 이쪽 자료는 협의 대상에서 빼고 바로 쓴다.
+def holder_cleared(holder: str, allow: list[str]) -> bool:
+    h = (holder or "").replace(" ", "").lower()
+    return any(a.replace(" ", "").lower() in h for a in allow if a)
 
-def apply_ledger(scenes: list[dict], ledger: dict) -> dict:
+
+def apply_ledger(scenes: list[dict], ledger: dict, allow: list[str] | None = None) -> dict:
+    allow = allow or []
     by_n = {e["n"]: e for e in ledger.get("scenes", ledger)}
-    stat = {"clear": 0, "negotiate": 0, "no_asset": 0, "flipped_back": 0}
+    stat = {"clear": 0, "negotiate": 0, "no_asset": 0, "flipped_back": 0, "owner_ok": 0}
     for s in scenes:
         e = by_n.get(s.get("sceneNumber"))
         ia = s.get("imageAsset")
@@ -58,6 +65,10 @@ def apply_ledger(scenes: list[dict], ledger: dict) -> dict:
         if lic in FREE:
             ia["assetStatus"] = "clear"
             stat["clear"] += 1
+        elif holder_cleared(e.get("holder", ""), allow):
+            ia["assetStatus"] = "owner_cleared"
+            ia["assetNote"] = f"{e.get('holder')} 자료 — 사용 결정됨"
+            stat["owner_ok"] += 1
         elif lic in NEGOTIABLE:
             ia["assetStatus"] = "permission_required"
             stat["negotiate"] += 1
@@ -91,6 +102,8 @@ def main() -> int:
     ap.add_argument("project", type=Path)
     ap.add_argument("--ledger", type=Path)
     ap.add_argument("--restore", type=Path)
+    ap.add_argument("--allow-holder", nargs="*", default=[],
+                    help="협의 없이 쓰기로 한 권리자 (부분 일치)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -102,7 +115,8 @@ def main() -> int:
     scenes = data.get("scenes", data)
 
     if args.ledger:
-        stat = apply_ledger(scenes, json.loads(args.ledger.read_text(encoding="utf-8")))
+        stat = apply_ledger(scenes, json.loads(args.ledger.read_text(encoding="utf-8")),
+                            args.allow_holder)
     else:
         prev = json.loads(args.restore.read_text(encoding="utf-8"))
         stat = apply_restore(scenes, prev.get("scenes", prev))
