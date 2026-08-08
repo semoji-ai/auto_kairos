@@ -104,29 +104,47 @@ ALLOWED = {
     "quote": {"quote_portrait"},
     "statement": {"headline_only", "quote_portrait"},
 }
-# 이 레이아웃들은 화면에 수치나 항목을 띄울 수 있다
-CAN_SHOW = METRIC_LAYOUTS | {"timeline", "items_list", "items_grid", "split",
-                             "before_after", "flow", "metric_wall", "comparison_table"}
+# 항목(items)을 그릴 수 있는 레이아웃
+ITEM_CAPABLE = {"items_list", "items_grid", "timeline", "flow", "split", "before_after",
+                "comparison_table", "rank_list", "card_carousel", "stacked_progress",
+                "metric_wall", "bar", "bar_horizontal", "pie", "donut", "line",
+                "annotated_chart", "person_card", "logo_grid"}
+# 수치(values)를 그릴 수 있는 레이아웃
+VALUE_CAPABLE = METRIC_LAYOUTS | {"metric_wall", "comparison_table", "timeline",
+                                  "before_after", "split", "stacked_progress"}
 
 
 def align_layout(scene: dict) -> str | None:
-    """정보 구조에 맞지 않는 레이아웃을 바로잡는다.
+    """**담긴 내용이 화면에서 사라지는 경우만** 레이아웃을 바로잡는다.
 
-    가장 나쁜 경우는 statement→cinematic이다. cinematic은 이미지 전체화면이라
-    텍스트가 없어서, 그 편이 하려는 말이 화면에 아예 뜨지 않는다(18건).
-    causal→headline_only도 마찬가지로 인과의 단계가 사라진다.
+    대응표를 어겼다고 고치면 안 된다. 텍스트도 항목도 없는 cinematic 한 컷이
+    그 편에서 가장 잘 전달되는 씬일 수 있다. 이미지 한 장이 숫자보다 강할 때가 있다.
+    표를 맞추려다 연출을 망가뜨린 적이 있다(EP05·09·11·12).
 
-    허용 대안은 건드리지 않는다. contrast를 before_after로 잡는 건 정상이다.
+    그래서 묻는 것은 하나다 — **이 씬이 들고 있는 것이 화면에 나올 수 있는가.**
+    items를 채워 뒀는데 items를 못 그리는 레이아웃이면 그 항목들은 사라진다.
+    그때만 고친다.
     """
-    info = scene.get("infoStructure")
-    want = MAP.get(info)
-    if not want:
-        return None
     cur = scene.get("layout")
-    if cur in ALLOWED.get(info, {want}):
+    # cinematic·quote_portrait는 "이 장면은 그림으로 간다"는 의도적 선택이다.
+    # 담긴 항목이 안 보여도 그게 연출일 수 있으므로 건드리지 않는다.
+    if cur != "headline_only":
         return None
+    # headline_only는 헤드라인 한 줄만 그린다. 항목이나 수치를 담아 뒀다면
+    # 그것들은 화면에 나올 자리가 없다 — 이건 의도가 아니라 사고다.
+    lost = []
+    if scene.get("items"):
+        lost.append("items")
+    if scene.get("values"):
+        lost.append("values")
+    if not lost:
+        return None
+    want = MAP.get(scene.get("infoStructure"))
+    if not want or want == cur:
+        # 정보 구조로 답이 안 나오면 담긴 내용에 맞춰 고른다
+        want = "items_list" if "items" in lost else "metric_wall"
     scene["layout"] = want
-    return f"{cur}→{want}"
+    return f"{cur}→{want} ({'+'.join(lost)} 유실 방지)"
 
 
 def main() -> int:
