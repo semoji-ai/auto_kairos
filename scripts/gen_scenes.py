@@ -20,13 +20,31 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+STYLE_BLOCK = """
+## 그림체 기준 — 첨부한 캐릭터 시트
+
+{base}
+
+**이 시트의 그림체로 화면 전체를 그리세요.** 인물만이 아니라 배경·소품·건물까지
+전부 같은 화풍입니다. 그림체를 말로 설명하지 않겠습니다. 첨부한 그림을 보고
+그대로 따르세요.
+
+특히 지킬 것
+- **인물 비율은 시트와 똑같이 합니다.** 머리가 크고 몸이 짧습니다.
+  배경을 사실적으로 그리다가 인물만 길어지면 안 됩니다.
+- 외곽선을 쓰지 않고 색면으로만 형태를 만듭니다.
+- 그림자는 같은 색의 한 단계 어두운 톤으로 부드러운 면만 넣습니다.
+  사진 같은 질감, 세밀한 명암, 사실적 원근은 쓰지 않습니다.
+- 배경도 인물과 같은 밀도의 플랫한 색면으로 그립니다.
+"""
+
 CAST_BLOCK = """
-등장 인물의 캐릭터 시트를 첨부합니다.
+## 등장 인물
+
 {sheets}
 
-각 인물의 **얼굴, 머리 모양, 옷**은 시트 그대로입니다. 시트의 화풍과 4등신 비율도
-그대로 유지하세요. 시트에 없는 것은 이 씬에서 정합니다 — 포즈, 각도, 표정의 세기,
-화면에서의 크기와 위치.
+각 인물의 **얼굴, 머리 모양, 옷**은 시트 그대로입니다.
+시트에 없는 것만 이 씬에서 정합니다 — 포즈, 각도, 표정의 세기, 화면에서의 위치.
 
 인물은 화면에서 **또렷하게 보이는 크기**로 그립니다. 얼굴 생김새와 옷 색이
 읽히지 않으면 인물을 넣은 의미가 없습니다.
@@ -35,7 +53,7 @@ CAST_BLOCK = """
 SCENE = """$imagegen
 
 {prompt}
-{cast_block}
+{style_block}{cast_block}
 size는 {size}입니다.
 
 생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:
@@ -60,15 +78,30 @@ def main() -> int:
     ap.add_argument("prompt_dir", type=Path)
     ap.add_argument("-o", "--out", required=True, type=Path)
     ap.add_argument("--sheets", type=Path, default=Path("_imggen/characters/final3"))
+    ap.add_argument("--base", type=Path,
+                    default=Path("auto_agent/data/artstyle/styles/semoji_character_sheet.png"),
+                    help="화풍 기준 시트 — 인물이 없는 씬에도 붙인다")
     ap.add_argument("--roster", type=Path, default=Path("_imggen/characters/roster.json"))
     ap.add_argument("--only", help="쉼표로 구분한 씬 번호")
     ap.add_argument("-j", "--jobs", type=int, default=4)
+    ap.add_argument("--allow-empty", action="store_true",
+                    help="빈 프롬프트도 생성 (장면이 날조되므로 쓰지 말 것)")
     args = ap.parse_args()
 
     data = json.loads((args.project / "scene_specs.json").read_text(encoding="utf-8"))
     scenes = {s["sceneNumber"]: s for s in data.get("scenes", data)}
     names = {e["id"]: e["name"] for e in json.loads(args.roster.read_text(encoding="utf-8"))}
     jobs = json.loads((args.prompt_dir / "jobs.json").read_text(encoding="utf-8"))
+
+    # 프롬프트가 빈 씬을 생성에 넘기면 모델이 장면을 지어낸다.
+    # EP01 씬 68(클리프행어)이 현대 사무실로 나온 원인이다. 경고가 아니라 막는다.
+    empty = [j["sceneNumber"] for j in jobs if "프롬프트 비어 있음" in (j.get("issues") or [])]
+    if empty:
+        print(f"  ✗ 프롬프트가 빈 씬 {len(empty)}개: {empty}")
+        print("    나레이션을 읽고 imageAsset.prompt를 쓴 뒤 다시 실행하세요.")
+        print("    (--allow-empty 로 강제할 수 있으나 장면이 날조됩니다)")
+        if not args.allow_empty:
+            return 2
     if args.only:
         want = {int(x) for x in args.only.split(",")}
         jobs = [j for j in jobs if j["sceneNumber"] in want]
@@ -83,9 +116,12 @@ def main() -> int:
             if p.exists():
                 lines.append(f"- {names.get(cid, cid)}: {p}")
         block = CAST_BLOCK.format(sheets="\n".join(lines)) if lines else ""
+        # 인물이 없는 씬에도 화풍 기준은 붙인다 — 배경만 사실적으로 빠지는 것을 막는다
+        style = STYLE_BLOCK.format(base=args.base.resolve())
         out = next_version(args.out, n)
         prompt = SCENE.format(prompt=Path(job["prompt_file"]).read_text(encoding="utf-8"),
-                              cast_block=block, size=job.get("size", "1792x1024"), out=out)
+                              style_block=style, cast_block=block,
+                              size=job.get("size", "1792x1024"), out=out)
         subprocess.run(
             ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
             stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=1200,

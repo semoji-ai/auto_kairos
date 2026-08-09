@@ -78,14 +78,16 @@ def build(scene: dict) -> str:
         scene_txt = clean(re.sub(r"^레이어 분리형[^,]*,\s*", "", raw))
 
     mood = scene.get("mood") or "informative"
+    # 빛이 아니라 색면의 밝기 차로 분위기를 만든다.
+    # 키라이트·앰비언트·딥섀도 같은 사진 어휘를 쓰면 회화적 렌더링이 나온다.
     tone = {
-        "dramatic": "high contrast, deep shadows anchoring the subject",
-        "suspense": "cool dim ambience, single warm light source",
-        "contemplative": "soft even light, calm spacing",
-        "triumphant": "bright warm key, open airy composition",
-        "somber": "muted low-saturation field, heavy sky",
-        "informative": "clear neutral daylight, legible separation between planes",
-    }.get(mood, "clear neutral daylight")
+        "dramatic": "어두운 색면과 밝은 색면의 대비를 크게 벌린다",
+        "suspense": "전체를 어두운 색면으로 깔고 한 곳만 밝은 색면으로 둔다",
+        "contemplative": "밝기 차를 좁혀 색면들이 잔잔하게 이어진다",
+        "triumphant": "밝고 따뜻한 색면을 넓게 쓰고 여백을 크게 둔다",
+        "somber": "채도를 더 낮춘 색면으로 통일한다",
+        "informative": "색면끼리 밝기가 또렷이 구분돼 층이 바로 읽힌다",
+    }.get(mood, "색면끼리 밝기가 또렷이 구분된다")
 
     lines = [
         f"Scene: 한국 브랜드 다큐멘터리 일러스트 한 컷. {scene_txt}",
@@ -93,11 +95,14 @@ def build(scene: dict) -> str:
         "Camera: 아이레벨 와이드 구도, 원경·중경·인물·전경이 또렷한 층으로 겹쳐 각 층을 따로 "
         "들어낼 수 있게 배치, 피사체 둘레에 넉넉한 여백",
         "",
-        f"Lighting: {tone}, 따뜻한 키라이트와 차가운 앰비언트 필, 가장자리가 부드러운 그림자",
+        f"Lighting: {tone}. 그림자는 같은 색의 한 단계 어두운 색면 하나로만 넣는다",
         "",
         f"Color grading: 채도를 낮춘 레트로 플랫 팔레트 {PALETTE}",
         "",
-        f"Texture/Medium: 매끈한 플랫 질감. {STYLE}",
+        f"Texture/Medium: 매끈한 플랫 질감. {STYLE}. "
+        "화면 전체가 같은 밀도의 평면 색면이며, 붓질감·종이질감·필름 그레인 없이 매끈하다. "
+        "공기 원근으로 흐려지는 안개, 빛이 번지는 효과, 렌즈 플레어, 부드러운 초점 흐림은 "
+        "쓰지 않고, 멀리 있는 것도 또렷한 색면으로 그린다",
         "",
         "Text-in-image: 형태와 색만 담은 깨끗한 면",
         "",
