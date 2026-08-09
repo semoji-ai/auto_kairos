@@ -40,9 +40,15 @@ def apply_ledger(scenes: list[dict], ledger: dict, allow: list[str] | None = Non
     stat = {"clear": 0, "negotiate": 0, "no_asset": 0, "flipped_back": 0, "owner_ok": 0}
     for s in scenes:
         e = by_n.get(s.get("sceneNumber"))
-        ia = s.get("imageAsset")
-        if not e or ia is None:
+        if not e:
             continue
+        ia = s.get("imageAsset")
+        if ia is None:
+            # 에이전트가 이미지가 필요 없다고 본 씬이라도, 쓸 실물이 있으면 쓴다.
+            # 자리가 없다고 자료를 버리면 실물 우선이 아니다.
+            if not e.get("found"):
+                continue
+            ia = s["imageAsset"] = {}
         if not e.get("found"):
             # 실물이 없는데 search로 두면 '출처 기록'에서 계속 깎인다.
             # 없는 자료는 코드가 만들어낼 수 없다 — 재현으로 확정하고 배지를 단다.
@@ -55,6 +61,9 @@ def apply_ledger(scenes: list[dict], ledger: dict, allow: list[str] | None = Non
         lic = e.get("license")
         was = ia.get("source")
         ia["source"] = "search"
+        # 실물을 쓰는 씬에 재현 배지가 남으면 실제 자료를 생성물로 잘못 고지한다
+        if s.get("badge") in ("일러스트 재현", "기업 사사 기록", "독립 근거 미확인"):
+            s.pop("badge", None)
         ia["url"] = e.get("image_url")
         ia["license"] = lic
         ia["assetCandidates"] = [{
