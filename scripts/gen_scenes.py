@@ -20,47 +20,46 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-STYLE_BLOCK = """
-## 첨부 1번 — 그림체 기준 (세모지 공식 캐릭터 시트)
+# 첨부 조합에 따라 지시가 달라진다 (kairos-ai 실증 구조).
+# 사람 그림이 둘이면 섞인다 — 캐릭터 시트가 있으면 화풍 기준 시트를 붙이지 않는다.
+
+STYLE_ONLY = """
+## 첨부 이미지 — 그림체 기준 (세모지 공식 캐릭터 시트)
 
 {base}
 
-이 그림은 **그림체와 비율의 기준**입니다. 여기 그려진 인물을 그대로 옮겨
-쓰지는 마세요. 화풍만 가져옵니다.
+**[STYLE ONLY] 이 그림은 그림체만 참고합니다.**
+- 가져올 것: 색감, 질감, 선 처리, 그림자 방식, 인물의 몸 비율, 분위기
+- **가져오지 말 것: 이 그림에 있는 사람의 얼굴, 머리 모양, 옷, 성별, 자세**
+- 이 그림 속 인물이 결과물에 나타나서는 안 됩니다
+- 아래 장면 설명에 맞는 **새로운 인물**을 그리세요
 
-**이 시트의 그림체로 화면 전체를 그리세요.** 인물만이 아니라 배경·소품·건물까지
-전부 같은 화풍입니다. 그림체를 말로 설명하지 않겠습니다. 첨부한 그림을 보고
-그대로 따르세요.
-
-특히 지킬 것
-- **인물 비율은 첨부한 시트가 정합니다.** 배경을 사실적으로 그리다가
-  인물만 길어지면 안 됩니다. (비율을 숫자로 지시하지 않습니다 —
-  숫자를 넣으면 모델이 인물을 새로 그려 정체성이 깨집니다)
-- 외곽선을 쓰지 않고 색면으로만 형태를 만듭니다.
-- 그림자는 같은 색의 한 단계 어두운 톤으로 부드러운 면만 넣습니다.
-  사진 같은 질감, 세밀한 명암, 사실적 원근은 쓰지 않습니다.
-- 배경도 인물과 같은 밀도의 플랫한 색면으로 그립니다.
-- **화면 안에 글자를 넣지 않습니다.** 간판·표지판·현수막·책 표지·상자·제품 라벨을
-  모두 글자 없이 비워 둡니다. 글자는 영상에서 자막과 헤드라인이 맡습니다.
-  이미지에 구워 넣으면 나중에 고칠 수도 번역할 수도 없습니다.
+**[STYLE ONLY] The attached image is for art style reference only.**
+- COPY: color palette, texture, line treatment, shading, body proportions, mood
+- NEVER COPY: the face, hairstyle, clothing, gender, or pose of any person in it
+- The reference image character must NOT appear in the generated image
 """
 
-CAST_BLOCK = """
-## 첨부 2번부터 — 등장 인물 시트 (이 인물·이 비율 그대로)
+CAST_ONLY = """
+## 첨부 이미지 — 등장 인물
 
 {sheets}
 
-각 인물의 **얼굴, 머리 모양, 옷**은 시트 그대로입니다.
-시트에 없는 것만 이 씬에서 정합니다 — 포즈, 각도, 표정의 세기, 화면에서의 위치.
-
-인물은 화면에서 **또렷하게 보이는 크기**로 그립니다. 얼굴 생김새와 옷 색이
-읽히지 않으면 인물을 넣은 의미가 없습니다.
+**얼굴과 옷차림만 참고합니다.**
+- 인물의 생김새, 머리 모양, 옷은 첨부한 시트 그대로입니다
+- **자세는 복사하지 마세요.** 시트의 정면으로 선 자세를 그대로 쓰면 안 됩니다
+- 자세와 동작은 아래 장면 설명을 따릅니다
+- 그림체와 몸 비율도 시트 그대로입니다
 """
 
+PEOPLE_BLOCK = """
+**등장 인물 (이대로 그릴 것)**
+{people}
+"""
 SCENE = """$imagegen
 
 {prompt}
-{style_block}{cast_block}
+{ref_block}
 size는 {size}입니다.
 
 생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:
@@ -122,13 +121,22 @@ def main() -> int:
             p = (args.sheets / f"{cid}_sheet.png").resolve()
             if p.exists():
                 lines.append(f"- {names.get(cid, cid)}: {p}")
-        block = CAST_BLOCK.format(sheets="\n".join(lines)) if lines else ""
-        # 인물이 없는 씬에도 화풍 기준은 붙인다 — 배경만 사실적으로 빠지는 것을 막는다
-        style = STYLE_BLOCK.format(base=args.base.resolve())
+        scene = scenes.get(n, {})
+        if lines:
+            # 캐릭터 시트가 있으면 그것만 붙인다. 화풍 기준 시트를 함께 주면
+            # 두 사람 그림이 섞여 정체성이 깨진다.
+            ref = CAST_ONLY.format(sheets="\n".join(lines))
+        else:
+            ref = STYLE_ONLY.format(base=args.base.resolve())
+            # 베끼지 말라고만 하면 대신 그릴 것이 없다. 무명 인물이라도
+            # 누가 나오는지 적어 주면 시트를 베낄 이유가 사라진다.
+            people = scene.get("people") or []
+            if people:
+                ref += PEOPLE_BLOCK.format(
+                    people="\n".join(f"- {d}" for d in people))
         out = next_version(args.out, n)
         prompt = SCENE.format(prompt=Path(job["prompt_file"]).read_text(encoding="utf-8"),
-                              style_block=style, cast_block=block,
-                              size=job.get("size", "1792x1024"), out=out)
+                              ref_block=ref, size=job.get("size", "1792x1024"), out=out)
         subprocess.run(
             ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
             stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=1200,

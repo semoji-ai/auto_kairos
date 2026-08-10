@@ -101,6 +101,8 @@ Thumbs.db
 !/scripts/fetch_assets.py
 !/scripts/check_prompt_match.py
 !/scripts/auto_cast.py
+!/scripts/detect_hatch.py
+!/scripts/organize_versions.py
 !/scripts/match_archive.py
 !/scripts/dedupe_assets.py
 !/scripts/extract_extras.py
