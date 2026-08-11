@@ -29,40 +29,32 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+
+def _quality(path: Path) -> tuple[float, float]:
+    """결과물의 결과 경계 흐림을 잰다. 기준 시트는 결 16.1 / 경계 14.6."""
+    sys.path.insert(0, str(Path(__file__).parent))
+    from detect_hatch import grain_score, edge_score
+    return grain_score(path), edge_score(path)
+
 SHEET = """$imagegen
 
-첨부한 세모지 기준 캐릭터 시트를 **편집**해 새 인물의 시트를 만드세요.
-새로 그리지 말고 이 시트를 고치는 겁니다.
+첨부한 1번 이미지는 세모지 기준 캐릭터 시트입니다.
 
-기준 시트: {base}
-{ref_block}
-이 캐릭터를 **{era}의 {name}({age})**로 바꾸세요.
-**레이아웃과 컷 구성은 기준 시트와 완전히 똑같이 유지합니다.**
+이 캐릭터를 수정하여 {who} 캐릭터 시트를 그려줘.
+기준 캐릭터 시트 인물의 헤어스타일과 의상은 변경해서 사용할 것.
+그림체는 1번 이미지 그대로 — 눈, 눈썹, 머리카락, 피부를 그린 방식을 그대로 옮길 것.
+눈은 심플한 검은 눈동자만 그리기.
 
-- 윗줄: 전신 정면 · 전신 측면 · 전신 후면 · 얼굴 클로즈업
-- 아랫줄: 표정 5종 (기본 미소 · 놀람 · 낙담 · 걱정 · 활짝 웃음)
+{outfit_line}
+레이아웃은 기준 시트와 같습니다 — 윗줄에 전신 정면·측면·후면과 얼굴 클로즈업,
+아랫줄에 표정 5종.
 
-각 컷의 위치, 크기, 간격, 전신의 키와 비례를 기준 시트 그대로 두세요.
-
-바꿀 것은 세 가지입니다.
-- 얼굴: {look}
-- 머리: {hair}
-- 옷: {outfit}
-
-**나머지는 기준 시트 그대로입니다.** 등신 비율, 팔다리 길이, 그림체, 외곽선 처리,
-면 그림자 방식, 색면 대비, 배경색, 눈 모양, 코와 입선 처리를 전혀 건드리지 마세요.
-
-후면 컷에서는 얼굴이 보이지 않으므로 **뒷머리의 형태와 옷의 뒷면 구조**로만
-이 인물을 알아볼 수 있어야 합니다. 그 두 가지를 분명하게 그리세요.
-
-표정 5종은 모두 같은 인물입니다. 얼굴 크기와 높이, 머리 모양, 옷깃이 같고
-표정만 다릅니다.
-
-글자는 넣지 않습니다. size는 1536x1024입니다.
+size는 1536x1024입니다.
 
 생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:
 {out}
@@ -72,9 +64,9 @@ SHEET = """$imagegen
 REF_BLOCK = """
 실제 인물 사진: {ref}
 
-이 사진은 **얼굴 특징의 근거**입니다. 그림체나 구도는 여기서 가져오지 마세요.
-사진에서 가져올 것은 얼굴형, 이마 넓이, 눈매의 각도와 크기, 눈썹, 코의 폭,
-입 모양, 턱선, 헤어라인, 안경과 수염의 유무뿐입니다.
+이 사진에서 가져올 것은 **얼굴 생김새뿐**입니다 — 얼굴형, 이마 넓이, 눈매의
+각도와 크기, 눈썹, 코의 폭, 입 모양, 턱선, 헤어라인, 안경과 수염의 유무.
+그리는 방식은 기준 시트를 따릅니다.
 {ref_note}
 """
 
@@ -97,6 +89,9 @@ def main() -> int:
                     help="기준 캐릭터 시트 (기본: 세모지 공식 시트)")
     ap.add_argument("-o", "--out", required=True, type=Path)
     ap.add_argument("--only", help="특정 id만")
+    ap.add_argument("--tries", type=int, default=3, help="기준 미달 시 재시도 횟수")
+    ap.add_argument("--max-grain", type=float, default=22.0, help="결 상한 (기준 시트 16.1)")
+    ap.add_argument("--max-edge", type=float, default=19.0, help="경계 흐림 상한 (기준 시트 14.6)")
     args = ap.parse_args()
 
     roster = json.loads(args.roster.read_text(encoding="utf-8"))
@@ -110,24 +105,41 @@ def main() -> int:
         look, hair = split_look(e)
         out = (args.out / f"{e['id']}_sheet.png").resolve()
 
-        ref_block = ""
-        if e.get("ref"):
-            ref = (args.roster.parent / e["ref"]).resolve()
-            if ref.exists():
-                ref_block = REF_BLOCK.format(ref=ref, ref_note=e.get("ref_note", ""))
-            else:
-                print(f"  ! {e['id']} 참조 사진 없음: {ref}")
-
-        prompt = SHEET.format(base=base, ref_block=ref_block, era=e.get("era", ""),
-                              name=e["name"], age=e.get("age", ""), look=look,
-                              hair=hair, outfit=e["outfit"], out=out)
-        subprocess.run(
-            ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
-            stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=900,
-        )
+        ref = (args.roster.parent / e["ref"]).resolve() if e.get("ref") else None
+        if ref and ref.exists():
+            who = f"첨부한 2번 이미지의 인물({e['name']}, {e.get('era','')} {e.get('age','')})로"
+            base_line = f"1번: {base}\n2번: {ref}"
+        else:
+            who = f"{e.get('era','')}의 {e['name']}({e.get('age','')}) — {look}, {hair} — 로"
+            base_line = f"1번: {base}"
+        prompt = SHEET.format(who=who, outfit_line=f"의상: {e['outfit']}\n", out=out)
+        prompt = prompt.replace("첨부한 1번 이미지는 세모지 기준 캐릭터 시트입니다.",
+                                f"첨부 이미지\n{base_line}\n\n1번은 세모지 기준 캐릭터 시트입니다.")
+        # 빗금·번짐은 프롬프트로 못 막는다. 뽑아 보고 기준을 넘으면 다시 뽑는다.
+        best = None
+        for attempt in range(1, args.tries + 1):
+            if out.exists():
+                out.replace(out.with_suffix(f".try{attempt - 1}.png"))
+            subprocess.run(
+                ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
+                stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=900,
+            )
+            if not out.exists():
+                continue
+            g, ed = _quality(out)
+            if best is None or (g + ed) < (best[1] + best[2]):
+                shutil.copy2(out, out.with_suffix(".best.png"))
+                best = (attempt, g, ed)
+            print(f"      시도 {attempt}: 결 {g:.1f} 경계 {ed:.1f}"
+                  + ("  ✓ 통과" if g <= args.max_grain and ed <= args.max_edge else ""))
+            if g <= args.max_grain and ed <= args.max_edge:
+                break
+        if best and out.with_suffix(".best.png").exists():
+            shutil.move(out.with_suffix(".best.png"), out)
         got = out.exists()
         ok += got
-        print(f"  {'✓' if got else '✗'} {e['id']:18s} {e['name']} {e.get('age','')}")
+        tail = f" (최선 시도 {best[0]}: 결 {best[1]:.1f} 경계 {best[2]:.1f})" if best else ""
+        print(f"  {'✓' if got else '✗'} {e['id']:18s} {e['name']} {e.get('age','')}{tail}")
 
     print(f"\n완료 {ok}/{len(roster)}")
     return 0 if ok == len(roster) else 1

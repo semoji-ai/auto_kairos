@@ -40,10 +40,30 @@ def grain_score(path: Path, size: int = 768) -> float:
     return float(hi[flat].std() * 1000)
 
 
+def edge_score(path: Path, size: int = 1024) -> float:
+    """색면 경계가 얼마나 흐린가. 평면 일러스트는 경계가 한 칸에서 끝난다.
+
+    구재서 시트처럼 머리와 이마 경계가 번지고 사선 결이 끼는 유형은
+    평탄면 검사(grain_score)로 잡히지 않는다. 경계 자체를 본다.
+    """
+    im = Image.open(path).convert("L").resize((size, size), Image.LANCZOS)
+    a = np.asarray(im, dtype=np.float32) / 255.0
+    gy, gx = np.gradient(a)
+    g = np.hypot(gy, gx)
+    strong = g > np.percentile(g, 99)            # 진짜 경계
+    if strong.sum() < 100:
+        return 0.0
+    # 경계 둘레가 완만하게 퍼져 있으면 번진 것이다
+    near = (_boxblur(strong.astype(np.float32), 2) > 0) & ~strong
+    return float(g[near].mean() / (g[strong].mean() + 1e-9) * 100)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("target", type=Path)
     ap.add_argument("--thr", type=float, default=30.0)
+    ap.add_argument("--edge-thr", type=float, default=100.0,
+                    help="경계 번짐 기준 (낮을수록 깨끗)")
     ap.add_argument("-o", "--out", type=Path)
     args = ap.parse_args()
 
@@ -51,14 +71,15 @@ def main() -> int:
     rows = []
     for f in files:
         try:
-            rows.append({"file": str(f), "score": round(grain_score(f), 1)})
+            rows.append({"file": str(f), "score": round(grain_score(f), 1),
+                         "edge": round(edge_score(f), 1)})
         except Exception as e:
             print(f"  ! {f.name} {type(e).__name__}")
     rows.sort(key=lambda r: -r["score"])
-    bad = [r for r in rows if r["score"] >= args.thr]
+    bad = [r for r in rows if r["score"] >= args.thr or r.get("edge", 0) >= args.edge_thr]
     for r in bad:
         p = Path(r["file"])
-        print(f"  {r['score']:6.1f}  {p.parent.parent.name}/{p.name}")
+        print(f"  결 {r['score']:5.1f} 경계 {r.get('edge', 0):5.1f}  {p.parent.parent.name}/{p.name}")
     print(f"\n검사 {len(rows)}장 / 기준 {args.thr} 이상 {len(bad)}장")
     if args.out:
         args.out.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
