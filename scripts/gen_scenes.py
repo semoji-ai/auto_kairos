@@ -28,16 +28,18 @@ STYLE_ONLY = """
 
 {base}
 
-**[STYLE ONLY] 이 그림은 그림체만 참고합니다.**
-- 가져올 것: 색감, 질감, 선 처리, 그림자 방식, 인물의 몸 비율, 분위기
-- **가져오지 말 것: 이 그림에 있는 사람의 얼굴, 머리 모양, 옷, 성별, 자세**
-- 이 그림 속 인물이 결과물에 나타나서는 안 됩니다
-- 아래 장면 설명에 맞는 **새로운 인물**을 그리세요
+**이 그림을 보고 그대로 따라 그리세요.**
 
-**[STYLE ONLY] The attached image is for art style reference only.**
-- COPY: color palette, texture, line treatment, shading, body proportions, mood
-- NEVER COPY: the face, hairstyle, clothing, gender, or pose of any person in it
-- The reference image character must NOT appear in the generated image
+사람을 그릴 때는 **첨부한 그림에 있는 사람과 똑같은 몸으로** 그립니다.
+머리 크기, 팔다리 길이, 키에 대한 머리의 비, 손발 크기 — 전부 그림에 있는 그대로입니다.
+**말로 설명하지 않겠습니다. 그림을 보고 맞추세요.**
+
+가져오지 말 것은 하나입니다 — **그 사람의 얼굴, 머리 모양, 옷, 성별.**
+누구인지만 다르고, 몸과 그리는 방식은 같습니다.
+
+**Match the attached image exactly for how bodies are drawn** — head size relative
+to the whole figure, limb length, hand and foot size. Do not reinterpret.
+Change only WHO the person is: face, hairstyle, clothing, gender.
 """
 
 CAST_ONLY = """
@@ -49,7 +51,7 @@ CAST_ONLY = """
 - 인물의 생김새, 머리 모양, 옷은 첨부한 시트 그대로입니다
 - **자세는 복사하지 마세요.** 시트의 정면으로 선 자세를 그대로 쓰면 안 됩니다
 - 자세와 동작은 아래 장면 설명을 따릅니다
-- 그림체와 몸 비율도 시트 그대로입니다
+- 몸을 그리는 방식은 시트 그대로입니다. 그림을 보고 맞추세요
 """
 
 PEOPLE_BLOCK = """
@@ -83,7 +85,7 @@ def main() -> int:
     ap.add_argument("project", type=Path)
     ap.add_argument("prompt_dir", type=Path)
     ap.add_argument("-o", "--out", required=True, type=Path)
-    ap.add_argument("--sheets", type=Path, default=Path("_imggen/characters/final3"))
+    ap.add_argument("--sheets", type=Path, default=Path("_imggen/characters/final_v2_up"))
     ap.add_argument("--base", type=Path,
                     default=Path("auto_agent/data/artstyle/styles/semoji_character_sheet.png"),
                     help="화풍 기준 시트 — 인물이 없는 씬에도 붙인다")
