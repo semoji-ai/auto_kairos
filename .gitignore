@@ -201,3 +201,4 @@ fontagent_vault/
 _archive_*/
 *.db-shm
 *.db-wal
+!/scripts/check_asset_relevance.py
