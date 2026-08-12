@@ -110,6 +110,12 @@ def main() -> int:
         s = scenes.get(n)
         if not s or (s.get("imageAsset") or {}).get("source") != "search":
             continue
+        # 「이 씬 내용과 어떻게 이어지는가」를 못 적었으면 쓸 근거가 없다.
+        # 이 검사가 없어서 부산 이전 씬에 1945년 귀환선 사진이, 1940년대 동업
+        # 설명에 2005년 GS 출범식 사진이 붙었다. 둘 다 desc는 정확했다.
+        if not (e.get("relevance") or "").strip():
+            fail.append((n, "relevance 공란 — 씬과의 연결 근거 없음"))
+            continue
         stem = outdir / f"scene_{n:03d}_search_01"
         got = next((p for p in outdir.glob(f"scene_{n:03d}_search_01.*")), None)
         if got:
