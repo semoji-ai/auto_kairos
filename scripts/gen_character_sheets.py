@@ -50,7 +50,7 @@ SHEET = """$imagegen
 그림체는 1번 이미지 그대로 — 눈, 눈썹, 머리카락, 피부를 그린 방식을 그대로 옮길 것.
 눈은 심플한 검은 눈동자만 그리기.
 
-{outfit_line}
+{outfit_line}{note_line}
 레이아웃은 기준 시트와 같습니다 — 윗줄에 전신 정면·측면·후면과 얼굴 클로즈업,
 아랫줄에 표정 5종.
 
@@ -112,7 +112,14 @@ def main() -> int:
         else:
             who = f"{e.get('era','')}의 {e['name']}({e.get('age','')}) — {look}, {hair} — 로"
             base_line = f"1번: {base}"
-        prompt = SHEET.format(who=who, outfit_line=f"의상: {e['outfit']}\n", out=out)
+        # ref_note에 사진과 다르게 그려야 할 점이 적혀 있다.
+        # 최소 프롬프트로 줄이며 이 줄을 흘렸더니, 20대 구인회에 40대 사진의
+        # 안경이 그대로 따라왔다. 사진과 그릴 나이가 다를 때 반드시 필요하다.
+        note = ""
+        if e.get("sheet_note"):
+            note = f"{e['sheet_note']}\n"
+        prompt = SHEET.format(who=who, outfit_line=f"의상: {e['outfit']}\n",
+                              note_line=note, out=out)
         prompt = prompt.replace("첨부한 1번 이미지는 세모지 기준 캐릭터 시트입니다.",
                                 f"첨부 이미지\n{base_line}\n\n1번은 세모지 기준 캐릭터 시트입니다.")
         # 빗금·번짐은 프롬프트로 못 막는다. 뽑아 보고 기준을 넘으면 다시 뽑는다.
