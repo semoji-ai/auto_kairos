@@ -76,8 +76,14 @@ def main() -> int:
     led = json.loads(args.ledger.read_text(encoding="utf-8"))
     entries = [e for e in led.get("scenes", led) if e.get("found")]
 
+    # scene_specs를 재생성하면 씬 수가 줄기도 한다. 원장은 그대로 남아
+    # 사라진 씬을 가리킨다 — EP11이 47씬으로 줄었는데 원장은 48·51을 들고 있었다.
+    orphan = [e["n"] for e in entries if e["n"] not in scenes]
+
     blank, weak = [], []
     for e in entries:
+        if e["n"] not in scenes:
+            continue
         r = (e.get("relevance") or "").strip()
         if not r:
             blank.append(e["n"])
@@ -101,20 +107,23 @@ def main() -> int:
                 judged = json.loads(fout.read_text(encoding="utf-8")).get("items", [])
 
     bad = [j for j in judged if j.get("verdict") in ("wrong", "risky")]
-    out = {"blank_relevance": blank, "weak_relevance": weak, "judged": judged}
+    out = {"blank_relevance": blank, "weak_relevance": weak,
+           "orphan_scenes": orphan, "judged": judged}
     if args.out:
         args.out.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 
     print(f"  {args.project.name}: 실물 {len(entries)}건"
           f" / 근거 공란 {len(blank)} / 근거 부실 {len(weak)}"
           + (f" / 내용 어긋남 {len(bad)}" if args.judge else ""))
+    if orphan:
+        print(f"      ⚠ 없는 씬을 가리킴 — {orphan[:10]} (scene_specs 재생성 흔적)")
     if blank:
         print(f"      근거 공란 — 씬 {blank[:14]}")
     for w in weak[:5]:
         print(f"      씬 {w['n']:>3} 부실 — {w['relevance'][:60]}")
     for b in bad[:8]:
         print(f"      씬 {b['n']:>3} {b['verdict']} — {b.get('why','')[:70]}")
-    return 1 if (blank or weak or bad) else 0
+    return 1 if (blank or weak or bad or orphan) else 0
 
 
 if __name__ == "__main__":

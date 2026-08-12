@@ -202,3 +202,5 @@ _archive_*/
 *.db-shm
 *.db-wal
 !/scripts/check_asset_relevance.py
+!/scripts/apply_relevance_recheck.py
+!/scripts/apply_dropped_fill.py
