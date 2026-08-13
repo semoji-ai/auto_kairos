@@ -52,6 +52,19 @@ def get_file_status(output_dir: str) -> dict:
     return result
 
 
+def _has_asset_entry(img_dir: Path, scene_num: int) -> bool:
+    """image_assets.json에 이 씬 항목이 (이미지 목록과 함께) 있는가."""
+    f = img_dir / "image_assets.json"
+    if not f.exists():
+        return False
+    try:
+        db = json.loads(f.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    return any(e.get("sceneNumber") == scene_num and e.get("images")
+               for e in db.get("scenes", []))
+
+
 def get_scene_image_url(project_dir_name: str, scene_num: int, output_dir: str) -> Optional[str]:
     """씬 이미지 URL 반환 (/output/ 마운트 기준). image_assets.json의 selected 우선."""
     img_dir = Path(output_dir) / "images"
@@ -61,6 +74,12 @@ def get_scene_image_url(project_dir_name: str, scene_num: int, output_dir: str) 
     selected = get_selected(img_dir, scene_num)
     if selected and (img_dir / selected).exists():
         return f"/output/{project_dir_name}/images/{selected}"
+
+    # 등록은 돼 있는데 고른 것이 없으면 「일부러 비웠다」는 뜻이다.
+    # 도표로 바꾼 씬이 그렇다 — 이미지가 없어야 맞다. 여기서 파일 탐색으로
+    # 넘어가면 관련성 관문에서 버린 사진이 썸네일에 그대로 되살아난다.
+    if _has_asset_entry(img_dir, scene_num):
+        return None
 
     # 2) 파일 시스템 탐색 fallback
     for subdir in ("", "generated/", "search/"):

@@ -117,7 +117,11 @@ def main() -> int:
             fail.append((n, "relevance 공란 — 씬과의 연결 근거 없음"))
             continue
         stem = outdir / f"scene_{n:03d}_search_01"
-        got = next((p for p in outdir.glob(f"scene_{n:03d}_search_01.*")), None)
+        # 확장자를 하나만 본다. `.*`로 잡으면 `scene_005_search_01.jpg.old` 같은
+        # 보관본까지 「이미 있음」으로 세어 교체가 통째로 건너뛰어진다.
+        # 실제로 이 한 줄 때문에 재조사로 바꾼 자료 22건이 하나도 안 내려왔다.
+        got = next((p for p in outdir.glob(f"scene_{n:03d}_search_01.*")
+                    if p.suffix in EXT.values()), None)
         if got:
             path, info = got, "이미 있음"
         else:

@@ -204,3 +204,4 @@ _archive_*/
 !/scripts/check_asset_relevance.py
 !/scripts/apply_relevance_recheck.py
 !/scripts/apply_dropped_fill.py
+!/scripts/sync_selected_assets.py
