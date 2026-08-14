@@ -23,9 +23,9 @@ from pathlib import Path
 
 from dotenv import dotenv_values
 
-MODEL = "gemini-2.5-pro"
+MODEL = "gemini-3.1-pro-preview"
 REF = Path("_imggen/review_small/_ref_sheet.jpg")   # 세모지 기준 캐릭터 시트
-BATCH = 6
+BATCH = 3   # 한 번에 많이 보면 앞 씬 인상이 뒤 씬 판정에 번진다
 
 RUBRIC = """당신은 한국 유튜브 다큐멘터리 〈브랜드백과사전 LG편〉의 화면을 검수합니다.
 
@@ -40,7 +40,20 @@ RUBRIC = """당신은 한국 유튜브 다큐멘터리 〈브랜드백과사전 
 1. 내용 일치 — 그림이 나레이션이 말하는 바로 그 장면인가.
    엉뚱한 시대·장소·사물이 그려졌으면 여기서 감점입니다.
 2. 화풍 일관 — 위 그림체에서 벗어나지 않았는가. 검은 외곽선, 사실적 묘사,
-   8등신 인물, 지나친 질감은 벗어난 것입니다.
+   지나친 질감은 벗어난 것입니다.
+
+   **인물 비율은 세어서 판정하세요.** 기준 시트의 인물은 머리 꼭대기부터
+   발끝까지가 머리 높이의 **3.5배**입니다 (three and a half heads tall,
+   head-to-body ratio 1:3.5). 실측값입니다.
+
+   검수 대상에서 사람을 하나 골라 같은 방식으로 세십시오 — 머리 높이가
+   전신의 몇 분의 일인가. 앉아 있으면 머리 대비 상체 길이로 가늠합니다.
+
+     3~4.5 heads   기준에 맞음
+     5~6 heads     벗어남 — style 3점 이하
+     7 heads 이상  성인 사실체 — style 1~2점
+
+   `heads_tall`에 센 값을 숫자로 적으세요. 사람이 없으면 0.
 3. 인물 — 같은 인물이 다른 씬과 같은 사람으로 보이는가. 얼굴·머리·옷이
    흔들리면 감점. (cast가 비어 있으면 해당 없음)
 4. 시대 고증 — 복식·건물·소품이 그 연대에 맞는가.
@@ -53,8 +66,8 @@ reject(반드시 다시) 중 하나.
 문제가 있으면 무엇이 어떻게 잘못됐는지 구체적으로 쓰세요. 없으면 짧게.
 
 JSON만 출력하세요. 설명 문장을 앞뒤에 붙이지 마세요.
-{"scenes":[{"n":1,"content":5,"style":5,"character":5,"period":5,"quality":5,
-"layers":5,"verdict":"keep","issue":""}]}"""
+{"scenes":[{"n":1,"content":5,"style":5,"heads_tall":3.5,"character":5,"period":5,
+"quality":5,"layers":5,"verdict":"keep","issue":""}]}"""
 
 
 def call(api_key: str, parts: list[dict], retries: int = 3) -> str:
@@ -128,6 +141,7 @@ def main() -> int:
                                    ensure_ascii=False, indent=1), encoding="utf-8")
     if out:
         keys = ("content", "style", "character", "period", "quality", "layers")
+        # heads_tall은 점수가 아니라 실측 눈금이라 평균에 넣지 않는다
         avg = {k: sum(x.get(k, 0) for x in out) / len(out) for k in keys}
         print("\n평균 " + " / ".join(f"{k} {v:.1f}" for k, v in avg.items()))
         for v in ("keep", "fix", "reject"):
