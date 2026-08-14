@@ -207,3 +207,5 @@ _archive_*/
 !/scripts/sync_selected_assets.py
 !/scripts/fix_visual_kind.py
 !/scripts/apply_extras.py
+!/scripts/publish_regen.py
+!/scripts/make_review_input.py
