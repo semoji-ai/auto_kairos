@@ -25,12 +25,16 @@ from pathlib import Path
 # 세모지 아트스타일 — artstyle/styles/semoji.json에서 뽑은 고정 서술
 # 세모지 아트스타일 — artstyle/styles/semoji_base.jpg를 직접 보고 서술
 # (semoji.json의 "chubby/oversized head/dot eyes" 서술은 실제 베이스와 맞지 않아 쓰지 않는다)
+# ⚠ 몸 비율은 한 글자도 쓰지 않는다. 「4등신」이라 적어도, 「머리가 크고 몸이
+# 짧다」라고 풀어 써도 모델이 매번 다르게 해석한다. 실제로 이 한 줄 때문에
+# EP01 씬 1·2가 7~8등신으로 나왔다(규칙 character-sheet-rules 3-2절).
+# 비율은 gen_scenes.py가 붙이는 기준 시트가 정한다 — 말이 아니라 그림으로.
 STYLE = (
-    "벡터 플랫 일러스트, 외곽선을 전혀 쓰지 않고 색면만으로 형태를 만든다. "
-    "인물은 4등신 비율로 머리가 크고 몸이 짧다. "
+    "벡터 플랫 일러스트, 형태는 오직 색면과 색면이 맞닿는 경계로만 만든다. "
+    "사람을 그릴 때는 첨부한 그림에 있는 사람과 똑같은 몸으로 그린다. "
     "얼굴에는 코와 입선이 있고, 눈은 작고 둥근 점, 눈썹은 가늘고 짧으며, 뺨에 옅은 홍조가 있다. "
     "같은 색의 한 단계 어두운 톤으로 부드러운 면 그림자만 넣는다. "
-    "색면은 명도 대비가 뚜렷해 서로 또렷하게 구분되고, 질감과 그러데이션 없이 매끈하다"
+    "색면은 명도 대비가 뚜렷해 서로 또렷하게 구분되고, 한 칸의 색면은 고르게 매끈하다"
 )
 
 PALETTE = "#A8BFB4, #8FAECF, #E8C4B0, #2F3E52, #F2F2F0"
@@ -43,6 +47,11 @@ BANNED = [
     "highly detailed", "sharp focus", "trending on artstation", "beautiful", "stunning",
 ]
 NEGATIVE = re.compile(r"\b(no|without|avoid|never|free of|exclude|devoid of)\b", re.IGNORECASE)
+# 한국어 부정문도 똑같이 렌더된다. 영어만 잡다가 「안개…쓰지 않고」,
+# 「필름 그레인 없이」가 그대로 프롬프트에 실려 나갔다.
+NEGATIVE_KO = re.compile(r"(쓰지 않|넣지 않|그리지 (말|않)|없이|않도록|금지)")
+# 몸 비율을 말로 규정하면 매번 다르게 해석된다. 비율은 첨부한 시트가 정한다.
+RATIO_WORDS = re.compile(r"등신|몸 ?비율|신체 ?비율|머리가 크고|비율은")
 
 
 def parse_layers(prompt: str) -> dict[str, str]:
@@ -99,16 +108,19 @@ def build(scene: dict) -> str:
         "",
         f"Color grading: 채도를 낮춘 레트로 플랫 팔레트 {PALETTE}",
         "",
+        # 「안개를 쓰지 않고」처럼 빼고 싶은 것을 이름으로 부르면 모델이 그것을
+        # 그린다(공냥 철칙). 한국어 부정문도 마찬가지다 — 검사기는 영어만 잡는다.
+        # 전부 긍정형으로 바꿔 그려야 할 것을 지정한다.
         f"Texture/Medium: 매끈한 플랫 질감. {STYLE}. "
-        "화면 전체가 같은 밀도의 평면 색면이며, 붓질감·종이질감·필름 그레인 없이 매끈하다. "
-        "공기 원근으로 흐려지는 안개, 빛이 번지는 효과, 렌즈 플레어, 부드러운 초점 흐림은 "
-        "쓰지 않고, 멀리 있는 것도 또렷한 색면으로 그린다",
+        "화면 전체가 같은 밀도의 평면 색면으로 고르게 매끈하다. "
+        "먼 곳도 가까운 곳과 같은 선명도의 또렷한 색면으로 그리고, "
+        "빛은 색면의 밝기 차로만 나타낸다",
         "",
         # 글자는 화면에서 자막·헤드라인이 담당한다. 이미지에 구워 넣으면 고칠 수도
         # 번역할 수도 없고, 철자가 틀려도 손댈 수 없다. 41씬에서 실제로 생겼다.
         "Text-in-image: 간판·현수막·표지판·화면·책 표지·상자에 이르기까지 "
-        "모든 면을 글자 없이 비워 둔다. 간판이 필요하면 색면과 도형만으로 표현하고, "
-        "제품명이나 회사명은 형태와 색으로 알아보게 한다",
+        "모든 면을 매끈한 빈 색면으로 남겨 둔다. 간판이 필요하면 색면과 도형만으로 "
+        "표현하고, 제품명이나 회사명은 형태와 색으로 알아보게 한다",
         "",
         "AR 16:9",
     ]
@@ -141,6 +153,10 @@ def main() -> int:
             issues.append("프롬프트 비어 있음")
         if NEGATIVE.search(prompt):
             issues.append("네거티브 표현")
+        if NEGATIVE_KO.search(prompt):
+            issues.append("한국어 부정문")
+        if RATIO_WORDS.search(prompt):
+            issues.append("몸 비율을 말로 규정")
         if re.match(r"^\s*\[AR", prompt):
             issues.append("앞머리 AR 브래킷")
         if not prompt.rstrip().endswith("AR 16:9"):
