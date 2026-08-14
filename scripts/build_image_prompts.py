@@ -37,6 +37,18 @@ STYLE = (
     "색면은 명도 대비가 뚜렷해 서로 또렷하게 구분되고, 한 칸의 색면은 고르게 매끈하다"
 )
 
+# 비율은 「4등신」이라고 적어도, 영어로 `3.5 heads tall`이라 적어도 전이되지 않았다
+# (여덟 판 실측: 전부 5~6.5등신). 비(ratio)를 **관찰 가능한 사실**로 풀어 쓰고
+# 우선순위를 선언하자 처음으로 4등신이 나왔다. 세 가지가 함께 필요하다 —
+#   ① 비 대신 백분율   ② 부위별 지시(어깨 위치·팔다리·손)   ③ 최우선이라는 선언
+PROPORTION = """CHARACTER PROPORTIONS — apply to every person in the frame, including
+background figures:
+Stylized cartoon proportions, three and a half heads tall.
+The head is very large relative to the body — one head height equals roughly
+28 percent of the full standing figure. Shoulders sit just below the chin.
+Legs are short and thick, arms are short with mitten-like hands.
+This is the single most important requirement of the image."""
+
 PALETTE = "#A8BFB4, #8FAECF, #E8C4B0, #2F3E52, #F2F2F0"
 
 LAYER_RE = re.compile(r"(배경|중경|인물|전경)\s*:\s*([^,]+(?:,(?!\s*(?:배경|중경|인물|전경)\s*:)[^,]+)*)")
@@ -111,6 +123,8 @@ def build(scene: dict) -> str:
         # 「안개를 쓰지 않고」처럼 빼고 싶은 것을 이름으로 부르면 모델이 그것을
         # 그린다(공냥 철칙). 한국어 부정문도 마찬가지다 — 검사기는 영어만 잡는다.
         # 전부 긍정형으로 바꿔 그려야 할 것을 지정한다.
+        PROPORTION,
+        "",
         f"Texture/Medium: 매끈한 플랫 질감. {STYLE}. "
         "화면 전체가 같은 밀도의 평면 색면으로 고르게 매끈하다. "
         "먼 곳도 가까운 곳과 같은 선명도의 또렷한 색면으로 그리고, "

@@ -54,11 +54,25 @@ CAST_ONLY = """
 - 몸을 그리는 방식은 시트 그대로입니다. 그림을 보고 맞추세요
 """
 
+CASE_LIST = """
+**화면에 나오는 사람은 아래 {count}명뿐입니다. {count}명은 서로 다른 사람입니다.**
+얼굴형, 머리 모양, 수염, 나이가 각각 다르게 보이도록 그리세요.
+
+{people}
+"""
+
 PEOPLE_BLOCK = """
 **등장 인물 (이대로 그릴 것)**
 {people}
+
+**얼굴도 이대로 그립니다.** 옷만 바꾸고 얼굴은 첨부 그림 사람을 쓰면 안 됩니다.
+위에 적힌 얼굴형·머리 모양대로, 사람마다 서로 다른 얼굴로 그리세요.
 """
 SCENE = """$imagegen
+
+**첨부한 그림을 먼저 view_image 도구로 불러와 대화 맥락에 넣으세요.**
+경로를 읽고 말로 옮기지 마세요 — 그림 자체가 맥락에 있어야 합니다.
+(이 단계가 빠져 536컷이 시트를 못 본 채 만들어졌다.)
 
 {prompt}
 {ref_block}
@@ -124,6 +138,7 @@ def main() -> int:
             if p.exists():
                 lines.append(f"- {names.get(cid, cid)}: {p}")
         scene = scenes.get(n, {})
+        people = scene.get("people") or []
         if lines:
             # 캐릭터 시트가 있으면 그것만 붙인다. 화풍 기준 시트를 함께 주면
             # 두 사람 그림이 섞여 정체성이 깨진다.
@@ -132,10 +147,16 @@ def main() -> int:
             ref = STYLE_ONLY.format(base=args.base.resolve())
             # 베끼지 말라고만 하면 대신 그릴 것이 없다. 무명 인물이라도
             # 누가 나오는지 적어 주면 시트를 베낄 이유가 사라진다.
-            people = scene.get("people") or []
             if people:
                 ref += PEOPLE_BLOCK.format(
                     people="\n".join(f"- {d}" for d in people))
+        # 화면에 누가 몇 명 있는지 못박지 않으면 남는 자리를 같은 얼굴로 채운다.
+        # 씬 11에서 어른 둘이 복제된 얼굴로 나왔다 — 시트도 설명도 없는 자리였다.
+        roster = [f"- {names.get(c, c)} (첨부한 시트의 인물)" for c in cast
+                  if (args.sheets / f"{c}_sheet.png").exists()]
+        roster += [f"- {d}" for d in people]
+        if roster:
+            ref += CASE_LIST.format(count=len(roster), people="\n".join(roster))
         out = next_version(args.out, n)
         prompt = SCENE.format(prompt=Path(job["prompt_file"]).read_text(encoding="utf-8"),
                               ref_block=ref, size=job.get("size", "1792x1024"), out=out)
