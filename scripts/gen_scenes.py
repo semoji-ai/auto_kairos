@@ -61,6 +61,11 @@ CASE_LIST = """
 {people}
 """
 
+NO_PEOPLE = """
+**이 화면에는 사람이 나오지 않습니다.** 사물·문서·건물·풍경만으로 채웁니다.
+빈자리는 소품과 공간으로 메우세요.
+"""
+
 PEOPLE_BLOCK = """
 **등장 인물 (이대로 그릴 것)**
 {people}
@@ -157,6 +162,10 @@ def main() -> int:
         roster += [f"- {d}" for d in people]
         if roster:
             ref += CASE_LIST.format(count=len(roster), people="\n".join(roster))
+        else:
+            # 사람을 안 적으면 모델이 화면을 채우려 사람을 그리고, 정보가 없으니
+            # 견본 시트를 베낀다. 아무도 없는 화면이면 그렇다고 못박는다.
+            ref += NO_PEOPLE
         out = next_version(args.out, n)
         prompt = SCENE.format(prompt=Path(job["prompt_file"]).read_text(encoding="utf-8"),
                               ref_block=ref, size=job.get("size", "1792x1024"), out=out)

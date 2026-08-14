@@ -25,7 +25,7 @@ from dotenv import dotenv_values
 
 MODEL = "gemini-3.1-pro-preview"
 REF = Path("_imggen/review_small/_ref_sheet.jpg")   # 세모지 기준 캐릭터 시트
-BATCH = 3   # 한 번에 많이 보면 앞 씬 인상이 뒤 씬 판정에 번진다
+BATCH = 1   # 여럿을 같이 보면 서로 비교해 눈금이 흔들린다 — 같은 이미지가 5등신과 3.5등신으로 갈렸다
 
 RUBRIC = """당신은 한국 유튜브 다큐멘터리 〈브랜드백과사전 LG편〉의 화면을 검수합니다.
 

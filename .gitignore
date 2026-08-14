@@ -206,3 +206,4 @@ _archive_*/
 !/scripts/apply_dropped_fill.py
 !/scripts/sync_selected_assets.py
 !/scripts/fix_visual_kind.py
+!/scripts/apply_extras.py
