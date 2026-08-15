@@ -3297,7 +3297,12 @@ const CreativeSceneInner: React.FC<CreativeSceneProps> = ({
   const accentMatches = [...headline.matchAll(/\{\{([^}]+)\}\}/g)];
   const isCounterLayout = layout === "counter" || layout === "metric_spotlight";
   // counter/metric_spotlight는 values[]를 카운트업 타겟으로 직접 사용
-  const numTargets = isCounterLayout && values.length > 0
+  // metric_wall도 values를 카운트 타겟으로 쓴다. 아래 로직은 곳곳에서
+  // `isCounterLayout || layout === "metric_wall"`로 metric_wall을 함께 다루는데
+  // 여기만 빠져 있어, headline에 {{}} 강조가 없으면 타겟이 비고 `|| 1` 폴백이 걸려
+  // **화면에 전부 「1」이 떴다**. EP01 씬 14가 2000·1800·3800·844 대신 1 1 1 1이었다.
+  const usesValueTargets = isCounterLayout || layout === "metric_wall";
+  const numTargets = usesValueTargets && values.length > 0
     ? values.map((v) => (typeof v === "number" ? v : extractNumber(String(v))))
     : accentMatches.map((m) => extractNumber(m[1]));
   const isCountEmphasis = emphasis === "number" || emphasis === "count";
