@@ -209,3 +209,4 @@ _archive_*/
 !/scripts/apply_extras.py
 !/scripts/publish_regen.py
 !/scripts/make_review_input.py
+!/scripts/build_rights.py

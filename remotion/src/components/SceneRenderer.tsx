@@ -200,6 +200,34 @@ export interface SceneRendererProps {
 }
 
 /**
+ * 실물 자료의 출처 표기.
+ *
+ * `attributionStatus`가 `negotiate`면 **붉게** 띄운다 — 아직 권리자 협의가 끝나지
+ * 않은 자료라는 뜻이다. 렌더를 넘겨보다 붉은 글씨가 보이면 그 컷은 못 나간다.
+ * 협의가 끝나면 원장의 라이선스를 `owner_cleared`로 바꾸고 build_rights.py를
+ * 다시 돌린다. 그러면 흰색이 된다.
+ */
+const AttributionTag: React.FC<{ text?: string; status?: string }> = ({ text, status }) => {
+  if (!text) return null;
+  const pending = status === "negotiate";
+  return (
+    <div style={{
+      position: "absolute",
+      bottom: 16,
+      right: 40,
+      fontSize: 22,
+      fontWeight: pending ? 700 : 400,
+      color: pending ? "#FF3B30" : "rgba(255,255,255,0.4)",
+      textShadow: pending ? "0 1px 3px rgba(0,0,0,0.6)" : undefined,
+      pointerEvents: "none",
+      zIndex: 6,
+    }}>
+      {pending ? "협의 필요 · " : "출처: "}{text}
+    </div>
+  );
+};
+
+/**
  * SceneRendererInner — DesignPresetProvider 안에서 호출됨.
  * 모든 이미지/레이아웃 분기를 여기서 통합 처리.
  */
@@ -293,6 +321,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
             출처: {vizData.source}
           </div>
         )}
+        <AttributionTag text={scene.attribution} status={scene.attributionStatus} />
         {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
@@ -310,6 +339,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
           hasImageBackground={true}
           imageAssetPlacement="fullscreen"
         />
+        <AttributionTag text={scene.attribution} status={scene.attributionStatus} />
         {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
@@ -328,6 +358,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
             imageAssetPlacement="center"
           />
         </CenterLayout>
+        <AttributionTag text={scene.attribution} status={scene.attributionStatus} />
         {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
@@ -349,6 +380,7 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
             imageAssetPlacement={placement}
           />
         </SideLayout>
+        <AttributionTag text={scene.attribution} status={scene.attributionStatus} />
         {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
       </AbsoluteFill>
     );
@@ -365,7 +397,8 @@ export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 
         hasImageBackground={hasAnyImage}
         imageAssetPlacement={placement}
       />
-      {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
+      <AttributionTag text={scene.attribution} status={scene.attributionStatus} />
+        {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
     </AbsoluteFill>
   );
 };
