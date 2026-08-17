@@ -525,13 +525,59 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
             scene["qa"] = qa_result
 
     # 캐릭터 썸네일을 각 씬에 주입 (2차 패스)
+    roster = _load_roster()
     for scene in scenes:
         scene["_char_thumbs"] = {}
         for char_id in scene.get("characters", []):
             if char_id in char_thumb_map:
                 scene["_char_thumbs"][char_id] = char_thumb_map[char_id]
+        # cast(로스터 id)를 시트에 잇는다 — 씬 이미지를 실제로 만든 근거가 이쪽이다
+        cast = []
+        for cid in scene.get("cast") or []:
+            info = roster.get(cid)
+            if info:
+                cast.append({"id": cid, "label": info["label"], "thumb": info["thumb"]})
+            else:
+                cast.append({"id": cid, "label": cid, "thumb": ""})
+        scene["_cast"] = cast
 
     return scenes
+
+
+_ROSTER_CACHE: Optional[dict] = None
+
+
+def _load_roster() -> dict:
+    """로스터 id → 표시 이름·시트 URL.
+
+    씬의 `cast`가 담는 것은 `koo_inhoe_40s` 같은 로스터 id다. 그 자체로는
+    누구인지 읽히지 않고 시트 경로도 알 수 없어, 스토리보드에서 인물이
+    비어 보였다. 로스터가 이름과 나이를 갖고 있으므로 여기서 이어 준다.
+    """
+    global _ROSTER_CACHE
+    if _ROSTER_CACHE is not None:
+        return _ROSTER_CACHE
+    out: dict = {}
+    try:
+        from auto_agent.paths import get_charsheet_dir
+
+        sheets = get_charsheet_dir()
+        if sheets is None:
+            return out
+        raw = json.loads((sheets.parent / "roster.json").read_text(encoding="utf-8"))
+        entries = raw if isinstance(raw, list) else raw.get("characters", [])
+        for e in entries:
+            cid = e.get("id")
+            if not cid:
+                continue
+            age = e.get("age") or ""
+            label = f"{e.get('name', cid)}{f' ({age})' if age else ''}"
+            thumb = f"/charsheets/{cid}_sheet.png" if (sheets / f"{cid}_sheet.png").exists() else ""
+            out[cid] = {"label": label, "thumb": thumb}
+    except Exception:
+        pass
+    _ROSTER_CACHE = out
+    return out
 
 
 def format_headline(headline: str) -> str:

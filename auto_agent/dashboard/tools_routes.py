@@ -158,11 +158,13 @@ def _generate_chartagent_dashboard_sync(out_dir: Path) -> dict:
 
     # fallback: subprocess
     try:
-        env = {"PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": str(Path.home())}
         import os
+        import sys
+        env = {"PATH": os.defpath, "HOME": str(Path.home())}
         env.update(os.environ)
         result = subprocess.run(
-            ["python3", "-m", "chartagent.cli", "dashboard", "--out-dir", str(out_dir)],
+            # "python3"은 윈도우에 없다. 지금 도는 인터프리터를 그대로 쓴다.
+            [sys.executable, "-m", "chartagent.cli", "dashboard", "--out-dir", str(out_dir)],
             cwd=str(CHARTAGENT_ROOT / "src"),
             capture_output=True,
             text=True,

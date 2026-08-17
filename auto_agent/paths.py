@@ -12,6 +12,7 @@ WORKSPACE_DIR: 사용자 워크스페이스 (읽기/쓰기 — output, .env, DB,
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 
 def get_package_dir() -> Path:
@@ -22,6 +23,22 @@ def get_package_dir() -> Path:
 def get_data_dir() -> Path:
     """번들 데이터 디렉토리 (pipeline.json, agents.json, skills/ 등)."""
     return get_package_dir() / "data"
+
+
+def get_charsheet_dir() -> Optional[Path]:
+    """인물 시트 디렉토리 (`_imggen/characters/final_v2`).
+
+    워크스페이스와 코드 루트가 갈릴 수 있어 둘 다 본다. 워크스페이스는
+    NAS를 가리키는 반면(output·DB가 거기 있다) 시트는 저장소에 함께
+    들어 있어, 워크스페이스만 보면 못 찾는다 — 실제로 스토리보드에서
+    인물이 안 뜨던 원인이다.
+    """
+    rel = Path("_imggen") / "characters" / "final_v2"
+    for base in (get_package_dir().parent, get_workspace_dir()):
+        p = base / rel
+        if p.is_dir():
+            return p
+    return None
 
 
 def get_workspace_dir() -> Path:

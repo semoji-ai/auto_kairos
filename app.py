@@ -102,6 +102,13 @@ output_dir = workspace / "output"
 if output_dir.exists():
     app.mount("/output", StaticFiles(directory=str(output_dir)), name="output")
 
+# 인물 시트 서빙 (/charsheets/ → _imggen/characters/final_v2/)
+# 시트는 시리즈 전체가 함께 쓰므로 프로젝트마다 복사하지 않고 한 곳에서 낸다.
+from auto_agent.paths import get_charsheet_dir
+_charsheet_dir = get_charsheet_dir()
+if _charsheet_dir:
+    app.mount("/charsheets", StaticFiles(directory=str(_charsheet_dir)), name="charsheets")
+
 # 아트스타일 이미지 서빙 (/static/artstyle/ → auto_agent/data/artstyle/styles/)
 _artstyle_dir = workspace / "auto_agent" / "data" / "artstyle" / "styles"
 if _artstyle_dir.exists():
