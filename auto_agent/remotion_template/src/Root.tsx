@@ -7,6 +7,7 @@ import { SimpleVideo } from "./SimpleVideo";
 import { ThumbnailComposition } from "./ThumbnailComposition";
 import { ShortsComposition } from "./ShortsComposition";
 import { CardNewsComposition } from "./CardNewsComposition";
+import { LayeredScene } from "./layered/LayeredScene";
 import type { SceneManifest, SubtitleConfig } from "./types/manifest";
 
 /**
@@ -265,6 +266,26 @@ export const RemotionRoot: React.FC = () => {
           }}
         />
       </Folder>
+      {/* ── 분리 레이어 + 카메라 (씬 하나를 5~20초로) ── */}
+      <Composition
+        id="LayeredScene"
+        component={LayeredScene as any}
+        durationInFrames={150}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          scene: { width: 1792, height: 1024 },
+          layers: [],
+          camera: [],
+        } as any}
+        calculateMetadata={async ({ props }: any) => {
+          const cam = props.camera ?? [];
+          const dur = props.durationSec
+            ?? (cam.length ? cam[cam.length - 1].t : 5);
+          return { durationInFrames: Math.max(Math.round(dur * 30), 1) };
+        }}
+      />
     </>
   );
 };
