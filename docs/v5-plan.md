@@ -122,8 +122,24 @@ v3의 옛 스크립트 둘에도 대체 표시를 달았다. 옛 프로젝트 �
 | ✅ 1. 발 축 까딱을 CSS로 | `LayeredScene.tsx` — 알파 훑기가 사라졌다 |
 | ✅ 2. Remotion 카메라·SVG 렌더러 | **564프레임 8분 → 21초** |
 | ✅ 3. adobe를 `adobe/`로 subtree 이관 | 이력 보존, 공유 규격 경로도 저장소 안으로 |
-| ⬜ 4. 로컬 폴더명 정리 + 5.0 태그 | |
-| ⬜ 5. v4 동결 | |
+| ✅ 4. 로컬 폴더명 정리 + 5.0.0 태그 | 옛 경로는 심링크로 살려 뒀다 |
+| ✅ 5. v4 정리 | 원격 아카이브, 로컬 삭제(2.6GB 회수) |
+
+### 경로 정리 결과
+
+```
+~/LocalProjects/auto_kairos          실제 폴더
+~/LocalProjects/auto_kairos_v3  →    심링크 (옛 경로도 계속 산다)
+CEP 확장  →  ~/LocalProjects/auto_kairos/adobe/cep/com.autokairos.pd
+```
+
+**NAS 경로는 그대로 뒀다** — `output/`이 가리키는
+`/Volumes/jleavens/Projects/auto_kairos_v3/output`은 NAS 쪽 폴더 이름이고,
+DB의 `output_dir`이 12편 전부 그 경로를 물고 있다. 이름만 맞추려고 건드리면
+프로젝트가 통째로 끊긴다. 로컬 폴더명과 NAS 폴더명은 달라도 된다.
+
+v4는 `github.com/semoji-ai/auto_kairos_v4`에 읽기 전용으로 남아 있다.
+원고 둘(트럼프의 인생·한국 강대국 갭)은 쓰지 않기로 해 보관하지 않았다.
 
 이관 뒤 adobe 쪽이 할 일은 `adobe/HANDOFF-5.0-monorepo.md`에 있다 —
 CEP 심링크 재설정과 백엔드 기동 경로 변경.
