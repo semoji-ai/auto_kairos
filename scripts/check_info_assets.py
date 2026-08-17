@@ -20,7 +20,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from gen_info_assets import clean_subject  # noqa: E402  같은 세척을 거친 뒤에 본다
 
-MAX_ASSETS = 4  # 다섯을 넘으면 배치가 성기고 시선이 흩어진다 (규칙 5)
+# 넷이 기본이지만 못 박지 않는다. 다섯을 넘으면 성겨지기 쉬울 뿐,
+# 내용이 요구하면 일곱까지는 쓴다 — 화면을 보고 정할 일이다.
+SOFT_MAX = 4   # 넘으면 살펴볼 것
+HARD_MAX = 7   # 넘으면 고쳐야 함
 
 # 프롬프트에 섞이면 해로운 말들 (규칙 4·7)
 #
@@ -65,8 +68,10 @@ def main() -> int:
 
         if not assets:
             errors.append(f"씬{n:>3}  인포그래픽인데 요소가 없다")
-        if len(assets) > MAX_ASSETS:
-            errors.append(f"씬{n:>3}  요소 {len(assets)}개 — {MAX_ASSETS}개를 넘는다. 씬을 나누거나 덩어리로 합친다")
+        if len(assets) > HARD_MAX:
+            errors.append(f"씬{n:>3}  요소 {len(assets)}개 — {HARD_MAX}개까지다. 씬을 나누거나 덩어리로 합친다")
+        elif len(assets) > SOFT_MAX:
+            warns.append(f"씬{n:>3}  요소 {len(assets)}개 — 배치가 성겨지지 않는지 화면에서 확인한다")
         if not (s.get("composition") or {}).get("note"):
             warns.append(f"씬{n:>3}  배치 설명이 비어 있다")
 
