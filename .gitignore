@@ -215,3 +215,4 @@ _archive_*/
 !/scripts/render_camera.py
 !/scripts/animate_scene.py
 !/scripts/verify_voice.py
+!/scripts/spec_sync.py
