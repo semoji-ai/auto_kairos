@@ -217,6 +217,9 @@ _archive_*/
 !/scripts/verify_voice.py
 !/scripts/spec_sync.py
 !/scripts/build_layered_props.py
+!/scripts/build_mode_input.py
+!/scripts/run_visual_mode.py
+!/scripts/gen_info_assets.py
 /app/node_modules/
 /app/src-tauri/target/
 /app/icon-src.png
