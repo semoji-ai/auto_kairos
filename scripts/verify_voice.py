@@ -40,6 +40,10 @@ HANGUL_NUM = re.compile(
     r"|[일이삼사오육칠팔구]십[일이삼사오육칠팔구]?\s*(골|년|살|개)")
 META = re.compile(r"^\s*([\[(#]|<출처>|>)")
 
+# 실측 낭독 속도 — ElevenLabs semoji 보이스로 412자/분. 여유를 둬 밴드로 쓴다.
+CHARS_PER_MIN = (350, 412)
+LEN_TOLERANCE = 0.3          # 목표 대비 ±30% 이탈이면 탈락 (adobe 게이트와 같은 기준)
+
 
 def bands() -> dict:
     try:
@@ -54,7 +58,7 @@ def narration_lines(text: str) -> list[str]:
             if l.strip() and not META.match(l.strip())]
 
 
-def check(text: str) -> dict:
+def check(text: str, target_min: float | None = None) -> dict:
     b = bands()
     lines = narration_lines(text)
     enders = [l for l in lines if re.search(r"[.?!…\"”]\s*$", l)
@@ -92,16 +96,31 @@ def check(text: str) -> dict:
                  "코퍼스 47편 모두 최소 1회 이상 씁니다. 공감 지점에 구어체를, "
                  "간접 사실에 전달체를 섞으세요.")
 
-    return {"ok": not v, "violations": v,
-            "metrics": {"polite": round(polite, 3), "colloq": round(colloq, 3),
-                        "plain": round(plain, 3), "line_len_std": round(len_std, 2),
-                        "enders": ne, "lines": len(lines)}}
+    m = {"polite": round(polite, 3), "colloq": round(colloq, 3),
+         "plain": round(plain, 3), "line_len_std": round(len_std, 2),
+         "enders": ne, "lines": len(lines)}
+
+    # 분량 — 목표가 주어졌을 때만 본다. 길이는 문체와 무관해 보이지만,
+    # 길면 늘어지고 짧으면 설명이 빠져 결국 전달이 무너진다.
+    if target_min:
+        chars = len(re.findall(r"[가-힣]", joined))
+        lo = int(target_min * CHARS_PER_MIN[0] * (1 - LEN_TOLERANCE))
+        hi = int(target_min * CHARS_PER_MIN[1] * (1 + LEN_TOLERANCE))
+        m["nar_chars"] = chars
+        m["target_range"] = [lo, hi]
+        if chars < lo or chars > hi:
+            v.append(f"분량 이탈 — 나레이션 한글 {chars:,}자, 목표 {lo:,}~{hi:,}자"
+                     f"({target_min:g}분 기준). "
+                     f"{'문장을 쳐내 압축하세요' if chars > hi else '내용을 보강하세요'}.")
+
+    return {"ok": not v, "violations": v, "metrics": m}
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("files", nargs="*", type=Path)
     ap.add_argument("--dir", type=Path, help="폴더 내 *.md 전체 검사")
+    ap.add_argument("--minutes", type=float, help="목표 분량(분) — 주면 분량 이탈도 탈락 사유")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
 
@@ -114,7 +133,7 @@ def main() -> int:
 
     out, bad = [], 0
     for p in paths:
-        r = check(p.read_text(encoding="utf-8"))
+        r = check(p.read_text(encoding="utf-8"), target_min=a.minutes)
         r["file"] = p.name
         out.append(r)
         m = r["metrics"]
