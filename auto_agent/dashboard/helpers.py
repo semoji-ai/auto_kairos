@@ -525,7 +525,7 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
             scene["qa"] = qa_result
 
     # 캐릭터 썸네일을 각 씬에 주입 (2차 패스)
-    roster = _load_roster()
+    roster = load_roster()
     for scene in scenes:
         scene["_char_thumbs"] = {}
         for char_id in scene.get("characters", []):
@@ -547,7 +547,7 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
 _ROSTER_CACHE: Optional[dict] = None
 
 
-def _load_roster() -> dict:
+def load_roster() -> dict:
     """로스터 id → 표시 이름·시트 URL.
 
     씬의 `cast`가 담는 것은 `koo_inhoe_40s` 같은 로스터 id다. 그 자체로는

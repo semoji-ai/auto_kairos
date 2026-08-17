@@ -954,6 +954,44 @@ async def get_characters(project_ref: str, request: Request):
             "from_plan": False,
         })
 
+    # cast(로스터 id) — 씬 이미지를 실제로 만들 때 붙인 인물 시트.
+    #
+    # 옛 `characters`는 자유 문자열이라 같은 사람이 씬마다 다르게 적혀 있고
+    # 시트와 이을 수가 없어 전부 「미생성」으로 보였다. cast를 쓰는
+    # 프로젝트라면 그쪽이 사실이므로 패널을 cast로 세운다.
+    from auto_agent.dashboard.helpers import load_roster
+
+    roster = load_roster()
+    cast_scenes: dict[str, list[int]] = {}
+    cast_gen_scenes: dict[str, list[int]] = {}
+    if specs:
+        for s in specs.get("scenes", []):
+            sn = s.get("sceneNumber") or s.get("scene_number") or 0
+            is_generate = (s.get("imageAsset") or {}).get("source") == "generate"
+            for cid in s.get("cast") or []:
+                cast_scenes.setdefault(cid, []).append(sn)
+                if is_generate:
+                    cast_gen_scenes.setdefault(cid, []).append(sn)
+
+    if cast_scenes:
+        result = []
+        for cid, scene_list in cast_scenes.items():
+            info = roster.get(cid) or {}
+            all_scenes = sorted(set(scene_list))
+            result.append({
+                "id": cid,
+                "name": info.get("label") or cid,
+                "canonical": cid,
+                "tags": [],
+                "descriptions": [],
+                "scenes": all_scenes,
+                "gen_scenes": sorted(set(cast_gen_scenes.get(cid, []))),
+                "scene_count": len(all_scenes),
+                "thumb_url": info.get("thumb", ""),
+                "has_image": bool(info.get("thumb")),
+                "from_plan": False,
+            })
+
     # 등장 횟수 내림차순 정렬
     result.sort(key=lambda x: (-x["scene_count"], x["canonical"]))
 
