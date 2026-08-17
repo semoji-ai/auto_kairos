@@ -1,0 +1,10 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    { "ae_comp_name": "Scene_001", "duration": 3, "subtitle": "auto_kairos PoC — 씬 1" },
+    { "ae_comp_name": "Scene_002", "duration": 3, "subtitle": "두 번째 씬" },
+    { "ae_comp_name": "Scene_003", "duration": 3, "subtitle": "세 번째 씬" }
+  ]
+}

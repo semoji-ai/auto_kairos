@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["score_total", "verdict", "revision_instructions"],
+  "properties": {
+    "score_total": { "type": "number" },
+    "verdict": { "type": "string", "enum": ["PASS", "REVISE", "FAIL"] },
+    "revision_instructions": { "type": "array", "items": { "type": "string" } },
+    "score_breakdown": { "type": "object", "additionalProperties": true },
+    "field_feedback": { "type": "object", "additionalProperties": true },
+    "antipatterns_detected": { "type": "array" },
+    "previous_score": { "type": "number" },
+    "next_action": { "type": "string" }
+  }
+}

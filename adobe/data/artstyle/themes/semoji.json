@@ -1,0 +1,67 @@
+{
+  "id": "semoji",
+  "label": "세모지",
+  "source": "내장 시드",
+  "colors": {
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "textRgb": [
+      232,
+      234,
+      237
+    ],
+    "mutedRgb": [
+      154,
+      160,
+      166
+    ],
+    "bgRgb": [
+      35,
+      38,
+      43
+    ]
+  },
+  "chart": {
+    "theme_set": "gallery_infographic",
+    "theme_overrides": {
+      "pattern_mode": "outline_plus_hatch"
+    },
+    "patternKind": "diagonal_hatch"
+  },
+  "map": {
+    "tile": "bright",
+    "overrides": [
+      {
+        "match": "background",
+        "paint": {
+          "background-color": "#F0E8DE"
+        }
+      },
+      {
+        "match": "water",
+        "paint": {
+          "fill-color": "#C8BAA0"
+        }
+      },
+      {
+        "match": "boundary*",
+        "paint": {
+          "line-color": "#8A6E48",
+          "line-width": 1.6,
+          "line-opacity": 0.9
+        }
+      },
+      {
+        "match": "road*",
+        "paint": {
+          "line-color": "#C8B498",
+          "line-opacity": 0.7
+        }
+      }
+    ],
+    "rasterFilter": "sepia(0.32) saturate(0.85) brightness(1.03)"
+  }
+}

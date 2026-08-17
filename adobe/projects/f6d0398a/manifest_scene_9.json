@@ -1,0 +1,51 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    {
+      "ae_comp_name": "S09_9239e134",
+      "width": 1920,
+      "height": 1080,
+      "image": null,
+      "layers": [],
+      "audio": null,
+      "subtitle": "오늘 밤, 당신의 뇌에게 청소할 시간을 주자.",
+      "duration": 4.0,
+      "layout": "cinematic"
+    }
+  ],
+  "skipFinal": true,
+  "ae_tokens": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/data/artstyle/ae_tokens.json",
+  "themeColors": {
+    "bg": "#23262b",
+    "bgRgb": [
+      35,
+      38,
+      43
+    ],
+    "text": "#E8EAED",
+    "textRgb": [
+      232,
+      234,
+      237
+    ],
+    "muted": "#9AA0A6",
+    "mutedRgb": [
+      154,
+      160,
+      166
+    ],
+    "accent": "#4A90D9",
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "accentSoftRgb": [
+      74,
+      144,
+      217
+    ]
+  }
+}

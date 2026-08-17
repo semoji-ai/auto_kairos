@@ -1,0 +1,75 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    {
+      "ae_comp_name": "S06_00be0406",
+      "width": 1920,
+      "height": 1080,
+      "image": null,
+      "layers": [],
+      "audio": null,
+      "subtitle": "그렇다면 나라마다 사람들은 얼마나 잘까? 네덜란드 사람들은 하루 평균 8.1시간을 잔다. 미국은 7.5시간, 일본은 6.8시간, 그리고 한국은 6.3시간으로 조사 대상국 가운데 가장 짧다.",
+      "duration": 17.5,
+      "layout": "bar",
+      "headline": "나라별 잠의 격차",
+      "chart": {
+        "labels": [
+          "네덜란드",
+          "미국",
+          "일본",
+          "한국"
+        ],
+        "values": [
+          8.1,
+          7.5,
+          6.8,
+          6.3
+        ],
+        "unit": "시간"
+      },
+      "chartSpec": {
+        "theme_set": "gallery_infographic",
+        "visual_mode": "editorial",
+        "guideLineCount": 1,
+        "guideDash": null,
+        "guideOpacity": 0.2,
+        "guideStrokeWidth": 1,
+        "axisStrokeWidth": 2,
+        "barRadius": 14,
+        "patternKind": "diagonal_hatch",
+        "patternSpacing": 10,
+        "patternOpacity": 0.4,
+        "patternStrokeWidth": 1.25,
+        "outlineWidth": 2.4,
+        "plotLeft": 80,
+        "plotRight": 40,
+        "plotBottom": 90
+      }
+    }
+  ],
+  "ae_tokens": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/data/artstyle/ae_tokens.json",
+  "themeColors": {
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "textRgb": [
+      33,
+      37,
+      41
+    ],
+    "mutedRgb": [
+      134,
+      142,
+      150
+    ],
+    "bgRgb": [
+      248,
+      249,
+      250
+    ]
+  }
+}

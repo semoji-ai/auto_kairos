@@ -1,0 +1,1 @@
+{"name": "finalize-manuscript", "inputs": ["plan.md", "drafts/v1.md", "research_targeted/targeted.md"], "output": "final_manuscript.md", "output_kind": "md", "schema": null}

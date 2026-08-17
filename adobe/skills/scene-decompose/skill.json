@@ -1,0 +1,7 @@
+{
+  "name": "scene-decompose",
+  "inputs": ["final_manuscript.md"],
+  "output": "scenes.json",
+  "output_kind": "json",
+  "schema": "scenes.schema.json"
+}

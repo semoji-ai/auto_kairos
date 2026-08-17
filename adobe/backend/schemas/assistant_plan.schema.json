@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actions", "reply"],
+  "properties": {
+    "reply": { "type": ["string", "null"] },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "reason", "targets"],
+        "properties": {
+          "action": { "type": "string",
+            "enum": ["generate_missing_images", "split_layers", "tts_all", "plan_motion", "assemble"] },
+          "reason": { "type": "string" },
+          "targets": {
+            "type": "array",
+            "description": "대상 씬 번호 목록. 사용자가 특정 씬을 지목했으면 그 번호만. 전체를 명시적으로 지시했을 때만 빈 배열(=조건에 맞는 모든 씬).",
+            "items": { "type": "number" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    {
+      "ae_comp_name": "S02_b0798c6d",
+      "width": 1920,
+      "height": 1080,
+      "image": null,
+      "layers": [],
+      "audio": null,
+      "subtitle": "그런데 잠은 단순한 휴식이 아니다.",
+      "duration": 3.2,
+      "layout": "headline_only",
+      "headline": "잠은 몸의 재가동 시간",
+      "sub": "쉬는 동안 더 중요한 일이 시작된다"
+    }
+  ],
+  "ae_tokens": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/data/artstyle/ae_tokens.json",
+  "themeColors": {
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "textRgb": [
+      33,
+      37,
+      41
+    ],
+    "mutedRgb": [
+      134,
+      142,
+      150
+    ],
+    "bgRgb": [
+      248,
+      249,
+      250
+    ]
+  }
+}

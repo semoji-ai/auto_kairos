@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["elements"],
+  "properties": {
+    "elements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "name_en", "location", "kind", "reason", "intent"],
+        "properties": {
+          "name": { "type": "string" },
+          "name_en": { "type": "string" },
+          "location": { "type": "string" },
+          "kind": { "type": "string", "enum": ["character", "object"] },
+          "reason": { "type": "string" },
+          "intent": { "type": "string" }
+        }
+      }
+    }
+  }
+}

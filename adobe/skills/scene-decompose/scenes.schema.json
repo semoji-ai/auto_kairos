@@ -1,0 +1,257 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "project_id",
+    "topic",
+    "total_scenes",
+    "scenes"
+  ],
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "topic": {
+      "type": "string"
+    },
+    "total_scenes": {
+      "type": "integer"
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sceneNumber",
+          "section",
+          "title",
+          "narration",
+          "characters",
+          "visual_summary",
+          "image_prompt",
+          "duration_estimate_sec",
+          "layout",
+          "headline",
+          "sub",
+          "items",
+          "value",
+          "label",
+          "chart",
+          "quote_text",
+          "quote_who",
+          "map_center",
+          "map_zoom",
+          "map_markers",
+          "map_route"
+        ],
+        "properties": {
+          "sceneNumber": {
+            "type": "integer"
+          },
+          "section": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "narration": {
+            "type": "string"
+          },
+          "characters": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "visual_summary": {
+            "type": "string"
+          },
+          "image_prompt": {
+            "type": "string"
+          },
+          "duration_estimate_sec": {
+            "type": "number"
+          },
+          "layout": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "bar",
+              "bar_chart",
+              "cinematic",
+              "counter_wall",
+              "diagram",
+              "dramatic_number",
+              "generic",
+              "graph",
+              "headline_only",
+              "icon_grid",
+              "icon_stat",
+              "impact_count",
+              "items_list",
+              "map",
+              "metric_spotlight",
+              "narrative_build",
+              "quote",
+              "reveal_sequence",
+              "slide_bignum",
+              "slide_compare",
+              "slide_highlight",
+              "slide_list",
+              "slide_numbered",
+              "slide_ranking",
+              "slide_statistic",
+              "split_contrast",
+              "spotlight_reveal",
+              "title_card",
+              "word_cascade",
+              null
+            ]
+          },
+          "headline": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sub": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "items": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "value": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "chart": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "labels",
+              "values",
+              "unit"
+            ],
+            "properties": {
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "quote_text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "quote_who": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "map_center": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            },
+            "description": "[위도, 경도]"
+          },
+          "map_zoom": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "map_markers": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "coord"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "coord": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "description": "[위도, 경도]"
+                }
+              }
+            }
+          },
+          "map_route": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "description": "이동 경로 [위도,경도] 점 목록(순서대로 선 연결)"
+          }
+        }
+      }
+    }
+  }
+}

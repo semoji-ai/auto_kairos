@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["layers", "camera"],
+  "properties": {
+    "layers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["layer", "moves"],
+        "properties": {
+          "layer": { "type": "string" },
+          "moves": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "start", "duration", "direction", "amount"],
+              "properties": {
+                "type": { "type": "string",
+                  "enum": ["slide_in", "fade_in", "pop", "drift", "bob",
+                           "shake", "zoom_emphasis", "exit_fade", "stamp", "wiggle"] },
+                "start": { "type": "number" },
+                "duration": { "type": "number" },
+                "direction": { "type": ["string", "null"],
+                  "enum": ["left", "right", "up", "down", null] },
+                "amount": { "type": ["number", "null"] }
+              }
+            }
+          }
+        }
+      }
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "amount"],
+      "properties": {
+        "type": { "type": "string",
+          "enum": ["none", "slow_zoom_in", "slow_zoom_out", "pan_left", "pan_right"] },
+        "amount": { "type": ["number", "null"] }
+      }
+    }
+  }
+}

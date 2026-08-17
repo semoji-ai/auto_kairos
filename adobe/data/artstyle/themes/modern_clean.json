@@ -1,0 +1,64 @@
+{
+  "id": "modern_clean",
+  "label": "모던클린",
+  "source": "내장 시드",
+  "colors": {
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "textRgb": [
+      33,
+      37,
+      41
+    ],
+    "mutedRgb": [
+      134,
+      142,
+      150
+    ],
+    "bgRgb": [
+      248,
+      249,
+      250
+    ]
+  },
+  "chart": {
+    "theme_set": "neutral_white",
+    "theme_overrides": {}
+  },
+  "map": {
+    "tile": "bright",
+    "overrides": [
+      {
+        "match": "background",
+        "paint": {
+          "background-color": "#FFFFFF"
+        }
+      },
+      {
+        "match": "water",
+        "paint": {
+          "fill-color": "#D6E6F5"
+        }
+      },
+      {
+        "match": "boundary*",
+        "paint": {
+          "line-color": "#A0AAB8",
+          "line-width": 1.2,
+          "line-opacity": 0.8
+        }
+      },
+      {
+        "match": "road*",
+        "paint": {
+          "line-color": "#D8DCE4",
+          "line-opacity": 0.7
+        }
+      }
+    ],
+    "rasterFilter": ""
+  }
+}

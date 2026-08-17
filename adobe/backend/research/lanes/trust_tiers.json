@@ -1,0 +1,156 @@
+{
+  "_meta": {
+    "version": "1",
+    "updated_at": "2026-04-28",
+    "policy": "evidence 채택 가능 여부를 결정하는 도메인 화이트리스트. claim_kind 차등은 spec 5절 참고. 추가/수정은 PR로만.",
+    "tiers": {
+      "A": "canonical — fact:date_or_number 단독 채택 가능",
+      "B": "corroborated — A 1건 또는 B 2건 교차 매칭 시 채택",
+      "C": "excluded — 색인은 하되 evidence로는 채택 ❌"
+    }
+  },
+
+  "A": {
+    "encyclopedia": [
+      "ko.wikipedia.org",
+      "en.wikipedia.org",
+      "ja.wikipedia.org",
+      "zh.wikipedia.org"
+    ],
+    "government_kr": [
+      "*.go.kr",
+      "*.korea.kr",
+      "kostat.go.kr",
+      "law.go.kr",
+      "moef.go.kr",
+      "moel.go.kr",
+      "kipris.or.kr",
+      "patent.go.kr"
+    ],
+    "government_global": [
+      "*.gov",
+      "*.gov.uk",
+      "*.gov.au",
+      "*.europa.eu",
+      "who.int",
+      "un.org",
+      "oecd.org",
+      "imf.org",
+      "worldbank.org"
+    ],
+    "press_kr_mainstream": [
+      "yna.co.kr",
+      "yonhapnewstv.co.kr",
+      "kbs.co.kr",
+      "news.kbs.co.kr",
+      "imnews.imbc.com",
+      "news.sbs.co.kr",
+      "ytn.co.kr",
+      "chosun.com",
+      "donga.com",
+      "joongang.co.kr",
+      "hankyung.com",
+      "mk.co.kr",
+      "hani.co.kr",
+      "khan.co.kr",
+      "kmib.co.kr",
+      "kookje.co.kr",
+      "seoul.co.kr",
+      "etnews.com",
+      "businesspost.co.kr",
+      "biz.chosun.com",
+      "edaily.co.kr",
+      "newsis.com",
+      "newspim.com"
+    ],
+    "press_global_mainstream": [
+      "reuters.com",
+      "apnews.com",
+      "bbc.com",
+      "bbc.co.uk",
+      "nytimes.com",
+      "washingtonpost.com",
+      "wsj.com",
+      "ft.com",
+      "economist.com",
+      "bloomberg.com",
+      "theguardian.com",
+      "npr.org"
+    ],
+    "official_corp_template": "회사 official 도메인은 영상 주제마다 추가 (예: yuhan.co.kr, samsung.com, lg.com, pokemon.co.jp, nintendo.com)"
+  },
+
+  "B": {
+    "academic": [
+      "doi.org",
+      "api.crossref.org",
+      "scholar.google.com",
+      "ncbi.nlm.nih.gov",
+      "pubmed.ncbi.nlm.nih.gov",
+      "arxiv.org",
+      "ssrn.com",
+      "jstor.org",
+      "ieee.org",
+      "acm.org",
+      "nature.com",
+      "science.org",
+      "sciencedirect.com",
+      "springer.com",
+      "wiley.com"
+    ],
+    "primary_sources_kr": [
+      "history.go.kr",
+      "archives.go.kr",
+      "nl.go.kr",
+      "kdb.or.kr",
+      "kostat.go.kr/files",
+      "krpia.co.kr"
+    ],
+    "primary_sources_global": [
+      "archive.org",
+      "loc.gov",
+      "nationalarchives.gov.uk",
+      "europeana.eu"
+    ],
+    "books": [
+      "openlibrary.org",
+      "books.google.com",
+      "google.com/books"
+    ]
+  },
+
+  "C": {
+    "_note": "다음 도메인은 evidence 채택 불가. raw 색인은 가능하나 클레임 근거로 사용 ❌",
+    "blogs_and_user_content": [
+      "blog.naver.com",
+      "tistory.com",
+      "brunch.co.kr",
+      "wordpress.com",
+      "blogspot.com",
+      "medium.com",
+      "velog.io",
+      "kr.linkedin.com/pulse",
+      "namu.wiki"
+    ],
+    "social_and_video": [
+      "youtube.com",
+      "youtu.be",
+      "instagram.com",
+      "facebook.com",
+      "twitter.com",
+      "x.com",
+      "tiktok.com",
+      "threads.net"
+    ],
+    "cafe_and_forums": [
+      "cafe.naver.com",
+      "cafe.daum.net",
+      "dcinside.com",
+      "ppomppu.co.kr",
+      "ruliweb.com",
+      "fmkorea.com",
+      "reddit.com",
+      "quora.com"
+    ]
+  }
+}

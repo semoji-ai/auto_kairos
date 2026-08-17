@@ -1,0 +1,57 @@
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+.DS_Store
+logs/
+*.log
+
+# 생성 산출물 (재생성 가능 — 커밋 안 함)
+projects/*/scenes.json
+projects/*/logs/
+projects/*/image_results/
+projects/*/.codex_session
+projects/*/strategy/
+projects/*/research_reports/
+projects/*/research_targeted/
+projects/*/drafts/
+projects/*/.imagegen_last.txt
+projects/*/images/
+projects/*/references.json
+projects/*/storyboard/
+projects/*/layers/
+projects/*/layers.json
+projects/*/tts_config.json
+projects/*/manifest.json
+# 에셋 서브폴더 — NAS 심링크(슬래시 없는 패턴이라야 심링크도 제외됨)
+projects/*/images
+projects/*/storyboard
+projects/*/layers
+projects/*/characters
+projects/*/audio
+projects/*/video_sources
+
+# LLM 오케스트레이터 선택(런타임)
+data/llm_config.json
+
+# 모션 플랜 산출물(재생성 가능)
+projects/*/motion_*.json
+projects/*/.motion_plan_*.json
+projects/*/_versions/
+projects/*/edits_log.jsonl
+projects/*/assistant_chat.jsonl
+projects/*/.assistant_plan.json
+projects/*/.motion_plan_*.json
+projects/*/.layer_analysis.json
+projects/*/.assistant_session.json
+projects/*/vault/
+projects/*/.vault_distill.md
+projects/*/subtitles.json
+projects/*/subtitles.srt
+
+# 타이레놀 재현 에셋(NAS 소스 복사본 — 로컬 유지)
+cep/com.autokairos.pd/jsx/tylenol/assets/
+.claude/worktrees/
+
+# 모션 학습 레퍼런스 영상(로컬, 내부 분석용)
+refs/

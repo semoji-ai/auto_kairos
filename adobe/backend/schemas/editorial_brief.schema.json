@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["real_topic", "core_question", "narrative_arc", "human_truth", "hidden_truth"],
+  "properties": {
+    "real_topic": { "type": "string" },
+    "core_question": { "type": "string" },
+    "hook_angle": { "type": "string" },
+    "hidden_truth": { "type": "string" },
+    "narrative_arc": { "type": "object", "additionalProperties": true },
+    "human_truth": { "type": "object", "additionalProperties": true },
+    "present_connection": { "type": "object", "additionalProperties": true },
+    "evidence_anchors": {},
+    "coherence_spine": { "type": "object", "additionalProperties": true },
+    "must_cover": {},
+    "excluded_angles": {},
+    "audience": {}
+  }
+}

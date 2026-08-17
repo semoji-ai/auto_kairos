@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["score_total", "verdict", "revision_instructions"],
+  "properties": {
+    "score_total": { "type": "number" },
+    "verdict": { "type": "string", "enum": ["PASS", "REVISE", "FAIL"] },
+    "revision_instructions": { "type": "array", "items": { "type": "string" } },
+    "viewer_score": { "type": "number" },
+    "expert_score": { "type": "number" },
+    "field_feedback": { "type": "object", "additionalProperties": true }
+  }
+}

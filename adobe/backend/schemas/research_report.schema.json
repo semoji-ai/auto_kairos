@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["topic", "sources", "digest"],
+  "properties": {
+    "topic": { "type": "string" },
+    "queries": { "type": "array", "items": { "type": "string" } },
+    "sources": { "type": "array" },
+    "web_findings": { "type": "array" },
+    "digest": { "type": "object", "additionalProperties": true }
+  }
+}

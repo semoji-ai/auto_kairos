@@ -1,0 +1,5 @@
+{
+  "gothic_bold": "OTSBAggroB", "gothic_med": "OTSBAggroM", "gothic_light": "OTSBAggroL",
+  "serif": "GyeonggiBatangR", "rounded": "Cafe24Ssurround", "sans": "Pretendard-Regular",
+  "fallback": "AppleSDGothicNeo-Bold"
+}

@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["entities"],
+  "properties": {
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "type", "name"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string", "enum": ["character", "location", "prop"] },
+          "name": { "type": "string" },
+          "aliases": { "type": "array" },
+          "visual": { "type": "object" },
+          "first_scene": { "type": "integer" },
+          "scenes": { "type": "array" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    {
+      "ae_comp_name": "S08_012d7ca0",
+      "width": 1920,
+      "height": 1080,
+      "image": null,
+      "layers": [],
+      "audio": null,
+      "subtitle": "수면이 부족하면 몸은 정직하게 신호를 보낸다. 첫째, 집중력이 떨어지고 실수가 늘어난다. 둘째, 면역력이 약해져 감기에 잘 걸린다. 셋째, 식욕 호르몬이 흔들려 과식하게 된다. 넷째, 감정 조절이 어려워져 짜증이 늘어난다.",
+      "duration": 22.3,
+      "layout": "items_list",
+      "headline": "몸이 보내는 경고",
+      "items": [
+        "집중력 저하와 실수 증가",
+        "면역력 약화",
+        "과식 유도",
+        "감정 조절 어려움"
+      ]
+    }
+  ],
+  "ae_tokens": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/data/artstyle/ae_tokens.json",
+  "themeColors": {
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "textRgb": [
+      33,
+      37,
+      41
+    ],
+    "mutedRgb": [
+      134,
+      142,
+      150
+    ],
+    "bgRgb": [
+      248,
+      249,
+      250
+    ]
+  }
+}

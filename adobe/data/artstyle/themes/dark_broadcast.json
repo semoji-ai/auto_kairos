@@ -1,0 +1,64 @@
+{
+  "id": "dark_broadcast",
+  "label": "다크방송",
+  "source": "내장 시드",
+  "colors": {
+    "accentRgb": [
+      255,
+      80,
+      80
+    ],
+    "textRgb": [
+      240,
+      240,
+      240
+    ],
+    "mutedRgb": [
+      150,
+      150,
+      150
+    ],
+    "bgRgb": [
+      18,
+      18,
+      20
+    ]
+  },
+  "chart": {
+    "theme_set": "broadcast_signal",
+    "theme_overrides": {}
+  },
+  "map": {
+    "tile": "dark",
+    "overrides": [
+      {
+        "match": "background",
+        "paint": {
+          "background-color": "#1A1C22"
+        }
+      },
+      {
+        "match": "water",
+        "paint": {
+          "fill-color": "#0E1018"
+        }
+      },
+      {
+        "match": "boundary*",
+        "paint": {
+          "line-color": "#6A6E7C",
+          "line-width": 1.4,
+          "line-opacity": 0.8
+        }
+      },
+      {
+        "match": "road*",
+        "paint": {
+          "line-color": "#383C48",
+          "line-opacity": 0.6
+        }
+      }
+    ],
+    "rasterFilter": ""
+  }
+}
