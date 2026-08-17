@@ -212,3 +212,6 @@ _archive_*/
 !/scripts/build_rights.py
 !/scripts/export_to_adobe.py
 !/scripts/relink_audio.py
+!/scripts/render_camera.py
+!/scripts/animate_scene.py
+!/scripts/verify_voice.py

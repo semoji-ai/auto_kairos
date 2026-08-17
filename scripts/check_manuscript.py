@@ -121,6 +121,17 @@ def narration_chars(text: str) -> int:
     return len(re.sub(r"[#\-*\n\s]", "", stripped))
 
 
+def check_voice(text: str) -> list[str]:
+    """문체 검사를 붙인다. 밴드 파일이 없으면 조용히 건너뛴다."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from verify_voice import check as voice_check
+    except Exception:
+        return []
+    r = voice_check(text)
+    return [f"  문체 — {v}" for v in r["violations"]]
+
+
 def check_file(path: Path) -> bool:
     text = path.read_text(encoding="utf-8")
     blocks = split_blocks(text)
@@ -129,6 +140,9 @@ def check_file(path: Path) -> bool:
     issues += find_duplicates(blocks)
     issues += check_chapters(text)
     issues += check_markers(text)
+    # 편집 사고와 문체는 다른 층이다. 둘을 한 관문에서 본다.
+    # (문체 기준은 세모지 코퍼스 47편 실측 밴드 — verify_voice.py)
+    issues += check_voice(text)
 
     n = narration_chars(text)
     head = f"{path.name}  {n:,}자 / 약 {n/350:.1f}분 / {len(blocks)}블록"
