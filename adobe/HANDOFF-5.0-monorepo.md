@@ -2,7 +2,7 @@
 
 > **작업 위치가 바뀝니다.** 지금 이 저장소에서 하던 일을
 > `auto_kairos/adobe/` 안에서 하게 됩니다.
-> 옮기는 방식은 git subtree이므로 **커밋 이력은 그대로 보존**됩니다.
+> 옮기는 방식은 git subtree(`--squash`)입니다.
 
 ---
 
@@ -28,7 +28,7 @@ import 하지 않습니다. 대화는 지금처럼 파일과 HTTP로만 합니�
 | 작업 경로 | `~/LocalProjects/auto_kairos_adobe/` | `~/LocalProjects/auto_kairos/adobe/` |
 | 백엔드 | `backend/` | `adobe/backend/` |
 | 패널 | `cep/com.autokairos.pd/` | `adobe/cep/com.autokairos.pd/` |
-| 이력 | — | **그대로 보존** (subtree) |
+| 이력 | — | 압축 커밋 1개 + 옛 리모트로 조회 (아래 참조) |
 
 ---
 
@@ -44,6 +44,10 @@ ln -s ~/LocalProjects/auto_kairos/adobe/cep/com.autokairos.pd \
       ~/Library/Application\ Support/Adobe/CEP/extensions/com.autokairos.pd
 ```
 
+**이미 걸어 뒀습니다.** `~/LocalProjects/auto_kairos`는 지금 `auto_kairos_v3`를
+가리키는 별칭 심링크입니다 — 나중에 실제 폴더명을 바꿔도 별칭만 갈아 끼우면
+되므로 CEP 심링크를 두 번 걸 필요가 없습니다.
+
 AE를 껐다 켜서 패널이 뜨는지 확인합니다.
 
 ### ② 백엔드 기동 경로
@@ -56,7 +60,22 @@ python3 -m uvicorn backend.app:app --port <기존 포트>
 `AK_PROJECTS_ROOT`는 그대로입니다 — 오히려 이제 같은 저장소 안의
 `projects/`(또는 v3 `output/`)를 가리키면 됩니다.
 
-### ③ 진행 중이던 브랜치
+### ③ 이력은 「압축」됐습니다 — 유실은 아닙니다
+
+`--squash`로 가져와 모노레포 메인라인에는 어도비 137+커밋이 **압축 커밋
+하나**(`5bb022c`)로 들어갔습니다. 처음 안내에서 「이력 그대로 보존」이라고
+쓴 것은 부정확했습니다.
+
+```bash
+git log adobe/backend/manifest.py        # 압축 이전은 안 보인다
+git log adobe/main -- backend/manifest.py  # 옛 리모트로는 보인다
+```
+
+옛 커밋(`9078905` 카메라 등)은 `adobe` 리모트를 통해 조회할 수 있습니다.
+파일 단위 이력 추적이 자주 필요하면 `--squash` 없이 다시 가져올 수도 있지만,
+그러면 커밋 그래프가 섞입니다. 지금은 압축 상태로 둡니다.
+
+### ④ 진행 중이던 브랜치
 
 `feat/tylenol-motion-recreation`의 내용은 **이미 main에 올라가 있습니다**
 (카메라 구현 `9078905`·`c0aa74e` 포함). subtree는 main 기준으로 가져가므로
@@ -65,6 +84,30 @@ python3 -m uvicorn backend.app:app --port <기존 포트>
 옮긴 뒤 새 작업은 `auto_kairos` 저장소에서 브랜치를 따세요.
 
 ---
+
+## 프로젝트 폴더 — 복사하지 않습니다
+
+옛 저장소의 `projects/lg_ep01~12`(2.1GB)는 git에 없던 산출물이라 subtree를
+따라오지 않았습니다. **옮기지 않습니다.** 복사본을 두면 원본이 갱신될 때
+어긋납니다.
+
+대신 v3 프로젝트 폴더를 직접 봅니다.
+
+```bash
+export AK_PROJECTS_ROOT=/Volumes/jleavens/Projects/auto_kairos_v3/output
+```
+
+각 프로젝트 폴더에 `scenes.json`을 **제자리로** 넣어 뒀습니다
+(`scripts/export_to_adobe.py --in-place`). `imageRef`·`audioRef`가 그 폴더의
+`images/`·`audio/`를 가리키므로 에셋 복사가 필요 없습니다.
+
+확인:
+
+```
+scan_projects(v3 output) → 전체 27 / LG 14편, status: decomposed
+```
+
+옛 `projects/lg_ep*`는 지워도 됩니다.
 
 ## 옛 저장소는 어떻게 되나
 

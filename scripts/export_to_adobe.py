@@ -58,6 +58,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("ep")
     ap.add_argument("--name", help="adobe 프로젝트 폴더 이름 (기본: lg_<ep 소문자>)")
+    ap.add_argument("--in-place", action="store_true",
+                    help="복사하지 않고 v3 프로젝트 폴더에 scenes.json만 쓴다 (권장)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -68,7 +70,9 @@ def main() -> int:
         print(f"  {args.ep}: ep_map에 없음")
         return 1
     D = Path(emap[key]["dir"])
-    out = ADOBE_ROOT / (args.name or f"lg_{args.ep.lower()}")
+    # 복사본을 만들면 원본이 갱신될 때 어긋난다. 12편에 2.1GB가 중복됐다.
+    # 제자리에 쓰고 adobe는 AK_PROJECTS_ROOT로 이 폴더를 직접 본다.
+    out = D if args.in_place else ADOBE_ROOT / (args.name or f"lg_{args.ep.lower()}")
 
     specs = json.loads((D / "scene_specs.json").read_text(encoding="utf-8"))
     scenes = specs["scenes"]
@@ -123,13 +127,15 @@ def main() -> int:
             "assetSource": ia.get("source"),
         }
         if sel.get(n):
-            row["imageRef"] = f"storyboard/sb_{sid}.png"
+            row["imageRef"] = (f"images/{sel[n]}" if args.in_place
+                               else f"storyboard/sb_{sid}.png")
             n_img += 1
         audio = D / apath[n] if n in apath else D / "audio" / f"{sid}.mp3"
         if not audio.exists():
             audio = D / "audio" / f"scene_{n:03d}.mp3"
         if audio.exists():
-            row["audioRef"] = f"audio/tts_{sid}.mp3"
+            row["audioRef"] = (str(audio.relative_to(D)) if args.in_place
+                               else f"audio/tts_{sid}.mp3")
             n_audio += 1
         rows.append(row)
 
@@ -146,6 +152,12 @@ def main() -> int:
     print(f"    씬 {len(rows)} / 이미지 {n_img} / 오디오 {n_audio}")
     if args.dry_run:
         print("    [dry-run]")
+        return 0
+
+    if args.in_place:
+        (out / "scenes.json").write_text(json.dumps(payload, ensure_ascii=False, indent=1),
+                                         encoding="utf-8")
+        print(f"    ✓ scenes.json 제자리 생성 (자산 복사 없음)")
         return 0
 
     for sub in ("storyboard", "audio", "characters"):
