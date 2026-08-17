@@ -47,7 +47,42 @@ if echo "$CHANGED" | grep -qE "^remotion/src/"; then
     cd "$REPO_ROOT"
 fi
 
-# ── 4. 폰트 누락 확인 ──────────────────────────────────
+# ── 4. adobe 백엔드 패키지 ─────────────────────────────
+# adobe/backend는 stdlib만 쓰는 것이 원칙이지만, 도구용 의존이 몇 개 있다.
+if echo "$CHANGED" | grep -qE "^adobe/requirements\.txt$"; then
+    echo ""
+    warn "adobe 패키지 변경 감지 — 설치 중..."
+    if [ -f "$VENV_PIP" ]; then
+        "$VENV_PIP" install -r "$REPO_ROOT/adobe/requirements.txt" -q && info "adobe 패키지 완료"
+    fi
+fi
+
+# ── 5. CEP 확장 심링크 ─────────────────────────────────
+# AE는 정해진 폴더만 읽는다. 새로 클론하면 링크가 없으므로 걸어 준다.
+CEP_DIR="$HOME/Library/Application Support/Adobe/CEP/extensions"
+CEP_LINK="$CEP_DIR/com.autokairos.pd"
+if [ -d "$REPO_ROOT/adobe/cep/com.autokairos.pd" ]; then
+    if [ ! -e "$CEP_LINK" ]; then
+        mkdir -p "$CEP_DIR"
+        ln -sfn "$REPO_ROOT/adobe/cep/com.autokairos.pd" "$CEP_LINK" \
+            && info "CEP 패널 심링크 생성"
+    elif [ "$(readlink "$CEP_LINK")" != "$REPO_ROOT/adobe/cep/com.autokairos.pd" ]; then
+        warn "CEP 심링크가 다른 곳을 가리킵니다 — $(readlink "$CEP_LINK")"
+        warn "  고치려면: ln -sfn \"$REPO_ROOT/adobe/cep/com.autokairos.pd\" \"$CEP_LINK\""
+    fi
+fi
+
+# ── 6. 공유 규격 잠금 ──────────────────────────────────
+# 파이프라인과 adobe가 같은 밴드 파일을 봐야 한다. 어긋나면 조용히 넘어가지 않는다.
+if echo "$CHANGED" | grep -qE "^(auto_agent/data/(artstyle|spec)/|artstyle/styles/)"; then
+    echo ""
+    if [ -f "$VENV_PYTHON" ]; then
+        "$VENV_PYTHON" "$REPO_ROOT/scripts/spec_sync.py" --push >/dev/null 2>&1 \
+            && info "공유 규격 동기화" || warn "공유 규격 동기화 실패 — scripts/spec_sync.py --check"
+    fi
+fi
+
+# ── 7. 폰트 누락 확인 ──────────────────────────────────
 FONT_CHECK="$REPO_ROOT/remotion/public/fonts/GyeonggiMillenniumBatang-Regular.ttf"
 if [ ! -f "$FONT_CHECK" ]; then
     echo ""
