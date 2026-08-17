@@ -27,7 +27,7 @@ if not IS_WINDOWS:
     import pty
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -89,30 +89,43 @@ app.mount("/static", StaticFiles(directory=str(DASHBOARD_DIR / "static")), name=
 # output 디렉토리 마운트 (이미지/오디오 직접 서빙)
 workspace = get_workspace_dir()
 
-# Remotion 폰트 서빙 (/fonts/ → remotion/public/fonts/)
-_fonts_dir = workspace / "remotion" / "public" / "fonts"
-if _fonts_dir.exists():
-    app.mount("/fonts", StaticFiles(directory=str(_fonts_dir)), name="fonts")
+# 정적 에셋 서빙 — 워크스페이스와 코드 루트를 **둘 다** 본다.
+#
+# 워크스페이스는 NAS를 가리키고(output·DB가 거기 있다) 저장소는 로컬이라,
+# 같은 이름의 폴더가 양쪽에 따로 자란다. 실제로 배경 이미지는 저장소에만,
+# 폰트 셋은 NAS 쪽이 더 많았다. 한쪽만 걸면 어느 쪽을 골라도 파일을 잃는다.
+from auto_agent.paths import get_charsheet_dir, get_package_dir
 
-# Remotion 배경 이미지 서빙 (/background/ → remotion/public/background/)
-_bg_dir = workspace / "remotion" / "public" / "background"
-if _bg_dir.exists():
-    app.mount("/background", StaticFiles(directory=str(_bg_dir)), name="background")
+_ASSET_ROOTS = [workspace, get_package_dir().parent]
+
+
+def _mount_asset(prefix: str, rel: str, extra: "Path | None" = None) -> None:
+    """prefix로 들어온 파일을 여러 뿌리에서 찾아 낸다. 먼저 찾은 것을 준다."""
+    dirs = [d for d in ([extra] if extra else []) + [r / rel for r in _ASSET_ROOTS]
+            if d and d.is_dir()]
+    if not dirs:
+        return
+
+    @app.get(prefix + "/{name:path}", name=prefix.strip("/"))
+    async def _serve(name: str, _dirs=tuple(dirs)):
+        for d in _dirs:
+            f = (d / name).resolve()
+            # 뿌리 밖으로 나가는 경로는 거절한다 (../ 방지)
+            if f.is_file() and d.resolve() in f.parents:
+                return FileResponse(f)
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
+
+
+_mount_asset("/fonts", "remotion/public/fonts")
+_mount_asset("/background", "remotion/public/background")
+_mount_asset("/charsheets", "_imggen/characters/final_v2", extra=get_charsheet_dir())
+
 output_dir = workspace / "output"
 if output_dir.exists():
     app.mount("/output", StaticFiles(directory=str(output_dir)), name="output")
 
-# 인물 시트 서빙 (/charsheets/ → _imggen/characters/final_v2/)
-# 시트는 시리즈 전체가 함께 쓰므로 프로젝트마다 복사하지 않고 한 곳에서 낸다.
-from auto_agent.paths import get_charsheet_dir
-_charsheet_dir = get_charsheet_dir()
-if _charsheet_dir:
-    app.mount("/charsheets", StaticFiles(directory=str(_charsheet_dir)), name="charsheets")
-
 # 아트스타일 이미지 서빙 (/static/artstyle/ → auto_agent/data/artstyle/styles/)
-_artstyle_dir = workspace / "auto_agent" / "data" / "artstyle" / "styles"
-if _artstyle_dir.exists():
-    app.mount("/artstyle", StaticFiles(directory=str(_artstyle_dir)), name="artstyle")
+_mount_asset("/artstyle", "auto_agent/data/artstyle/styles")
 
 # chartagent 정적 대시보드 서빙 (/chartagent-dash/ → workspace/chartagent_dashboard/)
 _chartagent_dash_dir = workspace / "chartagent_dashboard"
