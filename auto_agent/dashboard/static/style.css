@@ -2305,3 +2305,9 @@ body.terminal-open .main-content {
   margin: 0.5rem 0;
   color: var(--text-muted);
 }
+
+/* 단역 — 시트가 없는 것이 정상이므로 경고색을 쓰지 않는다 */
+.sb-char-extra-badge {
+  font-size: 11px; padding: 1px 6px; border-radius: 8px;
+  background: rgba(255,255,255,.12); color: #b9b9b9;
+}

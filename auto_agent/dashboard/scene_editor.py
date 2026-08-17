@@ -858,6 +858,17 @@ async def get_characters(project_ref: str, request: Request):
         head = raw_name.split("(")[0].strip()
         return _ud.normalize("NFC", head.replace(" ", "_"))
 
+    from auto_agent.dashboard.helpers import load_roster as _load_roster_names
+
+    _roster_names = {
+        _ud.normalize("NFC", (v.get("label") or "").split("(")[0].strip().replace(" ", "_"))
+        for v in _load_roster_names().values()
+    }
+
+    def _in_roster(canon: str) -> bool:
+        """이름이 로스터에 있는 인물인가 — 없으면 단역이라 시트가 없는 것이 맞다."""
+        return canon in _roster_names
+
     # character_plan.json 로드 (있으면 우선)
     cp_path = out_dir / "character_plan.json"
     char_plan_list: list[dict] = []
@@ -926,6 +937,7 @@ async def get_characters(project_ref: str, request: Request):
             "scene_count": len(all_scenes),
             "thumb_url": thumb_url,
             "has_image": bool(match),
+            "extra": not _in_roster(canon),
             "from_plan": True,
         })
 
@@ -951,6 +963,7 @@ async def get_characters(project_ref: str, request: Request):
             "scene_count": len(all_scenes),
             "thumb_url": thumb_url,
             "has_image": bool(match),
+            "extra": not _in_roster(canon),
             "from_plan": False,
         })
 
@@ -989,6 +1002,7 @@ async def get_characters(project_ref: str, request: Request):
                 "scene_count": len(all_scenes),
                 "thumb_url": info.get("thumb", ""),
                 "has_image": bool(info.get("thumb")),
+                "extra": cid not in roster,
                 "from_plan": False,
             })
 

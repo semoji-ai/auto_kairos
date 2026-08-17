@@ -1860,7 +1860,15 @@ function updateSceneLayout(slug, sceneNum, layout) {
           var sceneBadge = sceneCount ? '<div class="sb-char-scene-count">📍 ' + sceneCount + '씬</div>' : '';
           var genBadge = (c.has_image && genCount > 0)
             ? '<div class="sb-char-gen-count">🎨 ' + genCount + '</div>'
-            : (!c.has_image ? '<div class="sb-char-missing-badge">미생성</div>' : '');
+            : (!c.has_image
+                // 로스터 밖 인물은 「금성사 공장 노동자」처럼 대개 단역이라
+                // 시트가 없는 것이 정상이다. 붉은 「미생성」으로 두면 빠뜨린
+                // 일처럼 읽힌다. 시트를 만들지 말지는 사람이 정할 일이라
+                // 사실만 적고 색으로 구분한다.
+                ? (c.extra
+                    ? '<div class="sb-char-extra-badge">시트 없음</div>'
+                    : '<div class="sb-char-missing-badge">미생성</div>')
+                : '');
           // tooltip에 description 다양성 노출 (canonical 통합 케이스 디버깅용)
           var titleAttr = c.name;
           if (c.descriptions && c.descriptions.length > 1) {
