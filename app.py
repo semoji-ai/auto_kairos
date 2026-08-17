@@ -734,14 +734,25 @@ async def voice_preview_url(voice_id: str):
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    """프로젝트 목록 페이지."""
+async def index(request: Request, archived: bool = False):
+    """프로젝트 목록 페이지.
+
+    보관(archived)한 것은 기본으로 감춘다. 같은 회차의 옛 원고가 목록에
+    남아 있으면 어느 쪽이 살아 있는 판인지 헷갈린다 — 실제로 LG편에서
+    이미지가 없는 옛 6편을 열어 보고 「안 뜬다」고 판단한 일이 있었다.
+    `?archived=1` 로 볼 수 있다.
+    """
     pm = get_pm()
-    projects = pm.list_projects()
+    all_projects = pm.list_projects()
+    archived_count = sum(1 for p in all_projects if p.get("status") == "archived")
+    projects = (all_projects if archived
+                else [p for p in all_projects if p.get("status") != "archived"])
     for p in projects:
         p["asset_counts"] = pm.get_asset_counts(p["id"])
     return templates.TemplateResponse(request, "projects.html", {
         "projects": projects,
+        "archived_count": archived_count,
+        "showing_archived": archived,
     })
 
 

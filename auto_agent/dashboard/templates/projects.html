@@ -1,7 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Projects — Auto Agent{% endblock %}
 {% block content %}
-<h1 style="margin-bottom: 24px;">Projects</h1>
+<h1 style="margin-bottom: 8px;">Projects</h1>
+{% if archived_count %}
+<p style="margin-bottom: 20px; color: var(--text-muted); font-size: 13px;">
+  {% if showing_archived %}
+    보관본까지 보는 중 — <a href="/">진행 중인 것만 보기</a>
+  {% else %}
+    보관 {{ archived_count }}건 숨김 — <a href="/?archived=1">보관본도 보기</a>
+  {% endif %}
+</p>
+{% endif %}
 
 {% if projects %}
 <table>
