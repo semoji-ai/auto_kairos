@@ -316,13 +316,23 @@ def _scan_and_register_output_projects() -> int:
 
 @app.on_event("startup")
 async def startup_scan():
-    """대시보드 시작 시 output/ 폴더 스캔 → 누락 프로젝트 자동 등록."""
-    try:
-        count = _scan_and_register_output_projects()
-        if count:
-            print(f"[startup] output 스캔 완료: {count}개 프로젝트 등록")
-    except Exception as e:
-        print(f"[startup] output 스캔 실패 (무시): {e}")
+    """output/ 스캔 → 누락 프로젝트 자동 등록. **백그라운드로 돌린다.**
+
+    output/이 NAS라 os.listdir이 오래 걸린다. 앞단에서 기다리면 서버가 뜨지
+    않는다 — 데스크톱 앱으로 띄웠을 때 실제로 「Waiting for application startup」
+    에서 멈췄다(Finder로 띄운 프로세스는 네트워크 볼륨 접근이 더 느리다).
+    스캔은 화면을 그리는 데 필수가 아니므로 뒤로 미룬다."""
+    import threading
+
+    def run() -> None:
+        try:
+            count = _scan_and_register_output_projects()
+            if count:
+                print(f"[startup] output 스캔 완료: {count}개 프로젝트 등록", flush=True)
+        except Exception as e:
+            print(f"[startup] output 스캔 실패 (무시): {e}", flush=True)
+
+    threading.Thread(target=run, name="output-scan", daemon=True).start()
 
 
 TAB_TEMPLATES = {
