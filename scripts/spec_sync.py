@@ -20,6 +20,10 @@ SPEC = ROOT / "auto_agent" / "data" / "spec" / "shared.json"
 LOCK = ROOT / "auto_agent" / "data" / "spec" / "shared.lock.json"
 
 def consumer_root(name: str) -> Path:
+    """5.0부터 소비자는 같은 저장소 안이다(adobe/). 옛 경로도 남겨 둔다."""
+    inside = ROOT / name
+    if inside.is_dir():
+        return inside
     env = os.environ.get(name.upper() + "_ROOT")
     return Path(env) if env else Path.home() / "LocalProjects" / name
 

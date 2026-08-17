@@ -1,14 +1,14 @@
 {
  "version": "kairos-spec/1",
  "owner": "auto_kairos_v3",
- "note": "두 저장소가 함께 쓰는 파일 목록. 소유자만 고치고, 나머지는 받아 쓴다.",
+ "note": "두 갈래가 함께 쓰는 파일. 소유자(파이프라인)만 고치고 adobe/는 받아 쓴다. 5.0부터 한 저장소 안이라 경로가 상대경로다.",
  "files": [
   {
    "id": "semoji-voice-bands",
    "why": "세모지 문체 실측 밴드 — 원고 게이트의 문턱이 여기서 나온다",
    "source": "auto_agent/data/artstyle/semoji-voice-bands.json",
    "consumers": {
-    "auto_kairos_adobe": "data/artstyle/semoji-voice-bands.json"
+    "adobe": "data/artstyle/semoji-voice-bands.json"
    }
   },
   {
@@ -16,7 +16,7 @@
    "why": "세모지 그림체 문법 — 실측 등신·외곽선·명암 계단",
    "source": "artstyle/styles/semoji_drawing_style.json",
    "consumers": {
-    "auto_kairos_adobe": "data/artstyle/semoji_drawing_style.json"
+    "adobe": "data/artstyle/semoji_drawing_style.json"
    }
   }
  ]
