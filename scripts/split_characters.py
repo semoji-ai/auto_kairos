@@ -1,5 +1,9 @@
 """characters.png를 연결 컴포넌트로 분리하여 캐릭터별 cropped PNG + 좌표 기록.
 
+⚠️ 대체됨 — 시드림 layerize가 요소별 PNG와 bbox를 직접 준다.
+   연결요소로 크롭하던 이 방식은 인물이 겹치면 한 덩어리로 붙었다.
+
+
 각 씬 v2 폴더의 characters.png를 처리:
 - alpha 마스크 → connected components (8-neighbor BFS)
 - min_area 이상 컴포넌트만 유지 (노이즈 제거)

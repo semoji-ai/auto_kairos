@@ -1,5 +1,11 @@
 """scene-layer v2 — 단일 포즈 캐릭터 + 자산(로고/아이콘) 분리 생성.
 
+⚠️ 대체됨 — 레이어 분리는 시드림 5.0(`scripts/animate_scene.py`)을 쓴다.
+   이 스크립트는 codex imagegen으로 캐릭터를 다시 그려 분리했다. 시드림은
+   **원본을 그대로 쪼개고** bbox와 인페인팅된 배경판까지 돌려주므로,
+   다시 그리며 생기는 얼굴 흔들림이 없다. 옛 프로젝트 호환용으로만 남긴다.
+
+
 v1 (scene_layer_animate.py) 차이:
 - 캐릭터: 6포즈 그리드 → 단일 idle 포즈
 - 자산: overlays.content의 logo_grid·source_caption 항목을 entity별 transparent PNG로
