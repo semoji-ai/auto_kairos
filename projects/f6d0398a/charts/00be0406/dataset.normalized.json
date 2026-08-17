@@ -1,0 +1,46 @@
+{
+  "shape": "label_value_list",
+  "title": "나라별 잠의 격차",
+  "unit": "시간",
+  "records": [
+    {
+      "label": "네덜란드",
+      "value": 8.1,
+      "unit": "시간",
+      "note": "",
+      "full_label": "네덜란드",
+      "display_label": "네덜란드"
+    },
+    {
+      "label": "미국",
+      "value": 7.5,
+      "unit": "시간",
+      "note": "",
+      "full_label": "미국",
+      "display_label": "미국"
+    },
+    {
+      "label": "일본",
+      "value": 6.8,
+      "unit": "시간",
+      "note": "",
+      "full_label": "일본",
+      "display_label": "일본"
+    },
+    {
+      "label": "한국",
+      "value": 6.3,
+      "unit": "시간",
+      "note": "",
+      "full_label": "한국",
+      "display_label": "한국"
+    }
+  ],
+  "source_notes": [],
+  "simplification": {
+    "record_count_before": 4,
+    "record_count_after": 4,
+    "max_categories": 8,
+    "label_shortening_applied": false
+  }
+}

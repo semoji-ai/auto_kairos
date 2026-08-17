@@ -1,0 +1,163 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    {
+      "ae_comp_name": "S01_9c747e6d",
+      "width": 1536,
+      "height": 1024,
+      "image": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/storyboard/sb_9c747e6d.png",
+      "layers": [
+        {
+          "name": "9c747e6d__bg",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/9c747e6d__bg.png",
+          "kind": "bg"
+        },
+        {
+          "name": "9c747e6d__0_전기차_프로토타입",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/9c747e6d__0_전기차_프로토타입.png",
+          "kind": "element",
+          "foot": [
+            314.5,
+            404.0
+          ]
+        },
+        {
+          "name": "9c747e6d__1_배터리_전장_부품_작업대",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/9c747e6d__1_배터리_전장_부품_작업대.png",
+          "kind": "element",
+          "foot": [
+            320.0,
+            1003.0
+          ]
+        },
+        {
+          "name": "9c747e6d__2_생각하는_남자_v2",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/9c747e6d__2_생각하는_남자_v2.png",
+          "kind": "element",
+          "foot": [
+            787.5,
+            665.0
+          ],
+          "moves": [
+            {
+              "type": "fade_in",
+              "start": 0.0,
+              "duration": 0.8,
+              "direction": null,
+              "amount": null
+            },
+            {
+              "type": "bob",
+              "start": 0.8,
+              "duration": 12.757551,
+              "direction": null,
+              "amount": 10
+            }
+          ]
+        },
+        {
+          "name": "9c747e6d__3_설명하는_여자",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/9c747e6d__3_설명하는_여자.png",
+          "kind": "element",
+          "foot": [
+            979.0,
+            629.0
+          ],
+          "moves": [
+            {
+              "type": "fade_in",
+              "start": 0.2,
+              "duration": 0.8,
+              "direction": null,
+              "amount": null
+            },
+            {
+              "type": "bob",
+              "start": 1.0,
+              "duration": 12.557551,
+              "direction": null,
+              "amount": 8
+            }
+          ]
+        },
+        {
+          "name": "9c747e6d__4_오른쪽_남자",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/9c747e6d__4_오른쪽_남자.png",
+          "kind": "element",
+          "foot": [
+            1351.0,
+            677.0
+          ],
+          "moves": [
+            {
+              "type": "fade_in",
+              "start": 0.4,
+              "duration": 0.8,
+              "direction": null,
+              "amount": null
+            },
+            {
+              "type": "bob",
+              "start": 1.2,
+              "duration": 12.357551,
+              "direction": null,
+              "amount": 9
+            }
+          ]
+        },
+        {
+          "name": "9c747e6d__5_설계도_테이블",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/9c747e6d__5_설계도_테이블.png",
+          "kind": "element",
+          "foot": [
+            1009.5,
+            1011.0
+          ]
+        }
+      ],
+      "audio": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/audio/tts_9c747e6d.mp3",
+      "subtitle": "테슬라를 머스크가 만들었다고요? 사실, 처음부터 그의 회사는 아니었다. 2003년, 테슬라는 마틴 에버하드와 마크 타페닝이 세운 작은 전기차 회사로 시작했다. 머스크는 2004년 투자자로 합류했고, 훗날 회사를 대표하는 얼굴이 됐다.",
+      "duration": 13.557551,
+      "layout": "cinematic",
+      "camera": {
+        "type": "slow_zoom_in",
+        "amount": 3.0
+      }
+    }
+  ],
+  "skipFinal": true,
+  "ae_tokens": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/data/artstyle/ae_tokens.json",
+  "themeColors": {
+    "bg": "#23262b",
+    "bgRgb": [
+      35,
+      38,
+      43
+    ],
+    "text": "#E8EAED",
+    "textRgb": [
+      232,
+      234,
+      237
+    ],
+    "muted": "#9AA0A6",
+    "mutedRgb": [
+      154,
+      160,
+      166
+    ],
+    "accent": "#4A90D9",
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "accentSoftRgb": [
+      74,
+      144,
+      217
+    ]
+  }
+}

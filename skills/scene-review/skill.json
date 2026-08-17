@@ -1,0 +1,1 @@
+{ "name": "scene-review", "inputs": ["scenes.json", "editorial_brief.json"], "output": "scene_review_llm.json", "output_kind": "json" }

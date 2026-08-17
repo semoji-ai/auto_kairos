@@ -1,0 +1,1 @@
+{"name": "review-refine", "inputs": ["plan.md", "final_manuscript.md", "research_reports/deep.md", "research_targeted/targeted.md"], "output": "final_manuscript.md", "output_kind": "md", "schema": null}

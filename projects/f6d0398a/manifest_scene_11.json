@@ -1,0 +1,43 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    {
+      "ae_comp_name": "S11_8aa247de",
+      "width": 1920,
+      "height": 1080,
+      "image": null,
+      "layers": [],
+      "audio": null,
+      "subtitle": "잠이 곧 실력이다.",
+      "duration": 1.5,
+      "layout": "headline_only",
+      "headline": "잘 자는 사람이 더 잘 버틴다",
+      "sub": "수면은 내일의 능력이다"
+    }
+  ],
+  "ae_tokens": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/data/artstyle/ae_tokens.json",
+  "themeColors": {
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "textRgb": [
+      33,
+      37,
+      41
+    ],
+    "mutedRgb": [
+      134,
+      142,
+      150
+    ],
+    "bgRgb": [
+      248,
+      249,
+      250
+    ]
+  }
+}

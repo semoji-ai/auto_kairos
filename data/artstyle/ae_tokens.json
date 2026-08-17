@@ -1,0 +1,79 @@
+{
+  "colors": {
+    "bg": "#23262b",
+    "bgRgb": [
+      35,
+      38,
+      43
+    ],
+    "text": "#E8EAED",
+    "textRgb": [
+      232,
+      234,
+      237
+    ],
+    "muted": "#9AA0A6",
+    "mutedRgb": [
+      154,
+      160,
+      166
+    ],
+    "accent": "#4A90D9",
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "accentSoftRgb": [
+      74,
+      144,
+      217
+    ]
+  },
+  "fonts": {
+    "headline": "Cafe24Ssurround",
+    "body": "OTSBAggroM",
+    "bold": "OTSBAggroB",
+    "number": "Cafe24Ssurround",
+    "subtitle": "OTSBAggroM",
+    "fallback": "AppleSDGothicNeo-Bold",
+    "quote": "GyeonggiBatangR",
+    "quoteBold": "GyeonggiBatangB"
+  },
+  "type": {
+    "headline": 110,
+    "sub": 48,
+    "item": 52,
+    "metric": 220,
+    "metricLabel": 54,
+    "quote": 64,
+    "quoteWho": 40,
+    "barLabel": 36,
+    "barValue": 40,
+    "subtitle": 54
+  },
+  "layout1080": {
+    "margin": 160,
+    "maxTextW": 1600,
+    "leading": 1.25
+  },
+  "families": {
+    "headline": "Ssurround",
+    "body": "Aggro",
+    "bold": "Aggro",
+    "number": "Ssurround",
+    "subtitle": "Aggro",
+    "quote": "Batang",
+    "quoteBold": "Batang"
+  },
+  "map": {
+    "defaultTheme": "clean_white"
+  },
+  "chartagent": {
+    "theme_set": "gallery_infographic",
+    "theme_overrides": {
+      "pattern_mode": "outline_plus_hatch"
+    },
+    "patternKind": "diagonal_hatch"
+  }
+}

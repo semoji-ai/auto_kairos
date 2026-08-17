@@ -1,0 +1,1 @@
+{ "name": "manuscript-draft", "inputs": ["research_report.json", "editorial_brief.json"], "output": "manuscript_draft.json", "output_kind": "json" }

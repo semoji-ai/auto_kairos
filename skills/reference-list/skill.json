@@ -1,0 +1,1 @@
+{"name":"reference-list","inputs":["final_manuscript.md"],"output":"references.json","output_kind":"json","schema":"references.schema.json"}

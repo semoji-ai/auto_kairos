@@ -1,0 +1,21 @@
+# ChartAgent Notes
+
+- task_id: scene-006
+- chart_family: bar
+- chart_variant: vertical
+- theme_set: gallery_infographic
+- theme: editorial
+- visual_mode: editorial
+- layout_preset: balanced_canvas
+- reference_profile: financial_times_editorial
+- style_combo_preset: gallery_infographic
+- pattern_format_preset: None
+- source_ref: pinterest
+- source_ref: claude
+- source_ref: editorial_infographics
+- why: Few categories with short labels fit a vertical bar chart.
+- why: The visual can prioritize quick category comparison without rotating labels.
+- warning: Source note is missing; render should include an explicit provenance placeholder.
+- warning: Source note is missing.
+- warning: No `source_hints` were provided; source-note output may be thin.
+- warning: Source note is missing.

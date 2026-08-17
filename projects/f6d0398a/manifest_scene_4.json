@@ -1,0 +1,43 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    {
+      "ae_comp_name": "S04_5ebde2ed",
+      "width": 1920,
+      "height": 1080,
+      "image": null,
+      "layers": [],
+      "audio": null,
+      "subtitle": "뇌과학자 매슈 워커는 이렇게 말했다. \"잠은 건강이라는 집을 떠받치는 기초다. 기초가 흔들리면 어떤 노력도 소용이 없다.\"",
+      "duration": 11.7,
+      "layout": "quote",
+      "quote_text": "잠은 건강이라는 집을 떠받치는 기초다. 기초가 흔들리면 어떤 노력도 소용이 없다.",
+      "quote_who": "매슈 워커"
+    }
+  ],
+  "ae_tokens": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/data/artstyle/ae_tokens.json",
+  "themeColors": {
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "textRgb": [
+      33,
+      37,
+      41
+    ],
+    "mutedRgb": [
+      134,
+      142,
+      150
+    ],
+    "bgRgb": [
+      248,
+      249,
+      250
+    ]
+  }
+}

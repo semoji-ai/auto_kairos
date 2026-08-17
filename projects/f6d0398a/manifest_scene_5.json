@@ -1,0 +1,41 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    {
+      "ae_comp_name": "S05_b09a2bc5",
+      "width": 1920,
+      "height": 1080,
+      "image": null,
+      "layers": [],
+      "audio": null,
+      "subtitle": "밤이 되면 뇌 속에서는 놀라운 일이 벌어진다. 뇌척수액이 뇌 구석구석을 씻어내며 낮 동안 쌓인 노폐물을 청소한다. 마치 도시의 청소부가 새벽 거리를 청소하듯, 뇌는 잠든 사이에 스스로를 정비한다.",
+      "duration": 20.3,
+      "layout": "cinematic"
+    }
+  ],
+  "ae_tokens": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/data/artstyle/ae_tokens.json",
+  "themeColors": {
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "textRgb": [
+      33,
+      37,
+      41
+    ],
+    "mutedRgb": [
+      134,
+      142,
+      150
+    ],
+    "bgRgb": [
+      248,
+      249,
+      250
+    ]
+  }
+}

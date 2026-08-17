@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["scenes"],
+  "properties": {
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "sceneNumber": { "type": "number" },
+          "layout_fit": { "type": "string" },
+          "shot_relation_fit": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "flags": { "type": "array", "items": { "type": "string" } },
+    "overall": { "type": "string" }
+  }
+}

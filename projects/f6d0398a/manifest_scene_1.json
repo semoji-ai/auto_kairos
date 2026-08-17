@@ -1,0 +1,95 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    {
+      "ae_comp_name": "S01_bb940d9f",
+      "width": 1484,
+      "height": 1060,
+      "image": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/f6d0398a/storyboard/scene_bb940d9f_93792b.png",
+      "layers": [
+        {
+          "name": "bb940d9f__bg",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/f6d0398a/layers/bb940d9f__bg.png",
+          "kind": "bg"
+        },
+        {
+          "name": "bb940d9f__0_벽시계",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/f6d0398a/layers/bb940d9f__0_벽시계.png",
+          "kind": "element",
+          "foot": [
+            634.5,
+            896.0
+          ]
+        },
+        {
+          "name": "bb940d9f__1_잠_못_드는_남자_char",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/f6d0398a/layers/bb940d9f__1_잠_못_드는_남자_char.png",
+          "kind": "element",
+          "foot": [
+            634.5,
+            896.0
+          ],
+          "moves": [
+            {
+              "type": "bob",
+              "start": 0,
+              "duration": 8.907755
+            }
+          ]
+        },
+        {
+          "name": "bb940d9f__2_이불",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/f6d0398a/layers/bb940d9f__2_이불.png",
+          "kind": "element",
+          "foot": [
+            823.0,
+            1060.0
+          ]
+        }
+      ],
+      "audio": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/f6d0398a/audio/tts_bb940d9f.mp3",
+      "subtitle": "잠들지 못한 밤, 누구나 한 번쯤 천장을 바라보며 뒤척여 본 적이 있다. 어두운 방, 시계 초침 소리만 크게 들리는 그 순간의 답답함을 우리는 잘 안다.",
+      "duration": 8.907755,
+      "layout": "cinematic",
+      "camera": {
+        "type": "slow_zoom_in",
+        "amount": 4.0
+      }
+    }
+  ],
+  "skipFinal": true,
+  "ae_tokens": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/data/artstyle/ae_tokens.json",
+  "themeColors": {
+    "bg": "#23262b",
+    "bgRgb": [
+      35,
+      38,
+      43
+    ],
+    "text": "#E8EAED",
+    "textRgb": [
+      232,
+      234,
+      237
+    ],
+    "muted": "#9AA0A6",
+    "mutedRgb": [
+      154,
+      160,
+      166
+    ],
+    "accent": "#4A90D9",
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "accentSoftRgb": [
+      74,
+      144,
+      217
+    ]
+  }
+}

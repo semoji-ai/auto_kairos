@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>auto_kairos PD</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; background:#23262b; color:#e6e6e6;
+           margin:0; padding:0; font-size:13px; }
+    h1 { font-size:15px; margin:0 0 12px; }
+    button { width:100%; padding:10px; margin:6px 0; border:0; border-radius:6px;
+             background:#3a6df0; color:#fff; font-size:13px; cursor:pointer; }
+    button.alt { background:#444; }
+    button.tab { background:#2c2f36; color:#c5c8cc; border-radius:0; margin:0; }
+    button.tab.active { background:#3a6df0; color:#fff; }
+    .box { background:#1b1d21; border:1px solid #33363c; border-radius:6px;
+           padding:10px; margin:8px 0; white-space:pre-wrap; word-break:break-all;
+           min-height:18px; font-family: ui-monospace, monospace; font-size:12px; }
+    .label { color:#9aa0a6; margin-top:10px; }
+    [hidden] { display:none !important; }
+
+    /* 셸 레이아웃 */
+    #view-list { padding:16px; }
+    #view-detail { display:flex; flex-direction:column; height:100vh; }
+    #detail-header { display:flex; align-items:center; gap:8px; padding:10px 14px;
+                     background:#1b1d21; border-bottom:1px solid #33363c; }
+    #detailTitle { flex:1; font-size:14px; font-weight:600; }
+    #btnBackToList { width:auto; padding:6px 12px; margin:0; background:#444; }
+    #task-bar { padding:8px 14px; font-size:11px; color:#9aa0a6;
+                border-bottom:1px solid #2c2f36; }
+    #tabs { display:flex; border-bottom:1px solid #33363c; }
+    #tabs .tab { flex:1; }
+    #tab-content { flex:1; min-height:0; overflow:hidden; }
+    #tab-planning { height:100%; overflow-y:auto; padding:14px; box-sizing:border-box; }
+    #tab-storyboard { height:100%; box-sizing:border-box; }
+    #chat-dock { border-top:1px solid #33363c; background:#1b1d21; padding:10px 14px; }
+    #chat-dock .row { display:flex; gap:6px; }
+    #chatInput { flex:1; box-sizing:border-box; padding:8px; background:#23262b;
+                 color:#e6e6e6; border:1px solid #33363c; border-radius:5px; }
+    #btnChatSend, #btnChatStop { width:auto; padding:8px 14px; margin:0; }
+    #btnChatStop { background:#5a2b2b; border-color:#7a3a3a; }
+    #btnChatStop[hidden] { display:none; }
+    .chat-msg { margin:2px 0; font-size:12px; line-height:1.4; }
+
+    /* 스토리보드 프로덕션 시트 — 가로 행 테이블(씬#|이미지|스크립트|에셋|TTS) */
+    #sheet { overflow-x:auto; }
+    .sheet-head, .sheet-row { display:grid;
+      grid-template-columns: var(--cols, 30px 200px 280px 120px 140px);
+      gap:8px; align-items:start; width:max-content; min-width:100%; }
+    .sheet-head { color:#9aa0a6; font-size:11px; padding:6px 0;
+      border-bottom:1px solid #33363c; position:sticky; top:0; background:#23262b; z-index:1; }
+    .sheet-row { padding:8px 0; border-bottom:1px solid #2c2f36; }
+    .sheet-row .col-num { color:#9aa0a6; font-size:12px; padding-top:2px; }
+    .sheet-row .col-img { position:relative; }
+    .sheet-row .col-img img.main { width:100%; border-radius:4px; display:block; }
+    .sheet-row .col-img .lyr { width:32px; height:auto; margin:3px 3px 0 0; border-radius:3px; }
+    /* 컴프 미리보기 — 16:9 고정, jsx renderLayout 축소 미러 + 자막 오버레이 */
+    .pv { position:relative; width:100%; aspect-ratio:16/9; border-radius:4px; overflow:hidden; }
+    .pv img.main { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:0; }
+    .pv-abs { position:absolute; }
+    .pv-subtitle { position:absolute; left:5%; width:90%; bottom:5%; text-align:center; color:#fff;
+      font-family:'SB AggroOTF','OTSBAggroM',sans-serif;
+      text-shadow:0 0 3px #000, 0 1px 2px #000; pointer-events:none; }
+    .pv-headline, .pv-number { font-family:'Cafe24 Ssurround','Cafe24Ssurround','Cafe24 Ssurround Bold',sans-serif; }
+    .pv-body { font-family:'SB AggroOTF','OTSBAggroM',sans-serif; font-weight:500; }
+    .pv-bold { font-family:'SB AggroOTF','OTSBAggroB',sans-serif; font-weight:700; }
+    .pv-quote { font-family:'Gyeonggi Millennium Batang','GyeonggiBatangR',serif; }
+    .col-img .layout-badge { padding:24px 8px; text-align:center; background:#2c2f36;
+      border:1px dashed #4A90D9; border-radius:6px; color:#7ab0ff; font-size:12px; }
+    .sheet-row .unlink-img { display:none; position:absolute; top:2px; right:2px;
+      width:auto; margin:0; padding:2px 6px; font-size:11px; background:rgba(0,0,0,0.6); }
+    .sheet-row .col-img:hover .unlink-img { display:block; }
+    .sheet-row .layer-img { display:none; position:absolute; top:2px; right:28px;
+      width:auto; margin:0; padding:2px 6px; font-size:11px; background:rgba(0,0,0,0.6); }
+    .sheet-row .col-img:hover .layer-img { display:block; }
+    .sheet-row .row-title { font-size:11px; color:#c5c8cc; margin-bottom:3px; }
+    .sheet-row textarea.nar { width:100%; box-sizing:border-box; background:#23262b;
+      color:#e6e6e6; border:1px solid #33363c; border-radius:5px; padding:6px; font-size:12px;
+      overflow:hidden; resize:none; min-height:42px; }
+    .sheet-row .row-status { font-size:11px; color:#9aa0a6; }
+    .sheet-row button { margin:4px 0; padding:6px; font-size:12px; }
+    /* 시트 도구상자 — 체크된 씬에 일괄 실행 */
+    #sheet-actionbar { display:flex; align-items:center; gap:4px; flex-wrap:wrap;
+      padding:6px 0; border-bottom:1px solid #2c2f36; margin-bottom:4px; }
+    #sheet-actionbar .sab-hint { font-size:11px; color:#9aa0a6; margin-right:2px; }
+    #sheet-actionbar .sab-div { width:1px; height:18px; background:#33363c; margin:0 4px; }
+    #sheet-actionbar button { width:auto; margin:0; padding:5px 9px; font-size:12px;
+      background:#2c2f36; border:1px solid #33363c; border-radius:5px; }
+    #sheet-actionbar button:hover { background:#3a6df0; }
+    #sheet-actionbar .sab-txt { background:#23262b; color:#c5c8cc; }
+    #sheet-actionbar .sab-danger:hover { background:#a33; }
+    .col-img .img-wrap { position:relative; }
+    .col-img .comp { position:relative; width:100%; line-height:0; }
+    .col-img .comp img.comp-bg { width:100%; height:auto; display:block; }
+    .col-img .comp img.comp-el { position:absolute; }
+    .col-img .comp img.comp-el.full { top:0; left:0; width:100%; }
+    /* 레이어 목록 — 포토샵식 세로 리스트. 기본은 접힘(썸네일 띠). */
+    .lyr-head { display:flex; align-items:center; gap:6px; margin-top:4px; font-size:11px; color:#aaa; }
+    .lyr-head .lyr-toggle { width:auto; margin:0; padding:1px 5px; font-size:11px; }
+    .lyr-head .lyr-vec-all, .lyr-head .lyr-vec-sel { width:auto; margin:0; padding:1px 6px; font-size:11px; }
+    .lyr-list { margin-top:3px; border:1px solid #333; border-radius:4px; }
+    .lyr-row { display:flex; align-items:center; gap:5px; padding:2px 4px; border-bottom:1px solid #2a2a2a; }
+    .lyr-row:last-child { border-bottom:none; }
+    .lyr-row img.lyr { width:28px; height:auto; margin:0; border-radius:2px; background:#222; }
+    .lyr-row .lyr-name { flex:1; font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .lyr-row .lyr-kind { font-size:10px; color:#888; }
+    .lyr-row .lyr-eye, .lyr-row .lyr-rm, .lyr-row .lyr-restore, .lyr-row .lyr-revec {
+      width:auto; margin:0; padding:0 4px; font-size:11px; line-height:1.3; background:#333; }
+    .lyr-row .lyr-rm:hover { background:#a33; }
+    .lyr-row.off img.lyr, .lyr-row.off .lyr-name { opacity:0.35; }
+    .lyr-row.gone { opacity:0.4; }
+    .lyr-row.busy { opacity:0.4; pointer-events:none; }
+    .lyr-badge { font-size:9px; padding:0 3px; border-radius:2px; background:#2d5a2d; color:#cfc; }
+    .lyr-badge.fail { background:#5a2d2d; color:#fcc; }
+    .lyr-sep { padding:2px 5px; font-size:10px; color:#777; background:#242424; }
+    /* 씬 선택 체크박스 */
+    .scene-sel-wrap { display:flex; align-items:center; gap:4px; cursor:pointer; }
+    .scene-sel-wrap input { width:14px; height:14px; margin:0; }
+    .sheet-head input { width:13px; height:13px; margin:0 4px 0 0; vertical-align:middle; }
+    /* 작업 칸 — 진행 점(●=완료: 이미지·레이어·음성·모션) + 플레이어 + 상태 */
+    .col-work .work-dots { display:flex; gap:7px; align-items:center; height:20px; padding-left:6px; }
+    .col-work .work-dots .dot { width:9px; height:9px; border-radius:50%; }
+    .col-work .work-dots .dot.on { background:#2ecc71; }
+    .col-work .work-dots .dot.off { background:#3a3e46; border:1px solid #555; }
+    .col-work .work-chars { font-size:11px; color:#c5c8cc; margin-top:4px; }
+    .sheet-head > div { position:relative; }
+    .col-resize { position:absolute; right:-4px; top:0; width:8px; height:100%;
+      cursor:col-resize; }
+    .col-resize:hover { background:#3a6df0; opacity:0.4; }
+
+    /* 스토리보드 2-pane — 각 패널 독립 세로 스크롤 */
+    #sb-2pane { display:flex; gap:12px; align-items:stretch; height:100%;
+      padding:14px; box-sizing:border-box; }
+    #sb-left { flex:1; min-width:0; overflow-y:auto; }
+    #sb-right { width:320px; flex:0 0 320px; overflow-y:auto; }
+    #sb-toolbar { display:flex; flex-wrap:wrap; gap:4px; }
+    #sb-toolbar button { width:auto; flex:0 0 auto; margin:0; padding:6px 8px; font-size:12px; }
+    .sb-search { display:flex; gap:4px; margin:6px 0; }
+    .sb-search input { flex:1; min-width:0; box-sizing:border-box; padding:6px; background:#1b1d21; color:#e6e6e6; border:1px solid #33363c; border-radius:5px; }
+    .sb-search select { padding:5px; background:#1b1d21; color:#e6e6e6; border:1px solid #33363c; border-radius:5px; }
+    button.mini { width:auto; margin:2px 0; padding:5px 9px; font-size:12px; }
+    .sb-acc { margin-top:8px; border-top:1px solid #2c2f36; }
+    .sb-acc > summary { cursor:pointer; color:#9aa0a6; font-size:12px; padding:6px 0; }
+    .sb-acc input { width:100%; box-sizing:border-box; padding:6px; margin:3px 0; background:#1b1d21; color:#e6e6e6; border:1px solid #33363c; border-radius:5px; }
+    /* 세로 갤러리 썸네일 */
+    #gallery-panel .gal-thumb { display:block; width:100%; height:auto; border-radius:4px; }
+    #gallery-panel .gal-item { position:relative; margin:5px 0; }
+    #gallery-panel .gal-ae { display:none; position:absolute; top:4px; right:4px;
+      width:auto; margin:0; padding:2px 6px; font-size:11px; background:rgba(0,0,0,0.65); }
+    #gallery-panel .gal-item:hover .gal-ae { display:block; }
+    /* 검색 결과 선택 → 프로젝트로 불러오기 */
+    #gallery-panel .gal-selbar { display:flex; align-items:center; gap:6px; margin-bottom:6px;
+      position:sticky; top:0; background:#1b1d21; padding:4px 0; z-index:1; }
+    #gallery-panel .gal-selbar .gal-hint { font-size:10px; color:#9aa0a6; }
+    #gallery-panel #btnGalImport { width:auto; margin:0; padding:5px 10px; font-size:12px; }
+    #gallery-panel .gal-pick { box-sizing:border-box; border:3px solid transparent; }
+    #gallery-panel .gal-pick.sel { border-color:#3a6df0; }
+    /* 좁은 창: 세로 스택 + 일반 스크롤로 복귀 */
+    @media (max-width: 720px) {
+      #sb-2pane { flex-direction:column; height:auto; }
+      #sb-right { width:auto; flex:none; }
+      #sb-left, #sb-right { overflow:visible; }
+      #tab-content { overflow-y:auto; }
+      #tab-storyboard, #tab-planning { height:auto; }
+    }
+
+    /* 목록 뷰만 가운데 정렬(상세 뷰는 full-width 사용) */
+    @media (min-width: 760px) {
+      #view-list { max-width:520px; margin:0 auto; }
+    }
+
+    /* 백엔드 상태등 */
+    #health-bar { display:flex; align-items:center; gap:8px; margin:8px 0 16px; }
+    #health-bar .dot { width:11px; height:11px; border-radius:50%; flex:0 0 auto; }
+    #health-bar .dot.ok { background:#2ecc71; box-shadow:0 0 7px #2ecc71; }
+    #health-bar .dot.bad { background:#e74c3c; box-shadow:0 0 7px #e74c3c; }
+    #healthText { flex:1; font-size:12px; color:#c5c8cc; }
+    #btnReconnect { width:auto; margin:0; padding:4px 12px; }
+    /* 새 프로젝트 */
+    .proj-actions { display:flex; gap:6px; }
+    #btnNewProject { flex:1; }
+    #btnProjects { flex:0 0 auto; width:auto; }
+    #newProjectForm input, #newProjectForm select { box-sizing:border-box; padding:7px; margin:3px 0;
+      background:#1b1d21; color:#e6e6e6; border:1px solid #33363c; border-radius:5px; }
+    #newProjectForm input { width:100%; }
+    #newProjectForm .np-row { display:flex; gap:6px; }
+    #newProjectForm .np-row select { flex:1; }
+    /* 프로젝트 목록 — 가독 색상 + 카드형 */
+    #projects .proj-item { display:block; padding:8px 10px; margin:5px 0; background:#1b1d21;
+      border:1px solid #33363c; border-radius:6px; color:#e6e6e6; cursor:pointer; text-decoration:none; }
+    #projects .proj-item:hover { background:#2c2f36; border-color:#3a6df0; }
+    #projects .proj-item .pid { color:#8ab4f8; font-family:ui-monospace,monospace; font-size:11px; margin-right:6px; }
+    #projects .proj-item .st { color:#9aa0a6; font-size:11px; margin-left:6px; }
+
+    /* TTS 커스텀 플레이어(좁은 칸에서도 재생·길이 표시) */
+    .col-work .tts-player { display:flex; align-items:center; gap:5px; margin-top:4px; }
+    .col-work .tts-play { width:auto; margin:0; padding:3px 9px; font-size:13px; }
+    .col-work .tts-dur { font-size:11px; color:#c5c8cc; font-family:ui-monospace,monospace; }
+
+    /* 씬 전용 버튼 줄 — 체크박스 없이 그 씬에만 즉시 실행 */
+    .col-work .row-acts { display:flex; gap:3px; margin-top:5px; }
+    .col-work .row-acts .ra { width:auto; margin:0; padding:3px 7px; font-size:12px; line-height:1.1;
+      background:#2c2f36; border:1px solid #3a3d44; }
+    .col-work .row-acts .ra:hover { background:#3a6df0; border-color:#3a6df0; }
+    /* TTS·자막 텍스트 편집 패널(✎ 토글) */
+    .col-work .txt-edit { margin-top:6px; padding:6px; background:#1b1d21;
+      border:1px solid #33363c; border-radius:6px; }
+    .col-work .txt-edit[hidden] { display:none; }
+    .col-work .te-label { font-size:11px; color:#9aa0a6; margin:3px 0 2px; }
+    .col-work .te-hint { color:#6d7278; }
+    .col-work .te-diff { color:#e8b339; margin-left:4px; }
+    .col-work .te-reset { width:auto; margin:0 0 0 4px; padding:1px 6px; font-size:10px; }
+    .col-work .txt-edit textarea { width:100%; box-sizing:border-box; font-size:12px;
+      background:#23262b; color:#e6e6e6; border:1px solid #33363c; border-radius:4px; padding:4px; }
+    .col-work .te-acts { display:flex; gap:4px; margin-top:5px; }
+    .col-work .te-acts .mini { width:auto; margin:0; }
+
+    /* 모달(이미지 생성 + 레이어 선택 공용) */
+    #genModal, #layerModal { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100;
+      display:flex; align-items:center; justify-content:center; }
+    #genModal[hidden], #layerModal[hidden] { display:none; }
+    #genModal .gen-box, #layerModal .gen-box { width:min(440px,92vw); max-height:88vh; overflow-y:auto;
+      background:#23262b; border:1px solid #33363c; border-radius:10px; padding:16px; }
+    /* 레이어 선택 체크리스트 + 씬 탭 */
+    #layerTabs { display:flex; gap:3px; flex-wrap:wrap; margin:6px 0 0; }
+    #layerTabs .layer-tab { width:auto; margin:0; padding:5px 12px; font-size:12px;
+      background:#2c2f36; border:1px solid #33363c; border-radius:6px 6px 0 0; color:#c5c8cc; }
+    #layerTabs .layer-tab.active { background:#3a6df0; color:#fff; }
+    #layerList { padding:4px; }
+    #layerList .layer-chk { display:flex; gap:8px; align-items:flex-start; padding:7px 6px;
+      border-bottom:1px solid #2c2f36; cursor:pointer; line-height:1.4; }
+    #layerList .layer-chk:hover { background:#2c2f36; }
+    .layer-chk.layer-dropped { opacity:0.55; }
+    #layerList .layer-chk input { width:16px; height:16px; margin:2px 0 0; flex:0 0 auto; }
+    #genModal .gen-head, #layerModal .gen-head { display:flex; justify-content:space-between; align-items:center;
+      font-size:14px; font-weight:600; margin-bottom:8px; }
+    #genModal select, #genModal input, #genModal textarea { width:100%; box-sizing:border-box;
+      padding:7px; margin:3px 0; background:#1b1d21; color:#e6e6e6; border:1px solid #33363c; border-radius:5px; }
+    #genModal .gen-actions, #layerModal .gen-actions { display:flex; gap:8px; margin-top:10px; }
+    #genModal .gen-actions button, #layerModal .gen-actions button { flex:1; }
+
+    #toolsSection { margin-top:10px; border-top:1px solid #333; padding-top:6px; }
+    #toolsSection summary { cursor:pointer; font-size:12px; color:#aaa; }
+    .tools-body { padding:6px 0; }
+    .tools-row { display:flex; align-items:center; gap:6px; margin:4px 0; }
+    .tools-row .mini-label { font-size:11px; color:#888; width:90px; }
+    .tools-status { font-size:11px; color:#8a8; min-height:14px; }
+  </style>
+</head>
+<body>
+  <!-- ===== 목록 뷰 ===== -->
+  <div id="view-list">
+    <h1>auto_kairos PD</h1>
+
+    <div id="health-bar">
+      <span id="healthDot" class="dot bad"></span>
+      <span id="healthText">백엔드 확인 중…</span>
+      <button id="btnReconnect" class="mini" hidden>연결</button>
+    </div>
+
+    <div class="label">오케스트레이터 LLM</div>
+    <div class="row" style="display:flex;gap:6px;align-items:center">
+      <select id="llmSelect" style="flex:1;padding:6px;background:#1b1d21;color:#e6e6e6;border:1px solid #33363c;border-radius:5px"></select>
+      <span id="llmHint" style="font-size:10px;color:#9aa0a6">추론=선택 / 이미지=codex</span>
+    </div>
+
+    <div class="label">프로젝트</div>
+    <div class="proj-actions">
+      <button id="btnNewProject">+ 새 프로젝트</button>
+      <button id="btnProjects" class="mini alt" title="목록 새로고침">↻</button>
+    </div>
+    <div id="newProjectForm" hidden>
+      <input id="newTitle" type="text" placeholder="영상 제목/주제">
+      <div class="np-row">
+        <select id="newStyle">
+          <option value="semoji">semoji</option>
+          <option value="iromism">iromism</option>
+        </select>
+        <span style="display:flex;gap:4px;align-items:center">
+          <input id="newDuration" type="number" min="1" value="3" style="width:52px" title="분량(분)">분
+          <button class="mini alt" data-dur="1" type="button">1</button>
+          <button class="mini alt" data-dur="3" type="button">3</button>
+          <button class="mini alt" data-dur="5" type="button">5</button>
+          <button class="mini alt" data-dur="10" type="button">10</button>
+        </span>
+      </div>
+      <button id="btnCreate">만들기</button>
+    </div>
+    <details class="sb-acc" id="v3Import">
+      <summary>📥 v3 프로젝트 가져오기</summary>
+      <input id="v3Path" type="text" placeholder="v3 output 프로젝트 전체 경로 (output/{uuid}_{slug})">
+      <button id="btnImportV3" class="mini">가져오기</button>
+      <div class="box" id="v3Status" style="font-size:11px">—</div>
+    </details>
+    <div class="box" id="projects" style="min-height:40px">불러오는 중…</div>
+    <div class="box" id="current" hidden>현재 프로젝트: (없음)</div>
+  </div>
+
+  <!-- ===== 상세 뷰 ===== -->
+  <div id="view-detail" hidden>
+    <div id="detail-header">
+      <span id="detailTitle">프로젝트</span>
+      <button id="btnBackToList">← 목록</button>
+    </div>
+    <div id="task-bar">태스크: (P5에서 활성)</div>
+    <div id="tabs">
+      <button id="btnTabPlanning" class="tab active">기획</button>
+      <button id="btnTabStoryboard" class="tab">스토리보드</button>
+    </div>
+    <div id="tab-content">
+      <!-- 기획 탭 -->
+      <div id="tab-planning">
+        <div class="label">단계별 진행 — 각 단계 산출물을 검토·수정한 뒤 다음 단계를 실행하세요</div>
+        <div id="pipeStepper" class="box" style="min-height:32px">—</div>
+        <button id="btnRunPipeline" class="mini alt" title="기획→리서치→원고 6단계 자동 실행(개입 없이 끝까지)">🚀 6단계 전체 자동 실행</button>
+        <div class="box" id="pipelineStatus" style="min-height:16px">—</div>
+        <div class="label">결과물 (기획·리서치·원고)</div>
+        <button id="btnReloadFiles">파일 새로고침</button>
+        <div class="box" id="planFiles" style="min-height:40px">—</div>
+        <div class="label">편집 <span id="planEditName" style="color:#7ab0ff"></span></div>
+        <textarea id="planEdit" placeholder="파일을 선택하면 여기서 직접 수정할 수 있습니다." spellcheck="false"
+          style="width:100%;box-sizing:border-box;min-height:40vh;background:#1b1d21;color:#e6e6e6;border:1px solid #33363c;border-radius:6px;padding:10px;font-family:ui-monospace,monospace;font-size:12px;line-height:1.5;resize:vertical"></textarea>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="btnSavePlanFile" class="mini">💾 저장</button>
+          <span id="planEditStatus" style="font-size:11px;color:#9aa0a6">—</span>
+        </div>
+      </div>
+
+      <!-- 스토리보드 탭 -->
+      <div id="tab-storyboard" hidden>
+        <div id="sb-2pane">
+          <!-- 좌: 프로덕션 시트 -->
+          <div id="sb-left">
+            <div class="label">프로덕션 시트
+              <button id="btnLoadSheet" class="mini">시트 불러오기</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;color:#9aa0a6">
+              <span>프로젝트 테마:</span>
+              <select id="projectTheme" style="background:#23262b;color:#e6e6e6;border:1px solid #33363c;border-radius:4px;padding:3px 6px"></select>
+            </div>
+            <div id="sheet-actionbar" title="씬을 체크한 뒤 버튼을 누르면 체크된 씬에 일괄 실행됩니다">
+              <span class="sab-hint">체크한 씬에:</span>
+              <button id="sa-img" title="씬 이미지 생성">▣ 이미지</button>
+              <button id="sa-layer" title="레이어 분리(1개 씬만)">⧉ 레이어</button>
+              <button id="sa-tts" title="TTS 생성">♪ 음성</button>
+              <button id="sa-motion" title="모션 플랜(LLM)">◈ 모션</button>
+              <button id="sa-comp" title="AE 컴프로 내보내기(체크한 씬만 한 번에)">▶ 컴프</button>
+              <button id="sa-sub" title="체크한 씬의 말자막만 생성">💬 말자막</button>
+              <button id="sa-map" title="지도 씬 렌더(MapLibre→씬 이미지)">🗺 지도</button>
+              <button id="sa-chart" title="차트 디자인 명세서 생성(chartagent)">📊 차트</button>
+              <button id="sa-theme" title="체크한 씬에 테마 오버라이드 지정/해제">🎨 씬 테마</button>
+              <span id="sa-status" class="sab-hint"></span>
+              <span class="sab-div"></span>
+              <button id="sa-add" class="sab-txt" title="체크한 씬 아래(없으면 맨 끝)에 새 씬">씬 추가</button>
+              <button id="sa-split" class="sab-txt" title="체크한 씬을 둘로(1개만)">분할</button>
+              <button id="sa-merge" class="sab-txt" title="체크한 씬을 다음 씬과 합침(1개만)">병합</button>
+              <button id="sa-del" class="sab-txt sab-danger" title="체크한 씬 삭제(파일은 보존)">삭제</button>
+            </div>
+            <div id="sheet">—</div>
+          </div>
+
+          <!-- 우: 도구상자 + 세로 갤러리 -->
+          <div id="sb-right">
+            <div id="sb-toolbar">
+              <button id="btnOpenGenModal" title="이미지 생성(SB2)">+ 이미지 생성</button>
+              <button id="btnDecompose" class="alt">씬 분해</button>
+              <button id="btnRefreshCharacters" class="alt">캐릭터</button>
+              <button id="btnGalRefresh" class="alt">소스</button>
+              <button id="btnBuildAll" class="alt" title="전체 씬을 AE 컴프로 조립">🎬 전체 컴프</button>
+              <button id="btnTimelineAll" class="alt" title="모든 씬 컴프를 현재 타임라인에 시간대로 배치(길이=TTS, 없으면 5초)">⤓ 타임라인</button>
+              <button id="btnQueueRender" class="alt" title="Final 컴프를 렌더 큐에 추가">📤 렌더 큐</button>
+              <button id="btnSubtitles" class="alt" title="TTS 타임스탬프 기반 말자막 일괄 생성(Final 컴프)">💬 말자막</button>
+            </div>
+            <div class="sb-search">
+              <input id="galSearch" type="text" placeholder="이미지 검색">
+              <select id="galEngine">
+                <option value="serper">구글</option>
+                <option value="pixabay">pixabay</option>
+              </select>
+              <button id="btnGalSearch" class="mini">검색</button>
+            </div>
+            <div class="box" id="gallery-panel" style="min-height:60px">—</div>
+
+            <!-- 기준 캐릭터(임시 — SB2에서 모달로 통합) -->
+            <details class="sb-acc">
+              <summary>기준 캐릭터</summary>
+              <input id="charName" type="text" placeholder="이름 (예: 지오)">
+              <input id="charLooks" type="text" placeholder="헤어·의상">
+              <button id="btnGenCharacter" class="mini">캐릭터 생성</button>
+              <div class="box" id="characters">—</div>
+            </details>
+
+            <details class="sb-acc" id="ttsSettings">
+              <summary>🔊 TTS 설정</summary>
+              <div class="label">스타일</div>
+              <select id="ttsStyle"></select>
+              <div class="label">voice ID (직접 지정 시 스타일보다 우선, 비우면 스타일 사용)</div>
+              <input id="ttsVoiceId" type="text" placeholder="voice ID">
+              <button id="btnSaveTts" class="mini">저장</button>
+              <div class="box" id="ttsStatus" style="font-size:11px">—</div>
+            </details>
+
+            <!-- 배치·고급(레거시 — 접이식, 바인딩 보존) -->
+            <details class="sb-acc">
+              <summary>배치 · 고급</summary>
+              <div class="label">씬 분해 결과</div>
+              <div class="box" id="scenes">—</div>
+              <div class="label">레퍼런스 이미지</div>
+              <button id="btnRefList" class="mini">레퍼런스 목록</button>
+              <button id="btnGenImages" class="mini alt">이미지 생성</button>
+              <div class="box" id="gallery">—</div>
+              <button id="btnImportImages" class="mini alt">레퍼런스 → AE</button>
+              <button id="btnRefreshGallery" class="mini">갤러리 새로고침</button>
+              <div class="label">씬 이미지(배치)</div>
+              <button id="btnGenStoryboard" class="mini">씬 이미지 생성</button>
+              <div class="box" id="storyboard">—</div>
+              <button id="btnRefreshStoryboard" class="mini">새로고침</button>
+              <button id="btnImportStoryboard" class="mini alt">→ AE</button>
+              <div class="label">씬 레이어(배치)</div>
+              <div class="box" id="layers">—</div>
+              <button id="btnRefreshLayers" class="mini">레이어 새로고침</button>
+              <button id="btnImportLayers" class="mini alt">레이어 → AE</button>
+              <div class="label">AE 컴프</div>
+              <button id="btnBuild" class="mini alt">manifest → AE 컴프</button>
+              <div class="box" id="aeresult">—</div>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 채팅(P7 제작 비서) -->
+    <div id="chat-dock">
+      <div class="label" style="margin:0 0 4px">💬 제작 비서</div>
+      <div class="box" id="chatLog" style="max-height:22vh;overflow:auto;margin-bottom:4px">제작에 관해 상의하거나 지시하세요. (예: "어떤 씬부터 다듬을까?" / "음성 입혀서 합쳐줘")</div>
+      <div class="row">
+        <input id="chatInput" type="text" placeholder='지시 또는 상의… (예: "씬 5 어떻게 연출할까?" / "음성 입혀서 합쳐줘")'>
+        <button id="btnChatSend">전송</button>
+        <button id="btnChatStop" hidden title="실행 중인 비서 작업 중단">⏹ 중단</button>
+      </div>
+    </div>
+
+    <details id="toolsSection">
+      <summary>도구 — AE 보조 기능</summary>
+      <div class="tools-body">
+        <div class="tools-row">
+          <label class="mini-label">SRT 가져오기</label>
+          <input type="file" id="srtFile" accept=".srt">
+          <button class="mini" id="srtImportBtn">Final에 넣기</button>
+        </div>
+        <div class="tools-row">
+          <label class="mini-label">널 끼우기</label>
+          <button class="mini" id="insertNullBtn" title="선택한 레이어와 부모 사이에 널을 끼웁니다">선택 레이어에</button>
+        </div>
+        <div class="tools-row">
+          <label class="mini-label">프리셋 적용</label>
+          <select id="presetSelect">
+            <option value="slide_in">slide_in — 밀어 등장</option>
+            <option value="fade_in">fade_in — 서서히</option>
+            <option value="pop">pop — 통통 등장</option>
+            <option value="stamp">stamp — 도장</option>
+            <option value="zoom_emphasis">zoom_emphasis — 강조</option>
+            <option value="shake">shake — 흔들림</option>
+            <option value="wiggle">wiggle — 위글</option>
+            <option value="drift">drift — 떠다님</option>
+            <option value="exit_fade">exit_fade — 퇴장</option>
+          </select>
+          <input type="text" id="presetAmt" placeholder="진폭(선택)" style="width:70px">
+          <button class="mini" id="presetApplyBtn" title="AE에서 선택한 레이어에 겁니다">선택 레이어에</button>
+        </div>
+        <div id="toolsStatus" class="tools-status"></div>
+      </div>
+    </details>
+  </div>
+
+  <!-- 이미지 생성 모달 -->
+  <div id="genModal" hidden>
+    <div class="gen-box">
+      <div class="gen-head">이미지 생성 <button id="genClose" class="mini">✕</button></div>
+      <div class="label">카테고리</div>
+      <select id="genCategory">
+        <option value="character">캐릭터</option>
+        <option value="background">배경</option>
+        <option value="prop">소품</option>
+        <option value="scene">씬</option>
+      </select>
+
+      <div class="label">아트스타일</div>
+      <select id="genStyle">
+        <option value="semoji">세모지(semoji)</option>
+      </select>
+
+      <div id="genFieldName" class="gen-field">
+        <div class="label">이름</div>
+        <input id="genName" type="text" placeholder="예: 지오 / 작업실 배경 / 렌치">
+      </div>
+
+      <div id="genFieldScene" class="gen-field" hidden>
+        <div class="label">씬 선택</div>
+        <select id="genScene"></select>
+      </div>
+
+      <div id="genFieldChar" class="gen-field" hidden>
+        <div class="label">기준 캐릭터(스타일, 선택)</div>
+        <select id="genChar"><option value="">(없음)</option></select>
+      </div>
+
+      <div class="label" id="genPromptLabel">설명 / 프롬프트</div>
+      <textarea id="genPrompt" rows="3" placeholder="헤어·의상(캐릭터) / 장면 설명(배경·소품) / 씬은 비우면 원고 기반"></textarea>
+
+      <div class="gen-actions">
+        <button id="genSubmit">생성</button>
+        <button id="genCancel" class="alt">취소</button>
+      </div>
+      <div class="box" id="genStatus" style="min-height:16px">—</div>
+    </div>
+  </div>
+
+  <!-- 레이어 분리 — 요소 선택 모달 -->
+  <div id="layerModal" hidden>
+    <div class="gen-box">
+      <div class="gen-head">레이어 분리 — 요소 선택 <button id="layerClose" class="mini">✕</button></div>
+      <div class="label">분리 기준: ① 캐릭터 전원 ② 캐릭터를 가리는 전경 ③ 내용상 필요한 요소 — 나머지는 배경에 남습니다.</div>
+      <div id="layerTabs"></div>
+      <div id="layerList" class="box" style="max-height:50vh;overflow:auto">—</div>
+      <div class="gen-actions">
+        <button id="layerSubmit">선택 분리</button>
+        <button id="layerCancel" class="alt">취소</button>
+      </div>
+      <div class="box" id="layerModalStatus" style="min-height:16px">—</div>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/planning.js"></script>
+  <link rel="stylesheet" href="vendor/maplibre-gl.css">
+  <script src="vendor/maplibre-gl.js"></script>
+  <script src="js/mapgen.js"></script>
+  <script src="js/storyboard.js"></script>
+  <script src="js/gallery.js"></script>
+  <script src="js/genmodal.js"></script>
+  <script src="js/assistant.js"></script>
+</body>
+</html>

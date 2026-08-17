@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["scenes"],
+  "properties": {
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "visual_summary": { "type": "string" },
+          "image_prompt": { "type": "string" },
+          "characters": { "type": "array" },
+          "layout": { "type": "string", "enum": ["headline_only", "items_list", "metric_spotlight", "quote", "map", "cinematic"] },
+          "asset_source": { "type": "string", "enum": ["generate", "search"] },
+          "search_query": { "type": "string" },
+          "shot_relation": { "type": "string", "enum": ["cut", "continue"] },
+          "location": { "type": "string" },
+          "props": { "type": "array" }
+        }
+      }
+    }
+  }
+}

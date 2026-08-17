@@ -1,0 +1,1 @@
+{ "name": "manuscript-write", "inputs": ["draft.md", "targeted_claims.json"], "output": "final_manuscript.v1.md", "output_kind": "md" }

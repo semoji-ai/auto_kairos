@@ -1,0 +1,13 @@
+{
+  "default_style": "semoji",
+  "presets": {
+    "semoji":         { "label": "세모지", "voice_id": "W7FnAxJNpD5WGjrF5GLp",
+                        "voice_settings": { "stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": true, "speed": 1.1 } },
+    "semoji_3D":      { "label": "세모지 3D", "voice_id": "W7FnAxJNpD5WGjrF5GLp",
+                        "voice_settings": { "stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": true, "speed": 1.1 } },
+    "quirky_cartoon": { "label": "이로미즘 (quirky cartoon)", "voice_id": "9Sj8ugvpK1DmcAXyvi3a",
+                        "voice_settings": { "stability": 1.0, "similarity_boost": 0.6, "style": 0.9, "use_speaker_boost": true, "speed": 1.1 } },
+    "lego":           { "label": "레고", "voice_id": "4JJwo477JUAx3HV0T7n7",
+                        "voice_settings": { "stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": true, "speed": 1.1 } }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "presets": {
+    "type_on":        {"props": ["textOffset"], "ease": "linear", "params": {"cps": 14}},
+    "fade_scale_in":  {"props": ["opacity", "scale"], "ease": "easeOut", "params": {"scaleFrom": 85}},
+    "slide_in":       {"props": ["position", "opacity"], "ease": "easeOut", "params": {"dir": "left", "offset": 80}},
+    "pop_bounce":     {"props": ["scale", "opacity"], "ease": "overshoot", "params": {"overshoot": 110, "settle": 6}},
+    "mask_reveal":    {"props": ["trimEnd"], "ease": "easeInOut", "params": {"mode": "trim", "dir": "left"}},
+    "tilt_2_5d":      {"props": ["rotationY"], "ease": "easeOut", "params": {"angle": -15}},
+    "stagger":        {"meta": true, "params": {"base": "fade_scale_in", "offset": 5, "dir": "forward"}}
+  }
+}

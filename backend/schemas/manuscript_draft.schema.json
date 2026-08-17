@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["draft_markdown", "questions"],
+  "properties": {
+    "draft_markdown": { "type": "string" },
+    "questions": { "type": "array", "items": { "type": "string" } }
+  }
+}

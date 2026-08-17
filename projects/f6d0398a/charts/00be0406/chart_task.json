@@ -1,0 +1,40 @@
+{
+  "task_id": "scene-006",
+  "request_origin": "auto_kairos_adobe",
+  "goal": "show_ranking",
+  "question": "나라별 잠의 격차",
+  "dataset": {
+    "title": "나라별 잠의 격차",
+    "items": [
+      {
+        "label": "네덜란드",
+        "value": 8.1
+      },
+      {
+        "label": "미국",
+        "value": 7.5
+      },
+      {
+        "label": "일본",
+        "value": 6.8
+      },
+      {
+        "label": "한국",
+        "value": 6.3
+      }
+    ],
+    "unit": "시간"
+  },
+  "theme_set": "gallery_infographic",
+  "source_hints": [],
+  "constraints": {
+    "preserve_order": true
+  },
+  "context": {
+    "scene_number": 6,
+    "layout": "bar"
+  },
+  "theme_overrides": {
+    "pattern_mode": "outline_plus_hatch"
+  }
+}

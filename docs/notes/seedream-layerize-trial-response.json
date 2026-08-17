@@ -1,0 +1,203 @@
+{
+  "images": [
+    {
+      "url": "https://v3b.fal.media/files/b/0aa629e5/nOe9p8cLN26FjEoPTwgPk_81fba7ec0e13499e831a357290201fec.png",
+      "content_type": "image/png",
+      "file_name": "81fba7ec0e13499e831a357290201fec.png",
+      "file_size": 1564022,
+      "width": null,
+      "height": null
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0aa629e5/u8xSbFxrY3r8YRMzS85Ku_c9bd2e9c8a8045bf9846e0a1bf4117a7.png",
+      "content_type": "image/png",
+      "file_name": "c9bd2e9c8a8045bf9846e0a1bf4117a7.png",
+      "file_size": 2293564,
+      "width": null,
+      "height": null
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0aa629e5/Fq7siCoy7somjTPYPmmQD_5762244af4da4de5840de364b70b72a8.png",
+      "content_type": "image/png",
+      "file_name": "5762244af4da4de5840de364b70b72a8.png",
+      "file_size": 724104,
+      "width": null,
+      "height": null
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0aa629d3/U7_H4UXZ_opTe1QArneBS_57d4e32894f543a9a81dc18204a8c286.png",
+      "content_type": "image/png",
+      "file_name": "57d4e32894f543a9a81dc18204a8c286.png",
+      "file_size": 1401709,
+      "width": null,
+      "height": null
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0aa629d3/7mgVM6ODtXY3yF_YLDQjF_c8ad8db822cc4a60b5a26ffb0bbdfdfb.png",
+      "content_type": "image/png",
+      "file_name": "c8ad8db822cc4a60b5a26ffb0bbdfdfb.png",
+      "file_size": 885783,
+      "width": null,
+      "height": null
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0aa629e5/uIs5la25zGxcZG-9gZArk_010e763b000247639ef276f82fd736ef.png",
+      "content_type": "image/png",
+      "file_name": "010e763b000247639ef276f82fd736ef.png",
+      "file_size": 825791,
+      "width": null,
+      "height": null
+    }
+  ],
+  "layers": [
+    {
+      "image": {
+        "url": "https://v3b.fal.media/files/b/0aa629e5/nOe9p8cLN26FjEoPTwgPk_81fba7ec0e13499e831a357290201fec.png",
+        "content_type": "image/png",
+        "file_name": "81fba7ec0e13499e831a357290201fec.png",
+        "file_size": 1564022,
+        "width": null,
+        "height": null
+      },
+      "z_index": 0,
+      "bounding_box": null,
+      "name": null,
+      "description": null
+    },
+    {
+      "image": {
+        "url": "https://v3b.fal.media/files/b/0aa629e5/u8xSbFxrY3r8YRMzS85Ku_c9bd2e9c8a8045bf9846e0a1bf4117a7.png",
+        "content_type": "image/png",
+        "file_name": "c9bd2e9c8a8045bf9846e0a1bf4117a7.png",
+        "file_size": 2293564,
+        "width": null,
+        "height": null
+      },
+      "z_index": 1,
+      "bounding_box": {
+        "absolute": [
+          0,
+          52,
+          1536,
+          1024
+        ],
+        "normalized": [
+          0,
+          51,
+          999,
+          999
+        ]
+      },
+      "name": "background",
+      "description": "All background elements including city buildings, trees, sky, sun, road surface, and the family group on the left of the electric car, no foreground objects included"
+    },
+    {
+      "image": {
+        "url": "https://v3b.fal.media/files/b/0aa629e5/Fq7siCoy7somjTPYPmmQD_5762244af4da4de5840de364b70b72a8.png",
+        "content_type": "image/png",
+        "file_name": "5762244af4da4de5840de364b70b72a8.png",
+        "file_size": 724104,
+        "width": null,
+        "height": null
+      },
+      "z_index": 2,
+      "bounding_box": {
+        "absolute": [
+          1424,
+          515,
+          1525,
+          829
+        ],
+        "normalized": [
+          927,
+          503,
+          992,
+          809
+        ]
+      },
+      "name": "EV charger",
+      "description": "Green electric vehicle charging station with lightning symbol, only extract the charger unit itself"
+    },
+    {
+      "image": {
+        "url": "https://v3b.fal.media/files/b/0aa629d3/U7_H4UXZ_opTe1QArneBS_57d4e32894f543a9a81dc18204a8c286.png",
+        "content_type": "image/png",
+        "file_name": "57d4e32894f543a9a81dc18204a8c286.png",
+        "file_size": 1401709,
+        "width": null,
+        "height": null
+      },
+      "z_index": 3,
+      "bounding_box": {
+        "absolute": [
+          344,
+          500,
+          1254,
+          912
+        ],
+        "normalized": [
+          224,
+          488,
+          816,
+          890
+        ]
+      },
+      "name": "white electric car",
+      "description": "White electric sedan, only extract the car body, do not include charging cable or other attached elements"
+    },
+    {
+      "image": {
+        "url": "https://v3b.fal.media/files/b/0aa629d3/7mgVM6ODtXY3yF_YLDQjF_c8ad8db822cc4a60b5a26ffb0bbdfdfb.png",
+        "content_type": "image/png",
+        "file_name": "c8ad8db822cc4a60b5a26ffb0bbdfdfb.png",
+        "file_size": 885783,
+        "width": null,
+        "height": null
+      },
+      "z_index": 4,
+      "bounding_box": {
+        "absolute": [
+          1271,
+          399,
+          1426,
+          867
+        ],
+        "normalized": [
+          827,
+          390,
+          928,
+          846
+        ]
+      },
+      "name": "man on the right",
+      "description": "Man standing next to the EV charger on the right side, wearing green jacket and khaki pants, only extract this person"
+    },
+    {
+      "image": {
+        "url": "https://v3b.fal.media/files/b/0aa629e5/uIs5la25zGxcZG-9gZArk_010e763b000247639ef276f82fd736ef.png",
+        "content_type": "image/png",
+        "file_name": "010e763b000247639ef276f82fd736ef.png",
+        "file_size": 825791,
+        "width": null,
+        "height": null
+      },
+      "z_index": 5,
+      "bounding_box": {
+        "absolute": [
+          1195,
+          637,
+          1485,
+          844
+        ],
+        "normalized": [
+          778,
+          622,
+          966,
+          823
+        ]
+      },
+      "name": "charging cable",
+      "description": "Black charging cable connecting EV charger to the white electric car, only extract the cable itself"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "theme_set": "gallery_infographic",
+  "visual_mode": "editorial",
+  "guideLineCount": 1,
+  "guideDash": null,
+  "guideOpacity": 0.2,
+  "guideStrokeWidth": 1,
+  "axisStrokeWidth": 2,
+  "barRadius": 14,
+  "patternKind": "diagonal_hatch",
+  "patternSpacing": 10,
+  "patternOpacity": 0.4,
+  "patternStrokeWidth": 1.25,
+  "outlineWidth": 2.4,
+  "plotLeft": 80,
+  "plotRight": 40,
+  "plotBottom": 90
+}

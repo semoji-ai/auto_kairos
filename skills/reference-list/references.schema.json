@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["project_id", "references"],
+  "properties": {
+    "project_id": { "type": "string" },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "subject", "image_prompt"],
+        "properties": {
+          "id": { "type": "string" },
+          "subject": { "type": "string" },
+          "image_prompt": { "type": "string" }
+        }
+      }
+    }
+  }
+}

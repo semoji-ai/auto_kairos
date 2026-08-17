@@ -1,0 +1,1 @@
+{ "name": "brief-interview", "inputs": ["plan.md"], "output": "editorial_brief.v1.json", "output_kind": "json" }

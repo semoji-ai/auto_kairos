@@ -1,0 +1,56 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    {
+      "ae_comp_name": "S05_230205cf",
+      "image": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/storyboard/sb_230205cf.png",
+      "layers": [
+        {
+          "name": "230205cf__bg",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/230205cf__bg.png",
+          "kind": "bg"
+        },
+        {
+          "name": "230205cf__0_왼쪽_여성",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/230205cf__0_왼쪽_여성.png",
+          "kind": "element"
+        },
+        {
+          "name": "230205cf__1_왼쪽_남성",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/230205cf__1_왼쪽_남성.png",
+          "kind": "element"
+        },
+        {
+          "name": "230205cf__2_아이",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/230205cf__2_아이.png",
+          "kind": "element"
+        },
+        {
+          "name": "230205cf__3_흰색_전기차",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/230205cf__3_흰색_전기차.png",
+          "kind": "element"
+        },
+        {
+          "name": "230205cf__4_오른쪽_남성",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/230205cf__4_오른쪽_남성.png",
+          "kind": "element"
+        },
+        {
+          "name": "230205cf__5_충전_케이블",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/230205cf__5_충전_케이블.png",
+          "kind": "element"
+        },
+        {
+          "name": "230205cf__6_충전기",
+          "path": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/layers/230205cf__6_충전기.png",
+          "kind": "element"
+        }
+      ],
+      "audio": "/Users/jleavens_macmini/LocalProjects/auto_kairos_adobe/projects/tesla/audio/tts_230205cf.aiff",
+      "subtitle": "테슬라의 역사는 전기차를 발명한 이야기가 아니다. 전기차를 사람들이 갖고 싶어 하는 물건으로 바꾼 이야기다.",
+      "duration": 7.517551
+    }
+  ]
+}
