@@ -175,8 +175,8 @@ def _scene_dir(ep: str, n: int) -> Path:
 
 
 @app.post("/api/p/{project_ref}/assistant")
-async def assistant_plan(project_ref: str, request: Request):
-    """말로 시킨 것을 「할 일 목록」으로 바꾼다. 실행은 하지 않는다."""
+async def assistant_ask(project_ref: str, request: Request):
+    """비서와 대화한다. 돌릴 일이 있으면 계획을 함께 돌려준다(실행은 승인 후)."""
     from auto_agent.dashboard import health as health_mod, pd_assistant
 
     pm = get_pm()
@@ -187,11 +187,26 @@ async def assistant_plan(project_ref: str, request: Request):
     text = (body.get("text") or "").strip()
     if not text:
         return JSONResponse({"error": "무엇을 할지 적어 주세요"}, status_code=422)
+
     try:
         h = health_mod.collect(project)
     except Exception:
         h = {}
-    return pd_assistant.plan(project, h, text)
+    pd_assistant.append_history(project, "user", text)
+    res = pd_assistant.ask(project, h, text)
+    pd_assistant.append_history(project, "assistant", res.get("reply", ""), res.get("plan"))
+    return res
+
+
+@app.get("/api/p/{project_ref}/assistant/history")
+async def assistant_history(project_ref: str, limit: int = 40):
+    from auto_agent.dashboard import pd_assistant
+
+    pm = get_pm()
+    project, _ = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    return {"messages": pd_assistant.load_history(project, limit)}
 
 
 @app.post("/api/p/{project_ref}/assistant/run")
@@ -223,6 +238,7 @@ async def assistant_run(project_ref: str, request: Request):
         return JSONResponse({"error": "돌릴 수 있는 일이 없습니다"}, status_code=422)
 
     log = root / "_imggen" / f"{ep}_pd.log"
+    done_f = root / "_imggen" / f"{ep}_pd.done"
 
     def run() -> None:
         with log.open("w", encoding="utf-8") as f:
@@ -230,11 +246,13 @@ async def assistant_run(project_ref: str, request: Request):
                 f.write("=== " + " ".join(c[1:]) + "\n")
                 f.flush()
                 _sp.run(c, cwd=root, stdout=f, stderr=_sp.STDOUT, stdin=_sp.DEVNULL)
-        f_done = root / "_imggen" / f"{ep}_pd.done"
-        f_done.write_text("", encoding="utf-8")
+        done_f.write_text("", encoding="utf-8")
 
-    (root / "_imggen" / f"{ep}_pd.done").unlink(missing_ok=True)
+    done_f.unlink(missing_ok=True)
     _th.Thread(target=run, name=f"pd-{ep}", daemon=True).start()
+    pd_assistant.append_history(
+        project, "assistant",
+        "작업 " + str(len(cmds)) + "개를 시작했습니다.")
     return {"started": len(cmds)}
 
 
@@ -252,24 +270,6 @@ async def assistant_log(project_ref: str):
     done = (root / "_imggen" / f"{ep}_pd.done").exists()
     lines = f.read_text(encoding="utf-8", errors="replace").splitlines()[-30:]
     return {"lines": lines, "running": not done}
-
-
-@app.post("/api/client-error")
-async def client_error(request: Request):
-    """화면에서 난 오류를 서버 로그로 넘긴다.
-
-    데스크톱 앱에는 개발자 도구가 없다. 화면이 조용히 비어 있을 때 무엇이
-    터졌는지 알 길이 없어, 캐릭터 패널이 「로딩 중」에서 멈춘 것을 정적
-    분석으로 쫓아야 했다. 이제는 그냥 로그를 보면 된다.
-    """
-    try:
-        b = await request.json()
-    except Exception:
-        b = {}
-    print(f"[client] {b.get('where', '')} {b.get('message', '')} "
-          f"@ {b.get('source', '')}:{b.get('line', '')}\n{b.get('stack', '')[:800]}",
-          flush=True)
-    return {"ok": True}
 
 
 @app.get("/api/p/{project_ref}/health")

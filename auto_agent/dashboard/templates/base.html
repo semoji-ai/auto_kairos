@@ -34,14 +34,15 @@
     <div class="sidebar-pd" id="sidebar-pd">
       <div class="sm-header">
         <span style="flex:1">◈ PD 비서</span>
+        <span class="pd-clear" onclick="pdClear()" title="대화 지우기">↺</span>
         <span id="pd-toggle" class="sm-toggle" onclick="togglePd()" style="cursor:pointer">&#9650;</span>
       </div>
       <div class="sm-body" id="pd-body">
-        <div id="pd-out-side" class="pd-side-out"></div>
-        <div class="pd-side-row">
-          <input id="pd-input-side" type="text" placeholder="무엇을 할까요"
-                 onkeydown="if(event.key==='Enter') pdSideAsk()">
-          <button type="button" onclick="pdSideAsk()">▶</button>
+        <div id="pd-log" class="pd-log-area"></div>
+        <div class="pd-input-row">
+          <textarea id="pd-input-side" rows="1" placeholder="무엇이든 물어보세요"
+                    onkeydown="pdKey(event)"></textarea>
+          <button type="button" onclick="pdSideAsk()" id="pd-send">↑</button>
         </div>
       </div>
     </div>
@@ -191,10 +192,12 @@
     if (saved) document.documentElement.style.setProperty('--sidebar-w', saved);
   })();
 
-  /* PD 비서 — 사이드바.
-     여기 있던 Agent Chat은 걷어냈다. 에이전트 대화를 실시간으로 볼 일이
-     없다 — 실행은 백그라운드에서 돌고 결과는 파일로 남으며, 어디까지 됐는지는
-     대시보드가 세어 보여 준다. 상시 SSE 연결도 함께 사라진다. */
+  /* PD 비서 — 대화창.
+     위쪽이 주고받은 이야기, 아래가 입력칸이다. 이야기는 프로젝트 폴더에
+     남으므로 창을 닫았다 열어도 이어진다.
+
+     물어보는 일(경로·개수·원고·사실 확인)은 바로 답하고, 무언가를 만들거나
+     바꾸는 일은 「할 일」로 세워 보여 준 뒤 승인해야 돈다. */
   (function () {
     var box = document.getElementById('sidebar-pd');
     if (!box) return;
@@ -202,70 +205,115 @@
       var m = window.location.pathname.match(/^\/p\/([^/]+)/);
       return m ? decodeURIComponent(m[1]) : '';
     })();
-    if (!slug) { box.style.display = 'none'; return; }   // 프로젝트 안에서만
+    if (!slug) { box.style.display = 'none'; return; }
 
-    var body = document.getElementById('pd-body');
+    var logEl = document.getElementById('pd-log');
+    var inputEl = document.getElementById('pd-input-side');
+    var sendEl = document.getElementById('pd-send');
+    var bodyEl = document.getElementById('pd-body');
     var toggleEl = document.getElementById('pd-toggle');
     var collapsed = false;
+    var pending = null;
+
     window.togglePd = function () {
       collapsed = !collapsed;
-      body.classList.toggle('collapsed', collapsed);
+      bodyEl.classList.toggle('collapsed', collapsed);
       toggleEl.classList.toggle('collapsed', collapsed);
     };
 
-    var plan = null;
-    var out = document.getElementById('pd-out-side');
+    window.pdKey = function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); pdSideAsk(); }
+      inputEl.style.height = 'auto';
+      inputEl.style.height = Math.min(96, inputEl.scrollHeight) + 'px';
+    };
+
+    function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+    function bubble(role, text, plan) {
+      var el = document.createElement('div');
+      el.className = 'pd-msg pd-' + role;
+      var body = esc(text).replace(/\n/g, '<br>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+      el.innerHTML = '<div class="pd-bubble">' + body + '</div>';
+      if (plan && plan.length) {
+        var box2 = document.createElement('div');
+        box2.className = 'pd-plan';
+        box2.innerHTML = plan.map(function (s) {
+          return '<div class="pd-plan-step">' + esc(s.label)
+            + (s.scenes && s.scenes.length ? ' <span>씬 ' + s.scenes.join(', ') + '</span>' : '')
+            + (s.why ? '<div class="pd-plan-why">' + esc(s.why) + '</div>' : '') + '</div>';
+        }).join('');
+        var btn = document.createElement('button');
+        btn.className = 'pd-run';
+        btn.textContent = '이대로 진행';
+        btn.onclick = function () { pending = plan; pdRun(btn); };
+        box2.appendChild(btn);
+        el.appendChild(box2);
+      }
+      logEl.appendChild(el);
+      logEl.scrollTop = logEl.scrollHeight;
+      return el;
+    }
 
     window.pdSideAsk = function () {
-      var el = document.getElementById('pd-input-side');
-      var text = (el.value || '').trim();
+      var text = (inputEl.value || '').trim();
       if (!text) return;
-      out.innerHTML = '<div class="pd-side-wait">생각하는 중…</div>';
+      bubble('user', text);
+      inputEl.value = ''; inputEl.style.height = 'auto';
+      sendEl.disabled = true;
+      var waiting = bubble('assistant', '…');
       fetch('/api/p/' + encodeURIComponent(slug) + '/assistant', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: text })
       }).then(function (r) { return r.json(); })
         .then(function (d) {
-          if (d.error) { out.innerHTML = '<div class="pd-side-wait">' + d.error + '</div>'; return; }
-          plan = d.plan || [];
-          var h = d.say ? '<div class="pd-side-say">' + esc(d.say) + '</div>' : '';
-          if (d.ask) h += '<div class="pd-side-ask">' + esc(d.ask) + '</div>';
-          plan.forEach(function (s) {
-            h += '<div class="pd-side-step">' + esc(s.label)
-              + (s.scenes && s.scenes.length ? ' <span>씬 ' + s.scenes.join(', ') + '</span>' : '')
-              + '</div>';
-          });
-          if (plan.length) h += '<button class="pd-side-go" onclick="pdSideRun()">이대로 진행</button>';
-          out.innerHTML = h;
-          el.value = '';
-        });
+          waiting.remove();
+          sendEl.disabled = false;
+          if (d.error) { bubble('assistant', d.error); return; }
+          bubble('assistant', d.reply || '', d.plan);
+        })
+        .catch(function (e) { waiting.remove(); sendEl.disabled = false; bubble('assistant', '실패: ' + e.message); });
     };
 
-    window.pdSideRun = function () {
-      if (!plan || !plan.length) return;
+    function pdRun(btn) {
+      btn.disabled = true; btn.textContent = '시작하는 중…';
       fetch('/api/p/' + encodeURIComponent(slug) + '/assistant/run', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: plan })
+        body: JSON.stringify({ plan: pending })
       }).then(function (r) { return r.json(); })
         .then(function (d) {
-          if (d.error) { out.innerHTML = '<div class="pd-side-wait">' + esc(d.error) + '</div>'; return; }
-          poll();
-        });
-    };
-
-    function poll() {
-      fetch('/api/p/' + encodeURIComponent(slug) + '/assistant/log')
-        .then(function (r) { return r.json(); })
-        .then(function (d) {
-          var last = (d.lines || []).slice(-6).join('\n');
-          out.innerHTML = '<pre class="pd-side-log">' + esc(last) + '</pre>'
-            + (d.running ? '<div class="pd-side-wait">진행 중…</div>'
-                         : '<div class="pd-side-say">끝났습니다</div>');
-          if (d.running) setTimeout(poll, 5000);
+          if (d.error) { btn.disabled = false; btn.textContent = '이대로 진행'; bubble('assistant', d.error); return; }
+          btn.textContent = '진행 중';
+          var el = bubble('assistant', '작업을 시작했습니다.');
+          poll(el);
         });
     }
 
-    function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+    function poll(el) {
+      fetch('/api/p/' + encodeURIComponent(slug) + '/assistant/log')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var last = (d.lines || []).slice(-8).join('\n');
+          el.innerHTML = '<div class="pd-bubble"><pre class="pd-run-log">' + esc(last) + '</pre>'
+            + (d.running ? '<div class="pd-wait2">진행 중…</div>' : '<div>끝났습니다.</div>') + '</div>';
+          logEl.scrollTop = logEl.scrollHeight;
+          if (d.running) setTimeout(function () { poll(el); }, 5000);
+        });
+    }
+
+    window.pdClear = function () {
+      logEl.innerHTML = '';
+    };
+
+    // 지난 이야기 불러오기
+    fetch('/api/p/' + encodeURIComponent(slug) + '/assistant/history?limit=30')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        (d.messages || []).forEach(function (m) { bubble(m.role, m.text, m.plan); });
+        if (!(d.messages || []).length) {
+          bubble('assistant', '무엇을 도와드릴까요. 「3씬 레이어 나눠줘」·「자막 만들어줘」처럼 시키셔도 되고, 「이 편에서 시트 없이 그린 인물 어디야」처럼 물어보셔도 됩니다.');
+        }
+      });
   })();
   </script>
 
