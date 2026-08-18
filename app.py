@@ -127,6 +127,71 @@ if output_dir.exists():
 # 아트스타일 이미지 서빙 (/static/artstyle/ → auto_agent/data/artstyle/styles/)
 _mount_asset("/artstyle", "auto_agent/data/artstyle/styles")
 
+# 분리된 레이어 서빙 (/layers/<ep>_anim/s041b/03_박정희.png)
+#
+# 레이어는 프로젝트 폴더가 아니라 `_imggen/<ep>_anim/s<번호>/`에 쌓인다.
+# 그 아래만 열어 준다 — _imggen 전체를 통째로 여는 것과는 다르다.
+_LAYER_ROOT = get_package_dir().parent / "_imggen"
+
+
+@app.get("/layers/{name:path}")
+async def serve_layer(name: str):
+    import re as _re
+
+    if not _re.match(r"^[A-Za-z0-9_]+_anim/s\d{3}[a-z]?/[^/]+$", name):
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
+    f = (_LAYER_ROOT / name).resolve()
+    if f.is_file() and _LAYER_ROOT.resolve() in f.parents:
+        return FileResponse(f)
+    return JSONResponse({"detail": "Not Found"}, status_code=404)
+
+
+@app.get("/api/p/{project_ref}/layers/{scene_num}")
+async def scene_layers(project_ref: str, scene_num: int):
+    """이 씬에 분리된 레이어가 있으면 목록을 낸다.
+
+    분리 결과를 눈으로 확인할 길이 없었다 — 파일을 직접 찾아 열어야 했고,
+    어느 것이 어디에 놓이는지는 layers.json을 읽어야 알 수 있었다.
+    """
+    import json as _json
+
+    pm = get_pm()
+    project, _ = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+
+    # 슬러그에서 편 번호를 얻는다 (lg_brand_encyclopedia_ep06b → ep06b)
+    slug = project.get("slug") or ""
+    ep = slug.rsplit("_", 1)[-1] if "_ep" in slug else ""
+    sets = []
+    for d in sorted(_LAYER_ROOT.glob(f"{ep}_anim/s{scene_num:03d}*")):
+        meta_f = d / "layers.json"
+        if not meta_f.is_file():
+            continue
+        try:
+            meta = _json.loads(meta_f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        zf = d / "z_order.json"
+        layers = []
+        for m in meta:
+            png = Path(m.get("path", "")).name
+            svg = Path(m.get("svg") or "").name
+            layers.append({
+                "name": m.get("name"), "role": m.get("role"), "z": m.get("z"),
+                "bbox": m.get("bbox"),
+                "png": f"/layers/{d.parent.name}/{d.name}/{png}" if png else "",
+                "svg": f"/layers/{d.parent.name}/{d.name}/{svg}" if svg else "",
+            })
+        videos = [f"/layers/{d.parent.name}/{d.name}/{v.name}" for v in sorted(d.glob("*.mp4"))]
+        sets.append({
+            "id": d.name, "dir": f"{d.parent.name}/{d.name}",
+            "layers": layers, "videos": videos,
+            "vision_ordered": zf.is_file(),
+        })
+    return {"sets": sets}
+
+
 # chartagent 정적 대시보드 서빙 (/chartagent-dash/ → workspace/chartagent_dashboard/)
 _chartagent_dash_dir = workspace / "chartagent_dashboard"
 _chartagent_dash_dir.mkdir(parents=True, exist_ok=True)

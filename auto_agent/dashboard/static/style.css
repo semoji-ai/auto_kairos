@@ -2311,3 +2311,34 @@ body.terminal-open .main-content {
   font-size: 11px; padding: 1px 6px; border-radius: 8px;
   background: rgba(255,255,255,.12); color: #b9b9b9;
 }
+
+/* ── 레이어 보기 ─────────────────────────────────────────
+   분리 결과를 층별로 펼쳐 본다. 무대는 bbox 그대로 겹쳐 놓아
+   실제 화면에서 무엇이 무엇을 가리는지 바로 보이게 한다. */
+.sb-layers { margin: 6px 0; }
+.sb-layer-toggle {
+  font-size: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer;
+  background: rgba(167,139,250,.15); border: 1px solid rgba(167,139,250,.35); color: #a78bfa;
+}
+.sb-layer-toggle.open { background: rgba(167,139,250,.3); }
+.sb-layer-body { margin-top: 6px; }
+.sb-layer-empty { font-size: 11px; color: #8b8b8b; padding: 8px; line-height: 1.7; }
+.sb-layer-empty code { background: #1c1c1e; padding: 2px 5px; border-radius: 3px; }
+.sb-layer-set { border: 1px solid #2c2c2e; border-radius: 6px; padding: 8px; }
+.sb-layer-head { font-size: 10px; color: #9a9a9a; margin-bottom: 6px; }
+.sb-layer-stage {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  background: #131315; border-radius: 4px; overflow: hidden; margin-bottom: 8px;
+}
+.sb-layer-img { position: absolute; object-fit: fill; transition: opacity .12s; }
+.sb-layer-list { display: flex; flex-direction: column; gap: 2px; }
+.sb-layer-row {
+  display: flex; align-items: center; gap: 6px; font-size: 11px;
+  padding: 2px 4px; border-radius: 3px; cursor: pointer;
+}
+.sb-layer-row:hover { background: rgba(255,255,255,.05); }
+.sb-layer-name { flex: 1; color: #d4d4d4; }
+.sb-layer-z { color: #6f6f6f; font-size: 10px; }
+.sb-layer-vec { color: #60a5fa; font-size: 9px; text-decoration: none; }
+.sb-layer-vids { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.sb-layer-vid { font-size: 10px; color: #34d399; text-decoration: none; }

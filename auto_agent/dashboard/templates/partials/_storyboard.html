@@ -101,6 +101,14 @@
         {% endif %}
       </div>
 
+      {# 레이어 — 분리해 둔 것이 있으면 여기서 층별로 본다.
+         그동안 파일을 직접 찾아 열어야 했고, 어느 것이 어디 놓이는지는
+         layers.json을 읽어야 알 수 있었다. #}
+      <div class="sb-layers" data-scene="{{ scene.sceneNumber }}">
+        <button type="button" class="sb-layer-toggle" onclick="sbToggleLayers('{{ slug }}', {{ scene.sceneNumber }}, this)">⧉ 레이어</button>
+        <div class="sb-layer-body" id="sb-layers-{{ scene.sceneNumber }}" hidden></div>
+      </div>
+
       <div class="narration-wrap" data-scene="{{ scene.sceneNumber }}">
         <div class="narration-head" style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
           <button type="button" class="btn-narr-edit" onclick="sbToggleNarrEdit({{ scene.sceneNumber }})"
@@ -2273,6 +2281,78 @@ function updateSceneLayout(slug, sceneNum, layout) {
   // window 함수로 노출 (혹시 수동 호출 필요 시).
   window.__sbLoadEnrichmentInline = loadAndInject;
 })();
+
+/* 레이어 보기 — 분리 결과를 층별로 펼친다.
+   눈 아이콘으로 층을 껐다 켜면 무엇이 무엇을 가리는지 바로 보인다. */
+var SB_LAYER_CACHE = {};
+
+function sbToggleLayers(slug, n, btn) {
+  var box = document.getElementById("sb-layers-" + n);
+  if (!box) return;
+  if (!box.hidden) { box.hidden = true; btn.classList.remove("open"); return; }
+  box.hidden = false; btn.classList.add("open");
+  if (SB_LAYER_CACHE[n]) return;
+  box.innerHTML = '<div class="sb-layer-empty">불러오는 중…</div>';
+  fetch('/api/p/' + encodeURIComponent(slug) + '/layers/' + n)
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      SB_LAYER_CACHE[n] = d;
+      box.innerHTML = sbRenderLayers(d, n);
+    })
+    .catch(function () { box.innerHTML = '<div class="sb-layer-empty">불러오지 못했습니다</div>'; });
+}
+
+function sbRenderLayers(d, n) {
+  var sets = (d && d.sets) || [];
+  if (!sets.length) {
+    return '<div class="sb-layer-empty">아직 분리하지 않은 씬입니다.'
+      + '<br><code>python3 scripts/animate_scene.py EP03 ' + n + '</code></div>';
+  }
+  return sets.map(function (s) {
+    // 뒤에서 앞으로 쌓인 순서 그대로 겹쳐 보여준다
+    var stack = s.layers.map(function (L, i) {
+      var b = L.bbox;
+      var st = b
+        ? 'left:' + (b[0] / 17.92) + '%;top:' + (b[1] / 10.08) + '%;width:'
+          + ((b[2] - b[0]) / 17.92) + '%;height:' + ((b[3] - b[1]) / 10.08) + '%'
+        : 'left:0;top:0;width:100%;height:100%';
+      return '<img class="sb-layer-img" data-i="' + i + '" src="' + L.png
+        + '" style="' + st + ';z-index:' + (L.z || i) + '">';
+    }).join("");
+
+    var rows = s.layers.map(function (L, i) {
+      var kind = L.role === "person" ? "👤" : (L.role === "bg" ? "▨" : "▣");
+      var vec = L.svg ? '<a class="sb-layer-vec" href="' + L.svg + '" target="_blank">SVG</a>' : '';
+      return '<label class="sb-layer-row">'
+        + '<input type="checkbox" checked onchange="sbLayerVis(' + n + ',' + i + ',this.checked)">'
+        + '<span class="sb-layer-kind">' + kind + '</span>'
+        + '<span class="sb-layer-name">' + (L.name || "") + '</span>'
+        + '<span class="sb-layer-z">z' + (L.z != null ? L.z : i) + '</span>' + vec
+        + '</label>';
+    }).join("");
+
+    var vids = (s.videos || []).map(function (v) {
+      return '<a class="sb-layer-vid" href="' + v + '" target="_blank">▶ ' + v.split("/").pop() + '</a>';
+    }).join("");
+
+    return '<div class="sb-layer-set" data-set="' + s.id + '">'
+      + '<div class="sb-layer-head">' + s.id + ' · ' + s.layers.length + '층'
+      + (s.vision_ordered ? ' · <span title="화면을 보고 앞뒤를 판정했다">z 검증됨</span>' : '')
+      + '</div>'
+      + '<div class="sb-layer-stage" id="sb-layer-stage-' + n + '">' + stack + '</div>'
+      + '<div class="sb-layer-list">' + rows + '</div>'
+      + (vids ? '<div class="sb-layer-vids">' + vids + '</div>' : '')
+      + '</div>';
+  }).join("");
+}
+
+function sbLayerVis(n, i, on) {
+  var stage = document.getElementById("sb-layer-stage-" + n);
+  if (!stage) return;
+  var img = stage.querySelector('.sb-layer-img[data-i="' + i + '"]');
+  if (img) img.style.opacity = on ? "1" : "0.08";
+}
+
 </script>
 
 {% else %}
