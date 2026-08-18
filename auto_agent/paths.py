@@ -68,6 +68,39 @@ PACKAGE_DIR = get_package_dir()
 DATA_DIR = get_data_dir()
 
 
+def episode_label(slug: str) -> str:
+    """슬러그 → 편 번호 라벨(EP05 …).
+
+    슬러그 꼬리를 그대로 쓰면 안 된다. 5편의 슬러그는 ep06b이고 6편은 ep05다
+    — 원고를 다시 쓰면서 어긋난 것이라 지도(_imggen/ep_map.json)가 정본이다.
+    레이어 폴더를 이 라벨로 잡으므로 여기서 어긋나면 서로 다른 곳을 본다.
+    """
+    import json
+    import re
+
+    f = get_package_dir().parent / "_imggen" / "ep_map.json"
+    try:
+        emap = json.loads(f.read_text(encoding="utf-8"))
+    except Exception:
+        return ""
+    for key, v in emap.items():
+        if v.get("slug") == slug:
+            m = re.match(r"(EP\d+)", key)
+            if m:
+                return m.group(1)
+    return ""
+
+
+def layer_sets(slug: str, scene_num: int) -> list[Path]:
+    """이 씬에 분리해 둔 레이어 폴더들."""
+    ep = episode_label(slug)
+    if not ep:
+        return []
+    base = get_package_dir().parent / "_imggen" / f"{ep.lower()}_anim"
+    return [d for d in sorted(base.glob(f"s{scene_num:03d}*"))
+            if (d / "layers.json").is_file()]
+
+
 def get_vault_dir() -> Path:
     """Obsidian 볼트 디렉토리 (KAIROS_VAULT_DIR 환경변수)."""
     env = os.getenv("KAIROS_VAULT_DIR")

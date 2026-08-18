@@ -239,6 +239,35 @@ def plan_layers(scene_image: Path, narration: str, out_dir: Path) -> tuple[list[
     return names, people
 
 
+def _is_planned_person(name: str, people: set[str] | None) -> bool:
+    """분리해 돌려준 이름이 「움직일 층」으로 계획했던 것인가.
+
+    layerize는 이름을 그대로 돌려주지 않는다 — 「Newspaper with the hands and
+    arms holding it」으로 보내면 「Newspaper with hands and arms」로 온다.
+    문자열이 같은지만 보면 인물이 소품으로 잡히고, 그러면 까딱이지 않는다.
+    잔말을 걷어낸 낱말끼리 겹치는지로 본다.
+    """
+    if not people:
+        return False
+
+    stop = {"the", "a", "an", "of", "with", "and", "in", "on", "only",
+            "excluding", "holding", "it", "its", "her", "his", "their"}
+
+    def words(s: str) -> set[str]:
+        import re as _re
+        return {w for w in _re.findall(r"[a-z0-9가-힣]+", (s or "").lower())
+                if w not in stop}
+
+    a = words(name)
+    if not a:
+        return False
+    for p in people:
+        b = words(p)
+        if b and (a <= b or b <= a):
+            return True
+    return False
+
+
 def split(project: Path, n: int, names: list[str], out: Path,
           people: set[str] | None = None) -> list[dict]:
     # adobe는 5.0에서 저장소 안으로 들어왔다. 홈 아래 옛 폴더를 가리키고 있어
@@ -261,7 +290,7 @@ def split(project: Path, n: int, names: list[str], out: Path,
         # 역할은 이름으로 짐작하지 않는다 — 「김해수」·「구인회」는 어떤 키워드에도
         # 안 걸린다. 분리를 요청할 때 무엇이 인물이었는지 우리는 이미 안다.
         role = ("bg" if not L.get("bbox")
-                else "person" if (people and nm in people) else "prop")
+                else "person" if _is_planned_person(nm, people) else "prop")
         meta.append({"name": nm, "role": role, "z": L.get("z", i),
                      "path": str(p), "bbox": L.get("bbox")})
         print(f"    {i:02d} {nm}")

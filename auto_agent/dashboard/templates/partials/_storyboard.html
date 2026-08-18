@@ -119,7 +119,8 @@
          그동안 파일을 직접 찾아 열어야 했고, 어느 것이 어디 놓이는지는
          layers.json을 읽어야 알 수 있었다. #}
       <div class="sb-layers" data-scene="{{ scene.sceneNumber }}">
-        <button type="button" class="sb-layer-toggle" onclick="sbToggleLayers('{{ slug }}', {{ scene.sceneNumber }}, this)">⧉ 레이어</button>
+        <button type="button" class="sb-layer-toggle{% if scene._layer_count %} done{% endif %}"
+                onclick="sbToggleLayers('{{ slug }}', {{ scene.sceneNumber }}, this)">⧉ 레이어{% if scene._layer_count %} · {{ scene._layer_count }}층{% endif %}</button>
         <div class="sb-layer-body" id="sb-layers-{{ scene.sceneNumber }}" hidden></div>
       </div>
 

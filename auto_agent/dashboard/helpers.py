@@ -524,6 +524,25 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         if qa_result:
             scene["qa"] = qa_result
 
+    # 분리해 둔 레이어가 있으면 씬에 표시한다.
+    #
+    # 그동안은 레이어 칸을 펼쳐야만 알 수 있었다 — 목록에서는 나눈 씬과
+    # 안 나눈 씬이 똑같아 보였다.
+    from auto_agent.paths import layer_sets
+
+    slug = project_dir_name.split("_", 1)[-1] if "_" in project_dir_name else project_dir_name
+    layer_count: dict = {}
+    for scene in scenes:
+        sn = scene.get("sceneNumber")
+        if sn is None:
+            continue
+        for d in layer_sets(slug, sn):
+            try:
+                meta = json.loads((d / "layers.json").read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            layer_count[sn] = max(layer_count.get(sn, 0), len(meta))
+
     # 캐릭터 썸네일을 각 씬에 주입 (2차 패스)
     roster = load_roster()
     for scene in scenes:
@@ -540,6 +559,7 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
             else:
                 cast.append({"id": cid, "label": cid, "thumb": ""})
         scene["_cast"] = cast
+        scene["_layer_count"] = layer_count.get(scene.get("sceneNumber"), 0)
 
     return scenes
 

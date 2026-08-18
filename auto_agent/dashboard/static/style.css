@@ -2467,3 +2467,7 @@ body.terminal-open .main-content {
 }
 @keyframes sbSpin { to { transform: rotate(360deg) } }
 .sb-layer-empty.sb-fail { color: #f87171; }
+/* 나눠 둔 씬은 버튼이 색을 바꾼다 — 목록에서 바로 구별된다 */
+.sb-layer-toggle.done {
+  background: rgba(52,211,153,.16); border-color: rgba(52,211,153,.45); color: #34d399;
+}
