@@ -2362,3 +2362,21 @@ body.terminal-open .main-content {
 }
 #sb-batchbar button.ghost { background: transparent; border: 1px solid #55555c; color: #b9b9b9; }
 #sb-split-state { color: #9a9a9a; margin-left: auto; }
+
+/* ── 스토리보드 상단 고정 ─────────────────────────────
+   아트스타일·캐릭터까지는 위에 붙여 두고 씬만 흐르게 한다.
+   그래야 고른 씬에 거는 버튼이 화면에서 사라지지 않는다. */
+.sb-sticky-head {
+  position: sticky; top: 0; z-index: 30;
+  background: var(--bg, #131316);
+  padding-bottom: 8px;
+  border-bottom: 1px solid #26262a;
+  box-shadow: 0 6px 12px -8px rgba(0,0,0,.8);
+}
+.sb-sticky-head .sb-char-panel { margin-bottom: 0; }
+/* 인물이 많은 편은 캐릭터 줄이 화면을 다 먹지 않게 한 줄로 흐르게 둔다 */
+.sb-sticky-head .sb-char-list {
+  max-height: 132px; overflow-x: auto; overflow-y: hidden;
+  flex-wrap: nowrap;
+}
+#sb-batchbar { position: static; margin-bottom: 8px; }

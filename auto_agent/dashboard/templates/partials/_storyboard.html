@@ -2,26 +2,31 @@
 <!-- scene-thumb.js (썸네일 프리뷰) + scene-editor.js (에디터) -->
 <script src="/static/scene-thumb.js?v={{ static_version('scene-thumb.js') }}"></script>
 <script src="/static/scene-editor.js?v={{ static_version('scene-editor.js') }}"></script>
-<div id="sb-batchbar" hidden>
-  <span id="sb-pick-count">0개 고름</span>
-  <button type="button" onclick="sbSplitPicked('{{ slug }}')">⧉ 레이어 나누기</button>
-  <button type="button" class="ghost" onclick="sbPickClear()">해제</button>
-  <span id="sb-split-state"></span>
-</div>
 {% if scenes %}
-<div class="sb-top-bar">
-  <div class="sb-art-style-bar" id="sb-art-style-bar"></div>
-  <button class="btn-design-toggle" onclick="toggleDesignPanel()">🎨 Design</button>
-</div>
-
-{# ── 캐릭터 패널 ── #}
-<div class="sb-char-panel" id="sb-char-panel">
-  <div class="sb-char-panel-header">
-    <span class="sb-char-panel-title">👤 캐릭터</span>
-    <span class="sb-char-panel-subtitle" id="sb-char-subtitle"></span>
+{# 아트스타일·캐릭터까지는 위에 붙여 둔다. 씬만 흘러야 고른 씬에 거는
+   버튼이 화면에서 사라지지 않는다 — 아래까지 내려가 고른 뒤 다시 위로
+   올라와야 했다. #}
+<div class="sb-sticky-head">
+  <div id="sb-batchbar" hidden>
+    <span id="sb-pick-count">0개 선택</span>
+    <button type="button" onclick="sbSplitPicked('{{ slug }}')">⧉ 레이어 나누기</button>
+    <button type="button" class="ghost" onclick="sbPickClear()">해제</button>
+    <span id="sb-split-state"></span>
   </div>
-  <div class="sb-char-list" id="sb-char-list">
-    <span style="color:#71717A;font-size:12px">로딩 중...</span>
+  <div class="sb-top-bar">
+    <div class="sb-art-style-bar" id="sb-art-style-bar"></div>
+    <button class="btn-design-toggle" onclick="toggleDesignPanel()">🎨 Design</button>
+  </div>
+
+  {# ── 캐릭터 패널 ── #}
+  <div class="sb-char-panel" id="sb-char-panel">
+    <div class="sb-char-panel-header">
+      <span class="sb-char-panel-title">👤 캐릭터</span>
+      <span class="sb-char-panel-subtitle" id="sb-char-subtitle"></span>
+    </div>
+    <div class="sb-char-list" id="sb-char-list">
+      <span style="color:#71717A;font-size:12px">로딩 중...</span>
+    </div>
   </div>
 </div>
 
@@ -2377,7 +2382,7 @@ function sbPickChanged() {
   if (!bar) return;
   bar.hidden = n === 0;
   var c = document.getElementById("sb-pick-count");
-  if (c) c.textContent = n + "개 고름";
+  if (c) c.textContent = n + "개 선택";
 }
 
 function sbPickClear() {
