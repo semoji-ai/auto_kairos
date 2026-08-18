@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Auto Agent{% endblock %}</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <!-- 판 번호를 붙인다. 안 붙이면 웹뷰가 옛 스타일을 계속 물고 있어,
+       화면을 고쳐도 바뀌지 않는다 — 실제로 상단 고정이 안 먹던 원인이다. -->
+  <link rel="stylesheet" href="/static/style.css?v={{ static_version('style.css') }}">
   <script src="https://unpkg.com/htmx.org@1.9.10"></script>
   <script>htmx.config.allowScriptTags = true;</script>
   {% block head %}{% endblock %}
@@ -252,7 +254,7 @@
   })();
   </script>
 
-  <script src="/static/dashboard.js"></script>
+  <script src="/static/dashboard.js?v={{ static_version('dashboard.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
