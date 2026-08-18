@@ -10,6 +10,8 @@
   <div id="sb-batchbar" hidden>
     <span id="sb-pick-count">0개 선택</span>
     <button type="button" onclick="sbLayerFlow('{{ slug }}')">⧉ 레이어 나누기</button>
+    <button type="button" class="ghost" onclick="sbMakePicked('{{ slug }}','map')">🗺 지도로</button>
+    <button type="button" class="ghost" onclick="sbMakePicked('{{ slug }}','chart')">📊 차트로</button>
     <button type="button" class="ghost" onclick="sbPickClear()">해제</button>
     <span id="sb-split-state"></span>
   </div>
@@ -54,13 +56,8 @@
       <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
         <div class="sb-player-mount" data-scene-num="{{ scene.sceneNumber }}"></div>
       </div>
-      {# 모든 씬에 자료 타입 토글 — visual_kind가 map/chart/none이어도 변환 가능 #}
-      {% set _vk = scene.visual_kind or '' %}
-      <div class="sb-asset-type-switch">
-        <button class="sb-switch-btn{% if _vk in ('search_image', 'generate_image') %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'image', this)">🖼 이미지</button>
-        <button class="sb-switch-btn{% if _vk == 'video' %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'video', this)">🎬 비디오</button>
-        <button class="sb-switch-btn{% if _vk == 'map' %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'map', this)">🗺 지도</button>
-        <button class="sb-switch-btn{% if _vk == 'chart' %} active{% endif %}" onclick="sbSetAssetType({{ scene.sceneNumber }}, 'chart', this)">📊 차트</button>
+      {# 자료 종류 전환 버튼 넷은 걷어냈다. 씬마다 무엇으로 보여줄지는 이미
+         정해져 있고, 지도·차트를 새로 만들 일은 씬을 골라 위에서 일괄로 건다. #}
       </div>
     </div>
 
@@ -81,40 +78,9 @@
         </div>
       </div>
 
-      <div class="tags">
-        {% if scene._layout %}<span class="layout-badge{% if not scene._layout_explicit %} layout-inferred{% endif %}">{{ scene._layout }}</span>{% endif %}
-        {# v5 플랫 스키마: 최상위 필드 우선, v4 creative 중첩 fallback #}
-        {% set _mood = scene.mood or (scene.visualization.creative.mood if scene.visualization and scene.visualization.creative else '') %}
-        {% set _motion = scene.motion or '' %}
-        {% if _motion %}<span class="viz-badge">🎬 {{ _motion }}</span>{% endif %}
-        {% if _mood %}<span class="mood-badge">{{ _mood }}</span>{% endif %}
-        {# 캐릭터 배지 + 썸네일 #}
-        {% if scene.characters and not scene._cast %}{% for char in scene.characters %}<span class="char-badge">{% if scene._char_thumbs and scene._char_thumbs[char] %}<img class="char-thumb" src="{{ scene._char_thumbs[char] }}" alt="{{ char }}">{% endif %}👤 {{ char }}</span>{% endfor %}{% endif %}
-        {# cast — 이 씬 이미지를 만들 때 실제로 붙인 인물 시트 #}
-        {% if scene._cast %}{% for c in scene._cast %}<span class="char-badge" title="{{ c.id }}">{% if c.thumb %}<img class="char-thumb" src="{{ c.thumb }}" alt="{{ c.label }}">{% endif %}👤 {{ c.label }}</span>{% endfor %}{% endif %}
-        {# v4 호환: reveal/emphasis 배지 #}
-        {% if not _motion and scene.visualization and scene.visualization.creative %}
-        {% if scene.visualization.creative.reveal %}<span class="viz-badge">{{ scene.visualization.creative.reveal }}</span>{% endif %}
-        {% if scene.visualization.creative.emphasis %}<span class="viz-badge">{{ scene.visualization.creative.emphasis }}</span>{% endif %}
-        {% endif %}
-        {# 이미지 에셋 정보 #}
-        {% if scene.imageAsset %}
-        {% set img = scene.imageAsset %}
-        {% if img.source == 'wikimedia' or img.source == 'search' %}
-        <span class="img-badge img-search" title="{{ img.query or '' }}">🔍 {{ img.query[:20] if img.query else 'search' }}{% if img.query and img.query|length > 20 %}...{% endif %}</span>
-        {% elif img.source == 'generate' %}
-        <span class="img-badge img-gen">🎨 생성</span>
-        {% endif %}
-        {% if img.placement %}<span class="img-badge img-placement">📐 {{ img.placement }}</span>{% endif %}
-        {% if scene._video_file %}<span class="img-badge img-ok" style="background:rgba(239,68,68,0.18);color:#f87171">🎬 비디오</span>{% elif scene._image_url %}<span class="img-badge img-ok">✅ 이미지</span>{% else %}<span class="img-badge img-missing">⬜ 미확보</span>{% endif %}
-        {% endif %}
-        {# 차트 정보 #}
-        {% set _chart = scene.chartConfig or (scene.visualization.chartConfig if scene.visualization else none) %}
-        {% if _chart %}
-        <span class="img-badge img-chart">📊 {{ _chart.type }}</span>
-        {% endif %}
-      </div>
-
+      {# 연출 배지(레이아웃·모션·무드)와 자료 배지는 걷어냈다. 필요하면
+         썸네일을 눌러 리모션 플레이어에서 본다. 목록에서는 읽을 것이 많으면
+         정작 읽어야 할 나레이션이 묻힌다. #}
       {# 레이어 — 분리해 둔 것이 있으면 여기서 층별로 본다.
          그동안 파일을 직접 찾아 열어야 했고, 어느 것이 어디 놓이는지는
          layers.json을 읽어야 알 수 있었다. #}
@@ -124,24 +90,17 @@
         <div class="sb-layer-body" id="sb-layers-{{ scene.sceneNumber }}" hidden></div>
       </div>
 
+      {# 나레이션 — 눌러서 고치고 빠져나오면 저장된다. 편집 버튼을 따로
+         두면 한 단계가 더 늘 뿐이고, 여기서 고친 것은 원고 탭에도 그대로
+         나타난다(둘이 같은 것을 본다). #}
       <div class="narration-wrap" data-scene="{{ scene.sceneNumber }}">
-        <div class="narration-head" style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          <button type="button" class="btn-narr-edit" onclick="sbToggleNarrEdit({{ scene.sceneNumber }})"
-                  style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.35);color:#60A5FA;cursor:pointer">✏️ 편집</button>
-          {% if scene.narration_dirty %}
-          <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,0.18);color:#f87171" title="narration 수정됨 — TTS 재생성 필요">🔴 TTS 재생성 필요</span>
-          {% endif %}
-        </div>
-        <div class="narration" id="sb-narr-view-{{ scene.sceneNumber }}">{{ scene.narration }}</div>
-        <div id="sb-narr-edit-{{ scene.sceneNumber }}" style="display:none">
-          <textarea id="sb-narr-text-{{ scene.sceneNumber }}" rows="5"
-                    style="width:100%;background:rgba(0,0,0,0.3);color:#E4E4E7;border:1px solid rgba(96,165,250,0.4);border-radius:6px;padding:8px;font-size:13px;line-height:1.7;resize:vertical;font-family:inherit;box-sizing:border-box">{{ scene.narration }}</textarea>
-          <div style="display:flex;gap:6px;margin-top:4px">
-            <button type="button" onclick="sbSaveNarrEdit({{ scene.sceneNumber }})"
-                    style="font-size:11px;padding:4px 12px;border-radius:4px;background:rgba(96,165,250,0.2);border:1px solid rgba(96,165,250,0.4);color:#60A5FA;cursor:pointer">저장</button>
-            <button type="button" onclick="sbCancelNarrEdit({{ scene.sceneNumber }})"
-                    style="font-size:11px;padding:4px 12px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:#9CA3AF;cursor:pointer">취소</button>
-          </div>
+        <div class="narration" id="sb-narr-view-{{ scene.sceneNumber }}"
+             contenteditable="true" spellcheck="false"
+             data-orig="{{ scene.narration }}"
+             onfocus="sbNarrFocus({{ scene.sceneNumber }})"
+             onblur="sbNarrBlur('{{ slug }}', {{ scene.sceneNumber }})">{{ scene.narration }}</div>
+        <div class="narr-state" id="sb-narr-state-{{ scene.sceneNumber }}">
+          {% if scene.narration_dirty %}<span class="narr-dirty">TTS 재생성 필요</span>{% endif %}
         </div>
       </div>
 
@@ -159,48 +118,9 @@
         </div>
       </div>
 
-      {# 배경 컨텍스트 + 캐릭터 #}
-      {% if scene.background_context %}
-      <div class="sb-context-bar">
-        <span class="sb-bg-context">🎬 {{ scene.background_context }}</span>
-        {% if scene.is_first_of_background %}<span class="sb-first-bg">첫 장면</span>{% endif %}
-      </div>
-      {% endif %}
-
       {# 이미지 영역 #}
       <div class="sb-image-area">
         {% if scene._video_file %}
-        <div class="sb-image-prompt" style="border-left:2px solid #f87171">
-          <div class="sb-image-prompt-header">
-            <span class="sb-prompt-label" style="color:#f87171">🎬 비디오</span>
-            {% if scene.imageAsset and scene.imageAsset.placement %}<span class="sb-prompt-placement">{{ scene.imageAsset.placement }}</span>{% endif %}
-          </div>
-          <div class="sb-prompt-text" style="font-size:10px;word-break:break-all">{{ scene._video_file }}</div>
-          <div class="sb-prompt-detail">구간: {{ scene._video_start_sec }}s{% if scene._video_end_sec %} ~ {{ scene._video_end_sec }}s{% endif %}</div>
-        </div>
-        {% elif scene.imageAsset %}
-        <div class="sb-image-prompt">
-          {% set img = scene.imageAsset %}
-          <div class="sb-image-prompt-header">
-            {% if img.source == 'search' %}
-            <span class="sb-prompt-label">검색</span>
-            {% elif img.source == 'generate' %}
-            <span class="sb-prompt-label">생성</span>
-            {% endif %}
-            {% if img.placement %}<span class="sb-prompt-placement">{{ img.placement }}</span>{% endif %}
-          </div>
-          {% if img.source == 'search' and img.query %}
-          <div class="sb-prompt-text">{{ img.query }}</div>
-          {% elif img.source == 'generate' and img.prompt %}
-          <div class="sb-prompt-text">{{ img.prompt }}</div>
-          {% endif %}
-          {% if img.background %}<div class="sb-prompt-detail">배경: {{ img.background }}</div>{% endif %}
-          {% if img.camera %}<div class="sb-prompt-detail">카메라: {{ img.camera }}</div>{% endif %}
-        </div>
-        {% endif %}
-        {# visual_kind 기반 분기 — Layer 1 단일성 #}
-        {% if _vk == 'video' %}
-        {# 비디오 씬: 비디오 카드 리스트 + 타임라인 트리머 #}
         <div class="sb-video-panel" id="sb-video-panel-{{ scene.sceneNumber }}"
              data-start="{{ scene._video_start_sec or 0 }}"
              data-end="{{ scene._video_end_sec or '' }}"
@@ -225,7 +145,6 @@
         {# 이미지 씬: 이미지 그리드 + 검색·생성 패널 #}
         <div class="sb-image-row">
           <div class="sb-image-grid" id="sb-img-grid-{{ scene.sceneNumber }}" data-layout="{{ scene._layout }}" data-multi-images="{{ (scene.images or []) | tojson | e }}"></div>
-          <button class="btn-asset-toggle" onclick="toggleAssetPanel({{ scene.sceneNumber }})">이미지</button>
         </div>
         {% endif %}
         {# map / chart / none 씬: 별도 자료 패널 없음 (mapScene/chartConfig은 미리보기에서 직접 렌더) #}
@@ -1571,11 +1490,12 @@ function sbApplyTrim(sn) {
 .sb-char-panel-title { font-size: 12px; font-weight: 700; color: #A78BFA; white-space: nowrap; }
 .sb-char-panel-subtitle { font-size: 10px; color: #71717A; white-space: nowrap; }
 .sb-char-list { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
-.sb-char-card { position: relative; border-radius: 8px; overflow: hidden; cursor: default; width: 72px; height: 88px; border: 1.5px solid rgba(255,255,255,0.1); flex-shrink: 0; transition: border-color 0.15s; }
+.sb-char-card { position: relative; border-radius: 8px; overflow: hidden; cursor: zoom-in; width: 116px; height: 88px; border: 1.5px solid rgba(255,255,255,0.1); flex-shrink: 0; transition: border-color 0.15s; }
 .sb-char-card:hover .sb-char-overlay { opacity: 1; }
 .sb-char-card.has-image { border-color: rgba(167,139,250,0.4); }
 .sb-char-card.no-image { border-color: rgba(239,68,68,0.35); }
-.sb-char-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* cover 는 시트를 잘라 낸다 — 인물 전체가 보여야 고를 수 있다 */
+.sb-char-thumb { width: 100%; height: 100%; object-fit: contain; display: block; background: #1a1a1e; }
 .sb-char-thumb-placeholder { width: 100%; height: 100%; background: rgba(239,68,68,0.1); display: flex; align-items: center; justify-content: center; font-size: 28px; }
 .sb-char-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.82) 45%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 5px 5px 4px; opacity: 0; transition: opacity 0.15s; }
 .sb-char-card.no-image .sb-char-overlay { opacity: 1; background: linear-gradient(to top, rgba(0,0,0,0.7) 60%, transparent 100%); }
@@ -1902,7 +1822,10 @@ function updateSceneLayout(slug, sceneNum, layout) {
             titleAttr = c.canonical + ' — ' + c.descriptions.length + '개 description 통합';
           }
           var safeTitle = String(titleAttr).replace(/"/g, '&quot;').replace(/</g, '&lt;');
-          return '<div class="sb-char-card ' + (c.has_image ? 'has-image' : 'no-image') + '" title="' + safeTitle + '">'
+          return '<div class="sb-char-card ' + (c.has_image ? 'has-image' : 'no-image') + '"'
+            + ' title="' + safeTitle + '"'
+            + (c.thumb_url ? ' onclick="sbCharSheet(\'' + c.thumb_url + '\',\''
+                + String(c.name).replace(/'/g, "") + '\')"' : "") + '>'
             + thumb
             + '<div class="sb-char-overlay">'
             + '<div class="sb-char-name">' + nameShort + '</div>'
@@ -2641,6 +2564,74 @@ function sbPollSplit(slug) {
   document.addEventListener("DOMContentLoaded", measure);
   window.addEventListener("resize", measure);
 })();
+
+
+/* 나레이션 인라인 편집 — 눌러서 고치고 빠져나오면 저장한다.
+   원고 탭과 스토리보드가 같은 것(scene_specs.narration)을 보므로, 어느 쪽에서
+   고쳐도 반대쪽에 그대로 나타난다. */
+/* 인물 시트를 크게 본다 — 칩에서는 잘려 보인다 */
+function sbCharSheet(url, name) {
+  var back = document.createElement("div");
+  back.className = "ak-modal-back";
+  back.innerHTML = '<div class="ak-sheet"><div class="ak-sheet-name">' + name + '</div>'
+    + '<img src="' + url + '"><div class="ak-sheet-hint">아무 곳이나 눌러 닫습니다</div></div>';
+  back.addEventListener("click", function () { back.remove(); });
+  document.body.appendChild(back);
+}
+
+function sbNarrFocus(sn) {
+  var el = document.getElementById("sb-narr-view-" + sn);
+  if (el) el.classList.add("editing");
+}
+
+function sbNarrBlur(slug, sn) {
+  var el = document.getElementById("sb-narr-view-" + sn);
+  if (!el) return;
+  el.classList.remove("editing");
+  var text = (el.innerText || "").trim();
+  var orig = (el.dataset.orig || "").trim();
+  if (text === orig) return;
+  if (!text) { el.innerText = orig; akToast("나레이션은 비울 수 없습니다"); return; }
+
+  var state = document.getElementById("sb-narr-state-" + sn);
+  if (state) state.innerHTML = '<span class="narr-saving">저장 중…</span>';
+  fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/update-narration', {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ narration: text }),
+  }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+    .then(function (res) {
+      if (!res.ok) {
+        el.innerText = orig;
+        if (state) state.innerHTML = '<span class="narr-dirty">저장 실패</span>';
+        akToast("저장 실패: " + (res.d.error || res.d.detail || ""));
+        return;
+      }
+      el.dataset.orig = text;
+      // 말이 바뀌었으면 이미 만든 음성과 어긋난다 — 그 사실을 남긴다
+      if (state) state.innerHTML = '<span class="narr-dirty">TTS 재생성 필요</span>';
+    })
+    .catch(function (e) { el.innerText = orig; akToast("저장 실패: " + e.message); });
+}
+
+/* 고른 씬에 지도·차트를 만든다 — 씬마다 버튼 넷을 두는 대신 위에서 일괄로 */
+function sbMakePicked(slug, kind) {
+  var ns = sbPicked();
+  if (!ns.length) return;
+  var name = kind === "map" ? "지도" : kind === "chart" ? "차트" : "비디오";
+  akConfirm(ns.length + "개 씬을 " + name + " 씬으로 바꿉니다.\n\n씬 " + ns.join(", "),
+    function () {
+      var done = 0;
+      ns.forEach(function (n) {
+        fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + n + '/set-asset-type', {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: kind }),
+        }).then(function () {
+          done++;
+          if (done === ns.length) { akToast(name + " " + done + "개 씬 지정 완료"); location.reload(); }
+        });
+      });
+    });
+}
 
 </script>
 

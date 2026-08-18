@@ -15,15 +15,17 @@
   </div>
   {% endif %}
 
-  {# v4 PD 워크플로 산출물이 있으면 이 v3 단일 표시 블록은 숨긴다 — 아래 '원고 버전' 카드에 통합됨 #}
-  {% if final_manuscript and not (v4_manuscript and v4_manuscript.final_manuscript) %}
+  {# 원고는 씬 나레이션이 정본이다.
+     그동안 이 탭은 final_manuscript.md를 읽기 전용으로 보여 줬는데, 실제로
+     영상에 실리는 말은 scene_specs의 나레이션이라 둘이 어긋났다. 여기서
+     고치면 스토리보드에도, 스토리보드에서 고치면 여기에도 그대로 나타난다
+     — 같은 것을 보기 때문이다. #}
+  {% if scenes %}
   <div class="ms-manuscript">
-    <div class="ms-section-label">최종 원고</div>
-    <div class="ms-manuscript-text" id="ms-manuscript-text" data-raw="{{ final_manuscript|e }}"></div>
-  </div>
-  {% elif scenes %}
-  <div class="ms-manuscript">
-    <div class="ms-section-label">씬 나레이션 ({{ scenes|length }}씬)</div>
+    <div class="ms-section-label">
+      원고 ({{ scenes|length }}씬)
+      <span class="ms-hint">문장을 눌러 바로 고칩니다 · 빠져나오면 저장됩니다</span>
+    </div>
     {% set ns = namespace(current_chapter=None) %}
     {% for scene in scenes %}
       {% if scene.chapter != ns.current_chapter %}
@@ -31,12 +33,25 @@
         <div class="ms-chapter">Chapter {{ scene.chapter }}{% if scene.chapter_title %} — {{ scene.chapter_title }}{% endif %}</div>
       {% endif %}
       <div class="ms-scene-row">
-        <span class="ms-scene-num">#{{ scene.sceneNumber }}</span>
-        <span class="ms-narration-text">{{ scene.narration or '' }}</span>
+        <a class="ms-scene-num" href="/p/{{ slug }}?tab=storyboard#scene-{{ scene.sceneNumber }}"
+           title="스토리보드에서 보기">#{{ scene.sceneNumber }}</a>
+        <div class="ms-narration-text" contenteditable="true" spellcheck="false"
+             data-scene="{{ scene.sceneNumber }}" data-orig="{{ scene.narration or '' }}"
+             onblur="msNarrBlur(this)">{{ scene.narration or '' }}</div>
+        <span class="ms-row-state" id="ms-state-{{ scene.sceneNumber }}"></span>
       </div>
     {% endfor %}
   </div>
-  {% else %}
+  {% endif %}
+
+  {% if final_manuscript %}
+  <details class="ms-raw">
+    <summary>집필 원고 원문 (final_manuscript.md) — 참고용</summary>
+    <div class="ms-manuscript-text" id="ms-manuscript-text" data-raw="{{ final_manuscript|e }}"></div>
+  </details>
+  {% endif %}
+
+  {% if not scenes and not final_manuscript %}
   <div class="ms-empty">원고 파일이 없습니다.</div>
   {% endif %}
 
@@ -319,3 +334,50 @@ document.querySelectorAll('.v4-version-selector').forEach(sel => {
 });
 </script>
 {% endif %}
+
+<script>
+/* 원고 인라인 편집 — 스토리보드와 같은 것(scene_specs.narration)을 고친다.
+   어느 쪽에서 고쳐도 반대쪽에 그대로 나타난다. */
+function msNarrBlur(el) {
+  var sn = el.dataset.scene;
+  var text = (el.innerText || "").trim();
+  var orig = (el.dataset.orig || "").trim();
+  if (text === orig) return;
+  var state = document.getElementById("ms-state-" + sn);
+  if (!text) { el.innerText = orig; if (window.akToast) akToast("나레이션은 비울 수 없습니다"); return; }
+  if (state) state.innerHTML = '<span class="ms-saving">저장 중…</span>';
+  fetch('/api/p/' + encodeURIComponent(window.PROJECT_SLUG || '{{ slug }}') + '/editor/scenes/' + sn + '/update-narration', {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ narration: text }),
+  }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+    .then(function (res) {
+      if (!res.ok) {
+        el.innerText = orig;
+        if (state) state.innerHTML = '<span class="ms-dirty">저장 실패</span>';
+        return;
+      }
+      el.dataset.orig = text;
+      if (state) state.innerHTML = '<span class="ms-dirty">TTS 재생성 필요</span>';
+    })
+    .catch(function () { el.innerText = orig; });
+}
+</script>
+
+<style>
+.ms-hint { font-size: 10px; color: #7a7a7a; font-weight: 400; margin-left: 8px; }
+.ms-scene-row { display: flex; gap: 10px; align-items: flex-start; padding: 3px 0; }
+.ms-narration-text {
+  flex: 1; border: 1px solid transparent; border-radius: 5px;
+  padding: 4px 8px; margin: -4px -8px; outline: none; cursor: text;
+  transition: background .12s, border-color .12s; line-height: 1.9;
+}
+.ms-narration-text:hover { background: rgba(255,255,255,.03); }
+.ms-narration-text:focus { background: rgba(96,165,250,.07); border-color: rgba(96,165,250,.4); }
+.ms-scene-num { color: #6f6f76; font-size: 11px; text-decoration: none; padding-top: 4px; min-width: 34px; }
+.ms-scene-num:hover { color: #a78bfa; }
+.ms-row-state { min-width: 76px; padding-top: 5px; }
+.ms-dirty { font-size: 10px; padding: 1px 6px; border-radius: 4px; background: rgba(239,68,68,.18); color: #f87171; }
+.ms-saving { font-size: 10px; color: #8a8a8a; }
+.ms-raw { margin-top: 24px; }
+.ms-raw summary { font-size: 12px; color: #8a8a8a; cursor: pointer; padding: 6px 0; }
+</style>

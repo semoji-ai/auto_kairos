@@ -31,8 +31,9 @@ window.registerSse = window.registerSse || function(src) {
   <a href="#" data-tab="upload_info" class="content-tab {% if tab == 'upload_info' %}active{% endif %}" onclick="switchTab('upload_info', this); return false;">Upload</a>
   <a href="#" data-tab="thumbnail_canvas" class="content-tab {% if tab == 'thumbnail_canvas' %}active{% endif %}" onclick="switchTab('thumbnail_canvas', this); return false;">썸네일</a>
   <a href="#" data-tab="multiformat" class="content-tab {% if tab == 'multiformat' %}active{% endif %}" onclick="switchTab('multiformat', this); return false;">Multi</a>
-  <span class="content-tab-divider"></span>
-  <a href="#" data-tab="agent" class="content-tab {% if tab == 'agent' %}active{% endif %}" onclick="switchTab('agent', this); return false;">Agent</a>
+  {# Agent 탭은 접었다. 지금 일하는 방식(터미널에서 스크립트·에이전트를 돌리고
+     화면에서는 결과를 본다)에서 쓸 일이 없는데 자리만 차지했다.
+     ?tab=agent 로는 그대로 열린다. #}
 </nav>
 <div id="tab-content">
 {% if tab == 'brief' %}
@@ -60,6 +61,7 @@ window.registerSse = window.registerSse || function(src) {
 {% block scripts %}
 <script>
 var PROJECT_SLUG = '{{ slug }}';
+window.PROJECT_SLUG = PROJECT_SLUG;
 // 초기 탭이 studio이면 padding 제거
 (function() {
   var params = new URLSearchParams(window.location.search);

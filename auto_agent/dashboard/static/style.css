@@ -2482,3 +2482,29 @@ body.terminal-open .main-content {
   background: transparent; border: 1px solid #3d4a63; color: #60a5fa;
 }
 .sb-layer-vec.on { background: #60a5fa; color: #12121a; }
+
+/* 나레이션 인라인 편집 — 눌러서 바로 고친다 */
+.narration[contenteditable] {
+  border: 1px solid transparent; border-radius: 5px;
+  padding: 6px 8px; margin: -6px -8px; cursor: text; outline: none;
+  transition: background .12s, border-color .12s;
+}
+.narration[contenteditable]:hover { background: rgba(255,255,255,.03); }
+.narration[contenteditable].editing {
+  background: rgba(96,165,250,.07); border-color: rgba(96,165,250,.4);
+}
+.narr-state { min-height: 14px; margin-top: 4px; }
+.narr-dirty {
+  font-size: 10px; padding: 1px 6px; border-radius: 4px;
+  background: rgba(239,68,68,.18); color: #f87171;
+}
+.narr-saving { font-size: 10px; color: #8a8a8a; }
+
+/* 인물 시트 크게 보기 */
+.ak-sheet { max-width: 88vw; max-height: 88vh; text-align: center; }
+.ak-sheet img {
+  max-width: 88vw; max-height: 78vh; border-radius: 8px;
+  background: #f9f8f5; box-shadow: 0 20px 60px -20px #000;
+}
+.ak-sheet-name { color: #e6e6e6; font-size: 13px; margin-bottom: 8px; }
+.ak-sheet-hint { color: #7a7a7a; font-size: 11px; margin-top: 8px; }
