@@ -146,6 +146,130 @@ async def serve_layer(name: str):
     return JSONResponse({"detail": "Not Found"}, status_code=404)
 
 
+def _ep_of(project: dict) -> str:
+    """이 프로젝트의 **편 번호** 라벨(EP05 …).
+
+    슬러그 꼬리를 그대로 쓰면 안 된다. 5편의 슬러그는 ep06b이고 6편은 ep05다
+    — 원고를 다시 쓰면서 어긋난 것이라, 지도(_imggen/ep_map.json)가 정본이다.
+    스크립트도 이 라벨로 폴더를 잡으므로 여기서 어긋나면 서로 다른 곳을 본다.
+    """
+    import json as _json
+    import re as _re
+
+    slug = project.get("slug") or ""
+    f = get_package_dir().parent / "_imggen" / "ep_map.json"
+    try:
+        emap = _json.loads(f.read_text(encoding="utf-8"))
+    except Exception:
+        emap = {}
+    for key, v in emap.items():
+        if v.get("slug") == slug:
+            m = _re.match(r"(EP\d+)", key)
+            if m:
+                return m.group(1)
+    return slug.rsplit("_", 1)[-1].upper() if "_ep" in slug else ""
+
+
+def _scene_dir(ep: str, n: int) -> Path:
+    return get_package_dir().parent / "_imggen" / f"{ep.lower()}_anim" / f"s{n:03d}"
+
+
+@app.post("/api/p/{project_ref}/layers/plan")
+async def plan_layers_api(project_ref: str, request: Request):
+    """고른 씬을 훑어 **어떤 층으로 가를지 계획만** 세운다.
+
+    가르기 전에 사람이 목록을 보고 고칠 수 있어야 한다. 한 번 가르면 몇 분과
+    비용이 드는데, 무엇을 가를지 잘못 정했으면 그 시간이 통째로 버려진다.
+    계획은 글이라 고치기 쉽다.
+    """
+    import subprocess as _sp
+    import threading as _th
+
+    pm = get_pm()
+    project, _ = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    ep = _ep_of(project)
+    if not ep:
+        return JSONResponse({"error": "편 번호를 알 수 없습니다"}, status_code=422)
+    body = await request.json()
+    scenes = [int(x) for x in (body.get("scenes") or [])]
+    if not scenes:
+        return JSONResponse({"error": "고른 씬이 없습니다"}, status_code=422)
+
+    root = get_package_dir().parent
+    for n in scenes:                     # 훑는 중임을 씬마다 표시한다
+        d = _scene_dir(ep, n)
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "_planning").write_text("", encoding="utf-8")
+
+    def run() -> None:
+        for n in scenes:
+            d = _scene_dir(ep, n)
+            log = d / "plan.log"
+            try:
+                with log.open("w", encoding="utf-8") as f:
+                    _sp.run([str(root / ".venv/bin/python"),
+                             "scripts/plan_scene_layers.py", ep, str(n)],
+                            cwd=root, stdout=f, stderr=_sp.STDOUT, stdin=_sp.DEVNULL)
+            finally:
+                (d / "_planning").unlink(missing_ok=True)
+
+    _th.Thread(target=run, name=f"plan-{ep}", daemon=True).start()
+    return {"started": scenes}
+
+
+@app.get("/api/p/{project_ref}/layers/plan/{scene_num}")
+async def get_layer_plan(project_ref: str, scene_num: int):
+    """씬의 층 계획 상태 — 훑는 중 / 준비됨 / 실패 / 없음."""
+    import json as _json
+
+    pm = get_pm()
+    project, _ = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    d = _scene_dir(_ep_of(project), scene_num)
+    if (d / "_planning").exists():
+        return {"status": "running"}
+    if (d / "_splitting").exists():
+        return {"status": "splitting"}
+    f = d / "layer_plan.json"
+    if f.is_file():
+        try:
+            plan = _json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            return {"status": "failed", "message": "계획 파일을 읽지 못했습니다"}
+        return {"status": "ready", "layers": plan.get("layers") or [],
+                "note": plan.get("note", ""),
+                "split": (d / "layers.json").is_file()}
+    log = d / "plan.log"
+    if log.is_file():
+        tail = log.read_text(encoding="utf-8", errors="replace").strip().splitlines()[-3:]
+        return {"status": "failed", "message": "\n".join(tail)}
+    return {"status": "none"}
+
+
+@app.post("/api/p/{project_ref}/layers/plan/{scene_num}")
+async def save_layer_plan(project_ref: str, scene_num: int, request: Request):
+    """사람이 고친 층 목록을 저장한다. 가를 때 이 목록을 그대로 쓴다."""
+    import json as _json
+
+    pm = get_pm()
+    project, _ = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    body = await request.json()
+    rows = [r for r in (body.get("layers") or []) if (r.get("name") or "").strip()]
+    if not rows:
+        return JSONResponse({"error": "층이 비어 있습니다"}, status_code=422)
+    d = _scene_dir(_ep_of(project), scene_num)
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "layer_plan.json").write_text(
+        _json.dumps({"layers": rows, "note": body.get("note", "")},
+                    ensure_ascii=False, indent=1), encoding="utf-8")
+    return {"saved": len(rows)}
+
+
 @app.post("/api/p/{project_ref}/layers/split")
 async def split_layers(project_ref: str, request: Request):
     """체크한 씬들을 레이어로 가른다.
@@ -178,9 +302,16 @@ async def split_layers(project_ref: str, request: Request):
     def run() -> None:
         with log.open("w", encoding="utf-8") as f:
             for n in scenes:
+                d = _scene_dir(ep, n)
+                d.mkdir(parents=True, exist_ok=True)
+                (d / "_splitting").write_text("", encoding="utf-8")   # 씬마다 진행 표시
                 f.write(f"=== 씬 {n} 시작\n"); f.flush()
-                _sp.run([str(root / ".venv/bin/python"), "scripts/animate_scene.py", ep, str(n)],
-                        cwd=root, stdout=f, stderr=_sp.STDOUT, stdin=_sp.DEVNULL)
+                try:
+                    _sp.run([str(root / ".venv/bin/python"), "scripts/animate_scene.py",
+                             ep, str(n)],
+                            cwd=root, stdout=f, stderr=_sp.STDOUT, stdin=_sp.DEVNULL)
+                finally:
+                    (d / "_splitting").unlink(missing_ok=True)
                 f.write(f"=== 씬 {n} 끝\n"); f.flush()
 
     _th.Thread(target=run, name=f"split-{ep}", daemon=True).start()

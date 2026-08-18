@@ -2413,3 +2413,40 @@ body.terminal-open .main-content {
   background: #a78bfa; border: none; color: #17171a;
 }
 .ak-modal-row button.ghost { background: transparent; border: 1px solid #4a4a52; color: #c4c4c4; }
+
+/* ── 층 계획 · 훑는 중 표시 ─────────────────────────── */
+.sb-scan {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px; font-size: 11px; color: #c9c2f5;
+  background: rgba(167,139,250,.08); border-radius: 6px;
+}
+.sb-scan-bar {
+  position: relative; flex: 0 0 90px; height: 3px;
+  background: rgba(167,139,250,.2); border-radius: 2px; overflow: hidden;
+}
+.sb-scan-bar::after {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 40%;
+  background: #a78bfa; border-radius: 2px;
+  animation: sbScan 1.1s ease-in-out infinite;
+}
+@keyframes sbScan { 0% { left: -40% } 100% { left: 100% } }
+
+.sb-plan { border: 1px solid #34343a; border-radius: 6px; padding: 8px; }
+.sb-plan-head {
+  display: flex; align-items: baseline; gap: 8px;
+  font-size: 11px; color: #c4c4c4; margin-bottom: 6px;
+}
+.sb-plan-hint { font-size: 10px; color: #7a7a7a; }
+.sb-plan-text {
+  width: 100%; background: #161619; color: #e2e2e2;
+  border: 1px solid #2e2e34; border-radius: 4px;
+  padding: 6px 8px; font-size: 12px; line-height: 1.8; resize: vertical;
+  font-family: inherit;
+}
+.sb-plan-note { font-size: 10px; color: #8a8a8a; margin-top: 6px; line-height: 1.6; }
+.sb-plan-row { display: flex; gap: 6px; margin-top: 8px; }
+.sb-plan-row button, .sb-mini {
+  font-size: 11px; padding: 4px 10px; border-radius: 4px; cursor: pointer;
+  background: rgba(167,139,250,.16); border: 1px solid rgba(167,139,250,.35); color: #c4b5fd;
+}
+.sb-plan-row button:last-child { background: #a78bfa; border-color: #a78bfa; color: #17171a; }

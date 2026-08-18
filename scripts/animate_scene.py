@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import random
 import subprocess
 import sys
@@ -86,6 +87,67 @@ def foot_of(im: Image.Image) -> tuple[int, int]:
     return ((xs[0] + xs[-1]) // 2 if xs else (x0 + x1) // 2), y1
 
 
+def _claude_vision(image: Path, instructions: str) -> dict | None:
+    """클로드에게 그림을 보여 주고 JSON을 받는다 — 코덱스가 막혔을 때의 눈.
+
+    코덱스에는 사용량 한도가 있어 판단이 통째로 멈춘다. 그런데 여기서 코덱스가
+    하는 일은 **그림을 보는 것뿐**이고, 그건 클로드도 한다. 헤드리스로 Read
+    도구만 열어 주면 그림을 읽는다.
+
+    작업 폴더가 신뢰되지 않았다는 경고가 앞에 붙어 나오므로 JSON만 골라낸다.
+    """
+    prompt = (f"{image} 을 Read 도구로 열어 보고 아래를 판단하세요.\n"
+              "설명 문장 없이 **JSON만** 출력하세요.\n\n" + instructions)
+    env = {k: v for k, v in os.environ.items()
+           if k not in ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")}
+    try:
+        r = subprocess.run(["claude", "--allowedTools", "Read", "--output-format", "text"],
+                           input=prompt, capture_output=True, text=True,
+                           timeout=600, env=env)
+    except Exception as e:
+        print(f"  클로드 호출 실패: {e}")
+        return None
+    out = r.stdout or ""
+    i, j = out.find("{"), out.rfind("}")
+    if i < 0 or j <= i:
+        print("  클로드가 JSON을 내지 않았습니다")
+        return None
+    try:
+        return json.loads(out[i:j + 1])
+    except json.JSONDecodeError:
+        print("  클로드 응답을 읽지 못했습니다")
+        return None
+
+
+def _ask_vision(image: Path, instructions: str, out_file: Path) -> dict | None:
+    """그림을 보고 판단한다. 코덱스를 먼저, 막혔으면 클로드로.
+
+    코덱스는 결과를 파일에 쓰고, 클로드는 말로 답한다 — 받는 쪽을 하나로
+    맞추려고 클로드 답도 같은 파일에 적어 둔다.
+    """
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    prompt = ("$imagegen\n\n**먼저 view_image로 아래 그림을 불러오세요.**\n"
+              f"{image}\n\n{instructions}\n\n결과를 {out_file} 에 저장하세요.")
+    try:
+        subprocess.run(["codex", "exec", "--skip-git-repo-check",
+                        "--sandbox", "workspace-write", prompt],
+                       stdin=subprocess.DEVNULL, capture_output=True,
+                       text=True, timeout=900)
+    except Exception:
+        pass
+    if out_file.exists():
+        try:
+            return json.loads(out_file.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            pass
+
+    print("  코덱스가 답하지 않아 클로드로 봅니다")
+    d = _claude_vision(image, instructions)
+    if d:
+        out_file.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
+    return d
+
+
 def scene_image_of(project: Path, n: int) -> Path | None:
     """이 씬에서 고른 이미지."""
     db = json.loads((project / "images" / "image_assets.json").read_text(encoding="utf-8"))
@@ -128,7 +190,7 @@ PLAN_PROMPT = """첨부한 그림은 다큐멘터리 한 장면입니다. 이 �
 
 ## 낼 것
 
-{out} 에 저장합니다. 이름은 그림에서 가리키는 그대로 짧은 한국어로 씁니다
+이름은 그림에서 가리키는 그대로 짧은 한국어로 씁니다
 (사람은 이름이 있으면 그 이름).
 
 {{"layers":[{{"name":"", "is_person":false, "why":"왜 따로 가르는지 한 마디"}}],
@@ -147,16 +209,11 @@ def plan_layers(scene_image: Path, narration: str, out_dir: Path) -> tuple[list[
     뒤에서 앞으로 적어 보내면 나중에 z를 고칠 일이 없다.
     """
     res = out_dir / "layer_plan.json"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    prompt = ("$imagegen\n\n**먼저 view_image로 아래 그림을 불러오세요.**\n"
-              f"{scene_image}\n\n"
-              + PLAN_PROMPT.format(narration=(narration or "").strip()[:400], out=res))
-    subprocess.run(["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write",
-                    prompt], stdin=subprocess.DEVNULL, capture_output=True,
-                   text=True, timeout=900)
-    if not res.exists():
+    d = _ask_vision(scene_image,
+                    PLAN_PROMPT.format(narration=(narration or "").strip()[:400]),
+                    res)
+    if not d:
         return None
-    d = json.loads(res.read_text(encoding="utf-8"))
     rows = [L for L in d.get("layers", []) if (L.get("name") or "").strip()]
     if not rows:
         return None
@@ -211,7 +268,6 @@ ORDER_PROMPT = """첨부한 그림은 한 장의 장면입니다. 이 장면을 
 
 각 요소가 사람인지도 함께 적으세요 — 사람만 움직입니다.
 
-결과를 {out} 에 저장하세요.
 {{"order":["뒤에 있는 것", "...", "앞에 있는 것"],
   "people":["사람인 요소 이름"],
   "note":"판단 근거 한 문장"}}
@@ -225,16 +281,9 @@ def order_by_vision(scene_image: Path, meta: list[dict], out_dir: Path) -> list[
     **책상 위 부품까지** 덮었다 — 부품은 배경판에 있는데 상판이 그 위로 올라갔다.
     상판은 사람보다 앞이지만 그 위의 물건보다는 뒤다. 그건 그림을 봐야 안다."""
     names = "\n".join(f"- {m['name']}" for m in meta if m.get("bbox"))
-    res = out_dir / "z_order.json"
-    prompt = ("$imagegen\n\n**먼저 view_image로 아래 그림을 불러오세요.**\n"
-              f"{scene_image}\n\n"
-              + ORDER_PROMPT.format(names=names, out=res))
-    subprocess.run(["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write",
-                    prompt], stdin=subprocess.DEVNULL, capture_output=True,
-                   text=True, timeout=900)
-    if not res.exists():
+    d = _ask_vision(scene_image, ORDER_PROMPT.format(names=names), out_dir / "z_order.json")
+    if not d:
         return None
-    d = json.loads(res.read_text(encoding="utf-8"))
     by = {m["name"]: m for m in meta}
     ordered = [m for m in meta if not m.get("bbox")]          # 배경판 먼저
     for nm in d.get("order", []):
@@ -357,7 +406,18 @@ def main() -> int:
         #    layerize에 넘기는 이름 순서가 그대로 층 순서가 되므로
         #    뒤에서 앞으로 보내야 뒤죽박죽이 되지 않는다.
         img = scene_image_of(project, args.scene)
-        plan = plan_layers(img, s.get("narration") or "", out) if img else None
+        # 이미 세워 둔 계획이 있으면 그것을 쓴다. 화면에서 사람이 보고
+        # 고친 목록이 있는데 다시 물으면 그 손질이 버려진다.
+        saved = out / "layer_plan.json"
+        if saved.exists():
+            d = json.loads(saved.read_text(encoding="utf-8"))
+            rows = [L for L in d.get("layers", []) if (L.get("name") or "").strip()]
+            plan = ([L["name"].strip() for L in rows],
+                    {L["name"].strip() for L in rows if L.get("is_person")}) if rows else None
+            if plan:
+                print(f"  세워 둔 계획을 씁니다 ({len(plan[0])}층)")
+        else:
+            plan = plan_layers(img, s.get("narration") or "", out) if img else None
 
         if plan:
             names, people = plan

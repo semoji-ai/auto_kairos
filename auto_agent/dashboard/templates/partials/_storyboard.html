@@ -9,6 +9,7 @@
 <div class="sb-sticky-head">
   <div id="sb-batchbar" hidden>
     <span id="sb-pick-count">0개 선택</span>
+    <button type="button" onclick="sbPlanPicked('{{ slug }}')">⌕ 층 분석</button>
     <button type="button" onclick="sbSplitPicked('{{ slug }}')">⧉ 레이어 나누기</button>
     <button type="button" class="ghost" onclick="sbPickClear()">해제</button>
     <span id="sb-split-state"></span>
@@ -2300,34 +2301,69 @@ function updateSceneLayout(slug, sceneNum, layout) {
   window.__sbLoadEnrichmentInline = loadAndInject;
 })();
 
-/* 레이어 보기 — 분리 결과를 층별로 펼친다.
-   눈 아이콘으로 층을 껐다 켜면 무엇이 무엇을 가리는지 바로 보인다. */
-var SB_LAYER_CACHE = {};
+/* 레이어 — 「① 훑어서 계획 → ② 사람이 확인·수정 → ③ 나누기」 순서로 간다.
+   바로 나누면 무엇을 가를지 잘못 정했을 때 몇 분과 비용이 통째로 버려진다.
+   계획은 글이라 고치기 쉽다. */
+var SB_LAYER_POLL = {};
 
 function sbToggleLayers(slug, n, btn) {
   var box = document.getElementById("sb-layers-" + n);
   if (!box) return;
   if (!box.hidden) { box.hidden = true; btn.classList.remove("open"); return; }
   box.hidden = false; btn.classList.add("open");
-  if (SB_LAYER_CACHE[n]) return;
-  box.innerHTML = '<div class="sb-layer-empty">불러오는 중…</div>';
-  fetch('/api/p/' + encodeURIComponent(slug) + '/layers/' + n)
-    .then(function (r) { return r.json(); })
-    .then(function (d) {
-      SB_LAYER_CACHE[n] = d;
-      box.innerHTML = sbRenderLayers(d, n);
-    })
-    .catch(function () { box.innerHTML = '<div class="sb-layer-empty">불러오지 못했습니다</div>'; });
+  sbLoadLayers(slug, n);
 }
 
-function sbRenderLayers(d, n) {
-  var sets = (d && d.sets) || [];
-  if (!sets.length) {
-    return '<div class="sb-layer-empty">아직 분리하지 않은 씬입니다.'
-      + '<br><code>python3 scripts/animate_scene.py EP03 ' + n + '</code></div>';
+function sbLoadLayers(slug, n) {
+  var box = document.getElementById("sb-layers-" + n);
+  if (!box || box.hidden) return;
+  if (!box.innerHTML) box.innerHTML = '<div class="sb-layer-empty">불러오는 중…</div>';
+  Promise.all([
+    fetch('/api/p/' + encodeURIComponent(slug) + '/layers/plan/' + n).then(function (r) { return r.json(); }),
+    fetch('/api/p/' + encodeURIComponent(slug) + '/layers/' + n).then(function (r) { return r.json(); }),
+  ]).then(function (res) {
+    box.innerHTML = sbRenderLayerBox(slug, n, res[0], res[1]);
+    var st = res[0].status;
+    if (st === "running" || st === "splitting") {
+      clearTimeout(SB_LAYER_POLL[n]);
+      SB_LAYER_POLL[n] = setTimeout(function () { sbLoadLayers(slug, n); }, 4000);
+    }
+  });
+}
+
+function sbRenderLayerBox(slug, n, plan, sets) {
+  var html = "";
+
+  if (plan.status === "running") {
+    html += '<div class="sb-scan"><div class="sb-scan-bar"></div>'
+      + '<span>그림을 훑어 층을 정하는 중…</span></div>';
+  } else if (plan.status === "splitting") {
+    html += '<div class="sb-scan"><div class="sb-scan-bar"></div>'
+      + '<span>레이어로 나누는 중…</span></div>';
+  } else if (plan.status === "failed") {
+    html += '<div class="sb-layer-empty">층 분석 실패<br><code>'
+      + (plan.message || "").replace(/</g, "&lt;") + '</code></div>';
+  } else if (plan.status === "ready") {
+    // 계획을 그대로 고칠 수 있게 편다. 한 줄에 한 층, 뒤에서 앞 순서.
+    var lines = (plan.layers || []).map(function (L) {
+      return (L.is_person ? "@ " : "") + (L.name || "");
+    }).join("\n");
+    html += '<div class="sb-plan">'
+      + '<div class="sb-plan-head">층 계획 · 뒤 → 앞 순서'
+      + '<span class="sb-plan-hint">@ 는 사람 (사람만 까딱입니다)</span></div>'
+      + '<textarea class="sb-plan-text" id="sb-plan-' + n + '" rows="' + Math.max(3, (plan.layers || []).length) + '">'
+      + lines.replace(/</g, "&lt;") + '</textarea>'
+      + (plan.note ? '<div class="sb-plan-note">' + plan.note.replace(/</g, "&lt;") + '</div>' : "")
+      + '<div class="sb-plan-row">'
+      + '<button type="button" onclick="sbPlanSave(\'' + slug + '\',' + n + ')">계획 저장</button>'
+      + '<button type="button" onclick="sbSplitOne(\'' + slug + '\',' + n + ')">이 계획으로 나누기</button>'
+      + '</div></div>';
+  } else if (!(sets.sets || []).length) {
+    html += '<div class="sb-layer-empty">아직 훑지 않은 씬입니다. '
+      + '<button type="button" class="sb-mini" onclick="sbPlanOne(\'' + slug + '\',' + n + ')">⌕ 층 분석</button></div>';
   }
-  return sets.map(function (s) {
-    // 뒤에서 앞으로 쌓인 순서 그대로 겹쳐 보여준다
+
+  (sets.sets || []).forEach(function (s) {
     var stack = s.layers.map(function (L, i) {
       var b = L.bbox;
       var st = b
@@ -2337,10 +2373,9 @@ function sbRenderLayers(d, n) {
       return '<img class="sb-layer-img" data-i="' + i + '" src="' + L.png
         + '" style="' + st + ';z-index:' + (L.z || i) + '">';
     }).join("");
-
     var rows = s.layers.map(function (L, i) {
       var kind = L.role === "person" ? "👤" : (L.role === "bg" ? "▨" : "▣");
-      var vec = L.svg ? '<a class="sb-layer-vec" href="' + L.svg + '" target="_blank">SVG</a>' : '';
+      var vec = L.svg ? '<a class="sb-layer-vec" href="' + L.svg + '" target="_blank">SVG</a>' : "";
       return '<label class="sb-layer-row">'
         + '<input type="checkbox" checked onchange="sbLayerVis(' + n + ',' + i + ',this.checked)">'
         + '<span class="sb-layer-kind">' + kind + '</span>'
@@ -2348,20 +2383,48 @@ function sbRenderLayers(d, n) {
         + '<span class="sb-layer-z">z' + (L.z != null ? L.z : i) + '</span>' + vec
         + '</label>';
     }).join("");
-
     var vids = (s.videos || []).map(function (v) {
       return '<a class="sb-layer-vid" href="' + v + '" target="_blank">▶ ' + v.split("/").pop() + '</a>';
     }).join("");
-
-    return '<div class="sb-layer-set" data-set="' + s.id + '">'
-      + '<div class="sb-layer-head">' + s.id + ' · ' + s.layers.length + '층'
-      + (s.vision_ordered ? ' · <span title="화면을 보고 앞뒤를 판정했다">z 검증됨</span>' : '')
-      + '</div>'
+    html += '<div class="sb-layer-set">'
+      + '<div class="sb-layer-head">' + s.id + ' · ' + s.layers.length + '층</div>'
       + '<div class="sb-layer-stage" id="sb-layer-stage-' + n + '">' + stack + '</div>'
       + '<div class="sb-layer-list">' + rows + '</div>'
-      + (vids ? '<div class="sb-layer-vids">' + vids + '</div>' : '')
+      + (vids ? '<div class="sb-layer-vids">' + vids + '</div>' : "")
       + '</div>';
-  }).join("");
+  });
+  return html;
+}
+
+function sbPlanText(n) {
+  var ta = document.getElementById("sb-plan-" + n);
+  if (!ta) return null;
+  return ta.value.split("\n").map(function (line) {
+    var s = line.trim();
+    if (!s) return null;
+    var person = s.indexOf("@") === 0;
+    return { name: (person ? s.slice(1) : s).trim(), is_person: person };
+  }).filter(Boolean);
+}
+
+function sbPlanSave(slug, n, then) {
+  var rows = sbPlanText(n);
+  if (!rows || !rows.length) { alert("층이 비어 있습니다"); return; }
+  fetch('/api/p/' + encodeURIComponent(slug) + '/layers/plan/' + n, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ layers: rows }),
+  }).then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.error) { alert(d.error); return; }
+      akToast(n + "번 씬 · 층 " + d.saved + "개로 저장했습니다");
+      if (then) then();
+    });
+}
+
+function sbPlanOne(slug, n) { sbPlanRun(slug, [n]); }
+
+function sbSplitOne(slug, n) {
+  sbPlanSave(slug, n, function () { sbSplitRun(slug, [n]); });
 }
 
 function sbLayerVis(n, i, on) {
@@ -2370,7 +2433,6 @@ function sbLayerVis(n, i, on) {
   var img = stage.querySelector('.sb-layer-img[data-i="' + i + '"]');
   if (img) img.style.opacity = on ? "1" : "0.08";
 }
-
 
 /* 씬 고르기 + 레이어 일괄 나누기.
    롱폼은 이미지 검수를 끝낸 뒤에 가르는 것이 맞다 — 이미지를 다시 뽑으면
@@ -2394,6 +2456,34 @@ function sbPickClear() {
   sbPickChanged();
 }
 
+function sbPlanPicked(slug) {
+  var ns = sbPicked();
+  if (!ns.length) return;
+  sbPlanRun(slug, ns);
+}
+
+function sbPlanRun(slug, ns) {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/layers/plan', {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scenes: ns }),
+  }).then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.error) { alert(d.error); return; }
+      akToast(ns.length + "개 씬을 훑는 중입니다. 각 씬의 「⧉ 레이어」를 펼치면 진행이 보입니다.");
+      ns.forEach(function (n) { sbOpenLayers(slug, n); });
+    });
+}
+
+/* 진행이 보이도록 해당 씬의 레이어 칸을 열어 둔다 */
+function sbOpenLayers(slug, n) {
+  var box = document.getElementById("sb-layers-" + n);
+  if (!box) return;
+  box.hidden = false;
+  var btn = box.parentNode.querySelector(".sb-layer-toggle");
+  if (btn) btn.classList.add("open");
+  sbLoadLayers(slug, n);
+}
+
 function sbSplitPicked(slug) {
   var ns = sbPicked();
   if (!ns.length) return;
@@ -2405,6 +2495,7 @@ function sbSplitPicked(slug) {
 }
 
 function sbSplitRun(slug, ns) {
+  ns.forEach(function (n) { sbOpenLayers(slug, n); });
   var st = document.getElementById("sb-split-state");
   if (st) st.textContent = "시작하는 중…";
   fetch('/api/p/' + encodeURIComponent(slug) + '/layers/split', {
