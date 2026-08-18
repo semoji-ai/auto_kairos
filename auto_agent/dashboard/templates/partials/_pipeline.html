@@ -45,52 +45,11 @@
     <div id="skeleton-bar-inner"></div>
   </div>
 
-  <!-- ── 3. 뷰 전환 탭 ── -->
-  <div id="pipeline-ctrl-bar">
-    <div class="pctrl-tabs">
-      <button class="pctrl-tab active" onclick="setContentView('split', this)">리서치 + 원고</button>
-      <button class="pctrl-tab" onclick="setContentView('scenes', this)">🎬 씬스펙</button>
-    </div>
-    <span id="stream-chars" style="display:none;font-size:11px;color:var(--energy-ink-low);margin-left:auto;"></span>
-  </div>
-
-  <!-- ── 3. 2분할 캔버스 ── -->
-  <div id="split-view" style="flex:1;min-height:0;overflow:hidden;">
-    <div class="rc-wrap" id="rc-wrap" data-slug="{{ slug }}">
-      <div class="rc-panels">
-
-        <!-- 왼쪽: Research Canvas -->
-        <div class="rc-panel rc-panel-research" id="rc-research-panel">
-          <div class="rc-panel-header">
-            <span class="rc-panel-title">Research Canvas</span>
-            <span class="rc-claim-count" id="rc-claim-count">— claims</span>
-            <span class="rc-live-dot" id="rc-live-dot" title="실시간 스트리밍"></span>
-          </div>
-          <div class="rc-panel-body" id="rc-claims-body">
-            <div class="rc-empty">리서치 데이터를 불러오는 중...</div>
-          </div>
-        </div>
-
-        <!-- 오른쪽: Manuscript Canvas -->
-        <div class="rc-panel rc-panel-manuscript" id="rc-manuscript-panel">
-          <div class="rc-panel-header">
-            <span class="rc-panel-title">Manuscript Canvas</span>
-            <span class="rc-ms-badge" id="rc-ms-badge">—</span>
-          </div>
-          <div class="rc-panel-body" id="rc-ms-body">
-            <div class="rc-empty">원고가 생성되면 여기에 표시됩니다.</div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- ── 4b. 씬스펙 뷰 (탭 전환) ── -->
-  <div id="panel-scenes" class="scene-stream-list" style="display:none;flex:1;min-height:0;overflow-y:auto;">
-    <div style="color:var(--energy-ink-low);font-family:sans-serif;font-size:13px;padding:16px;">
-      씬이 생성되면 여기에 표시됩니다.
-    </div>
+  {# 리서치·원고·씬스펙을 여기서 또 보여 주고 있었다. 그건 각 탭이 하는
+     일이고, 정작 「지금 어디까지 왔고 다음에 뭘 하나」는 어디에도 없어
+     매번 파일을 세어 확인했다. 그 자리를 이걸로 바꾼다. #}
+  <div id="pj-health" data-slug="{{ slug }}" style="flex:1;min-height:0;overflow-y:auto;padding:16px;">
+    <div class="pj-loading">상태를 살피는 중…</div>
   </div>
 
   <!-- ── 5. 하단 바: 이벤트 로그 + Agent Status ── -->
@@ -546,8 +505,10 @@ function escapeHtml(s) {
     document.querySelectorAll('.pctrl-tab').forEach(t => t.classList.remove('active'));
     if (tabEl) tabEl.classList.add('active');
     currentView = view;
-    document.getElementById('split-view').style.display  = view === 'split'  ? 'flex' : 'none';
-    document.getElementById('panel-scenes').style.display = view === 'scenes' ? 'flex' : 'none';
+    var sv = document.getElementById('split-view');
+    var ps = document.getElementById('panel-scenes');
+    if (sv) sv.style.display = view === 'split' ? 'flex' : 'none';
+    if (ps) ps.style.display = view === 'scenes' ? 'flex' : 'none';
   };
 
   // ── 스텝 노드 상태 ──
@@ -943,7 +904,11 @@ function escapeHtml(s) {
 
 // ── Research Canvas IIFE (_research.html과 동일, msEv 제외) ──
 (function() {
-  var slug = document.getElementById('rc-wrap').dataset.slug;
+  // 리서치·원고 캔버스는 대시보드에서 걷어냈다(각 탭이 그 일을 한다).
+  // 여기서 없는 요소를 붙잡으면 아래 코드가 통째로 죽는다.
+  var wrap = document.getElementById('rc-wrap');
+  if (!wrap) return;
+  var slug = wrap.dataset.slug;
   var claimsBody = document.getElementById('rc-claims-body');
   var countEl = document.getElementById('rc-claim-count');
   var liveDot = document.getElementById('rc-live-dot');
@@ -1149,3 +1114,113 @@ function escapeHtml(s) {
 
 })();
 </script>
+
+<script>
+/* 대시보드 — 얼마나 됐나 · 다음에 뭘 하나 · 평가 · 수상한 것.
+   세는 것은 전부 파일에 있는 사실이다. 추측하지 않는다. */
+(function () {
+  var box = document.getElementById("pj-health");
+  if (!box) return;
+  var slug = box.dataset.slug;
+
+  function bar(d, t) {
+    var pct = t ? Math.min(100, Math.round(d / t * 100)) : 0;
+    var cls = !t ? "none" : d >= t ? "full" : d ? "part" : "zero";
+    return '<div class="pj-bar ' + cls + '"><i style="width:' + pct + '%"></i></div>';
+  }
+
+  function scenesLink(list) {
+    if (!list || !list.length) return "";
+    var shown = list.slice(0, 12).join(", ");
+    return '<div class="pj-scenes">씬 ' + shown + (list.length > 12 ? " …" : "") + '</div>';
+  }
+
+  fetch('/api/p/' + encodeURIComponent(slug) + '/health')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.error) { box.innerHTML = '<div class="pj-loading">' + d.error + '</div>'; return; }
+      var h = "";
+
+      h += '<div class="pj-card"><div class="pj-title">진행 상태'
+        + (d.episode ? ' <span class="pj-ep">' + d.episode + '</span>' : "") + '</div>';
+      h += '<div class="pj-grid">';
+      d.progress.forEach(function (p) {
+        h += '<div class="pj-row"><span class="pj-name">' + p.name + '</span>'
+          + bar(p.done, p.total)
+          + '<span class="pj-num">' + p.done + (p.total ? " / " + p.total : "") + '</span></div>';
+      });
+      h += '</div></div>';
+
+      h += '<div class="pj-card"><div class="pj-title">다음 할 일</div>';
+      if (!d.todos.length) h += '<div class="pj-ok">남은 것이 없습니다.</div>';
+      d.todos.forEach(function (t) {
+        h += '<div class="pj-todo"><div class="pj-todo-text">' + t.text + '</div>'
+          + (t.hint ? '<div class="pj-hint">' + t.hint + '</div>' : "")
+          + scenesLink(t.scenes) + '</div>';
+      });
+      h += '</div>';
+
+      h += '<div class="pj-card pj-warn"><div class="pj-title">오류 의심</div>';
+      if (!d.suspects.length) h += '<div class="pj-ok">걸리는 것이 없습니다.</div>';
+      d.suspects.forEach(function (s) {
+        h += '<div class="pj-todo"><div class="pj-todo-text">' + s.kind + '</div>'
+          + '<div class="pj-hint">' + s.text + '</div>' + scenesLink(s.scenes) + '</div>';
+      });
+      h += '</div>';
+
+      h += '<div class="pj-card"><div class="pj-title">평가 결과</div>';
+      if (!d.review) {
+        h += '<div class="pj-hint">아직 검수 기록이 없습니다.</div>';
+      } else {
+        h += '<div class="pj-hint">' + d.review.count + '컷 검수</div><div class="pj-scores">';
+        var names = { content: "내용", style: "화풍", character: "인물", period: "시대", quality: "완성도" };
+        Object.keys(d.review.avg).forEach(function (k) {
+          var v = d.review.avg[k];
+          h += '<span class="pj-score' + (v < 4 ? " low" : "") + '">'
+            + (names[k] || k) + ' ' + v + '</span>';
+        });
+        h += '</div><div class="pj-scores">';
+        Object.keys(d.review.verdicts).forEach(function (k) {
+          h += '<span class="pj-verdict v-' + k + '">' + k + ' ' + d.review.verdicts[k] + '</span>';
+        });
+        h += '</div>';
+      }
+      h += '</div>';
+
+      box.innerHTML = h;
+    })
+    .catch(function (e) { box.innerHTML = '<div class="pj-loading">' + e.message + '</div>'; });
+})();
+</script>
+
+<style>
+.pj-loading { color: #8a8a8a; font-size: 13px; padding: 20px; }
+.pj-card { background: rgba(255,255,255,.03); border: 1px solid #26262c; border-radius: 8px;
+  padding: 14px 16px; margin-bottom: 12px; }
+.pj-card.pj-warn { border-color: rgba(239,68,68,.28); }
+.pj-title { font-size: 13px; color: #e2e2e2; margin-bottom: 10px; font-weight: 600; }
+.pj-ep { font-size: 11px; color: #7a7a7a; font-weight: 400; }
+.pj-grid { display: flex; flex-direction: column; gap: 6px; }
+.pj-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.pj-name { width: 108px; color: #b4b4b4; }
+.pj-num { width: 84px; text-align: right; color: #8a8a8a; font-size: 11px; }
+.pj-bar { flex: 1; height: 6px; background: #232328; border-radius: 3px; overflow: hidden; }
+.pj-bar i { display: block; height: 100%; border-radius: 3px; background: #60a5fa; }
+.pj-bar.full i { background: #34d399; }
+.pj-bar.part i { background: #fbbf24; }
+.pj-bar.zero i { background: #52525b; }
+.pj-todo { padding: 7px 0; border-top: 1px solid #232328; }
+.pj-todo:first-of-type { border-top: none; }
+.pj-todo-text { font-size: 12px; color: #dcdcdc; }
+.pj-hint { font-size: 11px; color: #8a8a8a; margin-top: 2px; }
+.pj-scenes { font-size: 10px; color: #6f6f76; margin-top: 3px; }
+.pj-ok { font-size: 12px; color: #34d399; }
+.pj-scores { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pj-score { font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: rgba(52,211,153,.14); color: #34d399; }
+.pj-score.low { background: rgba(251,191,36,.16); color: #fbbf24; }
+.pj-verdict { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #26262c; color: #b4b4b4; }
+.pj-verdict.v-keep { background: rgba(52,211,153,.14); color: #34d399; }
+.pj-verdict.v-fix { background: rgba(251,191,36,.16); color: #fbbf24; }
+.pj-verdict.v-reject { background: rgba(239,68,68,.16); color: #f87171; }
+</style>

@@ -174,6 +174,21 @@ def _scene_dir(ep: str, n: int) -> Path:
     return get_package_dir().parent / "_imggen" / f"{ep.lower()}_anim" / f"s{n:03d}"
 
 
+@app.get("/api/p/{project_ref}/health")
+async def project_health(project_ref: str):
+    """진행 상태 · 다음 할 일 · 평가 · 수상한 것."""
+    from auto_agent.dashboard import health
+
+    pm = get_pm()
+    project, _ = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    try:
+        return health.collect(project)
+    except Exception as e:
+        return JSONResponse({"error": f"{type(e).__name__}: {e}"}, status_code=500)
+
+
 @app.post("/api/p/{project_ref}/layers/plan")
 async def plan_layers_api(project_ref: str, request: Request):
     """고른 씬을 훑어 **어떤 층으로 가를지 계획만** 세운다.
