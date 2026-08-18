@@ -86,9 +86,92 @@ def foot_of(im: Image.Image) -> tuple[int, int]:
     return ((xs[0] + xs[-1]) // 2 if xs else (x0 + x1) // 2), y1
 
 
+def scene_image_of(project: Path, n: int) -> Path | None:
+    """이 씬에서 고른 이미지."""
+    db = json.loads((project / "images" / "image_assets.json").read_text(encoding="utf-8"))
+    sel = next((i["file"] for e in db["scenes"] if e["sceneNumber"] == n
+                for i in e["images"] if i.get("selected")), None)
+    return (project / "images" / sel) if sel else None
+
+
+PLAN_PROMPT = """첨부한 그림은 다큐멘터리 한 장면입니다. 이 장면을 **몇 개의 층으로
+가를지** 정합니다. 가른 층은 각각 따로 움직이거나, 카메라가 들어갈 때 앞뒤로
+갈라져 깊이를 만듭니다.
+
+## 이 장면의 내레이션
+
+{narration}
+
+## 무엇을 가를 것인가
+
+**움직여야 하는 것**과 **가리는 것**을 가릅니다.
+
+- 사람은 각각 따로 가릅니다 — 사람만 까딱입니다.
+- **사람 앞을 지나가는 것**은 반드시 따로 가릅니다. 함께 두면 사람이 움직일 때
+  가려져 있던 부분이 드러나거나, 소품이 사람에 붙어 같이 흔들립니다.
+- **작업대·책상 위에 놓인 물건**은 상판과 따로 가릅니다. 함께 두면 상판이
+  그 물건들을 덮습니다.
+- 내레이션이 가리키는 물건이 있으면 따로 가릅니다 — 그것만 나타나거나
+  강조될 수 있어야 합니다.
+- 배경은 하나로 둡니다.
+
+너무 잘게 가르지 않습니다. 움직일 필요도 없고 아무것도 가리지 않는 것은
+배경에 둡니다.
+
+## 순서가 중요합니다
+
+**화면에서 뒤에 있는 것부터 앞에 있는 것 순으로** 적습니다. 이 순서가 그대로
+층 순서가 되므로, 여기서 틀리면 나중에 뒤죽박죽이 됩니다.
+
+큰 가구를 조심하세요. **작업대는 사람보다 앞이지만, 그 위에 놓인 물건보다는
+뒤입니다.** 상판이 물건을 덮으면 안 됩니다.
+
+## 낼 것
+
+{out} 에 저장합니다. 이름은 그림에서 가리키는 그대로 짧은 한국어로 씁니다
+(사람은 이름이 있으면 그 이름).
+
+{{"layers":[{{"name":"", "is_person":false, "why":"왜 따로 가르는지 한 마디"}}],
+  "note":"앞뒤 순서를 이렇게 정한 근거 한 문장"}}
+"""
+
+
+def plan_layers(scene_image: Path, narration: str, out_dir: Path) -> tuple[list[str], set[str]] | None:
+    """그림과 내레이션을 함께 보고 **무엇을 가를지, 어떤 순서로 가를지** 정한다.
+
+    예전에는 키워드 목록(OCCLUDER)으로 정했다. 「작업대」·「상자」가 목록에
+    있으면 떼고 없으면 못 뗐다. 장면마다 무엇이 무엇을 가리는지는 그림을 봐야
+    아는 것이라, 목록은 매번 조금씩 틀렸다.
+
+    순서도 여기서 정한다. layerize에 넘기는 이름 순서가 곧 층 순서가 되므로,
+    뒤에서 앞으로 적어 보내면 나중에 z를 고칠 일이 없다.
+    """
+    res = out_dir / "layer_plan.json"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    prompt = ("$imagegen\n\n**먼저 view_image로 아래 그림을 불러오세요.**\n"
+              f"{scene_image}\n\n"
+              + PLAN_PROMPT.format(narration=(narration or "").strip()[:400], out=res))
+    subprocess.run(["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write",
+                    prompt], stdin=subprocess.DEVNULL, capture_output=True,
+                   text=True, timeout=900)
+    if not res.exists():
+        return None
+    d = json.loads(res.read_text(encoding="utf-8"))
+    rows = [L for L in d.get("layers", []) if (L.get("name") or "").strip()]
+    if not rows:
+        return None
+    names = [L["name"].strip() for L in rows]
+    people = {L["name"].strip() for L in rows if L.get("is_person")}
+    print(f"  층 계획 {len(names)}개 (뒤→앞): {', '.join(names)}")
+    print(f"  근거: {d.get('note', '')}")
+    return names, people
+
+
 def split(project: Path, n: int, names: list[str], out: Path,
           people: set[str] | None = None) -> list[dict]:
-    sys.path.insert(0, str(Path.home() / "LocalProjects/auto_kairos_adobe"))
+    # adobe는 5.0에서 저장소 안으로 들어왔다. 홈 아래 옛 폴더를 가리키고 있어
+    # 그 폴더를 지우는 순간 조용히 깨진다.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "adobe"))
     from backend import fal_api
 
     db = json.loads((project / "images" / "image_assets.json").read_text(encoding="utf-8"))
@@ -196,8 +279,12 @@ def fix_z(meta: list[dict]) -> list[dict]:
 
 def animate(meta: list[dict], out_mp4: Path, size=(1792, 1024),
             scene_image: Path | None = None) -> None:
-    ordered = order_by_vision(scene_image, meta, out_mp4.parent) if scene_image else None
-    meta = ordered or fix_z(meta)
+    # 층 계획을 세우고 나눴다면 순서는 이미 맞다 — 다시 물을 이유가 없다.
+    # 계획 없이 나눈 옛 결과에는 그림을 보고 앞뒤를 고치는 단계가 필요하다.
+    planned = (out_mp4.parent / "layer_plan.json").exists()
+    ordered = (None if planned
+               else order_by_vision(scene_image, meta, out_mp4.parent) if scene_image else None)
+    meta = ordered or (meta if planned else fix_z(meta))
     frames = int(FPS * DUR)
     tmp = out_mp4.parent / "_frames"
     tmp.mkdir(parents=True, exist_ok=True)
@@ -265,24 +352,33 @@ def main() -> int:
         spec = {s["sceneNumber"]: s for s in json.loads(
             (project / "scene_specs.json").read_text(encoding="utf-8"))["scenes"]}
         s = spec[args.scene]
-        # 인물은 people 서술의 배역 이름을, 사물은 프롬프트에서 뽑는다
-        names = [p.split("(")[0].strip() for p in (s.get("people") or [])]
-        # 인물이 시트로 지정된 씬은 cast 이름을 쓴다
-        if not names and s.get("cast"):
-            rost = {e["id"]: e["name"] for e in json.loads(
-                (root / "_imggen" / "characters" / "roster.json").read_text(encoding="utf-8"))}
-            names = [rost.get(c, c) for c in s["cast"]]
-        occ = occluders_from_prompt((s.get("imageAsset") or {}).get("prompt", ""))
-        if occ:
-            print(f"  가림 소품 함께 분리: {', '.join(occ)}")
-        meta = split(project, args.scene, (names + occ)[:6], out, people=set(names))
 
-    # 원본 씬 그림 — 앞뒤 판정에 쓴다
-    db = json.loads((project / "images" / "image_assets.json").read_text(encoding="utf-8"))
-    sel = next((i["file"] for e in db["scenes"] if e["sceneNumber"] == args.scene
-                for i in e["images"] if i.get("selected")), None)
-    src = (project / "images" / sel) if sel else None
-    animate(meta, out / f"scene_{args.scene:03d}_5s.mp4", scene_image=src)
+        # ① 그림과 내레이션을 함께 보고 무엇을 어떤 순서로 가를지 정한다.
+        #    layerize에 넘기는 이름 순서가 그대로 층 순서가 되므로
+        #    뒤에서 앞으로 보내야 뒤죽박죽이 되지 않는다.
+        img = scene_image_of(project, args.scene)
+        plan = plan_layers(img, s.get("narration") or "", out) if img else None
+
+        if plan:
+            names, people = plan
+        else:
+            # 폴백 — 계획을 못 얻으면 예전 방식(이름 목록 + 키워드)으로 간다
+            print("  층 계획 실패 — 이름 목록으로 진행합니다")
+            names = [p.split("(")[0].strip() for p in (s.get("people") or [])]
+            if not names and s.get("cast"):
+                rost = {e["id"]: e["name"] for e in json.loads(
+                    (root / "_imggen" / "characters" / "roster.json").read_text(encoding="utf-8"))}
+                names = [rost.get(c, c) for c in s["cast"]]
+            people = set(names)
+            occ = occluders_from_prompt((s.get("imageAsset") or {}).get("prompt", ""))
+            if occ:
+                print(f"  가림 소품 함께 분리: {', '.join(occ)}")
+            names = (names + occ)[:6]
+
+        meta = split(project, args.scene, names[:8], out, people=people)
+
+    animate(meta, out / f"scene_{args.scene:03d}_5s.mp4",
+            scene_image=scene_image_of(project, args.scene))
     return 0
 
 

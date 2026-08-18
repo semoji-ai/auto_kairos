@@ -2,6 +2,12 @@
 <!-- scene-thumb.js (썸네일 프리뷰) + scene-editor.js (에디터) -->
 <script src="/static/scene-thumb.js?v={{ static_version('scene-thumb.js') }}"></script>
 <script src="/static/scene-editor.js?v={{ static_version('scene-editor.js') }}"></script>
+<div id="sb-batchbar" hidden>
+  <span id="sb-pick-count">0개 고름</span>
+  <button type="button" onclick="sbSplitPicked('{{ slug }}')">⧉ 레이어 나누기</button>
+  <button type="button" class="ghost" onclick="sbPickClear()">해제</button>
+  <span id="sb-split-state"></span>
+</div>
 {% if scenes %}
 <div class="sb-top-bar">
   <div class="sb-art-style-bar" id="sb-art-style-bar"></div>
@@ -35,6 +41,9 @@
 <div class="scene-list" id="scene-list">
   {% for scene in scenes %}
   <div class="sb-card" data-chapter="{{ scene.chapter }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
+    {# 씬 고르기 — 체크한 씬에 일괄로 레이어 나누기를 건다 #}
+    <input type="checkbox" class="sb-pick" data-scene="{{ scene.sceneNumber }}"
+           onchange="sbPickChanged()" title="이 씬 고르기">
     <!-- 좌측: Remotion Player 경량 임베드 -->
     <div class="sb-preview-wrap">
       <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
@@ -2351,6 +2360,59 @@ function sbLayerVis(n, i, on) {
   if (!stage) return;
   var img = stage.querySelector('.sb-layer-img[data-i="' + i + '"]');
   if (img) img.style.opacity = on ? "1" : "0.08";
+}
+
+
+/* 씬 고르기 + 레이어 일괄 나누기.
+   롱폼은 이미지 검수를 끝낸 뒤에 가르는 것이 맞다 — 이미지를 다시 뽑으면
+   가른 것이 통째로 버려진다. 그래서 낱개 버튼이 아니라 골라서 한꺼번에 건다. */
+function sbPicked() {
+  return Array.prototype.slice.call(document.querySelectorAll(".sb-pick:checked"))
+    .map(function (el) { return parseInt(el.dataset.scene, 10); });
+}
+
+function sbPickChanged() {
+  var n = sbPicked().length;
+  var bar = document.getElementById("sb-batchbar");
+  if (!bar) return;
+  bar.hidden = n === 0;
+  var c = document.getElementById("sb-pick-count");
+  if (c) c.textContent = n + "개 고름";
+}
+
+function sbPickClear() {
+  document.querySelectorAll(".sb-pick:checked").forEach(function (el) { el.checked = false; });
+  sbPickChanged();
+}
+
+function sbSplitPicked(slug) {
+  var ns = sbPicked();
+  if (!ns.length) return;
+  if (!confirm(ns.length + "개 씬을 레이어로 나눕니다.\n\n"
+      + "씬 " + ns.join(", ") + "\n\n"
+      + "한 씬에 몇 분이 걸리고 순차로 돕니다. 이미지를 다시 뽑으면 나눈 것이 "
+      + "버려지니, 이미지 검수가 끝난 씬만 고르셨는지 확인해 주세요.")) return;
+  var st = document.getElementById("sb-split-state");
+  if (st) st.textContent = "시작하는 중…";
+  fetch('/api/p/' + encodeURIComponent(slug) + '/layers/split', {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scenes: ns }),
+  }).then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.error) { if (st) st.textContent = d.error; return; }
+      sbPollSplit(slug);
+    });
+}
+
+function sbPollSplit(slug) {
+  var st = document.getElementById("sb-split-state");
+  fetch('/api/p/' + encodeURIComponent(slug) + '/layers/split/log')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (st) st.textContent = d.done + "/" + d.started + " 끝" + (d.running ? " · 진행 중" : " · 완료");
+      if (d.running) setTimeout(function () { sbPollSplit(slug); }, 5000);
+      else { SB_LAYER_CACHE = {}; }
+    });
 }
 
 </script>

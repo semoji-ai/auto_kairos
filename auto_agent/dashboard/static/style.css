@@ -2342,3 +2342,23 @@ body.terminal-open .main-content {
 .sb-layer-vec { color: #60a5fa; font-size: 9px; text-decoration: none; }
 .sb-layer-vids { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
 .sb-layer-vid { font-size: 10px; color: #34d399; text-decoration: none; }
+
+/* ── 씬 고르기 + 일괄 실행 ───────────────────────────── */
+.sb-card { position: relative; }
+.sb-pick {
+  position: absolute; top: 8px; left: 8px; z-index: 5;
+  width: 16px; height: 16px; cursor: pointer; accent-color: #a78bfa;
+}
+#sb-batchbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; margin-bottom: 10px;
+  background: rgba(167,139,250,.12); border: 1px solid rgba(167,139,250,.3);
+  border-radius: 6px; font-size: 12px;
+}
+#sb-batchbar button {
+  font-size: 11px; padding: 4px 10px; border-radius: 4px; cursor: pointer;
+  background: #a78bfa; border: none; color: #17171a;
+}
+#sb-batchbar button.ghost { background: transparent; border: 1px solid #55555c; color: #b9b9b9; }
+#sb-split-state { color: #9a9a9a; margin-left: auto; }

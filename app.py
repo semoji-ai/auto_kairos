@@ -146,6 +146,64 @@ async def serve_layer(name: str):
     return JSONResponse({"detail": "Not Found"}, status_code=404)
 
 
+@app.post("/api/p/{project_ref}/layers/split")
+async def split_layers(project_ref: str, request: Request):
+    """체크한 씬들을 레이어로 가른다.
+
+    롱폼은 이미지 검수가 끝난 뒤에 가르는 것이 맞다 — 이미지를 다시 뽑으면
+    가른 것이 통째로 버려진다. 그래서 씬을 골라 한꺼번에 돌리는 형태다.
+
+    한 씬에 몇 분이 걸리고 fal 비용이 드는 일이라 순차로 돌린다.
+    """
+    import subprocess as _sp
+    import threading as _th
+
+    pm = get_pm()
+    project, _ = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    body = await request.json()
+    scenes = [int(x) for x in (body.get("scenes") or [])]
+    if not scenes:
+        return JSONResponse({"error": "고른 씬이 없습니다"}, status_code=422)
+
+    slug = project.get("slug") or ""
+    ep = slug.rsplit("_", 1)[-1].upper() if "_ep" in slug else ""
+    if not ep:
+        return JSONResponse({"error": f"편 번호를 알 수 없습니다: {slug}"}, status_code=422)
+
+    root = get_package_dir().parent
+    log = root / "_imggen" / f"{ep}_split.log"
+
+    def run() -> None:
+        with log.open("w", encoding="utf-8") as f:
+            for n in scenes:
+                f.write(f"=== 씬 {n} 시작\n"); f.flush()
+                _sp.run([str(root / ".venv/bin/python"), "scripts/animate_scene.py", ep, str(n)],
+                        cwd=root, stdout=f, stderr=_sp.STDOUT, stdin=_sp.DEVNULL)
+                f.write(f"=== 씬 {n} 끝\n"); f.flush()
+
+    _th.Thread(target=run, name=f"split-{ep}", daemon=True).start()
+    return {"started": scenes, "log": f"/api/p/{project_ref}/layers/split/log"}
+
+
+@app.get("/api/p/{project_ref}/layers/split/log")
+async def split_log(project_ref: str):
+    pm = get_pm()
+    project, _ = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    slug = project.get("slug") or ""
+    ep = slug.rsplit("_", 1)[-1].upper() if "_ep" in slug else ""
+    f = get_package_dir().parent / "_imggen" / f"{ep}_split.log"
+    if not f.exists():
+        return {"lines": [], "running": False}
+    lines = f.read_text(encoding="utf-8", errors="replace").splitlines()
+    started = sum(1 for x in lines if x.startswith("=== 씬") and x.endswith("시작"))
+    done = sum(1 for x in lines if x.startswith("=== 씬") and x.endswith("끝"))
+    return {"lines": lines[-40:], "running": started > done, "done": done, "started": started}
+
+
 @app.get("/api/p/{project_ref}/layers/{scene_num}")
 async def scene_layers(project_ref: str, scene_num: int):
     """이 씬에 분리된 레이어가 있으면 목록을 낸다.
