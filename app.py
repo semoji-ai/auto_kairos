@@ -254,6 +254,24 @@ async def assistant_log(project_ref: str):
     return {"lines": lines, "running": not done}
 
 
+@app.post("/api/client-error")
+async def client_error(request: Request):
+    """화면에서 난 오류를 서버 로그로 넘긴다.
+
+    데스크톱 앱에는 개발자 도구가 없다. 화면이 조용히 비어 있을 때 무엇이
+    터졌는지 알 길이 없어, 캐릭터 패널이 「로딩 중」에서 멈춘 것을 정적
+    분석으로 쫓아야 했다. 이제는 그냥 로그를 보면 된다.
+    """
+    try:
+        b = await request.json()
+    except Exception:
+        b = {}
+    print(f"[client] {b.get('where', '')} {b.get('message', '')} "
+          f"@ {b.get('source', '')}:{b.get('line', '')}\n{b.get('stack', '')[:800]}",
+          flush=True)
+    return {"ok": True}
+
+
 @app.get("/api/p/{project_ref}/health")
 async def project_health(project_ref: str):
     """진행 상태 · 다음 할 일 · 평가 · 수상한 것."""

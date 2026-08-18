@@ -27,18 +27,22 @@
       <a href="/api/projects" class="sidebar-link">API</a>
     </nav>
     {% endblock %}
-    <!-- Agent Messenger (사이드바 하단 — 카톡 스타일) -->
-    <div class="sidebar-messenger" id="sidebar-messenger">
+    {# Agent Chat 자리에 PD 비서를 둔다.
+       에이전트 대화는 화면에서 볼 일이 없다 — 실행은 백그라운드에서 돌고
+       결과는 파일로 남는다. 그 자리에 실제로 쓰는 것을 놓는다.
+       파이프라인 알림 두 건은 그대로 남아 있고 산출물에는 영향이 없다. #}
+    <div class="sidebar-pd" id="sidebar-pd">
       <div class="sm-header">
-        <span onclick="toggleMessenger()" style="cursor:pointer;flex:1">💬 Agent Chat <span id="sm-count" class="sm-count" style="display:none">0</span></span>
-        <span class="sm-font-controls">
-          <button onclick="smFontSize(-1)" title="글자 작게">A-</button>
-          <button onclick="smFontSize(1)" title="글자 크게">A+</button>
-        </span>
-        <span id="sm-toggle" class="sm-toggle" onclick="toggleMessenger()" style="cursor:pointer">&#9650;</span>
+        <span style="flex:1">◈ PD 비서</span>
+        <span id="pd-toggle" class="sm-toggle" onclick="togglePd()" style="cursor:pointer">&#9650;</span>
       </div>
-      <div class="sm-body" id="sm-body">
-        <div id="sm-messages" class="sm-messages"></div>
+      <div class="sm-body" id="pd-body">
+        <div id="pd-out-side" class="pd-side-out"></div>
+        <div class="pd-side-row">
+          <input id="pd-input-side" type="text" placeholder="무엇을 할까요"
+                 onkeydown="if(event.key==='Enter') pdSideAsk()">
+          <button type="button" onclick="pdSideAsk()">▶</button>
+        </div>
       </div>
     </div>
 
@@ -103,6 +107,27 @@
   </style>
 
   <script>
+  /* 화면 오류를 서버로 보낸다 — 앱에는 개발자 도구가 없다 */
+  (function () {
+    function send(where, message, source, line, stack) {
+      try {
+        fetch('/api/client-error', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ where: where, message: String(message),
+                                 source: source || location.pathname,
+                                 line: line || 0, stack: stack || '' })
+        });
+      } catch (e) { /* 오류 보고가 또 터지면 조용히 넘어간다 */ }
+    }
+    window.addEventListener('error', function (e) {
+      send('error', e.message, e.filename, e.lineno, e.error && e.error.stack);
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      var r = e.reason || {};
+      send('promise', r.message || r, '', 0, r.stack);
+    });
+  })();
+
   // 메신저 폰트 크기 조절
   var smFontLevel = parseInt(localStorage.getItem('smFontLevel') || '0');
   var SM_SIZES = [8, 9, 10, 11, 12, 13, 14, 16];
@@ -142,115 +167,81 @@
     if (saved) document.documentElement.style.setProperty('--sidebar-w', saved);
   })();
 
-  // Agent Messenger — 사이드바 미니 패널
-  (function() {
-    var body = document.getElementById('sm-body');
-    var msgs = document.getElementById('sm-messages');
-    var countEl = document.getElementById('sm-count');
-    var toggleEl = document.getElementById('sm-toggle');
-    var es = null;
-    var unread = 0;
-    var isCollapsed = false;
-
-    // 프로젝트 slug 감지 (프로젝트 페이지면 slug, 아니면 빈 문자열=전체)
-    var projectSlug = (function() {
+  /* PD 비서 — 사이드바.
+     여기 있던 Agent Chat은 걷어냈다. 에이전트 대화를 실시간으로 볼 일이
+     없다 — 실행은 백그라운드에서 돌고 결과는 파일로 남으며, 어디까지 됐는지는
+     대시보드가 세어 보여 준다. 상시 SSE 연결도 함께 사라진다. */
+  (function () {
+    var box = document.getElementById('sidebar-pd');
+    if (!box) return;
+    var slug = (function () {
       var m = window.location.pathname.match(/^\/p\/([^/]+)/);
       return m ? decodeURIComponent(m[1]) : '';
     })();
+    if (!slug) { box.style.display = 'none'; return; }   // 프로젝트 안에서만
 
-    window.toggleMessenger = function() {
-      isCollapsed = !isCollapsed;
-      body.classList.toggle('collapsed', isCollapsed);
-      toggleEl.classList.toggle('collapsed', isCollapsed);
-      if (!isCollapsed) { unread = 0; countEl.style.display = 'none'; }
+    var body = document.getElementById('pd-body');
+    var toggleEl = document.getElementById('pd-toggle');
+    var collapsed = false;
+    window.togglePd = function () {
+      collapsed = !collapsed;
+      body.classList.toggle('collapsed', collapsed);
+      toggleEl.classList.toggle('collapsed', collapsed);
     };
 
-    var AGENTS = {
-      'director':        { emoji: '🎬', nick: '봉감독',   cls: 'director' },
-      'research':        { emoji: '🔍', nick: '홍탐정',   cls: 'researcher' },
-      'explorer':        { emoji: '🗺️', nick: '탐정보조', cls: 'researcher' },
-      'script-director': { emoji: '✍️', nick: '한작가',   cls: 'writer' },
-      'script':          { emoji: '✍️', nick: '한작가',   cls: 'writer' },
-      'data-mapper':     { emoji: '📊', nick: '황데이터', cls: 'builder' },
-      'fact':            { emoji: '🔬', nick: '백팩트',   cls: 'reviewer' },
-      'assembly':        { emoji: '🎨', nick: '조피디',   cls: 'composer' },
-      'preflight':       { emoji: '⚙️', nick: '카이로스', cls: 'system' },
-      'environment':     { emoji: '⚙️', nick: '카이로스', cls: 'system' },
-      'system':          { emoji: '🤖', nick: '시스템',   cls: 'system' },
+    var plan = null;
+    var out = document.getElementById('pd-out-side');
+
+    window.pdSideAsk = function () {
+      var el = document.getElementById('pd-input-side');
+      var text = (el.value || '').trim();
+      if (!text) return;
+      out.innerHTML = '<div class="pd-side-wait">생각하는 중…</div>';
+      fetch('/api/p/' + encodeURIComponent(slug) + '/assistant', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.error) { out.innerHTML = '<div class="pd-side-wait">' + d.error + '</div>'; return; }
+          plan = d.plan || [];
+          var h = d.say ? '<div class="pd-side-say">' + esc(d.say) + '</div>' : '';
+          if (d.ask) h += '<div class="pd-side-ask">' + esc(d.ask) + '</div>';
+          plan.forEach(function (s) {
+            h += '<div class="pd-side-step">' + esc(s.label)
+              + (s.scenes && s.scenes.length ? ' <span>씬 ' + s.scenes.join(', ') + '</span>' : '')
+              + '</div>';
+          });
+          if (plan.length) h += '<button class="pd-side-go" onclick="pdSideRun()">이대로 진행</button>';
+          out.innerHTML = h;
+          el.value = '';
+        });
     };
-    var lastSideAgent = '';
-    var agentCounter = {};
 
-    function getProfile(agent) {
-      var a = (agent || '').toLowerCase();
-      for (var key in AGENTS) {
-        if (a.indexOf(key) >= 0) {
-          var p = Object.assign({}, AGENTS[key]);
-          // 에이전트명에 숫자/문자 접미사가 있을 때만 번호 표시 (Explorer-3, SubWriter-A 등)
-          var numMatch = (agent || '').match(/[-_](\d+|[A-Z])$/);
-          if (numMatch) {
-            p.nick = p.nick + numMatch[1];
-          }
-          return p;
-        }
-      }
-      return { emoji: '🤖', nick: agent || '???', cls: 'system' };
-    }
+    window.pdSideRun = function () {
+      if (!plan || !plan.length) return;
+      fetch('/api/p/' + encodeURIComponent(slug) + '/assistant/run', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: plan })
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.error) { out.innerHTML = '<div class="pd-side-wait">' + esc(d.error) + '</div>'; return; }
+          poll();
+        });
+    };
 
-    function addMsg(msg) {
-      var profile = getProfile(msg.agent);
-      var isFirst = (lastSideAgent !== msg.agent);
-      lastSideAgent = msg.agent;
-      var t = new Date(msg.timestamp * 1000);
-      var time = t.toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'});
-
-      var el = document.createElement('div');
-      var isDirector = (profile.cls === 'director');
-      el.className = 'sm-msg' + (isFirst ? ' first-msg' : '') + (isDirector ? ' is-director' : '');
-
-      var profileHtml = isFirst
-        ? '<div class="sm-profile">' + profile.emoji + '</div>'
-        : '<div class="sm-profile hide"></div>';
-
-      var nickHtml = isFirst
-        ? '<div class="sm-nick nick-' + profile.cls + '">' + esc(profile.nick) + '</div>'
-        : '';
-
-      el.innerHTML = profileHtml
-        + '<div class="sm-bubble-wrap">'
-        + nickHtml
-        + '<div class="sm-bubble level-' + (msg.level || 'info') + '">' + esc(msg.text) + '</div>'
-        + '<div class="sm-time">' + time + '</div>'
-        + '</div>';
-
-      msgs.appendChild(el);
-      while (msgs.children.length > 50) msgs.removeChild(msgs.firstChild);
-      body.scrollTop = body.scrollHeight;
-
-      if (isCollapsed) { unread++; countEl.textContent = unread; countEl.style.display = 'inline'; }
+    function poll() {
+      fetch('/api/p/' + encodeURIComponent(slug) + '/assistant/log')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var last = (d.lines || []).slice(-6).join('\n');
+          out.innerHTML = '<pre class="pd-side-log">' + esc(last) + '</pre>'
+            + (d.running ? '<div class="pd-side-wait">진행 중…</div>'
+                         : '<div class="pd-side-say">끝났습니다</div>');
+          if (d.running) setTimeout(poll, 5000);
+        });
     }
 
     function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-
-    function connect() {
-      var url = '/api/agent-messages/stream';
-      if (projectSlug) url += '?project=' + encodeURIComponent(projectSlug);
-      es = new EventSource(url);
-      es.onmessage = function(e) { try { addMsg(JSON.parse(e.data)); } catch(err) {} };
-      es.onerror = function() { es.close(); setTimeout(connect, 3000); };
-    }
-
-    // 프로젝트 페이지에서만 메신저 활성화
-    if (!projectSlug) {
-      document.getElementById('sidebar-messenger').style.display = 'none';
-    } else {
-      var histUrl = '/api/agent-messages/history?limit=30&project=' + encodeURIComponent(projectSlug);
-      fetch(histUrl)
-        .then(function(r) { return r.json(); })
-        .then(function(d) { (d.messages || []).forEach(addMsg); })
-        .catch(function() {});
-      connect();
-    }
   })();
   </script>
 
