@@ -2367,7 +2367,10 @@ body.terminal-open .main-content {
    아트스타일·캐릭터까지는 위에 붙여 두고 씬만 흐르게 한다.
    그래야 고른 씬에 거는 버튼이 화면에서 사라지지 않는다. */
 .sb-sticky-head {
-  position: sticky; top: 0; z-index: 30;
+  /* 탭 바(.content-tabs)가 이미 top:0에 붙어 있다. 0으로 두면 그 아래로
+     파고들어 탭 높이만큼 올라간 뒤에야 멈춘다 — 「살짝 올라가다 고정」이
+     그것이다. 탭 높이는 재서 --tabs-h 에 넣는다. */
+  position: sticky; top: var(--tabs-h, 44px); z-index: 30;
   background: var(--bg, #131316);
   padding-bottom: 8px;
   border-bottom: 1px solid #26262a;

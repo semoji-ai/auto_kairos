@@ -2420,6 +2420,20 @@ function sbPollSplit(slug) {
     });
 }
 
+
+/* 탭 바 높이를 재서 --tabs-h 에 넣는다. 고정 헤더가 그 아래에 붙는다.
+   숫자를 박아 두면 탭이 두 줄로 접힐 때 어긋난다. */
+(function () {
+  function measure() {
+    var nav = document.getElementById("content-tabs");
+    if (!nav) return;
+    document.documentElement.style.setProperty("--tabs-h", nav.offsetHeight + "px");
+  }
+  measure();
+  document.addEventListener("DOMContentLoaded", measure);
+  window.addEventListener("resize", measure);
+})();
+
 </script>
 
 {% else %}
