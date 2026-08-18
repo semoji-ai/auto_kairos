@@ -203,17 +203,23 @@ async def plan_layers_api(project_ref: str, request: Request):
         d.mkdir(parents=True, exist_ok=True)
         (d / "_planning").write_text("", encoding="utf-8")
 
+    def one(n: int) -> None:
+        d = _scene_dir(ep, n)
+        try:
+            with (d / "plan.log").open("w", encoding="utf-8") as f:
+                _sp.run([str(root / ".venv/bin/python"),
+                         "scripts/plan_scene_layers.py", ep, str(n)],
+                        cwd=root, stdout=f, stderr=_sp.STDOUT, stdin=_sp.DEVNULL)
+        finally:
+            (d / "_planning").unlink(missing_ok=True)
+
     def run() -> None:
-        for n in scenes:
-            d = _scene_dir(ep, n)
-            log = d / "plan.log"
-            try:
-                with log.open("w", encoding="utf-8") as f:
-                    _sp.run([str(root / ".venv/bin/python"),
-                             "scripts/plan_scene_layers.py", ep, str(n)],
-                            cwd=root, stdout=f, stderr=_sp.STDOUT, stdin=_sp.DEVNULL)
-            finally:
-                (d / "_planning").unlink(missing_ok=True)
+        # 훑기는 그림을 읽고 답하는 일이라 서로 기다릴 이유가 없다. 나란히
+        # 돌린다. 넷을 넘기면 모델 쪽에서 막히므로 그 선에서 멈춘다.
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=min(4, len(scenes))) as ex:
+            list(ex.map(one, scenes))
 
     _th.Thread(target=run, name=f"plan-{ep}", daemon=True).start()
     return {"started": scenes}

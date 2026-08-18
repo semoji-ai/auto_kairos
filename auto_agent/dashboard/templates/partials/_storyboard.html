@@ -9,8 +9,7 @@
 <div class="sb-sticky-head">
   <div id="sb-batchbar" hidden>
     <span id="sb-pick-count">0개 선택</span>
-    <button type="button" onclick="sbPlanPicked('{{ slug }}')">⌕ 층 분석</button>
-    <button type="button" onclick="sbSplitPicked('{{ slug }}')">⧉ 레이어 나누기</button>
+    <button type="button" onclick="sbLayerFlow('{{ slug }}')">⧉ 레이어 나누기</button>
     <button type="button" class="ghost" onclick="sbPickClear()">해제</button>
     <span id="sb-split-state"></span>
   </div>
@@ -2359,8 +2358,8 @@ function sbRenderLayerBox(slug, n, plan, sets) {
       + '<button type="button" onclick="sbSplitOne(\'' + slug + '\',' + n + ')">이 계획으로 나누기</button>'
       + '</div></div>';
   } else if (!(sets.sets || []).length) {
-    html += '<div class="sb-layer-empty">아직 훑지 않은 씬입니다. '
-      + '<button type="button" class="sb-mini" onclick="sbPlanOne(\'' + slug + '\',' + n + ')">⌕ 층 분석</button></div>';
+    html += '<div class="sb-layer-empty">아직 나누지 않은 씬입니다. '
+      + '<button type="button" class="sb-mini" onclick="sbLayerOne(\'' + slug + '\',' + n + ')">⧉ 이 씬 나누기</button></div>';
   }
 
   (sets.sets || []).forEach(function (s) {
@@ -2421,7 +2420,20 @@ function sbPlanSave(slug, n, then) {
     });
 }
 
-function sbPlanOne(slug, n) { sbPlanRun(slug, [n]); }
+/* 한 씬만 할 때도 같은 흐름(훑기 → 확인 → 분리)을 탄다 */
+function sbLayerOne(slug, n) {
+  var box = document.getElementById("sb-layers-" + n);
+  if (box) box.hidden = false;
+  fetch('/api/p/' + encodeURIComponent(slug) + '/layers/plan', {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scenes: [n] }),
+  }).then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.error) { alert(d.error); return; }
+      sbLoadLayers(slug, n);
+      sbWaitPlans(slug, [n]);
+    });
+}
 
 function sbSplitOne(slug, n) {
   sbPlanSave(slug, n, function () { sbSplitRun(slug, [n]); });
@@ -2456,24 +2468,6 @@ function sbPickClear() {
   sbPickChanged();
 }
 
-function sbPlanPicked(slug) {
-  var ns = sbPicked();
-  if (!ns.length) return;
-  sbPlanRun(slug, ns);
-}
-
-function sbPlanRun(slug, ns) {
-  fetch('/api/p/' + encodeURIComponent(slug) + '/layers/plan', {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scenes: ns }),
-  }).then(function (r) { return r.json(); })
-    .then(function (d) {
-      if (d.error) { alert(d.error); return; }
-      akToast(ns.length + "개 씬을 훑는 중입니다. 각 씬의 「⧉ 레이어」를 펼치면 진행이 보입니다.");
-      ns.forEach(function (n) { sbOpenLayers(slug, n); });
-    });
-}
-
 /* 진행이 보이도록 해당 씬의 레이어 칸을 열어 둔다 */
 function sbOpenLayers(slug, n) {
   var box = document.getElementById("sb-layers-" + n);
@@ -2484,13 +2478,62 @@ function sbOpenLayers(slug, n) {
   sbLoadLayers(slug, n);
 }
 
-function sbSplitPicked(slug) {
+/* 레이어 나누기 = 훑기 → 확인 → 분리. 한 버튼으로 들어가되 중간에 사람이 본다.
+   훑기는 나란히 돌리고(넷까지), 분리는 순차로 돈다 — 분리는 fal 호출과
+   렌더가 붙어 있어 한꺼번에 던지면 서로 느려진다. */
+function sbLayerFlow(slug) {
   var ns = sbPicked();
   if (!ns.length) return;
-  akConfirm(ns.length + "개 씬을 레이어로 나눕니다.\n\n"
-    + "씬 " + ns.join(", ") + "\n\n"
-    + "한 씬에 몇 분이 걸리고 순차로 돕니다. 이미지를 다시 뽑으면 나눈 것이 "
-    + "버려지니, 이미지 검수가 끝난 씬만 고르셨는지 확인해 주세요.",
+  var st = document.getElementById("sb-split-state");
+
+  // 이미 계획이 선 씬은 다시 훑지 않는다 — 손질해 둔 것이 버려진다
+  Promise.all(ns.map(function (n) {
+    return fetch('/api/p/' + encodeURIComponent(slug) + '/layers/plan/' + n)
+      .then(function (r) { return r.json(); })
+      .then(function (d) { return { n: n, status: d.status }; });
+  })).then(function (rows) {
+    var todo = rows.filter(function (r) { return r.status !== "ready"; })
+                   .map(function (r) { return r.n; });
+    ns.forEach(function (n) { sbOpenLayers(slug, n); });
+    if (!todo.length) { sbReviewGate(slug, ns); return; }
+    if (st) st.textContent = todo.length + "개 훑는 중";
+    fetch('/api/p/' + encodeURIComponent(slug) + '/layers/plan', {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scenes: todo }),
+    }).then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.error) { alert(d.error); return; }
+        sbWaitPlans(slug, ns);
+      });
+  });
+}
+
+/* 훑기가 다 끝날 때까지 기다렸다가 확인을 청한다 */
+function sbWaitPlans(slug, ns) {
+  var st = document.getElementById("sb-split-state");
+  Promise.all(ns.map(function (n) {
+    return fetch('/api/p/' + encodeURIComponent(slug) + '/layers/plan/' + n)
+      .then(function (r) { return r.json(); })
+      .then(function (d) { return { n: n, status: d.status, layers: d.layers || [] }; });
+  })).then(function (rows) {
+    var done = rows.filter(function (r) { return r.status === "ready" || r.status === "failed"; });
+    if (st) st.textContent = done.length + "/" + ns.length + " 훑음";
+    if (done.length < ns.length) { setTimeout(function () { sbWaitPlans(slug, ns); }, 4000); return; }
+    var ok = rows.filter(function (r) { return r.status === "ready"; });
+    var bad = rows.filter(function (r) { return r.status !== "ready"; });
+    if (bad.length && st) st.textContent = "훑기 실패 " + bad.length + "개 — 씬을 펼쳐 확인하세요";
+    if (!ok.length) return;
+    sbReviewGate(slug, ok.map(function (r) { return r.n; }), rows);
+  });
+}
+
+/* 확인 관문 — 층 목록을 보고 나서 나눈다. 잘못 정한 채 나누면 시간이 버려진다. */
+function sbReviewGate(slug, ns, rows) {
+  var lines = (rows || []).filter(function (r) { return r.status === "ready"; })
+    .map(function (r) { return "씬 " + r.n + " · " + r.layers.length + "층"; }).join("\n");
+  akConfirm(ns.length + "개 씬의 층 계획이 섰습니다.\n\n" + (lines || "")
+    + "\n\n각 씬을 펼치면 목록을 고칠 수 있습니다. 지금 나눌까요?\n"
+    + "한 씬에 몇 분이 걸리고 순차로 돕니다.",
     function () { sbSplitRun(slug, ns); });
 }
 
