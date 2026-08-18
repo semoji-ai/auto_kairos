@@ -59,7 +59,6 @@
       {% set _vk = scene.visual_kind or '' %}
       {# 자료 종류 전환 버튼 넷은 걷어냈다. 씬마다 무엇으로 보여줄지는 이미
          정해져 있고, 지도·차트를 새로 만들 일은 씬을 골라 위에서 일괄로 건다. #}
-      </div>
     </div>
 
     <!-- 우측: 원고 + 메타 -->
@@ -1778,6 +1777,7 @@ function updateSceneLayout(slug, sceneNum, layout) {
 <script>
 // ── 캐릭터 패널 ──
 (function() {
+
   // 다른 블록이 만든 전역 slug에 기대지 않는다. 그 블록이 한 번이라도
   // 터지면 여기까지 조용히 죽어 「로딩 중」에서 멈춘다.
   var slug = (typeof PROJECT_SLUG !== "undefined" && PROJECT_SLUG)
