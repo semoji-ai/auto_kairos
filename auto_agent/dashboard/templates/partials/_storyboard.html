@@ -2381,7 +2381,11 @@ function sbRenderLayerBox(slug, n, plan, sets) {
     }).join("");
     var rows = s.layers.map(function (L, i) {
       var kind = L.role === "person" ? "👤" : (L.role === "bg" ? "▨" : "▣");
-      var vec = L.svg ? '<a class="sb-layer-vec" href="' + L.svg + '" target="_blank">SVG</a>' : "";
+      var vec = L.svg
+        ? '<button type="button" class="sb-layer-vec" title="이 층을 벡터로 바꿔 본다"'
+          + ' onclick="sbLayerSwap(' + n + ',' + i + ',this)" data-png="' + L.png
+          + '" data-svg="' + L.svg + '">SVG</button>'
+        : "";
       return '<label class="sb-layer-row">'
         + '<input type="checkbox" checked onchange="sbLayerVis(' + n + ',' + i + ',this.checked)">'
         + '<span class="sb-layer-kind">' + kind + '</span>'
@@ -2389,8 +2393,12 @@ function sbRenderLayerBox(slug, n, plan, sets) {
         + '<span class="sb-layer-z">z' + (L.z != null ? L.z : i) + '</span>' + vec
         + '</label>';
     }).join("");
+    // 새 창 링크로 두면 앱에서는 아무 일도 안 일어난다 — Tauri 창이 새 창을
+    // 막는다. 여기서 바로 튼다.
     var vids = (s.videos || []).map(function (v) {
-      return '<a class="sb-layer-vid" href="' + v + '" target="_blank">▶ ' + v.split("/").pop() + '</a>';
+      return '<div class="sb-layer-vid-item">'
+        + '<video class="sb-layer-video" src="' + v + '" controls preload="metadata"></video>'
+        + '<div class="sb-layer-vid-name">' + v.split("/").pop() + '</div></div>';
     }).join("");
     html += '<div class="sb-layer-set">'
       + '<div class="sb-layer-head">' + s.id + ' · ' + s.layers.length + '층</div>'
@@ -2485,6 +2493,16 @@ function sbLayerOne(slug, n) {
 
 function sbSplitOne(slug, n) {
   sbPlanSave(slug, n, function () { sbSplitRun(slug, [n]); });
+}
+
+/* 층 하나를 벡터(SVG)로 바꿔 본다 — 확대해도 깨지지 않는지 눈으로 본다 */
+function sbLayerSwap(n, i, btn) {
+  var stage = document.getElementById("sb-layer-stage-" + n);
+  if (!stage) return;
+  var img = stage.querySelector('.sb-layer-img[data-i="' + i + '"]');
+  if (!img) return;
+  var on = btn.classList.toggle("on");
+  img.src = on ? btn.dataset.svg : btn.dataset.png;
 }
 
 function sbLayerVis(n, i, on) {

@@ -2471,3 +2471,14 @@ body.terminal-open .main-content {
 .sb-layer-toggle.done {
   background: rgba(52,211,153,.16); border-color: rgba(52,211,153,.45); color: #34d399;
 }
+
+/* 만들어진 영상은 패널 안에서 바로 튼다 (앱은 새 창을 막는다) */
+.sb-layer-vids { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.sb-layer-vid-item { width: 220px; }
+.sb-layer-video { width: 100%; border-radius: 4px; background: #000; display: block; }
+.sb-layer-vid-name { font-size: 10px; color: #8a8a8a; margin-top: 3px; }
+.sb-layer-vec {
+  font-size: 9px; padding: 1px 5px; border-radius: 3px; cursor: pointer;
+  background: transparent; border: 1px solid #3d4a63; color: #60a5fa;
+}
+.sb-layer-vec.on { background: #60a5fa; color: #12121a; }
