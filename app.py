@@ -174,6 +174,86 @@ def _scene_dir(ep: str, n: int) -> Path:
     return get_package_dir().parent / "_imggen" / f"{ep.lower()}_anim" / f"s{n:03d}"
 
 
+@app.post("/api/p/{project_ref}/assistant")
+async def assistant_plan(project_ref: str, request: Request):
+    """말로 시킨 것을 「할 일 목록」으로 바꾼다. 실행은 하지 않는다."""
+    from auto_agent.dashboard import health as health_mod, pd_assistant
+
+    pm = get_pm()
+    project, _ = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    body = await request.json()
+    text = (body.get("text") or "").strip()
+    if not text:
+        return JSONResponse({"error": "무엇을 할지 적어 주세요"}, status_code=422)
+    try:
+        h = health_mod.collect(project)
+    except Exception:
+        h = {}
+    return pd_assistant.plan(project, h, text)
+
+
+@app.post("/api/p/{project_ref}/assistant/run")
+async def assistant_run(project_ref: str, request: Request):
+    """승인한 할 일을 돌린다. 목록에 있는 동작만 돈다."""
+    import subprocess as _sp
+    import threading as _th
+
+    from auto_agent.dashboard import pd_assistant
+
+    pm = get_pm()
+    project, _ = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    ep = _ep_of(project)
+    if not ep:
+        return JSONResponse({"error": "편 번호를 알 수 없습니다"}, status_code=422)
+
+    body = await request.json()
+    steps = body.get("plan") or []
+    root = get_package_dir().parent
+    cmds: list = []
+    for s in steps:
+        c = pd_assistant.command(s.get("action"), ep,
+                                 [int(x) for x in (s.get("scenes") or [])])
+        if c:
+            cmds.extend(c)
+    if not cmds:
+        return JSONResponse({"error": "돌릴 수 있는 일이 없습니다"}, status_code=422)
+
+    log = root / "_imggen" / f"{ep}_pd.log"
+
+    def run() -> None:
+        with log.open("w", encoding="utf-8") as f:
+            for c in cmds:
+                f.write("=== " + " ".join(c[1:]) + "\n")
+                f.flush()
+                _sp.run(c, cwd=root, stdout=f, stderr=_sp.STDOUT, stdin=_sp.DEVNULL)
+        f_done = root / "_imggen" / f"{ep}_pd.done"
+        f_done.write_text("", encoding="utf-8")
+
+    (root / "_imggen" / f"{ep}_pd.done").unlink(missing_ok=True)
+    _th.Thread(target=run, name=f"pd-{ep}", daemon=True).start()
+    return {"started": len(cmds)}
+
+
+@app.get("/api/p/{project_ref}/assistant/log")
+async def assistant_log(project_ref: str):
+    pm = get_pm()
+    project, _ = resolve_project_ref(pm, project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    ep = _ep_of(project)
+    root = get_package_dir().parent
+    f = root / "_imggen" / f"{ep}_pd.log"
+    if not f.exists():
+        return {"lines": [], "running": False}
+    done = (root / "_imggen" / f"{ep}_pd.done").exists()
+    lines = f.read_text(encoding="utf-8", errors="replace").splitlines()[-30:]
+    return {"lines": lines, "running": not done}
+
+
 @app.get("/api/p/{project_ref}/health")
 async def project_health(project_ref: str):
     """진행 상태 · 다음 할 일 · 평가 · 수상한 것."""
