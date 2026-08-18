@@ -958,7 +958,11 @@ function sbDoSearch(sn) {
 }
 
 function sbSelectCandidate(sn, url) {
-  if (!confirm('이 이미지로 교체하시겠습니까?')) return;
+  // 앱에서는 기본 confirm이 막혀 있어 눌러도 아무 일이 없었다
+  akConfirm('이 이미지로 교체하시겠습니까?', function () { sbSelectCandidateRun(sn, url); });
+}
+
+function sbSelectCandidateRun(sn, url) {
   fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sn + '/select-image', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({url: url})
@@ -2393,10 +2397,14 @@ function sbPickClear() {
 function sbSplitPicked(slug) {
   var ns = sbPicked();
   if (!ns.length) return;
-  if (!confirm(ns.length + "개 씬을 레이어로 나눕니다.\n\n"
-      + "씬 " + ns.join(", ") + "\n\n"
-      + "한 씬에 몇 분이 걸리고 순차로 돕니다. 이미지를 다시 뽑으면 나눈 것이 "
-      + "버려지니, 이미지 검수가 끝난 씬만 고르셨는지 확인해 주세요.")) return;
+  akConfirm(ns.length + "개 씬을 레이어로 나눕니다.\n\n"
+    + "씬 " + ns.join(", ") + "\n\n"
+    + "한 씬에 몇 분이 걸리고 순차로 돕니다. 이미지를 다시 뽑으면 나눈 것이 "
+    + "버려지니, 이미지 검수가 끝난 씬만 고르셨는지 확인해 주세요.",
+    function () { sbSplitRun(slug, ns); });
+}
+
+function sbSplitRun(slug, ns) {
   var st = document.getElementById("sb-split-state");
   if (st) st.textContent = "시작하는 중…";
   fetch('/api/p/' + encodeURIComponent(slug) + '/layers/split', {

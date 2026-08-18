@@ -2383,3 +2383,33 @@ body.terminal-open .main-content {
   flex-wrap: nowrap;
 }
 #sb-batchbar { position: static; margin-bottom: 8px; }
+
+/* ── 토스트 · 확인 창 (앱에서 기본 대화상자가 막혀 있어 대신 쓴다) ── */
+#ak-toasts {
+  position: fixed; right: 16px; bottom: 16px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px; max-width: 380px;
+}
+.ak-toast {
+  background: #26262b; color: #e6e6e6; border: 1px solid #3a3a40;
+  border-left: 3px solid #a78bfa; border-radius: 6px;
+  padding: 10px 14px; font-size: 12px; line-height: 1.6;
+  box-shadow: 0 8px 20px -8px rgba(0,0,0,.9); white-space: pre-wrap;
+  animation: akToastIn .18s ease;
+}
+.ak-toast.out { opacity: 0; transition: opacity .4s; }
+@keyframes akToastIn { from { transform: translateY(8px); opacity: 0 } }
+.ak-modal-back {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center;
+}
+.ak-modal {
+  background: #1c1c20; border: 1px solid #35353c; border-radius: 10px;
+  padding: 20px; max-width: 460px; box-shadow: 0 20px 50px -20px #000;
+}
+.ak-modal p { font-size: 13px; line-height: 1.7; color: #dcdcdc; white-space: pre-wrap; }
+.ak-modal-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.ak-modal-row button {
+  font-size: 12px; padding: 6px 16px; border-radius: 5px; cursor: pointer;
+  background: #a78bfa; border: none; color: #17171a;
+}
+.ak-modal-row button.ghost { background: transparent; border: 1px solid #4a4a52; color: #c4c4c4; }

@@ -332,7 +332,10 @@
   };
 
   window.selectCandidate = function(sceneNum, url) {
-    if (!confirm('이 이미지로 교체할까요?')) return;
+    akConfirm('이 이미지로 교체할까요?', function () { _selectCandidateRun(sceneNum, url); });
+  };
+
+  function _selectCandidateRun(sceneNum, url) {
     fetch('/api/p/' + encodeURIComponent(slug) + '/editor/scenes/' + sceneNum + '/select-image', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},

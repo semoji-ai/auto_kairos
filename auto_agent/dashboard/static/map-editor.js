@@ -143,11 +143,11 @@
               // 맵 이동
               if (leafletMap) leafletMap.flyTo({ center: [lng, lat], zoom: 10, duration: 1000 });
               // 마커 추가 확인
-              if (confirm(r.display_name.split(',')[0] + '에 마커를 추가하시겠습니까?')) {
+              akConfirm(r.display_name.split(',')[0] + '에 마커를 추가하시겠습니까?', function () {
                 ms.markers.push({ coordinates: [Math.round(lng*10000)/10000, Math.round(lat*10000)/10000], label: r.display_name.split(',')[0], style: 'pin', appearAtFrame: 0 });
                 renderMarkers();
                 syncMap();
-              }
+              });
             });
             item.addEventListener('mouseenter', function() { this.style.background = 'rgba(245,158,11,0.1)'; });
             item.addEventListener('mouseleave', function() { this.style.background = ''; });

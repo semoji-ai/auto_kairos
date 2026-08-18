@@ -602,7 +602,10 @@
 
   // ── 삭제 ──
   window.deletePreset = function(id) {
-    if (!confirm('프리셋을 삭제하시겠습니까?')) return;
+    akConfirm('프리셋을 삭제하시겠습니까?', function () { _deletePresetRun(id); });
+  };
+
+  function _deletePresetRun(id) {
     fetch('/api/design-presets/' + id, { method: 'DELETE' })
       .then(function(r) { return r.json(); })
       .then(function() {
@@ -616,7 +619,13 @@
   // ── 프로젝트에 적용 ──
   window.applyPreset = function(id) {
     if (!id) { _showStatus('먼저 프리셋을 저장하세요', true); return; }
-    var applyAll = confirm('모든 씬에 강제 적용하시겠습니까?\n\n확인: 모든 씬 덮어쓰기\n취소: 빈 값만 채우기');
+    // 「확인/취소」에 서로 다른 뜻을 담던 자리다. 앱에서 confirm이 죽으면
+    // 언제나 「빈 값만」으로 흘러가 버리므로 물음을 나눈다.
+    akConfirm('모든 씬에 덮어씁니다.\n\n취소하면 빈 값만 채웁니다.',
+      function () { _applyPresetRun(true); });
+  };
+
+  function _applyPresetRun(applyAll) {
     fetch('/api/p/' + SLUG + '/apply-preset', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
