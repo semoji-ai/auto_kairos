@@ -2450,3 +2450,20 @@ body.terminal-open .main-content {
   background: rgba(167,139,250,.16); border: 1px solid rgba(167,139,250,.35); color: #c4b5fd;
 }
 .sb-plan-row button:last-child { background: #a78bfa; border-color: #a78bfa; color: #17171a; }
+
+/* 씬 카드 위 진행 표시 — 레이어 칸을 접어 둬도 도는 게 보인다 */
+.sb-preview-wrap { position: relative; }
+.sb-work-tag {
+  position: absolute; left: 8px; bottom: 8px; z-index: 6;
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 12px; font-size: 11px;
+  background: rgba(23,23,26,.88); color: #c4b5fd;
+  border: 1px solid rgba(167,139,250,.4);
+}
+.sb-spin {
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 2px solid rgba(167,139,250,.3); border-top-color: #a78bfa;
+  animation: sbSpin .8s linear infinite;
+}
+@keyframes sbSpin { to { transform: rotate(360deg) } }
+.sb-layer-empty.sb-fail { color: #f87171; }

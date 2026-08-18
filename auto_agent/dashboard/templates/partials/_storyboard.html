@@ -2339,6 +2339,10 @@ function sbRenderLayerBox(slug, n, plan, sets) {
   } else if (plan.status === "splitting") {
     html += '<div class="sb-scan"><div class="sb-scan-bar"></div>'
       + '<span>레이어로 나누는 중…</span></div>';
+  } else if (plan.status === "split_failed") {
+    html += '<div class="sb-layer-empty sb-fail">나누기 실패<br><code>'
+      + (plan.message || "").replace(/</g, "&lt;") + '</code><br>'
+      + '<button type="button" class="sb-mini" onclick="sbSplitRun(\'' + slug + '\',[' + n + '])">다시 시도</button></div>';
   } else if (plan.status === "failed") {
     html += '<div class="sb-layer-empty">층 분석 실패<br><code>'
       + (plan.message || "").replace(/</g, "&lt;") + '</code></div>';
@@ -2354,6 +2358,7 @@ function sbRenderLayerBox(slug, n, plan, sets) {
       + lines.replace(/</g, "&lt;") + '</textarea>'
       + (plan.note ? '<div class="sb-plan-note">' + plan.note.replace(/</g, "&lt;") + '</div>' : "")
       + '<div class="sb-plan-row">'
+      + '<button type="button" onclick="sbRePlan(\'' + slug + '\',' + n + ')">다시 훑기</button>'
       + '<button type="button" onclick="sbPlanSave(\'' + slug + '\',' + n + ')">계획 저장</button>'
       + '<button type="button" onclick="sbSplitOne(\'' + slug + '\',' + n + ')">이 계획으로 나누기</button>'
       + '</div></div>';
@@ -2395,6 +2400,24 @@ function sbRenderLayerBox(slug, n, plan, sets) {
   return html;
 }
 
+/* 씬 카드 자체에 상태를 새긴다 — 레이어 칸을 접어 둬도 도는 게 보여야 한다 */
+function sbMarkCard(n, status) {
+  var pick = document.querySelector('.sb-pick[data-scene="' + n + '"]');
+  var card = pick ? pick.closest(".sb-card") : null;
+  if (!card) return;
+  var wrap = card.querySelector(".sb-preview-wrap");
+  var tag = card.querySelector(".sb-work-tag");
+  var label = status === "running" ? "층 훑는 중"
+            : status === "splitting" ? "레이어 나누는 중" : "";
+  if (!label) { if (tag) tag.remove(); return; }
+  if (!tag) {
+    tag = document.createElement("div");
+    tag.className = "sb-work-tag";
+    (wrap || card).appendChild(tag);
+  }
+  tag.innerHTML = '<span class="sb-spin"></span>' + label;
+}
+
 function sbPlanText(n) {
   var ta = document.getElementById("sb-plan-" + n);
   if (!ta) return null;
@@ -2417,6 +2440,18 @@ function sbPlanSave(slug, n, then) {
       if (d.error) { alert(d.error); return; }
       akToast(n + "번 씬 · 층 " + d.saved + "개로 저장했습니다");
       if (then) then();
+    });
+}
+
+/* 계획이 마음에 안 들 때 — 옛 계획을 버리고 다시 훑는다 */
+function sbRePlan(slug, n) {
+  fetch('/api/p/' + encodeURIComponent(slug) + '/layers/plan', {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scenes: [n], force: true }),
+  }).then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.error) { alert(d.error); return; }
+      sbLoadLayers(slug, n);
     });
 }
 

@@ -198,9 +198,12 @@ async def plan_layers_api(project_ref: str, request: Request):
         return JSONResponse({"error": "고른 씬이 없습니다"}, status_code=422)
 
     root = get_package_dir().parent
+    force = bool(body.get("force"))
     for n in scenes:                     # 훑는 중임을 씬마다 표시한다
         d = _scene_dir(ep, n)
         d.mkdir(parents=True, exist_ok=True)
+        if force:                        # 다시 훑기 — 옛 계획을 비운다
+            (d / "layer_plan.json").unlink(missing_ok=True)
         (d / "_planning").write_text("", encoding="utf-8")
 
     def one(n: int) -> None:
@@ -239,6 +242,9 @@ async def get_layer_plan(project_ref: str, scene_num: int):
         return {"status": "running"}
     if (d / "_splitting").exists():
         return {"status": "splitting"}
+    err = d / "split_error.txt"
+    if err.is_file() and not (d / "layers.json").is_file():
+        return {"status": "split_failed", "message": err.read_text(encoding="utf-8")}
     f = d / "layer_plan.json"
     if f.is_file():
         try:
@@ -298,7 +304,7 @@ async def split_layers(project_ref: str, request: Request):
         return JSONResponse({"error": "고른 씬이 없습니다"}, status_code=422)
 
     slug = project.get("slug") or ""
-    ep = slug.rsplit("_", 1)[-1].upper() if "_ep" in slug else ""
+    ep = _ep_of(project)
     if not ep:
         return JSONResponse({"error": f"편 번호를 알 수 없습니다: {slug}"}, status_code=422)
 
@@ -313,9 +319,17 @@ async def split_layers(project_ref: str, request: Request):
                 (d / "_splitting").write_text("", encoding="utf-8")   # 씬마다 진행 표시
                 f.write(f"=== 씬 {n} 시작\n"); f.flush()
                 try:
-                    _sp.run([str(root / ".venv/bin/python"), "scripts/animate_scene.py",
-                             ep, str(n)],
-                            cwd=root, stdout=f, stderr=_sp.STDOUT, stdin=_sp.DEVNULL)
+                    r = _sp.run([str(root / ".venv/bin/python"), "scripts/animate_scene.py",
+                                 ep, str(n)],
+                                cwd=root, stdout=f, stderr=_sp.STDOUT, stdin=_sp.DEVNULL)
+                    # 실패를 씬에 남긴다 — 로그 파일을 열어 봐야만 알 수 있으면
+                    # 화면에서는 「그냥 아무 일도 없는 것」과 구별되지 않는다.
+                    if r.returncode != 0:
+                        (d / "split_error.txt").write_text(
+                            f"분리에 실패했습니다 (코드 {r.returncode})\n"
+                            f"자세한 내용: _imggen/{ep}_split.log", encoding="utf-8")
+                    else:
+                        (d / "split_error.txt").unlink(missing_ok=True)
                 finally:
                     (d / "_splitting").unlink(missing_ok=True)
                 f.write(f"=== 씬 {n} 끝\n"); f.flush()
@@ -330,8 +344,7 @@ async def split_log(project_ref: str):
     project, _ = resolve_project_ref(pm, project_ref)
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
-    slug = project.get("slug") or ""
-    ep = slug.rsplit("_", 1)[-1].upper() if "_ep" in slug else ""
+    ep = _ep_of(project)
     f = get_package_dir().parent / "_imggen" / f"{ep}_split.log"
     if not f.exists():
         return {"lines": [], "running": False}
@@ -355,11 +368,9 @@ async def scene_layers(project_ref: str, scene_num: int):
     if not project:
         return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
 
-    # 슬러그에서 편 번호를 얻는다 (lg_brand_encyclopedia_ep06b → ep06b)
-    slug = project.get("slug") or ""
-    ep = slug.rsplit("_", 1)[-1] if "_ep" in slug else ""
+    ep = _ep_of(project)
     sets = []
-    for d in sorted(_LAYER_ROOT.glob(f"{ep}_anim/s{scene_num:03d}*")):
+    for d in sorted(_LAYER_ROOT.glob(f"{ep.lower()}_anim/s{scene_num:03d}*")):
         meta_f = d / "layers.json"
         if not meta_f.is_file():
             continue
