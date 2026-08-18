@@ -34,11 +34,9 @@
 
 <div class="sb-main-layout">
 <div class="sb-main-content">
+{# 챕터 필터(All·Ch1·Ch2…)는 걷어냈다. 씬은 어차피 순서대로 읽는 것이고,
+   특정 챕터만 보려고 누른 적이 없다. 미리보기 크기 조절만 남긴다. #}
 <div class="storyboard-filter">
-  <button class="btn btn-accent chapter-btn active" onclick="filterStoryboard(0, this)">All</button>
-  {% for ch in chapters_list %}
-  <button class="btn chapter-btn" onclick="filterStoryboard({{ ch }}, this)">Ch{{ ch }}</button>
-  {% endfor %}
   <span class="sb-size-control">
     <label>Size</label>
     <input type="range" min="200" max="720" value="480" step="20" oninput="resizePreview(this.value)">
