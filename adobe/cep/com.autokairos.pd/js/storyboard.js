@@ -168,6 +168,13 @@ function _previewHTML(s, dir) {
   return '<div class="pv" style="background:' + BG + '">' + inner + subEl + "</div>";
 }
 
+// 「시트 불러오기」 버튼이 화면에만 있고 아무 데도 묶여 있지 않았다.
+// 눌러도 반응이 없어 패널이 죽은 것처럼 보였다.
+document.addEventListener("DOMContentLoaded", function () {
+  var b = document.getElementById("btnLoadSheet");
+  if (b) b.addEventListener("click", function () { loadSheet(); });
+});
+
 function loadSheet() {
   if (!SELECTED_PROJECT) { $("sheet").textContent = "프로젝트를 먼저 선택하세요."; return; }
   $("sheet").textContent = "불러오는 중...";

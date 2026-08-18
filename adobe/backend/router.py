@@ -16,6 +16,29 @@ VERSION = "0.2.0-m2"
 SKILLS_DIR = Path(__file__).resolve().parents[1] / "skills"
 
 
+def _find_scene(data: dict, sn) -> dict | None:
+    """씬 번호로 씬을 찾는다. **형을 맞춰서** 찾는다.
+
+    패널이 씬 번호를 문자열로 보내는 자리가 여럿 있다(DOM 속성에서 바로
+    꺼내 쓰는 곳). 파이썬에서 "41" == 41 은 거짓이라, 멀쩡한 씬을 눌러도
+    「씬 없음」이 떴다. 프런트를 한 군데씩 고치는 것보다 받는 쪽에서
+    맞추는 편이 확실하다 — 새 호출이 생겨도 같은 일이 안 난다.
+    """
+    if sn is None:
+        return None
+    try:
+        key = int(sn)
+    except (TypeError, ValueError):
+        return None
+    for s in data.get("scenes") or []:
+        try:
+            if int(s.get("sceneNumber")) == key:
+                return s
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
 def _codex_status() -> str:
     if shutil.which("codex") is None:
         return "not_installed"
@@ -277,7 +300,7 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
             run_async(jobs, jid, _do)
             return 200, {"job_id": jid, "status": "running"}
         sn = b.get("sceneNumber")
-        sc = next((s for s in data["scenes"] if s.get("sceneNumber") == sn), None)
+        sc = _find_scene(data, sn)
         if not sc:
             return 404, {"error": "씬 없음"}
         text = b.get("text") if (b.get("text") or "").strip() else scenes.tts_text(sc)
@@ -377,7 +400,7 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
             return 404, {"error": "프로젝트 없음"}
         sn = b.get("sceneNumber")
         data = scenes.load_scenes(proj_dir)
-        scene = next((s for s in data["scenes"] if s.get("sceneNumber") == sn), None)
+        scene = _find_scene(data, sn)
         if not scene:
             return 404, {"error": f"scene {sn} 없음"}
         sid = scene.get("sceneId")
@@ -466,7 +489,7 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
             return 200, {"error": "chartagent 미설치 — CHARTAGENT_ROOT 환경변수 설정 필요"}
         sn = b.get("sceneNumber")
         data = scenes.load_scenes(proj_dir)
-        scene = next((s for s in data["scenes"] if s.get("sceneNumber") == sn), None)
+        scene = _find_scene(data, sn)
         if not scene:
             return 404, {"error": f"scene {sn} 없음"}
         try:
@@ -491,7 +514,7 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         if not proj_dir.is_dir():
             return 404, {"error": "프로젝트 없음"}
         data = scenes.load_scenes(proj_dir)
-        sc = next((s for s in data["scenes"] if s.get("sceneNumber") == b.get("sceneNumber")), None)
+        sc = _find_scene(data, b.get("sceneNumber"))
         if not sc:
             return 404, {"error": "씬 없음"}
         if not sc.get("_image"):
@@ -516,7 +539,7 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         if not proj_dir.is_dir():
             return 404, {"error": "프로젝트 없음"}
         data = scenes.load_scenes(proj_dir)
-        sc = next((s for s in data["scenes"] if s.get("sceneNumber") == b.get("sceneNumber")), None)
+        sc = _find_scene(data, b.get("sceneNumber"))
         if not sc:
             return 404, {"error": "씬 없음"}
         if not sc.get("_image"):
@@ -556,7 +579,7 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         if not proj_dir.is_dir():
             return 404, {"error": "프로젝트 없음"}
         data = scenes.load_scenes(proj_dir)
-        sc = next((s for s in data["scenes"] if s.get("sceneNumber") == b.get("sceneNumber")), None)
+        sc = _find_scene(data, b.get("sceneNumber"))
         if not sc:
             return 404, {"error": "씬 없음"}
         if not sc.get("_image"):
@@ -589,7 +612,7 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         if not proj_dir.is_dir():
             return 404, {"error": "프로젝트 없음"}
         data = scenes.load_scenes(proj_dir)
-        sc = next((s for s in data["scenes"] if s.get("sceneNumber") == b.get("sceneNumber")), None)
+        sc = _find_scene(data, b.get("sceneNumber"))
         if not sc:
             return 404, {"error": "씬 없음"}
         layer = (b.get("layer") or "").strip()
@@ -609,7 +632,7 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         if not proj_dir.is_dir():
             return 404, {"error": "프로젝트 없음"}
         data = scenes.load_scenes(proj_dir)
-        sc = next((s for s in data["scenes"] if s.get("sceneNumber") == b.get("sceneNumber")), None)
+        sc = _find_scene(data, b.get("sceneNumber"))
         if not sc:
             return 404, {"error": "씬 없음"}
         stems = [s for s in (b.get("layers") or []) if s]
