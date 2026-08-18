@@ -87,6 +87,19 @@ def foot_of(im: Image.Image) -> tuple[int, int]:
     return ((xs[0] + xs[-1]) // 2 if xs else (x0 + x1) // 2), y1
 
 
+def _load_env() -> None:
+    """저장소 .env 를 환경변수로 올린다 (이미 있는 값은 건드리지 않는다)."""
+    f = Path(__file__).resolve().parents[1] / ".env"
+    if not f.exists():
+        return
+    for line in f.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip().strip("'\""))
+
+
 def _claude_vision(image: Path, instructions: str) -> dict | None:
     """클로드에게 그림을 보여 주고 JSON을 받는다 — 코덱스가 막혔을 때의 눈.
 
@@ -182,6 +195,24 @@ PLAN_PROMPT = """첨부한 그림은 다큐멘터리 한 장면입니다. 이 �
 머리만 돌리거나 끄덕이려면 **머리를 따로** 가릅니다. 물건을 든 손이 있으면
 **그 물건과 팔을 한 층으로** 묶습니다 — 물건만 떼면 손에서 떨어져 나갑니다.
 
+### 부위로 가를 때는 아래 층을 온전하게 요청합니다
+
+「몸(머리 제외)」처럼 빼서 적으면 **아무도 그리지 않는 자리가 생깁니다.**
+실제로 머리와 몸을 갈랐더니 목이 통째로 비었습니다 — 머리 층에도 몸 층에도
+목이 없었기 때문입니다.
+
+그래서 **뒤에 오는 층은 온전한 것**으로 적고, 앞의 층을 그 위에 얹습니다.
+겹치는 것은 문제가 되지 않습니다. 위에 있는 것이 가릴 뿐입니다.
+
+  ✅  Woman sitting and reading, complete figure
+      Woman's head
+      Newspaper with the hands and arms holding it
+
+  ❌  Woman's body excluding head and arms      ← 목·어깨 이음매가 빈다
+      Woman's head only
+
+「excluding」·「only」·「without」으로 빼지 마세요. 아래 층은 언제나 온전하게.
+
 ## 순서가 중요합니다
 
 **화면에서 뒤에 있는 것부터 앞에 있는 것 순으로** 적습니다. 이 순서가 그대로
@@ -197,8 +228,8 @@ PLAN_PROMPT = """첨부한 그림은 다큐멘터리 한 장면입니다. 이 �
 ## 이렇게 가릅니다 (거실에서 신문 보는 사람)
 
   The rest of the background          움직이지도 가리지도 않는 것 전부
-  Person reading a newspaper (excluding head and arms)
-  Woman's head only                   따로 움직인다
+  Person reading a newspaper, complete figure    아래 층은 온전하게
+  Woman's head                        따로 움직인다 (몸 위에 얹힌다)
   Newspapers and the hands and arms holding them
   Table                               사람 앞을 가린다
 
@@ -239,6 +270,48 @@ def plan_layers(scene_image: Path, narration: str, out_dir: Path) -> tuple[list[
     return names, people
 
 
+# 「제외」로 적힌 층 — 빼는 순간 아무도 그리지 않는 자리가 생긴다
+_EXCLUDE_WORDS = ("excluding", "without", " only", "except", "제외", "만ᅟ")
+
+
+def heal_excluded(names: list[str]) -> list[str]:
+    """이음매가 비지 않도록 층 이름을 손본다.
+
+    세 가지를 겪었다.
+      · 머리와 몸을 갈랐더니 **목이 통째로 비었다** — 두 층 어디에도 목이 없었다
+      · 「팔까지」라고만 했더니 **소매 없는 맨살 팔**이 나왔다
+      · 「~ 제외」로 적으면 그 부분을 아무도 그리지 않는다
+
+    겹치는 것은 문제가 아니다. 위에 있는 것이 가릴 뿐이다. 그래서 빼는 말을
+    지우고, 아래 층은 온전하게, 팔을 뗄 때는 소매까지 적는다.
+    """
+    import re as _re
+
+    has_head = any("head" in (x or "").lower() for x in names)
+    out = []
+    for nm in names:
+        s = nm
+        # 빼는 말 지우기
+        s = _re.sub(r"\s*\((?:[^)]*(?:excluding|without|except|제외)[^)]*)\)", "", s)
+        s = _re.sub(r"\s*,?\s*(?:excluding|without|except)\b[^,]*", "", s, flags=_re.I)
+        s = _re.sub(r"\s+only\b", "", s, flags=_re.I)
+        s = _re.sub(r"\s{2,}", " ", s).strip(" ,")
+        stripped = s != nm
+        low = s.lower()
+
+        # 팔·손을 함께 뗄 때 소매를 말하지 않으면 맨살 팔이 나온다
+        if ("arm" in low or "hand" in low) and "sleeve" not in low:
+            s += " with the sleeves and clothing as drawn"
+        # 머리를 따로 뗀 장면에서만 이음매를 챙긴다
+        elif has_head and stripped:
+            s += " including the neck" if "head" in low else " as a complete figure"
+
+        if s != nm:
+            print(f"  「{nm}」 → 「{s}」")
+        out.append(s or nm)
+    return out
+
+
 def _is_planned_person(name: str, people: set[str] | None) -> bool:
     """분리해 돌려준 이름이 「움직일 층」으로 계획했던 것인가.
 
@@ -273,6 +346,9 @@ def split(project: Path, n: int, names: list[str], out: Path,
     # adobe는 5.0에서 저장소 안으로 들어왔다. 홈 아래 옛 폴더를 가리키고 있어
     # 그 폴더를 지우는 순간 조용히 깨진다.
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "adobe"))
+    # 대시보드는 .env를 읽고 뜨지만 스크립트로 직접 돌리면 아무도 안 읽는다.
+    # 그래서 손으로 돌릴 때만 FAL 키 없음으로 죽었다.
+    _load_env()
     from backend import fal_api
 
     db = json.loads((project / "images" / "image_assets.json").read_text(encoding="utf-8"))
@@ -479,7 +555,8 @@ def main() -> int:
                 print(f"  가림 소품 함께 분리: {', '.join(occ)}")
             names = (names + occ)[:6]
 
-        meta = split(project, args.scene, names[:8], out, people=people)
+        names = heal_excluded(names[:8])
+        meta = split(project, args.scene, names, out, people=people)
 
     animate(meta, out / f"scene_{args.scene:03d}_5s.mp4",
             scene_image=scene_image_of(project, args.scene))

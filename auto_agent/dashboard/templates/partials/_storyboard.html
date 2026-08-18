@@ -2353,12 +2353,13 @@ function sbRenderLayerBox(slug, n, plan, sets) {
       return (L.is_person ? "@ " : "") + (L.name || "");
     }).join("\n");
     html += '<div class="sb-plan">'
-      + '<div class="sb-plan-head">층 계획 · 뒤 → 앞 순서'
-      + '<span class="sb-plan-hint">@ 는 사람 (사람만 까딱입니다)</span></div>'
+      + '<div class="sb-plan-head">층 계획'
+      + '<span class="sb-plan-hint">첫 줄이 <b>맨 뒤(배경)</b> · 마지막 줄이 <b>맨 앞</b> · @ 는 움직이는 층</span></div>'
       + '<textarea class="sb-plan-text" id="sb-plan-' + n + '" rows="' + Math.max(3, (plan.layers || []).length) + '">'
       + lines.replace(/</g, "&lt;") + '</textarea>'
       + (plan.note ? '<div class="sb-plan-note">' + plan.note.replace(/</g, "&lt;") + '</div>' : "")
       + '<div class="sb-plan-row">'
+      + '<button type="button" onclick="sbPlanFlip(' + n + ')">순서 뒤집기</button>'
       + '<button type="button" onclick="sbRePlan(\'' + slug + '\',' + n + ')">다시 훑기</button>'
       + '<button type="button" onclick="sbPlanSave(\'' + slug + '\',' + n + ')">계획 저장</button>'
       + '<button type="button" onclick="sbSplitOne(\'' + slug + '\',' + n + ')">이 계획으로 나누기</button>'
@@ -2423,11 +2424,14 @@ function sbPlanText(n) {
   var ta = document.getElementById("sb-plan-" + n);
   if (!ta) return null;
   return ta.value.split("\n").map(function (line) {
-    var s = line.trim();
+    // 붙여 넣으면 앞에 쉼표·번호·불릿이 딸려 온다. 그대로 두면 층 이름이
+    // 「,@ Woman's head」가 되어 엉뚱한 것을 요청하게 된다.
+    var s = line.replace(/^[\s,·•\-*]+/, "").replace(/^\d+[.)]\s*/, "").trim();
     if (!s) return null;
-    var person = s.indexOf("@") === 0;
-    return { name: (person ? s.slice(1) : s).trim(), is_person: person };
-  }).filter(Boolean);
+    var person = s.charAt(0) === "@";
+    if (person) s = s.slice(1).trim();
+    return { name: s, is_person: person };
+  }).filter(function (r) { return r && r.name; });
 }
 
 function sbPlanSave(slug, n, then) {
@@ -2442,6 +2446,14 @@ function sbPlanSave(slug, n, then) {
       akToast(n + "번 씬 · 층 " + d.saved + "개로 저장했습니다");
       if (then) then();
     });
+}
+
+/* 앞뒤를 거꾸로 적었을 때 — 배경이 마지막 줄에 있으면 이걸 누른다 */
+function sbPlanFlip(n) {
+  var ta = document.getElementById("sb-plan-" + n);
+  if (!ta) return;
+  ta.value = ta.value.split("\n").filter(function (x) { return x.trim(); })
+    .reverse().join("\n");
 }
 
 /* 계획이 마음에 안 들 때 — 옛 계획을 버리고 다시 훑는다 */
