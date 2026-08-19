@@ -18,15 +18,20 @@
     </div>
     <div class="sidebar-resize-handle" id="sidebar-resize"></div>
     {% block sidebar %}
+    {# 볼트 검색·FontAgent·ChartAgent는 뺐다. 여기서 들어간 적이 없고,
+       필요하면 주소로 바로 간다(/vault/search · /tools/…). #}
     <nav class="sidebar-nav">
       <a href="/" class="sidebar-link active">Projects</a>
       <a href="/styles" class="sidebar-link">🎨 스타일</a>
-      <a href="/vault/search" class="sidebar-link">📚 볼트 검색</a>
-      <a href="/tools/fontagent" class="sidebar-link">🔤 FontAgent</a>
-      <a href="/tools/chartagent" class="sidebar-link">📊 ChartAgent</a>
-      <a href="/api/projects" class="sidebar-link">API</a>
     </nav>
     {% endblock %}
+
+    {# 최근 프로젝트 — 목록으로 돌아갔다 다시 들어오는 길을 줄인다.
+       프로젝트 안에서도 보이도록 sidebar 블록 바깥에 둔다. #}
+    <div class="sidebar-recent" id="sidebar-recent">
+      <div class="sr-label">최근 프로젝트</div>
+      <div class="sr-list" id="sr-list"></div>
+    </div>
     {# Agent Chat 자리에 PD 비서를 둔다.
        에이전트 대화는 화면에서 볼 일이 없다 — 실행은 백그라운드에서 돌고
        결과는 파일로 남는다. 그 자리에 실제로 쓰는 것을 놓는다.
@@ -130,6 +135,33 @@
     }
     document.addEventListener('htmx:afterSwap', function (e) { run(e.target); });
     document.addEventListener('htmx:afterSettle', function (e) { run(e.target); });
+  })();
+
+  /* 최근 프로젝트 — 손댄 순서로 열 개까지. 지금 보고 있는 것은 표시한다. */
+  (function () {
+    var list = document.getElementById('sr-list');
+    if (!list) return;
+    var here = (function () {
+      var m = window.location.pathname.match(/^\/p\/([^/]+)/);
+      return m ? decodeURIComponent(m[1]) : '';
+    })();
+    // 「최근 연 것」은 서버가 센다. DB의 updated_at은 내용이 바뀐 때라
+    // 한꺼번에 손보면 전부 같은 시각이 되어 순서가 뒤섞인다.
+    fetch('/api/recent-projects?limit=10')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var ps = d.projects || [];
+        list.innerHTML = ps.map(function (p) {
+          var on = (p.slug === here || p.uuid === here);
+          var name = p.name || p.slug;
+          return '<a class="sr-item' + (on ? ' on' : '') + '" href="/p/'
+            + encodeURIComponent(p.slug) + '" title="' + esc(p.topic || name) + '">'
+            + esc(name) + '</a>';
+        }).join('');
+      })
+      .catch(function () { list.innerHTML = ''; });
+
+    function esc(s) { var e = document.createElement('div'); e.textContent = s || ''; return e.innerHTML; }
   })();
 
   /* 화면 오류를 서버로 보낸다 — 앱에는 개발자 도구가 없다 */

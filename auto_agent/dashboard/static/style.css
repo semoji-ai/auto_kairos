@@ -2551,3 +2551,15 @@ body.terminal-open .main-content {
   color: #17171a; cursor: pointer; font-size: 13px;
 }
 .pd-input-row button:disabled { opacity: .5; cursor: default; }
+
+/* ── 사이드바 최근 프로젝트 ─────────────────────────── */
+.sidebar-recent { padding: 10px 8px 4px; border-top: 1px solid rgba(255,255,255,.06); }
+.sr-label { font-size: 10px; color: #6f6f76; padding: 0 6px 6px; letter-spacing: .04em; }
+.sr-list { display: flex; flex-direction: column; gap: 1px; }
+.sr-item {
+  display: block; padding: 5px 8px; border-radius: 5px;
+  font-size: 11px; color: #b4b4b4; text-decoration: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sr-item:hover { background: rgba(255,255,255,.06); color: #e6e6e6; }
+.sr-item.on { background: rgba(167,139,250,.18); color: #c4b5fd; }

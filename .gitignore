@@ -228,3 +228,4 @@ _archive_*/
 /app/src-tauri/target/
 /app/icon-src.png
 /logs/
+/.ak_recent.json

@@ -272,6 +272,53 @@ async def assistant_log(project_ref: str):
     return {"lines": lines, "running": not done}
 
 
+_RECENT_FILE = get_package_dir().parent / ".ak_recent.json"
+
+
+def _touch_recent(slug: str) -> None:
+    """프로젝트를 연 시각을 적어 둔다.
+
+    DB의 updated_at은 「내용이 바뀐 때」라, 한꺼번에 손보면 전부 같은 시각이
+    되어 순서가 뒤섞인다. 「최근 연 것」은 그것과 다른 사실이다.
+    """
+    import time
+
+    if not slug:
+        return
+    try:
+        d = json.loads(_RECENT_FILE.read_text(encoding="utf-8")) if _RECENT_FILE.exists() else {}
+    except Exception:
+        d = {}
+    d[slug] = time.time()
+    if len(d) > 60:                       # 오래된 것은 흘려 보낸다
+        d = dict(sorted(d.items(), key=lambda kv: -kv[1])[:60])
+    try:
+        _RECENT_FILE.write_text(json.dumps(d), encoding="utf-8")
+    except Exception:
+        pass
+
+
+@app.get("/api/recent-projects")
+async def recent_projects(limit: int = 10):
+    """최근 연 프로젝트 — 사이드바용."""
+    try:
+        opened = json.loads(_RECENT_FILE.read_text(encoding="utf-8")) if _RECENT_FILE.exists() else {}
+    except Exception:
+        opened = {}
+    pm = get_pm()
+    rows = []
+    for p in pm.list_projects():
+        if p.get("status") == "archived":
+            continue
+        rows.append({"slug": p.get("slug"), "uuid": p.get("uuid"),
+                     "name": p.get("name") or p.get("slug"),
+                     "topic": p.get("topic") or "",
+                     "opened": opened.get(p.get("slug"), 0),
+                     "updated": str(p.get("updated_at") or "")})
+    rows.sort(key=lambda r: (r["opened"], r["updated"]), reverse=True)
+    return {"projects": rows[:max(1, min(30, limit))]}
+
+
 @app.get("/api/p/{project_ref}/health")
 async def project_health(project_ref: str):
     """진행 상태 · 다음 할 일 · 평가 · 수상한 것."""
@@ -1148,6 +1195,8 @@ async def project_page(request: Request, project_ref: str, tab: str = "pipeline"
     """
     pm = get_pm()
     project, needs_redirect = resolve_project_ref(pm, project_ref)
+    if project:
+        _touch_recent(project.get("slug") or "")
     if not project:
         return HTMLResponse("Project not found", status_code=404)
     if needs_redirect:
