@@ -2563,3 +2563,18 @@ body.terminal-open .main-content {
 }
 .sr-item:hover { background: rgba(255,255,255,.06); color: #e6e6e6; }
 .sr-item.on { background: rgba(167,139,250,.18); color: #c4b5fd; }
+
+/* ── 인포그래픽 씬 미리보기 ─────────────────────────────
+   요소를 자리에 놓아 그대로 보여준다. 굽지 않으므로 라벨을 고칠 수 있고,
+   Remotion과 같은 배치 숫자를 읽어 두 화면이 어긋나지 않는다. */
+.sb-info-stage {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  background: #f2f2f0 url('/background/semoji_grid_bg.jpg') center/cover;
+  border-radius: 6px; overflow: hidden;
+}
+.sb-info-item { position: absolute; transform: translate(-50%, -50%); text-align: center; }
+.sb-info-item img { width: 100%; display: block; filter: drop-shadow(0 6px 12px rgba(0,0,0,.25)); }
+.sb-info-item span {
+  display: block; margin-top: 3px; font-size: 10px; color: #2F3E52;
+  font-family: 'BMYeonsung', inherit; line-height: 1.2;
+}

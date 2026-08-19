@@ -52,7 +52,21 @@
     <!-- 좌측: Remotion Player 경량 임베드 -->
     <div class="sb-preview-wrap">
       <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
+        {% if scene.infographic and scene.infographic.items %}
+        {# 인포그래픽 씬 — 요소를 자리에 놓아 그대로 보여준다. 그림을 굽지 않고
+           배치 숫자만 읽는다. Remotion도 같은 숫자를 쓴다. #}
+        <div class="sb-info-stage" title="{{ scene.infographic.note }}">
+          {% for it in scene.infographic['items'] %}
+          <div class="sb-info-item"
+               style="left:{{ it.left }}%;top:{{ it.top }}%;width:{{ it.size }}%">
+            <img src="/infoassets/{{ it.src }}" alt="{{ it.id }}" loading="lazy">
+            {% if it.label %}<span>{{ it.label }}</span>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
         <div class="sb-player-mount" data-scene-num="{{ scene.sceneNumber }}"></div>
+        {% endif %}
       </div>
       {% set _vk = scene.visual_kind or '' %}
       {# 자료 종류 전환 버튼 넷은 걷어냈다. 씬마다 무엇으로 보여줄지는 이미

@@ -134,6 +134,19 @@ _mount_asset("/artstyle", "auto_agent/data/artstyle/styles")
 _LAYER_ROOT = get_package_dir().parent / "_imggen"
 
 
+# 인포그래픽 요소 서빙 (/infoassets/ep01_info/s001_chip_pillar.png)
+@app.get("/infoassets/{name:path}")
+async def serve_info_asset(name: str):
+    import re as _re
+
+    if not _re.match(r"^[A-Za-z0-9_]+_info/[^/]+$", name):
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
+    f = (_LAYER_ROOT / name).resolve()
+    if f.is_file() and _LAYER_ROOT.resolve() in f.parents:
+        return FileResponse(f)
+    return JSONResponse({"detail": "Not Found"}, status_code=404)
+
+
 @app.get("/layers/{name:path}")
 async def serve_layer(name: str):
     import re as _re
