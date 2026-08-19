@@ -55,8 +55,14 @@
         {% if scene.infographic and scene.infographic.items %}
         {# 인포그래픽 씬 — 요소를 자리에 놓아 그대로 보여준다. 그림을 굽지 않고
            배치 숫자만 읽는다. Remotion도 같은 숫자를 쓴다. #}
-        <div class="sb-info-stage{% if not scene.infographic.designed %} rough{% endif %}"
+        <div class="sb-info-stage bg-{{ scene.infographic.background or 'grid' }}{% if not scene.infographic.designed %} rough{% endif %}"
              title="{{ scene.infographic.note }}">
+          {% if scene.infographic.background == 'map' %}
+          {# 지도는 미리보기 플레이어가 그린다. 그 위에 요소를 얹는다. #}
+          <div class="sb-info-base"><div class="sb-player-mount" data-scene-num="{{ scene.sceneNumber }}"></div></div>
+          {% elif scene.infographic.background == 'scene' %}
+          <div class="sb-info-base"><img src="{{ scene._image_url }}" alt=""></div>
+          {% endif %}
           {% if scene.infographic.title %}
           <div class="sb-info-title">{{ scene.infographic.title }}</div>
           {% endif %}

@@ -145,6 +145,9 @@ def main() -> int:
 
         s["infographic"] = {
             "title": (lay or {}).get("title", ""),
+            # 그리드 대신 그 씬의 지도·그림을 배경으로 깔 수 있다.
+            # 지도 위에 요소를 얹으면 「어디」와 「무엇이」가 한 화면에 온다.
+            "background": (lay or {}).get("background", "grid"),
             "divider": (lay or {}).get("divider", "none"),
             "marks": (lay or {}).get("marks", []),
             "form": (spec.get("composition") or {}).get("form", ""),

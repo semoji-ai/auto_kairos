@@ -2599,3 +2599,14 @@ body.terminal-open .main-content {
   font-size: 9px; color: #9a9a9a; background: rgba(255,255,255,.75);
   padding: 1px 5px; border-radius: 3px;
 }
+/* 지도·그림을 배경으로 깐 인포그래픽 */
+.sb-info-stage.bg-map, .sb-info-stage.bg-scene { background-image: none; background: #131315; }
+.sb-info-base { position: absolute; inset: 0; }
+.sb-info-base img, .sb-info-base > div { width: 100%; height: 100%; object-fit: cover; }
+.sb-info-stage.bg-map .sb-info-item span,
+.sb-info-stage.bg-scene .sb-info-item span {
+  color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.9);
+}
+.sb-info-stage.bg-map .sb-info-item span.accent,
+.sb-info-stage.bg-scene .sb-info-item span.accent { color: #FFD08A; }
+.sb-info-stage.bg-map .sb-info-mark { color: #e6e6e6; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
