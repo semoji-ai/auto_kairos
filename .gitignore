@@ -225,6 +225,7 @@ _archive_*/
 !/scripts/trim_opening.py
 !/scripts/add_chapter_cards.py
 !/scripts/restructure_ep01.py
+!/scripts/ep01_motive.py
 !/scripts/fix_info_overflow.py
 !/scripts/gen_info_assets.py
 /app/node_modules/
