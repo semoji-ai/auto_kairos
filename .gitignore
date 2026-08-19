@@ -228,6 +228,8 @@ _archive_*/
 !/scripts/ep01_motive.py
 !/scripts/compose_infographics.py
 !/scripts/plan_infographic_layout.py
+!/scripts/check_infographic.py
+!/scripts/render_infographic.py
 !/scripts/fix_info_overflow.py
 !/scripts/gen_info_assets.py
 /app/node_modules/
