@@ -1,3 +1,12 @@
+
+/* ── 연성체 ─────────────────────────────────────────
+   인포그래픽 글자는 전부 이 폰트다. 선언이 없어 지금까지 기본 고딕으로
+   떨어지고 있었다 — 파일은 서빙되는데 아무도 부르지 않았다. */
+@font-face {
+  font-family: 'BMYeonsung';
+  src: url('/fonts/BMYeonsung.ttf') format('truetype');
+  font-display: swap;
+}
 /* auto_agent_v2 Dashboard — Sidebar Layout */
 :root {
   --bg: #0A0A0A;
@@ -2610,3 +2619,34 @@ body.terminal-open .main-content {
 .sb-info-stage.bg-map .sb-info-item span.accent,
 .sb-info-stage.bg-scene .sb-info-item span.accent { color: #FFD08A; }
 .sb-info-stage.bg-map .sb-info-mark { color: #e6e6e6; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+
+/* ── 인포그래픽 배경·글자 대비 ───────────────────────
+   배경이 그림이면 글자가 묻힌다. 어느 방식으로 읽힐지는 설계가 정한다. */
+.sb-info-stage.bg-scene_blur .sb-info-base img { filter: blur(6px) brightness(.62); transform: scale(1.06); }
+.sb-info-stage.bg-scene .sb-info-base img { filter: brightness(.86); }
+
+.sb-info-item span, .sb-info-title, .sb-info-mark { font-family: 'BMYeonsung', sans-serif; }
+
+/* plain — 밝은 바탕에 먹색 */
+.tx-plain .sb-info-item span { color: #2F3E52; }
+.tx-plain .sb-info-title { color: #2F3E52; }
+
+/* shadow — 흰 글자에 그림자 */
+.tx-shadow .sb-info-item span, .tx-shadow .sb-info-title, .tx-shadow .sb-info-mark {
+  color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.7);
+}
+.tx-shadow .sb-info-item span.accent { color: #FFD08A; }
+
+/* box — 글자 뒤에 판을 깐다. 가장 확실하다 */
+.tx-box .sb-info-item span, .tx-box .sb-info-title {
+  color: #17171a; background: rgba(255,255,255,.88);
+  padding: 1px 6px; border-radius: 4px; display: inline-block;
+}
+.tx-box .sb-info-item span.accent { background: #C2571A; color: #fff; }
+.tx-box .sb-info-mark { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.9); }
+
+.sb-info-split {
+  position: absolute; left: 6px; bottom: 6px; z-index: 3;
+  font-size: 9px; color: #fbbf24; background: rgba(23,23,26,.8);
+  padding: 1px 5px; border-radius: 3px;
+}

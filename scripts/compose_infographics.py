@@ -148,6 +148,9 @@ def main() -> int:
             # 그리드 대신 그 씬의 지도·그림을 배경으로 깔 수 있다.
             # 지도 위에 요소를 얹으면 「어디」와 「무엇이」가 한 화면에 온다.
             "background": (lay or {}).get("background", "grid"),
+            # 글자가 읽히는 방식 — 배경이 복잡할수록 판을 깐다
+            "contrast": (lay or {}).get("contrast", "plain"),
+            "split_hint": (lay or {}).get("split_hint", ""),
             "divider": (lay or {}).get("divider", "none"),
             "marks": (lay or {}).get("marks", []),
             "form": (spec.get("composition") or {}).get("form", ""),
