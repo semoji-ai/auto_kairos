@@ -222,6 +222,7 @@ _archive_*/
 !/scripts/check_info_assets.py
 !/scripts/plan_scene_layers.py
 !/scripts/build_srt.py
+!/scripts/trim_opening.py
 !/scripts/fix_info_overflow.py
 !/scripts/gen_info_assets.py
 /app/node_modules/
