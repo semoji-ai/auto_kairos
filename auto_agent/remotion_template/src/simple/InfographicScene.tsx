@@ -78,8 +78,11 @@ export const InfographicScene: React.FC<InfographicSceneProps> = ({
       })}
 
       {headline && (
+        {/* 가운데 정렬은 폭을 늘리는 대신 옮겨서 한다 — 글자 뒤에 판을 깔 때
+            left:0/right:0 이면 판이 화면 끝까지 늘어난다 */}
         <div style={{
-          position: "absolute", left: 0, right: 0, top: "7%",
+          position: "absolute", left: "50%", top: "7%",
+          transform: "translateX(-50%)", maxWidth: "92%",
           textAlign: "center", fontFamily: "BMYeonsung, sans-serif",
           fontSize: 58, color: "#2F3E52",
           textShadow: `0 2px 0 ${accent}`,

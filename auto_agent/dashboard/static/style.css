@@ -2589,9 +2589,11 @@ body.terminal-open .main-content {
 }
 /* 인포그래픽 — 제목·기호·강조. 시험작의 화면 문법을 그대로 옮긴다 */
 .sb-info-title {
-  position: absolute; left: 0; right: 0; top: 5%;
-  text-align: center; font-family: 'BMYeonsung', inherit;
-  font-size: 13px; color: #2F3E52;
+  /* 가운데 정렬은 폭을 늘리는 대신 옮겨서 한다. left:0/right:0 으로 두면
+     글자 뒤 판(tx-box)이 화면 끝까지 늘어난다 — 제목 박스가 지나치게 길어 보였다. */
+  position: absolute; left: 50%; top: 5%; transform: translateX(-50%);
+  max-width: 92%; text-align: center;
+  font-family: 'BMYeonsung', inherit; font-size: 13px; color: #2F3E52;
 }
 .sb-info-divider {
   position: absolute; left: 50%; top: 20%; bottom: 12%;
@@ -2640,7 +2642,8 @@ body.terminal-open .main-content {
 /* box — 글자 뒤에 판을 깐다. 가장 확실하다 */
 .tx-box .sb-info-item span, .tx-box .sb-info-title {
   color: #17171a; background: rgba(255,255,255,.88);
-  padding: 1px 6px; border-radius: 4px; display: inline-block;
+  padding: 1px 6px; border-radius: 4px;
+  display: inline-block; width: auto;
 }
 .tx-box .sb-info-item span.accent { background: #C2571A; color: #fff; }
 .tx-box .sb-info-mark { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.9); }
