@@ -75,6 +75,7 @@ def main() -> int:
     mode = {s["n"]: s for s in json.loads(mode_f.read_text(encoding="utf-8"))["scenes"]
             if s.get("mode") == "infographic"}
 
+    layout_dir = root / "_imggen" / f"{args.ep.lower()}_layout"
     asset_dir = root / "_imggen" / f"{args.ep.lower()}_info"
     have = {p.stem: p for p in asset_dir.glob("*.png") if "_raw" not in p.name} \
         if asset_dir.exists() else {}
@@ -82,41 +83,84 @@ def main() -> int:
     f = proj / "scene_specs.json"
     data = json.loads(f.read_text(encoding="utf-8"))
 
-    done, missing = 0, []
+    done, missing, skipped = 0, [], []
     for s in data.get("scenes", []):
         n = s.get("sceneNumber")
         spec = mode.get(n)
         if not spec:
             continue
 
+        # 설계가 있으면 그것을 쓴다. 규칙으로 나눈 자리는 그냥 늘어놓은
+        # 화면이 되고, 시험작에 있던 문법(항 묶기·기호·강조)이 없다.
+        lay_f = layout_dir / f"s{n:03d}.json"
+        lay = None
+        if lay_f.exists():
+            try:
+                lay = json.loads(lay_f.read_text(encoding="utf-8"))
+            except Exception:
+                lay = None
+
+        if lay and lay.get("skip"):
+            # 도해로 만들면 힘이 빠지는 씬 — 재연 그림으로 되돌린다
+            if s.get("visual_kind") == "infographic":
+                s["visual_kind"] = "generate_image"
+                s.pop("infographic", None)
+                s.setdefault("imageAsset", {})["source"] = "generate"
+            skipped.append((n, lay.get("why", "")))
+            continue
+
         items = []
-        for a in spec.get("assets") or []:
-            stem = f"s{n:03d}_{a['id']}"
-            p = have.get(stem)
-            if not p:
-                missing.append(stem)
-                continue
-            items.append({"id": a["id"], "src": f"{asset_dir.name}/{p.name}"})
+        if lay and lay.get("items"):
+            for it in lay["items"]:
+                p_ = have.get(f"s{n:03d}_{it['id']}")
+                if not p_:
+                    missing.append(f"s{n:03d}_{it['id']}")
+                    continue
+                items.append({
+                    "id": it["id"], "src": f"{asset_dir.name}/{p_.name}",
+                    "left": it.get("left", 50), "top": it.get("top", 50),
+                    "size": it.get("size", 20),
+                    "label": it.get("label", ""),
+                    "emphasis": it.get("emphasis", "normal"),
+                })
+        else:
+            for a in spec.get("assets") or []:
+                stem = f"s{n:03d}_{a['id']}"
+                p_ = have.get(stem)
+                if not p_:
+                    missing.append(stem)
+                    continue
+                items.append({"id": a["id"], "src": f"{asset_dir.name}/{p_.name}"})
+            if items:
+                pos = slots((spec.get("composition") or {}).get("form", ""), len(items))
+                labels = spec.get("labels") or []
+                for i, it in enumerate(items):
+                    it.update(pos[i])
+                    it["emphasis"] = "normal"
+                    if i < len(labels):
+                        it["label"] = labels[i]
+
         if not items:
             continue
 
-        pos = slots((spec.get("composition") or {}).get("form", ""), len(items))
-        labels = spec.get("labels") or []
-        for i, it in enumerate(items):
-            it.update(pos[i])
-            if i < len(labels):
-                it["label"] = labels[i]
-
         s["infographic"] = {
+            "title": (lay or {}).get("title", ""),
+            "divider": (lay or {}).get("divider", "none"),
+            "marks": (lay or {}).get("marks", []),
             "form": (spec.get("composition") or {}).get("form", ""),
-            "note": (spec.get("composition") or {}).get("note", ""),
+            "note": (lay or {}).get("why") or (spec.get("composition") or {}).get("note", ""),
+            "designed": bool(lay),
             "items": items,
         }
         s["visual_kind"] = "infographic"
         s.setdefault("imageAsset", {})["source"] = "infographic"
         done += 1
 
-    print(f"{args.ep}  인포그래픽 씬 {len(mode)}개 중 {done}개 조립")
+    designed = sum(1 for s in data.get("scenes", [])
+                   if (s.get("infographic") or {}).get("designed"))
+    print(f"{args.ep}  인포그래픽 씬 {len(mode)}개 중 {done}개 조립 (설계본 {designed}개)")
+    for n, why in skipped:
+        print(f"  씬{n:>3} 재연으로 되돌림 — {why[:60]}")
     if missing:
         print(f"  요소 파일이 없어 건너뜀 {len(missing)}개: {missing[:6]}")
 

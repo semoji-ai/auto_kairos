@@ -55,12 +55,22 @@
         {% if scene.infographic and scene.infographic.items %}
         {# 인포그래픽 씬 — 요소를 자리에 놓아 그대로 보여준다. 그림을 굽지 않고
            배치 숫자만 읽는다. Remotion도 같은 숫자를 쓴다. #}
-        <div class="sb-info-stage" title="{{ scene.infographic.note }}">
+        <div class="sb-info-stage{% if not scene.infographic.designed %} rough{% endif %}"
+             title="{{ scene.infographic.note }}">
+          {% if scene.infographic.title %}
+          <div class="sb-info-title">{{ scene.infographic.title }}</div>
+          {% endif %}
+          {% if scene.infographic.divider == 'vertical' %}
+          <div class="sb-info-divider"></div>
+          {% endif %}
+          {% for m in scene.infographic['marks'] or [] %}
+          <div class="sb-info-mark" style="left:{{ m.left }}%;top:{{ m.top }}%">{{ m.text }}</div>
+          {% endfor %}
           {% for it in scene.infographic['items'] %}
           <div class="sb-info-item"
                style="left:{{ it.left }}%;top:{{ it.top }}%;width:{{ it.size }}%">
             <img src="/infoassets/{{ it.src }}" alt="{{ it.id }}" loading="lazy">
-            {% if it.label %}<span>{{ it.label }}</span>{% endif %}
+            {% if it.label %}<span class="{{ it.emphasis or 'normal' }}">{{ it.label }}</span>{% endif %}
           </div>
           {% endfor %}
         </div>

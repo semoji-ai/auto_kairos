@@ -2578,3 +2578,24 @@ body.terminal-open .main-content {
   display: block; margin-top: 3px; font-size: 10px; color: #2F3E52;
   font-family: 'BMYeonsung', inherit; line-height: 1.2;
 }
+/* 인포그래픽 — 제목·기호·강조. 시험작의 화면 문법을 그대로 옮긴다 */
+.sb-info-title {
+  position: absolute; left: 0; right: 0; top: 5%;
+  text-align: center; font-family: 'BMYeonsung', inherit;
+  font-size: 13px; color: #2F3E52;
+}
+.sb-info-divider {
+  position: absolute; left: 50%; top: 20%; bottom: 12%;
+  width: 1px; background: #b9bcc4;
+}
+.sb-info-mark {
+  position: absolute; transform: translate(-50%, -50%);
+  font-size: 14px; color: #6f7480; font-family: 'BMYeonsung', inherit;
+}
+.sb-info-item span.accent { color: #C2571A; font-weight: 600; }
+/* 설계 없이 규칙으로만 늘어놓은 화면 — 손봐야 한다는 표시 */
+.sb-info-stage.rough::after {
+  content: "배치 미설계"; position: absolute; right: 6px; bottom: 6px;
+  font-size: 9px; color: #9a9a9a; background: rgba(255,255,255,.75);
+  padding: 1px 5px; border-radius: 3px;
+}
