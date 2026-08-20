@@ -232,6 +232,8 @@ _archive_*/
 !/scripts/compare_scene_vs_info.py
 !/scripts/fix_infographic_layout.py
 !/scripts/judge_visual_by_text.py
+!/scripts/apply_rewrite.py
+!/scripts/rewrite_in_voice.py
 !/scripts/render_infographic.py
 !/scripts/fix_info_overflow.py
 !/scripts/gen_info_assets.py
