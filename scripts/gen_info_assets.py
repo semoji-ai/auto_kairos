@@ -107,16 +107,37 @@ def main() -> int:
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
-    modes = json.loads((root / "_imggen" / f"{args.ep}_mode.json").read_text(encoding="utf-8"))
+    sys.path.insert(0, str(root))
+    from auto_agent.paths import resolve_project  # noqa: E402
+
+    _proj, ep = resolve_project(args.ep)
+    modes = json.loads((root / "_imggen" / f"{ep}_mode.json").read_text(encoding="utf-8"))
+
+    # 설계가 있으면 **설계가 부르는 요소만** 그린다.
+    # 규칙이 「그 화면이 요구하는 것만 그린다」인데, 재분석이 나열한 것을
+    # 통째로 뽑고 있었다. EP01에서 157장을 뽑아 놓고 쓴 것은 40장뿐이었다.
+    layout_dir = root / "_imggen" / f"{ep.lower()}_layout"
+    wanted: dict = {}
+    for f_ in layout_dir.glob("s*.json") if layout_dir.exists() else []:
+        try:
+            lay = json.loads(f_.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if lay.get("skip"):
+            continue
+        wanted[int(f_.stem[1:])] = {it.get("id") for it in lay.get("items") or []}
     want = {int(x) for x in args.scenes.split(",")}
-    out_dir = root / "_imggen" / f"{args.ep.lower()}_info"
+    out_dir = root / "_imggen" / f"{ep.lower()}_info"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     jobs = []
     for s in modes["scenes"]:
         if s["n"] not in want or s["mode"] != "infographic":
             continue
+        need = wanted.get(s["n"])
         for a in s.get("assets") or []:
+            if need is not None and a.get("id") not in need:
+                continue          # 설계가 안 부르는 요소는 그리지 않는다
             jobs.append((s["n"], a))
 
     def run(job) -> tuple[int, str, bool]:

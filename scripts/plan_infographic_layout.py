@@ -149,8 +149,24 @@ def main() -> int:
     specs = {s["sceneNumber"]: s for s in
              json.loads((proj / "scene_specs.json").read_text(encoding="utf-8"))["scenes"]}
 
+    # 에셋이 있으면 그 목록으로, 없으면 재분석이 적어 둔 계획으로 짠다.
+    #
+    # 규칙은 「화면을 먼저 짠다」인데 코드가 에셋 파일을 요구하고 있었다.
+    # LG는 에셋을 미리 뽑아 놔서 안 드러났지만, 새 프로젝트에서는 설계가
+    # 0건이 됐다 — 에셋이 없으니 아무것도 대상이 아니었다.
     asset_dir = root / "_imggen" / f"{ep.lower()}_info"
-    have = {p.stem for p in asset_dir.glob("*.png") if "_raw" not in p.name}
+    have = {p.stem for p in asset_dir.glob("*.png") if "_raw" not in p.name} \
+        if asset_dir.exists() else set()
+
+    # 글 판단이 「재연이 낫다」고 한 씬은 설계하지 않는다 — 쓰지 않을 화면이다
+    text_dir = root / "_imggen" / f"{ep.lower()}_textjudge"
+    said_scene = set()
+    for f_ in text_dir.glob("s*.json") if text_dir.exists() else []:
+        try:
+            if json.loads(f_.read_text(encoding="utf-8")).get("pick") == "scene":
+                said_scene.add(int(f_.stem[1:]))
+        except Exception:
+            continue
 
     want = {int(x) for x in args.scenes.split(",")} if args.scenes else None
     jobs = []
@@ -158,8 +174,11 @@ def main() -> int:
         n = s.get("n")
         if s.get("mode") != "infographic" or (want and n not in want):
             continue
-        assets = [a for a in (s.get("assets") or [])
-                  if f"s{n:03d}_{a['id']}" in have]
+        if n in said_scene and not want:
+            continue
+        planned = s.get("assets") or []
+        # 그려 놓은 것이 있으면 그것만, 아직 없으면 계획한 것 전부로 짠다
+        assets = [a for a in planned if f"s{n:03d}_{a['id']}" in have] or planned
         if assets:
             jobs.append((n, s, assets))
 
