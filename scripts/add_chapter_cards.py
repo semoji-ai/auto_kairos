@@ -28,6 +28,9 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.paths import resolve_project  # noqa: E402
+
 DURATION = 3.0          # 초 — 읽고 넘어갈 만큼만
 CARD_BASE = 900         # 카드 씬 번호는 여기서부터
 
@@ -93,13 +96,20 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--ep", type=int, default=None, help="한 편만")
+    ap.add_argument("--slug", help="시리즈가 아닌 프로젝트 하나에 적용")
     ap.add_argument("--fix-titles", action="store_true",
                     help="원고 제목이 내용과 어긋나면 씬을 보고 새로 짓는다")
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
-    emap = json.loads((root / "_imggen" / "ep_map.json").read_text(encoding="utf-8"))
-    live = {int(re.match(r"EP(\d+)", k).group(1)): v["dir"] for k, v in emap.items()}
+    # 시리즈면 지도에서 편을 모두 돌고, 아니면 지정한 프로젝트 하나만 돈다
+    f_map = root / "_imggen" / "ep_map.json"
+    if f_map.exists() and not args.slug:
+        emap = json.loads(f_map.read_text(encoding="utf-8"))
+        live = {int(re.match(r"EP(\d+)", k).group(1)): v["dir"] for k, v in emap.items()}
+    else:
+        d_, _label = resolve_project(args.slug or "")
+        live = {1: str(d_)}
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     for ep in sorted(live):

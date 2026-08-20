@@ -18,6 +18,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.paths import resolve_project  # noqa: E402
+
 
 def audio_len(p: Path) -> float:
     """오디오 길이(초). ffprobe가 없으면 0."""
@@ -71,8 +74,8 @@ def main() -> int:
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
-    emap = json.loads((root / "_imggen" / "ep_map.json").read_text(encoding="utf-8"))
-    proj = Path(next(v["dir"] for k, v in emap.items() if k.startswith(args.ep)))
+    # 편 라벨이든 프로젝트 slug 든 받는다 — 시리즈가 아닌 프로젝트도 돌아야 한다
+    proj, ep = resolve_project(args.ep)
     specs = json.loads((proj / "scene_specs.json").read_text(encoding="utf-8"))
     audio = proj / "audio"
 

@@ -18,6 +18,9 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.paths import resolve_project  # noqa: E402
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from animate_scene import plan_layers, scene_image_of  # noqa: E402
 
@@ -29,9 +32,9 @@ def main() -> int:
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
-    emap = json.loads((root / "_imggen" / "ep_map.json").read_text(encoding="utf-8"))
-    project = Path(next(v["dir"] for k, v in emap.items() if k.startswith(args.ep)))
-    out = root / "_imggen" / f"{args.ep.lower()}_anim" / f"s{args.scene:03d}"
+    # 편 라벨이든 프로젝트 slug 든 받는다 — 시리즈가 아닌 프로젝트도 돌아야 한다
+    project, ep = resolve_project(args.ep)
+    out = root / "_imggen" / f"{ep.lower()}_anim" / f"s{args.scene:03d}"
 
     spec = {s["sceneNumber"]: s for s in json.loads(
         (project / "scene_specs.json").read_text(encoding="utf-8"))["scenes"]}

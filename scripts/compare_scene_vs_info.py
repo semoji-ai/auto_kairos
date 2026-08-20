@@ -26,6 +26,9 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.paths import resolve_project  # noqa: E402
+
 PROMPT = """다큐멘터리 한 장면을 어떤 화면으로 보여줄지 고릅니다.
 Read 도구로 **두 그림을 모두** 열어 보고 판단하세요.
 
@@ -94,8 +97,8 @@ def main() -> int:
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
-    emap = json.loads((root / "_imggen" / "ep_map.json").read_text(encoding="utf-8"))
-    proj = Path(next(v["dir"] for k, v in emap.items() if k.startswith(args.ep)))
+    # 편 라벨이든 프로젝트 slug 든 받는다 — 시리즈가 아닌 프로젝트도 돌아야 한다
+    proj, ep = resolve_project(args.ep)
     scenes = json.loads((proj / "scene_specs.json").read_text(encoding="utf-8"))["scenes"]
     order = [s.get("sceneNumber") for s in scenes]
     by_n = {s.get("sceneNumber"): s for s in scenes}
@@ -103,8 +106,8 @@ def main() -> int:
     sys.path.insert(0, str(root))
     from auto_agent.tools.image_assets import get_selected
 
-    shots = root / "_imggen" / f"{args.ep.lower()}_render"
-    out_dir = root / "_imggen" / f"{args.ep.lower()}_pick"
+    shots = root / "_imggen" / f"{ep.lower()}_render"
+    out_dir = root / "_imggen" / f"{ep.lower()}_pick"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     want = {int(x) for x in args.scenes.split(",")} if args.scenes else None
@@ -142,7 +145,7 @@ def main() -> int:
         return n, (f"{d.get('pick'):8s} 이해 {d.get('understand','')[:5]:5s} "
                    f"보고싶음 {d.get('watch','')[:5]:5s} {d.get('why','')[:44]}")
 
-    print(f"{args.ep}  {len(jobs)}씬 비교")
+    print(f"{ep}  {len(jobs)}씬 비교")
     with ThreadPoolExecutor(max_workers=args.jobs) as ex:
         for n, msg in ex.map(run, jobs):
             print(f"  씬{n:>3}  {msg}")

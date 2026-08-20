@@ -31,6 +31,9 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.paths import resolve_project  # noqa: E402
+
 PROMPT = """첨부한 그림은 다큐멘터리 한 장면의 **인포그래픽 화면**입니다.
 Read 도구로 그림을 열어 보고 판단하세요.
 
@@ -100,13 +103,13 @@ def main() -> int:
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
-    emap = json.loads((root / "_imggen" / "ep_map.json").read_text(encoding="utf-8"))
-    proj = Path(next(v["dir"] for k, v in emap.items() if k.startswith(args.ep)))
+    # 편 라벨이든 프로젝트 slug 든 받는다 — 시리즈가 아닌 프로젝트도 돌아야 한다
+    proj, ep = resolve_project(args.ep)
     specs = {s["sceneNumber"]: s for s in
              json.loads((proj / "scene_specs.json").read_text(encoding="utf-8"))["scenes"]}
 
-    shots = root / "_imggen" / f"{args.ep.lower()}_render"
-    out_dir = root / "_imggen" / f"{args.ep.lower()}_check"
+    shots = root / "_imggen" / f"{ep.lower()}_render"
+    out_dir = root / "_imggen" / f"{ep.lower()}_check"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     want = {int(x) for x in args.scenes.split(",")} if args.scenes else None
@@ -130,7 +133,7 @@ def main() -> int:
         kinds = ", ".join(x.get("kind", "") for x in d.get("problems") or [])
         return n, f"{d.get('verdict')}  {kinds}"
 
-    print(f"{args.ep}  {len(jobs)}장 검수")
+    print(f"{ep}  {len(jobs)}장 검수")
     with ThreadPoolExecutor(max_workers=args.jobs) as ex:
         for n, msg in ex.map(run, jobs):
             print(f"  씬{n:>3}  {msg}")

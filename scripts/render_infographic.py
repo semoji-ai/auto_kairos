@@ -18,6 +18,9 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.paths import resolve_project  # noqa: E402
+
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 W, H = 1280, 720                      # 보기용 — 비율만 맞으면 된다
@@ -133,15 +136,15 @@ def main() -> int:
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
-    emap = json.loads((root / "_imggen" / "ep_map.json").read_text(encoding="utf-8"))
-    proj = Path(next(v["dir"] for k, v in emap.items() if k.startswith(args.ep)))
+    # 편 라벨이든 프로젝트 slug 든 받는다 — 시리즈가 아닌 프로젝트도 돌아야 한다
+    proj, ep = resolve_project(args.ep)
     specs = json.loads((proj / "scene_specs.json").read_text(encoding="utf-8"))
 
     sys.path.insert(0, str(root))
     from auto_agent.tools.image_assets import get_selected
 
     want = {int(x) for x in args.scenes.split(",")} if args.scenes else None
-    out_dir = root / "_imggen" / f"{args.ep.lower()}_render"
+    out_dir = root / "_imggen" / f"{ep.lower()}_render"
     made = 0
     for s in specs["scenes"]:
         n = s.get("sceneNumber")
@@ -154,7 +157,7 @@ def main() -> int:
         if render(root, s, out_dir / f"s{n:03d}.png", img):
             made += 1
 
-    print(f"{args.ep}  {made}장 그림 → {out_dir}")
+    print(f"{ep}  {made}장 그림 → {out_dir}")
     return 0
 
 

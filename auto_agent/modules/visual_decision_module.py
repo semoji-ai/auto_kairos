@@ -26,7 +26,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from auto_agent.paths import episode_label, get_package_dir
+from auto_agent.paths import get_package_dir, resolve_project
 
 
 def _run(cmd: list[str], root: Path, log) -> int:
@@ -65,13 +65,13 @@ def run(project: dict, budget_sec: int = 1500, **kwargs) -> dict:
         return budget_sec - (time.time() - started)
 
     root = get_package_dir().parent
-    proj = Path(project.get("output_dir") or "")
     slug = project.get("slug") or ""
-    ep = episode_label(slug)
-
-    if not ep:
-        # 편 지도에 없는 프로젝트 — 이 단계는 편 번호로 파일을 잡는다
-        return {"status": "skipped", "reason": f"편 번호를 찾을 수 없습니다: {slug}"}
+    # 시리즈 편이면 편 번호를, 아니면 slug 를 라벨로 쓴다. 지도에 없다고
+    # 멈추면 시리즈가 아닌 프로젝트는 이 단계를 영영 못 지나간다.
+    try:
+        proj, ep = resolve_project(slug)
+    except SystemExit as e:
+        return {"status": "skipped", "reason": str(e)}
 
     py = str(root / ".venv/bin/python")
     log_f = root / "_imggen" / f"{ep}_visual_decision.log"

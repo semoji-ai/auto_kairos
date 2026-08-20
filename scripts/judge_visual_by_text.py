@@ -33,6 +33,9 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.paths import resolve_project  # noqa: E402
+
 PROMPT = """다큐멘터리 한 장면을 **재연 그림**으로 보여줄지 **인포그래픽**으로
 보여줄지 정합니다.
 
@@ -103,21 +106,21 @@ def main() -> int:
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
-    emap = json.loads((root / "_imggen" / "ep_map.json").read_text(encoding="utf-8"))
-    proj = Path(next(v["dir"] for k, v in emap.items() if k.startswith(args.ep)))
+    # 편 라벨이든 프로젝트 slug 든 받는다 — 시리즈가 아닌 프로젝트도 돌아야 한다
+    proj, ep = resolve_project(args.ep)
     scenes = json.loads((proj / "scene_specs.json").read_text(encoding="utf-8"))["scenes"]
     order = [s.get("sceneNumber") for s in scenes]
     by_n = {s.get("sceneNumber"): s for s in scenes}
 
     truth = {}
-    pick_dir = root / "_imggen" / f"{args.ep.lower()}_pick"
+    pick_dir = root / "_imggen" / f"{ep.lower()}_pick"
     for f in pick_dir.glob("s*.json") if pick_dir.exists() else []:
         try:
             truth[int(f.stem[1:])] = json.loads(f.read_text(encoding="utf-8")).get("pick")
         except Exception:
             continue
 
-    out_dir = root / "_imggen" / f"{args.ep.lower()}_textjudge"
+    out_dir = root / "_imggen" / f"{ep.lower()}_textjudge"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     want = {int(x) for x in args.scenes.split(",")} if args.scenes else None
@@ -142,7 +145,7 @@ def main() -> int:
             f.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
         return n, d
 
-    print(f"{args.ep}  {len(targets)}씬 판단")
+    print(f"{ep}  {len(targets)}씬 판단")
     got = {}
     with ThreadPoolExecutor(max_workers=args.jobs) as ex:
         for n, d in ex.map(run, targets):

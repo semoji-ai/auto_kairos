@@ -25,6 +25,9 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.paths import resolve_project  # noqa: E402
+
 
 def slots(form: str, n: int) -> list[dict]:
     """요소가 놓이는 자리 — 화면 대비 백분율(가운데 기준)."""
@@ -67,9 +70,9 @@ def main() -> int:
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
-    emap = json.loads((root / "_imggen" / "ep_map.json").read_text(encoding="utf-8"))
-    proj = Path(next(v["dir"] for k, v in emap.items() if k.startswith(args.ep)))
-    mode_f = root / "_imggen" / f"{args.ep}_mode.json"
+    # 편 라벨이든 프로젝트 slug 든 받는다 — 시리즈가 아닌 프로젝트도 돌아야 한다
+    proj, ep = resolve_project(args.ep)
+    mode_f = root / "_imggen" / f"{ep}_mode.json"
     if not mode_f.exists():
         raise SystemExit(f"재분석 결과가 없습니다: {mode_f}")
     mode = {s["n"]: s for s in json.loads(mode_f.read_text(encoding="utf-8"))["scenes"]
@@ -77,7 +80,7 @@ def main() -> int:
 
     # 씬 그림과 견줘 「씬 그림이 낫다」고 정한 씬은 다시 인포로 만들지 않는다.
     # 이 판정을 안 보면 되돌려 놓은 것이 조립할 때마다 되살아난다.
-    pick_dir = root / "_imggen" / f"{args.ep.lower()}_pick"
+    pick_dir = root / "_imggen" / f"{ep.lower()}_pick"
     picks = {}
     for f_ in pick_dir.glob("s*.json") if pick_dir.exists() else []:
         try:
@@ -87,7 +90,7 @@ def main() -> int:
 
     # 그림이 없어 견주지 못한 씬은 글 판단을 쓴다. 아무 판단도 없는 씬을
     # 인포로 두면 「둘 다 이길 때만」이 무너진다 — 이긴 적이 없는데 남는다.
-    text_dir = root / "_imggen" / f"{args.ep.lower()}_textjudge"
+    text_dir = root / "_imggen" / f"{ep.lower()}_textjudge"
     for f_ in text_dir.glob("s*.json") if text_dir.exists() else []:
         n_ = int(f_.stem[1:])
         if n_ in picks:
@@ -97,8 +100,8 @@ def main() -> int:
         except Exception:
             continue
 
-    layout_dir = root / "_imggen" / f"{args.ep.lower()}_layout"
-    asset_dir = root / "_imggen" / f"{args.ep.lower()}_info"
+    layout_dir = root / "_imggen" / f"{ep.lower()}_layout"
+    asset_dir = root / "_imggen" / f"{ep.lower()}_info"
     have = {p.stem: p for p in asset_dir.glob("*.png") if "_raw" not in p.name} \
         if asset_dir.exists() else {}
 
@@ -204,7 +207,7 @@ def main() -> int:
 
     designed = sum(1 for s in data.get("scenes", [])
                    if (s.get("infographic") or {}).get("designed"))
-    print(f"{args.ep}  인포그래픽 씬 {len(mode)}개 중 {done}개 조립 (설계본 {designed}개)")
+    print(f"{ep}  인포그래픽 씬 {len(mode)}개 중 {done}개 조립 (설계본 {designed}개)")
     if passed:
         print(f"  씬 그림으로 정한 씬 {len(passed)}개는 건드리지 않았습니다"
               + (f" (그중 {len(reverted)}개는 인포를 떼어 냈습니다)" if reverted else ""))

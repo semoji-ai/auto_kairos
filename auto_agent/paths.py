@@ -101,6 +101,41 @@ def layer_sets(slug: str, scene_num: int) -> list[Path]:
             if (d / "layers.json").is_file()]
 
 
+def resolve_project(token: str) -> tuple[Path, str]:
+    """`EP01` 같은 편 라벨이나 프로젝트 slug 를 받아 (프로젝트 폴더, 라벨).
+
+    시리즈 편은 `_imggen/ep_map.json`이 편 번호를 들고 있다. 하지만 그 지도는
+    LG 12부작을 위해 만든 것이라, 다른 프로젝트를 돌리면 여기서 막혔다.
+    지도에 없으면 slug 로 DB를 찾는다 — 지도는 있으면 쓰고 없으면 없는 대로.
+
+    돌려주는 라벨은 파일 이름에 쓴다(`_imggen/<라벨>_mode.json` 등).
+    """
+    import json
+    import re
+
+    root = get_package_dir().parent
+    f = root / "_imggen" / "ep_map.json"
+    if f.exists():
+        try:
+            emap = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            emap = {}
+        for key, v in emap.items():
+            m = re.match(r"(EP\d+)", key)
+            label = m.group(1) if m else key
+            if token.upper() == label.upper() or token == v.get("slug"):
+                return Path(v["dir"]), label
+
+    # 지도 밖 — slug 로 찾는다
+    from auto_agent.db.project_manager import ProjectManager
+
+    p = ProjectManager().get_project(slug=token)
+    if not p:
+        raise SystemExit(f"프로젝트를 찾을 수 없습니다: {token}")
+    label = re.sub(r"[^0-9A-Za-z]+", "_", token).strip("_")[:40] or "PROJECT"
+    return Path(p["output_dir"]), label
+
+
 def get_vault_dir() -> Path:
     """Obsidian 볼트 디렉토리 (KAIROS_VAULT_DIR 환경변수)."""
     env = os.getenv("KAIROS_VAULT_DIR")
