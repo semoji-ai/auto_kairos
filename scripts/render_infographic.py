@@ -101,11 +101,22 @@ def render(root: Path, scene: dict, out: Path, scene_img: Path | None) -> bool:
             draw_text(d, (cx, cy + h // 2 + 8), it["label"], font(24), mode,
                       it.get("emphasis") == "accent")
 
+    # 기호(+ = →)는 항을 잇는 말이다. 작고 옅으면 화면이 문장이 되지 않는다 —
+    # 실제로 「=」가 어두운 인물 위 회색이라 거의 안 보였다.
     for m in info.get("marks") or []:
-        draw_text(d, (int(W * float(m.get("left", 50)) / 100),
-                      int(H * float(m.get("top", 50)) / 100)),
-                  str(m.get("text", "")), font(34),
-                  "shadow" if mode != "plain" else "plain", False)
+        mx = int(W * float(m.get("left", 50)) / 100)
+        my = int(H * float(m.get("top", 50)) / 100)
+        txt = str(m.get("text", ""))
+        f = font(52)
+        if info.get("background", "grid") != "grid":
+            b = d.textbbox((0, 0), txt, font=f)
+            tw, th = b[2] - b[0], b[3] - b[1]
+            d.ellipse([mx - tw // 2 - 16, my - th // 2 - 14,
+                       mx + tw // 2 + 16, my + th // 2 + 16],
+                      fill=(23, 23, 26, 190))
+            d.text((mx - tw // 2, my - th // 2), txt, font=f, fill=(255, 255, 255))
+        else:
+            draw_text(d, (mx, my), txt, f, "plain", False)
 
     if info.get("title"):
         draw_text(d, (W // 2, int(H * 0.05)), info["title"], font(34), mode, False)

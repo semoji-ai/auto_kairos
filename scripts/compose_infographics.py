@@ -75,6 +75,16 @@ def main() -> int:
     mode = {s["n"]: s for s in json.loads(mode_f.read_text(encoding="utf-8"))["scenes"]
             if s.get("mode") == "infographic"}
 
+    # 씬 그림과 견줘 「씬 그림이 낫다」고 정한 씬은 다시 인포로 만들지 않는다.
+    # 이 판정을 안 보면 되돌려 놓은 것이 조립할 때마다 되살아난다.
+    pick_dir = root / "_imggen" / f"{args.ep.lower()}_pick"
+    picks = {}
+    for f_ in pick_dir.glob("s*.json") if pick_dir.exists() else []:
+        try:
+            picks[int(f_.stem[1:])] = json.loads(f_.read_text(encoding="utf-8")).get("pick")
+        except Exception:
+            continue
+
     layout_dir = root / "_imggen" / f"{args.ep.lower()}_layout"
     asset_dir = root / "_imggen" / f"{args.ep.lower()}_info"
     have = {p.stem: p for p in asset_dir.glob("*.png") if "_raw" not in p.name} \
@@ -83,11 +93,14 @@ def main() -> int:
     f = proj / "scene_specs.json"
     data = json.loads(f.read_text(encoding="utf-8"))
 
-    done, missing, skipped = 0, [], []
+    done, missing, skipped, passed = 0, [], [], []
     for s in data.get("scenes", []):
         n = s.get("sceneNumber")
         spec = mode.get(n)
         if not spec:
+            continue
+        if picks.get(n) in ("scene", "overlay"):
+            passed.append(n)
             continue
 
         # 설계가 있으면 그것을 쓴다. 규칙으로 나눈 자리는 그냥 늘어놓은
@@ -165,6 +178,8 @@ def main() -> int:
     designed = sum(1 for s in data.get("scenes", [])
                    if (s.get("infographic") or {}).get("designed"))
     print(f"{args.ep}  인포그래픽 씬 {len(mode)}개 중 {done}개 조립 (설계본 {designed}개)")
+    if passed:
+        print(f"  씬 그림으로 정한 씬 {len(passed)}개는 건드리지 않았습니다")
     for n, why in skipped:
         print(f"  씬{n:>3} 재연으로 되돌림 — {why[:60]}")
     if missing:
