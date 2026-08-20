@@ -234,6 +234,7 @@ _archive_*/
 !/scripts/judge_visual_by_text.py
 !/scripts/apply_rewrite.py
 !/scripts/split_scenes_by_sentence.py
+!/scripts/plan_screens.py
 !/scripts/reframe_from_source.py
 !/scripts/replan_split_shots.py
 !/scripts/rewrite_in_voice.py
