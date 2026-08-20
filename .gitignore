@@ -233,6 +233,7 @@ _archive_*/
 !/scripts/fix_infographic_layout.py
 !/scripts/judge_visual_by_text.py
 !/scripts/apply_rewrite.py
+!/scripts/split_scenes_by_sentence.py
 !/scripts/rewrite_in_voice.py
 !/scripts/render_infographic.py
 !/scripts/fix_info_overflow.py
