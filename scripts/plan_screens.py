@@ -130,6 +130,10 @@ PROMPT = """다큐멘터리의 한 대목입니다. **씬마다 화면을 정합
   medium    사람이 무엇을 하는가
   close     한 가지만 본다 — 손·글씨·눈·물건·현판
 
+**말이 화면에 보여야 합니다.** 시대와 분위기만 맞는 화면은 실패입니다.
+「빚은 회사를 쓰러뜨립니다」인데 그냥 장부를 읽는 그림이면 말이 사라진 것입니다.
+그 말을 **한 장면으로 어떻게 보이게 할지**를 정하세요.
+
 **말이 가리키는 것을 화면이 봅니다.** 「할아버지는 홍문관 교리였다」면 현판이나
 교지를, 「공부를 시켰다」면 서안과 붓을 봅니다.
 
@@ -193,6 +197,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("ep")
     ap.add_argument("--chapter", type=int, help="이 챕터만")
+    ap.add_argument("--scenes", help="이 씬만 (쉼표로 구분) — 화면이 말을 못 잡았을 때")
     ap.add_argument("--needs", action="store_true",
                     help="새로 그려야 하는 씬만 — 무엇으로 보여줄지 다시 묻는다")
     ap.add_argument("--apply", action="store_true")
@@ -208,6 +213,9 @@ def main() -> int:
     todo = [s for s in scenes if s.get("chapter") == args.chapter] if args.chapter else list(scenes)
     # 카드는 이미 화면이 정해져 있다 — 판단에서 뺀다
     todo = [s for s in todo if not s.get("isChapterCard")]
+    if args.scenes:
+        want_n = {int(x) for x in args.scenes.split(",")}
+        todo = [s for s in todo if s.get("sceneNumber") in want_n]
     if args.needs:
         # 새로 그려야 하는 씬은 「이미 그림이 있으니 재연」이라는 관성이 없다.
         # 여기서 도해·실물 자료를 다시 묻는 것이 맞다.
@@ -227,7 +235,8 @@ def main() -> int:
         head = idx.get(chunk[0].get("sceneNumber"), 0)
         jobs.append((scenes[max(0, head - LOOKBACK):head], chunk))
 
-    tag = ("needs" if args.needs else "") + (f"ch{args.chapter:02d}" if args.chapter else "all")
+    tag = (("s" + args.scenes.replace(",", "_")) if args.scenes else "") \
+        + ("needs" if args.needs else "") + (f"ch{args.chapter:02d}" if args.chapter else "all")
     print(f"{ep}  씬 {len(todo)}개 · 창 {len(jobs)}개")
 
     def run(job):

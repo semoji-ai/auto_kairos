@@ -233,9 +233,34 @@ def main() -> int:
                     people="\n".join(f"- {d}" for d in people))
         # 화면에 누가 몇 명 있는지 못박지 않으면 남는 자리를 같은 얼굴로 채운다.
         # 씬 11에서 어른 둘이 복제된 얼굴로 나왔다 — 시트도 설명도 없는 자리였다.
-        roster = [f"- {names.get(c, c)} (첨부한 시트의 인물)" for c in cast
-                  if (args.sheets / f"{c}_sheet.png").exists()]
-        roster += [f"- {d}" for d in people]
+        # 시트로 붙인 사람을 people 에도 적어 두면 **한 사람이 둘로 센다.**
+        # 씬11 은 cast 둘 + people 하나로 3명이 됐고, 화면에도 셋이 나왔다.
+        #
+        # 더 나아가, **people 에 없는 시트는 아예 붙이지 않는다.** cast 는 그
+        # 씬에 관계된 인물을 넓게 적어 둔 것이라, 이 컷에 나오지 않는 사람까지
+        # 들어 있다. 붙이면 모델이 「첨부한 사람들」을 다 그린다 — 씬11 은
+        # 구인회 한 명짜리 화면인데 구재서 시트가 따라붙어 노인이 하나 더 나왔다.
+        used, extra = [], list(people)
+        for cid in cast:
+            f_ = (args.sheets / f"{cid}_sheet.png")
+            if not f_.exists():
+                continue
+            nm = names.get(cid, cid)
+            hit = next((d for d in extra if nm and nm in str(d)), None)
+            if hit is not None:
+                extra.remove(hit)          # 한 사람은 한 번만 센다
+                used.append((nm, f_))
+            elif not people:
+                used.append((nm, f_))      # people 을 안 정한 옛 씬은 그대로
+        if people:
+            lines = [f"- {nm}: {f_.resolve()}" for nm, f_ in used]
+            if lines:
+                ref = CAST_ONLY.format(sheets="\n".join(lines))
+            else:
+                ref = STYLE_ONLY.format(base=args.base.resolve())
+                ref += PEOPLE_BLOCK.format(people="\n".join(f"- {d}" for d in extra))
+        roster = [f"- {nm} (첨부한 시트의 인물)" for nm, _ in used]
+        roster += [f"- {d}" for d in extra]
         if roster:
             ref += CASE_LIST.format(count=len(roster), people="\n".join(roster))
         else:
