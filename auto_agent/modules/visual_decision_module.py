@@ -89,6 +89,17 @@ def run(project: dict, budget_sec: int = 1500, **kwargs) -> dict:
         if not mode_f.exists():
             return {"status": "failed", "reason": f"재분석 결과가 없습니다 — {log_f}"}
 
+        # ①b 글만 보고 먼저 거른다.
+        #
+        # 그림이 없는 씬은 견줄 수가 없어 그대로 인포로 남았다. EP02에서
+        # 판정은 8씬인데 32씬이 인포로 조립된 것이 그 탓이다.
+        # EP01 정답지(그려서 견준 30씬)와 맞춰 보니 글 판단이 93% 일치했고,
+        # 틀리는 방향이 한쪽뿐이었다 — 인포를 조금 더 집을 뿐 놓치지는 않는다.
+        # 그러니 글로 먼저 좁히고, 그림이 나오면 견주기가 그 둘을 걸러 준다.
+        if left() > 300:
+            _run([py, "scripts/judge_visual_by_text.py", ep], root, log)
+            done.append("글 판단")
+
         # ② 화면 설계 (인포그래픽으로 정한 씬만)
         if left() < 120:
             return {"status": "completed", "done": done, "note": "시간이 모자라 설계는 다음에"}

@@ -85,6 +85,18 @@ def main() -> int:
         except Exception:
             continue
 
+    # 그림이 없어 견주지 못한 씬은 글 판단을 쓴다. 아무 판단도 없는 씬을
+    # 인포로 두면 「둘 다 이길 때만」이 무너진다 — 이긴 적이 없는데 남는다.
+    text_dir = root / "_imggen" / f"{args.ep.lower()}_textjudge"
+    for f_ in text_dir.glob("s*.json") if text_dir.exists() else []:
+        n_ = int(f_.stem[1:])
+        if n_ in picks:
+            continue
+        try:
+            picks[n_] = json.loads(f_.read_text(encoding="utf-8")).get("pick")
+        except Exception:
+            continue
+
     layout_dir = root / "_imggen" / f"{args.ep.lower()}_layout"
     asset_dir = root / "_imggen" / f"{args.ep.lower()}_info"
     have = {p.stem: p for p in asset_dir.glob("*.png") if "_raw" not in p.name} \
@@ -93,13 +105,22 @@ def main() -> int:
     f = proj / "scene_specs.json"
     data = json.loads(f.read_text(encoding="utf-8"))
 
-    done, missing, skipped, passed = 0, [], [], []
+    done, missing, skipped, passed, reverted = 0, [], [], [], []
     for s in data.get("scenes", []):
         n = s.get("sceneNumber")
         spec = mode.get(n)
         if not spec:
             continue
         if picks.get(n) in ("scene", "overlay"):
+            # 붙이지 않는 것으로는 모자란다. 앞서 인포로 조립해 둔 것이
+            # 그대로 남아, 판정이 바뀌어도 화면은 그대로였다. 떼어 낸다.
+            if s.get("infographic"):
+                s.pop("infographic", None)
+                s["visual_kind"] = "generate_image"
+                if not isinstance(s.get("imageAsset"), dict):
+                    s["imageAsset"] = {}
+                s["imageAsset"]["source"] = "generate"
+                reverted.append(n)
             passed.append(n)
             continue
 
@@ -185,7 +206,8 @@ def main() -> int:
                    if (s.get("infographic") or {}).get("designed"))
     print(f"{args.ep}  인포그래픽 씬 {len(mode)}개 중 {done}개 조립 (설계본 {designed}개)")
     if passed:
-        print(f"  씬 그림으로 정한 씬 {len(passed)}개는 건드리지 않았습니다")
+        print(f"  씬 그림으로 정한 씬 {len(passed)}개는 건드리지 않았습니다"
+              + (f" (그중 {len(reverted)}개는 인포를 떼어 냈습니다)" if reverted else ""))
     for n, why in skipped:
         print(f"  씬{n:>3} 재연으로 되돌림 — {why[:60]}")
     if missing:
