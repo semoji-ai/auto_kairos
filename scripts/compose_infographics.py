@@ -118,7 +118,9 @@ def main() -> int:
             if s.get("visual_kind") == "infographic":
                 s["visual_kind"] = "generate_image"
                 s.pop("infographic", None)
-                s.setdefault("imageAsset", {})["source"] = "generate"
+                if not isinstance(s.get("imageAsset"), dict):
+                    s["imageAsset"] = {}
+                s["imageAsset"]["source"] = "generate"
             skipped.append((n, lay.get("why", "")))
             continue
 
@@ -172,7 +174,11 @@ def main() -> int:
             "items": items,
         }
         s["visual_kind"] = "infographic"
-        s.setdefault("imageAsset", {})["source"] = "infographic"
+        # 키가 있는데 값이 null인 씬이 있다. setdefault는 그 None을 그대로
+        # 돌려주므로 여기서 죽었다.
+        if not isinstance(s.get("imageAsset"), dict):
+            s["imageAsset"] = {}
+        s["imageAsset"]["source"] = "infographic"
         done += 1
 
     designed = sum(1 for s in data.get("scenes", [])

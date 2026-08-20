@@ -4783,6 +4783,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "skeleton_from_vault": "modules/skeleton_from_vault_module.py",
             "chapter_projection": "modules/chapter_projection_module.py",
             "scene_enricher_module": "modules/scene_enricher_module.py",
+            "visual_decision_module": "modules/visual_decision_module.py",
             "duplicate-checker": "scripts/duplicate_check.py",
             "tts-generator": "scripts/generate_tts.py",
             "image_batch": "modules/image_batch_module.py",

@@ -499,6 +499,21 @@
           ],
           "blocking": true,
           "notes": "Stage 2 끝에서 모든 검색 작업 마무리. 검토 큐 잔여 항목 있으면 exit 2로 정지 — 대시보드 '자료 검토' 탭에서 처리 후 --from step_3b로 재개. Stage 3는 비용 발생 작업(생성·TTS)에만 집중."
+        },
+        {
+          "id": "step_2_visual",
+          "name": "visual_decision",
+          "description": "씬을 무엇으로 보여줄지 정한다 — 방식 재분석 · 화면 설계 · 그려서 견주기. script-director의 visual_kind는 초안이고 여기서 뒤집는다.",
+          "type": "module",
+          "module": "visual_decision_module",
+          "input": [
+            "scene_specs.json"
+          ],
+          "output": [
+            "scene_specs.json"
+          ],
+          "blocking": false,
+          "notes": "규칙: docs/rules/scene-visual-decision.md. 글로만 정하면 틀린다 — EP01에서 35씬이 인포그래픽으로 넘어갔으나 실제로 맞는 것은 5씬이었다. 이해는 도해가 빠르지만 보고 싶지가 않다(22:8 vs 5:25). 둘 다 이길 때만 인포그래픽이다. 씬 그림이 아직 없으면 설계까지만 하고 멈춘다 — step_3b 뒤에 --only step_2_visual 로 다시 부르면 비교까지 잇는다."
         }
       ],
       "checkpoint": {
