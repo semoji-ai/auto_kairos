@@ -37,6 +37,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("ep")
     ap.add_argument("--apply", action="store_true")
+    ap.add_argument("--chapter", type=int, help="이 챕터만")
+    ap.add_argument("--files", help="배분 파일 이름들 (쉼표로 구분)")
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
@@ -50,15 +52,39 @@ def main() -> int:
     img_db = json.loads(img_f.read_text(encoding="utf-8")) if img_f.exists() else {"scenes": []}
     img_by_n = {e.get("sceneNumber"): e for e in img_db.get("scenes", [])}
 
+    # 문장으로 배분한 결과가 있으면 그것을 쓴다. 없으면 다시 쓴 원고를 쓴다.
+    split_dir = root / "_imggen" / f"{ep.lower()}_split"
     rw_dir = root / "_imggen" / f"{ep.lower()}_rewrite"
-    plans = sorted(rw_dir.glob("ch*.json"))
+    # 배분 결과는 ch01.json 말고도 이름이 다양하다(resplit.json 등).
+    # ch*.json 만 훑으면 넘겨준 파일을 못 찾는다.
+    src_dir = split_dir if any(split_dir.glob("*.json")) else rw_dir
+    plans = sorted(src_dir.glob("*.json"))
+    if args.files:
+        want = {x.strip().removesuffix(".json") for x in args.files.split(",")}
+        plans = [f for f in plans if f.stem in want]
+    elif args.chapter:
+        plans = [f for f in plans if f.stem == f"ch{args.chapter:02d}"]
     if not plans:
-        raise SystemExit(f"다시 쓴 원고가 없습니다: {rw_dir}")
+        raise SystemExit(f"반영할 것이 없습니다: {src_dir}")
+    print(f"바탕: {src_dir.name}")
 
     used_new = {n for n in by_n if isinstance(n, int) and n >= NEW_BASE}
     next_new = max(used_new, default=NEW_BASE - 1) + 1
 
     replaced: set = set()          # 이 씬들은 새 씬으로 갈음된다
+
+    # 앞 단계(다시 쓰기)에서 다른 씬에 합쳐진 원본도 지운다. 배분 결과의
+    # from 에는 대표 번호만 남아 있어서, 이걸 안 보면 합쳐진 원본이 그대로
+    # 남아 같은 말이 두 번 나온다 — 실제로 씬16·22가 그랬다.
+    merged_away: set = set()
+    for f_ in sorted(rw_dir.glob("ch*.json")) if rw_dir.exists() else []:
+        if args.chapter and f_.stem != f"ch{args.chapter:02d}":
+            continue
+        for row in json.loads(f_.read_text(encoding="utf-8")).get("scenes", []):
+            fr = row.get("from")
+            fr = fr if isinstance(fr, list) else [fr]
+            fr = [x for x in fr if isinstance(x, int)]
+            merged_away.update(fr[1:])
     made: list = []                # (새 씬, 물려받을 그림 항목)
     report: list = []
 
@@ -76,25 +102,42 @@ def main() -> int:
                 num = next_new
                 next_new += 1
 
-            s = dict(src) if src else {}
+            turn = row.get("kind") == "turn"
+            s = {} if turn else (dict(src) if src else {})
+            if turn:
+                # 반전 접속사 카드 — 흰 화면에 한 마디, 빠르게 넘어간다.
+                # 음성은 넣되 쉼표로 끊는다(「하지만,」). 화면 글자는 쉼표 없이.
+                word = row.get("narration", "").strip().rstrip(".,")
+                s.update({
+                    "narration": word + ",",
+                    "headline": word,
+                    "title": word,
+                    "layout": "turn_card",
+                    "isTurnCard": True,
+                    "visual_kind": "none",
+                    "infoStructure": "scene",
+                    "durationSec": 1.2,
+                    "imageAsset": {"source": "none"},
+                })
             s.update({
                 "sceneNumber": num,
                 "sceneId": s.get("sceneId") if num == (froms[0] if froms else None)
                 else uuid.uuid4().hex[:8],
                 "chapter": ch,
-                "narration": row.get("narration", "").strip(),
-                "title": row.get("title", ""),
+                "narration": s.get("narration") if turn else row.get("narration", "").strip(),
+                "title": row.get("title", "") or s.get("title", ""),
                 "narration_dirty": True,       # 말이 바뀌었으니 음성은 다시
             })
             s.pop("infographic", None)          # 화면 결정은 다시 한다
 
             # 그림 물려주기
             pool = []
-            for fr in froms:
+            for fr in ([] if turn else froms):
                 e = img_by_n.get(fr)
                 if e:
                     pool.extend(e.get("images") or [])
             replaced.update(froms)
+            replaced.update(merged_away)
             made.append((s, num, froms, pool))
             report.append((num, froms, len(pool), row.get("title", ""), row.get("note", "")))
 
@@ -140,6 +183,14 @@ def main() -> int:
 
     # 이미지 항목 — 새 번호로 옮긴다. 파일은 그대로 두고 항목만 만든다.
     entries = {e.get("sceneNumber"): e for e in img_db.get("scenes", [])}
+
+    # 한 씬에서 갈라져 나온 조각들이 같은 그림을 그대로 물려받으면 화면이
+    # 되풀이된다. 원본에 여러 장이 있으면 **나눠 갖는다.**
+    order_of: dict = {}
+    for _ns, num, froms, _pool in made:
+        key = froms[0] if froms else None
+        order_of.setdefault(key, []).append(num)
+
     for ns, num, froms, pool in made:
         if not pool:
             continue
@@ -149,12 +200,16 @@ def main() -> int:
                 continue
             seen.add(im.get("file"))
             imgs.append(dict(im))
-        # 고른 그림은 하나만 남긴다(첫 번째 selected, 없으면 첫 장)
-        sel = next((i for i in imgs if i.get("selected")), imgs[0])
+
+        sibs = order_of.get(froms[0] if froms else None, [num])
+        rank = sibs.index(num) if num in sibs else 0
+        # 원래 고른 그림을 첫 조각이 갖고, 나머지는 다음 장을 하나씩
+        first = next((i for i, x in enumerate(imgs) if x.get("selected")), 0)
+        pick = imgs[(first + rank) % len(imgs)]
         for i in imgs:
-            i["selected"] = i is sel
+            i["selected"] = i is pick
         entries[num] = {"sceneNumber": num, "images": imgs,
-                        "selected": sel.get("file")}
+                        "selected": pick.get("file")}
     img_db["scenes"] = [entries[k] for k in sorted(entries)]
     img_f.parent.mkdir(parents=True, exist_ok=True)
     img_f.write_text(json.dumps(img_db, ensure_ascii=False, indent=2), encoding="utf-8")
