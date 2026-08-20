@@ -123,7 +123,10 @@ def main() -> int:
                 "sceneNumber": num,
                 "sceneId": s.get("sceneId") if num == (froms[0] if froms else None)
                 else uuid.uuid4().hex[:8],
-                "chapter": ch,
+                # 씬이 제 챕터를 들고 오면 그것을 쓴다. 묶음의 챕터를
+                # 덮어씌우면 여러 챕터를 걸친 묶음에서 원고가 뭉개진다.
+                "chapter": row.get("chapter",
+                                   (src or {}).get("chapter", ch) if src else ch),
                 "narration": s.get("narration") if turn else row.get("narration", "").strip(),
                 "title": row.get("title", "") or s.get("title", ""),
                 "narration_dirty": True,       # 말이 바뀌었으니 음성은 다시

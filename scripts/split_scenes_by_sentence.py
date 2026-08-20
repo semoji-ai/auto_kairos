@@ -236,6 +236,10 @@ def main() -> int:
                 continue
             body = " ".join(blocks[i] for i in idx)
             froms = sorted({owner[i] for i in idx})
+            # --out 으로 한 묶음을 볼 때는 챕터가 섞여 있다. 묶음 하나의
+            # 챕터를 전부에 찍으면 원고의 챕터가 뭉개진다 — 실제로 113씬이
+            # 전부 챕터0이 됐다. 씬마다 제가 온 곳의 챕터를 적어 둔다.
+            own_ch = by_n.get(froms[0], {}).get("chapter") if froms else ch
 
             # 반전 접속사는 독립 씬으로 떼어 낸다 — 흰 화면에 한 마디,
             # 빠르게 넘어가고 다음 화면이 이어받는다
@@ -246,6 +250,7 @@ def main() -> int:
                     "title": turn,
                     "from": froms,
                     "kind": "turn",
+                    "chapter": own_ch,
                     "why": "반전 — 흰 화면에 한 마디로 끊는다",
                 })
                 body = rest
@@ -254,6 +259,7 @@ def main() -> int:
                 "narration": body,
                 "title": row.get("title", ""),
                 "from": froms,
+                "chapter": own_ch,
                 "why": row.get("why", ""),
             })
         out = {"chapter": ch, "blocks": len(blocks),
