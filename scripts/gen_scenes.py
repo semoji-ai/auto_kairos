@@ -154,6 +154,11 @@ def main() -> int:
         p = prev_of.get(n)
         if p is None:
             return None
+        # 이번 판에서 방금 그린 것을 먼저 본다. 프로젝트에 붙이는 것은 나중이라
+        # 여기만 보면 이어지는 컷이 레퍼런스 없이 그려진다 — 씬986 이 그랬다.
+        for cand in (args.out / f"scene_{p:03d}.png", args.out / f"scene_{p}.png"):
+            if cand.exists():
+                return cand.resolve()
         sel = get_selected(args.project / "images", p)
         if not sel:
             return None
@@ -161,6 +166,9 @@ def main() -> int:
         return f if f.exists() else None
     jobs = json.loads((args.prompt_dir / "jobs.json").read_text(encoding="utf-8"))
 
+    if args.only:
+        want = {int(x) for x in args.only.split(",")}
+        jobs = [j for j in jobs if j["sceneNumber"] in want]
     # 프롬프트가 빈 씬을 생성에 넘기면 모델이 장면을 지어낸다.
     # EP01 씬 68(클리프행어)이 현대 사무실로 나온 원인이다. 경고가 아니라 막는다.
     empty = [j["sceneNumber"] for j in jobs if "프롬프트 비어 있음" in (j.get("issues") or [])]
@@ -170,21 +178,37 @@ def main() -> int:
         print("    (--allow-empty 로 강제할 수 있으나 장면이 날조됩니다)")
         if not args.allow_empty:
             return 2
-    if args.only:
-        want = {int(x) for x in args.only.split(",")}
-        jobs = [j for j in jobs if j["sceneNumber"] in want]
     args.out.mkdir(parents=True, exist_ok=True)
+
+    import re as _re
+
+    def people_in_prompt(text: str) -> str:
+        """프롬프트의 「인물:」 칸에 적힌 사람. 없으면 빈 문자열."""
+        m = _re.search(r"인물\s*[:：]\s*([^,\n]+)", text or "")
+        if not m:
+            return ""
+        v = m.group(1).strip()
+        return "" if v in ("없음", "-", "무") else v
 
     def run(job: dict) -> tuple[int, bool, str]:
         n = job["sceneNumber"]
         cast = scenes.get(n, {}).get("cast") or []
-        lines = []
+        lines: list = []
         for cid in cast:
             p = (args.sheets / f"{cid}_sheet.png").resolve()
             if p.exists():
                 lines.append(f"- {names.get(cid, cid)}: {p}")
         scene = scenes.get(n, {})
         people = scene.get("people") or []
+        body = Path(job["prompt_file"]).read_text(encoding="utf-8")
+        # 화면을 새로 짠 씬은 cast·people 칸이 비어 있다. 그런데 프롬프트의
+        # 「인물:」 칸에는 사람이 적혀 있다 — 그 씬에 NO_PEOPLE 을 붙이면
+        # 한 프롬프트 안에서 말이 엇갈리고, 모델은 「사람 없음」을 따른다.
+        # 씬986 이 그랬다: 「여인들이 옷에 돈을 썼다」인데 사람이 없었다.
+        if not people and not lines:
+            who = people_in_prompt(body)
+            if who:
+                people = [who]
         if lines:
             # 캐릭터 시트가 있으면 그것만 붙인다. 화풍 기준 시트를 함께 주면
             # 두 사람 그림이 섞여 정체성이 깨진다.
@@ -212,8 +236,7 @@ def main() -> int:
             if p:
                 ref += PREV_CUT.format(prev=p)
         out = next_version(args.out, n)
-        prompt = SCENE.format(prompt=Path(job["prompt_file"]).read_text(encoding="utf-8"),
-                              ref_block=ref, size=job.get("size", "1792x1024"), out=out)
+        prompt = SCENE.format(prompt=body, ref_block=ref, size=job.get("size", "1792x1024"), out=out)
         subprocess.run(
             ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
             stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=1200,

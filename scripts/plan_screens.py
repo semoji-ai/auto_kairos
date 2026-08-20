@@ -48,6 +48,10 @@ PROMPT = """다큐멘터리의 한 대목입니다. **씬마다 화면을 정합
 
 ## 정할 씬
 
+이 씬들은 **아직 그림이 없습니다.** 있는 그림에 맞추지 마세요 — 무엇으로
+보여줄지 처음부터 정합니다. 실물 사진·문서가 있어야 믿기는 자리면 `archive`,
+도해만 할 수 있는 일이면 `infographic` 입니다.
+
 {scenes}
 
 ---
@@ -165,6 +169,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("ep")
     ap.add_argument("--chapter", type=int, help="이 챕터만")
+    ap.add_argument("--needs", action="store_true",
+                    help="새로 그려야 하는 씬만 — 무엇으로 보여줄지 다시 묻는다")
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("-j", "--jobs", type=int, default=4)
     args = ap.parse_args()
@@ -178,6 +184,10 @@ def main() -> int:
     todo = [s for s in scenes if s.get("chapter") == args.chapter] if args.chapter else list(scenes)
     # 카드는 이미 화면이 정해져 있다 — 판단에서 뺀다
     todo = [s for s in todo if not s.get("isChapterCard")]
+    if args.needs:
+        # 새로 그려야 하는 씬은 「이미 그림이 있으니 재연」이라는 관성이 없다.
+        # 여기서 도해·실물 자료를 다시 묻는 것이 맞다.
+        todo = [s for s in todo if s.get("needs_image")]
     if not todo:
         raise SystemExit("정할 씬이 없습니다")
 
@@ -193,7 +203,7 @@ def main() -> int:
         head = idx.get(chunk[0].get("sceneNumber"), 0)
         jobs.append((scenes[max(0, head - LOOKBACK):head], chunk))
 
-    tag = f"ch{args.chapter:02d}" if args.chapter else "all"
+    tag = ("needs" if args.needs else "") + (f"ch{args.chapter:02d}" if args.chapter else "all")
     print(f"{ep}  씬 {len(todo)}개 · 창 {len(jobs)}개")
 
     def run(job):

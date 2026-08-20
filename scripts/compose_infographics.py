@@ -72,11 +72,12 @@ def main() -> int:
     root = Path(__file__).resolve().parent.parent
     # 편 라벨이든 프로젝트 slug 든 받는다 — 시리즈가 아닌 프로젝트도 돌아야 한다
     proj, ep = resolve_project(args.ep)
+    # 무엇이 도해인가는 **scene_specs 가 정본**이다. 재분석 결과(`_mode.json`)는
+    # 원고를 다시 쓰기 전의 씬 경계를 가리킨다 — 그것만 보면 16씬이 도해인데
+    # 35씬을 훑고 7씬만 조립된다. 옛 파일은 요소 목록으로만 쓴다.
     mode_f = root / "_imggen" / f"{ep}_mode.json"
-    if not mode_f.exists():
-        raise SystemExit(f"재분석 결과가 없습니다: {mode_f}")
     mode = {s["n"]: s for s in json.loads(mode_f.read_text(encoding="utf-8"))["scenes"]
-            if s.get("mode") == "infographic"}
+            if s.get("mode") == "infographic"} if mode_f.exists() else {}
 
     # 씬 그림과 견줘 「씬 그림이 낫다」고 정한 씬은 다시 인포로 만들지 않는다.
     # 이 판정을 안 보면 되돌려 놓은 것이 조립할 때마다 되살아난다.
@@ -111,13 +112,18 @@ def main() -> int:
     done, missing, skipped, passed, reverted = 0, [], [], [], []
     for s in data.get("scenes", []):
         n = s.get("sceneNumber")
-        spec = mode.get(n)
-        if not spec:
+        if s.get("visual_kind") != "infographic":
             continue
+        spec = mode.get(n) or {"n": n, "labels": [],
+                               "composition": {"note": s.get("info_shows", "")}}
         if picks.get(n) in ("scene", "overlay"):
             # 붙이지 않는 것으로는 모자란다. 앞서 인포로 조립해 둔 것이
             # 그대로 남아, 판정이 바뀌어도 화면은 그대로였다. 떼어 낸다.
-            if s.get("infographic"):
+            #
+            # 조립된 것이 없어도 종류는 되돌려야 한다. 안 그러면 「도해」로
+            # 표시된 채 도해가 없는 씬이 남는다 — 그려서 견준 판정이 글
+            # 판단을 이긴다는 규칙이 상태에 반영되지 않는다.
+            if s.get("infographic") or s.get("visual_kind") == "infographic":
                 s.pop("infographic", None)
                 s["visual_kind"] = "generate_image"
                 if not isinstance(s.get("imageAsset"), dict):

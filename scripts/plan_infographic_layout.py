@@ -139,13 +139,16 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("ep")
     ap.add_argument("--scenes", help="쉼표로 구분한 씬 번호 (없으면 전부)")
+    ap.add_argument("--force", action="store_true",
+                    help="이미 있는 설계도 다시 짠다 (원고가 바뀌었을 때)")
     ap.add_argument("-j", "--jobs", type=int, default=4)
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
     # 편 라벨이든 프로젝트 slug 든 받는다 — 시리즈가 아닌 프로젝트도 돌아야 한다
     proj, ep = resolve_project(args.ep)
-    mode = json.loads((root / "_imggen" / f"{ep}_mode.json").read_text(encoding="utf-8"))
+    mode_f = root / "_imggen" / f"{ep}_mode.json"
+    mode = json.loads(mode_f.read_text(encoding="utf-8")) if mode_f.exists() else {"scenes": []}
     specs = {s["sceneNumber"]: s for s in
              json.loads((proj / "scene_specs.json").read_text(encoding="utf-8"))["scenes"]}
 
@@ -169,14 +172,20 @@ def main() -> int:
             continue
 
     want = {int(x) for x in args.scenes.split(",")} if args.scenes else None
+
+    # 무엇이 도해인가는 **scene_specs 가 정본**이다. 예전에는 재분석 결과
+    # (`_mode.json`)를 봤는데, 원고를 다시 쓰고 씬을 다시 나눈 뒤로는 그 파일이
+    # 옛 씬 경계를 가리킨다 — 22씬이 도해인데 12씬만 잡혔다.
+    by_mode = {s.get("n"): s for s in mode.get("scenes", [])}
     jobs = []
-    for s in mode["scenes"]:
-        n = s.get("n")
-        if s.get("mode") != "infographic" or (want and n not in want):
+    for n, spec in sorted(specs.items()):
+        if spec.get("visual_kind") != "infographic" or (want and n not in want):
             continue
+        s = by_mode.get(n) or {"n": n, "labels": [],
+                               "composition": {"note": spec.get("info_shows", "")}}
         if n in said_scene and not want:
             continue
-        planned = s.get("assets") or []
+        planned = s.get("assets") or [{"id": "main", "role": spec.get("info_shows", "")}]
         # 그려 놓은 것이 있으면 그것만, 아직 없으면 계획한 것 전부로 짠다
         assets = [a for a in planned if f"s{n:03d}_{a['id']}" in have] or planned
         if assets:
@@ -188,7 +197,7 @@ def main() -> int:
     def run(job):
         n, s, assets = job
         f = out_dir / f"s{n:03d}.json"
-        if f.exists():
+        if f.exists() and not args.force:
             return n, "이미 있음"
         prompt = PROMPT.format(
             narration=(specs.get(n, {}).get("narration") or "").strip()[:400],
