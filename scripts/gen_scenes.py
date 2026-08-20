@@ -61,6 +61,28 @@ CASE_LIST = """
 {people}
 """
 
+PREV_CUT = """
+## 첨부 이미지 — 바로 앞 컷 (이어지는 장면입니다)
+
+{prev}
+
+이 컷은 앞 컷에서 **이어집니다.** 같은 세계이고 같은 흐름입니다.
+
+**앞 컷에서 가져올 것**
+- 인물의 얼굴·머리 모양·옷차림
+- 장소의 생김새와 소품
+- 빛의 방향과 색, 시간대
+- 그림체와 색감
+
+**바꿀 것 — 여기가 핵심입니다**
+- 카메라 자리와 각도를 확실히 옮깁니다. 크기도 한 단계 이상 바꿉니다
+- 인물의 자세와 동작은 **이야기가 나아간 만큼 달라집니다.**
+  앞 컷을 그대로 다시 그리는 것이 아닙니다
+
+**앞 컷을 복사하지 마세요.** 같은 사람이 같은 곳에 있되, 다음 순간을
+다른 자리에서 본 그림입니다.
+"""
+
 NO_PEOPLE = """
 **이 화면에는 사람이 나오지 않습니다.** 사물·문서·건물·풍경만으로 채웁니다.
 빈자리는 소품과 공간으로 메우세요.
@@ -118,6 +140,25 @@ def main() -> int:
     data = json.loads((args.project / "scene_specs.json").read_text(encoding="utf-8"))
     scenes = {s["sceneNumber"]: s for s in data.get("scenes", data)}
     names = {e["id"]: e["name"] for e in json.loads(args.roster.read_text(encoding="utf-8"))}
+
+    # 이어지는 컷은 앞 컷을 레퍼런스로 붙인다. 같은 사람이 같은 곳에 있는데
+    # 말로만 설명하면 얼굴도 옷도 빛도 매번 다시 해석된다 — 시트로 얼굴을
+    # 고정한 것과 같은 이유다. 그림을 보여 주는 편이 정확하다.
+    order = [s.get("sceneNumber") for s in data.get("scenes", data)]
+    prev_of = dict(zip(order[1:], order))
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from auto_agent.tools.image_assets import get_selected
+
+    def prev_cut(n: int) -> Path | None:
+        """앞 컷의 고른 그림. 앞 컷도 아직 안 그렸으면 없다."""
+        p = prev_of.get(n)
+        if p is None:
+            return None
+        sel = get_selected(args.project / "images", p)
+        if not sel:
+            return None
+        f = (args.project / "images" / sel).resolve()
+        return f if f.exists() else None
     jobs = json.loads((args.prompt_dir / "jobs.json").read_text(encoding="utf-8"))
 
     # 프롬프트가 빈 씬을 생성에 넘기면 모델이 장면을 지어낸다.
@@ -166,6 +207,10 @@ def main() -> int:
             # 사람을 안 적으면 모델이 화면을 채우려 사람을 그리고, 정보가 없으니
             # 견본 시트를 베낀다. 아무도 없는 화면이면 그렇다고 못박는다.
             ref += NO_PEOPLE
+        if (scene.get("imageAsset") or {}).get("continuity") == "continuous":
+            p = prev_cut(n)
+            if p:
+                ref += PREV_CUT.format(prev=p)
         out = next_version(args.out, n)
         prompt = SCENE.format(prompt=Path(job["prompt_file"]).read_text(encoding="utf-8"),
                               ref_block=ref, size=job.get("size", "1792x1024"), out=out)
