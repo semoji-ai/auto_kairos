@@ -33,6 +33,40 @@ STYLE = (
     "채도를 낮춘 레트로 플랫 팔레트 #A8BFB4, #8FAECF, #E8C4B0, #2F3E52, #F2F2F0"
 )
 
+
+# ── 실사 유래 콜라주 ─────────────────────────────────────
+# 제품 병처럼 **실물 형태가 정확해야 하는** 오브젝트는 설명만 보고 그리면
+# 라벨·문양·색이 실제와 어긋난다. 조사로 확보한 실사를 붙여 그 형태대로 뽑는다.
+#
+# 다만 실사처럼 매끈하게 뽑으면 시청자가 진짜 사진으로 받아들인다. 그래서
+# **오려 붙인 티가 나게** 만든다 — 재현임이 화면에서 스스로 드러나므로
+# 배지 없이도 오도가 생기지 않는다.
+#
+# ⚠️ 세모지 화풍 에셋에는 쓰지 않는다. 캐릭터 시트에서 오려낸 인물,
+#    도형·아이콘처럼 처음부터 그려낸 것에 흰 테두리를 두르면 화면이 지저분해진다.
+COLLAGE_REF = """
+## 첨부 이미지 — 실물 자료 (형태 기준)
+
+{refs}
+
+이 오브젝트는 **실물 형태를 그대로 따릅니다.** 병의 실루엣, 어깨와 목의 비율,
+라벨의 위치와 크기, 문양과 색을 첨부한 사진에서 가져옵니다.
+사진을 그대로 복사하지는 말고, 아래 콜라주 지시대로 다시 그립니다.
+"""
+
+COLLAGE_STYLE = """
+## 콜라주 처리 — 오려 붙인 티가 나게
+
+이것은 사진이 아니라 **잡지에서 오려 붙인 조각**입니다.
+- 오브젝트 바깥 둘레에 **흰 종이 테두리를 3~5px 두께로** 두릅니다.
+  가위로 자른 듯 미세하게 들쭉날쭉하게, 자를 대고 자른 듯 반듯하지 않게.
+- 흰 테두리 바깥으로 **아주 옅은 회색 그림자**를 짧게 깔아 종이가 살짝
+  들뜬 느낌을 냅니다. 길게 늘어뜨리지 않습니다.
+- 오브젝트 자체는 실물의 색과 형태를 유지하되 **면을 단순하게** 정리합니다.
+  반사와 하이라이트는 색면 두세 단계로 줄입니다.
+- 배경 그림자, 원근 왜곡, 렌즈 흐림은 넣지 않습니다.
+"""
+
 PROMPT = """$imagegen
 
 **첨부한 그림을 먼저 view_image 도구로 불러와 대화 맥락에 넣으세요.**
@@ -134,7 +168,11 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     jobs = []
-    by_mode = {s["n"]: s for s in modes.get("scenes", []) if s.get("mode") == "infographic"}
+    # `collage` 도 요소를 따로 그린다 — 실사 병 옆에 수치·풍미 요소를 놓는
+    # 화면이다. 모드 표에는 둘 다 있는데 여기서 infographic 만 받아, 콜라주로
+    # 정한 씬은 에셋이 한 장도 안 나왔다. 디아지오편 58·92·121 이 그랬다.
+    by_mode = {s["n"]: s for s in modes.get("scenes", [])
+               if s.get("mode") in ("infographic", "collage")}
     for n in sorted(want):
         need = wanted.get(n)
         listed = {a.get("id"): a for a in (by_mode.get(n) or {}).get("assets") or []}
@@ -157,6 +195,16 @@ def main() -> int:
         raw = out_dir / f"s{n:03d}_{a['id']}_raw.png"
         prompt = PROMPT.format(base=args.base.resolve(), subject=clean_subject(a["prompt"]),
                                chroma=CHROMA, style=STYLE, out=raw.resolve())
+        # 실사 자료가 붙은 오브젝트만 콜라주로 간다. 세모지 화풍 에셋은
+        # 그대로 둔다 — 그려낸 것에 흰 테두리를 두르면 화면이 지저분해진다.
+        refs = [r for r in (a.get("refAssets") or [])
+                if r.get("local") and Path(r["local"]).exists()]
+        if refs:
+            lines = "\n".join(f"- {r.get('desc') or '실물 자료'}: {Path(r['local']).resolve()}"
+                              for r in refs[:2])
+            prompt = prompt.replace(
+                "## 그릴 것",
+                COLLAGE_REF.format(refs=lines) + COLLAGE_STYLE + "\n## 그릴 것", 1)
         subprocess.run(
             ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
             stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=900)

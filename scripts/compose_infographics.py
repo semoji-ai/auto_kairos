@@ -76,8 +76,11 @@ def main() -> int:
     # 원고를 다시 쓰기 전의 씬 경계를 가리킨다 — 그것만 보면 16씬이 도해인데
     # 35씬을 훑고 7씬만 조립된다. 옛 파일은 요소 목록으로만 쓴다.
     mode_f = root / "_imggen" / f"{ep}_mode.json"
+    # `collage` 도 요소를 화면에 놓는다 — 씬 그림 위에 풍미·수치 요소를 얹는
+    # 화면이다. 여기서 infographic 만 받아, 콜라주로 정한 씬은 에셋을 만들어
+    # 두고도 배치가 생기지 않아 화면에 한 개도 안 올라왔다.
     mode = {s["n"]: s for s in json.loads(mode_f.read_text(encoding="utf-8"))["scenes"]
-            if s.get("mode") == "infographic"} if mode_f.exists() else {}
+            if s.get("mode") in ("infographic", "collage")} if mode_f.exists() else {}
 
     # 씬 그림과 견줘 「씬 그림이 낫다」고 정한 씬은 다시 인포로 만들지 않는다.
     # 이 판정을 안 보면 되돌려 놓은 것이 조립할 때마다 되살아난다.
@@ -116,7 +119,13 @@ def main() -> int:
             continue
         spec = mode.get(n) or {"n": n, "labels": [],
                                "composition": {"note": s.get("info_shows", "")}}
-        if picks.get(n) in ("scene", "overlay"):
+        # 씬 그림을 **배경으로 깔고 그 위에 요소를 얹는** 경우가 빠져 있었다.
+        # 판정이 「씬 그림이 낫다」여도, 재분석이 `background: scene` 이라고
+        # 적어 두었으면 그것은 「도해로 갈아치우자」가 아니라 「그림 위에
+        # 얹자」는 뜻이다. 둘을 같이 묶어 걸러 내면 풍미 요소를 만들어 두고도
+        # 화면에 한 개도 안 올라간다 — 디아지오편 58·92·121 이 그랬다.
+        overlay_on_scene = spec.get("background") == "scene"
+        if picks.get(n) in ("scene", "overlay") and not overlay_on_scene:
             # 붙이지 않는 것으로는 모자란다. 앞서 인포로 조립해 둔 것이
             # 그대로 남아, 판정이 바뀌어도 화면은 그대로였다. 떼어 낸다.
             #
@@ -192,7 +201,7 @@ def main() -> int:
             "title": (lay or {}).get("title", ""),
             # 그리드 대신 그 씬의 지도·그림을 배경으로 깔 수 있다.
             # 지도 위에 요소를 얹으면 「어디」와 「무엇이」가 한 화면에 온다.
-            "background": (lay or {}).get("background", "grid"),
+            "background": (lay or {}).get("background") or spec.get("background") or "grid",
             # 글자가 읽히는 방식 — 배경이 복잡할수록 판을 깐다
             "contrast": (lay or {}).get("contrast", "plain"),
             "split_hint": (lay or {}).get("split_hint", ""),
@@ -208,7 +217,10 @@ def main() -> int:
         # 돌려주므로 여기서 죽었다.
         if not isinstance(s.get("imageAsset"), dict):
             s["imageAsset"] = {}
-        s["imageAsset"]["source"] = "infographic"
+        # 씬 그림을 배경으로 깔 때는 `source` 를 건드리지 않는다. 그 그림을
+        # 계속 찾아야 하는데 `infographic` 으로 덮으면 배경이 사라진다.
+        if s["infographic"]["background"] != "scene":
+            s["imageAsset"]["source"] = "infographic"
         done += 1
 
     designed = sum(1 for s in data.get("scenes", [])
