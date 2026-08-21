@@ -556,11 +556,18 @@ document.addEventListener("DOMContentLoaded", function () {
   $("btnImportV3").addEventListener("click", importV3);
   $("btnReconnect").addEventListener("click", checkBackend);
   $("btnBuild").addEventListener("click", buildComp);
-  $("btnBuildAll").addEventListener("click", buildComp);
+  /* 「전체 컴프」와 「타임라인」은 **같은 호출이었다** —
+     buildComp() 도 exportToTimeline(null) 도 결국 _assemble(null) 이다.
+     버튼이 둘로 보여 무엇이 다른지 물어야 했다. 하나로 합치고
+     `btnBuildAll` 은 뺐다. 옛 마크업이 남아 있어도 죽지 않게 가드를 둔다. */
+  var bba = $("btnBuildAll");
+  if (bba) bba.addEventListener("click", buildComp);
   var btl = $("btnTimelineAll");
   if (btl) btl.addEventListener("click", function () { exportToTimeline(null); });
-  $("btnQueueRender").addEventListener("click", queueRender);
-  $("btnSubtitles").addEventListener("click", function () { buildSubtitles(null); });
+  var bqr = $("btnQueueRender");
+  if (bqr) bqr.addEventListener("click", queueRender);
+  var bsu = $("btnSubtitles");
+  if (bsu) bsu.addEventListener("click", function () { buildSubtitles(null); });
   $("btnProjects").addEventListener("click", loadProjects);
   $("btnNewProject").addEventListener("click", function () {
     var f = $("newProjectForm"); f.hidden = !f.hidden;

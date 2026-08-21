@@ -78,6 +78,16 @@
       overflow:hidden; resize:none; min-height:42px; }
     .sheet-row .row-status { font-size:11px; color:#9aa0a6; }
     .sheet-row button { margin:4px 0; padding:6px; font-size:12px; }
+    /* 머리 한 줄 — 불러오기·테마·전체 실행. 좁으면 줄바꿈된다. */
+    #sheet-topbar { display:flex; align-items:center; gap:5px; flex-wrap:wrap;
+      padding:4px 0 6px; }
+    #sheet-topbar .stb-lab { font-size:11px; color:#9aa0a6; }
+    #sheet-topbar button { width:auto; margin:0; padding:5px 9px; font-size:12px;
+      background:#2c2f36; border:1px solid #33363c; border-radius:5px; }
+    #sheet-topbar button:hover { background:#3a6df0; }
+    #sheet-topbar select { background:#23262b; color:#e6e6e6; border:1px solid #33363c;
+      border-radius:4px; padding:3px 6px; font-size:12px; }
+    #sheet-topbar .sab-div { width:1px; height:16px; background:#33363c; margin:0 3px; }
     /* 시트 도구상자 — 체크된 씬에 일괄 실행 */
     #sheet-actionbar { display:flex; align-items:center; gap:4px; flex-wrap:wrap;
       padding:6px 0; border-bottom:1px solid #2c2f36; margin-bottom:4px; }
@@ -376,12 +386,21 @@
           <!-- 좌: 프로덕션 시트 -->
           <div id="sb-left">
            <div id="sb-left-head">
-            <div class="label">프로덕션 시트
+            <!-- 머리 한 줄 — 불러오기·테마·전체 실행을 한자리에 모은다.
+                 셋이 세 줄을 차지해 정작 씬 목록이 좁았다. -->
+            <div id="sheet-topbar">
               <button id="btnLoadSheet" class="mini">시트 불러오기</button>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;color:#9aa0a6">
-              <span>프로젝트 테마:</span>
-              <select id="projectTheme" style="background:#23262b;color:#e6e6e6;border:1px solid #33363c;border-radius:4px;padding:3px 6px"></select>
+              <span class="stb-lab">테마:</span>
+              <select id="projectTheme"></select>
+              <span class="sab-div"></span>
+              <span class="stb-lab">전체에:</span>
+              <button id="btnDecompose" class="mini">씬 분해</button>
+              <button id="btnTimelineAll" class="mini"
+                title="매니페스트를 만들고 전체 씬을 AE 컴프로 조립해 타임라인에 배치합니다">🎬 조립·배치</button>
+              <button id="btnSubtitles" class="mini"
+                title="TTS 타임스탬프로 Final 컴프에 말자막을 일괄 생성합니다">💬 전체 말자막</button>
+              <button id="btnQueueRender" class="mini"
+                title="Final 컴프를 AE 렌더 큐에 얹습니다. 실제 렌더는 AE 에서 누릅니다 → render/final.mov">📤 렌더 큐</button>
             </div>
             <div id="sheet-actionbar" title="씬을 체크한 뒤 버튼을 누르면 체크된 씬에 일괄 실행됩니다">
               <span class="sab-hint">체크한 씬에:</span>
@@ -400,18 +419,6 @@
               <button id="sa-split" class="sab-txt" title="체크한 씬을 둘로(1개만)">분할</button>
               <button id="sa-merge" class="sab-txt" title="체크한 씬을 다음 씬과 합침(1개만)">병합</button>
               <button id="sa-del" class="sab-txt sab-danger" title="체크한 씬 삭제(파일은 보존)">삭제</button>
-            </div>
-            <!-- 전체에 거는 것 — 오른쪽 패널에 흩어져 있어 왼쪽 것과 무엇이
-                 다른지 알 수 없었다. 「체크한 씬에」 바로 아래 두어 범위가
-                 다르다는 것이 보이게 한다. -->
-            <div id="sheet-actionbar" style="border-bottom:none"
-                 title="체크와 무관하게 프로젝트 전체에 실행됩니다">
-              <span class="sab-hint">전체에:</span>
-              <button id="btnDecompose">씬 분해</button>
-              <button id="btnBuildAll" title="전체 씬을 AE 컴프로 조립">🎬 전체 컴프</button>
-              <button id="btnTimelineAll" title="모든 씬 컴프를 현재 타임라인에 시간대로 배치(길이=TTS, 없으면 5초)">⤓ 타임라인</button>
-              <button id="btnQueueRender" title="Final 컴프를 렌더 큐에 추가">📤 렌더 큐</button>
-              <button id="btnSubtitles" title="TTS 타임스탬프 기반 말자막 일괄 생성(Final 컴프)">💬 전체 말자막</button>
             </div>
             <!-- 범위 고르기·나레이션 찾기 — 시트 안에 있어 함께 스크롤됐다 -->
             <div id="sheet-tools"></div>

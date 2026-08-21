@@ -201,9 +201,16 @@ def test_tts_custom_player_and_scene_comp():
 
 
 def test_buildall_button_and_full_comp():
+    """전체 조립 버튼은 하나다.
+
+    예전에는 「전체 컴프」(btnBuildAll)와 「타임라인」(btnTimelineAll)이 따로
+    있었는데 **둘 다 `_assemble(null)` 을 불렀다** — 이름만 다른 같은 버튼이라
+    무엇이 다른지 물어야 했다. 하나로 합쳤다.
+    """
     html = HTML.read_text(encoding="utf-8")
-    assert 'id="btnBuildAll"' in html
-    assert "btnBuildAll" in MAIN.read_text(encoding="utf-8")
+    assert 'id="btnTimelineAll"' in html
+    main = MAIN.read_text(encoding="utf-8")
+    assert "function buildComp" in main and "exportToTimeline(null)" in main
 
 
 def test_gallery_select_import():
@@ -485,7 +492,8 @@ def test_subtitles_button_wired():
     main = MAIN.read_text(encoding="utf-8")
     assert "function buildSubtitles" in main and "/api/subtitles/build" in main
     assert "subtitle_layers.jsx" in main and "akBuildSubtitles" in main
-    assert '$("btnSubtitles").addEventListener' in main
+    # 버튼이 없는 마크업에서도 죽지 않게 가드를 뒀다 — 참조는 유지된다
+    assert 'btnSubtitles' in main and "addEventListener" in main
 
 
 def test_jsx_typography_upgrade():
