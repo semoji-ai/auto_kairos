@@ -89,6 +89,20 @@
     #sheet-actionbar .sab-txt { background:#23262b; color:#c5c8cc; }
     #sheet-actionbar .sab-danger:hover { background:#a33; }
     .col-img .img-wrap { position:relative; }
+    /* 미리보기 크게 보기 — 썸네일은 작아서 글자도 배치도 안 보인다.
+       겹창은 패널 위에 덮어 띄운다(어도비 안이라 새 창을 못 연다). */
+    #pv-zoom { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999;
+               display:none; align-items:center; justify-content:center; cursor:zoom-out; }
+    #pv-zoom.on { display:flex; }
+    #pv-zoom .box { position:relative; width:94%; max-height:92%; }
+    #pv-zoom .box > * { width:100%; height:auto; }
+    #pv-zoom img { width:100%; height:auto; display:block; border-radius:6px; }
+    #pv-zoom .cap { position:absolute; left:0; right:0; bottom:-24px; text-align:center;
+                    color:#9aa0a6; font-size:11px; }
+    #pv-zoom .x { position:absolute; top:-30px; right:0; color:#e8eaed; background:none;
+                  border:none; font-size:18px; cursor:pointer; }
+    .col-img .img-wrap { cursor:zoom-in; }
+
     .col-img .comp { position:relative; width:100%; line-height:0; }
     .col-img .comp img.comp-bg { width:100%; height:auto; display:block; }
     .col-img .comp img.comp-el { position:absolute; }
@@ -540,5 +554,6 @@
   <script src="js/gallery.js"></script>
   <script src="js/genmodal.js"></script>
   <script src="js/assistant.js"></script>
+  <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>
