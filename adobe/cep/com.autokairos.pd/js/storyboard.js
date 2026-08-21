@@ -140,8 +140,16 @@ function _previewHTML(s, dir) {
     return '<div class="pv" style="background:' + BG + '">' + base + els + subEl + "</div>";
   }
 
-  if (s.layout === "map" && !s._image) {
-    return '<div class="layout-badge">map — 🗺 지도 버튼으로 렌더</div>';
+  if (s.layout === "map" && !s._map_rendered) {
+    /* 좌표·마커가 다 들어와 있어도 누가 🗺 지도를 누르기 전에는 지도가
+       생기지 않는다. 그런데 v3 가 그려 준 삽화가 링크돼 있어 「다 된 것」처럼
+       보였다 — 지도 씬 셋이 그 상태로 남아 있었다. 아직임을 화면에 적는다. */
+    var mBadge = '<div class="layout-badge" style="position:absolute;left:4%;top:4%;'
+      + 'padding:3px 7px;font-size:10px;background:rgba(0,0,0,0.66);border-color:#e8b339;'
+      + 'color:#e8b339">🗺 지도 미렌더 — 체크 후 「🗺 지도」</div>';
+    if (!s._image) return '<div class="layout-badge">map — 🗺 지도 버튼으로 렌더</div>';
+    return '<div class="pv" style="background:' + BG + '">'
+      + '<img class="main" src="file://' + dir + "/" + s._image + '">' + mBadge + subEl + "</div>";
   }
   if (!s.layout || s.layout === "cinematic" || s.layout === "map") {
     if (!s._image) return '<div style="color:#666;font-size:11px">(없음)</div>';

@@ -99,6 +99,12 @@ def load_scenes(proj_dir: Path) -> dict:
         sid = s.get("sceneId")
         ref = s.get("imageRef") or ""
         s["_image"] = ref if (ref and (proj_dir / ref).is_file()) else None
+        # 지도 씬이 **아직 안 그려졌는지** 알려 준다. 좌표·마커가 다 들어와
+        # 있어도 누가 🗺 지도를 누르기 전에는 지도가 생기지 않는데, 화면에는
+        # v3 가 그려 준 삽화가 링크돼 있어 「다 된 것」처럼 보였다.
+        # 지도를 렌더하면 `<이미지>.geo.json` 사이드카가 함께 생긴다 — 그것이 표식이다.
+        s["_map_rendered"] = bool(
+            ref and (proj_dir / (ref + ".geo.json")).is_file())
         s["_layers"] = (sorted(f"layers/{p.name}" for p in lay_dir.glob(f"*{sid}*.png"))
                         if sid and lay_dir.is_dir() else [])
         s["_layer_meta"] = _layer_meta(lay_dir, sid) if sid and lay_dir.is_dir() else {}
