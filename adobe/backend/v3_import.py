@@ -357,7 +357,7 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
     # 기존 씬 이미지 복사(있으면): v3 images/scene_{n:03d}.* → storyboard/ + imageRef
     copied = 0
     img_dir = v3 / "images"
-    picked = {}
+    picked, versions = {}, {}
     ia = img_dir / "image_assets.json"
     if ia.is_file():
         try:
@@ -366,8 +366,10 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
                     (i.get("file") for i in e.get("images") or [] if i.get("selected")), None)
                 if sel:
                     picked[e.get("sceneNumber")] = sel
+                # 후보 전체 — 판본을 다 가져와야 패널에서 되돌릴 수 있다
+                versions[e.get("sceneNumber")] = e.get("images") or []
         except Exception:
-            picked = {}
+            picked, versions = {}, {}
     if img_dir.is_dir():
         cur = scenes.load_scenes(d)
         for s in cur["scenes"]:
@@ -387,19 +389,38 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
             sdir_ = img_dir / "search"
             if sdir_.is_dir():
                 cands += sorted(sdir_.glob(f"scene_{n:03d}*"))
-            for src in cands:
-                ext = src.suffix.lstrip(".").lower()
-                if src.is_file():
-                    sb = d / "storyboard"; sb.mkdir(exist_ok=True)
-                    dst = sb / f"sb_{s['sceneId']}.png"
-                    if ext == "png":
-                        shutil.copy(src, dst)
-                    else:
-                        from PIL import Image
-                        Image.open(src).convert("RGB").save(dst)
-                    scenes.set_image_ref(d, n, f"storyboard/{dst.name}")
-                    copied += 1
-                    break
+            # **판본을 전부 가져온다.** 예전에는 첫 장만 옮기고 끝냈다
+            # (`break`). v3 는 씬마다 여러 판을 쌓아 두고 `selected` 로 하나만
+            # 고르는데, 어도비에는 그 하나만 와서 **후보를 볼 수도 되돌릴 수도
+            # 없었다** — 디아지오편에서 38씬이 그 상태였다.
+            # 대시보드·앱은 후보를 보여 주는데 패널만 못 보던 이유다.
+            all_vers = [img_dir / i["file"] for i in (versions.get(n) or [])]
+            for extra in cands:
+                if extra not in all_vers:
+                    all_vers.append(extra)
+            sel_rel, k = None, 0
+            for src in all_vers:
+                if not src.is_file():
+                    continue
+                sb = d / "storyboard"; sb.mkdir(exist_ok=True)
+                # 첫 장은 sb_{sid}.png, 나머지는 _v2·_v3… — `_latest_image`·
+                # 후보 목록이 이 이름 규칙을 읽는다.
+                dst = sb / (f"sb_{s['sceneId']}.png" if k == 0
+                            else f"sb_{s['sceneId']}_v{k + 1}.png")
+                if src.suffix.lower() == ".png":
+                    shutil.copy(src, dst)
+                else:
+                    from PIL import Image
+                    Image.open(src).convert("RGB").save(dst)
+                # v3 가 고른 판본을 링크한다. 못 찾으면 첫 장.
+                if picked.get(n) and src == img_dir / picked[n]:
+                    sel_rel = f"storyboard/{dst.name}"
+                if sel_rel is None and k == 0:
+                    sel_rel = f"storyboard/{dst.name}"
+                k += 1
+            if sel_rel:
+                scenes.set_image_ref(d, n, sel_rel)
+                copied += 1
     return {"project_id": pid, "title": name, "scenes": len(mapped),
             "images": copied, "audio": audio_n, "infographic": info_n, "docs": doc_n,
             "characters": char_n}

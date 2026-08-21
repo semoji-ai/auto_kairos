@@ -452,6 +452,46 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
                 out["scenes"].append({"sceneNumber": n, "rel": by_scene[n]})
         return 200, out
 
+    # 씬 이미지 후보 — 판본을 쌓아 두고 고르는 구조인데 패널에는 고른 것
+    # 하나만 보였다. 대시보드·앱은 후보를 보여 주는데 여기만 못 봤다.
+    if method == "GET" and p == "/api/scenes/image-versions":
+        q = query or {}
+        pid = q.get("project_id", "")
+        proj_dir = root / (pid[0] if isinstance(pid, list) else pid)
+        if not proj_dir.is_dir():
+            return 404, {"error": "프로젝트 없음"}
+        sn = q.get("sceneNumber")
+        sn = sn[0] if isinstance(sn, list) else sn
+        data = scenes.load_scenes(proj_dir)
+        scene = _find_scene(data, sn)
+        if not scene:
+            return 404, {"error": f"scene {sn} 없음"}
+        sid = scene.get("sceneId")
+        sb = proj_dir / "storyboard"
+        out = []
+        if sid and sb.is_dir():
+            import re as _re
+            for f in sb.glob(f"*{sid}*"):
+                if f.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp"):
+                    continue
+                m = _re.search(r"_v(\d+)\.", f.name)
+                out.append({"rel": f.relative_to(proj_dir).as_posix(),
+                            "name": f.name,
+                            "ver": int(m.group(1)) if m else 1})
+        out.sort(key=lambda x: (x["ver"], x["name"]))
+        return 200, {"sceneNumber": sn, "selected": scene.get("_image") or "",
+                     "versions": out}
+
+    # 후보 중 하나를 고른다 — 파일은 그대로 두고 링크만 옮긴다
+    if method == "POST" and p == "/api/scenes/select-image":
+        b = body or {}
+        proj_dir = root / b.get("project_id", "")
+        if not proj_dir.is_dir():
+            return 404, {"error": "프로젝트 없음"}
+        rel = (b.get("rel") or "").strip()
+        r = scenes.set_image_ref(proj_dir, b.get("sceneNumber"), rel)
+        return (200, r) if "error" not in r else (422, r)
+
     # 비디오 모델 목록 — 모델마다 받는 파라미터와 이미지 첨부 한도가 달라
     # 화면을 모델별로 다시 짜야 한다. 스펙은 힉스필드 CLI 산출을 그대로 쓴다.
     if method == "GET" and p == "/api/video/models":

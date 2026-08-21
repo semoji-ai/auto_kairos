@@ -482,6 +482,9 @@ function renderRow(s, dir) {
     + '  <div class="col-img">'
     +      (s._image ? '<button class="unlink-img" data-scene="' + n + '" title="씬 이미지 링크 해제">✕</button>' : '')
     + '    <div class="img-wrap">' + media + '</div>'
+    /* 후보 판본 — 씬마다 여러 판을 쌓아 두고 하나를 고르는 구조인데
+       패널에는 고른 것만 보였다. 눌러서 바로 되돌릴 수 있게 띠로 깐다. */
+    + '    <div class="img-vers" data-scene="' + n + '"></div>'
     +      layerBlock
     + '  </div>'
     // 스크립트(나레이션)
@@ -593,6 +596,10 @@ function bindRows(scope) {
       pvZoom(this.innerHTML, row ? row.getAttribute("data-scene") : "");
     });
   }
+  // 후보 띠 채우기 — 판본이 하나뿐이면 아무것도 그리지 않는다
+  var vboxes = scope.querySelectorAll(".img-vers");
+  for (var v = 0; v < vboxes.length; v++) _loadVersions(vboxes[v]);
+
   var un = scope.querySelectorAll("button.unlink-img");
   for (var u = 0; u < un.length; u++) {
     un[u].addEventListener("click", function () { unlinkScene(this.getAttribute("data-scene")); });
@@ -1951,4 +1958,42 @@ function genSceneVideo(n) {
       if (ok) refreshRow(n);
     })
     .catch(function (e) { _rowStatus(n, "오류: " + e); });
+}
+
+
+/* 씬의 판본을 읽어 후보 띠를 그린다. 하나뿐이면 자리를 차지하지 않는다. */
+function _loadVersions(box) {
+  var n = box.getAttribute("data-scene");
+  fetch(BACKEND + "/api/scenes/image-versions?project_id="
+        + encodeURIComponent(SELECTED_PROJECT) + "&sceneNumber=" + encodeURIComponent(n))
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      var vs = j.versions || [];
+      if (vs.length < 2) { box.innerHTML = ""; return; }
+      var dir = IMG_DIR || "";
+      box.innerHTML = '<div class="iv-strip">' + vs.map(function (x) {
+        var on = x.rel === j.selected;
+        return '<img class="iv' + (on ? " on" : "") + '" src="file://' + dir + "/" + x.rel
+             + '" data-rel="' + x.rel + '" data-scene="' + n + '"'
+             + ' title="' + _esc(x.name) + (on ? " (지금 쓰는 것)" : " — 눌러서 바꿉니다") + '">';
+      }).join("") + "</div>";
+      var ims = box.querySelectorAll("img.iv");
+      for (var i = 0; i < ims.length; i++) {
+        ims[i].addEventListener("click", function () {
+          if (this.className.indexOf("on") >= 0) return;
+          var sc = this.getAttribute("data-scene");
+          fetch(BACKEND + "/api/scenes/select-image", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ project_id: SELECTED_PROJECT,
+                                   sceneNumber: parseFloat(sc),
+                                   rel: this.getAttribute("data-rel") }),
+          }).then(function (r) { return r.json(); })
+            .then(function (res) {
+              if (res.error) { _rowStatus(sc, "바꾸지 못했습니다: " + res.error); return; }
+              _rowStatus(sc, "이미지 바꿈 ✓"); refreshRow(sc);
+            });
+        });
+      }
+    })
+    .catch(function () { box.innerHTML = ""; });
 }

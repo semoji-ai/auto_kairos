@@ -126,6 +126,13 @@
     #sheet-actionbar button:hover { background:#3a6df0; }
     #sheet-actionbar .sab-txt { background:#23262b; color:#c5c8cc; }
     #sheet-actionbar .sab-danger:hover { background:#a33; }
+    /* 후보 판본 띠 — 지금 쓰는 것에 파란 테두리. 눌러서 바꾼다. */
+    .col-img .img-vers { margin-top:3px; }
+    .col-img .iv-strip { display:flex; flex-wrap:wrap; gap:3px; }
+    .col-img img.iv { width:30px; height:20px; object-fit:cover; border-radius:2px;
+      border:1px solid #33363c; cursor:pointer; opacity:0.6; }
+    .col-img img.iv:hover { opacity:1; border-color:#5a6270; }
+    .col-img img.iv.on { opacity:1; border-color:#3a6df0; border-width:2px; cursor:default; }
     .col-img .img-wrap { position:relative; }
     /* 미리보기 크게 보기 — 썸네일은 작아서 글자도 배치도 안 보인다.
        겹창은 패널 위에 덮어 띄운다(어도비 안이라 새 창을 못 연다). */
