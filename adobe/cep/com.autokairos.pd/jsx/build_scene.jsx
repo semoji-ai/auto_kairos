@@ -678,7 +678,10 @@ function akBuildScene(manifestPath) {
                 }
             }
         }
-        if (!(s.layers && s.layers.length) && s.image && !isLayoutScene) {
+        // 레이아웃 씬도 **그림이 있으면 배경으로 깐다.** v3 의 timeline·flow·
+        // items_list 는 도해만 있는 화면이 아니라, 씬 그림 위에 항목이 얹히는
+        // 구조다. isLayoutScene 으로 막아 두어 컴프에서 배경이 통째로 빠졌다.
+        if (!(s.layers && s.layers.length) && s.image) {
             var one = addLayerObj(proj, comp, {
                 path: s.image,
                 position: (s.imageFit || {}).position,

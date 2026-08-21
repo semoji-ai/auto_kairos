@@ -278,7 +278,10 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
         is_layout_scene = layout != "cinematic"
         # width/height는 씬 이미지 원본 크기(fit 계산 기준) — 컴프 좌표는 fit_transform으로 굽는다.
         # 레이아웃 씬(비이미지)은 이미지/레이어를 쓰지 않음 — 기본 1920×1080 기준
-        size = None if is_layout_scene else (_img_size(proj_dir / s["_image"]) if s.get("_image") else None)
+        # 레이아웃 씬이어도 **그림이 있으면 그 크기를 쓴다.** v3 의 timeline·
+        # flow·items_list 는 씬 그림 위에 항목이 얹히는 구조라 배경이 필요하다.
+        # 여기서 None 을 주면 fit 계산이 1920×1080 기준이 되어 배경이 어긋난다.
+        size = _img_size(proj_dir / s["_image"]) if s.get("_image") else None
         sw, sh = size if size else (W, H)
         f, ox = fit_transform(sw, sh)
         prefix = "S%s_" % timeline.comp_num(s.get("sceneNumber"))

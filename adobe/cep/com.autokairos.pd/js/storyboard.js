@@ -208,10 +208,21 @@ function _previewHTML(s, dir) {
       + '<div class="pv-abs pv-quote" style="left:19%;width:62%;top:32%;font-size:' + px(t.quote || 64) + ";color:" + TX + ';text-align:center;line-height:1.5">' + _esc(s.quote_text || "") + "</div>"
       + '<div class="pv-abs pv-quote" style="right:12%;top:58%;font-size:' + px((t.quote || 64) * 2.2) + ";color:" + AC + ';line-height:1">”</div>'
       + '<div class="pv-abs pv-quote" style="left:19%;width:62%;top:72%;font-size:' + px(t.quoteWho || 40) + ";color:" + MU + ';text-align:right">— ' + _esc(s.quote_who || "") + "</div>";
+  } else if (s._image) {
+    /* **아직 그리는 법을 모르는 레이아웃이라도 그림은 버리지 않는다.**
+       timeline·flow 처럼 전용 분기가 없는 이름이 오면 예전에는 이름표만
+       띄우고 씬 이미지를 통째로 감췄다 — 레이아웃 정보가 넘어오기 시작하자
+       멀쩡히 있던 그림이 사라진 것처럼 보였다. v3 에서 이 씬들은 **그림이
+       배경이고 그 위에 항목이 얹히는** 구조다. */
+    inner = '<div class="layout-badge" style="position:absolute;left:4%;top:4%;'
+          + 'padding:2px 6px;font-size:10px;opacity:0.75">' + _esc(s.layout) + '</div>';
   } else {
     return '<div class="layout-badge">' + _esc(s.layout) + "</div>";
   }
-  return '<div class="pv" style="background:' + BG + '">' + inner + subEl + "</div>";
+  // 그림이 있으면 항상 배경으로 깐다. 레이아웃 요소는 그 위에 얹힌다.
+  var bgImg = s._image
+    ? '<img class="main" src="file://' + dir + "/" + s._image + '">' : "";
+  return '<div class="pv" style="background:' + BG + '">' + bgImg + inner + subEl + "</div>";
 }
 
 // 「시트 불러오기」 버튼이 화면에만 있고 아무 데도 묶여 있지 않았다.
