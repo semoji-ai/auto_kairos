@@ -249,3 +249,10 @@ _archive_*/
 /app/icon-src.png
 /logs/
 /.ak_recent.json
+
+# 디아지오편에서 새로 만든 것들 — 배경 연속성·시기별 자료·참조 내려받기
+!/scripts/enforce_background_continuity.py
+!/scripts/map_timeline_refs.py
+!/scripts/fetch_ref_assets.py
+!/scripts/fetch_refs_wikimedia.py
+!/scripts/fetch_refs_via_serper.py
