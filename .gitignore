@@ -256,3 +256,4 @@ _archive_*/
 !/scripts/fetch_ref_assets.py
 !/scripts/fetch_refs_wikimedia.py
 !/scripts/fetch_refs_via_serper.py
+!/scripts/install_upscayl.sh
