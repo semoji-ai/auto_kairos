@@ -468,6 +468,16 @@ function bindRows(scope) {
       }
     });
   }
+  // 미리보기를 누르면 크게 본다. 썸네일은 200px 남짓이라 도해 글자도
+  // 자막 자리도 확인할 수 없다 — 화면을 보고 판단하려면 크게 봐야 한다.
+  var wraps = scope.querySelectorAll(".col-img .img-wrap");
+  for (var wi2 = 0; wi2 < wraps.length; wi2++) {
+    wraps[wi2].addEventListener("click", function (ev) {
+      if (ev.target.closest("button")) return;      // ✕(링크 해제) 같은 버튼은 그대로
+      var row = this.closest(".sheet-row");
+      pvZoom(this.innerHTML, row ? row.getAttribute("data-scene") : "");
+    });
+  }
   var un = scope.querySelectorAll("button.unlink-img");
   for (var u = 0; u < un.length; u++) {
     un[u].addEventListener("click", function () { unlinkScene(this.getAttribute("data-scene")); });
@@ -1273,3 +1283,24 @@ function bindTools() {
 }
 
 document.addEventListener("DOMContentLoaded", bindTools);
+
+
+// 미리보기 겹창 — 패널 안에 덮어 띄운다. 어도비 CEP 는 새 창을 못 연다.
+function pvZoom(html, sceneNo) {
+  var box = document.getElementById("pv-zoom");
+  if (!box) return;
+  box.querySelector(".inner").innerHTML = html;
+  box.querySelector(".cap").textContent = sceneNo ? "씬 " + sceneNo : "";
+  box.classList.add("on");
+}
+(function () {
+  var box = document.getElementById("pv-zoom");
+  if (!box) return;
+  function close() { box.classList.remove("on"); box.querySelector(".inner").innerHTML = ""; }
+  box.addEventListener("click", function (e) {
+    if (e.target === box || e.target.classList.contains("x")) close();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && box.classList.contains("on")) close();
+  });
+})();
