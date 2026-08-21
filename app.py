@@ -139,7 +139,10 @@ _LAYER_ROOT = get_package_dir().parent / "_imggen"
 async def serve_info_asset(name: str):
     import re as _re
 
-    if not _re.match(r"^[A-Za-z0-9_]+_info/[^/]+$", name):
+    # 폴더 이름은 프로젝트 라벨에서 온다. 한글 slug 프로젝트는 폴더가
+    # `디아지오_..._info` 라 ASCII 만 받으면 통째로 404 가 된다 — 에셋을
+    # 만들어 배치까지 해 놓고 화면에는 깨진 그림만 떴다.
+    if not _re.match(r"^[\w가-힣]+_info/[^/]+$", name):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
     f = (_LAYER_ROOT / name).resolve()
     if f.is_file() and _LAYER_ROOT.resolve() in f.parents:
@@ -151,7 +154,7 @@ async def serve_info_asset(name: str):
 async def serve_layer(name: str):
     import re as _re
 
-    if not _re.match(r"^[A-Za-z0-9_]+_anim/s\d{3}[a-z]?/[^/]+$", name):
+    if not _re.match(r"^[\w가-힣]+_anim/s\d{3}[a-z]?/[^/]+$", name):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
     f = (_LAYER_ROOT / name).resolve()
     if f.is_file() and _LAYER_ROOT.resolve() in f.parents:
