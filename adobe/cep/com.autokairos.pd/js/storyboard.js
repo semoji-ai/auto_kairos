@@ -11,6 +11,7 @@ function _dot(label, on) {
 
 /* 컬럼 너비(px) — 4컬럼(씬#·이미지·스크립트·작업) 드래그 조절 + localStorage 저장 */
 var COL_KEY = "ak_sheet_cols";
+var COL_DEFAULT = [30, 200, 300, 260];      // 씬# · 이미지 · 스크립트 · 작업
 var COLW = _loadCols();
 
 function _loadCols() {
@@ -29,7 +30,7 @@ function _loadCols() {
       }
     }
   } catch (e) {}
-  return [30, 200, 300, MIN_WORK];
+  return COL_DEFAULT.slice();
 }
 
 function _persistCols() {
@@ -56,16 +57,27 @@ function _autosizeAll() {
 function _bindColResize() {
   var handles = $("sheet").querySelectorAll(".col-resize");
   for (var i = 0; i < handles.length; i++) {
+    handles[i].title = "끌어서 너비 조절 · 두 번 누르면 기본값";
+    // 두 번 누르면 그 컬럼만 기본 너비로. 잘못 끌어 좁혀 놓고 되돌릴 방법이 없었다.
+    handles[i].addEventListener("dblclick", function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var idx = parseInt(this.getAttribute("data-col"), 10);
+      COLW[idx] = COL_DEFAULT[idx] || 150;
+      _applyCols(); _autosizeAll(); _persistCols();
+    });
     handles[i].addEventListener("mousedown", function (e) {
       e.preventDefault();
       var idx = parseInt(this.getAttribute("data-col"), 10);
       var startX = e.clientX, startW = COLW[idx] || 100;
+      var grip = this;
+      grip.classList.add("dragging");     // 끄는 동안 손잡이가 보이게
       function move(ev) {
         COLW[idx] = Math.max(24, startW + (ev.clientX - startX));
         _applyCols();
         _autosizeAll();          // 폭 변하면 줄바꿈 → 세로 높이 재계산
       }
       function up() {
+        grip.classList.remove("dragging");
         document.removeEventListener("mousemove", move);
         document.removeEventListener("mouseup", up);
         _persistCols();          // 설정값 저장(다음에도 유지)

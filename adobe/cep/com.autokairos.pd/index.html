@@ -146,9 +146,14 @@
     .col-work .work-dots .dot.off { background:#3a3e46; border:1px solid #555; }
     .col-work .work-chars { font-size:11px; color:#c5c8cc; margin-top:4px; }
     .sheet-head > div { position:relative; }
-    .col-resize { position:absolute; right:-4px; top:0; width:8px; height:100%;
-      cursor:col-resize; }
-    .col-resize:hover { background:#3a6df0; opacity:0.4; }
+    /* 컬럼 너비 손잡이 — 8px 짜리 보이지 않는 띠라 있는 줄도 몰랐다.
+       평소에도 옅은 세로선으로 보이게 하고, 잡는 폭을 넓힌다. */
+    .col-resize { position:absolute; right:-6px; top:0; width:12px; height:100%;
+      cursor:col-resize; z-index:2; }
+    .col-resize::after { content:""; position:absolute; left:5px; top:2px; bottom:2px;
+      width:2px; background:#3a3d44; border-radius:1px; }
+    .col-resize:hover::after { background:#3a6df0; width:3px; left:4px; }
+    .col-resize.dragging::after { background:#3a6df0; width:3px; left:4px; }
 
     /* 스토리보드 2-pane — 각 패널 독립 세로 스크롤 */
     #sb-2pane { display:flex; gap:12px; align-items:stretch; height:100%;
