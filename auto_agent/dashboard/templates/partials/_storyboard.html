@@ -41,6 +41,21 @@
     <label>Size</label>
     <input type="range" min="200" max="720" value="480" step="20" oninput="resizePreview(this.value)">
   </span>
+  {# 나레이션 찾기 — 씬이 백 개를 넘으면 눈으로 훑을 수 없다 #}
+  <span class="sb-find">
+    <input type="text" id="sb-find-input" placeholder="🔎 나레이션 찾기"
+           oninput="sbFind(this.value)" onkeydown="if(event.key==='Escape'){this.value='';sbFind('')}">
+    <span id="sb-find-msg"></span>
+  </span>
+  {# 범위로 고르기 — 하나씩 누르는 것이 일이다 #}
+  <span class="sb-range">
+    <input type="text" id="sb-range-input" placeholder="예: 1-10, 25, 40-52"
+           onkeydown="if(event.key==='Enter'){event.preventDefault();sbRangePick('add')}">
+    <button onclick="sbRangePick('add')" title="고른 것에 더한다">더하기</button>
+    <button onclick="sbRangePick('only')" title="이것만 고른다">이것만</button>
+    <button onclick="sbRangePick('off')" title="고른 것에서 뺀다">빼기</button>
+    <span id="sb-range-msg"></span>
+  </span>
 </div>
 
 <div class="scene-list" id="scene-list">
@@ -1972,6 +1987,17 @@ function updateSceneLayout(slug, sceneNum, layout) {
 .sb-lic-high { color: #F87171; }
 .sb-lic-unknown { color: #FBBF24; }
 .sb-enrich-empty { font-size: 10px; color: var(--text-muted); padding: 4px 6px; }
+
+.sb-find, .sb-range { display:flex; align-items:center; gap:5px; }
+.sb-find input { width:180px; }
+.sb-range input { width:150px; }
+.sb-find input, .sb-range input { background:rgba(255,255,255,0.05); color:#E4E4E7;
+  border:1px solid rgba(255,255,255,0.12); border-radius:4px; padding:3px 8px; font-size:11px; }
+.sb-range button { background:rgba(255,255,255,0.05); color:#A1A1AA;
+  border:1px solid rgba(255,255,255,0.12); border-radius:4px; padding:3px 8px;
+  font-size:11px; cursor:pointer; }
+.sb-range button:hover { background:rgba(255,255,255,0.10); color:#E4E4E7; }
+.sb-find-msg, #sb-find-msg, #sb-range-msg { font-size:10px; color:#71717A; white-space:nowrap; }
 </style>
 <script>
 (function() {
@@ -2655,6 +2681,71 @@ function sbMakePicked(slug, kind) {
     });
 }
 
+
+/* 나레이션 찾기 — 맞는 씬만 남긴다. 씬이 백 개를 넘으면 눈으로 못 훑는다. */
+function sbFind(q) {
+  q = (q || '').trim().toLowerCase();
+  var cards = document.querySelectorAll('#scene-list .sb-card');
+  var hit = 0;
+  cards.forEach(function (c) {
+    if (!q) { c.style.display = ''; c.classList.remove('sb-find-hit'); return; }
+    var el = c.querySelector('.sb-narration, textarea, [data-narration]');
+    var txt = ((el ? (el.value || el.textContent) : '') || c.textContent || '').toLowerCase();
+    var on = txt.indexOf(q) >= 0;
+    c.style.display = on ? '' : 'none';
+    c.classList.toggle('sb-find-hit', on);
+    if (on) hit++;
+  });
+  var m = document.getElementById('sb-find-msg');
+  if (m) m.textContent = q ? (hit + '개 씬') : '';
+}
+
+/* 「1-10, 25, 40-52」를 씬 번호로 편다.
+   씬을 다시 나누면 번호가 띄엄띄엄해진다(951·968·1023…). 1..N 으로 세면
+   없는 씬을 고르게 되므로, 화면에 있는 번호만 훑어 구간에 드는 것을 담는다. */
+function sbParseRange(text, present) {
+  var want = {}, bad = [];
+  String(text || '').split(',').forEach(function (part) {
+    part = part.trim();
+    if (!part) return;
+    var m = part.match(/^(\d+)\s*[-~]\s*(\d+)$/);
+    if (m) {
+      var a = +m[1], b = +m[2];
+      if (a > b) { var tmp = a; a = b; b = tmp; }
+      present.forEach(function (v) { if (v >= a && v <= b) want[v] = true; });
+      return;
+    }
+    if (/^\d+$/.test(part)) {
+      var n = +part;
+      if (present.indexOf(n) >= 0) want[n] = true; else bad.push(n);
+      return;
+    }
+    bad.push(part);
+  });
+  return { nums: Object.keys(want).map(Number).sort(function (x, y) { return x - y; }), bad: bad };
+}
+
+function sbRangePick(mode) {
+  var box = document.getElementById('sb-range-input');
+  if (!box) return;
+  var cbs = Array.prototype.slice.call(document.querySelectorAll('#scene-list .sb-pick'));
+  var present = cbs.map(function (c) { return parseInt(c.dataset.scene, 10); });
+  var r = sbParseRange(box.value, present);
+  var pick = {};
+  r.nums.forEach(function (n) { pick[n] = true; });
+  cbs.forEach(function (c) {
+    var n = parseInt(c.dataset.scene, 10);
+    if (mode === 'only') c.checked = !!pick[n];
+    else if (pick[n]) c.checked = (mode !== 'off');
+  });
+  if (typeof sbPickChanged === 'function') sbPickChanged();
+  var n = cbs.filter(function (c) { return c.checked; }).length;
+  var m = document.getElementById('sb-range-msg');
+  if (m) {
+    m.textContent = n + '개 선택됨' + (r.bad.length ? '  (없는 씬: ' + r.bad.join(', ') + ')' : '');
+    m.style.color = r.bad.length ? '#F59E0B' : '#71717A';
+  }
+}
 </script>
 
 {% else %}

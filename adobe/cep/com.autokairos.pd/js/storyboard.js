@@ -200,6 +200,11 @@ function loadSheet() {
         +   '<button id="selRangeOnly" title="이것만 고른다">이것만</button>'
         +   '<button id="selRangeOff" title="고른 것에서 뺀다">빼기</button>'
         +   '<span id="selRangeMsg"></span>'
+        + '</div>'
+        // 나레이션 찾기 — 씬이 백 개를 넘으면 눈으로 훑을 수 없다
+        + '<div class="sel-range">'
+        +   '<input id="sbFind" type="text" placeholder="🔎 나레이션 찾기">'
+        +   '<span id="sbFindMsg"></span>'
         + '</div>';
       $("sheet").innerHTML = head + list.map(function (s) { return renderRow(s, dir); }).join("");
       _applyCols();
@@ -217,6 +222,7 @@ function loadSheet() {
         }
       });
       _bindRangeSelect();
+      _bindFind();
       // 레이아웃 후 나레이션 높이 재계산(탭 표시 직후 scrollHeight=0 방지)
       if (window.requestAnimationFrame) requestAnimationFrame(_autosizeAll); else _autosizeAll();
     });
@@ -665,6 +671,29 @@ function _bindRangeSelect() {
   document.getElementById("selRangeOff").addEventListener("click", function () { apply("off"); });
   box.addEventListener("keydown", function (e) {
     if (e.key === "Enter") { e.preventDefault(); apply("add"); }
+  });
+}
+
+function _bindFind() {
+  var box = document.getElementById("sbFind");
+  if (!box) return;
+  var msg = document.getElementById("sbFindMsg");
+  function run() {
+    var q = (box.value || "").trim().toLowerCase();
+    var rows = document.getElementById("sheet").querySelectorAll(".sheet-row");
+    var hit = 0;
+    for (var i = 0; i < rows.length; i++) {
+      var el = rows[i].querySelector("textarea.nar");
+      var txt = ((el ? el.value : "") || rows[i].textContent || "").toLowerCase();
+      var on = !q || txt.indexOf(q) >= 0;
+      rows[i].style.display = on ? "" : "none";
+      if (q && on) hit++;
+    }
+    if (msg) msg.textContent = q ? hit + "개 씬" : "";
+  }
+  box.addEventListener("input", run);
+  box.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { box.value = ""; run(); }
   });
 }
 
