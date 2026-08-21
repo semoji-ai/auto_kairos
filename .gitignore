@@ -257,3 +257,4 @@ _archive_*/
 !/scripts/fetch_refs_wikimedia.py
 !/scripts/fetch_refs_via_serper.py
 !/scripts/install_upscayl.sh
+!/scripts/bump_panel_cachebust.py

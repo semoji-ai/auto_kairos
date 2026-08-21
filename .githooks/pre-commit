@@ -17,6 +17,12 @@ if ! "$PYTHON_BIN" "$REPO_ROOT/scripts/sync_remotion_src.py" --check; then
     exit 1
 fi
 
+# ── 어도비 패널 캐시버스터 ─────────────────────────────────
+# CEP(Chromium)는 js/*.js 를 캐시한다. `?v=` 를 안 올리면 고쳐도 패널이 옛
+# 코드를 계속 쓰고, **고친 사람은 반영된 줄 안다.** 손으로 올리면 잊는다.
+# artstyle 검사보다 **앞에** 둔다 — 그쪽은 해당 없으면 exit 0 으로 끝난다.
+"$PYTHON_BIN" "$REPO_ROOT/scripts/bump_panel_cachebust.py" || true
+
 # 스테이지된 파일 중 artstyle JSON이 있는지 확인
 CHANGED_STYLES=$(git diff --cached --name-only | grep 'auto_agent/data/artstyle/styles/.*\.json' || true)
 
