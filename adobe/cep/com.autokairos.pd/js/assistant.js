@@ -83,4 +83,21 @@ document.addEventListener("DOMContentLoaded", function () {
   var s = $("btnChatStop"); if (s) s.addEventListener("click", stopChatJob);
   var i = $("chatInput");
   if (i) i.addEventListener("keydown", function (e) { if (e.key === "Enter") sendChat(); });
+
+  /* 접기·펴기 — 비서 창이 화면 아래를 늘 차지해 시트가 좁았다.
+     안 쓸 때 접어 두고, 그 상태를 기억한다. */
+  var CHAT_KEY = "ak_chat_open";
+  var head = $("chatToggle"), bodyEl = $("chatBody"), caret = $("chatCaret");
+  function applyChat(open) {
+    if (!bodyEl) return;
+    bodyEl.hidden = !open;
+    if (caret) caret.textContent = open ? "▾" : "▸";
+    try { window.localStorage.setItem(CHAT_KEY, open ? "1" : "0"); } catch (e) {}
+  }
+  if (head && bodyEl) {
+    var saved = "1";
+    try { saved = window.localStorage.getItem(CHAT_KEY) || "1"; } catch (e) {}
+    applyChat(saved !== "0");
+    head.addEventListener("click", function () { applyChat(bodyEl.hidden); });
+  }
 });

@@ -505,13 +505,20 @@
     </div>
 
     <!-- 하단 채팅(P7 제작 비서) -->
+    <!-- 제목 줄을 눌러 접었다 편다. 화면 아래를 늘 차지해 시트가 좁았고,
+         안 쓸 때도 로그가 자리를 먹었다. 접힘 여부는 저장된다. -->
     <div id="chat-dock">
-      <div class="label" style="margin:0 0 4px">💬 제작 비서</div>
-      <div class="box" id="chatLog" style="max-height:22vh;overflow:auto;margin-bottom:4px">제작에 관해 상의하거나 지시하세요. (예: "어떤 씬부터 다듬을까?" / "음성 입혀서 합쳐줘")</div>
-      <div class="row">
-        <input id="chatInput" type="text" placeholder='지시 또는 상의… (예: "씬 5 어떻게 연출할까?" / "음성 입혀서 합쳐줘")'>
-        <button id="btnChatSend">전송</button>
-        <button id="btnChatStop" hidden title="실행 중인 비서 작업 중단">⏹ 중단</button>
+      <div class="label" id="chatToggle" title="눌러서 접기/펴기"
+           style="margin:0 0 4px;cursor:pointer;user-select:none">
+        <span id="chatCaret">▾</span> 💬 제작 비서
+      </div>
+      <div id="chatBody">
+        <div class="box" id="chatLog" style="max-height:22vh;overflow:auto;margin-bottom:4px">제작에 관해 상의하거나 지시하세요. (예: "어떤 씬부터 다듬을까?" / "음성 입혀서 합쳐줘")</div>
+        <div class="row">
+          <input id="chatInput" type="text" placeholder='지시 또는 상의… (예: "씬 5 어떻게 연출할까?" / "음성 입혀서 합쳐줘")'>
+          <button id="btnChatSend">전송</button>
+          <button id="btnChatStop" hidden title="실행 중인 비서 작업 중단">⏹ 중단</button>
+        </div>
       </div>
     </div>
 
