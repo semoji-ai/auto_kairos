@@ -104,8 +104,18 @@ def load_scenes(proj_dir: Path) -> dict:
         aud_dir = proj_dir / "audio"
         auds = ([p for p in aud_dir.glob(f"tts_{sid}.*") if p.suffix != ".json"]
                 if sid and aud_dir.is_dir() else [])    # .timestamps.json 사이드카 제외
-        s["_audio"] = (f"audio/{max(auds, key=lambda p: p.stat().st_mtime).name}"
-                       if auds else None)      # 최신(mp3/wav 공존 시 방금 생성분)
+        if auds:
+            s["_audio"] = f"audio/{max(auds, key=lambda p: p.stat().st_mtime).name}"
+        else:
+            # 이름이 `tts_{sceneId}` 인 것만 찾으면, **다른 데서 가져온 음성은
+            # 통째로 사라진다.** v3 는 음성을 해시로 저장하므로(`6fa8547e.mp3`)
+            # 이 규칙에 하나도 걸리지 않는다. 가져오기가 `scenes.json` 에
+            # 141개를 적어 넣어도 여기서 매번 None 으로 덮여, 파일이 다 있는데
+            # 패널에는 음성이 하나도 없었다.
+            #
+            # 적혀 있고 파일이 실제로 있으면 그것을 믿는다.
+            saved = s.get("_audio") or ""
+            s["_audio"] = saved if (saved and (proj_dir / saved).is_file()) else None
         if s["_audio"]:                         # 길이는 백엔드(afinfo)에서 — 브라우저 메타 불안정(MP3 Infinity)
             from backend import tts as _tts
             s["_audio_dur"] = _tts.audio_duration(proj_dir / s["_audio"])
