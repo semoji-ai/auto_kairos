@@ -191,6 +191,15 @@ function loadSheet() {
         + '<div>이미지<span class="col-resize" data-col="1"></span></div>'
         + '<div>스크립트<span class="col-resize" data-col="2"></span></div>'
         + '<div>작업<span class="col-resize" data-col="3"></span></div>'
+        + '</div>'
+        // 씬이 백 개를 넘으면 하나씩 누르는 것이 일이다. 범위로 고른다.
+        + '<div class="sel-range">'
+        +   '<input id="selRange" type="text" placeholder="예: 1-10, 25, 40-52" '
+        +     'title="범위나 번호를 쉼표로. 엔터로 적용">'
+        +   '<button id="selRangeAdd" title="고른 것에 더한다">더하기</button>'
+        +   '<button id="selRangeOnly" title="이것만 고른다">이것만</button>'
+        +   '<button id="selRangeOff" title="고른 것에서 뺀다">빼기</button>'
+        +   '<span id="selRangeMsg"></span>'
         + '</div>';
       $("sheet").innerHTML = head + list.map(function (s) { return renderRow(s, dir); }).join("");
       _applyCols();
@@ -207,6 +216,7 @@ function loadSheet() {
           if (on) SEL_SCENES[cbs[c].getAttribute("data-scene")] = true;
         }
       });
+      _bindRangeSelect();
       // 레이아웃 후 나레이션 높이 재계산(탭 표시 직후 scrollHeight=0 방지)
       if (window.requestAnimationFrame) requestAnimationFrame(_autosizeAll); else _autosizeAll();
     });
@@ -592,6 +602,72 @@ function bindRows(scope) {
 }
 
 /* ===== 도구상자(시트 상단) — 체크된 씬에 일괄 실행 ===== */
+// 「1-10, 25, 40-52」 같은 글을 씬 번호로 편다.
+// 화면에 있는 번호만 고른다 — 씬을 다시 나누면 번호가 띄엄띄엄해지기 때문에
+// (951·968·1023…) 1..N 으로 세면 없는 씬을 고르게 된다.
+function _parseRange(text, present) {
+  var want = {}, bad = [];
+  String(text || "").split(",").forEach(function (part) {
+    part = part.trim();
+    if (!part) return;
+    var m = part.match(/^(\d+)\s*[-~]\s*(\d+)$/);
+    if (m) {
+      var a = parseInt(m[1], 10), b = parseInt(m[2], 10);
+      if (a > b) { var tmp = a; a = b; b = tmp; }
+      // 순서대로 훑어 그 구간에 실제로 있는 씬만 담는다
+      for (var i = 0; i < present.length; i++) {
+        var v = present[i];
+        if (v >= a && v <= b) want[v] = true;
+      }
+      return;
+    }
+    if (/^\d+$/.test(part)) {
+      var n = parseInt(part, 10);
+      if (present.indexOf(n) >= 0) want[n] = true; else bad.push(n);
+      return;
+    }
+    bad.push(part);
+  });
+  return { nums: Object.keys(want).map(Number).sort(function (x, y) { return x - y; }),
+           bad: bad };
+}
+
+function _bindRangeSelect() {
+  var box = document.getElementById("selRange");
+  if (!box) return;
+  var msg = document.getElementById("selRangeMsg");
+  function present() {
+    var cbs = document.getElementById("sheet").querySelectorAll("input.scene-sel"), out = [];
+    for (var i = 0; i < cbs.length; i++) out.push(parseInt(cbs[i].getAttribute("data-scene"), 10));
+    return out;
+  }
+  function apply(mode) {
+    var have = present();
+    var r = _parseRange(box.value, have);
+    if (mode === "only") SEL_SCENES = {};
+    r.nums.forEach(function (n) {
+      if (mode === "off") delete SEL_SCENES[String(n)];
+      else SEL_SCENES[String(n)] = true;
+    });
+    var cbs = document.getElementById("sheet").querySelectorAll("input.scene-sel");
+    for (var i = 0; i < cbs.length; i++) {
+      cbs[i].checked = !!SEL_SCENES[cbs[i].getAttribute("data-scene")];
+    }
+    var n = Object.keys(SEL_SCENES).length;
+    if (msg) {
+      msg.textContent = n + "개 선택됨"
+        + (r.bad.length ? "  (없는 씬: " + r.bad.join(", ") + ")" : "");
+      msg.style.color = r.bad.length ? "#e0894a" : "#9aa0a6";
+    }
+  }
+  document.getElementById("selRangeAdd").addEventListener("click", function () { apply("add"); });
+  document.getElementById("selRangeOnly").addEventListener("click", function () { apply("only"); });
+  document.getElementById("selRangeOff").addEventListener("click", function () { apply("off"); });
+  box.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); apply("add"); }
+  });
+}
+
 var SEL_SCENES = {};    // {sceneNumber(str): true} — 재렌더에도 유지
 
 function _checkedScenes() {
