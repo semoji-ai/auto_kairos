@@ -236,18 +236,20 @@ function loadSheet() {
       /* 범위 고르기와 나레이션 찾기는 **시트 밖**(`#sheet-tools`)에 그린다.
          시트 안에 있으면 목록과 함께 스크롤돼, 아래로 내려가면 화면에서
          사라진다 — 체크하고 버튼을 누르러 매번 맨 위로 올라가야 했다. */
+      /* 범위 고르기와 나레이션 찾기를 **한 줄로** 둔다. 두 줄을 차지할 만큼
+         큰 일이 아니고, 머리가 두꺼워지면 정작 씬 목록이 좁아진다.
+         더하기·이것만·빼기는 기호(＋ ＝ －)로 줄인다 — 뜻은 툴팁에 남긴다. */
       var tools =
-          // 씬이 백 개를 넘으면 하나씩 누르는 것이 일이다. 범위로 고른다.
           '<div class="sel-range">'
+          // 씬이 백 개를 넘으면 하나씩 누르는 것이 일이다. 범위로 고른다.
         +   '<input id="selRange" type="text" placeholder="예: 1-10, 25, 40-52" '
         +     'title="범위나 번호를 쉼표로. 엔터로 적용">'
-        +   '<button id="selRangeAdd" title="고른 것에 더한다">더하기</button>'
-        +   '<button id="selRangeOnly" title="이것만 고른다">이것만</button>'
-        +   '<button id="selRangeOff" title="고른 것에서 뺀다">빼기</button>'
+        +   '<button id="selRangeAdd" class="sr-ico" title="고른 것에 더한다">＋</button>'
+        +   '<button id="selRangeOnly" class="sr-ico" title="이것만 고른다">＝</button>'
+        +   '<button id="selRangeOff" class="sr-ico" title="고른 것에서 뺀다">－</button>'
         +   '<span id="selRangeMsg"></span>'
-        + '</div>'
+        +   '<span class="sr-div"></span>'
           // 나레이션 찾기 — 씬이 백 개를 넘으면 눈으로 훑을 수 없다
-        + '<div class="sel-range">'
         +   '<input id="sbFind" type="text" placeholder="🔎 나레이션 찾기">'
         +   '<span id="sbFindMsg"></span>'
         + '</div>';

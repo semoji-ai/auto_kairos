@@ -143,9 +143,18 @@
                        border:1px solid #3a3f47; border-radius:3px; padding:3px 6px;
                        font-size:11px; }
     .sel-range button { background:#2f333a; color:#cfd3d8; border:1px solid #3a3f47;
-                        border-radius:3px; padding:3px 8px; font-size:11px; cursor:pointer; }
+                        border-radius:3px; padding:3px 8px; font-size:11px; cursor:pointer;
+                        width:auto; margin:0; flex:0 0 auto; }
     .sel-range button:hover { background:#3a3f47; }
+    /* 더하기·이것만·빼기 — 글자로 두면 세 개가 줄의 절반을 먹는다.
+       기호 하나로 줄이고 뜻은 툴팁에 남긴다. */
+    .sel-range button.sr-ico { padding:3px 7px; min-width:24px; text-align:center; }
+    .sel-range .sr-div { width:1px; height:14px; background:#3a3f47; margin:0 3px;
+                         flex:0 0 auto; }
     .sel-range span { font-size:10px; color:#9aa0a6; white-space:nowrap; }
+    /* 두 입력이 한 줄을 나눠 쓴다 — 범위는 좁게, 찾기는 남는 만큼 */
+    .sel-range #selRange { flex:0 1 150px; }
+    .sel-range #sbFind { flex:1 1 120px; }
     .scene-sel-wrap { display:flex; align-items:center; gap:4px; cursor:pointer; }
     .scene-sel-wrap input { width:14px; height:14px; margin:0; }
     .sheet-head input { width:13px; height:13px; margin:0 4px 0 0; vertical-align:middle; }
