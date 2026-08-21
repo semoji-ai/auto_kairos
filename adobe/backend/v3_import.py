@@ -240,6 +240,25 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
     if man.is_file():
         shutil.copy(man, d / "final_manuscript.md")
 
+    # 인물 시트 복사 — 재생성 모달이 「이 인물로 다시」를 하려면 시트가
+    # 프로젝트 안에 있어야 한다. v3 시트는 저장소의 `_imggen/characters/…`
+    # 에 있어 어도비 프로젝트 밖이다. 밖을 가리키면 다른 컴퓨터에서 깨진다.
+    char_n = 0
+    for base in (CODE_ROOT / "_imggen" / "characters",
+                 root_v3 / "_imggen" / "characters", v3 / "characters"):
+        sheets = sorted(Path(base).glob("*/*_sheet.png")) + sorted(Path(base).glob("*_sheet.png")) \
+            if Path(base).is_dir() else []
+        if not sheets:
+            continue
+        box = d / "characters"
+        box.mkdir(exist_ok=True)
+        for s_ in sheets:
+            dst = box / f"char_{s_.stem.replace('_sheet', '')}.png"
+            if not dst.exists():
+                shutil.copy(s_, dst)
+            char_n += 1
+        break
+
     # TTS 음성 복사 — 가져오기가 이 단계를 아예 갖고 있지 않았다.
     # 원고와 그림은 들어오는데 소리만 빠져 「연동이 안 됐다」로 보였다.
     #
@@ -322,4 +341,5 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
                     copied += 1
                     break
     return {"project_id": pid, "title": name, "scenes": len(mapped),
-            "images": copied, "audio": audio_n, "infographic": info_n}
+            "images": copied, "audio": audio_n, "infographic": info_n,
+            "characters": char_n}

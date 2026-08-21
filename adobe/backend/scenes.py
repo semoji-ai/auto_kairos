@@ -287,6 +287,25 @@ def new_scene_image_name(sid: str) -> str:
     return f"scene_{sid}_{uuid.uuid4().hex[:6]}.png"
 
 
+def set_image_prompt(proj_dir: Path, scene_number, prompt: str) -> dict:
+    """씬의 image_prompt 를 갈아 끼운다.
+
+    재생성 모달에서 고쳐 넣은 프롬프트를 남겨 두기 위한 것이다. 안 남기면
+    다음에 모달을 열 때 옛 프롬프트가 떠서 같은 수정을 매번 다시 해야 한다.
+    """
+    with _LOCK:
+        fp = _path(proj_dir)
+        if not fp.is_file():
+            return {"error": "scenes.json 없음"}
+        data = json.loads(fp.read_text(encoding="utf-8"))
+        for s in data.get("scenes", []):
+            if s.get("sceneNumber") == scene_number:
+                s["image_prompt"] = prompt
+                fp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                return {"ok": True, "sceneNumber": scene_number}
+        return {"error": f"scene {scene_number} 없음"}
+
+
 def set_image_ref(proj_dir: Path, scene_number, image_rel) -> dict:
     """씬의 imageRef 설정(링크) 또는 빈 문자열로 해제. 경로는 프로젝트 내부 + 존재 검증."""
     with _LOCK:

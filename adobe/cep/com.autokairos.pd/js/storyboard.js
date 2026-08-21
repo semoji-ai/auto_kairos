@@ -528,7 +528,7 @@ function bindRows(scope) {
     acts[a].addEventListener("click", function () {
       var n = this.getAttribute("data-scene");
       var act = this.getAttribute("data-act");
-      if (act === "img") { genSceneImage(n); }
+      if (act === "img") { openImageModal(n); }
       else if (act === "tts") { genTts(n); }
       else if (act === "txt") { toggleTextEditor(n); }
       else if (act === "tl") { exportToTimeline(parseFloat(n)); }
@@ -902,12 +902,76 @@ function saveNarration(n) {
     .catch(function (e) { _rowStatus(n, "오류: " + e); });
 }
 
-function genSceneImage(n) {
+/* ===== 재생성 모달 — 무엇을 보고 무슨 말로 그릴지 먼저 정한다 ===== */
+var IMG_SCENE = null, IMG_REFS = {}, IMG_TAB = "chars", IMG_DATA = null, IMG_DIR = "";
+
+function openImageModal(n) {
+  IMG_SCENE = n; IMG_REFS = {}; IMG_TAB = "chars"; IMG_DATA = null;
+  $("imgRefList").textContent = "불러오는 중...";
+  $("imgModalStatus").textContent = "—";
+  $("imgPrompt").value = "";
+  $("imgModal").hidden = false;
+
+  // 프롬프트는 이전 것을 먼저 띄운다 — 빈 칸에서 다시 쓰게 하면 손이 많이 간다.
+  fetch(BACKEND + "/api/scenes?project_id=" + encodeURIComponent(SELECTED_PROJECT))
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      IMG_DIR = j.dir || "";
+      var s = (j.scenes || []).filter(function (x) { return x.sceneNumber === parseFloat(n); })[0];
+      if (s) $("imgPrompt").value = s.image_prompt || s.visual_summary || "";
+      _renderImgRefs();                       // 경로가 늦게 와도 썸네일이 뜨도록
+    });
+
+  fetch(BACKEND + "/api/scenes/image-refs?project_id=" + encodeURIComponent(SELECTED_PROJECT))
+    .then(function (r) { return r.json(); })
+    .then(function (j) { IMG_DATA = j; _renderImgRefs(); })
+    .catch(function (e) { $("imgRefList").textContent = "참조 목록 오류: " + e; });
+}
+
+function _renderImgRefs() {
+  if (!IMG_DATA) return;
+  var tabs = $("imgRefTabs").querySelectorAll(".imgreftab");
+  for (var t = 0; t < tabs.length; t++) {
+    var on = tabs[t].getAttribute("data-tab") === IMG_TAB;
+    tabs[t].className = "mini imgreftab" + (on ? "" : " alt");
+  }
+  var items = IMG_TAB === "chars" ? (IMG_DATA.characters || []) : (IMG_DATA.scenes || []);
+  if (!items.length) {
+    $("imgRefList").textContent = IMG_TAB === "chars"
+      ? "이 프로젝트에 인물 시트가 없습니다." : "링크된 씬 이미지가 없습니다.";
+    return;
+  }
+  var dir = IMG_DIR || "";
+  var h = '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i], rel = it.rel;
+    var cap = IMG_TAB === "chars" ? it.name : ("씬 " + it.sceneNumber);
+    h += '<label class="imgref" style="width:78px;text-align:center;cursor:pointer'
+      + (IMG_REFS[rel] ? ';outline:2px solid #3a6df0' : '') + '">'
+      + '<img src="file://' + dir + '/' + rel + '" style="width:100%;border-radius:4px;display:block">'
+      + '<input type="checkbox" data-rel="' + rel + '"' + (IMG_REFS[rel] ? " checked" : "") + '>'
+      + '<span style="font-size:10px;color:#9aa0a6">' + _esc(cap) + '</span></label>';
+  }
+  $("imgRefList").innerHTML = h + '</div>';
+  var cbs = $("imgRefList").querySelectorAll('input[type="checkbox"]');
+  for (var c = 0; c < cbs.length; c++) {
+    cbs[c].addEventListener("change", function () {
+      var r = this.getAttribute("data-rel");
+      if (this.checked) IMG_REFS[r] = true; else delete IMG_REFS[r];
+      _renderImgRefs();
+    });
+  }
+  var picked = Object.keys(IMG_REFS);
+  $("imgRefPicked").textContent = "고른 참조: " + (picked.length ? picked.length + "장" : "없음");
+}
+
+function genSceneImage(n, prompt, refs) {
   _rowStatus(n, "씬 이미지 생성 중... (codex, 수십 초)" + (SELECTED_CHARACTER ? " [" + SELECTED_CHARACTER + "]" : ""));
   return fetch(BACKEND + "/api/scenes/image", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n),
-                           character: SELECTED_CHARACTER || "" }),
+                           character: SELECTED_CHARACTER || "",
+                           prompt: prompt || "", refs: refs || [] }),
   }).then(function (r) { return r.json(); })
     .then(function (j) {
       _rowStatus(n, (j.result && j.result.status === "completed") ? "생성 완료 ✓" : ("실패: " + JSON.stringify(j)));
@@ -1066,6 +1130,27 @@ document.addEventListener("DOMContentLoaded", function () {
   var s = $("layerSubmit"); if (s) s.addEventListener("click", _submitLayerSplit);
   var c = $("layerCancel"); if (c) c.addEventListener("click", _closeLayerModal);
   var x = $("layerClose"); if (x) x.addEventListener("click", _closeLayerModal);
+
+  /* 재생성 모달 */
+  function _closeImg() { $("imgModal").hidden = true; }
+  var ic = $("imgCancel"); if (ic) ic.addEventListener("click", _closeImg);
+  var ix = $("imgClose"); if (ix) ix.addEventListener("click", _closeImg);
+  var itb = $("imgRefTabs");
+  if (itb) itb.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest(".imgreftab") : null;
+    if (!b) return;
+    IMG_TAB = b.getAttribute("data-tab");
+    _renderImgRefs();
+  });
+  var isb = $("imgSubmit");
+  if (isb) isb.addEventListener("click", function () {
+    if (IMG_SCENE == null) return;
+    var p = $("imgPrompt").value.trim();
+    if (!p) { $("imgModalStatus").textContent = "프롬프트를 채우세요."; return; }
+    var refs = Object.keys(IMG_REFS);
+    $("imgModalStatus").textContent = "생성 중... (수십 초)";
+    genSceneImage(IMG_SCENE, p, refs).then(function () { _closeImg(); });
+  });
 });
 
 function splitLayers(n, els) {

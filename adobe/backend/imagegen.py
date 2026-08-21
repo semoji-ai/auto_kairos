@@ -169,9 +169,13 @@ def _run_codex_image(proj_dir: Path, out: Path, prompt: str, *,
 
 def generate_one(proj_dir: Path, rel_out: str, image_prompt: str,
                  *, subdir: str = "images", retries: int = 2, on_line=None,
-                 character_ref=None) -> dict:
+                 character_ref=None, extra_refs=None) -> dict:
     """씬/레퍼런스 1장 생성. 세모지 베이스를 항상 첨부(있으면).
-    character_ref를 주면 캐릭터 분기(시트+베이스), 없으면 무캐릭터 분기(베이스만, 인물 금지)."""
+    character_ref를 주면 캐릭터 분기(시트+베이스), 없으면 무캐릭터 분기(베이스만, 인물 금지).
+
+    `extra_refs` 는 사람이 모달에서 고른 참조들이다 — 인물 시트 여러 장이나
+    앞서 만든 씬 이미지. 캐릭터 분기 판단은 이것들도 함께 본다.
+    """
     out_base = proj_dir / subdir
     out_base.mkdir(parents=True, exist_ok=True)
     out = versioned_path(out_base, Path(rel_out).name)
@@ -179,6 +183,10 @@ def generate_one(proj_dir: Path, rel_out: str, image_prompt: str,
     images = []
     if character_ref:
         images.append(str(character_ref))
+    for r in (extra_refs or []):
+        if str(r) not in images:
+            images.append(str(r))
+    character_ref = character_ref or bool(extra_refs)
     base = base_img()
     if base:
         images.append(str(base))

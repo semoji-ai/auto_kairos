@@ -23,16 +23,21 @@ def _find_scene(data: dict, sn) -> dict | None:
     꺼내 쓰는 곳). 파이썬에서 "41" == 41 은 거짓이라, 멀쩡한 씬을 눌러도
     「씬 없음」이 떴다. 프런트를 한 군데씩 고치는 것보다 받는 쪽에서
     맞추는 편이 확실하다 — 새 호출이 생겨도 같은 일이 안 난다.
+
+    **다만 소수점 씬 번호를 뭉개면 안 된다.** `int()` 로 맞추면 18.25 가
+    18 이 되어 정수 형제 씬을 찾아 준다. 그 씬이 실재하므로 「성공」으로
+    보이고, 18.25 에 하려던 일이 18 에 적용된다 — 한 번의 조작으로 두 씬이
+    어긋난다. LS 프로젝트의 소수점 씬 19개가 전부 이 경우였다.
     """
     if sn is None:
         return None
     try:
-        key = int(sn)
+        key = float(sn)
     except (TypeError, ValueError):
         return None
     for s in data.get("scenes") or []:
         try:
-            if int(s.get("sceneNumber")) == key:
+            if float(s.get("sceneNumber")) == key:
                 return s
         except (TypeError, ValueError):
             continue
@@ -392,6 +397,32 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         run_async(jobs, jid, _do)
         return 200, {"job_id": jid, "status": "running"}
 
+    # 재생성 모달이 고를 수 있는 참조 목록. 인물 시트와 이미 만들어 둔 씬
+    # 이미지를 함께 낸다 — 「그 인물로」와 「저 컷과 같은 자리에서」가 둘 다
+    # 필요하고, 지금은 전자만 전역 하나로 걸 수 있었다.
+    if method == "GET" and p == "/api/scenes/image-refs":
+        pid = (query or {}).get("project_id", "")
+        proj_dir = root / (pid[0] if isinstance(pid, list) else pid)
+        if not proj_dir.is_dir():
+            return 404, {"error": "프로젝트 없음"}
+        out = {"characters": [], "scenes": []}
+        cdir = proj_dir / "characters"
+        if cdir.is_dir():
+            for f in sorted(cdir.glob("*.png")):
+                out["characters"].append({
+                    "name": f.stem.replace("char_", ""),
+                    "rel": f.relative_to(proj_dir).as_posix()})
+        sdir = proj_dir / "storyboard"
+        if sdir.is_dir():
+            by_scene = {}
+            for s in scenes.load_scenes(proj_dir).get("scenes", []):
+                ref = s.get("imageRef") or ""
+                if ref and (proj_dir / ref).is_file():
+                    by_scene[s.get("sceneNumber")] = ref
+            for n in sorted(by_scene, key=lambda x: (x is None, x)):
+                out["scenes"].append({"sceneNumber": n, "rel": by_scene[n]})
+        return 200, out
+
     if method == "POST" and p == "/api/scenes/image":
         b = body or {}
         pid = b.get("project_id", "")
@@ -413,11 +444,21 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         jobs = ctx["jobs"]
         jid = jobs.create("scene-image", pid)
         name = scenes.new_scene_image_name(sid)
+        # 모달에서 고른 참조들. 프로젝트 밖을 가리키는 경로는 받지 않는다.
+        extra_refs = []
+        for r in (b.get("refs") or []):
+            fp = (proj_dir / str(r)).resolve()
+            if fp.is_file() and proj_dir.resolve() in fp.parents:
+                extra_refs.append(str(fp))
+        prompt_in = (b.get("prompt") or "").strip()
         res = imagegen.generate_one(
             proj_dir, name,
-            (b.get("prompt") or "").strip() or scene.get("image_prompt", "") or scene.get("visual_summary", ""),
-            subdir="storyboard", character_ref=character_ref,
+            prompt_in or scene.get("image_prompt", "") or scene.get("visual_summary", ""),
+            subdir="storyboard", character_ref=character_ref, extra_refs=extra_refs,
             on_line=lambda ln: jobs.append_log(jid, ln))
+        # 고쳐 넣은 프롬프트는 남긴다 — 다음에 모달을 열면 이어서 고칠 수 있다.
+        if prompt_in and prompt_in != (scene.get("image_prompt") or ""):
+            scenes.set_image_prompt(proj_dir, sn, prompt_in)
         if res.get("status") == "completed":
             from pathlib import Path as _P
             rel = _P(res["path"]).relative_to(proj_dir).as_posix()

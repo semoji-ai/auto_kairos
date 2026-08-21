@@ -238,10 +238,10 @@
     .col-work .te-acts .mini { width:auto; margin:0; }
 
     /* 모달(이미지 생성 + 레이어 선택 공용) */
-    #genModal, #layerModal { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100;
+    #genModal, #layerModal, #imgModal { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100;
       display:flex; align-items:center; justify-content:center; }
-    #genModal[hidden], #layerModal[hidden] { display:none; }
-    #genModal .gen-box, #layerModal .gen-box { width:min(440px,92vw); max-height:88vh; overflow-y:auto;
+    #genModal[hidden], #layerModal[hidden], #imgModal[hidden] { display:none; }
+    #genModal .gen-box, #layerModal .gen-box, #imgModal .gen-box { width:min(440px,92vw); max-height:88vh; overflow-y:auto;
       background:#23262b; border:1px solid #33363c; border-radius:10px; padding:16px; }
     /* 레이어 선택 체크리스트 + 씬 탭 */
     #layerTabs { display:flex; gap:3px; flex-wrap:wrap; margin:6px 0 0; }
@@ -254,12 +254,12 @@
     #layerList .layer-chk:hover { background:#2c2f36; }
     .layer-chk.layer-dropped { opacity:0.55; }
     #layerList .layer-chk input { width:16px; height:16px; margin:2px 0 0; flex:0 0 auto; }
-    #genModal .gen-head, #layerModal .gen-head { display:flex; justify-content:space-between; align-items:center;
+    #genModal .gen-head, #layerModal .gen-head, #imgModal .gen-head { display:flex; justify-content:space-between; align-items:center;
       font-size:14px; font-weight:600; margin-bottom:8px; }
     #genModal select, #genModal input, #genModal textarea { width:100%; box-sizing:border-box;
       padding:7px; margin:3px 0; background:#1b1d21; color:#e6e6e6; border:1px solid #33363c; border-radius:5px; }
-    #genModal .gen-actions, #layerModal .gen-actions { display:flex; gap:8px; margin-top:10px; }
-    #genModal .gen-actions button, #layerModal .gen-actions button { flex:1; }
+    #genModal .gen-actions, #layerModal .gen-actions, #imgModal .gen-actions { display:flex; gap:8px; margin-top:10px; }
+    #genModal .gen-actions button, #layerModal .gen-actions button, #imgModal .gen-actions button { flex:1; }
 
     #toolsSection { margin-top:10px; border-top:1px solid #333; padding-top:6px; }
     #toolsSection summary { cursor:pointer; font-size:12px; color:#aaa; }
@@ -550,6 +550,29 @@
         <button id="layerCancel" class="alt">취소</button>
       </div>
       <div class="box" id="layerModalStatus" style="min-height:16px">—</div>
+    </div>
+  </div>
+
+  <!-- 씬 이미지 재생성 — 참조를 고르고 프롬프트를 손봐서 다시 그린다.
+       전에는 버튼을 누르면 곧바로 생성으로 들어가, 무엇을 참조하는지도
+       무슨 프롬프트로 그리는지도 볼 수 없었다. -->
+  <div id="imgModal" hidden>
+    <div class="gen-box">
+      <div class="gen-head">씬 이미지 재생성 <button id="imgClose" class="mini">✕</button></div>
+      <div class="label">참조 이미지 — 고른 그림을 보고 그립니다. 여러 장 고를 수 있습니다.</div>
+      <div id="imgRefTabs" style="display:flex;gap:6px;margin-bottom:6px">
+        <button class="mini imgreftab" data-tab="chars">인물 시트</button>
+        <button class="mini imgreftab alt" data-tab="scenes">기존 씬 이미지</button>
+      </div>
+      <div id="imgRefList" class="box" style="max-height:34vh;overflow:auto">—</div>
+      <div id="imgRefPicked" class="label" style="margin-top:4px">고른 참조: 없음</div>
+      <div class="label" style="margin-top:8px">프롬프트 — 이전 내용이 채워집니다. 고쳐서 다시 그리세요.</div>
+      <textarea id="imgPrompt" rows="7" style="width:100%"></textarea>
+      <div class="gen-actions">
+        <button id="imgSubmit">이 내용으로 생성</button>
+        <button id="imgCancel" class="alt">취소</button>
+      </div>
+      <div class="box" id="imgModalStatus" style="min-height:16px">—</div>
     </div>
   </div>
 
