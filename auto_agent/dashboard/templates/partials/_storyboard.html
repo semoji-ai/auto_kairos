@@ -52,7 +52,10 @@
     <!-- 좌측: Remotion Player 경량 임베드 -->
     <div class="sb-preview-wrap">
       <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
-        {% if scene.infographic and scene.infographic.items %}
+        {% if scene.isTurnCard %}
+        {# 반전 접속사 카드 — 흰 화면에 한 마디. 빠르게 넘어간다. #}
+        <div class="sb-turn-card"><span>{{ scene.headline }}</span></div>
+        {% elif scene.infographic and scene.infographic.items %}
         {# 인포그래픽 씬 — 요소를 자리에 놓아 그대로 보여준다. 그림을 굽지 않고
            배치 숫자만 읽는다. Remotion도 같은 숫자를 쓴다. #}
         <div class="sb-info-stage bg-{{ scene.infographic.background or 'grid' }} tx-{{ scene.infographic.contrast or 'plain' }}{% if not scene.infographic.designed %} rough{% endif %}"
@@ -1032,17 +1035,23 @@ function sbLoadImageGrid(sn) {
         }
       });
       if (others.length) {
-        var othersJson = JSON.stringify(others.map(function(v) {
-          return {file: v.file, url: v.url, type: v.type};
-        })).replace(/"/g, '&quot;');
-        html += '<div class="sb-versions-toggle" data-sn="' + sn + '">'
-          + '<button class="sb-versions-toggle-btn" onclick="sbToggleVersions(' + sn + ')" '
+        // 카드를 지금 그려 둔다. 예전에는 JSON을 data-속성에 넣어 두고 펼칠 때
+        // 파싱했는데, 따옴표가 섞이면 조용히 실패해 빈 칸만 열렸다.
+        html += '<button class="sb-versions-toggle-btn" onclick="sbToggleVersions(' + sn + ')" '
           + 'style="font-size:9px;color:#71717A;background:transparent;border:1px solid rgba(255,255,255,0.1);'
-          + 'border-radius:4px;padding:2px 8px;cursor:pointer;height:100%;min-height:60px">'
-          + '🖼️ 다른 버전 ' + others.length + '개 ▾</button>'
-          + '<div class="sb-versions-others" id="sb-versions-others-' + sn + '" '
-          + 'data-others="' + othersJson + '" '
-          + 'style="display:none"></div></div>';
+          + 'border-radius:4px;padding:2px 8px;cursor:pointer;height:60px">'
+          + '🖼️ 다른 버전 ' + others.length + '개 ▾</button>';
+        // 제 줄을 통째로 차지하게 한다 — flex 안에서는 버튼 옆 좁은 자리에
+        // 끼어 들어가 화면 밖으로 밀려난다.
+        var oh = '';
+        others.forEach(function(v) {
+          var ti = v.type === 'generate' ? '🎨' : '🔍';
+          var sf = String(v.file).replace(/'/g, "\\'");
+          oh += '<div class="sb-grid-thumb" onclick="sbSelectVersion(' + sn + ',\'' + sf + '\')" '
+            + 'title="' + ti + ' ' + v.file + '"><img src="' + v.url + '" loading="lazy"></div>';
+        });
+        html += '<div class="sb-versions-others" id="sb-versions-others-' + sn + '" '
+          + 'style="display:none;flex-basis:100%;flex-wrap:wrap;gap:3px">' + oh + '</div>';
       }
     } else {
       // 기존 동작 — 모든 버전 노출 (멀티 모드 또는 versions < 3)
@@ -1177,32 +1186,8 @@ function sbLoadVersions(sn) {
 function sbToggleVersions(sn) {
   var container = document.getElementById('sb-versions-others-' + sn);
   if (!container) return;
-  var hidden = container.style.display === 'none' || !container.style.display;
-  if (!hidden) {
-    container.style.display = 'none';
-    return;
-  }
-  // 첫 펼침 시에만 카드 렌더
-  if (container.dataset.loaded !== '1') {
-    var raw = container.dataset.others || '[]';
-    try {
-      var others = JSON.parse(raw);
-      var html = '';
-      others.forEach(function(v) {
-        var typeIcon = v.type === 'generate' ? '🎨' : '🔍';
-        var safeFile = v.file.replace(/'/g, "\\'");
-        html += '<div class="sb-grid-thumb" '
-          + 'onclick="sbSelectVersion(' + sn + ',\'' + safeFile + '\')" '
-          + 'title="' + typeIcon + ' ' + v.file + '" '
-          + 'style="display:inline-block;margin:2px">'
-          + '<img src="' + v.url + '" loading="lazy">'
-          + '</div>';
-      });
-      container.innerHTML = html;
-      container.dataset.loaded = '1';
-    } catch (e) {}
-  }
-  container.style.display = 'inline-block';
+  var shown = container.style.display && container.style.display !== 'none';
+  container.style.display = shown ? 'none' : 'flex';
 }
 
 function sbSelectVersion(sn, file) {
