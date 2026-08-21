@@ -11,7 +11,22 @@ def _proj(tmp_path, scenes_arr):
 
 def test_catalog_names():
     assert set(assistant.ACTION_HANDLERS) == {
-        "generate_missing_images", "split_layers", "tts_all", "plan_motion", "assemble"}
+        "generate_missing_images", "edit_images",
+        "split_layers", "tts_all", "plan_motion", "assemble"}
+
+
+def test_edit_images_needs_instruction(tmp_path):
+    """무엇을 바꿀지 없으면 아무것도 하지 않는다 — 빈 지시로 그림을 건드리면 안 된다."""
+    d = _proj(tmp_path, [{"sceneNumber": 1, "sceneId": "e1", "imageRef": "storyboard/a.png"}])
+    r = assistant._h_edit_images(d, instruction="")
+    assert r["edited"] == 0 and "error" in r
+
+
+def test_edit_images_reports_scenes_without_image(tmp_path, monkeypatch):
+    """고칠 그림이 없는 씬은 **조용히 넘기지 않는다.** 왜 안 됐는지 알아야 한다."""
+    d = _proj(tmp_path, [{"sceneNumber": 7, "sceneId": "e7"}])      # 이미지 없음
+    r = assistant._h_edit_images(d, instruction="안경을 뺀다")
+    assert r["edited"] == 0 and r.get("no_image") == [7]
 
 
 def test_plan_motion_handler(tmp_path, monkeypatch):

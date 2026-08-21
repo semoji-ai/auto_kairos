@@ -65,6 +65,40 @@ def _h_generate_missing_images(proj_dir: Path, on_event=None, targets=None, shou
     return {"generated": n}
 
 
+def _h_edit_images(proj_dir: Path, on_event=None, targets=None, should_cancel=None,
+                   instruction: str = "") -> dict:
+    """이미 있는 씬 그림을 **참조로 붙여** 지시한 곳만 고친다.
+
+    전에는 「이미지가 없는 씬에 새로 생성」밖에 없어, 「109·110·112 안경만
+    빼 줘」 같은 부분 수정을 아예 할 수 없었다. 재생성으로 하면 구도와 자세가
+    통째로 바뀌어 고치려던 것보다 더 많이 달라진다.
+
+    **옛 그림은 지우지 않는다.** 새 판본으로 쌓고 링크만 옮긴다.
+    """
+    if not (instruction or "").strip():
+        return {"edited": 0, "error": "무엇을 바꿀지 적어야 합니다"}
+    data = scenes.load_scenes(proj_dir)
+    n, skipped = 0, []
+    for s in _target_scenes(data, targets):
+        _check(should_cancel, n)
+        if not s.get("_image"):
+            skipped.append(s.get("sceneNumber"))
+            continue
+        name = scenes.new_scene_image_name(s.get("sceneId"))
+        res = imagegen.edit_one(proj_dir, name, s["_image"], instruction,
+                                subdir="storyboard")
+        if res.get("status") == "completed":
+            rel = Path(res["path"]).relative_to(proj_dir).as_posix()
+            scenes.set_image_ref(proj_dir, s.get("sceneNumber"), rel)
+            n += 1
+        if on_event:
+            on_event(f"S{s.get('sceneNumber')} 수정: {res.get('status')}")
+    out = {"edited": n}
+    if skipped:
+        out["no_image"] = skipped        # 고칠 그림이 없는 씬은 조용히 넘기지 않는다
+    return out
+
+
 def _h_split_layers(proj_dir: Path, on_event=None, targets=None, should_cancel=None) -> dict:
     from backend import vault
     data = scenes.load_scenes(proj_dir)
@@ -131,6 +165,7 @@ def _h_assemble(proj_dir: Path, on_event=None, targets=None, should_cancel=None)
 
 ACTION_HANDLERS = {
     "generate_missing_images": _h_generate_missing_images,
+    "edit_images": _h_edit_images,
     "split_layers": _h_split_layers,
     "tts_all": _h_tts_all,
     "plan_motion": _h_plan_motion,
@@ -139,6 +174,9 @@ ACTION_HANDLERS = {
 
 _CATALOG_DESC = (
     "- generate_missing_images: 이미지가 없는 씬에 씬 이미지를 생성한다.\n"
+    "- edit_images: **이미 있는 씬 그림을 참조로 붙여 지시한 곳만 고친다.**\n"
+    "  `instruction` 에 바꿀 것 하나를 적는다(예: \"인물의 안경을 빼고 나머지는 그대로\").\n"
+    "  구도·자세·화풍이 유지되므로 부분 수정은 재생성 대신 이것을 쓴다.\n"
     "- split_layers: 이미지가 있고 레이어가 없는 씬을 캐릭터/움직임 기준으로 레이어 분리한다.\n"
     "- tts_all: 내레이션이 있는 모든 씬의 음성을 생성한다.\n"
     "- plan_motion: 레이어가 분리된 씬에 모션 플랜을 설계한다.\n"
@@ -354,7 +392,12 @@ def run_assistant(proj_dir: Path, instruction: str, *,
             results.append({"action": name, "reason": a.get("reason"), "result": {"status": "skipped"}})
             continue
         try:
-            r = h(proj_dir, on_event=on_event, targets=targets, should_cancel=should_cancel)
+            kw = {"on_event": on_event, "targets": targets, "should_cancel": should_cancel}
+            # 계획이 적어 준 지시문을 그대로 넘긴다. `edit_images` 는 이것이
+            # 없으면 무엇을 바꿀지 몰라 아무 일도 못 한다.
+            if a.get("instruction"):
+                kw["instruction"] = a["instruction"]
+            r = h(proj_dir, **kw)
         except TypeError:                       # 구형/테스트 핸들러 호환
             try:
                 r = h(proj_dir, on_event=on_event)

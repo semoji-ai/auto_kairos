@@ -196,6 +196,88 @@ def generate_one(proj_dir: Path, rel_out: str, image_prompt: str,
                             retries=retries, on_line=on_line)
 
 
+EDIT_PROMPT = """$imagegen
+
+**첨부한 그림을 먼저 view_image 도구로 불러와 대화 맥락에 넣으세요.**
+경로를 읽고 말로 옮기지 마세요 — 그림 자체가 맥락에 있어야 합니다.
+
+## 고칠 그림
+
+{src}
+
+## 바꿀 것
+
+{instruction}
+
+## 지켜야 할 것
+
+**바꿀 것은 위에 적은 것뿐입니다.** 나머지는 첨부한 그림 그대로 둡니다 —
+구도, 인물의 자세와 몸 비율, 얼굴, 옷, 배경, 색, 빛의 방향, 화면 크기까지
+전부 원본과 같습니다. 다시 그리는 것이 아니라 **그 그림을 고치는 것**입니다.
+
+말로 그림체를 설명하지 않습니다. 첨부한 그림이 그림체의 기준입니다.
+
+size는 1792x1024입니다.
+
+생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:
+{out}
+"""
+
+
+def _run_codex_imagegen(out: Path, prompt: str, *, timeout: int = 1200,
+                        on_line=None) -> dict:
+    """코덱스 내장 `$imagegen` 으로 그린다.
+
+    OpenAI API 를 직접 부르는 CLI 경로(`_run_codex_image`)와 다르다. v3 의
+    `scripts/gen_scenes.py` 가 536컷을 이 방식으로 뽑았고, 그림체 기준 시트를
+    첨부해 편집하는 흐름이 여기서만 제대로 돈다.
+
+    코덱스가 `$CODEX_HOME/generated_images/` 에 떨어뜨린 것을 프롬프트 지시대로
+    목적지에 복사한다 — 경로 인자에 기대지 않는다.
+    """
+    out.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        proc = subprocess.run(
+            ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=timeout)
+    except FileNotFoundError:
+        return {"status": "failed", "error": "codex 명령을 찾을 수 없습니다"}
+    except subprocess.TimeoutExpired:
+        return {"status": "failed", "error": f"{timeout}초 초과"}
+    log = (proc.stdout or "") + "\n" + (proc.stderr or "")
+    if on_line:
+        for ln in log.splitlines():
+            if ln.strip():
+                on_line(ln)
+    if out.is_file():
+        return {"status": "completed", "path": str(out)}
+    return {"status": "failed", "error": "no_file", "log_tail": log[-400:]}
+
+
+def edit_one(proj_dir: Path, rel_out: str, src_rel: str, instruction: str,
+             *, subdir: str = "storyboard", retries: int = 2, on_line=None) -> dict:
+    """이미 있는 그림을 **참조로 붙여** 지시한 곳만 고친다.
+
+    새로 그리는 것(`generate_one`)과 다르다. 원본을 첨부하고 「바꿀 것 하나」만
+    말하므로 구도·자세·화풍이 흔들리지 않는다. 인물 시트를 만들 때 확인된
+    방식이다 — 말로 묘사하면 매번 재해석되지만, 그림을 붙여 고치면 그대로 남는다.
+
+    「안경만 빼 줘」처럼 **한 곳만 고치고 싶은데 재생성밖에 없어** 화면이 통째로
+    바뀌던 자리를 메운다.
+    """
+    src = (proj_dir / src_rel).resolve()
+    if not src.is_file():
+        return {"status": "failed", "error": f"원본 없음: {src_rel}"}
+    if not (instruction or "").strip():
+        return {"status": "failed", "error": "무엇을 바꿀지 적어야 합니다"}
+    out_base = proj_dir / subdir
+    out_base.mkdir(parents=True, exist_ok=True)
+    out = versioned_path(out_base, Path(rel_out).name)
+    prompt = EDIT_PROMPT.format(src=str(src), instruction=instruction.strip(),
+                                out=str(out))
+    return _run_codex_imagegen(out, prompt, on_line=on_line)
+
+
 def generate_character(proj_dir: Path, name: str, looks: str,
                        *, rel_out: str | None = None, subdir: str = "characters",
                        retries: int = 2, on_line=None) -> dict:

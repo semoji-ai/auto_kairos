@@ -1,23 +1,52 @@
 {
   "type": "object",
   "additionalProperties": false,
-  "required": ["actions", "reply"],
+  "required": [
+    "actions",
+    "reply"
+  ],
   "properties": {
-    "reply": { "type": ["string", "null"] },
+    "reply": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "actions": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["action", "reason", "targets"],
+        "required": [
+          "action",
+          "reason",
+          "targets"
+        ],
         "properties": {
-          "action": { "type": "string",
-            "enum": ["generate_missing_images", "split_layers", "tts_all", "plan_motion", "assemble"] },
-          "reason": { "type": "string" },
+          "action": {
+            "type": "string",
+            "enum": [
+              "generate_missing_images",
+              "edit_images",
+              "split_layers",
+              "tts_all",
+              "plan_motion",
+              "assemble"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
           "targets": {
             "type": "array",
             "description": "대상 씬 번호 목록. 사용자가 특정 씬을 지목했으면 그 번호만. 전체를 명시적으로 지시했을 때만 빈 배열(=조건에 맞는 모든 씬).",
-            "items": { "type": "number" }
+            "items": {
+              "type": "number"
+            }
+          },
+          "instruction": {
+            "type": "string",
+            "description": "edit_images 전용 — 그림에서 **바꿀 것 하나**를 적는다. 예: \"인물의 안경을 빼고 나머지는 그대로\". 나머지는 원본을 그대로 두라는 지시가 프롬프트에 이미 들어 있으므로 여기에는 바꿀 것만 적는다."
           }
         }
       }

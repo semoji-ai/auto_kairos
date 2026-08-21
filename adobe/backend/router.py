@@ -452,6 +452,41 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
                 out["scenes"].append({"sceneNumber": n, "rel": by_scene[n]})
         return 200, out
 
+    # 있는 그림을 **고친다** — 새로 그리는 것과 다르다. 원본을 참조로 붙이고
+    # 바꿀 것 하나만 말하므로 구도·자세·화풍이 흔들리지 않는다.
+    # 「안경만 빼 줘」처럼 한 곳만 고치고 싶은데 재생성밖에 없어, 고치려던 것보다
+    # 더 많이 달라지던 자리를 메운다.
+    if method == "POST" and p == "/api/scenes/image-edit":
+        b = body or {}
+        pid = b.get("project_id", "")
+        proj_dir = root / pid
+        if not proj_dir.is_dir():
+            return 404, {"error": "프로젝트 없음"}
+        sn = b.get("sceneNumber")
+        data = scenes.load_scenes(proj_dir)
+        scene = _find_scene(data, sn)
+        if not scene:
+            return 404, {"error": f"scene {sn} 없음"}
+        src = scene.get("_image") or ""
+        if not src:
+            return 422, {"error": "고칠 그림이 없습니다 — 먼저 생성하세요"}
+        instruction = (b.get("instruction") or "").strip()
+        if not instruction:
+            return 400, {"error": "무엇을 바꿀지 적어야 합니다"}
+        jobs = ctx["jobs"]
+        jid = jobs.create("scene-image-edit", pid)
+        name = scenes.new_scene_image_name(scene.get("sceneId"))
+        res = imagegen.edit_one(proj_dir, name, src, instruction,
+                                subdir="storyboard",
+                                on_line=lambda ln: jobs.append_log(jid, ln))
+        if res.get("status") == "completed":
+            from pathlib import Path as _P
+            rel = _P(res["path"]).relative_to(proj_dir).as_posix()
+            scenes.set_image_ref(proj_dir, sn, rel)   # 옛 그림은 남고 링크만 옮긴다
+        jobs.set_status(jid, "completed" if res.get("status") == "completed" else "failed",
+                        artifact_paths=[str(proj_dir / "storyboard")])
+        return 200, {"job_id": jid, "result": res}
+
     if method == "POST" and p == "/api/scenes/image":
         b = body or {}
         pid = b.get("project_id", "")

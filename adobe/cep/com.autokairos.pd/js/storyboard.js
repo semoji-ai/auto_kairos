@@ -964,9 +964,31 @@ function saveNarration(n) {
 
 /* ===== 재생성 모달 — 무엇을 보고 무슨 말로 그릴지 먼저 정한다 ===== */
 var IMG_SCENE = null, IMG_REFS = {}, IMG_TAB = "chars", IMG_DATA = null, IMG_DIR = "";
+var IMG_MODE = "gen";      // gen=새로 그리기 · edit=지금 그림 고치기
+
+/* 새로 그리기 ↔ 고치기. 고치기는 지금 그림을 참조로 붙이고 바꿀 것 하나만
+   말하므로 구도·자세가 유지된다 — 참조 고르기와 이전 프롬프트는 필요 없다. */
+function _setImgMode(m) {
+  IMG_MODE = m;
+  var bs = $("imgModeTabs").querySelectorAll(".imgmode");
+  for (var i = 0; i < bs.length; i++) {
+    bs[i].className = "mini imgmode" + (bs[i].getAttribute("data-mode") === m ? "" : " alt");
+  }
+  var edit = m === "edit";
+  $("imgRefBlock").hidden = edit;
+  $("imgPromptLabel").textContent = edit
+    ? "무엇을 바꿀까요 — 바꿀 것 하나만 적으세요. 나머지는 지금 그림 그대로 둡니다."
+    : "프롬프트 — 이전 내용이 채워집니다. 고쳐서 다시 그리세요.";
+  $("imgSubmit").textContent = edit ? "이대로 고치기" : "이 내용으로 생성";
+  var ta = $("imgPrompt");
+  if (edit) { ta._genText = ta.value; ta.value = ta._editText || ""; ta.placeholder = "예: 인물이 쓴 안경을 없애고 맨 얼굴로"; }
+  else { ta._editText = ta.value; ta.value = ta._genText || ""; ta.placeholder = ""; }
+}
 
 function openImageModal(n) {
   IMG_SCENE = n; IMG_REFS = {}; IMG_TAB = "chars"; IMG_DATA = null;
+  var ta0 = $("imgPrompt"); ta0._genText = ""; ta0._editText = "";
+  _setImgMode("gen");
   $("imgRefList").textContent = "불러오는 중...";
   $("imgModalStatus").textContent = "—";
   $("imgPrompt").value = "";
@@ -1027,6 +1049,23 @@ function _renderImgRefs() {
   }
   var picked = Object.keys(IMG_REFS);
   $("imgRefPicked").textContent = "고른 참조: " + (picked.length ? picked.length + "장" : "없음");
+}
+
+/* 지금 그림을 참조로 붙여 지시한 곳만 고친다. 옛 그림은 지우지 않고
+   새 판본으로 쌓은 뒤 링크만 옮긴다. */
+function editSceneImage(n, instruction) {
+  _rowStatus(n, "이미지 고치는 중... (codex, 수십 초)");
+  return fetch(BACKEND + "/api/scenes/image-edit", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n),
+                           instruction: instruction }),
+  }).then(function (r) { return r.json(); })
+    .then(function (j) {
+      var ok = j.result && j.result.status === "completed";
+      _rowStatus(n, ok ? "수정 완료 ✓" : ("실패: " + JSON.stringify(j)));
+      if (ok) refreshRow(n);
+    })
+    .catch(function (e) { _rowStatus(n, "오류: " + e); });
 }
 
 function genSceneImage(n, prompt, refs) {
@@ -1206,14 +1245,25 @@ document.addEventListener("DOMContentLoaded", function () {
     IMG_TAB = b.getAttribute("data-tab");
     _renderImgRefs();
   });
+  var mtb = $("imgModeTabs");
+  if (mtb) mtb.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest(".imgmode") : null;
+    if (b) _setImgMode(b.getAttribute("data-mode"));
+  });
   var isb = $("imgSubmit");
   if (isb) isb.addEventListener("click", function () {
     if (IMG_SCENE == null) return;
     var p = $("imgPrompt").value.trim();
-    if (!p) { $("imgModalStatus").textContent = "프롬프트를 채우세요."; return; }
-    var refs = Object.keys(IMG_REFS);
-    $("imgModalStatus").textContent = "생성 중... (수십 초)";
-    genSceneImage(IMG_SCENE, p, refs).then(function () { _closeImg(); });
+    if (!p) {
+      $("imgModalStatus").textContent = IMG_MODE === "edit"
+        ? "무엇을 바꿀지 적으세요." : "프롬프트를 채우세요.";
+      return;
+    }
+    $("imgModalStatus").textContent = (IMG_MODE === "edit" ? "고치는 중" : "생성 중") + "... (수십 초)";
+    var run = IMG_MODE === "edit"
+      ? editSceneImage(IMG_SCENE, p)
+      : genSceneImage(IMG_SCENE, p, Object.keys(IMG_REFS));
+    run.then(function () { _closeImg(); });
   });
 });
 
