@@ -1969,6 +1969,10 @@ function _loadVersions(box) {
     .then(function (r) { return r.json(); })
     .then(function (j) {
       var vs = j.versions || [];
+      // 판본이 하나뿐이면 조용히 비운다 — 대부분의 씬이 그렇다.
+      // 다만 **오류로 비는 것과 구분**되어야 한다. 아래 catch 가 이유를 적는다.
+      if (j.error) { box.innerHTML = '<div class="iv-msg">후보 조회 실패: '
+                                    + _esc(j.error) + "</div>"; return; }
       if (vs.length < 2) { box.innerHTML = ""; return; }
       var dir = IMG_DIR || "";
       box.innerHTML = '<div class="iv-strip">' + vs.map(function (x) {
@@ -1995,5 +1999,8 @@ function _loadVersions(box) {
         });
       }
     })
-    .catch(function () { box.innerHTML = ""; });
+    .catch(function (e) {
+      // 조용히 비우면 「후보가 없다」와 「불러오지 못했다」가 같아 보인다
+      box.innerHTML = '<div class="iv-msg">후보 조회 오류: ' + _esc(String(e)) + "</div>";
+    });
 }

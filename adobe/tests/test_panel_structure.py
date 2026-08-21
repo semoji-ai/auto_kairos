@@ -80,13 +80,14 @@ def test_planning_tab_has_file_viewer():
 
 
 def test_index_loads_planning_js():
-    assert 'src="js/planning.js"' in HTML.read_text(encoding="utf-8")
+    # `?v=` 캐시버스터가 붙는다 — 경로만 본다
+    assert 'src="js/planning.js' in HTML.read_text(encoding="utf-8")
 
 
 def test_storyboard_tab_has_sheet():
     html = HTML.read_text(encoding="utf-8")
     assert 'id="sheet"' in html and 'id="btnLoadSheet"' in html
-    assert 'src="js/storyboard.js"' in html
+    assert 'src="js/storyboard.js' in html
 
 
 def test_storyboard_js_defines_loadSheet():
@@ -97,7 +98,7 @@ def test_storyboard_js_defines_loadSheet():
 def test_gallery_panel_present():
     html = HTML.read_text(encoding="utf-8")
     for el in ['id="gallery-panel"', 'id="galSearch"', 'id="galEngine"',
-               'id="btnGalSearch"', 'id="btnGalRefresh"', 'src="js/gallery.js"']:
+               'id="btnGalSearch"', 'id="btnGalRefresh"', 'src="js/gallery.js']:
         assert el in html, el
 
 
@@ -134,7 +135,7 @@ def test_storyboard_js_has_layer_analysis():
 def test_genmodal_present():
     html = HTML.read_text(encoding="utf-8")
     for el in ['id="genModal"', 'id="genCategory"', 'id="genPrompt"', 'id="genSubmit"',
-               'id="genScene"', 'src="js/genmodal.js"']:
+               'id="genScene"', 'src="js/genmodal.js']:
         assert el in html, el
 
 
