@@ -232,9 +232,21 @@ function loadSheet() {
 
 /* 저장된 전용 텍스트가 원고와 다르면 배지 + 원고에서 다시 채우기 버튼.
    원고를 고쳐도 전용 텍스트를 자동으로 덮어쓰지 않으므로, 어긋남을 눈에 보이게 한다. */
+/* 백엔드 `_clean_text` 와 같은 정리를 한다. 자동 저장되는 값은 이 정리를
+   거친 것이라, 날것끼리 비교하면 **원고에 괄호나 이모지가 있기만 해도**
+   「원고와 다름」이 뜬다. 디아지오 141개 중 49개가 그 헛경보였고, 진짜로
+   손봐야 할 72개가 그 속에 묻혔다. */
+function _clean(t) {
+  return (t || "")
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function _teBadge(n, kind, stored, narration) {
   var st = (stored || "").trim();
-  if (!st || st === (narration || "").trim()) return "";
+  if (!st || _clean(st) === _clean(narration)) return "";
   return ' <span class="te-diff">원고와 다름</span>'
     + '<button class="mini te-reset" data-scene="' + n + '" data-kind="' + kind + '"'
     + ' title="이 칸을 비워 원고 기준으로 되돌립니다">원고에서 다시 채우기</button>';
@@ -428,7 +440,11 @@ function renderRow(s, dir) {
         ? ('<div class="tts-player">'
            + '<button class="tts-play" title="재생/정지">▶</button>'
            + '<span class="tts-dur">' + (s._audio_dur ? _fmtDur(s._audio_dur) : "--:--") + '</span>'
-           + '<audio class="tts-audio" preload="none" src="file://' + dir + '/' + s._audio + '"></audio>'
+           /* 파일 이름이 늘 같고(`tts_{sid}.mp3`) 재생성은 덮어쓴다. 캐시버스터가
+              없으면 CEP(Chromium)가 옛 음성을 계속 재생해, 제대로 다시 만들었는데도
+              「안 바뀐다」로 보인다. 길이를 붙여 파일이 바뀌면 주소도 바뀌게 한다. */
+           + '<audio class="tts-audio" preload="none" src="file://' + dir + '/' + s._audio
+           + '?t=' + Math.round((s._audio_dur || 0) * 1000) + '"></audio>'
            + '</div>')
         : '')
     + '    <div class="row-status" data-scene="' + n + '"></div>'
@@ -515,7 +531,7 @@ function bindRows(scope) {
       if (act === "img") { genSceneImage(n); }
       else if (act === "tts") { genTts(n); }
       else if (act === "txt") { toggleTextEditor(n); }
-      else if (act === "tl") { exportToTimeline(parseInt(n, 10)); }
+      else if (act === "tl") { exportToTimeline(parseFloat(n)); }
     });
   }
   var saves = scope.querySelectorAll("button.te-save");
@@ -644,7 +660,7 @@ function _bindRangeSelect() {
   var msg = document.getElementById("selRangeMsg");
   function present() {
     var cbs = document.getElementById("sheet").querySelectorAll("input.scene-sel"), out = [];
-    for (var i = 0; i < cbs.length; i++) out.push(parseInt(cbs[i].getAttribute("data-scene"), 10));
+    for (var i = 0; i < cbs.length; i++) out.push(parseFloat(cbs[i].getAttribute("data-scene")));
     return out;
   }
   function apply(mode) {
@@ -700,7 +716,7 @@ function _bindFind() {
 var SEL_SCENES = {};    // {sceneNumber(str): true} — 재렌더에도 유지
 
 function _checkedScenes() {
-  return Object.keys(SEL_SCENES).map(function (k) { return parseInt(k, 10); })
+  return Object.keys(SEL_SCENES).map(function (k) { return parseFloat(k); })
     .sort(function (a, b) { return a - b; });
 }
 
@@ -828,7 +844,7 @@ function refreshRow(n) {
   fetch(BACKEND + "/api/scenes?project_id=" + encodeURIComponent(SELECTED_PROJECT))
     .then(function (r) { return r.json(); })
     .then(function (j) {
-      var s = (j.scenes || []).filter(function (x) { return x.sceneNumber === parseInt(n, 10); })[0];
+      var s = (j.scenes || []).filter(function (x) { return x.sceneNumber === parseFloat(n); })[0];
       var old = $("sheet").querySelector('.sheet-row[data-scene="' + n + '"]');
       if (!s || !old) { loadSheet(); return; }            // 못 찾으면 전체 갱신 폴백
       NAR_ORIG[s.sceneNumber] = s.narration || "";
@@ -848,7 +864,7 @@ function planMotion(n) {
   _rowStatus(n, "모션 설계 중... (LLM, 비동기)");
   return fetch(BACKEND + "/api/scenes/motion", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10) }),
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n) }),
   }).then(function (r) { return r.json(); })
     .then(function (j) {
       if (j.status !== "running" || !j.job_id) { _rowStatus(n, "실패: " + (j.error || JSON.stringify(j))); return; }
@@ -880,7 +896,7 @@ function saveNarration(n) {
   _rowStatus(n, "저장 중...");
   fetch(BACKEND + "/api/scenes/narration", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10), narration: ta.value }),
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n), narration: ta.value }),
   }).then(function (r) { return r.json(); })
     .then(function (j) { _rowStatus(n, j.ok ? "저장됨 ✓" : ("실패: " + JSON.stringify(j))); })
     .catch(function (e) { _rowStatus(n, "오류: " + e); });
@@ -890,7 +906,7 @@ function genSceneImage(n) {
   _rowStatus(n, "씬 이미지 생성 중... (codex, 수십 초)" + (SELECTED_CHARACTER ? " [" + SELECTED_CHARACTER + "]" : ""));
   return fetch(BACKEND + "/api/scenes/image", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10),
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n),
                            character: SELECTED_CHARACTER || "" }),
   }).then(function (r) { return r.json(); })
     .then(function (j) {
@@ -904,7 +920,7 @@ function unlinkScene(n) {
   _rowStatus(n, "링크 해제 중...");
   fetch(BACKEND + "/api/scenes/unlink-image", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10) }),
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n) }),
   }).then(function (r) { return r.json(); })
     .then(function (j) {
       _rowStatus(n, j.ok ? "링크 해제됨(파일은 갤러리에 보존)" : ("실패: " + JSON.stringify(j)));
@@ -942,7 +958,7 @@ function analyzeLayers(ns) {
     _rowStatus(n, "레이어 분석 중...");
     fetch(BACKEND + "/api/scenes/analyze-layers", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10) }),
+      body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n) }),
     }).then(function (r) { return r.json(); })
       .then(function (j) {
         var els = j.elements || [], dropped = j.dropped || [];
@@ -1056,7 +1072,7 @@ function splitLayers(n, els) {
   _rowStatus(n, "레이어 분리 중... (" + els.length + "개 요소 + 배경, fal)");
   fetch(BACKEND + "/api/scenes/split-layers", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10), elements: els }),
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n), elements: els }),
   }).then(function (r) { return r.json(); })
     .then(function (j) {
       if (j.status !== "running" || !j.job_id) { _rowStatus(n, "실패: " + JSON.stringify(j)); return; }
@@ -1120,7 +1136,7 @@ function regenLayer(n, stem) {
   _rowStatus(n, "씬 다시 분리 중... (layerize)");
   return fetch(BACKEND + "/api/layers/regenerate", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10), layer: stem }),
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n), layer: stem }),
   }).then(function (r) { return r.json(); })
     .then(function (j) {
       if (j.status !== "running" || !j.job_id) {
@@ -1140,7 +1156,7 @@ function regenLayer(n, stem) {
 
 /* 눈 토글 / 제거 / 복구 — 사이드카 플래그만 바꾼다. 파일은 그대로 남는다. */
 function setLayerState(n, stem, patch) {
-  var b = { project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10), layer: stem };
+  var b = { project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n), layer: stem };
   if (patch.hidden != null) b.hidden = patch.hidden;
   if (patch.removed != null) b.removed = patch.removed;
   _layerBusy(n, stem, true);
@@ -1164,7 +1180,7 @@ function vectorizeLayers(n, stems, force) {
   _rowStatus(n, "벡터화 중... (Recraft)");
   return fetch(BACKEND + "/api/layers/vectorize", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10),
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n),
                            layers: stems, force: !!force }),
   }).then(function (r) { return r.json(); })
     .then(function (j) {
@@ -1209,7 +1225,7 @@ function genTts(n) {
   _rowStatus(n, "TTS 생성 중... (ElevenLabs)");
   return fetch(BACKEND + "/api/scenes/tts", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10) }),
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n) }),
   }).then(function (r) { return r.json(); })
     .then(function (j) {
       var ok = j.result && j.result.status === "completed";
@@ -1240,7 +1256,7 @@ function saveSceneTexts(n, regen) {
   return fetch(BACKEND + "/api/scenes/texts", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10),
+      project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n),
       narration_tts: tts, subtitle_text: sub,
     }),
   }).then(function (r) { return r.json(); })
@@ -1254,7 +1270,7 @@ function saveSceneTexts(n, regen) {
 
 /* 전용 텍스트 필드를 비워 원고 기준으로 되돌림. kind: "tts" | "sub" */
 function resetSceneText(n, kind) {
-  var b = { project_id: SELECTED_PROJECT, sceneNumber: parseInt(n, 10) };
+  var b = { project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n) };
   b[kind === "tts" ? "narration_tts" : "subtitle_text"] = "";
   _rowStatus(n, "원고 기준으로 되돌리는 중...");
   return fetch(BACKEND + "/api/scenes/texts", {
@@ -1277,7 +1293,7 @@ function exportToTimeline(sceneNumber) {
     : function (m) { _rowStatus(sceneNumber, m); };
   if (!SELECTED_PROJECT) { say("프로젝트를 먼저 선택하세요."); return; }
   if (typeof _assemble !== "function") { say("빌드 함수를 찾지 못했습니다."); return; }
-  return _assemble(sceneNumber == null ? null : parseInt(sceneNumber, 10), say);
+  return _assemble(sceneNumber == null ? null : parseFloat(sceneNumber), say);
 }
 
 function exportAllToTimeline() { exportToTimeline(null); }

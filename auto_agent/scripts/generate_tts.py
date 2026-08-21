@@ -355,6 +355,24 @@ def main():
         scenes = [s for s in scenes if (s.get("sceneNumber") or s.get("scene_number")) == target_scene]
         print(f"--scene {target_scene}: {len(scenes)}개 씬만 처리")
 
+    # --scenes 97-142,7 : 여러 씬을 한 번에. `--scene` 은 한 개뿐이라
+    # 챕터 하나를 다시 뽑으려면 프로세스를 수십 번 띄워야 했고, 그때마다
+    # scene_specs 를 통째로 다시 써서 그 사이의 수정이 날아갈 자리가 생긴다.
+    for idx, arg in enumerate(argv):
+        if arg == "--scenes" and idx + 1 < len(argv):
+            want: set = set()
+            for part in argv[idx + 1].split(","):
+                part = part.strip()
+                if "-" in part:
+                    a, b = part.split("-", 1)
+                    want.update(range(int(a), int(b) + 1))
+                elif part:
+                    want.add(int(part))
+            scenes = [s for s in scenes
+                      if (s.get("sceneNumber") or s.get("scene_number")) in want]
+            print(f"--scenes {argv[idx + 1]}: {len(scenes)}개 씬만 처리")
+            break
+
     total = len(scenes)
     results = []
 

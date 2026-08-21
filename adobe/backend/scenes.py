@@ -1,6 +1,7 @@
 """scenes.json 조회/수정 — sceneId 기반 에셋, 미디어·레이어 enrich, 나레이션 편집(무삭제)."""
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import threading
@@ -162,11 +163,34 @@ def update_narration(proj_dir: Path, scene_number: int, narration: str) -> dict:
         return {"error": f"scene {scene_number} 없음"}
 
 
+def narration_stamp(narration: str) -> str:
+    """이 원고에서 나온 전용 텍스트인지 표시할 지문."""
+    from backend import tts as _tts
+    return hashlib.sha1(
+        _tts._clean_text(narration or "").encode("utf-8")).hexdigest()[:12]
+
+
 def tts_text(scene: dict) -> str:
-    """씬의 TTS 발음용 텍스트. narration_tts 없으면 narration을 정리해서 반환(저장은 안 함)."""
+    """씬의 TTS 발음용 텍스트. narration_tts 없으면 narration을 정리해서 반환(저장은 안 함).
+
+    **전용 텍스트가 원고를 영원히 이기면 안 된다.** 합성할 때마다 쓴 텍스트가
+    narration_tts 로 자동 저장되므로, 한 번이라도 TTS 를 돌린 씬은 그 값이
+    굳는다. 그 뒤로 원고를 아무리 고쳐도 여기서 굳은 값을 돌려주어 음성이
+    바뀌지 않았다 — 「될 때가 있고 안 될 때가 있다」의 정체다.
+
+    그래서 전용 텍스트를 저장할 때 **그때의 원고 지문**을 함께 남긴다.
+    지금 원고의 지문과 다르면 원고가 그 뒤에 바뀐 것이므로 전용 텍스트를
+    지나치고 원고를 쓴다. 손으로 넣은 발음 교정은 원고가 그대로인 동안
+    살아남는다.
+
+    지문이 없는 옛 값은 그대로 믿는다 — 그 안에 의도한 발음 교정이 섞여
+    있어 일괄로 버릴 수 없다. 화면의 「원고와 다름」 배지로 사람이 고른다.
+    """
     t = (scene.get("narration_tts") or "").strip()
     if t:
-        return t
+        stamp = scene.get("narration_tts_of")
+        if not stamp or stamp == narration_stamp(scene.get("narration") or ""):
+            return t
     from backend import tts as _tts
     return _tts._clean_text(scene.get("narration") or "")
 
@@ -242,8 +266,15 @@ def update_texts(proj_dir: Path, scene_number: int,
                         continue
                     if val.strip():
                         s[key] = val
+                        # 이 전용 텍스트가 **어느 원고에서 나왔는지** 함께 남긴다.
+                        # 나중에 원고가 바뀌면 tts_text() 가 이 지문을 보고
+                        # 굳은 값을 지나친다.
+                        if key == "narration_tts":
+                            s["narration_tts_of"] = narration_stamp(s.get("narration") or "")
                     else:
                         s.pop(key, None)
+                        if key == "narration_tts":
+                            s.pop("narration_tts_of", None)
                 fp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
                 return {"ok": True, "sceneNumber": scene_number,
                         "narration_tts": s.get("narration_tts", ""),
