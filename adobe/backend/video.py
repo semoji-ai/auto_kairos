@@ -108,7 +108,16 @@ def generate(proj_dir: Path, job_type: str, params: dict, *,
             continue
         cmd += [f"--{k.replace('_', '-')}", str(v)]
 
+    # 이 모델이 받는 이미지 칸만 넘긴다. 화면에서 걸러도 여기서 한 번 더 본다 —
+    # gemini_omni 처럼 `start_image` 가 아예 없는 모델에 그것을 보내면 CLI 가
+    # 거절하는데, 왜 거절됐는지는 로그를 봐야 알 수 있어 원인을 찾기 어렵다.
+    spec = next((m for m in load_specs() if m["job_type"] == job_type), None)
+    allowed = set(spec["image_slots"]) if spec else set(IMAGE_PARAMS)
+    dropped = [k for k in (images or {}) if k not in allowed]
+
     for slot, paths in (images or {}).items():
+        if slot not in allowed:
+            continue
         flag = "--" + slot.replace("_", "-")
         for rel in paths or []:
             fp = (proj_dir / rel).resolve()
@@ -132,7 +141,11 @@ def generate(proj_dir: Path, job_type: str, params: dict, *,
     urls = _result_urls(proc.stdout or "")
     if not urls:
         return {"status": "failed", "error": "결과 URL 없음", "log_tail": log[-600:]}
-    return {"status": "completed", "urls": urls, "log_tail": log[-400:]}
+    out = {"status": "completed", "urls": urls, "log_tail": log[-400:]}
+    if dropped:
+        # 조용히 버리지 않는다 — 붙였다고 생각한 것이 안 들어갔으면 알아야 한다
+        out["dropped_slots"] = dropped
+    return out
 
 
 def _result_urls(stdout: str) -> list:

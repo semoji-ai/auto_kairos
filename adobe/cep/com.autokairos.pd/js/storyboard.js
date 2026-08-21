@@ -1751,7 +1751,7 @@ document.addEventListener("keydown", function (e) {
    모델마다 받는 파라미터도, 붙일 수 있는 이미지 칸도, 해상도 목록도 다르다.
    그 차이를 손으로 적어 두면 힉스필드가 바꿀 때마다 어긋나므로,
    백엔드가 CLI 산출을 그대로 넘겨 주고 화면은 그것만 보고 짠다. */
-var VID_MODELS = null, VID_SCENE = null, VID_PICK = {};
+var VID_MODELS = null, VID_SCENE = null, VID_PICK = {}, VID_SCENE_IMG = "";
 
 function openVideoModal(n) {
   VID_SCENE = n; VID_PICK = {};
@@ -1766,7 +1766,8 @@ function openVideoModal(n) {
       IMG_DIR = j.dir || IMG_DIR;
       var s = (j.scenes || []).filter(function (x) { return x.sceneNumber === parseFloat(n); })[0];
       if (s) $("vidPrompt").value = s.image_prompt || s.visual_summary || "";
-      if (s && s._image) VID_PICK.start_image = [s._image];   // 씬 그림을 첫 프레임으로
+      VID_SCENE_IMG = (s && s._image) || "";
+      _seedVidStart();
       _renderVidSlots();
     });
 
@@ -1782,6 +1783,24 @@ function openVideoModal(n) {
       _renderVidModel();
     })
     .catch(function (e) { $("vidStatus").textContent = "모델 목록 오류: " + e; });
+}
+
+/* 씬 그림을 첫 프레임으로 미리 넣는다. 비디오는 그 씬의 그림에서 움직이기
+   시작하는 것이 기본이고, 매번 손으로 고르게 하면 잊기 쉽다.
+
+   **모델이 `start_image` 를 안 받으면 `image_references` 로 넣는다.**
+   gemini_omni 는 그 칸이 아예 없어, 그대로 보내면 CLI 가 거절한다. */
+function _seedVidStart() {
+  if (!VID_SCENE_IMG) return;
+  var m = _vidModel();
+  var slots = (m && m.image_slots) || [];
+  var already = false;
+  for (var k in VID_PICK) {
+    if ((VID_PICK[k] || []).indexOf(VID_SCENE_IMG) >= 0) { already = true; break; }
+  }
+  if (already) return;
+  if (slots.indexOf("start_image") >= 0) VID_PICK.start_image = [VID_SCENE_IMG];
+  else if (slots.indexOf("image_references") >= 0) VID_PICK.image_references = [VID_SCENE_IMG];
 }
 
 function _vidModel() {
@@ -1819,6 +1838,11 @@ function _renderVidModel() {
     }
   }
   $("vidParams").innerHTML = '<div class="vp-grid">' + h + "</div>";
+  // 모델을 바꾸면 그 모델이 **안 받는 칸은 버린다.** 남겨 두면 CLI 가 거절한다.
+  for (var k in VID_PICK) {
+    if (m.image_slots.indexOf(k) < 0) delete VID_PICK[k];
+  }
+  _seedVidStart();
   _renderVidSlots();
 }
 
@@ -1831,9 +1855,19 @@ function _renderVidSlots() {
   for (var i = 0; i < m.image_slots.length; i++) {
     var slot = m.image_slots[i];
     var cur = VID_PICK[slot] || [];
+    // 무엇이 들어 있는지 보이게 한다. 「1장」만 적으면 그것이 이 씬 그림인지
+    // 다른 데서 고른 것인지 알 수 없다.
+    var isScene = cur.length === 1 && cur[0] === VID_SCENE_IMG;
+    var cnt = !cur.length ? "없음"
+            : isScene ? "이 씬 그림"
+            : cur.length + "장";
+    var thumb = cur.length
+      ? '<img src="file://' + (IMG_DIR || "") + "/" + cur[0]
+        + '" style="width:34px;height:auto;border-radius:3px;vertical-align:middle">' : "";
     h += '<div class="vslot"><span class="vslot-name">' + _esc(slot) + "</span>"
+       + thumb
+       + '<span class="vslot-cnt">' + _esc(cnt) + "</span>"
        + '<button class="mini vslot-add" data-slot="' + slot + '">고르기</button>'
-       + '<span class="vslot-cnt">' + (cur.length ? cur.length + "장" : "없음") + "</span>"
        + (cur.length ? '<button class="mini vslot-clr" data-slot="' + slot + '">비우기</button>' : "")
        + "</div>";
   }
