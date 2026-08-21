@@ -88,7 +88,7 @@ def main() -> int:
                     default=Path("artstyle/styles/semoji_character_sheet.png"),
                     help="기준 캐릭터 시트 (기본: 세모지 공식 시트)")
     ap.add_argument("-o", "--out", required=True, type=Path)
-    ap.add_argument("--only", help="특정 id만")
+    ap.add_argument("--only", help="특정 id만 — 쉼표로 여러 개 (fleet 분할용)")
     ap.add_argument("--tries", type=int, default=3, help="기준 미달 시 재시도 횟수")
     ap.add_argument("--max-grain", type=float, default=22.0, help="결 상한 (기준 시트 16.1)")
     ap.add_argument("--max-edge", type=float, default=19.0, help="경계 흐림 상한 (기준 시트 14.6)")
@@ -96,7 +96,10 @@ def main() -> int:
 
     roster = json.loads(args.roster.read_text(encoding="utf-8"))
     if args.only:
-        roster = [r for r in roster if r["id"] == args.only]
+        # 쉼표 목록을 받는다 — 여러 프로세스로 갈라 동시에 돌리기 위해서다.
+        # 22종을 순차로 뽑으면 재시도까지 겹쳐 한참 걸린다.
+        want = {x.strip() for x in args.only.split(",") if x.strip()}
+        roster = [r for r in roster if r["id"] in want]
     args.out.mkdir(parents=True, exist_ok=True)
     base = args.base.resolve()
 

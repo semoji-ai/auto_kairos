@@ -60,6 +60,23 @@ def apply_ledger(scenes: list[dict], ledger: dict, allow: list[str] | None = Non
             continue
         lic = e.get("license")
         was = ia.get("source")
+
+        # 자료에는 쓰임이 둘이다. 화면에 그대로 내보내는 것과, 그림을 그릴 때
+        # 보고 그리는 것. 앞의 것만 search 다. 뒤의 것을 search 로 올리면
+        # 참조용 사진이 화면에 뜬다 — 인물 초상이나 설비 도면이 그대로 나간다.
+        if e.get("use") == "reference":
+            ia.setdefault("source", "generate")
+            refs = ia.setdefault("refAssets", [])
+            if not any(r.get("url") == e.get("image_url") for r in refs):
+                refs.append({
+                    "desc": e.get("desc", ""), "url": e.get("image_url", ""),
+                    "page": e.get("page_url", ""), "holder": e.get("holder", ""),
+                    "license": lic, "checked": e.get("checked", ""),
+                    "relevance": e.get("relevance", ""),
+                })
+            stat["reference"] = stat.get("reference", 0) + 1
+            continue
+
         ia["source"] = "search"
         # 실물을 쓰는 씬에 재현 배지가 남으면 실제 자료를 생성물로 잘못 고지한다
         if s.get("badge") in ("일러스트 재현", "기업 사사 기록", "독립 근거 미확인"):

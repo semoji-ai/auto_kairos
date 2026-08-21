@@ -26,19 +26,37 @@ def get_data_dir() -> Path:
 
 
 def get_charsheet_dir() -> Optional[Path]:
-    """인물 시트 디렉토리 (`_imggen/characters/final_v2`).
+    """인물 시트 디렉토리.
 
     워크스페이스와 코드 루트가 갈릴 수 있어 둘 다 본다. 워크스페이스는
     NAS를 가리키는 반면(output·DB가 거기 있다) 시트는 저장소에 함께
     들어 있어, 워크스페이스만 보면 못 찾는다 — 실제로 스토리보드에서
     인물이 안 뜨던 원인이다.
+
+    **폴더 이름을 하나로 못박으면 안 된다.** `final_v2` 는 LG 12부작에서
+    쓰던 이름이라, 디아지오편처럼 다른 폴더(`sheets`)에 시트를 만들면
+    앱이 전부 「시트 없음」으로 떴다 — 시트 22종이 멀쩡히 있는데도.
+    후보를 순서대로 보고, **`*_sheet.png` 가 실제로 들어 있는** 첫 폴더를
+    쓴다. 빈 폴더가 앞에 있어도 넘어간다.
     """
-    rel = Path("_imggen") / "characters" / "final_v2"
-    for base in (get_package_dir().parent, get_workspace_dir()):
-        p = base / rel
+    env = os.getenv("KAIROS_CHARSHEET_DIR")
+    if env:
+        p = Path(env).expanduser()
         if p.is_dir():
             return p
-    return None
+
+    names = ("sheets", "final_v2_up", "final_v2")
+    fallback = None
+    for base in (get_package_dir().parent, get_workspace_dir()):
+        for name in names:
+            p = base / "_imggen" / "characters" / name
+            if not p.is_dir():
+                continue
+            if any(p.glob("*_sheet.png")):
+                return p
+            if fallback is None:
+                fallback = p
+    return fallback
 
 
 def get_workspace_dir() -> Path:
@@ -132,7 +150,11 @@ def resolve_project(token: str) -> tuple[Path, str]:
     p = ProjectManager().get_project(slug=token)
     if not p:
         raise SystemExit(f"프로젝트를 찾을 수 없습니다: {token}")
-    label = re.sub(r"[^0-9A-Za-z]+", "_", token).strip("_")[:40] or "PROJECT"
+    # 라벨은 **되돌아올 수 있어야 한다.** 하류 스크립트가 이 라벨을 인자로 받아
+    # 다시 resolve_project 를 부르기 때문이다. 한글을 지우면 순수 한글 slug 가
+    # 통째로 빈 문자열이 되어 "PROJECT" 로 떨어지고, 그 이름으로는 DB 에서
+    # 프로젝트를 찾을 수 없다 — 디아지오편에서 하류 6개가 전부 그렇게 죽었다.
+    label = re.sub(r"[^0-9A-Za-z가-힣]+", "_", token).strip("_")[:40] or "PROJECT"
     return Path(p["output_dir"]), label
 
 

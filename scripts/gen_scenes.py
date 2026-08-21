@@ -104,6 +104,28 @@ PEOPLE_BLOCK = """
 **얼굴도 이대로 그립니다.** 옷만 바꾸고 얼굴은 첨부 그림 사람을 쓰면 안 됩니다.
 위에 적힌 얼굴형·머리 모양대로, 사람마다 서로 다른 얼굴로 그리세요.
 """
+DOC_REF = """
+## 첨부 이미지 — 실물 자료 (고증 참조)
+
+{docs}
+
+이 자료는 **화면에 나가지 않습니다.** 보고 그리기 위한 것입니다.
+- 건물·설비·병·복식의 **생김새와 구조**를 여기서 가져옵니다
+- 사진을 그대로 옮기지 말고, 첨부한 그림체로 다시 그립니다
+- 「형태만 참고」라고 적힌 자료는 시대가 다릅니다. 구조만 보고 시대는 장면 설명을 따르세요
+"""
+
+BG_REF = """
+## 첨부 이미지 — 같은 장소 (앞 컷)
+
+{first}
+
+이 컷은 **앞 컷과 같은 장소, 같은 상황**입니다. 컷만 바뀝니다.
+- 장소, 건물, 소품, 시간대, 날씨, 빛의 방향은 첨부 그림 그대로입니다
+- 바뀌는 것은 **카메라 앵글과 사이즈뿐**입니다
+- 앞 컷을 그대로 베끼지는 마세요 — 같은 장소를 다른 자리에서 본 그림입니다
+"""
+
 SCENE = """$imagegen
 
 **첨부한 그림을 먼저 view_image 도구로 불러와 대화 맥락에 넣으세요.**
@@ -128,6 +150,12 @@ def next_version(out_dir: Path, n: int) -> Path:
     while (out_dir / f"scene_{n:03d}_v{v}.png").exists():
         v += 1
     return out_dir / f"scene_{n:03d}_v{v}.png"
+
+
+def latest_version(out_dir: Path, n: int) -> Path | None:
+    """그 씬의 가장 최신 판을 돌려준다 — 이어짐 컷이 참조할 그림."""
+    cands = sorted(out_dir.glob(f"scene_{n:03d}*.png"))
+    return cands[-1] if cands else None
 
 
 def main() -> int:
@@ -267,10 +295,35 @@ def main() -> int:
             # 사람을 안 적으면 모델이 화면을 채우려 사람을 그리고, 정보가 없으니
             # 견본 시트를 베낀다. 아무도 없는 화면이면 그렇다고 못박는다.
             ref += NO_PEOPLE
+        # 조사로 확보한 실물 자료 — 건물·설비·병·복식을 보고 그린다.
+        # 데이터에만 있고 그림을 안 보여 주면 모델이 지어낸다. 디아지오편에서
+        # 병 라벨 숫자가 8·12·15·18 로 나온 것이 이것이 없어서였다.
+        docs = []
+        for r in ((scene.get("imageAsset") or {}).get("refAssets") or []):
+            lp = r.get("local")
+            if lp and Path(lp).exists():
+                tail = f"  [{r['note']}]" if r.get("note") else ""
+                docs.append(f"- {r.get('desc') or r.get('subject') or '실물 자료'}: "
+                            f"{Path(lp).resolve()}{tail}")
+        if docs:
+            ref += DOC_REF.format(docs="\n".join(docs[:4]))
+
+        # 같은 장소가 이어지는 컷 — 앞 컷 그림을 붙여 장소를 고정한다.
+        # 데이터에 「같은 배경」이라 적혀 있어도 그림을 안 보여 주면 매번 새로
+        # 해석된다. 인물을 시트로 잡은 것과 같은 방식이다.
+        #
+        # **앞 컷 그림은 한 장만 붙인다.** `continuity` 를 쓰는 씬과
+        # `is_first_of_background` 를 쓰는 씬이 섞여 있어 둘 다 보되,
+        # 둘이 함께 붙으면 모델이 두 장을 섞는다.
         if (scene.get("imageAsset") or {}).get("continuity") == "continuous":
             p = prev_cut(n)
             if p:
                 ref += PREV_CUT.format(prev=p)
+        elif lead.get(n):
+            first_n = lead[n]
+            fp = latest_version(args.out, first_n)
+            if fp:
+                ref += BG_REF.format(first=f"- 앞 컷(씬 {first_n}): {fp.resolve()}")
         out = next_version(args.out, n)
         prompt = SCENE.format(prompt=body, ref_block=ref, size=job.get("size", "1792x1024"), out=out)
         subprocess.run(
@@ -279,13 +332,36 @@ def main() -> int:
         )
         return n, out.exists(), out.name
 
-    ok = 0
-    with ThreadPoolExecutor(max_workers=args.jobs) as ex:
-        for n, got, name in ex.map(run, jobs):
-            ok += got
-            print(f"  {'✓' if got else '✗'} scene {n:>3}  {name}", flush=True)
+    # 같은 장소가 이어지는 컷은 앞 컷 그림을 참조해야 한다. 그러려면 그룹의
+    # 첫 컷이 먼저 나와 있어야 하므로 두 판으로 나눠 돌린다. 한 번에 병렬로
+    # 돌리면 참조할 그림이 아직 없어 같은 장소가 매번 다른 장소로 나온다.
+    lead = {}          # 씬번호 → 그 그룹 첫 컷의 씬번호
+    cur = None
+    for n in sorted(scenes):
+        s = scenes[n]
+        if s.get("is_first_of_background") is False and cur is not None:
+            lead[n] = cur
+        else:
+            cur = n
+    pass1 = [j for j in jobs if j["sceneNumber"] not in lead]
+    pass2 = [j for j in jobs if j["sceneNumber"] in lead]
 
-    print(f"\n완료 {ok}/{len(jobs)}")
+    ok = 0
+
+    def sweep(batch, label):
+        nonlocal ok
+        if not batch:
+            return
+        print(f"  ── {label} {len(batch)}컷", flush=True)
+        with ThreadPoolExecutor(max_workers=args.jobs) as ex:
+            for n, got, name in ex.map(run, batch):
+                ok += got
+                print(f"  {'✓' if got else '✗'} scene {n:>3}  {name}", flush=True)
+
+    sweep(pass1, "1판 — 장소를 세우는 컷")
+    sweep(pass2, "2판 — 같은 장소의 다른 앵글")
+
+    print(f"\n완료 {ok}/{len(jobs)}  (이어짐 컷 {len(pass2)}개)")
     return 0 if ok == len(jobs) else 1
 
 

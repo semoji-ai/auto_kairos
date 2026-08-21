@@ -49,6 +49,9 @@ SIGNALS = [
     (r"(라디오 듣|텔레비전 보|흑백|컬러 방송|전기가 들어|수돗물|연탄|보릿고개)", "시대풍경"),
 ]
 
+# 강한 신호 라벨 — 이게 없으면 검색어를 만들 수 없다. 편별 어휘로 늘어난다.
+STRONG_LABELS = {"인물", "브랜드", "제품명", "기업"}
+
 # 실물이 없는 자리 — 조사해도 빈손이다
 SKIP = [
     (r"(마음|생각|믿음|불안|두려움|자존심|각오|의지)", "심리"),
@@ -72,7 +75,7 @@ def classify(scene: dict) -> tuple[bool, list[str], str]:
     needs_image = layout in IMAGE_LAYOUTS
 
     # 실물을 특정할 수 있는 강한 신호 — 이게 없으면 검색어를 만들 수 없다
-    strong = {"인물", "브랜드", "제품명", "기업"} & set(hits)
+    strong = STRONG_LABELS & set(hits)
 
     # 시대 장면은 브랜드가 없어도 기록 사진이 넘친다.
     # 1950년대 서울 거리, 산업화 시절 공장, 라디오 앞에 모인 가족 —
@@ -99,7 +102,20 @@ def main() -> int:
     ap.add_argument("project", type=Path)
     ap.add_argument("-o", "--out", required=True, type=Path)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--signals", type=Path,
+                    help="편별 어휘 JSON. 기본 SIGNALS 는 LG편 어휘라 다른 소재에서는 "
+                         "거의 걸리지 않는다(디아지오편 142씬 중 7씬). "
+                         '형식: {"강한": {"브랜드": "정규식", ...}, "뒷받침": {...}}')
     args = ap.parse_args()
+
+    # 편별 어휘 주입 — 기본 목록은 LG 전용 고유명사라 소재가 바뀌면 무력해진다.
+    if args.signals:
+        extra = json.loads(args.signals.read_text(encoding="utf-8"))
+        for label, pat in (extra.get("강한") or {}).items():
+            SIGNALS.append((pat, label))
+            STRONG_LABELS.add(label)
+        for label, pat in (extra.get("뒷받침") or {}).items():
+            SIGNALS.append((pat, label))
 
     data = json.loads((args.project / "scene_specs.json").read_text(encoding="utf-8"))
     scenes = data.get("scenes", data)
