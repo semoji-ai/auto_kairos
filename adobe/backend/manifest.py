@@ -183,6 +183,53 @@ def _scene_layers(proj_dir: Path, layer_rels: list, sid: str = "", scene_width: 
     return out
 
 
+def _info_layers(proj_dir: Path, info: dict, prefix: str) -> tuple[list, list]:
+    """도해를 **레이어와 글자**로 굽는다 — 요소 하나가 레이어 하나다.
+
+    도해는 한 장으로 구운 그림이 아니라 배경이 빠진 요소 PNG 여럿과 백분율
+    좌표다. 그래서 어도비에서 레이어마다 집어 옮길 수 있다. 좌표가 조금
+    어긋난 자리는 사람이 직접 옮기는 편이 모델에게 다시 물어보는 것보다 낫다.
+
+      left/top (%)  → 컴프 좌표 (앵커는 가운데)
+      size (%)      → 화면 너비 대비 배율
+      label         → 요소 아래 글자
+      marks         → 잇는 기호(= → ×5)와 도장(확인불가)
+    """
+    layers, texts = [], []
+    for i, it in enumerate(info.get("items") or []):
+        rel = it.get("src") or ""
+        f = proj_dir / rel
+        if not f.is_file():
+            continue
+        size = _img_size(f) or (W, H)
+        want_w = W * float(it.get("size", 20)) / 100.0
+        cx = W * float(it.get("left", 50)) / 100.0
+        cy = H * float(it.get("top", 50)) / 100.0
+        layers.append({
+            "name": f"{prefix}info_{it.get('id', i)}_{i}",
+            "aeName": f"{prefix}info_{it.get('id', i)}_{i}",
+            "path": str(f.resolve()),
+            "kind": "element",
+            "position": [round(cx, 2), round(cy, 2)],
+            "scale": round(want_w / (size[0] or W) * 100, 3),
+        })
+        if (it.get("label") or "").strip():
+            texts.append({"text": it["label"], "position": [round(cx, 2),
+                          round(cy + want_w / 2 + H * 0.045, 2)],
+                          "style": "label", "size": 30,
+                          "accent": it.get("emphasis") == "accent"})
+    for m in info.get("marks") or []:
+        texts.append({
+            "text": str(m.get("text", "")),
+            "position": [round(W * float(m.get("left", 50)) / 100.0, 2),
+                         round(H * float(m.get("top", 50)) / 100.0, 2)],
+            "style": m.get("style", "mark"),
+            "size": int(m.get("size", 52)),
+            "accent": False,
+        })
+    return layers, texts
+
+
 def _alpha_foot(path: Path) -> list | None:
     """불투명 영역 bbox의 하단 중앙 [x, y](레이어=컴프 좌표). 전부 투명/실패 시 None.
     bbox 사이드카가 없는 기존(풀프레임) 레이어의 까딱 모션 피벗 폴백."""
@@ -307,6 +354,12 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
                 entry["moves"] = [{"type": "bob", "start": 0, "duration": dur}]
         # 레이아웃 데이터 — v3 공통 계약으로 정규화해서 넘긴다(jsx는 정규 이름만 안다)
         data_fields = scene_layouts.normalize_fields(s)
+        # 도해 — 요소를 레이어로, 라벨과 기호를 글자로 굽는다
+        info_texts = []
+        info_src = s.get("infographic")
+        if isinstance(info_src, dict) and (info_src.get("items") or info_src.get("marks")):
+            il, info_texts = _info_layers(proj_dir, info_src, prefix)
+            layers = list(layers) + il
         out_scenes.append({
             "ae_comp_name": timeline.comp_name(s),
             "width": sw, "height": sh,
@@ -327,6 +380,9 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
                              "scale": sw * f / float((_img_size(proj_dir / s["_image"]) or (sw, sh))[0] or sw) * 100}}
                if s.get("_image") else {}),
             "layout": layout,
+            **({"infoTexts": info_texts} if info_texts else {}),
+            **({"infoBackground": (s.get("infographic") or {}).get("background")}
+               if isinstance(s.get("infographic"), dict) else {}),
             **data_fields,
             **({"camera": cam} if cam else {}),
             **({"mapGeo": map_geo} if map_geo else {}),

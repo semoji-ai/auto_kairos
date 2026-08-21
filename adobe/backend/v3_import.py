@@ -127,6 +127,18 @@ def _map_scene(s: dict) -> dict:
     }
     if s.get("narration_tts"):
         out["narration_tts"] = s["narration_tts"]
+    # 도해 — 요소마다 배경이 빠진 PNG 한 장과 백분율 좌표가 있다. 어도비가
+    # 원하는 모양 그대로다(레이어 하나 = 요소 하나). 이 매핑이 없어서 도해
+    # 씬은 어도비로 넘어오면 배경만 남았다.
+    info = s.get("infographic")
+    if isinstance(info, dict) and (info.get("items") or info.get("marks")):
+        out["infographic"] = {
+            "background": info.get("background", "grid"),
+            "contrast": info.get("contrast", "plain"),
+            "divider": info.get("divider", "none"),
+            "items": [dict(it) for it in info.get("items") or []],
+            "marks": [dict(m) for m in info.get("marks") or []],
+        }
     if s.get("durationFrames"):
         out["duration_estimate_sec"] = round(float(s["durationFrames"]) / FPS, 2)
     elif s.get("duration_estimate_sec"):
@@ -160,6 +172,10 @@ def _map_scene(s: dict) -> dict:
     return out
 
 
+# adobe/backend/v3_import.py → adobe/backend → adobe → auto_kairos
+CODE_ROOT = Path(__file__).resolve().parents[2]
+
+
 def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
     """v3 출력 폴더에서 adobe 프로젝트 생성. 반환 {project_id, scenes, images} 또는 {error}."""
     v3 = Path(v3_dir)
@@ -187,6 +203,39 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
                                    encoding="utf-8")
     scenes.ensure_scene_ids(d)          # sceneId 발급 + imageRef 백필
 
+    # 도해 요소 PNG 복사 — v3 의 `_imggen/…` 는 어도비 프로젝트 밖이다.
+    # 밖을 가리키는 경로는 다른 컴퓨터에서 깨진다. 안으로 들여온다.
+    cur0 = scenes.load_scenes(d)
+    info_n = 0
+    root_v3 = v3.parent.parent if (v3.parent.parent / "_imggen").is_dir() else v3.parent
+    for s in cur0["scenes"]:
+        info = s.get("infographic")
+        if not isinstance(info, dict):
+            continue
+        for it in info.get("items") or []:
+            rel = it.get("src") or ""
+            src = None
+            # 설계가 적어 둔 경로는 `ep01_info/…` 처럼 _imggen 안쪽 기준이다.
+            # v3 출력 폴더는 NAS 에 있고 _imggen 은 코드 저장소에 있다 —
+            # 출력 폴더 둘레만 뒤지면 못 찾는다(도해 요소가 통째로 빠졌다).
+            for base in (CODE_ROOT / "_imggen", root_v3 / "_imggen", root_v3,
+                         v3 / "_imggen", v3, Path.cwd() / "_imggen", Path.cwd()):
+                cand = Path(base) / rel
+                if cand.is_file():
+                    src = cand
+                    break
+            if src is None:
+                continue
+            box = d / "infographic"
+            box.mkdir(exist_ok=True)
+            dst = box / src.name
+            if not dst.exists():
+                shutil.copy(src, dst)
+            it["src"] = f"infographic/{dst.name}"
+            info_n += 1
+    if info_n:
+        scenes._save(d, cur0)
+
     man = v3 / "final_manuscript.md"
     if man.is_file():
         shutil.copy(man, d / "final_manuscript.md")
@@ -194,14 +243,32 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
     # 기존 씬 이미지 복사(있으면): v3 images/scene_{n:03d}.* → storyboard/ + imageRef
     copied = 0
     img_dir = v3 / "images"
+    picked = {}
+    ia = img_dir / "image_assets.json"
+    if ia.is_file():
+        try:
+            for e in json.loads(ia.read_text(encoding="utf-8")).get("scenes", []):
+                sel = e.get("selected") or next(
+                    (i.get("file") for i in e.get("images") or [] if i.get("selected")), None)
+                if sel:
+                    picked[e.get("sceneNumber")] = sel
+        except Exception:
+            picked = {}
     if img_dir.is_dir():
         cur = scenes.load_scenes(d)
         for s in cur["scenes"]:
             n = s.get("sceneNumber")
             if not isinstance(n, int):
                 continue
-            for ext in ("png", "jpg", "jpeg", "webp"):
-                src = img_dir / f"scene_{n:03d}.{ext}"
+            # 고른 그림은 image_assets.json 에 적혀 있다. 파일 이름이
+            # scene_011_fix.png 처럼 판이 올라가므로, 이름만 짐작하면
+            # 옛 그림을 가져가거나 아무것도 못 가져간다.
+            cands = []
+            if picked.get(n):
+                cands.append(img_dir / picked[n])
+            cands += [img_dir / f"scene_{n:03d}.{e}" for e in ("png", "jpg", "jpeg", "webp")]
+            for src in cands:
+                ext = src.suffix.lstrip(".").lower()
                 if src.is_file():
                     sb = d / "storyboard"; sb.mkdir(exist_ok=True)
                     dst = sb / f"sb_{s['sceneId']}.png"

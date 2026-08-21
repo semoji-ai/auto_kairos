@@ -637,7 +637,48 @@ function akBuildScene(manifestPath) {
                 while (top.parent && top.parent !== guide) { top = top.parent; }
                 if (top !== guide && !top.parent) { top.parent = guide; }
             }
-        } else if (s.image && !isLayoutScene) {
+        }
+        // 도해의 라벨·기호·도장 — AE 텍스트 레이어로 올린다. 이미지에 구워
+        // 버리면 고칠 수도 옮길 수도 없다. 요소는 위에서 레이어로 올라갔다.
+        if (s.infoTexts && s.infoTexts.length) {
+            for (var ti = 0; ti < s.infoTexts.length; ti++) {
+                var tx = s.infoTexts[ti];
+                var isStamp = (tx.style === "stamp");
+                var rgb = isStamp ? [198, 40, 40]
+                    : (tx.accent ? TK.colors.accentRgb : TK.colors.inkRgb);
+                var tl2 = null;
+                try {
+                    tl2 = addTextL(comp, tx.text, {
+                        x: tx.position[0], y: tx.position[1],
+                        size: tx.size || 30, rgb: rgb, font: TK.fonts.body
+                    });
+                } catch (eT) { log.push(pf + "도해 글자 실패 " + eT.toString()); continue; }
+                tl2.name = pf + "info_" + (isStamp ? "stamp_" : "text_") + ti;
+                tl2.inPoint = t0; tl2.outPoint = t1;
+                tl2.parent = guide;
+                if (isStamp) {
+                    // 붉은 둥근 네모 — 도장이 찍혔다는 것 자체가 「찾아봤다」는 뜻이다
+                    try {
+                        var rc2 = tl2.sourceRectAtTime(0, false);
+                        var bw = rc2.width + 44, bh = rc2.height + 28;
+                        var sl2 = comp.layers.addShape();
+                        sl2.name = pf + "info_stampbox_" + ti;
+                        var g2 = sl2.property("Contents").addProperty("ADBE Vector Group");
+                        var r2 = g2.property("Contents").addProperty("ADBE Vector Shape - Rect");
+                        r2.property("Size").setValue([bw, bh]);
+                        try { r2.property("Roundness").setValue(14); } catch (eR) { }
+                        var st2 = g2.property("Contents").addProperty("ADBE Vector Graphic - Stroke");
+                        st2.property("Color").setValue([198 / 255, 40 / 255, 40 / 255]);
+                        st2.property("Stroke Width").setValue(6);
+                        sl2.property("Position").setValue([tx.position[0], tx.position[1]]);
+                        sl2.inPoint = t0; sl2.outPoint = t1;
+                        sl2.parent = guide;
+                        sl2.moveAfter(tl2);
+                    } catch (eS) { log.push(pf + "도장 테두리 실패 " + eS.toString()); }
+                }
+            }
+        }
+        if (!(s.layers && s.layers.length) && s.image && !isLayoutScene) {
             var one = addLayerObj(proj, comp, {
                 path: s.image,
                 position: (s.imageFit || {}).position,
