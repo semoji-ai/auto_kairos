@@ -233,14 +233,12 @@ function loadSheet() {
       if (!list.length) { $("sheet").textContent = "(씬 없음 — 씬 분해 먼저)"; return; }
       NAR_ORIG = {};
       list.forEach(function (s) { NAR_ORIG[s.sceneNumber] = s.narration || ""; });
-      var head = '<div class="sheet-head">'
-        + '<div><input type="checkbox" id="selAllScenes" title="전체 선택/해제">#<span class="col-resize" data-col="0"></span></div>'
-        + '<div>이미지<span class="col-resize" data-col="1"></span></div>'
-        + '<div>스크립트<span class="col-resize" data-col="2"></span></div>'
-        + '<div>작업<span class="col-resize" data-col="3"></span></div>'
-        + '</div>'
-        // 씬이 백 개를 넘으면 하나씩 누르는 것이 일이다. 범위로 고른다.
-        + '<div class="sel-range">'
+      /* 범위 고르기와 나레이션 찾기는 **시트 밖**(`#sheet-tools`)에 그린다.
+         시트 안에 있으면 목록과 함께 스크롤돼, 아래로 내려가면 화면에서
+         사라진다 — 체크하고 버튼을 누르러 매번 맨 위로 올라가야 했다. */
+      var tools =
+          // 씬이 백 개를 넘으면 하나씩 누르는 것이 일이다. 범위로 고른다.
+          '<div class="sel-range">'
         +   '<input id="selRange" type="text" placeholder="예: 1-10, 25, 40-52" '
         +     'title="범위나 번호를 쉼표로. 엔터로 적용">'
         +   '<button id="selRangeAdd" title="고른 것에 더한다">더하기</button>'
@@ -248,11 +246,21 @@ function loadSheet() {
         +   '<button id="selRangeOff" title="고른 것에서 뺀다">빼기</button>'
         +   '<span id="selRangeMsg"></span>'
         + '</div>'
-        // 나레이션 찾기 — 씬이 백 개를 넘으면 눈으로 훑을 수 없다
+          // 나레이션 찾기 — 씬이 백 개를 넘으면 눈으로 훑을 수 없다
         + '<div class="sel-range">'
         +   '<input id="sbFind" type="text" placeholder="🔎 나레이션 찾기">'
         +   '<span id="sbFindMsg"></span>'
         + '</div>';
+      var tb = $("sheet-tools");
+      if (tb) tb.innerHTML = tools;
+
+      var head = '<div class="sheet-head">'
+        + '<div><input type="checkbox" id="selAllScenes" title="전체 선택/해제">#<span class="col-resize" data-col="0"></span></div>'
+        + '<div>이미지<span class="col-resize" data-col="1"></span></div>'
+        + '<div>스크립트<span class="col-resize" data-col="2"></span></div>'
+        + '<div>작업<span class="col-resize" data-col="3"></span></div>'
+        + '</div>'
+        + (tb ? "" : tools);          // 옛 마크업이면 예전처럼 시트 안에 둔다
       $("sheet").innerHTML = head + list.map(function (s) { return renderRow(s, dir); }).join("");
       _applyCols();
       _bindColResize();
