@@ -259,6 +259,43 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
             char_n += 1
         break
 
+    # 조사로 확보한 실물 자료. 둘로 나뉜다.
+    #   ① 화면에 그대로 나가는 것(`images/search/`) — 씬의 그림 자체다
+    #   ② 보고 그리기 위한 참조(`refAssets`) — 화면에는 안 나가지만 재생성
+    #      모달에서 골라 붙일 수 있어야 한다
+    # 둘 다 안 옮기고 있었다. 어도비에서 「자료 이미지가 하나도 안 보인다」의 정체다.
+    doc_n = 0
+    sdir = v3 / "images" / "search"
+    if sdir.is_dir():
+        box = d / "docs"
+        for f_ in sorted(sdir.iterdir()):
+            if f_.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp"):
+                continue
+            box.mkdir(exist_ok=True)
+            if not (box / f_.name).exists():
+                shutil.copy2(f_, box / f_.name)
+            doc_n += 1
+
+    # refAssets — v3 프로젝트 밖(`_imggen/refs/…`)을 가리키는 것이 많다.
+    # 밖을 가리키는 경로는 다른 컴퓨터에서 깨지므로 안으로 들여온다.
+    seen_ref: set = set()
+    for s in src_scenes:
+        for r in ((s.get("imageAsset") or {}).get("refAssets") or []):
+            lp = r.get("local")
+            if not lp:
+                continue
+            for base in (v3, CODE_ROOT, root_v3):
+                cand = Path(base) / lp
+                if cand.is_file():
+                    box = d / "docs"
+                    box.mkdir(exist_ok=True)
+                    dst = box / cand.name
+                    if cand.name not in seen_ref and not dst.exists():
+                        shutil.copy2(cand, dst)
+                        doc_n += 1
+                    seen_ref.add(cand.name)
+                    break
+
     # TTS 음성 복사 — 가져오기가 이 단계를 아예 갖고 있지 않았다.
     # 원고와 그림은 들어오는데 소리만 빠져 「연동이 안 됐다」로 보였다.
     #
@@ -327,6 +364,12 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
             if picked.get(n):
                 cands.append(img_dir / picked[n])
             cands += [img_dir / f"scene_{n:03d}.{e}" for e in ("png", "jpg", "jpeg", "webp")]
+            # `source: search` 씬은 **조사한 실물 사진이 곧 화면**이다.
+            # `images/search/scene_NNN_search_01.jpg` 로 들어 있는데 여기를
+            # 안 봐서 28씬이 통째로 그림 없이 넘어왔다.
+            sdir_ = img_dir / "search"
+            if sdir_.is_dir():
+                cands += sorted(sdir_.glob(f"scene_{n:03d}*"))
             for src in cands:
                 ext = src.suffix.lstrip(".").lower()
                 if src.is_file():
@@ -341,5 +384,5 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
                     copied += 1
                     break
     return {"project_id": pid, "title": name, "scenes": len(mapped),
-            "images": copied, "audio": audio_n, "infographic": info_n,
+            "images": copied, "audio": audio_n, "infographic": info_n, "docs": doc_n,
             "characters": char_n}

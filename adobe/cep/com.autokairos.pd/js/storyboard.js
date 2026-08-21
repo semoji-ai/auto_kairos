@@ -94,6 +94,29 @@ function _previewHTML(s, dir) {
   }
   var subEl = sub1 ? '<div class="pv-subtitle" style="font-size:' + px(t.subtitle || 54) + '">' + _esc(sub1) + "</div>" : "";
   var inner = "";
+
+  /* 도해 요소 — 배경 위에 백분율 좌표로 얹는다.
+     패널에 이 분기가 아예 없어, 요소를 만들어 배치까지 끝낸 씬도 배경 그림만
+     보였다. v3 가 정한 자리(left·top·size, 화면 대비 %)를 그대로 읽는다 —
+     여기서 따로 배치하면 v3·대시보드·어도비 셋이 어긋난다. */
+  var ig = s.infographic;
+  if (ig && ig.items && ig.items.length) {
+    var base = "";
+    if ((ig.background === "scene" || ig.background === "scene_blur") && s._image) {
+      base = '<img class="main" src="file://' + dir + "/" + s._image + '"'
+           + (ig.background === "scene_blur" ? ' style="filter:blur(3px)"' : "") + '>';
+    }
+    var els = "";
+    for (var q = 0; q < ig.items.length; q++) {
+      var it = ig.items[q];
+      if (!it || !it.src) continue;
+      els += '<img class="pv-abs" src="file://' + dir + "/" + it.src + '"'
+           + ' style="left:' + (it.left || 50) + '%;top:' + (it.top || 50) + '%;'
+           + 'width:' + (it.size || 20) + '%;transform:translate(-50%,-50%)">';
+    }
+    return '<div class="pv" style="background:' + BG + '">' + base + els + subEl + "</div>";
+  }
+
   if (s.layout === "map" && !s._image) {
     return '<div class="layout-badge">map — 🗺 지도 버튼으로 렌더</div>';
   }
@@ -178,7 +201,8 @@ document.addEventListener("DOMContentLoaded", function () {
 function loadSheet() {
   if (!SELECTED_PROJECT) { $("sheet").textContent = "프로젝트를 먼저 선택하세요."; return; }
   $("sheet").textContent = "불러오는 중...";
-  _loadTokens().then(function () {
+  // 목소리 프리셋을 먼저 받는다 — 행마다 고르개를 그려야 하므로 시트보다 앞서야 한다
+  _loadTokens().then(loadVoices).then(function () {
   return fetch(BACKEND + "/api/scenes?project_id=" + encodeURIComponent(SELECTED_PROJECT))
     .then(function (r) { return r.json(); })
     .then(function (j) {
@@ -432,6 +456,7 @@ function renderRow(s, dir) {
     +        '<div class="te-label">자막 텍스트 <span class="te-hint">화면 표시용 — 비우면 원고 사용</span>'
     +          _teBadge(n, "sub", s.subtitle_text, s.narration) + '</div>'
     +        '<textarea class="te-sub" data-scene="' + n + '" rows="3">' + _esc(s._subtitle_text || "") + '</textarea>'
+    +        voiceSelectHtml(n)
     +        '<div class="te-acts">'
     +          '<button class="mini te-save" data-scene="' + n + '">저장</button>'
     +          '<button class="mini te-regen" data-scene="' + n + '">저장 후 TTS 재생성</button>'
@@ -1308,11 +1333,54 @@ function _lyrStemsOf(n, onlySelected) {
   return out;
 }
 
-function genTts(n) {
+/* 목소리 프리셋 — 한 번 받아 두고 재생성 자리마다 고를 수 있게 한다.
+   전에는 고를 자리가 아예 없어, 프로젝트에 걸린 것과 다른 목소리로 나와도
+   패널에서 손쓸 방법이 없었다. */
+var VOICES = null, VOICE_NOW = "";
+
+function loadVoices() {
+  if (!SELECTED_PROJECT) return Promise.resolve(null);
+  return fetch(BACKEND + "/api/tts/config?project_id=" + encodeURIComponent(SELECTED_PROJECT))
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      VOICES = j;
+      VOICE_NOW = (j.config && j.config.voice_id) || "";
+      return j;
+    }).catch(function () { return null; });
+}
+
+/* 행 편집 패널에 끼울 목소리 고르개. 지금 걸린 것이 먼저 선택돼 있다. */
+function voiceSelectHtml(n) {
+  if (!VOICES) return "";
+  var pr = (VOICES.presets && VOICES.presets.presets) || {};
+  var h = '<label class="te-label" style="display:block;margin-top:6px">목소리 '
+        + '<select class="te-voice" data-scene="' + n + '">';
+  var seen = {};
+  for (var k in pr) {
+    if (!pr[k] || !pr[k].voice_id) continue;
+    var vid = pr[k].voice_id;
+    if (seen[vid]) continue;
+    seen[vid] = 1;
+    h += '<option value="' + vid + '"' + (vid === VOICE_NOW ? " selected" : "") + '>'
+       + _esc((pr[k].label || pr[k].name || k) + " — " + vid.slice(0, 8)) + '</option>';
+  }
+  if (VOICE_NOW && !seen[VOICE_NOW]) {
+    h += '<option value="' + VOICE_NOW + '" selected>프로젝트 설정 — '
+       + _esc(VOICE_NOW.slice(0, 8)) + '</option>';
+  }
+  return h + '</select></label>';
+}
+
+function genTts(n, voice) {
   _rowStatus(n, "TTS 생성 중... (ElevenLabs)");
+  var body = { project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n) };
+  // 고르개에서 고른 목소리를 함께 보낸다. 안 고르면 프로젝트 설정을 따른다.
+  var sel = $("sheet").querySelector('select.te-voice[data-scene="' + n + '"]');
+  var v = voice || (sel ? sel.value : "");
+  if (v) body.voice = v;
   return fetch(BACKEND + "/api/scenes/tts", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n) }),
+    body: JSON.stringify(body),
   }).then(function (r) { return r.json(); })
     .then(function (j) {
       var ok = j.result && j.result.status === "completed";
