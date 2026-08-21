@@ -292,12 +292,35 @@ function loadProjects() {
         return '<div class="proj-item" data-pid="' + p.project_id + '" data-label="'
           + encodeURIComponent(p.title + ' (' + p.project_id + ') [' + p.status + ']') + '">'
           + '<span class="pid">' + p.project_id + '</span>' + _esc(p.title)
-          + '<span class="st">' + _esc(p.status) + '</span></div>';
+          + '<span class="st">' + _esc(p.status) + '</span>'
+          /* 잘못 가져온 프로젝트가 쌓여 헷갈린다. 목록에서 뺄 수 있게 한다 —
+             지우는 것이 아니라 `_archive/` 로 옮기므로 되돌릴 수 있다. */
+          + '<button class="proj-x" data-pid="' + p.project_id + '"'
+          + ' title="목록에서 뺍니다 (파일은 _archive 로 옮겨 보관)">✕</button>'
+          + '</div>';
       }).join("");
       var links = $("projects").querySelectorAll(".proj-item");
       for (var i = 0; i < links.length; i++) {
-        links[i].addEventListener("click", function () {
+        links[i].addEventListener("click", function (e) {
+          if (e.target && e.target.classList.contains("proj-x")) return;   // ✕ 는 열지 않는다
           enterProject(this.getAttribute("data-pid"), decodeURIComponent(this.getAttribute("data-label") || ""));
+        });
+      }
+      var xs = $("projects").querySelectorAll(".proj-x");
+      for (var k = 0; k < xs.length; k++) {
+        xs[k].addEventListener("click", function (e) {
+          e.stopPropagation();
+          var pid = this.getAttribute("data-pid"), row = this.parentNode;
+          row.style.opacity = "0.5";
+          fetch(BACKEND + "/api/projects/archive", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ project_id: pid }),
+          }).then(function (r) { return r.json(); })
+            .then(function (j) {
+              if (j.ok) loadProjects();
+              else { row.style.opacity = "1"; row.title = "빼지 못했습니다: " + JSON.stringify(j); }
+            })
+            .catch(function (err) { row.style.opacity = "1"; row.title = "오류: " + err; });
         });
       }
     })

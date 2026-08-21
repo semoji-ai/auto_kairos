@@ -87,6 +87,26 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
             duration=b.get("duration", "1분"))
         return 200, info
 
+    # 목록에서 빼기 — **지우지 않는다.** `_archive/` 로 옮긴다.
+    # 잘못 가져온 프로젝트가 목록에 쌓여 헷갈리는 것이 문제이지, 파일이
+    # 아까운 것은 아니다. 되돌리려면 폴더를 도로 꺼내면 된다.
+    if method == "POST" and p == "/api/projects/archive":
+        pid = ((body or {}).get("project_id") or "").strip()
+        proj_dir = root / pid
+        if not pid or not proj_dir.is_dir():
+            return 404, {"error": "프로젝트 없음"}
+        if proj_dir.resolve().parent != root.resolve():
+            return 400, {"error": "잘못된 경로"}
+        box = root / "_archive"
+        box.mkdir(exist_ok=True)
+        dst = box / pid
+        i = 2
+        while dst.exists():
+            dst = box / f"{pid}_{i}"
+            i += 1
+        shutil.move(str(proj_dir), str(dst))
+        return 200, {"ok": True, "moved_to": str(dst)}
+
     if method == "POST" and p == "/api/projects/import-v3":
         b = body or {}
         path = (b.get("path") or "").strip()

@@ -417,10 +417,12 @@ function renderRow(s, dir) {
     +      '</div>'
     // 씬 전용 버튼 — 체크박스와 무관하게 이 씬에만 즉시 실행
     +      '<div class="row-acts">'
-    +        '<button class="ra" data-act="img" data-scene="' + n + '" title="이 씬 이미지 재생성">▣</button>'
-    +        '<button class="ra" data-act="tts" data-scene="' + n + '" title="이 씬 TTS 재생성">♪</button>'
-    +        '<button class="ra" data-act="txt" data-scene="' + n + '" title="TTS·자막 텍스트 편집">✎</button>'
-    +        '<button class="ra" data-act="tl" data-scene="' + n + '" title="이 씬을 현재 타임라인에 배치">⤓</button>'
+    /* 기호 버튼(▣ ♪ ✎ ⤓)은 무엇을 하는 단추인지 알 수 없어 글자로 바꾼다.
+       ♪ 와 ✎ 는 둘 다 TTS 를 다시 만든다 — ✎ 는 텍스트를 고쳐서 그 자리에서
+       다시 만드는 것이라, 「수정」이 아니라 「TTS 재생성」이 하는 일에 맞다. */
+    +        '<button class="ra" data-act="img" data-scene="' + n + '" title="참조와 프롬프트를 골라 다시 그립니다">이미지 재생성</button>'
+    +        '<button class="ra" data-act="txt" data-scene="' + n + '" title="TTS·자막 텍스트를 고쳐 다시 만듭니다">TTS 재생성</button>'
+    +        '<button class="ra" data-act="tl" data-scene="' + n + '" title="이 씬을 현재 타임라인에 배치합니다">import</button>'
     +      '</div>'
     // 텍스트 편집 패널(✎ 토글) — TTS용/자막용 분리
     +      '<div class="txt-edit" data-scene="' + n + '" hidden>'
@@ -1499,14 +1501,27 @@ function pvZoom(html, sceneNo) {
   box.querySelector(".cap").textContent = sceneNo ? "씬 " + sceneNo : "";
   box.classList.add("on");
 }
-(function () {
+/* 닫기 — **문서에 위임한다.**
+   겹창 마크업(`#pv-zoom`)이 index.html 에서 이 스크립트 **뒤에** 있다.
+   스크립트가 읽히는 시점에는 그 요소가 아직 없어 `getElementById` 가
+   null 을 돌려주고, 예전 코드는 거기서 `return` 해 핸들러를 한 번도 걸지
+   못했다 — 겹창은 열리는데 ✕ 를 눌러도 닫히지 않던 원인이다.
+   위임하면 마크업 순서를 타지 않는다. */
+function _pvClose() {
   var box = document.getElementById("pv-zoom");
   if (!box) return;
-  function close() { box.classList.remove("on"); box.querySelector(".inner").innerHTML = ""; }
-  box.addEventListener("click", function (e) {
-    if (e.target === box || e.target.classList.contains("x")) close();
-  });
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && box.classList.contains("on")) close();
-  });
-})();
+  box.classList.remove("on");
+  var inner = box.querySelector(".inner");
+  if (inner) inner.innerHTML = "";
+}
+document.addEventListener("click", function (e) {
+  var box = document.getElementById("pv-zoom");
+  if (!box || !box.classList.contains("on")) return;
+  var t = e.target;
+  if (t === box || (t.classList && t.classList.contains("x"))
+      || (t.closest && t.closest("#pv-zoom .x"))) _pvClose();
+});
+document.addEventListener("keydown", function (e) {
+  var box = document.getElementById("pv-zoom");
+  if (e.key === "Escape" && box && box.classList.contains("on")) _pvClose();
+});

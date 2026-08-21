@@ -1,0 +1,59 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "scenes": [
+    {
+      "ae_comp_name": "S98_24f2bbd5",
+      "width": 1920,
+      "height": 1080,
+      "image": null,
+      "layers": [],
+      "audio": "/Users/hannah/Projects/auto_kairos_v3/adobe/projects/3a016021/audio/1558298b.mp3",
+      "subtitle": "라가불린은 게일어로 '방앗간이 있는 분지'라는 뜻입니다.",
+      "duration": 3.669,
+      "start": 881.739,
+      "prefix": "S98_",
+      "fit": {
+        "f": 1.0,
+        "ox": 0.0,
+        "w": 1920,
+        "h": 1080
+      },
+      "bgFill": false,
+      "layout": "cinematic"
+    }
+  ],
+  "ae_tokens": "/Users/hannah/Projects/auto_kairos_v3/adobe/data/artstyle/ae_tokens.json",
+  "themeColors": {
+    "bg": "#23262b",
+    "bgRgb": [
+      35,
+      38,
+      43
+    ],
+    "text": "#E8EAED",
+    "textRgb": [
+      232,
+      234,
+      237
+    ],
+    "muted": "#9AA0A6",
+    "mutedRgb": [
+      154,
+      160,
+      166
+    ],
+    "accent": "#4A90D9",
+    "accentRgb": [
+      74,
+      144,
+      217
+    ],
+    "accentSoftRgb": [
+      74,
+      144,
+      217
+    ]
+  }
+}

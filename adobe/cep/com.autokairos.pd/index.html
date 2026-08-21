@@ -208,9 +208,14 @@
     #newProjectForm .np-row { display:flex; gap:6px; }
     #newProjectForm .np-row select { flex:1; }
     /* 프로젝트 목록 — 가독 색상 + 카드형 */
-    #projects .proj-item { display:block; padding:8px 10px; margin:5px 0; background:#1b1d21;
+    #projects .proj-item { display:flex; align-items:center; padding:8px 10px; margin:5px 0; background:#1b1d21;
       border:1px solid #33363c; border-radius:6px; color:#e6e6e6; cursor:pointer; text-decoration:none; }
     #projects .proj-item:hover { background:#2c2f36; border-color:#3a6df0; }
+    /* 목록에서 빼기 — 평소엔 흐리게, 올려놓으면 붉게. 실수로 누르기 어렵게. */
+    #projects .proj-item .st { margin-left:auto; }
+    #projects .proj-item .proj-x { width:auto; margin:0 0 0 8px; padding:2px 7px; font-size:11px;
+      background:transparent; border:1px solid #3a3d44; color:#6b7078; border-radius:4px; }
+    #projects .proj-item .proj-x:hover { background:#a33; border-color:#a33; color:#fff; }
     #projects .proj-item .pid { color:#8ab4f8; font-family:ui-monospace,monospace; font-size:11px; margin-right:6px; }
     #projects .proj-item .st { color:#9aa0a6; font-size:11px; margin-left:6px; }
 
@@ -220,8 +225,8 @@
     .col-work .tts-dur { font-size:11px; color:#c5c8cc; font-family:ui-monospace,monospace; }
 
     /* 씬 전용 버튼 줄 — 체크박스 없이 그 씬에만 즉시 실행 */
-    .col-work .row-acts { display:flex; gap:3px; margin-top:5px; }
-    .col-work .row-acts .ra { width:auto; margin:0; padding:3px 7px; font-size:12px; line-height:1.1;
+    .col-work .row-acts { display:flex; gap:3px; margin-top:5px; flex-wrap:wrap; }
+    .col-work .row-acts .ra { width:auto; margin:0; padding:3px 7px; font-size:11px; line-height:1.1; white-space:nowrap;
       background:#2c2f36; border:1px solid #3a3d44; }
     .col-work .row-acts .ra:hover { background:#3a6df0; border-color:#3a6df0; }
     /* TTS·자막 텍스트 편집 패널(✎ 토글) */

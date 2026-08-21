@@ -724,8 +724,11 @@ def test_timeline_export_wired():
     for fn in ["function exportToTimeline", "function toggleTextEditor", "function saveSceneTexts"]:
         assert fn in sb, fn
     assert "akPlaceOnTimeline" not in sb
-    for act in ['data-act="img"', 'data-act="tts"', 'data-act="txt"', 'data-act="tl"']:
+    # 행 버튼은 셋이다. `tts` 는 따로 두지 않는다 — 텍스트 편집 패널이
+    # 고친 자리에서 바로 다시 만들므로(genTts) 같은 일을 하는 단추가 둘이었다.
+    for act in ['data-act="img"', 'data-act="txt"', 'data-act="tl"']:
         assert act in sb, act
+    assert "function genTts" in sb          # 편집 패널이 부르는 재생성은 남아 있어야 한다
 
 
 def test_sheet_toolbar_batches_checked_scenes():

@@ -84,6 +84,9 @@ def scan_projects(root: Path) -> list[dict]:
     for d in sorted(root.iterdir()):
         if not d.is_dir():
             continue
+        # 목록에서 뺀 것을 담아 두는 곳. 파일은 남기되 목록에는 안 보인다.
+        if d.name.startswith("_") or d.name.startswith("."):
+            continue
         arts = _artifacts(d)
         if not (arts["final_manuscript.md"] or arts["plan.md"]):
             continue
