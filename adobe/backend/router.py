@@ -425,7 +425,16 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         proj_dir = root / (pid[0] if isinstance(pid, list) else pid)
         if not proj_dir.is_dir():
             return 404, {"error": "프로젝트 없음"}
-        out = {"characters": [], "scenes": []}
+        out = {"characters": [], "scenes": [], "docs": []}
+        # 조사로 확보한 실물 자료. 옮겨는 왔는데 **볼 방법이 없었다** —
+        # 재생성 모달이 인물 시트와 씬 이미지만 보여 줬다. 병·건물·설비를
+        # 보고 그리려면 이쪽이 필요하다.
+        ddir = proj_dir / "docs"
+        if ddir.is_dir():
+            for f in sorted(ddir.iterdir()):
+                if f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"):
+                    out["docs"].append({"name": f.stem,
+                                        "rel": f.relative_to(proj_dir).as_posix()})
         cdir = proj_dir / "characters"
         if cdir.is_dir():
             for f in sorted(cdir.glob("*.png")):

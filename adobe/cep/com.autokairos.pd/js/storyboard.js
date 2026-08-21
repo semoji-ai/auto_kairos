@@ -995,17 +995,21 @@ function _renderImgRefs() {
     var on = tabs[t].getAttribute("data-tab") === IMG_TAB;
     tabs[t].className = "mini imgreftab" + (on ? "" : " alt");
   }
-  var items = IMG_TAB === "chars" ? (IMG_DATA.characters || []) : (IMG_DATA.scenes || []);
+  var items = IMG_TAB === "chars" ? (IMG_DATA.characters || [])
+            : IMG_TAB === "docs"  ? (IMG_DATA.docs || [])
+            : (IMG_DATA.scenes || []);
   if (!items.length) {
-    $("imgRefList").textContent = IMG_TAB === "chars"
-      ? "이 프로젝트에 인물 시트가 없습니다." : "링크된 씬 이미지가 없습니다.";
+    $("imgRefList").textContent =
+        IMG_TAB === "chars" ? "이 프로젝트에 인물 시트가 없습니다."
+      : IMG_TAB === "docs"  ? "실물 자료가 없습니다 — 프로젝트를 다시 불러오면 들어옵니다."
+      : "링크된 씬 이미지가 없습니다.";
     return;
   }
   var dir = IMG_DIR || "";
   var h = '<div style="display:flex;flex-wrap:wrap;gap:6px">';
   for (var i = 0; i < items.length; i++) {
     var it = items[i], rel = it.rel;
-    var cap = IMG_TAB === "chars" ? it.name : ("씬 " + it.sceneNumber);
+    var cap = IMG_TAB === "scenes" ? ("씬 " + it.sceneNumber) : (it.name || "");
     h += '<label class="imgref" style="width:78px;text-align:center;cursor:pointer'
       + (IMG_REFS[rel] ? ';outline:2px solid #3a6df0' : '') + '">'
       + '<img src="file://' + dir + '/' + rel + '" style="width:100%;border-radius:4px;display:block">'
