@@ -14,11 +14,22 @@ var COL_KEY = "ak_sheet_cols";
 var COLW = _loadCols();
 
 function _loadCols() {
+  // 작업 컬럼은 260px 이 최소다. 버튼이 기호(▣ ♪ ✎ ⤓)일 때 잡은 150px 로는
+  // 「이미지 재생성」 한 글자도 안 들어가고 목소리 고르개도 눌려 버린다.
+  // 저장해 둔 값이 그보다 좁으면 끌어올린다 — 예전 폭이 남아 있으면 새 버튼이
+  // 계속 찌그러진 채로 보인다.
+  var MIN_WORK = 260;
   try {
     var s = window.localStorage.getItem(COL_KEY);
-    if (s) { var a = JSON.parse(s); if (a && a.length === 4) return a; }
+    if (s) {
+      var a = JSON.parse(s);
+      if (a && a.length === 4) {
+        if (a[3] < MIN_WORK) a[3] = MIN_WORK;
+        return a;
+      }
+    }
   } catch (e) {}
-  return [30, 200, 300, 150];
+  return [30, 200, 300, MIN_WORK];
 }
 
 function _persistCols() {
@@ -1340,7 +1351,7 @@ var VOICES = null, VOICE_NOW = "";
 
 function loadVoices() {
   if (!SELECTED_PROJECT) return Promise.resolve(null);
-  return fetch(BACKEND + "/api/tts/config?project_id=" + encodeURIComponent(SELECTED_PROJECT))
+  return fetch(BACKEND + "/api/tts/settings?project_id=" + encodeURIComponent(SELECTED_PROJECT))
     .then(function (r) { return r.json(); })
     .then(function (j) {
       VOICES = j;
