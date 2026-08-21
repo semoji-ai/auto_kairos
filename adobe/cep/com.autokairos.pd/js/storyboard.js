@@ -249,6 +249,9 @@ function loadSheet() {
     .then(function (r) { return r.json(); })
     .then(function (j) {
       var dir = j.dir || "", list = j.scenes || [];
+        // 모달들이 `file://` 미리보기에 쓴다. 시트를 읽을 때 잡아 두지 않으면
+        // 모달이 자기 요청을 기다리는 동안 깨진 그림이 잠깐 뜬다.
+        IMG_DIR = dir || IMG_DIR;
       if (!list.length) { $("sheet").textContent = "(씬 없음 — 씬 분해 먼저)"; return; }
       NAR_ORIG = {};
       list.forEach(function (s) { NAR_ORIG[s.sceneNumber] = s.narration || ""; });
@@ -1855,21 +1858,29 @@ function _renderVidSlots() {
   for (var i = 0; i < m.image_slots.length; i++) {
     var slot = m.image_slots[i];
     var cur = VID_PICK[slot] || [];
-    // 무엇이 들어 있는지 보이게 한다. 「1장」만 적으면 그것이 이 씬 그림인지
-    // 다른 데서 고른 것인지 알 수 없다.
-    var isScene = cur.length === 1 && cur[0] === VID_SCENE_IMG;
-    var cnt = !cur.length ? "없음"
-            : isScene ? "이 씬 그림"
-            : cur.length + "장";
-    var thumb = cur.length
-      ? '<img src="file://' + (IMG_DIR || "") + "/" + cur[0]
-        + '" style="width:34px;height:auto;border-radius:3px;vertical-align:middle">' : "";
+    /* **붙인 그림을 전부 보여 준다.** 「3장」이라고만 적으면 무엇을 붙였는지
+       알 수 없어, 엉뚱한 것을 붙여 놓고도 모른 채 돌리게 된다.
+       한 장씩 뺄 수 있게 각 그림에 ✕ 를 단다. */
     h += '<div class="vslot"><span class="vslot-name">' + _esc(slot) + "</span>"
-       + thumb
-       + '<span class="vslot-cnt">' + _esc(cnt) + "</span>"
-       + '<button class="mini vslot-add" data-slot="' + slot + '">고르기</button>'
-       + (cur.length ? '<button class="mini vslot-clr" data-slot="' + slot + '">비우기</button>' : "")
+       + '<button class="mini vslot-add" data-slot="' + slot + '">'
+       + (cur.length ? "더 고르기" : "고르기") + "</button>"
+       + (cur.length ? '<button class="mini vslot-clr" data-slot="' + slot + '">비우기</button>'
+                     : '<span class="vslot-cnt">없음</span>')
        + "</div>";
+    if (cur.length) {
+      h += '<div class="vthumbs">';
+      for (var q = 0; q < cur.length; q++) {
+        var isScene = cur[q] === VID_SCENE_IMG;
+        h += '<div class="vthumb' + (isScene ? " is-scene" : "") + '">'
+           + '<img src="file://' + (IMG_DIR || "") + "/" + cur[q] + '" alt="">'
+           + '<button class="vthumb-x" data-slot="' + slot + '" data-i="' + q + '"'
+           + ' title="이 그림만 뺍니다">✕</button>'
+           + '<span class="vthumb-cap">'
+           + _esc(isScene ? "이 씬 그림" : cur[q].split("/").pop().slice(0, 16))
+           + "</span></div>";
+      }
+      h += "</div>";
+    }
   }
   $("vidSlots").innerHTML = h;
   var adds = $("vidSlots").querySelectorAll(".vslot-add");
@@ -1880,6 +1891,15 @@ function _renderVidSlots() {
   for (var c = 0; c < clrs.length; c++) {
     clrs[c].addEventListener("click", function () {
       delete VID_PICK[this.getAttribute("data-slot")]; _renderVidSlots();
+    });
+  }
+  var xs = $("vidSlots").querySelectorAll(".vthumb-x");
+  for (var x = 0; x < xs.length; x++) {
+    xs[x].addEventListener("click", function () {
+      var sl = this.getAttribute("data-slot"), ix = parseInt(this.getAttribute("data-i"), 10);
+      (VID_PICK[sl] || []).splice(ix, 1);
+      if (!(VID_PICK[sl] || []).length) delete VID_PICK[sl];
+      _renderVidSlots();
     });
   }
 }
@@ -1894,6 +1914,9 @@ function _pickVidImage(slot) {
         .concat((j.characters || []).map(function (x) { return x.rel; }))
         .concat((j.docs || []).map(function (x) { return x.rel; }));
       IMG_DATA = j; IMG_TAB = "scenes"; IMG_REFS = {};
+      // 이미 붙은 것을 체크된 채로 연다 — 「더 고르기」가 앞의 것을 지우면 안 된다
+      var had = VID_PICK[slot] || [];
+      for (var q = 0; q < had.length; q++) IMG_REFS[had[q]] = true;
       VID_SLOT_TARGET = slot;
       $("imgModal").hidden = false;
       _setImgMode("gen");

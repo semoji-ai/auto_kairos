@@ -94,6 +94,17 @@
     #vidModal .vslot-name { flex:0 0 130px; color:#c5c8cc; font-family:ui-monospace,monospace; }
     #vidModal .vslot-cnt { color:#9aa0a6; font-size:11px; }
     #vidModal button.mini { width:auto; margin:0; }
+    /* 붙인 그림 미리보기 — 무엇을 붙였는지 보여야 엉뚱한 것을 안 돌린다 */
+    #vidModal .vthumbs { display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 8px 136px; }
+    #vidModal .vthumb { position:relative; width:76px; }
+    #vidModal .vthumb img { width:100%; height:48px; object-fit:contain;
+      background:#15171a; border:1px solid #33363c; border-radius:4px; display:block; }
+    #vidModal .vthumb.is-scene img { border-color:#3a6df0; }
+    #vidModal .vthumb-cap { display:block; font-size:9px; color:#9aa0a6;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
+    #vidModal .vthumb-x { position:absolute; top:-5px; right:-5px; width:auto; margin:0;
+      padding:0 4px; font-size:10px; line-height:14px; background:#a33; border:0;
+      border-radius:8px; color:#fff; cursor:pointer; }
 
     /* 머리 한 줄 — 불러오기·테마·전체 실행. 좁으면 줄바꿈된다. */
     #sheet-topbar { display:flex; align-items:center; gap:5px; flex-wrap:wrap;
