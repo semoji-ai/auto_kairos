@@ -1,0 +1,20 @@
+{
+  "characters": [
+    "그",
+    "런",
+    "데",
+    ","
+  ],
+  "character_start_times_seconds": [
+    0.0,
+    0.128,
+    0.279,
+    0.511
+  ],
+  "character_end_times_seconds": [
+    0.128,
+    0.279,
+    0.511,
+    0.604
+  ]
+}

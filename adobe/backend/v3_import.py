@@ -144,31 +144,48 @@ def _map_scene(s: dict) -> dict:
     elif s.get("duration_estimate_sec"):
         out["duration_estimate_sec"] = s["duration_estimate_sec"]
 
-    # 레이아웃 이관 — v3의 visualization이 곧 레이아웃 정보다.
-    # 어도비가 모르는 이름이어도 그대로 싣는다(별칭표·범용 렌더러가 받는다).
+    # 레이아웃 이관 — 어도비가 모르는 이름이어도 그대로 싣는다
+    # (별칭표·범용 렌더러가 받는다).
+    #
+    # **플랫 스키마를 안 읽고 있었다.** v3 는 `layout`·`items`·`values`·
+    # `headline` 을 씬 최상위에 둔다(중첩 `visualization` 은 옛 구조다).
+    # 그런데 여기서 `viz` 가 비면 블록 전체를 건너뛰어, 디아지오 142씬 중
+    # **139씬이 레이아웃 없이** 넘어왔다 — 지도·차트·항목·헤드라인이 통째로
+    # 사라져 전부 그림 한 장짜리 컷이 됐다. 둘 다 읽는다.
     viz = s.get("visualization") or {}
     cre = viz.get("creative") or {}
-    layout = (viz.get("vizType") or cre.get("layout") or "").strip()
+    layout = (viz.get("vizType") or cre.get("layout") or s.get("layout") or "").strip()
     if s.get("mapScene"):
         out.update(_map_fields(s["mapScene"]))
     elif layout:
         out["layout"] = layout
-    if viz:
-        if viz.get("title"):
-            out.setdefault("headline", viz["title"])          # 씬의 title(씬 이름)과 충돌하지 않게 headline으로
-        elif cre.get("headline"):
-            out.setdefault("headline", cre["headline"])
-        for key in ("items", "values", "descriptions", "unit",
-                    "left", "right", "relations", "profileName", "profileSubtitle"):
-            val = viz.get(key)
-            if val:
-                out[key] = val
-        if viz.get("source"):
-            out.setdefault("source", viz["source"])
-        if not out.get("unit"):
-            chart_unit = (viz.get("chart") or {}).get("unit")
-            if chart_unit:
-                out["unit"] = chart_unit
+
+    if viz.get("title"):
+        out.setdefault("headline", viz["title"])   # 씬의 title(씬 이름)과 충돌하지 않게 headline으로
+    elif cre.get("headline"):
+        out.setdefault("headline", cre["headline"])
+    elif s.get("headline"):
+        out.setdefault("headline", s["headline"])
+
+    for key in ("items", "values", "descriptions", "unit",
+                "left", "right", "relations", "profileName", "profileSubtitle"):
+        val = viz.get(key) or s.get(key)            # 중첩 우선, 없으면 플랫
+        if val:
+            out[key] = val
+
+    if viz.get("source") or s.get("source"):
+        out.setdefault("source", viz.get("source") or s.get("source"))
+    if not out.get("unit"):
+        chart_unit = (viz.get("chart") or {}).get("unit") or (s.get("chart") or {}).get("unit")
+        if chart_unit:
+            out["unit"] = chart_unit
+
+    # 인용 씬은 전용 필드를 쓴다 — 없으면 quote 레이아웃이 빈 따옴표만 그린다
+    for k_src, k_dst in (("quote_text", "quote_text"), ("quote", "quote_text"),
+                         ("quote_who", "quote_who"), ("speaker", "quote_who"),
+                         ("mood", "mood"), ("icons", "icons"), ("sub", "sub")):
+        if s.get(k_src) and not out.get(k_dst):
+            out[k_dst] = s[k_src]
     return out
 
 

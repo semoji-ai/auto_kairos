@@ -55,7 +55,11 @@
     .sheet-row .col-img .lyr { width:32px; height:auto; margin:3px 3px 0 0; border-radius:3px; }
     /* 컴프 미리보기 — 16:9 고정, jsx renderLayout 축소 미러 + 자막 오버레이 */
     .pv { position:relative; width:100%; aspect-ratio:16/9; border-radius:4px; overflow:hidden; }
-    .pv img.main { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:0; }
+    /* `cover` 는 화면을 꽉 채우려고 **잘라낸다.** 생성 이미지는 16:9 라
+       잘릴 것이 없지만, 조사한 실물 사진은 세로형·정사각형이 섞여 있어
+       위아래나 좌우가 통째로 날아갔다. 긴 축을 기준으로 넣어 전체를 보인다. */
+    .pv img.main { position:absolute; inset:0; width:100%; height:100%;
+      object-fit:contain; background:#15171a; border-radius:0; }
     .pv-abs { position:absolute; }
     .pv-subtitle { position:absolute; left:5%; width:90%; bottom:5%; text-align:center; color:#fff;
       font-family:'SB AggroOTF','OTSBAggroM',sans-serif;
