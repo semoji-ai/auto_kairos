@@ -240,6 +240,47 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
     if man.is_file():
         shutil.copy(man, d / "final_manuscript.md")
 
+    # TTS 음성 복사 — 가져오기가 이 단계를 아예 갖고 있지 않았다.
+    # 원고와 그림은 들어오는데 소리만 빠져 「연동이 안 됐다」로 보였다.
+    #
+    # v3 음성 파일은 **씬 번호가 아니라 해시로** 저장된다(`6fa8547e.mp3`).
+    # 그래서 이름을 짐작할 수 없고, 씬과 파일을 잇는 것은 `tts_results.json`
+    # 하나뿐이다. 그것을 읽지 않으면 282개 파일을 놓고도 어느 것이 몇 번
+    # 씬인지 알 수 없다.
+    audio_n = 0
+    tts_f = v3 / "tts_results.json"
+    if tts_f.is_file():
+        try:
+            results = json.loads(tts_f.read_text(encoding="utf-8")).get("results") or []
+        except Exception:
+            results = []
+        cur_a = scenes.load_scenes(d)
+        by_n = {s.get("sceneNumber"): s for s in cur_a["scenes"]}
+        box = d / "audio"
+        for r in results:
+            if r.get("status") != "ok":
+                continue
+            s = by_n.get(r.get("scene"))
+            src = Path(r.get("path") or "")
+            # 절대경로는 만든 컴퓨터의 것이다. 파일 이름으로 v3 audio/ 를 다시 본다.
+            if not src.is_file():
+                src = v3 / "audio" / src.name
+            if not (s and src.is_file()):
+                continue
+            box.mkdir(exist_ok=True)
+            dst = box / src.name
+            if not dst.exists():
+                shutil.copy(src, dst)
+            # 자막 타이밍도 함께 온다. 없으면 자막이 소리와 어긋난다.
+            ts = src.with_suffix(".timestamps.json")
+            if ts.is_file() and not (box / ts.name).exists():
+                shutil.copy(ts, box / ts.name)
+            s["_audio"] = f"audio/{dst.name}"
+            s["_audio_dur"] = float(r.get("duration") or 0.0)
+            audio_n += 1
+        if audio_n:
+            scenes._save(d, cur_a)
+
     # 기존 씬 이미지 복사(있으면): v3 images/scene_{n:03d}.* → storyboard/ + imageRef
     copied = 0
     img_dir = v3 / "images"
@@ -280,4 +321,5 @@ def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
                     scenes.set_image_ref(d, n, f"storyboard/{dst.name}")
                     copied += 1
                     break
-    return {"project_id": pid, "title": name, "scenes": len(mapped), "images": copied}
+    return {"project_id": pid, "title": name, "scenes": len(mapped),
+            "images": copied, "audio": audio_n, "infographic": info_n}
