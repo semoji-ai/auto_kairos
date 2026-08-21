@@ -147,7 +147,8 @@ def main() -> int:
                 lay = designs.get(n) or {}
                 it = next((x for x in lay.get("items") or [] if x.get("id") == iid), {})
                 a = {"id": iid,
-                     "prompt": it.get("label") or lay.get("title") or "",
+                     "prompt": it.get("asset_prompt") or it.get("label")
+                     or lay.get("title") or "",
                      "role": lay.get("title", "")}
             jobs.append((n, a))
 

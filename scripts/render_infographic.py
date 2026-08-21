@@ -54,6 +54,9 @@ def base_layer(root: Path, info: dict, scene_img: Path | None) -> Image.Image:
     return Image.new("RGB", (W, H), (242, 242, 240))
 
 
+STAMP = (198, 40, 40)      # 도장의 붉은색
+
+
 def draw_text(d: ImageDraw.ImageDraw, xy, text: str, fnt, mode: str, accent: bool):
     """글자 — 대비 방식대로. box는 글자만큼만 판을 깐다."""
     x, y = xy
@@ -110,7 +113,24 @@ def render(root: Path, scene: dict, out: Path, scene_img: Path | None) -> bool:
         mx = int(W * float(m.get("left", 50)) / 100)
         my = int(H * float(m.get("top", 50)) / 100)
         txt = str(m.get("text", ""))
-        f = font(52)
+        style = m.get("style", "")
+        f = font(int(m.get("size", 52)))
+        if style == "stamp":
+            # 붉은 둥근 네모에 글자 — 도장을 꽝 찍은 자리다. 「확인불가」처럼
+            # 판정을 화면에 박을 때 쓴다. 따로 「확인 시도」라고 적을 필요가
+            # 없어진다 — 도장이 찍혔다는 것 자체가 찾아봤다는 뜻이다.
+            b = d.textbbox((0, 0), txt, font=f)
+            tw, th = b[2] - b[0], b[3] - b[1]
+            pad_x, pad_y = 22, 14
+            x0, y0 = mx - tw // 2 - pad_x, my - th // 2 - pad_y
+            x1, y1 = mx + tw // 2 + pad_x, my + th // 2 + pad_y
+            d.rounded_rectangle([x0, y0, x1, y1], radius=14,
+                                outline=STAMP, width=6)
+            d.text((mx - tw // 2, my - th // 2 - 2), txt, font=f, fill=STAMP)
+            continue
+        if style == "label":
+            draw_text(d, (mx, my), txt, f, mode, False)
+            continue
         if info.get("background", "grid") != "grid":
             b = d.textbbox((0, 0), txt, font=f)
             tw, th = b[2] - b[0], b[3] - b[1]

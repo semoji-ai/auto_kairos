@@ -2653,3 +2653,21 @@ body.terminal-open .main-content {
   font-size: 9px; color: #fbbf24; background: rgba(23,23,26,.8);
   padding: 1px 5px; border-radius: 3px;
 }
+
+/* ── 반전 접속사 카드 ───────────────────────────────
+   「그런데」·「하지만」은 흐름을 뒤집는 자리다. 말에 묻어 두면 지나가지만
+   흰 화면에 한 마디로 띄우면 그 순간이 보인다. 짧게, 빠르게. */
+.sb-turn-card {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  background: #fff; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.sb-turn-card span {
+  font-family: 'BMYeonsung', sans-serif; font-size: 34px; color: #2F3E52;
+  /* 페더 30 정도의 부드러운 그림자 */
+  text-shadow: 0 6px 30px rgba(47,62,82,.35);
+  border-right: 2px solid #2F3E52;    /* 타이핑 커서 */
+  padding-right: 6px;
+  animation: sbCaret 1s step-end infinite;
+}
+@keyframes sbCaret { 50% { border-color: transparent } }

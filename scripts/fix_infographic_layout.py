@@ -104,6 +104,9 @@ def main() -> int:
         chk = json.loads(c.read_text(encoding="utf-8"))
         if chk.get("verdict") != "fix":
             continue
+        # 지금 도해가 아닌 씬은 고치지 않는다 — 쓰지 않을 화면이다
+        if specs.get(n, {}).get("visual_kind") != "infographic":
+            continue
         lay_f = lay_dir / f"s{n:03d}.json"
         shot = shots / f"s{n:03d}.png"
         if lay_f.exists() and shot.exists():

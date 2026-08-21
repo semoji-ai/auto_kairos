@@ -120,6 +120,11 @@ def main() -> int:
         n = int(p.stem[1:])
         if want and n not in want:
             continue
+        # 그려 둔 화면 파일은 남아 있어도 그 씬이 지금도 도해라는 뜻은 아니다.
+        # 옛 판의 그림까지 붙들고 고치면 쓰지도 않을 화면에 품을 쏟는다 —
+        # 실제로 도해 12씬인데 21장을 보고 있었다.
+        if specs.get(n, {}).get("visual_kind") != "infographic":
+            continue
         jobs.append((n, p))
 
     def run(job):
