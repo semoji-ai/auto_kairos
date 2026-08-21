@@ -1,0 +1,64 @@
+{
+  "display_name": "Gemini Omni Flash",
+  "job_type": "gemini_omni",
+  "params": [
+    {
+      "name": "aspect_ratio",
+      "type": "string",
+      "default": "16:9",
+      "required": false,
+      "enum": [
+        "16:9",
+        "9:16"
+      ]
+    },
+    {
+      "name": "duration",
+      "type": "integer",
+      "default": 8,
+      "required": false
+    },
+    {
+      "name": "image_references",
+      "type": "array",
+      "default": null,
+      "required": false
+    },
+    {
+      "name": "prompt",
+      "type": "string",
+      "default": null,
+      "required": true
+    },
+    {
+      "name": "resolution",
+      "type": "string",
+      "default": "720p",
+      "required": false,
+      "enum": [
+        "720p"
+      ]
+    },
+    {
+      "name": "video_references",
+      "type": "array",
+      "default": null,
+      "required": false
+    }
+  ],
+  "rules": [
+    {
+      "cel": "size(params.video_references) <= 1",
+      "message": "at most 1 video_references entry is allowed"
+    },
+    {
+      "cel": "size(params.video_references) == 0 || size(params.image_references) <= 5",
+      "message": "when a video reference is provided, at most 5 image_references are allowed"
+    },
+    {
+      "cel": "size(params.video_references) > 0 || size(params.image_references) <= 7",
+      "message": "at most 7 image_references are allowed"
+    }
+  ],
+  "type": "video"
+}

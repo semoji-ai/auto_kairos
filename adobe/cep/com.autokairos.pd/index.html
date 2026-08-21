@@ -82,6 +82,19 @@
       overflow:hidden; resize:none; min-height:42px; }
     .sheet-row .row-status { font-size:11px; color:#9aa0a6; }
     .sheet-row button { margin:4px 0; padding:6px; font-size:12px; }
+    /* 비디오 모달 — 모델 파라미터 칸과 이미지 칸 */
+    #vidModal select, #vidModal textarea, #vidModal input[type="number"] {
+      background:#23262b; color:#e6e6e6; border:1px solid #33363c; border-radius:4px;
+      padding:5px; font-size:12px; box-sizing:border-box; }
+    #vidModal select { width:100%; }
+    #vidModal .vp-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px; }
+    #vidModal .vp { display:flex; align-items:center; gap:5px; font-size:11px; color:#9aa0a6; }
+    #vidModal .vp select, #vidModal .vp input { flex:1; min-width:0; }
+    #vidModal .vslot { display:flex; align-items:center; gap:6px; margin:4px 0; font-size:12px; }
+    #vidModal .vslot-name { flex:0 0 130px; color:#c5c8cc; font-family:ui-monospace,monospace; }
+    #vidModal .vslot-cnt { color:#9aa0a6; font-size:11px; }
+    #vidModal button.mini { width:auto; margin:0; }
+
     /* 머리 한 줄 — 불러오기·테마·전체 실행. 좁으면 줄바꿈된다. */
     #sheet-topbar { display:flex; align-items:center; gap:5px; flex-wrap:wrap;
       padding:4px 0 6px; }
@@ -283,10 +296,10 @@
     .col-work .te-acts .mini { width:auto; margin:0; }
 
     /* 모달(이미지 생성 + 레이어 선택 공용) */
-    #genModal, #layerModal, #imgModal { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100;
+    #genModal, #layerModal, #imgModal, #vidModal { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100;
       display:flex; align-items:center; justify-content:center; }
-    #genModal[hidden], #layerModal[hidden], #imgModal[hidden] { display:none; }
-    #genModal .gen-box, #layerModal .gen-box, #imgModal .gen-box { width:min(440px,92vw); max-height:88vh; overflow-y:auto;
+    #genModal[hidden], #layerModal[hidden], #imgModal[hidden], #vidModal[hidden] { display:none; }
+    #genModal .gen-box, #layerModal .gen-box, #imgModal .gen-box, #vidModal .gen-box { width:min(440px,92vw); max-height:88vh; overflow-y:auto;
       background:#23262b; border:1px solid #33363c; border-radius:10px; padding:16px; }
     /* 레이어 선택 체크리스트 + 씬 탭 */
     #layerTabs { display:flex; gap:3px; flex-wrap:wrap; margin:6px 0 0; }
@@ -299,12 +312,12 @@
     #layerList .layer-chk:hover { background:#2c2f36; }
     .layer-chk.layer-dropped { opacity:0.55; }
     #layerList .layer-chk input { width:16px; height:16px; margin:2px 0 0; flex:0 0 auto; }
-    #genModal .gen-head, #layerModal .gen-head, #imgModal .gen-head { display:flex; justify-content:space-between; align-items:center;
+    #genModal .gen-head, #layerModal .gen-head, #imgModal .gen-head, #vidModal .gen-head { display:flex; justify-content:space-between; align-items:center;
       font-size:14px; font-weight:600; margin-bottom:8px; }
     #genModal select, #genModal input, #genModal textarea { width:100%; box-sizing:border-box;
       padding:7px; margin:3px 0; background:#1b1d21; color:#e6e6e6; border:1px solid #33363c; border-radius:5px; }
-    #genModal .gen-actions, #layerModal .gen-actions, #imgModal .gen-actions { display:flex; gap:8px; margin-top:10px; }
-    #genModal .gen-actions button, #layerModal .gen-actions button, #imgModal .gen-actions button { flex:1; }
+    #genModal .gen-actions, #layerModal .gen-actions, #imgModal .gen-actions, #vidModal .gen-actions { display:flex; gap:8px; margin-top:10px; }
+    #genModal .gen-actions button, #layerModal .gen-actions button, #imgModal .gen-actions button, #vidModal .gen-actions button { flex:1; }
 
     #toolsSection { margin-top:10px; border-top:1px solid #333; padding-top:6px; }
     #toolsSection summary { cursor:pointer; font-size:12px; color:#aaa; }
@@ -426,6 +439,8 @@
               <button id="sa-map" title="지도 씬 렌더(MapLibre→씬 이미지)">🗺 지도</button>
               <button id="sa-chart" title="차트 디자인 명세서 생성(chartagent)">📊 차트</button>
               <button id="sa-theme" title="체크한 씬에 테마 오버라이드 지정/해제">🎨 씬 테마</button>
+              <button id="sa-upscale" title="로컬 Upscayl 로 4배 업스케일 — 원본은 남고 새 판본이 생깁니다">⤢ 업스케일</button>
+              <button id="sa-vector" title="Recraft 로 SVG 벡터화 — 씬 이미지 옆에 .svg 로 저장됩니다">◇ 벡터화</button>
               <span id="sa-status" class="sab-hint"></span>
               <span class="sab-div"></span>
               <button id="sa-add" class="sab-txt" title="체크한 씬 아래(없으면 맨 끝)에 새 씬">씬 추가</button>
@@ -620,6 +635,26 @@
   <!-- 씬 이미지 재생성 — 참조를 고르고 프롬프트를 손봐서 다시 그린다.
        전에는 버튼을 누르면 곧바로 생성으로 들어가, 무엇을 참조하는지도
        무슨 프롬프트로 그리는지도 볼 수 없었다. -->
+  <!-- 씬 비디오 생성 — 힉스필드. 모델마다 받는 파라미터와 이미지 첨부
+       한도가 달라, 모델을 고르면 그 모델이 받는 것만 화면에 뜬다. -->
+  <div id="vidModal" hidden>
+    <div class="gen-box">
+      <div class="gen-head">씬 비디오 생성 <button id="vidClose" class="mini">✕</button></div>
+      <div class="label">모델</div>
+      <select id="vidModel"></select>
+      <div id="vidRules" class="label" style="font-size:11px;color:#8a8f96"></div>
+      <div id="vidParams"></div>
+      <div class="label" style="margin-top:8px">프롬프트</div>
+      <textarea id="vidPrompt" rows="5" style="width:100%"></textarea>
+      <div id="vidSlots"></div>
+      <div class="gen-actions">
+        <button id="vidSubmit">비디오 생성</button>
+        <button id="vidCancel" class="alt">취소</button>
+      </div>
+      <div class="box" id="vidStatus" style="min-height:16px">—</div>
+    </div>
+  </div>
+
   <div id="imgModal" hidden>
     <div class="gen-box">
       <div class="gen-head">씬 이미지 <button id="imgClose" class="mini">✕</button></div>

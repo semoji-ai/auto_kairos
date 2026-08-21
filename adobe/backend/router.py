@@ -452,6 +452,94 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
                 out["scenes"].append({"sceneNumber": n, "rel": by_scene[n]})
         return 200, out
 
+    # 비디오 모델 목록 — 모델마다 받는 파라미터와 이미지 첨부 한도가 달라
+    # 화면을 모델별로 다시 짜야 한다. 스펙은 힉스필드 CLI 산출을 그대로 쓴다.
+    if method == "GET" and p == "/api/video/models":
+        from backend import video as _v
+        return 200, {"models": _v.load_specs(), "cli": bool(_v.cli())}
+
+    # 씬 비디오 생성. 결과는 **프로젝트 안으로 받아 둔다** — 원격 URL 은
+    # 만료되므로 링크만 두면 나중에 재생이 안 된다.
+    if method == "POST" and p == "/api/scenes/video":
+        from backend import video as _v
+        b = body or {}
+        proj_dir = root / b.get("project_id", "")
+        if not proj_dir.is_dir():
+            return 404, {"error": "프로젝트 없음"}
+        sn = b.get("sceneNumber")
+        data = scenes.load_scenes(proj_dir)
+        scene = _find_scene(data, sn)
+        if not scene:
+            return 404, {"error": f"scene {sn} 없음"}
+        jt = (b.get("job_type") or "").strip()
+        params = dict(b.get("params") or {})
+        if not (params.get("prompt") or "").strip():
+            # 프롬프트를 안 적었으면 씬이 이미 들고 있는 것을 쓴다
+            params["prompt"] = (scene.get("image_prompt")
+                                or scene.get("visual_summary") or "").strip()
+        jobs = ctx["jobs"]
+        jid = jobs.create("scene-video", b.get("project_id", ""))
+        res = _v.generate(proj_dir, jt, params, images=b.get("images") or {},
+                          on_line=lambda ln: jobs.append_log(jid, ln))
+        if res.get("status") == "completed" and res.get("urls"):
+            out = proj_dir / "video" / f"v_{scene.get('sceneId')}_{jt}.mp4"
+            dl = _v.download(res["urls"][0], out)
+            if dl.get("status") == "completed":
+                res["rel"] = out.relative_to(proj_dir).as_posix()
+                scenes.set_scene_video(proj_dir, sn, res["rel"])
+            else:
+                res["download"] = dl
+        jobs.set_status(jid, "completed" if res.get("status") == "completed" else "failed",
+                        artifact_paths=[str(proj_dir / "video")])
+        return 200, {"job_id": jid, "result": res}
+
+    # 업스케일(로컬 Upscayl) · 벡터라이징(Recraft) — 체크한 씬에 건다.
+    if method == "POST" and p in ("/api/scenes/upscale", "/api/scenes/vectorize"):
+        b = body or {}
+        proj_dir = root / b.get("project_id", "")
+        if not proj_dir.is_dir():
+            return 404, {"error": "프로젝트 없음"}
+        nums = b.get("sceneNumbers") or ([b["sceneNumber"]] if b.get("sceneNumber") else [])
+        if not nums:
+            return 400, {"error": "씬을 고르세요"}
+        data = scenes.load_scenes(proj_dir)
+        done, failed = [], []
+        for sn in nums:
+            sc = _find_scene(data, sn)
+            if not sc or not sc.get("_image"):
+                failed.append({"scene": sn, "error": "그림 없음"})
+                continue
+            src = proj_dir / sc["_image"]
+            if p.endswith("upscale"):
+                import sys as _sys
+                _sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+                try:
+                    from auto_agent.tools import upscale as _up
+                except Exception as e:
+                    return 500, {"error": f"업스케일 도구를 불러오지 못했습니다: {e}"}
+                if not _up.upscayl_available():
+                    return 422, {"error": "Upscayl 이 설치돼 있지 않습니다 "
+                                          "(install.sh --upscayl 로 받으세요)"}
+                # **원본을 덮지 않는다.** 새 판본으로 쌓고 링크만 옮긴다.
+                out = proj_dir / "storyboard" / (src.stem + "_up.png")
+                r = _up.upscale_image(str(src), str(out), content="illustration")
+                if out.is_file():
+                    scenes.set_image_ref(proj_dir, sn, out.relative_to(proj_dir).as_posix())
+                    done.append(sn)
+                else:
+                    failed.append({"scene": sn, "error": str(r)[:150]})
+            else:
+                from backend import vectorize as _vec
+                try:
+                    svg = _vec.vectorize_png(src)
+                except Exception as e:
+                    failed.append({"scene": sn, "error": str(e)[:150]})
+                    continue
+                out = src.with_suffix(".svg")
+                out.write_bytes(svg)
+                done.append(sn)
+        return 200, {"done": done, "failed": failed}
+
     # 있는 그림을 **고친다** — 새로 그리는 것과 다르다. 원본을 참조로 붙이고
     # 바꿀 것 하나만 말하므로 구도·자세·화풍이 흔들리지 않는다.
     # 「안경만 빼 줘」처럼 한 곳만 고치고 싶은데 재생성밖에 없어, 고치려던 것보다

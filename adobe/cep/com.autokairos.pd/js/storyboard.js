@@ -490,6 +490,7 @@ function renderRow(s, dir) {
        다시 만드는 것이라, 「수정」이 아니라 「TTS 재생성」이 하는 일에 맞다. */
     +        '<button class="ra" data-act="img" data-scene="' + n + '" title="참조와 프롬프트를 골라 다시 그립니다">이미지 재생성</button>'
     +        '<button class="ra" data-act="txt" data-scene="' + n + '" title="TTS·자막 텍스트를 고쳐 다시 만듭니다">TTS 재생성</button>'
+    +        '<button class="ra" data-act="vid" data-scene="' + n + '" title="이 씬 그림으로 영상을 만듭니다 (힉스필드)">🎞 비디오</button>'
     +        '<button class="ra" data-act="tl" data-scene="' + n + '" title="이 씬을 현재 타임라인에 배치합니다">import</button>'
     +      '</div>'
     // 텍스트 편집 패널(✎ 토글) — TTS용/자막용 분리
@@ -602,6 +603,7 @@ function bindRows(scope) {
       if (act === "img") { openImageModal(n); }
       else if (act === "tts") { genTts(n); }
       else if (act === "txt") { toggleTextEditor(n); }
+      else if (act === "vid") { openVideoModal(n); }
       else if (act === "tl") { exportToTimeline(parseFloat(n)); }
     });
   }
@@ -870,6 +872,29 @@ function bindSheetToolbar() {
         .catch(function (e) { say("씬 " + n + " 차트 실패: " + e); });
     });
   });
+  /* 업스케일·벡터화 — 체크한 씬에 한 번에 건다.
+     업스케일은 원본을 덮지 않고 새 판본을 만들어 링크만 옮긴다. */
+  function _batchTool(url, label) {
+    var ns = _needChecked(1, label); if (!ns) return;
+    var st = $("sa-status");
+    function say(m) { if (st) st.textContent = m; }
+    say(label + " " + ns.length + "씬 처리 중...");
+    fetch(BACKEND + url, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumbers: ns }),
+    }).then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.error) { say(label + " 실패: " + j.error); return; }
+        var d = (j.done || []).length, f = (j.failed || []).length;
+        say(label + " 완료 " + d + "씬" + (f ? (" · 실패 " + f) : ""));
+        for (var k = 0; k < (j.done || []).length; k++) refreshRow(j.done[k]);
+      })
+      .catch(function (e) { say(label + " 오류: " + e); });
+  }
+  on("sa-upscale", function () { _batchTool("/api/scenes/upscale", "업스케일"); });
+  on("sa-vector", function () { _batchTool("/api/scenes/vectorize", "벡터화"); });
+
+
   on("sa-theme", function () {
     var ns = _needChecked(1, "씬 테마"); if (!ns) return;
     var tid = window.prompt("이 씬에 적용할 테마 id(비우면 해제):", "");
@@ -1247,8 +1272,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /* 재생성 모달 */
   function _closeImg() { $("imgModal").hidden = true; }
-  var ic = $("imgCancel"); if (ic) ic.addEventListener("click", _closeImg);
-  var ix = $("imgClose"); if (ix) ix.addEventListener("click", _closeImg);
+  function _closeImgAll() { VID_SLOT_TARGET = null; $("imgSubmit").textContent = "이 내용으로 생성"; _closeImg(); }
+  var ic = $("imgCancel"); if (ic) ic.addEventListener("click", _closeImgAll);
+  var ix = $("imgClose"); if (ix) ix.addEventListener("click", _closeImgAll);
+
+  /* 비디오 모달 */
+  function _closeVid() { $("vidModal").hidden = true; }
+  var vc = $("vidCancel"); if (vc) vc.addEventListener("click", _closeVid);
+  var vx = $("vidClose"); if (vx) vx.addEventListener("click", _closeVid);
+  var vm = $("vidModel"); if (vm) vm.addEventListener("change", _renderVidModel);
+  var vs = $("vidSubmit");
+  if (vs) vs.addEventListener("click", function () {
+    if (VID_SCENE == null) return;
+    if (!$("vidPrompt").value.trim()) { $("vidStatus").textContent = "프롬프트를 채우세요."; return; }
+    genSceneVideo(VID_SCENE).then(_closeVid);
+  });
   var itb = $("imgRefTabs");
   if (itb) itb.addEventListener("click", function (e) {
     var b = e.target.closest ? e.target.closest(".imgreftab") : null;
@@ -1263,6 +1301,15 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   var isb = $("imgSubmit");
   if (isb) isb.addEventListener("click", function () {
+    // 비디오 모달이 참조를 고르려고 이 창을 빌려 쓴 경우 — 고른 것만 넘기고 닫는다
+    if (VID_SLOT_TARGET) {
+      VID_PICK[VID_SLOT_TARGET] = Object.keys(IMG_REFS);
+      VID_SLOT_TARGET = null;
+      $("imgSubmit").textContent = "이 내용으로 생성";
+      _closeImg();
+      _renderVidSlots();
+      return;
+    }
     if (IMG_SCENE == null) return;
     var p = $("imgPrompt").value.trim();
     if (!p) {
@@ -1691,3 +1738,152 @@ document.addEventListener("keydown", function (e) {
   var box = document.getElementById("pv-zoom");
   if (e.key === "Escape" && box && box.classList.contains("on")) _pvClose();
 });
+
+/* ===== 씬 비디오 생성 (힉스필드) =====
+   모델마다 받는 파라미터도, 붙일 수 있는 이미지 칸도, 해상도 목록도 다르다.
+   그 차이를 손으로 적어 두면 힉스필드가 바꿀 때마다 어긋나므로,
+   백엔드가 CLI 산출을 그대로 넘겨 주고 화면은 그것만 보고 짠다. */
+var VID_MODELS = null, VID_SCENE = null, VID_PICK = {};
+
+function openVideoModal(n) {
+  VID_SCENE = n; VID_PICK = {};
+  $("vidStatus").textContent = "—";
+  $("vidModal").hidden = false;
+  $("vidPrompt").value = "";
+
+  // 씬이 들고 있는 프롬프트를 먼저 채운다 — 빈 칸에서 시작하면 손이 많이 간다
+  fetch(BACKEND + "/api/scenes?project_id=" + encodeURIComponent(SELECTED_PROJECT))
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      IMG_DIR = j.dir || IMG_DIR;
+      var s = (j.scenes || []).filter(function (x) { return x.sceneNumber === parseFloat(n); })[0];
+      if (s) $("vidPrompt").value = s.image_prompt || s.visual_summary || "";
+      if (s && s._image) VID_PICK.start_image = [s._image];   // 씬 그림을 첫 프레임으로
+      _renderVidSlots();
+    });
+
+  if (VID_MODELS) { _renderVidModel(); return; }
+  fetch(BACKEND + "/api/video/models").then(function (r) { return r.json(); })
+    .then(function (j) {
+      VID_MODELS = j.models || [];
+      if (!j.cli) $("vidStatus").textContent = "higgsfield CLI 를 찾을 수 없습니다.";
+      var sel = $("vidModel");
+      sel.innerHTML = VID_MODELS.map(function (m) {
+        return '<option value="' + m.job_type + '">' + _esc(m.display_name) + "</option>";
+      }).join("");
+      _renderVidModel();
+    })
+    .catch(function (e) { $("vidStatus").textContent = "모델 목록 오류: " + e; });
+}
+
+function _vidModel() {
+  var jt = $("vidModel").value;
+  for (var i = 0; i < (VID_MODELS || []).length; i++) {
+    if (VID_MODELS[i].job_type === jt) return VID_MODELS[i];
+  }
+  return null;
+}
+
+/* 파라미터 칸을 모델 스펙대로 그린다. enum 이 있으면 드롭다운, 없으면 입력칸. */
+function _renderVidModel() {
+  var m = _vidModel();
+  if (!m) return;
+  $("vidRules").innerHTML = (m.rules || []).map(function (r) {
+    return "· " + _esc(r);
+  }).join("<br>");
+  var h = "";
+  for (var i = 0; i < m.params.length; i++) {
+    var p = m.params[i];
+    if (p.name === "prompt") continue;                       // 프롬프트는 아래 큰 칸
+    if (p.name.indexOf("image") >= 0 || p.name.indexOf("reference") >= 0) continue;
+    if (p.type === "boolean") {
+      h += '<label class="vp"><input type="checkbox" data-p="' + p.name + '"'
+         + (p["default"] ? " checked" : "") + '> ' + _esc(p.name) + "</label>";
+    } else if (p["enum"]) {
+      h += '<label class="vp">' + _esc(p.name) + ' <select data-p="' + p.name + '">'
+         + p["enum"].map(function (v) {
+             return '<option value="' + v + '"' + (String(v) === String(p["default"]) ? " selected" : "")
+                  + ">" + _esc(String(v)) + "</option>";
+           }).join("") + "</select></label>";
+    } else if (p.type === "integer" || p.type === "number") {
+      h += '<label class="vp">' + _esc(p.name) + ' <input type="number" data-p="' + p.name
+         + '" value="' + (p["default"] == null ? "" : p["default"]) + '"></label>';
+    }
+  }
+  $("vidParams").innerHTML = '<div class="vp-grid">' + h + "</div>";
+  _renderVidSlots();
+}
+
+/* 이미지 칸 — 모델이 받는 것만 낸다. 씬 그림·인물 시트·실물 자료에서 고른다. */
+function _renderVidSlots() {
+  var m = _vidModel();
+  if (!m) { $("vidSlots").innerHTML = ""; return; }
+  var lim = m.max_images == null ? "" : ' (최대 ' + m.max_images + '장)';
+  var h = '<div class="label" style="margin-top:8px">참조 이미지' + lim + '</div>';
+  for (var i = 0; i < m.image_slots.length; i++) {
+    var slot = m.image_slots[i];
+    var cur = VID_PICK[slot] || [];
+    h += '<div class="vslot"><span class="vslot-name">' + _esc(slot) + "</span>"
+       + '<button class="mini vslot-add" data-slot="' + slot + '">고르기</button>'
+       + '<span class="vslot-cnt">' + (cur.length ? cur.length + "장" : "없음") + "</span>"
+       + (cur.length ? '<button class="mini vslot-clr" data-slot="' + slot + '">비우기</button>' : "")
+       + "</div>";
+  }
+  $("vidSlots").innerHTML = h;
+  var adds = $("vidSlots").querySelectorAll(".vslot-add");
+  for (var a = 0; a < adds.length; a++) {
+    adds[a].addEventListener("click", function () { _pickVidImage(this.getAttribute("data-slot")); });
+  }
+  var clrs = $("vidSlots").querySelectorAll(".vslot-clr");
+  for (var c = 0; c < clrs.length; c++) {
+    clrs[c].addEventListener("click", function () {
+      delete VID_PICK[this.getAttribute("data-slot")]; _renderVidSlots();
+    });
+  }
+}
+
+/* 이미지 고르기는 재생성 모달의 참조 목록을 그대로 쓴다 — 같은 것을 두 벌
+   만들면 한쪽만 고치는 일이 생긴다. */
+function _pickVidImage(slot) {
+  fetch(BACKEND + "/api/scenes/image-refs?project_id=" + encodeURIComponent(SELECTED_PROJECT))
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      var all = (j.scenes || []).map(function (x) { return x.rel; })
+        .concat((j.characters || []).map(function (x) { return x.rel; }))
+        .concat((j.docs || []).map(function (x) { return x.rel; }));
+      IMG_DATA = j; IMG_TAB = "scenes"; IMG_REFS = {};
+      VID_SLOT_TARGET = slot;
+      $("imgModal").hidden = false;
+      _setImgMode("gen");
+      $("imgRefBlock").hidden = false;
+      $("imgPromptLabel").textContent = "이 목록에서 참조로 쓸 그림을 고른 뒤 「고른 것 쓰기」를 누르세요.";
+      $("imgPrompt").value = "";
+      $("imgSubmit").textContent = "고른 것 쓰기";
+      _renderImgRefs();
+    });
+}
+var VID_SLOT_TARGET = null;
+
+function genSceneVideo(n) {
+  var m = _vidModel();
+  if (!m) return Promise.resolve();
+  var params = { prompt: $("vidPrompt").value.trim() };
+  var els = $("vidParams").querySelectorAll("[data-p]");
+  for (var i = 0; i < els.length; i++) {
+    var k = els[i].getAttribute("data-p");
+    params[k] = els[i].type === "checkbox" ? els[i].checked : els[i].value;
+  }
+  _rowStatus(n, "비디오 생성 중... (힉스필드, 몇 분)");
+  $("vidStatus").textContent = "생성 중... 창을 닫아도 계속됩니다.";
+  return fetch(BACKEND + "/api/scenes/video", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n),
+                           job_type: m.job_type, params: params, images: VID_PICK }),
+  }).then(function (r) { return r.json(); })
+    .then(function (j) {
+      var ok = j.result && j.result.status === "completed";
+      _rowStatus(n, ok ? "비디오 완료 ✓" : ("실패: " + JSON.stringify(j.result || j).slice(0, 200)));
+      if (ok) refreshRow(n);
+    })
+    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+}

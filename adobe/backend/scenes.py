@@ -287,6 +287,31 @@ def new_scene_image_name(sid: str) -> str:
     return f"scene_{sid}_{uuid.uuid4().hex[:6]}.png"
 
 
+def set_scene_video(proj_dir: Path, scene_number, video_rel: str) -> dict:
+    """씬에 만들어 둔 비디오를 매단다.
+
+    **원격 URL 을 그대로 두지 않는다.** 힉스필드 결과 링크는 만료되므로
+    프로젝트 안으로 받아 둔 상대 경로만 적는다.
+    """
+    with _LOCK:
+        fp = _path(proj_dir)
+        if not fp.is_file():
+            return {"error": "scenes.json 없음"}
+        rel = (video_rel or "").strip()
+        if rel and not (proj_dir / rel).is_file():
+            return {"error": f"파일 없음: {rel}"}
+        data = json.loads(fp.read_text(encoding="utf-8"))
+        for s in data.get("scenes", []):
+            if s.get("sceneNumber") == scene_number:
+                if rel:
+                    s["videoRef"] = rel
+                else:
+                    s.pop("videoRef", None)
+                fp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                return {"ok": True, "sceneNumber": scene_number, "videoRef": rel}
+        return {"error": f"scene {scene_number} 없음"}
+
+
 def set_image_prompt(proj_dir: Path, scene_number, prompt: str) -> dict:
     """씬의 image_prompt 를 갈아 끼운다.
 

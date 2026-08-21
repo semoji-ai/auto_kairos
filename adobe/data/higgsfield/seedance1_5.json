@@ -1,0 +1,74 @@
+{
+  "display_name": "Seedance 1.5 Pro",
+  "job_type": "seedance1_5",
+  "params": [
+    {
+      "name": "aspect_ratio",
+      "type": "string",
+      "default": "16:9",
+      "required": false,
+      "enum": [
+        "auto",
+        "16:9",
+        "9:16",
+        "4:3",
+        "3:4",
+        "1:1",
+        "21:9"
+      ]
+    },
+    {
+      "name": "duration",
+      "type": "integer",
+      "default": 4,
+      "required": false,
+      "enum": [
+        "4",
+        "8",
+        "12"
+      ]
+    },
+    {
+      "name": "end_image",
+      "type": "object|null",
+      "default": null,
+      "required": false
+    },
+    {
+      "name": "generate_audio",
+      "type": "boolean",
+      "default": true,
+      "required": false
+    },
+    {
+      "name": "prompt",
+      "type": "string",
+      "default": null,
+      "required": true
+    },
+    {
+      "name": "resolution",
+      "type": "string",
+      "default": "720p",
+      "required": false,
+      "enum": [
+        "480p",
+        "720p",
+        "1080p"
+      ]
+    },
+    {
+      "name": "start_image",
+      "type": "object|null",
+      "default": null,
+      "required": false
+    }
+  ],
+  "rules": [
+    {
+      "cel": "params.end_image == null || !(params.start_image == null)",
+      "message": "end_image requires start_image to be set"
+    }
+  ],
+  "type": "video"
+}
