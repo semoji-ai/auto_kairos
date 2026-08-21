@@ -223,6 +223,20 @@ def main() -> int:
     if not todo:
         raise SystemExit("정할 씬이 없습니다")
 
+    # 되돌린 것은 되살아나지 않는다. 설계·비교 단계가 「씬 그림이 낫다」고
+    # 정한 씬을 여기서 다시 도해로 돌리면 두 도구가 서로를 뒤집으며 돈다
+    # — 씬56 이 세 번 오갔다.
+    pick_dir = root / "_imggen" / f"{ep.lower()}_pick"
+    locked = set()
+    for f_ in pick_dir.glob("s*.json") if pick_dir.exists() else []:
+        try:
+            if json.loads(f_.read_text(encoding="utf-8")).get("pick") in ("scene", "overlay"):
+                locked.add(int(f_.stem[1:]))
+        except Exception:
+            continue
+    if locked:
+        print(f"  씬 그림으로 잠긴 씬 {len(locked)}개는 도해로 되돌리지 않습니다")
+
     idx = {s.get("sceneNumber"): i for i, s in enumerate(scenes)}
     out_dir = root / "_imggen" / f"{ep.lower()}_screens"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -279,6 +293,8 @@ def main() -> int:
         if not s or s.get("isChapterCard"):
             continue
         kind = r.get("kind", "scene")
+        if r.get("scene") in locked and kind == "infographic":
+            kind = "scene"
         s["visual_kind"] = KIND.get(kind, "generate_image")
         s["visual_why"] = r.get("why", "")
         if kind == "infographic":

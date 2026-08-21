@@ -99,6 +99,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("ep")
     ap.add_argument("--scenes")
+    ap.add_argument("--force", action="store_true",
+                    help="이미 본 화면도 다시 본다 (고친 뒤에는 반드시)")
     ap.add_argument("-j", "--jobs", type=int, default=4)
     args = ap.parse_args()
 
@@ -124,7 +126,8 @@ def main() -> int:
         n, p = job
         f = out_dir / f"s{n:03d}.json"
         if f.exists():
-            return n, "이미 봄"
+            if not args.force:
+                return n, "이미 봄"
         d = ask(PROMPT.format(path=p.resolve(),
                               narration=(specs.get(n, {}).get("narration") or "")[:300]))
         if not d:
