@@ -39,6 +39,8 @@ def main() -> int:
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--chapter", type=int, help="이 챕터만")
     ap.add_argument("--files", help="배분 파일 이름들 (쉼표로 구분)")
+    ap.add_argument("--drop-missing", action="store_true",
+                    help="다시 쓸 때 뺀 씬을 실제로 지운다 (제안 파일에 없는 씬)")
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
@@ -144,6 +146,23 @@ def main() -> int:
             made.append((s, num, froms, pool))
             report.append((num, froms, len(pool), row.get("title", ""), row.get("note", "")))
 
+    # 제안 파일에서 문장을 지워도 씬은 사라지지 않는다. 원본을 그대로 두기
+    # 때문인데, 그러면 「뺐다고 생각한 말」이 화면에 남는다 — 검증 대목 다섯
+    # 씬을 뺐는데 일곱 씬이 그대로 있었다.
+    dropped: list = []
+    if args.drop_missing:
+        kept = {n for _ns, n, _fr, _p in made}
+        touched = {x for _ns, _n, fr, _p in made for x in fr}
+        chapters = {ns.get("chapter") for ns, _n, _fr, _p in made}
+        for s in scenes:
+            n = s.get("sceneNumber")
+            if s.get("isChapterCard") or n in kept or n in touched:
+                continue
+            if s.get("chapter") in chapters and (s.get("narration") or "").strip():
+                dropped.append(n)
+        if dropped:
+            print(f"  제안에서 빠진 씬 {len(dropped)}개를 지웁니다: {dropped[:12]}")
+
     print(f"{ep}  다시 쓴 씬 {len(made)}개")
     for num, froms, npool, title, note in report:
         mark = "그대로" if froms and num == froms[0] else "새 번호"
@@ -176,6 +195,8 @@ def main() -> int:
                     placed.add(num)
             continue
         new_scenes.append(s)
+    if args.drop_missing and dropped:
+        new_scenes = [s for s in new_scenes if s.get("sceneNumber") not in set(dropped)]
     for ns, num, froms, _pool in made:      # 원본이 사라진 경우 대비
         if num not in placed:
             new_scenes.append(ns)
