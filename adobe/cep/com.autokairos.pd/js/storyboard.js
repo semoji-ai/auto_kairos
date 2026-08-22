@@ -392,7 +392,9 @@ function renderLayerList(s, dir) {
           +   '<button class="lyr-eye" title="패널 미리보기에서만 끕니다 — 내보내기에는 그대로 들어갑니다">'
           +     (m.hidden ? '🚫' : '👁') + '</button>'
           +   thumb + nameCell
-          +   (isBg ? '<button class="lyr-regen" title="씬을 다시 분리합니다 — 레이어 전체가 새로 만들어집니다">↻</button>' : '')
+          +   (isBg ? '<button class="lyr-regen" title="씬을 다시 분리합니다 — 레이어 전체가 새로 만들어집니다">↻</button>'
+                        : '<button class="lyr-pose" data-rel="' + _esc(rels[i]) + '"'
+                          + ' title="이 레이어만 고칩니다 — 자세·표정 (씨드림 5.0 Pro, 3크레딧)">자세</button>')
           +   (m.svg ? '<button class="lyr-revec" title="이 레이어를 다시 벡터화합니다(1크레딧)">↻SVG</button>'
                      : '<button class="lyr-revec" title="이 레이어를 벡터화합니다(1크레딧)">SVG</button>')
           +   (isBg ? '' : '<button class="lyr-rm" title="프로젝트에서 뺍니다 — 파일은 남고 되돌릴 수 있습니다">🗑</button>')
@@ -459,12 +461,42 @@ function _lyrHead(s) {
        + '</div>';
 }
 
+/* 씬마다 미리보기를 무엇으로 볼지 — "image" | "layers" | "video".
+   행을 다시 그려도 보던 것이 유지되게 밖에 둔다. */
+var PV_MODE = {};
+
+function _pvSwitch(n, mode, hasLayers, hasVideo) {
+  var opts = [["image", "🖼 이미지"]];
+  if (hasLayers) opts.push(["layers", "🧩 레이어"]);
+  if (hasVideo) opts.push(["video", "🎞 영상"]);
+  if (opts.length < 2) return "";              // 고를 것이 하나면 단추가 군더더기다
+  return '<div class="pv-switch" data-scene="' + n + '">'
+       + opts.map(function (o) {
+           return '<button class="pvs' + (o[0] === mode ? " on" : "") + '"'
+                + ' data-scene="' + n + '" data-mode="' + o[0] + '">' + o[1] + '</button>';
+         }).join("")
+       + '</div>';
+}
+
 function renderRow(s, dir) {
   var n = s.sceneNumber;
   // 레이어가 있으면 합성 미리보기(눈 토글이 즉시 보인다), 없으면 기존 컴프 미리보기.
   var comp = renderComposite(s, dir);
-  var media = comp || _previewHTML(s, dir);   // 컴프 결과 미리보기(배경+레이아웃+자막)
   var hasLayers = (s._layers || []).length > 0;
+  /* 미리보기는 **한 자리에서 갈아 낀다** — 이미지 / 레이어 / 영상.
+     따로따로 두면 같은 씬 그림이 여러 번 나와 자리만 잡아먹는다.
+     레이어가 있으면 레이어가 기본이다(전에도 그랬다). */
+  var mode = PV_MODE[n] || (comp ? "layers" : "image");
+  if (mode === "layers" && !comp) mode = "image";
+  if (mode === "video" && !s.videoRef) mode = comp ? "layers" : "image";
+  PV_MODE[n] = mode;
+  var media = mode === "video"
+    ? ('<video class="vid-el" controls preload="metadata" src="file://'
+       + dir + '/' + s.videoRef + '"></video>')
+    : (mode === "layers" ? comp : _previewHTML(s, dir));
+  /* 레이어 보기에서는 목록을 펴 둔다 — 눈 아이콘으로 껐다 켜는 자리가
+     같은 화면에 있어야 「레이어 패널」이 된다. */
+  if (mode === "layers" && hasLayers && LYR_OPEN[n] === undefined) LYR_OPEN[n] = true;
   var layerBlock = hasLayers
     ? (_lyrHead(s) + (LYR_OPEN[n] ? renderLayerList(s, dir)
                                   : '<div class="lyr-strip">' + _lyrStrip(s, dir) + '</div>'))
@@ -481,14 +513,9 @@ function renderRow(s, dir) {
     // 이미지 미리보기 + 레이어 썸네일(클릭=씬 위에 빨간 윤곽선 오버레이)
     + '  <div class="col-img">'
     +      (s._image ? '<button class="unlink-img" data-scene="' + n + '" title="씬 이미지 링크 해제">✕</button>' : '')
-    /* 비디오는 **미리보기 자리에서 바꿔 본다.** 아래에 따로 플레이어를 두면
-       같은 씬 미리보기가 둘이 되어 자리만 잡아먹는다. 🎞 를 누르면 그림 위에
-       비디오가 덮이고, 다시 누르면 그림으로 돌아온다. */
-    +      (s.videoRef
-        ? ('<button class="vid-toggle" data-scene="' + n + '" '
-           + 'data-src="' + _esc("file://" + dir + "/" + s.videoRef) + '" '
-           + 'title="' + _esc(String(s.videoRef).split("/").pop()) + '">🎞 영상</button>')
-        : '')
+    /* 볼 수 있는 것만 단추로 낸다 — 레이어가 없는 씬에 「레이어」가 있으면
+       눌러도 아무 일이 안 일어나 고장으로 보인다. */
+    +      _pvSwitch(n, mode, !!comp, !!s.videoRef)
     + '    <div class="img-wrap">' + media + '</div>'
     /* 후보 판본 — 씬마다 여러 판을 쌓아 두고 하나를 고르는 구조인데
        패널에는 고른 것만 보였다. 눌러서 바로 되돌릴 수 있게 띠로 깐다. */
@@ -610,30 +637,19 @@ function bindRows(scope) {
   if (vboxes.length === 1) { _loadVersions(vboxes[0]); }
   else if (vboxes.length) { _loadVersionsAll(vboxes); }
 
-  /* 🎞 영상 — 미리보기 자리에서 그림 ↔ 비디오를 오간다.
-     비디오를 새로 만들지 않고 `<video>` 를 그림 위에 덮었다 걷는다.
-     떠날 때는 반드시 멈춘다 — 안 그러면 다른 씬을 보는데 소리가 계속 난다. */
-  var vt = scope.querySelectorAll("button.vid-toggle");
-  for (var vq = 0; vq < vt.length; vq++) {
-    vt[vq].addEventListener("click", function (ev) {
-      ev.stopPropagation();                       // 확대 보기가 같이 뜨지 않게
-      var col = this.closest(".col-img");
-      var wrap = col && col.querySelector(".img-wrap");
-      if (!wrap) return;
-      var have = wrap.querySelector("video.vid-el");
-      if (have) {                                  // 이미 영상 → 그림으로 되돌린다
-        have.pause();
-        wrap.innerHTML = wrap.getAttribute("data-img-html") || "";
-        wrap.removeAttribute("data-img-html");
-        this.classList.remove("on");
-        this.textContent = "🎞 영상";
-        return;
-      }
-      wrap.setAttribute("data-img-html", wrap.innerHTML);
-      wrap.innerHTML = '<video class="vid-el" controls autoplay preload="metadata" src="'
-                     + this.getAttribute("data-src") + '"></video>';
-      this.classList.add("on");
-      this.textContent = "🖼 그림";
+  /* 미리보기 전환 — 이미지 / 레이어 / 영상. 행을 통째로 다시 그린다:
+     레이어 보기는 목록까지 함께 펴야 하고, 영상은 재생을 멈춰야 한다. */
+  var pvs = scope.querySelectorAll("button.pvs");
+  for (var pv = 0; pv < pvs.length; pv++) {
+    pvs[pv].addEventListener("click", function (ev) {
+      ev.stopPropagation();                    // 확대 보기가 같이 뜨지 않게
+      var n = this.getAttribute("data-scene");
+      if (PV_MODE[n] === this.getAttribute("data-mode")) return;
+      var row = this.closest(".sheet-row");
+      var vid = row && row.querySelector("video.vid-el");
+      if (vid) vid.pause();                    // 떠나면서 소리를 남기지 않는다
+      PV_MODE[n] = this.getAttribute("data-mode");
+      refreshRow(n);
     });
   }
 
@@ -739,6 +755,17 @@ function bindRows(scope) {
       vectorizeLayers(n, _lyrStemsOf(n, true), false);
     });
   }
+  /* 자세 — 레이어 한 장만 고친다. 씬을 다시 그리면 나머지 레이어가 전부
+     어긋나므로 쓸 수 없고, 다시 분리하면 요소 경계가 달라진다. */
+  var poses = scope.querySelectorAll("button.lyr-pose");
+  for (var po = 0; po < poses.length; po++) {
+    poses[po].addEventListener("click", function () {
+      var row = this.closest(".lyr-row");
+      _openPoseModal(row.getAttribute("data-scene"), this.getAttribute("data-rel"),
+                     (row.querySelector(".lyr-name") || {}).textContent || "");
+    });
+  }
+
   var revs = scope.querySelectorAll("button.lyr-revec");
   for (var rv = 0; rv < revs.length; rv++) {
     revs[rv].addEventListener("click", function () {
@@ -1038,6 +1065,53 @@ function planMotion(n) {
     })
     .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
+
+/* 레이어 자세 바꾸기 — 기존 레이어는 그대로 두고 새 판본으로 쌓는다.
+   원본 자세와 바꾼 자세를 함께 쓰는 것이 이 기능을 만드는 이유다. */
+var POSE_TARGET = null;
+
+function _openPoseModal(n, rel, name) {
+  POSE_TARGET = { n: n, rel: rel };
+  $("poseWho").textContent = "씬 " + n + " · " + name;
+  $("posePrompt").value = "";
+  $("poseKeep").checked = true;
+  $("poseStatus").textContent = "";
+  $("poseModal").hidden = false;
+  $("posePrompt").focus();
+}
+
+function _closePose() { $("poseModal").hidden = true; POSE_TARGET = null; }
+
+function _submitPose() {
+  if (!POSE_TARGET) return;
+  var ins = $("posePrompt").value.trim();
+  if (!ins) { $("poseStatus").textContent = "무엇을 바꿀지 적으세요."; return; }
+  var n = POSE_TARGET.n, rel = POSE_TARGET.rel, keep = $("poseKeep").checked;
+  _closePose();
+  _rowBusy(n, true, "레이어 고치는 중... (씨드림 5.0 Pro, 1분 안팎)");
+  fetch(BACKEND + "/api/layers/edit", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, layer: rel,
+                           instruction: ins, keep_frame: keep }),
+  }).then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (j.status !== "running" || !j.job_id) {
+        _rowBusy(n, false, "실패: " + JSON.stringify(j)); return;
+      }
+      _awaitJob(j.job_id, function (job) {
+        var ok = job.status === "completed";
+        var made = ((job.result || {}).rel || "").split("/").pop();
+        _rowDone(n, ok, ok ? ("새 판본 " + made + " ✓ (원본은 그대로 남습니다)")
+                           : ("실패: " + (job.error || "")));
+      }, function (logs) { if (logs.length) _rowStatus(n, logs[logs.length - 1]); });
+    })
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  var g = $("poseGo"); if (g) g.addEventListener("click", _submitPose);
+  var c = $("poseCancel"); if (c) c.addEventListener("click", _closePose);
+});
 
 function _rowStatus(n, msg) {
   var el = $("sheet").querySelector('.row-status[data-scene="' + n + '"]');

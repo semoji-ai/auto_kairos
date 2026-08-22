@@ -307,10 +307,22 @@
        같은 씬 미리보기가 둘이 되어 자리만 잡아먹는다. */
     .sheet-row .col-img .vid-el { width:100%; aspect-ratio:16/9; border-radius:4px;
       background:#000; display:block; object-fit:contain; }
-    .sheet-row .vid-toggle { display:block; position:absolute; top:2px; left:2px;
-      width:auto; margin:0; padding:2px 6px; font-size:11px; z-index:2;
-      background:rgba(0,0,0,0.6); }
-    .sheet-row .vid-toggle.on { background:#3a6df0; }
+    /* 레이어 고치기 모달 */
+    #posePrompt { width:100%; box-sizing:border-box; background:#23262b; color:#e6e6e6;
+      border:1px solid #33363c; border-radius:5px; padding:7px; font-size:12px;
+      resize:vertical; margin-top:4px; }
+    .pose-keep { display:block; font-size:11px; color:#c5c8cc; margin:8px 0 2px; line-height:1.5; }
+    .pose-keep .pose-hint { display:block; color:#9aa0a6; font-size:10px; margin-left:20px; }
+    .lyr-row .lyr-pose { width:auto; margin:0; padding:2px 7px; font-size:10px;
+      background:#2c2f36; border:1px solid #33363c; }
+    .lyr-row .lyr-pose:hover { background:#3a6df0; }
+
+    /* 미리보기 전환 — 이미지 / 레이어 / 영상을 한 자리에서 갈아 낀다 */
+    .sheet-row .pv-switch { display:flex; gap:1px; position:absolute; top:2px; left:2px;
+      z-index:2; border-radius:4px; overflow:hidden; }
+    .sheet-row .pv-switch .pvs { width:auto; margin:0; padding:2px 6px; font-size:10px;
+      border-radius:0; background:rgba(0,0,0,0.62); color:#c5c8cc; white-space:nowrap; }
+    .sheet-row .pv-switch .pvs.on { background:#3a6df0; color:#fff; }
 
     /* 일하는 중 — 글자 한 줄로는 돌고 있는지 안 돌고 있는지 알 수 없다.
        이미지 칸을 덮고 고리를 돌려, 멈춰 있는 화면과 확실히 갈리게 한다. */
@@ -672,6 +684,25 @@
   </div>
 
   <!-- 레이어 분리 — 요소 선택 모달 -->
+  <!-- 레이어 한 장만 고치기 — 자세·표정. 기존 레이어는 그대로 두고 판본을 쌓는다. -->
+  <div id="poseModal" hidden>
+    <div class="gen-box">
+      <div class="gen-head">레이어 고치기 <button id="poseCancel" class="mini">✕</button></div>
+      <div class="label" id="poseWho">—</div>
+      <div class="label">무엇을 바꿀지 한 가지만 적으세요. 얼굴·의상·그림체는 그대로 유지됩니다.</div>
+      <textarea id="posePrompt" rows="3"
+        placeholder="예: 오른손 엄지를 세워 들고 환하게 웃는 표정으로 바꾼다"></textarea>
+      <label class="pose-keep"><input type="checkbox" id="poseKeep" checked>
+        틀 유지 — 구도·인물 크기·잘린 범위를 원본과 같게 둡니다
+        <span class="pose-hint">(끄면 모델이 화면을 새로 잡습니다 — 상반신이 전신으로 늘어나기도 합니다)</span>
+      </label>
+      <div class="gen-actions">
+        <button id="poseGo">고치기 (3크레딧)</button>
+      </div>
+      <div class="box" id="poseStatus" style="min-height:16px">—</div>
+    </div>
+  </div>
+
   <div id="layerModal" hidden>
     <div class="gen-box">
       <div class="gen-head">레이어 분리 — 요소 선택 <button id="layerClose" class="mini">✕</button></div>
@@ -742,16 +773,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1296"></script>
-  <script src="js/nav.js?v=1296"></script>
-  <script src="js/planning.js?v=1296"></script>
+  <script src="js/main.js?v=1297"></script>
+  <script src="js/nav.js?v=1297"></script>
+  <script src="js/planning.js?v=1297"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1296"></script>
-  <script src="js/storyboard.js?v=1296"></script>
-  <script src="js/gallery.js?v=1296"></script>
-  <script src="js/genmodal.js?v=1296"></script>
-  <script src="js/assistant.js?v=1296"></script>
+  <script src="js/mapgen.js?v=1297"></script>
+  <script src="js/storyboard.js?v=1297"></script>
+  <script src="js/gallery.js?v=1297"></script>
+  <script src="js/genmodal.js?v=1297"></script>
+  <script src="js/assistant.js?v=1297"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>

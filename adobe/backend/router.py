@@ -8,7 +8,7 @@ import uuid
 from pathlib import Path
 
 from backend import projects, skills_cfg, sessions, pipeline, imagegen, scenes, search, media, tts, manifest, assistant, llm, motion, v3_import, edits, vault, subtitles, chartgen, themes, vectorize, srt
-from backend import fal_api
+from backend import fal_api, layer_edit
 from backend.codex_runner import run_skill
 from backend.jobs import run_async
 
@@ -811,6 +811,30 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         return 200, {"job_id": jid, "elements": res.get("elements", []),
                      "dropped": res.get("dropped", []), "error": res.get("error"),
                      "prompt": fal_api.build_layerize_prompt([n for n in _names if n])}
+
+    # 레이어 한 장만 고친다 — 인물 자세·표정 바꾸기(씨드림 5.0 Pro).
+    # **기존 레이어는 그대로 두고 새 판본으로 쌓는다** — 원본 자세와 바꾼
+    # 자세를 함께 쓰는 것이 이 기능을 만드는 이유다.
+    if method == "POST" and p == "/api/layers/edit":
+        b = body or {}
+        proj_dir = root / b.get("project_id", "")
+        if not proj_dir.is_dir():
+            return 404, {"error": "프로젝트 없음"}
+        rel = (b.get("layer") or "").strip()
+        if not rel:
+            return 400, {"error": "layer 필요"}
+        jobs = ctx["jobs"]
+        jid = jobs.create("layer-edit", b.get("project_id", ""))
+        def _do(proj_dir=proj_dir, rel=rel, b=b, jid=jid):
+            r = layer_edit.edit_layer(
+                proj_dir, rel, b.get("instruction") or "",
+                keep_frame=b.get("keep_frame", True),
+                on_line=lambda ln: jobs.append_log(jid, ln))
+            if r.get("status") != "completed":
+                raise RuntimeError(r.get("error") or "레이어 수정 실패")
+            return r
+        run_async(jobs, jid, _do)
+        return 200, {"job_id": jid, "status": "running"}
 
     if method == "POST" and p == "/api/scenes/split-layers":
         b = body or {}
