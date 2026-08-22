@@ -305,7 +305,8 @@ def _full_prompt(proj_dir: Path, instruction: str) -> str:
         "실행되므로, '전부/모든 씬/일괄'처럼 전체를 분명히 지시했을 때만 비운다. "
         "대상이 불분명하면 실행하지 말고 reply로 어느 씬인지 되물어라.\n"
         "3) 실행할 때도 reply에 무엇을 왜 하는지 한 줄 설명을 함께 담아라.\n"
-        "4) 목록 외 동작은 만들지 말고, 보통 assemble은 마지막.\n\n"
+        "4) 목록 외 동작은 만들지 말고, 보통 assemble은 마지막.\n"
+        "5) actions의 각 항목은 반드시 이 모양이다 — {\"action\": \"<아래 목록의 이름 그대로>\", \"reason\": \"한 줄\", \"targets\": [씬번호…]}. **키 이름은 `action` 이다** (`type`·`name` 이 아니다). edit_images 는 여기에 `instruction` 을 더한다.\n\n"
         "## 제작 기준(상담 근거)\n"
         "- 레이어 분리: 1순위 캐릭터 전원, 2순위 캐릭터를 가리는 전경, 3순위 내용상 필요 요소, 그 외 배경 잔류\n"
         "- 모션: 현재 캐릭터만(bob 까딱임+선택 fade_in), 사물·배경 모션은 규칙 미정으로 금지\n"
@@ -327,7 +328,8 @@ def _resume_prompt(proj_dir: Path, instruction: str) -> str:
         f"## 현재 프로젝트 상태(갱신)\n{project_status(proj_dir)}\n"
         + (f"\n{recent}\n" if recent else "")
         + f"\n## 사용자 입력\n{instruction}\n"
-        "(규칙 동일: 기본은 reply 대화, 명확한 실행 지시만 actions.)"
+        "(규칙 동일: 기본은 reply 대화, 명확한 실행 지시만 actions. "
+        "액션 항목의 키는 `action`·`reason`·`targets` 이다.)"
     )
 
 
@@ -364,6 +366,30 @@ def plan_actions(proj_dir: Path, instruction: str, *, on_line=None) -> dict:
         return {"actions": [], "reply": None}
 
 
+def _normalize_actions(actions: list) -> list:
+    """계획의 동작 이름을 바로잡는다.
+
+    **스키마가 강제되지 않는 길이 있다.** 코덱스는 `--output-schema` 로 형을
+    강제하지만 클로드 쪽은 스키마를 힌트로만 쓰고 본문에서 JSON 을 긁어낸다.
+    그래서 모델이 `action` 대신 `type` 을 적어도 그대로 통과한다 —
+    109·110·112 씬 안경 제거가 그렇게 아무 일도 안 하고 끝났다.
+
+    이름이 다르게 오면 고쳐 주고, 고칠 수 없으면 **조용히 넘기지 않는다.**
+    """
+    out = []
+    for a in actions or []:
+        if not isinstance(a, dict):
+            continue
+        a = dict(a)
+        if not a.get("action"):
+            for alias in ("type", "name", "act", "action_name"):
+                if a.get(alias) in ACTION_HANDLERS:
+                    a["action"] = a[alias]
+                    break
+        out.append(a)
+    return out
+
+
 def run_assistant(proj_dir: Path, instruction: str, *,
                   planner=None, handlers=None, on_event=None, should_cancel=None) -> dict:
     """plan_actions로 계획 → 핸들러 순차 실행 → 결과 수집. planner/handlers 주입 가능(테스트)."""
@@ -376,6 +402,7 @@ def run_assistant(proj_dir: Path, instruction: str, *,
         actions, reply = planned.get("actions", []), planned.get("reply")
     else:                                               # 구형 list 플래너(테스트 주입) 호환
         actions, reply = planned, None
+    actions = _normalize_actions(actions)               # `type` 으로 온 이름을 바로잡는다
     if reply:
         append_history(proj_dir, "assistant", reply)
     elif actions:
@@ -389,7 +416,14 @@ def run_assistant(proj_dir: Path, instruction: str, *,
             on_event(f"▶ {name} ({scope}): {a.get('reason', '')}")
         h = handlers.get(name)
         if h is None:
-            results.append({"action": name, "reason": a.get("reason"), "result": {"status": "skipped"}})
+            # **「건너뜀」으로 조용히 끝내지 않는다.** 화면에는 완료처럼 보이는데
+            # 실제로는 아무 일도 안 한 상태가 되어, 사용자가 결과를 기다린다.
+            err = (f"실행할 동작을 알 수 없습니다: {name!r}. "
+                   f"쓸 수 있는 동작 — {', '.join(sorted(handlers))}")
+            if on_event:
+                on_event("✗ " + err)
+            results.append({"action": name, "reason": a.get("reason"),
+                            "result": {"status": "failed", "error": err}})
             continue
         try:
             kw = {"on_event": on_event, "targets": targets, "should_cancel": should_cancel}

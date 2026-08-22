@@ -290,6 +290,25 @@
     .col-work .tts-play { width:auto; margin:0; padding:3px 9px; font-size:13px; }
     .col-work .tts-dur { font-size:11px; color:#c5c8cc; font-family:ui-monospace,monospace; }
 
+    /* 만든 비디오 — 씬 자리에서 바로 본다 */
+    .col-work .vid-player { margin-top:6px; }
+    .col-work .vid-el { width:100%; max-width:260px; border-radius:4px; background:#000; display:block; }
+    .col-work .vid-name { font-size:10px; color:#9aa0a6; margin-top:2px;
+                          font-family:ui-monospace,monospace; word-break:break-all; }
+
+    /* 일하는 중 — 글자 한 줄로는 돌고 있는지 안 돌고 있는지 알 수 없다.
+       이미지 칸을 덮고 고리를 돌려, 멈춰 있는 화면과 확실히 갈리게 한다. */
+    .sheet-row.busy .col-img { position:relative; }
+    .sheet-row.busy .col-img::after {
+      content:""; position:absolute; left:50%; top:38px; width:26px; height:26px;
+      margin-left:-13px; border-radius:50%;
+      border:3px solid rgba(138,180,248,.25); border-top-color:#8ab4f8;
+      animation:ak-spin .8s linear infinite; pointer-events:none; z-index:3;
+    }
+    .sheet-row.busy .col-img .img-wrap { opacity:.45; }
+    .sheet-row.busy .row-status { color:#8ab4f8; }
+    @keyframes ak-spin { to { transform:rotate(360deg); } }
+
     /* 씬 전용 버튼 줄 — 체크박스 없이 그 씬에만 즉시 실행 */
     .col-work .row-acts { display:flex; gap:3px; margin-top:5px; flex-wrap:wrap; }
     .col-work .row-acts .ra { width:auto; margin:0; padding:3px 7px; font-size:11px; line-height:1.1; white-space:nowrap;
@@ -707,16 +726,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1290"></script>
-  <script src="js/nav.js?v=1290"></script>
-  <script src="js/planning.js?v=1290"></script>
+  <script src="js/main.js?v=1292"></script>
+  <script src="js/nav.js?v=1292"></script>
+  <script src="js/planning.js?v=1292"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1290"></script>
-  <script src="js/storyboard.js?v=1290"></script>
-  <script src="js/gallery.js?v=1290"></script>
-  <script src="js/genmodal.js?v=1290"></script>
-  <script src="js/assistant.js?v=1290"></script>
+  <script src="js/mapgen.js?v=1292"></script>
+  <script src="js/storyboard.js?v=1292"></script>
+  <script src="js/gallery.js?v=1292"></script>
+  <script src="js/genmodal.js?v=1292"></script>
+  <script src="js/assistant.js?v=1292"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>

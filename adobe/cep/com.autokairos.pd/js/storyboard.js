@@ -522,6 +522,15 @@ function renderRow(s, dir) {
     +        '</div>'
     +      '</div>'
     + (chars ? '<div class="work-chars">👤 ' + _esc(chars) + '</div>' : '')
+    /* 만든 비디오를 씬에서 바로 본다. `videoRef` 만 적히고 볼 자리가 없어
+       「생성은 됐는데 어디서 확인하느냐」가 됐다. TTS 플레이어와 같은 자리다. */
+    +      (s.videoRef
+        ? ('<div class="vid-player">'
+           + '<video class="vid-el" controls preload="metadata" '
+           +   'src="file://' + dir + '/' + s.videoRef + '"></video>'
+           + '<div class="vid-name">🎞 ' + _esc(String(s.videoRef).split("/").pop()) + '</div>'
+           + '</div>')
+        : '')
     +      (s._audio
         ? ('<div class="tts-player">'
            + '<button class="tts-play" title="재생/정지">▶</button>'
@@ -980,7 +989,7 @@ function refreshRow(n) {
 
 /* 씬 모션 플랜(LLM) — 동기 호출, 완료 시 상태줄 안내 */
 function planMotion(n) {
-  _rowStatus(n, "모션 설계 중... (LLM, 비동기)");
+  _rowBusy(n, true, "모션 설계 중... (LLM, 비동기)");
   return fetch(BACKEND + "/api/scenes/motion", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n) }),
@@ -1001,12 +1010,30 @@ function planMotion(n) {
         });
       });
     })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 function _rowStatus(n, msg) {
   var el = $("sheet").querySelector('.row-status[data-scene="' + n + '"]');
   if (el) el.textContent = msg;
+}
+
+/* 씬이 일하는 중인지 **글자 말고 눈으로** 보이게 한다.
+   `_rowStatus` 만 있던 때는 작은 회색 글씨 한 줄이 전부라, 돌고 있는 건지
+   아무 일도 안 일어난 건지 구분이 안 됐다 — 비서가 계획을 못 세워 아무것도
+   안 했을 때도 화면이 똑같아 보였다.
+   `on` 이 참이면 이미지 칸에 도는 고리를 얹고, 거짓이면 걷는다. */
+function _rowBusy(n, on, msg) {
+  var row = $("sheet").querySelector('.sheet-row[data-scene="' + n + '"]');
+  if (row) row.classList.toggle("busy", !!on);
+  if (msg) _rowStatus(n, msg);
+}
+
+/* 일이 끝나면 **누르지 않아도** 화면에 반영한다. 끝난 줄 모르고 기다리거나
+   새로고침을 눌러야 보이면 안 만든 것과 같다. */
+function _rowDone(n, ok, msg) {
+  _rowBusy(n, false, msg);
+  if (ok) refreshRow(n);
 }
 
 function saveNarration(n) {
@@ -1018,7 +1045,7 @@ function saveNarration(n) {
     body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n), narration: ta.value }),
   }).then(function (r) { return r.json(); })
     .then(function (j) { _rowStatus(n, j.ok ? "저장됨 ✓" : ("실패: " + JSON.stringify(j))); })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 /* ===== 재생성 모달 — 무엇을 보고 무슨 말로 그릴지 먼저 정한다 ===== */
@@ -1113,7 +1140,7 @@ function _renderImgRefs() {
 /* 지금 그림을 참조로 붙여 지시한 곳만 고친다. 옛 그림은 지우지 않고
    새 판본으로 쌓은 뒤 링크만 옮긴다. */
 function editSceneImage(n, instruction) {
-  _rowStatus(n, "이미지 고치는 중... (codex, 수십 초)");
+  _rowBusy(n, true, "이미지 고치는 중... (codex, 수십 초)");
   return fetch(BACKEND + "/api/scenes/image-edit", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n),
@@ -1121,14 +1148,13 @@ function editSceneImage(n, instruction) {
   }).then(function (r) { return r.json(); })
     .then(function (j) {
       var ok = j.result && j.result.status === "completed";
-      _rowStatus(n, ok ? "수정 완료 ✓" : ("실패: " + JSON.stringify(j)));
-      if (ok) refreshRow(n);
+      _rowDone(n, ok, ok ? "수정 완료 ✓" : ("실패: " + JSON.stringify(j)));
     })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 function genSceneImage(n, prompt, refs) {
-  _rowStatus(n, "씬 이미지 생성 중... (codex, 수십 초)" + (SELECTED_CHARACTER ? " [" + SELECTED_CHARACTER + "]" : ""));
+  _rowBusy(n, true, "씬 이미지 생성 중... (codex, 수십 초)" + (SELECTED_CHARACTER ? " [" + SELECTED_CHARACTER + "]" : ""));
   return fetch(BACKEND + "/api/scenes/image", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n),
@@ -1136,10 +1162,10 @@ function genSceneImage(n, prompt, refs) {
                            prompt: prompt || "", refs: refs || [] }),
   }).then(function (r) { return r.json(); })
     .then(function (j) {
-      _rowStatus(n, (j.result && j.result.status === "completed") ? "생성 완료 ✓" : ("실패: " + JSON.stringify(j)));
-      if (j.result && j.result.status === "completed") refreshRow(n);   // 썸네일 갱신(행 단위)
+      var ok = j.result && j.result.status === "completed";
+      _rowDone(n, ok, ok ? "생성 완료 ✓" : ("실패: " + JSON.stringify(j)));   // 썸네일 갱신(행 단위)
     })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 function unlinkScene(n) {
@@ -1152,7 +1178,7 @@ function unlinkScene(n) {
       _rowStatus(n, j.ok ? "링크 해제됨(파일은 갤러리에 보존)" : ("실패: " + JSON.stringify(j)));
       if (j.ok) refreshRow(n);
     })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 /* 레이어 분리 — 여러 씬 동시: 씬별 분석을 병렬로 돌리고 탭으로 확인·체크 후 일괄(병렬) 분리 */
@@ -1349,7 +1375,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function splitLayers(n, els) {
-  _rowStatus(n, "레이어 분리 중... (" + els.length + "개 요소 + 배경, fal)");
+  _rowBusy(n, true, "레이어 분리 중... (" + els.length + "개 요소 + 배경, fal)");
   fetch(BACKEND + "/api/scenes/split-layers", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n), elements: els }),
@@ -1370,7 +1396,7 @@ function splitLayers(n, els) {
         if (logs.length) _rowStatus(n, "레이어 분리 중... " + logs[logs.length - 1]);
       }, 1600);   // 40분 한도 — 병렬 분리 시 큐 대기 포함(5분 기본은 거짓 타임아웃 유발)
     })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 function dropOnScene(ev, n) {
@@ -1387,7 +1413,7 @@ function dropOnScene(ev, n) {
       _rowStatus(n, ok ? "적용됨 ✓" : ("실패: " + JSON.stringify(j)));
       if (ok) refreshRow(n);
     })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 
@@ -1483,7 +1509,7 @@ function vectorizeLayers(n, stems, force) {
         if (logs.length) _rowStatus(n, "벡터화 중... " + logs[logs.length - 1]);
       }, 1500);
     })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 /* 벡터화 대상 — 전체 버튼은 SVG가 없는 살아 있는 레이어만 넘긴다(있는 것은 백엔드가 건너뛴다). */
@@ -1555,7 +1581,7 @@ function genTts(n, voice) {
       _rowStatus(n, ok ? ("TTS 완료 (" + (j.result.duration || 0).toFixed(1) + "s)") : ("실패: " + JSON.stringify(j)));
       if (ok) refreshRow(n);      // 오디오 플레이어 표시(행 단위)
     })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 /* ✎ — 행의 텍스트 편집 패널 열고 닫기 */
@@ -1588,7 +1614,7 @@ function saveSceneTexts(n, regen) {
       _rowStatus(n, "텍스트 저장됨 ✓");
       if (regen) return genTts(n);
     })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 /* 전용 텍스트 필드를 비워 원고 기준으로 되돌림. kind: "tts" | "sub" */
@@ -1604,7 +1630,7 @@ function resetSceneText(n, kind) {
       _rowStatus(n, "원고 기준으로 되돌림 ✓");
       refreshRow(n);
     })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 /* ⤓ — 이 씬을 타임라인에 다시 놓는다. 평면 컴프라 씬 빌드가 곧 재배치다:
@@ -1962,10 +1988,10 @@ function genSceneVideo(n) {
   }).then(function (r) { return r.json(); })
     .then(function (j) {
       var ok = j.result && j.result.status === "completed";
-      _rowStatus(n, ok ? "비디오 완료 ✓" : ("실패: " + JSON.stringify(j.result || j).slice(0, 200)));
-      if (ok) refreshRow(n);
+      _rowDone(n, ok, ok ? "비디오 완료 ✓"
+                         : ("실패: " + JSON.stringify(j.result || j).slice(0, 200)));
     })
-    .catch(function (e) { _rowStatus(n, "오류: " + e); });
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
 }
 
 
