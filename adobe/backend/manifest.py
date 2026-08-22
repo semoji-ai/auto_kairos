@@ -174,6 +174,11 @@ def _scene_layers(proj_dir: Path, layer_rels: list, sid: str = "", scene_width: 
             # SVG 가 선언한 크기로 들여온다. 둘이 다르면 자리가 통째로 밀린다.
             # 머리말을 읽어 그 비를 곱해 둔다 — 1/10 로 줄여 넣어도 자리가 맞는다.
             entry["vectorRatio"] = _svg_ratio(proj_dir / svg_rel, proj_dir / r)
+            # **요소만 쉐이프로 편다.** 배경판은 path 가 900개를 넘어 레이어가
+            # 쏟아진다 — 타임라인이 감당이 안 되고 렌더도 무거워진다.
+            # 요소는 10~40KB 라 펴도 몇 장 안 된다.
+            if not is_bg:
+                entry["explode"] = True
             # **SVG 가 안 들어올 때를 대비해 PNG 를 함께 준다.** 애프터이펙트가
             # SVG 하나를 거부하면 그 씬 빌드가 통째로 멈춰, 배경만 들어오고
             # 나머지는 사라진다(100씬이 그랬다). 한 장이 실패해도 그림은 나와야 한다.

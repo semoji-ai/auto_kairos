@@ -518,6 +518,46 @@ function akBuildScene(manifestPath) {
         return foot;
     }
 
+    /* SVG 컴프 안의 쉐이프 레이어를 **Final 로 꺼내 올린다.**
+       컴프째 얹으면 패스를 고치려고 컴프를 열고 들어가야 하고, 연속 래스터화를
+       켜야 화질이 산다. 꺼내 올리면 쉐이프라 원래 벡터이고 Final 에서 바로
+       만질 수 있다. 대신 패스 수만큼 레이어가 생긴다 — 배경판처럼 900개가
+       넘는 것은 컴프로 두는 편이 낫다.
+
+       좌표는 널 하나에 몰아 준다. 꺼낸 쉐이프는 SVG 컴프의 좌표계로 오므로,
+       컴프째 얹었을 때와 같은 자리·배율을 널에 주고 거기 붙인다. */
+    function explodeCompLayers(comp, src, layer, W, H, log) {
+        if (!(src instanceof CompItem)) { return null; }
+        if (src.numLayers === 0) { return null; }
+        var cap = 60;                       // 이보다 많으면 타임라인이 감당이 안 된다
+        if (src.numLayers > cap) {
+            if (log) { log.push("레이어가 " + src.numLayers + "장이라 컴프째 얹습니다: "
+                                + (layer.aeName || layer.name)); }
+            return null;
+        }
+        var nl = comp.layers.addNull();
+        nl.name = (layer.aeName || layer.name || "svg") + "_그룹";
+        var lp = layer.position || [W / 2, H / 2];
+        var ls = (layer.scale != null) ? layer.scale : 100;
+        // 널의 앵커를 컴프 한가운데로 옮겨, 꺼낸 쉐이프가 그 컴프 안에 있던 것처럼 앉게 한다
+        try { nl.property("Anchor Point").setValue([src.width / 2, src.height / 2]); } catch (eA) { }
+        nl.property("Position").setValue([lp[0], lp[1]]);
+        nl.property("Scale").setValue([ls, ls]);
+        var made = [];
+        for (var i = src.numLayers; i >= 1; i--) {
+            try {
+                src.layer(i).copyToComp(comp);   // 맨 위에 들어온다
+                var got = comp.layer(1);
+                got.parent = nl;
+                made.push(got);
+            } catch (eC) {
+                if (log) { log.push("쉐이프 옮기기 실패: " + eC.toString()); }
+            }
+        }
+        if (!made.length) { try { nl.remove(); } catch (eR) { } return null; }
+        return nl;
+    }
+
     function addLayerObj(proj, comp, layer, W, H, log) {
         var note = [];
         var foot = akImport(proj, layer.path, note);
@@ -539,6 +579,15 @@ function akBuildScene(manifestPath) {
                      : (foot instanceof FootageItem) ? "푸티지" : "기타";
             var extra = (foot instanceof CompItem) ? (", 안에 " + foot.numLayers + "장") : "";
             log.push("얹음 [" + kind + "] " + foot.name + " " + foot.width + "x" + foot.height + extra);
+        }
+        // 쉐이프로 꺼내 올릴지 — 매니페스트가 `explode` 를 주면 그렇게 한다
+        if (layer.explode && !usedFallback && (foot instanceof CompItem)) {
+            var grp = explodeCompLayers(comp, foot, layer, W, H, log);
+            if (grp) {
+                if (log) { log.push("쉐이프로 폄: " + (layer.aeName || layer.name)
+                                    + " (" + foot.numLayers + "장)"); }
+                return grp;
+            }
         }
         var il = comp.layers.add(foot);
         if (usedFallback) {
