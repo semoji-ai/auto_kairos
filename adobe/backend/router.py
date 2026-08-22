@@ -836,6 +836,28 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         run_async(jobs, jid, _do)
         return 200, {"job_id": jid, "status": "running"}
 
+    # 남은 배경판에서 못 뗀 요소를 더 떼어낸다 — 기존 레이어는 건드리지 않는다.
+    if method == "POST" and p == "/api/scenes/split-more":
+        b = body or {}
+        proj_dir = root / b.get("project_id", "")
+        if not proj_dir.is_dir():
+            return 404, {"error": "프로젝트 없음"}
+        data = scenes.load_scenes(proj_dir)
+        sc = _find_scene(data, b.get("sceneNumber"))
+        if not sc:
+            return 404, {"error": "씬 없음"}
+        els = b.get("elements") or []
+        if not els:
+            return 400, {"error": "elements 필요"}
+        jobs = ctx["jobs"]
+        jid = jobs.create("split-more", b.get("project_id", ""))
+        def _more(proj_dir=proj_dir, sc=sc, els=els, jid=jid):
+            return imagegen.split_more_from_bg(
+                proj_dir, sc.get("sceneId"), els,
+                on_event=lambda r: jobs.append_log(jid, f"{r.get('name')}: {r.get('status')}"))
+        run_async(jobs, jid, _more)
+        return 200, {"job_id": jid, "status": "running"}
+
     if method == "POST" and p == "/api/scenes/split-layers":
         b = body or {}
         proj_dir = root / b.get("project_id", "")

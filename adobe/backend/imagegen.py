@@ -677,3 +677,90 @@ def generate_many(proj_dir: Path, items: list, *, subdir: str = "images",
         for rel, res in ex.map(_work, items):
             results[rel] = res
     return results
+
+
+def split_more_from_bg(proj_dir: Path, sid: str, elements: list, *,
+                       subdir: str = "layers", on_event=None) -> dict:
+    """**남은 배경판에서 못 뗀 요소를 더 떼어낸다.**
+
+    씨드림은 한 번에 여러 요소를 겨루게 하면 옅거나 바닥에 이어진 것을 놓친다
+    — 연기, 전경의 바위·풀밭이 그랬고, 경쟁이 심하면 인물마저 빠진다
+    (씬 103·106).
+
+    이때 원본을 다시 돌리는 것은 손해다. 같은 경쟁이 그대로라 또 떨어질 공산이
+    크고, **이미 잘 나온 레이어까지 덮어쓴다.** 배경판에는 뗀 것이 이미 빠져
+    있으므로 남은 것끼리만 겨루고, 못 뗀 부분은 원본 화소 그대로 남아 있어
+    화질 손해도 없다. 프레임 크기가 같아 좌표도 그대로 맞는다.
+
+    기존 요소 레이어는 건드리지 않는다. 배경판만 새것으로 바뀌고(옛것은
+    아카이브로 옮긴다 — 지우지 않는다) 요소가 뒤에 더해진다.
+    """
+    out_base = Path(proj_dir) / subdir
+    bg = out_base / f"{sid}__bg.png"
+    if not bg.is_file():
+        raise fal_api.FalError(f"배경판이 없습니다: {bg.name}")
+    picked = [e for e in (elements or []) if (e.get("name_en") or "").strip()]
+    if not picked:
+        raise fal_api.FalError("분리할 요소 이름 없음 — name_en이 비어 있습니다")
+
+    layers = fal_api.layerize(str(bg), [(e["name_en"]).strip() for e in picked])
+
+    old = load_element_specs(out_base, sid)
+    used = {(s.get("name_en") or "").strip().lower() for s in old}
+    next_i = max([int(s.get("index", -1)) for s in old] + [-1]) + 1
+    by_name = {}
+    for k, el in enumerate(picked):
+        key = (el.get("name_en") or "").strip().lower()
+        if key and key not in used:
+            by_name[key] = el
+
+    kinds_fp = out_base / KINDS_SIDECAR.format(sid=sid)
+    try:
+        kinds = json.loads(kinds_fp.read_text(encoding="utf-8"))
+    except Exception:
+        kinds = {}
+
+    matched, results, added = set(), [], []
+    for L in layers:
+        nm = L.get("name")
+        if nm is None:                          # 새 배경판 — 옛것은 아카이브로
+            box = out_base / "_archive"
+            box.mkdir(exist_ok=True)
+            keep = versioned_path(box, bg.name)
+            shutil.move(str(bg), str(keep))
+            bg.write_bytes(L["data"])
+            results.append({"name": "배경", "rel": bg.relative_to(proj_dir).as_posix(),
+                            "status": "completed", "z": L.get("z"), "bbox": None})
+            if on_event:
+                on_event(results[-1])
+            continue
+        key = (nm or "").strip().lower()
+        el = by_name.get(key)
+        if el is None or key in matched:
+            if on_event:
+                on_event({"name": nm, "status": "unexpected"})
+            continue
+        matched.add(key)
+        i = next_i + len(added)
+        tag = "_char" if el.get("kind") == "character" else ""
+        out = versioned_path(out_base, f"{sid}__{i}_{_layer_slug(nm)}{tag}.png")
+        out.write_bytes(L["data"])
+        kinds[out.stem] = el.get("kind", "object")
+        added.append({"layer": out.stem, "index": i, "name": el.get("name", ""),
+                      "name_en": nm, "location": el.get("location", ""),
+                      "kind": el.get("kind", "object"), "intent": el.get("intent", ""),
+                      "bbox": L.get("bbox"), "z": L.get("z")})
+        results.append({"name": el.get("name", nm), "rel": out.relative_to(proj_dir).as_posix(),
+                        "status": "completed", "z": L.get("z"), "bbox": L.get("bbox")})
+        if on_event:
+            on_event(results[-1])
+
+    missing = [e.get("name_en") for k, e in by_name.items() if k not in matched]
+    for m in missing:
+        if on_event:
+            on_event({"name": m, "status": "missing"})
+    if kinds:
+        kinds_fp.write_text(json.dumps(kinds, ensure_ascii=False, indent=2), encoding="utf-8")
+    if added:
+        write_element_specs(out_base, sid, old + added)
+    return {"layers": results, "added": len(added), "missing": missing}
