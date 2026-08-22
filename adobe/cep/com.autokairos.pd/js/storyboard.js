@@ -1240,7 +1240,7 @@ function analyzeLayers(ns) {
     }).then(function (r) { return r.json(); })
       .then(function (j) {
         var els = j.elements || [], dropped = j.dropped || [];
-        _layerMulti[n] = { els: els.concat(dropped), done: true };
+        _layerMulti[n] = { els: els.concat(dropped), done: true, prompt: j.prompt || "" };
         _renderLayerPane(n, els, j.error, dropped);
         _rowStatus(n, els.length
           ? (els.length + "개 요소 분석됨" + (dropped.length ? " (+" + dropped.length + "개 예산 초과)" : ""))
@@ -1276,12 +1276,55 @@ function _renderLayerPane(n, els, err, dropped) {
   var html = '<div class="layer-cap-note" style="font-size:11px;color:#9aa0a6;padding:4px 2px"></div>';
   html += els.map(function (e, i) { return row(e, i, false); }).join("");
   html += (dropped || []).map(function (e, i) { return row(e, els.length + i, true); }).join("");
+  /* **분석 결과가 곧 씨드림 프롬프트다.** 체크한 요소 이름을 영어로 나열한
+     것이 그대로 모델에 간다 — 그런데 화면에 안 보여 고칠 방법이 없었다.
+     체크를 바꾸면 여기도 따라 바뀌고, 손으로 고치면 고친 것이 그대로 나간다. */
+  html += '<div class="lp-prompt-wrap">'
+        +   '<div class="lp-prompt-lab">씨드림 5.0 프롬프트 '
+        +     '<span class="lp-prompt-hint">이대로 나갑니다 — 고쳐도 됩니다</span>'
+        +     '<button class="mini lp-prompt-reset" type="button">되돌리기</button>'
+        +   '</div>'
+        +   '<textarea class="lp-prompt" rows="4"></textarea>'
+        + '</div>';
   pane.innerHTML = html;
   var chks = pane.querySelectorAll('input[type="checkbox"]');
   for (var c = 0; c < chks.length; c++) {
-    chks[c].addEventListener("change", function () { _enforceLayerCap(pane); });
+    chks[c].addEventListener("change", function () {
+      _enforceLayerCap(pane);
+      _syncLayerPrompt(n, pane);
+    });
   }
+  var ta = pane.querySelector("textarea.lp-prompt");
+  if (ta) ta.addEventListener("input", function () { pane.setAttribute("data-prompt-edited", "1"); });
+  var rb = pane.querySelector(".lp-prompt-reset");
+  if (rb) rb.addEventListener("click", function () {
+    pane.removeAttribute("data-prompt-edited");
+    _syncLayerPrompt(n, pane);
+  });
   _enforceLayerCap(pane);
+  _syncLayerPrompt(n, pane);
+}
+
+/* 체크된 요소로 프롬프트를 다시 짠다. **손으로 고친 뒤에는 덮지 않는다** —
+   고쳐 놓은 문장이 체크 한 번에 날아가면 고칠 수가 없다. 되돌리기로 푼다.
+   문구는 백엔드 `build_layerize_prompt` 와 같아야 한다. */
+function _syncLayerPrompt(n, pane) {
+  var ta = pane.querySelector("textarea.lp-prompt");
+  if (!ta || pane.getAttribute("data-prompt-edited") === "1") return;
+  var info = _layerMulti[n] || {};
+  var chks = pane.querySelectorAll('input[type="checkbox"]');
+  var names = [];
+  for (var i = 0; i < chks.length; i++) {
+    if (!chks[i].checked) continue;
+    var e = (info.els || [])[parseInt(chks[i].getAttribute("data-idx"), 10)];
+    var en = e && (e.name_en || "").trim();
+    if (en) names.push(en);
+  }
+  ta.value = names.length
+    ? ("Separate this illustration into transparent layers. "
+       + "Extract each of these as its own layer: " + names.join(", ") + ". "
+       + "Keep each element whole and in its original position.")
+    : (info.prompt || "");
 }
 
 /* 씬당 요소 레이어 상한 — 배경 1장을 더해 최대 11레이어(백엔드 MAX_ELEMENTS와 같은 값). */
@@ -1333,11 +1376,13 @@ function _submitLayerSplit() {
     for (var i = 0; i < chks.length; i++) {
       if (chks[i].checked) chosen.push(info.els[parseInt(chks[i].getAttribute("data-idx"), 10)]);
     }
-    if (chosen.length) jobs.push({ n: n, els: chosen });
+    var pta = panes[p].querySelector("textarea.lp-prompt");
+    if (chosen.length) jobs.push({ n: n, els: chosen,
+                                   prompt: pta ? pta.value.trim() : "" });
   }
   if (!jobs.length) { $("layerModalStatus").textContent = "분리할 요소를 1개 이상 체크하세요."; return; }
   _closeLayerModal();
-  jobs.forEach(function (j) { splitLayers(j.n, j.els); });   // 씬별 병렬 잡(각자 폴링)
+  jobs.forEach(function (j) { splitLayers(j.n, j.els, j.prompt); });   // 씬별 병렬 잡(각자 폴링)
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -1400,11 +1445,13 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-function splitLayers(n, els) {
+function splitLayers(n, els, prompt) {
   _rowBusy(n, true, "레이어 분리 중... (" + els.length + "개 요소 + 배경, fal)");
   fetch(BACKEND + "/api/scenes/split-layers", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n), elements: els }),
+    // 비우면 백엔드가 요소 이름으로 다시 짠다 — 고친 것이 있을 때만 넘어간다
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n),
+                           elements: els, prompt: prompt || "" }),
   }).then(function (r) { return r.json(); })
     .then(function (j) {
       if (j.status !== "running" || !j.job_id) { _rowStatus(n, "실패: " + JSON.stringify(j)); return; }

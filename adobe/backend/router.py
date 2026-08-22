@@ -8,6 +8,7 @@ import uuid
 from pathlib import Path
 
 from backend import projects, skills_cfg, sessions, pipeline, imagegen, scenes, search, media, tts, manifest, assistant, llm, motion, v3_import, edits, vault, subtitles, chartgen, themes, vectorize, srt
+from backend import fal_api
 from backend.codex_runner import run_skill
 from backend.jobs import run_async
 
@@ -803,8 +804,13 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
             briefing=vault.read_context(proj_dir),
             on_line=lambda ln: jobs.append_log(jid, ln))
         jobs.set_status(jid, "completed" if res.get("elements") else "failed")
+        # **분석 결과가 곧 씨드림 프롬프트다.** 요소 이름을 영어로 나열한 것이
+        # 그대로 프롬프트가 되는데, 만들어 쓰기만 하고 화면에 안 보여 주니
+        # 사람이 고칠 방법이 없었다. 만들어 둔 것을 함께 내보낸다.
+        _names = [(e.get("name_en") or "").strip() for e in res.get("elements", [])]
         return 200, {"job_id": jid, "elements": res.get("elements", []),
-                     "dropped": res.get("dropped", []), "error": res.get("error")}
+                     "dropped": res.get("dropped", []), "error": res.get("error"),
+                     "prompt": fal_api.build_layerize_prompt([n for n in _names if n])}
 
     if method == "POST" and p == "/api/scenes/split-layers":
         b = body or {}
@@ -825,6 +831,7 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         def _do(proj_dir=proj_dir, sc=sc, elements=elements, jid=jid):
             res = imagegen.split_scene_to_elements(
                 proj_dir, str(proj_dir / sc["_image"]), sc.get("sceneId"), elements,
+                prompt=(b.get("prompt") or "").strip() or None,
                 on_event=lambda r: jobs.append_log(jid, f"{r['name']}: {r['status']}"))
             layers_res = res.get("layers", [])
             elements_completed = any(l.get("status") == "completed" and l.get("name") != "배경"

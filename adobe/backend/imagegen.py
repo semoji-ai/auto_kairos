@@ -579,7 +579,8 @@ def regenerate_layer(proj_dir: Path, scene_image: str, sid: str, layer: str, *,
 
 
 def split_scene_to_elements(proj_dir: Path, scene_image: str, sid: str, elements: list,
-                            *, subdir: str = "layers", concurrency: int = 1, on_event=None) -> dict:
+                            *, subdir: str = "layers", concurrency: int = 1,
+                            prompt: str | None = None, on_event=None) -> dict:
     """씬 이미지를 layerize로 분리해 투명 PNG 여러 장을 저장한다.
 
     모델이 프롬프트에 적은 이름대로 오려내므로 다시 그리지 않는다 — 원위치가 어긋날 수 없다.
@@ -596,7 +597,7 @@ def split_scene_to_elements(proj_dir: Path, scene_image: str, sid: str, elements
     names = [n for n in names if n]
     if not names:
         raise fal_api.FalError("분리할 요소 이름 없음 — name_en이 비어 있습니다")
-    layers = fal_api.layerize(scene_image, names)
+    layers = fal_api.layerize(scene_image, names, prompt=prompt)
     _archive_prev_layers(out_base, sid)     # layerize 성공 후에만 기존 레이어 아카이브(무삭제)
 
     by_name = {}

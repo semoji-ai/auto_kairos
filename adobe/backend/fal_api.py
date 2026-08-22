@@ -94,7 +94,8 @@ def build_layerize_prompt(names: list) -> str:
             "Keep each element whole and in its original position.")
 
 
-def layerize(image_path, names: list, *, timeout: int = 600) -> list:
+def layerize(image_path, names: list, *, prompt: str | None = None,
+             timeout: int = 600) -> list:
     """씬 이미지를 레이어로 분리. z_index 오름차순 목록을 돌려준다.
 
     각 항목 {name(z0은 None), z, bbox(z0은 None), data(PNG 바이트)}.
@@ -111,7 +112,10 @@ def layerize(image_path, names: list, *, timeout: int = 600) -> list:
         raise FalError(f"씬 이미지 없음: {src}")
     body = json.dumps({
         "image_url": data_uri(src),
-        "prompt": build_layerize_prompt(picked),
+        # 화면에서 고쳐 보낸 프롬프트가 있으면 그것을 쓴다. **이 프롬프트가
+        # 곧 분리 결과다** — 이름을 어떻게 적느냐로 무엇이 갈리는지가 정해지는데,
+        # 만들어 쓰기만 하고 보여 주지 않으니 고칠 방법이 없었다.
+        "prompt": (prompt or "").strip() or build_layerize_prompt(picked),
         "image_size": "auto",
     }).encode("utf-8")
     req = urllib.request.Request(

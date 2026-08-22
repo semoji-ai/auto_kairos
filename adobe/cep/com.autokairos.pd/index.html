@@ -290,6 +290,19 @@
     .col-work .tts-play { width:auto; margin:0; padding:3px 9px; font-size:13px; }
     .col-work .tts-dur { font-size:11px; color:#c5c8cc; font-family:ui-monospace,monospace; }
 
+    /* 레이어 분리 프롬프트 — 분석 결과가 곧 씨드림에 가는 문장이다.
+       보여 주지 않으면 무엇이 갈릴지 모른 채 돌리게 된다. */
+    .layer-pane .lp-prompt-wrap { margin:8px 2px 2px; padding-top:8px;
+      border-top:1px solid #33363c; }
+    .layer-pane .lp-prompt-lab { display:flex; align-items:center; gap:6px;
+      font-size:11px; color:#c5c8cc; margin-bottom:4px; }
+    .layer-pane .lp-prompt-hint { color:#9aa0a6; flex:1; }
+    .layer-pane .lp-prompt-reset { width:auto; margin:0; padding:2px 7px; font-size:10px;
+      background:#2c2f36; border:1px solid #33363c; }
+    .layer-pane .lp-prompt { width:100%; box-sizing:border-box; background:#23262b;
+      color:#e6e6e6; border:1px solid #33363c; border-radius:4px; padding:6px;
+      font-size:11px; font-family:ui-monospace,monospace; line-height:1.45; resize:vertical; }
+
     /* 만든 비디오 — **미리보기 자리에서 바꿔 본다.** 아래에 따로 두면
        같은 씬 미리보기가 둘이 되어 자리만 잡아먹는다. */
     .sheet-row .col-img .vid-el { width:100%; aspect-ratio:16/9; border-radius:4px;
@@ -729,16 +742,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1294"></script>
-  <script src="js/nav.js?v=1294"></script>
-  <script src="js/planning.js?v=1294"></script>
+  <script src="js/main.js?v=1295"></script>
+  <script src="js/nav.js?v=1295"></script>
+  <script src="js/planning.js?v=1295"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1294"></script>
-  <script src="js/storyboard.js?v=1294"></script>
-  <script src="js/gallery.js?v=1294"></script>
-  <script src="js/genmodal.js?v=1294"></script>
-  <script src="js/assistant.js?v=1294"></script>
+  <script src="js/mapgen.js?v=1295"></script>
+  <script src="js/storyboard.js?v=1295"></script>
+  <script src="js/gallery.js?v=1295"></script>
+  <script src="js/genmodal.js?v=1295"></script>
+  <script src="js/assistant.js?v=1295"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>
