@@ -16,6 +16,26 @@ from backend import tts as _tts
 
 DEFAULT_DUR = 5.0
 
+# 프레임 격자. **씬 경계는 프레임에 딱 떨어져야 한다.**
+#
+# 길이를 오디오 실측(소수 셋째 자리)으로 누적하니 시작점이 프레임 사이에
+# 걸렸다 — 142씬 중 43씬이 그랬다. 애프터이펙트는 레이어 in·out 을 프레임으로
+# 맞추므로, 씬마다 반올림 방향이 달라 이웃 씬과 한 프레임 겹치거나 벌어진다.
+# 자막·음성·그림이 각자 다른 프레임으로 밀리는 원인이다.
+#
+# **올림으로 맞춘다.** 내림하면 음성 끝이 잘린다. 씬당 최대 한 프레임(0.033초)
+# 무음이 붙지만 들리지 않고, 누적 오차는 생기지 않는다 — 시작점이 언제나
+# 올림한 길이의 정확한 합이기 때문이다.
+FPS = 30.0
+
+
+def snap(sec: float, fps: float = FPS) -> float:
+    """초를 프레임 격자에 올림으로 맞춘다."""
+    import math
+    if not fps or fps <= 0:
+        return float(sec)
+    return math.ceil(round(float(sec) * fps, 6)) / fps
+
 
 def comp_num(scene_number) -> str:
     """컴프 이름에 쓰는 씬 번호 표기. 정수는 2자리 0채움, 소수는 점을 하이픈으로.
@@ -61,13 +81,20 @@ def scene_duration(proj_dir: Path, scene: dict) -> float:
     return DEFAULT_DUR
 
 
-def scene_timings(proj_dir: Path, data: dict) -> list:
-    """[(scene, start, duration)] — 전체 씬 기준 누적 시작 시점."""
-    out, offset = [], 0.0
+def scene_timings(proj_dir: Path, data: dict, *, fps: float = FPS) -> list:
+    """[(scene, start, duration)] — 전체 씬 기준 누적 시작 시점.
+
+    **프레임 격자에 맞춰 낸다.** 길이를 올림하고 그 합으로 시작점을 만들므로
+    시작·끝이 모두 프레임에 딱 떨어지고, 이웃 씬과 겹치거나 벌어지지 않는다.
+    """
+    import math
+    out, frame = [], 0
     for s in data.get("scenes", []):
-        dur = scene_duration(proj_dir, s)
-        out.append((s, round(offset, 3), dur))
-        offset += dur
+        # **프레임 정수로 누적한다.** 초로 더하면 1/30 이 이진수로 딱 떨어지지
+        # 않아 백 씬쯤에서 오차가 쌓여 다시 격자를 벗어난다(142씬 중 29씬).
+        nf = max(1, math.ceil(round(scene_duration(proj_dir, s) * fps, 6)))
+        out.append((s, frame / fps, nf / fps))
+        frame += nf
     return out
 
 

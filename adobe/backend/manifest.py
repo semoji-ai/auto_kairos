@@ -292,7 +292,9 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
             continue
         sid = s.get("sceneId")
         audio = _abs(proj_dir, s["_audio"]) if s.get("_audio") else None
-        dur = timeline.scene_duration(proj_dir, s)   # 컴프·자막·타임라인 공통 계산
+        # **시작점과 같은 격자를 쓴다.** 시작은 프레임에 맞추고 길이는 실측
+        # 그대로 쓰면 씬 끝이 다음 씬 시작과 어긋난다.
+        dur = timeline.snap(timeline.scene_duration(proj_dir, s))
         layout = s.get("layout") or "cinematic"
         layout = scene_layouts.resolve_layout(layout)   # 별칭·미지원 이름 → 그릴 수 있는 이름
         # 지도 씬 — 패널(MapLibre)이 렌더한 지도 이미지가 링크되면 일반 이미지 씬으로 취급
