@@ -438,7 +438,17 @@ function akBuildScene(manifestPath) {
         var need = Math.max(0.04, t1 - t0);
         try {
             var src = il.source;
-            if (src instanceof CompItem && src.duration < need) { src.duration = need; }
+            if (src instanceof CompItem && src.duration < need) {
+                src.duration = need;
+                // **안쪽 레이어도 함께 편다.** 컴프만 늘리면 그 안 도형이 10프레임에서
+                // 끝나 화면이 그 뒤로 비어 버린다. 우리가 늘린 컴프는 방금 들여온
+                // 정지 벡터뿐이므로(길이가 충분한 컴프는 건드리지 않는다) 안전하다.
+                for (var q = 1; q <= src.numLayers; q++) {
+                    var iq = src.layer(q);
+                    try { iq.startTime = 0; } catch (e1) { }
+                    try { iq.inPoint = 0; iq.outPoint = need; } catch (e2) { }
+                }
+            }
         } catch (eD) { }
         // startTime 을 먼저 맞춘다 — 소스 0초가 씬 시작에 오게 한다.
         try { il.startTime = t0; } catch (eS) { }
