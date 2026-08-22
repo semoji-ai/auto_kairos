@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -328,7 +329,10 @@ def main() -> int:
         prompt = SCENE.format(prompt=body, ref_block=ref, size=job.get("size", "1792x1024"), out=out)
         subprocess.run(
             ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
-            stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=1200,
+            stdin=subprocess.DEVNULL, capture_output=True, text=True,
+            # 프롬프트가 길고 참조 그림이 여러 장인 컷은 20분을 넘긴다
+            # (디아지오 126씬은 병 4종 라벨 + 잔 4종 + 참조 사진 4장이라 7.5KB).
+            timeout=int(os.environ.get('GEN_TIMEOUT', '2400')),
         )
         return n, out.exists(), out.name
 
