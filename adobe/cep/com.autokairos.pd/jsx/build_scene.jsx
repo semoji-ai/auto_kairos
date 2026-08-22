@@ -358,6 +358,29 @@ function akBuildScene(manifestPath) {
         return n;
     }
 
+    // 컴프의 레이어를 **참조로** 담는다. 개수로 세면 안 되는 이유:
+    // 빌드 도중 도장·피벗 널이 moveAfter 로 자리를 바꾸고, 한 장이 실패하면
+    // 만들어진 수가 예상과 어긋난다. 「위에서 N장」이라는 셈이 그때 틀어져
+    // 엉뚱한 레이어를 그룹으로 잡는다. 무엇이 새로 생겼는지는 **있던 것과
+    // 대조**해서 안다.
+    function akSnapshot(comp) {
+        var a = [];
+        for (var i = 1; i <= comp.numLayers; i++) { a.push(comp.layer(i)); }
+        return a;
+    }
+
+    function akAddedSince(comp, snap) {
+        var made = [];
+        for (var i = 1; i <= comp.numLayers; i++) {
+            var L = comp.layer(i), seen = false;
+            for (var j = 0; j < snap.length; j++) {
+                if (snap[j] === L) { seen = true; break; }
+            }
+            if (!seen) { made.push(L); }
+        }
+        return made;
+    }
+
     // 다음 씬 그룹의 최상단 레이어 — 새 그룹을 그 위에 놓아 씬 번호 순서를 지킨다.
     function akGroupAnchor(comp, scenes, idx) {
         for (var j = idx + 1; j < scenes.length; j++) {
@@ -384,22 +407,34 @@ function akBuildScene(manifestPath) {
 
     // 레이어 추가. layer.position 있으면 그 좌표·스케일로(크롭된 요소), 없으면 컴프 채움·중앙(풀프레임/배경).
     // 자동 효과(페이드 등)는 넣지 않는다 — 모든 모션은 모션 플랜(applyMoves)에서만(규칙 기반).
-    function addLayerObj(proj, comp, layer, W, H) {
-        var f = new File(layer.path);
-        if (!f.exists) return null;
-        // **한 장이 실패해도 씬은 나와야 한다.** 여기에 try/catch 가 없어서
-        // SVG 하나가 거부되면 그 예외가 씬 빌드를 통째로 멈췄다 — 배경만
-        // 들어오고 나머지는 사라졌다(100씬). 벡터가 안 들어오면 PNG 로 간다.
-        var foot = null, usedFallback = false;
-        try {
-            foot = proj.importFile(new ImportOptions(f));
-        } catch (eV) {
-            var fb = layer.fallback ? new File(layer.fallback) : null;
-            if (!fb || !fb.exists) { return null; }
-            try { foot = proj.importFile(new ImportOptions(fb)); usedFallback = true; }
-            catch (eP) { return null; }
+    // 파일 하나를 들여온다. 안 되면 null — **왜 안 됐는지 남긴다.**
+    function akImport(proj, path, note) {
+        if (!path) { return null; }
+        var f = new File(path);
+        if (!f.exists) { note.push("파일 없음"); return null; }
+        var foot = null;
+        try { foot = proj.importFile(new ImportOptions(f)); }
+        catch (e) { note.push(e.toString()); return null; }
+        // **예외를 안 던지고 빈 값을 주는 길이 있다.** 그때 대비책이 돌지 않아
+        // SVG 4장이 통째로 「누락」으로 끝났다.
+        if (!foot) { note.push("가져왔으나 비어 있음"); return null; }
+        return foot;
+    }
+
+    function addLayerObj(proj, comp, layer, W, H, log) {
+        var note = [];
+        var foot = akImport(proj, layer.path, note);
+        var usedFallback = false;
+        if (!foot && layer.fallback) {
+            if (log) { log.push("SVG 실패(" + note.join("/") + ") → PNG 로 갑니다: " + (layer.aeName || layer.name)); }
+            note = [];
+            foot = akImport(proj, layer.fallback, note);
+            usedFallback = !!foot;
         }
-        if (!foot) return null;
+        if (!foot) {
+            if (log) { log.push("가져오기 실패 " + (layer.aeName || layer.name) + " — " + note.join("/")); }
+            return null;
+        }
         var il = comp.layers.add(foot);
         if (usedFallback) {
             layer.vector = false;                     // PNG 로 왔으면 연속 래스터화는 뜻이 없다
@@ -669,7 +704,7 @@ function akBuildScene(manifestPath) {
                 // 레이어 하나가 어디서 실패하든 나머지는 들어와야 한다.
                 // 여기가 안 감싸여 있어 100씬이 배경 한 장만 남았다.
                 var il = null;
-                try { il = addLayerObj(proj, comp, lay, W, H); }
+                try { il = addLayerObj(proj, comp, lay, W, H, log); }
                 catch (eL) { log.push(pf + "레이어 실패 " + (lay.aeName || lay.name) + " — " + eL.toString()); continue; }
                 if (!il) { log.push(pf + "레이어 누락 " + (lay.aeName || lay.name)); continue; }
                 try {
@@ -819,25 +854,23 @@ function akBuildScene(manifestPath) {
             var s = scenes[i];
             // 옛 레이어는 그대로 둔다 — 지우는 것은 사람 몫이다.
             var had = akCountSceneGroup(comp, s.prefix);
-            var before = comp.numLayers;
+            var snap = akSnapshot(comp);
             try { buildSceneGroup(proj, comp, s, W, H, log, FPS); }
             catch (eB) {
                 log.push((s.prefix || "") + "빌드 실패 — 옛 레이어를 그대로 둡니다: " + eB.toString());
                 // 실패했으면 옛것을 지키고, 만들다 만 것을 되돌린다. 남겨 두면
                 // 옛것과 겹쳐 두 벌이 된다.
-                var madeErr = comp.numLayers - before;
-                for (var kE = madeErr; kE >= 1; kE--) {
-                    try { comp.layer(kE).remove(); } catch (eR) { }
+                var half = akAddedSince(comp, snap);
+                for (var kE = half.length - 1; kE >= 0; kE--) {
+                    try { half[kE].remove(); } catch (eR) { }
                 }
                 continue;
             }
-            var made = comp.numLayers - before;
+            var group = akAddedSince(comp, snap);         // 새로 생긴 것만 — 개수로 세지 않는다
             if (had) {
                 // 겹쳐 놓인다는 것을 알린다 — 모르고 쌓이면 왜 무거운지 알 수 없다
-                log.push((s.prefix || "") + "이미 " + had + "장이 있어 그 위에 " + made + "장을 얹었습니다");
+                log.push((s.prefix || "") + "이미 " + had + "장이 있어 그 위에 " + group.length + "장을 얹었습니다");
             }
-            var group = [];                               // 인덱스는 옮기는 즉시 밀리므로 참조를 먼저 모은다
-            for (var k = 1; k <= made && k <= comp.numLayers; k++) { group.push(comp.layer(k)); }
             var anchor = akGroupAnchor(comp, scenes, i);  // 다음 씬 그룹 위로 옮긴다
             if (anchor) {
                 // 위에서부터 차례로 anchor 바로 위에 놓으면 그룹 안 순서가 그대로 유지된다
