@@ -72,16 +72,17 @@ def _multipart(fields: dict, file_field: str, data: bytes, filename: str) -> tup
 # 넣는 값을 바꿔 보고 싶을 때를 위해 손잡이만 남긴다.
 VECTORIZE_MAX_W = int(os.environ.get("AK_VECTORIZE_MAX_W", "0"))
 
-# SVG 를 선언 크기의 몇 분의 1로 들여올지. **기본 1(그대로).**
+# SVG 를 선언 크기의 몇 분의 1로 들여올지. **기본 10.**
 #
-# 벡터라 확대해도 깨지지 않으니 작게 들여와 배율로 키우면 AE 가 가볍다 —
-# 다만 **연속 래스터화가 꺼지면 그대로 흐려진다.** 뷰어로 재 보니 10분의 1은
-# 작은 캔버스로 래스터된 뒤 늘어나 화면의 80%가 달라졌다. AE 에서 실제로
-# 확인하기 전까지는 1로 둔다.
+# 벡터라 확대해도 깨지지 않으니 작게 들여와 배율로 키우면 AE 가 가볍다.
+# 배치는 매니페스트가 SVG 머리말을 직접 읽어 맞추므로 자리는 어긋나지 않고,
+# PNG 로 대체될 때는 build_scene.jsx 가 그 배율을 되돌린다.
 #
-# 배치는 매니페스트가 SVG 머리말을 직접 읽어 맞추므로, 이 값을 바꿔도
-# 자리는 어긋나지 않는다.
-VECTORIZE_DIVISOR = max(1, int(os.environ.get("AK_VECTORIZE_DIVISOR", "1")))
+# ⚠️ **연속 래스터화가 꺼지면 그대로 흐려진다.** 벡터 레이어에는
+# `collapseTransformation` 을 켜 두지만, 그 스위치는 블렌딩 모드와 일부
+# 이펙트를 무시하므로 사람이 끄는 일이 있다. 흐리게 보이면 그 스위치부터
+# 확인하고, 그래도 안 되면 AK_VECTORIZE_DIVISOR=1 로 되돌린다.
+VECTORIZE_DIVISOR = max(1, int(os.environ.get("AK_VECTORIZE_DIVISOR", "10")))
 
 
 def _downscaled(src: Path, max_w: int) -> tuple:
@@ -234,10 +235,20 @@ def _compact_path(d: str) -> str:
 
 
 def slim_svg(text: str, *, precision: int = 1) -> str:
-    """좌표 자릿수를 줄이고 군더더기 공백을 걷는다. 모양은 그대로다."""
+    """좌표 자릿수를 줄이고 군더더기 공백을 걷는다.
+
+    **`d` 안에서만 숫자를 건드린다.** 처음에는 본문의 모든 숫자를 반올림했는데,
+    그러면 `rgb(245,222,193)` 의 색 값과 그래디언트 정지점·불투명도까지 걸린다.
+    줄일 것은 좌표뿐이다 — 색은 손대지 않는다.
+    """
     import re as _re
-    out = _re.sub(r"-?\d+\.\d+", lambda m: _round_num(m, precision), text)
-    out = _re.sub(r'd="([^"]*)"', lambda m: 'd="' + _compact_path(m.group(1)) + '"', out)
+
+    def _one(m):
+        d = m.group(1)
+        d = _re.sub(r"-?\d+\.\d+", lambda x: _round_num(x, precision), d)
+        return 'd="' + _compact_path(d) + '"'
+
+    out = _re.sub(r'd="([^"]*)"', _one, text)
     out = _re.sub(r">\s+<", "><", out)          # 태그 사이 들여쓰기
     out = _re.sub(r"[ \t]{2,}", " ", out)
     out = _re.sub(r"\s*\n\s*", "", out)

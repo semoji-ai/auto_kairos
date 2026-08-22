@@ -341,23 +341,19 @@ function akBuildScene(manifestPath) {
         return proj.items.addComp(name, W, H, 1.0, Math.max(dur, 1), fps);
     }
 
-    // 이 씬의 기존 레이어를 **모으기만** 한다. 지우는 것은 새로 다 만든 뒤다.
+    // **레이어를 지우지 않는다.** 임포트는 그 씬의 in~out 구간에 레이어를
+    // 얹기만 한다. 무엇을 지울지는 사람이 정한다.
     //
-    // 전에는 빌드 전에 지웠다. 그러다 빌드가 도중에 실패하면 옛것은 이미 없고
-    // 새것은 배경까지만 남는다 — 100씬에서 「배경만 들어오고 그전에 넣어 둔
-    // PNG 는 사라졌다」가 이것이다. **실패한 재빌드가 멀쩡한 결과를 지우면 안 된다.**
-    function akCollectSceneGroup(comp, prefix) {
-        var got = [];
-        for (var i = comp.numLayers; i >= 1; i--) {
-            if (comp.layer(i).name.indexOf(prefix) === 0) { got.push(comp.layer(i)); }
-        }
-        return got;
-    }
-
-    function akDropLayers(list) {
+    // 전에는 빌드 전에 같은 접두사의 레이어를 싹 지웠다. 그러다 빌드가 도중에
+    // 실패하면 옛것은 이미 없고 새것은 배경까지만 남는다 — 100씬에서
+    // 「배경만 들어오고 그전에 넣어 둔 PNG 는 사라졌다」가 이것이다.
+    //
+    // 겹쳐 쌓이는 것은 감수한다. 자동으로 지우는 편이 편해 보이지만, 한 번의
+    // 실패로 멀쩡한 작업이 날아가는 것보다 낫다.
+    function akCountSceneGroup(comp, prefix) {
         var n = 0;
-        for (var i = 0; i < list.length; i++) {
-            try { list[i].remove(); n++; } catch (e) { }
+        for (var i = 1; i <= comp.numLayers; i++) {
+            if (comp.layer(i).name.indexOf(prefix) === 0) { n++; }
         }
         return n;
     }
@@ -405,7 +401,15 @@ function akBuildScene(manifestPath) {
         }
         if (!foot) return null;
         var il = comp.layers.add(foot);
-        if (usedFallback) { layer.vector = false; }   // PNG 로 왔으면 연속 래스터화는 뜻이 없다
+        if (usedFallback) {
+            layer.vector = false;                     // PNG 로 왔으면 연속 래스터화는 뜻이 없다
+            // **배율을 되돌린다.** 매니페스트의 배율은 「작게 선언된 SVG 가
+            // 들어온다」를 전제로 vectorRatio 를 곱해 둔 값이다. PNG 는 원래
+            // 크기로 들어오므로 그대로 두면 그 배만큼 커진다.
+            if (layer.vectorRatio && layer.scale != null) {
+                layer.scale = layer.scale / layer.vectorRatio;
+            }
+        }
         // SVG는 기본값으로 100% 크기에서 한 번만 래스터화된다 — 확대하면 PNG처럼 깨진다.
         // 연속 래스터화를 켜야 배율마다 벡터에서 다시 그린다. 이것이 벡터화의 목적 그 자체다.
         // 부작용: 이 스위치를 켠 레이어는 블렌딩 모드와 일부 이펙트가 무시된다(AE 제약).
@@ -813,8 +817,8 @@ function akBuildScene(manifestPath) {
 
         for (var i = 0; i < scenes.length; i++) {
             var s = scenes[i];
-            // 옛 레이어는 참조만 잡아 두고, **새로 다 만든 뒤에** 지운다.
-            var stale = akCollectSceneGroup(comp, s.prefix);
+            // 옛 레이어는 그대로 둔다 — 지우는 것은 사람 몫이다.
+            var had = akCountSceneGroup(comp, s.prefix);
             var before = comp.numLayers;
             try { buildSceneGroup(proj, comp, s, W, H, log, FPS); }
             catch (eB) {
@@ -827,9 +831,11 @@ function akBuildScene(manifestPath) {
                 }
                 continue;
             }
-            // **개수를 먼저 센다.** 옛것을 치우면 numLayers 가 줄어 셈이 틀어진다.
             var made = comp.numLayers - before;
-            akDropLayers(stale);                          // 새것이 다 선 뒤에 옛것을 치운다
+            if (had) {
+                // 겹쳐 놓인다는 것을 알린다 — 모르고 쌓이면 왜 무거운지 알 수 없다
+                log.push((s.prefix || "") + "이미 " + had + "장이 있어 그 위에 " + made + "장을 얹었습니다");
+            }
             var group = [];                               // 인덱스는 옮기는 즉시 밀리므로 참조를 먼저 모은다
             for (var k = 1; k <= made && k <= comp.numLayers; k++) { group.push(comp.layer(k)); }
             var anchor = akGroupAnchor(comp, scenes, i);  // 다음 씬 그룹 위로 옮긴다
