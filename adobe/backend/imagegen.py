@@ -578,6 +578,58 @@ def regenerate_layer(proj_dir: Path, scene_image: str, sid: str, layer: str, *,
             "layers": res.get("layers", []), "unexpected": res.get("unexpected", [])}
 
 
+def _norm_name(s: str) -> str:
+    """대조용 정규화 — 문장부호를 걷고 소문자로."""
+    return re.sub(r"[^a-z0-9가-힣 ]+", " ", (s or "").lower()).strip()
+
+
+def _tokens(s: str) -> set:
+    # 관사·전치사는 이름을 가르는 데 도움이 안 된다
+    stop = {"the", "a", "an", "of", "with", "and", "on", "in", "at", "from", "for"}
+    return {w for w in _norm_name(s).split() if w and w not in stop}
+
+
+def match_layer_names(requested: list, returned: list) -> dict:
+    """돌려받은 이름 → 요청한 이름. **글자가 똑같기를 요구하지 않는다.**
+
+    씨드림은 보낸 이름을 그대로 돌려주지 않는다. 실측한 어긋남들:
+
+        Peter Mackie seated at desk holding a document  →  Peter Mackie
+        Peter, mustached Scottish man in kilt…          →  Peter mustached …   (쉼표 하나)
+        foreground low round wooden table               →  foreground round wooden table
+        smoke plume from the distillery chimney         →  Distillery chimney smoke plume
+
+    글자 대조만 하던 때는 이런 것을 전부 「예상 밖」으로 **버렸다.** 13씬을
+    돌려 9개 요소가 그렇게 사라졌고, 씬 121 은 넷 다 버려져 실패로 끝났다.
+    돈을 내고 받은 레이어를 이름 때문에 버린 것이다.
+
+    정규화 일치 → 포함 관계 → 낱말 겹침 순으로 가장 잘 맞는 짝을 고른다.
+    """
+    left = {i: _tokens(r) for i, r in enumerate(requested)}
+    out, taken = {}, set()
+    pairs = []
+    for rv in returned:
+        rt = _tokens(rv)
+        nv = _norm_name(rv)
+        for i, r in enumerate(requested):
+            nr = _norm_name(r)
+            if nv == nr:
+                score = 1.0
+            elif nv and nr and (nv in nr or nr in nv):
+                score = 0.9
+            else:
+                union = rt | left[i]
+                score = (len(rt & left[i]) / len(union)) if union else 0.0
+            if score > 0:
+                pairs.append((score, rv, i))
+    for score, rv, i in sorted(pairs, key=lambda x: -x[0]):
+        if rv in out or i in taken or score < 0.34:
+            continue
+        out[rv] = i
+        taken.add(i)
+    return out
+
+
 def split_scene_to_elements(proj_dir: Path, scene_image: str, sid: str, elements: list,
                             *, subdir: str = "layers", concurrency: int = 1,
                             prompt: str | None = None, on_event=None) -> dict:
@@ -600,11 +652,11 @@ def split_scene_to_elements(proj_dir: Path, scene_image: str, sid: str, elements
     layers = fal_api.layerize(scene_image, names, prompt=prompt)
     _archive_prev_layers(out_base, sid)     # layerize 성공 후에만 기존 레이어 아카이브(무삭제)
 
-    by_name = {}
-    for i, el in enumerate(picked):
-        key = (el.get("name_en") or "").strip().lower()
-        if key:
-            by_name[key] = (i, el)
+    # 이름이 글자까지 같기를 요구하지 않는다 — 씨드림은 보낸 이름을 그대로
+    # 돌려주지 않는다(`match_layer_names` 참조).
+    req_names = [(el.get("name_en") or "").strip() for el in picked]
+    ret_names = [L.get("name") for L in layers if L.get("name")]
+    pair = match_layer_names(req_names, ret_names)
 
     matched_keys = set()
     results, specs, kinds, unexpected = [], [], {}, []
@@ -618,17 +670,20 @@ def split_scene_to_elements(proj_dir: Path, scene_image: str, sid: str, elements
             if on_event:
                 on_event(results[-1])
             continue
-        key = nm.strip().lower()
-        hit = by_name.get(key)
-        if hit is None or key in matched_keys:
-            # 요청 목록에 없거나(모델이 임의로 쪼갬), 이미 매칭된 이름이 중복 반환됨
-            # — 어느 쪽이든 두 번째 요소로 취급하지 않는다(사이드카 덮어쓰기 방지)
+        idx = pair.get(nm)
+        if idx is None or idx in matched_keys:
+            # 어디에도 안 붙는 레이어 — **버리지 않는다.** 모델이 임의로 쪼갠
+            # 것이라도 파일은 남겨 사람이 쓸 수 있게 한다. 돈을 내고 받은 것이다.
             unexpected.append(nm)
+            extra = versioned_path(out_base, f"{sid}__x_{_layer_slug(nm)}.png")
+            extra.write_bytes(L["data"])
+            results.append({"name": nm, "rel": extra.relative_to(proj_dir).as_posix(),
+                            "status": "extra", "z": L.get("z"), "bbox": L.get("bbox")})
             if on_event:
-                on_event({"name": nm, "status": "unexpected"})
+                on_event(results[-1])
             continue
-        matched_keys.add(key)
-        i, el = hit
+        matched_keys.add(idx)
+        i, el = idx, picked[idx]
         tag = "_char" if el.get("kind") == "character" else ""
         out = versioned_path(out_base, f"{sid}__{i}_{_layer_slug(nm)}{tag}.png")
         out.write_bytes(L["data"])
@@ -644,8 +699,8 @@ def split_scene_to_elements(proj_dir: Path, scene_image: str, sid: str, elements
             on_event(results[-1])
 
     missing = []
-    for key, (i, el) in by_name.items():
-        if key not in matched_keys:
+    for i, el in enumerate(picked):
+        if i not in matched_keys:
             name_en = (el.get("name_en") or "").strip()
             missing.append(name_en)
             if on_event:
@@ -662,7 +717,7 @@ def split_scene_to_elements(proj_dir: Path, scene_image: str, sid: str, elements
         {"name_en": (el.get("name_en") or "").strip(), "name": el.get("name", ""),
          "kind": el.get("kind", "object"), "location": el.get("location", ""),
          "intent": el.get("intent", "")}
-        for key, (i, el) in by_name.items() if key not in matched_keys
+        for i, el in enumerate(picked) if i not in matched_keys
     ]
     _write_missing(out_base, sid, miss_specs)
     return {"layers": results, "unexpected": unexpected, "missing": missing}
@@ -737,11 +792,10 @@ def split_more_from_bg(proj_dir: Path, sid: str, elements: list, *,
     old = load_element_specs(out_base, sid)
     used = {(s.get("name_en") or "").strip().lower() for s in old}
     next_i = max([int(s.get("index", -1)) for s in old] + [-1]) + 1
-    by_name = {}
-    for k, el in enumerate(picked):
-        key = (el.get("name_en") or "").strip().lower()
-        if key and key not in used:
-            by_name[key] = el
+    fresh = [el for el in picked
+             if (el.get("name_en") or "").strip().lower() not in used]
+    pair = match_layer_names([(e.get("name_en") or "").strip() for e in fresh],
+                             [L.get("name") for L in layers if L.get("name")])
 
     kinds_fp = out_base / KINDS_SIDECAR.format(sid=sid)
     try:
@@ -763,13 +817,18 @@ def split_more_from_bg(proj_dir: Path, sid: str, elements: list, *,
             if on_event:
                 on_event(results[-1])
             continue
-        key = (nm or "").strip().lower()
-        el = by_name.get(key)
-        if el is None or key in matched:
+        idx = pair.get(nm)
+        if idx is None or idx in matched:
+            # 어디에도 안 붙어도 **버리지 않는다** — 파일로 남긴다
+            extra = versioned_path(out_base, f"{sid}__x_{_layer_slug(nm)}.png")
+            extra.write_bytes(L["data"])
+            results.append({"name": nm, "rel": extra.relative_to(proj_dir).as_posix(),
+                            "status": "extra", "z": L.get("z"), "bbox": L.get("bbox")})
             if on_event:
-                on_event({"name": nm, "status": "unexpected"})
+                on_event(results[-1])
             continue
-        matched.add(key)
+        matched.add(idx)
+        el = fresh[idx]
         i = next_i + len(added)
         tag = "_char" if el.get("kind") == "character" else ""
         out = versioned_path(out_base, f"{sid}__{i}_{_layer_slug(nm)}{tag}.png")
@@ -784,7 +843,7 @@ def split_more_from_bg(proj_dir: Path, sid: str, elements: list, *,
         if on_event:
             on_event(results[-1])
 
-    missing = [e.get("name_en") for k, e in by_name.items() if k not in matched]
+    missing = [e.get("name_en") for k, e in enumerate(fresh) if k not in matched]
     for m in missing:
         if on_event:
             on_event({"name": m, "status": "missing"})
@@ -793,7 +852,8 @@ def split_more_from_bg(proj_dir: Path, sid: str, elements: list, *,
     if added:
         write_element_specs(out_base, sid, old + added)
     # 이번에 뗀 것은 목록에서 뺀다 — 남은 것만 다음에 다시 시도한다
+    done = {(fresh[k].get("name_en") or "").strip().lower() for k in matched}
     _write_missing(out_base, sid,
                    [m for m in load_missing(out_base, sid)
-                    if (m.get("name_en") or "").strip().lower() not in matched])
+                    if (m.get("name_en") or "").strip().lower() not in done])
     return {"layers": results, "added": len(added), "missing": missing}
