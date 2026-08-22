@@ -153,8 +153,14 @@
        요소는 컨테이너 기준 퍼센트로 놓이는데, 16:9 로 묶으면 배경(1792x1024,
        =1.75)이 레터박스되어 요소 자리가 통째로 밀린다.
        `.col-img` 밖(스크립트 칸)에서도 쓰이므로 범위만 푼다. */
-    .comp { position:relative; width:100%; line-height:0; }
-    .comp img.comp-bg { width:100%; height:auto; display:block; border-radius:4px; }
+    /* 합성 미리보기 — **세로를 씬 규격(1792x1024)에 못박는다.**
+       배경판이 그 크기이므로 요소의 퍼센트 좌표가 그대로 맞는다.
+       비를 16:9 로 바꾸면 배경이 레터박스되어 요소 자리가 밀린다 —
+       그래서 16:9 가 아니라 1792/1024 다. */
+    .comp { position:relative; width:100%; aspect-ratio:1792/1024;
+      line-height:0; overflow:hidden; border-radius:4px; background:#15171a; }
+    .comp img.comp-bg { position:absolute; inset:0; width:100%; height:100%;
+      display:block; }
     .comp img.comp-el { position:absolute; }
     .comp img.comp-el.full { top:0; left:0; width:100%; }
     /* 레이어 목록 — 포토샵식 세로 리스트. 기본은 접힘(썸네일 띠). */
@@ -165,7 +171,11 @@
     .lyr-head { display:flex; align-items:center; gap:6px; margin-top:4px; font-size:11px; color:#aaa; }
     .lyr-head .lyr-toggle { width:auto; margin:0; padding:1px 5px; font-size:11px; }
     .lyr-head .lyr-vec-all, .lyr-head .lyr-vec-sel { width:auto; margin:0; padding:1px 6px; font-size:11px; }
-    .lyr-list { margin-top:3px; border:1px solid #333; border-radius:4px; }
+    /* **세로를 고정한다.** 레이어가 많은 씬은 목록이 길어져 행이 통째로
+       늘어나고, 그러면 위아래 씬이 화면에서 밀려 나간다. 넘치면 목록 안에서
+       스크롤한다 — 행 높이는 어느 씬이든 같다. */
+    .lyr-list { margin-top:3px; border:1px solid #333; border-radius:4px;
+      max-height:180px; overflow-y:auto; }
     .lyr-row { display:flex; align-items:center; gap:5px; padding:2px 4px; border-bottom:1px solid #2a2a2a; }
     .lyr-row:last-child { border-bottom:none; }
     .lyr-row img.lyr { width:28px; height:auto; margin:0; border-radius:2px; background:#222; }
@@ -799,16 +809,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1321"></script>
-  <script src="js/nav.js?v=1321"></script>
-  <script src="js/planning.js?v=1321"></script>
+  <script src="js/main.js?v=1322"></script>
+  <script src="js/nav.js?v=1322"></script>
+  <script src="js/planning.js?v=1322"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1321"></script>
-  <script src="js/storyboard.js?v=1321"></script>
-  <script src="js/gallery.js?v=1321"></script>
-  <script src="js/genmodal.js?v=1321"></script>
-  <script src="js/assistant.js?v=1321"></script>
+  <script src="js/mapgen.js?v=1322"></script>
+  <script src="js/storyboard.js?v=1322"></script>
+  <script src="js/gallery.js?v=1322"></script>
+  <script src="js/genmodal.js?v=1322"></script>
+  <script src="js/assistant.js?v=1322"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>
