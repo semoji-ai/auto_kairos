@@ -369,8 +369,21 @@ function akBuildScene(manifestPath) {
     function addLayerObj(proj, comp, layer, W, H) {
         var f = new File(layer.path);
         if (!f.exists) return null;
-        var foot = proj.importFile(new ImportOptions(f));
+        // **한 장이 실패해도 씬은 나와야 한다.** 여기에 try/catch 가 없어서
+        // SVG 하나가 거부되면 그 예외가 씬 빌드를 통째로 멈췄다 — 배경만
+        // 들어오고 나머지는 사라졌다(100씬). 벡터가 안 들어오면 PNG 로 간다.
+        var foot = null, usedFallback = false;
+        try {
+            foot = proj.importFile(new ImportOptions(f));
+        } catch (eV) {
+            var fb = layer.fallback ? new File(layer.fallback) : null;
+            if (!fb || !fb.exists) { return null; }
+            try { foot = proj.importFile(new ImportOptions(fb)); usedFallback = true; }
+            catch (eP) { return null; }
+        }
+        if (!foot) return null;
         var il = comp.layers.add(foot);
+        if (usedFallback) { layer.vector = false; }   // PNG 로 왔으면 연속 래스터화는 뜻이 없다
         // SVG는 기본값으로 100% 크기에서 한 번만 래스터화된다 — 확대하면 PNG처럼 깨진다.
         // 연속 래스터화를 켜야 배율마다 벡터에서 다시 그린다. 이것이 벡터화의 목적 그 자체다.
         // 부작용: 이 스위치를 켠 레이어는 블렌딩 모드와 일부 이펙트가 무시된다(AE 제약).
@@ -627,15 +640,21 @@ function akBuildScene(manifestPath) {
         if (s.layers && s.layers.length) {
             for (var li = 0; li < s.layers.length; li++) {
                 var lay = s.layers[li];
-                var il = addLayerObj(proj, comp, lay, W, H);
+                // 레이어 하나가 어디서 실패하든 나머지는 들어와야 한다.
+                // 여기가 안 감싸여 있어 100씬이 배경 한 장만 남았다.
+                var il = null;
+                try { il = addLayerObj(proj, comp, lay, W, H); }
+                catch (eL) { log.push(pf + "레이어 실패 " + (lay.aeName || lay.name) + " — " + eL.toString()); continue; }
                 if (!il) { log.push(pf + "레이어 누락 " + (lay.aeName || lay.name)); continue; }
-                il.name = lay.aeName || lay.name;
-                il.inPoint = t0; il.outPoint = t1;
-                il.parent = guide;
-                if (lay.moves) { applyMoves(comp, il, lay, t0, dur, W, H, fps); }
-                var top = il;                             // 까딱까딱 널이 끼면 그 널이 가이드의 자식
-                while (top.parent && top.parent !== guide) { top = top.parent; }
-                if (top !== guide && !top.parent) { top.parent = guide; }
+                try {
+                    il.name = lay.aeName || lay.name;
+                    il.inPoint = t0; il.outPoint = t1;
+                    il.parent = guide;
+                    if (lay.moves) { applyMoves(comp, il, lay, t0, dur, W, H, fps); }
+                    var top = il;                         // 까딱까딱 널이 끼면 그 널이 가이드의 자식
+                    while (top.parent && top.parent !== guide) { top = top.parent; }
+                    if (top !== guide && !top.parent) { top.parent = guide; }
+                } catch (eA) { log.push(pf + "레이어 배치 실패 " + (lay.aeName || lay.name) + " — " + eA.toString()); }
             }
         }
         // 도해의 라벨·기호·도장 — AE 텍스트 레이어로 올린다. 이미지에 구워

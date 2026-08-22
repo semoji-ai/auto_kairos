@@ -154,6 +154,10 @@ def _scene_layers(proj_dir: Path, layer_rels: list, sid: str = "", scene_width: 
                  "kind": "bg" if is_bg else "element"}
         if has_svg:
             entry["vector"] = True
+            # **SVG 가 안 들어올 때를 대비해 PNG 를 함께 준다.** 애프터이펙트가
+            # SVG 하나를 거부하면 그 씬 빌드가 통째로 멈춰, 배경만 들어오고
+            # 나머지는 사라진다(100씬이 그랬다). 한 장이 실패해도 그림은 나와야 한다.
+            entry["fallback"] = _abs(proj_dir, r)
         placed = False
         if not is_bg:
             bbox = (specs.get(stem) or {}).get("bbox")

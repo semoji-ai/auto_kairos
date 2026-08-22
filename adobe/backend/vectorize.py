@@ -111,6 +111,13 @@ def vectorize_layers(proj_dir, sid: str, stems: list, *, subdir: str = "layers",
         try:
             data = vectorize_png(png_path)
             svg_path.write_bytes(data)
+            # 받은 그대로 두면 무겁다. 좌표 자릿수를 줄이고 군더더기를 걷는다 —
+            # 배경 한 장이 512KB 였고, AE 에서 연속 래스터화를 켜면 배율마다
+            # 그걸 다시 그리므로 눈에 띄게 느려진다.
+            r = slim_svg_file(svg_path)
+            if on_event and r.get("saved"):
+                on_event({"layer": stem, "status": "slim",
+                          "before": r["before"], "after": r["after"]})
         except Exception as e:
             # 예상 외 예외도 한 장의 실패로 처리 (다음 레이어 계속)
             # 예외 타입을 메시지에 포함해 원인 추적 가능하게
@@ -123,3 +130,66 @@ def vectorize_layers(proj_dir, sid: str, stems: list, *, subdir: str = "layers",
         if on_event:
             on_event({"layer": stem, "status": "completed"})
     return {"ok": ok, "skipped": skipped, "failed": failed}
+
+
+# ---- SVG 다이어트 -------------------------------------------------------
+#
+# 리크래프트가 돌려주는 SVG 는 좌표를 소수 셋째 자리까지 적는다. 배경 한 장이
+# path 924개 · 숫자 55,000개 · **512KB** 였고, 애프터이펙트에서 연속 래스터화를
+# 켜면 배율마다 이걸 다시 그리므로 눈에 띄게 무거워진다.
+#
+# 벡터의 값어치는 확대해도 안 깨지는 것이지 소수점 셋째 자리가 아니다.
+# viewBox 2048 폭을 1792 로 그리므로 **1 단위가 화면에서 0.9px** 다 —
+# 소수 첫째 자리면 0.09px, 눈으로 볼 수 없다.
+#
+# 1 미만 값은 3자리를 남긴다. 그래디언트 정지점(offset)과 불투명도가 거기 있어
+# 반올림하면 색이 튄다.
+
+def _round_num(m, precision: int) -> str:
+    v = float(m.group(0))
+    p = precision if abs(v) >= 1 else 3
+    s = f"{v:.{p}f}".rstrip("0").rstrip(".")
+    return s or "0"
+
+
+def _compact_path(d: str) -> str:
+    """`d` 안의 없어도 되는 구분자를 뺀다. **파일의 85%가 여기다.**
+
+        M 631.6 525.8 L 660.2 526.1   →   M631.6 525.8L660.2 526.1
+
+    · 명령 글자 뒤의 공백은 필요 없다
+    · 음수 앞의 공백도 필요 없다 — 마이너스가 곧 구분자다
+    문법은 그대로라 모양이 바뀌지 않는다.
+    """
+    import re as _re
+    d = _re.sub(r"\s+", " ", d).strip()
+    d = _re.sub(r"([MmLlHhVvCcSsQqTtAaZz])\s+", r"\1", d)
+    d = _re.sub(r"\s+([-.])", r"\1", d)
+    return d
+
+
+def slim_svg(text: str, *, precision: int = 1) -> str:
+    """좌표 자릿수를 줄이고 군더더기 공백을 걷는다. 모양은 그대로다."""
+    import re as _re
+    out = _re.sub(r"-?\d+\.\d+", lambda m: _round_num(m, precision), text)
+    out = _re.sub(r'd="([^"]*)"', lambda m: 'd="' + _compact_path(m.group(1)) + '"', out)
+    out = _re.sub(r">\s+<", "><", out)          # 태그 사이 들여쓰기
+    out = _re.sub(r"[ \t]{2,}", " ", out)
+    out = _re.sub(r"\s*\n\s*", "", out)
+    return out.strip()
+
+
+def slim_svg_file(path, *, precision: int = 1) -> dict:
+    """파일을 제자리에서 줄인다. 커지면 되돌린다(그럴 일은 없지만 확인은 싸다)."""
+    p = Path(path)
+    before = p.stat().st_size
+    try:
+        new = slim_svg(p.read_text(encoding="utf-8"), precision=precision)
+    except Exception as e:
+        return {"ok": False, "error": f"{type(e).__name__}: {e}"}
+    data = new.encode("utf-8")
+    if len(data) >= before:
+        return {"ok": True, "before": before, "after": before, "saved": 0}
+    p.write_bytes(data)
+    return {"ok": True, "before": before, "after": len(data),
+            "saved": before - len(data)}
