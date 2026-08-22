@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -51,6 +52,26 @@ def cli() -> str | None:
     return shutil.which("higgsfield") or shutil.which("hf")
 
 
+def _account_env(need: float | None = None) -> tuple:
+    """쓸 계정을 고른다. 반환 (환경, 계정이름|None).
+
+    구독을 여러 개 두면 크레딧이 계정마다 따로 들어온다. CLI 는 계정을 하나만
+    기억하므로, 잔액이 떨어지면 사람이 로그아웃하고 다시 로그인해야 했다 —
+    26편을 돌리다 한 편 만에 `not_enough_credits` 로 멈춘 적이 있다.
+    등록된 계정 중 잔액이 넉넉한 쪽을 골라 그 집(HOME)으로 CLI 를 돌린다.
+    """
+    try:
+        from backend import hf_accounts as acc
+    except Exception:
+        return dict(os.environ), None
+    if not acc.names():
+        return dict(os.environ), None
+    name = acc.pick(need or 0)
+    if not name:
+        return dict(os.environ), None
+    return acc.env_for(name), name
+
+
 def upload(path: Path, *, timeout: int = 300) -> str | None:
     """이미지를 먼저 올리고 UUID 를 받는다.
 
@@ -69,8 +90,11 @@ def upload(path: Path, *, timeout: int = 300) -> str | None:
     if not exe:
         return None
     try:
+        # **업로드는 생성과 같은 계정이어야 한다.** 계정이 다르면 그 UUID 를
+        # 못 찾아 「UUID 도 파일도 아니다」로 떨어진다.
+        env, _ = _account_env(0)
         p = subprocess.run([exe, "upload", "create", str(path), "--json"],
-                           capture_output=True, text=True,
+                           capture_output=True, text=True, env=env,
                            stdin=subprocess.DEVNULL, timeout=timeout)
         if p.returncode != 0:
             return None
@@ -235,12 +259,35 @@ def generate(proj_dir: Path, job_type: str, params: dict, *,
         return {"status": "failed",
                 "error": "이미지 업로드 실패: " + ", ".join(failed_up)}
 
+    # 잔액이 넉넉한 계정으로 돌린다(등록된 것이 있을 때만).
+    need = 0.0
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True,
+        need = float(params.get("duration") or 0) * 4
+    except (TypeError, ValueError):
+        pass
+    env, acct = _account_env(need)
+    if acct and on_line:
+        on_line(f"· 계정 {acct} 로 돌립니다")
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, env=env,
                               stdin=subprocess.DEVNULL, timeout=timeout + 120)
     except subprocess.TimeoutExpired:
         return {"status": "failed", "error": f"{timeout}초 초과"}
     log = (proc.stdout or "") + "\n" + (proc.stderr or "")
+    # 잔액 부족이면 다른 계정으로 한 번 더 — 잔액은 순간마다 바뀐다
+    if "not_enough_credits" in log:
+        try:
+            from backend import hf_accounts as acc_mod
+            alt = acc_mod.pick(need, exclude={acct} if acct else None)
+        except Exception:
+            alt = None
+        if alt:
+            if on_line:
+                on_line(f"· 잔액 부족 — 계정 {alt} 로 다시 시도합니다")
+            proc = subprocess.run(cmd, capture_output=True, text=True,
+                                  env=acc_mod.env_for(alt),
+                                  stdin=subprocess.DEVNULL, timeout=timeout + 120)
+            log = (proc.stdout or "") + "\n" + (proc.stderr or "")
     if on_line:
         for ln in log.splitlines():
             if ln.strip():
