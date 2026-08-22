@@ -258,30 +258,53 @@ def generate(proj_dir: Path, job_type: str, params: dict, *,
     return out
 
 
+_VID_EXT = (".mp4", ".mov", ".webm", ".m4v")
+_IMG_EXT = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif")
+
+
 def _result_urls(stdout: str) -> list:
-    """JSON 응답에서 결과 URL 을 긁는다. 응답 모양이 판마다 조금씩 다르다."""
+    """JSON 응답에서 **비디오** URL 을 긁는다. 응답 모양이 판마다 조금씩 다르다.
+
+    ⚠️ **아무 `url` 이나 집으면 안 된다.** 전에는 키에 "url" 이 들어가면
+    무엇이든 담았는데, 응답에는 미리보기 이미지와 넣어 준 시작 이미지의
+    주소도 함께 온다. 그것이 먼저 걸려 **PNG 를 받아 `.mp4` 로 저장했고**,
+    씬에는 비디오가 달렸는데 재생이 안 됐다(1792×1024 PNG 였다).
+
+    확장자가 비디오인 것 → 키에 video 가 든 것 순으로 고르고, 그림 확장자는
+    아예 뺀다. 하나도 못 고르면 빈 목록을 돌려 **실패로 드러낸다** —
+    엉뚱한 파일을 받아 두는 것보다 낫다.
+    """
     import re
     try:
         d = json.loads(stdout)
     except Exception:
         # JSON 이 아니면 본문에서 URL 을 집는다 — 실패로 떨어뜨리기 전에 해 본다
-        return re.findall(r"https?://\S+\.(?:mp4|mov|webm)", stdout)
-    found: list = []
+        return list(dict.fromkeys(re.findall(r"https?://\S+\.(?:mp4|mov|webm|m4v)", stdout)))
 
-    def walk(x):
+    strong: list = []       # 확장자가 비디오
+    weak: list = []         # 키 이름이 video 계열
+
+    def _base(u: str) -> str:
+        return u.split("?", 1)[0].split("#", 1)[0].lower()
+
+    def walk(x, key=""):
         if isinstance(x, dict):
             for k, v in x.items():
-                if isinstance(v, str) and v.startswith("http") and (
-                        "url" in k.lower() or v.endswith((".mp4", ".mov", ".webm"))):
-                    found.append(v)
-                else:
-                    walk(v)
+                walk(v, k)
         elif isinstance(x, list):
             for v in x:
-                walk(v)
+                walk(v, key)
+        elif isinstance(x, str) and x.startswith("http"):
+            b = _base(x)
+            if b.endswith(_VID_EXT):
+                strong.append(x)
+            elif b.endswith(_IMG_EXT):
+                return                      # 미리보기·입력 그림은 결과가 아니다
+            elif "video" in key.lower() or "video" in b:
+                weak.append(x)
 
     walk(d)
-    return list(dict.fromkeys(found))
+    return list(dict.fromkeys(strong or weak))
 
 
 def download(url: str, out: Path, *, timeout: int = 600) -> dict:
@@ -290,7 +313,20 @@ def download(url: str, out: Path, *, timeout: int = 600) -> dict:
     out.parent.mkdir(parents=True, exist_ok=True)
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r, open(out, "wb") as f:
+            ctype = (r.headers.get("Content-Type") or "").lower()
             shutil.copyfileobj(r, f)
     except Exception as e:
         return {"status": "failed", "error": f"내려받기 실패: {e}"}
+
+    # **비디오가 아니면 받아 두지 않는다.** 그림을 `.mp4` 로 저장해 두면 씬에는
+    # 비디오가 달린 것처럼 보이고 재생만 안 된다 — 무엇이 잘못됐는지 알 수 없다.
+    head = out.read_bytes()[:16] if out.is_file() else b""
+    is_mp4 = head[4:8] in (b"ftyp",)                 # ISO BMFF (mp4·mov·m4v)
+    is_webm = head[:4] == b"\x1a\x45\xdf\xa3"        # Matroska/WebM
+    if not (is_mp4 or is_webm):
+        bad = out.with_suffix(out.suffix + ".notvideo")
+        out.replace(bad)                             # 지우지 않고 옆으로 치운다
+        return {"status": "failed",
+                "error": f"비디오가 아닙니다 (Content-Type: {ctype or '불명'}). "
+                         f"받은 것은 {bad.name} 에 남겨 두었습니다"}
     return {"status": "completed", "path": str(out)}

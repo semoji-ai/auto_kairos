@@ -481,6 +481,14 @@ function renderRow(s, dir) {
     // 이미지 미리보기 + 레이어 썸네일(클릭=씬 위에 빨간 윤곽선 오버레이)
     + '  <div class="col-img">'
     +      (s._image ? '<button class="unlink-img" data-scene="' + n + '" title="씬 이미지 링크 해제">✕</button>' : '')
+    /* 비디오는 **미리보기 자리에서 바꿔 본다.** 아래에 따로 플레이어를 두면
+       같은 씬 미리보기가 둘이 되어 자리만 잡아먹는다. 🎞 를 누르면 그림 위에
+       비디오가 덮이고, 다시 누르면 그림으로 돌아온다. */
+    +      (s.videoRef
+        ? ('<button class="vid-toggle" data-scene="' + n + '" '
+           + 'data-src="' + _esc("file://" + dir + "/" + s.videoRef) + '" '
+           + 'title="' + _esc(String(s.videoRef).split("/").pop()) + '">🎞 영상</button>')
+        : '')
     + '    <div class="img-wrap">' + media + '</div>'
     /* 후보 판본 — 씬마다 여러 판을 쌓아 두고 하나를 고르는 구조인데
        패널에는 고른 것만 보였다. 눌러서 바로 되돌릴 수 있게 띠로 깐다. */
@@ -522,15 +530,6 @@ function renderRow(s, dir) {
     +        '</div>'
     +      '</div>'
     + (chars ? '<div class="work-chars">👤 ' + _esc(chars) + '</div>' : '')
-    /* 만든 비디오를 씬에서 바로 본다. `videoRef` 만 적히고 볼 자리가 없어
-       「생성은 됐는데 어디서 확인하느냐」가 됐다. TTS 플레이어와 같은 자리다. */
-    +      (s.videoRef
-        ? ('<div class="vid-player">'
-           + '<video class="vid-el" controls preload="metadata" '
-           +   'src="file://' + dir + '/' + s.videoRef + '"></video>'
-           + '<div class="vid-name">🎞 ' + _esc(String(s.videoRef).split("/").pop()) + '</div>'
-           + '</div>')
-        : '')
     +      (s._audio
         ? ('<div class="tts-player">'
            + '<button class="tts-play" title="재생/정지">▶</button>'
@@ -610,6 +609,33 @@ function bindRows(scope) {
   var vboxes = scope.querySelectorAll(".img-vers");
   if (vboxes.length === 1) { _loadVersions(vboxes[0]); }
   else if (vboxes.length) { _loadVersionsAll(vboxes); }
+
+  /* 🎞 영상 — 미리보기 자리에서 그림 ↔ 비디오를 오간다.
+     비디오를 새로 만들지 않고 `<video>` 를 그림 위에 덮었다 걷는다.
+     떠날 때는 반드시 멈춘다 — 안 그러면 다른 씬을 보는데 소리가 계속 난다. */
+  var vt = scope.querySelectorAll("button.vid-toggle");
+  for (var vq = 0; vq < vt.length; vq++) {
+    vt[vq].addEventListener("click", function (ev) {
+      ev.stopPropagation();                       // 확대 보기가 같이 뜨지 않게
+      var col = this.closest(".col-img");
+      var wrap = col && col.querySelector(".img-wrap");
+      if (!wrap) return;
+      var have = wrap.querySelector("video.vid-el");
+      if (have) {                                  // 이미 영상 → 그림으로 되돌린다
+        have.pause();
+        wrap.innerHTML = wrap.getAttribute("data-img-html") || "";
+        wrap.removeAttribute("data-img-html");
+        this.classList.remove("on");
+        this.textContent = "🎞 영상";
+        return;
+      }
+      wrap.setAttribute("data-img-html", wrap.innerHTML);
+      wrap.innerHTML = '<video class="vid-el" controls autoplay preload="metadata" src="'
+                     + this.getAttribute("data-src") + '"></video>';
+      this.classList.add("on");
+      this.textContent = "🖼 그림";
+    });
+  }
 
   var un = scope.querySelectorAll("button.unlink-img");
   for (var u = 0; u < un.length; u++) {

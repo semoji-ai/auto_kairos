@@ -476,19 +476,38 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         # **씬마다 따로 물으면 142번 왕복한다.** `sceneNumber` 를 빼고 부르면
         # 전부 한 번에 돌려준다 — 시트를 열 때 그렇게 쓴다. 저장소는 한 번만
         # 훑고 sceneId 로 나눈다.
+        # **파일 이름에서 씬을 되짚지 않는다.** 한 폴더에 이름 규칙이 둘이라
+        # 이름을 자르는 방식으로는 같은 씬으로 묶이지 않는다.
+        #
+        #     가져온 것    sb_<sid>.png · sb_<sid>_v2.png
+        #     새로 그린 것  scene_<sid>_<난수6>.png
+        #
+        # 앞의 규칙만 보고 `sb_` 를 떼고 `_v` 앞을 잘랐더니 새로 그린 것이
+        # 저 혼자 다른 묶음이 됐다 — 다시 그려도 **이전 판본이 후보로 안 떴다.**
+        # 씬 ID 를 먼저 모아 두고 파일 이름이 그것을 품고 있는지로 가른다.
         import re as _re
         sb = proj_dir / "storyboard"
+        sids = [s.get("sceneId") for s in (data.get("scenes") or []) if s.get("sceneId")]
+        sids.sort(key=len, reverse=True)          # 긴 것부터 — 짧은 ID 가 먼저 걸리지 않게
         by_sid: dict = {}
         if sb.is_dir():
             for f in sb.iterdir():
                 if f.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp"):
                     continue
+                sid = next((x for x in sids if x in f.stem), None)
+                if not sid:
+                    continue
                 m = _re.search(r"_v(\d+)\.", f.name)
-                by_sid.setdefault(f.stem.replace("sb_", "").split("_v")[0], []).append(
+                try:
+                    mtime = f.stat().st_mtime
+                except OSError:
+                    mtime = 0.0
+                by_sid.setdefault(sid, []).append(
                     {"rel": f.relative_to(proj_dir).as_posix(), "name": f.name,
-                     "ver": int(m.group(1)) if m else 1})
+                     "ver": int(m.group(1)) if m else 1, "mtime": mtime})
+        # `_v` 번호가 없는 판본(새로 그린 것)은 만든 시각으로 줄을 세운다.
         for v in by_sid.values():
-            v.sort(key=lambda x: (x["ver"], x["name"]))
+            v.sort(key=lambda x: (x["ver"], x["mtime"], x["name"]))
 
         def _one(scene):
             sid = scene.get("sceneId") or ""
