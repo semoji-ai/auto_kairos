@@ -288,7 +288,7 @@ def slim_svg_file(path, *, precision: int = 1) -> dict:
 # 로 들여와 배율로 키우는 편이 애프터이펙트에 가볍다 — 다만 매니페스트가
 # 그만큼 배율을 곱해 줘야 자리가 맞는다(`vectorDivisor` 로 함께 내보낸다).
 
-def normalize_svg(text: str, *, divisor: int = 1) -> tuple:
+def normalize_svg(text: str, *, divisor: int = 1, target=None) -> tuple:
     """viewBox 를 선언 크기(÷divisor)에 맞춘다. 반환 (새 텍스트, (w, h)).
 
     **좌표를 직접 곱하면 안 된다.** 처음에 본문의 모든 숫자에 배율을 곱했더니
@@ -308,7 +308,18 @@ def normalize_svg(text: str, *, divisor: int = 1) -> tuple:
     vx, vy, vw, vh = (float(mv.group(i)) for i in range(1, 5))
     if vw <= 0 or vh <= 0 or dw <= 0 or dh <= 0:
         return text, None
-    tw, th = dw / max(1, divisor), dh / max(1, divisor)
+    # **정수로 만든다.** 애프터이펙트 footage 는 정수 픽셀이어야 한다 —
+    # 179.2 x 102.4 로 내보냈더니 SVG 4장이 통째로 안 들어왔다.
+    # sx·sy 를 따로 두므로 반올림해도 비는 선언 크기에 정확히 맞는다.
+    #
+    # `target` 을 주면 그 크기로 맞춘다. **두 번 돌려도 같은 결과여야 한다** —
+    # 지금 선언 크기를 다시 나누면 돌릴 때마다 작아진다. 호출자는 PNG 픽셀
+    # 크기를 기준으로 주므로 몇 번을 돌려도 결과가 같다.
+    if target:
+        tw, th = max(1, int(round(target[0]))), max(1, int(round(target[1])))
+    else:
+        tw = max(1, int(round(dw / max(1, divisor))))
+        th = max(1, int(round(dh / max(1, divisor))))
     sx, sy = tw / vw, th / vh
 
     head_end = text.index(">") + 1
@@ -316,18 +327,29 @@ def normalize_svg(text: str, *, divisor: int = 1) -> tuple:
     close = body.rindex("</svg>")
     inner, tail = body[:close], body[close:]
 
-    head = _re.sub(r'\swidth="[\d.]+"', f' width="{tw:g}"', head)
-    head = _re.sub(r'\sheight="[\d.]+"', f' height="{th:g}"', head)
-    head = _re.sub(r'viewBox="[^"]*"', f'viewBox="0 0 {tw:g} {th:g}"', head)
+    head = _re.sub(r'\swidth="[\d.]+"', f' width="{tw}"', head)
+    head = _re.sub(r'\sheight="[\d.]+"', f' height="{th}"', head)
+    head = _re.sub(r'viewBox="[^"]*"', f'viewBox="0 0 {tw} {th}"', head)
     g = f'<g transform="matrix({sx:.6g},0,0,{sy:.6g},{-vx * sx:.6g},{-vy * sy:.6g})">'
     return head + g + inner + "</g>" + tail, (tw, th)
 
 
-def normalize_svg_file(path, *, divisor: int = 1) -> dict:
+def normalize_svg_file(path, *, divisor: int = 1, png_path=None) -> dict:
+    """PNG 픽셀 크기 ÷ divisor 를 목표로 맞춘다. 여러 번 돌려도 결과가 같다."""
     p = Path(path)
     before = p.stat().st_size
+    target = None
+    src = Path(png_path) if png_path else p.with_suffix(".png")
+    if src.is_file():
+        try:
+            from PIL import Image
+            with Image.open(src) as im:
+                target = (im.size[0] / max(1, divisor), im.size[1] / max(1, divisor))
+        except Exception:
+            target = None
     try:
-        new, size = normalize_svg(p.read_text(encoding="utf-8"), divisor=divisor)
+        new, size = normalize_svg(p.read_text(encoding="utf-8"),
+                                  divisor=divisor, target=target)
     except Exception as e:
         return {"ok": False, "error": f"{type(e).__name__}: {e}"}
     if size is None:
