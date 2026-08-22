@@ -312,6 +312,15 @@
        같은 씬 미리보기가 둘이 되어 자리만 잡아먹는다. */
     .sheet-row .col-img .vid-el { width:100%; aspect-ratio:16/9; border-radius:4px;
       background:#000; display:block; object-fit:contain; }
+    /* 세모지 도구상자 — 낱개 버튼 */
+    .tools-preset { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+    .tools-preset .mini-label { flex:0 0 52px; color:#9aa0a6; font-size:11px; }
+    .tools-preset .pbtn { width:auto; margin:0; padding:4px 9px; font-size:11px;
+      background:#2c2f36; border:1px solid #33363c; border-radius:5px; }
+    .tools-preset .pbtn:hover { background:#3a6df0; }
+    .tools-preset input { background:#23262b; color:#e6e6e6; border:1px solid #33363c;
+      border-radius:4px; padding:3px 5px; font-size:11px; }
+
     /* 레이어 고치기 모달 */
     #posePrompt { width:100%; box-sizing:border-box; background:#23262b; color:#e6e6e6;
       border:1px solid #33363c; border-radius:5px; padding:7px; font-size:12px;
@@ -626,21 +635,28 @@
           <label class="mini-label">널 끼우기</label>
           <button class="mini" id="insertNullBtn" title="선택한 레이어와 부모 사이에 널을 끼웁니다">선택 레이어에</button>
         </div>
-        <div class="tools-row">
-          <label class="mini-label">프리셋 적용</label>
-          <select id="presetSelect">
-            <option value="slide_in">slide_in — 밀어 등장</option>
-            <option value="fade_in">fade_in — 서서히</option>
-            <option value="pop">pop — 통통 등장</option>
-            <option value="stamp">stamp — 도장</option>
-            <option value="zoom_emphasis">zoom_emphasis — 강조</option>
-            <option value="shake">shake — 흔들림</option>
-            <option value="wiggle">wiggle — 위글</option>
-            <option value="drift">drift — 떠다님</option>
-            <option value="exit_fade">exit_fade — 퇴장</option>
-          </select>
-          <input type="text" id="presetAmt" placeholder="진폭(선택)" style="width:70px">
-          <button class="mini" id="presetApplyBtn" title="AE에서 선택한 레이어에 겁니다">선택 레이어에</button>
+        <!-- 세모지 도구상자 — AE 타임라인에서 고른 레이어에 바로 건다.
+             고르고 누르는 두 단계였는데, 낱개 버튼이 손이 덜 간다. -->
+        <div class="tools-row tools-preset">
+          <label class="mini-label">등장</label>
+          <button class="mini pbtn" data-preset="slide_in" title="옆에서 밀고 들어옵니다">밀어 등장</button>
+          <button class="mini pbtn" data-preset="fade_in" title="서서히 나타납니다">서서히</button>
+          <button class="mini pbtn" data-preset="pop" title="살짝 커졌다 제자리로">통통</button>
+          <button class="mini pbtn" data-preset="stamp" title="크게 찍히며 들어옵니다 — 판정을 얹을 때">도장</button>
+        </div>
+        <div class="tools-row tools-preset">
+          <label class="mini-label">움직임</label>
+          <button class="mini pbtn" data-preset="bob" title="발밑을 축으로 세로만 눌렀다 폅니다 — 인물 idle">까딱까딱</button>
+          <button class="mini pbtn" data-preset="drift" title="구간 내내 천천히 흘러갑니다">떠다님</button>
+          <button class="mini pbtn" data-preset="shake" title="좌우로 잦아들며 흔들립니다">흔들림</button>
+          <button class="mini pbtn" data-preset="wiggle" title="위치에 wiggle 식을 겁니다">위글</button>
+        </div>
+        <div class="tools-row tools-preset">
+          <label class="mini-label">강조·퇴장</label>
+          <button class="mini pbtn" data-preset="zoom_emphasis" title="살짝 다가갔다 돌아옵니다">줌 강조</button>
+          <button class="mini pbtn" data-preset="exit_fade" title="끝에서 사라집니다">퇴장</button>
+          <span class="mini-label">세기</span>
+          <input type="text" id="presetAmt" placeholder="기본값" style="width:56px">
         </div>
         <div id="toolsStatus" class="tools-status"></div>
       </div>
@@ -780,16 +796,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1313"></script>
-  <script src="js/nav.js?v=1313"></script>
-  <script src="js/planning.js?v=1313"></script>
+  <script src="js/main.js?v=1314"></script>
+  <script src="js/nav.js?v=1314"></script>
+  <script src="js/planning.js?v=1314"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1313"></script>
-  <script src="js/storyboard.js?v=1313"></script>
-  <script src="js/gallery.js?v=1313"></script>
-  <script src="js/genmodal.js?v=1313"></script>
-  <script src="js/assistant.js?v=1313"></script>
+  <script src="js/mapgen.js?v=1314"></script>
+  <script src="js/storyboard.js?v=1314"></script>
+  <script src="js/gallery.js?v=1314"></script>
+  <script src="js/genmodal.js?v=1314"></script>
+  <script src="js/assistant.js?v=1314"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>

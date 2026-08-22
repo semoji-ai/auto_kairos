@@ -1906,12 +1906,17 @@ function bindTools() {
   if (b1) b1.addEventListener("click", importSrtFile);
   var b2 = $("insertNullBtn");
   if (b2) b2.addEventListener("click", function () { _runTool("akInsertNull();"); });
-  var b3 = $("presetApplyBtn");
-  if (b3) b3.addEventListener("click", function () {
-    var t = $("presetSelect").value;
-    var a = $("presetAmt").value;
-    _runTool("akApplyPreset(" + JSON.stringify(t) + ", " + JSON.stringify(a) + ");");
-  });
+  // 낱개 버튼 — 누르면 그 프리셋을 AE 선택 레이어에 바로 건다
+  var pb = document.querySelectorAll("button.pbtn");
+  for (var pi = 0; pi < pb.length; pi++) {
+    pb[pi].addEventListener("click", function () {
+      var amtEl = $("presetAmt");
+      var a = amtEl ? amtEl.value : "";
+      _toolsSay(this.textContent + " 거는 중…");
+      _runTool("akApplyPreset(" + JSON.stringify(this.getAttribute("data-preset"))
+               + ", " + JSON.stringify(a) + ");");
+    });
+  }
 }
 
 document.addEventListener("DOMContentLoaded", bindTools);

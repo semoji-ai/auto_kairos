@@ -161,6 +161,36 @@ function akApplyPreset(type, amount) {
                     } catch (eEz) { }
                     var ot = il.property("Opacity");
                     ot.setValueAtTime(t0, 0); ot.setValueAtTime(hit, 100);
+                } else if (type === "bob") {
+                    // 까딱까딱 — **발밑을 축으로 세로만 눌렀다 편다.**
+                    // 조립할 때 인물 레이어에 자동으로 붙는 것과 같은 방식이다.
+                    // 위치를 흔드는 wiggle·shake 와는 다르다 — 발이 땅에 붙어 있다.
+                    var bAmt = amt || 3;
+                    var rc = il.sourceRectAtTime(t0, false);
+                    // 발밑(불투명 영역 하단 중앙)을 컴프 좌표로 — 앵커 기준 오프셋을 더한다
+                    var ap = il.property("Anchor Point").value;
+                    var sc = il.property("Scale").value;
+                    var footX = P[0] + (rc.left + rc.width / 2 - ap[0]) * sc[0] / 100;
+                    var footY = P[1] + (rc.top + rc.height - ap[1]) * sc[1] / 100;
+                    var prevP = il.parent;
+                    il.parent = null;
+                    var nb = comp.layers.addNull();
+                    nb.name = il.name + "_피벗";
+                    nb.property("Position").setValue([footX, footY]);
+                    nb.inPoint = il.inPoint; nb.outPoint = il.outPoint;
+                    il.parent = nb;                        // AE 가 월드 변환을 보존하며 붙인다
+                    if (prevP) { nb.parent = prevP; }
+                    nb.moveAfter(il);
+                    var bs = nb.property("Scale");
+                    var half = 0.6;                        // 반주기 0.6초
+                    bs.setValueAtTime(t0, [100, 100]);
+                    bs.setValueAtTime(Math.min(il.outPoint, t0 + half), [100, 100 + bAmt]);
+                    try {
+                        var ezb = new KeyframeEase(0, 33.34);
+                        bs.setTemporalEaseAtKey(1, [ezb, ezb], [ezb, ezb]);
+                        bs.setTemporalEaseAtKey(2, [ezb, ezb], [ezb, ezb]);
+                    } catch (eB) { }
+                    try { bs.expression = 'loopOut("pingpong")'; } catch (eE) { }
                 } else if (type === "wiggle") {
                     var wa = amt || 8;
                     il.property("Position").expression = "wiggle(1, " + wa + ")";
