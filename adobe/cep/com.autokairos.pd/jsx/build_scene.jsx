@@ -408,15 +408,24 @@ function akBuildScene(manifestPath) {
     // 레이어 추가. layer.position 있으면 그 좌표·스케일로(크롭된 요소), 없으면 컴프 채움·중앙(풀프레임/배경).
     // 자동 효과(페이드 등)는 넣지 않는다 — 모든 모션은 모션 플랜(applyMoves)에서만(규칙 기반).
     // 같은 파일이 이미 프로젝트에 있으면 그것을 쓴다(중복 임포트 방지).
-    function akFindFootage(proj, fsName) {
+    //
+    // **이름으로도 찾는다.** SVG 는 컴프로 들어오는데, 그 컴프에는 원본 파일이
+    // 매달려 있지 않아 경로로는 못 찾는다. 게다가 임포트가 그 호출 안에서
+    // 끝나지 않아, 넣은 직후에는 프로젝트에서 보이지도 않는다 — 넣기는
+    // 넣었는데 스크립트는 못 보고 PNG 로 넘어가는 상태가 그것이다.
+    // 파일 이름과 같은 이름의 항목을 먼저 찾으면, 한 번 들어와 있는 SVG 를
+    // 다음 실행에서 그대로 쓸 수 있다.
+    function akFindFootage(proj, fsName, baseName) {
+        var byName = null;
         for (var i = 1; i <= proj.numItems; i++) {
             var it = proj.item(i);
             if (it instanceof FootageItem && it.mainSource
                 && it.mainSource.file && it.mainSource.file.fsName === fsName) {
-                return it;
+                if (akUsable(it)) { return it; }
             }
+            if (baseName && it.name === baseName && akUsable(it)) { byName = byName || it; }
         }
-        return null;
+        return byName;
     }
 
     // 이 항목을 화면에 쓸 수 있는가. **크기가 있어야 하고, 소재가 살아 있어야 한다.**
@@ -459,7 +468,7 @@ function akBuildScene(manifestPath) {
         if (!f.exists) { note.push("파일 없음"); return null; }
         // **이미 들여온 것이 있으면 다시 안 들여온다.** 레이어를 지우지 않게
         // 바꾼 뒤로 임포트를 누를 때마다 프로젝트 항목이 같이 쌓인다.
-        var already = akFindFootage(proj, f.fsName);
+        var already = akFindFootage(proj, f.fsName, f.name);
         if (already) { return already; }
         var had = proj.numItems;
         var foot = null;
@@ -475,6 +484,8 @@ function akBuildScene(manifestPath) {
                 if (foot) { break; }
             }
         }
+        // 그래도 없으면 이름으로 한 번 더 — 임포트가 늦게 끝나는 경우가 있다
+        if (!foot) { foot = akFindFootage(proj, f.fsName, f.name); }
         if (!foot) { note.push("가져왔으나 쓸 수 있는 항목이 없음(빈 항목/자리표시자)"); return null; }
         return foot;
     }
@@ -492,6 +503,14 @@ function akBuildScene(manifestPath) {
         if (!foot) {
             if (log) { log.push("가져오기 실패 " + (layer.aeName || layer.name) + " — " + note.join("/")); }
             return null;
+        }
+        // **무엇을 얹었는지 남긴다.** SVG 가 프로젝트에는 컴프로 잘 들어오는데
+        // Final 에서는 빈 화면이라, 얹은 것이 그 컴프가 맞는지부터 확인해야 한다.
+        if (log) {
+            var kind = (foot instanceof CompItem) ? "컴프"
+                     : (foot instanceof FootageItem) ? "푸티지" : "기타";
+            var extra = (foot instanceof CompItem) ? (", 안에 " + foot.numLayers + "장") : "";
+            log.push("얹음 [" + kind + "] " + foot.name + " " + foot.width + "x" + foot.height + extra);
         }
         var il = comp.layers.add(foot);
         if (usedFallback) {

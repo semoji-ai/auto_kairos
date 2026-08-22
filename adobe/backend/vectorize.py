@@ -84,6 +84,9 @@ VECTORIZE_MAX_W = int(os.environ.get("AK_VECTORIZE_MAX_W", "0"))
 # 확인하고, 그래도 안 되면 AK_VECTORIZE_DIVISOR=1 로 되돌린다.
 VECTORIZE_DIVISOR = max(1, int(os.environ.get("AK_VECTORIZE_DIVISOR", "10")))
 
+# 정규화를 아예 끄고 리크래프트 산출 그대로 두기 — 문제를 가를 때 쓴다.
+VECTORIZE_NORMALIZE = os.environ.get("AK_VECTORIZE_NORMALIZE", "1") != "0"
+
 
 def _downscaled(src: Path, max_w: int) -> tuple:
     """가로가 상한을 넘으면 줄인 바이트를 돌려준다. (바이트, 원래크기, 넣은크기)"""
@@ -179,7 +182,8 @@ def vectorize_layers(proj_dir, sid: str, stems: list, *, subdir: str = "layers",
             # **좌표계를 먼저 맞춘다.** 리크래프트 SVG 는 선언 크기와 viewBox 가
             # 달라(582x850 인데 viewBox 는 1402x2048), AE 가 어느 쪽을 footage
             # 크기로 읽느냐에 따라 배치가 2.4배 어긋난다.
-            normalize_svg_file(svg_path, divisor=VECTORIZE_DIVISOR)
+            if VECTORIZE_NORMALIZE:
+                normalize_svg_file(svg_path, divisor=VECTORIZE_DIVISOR)
             r = slim_svg_file(svg_path)
             if on_event and r.get("saved"):
                 on_event({"layer": stem, "status": "slim",
