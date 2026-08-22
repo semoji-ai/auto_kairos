@@ -419,11 +419,30 @@ function akBuildScene(manifestPath) {
         return null;
     }
 
+    // 이 항목을 화면에 쓸 수 있는가. **크기가 있어야 하고, 소재가 살아 있어야 한다.**
+    // 없는 파일 자리표시자나 내용을 못 읽은 빈 항목이 그대로 얹히면, 이름만 있는
+    // 빈 레이어가 된다 — SVG 를 넣었을 때 실제로 그렇게 나왔다.
+    function akUsable(item) {
+        if (!item) { return false; }
+        try {
+            if (!(item.width > 0 && item.height > 0)) { return false; }
+            if (item instanceof FootageItem) {
+                if (item.footageMissing) { return false; }
+                if (item.mainSource instanceof PlaceholderSource) { return false; }
+                if (item.mainSource instanceof SolidSource) { return false; }
+            }
+            if (item instanceof CompItem && item.numLayers === 0) { return false; }
+        } catch (e) { return false; }
+        return true;
+    }
+
     // 폴더로 들어온 경우 그 안에서 쓸 수 있는 것을 찾는다.
     // SVG·일러스트레이터 파일은 「컴프 + 소재 폴더」로 들어오는 일이 있다.
     function akPickAV(item) {
         if (!item) { return null; }
-        if (item instanceof CompItem || item instanceof FootageItem) { return item; }
+        if (item instanceof CompItem || item instanceof FootageItem) {
+            return akUsable(item) ? item : null;
+        }
         if (item instanceof FolderItem) {
             for (var i = 1; i <= item.numItems; i++) {
                 var got = akPickAV(item.item(i));
@@ -456,7 +475,7 @@ function akBuildScene(manifestPath) {
                 if (foot) { break; }
             }
         }
-        if (!foot) { note.push("가져왔으나 쓸 수 있는 항목이 없음"); return null; }
+        if (!foot) { note.push("가져왔으나 쓸 수 있는 항목이 없음(빈 항목/자리표시자)"); return null; }
         return foot;
     }
 
