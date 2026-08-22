@@ -1281,7 +1281,7 @@ function _renderLayerPane(n, els, err, dropped) {
      체크를 바꾸면 여기도 따라 바뀌고, 손으로 고치면 고친 것이 그대로 나간다. */
   html += '<div class="lp-prompt-wrap">'
         +   '<div class="lp-prompt-lab">씨드림 5.0 프롬프트 '
-        +     '<span class="lp-prompt-hint">이대로 나갑니다 — 고쳐도 됩니다</span>'
+        +     '<span class="lp-prompt-hint">나눌 레이어 이름만, 쉼표로 — 고쳐도 됩니다</span>'
         +     '<button class="mini lp-prompt-reset" type="button">되돌리기</button>'
         +   '</div>'
         +   '<textarea class="lp-prompt" rows="4"></textarea>'
@@ -1320,11 +1320,8 @@ function _syncLayerPrompt(n, pane) {
     var en = e && (e.name_en || "").trim();
     if (en) names.push(en);
   }
-  ta.value = names.length
-    ? ("Separate this illustration into transparent layers. "
-       + "Extract each of these as its own layer: " + names.join(", ") + ". "
-       + "Keep each element whole and in its original position.")
-    : (info.prompt || "");
+  // 이름만 나열한다 — 백엔드 build_layerize_prompt 와 같은 문자열이어야 한다
+  ta.value = names.length ? names.join(", ") : (info.prompt || "");
 }
 
 /* 씬당 요소 레이어 상한 — 배경 1장을 더해 최대 11레이어(백엔드 MAX_ELEMENTS와 같은 값). */

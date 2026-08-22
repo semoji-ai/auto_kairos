@@ -83,15 +83,16 @@ LAYERIZE_ENDPOINT = "https://fal.run/bytedance/seedream/v5/pro/layerize"
 
 
 def build_layerize_prompt(names: list) -> str:
-    """분리할 요소 이름을 영어로 나열한다.
+    """분리할 요소 이름을 영어로 나열한다. **이름만 적는다.**
 
     이 모델은 프롬프트에 적은 이름대로 쪼갠다 — 적지 않은 것은 배경에 남는다.
+    설명 문장을 앞뒤에 붙이던 것을 걷어냈다: 이 엔드포인트가 하는 일이 이미
+    「투명 레이어로 분리」라서 그 말을 되풀이할 이유가 없고, 문장이 섞이면
+    모델이 그 안의 낱말까지 요소로 읽을 여지가 생긴다.
+
     'background'는 절대 넣지 않는다: 넣으면 하늘·도로가 뚫린 배경 요소 레이어가
     한 장 더 오는데, 우리가 쓰는 배경은 z_index 0의 인페인팅된 판이다."""
-    joined = ", ".join(n for n in names if n)
-    return ("Separate this illustration into transparent layers. "
-            f"Extract each of these as its own layer: {joined}. "
-            "Keep each element whole and in its original position.")
+    return ", ".join(n for n in names if n)
 
 
 def layerize(image_path, names: list, *, prompt: str | None = None,
