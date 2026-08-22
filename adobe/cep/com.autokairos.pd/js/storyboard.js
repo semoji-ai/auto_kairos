@@ -238,7 +238,23 @@ function _previewHTML(s, dir) {
 document.addEventListener("DOMContentLoaded", function () {
   var b = document.getElementById("btnLoadSheet");
   if (b) b.addEventListener("click", function () { loadSheet(); });
+  var r = document.getElementById("btnRefreshSheet");
+  if (r) r.addEventListener("click", refreshSheet);
 });
+
+/* 새로고침 — **캐시까지 비우고** 시트를 다시 읽는다.
+   그냥 다시 읽기만 하면 소용없을 때가 있다: CEP(Chromium)는 `file://` 그림도
+   캐시해서, 파일이 바뀌어도 주소가 같으면 옛 그림을 그대로 보여 준다.
+   그래서 도장(IV_STAMP)을 올려 모든 그림 주소를 바꾼 뒤 다시 그린다. */
+function refreshSheet() {
+  IV_STAMP = IV_STAMP + 1;
+  var b = $("btnRefreshSheet");
+  if (b) { b.disabled = true; b.textContent = "새로고침 중…"; }
+  loadSheet();
+  setTimeout(function () {
+    if (b) { b.disabled = false; b.textContent = "↻ 새로고침"; }
+  }, 900);
+}
 
 function loadSheet() {
   if (!SELECTED_PROJECT) { $("sheet").textContent = "프로젝트를 먼저 선택하세요."; return; }
@@ -373,7 +389,7 @@ function renderLayerList(s, dir) {
     var m = meta[stem] || {};
     var isBg = m.kind === "bg";
     var kindLabel = isBg ? "배경" : (m.kind === "character" ? "인물" : "사물");
-    var thumb = '<img class="lyr" src="file://' + dir + '/' + rels[i] + '">';
+    var thumb = '<img class="lyr" src="file://' + dir + '/' + rels[i] + '?t=' + IV_STAMP + '">';
     var nameCell = '<span class="lyr-name" title="' + _esc(stem) + '">'
                  + _esc(m.name || stem) + '</span>'
                  + '<span class="lyr-kind">' + kindLabel + '</span>'
@@ -422,7 +438,7 @@ function renderComposite(s, dir) {
     var stem = _lyrStem(rels[i]);
     var m = meta[stem] || {};
     if (m.removed || m.hidden) continue;
-    var src = 'file://' + dir + '/' + rels[i];
+    var src = 'file://' + dir + '/' + rels[i] + '?t=' + IV_STAMP;
     if (m.kind === "bg" && !bgRel) {
       bgRel = src;
       continue;
