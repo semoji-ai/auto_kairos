@@ -52,7 +52,7 @@
     .sheet-row .col-num { color:#9aa0a6; font-size:12px; padding-top:2px; }
     .sheet-row .col-img { position:relative; }
     .sheet-row .col-img img.main { width:100%; border-radius:4px; display:block; }
-    .sheet-row .col-img .lyr { width:32px; height:auto; margin:3px 3px 0 0; border-radius:3px; }
+    .sheet-row .lyr { width:32px; height:auto; margin:3px 3px 0 0; border-radius:3px; }
     /* 컴프 미리보기 — 16:9 고정, jsx renderLayout 축소 미러 + 자막 오버레이 */
     .pv { position:relative; width:100%; aspect-ratio:16/9; border-radius:4px; overflow:hidden; }
     /* `cover` 는 화면을 꽉 채우려고 **잘라낸다.** 생성 이미지는 16:9 라
@@ -149,11 +149,16 @@
                   border:none; font-size:18px; cursor:pointer; }
     .col-img .img-wrap { cursor:zoom-in; }
 
-    .col-img .comp { position:relative; width:100%; line-height:0; }
-    .col-img .comp img.comp-bg { width:100%; height:auto; display:block; }
-    .col-img .comp img.comp-el { position:absolute; }
-    .col-img .comp img.comp-el.full { top:0; left:0; width:100%; }
+    /* 합성 미리보기 — 배경 그림이 높이를 정한다. **비율을 강제하지 말 것** —
+       요소는 컨테이너 기준 퍼센트로 놓이는데, 16:9 로 묶으면 배경(1792x1024,
+       =1.75)이 레터박스되어 요소 자리가 통째로 밀린다.
+       `.col-img` 밖(스크립트 칸)에서도 쓰이므로 범위만 푼다. */
+    .comp { position:relative; width:100%; line-height:0; }
+    .comp img.comp-bg { width:100%; height:auto; display:block; border-radius:4px; }
+    .comp img.comp-el { position:absolute; }
+    .comp img.comp-el.full { top:0; left:0; width:100%; }
     /* 레이어 목록 — 포토샵식 세로 리스트. 기본은 접힘(썸네일 띠). */
+    .col-script .lyr-head { margin-top:8px; padding-top:7px; border-top:1px solid #33363c; }
     .lyr-head { display:flex; align-items:center; gap:6px; margin-top:4px; font-size:11px; color:#aaa; }
     .lyr-head .lyr-toggle { width:auto; margin:0; padding:1px 5px; font-size:11px; }
     .lyr-head .lyr-vec-all, .lyr-head .lyr-vec-sel { width:auto; margin:0; padding:1px 6px; font-size:11px; }
@@ -773,16 +778,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1297"></script>
-  <script src="js/nav.js?v=1297"></script>
-  <script src="js/planning.js?v=1297"></script>
+  <script src="js/main.js?v=1298"></script>
+  <script src="js/nav.js?v=1298"></script>
+  <script src="js/planning.js?v=1298"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1297"></script>
-  <script src="js/storyboard.js?v=1297"></script>
-  <script src="js/gallery.js?v=1297"></script>
-  <script src="js/genmodal.js?v=1297"></script>
-  <script src="js/assistant.js?v=1297"></script>
+  <script src="js/mapgen.js?v=1298"></script>
+  <script src="js/storyboard.js?v=1298"></script>
+  <script src="js/gallery.js?v=1298"></script>
+  <script src="js/genmodal.js?v=1298"></script>
+  <script src="js/assistant.js?v=1298"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>

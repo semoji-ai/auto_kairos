@@ -494,10 +494,12 @@ function renderRow(s, dir) {
     ? ('<video class="vid-el" controls preload="metadata" src="file://'
        + dir + '/' + s.videoRef + '"></video>')
     : (mode === "layers" ? comp : _previewHTML(s, dir));
-  /* 레이어 보기에서는 목록을 펴 둔다 — 눈 아이콘으로 껐다 켜는 자리가
-     같은 화면에 있어야 「레이어 패널」이 된다. */
+  /* 레이어 목록은 **레이어 보기일 때만** 낸다. 늘 깔아 두면 이미지만 보고
+     싶을 때도 파일 이름이 줄줄이 붙어 행이 어수선하다.
+     자리는 **스크립트 칸 아래**다 — 좁은 이미지 칸에 넣었더니 목록이
+     칸 너비에 눌려 행이 통째로 늘어났다(112씬이 그랬다). */
   if (mode === "layers" && hasLayers && LYR_OPEN[n] === undefined) LYR_OPEN[n] = true;
-  var layerBlock = hasLayers
+  var layerBlock = (mode === "layers" && hasLayers)
     ? (_lyrHead(s) + (LYR_OPEN[n] ? renderLayerList(s, dir)
                                   : '<div class="lyr-strip">' + _lyrStrip(s, dir) + '</div>'))
     : "";
@@ -520,12 +522,12 @@ function renderRow(s, dir) {
     /* 후보 판본 — 씬마다 여러 판을 쌓아 두고 하나를 고르는 구조인데
        패널에는 고른 것만 보였다. 눌러서 바로 되돌릴 수 있게 띠로 깐다. */
     + '    <div class="img-vers" data-scene="' + n + '"></div>'
-    +      layerBlock
     + '  </div>'
     // 스크립트(나레이션)
     + '  <div class="col-script">'
     + '    <div class="row-title">' + _esc(s.title || "") + '</div>'
     + '    <textarea class="nar" data-scene="' + n + '" rows="3">' + _esc(s.narration || "") + '</textarea>'
+    +      layerBlock
     + '  </div>'
     // 작업 — 진행 점(●=완료) + 플레이어 + 상태(실행 버튼은 시트 상단 도구상자)
     + '  <div class="col-work">'
