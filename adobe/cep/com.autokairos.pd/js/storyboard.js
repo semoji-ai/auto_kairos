@@ -955,7 +955,10 @@ document.addEventListener("DOMContentLoaded", bindSheetToolbar);
 /* 단일 씬 행만 갱신 — 전체 loadSheet의 포커스 손실/스크롤 점프 방지.
    행 수가 변하는 구조 편집(add/del/split/merge)은 loadSheet 사용. */
 function refreshRow(n) {
-  fetch(BACKEND + "/api/scenes?project_id=" + encodeURIComponent(SELECTED_PROJECT))
+  // **그 씬만 받는다.** 142씬을 통째로 받아 한 행을 고치면 그 시간이 그대로
+  // 「바꾸는 중…」으로 보인다.
+  fetch(BACKEND + "/api/scenes?project_id=" + encodeURIComponent(SELECTED_PROJECT)
+        + "&sceneNumber=" + encodeURIComponent(n))
     .then(function (r) { return r.json(); })
     .then(function (j) {
       var s = (j.scenes || []).filter(function (x) { return x.sceneNumber === parseFloat(n); })[0];

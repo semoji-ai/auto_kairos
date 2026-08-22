@@ -259,7 +259,16 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
 
     if method == "GET" and p == "/api/scenes":
         pid = query.get("project_id", "")
-        return 200, scenes.load_scenes(root / pid)
+        data = scenes.load_scenes(root / pid)
+        # 한 행만 갱신할 때 142씬을 통째로 보내는 것은 낭비다. `sceneNumber` 를
+        # 주면 그 씬만 돌려준다 — 후보를 바꿀 때마다 전체를 받아 오면
+        # 그 시간이 그대로 「바꾸는 중…」으로 보인다.
+        sn = query.get("sceneNumber")
+        sn = sn[0] if isinstance(sn, list) else sn
+        if sn not in (None, ""):
+            one = _find_scene(data, sn)
+            data = {**data, "scenes": [one] if one else []}
+        return 200, data
 
     if method == "POST" and p == "/api/scenes/narration":
         b = body or {}

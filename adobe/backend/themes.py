@@ -67,15 +67,34 @@ def load_theme(theme_id: str) -> dict | None:
         return None
 
 
+# 프로젝트 테마 캐시 — (경로 → (mtime_ns, 크기, 값))
+#
+# `resolve_theme` 은 **씬마다** 불린다. 그때마다 `scenes.json` 을 통째로
+# 파싱하고 있었다. 디아지오편은 그 파일이 1MB 남짓에 142씬이라 시트를 한 번
+# 여는 데 **143번 파싱** — 0.7초가 여기서 나갔다. 후보를 하나 바꿀 때마다
+# `refreshRow` 가 `/api/scenes` 를 다시 부르므로 그 값이 그대로 체감된다.
+#
+# 파일이 바뀌면(mtime·크기) 저절로 무효가 되므로 손으로 비울 일이 없다.
+_THEME_ID_CACHE: dict = {}
+
+
 def _project_theme_id(proj_dir: Path) -> str | None:
     # scenes.json 최상위 "theme" — scenes.set_project_theme(Task 3)가 이 키에 기록
     fp = proj_dir / "scenes.json"
-    if not fp.is_file():
-        return None
     try:
-        return json.loads(fp.read_text(encoding="utf-8")).get("theme")
+        st = fp.stat()
+    except OSError:
+        return None
+    key = str(fp)
+    hit = _THEME_ID_CACHE.get(key)
+    if hit and hit[0] == st.st_mtime_ns and hit[1] == st.st_size:
+        return hit[2]
+    try:
+        val = json.loads(fp.read_text(encoding="utf-8")).get("theme")
     except json.JSONDecodeError:
         return None
+    _THEME_ID_CACHE[key] = (st.st_mtime_ns, st.st_size, val)
+    return val
 
 
 def resolve_theme(proj_dir: Path, scene: dict | None = None) -> dict:
