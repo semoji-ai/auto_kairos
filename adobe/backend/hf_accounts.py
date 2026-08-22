@@ -12,9 +12,20 @@
 
 `XDG_CONFIG_HOME` 은 안 통한다(실측). CLI 가 경로를 직접 짓는다.
 
-    python3 -m backend.hf_accounts list          계정과 잔액
+    python3 -m backend.hf_accounts list          계정과 잔액(쓸 순서대로)
+    python3 -m backend.hf_accounts order a,b,c   쓸 순서를 정한다
     python3 -m backend.hf_accounts add <이름>     지금 로그인된 계정을 등록
     python3 -m backend.hf_accounts login <이름>   그 집에서 새로 로그인
+
+**순서는 결재일 기준이다.** 크레딧은 결재일에 초기화되므로 갱신이 임박한
+계정부터 비워야 한다. 많이 남은 쪽부터 쓰면 갱신이 코앞인 계정이 끝까지
+안 쓰이고 매달 그만큼 날아간다.
+
+    sub03  jleavens.sub03   25일 갱신   ← 먼저
+    main   ksjeaea          26일 갱신
+    sub01  jleavens.sub01    6일 갱신   ← 나중
+
+계정을 더하거나 결재일이 바뀌면 `order` 로 다시 정한다.
 """
 from __future__ import annotations
 
@@ -27,6 +38,32 @@ from pathlib import Path
 
 ROOT = Path(os.environ.get("AK_HF_ACCOUNTS") or (Path.home() / ".hf_accounts"))
 LIVE = Path.home() / ".config" / "higgsfield"
+ORDER_FILE = ROOT / "order.json"
+
+
+def order() -> list:
+    """쓸 순서. **잔액이 많은 쪽이 아니라 갱신이 임박한 쪽부터 쓴다.**
+
+    크레딧은 결재일에 초기화되므로, 곧 갱신되는 계정에 남겨 두면 그대로
+    사라진다. 많이 남은 쪽부터 쓰면 갱신이 코앞인 계정이 끝까지 안 쓰이고
+    버려진다 — 매달 그만큼이 날아간다.
+
+    `order.json` 에 이름을 순서대로 적어 둔다. 없는 이름은 무시하고,
+    적히지 않은 계정은 뒤에 붙는다.
+    """
+    try:
+        want = json.loads(ORDER_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        want = []
+    got = names()
+    return [n for n in want if n in got] + [n for n in got if n not in want]
+
+
+def set_order(seq: list) -> list:
+    ROOT.mkdir(parents=True, exist_ok=True)
+    ORDER_FILE.write_text(json.dumps(list(seq), ensure_ascii=False, indent=1),
+                          encoding="utf-8")
+    return order()
 
 
 def home_of(name: str) -> Path:
@@ -60,10 +97,35 @@ def _run(args: list, name: str | None = None, timeout: int = 60) -> str:
     return (p.stdout or "") + (p.stderr or "")
 
 
+def ensure_workspace(name: str | None = None) -> str | None:
+    """워크스페이스가 안 골라져 있으면 첫 번째를 고른다.
+
+    새로 로그인하면 인증은 되는데 **워크스페이스가 비어 있어** 모든 명령이
+    「No workspace selected」로 막힌다. 계정마다 사람이 한 번씩 골라 줘야 하는데
+    잊기 쉽고, 잊으면 그 계정은 잔액이 있어도 없는 것처럼 보인다.
+    """
+    import re
+    st = _run(["account", "status"], name)
+    if "@" in st and "credits" in st:
+        return None                      # 이미 멀쩡하다
+    out = _run(["workspace", "list"], name)
+    # 머리줄은 UUID 로 시작하지 않는다 — 정규식이 그것을 걸러 준다
+    rows = [l for l in out.splitlines()
+            if re.match(r"^[0-9a-f]{8}-[0-9a-f-]{27}\s", l.strip())]
+    if not rows:
+        return None
+    wid = rows[0].split()[0]
+    _run(["workspace", "set", wid], name)
+    return wid
+
+
 def status(name: str | None = None) -> dict:
     """{email, plan, credits} — 못 읽으면 credits 는 None."""
     import re
     out = _run(["account", "status"], name).strip()
+    if "No workspace selected" in out:
+        ensure_workspace(name)
+        out = _run(["account", "status"], name).strip()
     m = re.search(r"([\w.+-]+@[\w.-]+)\s*—\s*(\S+)\s*plan,\s*([\d.]+)\s*credits", out)
     if not m:
         return {"name": name, "email": None, "plan": None, "credits": None, "raw": out[:120]}
@@ -85,18 +147,17 @@ def add(name: str) -> dict:
 
 
 def pick(need: float, *, exclude: set | None = None) -> str | None:
-    """크레딧이 `need` 이상 남은 계정 하나. 많이 남은 쪽부터 고른다."""
-    got = []
-    for n in names():
+    """크레딧이 `need` 이상 남은 계정 하나. **정해 둔 순서대로** 고른다.
+
+    앞선 계정을 바닥까지 쓰고 다음으로 넘어간다 — 갱신이 임박한 것부터.
+    """
+    for n in order():
         if exclude and n in exclude:
             continue
         c = status(n).get("credits")
         if c is not None and c >= need:
-            got.append((c, n))
-    if not got:
-        return None
-    got.sort(reverse=True)
-    return got[0][1]
+            return n
+    return None
 
 
 def total() -> float:
@@ -111,13 +172,19 @@ def _main(argv: list) -> int:
             print(f"등록된 계정이 없습니다. `add <이름>` 으로 지금 계정을 등록하세요.")
             print(f"보관 위치: {ROOT}")
             return 0
-        for n in ns:
+        for n in order():
             s = status(n)
             c = s.get("credits")
             print(f"  {n:<12} {s.get('email') or '?':<32} "
                   f"{'' if c is None else f'{c:>10,.1f} 크레딧'}"
                   f"{'  ← 읽기 실패' if c is None else ''}")
         print(f"  {'합계':<12} {'':<32} {total():>10,.1f} 크레딧")
+        return 0
+    if cmd == "order":
+        if len(argv) > 2:
+            print(set_order(argv[2].split(",")))
+        else:
+            print(" → ".join(order()))
         return 0
     if cmd == "add" and len(argv) > 2:
         print(add(argv[2]))
@@ -127,6 +194,7 @@ def _main(argv: list) -> int:
         home_of(name).mkdir(parents=True, exist_ok=True)
         print(f"{name} 계정으로 로그인합니다 (브라우저가 열립니다)")
         print(_run(["auth", "login"], name, timeout=300))
+        ensure_workspace(name)           # 로그인만으로는 부족하다
         print(status(name))
         return 0
     print(__doc__)
