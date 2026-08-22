@@ -23,6 +23,21 @@ def _abs(proj_dir: Path, rel: str) -> str:
     return str((proj_dir / rel).resolve())
 
 
+def _svg_ratio(svg_path, png_path) -> float:
+    """PNG 픽셀 폭 ÷ SVG 선언 폭. 배율에 곱하면 들어온 크기가 무엇이든 자리가 맞는다."""
+    import re as _re
+    try:
+        head = svg_path.read_text(encoding="utf-8", errors="replace")[:400]
+        m = _re.search(r'\swidth="([\d.]+)"', head)
+        sw = float(m.group(1)) if m else 0.0
+        pw = float((_img_size(png_path) or (0, 0))[0])
+        if sw > 0 and pw > 0:
+            return pw / sw
+    except Exception:
+        pass
+    return 1.0
+
+
 def _img_size(path: Path):
     """이미지 픽셀 크기 (w, h). 실패 시 None."""
     try:
@@ -154,6 +169,11 @@ def _scene_layers(proj_dir: Path, layer_rels: list, sid: str = "", scene_width: 
                  "kind": "bg" if is_bg else "element"}
         if has_svg:
             entry["vector"] = True
+            # **배율은 들어올 크기 기준이어야 한다.** 좌표와 배율은 PNG 픽셀
+            # 기준으로 계산하는데(PIL 이 SVG 를 못 읽는다), 애프터이펙트는
+            # SVG 가 선언한 크기로 들여온다. 둘이 다르면 자리가 통째로 밀린다.
+            # 머리말을 읽어 그 비를 곱해 둔다 — 1/10 로 줄여 넣어도 자리가 맞는다.
+            entry["vectorRatio"] = _svg_ratio(proj_dir / svg_rel, proj_dir / r)
             # **SVG 가 안 들어올 때를 대비해 PNG 를 함께 준다.** 애프터이펙트가
             # SVG 하나를 거부하면 그 씬 빌드가 통째로 멈춰, 배경만 들어오고
             # 나머지는 사라진다(100씬이 그랬다). 한 장이 실패해도 그림은 나와야 한다.
@@ -170,7 +190,7 @@ def _scene_layers(proj_dir: Path, layer_rels: list, sid: str = "", scene_width: 
                     size = _img_size(proj_dir / r)
                     if size and size[0]:
                         entry["position"] = [(l + rr) / 2 * f + ox, (t + b) / 2 * f]
-                        entry["scale"] = (rr - l) / size[0] * 100 * f
+                        entry["scale"] = (rr - l) / size[0] * 100 * f * entry.get("vectorRatio", 1.0)
                         entry["foot"] = [(l + rr) / 2 * f + ox, b * f]
                         placed = True
         if not placed:
@@ -178,7 +198,7 @@ def _scene_layers(proj_dir: Path, layer_rels: list, sid: str = "", scene_width: 
             size = _img_size(proj_dir / r) or (sw, sh)
             pw = float(size[0] or sw)
             entry["position"] = [sw * f / 2 + ox, sh * f / 2]
-            entry["scale"] = sw * f / pw * 100
+            entry["scale"] = sw * f / pw * 100 * entry.get("vectorRatio", 1.0)
             if not is_bg:
                 foot = _alpha_foot(proj_dir / r)
                 if foot:

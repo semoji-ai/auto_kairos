@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import json
+import os
 import mimetypes
 import urllib.request
 import uuid
@@ -47,7 +48,64 @@ def _multipart(fields: dict, file_field: str, data: bytes, filename: str) -> tup
     return b"".join(parts), "multipart/form-data; boundary=" + boundary
 
 
-def vectorize_png(png_path, *, timeout: int = 300) -> bytes:
+# 벡터화에 넣을 원본의 가로 상한. **기본은 끔(0).**
+#
+# 「원본을 줄여 넣으면 SVG 도 작아지지 않겠나」를 실제로 재 봤는데 아니었다.
+# 리크래프트가 내부에서 정규화하는지, 넣는 해상도를 3분의 1로 줄여도 결과가
+# 거의 같다.
+#
+#     넣은 가로   SVG      path
+#     1792(원본)  512KB    924
+#     1200        512KB    986
+#      900        519KB   1001
+#      600        473KB    884     ← 8% 줄자고 화질을 버릴 값어치가 없다
+#
+# 색을 줄이는 것은 **더 나빴다** — 띠가 생겨 면이 잘게 쪼개진다.
+#
+#     32색  712KB · path 1337
+#     16색  740KB · path 1411
+#
+# 무게를 정하는 것은 해상도도 색 수도 아니라 **그림의 결**이다. 종이 질감이
+# 깔린 배경판은 어떻게 넣어도 path 가 900개 넘게 나온다.
+# 그래서 진짜 답은 **배경을 벡터화하지 않는 것**이다(요소는 10~40KB 로 가볍다).
+#
+# 넣는 값을 바꿔 보고 싶을 때를 위해 손잡이만 남긴다.
+VECTORIZE_MAX_W = int(os.environ.get("AK_VECTORIZE_MAX_W", "0"))
+
+# SVG 를 선언 크기의 몇 분의 1로 들여올지. **기본 1(그대로).**
+#
+# 벡터라 확대해도 깨지지 않으니 작게 들여와 배율로 키우면 AE 가 가볍다 —
+# 다만 **연속 래스터화가 꺼지면 그대로 흐려진다.** 뷰어로 재 보니 10분의 1은
+# 작은 캔버스로 래스터된 뒤 늘어나 화면의 80%가 달라졌다. AE 에서 실제로
+# 확인하기 전까지는 1로 둔다.
+#
+# 배치는 매니페스트가 SVG 머리말을 직접 읽어 맞추므로, 이 값을 바꿔도
+# 자리는 어긋나지 않는다.
+VECTORIZE_DIVISOR = max(1, int(os.environ.get("AK_VECTORIZE_DIVISOR", "1")))
+
+
+def _downscaled(src: Path, max_w: int) -> tuple:
+    """가로가 상한을 넘으면 줄인 바이트를 돌려준다. (바이트, 원래크기, 넣은크기)"""
+    raw = src.read_bytes()
+    if max_w <= 0:
+        return raw, None, None
+    try:
+        from PIL import Image
+        import io
+        with Image.open(io.BytesIO(raw)) as im:
+            w, h = im.size
+            if w <= max_w:
+                return raw, (w, h), (w, h)
+            nh = max(1, round(h * max_w / w))
+            buf = io.BytesIO()
+            im.convert("RGBA").resize((max_w, nh), Image.LANCZOS).save(buf, "PNG")
+            return buf.getvalue(), (w, h), (max_w, nh)
+    except Exception:
+        return raw, None, None       # 못 줄이면 원본 그대로 — 막지는 않는다
+
+
+def vectorize_png(png_path, *, timeout: int = 300, max_w: int | None = None,
+                  on_line=None) -> bytes:
     """PNG 1장을 SVG 바이트로. 실패 시 VectorizeError.
 
     키 값은 어떤 메시지에도 넣지 않는다."""
@@ -57,7 +115,10 @@ def vectorize_png(png_path, *, timeout: int = 300) -> bytes:
     src = Path(png_path)
     if not src.is_file():
         raise VectorizeError(f"이미지 없음: {src.name}")
-    body, ctype = _multipart({"response_format": "url"}, "file", src.read_bytes(), src.name)
+    raw, was, now = _downscaled(src, VECTORIZE_MAX_W if max_w is None else max_w)
+    if on_line and was and now and was != now:
+        on_line(f"  줄여서 넣습니다 {was[0]}x{was[1]} → {now[0]}x{now[1]}")
+    body, ctype = _multipart({"response_format": "url"}, "file", raw, src.name)
     req = urllib.request.Request(
         ENDPOINT, data=body, method="POST",
         headers={"Authorization": "Bearer " + key, "Content-Type": ctype})
@@ -114,6 +175,10 @@ def vectorize_layers(proj_dir, sid: str, stems: list, *, subdir: str = "layers",
             # 받은 그대로 두면 무겁다. 좌표 자릿수를 줄이고 군더더기를 걷는다 —
             # 배경 한 장이 512KB 였고, AE 에서 연속 래스터화를 켜면 배율마다
             # 그걸 다시 그리므로 눈에 띄게 느려진다.
+            # **좌표계를 먼저 맞춘다.** 리크래프트 SVG 는 선언 크기와 viewBox 가
+            # 달라(582x850 인데 viewBox 는 1402x2048), AE 가 어느 쪽을 footage
+            # 크기로 읽느냐에 따라 배치가 2.4배 어긋난다.
+            normalize_svg_file(svg_path, divisor=VECTORIZE_DIVISOR)
             r = slim_svg_file(svg_path)
             if on_event and r.get("saved"):
                 on_event({"layer": stem, "status": "slim",
@@ -193,3 +258,68 @@ def slim_svg_file(path, *, precision: int = 1) -> dict:
     p.write_bytes(data)
     return {"ok": True, "before": before, "after": len(data),
             "saved": before - len(data)}
+
+
+# ---- 좌표계 정규화 ------------------------------------------------------
+#
+# 리크래프트 SVG 는 **선언 크기와 viewBox 가 다르다.**
+#
+#     width="582" height="850"   viewBox="0 0 1402 2048"
+#
+# 애프터이펙트가 둘 중 어느 쪽을 footage 크기로 읽는지에 따라 배치가 2.4배
+# 어긋난다. 매니페스트는 PNG 픽셀 크기로 좌표와 배율을 계산하므로, 들어온
+# 크기가 그것과 다르면 자리가 통째로 밀린다.
+#
+# 그래서 **viewBox 를 선언 크기에 맞춘다.** path 좌표를 그 비로 곱하면
+# 그림은 그대로이고 두 값이 같아져 해석의 여지가 없어진다.
+#
+# `divisor` 로 더 줄일 수 있다. 벡터라 확대해도 깨지지 않으므로 작은 footage
+# 로 들여와 배율로 키우는 편이 애프터이펙트에 가볍다 — 다만 매니페스트가
+# 그만큼 배율을 곱해 줘야 자리가 맞는다(`vectorDivisor` 로 함께 내보낸다).
+
+def normalize_svg(text: str, *, divisor: int = 1) -> tuple:
+    """viewBox 를 선언 크기(÷divisor)에 맞춘다. 반환 (새 텍스트, (w, h)).
+
+    **좌표를 직접 곱하면 안 된다.** 처음에 본문의 모든 숫자에 배율을 곱했더니
+    `rgb(245,222,193)` 의 색 값과 그래디언트 정지점까지 곱해져 색이 무너졌다
+    (렌더해 견줘 보니 화면의 76%가 달랐다).
+
+    그래서 본문은 한 글자도 건드리지 않고 **`<g transform="scale(...)">` 로
+    감싼다.** 정확하고, 늘어나는 것은 한 줄뿐이다.
+    """
+    import re as _re
+    mw = _re.search(r'\swidth="([\d.]+)"', text)
+    mh = _re.search(r'\sheight="([\d.]+)"', text)
+    mv = _re.search(r'viewBox="\s*([\d.-]+)\s+([\d.-]+)\s+([\d.]+)\s+([\d.]+)\s*"', text)
+    if not (mw and mh and mv):
+        return text, None
+    dw, dh = float(mw.group(1)), float(mh.group(1))
+    vx, vy, vw, vh = (float(mv.group(i)) for i in range(1, 5))
+    if vw <= 0 or vh <= 0 or dw <= 0 or dh <= 0:
+        return text, None
+    tw, th = dw / max(1, divisor), dh / max(1, divisor)
+    sx, sy = tw / vw, th / vh
+
+    head_end = text.index(">") + 1
+    head, body = text[:head_end], text[head_end:]
+    close = body.rindex("</svg>")
+    inner, tail = body[:close], body[close:]
+
+    head = _re.sub(r'\swidth="[\d.]+"', f' width="{tw:g}"', head)
+    head = _re.sub(r'\sheight="[\d.]+"', f' height="{th:g}"', head)
+    head = _re.sub(r'viewBox="[^"]*"', f'viewBox="0 0 {tw:g} {th:g}"', head)
+    g = f'<g transform="matrix({sx:.6g},0,0,{sy:.6g},{-vx * sx:.6g},{-vy * sy:.6g})">'
+    return head + g + inner + "</g>" + tail, (tw, th)
+
+
+def normalize_svg_file(path, *, divisor: int = 1) -> dict:
+    p = Path(path)
+    before = p.stat().st_size
+    try:
+        new, size = normalize_svg(p.read_text(encoding="utf-8"), divisor=divisor)
+    except Exception as e:
+        return {"ok": False, "error": f"{type(e).__name__}: {e}"}
+    if size is None:
+        return {"ok": False, "error": "머리말을 읽지 못했습니다(건드리지 않음)"}
+    p.write_text(new, encoding="utf-8")
+    return {"ok": True, "size": list(size), "before": before, "after": p.stat().st_size}
