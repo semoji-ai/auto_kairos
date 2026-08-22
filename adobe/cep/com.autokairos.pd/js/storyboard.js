@@ -126,7 +126,7 @@ function _previewHTML(s, dir) {
   if (ig && ig.items && ig.items.length) {
     var base = "";
     if ((ig.background === "scene" || ig.background === "scene_blur") && s._image) {
-      base = '<img class="main" src="file://' + dir + "/" + s._image + '"'
+      base = '<img class="main" src="file://' + dir + "/" + s._image + "?t=" + IV_STAMP + '"'
            + (ig.background === "scene_blur" ? ' style="filter:blur(3px)"' : "") + '>';
     }
     var els = "";
@@ -149,12 +149,12 @@ function _previewHTML(s, dir) {
       + 'color:#e8b339">🗺 지도 미렌더 — 체크 후 「🗺 지도」</div>';
     if (!s._image) return '<div class="layout-badge">map — 🗺 지도 버튼으로 렌더</div>';
     return '<div class="pv" style="background:' + BG + '">'
-      + '<img class="main" src="file://' + dir + "/" + s._image + '">' + mBadge + subEl + "</div>";
+      + '<img class="main" src="file://' + dir + "/" + s._image + "?t=" + IV_STAMP + '">' + mBadge + subEl + "</div>";
   }
   if (!s.layout || s.layout === "cinematic" || s.layout === "map") {
     if (!s._image) return '<div style="color:#666;font-size:11px">(없음)</div>';
     return '<div class="pv" style="background:' + BG + '">'
-      + '<img class="main" src="file://' + dir + "/" + s._image + '">' + subEl + "</div>";
+      + '<img class="main" src="file://' + dir + "/" + s._image + "?t=" + IV_STAMP + '">' + subEl + "</div>";
   }
   if (s.layout === "headline_only") {
     inner = '<div class="pv-abs" style="left:50%;top:30%;width:' + px(120) + ";height:" + px(10) + ";background:" + AC + ';transform:translateX(-50%)"></div>'
@@ -229,7 +229,7 @@ function _previewHTML(s, dir) {
   }
   // 그림이 있으면 항상 배경으로 깐다. 레이아웃 요소는 그 위에 얹힌다.
   var bgImg = s._image
-    ? '<img class="main" src="file://' + dir + "/" + s._image + '">' : "";
+    ? '<img class="main" src="file://' + dir + "/" + s._image + "?t=" + IV_STAMP + '">' : "";
   return '<div class="pv" style="background:' + BG + '">' + bgImg + inner + subEl + "</div>";
 }
 
@@ -1962,6 +1962,10 @@ function genSceneVideo(n) {
 
 
 /* 씬의 판본을 읽어 후보 띠를 그린다. 하나뿐이면 자리를 차지하지 않는다. */
+/* 파일명이 같은데 내용만 바뀌는 경우가 있다(업스케일·편집이 덮을 때).
+   그때 옛 그림이 남지 않도록 후보 썸네일에 도장을 붙인다. */
+var IV_STAMP = 1;
+
 function _loadVersions(box) {
   var n = box.getAttribute("data-scene");
   fetch(BACKEND + "/api/scenes/image-versions?project_id="
@@ -1977,25 +1981,39 @@ function _loadVersions(box) {
       var dir = IMG_DIR || "";
       box.innerHTML = '<div class="iv-strip">' + vs.map(function (x) {
         var on = x.rel === j.selected;
-        return '<img class="iv' + (on ? " on" : "") + '" src="file://' + dir + "/" + x.rel
+        return '<img class="iv' + (on ? " on" : "") + '" src="file://' + dir + "/" + x.rel + "?t=" + IV_STAMP
              + '" data-rel="' + x.rel + '" data-scene="' + n + '"'
              + ' title="' + _esc(x.name) + (on ? " (지금 쓰는 것)" : " — 눌러서 바꿉니다") + '">';
       }).join("") + "</div>";
-      var ims = box.querySelectorAll("img.iv");
-      for (var i = 0; i < ims.length; i++) {
-        ims[i].addEventListener("click", function () {
-          if (this.className.indexOf("on") >= 0) return;
-          var sc = this.getAttribute("data-scene");
+      /* **박스에 위임한다.** 각 <img> 에 직접 걸면 innerHTML 을 다시 쓸 때마다
+         리스너가 사라진다 — 한 번 바꾸면 그다음부터는 눌러도 아무 일이 없었다.
+         박스는 그대로 남으므로 위임이 안전하다. 두 번 걸리지 않게 표식을 둔다. */
+      if (!box._ivBound) {
+        box._ivBound = true;
+        box.addEventListener("click", function (ev) {
+          var im = ev.target;
+          if (!im || im.tagName !== "IMG" || im.className.indexOf("iv") < 0) return;
+          if (im.className.indexOf("on") >= 0) return;        // 지금 쓰는 것
+          var sc = im.getAttribute("data-scene");
+          var rel = im.getAttribute("data-rel");
+          _rowStatus(sc, "이미지 바꾸는 중...");
+          // 눌린 것에 곧바로 표시를 옮긴다 — 응답을 기다리는 동안 먹통처럼 보이지 않게
+          var sibs = box.querySelectorAll("img.iv");
+          for (var q = 0; q < sibs.length; q++) {
+            sibs[q].className = "iv" + (sibs[q] === im ? " on" : "");
+          }
           fetch(BACKEND + "/api/scenes/select-image", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ project_id: SELECTED_PROJECT,
-                                   sceneNumber: parseFloat(sc),
-                                   rel: this.getAttribute("data-rel") }),
+                                   sceneNumber: parseFloat(sc), rel: rel }),
           }).then(function (r) { return r.json(); })
             .then(function (res) {
               if (res.error) { _rowStatus(sc, "바꾸지 못했습니다: " + res.error); return; }
-              _rowStatus(sc, "이미지 바꿈 ✓"); refreshRow(sc);
-            });
+              IV_STAMP = IV_STAMP + 1;      // 다음 렌더에서 그림을 새로 읽게
+              _rowStatus(sc, "이미지 바꿈 \u2713 " + rel.split("/").pop());
+              refreshRow(sc);
+            })
+            .catch(function (e) { _rowStatus(sc, "바꾸기 오류: " + e); });
         });
       }
     })
