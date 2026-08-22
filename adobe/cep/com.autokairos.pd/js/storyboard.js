@@ -596,9 +596,11 @@ function bindRows(scope) {
       pvZoom(this.innerHTML, row ? row.getAttribute("data-scene") : "");
     });
   }
-  // 후보 띠 채우기 — 판본이 하나뿐이면 아무것도 그리지 않는다
+  // 후보 띠 채우기 — **한 번에 받아 나눠 준다.** 씬마다 따로 물으면
+  // 142씬이면 왕복이 142번이라 시트가 한참 뜬다.
   var vboxes = scope.querySelectorAll(".img-vers");
-  for (var v = 0; v < vboxes.length; v++) _loadVersions(vboxes[v]);
+  if (vboxes.length === 1) { _loadVersions(vboxes[0]); }
+  else if (vboxes.length) { _loadVersionsAll(vboxes); }
 
   var un = scope.querySelectorAll("button.unlink-img");
   for (var u = 0; u < un.length; u++) {
@@ -1974,54 +1976,79 @@ function _loadVersions(box) {
   fetch(BACKEND + "/api/scenes/image-versions?project_id="
         + encodeURIComponent(SELECTED_PROJECT) + "&sceneNumber=" + encodeURIComponent(n))
     .then(function (r) { return r.json(); })
-    .then(function (j) {
-      var vs = j.versions || [];
-      // 판본이 하나뿐이면 조용히 비운다 — 대부분의 씬이 그렇다.
-      // 다만 **오류로 비는 것과 구분**되어야 한다. 아래 catch 가 이유를 적는다.
-      if (j.error) { box.innerHTML = '<div class="iv-msg">후보 조회 실패: '
-                                    + _esc(j.error) + "</div>"; return; }
-      if (vs.length < 2) { box.innerHTML = ""; return; }
-      var dir = IMG_DIR || "";
-      box.innerHTML = '<div class="iv-strip">' + vs.map(function (x) {
-        var on = x.rel === j.selected;
-        return '<img class="iv' + (on ? " on" : "") + '" src="file://' + dir + "/" + x.rel + "?t=" + IV_STAMP
-             + '" data-rel="' + x.rel + '" data-scene="' + n + '"'
-             + ' title="' + _esc(x.name) + (on ? " (지금 쓰는 것)" : " — 눌러서 바꿉니다") + '">';
-      }).join("") + "</div>";
-      /* **박스에 위임한다.** 각 <img> 에 직접 걸면 innerHTML 을 다시 쓸 때마다
-         리스너가 사라진다 — 한 번 바꾸면 그다음부터는 눌러도 아무 일이 없었다.
-         박스는 그대로 남으므로 위임이 안전하다. 두 번 걸리지 않게 표식을 둔다. */
-      if (!box._ivBound) {
-        box._ivBound = true;
-        box.addEventListener("click", function (ev) {
-          var im = ev.target;
-          if (!im || im.tagName !== "IMG" || im.className.indexOf("iv") < 0) return;
-          if (im.className.indexOf("on") >= 0) return;        // 지금 쓰는 것
-          var sc = im.getAttribute("data-scene");
-          var rel = im.getAttribute("data-rel");
-          _rowStatus(sc, "이미지 바꾸는 중...");
-          // 눌린 것에 곧바로 표시를 옮긴다 — 응답을 기다리는 동안 먹통처럼 보이지 않게
-          var sibs = box.querySelectorAll("img.iv");
-          for (var q = 0; q < sibs.length; q++) {
-            sibs[q].className = "iv" + (sibs[q] === im ? " on" : "");
-          }
-          fetch(BACKEND + "/api/scenes/select-image", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ project_id: SELECTED_PROJECT,
-                                   sceneNumber: parseFloat(sc), rel: rel }),
-          }).then(function (r) { return r.json(); })
-            .then(function (res) {
-              if (res.error) { _rowStatus(sc, "바꾸지 못했습니다: " + res.error); return; }
-              IV_STAMP = IV_STAMP + 1;      // 다음 렌더에서 그림을 새로 읽게
-              _rowStatus(sc, "이미지 바꿈 \u2713 " + rel.split("/").pop());
-              refreshRow(sc);
-            })
-            .catch(function (e) { _rowStatus(sc, "바꾸기 오류: " + e); });
-        });
-      }
-    })
+    .then(function (j) { _paintVersions(box, j); })
     .catch(function (e) {
       // 조용히 비우면 「후보가 없다」와 「불러오지 못했다」가 같아 보인다
       box.innerHTML = '<div class="iv-msg">후보 조회 오류: ' + _esc(String(e)) + "</div>";
+    });
+}
+
+/* 받은 후보를 박스에 그린다. 하나씩 받든 한 번에 받든 여기로 모인다 —
+   두 벌로 두면 한쪽만 고치는 일이 생긴다. */
+function _paintVersions(box, j) {
+  var n = box.getAttribute("data-scene");
+  if (j && j.error) {
+    box.innerHTML = '<div class="iv-msg">후보 조회 실패: ' + _esc(j.error) + "</div>";
+    return;
+  }
+  var vs = (j && j.versions) || [];
+  if (vs.length < 2) { box.innerHTML = ""; return; }   // 판본이 하나뿐 — 대부분의 씬
+  var dir = IMG_DIR || "";
+  box.innerHTML = '<div class="iv-strip">' + vs.map(function (x) {
+    var on = x.rel === j.selected;
+    return '<img class="iv' + (on ? " on" : "") + '" src="file://' + dir + "/" + x.rel + "?t=" + IV_STAMP
+         + '" data-rel="' + x.rel + '" data-scene="' + n + '"'
+         + ' title="' + _esc(x.name) + (on ? " (지금 쓰는 것)" : " — 눌러서 바꿉니다") + '">';
+  }).join("") + "</div>";
+
+  /* **박스에 위임한다.** 각 <img> 에 직접 걸면 innerHTML 을 다시 쓸 때마다
+     리스너가 사라진다 — 한 번 바꾸면 그다음부터는 눌러도 아무 일이 없었다. */
+  if (!box._ivBound) {
+    box._ivBound = true;
+    box.addEventListener("click", function (ev) {
+      var im = ev.target;
+      if (!im || im.tagName !== "IMG" || im.className.indexOf("iv") < 0) return;
+      if (im.className.indexOf("on") >= 0) return;        // 지금 쓰는 것
+      var sc = im.getAttribute("data-scene");
+      var rel = im.getAttribute("data-rel");
+      _rowStatus(sc, "이미지 바꾸는 중...");
+      var sibs = box.querySelectorAll("img.iv");
+      for (var q = 0; q < sibs.length; q++) {
+        sibs[q].className = "iv" + (sibs[q] === im ? " on" : "");
+      }
+      fetch(BACKEND + "/api/scenes/select-image", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_id: SELECTED_PROJECT,
+                               sceneNumber: parseFloat(sc), rel: rel }),
+      }).then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (res.error) { _rowStatus(sc, "바꾸지 못했습니다: " + res.error); return; }
+          IV_STAMP = IV_STAMP + 1;
+          _rowStatus(sc, "이미지 바꿈 \u2713 " + rel.split("/").pop());
+          refreshRow(sc);
+        })
+        .catch(function (e) { _rowStatus(sc, "바꾸기 오류: " + e); });
+    });
+  }
+}
+
+
+/* 후보를 한 번에 받아 각 박스에 나눠 준다. 시트를 처음 열 때 쓴다. */
+function _loadVersionsAll(boxes) {
+  fetch(BACKEND + "/api/scenes/image-versions?project_id="
+        + encodeURIComponent(SELECTED_PROJECT))
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      var by = {};
+      (j.scenes || []).forEach(function (x) { by[String(x.sceneNumber)] = x; });
+      for (var i = 0; i < boxes.length; i++) {
+        var box = boxes[i];
+        var d = by[String(box.getAttribute("data-scene"))];
+        _paintVersions(box, d || { versions: [], selected: "" });
+      }
+    })
+    .catch(function (e) {
+      // 일괄이 실패하면 하나씩이라도 — 조용히 비우지 않는다
+      for (var i = 0; i < boxes.length; i++) _loadVersions(boxes[i]);
     });
 }

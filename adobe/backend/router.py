@@ -472,24 +472,36 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         sn = q.get("sceneNumber")
         sn = sn[0] if isinstance(sn, list) else sn
         data = scenes.load_scenes(proj_dir)
-        scene = _find_scene(data, sn)
-        if not scene:
-            return 404, {"error": f"scene {sn} 없음"}
-        sid = scene.get("sceneId")
+
+        # **씬마다 따로 물으면 142번 왕복한다.** `sceneNumber` 를 빼고 부르면
+        # 전부 한 번에 돌려준다 — 시트를 열 때 그렇게 쓴다. 저장소는 한 번만
+        # 훑고 sceneId 로 나눈다.
+        import re as _re
         sb = proj_dir / "storyboard"
-        out = []
-        if sid and sb.is_dir():
-            import re as _re
-            for f in sb.glob(f"*{sid}*"):
+        by_sid: dict = {}
+        if sb.is_dir():
+            for f in sb.iterdir():
                 if f.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp"):
                     continue
                 m = _re.search(r"_v(\d+)\.", f.name)
-                out.append({"rel": f.relative_to(proj_dir).as_posix(),
-                            "name": f.name,
-                            "ver": int(m.group(1)) if m else 1})
-        out.sort(key=lambda x: (x["ver"], x["name"]))
-        return 200, {"sceneNumber": sn, "selected": scene.get("_image") or "",
-                     "versions": out}
+                by_sid.setdefault(f.stem.replace("sb_", "").split("_v")[0], []).append(
+                    {"rel": f.relative_to(proj_dir).as_posix(), "name": f.name,
+                     "ver": int(m.group(1)) if m else 1})
+        for v in by_sid.values():
+            v.sort(key=lambda x: (x["ver"], x["name"]))
+
+        def _one(scene):
+            sid = scene.get("sceneId") or ""
+            return {"sceneNumber": scene.get("sceneNumber"),
+                    "selected": scene.get("_image") or "",
+                    "versions": by_sid.get(sid, [])}
+
+        if sn in (None, ""):
+            return 200, {"scenes": [_one(s) for s in data.get("scenes") or []]}
+        scene = _find_scene(data, sn)
+        if not scene:
+            return 404, {"error": f"scene {sn} 없음"}
+        return 200, _one(scene)
 
     # 후보 중 하나를 고른다 — 파일은 그대로 두고 링크만 옮긴다
     if method == "POST" and p == "/api/scenes/select-image":

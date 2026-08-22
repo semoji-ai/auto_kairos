@@ -117,7 +117,12 @@ def _timestamps_duration(path: Path) -> float:
     if not side.is_file():
         return 0.0
     try:
-        ends = json.loads(side.read_text(encoding="utf-8")).get("ends") or []
+        d = json.loads(side.read_text(encoding="utf-8"))
+        # **두 형식이 섞여 있다.** 어도비가 만든 것은 `ends`, v3 에서 가져온
+        # 것은 일레븐랩스 원본 그대로라 `character_end_times_seconds` 다.
+        # 뒤쪽을 못 읽어 46개 전부 ffprobe 로 떨어졌고, 씬당 40ms 씩 2초를
+        # 여기서 썼다 — 사이드카가 바로 옆에 있는데도.
+        ends = d.get("ends") or d.get("character_end_times_seconds") or []
         return round(float(ends[-1]), 3) if ends else 0.0
     except (json.JSONDecodeError, OSError, ValueError, TypeError, IndexError):
         return 0.0

@@ -16,12 +16,28 @@ def _catalog_dir() -> Path:
     return _DATA / "themes"
 
 
+# 번들 데이터 캐시. `_default_theme()` 이 씬마다 불리므로 그대로 두면
+# 시트를 한 번 여는 데 `ae_tokens.json` 을 **143번** 읽는다(실측).
+# 저장소에 함께 들어오는 파일이라 바뀔 일이 드물지만, mtime 이 달라지면
+# 다시 읽어 고쳐도 반영되게 한다.
+_AE_CACHE: tuple | None = None
+
+
 def _ae_tokens() -> dict:
+    global _AE_CACHE
     fp = _DATA / "ae_tokens.json"
     try:
-        return json.loads(fp.read_text(encoding="utf-8"))
+        st = fp.stat()
+    except OSError:
+        return {}
+    if _AE_CACHE and _AE_CACHE[0] == st.st_mtime_ns and _AE_CACHE[1] == st.st_size:
+        return _AE_CACHE[2]
+    try:
+        val = json.loads(fp.read_text(encoding="utf-8"))
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
+    _AE_CACHE = (st.st_mtime_ns, st.st_size, val)
+    return val
 
 
 def _default_theme() -> dict:
