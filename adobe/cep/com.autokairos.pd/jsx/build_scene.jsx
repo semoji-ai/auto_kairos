@@ -407,17 +407,56 @@ function akBuildScene(manifestPath) {
 
     // 레이어 추가. layer.position 있으면 그 좌표·스케일로(크롭된 요소), 없으면 컴프 채움·중앙(풀프레임/배경).
     // 자동 효과(페이드 등)는 넣지 않는다 — 모든 모션은 모션 플랜(applyMoves)에서만(규칙 기반).
+    // 같은 파일이 이미 프로젝트에 있으면 그것을 쓴다(중복 임포트 방지).
+    function akFindFootage(proj, fsName) {
+        for (var i = 1; i <= proj.numItems; i++) {
+            var it = proj.item(i);
+            if (it instanceof FootageItem && it.mainSource
+                && it.mainSource.file && it.mainSource.file.fsName === fsName) {
+                return it;
+            }
+        }
+        return null;
+    }
+
+    // 폴더로 들어온 경우 그 안에서 쓸 수 있는 것을 찾는다.
+    // SVG·일러스트레이터 파일은 「컴프 + 소재 폴더」로 들어오는 일이 있다.
+    function akPickAV(item) {
+        if (!item) { return null; }
+        if (item instanceof CompItem || item instanceof FootageItem) { return item; }
+        if (item instanceof FolderItem) {
+            for (var i = 1; i <= item.numItems; i++) {
+                var got = akPickAV(item.item(i));
+                if (got) { return got; }
+            }
+        }
+        return null;
+    }
+
     // 파일 하나를 들여온다. 안 되면 null — **왜 안 됐는지 남긴다.**
     function akImport(proj, path, note) {
         if (!path) { return null; }
         var f = new File(path);
         if (!f.exists) { note.push("파일 없음"); return null; }
+        // **이미 들여온 것이 있으면 다시 안 들여온다.** 레이어를 지우지 않게
+        // 바꾼 뒤로 임포트를 누를 때마다 프로젝트 항목이 같이 쌓인다.
+        var already = akFindFootage(proj, f.fsName);
+        if (already) { return already; }
+        var had = proj.numItems;
         var foot = null;
         try { foot = proj.importFile(new ImportOptions(f)); }
         catch (e) { note.push(e.toString()); return null; }
-        // **예외를 안 던지고 빈 값을 주는 길이 있다.** 그때 대비책이 돌지 않아
-        // SVG 4장이 통째로 「누락」으로 끝났다.
-        if (!foot) { note.push("가져왔으나 비어 있음"); return null; }
+        foot = akPickAV(foot);
+        // **가져오기는 됐는데 빈 값을 돌려주는 길이 있다.** SVG 가 그랬다 —
+        // 프로젝트 창에는 들어와 있는데 반환값이 없어 「비어 있음」으로 끝났고,
+        // 컴프에는 한 장도 안 올라갔다. 반환값을 못 믿으면 **프로젝트에서 찾는다.**
+        if (!foot) {
+            for (var i = proj.numItems; i > had; i--) {
+                foot = akPickAV(proj.item(i));
+                if (foot) { break; }
+            }
+        }
+        if (!foot) { note.push("가져왔으나 쓸 수 있는 항목이 없음"); return null; }
         return foot;
     }
 
