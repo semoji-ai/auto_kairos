@@ -1792,8 +1792,8 @@ function openVideoModal(n) {
       VID_MODELS = j.models || [];
       if (!j.cli) $("vidStatus").textContent = "higgsfield CLI 를 찾을 수 없습니다.";
       var sel = $("vidModel");
-      sel.innerHTML = VID_MODELS.map(function (m) {
-        return '<option value="' + m.job_type + '">' + _esc(m.display_name) + "</option>";
+      sel.innerHTML = VID_MODELS.map(function (m, i) {
+        return '<option value="' + i + '">' + _esc(m.display_name) + "</option>";
       }).join("");
       _renderVidModel();
     })
@@ -1818,12 +1818,12 @@ function _seedVidStart() {
   else if (slots.indexOf("image_references") >= 0) VID_PICK.image_references = [VID_SCENE_IMG];
 }
 
+/* **인덱스로 고른다.** 「Seedance 2.0」과 「Seedance 2.0 Fast」는 job_type 이
+   같아(`seedance_2_0`), 이름으로 찾으면 늘 앞의 것이 잡힌다 — Fast 를 골라도
+   std 로 나간다. */
 function _vidModel() {
-  var jt = $("vidModel").value;
-  for (var i = 0; i < (VID_MODELS || []).length; i++) {
-    if (VID_MODELS[i].job_type === jt) return VID_MODELS[i];
-  }
-  return null;
+  var i = parseInt($("vidModel").value, 10);
+  return (VID_MODELS || [])[i] || null;
 }
 
 /* 파라미터 칸을 모델 스펙대로 그린다. enum 이 있으면 드롭다운, 없으면 입력칸. */
@@ -1842,9 +1842,12 @@ function _renderVidModel() {
       h += '<label class="vp"><input type="checkbox" data-p="' + p.name + '"'
          + (p["default"] ? " checked" : "") + '> ' + _esc(p.name) + "</label>";
     } else if (p["enum"]) {
+      // 프리셋(예: Fast 의 mode=fast)이 있으면 기본값 대신 그것을 고른다
+      var pre = (m.preset || {})[p.name];
+      var cur = pre == null ? p["default"] : pre;
       h += '<label class="vp">' + _esc(p.name) + ' <select data-p="' + p.name + '">'
          + p["enum"].map(function (v) {
-             return '<option value="' + v + '"' + (String(v) === String(p["default"]) ? " selected" : "")
+             return '<option value="' + v + '"' + (String(v) === String(cur) ? " selected" : "")
                   + ">" + _esc(String(v)) + "</option>";
            }).join("") + "</select></label>";
     } else if (p.type === "integer" || p.type === "number") {
