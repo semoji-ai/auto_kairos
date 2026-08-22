@@ -34,7 +34,7 @@
         </Lifecycle>
         <UI>
           <Type>Panel</Type>
-          <Menu>auto_kairos PD (PoC)</Menu>
+          <Menu>AUTO KAIROS</Menu>
           <Geometry>
             <Size><Height>520</Height><Width>360</Width></Size>
           </Geometry>

@@ -1,4 +1,4 @@
-/* auto_kairos PD 패널 — PoC 로직.
+/* AUTO KAIROS 패널 — 메인 로직.
    - 백엔드 /health 로 연결 확인 (#3)
    - build_scene.jsx 를 evalScript 로 AE에 실행해 컴프 생성 (#4)
    CSInterface 전체 라이브러리 대신 window.__adobe_cep__ 직접 사용(최소). */
