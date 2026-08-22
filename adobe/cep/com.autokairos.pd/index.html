@@ -52,7 +52,11 @@
     .sheet-row .col-num { color:#9aa0a6; font-size:12px; padding-top:2px; }
     .sheet-row .col-img { position:relative; }
     .sheet-row .col-img img.main { width:100%; border-radius:4px; display:block; }
-    .sheet-row .lyr { width:32px; height:auto; margin:3px 3px 0 0; border-radius:3px; }
+    /* **썸네일은 상자 안에 맞춘다.** 높이를 비례로 두면 세로로 긴 레이어가
+       그대로 늘어난다 — 126씬 라가불린 잔이 112px, 클라이넬리쉬가 96px 였다.
+       한 줄에 그런 것이 여럿이면 행이 통째로 길어진다. */
+    .sheet-row .lyr { width:32px; height:32px; object-fit:contain;
+      margin:3px 3px 0 0; border-radius:3px; background:#222; }
     /* 컴프 미리보기 — 16:9 고정, jsx renderLayout 축소 미러 + 자막 오버레이 */
     .pv { position:relative; width:100%; aspect-ratio:16/9; border-radius:4px; overflow:hidden; }
     /* `cover` 는 화면을 꽉 채우려고 **잘라낸다.** 생성 이미지는 16:9 라
@@ -178,7 +182,8 @@
       max-height:180px; overflow-y:auto; }
     .lyr-row { display:flex; align-items:center; gap:5px; padding:2px 4px; border-bottom:1px solid #2a2a2a; }
     .lyr-row:last-child { border-bottom:none; }
-    .lyr-row img.lyr { width:28px; height:auto; margin:0; border-radius:2px; background:#222; }
+    .lyr-row img.lyr { width:28px; height:28px; object-fit:contain; flex:0 0 28px;
+      margin:0; border-radius:2px; background:#222; }
     .lyr-row .lyr-name { flex:1; font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .lyr-row .lyr-kind { font-size:10px; color:#888; }
     .lyr-row .lyr-eye, .lyr-row .lyr-rm, .lyr-row .lyr-restore, .lyr-row .lyr-revec {
@@ -809,16 +814,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1322"></script>
-  <script src="js/nav.js?v=1322"></script>
-  <script src="js/planning.js?v=1322"></script>
+  <script src="js/main.js?v=1323"></script>
+  <script src="js/nav.js?v=1323"></script>
+  <script src="js/planning.js?v=1323"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1322"></script>
-  <script src="js/storyboard.js?v=1322"></script>
-  <script src="js/gallery.js?v=1322"></script>
-  <script src="js/genmodal.js?v=1322"></script>
-  <script src="js/assistant.js?v=1322"></script>
+  <script src="js/mapgen.js?v=1323"></script>
+  <script src="js/storyboard.js?v=1323"></script>
+  <script src="js/gallery.js?v=1323"></script>
+  <script src="js/genmodal.js?v=1323"></script>
+  <script src="js/assistant.js?v=1323"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>
