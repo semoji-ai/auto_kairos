@@ -655,7 +655,36 @@ def split_scene_to_elements(proj_dir: Path, scene_image: str, sid: str, elements
         (out_base / KINDS_SIDECAR.format(sid=sid)).write_text(
             json.dumps(kinds, ensure_ascii=False, indent=2), encoding="utf-8")
     write_element_specs(out_base, sid, specs)
+    # **못 뗀 것을 적어 둔다.** 이것이 없으면 무엇이 빠졌는지 로그를 뒤져야 하고,
+    # 화면에서는 「이 씬은 다 된 것」으로 보인다. 남겨 두면 배경판에서 다시
+    # 떼는 것을 버튼 하나로 걸 수 있다.
+    miss_specs = [
+        {"name_en": (el.get("name_en") or "").strip(), "name": el.get("name", ""),
+         "kind": el.get("kind", "object"), "location": el.get("location", ""),
+         "intent": el.get("intent", "")}
+        for key, (i, el) in by_name.items() if key not in matched_keys
+    ]
+    _write_missing(out_base, sid, miss_specs)
     return {"layers": results, "unexpected": unexpected, "missing": missing}
+
+
+MISSING_SIDECAR = "{sid}__missing.json"
+
+
+def _write_missing(out_base: Path, sid: str, items: list) -> None:
+    fp = out_base / MISSING_SIDECAR.format(sid=sid)
+    if items:
+        fp.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
+    elif fp.is_file():
+        fp.unlink()          # 다 떼었으면 표식을 지운다(레이어 파일이 아니다)
+
+
+def load_missing(out_base: Path, sid: str) -> list:
+    fp = Path(out_base) / MISSING_SIDECAR.format(sid=sid)
+    try:
+        return json.loads(fp.read_text(encoding="utf-8"))
+    except Exception:
+        return []
 
 
 def generate_many(proj_dir: Path, items: list, *, subdir: str = "images",
@@ -763,4 +792,8 @@ def split_more_from_bg(proj_dir: Path, sid: str, elements: list, *,
         kinds_fp.write_text(json.dumps(kinds, ensure_ascii=False, indent=2), encoding="utf-8")
     if added:
         write_element_specs(out_base, sid, old + added)
+    # 이번에 뗀 것은 목록에서 뺀다 — 남은 것만 다음에 다시 시도한다
+    _write_missing(out_base, sid,
+                   [m for m in load_missing(out_base, sid)
+                    if (m.get("name_en") or "").strip().lower() not in matched])
     return {"layers": results, "added": len(added), "missing": missing}

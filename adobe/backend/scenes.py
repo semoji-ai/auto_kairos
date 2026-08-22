@@ -108,6 +108,13 @@ def load_scenes(proj_dir: Path) -> dict:
         s["_layers"] = (sorted(f"layers/{p.name}" for p in lay_dir.glob(f"*{sid}*.png"))
                         if sid and lay_dir.is_dir() else [])
         s["_layer_meta"] = _layer_meta(lay_dir, sid) if sid and lay_dir.is_dir() else {}
+        # 못 뗀 요소 — 있으면 화면에 「빠진 N개 더 분리」를 낸다.
+        # 이것이 없으면 절반만 분리된 씬이 다 된 것처럼 보인다.
+        if sid and lay_dir.is_dir():
+            from backend import imagegen as _ig
+            s["_layer_missing"] = _ig.load_missing(lay_dir, sid)
+        else:
+            s["_layer_missing"] = []
         aud_dir = proj_dir / "audio"
         auds = ([p for p in aud_dir.glob(f"tts_{sid}.*") if p.suffix != ".json"]
                 if sid and aud_dir.is_dir() else [])    # .timestamps.json 사이드카 제외

@@ -270,7 +270,10 @@ function loadSheet() {
         IMG_DIR = dir || IMG_DIR;
       if (!list.length) { $("sheet").textContent = "(씬 없음 — 씬 분해 먼저)"; return; }
       NAR_ORIG = {};
-      list.forEach(function (s) { NAR_ORIG[s.sceneNumber] = s.narration || ""; });
+      list.forEach(function (s) {
+        NAR_ORIG[s.sceneNumber] = s.narration || "";
+        _layerMissing[s.sceneNumber] = s._layer_missing || [];
+      });
       /* 범위 고르기와 나레이션 찾기는 **시트 밖**(`#sheet-tools`)에 그린다.
          시트 안에 있으면 목록과 함께 스크롤돼, 아래로 내려가면 화면에서
          사라진다 — 체크하고 버튼을 누르러 매번 맨 위로 올라가야 했다. */
@@ -469,6 +472,13 @@ function _lyrHead(s) {
   return '<div class="lyr-head">'
        + '<button class="lyr-toggle" data-scene="' + n + '">' + (open ? '▾' : '▸') + '</button>'
        + '<span>레이어 ' + count + '</span>'
+       /* 못 뗀 요소가 있으면 그렇게 말한다 — 절반만 분리된 씬이 다 된 것처럼
+          보이면 안 된다. 누르면 **남은 배경판에서** 다시 뗀다(기존 레이어는 그대로). */
+       + (((s._layer_missing || []).length)
+           ? '<button class="lyr-more" data-scene="' + n + '" title="'
+             + _esc((s._layer_missing || []).map(function (m) { return m.name || m.name_en; }).join(", "))
+             + ' — 남은 배경에서 다시 뗍니다">➕ 빠진 ' + s._layer_missing.length + '개</button>'
+           : '')
        + (open ? '<button class="lyr-vec-all" data-scene="' + n + '"'
                  + ' title="SVG가 없는 레이어를 모두 벡터화합니다(레이어당 1크레딧)">전체 벡터화</button>'
                + '<button class="lyr-vec-sel" data-scene="' + n + '"'
@@ -480,6 +490,8 @@ function _lyrHead(s) {
 /* 씬마다 미리보기를 무엇으로 볼지 — "image" | "layers" | "video".
    행을 다시 그려도 보던 것이 유지되게 밖에 둔다. */
 var PV_MODE = {};
+/* 씬별 못 뗀 요소 — ➕ 버튼이 그대로 다시 보낸다 */
+var _layerMissing = {};
 
 function _pvSwitch(n, mode, hasLayers, hasVideo) {
   var opts = [["image", "🖼 이미지"]];
@@ -668,6 +680,14 @@ function bindRows(scope) {
       if (vid) vid.pause();                    // 떠나면서 소리를 남기지 않는다
       PV_MODE[n] = this.getAttribute("data-mode");
       refreshRow(n);
+    });
+  }
+
+  // ➕ 빠진 N개 — 남은 배경판에서 다시 뗀다. 기존 레이어는 건드리지 않는다.
+  var more = scope.querySelectorAll("button.lyr-more");
+  for (var mo = 0; mo < more.length; mo++) {
+    more[mo].addEventListener("click", function () {
+      splitMore(this.getAttribute("data-scene"));
     });
   }
 
@@ -1533,6 +1553,31 @@ document.addEventListener("DOMContentLoaded", function () {
     run.then(function () { _closeImg(); });
   });
 });
+
+/* 못 뗀 요소를 남은 배경판에서 다시 뗀다.
+   원본을 다시 돌리면 같은 경쟁이 그대로라 또 떨어지고, 이미 잘 나온 레이어까지
+   덮어쓴다. 배경판에는 뗀 것이 빠져 있어 남은 것끼리만 겨룬다. */
+function splitMore(n) {
+  _rowBusy(n, true, "빠진 요소 다시 떼는 중... (fal)");
+  fetch(BACKEND + "/api/scenes/split-more", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, sceneNumber: parseFloat(n),
+                           elements: (_layerMissing[n] || []) }),
+  }).then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (j.status !== "running" || !j.job_id) {
+        _rowBusy(n, false, "실패: " + JSON.stringify(j)); return;
+      }
+      _awaitJob(j.job_id, function (job) {
+        var res = (job.result && job.result.result) || job.result || {};
+        var ok = job.status === "completed";
+        _rowDone(n, ok, ok ? ((res.added || 0) + "개 더 뗐습니다"
+                              + ((res.missing || []).length ? " (여전히 " + res.missing.length + "개 남음)" : " ✓"))
+                          : ("실패: " + (job.error || "")));
+      }, function (logs) { if (logs.length) _rowStatus(n, logs[logs.length - 1]); });
+    })
+    .catch(function (e) { _rowBusy(n, false, "오류: " + e); });
+}
 
 function splitLayers(n, els, prompt) {
   _rowBusy(n, true, "레이어 분리 중... (" + els.length + "개 요소 + 배경, fal)");

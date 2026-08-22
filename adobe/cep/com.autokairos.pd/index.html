@@ -158,6 +158,9 @@
     .comp img.comp-el { position:absolute; }
     .comp img.comp-el.full { top:0; left:0; width:100%; }
     /* 레이어 목록 — 포토샵식 세로 리스트. 기본은 접힘(썸네일 띠). */
+    .lyr-head .lyr-more { width:auto; margin:0; padding:1px 7px; font-size:11px;
+      background:#5a4520; border:1px solid #7a5f2c; color:#f0d9a8; border-radius:4px; }
+    .lyr-head .lyr-more:hover { background:#3a6df0; border-color:#3a6df0; color:#fff; }
     .col-script .lyr-head { margin-top:8px; padding-top:7px; border-top:1px solid #33363c; }
     .lyr-head { display:flex; align-items:center; gap:6px; margin-top:4px; font-size:11px; color:#aaa; }
     .lyr-head .lyr-toggle { width:auto; margin:0; padding:1px 5px; font-size:11px; }
@@ -796,16 +799,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1315"></script>
-  <script src="js/nav.js?v=1315"></script>
-  <script src="js/planning.js?v=1315"></script>
+  <script src="js/main.js?v=1316"></script>
+  <script src="js/nav.js?v=1316"></script>
+  <script src="js/planning.js?v=1316"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1315"></script>
-  <script src="js/storyboard.js?v=1315"></script>
-  <script src="js/gallery.js?v=1315"></script>
-  <script src="js/genmodal.js?v=1315"></script>
-  <script src="js/assistant.js?v=1315"></script>
+  <script src="js/mapgen.js?v=1316"></script>
+  <script src="js/storyboard.js?v=1316"></script>
+  <script src="js/gallery.js?v=1316"></script>
+  <script src="js/genmodal.js?v=1316"></script>
+  <script src="js/assistant.js?v=1316"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>
