@@ -320,22 +320,44 @@ function akBuildScene(manifestPath) {
         });
     }
     // 평면 컴프 — 컴프는 Final 하나. 씬은 S{번호}_ 접두사 레이어 그룹으로 구분한다.
-    function akFindOrMakeComp(proj, name, W, H, fps, dur) {
+    // **같은 이름의 컴프가 여럿이면 알려 준다.** 애프터이펙트는 이름 중복을
+    // 허용하는데, 여기서는 먼저 찾은 것 하나에만 쓴다. 보고 있는 「Final」과
+    // 쓰는 「Final」이 다르면, 눌러도 아무 일이 안 일어나는 것처럼 보인다.
+    function akFindOrMakeComp(proj, name, W, H, fps, dur, log) {
+        var found = null, dup = 0;
         for (var i = 1; i <= proj.numItems; i++) {
             var it = proj.item(i);
             if (it instanceof CompItem && it.name === name) {
-                if (dur > it.duration) { it.duration = dur; }
-                return it;
+                if (!found) { found = it; } else { dup++; }
             }
+        }
+        if (dup && log) {
+            log.push("경고: 「" + name + "」 컴프가 " + (dup + 1) + "개입니다 — 맨 앞의 것에 씁니다");
+        }
+        if (found) {
+            if (dur > found.duration) { found.duration = dur; }
+            return found;
         }
         return proj.items.addComp(name, W, H, 1.0, Math.max(dur, 1), fps);
     }
 
-    // 이 씬의 레이어를 전부 지운다(재빌드는 지우고 다시 넣는다).
-    function akRemoveSceneGroup(comp, prefix) {
-        var n = 0;
+    // 이 씬의 기존 레이어를 **모으기만** 한다. 지우는 것은 새로 다 만든 뒤다.
+    //
+    // 전에는 빌드 전에 지웠다. 그러다 빌드가 도중에 실패하면 옛것은 이미 없고
+    // 새것은 배경까지만 남는다 — 100씬에서 「배경만 들어오고 그전에 넣어 둔
+    // PNG 는 사라졌다」가 이것이다. **실패한 재빌드가 멀쩡한 결과를 지우면 안 된다.**
+    function akCollectSceneGroup(comp, prefix) {
+        var got = [];
         for (var i = comp.numLayers; i >= 1; i--) {
-            if (comp.layer(i).name.indexOf(prefix) === 0) { comp.layer(i).remove(); n++; }
+            if (comp.layer(i).name.indexOf(prefix) === 0) { got.push(comp.layer(i)); }
+        }
+        return got;
+    }
+
+    function akDropLayers(list) {
+        var n = 0;
+        for (var i = 0; i < list.length; i++) {
+            try { list[i].remove(); n++; } catch (e) { }
         }
         return n;
     }
@@ -787,25 +809,27 @@ function akBuildScene(manifestPath) {
             var se = (scenes[ei].start || 0) + (scenes[ei].duration || 5);
             if (se > endT) { endT = se; }
         }
-        var comp = akFindOrMakeComp(proj, "Final", W, H, FPS, endT);
+        var comp = akFindOrMakeComp(proj, "Final", W, H, FPS, endT, log);
 
         for (var i = 0; i < scenes.length; i++) {
             var s = scenes[i];
-            akRemoveSceneGroup(comp, s.prefix);           // 재빌드 — 지우고 다시 넣는다
+            // 옛 레이어는 참조만 잡아 두고, **새로 다 만든 뒤에** 지운다.
+            var stale = akCollectSceneGroup(comp, s.prefix);
             var before = comp.numLayers;
             try { buildSceneGroup(proj, comp, s, W, H, log, FPS); }
             catch (eB) {
-                log.push((s.prefix || "") + "빌드 실패 " + eB.toString());
-                // 실패해도 이미 만들어진 레이어는 남는다 — 접두사를 붙여 두지 않으면
-                // 다음 재빌드의 akRemoveSceneGroup이 못 지워 컴프에 영원히 쌓인다.
+                log.push((s.prefix || "") + "빌드 실패 — 옛 레이어를 그대로 둡니다: " + eB.toString());
+                // 실패했으면 옛것을 지키고, 만들다 만 것을 되돌린다. 남겨 두면
+                // 옛것과 겹쳐 두 벌이 된다.
                 var madeErr = comp.numLayers - before;
-                if (madeErr > 0) {
-                    akTagGroup(comp, madeErr, s.prefix || "S00_", null,
-                               s.start || 0, (s.start || 0) + (s.duration || 5));
+                for (var kE = madeErr; kE >= 1; kE--) {
+                    try { comp.layer(kE).remove(); } catch (eR) { }
                 }
                 continue;
             }
+            // **개수를 먼저 센다.** 옛것을 치우면 numLayers 가 줄어 셈이 틀어진다.
             var made = comp.numLayers - before;
+            akDropLayers(stale);                          // 새것이 다 선 뒤에 옛것을 치운다
             var group = [];                               // 인덱스는 옮기는 즉시 밀리므로 참조를 먼저 모은다
             for (var k = 1; k <= made && k <= comp.numLayers; k++) { group.push(comp.layer(k)); }
             var anchor = akGroupAnchor(comp, scenes, i);  // 다음 씬 그룹 위로 옮긴다
