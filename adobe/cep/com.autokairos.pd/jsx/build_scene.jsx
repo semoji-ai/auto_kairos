@@ -428,6 +428,24 @@ function akBuildScene(manifestPath) {
         return byName;
     }
 
+    // 레이어를 씬 구간에 맞춘다.
+    //
+    // **컴프를 소스로 쓰면 그 컴프의 길이가 상한이다.** SVG 는 컴프로 들어오는데
+    // 그 컴프가 1프레임이라, inPoint 를 씬 시작으로 밀어도 outPoint 가 따라오지
+    // 못하고 0초에 1프레임짜리로 앉았다. 정지 벡터이므로 소스 길이를 늘려도
+    // 잃는 것이 없다.
+    function akSpan(il, t0, t1) {
+        var need = Math.max(0.04, t1 - t0);
+        try {
+            var src = il.source;
+            if (src instanceof CompItem && src.duration < need) { src.duration = need; }
+        } catch (eD) { }
+        // startTime 을 먼저 맞춘다 — 소스 0초가 씬 시작에 오게 한다.
+        try { il.startTime = t0; } catch (eS) { }
+        il.inPoint = t0;
+        il.outPoint = t1;
+    }
+
     // 이 항목을 화면에 쓸 수 있는가. **크기가 있어야 하고, 소재가 살아 있어야 한다.**
     // 없는 파일 자리표시자나 내용을 못 읽은 빈 항목이 그대로 얹히면, 이름만 있는
     // 빈 레이어가 된다 — SVG 를 넣었을 때 실제로 그렇게 나왔다.
@@ -786,7 +804,7 @@ function akBuildScene(manifestPath) {
                 if (!il) { log.push(pf + "레이어 누락 " + (lay.aeName || lay.name)); continue; }
                 try {
                     il.name = lay.aeName || lay.name;
-                    il.inPoint = t0; il.outPoint = t1;
+                    akSpan(il, t0, t1);
                     il.parent = guide;
                     if (lay.moves) { applyMoves(comp, il, lay, t0, dur, W, H, fps); }
                     var top = il;                         // 까딱까딱 널이 끼면 그 널이 가이드의 자식
@@ -846,7 +864,7 @@ function akBuildScene(manifestPath) {
             }, W, H);
             if (one) {
                 one.name = pf + "이미지";
-                one.inPoint = t0; one.outPoint = t1;
+                akSpan(one, t0, t1);
                 one.parent = guide;
             } else { log.push(pf + "image 누락"); }
         }
