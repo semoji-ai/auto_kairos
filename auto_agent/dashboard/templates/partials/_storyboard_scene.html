@@ -18,48 +18,28 @@
     {# 이미지 / 영상 / 레이어 — 한 자리에서 갈아 낀다.
        어도비 패널이 만든 비디오와 레이어가 같은 폴더에 있는데 대시보드가
        몰라 안 보였다. 볼 수 있는 것만 단추로 낸다. #}
-    {% if scene._video_url or scene._layers %}
-    <div class="sv-switch" data-scene="{{ scene.sceneNumber }}">
-      <button class="svb on" data-mode="image">🖼 이미지</button>
-      {% if scene._layers %}<button class="svb" data-mode="layers">🧩 레이어 {{ scene._layers|length }}</button>{% endif %}
-      {% if scene._video_url %}<button class="svb" data-mode="video">🎞 영상</button>{% endif %}
-    </div>
-    {% endif %}
-    <img src="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }}" class="detail-image" id="main-scene-image">
+    {# 미리보기 위에 겹쳐 둔다 — 어도비 패널과 같은 자리(왼쪽 위 모서리) #}
+    <div class="sv-wrap">
+      {% if scene._video_url or scene._layers %}
+      <div class="sv-switch" data-scene="{{ scene.sceneNumber }}">
+        <button class="svb on" data-mode="image">🖼 이미지</button>
+        {% if scene._layers %}<button class="svb" data-mode="layers">🧩 레이어</button>{% endif %}
+        {% if scene._video_url %}<button class="svb" data-mode="video">🎞 영상</button>{% endif %}
+      </div>
+      {% endif %}
+      <img src="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }}" class="detail-image" id="main-scene-image">
     {# 비디오 만들기 — 애프터이펙트와 무관한 기능인데 패널에만 있었다 #}
     <div class="sv-make">
       <button class="sv-mk" id="btn-make-video" data-slug="{{ slug }}"
               data-scene="{{ scene.sceneNumber }}">🎞 비디오 생성</button>
       <span class="sv-mk-note" id="sv-mk-note"></span>
     </div>
-    {% if scene._video_url %}
-    <video src="{{ scene._video_url }}" controls preload="metadata"
-           class="detail-image sv-pane" id="scene-video" style="display:none"></video>
-    {% endif %}
-    {% if scene._layers %}
-    <div class="sv-pane sv-layers" id="scene-layers" style="display:none"
-         data-slug="{{ slug }}" data-scene="{{ scene.sceneNumber }}">
-      {# 머리줄 — 어도비 패널과 같은 구성 #}
-      <div class="lyr-head">
-        <span>레이어 {{ scene._layers|length }}</span>
-        <button class="lyr-vec-all" title="SVG가 없는 레이어를 모두 벡터화합니다(레이어당 1크레딧)">전체 벡터화</button>
-        <button class="lyr-regen" title="씬을 다시 분리합니다 — 레이어 전체가 새로 만들어집니다">↻ 다시 분리</button>
-        <span class="lyr-note"></span>
-      </div>
-      {% for L in scene._layers %}
-      <div class="lyr-row" data-layer="{{ L.stem }}" data-rel="{{ L.rel }}">
-        <img class="lyr" src="{{ L.url }}" alt="{{ L.name }}" loading="lazy">
-        <span class="lyr-name" title="{{ L.stem }}">{{ L.name }}</span>
-        <span class="lyr-kind">{{ '배경' if L.is_bg else ('인물' if L.kind == 'character' else '사물') }}</span>
-        {% if L.svg %}<span class="lyr-badge">SVG</span>{% endif %}
-        {% if not L.is_bg %}
-        <button class="lyr-pose" title="이 레이어만 고칩니다 — 자세·표정 (씨드림 5.0 Pro, 3크레딧)">자세</button>
-        {% endif %}
-        <button class="lyr-revec">{{ '↻SVG' if L.svg else 'SVG' }}</button>
-      </div>
-      {% endfor %}
+      {% if scene._video_url %}
+      <video src="{{ scene._video_url }}" controls preload="metadata"
+             class="detail-image sv-pane" id="scene-video" style="display:none"></video>
+      {% endif %}
     </div>
-    {% endif %}
+
   </div>
   {% endif %}
 
@@ -139,6 +119,31 @@
       {% endif %}
     </h4>
     <div id="narration-view" class="narration-full">{{ scene.narration|replace('\n', '<br>') }}</div>
+    {# 레이어 패널 — 어도비처럼 스크립트 아래에 둔다 #}
+    {% if scene._layers %}
+    <div class="sv-pane sv-layers" id="scene-layers" style="display:none"
+         data-slug="{{ slug }}" data-scene="{{ scene.sceneNumber }}">
+      {# 머리줄 — 어도비 패널과 같은 구성 #}
+      <div class="lyr-head">
+        <span>레이어 {{ scene._layers|length }}</span>
+        <button class="lyr-vec-all" title="SVG가 없는 레이어를 모두 벡터화합니다(레이어당 1크레딧)">전체 벡터화</button>
+        <button class="lyr-regen" title="씬을 다시 분리합니다 — 레이어 전체가 새로 만들어집니다">↻ 다시 분리</button>
+        <span class="lyr-note"></span>
+      </div>
+      {% for L in scene._layers %}
+      <div class="lyr-row" data-layer="{{ L.stem }}" data-rel="{{ L.rel }}">
+        <img class="lyr" src="{{ L.url }}" alt="{{ L.name }}" loading="lazy">
+        <span class="lyr-name" title="{{ L.stem }}">{{ L.name }}</span>
+        <span class="lyr-kind">{{ '배경' if L.is_bg else ('인물' if L.kind == 'character' else '사물') }}</span>
+        {% if L.svg %}<span class="lyr-badge">SVG</span>{% endif %}
+        {% if not L.is_bg %}
+        <button class="lyr-pose" title="이 레이어만 고칩니다 — 자세·표정 (씨드림 5.0 Pro, 3크레딧)">자세</button>
+        {% endif %}
+        <button class="lyr-revec">{{ '↻SVG' if L.svg else 'SVG' }}</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
     <div id="narration-edit" style="display:none;margin-top:6px">
       <textarea id="narration-textarea" rows="6"
                 style="width:100%;background:rgba(0,0,0,0.3);color:var(--text-primary);border:1px solid rgba(96,165,250,0.4);border-radius:6px;padding:10px;font-size:13px;line-height:1.7;resize:vertical;font-family:inherit">{{ scene.narration }}</textarea>
@@ -558,11 +563,14 @@ function _tryMountEditor() {
 </script>
 
 <style>
-/* 이미지 / 레이어 / 영상 전환 */
-.sv-switch { display:flex; gap:4px; margin-bottom:6px; }
-.sv-switch .svb { padding:3px 10px; font-size:12px; border:1px solid #33363c;
-  background:#2c2f36; color:#c5c8cc; border-radius:5px; cursor:pointer; }
-.sv-switch .svb.on { background:#3a6df0; border-color:#3a6df0; color:#fff; }
+/* 이미지 / 레이어 / 영상 — **미리보기 위에 겹친다.** 어도비 패널과 같은
+   자리(왼쪽 위 모서리)라 두 화면을 오갈 때 다시 익힐 것이 없다. */
+.sv-wrap { position:relative; }
+.sv-switch { display:flex; gap:1px; position:absolute; top:4px; left:4px; z-index:2;
+  border-radius:4px; overflow:hidden; }
+.sv-switch .svb { padding:2px 7px; font-size:10px; border:0; border-radius:0;
+  background:rgba(0,0,0,0.62); color:#c5c8cc; cursor:pointer; white-space:nowrap; }
+.sv-switch .svb.on { background:#3a6df0; color:#fff; }
 /* 레이어 목록 — 어도비 패널과 같은 구성(줄 목록 + 줄마다 버튼).
    세로를 고정한다: 레이어가 많은 씬은 목록이 길어져 화면을 잡아먹는다. */
 .sv-layers { max-height:300px; overflow-y:auto; border:1px solid #333; border-radius:4px; }
