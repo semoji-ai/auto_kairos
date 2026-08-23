@@ -1691,6 +1691,13 @@ async def storyboard_scene_detail_by_slug(request: Request, project_ref: str, sc
     dir_name = Path(out_dir).name if out_dir else slug
     scene["_image_url"] = get_scene_image_url(dir_name, scene_num, out_dir)
     scene["_audio_url"] = get_scene_audio_url(dir_name, scene_num, out_dir)
+    # 어도비가 만든 비디오·레이어 — 이 라우터는 씬을 직접 조립하므로
+    # helpers 의 enrich 를 거치지 않는다. 여기서도 붙여 준다.
+    from auto_agent.dashboard.helpers import (adobe_scene_ids, get_scene_video_url,
+                                              get_scene_layer_urls)
+    _asid = adobe_scene_ids(out_dir).get(float(scene_num)) if out_dir else None
+    scene["_video_url"] = get_scene_video_url(dir_name, out_dir, _asid) if _asid else ""
+    scene["_layers"] = get_scene_layer_urls(dir_name, out_dir, _asid) if _asid else []
 
     tts = load_project_json(out_dir,"tts_results.json")
     if tts:

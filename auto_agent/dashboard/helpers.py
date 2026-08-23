@@ -128,6 +128,8 @@ def get_scene_layer_urls(project_dir_name: str, output_dir: str, sid: str) -> li
         e = specs.get(stem) or {}
         out.append({
             "name": e.get("name") or stem,
+            "stem": stem,
+            "rel": f"layers/{p.name}",          # 자세 수정이 이 경로로 부른다
             "url": f"/output/{project_dir_name}/layers/{p.name}",
             "svg": (d / (stem + ".svg")).is_file(),
             "is_bg": "__bg" in p.name,
