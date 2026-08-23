@@ -253,11 +253,24 @@
     .sb-acc { margin-top:8px; border-top:1px solid #2c2f36; }
     .sb-acc > summary { cursor:pointer; color:#9aa0a6; font-size:12px; padding:6px 0; }
     .sb-acc input { width:100%; box-sizing:border-box; padding:6px; margin:3px 0; background:#1b1d21; color:#e6e6e6; border:1px solid #33363c; border-radius:5px; }
-    /* 세로 갤러리 썸네일 */
-    #gallery-panel .gal-thumb { display:block; width:100%; height:auto; border-radius:4px; }
-    #gallery-panel .gal-item { position:relative; margin:5px 0; }
-    #gallery-panel .gal-ae { display:none; position:absolute; top:4px; right:4px;
-      width:auto; margin:0; padding:2px 6px; font-size:11px; background:rgba(0,0,0,0.65); }
+    /* 소스 패널 — 종류로 거르고 작게 깐다. 자세히는 눌러서 본다.
+       천 장이 한 줄에 하나씩 크게 깔리면 찾는 것이 일이 된다. */
+    #gallery-panel .gal-filter { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:6px;
+      position:sticky; top:0; background:#1b1d21; padding-bottom:4px; z-index:2; }
+    #gallery-panel .galf { width:auto; margin:0; padding:2px 7px; font-size:10px;
+      background:#2c2f36; border:1px solid #33363c; border-radius:10px; color:#c5c8cc;
+      white-space:nowrap; }
+    #gallery-panel .galf.on { background:#3a6df0; border-color:#3a6df0; color:#fff; }
+    #gallery-panel .gal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(56px,1fr));
+      gap:4px; }
+    #gallery-panel .gal-thumb { display:block; width:100%; height:56px;
+      object-fit:contain; background:#15171a; border-radius:3px; cursor:pointer; }
+    #gallery-panel .gal-vid { height:56px; display:flex; align-items:center; justify-content:center;
+      background:#15171a; border-radius:3px; font-size:20px; cursor:pointer; }
+    #gallery-panel .gal-item { position:relative; margin:0; }
+    #gallery-panel .gal-ae { display:none; position:absolute; top:2px; right:2px;
+      width:auto; margin:0; padding:0 5px; font-size:10px; line-height:16px;
+      background:rgba(0,0,0,0.7); border-radius:3px; }
     #gallery-panel .gal-item:hover .gal-ae { display:block; }
     /* 검색 결과 선택 → 프로젝트로 불러오기 */
     #gallery-panel .gal-selbar { display:flex; align-items:center; gap:6px; margin-bottom:6px;
@@ -817,16 +830,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1324"></script>
-  <script src="js/nav.js?v=1324"></script>
-  <script src="js/planning.js?v=1324"></script>
+  <script src="js/main.js?v=1325"></script>
+  <script src="js/nav.js?v=1325"></script>
+  <script src="js/planning.js?v=1325"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1324"></script>
-  <script src="js/storyboard.js?v=1324"></script>
-  <script src="js/gallery.js?v=1324"></script>
-  <script src="js/genmodal.js?v=1324"></script>
-  <script src="js/assistant.js?v=1324"></script>
+  <script src="js/mapgen.js?v=1325"></script>
+  <script src="js/storyboard.js?v=1325"></script>
+  <script src="js/gallery.js?v=1325"></script>
+  <script src="js/genmodal.js?v=1325"></script>
+  <script src="js/assistant.js?v=1325"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>

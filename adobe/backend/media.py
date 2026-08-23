@@ -5,12 +5,25 @@ from pathlib import Path
 
 _IMG_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 _VID_EXT = {".mp4", ".mov", ".webm", ".m4v"}
-_MEDIA_DIRS = ["images", "images/search", "storyboard", "characters", "layers", "video_sources"]
+# 훑을 폴더. `video` 가 빠져 있어 만든 비디오 29편이 소스 목록에 안 보였다.
+# `docs` 는 조사로 확보한 실물 자료 — 씬에 붙일 수 있어야 한다.
+_MEDIA_DIRS = ["images", "images/generated", "images/search", "storyboard",
+               "characters", "layers", "video", "video_sources", "docs",
+               "infographic"]
+
+# 소스 종류. 폴더가 곧 종류다 — 화면에서 이 이름으로 거른다.
+_GROUP = {
+    "storyboard": "씬 이미지", "images": "씬 이미지", "images/generated": "씬 이미지",
+    "images/search": "실물 자료", "docs": "실물 자료",
+    "layers": "레이어", "characters": "인물 시트",
+    "video": "비디오", "video_sources": "비디오", "infographic": "도해",
+}
 
 
 def list_media(proj_dir: Path) -> list[dict]:
     """프로젝트 미디어 폴더의 이미지/비디오 파일 목록. [{name, rel, type, dir}]."""
     out: list[dict] = []
+    seen: set = set()
     for sub in _MEDIA_DIRS:
         d = proj_dir / sub
         if not d.is_dir():
@@ -22,8 +35,12 @@ def list_media(proj_dir: Path) -> list[dict]:
             kind = "image" if ext in _IMG_EXT else ("video" if ext in _VID_EXT else None)
             if not kind:
                 continue
-            out.append({"name": f.name, "rel": f.relative_to(proj_dir).as_posix(),
-                        "type": kind, "dir": str(proj_dir)})
+            rel = f.relative_to(proj_dir).as_posix()
+            if rel in seen:
+                continue
+            seen.add(rel)
+            out.append({"name": f.name, "rel": rel, "type": kind,
+                        "group": _GROUP.get(sub, sub), "dir": str(proj_dir)})
     return out
 
 

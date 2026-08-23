@@ -5,37 +5,99 @@ function _gesc(s) {
   return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+/* 소스 목록 — 종류로 거르고, 작게 깐다. 자세히는 눌러서 본다.
+   천 장이 한 줄에 하나씩 크게 깔리면 찾는 것이 일이 된다. */
+var GAL_ITEMS = [];
+var GAL_FILTER = "전체";
+
 function loadGallery() {
   if (!SELECTED_PROJECT) { $("gallery-panel").textContent = "프로젝트를 먼저 선택하세요."; return; }
   $("gallery-panel").textContent = "불러오는 중...";
   fetch(BACKEND + "/api/media?project_id=" + encodeURIComponent(SELECTED_PROJECT))
     .then(function (r) { return r.json(); })
     .then(function (j) {
-      var items = j.items || [];
-      if (!items.length) { $("gallery-panel").textContent = "(소스 없음)"; return; }
-      $("gallery-panel").innerHTML = items.map(function (it) {
-        if (it.type === "image") {
-          return '<div class="gal-item">'
-            + '<img src="file://' + it.dir + '/' + it.rel + '" draggable="true"'
-            + ' ondragstart="event.dataTransfer.setData(\'text/plain\', this.getAttribute(\'data-rel\'))"'
-            + ' data-rel="' + _gesc(it.rel) + '" title="' + _gesc(it.rel) + ' — 시트 행으로 드래그 / ↧AE로 임포트"'
-            + ' class="gal-thumb" style="cursor:grab;">'
-            + '<button class="gal-ae" data-rel="' + _gesc(it.rel) + '" data-dir="' + _gesc(it.dir) + '" title="AE 프로젝트로 가져오기">↧AE</button>'
-            + '</div>';
-        }
-        return '<div class="gal-item"><span style="display:inline-block;padding:6px;background:#23262b;border-radius:4px;font-size:11px;">🎬 ' + _gesc(it.name) + '</span>'
-          + '<button class="gal-ae" data-rel="' + _gesc(it.rel) + '" data-dir="' + _gesc(it.dir) + '" title="AE 프로젝트로 가져오기">↧AE</button></div>';
-      }).join("");
-      var aebtns = $("gallery-panel").querySelectorAll("button.gal-ae");
-      for (var i = 0; i < aebtns.length; i++) {
-        aebtns[i].addEventListener("click", function () {
-          if (typeof importToAE === "function") {
-            importToAE(this.getAttribute("data-dir"), [this.getAttribute("data-rel")], "gallery", "gallery-panel");
-          }
-        });
-      }
+      GAL_ITEMS = j.items || [];
+      if (!GAL_ITEMS.length) { $("gallery-panel").textContent = "(소스 없음)"; return; }
+      GAL_FILTER = "전체";
+      _renderGallery();
     })
     .catch(function (e) { $("gallery-panel").textContent = "오류: " + e; });
+}
+
+function _galGroups() {
+  var c = {}, order = [];
+  for (var i = 0; i < GAL_ITEMS.length; i++) {
+    var g = GAL_ITEMS[i].group || "기타";
+    if (!(g in c)) { c[g] = 0; order.push(g); }
+    c[g]++;
+  }
+  return { counts: c, order: order };
+}
+
+function _renderGallery() {
+  var g = _galGroups();
+  var chips = '<div class="gal-filter">'
+    + '<button class="galf' + (GAL_FILTER === "전체" ? " on" : "") + '" data-g="전체">'
+    + '전체 ' + GAL_ITEMS.length + '</button>'
+    + g.order.map(function (k) {
+        return '<button class="galf' + (GAL_FILTER === k ? " on" : "") + '" data-g="' + _gesc(k) + '">'
+             + _gesc(k) + ' ' + g.counts[k] + '</button>';
+      }).join("")
+    + '</div>';
+
+  var list = GAL_ITEMS.filter(function (it) {
+    return GAL_FILTER === "전체" || (it.group || "기타") === GAL_FILTER;
+  });
+
+  var body = '<div class="gal-grid">' + list.map(function (it) {
+    var src = "file://" + it.dir + "/" + it.rel;
+    if (it.type === "video") {
+      return '<div class="gal-item" data-rel="' + _gesc(it.rel) + '" data-dir="' + _gesc(it.dir) + '"'
+        + ' data-kind="video" title="' + _gesc(it.rel) + '">'
+        + '<div class="gal-vid">🎞</div>'
+        + '<button class="gal-ae" data-rel="' + _gesc(it.rel) + '" data-dir="' + _gesc(it.dir) + '" title="AE 프로젝트로 가져오기">↧</button>'
+        + '</div>';
+    }
+    return '<div class="gal-item" data-rel="' + _gesc(it.rel) + '" data-dir="' + _gesc(it.dir) + '"'
+      + ' data-kind="image" title="' + _gesc(it.rel) + '">'
+      + '<img src="' + src + '" draggable="true"'
+      + ' ondragstart="event.dataTransfer.setData(\'text/plain\', this.parentNode.getAttribute(\'data-rel\'))"'
+      + ' class="gal-thumb">'
+      + '<button class="gal-ae" data-rel="' + _gesc(it.rel) + '" data-dir="' + _gesc(it.dir) + '" title="AE 프로젝트로 가져오기">↧</button>'
+      + '</div>';
+  }).join("") + '</div>';
+
+  $("gallery-panel").innerHTML = chips + body;
+
+  var fb = $("gallery-panel").querySelectorAll("button.galf");
+  for (var k = 0; k < fb.length; k++) {
+    fb[k].addEventListener("click", function () {
+      GAL_FILTER = this.getAttribute("data-g");
+      _renderGallery();
+    });
+  }
+  var aebtns = $("gallery-panel").querySelectorAll("button.gal-ae");
+  for (var i = 0; i < aebtns.length; i++) {
+    aebtns[i].addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      if (typeof importToAE === "function") {
+        importToAE(this.getAttribute("data-dir"), [this.getAttribute("data-rel")], "gallery", "gallery-panel");
+      }
+    });
+  }
+  // 누르면 크게 본다 — 썸네일이 작아진 만큼 이쪽이 있어야 한다
+  var cells = $("gallery-panel").querySelectorAll(".gal-item");
+  for (var c = 0; c < cells.length; c++) {
+    cells[c].addEventListener("click", function (ev) {
+      if (ev.target.closest("button")) { return; }
+      var rel = this.getAttribute("data-rel"), dir = this.getAttribute("data-dir");
+      var src = "file://" + dir + "/" + rel;
+      var html = (this.getAttribute("data-kind") === "video")
+        ? '<video src="' + src + '" controls autoplay style="max-width:100%"></video>'
+        : '<img class="main" src="' + src + '">';
+      if (typeof pvZoom === "function") { pvZoom(html, rel); }
+    });
+  }
 }
 
 function searchGallery() {
