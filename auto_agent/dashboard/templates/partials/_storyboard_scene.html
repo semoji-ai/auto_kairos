@@ -26,6 +26,12 @@
     </div>
     {% endif %}
     <img src="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }}" class="detail-image" id="main-scene-image">
+    {# 비디오 만들기 — 애프터이펙트와 무관한 기능인데 패널에만 있었다 #}
+    <div class="sv-make">
+      <button class="sv-mk" id="btn-make-video" data-slug="{{ slug }}"
+              data-scene="{{ scene.sceneNumber }}">🎞 비디오 생성</button>
+      <span class="sv-mk-note" id="sv-mk-note"></span>
+    </div>
     {% if scene._video_url %}
     <video src="{{ scene._video_url }}" controls preload="metadata"
            class="detail-image sv-pane" id="scene-video" style="display:none"></video>
@@ -561,6 +567,42 @@ function _tryMountEditor() {
     if (r) r.innerHTML = '<div style="padding:40px;color:#f66;text-align:center;font-size:13px">프리뷰 로드 실패</div>';
   }
 })();
+
+/* 비디오 생성 — 씬 길이는 서버가 정한다(씬 길이 + 1초, 상한 15초).
+   프롬프트는 사람이 쓴다. 씬 규칙은 docs/rules/scene-video-rules.md. */
+(function () {
+  var b = document.getElementById("btn-make-video");
+  if (!b) { return; }
+  var note = document.getElementById("sv-mk-note");
+  function say(m) { if (note) { note.textContent = m; } }
+
+  fetch("/api/video/accounts").then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (j.total != null) { say("잔액 " + Math.round(j.total).toLocaleString() + " 크레딧"); }
+    }).catch(function () {});
+
+  b.addEventListener("click", function () {
+    var p = window.prompt(
+      "이 씬에서 무엇이 움직입니까?\n\n" +
+      "사건이 있는 씬은 시작과 끝이 달라야 합니다.\n" +
+      "예) 둑 위쪽으로 물이 차오르고 아래쪽 수위가 내려가 젖은 돌이 드러난다.\n" +
+      "    남자는 그것을 내려다보며 입꼬리가 올라간다.");
+    if (!p) { return; }
+    b.disabled = true; say("만드는 중… (3~5분)");
+    fetch("/api/video/generate", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: b.getAttribute("data-slug"),
+                             sceneNumber: parseFloat(b.getAttribute("data-scene")),
+                             prompt: p })
+    }).then(function (r) { return r.json(); })
+      .then(function (j) {
+        b.disabled = false;
+        if (j.ok) { say(j.duration + "초 완성 — 새로고침하면 보입니다"); }
+        else { say("실패: " + (j.error || JSON.stringify(j)).slice(0, 120)); }
+      })
+      .catch(function (e) { b.disabled = false; say("오류: " + e); });
+  });
+})();
 </script>
 
 <style>
@@ -578,6 +620,12 @@ function _tryMountEditor() {
   background:#2c2f36; color:#c5c8cc; margin-right:3px; }
 .sv-kind.sv-character { background:#3a5a2c; color:#d6f0c0; }
 .sv-kind.sv-bg { background:#3a3f4a; }
+.sv-make { margin:6px 0; display:flex; align-items:center; gap:8px; }
+.sv-mk { padding:4px 11px; font-size:12px; border:1px solid #33363c; background:#2c2f36;
+  color:#c5c8cc; border-radius:5px; cursor:pointer; }
+.sv-mk:hover { background:#3a6df0; color:#fff; }
+.sv-mk[disabled] { opacity:.5; cursor:default; }
+.sv-mk-note { font-size:11px; color:#9aa0a6; }
 .sv-svg { display:inline-block; padding:0 4px; border-radius:6px; font-size:9px;
   background:#2b4a5a; color:#bfe4f5; margin-left:3px; }
 </style>

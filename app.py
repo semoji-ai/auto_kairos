@@ -62,6 +62,9 @@ from auto_agent.dashboard.vault_routes import router as vault_router
 from auto_agent.dashboard.scene_editor import router as scene_editor_router
 from auto_agent.dashboard.scene_editor import manifest_router
 from auto_agent.dashboard.design_presets import router as design_presets_router
+from auto_agent.dashboard.video_routes import router as video_router
+from auto_agent.dashboard.layer_routes import router as layer_router
+from auto_agent.dashboard.voice_routes import router as voice_router
 
 app = FastAPI(title="Auto Agent Dashboard")
 
@@ -74,6 +77,9 @@ app.include_router(vault_router)
 app.include_router(scene_editor_router)
 app.include_router(manifest_router)
 app.include_router(design_presets_router)
+app.include_router(video_router)
+app.include_router(layer_router)
+app.include_router(voice_router)
 from auto_agent.dashboard.agent_messenger import router as messenger_router
 app.include_router(messenger_router)
 from auto_agent.dashboard.tools_routes import router as tools_router
