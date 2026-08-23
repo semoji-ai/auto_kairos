@@ -15,7 +15,35 @@
   <div id="info-tab" style="display:none">
   {% if scene._image_url %}
   <div class="section">
+    {# 이미지 / 영상 / 레이어 — 한 자리에서 갈아 낀다.
+       어도비 패널이 만든 비디오와 레이어가 같은 폴더에 있는데 대시보드가
+       몰라 안 보였다. 볼 수 있는 것만 단추로 낸다. #}
+    {% if scene._video_url or scene._layers %}
+    <div class="sv-switch" data-scene="{{ scene.sceneNumber }}">
+      <button class="svb on" data-mode="image">🖼 이미지</button>
+      {% if scene._layers %}<button class="svb" data-mode="layers">🧩 레이어 {{ scene._layers|length }}</button>{% endif %}
+      {% if scene._video_url %}<button class="svb" data-mode="video">🎞 영상</button>{% endif %}
+    </div>
+    {% endif %}
     <img src="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }}" class="detail-image" id="main-scene-image">
+    {% if scene._video_url %}
+    <video src="{{ scene._video_url }}" controls preload="metadata"
+           class="detail-image sv-pane" id="scene-video" style="display:none"></video>
+    {% endif %}
+    {% if scene._layers %}
+    <div class="sv-pane sv-layers" id="scene-layers" style="display:none">
+      {% for L in scene._layers %}
+      <div class="sv-layer">
+        <img src="{{ L.url }}" alt="{{ L.name }}" loading="lazy">
+        <div class="sv-layer-cap">
+          <span class="sv-kind sv-{{ L.kind }}">{{ '배경' if L.is_bg else ('인물' if L.kind == 'character' else '사물') }}</span>
+          {{ L.name }}
+          {% if L.svg %}<span class="sv-svg">SVG</span>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
     {% if scene.imageAsset and scene.imageAsset.source in ('wikimedia', 'search') %}
     <div class="image-candidates" id="image-candidates" data-slug="{{ slug }}" data-scene="{{ scene.sceneNumber }}">
       <div class="candidates-header">
@@ -532,5 +560,46 @@ function _tryMountEditor() {
     var r = document.getElementById('scene-editor-root');
     if (r) r.innerHTML = '<div style="padding:40px;color:#f66;text-align:center;font-size:13px">프리뷰 로드 실패</div>';
   }
+})();
+</script>
+
+<style>
+/* 이미지 / 레이어 / 영상 전환 */
+.sv-switch { display:flex; gap:4px; margin-bottom:6px; }
+.sv-switch .svb { padding:3px 10px; font-size:12px; border:1px solid #33363c;
+  background:#2c2f36; color:#c5c8cc; border-radius:5px; cursor:pointer; }
+.sv-switch .svb.on { background:#3a6df0; border-color:#3a6df0; color:#fff; }
+.sv-layers { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; }
+.sv-layer img { width:100%; height:90px; object-fit:contain; background:#15171a;
+  border:1px solid #2c2f36; border-radius:4px; display:block; }
+.sv-layer-cap { font-size:10px; color:#9aa0a6; margin-top:3px; line-height:1.35;
+  word-break:break-all; }
+.sv-kind { display:inline-block; padding:0 5px; border-radius:8px; font-size:9px;
+  background:#2c2f36; color:#c5c8cc; margin-right:3px; }
+.sv-kind.sv-character { background:#3a5a2c; color:#d6f0c0; }
+.sv-kind.sv-bg { background:#3a3f4a; }
+.sv-svg { display:inline-block; padding:0 4px; border-radius:6px; font-size:9px;
+  background:#2b4a5a; color:#bfe4f5; margin-left:3px; }
+</style>
+<script>
+(function () {
+  var sw = document.querySelector(".sv-switch");
+  if (!sw) { return; }
+  var img = document.getElementById("main-scene-image");
+  var vid = document.getElementById("scene-video");
+  var lay = document.getElementById("scene-layers");
+  sw.addEventListener("click", function (ev) {
+    var b = ev.target.closest(".svb");
+    if (!b) { return; }
+    var m = b.getAttribute("data-mode");
+    var all = sw.querySelectorAll(".svb");
+    for (var i = 0; i < all.length; i++) { all[i].classList.toggle("on", all[i] === b); }
+    if (img) { img.style.display = (m === "image") ? "" : "none"; }
+    if (lay) { lay.style.display = (m === "layers") ? "grid" : "none"; }
+    if (vid) {
+      vid.style.display = (m === "video") ? "" : "none";
+      if (m !== "video") { try { vid.pause(); } catch (e) {} }   // 떠나면 멈춘다
+    }
+  });
 })();
 </script>

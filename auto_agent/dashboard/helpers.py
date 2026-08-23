@@ -65,6 +65,79 @@ def _has_asset_entry(img_dir: Path, scene_num: int) -> bool:
                for e in db.get("scenes", []))
 
 
+def adobe_scene_ids(output_dir: str) -> dict:
+    """{씬번호: 어도비 sceneId}. 없으면 빈 dict.
+
+    **어도비가 만든 산출물은 그쪽 sceneId 로 이름 지어져 있다.**
+    레이어 `layers/<sid>__*.png`, 비디오 `video/v_<sid>_*.mp4`. 그런데
+    `scene_specs.json` 의 sceneId 는 다른 값이다 — 그쪽은 음성 파일 이름을
+    쥐고 있어 통일할 수 없다(양쪽 다 자기 파일을 이미 갖고 있다).
+    그래서 같은 폴더의 `scenes.json` 을 읽어 씬 번호로 잇는다.
+    """
+    fp = Path(output_dir) / "scenes.json"
+    if not fp.is_file():
+        return {}
+    try:
+        data = json.loads(fp.read_text(encoding="utf-8"))
+        rows = data.get("scenes") if isinstance(data, dict) else data
+        out = {}
+        for s in rows or []:
+            sid = s.get("sceneId")
+            if not sid:
+                continue
+            try:
+                out[float(s.get("sceneNumber"))] = sid
+            except (TypeError, ValueError):
+                continue
+        return out
+    except Exception:
+        return {}
+
+
+def get_scene_video_url(project_dir_name: str, output_dir: str, sid: str) -> str:
+    """씬 비디오 URL. 어도비 패널이 만든 것을 대시보드에서도 본다."""
+    if not sid:
+        return ""
+    d = Path(output_dir) / "video"
+    if not d.is_dir():
+        return ""
+    hits = sorted(d.glob(f"v_{sid}_*.mp4"), key=lambda p: p.stat().st_mtime, reverse=True)
+    if not hits:
+        return ""
+    return f"/output/{project_dir_name}/video/{hits[0].name}"
+
+
+def get_scene_layer_urls(project_dir_name: str, output_dir: str, sid: str) -> list:
+    """씬 레이어 목록 [{name, url, svg, is_bg}]. z 순서(배경 먼저)."""
+    if not sid:
+        return []
+    d = Path(output_dir) / "layers"
+    if not d.is_dir():
+        return []
+    specs = {}
+    fp = d / f"{sid}__elements.json"
+    if fp.is_file():
+        try:
+            for e in json.loads(fp.read_text(encoding="utf-8")):
+                specs[e.get("layer")] = e
+        except Exception:
+            pass
+    out = []
+    for p in sorted(d.glob(f"{sid}__*.png")):
+        stem = p.stem
+        e = specs.get(stem) or {}
+        out.append({
+            "name": e.get("name") or stem,
+            "url": f"/output/{project_dir_name}/layers/{p.name}",
+            "svg": (d / (stem + ".svg")).is_file(),
+            "is_bg": "__bg" in p.name,
+            "kind": e.get("kind") or ("bg" if "__bg" in p.name else "object"),
+            "z": e.get("z") if e.get("z") is not None else (-1 if "__bg" in p.name else 999),
+        })
+    out.sort(key=lambda x: (0 if x["is_bg"] else 1, x["z"], x["name"]))
+    return out
+
+
 def get_scene_image_url(project_dir_name: str, scene_num: int, output_dir: str) -> Optional[str]:
     """씬 이미지 URL 반환 (/output/ 마운트 기준). image_assets.json의 selected 우선."""
     img_dir = Path(output_dir) / "images"
@@ -464,6 +537,8 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
                 if match:
                     char_thumb_map[char_id] = f"/output/{project_dir_name_local}/characters/{match.name}"
 
+    # 어도비 sceneId 는 한 번만 읽는다 — 씬마다 읽으면 시트가 느려진다
+    _ADOBE_IDS = adobe_scene_ids(output_dir) if output_dir else {}
     for scene in scenes:
         sn = scene["sceneNumber"]
         # 비디오 에셋 정보 주입
@@ -490,6 +565,11 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
             scene["_video_thumb_url"] = ""
 
         scene["_image_url"] = get_scene_image_url(project_dir_name, sn, output_dir)
+        # 어도비 패널이 만든 비디오·레이어 — 같은 폴더에 있는데 대시보드가
+        # 몰라 안 보였다. 씬 번호로 어도비 sceneId 를 찾아 잇는다.
+        _asid = _ADOBE_IDS.get(float(sn)) if _ADOBE_IDS else None
+        scene["_video_url"] = get_scene_video_url(project_dir_name, output_dir, _asid) if _asid else ""
+        scene["_layers"] = get_scene_layer_urls(project_dir_name, output_dir, _asid) if _asid else []
         scene["_audio_url"] = get_scene_audio_url(project_dir_name, sn, output_dir,
                                                     scene_id=scene.get("sceneId", ""))
         tts = tts_map.get(sn, {})
