@@ -166,11 +166,136 @@ function akLayout_generic(comp, s, ctx) {
     }
 }
 
+
+/* ── flow · timeline · split ────────────────────────────────────────────
+   셋 다 `items` 로 돈다. 전에는 이름을 몰라 generic 으로 떨어져, 69씬이
+   밋밋한 기본꼴로 나왔다.
+
+   items 의 뜻이 갈래마다 다르다.
+     flow      단계 — 왼→오른쪽으로 이어진다
+     timeline  연·사건이 짝을 이룬다 (홀수는 연, 짝수는 내용)
+     split     좌우 대비 — 앞의 둘을 양쪽에 세운다
+   ─────────────────────────────────────────────────────────────────────── */
+
+function _akHead(comp, s, ctx, y) {
+    /* 제목 한 줄 + 밑줄. 셋이 같은 머리를 쓴다. */
+    var W = ctx.W, H = ctx.H, S = ctx.S, c = ctx.colors, t = ctx.type;
+    if (!s.title) { return; }
+    ctx.addTextL(comp, s.title, { x: W / 2, y: H * y, size: t.sub * 1.5 * S, rgb: c.textRgb,
+                                  font: ctx.fonts.headline, box: [W * 0.8, H * 0.12], leading: 1.2,
+                                  anim: { type: "reveal", t0: 0.15, dur: 0.6 } });
+    ctx.addRectL(comp, "rule", W * 0.18, H * (y + 0.075), W * 0.64, 3 * S, c.accentRgb);
+}
+
+function akLayout_flow(comp, s, ctx) {
+    var W = ctx.W, H = ctx.H, S = ctx.S, c = ctx.colors, t = ctx.type;
+    var items = s.items || [];
+    if (!items.length) { akLayout_generic(comp, s, ctx); return; }
+    var top = s.title ? 0.15 : 0.0;
+    _akHead(comp, s, ctx, 0.15);
+    var n = items.length;
+    var midY = H * (top ? 0.58 : 0.5);
+    // 칸 너비를 개수로 나눈다. 화살표 자리를 칸 사이에 둔다.
+    var margin = W * 0.08;
+    var span = (W - margin * 2) / n;
+    var boxW = span * 0.78;
+    for (var i = 0; i < n; i++) {
+        var cx = margin + span * i + span / 2;
+        var plate = ctx.addRectL(comp, "flowbox" + i, cx - boxW / 2, midY - 62 * S,
+                                 boxW, 124 * S, c.accentSoftRgb || c.mutedRgb);
+        var tl = ctx.addTextL(comp, items[i], { x: cx, y: midY, size: t.item * 0.9 * S,
+                              rgb: c.textRgb, font: ctx.fonts.body,
+                              box: [boxW * 0.86, 110 * S], leading: 1.2 });
+        // 단계는 하나씩 들어온다 — 흐름이 눈으로 읽혀야 한다
+        var t0 = 0.2 + i * 0.45;
+        var op = plate.property("Opacity"); op.setValueAtTime(t0, 0); op.setValueAtTime(t0 + 0.3, 100);
+        var ot = tl.property("Opacity");    ot.setValueAtTime(t0, 0); ot.setValueAtTime(t0 + 0.3, 100);
+        if (i < n - 1) {
+            var ax = margin + span * (i + 1);
+            var ar = ctx.addTextL(comp, "→", { x: ax, y: midY, size: t.item * 1.4 * S,
+                                  rgb: c.accentRgb, font: ctx.fonts.headline });
+            var oa = ar.property("Opacity");
+            oa.setValueAtTime(t0 + 0.3, 0); oa.setValueAtTime(t0 + 0.45, 100);
+        }
+    }
+}
+
+function akLayout_timeline(comp, s, ctx) {
+    var W = ctx.W, H = ctx.H, S = ctx.S, c = ctx.colors, t = ctx.type;
+    var items = s.items || [];
+    if (!items.length) { akLayout_generic(comp, s, ctx); return; }
+    _akHead(comp, s, ctx, 0.14);
+    // 홀수 개수면 마지막은 짝 없이 선다 — 버리지 않는다
+    var pairs = [];
+    for (var k = 0; k < items.length; k += 2) {
+        pairs.push([items[k], (k + 1 < items.length) ? items[k + 1] : ""]);
+    }
+    var n = pairs.length;
+    var lineY = H * (s.title ? 0.62 : 0.55);
+    var margin = W * 0.10;
+    var span = (W - margin * 2) / Math.max(1, n - 1 || 1);
+    // 가로 축 — 왼쪽부터 자라난다
+    var axis = ctx.addRectL(comp, "axis", margin, lineY - 2 * S, W - margin * 2, 4 * S, c.accentRgb);
+    try {
+        var sc = axis.property("Scale");
+        axis.property("Anchor Point").setValue([0, axis.height / 2]);
+        axis.property("Position").setValue([margin, lineY]);
+        sc.setValueAtTime(0.15, [0, 100]); sc.setValueAtTime(0.15 + 0.25 * n, [100, 100]);
+    } catch (eA) { }
+    for (var i = 0; i < n; i++) {
+        var cx = (n === 1) ? W / 2 : margin + span * i;
+        var dot = ctx.addRectL(comp, "tldot" + i, cx - 9 * S, lineY - 9 * S, 18 * S, 18 * S, c.accentRgb);
+        var yr = ctx.addTextL(comp, pairs[i][0], { x: cx, y: lineY - 52 * S, size: t.item * 0.95 * S,
+                              rgb: c.accentRgb, font: ctx.fonts.number,
+                              box: [span * 0.92, 60 * S], leading: 1.15 });
+        var ev = pairs[i][1] ? ctx.addTextL(comp, pairs[i][1], { x: cx, y: lineY + 66 * S,
+                              size: t.item * 0.85 * S, rgb: c.textRgb, font: ctx.fonts.body,
+                              box: [span * 0.92, 120 * S], leading: 1.2 }) : null;
+        var t0 = 0.3 + i * 0.35;
+        var arr = [dot, yr]; if (ev) { arr.push(ev); }
+        for (var q = 0; q < arr.length; q++) {
+            var o = arr[q].property("Opacity");
+            o.setValueAtTime(t0, 0); o.setValueAtTime(t0 + 0.3, 100);
+        }
+    }
+}
+
+function akLayout_split(comp, s, ctx) {
+    var W = ctx.W, H = ctx.H, S = ctx.S, c = ctx.colors, t = ctx.type;
+    var items = s.items || [];
+    if (items.length < 2) { akLayout_generic(comp, s, ctx); return; }
+    _akHead(comp, s, ctx, 0.14);
+    var topY = s.title ? 0.60 : 0.5;
+    var midY = H * topY;
+    var halfW = W * 0.40;
+    // 가운데 세로 구분선 — 대비할 때만 긋는다(흐름에 그으면 이야기가 끊긴다)
+    ctx.addRectL(comp, "divider", W / 2 - 1.5 * S, midY - H * 0.20, 3 * S, H * 0.40, c.accentRgb);
+    var side = [[W * 0.28, items[0]], [W * 0.72, items[1]]];
+    for (var i = 0; i < 2; i++) {
+        var tl = ctx.addTextL(comp, side[i][1], { x: side[i][0], y: midY, size: t.item * S,
+                              rgb: c.textRgb, font: ctx.fonts.body,
+                              box: [halfW * 0.86, H * 0.34], leading: 1.25 });
+        var o = tl.property("Opacity");
+        o.setValueAtTime(0.25 + i * 0.4, 0); o.setValueAtTime(0.55 + i * 0.4, 100);
+    }
+    // 셋 이상이면 남은 것을 아래에 한 줄로 — 버리지 않는다
+    if (items.length > 2) {
+        var rest = [];
+        for (var r = 2; r < items.length; r++) { rest.push(items[r]); }
+        ctx.addTextL(comp, rest.join("  ·  "), { x: W / 2, y: H * 0.88, size: t.sub * 0.9 * S,
+                     rgb: c.mutedRgb, font: ctx.fonts.body, box: [W * 0.8, H * 0.1], leading: 1.2 });
+    }
+}
+
 var AK_LAYOUTS = {
     "headline_only": akLayout_headline_only,
     "items_list": akLayout_items_list,
     "metric_spotlight": akLayout_metric_spotlight,
     "quote": akLayout_quote,
+    "quote_portrait": akLayout_quote,
+    "flow": akLayout_flow,
+    "timeline": akLayout_timeline,
+    "split": akLayout_split,
     "bar": akLayout_bar,
     "generic": akLayout_generic
 };
