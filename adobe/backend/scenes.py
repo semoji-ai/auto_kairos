@@ -455,17 +455,119 @@ def set_image_ref(proj_dir: Path, scene_number, image_rel) -> dict:
             if s.get("sceneNumber") == scene_number:
                 s["imageRef"] = rel
                 fp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                mirror_selected_image(proj_dir, scene_number, rel)
                 return {"ok": True, "sceneNumber": scene_number, "imageRef": rel}
         return {"error": f"scene {scene_number} 없음"}
 
 
+def mirror_selected_image(proj_dir: Path, scene_number, rel: str) -> bool:
+    """`images/image_assets.json` 의 `selected` 도 함께 맞춘다.
+
+    **씬 그림을 가리키는 자리가 둘이다.** 어도비는 `scenes.json` 의 `imageRef`,
+    리모션·대시보드는 `image_assets.json` 의 `selected`. 지금은 같은 그림을
+    가리키지만, 패널에서 후보를 바꾸면 `imageRef` 만 바뀌어 **대시보드가 옛
+    판본을 계속 본다.** 저장소를 합쳐 파일은 같은데 링크가 갈리는 것이다.
+
+    어도비 그림은 `storyboard/` 에 있고 v3 는 `images/` 안만 다룬다. 그래서
+    `images/` 밖의 것은 상대 경로를 그대로 넣어 둔다 — v3 쪽 `get_selected`
+    가 `images/` 기준으로 파일을 찾으므로, 밖을 가리킬 때는 `../` 로 적는다.
+    """
+    images_dir = Path(proj_dir) / "images"
+    if not images_dir.is_dir():
+        return False
+    rel = (rel or "").strip().replace("\\", "/")
+    if not rel:
+        return False
+    name = rel[len("images/"):] if rel.startswith("images/") else "../" + rel
+    try:
+        import sys
+        root = str(Path(proj_dir).resolve().parents[1])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from auto_agent.tools import image_assets as ia
+        if ia.select_version(images_dir, int(float(scene_number)), name):
+            return True
+        # 목록에 없는 파일이면 판본으로 더한 뒤 고른다 — 어도비에서 새로 그린 것
+        ia.add_version(images_dir, int(float(scene_number)), name, "generate")
+        return ia.select_version(images_dir, int(float(scene_number)), name)
+    except Exception:
+        return False
+
+
 def _save(proj_dir: Path, data: dict) -> dict:
     _path(proj_dir).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    mirror_structure(proj_dir, data)
     return data
 
 
+def mirror_structure(proj_dir: Path, data: dict) -> bool:
+    """씬을 더하거나 지우거나 나눴을 때 `scene_specs.json` 의 구성을 맞춘다.
+
+    **번호가 밀리면 되비추기로는 못 따라간다.** 나레이션 한 줄을 고치는 것과
+    달리, 씬을 더하면 뒤 씬의 번호가 전부 바뀌고 새 씬은 ID 도 없다. 그대로
+    두면 리모션이 옛 구성으로 렌더한다.
+
+    그래서 **어도비의 씬 구성을 정본으로 삼아** 원고 쪽을 맞춘다.
+
+      · 남은 씬은 `sceneId` 로 찾아 번호만 새로 매긴다 — 원고·레이아웃·
+        이미지 프롬프트 같은 v3 전용 필드를 잃지 않기 위해서다
+      · 새로 생긴 씬은 최소한만 갖춘 항목으로 넣는다(번호·제목·나레이션)
+      · 지워진 씬은 뺀다
+
+    **`sceneId` 는 서로 다르다.** 어도비 ID 는 그림·레이어·비디오의 이름이고
+    v3 ID 는 음성의 이름이다. 그래서 어도비 ID 가 아니라 **씬 번호가 아니라
+    옛 번호↔새 번호 대응**으로 짝을 찾는다 — 그것이 유일하게 공통인 축이다.
+    """
+    fp = Path(proj_dir) / SPECS
+    if not fp.is_file():
+        return False
+    try:
+        spec = json.loads(fp.read_text(encoding="utf-8"))
+        rows = spec.get("scenes") if isinstance(spec, dict) else spec
+        by_num = {}
+        for s in rows or []:
+            try:
+                by_num[float(s.get("sceneNumber"))] = s
+            except (TypeError, ValueError):
+                continue
+        # 어도비 쪽이 들고 있는 옛 번호(`_specs_num`)로 원고 항목을 따라간다.
+        out = []
+        for s in data.get("scenes", []):
+            n = s.get("sceneNumber")
+            old = s.get("_specs_num")
+            src = by_num.get(float(old)) if old is not None else by_num.get(float(n))
+            if src is None:
+                src = {"sceneNumber": n, "title": s.get("title", ""),
+                       "narration": s.get("narration", ""),
+                       "layout": s.get("layout") or "headline_only"}
+            else:
+                src = dict(src)
+                src["narration"] = s.get("narration", src.get("narration", ""))
+                src["title"] = s.get("title", src.get("title", ""))
+            src["sceneNumber"] = n
+            out.append(src)
+        if isinstance(spec, dict):
+            spec["scenes"] = out
+        else:
+            spec = out
+        fp.write_text(json.dumps(spec, ensure_ascii=False, indent=2), encoding="utf-8")
+        _DRIFT_CACHE.pop(str(proj_dir), None)
+        return True
+    except Exception:
+        return False
+
+
 def _renumber(data: dict) -> dict:
+    """번호를 1부터 다시 매긴다.
+
+    **옛 번호를 `_specs_num` 에 남긴다.** 씬을 더하거나 지우면 뒤 번호가 전부
+    밀리는데, 그러면 원고(`scene_specs.json`) 쪽 항목을 무엇으로 찾을지 알
+    수 없다. 두 파일의 `sceneId` 는 서로 다르므로(한쪽은 그림, 한쪽은 음성
+    이름) 번호가 유일한 공통 축이다. 처음 매길 때 그 축을 붙들어 둔다.
+    """
     for i, s in enumerate(data.get("scenes", []), start=1):
+        if "_specs_num" not in s:
+            s["_specs_num"] = s.get("sceneNumber")
         s["sceneNumber"] = i
     return data
 

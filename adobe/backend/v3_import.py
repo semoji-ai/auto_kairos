@@ -3,6 +3,7 @@ scene_specs 구(visualization.creative 중첩)/신(플랫) 스키마 양쪽 허�
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import uuid
 from pathlib import Path
@@ -194,7 +195,22 @@ CODE_ROOT = Path(__file__).resolve().parents[2]
 
 
 def import_v3(root: Path, v3_dir, title: str | None = None) -> dict:
-    """v3 출력 폴더에서 adobe 프로젝트 생성. 반환 {project_id, scenes, images} 또는 {error}."""
+    """v3 출력 폴더에서 adobe 프로젝트 생성 — **더는 쓰지 않는다.**
+
+    저장소를 합치기 전에 쓰던 길이다. v3 프로젝트를 `adobe/projects/` 로
+    통째로 복사했고, 그래서 같은 편이 두 곳에 있었다. v3 에서 그림을 다시
+    뽑아도 패널에는 옛 그림이 그대로였고(잔 모양 9씬), 손으로 옮기다 패널에서
+    안경을 지운 세 씬을 덮을 뻔했다.
+
+    지금은 패널이 `output/` 을 직접 연다. **가져올 것이 없다** — 이미 그
+    폴더에 있다. 실수로 부르면 사본이 다시 생기므로 막는다.
+
+    정말 복사가 필요하면 `AK_ALLOW_V3_IMPORT=1` 로 연다.
+    """
+    if os.environ.get("AK_ALLOW_V3_IMPORT") != "1":
+        return {"error": "가져오기는 더 쓰지 않습니다 — 패널이 v3 프로젝트를 "
+                         "직접 엽니다(output/). 사본을 만들면 다시 갈라집니다. "
+                         "정말 필요하면 AK_ALLOW_V3_IMPORT=1"}
     v3 = Path(v3_dir)
     specs = v3 / "scene_specs.json"
     if not specs.is_file():
