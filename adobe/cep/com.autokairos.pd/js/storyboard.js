@@ -294,6 +294,17 @@ function loadSheet() {
         +   '<input id="sbFind" type="text" placeholder="🔎 나레이션 찾기">'
         +   '<span id="sbFindMsg"></span>'
         + '</div>';
+      /* 원고 파일과 어긋났으면 말한다 — 모르고 지나가면 리모션이 옛 구성으로
+         렌더한다. 나레이션은 저장할 때 함께 쓰지만 씬을 더하거나 지우면
+         되비출 수 없다. */
+      var dft = j._specs_drift || {};
+      if (dft.scenes || dft.narration) {
+        var msg = [];
+        if (dft.scenes) msg.push("씬 수가 다릅니다 (원고 " + dft.scenes[0] + " · 여기 " + dft.scenes[1] + ")");
+        if (dft.narration) msg.push("나레이션이 다른 씬 " + dft.narration + "개");
+        tools = '<div class="specs-drift">⚠ scene_specs.json 과 어긋남 — '
+              + msg.join(" · ") + '</div>' + tools;
+      }
       var tb = $("sheet-tools");
       if (tb) tb.innerHTML = tools;
 

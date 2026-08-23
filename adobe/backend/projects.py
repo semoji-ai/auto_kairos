@@ -43,9 +43,25 @@ def list_files(proj_dir: Path) -> list[dict]:
 
 
 def projects_root() -> Path:
+    """프로젝트 저장소. **기본은 v3 의 `output/` 이다.**
+
+    전에는 `adobe/projects/` 에 v3 프로젝트를 **통째로 복사**해 썼다. 그래서
+    같은 편이 두 곳에 있었고, v3 에서 그림을 다시 뽑아도 패널에는 옛 그림이
+    그대로였다 — 잔 모양을 고친 9씬이 그렇게 반영되지 않았고, 손으로 옮기다
+    패널에서 안경을 지운 세 씬을 덮을 뻔했다.
+
+    v3 폴더를 그대로 열면 사본이 생기지 않는다. 산출물(레이어·비디오·그림)이
+    한 곳에 모이고, 리모션과 애프터이펙트가 **같은 것을 보고 렌더 단계에서만
+    갈린다.**
+
+    `AK_PROJECTS_ROOT` 로 덮을 수 있고, `output/` 이 없으면 옛 자리로 돌아간다.
+    """
     env = os.environ.get("AK_PROJECTS_ROOT")
     if env:
         return Path(env)
+    out = Path(__file__).resolve().parents[2] / "output"
+    if out.is_dir():
+        return out
     return Path(__file__).resolve().parents[1] / "projects"
 
 

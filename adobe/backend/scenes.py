@@ -157,7 +157,94 @@ def load_scenes(proj_dir: Path) -> dict:
         s["_theme"] = themes.resolve_theme(proj_dir, s)   # 씬별 resolve(override 반영)
     data["_theme"] = themes.resolve_theme(proj_dir, None)  # 프로젝트 전역 테마
     data["dir"] = str(proj_dir)
+    data["_specs_drift"] = specs_drift(proj_dir)           # 원고 파일과 어긋난 곳
     return data
+
+
+SPECS = "scene_specs.json"
+
+
+def mirror_to_specs(proj_dir: Path, scene_number, fields: dict) -> bool:
+    """같은 폴더의 `scene_specs.json` 에도 함께 쓴다.
+
+    **원고는 두 파일에 있다.** 어도비는 `scenes.json` 을, 리모션·대시보드는
+    `scene_specs.json` 을 본다. 한쪽만 고치면 같은 폴더 안에서 갈리고, 갈린 줄
+    모른 채 한쪽으로 렌더된다.
+
+    지금은 142씬이 전부 일치한다(대조해 확인했다). 그 상태를 지키는 것이
+    이 함수의 일이다.
+
+    `sceneId` 는 **건드리지 않는다.** 두 파일의 ID 가 다른데 각자 다른 산출물의
+    이름을 쥐고 있다 — v3 ID 는 음성 92개, 어도비 ID 는 그림·레이어 347장과
+    비디오 29편. 어느 쪽으로 통일해도 반대쪽 파일을 전부 이름 바꿔야 하고,
+    지금도 서로를 잘 찾고 있으므로 그대로 둔다.
+    """
+    fp = Path(proj_dir) / SPECS
+    if not fp.is_file():
+        return False
+    try:
+        data = json.loads(fp.read_text(encoding="utf-8"))
+        rows = data.get("scenes") if isinstance(data, dict) else data
+        for s in rows or []:
+            try:
+                same = float(s.get("sceneNumber")) == float(scene_number)
+            except (TypeError, ValueError):
+                continue
+            if not same:
+                continue
+            for k, v in fields.items():
+                if v is None:
+                    continue
+                s[k] = v
+            fp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+            return True
+    except Exception:
+        return False
+    return False
+
+
+_DRIFT_CACHE: dict = {}
+
+
+def specs_drift(proj_dir: Path) -> dict:
+    """`scene_specs.json` 과 어긋난 곳을 센다. {scenes, narration} 또는 {}.
+
+    나레이션·TTS·자막은 `mirror_to_specs` 가 함께 쓰지만, **씬을 더하거나
+    지우거나 나누면 되비출 수 없다** — 번호가 밀리고 ID 가 새로 생긴다.
+    그때는 막지 말고 **어긋났다고 알린다.** 모르고 지나가면 리모션이 옛 구성으로
+    렌더한다.
+
+    파일이 바뀌지 않았으면 다시 세지 않는다 — 1MB 를 씬마다 읽으면 시트가 느려진다.
+    """
+    fp = Path(proj_dir) / SPECS
+    mine = _path(proj_dir)
+    if not (fp.is_file() and mine.is_file()):
+        return {}
+    try:
+        key = (fp.stat().st_mtime_ns, fp.stat().st_size,
+               mine.stat().st_mtime_ns, mine.stat().st_size)
+    except OSError:
+        return {}
+    hit = _DRIFT_CACHE.get(str(proj_dir))
+    if hit and hit[0] == key:
+        return hit[1]
+    out = {}
+    try:
+        a = json.loads(fp.read_text(encoding="utf-8"))
+        a = a.get("scenes") if isinstance(a, dict) else a
+        b = json.loads(mine.read_text(encoding="utf-8")).get("scenes") or []
+        A = {str(s.get("sceneNumber")): s for s in a or []}
+        B = {str(s.get("sceneNumber")): s for s in b}
+        if len(A) != len(B) or set(A) != set(B):
+            out["scenes"] = [len(A), len(B)]
+        n = sum(1 for k in (set(A) & set(B))
+                if (A[k].get("narration") or "") != (B[k].get("narration") or ""))
+        if n:
+            out["narration"] = n
+    except Exception:
+        out = {}
+    _DRIFT_CACHE[str(proj_dir)] = (key, out)
+    return out
 
 
 def update_narration(proj_dir: Path, scene_number: int, narration: str) -> dict:
@@ -172,6 +259,7 @@ def update_narration(proj_dir: Path, scene_number: int, narration: str) -> dict:
                 s["narration"] = narration
                 s["narration_dirty"] = True
                 fp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                mirror_to_specs(proj_dir, scene_number, {"narration": narration})
                 return {"ok": True, "sceneNumber": scene_number}
         return {"error": f"scene {scene_number} 없음"}
 
@@ -289,6 +377,11 @@ def update_texts(proj_dir: Path, scene_number: int,
                         if key == "narration_tts":
                             s.pop("narration_tts_of", None)
                 fp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                # 원고 쪽에도 함께 — 리모션·대시보드가 그 파일을 본다
+                mirror_to_specs(proj_dir, scene_number, {
+                    "narration_tts": s.get("narration_tts"),
+                    "subtitle_text": s.get("subtitle_text"),
+                })
                 return {"ok": True, "sceneNumber": scene_number,
                         "narration_tts": s.get("narration_tts", ""),
                         "subtitle_text": s.get("subtitle_text", "")}
