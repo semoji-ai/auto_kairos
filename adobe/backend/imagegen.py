@@ -692,6 +692,11 @@ def split_scene_to_elements(proj_dir: Path, scene_image: str, sid: str, elements
         specs.append({"layer": stem, "index": i, "name": el.get("name", ""),
                       "name_en": nm, "location": el.get("location", ""),
                       "kind": el.get("kind", "object"), "intent": el.get("intent", ""),
+                      # **모션 의도를 여기 적는다.** 지금까지는 `_char` 접미사로
+                      # 추론했는데, 그것은 어도비만 아는 규칙이라 리모션이 못
+                      # 읽는다. 의도는 공유 자산이고 구현은 렌더러마다 다르다 —
+                      # 어도비는 널+핑퐁, 리모션은 scaleY 보간.
+                      "motion": "bob" if el.get("kind") == "character" else None,
                       "bbox": L.get("bbox"), "z": L.get("z")})
         results.append({"name": el.get("name", nm), "rel": out.relative_to(proj_dir).as_posix(),
                         "status": "completed", "z": L.get("z"), "bbox": L.get("bbox")})
@@ -837,6 +842,7 @@ def split_more_from_bg(proj_dir: Path, sid: str, elements: list, *,
         added.append({"layer": out.stem, "index": i, "name": el.get("name", ""),
                       "name_en": nm, "location": el.get("location", ""),
                       "kind": el.get("kind", "object"), "intent": el.get("intent", ""),
+                      "motion": "bob" if el.get("kind") == "character" else None,
                       "bbox": L.get("bbox"), "z": L.get("z")})
         results.append({"name": el.get("name", nm), "rel": out.relative_to(proj_dir).as_posix(),
                         "status": "completed", "z": L.get("z"), "bbox": L.get("bbox")})

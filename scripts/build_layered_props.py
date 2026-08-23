@@ -61,7 +61,10 @@ def main() -> int:
         if m.get("bbox"):
             x0, y0, x1, y1 = m["bbox"]
             L["bbox"] = [x0, y0, x1 - x0, y1 - y0]
-        if L["role"] == "person":
+        # 까딱임은 **적힌 의도**가 먼저다(`motion: "bob"`). 인물이라고 다 까딱이는
+        # 것은 아니고, 앉아 있거나 등을 돌린 인물은 까딱이면 어색하다.
+        # motion 이 아예 없는 옛 메타는 예전대로 role 로 판정한다.
+        if m.get("motion") == "bob" or ("motion" not in m and L["role"] == "person"):
             L["bob"] = bob(m["name"], i)
         layers.append(L)
 

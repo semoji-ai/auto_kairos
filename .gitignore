@@ -103,6 +103,7 @@ Thumbs.db
 !/scripts/auto_cast.py
 !/scripts/publish_images.py
 !/scripts/sync_to_adobe.py
+!/scripts/build_remotion_layers.py
 !/scripts/check_cast_gaps.py
 !/scripts/promote_cast.py
 !/scripts/detect_hatch.py
