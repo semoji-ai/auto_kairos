@@ -100,4 +100,28 @@ def normalize_fields(scene: dict) -> dict:
         "profileName": _first_nonempty(s.get("profileName")),
         "profileSubtitle": _first_nonempty(s.get("profileSubtitle")),
     }
-    return {k: v for k, v in out.items() if v is not None}
+    return {k: _strip_marks(v) for k, v in out.items() if v is not None}
+
+
+_MARK = None
+
+
+def _strip_marks(v):
+    """`{{강조}}` 표기를 걷는다.
+
+    **리모션 표기다.** 그쪽은 중괄호 안을 색으로 칠하지만 애프터이펙트
+    렌더러는 그것을 모르므로, 그대로 두면 **화면에 중괄호가 찍힌다.**
+    디아지오편만 30씬에 들어 있었다(headline_only 16 · cinematic 4 · split 4 …).
+
+    강조 자체를 살리려면 AE 텍스트에 문자 단위 색을 넣어야 하는데, 그건
+    렌더러마다 손이 든다. 우선 글자가 제대로 나오게 하는 것이 먼저다.
+    """
+    global _MARK
+    if _MARK is None:
+        import re
+        _MARK = re.compile(r"\{\{\s*|\s*\}\}")
+    if isinstance(v, str):
+        return _MARK.sub("", v)
+    if isinstance(v, list):
+        return [_strip_marks(x) for x in v]
+    return v

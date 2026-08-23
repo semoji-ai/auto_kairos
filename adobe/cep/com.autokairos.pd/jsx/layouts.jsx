@@ -287,6 +287,139 @@ function akLayout_split(comp, s, ctx) {
     }
 }
 
+
+/* ── metric_wall · before_after · counter ──────────────────────────────── */
+
+function _akUnits(unit, n) {
+    /* 단위를 값 수만큼 돌려준다.
+
+       **`unit` 은 씬에 하나뿐인데 값마다 다를 때가 있다** — `"ml / %"`,
+       `"ppm / 시간"` 처럼 온다. 하나로 쓰면 두 값에 같은 단위가 붙어 둘 다
+       틀린다. `/` 로 갈라 값 순서대로 준다. 개수가 안 맞으면 첫 것을 쓴다. */
+    var out = [], i;
+    var raw = String(unit == null ? "" : unit);
+    if (!raw) { for (i = 0; i < n; i++) { out.push(""); } return out; }
+    var parts = raw.split("/");
+    if (parts.length === n) {
+        for (i = 0; i < n; i++) { out.push(parts[i].replace(/^\s+|\s+$/g, "")); }
+        return out;
+    }
+    for (i = 0; i < n; i++) { out.push(raw); }
+    return out;
+}
+
+function _akPlain(s) {
+    /* `{{강조}}` 는 리모션 표기다. 어도비는 모르므로 괄호만 걷는다 —
+       그대로 두면 화면에 중괄호가 찍힌다. */
+    return String(s == null ? "" : s).replace(/\{\{\s*/g, "").replace(/\s*\}\}/g, "");
+}
+
+function akLayout_metric_wall(comp, s, ctx) {
+    var W = ctx.W, H = ctx.H, S = ctx.S, c = ctx.colors, t = ctx.type;
+    var vals = s.values || [], labs = s.items || [];
+    var n = Math.max(vals.length, labs.length);
+    if (!n) { akLayout_generic(comp, s, ctx); return; }
+    if (s.title) { _akHead(comp, s, ctx, 0.13); }
+    var units = _akUnits(s.unit, vals.length);
+    // 한 줄에 넷까지. 다섯을 넘으면 두 줄로 접는다 — 옆으로만 늘리면 글자가 뭉갠다
+    var perRow = (n > 4) ? Math.ceil(n / 2) : n;
+    var rows = Math.ceil(n / perRow);
+    var margin = W * 0.07;
+    var span = (W - margin * 2) / perRow;
+    var baseY = H * (s.title ? (rows > 1 ? 0.46 : 0.56) : (rows > 1 ? 0.40 : 0.50));
+    var rowH = H * 0.28;
+    for (var i = 0; i < n; i++) {
+        var r = Math.floor(i / perRow), col = i % perRow;
+        var cx = margin + span * col + span / 2;
+        var cy = baseY + r * rowH;
+        var v = (i < vals.length) ? (String(vals[i]) + (units[i] || "")) : "";
+        var lb = _akPlain((i < labs.length) ? labs[i] : "");
+        var t0 = 0.25 + i * 0.3;
+        var vl = ctx.addTextL(comp, v, { x: cx, y: cy, size: t.metric * 0.62 * S,
+                              rgb: c.accentRgb, font: ctx.fonts.number,
+                              box: [span * 0.9, rowH * 0.5], leading: 1.05 });
+        var ll = ctx.addTextL(comp, lb, { x: cx, y: cy + 72 * S, size: t.metricLabel * 0.85 * S,
+                              rgb: c.textRgb, font: ctx.fonts.body,
+                              box: [span * 0.9, rowH * 0.4], leading: 1.2 });
+        var a = [vl, ll];
+        for (var q = 0; q < a.length; q++) {
+            var o = a[q].property("Opacity");
+            o.setValueAtTime(t0, 0); o.setValueAtTime(t0 + 0.3, 100);
+        }
+    }
+}
+
+function akLayout_before_after(comp, s, ctx) {
+    var W = ctx.W, H = ctx.H, S = ctx.S, c = ctx.colors, t = ctx.type;
+    var items = s.items || [];
+    if (items.length < 2) { akLayout_generic(comp, s, ctx); return; }
+    if (s.title) { _akHead(comp, s, ctx, 0.13); }
+    var midY = H * (s.title ? 0.58 : 0.50);
+    var halfW = W * 0.40;
+    // 앞 → 뒤. **split 과 다른 점은 가운데가 화살표라는 것이다** —
+    // 구분선은 대비를 가르고, 화살표는 바뀌었다고 말한다.
+    var side = [[W * 0.27, items[0], c.mutedRgb], [W * 0.73, items[1], c.textRgb]];
+    var made = [];
+    for (var i = 0; i < 2; i++) {
+        var plate = ctx.addRectL(comp, "ba" + i, side[i][0] - halfW / 2, midY - H * 0.17,
+                                 halfW, H * 0.34, c.accentSoftRgb || c.mutedRgb);
+        var tl = ctx.addTextL(comp, _akPlain(side[i][1]), { x: side[i][0], y: midY,
+                              size: t.item * S, rgb: side[i][2], font: ctx.fonts.body,
+                              box: [halfW * 0.84, H * 0.30], leading: 1.25 });
+        made.push([plate, tl]);
+    }
+    var ar = ctx.addTextL(comp, "→", { x: W / 2, y: midY, size: t.metric * 0.5 * S,
+                          rgb: c.accentRgb, font: ctx.fonts.headline });
+    // 앞을 먼저 보이고, 화살표, 그다음 뒤 — 바뀌는 순서가 눈으로 읽혀야 한다
+    var steps = [[made[0], 0.25], [[ar], 0.85], [made[1], 1.05]];
+    for (var k = 0; k < steps.length; k++) {
+        var arr = steps[k][0], t0 = steps[k][1];
+        for (var q = 0; q < arr.length; q++) {
+            var o = arr[q].property("Opacity");
+            o.setValueAtTime(t0, 0); o.setValueAtTime(t0 + 0.3, 100);
+        }
+    }
+    if (items.length > 2) {
+        var rest = [];
+        for (var r = 2; r < items.length; r++) { rest.push(_akPlain(items[r])); }
+        ctx.addTextL(comp, rest.join("  ·  "), { x: W / 2, y: H * 0.88, size: t.sub * 0.9 * S,
+                     rgb: c.mutedRgb, font: ctx.fonts.body, box: [W * 0.8, H * 0.1], leading: 1.2 });
+    }
+}
+
+function akLayout_counter(comp, s, ctx) {
+    var W = ctx.W, H = ctx.H, S = ctx.S, c = ctx.colors, t = ctx.type;
+    var vals = s.values || [];
+    if (!vals.length) { akLayout_generic(comp, s, ctx); return; }
+    var raw = vals[0];
+    var unit = (_akUnits(s.unit, 1))[0] || "";
+    var lab = _akPlain(s.title || ((s.items && s.items.length) ? s.items[0] : ""));
+    var vl = ctx.addTextL(comp, String(raw) + unit, { x: W / 2, y: H * 0.47,
+                          size: t.metric * S, rgb: c.accentRgb, font: ctx.fonts.number,
+                          leading: 1.0 });
+    // **0 에서 세어 올린다.** 이것이 metric_spotlight 와 다른 점이다 —
+    // 숫자가 불어나는 것 자체가 내용일 때 쓴다.
+    var num = parseFloat(String(raw).replace(/[^0-9.\-]/g, ""));
+    if (!isNaN(num)) {
+        try {
+            var src = vl.property("Source Text");
+            var dur = 1.2, steps = 24;
+            for (var k = 0; k <= steps; k++) {
+                var f = k / steps;
+                var cur = Math.round(num * f);
+                src.setValueAtTime(0.25 + dur * f, String(cur) + unit);
+            }
+            for (var h = 1; h <= src.numKeys; h++) { src.setInterpolationTypeAtKey(h, KeyframeInterpolationType.HOLD); }
+        } catch (eC) { }
+    }
+    ctx.addRectL(comp, "underline", W / 2 - 110 * S, H * 0.585, 220 * S, 5 * S, c.accentRgb);
+    if (lab) {
+        ctx.addTextL(comp, lab, { x: W / 2, y: H * 0.68, size: t.metricLabel * S, rgb: c.textRgb,
+                      font: ctx.fonts.body, box: [W * 0.7, H * 0.12], leading: 1.3,
+                      anim: { type: "slide", dir: "up", t0: 1.4, dur: 0.5 } });
+    }
+}
+
 var AK_LAYOUTS = {
     "headline_only": akLayout_headline_only,
     "items_list": akLayout_items_list,
@@ -296,6 +429,9 @@ var AK_LAYOUTS = {
     "flow": akLayout_flow,
     "timeline": akLayout_timeline,
     "split": akLayout_split,
+    "metric_wall": akLayout_metric_wall,
+    "before_after": akLayout_before_after,
+    "counter": akLayout_counter,
     "bar": akLayout_bar,
     "generic": akLayout_generic
 };
