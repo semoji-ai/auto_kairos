@@ -1,6 +1,31 @@
 import json
 from pathlib import Path
+
+import pytest
+
 from backend import v3_import
+
+
+# 가져오기는 **더 쓰지 않는다.** 저장소를 합치기 전 길이라, 지금 부르면 같은
+# 편이 두 곳에 생겨 다시 갈린다(잔 모양 9씬이 그렇게 어긋났다). 그래서
+# `AK_ALLOW_V3_IMPORT=1` 없이는 막힌다.
+#
+# 그런데 **변환 로직 자체는 살아 있다** — 언제 다시 켜질지 모르므로 계속
+# 검사한다. 막혔다는 이유로 테스트를 지우면, 다시 켰을 때 아무도 안 봐 온
+# 코드가 돌게 된다. 그래서 아래 테스트들은 탈출구를 열고 돈다.
+@pytest.fixture(autouse=True)
+def _allow_import(monkeypatch):
+    monkeypatch.setenv("AK_ALLOW_V3_IMPORT", "1")
+
+
+def test_import_v3_is_blocked_by_default(monkeypatch, tmp_path):
+    """평소에는 막혀 있어야 한다 — 이것이 기본 동작이다."""
+    monkeypatch.delenv("AK_ALLOW_V3_IMPORT", raising=False)
+    root = tmp_path / "projects"; root.mkdir()
+    v3 = _mk_v3(tmp_path, [{"sceneNumber": 1, "title": "t", "narration": "n"}])
+    res = v3_import.import_v3(root, v3)
+    assert "error" in res and "project_id" not in res
+    assert not any(root.iterdir())          # 사본이 생기지 않았다
 
 
 def _mk_v3(tmp_path, scenes, manuscript="원고 본문"):

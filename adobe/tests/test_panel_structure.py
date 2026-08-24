@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from conftest import es5_code
+
 PANEL = Path(__file__).resolve().parents[1] / "cep" / "com.autokairos.pd"
 HTML = PANEL / "index.html"
 NAV = PANEL / "js" / "nav.js"
@@ -279,6 +281,7 @@ def test_subtitle_layers_jsx():
     assert "startTime" in jsx and "inPoint" in jsx and "outPoint" in jsx
     assert '"Final"' in jsx and "JSON.parse" in jsx
     # ES3 호환 — const/let/arrow 금지
+    jsx = es5_code(jsx)
     assert "=>" not in jsx and "const " not in jsx and "let " not in jsx
 
 
@@ -319,7 +322,9 @@ def test_jsx_uses_json_parse():
     assert (PANEL / "jsx" / "json2.jsx").exists()
     # json2는 ES3 호환(parse만) — const/let/arrow 금지
     j2 = (PANEL / "jsx" / "json2.jsx").read_text(encoding="utf-8")
-    assert "JSON.parse" in j2 and "=>" not in j2 and "const " not in j2 and "let " not in j2
+    assert "JSON.parse" in j2
+    j2 = es5_code(j2)
+    assert "=>" not in j2 and "const " not in j2 and "let " not in j2
     main = MAIN.read_text(encoding="utf-8")
     assert "json2.jsx" in main
 
@@ -444,7 +449,10 @@ def test_jsx_no_auto_fade():
     """자동 페이드(배경 오퍼시티 0→100) 금지 — 모든 모션은 모션 플랜에서만."""
     jsx = (PANEL / "jsx" / "build_scene.jsx").read_text(encoding="utf-8")
     assert "li === 0" not in jsx
-    assert "function addLayerObj(proj, comp, layer, W, H)" in jsx   # fade 파라미터 제거
+    # fade 파라미터는 없다. `log` 는 나중에 붙은 것 — 왜 이 레이어가 빠졌는지
+    # 알려면 함수 안에서 적어야 한다.
+    assert "function addLayerObj(proj, comp, layer, W, H, log)" in jsx
+    assert "function addLayerObj(proj, comp, layer, W, H, fade" not in jsx
 
 
 def test_sse_push_wired():
@@ -728,7 +736,9 @@ def test_timeline_export_wired():
     assert 'id="btnTimelineAll"' in html
     assert not (PANEL / "jsx" / "place_on_timeline.jsx").exists()
     build_jsx = (PANEL / "jsx" / "build_scene.jsx").read_text(encoding="utf-8")
-    assert "akRemoveSceneGroup" in build_jsx
+    # 옛것을 지우던 헬퍼는 없앴다 — 지우지 않고 쌓는다.
+    assert "akRemoveSceneGroup" not in build_jsx
+    assert "akAddedSince" in build_jsx
     sb = (PANEL / "js" / "storyboard.js").read_text(encoding="utf-8")
     for fn in ["function exportToTimeline", "function toggleTextEditor", "function saveSceneTexts"]:
         assert fn in sb, fn
@@ -814,7 +824,8 @@ def test_layouts_jsx_registry_and_generic():
     for name in ("headline_only", "items_list", "metric_spotlight", "quote"):
         assert "akLayout_" + name in jsx, name
     # ES3 수준 — 화살표 함수·템플릿 리터럴 금지
-    assert "=>" not in jsx and "`" not in jsx
+    code = es5_code(jsx)
+    assert "=>" not in code and "`" not in code
     assert "const " not in jsx and "let " not in jsx
 
 

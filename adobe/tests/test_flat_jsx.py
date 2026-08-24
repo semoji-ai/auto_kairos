@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from conftest import es5_code
+
 PANEL = Path(__file__).resolve().parents[1] / "cep" / "com.autokairos.pd"
 JSX = PANEL / "jsx" / "build_scene.jsx"
 
@@ -17,8 +19,9 @@ def test_no_per_scene_comp():
 
 def test_flat_helpers_exist():
     src = _src()
-    for fn in ("function akFindOrMakeComp", "function akRemoveSceneGroup",
-               "function akGroupAnchor", "function buildSceneGroup"):
+    for fn in ("function akFindOrMakeComp", "function akSnapshot",
+               "function akAddedSince", "function akGroupAnchor",
+               "function buildSceneGroup"):
         assert fn in src
 
 
@@ -78,6 +81,7 @@ def test_no_skip_final():
 
 def test_es5_only():
     src = _src()
+    src = es5_code(src)
     assert "=>" not in src
     assert "const " not in src and "let " not in src
     assert "`" not in src
@@ -111,10 +115,20 @@ def test_place_on_timeline_removed():
     assert "akPlaceOnTimeline" not in js
 
 
-def test_scene_build_is_idempotent():
-    """같은 씬을 다시 빌드하면 기존 그룹을 지우고 다시 넣는다."""
+def test_rebuild_never_deletes_old_layers():
+    """다시 빌드해도 **옛 레이어를 지우지 않는다.** 위에 얹고, 얹었다고 말한다.
+
+    전에는 `akRemoveSceneGroup` 으로 옛 그룹을 지우고 다시 넣었다. 그 방식은
+    손으로 고친 것까지 함께 지운다 — 애프터이펙트에서 다듬어 놓은 씬이 재빌드
+    한 번에 사라진다. 지우는 것은 되돌릴 수 없고 쌓이는 것은 되돌릴 수 있다.
+
+    대신 겹쳤다는 사실을 로그로 알린다 — 모르고 쌓이면 왜 무거운지 알 수 없다.
+    """
     src = _src()
-    assert "akRemoveSceneGroup(comp, s.prefix)" in src
+    assert "akRemoveSceneGroup" not in src
+    assert "akSnapshot(comp)" in src
+    assert "akAddedSince(comp, snap)" in src
+    assert "장을 얹었습니다" in src
 
 
 def test_subtitle_moved_above_scene_groups():
@@ -128,11 +142,15 @@ def test_subtitle_moved_above_scene_groups():
     assert "moveToBeginning" in src
 
 
-def test_failed_build_still_tags_partial_layers():
-    """buildSceneGroup이 실패해도 이미 만들어진 레이어에 접두사를 붙인다.
+def test_failed_build_keeps_old_and_rolls_back_the_half():
+    """빌드가 실패하면 **옛것은 지키고 만들다 만 것만 되돌린다.**
 
-    안 붙이면 다음 재빌드의 akRemoveSceneGroup이 그 레이어를 못 찾아
-    컴프에 접두사 없는 레이어가 영구히 쌓인다."""
+    이 둘을 함께 해야 한다. 옛것을 지우면 실패했는데 화면이 비고, 만들다 만
+    것을 남기면 옛것과 겹쳐 두 벌이 된다. 되돌릴 대상은 이번에 새로 생긴 것
+    뿐이므로 개수가 아니라 **찍어 둔 목록과의 차이**로 찾는다.
+    """
     src = _src()
     catch_block = src.split("catch (eB)")[1].split("continue;")[0]
-    assert "akTagGroup(comp" in catch_block
+    assert "옛 레이어를 그대로 둡니다" in catch_block
+    assert "akAddedSince(comp, snap)" in catch_block
+    assert ".remove()" in catch_block

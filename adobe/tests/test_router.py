@@ -814,7 +814,22 @@ def test_tts_all_prefers_narration_tts(tmp_path, monkeypatch):
     assert seen == ["교정본"]
 
 
-def test_import_v3_route(tmp_path):
+def test_import_v3_route_blocked_by_default(tmp_path):
+    """가져오기는 더 쓰지 않는다 — 패널이 output/ 을 직접 연다.
+
+    부르면 사본이 다시 생겨 같은 편이 두 곳에 갈린다. 막힌 것이 정상이다.
+    """
+    v3 = tmp_path / "uuidabcd_topic"; v3.mkdir()
+    (v3 / "scene_specs.json").write_text(
+        '{"scenes":[{"sceneNumber":1,"title":"t","narration":"n"}]}', encoding="utf-8")
+    ctx = {"root": tmp_path / "root", "jobs": JobRegistry()}
+    code, body = handle_request("POST", "/api/projects/import-v3", {}, {"path": str(v3)}, ctx)
+    assert code == 422 and "error" in body
+
+
+def test_import_v3_route(tmp_path, monkeypatch):
+    """탈출구를 열면 예전대로 돈다 — 변환 로직은 살아 있다."""
+    monkeypatch.setenv("AK_ALLOW_V3_IMPORT", "1")
     v3 = tmp_path / "uuidabcd_topic"; v3.mkdir()
     (v3 / "scene_specs.json").write_text(
         '{"scenes":[{"sceneNumber":1,"title":"t","narration":"n"}]}', encoding="utf-8")

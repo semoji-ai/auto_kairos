@@ -92,13 +92,21 @@ def test_run_assistant_dispatches_in_order(tmp_path):
     assert out["results"][0]["result"] == {"done": 1}
 
 
-def test_run_assistant_unknown_action_skipped(tmp_path):
+def test_run_assistant_unknown_action_fails_loudly(tmp_path):
+    """모르는 동작은 **실패**다 — 건너뛰면 아무 일도 안 한 것이 성공으로 보인다.
+
+    전에는 `skipped` 였다. 그래서 계획이 통째로 버려져도 화면에는 아무 문제가
+    없어 보였다 — 실제로 109·110·112 씬의 안경 지우기가 그렇게 조용히 사라졌고,
+    원인(모델이 `action` 대신 `type` 을 냈다)을 찾는 데 시간을 썼다.
+
+    아무것도 안 했으면 안 했다고 말해야 한다.
+    """
     d = _proj(tmp_path, [{"sceneNumber": 1, "sceneId": "a"}])
     out = assistant.run_assistant(
         d, "x",
         planner=lambda proj_dir, instr, on_line=None: [{"action": "nope", "reason": "?"}],
         handlers={})
-    assert out["results"][0]["result"]["status"] == "skipped"
+    assert out["results"][0]["result"]["status"] == "failed"
 
 
 def test_generate_missing_images_only_missing(tmp_path, monkeypatch):

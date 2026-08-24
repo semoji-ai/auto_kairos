@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from conftest import es5_code
+
 PANEL = Path(__file__).resolve().parents[1] / "cep" / "com.autokairos.pd"
 JSX = PANEL / "jsx" / "build_scene.jsx"
 
@@ -44,6 +46,7 @@ def test_source_caption_called_in_build():
 
 def test_es5_only():
     src = _src()
+    src = es5_code(src)
     assert "=>" not in src and "const " not in src and "let " not in src and "`" not in src
 
 
@@ -73,6 +76,7 @@ def test_tools_insert_null_preserves_parent():
 
 def test_tools_es5_only():
     src = TOOLS.read_text(encoding="utf-8")
+    src = es5_code(src)
     assert "=>" not in src and "const " not in src and "let " not in src and "`" not in src
 
 

@@ -57,7 +57,27 @@ def test_named_layers_use_existing_filename_rule(tmp_path, monkeypatch):
     names = sorted(p.name for p in d.glob("ab__*.png"))
     assert "ab__0_white_electric_car.png" in names
     assert any(n.startswith("ab__1_man_on_the_right") and n.endswith("_char.png") for n in names)
-    assert all(L["status"] == "completed" for L in res["layers"])
+    # 요청한 것은 전부 나와야 한다
+    got = {L["name"]: L["status"] for L in res["layers"]}
+    assert got["차량"] == "completed" and got["남자"] == "completed"
+
+
+def test_unrequested_layers_are_kept_not_discarded(tmp_path, monkeypatch):
+    """묻지 않은 것을 모델이 덤으로 줘도 **버리지 않는다.**
+
+    전에는 요청한 이름과 안 맞으면 조용히 버렸다. fal 대시보드에서는 제대로
+    갈라져 있는데 손에는 없는 일이 그래서 생겼고, 121씬은 쉼표 하나 때문에
+    통째로 실패했다. 떼어 낸 것은 이미 값을 치른 것이라 버릴 이유가 없다.
+
+    `__x_` 로 따로 표시해 둔다 — 요청한 것과 섞이면 무엇이 설계된 것인지
+    알 수 없다.
+    """
+    res, _seen, d = _run(tmp_path, monkeypatch)
+    extra = sorted(p.name for p in d.glob("ab__x_*.png"))
+    assert extra == ["ab__x_EV_charger.png", "ab__x_background.png",
+                     "ab__x_charging_cable.png"]
+    assert {L["name"] for L in res["layers"] if L["status"] == "extra"} == {
+        "background", "EV charger", "charging cable"}
 
 
 def test_sidecar_keeps_bbox_and_z(tmp_path, monkeypatch):
