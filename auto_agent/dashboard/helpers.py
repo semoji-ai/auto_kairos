@@ -571,6 +571,17 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         # 몰라 안 보였다. 씬 번호로 어도비 sceneId 를 찾아 잇는다.
         _asid = _ADOBE_IDS.get(float(sn)) if _ADOBE_IDS else None
         scene["_video_url"] = get_scene_video_url(project_dir_name, output_dir, _asid) if _asid else ""
+        # 끌어다 놓은 영상도 같은 자리에서 본다.
+        #
+        # 영상이 들어오는 길이 둘인데 서로를 몰랐다 — 만든 것은
+        # `video/v_<sid>_*.mp4` 로 떨어지고, 파인더에서 끌어다 놓은 것은
+        # `video_sources/` 로 들어가 `video_assets.json` 에 적힌다. 씬 상세의
+        # 🎞 전환은 앞의 것만 봐서, 끌어다 놓고도 「영상 없음」으로 보였다.
+        # 만든 것이 있으면 그것이 먼저고, 없을 때 끌어다 놓은 것을 쓴다.
+        if not scene["_video_url"] and va_entry:
+            _vf = (va_entry.get("videoFile") or "").strip()
+            if _vf and (Path(output_dir) / "video_sources" / _vf).is_file():
+                scene["_video_url"] = f"/output/{project_dir_name}/video_sources/{_vf}"
         scene["_layers"] = get_scene_layer_urls(project_dir_name, output_dir, _asid) if _asid else []
         scene["_audio_url"] = get_scene_audio_url(project_dir_name, sn, output_dir,
                                                     scene_id=scene.get("sceneId", ""))

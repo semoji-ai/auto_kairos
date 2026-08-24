@@ -60,7 +60,7 @@
 
 <div class="scene-list" id="scene-list">
   {% for scene in scenes %}
-  <div class="sb-card" data-chapter="{{ scene.chapter }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
+  <div class="sb-card" data-scene="{{ scene.sceneNumber }}" data-chapter="{{ scene.chapter }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
     {# 씬 고르기 — 체크한 씬에 일괄로 레이어 나누기를 건다 #}
     <input type="checkbox" class="sb-pick" data-scene="{{ scene.sceneNumber }}"
            onchange="sbPickChanged()" title="이 씬 고르기">
@@ -1717,38 +1717,62 @@ function updateSceneLayout(slug, sceneNum, layout) {
     setTimeout(setupDropZones, 500);
   }
 
+  // 카드마다 거는 대신 **목록 하나에 위임한다.**
+  //
+  // 전에는 `.sb-preview` 를 훑어 하나씩 걸었는데, 씬 번호를 미리보기 안의
+  // `.sb-player-mount` 에서 읽었다. 그런데 그 마운트가 **없는 씬이 있다** —
+  // 도해 배경이 그림인 씬(디아지오 58·92·121)은 `<img>` 만 들어간다.
+  // 거기서 `null.dataset` 으로 터졌고, `forEach` 안이라 예외가 루프를 통째로
+  // 끊어 **그 뒤 85개 씬이 전부 드롭을 못 받았다.** 앞쪽 씬에서만 되니
+  // 「되다 안 되다」로 보였다.
+  //
+  // 위임이면 한 곳만 걸어서 터질 자리가 없고, 나중에 다시 그려진 카드도
+  // 그대로 받는다(`sbRefreshGrid` 는 정의된 적이 없어 다시 걸 자리도 없었다).
   function setupDropZones() {
-    document.querySelectorAll('.sb-preview').forEach(function(preview) {
-      var card = preview.closest('.sb-card');
-      if (!card) return;
-      var sceneNum = parseInt(preview.querySelector('.sb-player-mount').dataset.sceneNum, 10);
+    var list = document.getElementById('scene-list');
+    if (!list || list.__akDropWired) return;
+    list.__akDropWired = true;
 
-      preview.addEventListener('dragover', function(e) {
-        var types = e.dataTransfer.types;
-        if (types.includes('application/x-gallery-url') || types.includes('Files')) {
-          e.preventDefault();
-          preview.classList.add('drop-hover');
-        }
-      });
-      preview.addEventListener('dragleave', function() {
-        preview.classList.remove('drop-hover');
-      });
-      preview.addEventListener('drop', function(e) {
-        e.preventDefault();
-        preview.classList.remove('drop-hover');
-        // 갤러리 드래그
-        var url = e.dataTransfer.getData('application/x-gallery-url');
-        var file = e.dataTransfer.getData('application/x-gallery-file');
-        if (url) {
-          applyGalleryImageToScene(sceneNum, url, file);
-          return;
-        }
-        // 파인더/탐색기 파일 드래그
-        var files = e.dataTransfer.files;
-        if (files && files.length > 0) {
-          uploadFileToScene(sceneNum, files[0]);
-        }
-      });
+    function sceneOf(preview) {
+      var card = preview.closest('.sb-card');
+      if (!card) return NaN;
+      // 카드에 적힌 번호가 먼저다 — 미리보기 안의 것은 씬 종류를 탄다
+      var n = card.dataset.scene;
+      if (n == null || n === '') {
+        var mount = preview.querySelector('.sb-player-mount');
+        var pick = card.querySelector('.sb-pick');
+        n = mount ? mount.dataset.sceneNum : (pick ? pick.dataset.scene : null);
+      }
+      return parseInt(n, 10);
+    }
+
+    function wanted(dt) {
+      return dt && (dt.types.indexOf('application/x-gallery-url') !== -1
+                    || dt.types.indexOf('Files') !== -1);
+    }
+
+    list.addEventListener('dragover', function(e) {
+      var preview = e.target.closest && e.target.closest('.sb-preview');
+      if (!preview || !wanted(e.dataTransfer)) return;
+      e.preventDefault();
+      preview.classList.add('drop-hover');
+    });
+    list.addEventListener('dragleave', function(e) {
+      var preview = e.target.closest && e.target.closest('.sb-preview');
+      if (preview) preview.classList.remove('drop-hover');
+    });
+    list.addEventListener('drop', function(e) {
+      var preview = e.target.closest && e.target.closest('.sb-preview');
+      if (!preview) return;
+      e.preventDefault();
+      preview.classList.remove('drop-hover');
+      var sceneNum = sceneOf(preview);
+      if (!sceneNum) return;
+      var url = e.dataTransfer.getData('application/x-gallery-url');
+      var file = e.dataTransfer.getData('application/x-gallery-file');
+      if (url) { applyGalleryImageToScene(sceneNum, url, file); return; }
+      var files = e.dataTransfer.files;
+      if (files && files.length > 0) { uploadFileToScene(sceneNum, files[0]); }
     });
   }
 
