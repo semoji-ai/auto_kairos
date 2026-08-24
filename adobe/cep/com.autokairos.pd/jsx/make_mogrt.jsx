@@ -23,9 +23,11 @@ function akMakeMogrt(outDir, only) {
     var made = [];
     try {
         if (typeof akRenderLayout !== "function") { return "ERROR: layouts.jsx 가 없습니다"; }
+        // **폴더를 여기서 만들지 않는다.** `Folder.create()` 는 애프터이펙트의
+        // 「스크립트가 파일을 쓰고 네트워크에 접근하도록 허용」 설정에 걸려
+        // permission denied 로 죽는다. 백엔드가 미리 만들어 둔다.
         var d = new Folder(outDir);
-        if (!d.exists) { d.create(); }
-        if (!d.exists) { return "ERROR: 폴더를 만들 수 없습니다 " + outDir; }
+        if (!d.exists) { return "ERROR: 폴더가 없습니다(백엔드가 만들어야 합니다) " + outDir; }
 
         var W = 1920, H = 1080, FPS = 30, DUR = 5;
         var want = only && only.length ? only : akMogrtLayouts();
@@ -86,7 +88,11 @@ function akOneMogrt(key, folder, outFolder, W, H, FPS, DUR, log) {
         comp.motionGraphicsTemplateName = "auto_kairos " + key;
         var out = new File(outFolder.fsName + "/" + key + ".mogrt");
         var ok = comp.exportAsMotionGraphicsTemplate(true, out.fsName);
-        if (!ok) { log.push(key + ": 내보내기 실패"); return false; }
+        if (!ok) {
+            log.push(key + ": 내보내기 실패 — 설정 > 스크립팅 및 표현식 >"
+                     + " 「스크립트가 파일을 쓰고 네트워크에 접근하도록 허용」 을 켜 보세요");
+            return false;
+        }
         return true;
     } catch (e) {
         log.push(key + ": " + e.toString());

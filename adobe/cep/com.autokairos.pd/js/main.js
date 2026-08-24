@@ -259,15 +259,24 @@ function makeMogrt() {
   if (!SELECTED_PROJECT) { setS("프로젝트를 먼저 선택하세요."); return; }
   if (!PROJECTS_ROOT) { setS("백엔드 연결 필요(/health root)."); return; }
   if (isPremiere()) { setS("MOGRT 는 애프터이펙트에서 찍습니다."); return; }
-  var out = PROJECTS_ROOT + "/" + SELECTED_PROJECT + "/mogrt";
   var jsx;
   try {
     jsx = readLocal("./jsx/json2.jsx") + "\n" + readLocal("./jsx/layouts.jsx")
         + "\n" + readLocal("./jsx/build_scene.jsx") + "\n" + readLocal("./jsx/make_mogrt.jsx");
   } catch (e) { setS("jsx 로드 실패: " + e); return; }
-  setS("MOGRT 찍는 중... (레이아웃마다 컴프를 그렸다 지웁니다)");
-  var call = "\nakMakeMogrt(" + JSON.stringify(out) + ", null);";
-  evalScript(jsx + call).then(function (r) { setS(r || "(빈 응답 — AE 콘솔 확인)"); });
+  setS("폴더 준비 중...");
+  // 폴더는 백엔드가 만든다 — 애프터이펙트 스크립트의 파일 쓰기는 설정에 걸린다
+  fetch(BACKEND + "/api/mogrt/prepare", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project_id: SELECTED_PROJECT }),
+  }).then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (j.error || !j.path) { setS("폴더 준비 실패: " + JSON.stringify(j)); return; }
+      setS("MOGRT 찍는 중... (레이아웃마다 컴프를 그렸다 지웁니다)");
+      var call = "\nakMakeMogrt(" + JSON.stringify(j.path) + ", null);";
+      return evalScript(jsx + call).then(function (r) { setS(r || "(빈 응답 — AE 콘솔 확인)"); });
+    })
+    .catch(function (e) { setS("오류: " + e); });
 }
 
 /* AE 컴프 조립. scope=null이면 전체, 숫자면 그 씬, 배열이면 그 씬들만(한 번의 호출로).

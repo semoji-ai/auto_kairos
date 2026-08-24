@@ -152,3 +152,30 @@ def test_mogrt_button_is_ae_only():
     assert 'id="btnMogrt"' in html
     assert "function makeMogrt()" in js
     assert "btnMogrt" in js.split("function applyHostUI()")[1].split("\n}")[0]
+
+
+def test_mogrt_folder_is_made_by_backend():
+    """폴더는 파이썬이 만든다.
+
+    `Folder.create()` 가 애프터이펙트의 「스크립트가 파일을 쓰고 네트워크에
+    접근하도록 허용」 설정에 걸려 permission denied 로 죽었다. 그 설정은 사람이
+    켜야 하는 보안 설정이고, 폴더 하나 만들자고 켜게 할 이유가 없다.
+    """
+    src = _mog()
+    assert "d.create()" not in src
+    assert "백엔드가 만들어야 합니다" in src
+    js = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
+    assert "/api/mogrt/prepare" in js
+    router = (Path(__file__).resolve().parents[1] / "backend" / "router.py").read_text(encoding="utf-8")
+    assert "/api/mogrt/prepare" in router
+
+
+def test_mogrt_prepare_makes_the_dir(tmp_path):
+    from backend.router import handle_request
+    from backend.jobs import JobRegistry
+    (tmp_path / "p").mkdir()
+    code, body = handle_request("POST", "/api/mogrt/prepare", {}, {"project_id": "p"},
+                                {"root": tmp_path, "jobs": JobRegistry()})
+    assert code == 200
+    assert (tmp_path / "p" / "mogrt").is_dir()
+    assert body["path"].endswith("mogrt")
