@@ -292,27 +292,17 @@ function akBuildScene(manifestPath) {
 
     // 레이아웃 5종 결정적 렌더 — 1080p 기준 토큰을 S=W/1920 배율로 스케일(4K/720p 대응).
     // 긴 텍스트는 박스 텍스트(자동 줄바꿈 + 행간 1.25). 세로 폼은 별도 템플릿 필요(추후).
+    // **글자만 그린다. 바탕은 깔지 않는다.**
+    //
+    // 전에는 여기서 바탕 솔리드와 씬 그림을 함께 깔았다. 그런데 바깥에서도
+    // 그림을 깔게 되면서 **같은 PNG 가 두 장** 들어왔다. 그림을 까는 자리는
+    // 한 곳이어야 한다 — 바깥이 한 번만 깐다.
+    //
+    // 그리고 이 함수는 이제 **맨 나중에** 불린다. 글자가 영상·레이어 위에
+    // 와야 하기 때문이다(`comp.layers.add` 는 맨 위에 넣는다).
     function renderLayout(proj, comp, s, W, H) {
         var c = TK.colors, t = TK.type;
         var S = W / 1920;                                  // 해상도 배율(1080p=1)
-        addBgSolid(comp, W, H, c.bgRgb);
-        // v3 레이아웃은 원래 스토리보드 이미지 위에 겹쳐 그린다 — 있으면 풀프레임 배경으로 먼저 깐다.
-        if (s.image) {
-            try {
-                var imgF = new File(s.image);
-                if (imgF.exists) {
-                    var imgFoot = proj.importFile(new ImportOptions(imgF));
-                    var imgL = comp.layers.add(imgFoot);
-                    // 좌표는 매니페스트가 구워서 준다 — 세로 기준 배율이라 위아래가 안 잘린다.
-                    var ifit = s.imageFit || {};
-                    var ipos = ifit.position || [W / 2, H / 2];
-                    var isc = (ifit.scale != null) ? ifit.scale : 100;
-                    imgL.property("Anchor Point").setValue([imgL.source.width / 2, imgL.source.height / 2]);
-                    imgL.property("Position").setValue([ipos[0], ipos[1]]);
-                    imgL.property("Scale").setValue([isc, isc]);
-                }
-            } catch (eImg) { }
-        }
         // 렌더러는 layouts.jsx에 있다. 헬퍼가 이 함수의 클로저라 ctx로 넘긴다.
         akRenderLayout(comp, s, {
             W: W, H: H, S: S, colors: c, type: t, fonts: TK.fonts,
@@ -915,10 +905,11 @@ function akBuildScene(manifestPath) {
 
         var isLayoutScene = s.layout && s.layout !== "cinematic";
         if (isLayoutScene) {
-            var beforeL = comp.numLayers;
-            try { renderLayout(proj, comp, s, W, H); }
-            catch (eL) { log.push(pf + "레이아웃 렌더 실패 " + eL.toString()); }
-            akTagGroup(comp, comp.numLayers - beforeL, pf, guide, t0, t1);
+            // 바탕 솔리드는 글자보다 먼저 — 그림이 없어도 화면이 비지 않는다
+            var bgS = addBgSolid(comp, W, H, TK.colors.bgRgb);
+            bgS.name = pf + "판바탕";
+            akSpan(bgS, t0, t1);
+            bgS.parent = guide;
         }
 
         // **그림은 맨 아래에 깐다. 레이어가 있어도 깐다.**
@@ -1050,6 +1041,18 @@ function akBuildScene(manifestPath) {
             }
         }
 
+
+        // **레이아웃 글자는 맨 나중에 그린다 — 그래야 맨 위에 온다.**
+        //
+        // `comp.layers.add` 는 맨 위에 넣으므로 먼저 그린 것이 아래로 밀린다.
+        // 전에는 맨 처음 그려서, 나중에 얹은 영상·레이어가 글자를 통째로
+        // 덮었다. 화면에 하려는 말이 안 뜨는 것이 가장 나쁜 어긋남이다.
+        if (isLayoutScene) {
+            var beforeL = comp.numLayers;
+            try { renderLayout(proj, comp, s, W, H); }
+            catch (eL) { log.push(pf + "레이아웃 렌더 실패 " + eL.toString()); }
+            akTagGroup(comp, comp.numLayers - beforeL, pf, guide, t0, t1);
+        }
 
         if (s.mapGeo) {
             var beforeM = comp.numLayers;

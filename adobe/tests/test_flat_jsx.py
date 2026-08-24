@@ -210,11 +210,34 @@ def test_video_image_layers_all_imported_in_order():
     """
     src = _src()
     body = src.split("function buildSceneGroup(")[1]
+    i_bg = body.index("addBgSolid(comp, W, H, TK.colors.bgRgb)")
     i_img = body.index("if (s.image) {")
     i_lay = body.index("if (s.layers && s.layers.length) {")
     i_vid = body.index("if (s.video) {")
-    assert i_img < i_lay < i_vid
+    i_txt = body.index("renderLayout(proj, comp, s, W, H)")
+    # 아래 → 위: 판바탕 → 그림 → 레이어 → 영상 → 레이아웃 글자
+    assert i_bg < i_img < i_lay < i_vid < i_txt
     assert "didVideo" not in body                  # 건너뛰기 게이트는 없앴다
+
+
+def test_layout_text_is_on_top():
+    """레이아웃 글자가 영상·레이어 위에 온다.
+
+    전에는 레이아웃을 맨 처음 그려서, 나중에 얹은 영상이 글자를 통째로 덮었다.
+    화면에 하려는 말이 안 뜨는 것이 가장 나쁜 어긋남이다.
+    """
+    body = _src().split("function buildSceneGroup(")[1]
+    assert body.index("if (s.video) {") < body.index("renderLayout(proj, comp, s, W, H)")
+
+
+def test_scene_image_is_added_once():
+    """씬 그림을 까는 자리는 한 곳이다 — 두 곳에서 까서 PNG 가 두 장 들어왔다."""
+    src = _src()
+    rl = src.split("function renderLayout(")[1].split("\n    function ")[0]
+    assert "s.image" not in rl                    # 레이아웃 렌더러는 그림을 안 깐다
+    assert "importFile" not in rl
+    body = src.split("function buildSceneGroup(")[1]
+    assert body.count("if (s.image) {") == 1
 
 
 def test_short_video_holds_last_frame():
