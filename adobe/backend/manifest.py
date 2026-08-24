@@ -368,7 +368,18 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
         sw, sh = size if size else (W, H)
         f, ox = fit_transform(sw, sh)
         prefix = "S%s_" % timeline.comp_num(s.get("sceneNumber"))
-        layers = [] if is_layout_scene else _scene_layers(
+        # **레이아웃 씬이어도 나눠 둔 레이어는 싣는다.**
+        #
+        # 바로 위에서 「레이아웃 씬이어도 그림이 있으면 그 크기를 쓴다」고 고쳐
+        # 놓고, 정작 레이어는 여기서 통째로 버리고 있었다. 같은 오해를 한 곳만
+        # 고친 것이다 — v3 의 flow·items_list·before_after 는 도해만 있는 화면이
+        # 아니라 **씬 그림 위에 항목이 얹히는** 구조라, 그 그림을 가른 레이어도
+        # 그대로 쓸 수 있어야 한다.
+        #
+        # 실측: 디아지오편 142씬 중 **15씬**이 레이어를 나눠 두고도 못 쓰고
+        # 있었다(107·111·112·114·118·121·123·124·125·127·128·129·131·132·141).
+        # 레이아웃 글자는 조립할 때 맨 위에 그리므로 가려지지 않는다.
+        layers = _scene_layers(
             proj_dir, s.get("_layers") or [], sid, sw,
             prefix=prefix, f=f, ox=ox, scene_height=sh)
         # 레이어 종류(캐릭터/사물) — 옛 모션 사이드카·기본 bob 규칙 둘 다 이걸 쓴다.

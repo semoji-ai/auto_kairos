@@ -570,3 +570,30 @@ def test_no_video_no_key(tmp_path):
     manifest.build_manifest(d)
     sc = json.loads((d / "manifest.json").read_text(encoding="utf-8"))["scenes"][0]
     assert "video" not in sc
+
+
+def test_layout_scene_keeps_its_layers(tmp_path):
+    """레이아웃 씬이어도 나눠 둔 레이어를 싣는다.
+
+    v3 의 flow·items_list·before_after 는 도해만 있는 화면이 아니라 **씬 그림
+    위에 항목이 얹히는** 구조다. 그런데 레이아웃 씬이면 레이어를 통째로
+    버리고 있었다 — 디아지오편 142씬 중 15씬이 나눠 두고도 못 썼다.
+    레이아웃 글자는 조립할 때 맨 위에 그리므로 가려지지 않는다.
+    """
+    from PIL import Image
+    d = _proj(tmp_path, [{"sceneNumber": 128, "sceneId": "ab", "layout": "flow",
+                          "imageRef": "storyboard/sb.png", "items": ["가", "나"],
+                          "duration_estimate_sec": 5}])
+    (d / "storyboard").mkdir(); Image.new("RGB", (200, 200)).save(d / "storyboard" / "sb.png")
+    lay = d / "layers"; lay.mkdir()
+    im = Image.new("RGBA", (200, 200), (0, 0, 0, 0))
+    for y in range(50, 150):
+        for x in range(80, 120):
+            im.putpixel((x, y), (200, 30, 40, 255))
+    im.save(lay / "ab__0_잔.png")
+    Image.new("RGBA", (200, 200), (9, 9, 9, 255)).save(lay / "ab__bg.png")
+    manifest.build_manifest(d)
+    sc = json.loads((d / "manifest.json").read_text(encoding="utf-8"))["scenes"][0]
+    assert sc["layout"] != "cinematic"        # 레이아웃 씬이다(= 예전엔 버려졌다)
+    names = [L["name"] for L in sc["layers"]]
+    assert "ab__bg" in names and "ab__0_잔" in names
