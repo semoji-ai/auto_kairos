@@ -1,0 +1,18 @@
+{# 이미지 / 레이어 / 영상 전환 — 미리보기 위에 겹쳐 둔다(어도비 패널과 같은 자리).
+
+   **그리드와 씬 상세가 같은 것을 쓴다.** 전에는 씬 상세에만 있었고 그리드는
+   옛 「⧉ 레이어」 토글이라, 같은 기능이 화면마다 다르게 보였다.
+
+   쓰는 쪽은 바깥에 `sv-host` 를 두고 이미지 요소에 `sv-image` 를 단다 —
+   그리드는 카드가 142개라 id 로는 못 잡는다. #}
+{% if scene._video_url or scene._layers %}
+<div class="sv-switch" data-scene="{{ scene.sceneNumber }}">
+  <button type="button" class="svb on" data-mode="image">🖼 이미지</button>
+  {% if scene._layers %}<button type="button" class="svb" data-mode="layers">🧩 레이어{% if scene._layers|length %} {{ scene._layers|length }}{% endif %}</button>{% endif %}
+  {% if scene._video_url %}<button type="button" class="svb" data-mode="video">🎞 영상</button>{% endif %}
+</div>
+{% endif %}
+{% if scene._video_url %}
+<video src="{{ scene._video_url }}" controls preload="metadata"
+       class="sv-video sv-pane" style="display:none"></video>
+{% endif %}

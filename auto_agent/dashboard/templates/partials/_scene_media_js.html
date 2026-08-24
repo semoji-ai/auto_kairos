@@ -1,0 +1,215 @@
+{# 이미지/레이어/영상 전환 + 레이어 작업 + 비디오 생성 — 그리드와 씬 상세 공용.
+
+   **한 벌만 둔다.** 전에는 씬 상세에만 있었고 그리드는 옛 토글이라 같은
+   기능이 화면마다 다르게 보였다. 그런데 그 코드가 `id` 와 단수
+   `querySelector` 로 짜여 있어 카드가 142개인 그리드에는 그대로 못 옮겼다 —
+   id 는 문서에 하나뿐이라 첫 카드만 잡힌다.
+
+   그래서 전부 **위임 + 범위 잡기**로 바꿨다. 클릭은 문서 하나에서 받고,
+   대상은 누른 자리에서 가장 가까운 `.sv-host` 안에서만 찾는다. 카드가
+   나중에 다시 그려져도 그대로 먹는다. #}
+<script>
+(function () {
+  if (window.__akSceneMediaWired) { return; }
+  window.__akSceneMediaWired = true;
+
+  function host(el) { return el.closest ? el.closest(".sv-host") : null; }
+  function say(h, m) {
+    var n = h && h.querySelector(".lyr-note, .sv-mk-note");
+    if (n) { n.textContent = m; }
+  }
+  function post(url, body, btn, done, h) {
+    if (btn) { btn.disabled = true; }
+    fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
+                 body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (btn) { btn.disabled = false; } done(j); })
+      .catch(function (e) { if (btn) { btn.disabled = false; } say(h, "오류: " + e); });
+  }
+
+  document.addEventListener("click", function (ev) {
+    var t = ev.target;
+    if (!t || !t.closest) { return; }
+    var h = host(t);
+    if (!h) { return; }
+
+    // ── 이미지 / 레이어 / 영상 갈아 끼기 ──────────────────────────────
+    var sb = t.closest(".svb");
+    if (sb) {
+      ev.preventDefault();
+      ev.stopPropagation();            // 카드 클릭(씬 상세 열기)까지 번지지 않게
+      var m = sb.getAttribute("data-mode");
+      var all = h.querySelectorAll(".svb");
+      for (var i = 0; i < all.length; i++) { all[i].classList.toggle("on", all[i] === sb); }
+      var img = h.querySelector(".sv-image");
+      // 씬 상세는 `.sv-layers`(직접 그린 목록), 그리드는 `.sv-layers-slot`
+      // (훑기 → 확인 → 나누기 작업 흐름). 여는 자리는 같다.
+      var lay = h.querySelector(".sv-layers, .sv-layers-slot");
+      var vid = h.querySelector(".sv-video");
+      if (img) { img.style.display = (m === "image") ? "" : "none"; }
+      if (lay) {
+        lay.style.display = (m === "layers") ? "block" : "none";
+        // 그리드 칸은 비어 있으면 그때 불러온다 — 142장을 미리 채우지 않는다
+        if (m === "layers" && lay.classList.contains("sv-layers-slot")
+            && typeof window.sbLoadLayers === "function") {
+          var body = lay.querySelector(".sb-layer-body");
+          if (body && !body.innerHTML.trim()) {
+            window.sbLoadLayers(window.PROJECT_SLUG || h.getAttribute("data-slug") || "",
+                                parseFloat(h.getAttribute("data-scene")));
+          }
+        }
+      }
+      if (vid) {
+        vid.style.display = (m === "video") ? "" : "none";
+        if (m !== "video") { try { vid.pause(); } catch (e) {} }   // 떠나면 멈춘다
+      }
+      return;
+    }
+
+    // ── 레이어 작업 ──────────────────────────────────────────────────
+    var box = t.closest(".sv-layers");
+    if (box) {
+      var b = t.closest("button");
+      if (!b) { return; }
+      ev.preventDefault(); ev.stopPropagation();
+      var slug = box.getAttribute("data-slug");
+      var scene = parseFloat(box.getAttribute("data-scene"));
+      var row = b.closest(".lyr-row");
+
+      if (b.classList.contains("lyr-pose")) {
+        var ins = window.prompt(
+          "이 레이어에서 무엇을 바꿉니까? 한 가지만 적으세요.\n" +
+          "얼굴·의상·그림체는 그대로 유지됩니다.\n\n" +
+          "예) 오른손 엄지를 세워 들고 환하게 웃는 표정으로 바꾼다");
+        if (!ins) { return; }
+        say(h, "고치는 중… (1분 안팎)");
+        post("/api/layers/edit",
+             { slug: slug, layer: row.getAttribute("data-rel"), instruction: ins, keep_frame: true },
+             b, function (j) {
+               say(h, j.status === "completed"
+                   ? "새 판본 완성 — 새로고침하면 보입니다 (원본은 남습니다)"
+                   : "실패: " + (j.error || "").slice(0, 90));
+             }, h);
+        return;
+      }
+      if (b.classList.contains("lyr-revec")) {
+        say(h, "벡터화 중…");
+        post("/api/layers/vectorize",
+             { slug: slug, sceneNumber: scene, stems: [row.getAttribute("data-layer")], force: true },
+             b, function (j) {
+               say(h, (j.failed && j.failed.length)
+                      ? ("실패: " + (j.failed[0].error || "").slice(0, 80))
+                      : "벡터화 완료 — 새로고침하면 보입니다");
+             }, h);
+        return;
+      }
+      if (b.classList.contains("lyr-vec-all")) {
+        say(h, "전체 벡터화 중… (레이어당 1크레딧)");
+        post("/api/layers/vectorize", { slug: slug, sceneNumber: scene }, b, function (j) {
+          say(h, "완료 " + ((j.ok || []).length) + " · 건너뜀 " + ((j.skipped || []).length)
+                 + " · 실패 " + ((j.failed || []).length));
+        }, h);
+        return;
+      }
+      if (b.classList.contains("lyr-regen")) {
+        if (!window.confirm("씬을 다시 분리합니다. 기존 레이어는 지우지 않고 새로 만듭니다. 진행할까요?")) { return; }
+        say(h, "요소 분석 중… (코덱스)");
+        post("/api/layers/analyze", { slug: slug, sceneNumber: scene }, b, function (a) {
+          if (!a.elements || !a.elements.length) { say(h, "분석 실패: " + (a.error || "")); return; }
+          say(h, "요소 " + a.elements.length + "개 — 분리 중… (fal)");
+          post("/api/layers/split",
+               { slug: slug, sceneNumber: scene, elements: a.elements, prompt: a.prompt },
+               b, function (j) {
+                 say(h, j.ok ? ("레이어 " + ((j.layers || []).length) + "장 — 새로고침하면 보입니다")
+                             : ("실패: " + (j.error || "").slice(0, 90)));
+               }, h);
+        }, h);
+      }
+      return;
+    }
+
+    // ── 비디오 생성 ──────────────────────────────────────────────────
+    // 씬 길이는 서버가 정한다(씬 길이 + 1초, 상한 15초). 프롬프트는 사람이 쓴다.
+    // 무엇을 쓸지는 docs/rules/scene-video-rules.md — 움직임이 말을 해야 한다.
+    var mk = t.closest(".sv-mk");
+    if (mk) {
+      ev.preventDefault(); ev.stopPropagation();
+      var p = window.prompt(
+        "이 씬에서 무엇이 움직입니까?\n\n" +
+        "사건이 있는 씬은 시작과 끝이 달라야 합니다.\n" +
+        "예) 둑 위쪽으로 물이 차오르고 아래쪽 수위가 내려가 젖은 돌이 드러난다.\n" +
+        "    남자는 그것을 내려다보며 입꼬리가 올라간다.");
+      if (!p) { return; }
+      mk.disabled = true; say(h, "만드는 중… (3~5분)");
+      fetch("/api/video/generate", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: mk.getAttribute("data-slug"),
+                               sceneNumber: parseFloat(mk.getAttribute("data-scene")),
+                               prompt: p })
+      }).then(function (r) { return r.json(); })
+        .then(function (j) {
+          mk.disabled = false;
+          say(h, j.ok ? (j.duration + "초 완성 — 새로고침하면 보입니다")
+                      : ("실패: " + (j.error || JSON.stringify(j)).slice(0, 120)));
+        })
+        .catch(function (e) { mk.disabled = false; say(h, "오류: " + e); });
+    }
+  }, true);   // 붙잡기 단계 — 카드의 onclick 이 먼저 먹지 않도록
+
+  // 잔액은 한 번만 물어 본다 — 카드가 142개라도 호출은 하나다
+  var notes = document.querySelectorAll(".sv-mk-note");
+  if (notes.length) {
+    fetch("/api/video/accounts").then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.total == null) { return; }
+        var m = "잔액 " + Math.round(j.total).toLocaleString();
+        for (var i = 0; i < notes.length; i++) { notes[i].textContent = m; }
+      }).catch(function () {});
+  }
+})();
+</script>
+
+<style>
+/* 이미지 / 레이어 / 영상 — **미리보기 위에 겹친다.** 어도비 패널과 같은 자리
+   (왼쪽 위 모서리). 미리보기를 두 개 두면 어느 것이 지금 것인지 헷갈린다. */
+.sv-host { position: relative; }
+.sv-switch { display:flex; gap:1px; position:absolute; top:4px; left:4px; z-index:3;
+  background:rgba(20,22,26,.82); border-radius:3px; overflow:hidden; }
+.sv-switch .svb { padding:2px 7px; font-size:10px; border:0; border-radius:0;
+  background:transparent; color:#c5c8cc; cursor:pointer; line-height:1.5; }
+.sv-switch .svb.on { background:#3a6df0; color:#fff; }
+.sv-video { width:100%; border-radius:4px; display:block; background:#000; }
+
+.sv-make { display:flex; align-items:center; gap:6px; margin-top:4px; }
+.sv-mk { padding:2px 8px; font-size:10px; border:1px solid #33363c; border-radius:3px;
+  background:#26292f; color:#c5c8cc; cursor:pointer; }
+.sv-mk:hover { background:#3a6df0; color:#fff; }
+.sv-mk[disabled] { opacity:.45; cursor:default; }
+.sv-mk-note { font-size:10px; color:#8b9098; }
+
+.sv-layers { border:1px solid #33363c; border-radius:4px; margin-top:6px;
+  background:rgba(20,22,26,.5); }
+.lyr-head { display:flex; align-items:center; gap:6px; padding:4px 7px;
+  border-bottom:1px solid #33363c; font-size:11px; color:#9aa0a6; }
+.lyr-head button { padding:2px 7px; font-size:10px; border:1px solid #33363c;
+  border-radius:3px; background:#26292f; color:#c5c8cc; cursor:pointer; }
+.lyr-head button:hover { background:#3a6df0; color:#fff; }
+.lyr-head button[disabled] { opacity:.45; cursor:default; }
+.lyr-note { margin-left:auto; font-size:10px; color:#8b9098; }
+.lyr-row { display:flex; align-items:center; gap:6px; padding:3px 7px;
+  border-bottom:1px solid #2c2f36; }
+.lyr-row:last-child { border-bottom:none; }
+/* **썸네일은 상자 안에 맞춘다.** 높이를 비례로 두면 세로로 긴 레이어가
+   그대로 늘어나 행이 통째로 길어진다(126씬 클라이넬리쉬 잔이 그랬다). */
+.lyr-row img.lyr { width:28px; height:28px; object-fit:contain; flex:0 0 28px;
+  border-radius:2px; background:#222; }
+.lyr-row .lyr-name { flex:1; font-size:11px; overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; }
+.lyr-row .lyr-kind { font-size:10px; color:#888; }
+.lyr-badge { font-size:9px; color:#7ea6ff; border:1px solid #3a4a6b; border-radius:2px;
+  padding:0 3px; }
+.lyr-row button { padding:2px 7px; font-size:10px; border:1px solid #33363c;
+  border-radius:3px; background:#26292f; color:#c5c8cc; cursor:pointer; }
+.lyr-row button:hover { background:#3a6df0; color:#fff; }
+.lyr-row button[disabled] { opacity:.45; cursor:default; }
+</style>

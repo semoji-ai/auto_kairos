@@ -60,13 +60,15 @@
 
 <div class="scene-list" id="scene-list">
   {% for scene in scenes %}
-  <div class="sb-card" data-scene="{{ scene.sceneNumber }}" data-chapter="{{ scene.chapter }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
+  <div class="sb-card sv-host" data-scene="{{ scene.sceneNumber }}" data-chapter="{{ scene.chapter }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
     {# 씬 고르기 — 체크한 씬에 일괄로 레이어 나누기를 건다 #}
     <input type="checkbox" class="sb-pick" data-scene="{{ scene.sceneNumber }}"
            onchange="sbPickChanged()" title="이 씬 고르기">
     <!-- 좌측: Remotion Player 경량 임베드 -->
     <div class="sb-preview-wrap">
-      <div class="sb-preview" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
+      {# 이미지/레이어/영상 — 씬 상세와 **같은 조각**을 쓴다 #}
+      {% include "partials/_scene_switch.html" %}
+      <div class="sb-preview sv-image" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
         {% if scene.isTurnCard %}
         {# 반전 접속사 카드 — 흰 화면에 한 마디. 빠르게 넘어간다. #}
         <div class="sb-turn-card"><span>{{ scene.headline }}</span></div>
@@ -130,14 +132,10 @@
       {# 연출 배지(레이아웃·모션·무드)와 자료 배지는 걷어냈다. 필요하면
          썸네일을 눌러 리모션 플레이어에서 본다. 목록에서는 읽을 것이 많으면
          정작 읽어야 할 나레이션이 묻힌다. #}
-      {# 레이어 — 분리해 둔 것이 있으면 여기서 층별로 본다.
-         그동안 파일을 직접 찾아 열어야 했고, 어느 것이 어디 놓이는지는
-         layers.json을 읽어야 알 수 있었다. #}
-      <div class="sb-layers" data-scene="{{ scene.sceneNumber }}">
-        <button type="button" class="sb-layer-toggle{% if scene._layer_count %} done{% endif %}"
-                onclick="sbToggleLayers('{{ slug }}', {{ scene.sceneNumber }}, this)">⧉ 레이어{% if scene._layer_count %} · {{ scene._layer_count }}층{% endif %}</button>
-        <div class="sb-layer-body" id="sb-layers-{{ scene.sceneNumber }}" hidden></div>
-      </div>
+      {# 레이어 목록은 **스크립트 아래**로 내렸다 — 어도비 패널과 같은 자리.
+         전환은 미리보기 왼쪽 위 단추가 한다(위의 _scene_switch.html).
+         옛 「⧉ 레이어」 토글은 걷어냈다 — 씬 상세와 다른 UI 두 벌이 돌고
+         있었고, 그래서 같은 기능이 화면마다 다르게 보였다. #}
 
       {# 나레이션 — 눌러서 고치고 빠져나오면 저장된다. 편집 버튼을 따로
          두면 한 단계가 더 늘 뿐이고, 여기서 고친 것은 원고 탭에도 그대로
@@ -151,6 +149,22 @@
         <div class="narr-state" id="sb-narr-state-{{ scene.sceneNumber }}">
           {% if scene.narration_dirty %}<span class="narr-dirty">TTS 재생성 필요</span>{% endif %}
         </div>
+      </div>
+
+      {# 레이어 — **스크립트 아래**에 둔다(어도비 패널과 같은 자리).
+         여는 것은 미리보기 왼쪽 위 전환 단추가 한다.
+
+         안에 든 것은 「훑기 → 사람이 확인 → 나누기」 작업 흐름이다. 바로
+         나누면 무엇을 가를지 잘못 정했을 때 몇 분과 비용이 통째로 버려진다.
+         위쪽 일괄 나누기도 이 칸에 진행을 그린다. #}
+      <div class="sb-layers sv-layers-slot" data-scene="{{ scene.sceneNumber }}" style="display:none">
+        <div class="sb-layer-body" id="sb-layers-{{ scene.sceneNumber }}"></div>
+      </div>
+
+      <div class="sv-make">
+        <button type="button" class="sv-mk" data-slug="{{ slug }}"
+                data-scene="{{ scene.sceneNumber }}">🎞 비디오 생성</button>
+        <span class="sv-mk-note"></span>
       </div>
 
       <div class="audio-player">
@@ -2301,6 +2315,27 @@ function updateSceneLayout(slug, sceneNum, layout) {
    계획은 글이라 고치기 쉽다. */
 var SB_LAYER_POLL = {};
 
+/* 레이어 칸을 연다 — 감싼 칸과 전환 단추까지 함께 맞춘다.
+   칸을 스크립트 아래로 내리면서 겉을 하나 씌웠는데, 옛 함수들은 속만 열어
+   두어 화면에 아무것도 안 나타났다. */
+function sbShowLayerSlot(n) {
+  var body = document.getElementById("sb-layers-" + n);
+  if (!body) { return null; }
+  var slot = body.closest(".sb-layers");
+  if (slot) { slot.style.display = "block"; }
+  var card = body.closest(".sv-host");
+  if (card) {
+    var bs = card.querySelectorAll(".svb");
+    for (var i = 0; i < bs.length; i++) {
+      bs[i].classList.toggle("on", bs[i].getAttribute("data-mode") === "layers");
+    }
+    var img = card.querySelector(".sv-image");
+    if (img) { img.style.display = "none"; }
+  }
+  return body;
+}
+window.sbShowLayerSlot = sbShowLayerSlot;
+
 function sbToggleLayers(slug, n, btn) {
   var box = document.getElementById("sb-layers-" + n);
   if (!box) return;
@@ -2309,9 +2344,10 @@ function sbToggleLayers(slug, n, btn) {
   sbLoadLayers(slug, n);
 }
 
+window.sbLoadLayers = sbLoadLayers;   // 전환 단추가 부른다
 function sbLoadLayers(slug, n) {
   var box = document.getElementById("sb-layers-" + n);
-  if (!box || box.hidden) return;
+  if (!box) return;
   if (!box.innerHTML) box.innerHTML = '<div class="sb-layer-empty">불러오는 중…</div>';
   Promise.all([
     fetch('/api/p/' + encodeURIComponent(slug) + '/layers/plan/' + n).then(function (r) { return r.json(); }),
@@ -2473,8 +2509,7 @@ function sbRePlan(slug, n) {
 
 /* 한 씬만 할 때도 같은 흐름(훑기 → 확인 → 분리)을 탄다 */
 function sbLayerOne(slug, n) {
-  var box = document.getElementById("sb-layers-" + n);
-  if (box) box.hidden = false;
+  sbShowLayerSlot(n);
   fetch('/api/p/' + encodeURIComponent(slug) + '/layers/plan', {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ scenes: [n] }),
@@ -2531,11 +2566,7 @@ function sbPickClear() {
 
 /* 진행이 보이도록 해당 씬의 레이어 칸을 열어 둔다 */
 function sbOpenLayers(slug, n) {
-  var box = document.getElementById("sb-layers-" + n);
-  if (!box) return;
-  box.hidden = false;
-  var btn = box.parentNode.querySelector(".sb-layer-toggle");
-  if (btn) btn.classList.add("open");
+  if (!sbShowLayerSlot(n)) { return; }
   sbLoadLayers(slug, n);
 }
 
@@ -2775,3 +2806,5 @@ function sbRangePick(mode) {
 {% else %}
 <div class="empty">No scene specs found. Run the pipeline first.</div>
 {% endif %}
+
+{% include "partials/_scene_media_js.html" %}

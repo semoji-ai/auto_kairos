@@ -1,0 +1,33 @@
+{# 레이어 패널 — 어도비처럼 스크립트 아래에 둔다.
+
+   **그리드와 씬 상세가 같은 것을 쓴다.** 전에는 씬 상세에만 이 패널이 있고
+   그리드는 옛 「⧉ 레이어」 토글이라, 같은 기능이 화면마다 다르게 보였다.
+
+   id 를 쓰지 않는다 — 그리드는 카드가 142개라 id 로는 못 잡는다.
+   바깥의 `sv-host` 안에서 클래스로 찾는다. #}
+{% if scene._layers %}
+<div class="sv-pane sv-layers" style="display:none"
+     data-slug="{{ slug }}" data-scene="{{ scene.sceneNumber }}">
+  <div class="lyr-head">
+    <span>레이어 {{ scene._layers|length }}</span>
+    <button type="button" class="lyr-vec-all"
+            title="SVG가 없는 레이어를 모두 벡터화합니다(레이어당 1크레딧)">전체 벡터화</button>
+    <button type="button" class="lyr-regen"
+            title="씬을 다시 분리합니다 — 기존 레이어는 지우지 않고 새로 만듭니다">↻ 다시 분리</button>
+    <span class="lyr-note"></span>
+  </div>
+  {% for L in scene._layers %}
+  <div class="lyr-row" data-layer="{{ L.stem }}" data-rel="{{ L.rel }}">
+    <img class="lyr" src="{{ L.url }}" alt="{{ L.name }}" loading="lazy">
+    <span class="lyr-name" title="{{ L.stem }}">{{ L.name }}</span>
+    <span class="lyr-kind">{{ '배경' if L.is_bg else ('인물' if L.kind == 'character' else '사물') }}</span>
+    {% if L.svg %}<span class="lyr-badge">SVG</span>{% endif %}
+    {% if not L.is_bg %}
+    <button type="button" class="lyr-pose"
+            title="이 레이어만 고칩니다 — 자세·표정 (씨드림 5.0 Pro, 3크레딧)">자세</button>
+    {% endif %}
+    <button type="button" class="lyr-revec">{{ '↻SVG' if L.svg else 'SVG' }}</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
