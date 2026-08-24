@@ -96,3 +96,59 @@ def test_panel_branches_by_host():
     # 버튼만 눌러 보고 안 되는 것이 가장 나쁘다
     for b in ("btnQueueRender", "btnSubtitles", "btnDecompose"):
         assert b in js.split("function applyHostUI()")[1].split("\n}")[0]
+
+
+# ── MOGRT — 프리미어에서 고칠 수 있게 ──────────────────────────────────
+
+def _mog():
+    return (PANEL / "jsx" / "make_mogrt.jsx").read_text(encoding="utf-8")
+
+
+def test_mogrt_reuses_layouts_jsx():
+    """**디자인 소스를 둘로 만들지 않는다.**
+
+    MOGRT 를 손으로 만들면 같은 디자인이 두 벌이 된다 — `layouts.jsx` 한 벌,
+    MOGRT 한 벌. 하나를 고치면 갈린다. 그래서 찍을 때도 `akRenderLayout` 을
+    부른다. 디자인은 계속 layouts.jsx 하나가 정한다.
+    """
+    src = _mog()
+    assert "akRenderLayout(comp," in src
+    # 여기서 직접 레이아웃을 그리면 그 순간 두 벌이 된다
+    assert "function akLayout_" not in src
+
+
+def test_mogrt_exposes_text_color_place_size():
+    """글자·색·자리·크기 넷을 다 노출한다.
+
+    색은 Fill 이펙트로 준다 — 텍스트 색은 `Source Text` 안의 TextDocument 에
+    들어 있어 따로 노출할 수 없다.
+    """
+    src = _mog()
+    for x in ('"Source Text"', '" 색"', '" 자리"', '" 크기"'):
+        assert x in src, x
+    assert "ADBE Fill" in src
+    assert "addToMotionGraphicsTemplateAs" in src
+    assert "canAddToMotionGraphicsTemplate" in src
+
+
+def test_mogrt_cleans_up_after_itself():
+    """사람이 쓰던 프로젝트에 임시 컴프를 남기지 않는다."""
+    src = _mog()
+    assert "beginUndoGroup" in src and "endUndoGroup" in src
+    assert "folder.remove()" in src
+
+
+def test_mogrt_is_es5():
+    from conftest import es5_code
+    src = es5_code(_mog())
+    for bad in ("=>", "`", "const ", "let "):
+        assert bad not in src, bad
+
+
+def test_mogrt_button_is_ae_only():
+    """찍는 쪽은 애프터이펙트다 — 프리미어에서는 감춘다."""
+    html = (PANEL / "index.html").read_text(encoding="utf-8")
+    js = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
+    assert 'id="btnMogrt"' in html
+    assert "function makeMogrt()" in js
+    assert "btnMogrt" in js.split("function applyHostUI()")[1].split("\n}")[0]
