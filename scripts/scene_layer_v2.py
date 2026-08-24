@@ -302,7 +302,10 @@ def main() -> None:
                     "intrinsic_size": common_intrinsic,
                     "placement": common_placement,
                     "z": 10,
-                    "motion": {"type": "feet_bob", "amplitude_pct": 2, "period_s": 1.6},
+                    # 까딱임 — 반주기 10프레임 · 100 → 101 · ease-in-out.
+                    # `amplitude_pct`/`period_s` 는 렌더러가 읽지 않는 이름이었다.
+                    "motion": {"type": "feet_bob", "max_scale": 1.01,
+                               "period_frames": 20},
                 })
         else:
             print(f"\n  scene_{args.scene:03d}.png 없음 — 인물 분리 스킵")
@@ -329,7 +332,10 @@ def main() -> None:
                     "src": f"scene_{args.scene:03d}_v2/{sp.name}",
                     "anchor": {"x": 960, "y": 540, "origin": "feet_center"},
                     "scale": 1.0, "z": 10,
-                    "motion": {"type": "feet_bob", "amplitude_pct": 2, "period_s": 1.6},
+                    # 까딱임 — 반주기 10프레임 · 100 → 101 · ease-in-out.
+                    # `amplitude_pct`/`period_s` 는 렌더러가 읽지 않는 이름이었다.
+                    "motion": {"type": "feet_bob", "max_scale": 1.01,
+                               "period_frames": 20},
                 })
 
     # 3. 자산(로고·아이콘) — 공유 캐시

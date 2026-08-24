@@ -115,9 +115,15 @@ def split(chars_path: Path, layers_path: Path, alpha_thresh: int = 64,
             "source_canvas_size": {"width": W, "height": H},
             "source_bbox": {"x": bx1, "y": by1, "width": int(bx2-bx1), "height": int(by2-by1)},
             "z": 10 + kept,
-            "motion": {"type": "feet_bob", "amplitude_pct": 2,
-                       "period_s": round(1.4 + 0.2*kept, 2),  # 캐릭터별 다른 주기
-                       "phase_offset_s": round(0.3*kept, 2)},   # 위상 차이
+            # 까딱임 — 반주기 10프레임 · 100 → 101 · ease-in-out.
+            # `amplitude_pct`/`period_s` 는 SemojiLayerScene 이 읽지 않는 이름이라
+            # 그동안 조용히 기본값으로 떨어지고 있었다. 정본 이름으로 적는다.
+            # **폭과 주기는 모두 같고 위상만 흩는다** — 사람마다 주기가 다르면
+            # 같은 인물이 씬마다 다르게 까딱인다. 한 박자로 맞으면 기계 같으니
+            # 시작 시점만 어긋나게 둔다.
+            "motion": {"type": "feet_bob", "max_scale": 1.01,
+                       "period_frames": 20,
+                       "phase_offset_frames": (kept * 7) % 20},
         })
         kept += 1
 

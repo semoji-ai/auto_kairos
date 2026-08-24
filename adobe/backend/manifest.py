@@ -385,7 +385,8 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
                 continue
             is_char = "_char" in entry["name"] or kinds.get(entry["name"]) == "character"
             if is_char:
-                entry["moves"] = [{"type": "bob", "start": 0, "duration": dur}]
+                # 숫자는 여기 적지 않는다 — 까딱임 기본값은 motion.py 하나뿐이다
+                entry["moves"] = [motion.bob_move(0, dur)]
         # 레이아웃 데이터 — v3 공통 계약으로 정규화해서 넘긴다(jsx는 정규 이름만 안다)
         data_fields = scene_layouts.normalize_fields(s)
         # 도해 — 요소를 레이어로, 라벨과 기호를 글자로 굽는다

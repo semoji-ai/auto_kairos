@@ -9,6 +9,38 @@ from backend import scenes, llm, tts, imagegen, camera_plan
 
 _SCHEMA = Path(__file__).resolve().parent / "schemas" / "motion_plan.schema.json"
 
+# ── 까딱임 기본값 (단일 소스) ──────────────────────────────────────────────
+#
+# 인물 idle. **발밑을 축으로 세로만 눌렀다 편다** — 위치를 흔드는 wiggle 과
+# 다르다. 발이 땅에 붙어 있어야 서 있는 사람으로 보인다.
+#
+#     반주기 10프레임 · 100% → 101% · 양 키 easy ease
+#
+# 이 숫자가 정본이다. `SemojiLayerScene.tsx` 가 처음부터 이 값이었고
+# (`max_scale: 1.01`, `period_frames: 20`), 애프터이펙트와 `build_layered_props`
+# 만 다른 값으로 벌어져 있었다 — 같은 인물이 렌더러마다 다르게 까딱였다.
+#
+# **여기서만 고친다.** jsx 는 매니페스트가 실어 보낸 값을 쓰고, 리모션 쪽은
+# 아래 두 함수로 환산해 쓴다. 어느 쪽도 숫자를 직접 적지 않는다.
+BOB_HALF_FRAMES = 10        # 100 → 101 까지 걸리는 시간(되돌아오는 데 또 10)
+BOB_AMOUNT = 1              # 세로 스케일 증가분(%) — 100 → 101
+BOB_FPS = 30.0              # 프레임을 초로 바꿀 때의 기준 (timeline.FPS 와 같다)
+
+
+def bob_move(start: float = 0.0, duration: float = 0.0) -> dict:
+    """매니페스트에 실어 보낼 까딱임 지시. jsx 가 이 값으로 키를 찍는다."""
+    return {"type": "bob", "start": start, "duration": duration,
+            "half_frames": BOB_HALF_FRAMES, "amount": BOB_AMOUNT}
+
+
+def bob_remotion(fps: float = BOB_FPS) -> dict:
+    """리모션 `LayerSpec.bob` 값. `amp` 는 비율, `period` 는 초당 주기(Hz).
+
+    한 바퀴는 반주기의 두 배다 — 눌렸다가 되돌아와야 한 번이다.
+    """
+    return {"amp": BOB_AMOUNT / 100.0,
+            "period": fps / (BOB_HALF_FRAMES * 2)}
+
 PRESET_GUIDE = (
     "- slide_in: 화면 밖에서 등장(direction 필수). 등장 연출.\n"
     "- fade_in: 서서히 나타남.\n"

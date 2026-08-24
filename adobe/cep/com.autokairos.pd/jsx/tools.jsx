@@ -165,7 +165,7 @@ function akApplyPreset(type, amount) {
                     // 까딱까딱 — **발밑을 축으로 세로만 눌렀다 편다.**
                     // 조립할 때 인물 레이어에 자동으로 붙는 것과 같은 방식이다.
                     // 위치를 흔드는 wiggle·shake 와는 다르다 — 발이 땅에 붙어 있다.
-                    var bAmt = amt || 3;
+                    var bAmt = amt || 1;              // 100 → 101
                     var rc = il.sourceRectAtTime(t0, false);
                     // 발밑(불투명 영역 하단 중앙)을 컴프 좌표로 — 앵커 기준 오프셋을 더한다
                     var ap = il.property("Anchor Point").value;
@@ -182,7 +182,10 @@ function akApplyPreset(type, amount) {
                     if (prevP) { nb.parent = prevP; }
                     nb.moveAfter(il);
                     var bs = nb.property("Scale");
-                    var half = 0.6;                        // 반주기 0.6초
+                    // 반주기 10프레임 — 초로 적으면 fps 가 바뀔 때 어긋난다.
+                    // 조립할 때 붙는 것과 같은 값이어야 한다(motion.py 가 정본).
+                    // 여기는 손으로 거는 프리셋이라 매니페스트가 없다 — 같은 수를 적는다.
+                    var half = 10 * comp.frameDuration;
                     bs.setValueAtTime(t0, [100, 100]);
                     bs.setValueAtTime(Math.min(il.outPoint, t0 + half), [100, 100 + bAmt]);
                     try {

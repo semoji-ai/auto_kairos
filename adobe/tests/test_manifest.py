@@ -140,7 +140,11 @@ def test_char_layer_auto_bob_without_plan(tmp_path):
     manifest.build_manifest(d)                            # 모션 플랜 파일 없음
     sc = json.loads((d / "manifest.json").read_text(encoding="utf-8"))["scenes"][0]
     char = next(L for L in sc["layers"] if "_char" in L["name"])
-    assert char["moves"] == [{"type": "bob", "start": 0, "duration": 5.0}]   # 자동 bob
+    # 까딱임 값은 매니페스트가 실어 보낸다 — jsx 가 숫자를 적지 않는다.
+    from backend import motion
+    assert char["moves"] == [motion.bob_move(0, 5.0)]
+    assert char["moves"][0]["half_frames"] == 10      # 반주기 10프레임
+    assert char["moves"][0]["amount"] == 1            # 100 → 101
     desk = next(L for L in sc["layers"] if "책상" in L["name"])
     assert "moves" not in desk                            # 사물은 모션 없음
 

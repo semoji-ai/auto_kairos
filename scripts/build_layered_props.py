@@ -17,12 +17,23 @@ ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = ROOT / "remotion" / "public"
 
 
+# 까딱임 기본값 — 반주기 10프레임 · 100 → 101 · ease-in-out.
+# 정본은 `adobe/backend/motion.py` 의 BOB_* 이고, 여기 두 수는 그것을 옮긴 것이다
+# (scripts/ 는 adobe/backend 를 임포트하지 않는다). 고칠 때 저쪽을 함께 고친다.
+BOB_HALF_FRAMES, BOB_AMOUNT, BOB_FPS = 10, 1, 30.0
+
+
 def bob(name: str, idx: int) -> dict:
-    """인물마다 위상·주기·폭을 흩는다. 이름을 씨앗으로 삼아 재현 가능하게."""
+    """까딱임 값. **폭과 주기는 모두 같다** — 위상만 흩는다.
+
+    전에는 셋 다 무작위였다(폭 0.7~1.3%, 반주기 0.5~0.85초). 그래서 같은
+    인물이 씬마다 다르게 까딱였고, 애프터이펙트로 조립한 것과도 안 맞았다.
+    흩어야 하는 것은 **시작 시점**뿐이다 — 여럿이 한 박자로 까딱이면 기계 같다.
+    """
     r = random.Random(f"{name}:{idx}")
     return {"phase": r.uniform(0, 2 * math.pi),
-            "period": r.uniform(0.5, 0.85),
-            "amp": r.uniform(0.007, 0.013)}
+            "period": BOB_FPS / (BOB_HALF_FRAMES * 2),   # 초당 주기(Hz)
+            "amp": BOB_AMOUNT / 100.0}
 
 
 def main() -> int:
