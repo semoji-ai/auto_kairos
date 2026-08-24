@@ -178,7 +178,13 @@ python3 scripts/gen_character_sheets.py <roster.json> -o <out_dir>
 **사진을 말로 옮겨 적지 않는다.** 「가는 아몬드형 눈」 같은 서술은 「검은 눈동자」와
 충돌해 눈 주변에 빗금을 만든다.
 
-이 프롬프트로 만든 것이 `_imggen/characters/final_v2/` 11종이며 **기준 산출물**이다.
+이 프롬프트로 만든 것이 `_imggen/characters/sheets/*_sheet.png` 이다(디아지오편 22종).
+`.try0`·`.try1` 은 시도판, `.replaced` 는 실사를 찾아 다시 만들기 전의 것이다.
+
+> ⚠️ **인물별 시트는 저장소에 올리지 않는다.** 편마다 다르게 쓰는 것이라
+> 공유 대상이 아니다(`.gitignore`). 다른 컴에서 받아야 하는 것은 **기준
+> 시트 하나**뿐이고 그것은 `artstyle/styles/semoji_character_sheet.png` 로
+> 추적된다. 인물 시트는 `gen_character_sheets.py` 로 그 자리에서 만든다.
 
 ### 남은 한계
 

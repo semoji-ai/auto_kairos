@@ -261,3 +261,13 @@ _archive_*/
 !/scripts/install_upscayl.sh
 !/scripts/bump_panel_cachebust.py
 !/scripts/clear_panel_cache.sh
+
+# _imggen — **레시피는 올리고 산출물은 안 올린다.**
+# 스크립트·프롬프트·roster·참고 실사는 추적한다(그것이 만드는 법이다).
+# 기준 캐릭터 시트도 추적한다 — artstyle/styles/semoji_character_sheet.png.
+#
+# 그런데 그 기준 시트로 만든 **인물별 시트는 편마다 다르게 쓴다.** 공유할
+# 것이 아니므로 올리지 않는다. 규칙에 안 적어 두었더니 `??` 로 떠서 「커밋이
+# 안 됐다」는 사고로 읽혔다 — 안 올리는 것이 의도임을 여기 적어 둔다.
+_imggen/characters/sheets/
+_imggen/characters/roster.pre_split.json
