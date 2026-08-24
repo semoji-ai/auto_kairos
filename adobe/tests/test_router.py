@@ -607,9 +607,10 @@ def test_assembly_manifest(tmp_path, monkeypatch):
     proj = tmp_path / "p"; proj.mkdir()
     (proj / "scenes.json").write_text('{"scenes":[]}', encoding="utf-8")
     monkeypatch.setattr(r.manifest, "build_manifest",
-                        lambda proj_dir, only_scene=None, only_scenes=None: {
+                        lambda proj_dir, only_scene=None, only_scenes=None, include=None: {
                             "path": str(proj_dir / "manifest.json"), "scenes": 0,
-                            "only_scene": only_scene, "only_scenes": only_scenes})
+                            "only_scene": only_scene, "only_scenes": only_scenes,
+                            "include": include})
     ctx = {"root": tmp_path, "jobs": JobRegistry()}
     code, body = handle_request("POST", "/api/assembly/manifest", {}, {"project_id": "p"}, ctx)
     assert code == 200 and body["path"].endswith("manifest.json") and body["only_scene"] is None
@@ -620,7 +621,7 @@ def test_assembly_manifest_single_scene(tmp_path, monkeypatch):
     proj = tmp_path / "p"; proj.mkdir()
     (proj / "scenes.json").write_text('{"scenes":[]}', encoding="utf-8")
     monkeypatch.setattr(r.manifest, "build_manifest",
-                        lambda proj_dir, only_scene=None, only_scenes=None: {
+                        lambda proj_dir, only_scene=None, only_scenes=None, include=None: {
                             "path": "x", "scenes": 1,
                             "only_scene": only_scene, "only_scenes": only_scenes})
     ctx = {"root": tmp_path, "jobs": JobRegistry()}
@@ -1064,7 +1065,7 @@ def test_assembly_manifest_scene_list(tmp_path, monkeypatch):
     proj = tmp_path / "p"; proj.mkdir()
     (proj / "scenes.json").write_text('{"scenes":[]}', encoding="utf-8")
     monkeypatch.setattr(r.manifest, "build_manifest",
-                        lambda proj_dir, only_scene=None, only_scenes=None: {
+                        lambda proj_dir, only_scene=None, only_scenes=None, include=None: {
                             "path": "x", "scenes": len(only_scenes or []),
                             "only_scene": only_scene, "only_scenes": only_scenes})
     ctx = {"root": tmp_path, "jobs": JobRegistry()}
@@ -1129,3 +1130,25 @@ def test_layers_endpoints_validate_input(tmp_path):
     code, _ = handle_request("POST", "/api/layers/regenerate", {},
                              {"project_id": "lp", "sceneNumber": 99, "layer": "x"}, ctx)
     assert code == 404                                          # 씬 없음
+
+
+def test_assembly_manifest_passes_include(tmp_path, monkeypatch):
+    """무엇을 넣을지 고른 것이 **매니페스트까지 전해져야** 한다.
+
+    화면에만 있고 안 전해지면 체크상자가 아무 일도 안 한다.
+    """
+    import backend.router as r
+    proj = tmp_path / "p"; proj.mkdir()
+    (proj / "scenes.json").write_text('{"scenes":[]}', encoding="utf-8")
+    seen = {}
+
+    def _stub(proj_dir, only_scene=None, only_scenes=None, include=None):
+        seen["include"] = include
+        return {"path": str(proj_dir / "manifest.json"), "scenes": 0}
+
+    monkeypatch.setattr(r.manifest, "build_manifest", _stub)
+    ctx = {"root": tmp_path, "jobs": JobRegistry()}
+    code, _ = handle_request("POST", "/api/assembly/manifest", {},
+                             {"project_id": "p", "include": {"video": False}}, ctx)
+    assert code == 200
+    assert seen["include"] == {"video": False}
