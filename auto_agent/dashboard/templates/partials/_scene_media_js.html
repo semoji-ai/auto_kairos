@@ -13,6 +13,56 @@
   if (window.__akSceneMediaWired) { return; }
   window.__akSceneMediaWired = true;
 
+  // ── 모달 ────────────────────────────────────────────────────────────
+  //
+  // **`window.prompt` 을 쓰지 않는다.** 카이로스 앱은 Tauri(WKWebView)인데
+  // 거기서는 `prompt` 가 뜨지 않는다 — 단추를 눌러도 아무 일도 안 일어난다.
+  // 브라우저에서는 되니 「대시보드는 되는데 앱은 안 된다」로 보였다.
+  // 화면 안에 직접 그리면 어디서나 같고, 모델·길이처럼 여러 값을 받을 수도 있다.
+  var _m = null;
+  function modal() {
+    if (_m) { return _m; }
+    var d = document.createElement("div");
+    d.className = "akm"; d.hidden = true;
+    d.innerHTML = '<div class="akm-back"></div><div class="akm-box">'
+      + '<div class="akm-head"><span class="akm-title"></span>'
+      + '<button type="button" class="akm-x">✕</button></div>'
+      + '<div class="akm-body"></div>'
+      + '<div class="akm-actions"><button type="button" class="akm-ok"></button>'
+      + '<button type="button" class="akm-cancel">취소</button></div>'
+      + '<div class="akm-status"></div></div>';
+    document.body.appendChild(d);
+    function close() { d.hidden = true; }
+    d.querySelector(".akm-x").addEventListener("click", close);
+    d.querySelector(".akm-cancel").addEventListener("click", close);
+    d.querySelector(".akm-back").addEventListener("click", close);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !d.hidden) { close(); }
+    });
+    _m = d; return d;
+  }
+  function openModal(o) {
+    var d = modal();
+    d.querySelector(".akm-title").textContent = o.title || "";
+    d.querySelector(".akm-body").innerHTML = o.html || "";
+    d.querySelector(".akm-status").textContent = "";
+    var ok = d.querySelector(".akm-ok");
+    ok.textContent = o.okText || "확인";
+    ok.disabled = false;
+    var fresh = ok.cloneNode(true);          // 옛 핸들러를 떼어 낸다
+    ok.parentNode.replaceChild(fresh, ok);
+    fresh.addEventListener("click", function () {
+      o.onOk(d.querySelector(".akm-body"), function (m, done) {
+        d.querySelector(".akm-status").textContent = m;
+        fresh.disabled = !done;
+      }, function () { d.hidden = true; });
+    });
+    d.hidden = false;
+    var first = d.querySelector(".akm-body textarea, .akm-body input, .akm-body select");
+    if (first) { try { first.focus(); } catch (e) {} }
+    return d;
+  }
+
   function host(el) { return el.closest ? el.closest(".sv-host") : null; }
   function say(h, m) {
     var n = h && h.querySelector(".lyr-note, .sv-mk-note");
@@ -77,19 +127,28 @@
       var row = b.closest(".lyr-row");
 
       if (b.classList.contains("lyr-pose")) {
-        var ins = window.prompt(
-          "이 레이어에서 무엇을 바꿉니까? 한 가지만 적으세요.\n" +
-          "얼굴·의상·그림체는 그대로 유지됩니다.\n\n" +
-          "예) 오른손 엄지를 세워 들고 환하게 웃는 표정으로 바꾼다");
-        if (!ins) { return; }
-        say(h, "고치는 중… (1분 안팎)");
-        post("/api/layers/edit",
-             { slug: slug, layer: row.getAttribute("data-rel"), instruction: ins, keep_frame: true },
-             b, function (j) {
-               say(h, j.status === "completed"
-                   ? "새 판본 완성 — 새로고침하면 보입니다 (원본은 남습니다)"
-                   : "실패: " + (j.error || "").slice(0, 90));
-             }, h);
+        var rel = row.getAttribute("data-rel");
+        openModal({
+          title: "레이어 고치기 — " + (row.querySelector(".lyr-name") || {}).textContent,
+          okText: "고치기",
+          html: '<p class="akm-hint">바꿀 것 <b>한 가지만</b> 적으세요. 얼굴·의상·'
+              + '그림체는 그대로 유지됩니다. 원본은 남고 새 판본으로 쌓입니다.</p>'
+              + '<textarea class="akm-t" rows="3" placeholder="예) 오른손 엄지를 세워 들고 '
+              + '환하게 웃는 표정으로 바꾼다"></textarea>',
+          onOk: function (body, status) {
+            var ins = (body.querySelector(".akm-t").value || "").trim();
+            if (!ins) { status("무엇을 바꿀지 적어 주세요", true); return; }
+            status("고치는 중… (1분 안팎)", false);
+            post("/api/layers/edit",
+                 { slug: slug, layer: rel, instruction: ins, keep_frame: true },
+                 null, function (j) {
+                   var m = j.status === "completed"
+                       ? "새 판본 완성 — 새로고침하면 보입니다 (원본은 남습니다)"
+                       : "실패: " + (j.error || "").slice(0, 90);
+                   status(m, true); say(h, m);
+                 }, h);
+          }
+        });
         return;
       }
       if (b.classList.contains("lyr-revec")) {
@@ -112,18 +171,29 @@
         return;
       }
       if (b.classList.contains("lyr-regen")) {
-        if (!window.confirm("씬을 다시 분리합니다. 기존 레이어는 지우지 않고 새로 만듭니다. 진행할까요?")) { return; }
-        say(h, "요소 분석 중… (코덱스)");
-        post("/api/layers/analyze", { slug: slug, sceneNumber: scene }, b, function (a) {
-          if (!a.elements || !a.elements.length) { say(h, "분석 실패: " + (a.error || "")); return; }
-          say(h, "요소 " + a.elements.length + "개 — 분리 중… (fal)");
-          post("/api/layers/split",
-               { slug: slug, sceneNumber: scene, elements: a.elements, prompt: a.prompt },
-               b, function (j) {
-                 say(h, j.ok ? ("레이어 " + ((j.layers || []).length) + "장 — 새로고침하면 보입니다")
-                             : ("실패: " + (j.error || "").slice(0, 90)));
-               }, h);
-        }, h);
+        openModal({
+          title: "씬 " + scene + " 다시 분리",
+          okText: "다시 분리",
+          html: '<p class="akm-hint">요소를 다시 훑어(코덱스) 새로 떼어 냅니다(fal).<br>'
+              + '<b>기존 레이어는 지우지 않습니다</b> — 새 판본으로 쌓입니다.</p>',
+          onOk: function (body, status) {
+            status("요소 분석 중… (코덱스)", false);
+            post("/api/layers/analyze", { slug: slug, sceneNumber: scene }, null, function (a2) {
+              if (!a2.elements || !a2.elements.length) {
+                var e = "분석 실패: " + (a2.error || ""); status(e, true); say(h, e); return;
+              }
+              status("요소 " + a2.elements.length + "개 — 분리 중… (fal)", false);
+              post("/api/layers/split",
+                   { slug: slug, sceneNumber: scene, elements: a2.elements, prompt: a2.prompt },
+                   null, function (j) {
+                     var m = j.ok
+                         ? ("레이어 " + ((j.layers || []).length) + "장 — 새로고침하면 보입니다")
+                         : ("실패: " + (j.error || "").slice(0, 90));
+                     status(m, true); say(h, m);
+                   }, h);
+            }, h);
+          }
+        });
       }
       return;
     }
@@ -134,25 +204,55 @@
     var mk = t.closest(".sv-mk");
     if (mk) {
       ev.preventDefault(); ev.stopPropagation();
-      var p = window.prompt(
-        "이 씬에서 무엇이 움직입니까?\n\n" +
-        "사건이 있는 씬은 시작과 끝이 달라야 합니다.\n" +
-        "예) 둑 위쪽으로 물이 차오르고 아래쪽 수위가 내려가 젖은 돌이 드러난다.\n" +
-        "    남자는 그것을 내려다보며 입꼬리가 올라간다.");
-      if (!p) { return; }
-      mk.disabled = true; say(h, "만드는 중… (3~5분)");
-      fetch("/api/video/generate", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: mk.getAttribute("data-slug"),
-                               sceneNumber: parseFloat(mk.getAttribute("data-scene")),
-                               prompt: p })
-      }).then(function (r) { return r.json(); })
+      var vslug = mk.getAttribute("data-slug");
+      var vscene = parseFloat(mk.getAttribute("data-scene"));
+      openModal({
+        title: "씬 " + vscene + " 비디오 생성",
+        okText: "비디오 생성",
+        html: '<div class="akm-row"><label>모델</label>'
+            + '<select class="akm-model"><option value="minimax_h3">MiniMax H3</option></select></div>'
+            + '<div class="akm-row"><label>길이(초)</label>'
+            + '<input class="akm-dur" type="number" min="4" max="15" placeholder="자동">'
+            + '<span class="akm-hint2">비우면 씬 길이 + 1초 (상한 15초)</span></div>'
+            + '<p class="akm-hint"><b>무엇이 움직입니까?</b> 사건이 있는 씬은 시작과 끝이 '
+            + '달라야 합니다. 나레이션을 지우고 화면만 봤을 때 움직임이 말을 해야 합니다.</p>'
+            + '<textarea class="akm-t" rows="4" placeholder="예) 둑 위쪽으로 물이 차오르고 '
+            + '아래쪽 수위가 내려가 젖은 돌이 드러난다. 남자는 그것을 내려다보며 '
+            + '입꼬리가 올라간다."></textarea>',
+        onOk: function (body, status) {
+          var p = (body.querySelector(".akm-t").value || "").trim();
+          if (!p) { status("무엇이 움직이는지 적어 주세요", true); return; }
+          var dur = parseInt(body.querySelector(".akm-dur").value, 10);
+          var req = { slug: vslug, sceneNumber: vscene, prompt: p,
+                      job_type: body.querySelector(".akm-model").value };
+          if (dur) { req.duration = dur; }
+          status("만드는 중… (3~5분) 창을 닫아도 계속됩니다", false);
+          fetch("/api/video/generate", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(req)
+          }).then(function (r) { return r.json(); })
+            .then(function (j) {
+              var m = j.ok ? (j.duration + "초 완성 — 새로고침하면 보입니다")
+                           : ("실패: " + (j.error || JSON.stringify(j)).slice(0, 160));
+              status(m, true); say(h, m);
+            })
+            .catch(function (e2) { status("오류: " + e2, true); });
+        }
+      });
+      // 모델 목록은 열 때 채운다 — 미리 부르면 카드 수만큼 호출된다
+      fetch("/api/video/models").then(function (r) { return r.json(); })
         .then(function (j) {
-          mk.disabled = false;
-          say(h, j.ok ? (j.duration + "초 완성 — 새로고침하면 보입니다")
-                      : ("실패: " + (j.error || JSON.stringify(j)).slice(0, 120)));
-        })
-        .catch(function (e) { mk.disabled = false; say(h, "오류: " + e); });
+          var sel = document.querySelector(".akm-model");
+          if (!sel || !j.models || !j.models.length) { return; }
+          sel.innerHTML = "";
+          for (var i = 0; i < j.models.length; i++) {
+            var m2 = j.models[i], o = document.createElement("option");
+            o.value = m2.job_type;
+            o.textContent = m2.display_name || m2.job_type;
+            if (m2.job_type === "minimax_h3" && !m2.preset) { o.selected = true; }
+            sel.appendChild(o);
+          }
+        }).catch(function () {});
     }
   }, true);   // 붙잡기 단계 — 카드의 onclick 이 먼저 먹지 않도록
 
@@ -170,6 +270,38 @@
 </script>
 
 <style>
+/* 모달 — 화면 안에 직접 그린다. `window.prompt` 은 Tauri(WKWebView)에서
+   뜨지 않아 앱에서는 단추를 눌러도 아무 일이 없었다. */
+.akm { position:fixed; inset:0; z-index:2000; display:flex;
+  align-items:center; justify-content:center; }
+.akm[hidden] { display:none; }
+.akm-back { position:absolute; inset:0; background:rgba(0,0,0,.62); }
+.akm-box { position:relative; width:min(460px,92vw); max-height:88vh; overflow-y:auto;
+  background:#23262b; border:1px solid #33363c; border-radius:8px; padding:14px;
+  box-shadow:0 12px 40px rgba(0,0,0,.5); }
+.akm-head { display:flex; justify-content:space-between; align-items:center;
+  font-size:13px; color:#e8eaed; margin-bottom:10px; }
+.akm-x { width:auto; margin:0; padding:2px 7px; font-size:11px; border:1px solid #33363c;
+  border-radius:3px; background:#26292f; color:#c5c8cc; cursor:pointer; }
+.akm-hint { font-size:11px; color:#9aa0a6; line-height:1.6; margin:0 0 8px; }
+.akm-hint2 { font-size:10px; color:#8b9098; }
+.akm-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; font-size:11px;
+  color:#9aa0a6; }
+.akm-row label { flex:0 0 62px; }
+.akm-row select, .akm-row input { background:#1b1e23; color:#e8eaed;
+  border:1px solid #33363c; border-radius:4px; padding:4px 6px; font-size:12px; }
+.akm-row select { flex:1; min-width:0; }
+.akm-row input { width:88px; }
+.akm-box textarea { width:100%; background:#1b1e23; color:#e8eaed; border:1px solid #33363c;
+  border-radius:4px; padding:7px; font-size:12px; line-height:1.6; font-family:inherit;
+  resize:vertical; }
+.akm-actions { display:flex; gap:8px; margin-top:10px; }
+.akm-actions button { padding:5px 12px; font-size:12px; border-radius:4px; cursor:pointer;
+  border:1px solid #33363c; background:#26292f; color:#c5c8cc; }
+.akm-ok { background:#3a6df0 !important; color:#fff !important; border-color:#3a6df0 !important; }
+.akm-ok[disabled] { opacity:.5; cursor:default; }
+.akm-status { margin-top:8px; min-height:16px; font-size:11px; color:#9aa0a6; }
+
 /* 이미지 / 레이어 / 영상 — **미리보기 위에 겹친다.** 어도비 패널과 같은 자리
    (왼쪽 위 모서리). 미리보기를 두 개 두면 어느 것이 지금 것인지 헷갈린다. */
 .sv-host { position: relative; }
