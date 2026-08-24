@@ -154,3 +154,45 @@ def test_failed_build_keeps_old_and_rolls_back_the_half():
     assert "옛 레이어를 그대로 둡니다" in catch_block
     assert "akAddedSince(comp, snap)" in catch_block
     assert ".remove()" in catch_block
+
+
+# ── 「벡터화한 SVG 가 컴프에 안 보인다」— jsx 쪽 3겹 ────────────────────
+
+def test_import_rereads_when_file_changed():
+    """파일이 바뀌면 다시 읽는다.
+
+    애프터이펙트는 들여온 시점의 파싱을 쥐고 있다. 이름만 같으면 재사용하도록
+    두었더니, 디스크의 SVG 를 고쳐도 프로젝트 안의 옛 것이 계속 얹혔다 —
+    창을 고쳤는데 내보내기 로그에 여전히 옛 크기가 찍혔다.
+    """
+    src = _src()
+    assert "akmod=" in src                     # 수정 시각 도장
+    assert "f.modified.getTime()" in src
+    assert ".replace(f)" in src                # 푸티지는 자리에서 갈아 끼운다
+    assert "(구판)" in src                      # 컴프는 비켜 놓고 다시 읽는다
+
+
+def test_import_fallback_matches_by_name():
+    """폴백이 이름 맞는 것만 새 항목으로 인정한다.
+
+    「새 항목은 목록 끝에 있겠지」로 끝에서부터 훑었는데, 프로젝트 항목은
+    이름순으로 꽂힌다. 끝에 있던 사람이 붙여 둔 `Untitled-1.ai` 를 집어
+    병 자리에 다섯 번 얹었다.
+    """
+    src = _src()
+    seg = src.split("if (!foot) {")[1].split("}")[0]
+    assert "f.name" in seg or "want" in seg
+    assert "var want = f.name" in src
+
+
+def test_span_also_stretches_children():
+    """널을 펼 때 붙어 있는 자식도 함께 편다.
+
+    페어런팅은 위치만 따라오지 시간은 따라오지 않는다. SVG 는 1프레임짜리
+    컴프로 들어오고 `copyToComp` 는 그 구간을 그대로 가져오므로, 널만 펴면
+    꺼낸 쉐이프가 타임라인 맨 앞 1프레임에 눌러앉는다.
+    """
+    src = _src()
+    span = src.split("function akSpan(")[1].split("\n    }")[0]
+    assert "cl.parent !== il" in span
+    assert "cl.outPoint = t1" in span

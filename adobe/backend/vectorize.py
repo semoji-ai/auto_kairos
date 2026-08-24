@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import mimetypes
 import urllib.request
 import uuid
@@ -72,7 +73,16 @@ def _multipart(fields: dict, file_field: str, data: bytes, filename: str) -> tup
 # 넣는 값을 바꿔 보고 싶을 때를 위해 손잡이만 남긴다.
 VECTORIZE_MAX_W = int(os.environ.get("AK_VECTORIZE_MAX_W", "0"))
 
-# SVG 를 선언 크기의 몇 분의 1로 들여올지. **기본 10.**
+# SVG 를 선언 크기의 몇 분의 1로 들여올지. **기본 1 — 나누지 않는다.**
+#
+# ⚠️ 한때 10 이었고, 그것이 「벡터화한 SVG 가 컴프에 안 보인다」의 뿌리였다.
+# 작게 선언하려면 그림 좌표를 그만큼 줄여야 하는데, 좌표를 직접 곱하면 색
+# 값까지 곱해져 무너지므로 `<g transform>` 으로 감쌌다. 렌더러는 그 변환을
+# 따라가지만 **애프터이펙트의 「쉐이프로 펴기」는 따라가지 않는다.** 2048
+# 좌표계의 패스가 77×87 창에 들어가 통째로 창 밖으로 나갔다 — 화면에는
+# 배경만 남았다(배경은 펴지 않으므로 멀쩡했고, 그래서 원인이 오래 가려졌다).
+#
+# 무게를 줄이자고 켠 손잡이 하나가 기능 자체를 죽였다. 되돌린다.
 #
 # 벡터라 확대해도 깨지지 않으니 작게 들여와 배율로 키우면 AE 가 가볍다.
 # 배치는 매니페스트가 SVG 머리말을 직접 읽어 맞추므로 자리는 어긋나지 않고,
@@ -82,7 +92,7 @@ VECTORIZE_MAX_W = int(os.environ.get("AK_VECTORIZE_MAX_W", "0"))
 # `collapseTransformation` 을 켜 두지만, 그 스위치는 블렌딩 모드와 일부
 # 이펙트를 무시하므로 사람이 끄는 일이 있다. 흐리게 보이면 그 스위치부터
 # 확인하고, 그래도 안 되면 AK_VECTORIZE_DIVISOR=1 로 되돌린다.
-VECTORIZE_DIVISOR = max(1, int(os.environ.get("AK_VECTORIZE_DIVISOR", "10")))
+VECTORIZE_DIVISOR = max(1, int(os.environ.get("AK_VECTORIZE_DIVISOR", "1")))
 
 # 정규화를 아예 끄고 리크래프트 산출 그대로 두기 — 문제를 가를 때 쓴다.
 VECTORIZE_NORMALIZE = os.environ.get("AK_VECTORIZE_NORMALIZE", "1") != "0"
@@ -292,71 +302,105 @@ def slim_svg_file(path, *, precision: int = 1) -> dict:
 # 로 들여와 배율로 키우는 편이 애프터이펙트에 가볍다 — 다만 매니페스트가
 # 그만큼 배율을 곱해 줘야 자리가 맞는다(`vectorDivisor` 로 함께 내보낸다).
 
-def normalize_svg(text: str, *, divisor: int = 1, target=None) -> tuple:
-    """viewBox 를 선언 크기(÷divisor)에 맞춘다. 반환 (새 텍스트, (w, h)).
+def unwrap_svg(text: str) -> tuple:
+    """전에 감싸 둔 `<g transform="matrix(...)">` 를 걷어내고 그리기 좌표를 창으로 삼는다.
 
-    **좌표를 직접 곱하면 안 된다.** 처음에 본문의 모든 숫자에 배율을 곱했더니
-    `rgb(245,222,193)` 의 색 값과 그래디언트 정지점까지 곱해져 색이 무너졌다
-    (렌더해 견줘 보니 화면의 76%가 달랐다).
+    애프터이펙트의 「쉐이프로 펴기」는 그룹 변환을 따라가지 않는다. 그래서
+    2048 좌표계의 패스가 77×87 창에 들어가 통째로 창 밖으로 나갔다.
 
-    그래서 본문은 한 글자도 건드리지 않고 **`<g transform="scale(...)">` 로
-    감싼다.** 정확하고, 늘어나는 것은 한 줄뿐이다.
+    되돌리는 것은 산술이다 — 감쌀 때 쓴 배율로 원래 좌표 공간을 되찾는다.
+    **다시 벡터화하지 않는다**(크레딧 0). 반환 (새 텍스트, (w, h) 또는 None).
     """
-    import re as _re
-    mw = _re.search(r'\swidth="([\d.]+)"', text)
-    mh = _re.search(r'\sheight="([\d.]+)"', text)
-    mv = _re.search(r'viewBox="\s*([\d.-]+)\s+([\d.-]+)\s+([\d.]+)\s+([\d.]+)\s*"', text)
+    m = re.search(r'(<svg\b[^>]*>)\s*<g transform="matrix\(\s*'
+                  r'([-\d.eE]+),\s*0,\s*0,\s*([-\d.eE]+),\s*'
+                  r'([-\d.eE]+),\s*([-\d.eE]+)\s*\)"\s*>', text)
+    if not m:
+        return text, None
+    head, sx, sy, tx, ty = m.group(1), *(float(m.group(i)) for i in range(2, 6))
+    if sx == 0 or sy == 0:
+        return text, None
+    mw = re.search(r'\swidth="([\d.]+)"', head)
+    mh = re.search(r'\sheight="([\d.]+)"', head)
+    if not (mw and mh):
+        return text, None
+    # 감쌀 때: 그린 좌표 × s + t = 창 좌표. 되돌리면 그린 좌표 공간이 나온다.
+    vw = float(mw.group(1)) / sx
+    vh = float(mh.group(1)) / sy
+    vx, vy = -tx / sx, -ty / sy
+    tw, th = max(1, int(round(vw))), max(1, int(round(vh)))
+
+    close = text.rindex("</svg>")
+    body = text[m.end():close]
+    gclose = body.rindex("</g>")          # 감쌀 때 붙인 마지막 닫음
+    inner = body[:gclose] + body[gclose + 4:]
+
+    head2 = re.sub(r'\swidth="[\d.]+"', f' width="{tw}"', head)
+    head2 = re.sub(r'\sheight="[\d.]+"', f' height="{th}"', head2)
+    head2 = re.sub(r'viewBox="[^"]*"',
+                   f'viewBox="{vx:.6g} {vy:.6g} {vw:.6g} {vh:.6g}"', head2)
+    return head2 + inner + text[close:], (tw, th)
+
+
+def normalize_svg(text: str, *, divisor: int = 1, target=None) -> tuple:
+    """선언 크기를 **그리기 좌표 공간에 맞춘다.** 반환 (새 텍스트, (w, h)).
+
+    좌표는 한 글자도 건드리지 않는다. 창(viewBox)을 그림에 맞추는 것이지
+    그림을 창에 맞추는 것이 아니다 — 그래야 애프터이펙트가 「쉐이프로 펴기」를
+    했을 때 패스가 제자리에 온다.
+
+    ⚠️ **감싸지 않는다.** 전에는 `<g transform="scale(...)">` 로 감싸 작게
+    선언했는데(본문의 숫자를 곱하면 `rgb(245,222,193)` 의 색 값까지 곱해져
+    무너지기 때문이었다), 애프터이펙트가 그 변환을 무시해 그림이 창 밖으로
+    나갔다. 색을 지키려다 그림을 잃었다. 감싸는 대신 **창을 넓힌다.**
+
+    `divisor`·`target` 은 옛 호출부와의 호환으로 받기만 하고 쓰지 않는다.
+    """
+    mw = re.search(r'\swidth="([\d.]+)"', text)
+    mh = re.search(r'\sheight="([\d.]+)"', text)
+    mv = re.search(r'viewBox="\s*([\d.-]+)\s+([\d.-]+)\s+([\d.]+)\s+([\d.]+)\s*"', text)
     if not (mw and mh and mv):
         return text, None
-    dw, dh = float(mw.group(1)), float(mh.group(1))
     vx, vy, vw, vh = (float(mv.group(i)) for i in range(1, 5))
-    if vw <= 0 or vh <= 0 or dw <= 0 or dh <= 0:
+    if vw <= 0 or vh <= 0:
         return text, None
+    # 이미 감싸 둔 것이면 먼저 걷어낸다 — 여러 번 돌려도 결과가 같아야 한다
+    if '<g transform="matrix(' in text[:text.index(">") + 400]:
+        return unwrap_svg(text)
     # **정수로 만든다.** 애프터이펙트 footage 는 정수 픽셀이어야 한다 —
     # 179.2 x 102.4 로 내보냈더니 SVG 4장이 통째로 안 들어왔다.
-    # sx·sy 를 따로 두므로 반올림해도 비는 선언 크기에 정확히 맞는다.
-    #
-    # `target` 을 주면 그 크기로 맞춘다. **두 번 돌려도 같은 결과여야 한다** —
-    # 지금 선언 크기를 다시 나누면 돌릴 때마다 작아진다. 호출자는 PNG 픽셀
-    # 크기를 기준으로 주므로 몇 번을 돌려도 결과가 같다.
-    if target:
-        tw, th = max(1, int(round(target[0]))), max(1, int(round(target[1])))
-    else:
-        tw = max(1, int(round(dw / max(1, divisor))))
-        th = max(1, int(round(dh / max(1, divisor))))
-    sx, sy = tw / vw, th / vh
-
+    tw, th = max(1, int(round(vw))), max(1, int(round(vh)))
+    # **정확히 같을 때만 건너뛴다.** 「거의 같으면 됐다」로 두었더니 179.2 가
+    # 179 로 안 고쳐진 채 통과했다 — 애프터이펙트는 그 소수 하나에 파일을
+    # 통째로 거절한다(SVG 4장이 그렇게 안 들어왔다).
+    if float(mw.group(1)) == tw and float(mh.group(1)) == th:
+        return text, (tw, th)
     head_end = text.index(">") + 1
-    head, body = text[:head_end], text[head_end:]
-    close = body.rindex("</svg>")
-    inner, tail = body[:close], body[close:]
-
-    head = _re.sub(r'\swidth="[\d.]+"', f' width="{tw}"', head)
-    head = _re.sub(r'\sheight="[\d.]+"', f' height="{th}"', head)
-    head = _re.sub(r'viewBox="[^"]*"', f'viewBox="0 0 {tw} {th}"', head)
-    g = f'<g transform="matrix({sx:.6g},0,0,{sy:.6g},{-vx * sx:.6g},{-vy * sy:.6g})">'
-    return head + g + inner + "</g>" + tail, (tw, th)
+    head = text[:head_end]
+    head = re.sub(r'\swidth="[\d.]+"', f' width="{tw}"', head)
+    head = re.sub(r'\sheight="[\d.]+"', f' height="{th}"', head)
+    head = re.sub(r'viewBox="[^"]*"',
+                  f'viewBox="{vx:.6g} {vy:.6g} {vw:.6g} {vh:.6g}"', head)
+    return head + text[head_end:], (tw, th)
 
 
 def normalize_svg_file(path, *, divisor: int = 1, png_path=None) -> dict:
-    """PNG 픽셀 크기 ÷ divisor 를 목표로 맞춘다. 여러 번 돌려도 결과가 같다."""
+    """파일 하나를 그리기 좌표 공간에 맞춘다. 여러 번 돌려도 결과가 같다.
+
+    이미 `<g transform>` 으로 감싸 둔 옛 파일이면 걷어낸다 — **다시 벡터화하지
+    않으므로 크레딧이 들지 않는다.** `divisor`·`png_path` 는 옛 호출부와의
+    호환으로 받기만 한다(이제 PNG 크기로 창을 정하지 않는다 — 그림이 정한다).
+    """
     p = Path(path)
     before = p.stat().st_size
-    target = None
-    src = Path(png_path) if png_path else p.with_suffix(".png")
-    if src.is_file():
-        try:
-            from PIL import Image
-            with Image.open(src) as im:
-                target = (im.size[0] / max(1, divisor), im.size[1] / max(1, divisor))
-        except Exception:
-            target = None
     try:
-        new, size = normalize_svg(p.read_text(encoding="utf-8"),
-                                  divisor=divisor, target=target)
+        text = p.read_text(encoding="utf-8")
+        out, size = normalize_svg(text)
     except Exception as e:
         return {"ok": False, "error": f"{type(e).__name__}: {e}"}
     if size is None:
         return {"ok": False, "error": "머리말을 읽지 못했습니다(건드리지 않음)"}
-    p.write_text(new, encoding="utf-8")
-    return {"ok": True, "size": list(size), "before": before, "after": p.stat().st_size}
+    changed = out != text
+    if changed:
+        p.write_text(out, encoding="utf-8")
+    return {"ok": True, "size": list(size), "changed": changed,
+            "before": before, "after": p.stat().st_size}

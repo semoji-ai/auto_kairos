@@ -454,6 +454,23 @@ function akBuildScene(manifestPath) {
         try { il.startTime = t0; } catch (eS) { }
         il.inPoint = t0;
         il.outPoint = t1;
+        // **붙어 있는 자식도 같은 구간으로 편다.**
+        //
+        // 페어런팅은 위치만 따라오지 시간은 따라오지 않는다. SVG 는 1프레임짜리
+        // 컴프로 들어오는데, 「쉐이프로 펴기」가 그 안의 레이어를 copyToComp 로
+        // 복사하면 시간 구간도 그대로 온다(0초, 1프레임). 자리 잡는 널만 펴
+        // 두었더니 꺼낸 쉐이프가 타임라인 맨 앞 1프레임에 눌러앉아, 정작 씬
+        // 자리에서는 빈 화면이었다. 배경(컴프째 얹는 길)에는 위의 「안쪽도
+        // 편다」가 이미 있었고 **요소를 꺼내는 길에만 빠져 있었다.**
+        try {
+            var pc = il.containingComp;
+            for (var c = 1; c <= pc.numLayers; c++) {
+                var cl = pc.layer(c);
+                if (cl === il || cl.parent !== il) { continue; }
+                try { cl.startTime = t0; } catch (e3) { }
+                try { cl.inPoint = t0; cl.outPoint = t1; } catch (e4) { }
+            }
+        } catch (eK) { }
     }
 
     // 이 항목을 화면에 쓸 수 있는가. **크기가 있어야 하고, 소재가 살아 있어야 한다.**
@@ -496,8 +513,26 @@ function akBuildScene(manifestPath) {
         if (!f.exists) { note.push("파일 없음"); return null; }
         // **이미 들여온 것이 있으면 다시 안 들여온다.** 레이어를 지우지 않게
         // 바꾼 뒤로 임포트를 누를 때마다 프로젝트 항목이 같이 쌓인다.
+        // **파일이 바뀌었으면 다시 읽는다.** 애프터이펙트는 들여온 시점의 파싱을
+        // 쥐고 있어서, 디스크의 SVG 를 고쳐도 프로젝트 안의 옛 것이 계속 얹혔다
+        // (창을 30x116 에서 고쳤는데 내보내기 로그에 여전히 30x116 이 찍혔다).
+        // 수정 시각을 항목에 도장으로 남겨 두고 다르면 되읽는다.
+        var stamp = "akmod=" + f.modified.getTime();
         var already = akFindFootage(proj, f.fsName, f.name);
-        if (already) { return already; }
+        if (already) {
+            var cm = "";
+            try { cm = already.comment || ""; } catch (eC0) { }
+            if (cm.indexOf(stamp) >= 0) { return already; }
+            if (already instanceof FootageItem) {
+                try {
+                    already.replace(f);              // 푸티지는 자리에서 갈아 끼운다
+                    already.comment = stamp;
+                    return already;
+                } catch (eR) { }
+            }
+            // SVG 는 컴프로 들어온다 — 갈아 끼울 수 없으므로 비켜 놓고 다시 읽는다.
+            try { already.name = already.name + " (구판)"; } catch (eN) { }
+        }
         var had = proj.numItems;
         var foot = null;
         try { foot = proj.importFile(new ImportOptions(f)); }
@@ -507,14 +542,24 @@ function akBuildScene(manifestPath) {
         // 프로젝트 창에는 들어와 있는데 반환값이 없어 「비어 있음」으로 끝났고,
         // 컴프에는 한 장도 안 올라갔다. 반환값을 못 믿으면 **프로젝트에서 찾는다.**
         if (!foot) {
+            // **이름이 맞는 것만 새 항목으로 인정한다.**
+            //
+            // 「새 항목은 목록 끝에 있겠지」로 끝에서부터 훑었는데, 애프터이펙트
+            // 프로젝트 항목은 이름순으로 꽂힌다. 새 SVG 는 135번쯤에 들어가고
+            // 끝에는 사람이 직접 붙여 둔 `Untitled-1.ai` 가 있었다. 그것을 집어
+            // 병 자리에 다섯 번 얹었다 — 엉뚱한 그림이 화면에 나온 원인이다.
+            var want = f.name.replace(/\.[^.]+$/, "");
             for (var i = proj.numItems; i > had; i--) {
-                foot = akPickAV(proj.item(i));
-                if (foot) { break; }
+                var cand = akPickAV(proj.item(i));
+                if (!cand) { continue; }
+                var cn = String(cand.name || "").replace(/\.[^.]+$/, "");
+                if (cn === want || cn === f.name) { foot = cand; break; }
             }
         }
         // 그래도 없으면 이름으로 한 번 더 — 임포트가 늦게 끝나는 경우가 있다
         if (!foot) { foot = akFindFootage(proj, f.fsName, f.name); }
         if (!foot) { note.push("가져왔으나 쓸 수 있는 항목이 없음(빈 항목/자리표시자)"); return null; }
+        try { foot.comment = stamp; } catch (eS2) { }   // 다음에 되읽을지 판단할 도장
         return foot;
     }
 
