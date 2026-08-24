@@ -136,8 +136,13 @@ def test_duplicate_returned_name_goes_to_unexpected(tmp_path, monkeypatch):
     res = imagegen.split_scene_to_elements(tmp_path, str(scene), "ab", ELEMENTS)
     assert res["unexpected"].count("white electric car") == 1
     specs = imagegen.load_element_specs(tmp_path / "layers", "ab")
-    cars = [s for s in specs if s["name_en"] == "white electric car"]
-    assert len(cars) == 1 and cars[0]["bbox"] == [1, 2, 3, 4]   # 첫 번째가 남는다
+    # 요청한 자리에 앉은 것은 하나뿐이고 **첫 번째가 남는다**(덮어쓰지 않는다).
+    cars = [s for s in specs
+            if s["name_en"] == "white electric car" and not s.get("extra")]
+    assert len(cars) == 1 and cars[0]["bbox"] == [1, 2, 3, 4]
+    # 두 번째는 덤으로 따로 남는다 — 자리와 함께
+    dup = [s for s in specs if s.get("extra") and s["name_en"] == "white electric car"]
+    assert len(dup) == 1 and dup[0]["bbox"] == [5, 6, 7, 8]
 
 
 def test_previous_layers_archived(tmp_path, monkeypatch):
@@ -147,3 +152,21 @@ def test_previous_layers_archived(tmp_path, monkeypatch):
     _res, _seen, _d = _run(tmp_path, monkeypatch)
     assert not (d / "ab__0_old.png").exists()
     assert (d / "_prev" / "ab__0_old.png").is_file()
+
+
+def test_extra_layers_record_their_place(tmp_path, monkeypatch):
+    """묻지 않은 레이어도 **자리를 함께 적는다.**
+
+    파일만 남기고 bbox 를 안 적었더니 매니페스트가 자리를 몰라 「화면 폭에
+    맞추기」 폴백을 탔고, 씬 128 의 잔 하나가 307% 로 들어왔다. 떼어 낼 때
+    자리를 이미 받아 두었는데(fal 이 준다) 적지 않아 버린 것이다.
+    """
+    _res, _seen, d = _run(tmp_path, monkeypatch)
+    specs = json.loads((d / "ab__elements.json").read_text(encoding="utf-8"))
+    by = {s["layer"]: s for s in specs}
+    extras = [s for s in specs if s.get("extra")]
+    assert extras, "덤으로 온 레이어가 사이드카에 없다"
+    for s in extras:
+        assert s.get("bbox"), f"{s['layer']} 에 자리가 없다"
+        assert s.get("kind") == "object"
+    assert "ab__x_EV_charger" in by

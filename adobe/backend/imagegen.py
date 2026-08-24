@@ -709,6 +709,13 @@ def split_scene_to_elements(proj_dir: Path, scene_image: str, sid: str, elements
             unexpected.append(nm)
             extra = versioned_path(out_base, f"{sid}__x_{_layer_slug(nm)}.png")
             extra.write_bytes(L["data"])
+            # **자리도 함께 적는다.** 파일만 남기고 bbox 를 안 적었더니
+            # 매니페스트가 자리를 몰라 「화면 폭에 맞추기」 폴백을 탔고,
+            # 씬 128 의 잔 하나가 307% 로 들어왔다. 떼어 낼 때 자리를 이미
+            # 받아 두었는데(fal 이 준다) 적지 않아 버린 것이다.
+            specs.append({"layer": extra.stem, "name": nm, "name_en": nm,
+                          "kind": "object", "extra": True,
+                          "z": L.get("z"), "bbox": L.get("bbox")})
             results.append({"name": nm, "rel": extra.relative_to(proj_dir).as_posix(),
                             "status": "extra", "z": L.get("z"), "bbox": L.get("bbox")})
             if on_event:
@@ -859,6 +866,13 @@ def split_more_from_bg(proj_dir: Path, sid: str, elements: list, *,
             # 어디에도 안 붙어도 **버리지 않는다** — 파일로 남긴다
             extra = versioned_path(out_base, f"{sid}__x_{_layer_slug(nm)}.png")
             extra.write_bytes(L["data"])
+            # **자리도 함께 적는다.** 파일만 남기고 bbox 를 안 적었더니
+            # 매니페스트가 자리를 몰라 「화면 폭에 맞추기」 폴백을 탔고,
+            # 씬 128 의 잔 하나가 307% 로 들어왔다. 떼어 낼 때 자리를 이미
+            # 받아 두었는데(fal 이 준다) 적지 않아 버린 것이다.
+            added.append({"layer": extra.stem, "name": nm, "name_en": nm,
+                          "kind": "object", "extra": True,
+                          "z": L.get("z"), "bbox": L.get("bbox")})
             results.append({"name": nm, "rel": extra.relative_to(proj_dir).as_posix(),
                             "status": "extra", "z": L.get("z"), "bbox": L.get("bbox")})
             if on_event:

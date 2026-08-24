@@ -251,11 +251,20 @@ def _scene_layers(proj_dir: Path, layer_rels: list, sid: str = "", scene_width: 
                         entry["foot"] = [(l + rr) / 2 * f + ox, b * f]
                         placed = True
         if not placed:
-            # 풀프레임(배경판·bbox 없는 레거시) — 씬 사각형을 채운다
             size = _img_size(proj_dir / r) or (sw, sh)
             pw = float(size[0] or sw)
             entry["position"] = [sw * f / 2 + ox, sh * f / 2]
-            entry["scale"] = sw * f / pw * 100 * entry.get("vectorRatio", 1.0)
+            if is_bg:
+                # 배경판은 씬 사각형을 채운다
+                entry["scale"] = sw * f / pw * 100 * entry.get("vectorRatio", 1.0)
+            else:
+                # **자리를 모르는 요소는 늘리지 않는다.**
+                #
+                # 배경판과 같은 셈을 쓰면 화면 폭에 맞추려고 잡아 늘린다 —
+                # 폭 349px 짜리 잔 하나가 307% 로 들어왔다. 자리를 모르는 것과
+                # 화면을 채워야 하는 것은 다르다. 그린 크기 그대로 가운데
+                # 놓고, 어디에 둘지는 사람이 정한다.
+                entry["scale"] = 100 * f * scale_factor * entry.get("vectorRatio", 1.0)
             if not is_bg:
                 foot = _alpha_foot(proj_dir / r)
                 if foot:
