@@ -32,15 +32,19 @@ function akMakeMogrt(outDir, only) {
         var W = 1920, H = 1080, FPS = 30, DUR = 5;
         var want = only && only.length ? only : akMogrtLayouts();
 
+        // **정리 폴더를 쓰지 않는다.**
+        //
+        // 처음에는 임시 폴더에 컴프를 모았는데, 컴프를 하나 지우고 나면 그
+        // 폴더 참조가 무효가 되어 두 번째부터 「FolderItem is not of the
+        // correct type」 으로 죽었다(11종 중 1종만 나왔다). 항목을 지우면
+        // 색인이 밀리기 때문이다.
+        //
+        // 어차피 컴프는 찍자마자 지운다. 폴더는 정리하려고 둔 것이었으니 뺀다.
         app.beginUndoGroup("auto_kairos MOGRT 찍기");
-        var folder = akTempFolder("__ak_mogrt");
         for (var i = 0; i < want.length; i++) {
             var key = want[i];
-            var r = akOneMogrt(key, folder, d, W, H, FPS, DUR, log);
-            if (r) { made.push(key); }
+            if (akOneMogrt(key, d, W, H, FPS, DUR, log)) { made.push(key); }
         }
-        // **찍고 나면 치운다.** 사람이 쓰던 프로젝트에 임시 컴프를 남기지 않는다.
-        try { folder.remove(); } catch (eF) { log.push("임시 폴더 정리 실패"); }
         app.endUndoGroup();
 
         return "OK: MOGRT " + made.length + "개 → " + outDir
@@ -61,20 +65,11 @@ function akMogrtLayouts() {
             "counter", "bar"];
 }
 
-function akTempFolder(name) {
-    for (var i = 1; i <= app.project.numItems; i++) {
-        var it = app.project.item(i);
-        if (it instanceof FolderItem && it.name === name) { return it; }
-    }
-    return app.project.items.addFolder(name);
-}
-
-/* 레이아웃 하나 → 컴프 → 속성 노출 → .mogrt */
-function akOneMogrt(key, folder, outFolder, W, H, FPS, DUR, log) {
+/* 레이아웃 하나 → 컴프 → 속성 노출 → .mogrt → 컴프 삭제 */
+function akOneMogrt(key, outFolder, W, H, FPS, DUR, log) {
     var comp = null;
     try {
         comp = app.project.items.addComp("ak_" + key, W, H, 1, DUR, FPS);
-        comp.parentFolder = folder;
 
         // **본문은 layouts.jsx 가 그린다.** 여기서 그리면 그 순간 두 벌이 된다.
         akRenderLayout(comp, akSampleScene(key), akMogrtCtx(comp, W, H));
@@ -85,9 +80,13 @@ function akOneMogrt(key, folder, outFolder, W, H, FPS, DUR, log) {
         }
         if (!n) { log.push(key + ": 노출할 속성이 없습니다"); }
 
-        comp.motionGraphicsTemplateName = "auto_kairos " + key;
-        var out = new File(outFolder.fsName + "/" + key + ".mogrt");
-        var ok = comp.exportAsMotionGraphicsTemplate(true, out.fsName);
+        // **이름은 컴프가 정하고, 인자로는 폴더를 준다.**
+        //
+        // 파일 경로를 주었더니 애프터이펙트가 그 이름으로 **폴더를 만들었다**
+        // (`headline_only.mogrt/` 가 빈 디렉터리로 생겼다). 내보내기는 목적지
+        // 폴더를 받고 파일 이름은 `motionGraphicsTemplateName` 에서 가져간다.
+        comp.motionGraphicsTemplateName = key;
+        var ok = comp.exportAsMotionGraphicsTemplate(true, outFolder.fsName);
         if (!ok) {
             log.push(key + ": 내보내기 실패 — 설정 > 스크립팅 및 표현식 >"
                      + " 「스크립트가 파일을 쓰고 네트워크에 접근하도록 허용」 을 켜 보세요");
@@ -168,7 +167,7 @@ function akSampleScene(key) {
         headline: "제목을 여기에",
         descriptions: ["설명을 여기에"],
         items: items,
-        values: ["1", "2", "3", "4", "5", "6"],
+        values: [40, 65, 30, 80, 55, 20],   // **숫자여야 한다** — bar 가 이걸로 높이를 잰다
         unit: "단위",
         quote: "인용을 여기에",
         source: "출처",
@@ -185,12 +184,20 @@ function akMogrtCtx(comp, W, H) {
         bgRgb: [18, 18, 20], textRgb: [235, 235, 240], mutedRgb: [150, 155, 165],
         accentRgb: [58, 109, 240], accentSoftRgb: [40, 60, 120]
     };
-    var type = TKc ? TKc.type : { headline: 96, sub: 48, item: 42, value: 120 };
+    // **키가 하나라도 없으면 NaN 이 된다.** `t.quote * S` 가 NaN 이 되어
+    // addBoxText 가 죽었다(quote 레이아웃). build_scene 의 TK.type 와 같은
+    // 키를 다 갖춘다.
+    var type = TKc ? TKc.type : {
+        headline: 110, sub: 48, item: 52, metric: 220, metricLabel: 54,
+        quote: 64, quoteWho: 40, barLabel: 36, barValue: 40
+    };
     var fonts = TKc ? TKc.fonts : { headline: "", body: "", value: "", fallback: "" };
     return {
         W: W, H: H, S: W / 1920, colors: colors, type: type, fonts: fonts,
         addTextL: akMogrtText, addRectL: akMogrtRect,
-        addBarShape: akMogrtRect, applyDash: function () { }
+        // **서명이 다르다** — (comp, name, w, h, rgb, CS, S). addRectL 로
+        // 대신 쓰면 인자가 밀려 Size 에 배열이 들어간다(bar 가 그랬다).
+        addBarShape: akMogrtBar, applyDash: function () { }
     };
 }
 
@@ -209,6 +216,18 @@ function akMogrtText(comp, str, opts) {
     tl.property("Position").setValue([opts.x, opts.y]);
     tl.name = String(str).substr(0, 18) || "글자";
     return tl;
+}
+
+/* 막대 — 무늬 없이 단색으로. MOGRT 는 색을 고를 수 있으면 되고, 해칭까지
+   옮기면 컨트롤만 늘어난다. 앵커를 밑변에 두어 자라나는 느낌을 남긴다. */
+function akMogrtBar(comp, name, w, h, rgb, CS, S) {
+    var sl = comp.layers.addShape(); sl.name = name || "막대";
+    var grp = sl.property("Contents").addProperty("ADBE Vector Group");
+    var rect = grp.property("Contents").addProperty("ADBE Vector Shape - Rect");
+    rect.property("Size").setValue([w, h]);
+    var fill = grp.property("Contents").addProperty("ADBE Vector Graphic - Fill");
+    fill.property("Color").setValue([rgb[0], rgb[1], rgb[2]]);
+    return sl;
 }
 
 function akMogrtRect(comp, name, x, y, w, h, rgb) {

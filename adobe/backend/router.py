@@ -381,18 +381,6 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
                        + (f", 씬 {','.join(str(x) for x in scope)}만" if scope else "") + ")")
         return 200, mres
 
-    if method == "POST" and p == "/api/mogrt/prepare":
-        # **폴더는 파이썬이 만든다.** 애프터이펙트 스크립트의 파일 쓰기는
-        # 「스크립트가 파일을 쓰고 네트워크에 접근하도록 허용」 설정에 걸려
-        # `Folder.create()` 가 permission denied 로 죽는다. 그 설정은 사람이
-        # 켜야 하는 보안 설정이고, 폴더 하나 만들자고 켜게 할 이유가 없다.
-        proj_dir = root / (body or {}).get("project_id", "")
-        if not proj_dir.is_dir():
-            return 404, {"error": "프로젝트 없음"}
-        d = proj_dir / "mogrt"
-        d.mkdir(parents=True, exist_ok=True)
-        return 200, {"path": str(d)}
-
     if method == "POST" and p == "/api/subtitles/build":
         proj_dir = root / (body or {}).get("project_id", "")
         if not proj_dir.is_dir():

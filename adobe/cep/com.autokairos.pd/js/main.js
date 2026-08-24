@@ -93,7 +93,7 @@ function evalScript(script) {
    감추고, 무엇이 되는지 한 줄로 적어 둔다. */
 function applyHostUI() {
   if (!isPremiere()) { return; }
-  var hide = ["btnMogrt", "btnQueueRender", "btnSubtitles", "btnDecompose",
+  var hide = ["btnQueueRender", "btnSubtitles", "btnDecompose",
               "btnImportImages", "btnImportStoryboard", "btnImportLayers", "btnBuild",
               "sa-sub"];
   for (var i = 0; i < hide.length; i++) {
@@ -243,38 +243,6 @@ function buildSubtitles(sceneNumbers, statusFn) {
       return evalScript(jsx + call).then(function (r) {
         setS((r || "") + " — " + j.lines + "줄" + warn + " / SRT: " + j.srt);
       });
-    })
-    .catch(function (e) { setS("오류: " + e); });
-}
-
-/* 레이아웃 → .mogrt.
-
-   **디자인 소스를 둘로 만들지 않기 위한 것이다.** 프리미어에서 편집자가 글자를
-   고치려면 MOGRT 여야 하는데, 손으로 만들면 같은 디자인이 두 벌이 된다.
-   그래서 `layouts.jsx` 를 그대로 불러 컴프를 그리고, 그 컴프를 내보낸다.
-
-   애프터이펙트에서만 쓴다 — 만드는 쪽이 애프터이펙트다. */
-function makeMogrt() {
-  var setS = function (m) { $("aeresult").textContent = m; };
-  if (!SELECTED_PROJECT) { setS("프로젝트를 먼저 선택하세요."); return; }
-  if (!PROJECTS_ROOT) { setS("백엔드 연결 필요(/health root)."); return; }
-  if (isPremiere()) { setS("MOGRT 는 애프터이펙트에서 찍습니다."); return; }
-  var jsx;
-  try {
-    jsx = readLocal("./jsx/json2.jsx") + "\n" + readLocal("./jsx/layouts.jsx")
-        + "\n" + readLocal("./jsx/build_scene.jsx") + "\n" + readLocal("./jsx/make_mogrt.jsx");
-  } catch (e) { setS("jsx 로드 실패: " + e); return; }
-  setS("폴더 준비 중...");
-  // 폴더는 백엔드가 만든다 — 애프터이펙트 스크립트의 파일 쓰기는 설정에 걸린다
-  fetch(BACKEND + "/api/mogrt/prepare", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project_id: SELECTED_PROJECT }),
-  }).then(function (r) { return r.json(); })
-    .then(function (j) {
-      if (j.error || !j.path) { setS("폴더 준비 실패: " + JSON.stringify(j)); return; }
-      setS("MOGRT 찍는 중... (레이아웃마다 컴프를 그렸다 지웁니다)");
-      var call = "\nakMakeMogrt(" + JSON.stringify(j.path) + ", null);";
-      return evalScript(jsx + call).then(function (r) { setS(r || "(빈 응답 — AE 콘솔 확인)"); });
     })
     .catch(function (e) { setS("오류: " + e); });
 }
@@ -651,8 +619,6 @@ document.addEventListener("DOMContentLoaded", function () {
   if (bba) bba.addEventListener("click", buildComp);
   var btl = $("btnTimelineAll");
   if (btl) btl.addEventListener("click", function () { exportToTimeline(null); });
-  var bmg = $("btnMogrt");
-  if (bmg) bmg.addEventListener("click", makeMogrt);
   var bqr = $("btnQueueRender");
   if (bqr) bqr.addEventListener("click", queueRender);
   var bsu = $("btnSubtitles");
