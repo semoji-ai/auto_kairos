@@ -198,17 +198,23 @@ def test_span_also_stretches_children():
     assert "cl.outPoint = t1" in span
 
 
-def test_video_replaces_image_and_layers():
-    """영상이 있으면 그것이 그 씬의 화면이다.
+def test_video_image_layers_all_imported_in_order():
+    """셋을 다 올린다 — 아래부터 **그림 → 레이어 → 영상**.
 
-    영상은 씬 그림을 움직인 것이라 그림·레이어와 같은 자리를 두고 다툰다.
-    셋을 다 얹으면 겹쳐서 아무것도 안 보인다.
+    한때 영상이 있으면 그림·레이어를 건너뛰게 했는데, 그러면 애프터이펙트에서
+    고를 수가 없다. 영상을 쓰다가 한 컷만 레이어로 다시 짜는 일이 있고, 그때
+    레이어가 없으면 다시 조립해야 한다. 눈 아이콘으로 고르게 한다.
+
+    순서가 핵심이다 — `comp.layers.add` 는 맨 위에 넣으므로 **나중에 넣은 것이
+    위**다. 그림을 나중에 넣으면 레이어를 덮어 버린다.
     """
     src = _src()
-    assert "if (s.video) {" in src
-    assert "var didVideo = false;" in src
-    assert "if (!didVideo && s.layers && s.layers.length) {" in src
-    assert "if (!didVideo && !(s.layers && s.layers.length) && s.image) {" in src
+    body = src.split("function buildSceneGroup(")[1]
+    i_img = body.index("if (s.image) {")
+    i_lay = body.index("if (s.layers && s.layers.length) {")
+    i_vid = body.index("if (s.video) {")
+    assert i_img < i_lay < i_vid
+    assert "didVideo" not in body                  # 건너뛰기 게이트는 없앴다
 
 
 def test_short_video_holds_last_frame():

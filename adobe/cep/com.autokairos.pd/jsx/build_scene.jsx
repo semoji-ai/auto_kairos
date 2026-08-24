@@ -921,56 +921,29 @@ function akBuildScene(manifestPath) {
             akTagGroup(comp, comp.numLayers - beforeL, pf, guide, t0, t1);
         }
 
-        // **영상이 있으면 그것이 이 씬의 화면이다.**
+        // **그림은 맨 아래에 깐다. 레이어가 있어도 깐다.**
         //
-        // 영상은 씬 그림을 움직인 것이라 그림·레이어와 같은 자리를 두고 다툰다.
-        // 셋을 다 얹으면 겹쳐서 아무것도 안 보인다. 그래서 영상이 있으면 그것만
-        // 얹고 그림과 레이어는 건너뛴다 — 레이아웃 글자는 그 위에 그대로 남는다
-        // (그것은 씬 그림이 아니라 화면에 얹는 정보다).
-        var didVideo = false;
-        if (s.video) {
-            var vNote = [];
-            var vf = akImport(proj, s.video, vNote);
-            if (!vf) {
-                log.push(pf + "영상 가져오기 실패 — " + vNote.join("/"));
-            } else {
-                var vl = comp.layers.add(vf);
-                vl.name = pf + "영상";
-                // 화면을 채운다 — 세로를 맞추고 좌우는 넘치게 둔다(그림과 같은 규칙)
-                var vw = vl.source.width, vh = vl.source.height;
-                if (vw > 0 && vh > 0) {
-                    var vs = Math.max(W / vw, H / vh) * 100;
-                    vl.property("Anchor Point").setValue([vw / 2, vh / 2]);
-                    vl.property("Position").setValue([W / 2, H / 2]);
-                    vl.property("Scale").setValue([vs, vs]);
-                }
-                vl.startTime = t0;
-                vl.inPoint = t0;
-                // **영상이 씬보다 짧으면 마지막 프레임을 붙든다.**
-                // 그냥 두면 그 뒤가 빈 화면이 된다. 길면 잘라 낸다.
-                var vdur = 0;
-                try { vdur = vl.source.duration; } catch (eVD) { vdur = 0; }
-                if (vdur > 0 && vdur < dur - 0.001) {
-                    try {
-                        vl.timeRemapEnabled = true;
-                        var tr = vl.property("Time Remap");
-                        tr.setValueAtTime(t0, 0);
-                        tr.setValueAtTime(t0 + vdur, vdur - (1 / (fps || 30)));
-                        tr.setValueAtTime(t1, vdur - (1 / (fps || 30)));   // 끝을 붙든다
-                        log.push(pf + "영상이 씬보다 짧아 마지막 프레임을 늘렸습니다 ("
-                                 + vdur.toFixed(2) + "s → " + dur.toFixed(2) + "s)");
-                    } catch (eTR) {
-                        log.push(pf + "시간 리맵 실패(그대로 둡니다): " + eTR.toString());
-                    }
-                }
-                vl.outPoint = t1;
-                vl.parent = guide;
-                didVideo = true;
-                log.push(pf + "영상 " + vf.name + " (" + vdur.toFixed(2) + "s)");
-            }
+        // v3 의 timeline·flow·items_list 는 도해만 있는 화면이 아니라 씬 그림
+        // 위에 항목이 얹히는 구조라, 레이아웃 씬이라고 막았더니 배경이 통째로
+        // 빠졌다.
+        //
+        // 레이어가 있는 씬에도 깐다. 레이어는 이 그림을 가른 것이라 덮여서
+        // 안 보이지만, 레이어 한 장이 잘못 떨어졌을 때 **밑에 성한 그림이
+        // 있는 것과 없는 것은 다르다.** 눈 아이콘 하나로 되돌릴 수 있다.
+        if (s.image) {
+            var one = addLayerObj(proj, comp, {
+                path: s.image,
+                position: (s.imageFit || {}).position,
+                scale: (s.imageFit || {}).scale
+            }, W, H);
+            if (one) {
+                one.name = pf + "이미지";
+                akSpan(one, t0, t1);
+                one.parent = guide;
+            } else { log.push(pf + "image 누락"); }
         }
 
-        if (!didVideo && s.layers && s.layers.length) {
+        if (s.layers && s.layers.length) {
             for (var li = 0; li < s.layers.length; li++) {
                 var lay = s.layers[li];
                 // 레이어 하나가 어디서 실패하든 나머지는 들어와야 한다.
@@ -1030,25 +1003,53 @@ function akBuildScene(manifestPath) {
                 }
             }
         }
-        // 레이아웃 씬도 **그림이 있으면 배경으로 깐다.** v3 의 timeline·flow·
-        // items_list 는 도해만 있는 화면이 아니라, 씬 그림 위에 항목이 얹히는
-        // 구조다. isLayoutScene 으로 막아 두어 컴프에서 배경이 통째로 빠졌다.
+        // **영상은 맨 위에 얹는다. 그림과 레이어는 그대로 둔다.**
         //
-        // **단, 영상이 있으면 영상이 그 씬의 화면이다.** 영상은 씬 그림을
-        // 움직인 것이라 같은 자리를 두고 다툰다 — 셋을 다 얹으면 겹쳐서
-        // 아무것도 안 보인다. 위에서 이미 얹었으면 그림은 건너뛴다.
-        if (!didVideo && !(s.layers && s.layers.length) && s.image) {
-            var one = addLayerObj(proj, comp, {
-                path: s.image,
-                position: (s.imageFit || {}).position,
-                scale: (s.imageFit || {}).scale
-            }, W, H);
-            if (one) {
-                one.name = pf + "이미지";
-                akSpan(one, t0, t1);
-                one.parent = guide;
-            } else { log.push(pf + "image 누락"); }
+        // 한때 영상이 있으면 그림·레이어를 건너뛰게 했는데, 그러면 애프터이펙트
+        // 에서 고를 수가 없다. 영상을 쓰다가 한 컷만 레이어로 다시 짜는 일이
+        // 있고, 그때 레이어가 없으면 다시 조립해야 한다. 셋을 다 올려 두고
+        // **눈 아이콘으로 고르게 한다** — 위에 있는 영상이 기본으로 보인다.
+        if (s.video) {
+            var vNote = [];
+            var vf = akImport(proj, s.video, vNote);
+            if (!vf) {
+                log.push(pf + "영상 가져오기 실패 — " + vNote.join("/"));
+            } else {
+                var vl = comp.layers.add(vf);
+                vl.name = pf + "영상";
+                // 화면을 채운다 — 세로를 맞추고 좌우는 넘치게 둔다(그림과 같은 규칙)
+                var vw = vl.source.width, vh = vl.source.height;
+                if (vw > 0 && vh > 0) {
+                    var vs = Math.max(W / vw, H / vh) * 100;
+                    vl.property("Anchor Point").setValue([vw / 2, vh / 2]);
+                    vl.property("Position").setValue([W / 2, H / 2]);
+                    vl.property("Scale").setValue([vs, vs]);
+                }
+                vl.startTime = t0;
+                vl.inPoint = t0;
+                // **영상이 씬보다 짧으면 마지막 프레임을 붙든다.**
+                // 그냥 두면 그 뒤가 빈 화면이 된다. 길면 잘라 낸다.
+                var vdur = 0;
+                try { vdur = vl.source.duration; } catch (eVD) { vdur = 0; }
+                if (vdur > 0 && vdur < dur - 0.001) {
+                    try {
+                        vl.timeRemapEnabled = true;
+                        var tr = vl.property("Time Remap");
+                        tr.setValueAtTime(t0, 0);
+                        tr.setValueAtTime(t0 + vdur, vdur - (1 / (fps || 30)));
+                        tr.setValueAtTime(t1, vdur - (1 / (fps || 30)));   // 끝을 붙든다
+                        log.push(pf + "영상이 씬보다 짧아 마지막 프레임을 늘렸습니다 ("
+                                 + vdur.toFixed(2) + "s → " + dur.toFixed(2) + "s)");
+                    } catch (eTR) {
+                        log.push(pf + "시간 리맵 실패(그대로 둡니다): " + eTR.toString());
+                    }
+                }
+                vl.outPoint = t1;
+                vl.parent = guide;
+                log.push(pf + "영상 " + vf.name + " (" + vdur.toFixed(2) + "s)");
+            }
         }
+
 
         if (s.mapGeo) {
             var beforeM = comp.numLayers;
