@@ -412,3 +412,78 @@ def test_openai_missing_detected():
     assert imagegen._openai_missing('ImportError: No module named "openai"')
     assert not imagegen._openai_missing("rate limit exceeded")
     assert not imagegen._openai_missing("")
+
+
+# ── 코덱스가 딴 데 떨군 그림 거두기 ────────────────────────────────────
+#
+# `workspace-write` 는 작업 폴더 안에만 쓰게 한다. 백엔드가 `adobe/` 에서
+# 도는데 목적지는 `output/…` 이라 그 밖이었다 — 코덱스가 그림을 만들어 놓고
+# 「지정 폴더는 쓰기 권한 밖」이라며 자기 작업 폴더에 떨궜고, 우리는
+# `no_file` 로 읽었다. 48,306 토큰을 쓰고 만든 그림이었다.
+
+def test_rescue_picks_up_the_stray_file(tmp_path):
+    import time as _t
+    from backend import imagegen as ig
+    out = tmp_path / "dst" / "scene_001.png"
+    out.parent.mkdir(parents=True)
+    stray = tmp_path / "scene_f14e_bda929.png"
+    stray.write_bytes(b"\x89PNG-new")
+    since = _t.time() - 1
+    got = ig._rescue_image(out, f"완성본은 여기에 저장했습니다: {stray}", since)
+    assert got == str(stray)
+    assert out.is_file() and out.read_bytes() == b"\x89PNG-new"
+    assert not stray.exists()          # 옮긴다 — 사본을 남기지 않는다
+
+
+def test_rescue_ignores_old_files(tmp_path):
+    """**이번에 생긴 것만** 거둔다.
+
+    옛 그림을 집어 오면 「됐다」고 보고하면서 엉뚱한 화면이 들어간다.
+    """
+    import os, time as _t
+    from backend import imagegen as ig
+    out = tmp_path / "dst" / "scene_001.png"
+    out.parent.mkdir(parents=True)
+    old = tmp_path / "dst" / "예전.png"
+    old.write_bytes(b"\x89PNG-old")
+    os.utime(old, (1, 1))              # 아주 옛날 것으로
+    assert ig._rescue_image(out, "", _t.time()) is None
+    assert not out.exists()
+
+
+def test_rescue_returns_none_when_nothing_made(tmp_path):
+    import time as _t
+    from backend import imagegen as ig
+    out = tmp_path / "dst" / "scene_001.png"
+    out.parent.mkdir(parents=True)
+    assert ig._rescue_image(out, "아무것도 못 만들었습니다", _t.time()) is None
+
+
+def test_codex_runs_where_it_can_write():
+    """**프로젝트 폴더**를 작업 폴더로 준다 — 그래야 샌드박스 안이다.
+
+    목적지 폴더(`images/`)만 주면 좁다. 그림을 그리려면 인물 시트·레이어·앞서
+    그린 씬을 읽어야 하는데 그것들은 형제 폴더에 있다.
+    """
+    from pathlib import Path as _P
+    src = (_P(__file__).resolve().parents[1] / "backend" / "imagegen.py").read_text(encoding="utf-8")
+    seg = src.split("def _run_codex_imagegen(")[1].split("\ndef ")[0]
+    assert "cwd=str(_workspace_for(out))" in seg
+
+
+def test_workspace_is_the_project_folder(tmp_path):
+    from backend import imagegen as ig
+    proj = tmp_path / "f772e15c_슬러그"
+    (proj / "images").mkdir(parents=True)
+    (proj / "scene_specs.json").write_text("{}", encoding="utf-8")
+    assert ig._workspace_for(proj / "images" / "scene_001.png") == proj
+    # 레이어처럼 더 깊은 자리에서도 같은 뿌리를 찾는다
+    (proj / "layers").mkdir()
+    assert ig._workspace_for(proj / "layers" / "ab__0.png") == proj
+
+
+def test_workspace_falls_back_when_no_project(tmp_path):
+    """못 찾으면 목적지 폴더로 물러선다 — 저장소 뿌리까지 열어 주지 않는다."""
+    from backend import imagegen as ig
+    d = tmp_path / "외딴곳"; d.mkdir()
+    assert ig._workspace_for(d / "a.png") == d

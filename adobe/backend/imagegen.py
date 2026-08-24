@@ -278,10 +278,22 @@ def _run_codex_imagegen(out: Path, prompt: str, *, timeout: int = 1200,
     목적지에 복사한다 — 경로 인자에 기대지 않는다.
     """
     out.parent.mkdir(parents=True, exist_ok=True)
+    started = time.time()
     try:
         proc = subprocess.run(
             [codex_runner.codex_exe(), "exec", "--skip-git-repo-check",
              "--sandbox", "workspace-write", prompt],
+            # **쓸 수 있는 자리에서 돌린다 — 프로젝트 폴더 전체를 준다.**
+            #
+            # `workspace-write` 는 작업 폴더 안에만 쓰게 한다. 백엔드가 `adobe/`
+            # 에서 도는데 목적지는 `output/…` 이라 그 밖이었다 — 코덱스가 그림은
+            # 만들어 놓고 「지정 폴더는 쓰기 권한 밖」이라며 자기 작업 폴더에
+            # 떨궜고, 우리는 `no_file` 로 읽었다.
+            #
+            # 목적지 폴더(`images/`)만 주면 좁다. 그림을 그리려면 인물 시트·
+            # 레이어·앞서 그린 씬을 읽어야 하는데 그것들은 형제 폴더에 있다.
+            # 프로젝트 폴더를 통째로 준다.
+            cwd=str(_workspace_for(out)),
             stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=timeout)
     except FileNotFoundError:
         return {"status": "failed", "error": "codex 명령을 찾을 수 없습니다"}
@@ -294,7 +306,76 @@ def _run_codex_imagegen(out: Path, prompt: str, *, timeout: int = 1200,
                 on_line(ln)
     if out.is_file():
         return {"status": "completed", "path": str(out)}
+    # **어디에 떨어졌든 거둔다.** 주석은 예전부터 「경로 인자에 기대지 않는다」고
+    # 적혀 있었는데 코드는 목적지만 보고 있었다. 값을 치르고 만든 그림을
+    # 자리 하나 어긋났다고 버리지 않는다.
+    got = _rescue_image(out, log, started)
+    if got:
+        return {"status": "completed", "path": str(out), "rescued": got}
     return {"status": "failed", "error": "no_file", "log_tail": log[-400:]}
+
+
+# 프로젝트 폴더임을 알려 주는 표식. 하나라도 있으면 그 폴더가 뿌리다.
+_PROJ_MARKS = ("scene_specs.json", "scenes.json", "manifest.json")
+
+
+def _workspace_for(out: Path) -> Path:
+    """코덱스에게 줄 작업 폴더 — 목적지가 속한 **프로젝트 폴더**.
+
+    못 찾으면 목적지 폴더로 물러선다. 좁게 주면 참조를 못 읽고, 넓게 주면
+    (저장소 뿌리 같은) 엉뚱한 곳까지 쓸 수 있게 되므로 프로젝트에서 멈춘다.
+    """
+    d = out.parent
+    for _ in range(6):
+        try:
+            if any((d / m).is_file() for m in _PROJ_MARKS):
+                return d
+            if d.parent == d:
+                break
+            d = d.parent
+        except OSError:
+            break
+    return out.parent
+
+
+def _rescue_image(out: Path, log: str, since: float):
+    """코덱스가 딴 데 떨궈 둔 그림을 목적지로 옮긴다. 옮겼으면 원래 자리를 돌려준다.
+
+    찾는 곳은 셋이다 — 로그에 적힌 경로, 코덱스 작업 폴더, `generated_images/`.
+    **이 실행에서 생긴 것만** 본다(시각으로 거른다). 옛 그림을 집어 오면
+    「됐다」고 보고하면서 엉뚱한 화면이 들어간다.
+    """
+    cands = []
+    for m in re.finditer(r"(/[^\s()\[\]'\"]+\.png)", log or ""):
+        cands.append(Path(m.group(1)))
+    roots = [out.parent, Path.cwd(),
+             Path(os.environ.get("CODEX_HOME") or (Path.home() / ".codex")) / "generated_images"]
+    for r in roots:
+        try:
+            if r.is_dir():
+                cands.extend(r.glob("*.png"))
+                cands.extend(r.glob("*/*.png"))
+        except OSError:
+            continue
+    best = None
+    for c in cands:
+        try:
+            if not c.is_file() or c.resolve() == out.resolve():
+                continue
+            st = c.stat()
+            if st.st_mtime < since - 5:        # 이번에 생긴 것만
+                continue
+            if best is None or st.st_mtime > best[1]:
+                best = (c, st.st_mtime)
+        except OSError:
+            continue
+    if not best:
+        return None
+    try:
+        shutil.move(str(best[0]), str(out))
+    except OSError:
+        return None
+    return str(best[0])
 
 
 def edit_one(proj_dir: Path, rel_out: str, src_rel: str, instruction: str,
