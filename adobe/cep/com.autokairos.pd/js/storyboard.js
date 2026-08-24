@@ -1,3 +1,22 @@
+/* 조립 결과를 **한 줄로 줄여** 버튼 줄에 놓는다.
+
+   조립 로그는 얹은 레이어를 전부 이어 붙인 한 덩어리다. 34씬이면 수십 줄이라
+   버튼 줄을 밀어내고 그대로 남았다. 그렇다고 없애면 안 된다 — 무엇이 얹혔고
+   무엇이 쉐이프로 펴졌는지가 문제를 가릴 때 유일한 단서다(오늘만 세 번 썼다).
+
+   앞머리(첫 `|` 앞)만 띄우고, 전체는 아래 「AE 컴프」 칸에 둔다. */
+function saSay(m) {
+  var st = $("sa-status"), box = $("aeresult"), more = $("sa-more");
+  var s = String(m == null ? "" : m);
+  if (st) {
+    var head = s.split(" | ")[0];
+    st.textContent = head.length > 90 ? head.slice(0, 90) + "…" : head;
+    st.title = s;                       // 넘겨 보면 전체가 나온다
+  }
+  if (box) { box.textContent = s || "—"; }
+  if (more) { more.hidden = !(s && s.indexOf(" | ") >= 0); }
+}
+
 /* 스토리보드 프로덕션 시트 — 씬당 1행. BACKEND/$/SELECTED_PROJECT/SELECTED_CHARACTER는 main.js 전역. */
 
 function _esc(s) {
@@ -956,21 +975,26 @@ function bindSheetToolbar() {
   on("sa-motion", function () {
     var ns = _needChecked(1, "모션 플랜"); if (ns) _runSeq(ns, planMotion);
   });
+  on("sa-more", function () {
+    // 전체 로그는 아래 「AE 컴프」 칸에 이미 들어 있다. 접힌 곳을 펴서 보여 준다.
+    var box = $("aeresult");
+    if (!box) { return; }
+    var d = box.closest ? box.closest("details") : null;
+    if (d) { d.open = true; }
+    try { box.scrollIntoView({ block: "nearest" }); } catch (e) { }
+  });
   on("sa-comp", function () {
     var ns = _needChecked(1, "AE 컴프"); if (!ns) return;
     // 체크한 씬 전체를 한 번에 — 씬마다 매니페스트·jsx를 반복하면 씬 많은 프로젝트에서 몇 분씩 걸린다
-    var st = $("sa-status");
-    _assemble(ns, function (m) { if (st) st.textContent = m; $("aeresult").textContent = m; });
+    _assemble(ns, saSay);
   });
   on("sa-sub", function () {
     var ns = _needChecked(1, "말자막"); if (!ns) return;
-    var st2 = $("sa-status");
-    buildSubtitles(ns, function (m) { if (st2) st2.textContent = m; $("aeresult").textContent = m; });
+    buildSubtitles(ns, saSay);
   });
   on("sa-map", function () {
     var ns = _needChecked(1, "지도 렌더"); if (!ns) return;
-    var box = $("aeresult"), st = $("sa-status");
-    function say(t) { if (st) st.textContent = t; if (box) box.textContent = t; }
+    var say = saSay;
     say("지도 렌더 중... (타일 다운로드 수 초)");
     fetch(BACKEND + "/api/scenes?project_id=" + encodeURIComponent(SELECTED_PROJECT))
       .then(function (r) { return r.json(); })
@@ -992,8 +1016,7 @@ function bindSheetToolbar() {
   });
   on("sa-chart", function () {
     var ns = _needChecked(1, "차트 명세서"); if (!ns) return;
-    var st = $("sa-status"), box = $("aeresult");
-    function say(t) { if (st) st.textContent = t; if (box) box.textContent = t; }
+    var say = saSay;
     say("차트 명세서 생성 중...");
     _runSeq(ns, function (n) {
       return fetch(BACKEND + "/api/scenes/chart-spec", {
@@ -1011,8 +1034,7 @@ function bindSheetToolbar() {
      업스케일은 원본을 덮지 않고 새 판본을 만들어 링크만 옮긴다. */
   function _batchTool(url, label) {
     var ns = _needChecked(1, label); if (!ns) return;
-    var st = $("sa-status");
-    function say(m) { if (st) st.textContent = m; }
+    var say = saSay;
     say(label + " " + ns.length + "씬 처리 중...");
     fetch(BACKEND + url, {
       method: "POST", headers: { "Content-Type": "application/json" },

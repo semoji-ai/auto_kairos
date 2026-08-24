@@ -893,3 +893,26 @@ def test_layer_buttons_say_scene_resplit():
     js = (PANEL / "js" / "storyboard.js").read_text(encoding="utf-8")
     assert "씬을 다시 분리" in js
     assert "이 레이어만 다시 생성" not in js
+
+
+def test_assembly_log_is_one_line():
+    """조립 로그가 버튼 줄을 밀어내지 않는다.
+
+    34씬을 조립하면 얹은 레이어가 전부 이어 붙은 한 덩어리가 오는데, 그것을
+    그대로 뿌려 수십 줄이 상단에 남았다. 요약만 한 줄로 띄우고 전체는 아래
+    「AE 컴프」 칸에 둔다 — 없애면 안 된다. 무엇이 얹혔고 무엇이 쉐이프로
+    펴졌는지가 문제를 가릴 때 유일한 단서다.
+    """
+    html = (PANEL / "index.html").read_text(encoding="utf-8")
+    js = (PANEL / "js" / "storyboard.js").read_text(encoding="utf-8")
+    # 한 줄로 묶고, 비면 자리를 안 차지한다
+    assert "#sa-status" in html
+    assert "text-overflow:ellipsis" in html
+    assert "#sa-status:empty { display:none; }" in html
+    # 요약만 띄우는 함수 하나로 모은다 — 핸들러마다 직접 쓰면 또 갈린다
+    assert "function saSay(" in js
+    assert 's.split(" | ")[0]' in js
+    assert js.count('$("sa-status")') == 1
+    # 전체는 아래 칸에 남고 「자세히」로 편다
+    assert 'id="sa-more"' in html
+    assert 'on("sa-more"' in js

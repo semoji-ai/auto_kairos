@@ -124,6 +124,17 @@
     #sheet-actionbar { display:flex; align-items:center; gap:4px; flex-wrap:wrap;
       padding:6px 0; border-bottom:1px solid #2c2f36; margin-bottom:4px; }
     #sheet-actionbar .sab-hint { font-size:11px; color:#9aa0a6; margin-right:2px; }
+    /* 조립 결과는 **한 줄만** 보인다.
+       전에는 얹은 레이어를 전부 이어 붙여 뿌려서, 34씬을 조립하면 수십 줄이
+       버튼 줄을 밀어내고 그대로 남았다. 요약만 남기고 자세한 것은 아래
+       「AE 컴프」 칸(#aeresult)에 둔다 — 진단할 때는 그게 필요하다. */
+    #sa-status { display:inline-block; max-width:46%; vertical-align:bottom;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #sa-status:empty { display:none; }
+    #sa-more { width:auto; margin:0 0 0 4px; padding:1px 6px; font-size:10px;
+      border:1px solid #33363c; border-radius:3px; background:#26292f;
+      color:#c5c8cc; cursor:pointer; }
+    #sa-more[hidden] { display:none; }
     #sheet-actionbar .sab-div { width:1px; height:18px; background:#33363c; margin:0 4px; }
     #sheet-actionbar button { width:auto; margin:0; padding:5px 9px; font-size:12px;
       background:#2c2f36; border:1px solid #33363c; border-radius:5px; }
@@ -562,6 +573,8 @@
               <button id="sa-upscale" title="로컬 Upscayl 로 4배 업스케일 — 원본은 남고 새 판본이 생깁니다">⤢ 업스케일</button>
               <button id="sa-vector" title="Recraft 로 SVG 벡터화 — 씬 이미지 옆에 .svg 로 저장됩니다">◇ 벡터화</button>
               <span id="sa-status" class="sab-hint"></span>
+              <button type="button" id="sa-more" hidden
+                title="아래 「AE 컴프」 칸에 전체 로그를 폅니다">자세히</button>
               <span class="sab-div"></span>
               <button id="sa-add" class="sab-txt" title="체크한 씬 아래(없으면 맨 끝)에 새 씬">씬 추가</button>
               <button id="sa-split" class="sab-txt" title="체크한 씬을 둘로(1개만)">분할</button>
@@ -834,16 +847,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1344"></script>
-  <script src="js/nav.js?v=1344"></script>
-  <script src="js/planning.js?v=1344"></script>
+  <script src="js/main.js?v=1345"></script>
+  <script src="js/nav.js?v=1345"></script>
+  <script src="js/planning.js?v=1345"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1344"></script>
-  <script src="js/storyboard.js?v=1344"></script>
-  <script src="js/gallery.js?v=1344"></script>
-  <script src="js/genmodal.js?v=1344"></script>
-  <script src="js/assistant.js?v=1344"></script>
+  <script src="js/mapgen.js?v=1345"></script>
+  <script src="js/storyboard.js?v=1345"></script>
+  <script src="js/gallery.js?v=1345"></script>
+  <script src="js/genmodal.js?v=1345"></script>
+  <script src="js/assistant.js?v=1345"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>
