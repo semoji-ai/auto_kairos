@@ -196,3 +196,25 @@ def test_span_also_stretches_children():
     span = src.split("function akSpan(")[1].split("\n    }")[0]
     assert "cl.parent !== il" in span
     assert "cl.outPoint = t1" in span
+
+
+def test_video_replaces_image_and_layers():
+    """영상이 있으면 그것이 그 씬의 화면이다.
+
+    영상은 씬 그림을 움직인 것이라 그림·레이어와 같은 자리를 두고 다툰다.
+    셋을 다 얹으면 겹쳐서 아무것도 안 보인다.
+    """
+    src = _src()
+    assert "if (s.video) {" in src
+    assert "var didVideo = false;" in src
+    assert "if (!didVideo && s.layers && s.layers.length) {" in src
+    assert "if (!didVideo && !(s.layers && s.layers.length) && s.image) {" in src
+
+
+def test_short_video_holds_last_frame():
+    """영상이 씬보다 짧으면 마지막 프레임을 붙든다 — 그냥 두면 뒤가 빈다."""
+    src = _src()
+    seg = src.split("if (s.video) {")[1].split("\n        if (!didVideo")[0]
+    assert "timeRemapEnabled" in seg
+    assert "Time Remap" in seg
+    assert "vl.outPoint = t1" in seg          # 길면 잘라 낸다

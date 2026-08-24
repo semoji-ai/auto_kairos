@@ -38,6 +38,35 @@ def _svg_ratio(svg_path, png_path) -> float:
     return 1.0
 
 
+def _scene_video(proj_dir: Path, sid: str):
+    """이 씬의 영상. 없으면 None.
+
+    두 길로 들어온다 — **만든 것**은 `video/v_<sid>_*.mp4`(힉스필드), **끌어다
+    놓은 것**은 `video_sources/`(대시보드). 만든 것이 있으면 그것이 먼저다.
+    같은 씬을 여러 번 만들었으면 가장 최근 것을 쓴다.
+    """
+    if not sid:
+        return None
+    d = proj_dir / "video"
+    if d.is_dir():
+        hits = sorted(d.glob(f"v_{sid}_*.mp4"), key=lambda p: p.stat().st_mtime,
+                      reverse=True)
+        if hits:
+            return hits[0]
+    va = proj_dir / "video_assets.json"
+    if va.is_file():
+        try:
+            for e in json.loads(va.read_text(encoding="utf-8")).get("scenes", []):
+                if e.get("sceneId") != sid:
+                    continue
+                p = proj_dir / "video_sources" / (e.get("videoFile") or "")
+                if p.is_file():
+                    return p
+        except Exception:
+            pass
+    return None
+
+
 def _svg_size(svg_path):
     """SVG 가 선언한 크기 (w, h). 못 읽으면 None."""
     import re as _re
@@ -422,6 +451,13 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
             "ae_comp_name": timeline.comp_name(s),
             "width": sw, "height": sh,
             "image": _abs(proj_dir, s["_image"]) if s.get("_image") else None,
+            # **영상이 있으면 그것이 그 씬의 화면이다.**
+            #
+            # 영상은 씬 그림을 움직인 것이라, 그림·레이어와 같은 자리를 두고
+            # 다툰다. 셋을 다 얹으면 겹쳐서 아무것도 안 보인다. 있으면
+            # 영상만 얹고 그림과 레이어는 건너뛴다 — 판단은 jsx 가 한다.
+            **({"video": _abs(proj_dir, str(_vid.relative_to(proj_dir)))}
+               if (_vid := _scene_video(proj_dir, str(s.get("sceneId") or ""))) else {}),
             "layers": layers,
             "audio": audio,
             "subtitle": scenes.subtitle_text(s),   # 화면 표시용(TTS 발음 텍스트 아님)

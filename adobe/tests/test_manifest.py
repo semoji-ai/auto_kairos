@@ -524,3 +524,49 @@ def test_jsx_corrects_when_svg_size_differs():
     assert "layer.scale = layer.scale * corr" in jsx
     # 보정이 explode 보다 앞에 있어야 한다 — 뒤에 있으면 쉐이프가 못 쓴다
     assert jsx.index("layer.vectorSize[0] / realW") < jsx.index("explodeCompLayers(comp, foot")
+
+
+def test_scene_video_is_carried(tmp_path):
+    """영상이 있으면 매니페스트가 싣는다 — 없던 기능이라 99씬이 안 들어왔다."""
+    d = _proj(tmp_path, [{"sceneNumber": 99, "sceneId": "ab", "duration_estimate_sec": 5}])
+    v = d / "video"; v.mkdir()
+    (v / "v_ab_minimax_h3.mp4").write_bytes(b"\x00\x00\x00\x18ftypmp42")
+    manifest.build_manifest(d)
+    sc = json.loads((d / "manifest.json").read_text(encoding="utf-8"))["scenes"][0]
+    assert sc["video"].endswith("v_ab_minimax_h3.mp4")
+
+
+def test_dropped_video_is_carried(tmp_path):
+    """끌어다 놓은 영상도 같은 자리에서 쓴다(`video_sources/` + video_assets.json)."""
+    d = _proj(tmp_path, [{"sceneNumber": 1, "sceneId": "ab", "duration_estimate_sec": 5}])
+    vs = d / "video_sources"; vs.mkdir()
+    (vs / "clip.mp4").write_bytes(b"\x00\x00\x00\x18ftypmp42")
+    (d / "video_assets.json").write_text(json.dumps(
+        {"scenes": [{"sceneId": "ab", "sceneNumber": 1, "videoFile": "clip.mp4"}]}),
+        encoding="utf-8")
+    manifest.build_manifest(d)
+    sc = json.loads((d / "manifest.json").read_text(encoding="utf-8"))["scenes"][0]
+    assert sc["video"].endswith("clip.mp4")
+
+
+def test_generated_video_wins_over_dropped(tmp_path):
+    """만든 것이 있으면 그것이 먼저다."""
+    d = _proj(tmp_path, [{"sceneNumber": 1, "sceneId": "ab", "duration_estimate_sec": 5}])
+    (d / "video").mkdir()
+    (d / "video" / "v_ab_minimax_h3.mp4").write_bytes(b"\x00\x00\x00\x18ftypmp42")
+    vs = d / "video_sources"; vs.mkdir()
+    (vs / "clip.mp4").write_bytes(b"\x00\x00\x00\x18ftypmp42")
+    (d / "video_assets.json").write_text(json.dumps(
+        {"scenes": [{"sceneId": "ab", "sceneNumber": 1, "videoFile": "clip.mp4"}]}),
+        encoding="utf-8")
+    manifest.build_manifest(d)
+    sc = json.loads((d / "manifest.json").read_text(encoding="utf-8"))["scenes"][0]
+    assert sc["video"].endswith("v_ab_minimax_h3.mp4")
+
+
+def test_no_video_no_key(tmp_path):
+    """없으면 키 자체가 없다 — jsx 가 `s.video` 로 판단한다."""
+    d = _proj(tmp_path, [{"sceneNumber": 1, "sceneId": "ab", "duration_estimate_sec": 5}])
+    manifest.build_manifest(d)
+    sc = json.loads((d / "manifest.json").read_text(encoding="utf-8"))["scenes"][0]
+    assert "video" not in sc
