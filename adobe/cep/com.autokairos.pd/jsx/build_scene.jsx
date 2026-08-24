@@ -78,8 +78,33 @@ function akBuildScene(manifestPath) {
             tl.motionBlur = true;
         } catch (e) { }
     }
+    /* 한 줄에 들어가는가. 들어가면 상자를 씌우지 않는다.
+
+       한글은 글자 하나가 대략 글자 크기만큼, 라틴은 그 절반쯤 차지한다.
+       정확할 필요는 없다 — 아슬아슬하면 상자를 씌우는 쪽으로 기울면 된다. */
+    function akFitsOneLine(str, size, boxW) {
+        var s = String(str);
+        if (s.indexOf("\n") >= 0 || s.indexOf("\r") >= 0) { return false; }
+        var w = 0;
+        for (var i = 0; i < s.length; i++) {
+            w += (s.charCodeAt(i) > 0x2000) ? size : size * 0.55;
+        }
+        return w <= boxW * 0.95;
+    }
+
     function addTextL(comp, str, opts) {
-        var tl = opts.box
+        // **상자는 줄바꿈이 필요할 때만 씌운다.**
+        //
+        // 전에는 `box` 가 주어지면 무조건 상자 텍스트로 만들었다. 그런데 이
+        // 편의 글자 271개 중 상자가 실제로 필요한 것은 10개뿐이다(중앙값
+        // 10자, 최대 40자). 나머지는 한 줄에 들어가는데도 상자가 씌워져,
+        // 애프터이펙트에서 글자를 고칠 때마다 상자를 함께 다뤄야 했다.
+        //
+        // 가운데 정렬이 아닌 것은 상자를 유지한다 — 오른쪽 정렬은 상자의
+        // 오른쪽 변을 기준으로 삼으므로, 상자를 빼면 자리가 밀린다.
+        var useBox = !!opts.box
+            && (!!opts.just || !akFitsOneLine(str, opts.size, opts.box[0]));
+        var tl = useBox
             ? comp.layers.addBoxText([opts.box[0], opts.box[1]], String(str))
             : comp.layers.addText(String(str));
         var td = tl.property("Source Text").value;

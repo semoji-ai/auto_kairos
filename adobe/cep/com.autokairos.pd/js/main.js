@@ -247,6 +247,70 @@ function buildSubtitles(sceneNumbers, statusFn) {
     .catch(function (e) { setS("오류: " + e); });
 }
 
+/* 골라 넣기 — **무엇이 들어오는지 먼저 보여 준다.**
+
+   「130·131·132 레이어가 안 들어온다」를 세 번 물었는데, 130 은 애초에
+   레이어를 나눈 적이 없었다(142씬 중 115씬이 그렇다). 들어올 것이 없는 것과
+   들어와야 하는데 안 들어온 것은 다른 일인데, 화면이 그것을 구분해 주지
+   않았다. 목록을 보여 주면 물을 일이 없다. */
+function openPickImport() {
+  if (!SELECTED_PROJECT) { $("aeresult").textContent = "프로젝트를 먼저 선택하세요."; return; }
+  var box = $("pickList"), st = $("pickStatus");
+  box.innerHTML = "불러오는 중...";
+  $("pickModal").hidden = false;
+  st.textContent = "—";
+  fetch(BACKEND + "/api/assembly/inventory?project_id=" + encodeURIComponent(SELECTED_PROJECT))
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (j.error) { box.textContent = j.error; return; }
+      var h = "";
+      for (var i = 0; i < (j.scenes || []).length; i++) {
+        var s = j.scenes[i];
+        var bits = [];
+        if (s.image) { bits.push("그림"); }
+        if (s.layers) { bits.push("<b>레이어 " + s.layers + "</b>"); }
+        if (s.video) { bits.push("<b>영상</b>"); }
+        if (s.audio) { bits.push("음성"); }
+        if (s.layout && s.layout !== "cinematic") { bits.push(s.layout); }
+        var empty = !s.image && !s.layers && !s.video;
+        h += '<label class="pk' + (empty ? " none" : "") + '">'
+           + '<input type="checkbox" class="pkc" data-n="' + s.sceneNumber + '"'
+           + ' data-layers="' + (s.layers || 0) + '" data-video="' + (s.video ? 1 : 0) + '"'
+           + (empty ? "" : " checked") + '>'
+           + '<span class="n">' + s.sceneNumber + '</span>'
+           + '<span class="t">' + (s.title || "") + '</span>'
+           + '<span class="k">' + (bits.join(" · ") || "없음") + '</span></label>';
+      }
+      box.innerHTML = h;
+      pickCount();
+    })
+    .catch(function (e) { box.textContent = "오류: " + e; });
+}
+
+function pickBoxes() { return $("pickList").querySelectorAll(".pkc"); }
+
+function pickCount() {
+  var b = pickBoxes(), n = 0;
+  for (var i = 0; i < b.length; i++) { if (b[i].checked) { n++; } }
+  $("pickCount").textContent = n + " / " + b.length + "씬";
+  return n;
+}
+
+function pickSet(fn) {
+  var b = pickBoxes();
+  for (var i = 0; i < b.length; i++) { b[i].checked = fn(b[i]); }
+  pickCount();
+}
+
+function pickGo() {
+  var b = pickBoxes(), ns = [];
+  for (var i = 0; i < b.length; i++) {
+    if (b[i].checked) { ns.push(parseFloat(b[i].getAttribute("data-n"))); }
+  }
+  if (!ns.length) { $("pickStatus").textContent = "고른 씬이 없습니다."; return; }
+  _assemble(ns, function (m) { $("pickStatus").textContent = m; $("aeresult").textContent = m; });
+}
+
 /* AE 컴프 조립. scope=null이면 전체, 숫자면 그 씬, 배열이면 그 씬들만(한 번의 호출로).
    여러 씬을 한 번에 넘겨야 매니페스트 빌드·jsx 실행이 씬 수만큼 반복되지 않는다. */
 function _assemble(scope, statusFn) {
@@ -619,6 +683,24 @@ document.addEventListener("DOMContentLoaded", function () {
   if (bba) bba.addEventListener("click", buildComp);
   var btl = $("btnTimelineAll");
   if (btl) btl.addEventListener("click", function () { exportToTimeline(null); });
+  var bpi = $("btnPickImport");
+  if (bpi) bpi.addEventListener("click", openPickImport);
+  var pc = $("pickClose"), px = $("pickCancel");
+  if (pc) pc.addEventListener("click", function () { $("pickModal").hidden = true; });
+  if (px) px.addEventListener("click", function () { $("pickModal").hidden = true; });
+  var pa = $("pickAll"), pn = $("pickNone"), pl = $("pickLayers"), pv = $("pickVideo");
+  if (pa) pa.addEventListener("click", function () { pickSet(function () { return true; }); });
+  if (pn) pn.addEventListener("click", function () { pickSet(function () { return false; }); });
+  if (pl) pl.addEventListener("click", function () {
+    pickSet(function (b) { return b.getAttribute("data-layers") !== "0"; });
+  });
+  if (pv) pv.addEventListener("click", function () {
+    pickSet(function (b) { return b.getAttribute("data-video") === "1"; });
+  });
+  var pg = $("pickGo");
+  if (pg) pg.addEventListener("click", pickGo);
+  var plst = $("pickList");
+  if (plst) plst.addEventListener("change", pickCount);
   var bqr = $("btnQueueRender");
   if (bqr) bqr.addEventListener("click", queueRender);
   var bsu = $("btnSubtitles");

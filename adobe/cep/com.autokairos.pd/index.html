@@ -425,10 +425,21 @@
     .col-work .te-acts .mini { width:auto; margin:0; }
 
     /* 모달(이미지 생성 + 레이어 선택 공용) */
-    #genModal, #layerModal, #imgModal, #vidModal { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100;
+    /* 골라 넣기 목록 — 씬마다 무엇이 있는지 한 줄로 */
+    #pickList { max-height:52vh; overflow-y:auto; border:1px solid #33363c; border-radius:4px; }
+    #pickList .pk { display:flex; align-items:center; gap:6px; padding:3px 7px;
+      border-bottom:1px solid #2c2f36; font-size:11px; }
+    #pickList .pk:last-child { border-bottom:none; }
+    #pickList .pk input { width:13px; height:13px; margin:0; flex:0 0 13px; }
+    #pickList .pk .n { flex:0 0 38px; color:#9aa0a6; font-family:ui-monospace,monospace; }
+    #pickList .pk .t { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #pickList .pk .k { flex:0 0 auto; font-size:10px; color:#8b9098; }
+    #pickList .pk .k b { color:#7ea6ff; font-weight:normal; }
+    #pickList .pk.none { opacity:.45; }
+    #genModal, #layerModal, #imgModal, #vidModal, #pickModal { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100;
       display:flex; align-items:center; justify-content:center; }
-    #genModal[hidden], #layerModal[hidden], #imgModal[hidden], #vidModal[hidden] { display:none; }
-    #genModal .gen-box, #layerModal .gen-box, #imgModal .gen-box, #vidModal .gen-box { width:min(440px,92vw); max-height:88vh; overflow-y:auto;
+    #genModal[hidden], #layerModal[hidden], #imgModal[hidden], #vidModal[hidden], #pickModal[hidden] { display:none; }
+    #genModal .gen-box, #layerModal .gen-box, #imgModal .gen-box, #vidModal .gen-box, #pickModal .gen-box { width:min(440px,92vw); max-height:88vh; overflow-y:auto;
       background:#23262b; border:1px solid #33363c; border-radius:10px; padding:16px; }
     /* 레이어 선택 체크리스트 + 씬 탭 */
     #layerTabs { display:flex; gap:3px; flex-wrap:wrap; margin:6px 0 0; }
@@ -441,11 +452,11 @@
     #layerList .layer-chk:hover { background:#2c2f36; }
     .layer-chk.layer-dropped { opacity:0.55; }
     #layerList .layer-chk input { width:16px; height:16px; margin:2px 0 0; flex:0 0 auto; }
-    #genModal .gen-head, #layerModal .gen-head, #imgModal .gen-head, #vidModal .gen-head { display:flex; justify-content:space-between; align-items:center;
+    #genModal .gen-head, #layerModal .gen-head, #imgModal .gen-head, #vidModal .gen-head, #pickModal .gen-head { display:flex; justify-content:space-between; align-items:center;
       font-size:14px; font-weight:600; margin-bottom:8px; }
     #genModal select, #genModal input, #genModal textarea { width:100%; box-sizing:border-box;
       padding:7px; margin:3px 0; background:#1b1d21; color:#e6e6e6; border:1px solid #33363c; border-radius:5px; }
-    #genModal .gen-actions, #layerModal .gen-actions, #imgModal .gen-actions, #vidModal .gen-actions { display:flex; gap:8px; margin-top:10px; }
+    #genModal .gen-actions, #layerModal .gen-actions, #imgModal .gen-actions, #vidModal .gen-actions, #pickModal .gen-actions { display:flex; gap:8px; margin-top:10px; }
     #genModal .gen-actions button, #layerModal .gen-actions button, #imgModal .gen-actions button, #vidModal .gen-actions button { flex:1; }
 
     #toolsSection { margin-top:10px; border-top:1px solid #333; padding-top:6px; }
@@ -552,6 +563,8 @@
               <span class="sab-div"></span>
               <span class="stb-lab">전체에:</span>
               <button id="btnDecompose" class="mini">씬 분해</button>
+              <button id="btnPickImport" class="mini"
+                title="무엇이 들어오는지 보고 골라서 넣습니다 — 씬마다 그림·레이어·영상·음성">📋 골라 넣기</button>
               <button id="btnTimelineAll" class="mini"
                 title="매니페스트를 만들고 전체 씬을 AE 컴프로 조립해 타임라인에 배치합니다">🎬 조립·배치</button>
               <button id="btnSubtitles" class="mini"
@@ -814,6 +827,25 @@
     </div>
   </div>
 
+  <div id="pickModal" hidden>
+    <div class="gen-box">
+      <div class="gen-head">무엇을 넣을까요 <button id="pickClose" class="mini">✕</button></div>
+      <div id="pickBar" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+        <button id="pickAll" class="mini">전체</button>
+        <button id="pickNone" class="mini alt">해제</button>
+        <button id="pickLayers" class="mini alt" title="레이어가 있는 씬만 고릅니다">레이어 있는 것만</button>
+        <button id="pickVideo" class="mini alt" title="영상이 있는 씬만 고릅니다">영상 있는 것만</button>
+        <span id="pickCount" class="sab-hint"></span>
+      </div>
+      <div id="pickList"></div>
+      <div class="gen-actions">
+        <button id="pickGo">고른 씬 넣기</button>
+        <button id="pickCancel" class="alt">취소</button>
+      </div>
+      <div class="box" id="pickStatus" style="min-height:16px">—</div>
+    </div>
+  </div>
+
   <div id="imgModal" hidden>
     <div class="gen-box">
       <div class="gen-head">씬 이미지 <button id="imgClose" class="mini">✕</button></div>
@@ -847,16 +879,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1354"></script>
-  <script src="js/nav.js?v=1354"></script>
-  <script src="js/planning.js?v=1354"></script>
+  <script src="js/main.js?v=1355"></script>
+  <script src="js/nav.js?v=1355"></script>
+  <script src="js/planning.js?v=1355"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1354"></script>
-  <script src="js/storyboard.js?v=1354"></script>
-  <script src="js/gallery.js?v=1354"></script>
-  <script src="js/genmodal.js?v=1354"></script>
-  <script src="js/assistant.js?v=1354"></script>
+  <script src="js/mapgen.js?v=1355"></script>
+  <script src="js/storyboard.js?v=1355"></script>
+  <script src="js/gallery.js?v=1355"></script>
+  <script src="js/genmodal.js?v=1355"></script>
+  <script src="js/assistant.js?v=1355"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>

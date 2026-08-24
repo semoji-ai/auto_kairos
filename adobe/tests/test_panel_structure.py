@@ -916,3 +916,32 @@ def test_assembly_log_is_one_line():
     # 전체는 아래 칸에 남고 「자세히」로 편다
     assert 'id="sa-more"' in html
     assert 'on("sa-more"' in js
+
+
+def test_pick_import_shows_what_will_come():
+    """넣기 전에 **무엇이 들어오는지** 보여 준다.
+
+    「130·131·132 레이어가 안 들어온다」를 세 번 물었는데, 130 은 애초에
+    레이어를 나눈 적이 없었다(142씬 중 115씬이 그렇다). 들어올 것이 없는
+    것과 들어와야 하는데 안 들어온 것은 다른 일인데, 화면이 그것을 구분해
+    주지 않았다.
+    """
+    html = (PANEL / "index.html").read_text(encoding="utf-8")
+    js = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
+    assert 'id="btnPickImport"' in html and 'id="pickModal"' in html
+    assert "function openPickImport()" in js
+    assert "/api/assembly/inventory" in js
+    # 씬마다 무엇이 있는지 — 그림·레이어·영상·음성
+    for k in ("그림", "레이어 ", "영상", "음성"):
+        assert k in js.split("function openPickImport()")[1].split("\nfunction pickBoxes")[0], k
+    # 아무것도 없는 씬은 흐리게 두고 기본으로 안 고른다
+    assert 'var empty = !s.image && !s.layers && !s.video;' in js
+    # 골라서 넣는다 — 일괄이든 하나든 같은 길
+    assert "function pickGo()" in js and "_assemble(ns," in js
+
+
+def test_pick_import_has_bulk_filters():
+    """레이어 있는 것만·영상 있는 것만 — 골라 잡는 손잡이."""
+    js = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
+    assert 'data-layers' in js and 'data-video' in js
+    assert 'id="pickLayers"' in (PANEL / "index.html").read_text(encoding="utf-8")

@@ -381,6 +381,36 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
                        + (f", 씬 {','.join(str(x) for x in scope)}만" if scope else "") + ")")
         return 200, mres
 
+    if p == "/api/assembly/inventory" and method == "GET":
+        # **무엇이 들어오는지 먼저 보여 준다.**
+        #
+        # 「130·131·132 레이어가 안 들어온다」를 세 번 물었는데, 130 은 애초에
+        # 레이어를 나눈 적이 없었다(142씬 중 115씬이 그렇다). 들어올 것이
+        # 없는 것과 들어와야 하는데 안 들어온 것은 다른 일인데, 화면이
+        # 그것을 구분해 주지 않았다.
+        from backend import manifest as _mf, scenes as _sc
+        proj_dir = root / (query.get("project_id") or "")
+        if not proj_dir.is_dir():
+            return 404, {"error": "프로젝트 없음"}
+        data = _sc.load_scenes(proj_dir)
+        lay = proj_dir / "layers"
+        out = []
+        for s in data.get("scenes", []):
+            sid = s.get("sceneId") or ""
+            n = s.get("sceneNumber")
+            png = sorted(lay.glob(f"{sid}__*.png")) if (sid and lay.is_dir()) else []
+            vid = _mf._scene_video(proj_dir, sid)
+            out.append({
+                "sceneNumber": n,
+                "title": (s.get("title") or "")[:40],
+                "layout": s.get("layout") or "",
+                "image": bool(s.get("_image")),
+                "layers": len(png),
+                "video": bool(vid),
+                "audio": bool(s.get("_audio")),
+            })
+        return 200, {"scenes": out}
+
     if method == "POST" and p == "/api/subtitles/build":
         proj_dir = root / (body or {}).get("project_id", "")
         if not proj_dir.is_dir():
