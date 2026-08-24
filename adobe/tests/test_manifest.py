@@ -483,3 +483,44 @@ def test_legacy_layers_without_bbox_get_fullframe_comp_coords(tmp_path):
     # 이미지 참조가 없으므로 씬은 기본 1920x1080(f=1, ox=0) — old.png도 1920x1080이라 1:1로 겹침
     assert old["position"] == pytest.approx([960.0, 540.0])
     assert old["scale"] == pytest.approx(100.0)
+
+
+def test_vector_size_recorded(tmp_path):
+    """배율이 무엇을 전제로 계산됐는지 함께 적는다.
+
+    SVG 파일이 나중에 바뀌면(창을 고치거나 다시 벡터화하면) 그 전제가 깨진다.
+    매니페스트를 다시 굽지 않으면 아무도 모르는데, 창을 1/10 로 선언하던 시절
+    매니페스트로 들여왔더니 쉐이프가 24배로 커지고 자리가 통째로 밀렸다.
+    """
+    from PIL import Image
+    d = _proj(tmp_path, [{"sceneNumber": 1, "sceneId": "ab", "imageRef": "storyboard/sb.png",
+                          "duration_estimate_sec": 5}])
+    (d / "storyboard").mkdir(); Image.new("RGB", (200, 200)).save(d / "storyboard" / "sb.png")
+    lay = d / "layers"; lay.mkdir()
+    im = Image.new("RGBA", (200, 200), (0, 0, 0, 0))
+    for y in range(50, 150):
+        for x in range(80, 120):
+            im.putpixel((x, y), (200, 30, 40, 255))
+    im.save(lay / "ab__0_병.png")
+    Image.new("RGBA", (200, 200), (9, 9, 9, 255)).save(lay / "ab__bg.png")
+    # 그림 좌표 공간(2048)으로 선언한 SVG — 지금 규격
+    (lay / "ab__0_병.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 2048" '
+        'width="1024" height="2048"><path d="M0 0L10 10Z"/></svg>', encoding="utf-8")
+    manifest.build_manifest(d)
+    sc = json.loads((d / "manifest.json").read_text(encoding="utf-8"))["scenes"][0]
+    L = next(x for x in sc["layers"] if x["name"] == "ab__0_병")
+    assert L["vectorSize"] == [1024.0, 2048.0]
+    # 배율은 선언 크기 기준이다 — PNG(200) 가 아니라 SVG(1024)
+    assert abs(L["vectorRatio"] - 200 / 1024) < 1e-6
+
+
+def test_jsx_corrects_when_svg_size_differs():
+    """jsx 가 들여온 실제 크기와 대 보고 스스로 맞춘다 — 쉐이프로 펴기 **전에**."""
+    from pathlib import Path as _P
+    jsx = (_P(__file__).resolve().parents[1] / "cep" / "com.autokairos.pd"
+           / "jsx" / "build_scene.jsx").read_text(encoding="utf-8")
+    assert "layer.vectorSize" in jsx
+    assert "layer.scale = layer.scale * corr" in jsx
+    # 보정이 explode 보다 앞에 있어야 한다 — 뒤에 있으면 쉐이프가 못 쓴다
+    assert jsx.index("layer.vectorSize[0] / realW") < jsx.index("explodeCompLayers(comp, foot")

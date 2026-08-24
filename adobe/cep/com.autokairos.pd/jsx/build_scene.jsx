@@ -625,6 +625,27 @@ function akBuildScene(manifestPath) {
             var extra = (foot instanceof CompItem) ? (", 안에 " + foot.numLayers + "장") : "";
             log.push("얹음 [" + kind + "] " + foot.name + " " + foot.width + "x" + foot.height + extra);
         }
+        // **전제가 깨졌으면 여기서 바로잡는다.**
+        //
+        // 매니페스트의 배율은 「SVG 가 이 크기로 들어온다」를 전제로 굽는다.
+        // 그 뒤 SVG 파일이 바뀌면(창을 고치거나 다시 벡터화하면) 전제가 깨지는데,
+        // 매니페스트를 다시 굽지 않으면 아무도 모른 채 쉐이프가 엉뚱한 크기로
+        // 앉는다 — 창을 1/10 로 선언하던 시절 매니페스트로 들여왔더니 24배로
+        // 커졌고 자리도 통째로 밀렸다. 들여온 실제 크기와 대 보고 맞춘다.
+        if (layer.vectorSize && layer.vectorSize[0] > 0 && !usedFallback) {
+            try {
+                var realW = foot.width;
+                if (realW > 0 && Math.abs(realW - layer.vectorSize[0]) > 0.5) {
+                    var corr = layer.vectorSize[0] / realW;
+                    if (layer.scale != null) { layer.scale = layer.scale * corr; }
+                    if (log) {
+                        log.push("SVG 크기가 매니페스트와 다릅니다("
+                                 + Math.round(layer.vectorSize[0]) + "→" + Math.round(realW)
+                                 + ") — 배율을 맞췄습니다: " + (layer.aeName || layer.name));
+                    }
+                }
+            } catch (eVS) { }
+        }
         // 쉐이프로 꺼내 올릴지 — 매니페스트가 `explode` 를 주면 그렇게 한다
         if (layer.explode && !usedFallback && (foot instanceof CompItem)) {
             var grp = explodeCompLayers(comp, foot, layer, W, H, log);

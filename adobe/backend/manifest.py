@@ -38,6 +38,20 @@ def _svg_ratio(svg_path, png_path) -> float:
     return 1.0
 
 
+def _svg_size(svg_path):
+    """SVG 가 선언한 크기 (w, h). 못 읽으면 None."""
+    import re as _re
+    try:
+        head = svg_path.read_text(encoding="utf-8", errors="replace")[:400]
+        mw = _re.search(r'\swidth="([\d.]+)"', head)
+        mh = _re.search(r'\sheight="([\d.]+)"', head)
+        if mw and mh:
+            return [float(mw.group(1)), float(mh.group(1))]
+    except Exception:
+        pass
+    return None
+
+
 def _img_size(path: Path):
     """이미지 픽셀 크기 (w, h). 실패 시 None."""
     try:
@@ -174,6 +188,15 @@ def _scene_layers(proj_dir: Path, layer_rels: list, sid: str = "", scene_width: 
             # SVG 가 선언한 크기로 들여온다. 둘이 다르면 자리가 통째로 밀린다.
             # 머리말을 읽어 그 비를 곱해 둔다 — 1/10 로 줄여 넣어도 자리가 맞는다.
             entry["vectorRatio"] = _svg_ratio(proj_dir / svg_rel, proj_dir / r)
+            # **무엇을 전제로 계산했는지 함께 적는다.**
+            #
+            # 배율은 「SVG 가 이 크기로 들어온다」를 전제로 굽는다. 그런데 SVG
+            # 파일이 나중에 바뀌면(창을 고치거나 다시 벡터화하면) 그 전제가
+            # 깨지고, 매니페스트를 다시 굽지 않으면 아무도 모른다 — 창을 1/10
+            # 로 선언하던 시절의 매니페스트로 들여왔더니 쉐이프가 24배로
+            # 커졌다. 전제를 적어 두면 jsx 가 들여온 실제 크기와 대 보고
+            # 스스로 맞춘다.
+            entry["vectorSize"] = _svg_size(proj_dir / svg_rel)
             # **요소만 쉐이프로 편다.** 배경판은 path 가 900개를 넘어 레이어가
             # 쏟아진다 — 타임라인이 감당이 안 되고 렌더도 무거워진다.
             # 요소는 10~40KB 라 펴도 몇 장 안 된다.
