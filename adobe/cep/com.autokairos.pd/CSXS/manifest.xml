@@ -8,6 +8,9 @@
     <HostList>
       <!-- AEFT = After Effects. 2024(24)~2026(26) 커버 -->
       <Host Name="AEFT" Version="[22.0,99.9]" />
+      <!-- PPRO = Premiere Pro. 같은 패널이 뜬다 — 백엔드도 화면도 그대로다.
+           갈리는 것은 호스트에 넣는 스크립트뿐이다(jsx/build_sequence.jsx). -->
+      <Host Name="PPRO" Version="[22.0,99.9]" />
     </HostList>
     <LocaleList>
       <Locale Code="All" />

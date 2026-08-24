@@ -77,6 +77,51 @@ function evalScript(script) {
   });
 }
 
+/* 어느 호스트에 붙어 있나 — "AEFT"(애프터이펙트) 또는 "PPRO"(프리미어).
+
+   같은 패널이 둘 다에서 뜬다. 백엔드도 화면도 매니페스트도 그대로다.
+   **갈리는 것은 호스트에 넣는 스크립트뿐이다** — 애프터이펙트는 컴프를 짜고
+   (build_scene.jsx), 프리미어는 시퀀스를 깐다(build_sequence.jsx).
+
+   프리미어에서는 쉐이프·텍스트 레이어를 스크립트로 만들 수 없어서 연출을
+   그대로 옮길 수 없다. 그쪽은 거친 편집본까지만 하고, 연출은 애프터이펙트가
+   맡는다. */
+/* 프리미어에서는 애프터이펙트 전용 기능을 감춘다.
+
+   **버튼만 눌러 보고 안 되는 것이 가장 나쁘다.** 렌더 큐·말자막 레이어·씬
+   분해는 컴프와 텍스트 레이어를 다루므로 프리미어에서는 성립하지 않는다.
+   감추고, 무엇이 되는지 한 줄로 적어 둔다. */
+function applyHostUI() {
+  if (!isPremiere()) { return; }
+  var hide = ["btnQueueRender", "btnSubtitles", "btnDecompose",
+              "btnImportImages", "btnImportStoryboard", "btnImportLayers", "btnBuild",
+              "sa-sub"];
+  for (var i = 0; i < hide.length; i++) {
+    var el = $(hide[i]);
+    if (el) { el.hidden = true; }
+  }
+  var t = $("btnTimelineAll");
+  if (t) {
+    t.textContent = "🎬 시퀀스 조립";
+    t.title = "매니페스트를 만들고 전체 씬을 프리미어 시퀀스에 깝니다"
+            + " — 영상·그림·음성·씬 마커";
+  }
+  var c = $("sa-comp");
+  if (c) { c.textContent = "▶ 시퀀스"; c.title = "체크한 씬만 시퀀스에 깝니다"; }
+  var h = document.querySelector(".sab-hint");
+  if (h) { h.textContent = "체크한 씬에:"; }
+  var hd = $("healthText");
+  if (hd) { hd.title = "프리미어 모드 — 연출(레이아웃·레이어 모션)은 애프터이펙트에서"; }
+}
+
+function hostApp() {
+  try {
+    var id = JSON.parse(window.__adobe_cep__.getHostEnvironment()).appName;
+    return String(id || "AEFT").toUpperCase();
+  } catch (e) { return "AEFT"; }
+}
+function isPremiere() { return hostApp().indexOf("PPRO") === 0; }
+
 /* 로컬 파일(확장 내부 jsx) 동기 읽기 — file:// 에서 fetch가 막혀도 XHR은 동작 */
 function readLocal(relPath) {
   var x = new XMLHttpRequest();
@@ -217,13 +262,23 @@ function _assemble(scope, statusFn) {
   }).then(function (r) { return r.json(); })
     .then(function (j) {
       if (j.error || !j.path) { setS("매니페스트 실패: " + JSON.stringify(j)); return; }
+      // **호스트에 따라 다른 것을 넣는다.** 매니페스트는 하나, 쓰는 법이 둘이다.
+      var pp = isPremiere();
       var jsx;
-      try { jsx = readLocal("./jsx/json2.jsx") + "\n" + readLocal("./jsx/layouts.jsx")
-                  + "\n" + readLocal("./jsx/build_scene.jsx"); }
+      try {
+        jsx = readLocal("./jsx/json2.jsx") + "\n" + (pp
+          ? readLocal("./jsx/build_sequence.jsx")
+          : (readLocal("./jsx/layouts.jsx") + "\n" + readLocal("./jsx/build_scene.jsx")));
+      }
       catch (e) { setS("jsx 로드 실패: " + e); return; }
-      setS("AE 조립 중... (씬 " + j.scenes + "개)");
-      var call = "\nakBuildScene(" + JSON.stringify(j.path) + ");";
-      return evalScript(jsx + call).then(function (r) { setS(r || "(빈 응답 — AE 콘솔 확인)"); });
+      setS((pp ? "프리미어 시퀀스" : "AE") + " 조립 중... (씬 " + j.scenes + "개)");
+      var call = pp
+        ? ("\nakBuildSequence(" + JSON.stringify(j.path) + ", "
+           + JSON.stringify({ name: "auto_kairos Final" }) + ");")
+        : ("\nakBuildScene(" + JSON.stringify(j.path) + ");");
+      return evalScript(jsx + call).then(function (r) {
+        setS(r || "(빈 응답 — 콘솔 확인)");
+      });
     })
     .catch(function (e) { setS("오류: " + e); });
 }
@@ -573,6 +628,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var f = $("newProjectForm"); f.hidden = !f.hidden;
   });
   var ls = $("llmSelect"); if (ls) ls.addEventListener("change", saveLlmSetting);
+  applyHostUI();           // 프리미어면 애프터이펙트 전용 버튼을 감춘다
   checkBackend();          // 열면 자동 백엔드 확인 → 연결 시 프로젝트 목록 자동 로드
   $("btnDecompose").addEventListener("click", decompose);
   $("btnGenCharacter").addEventListener("click", genCharacter);
