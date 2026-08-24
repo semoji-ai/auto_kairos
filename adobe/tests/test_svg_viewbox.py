@@ -72,3 +72,38 @@ def test_plain_svg_gets_integer_canvas():
     assert size == (179, 102)
     w, h = _head(out)
     assert w == int(w) and h == int(h)
+
+
+def test_declared_size_follows_scene_bbox(tmp_path):
+    """선언 크기는 **씬에서 차지하는 크기**로 — 그래야 배율이 그림과 같아진다.
+
+    fal 은 요소를 씬 해상도의 4배쯤으로 크게 떼어 준다(bbox 203px 인데 PNG 는
+    813px). PNG 는 그 여분이 화질이 되지만 벡터에는 값어치가 없다. 그리기 좌표
+    (2048)로 선언하면 배율 10%, PNG 크기로 선언하면 26% 로 들어와 패스를
+    손보기 어렵다. bbox 로 선언하면 씬 그림과 같은 배율이 된다.
+    """
+    import json as _j
+    L = tmp_path
+    (L / "ab__elements.json").write_text(_j.dumps([
+        {"layer": "ab__0_잔", "bbox": [794, 486, 997, 577]}]), encoding="utf-8")
+    (L / "ab__0_잔.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 919" '
+        'width="2048" height="919"><path d="M0 0L10 10Z"/></svg>', encoding="utf-8")
+    from backend import vectorize
+    r = vectorize.normalize_svg_file(L / "ab__0_잔.svg")
+    assert r["ok"]
+    assert r["size"] == [203, 91]          # bbox 크기
+    t = (L / "ab__0_잔.svg").read_text(encoding="utf-8")
+    assert 'viewBox="0 0 2048 919"' in t   # **패스는 안 건드린다**
+
+
+def test_falls_back_to_png_when_no_bbox(tmp_path):
+    """배경판·덤 레이어는 자리를 모른다 — PNG 크기로 물러선다."""
+    from PIL import Image
+    from backend import vectorize
+    Image.new("RGBA", (300, 200)).save(tmp_path / "ab__bg.png")
+    (tmp_path / "ab__bg.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 1365" '
+        'width="2048" height="1365"><path d="M0 0L10 10Z"/></svg>', encoding="utf-8")
+    r = vectorize.normalize_svg_file(tmp_path / "ab__bg.svg")
+    assert r["size"] == [300, 200]

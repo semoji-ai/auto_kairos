@@ -327,6 +327,8 @@ def unwrap_svg(text: str) -> tuple:
     vw = float(mw.group(1)) / sx
     vh = float(mh.group(1)) / sy
     vx, vy = -tx / sx, -ty / sy
+    # 여기서는 **되돌리기만** 한다 — 그리기 좌표를 그대로 창으로 삼는다.
+    # 화면 크기에 맞추는 것은 `normalize_svg` 가 이어서 한다.
     tw, th = max(1, int(round(vw))), max(1, int(round(vh)))
 
     close = text.rindex("</svg>")
@@ -342,18 +344,20 @@ def unwrap_svg(text: str) -> tuple:
 
 
 def normalize_svg(text: str, *, divisor: int = 1, target=None) -> tuple:
-    """선언 크기를 **그리기 좌표 공간에 맞춘다.** 반환 (새 텍스트, (w, h)).
+    """선언 크기를 정한다. viewBox 는 그리기 좌표 그대로 둔다. 반환 (텍스트, (w,h)).
 
-    좌표는 한 글자도 건드리지 않는다. 창(viewBox)을 그림에 맞추는 것이지
-    그림을 창에 맞추는 것이 아니다 — 그래야 애프터이펙트가 「쉐이프로 펴기」를
-    했을 때 패스가 제자리에 온다.
+    **좌표는 한 글자도 건드리지 않는다.** 창(viewBox)과 선언 크기(width/height)만
+    손댄다. 애프터이펙트는 그 둘의 비로 패스를 줄여 들여온다 — 실측으로 확인했다.
 
-    ⚠️ **감싸지 않는다.** 전에는 `<g transform="scale(...)">` 로 감싸 작게
-    선언했는데(본문의 숫자를 곱하면 `rgb(245,222,193)` 의 색 값까지 곱해져
-    무너지기 때문이었다), 애프터이펙트가 그 변환을 무시해 그림이 창 밖으로
-    나갔다. 색을 지키려다 그림을 잃었다. 감싸는 대신 **창을 넓힌다.**
+        viewBox="0 0 1000 1000" width="100"  →  컴프 100x100, 패스 800→80  ✅
 
-    `divisor`·`target` 은 옛 호출부와의 호환으로 받기만 하고 쓰지 않는다.
+    ⚠️ **`<g transform>` 으로 감싸면 안 된다.** 전에는 그렇게 작게 선언했는데
+    (본문 숫자를 곱하면 `rgb(245,222,193)` 의 색 값까지 곱해져 무너지므로),
+    애프터이펙트의 「쉐이프로 펴기」가 그 변환만 무시해 그림이 창 밖으로 나갔다.
+    같은 파일에서 viewBox 축소는 따르고 그룹 변환은 안 따른다.
+
+    `target` 을 주면 그 크기로 선언한다(보통 PNG 픽셀 크기). 안 주면 그리기
+    좌표 그대로다. `divisor` 는 옛 호출부와의 호환으로 받기만 한다.
     """
     mw = re.search(r'\swidth="([\d.]+)"', text)
     mh = re.search(r'\sheight="([\d.]+)"', text)
@@ -365,10 +369,29 @@ def normalize_svg(text: str, *, divisor: int = 1, target=None) -> tuple:
         return text, None
     # 이미 감싸 둔 것이면 먼저 걷어낸다 — 여러 번 돌려도 결과가 같아야 한다
     if '<g transform="matrix(' in text[:text.index(">") + 400]:
-        return unwrap_svg(text)
+        text, _ = unwrap_svg(text)
+        mv = re.search(r'viewBox="\s*([\d.-]+)\s+([\d.-]+)\s+([\d.]+)\s+([\d.]+)\s*"', text)
+        mw = re.search(r'\swidth="([\d.]+)"', text)
+        mh = re.search(r'\sheight="([\d.]+)"', text)
+        if not (mw and mh and mv):
+            return text, None
+        vx, vy, vw, vh = (float(mv.group(i)) for i in range(1, 5))
+    # **선언 크기는 그림이 화면에 앉을 크기로 — 보통 PNG 픽셀 크기다.**
+    #
+    # 그리기 좌표 그대로 선언하면(2048) 화면에서 200픽셀인 요소가 배율 10% 로
+    # 들어온다. 그 상태로는 패스를 손보기가 어렵다 — 핸들이 깨알만 하고 선
+    # 굵기가 어긋난다. PNG 크기로 선언하면 SVG 와 PNG 가 같은 크기로 들어와,
+    # 배율이 그림 레이어와 같아지고 둘을 갈아 끼워도 자리가 안 밀린다.
+    #
+    # 패스는 건드리지 않는다. viewBox 는 그리기 좌표 그대로 두고, 애프터이펙트가
+    # 그 비로 줄여 들여온다(실측 확인: viewBox 1000 / width 100 → 패스 800→80).
+    #
     # **정수로 만든다.** 애프터이펙트 footage 는 정수 픽셀이어야 한다 —
     # 179.2 x 102.4 로 내보냈더니 SVG 4장이 통째로 안 들어왔다.
-    tw, th = max(1, int(round(vw))), max(1, int(round(vh)))
+    if target:
+        tw, th = max(1, int(round(target[0]))), max(1, int(round(target[1])))
+    else:
+        tw, th = max(1, int(round(vw))), max(1, int(round(vh)))
     # **정확히 같을 때만 건너뛴다.** 「거의 같으면 됐다」로 두었더니 179.2 가
     # 179 로 안 고쳐진 채 통과했다 — 애프터이펙트는 그 소수 하나에 파일을
     # 통째로 거절한다(SVG 4장이 그렇게 안 들어왔다).
@@ -378,9 +401,39 @@ def normalize_svg(text: str, *, divisor: int = 1, target=None) -> tuple:
     head = text[:head_end]
     head = re.sub(r'\swidth="[\d.]+"', f' width="{tw}"', head)
     head = re.sub(r'\sheight="[\d.]+"', f' height="{th}"', head)
+    # viewBox 는 그리기 좌표 그대로 — 애프터이펙트가 이 비로 줄인다
     head = re.sub(r'viewBox="[^"]*"',
                   f'viewBox="{vx:.6g} {vy:.6g} {vw:.6g} {vh:.6g}"', head)
     return head + text[head_end:], (tw, th)
+
+
+def _scene_size(svg_path):
+    """이 레이어가 씬에서 차지하는 크기 (w, h). 사이드카 `bbox` 에서 읽는다.
+
+    없으면 None — 배경판은 bbox 가 없고, 이름이 안 맞아 `__x_` 로 남긴 것도
+    자리를 모른다.
+    """
+    p = Path(svg_path)
+    stem = p.stem
+    if "__" not in stem:
+        return None
+    sid = stem.split("__", 1)[0]
+    side = p.parent / f"{sid}__elements.json"
+    if not side.is_file():
+        return None
+    try:
+        for e in json.loads(side.read_text(encoding="utf-8")):
+            if e.get("layer") != stem:
+                continue
+            b = e.get("bbox")
+            if b and len(b) == 4:
+                w, h = float(b[2]) - float(b[0]), float(b[3]) - float(b[1])
+                if w > 0 and h > 0:
+                    return (w, h)
+            return None
+    except Exception:
+        pass
+    return None
 
 
 def normalize_svg_file(path, *, divisor: int = 1, png_path=None) -> dict:
@@ -392,9 +445,29 @@ def normalize_svg_file(path, *, divisor: int = 1, png_path=None) -> dict:
     """
     p = Path(path)
     before = p.stat().st_size
+    # **씬에서 차지하는 크기로 선언한다.**
+    #
+    # fal 은 요소를 씬 해상도의 4배쯤으로 크게 떼어 준다(bbox 203px 인데 PNG 는
+    # 813px). PNG 는 그 여분이 화질이 되지만 **벡터에는 아무 값어치가 없다** —
+    # 확대해도 다시 그린다. 그런데 그 크기로 선언하면 배율이 26% 로 들어와
+    # 패스를 손보기가 어렵다.
+    #
+    # 그래서 사이드카의 `bbox`(씬 좌표)를 목표로 삼는다. 그러면 배율이 씬
+    # 그림과 같아진다 — 씬을 컴프에 맞추는 비 하나만 남는다.
+    # bbox 가 없으면(배경판·덤 레이어) PNG 크기로 물러선다.
+    target = _scene_size(p)
+    if target is None:
+        src = Path(png_path) if png_path else p.with_suffix(".png")
+        if src.is_file():
+            try:
+                from PIL import Image
+                with Image.open(src) as im:
+                    target = im.size
+            except Exception:
+                target = None
     try:
         text = p.read_text(encoding="utf-8")
-        out, size = normalize_svg(text)
+        out, size = normalize_svg(text, target=target)
     except Exception as e:
         return {"ok": False, "error": f"{type(e).__name__}: {e}"}
     if size is None:
