@@ -8,8 +8,8 @@
 // 레이어를 스크립트로 만들고 속성마다 키를 찍는 일은 여기서 안 된다. 그래서
 // 이 스크립트는 **거친 편집본을 까는 데까지**만 한다 —
 //
-//   · 씬마다 영상(없으면 그림)을 제 자리에 제 길이로
-//   · 나레이션 음성을 같은 자리에
+//   · V1 씬 그림 · V2 영상(있으면) · A1 나레이션 — 제 자리에 제 길이로
+//   · 셋을 다 깐다. 편집하다 한 컷을 정지로 되돌릴 때 밑에 그림이 있어야 한다
 //   · 씬 번호·제목으로 마커
 //   · 자막 SRT 와 에셋을 빈으로 정리
 //
@@ -34,9 +34,20 @@ function akBuildSequence(manifestPath, opts) {
         var seq = akSequence(proj, opts.name || "auto_kairos Final", scenes, bin, log);
         if (!seq) { return "ERROR: 시퀀스를 만들지 못했습니다 — " + log.join(" / "); }
 
-        var vt = seq.videoTracks[0];
-        var at = seq.audioTracks[0];
-        var placed = 0, noAsset = 0, audio = 0;
+        // **트랙을 나눈다 — 애프터이펙트와 같은 쌓임이다.**
+        //
+        //   V2  영상        있으면 이것이 보인다
+        //   V1  씬 그림     늘 깐다
+        //   A1  나레이션
+        //
+        // 처음에는 「영상이 있으면 그림은 건너뛴다」로 했는데, 그러면 영상이
+        // 있는 29씬(99번부터)에 그림이 아예 안 깔린다. 편집하다 한 컷만 정지로
+        // 되돌리고 싶을 때 밑에 그림이 없으면 다시 조립해야 한다. 애프터이펙트
+        // 쪽은 이미 셋을 다 올리게 고쳐 두었는데 여기만 안 맞았다.
+        var vt = akTrack(seq, "video", 0, log);
+        var vt2 = akTrack(seq, "video", 1, log);
+        var at = akTrack(seq, "audio", 0, log);
+        var placed = 0, vids = 0, noAsset = 0, audio = 0;
 
         for (var i = 0; i < scenes.length; i++) {
             var s = scenes[i];
@@ -44,20 +55,22 @@ function akBuildSequence(manifestPath, opts) {
             var dur = Number(s.duration || 5);
             var pf = s.prefix || ("S" + (i + 1) + "_");
 
-            // **영상이 있으면 영상, 없으면 그림.** 그림은 정지라 길이를 씬에
-            // 맞춰 늘린다. 어느 쪽도 없으면 자리를 비우고 기록만 남긴다 —
-            // 조용히 건너뛰면 편집자가 빈 자리를 못 찾는다.
-            var src = s.video || s.image;
-            if (!src) {
+            // 그림은 V1 에 늘 깐다. 정지라 길이를 씬에 맞춰 늘린다.
+            if (s.image) {
+                var im = akImportOnce(proj, s.image, bin, log);
+                if (im && vt && akPlace(vt, im, t0, dur, log, pf)) { placed++; }
+                else if (!im) { noAsset++; }
+            }
+            // 영상은 V2 에 — 있으면 이것이 보인다.
+            if (s.video) {
+                var vi = akImportOnce(proj, s.video, bin, log);
+                if (vi && vt2 && akPlace(vt2, vi, t0, dur, log, pf + "영상 ")) { vids++; }
+                else if (!vi) { noAsset++; }
+            }
+            // 어느 쪽도 없으면 조용히 넘기지 않는다 — 편집자가 빈 자리를 못 찾는다
+            if (!s.image && !s.video) {
                 noAsset++;
                 log.push(pf + "쓸 그림도 영상도 없습니다");
-            } else {
-                var item = akImportOnce(proj, src, bin, log);
-                if (!item) {
-                    noAsset++;
-                } else if (akPlace(vt, item, t0, dur, log, pf)) {
-                    placed++;
-                }
             }
 
             if (s.audio) {
@@ -73,12 +86,31 @@ function akBuildSequence(manifestPath, opts) {
         var srt = opts.srt ? akImportOnce(proj, opts.srt, bin, log) : null;
 
         return "OK: 씬 " + scenes.length + "개 → " + seq.name
-             + " (영상·그림 " + placed + " · 음성 " + audio
+             + " (그림 " + placed + " · 영상 " + vids + " · 음성 " + audio
              + (noAsset ? (" · 자산 없음 " + noAsset) : "")
              + (srt ? " · 자막 SRT 빈에 있음" : "")
              + ")" + (log.length ? (" | " + log.join(", ")) : "");
     } catch (e) {
         return "ERROR: " + e.toString() + (log.length ? (" | " + log.join(", ")) : "");
+    }
+}
+
+/* 트랙 하나를 집는다. 모자라면 만든다.
+
+   새 시퀀스는 보통 V1·A1 만 있다. 영상을 그림 위에 올리려면 V2 가 필요한데,
+   없는 트랙을 집으면 그 자리부터 조용히 아무것도 안 깔린다. */
+function akTrack(seq, kind, idx, log) {
+    var list = (kind === "audio") ? seq.audioTracks : seq.videoTracks;
+    try {
+        while (list.numTracks <= idx) {
+            if (kind === "audio") { seq.audioTracks.addTracks(1); }
+            else { seq.videoTracks.addTracks(1); }
+            list = (kind === "audio") ? seq.audioTracks : seq.videoTracks;
+        }
+        return list[idx];
+    } catch (e) {
+        log.push(kind + " 트랙 " + (idx + 1) + " 을 만들지 못했습니다: " + e.toString());
+        return (list.numTracks > idx) ? list[idx] : null;
     }
 }
 
@@ -178,6 +210,10 @@ function akClearTracks(seq, log) {
    맞춰야 자리가 안 밀린다. */
 function akPlace(track, item, t0, dur, log, pf) {
     try {
+        // **정지 그림은 기본 길이가 짧다.** 프리미어는 스틸을 환경설정 기본값
+        // (보통 5초)으로 들여오는데, 씬이 그보다 길면 뒤가 빈다(이 편에서 9씬).
+        // 놓기 전에 쓸 수 있는 길이를 늘려 둔다 — 놓은 뒤에는 못 늘린다.
+        try { item.setOutPoint(dur + 1, 4); } catch (eO) { }   // 4 = 비디오 미디어
         track.overwriteClip(item, t0);
         var clip = null;
         for (var i = track.clips.numItems - 1; i >= 0; i--) {

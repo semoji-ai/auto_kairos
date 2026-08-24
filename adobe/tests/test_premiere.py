@@ -37,16 +37,38 @@ def test_sequence_uses_manifest_timings():
     assert "overwriteClip" in src
 
 
-def test_video_preferred_then_image():
-    """영상이 있으면 영상, 없으면 그림. 둘 다 없으면 **기록을 남긴다.**"""
+def test_image_and_video_on_separate_tracks():
+    """V1 그림 · V2 영상 — **둘 다 깐다.** 애프터이펙트와 같은 쌓임이다.
+
+    처음에는 「영상이 있으면 그림은 건너뛴다」로 했는데, 그러면 영상이 있는
+    29씬(99번부터)에 그림이 아예 안 깔린다. 편집하다 한 컷만 정지로 되돌리고
+    싶을 때 밑에 그림이 없으면 다시 조립해야 한다.
+    """
     src = _seq()
-    assert "s.video || s.image" in src
+    body = src.split("function akBuildSequence(")[1]
+    assert 'akTrack(seq, "video", 0' in body and 'akTrack(seq, "video", 1' in body
+    assert body.index("if (s.image) {") < body.index("if (s.video) {")   # 그림이 아래
+    assert "s.video || s.image" not in body        # 둘 중 하나 고르지 않는다
     assert "쓸 그림도 영상도 없습니다" in src
+
+
+def test_missing_track_is_created():
+    """새 시퀀스는 V1·A1 뿐이다. 없는 트랙을 집으면 그 자리부터 조용히 빈다."""
+    src = _seq()
+    assert "function akTrack(" in src
+    assert "addTracks(1)" in src
+
+
+def test_still_duration_is_extended_before_placing():
+    """스틸 기본 길이(보통 5초)보다 긴 씬이 있다 — 놓기 전에 늘린다."""
+    body = _seq().split("function akPlace(")[1]
+    assert "setOutPoint(" in body
+    assert body.index("setOutPoint(") < body.index("overwriteClip(")
 
 
 def test_audio_and_markers():
     src = _seq()
-    assert "audioTracks[0]" in src
+    assert 'akTrack(seq, "audio", 0' in src
     assert "markers.createMarker" in src
 
 
