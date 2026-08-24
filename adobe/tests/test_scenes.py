@@ -357,3 +357,53 @@ def test_load_scenes_exposes_effective_texts(tmp_path):
         {"scenes": [{"sceneNumber": 1, "sceneId": "a", "narration": "원고입니다"}]}), encoding="utf-8")
     s = scenes.load_scenes(tmp_path)["scenes"][0]
     assert s["_tts_text"] == "원고입니다" and s["_subtitle_text"] == "원고입니다"
+
+
+# ── 원고 삭제 사고 (디아지오 142씬) ────────────────────────────────────────
+#
+# 통합 뒤 백엔드는 v3 `output/` 폴더를 바로 여는데, v3 프로젝트에는
+# `scenes.json` 이 없다 — 원고는 `scene_specs.json` 이다. 그러면 어도비 쪽이
+# 0씬이 되고, `mirror_structure` 가 그것을 「전부 지워졌다」로 읽어 광고주
+# 컨펌본을 통째로 비웠다. 방아쇠는 패널에서 씬 구성을 한 번 만진 것뿐이었다.
+
+def _specs(d, n):
+    (d / "scene_specs.json").write_text(json.dumps(
+        {"scenes": [{"sceneNumber": i, "narration": f"나레이션 {i}",
+                     "layout": "cinematic", "imageAsset": {"source": "generate"}}
+                    for i in range(1, n + 1)]}, ensure_ascii=False), encoding="utf-8")
+
+
+def _count(d):
+    return len(json.loads((d / "scene_specs.json").read_text(encoding="utf-8"))["scenes"])
+
+
+def test_empty_adobe_never_wipes_manuscript(tmp_path):
+    """어도비가 0씬이면 원고를 건드리지 않는다 — 빈 것과 지워진 것은 다르다."""
+    d = _proj(tmp_path, [])
+    _specs(d, 142)
+    assert scenes.mirror_structure(d, {"scenes": []}) is False
+    assert _count(d) == 142
+
+
+def test_real_structure_change_still_mirrors(tmp_path):
+    """가드가 정상 동작까지 막지는 않는다 — 실제로 지운 씬은 반영된다."""
+    d = _proj(tmp_path, [])
+    _specs(d, 3)
+    ok = scenes.mirror_structure(d, {"scenes": [
+        {"sceneNumber": 1, "_specs_num": 1, "narration": "나레이션 1"},
+        {"sceneNumber": 2, "_specs_num": 3, "narration": "나레이션 3"}]})
+    assert ok is True
+    rows = json.loads((d / "scene_specs.json").read_text(encoding="utf-8"))["scenes"]
+    assert [s["narration"] for s in rows] == ["나레이션 1", "나레이션 3"]
+    assert rows[1]["layout"] == "cinematic"      # v3 전용 필드는 살아 있다
+
+
+def test_big_shrink_leaves_a_backup(tmp_path):
+    """반 넘게 줄면 덮어쓰기 전에 한 벌 남긴다 — 0씬 가드는 공백만 막는다."""
+    d = _proj(tmp_path, [])
+    _specs(d, 142)
+    scenes.mirror_structure(d, {"scenes": [{"sceneNumber": 1, "_specs_num": 1}]})
+    assert _count(d) == 1
+    bak = d / "scene_specs.bak_142scenes.json"
+    assert bak.is_file()
+    assert len(json.loads(bak.read_text(encoding="utf-8"))["scenes"]) == 142

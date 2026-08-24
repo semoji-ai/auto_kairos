@@ -11,7 +11,7 @@ function _dot(label, on) {
 
 /* 컬럼 너비(px) — 4컬럼(씬#·이미지·스크립트·작업) 드래그 조절 + localStorage 저장 */
 var COL_KEY = "ak_sheet_cols";
-var COL_DEFAULT = [30, 200, 300, 260];      // 씬# · 이미지 · 스크립트 · 작업
+var COL_DEFAULT = [44, 200, 300, 260];      // 씬# · 이미지 · 스크립트 · 작업
 var COLW = _loadCols();
 
 function _loadCols() {
@@ -19,13 +19,17 @@ function _loadCols() {
   // 「이미지 재생성」 한 글자도 안 들어가고 목소리 고르개도 눌려 버린다.
   // 저장해 둔 값이 그보다 좁으면 끌어올린다 — 예전 폭이 남아 있으면 새 버튼이
   // 계속 찌그러진 채로 보인다.
-  var MIN_WORK = 260;
+  // 씬# 칸도 같은 이유로 하한이 있다. 체크박스 14 + 간격 4 + 번호 두 자리 +
+  // 끌개가 들어가야 해서 30px 로는 모자란다. 저장된 옛 폭이 남아 있으면
+  // 새 기본값을 넣어도 계속 찌그러진 채로 보인다.
+  var MIN_WORK = 260, MIN_NUM = 44;
   try {
     var s = window.localStorage.getItem(COL_KEY);
     if (s) {
       var a = JSON.parse(s);
       if (a && a.length === 4) {
         if (a[3] < MIN_WORK) a[3] = MIN_WORK;
+        if (a[0] < MIN_NUM) a[0] = MIN_NUM;
         return a;
       }
     }

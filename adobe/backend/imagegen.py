@@ -18,6 +18,7 @@ from pathlib import Path
 from backend import env
 from backend import fal_api
 from backend import llm
+from backend import codex_runner
 from backend.codex_runner import run_skill  # noqa: F401 — 하위 호환 재export
 
 STYLE_FILE = Path(__file__).resolve().parents[1] / "data" / "artstyle" / "semoji.md"
@@ -103,8 +104,26 @@ _BOILERPLATE_RE = re.compile(
 
 
 def _image_python() -> str:
-    """image_gen.py를 돌릴 파이썬(openai 설치 필요). AK_IMAGE_PYTHON > 현재 인터프리터."""
-    return os.environ.get("AK_IMAGE_PYTHON") or sys.executable
+    """image_gen.py를 돌릴 파이썬(openai 설치 필요). AK_IMAGE_PYTHON > 현재 인터프리터.
+
+    ⚠️ `os.environ` 이 아니라 `env.get_key` 로 읽는다. 이 코드베이스의 설정은
+    `.env` 에 적히고 나머지 전부 `env.get_key` 로 읽는데(그쪽이 os.environ 을
+    먼저 보고 없으면 `.env` 를 본다) 여기만 `os.environ` 이었다. 그래서 `.env` 에
+    적어 둔 값이 안 읽혀, 파이썬은 있는데 openai 가 없는 인터프리터로 돌다가
+    아래 `openai_missing` 으로 떨어졌다.
+    """
+    return env.get_key("AK_IMAGE_PYTHON") or sys.executable
+
+
+# openai 가 안 깔린 인터프리터로 돌면 이 자국이 남는다. 재시도해도 소용없다 —
+# 깔기 전에는 몇 번을 돌려도 같다.
+_OPENAI_MISSING_RE = re.compile(
+    r"ModuleNotFoundError.*['\"]openai['\"]|No module named ['\"]openai['\"]",
+    re.IGNORECASE)
+
+
+def _openai_missing(log: str) -> bool:
+    return bool(_OPENAI_MISSING_RE.search(log or ""))
 
 
 def _clean_image_prompt(prompt: str) -> str:
@@ -157,12 +176,24 @@ def _run_codex_image(proj_dir: Path, out: Path, prompt: str, *,
                 if post:
                     post(out)
                 return {"status": "completed", "path": str(out)}
+        if _openai_missing(last):
+            break            # 재시도해도 같다 — 깔기 전에는 안 된다
         if is_rate_limited(last) and attempt < retries:
             time.sleep(20 * (attempt + 1))
             continue
         if attempt < retries:
             continue
         break
+    # **왜 안 됐는지 말한다.** 전에는 무엇이든 `no_file` 이라, 파일이 안 생겼다는
+    # 것만 알려 주고 이유는 안 알려 줬다. 윈도우에서 openai 가 안 깔린 것을
+    # 「그림이 안 나왔다」로만 보고해 원인을 찾는 데 시간을 썼다.
+    if _openai_missing(last):
+        py = _image_python()
+        return {"status": "failed", "error": "openai_missing",
+                "hint": f"이 파이썬에 openai 가 없습니다: {py}\n"
+                        f"  {py} -m pip install openai\n"
+                        f"  또는 .env 의 AK_IMAGE_PYTHON 을 openai 가 깔린 파이썬으로",
+                "log_tail": last[-300:]}
     reason = "rate_limit" if is_rate_limited(last) else "no_file"
     return {"status": "failed", "error": reason, "log_tail": last[-300:]}
 
@@ -249,7 +280,8 @@ def _run_codex_imagegen(out: Path, prompt: str, *, timeout: int = 1200,
     out.parent.mkdir(parents=True, exist_ok=True)
     try:
         proc = subprocess.run(
-            ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
+            [codex_runner.codex_exe(), "exec", "--skip-git-repo-check",
+             "--sandbox", "workspace-write", prompt],
             stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=timeout)
     except FileNotFoundError:
         return {"status": "failed", "error": "codex 명령을 찾을 수 없습니다"}

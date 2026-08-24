@@ -215,7 +215,11 @@
     .sel-range #selRange { flex:0 1 150px; }
     .sel-range #sbFind { flex:1 1 120px; }
     .scene-sel-wrap { display:flex; align-items:center; gap:4px; cursor:pointer; }
-    .scene-sel-wrap input { width:14px; height:14px; margin:0; }
+    /* **체크박스는 줄어들지 않는다.** flex 항목은 기본이 축소 허용이라,
+       칸이 좁으면 `width:14px` 을 적어 두어도 0 까지 눌려 사라진다. 씬# 칸이
+       30px 이었고 그 안에 체크박스·번호·끌개가 함께 들어 있었다 — 화면에서
+       체크박스가 아예 안 보여 「선택이 안 된다」로 보고됐다. */
+    .scene-sel-wrap input { flex:0 0 14px; width:14px; height:14px; margin:0; }
     .sheet-head input { width:13px; height:13px; margin:0 4px 0 0; vertical-align:middle; }
     /* 작업 칸 — 진행 점(●=완료: 이미지·레이어·음성·모션) + 플레이어 + 상태 */
     .col-work .work-dots { display:flex; gap:7px; align-items:center; height:20px; padding-left:6px; }
@@ -830,16 +834,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1333"></script>
-  <script src="js/nav.js?v=1333"></script>
-  <script src="js/planning.js?v=1333"></script>
+  <script src="js/main.js?v=1334"></script>
+  <script src="js/nav.js?v=1334"></script>
+  <script src="js/planning.js?v=1334"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1333"></script>
-  <script src="js/storyboard.js?v=1333"></script>
-  <script src="js/gallery.js?v=1333"></script>
-  <script src="js/genmodal.js?v=1333"></script>
-  <script src="js/assistant.js?v=1333"></script>
+  <script src="js/mapgen.js?v=1334"></script>
+  <script src="js/storyboard.js?v=1334"></script>
+  <script src="js/gallery.js?v=1334"></script>
+  <script src="js/genmodal.js?v=1334"></script>
+  <script src="js/assistant.js?v=1334"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>

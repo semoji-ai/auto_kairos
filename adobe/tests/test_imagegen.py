@@ -382,3 +382,33 @@ def test_style_forbids_grain_texture():
     style = imagegen.load_style().lower()
     for term in ("grain", "noise", "texture", "halftone", "smooth"):
         assert term in style, term
+
+
+# ── 윈도우에서 이미지 생성이 `no_file` 로만 죽던 것 ────────────────────────
+#
+# 원인 둘. ① `AK_IMAGE_PYTHON` 만 `os.environ` 으로 읽어 `.env` 값이 안 읽혔다
+# (나머지는 전부 `env.get_key`). ② openai 미설치가 `no_file` 로 뭉뚱그려져,
+# 무엇이 문제인지 안 알려 주면서 두 번을 더 재시도했다.
+
+def test_image_python_reads_dotenv(monkeypatch):
+    """`.env` 에 적은 값이 읽혀야 한다 — 여기만 os.environ 이었다."""
+    from backend import env, imagegen
+    monkeypatch.setattr(env, "get_key",
+                        lambda n: "/opt/py311/bin/python" if n == "AK_IMAGE_PYTHON" else "")
+    assert imagegen._image_python() == "/opt/py311/bin/python"
+
+
+def test_image_python_falls_back_to_current(monkeypatch):
+    import sys as _sys
+    from backend import env, imagegen
+    monkeypatch.setattr(env, "get_key", lambda n: "")
+    assert imagegen._image_python() == _sys.executable
+
+
+def test_openai_missing_detected():
+    from backend import imagegen
+    assert imagegen._openai_missing(
+        "Traceback...\nModuleNotFoundError: No module named 'openai'")
+    assert imagegen._openai_missing('ImportError: No module named "openai"')
+    assert not imagegen._openai_missing("rate limit exceeded")
+    assert not imagegen._openai_missing("")

@@ -517,6 +517,17 @@ def mirror_structure(proj_dir: Path, data: dict) -> bool:
     **`sceneId` 는 서로 다르다.** 어도비 ID 는 그림·레이어·비디오의 이름이고
     v3 ID 는 음성의 이름이다. 그래서 어도비 ID 가 아니라 **씬 번호가 아니라
     옛 번호↔새 번호 대응**으로 짝을 찾는다 — 그것이 유일하게 공통인 축이다.
+
+    ⚠️ **어도비가 0씬이면 원고를 건드리지 않는다.** 「어도비를 정본으로 삼는다」는
+    어도비가 **실제로 그 편을 들고 있을 때만** 성립한다. 통합 뒤 백엔드는 v3
+    `output/` 폴더를 바로 여는데, v3 프로젝트에는 `scenes.json` 이 없다(원고는
+    `scene_specs.json` 이다). 그러면 `load_scenes` 가 빈 목록을 돌려주고, 이
+    함수가 그것을 「142씬이 전부 지워졌다」로 읽어 광고주 컨펌본을 통째로 비운다.
+    실제로 디아지오 편에서 그렇게 됐다 — 679,595 B / 142씬이 265 B / 0씬이 됐고,
+    방아쇠는 패널에서 씬 구성을 한 번 만진 것뿐이었다.
+
+    **빈 것과 지워진 것은 다르다.** 데이터가 없는 상태를 「전부 삭제」로 읽지
+    않는다. 지우는 것은 되돌릴 수 없고, 안 지우는 것은 언제든 되돌릴 수 있다.
     """
     fp = Path(proj_dir) / SPECS
     if not fp.is_file():
@@ -524,6 +535,9 @@ def mirror_structure(proj_dir: Path, data: dict) -> bool:
     try:
         spec = json.loads(fp.read_text(encoding="utf-8"))
         rows = spec.get("scenes") if isinstance(spec, dict) else spec
+        if not data.get("scenes") and (rows or []):
+            # 어도비 쪽에 씬이 하나도 없다 — 정본이 될 자격이 없다.
+            return False
         by_num = {}
         for s in rows or []:
             try:
@@ -546,6 +560,14 @@ def mirror_structure(proj_dir: Path, data: dict) -> bool:
                 src["title"] = s.get("title", src.get("title", ""))
             src["sceneNumber"] = n
             out.append(src)
+        # 크게 줄어들면 덮어쓰기 전에 한 벌 남긴다. 0씬 가드는 **완전한 공백**만
+        # 막는다 — 142씬이 3씬으로 오는 부분 손실은 못 걸러 내고, 그것도 되돌릴
+        # 수 없기는 마찬가지다. 지우기 전에 남기는 값이 남기지 않는 값보다 늘 싸다.
+        if len(out) * 2 < len(rows or []):
+            bak = fp.with_suffix(f".bak_{len(rows or [])}scenes.json")
+            if not bak.exists():
+                bak.write_text(json.dumps(spec, ensure_ascii=False, indent=2),
+                               encoding="utf-8")
         if isinstance(spec, dict):
             spec["scenes"] = out
         else:
