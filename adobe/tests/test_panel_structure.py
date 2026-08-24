@@ -945,3 +945,17 @@ def test_pick_import_has_bulk_filters():
     js = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
     assert 'data-layers' in js and 'data-video' in js
     assert 'id="pickLayers"' in (PANEL / "index.html").read_text(encoding="utf-8")
+
+
+def test_pick_import_chooses_kinds_too():
+    """씬만이 아니라 **무엇을** 넣을지도 고른다 — 이미지·레이어·영상·음성, 그리고 벡터 여부."""
+    html = (PANEL / "index.html").read_text(encoding="utf-8")
+    js = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
+    for k in ("image", "layers", "vector", "video", "audio"):
+        assert 'data-k="%s"' % k in html, k
+    assert "function pickKinds()" in js
+    # 매니페스트까지 실제로 전해져야 한다 — 화면에만 있으면 아무 일도 안 일어난다
+    assert "bodyObj.include = include" in js
+    assert "_assemble(ns," in js and "kinds);" in js
+    # 레이어를 안 넣으면 벡터는 물을 것이 없다
+    assert "function pickKindsSync()" in js

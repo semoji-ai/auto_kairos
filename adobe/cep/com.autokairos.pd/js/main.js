@@ -289,6 +289,20 @@ function openPickImport() {
 
 function pickBoxes() { return $("pickList").querySelectorAll(".pkc"); }
 
+/* 무엇을 넣을지 — 안 고른 것은 매니페스트에서 아예 빠진다. */
+function pickKinds() {
+  var out = {}, k = document.querySelectorAll(".pkk");
+  for (var i = 0; i < k.length; i++) { out[k[i].getAttribute("data-k")] = k[i].checked; }
+  return out;
+}
+
+/* 레이어를 안 넣으면 「벡터」는 물을 것이 없다 — 흐리게 둔다. */
+function pickKindsSync() {
+  var lay = document.querySelector('.pkk[data-k="layers"]');
+  var w = $("pkVecWrap");
+  if (lay && w) { w.className = lay.checked ? "" : "off"; }
+}
+
 function pickCount() {
   var b = pickBoxes(), n = 0;
   for (var i = 0; i < b.length; i++) { if (b[i].checked) { n++; } }
@@ -308,18 +322,24 @@ function pickGo() {
     if (b[i].checked) { ns.push(parseFloat(b[i].getAttribute("data-n"))); }
   }
   if (!ns.length) { $("pickStatus").textContent = "고른 씬이 없습니다."; return; }
-  _assemble(ns, function (m) { $("pickStatus").textContent = m; $("aeresult").textContent = m; });
+  var kinds = pickKinds();
+  if (!kinds.image && !kinds.layers && !kinds.video && !kinds.audio) {
+    $("pickStatus").textContent = "넣을 종류를 하나는 고르세요."; return;
+  }
+  _assemble(ns, function (m) { $("pickStatus").textContent = m; $("aeresult").textContent = m; },
+            kinds);
 }
 
 /* AE 컴프 조립. scope=null이면 전체, 숫자면 그 씬, 배열이면 그 씬들만(한 번의 호출로).
    여러 씬을 한 번에 넘겨야 매니페스트 빌드·jsx 실행이 씬 수만큼 반복되지 않는다. */
-function _assemble(scope, statusFn) {
+function _assemble(scope, statusFn, include) {
   if (!SELECTED_PROJECT) { (statusFn || function (m) { $("aeresult").textContent = m; })("프로젝트를 먼저 선택하세요."); return; }
   var setS = statusFn || function (m) { $("aeresult").textContent = m; };
   setS("매니페스트 빌드 중...");
   var bodyObj = { project_id: SELECTED_PROJECT };
   if (scope instanceof Array) { bodyObj.sceneNumbers = scope; }
   else if (scope != null) { bodyObj.sceneNumber = scope; }
+  if (include) { bodyObj.include = include; }   // 무엇을 넣을지 — 없으면 다 넣는다
   return fetch(BACKEND + "/api/assembly/manifest", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify(bodyObj),
@@ -701,6 +721,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (pg) pg.addEventListener("click", pickGo);
   var plst = $("pickList");
   if (plst) plst.addEventListener("change", pickCount);
+  var pk = $("pickKinds");
+  if (pk) pk.addEventListener("change", pickKindsSync);
   var bqr = $("btnQueueRender");
   if (bqr) bqr.addEventListener("click", queueRender);
   var bsu = $("btnSubtitles");

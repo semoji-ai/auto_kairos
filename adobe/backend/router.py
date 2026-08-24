@@ -374,7 +374,8 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         if not proj_dir.is_dir():
             return 404, {"error": "프로젝트 없음"}
         mres = manifest.build_manifest(proj_dir, only_scene=b.get("sceneNumber"),
-                                       only_scenes=b.get("sceneNumbers"))
+                                       only_scenes=b.get("sceneNumbers"),
+                                       include=b.get("include"))
         scope = b.get("sceneNumbers") or ([b["sceneNumber"]] if b.get("sceneNumber") else None)
         vault.log_work(proj_dir, "assemble",
                        f"매니페스트 빌드(씬 {mres.get('scenes')}개"

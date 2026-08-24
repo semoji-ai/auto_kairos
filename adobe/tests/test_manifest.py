@@ -597,3 +597,70 @@ def test_layout_scene_keeps_its_layers(tmp_path):
     assert sc["layout"] != "cinematic"        # 레이아웃 씬이다(= 예전엔 버려졌다)
     names = [L["name"] for L in sc["layers"]]
     assert "ab__bg" in names and "ab__0_잔" in names
+
+
+# ── 무엇을 넣을지 고르기 ────────────────────────────────────────────────
+
+def _rich(tmp_path):
+    """그림·레이어(SVG+PNG)·영상·음성이 다 있는 씬 하나."""
+    from PIL import Image
+    d = _proj(tmp_path, [{"sceneNumber": 1, "sceneId": "ab", "imageRef": "storyboard/sb.png",
+                          "duration_estimate_sec": 5}])
+    (d / "storyboard").mkdir(); Image.new("RGB", (200, 200)).save(d / "storyboard" / "sb.png")
+    lay = d / "layers"; lay.mkdir()
+    im = Image.new("RGBA", (200, 200), (0, 0, 0, 0))
+    for y in range(50, 150):
+        for x in range(80, 120):
+            im.putpixel((x, y), (200, 30, 40, 255))
+    im.save(lay / "ab__0_잔.png")
+    Image.new("RGBA", (200, 200), (9, 9, 9, 255)).save(lay / "ab__bg.png")
+    for stem in ("ab__0_잔", "ab__bg"):
+        (lay / f"{stem}.svg").write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" '
+            'width="200" height="200"><path d="M0 0L10 10Z"/></svg>', encoding="utf-8")
+    (d / "video").mkdir()
+    (d / "video" / "v_ab_minimax_h3.mp4").write_bytes(b"\x00\x00\x00\x18ftypmp42")
+    return d
+
+
+def _one(d):
+    return json.loads((d / "manifest.json").read_text(encoding="utf-8"))["scenes"][0]
+
+
+def test_include_default_is_everything(tmp_path):
+    """빠뜨린 항목은 넣는 것으로 본다 — 옛 호출부가 그대로 돌아야 한다."""
+    d = _rich(tmp_path)
+    manifest.build_manifest(d)
+    s = _one(d)
+    assert s["image"] and s["video"] and len(s["layers"]) == 2
+
+
+def test_include_drops_what_you_did_not_pick(tmp_path):
+    """안 고른 것은 매니페스트에서 **아예 뺀다** — jsx 는 없는 키를 건너뛴다."""
+    d = _rich(tmp_path)
+    manifest.build_manifest(d, include={"video": False, "image": False})
+    s = _one(d)
+    assert not s["image"] and "video" not in s
+    assert "imageFit" not in s          # 그림을 안 넣으면 그 자리 계산도 뺀다
+    assert len(s["layers"]) == 2        # 레이어는 그대로
+
+
+def test_include_layers_off(tmp_path):
+    d = _rich(tmp_path)
+    manifest.build_manifest(d, include={"layers": False})
+    assert _one(d)["layers"] == []
+
+
+def test_vector_off_uses_png(tmp_path):
+    """벡터를 끄면 SVG 가 있어도 PNG 로 넣는다.
+
+    벡터는 확대해도 안 깨지지만 쉐이프가 수십 장 쏟아져 타임라인이 무겁다 —
+    손볼 씬만 벡터로 넣고 나머지는 그림으로 두고 싶을 때가 있다.
+    """
+    d = _rich(tmp_path)
+    manifest.build_manifest(d, include={"vector": False})
+    lay = _one(d)["layers"]
+    assert lay and not any(L.get("vector") for L in lay)
+    assert all(L["path"].endswith(".png") for L in lay)
+    manifest.build_manifest(d, include={"vector": True})
+    assert all(L.get("vector") for L in _one(d)["layers"])

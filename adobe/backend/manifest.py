@@ -165,7 +165,7 @@ def camera_keys(cam, *, sw, sh, f: float, ox: float, dur: float,
 
 def _scene_layers(proj_dir: Path, layer_rels: list, sid: str = "", scene_width: int | None = None,
                   *, prefix: str = "", f: float = 1.0, ox: float = 0.0,
-                  scene_height: int | None = None) -> list:
+                  scene_height: int | None = None, vector: bool = True) -> list:
     """[{name, aeName, path, kind, position, scale, foot?}] — 배경(__bg)을 맨 앞(최하단)으로.
 
     좌표는 **컴프 공간**이다. layerize 레이어는 요소 크기로 크롭돼 오므로 사이드카 bbox로
@@ -198,8 +198,11 @@ def _scene_layers(proj_dir: Path, layer_rels: list, sid: str = "", scene_width: 
         is_bg = "__bg" in Path(r).name
         # 벡터화한 레이어는 SVG로 내보낸다 — AE에서 연속 래스터화를 켜면 확대해도 깨지지 않는다.
         # 크기 계산은 PNG 기준을 그대로 쓴다. PIL은 SVG를 읽지 못한다.
+        # `vector=False` 면 SVG 가 있어도 PNG 로 넣는다. 벡터는 확대해도 안
+        # 깨지지만 쉐이프가 수십 장 쏟아져 타임라인이 무거워진다 — 손볼 씬만
+        # 벡터로 넣고 나머지는 그림으로 두고 싶을 때가 있다.
         svg_rel = str(Path(r).with_suffix(".svg"))
-        has_svg = (proj_dir / svg_rel).is_file()
+        has_svg = vector and (proj_dir / svg_rel).is_file()
         if is_bg:
             ae_name = prefix + "배경"
         else:
@@ -336,12 +339,25 @@ def _alpha_foot(path: Path) -> list | None:
 
 
 def build_manifest(proj_dir: Path, only_scene: int | None = None,
-                   only_scenes: list | None = None) -> dict:
+                   only_scenes: list | None = None, include: dict | None = None) -> dict:
     """manifest.json 생성. 반환 {path, scenes}.
 
     only_scene = 한 씬(manifest_scene_{n}.json), only_scenes = 여러 씬(manifest_subset.json).
     둘 다 없으면 전체(manifest.json). 평면 구조에서는 Final이 유일한 컴프이므로 부분
-    빌드도 같은 컴프에 들어간다 — 각 씬은 자기 start(전체 타임라인 기준)를 그대로 낸다."""
+    빌드도 같은 컴프에 들어간다 — 각 씬은 자기 start(전체 타임라인 기준)를 그대로 낸다.
+
+    `include` 로 **무엇을 넣을지** 고른다 — 안 넣는 것은 매니페스트에서 아예
+    뺀다. jsx 는 없는 키를 건너뛰므로 따로 고칠 것이 없다.
+
+        {"image": True, "layers": True, "video": True, "audio": True,
+         "vector": True}      # vector=False → 레이어를 PNG 로
+
+    빠뜨린 항목은 넣는 것으로 본다. 그래야 옛 호출부가 그대로 돈다.
+    """
+    inc = dict(include or {})
+
+    def want(k):
+        return inc.get(k, True)
     proj_dir = Path(proj_dir)
     data = scenes.load_scenes(proj_dir)
     starts = {}
@@ -357,7 +373,7 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
         if picked is not None and _key(s.get("sceneNumber")) not in picked:
             continue
         sid = s.get("sceneId")
-        audio = _abs(proj_dir, s["_audio"]) if s.get("_audio") else None
+        audio = _abs(proj_dir, s["_audio"]) if (want("audio") and s.get("_audio")) else None
         # **시작점과 같은 격자를 쓴다.** 시작은 프레임에 맞추고 길이는 실측
         # 그대로 쓰면 씬 끝이 다음 씬 시작과 어긋난다.
         dur = timeline.snap(timeline.scene_duration(proj_dir, s))
@@ -390,7 +406,8 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
         # 레이아웃 글자는 조립할 때 맨 위에 그리므로 가려지지 않는다.
         layers = _scene_layers(
             proj_dir, s.get("_layers") or [], sid, sw,
-            prefix=prefix, f=f, ox=ox, scene_height=sh)
+            prefix=prefix, f=f, ox=ox, scene_height=sh,
+            vector=want("vector")) if want("layers") else []
         # 레이어 종류(캐릭터/사물) — 옛 모션 사이드카·기본 bob 규칙 둘 다 이걸 쓴다.
         kinds = {}
         kp = proj_dir / "layers" / f"{sid}__kinds.json"
@@ -470,14 +487,15 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
         out_scenes.append({
             "ae_comp_name": timeline.comp_name(s),
             "width": sw, "height": sh,
-            "image": _abs(proj_dir, s["_image"]) if s.get("_image") else None,
+            "image": _abs(proj_dir, s["_image"]) if (want("image") and s.get("_image")) else None,
             # **영상이 있으면 그것이 그 씬의 화면이다.**
             #
             # 영상은 씬 그림을 움직인 것이라, 그림·레이어와 같은 자리를 두고
             # 다툰다. 셋을 다 얹으면 겹쳐서 아무것도 안 보인다. 있으면
             # 영상만 얹고 그림과 레이어는 건너뛴다 — 판단은 jsx 가 한다.
             **({"video": _abs(proj_dir, str(_vid.relative_to(proj_dir)))}
-               if (_vid := _scene_video(proj_dir, str(s.get("sceneId") or ""))) else {}),
+               if (want("video")
+                   and (_vid := _scene_video(proj_dir, str(s.get("sceneId") or "")))) else {}),
             "layers": layers,
             "audio": audio,
             "subtitle": scenes.subtitle_text(s),   # 화면 표시용(TTS 발음 텍스트 아님)
@@ -492,7 +510,7 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
             "bgFill": (sw * f) < (W - 1),
             **({"imageFit": {"position": [sw * f / 2 + ox, sh * f / 2],
                              "scale": sw * f / float((_img_size(proj_dir / s["_image"]) or (sw, sh))[0] or sw) * 100}}
-               if s.get("_image") else {}),
+               if (want("image") and s.get("_image")) else {}),
             "layout": layout,
             **({"infoTexts": info_texts} if info_texts else {}),
             **({"infoBackground": (s.get("infographic") or {}).get("background")}

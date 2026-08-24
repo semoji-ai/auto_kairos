@@ -425,6 +425,14 @@
     .col-work .te-acts .mini { width:auto; margin:0; }
 
     /* 모달(이미지 생성 + 레이어 선택 공용) */
+    /* 종류 고르기 — 레이어는 벡터(SVG)로 넣을지 그림(PNG)으로 넣을지 함께 고른다.
+       벡터는 확대해도 안 깨지지만 쉐이프가 수십 장 쏟아져 타임라인이 무겁다. */
+    #pickKinds { display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+      margin-bottom:8px; font-size:11px; color:#c5c8cc; }
+    #pickKinds label { display:flex; align-items:center; gap:4px; cursor:pointer; }
+    #pickKinds input { width:13px; height:13px; margin:0; }
+    #pickKinds #pkVecWrap { margin-left:-4px; color:#9aa0a6; }
+    #pickKinds #pkVecWrap.off { opacity:.4; }
     /* 골라 넣기 목록 — 씬마다 무엇이 있는지 한 줄로 */
     #pickList { max-height:52vh; overflow-y:auto; border:1px solid #33363c; border-radius:4px; }
     #pickList .pk { display:flex; align-items:center; gap:6px; padding:3px 7px;
@@ -830,6 +838,14 @@
   <div id="pickModal" hidden>
     <div class="gen-box">
       <div class="gen-head">무엇을 넣을까요 <button id="pickClose" class="mini">✕</button></div>
+      <div id="pickKinds">
+        <span class="sab-hint">무엇을:</span>
+        <label><input type="checkbox" class="pkk" data-k="image" checked>이미지</label>
+        <label><input type="checkbox" class="pkk" data-k="layers" checked>레이어</label>
+        <label id="pkVecWrap"><input type="checkbox" class="pkk" data-k="vector" checked>벡터(SVG)</label>
+        <label><input type="checkbox" class="pkk" data-k="video" checked>영상</label>
+        <label><input type="checkbox" class="pkk" data-k="audio" checked>음성</label>
+      </div>
       <div id="pickBar" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
         <button id="pickAll" class="mini">전체</button>
         <button id="pickNone" class="mini alt">해제</button>
@@ -879,16 +895,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1355"></script>
-  <script src="js/nav.js?v=1355"></script>
-  <script src="js/planning.js?v=1355"></script>
+  <script src="js/main.js?v=1356"></script>
+  <script src="js/nav.js?v=1356"></script>
+  <script src="js/planning.js?v=1356"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1355"></script>
-  <script src="js/storyboard.js?v=1355"></script>
-  <script src="js/gallery.js?v=1355"></script>
-  <script src="js/genmodal.js?v=1355"></script>
-  <script src="js/assistant.js?v=1355"></script>
+  <script src="js/mapgen.js?v=1356"></script>
+  <script src="js/storyboard.js?v=1356"></script>
+  <script src="js/gallery.js?v=1356"></script>
+  <script src="js/genmodal.js?v=1356"></script>
+  <script src="js/assistant.js?v=1356"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>
