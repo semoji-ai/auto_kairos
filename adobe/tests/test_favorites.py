@@ -85,14 +85,31 @@ def test_reveal_is_cross_platform():
     assert "xdg-open" in src
 
 
-def test_panel_opens_favorites_first():
-    """열면 즐겨찾기부터 — 1044장을 깔지 않는다."""
+def test_source_panel_shows_favorites_only():
+    """소스 칸에 **프로젝트 이미지를 깔지 않는다.**
+
+    디아지오편 1044장이고 그중 565장이 같은 내용의 사본이다 — 다 깔면 정작
+    자주 쓰는 배경 한 장을 못 찾는다. 씬 이미지와 에셋은 이미 왼쪽 시트에
+    있으니 같은 것을 오른쪽에 또 깔 이유가 없다.
+    """
     js = (PANEL / "js" / "gallery.js").read_text(encoding="utf-8")
     html = (PANEL / "index.html").read_text(encoding="utf-8")
-    assert 'srcView("fav")' in js
-    assert 'data-v="fav"' in html and 'data-v="proj"' in html
-    # 프로젝트 쪽에는 폴더 열기 — 끌어다 쓰라고
+    assert "loadFavorites();" in js
+    assert 'data-v="proj"' not in html          # 프로젝트 탭은 없앴다
+    assert "srct-title" in html
+    # 프로젝트 소스는 폴더를 열어 끌어다 쓴다
     assert 'id="srcFolders"' in html and 'data-d="storyboard"' in html
     assert "function revealFolder(" in js
-    # 프로젝트 칸의 ☆ 로 담는다
-    assert "function favAdd(" in js and 'class="fav-star"' in js
+
+
+def test_two_ways_to_register():
+    """담는 길은 둘 — 왼쪽 시트의 ☆, 그리고 파인더에서 끌어다 놓기."""
+    gal = (PANEL / "js" / "gallery.js").read_text(encoding="utf-8")
+    sb = (PANEL / "js" / "storyboard.js").read_text(encoding="utf-8")
+    # ① 시트의 ☆ — 씬 이미지와 레이어 양쪽에
+    assert sb.count('class="fav-add"') >= 2
+    assert "/api/favorites/add" in sb
+    assert "sheet.__favWired" in sb          # 위임 — 행이 다시 그려져도 산다
+    # ② 끌어다 놓기
+    assert "function wireFavDrop(" in gal
+    assert "fs[i].path" in gal               # CEP 는 실제 경로를 준다

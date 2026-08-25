@@ -371,6 +371,13 @@
     .tools-preset .pbtn:hover { background:#3a6df0; }
     .tools-preset input { background:#23262b; color:#e6e6e6; border:1px solid #33363c;
       border-radius:4px; padding:3px 5px; font-size:11px; }
+    /* 거는 모션 — 키프레임 프리셋(pbtn)과 눈으로 구분되게 테두리를 준다.
+       둘이 같아 보이면 「걸고 나서 고칠 수 있는 것」이 어느 쪽인지 알 수 없다. */
+    .tools-preset .fxbtn { width:auto; margin:0; padding:4px 9px; font-size:11px;
+      background:#2a2d34; border:1px solid #4a5570; border-radius:5px; }
+    .tools-preset .fxbtn:hover { background:#3a6df0; }
+    .tools-hint { font-size:10px; color:#7c828a; line-height:1.5; margin:3px 0 2px 0; }
+    .tools-hint b { color:#9aa8c4; font-weight:600; }
 
     /* 레이어 고치기 모달 */
     #posePrompt { width:100%; box-sizing:border-box; background:#23262b; color:#e6e6e6;
@@ -429,15 +436,21 @@
     /* 모달(이미지 생성 + 레이어 선택 공용) */
     /* 소스 칸 — 즐겨찾기와 프로젝트를 갈아 낀다 */
     #srcTabs { display:flex; gap:4px; align-items:center; margin-bottom:6px; }
-    #srcTabs .srct { width:auto; margin:0; padding:3px 9px; font-size:11px;
-      border:1px solid #33363c; border-radius:3px; background:#26292f; color:#c5c8cc;
-      cursor:pointer; }
-    #srcTabs .srct.on { background:#3a6df0; color:#fff; border-color:#3a6df0; }
+    #srcTabs .srct-title { font-size:12px; color:#e8eaed; }
     #srcTabs #btnFavFolder { margin-left:auto; }
     #srcFolders { display:flex; flex-wrap:wrap; gap:4px; align-items:center;
       margin-bottom:6px; }
-    #srcFolders[hidden] { display:none; }
+    /* 끌어다 놓아 담기 — 파인더에서 끌어오면 즐겨찾기에 들어간다 */
+    #gallery-panel.fav-drop { outline:2px dashed #3a6df0; outline-offset:-3px; }
     #srcFolders .fdr { width:auto; margin:0; padding:2px 7px; font-size:10px; }
+    /* ☆ — 시트에서 즐겨찾기에 담는다. 소스 칸은 프로젝트 이미지를 깔지
+       않으므로 담는 자리는 여기다. */
+    .fav-add { width:auto; margin:0; padding:0 3px; font-size:12px; line-height:1;
+      border:0; background:transparent; color:#6b7078; cursor:pointer; }
+    .fav-add:hover { color:#f5c14b; }
+    .fav-add.on { color:#f5c14b; }
+    .col-img .fav-add { position:absolute; top:2px; right:20px; z-index:3;
+      background:rgba(20,22,26,.72); border-radius:3px; }
     .fav-star { width:auto; margin:0; padding:0 3px; font-size:12px; line-height:1;
       border:0; background:transparent; color:#6b7078; cursor:pointer; }
     .fav-star.on { color:#f5c14b; }
@@ -647,13 +660,12 @@
                  찾는 것은 일이다. 담아 둔 것만 깔고, 프로젝트 소스는 폴더를
                  열어 끌어다 쓴다. -->
             <div id="srcTabs">
-              <button class="srct on" data-v="fav">⭐ 즐겨찾기</button>
-              <button class="srct" data-v="proj">📁 프로젝트</button>
+              <span class="srct-title">⭐ 즐겨찾기</span>
               <button id="btnFavFolder" class="mini alt"
-                title="즐겨찾기 폴더를 탐색기에서 엽니다 — 끌어다 쓰세요">폴더 열기</button>
+                title="즐겨찾기 폴더를 탐색기에서 엽니다">폴더 열기</button>
             </div>
-            <div id="srcFolders" hidden>
-              <span class="sab-hint">폴더 열기:</span>
+            <div id="srcFolders">
+              <span class="sab-hint">프로젝트 폴더 열기:</span>
               <button class="mini alt fdr" data-d="storyboard">씬 이미지</button>
               <button class="mini alt fdr" data-d="images">생성 이미지</button>
               <button class="mini alt fdr" data-d="layers">레이어</button>
@@ -771,6 +783,32 @@
           <button class="mini pbtn" data-preset="exit_fade" title="끝에서 사라집니다">퇴장</button>
           <span class="mini-label">세기</span>
           <input type="text" id="presetAmt" placeholder="기본값" style="width:56px">
+        </div>
+
+        <!-- 거는 모션 — 키프레임이 아니라 익스프레션이라 **걸고 나서 고친다.**
+             시점은 타임라인의 AK등장/AK퇴장 마커를 끌어서,
+             세기는 이펙트 컨트롤 창의 슬라이더로. -->
+        <div class="tools-row tools-preset">
+          <label class="mini-label">거는 모션</label>
+          <button class="mini fxbtn" data-fx="overshoot_scale" title="작게 시작해 살짝 지나쳤다 제자리로 — 가장 많이 쓰는 등장">오버슛 스케일</button>
+          <button class="mini fxbtn" data-fx="scale" title="작게 시작해 곧장 제자리로">스케일</button>
+          <button class="mini fxbtn" data-fx="bounce_scale" title="여러 번 튀며 자리를 잡습니다">바운스 스케일</button>
+        </div>
+        <div class="tools-row tools-preset">
+          <label class="mini-label">&nbsp;</label>
+          <button class="mini fxbtn" data-fx="position" title="화면 밖에서 밀고 들어옵니다 — 방향은 이펙트 컨트롤에서">포지션 인</button>
+          <button class="mini fxbtn" data-fx="overshoot_position" title="밀고 들어와 살짝 지나쳤다 돌아옵니다">오버슛 포지션</button>
+          <button class="mini fxbtn" data-fx="fade" title="투명도만 오릅니다">서서히</button>
+          <button class="mini fxbtn" data-fx="stamp" title="크게서 찍히듯 들어옵니다">도장</button>
+        </div>
+        <div class="tools-row tools-preset">
+          <label class="mini-label">&nbsp;</label>
+          <button class="mini alt" id="fxBakeBtn" title="익스프레션을 키프레임으로 굽습니다 — mogrt·외부 이관용">키프레임으로 굽기</button>
+          <button class="mini alt" id="fxClearBtn" title="AK가 건 이펙트·식·마커만 걷어냅니다">해제</button>
+        </div>
+        <div class="tools-hint">
+          시점은 <b>AK등장 / AK퇴장 마커</b>를 끌어서, 세기는 <b>이펙트 컨트롤</b>에서 고칩니다.
+          「AK 모션」 이펙트의 <b>fx 토글</b>을 끄면 통째로 꺼집니다.
         </div>
         <div id="toolsStatus" class="tools-status"></div>
       </div>
@@ -937,16 +975,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1360"></script>
-  <script src="js/nav.js?v=1360"></script>
-  <script src="js/planning.js?v=1360"></script>
+  <script src="js/main.js?v=1361"></script>
+  <script src="js/nav.js?v=1361"></script>
+  <script src="js/planning.js?v=1361"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1360"></script>
-  <script src="js/storyboard.js?v=1360"></script>
-  <script src="js/gallery.js?v=1360"></script>
-  <script src="js/genmodal.js?v=1360"></script>
-  <script src="js/assistant.js?v=1360"></script>
+  <script src="js/mapgen.js?v=1361"></script>
+  <script src="js/storyboard.js?v=1361"></script>
+  <script src="js/gallery.js?v=1361"></script>
+  <script src="js/genmodal.js?v=1361"></script>
+  <script src="js/assistant.js?v=1361"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>

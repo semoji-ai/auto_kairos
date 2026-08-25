@@ -430,7 +430,8 @@ function renderLayerList(s, dir) {
     var nameCell = '<span class="lyr-name" title="' + _esc(stem) + '">'
                  + _esc(m.name || stem) + '</span>'
                  + '<span class="lyr-kind">' + kindLabel + '</span>'
-                 + (m.svg ? '<span class="lyr-badge">SVG</span>' : '');
+                 + (m.svg ? '<span class="lyr-badge">SVG</span>' : '')
+                 + '<button class="fav-add" data-rel="' + _esc(rels[i]) + '" title="즐겨찾기에 담습니다">☆</button>';
     if (m.removed) {
       gone += '<div class="lyr-row gone" data-scene="' + n + '" data-layer="' + _esc(stem) + '">'
             +   thumb + nameCell
@@ -577,6 +578,9 @@ function renderRow(s, dir) {
     // 이미지 미리보기 + 레이어 썸네일(클릭=씬 위에 빨간 윤곽선 오버레이)
     + '  <div class="col-img">'
     +      (s._image ? '<button class="unlink-img" data-scene="' + n + '" title="씬 이미지 링크 해제">✕</button>' : '')
+    /* ☆ — 즐겨찾기에 담는다. 소스 칸은 프로젝트 이미지를 깔지 않으므로
+       **담는 자리는 여기다.** 씬 이미지와 에셋은 이미 이 시트에 있다. */
+    +      (s._image ? '<button class="fav-add" data-rel="' + _esc(s._image) + '" title="즐겨찾기에 담습니다">☆</button>' : '')
     /* 볼 수 있는 것만 단추로 낸다 — 레이어가 없는 씬에 「레이어」가 있으면
        눌러도 아무 일이 안 일어나 고장으로 보인다. */
     +      _pvSwitch(n, mode, !!comp, !!s.videoRef)
@@ -687,6 +691,26 @@ function bindRows(scope) {
   }
   // 미리보기를 누르면 크게 본다. 썸네일은 200px 남짓이라 도해 글자도
   // 자막 자리도 확인할 수 없다 — 화면을 보고 판단하려면 크게 봐야 한다.
+  // ☆ 는 시트 전체에 위임한다 — 행이 다시 그려질 때마다 걸면 새는 곳이 생긴다
+  var sheet = $("sheet");
+  if (sheet && !sheet.__favWired) {
+    sheet.__favWired = true;
+    sheet.addEventListener("click", function (ev) {
+      var b = ev.target.closest ? ev.target.closest(".fav-add") : null;
+      if (!b) { return; }
+      ev.preventDefault(); ev.stopPropagation();
+      var rel = b.getAttribute("data-rel");
+      fetch(BACKEND + "/api/favorites/add", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_id: SELECTED_PROJECT, rel: rel,
+                               label: String(rel).split("/").pop() }),
+      }).then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (j.ok) { b.textContent = "★"; b.classList.add("on"); }
+          if (typeof loadFavorites === "function") { loadFavorites(); }
+        }).catch(function () { });
+    }, true);
+  }
   var wraps = scope.querySelectorAll(".col-img .img-wrap");
   for (var wi2 = 0; wi2 < wraps.length; wi2++) {
     wraps[wi2].addEventListener("click", function (ev) {
@@ -1962,6 +1986,16 @@ function _runTool(call) {
   return evalScript(jsx + "\n" + call).then(function (r) { _toolsSay(r || "(빈 응답)"); });
 }
 
+/* 거는 모션(motion_fx.jsx) — 익스프레션 + 이펙트 컨트롤 + 마커.
+   tools.jsx 와 파일을 나눈 이유는 방식이 아예 달라서다. 저쪽은 키프레임을
+   찍고 끝이고, 이쪽은 걸어 둔 뒤 마커와 슬라이더로 계속 고친다. */
+function _runFx(call) {
+  var jsx;
+  try { jsx = readLocal("./jsx/json2.jsx") + "\n" + readLocal("./jsx/motion_fx.jsx"); }
+  catch (e) { _toolsSay("jsx 로드 실패: " + e); return; }
+  return evalScript(jsx + "\n" + call).then(function (r) { _toolsSay(r || "(빈 응답)"); });
+}
+
 function importSrtFile() {
   var inp = $("srtFile");
   if (!inp || !inp.files || !inp.files.length) { _toolsSay("SRT 파일을 고르세요"); return; }
@@ -1999,6 +2033,22 @@ function bindTools() {
                + ", " + JSON.stringify(a) + ");");
     });
   }
+  // 거는 모션 — 걸고 나서 마커·슬라이더로 고치는 쪽
+  var fb = document.querySelectorAll("button.fxbtn");
+  for (var fi = 0; fi < fb.length; fi++) {
+    fb[fi].addEventListener("click", function () {
+      _toolsSay(this.textContent + " 거는 중…");
+      _runFx("akFxApply(" + JSON.stringify(this.getAttribute("data-fx")) + ", \"\");");
+    });
+  }
+  var bk = $("fxBakeBtn");
+  if (bk) bk.addEventListener("click", function () {
+    _toolsSay("굽는 중…"); _runFx("akFxBake();");
+  });
+  var cl = $("fxClearBtn");
+  if (cl) cl.addEventListener("click", function () {
+    _toolsSay("걷어내는 중…"); _runFx("akFxClear();");
+  });
 }
 
 document.addEventListener("DOMContentLoaded", bindTools);

@@ -20,15 +20,19 @@ var GAL_FILTER = "전체";
 var SRC_VIEW = "fav";
 var FAV_MD5 = {};        // 이미 담긴 것 — 별을 채워 보이려고
 
+/* 소스 칸은 **즐겨찾기만** 보인다.
+
+   프로젝트 이미지를 여기 깔지 않는다. 디아지오편 1044장이고 그중 565장이 같은
+   내용의 사본이다 — 다 깔아 두면 정작 자주 쓰는 배경 한 장을 못 찾는다.
+   씬 이미지와 에셋은 **이미 왼쪽 시트에 있다.** 같은 것을 오른쪽에 또 깔 이유가
+   없다.
+
+   담는 길은 둘이다.
+     · 왼쪽 시트의 씬 이미지·레이어에서 ☆
+     · 파인더에서 이 칸에 끌어다 놓기 */
 function srcView(v) {
-  SRC_VIEW = v;
-  var b = document.querySelectorAll("#srcTabs .srct");
-  for (var i = 0; i < b.length; i++) {
-    b[i].classList.toggle("on", b[i].getAttribute("data-v") === v);
-  }
-  var fd = $("srcFolders");
-  if (fd) { fd.hidden = (v !== "proj"); }
-  if (v === "fav") { loadFavorites(); } else { loadGallery(); }
+  SRC_VIEW = "fav";
+  loadFavorites();
 }
 
 function loadFavorites() {
@@ -41,7 +45,9 @@ function loadFavorites() {
       for (var i = 0; i < its.length; i++) { FAV_MD5[its[i].md5] = its[i].name; }
       if (!its.length) {
         box.innerHTML = '<div style="font-size:11px;color:#8b9098;line-height:1.7">'
-          + '담아 둔 것이 없습니다.<br>「📁 프로젝트」에서 ☆ 를 눌러 담으세요.<br>'
+          + '담아 둔 것이 없습니다.<br><br>'
+          + '· 왼쪽 시트의 씬 이미지·레이어에서 <b>☆</b><br>'
+          + '· 파인더에서 이 칸에 <b>끌어다 놓기</b><br><br>'
           + '자주 쓰는 배경은 편이 바뀌어도 여기 남습니다.</div>';
         return;
       }
@@ -58,6 +64,35 @@ function loadFavorites() {
       _wireFavRemove();
     })
     .catch(function (e) { box.textContent = "오류: " + e; });
+}
+
+/* 파인더에서 끌어다 놓으면 담는다 — 프로젝트 밖의 소스도 이렇게 들인다. */
+function wireFavDrop() {
+  var box = $("gallery-panel");
+  if (!box || box.__favDrop) { return; }
+  box.__favDrop = true;
+  box.addEventListener("dragover", function (e) {
+    if (e.dataTransfer && e.dataTransfer.types.indexOf("Files") !== -1) {
+      e.preventDefault(); box.classList.add("fav-drop");
+    }
+  });
+  box.addEventListener("dragleave", function () { box.classList.remove("fav-drop"); });
+  box.addEventListener("drop", function (e) {
+    box.classList.remove("fav-drop");
+    var fs = e.dataTransfer && e.dataTransfer.files;
+    if (!fs || !fs.length) { return; }
+    e.preventDefault();
+    var left = fs.length;
+    for (var i = 0; i < fs.length; i++) {
+      // CEP 는 파일의 실제 경로를 준다(브라우저와 다르다)
+      var p = fs[i].path || fs[i].name;
+      fetch(BACKEND + "/api/favorites/add", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: p, label: String(p).split("/").pop() }),
+      }).then(function () { if (--left <= 0) { loadFavorites(); } })
+        .catch(function () { if (--left <= 0) { loadFavorites(); } });
+    }
+  });
 }
 
 function _wireFavRemove() {
@@ -273,5 +308,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // 새로 읽으면 화면이 통째로 바뀐다.
   $("btnGalRefresh").addEventListener("click", function () { srcView(SRC_VIEW); });
   $("btnGalSearch").addEventListener("click", searchGallery);
-  srcView("fav");        // 열면 즐겨찾기부터 — 1044장을 깔지 않는다
+  wireFavDrop();
+  loadFavorites();       // 소스 칸은 즐겨찾기만 — 1044장을 깔지 않는다
 });
