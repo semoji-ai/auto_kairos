@@ -743,11 +743,7 @@ document.addEventListener("DOMContentLoaded", function () {
      `btnBuildAll` 은 뺐다. 옛 마크업이 남아 있어도 죽지 않게 가드를 둔다. */
   var bba = $("btnBuildAll");
   if (bba) bba.addEventListener("click", buildComp);
-  // 소스 칸 — 즐겨찾기 / 프로젝트 갈아 끼기, 폴더 열기
-  var st = document.querySelectorAll("#srcTabs .srct");
-  for (var si = 0; si < st.length; si++) {
-    st[si].addEventListener("click", function () { srcView(this.getAttribute("data-v")); });
-  }
+  // 소스 칸 — 폴더 열기(탭은 없앴다. 즐겨찾기만 보인다)
   var bff = $("btnFavFolder");
   if (bff) bff.addEventListener("click", function () {
     fetch(BACKEND + "/api/favorites").then(function (r) { return r.json(); })

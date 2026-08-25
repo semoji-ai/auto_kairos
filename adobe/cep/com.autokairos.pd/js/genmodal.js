@@ -1,5 +1,5 @@
 /* 이미지 생성 모달 — 카테고리별 폼 + 엔드포인트 라우팅. 전역 $/BACKEND/SELECTED_PROJECT.
-   완료 후 loadGallery/loadSheet 갱신(있으면). */
+   완료 후 loadFavorites/loadSheet 갱신(있으면). */
 
 function openGenModal() {
   if (!SELECTED_PROJECT) { alert("프로젝트를 먼저 선택하세요."); return; }
@@ -73,7 +73,8 @@ function submitGen() {
       var ok = res && (res.status === "completed" || res.ok || j.character);
       $("genStatus").textContent = ok ? "생성 완료 ✓" : ("실패: " + JSON.stringify(j));
       if (ok) {
-        if (typeof loadGallery === "function") loadGallery();
+        // 그린 것은 왼쪽 시트에 뜬다 — 소스 칸에 또 깔지 않는다
+        if (typeof loadFavorites === "function") loadFavorites();
         if (typeof loadSheet === "function") loadSheet();
       }
     })

@@ -29,7 +29,10 @@ function switchTab(name) {
   _$("btnTabPlanning").classList.toggle("active", planning);
   _$("btnTabStoryboard").classList.toggle("active", !planning);
   if (!planning && typeof loadSheet === "function") loadSheet();
-  if (!planning && typeof loadGallery === "function") loadGallery();
+  // 소스 칸은 **즐겨찾기만** 보인다. 프로젝트 이미지를 여기 깔지 않는다 —
+  // 1044장이고 그중 565장이 같은 내용의 사본이라, 다 깔면 정작 자주 쓰는
+  // 배경 한 장을 못 찾는다. 씬 이미지와 에셋은 이미 왼쪽 시트에 있다.
+  if (!planning && typeof loadFavorites === "function") loadFavorites();
 }
 
 document.addEventListener("DOMContentLoaded", function () {
