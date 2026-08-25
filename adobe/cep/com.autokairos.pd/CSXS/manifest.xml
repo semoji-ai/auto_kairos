@@ -30,6 +30,15 @@
             <Parameter>--mixed-context</Parameter>
             <Parameter>--enable-webgl</Parameter>
             <Parameter>--ignore-gpu-blacklist</Parameter>
+            <!-- **캐시를 끈다.**
+                 CEP 는 `js/*.js` 뿐 아니라 `index.html` 자체도 캐시한다.
+                 스크립트에는 `?v=` 버스터를 붙이는데 그것은 index.html 이 새로
+                 읽힐 때만 듣는다. 그래서 고쳐도 패널이 옛 화면을 계속 띄우고
+                 **고친 사람은 반영된 줄 안다** — 오늘 소스 칸을 바꾸고도
+                 「그대로네」로 돌아왔고, 전에는 후보 띠로 같은 일을 겪었다.
+                 패널은 로컬 파일 몇 개라 캐시로 얻을 것이 없다. -->
+            <Parameter>--disable-http-cache</Parameter>
+            <Parameter>--disable-application-cache</Parameter>
           </CEFCommandLine>
         </Resources>
         <Lifecycle>

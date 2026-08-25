@@ -123,6 +123,8 @@
     /* 시트 도구상자 — 체크된 씬에 일괄 실행 */
     #sheet-actionbar { display:flex; align-items:center; gap:4px; flex-wrap:wrap;
       padding:6px 0; border-bottom:1px solid #2c2f36; margin-bottom:4px; }
+    #panelVer { margin-left:auto; font-size:10px; color:#6b7078;
+      font-family:ui-monospace,monospace; }
     #sheet-actionbar .sab-hint { font-size:11px; color:#9aa0a6; margin-right:2px; }
     /* 조립 결과는 **한 줄만** 보인다.
        전에는 얹은 레이어를 전부 이어 붙여 뿌려서, 34씬을 조립하면 수십 줄이
@@ -499,6 +501,11 @@
       <span id="healthDot" class="dot bad"></span>
       <span id="healthText">백엔드 확인 중…</span>
       <button id="btnReconnect" class="mini" hidden>연결</button>
+      <!-- **어느 판이 떠 있는지 눈에 보이게.**
+           CEP 가 화면을 캐시하면 고쳐도 옛 것이 뜨는데, 그러면 고친 사람은
+           반영된 줄 알고 엉뚱한 데를 찾는다. 이 숫자가 커밋 수와 같으면
+           새 코드다. 다르면 캐시다 — `scripts/clear_panel_cache.sh`. -->
+      <span id="panelVer" title="패널 판 번호 — 커밋 수와 같아야 새 코드입니다"></span>
     </div>
 
     <div class="label">오케스트레이터 LLM</div>
@@ -930,16 +937,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1359"></script>
-  <script src="js/nav.js?v=1359"></script>
-  <script src="js/planning.js?v=1359"></script>
+  <script src="js/main.js?v=1360"></script>
+  <script src="js/nav.js?v=1360"></script>
+  <script src="js/planning.js?v=1360"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1359"></script>
-  <script src="js/storyboard.js?v=1359"></script>
-  <script src="js/gallery.js?v=1359"></script>
-  <script src="js/genmodal.js?v=1359"></script>
-  <script src="js/assistant.js?v=1359"></script>
+  <script src="js/mapgen.js?v=1360"></script>
+  <script src="js/storyboard.js?v=1360"></script>
+  <script src="js/gallery.js?v=1360"></script>
+  <script src="js/genmodal.js?v=1360"></script>
+  <script src="js/assistant.js?v=1360"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>

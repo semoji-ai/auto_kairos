@@ -959,3 +959,25 @@ def test_pick_import_chooses_kinds_too():
     assert "_assemble(ns," in js and "kinds);" in js
     # 레이어를 안 넣으면 벡터는 물을 것이 없다
     assert "function pickKindsSync()" in js
+
+
+def test_cef_cache_is_off():
+    """**CEP 는 index.html 까지 캐시한다.**
+
+    스크립트에는 `?v=` 버스터를 붙이지만 그것은 index.html 이 새로 읽힐 때만
+    듣는다. 그래서 고쳐도 패널이 옛 화면을 계속 띄우고 **고친 사람은 반영된
+    줄 안다** — 소스 칸을 바꾸고도 「그대로네」로 돌아왔고, 전에는 후보 띠로
+    같은 일을 겪었다. 패널은 로컬 파일 몇 개라 캐시로 얻을 것이 없다.
+    """
+    x = (PANEL / "CSXS" / "manifest.xml").read_text(encoding="utf-8")
+    assert "--disable-http-cache" in x
+    assert "--disable-application-cache" in x
+
+
+def test_panel_shows_its_version():
+    """어느 판이 떠 있는지 눈에 보여야 한다 — 안 보이면 캐시인지 알 수 없다."""
+    html = (PANEL / "index.html").read_text(encoding="utf-8")
+    js = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
+    assert 'id="panelVer"' in html
+    assert "function showPanelVersion()" in js
+    assert "showPanelVersion();" in js

@@ -114,6 +114,23 @@ function applyHostUI() {
   if (hd) { hd.title = "프리미어 모드 — 연출(레이아웃·레이어 모션)은 애프터이펙트에서"; }
 }
 
+/* 패널 판 번호 — 스크립트에 붙은 `?v=` 를 그대로 읽어 띄운다.
+
+   CEP 는 `index.html` 까지 캐시한다. 고쳐도 옛 화면이 뜨는데 **고친 사람은
+   반영된 줄 안다** — 소스 칸을 바꾸고도 「그대로네」로 돌아왔고, 전에는 후보
+   띠로 같은 일을 겪었다. 숫자가 안 오르면 캐시다. */
+function showPanelVersion() {
+  var el = $("panelVer");
+  if (!el) { return; }
+  var v = "?";
+  var s = document.querySelectorAll('script[src*="?v="]');
+  if (s.length) {
+    var m = String(s[0].getAttribute("src")).match(/\?v=(\d+)/);
+    if (m) { v = m[1]; }
+  }
+  el.textContent = "v" + v;
+}
+
 function hostApp() {
   try {
     var id = JSON.parse(window.__adobe_cep__.getHostEnvironment()).appName;
@@ -753,6 +770,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var f = $("newProjectForm"); f.hidden = !f.hidden;
   });
   var ls = $("llmSelect"); if (ls) ls.addEventListener("change", saveLlmSetting);
+  showPanelVersion();      // 어느 판이 떠 있는지 — 캐시를 물었는지 바로 보인다
   applyHostUI();           // 프리미어면 애프터이펙트 전용 버튼을 감춘다
   checkBackend();          // 열면 자동 백엔드 확인 → 연결 시 프로젝트 목록 자동 로드
   $("btnDecompose").addEventListener("click", decompose);
