@@ -608,7 +608,7 @@ function renderRow(s, dir) {
     +        '<button class="ra" data-act="img" data-scene="' + n + '" title="참조와 프롬프트를 골라 다시 그립니다">이미지 재생성</button>'
     +        '<button class="ra" data-act="txt" data-scene="' + n + '" title="TTS·자막 텍스트를 고쳐 다시 만듭니다">TTS 재생성</button>'
     +        '<button class="ra" data-act="vid" data-scene="' + n + '" title="이 씬 그림으로 영상을 만듭니다 (힉스필드)">🎞 비디오</button>'
-    +        '<button class="ra" data-act="tl" data-scene="' + n + '" title="이 씬을 현재 타임라인에 배치합니다">import</button>'
+    +        '<button class="ra" data-act="tl" data-scene="' + n + '" title="이 씬을 넣습니다 — 종류도 고를 수 있습니다">임폴트</button>'
     +      '</div>'
     // 텍스트 편집 패널(✎ 토글) — TTS용/자막용 분리
     +      '<div class="txt-edit" data-scene="' + n + '" hidden>'
@@ -771,7 +771,9 @@ function bindRows(scope) {
       else if (act === "tts") { genTts(n); }
       else if (act === "txt") { toggleTextEditor(n); }
       else if (act === "vid") { openVideoModal(n); }
-      else if (act === "tl") { exportToTimeline(parseFloat(n)); }
+      // **하나든 여럿이든 전부든 같은 창이다.** 종류를 고르는 길이
+      // 「골라 넣기」 하나뿐이라, 한 씬만 넣으면서 종류를 고를 수 없었다.
+      else if (act === "tl") { openPickImport(parseFloat(n)); }
     });
   }
   var saves = scope.querySelectorAll("button.te-save");
@@ -1008,9 +1010,10 @@ function bindSheetToolbar() {
     try { box.scrollIntoView({ block: "nearest" }); } catch (e) { }
   });
   on("sa-comp", function () {
-    var ns = _needChecked(1, "AE 컴프"); if (!ns) return;
-    // 체크한 씬 전체를 한 번에 — 씬마다 매니페스트·jsx를 반복하면 씬 많은 프로젝트에서 몇 분씩 걸린다
-    _assemble(ns, saSay);
+    var ns = _needChecked(1, "임폴트"); if (!ns) return;
+    // 체크한 씬 전체를 한 번에 — 씬마다 매니페스트·jsx를 반복하면 씬 많은
+    // 프로젝트에서 몇 분씩 걸린다. 종류는 창에서 고른다.
+    openPickImport(ns);
   });
   on("sa-sub", function () {
     var ns = _needChecked(1, "말자막"); if (!ns) return;

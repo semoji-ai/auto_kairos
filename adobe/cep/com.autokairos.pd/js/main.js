@@ -100,14 +100,14 @@ function applyHostUI() {
     var el = $(hide[i]);
     if (el) { el.hidden = true; }
   }
-  var t = $("btnTimelineAll");
+  // 「임폴트」는 프리미어에서도 같은 버튼이다 — 이름만 시퀀스로 바꾼다
+  var t = $("btnPickImport");
   if (t) {
-    t.textContent = "🎬 시퀀스 조립";
-    t.title = "매니페스트를 만들고 전체 씬을 프리미어 시퀀스에 깝니다"
-            + " — 영상·그림·음성·씬 마커";
+    t.textContent = "🎬 시퀀스 임폴트";
+    t.title = "전체 씬을 프리미어 시퀀스에 깝니다 — 영상·그림·음성·씬 마커";
   }
   var c = $("sa-comp");
-  if (c) { c.textContent = "▶ 시퀀스"; c.title = "체크한 씬만 시퀀스에 깝니다"; }
+  if (c) { c.textContent = "▶ 시퀀스"; c.title = "체크한 씬을 시퀀스에 깝니다"; }
   var h = document.querySelector(".sab-hint");
   if (h) { h.textContent = "체크한 씬에:"; }
   var hd = $("healthText");
@@ -270,19 +270,44 @@ function buildSubtitles(sceneNumbers, statusFn) {
    레이어를 나눈 적이 없었다(142씬 중 115씬이 그렇다). 들어올 것이 없는 것과
    들어와야 하는데 안 들어온 것은 다른 일인데, 화면이 그것을 구분해 주지
    않았다. 목록을 보여 주면 물을 일이 없다. */
-function openPickImport() {
+/* 임폴트 — **하나든 여럿이든 전부든 같은 창**이다.
+
+   전에는 길이 셋이었다. 행의 「import」, 체크한 씬의 「▶ 컴프」, 「🎬 조립·배치」.
+   이름도 셋이고 하는 일은 범위만 달랐다. 게다가 종류(이미지·레이어·벡터·영상·
+   음성)를 고르는 것은 「골라 넣기」 하나뿐이라, 한 씬만 넣으면서 종류를 고를
+   길이 없었다.
+
+   `scope` — 숫자 하나 / 번호 배열 / null(전체). */
+var PICK_SCOPE = null;
+
+function openPickImport(scope) {
   if (!SELECTED_PROJECT) { $("aeresult").textContent = "프로젝트를 먼저 선택하세요."; return; }
+  PICK_SCOPE = (scope == null) ? null
+             : (scope instanceof Array ? scope.slice() : [parseFloat(scope)]);
   var box = $("pickList"), st = $("pickStatus");
   box.innerHTML = "불러오는 중...";
   $("pickModal").hidden = false;
   st.textContent = "—";
+  var ttl = document.querySelector("#pickModal .gen-head");
+  if (ttl) {
+    ttl.firstChild.nodeValue = PICK_SCOPE
+      ? ("임폴트 — 씬 " + (PICK_SCOPE.length === 1 ? PICK_SCOPE[0]
+                          : (PICK_SCOPE.length + "개")) + " ")
+      : "임폴트 — 전체 ";
+  }
   fetch(BACKEND + "/api/assembly/inventory?project_id=" + encodeURIComponent(SELECTED_PROJECT))
     .then(function (r) { return r.json(); })
     .then(function (j) {
       if (j.error) { box.textContent = j.error; return; }
       var h = "";
+      var only = null;
+      if (PICK_SCOPE) {
+        only = {};
+        for (var q = 0; q < PICK_SCOPE.length; q++) { only[PICK_SCOPE[q]] = 1; }
+      }
       for (var i = 0; i < (j.scenes || []).length; i++) {
         var s = j.scenes[i];
+        if (only && !only[s.sceneNumber]) { continue; }
         var bits = [];
         if (s.image) { bits.push("그림"); }
         if (s.layers) { bits.push("<b>레이어 " + s.layers + "</b>"); }
@@ -718,8 +743,6 @@ document.addEventListener("DOMContentLoaded", function () {
      `btnBuildAll` 은 뺐다. 옛 마크업이 남아 있어도 죽지 않게 가드를 둔다. */
   var bba = $("btnBuildAll");
   if (bba) bba.addEventListener("click", buildComp);
-  var btl = $("btnTimelineAll");
-  if (btl) btl.addEventListener("click", function () { exportToTimeline(null); });
   // 소스 칸 — 즐겨찾기 / 프로젝트 갈아 끼기, 폴더 열기
   var st = document.querySelectorAll("#srcTabs .srct");
   for (var si = 0; si < st.length; si++) {
@@ -742,7 +765,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fdrs[fi].addEventListener("click", function () { revealFolder(this.getAttribute("data-d")); });
   }
   var bpi = $("btnPickImport");
-  if (bpi) bpi.addEventListener("click", openPickImport);
+  if (bpi) bpi.addEventListener("click", function () { openPickImport(null); });
   var pc = $("pickClose"), px = $("pickCancel");
   if (pc) pc.addEventListener("click", function () { $("pickModal").hidden = true; });
   if (px) px.addEventListener("click", function () { $("pickModal").hidden = true; });

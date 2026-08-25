@@ -211,7 +211,7 @@ def test_buildall_button_and_full_comp():
     무엇이 다른지 물어야 했다. 하나로 합쳤다.
     """
     html = HTML.read_text(encoding="utf-8")
-    assert 'id="btnTimelineAll"' in html
+    assert 'id="btnPickImport"' in html      # 「조립·배치」를 「임폴트」로 모았다
     main = MAIN.read_text(encoding="utf-8")
     assert "function buildComp" in main and "exportToTimeline(null)" in main
 
@@ -733,7 +733,7 @@ def test_planning_stepper_ui():
 def test_timeline_export_wired():
     """전체 타임라인 버튼 + 씬 재빌드 경로 + 씬 행 버튼. 평면 컴프라 씬 컴프 배치 스크립트는 없다."""
     html = HTML.read_text(encoding="utf-8")
-    assert 'id="btnTimelineAll"' in html
+    assert 'id="btnPickImport"' in html      # 「조립·배치」를 「임폴트」로 모았다
     assert not (PANEL / "jsx" / "place_on_timeline.jsx").exists()
     build_jsx = (PANEL / "jsx" / "build_scene.jsx").read_text(encoding="utf-8")
     # 옛것을 지우던 헬퍼는 없앴다 — 지우지 않고 쌓는다.
@@ -754,7 +754,7 @@ def test_sheet_toolbar_batches_checked_scenes():
     """컴프·말자막이 체크한 씬 목록을 한 번에 넘긴다(씬마다 반복 호출 금지)."""
     sb = (PANEL / "js" / "storyboard.js").read_text(encoding="utf-8")
     assert 'id="sa-sub"' in HTML.read_text(encoding="utf-8") or "sa-sub" in sb
-    assert "_assemble(ns," in sb                 # 목록을 통째로
+    assert "openPickImport(ns)" in sb           # 체크한 씬을 창으로 — 종류도 고른다
     assert "buildSubtitles(ns," in sb
     assert "_runSeq(ns, function (n) {\n      return Promise.resolve(buildSceneComp(n));" not in sb
     main = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
@@ -918,6 +918,29 @@ def test_assembly_log_is_one_line():
     assert 'on("sa-more"' in js
 
 
+def test_import_is_one_button_with_three_scopes():
+    """**하나든 여럿이든 전부든 같은 창**이다.
+
+    전에는 길이 셋이었다 — 행의 「import」, 체크한 씬의 「▶ 컴프」,
+    「🎬 조립·배치」. 이름도 셋이고 하는 일은 범위만 달랐다. 게다가 종류를
+    고르는 것은 「골라 넣기」 하나뿐이라, 한 씬만 넣으면서 종류를 고를 길이
+    없었다.
+    """
+    html = (PANEL / "index.html").read_text(encoding="utf-8")
+    js = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
+    sb = (PANEL / "js" / "storyboard.js").read_text(encoding="utf-8")
+    # 이름이 하나다
+    assert "🎬 임폴트" in html and "▶ 임폴트" in html and ">임폴트<" in sb
+    assert "btnTimelineAll" not in html and "btnTimelineAll" not in js
+    # 셋 다 같은 창을 연다 — 범위만 다르다
+    assert "function openPickImport(scope)" in js
+    assert "openPickImport(null)" in js                    # 전체
+    assert "openPickImport(ns)" in sb                      # 체크한 씬
+    assert "openPickImport(parseFloat(n))" in sb           # 한 씬
+    # 범위가 있으면 그 씬만 깔린다
+    assert "PICK_SCOPE" in js and "if (only && !only[s.sceneNumber])" in js
+
+
 def test_pick_import_shows_what_will_come():
     """넣기 전에 **무엇이 들어오는지** 보여 준다.
 
@@ -929,11 +952,11 @@ def test_pick_import_shows_what_will_come():
     html = (PANEL / "index.html").read_text(encoding="utf-8")
     js = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
     assert 'id="btnPickImport"' in html and 'id="pickModal"' in html
-    assert "function openPickImport()" in js
+    assert "function openPickImport(scope)" in js
     assert "/api/assembly/inventory" in js
     # 씬마다 무엇이 있는지 — 그림·레이어·영상·음성
     for k in ("그림", "레이어 ", "영상", "음성"):
-        assert k in js.split("function openPickImport()")[1].split("\nfunction pickBoxes")[0], k
+        assert k in js.split("function openPickImport(scope)")[1].split("\nfunction pickBoxes")[0], k
     # 아무것도 없는 씬은 흐리게 두고 기본으로 안 고른다
     assert 'var empty = !s.image && !s.layers && !s.video;' in js
     # 골라서 넣는다 — 일괄이든 하나든 같은 길
