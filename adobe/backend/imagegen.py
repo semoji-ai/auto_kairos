@@ -616,17 +616,49 @@ def _specs_from_filenames(out_base: Path, sid: str) -> list:
     return specs
 
 
+# 사이드카를 되읽지 않는다 — 파일 시각이 그대로면 앞서 읽은 것을 준다.
+#
+# 매니페스트를 한 번 구울 때 이 함수가 **씬당 두 번** 불린다(`scenes._layer_meta`
+# 와 `manifest._scene_layers`). 142씬이면 284번이고, 사이드카가 없는 씬은
+# `_specs_from_filenames` 가 폴더를 통째로 다시 훑는다.
+#
+# 키에 수정 시각을 넣으므로 파일이 바뀌면 저절로 새로 읽는다 — 낡은 것을
+# 쥐고 있을 일이 없다.
+_SPEC_CACHE: dict = {}
+
+
 def load_element_specs(out_base: Path, sid: str) -> list:
     """요소 명세 목록. 사이드카 우선, 없으면 파일명에서 복원."""
     fp = Path(out_base) / ELEMENTS_SIDECAR.format(sid=sid)
+    try:
+        stamp = fp.stat().st_mtime_ns if fp.is_file() else 0
+    except OSError:
+        stamp = 0
+    # 사이드카가 없으면 파일명에서 복원하는데, 그때는 **폴더 시각**을 키로 쓴다.
+    # 레이어가 아예 없는 씬(이 편에서 115개)도 이 길을 타므로, 안 담아 두면
+    # 매니페스트를 구울 때마다 폴더를 228번 다시 훑는다.
+    if not stamp:
+        try:
+            stamp = -Path(out_base).stat().st_mtime_ns
+        except OSError:
+            stamp = 0
+    key = (str(out_base), sid, stamp)
+    hit = _SPEC_CACHE.get(key)
+    if hit is not None:
+        return hit
+    out = None
     if fp.is_file():
         try:
             specs = json.loads(fp.read_text(encoding="utf-8"))
             if isinstance(specs, list) and specs:
-                return specs
+                out = specs
         except (json.JSONDecodeError, OSError):
             pass
-    return _specs_from_filenames(out_base, sid)
+    if out is None:
+        out = _specs_from_filenames(out_base, sid)
+    if stamp:
+        _SPEC_CACHE[key] = out
+    return out
 
 
 def _stem_of(layer: str) -> str:
