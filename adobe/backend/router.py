@@ -1028,6 +1028,41 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
             out["tokens_path"] = str(tokens_path)
         return 200, out
 
+    # ── 즐겨찾기 ────────────────────────────────────────────────────────
+    #
+    # 소스 칸이 프로젝트 이미지를 통째로 깔고 있었다(1044장, 그중 565장이 같은
+    # 내용의 사본). 자주 쓰는 배경 한 장을 그 안에서 찾는 것은 일이다.
+    # 담아 둔 것만 깔고, 프로젝트 소스는 폴더를 열어 끌어다 쓴다.
+    if p.startswith("/api/favorites"):
+        from backend import favorites as _fav
+        b = body or {}
+        if method == "GET" and p == "/api/favorites":
+            return 200, _fav.listing()
+        if method == "POST" and p == "/api/favorites/add":
+            src = (b.get("path") or "").strip()
+            if not src and b.get("project_id") and b.get("rel"):
+                src = str(root / b["project_id"] / b["rel"])
+            if not src:
+                return 400, {"error": "path 또는 project_id+rel 필요"}
+            r = _fav.add(src, label=b.get("label") or "", tags=b.get("tags"))
+            return (200, r) if r.get("ok") else (422, r)
+        if method == "POST" and p == "/api/favorites/remove":
+            r = _fav.remove((b.get("name") or "").strip())
+            return (200, r) if r.get("ok") else (422, r)
+        return 404, {"error": "없는 경로"}
+
+    if method == "POST" and p == "/api/reveal":
+        # 탐색기에서 폴더를 연다 — 끌어다 쓰라고. 맥·윈도우·리눅스가 다르다.
+        from backend import favorites as _fav
+        b = body or {}
+        tgt = (b.get("path") or "").strip()
+        if not tgt and b.get("project_id"):
+            tgt = str(root / b["project_id"] / (b.get("rel") or ""))
+        if not tgt:
+            return 400, {"error": "path 필요"}
+        r = _fav.reveal(tgt)
+        return (200, r) if r.get("ok") else (422, r)
+
     if method == "GET" and p == "/api/media":
         pid = query.get("project_id", "")
         return 200, {"items": media.list_media(root / pid)}

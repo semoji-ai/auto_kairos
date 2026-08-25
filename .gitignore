@@ -271,3 +271,6 @@ _archive_*/
 # 안 됐다」는 사고로 읽혔다 — 안 올리는 것이 의도임을 여기 적어 둔다.
 _imggen/characters/sheets/
 _imggen/characters/roster.pre_split.json
+
+# 즐겨찾기 — 자주 쓰는 배경·소스의 사본. 사람마다 다르고 무겁다.
+/favorites/

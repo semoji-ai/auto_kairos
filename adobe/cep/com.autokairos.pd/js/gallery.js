@@ -10,6 +10,92 @@ function _gesc(s) {
 var GAL_ITEMS = [];
 var GAL_FILTER = "전체";
 
+/* 소스 칸이 무엇을 보이는가 — "fav"(즐겨찾기) 또는 "proj"(프로젝트).
+
+   전에는 프로젝트 이미지를 통째로 깔았다. 디아지오편 1044장이고 그중 565장이
+   내용이 같은 사본이다(1.3GB) — 개발 과정에서 두 벌씩 남았다. 그 안에서 자주
+   쓰는 배경 한 장을 찾는 것은 일이다.
+
+   담아 둔 것만 깔고, 프로젝트 소스는 **폴더를 열어 끌어다 쓴다.** */
+var SRC_VIEW = "fav";
+var FAV_MD5 = {};        // 이미 담긴 것 — 별을 채워 보이려고
+
+function srcView(v) {
+  SRC_VIEW = v;
+  var b = document.querySelectorAll("#srcTabs .srct");
+  for (var i = 0; i < b.length; i++) {
+    b[i].classList.toggle("on", b[i].getAttribute("data-v") === v);
+  }
+  var fd = $("srcFolders");
+  if (fd) { fd.hidden = (v !== "proj"); }
+  if (v === "fav") { loadFavorites(); } else { loadGallery(); }
+}
+
+function loadFavorites() {
+  var box = $("gallery-panel");
+  box.textContent = "불러오는 중...";
+  fetch(BACKEND + "/api/favorites").then(function (r) { return r.json(); })
+    .then(function (j) {
+      FAV_MD5 = {};
+      var its = j.items || [];
+      for (var i = 0; i < its.length; i++) { FAV_MD5[its[i].md5] = its[i].name; }
+      if (!its.length) {
+        box.innerHTML = '<div style="font-size:11px;color:#8b9098;line-height:1.7">'
+          + '담아 둔 것이 없습니다.<br>「📁 프로젝트」에서 ☆ 를 눌러 담으세요.<br>'
+          + '자주 쓰는 배경은 편이 바뀌어도 여기 남습니다.</div>';
+        return;
+      }
+      var h = '<div class="gal-grid">';
+      for (var k = 0; k < its.length; k++) {
+        var it = its[k];
+        h += '<div class="gal-item" draggable="true" data-abs="' + _gesc(it.path) + '">'
+          + '<img src="file://' + _gesc(it.path) + '" loading="lazy">'
+          + '<span class="cap">' + _gesc(it.label || it.name) + '</span>'
+          + '<button class="fav-star on" data-name="' + _gesc(it.name) + '" title="즐겨찾기에서 뺍니다">★</button>'
+          + '</div>';
+      }
+      box.innerHTML = h + "</div>";
+      _wireFavRemove();
+    })
+    .catch(function (e) { box.textContent = "오류: " + e; });
+}
+
+function _wireFavRemove() {
+  var b = $("gallery-panel").querySelectorAll(".fav-star");
+  for (var i = 0; i < b.length; i++) {
+    b[i].addEventListener("click", function (ev) {
+      ev.stopPropagation(); ev.preventDefault();
+      var n = this.getAttribute("data-name");
+      fetch(BACKEND + "/api/favorites/remove", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: n }),
+      }).then(function () { loadFavorites(); });
+    });
+  }
+}
+
+/* 프로젝트 소스에서 담기 — 파일을 **복사한다.** 원본을 가리키기만 하면
+   그 프로젝트를 지웠을 때 즐겨찾기가 통째로 깨진다. */
+function favAdd(rel, label, btn) {
+  fetch(BACKEND + "/api/favorites/add", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, rel: rel, label: label || "" }),
+  }).then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (j.ok && btn) { btn.classList.add("on"); btn.textContent = "★"; }
+    })
+    .catch(function () { });
+}
+
+/* 탐색기에서 폴더 열기 — 맥·윈도우가 각각 다르다(백엔드가 가른다). */
+function revealFolder(rel) {
+  if (!SELECTED_PROJECT) { return; }
+  fetch(BACKEND + "/api/reveal", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project_id: SELECTED_PROJECT, rel: rel || "" }),
+  });
+}
+
 function loadGallery() {
   if (!SELECTED_PROJECT) { $("gallery-panel").textContent = "프로젝트를 먼저 선택하세요."; return; }
   $("gallery-panel").textContent = "불러오는 중...";
@@ -64,6 +150,7 @@ function _renderGallery() {
       + ' ondragstart="event.dataTransfer.setData(\'text/plain\', this.parentNode.getAttribute(\'data-rel\'))"'
       + ' class="gal-thumb">'
       + '<button class="gal-ae" data-rel="' + _gesc(it.rel) + '" data-dir="' + _gesc(it.dir) + '" title="AE 프로젝트로 가져오기">↧</button>'
+      + '<button class="fav-star" data-rel="' + _gesc(it.rel) + '" title="즐겨찾기에 담습니다 — 편이 바뀌어도 남습니다">☆</button>'
       + '</div>';
   }).join("") + '</div>';
 
@@ -74,6 +161,14 @@ function _renderGallery() {
     fb[k].addEventListener("click", function () {
       GAL_FILTER = this.getAttribute("data-g");
       _renderGallery();
+    });
+  }
+  var stars = $("gallery-panel").querySelectorAll("button.fav-star");
+  for (var si = 0; si < stars.length; si++) {
+    stars[si].addEventListener("click", function (ev) {
+      ev.stopPropagation(); ev.preventDefault();
+      var rel = this.getAttribute("data-rel");
+      favAdd(rel, rel.split("/").pop(), this);
     });
   }
   var aebtns = $("gallery-panel").querySelectorAll("button.gal-ae");
@@ -174,6 +269,9 @@ function saveSearchResult(url, name) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  $("btnGalRefresh").addEventListener("click", loadGallery);
+  // 새로고침은 **지금 보이는 쪽**을 다시 읽는다 — 즐겨찾기를 보는데 프로젝트를
+  // 새로 읽으면 화면이 통째로 바뀐다.
+  $("btnGalRefresh").addEventListener("click", function () { srcView(SRC_VIEW); });
   $("btnGalSearch").addEventListener("click", searchGallery);
+  srcView("fav");        // 열면 즐겨찾기부터 — 1044장을 깔지 않는다
 });

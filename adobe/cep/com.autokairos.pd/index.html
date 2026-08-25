@@ -425,6 +425,21 @@
     .col-work .te-acts .mini { width:auto; margin:0; }
 
     /* 모달(이미지 생성 + 레이어 선택 공용) */
+    /* 소스 칸 — 즐겨찾기와 프로젝트를 갈아 낀다 */
+    #srcTabs { display:flex; gap:4px; align-items:center; margin-bottom:6px; }
+    #srcTabs .srct { width:auto; margin:0; padding:3px 9px; font-size:11px;
+      border:1px solid #33363c; border-radius:3px; background:#26292f; color:#c5c8cc;
+      cursor:pointer; }
+    #srcTabs .srct.on { background:#3a6df0; color:#fff; border-color:#3a6df0; }
+    #srcTabs #btnFavFolder { margin-left:auto; }
+    #srcFolders { display:flex; flex-wrap:wrap; gap:4px; align-items:center;
+      margin-bottom:6px; }
+    #srcFolders[hidden] { display:none; }
+    #srcFolders .fdr { width:auto; margin:0; padding:2px 7px; font-size:10px; }
+    .fav-star { width:auto; margin:0; padding:0 3px; font-size:12px; line-height:1;
+      border:0; background:transparent; color:#6b7078; cursor:pointer; }
+    .fav-star.on { color:#f5c14b; }
+
     /* 종류 고르기 — 레이어는 벡터(SVG)로 넣을지 그림(PNG)으로 넣을지 함께 고른다.
        벡터는 확대해도 안 깨지지만 쉐이프가 수십 장 쏟아져 타임라인이 무겁다. */
     #pickKinds { display:flex; flex-wrap:wrap; gap:10px; align-items:center;
@@ -617,7 +632,27 @@
                    놓여야 무엇이 다른지 보인다. -->
               <button id="btnOpenGenModal" title="참조 없이 새 이미지를 만들어 아래 소스에 담습니다">+ 이미지 생성</button>
               <button id="btnRefreshCharacters" class="alt" title="아래 기준 캐릭터 목록 새로고침">캐릭터 새로고침</button>
-              <button id="btnGalRefresh" class="alt" title="아래 소스 갤러리 새로고침">소스 새로고침</button>
+              <button id="btnGalRefresh" class="alt" title="아래 목록 새로고침">새로고침</button>
+            </div>
+            <!-- 소스 칸의 쓰임을 바꿨다.
+                 전에는 프로젝트 이미지를 통째로 깔았다(디아지오 1044장, 그중
+                 565장이 내용이 같은 사본). 자주 쓰는 배경 한 장을 그 안에서
+                 찾는 것은 일이다. 담아 둔 것만 깔고, 프로젝트 소스는 폴더를
+                 열어 끌어다 쓴다. -->
+            <div id="srcTabs">
+              <button class="srct on" data-v="fav">⭐ 즐겨찾기</button>
+              <button class="srct" data-v="proj">📁 프로젝트</button>
+              <button id="btnFavFolder" class="mini alt"
+                title="즐겨찾기 폴더를 탐색기에서 엽니다 — 끌어다 쓰세요">폴더 열기</button>
+            </div>
+            <div id="srcFolders" hidden>
+              <span class="sab-hint">폴더 열기:</span>
+              <button class="mini alt fdr" data-d="storyboard">씬 이미지</button>
+              <button class="mini alt fdr" data-d="images">생성 이미지</button>
+              <button class="mini alt fdr" data-d="layers">레이어</button>
+              <button class="mini alt fdr" data-d="characters">인물 시트</button>
+              <button class="mini alt fdr" data-d="video">영상</button>
+              <button class="mini alt fdr" data-d="">프로젝트</button>
             </div>
             <div class="sb-search">
               <input id="galSearch" type="text" placeholder="이미지 검색">
@@ -895,16 +930,16 @@
   <!-- `?v=` 는 캐시버스터다. CEP(Chromium)가 옛 JS 를 계속 물고 있어,
        고쳐도 패널에 반영되지 않는 일이 반복됐다 — 후보 띠를 넣고도
        안 보이던 것이 그 때문이었다. 커밋 수라 코드가 바뀌면 함께 바뀐다. -->
-  <script src="js/main.js?v=1358"></script>
-  <script src="js/nav.js?v=1358"></script>
-  <script src="js/planning.js?v=1358"></script>
+  <script src="js/main.js?v=1359"></script>
+  <script src="js/nav.js?v=1359"></script>
+  <script src="js/planning.js?v=1359"></script>
   <link rel="stylesheet" href="vendor/maplibre-gl.css">
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="js/mapgen.js?v=1358"></script>
-  <script src="js/storyboard.js?v=1358"></script>
-  <script src="js/gallery.js?v=1358"></script>
-  <script src="js/genmodal.js?v=1358"></script>
-  <script src="js/assistant.js?v=1358"></script>
+  <script src="js/mapgen.js?v=1359"></script>
+  <script src="js/storyboard.js?v=1359"></script>
+  <script src="js/gallery.js?v=1359"></script>
+  <script src="js/genmodal.js?v=1359"></script>
+  <script src="js/assistant.js?v=1359"></script>
   <div id="pv-zoom"><div class="box"><button class="x" title="닫기">✕</button><div class="inner"></div><div class="cap"></div></div></div>
 </body>
 </html>

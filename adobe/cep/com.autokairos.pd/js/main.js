@@ -703,6 +703,27 @@ document.addEventListener("DOMContentLoaded", function () {
   if (bba) bba.addEventListener("click", buildComp);
   var btl = $("btnTimelineAll");
   if (btl) btl.addEventListener("click", function () { exportToTimeline(null); });
+  // 소스 칸 — 즐겨찾기 / 프로젝트 갈아 끼기, 폴더 열기
+  var st = document.querySelectorAll("#srcTabs .srct");
+  for (var si = 0; si < st.length; si++) {
+    st[si].addEventListener("click", function () { srcView(this.getAttribute("data-v")); });
+  }
+  var bff = $("btnFavFolder");
+  if (bff) bff.addEventListener("click", function () {
+    fetch(BACKEND + "/api/favorites").then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.root) {
+          fetch(BACKEND + "/api/reveal", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: j.root }),
+          });
+        }
+      });
+  });
+  var fdrs = document.querySelectorAll("#srcFolders .fdr");
+  for (var fi = 0; fi < fdrs.length; fi++) {
+    fdrs[fi].addEventListener("click", function () { revealFolder(this.getAttribute("data-d")); });
+  }
   var bpi = $("btnPickImport");
   if (bpi) bpi.addEventListener("click", openPickImport);
   var pc = $("pickClose"), px = $("pickCancel");
