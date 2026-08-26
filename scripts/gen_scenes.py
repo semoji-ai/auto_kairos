@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -142,6 +143,47 @@ size는 {size}입니다.
 """
 
 
+# 한 줄에 여러 사람을 적으면 **세는 수와 그리는 수가 어긋난다.**
+# 「인부 둘」은 항목 하나로 세어 「사람은 1명입니다」라고 못 박히는데,
+# 같은 프롬프트 본문은 「두 사람」이라 말한다. 모델은 한 명만 그린다 —
+# EP01 의 「사람 없음」 모순과 같은 계열이다.
+_COUNTED = re.compile(r"(?:^|[\s,·])(둘|셋|넷|다섯|여섯"
+                      r"|두 사람|세 사람|네 사람|두 명|세 명|네 명)\s*$")
+_COUNT = {"둘": 2, "두 사람": 2, "두 명": 2, "셋": 3, "세 사람": 3, "세 명": 3,
+          "넷": 4, "네 사람": 4, "네 명": 4, "다섯": 5, "여섯": 6}
+# 수가 없는 무리 — 「상인들」·「아이들」·「사람들」. 몇 명인지 못 박을 수 없다.
+_CROWD = re.compile(r"(들|무리|행렬|줄)\s*$")
+
+
+def split_plural(people: list) -> tuple[list, list]:
+    """한 줄에 여럿을 담은 항목을 갈라 낸다. (갈라낸 목록, 손댄 자리)
+
+    수가 있으면 그 수만큼 자리를 갈라 적고, 수가 없는 무리는 세지 않는
+    배경 사람들로 넘긴다 — 못 박을 수 있는 것만 못 박는다.
+    """
+    out, touched = [], []
+    where = ["왼쪽", "오른쪽", "가운데", "뒤쪽", "앞쪽", "옆"]
+    for d in people:
+        s = str(d).strip()
+        m = _COUNTED.search(s)
+        if m:
+            n = _COUNT.get(m.group(1))
+            base = s[:m.start()].rstrip(" ,·")
+            if n and base:
+                for i in range(n):
+                    tag = where[i] if i < len(where) else str(i + 1)
+                    out.append(f"{base} — {tag}에 선 사람")
+                touched.append((s, n))
+                continue
+        if _CROWD.search(s):
+            # 통째로 남긴다. 낱말을 떼면 무엇을 그릴지가 사라진다.
+            out.append(f"{s} (여럿 — 화면 뒤를 채운다)")
+            touched.append((s, 0))
+            continue
+        out.append(s)
+    return out, touched
+
+
 def next_version(out_dir: Path, n: int) -> Path:
     """기존 파일을 덮어쓰지 않는다 — 이미지 삭제·덮어쓰기 금지 규칙."""
     base = out_dir / f"scene_{n:03d}.png"
@@ -238,6 +280,9 @@ def main() -> int:
                 lines.append(f"- {names.get(cid, cid)}: {p}")
         scene = scenes.get(n, {})
         people = scene.get("people") or []
+        people, plural = split_plural(people)
+        for src, cnt in plural:
+            print(f"    씬{n}: 「{src}」를 {cnt}명으로 갈랐습니다", flush=True)
         body = Path(job["prompt_file"]).read_text(encoding="utf-8")
         # 사람이 있어야 하는가는 **화면을 짤 때 정한 것**(`people`)이 정본이다.
         # 빈 배열이면 정말로 사물만 나오는 화면이니 그대로 「사람 없음」을 붙인다.
@@ -269,6 +314,12 @@ def main() -> int:
         # 씬에 관계된 인물을 넓게 적어 둔 것이라, 이 컷에 나오지 않는 사람까지
         # 들어 있다. 붙이면 모델이 「첨부한 사람들」을 다 그린다 — 씬11 은
         # 구인회 한 명짜리 화면인데 구재서 시트가 따라붙어 노인이 하나 더 나왔다.
+        # 「사물만」이라고 정한 화면(people 이 빈 배열)에는 시트를 붙이지
+        # 않는다. cast 는 그 씬에 관계된 인물을 넓게 적어 둔 것이라 남아
+        # 있기 마련인데, 붙이면 모델이 그 사람을 그린다 — 사람이 없어야 할
+        # 화면에 한 명이 섰다.
+        if isinstance(scene.get("people"), list) and not scene["people"]:
+            cast = []
         used, extra = [], list(people)
         for cid in cast:
             f_ = (args.sheets / f"{cid}_sheet.png")
@@ -289,9 +340,14 @@ def main() -> int:
                 ref = STYLE_ONLY.format(base=args.base.resolve())
                 ref += PEOPLE_BLOCK.format(people="\n".join(f"- {d}" for d in extra))
         roster = [f"- {nm} (첨부한 시트의 인물)" for nm, _ in used]
-        roster += [f"- {d}" for d in extra]
+        roster += [f"- {d}" for d in extra if "여럿" not in str(d)]
+        crowd = [d for d in extra if "여럿" in str(d)]
         if roster:
             ref += CASE_LIST.format(count=len(roster), people="\n".join(roster))
+            if crowd:
+                ref += ("\n**그 밖에 화면 뒤를 채우는 사람들이 있습니다.** "
+                        "얼굴이 또렷하지 않게, 멀리 작게 그리세요.\n"
+                        + "\n".join(f"- {d}" for d in crowd) + "\n")
         else:
             # 사람을 안 적으면 모델이 화면을 채우려 사람을 그리고, 정보가 없으니
             # 견본 시트를 베낀다. 아무도 없는 화면이면 그렇다고 못박는다.
