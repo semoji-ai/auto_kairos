@@ -21,7 +21,10 @@ function akImportSrt(cuesJson, tokensPath) {
         var comp = akToolsFindComp("Final");
         if (!comp) { return "ERROR: Final 컴프 없음 — 먼저 컴프를 빌드하세요"; }
 
-        var size = 54, fontName = "";
+        // 크기·글꼴·**색** 모두 ae_tokens.json 에서 — 말자막(subtitle_layers.jsx)과 같은 값.
+        // 색만 [1,1,1] 로 박아 두었던 탓에 가져온 자막은 순백, 말자막은 #E8EAED 로
+        // 한 화면에서 미묘하게 어긋났다. 토큰이 없을 때의 폴백도 말자막과 같게 둔다.
+        var size = 54, fontName = "", txt = [1, 1, 1];
         try {
             if (tokensPath) {
                 var tf = new File(tokensPath);
@@ -30,6 +33,9 @@ function akImportSrt(cuesJson, tokensPath) {
                     var tk = (typeof JSON === "object" && JSON.parse) ? JSON.parse(raw) : eval("(" + raw + ")");
                     if (tk.type && tk.type.subtitle) { size = tk.type.subtitle; }
                     if (tk.fonts && tk.fonts.subtitle) { fontName = tk.fonts.subtitle; }
+                    if (tk.colors && tk.colors.textRgb) {
+                        txt = [tk.colors.textRgb[0] / 255, tk.colors.textRgb[1] / 255, tk.colors.textRgb[2] / 255];
+                    }
                 }
             }
         } catch (eTk) { }
@@ -43,7 +49,7 @@ function akImportSrt(cuesJson, tokensPath) {
         var prop = tl.property("Source Text");
         var doc = prop.value;
         doc.fontSize = size;
-        doc.fillColor = [1, 1, 1];
+        doc.fillColor = txt;
         try { doc.applyStroke = true; doc.strokeColor = [0, 0, 0]; doc.strokeWidth = Math.max(4, size / 12); doc.strokeOverFill = false; } catch (e2) { }
         try { if (fontName) { doc.font = fontName; } } catch (e3) { }
         try { doc.justification = ParagraphJustification.CENTER_JUSTIFY; } catch (e4) { }
