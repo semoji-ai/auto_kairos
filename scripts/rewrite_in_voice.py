@@ -63,6 +63,14 @@ PROMPT = """다큐멘터리 원고를 **감독의 목소리로** 다시 씁니�
 - **뒷편과 이어 줍니다.** 「이것이 훗날 LG와 GS의 깊은 관계의 시작이었죠」처럼
   지금 장면이 시리즈 어디로 이어지는지 짚습니다.
 
+## 이 대목에 넣을 자료
+
+리서치로 확인해 둔 것인데 원고가 아직 쓰지 않은 것들입니다. **해당하는
+자리에 자연스럽게 녹이세요.** 억지로 다 넣지는 마세요 — 그 대목의 이야기가
+더 또렷해지는 것만 씁니다.
+
+{facts}
+
 ## 다시 쓸 원고
 
 {scenes}
@@ -117,6 +125,10 @@ def main() -> int:
     ap.add_argument("--keep-through", type=int, default=0,
                     help="이 씬까지는 손대지 않는다(감독이 이미 고친 곳)")
     ap.add_argument("--chapter", type=int, help="이 챕터만")
+    ap.add_argument("--sample-from",
+                    help="본보기를 다른 편에서 가져온다 (예: EP01) — 시리즈 목소리를 옮길 때")
+    ap.add_argument("--facts",
+                    help="원고에 넣을 자료 파일(.md) — 리서치에 있는데 안 쓴 것들")
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
@@ -125,18 +137,32 @@ def main() -> int:
     order = [s.get("sceneNumber") for s in scenes]
 
     # 본보기 — 감독이 고친 씬(keep-through 안쪽에서 말이 있는 것)
-    keep_idx = order.index(args.keep_through) if args.keep_through in order else -1
-    samples = [s for s in scenes[:keep_idx + 1]
+    if args.sample_from:
+        # 시리즈의 목소리는 앞 편에 있다. 이 편에는 아직 본보기가 없다.
+        sproj, _ = resolve_project(args.sample_from)
+        sscenes = json.loads((sproj / "scene_specs.json").read_text(encoding="utf-8"))["scenes"]
+        samples = [s for s in sscenes
+                   if (s.get("narration") or "").strip() and not s.get("isChapterCard")][:14]
+    else:
+        keep_idx = order.index(args.keep_through) if args.keep_through in order else -1
+        samples = [s for s in scenes[:keep_idx + 1]
                if (s.get("narration") or "").strip() and not s.get("isChapterCard")]
     if not samples:
         raise SystemExit("본보기로 쓸 씬이 없습니다 — --keep-through 를 확인하세요")
 
+    keep_idx = order.index(args.keep_through) if args.keep_through in order else -1
     todo = [s for s in scenes[keep_idx + 1:]
             if not s.get("isChapterCard") and (s.get("narration") or "").strip()]
     if args.chapter:
         todo = [s for s in todo if s.get("chapter") == args.chapter]
     if not todo:
         raise SystemExit("다시 쓸 씬이 없습니다")
+
+    facts_text = "(없음)"
+    if args.facts:
+        fp = Path(args.facts)
+        if fp.is_file():
+            facts_text = fp.read_text(encoding="utf-8")
 
     out_dir = root / "_imggen" / f"{ep.lower()}_rewrite"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -154,6 +180,7 @@ def main() -> int:
         body = "\n\n".join(
             f"[씬{s['sceneNumber']}] {(s.get('narration') or '').strip()}" for s in group)
         d = ask(PROMPT.format(
+            facts=facts_text,
             samples="\n\n".join(f"[씬{s['sceneNumber']}] {s['narration'].strip()}"
                                 for s in samples[-6:]),
             scenes=body))
