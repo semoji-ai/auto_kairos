@@ -237,6 +237,7 @@ _archive_*/
 !/scripts/apply_rewrite.py
 !/scripts/split_scenes_by_sentence.py
 !/scripts/plan_screens.py
+!/scripts/check_rewrite_facts.py
 !/scripts/sanitize_layout.py
 !/scripts/fill_people.py
 !/scripts/rematch_images.py
