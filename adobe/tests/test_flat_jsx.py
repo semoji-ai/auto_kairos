@@ -247,3 +247,45 @@ def test_short_video_holds_last_frame():
     assert "timeRemapEnabled" in seg
     assert "Time Remap" in seg
     assert "vl.outPoint = t1" in seg          # 길면 잘라 낸다
+
+
+def test_imports_go_into_folders():
+    """프로젝트 창을 종류별로 나눈다.
+
+    한 편을 통째로 넣으면 항목이 300개를 넘는다(그림 142 · 레이어 148 ·
+    영상 29 · 음성 46). 평평하게 쏟아지면 무엇이 무엇인지 알 수 없다.
+
+        auto_kairos/
+          씬 이미지/
+          레이어/ S100 · S101 …     ← 148장이 한 폴더면 못 찾는다
+          영상/
+          음성/
+    """
+    src = _src()
+    assert 'var AK_BIN = "auto_kairos";' in src
+    assert "function akFolder(" in src and "function akPutIn(" in src
+    for kind in ("씬 이미지", "레이어", "영상", "음성"):
+        assert 'akFolder(proj, [AK_BIN, "%s"' % kind in src, kind
+    # 레이어는 씬별 하위 폴더
+    assert '(s.prefix || "S00_").replace(/_$/, "")' in src
+
+
+def test_folder_lookup_is_not_cached():
+    """폴더 참조를 들고 있지 않는다.
+
+    항목을 지우면 색인이 밀려 들고 있던 FolderItem 이 무효가 된다 — 전에
+    그것 때문에 MOGRT 찍기가 두 번째부터 「FolderItem is not of the correct
+    type」 으로 죽었다. 매번 찾는다.
+    """
+    src = _src()
+    seg = src.split("function akFolder(")[1].split("\n    }")[0]
+    assert "proj.items.addFolder" in seg
+    assert "for (var k = 1; k <= proj.numItems" in seg      # 매번 훑는다
+    # id 로 견준다 — 객체 비교는 어긋나는 판이 있다
+    assert "akSameItem" in seg
+
+
+def test_putting_in_a_folder_never_stops_the_build():
+    """정리는 덤이다 — 폴더에 못 넣어도 조립은 계속한다."""
+    seg = _src().split("function akPutIn(")[1].split("\n    }")[0]
+    assert "try {" in seg and "catch" in seg

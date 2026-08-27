@@ -2,6 +2,10 @@
 // 입력: manifest 경로(JSON). 출력: 씬별 컴프 + Final 컴프(순서 배치).
 // JSON 파싱: json2.jsx 폴리필(JSON.parse) 우선, 없으면 eval 폴백.
 
+// 프로젝트 창에서 우리가 넣은 것이 모이는 자리. 사람이 따로 넣어 둔 소재와
+// 섞이지 않게 한 겹 두른다.
+var AK_BIN = "auto_kairos";
+
 function akBuildScene(manifestPath) {
     // 디자인 토큰(semoji) — manifest.ae_tokens 로드 실패 시 내장 기본값
     var TK = { colors: { bgRgb: [35, 38, 43], textRgb: [232, 234, 237], mutedRgb: [154, 160, 166], accentRgb: [74, 144, 217] },
@@ -522,7 +526,51 @@ function akBuildScene(manifestPath) {
     }
 
     // 파일 하나를 들여온다. 안 되면 null — **왜 안 됐는지 남긴다.**
-    function akImport(proj, path, note) {
+    /* 프로젝트 창의 폴더를 찾거나 만든다. `["auto_kairos","레이어","S100"]` 처럼 준다.
+
+       한 편을 통째로 넣으면 항목이 300개를 넘는다(그림 142 · 레이어 148 ·
+       영상 29 · 음성 46). 그것이 프로젝트 창에 평평하게 쏟아지면 무엇이
+       무엇인지 알 수 없다.
+
+       **참조를 들고 있지 않고 매번 찾는다.** 항목을 지우면 색인이 밀려
+       들고 있던 FolderItem 이 무효가 된다 — 전에 그것 때문에 「FolderItem is
+       not of the correct type」 으로 두 번째부터 죽은 적이 있다. */
+    function akSameItem(a, b) {
+        if (!a || !b) { return false; }
+        try { if (a.id != null && b.id != null) { return a.id === b.id; } } catch (e) { }
+        return a === b;
+    }
+
+    function akFolder(proj, names) {
+        var parent = null;
+        for (var i = 0; i < names.length; i++) {
+            var nm = String(names[i]);
+            var found = null;
+            for (var k = 1; k <= proj.numItems; k++) {
+                var it = proj.item(k);
+                if (!(it instanceof FolderItem) || it.name !== nm) { continue; }
+                var pp = null;
+                try { pp = it.parentFolder; } catch (eP) { pp = null; }
+                // **id 로 견준다.** 객체 비교는 같은 항목인데도 어긋나는 판이 있다.
+                var isRoot = (!pp || akSameItem(pp, proj.rootFolder));
+                if (parent ? akSameItem(pp, parent) : isRoot) { found = it; break; }
+            }
+            if (!found) {
+                found = proj.items.addFolder(nm);
+                if (parent) { try { found.parentFolder = parent; } catch (eF) { } }
+            }
+            parent = found;
+        }
+        return parent;
+    }
+
+    /* 항목을 폴더에 넣는다. 실패해도 조립은 계속한다 — 정리는 덤이다. */
+    function akPutIn(item, folder) {
+        if (!item || !folder) { return; }
+        try { item.parentFolder = folder; } catch (e) { }
+    }
+
+    function akImport(proj, path, note, folder) {
         if (!path) { return null; }
         var f = new File(path);
         if (!f.exists) { note.push("파일 없음"); return null; }
@@ -575,6 +623,7 @@ function akBuildScene(manifestPath) {
         if (!foot) { foot = akFindFootage(proj, f.fsName, f.name); }
         if (!foot) { note.push("가져왔으나 쓸 수 있는 항목이 없음(빈 항목/자리표시자)"); return null; }
         try { foot.comment = stamp; } catch (eS2) { }   // 다음에 되읽을지 판단할 도장
+        akPutIn(foot, folder);
         return foot;
     }
 
@@ -618,14 +667,14 @@ function akBuildScene(manifestPath) {
         return nl;
     }
 
-    function addLayerObj(proj, comp, layer, W, H, log) {
+    function addLayerObj(proj, comp, layer, W, H, log, folder) {
         var note = [];
-        var foot = akImport(proj, layer.path, note);
+        var foot = akImport(proj, layer.path, note, folder);
         var usedFallback = false;
         if (!foot && layer.fallback) {
             if (log) { log.push("SVG 실패(" + note.join("/") + ") → PNG 로 갑니다: " + (layer.aeName || layer.name)); }
             note = [];
-            foot = akImport(proj, layer.fallback, note);
+            foot = akImport(proj, layer.fallback, note, folder);
             usedFallback = !!foot;
         }
         if (!foot) {
@@ -951,7 +1000,7 @@ function akBuildScene(manifestPath) {
                 path: s.image,
                 position: (s.imageFit || {}).position,
                 scale: (s.imageFit || {}).scale
-            }, W, H);
+            }, W, H, log, akFolder(proj, [AK_BIN, "씬 이미지"]));
             if (one) {
                 one.name = pf + "이미지";
                 akSpan(one, t0, t1);
@@ -965,7 +1014,10 @@ function akBuildScene(manifestPath) {
                 // 레이어 하나가 어디서 실패하든 나머지는 들어와야 한다.
                 // 여기가 안 감싸여 있어 100씬이 배경 한 장만 남았다.
                 var il = null;
-                try { il = addLayerObj(proj, comp, lay, W, H, log); }
+                // 레이어는 **씬별로** 나눈다 — 148장이 한 폴더에 있으면 못 찾는다.
+                // 레이어가 있는 씬은 27개뿐이라 폴더가 넘치지 않는다.
+                var lf = akFolder(proj, [AK_BIN, "레이어", (s.prefix || "S00_").replace(/_$/, "")]);
+                try { il = addLayerObj(proj, comp, lay, W, H, log, lf); }
                 catch (eL) { log.push(pf + "레이어 실패 " + (lay.aeName || lay.name) + " — " + eL.toString()); continue; }
                 if (!il) { log.push(pf + "레이어 누락 " + (lay.aeName || lay.name)); continue; }
                 try {
@@ -1027,7 +1079,7 @@ function akBuildScene(manifestPath) {
         // **눈 아이콘으로 고르게 한다** — 위에 있는 영상이 기본으로 보인다.
         if (s.video) {
             var vNote = [];
-            var vf = akImport(proj, s.video, vNote);
+            var vf = akImport(proj, s.video, vNote, akFolder(proj, [AK_BIN, "영상"]));
             if (!vf) {
                 log.push(pf + "영상 가져오기 실패 — " + vNote.join("/"));
             } else {
@@ -1094,7 +1146,9 @@ function akBuildScene(manifestPath) {
         if (s.audio) {
             var aF = new File(s.audio);
             if (aF.exists) {
-                var al = comp.layers.add(proj.importFile(new ImportOptions(aF)));
+                var aItem = proj.importFile(new ImportOptions(aF));
+                akPutIn(aItem, akFolder(proj, [AK_BIN, "음성"]));
+                var al = comp.layers.add(aItem);
                 al.name = pf + "음성";
                 al.startTime = t0;                        // 이것이 없으면 0초부터 재생된다
                 al.inPoint = t0; al.outPoint = t1;
