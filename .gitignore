@@ -289,3 +289,4 @@ _imggen/characters/roster.pre_split.json
 !/scripts/compose_infographics.py
 !/scripts/sanitize_layout.py
 !/scripts/render_infographic.py
+!/scripts/apply_image_fixes.py
