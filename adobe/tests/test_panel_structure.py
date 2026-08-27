@@ -451,7 +451,9 @@ def test_jsx_no_auto_fade():
     assert "li === 0" not in jsx
     # fade 파라미터는 없다. `log` 는 나중에 붙은 것 — 왜 이 레이어가 빠졌는지
     # 알려면 함수 안에서 적어야 한다.
-    assert "function addLayerObj(proj, comp, layer, W, H, log)" in jsx
+    # `log` 는 왜 이 레이어가 빠졌는지 남기려고, `folder` 는 프로젝트 창을
+    # 정리하려고 나중에 붙은 것이다. 없어야 하는 것은 `fade` 뿐이다.
+    assert "function addLayerObj(proj, comp, layer, W, H, log, folder)" in jsx
     assert "function addLayerObj(proj, comp, layer, W, H, fade" not in jsx
 
 
