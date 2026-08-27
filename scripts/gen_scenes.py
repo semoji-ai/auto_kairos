@@ -206,7 +206,8 @@ def main() -> int:
     ap.add_argument("project", type=Path)
     ap.add_argument("prompt_dir", type=Path)
     ap.add_argument("-o", "--out", required=True, type=Path)
-    ap.add_argument("--sheets", type=Path, default=Path("_imggen/characters/final_v2_up"))
+    ap.add_argument("--sheets", type=Path, default=None,
+                    help="비우면 paths.get_charsheet_dir() 을 쓴다 — 경로 규칙은 한 곳에만 있다")
     ap.add_argument("--base", type=Path,
                     default=Path("auto_agent/data/artstyle/styles/semoji_character_sheet.png"),
                     help="화풍 기준 시트 — 인물이 없는 씬에도 붙인다")
@@ -216,6 +217,10 @@ def main() -> int:
     ap.add_argument("--allow-empty", action="store_true",
                     help="빈 프롬프트도 생성 (장면이 날조되므로 쓰지 말 것)")
     args = ap.parse_args()
+
+    if args.sheets is None:
+        from auto_agent.paths import get_charsheet_dir
+        args.sheets = get_charsheet_dir() or Path("_imggen/characters/sheets")
 
     data = json.loads((args.project / "scene_specs.json").read_text(encoding="utf-8"))
     scenes = {s["sceneNumber"]: s for s in data.get("scenes", data)}
@@ -322,7 +327,10 @@ def main() -> int:
             cast = []
         used, extra = [], list(people)
         for cid in cast:
-            f_ = (args.sheets / f"{cid}_sheet.png")
+            # `_up` 이 있으면 그것을 쓴다. 규칙은 paths.charsheet_path 에만 있다.
+            f_ = args.sheets / f"{cid}_sheet_up.png"
+            if not f_.exists():
+                f_ = args.sheets / f"{cid}_sheet.png"
             if not f_.exists():
                 continue
             nm = names.get(cid, cid)

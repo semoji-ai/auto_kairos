@@ -104,8 +104,19 @@ def render(root: Path, scene: dict, out: Path, scene_img: Path | None) -> bool:
         im.alpha_composite(el, (cx - w // 2, cy - h // 2))
 
         if it.get("label"):
-            draw_text(d, (cx, cy + h // 2 + 8), it["label"], font(24), mode,
-                      it.get("emphasis") == "accent")
+            ly = cy + h // 2 + 8
+            if mode == "box":
+                fl = font(24)
+                b = d.textbbox((0, 0), it["label"], font=fl)
+                tw, th = b[2] - b[0], b[3] - b[1]
+                d.rounded_rectangle([cx - tw // 2 - 12, ly - th // 2 - 8,
+                                     cx + tw // 2 + 12, ly + th // 2 + 8],
+                                    radius=7, fill=(255, 255, 255, 235))
+                d.text((cx - tw // 2, ly - th // 2), it["label"], font=fl,
+                       fill=ACCENT if it.get("emphasis") == "accent" else INK)
+            else:
+                draw_text(d, (cx, ly), it["label"], font(24), mode,
+                          it.get("emphasis") == "accent")
 
     # 기호(+ = →)는 항을 잇는 말이다. 작고 옅으면 화면이 문장이 되지 않는다 —
     # 실제로 「=」가 어두운 인물 위 회색이라 거의 안 보였다.
@@ -131,7 +142,20 @@ def render(root: Path, scene: dict, out: Path, scene_img: Path | None) -> bool:
         if style == "label":
             draw_text(d, (mx, my), txt, f, mode, False)
             continue
-        if info.get("background", "grid") != "grid":
+        # 배경이 모눈이라고 글자가 안전한 것이 아니다. **요소 그림 위에**
+        # 놓이면 묻힌다 — 「신용」이 공장 문 한가운데 놓여 안 읽혔다.
+        # 그래서 배경이 아니라 `contrast` 를 본다. sanitize_layout 이
+        # 겹침을 재서 box 로 올려 준다.
+        if mode == "box":
+            b = d.textbbox((0, 0), txt, font=f)
+            tw, th = b[2] - b[0], b[3] - b[1]
+            pad_x, pad_y = 14, 10
+            d.rounded_rectangle(
+                [mx - tw // 2 - pad_x, my - th // 2 - pad_y,
+                 mx + tw // 2 + pad_x, my + th // 2 + pad_y],
+                radius=8, fill=(255, 255, 255, 235))
+            d.text((mx - tw // 2, my - th // 2), txt, font=f, fill=INK)
+        elif info.get("background", "grid") != "grid":
             b = d.textbbox((0, 0), txt, font=f)
             tw, th = b[2] - b[0], b[3] - b[1]
             d.ellipse([mx - tw // 2 - 16, my - th // 2 - 14,

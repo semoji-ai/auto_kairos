@@ -4784,6 +4784,10 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "chapter_projection": "modules/chapter_projection_module.py",
             "scene_enricher_module": "modules/scene_enricher_module.py",
             "visual_decision_module": "modules/visual_decision_module.py",
+            # 화면을 정한 뒤·그린 뒤에 각각 세어 보는 관문.
+            # 규칙은 있었는데 검사가 없어 LG 1편이 시청자 평가 53점을 받았다.
+            "visual_gate_module": "modules/visual_gate_module.py",
+            "image_says_module": "modules/image_says_module.py",
             "duplicate-checker": "scripts/duplicate_check.py",
             "tts-generator": "scripts/generate_tts.py",
             "image_batch": "modules/image_batch_module.py",

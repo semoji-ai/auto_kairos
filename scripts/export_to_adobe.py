@@ -9,7 +9,7 @@
     scene_specs.json  ─────────────────▶  scenes.json
     images/ (선택된 것)  ────────────────▶  storyboard/sb_<sceneId>.png
     audio/*.mp3       ─────────────────▶  audio/tts_<sceneId>.mp3
-    _imggen/characters/final_v2_up ────▶  characters/
+    _imggen/characters/sheets ───────▶  characters/
 
 adobe가 이어받는 것: 레이어 분리 → 모션 계획 → ae_manifest → JSX 빌드.
 그래서 여기서는 **레이어를 나누지 않는다.** 통짜 씬 이미지를 넘기고,
@@ -175,7 +175,7 @@ def main() -> int:
             shutil.copy2(a, out / "audio" / f"tts_{sid}.mp3")
 
     # 인물 시트 — adobe가 레이어 분리·재생성에서 얼굴 근거로 쓴다
-    sheets = root / "_imggen" / "characters" / "final_v2_up"
+    sheets = root / "_imggen" / "characters" / "sheets"
     if sheets.exists():
         for p in sheets.glob("*_sheet.png"):
             shutil.copy2(p, out / "characters" / p.name)

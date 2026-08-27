@@ -514,6 +514,22 @@
           ],
           "blocking": false,
           "notes": "규칙: docs/rules/scene-visual-decision.md. 글로만 정하면 틀린다 — EP01에서 35씬이 인포그래픽으로 넘어갔으나 실제로 맞는 것은 5씬이었다. 이해는 도해가 빠르지만 보고 싶지가 않다(22:8 vs 5:25). 둘 다 이길 때만 인포그래픽이다. 씬 그림이 아직 없으면 설계까지만 하고 멈춘다 — step_3b 뒤에 --only step_2_visual 로 다시 부르면 비교까지 잇는다."
+        },
+        {
+          "id": "step_2_visual_check",
+          "name": "visual_gate",
+          "description": "화면을 정한 뒤 세 가지를 센다 — 프롬프트를 나눠 가진 씬 · 근거 없는 실물 자료 · 화면이 없는 씬.",
+          "type": "module",
+          "module": "visual_gate_module",
+          "input": [
+            "scene_specs.json",
+            "images/image_assets.json"
+          ],
+          "output": [
+            "scene_specs.json"
+          ],
+          "blocking": false,
+          "notes": "규칙: docs/rules/image-direction-rules.md 2·4절. ① check_split_health — 쪼갠 조각이 원래 프롬프트를 물려받으면 같은 그림이 나오고 반전이 질문 컷에서 소진된다(EP01 16씬). scene-splitting-rules 6절에 있던 검사인데 한 번도 돌지 않았다. ② check_kind_reason — 실물 자료로 정했는데 관련성 칸이 비면 「이 말과 이어진다」는 근거가 없는 것이다. 시대만 맞는 사진이 붙는다(EP01 6씬: 안희제 자리에 일본어 간판 거리 사진, 살림집 자리에 대형 공장 단지). 재현으로 되돌린다."
         }
       ],
       "checkpoint": {
@@ -565,6 +581,22 @@
             "shared/image-prompt-rules"
           ],
           "notes": "이미지는 step_3a에서 이미 생성됨. 에이전트는 TTS + 이미지 검수 + 매니페스트에 집중. 렌더링은 대시보드 검토 후 수동."
+        },
+        {
+          "id": "step_3b_image_check",
+          "name": "image_says_gate",
+          "description": "그린 그림을 **열어 보고** 이 말을 하는지 묻는다. wrong 이면 화면을 다시 짜고 다시 그린다.",
+          "type": "module",
+          "module": "image_says_module",
+          "input": [
+            "scene_specs.json",
+            "images/"
+          ],
+          "output": [
+            "_imggen/{EP}_image_says.json"
+          ],
+          "blocking": false,
+          "notes": "규칙: docs/rules/image-direction-rules.md 1·3절. 기존 검사 둘(check_prompt_match·check_asset_relevance)은 글과 글만 봐서, 그리고 난 뒤 아무도 그림을 안 봤다. 프롬프트가 맞아도 그림이 배신한다 — 프롬프트의 80%가 화풍 지시이고 그중 비율 블록이 스스로 「가장 중요한 요구」라고 선언하고 있었기 때문이다. EP01 첫 검사: ok 63 · weak 35 · wrong 10. 「못 내놓았다」에 웃으며 천을 펼치는 그림이, 「누가 비단을 사겠느냐」에 활기찬 장터가 올라가 있었다. 화풍을 덜면 그림체가 흩어지므로 덜지 말고 순위만 바꾼다(Priority + Must be visible)."
         },
         {
           "id": "step_3c",

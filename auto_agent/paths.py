@@ -26,18 +26,23 @@ def get_data_dir() -> Path:
 
 
 def get_charsheet_dir() -> Optional[Path]:
-    """인물 시트 디렉토리.
+    """인물 시트가 있는 **한 폴더**. 기본은 `_imggen/characters/sheets`.
 
-    워크스페이스와 코드 루트가 갈릴 수 있어 둘 다 본다. 워크스페이스는
-    NAS를 가리키는 반면(output·DB가 거기 있다) 시트는 저장소에 함께
-    들어 있어, 워크스페이스만 보면 못 찾는다 — 실제로 스토리보드에서
-    인물이 안 뜨던 원인이다.
+    폴더를 나누지 않는다. 예전에는 `final_v2`(원본)와 `final_v2_up`(업스케일)로
+    갈라 두어, 대시보드는 앞쪽을 보고 생성기는 뒤쪽을 봤다. 새 시트를 한쪽에만
+    넣으면 화면에서 「시트 없음」으로 떴다 — 구평회가 그랬다.
 
-    **폴더 이름을 하나로 못박으면 안 된다.** `final_v2` 는 LG 12부작에서
-    쓰던 이름이라, 디아지오편처럼 다른 폴더(`sheets`)에 시트를 만들면
-    앱이 전부 「시트 없음」으로 떴다 — 시트 22종이 멀쩡히 있는데도.
-    후보를 순서대로 보고, **`*_sheet.png` 가 실제로 들어 있는** 첫 폴더를
-    쓴다. 빈 폴더가 앞에 있어도 넘어간다.
+    **규칙은 파일 이름에 둔다.**
+
+        <id>_sheet.png       기본
+        <id>_sheet_up.png    업스케일 (있으면 이것을 쓴다)
+        _try/…               시도본은 하위 폴더로 물린다
+
+    워크스페이스(NAS)와 코드 루트가 갈릴 수 있어 둘 다 본다. 시트는 저장소에
+    함께 들어 있어 워크스페이스만 보면 못 찾는다.
+
+    옛 폴더 이름(`final_v2`·`final_v2_up`)도 뒤에서 찾아 준다 — 아직 옮기지
+    않은 프로젝트가 깨지지 않게.
     """
     env = os.getenv("KAIROS_CHARSHEET_DIR")
     if env:
@@ -45,7 +50,7 @@ def get_charsheet_dir() -> Optional[Path]:
         if p.is_dir():
             return p
 
-    names = ("sheets", "final_v2_up", "final_v2")
+    names = ("sheets", "final_v2_up", "final_v2")   # 앞이 정본, 뒤는 옛 이름
     fallback = None
     for base in (get_package_dir().parent, get_workspace_dir()):
         for name in names:
@@ -57,6 +62,27 @@ def get_charsheet_dir() -> Optional[Path]:
             if fallback is None:
                 fallback = p
     return fallback
+
+
+def charsheet_path(char_id: str, *, upscaled: bool = True) -> Optional[Path]:
+    """인물 시트 한 장의 경로. **여기 말고 다른 데서 경로를 짜지 않는다.**
+
+    업스케일본은 파일 이름의 `_up` 으로 가른다. 폴더를 나누지 않는다.
+
+        upscaled=True   `<id>_sheet_up.png` → 없으면 `<id>_sheet.png`
+        upscaled=False  `<id>_sheet.png`
+
+    없으면 None. 부르는 쪽이 「시트 없음」을 판단한다.
+    """
+    d = get_charsheet_dir()
+    if not d:
+        return None
+    if upscaled:
+        up = d / f"{char_id}_sheet_up.png"
+        if up.is_file():
+            return up
+    base = d / f"{char_id}_sheet.png"
+    return base if base.is_file() else None
 
 
 def get_workspace_dir() -> Path:

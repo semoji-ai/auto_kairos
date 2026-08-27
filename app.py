@@ -124,7 +124,7 @@ def _mount_asset(prefix: str, rel: str, extra: "Path | None" = None) -> None:
 
 _mount_asset("/fonts", "remotion/public/fonts")
 _mount_asset("/background", "remotion/public/background")
-_mount_asset("/charsheets", "_imggen/characters/final_v2", extra=get_charsheet_dir())
+_mount_asset("/charsheets", "_imggen/characters/sheets", extra=get_charsheet_dir())
 
 output_dir = workspace / "output"
 if output_dir.exists():

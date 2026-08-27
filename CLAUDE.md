@@ -190,6 +190,8 @@ script-director → scene_specs → script-reviewer 평가 (100점)
 @docs/rules/scene-splitting-rules.md
 @docs/rules/scene-visual-decision.md
 @docs/rules/direction-recipes.md
+@docs/rules/dont-discard-good-work.md
+@docs/rules/image-direction-rules.md
 @docs/rules/infographic-asset-rules.md
 @docs/rules/scene-video-rules.md
 @docs/rules/shared-vs-branch.md

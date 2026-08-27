@@ -237,6 +237,7 @@ _archive_*/
 !/scripts/apply_rewrite.py
 !/scripts/split_scenes_by_sentence.py
 !/scripts/plan_screens.py
+!/scripts/merge_weak_scenes.py
 !/scripts/check_rewrite_facts.py
 !/scripts/sanitize_layout.py
 !/scripts/fill_people.py
@@ -275,3 +276,16 @@ _imggen/characters/roster.pre_split.json
 
 # 즐겨찾기 — 자주 쓰는 배경·소스의 사본. 사람마다 다르고 무겁다.
 /favorites/
+
+# 씬 연출 검사 고리 — LG 1편에서 화면이 말을 배신한 원인을 잡으며 세운 도구들
+!/scripts/check_split_health.py
+!/scripts/check_kind_reason.py
+!/scripts/check_image_says.py
+!/scripts/replan_direction.py
+!/scripts/viewer_eval.py
+!/scripts/viewer_fixes.py
+!/scripts/check_rewrite_facts.py
+!/scripts/merge_weak_scenes.py
+!/scripts/compose_infographics.py
+!/scripts/sanitize_layout.py
+!/scripts/render_infographic.py

@@ -67,6 +67,13 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("ep")
     ap.add_argument("--apply", action="store_true")
+    # 한 장을 고치려고 전편을 다시 조립하면, 손대지 않은 도해까지 레이아웃
+    # 파일 상태로 되돌아간다. 그 사이 레이아웃이 깎여 있었으면(sanitize 가
+    # 강조를 떼거나 크기를 줄여 놓은 채라면) 잘 만든 화면이 조용히 망가진다.
+    # EP01 씬2가 그렇게 「기둥 위의 칩」에서 「도장 찍힌 원판」이 됐다.
+    ap.add_argument("--scenes", help="이 씬만 (쉼표로 구분)")
+    ap.add_argument("--allow-revert", action="store_true",
+                    help="설계를 마친 도해도 판정에 따라 떼어 낸다")
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
@@ -113,8 +120,12 @@ def main() -> int:
     data = json.loads(f.read_text(encoding="utf-8"))
 
     done, missing, skipped, passed, reverted = 0, [], [], [], []
+    kept = []   # 판정은 떼라 하지만 설계본이라 지킨 씬
+    want = {int(x) for x in args.scenes.split(",")} if args.scenes else None
     for s in data.get("scenes", []):
         n = s.get("sceneNumber")
+        if want and n not in want:
+            continue
         if s.get("visual_kind") != "infographic":
             continue
         spec = mode.get(n) or {"n": n, "labels": [],
@@ -132,6 +143,19 @@ def main() -> int:
             # 조립된 것이 없어도 종류는 되돌려야 한다. 안 그러면 「도해」로
             # 표시된 채 도해가 없는 씬이 남는다 — 그려서 견준 판정이 글
             # 판단을 이긴다는 규칙이 상태에 반영되지 않는다.
+            # **설계를 마친 도해는 판정만으로 떼어 내지 않는다.**
+            # 판정은 조립된 화면을 보고 내리는데, 그 뒤 요소를 갈아 끼우면
+            # 판정의 근거가 사라진다. 그런데 판정문은 그대로 남아 매번
+            # 도해를 떼어 낸다 — EP01 씬985가 그랬다. 「현대식 반팔 차림이라
+            # 1947년으로 안 읽힌다」는 판정이, 시대 복식으로 다시 짠 뒤에도
+            # 남아 후보 0장인 씬을 만들었다.
+            #
+            # 지키는 쪽으로 기운다. 떼려면 판정을 갱신하거나 --allow-revert 로
+            # 뜻을 밝힌다.
+            g = s.get("infographic") or {}
+            if g.get("designed") and g.get("items") and not args.allow_revert:
+                kept.append(n)
+                continue
             if s.get("infographic") or s.get("visual_kind") == "infographic":
                 s.pop("infographic", None)
                 s["visual_kind"] = "generate_image"
@@ -226,6 +250,10 @@ def main() -> int:
     designed = sum(1 for s in data.get("scenes", [])
                    if (s.get("infographic") or {}).get("designed"))
     print(f"{ep}  인포그래픽 씬 {len(mode)}개 중 {done}개 조립 (설계본 {designed}개)")
+    if kept:
+        print(f"  판정은 「그림」이지만 설계본이라 지킨 씬 {len(kept)}개: {sorted(kept)}")
+        print("    판정이 낡았는지 보세요 — 요소를 갈아 끼운 뒤에도 옛 판정이 남아 있곤 합니다.")
+        print("    정말 떼려면 --allow-revert 를 붙이세요.")
     if passed:
         print(f"  씬 그림으로 정한 씬 {len(passed)}개는 건드리지 않았습니다"
               + (f" (그중 {len(reverted)}개는 인포를 떼어 냈습니다)" if reverted else ""))
