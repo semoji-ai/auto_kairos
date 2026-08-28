@@ -166,8 +166,9 @@ EOF
 # 4. 그린다
 python3 scripts/gen_scenes.py output/b5f04c4d_lg_brand_encyclopedia_ep01 _imggen/ep01_vN -o _imggen/ep01_vN/out
 
-# 5. 붙인다 — publish_images 는 `current/` 를 본다. out 을 복사해야 한다
-mkdir -p _imggen/ep01_vN/current && cp _imggen/ep01_vN/out/scene_*.png _imggen/ep01_vN/current/
+# 5. 붙인다 — publish_images 가 out 을 바로 본다. 복사하지 말 것
+#    (예전에는 current 로 복사해야 했고, 그 복사가 사본을 한 벌씩 더 만들어
+#     EP01 작업 폴더 2.4GB 중 0.48GB 가 중복이었다)
 python3 scripts/publish_images.py _imggen/ep01_vN output/b5f04c4d_lg_brand_encyclopedia_ep01
 
 # 6. 확인한다

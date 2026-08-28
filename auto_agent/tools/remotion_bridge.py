@@ -240,7 +240,9 @@ class RemotionBridge:
                 "audioDurationSec": round(audio_duration, 3),
                 "subtitles": subtitles,
                 "visualization": visualization,
-                "kenBurns": {"enabled": not bool(viz_type), "zoomFactor": 1.08},
+                # 켄번은 기본으로 끈다 — 정지 그림을 미는 것은 의미 있는
+                # 효과가 아니다. 켤 씬은 design_spec 오버라이드로 정한다.
+                "kenBurns": {"enabled": False, "zoomFactor": 1.0},
                 "transition": {"type": "cut", "durationFrames": 0},
             }
             scene_entries.append(entry)

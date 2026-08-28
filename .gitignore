@@ -231,6 +231,7 @@ _archive_*/
 !/scripts/compose_infographics.py
 !/scripts/plan_infographic_layout.py
 !/scripts/check_infographic.py
+!/scripts/gen_infographic_scenes.py
 !/scripts/compare_scene_vs_info.py
 !/scripts/fix_infographic_layout.py
 !/scripts/judge_visual_by_text.py
@@ -283,6 +284,7 @@ _imggen/characters/roster.pre_split.json
 !/scripts/check_image_says.py
 !/scripts/replan_direction.py
 !/scripts/viewer_eval.py
+!/scripts/youtube_eval.py
 !/scripts/viewer_fixes.py
 !/scripts/check_rewrite_facts.py
 !/scripts/merge_weak_scenes.py
@@ -290,3 +292,7 @@ _imggen/characters/roster.pre_split.json
 !/scripts/sanitize_layout.py
 !/scripts/render_infographic.py
 !/scripts/apply_image_fixes.py
+!/scripts/ground_narration.py
+!/scripts/check_redundancy.py
+!/scripts/ask_removal.py
+!/scripts/pick_unselected.py

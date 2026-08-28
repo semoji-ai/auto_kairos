@@ -58,6 +58,38 @@ PROMPT = """그린 그림이 **그 말을 하는지** 봅니다.
 ok      그림이 그 말을 한다
 weak    말과 어긋나지는 않지만 그 말의 핵심이 화면에 없다
 wrong   그림이 말과 반대이거나 딴 이야기를 한다   ← 반드시 다시 그린다
+na      **그 말은 그림이 질 수 있는 말이 아니다**  ← 화면에 묻지 않는다
+```
+
+### na 로 둘 것 — 화면이 질 수 없는 짐
+
+물음·되묻기·예고·전언·평가처럼, 문장 안에 **그릴 수 있는 사물도 행동도
+사람도 없는** 말이 있습니다. 이런 말은 어떻게 그려도 「핵심이 화면에
+없다」가 됩니다. 그 몫은 자막·카드·모션이 집니다.
+
+```
+「왜였을까요.」
+「보여주는 장면이 하나 전해집니다.」
+「이건 단순한 배짱이 아니었습니다.」
+```
+
+다만 **말 안에 그릴 수 있는 것이 하나라도 있으면 na 가 아닙니다.**
+「집안의 논을 담보로 맡기고」에는 논과 문서가 있습니다 — 이건 weak 입니다.
+na 는 어려운 씬의 도피처가 아니라, 애초에 화면에 물을 수 없는 말입니다.
+
+### 갈래(tag) — 반드시 아래 중 하나
+
+같은 씬이 회차를 넘겨 **같은 갈래로 두 번 잡히면** 그때 실제 결함으로
+봅니다. 그래서 갈래를 정확히 골라야 합니다.
+
+```
+인물불일치   누구인지 안 읽히거나 앞뒤 씬과 생김새·나이·옷이 다르다
+시대고증     때와 곳이 어긋난다
+표정감정     표정이나 몸짓이 말의 감정과 어긋난다
+규모정도     수량·크기·액수의 정도가 말과 맞지 않는다
+요소누락     말이 가리키는 사물·행동이 화면에 없다
+방향시점     들어오는지 나가는지, 무엇을 향하는지가 안 읽힌다
+이웃중복     앞뒤 씬과 같은 화면이거나 다음 씬 내용을 앞질러 소진한다
 ```
 
 ### wrong 으로 볼 것
@@ -87,10 +119,11 @@ wrong   그림이 말과 반대이거나 딴 이야기를 한다   ← 반드시
 ## 낼 것 — JSON만
 
 {{"scenes": [
-  {{"scene": 씬번호, "verdict": "ok | weak | wrong",
+  {{"scene": 씬번호, "verdict": "ok | weak | wrong | na",
+    "tag": "weak·wrong 이면 위 일곱 갈래 중 하나, 아니면 빈 문자열",
     "seen": "그림에 실제로 보이는 것을 한 줄로",
-    "gap": "말과 어긋나는 지점 (ok 면 빈 문자열)",
-    "fix": "무엇으로 바꾸면 되는가 — 화면에 보이는 것으로 (ok 면 빈 문자열)"}}
+    "gap": "말과 어긋나는 지점 (ok·na 면 빈 문자열)",
+    "fix": "무엇으로 바꾸면 되는가 — 화면에 보이는 것으로 (ok·na 면 빈 문자열)"}}
 ]}}
 """
 
@@ -154,6 +187,11 @@ def main() -> int:
         prev = next((by_n[order[k]] for k in range(i - 1, -1, -1)
                      if (by_n[order[k]].get("narration") or "").strip()), None)
         sel = get_selected(proj / "images", n)
+        # 말은 **그 컷의 `narration` 한 줄**이다. `subtitle_lines` 를 쓰면 안 된다
+        # — 그것은 이 컷의 대사가 아니라 여러 컷에 걸쳐 나뉘는 문단 전체다.
+        # 씬61의 subtitle_lines[1]「스무 명 남짓이 모여 시작한 작은 공장」은
+        # 실제로 씬1064의 대사다. 문단을 통째로 물리면 컷마다 이웃 컷의 몫까지
+        # 답해야 해서 멀쩡한 그림이 무더기로 weak 로 떨어진다 (ok 81 → 64).
         L = [f"  씬{n} (챕터 {s.get('chapter')})",
              f"    말: {(s.get('narration') or '').strip()}"]
         if prev:
@@ -173,7 +211,33 @@ def main() -> int:
 
     import collections
     c = collections.Counter(r.get("verdict", "?") for r in rows)
-    print(f"\n  ok {c['ok']} · weak {c['weak']} · wrong {c['wrong']}   (본 것 {len(rows)})")
+    print(f"\n  ok {c['ok']} · weak {c['weak']} · wrong {c['wrong']} · na {c['na']}"
+          f"   (본 것 {len(rows)})")
+
+    # ── 재현성 게이트 ────────────────────────────────────────────────
+    # weak 총량은 그림의 상태가 아니라 「이번에 무엇을 지적했는가」에 크게
+    # 흔들린다. 그림을 29컷 고친 회차에도 32 → 23 → 28 → 24 로 밴드 안에서
+    # 움직였고, 손대지 않은 15컷이 새로 내려앉았다.
+    # 그래서 **같은 갈래로 두 번 연속 잡힌 것만** 고칠 것으로 센다.
+    hist_f = root / "_imggen" / f"{ep}_says_history.json"
+    try:
+        hist = json.loads(hist_f.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        hist = {}
+    confirmed, watching = [], []
+    for r in rows:
+        n = str(r["scene"])
+        v, tag = r.get("verdict"), (r.get("tag") or "").strip()
+        past = hist.get(n) or []
+        if v in ("weak", "wrong"):
+            if any(p.get("verdict") in ("weak", "wrong") and p.get("tag") == tag
+                   for p in past[-1:]):
+                confirmed.append(r)
+            else:
+                watching.append(r)
+        # 부분 검사도 이력에 쌓는다 — 본 것만 기록한다
+        hist[n] = (past + [{"verdict": v, "tag": tag}])[-4:]
+    hist_f.write_text(json.dumps(hist, ensure_ascii=False, indent=1), encoding="utf-8")
 
     bad = [r for r in rows if r.get("verdict") == "wrong"]
     for r in bad[:15]:
@@ -182,14 +246,39 @@ def main() -> int:
         print(f"      보이는 것: {r.get('seen','')[:88]}")
         print(f"      어긋남: {r.get('gap','')[:88]}")
 
+    cw = [r for r in confirmed if r.get("verdict") == "weak"]
+    print(f"\n  확정 weak {len(cw)}컷 (같은 갈래로 두 번 연속) — 이것만 고칩니다")
+    for r in cw[:20]:
+        print(f"    씬{r['scene']:>5}  [{r.get('tag','')}] {r.get('gap','')[:62]}")
+    print(f"  관찰 중 {len([r for r in watching if r.get('verdict') == 'weak'])}컷"
+          f" · 화면이 질 수 없는 말(na) {c['na']}컷")
+
     f = root / "_imggen" / f"{ep}_image_says.json"
+    # 한 컷만 다시 본 결과가 전수 결과를 통째로 덮으면 weak 목록이 사라진다.
+    # 그러면 손볼 씬을 알아내려고 전수를 다시 돌아야 한다 — 실제로 세 번 그랬다.
+    # **부분 검사는 본 씬만 갈아 끼우고 나머지는 그대로 둔다.**
+    merged = []
+    if (args.scenes or args.chapter is not None) and f.exists():
+        try:
+            old = json.loads(f.read_text(encoding="utf-8")).get("scenes") or []
+        except (json.JSONDecodeError, OSError):
+            old = []
+        seen_now = {r.get("scene") for r in rows}
+        merged = [r for r in old if r.get("scene") not in seen_now]
     if f.exists():
         f.replace(f.with_name(f"{f.stem}.prev{f.suffix}"))
-    f.write_text(json.dumps({"episode": ep, "scenes": rows}, ensure_ascii=False, indent=2),
-                 encoding="utf-8")
+    f.write_text(json.dumps({"episode": ep, "scenes": merged + rows},
+                            ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n{f}")
-    print(f"  다시 그릴 씬: {sorted(r['scene'] for r in bad)}")
-    return 0
+    # 게이트는 **확정된 wrong** 만 본다. wrong 도 흔들린다 — 전수 세 번에서
+    # [21] · [21,1026,1059] · [21,956,968] 이 나왔고, 1026·1059 는 손대지
+    # 않았는데 사라졌으며 956·968 은 그림이 그대로인데 새로 올라왔다.
+    # 겹친 것은 씬21 하나뿐이었다. weak 과 같은 잣대를 쓴다.
+    cwr = [r for r in confirmed if r.get("verdict") == "wrong"]
+    print(f"  다시 그릴 씬(확정 wrong): {sorted(r['scene'] for r in cwr)}")
+    print(f"    관찰 중 wrong: {sorted(r['scene'] for r in bad if r not in cwr)}")
+    print(f"  확정 weak: {sorted(r['scene'] for r in cw)}")
+    return 1 if cwr else 0
 
 
 if __name__ == "__main__":

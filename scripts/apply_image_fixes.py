@@ -77,6 +77,11 @@ PROMPT = """그림이 **한 걸음 모자란** 씬들입니다. 프롬프트에 
 **앞뒤 문장을 읽고 쓰세요.** 이 씬이 아직 질문이면 답을 그리면 안 됩니다 —
 다음 씬이 할 말을 미리 써 버립니다.
 
+**앞뒤 컷의 화면과 겹치지 마세요.** 위에 앞뒤 컷이 무엇을 그리고 있는지
+적어 두었습니다. 같은 장소·같은 사물·같은 사건을 그리면 두 컷이 같은 말을
+두 번 하게 됩니다. 실제로 씬1034와 1056이 둘 다 혼례식이 되었고,
+씬1002와 1046이 둘 다 빈 궤짝이 되었습니다.
+
 **부정문을 쓰지 마세요.** 「안경 없이」라고 쓰면 안경이 그려집니다.
 빼고 싶은 것은 있는 것으로 바꿔 씁니다.
 
@@ -124,6 +129,8 @@ def main() -> int:
     ap.add_argument("ep")
     ap.add_argument("--report", help="기본: _imggen/<EP>_image_says.json")
     ap.add_argument("--verdict", default="weak", choices=("weak", "wrong", "both"))
+    ap.add_argument("--all", action="store_true",
+                    help="한 번만 잡힌 weak 까지 전부 — 기본은 확정된 것만")
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("-j", "--jobs", type=int, default=3)
     args = ap.parse_args()
@@ -141,8 +148,33 @@ def main() -> int:
     rows = json.loads(rf.read_text(encoding="utf-8")).get("scenes", [])
     want = ("weak", "wrong") if args.verdict == "both" else (args.verdict,)
     todo = [r for r in rows if r.get("verdict") in want and r.get("scene") in by_n]
+
+    # weak 은 한 번 잡혔다고 결함이 아니다. 같은 그림을 다시 봐도 판정이
+    # 뒤집히고, 손대지 않은 컷이 다음 회차에 새로 내려앉는다. **같은 갈래로
+    # 두 번 연속 잡힌 것만** 고친다 — 이력은 check_image_says 가 쌓는다.
+    # wrong 은 지적이 일관되므로 한 번이면 바로 고친다.
+    if not args.all:
+        hf = root / "_imggen" / f"{ep}_says_history.json"
+        try:
+            hist = json.loads(hf.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            hist = {}
+        def confirmed(r):
+            # wrong 도 흔들린다. 손대지 않은 컷이 다음 회차에 사라지거나 새로
+            # 올라온다 — 전수 세 번에서 겹친 wrong 은 씬21 하나뿐이었다.
+            # 그래서 wrong 에도 같은 잣대를 쓴다.
+            past = (hist.get(str(r["scene"])) or [])[-2:]
+            hits = [p for p in past
+                    if p.get("verdict") in ("weak", "wrong")
+                    and p.get("tag") == (r.get("tag") or "").strip()]
+            return len(hits) >= 2
+        kept = [r for r in todo if confirmed(r)]
+        if len(kept) != len(todo):
+            print(f"  관찰 중 {len(todo) - len(kept)}컷은 건너뜁니다 "
+                  f"(아직 한 번만 잡힘 — --all 로 강제)")
+        todo = kept
     if not todo:
-        raise SystemExit("고칠 씬이 없습니다")
+        raise SystemExit("고칠 씬이 없습니다 (확정된 것 기준)")
 
     print(f"{ep}  {args.verdict} {len(todo)}컷의 프롬프트를 손봅니다")
 
@@ -156,10 +188,17 @@ def main() -> int:
                     if (by_n[order[k]].get("narration") or "").strip()), None)
         L = [f"  씬{n} (챕터 {s.get('chapter')})",
              f"    말: {(s.get('narration') or '').strip()}"]
-        if prev:
-            L.append(f"    앞: {(prev.get('narration') or '').strip()[:66]}")
-        if nxt:
-            L.append(f"    뒤: {(nxt.get('narration') or '').strip()[:66]}")
+        # 앞뒤의 **말만** 보여 주면 화면이 겹치는 것을 막지 못한다. 씬1034를
+        # 고쳤더니 씬1056과 같은 혼례 그림이 됐고, 씬1002를 고쳤더니 씬1046과
+        # 빈 궤짝이 겹쳤다 — 둘 다 이 도구가 만든 사고다. 앞뒤 컷이 **무엇을
+        # 그리고 있는지**까지 보여 준다.
+        for label, o in (("앞", prev), ("뒤", nxt)):
+            if not o:
+                continue
+            L.append(f"    {label}: {(o.get('narration') or '').strip()[:66]}")
+            op = ((o.get("imageAsset") or {}).get("prompt") or "").strip()
+            if op:
+                L.append(f"    {label} 컷의 화면: {op[:200]}")
         L += [f"    지금 그림에 보이는 것: {r.get('seen','')}",
               f"    모자란 것: {r.get('gap','')}",
               f"    검사기의 처방: {r.get('fix','')}",

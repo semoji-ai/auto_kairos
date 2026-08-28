@@ -334,10 +334,18 @@ def main() -> int:
             cast = []
         used, extra = [], list(people)
         for cid in cast:
-            # `_up` 이 있으면 그것을 쓴다. 규칙은 paths.charsheet_path 에만 있다.
-            f_ = args.sheets / f"{cid}_sheet_up.png"
-            if not f_.exists():
-                f_ = args.sheets / f"{cid}_sheet.png"
+            # `_up`(키운 판)이 있으면 그것을 쓴다. 다만 **기본 시트보다 낡았으면
+            # 쓰지 않는다** — 시트를 다시 만들어도 낡은 `_up` 이 이기면 새 얼굴이
+            # 통째로 무시된다. 허만정이 그랬다: 실사진에 맞춰 시트를 새로 만들었는데
+            # 8월 12일자 `_up` 이 먼저 붙어 일곱 컷이 다시 백발로 나왔다.
+            up = args.sheets / f"{cid}_sheet_up.png"
+            base = args.sheets / f"{cid}_sheet.png"
+            f_ = up
+            if not up.exists():
+                f_ = base
+            elif base.exists() and base.stat().st_mtime > up.stat().st_mtime:
+                print(f"    {cid}: _up 시트가 낡아 기본 시트를 씁니다", flush=True)
+                f_ = base
             if not f_.exists():
                 continue
             nm = names.get(cid, cid)

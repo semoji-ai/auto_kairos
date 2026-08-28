@@ -27,10 +27,27 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
+    # `current/` 가 있으면 그것을 쓰고, 없으면 `out/`(생성 결과)을 바로 본다.
+    #
+    # 예전에는 `current/` 만 봤다. 그래서 그릴 때마다 절차에 이 줄이 끼어 있었다.
+    #
+    #     cp _imggen/ep01_vN/out/scene_*.png _imggen/ep01_vN/current/
+    #
+    # 그 복사가 **사본을 한 벌씩 더 만든다.** EP01 작업 폴더 2.4GB 중 0.53GB(22%)가
+    # out 과 current 에 같은 파일이 두 벌 있어 생긴 것이었다. 하루에 배치를 스무 번
+    # 돌리면 그만큼 쌓인다.
+    #
+    # `current/` 를 계속 지원하는 이유는 organize_versions 로 여러 판 중 골라 담는
+    # 흐름이 있기 때문이다. 고른 것이 있으면 그쪽이 이긴다.
     cur = args.epdir / "current"
     if not cur.exists():
-        print(f"  {args.epdir.name}: current 폴더 없음 — organize_versions 먼저")
-        return 1
+        out = args.epdir / "out"
+        if out.exists() and any(out.glob("scene_*.png")):
+            cur = out
+            print(f"  {args.epdir.name}: current 없음 → out 에서 바로 발행합니다")
+        else:
+            print(f"  {args.epdir.name}: current·out 둘 다 없음 — organize_versions 먼저")
+            return 1
 
     spec = json.loads((args.project / "scene_specs.json").read_text(encoding="utf-8"))
     scenes = {s["sceneNumber"]: s for s in spec.get("scenes", spec)}

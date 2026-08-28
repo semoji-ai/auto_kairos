@@ -187,6 +187,8 @@ script-director → scene_specs → script-reviewer 평가 (100점)
 @docs/rules/direction-standard.md
 @docs/rules/character-sheet-rules.md
 @docs/rules/image-review-rules.md
+@docs/rules/content-evaluation-rules.md
+@docs/rules/manuscript-redundancy-rules.md
 @docs/rules/scene-splitting-rules.md
 @docs/rules/scene-visual-decision.md
 @docs/rules/direction-recipes.md

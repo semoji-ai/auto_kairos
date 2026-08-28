@@ -496,11 +496,14 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 "durationFrames": transition_in.get("duration_frames", transition_in.get("durationFrames", 15)),
             }
 
-        # Ken Burns
-        has_image = bool(image_path) and _ia_source != "none"
+        # Ken Burns — 기본으로 끈다.
+        # 정지 그림을 8% 확대하며 미는 것은 의미 있는 효과가 아니다. 화면이
+        # 무엇을 말하는지는 그림과 컷 전환이 정하고, 켄번은 그 위에 얹히는
+        # 움직임일 뿐이라 컷마다 같은 방식으로 들어가면 오히려 밋밋해진다.
+        # 필요한 씬은 design_spec 의 씬별 오버라이드로 켠다.
         ken_burns = {
-            "enabled": has_image,
-            "zoomFactor": 1.08 if has_image else 1.0,
+            "enabled": False,
+            "zoomFactor": 1.0,
             "zoomDirection": "in",
             "panDirection": "none",
         }
