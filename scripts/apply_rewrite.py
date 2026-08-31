@@ -135,6 +135,21 @@ def main() -> int:
             })
             s.pop("infographic", None)          # 화면 결정은 다시 한다
 
+            # 길이도 다시 잰다. `dict(src)` 로 원본을 통째로 베끼기 때문에
+            # **조각마다 원본의 길이가 그대로 따라붙는다.** 말은 6분의 1로
+            # 줄었는데 길이는 25초 그대로인 것이다.
+            #
+            # EP03에서 실제로 그랬다 — 씬21과 조각 다섯이 각각 25.0초를 들고
+            # 있어 합계가 35.3분으로 부풀었고, 채점기가 「빈 사무실 한 장이
+            # 25초」로 읽어 지속 점수를 깎았다. 화면이 아니라 눈금이 틀린 것이다.
+            #
+            # 비워 두면 `rubric_autofill.fill_pacing` 이 TTS 실측으로,
+            # 없으면 제 나레이션 길이로 다시 채운다.
+            if not turn:
+                s.pop("durationSec", None)
+                s.pop("estimatedDurationSec", None)
+                s.pop("hold", None)
+
             # 그림 물려주기
             pool = []
             for fr in ([] if turn else froms):
@@ -208,8 +223,19 @@ def main() -> int:
     # 이미지 항목 — 새 번호로 옮긴다. 파일은 그대로 두고 항목만 만든다.
     entries = {e.get("sceneNumber"): e for e in img_db.get("scenes", [])}
 
-    # 한 씬에서 갈라져 나온 조각들이 같은 그림을 그대로 물려받으면 화면이
-    # 되풀이된다. 원본에 여러 장이 있으면 **나눠 갖는다.**
+    # 한 씬에서 갈라져 나온 조각들에게 **원본의 후보를 나눠 주지 않는다.**
+    #
+    # 예전에는 나눠 줬다. 그림이 모자라니 있는 것으로 메운 것이다. 그런데
+    # 원본의 후보 여러 장은 **같은 프롬프트로 뽑은 변형**이다. 조각마다
+    # 프롬프트를 새로 써 두어도 화면은 같은 그림 여러 장이 된다.
+    #
+    # EP03에서 실제로 그랬다 — 씬18을 넷으로 가르고 `scene_018_gen_01~04`를
+    # 한 장씩 나눠 줬더니, 채점에서 「네 컷이 같은 회의실 정지 그림」으로
+    # 지속 점수가 9 → 6 으로 떨어졌다.
+    #
+    # 그래서 **첫 조각만 원본의 그림을 갖고, 나머지는 비운다.** 빈 자리는
+    # 「그려야 함」으로 남아 다음 단계에서 제 프롬프트로 그려진다. 비어 있는
+    # 것이 잘못된 그림보다 낫다 — 비면 눈에 띄어 반드시 채우게 된다.
     order_of: dict = {}
     for _ns, num, froms, _pool in made:
         key = froms[0] if froms else None
@@ -227,9 +253,14 @@ def main() -> int:
 
         sibs = order_of.get(froms[0] if froms else None, [num])
         rank = sibs.index(num) if num in sibs else 0
-        # 원래 고른 그림을 첫 조각이 갖고, 나머지는 다음 장을 하나씩
+        if rank > 0:
+            # 갈라져 나온 조각 — 후보는 버리지 않고 얹어 두되 고르지는 않는다
+            for i in imgs:
+                i["selected"] = False
+            entries[num] = {"sceneNumber": num, "images": imgs, "selected": None}
+            continue
         first = next((i for i, x in enumerate(imgs) if x.get("selected")), 0)
-        pick = imgs[(first + rank) % len(imgs)]
+        pick = imgs[first]
         for i in imgs:
             i["selected"] = i is pick
         entries[num] = {"sceneNumber": num, "images": imgs,

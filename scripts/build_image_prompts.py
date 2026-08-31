@@ -226,16 +226,25 @@ def main() -> int:
         prompt = build(s)
 
         # 철칙 자체검사
+        #
+        # `text_in_image` 값은 **화면에 그대로 찍을 글자**이지 모델에게 주는
+        # 지시가 아니다. 그래서 검사에서 뺀다 — 안 그러면 고유명사가 걸린다.
+        # EP03 씬41의 「특정외래품 판매금지법안」이 법 이름인데 「금지」 때문에
+        # 부정문으로 잡혔다. 이름을 고칠 수는 없으니 검사기가 비켜야 한다.
+        checked = prompt
+        lit = (s.get("text_in_image") or "").strip()
+        if lit:
+            checked = checked.replace(lit, "")
         issues = []
         # search에서 전환된 씬은 prompt가 비어 있다 — 그대로 넘기면 모델이 지어낸다.
         # EP01 씬 68(클리프행어 keyVisual)이 엉뚱한 현대 사무실로 나온 원인이었다.
         if not (ia.get("prompt") or "").strip():
             issues.append("프롬프트 비어 있음")
-        if NEGATIVE.search(prompt):
+        if NEGATIVE.search(checked):
             issues.append("네거티브 표현")
-        if NEGATIVE_KO.search(prompt):
+        if NEGATIVE_KO.search(checked):
             issues.append("한국어 부정문")
-        if RATIO_WORDS.search(prompt):
+        if RATIO_WORDS.search(checked):
             issues.append("몸 비율을 말로 규정")
         if re.match(r"^\s*\[AR", prompt):
             issues.append("앞머리 AR 브래킷")

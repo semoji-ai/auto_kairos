@@ -126,7 +126,8 @@ def main() -> int:
                     help="이 씬까지는 손대지 않는다(감독이 이미 고친 곳)")
     ap.add_argument("--chapter", type=int, help="이 챕터만")
     ap.add_argument("--sample-from",
-                    help="본보기를 다른 편에서 가져온다 (예: EP01) — 시리즈 목소리를 옮길 때")
+                    help="본보기를 다른 편에서 가져온다 (예: EP01, 또는 EP01,EP02) "
+                         "— 시리즈 목소리를 옮길 때. 여러 편이면 편마다 고르게 섞는다")
     ap.add_argument("--facts",
                     help="원고에 넣을 자료 파일(.md) — 리서치에 있는데 안 쓴 것들")
     args = ap.parse_args()
@@ -139,10 +140,21 @@ def main() -> int:
     # 본보기 — 감독이 고친 씬(keep-through 안쪽에서 말이 있는 것)
     if args.sample_from:
         # 시리즈의 목소리는 앞 편에 있다. 이 편에는 아직 본보기가 없다.
-        sproj, _ = resolve_project(args.sample_from)
-        sscenes = json.loads((sproj / "scene_specs.json").read_text(encoding="utf-8"))["scenes"]
-        samples = [s for s in sscenes
-                   if (s.get("narration") or "").strip() and not s.get("isChapterCard")][:14]
+        # 편이 여럿이면 한 편에 쏠리지 않게 번갈아 끼운다 — 뒤쪽 6개만 쓰이기 때문이다.
+        picks = []
+        for name in [x.strip() for x in args.sample_from.split(",") if x.strip()]:
+            sproj, _ = resolve_project(name)
+            sscenes = json.loads(
+                (sproj / "scene_specs.json").read_text(encoding="utf-8"))["scenes"]
+            picks.append([s for s in sscenes
+                          if (s.get("narration") or "").strip()
+                          and not s.get("isChapterCard")][:14])
+        if len(picks) == 1:
+            samples = picks[0]
+        else:
+            per = max(1, 6 // len(picks))
+            tails = [p[-per:] for p in picks]
+            samples = [s for row in zip(*tails) for s in row]
     else:
         keep_idx = order.index(args.keep_through) if args.keep_through in order else -1
         samples = [s for s in scenes[:keep_idx + 1]

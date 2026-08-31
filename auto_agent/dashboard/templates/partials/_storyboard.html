@@ -72,7 +72,12 @@
         {% if scene.isTurnCard %}
         {# 반전 접속사 카드 — 흰 화면에 한 마디. 빠르게 넘어간다. #}
         <div class="sb-turn-card"><span>{{ scene.headline }}</span></div>
-        {% elif scene.infographic and scene.infographic.items %}
+        {# `.items` 는 키가 없으면 딕셔너리의 메서드로 넘어간다 — 그것이 참이라
+           도해가 아닌 씬이 도해로 그려지려다 아래 for 문에서 터진다.
+           `.get()` 으로 값만 보고, 목록인지까지 확인한다. #}
+        {% elif scene.infographic and scene.infographic.get('items') is sequence
+                and scene.infographic.get('items') is not string
+                and scene.infographic.get('items') %}
         {# 인포그래픽 씬 — 요소를 자리에 놓아 그대로 보여준다. 그림을 굽지 않고
            배치 숫자만 읽는다. Remotion도 같은 숫자를 쓴다. #}
         <div class="sb-info-stage bg-{{ scene.infographic.background or 'grid' }} tx-{{ scene.infographic.contrast or 'plain' }}{% if not scene.infographic.designed %} rough{% endif %}"
@@ -92,10 +97,10 @@
           {% if scene.infographic.divider == 'vertical' %}
           <div class="sb-info-divider"></div>
           {% endif %}
-          {% for m in scene.infographic['marks'] or [] %}
+          {% for m in scene.infographic.get('marks') or [] %}
           <div class="sb-info-mark" style="left:{{ m.left }}%;top:{{ m.top }}%">{{ m.text }}</div>
           {% endfor %}
-          {% for it in scene.infographic['items'] %}
+          {% for it in scene.infographic.get('items') or [] %}
           <div class="sb-info-item"
                style="left:{{ it.left }}%;top:{{ it.top }}%;width:{{ it.size }}%">
             <img src="/infoassets/{{ it.src }}" alt="{{ it.id }}" loading="lazy">
@@ -118,8 +123,13 @@
         <div class="sb-title">
           <span class="scene-num">Scene {{ scene.sceneNumber }}</span>
           <span class="ch-tag">Ch{{ scene.chapter }}</span>
-          {% if scene._layout == 'quote_portrait' and scene['items'] is defined and scene['items'] %}
-          <span class="sb-scene-title" data-headline>"{{ scene['items'][0][:40] }}" — {{ scene.source or '' }}</span>
+          {# `scene['items']` 로 쓰면 안 된다. 키가 없을 때 Jinja 가 딕셔너리의
+             **`items` 메서드**를 돌려주는데, 그것이 참이라 조건을 통과하고
+             `[0]` 에서 터진다 — EP02·EP03 스토리보드가 통째로 500 이었다.
+             `.get()` 으로 값만 가져오고 목록인지까지 확인한다. #}
+          {% set _quote = scene.get('items') %}
+          {% if scene._layout == 'quote_portrait' and _quote is sequence and _quote is not string and _quote %}
+          <span class="sb-scene-title" data-headline>"{{ _quote[0][:40] }}" — {{ scene.source or '' }}</span>
           {% else %}
           <span class="sb-scene-title" data-headline>{{ scene.title }}</span>
           {% endif %}
@@ -749,7 +759,10 @@ function selectTtsVersion(sn, fileName) {
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.ok) {
       var audio = document.getElementById('audio-' + sn);
-      if (audio) audio.src = '/output/' + dirName + '/audio/scene_' + String(sn).padStart(3,'0') + '.mp3?t=' + Date.now();
+      // 파일 이름을 짐작하면 안 된다 — TTS 는 `<sceneId>.mp3` 로 저장하는데
+      // 여기서는 `scene_NNN.mp3` 를 만들어 붙여 404 가 났고, 플레이어가
+      // 「에러」로 떴다. 서버가 돌려준 실제 파일 이름을 그대로 쓴다.
+      if (audio) audio.src = '/output/' + dirName + '/audio/' + (d.selected || fileName) + '?t=' + Date.now();
     }
   });
 }
@@ -771,7 +784,8 @@ function regenTts(sn) {
     if (d.ok) {
       status.textContent = '✅ 재생성 완료!';
       var audio = document.getElementById('audio-' + sn);
-      if (audio) { audio.src = '/output/' + dirName + '/audio/scene_' + String(sn).padStart(3,'0') + '.mp3?t=' + Date.now(); }
+      // 서버가 방금 만든 파일 이름을 돌려준다. 짐작해서 만들지 않는다.
+      if (audio && d.file) { audio.src = '/output/' + dirName + '/audio/' + d.file + '?t=' + Date.now(); }
       loadTtsVersions(sn);
     } else {
       status.textContent = '실패: ' + (d.error || '').substring(0, 50);

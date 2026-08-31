@@ -148,7 +148,12 @@ async def serve_info_asset(name: str):
     # 폴더 이름은 프로젝트 라벨에서 온다. 한글 slug 프로젝트는 폴더가
     # `디아지오_..._info` 라 ASCII 만 받으면 통째로 404 가 된다 — 에셋을
     # 만들어 배치까지 해 놓고 화면에는 깨진 그림만 떴다.
-    if not _re.match(r"^[\w가-힣]+_info/[^/]+$", name):
+    #
+    # 폴더는 두 종류다 — 요소를 낱장으로 만드는 `<ep>_info` 와, 도해 한 장을
+    # 통째로 그리는 `<ep>_infoscene`. `_info` 로 **끝나는** 것만 받고 있어서
+    # `_infoscene` 이 전부 404 였다. EP01 씬2·EP03 씬976 이 그래서 물음표로
+    # 떴다 — 파일은 멀쩡히 있는데 라우트가 막고 있었다.
+    if not _re.match(r"^[\w가-힣]+_info(?:scene)?/[^/]+$", name):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
     f = (_LAYER_ROOT / name).resolve()
     if f.is_file() and _LAYER_ROOT.resolve() in f.parents:
@@ -855,8 +860,22 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
     def _image_url(scene_num):
         return get_scene_image_url(dir_name, scene_num, out_dir)
 
+    # `sceneId` 를 넘겨야 한다. TTS 는 `<sceneId>.mp3` 로 저장하는데 그것을
+    # 안 넘기면 `scene_NNN.mp3` 만 찾다가 못 찾고, 플레이어가 빈 채로 뜨거나
+    # 「에러」가 된다. helpers 는 이미 sceneId 를 받게 돼 있었는데 부르는 쪽이
+    # 안 주고 있었다.
+    _sid_by_num = {}
+
+    def _scene_id_of(scene_num):
+        if not _sid_by_num:
+            specs = load_project_json(out_dir, "scene_specs.json") or {}
+            for s in specs.get("scenes", []):
+                _sid_by_num[s.get("sceneNumber")] = s.get("sceneId") or ""
+        return _sid_by_num.get(scene_num, "")
+
     def _audio_url(scene_num):
-        return get_scene_audio_url(dir_name, scene_num, out_dir)
+        return get_scene_audio_url(dir_name, scene_num, out_dir,
+                                   scene_id=_scene_id_of(scene_num))
 
     if tab == "overview":
         context["asset_counts"] = pm.get_asset_counts(project_id)
@@ -1690,7 +1709,8 @@ async def storyboard_scene_detail_by_slug(request: Request, project_ref: str, sc
     # URL 경로용: output 디렉토리명 (uuid_{slug} 형식)
     dir_name = Path(out_dir).name if out_dir else slug
     scene["_image_url"] = get_scene_image_url(dir_name, scene_num, out_dir)
-    scene["_audio_url"] = get_scene_audio_url(dir_name, scene_num, out_dir)
+    scene["_audio_url"] = get_scene_audio_url(dir_name, scene_num, out_dir,
+                                              scene_id=scene.get("sceneId") or "")
     # 어도비가 만든 비디오·레이어 — 이 라우터는 씬을 직접 조립하므로
     # helpers 의 enrich 를 거치지 않는다. 여기서도 붙여 준다.
     from auto_agent.dashboard.helpers import (adobe_scene_ids, get_scene_video_url,
