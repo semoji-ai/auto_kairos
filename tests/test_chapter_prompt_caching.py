@@ -157,3 +157,35 @@ class TestCacheWarming:
 
         monkeypatch.setattr("subprocess.run", boom)
         r._warm_chapter_cache({"agent": "script-director", "mode": "chapters"})  # 예외가 새면 실패
+
+
+class TestChaptersRuleReachesChaptersMode:
+    """「chapters 모드 처리 규칙」이 chapters 모드에 도착해야 한다.
+
+    caption 마커(`<!-- caption: ... -->`)를 **쓰는** 것은 manuscript 모드 일이고,
+    그것을 씬의 `items` 에 **넣는** 것은 chapters 모드 일이다. 그런데 후자의 규칙이
+    「모드 1.5(manuscript)」 섹션 안에 적혀 있어서 슬라이싱이 거꾸로 배달했다 —
+    필요한 chapters 에는 없고, `items`/`headline` 을 손대는 것이 금지된 manuscript
+    에는 있었다.
+    """
+
+    def _slice(self, mode: str) -> str:
+        import pathlib
+        from auto_agent.orchestrator.skill_slicer import slice_agent_skill
+        full = pathlib.Path(
+            "auto_agent/data/skills/agents/script-director/SKILL.md"
+        ).read_text(encoding="utf-8")
+        return slice_agent_skill(full, "script-director", mode)
+
+    RULE = "각 항목을 그 씬의 `items` 배열에"
+
+    def test_chapters_mode_gets_the_rule(self):
+        assert self.RULE in self._slice("chapters")
+
+    def test_manuscript_mode_does_not_get_it(self):
+        """manuscript 는 items/headline 을 손대는 것이 금지다 — 이 규칙을 주면 안 된다."""
+        assert self.RULE not in self._slice("manuscript")
+
+    def test_manuscript_still_learns_to_write_the_marker(self):
+        """마커를 **쓰는** 법은 manuscript 일이다. 그건 남아 있어야 한다."""
+        assert "caption:" in self._slice("manuscript")
