@@ -223,6 +223,28 @@ output/{uuid}_{slug}/
 └── {slug}_final.mp4          # 최종 영상
 ```
 
+### 산출물은 커밋하지 않는다
+
+프로젝트가 만들어 낸 것(이미지·음성·영상·레이어·스토리보드)은 저장소에 올리지
+않는다. `output/`·`adobe/projects/`·`_imggen/` 아래의 **바이너리**가 그것이다.
+원고·기획·표석 같은 **텍스트(.md/.json/.jsonl)는 기록이라 계속 추적한다.**
+
+완성한 편은 보관 워크스페이스(NAS)로 보낸다.
+
+```bash
+python -m auto_agent.scripts.archive_project <프로젝트> [--dry-run]
+```
+
+실물만 NAS 로 가고 원래 자리에는 `ARCHIVED.json` 표석이 남는다. **DB 의
+`output_dir` 은 건드리지 않는다** — NAS 경로를 박았다가 대시보드가 죽은 적이
+있다(`docs/v5-plan.md:76`). 복사 → 해시 검증 → 삭제 순서라 중간에 끊겨도 원본이
+남는다(NAS 실측 쓰기 11MB/s·작은 파일 4.3개/초, 한 편이 10분을 넘는다).
+
+> ⚠️ `.gitignore` 의 `projects/*/…` 는 **깊이 하나만** 맞는다. 그래서
+> `projects/_archive/<편>/images/` 가 새어 2.9GB(1,802 파일)가 커밋된 적이 있다.
+> 지금은 `projects/**/…` 규칙과 pre-commit 관문
+> (`auto_agent/scripts/check_no_artifacts.py`)이 두 겹으로 막는다.
+
 ## 8. 설정 파일 위치
 
 | 파일 | 위치 | 역할 |
