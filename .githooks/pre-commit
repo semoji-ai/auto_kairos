@@ -17,6 +17,15 @@ if ! "$PYTHON_BIN" "$REPO_ROOT/scripts/sync_remotion_src.py" --check; then
     exit 1
 fi
 
+# ── 산출물 커밋 가드 ───────────────────────────────────────
+# adobe/projects/_archive 2.9GB(1,802 파일)가 통째로 커밋된 적이 있다. 원인은
+# .gitignore 의 `projects/*/…` 가 **깊이 하나만** 맞아 한 겹 더 들어간 자리를
+# 놓친 것이다. 규칙은 고쳤지만 규칙은 「내가 아는 자리」만 막는다.
+# 이 관문은 자리를 몰라도 막는다 — 프로젝트 폴더 아래 바이너리와 큰 파일.
+if ! "$PYTHON_BIN" -m auto_agent.scripts.check_no_artifacts; then
+    exit 1
+fi
+
 # ── 어도비 패널 캐시버스터 ─────────────────────────────────
 # CEP(Chromium)는 js/*.js 를 캐시한다. `?v=` 를 안 올리면 고쳐도 패널이 옛
 # 코드를 계속 쓰고, **고친 사람은 반영된 줄 안다.** 손으로 올리면 잊는다.
