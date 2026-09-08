@@ -1,7 +1,7 @@
-# Auto Kairos v3 — 프로젝트 가이드
+# Auto Kairos 5.0 — 프로젝트 가이드
 
 > 이 파일은 모든 Claude 세션이 시작 시 읽는 프로젝트 규칙서입니다.
-> 상세 규칙은 `.claude/rules/`에 분리되어 있습니다.
+> 상세 규칙은 `docs/rules/`에 분리되어 있습니다.
 
 ## Essential (Post-Compact)
 
@@ -156,7 +156,7 @@ script-director → scene_specs → script-reviewer 평가 (100점)
   → 최대 3라운드, 점수 하락 시 이전 버전 복원
 ```
 
-### runner.py (검증된 사실)
+### `auto_agent/orchestrator/runner.py` (검증된 사실)
 - **에이전트 호출은 stdin** (`-p` 플래그 사용 안 함)
 - 타임아웃: research `1200s`, script `600+분×180`, assembly `600+씬×60`
 - Resume: 출력 파일 존재 시 스킵, `skip_resume: True`로 강제 재실행
@@ -178,7 +178,7 @@ script-director → scene_specs → script-reviewer 평가 (100점)
 
 ## 6. 반복 에러 방지 규칙
 
-> 상세 규칙은 `.claude/rules/` 에 분리되어 있습니다.
+> 상세 규칙은 `docs/rules/` 에 분리되어 있습니다.
 
 @docs/rules/remotion-rules.md
 @docs/rules/path-env-rules.md
@@ -269,4 +269,4 @@ python3 -m auto_agent.modules.memory_index build
 ## 12. 에러 볼트
 
 에러 해결 시 → `$KAIROS_VAULT_DIR/08-dev/errors/` 노트 생성.
-3회 반복 → `.claude/rules/`에 방지 규칙 추가.
+3회 반복 → `docs/rules/`에 방지 규칙 추가.
