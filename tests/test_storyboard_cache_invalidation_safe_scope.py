@@ -1,6 +1,8 @@
 from pathlib import Path
 
-ROOT = Path("/Users/jleavens_macmini/Projects/auto_kairos_v3")
+# 저장소 루트는 이 파일 위치에서 구한다. 절대경로를 박으면 다른 머신에서
+# 조용히 FileNotFoundError 로 죽는다 — 실제로 그렇게 죽어 있었다.
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def _read(rel_path: str) -> str:
