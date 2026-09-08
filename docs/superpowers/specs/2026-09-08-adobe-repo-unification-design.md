@@ -110,13 +110,15 @@ rev-list --count main..<branch> == 0  이어야만 삭제 대상
 
 확인된 삭제 후보(둘 다 `main..` 카운트 0):
 
-- `v4-bridge` (로컬·원격) — `origin/v4-bridge`의 미병합 2커밋은 내용이 이미
-  main에 있다. `pv-zoom` 확대보기는 `storyboard.js`에, `--drop-missing`은
+- `v4-bridge` (로컬·원격) — `git cherry -v main origin/v4-bridge`가 미병합
+  2커밋을 **둘 다 `-`로 판정**했다(= 패치 동등물이 upstream에 있음).
+  `pv-zoom` 확대보기는 `storyboard.js`에, `--drop-missing`은
   `scripts/apply_rewrite.py:42`에 들어가 있다. SHA만 다른 재적용본이다.
 - `claude/fix-windows-art-style-oZLv0` (로컬·원격) — 로컬이 원격보다 4커밋
   앞서 있으나 `main`에 부족한 커밋은 0개다.
 
-나머지 브랜치는 검증 스크립트 결과에 따른다.
+나머지 브랜치는 검증 스크립트 결과에 따른다. `git cherry`는 `rev-list --count`가
+놓치는 "SHA는 다르나 내용은 같은" 재적용본을 잡아내므로, 판정에 **둘 다** 쓴다.
 
 ### 4. 폴더 개명
 
@@ -153,7 +155,15 @@ mv ~/Projects/auto_kairos_v3  ~/Projects/auto_kairos
   작업이다(첨부 이미지 경로 오류를 조용히 넘기던 버그). 이 통합 작업이
   커밋하지 않는다.
 - **`ACAO: *`를 화이트리스트로 바꾸지 않음** — 위 1항 참조.
-- **`auto_kairos_v4` 저장소 손대지 않음** — 이미 archived.
+- **`auto_kairos_v4` 저장소 손대지 않음** — 이미 archived이고, 흡수할 것이
+  남아 있지 않다. 실제 코드 커밋은 `cf9c90e`(2026-05-14)에서 멈췄고 그 뒤
+  3개는 문서다(마지막이 `1a9efab` "저장소 동결 — 줄기는 semoji-ai/auto_kairos").
+  `docs/v5-plan.md`가 흡수 대상으로 지목한 2건은 둘 다 정본에 들어와 있다.
+
+  | 지목된 것 | 현재 위치 |
+  |---|---|
+  | 발 축 까딱을 CSS로 (`transformOrigin: "50% 100%"`) | `auto_agent/remotion_template/src/layered/LayeredScene.tsx:97` |
+  | 렌더 경로로서의 Remotion | `auto_agent/remotion_template/src/` (`SemojiLayerScene.tsx` 외), `auto_agent/cli.py`에서 호출 |
 
 ## 테스트
 
