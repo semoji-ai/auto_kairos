@@ -416,6 +416,19 @@ tags: [feedback, stage0]
             return weekly_result
         usage_totals = self._accumulate_usage(usage_totals, weekly_result.get("usage", {}))
 
+        # **여기서 한 번 끊는다.** feedback 호출이 이 회고를 근거로 삼으므로, 회고가
+        # 비어 있으면 빈 템플릿을 읽고 지어내게 된다. 종료코드가 0이어도 파일을
+        # 안 쓴 경우가 있어 내용으로 확인한다 — 아래 최종 검사는 두 호출이 다 끝난
+        # 뒤라 그때는 이미 한 번 헛돈 뒤다.
+        if weekly_abs.read_text(encoding="utf-8") == weekly_before:
+            return {
+                "status": "error",
+                "returncode": -1,
+                "stdout": "",
+                "stderr": f"weekly review 가 채워지지 않았습니다: {weekly_abs}",
+                "usage": usage_totals,
+            }
+
         feedback_prompt = self.build_codex_stage0_feedback_prompt(channel, digest_paths, output_paths)
         feedback_result = self._run_agent(feedback_prompt, config)
         if feedback_result.get("status") != "success":
@@ -570,10 +583,18 @@ tags: [feedback, stage0]
         digest_paths: Dict[str, Path],
         output_paths: Dict[str, Path],
     ) -> str:
+        # **digest 다섯을 다시 읽지 않는다.** 바로 앞 호출이 그 다섯을 읽고 종합해
+        # weekly review 를 썼다. 같은 것을 또 주면 같은 근거를 두 번 분석하고,
+        # 두 산출물이 서로 다른 결론을 낼 수도 있다. 여기서는 **그 결론 위에서**
+        # 판단만 한다. signal digest 만 함께 두는데, 최신 외부 신호는 회고보다
+        # 앞으로 무엇을 할지에 더 쓸모가 있어서다.
         digest_lines = "\n".join(
-            f"- {label}: `{path}`"
-            for label, path in digest_paths.items()
-            if label in {"performance_digest", "analytics_digest", "signal_digest", "competitor_digest", "planning_digest"}
+            [f"- weekly_review (직전 단계 산출물): `{output_paths['weekly_review_path']}`"]
+            + [
+                f"- {label}: `{path}`"
+                for label, path in digest_paths.items()
+                if label == "signal_digest"
+            ]
         )
         return f"""# Stage 4 Codex Stage0 Feedback
 
@@ -584,6 +605,10 @@ tags: [feedback, stage0]
 
 ## 읽을 입력 파일
 {digest_lines}
+
+weekly review 는 이번 주 digest 를 이미 종합한 결과입니다. **원본 digest 를 다시
+훑지 말고** 이 회고 위에서 판단하세요. 회고에 없는 사실이 필요하면 그 회고가
+가리키는 원본 경로만 찾아 확인하세요.
 
 ## 반드시 채울 섹션
 - 성과 좋았던 주제 유형
@@ -1045,10 +1070,25 @@ Stage 0 피드백을 insights/feedback/ 에 저장하세요."""
                 break
         return "\n".join(compact)[:limit]
 
+    # 우리가 만든 digest 를 쌓아 두는 폴더. 입력으로 다시 집으면 안 된다.
+    _DIGEST_DIR_NAME = "_inputs"
+
     def _select_recent_files(self, directory: Path, limit: int) -> List[Path]:
+        """가장 최근에 손댄 자료 파일을 고른다 — **우리가 만든 digest 는 뺀다.**
+
+        `insights/performance/_inputs/` 는 이 클래스가 digest 를 쓰는 자리인데,
+        탐색 루트는 그 상위인 `insights/performance` 다. rglob 재귀에 수정시간
+        내림차순이라 **방금 쓴 digest 가 언제나 1순위로 뽑힌다.** 그러면 원자료
+        대신 재요약된 요약이 입력 자리를 차지하고, 돌릴수록 원본에서 멀어진다.
+        """
         if not directory.exists():
             return []
-        files = [p for p in directory.rglob("*") if p.is_file() and p.suffix.lower() in {".md", ".json", ".jsonl"}]
+        files = [
+            p for p in directory.rglob("*")
+            if p.is_file()
+            and p.suffix.lower() in {".md", ".json", ".jsonl"}
+            and self._DIGEST_DIR_NAME not in p.parts
+        ]
         files.sort(key=lambda p: (p.stat().st_mtime, str(p)), reverse=True)
         return files[:limit]
 
