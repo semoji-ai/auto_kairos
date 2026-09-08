@@ -128,7 +128,41 @@ mv ~/Projects/auto_kairos_v3  ~/Projects/auto_kairos
 
 `_v3`라는 이름이 이번 혼란의 근원이다. `docs/v5-plan.md`에도 예정된 작업이다.
 
-의존처 5곳을 이어서 고친다.
+### 먼저 — 이 저장소는 여러 머신에서 쓰인다
+
+`.claude/settings.json`의 훅 3개가 **`/Users/jleavens_macmini/…`** 를 박아 두고
+있다. 현재 머신은 `hannah`라 그 경로가 없다. 결과는 조용한 무력화다.
+
+| 훅 | 이 머신에서 |
+|---|---|
+| `CreativeScene` 편집 → Vite 빌드 2종 | `cd`가 실패해 **조용히 안 돈다** |
+| TTS 전처리 검증 | python 경로가 없어 경고만 뜬다 |
+| narration 재작성 검증 | 같음 |
+
+첫 줄이 특히 나쁘다. `docs/rules/remotion-rules.md`가 **필수**라고 못박은
+빌드인데 이 머신에서는 한 번도 돈 적이 없다.
+
+`adobe/HANDOFF-5.0-monorepo.md:47`에는 별칭 심링크
+(`~/LocalProjects/auto_kairos` → 실폴더) 전략이 적혀 있으나 **이 머신에는
+`~/LocalProjects`가 없다.** 현재 CEP 심링크는 실경로를 직접 가리킨다.
+
+### 그래서 — 새 이름으로 고치지 않고, 이름에서 떼어 낸다
+
+경로 5곳을 새 이름으로 바꾸면 **다음 개명 때 같은 일을 또 한다.** 게다가
+머신마다 사용자명이 달라 어느 이름으로 고쳐도 한쪽은 깨진다.
+
+저장소 **안**의 경로는 머신 독립으로 바꾼다. Claude Code 훅은
+`$CLAUDE_PROJECT_DIR`을 받으므로 절대경로가 필요 없다.
+
+| 대상 | 처리 |
+|---|---|
+| `.claude/settings.json` 훅 3개 | `/Users/…/auto_kairos_v3` → `$CLAUDE_PROJECT_DIR` |
+| `.env.example` `AUTO_AGENT_DB` | 예시 경로를 `<저장소 루트>/auto_agent.db`로 |
+| `adobe/HANDOFF-5.0-monorepo.md` | 별칭 전략을 실제 상태에 맞게 고침 |
+
+이렇게 하면 개명이 저장소를 **건드리지 않는다.** 죽어 있던 훅도 같이 살아난다.
+
+### 저장소 밖 의존처
 
 | # | 대상 | 내용 |
 |---|---|---|
@@ -136,9 +170,13 @@ mv ~/Projects/auto_kairos_v3  ~/Projects/auto_kairos
 | 2 | `~/.claude/settings.json` | 경로 참조 |
 | 3 | `~/.codex/config.toml` | 경로 참조 |
 | 4 | `~/Projects/brand-tycoon/tools/gen_portraits.py` | 다른 프로젝트가 참조 |
-| 5 | 저장소 내부 `.claude/settings.json`·`.env.example` | 경로 참조 |
 
 개명은 `mv`이므로 미커밋 변경분이 그대로 따라온다.
+
+> ⚠️ `adobe/projects/7184ea44`(1.1GB)에 v3로 아직 안 올린 작업이 있다
+> (`docs/adobe-project-unification.md` 참조 — 안경 지운 109·110·112, 레이어,
+> 씬 99 비디오, 챕터 4·5 TTS). **이 통합 작업의 범위 밖**이지만 개명이 그
+> 폴더를 옮기므로 여기 적어 둔다. `mv`는 내용을 건드리지 않는다.
 
 ## 범위 제외
 
