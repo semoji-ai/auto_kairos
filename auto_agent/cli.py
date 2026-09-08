@@ -939,7 +939,7 @@ def cmd_update(args):
         # pip install git+... 로 설치한 경우 (site-packages에 위치)
         console.print("  [dim]Git 저장소가 아닌 환경에서 설치되었습니다.[/dim]\n")
         console.print("  업데이트 방법:")
-        console.print("  [accent]pip install --upgrade git+ssh://git@github.com/jleavens01/kairos-agent.git[/accent]")
+        console.print("  [accent]pip install --upgrade git+ssh://git@github.com/semoji-ai/kairos-agent.git[/accent]")
         return
 
     current = __version__
