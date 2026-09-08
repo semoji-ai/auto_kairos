@@ -297,3 +297,7 @@ _imggen/characters/roster.pre_split.json
 !/scripts/ask_removal.py
 !/scripts/pick_unselected.py
 !/scripts/publish_assets.py
+
+# 어도비 패널 옛 프로젝트 사본 — 지금은 v3 output/ 을 직접 본다
+# (adobe/backend/projects.py 의 projects_root 주석 참조)
+adobe/projects/
