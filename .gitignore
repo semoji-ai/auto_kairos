@@ -274,3 +274,6 @@ _imggen/characters/roster.pre_split.json
 
 # 즐겨찾기 — 자주 쓰는 배경·소스의 사본. 사람마다 다르고 무겁다.
 /favorites/
+
+# 챕터 캐싱용 시스템 프롬프트 (내용 해시 파일명, 재생성 가능)
+.chapter_system_*.txt

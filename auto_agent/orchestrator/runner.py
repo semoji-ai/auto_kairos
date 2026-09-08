@@ -15,6 +15,7 @@ pipeline.json을 읽고 순차/병렬 실행.
   python -m orchestrator.runner --project <slug> --only step_8b
 """
 import json
+import hashlib
 import os
 import platform
 import re
@@ -3034,6 +3035,11 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         chapter_results: dict = {}
         total_cost: dict = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0}
 
+        # 7개를 한꺼번에 던지면 **아무도 캐시를 못 읽는다.** 캐시 항목은 앞선 응답이
+        # 시작된 뒤에야 읽을 수 있는데, 동시 발사에서는 7개가 전부 아직 안 쓰인
+        # 캐시를 보고 각자 쓴다. 값싼 호출 하나로 먼저 굽고 나서 던진다.
+        self._warm_chapter_cache(step)
+
         workers = min(n_chapters, 10)
         with ThreadPoolExecutor(max_workers=workers) as pool:
             futures = {}
@@ -3176,6 +3182,100 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 cost_info=total_cost,
             )
 
+    @staticmethod
+    def _build_chapter_static_system(agent_skill: str, shared_skills_text: str) -> str:
+        """챕터 호출 7회가 **글자 하나까지 공유**하는 블록.
+
+        캐시는 prefix 바이트 일치라, 여기 들어가는 것은 챕터와 무관해야 한다.
+        빈 `<shared_skills>` 태그도 넣지 않는다 — 있는 편과 없는 편의 바이트가
+        달라지면 그 둘은 서로 다른 캐시가 된다.
+        """
+        parts = [f"<agent_skill>\n{agent_skill}\n</agent_skill>"]
+        if shared_skills_text:
+            parts.append(f"<shared_skills>{shared_skills_text}\n</shared_skills>")
+        return "\n\n".join(parts)
+
+    @staticmethod
+    def _write_chapter_system_prompt(dir_path: Path, content: str) -> Path:
+        """정적 블록을 파일로 떨궈 `--append-system-prompt-file` 에 넘긴다.
+
+        내용 해시를 파일명으로 삼아 **같은 내용이면 같은 파일**이 된다. 7개 챕터가
+        같은 파일을 보게 하려는 것이고, 덤으로 내용이 바뀌면 파일이 갈려 낡은 것을
+        읽는 사고가 안 난다.
+
+        쓰기는 임시 파일 + rename 이다. 병렬로 들어와도 반쯤 쓰인 파일을 읽는 일이
+        없어야 한다 — 그러면 그 챕터만 캐시가 어긋난다.
+        """
+        digest = hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
+        path = dir_path / f".chapter_system_{digest}.txt"
+        if not path.exists():
+            tmp = path.with_suffix(f".{os.getpid()}.{threading.get_ident()}.tmp")
+            tmp.write_text(content, encoding="utf-8")
+            os.replace(tmp, path)          # 원자적 — 반쯤 쓰인 파일이 보이지 않는다
+        return path
+
+    def _warm_chapter_cache(self, step: dict) -> None:
+        """챕터를 병렬 발사하기 전에 캐시를 한 번 구워 둔다.
+
+        캐시 항목은 **앞선 응답이 시작된 뒤에야** 읽을 수 있다. 7개를 동시에 던지면
+        전부 「아직 없는 캐시」를 보고 각자 쓴다 — 쓰기는 읽기의 12.5배 값이라
+        캐싱을 켜고도 이득이 거의 없어진다.
+
+        그래서 값싼 호출 하나(짧은 user 메시지 + 같은 시스템 프롬프트)로 먼저 굽는다.
+        **실패해도 조용히 넘어간다** — 이건 최적화이지 본 작업이 아니다.
+        """
+        try:
+            agent_name = step.get("agent", "script-director")
+            static = self._build_chapter_static_system(
+                self._load_agent_skill(agent_name, step),
+                self._build_shared_skills_text(agent_name, step),
+            )
+            path = self._write_chapter_system_prompt(self.project_dir, static)
+            cmd = [
+                self._find_claude_cli(), "--print", "--output-format", "json",
+                "--dangerously-skip-permissions",
+                "--append-system-prompt-file", str(path),
+                "--model", step.get("single_call_model", "claude-opus-4-6"),
+                "--max-turns", "1",
+            ]
+            env = os.environ.copy()
+            env.pop("CLAUDECODE", None)
+            t0 = time.time()
+            proc = subprocess.run(
+                cmd, input="OK 라고만 답하세요.", capture_output=True, text=True,
+                encoding="utf-8", env=env, cwd=str(self.project_dir), timeout=180,
+                **subprocess_kwargs(),
+            )
+            info = self._parse_claude_cost(proc.stdout, proc.stderr)
+            print(
+                f"    [cache_warm] {time.time() - t0:.1f}s "
+                f"write={info.get('cache_write', 0):,} read={info.get('cache_read', 0):,}",
+                flush=True,
+            )
+        except Exception as e:                  # 워밍 실패가 본 작업을 막지 않는다
+            print(f"    [cache_warm] 건너뜁니다: {e}", flush=True)
+
+    def _build_shared_skills_text(self, agent_name: str, step: dict) -> str:
+        """공유 스킬 본문을 이어 붙인다. 챕터 실행부와 워밍이 **같은 바이트**를 봐야 한다."""
+        skill_names = list(step.get("skills", []))
+        agents_config = self._load_agents_config()
+        agent_def = agents_config.get("subagents", {}).get(agent_name, {})
+        for s in agent_def.get("skills", []):
+            if s not in skill_names:
+                skill_names.append(s)
+        skill_names = self._filter_writing_style_skills(skill_names)
+        skill_refs = agent_def.get("skill_refs", {})
+        skill_limits = agent_def.get("skill_limits", {})
+        out = ""
+        for skill_name in skill_names:
+            content = self._load_shared_skill(skill_name, skill_refs.get(skill_name))
+            if content:
+                limit = skill_limits.get(skill_name)
+                if limit and len(content) > limit:
+                    content = content[:limit]
+                out += f"\n\n## {skill_name}\n\n{content}"
+        return out
+
     def _execute_manuscript_chapter(
         self,
         step: dict,
@@ -3268,14 +3368,6 @@ SCRIPT_DIRECTOR_MODE: {_mode}
 SCRIPT_DIRECTOR_CHAPTER: {chapter_num}
 </system_context>
 
-<agent_skill>
-{agent_skill}
-</agent_skill>
-
-<shared_skills>
-{shared_skills_text}
-</shared_skills>
-
 {context_block}
 
 <scene_table>
@@ -3314,10 +3406,21 @@ JSON 구조:
         model = step.get("single_call_model", "claude-opus-4-6")
         timeout_sec = self._get_agent_timeout(agent_name)
 
+        # 정적 블록(SKILL + 공유 스킬)은 **시스템 프롬프트로** 넘긴다.
+        # stdin 에 실으면 챕터마다 새로 캐시를 쓴다 — 자리만 옮기면 캐시를 탄다.
+        # 실측(chapters 슬라이스 57KB, 같은 프롬프트 2회):
+        #   시스템 프롬프트  2회차 write 0      read 106,516
+        #   stdin           2회차 write 83,454 read  23,069
+        sys_prompt_path = self._write_chapter_system_prompt(
+            self.project_dir,
+            self._build_chapter_static_system(agent_skill, shared_skills_text),
+        )
+
         cli_path = self._find_claude_cli()
         cmd = [
             cli_path, "--print", "--output-format", "json",
             "--dangerously-skip-permissions",
+            "--append-system-prompt-file", str(sys_prompt_path),
             "--model", model, "--max-turns", "10",
             "--allowedTools", "Read", "--allowedTools", "Write",
         ]
@@ -5826,7 +5929,10 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
     def _parse_claude_cost(self, stdout: str, stderr: str) -> dict:
         """Claude CLI 출력에서 비용 정보 파싱."""
-        cost_info = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0}
+        # 캐시 토큰까지 받아 둔다. CLI 는 이미 주고 있었는데 여기서 버리고 있어서,
+        # 캐시가 도는지 안 도는지를 볼 방법이 없었다.
+        cost_info = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0,
+                     "cache_read": 0, "cache_write": 0}
 
         for raw in (stdout, stderr):
             wrapper = self._parse_cli_result_wrapper(raw)
@@ -5835,6 +5941,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             usage = wrapper.get("usage", {}) or {}
             cost_info["tokens_in"] = usage.get("input_tokens", 0)
             cost_info["tokens_out"] = usage.get("output_tokens", 0)
+            cost_info["cache_read"] = usage.get("cache_read_input_tokens", 0) or 0
+            cost_info["cache_write"] = usage.get("cache_creation_input_tokens", 0) or 0
             cost_info["cost_usd"] = (
                 wrapper.get("cost_usd", 0.0) or wrapper.get("total_cost_usd", 0.0)
             )
