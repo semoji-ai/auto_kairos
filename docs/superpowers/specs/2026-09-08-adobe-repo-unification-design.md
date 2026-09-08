@@ -163,6 +163,18 @@ mv ~/Projects/auto_kairos_v3  ~/Projects/auto_kairos
 - SSE 가드 — `/api/events`가 교차 출처 요청에 403을 돌려주는지. `_sse`가
   `_route`를 우회하므로 별도 케이스가 필요하다.
 - `adobe/` 기존 테스트 전체 통과(회귀 없음).
+
+  루트 `pyproject.toml`이 `testpaths = ["tests"]`라 저장소 루트에서 pytest를
+  돌리면 **`adobe/tests/`는 수집되지 않는다.** adobe 테스트는 경로를 명시해야
+  한다. 기준선은 이미 재 뒀다.
+
+  ```bash
+  cd adobe && python3 -m pytest tests -q
+  # 2026-09-08 기준선: 952 passed, 2 skipped (132초)
+  ```
+
+  adobe 테스트는 `from backend import …` 형태로 import하므로 `adobe/`를
+  작업 디렉토리로 삼아야 한다.
 - 실전 스모크
   - `curl -H "Origin: https://evil.test" http://127.0.0.1:8765/api/projects/files` → **403**
   - Origin 헤더 없이 같은 요청 → **200** (패널 정상 동작 확인)
