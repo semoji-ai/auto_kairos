@@ -103,7 +103,13 @@
           {% for it in scene.infographic.get('items') or [] %}
           <div class="sb-info-item"
                style="left:{{ it.left }}%;top:{{ it.top }}%;width:{{ it.size }}%">
-            <img src="/infoassets/{{ it.src }}" alt="{{ it.id }}" loading="lazy">
+            {# 도해도 이제 프로젝트 폴더로 발행된다(`images/info/`). 그쪽을 먼저
+               쓰고, 아직 옮기지 않은 프로젝트는 옛 경로(`/infoassets/`)로 물러난다.
+               폴백을 남기는 이유 — 라우트가 작업 폴더 이름 규칙에 매여 있어서
+               `<ep>_infoscene` 이 통째로 404 였던 적이 있다. 화면이 조용히
+               깨지는 것보다 두 곳을 다 보는 편이 낫다. #}
+            <img src="{% if it.src.startswith('info/') %}/output/{{ dir_name }}/images/{{ it.src }}{% else %}/infoassets/{{ it.src }}{% endif %}"
+                 alt="{{ it.id }}" loading="lazy">
             {% if it.label %}<span class="{{ it.emphasis or 'normal' }}">{{ it.label }}</span>{% endif %}
           </div>
           {% endfor %}

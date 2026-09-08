@@ -85,6 +85,37 @@ def charsheet_path(char_id: str, *, upscaled: bool = True) -> Optional[Path]:
     return base if base.is_file() else None
 
 
+def get_series_dir(series_id: str, create: bool = False) -> Path:
+    """시리즈가 함께 쓰는 자산이 놓이는 곳 — `output/_series/<series_id>/`.
+
+    편마다 복사하면 안 되는 것들이 있다. 인물 시트가 그렇다. LG 12부작이
+    구인회·허만정을 나눠 쓰는데 편별 폴더에 한 벌씩 두면 열두 벌이 되고,
+    한 곳만 고치면 나머지 열한 편이 옛 얼굴로 남는다.
+
+    그런데 **둘 자리가 없어서** 작업 폴더(`_imggen/characters/sheets`)가
+    자산 저장소를 겸하고 있었다. 그래서 두 가지가 어긋났다.
+
+      · 프로젝트 폴더만 백업하면 시트와 도해가 통째로 빠진다
+      · `output` 은 NAS 인데 그 둘만 로컬이라 워크스페이스를 옮기면 깨진다
+
+    `episode_brief.json` 의 `_series.series_id` 가 이미 열두 편 모두에
+    들어 있다. 그것을 그대로 폴더 이름으로 쓴다.
+
+        output/_series/lg_brand_encyclopedia/
+          ├── characters/     인물 시트
+          ├── artstyle/       화풍 기준
+          └── refs/           실사진
+
+    **만드는 곳은 여전히 `_imggen` 이다.** 코덱스가 NAS 에 쓰지 못하기
+    때문이다(operation not permitted). 씬 이미지와 똑같이 로컬에서 만들고
+    발행 단계에서 이쪽으로 옮긴다.
+    """
+    d = get_workspace_dir() / "output" / "_series" / series_id
+    if create:
+        d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
 def get_workspace_dir() -> Path:
     """사용자 워크스페이스 디렉토리 (output, .env, DB)."""
     # 1. --workspace CLI 인자

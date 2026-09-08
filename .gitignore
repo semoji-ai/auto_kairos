@@ -296,3 +296,4 @@ _imggen/characters/roster.pre_split.json
 !/scripts/check_redundancy.py
 !/scripts/ask_removal.py
 !/scripts/pick_unselected.py
+!/scripts/publish_assets.py
