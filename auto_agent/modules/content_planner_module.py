@@ -227,7 +227,7 @@ def generate_auto_brief(
     style_hint = ""
     if writing_style == "semoji" or channel in ("세모지", "세상의모든지식"):
         style_hint = (
-            "\n채널 특성: 세모지 — writing-style-semoji 15-1~15-5 공식 준수 "
+            "\n채널 특성: 세모지 — narrative-semoji 심화 규칙(7번) 준수 "
             "(입체적 인물, 현재와의 연결, 이면의 진실, 데이터 기반, 3단 서사)"
         )
     elif writing_style == "iromism":

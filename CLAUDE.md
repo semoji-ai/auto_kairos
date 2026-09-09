@@ -42,9 +42,10 @@
 │ performance-     │         │ Stage 2: 원고 + 연출              │
 │ analyst          │         │ script-director → scene_specs.json│
 │                  │         │ data-mapper → 데이터 매핑          │
-│ 운영 에이전트:    │         │ script-reviewer → 래칫 리뷰 루프   │
-│ threads-publisher│         │ fact-verifier → 팩트체크 (비차단)  │
-│ kairos-admin     │         ├─────────────────────────────────┤
+│ 운영 에이전트:    │         │ manuscript-reviewer → 원고 게이트  │
+│ threads-publisher│         │ script-reviewer → 씬 게이트        │
+│ kairos-admin     │         │ fact-verifier → 팩트체크 (비차단)  │
+│                  │         ├─────────────────────────────────┤
 └─────────────────┘         │ Stage 3: 에셋 조립 + 렌더링       │
         ↑                   │ assembly-director                │
         │                   │ → TTS + 이미지 + 자막 + 영상      │
@@ -62,9 +63,10 @@
 | draft-writer | 2_draft | opus | outline.json + chapter_facts/ | draft.md + research_questions.json |
 | targeted-researcher | 2_target | sonnet | research_questions.json | targeted_claims.json |
 | script-director (manuscript) | 2_manuscript | opus | draft.md + targeted_claims.json | final_manuscript.md |
+| manuscript-reviewer | 2_manuscript_review | sonnet | final_manuscript.md + brief | manuscript_review.json + drafts/v{N}.md |
 | script-director (chapters) | 2 | opus | final_manuscript.md | scene_specs.json |
-| data-mapper | 2_data | sonnet | scene_specs + targeted_claims | scene_specs.json (데이터) |
 | script-reviewer | 2_review | sonnet | scene_specs.json | review_feedback.json |
+| data-mapper | 2_data | sonnet | scene_specs + targeted_claims | scene_specs.json (데이터) |
 | fact-verifier | 2b | sonnet | scene_specs.json | factcheck_report.json |
 | assembly-director | 3b | opus | scene_specs.json | TTS + 이미지 + 자막 + 영상 |
 | release-manager | 3c | sonnet | scene_specs + manifest + final_manuscript | upload_info.json |
@@ -123,8 +125,11 @@ python -m uvicorn app:app --host 0.0.0.0 --port 8080
 | step_2_draft | draft-writer | 초고 + WHY/HOW 질문 목록 |
 | step_2_target | targeted-researcher | 정밀 웹 리서치 → targeted_claims.json |
 | step_2_target_deepen | brief_deepener | brief v2 → v3 최종 잠금 |
-| step_2_manuscript | script-director (manuscript) | 최종 원고 prose + claims_ledger.jsonl (fact-retriever 절차) |
+| step_2_manuscript | script-director (manuscript) | 최종 원고 prose + claims_ledger.jsonl (fact-retriever 절차). **문체 미적용** |
+| **step_2_polish** | **script-polisher** | **윤문 전담 — 확정된 원고에 채널 문체 적용. 수치·고유명사·인과 불변** |
+| **step_2_manuscript_review** | **manuscript-reviewer** | **원고 게이트 — 자체 3라운드 래칫. 분량·서사·문체. 씬분할 전 마지막 수정 지점** |
 | step_2 | script-director (chapters) | 씬 분할 + 연출 결정 |
+| **step_2_review** | **script-reviewer** | **씬 게이트 — 자체 3라운드 래칫. 시청자 + 콘텐츠 전문가 2관점** |
 | step_2_consistency | script-director (consistency) | 내러티브 흐름 보정 |
 | step_2_data | data-mapper | 데이터 필드 매핑 |
 | step_2b | fact-verifier (비차단) | 팩트체크 + 비문 검사 (grammar_issues) |
@@ -148,13 +153,54 @@ python -m uvicorn app:app --host 0.0.0.0 --port 8080
 
 ## 4. 핵심 프로세스
 
-### 래칫 리뷰 루프
+### 문체는 초고에 걸지 않는다 — 구성/문체/연출 3분할
+
+문체 규격(세모지 "그런데" 3~7회 등)을 초고부터 강제하면 작가가 형식을 맞추느라 내용이 밀린다.
+그래서 채널 스타일 스킬을 셋으로 나누고 단계별로 준다.
+
+| 가족 | 내용 | 받는 단계 |
+|---|---|---|
+| `narrative-<style>` | 구성·서사 — 후킹, 서사 구조, 챕터 전환, 클로징, 페이싱 | `step_2_draft`부터 (초고) |
+| `voice-<style>` | 문체 — 시그니처 빈도, 톤·어미, 인용, 볼드 마커, 참조 원고 | `step_2_polish`부터 (윤문) |
+| `direction-<style>` | 연출 — layout 선택, imageAsset, 씬 분할 기준 | `step_2`부터 (씬분할) |
+
+- 파이프라인 스텝은 **`style/narrative` · `style/voice` · `style/direction`**로 선언한다.
+  runner의 `_resolve_style_skills()`가 활성 `writing_style`에 맞는 변종으로 해석한다.
+- **자동 주입하지 않는다.** 예전에는 활성 writing-style 스킬을 모든 에이전트에 넣고
+  `<project_config>`로 "문체 필수 적용"을 무조건 지시했다. 초고 작가는 규칙서(스킬)는 못 받고
+  준수 명령만 받는 상태였다. 지금은 스텝이 선언한 가족만 가고, 문체 지시문도
+  `_step_applies_voice()`가 참일 때만 들어간다.
+- `writing-style-<style>.md`는 포인터 스텁으로만 남아 있다. 내용은 3분할 파일에 있다.
+- **윤문은 사실을 바꾸지 않는다.** 리듬·빈도 규격을 채우려고 없는 사실을 만들지 말 것.
+  규격 미달은 `polish_report.json`의 `unmet_targets`에 사유와 함께 적는다.
+
+### 래칫 리뷰 루프 — 게이트 2개
+
+같은 래칫 패턴을 **원고 단계와 씬 단계에 각각** 건다. 문장을 고치는 것은 싸고 씬을 다시 쪼개는 것은
+비싸므로, 분량·서사·문체처럼 원고에서 잡을 수 있는 것은 씬분할 전에 끝낸다.
 
 ```
-script-director → scene_specs → script-reviewer 평가 (100점)
-  → 90점 미만: Edit 모드로 수정 → 재평가 (미수정 씬 점수 고정)
-  → 최대 3라운드, 점수 하락 시 이전 버전 복원
+step_2_draft / step_2_manuscript → final_manuscript.md   (내용 + 구성, 문체 미적용)
+  → [step_2_polish] script-polisher — 채널 문체 적용, 수치·고유명사·인과 불변
+  → [step_2_manuscript_review] manuscript-reviewer 평가 (100점, 연출 제외)
+       블로킹 게이트 G1~G5: 분량 ±10% / 챕터 정합 / 금지 각도 / 필수 누락 / 근거 없는 수치
+       → 미달: drafts/v{N}.md로 개정본 저장 + final_manuscript.md 동기화 → 재평가
+       → 최대 3라운드, 점수 하락 시 이전 버전 복원
+
+step_2(씬분할) → scene_specs.json
+  → [step_2_review] script-reviewer 평가 (100점, 시청자 + 콘텐츠 전문가)
+       → 90점 미만: 문제 씬만 수정 → 재평가 (미수정 씬 점수 고정 → 단조 증가)
+       → 최대 3라운드, 점수 하락 시 이전 버전 복원
 ```
+
+- 루프는 **에이전트가 SKILL.md 안에서 자체 수행**한다. runner가 라운드를 돌리지 않는다
+  (`step_0d` brief-reviewer와 같은 방식).
+- 둘 다 `blocking:false` — 점수 미달로 파이프라인을 세우지 않고 최고 점수 버전으로 진행한다.
+- 목표 나레이션 글자 수는 runner가 `duration_minutes × 400`으로 계산해 `<project_config>`로 주입한다
+  (`runner.py`의 `target_chars`).
+- ⚠️ **원고 게이트는 하류 정정을 되돌리면 안 된다.** `editorial_brief.evidence_anchors`는 의뢰인의
+  주장이지 검증된 사실이 아니다. `fact_fix_log.json` > `factcheck_report.json` > `claims_ledger` >
+  `editorial_brief` 순으로 근거 우선순위를 따른다.
 
 ### `auto_agent/orchestrator/runner.py` (검증된 사실)
 - **에이전트 호출은 stdin** (`-p` 플래그 사용 안 함)

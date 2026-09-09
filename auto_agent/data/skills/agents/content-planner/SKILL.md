@@ -12,7 +12,7 @@
 ## 참조
 
 - `shared/brief-dna.md` — 5대 DNA 레버 정의 (반드시 읽기)
-- `shared/writing-style-semoji.md` — 세모지 채널 시 참조 (15-1~15-5 공식)
+- `shared/narrative-semoji.md` — 세모지 채널 시 참조 (심화 규칙 7번)
 
 ---
 

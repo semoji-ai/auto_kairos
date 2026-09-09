@@ -9,9 +9,8 @@ allowed_tools:
   - Glob
   - Bash
 skills:
-  - shared/writing-style
-  - shared/writing-style-semoji
-  - shared/writing-style-iromism
+  - style/narrative
+  - style/direction
   - shared/motion-presets
   - shared/remotion-design-system
 ---
@@ -1433,9 +1432,12 @@ cinematic/quote_portrait 외에도 **데이터 씬에 관련 실사 배경**을 
 
 | art_style | 문체 스킬 | 글자 수 상한 | 특징 |
 |-----------|----------|------------|------|
-| semoji | writing-style-semoji | 100자 | 개념당 1씬, 이모지 활용 |
-| quirky_cartoon | writing-style-iromism | 80자 | 교양 있는 수다 톤, 10~80자 리듬 교차 |
+| semoji | narrative-semoji (+ direction-semoji) | 100자 | 개념당 1씬, 이모지 활용 |
+| quirky_cartoon | narrative-iromism (+ direction-iromism) | 80자 | 교양 있는 수다 톤, 10~80자 리듬 교차 |
 | 그 외 | writing-style | 100자 | 대화체, 능동태 |
+
+> 문체(voice-*)는 이 에이전트가 받지 않습니다 — 윤문은 `step_2_polish`(script-polisher)의 일입니다.
+> manuscript 모드에서 문장이 다소 투박해도 됩니다. 내용과 구성을 우선하세요.
 
 ---
 

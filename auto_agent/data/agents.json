@@ -8,9 +8,14 @@
       "max_turns": 12,
       "budget": "$0.3",
       "max_duration_minutes": 6,
-      "allowed_tools": ["Read", "Write"],
+      "allowed_tools": [
+        "Read",
+        "Write"
+      ],
       "skill_file": "agents/brief-interviewer-auto/SKILL.md",
-      "shared_skills": ["shared/brief-dna.md"],
+      "shared_skills": [
+        "shared/brief-dna.md"
+      ],
       "notes": "auto 모드. brief_mode=auto 설정 시 사용. 후속 brief-reviewer 래칫 대상."
     },
     "brief-reviewer": {
@@ -19,9 +24,14 @@
       "max_turns": 15,
       "budget": "$0.4",
       "max_duration_minutes": 8,
-      "allowed_tools": ["Read", "Write"],
+      "allowed_tools": [
+        "Read",
+        "Write"
+      ],
       "skill_file": "agents/brief-reviewer/SKILL.md",
-      "shared_skills": ["shared/brief-dna.md"],
+      "shared_skills": [
+        "shared/brief-dna.md"
+      ],
       "notes": "래칫 기준 90점 PASS, 75점 미만 FAIL. 점수 단조 증가 강제."
     },
     "brief-deepener": {
@@ -30,9 +40,15 @@
       "max_turns": 20,
       "budget": "$0.5",
       "max_duration_minutes": 10,
-      "allowed_tools": ["Read", "Write", "Glob"],
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Glob"
+      ],
       "skill_file": "agents/brief-deepener/SKILL.md",
-      "shared_skills": ["shared/brief-dna.md"],
+      "shared_skills": [
+        "shared/brief-dna.md"
+      ],
       "notes": "LOCKED_FIELDS (core_question/real_topic/hook_angle/excluded_angles/tone_goal) 변경 금지. 점수 하락 시 runner가 이전 버전 복원."
     },
     "brief-interviewer": {
@@ -208,6 +224,37 @@
         "motion-presets": 6000
       },
       "notes": "Stage 2 래칫. 시청자(이탈예측) + 전문가(시각화적합성) 2관점 평가. 85점 이상 PASS."
+    },
+    "manuscript-reviewer": {
+      "description": "final_manuscript.md 래칫 리뷰. 원고 prose만 평가(연출 제외) + 자체 재작성 루프. 씬분할 전 분량·서사·문체 게이트.",
+      "model": "sonnet",
+      "max_turns": 40,
+      "budget": "$2.0",
+      "max_duration_minutes": 20,
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Edit"
+      ],
+      "skill_file": "agents/manuscript-reviewer/SKILL.md",
+      "shared_skills": [
+        "shared/brief-dna.md"
+      ],
+      "notes": "래칫 90점 PASS / 75점 미만 FAIL. 블로킹 게이트 G1(분량 ±10%)~G5는 점수 무관 REVISE. 개정본은 drafts/v{N}.md로 버전 보존, final_manuscript.md는 최신본과 동기화. step_2 씬분할이 substring으로 나레이션을 가져가므로 문장 수정 가능한 마지막 지점."
+    },
+    "script-polisher": {
+      "description": "사실·구성이 확정된 원고에 채널 문체를 입히는 윤문 전담. 수치·고유명사·인과 주장 불변, 표현만 변경.",
+      "model": "sonnet",
+      "max_turns": 40,
+      "budget": "$2.0",
+      "max_duration_minutes": 20,
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Edit"
+      ],
+      "skill_file": "agents/script-polisher/SKILL.md",
+      "notes": "초고·본문은 narrative만 받고 voice를 받지 않는다 — 문체 규격을 맞추다 내용이 밀리는 것을 막기 위함. 문체는 이 스텝에서 한 번에 적용한다. 윤문 전 원고는 drafts/pre_polish.md로 보존. 분량 변화 ±5% 이내 유지(±10% 밴드 검사는 하류 게이트)."
     },
     "fact-verifier": {
       "description": "원고 내 주요 주장 교차 검증",
