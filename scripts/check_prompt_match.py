@@ -30,6 +30,9 @@ from collections import defaultdict
 from difflib import SequenceMatcher
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.paths import resolve_project  # noqa: E402
+
 # 어느 프롬프트에나 나오는 말 — 겹쳐도 근거가 되지 않는다
 STOP = {"한국", "모습", "장면", "배경", "인물", "전경", "중경", "레이어", "분리형",
         "위에", "앞에", "옆에", "사이", "가운데", "화면", "차림", "표정", "그리고",
@@ -43,19 +46,30 @@ def words(text: str) -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("project", type=Path)
+    ap.add_argument("project", help="프로젝트 폴더 또는 편 라벨(EP12)")
     ap.add_argument("-o", "--out", type=Path)
     ap.add_argument("--sim", type=float, default=0.85,
                     help="이 비율 이상 닮으면 중복으로 본다")
     args = ap.parse_args()
 
-    data = json.loads((args.project / "scene_specs.json").read_text(encoding="utf-8"))
+    # 편 라벨(EP12)도 받는다. 다른 검사들은 모두 resolve_project 를 쓰는데
+    # 여기만 인자를 경로로 그대로 써서 `EP12/scene_specs.json` 을 찾다 죽었다.
+    proj = Path(args.project)
+    if not (proj / "scene_specs.json").is_file():
+        proj, _ = resolve_project(args.project)
+
+    data = json.loads((proj / "scene_specs.json").read_text(encoding="utf-8"))
     scenes = data.get("scenes", data)
 
+    # **도해 씬은 세지 않는다.** 도해는 `infographic.items` 의 그림 한 장으로
+    # 그려지고 `imageAsset.prompt` 는 도해가 되기 전에 쓰던 재연용 찌꺼기다.
+    # 그것이 겹치는 것은 화면에 아무 영향이 없는데, 걸러내지 않아 EP12 에서
+    # 중복이 10건이 아니라 14건으로 부풀었다.
     targets = [(s["sceneNumber"], (s.get("imageAsset") or {}).get("prompt") or "",
                 s.get("narration") or "", s.get("headline") or "")
                for s in scenes
-               if (s.get("imageAsset") or {}).get("source") == "generate"]
+               if (s.get("imageAsset") or {}).get("source") == "generate"
+               and s.get("visual_kind") != "infographic"]
 
     dup: list[dict] = []
     seen: dict[str, int] = {}
@@ -85,7 +99,7 @@ def main() -> int:
     if args.out:
         args.out.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    name = args.project.name
+    name = proj.name
     print(f"  {name}: 생성 {len(targets)}컷 / 중복 {len(dup)} / 무관 의심 {len(unrelated)}")
     for d in dup[:6]:
         print(f"      씬 {d['n']} — 씬 {d['same_as']}와 {d['kind']}")
