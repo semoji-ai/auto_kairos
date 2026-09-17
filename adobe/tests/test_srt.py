@@ -1,3 +1,4 @@
+from pathlib import Path
 from backend import srt
 
 BASIC = """1
@@ -79,3 +80,34 @@ def test_endpoint_no_cues(tmp_path):
         {"root": tmp_path, "jobs": jobs_mod.JobRegistry()})
     assert status == 422
     assert "error" in res
+
+
+# ── 자막 스타일: 두 경로가 같은 토큰을 읽어야 한다 ──────────────────
+#
+# 가져온 자막(tools.jsx)만 글자색을 [1,1,1] 로 박아 두어, 말자막(#E8EAED)과
+# 한 화면에서 미묘하게 어긋났다. 크기·글꼴은 토큰에서 읽으면서 색만 빠져
+# 있었던 것이라 눈으로는 찾기 어려웠다.
+
+JSX_DIR = Path(__file__).resolve().parents[1] / "cep" / "com.autokairos.pd" / "jsx"
+_IMPORT_SRT = JSX_DIR / "tools.jsx"
+_SPEAK_SUB = JSX_DIR / "subtitle_layers.jsx"
+
+
+def test_both_subtitle_paths_read_the_same_tokens():
+    for path in (_IMPORT_SRT, _SPEAK_SUB):
+        src = path.read_text(encoding="utf-8")
+        for token in ("tk.type.subtitle", "tk.fonts.subtitle", "tk.colors.textRgb"):
+            assert token in src, f"{path.name} 이 {token} 을 안 읽습니다"
+
+
+def test_import_srt_does_not_hardcode_white():
+    src = _IMPORT_SRT.read_text(encoding="utf-8")
+    assert "doc.fillColor = txt;" in src
+    assert "doc.fillColor = [1, 1, 1]" not in src
+
+
+def test_token_fallback_is_the_same_on_both_paths():
+    """토큰 파일이 없을 때의 기본값도 같아야 한다."""
+    for path in (_IMPORT_SRT, _SPEAK_SUB):
+        src = path.read_text(encoding="utf-8")
+        assert 'var size = 54, fontName = "", txt = [1, 1, 1];' in src, path.name

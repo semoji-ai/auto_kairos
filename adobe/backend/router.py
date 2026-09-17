@@ -564,6 +564,34 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         r = scenes.set_image_ref(proj_dir, b.get("sceneNumber"), rel)
         return (200, r) if "error" not in r else (422, r)
 
+    # 여러 씬에 걸치는 비디오 트랙 — video_tracks.json 조회/저장.
+    # 저장은 revision 으로 충돌을 감지한다(다른 창의 수정을 조용히 덮지 않는다).
+    if p == "/api/video-tracks":
+        from backend import video_tracks as _vt
+        if method == "GET":
+            proj_dir = root / (query.get("project_id") or "")
+            if not proj_dir.is_dir():
+                return 404, {"error": "프로젝트 없음"}
+            d = _vt.load(proj_dir)
+            r = _vt.resolve(proj_dir, d)
+            return 200, {"data": d,
+                         "resolved": {"clips": r["clips"],
+                                      "covered": sorted(r["covered"]),
+                                      "errors": r["errors"]}}
+        if method == "POST":
+            b = body or {}
+            proj_dir = root / b.get("project_id", "")
+            if not proj_dir.is_dir():
+                return 404, {"error": "프로젝트 없음"}
+            res = _vt.save(proj_dir, b.get("data") or {},
+                           expect_revision=b.get("revision"))
+            if res.get("error"):
+                return 409, res
+            r = _vt.resolve(proj_dir, _vt.load(proj_dir))
+            return 200, {**res, "resolved": {"clips": r["clips"],
+                                             "covered": sorted(r["covered"]),
+                                             "errors": r["errors"]}}
+
     # 비디오 모델 목록 — 모델마다 받는 파라미터와 이미지 첨부 한도가 달라
     # 화면을 모델별로 다시 짜야 한다. 스펙은 힉스필드 CLI 산출을 그대로 쓴다.
     if method == "GET" and p == "/api/video/models":
@@ -604,6 +632,34 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         jobs.set_status(jid, "completed" if res.get("status") == "completed" else "failed",
                         artifact_paths=[str(proj_dir / "video")])
         return 200, {"job_id": jid, "result": res}
+
+    # 레이어 업스케일 — **제자리 교체, 원본은 백업 폴더로.**
+    #
+    # `_up` 을 붙여 옆에 두면 매니페스트가 `<sid>__*.png` 를 훑다가 레이어가
+    # 한 장 더 생긴 것으로 잡는다. 제자리에 두어야 사이드카의 bbox·z·motion 이
+    # 그대로 살고, 배율은 매니페스트가 다시 계산한다(분모가 커진 만큼 줄어
+    # 화면 크기는 그대로다).
+    if p.startswith("/api/layers/upscale"):
+        from backend import upscale_layers as _ul
+        b = body or {}
+        proj_dir = root / (b.get("project_id") or query.get("project_id") or "")
+        if not proj_dir.is_dir():
+            return 404, {"error": "프로젝트 없음"}
+        if method == "GET" and p == "/api/layers/upscale/plan":
+            want = float(query.get("want") or 2.0)
+            return 200, {"items": _ul.plan(proj_dir, query.get("sceneId") or "", want=want)}
+        if method == "POST" and p == "/api/layers/upscale":
+            stems = b.get("stems")
+            if not stems:
+                stems = [x["stem"] for x in _ul.plan(proj_dir, b.get("sceneId") or "",
+                                                     want=float(b.get("want") or 2.0))]
+            if not stems:
+                return 200, {"done": [], "failed": [], "note": "업스케일할 것이 없습니다"}
+            return 200, _ul.run(proj_dir, stems, scale=int(b.get("scale") or 2))
+        if method == "POST" and p == "/api/layers/upscale/restore":
+            r = _ul.restore(proj_dir, (b.get("stem") or "").strip())
+            return (200, r) if r.get("ok") else (422, r)
+        return 404, {"error": "없는 경로"}
 
     # 업스케일(로컬 Upscayl) · 벡터라이징(Recraft) — 체크한 씬에 건다.
     if method == "POST" and p in ("/api/scenes/upscale", "/api/scenes/vectorize"):

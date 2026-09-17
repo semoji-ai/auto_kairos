@@ -245,7 +245,12 @@ auto-agent bg start --project {slug}
 ```
 
 - step_1_v4bridge(어댑터)가 v4 산출물을 v3 입력으로 변환
-- 네이티브 stage 1/2는 legacy_only로 자동 스킵 (ENABLE_LEGACY_V3 미설정 시)
+- 네이티브 stage 1/2는 **이 프로젝트에 v4 산출물이 있을 때만** 스킵된다
+  (판별: `final_manuscript_marked.md` 또는 `.v4_bridge_origin`). 9단계까지 밟았다면
+  당연히 스킵된다. 반대로 v4 없이 `bg start`만 하면 네이티브 stage 1/2가 정상 실행된다
+  — v3 네이티브가 기본 경로다(`docs/v5-plan.md`)
+- v4 프로젝트에서 네이티브를 강제로 다시 돌리려면 `ENABLE_LEGACY_V3=1` (v4 산출물을
+  덮어쓰므로 주의)
 - step_2(씬분할) → Stage 3(조립/렌더)로 진행
 
 ### 11단계: 진행 모니터링 + 단계별 보고

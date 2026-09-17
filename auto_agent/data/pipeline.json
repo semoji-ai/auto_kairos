@@ -279,7 +279,10 @@
             "research_questions.json"
           ],
           "legacy_only": true,
-          "notes": "chapter_facts/ 디렉토리를 Glob으로 탐색하여 읽음. [[Q:qXXX]] 마킹 + research_questions.json 병행 생성."
+          "notes": "chapter_facts/ 디렉토리를 Glob으로 탐색하여 읽음. [[Q:qXXX]] 마킹 + research_questions.json 병행 생성.",
+          "skills": [
+            "style/narrative"
+          ]
         },
         {
           "id": "step_2_target",
@@ -354,10 +357,66 @@
             "research/claims_ledger.jsonl"
           ],
           "skills": [
-            "shared/writing-style"
+            "style/narrative"
           ],
           "legacy_only": true,
           "notes": "단일 에이전트 다단계 모드 1.5단계. 매력적인 prose 작성에만 집중. layout/motion/imageAsset 결정 X (다음 step에서 처리). runner가 active writing_style의 참조 원고 + vault semantic search 결과 주입."
+        },
+        {
+          "id": "step_2_polish",
+          "name": "manuscript_polish",
+          "description": "확정된 원고에 채널 문체를 입히는 윤문 전담. 수치·고유명사·인과 주장 불변, 표현만 변경.",
+          "type": "agent",
+          "agent": "script-polisher",
+          "input": [
+            "final_manuscript.md",
+            "research/claims_ledger.jsonl",
+            "targeted_claims.json",
+            "factcheck_report.json",
+            "fact_fix_log.json",
+            "project_config"
+          ],
+          "output": [
+            "polish_report.json"
+          ],
+          "skills": [
+            "style/narrative",
+            "style/voice"
+          ],
+          "blocking": false,
+          "skip_resume": true,
+          "max_attempts": 1,
+          "legacy_only": true,
+          "notes": "초고(step_2_draft)와 본문(step_2_manuscript)은 style/narrative만 받는다 — 문체 규격을 맞추다 내용이 밀리는 것을 막기 위함. 문체는 여기서 한 번에 적용. 윤문 전 원고는 drafts/pre_polish.md로 보존. legacy_only — v4-bridge 원작은 PD가 이미 윤문했으므로 스킵."
+        },
+        {
+          "id": "step_2_manuscript_review",
+          "name": "manuscript_ratchet",
+          "description": "final_manuscript.md 래칫 리뷰 — manuscript-reviewer SKILL.md의 자체 3라운드 루프. 씬분할 전 분량·서사·문체 게이트.",
+          "type": "agent",
+          "agent": "manuscript-reviewer",
+          "input": [
+            "final_manuscript.md",
+            "outline.json",
+            "editorial_brief.json",
+            "targeted_claims.json",
+            "research/claims_ledger.jsonl",
+            "factcheck_report.json",
+            "fact_fix_log.json",
+            "project_config"
+          ],
+          "output": [
+            "manuscript_review.json"
+          ],
+          "skills": [
+            "style/narrative",
+            "style/voice"
+          ],
+          "blocking": false,
+          "skip_resume": true,
+          "max_attempts": 1,
+          "legacy_only": true,
+          "notes": "에이전트가 SKILL.md의 자체 래칫 루프 수행(최대 3R) — 개정본은 drafts/v{N}.md, final_manuscript.md는 최신본과 동기화. blocking:false로 점수 무관 진행. legacy_only — v4-bridge 원작 프로젝트는 PD가 이미 drafts/v{n}으로 개정했으므로 스킵. factcheck_report/fact_fix_log는 재실행 시에만 존재하는 선택 입력 — 하류 정정을 브리프 근거로 되돌리는 사고를 막기 위해 주입한다(G5 근거 우선순위)."
         },
         {
           "id": "step_2_plan",
@@ -398,11 +457,38 @@
             "scene_specs.json"
           ],
           "skills": [
-            "shared/writing-style",
+            "style/narrative",
+            "style/direction",
             "shared/motion-presets",
             "shared/remotion-design-system"
           ],
           "notes": "final_manuscript.md의 prose를 의미 단위로 분할 + 각 씬에 layout/motion/mood/imageAsset/headline 결정. ⚠️ narration 재작성 금지 — manuscript에서 substring으로만 가져옴 (post-validation hook 검증)."
+        },
+        {
+          "id": "step_2_review",
+          "name": "scene_ratchet",
+          "description": "scene_specs.json 래칫 리뷰 — script-reviewer SKILL.md의 자체 3라운드 루프. 시청자 + 콘텐츠 전문가 2관점 100점 채점.",
+          "type": "agent",
+          "agent": "script-reviewer",
+          "input": [
+            "scene_specs.json",
+            "outline.json",
+            "editorial_brief.json",
+            "targeted_claims.json",
+            "project_config"
+          ],
+          "output": [
+            "review_feedback.json"
+          ],
+          "blocking": false,
+          "skip_resume": true,
+          "max_attempts": 1,
+          "notes": "에이전트가 SKILL.md의 자체 래칫 루프 수행(최대 3R, 90점 PASS) — 미수정 씬 점수 고정으로 단조 증가. blocking:false로 점수 무관 진행. 원고 단계 게이트는 step_2_manuscript_review.",
+          "skills": [
+            "style/narrative",
+            "style/voice",
+            "style/direction"
+          ]
         },
         {
           "id": "step_2_consistency",
@@ -420,7 +506,8 @@
             "scene_specs.json"
           ],
           "skills": [
-            "shared/writing-style",
+            "style/narrative",
+            "style/direction",
             "shared/motion-presets",
             "shared/remotion-design-system"
           ],

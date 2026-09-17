@@ -55,3 +55,27 @@ cep/com.autokairos.pd/jsx/tylenol/assets/
 
 # 모션 학습 레퍼런스 영상(로컬, 내부 분석용)
 refs/
+
+# ── 깊이에 상관없이 산출물을 막는다 ────────────────────────────────────
+# 위의 `projects/*/…` 규칙은 깊이 하나만 맞는다. 그래서
+# `projects/_archive/<편>/images/` 같은 한 겹 더 들어간 자리가 새어,
+# 2.9GB(1,802 파일)가 통째로 커밋된 적이 있다. `**` 로 다시 막는다.
+# 원고·기획·표석 같은 텍스트(.md/.json/.jsonl)는 기록이라 계속 추적한다.
+projects/**/images/
+projects/**/storyboard/
+projects/**/layers/
+projects/**/audio/
+projects/**/video/
+projects/**/video_sources/
+projects/**/characters/
+projects/**/infographic/
+projects/**/charts/
+projects/**/*.png
+projects/**/*.jpg
+projects/**/*.jpeg
+projects/**/*.webp
+projects/**/*.svg
+projects/**/*.mp3
+projects/**/*.wav
+projects/**/*.mp4
+projects/**/*.mov

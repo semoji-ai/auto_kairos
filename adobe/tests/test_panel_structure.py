@@ -211,7 +211,7 @@ def test_buildall_button_and_full_comp():
     무엇이 다른지 물어야 했다. 하나로 합쳤다.
     """
     html = HTML.read_text(encoding="utf-8")
-    assert 'id="btnTimelineAll"' in html
+    assert 'id="btnPickImport"' in html      # 「조립·배치」를 「임폴트」로 모았다
     main = MAIN.read_text(encoding="utf-8")
     assert "function buildComp" in main and "exportToTimeline(null)" in main
 
@@ -278,7 +278,7 @@ def test_subtitle_layers_jsx():
     assert fp.exists()
     jsx = fp.read_text(encoding="utf-8")
     assert "function akBuildSubtitles" in jsx
-    assert "startTime" in jsx and "inPoint" in jsx and "outPoint" in jsx
+    assert "inPoint" in jsx and "outPoint" in jsx
     assert '"Final"' in jsx and "JSON.parse" in jsx
     # ES3 호환 — const/let/arrow 금지
     jsx = es5_code(jsx)
@@ -451,7 +451,9 @@ def test_jsx_no_auto_fade():
     assert "li === 0" not in jsx
     # fade 파라미터는 없다. `log` 는 나중에 붙은 것 — 왜 이 레이어가 빠졌는지
     # 알려면 함수 안에서 적어야 한다.
-    assert "function addLayerObj(proj, comp, layer, W, H, log)" in jsx
+    # `log` 는 왜 이 레이어가 빠졌는지 남기려고, `folder` 는 프로젝트 창을
+    # 정리하려고 나중에 붙은 것이다. 없어야 하는 것은 `fade` 뿐이다.
+    assert "function addLayerObj(proj, comp, layer, W, H, log, folder)" in jsx
     assert "function addLayerObj(proj, comp, layer, W, H, fade" not in jsx
 
 
@@ -606,16 +608,21 @@ def test_theme_selector_ui():
     assert "/api/themes/set-project" in js and "/api/themes/set-scene" in js
 
 
-def test_subtitle_single_layer_keyframed():
-    """자막은 레이어 1개 + Source Text 키프레임 — 줄마다 레이어를 만들면 AE가 멈춘다.
+def test_subtitle_per_cue_layers():
+    """자막은 큐마다 텍스트 레이어 하나씩 — SEMOJI TOOL 자막작업 방식.
 
-    줄마다 텍스트 길이가 달라지므로 앵커 보정(sourceRectAtTime) 대신
-    가운데 정렬로 수평 위치를 고정한다."""
+    줄별로 위치·스타일을 따로 고칠 수 있는 것이 목적이다. 수백 장이 타임라인을
+    덮지 않게 shy로 접고, 스타일은 기준 텍스트 레이어(선택 → 자막스타일 → 예전
+    말자막)에서 통째로 복사하며, 부분 빌드는 그 시간 구간의 레이어만 교체한다."""
     jsx = (PANEL / "jsx" / "subtitle_layers.jsx").read_text(encoding="utf-8")
-    assert "setValueAtTime" in jsx and "CENTER_JUSTIFY" in jsx
+    assert "comp.layers.addText" in jsx and "CENTER_JUSTIFY" in jsx
     assert "Anchor Point" in jsx and "Position" in jsx
-    assert "akRemoveLegacySubLayers" in jsx          # 예전 줄별 레이어 정리
-    assert "comp.layers.addText" in jsx and jsx.count("comp.layers.addText") == 1
+    assert "akRemoveSubLayersInRange" in jsx         # 부분 빌드 — 구간만 교체
+    assert "akFindStyleTemplate" in jsx              # 기준 레이어 스타일 복사
+    assert ".shy = true" in jsx                      # 타임라인 무게 완화
+    assert "setValueAtTime" not in jsx               # 키프레임 방식으로 되돌리지 않는다
+    # 예전 단일 키프레임 말자막이 남으면 줄별 레이어와 겹쳐 두 번 보인다 — 정리 필수
+    assert "oldLayer.remove()" in jsx
 
 
 def test_preview_hatch_matches_pattern_kind():
@@ -733,7 +740,7 @@ def test_planning_stepper_ui():
 def test_timeline_export_wired():
     """전체 타임라인 버튼 + 씬 재빌드 경로 + 씬 행 버튼. 평면 컴프라 씬 컴프 배치 스크립트는 없다."""
     html = HTML.read_text(encoding="utf-8")
-    assert 'id="btnTimelineAll"' in html
+    assert 'id="btnPickImport"' in html      # 「조립·배치」를 「임폴트」로 모았다
     assert not (PANEL / "jsx" / "place_on_timeline.jsx").exists()
     build_jsx = (PANEL / "jsx" / "build_scene.jsx").read_text(encoding="utf-8")
     # 옛것을 지우던 헬퍼는 없앴다 — 지우지 않고 쌓는다.
@@ -754,7 +761,7 @@ def test_sheet_toolbar_batches_checked_scenes():
     """컴프·말자막이 체크한 씬 목록을 한 번에 넘긴다(씬마다 반복 호출 금지)."""
     sb = (PANEL / "js" / "storyboard.js").read_text(encoding="utf-8")
     assert 'id="sa-sub"' in HTML.read_text(encoding="utf-8") or "sa-sub" in sb
-    assert "_assemble(ns," in sb                 # 목록을 통째로
+    assert "openPickImport(ns)" in sb           # 체크한 씬을 창으로 — 종류도 고른다
     assert "buildSubtitles(ns," in sb
     assert "_runSeq(ns, function (n) {\n      return Promise.resolve(buildSceneComp(n));" not in sb
     main = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
@@ -918,6 +925,29 @@ def test_assembly_log_is_one_line():
     assert 'on("sa-more"' in js
 
 
+def test_import_is_one_button_with_three_scopes():
+    """**하나든 여럿이든 전부든 같은 창**이다.
+
+    전에는 길이 셋이었다 — 행의 「import」, 체크한 씬의 「▶ 컴프」,
+    「🎬 조립·배치」. 이름도 셋이고 하는 일은 범위만 달랐다. 게다가 종류를
+    고르는 것은 「골라 넣기」 하나뿐이라, 한 씬만 넣으면서 종류를 고를 길이
+    없었다.
+    """
+    html = (PANEL / "index.html").read_text(encoding="utf-8")
+    js = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
+    sb = (PANEL / "js" / "storyboard.js").read_text(encoding="utf-8")
+    # 이름이 하나다
+    assert "🎬 임폴트" in html and "▶ 임폴트" in html and ">임폴트<" in sb
+    assert "btnTimelineAll" not in html and "btnTimelineAll" not in js
+    # 셋 다 같은 창을 연다 — 범위만 다르다
+    assert "function openPickImport(scope)" in js
+    assert "openPickImport(null)" in js                    # 전체
+    assert "openPickImport(ns)" in sb                      # 체크한 씬
+    assert "openPickImport(parseFloat(n))" in sb           # 한 씬
+    # 범위가 있으면 그 씬만 깔린다
+    assert "PICK_SCOPE" in js and "if (only && !only[s.sceneNumber])" in js
+
+
 def test_pick_import_shows_what_will_come():
     """넣기 전에 **무엇이 들어오는지** 보여 준다.
 
@@ -929,11 +959,11 @@ def test_pick_import_shows_what_will_come():
     html = (PANEL / "index.html").read_text(encoding="utf-8")
     js = (PANEL / "js" / "main.js").read_text(encoding="utf-8")
     assert 'id="btnPickImport"' in html and 'id="pickModal"' in html
-    assert "function openPickImport()" in js
+    assert "function openPickImport(scope)" in js
     assert "/api/assembly/inventory" in js
     # 씬마다 무엇이 있는지 — 그림·레이어·영상·음성
     for k in ("그림", "레이어 ", "영상", "음성"):
-        assert k in js.split("function openPickImport()")[1].split("\nfunction pickBoxes")[0], k
+        assert k in js.split("function openPickImport(scope)")[1].split("\nfunction pickBoxes")[0], k
     # 아무것도 없는 씬은 흐리게 두고 기본으로 안 고른다
     assert 'var empty = !s.image && !s.layers && !s.video;' in js
     # 골라서 넣는다 — 일괄이든 하나든 같은 길

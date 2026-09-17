@@ -42,19 +42,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if echo \"$TOOL_INPUT\" | grep -q 'CreativeScene'; then cd /Users/jleavens_macmini/Projects/auto_kairos_v3/remotion && node node_modules/vite/bin/vite.js build --config vite.thumb.config.ts --logLevel silent && node node_modules/vite/bin/vite.js build --config vite.editor.config.ts --logLevel silent; fi",
+            "command": "if echo \"$TOOL_INPUT\" | grep -q 'CreativeScene'; then cd $CLAUDE_PROJECT_DIR/remotion && node node_modules/vite/bin/vite.js build --config vite.thumb.config.ts --logLevel silent && node node_modules/vite/bin/vite.js build --config vite.editor.config.ts --logLevel silent; fi",
             "timeout": 30,
             "statusMessage": "스토리보드 JS 리빌드 중..."
           },
           {
             "type": "command",
-            "command": "PROJECT_DIR=$(echo \"$TOOL_INPUT\" | python3 -c \"import sys,json,re; t=sys.stdin.read(); m=re.search(r'/output/[^\\\"\\']*scene_specs\\.json', t); print(m.group(0).rsplit('/',1)[0] if m else '')\"); if [ -n \"$PROJECT_DIR\" ] && [ -f \"$PROJECT_DIR/scene_specs.json\" ]; then /Users/jleavens_macmini/Projects/auto_kairos_v3/.venv/bin/python -m auto_agent.scripts.validate_tts_preprocessing \"$PROJECT_DIR\" || echo 'TTS 전처리 검증 실패 — generate_tts.py 재실행 필요' >&2; fi",
+            "command": "PROJECT_DIR=$(echo \"$TOOL_INPUT\" | python3 -c \"import sys,json,re; t=sys.stdin.read(); m=re.search(r'/output/[^\\\"\\']*scene_specs\\.json', t); print(m.group(0).rsplit('/',1)[0] if m else '')\"); if [ -n \"$PROJECT_DIR\" ] && [ -f \"$PROJECT_DIR/scene_specs.json\" ]; then $CLAUDE_PROJECT_DIR/.venv/bin/python -m auto_agent.scripts.validate_tts_preprocessing \"$PROJECT_DIR\" || echo 'TTS 전처리 검증 실패 — generate_tts.py 재실행 필요' >&2; fi",
             "timeout": 15,
             "statusMessage": "scene_specs.json TTS 전처리 검증 중..."
           },
           {
             "type": "command",
-            "command": "PROJECT_DIR=$(echo \"$TOOL_INPUT\" | python3 -c \"import sys,json,re; t=sys.stdin.read(); m=re.search(r'/output/[^\\\"\\']*scene_specs\\.json', t); print(m.group(0).rsplit('/',1)[0] if m else '')\"); if [ -n \"$PROJECT_DIR\" ] && [ -f \"$PROJECT_DIR/scene_specs.json\" ] && [ -f \"$PROJECT_DIR/final_manuscript.md\" ]; then /Users/jleavens_macmini/Projects/auto_kairos_v3/.venv/bin/python -m auto_agent.scripts.validate_narration_from_manuscript \"$PROJECT_DIR\" || echo 'narration 재작성 발견 — chapters 모드는 manuscript에서 substring으로만 가져와야 합니다' >&2; fi",
+            "command": "PROJECT_DIR=$(echo \"$TOOL_INPUT\" | python3 -c \"import sys,json,re; t=sys.stdin.read(); m=re.search(r'/output/[^\\\"\\']*scene_specs\\.json', t); print(m.group(0).rsplit('/',1)[0] if m else '')\"); if [ -n \"$PROJECT_DIR\" ] && [ -f \"$PROJECT_DIR/scene_specs.json\" ] && [ -f \"$PROJECT_DIR/final_manuscript.md\" ]; then $CLAUDE_PROJECT_DIR/.venv/bin/python -m auto_agent.scripts.validate_narration_from_manuscript \"$PROJECT_DIR\" || echo 'narration 재작성 발견 — chapters 모드는 manuscript에서 substring으로만 가져와야 합니다' >&2; fi",
             "timeout": 10,
             "statusMessage": "scene_specs narration ↔ manuscript 일치 검증 중..."
           }

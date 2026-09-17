@@ -9,7 +9,7 @@ Claude Code + Remotion 기반 영상 제작 파이프라인. 주제만 입력하
 ### macOS / Linux / WSL
 
 ```bash
-git clone https://github.com/jleavens01/auto_kairos.git
+git clone https://github.com/semoji-ai/auto_kairos.git
 cd auto_kairos
 ./install.sh
 ```
@@ -17,7 +17,7 @@ cd auto_kairos
 ### Windows (PowerShell)
 
 ```powershell
-git clone https://github.com/jleavens01/auto_kairos.git
+git clone https://github.com/semoji-ai/auto_kairos.git
 cd auto_kairos
 .\install.ps1
 ```

@@ -113,3 +113,30 @@ def test_two_ways_to_register():
     # ② 끌어다 놓기
     assert "function wireFavDrop(" in gal
     assert "fs[i].path" in gal               # CEP 는 실제 경로를 준다
+
+
+def test_nothing_loads_the_project_gallery_anymore():
+    """**부르는 곳이 하나도 없어야 한다.**
+
+    화면을 즐겨찾기로 바꾸고도 씬 이미지가 계속 떴다. `nav.js` 가 프로젝트를
+    열 때마다 `loadGallery()` 를 부르고 있었기 때문이다 — 캐시가 아니라
+    코드였다. 남겨 두면 누군가(나 포함) 다시 부른다.
+    """
+    js_dir = PANEL / "js"
+    for p in sorted(js_dir.glob("*.js")):
+        src = p.read_text(encoding="utf-8")
+        assert "loadGallery(" not in src, f"{p.name} 이 아직 프로젝트 갤러리를 부른다"
+        assert "srcView(" not in src, p.name
+
+
+def test_project_entry_loads_favorites():
+    """프로젝트를 열면 즐겨찾기를 읽는다."""
+    nav = (PANEL / "js" / "nav.js").read_text(encoding="utf-8")
+    assert "loadFavorites()" in nav
+
+
+def test_search_saves_go_to_favorites():
+    """골라서 받은 것은 즐겨찾기에 담는다 — 프로젝트에만 두면 1044장 속에 묻힌다."""
+    gal = (PANEL / "js" / "gallery.js").read_text(encoding="utf-8")
+    seg = gal.split("function searchGallery(")[0] + gal.split("function searchGallery(")[1]
+    assert seg.count("favAdd(") >= 2

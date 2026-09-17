@@ -487,3 +487,53 @@ def test_workspace_falls_back_when_no_project(tmp_path):
     from backend import imagegen as ig
     d = tmp_path / "외딴곳"; d.mkdir()
     assert ig._workspace_for(d / "a.png") == d
+
+
+# ── 사이드카를 되읽지 않는다 ────────────────────────────────────────────
+#
+# 매니페스트를 한 번 구울 때 `load_element_specs` 가 **씬당 두 번** 불린다
+# (`scenes._layer_meta` 와 `manifest._scene_layers`). 142씬이면 284번이고,
+# 사이드카가 없는 씬은 폴더를 통째로 다시 훑는다(228번). 1.27초가 0.60초가
+# 됐다.
+#
+# ⚠️ 캐시가 낡은 것을 쥐면 레이어를 새로 뗀 씬이 통째로 빈다. 그래서 키에
+# **수정 시각**을 넣는다.
+
+def test_specs_cache_reloads_when_sidecar_changes(tmp_path):
+    import json as _j
+    from backend import imagegen as ig
+    L = tmp_path; sid = "ab"
+    fp = L / f"{sid}__elements.json"
+    fp.write_text(_j.dumps([{"layer": "ab__0_가", "kind": "object"}]), encoding="utf-8")
+    assert [x["layer"] for x in ig.load_element_specs(L, sid)] == ["ab__0_가"]
+    # 시각을 확실히 벌린 뒤 바꾼다
+    import os, time as _t
+    fp.write_text(_j.dumps([{"layer": "ab__0_가"}, {"layer": "ab__1_나"}]), encoding="utf-8")
+    os.utime(fp, (_t.time() + 5, _t.time() + 5))
+    got = [x["layer"] for x in ig.load_element_specs(L, sid)]
+    assert got == ["ab__0_가", "ab__1_나"], "사이드카가 바뀌었는데 옛 목록을 줬다"
+
+
+def test_specs_cache_reloads_when_layer_added(tmp_path):
+    """사이드카가 없는 길도 낡으면 안 된다 — 폴더 시각을 키로 쓴다."""
+    import os, time as _t
+    from PIL import Image
+    from backend import imagegen as ig
+    L = tmp_path / "layers"; L.mkdir()
+    (L / "ab__kinds.json").write_text("{}", encoding="utf-8")
+    Image.new("RGBA", (4, 4)).save(L / "ab__0_가.png")
+    assert len(ig.load_element_specs(L, "ab")) == 1
+    Image.new("RGBA", (4, 4)).save(L / "ab__1_나.png")
+    os.utime(L, (_t.time() + 5, _t.time() + 5))
+    assert len(ig.load_element_specs(L, "ab")) == 2, "레이어가 늘었는데 옛 목록을 줬다"
+
+
+def test_specs_cache_actually_caches(tmp_path):
+    """같은 상태면 파일을 다시 읽지 않는다."""
+    import json as _j
+    from backend import imagegen as ig
+    fp = tmp_path / "ab__elements.json"
+    fp.write_text(_j.dumps([{"layer": "ab__0_가"}]), encoding="utf-8")
+    a = ig.load_element_specs(tmp_path, "ab")
+    b = ig.load_element_specs(tmp_path, "ab")
+    assert a is b            # 같은 객체 — 다시 파싱하지 않았다

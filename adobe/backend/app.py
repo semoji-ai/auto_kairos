@@ -22,6 +22,27 @@ CTX = {"root": projects.projects_root(), "jobs": JobRegistry()}
 RELOAD = os.environ.get("AK_BACKEND_RELOAD", "1") != "0"
 
 
+def origin_allowed(origin: str | None) -> bool:
+    """이 요청이 패널에서 온 것인가, 웹페이지에서 온 것인가.
+
+    이 서버는 `127.0.0.1` 에만 뜨지만 그것이 방어가 되지는 않는다. AE 패널이
+    켜져 있는 동안 사용자가 연 웹페이지의 자바스크립트가 그대로 부를 수 있고,
+    아래 응답들이 `Access-Control-Allow-Origin: *` 를 달고 나가므로 **답까지
+    읽힌다.** 파일을 덮어쓰고 씬을 지우고 프로세스를 띄우는 라우트가 그 안에
+    있다.
+
+    가르는 것은 `Origin` 헤더다. **브라우저가 직접 붙이므로 웹페이지가 위조할
+    수 없다.** CEP 패널은 `file://` 문서라 헤더가 없거나 `"null"` 로 오고,
+    웹페이지는 반드시 출처가 붙는다. 그래서 「출처가 있고 file:// 이 아니면
+    웹페이지」가 깔끔하게 갈린다.
+
+    제 컴퓨터에서 뜬 페이지(`http://localhost:3000`)도 웹페이지다 — 막는다.
+    """
+    if origin is None:
+        return True
+    return origin == "null" or origin.startswith("file://")
+
+
 def _watch_sources() -> None:
     """`backend/*.py` 가 바뀌면 프로세스를 다시 띄운다.
 
@@ -89,13 +110,34 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _guard(self) -> bool:
+        """교차 출처면 403 을 내보내고 False. 관문은 **들어오는 문마다** 둔다.
+
+        `_route` 안에만 두면 `/api/events` 가 새어 나간다 — `do_GET` 이 그것을
+        `_route` 보다 먼저 가로채기 때문이다. 이식해 온 원본이 그 상태였다.
+        """
+        if origin_allowed(self.headers.get("Origin")):
+            return True
+        data = json.dumps({"error": "forbidden origin"}, ensure_ascii=False).encode("utf-8")
+        self.send_response(403)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()                      # ACAO 를 붙이지 않는다 — 붙이면 막은 뜻이 없다
+        self.wfile.write(data)
+        return False
+
     def do_GET(self):   # noqa: N802
+        if not self._guard():
+            return
         if urlparse(self.path).path == "/api/events":
             self._sse()
             return
         self._route("GET")
 
-    def do_POST(self):  self._route("POST")   # noqa: E704,N802
+    def do_POST(self):  # noqa: N802
+        if not self._guard():
+            return
+        self._route("POST")
 
     def _sse(self) -> None:
         """SSE 스트림 — 잡 로그/완료를 푸시(패널은 폴링 대신 이벤트 수신). 15s 핑으로 연결 유지."""
@@ -120,6 +162,9 @@ class Handler(BaseHTTPRequestHandler):
             CTX["jobs"].unsubscribe(q)
 
     def do_OPTIONS(self):  # noqa: N802
+        # 사전확인에서 막으면 본 요청이 아예 뜨지 않는다 — 한 겹 앞에서 끊는다
+        if not self._guard():
+            return
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")

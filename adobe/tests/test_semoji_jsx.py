@@ -59,13 +59,18 @@ def test_tools_jsx_exists_and_functions():
         assert fn in src
 
 
-def test_tools_srt_single_text_layer():
-    """SRT도 1레이어 + Source Text 키프레임 — 줄별 레이어 금지(577레이어 사태의 교훈)."""
+def test_tools_srt_per_cue_layers():
+    """SRT도 큐마다 텍스트 레이어 하나씩 — SEMOJI TOOL 자막작업 방식.
+
+    줄별로 고치고 움직일 수 있는 것이 목적이다. 예전에 577레이어 사태로
+    단일 키프레임 방식으로 갔다가, 줄별 편집이 안 되어 되돌렸다 — 대신
+    shy로 접고, 다시 넣을 때 이전 결과(단일 레이어·줄별 레이어)를 정리한다."""
     src = TOOLS.read_text(encoding="utf-8")
-    assert '"가져온자막"' in src
-    assert "setValueAtTime" in src
-    # 큐마다 addText를 부르는 구조가 아니어야 한다
-    assert src.count("layers.addText") == 1
+    assert '"가져온자막"' in src                     # 예전 단일 레이어 정리 대상
+    assert "akIsSrtLayerName" in src                 # 줄별 레이어 판별 + 재실행 정리
+    assert "layers.addText" in src
+    assert ".shy = true" in src                      # 타임라인 무게 완화
+    assert "setValueAtTime" not in src.split("function akImportSrt")[1].split("\nfunction ")[0]
 
 
 def test_tools_insert_null_preserves_parent():

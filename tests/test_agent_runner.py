@@ -478,3 +478,150 @@ class TestBuildCommand:
         assert "반도체 장기공급계약과 AI 추론 수요 급증" in finance_digest
         assert "2026-04-12-google-news-business-ko.json" in ai_digest
         assert "반도체 장기공급계약과 AI 추론 수요 급증" in ai_digest
+
+
+class TestDigestRecursion:
+    """digest 가 digest 를 다시 먹지 않는다.
+
+    Stage 0·4 는 만든 digest 를 `insights/<단계>/_inputs/` 에 쌓는데, 입력을 고르는
+    탐색 루트가 그 **상위**(`insights/performance`)였다. 탐색은 rglob 재귀에
+    수정시간 내림차순이라, 방금 쓴 digest 가 항상 최신 상단에 온다 — 원자료 대신
+    **재요약된 요약**이 입력 자리를 차지한다.
+    """
+
+    def _vault(self, tmp_path, monkeypatch):
+        vault_dir = tmp_path / "vault"
+        for rel in [
+            "insights/performance/_inputs", "insights/planning/_inputs", "insights/feedback",
+            "channels/이로미즘/videos", "channels/이로미즘/analytics",
+            "channels/competitors/지식한입", "market/trends", "market/news",
+            "market/social", "market/communities",
+        ]:
+            (vault_dir / rel).mkdir(parents=True, exist_ok=True)
+        monkeypatch.setenv("KAIROS_VAULT_DIR", str(vault_dir))
+        return vault_dir
+
+    def test_select_recent_files_skips_inputs_dir(self, tmp_path, monkeypatch):
+        vault_dir = self._vault(tmp_path, monkeypatch)
+        perf = vault_dir / "insights" / "performance"
+        (perf / "2026-09-01-weekly-review.md").write_text("원자료", encoding="utf-8")
+        # 나중에 써서 mtime 이 더 최신 — 지금 구조라면 이게 1순위로 뽑힌다
+        (perf / "_inputs" / "2026-09-08-performance-digest.md").write_text("재요약", encoding="utf-8")
+
+        runner = AgentRunner()
+        picked = runner._select_recent_files(perf, limit=5)
+        names = [p.name for p in picked]
+        assert "2026-09-01-weekly-review.md" in names
+        assert not any("_inputs" in str(p) for p in picked), f"_inputs 가 입력으로 뽑혔습니다: {picked}"
+
+    def test_stage4_digest_does_not_ingest_previous_digest(self, tmp_path, monkeypatch):
+        vault_dir = self._vault(tmp_path, monkeypatch)
+        perf = vault_dir / "insights" / "performance"
+        (perf / "2026-09-01-weekly-review.md").write_text("지난 주 회고 원자료", encoding="utf-8")
+        (perf / "_inputs" / "2026-09-07-이로미즘-performance-digest.md").write_text(
+            "어제 만든 digest — 이것이 다시 입력이 되면 안 된다", encoding="utf-8")
+        (vault_dir / "channels" / "이로미즘" / "videos" / "v.md").write_text("video", encoding="utf-8")
+
+        runner = AgentRunner(provider="codex")
+        paths = runner._build_stage4_digests("이로미즘")
+        body = (vault_dir / paths["performance_digest"]).read_text(encoding="utf-8")
+        assert "2026-09-01-weekly-review.md" in body
+        assert "performance-digest.md" not in body, "digest 가 이전 digest 를 물고 들어왔습니다"
+
+    def test_stage0_feedback_digest_does_not_ingest_previous_digest(self, tmp_path, monkeypatch):
+        vault_dir = self._vault(tmp_path, monkeypatch)
+        (vault_dir / "insights" / "feedback" / "2026-09-01-stage0-feedback.md").write_text(
+            "원자료 피드백", encoding="utf-8")
+        (vault_dir / "insights" / "performance" / "_inputs" / "2026-09-07-이로미즘-analytics-digest.md").write_text(
+            "어제 digest", encoding="utf-8")
+
+        runner = AgentRunner(provider="codex")
+        paths = runner._build_stage0_digests("이로미즘")
+        body = (vault_dir / paths["feedback_digest"]).read_text(encoding="utf-8")
+        assert "analytics-digest.md" not in body, "Stage 0 이 Stage 4 digest 를 물고 들어왔습니다"
+
+
+class TestStage4PromptDeduplication:
+    """두 번째 호출이 같은 digest 다섯 개를 다시 분석하지 않는다.
+
+    weekly review 가 이미 그 다섯을 읽고 종합한 결과물이다. feedback 호출에 같은
+    다섯을 또 주면 같은 근거를 두 번 분석하고, 두 산출물이 서로 어긋날 수도 있다.
+    """
+
+    def _paths(self, tmp_path, monkeypatch):
+        vault_dir = tmp_path / "vault"
+        for rel in [
+            "insights/performance/_inputs", "insights/planning/_inputs", "insights/feedback",
+            "channels/이로미즘/videos", "channels/이로미즘/analytics",
+            "channels/competitors/지식한입", "market/trends", "market/news",
+            "market/social", "market/communities",
+        ]:
+            (vault_dir / rel).mkdir(parents=True, exist_ok=True)
+        monkeypatch.setenv("KAIROS_VAULT_DIR", str(vault_dir))
+        runner = AgentRunner(provider="codex")
+        return runner, runner._build_stage4_digests("이로미즘"), runner._prepare_stage4_output_templates("이로미즘")
+
+    def test_feedback_prompt_reads_weekly_review_not_all_digests(self, tmp_path, monkeypatch):
+        runner, digests, outputs = self._paths(tmp_path, monkeypatch)
+        prompt = runner.build_codex_stage0_feedback_prompt("이로미즘", digests, outputs)
+
+        assert str(outputs["weekly_review_path"]) in prompt, "직전 weekly review 를 입력으로 주지 않습니다"
+        for label in ("performance_digest", "analytics_digest", "competitor_digest", "planning_digest"):
+            assert str(digests[label]) not in prompt, f"{label} 를 두 번째 호출에서 또 읽습니다"
+
+    def test_weekly_prompt_still_reads_all_digests(self, tmp_path, monkeypatch):
+        """첫 호출은 그대로 다섯을 다 읽어야 한다 — 줄일 곳은 두 번째다."""
+        runner, digests, outputs = self._paths(tmp_path, monkeypatch)
+        prompt = runner.build_codex_weekly_review_prompt("이로미즘", digests, outputs)
+        for label in ("performance_digest", "analytics_digest", "signal_digest",
+                      "competitor_digest", "planning_digest"):
+            assert str(digests[label]) in prompt
+
+
+class TestStage4WeeklyGate:
+    """feedback 이 weekly review 를 근거로 삼으니, 그것이 비면 거기서 끊어야 한다."""
+
+    def _runner(self, tmp_path, monkeypatch):
+        vault_dir = tmp_path / "vault"
+        for rel in [
+            "insights/performance/_inputs", "insights/planning/_inputs", "insights/feedback",
+            "channels/이로미즘/videos", "channels/이로미즘/analytics",
+            "channels/competitors/지식한입", "market/trends", "market/news",
+            "market/social", "market/communities",
+        ]:
+            (vault_dir / rel).mkdir(parents=True, exist_ok=True)
+        monkeypatch.setenv("KAIROS_VAULT_DIR", str(vault_dir))
+        return AgentRunner(provider="codex"), vault_dir
+
+    def test_stops_when_weekly_review_stays_empty(self, tmp_path, monkeypatch):
+        runner, _ = self._runner(tmp_path, monkeypatch)
+        calls = []
+
+        def fake_run_agent(prompt, config, **kwargs):
+            calls.append(prompt)
+            return {"status": "success", "returncode": 0, "stdout": "", "stderr": "", "usage": {}}
+
+        runner._run_agent = fake_run_agent            # 파일을 안 쓰는 에이전트를 흉내낸다
+        result = runner._run_codex_performance_analyst("weekly", "이로미즘", {})
+
+        assert result["status"] == "error"
+        assert "weekly review" in result["stderr"]
+        assert len(calls) == 1, "회고가 비었는데 feedback 호출까지 갔습니다"
+
+    def test_proceeds_when_weekly_review_filled(self, tmp_path, monkeypatch):
+        runner, vault_dir = self._runner(tmp_path, monkeypatch)
+        calls = []
+
+        def fake_run_agent(prompt, config, **kwargs):
+            calls.append(prompt)
+            # 첫 호출이 회고를 채우고, 두 번째가 feedback 을 채운다
+            target = "weekly-review.md" if len(calls) == 1 else "stage0-feedback.md"
+            for p in vault_dir.rglob(f"*{target}"):
+                p.write_text(p.read_text(encoding="utf-8") + "\n채움", encoding="utf-8")
+            return {"status": "success", "returncode": 0, "stdout": "", "stderr": "", "usage": {}}
+
+        runner._run_agent = fake_run_agent
+        result = runner._run_codex_performance_analyst("weekly", "이로미즘", {})
+
+        assert result["status"] == "success", result.get("stderr")
+        assert len(calls) == 2

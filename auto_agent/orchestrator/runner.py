@@ -15,6 +15,7 @@ pipeline.json을 읽고 순차/병렬 실행.
   python -m orchestrator.runner --project <slug> --only step_8b
 """
 import json
+import hashlib
 import os
 import platform
 import re
@@ -200,13 +201,32 @@ def build_adapter_cmd(project_dir: str, art_style: str, theme: str | None) -> li
     return cmd
 
 
-def is_legacy_gated(step: dict, enable_legacy: bool) -> bool:
-    """legacy_only 스텝인데 ENABLE_LEGACY_V3가 꺼져 있으면 True(스킵 대상).
+def is_legacy_gated(step: dict, enable_legacy: bool, v4_artifacts: bool = False) -> bool:
+    """legacy_only 스텝을 스킵해야 하면 True.
 
-    v4-bridge가 표준 Stage 1/2 경로이므로 네이티브 v3 스텝은 기본 스킵.
-    ENABLE_LEGACY_V3=1 일 때만 네이티브 경로 복구.
+    v3 네이티브 Stage 1/2가 기본 경로다(docs/v5-plan.md — "v5는 v3의 이름 정리다").
+    게이팅은 PD가 v4 워크플로로 원고를 이미 만들어 둔 프로젝트에서만 걸린다.
+    네이티브 스텝이 그 산출물을 덮어쓰는 것을 막는 것이 게이팅의 목적이기 때문이다.
+
+    ENABLE_LEGACY_V3=1은 v4 프로젝트에서도 네이티브 경로를 강제 복구하는 탈출구.
     """
-    return bool(step.get("legacy_only")) and not enable_legacy
+    if not step.get("legacy_only"):
+        return False
+    return v4_artifacts and not enable_legacy
+
+
+def result_bucket(status: str) -> str:
+    """StepResult.status → state의 어느 리스트에 기록할지.
+
+    'skipped'는 completed도 failed도 아닌 3번째 상태다 — 실행되지 않았다는 뜻.
+    순차 경로가 skipped를 completed_steps로, 병렬 경로가 failed_steps로 넣던
+    불일치를 여기 한곳으로 모은다. 모르는 상태는 성공으로 세지 않는다.
+    """
+    if status == "completed":
+        return "completed_steps"
+    if status == "skipped":
+        return "skipped_steps"
+    return "failed_steps"
 
 
 def _filter_steps_until(steps: list[dict], stop_after: str | None) -> list[dict]:
@@ -1846,7 +1866,7 @@ class PipelineRunner:
                     self.state.failed_steps.append(step["id"])
                     return
             else:
-                self.state.completed_steps.append(step["id"])
+                getattr(self.state, result_bucket(result.status)).append(step["id"])
 
     def _detect_cycles(self, dependent: Dict[str, tuple]) -> List[str]:
         """순환 의존성 탐지. 순환에 포함된 step ID 리스트 반환."""
@@ -1919,6 +1939,8 @@ class PipelineRunner:
                 if result.status == "completed":
                     completed_ids.add(step["id"])
                     self.state.completed_steps.append(step["id"])
+                elif result.status == "skipped":
+                    self.state.skipped_steps.append(step["id"])
                 elif step.get("blocking") is not False:
                     self.state.failed_steps.append(step["id"])
 
@@ -1942,10 +1964,9 @@ class PipelineRunner:
                 if result.status == "completed":
                     completed_ids.add(step_id)
                     self.state.completed_steps.append(step_id)
-                    progress = True
                 else:
-                    self.state.failed_steps.append(step_id)
-                    progress = True  # 실패해도 다음 라운드 시도
+                    getattr(self.state, result_bucket(result.status)).append(step_id)
+                progress = True  # 실패·스킵해도 다음 라운드 시도
 
         # 해소 불가 step 처리
         for step_id, (step, deps) in remaining.items():
@@ -2420,19 +2441,47 @@ class PipelineRunner:
         "data_enrichment": "data-enrichment.md",
     }
 
-    _WRITING_STYLE_SKILLS = frozenset({"writing-style-semoji", "writing-style-iromism"})
+    # 문체 스킬 가족 — 스텝이 style/<family> 로 선언하면 활성 writing_style 변종으로 해석한다.
+    #   narrative = 구성(무엇을 어떤 순서로) — 초고부터
+    #   voice     = 문체(어떻게 말할지)      — 윤문 단계부터
+    #   direction = 연출(layout·씬분할)      — 씬분할 단계부터
+    _STYLE_FAMILIES = ("narrative", "voice", "direction")
+    _STYLE_VARIANTS = frozenset(
+        f"{fam}-{style}"
+        for fam in _STYLE_FAMILIES
+        for style in ("semoji", "iromism")
+    )
 
-    def _filter_writing_style_skills(self, skill_names: list) -> list:
-        """비활성 writing style 스킬 제거 + 활성 스킬 자동 주입."""
+    def _resolve_style_skills(self, skill_names: list) -> list:
+        """style/<family> 선언을 활성 writing_style 변종으로 해석 + 비활성 변종 제거.
+
+        예전에는 활성 writing-style 스킬을 모든 에이전트에 자동 주입했다. 그 탓에
+        초고 작가까지 문체 규격을 떠안아 내용이 밀렸다. 이제 자동 주입하지 않고,
+        스텝이 필요한 가족만 명시적으로 선언한다.
+        """
         writing_style = (self.state.config or {}).get("writing_style", "")
-        active = f"writing-style-{writing_style}" if writing_style else None
-        filtered = [
-            s for s in skill_names
-            if s not in self._WRITING_STYLE_SKILLS or s == active
-        ]
-        if active and active not in filtered:
-            filtered.append(active)
-        return filtered
+        resolved: list = []
+        for s in skill_names:
+            name = s.split("/")[-1] if s.startswith("style/") else s
+            if s.startswith("style/"):
+                if not writing_style:
+                    continue  # 채널 문체 미설정 — 기본 writing-style로 충분
+                name = f"{name}-{writing_style}"
+            elif name in self._STYLE_VARIANTS:
+                # 스텝이 변종을 직접 박아둔 경우 — 활성 문체가 아니면 버린다
+                if not name.endswith(f"-{writing_style}"):
+                    continue
+            if name not in resolved:
+                resolved.append(name)
+        return resolved
+
+    def _step_applies_voice(self, step: dict) -> bool:
+        """이 스텝이 문체(voice) 스킬을 받는가 — 문체 준수 지시문 주입 여부 판단용."""
+        declared = list(step.get("skills", []))
+        return any(
+            s == "style/voice" or s in {f"voice-{v}" for v in ("semoji", "iromism")}
+            for s in declared
+        )
 
     def _build_chapter_prompt(self, step: dict, chapter_specs: dict) -> str:
         """챕터별 병렬 처리용 프롬프트 빌드."""
@@ -2569,6 +2618,18 @@ class PipelineRunner:
                 return True
         return False
 
+    def _has_v4_artifacts(self) -> bool:
+        """PD가 v4 워크플로로 만들어 둔 산출물이 이 프로젝트에 있는지.
+
+        어댑터 실행 전에는 마커 원고가, 실행 뒤에는 sentinel이 근거가 된다.
+        둘 중 하나라도 있으면 v4-bridge 원작 프로젝트로 보고 네이티브
+        Stage 1/2를 막는다 — 덮어쓰기 방지가 게이팅의 목적이다.
+        """
+        return (
+            (self.project_dir / "final_manuscript_marked.md").exists()
+            or (self.project_dir / ".v4_bridge_origin").exists()
+        )
+
     def _load_agent_skill(self, agent_name: str, step: dict | None = None) -> str:
         """에이전트 SKILL.md 로드 + 실행 모드에 필요한 섹션만 슬라이싱.
 
@@ -2657,7 +2718,7 @@ class PipelineRunner:
             if s not in skill_names:
                 skill_names.append(s)
 
-        skill_names = self._filter_writing_style_skills(skill_names)
+        skill_names = self._resolve_style_skills(skill_names)
         skill_refs = agent_def.get("skill_refs", {})
         skill_limits = agent_def.get("skill_limits", {})
         shared_skills_text = ""
@@ -3034,6 +3095,11 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         chapter_results: dict = {}
         total_cost: dict = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0}
 
+        # 7개를 한꺼번에 던지면 **아무도 캐시를 못 읽는다.** 캐시 항목은 앞선 응답이
+        # 시작된 뒤에야 읽을 수 있는데, 동시 발사에서는 7개가 전부 아직 안 쓰인
+        # 캐시를 보고 각자 쓴다. 값싼 호출 하나로 먼저 굽고 나서 던진다.
+        self._warm_chapter_cache(step)
+
         workers = min(n_chapters, 10)
         with ThreadPoolExecutor(max_workers=workers) as pool:
             futures = {}
@@ -3176,6 +3242,100 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 cost_info=total_cost,
             )
 
+    @staticmethod
+    def _build_chapter_static_system(agent_skill: str, shared_skills_text: str) -> str:
+        """챕터 호출 7회가 **글자 하나까지 공유**하는 블록.
+
+        캐시는 prefix 바이트 일치라, 여기 들어가는 것은 챕터와 무관해야 한다.
+        빈 `<shared_skills>` 태그도 넣지 않는다 — 있는 편과 없는 편의 바이트가
+        달라지면 그 둘은 서로 다른 캐시가 된다.
+        """
+        parts = [f"<agent_skill>\n{agent_skill}\n</agent_skill>"]
+        if shared_skills_text:
+            parts.append(f"<shared_skills>{shared_skills_text}\n</shared_skills>")
+        return "\n\n".join(parts)
+
+    @staticmethod
+    def _write_chapter_system_prompt(dir_path: Path, content: str) -> Path:
+        """정적 블록을 파일로 떨궈 `--append-system-prompt-file` 에 넘긴다.
+
+        내용 해시를 파일명으로 삼아 **같은 내용이면 같은 파일**이 된다. 7개 챕터가
+        같은 파일을 보게 하려는 것이고, 덤으로 내용이 바뀌면 파일이 갈려 낡은 것을
+        읽는 사고가 안 난다.
+
+        쓰기는 임시 파일 + rename 이다. 병렬로 들어와도 반쯤 쓰인 파일을 읽는 일이
+        없어야 한다 — 그러면 그 챕터만 캐시가 어긋난다.
+        """
+        digest = hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
+        path = dir_path / f".chapter_system_{digest}.txt"
+        if not path.exists():
+            tmp = path.with_suffix(f".{os.getpid()}.{threading.get_ident()}.tmp")
+            tmp.write_text(content, encoding="utf-8")
+            os.replace(tmp, path)          # 원자적 — 반쯤 쓰인 파일이 보이지 않는다
+        return path
+
+    def _warm_chapter_cache(self, step: dict) -> None:
+        """챕터를 병렬 발사하기 전에 캐시를 한 번 구워 둔다.
+
+        캐시 항목은 **앞선 응답이 시작된 뒤에야** 읽을 수 있다. 7개를 동시에 던지면
+        전부 「아직 없는 캐시」를 보고 각자 쓴다 — 쓰기는 읽기의 12.5배 값이라
+        캐싱을 켜고도 이득이 거의 없어진다.
+
+        그래서 값싼 호출 하나(짧은 user 메시지 + 같은 시스템 프롬프트)로 먼저 굽는다.
+        **실패해도 조용히 넘어간다** — 이건 최적화이지 본 작업이 아니다.
+        """
+        try:
+            agent_name = step.get("agent", "script-director")
+            static = self._build_chapter_static_system(
+                self._load_agent_skill(agent_name, step),
+                self._build_shared_skills_text(agent_name, step),
+            )
+            path = self._write_chapter_system_prompt(self.project_dir, static)
+            cmd = [
+                self._find_claude_cli(), "--print", "--output-format", "json",
+                "--dangerously-skip-permissions",
+                "--append-system-prompt-file", str(path),
+                "--model", step.get("single_call_model", "claude-opus-4-6"),
+                "--max-turns", "1",
+            ]
+            env = os.environ.copy()
+            env.pop("CLAUDECODE", None)
+            t0 = time.time()
+            proc = subprocess.run(
+                cmd, input="OK 라고만 답하세요.", capture_output=True, text=True,
+                encoding="utf-8", env=env, cwd=str(self.project_dir), timeout=180,
+                **subprocess_kwargs(),
+            )
+            info = self._parse_claude_cost(proc.stdout, proc.stderr)
+            print(
+                f"    [cache_warm] {time.time() - t0:.1f}s "
+                f"write={info.get('cache_write', 0):,} read={info.get('cache_read', 0):,}",
+                flush=True,
+            )
+        except Exception as e:                  # 워밍 실패가 본 작업을 막지 않는다
+            print(f"    [cache_warm] 건너뜁니다: {e}", flush=True)
+
+    def _build_shared_skills_text(self, agent_name: str, step: dict) -> str:
+        """공유 스킬 본문을 이어 붙인다. 챕터 실행부와 워밍이 **같은 바이트**를 봐야 한다."""
+        skill_names = list(step.get("skills", []))
+        agents_config = self._load_agents_config()
+        agent_def = agents_config.get("subagents", {}).get(agent_name, {})
+        for s in agent_def.get("skills", []):
+            if s not in skill_names:
+                skill_names.append(s)
+        skill_names = self._resolve_style_skills(skill_names)
+        skill_refs = agent_def.get("skill_refs", {})
+        skill_limits = agent_def.get("skill_limits", {})
+        out = ""
+        for skill_name in skill_names:
+            content = self._load_shared_skill(skill_name, skill_refs.get(skill_name))
+            if content:
+                limit = skill_limits.get(skill_name)
+                if limit and len(content) > limit:
+                    content = content[:limit]
+                out += f"\n\n## {skill_name}\n\n{content}"
+        return out
+
     def _execute_manuscript_chapter(
         self,
         step: dict,
@@ -3199,7 +3359,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         for s in agent_def.get("skills", []):
             if s not in skill_names:
                 skill_names.append(s)
-        skill_names = self._filter_writing_style_skills(skill_names)
+        skill_names = self._resolve_style_skills(skill_names)
         skill_refs = agent_def.get("skill_refs", {})
         skill_limits = agent_def.get("skill_limits", {})
         shared_skills_text = ""
@@ -3268,14 +3428,6 @@ SCRIPT_DIRECTOR_MODE: {_mode}
 SCRIPT_DIRECTOR_CHAPTER: {chapter_num}
 </system_context>
 
-<agent_skill>
-{agent_skill}
-</agent_skill>
-
-<shared_skills>
-{shared_skills_text}
-</shared_skills>
-
 {context_block}
 
 <scene_table>
@@ -3314,10 +3466,21 @@ JSON 구조:
         model = step.get("single_call_model", "claude-opus-4-6")
         timeout_sec = self._get_agent_timeout(agent_name)
 
+        # 정적 블록(SKILL + 공유 스킬)은 **시스템 프롬프트로** 넘긴다.
+        # stdin 에 실으면 챕터마다 새로 캐시를 쓴다 — 자리만 옮기면 캐시를 탄다.
+        # 실측(chapters 슬라이스 57KB, 같은 프롬프트 2회):
+        #   시스템 프롬프트  2회차 write 0      read 106,516
+        #   stdin           2회차 write 83,454 read  23,069
+        sys_prompt_path = self._write_chapter_system_prompt(
+            self.project_dir,
+            self._build_chapter_static_system(agent_skill, shared_skills_text),
+        )
+
         cli_path = self._find_claude_cli()
         cmd = [
             cli_path, "--print", "--output-format", "json",
             "--dangerously-skip-permissions",
+            "--append-system-prompt-file", str(sys_prompt_path),
             "--model", model, "--max-turns", "10",
             "--allowedTools", "Read", "--allowedTools", "Write",
         ]
@@ -3700,10 +3863,15 @@ JSON 구조:
                 print(f"  [SKIP] {step_id}: v4-bridge origin — fact-check/proofread는 draft 단계에서 완료")
                 return StepResult(step_id=step_id, status="skipped")
 
-        # 레거시 v3 stage 1/2 게이팅 — v4-bridge가 표준 경로.
-        # ENABLE_LEGACY_V3=1 일 때만 네이티브 스텝 실행.
-        if is_legacy_gated(step, os.environ.get("ENABLE_LEGACY_V3") == "1"):
-            print(f"  [SKIP] {step_id}: legacy_only — v4-bridge 표준 (복구: ENABLE_LEGACY_V3=1)")
+        # 레거시 v3 stage 1/2 게이팅 — v3 네이티브가 기본 경로다.
+        # PD가 v4 워크플로로 원고를 만들어 둔 프로젝트에서만 네이티브 스텝을 막는다
+        # (그 산출물을 덮어쓰지 않기 위해). ENABLE_LEGACY_V3=1은 강제 복구 탈출구.
+        if is_legacy_gated(
+            step,
+            os.environ.get("ENABLE_LEGACY_V3") == "1",
+            self._has_v4_artifacts(),
+        ):
+            print(f"  [SKIP] {step_id}: legacy_only — v4-bridge 원작 (복구: ENABLE_LEGACY_V3=1)")
             return StepResult(step_id=step_id, status="skipped")
 
         # conditional 체크
@@ -3852,6 +4020,12 @@ JSON 구조:
                         self._vault_save_research(step, result)
                     except Exception as vault_err:
                         print(f"    [WARN] 볼트 축적 실패: {vault_err}")
+            elif result.status == "skipped":
+                # 모듈이 실행 시점에 판단한 스킵(예: v4 산출물 없음). 실패가 아니다 —
+                # 사전 체크 스킵과 같은 취급으로 run 행만 닫고 조용히 넘어간다.
+                self.pm.complete_pipeline_run(run_id)
+                print(f"SKIP ({elapsed:.1f}s)")
+
             else:
                 self.pm.fail_pipeline_run(run_id, result.error)
                 print(f"FAIL ({elapsed:.1f}s) — {result.error[:80]}")
@@ -4134,7 +4308,7 @@ JSON 구조:
         for s in agent_def.get("skills", []):
             if s not in skill_names:
                 skill_names.append(s)
-        skill_names = self._filter_writing_style_skills(skill_names)
+        skill_names = self._resolve_style_skills(skill_names)
         skill_refs = agent_def.get("skill_refs", {})
         skill_limits = agent_def.get("skill_limits", {})
         shared_skills_text = ""
@@ -4165,6 +4339,21 @@ JSON 구조:
         if step.get("mode") == "plan":
             _plan_blocks_block = self._build_numbered_blocks()
 
+        # 문체 지시문은 이 스텝이 voice 스킬을 받을 때만 넣는다.
+        # 규칙서 없이 준수 명령만 가면 작가가 내용을 밀어내고 형식을 맞추려 든다.
+        if writing_style and self._step_applies_voice(step):
+            _style_directive = (
+                f"**{writing_style} 문체 필수 적용** — voice-{writing_style} 스킬의 규칙을 반드시 따르세요."
+            )
+        elif writing_style:
+            _style_directive = (
+                f"문체 윤문은 이 단계의 일이 아닙니다 — 이후 윤문 단계(step_2_polish)에서 "
+                f"voice-{writing_style}로 처리합니다. **지금은 내용과 구성에 집중하세요.** "
+                f"문장이 다소 투박해도 됩니다."
+            )
+        else:
+            _style_directive = ""
+
         dynamic_system = f"""<system_context>
 프로젝트: {self.project_slug}
 작업 디렉토리: {self.project_dir}
@@ -4176,8 +4365,7 @@ JSON 구조:
 목표 나레이션 글자 수: 약 {target_chars}자 (±10%)
 아트스타일: {art_style}
 문체 스타일: {writing_style}
-{"**이로미즘 문체 필수 적용** — writing-style-iromism 스킬의 규칙을 반드시 따르세요." if writing_style == "iromism" else ""}
-{"**세모지 문체 필수 적용** — writing-style-semoji 스킬의 규칙을 반드시 따르세요." if writing_style == "semoji" else ""}
+{_style_directive}
 </project_config>
 
 {self._build_progress_block(step.get('id', ''))}{_plan_blocks_block}"""
@@ -5298,13 +5486,15 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         return ""
 
     def _build_manuscript_reference_block(self) -> str:
-        """script-director manuscript 모드 전용 — 매력적인 prose 작성을 위한 강제 reference 블록.
+        """script-director manuscript 모드 전용 — 구성 참고용 reference 블록.
 
-        2개 source를 강하게 주입:
-        1. writing-style-iromism.md / writing-style-semoji.md의 "참조 원고" 섹션 통째
-        2. vault semantic search로 유사 주제 과거 영상 원고 (1~2편, top match)
+        vault semantic search로 유사 주제의 과거 영상 원고를 1편 주입한다.
+        목적: 추상적 규칙이 아닌 실제 예시로 **구조와 전개**를 학습시킨다.
 
-        목적: 추상적 규칙이 아닌 실제 예시로 톤/리듬/후킹 패턴을 학습시킨다.
+        ⚠️ 문체 참조 원고(voice-*.md의 "참조 원고" 절)는 여기서 주입하지 않는다.
+        manuscript 단계는 내용과 구성만 맡고, 말투는 윤문 단계(step_2_polish)에서
+        script-polisher가 voice-<style> 스킬로 처리한다. 예전에는 이 자리에서
+        문체 예시를 강제 주입해 작가가 형식을 맞추느라 내용이 밀렸다.
         """
         writing_style = self.state.config.get("writing_style", "")
         if not writing_style:
@@ -5312,37 +5502,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
         sections: list[str] = []
 
-        # ── 1. 참조 원고 (writing-style-iromism.md 의 ⭐ 참조 원고 섹션) ──
-        try:
-            style_skill_path = (
-                Path(__file__).parent.parent
-                / "data" / "skills" / "shared"
-                / f"writing-style-{writing_style}.md"
-            )
-            if style_skill_path.exists():
-                style_text = style_skill_path.read_text(encoding="utf-8")
-                # "## ⭐ 참조 원고" 섹션부터 다음 ## 까지 추출
-                ref_start = style_text.find("⭐ 참조 원고")
-                if ref_start == -1:
-                    ref_start = style_text.find("## 참조 원고")
-                if ref_start == -1:
-                    ref_start = style_text.find("참조 원고")
-                if ref_start >= 0:
-                    # 다음 ## 헤더까지 (또는 끝까지)
-                    next_h = style_text.find("\n## ", ref_start + 10)
-                    ref_section = (
-                        style_text[ref_start:next_h] if next_h > 0 else style_text[ref_start:]
-                    )
-                    # 너무 길면 자름 (max 3000자)
-                    if len(ref_section) > 3000:
-                        ref_section = ref_section[:3000] + "\n\n[... 이하 생략 ...]"
-                    sections.append(
-                        f"## 참조 원고 ({writing_style} 스타일 — 톤/리듬/후킹 패턴을 그대로 따르세요)\n\n{ref_section}"
-                    )
-        except Exception as e:
-            print(f"    [WARN] \1", flush=True)
-
-        # ── 2. vault semantic search — 유사 주제의 매력적인 과거 영상 원고 ──
+        # ── vault semantic search — 유사 주제의 매력적인 과거 영상 원고 ──
         try:
             if self.vault.enabled:
                 topic = self.project.get("topic") or self.project_slug
@@ -5415,7 +5575,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 skill_names.append(s)
 
         # skill_refs: 에이전트별 필요한 references만 선택 로드
-        skill_names = self._filter_writing_style_skills(skill_names)
+        skill_names = self._resolve_style_skills(skill_names)
         skill_refs = agent_def.get("skill_refs", {})
         skill_limits = agent_def.get("skill_limits", {})
 
@@ -5534,6 +5694,22 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
         # topic 추출 (DB topic 컬럼 → config → slug 폴백)
         _topic = self.project.get("topic") or config.get("topic") or self.project_slug
+
+        # 문체 지시문은 이 스텝이 voice 스킬을 받을 때만 넣는다.
+        # 규칙서 없이 준수 명령만 가면 작가가 내용을 밀어내고 형식을 맞추려 든다.
+        if writing_style and self._step_applies_voice(step):
+            _style_directive = (
+                f"**{writing_style} 문체 필수 적용** — voice-{writing_style} 스킬의 규칙을 반드시 따르세요."
+            )
+        elif writing_style:
+            _style_directive = (
+                f"문체 윤문은 이 단계의 일이 아닙니다 — 이후 윤문 단계(step_2_polish)에서 "
+                f"voice-{writing_style}로 처리합니다. **지금은 내용과 구성에 집중하세요.** "
+                f"문장이 다소 투박해도 됩니다."
+            )
+        else:
+            _style_directive = ""
+
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
 주제(topic): {_topic}
@@ -5547,8 +5723,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 목표 나레이션 글자 수: 약 {target_chars}자 (±10%)
 아트스타일: {art_style}
 문체 스타일: {writing_style}
-{"**이로미즘 문체 필수 적용** — writing-style-iromism 스킬의 규칙을 반드시 따르세요." if writing_style == "iromism" else ""}
-{"**세모지 문체 필수 적용** — writing-style-semoji 스킬의 규칙을 반드시 따르세요." if writing_style == "semoji" else ""}
+{_style_directive}
 </project_config>
 
 <agent_skill>
@@ -5830,7 +6005,10 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
     def _parse_claude_cost(self, stdout: str, stderr: str) -> dict:
         """Claude CLI 출력에서 비용 정보 파싱."""
-        cost_info = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0}
+        # 캐시 토큰까지 받아 둔다. CLI 는 이미 주고 있었는데 여기서 버리고 있어서,
+        # 캐시가 도는지 안 도는지를 볼 방법이 없었다.
+        cost_info = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0,
+                     "cache_read": 0, "cache_write": 0}
 
         for raw in (stdout, stderr):
             wrapper = self._parse_cli_result_wrapper(raw)
@@ -5839,6 +6017,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             usage = wrapper.get("usage", {}) or {}
             cost_info["tokens_in"] = usage.get("input_tokens", 0)
             cost_info["tokens_out"] = usage.get("output_tokens", 0)
+            cost_info["cache_read"] = usage.get("cache_read_input_tokens", 0) or 0
+            cost_info["cache_write"] = usage.get("cache_creation_input_tokens", 0) or 0
             cost_info["cost_usd"] = (
                 wrapper.get("cost_usd", 0.0) or wrapper.get("total_cost_usd", 0.0)
             )

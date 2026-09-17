@@ -81,11 +81,59 @@ function akBuildSequence(manifestPath, opts) {
             akMarker(seq, t0, pf + (s.title || ""), s.subtitle || "", log);
         }
 
+        // **여러 씬에 걸치는 비디오 클립 — V2 에 한 번 배치한다.**
+        //
+        // 오디오(나레이션)는 씬 기준 그대로 A1 에 있고, 영상은 연결된 씬 범위의
+        // 첫 씬 in점(clip.start)에서 시작한다. 덮인 씬은 매니페스트가 씬별
+        // 영상을 이미 뺐으므로 V2 의 그 구간은 비어 있다.
+        // ⚠️ 실제 프리미어 실행 검증 전 — ProjectItem in/out 변경이 다른 배치에
+        // 영향을 주는지는 호스트에서 확인해야 한다(핸드오프 §5D).
+        var mclips = M.videoClips || [], mvids = 0;
+        for (var mc = 0; mc < mclips.length; mc++) {
+            var cv = mclips[mc];
+            var cvItem = akImportOnce(proj, cv.sourcePath, bin, log);
+            if (!cvItem) { continue; }
+            try {
+                // 원본 [sourceIn, sourceOut) 만 쓰도록 항목 in/out 을 먼저 잡는다
+                if (cv.sourceIn) { try { cvItem.setInPoint(cv.sourceIn, 4); } catch (eIn) { } }
+                try { cvItem.setOutPoint(cv.sourceOut || (cv.sourceIn + cv.duration), 4); } catch (eOut) { }
+                vt2.overwriteClip(cvItem, cv.start);
+                // 놓인 클립 끝을 타임라인 길이에 맞춘다(범위 끝에서 자르기)
+                for (var mcf = vt2.clips.numItems - 1; mcf >= 0; mcf--) {
+                    var mcc = vt2.clips[mcf];
+                    if (Math.abs(Number(mcc.start.seconds) - cv.start) < 0.02) {
+                        try {
+                            var mce = mcc.end; mce.seconds = cv.start + cv.duration;
+                            mcc.end = mce;
+                        } catch (eE) { }
+                        break;
+                    }
+                }
+                // 내장 오디오가 A트랙에 따라 들어왔으면 걷어낸다 — TTS 와 겹친다
+                for (var mat = 0; mat < seq.audioTracks.numTracks; mat++) {
+                    var atr = seq.audioTracks[mat];
+                    for (var mac = atr.clips.numItems - 1; mac >= 0; mac--) {
+                        var acp = atr.clips[mac];
+                        if (acp.projectItem && acp.projectItem.nodeId === cvItem.nodeId
+                            && Math.abs(Number(acp.start.seconds) - cv.start) < 0.02) {
+                            try { acp.remove(false, false); } catch (eAr) { }
+                        }
+                    }
+                }
+                akMarker(seq, cv.start, "클립 " + cv.clipId,
+                         (cv.warnings || []).join(" / "), log);
+                mvids++;
+            } catch (eMc) { log.push("클립 " + cv.clipId + " 배치 실패: " + eMc.toString()); }
+        }
+        var mErrs = M.videoClipErrors || [];
+        for (var me = 0; me < mErrs.length; me++) { log.push("클립 오류: " + mErrs[me]); }
+
         // 자막은 빈에 넣어 둔다. 캡션 트랙에 붙이는 것은 프리미어 판마다
         // 달라 손으로 끄는 편이 확실하다 — 어디 있는지만 알려 준다.
         var srt = opts.srt ? akImportOnce(proj, opts.srt, bin, log) : null;
 
         return "OK: 씬 " + scenes.length + "개 → " + seq.name
+             + (mvids ? " · 다중씬 클립 " + mvids + "개" : "")
              + " (그림 " + placed + " · 영상 " + vids + " · 음성 " + audio
              + (noAsset ? (" · 자산 없음 " + noAsset) : "")
              + (srt ? " · 자막 SRT 빈에 있음" : "")
