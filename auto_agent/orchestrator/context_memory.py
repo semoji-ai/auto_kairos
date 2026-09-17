@@ -76,8 +76,9 @@ CATEGORY_MAP = {
 class ContextMemory:
     """프로젝트별 컨텍스트 메모리 관리."""
 
-    def __init__(self, project_dir: Path):
+    def __init__(self, project_dir: Path, config: dict | None = None):
         self.project_dir = project_dir
+        self.config = config or {}
         self.memory_path = project_dir / "context_memory.json"
 
     def load(self) -> dict:
@@ -107,6 +108,21 @@ class ContextMemory:
         output_files: list,
     ):
         """step 완료 후 Haiku CLI 호출로 핵심 요약 수집."""
+        from auto_agent.orchestrator.execution import execution_profile
+        if execution_profile(self.config) != "legacy":
+            # Keep original evidence accessible; this index is not an LLM summary.
+            paths = [str(Path(fp)) for fp in output_files if Path(fp).exists()]
+            if not paths:
+                return
+            memory = self.load()
+            memory["entries"] = [e for e in memory["entries"] if e["step_id"] != step_id]
+            memory["entries"].append({
+                "step_id": step_id, "agent": agent_name, "timestamp": datetime.now().isoformat(),
+                "category": "artifact_index", "summary": "원본 산출물: " + ", ".join(paths),
+                "artifact_paths": paths, "key_facts": [], "decisions": [],
+            })
+            self.save(memory)
+            return
         file_snippets = []
         for fp in output_files[:MAX_COLLECT_FILES]:
             p = Path(fp)
@@ -292,7 +308,7 @@ class ContextMemory:
         """현재 step 이전에 수집된 엔트리가 있는지 확인."""
         memory = self.load()
         return any(
-            _step_order(e["step_id"]) < _step_order(current_step_id)
+            e.get("category") != "artifact_index" and _step_order(e["step_id"]) < _step_order(current_step_id)
             for e in memory.get("entries", [])
         )
 

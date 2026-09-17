@@ -298,8 +298,7 @@ _imggen/characters/roster.pre_split.json
 !/scripts/pick_unselected.py
 !/scripts/publish_assets.py
 
-# 어도비 패널 옛 프로젝트 사본 — 지금은 v3 output/ 을 직접 본다
-# (adobe/backend/projects.py 의 projects_root 주석 참조)
-adobe/projects/
+# 기존 프로젝트 사본 삭제는 유지하되, main의 산출물 가드를 따른다.
+# 폴더 전체를 무시하면 ARCHIVED.json 등 작은 보관 기록까지 가려진다.
 # 챕터 캐싱용 시스템 프롬프트 (내용 해시 파일명, 재생성 가능)
 .chapter_system_*.txt

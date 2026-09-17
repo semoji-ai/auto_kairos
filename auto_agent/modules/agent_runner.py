@@ -163,6 +163,7 @@ class AgentRunner:
             "cache_creation_tokens": 0,
         }
         rounds_completed = 0
+        stop_reason = "round_limit"
 
         for round_number in range(1, loop._max_rounds + 1):
             round_path = planning_dir / f"{today}-{loop._channel}-autoresearch-round-{round_number}.json"
@@ -187,9 +188,14 @@ class AgentRunner:
                     "stderr": f"Codex autoresearch round output invalid or empty: {round_path}",
                     "usage": usage_totals,
                 }
+            previous_candidates = candidates
             candidates = self._merge_candidates(candidates, round_candidates)
             ratchet_score = max((float(c.get("topic_score", 0) or 0) for c in candidates), default=0.0)
             rounds_completed = round_number
+            from auto_agent.orchestrator.execution import execution_profile
+            if execution_profile({}) != "legacy" and previous_candidates == candidates:
+                stop_reason = "unchanged_candidates"
+                break
 
         final_json_path = planning_dir / f"{today}-{loop._channel}-autoresearch.json"
         final_md_path = planning_dir / f"{today}-{loop._channel}-기획안.md"
@@ -198,6 +204,7 @@ class AgentRunner:
             "date": today,
             "channel": loop._channel,
             "rounds_completed": rounds_completed,
+            "stop_reason": stop_reason,
             "ratchet_score": ratchet_score,
             "candidates": final_candidates,
             "removed": [],
@@ -1400,6 +1407,15 @@ Stage 0 피드백을 insights/feedback/ 에 저장하세요."""
         return merged
 
     def _resolve_model(self, model: str) -> str:
+        from auto_agent.orchestrator.execution import execution_profile, resolve_execution
+        if execution_profile({}) != "legacy":
+            options = {"provider": self._provider}
+            if model.startswith("gpt-") and self._provider == "codex":
+                options["model"] = model
+            elif model.startswith("claude-") and self._provider == "claude":
+                options["model"] = model
+            return resolve_execution("operations", {"model": model},
+                                     {"execution": options}).model
         if self._provider == "claude":
             return model
         override = os.getenv("AUTO_AGENT_CODEX_MODEL", "").strip()

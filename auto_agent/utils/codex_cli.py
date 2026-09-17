@@ -28,6 +28,7 @@ def build_codex_exec_cmd(
     model: Optional[str] = None,
     reasoning_effort: str = "medium",
     search: bool = False,
+    sandbox: str = "workspace-write",
 ) -> List[str]:
     """codex exec 명령 빌드. 프롬프트는 stdin으로 전달한다."""
     cmd = [find_codex_cli()]
@@ -41,7 +42,7 @@ def build_codex_exec_cmd(
         "-C", str(workdir),
         "--skip-git-repo-check",
         "--ephemeral",
-        "--sandbox", "workspace-write",
+        "--sandbox", sandbox,
         "-c", f'model_reasoning_effort="{reasoning_effort}"',
         "--json",
         "--output-last-message", output_last_message,

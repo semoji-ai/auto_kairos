@@ -233,6 +233,30 @@ def _llm_score(
     previous: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Claude CLI로 엄격한 LLM 채점 시도. 실패 시 None 반환 (폴백 트리거)."""
+    from auto_agent.orchestrator.execution import execution_profile, resolve_execution, run_cli
+    if execution_profile({}) != "legacy":
+        skill = Path(__file__).parent.parent / "data/skills/agents/brief-reviewer/ADAPTIVE.md"
+        prompt = (skill.read_text(encoding="utf-8") + "\n이번 호출은 검수만 수행합니다. "
+                  "수정·파일 쓰기·자체 루프 없이 피드백 JSON을 직접 출력하세요.\n"
+                  + json.dumps({"brief": brief, "previous_review": previous}, ensure_ascii=False))
+        result = run_cli(resolve_execution("brief-reviewer", {}, {}), prompt, project_dir,
+                         read_only=True, timeout=300, label="brief.review")
+        if result.returncode:
+            return None
+        try:
+            match = re.search(r"\{[\s\S]*\}", result.text)
+            parsed = json.loads(match.group(0)) if match else None
+            if not isinstance(parsed, dict) or not isinstance(parsed.get("score_total"), (int, float)):
+                return None
+            if parsed.get("verdict") not in {"PASS", "REVISE", "FAIL"}:
+                return None
+            parsed["scorer"] = "llm"
+            blocking = parsed.get("score_breakdown", {}).get("spine_blocking", {}).get("failed_gates", [])
+            if blocking or not brief.get("coherence_spine", {}).get("spine_question"):
+                parsed["verdict"] = "REVISE"
+            return parsed
+        except (ValueError, TypeError, AttributeError):
+            return None
     claude_bin = os.environ.get("CLAUDE_CLI_BIN", "claude")
     try:
         subprocess.run([claude_bin, "--version"], capture_output=True, timeout=5, check=True)
@@ -356,6 +380,12 @@ def review_brief(
         score = _llm_score(brief, version, project_dir, previous)
     if score is None:
         score = _heuristic_score(brief)
+        from auto_agent.orchestrator.execution import execution_profile
+        if use_llm and execution_profile({}) != "legacy":
+            # A string-length heuristic cannot certify an artifact after reviewer failure.
+            score["verdict"] = "REVISE"
+            score["scorer"] = "heuristic"
+            score["review_unavailable"] = True
 
     # 점수 단조 증가 체크
     prev_score = previous.get("score_total", 0) if previous else 0

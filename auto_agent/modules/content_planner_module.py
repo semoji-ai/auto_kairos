@@ -210,11 +210,49 @@ def generate_auto_brief(
     topic: str,
     writing_style: str = "",
     channel: str = "",
+    *,
+    previous_brief: dict | None = None,
+    feedback: dict | None = None,
+    project_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Auto 모드: 각 DNA 레버에 후보 3개 생성 → 자가 평가 → 최고점 선택.
 
     Claude API 사용 가능할 때만 진짜 auto 동작, 없으면 _default_auto_brief.
     """
+    from auto_agent.orchestrator.execution import execution_profile, resolve_execution, run_cli
+    if execution_profile({}) != "legacy":
+        from auto_agent.paths import get_workspace_dir
+        schema = _default_auto_brief(topic)
+        schema["coherence_spine"] = {
+            "spine_question": "핵심 질문", "layer_map": {
+                "act1_hook": "도입과 질문의 연결", "act2_body": "본론과 질문의 연결",
+                "act3_landing": "결론과 질문의 연결"}, "must_include_links": []}
+        prompt = (
+            f"영상 기획안을 JSON으로 작성하세요. 주제: {topic}\n문체: {writing_style}\n채널: {channel}\n"
+            + _today_context()
+            + "\n아래 스키마의 플레이스홀더를 구체적인 기획으로 채우세요. "
+              "근거를 모르는 사실은 단정하지 말고 needs_research로 표시하세요. "
+              "인물/반전/현재 연결은 핵심 질문에 어떻게 기여하는지 spine_link로 명시하세요. "
+              "고정 개수의 후보 생성이나 자기 채점 반복은 필요 없습니다. JSON만 출력하세요.\n"
+            + json.dumps(schema, ensure_ascii=False)
+        )
+        if previous_brief:
+            prompt += "\n기존 기획의 좋은 부분과 사용자 의도를 유지하고 피드백의 결함만 고치세요.\n"
+            prompt += json.dumps({"previous_brief": previous_brief, "feedback": feedback}, ensure_ascii=False)
+        result = run_cli(resolve_execution("brief-interviewer-auto", {}, {}), prompt,
+                         project_dir or get_workspace_dir() / ".planner_runs", read_only=True,
+                         timeout=600, label="brief.generate")
+        if result.returncode:
+            raise RuntimeError(result.error)
+        raw = result.text.strip()
+        if raw.startswith("```"):
+            raw = "\n".join(raw.splitlines()[1:-1])
+        brief = json.loads(raw)
+        errors = validate_brief(brief)
+        if errors:
+            raise ValueError("; ".join(errors))
+        brief["_generated_by"] = "adaptive"
+        return brief
     try:
         import anthropic
     except ImportError:
@@ -357,15 +395,35 @@ def ratchet_brief_v1(
     project_dir = Path(project_dir)
     project_dir.mkdir(parents=True, exist_ok=True)
     final: dict[str, Any] = {"round": 0, "score_total": 0, "verdict": "FAIL"}
+    from auto_agent.orchestrator.execution import execution_profile
+    from auto_agent.orchestrator.review_policy import review_rank
+    adaptive = execution_profile({}) != "legacy"
+    best_brief, best_feedback = None, None
+    previous_brief = None
+    if max_rounds < 1:
+        raise ValueError("max_rounds must be positive")
 
     for round_num in range(1, max_rounds + 1):
         # 라운드별 brief 생성
         if mode == "auto":
-            brief = generate_auto_brief(topic, writing_style, channel)
+            if adaptive:
+                brief = generate_auto_brief(topic, writing_style, channel, previous_brief=best_brief,
+                                            feedback=best_feedback, project_dir=project_dir)
+            else:
+                brief = generate_auto_brief(topic, writing_style, channel)
         else:
             # manual/skip: 기존 planner 사용 (사용자가 별도 인터뷰 수행 가정)
             brief = generate_planner_brief(topic, writing_style, channel)
 
+        if adaptive and previous_brief == brief:
+            final["stop_reason"] = "unchanged_artifact"
+            break
+        previous_brief = json.loads(json.dumps(brief))
+        # Preserve every evaluated candidate before moving the selected pointer.
+        if adaptive:
+            from uuid import uuid4
+            attempt = project_dir / f"brief_attempt_{uuid4().hex}.json"
+            attempt.write_text(json.dumps(brief, ensure_ascii=False, indent=2), encoding="utf-8")
         # v1 저장 (overwrite)
         save_brief_versioned(brief, project_dir, version="v1", overwrite=True)
 
@@ -384,7 +442,21 @@ def ratchet_brief_v1(
         print(f"[ratchet_brief_v1] round {round_num}: {score}점 ({verdict})",
               flush=True)
 
-        if verdict == "PASS" or score >= pass_threshold:
+        blocking = feedback.get("score_breakdown", {}).get("spine_blocking", {}).get("failed_gates", [])
+        if adaptive and best_feedback is not None and review_rank(feedback) <= review_rank(best_feedback):
+            final = {**best_feedback, "stop_reason": "no_quality_gain", "rounds_completed": round_num}
+            save_brief_versioned(best_brief, project_dir, version="v1", overwrite=True)
+            (project_dir / "brief_review_feedback.v1.json").write_text(
+                json.dumps(final, ensure_ascii=False, indent=2), encoding="utf-8")
+            break
+        best_brief = json.loads(json.dumps(brief))
+        best_feedback = dict(feedback)
+        if verdict == "PASS" and score >= pass_threshold and not blocking:
+            final["stop_reason"] = "quality_pass"
+            break
+
+        if adaptive and (not feedback.get("revision_instructions") or feedback.get("scorer") == "heuristic"):
+            final["stop_reason"] = "needs_evidence_or_review"
             break
 
         # 마지막 라운드면 중단
@@ -393,6 +465,8 @@ def ratchet_brief_v1(
                   f"최종 {score}점, 사용자 개입 권장", flush=True)
             break
 
+    (project_dir / "brief_review_feedback.v1.json").write_text(
+        json.dumps(final, ensure_ascii=False, indent=2), encoding="utf-8")
     return final
 
 

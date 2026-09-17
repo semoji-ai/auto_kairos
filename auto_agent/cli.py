@@ -261,6 +261,9 @@ def cmd_run(args):
     parser.add_argument("--only", dest="only_step", help="이 step만 실행")
     parser.add_argument("--until", dest="until_step", help="이 step까지만 실행 (예: --until step_2b)")
     parser.add_argument("--dry-run", action="store_true", help="실행하지 않고 계획만 출력")
+    parser.add_argument("--provider", choices=["claude", "codex"], help="전체 에이전트 실행 엔진")
+    parser.add_argument("--execution-profile", choices=["balanced", "quality", "legacy"], help="모델·프롬프트 실행 프로필")
+    parser.add_argument("--model", help="선택 엔진의 모델 ID (명시적 고정)")
     parser.add_argument("--force", action="store_true", help="출력 파일이 이미 있어도 강제 재실행")
     parser.add_argument("--workspace", help="워크스페이스 경로")
     parsed = parser.parse_args(args)
@@ -286,6 +289,8 @@ def cmd_run(args):
         stop_after_step=getattr(parsed, "until_step", None),
         dry_run=parsed.dry_run,
         force=parsed.force,
+        execution={k: v for k, v in {"provider": parsed.provider, "profile": parsed.execution_profile,
+                                     "model": parsed.model}.items() if v is not None},
     )
 
 

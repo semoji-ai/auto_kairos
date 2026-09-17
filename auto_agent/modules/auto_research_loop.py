@@ -98,7 +98,7 @@ class AutoResearchLoop:
             loop_protocol = f"""## Codex Vault-Only Ratchet Protocol
 
 당신은 자율 주제 탐색 에이전트입니다. 외부 웹 검색 없이 **볼트 안의 자료만** 사용하세요.
-아래 루프를 {self._max_rounds}회 반복하세요.
+최대 {self._max_rounds}라운드 안에서 탐색하세요. 새 근거·후보 개선이 없으면 종료하고 실제 수행 라운드 수를 기록하세요.
 
 ### 매 라운드 수행 절차:
 1. **스캔**: `market/trends/`, `insights/feedback/`, `channels/{self._channel}/videos/`, `channels/competitors/`를 읽어 핵심 신호를 정리
@@ -123,7 +123,8 @@ class AutoResearchLoop:
         else:
             loop_protocol = f"""## 카파시 AutoResearch 프로토콜
 
-당신은 자율 주제 탐색 에이전트입니다. 아래 루프를 {self._max_rounds}회 반복하세요.
+당신은 자율 주제 탐색 에이전트입니다. 최대 {self._max_rounds}라운드 안에서 탐색하세요.
+새 근거·후보 개선이 없으면 종료하고 실제 수행 라운드 수를 기록하세요.
 
 ### 매 라운드 수행 절차:
 1. **스캔**: WebSearch로 최신 트렌드 검색 (YouTube 인기, 뉴스, 커뮤니티)

@@ -120,6 +120,7 @@ class TestBuildCommand:
         assert str(workdir) in cmd
 
     def test_resolve_codex_model_mapping(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("AUTO_AGENT_EXECUTION_PROFILE", "legacy")
         vault_dir = tmp_path / "vault"
         vault_dir.mkdir()
         monkeypatch.setenv("KAIROS_VAULT_DIR", str(vault_dir))
