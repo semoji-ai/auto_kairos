@@ -564,6 +564,34 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
         r = scenes.set_image_ref(proj_dir, b.get("sceneNumber"), rel)
         return (200, r) if "error" not in r else (422, r)
 
+    # 여러 씬에 걸치는 비디오 트랙 — video_tracks.json 조회/저장.
+    # 저장은 revision 으로 충돌을 감지한다(다른 창의 수정을 조용히 덮지 않는다).
+    if p == "/api/video-tracks":
+        from backend import video_tracks as _vt
+        if method == "GET":
+            proj_dir = root / (query.get("project_id") or "")
+            if not proj_dir.is_dir():
+                return 404, {"error": "프로젝트 없음"}
+            d = _vt.load(proj_dir)
+            r = _vt.resolve(proj_dir, d)
+            return 200, {"data": d,
+                         "resolved": {"clips": r["clips"],
+                                      "covered": sorted(r["covered"]),
+                                      "errors": r["errors"]}}
+        if method == "POST":
+            b = body or {}
+            proj_dir = root / b.get("project_id", "")
+            if not proj_dir.is_dir():
+                return 404, {"error": "프로젝트 없음"}
+            res = _vt.save(proj_dir, b.get("data") or {},
+                           expect_revision=b.get("revision"))
+            if res.get("error"):
+                return 409, res
+            r = _vt.resolve(proj_dir, _vt.load(proj_dir))
+            return 200, {**res, "resolved": {"clips": r["clips"],
+                                             "covered": sorted(r["covered"]),
+                                             "errors": r["errors"]}}
+
     # 비디오 모델 목록 — 모델마다 받는 파라미터와 이미지 첨부 한도가 달라
     # 화면을 모델별로 다시 짜야 한다. 스펙은 힉스필드 CLI 산출을 그대로 쓴다.
     if method == "GET" and p == "/api/video/models":

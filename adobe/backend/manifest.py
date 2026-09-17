@@ -360,6 +360,19 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
         return inc.get(k, True)
     proj_dir = Path(proj_dir)
     data = scenes.load_scenes(proj_dir)
+
+    # 여러 씬에 걸치는 비디오 트랙 — 활성 클립이 덮는 씬에서는 씬별 영상을
+    # 뺀다. `video/v_<sid>_*.mp4` 자동 선택이 명시적 트랙 배치를 덮으면
+    # 같은 구간에 영상이 두 벌 얹힌다. 트랙 파일이 없으면 전부 빈 값이라
+    # 기존 프로젝트 출력은 그대로다.
+    track_clips: list = []
+    track_covered: set = set()
+    track_errors: list = []
+    if want("video"):
+        from backend import video_tracks as _vt
+        _tr = _vt.resolve(proj_dir, _vt.load(proj_dir))
+        track_clips, track_covered = _tr["clips"], _tr["covered"]
+        track_errors = _tr["errors"]
     starts = {}
     for s_t, start_t, _dur_t in timeline.scene_timings(proj_dir, data):
         starts[_key(s_t.get("sceneNumber"))] = start_t
@@ -495,6 +508,7 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
             # 영상만 얹고 그림과 레이어는 건너뛴다 — 판단은 jsx 가 한다.
             **({"video": _abs(proj_dir, str(_vid.relative_to(proj_dir)))}
                if (want("video")
+                   and str(s.get("sceneId") or "") not in track_covered
                    and (_vid := _scene_video(proj_dir, str(s.get("sceneId") or "")))) else {}),
             "layers": layers,
             "audio": audio,
@@ -521,6 +535,13 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
             **({"chartSpec": chart_spec} if chart_spec else {}),
         })
     mf = {"width": W, "height": H, "fps": FPS, "scenes": out_scenes}
+    if track_clips:
+        # 프로젝트 수준 클립 — 씬 항목과 별개로 한 번만 배치한다.
+        # 부분 빌드여도 전체 목록을 준다. 시작 시각이 전체 기준이라 제자리에
+        # 들어가고, jsx 가 clipId 로 교체하므로 거듭 내려도 중복되지 않는다.
+        mf["videoClips"] = track_clips
+    if track_errors:
+        mf["videoClipErrors"] = track_errors   # jsx 로그로 드러낸다 — 조용히 빠뜨리지 않는다
     tokens_path = Path(__file__).resolve().parents[1] / "data" / "artstyle" / "ae_tokens.json"
     if tokens_path.is_file():
         mf["ae_tokens"] = str(tokens_path)

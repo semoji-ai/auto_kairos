@@ -1253,6 +1253,61 @@ function akBuildScene(manifestPath) {
                 for (var g = 0; g < group.length; g++) { group[g].moveBefore(anchor); }
             }
         }
+        // **여러 씬에 걸치는 비디오 클립 — 한 레이어를 첫 씬 in점에 한 번 놓는다.**
+        //
+        // 씬별 영상(S###_영상)과 다른 층이다. 원고·TTS·자막은 씬 기준 그대로,
+        // 영상 하나가 연결된 씬 범위를 가로질러 재생된다. 씬 컴프마다 처음부터
+        // 다시 재생하지 않도록 씬 그룹 밖에서 배치한다(핸드오프 §5D).
+        // 이름은 「클립_<clipId>」 — 씬 접두사와 분리해, 씬 재빌드가 이 레이어를
+        // 지우지도 다시 만들지도 않게 한다. 재배치는 clipId 로 교체한다.
+        var clips = m.videoClips || [];
+        var clipsPlaced = 0;
+        for (var cvi = 0; cvi < clips.length; cvi++) {
+            var cv = clips[cvi];
+            var cvName = "클립_" + cv.clipId;
+            var cvNote = [];
+            var cvFoot = akImport(proj, cv.sourcePath, cvNote, akFolder(proj, [AK_BIN, "영상"]));
+            if (!cvFoot) {
+                log.push(cvName + " 가져오기 실패 — " + cvNote.join("/"));
+                continue;
+            }
+            var cvl = comp.layers.add(cvFoot);
+            // 새것을 먼저 얹고 같은 clipId 의 옛것을 지운다 — 실패해도 옛것이 남는다
+            for (var cvo = comp.numLayers; cvo >= 1; cvo--) {
+                var cvOld = comp.layer(cvo);
+                if (cvOld !== cvl && cvOld.name === cvName) {
+                    try { cvOld.remove(); } catch (eCvo) { }
+                }
+            }
+            cvl.name = cvName;
+            var cvw = cvl.source.width, cvh = cvl.source.height;
+            if (cvw > 0 && cvh > 0) {
+                var cvs = Math.max(W / cvw, H / cvh) * 100;
+                cvl.property("Anchor Point").setValue([cvw / 2, cvh / 2]);
+                cvl.property("Position").setValue([W / 2, H / 2]);
+                cvl.property("Scale").setValue([cvs, cvs]);
+            }
+            // 원본 [sourceIn, sourceOut) 이 타임라인 [start, start+duration) 에 오게.
+            // 배속이 있으면 stretch 로 — 소스 시간 = (컴프시간 - startTime) × rate.
+            var cvRate = cv.playbackRate || 1;
+            if (cvRate !== 1) {
+                try { cvl.stretch = 100 / cvRate; } catch (eSt) { }
+            }
+            cvl.startTime = cv.start - (cv.sourceIn || 0) / cvRate;
+            cvl.inPoint = cv.start;
+            cvl.outPoint = cv.start + cv.duration;
+            if (cv.muted !== false) {
+                try { cvl.audioEnabled = false; } catch (eMu) { }   // TTS 와 겹치지 않게
+            }
+            cvl.moveToBeginning();      // 씬 그룹 위 — 자막은 아래에서 다시 그 위로 올라간다
+            if (cv.warnings && cv.warnings.length) {
+                log.push(cvName + ": " + cv.warnings.join(" / "));
+            }
+            clipsPlaced++;
+        }
+        var clipErrs = m.videoClipErrors || [];
+        for (var cve = 0; cve < clipErrs.length; cve++) { log.push("클립 오류: " + clipErrs[cve]); }
+
         // 말자막(subtitle_layers.jsx)이 씬 그룹 아래로 깔리는 것을 막는다.
         // 씬 그룹 재배치는 위에서 다음 씬 그룹 위로만 옮기므로, 그룹이 없는 부분 빌드나
         // 마지막 씬은 최상단에 남는다 — 그러면 그 아래 자막이 불투명 배경에 가려진다.
@@ -1274,6 +1329,7 @@ function akBuildScene(manifestPath) {
         app.endUndoGroup();
 
         return "OK: 씬 " + scenes.length + "개 → Final(" + endT + "s)" +
+               (clipsPlaced ? " · 다중씬 클립 " + clipsPlaced + "개" : "") +
                (log.length ? " | " + log.join(", ") : "") +
                (FONT_WARN.length ? " | 폰트: " + FONT_WARN.join(", ") : "");
     } catch (e) {
