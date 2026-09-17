@@ -121,6 +121,49 @@ Camera holds completely still.
 
 ---
 
+## 4-1. 액체를 움직이라고 하면 액체 안의 것이 지워진다
+
+탈리스커 잔은 **잔 안쪽 바닥에서 유리 산맥이 솟아** 위스키에 잠겨 있다.
+이 잔이 놓인 세 컷을 돌렸는데 **한 컷에서만 산맥이 사라졌다.**
+
+| 씬 | 액체에 준 지시 | 산맥 |
+|---|---|---|
+| 92 | 없음(사람이 움직인다) | 끝까지 남음 |
+| 93 | 없음(빛만 흐른다) | 끝까지 남음 |
+| **95** | **「위스키가 한 번 일렁이고 가라앉는다」** | **프레임 1부터 없어짐** |
+
+**모델은 산맥을 액체의 일부로 본다.** 액체를 다시 그리라고 하면 그 안에
+담긴 것을 함께 지운다. 굴 도마 모양과 레몬 위치까지 흔들렸다.
+
+### 고치는 법
+
+```
+❌  The whisky ripples once and settles
+✅  The whisky stays perfectly still and level, and the sculpted glass
+    mountain inside the base stays exactly as drawn, unchanged, in every
+    frame — it is part of the glass, not the liquid.
+```
+
+셋이 함께 필요했다.
+
+1. **액체를 아예 안 움직인다** — 일렁임 한 번이 화근이다
+2. **구조물을 이름 붙여 못박는다** — 그리고 **「액체가 아니라 유리의 일부」**라고
+   덧붙인다. 이 한 마디가 없으면 모델이 액체로 보고 지운다
+3. **움직임을 그 물건 바깥으로 돌린다** — 굴 껍데기 위 빛, 도마 끝 물방울,
+   뒤의 바다
+
+공통 꼬리에도 한 문단을 더한다.
+
+```
+Every object keeps the exact shape, size and position it has in the attached
+frame. Nothing is redrawn, added or removed.
+```
+
+> 잔·병·유리처럼 **안이 비쳐 보이는 물건**은 전부 같은 위험이 있다.
+> 얼음이 든 잔, 라벨이 붙은 병도 마찬가지다.
+
+---
+
 ## 5. 길이와 요금
 
 ```
