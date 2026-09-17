@@ -231,12 +231,19 @@ def main() -> int:
 
     by_n = {s.get("sceneNumber"): s for s in scenes}
     for n in [s["sceneNumber"] for s in todo]:
-        e = ent.get(n)
+        e = ent.setdefault(n, {"sceneNumber": n, "images": []})
         pick = taken_scene.get(n)
-        if e:
-            for im in e.get("images") or []:
-                im["selected"] = bool(pick) and im.get("file") == pick["file"]
-            e["selected"] = pick["file"] if pick else None
+        # 두 번째 바퀴에서 고른 그림은 **다른 씬의 것**이라 이 씬의 images 에
+        # 없다. 그대로 두면 e["selected"] 에 이름만 남고 개별 표시는 하나도
+        # 켜지지 않는다 — 정본은 개별 표시(`get_selected`)이므로 그림이
+        # 사라진 것처럼 보인다. EP02 에서 20씬이 그랬다.
+        if pick and not any(im.get("file") == pick["file"]
+                            for im in e.get("images") or []):
+            e.setdefault("images", []).append(
+                {"file": pick["file"], "type": "generated", "selected": True})
+        for im in e.get("images") or []:
+            im["selected"] = bool(pick) and im.get("file") == pick["file"]
+        e["selected"] = pick["file"] if pick else None
         if pick:
             by_n[n].pop("needs_image", None)
         else:

@@ -124,6 +124,9 @@ class TestCacheWarming:
         r = PipelineRunner.__new__(PipelineRunner)
         r.project_dir = tmp_path
         r.project_slug = "테스트"
+        from types import SimpleNamespace
+        r.state = SimpleNamespace(config={"execution": {"provider": "claude", "model": "claude-opus-5"}})
+        monkeypatch.setattr(r, "_load_agents_config", lambda: {"subagents": {}}, raising=False)
         monkeypatch.setattr(r, "_load_agent_skill", lambda *a, **k: "SKILL", raising=False)
         monkeypatch.setattr(r, "_build_shared_skills_text", lambda *a, **k: "공유", raising=False)
         return r
@@ -146,6 +149,16 @@ class TestCacheWarming:
 
         assert len(calls) == 1, "워밍은 딱 한 번"
         assert "--append-system-prompt-file" in calls[0], "정적 블록을 실어야 캐시가 구워진다"
+        assert calls[0][calls[0].index("--model") + 1] == "claude-opus-5"
+
+    def test_codex_never_warms_claude(self, tmp_path, monkeypatch):
+        r = self._runner(tmp_path, monkeypatch)
+        r.state.config = {"execution": {"provider": "codex"}}
+        def forbidden(*args, **kwargs):
+            pytest.fail("Codex selection must not invoke Claude cache warming")
+        monkeypatch.setattr(r, "_find_claude_cli", forbidden)
+        monkeypatch.setattr("subprocess.run", forbidden)
+        r._warm_chapter_cache({"agent": "script-director", "mode": "chapters"})
 
     def test_warming_failure_does_not_stop_the_run(self, tmp_path, monkeypatch):
         """워밍은 최적화다. 실패해도 본 작업은 그대로 간다."""

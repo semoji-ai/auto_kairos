@@ -59,10 +59,24 @@ def sanitize(lay: dict) -> tuple[dict, list]:
                 it["size"] = round(cap, 1)
                 notes.append(f"{it.get('id')} 크기 {cap:.0f}%로")
 
-    # ② 세로로 겹치면 아래로 밀어낸다 (위에서부터 차례로)
+    # ② 겹치면 밀어낸다 — 다만 **가로로 이미 갈라진 것은 건드리지 않는다.**
+    # 「3,800원 = 쌀 844가마」처럼 좌우로 놓은 두 항을 세로로 밀면 한쪽이
+    # 아래로 내려가 저울이 기울어 보인다.
+    def h_of(it):
+        return float(it.get("size", 20)) + (LABEL if it.get("label") else 0)
+
+    def overlaps_x(a, b):
+        wa, wb = float(a.get("size", 20)), float(b.get("size", 20))
+        ax, bx = float(a.get("left", 50)), float(b.get("left", 50))
+        return abs(ax - bx) < (wa + wb) / 2
+
     y = TITLE_BOTTOM + MARGIN
-    for it in tall:
-        h = float(it.get("size", 20)) + (LABEL if it.get("label") else 0)
+    for idx, it in enumerate(tall):
+        # 앞 요소들과 가로로 안 겹치면 세로로 밀 이유가 없다
+        if any(not overlaps_x(it, o) for o in tall[:idx]) and tall[:idx]:
+            if all(not overlaps_x(it, o) for o in tall[:idx]):
+                continue
+        h = h_of(it)
         want = float(it.get("top", 50)) - h / 2
         if want < y:
             it["top"] = round(y + h / 2, 1)
@@ -81,6 +95,28 @@ def sanitize(lay: dict) -> tuple[dict, list]:
            abs(top - float(it.get("top", 50))) > 0.5:
             notes.append(f"{it.get('id')} 안으로 당김")
         it["left"], it["top"] = round(left, 1), round(top, 1)
+
+    # 글자가 그림 위에 겹치면 묻힌다. 겹치는지는 좌표로 알 수 있다 —
+    # 「신용」이 공장 문 한가운데 놓여 읽히지 않았다.
+    #
+    #   겹치지 않으면   plain 그대로
+    #   겹치면          box 로 바꿔 글자 뒤에 판을 깐다
+    boxes = []
+    for it in items:
+        w = float(it.get("size", 20))
+        h = w + (LABEL if it.get("label") else 0)
+        cx, cy = float(it.get("left", 50)), float(it.get("top", 50))
+        boxes.append((cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2))
+    over = 0
+    for m in lay.get("marks") or []:
+        if m.get("style") in ("stamp", "label"):
+            continue
+        mx, my = float(m.get("left", 50)), float(m.get("top", 50))
+        if any(x0 <= mx <= x1 and y0 <= my <= y1 for x0, y0, x1, y1 in boxes):
+            over += 1
+    if over and lay.get("contrast") == "plain":
+        lay["contrast"] = "box"
+        notes.append(f"글자 {over}개가 그림 위에 겹쳐 box 로")
 
     # 제목과 똑같은 말을 강조 라벨로 또 쓰면 군더더기다
     title = (lay.get("title") or "").strip()

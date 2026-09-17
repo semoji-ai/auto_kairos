@@ -22,7 +22,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("project", type=Path)
     ap.add_argument("--roster", type=Path, default=Path("_imggen/characters/roster.json"))
-    ap.add_argument("--sheets", type=Path, default=Path("_imggen/characters/final_v2_up"))
+    ap.add_argument("--sheets", type=Path, default=Path("_imggen/characters/sheets"))
     args = ap.parse_args()
 
     roster = json.loads(args.roster.read_text(encoding="utf-8"))

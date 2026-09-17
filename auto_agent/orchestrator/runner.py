@@ -31,6 +31,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Dict, List, Optional
 from zoneinfo import ZoneInfo
+from uuid import uuid4
 
 # Windows cp949 인코딩 문제 — 모든 출력을 UTF-8로 강제
 if platform.system() == "Windows":
@@ -48,6 +49,7 @@ from auto_agent.orchestrator.vault_rag import VaultRAG
 from auto_agent.orchestrator.claude_client import CachingClaudeClient
 from auto_agent.orchestrator.local_tools import LOCAL_TOOL_SCHEMAS, handle_local_tool
 from auto_agent.utils.platform import get_env_with_node, subprocess_kwargs
+from auto_agent.orchestrator.execution import execution_options, execution_profile, resolve_execution, resolve_provider, run_cli
 
 # ── Agent Messenger 브릿지 ──
 _MESSENGER_URL = "http://localhost:8080/api/agent-messages/send"
@@ -569,22 +571,9 @@ class StepResult:
     cost_info: dict = field(default_factory=dict)
 
 
-# codex로 라우팅 가능한 웹 리서치 에이전트 (토큰 절약 대상)
-CODEX_RESEARCH_AGENTS = {"flesh-researcher", "targeted-researcher"}
-
-
 def resolve_agent_provider(agent: str, agent_def: dict, project_config: dict) -> str:
-    """리서치 에이전트 provider 해석. 우선순위: 프로젝트 config > env > agents.json > claude."""
-    if agent not in CODEX_RESEARCH_AGENTS:
-        return "claude"
-    for candidate in (
-        project_config.get("research_provider"),
-        os.getenv("AUTO_AGENT_RESEARCH_PROVIDER"),
-        agent_def.get("provider"),
-    ):
-        if isinstance(candidate, str) and candidate.strip().lower() in {"claude", "codex"}:
-            return candidate.strip().lower()
-    return "claude"
+    """Compatibility entrypoint; all agents now share provider resolution."""
+    return resolve_provider(agent, agent_def, project_config)
 
 
 @dataclass
@@ -970,7 +959,7 @@ class PipelineRunner:
             except Exception as e:
                 print(f"[resume] pipeline_state.json 로드 실패: {e}")
 
-        self.context_memory = ContextMemory(self.project_dir)
+        self.context_memory = ContextMemory(self.project_dir, self.state.config)
         self.messenger = Messenger(self.project_dir, self.project_slug)
         self.vault = VaultRAG()
         self.hooks = _build_default_hooks()
@@ -1055,11 +1044,38 @@ class PipelineRunner:
         dry_run: bool = False,
         stop_after_step: str = None,
         force: bool = False,
+        execution: dict | None = None,
     ):
         """파이프라인 전체 또는 부분 실행."""
+        if execution:
+            self.state.config["execution"] = {**self.state.config.get("execution", {}), **execution}
+        execution_profile(self.state.config)  # validate before running any steps
+        self.context_memory.config = self.state.config
+        if dry_run:
+            planned = [s for phase in self.pipeline.get("phases", []) for s in phase.get("steps", [])]
+            if stop_after_step:
+                planned = _filter_steps_until(planned, stop_after=stop_after_step)
+            if from_step:
+                starts = [i for i, s in enumerate(planned) if s["id"] == from_step]
+                if not starts:
+                    raise ValueError(f"Unknown step: {from_step}")
+                planned = planned[starts[0]:]
+            if only_step:
+                planned = [s for s in planned if s["id"] == only_step]
+                if not planned:
+                    raise ValueError(f"Unknown step: {only_step}")
+            for step in planned:
+                if is_legacy_gated(step, os.environ.get("ENABLE_LEGACY_V3") == "1"):
+                    print(f"[DRY] {step['id']}: legacy skip")
+                elif step.get("agent"):
+                    spec = self._execution_spec(step)
+                    print(f"[DRY] {step['id']}: {spec.provider}/{spec.model} ({spec.profile})")
+                else:
+                    print(f"[DRY] {step['id']}: module {step.get('module', '')}")
+            return
         # 볼트 인덱스 자동 빌드 — 변경된 .md 파일만 재인덱싱 (해시 캐시 활용)
         # 매 실행마다 보장: 새 노트가 추가되면 다음 파이프라인에서 즉시 검색 가능
-        if self.vault.enabled:
+        if self.vault.enabled and not dry_run:
             try:
                 from auto_agent.orchestrator.vault_indexer import VaultIndexer
                 indexer = VaultIndexer()
@@ -1258,7 +1274,8 @@ class PipelineRunner:
             print(f"\n  [ERROR] step '{only_step}'를 찾을 수 없습니다.", flush=True)
             print(f"  사용 가능한 step ID: {', '.join(all_ids)}", flush=True)
 
-        self._finish()
+        if not dry_run:
+            self._finish()
 
     def _merge_research_outputs(self):
         """Explorer 산출물을 research_report.json으로 기계적 병합.
@@ -2160,6 +2177,8 @@ class PipelineRunner:
             if not failed_chapters:
                 break
             for ch_num in list(failed_chapters.keys()):
+                if not self._is_retryable_error(failed_chapters[ch_num].error):
+                    continue
                 _notify(agent_name,
                         f"{label} Ch{ch_num} 재시도합니다 ({retry}/2)",
                         phase=self.state.current_phase, project=self.project_slug)
@@ -2177,6 +2196,12 @@ class PipelineRunner:
                                 level="success")
                 except Exception:
                     pass
+
+        if failed_chapters and execution_profile(self.state.config) != "legacy":
+            error = f"챕터 검증 실패: {sorted(failed_chapters)} — 기존 scene_specs 보존"
+            self.pm.fail_pipeline_run(run_id, error)
+            return StepResult(step_id=step_id, status="failed", error=error,
+                              duration_sec=time.time() - t0)
 
         # 최종 실패 챕터 → 볼트 에러 기록
         for ch_num, ch_result in failed_chapters.items():
@@ -2351,6 +2376,25 @@ class PipelineRunner:
 특히 imageAsset의 searchQuery 필드를 반드시 채워주세요.
 모든 씬에 적절한 이미지 검색어를 영어로 작성해야 합니다.
 </output_format>"""
+
+        spec = self._execution_spec(step)
+        model = spec.model
+        if spec.profile != "legacy" or spec.provider == "codex":
+            result_path = self.project_dir / f".chapter_result_{uuid4().hex}.json"
+            prompt += f"\n이번 시도의 최종 JSON 저장 경로는 {result_path} 입니다. 입력 파일은 보존하세요.\n"
+            result = self._run_selected_cli(chapter_step, prompt, label=f"{step_id}.ch{chapter_num}")
+            if result.returncode:
+                return ChapterResult(chapter=chapter_num, status="failed", error=result.error,
+                                     cost_info=result.usage, duration_sec=result.duration_sec)
+            try:
+                updated = json.loads(result_path.read_text(encoding="utf-8"))
+                self._validate_chapter_coverage(updated.get("scenes"), chapter_scenes)
+                scenes = self._merge_llm_response(chapter_scenes, updated["scenes"])
+            except (OSError, ValueError, TypeError) as exc:
+                return ChapterResult(chapter=chapter_num, status="failed", error=str(exc),
+                                     cost_info=result.usage, duration_sec=result.duration_sec)
+            return ChapterResult(chapter=chapter_num, status="completed", scenes=scenes,
+                                 cost_info=result.usage, duration_sec=result.duration_sec)
 
         cli_path = self._find_claude_cli()
         # max_turns: agents.json 설정값 사용 (기본 30, 최소 20 보장)
@@ -2638,6 +2682,12 @@ class PipelineRunner:
         """
         if not agent_name:
             return ""
+        config = getattr(getattr(self, "state", None), "config", {})
+        profile = execution_options(config, agent_name, step).get("profile", execution_profile(config))
+        if profile != "legacy":
+            adaptive = self._load_skill_file(f"skills/agents/{agent_name}/ADAPTIVE.md")
+            if adaptive:
+                return adaptive
         text = self._load_skill_file(f"skills/agents/{agent_name}/SKILL.md")
         if not text:
             return ""
@@ -2669,6 +2719,7 @@ class PipelineRunner:
 
     def _load_shared_skill(self, skill_name: str, refs_to_load=None) -> str:
         """공유 스킬 로드. 디렉토리 스킬(SKILL.md + references/) 또는 플랫 파일."""
+        skill_name = skill_name.removeprefix("shared/").removesuffix(".md")
         # 1) 디렉토리 스킬
         skill_key = f"skills/shared/{skill_name}/SKILL.md"
         content = self._load_skill_file(skill_key)
@@ -3124,6 +3175,8 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             if not failed_chapters:
                 break
             for ch_num in list(failed_chapters.keys()):
+                if not self._is_retryable_error(failed_chapters[ch_num].error):
+                    continue
                 _notify(agent_name, f"{label} Ch{ch_num} 재시도합니다 ({retry}/2)",
                         phase=self.state.current_phase, project=self.project_slug)
                 time.sleep(5)
@@ -3139,6 +3192,12 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         for ch_result in chapter_results.values():
             for k in ("tokens_in", "tokens_out", "cost_usd"):
                 total_cost[k] += ch_result.cost_info.get(k, 0)
+
+        if failed_chapters and execution_profile(self.state.config) != "legacy":
+            error = f"챕터 검증 실패: {sorted(failed_chapters)} — 기존 scene_specs 보존"
+            self.pm.fail_pipeline_run(run_id, error)
+            return StepResult(step_id=step_id, status="failed", error=error,
+                              duration_sec=time.time() - t0, cost_info=total_cost)
 
         # 전체 씬 병합 + 씬 번호 재부여
         # 덮어쓰기 전에 기존 씬 목록 백업 (이미지 reconcile에 사용)
@@ -3286,6 +3345,9 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         """
         try:
             agent_name = step.get("agent", "script-director")
+            spec = self._execution_spec(step)
+            if spec.provider != "claude":
+                return
             static = self._build_chapter_static_system(
                 self._load_agent_skill(agent_name, step),
                 self._build_shared_skills_text(agent_name, step),
@@ -3295,7 +3357,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 self._find_claude_cli(), "--print", "--output-format", "json",
                 "--dangerously-skip-permissions",
                 "--append-system-prompt-file", str(path),
-                "--model", step.get("single_call_model", "claude-opus-4-6"),
+                "--model", spec.model,
                 "--max-turns", "1",
             ]
             env = os.environ.copy()
@@ -3348,7 +3410,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         agent_name = step.get("agent", "script-director")
 
         t0 = time.time()
-        tmp_filename = f".scene_specs_ch{chapter_num}_{step_name}.json"
+        tmp_filename = f".scene_specs_ch{chapter_num}_{step_name}_{uuid4().hex}.json"
         tmp_path = self.project_dir / tmp_filename
 
         # 에이전트 스킬 로드
@@ -3466,56 +3528,21 @@ JSON 구조:
         model = step.get("single_call_model", "claude-opus-4-6")
         timeout_sec = self._get_agent_timeout(agent_name)
 
-        # 정적 블록(SKILL + 공유 스킬)은 **시스템 프롬프트로** 넘긴다.
-        # stdin 에 실으면 챕터마다 새로 캐시를 쓴다 — 자리만 옮기면 캐시를 탄다.
-        # 실측(chapters 슬라이스 57KB, 같은 프롬프트 2회):
-        #   시스템 프롬프트  2회차 write 0      read 106,516
-        #   stdin           2회차 write 83,454 read  23,069
+        # Preserve main's shared Claude system-prefix cache, while Codex receives
+        # the same instructions through its own adapter (never a Claude fallback).
         sys_prompt_path = self._write_chapter_system_prompt(
             self.project_dir,
             self._build_chapter_static_system(agent_skill, shared_skills_text),
         )
-
-        cli_path = self._find_claude_cli()
-        cmd = [
-            cli_path, "--print", "--output-format", "json",
-            "--dangerously-skip-permissions",
-            "--append-system-prompt-file", str(sys_prompt_path),
-            "--model", model, "--max-turns", "10",
-            "--allowedTools", "Read", "--allowedTools", "Write",
-        ]
-        env = os.environ.copy()
-        env["PROJECT_NAME"] = self.project_slug
-        env["SCRIPT_DIRECTOR_MODE"] = _mode
-        env["SCRIPT_DIRECTOR_CHAPTER"] = str(chapter_num)
-        env.pop("CLAUDECODE", None)
-
-        _popen_flags = subprocess_kwargs()
-        try:
-            proc = subprocess.Popen(
-                cmd, cwd=str(self.project_dir), env=env,
-                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True, encoding="utf-8",
-                **_popen_flags,
-            )
-            try:
-                stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                proc.communicate()
-                return ChapterResult(chapter=chapter_num, status="failed",
-                                     error=f"CLI 타임아웃 ({timeout_sec}s)")
-        except FileNotFoundError:
+        chapter_step = {**step, "_chapter_num": chapter_num}
+        result = self._run_selected_cli(
+            chapter_step, prompt, label=f"{step['id']}.ch{chapter_num}",
+            system_prompt_file=sys_prompt_path,
+        )
+        stdout, elapsed, cost_info = result.text, result.duration_sec, result.usage
+        if result.returncode != 0:
             return ChapterResult(chapter=chapter_num, status="failed",
-                                 error="Claude CLI를 찾을 수 없습니다")
-
-        elapsed = time.time() - t0
-        cost_info = self._parse_claude_cost(stdout, stderr)
-
-        if proc.returncode != 0:
-            error = stderr[:300] or stdout[:300]
-            return ChapterResult(chapter=chapter_num, status="failed",
-                                 error=f"CLI exit {proc.returncode}: {error}",
+                                 error=result.error,
                                  cost_info=cost_info, duration_sec=elapsed)
 
         # 결과 파싱
@@ -3535,6 +3562,12 @@ JSON 구조:
         if not scenes:
             return ChapterResult(chapter=chapter_num, status="failed",
                                  error="씬 데이터 없음", cost_info=cost_info, duration_sec=elapsed)
+
+        try:
+            self._validate_chapter_coverage(scenes, skeleton)
+        except (ValueError, TypeError) as exc:
+            return ChapterResult(chapter=chapter_num, status="failed", error=str(exc),
+                                 cost_info=cost_info, duration_sec=elapsed)
 
         # --- 에이전트가 낸 연출을 코드가 만든 뼈대에 얹는다.
         # 뼈대의 narration은 원고 블록을 이어 붙인 것이므로 항상 100% 보존된다.
@@ -4067,12 +4100,16 @@ JSON 구조:
             inputs = [inputs]
         input_set = set(inputs)
         has_inplace = any(out in input_set for out in outputs)
-        if not has_inplace and outputs:
+        if not has_inplace and outputs and not step.get("skip_resume") and not getattr(self, "_force", False):
             all_exist = all(
                 self._resolve_output_path(out).exists()
                 for out in outputs
-                if "{" not in out
-            )
+            ) and not any("{" in out for out in outputs)
+            if all_exist:
+                try:
+                    self._validate_agent_outputs(outputs)
+                except (OSError, ValueError):
+                    all_exist = False
             if all_exist:
                 return StepResult(
                     step_id=step_id, status="completed",
@@ -4155,14 +4192,26 @@ JSON 구조:
         user_message_sc = prompt
 
         try:
-            sdk_client = CachingClaudeClient()
-            response_text, usage = sdk_client.call_single(
-                model=target_model,
-                static_system=static_system_sc,
-                dynamic_system=dynamic_system_sc,
-                user_message=user_message_sc,
-                max_tokens=8192,
-            )
+            spec = self._execution_spec(step)
+            if spec.profile != "legacy" or spec.provider == "codex":
+                # The generic prompt already contains skills. Only templates need them prepended.
+                cli_prompt = (static_system_sc + "\n" if prompt_file else "") + prompt
+                result = self._run_selected_cli(step, cli_prompt, read_only=True)
+                if result.returncode:
+                    return StepResult(step_id=step_id, status="failed", error=result.error,
+                                      duration_sec=result.duration_sec, cost_info=result.usage)
+                response_text = result.text
+                usage = {"input_tokens": result.usage.get("tokens_in", 0),
+                         "output_tokens": result.usage.get("tokens_out", 0)}
+            else:
+                sdk_client = CachingClaudeClient()
+                response_text, usage = sdk_client.call_single(
+                    model=spec.model,
+                    static_system=static_system_sc if prompt_file else "",
+                    dynamic_system=dynamic_system_sc,
+                    user_message=user_message_sc,
+                    max_tokens=8192,
+                )
         except Exception as exc:
             return StepResult(step_id=step_id, status="failed", error=str(exc))
 
@@ -4177,22 +4226,13 @@ JSON 구조:
 
         # SDK 응답 → 기존 JSON 파싱 로직 재사용
         elapsed = time.time() - t0
-        cost_info = {}
+        cost_info = result.usage if spec.profile != "legacy" or spec.provider == "codex" else {}
 
         # SDK 텍스트에서 JSON 추출 (마크다운 코드블록 포함 처리)
         content = self._extract_json_from_cli_output(response_text)
         if not content:
-            # 파일이 이미 존재하면 (이전 실행 등) 성공 처리
-            all_exist = all(
-                self._resolve_output_path(out).exists()
-                for out in outputs if "{" not in out
-            ) if outputs else False
-            if all_exist:
-                return StepResult(step_id=step_id, status="completed",
-                                  output_files=[str(self._resolve_output_path(o)) for o in outputs],
-                                  cost_info=cost_info, duration_sec=elapsed)
             # 디버그: stdout 첫 500자 출력
-            print(f"    [single_call] JSON 파싱 실패. stdout 시작: {stdout[:500]}", flush=True)
+            print(f"    [single_call] JSON 파싱 실패. 응답 시작: {response_text[:500]}", flush=True)
             return StepResult(step_id=step_id, status="failed",
                               error="stdout에서 JSON 파싱 실패",
                               cost_info=cost_info, duration_sec=elapsed)
@@ -4208,6 +4248,9 @@ JSON 구조:
                 )
             elif len(output_names) >= 2:
                 files = content.get("files", content)
+                missing = [name for name in output_names if name not in files]
+                if missing:
+                    raise ValueError(f"응답 산출물 누락: {missing}")
                 for out in outputs:
                     fname = Path(out).name
                     if fname in files:
@@ -4217,6 +4260,7 @@ JSON 구조:
                             json.dumps(files[fname], ensure_ascii=False, indent=2),
                             encoding="utf-8",
                         )
+            self._validate_agent_outputs(outputs)
         except Exception as e:
             return StepResult(step_id=step_id, status="failed",
                               error=f"파일 저장 실패: {e}",
@@ -4552,6 +4596,59 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
     # ── CLI 모드 (기존) ──────────────────────────────────────────────────
 
+    def _execution_spec(self, step: dict):
+        agent = step.get("agent", "")
+        definition = self._load_agents_config().get("subagents", {}).get(agent, {})
+        return resolve_execution(agent, definition, self.state.config, step)
+
+    def _run_selected_cli(self, step: dict, prompt: str, *, label: str = "", read_only: bool = False,
+                          system_prompt_file: Path | None = None):
+        agent = step.get("agent", "")
+        definition = self._load_agents_config().get("subagents", {}).get(agent, {})
+        spec = self._execution_spec(step)
+        env = os.environ.copy()
+        env["PROJECT_NAME"] = self.project_slug
+        if step.get("mode"):
+            env["SCRIPT_DIRECTOR_MODE"] = step["mode"]
+        if step.get("_chapter_num") is not None:
+            env["SCRIPT_DIRECTOR_CHAPTER"] = str(step["_chapter_num"])
+        env["SEARCH_ENGINE"] = self.state.config.get("search_engine", "")
+        timeout = self._get_agent_timeout(agent)
+        if agent == "script-director":
+            timeout = max(timeout, 600 + self.state.config.get("duration_minutes", 10) * 180)
+        elif agent == "assembly-director":
+            timeout = max(timeout, 600 + self._count_image_scenes() * 60)
+        print(f"    → {spec.provider}/{spec.model} ({spec.profile})", flush=True)
+        return run_cli(spec, prompt, self.project_dir, timeout=timeout,
+                       max_turns=definition.get("max_turns", 30),
+                       allowed_tools=definition.get("allowed_tools", ["Read", "Write", "Edit", "Glob"]),
+                       env=env, read_only=read_only, label=label or step["id"],
+                       system_prompt_file=system_prompt_file)
+
+    @staticmethod
+    def _validate_chapter_coverage(scenes, expected):
+        if not isinstance(scenes, list) or not scenes or not all(isinstance(s, dict) for s in scenes):
+            raise ValueError("씬 배열이 없거나 잘못되었습니다")
+        actual_ids = [s.get("sceneNumber") for s in scenes]
+        expected_ids = [s.get("sceneNumber") for s in expected]
+        if len(actual_ids) != len(set(actual_ids)) or set(actual_ids) != set(expected_ids):
+            raise ValueError("챕터 씬 번호 누락/중복/추가 — 재검증 필요")
+
+    def _validate_agent_outputs(self, outputs):
+        for out in outputs:
+            if not self._agent_output_exists(out):
+                raise ValueError(f"산출물 누락: {out}")
+            path = self._resolve_output_path(out)
+            if path.is_file():
+                if not path.stat().st_size:
+                    raise ValueError(f"빈 산출물: {out}")
+                if path.suffix == ".json":
+                    data = json.loads(path.read_text(encoding="utf-8"))
+                    if data in ({}, [], None):
+                        raise ValueError(f"빈 JSON 산출물: {out}")
+                    if isinstance(data, dict) and "scenes" in data and not data["scenes"]:
+                        raise ValueError(f"빈 scenes: {out}")
+
     def _agent_output_exists(self, out: str) -> bool:
         """출력 계약 존재 확인 — resume 체크와 동일한 규칙(디렉토리/패턴/파일)."""
         out_path = self._resolve_output_path(out)
@@ -4561,56 +4658,6 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             pattern = out_path.name.replace("{", "*").replace("}", "*")
             return out_path.parent.exists() and out_path.parent.is_dir() and any(out_path.parent.glob(pattern))
         return out_path.exists()
-
-    def _run_codex_agent_step(
-        self, step: dict, step_id: str, agent_def: dict,
-        prompt: str, outputs: list, timeout_sec: int,
-    ) -> StepResult:
-        """codex exec로 에이전트 스텝 실행. 실패 시 status=failed 반환(호출부가 claude 폴백)."""
-        from auto_agent.utils import codex_cli as codex_cli_util
-
-        last_msg = self.project_dir / f".codex_last_{step_id}.txt"
-        try:
-            cmd = codex_cli_util.build_codex_exec_cmd(
-                workdir=self.project_dir,
-                output_last_message=str(last_msg),
-                model=agent_def.get("codex_model"),
-                search=True,
-            )
-        except FileNotFoundError as e:
-            return StepResult(step_id=step_id, status="failed", error=str(e))
-
-        env = os.environ.copy()
-        env["PROJECT_NAME"] = self.project_slug
-        env.pop("CLAUDECODE", None)
-
-        print(f"\n    → codex {step['agent']} (search=on, timeout={timeout_sec}s)", flush=True)
-        try:
-            proc = subprocess.Popen(
-                cmd, cwd=str(self.project_dir), env=env,
-                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                text=True, encoding="utf-8", **subprocess_kwargs(),
-            )
-            stdout, stderr = proc.communicate(input=prompt, timeout=timeout_sec)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            return StepResult(step_id=step_id, status="failed", error=f"codex timeout ({timeout_sec}s)")
-        except Exception as e:
-            return StepResult(step_id=step_id, status="failed", error=f"codex 실행 오류: {e}")
-
-        if proc.returncode != 0:
-            return StepResult(step_id=step_id, status="failed",
-                              error=f"codex exit={proc.returncode}: {(stderr or stdout)[-400:]}")
-
-        # 산출물 검증 — 하나라도 없으면 실패 처리 (claude 폴백 유도)
-        missing = [o for o in outputs if not self._agent_output_exists(o)]
-        if missing:
-            return StepResult(step_id=step_id, status="failed",
-                              error=f"codex 산출물 미생성: {missing}")
-        return StepResult(
-            step_id=step_id, status="completed",
-            output_files=[str(self._resolve_output_path(o)) for o in outputs],
-        )
 
     def _run_agent_step(self, step: dict) -> StepResult:
         """에이전트 step → Claude CLI 서브프로세스 호출.
@@ -4657,8 +4704,9 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                                     content_ok = False
                                     print(f"[resume] {out_path.name} scenes 빈 배열 — 재실행", flush=True)
                                     break
-                            except Exception:
-                                pass
+                            except (ValueError, OSError):
+                                content_ok = False
+                                break
                 if content_ok:
                     print(f"[resume] 출력 파일 존재 + 내용 검증 통과 → 스킵", flush=True)
                     return StepResult(
@@ -4681,6 +4729,20 @@ Step: {step.get("id", "")} — {step.get("name", "")}
         allowed_tools = agent_def.get("allowed_tools", ["Read", "Write", "Glob"])
         budget = self._get_agent_budget(agent)
         timeout_sec = self._get_agent_timeout(agent)
+
+        spec = self._execution_spec(step)
+        model = spec.model
+        if spec.profile != "legacy" or spec.provider == "codex":
+            result = self._run_selected_cli(step, self._build_agent_prompt(step))
+            error = result.error
+            if not result.returncode:
+                try:
+                    self._validate_agent_outputs(outputs)
+                except (OSError, ValueError) as exc:
+                    error = str(exc)
+            return StepResult(step_id=step_id, status="failed" if result.returncode or error else "completed",
+                              error=error, duration_sec=result.duration_sec, cost_info=result.usage,
+                              output_files=[str(self._resolve_output_path(o)) for o in outputs])
 
         # ── SDK 모드 라우팅 (use_sdk: true 에이전트) ──
         if agent_def.get("use_sdk", False):
@@ -4724,15 +4786,6 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
         # 2. 프롬프트 빌드 (컨텍스트 메모리 포함)
         prompt = self._build_agent_prompt(step)
-
-        # ── codex provider 분기 (웹 리서치 에이전트 토큰 절약) ──
-        provider = resolve_agent_provider(agent, agent_def, self.state.config)
-        if provider == "codex":
-            result = self._run_codex_agent_step(step, step_id, agent_def, prompt, outputs, timeout_sec)
-            if result.status == "completed":
-                return result
-            print(f"    [codex→claude 폴백] {result.error}", flush=True)
-            # 이하 기존 claude CLI 경로로 계속 진행
 
         # 3. 프롬프트를 임시 파일에 저장 (긴 프롬프트 대비)
         prompt_file = self.project_dir / f".prompt_{step_id}.md"
@@ -4972,6 +5025,10 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "chapter_projection": "modules/chapter_projection_module.py",
             "scene_enricher_module": "modules/scene_enricher_module.py",
             "visual_decision_module": "modules/visual_decision_module.py",
+            # 화면을 정한 뒤·그린 뒤에 각각 세어 보는 관문.
+            # 규칙은 있었는데 검사가 없어 LG 1편이 시청자 평가 53점을 받았다.
+            "visual_gate_module": "modules/visual_gate_module.py",
+            "image_says_module": "modules/image_says_module.py",
             "duplicate-checker": "scripts/duplicate_check.py",
             "tts-generator": "scripts/generate_tts.py",
             "image_batch": "modules/image_batch_module.py",
@@ -5859,6 +5916,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "json 파싱", "json parse", "jsondecodeerror",       # 형식
             "unknown step",                                     # 설정 오류
             "permission denied",                               # 권한
+            "no access", "unauthorized", "authentication", "model_not_found", "unknown provider",
         ]
         err_lower = error.lower()
         return not any(kw in err_lower for kw in NON_RETRYABLE)

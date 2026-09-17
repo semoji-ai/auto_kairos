@@ -424,6 +424,24 @@ def main():
         scene_id = scene.get("sceneId", "")
         output_path = OUTPUT_DIR / (f"{scene_id}.mp3" if scene_id else f"scene_{num:03d}.mp3")
 
+        # 말이 바뀐 씬은 옛 음성을 버린다.
+        #
+        # `narration_dirty` 는 원고를 다시 쓰거나 씬을 쪼갤 때 붙는 표시다
+        # (apply_rewrite). 그런데 여기서 「파일 있으면 건너뛴다」로만 보고 있어
+        # **옛 음성이 그대로 남았다.**
+        #
+        # EP03에서 실제로 그랬다 — 씬20은 한 문장(22자)으로 줄었는데 음성은
+        # 쪼개기 전 원고를 읽은 19.7초짜리였다. 채점기는 길이를 mp3 크기에서
+        # 읽으므로 「정지 화면 19.7초」로 보고 지속 점수를 깎았다.
+        # 화면이 아니라 눈금이 틀린 것이다.
+        if output_path.exists() and scene.get("narration_dirty"):
+            old = output_path.with_suffix(".mp3.stale")
+            try:
+                output_path.replace(old)
+                print(f"  [{i+1}/{total}] Scene {num}: 말이 바뀌어 다시 녹음합니다")
+            except OSError:
+                pass
+
         # Skip if already exists
         if output_path.exists():
             size = output_path.stat().st_size
@@ -441,6 +459,17 @@ def main():
                 srt_path.unlink()
             print(f"  [{i+1}/{total}] Scene {num}: OK ({duration:.1f}s)")
             results.append({"scene": num, "status": "ok", "duration": duration, "path": str(output_path)})
+            # 다시 녹음했으면 표시를 지운다.
+            #
+            # 지우지 않아서 **표시가 뜻을 잃었다.** 화면에는 모든 씬에
+            # 「TTS 재생성 필요」가 떠 있고, 실제로 낡은 씬이 어느 것인지
+            # 알 수 없게 됐다. EP03는 186개를 전부 다시 구웠는데도 187개가
+            # 전부 「필요」로 남아 있었다.
+            #
+            # 표시가 항상 켜져 있으면 없는 것과 같다 — 오히려 나쁘다.
+            # 정말 고쳐야 할 씬을 가리기 때문이다.
+            if scene.pop("narration_dirty", None) is not None:
+                specs_updated = True
             # Small delay to avoid rate limiting
             time.sleep(0.3)
         except Exception as e:

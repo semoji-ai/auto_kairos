@@ -57,10 +57,17 @@ def run_orchestrator(prompt, cwd, *, session_id=None, output_schema=None, output
                      sandbox=None, images=None, model=None, on_line=None) -> dict:
     """선택 오케스트레이터로 추론 실행. images 있으면 codex 강제."""
     engine = get_orchestrator()
+    from auto_agent.orchestrator.execution import resolve_execution
+    selected_provider = "codex" if images else engine
+    options = {"provider": selected_provider}
+    if model or (selected_provider == "claude" and claude_model()):
+        options["model"] = model or claude_model()
+    selected_model = resolve_execution("adobe-orchestrator", {}, {"execution": options}).model
     if images or engine == "codex":
         return codex_runner.run_skill(prompt, cwd, session_id=session_id, output_schema=output_schema,
-                                      output_last=output_last, sandbox=sandbox, images=images, on_line=on_line)
+                                      output_last=output_last, sandbox=sandbox, images=images, on_line=on_line,
+                                      model=selected_model)
     return claude_runner.run_claude(prompt, cwd, session_id=session_id, output_schema=output_schema,
                                     output_last=output_last, sandbox=sandbox, images=images,
-                                    model=model or claude_model(),
+                                    model=selected_model,
                                     on_line=on_line)

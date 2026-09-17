@@ -625,6 +625,27 @@ async def select_scene_image(project_ref: str, scene_num: int, request: Request)
                 if ia.get("source") == "none":
                     ia.pop("source", None)
                     scene["imageAsset"] = ia
+
+                # 고른 그림이 실물 자료면 **타입도 따라간다.**
+                #
+                # 화면에서 그림만 갈아 끼우면 `visual_kind` 는 그대로 남았다.
+                # 그래서 감독이 실물 사진으로 바꿔 둔 씬이 여전히 「재연 생성」으로
+                # 분류되고, 영상 생성 대상에도 그대로 들어갔다 — 애써 고른 자료를
+                # 덮어쓰고 크레딧까지 쓰는 셈이다.
+                # EP01 씬966·967이 그 상태였다.
+                #
+                # 판단 근거는 파일이 놓인 자리다. `images/search/` 아래면 실물 자료다.
+                if "/images/search/" in image_url:
+                    ia = scene.get("imageAsset") or {}
+                    ia["source"] = "search"
+                    scene["imageAsset"] = ia
+                    scene["visual_kind"] = "search_image"
+                elif "/images/generated/" in image_url and \
+                        scene.get("visual_kind") == "search_image":
+                    ia = scene.get("imageAsset") or {}
+                    ia["source"] = "generate"
+                    scene["imageAsset"] = ia
+                    scene["visual_kind"] = "generate_image"
             found = True
             break
 

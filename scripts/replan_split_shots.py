@@ -115,6 +115,13 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("ep")
     ap.add_argument("--scenes")
+    # 프롬프트가 같은 무리만 잡으면 **프롬프트는 다른데 그림이 비슷한** 구간을
+    # 놓친다. LG 1편에서 시청자 넷이 여덟 구간 전부에서 같은 말을 했다 —
+    # 「같은 방, 같은 옷, 같은 카메라 높이가 여덟 컷」. 프롬프트는 다 달랐다.
+    # 그래서 무리를 밖에서 지정할 수 있게 둔다.
+    ap.add_argument("--groups",
+                    help="세미콜론으로 무리를 나누고 쉼표로 씬을 적는다 "
+                         "— 예: 952,974,986;1001,1002,1003")
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("-j", "--jobs", type=int, default=4)
     args = ap.parse_args()
@@ -133,6 +140,18 @@ def main() -> int:
         if p.strip():
             groups[p].append(s)
 
+    by_num = {s.get("sceneNumber"): s for s in scenes}
+    if args.groups:
+        todo = []
+        for chunk in args.groups.split(";"):
+            g = [by_num[int(x)] for x in chunk.split(",")
+                 if x.strip() and int(x) in by_num]
+            if len(g) >= 2:
+                # 무리의 기준 화면은 첫 컷의 프롬프트로 삼는다
+                todo.append(((g[0].get("imageAsset") or {}).get("prompt") or "", g))
+        print(f"{ep}  지정한 무리 {len(todo)}개")
+        return _work(args, f, data, scenes, todo)
+
     want = {int(x) for x in args.scenes.split(",")} if args.scenes else None
     todo = []
     for p, group in groups.items():
@@ -145,6 +164,10 @@ def main() -> int:
     print(f"{ep}  같은 화면을 나눠 가진 무리 {len(todo)}개")
     if not todo:
         return 0
+    return _work(args, f, data, scenes, todo)
+
+
+def _work(args, f, data, scenes, todo):
 
     def run(job):
         base, group = job

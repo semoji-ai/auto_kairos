@@ -25,12 +25,37 @@ def main() -> int:
     ap.add_argument("epdir", type=Path, help="_imggen/ep01 처럼 작업 폴더")
     ap.add_argument("project", type=Path)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--from-out", action="store_true",
+                    help="current/ 가 있어도 out/ 에서 발행한다 — 고른 판이 낡았을 때")
     args = ap.parse_args()
 
+    # `current/` 가 있으면 그것을 쓰고, 없으면 `out/`(생성 결과)을 바로 본다.
+    #
+    # 예전에는 `current/` 만 봤다. 그래서 그릴 때마다 절차에 이 줄이 끼어 있었다.
+    #
+    #     cp _imggen/ep01_vN/out/scene_*.png _imggen/ep01_vN/current/
+    #
+    # 그 복사가 **사본을 한 벌씩 더 만든다.** EP01 작업 폴더 2.4GB 중 0.53GB(22%)가
+    # out 과 current 에 같은 파일이 두 벌 있어 생긴 것이었다. 하루에 배치를 스무 번
+    # 돌리면 그만큼 쌓인다.
+    #
+    # `current/` 를 계속 지원하는 이유는 organize_versions 로 여러 판 중 골라 담는
+    # 흐름이 있기 때문이다. 고른 것이 있으면 그쪽이 이긴다.
+    # `current/` 가 낡아 있는 경우가 있다 — 새로 그린 컷은 `out/` 에만 있는데
+    # 고른 판이 예전 것이라 발행에서 통째로 빠진다. EP03에서 실제로 그랬다
+    # (current 는 8월 11일, 새 컷 다섯은 out 에만). 지우지 않고 이 플래그로 넘긴다.
     cur = args.epdir / "current"
-    if not cur.exists():
-        print(f"  {args.epdir.name}: current 폴더 없음 — organize_versions 먼저")
-        return 1
+    if args.from_out:
+        cur = args.epdir / "out"
+        print(f"  {args.epdir.name}: --from-out → out 에서 발행합니다")
+    elif not cur.exists():
+        out = args.epdir / "out"
+        if out.exists() and any(out.glob("scene_*.png")):
+            cur = out
+            print(f"  {args.epdir.name}: current 없음 → out 에서 바로 발행합니다")
+        else:
+            print(f"  {args.epdir.name}: current·out 둘 다 없음 — organize_versions 먼저")
+            return 1
 
     spec = json.loads((args.project / "scene_specs.json").read_text(encoding="utf-8"))
     scenes = {s["sceneNumber"]: s for s in spec.get("scenes", spec)}

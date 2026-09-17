@@ -4,7 +4,7 @@
 
 ## 작업 경계
 
-- `auto-agent run`의 Stage 1/2 핵심 에이전트 실행부는 아직 Claude CLI/Anthropic SDK에 강하게 결합되어 있습니다.
+- `auto-agent run --provider claude|codex`로 공통 에이전트 실행 엔진을 선택할 수 있습니다. 설정 우선순위와 미전환 보조 모듈은 `docs/hybrid-execution.md`를 먼저 확인하세요.
 - Codex에서 완전한 Stage 1 -> Stage 3 작업을 진행하려면 `/Users/jleavens_macmini/LocalProjects/auto_kairos_codex`의 Codex-native 파이프라인을 우선 검토하세요.
 - 이 v3 저장소 안에서 Codex로 바로 다루기 좋은 영역은 로컬 CLI, DB/대시보드 보조 기능, Stage 0/4의 `AgentRunner(provider="codex")`, Remotion/에셋/검증 스크립트입니다.
 
@@ -33,5 +33,5 @@
 ## Codex 전환 메모
 
 - v3의 `auto_agent/modules/agent_runner.py`에는 Stage 0/4용 Codex provider가 이미 있습니다.
-- v3의 `auto_agent/orchestrator/runner.py`, `context_memory.py`, `agent_loop.py`, `claude_client.py`는 Claude/Anthropic 의존도가 높습니다.
+- `runner.py`의 일반·챕터·단일 응답 실행은 공통 `execution.py`로 라우팅합니다. legacy SDK 및 일부 독립 보조 모듈은 여전히 Claude 의존 경로입니다.
 - Codex 앱에서 v3 전체 파이프라인을 안정적으로 돌리려면 Claude CLI 호출을 직접 치환하기보다, `auto_kairos_codex`의 file-system-first task contract 방식으로 단계별 이관하는 편이 안전합니다.

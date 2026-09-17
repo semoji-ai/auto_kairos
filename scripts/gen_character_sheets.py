@@ -34,6 +34,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+# 저장소 뿌리를 먼저 잡는다 — auto_agent.paths 의 경로 규칙을 쓰기 위해
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 
 def _quality(path: Path) -> tuple[float, float]:
     """결과물의 결과 경계 흐림을 잰다. 기준 시트는 결 16.1 / 경계 14.6."""
@@ -87,12 +90,16 @@ def main() -> int:
     ap.add_argument("--base", type=Path,
                     default=Path("artstyle/styles/semoji_character_sheet.png"),
                     help="기준 캐릭터 시트 (기본: 세모지 공식 시트)")
-    ap.add_argument("-o", "--out", required=True, type=Path)
+    ap.add_argument("-o", "--out", type=Path, default=None,
+                    help="비우면 paths.get_charsheet_dir() — 폴더를 나누지 않는다")
     ap.add_argument("--only", help="특정 id만 — 쉼표로 여러 개 (fleet 분할용)")
     ap.add_argument("--tries", type=int, default=3, help="기준 미달 시 재시도 횟수")
     ap.add_argument("--max-grain", type=float, default=22.0, help="결 상한 (기준 시트 16.1)")
     ap.add_argument("--max-edge", type=float, default=19.0, help="경계 흐림 상한 (기준 시트 14.6)")
     args = ap.parse_args()
+    if args.out is None:
+        from auto_agent.paths import get_charsheet_dir
+        args.out = get_charsheet_dir() or Path("_imggen/characters/sheets")
 
     roster = json.loads(args.roster.read_text(encoding="utf-8"))
     if args.only:
@@ -147,7 +154,6 @@ def main() -> int:
         if best and out.with_suffix(".best.png").exists():
             shutil.move(out.with_suffix(".best.png"), out)
         got = out.exists()
-        ok += got
         tail = f" (최선 시도 {best[0]}: 결 {best[1]:.1f} 경계 {best[2]:.1f})" if best else ""
         print(f"  {'✓' if got else '✗'} {e['id']:18s} {e['name']} {e.get('age','')}{tail}")
 

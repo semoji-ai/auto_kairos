@@ -1,4 +1,5 @@
 import os
+import pytest
 from unittest.mock import patch
 
 from auto_agent.orchestrator.runner import resolve_agent_provider
@@ -22,9 +23,10 @@ def test_project_config_overrides_env():
         assert resolve_agent_provider("flesh-researcher", FLESH_DEF, {"research_provider": "codex"}) == "codex"
 
 
-def test_non_research_agent_always_claude():
-    assert resolve_agent_provider("script-director", {"provider": "codex"}, {"research_provider": "codex"}) == "claude"
+def test_non_research_agent_can_select_codex():
+    assert resolve_agent_provider("script-director", {"provider": "codex"}, {}) == "codex"
 
 
-def test_invalid_value_falls_back():
-    assert resolve_agent_provider("flesh-researcher", {"provider": "gemini"}, {}) == "claude"
+def test_invalid_value_fails_explicitly():
+    with pytest.raises(ValueError, match="Unknown provider"):
+        resolve_agent_provider("flesh-researcher", {"provider": "gemini"}, {})

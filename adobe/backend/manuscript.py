@@ -162,6 +162,11 @@ def run_manuscript_pipeline(proj_dir, *, threshold: int = 90, max_rounds: int = 
     history: list[dict] = []
     best = None                      # (path, score, verdict)
     last_revisions = None
+    from auto_agent.orchestrator.execution import execution_profile
+    from auto_agent.orchestrator.review_policy import blocking_issues, review_rank, stop_reason
+    adaptive = execution_profile({}) != "legacy"
+    best_review = None
+    stopped = "round_limit"
     for n in range(1, max_rounds + 1):
         prev_path = best[0] if best else None
         out = write_manuscript(proj_dir, version=n, prev=prev_path,
@@ -171,11 +176,16 @@ def run_manuscript_pipeline(proj_dir, *, threshold: int = 90, max_rounds: int = 
                 break
             return {"error": "원고 작성 실패", "claims": len(claims)}
         rv = review_manuscript(proj_dir, out, prev_path=prev_path, on_event=on_event)
+        if adaptive and rv["verdict"] == "PASS" and (blocking_issues(rv) or rv["score"] < threshold):
+            rv = {**rv, "verdict": "REVISE"}
         history.append({"version": n, "score": rv["score"], "verdict": rv["verdict"]})
         last_revisions = rv["revision_instructions"]
-        if best is None or rv["score"] > best[1]:
+        reason = stop_reason(rv, best_review, threshold) if adaptive else None
+        if best is None or (review_rank(rv) > review_rank(best_review) if adaptive else rv["score"] > best[1]):
             best = (out, rv["score"], rv["verdict"])
-        if rv["score"] >= threshold and rv["verdict"] == "PASS":
+            best_review = rv
+        if reason or (not adaptive and rv["score"] >= threshold and rv["verdict"] == "PASS"):
+            stopped = reason or "quality_pass"
             break
 
     locked = proj_dir / "final_manuscript.md"
@@ -183,4 +193,4 @@ def run_manuscript_pipeline(proj_dir, *, threshold: int = 90, max_rounds: int = 
     if on_event:
         on_event(f"원고 확정 — {best[1]}점 {best[2]} ({len(history)}라운드)")
     return {"manuscript": str(locked), "score": best[1], "verdict": best[2],
-            "rounds": len(history), "history": history, "claims": len(claims)}
+            "rounds": len(history), "history": history, "claims": len(claims), "stop_reason": stopped}

@@ -127,6 +127,11 @@ def run_brief_ratchet(proj_dir, *, threshold: int = 90, max_rounds: int = 3,
     history: list[dict] = []
     best = None                      # (path, score, verdict)
     last_revisions = None
+    from auto_agent.orchestrator.execution import execution_profile
+    from auto_agent.orchestrator.review_policy import blocking_issues, review_rank, stop_reason
+    adaptive = execution_profile({}) != "legacy"
+    best_review = None
+    stopped = "round_limit"
 
     for n in range(1, max_rounds + 1):
         prev_path = best[0] if best else None
@@ -137,12 +142,17 @@ def run_brief_ratchet(proj_dir, *, threshold: int = 90, max_rounds: int = 3,
                 break
             return {"error": "브리프 생성 실패", "rounds": n - 1, "history": history}
         rv = review_brief(proj_dir, out, prev_path=prev_path, on_event=on_event)
+        if adaptive and rv["verdict"] == "PASS" and (blocking_issues(rv) or rv["score"] < threshold):
+            rv = {**rv, "verdict": "REVISE"}
         history.append({"version": n, "score": rv["score"], "verdict": rv["verdict"]})
         last_revisions = rv["revision_instructions"]
         passed = rv["score"] >= threshold and rv["verdict"] == "PASS"
-        if best is None or rv["score"] > best[1]:    # 단조증가 — 더 높을 때만 채택
+        reason = stop_reason(rv, best_review, threshold) if adaptive else None
+        if best is None or (review_rank(rv) > review_rank(best_review) if adaptive else rv["score"] > best[1]):
             best = (out, rv["score"], rv["verdict"])
-        if passed:
+            best_review = rv
+        if reason or (passed and not adaptive):
+            stopped = reason or "quality_pass"
             break
 
     rounds = len(history)
@@ -151,4 +161,4 @@ def run_brief_ratchet(proj_dir, *, threshold: int = 90, max_rounds: int = 3,
     if on_event:
         on_event(f"브리프 확정 — {best[1]}점 {best[2]} ({rounds}라운드)")
     return {"brief": str(locked), "score": best[1], "verdict": best[2],
-            "rounds": rounds, "history": history}
+            "rounds": rounds, "history": history, "stop_reason": stopped}

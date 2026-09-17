@@ -215,6 +215,8 @@ step_2(씬분할) → scene_specs.json
 
 ## 5. API 규칙
 
+- 공통 파이프라인은 `--provider claude|codex` 선택을 존중합니다. 혼합 설정·모델 우선순위는 `docs/hybrid-execution.md`를 따릅니다. Codex 실패 시 Claude로 몰래 폴백하지 않습니다.
+
 - Anthropic API 직접 호출은 사용자 요청 시만
 - 기본: **Claude CLI (`claude` 바이너리)** 우선
 - Qwen3.5: **Ollama chat API + `think: false`** (generate API는 thinking 소진)
@@ -233,8 +235,13 @@ step_2(씬분할) → scene_specs.json
 @docs/rules/direction-standard.md
 @docs/rules/character-sheet-rules.md
 @docs/rules/image-review-rules.md
+@docs/rules/content-evaluation-rules.md
+@docs/rules/manuscript-redundancy-rules.md
+@docs/rules/scene-splitting-rules.md
 @docs/rules/scene-visual-decision.md
 @docs/rules/direction-recipes.md
+@docs/rules/dont-discard-good-work.md
+@docs/rules/image-direction-rules.md
 @docs/rules/infographic-asset-rules.md
 @docs/rules/scene-video-rules.md
 @docs/rules/shared-vs-branch.md

@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -48,11 +49,18 @@ CAST_ONLY = """
 
 {sheets}
 
-**얼굴과 옷차림만 참고합니다.**
+**생김새·옷차림·표정을 시트에서 가져옵니다.**
 - 인물의 생김새, 머리 모양, 옷은 첨부한 시트 그대로입니다
 - **자세는 복사하지 마세요.** 시트의 정면으로 선 자세를 그대로 쓰면 안 됩니다
 - 자세와 동작은 아래 장면 설명을 따릅니다
 - 몸을 그리는 방식은 시트 그대로입니다. 그림을 보고 맞추세요
+
+**시트 아랫줄의 표정 칸을 쓰세요.** 평온·놀람·근심·낙담·기쁨이 그려져
+있습니다. 이 장면의 인물이 어떤 마음인지 골라 그 얼굴을 씁니다.
+
+앞서 이것을 「얼굴과 옷차림만 참고」라고 적어 두어, 표정 칸이 있는데도
+모든 컷이 평온한 얼굴로 나왔다. 두려움을 말하는 씬이 「사람들이 편안한
+평시 장터」로 읽힌 까닭이다.
 """
 
 CASE_LIST = """
@@ -117,14 +125,25 @@ DOC_REF = """
 """
 
 BG_REF = """
-## 첨부 이미지 — 같은 장소 (앞 컷)
+## 첨부 이미지 — 마스터 컷 (같은 장소)
 
 {first}
 
-이 컷은 **앞 컷과 같은 장소, 같은 상황**입니다. 컷만 바뀝니다.
-- 장소, 건물, 소품, 시간대, 날씨, 빛의 방향은 첨부 그림 그대로입니다
-- 바뀌는 것은 **카메라 앵글과 사이즈뿐**입니다
-- 앞 컷을 그대로 베끼지는 마세요 — 같은 장소를 다른 자리에서 본 그림입니다
+첨부 그림은 **이 장소를 정해 둔 마스터**입니다. 베낄 그림이 아닙니다.
+
+**첨부에서 가져올 것 — 세계를 고정합니다**
+- 장소의 생김새와 건물, 놓인 소품
+- 시간대와 날씨, 빛의 방향과 색
+- 그림체와 색감
+
+**무엇을 그릴지는 아래 Scene 이 정합니다.**
+이 컷이 하는 말이 앞 컷과 다르면 **화면에 보이는 일도 달라야 합니다.**
+사람의 자세와 행동, 손에 든 것, 놓인 물건, 누가 있고 누가 들어오는지가
+그 말만큼 나아갑니다. 카메라 자리와 크기는 그 다음에 따라옵니다.
+
+**앵글만 옮긴 같은 그림은 안 됩니다.** 같은 장소에서 **다음 일이 벌어지는**
+그림입니다. 첨부 그림을 보고 「무엇이 그대로인가」와 「무엇이 달라졌는가」를
+먼저 정한 뒤 그리세요.
 """
 
 SCENE = """$imagegen
@@ -140,6 +159,47 @@ size는 {size}입니다.
 생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:
 {out}
 """
+
+
+# 한 줄에 여러 사람을 적으면 **세는 수와 그리는 수가 어긋난다.**
+# 「인부 둘」은 항목 하나로 세어 「사람은 1명입니다」라고 못 박히는데,
+# 같은 프롬프트 본문은 「두 사람」이라 말한다. 모델은 한 명만 그린다 —
+# EP01 의 「사람 없음」 모순과 같은 계열이다.
+_COUNTED = re.compile(r"(?:^|[\s,·])(둘|셋|넷|다섯|여섯"
+                      r"|두 사람|세 사람|네 사람|두 명|세 명|네 명)\s*$")
+_COUNT = {"둘": 2, "두 사람": 2, "두 명": 2, "셋": 3, "세 사람": 3, "세 명": 3,
+          "넷": 4, "네 사람": 4, "네 명": 4, "다섯": 5, "여섯": 6}
+# 수가 없는 무리 — 「상인들」·「아이들」·「사람들」. 몇 명인지 못 박을 수 없다.
+_CROWD = re.compile(r"(들|무리|행렬|줄)\s*$")
+
+
+def split_plural(people: list) -> tuple[list, list]:
+    """한 줄에 여럿을 담은 항목을 갈라 낸다. (갈라낸 목록, 손댄 자리)
+
+    수가 있으면 그 수만큼 자리를 갈라 적고, 수가 없는 무리는 세지 않는
+    배경 사람들로 넘긴다 — 못 박을 수 있는 것만 못 박는다.
+    """
+    out, touched = [], []
+    where = ["왼쪽", "오른쪽", "가운데", "뒤쪽", "앞쪽", "옆"]
+    for d in people:
+        s = str(d).strip()
+        m = _COUNTED.search(s)
+        if m:
+            n = _COUNT.get(m.group(1))
+            base = s[:m.start()].rstrip(" ,·")
+            if n and base:
+                for i in range(n):
+                    tag = where[i] if i < len(where) else str(i + 1)
+                    out.append(f"{base} — {tag}에 선 사람")
+                touched.append((s, n))
+                continue
+        if _CROWD.search(s):
+            # 통째로 남긴다. 낱말을 떼면 무엇을 그릴지가 사라진다.
+            out.append(f"{s} (여럿 — 화면 뒤를 채운다)")
+            touched.append((s, 0))
+            continue
+        out.append(s)
+    return out, touched
 
 
 def next_version(out_dir: Path, n: int) -> Path:
@@ -164,7 +224,8 @@ def main() -> int:
     ap.add_argument("project", type=Path)
     ap.add_argument("prompt_dir", type=Path)
     ap.add_argument("-o", "--out", required=True, type=Path)
-    ap.add_argument("--sheets", type=Path, default=Path("_imggen/characters/final_v2_up"))
+    ap.add_argument("--sheets", type=Path, default=None,
+                    help="비우면 paths.get_charsheet_dir() 을 쓴다 — 경로 규칙은 한 곳에만 있다")
     ap.add_argument("--base", type=Path,
                     default=Path("auto_agent/data/artstyle/styles/semoji_character_sheet.png"),
                     help="화풍 기준 시트 — 인물이 없는 씬에도 붙인다")
@@ -174,6 +235,10 @@ def main() -> int:
     ap.add_argument("--allow-empty", action="store_true",
                     help="빈 프롬프트도 생성 (장면이 날조되므로 쓰지 말 것)")
     args = ap.parse_args()
+
+    if args.sheets is None:
+        from auto_agent.paths import get_charsheet_dir
+        args.sheets = get_charsheet_dir() or Path("_imggen/characters/sheets")
 
     data = json.loads((args.project / "scene_specs.json").read_text(encoding="utf-8"))
     scenes = {s["sceneNumber"]: s for s in data.get("scenes", data)}
@@ -238,6 +303,9 @@ def main() -> int:
                 lines.append(f"- {names.get(cid, cid)}: {p}")
         scene = scenes.get(n, {})
         people = scene.get("people") or []
+        people, plural = split_plural(people)
+        for src, cnt in plural:
+            print(f"    씬{n}: 「{src}」를 {cnt}명으로 갈랐습니다", flush=True)
         body = Path(job["prompt_file"]).read_text(encoding="utf-8")
         # 사람이 있어야 하는가는 **화면을 짤 때 정한 것**(`people`)이 정본이다.
         # 빈 배열이면 정말로 사물만 나오는 화면이니 그대로 「사람 없음」을 붙인다.
@@ -269,9 +337,26 @@ def main() -> int:
         # 씬에 관계된 인물을 넓게 적어 둔 것이라, 이 컷에 나오지 않는 사람까지
         # 들어 있다. 붙이면 모델이 「첨부한 사람들」을 다 그린다 — 씬11 은
         # 구인회 한 명짜리 화면인데 구재서 시트가 따라붙어 노인이 하나 더 나왔다.
+        # 「사물만」이라고 정한 화면(people 이 빈 배열)에는 시트를 붙이지
+        # 않는다. cast 는 그 씬에 관계된 인물을 넓게 적어 둔 것이라 남아
+        # 있기 마련인데, 붙이면 모델이 그 사람을 그린다 — 사람이 없어야 할
+        # 화면에 한 명이 섰다.
+        if isinstance(scene.get("people"), list) and not scene["people"]:
+            cast = []
         used, extra = [], list(people)
         for cid in cast:
-            f_ = (args.sheets / f"{cid}_sheet.png")
+            # `_up`(키운 판)이 있으면 그것을 쓴다. 다만 **기본 시트보다 낡았으면
+            # 쓰지 않는다** — 시트를 다시 만들어도 낡은 `_up` 이 이기면 새 얼굴이
+            # 통째로 무시된다. 허만정이 그랬다: 실사진에 맞춰 시트를 새로 만들었는데
+            # 8월 12일자 `_up` 이 먼저 붙어 일곱 컷이 다시 백발로 나왔다.
+            up = args.sheets / f"{cid}_sheet_up.png"
+            base = args.sheets / f"{cid}_sheet.png"
+            f_ = up
+            if not up.exists():
+                f_ = base
+            elif base.exists() and base.stat().st_mtime > up.stat().st_mtime:
+                print(f"    {cid}: _up 시트가 낡아 기본 시트를 씁니다", flush=True)
+                f_ = base
             if not f_.exists():
                 continue
             nm = names.get(cid, cid)
@@ -289,9 +374,14 @@ def main() -> int:
                 ref = STYLE_ONLY.format(base=args.base.resolve())
                 ref += PEOPLE_BLOCK.format(people="\n".join(f"- {d}" for d in extra))
         roster = [f"- {nm} (첨부한 시트의 인물)" for nm, _ in used]
-        roster += [f"- {d}" for d in extra]
+        roster += [f"- {d}" for d in extra if "여럿" not in str(d)]
+        crowd = [d for d in extra if "여럿" in str(d)]
         if roster:
             ref += CASE_LIST.format(count=len(roster), people="\n".join(roster))
+            if crowd:
+                ref += ("\n**그 밖에 화면 뒤를 채우는 사람들이 있습니다.** "
+                        "얼굴이 또렷하지 않게, 멀리 작게 그리세요.\n"
+                        + "\n".join(f"- {d}" for d in crowd) + "\n")
         else:
             # 사람을 안 적으면 모델이 화면을 채우려 사람을 그리고, 정보가 없으니
             # 견본 시트를 베낀다. 아무도 없는 화면이면 그렇다고 못박는다.
