@@ -132,14 +132,31 @@ def test_rebuild_never_deletes_old_layers():
 
 
 def test_subtitle_moved_above_scene_groups():
-    """말자막은 씬 그룹 재배치가 끝난 뒤 항상 컴프 최상단으로 올린다.
+    """자막은 씬 그룹 재배치가 끝난 뒤 항상 컴프 최상단으로 올린다.
 
     그룹 재배치는 다음 씬 그룹이 있을 때만 그 위로 옮기므로, 부분 빌드나
     마지막 씬의 그룹은 컴프 맨 위에 남는다 — 그 아래로 자막이 깔리면
-    씬 그룹의 불투명 배경에 가려 안 보인다."""
+    씬 그룹의 불투명 배경에 가려 안 보인다.
+    자막이 줄별 레이어(sub_*)가 된 뒤로는 전부 올린다(예전 "말자막"도 함께)."""
     src = _src()
-    assert 'name === "말자막"' in src
+    assert '=== "말자막"' in src
+    assert '"sub_"' in src
     assert "moveToBeginning" in src
+
+
+def test_video_layer_replaced_not_stacked():
+    """영상 레이어는 씬당 정확히 1개 — 재임폴트 때 옛것을 지우고 새로 얹는다.
+
+    「옛 레이어는 그대로 둔다」 설계라 임폴트를 거듭하면 S###_영상 이 겹겹이
+    쌓여 소리가 두 배로 울렸다. 건너뛰기만 하면 새로 쌓인 그림이 옛 영상을
+    덮으므로, 기계가 놓는 이 이름의 레이어만 교체한다. 새것을 먼저 얹고
+    옛것을 지워 얹기 실패 시 옛것이 남는다."""
+    src = _src()
+    block = src.split("if (s.video)")[1].split("// **레이아웃 글자는")[0]
+    assert "옛 영상 레이어" in block and ".remove()" in block
+    add_at = block.index("comp.layers.add(vf)")
+    rm_at = block.index(".remove()")
+    assert add_at < rm_at, "새것을 먼저 얹고 옛것을 지워야 한다"
 
 
 def test_failed_build_keeps_old_and_rolls_back_the_half():

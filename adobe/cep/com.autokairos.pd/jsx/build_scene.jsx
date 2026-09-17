@@ -1083,7 +1083,24 @@ function akBuildScene(manifestPath) {
             if (!vf) {
                 log.push(pf + "영상 가져오기 실패 — " + vNote.join("/"));
             } else {
+                // **영상 레이어는 씬당 정확히 1개 — 옛것을 지우고 새로 얹는다.**
+                //
+                // 「옛 레이어는 그대로 둔다」 설계 때문에 임폴트를 거듭하면
+                // S###_영상 이 겹겹이 쌓였다. 그림은 겹쳐도 안 보이지만 영상은
+                // 레이어 목록에 바로 드러나고 **소리가 두 배**로 울린다. 게다가
+                // 건너뛰기만 하면 새로 쌓인 그림이 옛 영상을 덮어 영상이 사라진다.
+                // 이 이름의 레이어는 기계가 놓는 것이므로 교체가 안전하다 —
+                // 사람이 만진 씬 그림·레이어는 여전히 건드리지 않는다.
+                // 새것을 먼저 얹고 옛것을 지운다 — 얹기가 실패해도 옛것이 남는다.
                 var vl = comp.layers.add(vf);
+                var vOld = 0;
+                for (var ovi = comp.numLayers; ovi >= 1; ovi--) {
+                    var ovl = comp.layer(ovi);
+                    if (ovl !== vl && ovl.name === pf + "영상") {
+                        try { ovl.remove(); vOld++; } catch (eOv) { }
+                    }
+                }
+                if (vOld) { log.push(pf + "옛 영상 레이어 " + vOld + "개 교체"); }
                 vl.name = pf + "영상";
                 // 화면을 채운다 — 세로를 맞추고 좌우는 넘치게 둔다(그림과 같은 규칙)
                 var vw = vl.source.width, vh = vl.source.height;
@@ -1239,10 +1256,20 @@ function akBuildScene(manifestPath) {
         // 말자막(subtitle_layers.jsx)이 씬 그룹 아래로 깔리는 것을 막는다.
         // 씬 그룹 재배치는 위에서 다음 씬 그룹 위로만 옮기므로, 그룹이 없는 부분 빌드나
         // 마지막 씬은 최상단에 남는다 — 그러면 그 아래 자막이 불투명 배경에 가려진다.
-        // 자막 레이어(이름 "말자막")를 마지막에 다시 최상단으로 올려 항상 보이게 한다.
+        // 줄별 자막 레이어("sub_<번호> …")와 예전 단일 "말자막"을 전부 최상단으로 올린다.
+        // (subtitle_layers.jsx 와는 다른 evalScript 로 로드되므로 이름 판별을 여기서 한다)
+        var subTops = [];
         for (var subI = 1; subI <= comp.numLayers; subI++) {
-            if (comp.layer(subI).name === "말자막") { comp.layer(subI).moveToBeginning(); break; }
+            var subNm = comp.layer(subI).name;
+            var isSub = (subNm === "말자막");
+            if (!isSub && subNm.length > 4 && subNm.substring(0, 4) === "sub_") {
+                var subK = 4, subDigit = false;
+                while (subK < subNm.length && subNm.charAt(subK) >= "0" && subNm.charAt(subK) <= "9") { subK++; subDigit = true; }
+                isSub = subDigit && (subK === subNm.length || subNm.charAt(subK) === " ");
+            }
+            if (isSub) { subTops.push(comp.layer(subI)); }
         }
+        for (var subJ = subTops.length - 1; subJ >= 0; subJ--) { subTops[subJ].moveToBeginning(); }
         comp.openInViewer();
         app.endUndoGroup();
 
