@@ -72,7 +72,7 @@ def _account_env(need: float | None = None) -> tuple:
     return acc.env_for(name), name
 
 
-def upload(path: Path, *, timeout: int = 300) -> str | None:
+def upload(path: Path, *, env: dict | None = None, timeout: int = 300) -> str | None:
     """이미지를 먼저 올리고 UUID 를 받는다.
 
     **로컬 경로를 `--start-image` 에 그대로 넘기면 안 된다.** CLI 가 알아서
@@ -85,16 +85,20 @@ def upload(path: Path, *, timeout: int = 300) -> str | None:
         --start-image <UUID>       통과
 
     `upload create` 는 같은 파일을 올려도 멀쩡하다. 그래서 그쪽으로 돌린다.
+
+    **업로드는 생성과 같은 계정이어야 한다.** 계정이 다르면 그 UUID 를 못 찾아
+    「UUID 도 파일도 아니다」로 떨어진다. 그래서 계정을 여기서 고르지 않고
+    **호출한 쪽이 생성에 쓸 `env` 를 그대로 넘긴다.** 예전에는 여기서 pick(0)
+    으로 따로 골랐는데, 생성 쪽은 pick(잔액 필요량)으로 골라서 1번 계정 잔액이
+    애매한 날은 둘이 갈렸다 — 됐다 안 됐다 하던 원인이다.
     """
     exe = cli()
     if not exe:
         return None
     try:
-        # **업로드는 생성과 같은 계정이어야 한다.** 계정이 다르면 그 UUID 를
-        # 못 찾아 「UUID 도 파일도 아니다」로 떨어진다.
-        env, _ = _account_env(0)
         p = subprocess.run([exe, "upload", "create", str(path), "--json"],
-                           capture_output=True, text=True, env=env,
+                           capture_output=True, text=True,
+                           env=(env if env is not None else dict(os.environ)),
                            stdin=subprocess.DEVNULL, timeout=timeout)
         if p.returncode != 0:
             return None
@@ -103,13 +107,18 @@ def upload(path: Path, *, timeout: int = 300) -> str | None:
         return None
 
 
-def _upload_cached(path: Path, cache: dict) -> str | None:
-    """같은 파일을 두 번 올리지 않는다. 한 번에 몇 초씩 걸린다."""
+def _upload_cached(path: Path, cache: dict, *, acct: str | None = None,
+                   env: dict | None = None) -> str | None:
+    """같은 파일을 두 번 올리지 않는다. 한 번에 몇 초씩 걸린다.
+
+    **열쇠에 계정 이름이 들어간다.** UUID 는 올린 계정에서만 보이므로,
+    계정 없이 캐시하면 다른 계정으로 생성할 때 남의 UUID 를 재사용해
+    「UUID 도 파일도 아니다」로 떨어진다."""
     st = path.stat()
-    key = f"{path}|{st.st_mtime_ns}|{st.st_size}"
+    key = f"{acct or 'default'}|{path}|{st.st_mtime_ns}|{st.st_size}"
     if key in cache:
         return cache[key]
-    uid = upload(path)
+    uid = upload(path, env=env)
     if uid:
         cache[key] = uid
     return uid
@@ -224,57 +233,94 @@ def generate(proj_dir: Path, job_type: str, params: dict, *,
     allowed = set(spec["image_slots"]) if spec else set(IMAGE_PARAMS)
     dropped = [k for k in (images or {}) if k not in allowed]
 
-    cache_fp = proj_dir / ".higgsfield_uploads.json"
-    try:
-        cache = json.loads(cache_fp.read_text(encoding="utf-8"))
-    except Exception:
-        cache = {}
-    before = len(cache)
-    failed_up: list = []
-
+    # 첨부 경로를 먼저 검증한다 — 계정·업로드와 무관한 잘못은 여기서 끝낸다.
+    files: list = []          # (flag, rel, 절대경로)
+    missing: list = []
     for slot, paths in (images or {}).items():
         if slot not in allowed:
             continue
         flag = "--" + slot.replace("_", "-")
         for rel in paths or []:
             fp = (proj_dir / rel).resolve()
-            # 프로젝트 밖을 가리키는 경로는 받지 않는다
-            if not (fp.is_file() and proj_dir.resolve() in fp.parents):
+            # **없는 경로를 조용히 넘기지 않는다.** 예전에는 `continue` 였다.
+            # 경로를 `generated/…` 로 잘못 주면(맞는 것은 `images/generated/…`)
+            # 첨부가 통째로 빠진 채 생성이 돌아, 첫 프레임 없이 프롬프트만으로
+            # 만들어졌다. 크레딧은 나가고 결과는 씬과 무관한 그림이 되는데
+            # 로그에 아무 말이 없어 다 뽑고 나서야 알았다(68크레딧을 그렇게 날렸다).
+            if not fp.is_file():
+                missing.append(f"{rel} (없음)")
                 continue
-            if on_line:
-                on_line(f"· 이미지 올리는 중: {rel}")
-            uid = _upload_cached(fp, cache)
-            if not uid:
-                failed_up.append(rel)
+            if proj_dir.resolve() not in fp.parents:
+                missing.append(f"{rel} (프로젝트 밖)")
                 continue
-            cmd += [flag, uid]
-
-    if len(cache) != before:
-        try:
-            cache_fp.write_text(json.dumps(cache, ensure_ascii=False, indent=1),
-                                encoding="utf-8")
-        except Exception:
-            pass
-    if failed_up:
+            files.append((flag, rel, fp))
+    if missing:
         return {"status": "failed",
-                "error": "이미지 업로드 실패: " + ", ".join(failed_up)}
+                "error": "첨부 이미지를 찾지 못했습니다: " + ", ".join(missing)
+                         + " — 경로는 프로젝트 뿌리 기준입니다(예: images/generated/scene_092_v5.png)"}
+    # **붙이라고 준 것이 하나도 안 붙었으면 돌리지 않는다.** 슬롯 이름을 잘못
+    # 적어도(`start-image` 처럼) 위 검사를 다 지나쳐 빈손으로 생성된다.
+    if images and not files:
+        return {"status": "failed",
+                "error": f"이미지를 넘겼는데 하나도 붙지 않았습니다. "
+                         f"이 모델이 받는 칸: {sorted(allowed)} · 준 칸: {sorted(images)}"}
 
-    # 잔액이 넉넉한 계정으로 돌린다(등록된 것이 있을 때만).
+    # **계정을 먼저 하나 고르고, 업로드와 생성이 그 계정을 함께 쓴다.**
+    #
+    # 예전에는 업로드가 pick(0), 생성이 pick(필요량)으로 따로 골랐다.
+    # 1번 계정 잔액이 0보다 크고 필요량보다 작은 날은 업로드는 1번,
+    # 생성은 2번으로 갈려 「UUID 도 파일도 아니다」로 떨어졌다 — 잔액에
+    # 따라 됐다 안 됐다 하던 원인이다. UUID 는 올린 계정에서만 보인다.
     need = 0.0
     try:
         need = float(params.get("duration") or 0) * 4
     except (TypeError, ValueError):
         pass
     env, acct = _account_env(need)
+
+    cache_fp = proj_dir / ".higgsfield_uploads.json"
+    try:
+        cache = json.loads(cache_fp.read_text(encoding="utf-8"))
+    except Exception:
+        cache = {}
+
+    def _attach(env2: dict, acct2: str | None) -> tuple:
+        """이 계정으로 첨부를 올려 (플래그 목록, 실패 목록)을 낸다.
+        캐시 열쇠에 계정이 들어가므로 계정을 바꿔 재시도해도 안전하다."""
+        before = len(cache)
+        flags, failed = [], []
+        for flag, rel, fp in files:
+            if on_line:
+                on_line(f"· 이미지 올리는 중: {rel}")
+            uid = _upload_cached(fp, cache, acct=acct2, env=env2)
+            if not uid:
+                failed.append(rel)
+                continue
+            flags += [flag, uid]
+        if len(cache) != before:
+            try:
+                cache_fp.write_text(json.dumps(cache, ensure_ascii=False, indent=1),
+                                    encoding="utf-8")
+            except Exception:
+                pass
+        return flags, failed
+
+    img_flags, failed_up = _attach(env, acct)
+    if failed_up:
+        return {"status": "failed",
+                "error": "이미지 업로드 실패: " + ", ".join(failed_up)}
+
     if acct and on_line:
         on_line(f"· 계정 {acct} 로 돌립니다")
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, env=env,
+        proc = subprocess.run(cmd + img_flags, capture_output=True, text=True, env=env,
                               stdin=subprocess.DEVNULL, timeout=timeout + 120)
     except subprocess.TimeoutExpired:
         return {"status": "failed", "error": f"{timeout}초 초과"}
     log = (proc.stdout or "") + "\n" + (proc.stderr or "")
-    # 잔액 부족이면 다른 계정으로 한 번 더 — 잔액은 순간마다 바뀐다
+    # 잔액 부족이면 다른 계정으로 한 번 더 — 잔액은 순간마다 바뀐다.
+    # **첨부도 그 계정으로 다시 올린다.** 원래 계정의 UUID 를 그대로 들고
+    # 가면 새 계정에서는 못 찾아 반드시 떨어진다.
     if "not_enough_credits" in log:
         try:
             from backend import hf_accounts as acc_mod
@@ -284,8 +330,13 @@ def generate(proj_dir: Path, job_type: str, params: dict, *,
         if alt:
             if on_line:
                 on_line(f"· 잔액 부족 — 계정 {alt} 로 다시 시도합니다")
-            proc = subprocess.run(cmd, capture_output=True, text=True,
-                                  env=acc_mod.env_for(alt),
+            alt_env = acc_mod.env_for(alt)
+            img_flags, failed_up = _attach(alt_env, alt)
+            if failed_up:
+                return {"status": "failed",
+                        "error": "이미지 업로드 실패(재시도 계정): " + ", ".join(failed_up)}
+            proc = subprocess.run(cmd + img_flags, capture_output=True, text=True,
+                                  env=alt_env,
                                   stdin=subprocess.DEVNULL, timeout=timeout + 120)
             log = (proc.stdout or "") + "\n" + (proc.stderr or "")
     if on_line:
