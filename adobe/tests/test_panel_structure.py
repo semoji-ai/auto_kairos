@@ -278,7 +278,7 @@ def test_subtitle_layers_jsx():
     assert fp.exists()
     jsx = fp.read_text(encoding="utf-8")
     assert "function akBuildSubtitles" in jsx
-    assert "startTime" in jsx and "inPoint" in jsx and "outPoint" in jsx
+    assert "inPoint" in jsx and "outPoint" in jsx
     assert '"Final"' in jsx and "JSON.parse" in jsx
     # ES3 호환 — const/let/arrow 금지
     jsx = es5_code(jsx)
@@ -608,16 +608,21 @@ def test_theme_selector_ui():
     assert "/api/themes/set-project" in js and "/api/themes/set-scene" in js
 
 
-def test_subtitle_single_layer_keyframed():
-    """자막은 레이어 1개 + Source Text 키프레임 — 줄마다 레이어를 만들면 AE가 멈춘다.
+def test_subtitle_per_cue_layers():
+    """자막은 큐마다 텍스트 레이어 하나씩 — SEMOJI TOOL 자막작업 방식.
 
-    줄마다 텍스트 길이가 달라지므로 앵커 보정(sourceRectAtTime) 대신
-    가운데 정렬로 수평 위치를 고정한다."""
+    줄별로 위치·스타일을 따로 고칠 수 있는 것이 목적이다. 수백 장이 타임라인을
+    덮지 않게 shy로 접고, 스타일은 기준 텍스트 레이어(선택 → 자막스타일 → 예전
+    말자막)에서 통째로 복사하며, 부분 빌드는 그 시간 구간의 레이어만 교체한다."""
     jsx = (PANEL / "jsx" / "subtitle_layers.jsx").read_text(encoding="utf-8")
-    assert "setValueAtTime" in jsx and "CENTER_JUSTIFY" in jsx
+    assert "comp.layers.addText" in jsx and "CENTER_JUSTIFY" in jsx
     assert "Anchor Point" in jsx and "Position" in jsx
-    assert "akRemoveLegacySubLayers" in jsx          # 예전 줄별 레이어 정리
-    assert "comp.layers.addText" in jsx and jsx.count("comp.layers.addText") == 1
+    assert "akRemoveSubLayersInRange" in jsx         # 부분 빌드 — 구간만 교체
+    assert "akFindStyleTemplate" in jsx              # 기준 레이어 스타일 복사
+    assert ".shy = true" in jsx                      # 타임라인 무게 완화
+    assert "setValueAtTime" not in jsx               # 키프레임 방식으로 되돌리지 않는다
+    # 예전 단일 키프레임 말자막이 남으면 줄별 레이어와 겹쳐 두 번 보인다 — 정리 필수
+    assert "oldLayer.remove()" in jsx
 
 
 def test_preview_hatch_matches_pattern_kind():

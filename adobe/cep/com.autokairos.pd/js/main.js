@@ -237,7 +237,8 @@ function queueRender() {
   });
 }
 
-/* 말자막 — 백엔드가 SRT/JSON 빌드 → Final 컴프에 자막 레이어 1개(Source Text 키프레임) 생성.
+/* 말자막 — 백엔드가 SRT/JSON 빌드 → Final 컴프에 자막마다 텍스트 레이어를 하나씩 생성
+   (SEMOJI TOOL 자막작업 방식 — 줄별로 고치고 움직일 수 있다).
    sceneNumbers 배열을 주면 그 씬들의 자막만(시각은 전체 기준 그대로). */
 function buildSubtitles(sceneNumbers, statusFn) {
   var setS = statusFn || function (m) { $("aeresult").textContent = m; };
