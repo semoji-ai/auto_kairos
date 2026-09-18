@@ -1,5 +1,6 @@
 import React from "react";
-import { AbsoluteFill } from "remotion";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
+import {VideoTrackLayer} from "./components/VideoTrackLayer";
 import { SceneSequencer } from "./components/SceneSequencer";
 import { SubtitleTrack } from "./components/SubtitleTrack";
 import { OverlayLayer } from "./components/OverlayLayer";
@@ -16,6 +17,13 @@ export const KairosVideo: React.FC<Props> = ({
   manifest,
   subtitleConfig,
 }) => {
+  const frame = useCurrentFrame();
+  let offset = 0;
+  const current = manifest.scenes.find(s => {
+    const start = offset;
+    offset += s.durationFrames ?? Math.max(1, Math.ceil(s.audioDurationSec * manifest.meta.fps));
+    return frame >= start && frame < offset;
+  });
   return (
     <DesignTokenProvider tokens={manifest.meta.designTokens}>
       <AbsoluteFill style={{ backgroundColor: "#000" }}>
@@ -28,6 +36,8 @@ export const KairosVideo: React.FC<Props> = ({
           fps={manifest.meta.fps}
         />
 
+        <VideoTrackLayer clips={manifest.videoClips} scene={current} />
+        <AbsoluteFill style={{zIndex: 3, pointerEvents: "none"}}>
         {/* Layer 3: GIF/Lottie 오버레이 */}
         <OverlayLayer scenes={manifest.scenes} fps={manifest.meta.fps} />
 
@@ -37,6 +47,7 @@ export const KairosVideo: React.FC<Props> = ({
           fps={manifest.meta.fps}
           config={subtitleConfig}
         />
+        </AbsoluteFill>
       </AbsoluteFill>
     </DesignTokenProvider>
   );

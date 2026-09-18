@@ -24,7 +24,7 @@ export const SubtitleTrack: React.FC<Props> = ({ scenes, fps, config }) => {
     <AbsoluteFill style={{ pointerEvents: "none" }}>
       {scenes.map((scene) => {
         const minFrames = scene.audioDurationSec > 0 ? 1 : 90;
-        const durationInFrames = Math.max(Math.ceil(scene.audioDurationSec * fps), minFrames);
+        const durationInFrames = scene.durationFrames ?? Math.max(Math.ceil(scene.audioDurationSec * fps), minFrames);
         const from = frameOffset;
         frameOffset += durationInFrames;
 

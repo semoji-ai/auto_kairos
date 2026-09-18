@@ -35,7 +35,7 @@ const SingleSceneInner: React.FC<Props> = ({ scene, meta }) => {
     : 90; // TTS 없으면 3초
 
   // 맵 씬 → MapSceneRenderer
-  if (scene.mapScene) {
+  if (scene.mapScene && !(scene as any).videoTrackSlices?.length) {
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
         <Suspense fallback={<MapFallback />}>

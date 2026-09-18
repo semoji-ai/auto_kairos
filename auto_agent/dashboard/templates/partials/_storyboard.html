@@ -2,6 +2,7 @@
 <!-- scene-thumb.js (썸네일 프리뷰) + scene-editor.js (에디터) -->
 <script src="/static/scene-thumb.js?v={{ static_version('scene-thumb.js') }}"></script>
 <script src="/static/scene-editor.js?v={{ static_version('scene-editor.js') }}"></script>
+<script src="/static/video-tracks.js?v={{ static_version('video-tracks.js') }}"></script>
 {% if scenes %}
 {# 아트스타일·캐릭터까지는 위에 붙여 둔다. 씬만 흘러야 고른 씬에 거는
    버튼이 화면에서 사라지지 않는다 — 아래까지 내려가 고른 뒤 다시 위로
@@ -17,6 +18,7 @@
   </div>
   <div class="sb-top-bar">
     <div class="sb-art-style-bar" id="sb-art-style-bar"></div>
+    <button type="button" onclick="openVideoTracks('{{ slug }}')">🎞 통합 비디오 트랙</button>
     <button class="btn-design-toggle" onclick="toggleDesignPanel()">🎨 Design</button>
   </div>
 
@@ -2828,3 +2830,4 @@ function sbRangePick(mode) {
 {% endif %}
 
 {% include "partials/_scene_media_js.html" %}
+<script>loadVideoTrackBadges({{ slug | tojson }});</script>

@@ -5,11 +5,18 @@
 조용히 얹지 않고 errors 로 드러낸다.
 """
 import json
+import pytest
 from pathlib import Path
 
 from backend import manifest, video_tracks
 
 JSX_DIR = Path(__file__).resolve().parents[1] / "cep" / "com.autokairos.pd" / "jsx"
+
+
+@pytest.fixture(autouse=True)
+def fake_probe(monkeypatch):
+    # Contract unit tests use placeholder bytes. Real ffprobe is tested separately.
+    monkeypatch.setattr("auto_agent.video_tracks.media_duration", lambda p: 12.0)
 
 
 def _proj(tmp_path, n_scenes=3):

@@ -844,6 +844,9 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         "bgm": None,
     }
 
+    from auto_agent.video_tracks import attach_manifest
+    attach_manifest(out_dir, manifest)
+
     _subtitle_override = (design_preset or {}).get("subtitle", {})
     subtitle_config = {
         "visible": True,

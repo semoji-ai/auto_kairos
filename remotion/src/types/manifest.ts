@@ -49,7 +49,20 @@ export interface DesignTokens {
   vizTitleFont?: string;
 }
 
+export interface VideoTrackClip {
+  clipId: string;
+  sourcePath: string;
+  sceneIds: string[];
+  timelineStartFrame: number;
+  timelineDurationFrames: number;
+  sourceIn: number;
+  sourceOut: number;
+  muted: boolean;
+}
+
 export interface SceneManifest {
+  videoClips?: VideoTrackClip[];
+  videoClipErrors?: string[];
   meta: {
     topic: string;
     resolution: { width: number; height: number };
@@ -85,6 +98,10 @@ export interface CanvasOverrides {
 }
 
 export interface SceneEntry {
+  sceneId?: string;
+  timelineStartFrame?: number;
+  durationFrames?: number;
+  videoTrackSlices?: VideoTrackClip[];
   sceneNumber: number;
   imagePath: string;
   audioPath: string;

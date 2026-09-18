@@ -27,7 +27,7 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
     : 150;
 
   // 맵 씬 → 실제 맵 렌더 (스토리보드와 스튜디오 결과 일치)
-  if (scene.mapScene) {
+  if (scene.mapScene && !(scene as any).videoTrackSlices?.length) {
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
         <MapSceneRenderer

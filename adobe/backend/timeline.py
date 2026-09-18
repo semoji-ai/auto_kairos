@@ -65,6 +65,11 @@ def comp_name(scene: dict) -> str:
 
 def scene_duration(proj_dir: Path, scene: dict) -> float:
     """씬 길이(초). TTS 오디오 → duration_estimate_sec → DEFAULT_DUR."""
+    if (Path(proj_dir) / "video_tracks.json").exists() and (Path(proj_dir) / "scene_specs.json").exists():
+        from backend.video_tracks import shared
+        for original, _, duration in shared.project_timings(proj_dir):
+            if original.get("sceneNumber") == scene.get("sceneNumber"):
+                return duration
     rel = scene.get("_audio")
     if rel:
         d = scene.get("_audio_dur")
@@ -96,5 +101,3 @@ def scene_timings(proj_dir: Path, data: dict, *, fps: float = FPS) -> list:
         out.append((s, frame / fps, nf / fps))
         frame += nf
     return out
-
-
