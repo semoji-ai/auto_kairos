@@ -18,6 +18,7 @@ import { CanvasScene } from "./simple/CanvasScene";
 import { MapSceneRenderer } from "./map/MapSceneRenderer";
 import { SceneRendererInner, TextureOverlay } from "./components/SceneRenderer";
 import { SubtitleOverlay } from "./components/SubtitleOverlay";
+import {VideoTrackLayer, activeTrack} from "./components/VideoTrackLayer";
 import { DesignPresetProvider, useDesignPreset } from "./design";
 import { buildFontFamily } from "./design/fonts";
 import type { SceneManifest, SubtitleConfig } from "./types/manifest";
@@ -53,7 +54,7 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
   for (let i = 0; i < manifest.scenes.length; i++) {
     const scene = manifest.scenes[i];
     const minFrames = scene.audioDurationSec > 0 ? 1 : 90;
-    const dur = Math.max(Math.ceil(scene.audioDurationSec * fps), minFrames);
+    const dur = scene.durationFrames ?? Math.max(Math.ceil(scene.audioDurationSec * fps), minFrames);
     const from = offset;
     offset += dur;
     timing.push({ scene, from, dur });
@@ -88,7 +89,7 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
           layout="none"
         >
           <AbsoluteFill>
-            {(scene as any)._canvas?.layers ? (
+            {activeTrack(manifest.videoClips, frame) ? null : (scene as any)._canvas?.layers ? (
               <CanvasScene
                 canvas={(scene as any)._canvas}
                 durationInFrames={dur}
@@ -103,12 +104,14 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
               </FadeWrap>
             ) : (
               <FadeWrap duration={dur} fade={10}>
-                <SceneRendererInner scene={scene} fps={fps} />
+                <SceneRendererInner scene={{...scene, videoTrackSlices: undefined}} fps={fps} />
               </FadeWrap>
             )}
             {/* 자막 — Sequence 안에서 SubtitleOverlay 사용 (subtitleConfig 반영) */}
             {subtitleConfig.visible !== false && scene.subtitles?.length > 0 && (
-              <SubtitleOverlay subtitles={scene.subtitles} fps={fps} config={subtitleConfig} />
+              <AbsoluteFill style={{zIndex: 3, pointerEvents: "none"}}>
+                <SubtitleOverlay subtitles={scene.subtitles} fps={fps} config={subtitleConfig} />
+              </AbsoluteFill>
             )}
             {/* topLayer 텍스처 — 자막 위에 렌더 (preset.texture.topLayer:true 시) */}
             {(() => {
@@ -121,6 +124,9 @@ const SimpleVideoInner: React.FC<Props> = ({ manifest, subtitleConfig }) => {
           </AbsoluteFill>
         </Sequence>
       ))}
+
+      <VideoTrackLayer clips={manifest.videoClips}
+        scene={timing.find(t => frame >= t.from && frame < t.from + t.dur)?.scene} />
 
       {/* BGM */}
       {manifest.bgm && manifest.bgm.path && (
@@ -149,4 +155,3 @@ const FadeWrap: React.FC<{
   );
   return <AbsoluteFill style={{ opacity }}>{children}</AbsoluteFill>;
 };
-

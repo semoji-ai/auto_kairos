@@ -586,7 +586,7 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
             res = _vt.save(proj_dir, b.get("data") or {},
                            expect_revision=b.get("revision"))
             if res.get("error"):
-                return 409, res
+                return (409 if "revision" in res else 422), res
             r = _vt.resolve(proj_dir, _vt.load(proj_dir))
             return 200, {**res, "resolved": {"clips": r["clips"],
                                              "covered": sorted(r["covered"]),

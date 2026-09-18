@@ -15,7 +15,7 @@ export const OverlayLayer: React.FC<Props> = ({ scenes, fps }) => {
   return (
     <AbsoluteFill className="pointer-events-none">
       {scenes.map((scene) => {
-        const durationInFrames = Math.ceil(scene.audioDurationSec * fps);
+        const durationInFrames = scene.durationFrames ?? Math.ceil(scene.audioDurationSec * fps);
         const from = frameOffset;
         frameOffset += durationInFrames;
 

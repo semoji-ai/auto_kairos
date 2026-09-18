@@ -5,7 +5,8 @@
  * 맵 씬은 MapSceneRenderer(lazy)로 처리.
  */
 import React, { lazy, Suspense } from "react";
-import { AbsoluteFill } from "remotion";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
+import {activeTrack} from "../components/VideoTrackLayer";
 import { DesignPresetProvider, useDesignPreset } from "../design";
 import { buildFontFamily } from "../design/fonts";
 import { SceneRendererInner } from "../components/SceneRenderer";
@@ -27,6 +28,7 @@ interface Props {
 }
 
 const SingleSceneInner: React.FC<Props> = ({ scene, meta }) => {
+  const frame = useCurrentFrame();
   const preset = useDesignPreset();
   const fontFamily = buildFontFamily(preset);
   const fps = meta?.fps || 30;
@@ -35,7 +37,7 @@ const SingleSceneInner: React.FC<Props> = ({ scene, meta }) => {
     : 90; // TTS 없으면 3초
 
   // 맵 씬 → MapSceneRenderer
-  if (scene.mapScene) {
+  if (scene.mapScene && !activeTrack(scene.videoTrackSlices, frame)) {
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
         <Suspense fallback={<MapFallback />}>

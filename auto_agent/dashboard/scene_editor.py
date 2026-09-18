@@ -1147,6 +1147,9 @@ async def get_scene_for_editor(project_ref: str, scene_num: int, request: Reques
         try:
             mdata = _json.loads(manifest_path.read_text(encoding="utf-8"))
             manifest = mdata.get("manifest", mdata)
+            from auto_agent.video_tracks import attach_manifest, web_paths
+            attach_manifest(Path(out_dir), manifest)
+            web_paths(manifest, f"/output/{dir_name}/")
             for mscene in manifest.get("scenes", []):
                 if mscene.get("sceneNumber") == scene_num:
                     # manifest 경로 rewrite: project/ → /output/{dir}/

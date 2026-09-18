@@ -101,7 +101,9 @@ export const SceneEditor: React.FC<Props> = ({ manifest, sceneNumber, subtitleCo
       <SceneRendererInner scene={mergedScene} fps={fps} />
       {/* 자막 오버레이 */}
       {subtitleConfig.visible !== false && mergedScene.subtitles?.length > 0 && (
-        <SubtitleOverlay subtitles={mergedScene.subtitles} fps={fps} config={subtitleConfig} />
+        <AbsoluteFill style={{zIndex: 3, pointerEvents: "none"}}>
+          <SubtitleOverlay subtitles={mergedScene.subtitles} fps={fps} config={subtitleConfig} />
+        </AbsoluteFill>
       )}
       {/* 오디오 */}
       {mergedScene.audioPath ? <Audio src={resolveAsset(mergedScene.audioPath)} /> : null}

@@ -6,7 +6,8 @@
  * 수정은 여기서만 하면 3뷰가 동일하게 반영됨.
  */
 import React from "react";
-import { AbsoluteFill, Img, OffthreadVideo, staticFile, useVideoConfig } from "remotion";
+import { AbsoluteFill, Img, OffthreadVideo, staticFile, useVideoConfig, useCurrentFrame } from "remotion";
+import { VideoTrackLayer, activeTrack } from "./VideoTrackLayer";
 import { CreativeScene } from "../simple/CreativeScene";
 import { useDesignPreset } from "../design";
 import { DEFAULT_PRESET } from "../design/defaults";
@@ -76,7 +77,7 @@ export const VideoBg: React.FC<{
   startSec?: number;
   endSec?: number;
   volume?: number;
-}> = ({ src, opacity, startSec = 0, volume = 0 }) => {
+}> = ({ src, opacity, startSec = 0, endSec, volume = 0 }) => {
   const { fps } = useVideoConfig();
   const startFrom = Math.round(startSec * fps);
   return (
@@ -90,6 +91,7 @@ export const VideoBg: React.FC<{
           opacity,
         }}
         startFrom={startFrom}
+        endAt={endSec != null && endSec > startSec ? Math.round(endSec * fps) : undefined}
         volume={volume}
         muted={volume === 0}
         playbackRate={1}
@@ -231,7 +233,15 @@ const AttributionTag: React.FC<{ text?: string; status?: string }> = ({ text, st
  * SceneRendererInner — DesignPresetProvider 안에서 호출됨.
  * 모든 이미지/레이아웃 분기를 여기서 통합 처리.
  */
-export const SceneRendererInner: React.FC<SceneRendererProps> = ({ scene, fps = 30 }) => {
+export const SceneRendererInner: React.FC<SceneRendererProps> = ({scene, fps = 30}) => {
+  const frame = useCurrentFrame();
+  if (activeTrack(scene.videoTrackSlices, frame)) {
+    return <VideoTrackLayer clips={scene.videoTrackSlices} scene={scene} />;
+  }
+  return <SceneRendererBase scene={scene} fps={fps} />;
+};
+
+const SceneRendererBase: React.FC<SceneRendererProps> = ({ scene, fps = 30 }) => {
   const preset = useDesignPreset();
   usePresetFonts();
   const fontFamily = buildFontFamily(preset);

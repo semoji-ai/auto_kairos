@@ -76,6 +76,8 @@ app.include_router(memory_router)
 app.include_router(vault_router)
 app.include_router(scene_editor_router)
 app.include_router(manifest_router)
+from auto_agent.dashboard.video_tracks import router as video_tracks_router
+app.include_router(video_tracks_router)
 app.include_router(design_presets_router)
 app.include_router(video_router)
 app.include_router(layer_router)
@@ -661,6 +663,9 @@ async def get_manifest_for_project(dir_name: str):
     # project/ 경로 → /output/{dir_name}/ 으로 서버 사이드 rewrite
     prefix = f"/output/{dir_name}/"
     manifest = data.get("manifest", data)
+    from auto_agent.video_tracks import attach_manifest, web_paths
+    attach_manifest(workspace / "output" / dir_name, manifest)
+    web_paths(manifest, prefix)
     for scene in manifest.get("scenes", []):
         for key in ("imagePath", "vizBackgroundPath", "audioPath", "videoPath", "videoThumbPath"):
             val = scene.get(key, "")

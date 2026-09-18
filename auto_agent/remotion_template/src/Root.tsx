@@ -125,7 +125,7 @@ function calcTotalFrames(manifest: SceneManifest): number {
   const totalFrames = manifest.scenes.reduce(
     (acc, s) => {
       const minFrames = s.audioDurationSec > 0 ? 1 : 90;
-      const dur = Math.max(Math.ceil(s.audioDurationSec * fps), minFrames);
+      const dur = s.durationFrames ?? Math.max(Math.ceil(s.audioDurationSec * fps), minFrames);
       return acc + dur;
     },
     0,
@@ -194,7 +194,7 @@ export const RemotionRoot: React.FC = () => {
                 (s) => s.sceneNumber === props.sceneNumber,
               );
               const duration = scene
-                ? Math.ceil(scene.audioDurationSec * fps)
+                ? (scene.durationFrames ?? Math.ceil(scene.audioDurationSec * fps))
                 : 1;
               return {
                 durationInFrames: Math.max(duration, 1),

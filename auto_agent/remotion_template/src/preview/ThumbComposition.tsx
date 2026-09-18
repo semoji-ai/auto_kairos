@@ -5,7 +5,8 @@
  * 스튜디오/씬에디터와 동일하게 맵/비디오 분기를 실제로 렌더한다.
  */
 import React from "react";
-import { AbsoluteFill } from "remotion";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
+import {activeTrack} from "../components/VideoTrackLayer";
 import { DesignPresetProvider } from "../design";
 import { useDesignPreset } from "../design";
 import { buildFontFamily } from "../design/fonts";
@@ -19,6 +20,7 @@ interface Props {
 }
 
 const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
+  const frame = useCurrentFrame();
   const preset = useDesignPreset();
   const fontFamily = buildFontFamily(preset);
   const fps = meta?.fps || 30;
@@ -27,7 +29,7 @@ const ThumbInner: React.FC<Props> = ({ scene, meta }) => {
     : 150;
 
   // 맵 씬 → 실제 맵 렌더 (스토리보드와 스튜디오 결과 일치)
-  if (scene.mapScene) {
+  if (scene.mapScene && !activeTrack(scene.videoTrackSlices, frame)) {
     return (
       <AbsoluteFill style={{ backgroundColor: preset.colors.bg, fontFamily }}>
         <MapSceneRenderer
