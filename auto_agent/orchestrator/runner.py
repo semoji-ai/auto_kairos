@@ -1229,7 +1229,8 @@ class PipelineRunner:
             # blocking step 실패 시 전체 파이프라인 중단
             if self.state.failed_steps:
                 blocking_fails = [s for s in self.state.failed_steps
-                                  if not any(st.get("blocking") is False
+                                  if self.state.results.get(s, {}).get("error", "").startswith("FATAL:")
+                                  or not any(st.get("blocking") is False
                                              for st in steps if st["id"] == s)]
                 if blocking_fails:
                     print(f"\n  *** 파이프라인 중단: {blocking_fails} 실패 ***")
@@ -1841,6 +1842,10 @@ class PipelineRunner:
                 except Exception:
                     pass
 
+        if (self.project_dir / "sentence_inventory.json").exists() and step_id in {
+            "step_2", "step_2_review", "step_2_consistency", "step_2_data", "step_2b", "step_2c", "step_4"
+        }:
+            return self._scene_coverage_failure(step_id) or result
         return result  # 기본: 원래 결과 유지
 
     def _run_sequential(self, steps: List[dict]):
@@ -2083,6 +2088,25 @@ class PipelineRunner:
         agent_name = step.get("agent", "script-director")
         label = _step_label(step_name, "start").replace(" 시작합니다", "")
 
+        # Every step_2 entry (including --only and forced re-splits) uses the
+        # same source contract. Resume never silently regenerates existing work.
+        if step_id == "step_2":
+            from auto_agent.modules.scene_coverage_module import prepare, check_project
+            try:
+                ledger = prepare(self.project_dir)
+            except (OSError, ValueError) as exc:
+                return StepResult(step_id=step_id, status="failed", error=f"FATAL: {exc}")
+            if (self.project_dir / "scene_specs.json").exists() and not getattr(self, "_force", False):
+                report = check_project(self.project_dir)
+                if report["ok"]:
+                    return StepResult(step_id=step_id, status="skipped")
+                return StepResult(step_id=step_id, status="failed",
+                                  error="FATAL: 기존 씬과 원고 불일치. 기존 파일 보존; 원고 확인 후 --force로 재분할: " + str(report["errors"]))
+            chapters = {}
+            for row in ledger["sentences"]:
+                chapters.setdefault(row["chapter"], []).append(row["text"])
+            return self._run_chunked_from_manuscript(step, {ch: "\n".join(parts) for ch, parts in chapters.items()})
+
         # scene_specs 로드 (없으면 scene_decomposition.json에서 폴백)
         # scene_specs가 아직 없는 생성 단계(script-director 등)는 단일 agent로 전환
         specs_path = self.project_dir / "scene_specs.json"
@@ -2197,7 +2221,7 @@ class PipelineRunner:
                 except Exception:
                     pass
 
-        if failed_chapters and execution_profile(self.state.config) != "legacy":
+        if failed_chapters and (step_id == "step_2" or execution_profile(self.state.config) != "legacy"):
             error = f"챕터 검증 실패: {sorted(failed_chapters)} — 기존 scene_specs 보존"
             self.pm.fail_pipeline_run(run_id, error)
             return StepResult(step_id=step_id, status="failed", error=error,
@@ -3193,7 +3217,7 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             for k in ("tokens_in", "tokens_out", "cost_usd"):
                 total_cost[k] += ch_result.cost_info.get(k, 0)
 
-        if failed_chapters and execution_profile(self.state.config) != "legacy":
+        if failed_chapters and (step_id == "step_2" or execution_profile(self.state.config) != "legacy"):
             error = f"챕터 검증 실패: {sorted(failed_chapters)} — 기존 scene_specs 보존"
             self.pm.fail_pipeline_run(run_id, error)
             return StepResult(step_id=step_id, status="failed", error=error,
@@ -3227,7 +3251,18 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         for i, scene in enumerate(all_scenes, start=1):
             scene["sceneNumber"] = i
 
-        coverage = self._narration_coverage(all_scenes)
+        coverage = self._narration_coverage(all_scenes) if step_id != "step_2" else None
+        if step_id == "step_2":
+            from auto_agent.modules.scene_coverage_module import validate
+            report = validate(
+                json.loads((self.project_dir / "sentence_inventory.json").read_text(encoding="utf-8")),
+                (self.project_dir / "final_manuscript.md").read_text(encoding="utf-8"),
+                {"scenes": all_scenes},
+            )
+            if not report["ok"]:
+                error = "FATAL: 씬 원문 보존 검증 실패: " + str(report["errors"])
+                self.pm.fail_pipeline_run(run_id, error)
+                return StepResult(step_id=step_id, status="failed", error=error)
         if coverage is not None:
             tag = "✓" if coverage >= 0.95 else "✗"
             print(f"    [나레이션 보존] 원고 대비 {coverage:.0%} {tag}", flush=True)
@@ -3242,6 +3277,13 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
                 )
 
         merged = {"scenes": all_scenes}
+        if step_id == "step_2" and specs_path.exists():
+            # Preserve the exact previous version and project-level metadata.
+            previous = specs_path.read_text(encoding="utf-8")
+            backup_dir = self.project_dir / "scene_split_backups"
+            backup_dir.mkdir(exist_ok=True)
+            (backup_dir / f"scene_specs_{uuid4().hex}.json").write_text(previous, encoding="utf-8")
+            merged = {**json.loads(previous), "scenes": all_scenes}
         specs_path.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
 
         # 이미지 매핑 reconcile (씬번호 변경 시 image_assets + image_candidates 재매핑)
@@ -3482,6 +3524,12 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
             _rows.append(f"{head}\n    {body}")
         scene_table = "\n".join(_rows)
 
+        # New splits start from every sentence, not the author's --- blocks.
+        sentence_rows = None
+        if step_id == "step_2":
+            ledger = json.loads((self.project_dir / "sentence_inventory.json").read_text(encoding="utf-8"))
+            sentence_rows = [r for r in ledger["sentences"] if r["chapter"] == chapter_num]
+
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
 작업 디렉토리: {self.project_dir}
@@ -3525,6 +3573,33 @@ JSON 구조:
 
 {context_memory_block}"""
 
+        if sentence_rows is not None:
+            prompt = f"""프로젝트: {self.project_slug}
+작업 디렉토리: {self.project_dir}
+SCRIPT_DIRECTOR_MODE: chapters
+SCRIPT_DIRECTOR_CHAPTER: {chapter_num}
+아래는 최종 씬이 아닌 문장 전수 목록입니다. 모든 id를 정확히 한 번, 원문 순서로 사용하세요.
+각 문장의 앞뒤를 보고 같은 화면/행동/의미면 묶고, 시간·장소·주체·시각적 초점이 달라지면 나누세요.
+문장 수나 글자 수는 강제 경계가 아닙니다. 기존 --- 경계나 계획의 병합 지시보다 문맥과 원문 보존이 우선입니다.
+먼저 씬 배분을 결정하고 그 다음 장면/도해/자료 연출을 결정하세요. narration은 코드가 원문으로 채웁니다.
+{context_block}
+<sentence_inventory>
+{json.dumps(sentence_rows, ensure_ascii=False)}
+</sentence_inventory>
+{tmp_path} 에 JSON을 저장하세요:
+{{"scenes": [{{"sourceSentences": [1, 2], "splitReason": "앞뒤 맥락에 따른 이유", "layout": "cinematic", "motion": "cinematic_fade", "imageAsset": {{}}}}]}}
+sourceSentences는 위 실제 id만 사용합니다. 빈 씬, 누락, 중복, 재정렬은 실패입니다.
+한 문장 내부를 나눠야 하면 그 씬에서는 sourceSentences 대신 sourceSpans를 사용하세요.
+예: "sourceSpans": [{{"id": 1, "start": 0, "end": 8}}].
+start/end는 목록 text의 0부터 시작하는 유니코드 문자 인덱스이고 end는 미포함입니다.
+앞 씬 끝과 다음 씬 시작을 이어 모든 문자를 정확히 한 번 배분해야 합니다. 두 배분 필드를 동시에 쓰지 마세요.
+characters/captions/productionNotes는 제작 지시이며 narration이 아닙니다.
+captions는 블록 공통 참고입니다. 자동 표시 기본 위치는 captionAnchor 문장의 시작이며 이후 씬마다 반복하지 마세요.
+각 씬에는 기존 연출 스키마 필드를 함께 채우되 narration은 쓰지 마세요.
+앵글이나 화면 크기가 달라지는 컷은 별도 flat scene으로 배분합니다. 씬 하위 cuts 배열을 만들지 마세요.
+지정한 임시 JSON 외에 원고·목록·기존 scene_specs.json을 수정하지 마세요.
+{context_memory_block}"""
+
         model = step.get("single_call_model", "claude-opus-4-6")
         timeout_sec = self._get_agent_timeout(agent_name)
 
@@ -3564,6 +3639,9 @@ JSON 구조:
                                  error="씬 데이터 없음", cost_info=cost_info, duration_sec=elapsed)
 
         try:
+            if sentence_rows is not None:
+                from auto_agent.modules.scene_coverage_module import allocate
+                skeleton, scenes = allocate(sentence_rows, scenes)
             self._validate_chapter_coverage(scenes, skeleton)
         except (ValueError, TypeError) as exc:
             return ChapterResult(chapter=chapter_num, status="failed", error=str(exc),
@@ -3574,6 +3652,9 @@ JSON 구조:
         # 에이전트가 narration을 냈더라도 버린다.
         DIRECTION_ONLY = {"narration", "sceneNumber", "chapter", "beat", "infoStructure",
                           "keyVisual", "_chars", "_captions", "_blocks", "_note"}
+        if sentence_rows is not None:
+            DIRECTION_ONLY -= {"beat", "infoStructure", "keyVisual"}
+            DIRECTION_ONLY |= {"sourceSentences", "sourceSpans", "characters", "productionNotes"}
         by_num = {}
         for s in scenes:
             try:
@@ -3859,7 +3940,32 @@ JSON 구조:
     # Step 실행
     # ─────────────────────────────────────
 
+    def _scene_coverage_failure(self, step_id: str) -> StepResult | None:
+        from auto_agent.modules.scene_coverage_module import check_project
+        report = check_project(self.project_dir)
+        if not report["ok"]:
+            return StepResult(step_id=step_id, status="failed",
+                              error="FATAL: 씬 원문 보존 검증 실패. 원고부터 수정 후 prepare/재분할 필요: " + str(report["errors"]))
+        return None
+
     def _execute_step(self, step: dict) -> StepResult:
+        # Existing projects without an inventory remain untouched until step_2.
+        # Once opted in, review/consistency and production cannot bypass coverage.
+        guarded = (self.project_dir / "sentence_inventory.json").exists() and (
+            "scene_specs.json" in step.get("input", [])
+            or "scene_specs.json" in step.get("output", [])
+            or getattr(self.state, "current_phase", "") in {"stage_3", "stage_4"}
+        ) and step["id"] != "step_2"
+        if guarded and not step.get("skip"):
+            failure = self._scene_coverage_failure(step["id"])
+            if failure:
+                return failure
+        result = self._execute_step_unchecked(step)
+        if guarded and not step.get("skip"):
+            return self._scene_coverage_failure(step["id"]) or result
+        return result
+
+    def _execute_step_unchecked(self, step: dict) -> StepResult:
         """단일 step 실행. 타입에 따라 에이전트 or 모듈 호출."""
         step_id = step["id"]
         step_name = step.get("name", step_id)
@@ -5011,6 +5117,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
         # 모듈별 스크립트 매핑 (PACKAGE_DIR 기준)
         script_map = {
+            "scene_sentence_inventory": "modules/scene_coverage_module.py",
+            "scene_coverage_gate": "modules/scene_coverage_module.py",
             "preflight": "scripts/preflight_check.py",
             "editorial_brief": "modules/editorial_brief_module.py",
             "brief_review": "modules/brief_review_module.py",
@@ -5080,6 +5188,8 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 
         # manifest-builder는 project_id + storage_key 인자 필요
         cmd = [sys.executable, str(script_path)]
+        if module_name in ("scene_sentence_inventory", "scene_coverage_gate"):
+            cmd.append("prepare" if module_name == "scene_sentence_inventory" else "validate")
         if module_name == "manifest-builder":
             pid = str(self.project.get("id", self.project_slug))
             sk = str(self.sync.storage_key) if self.sync and self.sync.storage_key else self.project_slug

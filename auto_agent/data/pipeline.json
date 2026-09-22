@@ -419,6 +419,17 @@
           "notes": "에이전트가 SKILL.md의 자체 래칫 루프 수행(최대 3R) — 개정본은 drafts/v{N}.md, final_manuscript.md는 최신본과 동기화. blocking:false로 점수 무관 진행. legacy_only — v4-bridge 원작 프로젝트는 PD가 이미 drafts/v{n}으로 개정했으므로 스킵. factcheck_report/fact_fix_log는 재실행 시에만 존재하는 선택 입력 — 하류 정정을 브리프 근거로 되돌리는 사고를 막기 위해 주입한다(G5 근거 우선순위)."
         },
         {
+          "id": "step_2_sentences",
+          "name": "sentence_inventory",
+          "type": "module",
+          "module": "scene_sentence_inventory",
+          "input": ["final_manuscript.md"],
+          "output": ["sentence_inventory.json"],
+          "blocking": true,
+          "skip_resume": true,
+          "description": "확정 원고의 모든 문장을 기계적으로 목록화. 최종 씬 경계는 다음 단계에서 앞뒤 맥락으로 판단."
+        },
+        {
           "id": "step_2_plan",
           "name": "direction_plan",
           "description": "편 전체를 한 번에 보고 리듬·정보구조·씬 병합을 설계. chapters 모드는 챕터별 병렬이라 편 전체를 못 보므로 이 단계가 먼저 전역 판단을 내린다.",
@@ -437,7 +448,7 @@
         {
           "id": "step_2",
           "name": "script_split_and_direct",
-          "description": "final_manuscript.md를 의미 단위로 자르고 각 씬에 layout/motion/mood/imageAsset 결정. narration은 manuscript에서 substring으로 가져옴 (재작성 금지).",
+          "description": "sentence_inventory.json의 모든 문장을 앞뒤 맥락으로 묶거나 분리한 뒤 연출 결정. 원문 보존, 누락·중복·순서 변경 금지.",
           "agent": "script-director",
           "model": "sonnet",
           "mode": "chapters",
@@ -449,6 +460,7 @@
           "input": [
             "outline.json",
             "final_manuscript.md",
+            "sentence_inventory.json",
             "targeted_claims.json",
             "art_style.json",
             "project_config"
@@ -463,6 +475,17 @@
             "shared/remotion-design-system"
           ],
           "notes": "final_manuscript.md의 prose를 의미 단위로 분할 + 각 씬에 layout/motion/mood/imageAsset/headline 결정. ⚠️ narration 재작성 금지 — manuscript에서 substring으로만 가져옴 (post-validation hook 검증)."
+        },
+        {
+          "id": "step_2_coverage",
+          "name": "scene_coverage_gate",
+          "type": "module",
+          "module": "scene_coverage_gate",
+          "input": ["final_manuscript.md", "sentence_inventory.json", "scene_specs.json"],
+          "output": ["scene_coverage_report.json"],
+          "blocking": true,
+          "skip_resume": true,
+          "description": "전체 원문과 씬 내레이션을 순서대로 대조. 누락·중복·추가·재작성·챕터 경계 오류 시 중단."
         },
         {
           "id": "step_2_review",
