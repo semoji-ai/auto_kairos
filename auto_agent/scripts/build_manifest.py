@@ -81,6 +81,9 @@ def _background_preset_path(scene: dict, image_path: str, public_dir: Path) -> s
     preset = (scene.get("backgroundPreset") or "").strip().lstrip("/")
     if image_path or not preset or scene.get("visual_mode") != "text_overlay":
         return ""
+    # 「이미지 없음」을 명시한 씬은 배경도 비운다 — 렌더러의 source:none 분기와 같은 뜻
+    if (scene.get("imageAsset") or {}).get("source") == "none":
+        return ""
     if not (public_dir / preset).exists():
         return ""
     return "/" + preset
@@ -582,6 +585,9 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         _preset_bg = _background_preset_path(scene, image_path, workspace / "remotion" / "public")
         if _preset_bg:
             entry["vizBackgroundPath"] = _preset_bg
+            # imageAsset이 없으면 렌더러가 배경 이미지를 0.35로 흐리게 그린다.
+            # 문구 배경은 원래 명도로 화면을 꽉 채운다.
+            entry["imageAsset"] = {"placement": "background", "opacity": 1.0, "fit": "cover"}
         if person_images:
             entry["images"] = person_images
         elif scene.get("layout") in ("person_card", "images_grid") and scene.get("images"):

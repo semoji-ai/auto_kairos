@@ -32,6 +32,11 @@ def test_missing_preset_file_is_ignored(tmp_path):
     assert _background_preset_path(scene, "", _public(tmp_path)) == ""
 
 
+def test_explicit_image_source_none_keeps_blank(tmp_path):
+    scene = {"visual_mode": "text_overlay", "backgroundPreset": GRID, "imageAsset": {"source": "none"}}
+    assert _background_preset_path(scene, "", _public(tmp_path)) == ""
+
+
 def test_leading_slash_is_normalised(tmp_path):
     scene = {"visual_mode": "text_overlay", "backgroundPreset": "/" + GRID}
     assert _background_preset_path(scene, "", _public(tmp_path)) == "/" + GRID
