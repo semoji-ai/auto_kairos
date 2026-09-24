@@ -72,6 +72,20 @@ def _load_project_config(project_id: str, project_dir: str = None) -> dict:
     return {}
 
 
+def _background_preset_path(scene: dict, image_path: str, public_dir: Path) -> str:
+    """이미지 없는 text_overlay 씬의 backgroundPreset → 렌더러가 읽는 /background/... 경로.
+
+    선택 이미지가 있으면 그 이미지가 우선이다. 파일이 public/ 에 없으면 빈 값 —
+    없는 배경을 가리키면 렌더러가 깨진 이미지를 그린다.
+    """
+    preset = (scene.get("backgroundPreset") or "").strip().lstrip("/")
+    if image_path or not preset or scene.get("visual_mode") != "text_overlay":
+        return ""
+    if not (public_dir / preset).exists():
+        return ""
+    return "/" + preset
+
+
 def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     """로컬 파일 기반 manifest 빌드.
     이미지/오디오 경로를 Remotion staticFile() 상대 경로로 설정.
@@ -565,6 +579,9 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             "transition": transition,
             "vizAnimation": viz_animation,
         }
+        _preset_bg = _background_preset_path(scene, image_path, workspace / "remotion" / "public")
+        if _preset_bg:
+            entry["vizBackgroundPath"] = _preset_bg
         if person_images:
             entry["images"] = person_images
         elif scene.get("layout") in ("person_card", "images_grid") and scene.get("images"):
