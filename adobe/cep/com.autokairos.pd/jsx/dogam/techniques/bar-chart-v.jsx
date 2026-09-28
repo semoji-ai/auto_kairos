@@ -34,7 +34,7 @@ AKD.register("bar-chart-v", {
     var t = A.text(X.comp, C.title, A.name(X, "막대 리본 글자"), { font: A.FONT.neoHv, size: size, fill: "#ffffff" });
     A.centerText(t); A.P(t).setValue([X.comp.width / 2, y + h / 2]);
     A.P(s).setValue([X.comp.width / 2, y]);
-    t.setParentWithJump(s);
+    AKD.parent(t, s);
     A.shadow(s, 10, 16, 0.28);
     A.anim(A.P(s), [X.t, X.f(Math.max(1, P.ribbonDrop))], [[X.comp.width / 2, y - (y + h + 60)], [X.comp.width / 2, y]], "cubicOut");
     s.inPoint = t.inPoint = X.t;
@@ -42,10 +42,13 @@ AKD.register("bar-chart-v", {
   /** 위쪽만 둥근 막대: 둥근 사각형 + 아래 절반 덮는 사각형. 크기·위치 키를 높이 bh(g) 에 맞춰 */
   bar: function (X, name, x, baseY, barW, bhEnd, color, t0, dur, ez) {
     var A = AKD, s = A.shapeLayer(X.comp, name), root = s.property("ADBE Root Vectors Group");
-    var g = A.group(root, "막대"), rr = g.addProperty("ADBE Vector Shape - Rect");
-    rr.property("ADBE Vector Rect Roundness").setValue(10);
-    var sq = g.addProperty("ADBE Vector Shape - Rect");
+    var g = A.group(root, "막대");
+    g.addProperty("ADBE Vector Shape - Rect"); g.addProperty("ADBE Vector Shape - Rect");
     A.paint(g, color);
+    // 속성을 더하면 앞서 받은 참조가 무효 — 다 붙인 뒤 순서로 다시 찾습니다(1 = 둥근 사각형, 2 = 아래 덮개)
+    g = s.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group");
+    var rr = g.property(1), sq = g.property(2);
+    rr.property("ADBE Vector Rect Roundness").setValue(10);
     A.P(s).setValue([x + barW / 2, baseY]); A.AP(s).setValue([0, 0]);
     var t1 = t0 + dur * X.fd, e = ez;
     A.anim(rr.property("ADBE Vector Rect Size"), [t0, t1], [[barW, 0], [barW, bhEnd]], e);

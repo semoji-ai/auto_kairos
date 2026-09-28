@@ -34,19 +34,16 @@ AKD.register("dim-cutaway-drop-exit", {
     adj.moveAfter(lowest); dark.moveAfter(adj);
     // 컷어웨이 레이어들(말풍선·인물)보다 딤이 아래 — 인물이 부모 널을 가진 경우도 레이어 순서는 그대로
     var e0 = P.exitAt, drop = P.exit === "drop";
-    var kIn = [X.t, X.f(P.dimLen)];
+    var kIn = [X.t, X.f(P.dimLen)], kOut = [X.f(e0), X.f(e0 + P.undimLen)];
+    // 효과를 하나 더 붙이면 앞서 받아 둔 효과 참조가 무효가 됩니다 — 효과마다 붙이고 곧바로 키를 끝냅니다
     A.anim(A.O(dark), kIn, [0, 100 * P.dim], "quadOut");
-    var gb = A.gblur(adj, "컷어웨이 블러");
-    A.anim(gb.property("ADBE Gaussian Blur 2-0001"), kIn, [0, P.blur * A.BLUR_K], "quadOut");
-    var tf = A.fx(adj, "ADBE Geometry2", "컷어웨이 102%");
-    A.anim(tf.property("ADBE Geometry2-0003"), kIn, [100, 102], "quadOut");
-    if (drop) {
-      // 딤 해제: k·(1→0) quadOut, undimLen
-      var kOut = [X.f(e0), X.f(e0 + P.undimLen)];
-      A.anim(A.O(dark), kOut, [100 * P.dim, 0], "quadOut");
-      A.anim(gb.property("ADBE Gaussian Blur 2-0001"), kOut, [P.blur * A.BLUR_K, 0], "quadOut");
-      A.anim(tf.property("ADBE Geometry2-0003"), kOut, [102, 100], "quadOut");
-    }
+    if (drop) { A.anim(A.O(dark), kOut, [100 * P.dim, 0], "quadOut"); }   // 딤 해제: k·(1→0) quadOut, undimLen
+    var gb = A.gblur(adj, "컷어웨이 블러").property("ADBE Gaussian Blur 2-0001");
+    A.anim(gb, kIn, [0, P.blur * A.BLUR_K], "quadOut");
+    if (drop) { A.anim(gb, kOut, [P.blur * A.BLUR_K, 0], "quadOut"); }
+    var tf = A.fx(adj, "ADBE Geometry2", "컷어웨이 102%").property("ADBE Geometry2-0003");
+    A.anim(tf, kIn, [100, 102], "quadOut");
+    if (drop) { A.anim(tf, kOut, [102, 100], "quadOut"); }
     adj.inPoint = dark.inPoint = X.t;
     if (drop) { adj.outPoint = dark.outPoint = X.f(e0 + P.undimLen); }
     // 인물 슬라이드업(expoOut)
@@ -83,7 +80,7 @@ AKD.register("dim-cutaway-drop-exit", {
         // 이미 부모(까딱까딱 널 등)가 있으면 그 최상위 부모를 낙하 널에 답니다
         while (top.parent && !(created && top.parent === nul)) { top = top.parent; }
         if (top === nul) { continue; }
-        if (created || top !== all[i]) { top.setParentWithJump(nul); } else { A.setAttr(top, "parent", nul); }
+        if (created || top !== all[i]) { AKD.parent(top, nul); } else { A.setAttr(top, "parent", nul); }
         var db = A.fx(all[i], "ADBE Motion Blur", "낙하 모션블러");
         db.property("ADBE Motion Blur-0001").setValue(0);   // 방향 0° = 세로
         var L2 = db.property("ADBE Motion Blur-0002"), mid = P.dropLen / 2;

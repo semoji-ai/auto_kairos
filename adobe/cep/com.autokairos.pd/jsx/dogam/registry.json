@@ -472,8 +472,8 @@
    "previewMp4": "jsx/dogam/assets/previews_src/core-28.mp4",
    "kind": "layer",
    "create": false,
-   "support": "native",
-   "aeNote": "",
+   "support": "partial",
+   "aeNote": "까딱·눈 깜빡임은 그대로, 패럴랙스 흐름(drift·bgPar·fgPar)은 아직 옮기지 않았습니다.",
    "params": [
     {
      "key": "bobFrames",

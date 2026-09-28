@@ -58,7 +58,7 @@ AKD.register("scroll-label", {
       rods.push(rod);
     }
     var all = [body].concat(rods);
-    for (var i = 0; i < all.length; i++) { all[i].inPoint = X.t; all[i].setParentWithJump(grp); }
+    for (var i = 0; i < all.length; i++) { all[i].inPoint = X.t; AKD.parent(all[i], grp); }
     grp.inPoint = X.t;
     // 스프링 팝(극값 키)
     var n = 40;

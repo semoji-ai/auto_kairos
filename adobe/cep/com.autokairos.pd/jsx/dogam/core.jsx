@@ -133,7 +133,7 @@ var AKD = (typeof AKD === "object" && AKD) ? AKD : {};
         T[key] = { layer: layer, attr: name, orig: orig, times: [], path: [] };
       }
     }
-    if (name === "parent") { layer.setParentWithJump(value || null); } else { layer[name] = value; }
+    if (name === "parent") { A.parent(layer, value || null); } else { layer[name] = value; }
   };
   A.created = function (layer) { if (A._rec && (!A._rec.comp || layer.containingComp === A._rec.comp)) { A._rec.created.push(layer); } return layer; };
 
@@ -154,10 +154,34 @@ var AKD = (typeof AKD === "object" && AKD) ? AKD : {};
     for (var j = 0; j < n; j++) { d.push((j < a.length && j < b.length) ? (b[j] - a[j]) : 0); }   // 스케일은 3차원(z) — 안 준 축은 0
     return d;
   }
+  /* 패스(마스크·도형) 값은 템포럴 이즈 속도가 숫자가 아니라 환산할 수 없습니다.
+     이징 구간은 프레임마다 모양을 보간해 선형 키로 굽습니다(선형·홀드 구간은 키 두 개). 정점 수가 같은 모양끼리만 */
+  function lerpShape(a, b, k) {
+    function L(x, y) { var o = []; for (var i = 0; i < x.length; i++) { o.push([x[i][0] + (y[i][0] - x[i][0]) * k, x[i][1] + (y[i][1] - x[i][1]) * k]); } return o; }
+    var sh = new Shape(); sh.vertices = L(a.vertices, b.vertices); sh.inTangents = L(a.inTangents, b.inTangents); sh.outTangents = L(a.outTangents, b.outTangents); sh.closed = a.closed;
+    return sh;
+  }
+  function shapeAnim(prop, ts, vs, ez) {
+    var T = [], V = [], E = [], fd = layerOf(prop).containingComp.frameDuration;
+    for (var i = 0; i < ts.length - 1; i++) {
+      var name = (ez instanceof Array) ? ez[i] : ez, n = Math.max(1, Math.round((ts[i + 1] - ts[i]) / fd));
+      var eased = name && name !== "linear" && name !== "hold";
+      var steps = eased ? n : 1;
+      for (var g = 0; g < steps; g++) { T.push(ts[i] + (ts[i + 1] - ts[i]) * g / steps); V.push(lerpShape(vs[i], vs[i + 1], eased ? A.bez(name, g / steps) : 0)); E.push(name === "hold" ? "hold" : "linear"); }
+    }
+    T.push(ts[ts.length - 1]); V.push(vs[vs.length - 1]);
+    touch(prop, T);
+    for (var j = 0; j < T.length; j++) { prop.setValueAtTime(T[j], V[j]); }
+    for (j = 0; j < T.length - 1; j++) {
+      var ki = prop.nearestKeyIndex(T[j]);
+      prop.setInterpolationTypeAtKey(ki, prop.keyInInterpolationType(ki), E[j] === "hold" ? KeyframeInterpolationType.HOLD : KeyframeInterpolationType.LINEAR);
+    }
+  }
   /** 값 키: ts(초)·vs(값) 배열, ez = 구간별 이징 이름(문자열 하나면 전 구간 공통, "hold"/"linear" 가능).
       cubic-bezier → 템포럴 이즈 환산: 나가는 키 영향 x1·속도 (y1/x1)Δ/T, 들어오는 키 영향 (1−x2)·속도 ((1−y2)/(1−x2))Δ/T */
   A.anim = function (prop, ts, vs, ez) {
     if (!prop || !ts.length) { return; }
+    if (prop.propertyValueType === PropertyValueType.SHAPE && ts.length > 1) { return shapeAnim(prop, ts, vs, ez); }
     touch(prop, ts);
     var n = dimsOf(prop), idx = [], i, k;
     for (i = 0; i < ts.length; i++) { prop.setValueAtTime(ts[i], vs[i]); }
@@ -389,8 +413,11 @@ var AKD = (typeof AKD === "object" && AKD) ? AKD : {};
   };
 
   // ── 부모 연결 ────────────────────────────────────────────────────────
-  /** 부모의 현재 변환을 감안해 자식을 붙입니다(화면 위치 유지) */
-  A.parent = function (child, parent) { child.setParentWithJump(parent); };
+  /* 부모 바꾸기(화면 위치 유지). AE 스크립트에서
+       layer.parent = p           → 자식 값을 보정해 화면 위치 유지(우리가 원하는 것)
+       layer.setParentWithJump(p) → 값을 그대로 두어 화면에서 "점프" (실측으로 확인 — 이름과 반대로 헷갈리기 쉬움)
+     그래서 항상 .parent 대입을 씁니다. t 는 호환용(무시). */
+  A.parent = function (child, parent, t) { void t; if (child.parent !== (parent || null)) { child.parent = parent || null; } };
 
   // ── 마커 ─────────────────────────────────────────────────────────────
   A.MARK = "ak-dogam:";
@@ -524,6 +551,9 @@ var AKD = (typeof AKD === "object" && AKD) ? AKD : {};
     n.label = 11;
     A.P(n).setValue([o.pivot[0], o.pivot[1]]);
     var t0 = o.t0 || 0, t1 = o.t1 || comp.duration, every = Math.max(1, o.every), amp = o.amp;
+    // 부모 연결은 키를 넣기 전(정지 자세 100%)에 — 원래 부모가 있으면 널을 그 부모에 달아 계층 유지
+    if (target.parent) { A.parent(n, target.parent, t0); }
+    A.setAttr(target, "parent", n);
     // k = (g + phase), 반주기 every: seg 짝수 = 늘어나는 중(100→100+amp), 홀수 = 줄어드는 중
     var ts = [], vs = [], ph = o.phase || 0;
     var first = t0 - ((ph % every) * fd), seg = Math.floor(ph / every);
@@ -532,9 +562,6 @@ var AKD = (typeof AKD === "object" && AKD) ? AKD : {};
     }
     A.anim(A.S(n), ts, vs, o.ez || "smooth");
     n.inPoint = t0; n.outPoint = t1;
-    // 원래 부모가 있으면 널을 그 부모에 달아 계층을 유지합니다(제거 시 원래 부모로 돌아갑니다)
-    if (target.parent) { n.setParentWithJump(target.parent); }
-    target.setParentWithJump(n);
     return n;
   };
 
@@ -780,7 +807,7 @@ var AKD = (typeof AKD === "object" && AKD) ? AKD : {};
         if (l.parent === createdLayers[j] && !inArr(createdLayers, l)) {
           var gp = createdLayers[j].parent;
           while (gp && inArr(createdLayers, gp)) { gp = gp.parent; }
-          l.setParentWithJump(gp || null);
+          A.parent(l, gp || null);
         }
       }
     }
@@ -797,7 +824,7 @@ var AKD = (typeof AKD === "object" && AKD) ? AKD : {};
         if (it.r && it.r.attr === "parent") {
           var par = null;
           if (it.r.orig) { for (j = 1; j <= comp.numLayers; j++) { if (comp.layer(j).name === it.r.orig.name) { par = comp.layer(j); break; } } }
-          it.layer.setParentWithJump(par);
+          A.parent(it.layer, par);
         }
       } catch (e4) {}
     }

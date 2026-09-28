@@ -5,7 +5,8 @@
    발밑 = 알파가 있는 범위의 아래 가운데(A.alphaBBox) — 전체 캔버스 크기 누끼 PNG 도 맞습니다. content.bbox 로 직접 줄 수 있습니다.
    drift(패럴랙스)는 아직 옮기지 않았습니다(AE 지원 partial). */
 AKD.register("idle-bob", {
-  kind: "layer", name: "아이들 까딱(바디 밥)",
+  kind: "layer", name: "아이들 까딱(바디 밥)", support: "partial",
+  note: "까딱·눈 깜빡임은 그대로, 패럴랙스 흐름(drift·bgPar·fgPar)은 아직 옮기지 않았습니다.",
   params: { bobFrames: 10, bobAmp: 1, blink: true, blinkEvery: 120, blinkJitter: 90, blinkLen: 3, blinkTwice: 0.2, drift: 0, bgPar: 0.45, fgPar: 0.5 },
   content: { seeds: null, bboxes: null, until: 0 },
   CLOSED: /(눈감음|감은눈|__blink|blink|closed)/i,

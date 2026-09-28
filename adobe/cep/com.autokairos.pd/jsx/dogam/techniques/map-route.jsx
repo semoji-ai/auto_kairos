@@ -71,7 +71,8 @@ AKD.register("map-route", {
       A.AP(rt).setValue([W / 2, H / 2]); A.P(rt).setValue([W / 2, H / 2]);
       if (cam) {
         A.anim(A.S(rt), [0, CL * fd], [[q0 * 100, q0 * 100], [100, 100]], "inOutCubic");
-        A.anim(gc.property("ADBE Vector Graphic - Stroke").property("ADBE Vector Stroke Width"), [0, CL * fd], [rw / q0, rw], "inOutCubic");
+        var sw = rt.property("ADBE Root Vectors Group").property("항로").property("ADBE Vectors Group").property("ADBE Vector Graphic - Stroke").property("ADBE Vector Stroke Width");
+        A.anim(sw, [0, CL * fd], [rw / q0, rw], "inOutCubic");
       }
       // 정크선: 항로 위 점을 프레임마다(Remotion: pts[round(k·40)]) + 흔들림
       if (!brush) {
@@ -114,7 +115,7 @@ AKD.register("map-route", {
           var tl = A.text(pc, lb.text, "라벨 " + lb.text, { font: A.FONT.neoHv, size: 40, fill: "#ffffff" });
           var tr = A.centerText(tl);
           L.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").property("ADBE Vector Shape - Rect").property("ADBE Vector Rect Size").setValue([tr.width + 36, 56]);
-          A.P(tl).setValue(pos); A.P(L).setValue(pos); tl.setParentWithJump(L); tl.inPoint = a0 * fd;
+          A.P(tl).setValue(pos); A.P(L).setValue(pos); AKD.parent(tl, L); tl.inPoint = a0 * fd;
         }
         follow(L, pos);
         A.textPop(XL, L, a0, {});

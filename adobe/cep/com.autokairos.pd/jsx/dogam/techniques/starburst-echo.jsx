@@ -28,8 +28,10 @@ AKD.register("starburst-echo", {
     try {
       var s = pc.layers.addShape(); s.name = "가시 말풍선";
       var g = A.group(s.property("ADBE Root Vectors Group"), "가시");
-      var pp = g.addProperty("ADBE Vector Shape - Group");
+      g.addProperty("ADBE Vector Shape - Group");
       A.paint(g, P.color);
+      // 속성을 더하면 앞서 받은 참조가 무효가 됩니다 — 칠을 붙인 뒤 다시 찾습니다
+      var pp = s.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").property(1);
       A.P(s).setValue([0, 0]); A.AP(s).setValue([0, 0]);
       // 보일링: boilEvery 마다 모양 교체(홀드)
       var ps = pp.property("ADBE Vector Shape"), ts = [], vs = [], every = Math.max(1, Math.round(P.boilEvery));

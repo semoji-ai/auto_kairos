@@ -159,7 +159,8 @@ try {
   if (PLATE) { H.plateLayer(PLATE, "00 배경(도감 미리보기 판)"); }
   %(setup)s
   RES.log.push("layers " + comp.numLayers);
-  if (%(debug)s) { for (i = 1; i <= comp.numLayers; i++) { var Ld = comp.layer(i); try { RES.log.push(i + " " + Ld.name + " in=" + Ld.inPoint.toFixed(2) + " out=" + Ld.outPoint.toFixed(2) + " en=" + Ld.enabled + " par=" + (Ld.parent ? Ld.parent.name : "-") + " P=" + H.P(Ld).valueAtTime(0.5, false) + " S=" + H.S(Ld).valueAtTime(0.5, false) + " O=" + Ld.property("ADBE Transform Group").property("ADBE Opacity").valueAtTime(0.5, false)); } catch (ed) { RES.log.push("dbg " + ed); } } }
+  if (%(debug)s) { for (i = 1; i <= comp.numLayers; i++) { var Ld = comp.layer(i); try { var pv = H.P(Ld).valueAtTime(0.5, false), sv = H.S(Ld).valueAtTime(0.5, false), ov = Ld.property("ADBE Transform Group").property("ADBE Opacity").valueAtTime(0.5, false);
+      RES.log.push(i + " " + Ld.name + " in=" + Ld.inPoint.toFixed(2) + " out=" + Ld.outPoint.toFixed(2) + " par=" + (Ld.parent ? Ld.parent.name : "-") + " P=" + pv.join(",") + " S=" + sv.join(",") + " O=" + ov); } catch (ed) { RES.log.push("dbg " + i + " " + String(ed.message || "")); } } }
   // 프레임 저장(비동기 — 파일이 생기고 크기가 멈출 때까지 기다립니다)
   var FR = %(frames)s;
   for (i = 0; i < FR.length; i++) {
@@ -171,7 +172,7 @@ try {
   }
   RES.ok = true;
 } catch (e) {
-  RES.log.push("ERR " + e + (e.line ? " line " + e.line : ""));
+  try { RES.log.push("ERR " + String(e.message || e.description || "?") + (e.line ? " line " + e.line : "")); } catch (e0) { RES.log.push("ERR (메시지 읽기 실패)"); }
 } finally {
   try {
     for (i = app.project.numItems; i >= 1; i--) { var it = null; try { it = app.project.item(i); } catch (e1) { continue; } if (it && !snap[it.id]) { try { it.remove(); } catch (e2) {} } }
@@ -290,7 +291,21 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("ids", nargs="*", help="기법 id (없으면 파일럿 전부)")
     ap.add_argument("--no-ae", action="store_true", help="AE 실행 없이 비교 시트만 다시")
+    ap.add_argument("--roundtrip", action="store_true", help="적용→다시 적용→제거 왕복 검사(scripts/dogam_roundtrip.jsx)")
     a = ap.parse_args()
+    if a.roundtrip:
+        OUT.mkdir(parents=True, exist_ok=True)
+        src = (ADOBE / "scripts" / "dogam_roundtrip.jsx").read_text(encoding="utf-8")
+        out = OUT / "roundtrip.json"
+        out.unlink(missing_ok=True)
+        jp = OUT / "roundtrip_run.jsx"
+        jp.write_text(src.replace("%OUT%", str(out)).replace("%JSX%", str(JSX)).replace("%ASSETS%", str(ASSETS)), encoding="utf-8")
+        run_ae(jp)
+        r = json.loads(out.read_text(encoding="utf-8")) if out.exists() else {"ok": False, "log": ["결과 없음"]}
+        for c in r.get("checks", []):
+            print(("  ✅ " if c["ok"] else "  ❌ ") + c["name"], c["info"])
+        print("  log:", r.get("log"))
+        return
     ids = a.ids or list(CASES)
     OUT.mkdir(parents=True, exist_ok=True)
     summ_p = OUT / "summary.json"

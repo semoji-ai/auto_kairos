@@ -24,7 +24,7 @@ AKD.register("photo-pop", {
         A.shadow(ring, 10, 24, P.shadow);
         ring.moveAfter(L);
         ring.inPoint = X.t; ring.outPoint = L.outPoint;
-        ring.setParentWithJump(L);
+        AKD.parent(ring, L);
       }
       // 등장 전에는 보이지 않게(Remotion: f < at 이면 그리지 않음)
       if (L.inPoint < X.t) { A.setAttr(L, "inPoint", X.t); }

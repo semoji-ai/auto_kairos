@@ -36,7 +36,7 @@ AKD.register("smoke-wipe", {
       try { hl.property("ADBE Vector Graphic - Stroke").property("ADBE Vector Stroke Line Cap").setValue(2); } catch (e1) {}
       // 하이라이트가 원 위에 오게(먼저 추가한 그룹이 위)
       hl.parentProperty.moveTo(1);
-      var gt = grp.property("ADBE Vector Transform Group");
+      var gt = root.property(root.numProperties).property("ADBE Vector Transform Group");   // 참조 무효 방지: 다시 찾기
       gt.property("ADBE Vector Position").setValue([px, py]);
       if (P.wobble > 0) {
         (function (ii) {
