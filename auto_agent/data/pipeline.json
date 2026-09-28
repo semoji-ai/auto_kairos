@@ -410,7 +410,8 @@
           ],
           "skills": [
             "style/narrative",
-            "style/voice"
+            "style/voice",
+            "shared/viewer-personas"
           ],
           "blocking": false,
           "skip_resume": true,
