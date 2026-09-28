@@ -675,10 +675,13 @@ def _build_default_hooks() -> HookManager:
                     )
 
         # 규칙 2: 동일 인물 동일 문자열 확인
-        name_base = {}  # {이름부분: [전체문자열들]}
+        # 연령대만 다른 것(「구인회(창업주, 20대)」·「구인회(창업주, 40대)」)은 의도된 분리다 —
+        # 시트가 따로 있다. 연령 표기를 걷어 낸 뒤에도 다르면 그때만 불일치로 본다.
+        _age = re.compile(r"\s*,?\s*(\d+\s*대|\d+\s*세|유년|소년|청년|중년|장년|노년)\s*")
+        name_base = {}  # {이름부분: [연령 표기를 뺀 전체문자열들]}
         for char in all_chars:
             base = char.split("(")[0].strip()
-            name_base.setdefault(base, set()).add(char)
+            name_base.setdefault(base, set()).add(_age.sub("", char).replace("(,", "(").replace(", )", ")"))
         for base, variants in name_base.items():
             if len(variants) > 1:
                 issues.append(

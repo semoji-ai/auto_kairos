@@ -159,7 +159,8 @@
         "Read",
         "Write",
         "Edit",
-        "Glob"
+        "Glob",
+        "Bash"
       ],
       "skill_file": "agents/script-director/SKILL.md",
       "shared_skills": [
