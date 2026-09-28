@@ -18,6 +18,21 @@ from auto_agent.utils.codex_cli import build_codex_exec_cmd
 from auto_agent.utils.models import CLAUDE_OPUS, CODEX_DEFAULT
 from auto_agent.utils.platform import subprocess_kwargs
 
+_GUARD_SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "hooks" / "guard_agent_tools.py"
+
+
+def agent_hook_settings() -> str:
+    """에이전트 CLI에 `--settings` 로 넘길 훅 설정(JSON 문자열).
+
+    cwd 가 프로젝트 출력 폴더(NAS 포함)라 저장소 .claude/settings.json 을 못 읽을 수
+    있으므로, 가드는 경로를 절대경로로 박아 명시적으로 넘긴다.
+    """
+    import sys
+    command = f'"{sys.executable}" "{_GUARD_SCRIPT}"'
+    return json.dumps({"hooks": {"PreToolUse": [
+        {"matcher": "Bash", "hooks": [{"type": "command", "command": command, "timeout": 5}]}]}})
+
+
 PROFILES = {
     "balanced": {"claude": CLAUDE_OPUS, "codex": CODEX_DEFAULT},
     "quality": {"claude": "claude-fable-5-1", "codex": "gpt-6-astra"},
@@ -170,7 +185,8 @@ def run_cli(spec: ExecutionSpec, prompt: str, workdir: Path, *, timeout: int = 9
             if not cli:
                 raise FileNotFoundError("Claude CLI not found")
             cmd = [cli, "--print", "--output-format", "json", "--model", spec.model,
-                   "--max-turns", str(max_turns), "--permission-mode", "acceptEdits"]
+                   "--max-turns", str(max_turns), "--permission-mode", "acceptEdits",
+                   "--settings", agent_hook_settings()]
             if spec.profile != "legacy":
                 cmd += ["--effort", spec.reasoning_effort]
             if system_prompt_file is not None:

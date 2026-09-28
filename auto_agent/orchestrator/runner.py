@@ -49,7 +49,7 @@ from auto_agent.orchestrator.vault_rag import VaultRAG
 from auto_agent.orchestrator.claude_client import CachingClaudeClient
 from auto_agent.orchestrator.local_tools import LOCAL_TOOL_SCHEMAS, handle_local_tool
 from auto_agent.utils.platform import get_env_with_node, subprocess_kwargs
-from auto_agent.orchestrator.execution import execution_options, execution_profile, resolve_execution, resolve_provider, run_cli
+from auto_agent.orchestrator.execution import execution_options, execution_profile, resolve_execution, resolve_provider, run_cli, agent_hook_settings
 
 # ── Agent Messenger 브릿지 ──
 _MESSENGER_URL = "http://localhost:8080/api/agent-messages/send"
@@ -642,41 +642,9 @@ def _build_default_hooks() -> HookManager:
     """기본 가드레일 훅 등록."""
     hm = HookManager()
 
-    # ── guard: 이미지 삭제 차단 (CLAUDE.md §9) ──
-    def guard_image_delete(tool_input: dict):
-        cmd = tool_input.get("command", "")
-        if re.search(r"\brm\b", cmd):
-            img_patterns = [r"scene_\d+", r"\.png\b", r"\.jpg\b", r"\.webp\b", r"_gen_\d+"]
-            for p in img_patterns:
-                if re.search(p, cmd, re.IGNORECASE):
-                    raise ValueError(f"이미지 삭제 차단: {cmd[:100]}")
-    hm.register_pre_tool("Bash", guard_image_delete)
-
-    # ── guard: scene_specs 중첩 구조 차단 ──
-    def guard_scene_specs_schema(tool_input: dict):
-        content = tool_input.get("content", "")
-        if '"visualization"' in content and '"creative"' in content:
-            raise ValueError("scene_specs에 visualization.creative 중첩 구조 사용 금지 — 플랫 스키마 사용")
-    hm.register_pre_tool("Write", guard_scene_specs_schema)
-
-    # ── guard: 이미지 프롬프트 규칙 (아트스타일 키워드 금지) ──
-    def guard_image_prompt(tool_input: dict):
-        content = json.dumps(tool_input, ensure_ascii=False) if isinstance(tool_input, dict) else str(tool_input)
-        # imageAsset.prompt에 아트스타일 키워드 삽입 금지
-        blocked = ["semoji style", "quirky cartoon", "flat staging", "2D illustration"]
-        lower = content.lower()
-        for kw in blocked:
-            if kw in lower and "imageAsset" in content:
-                raise ValueError(f"이미지 프롬프트에 아트스타일 키워드 금지: {kw}")
-    hm.register_pre_tool("Write", guard_image_prompt)
-
-    # ── guard: 이미지 버저닝 (덮어쓰기 금지) ──
-    def guard_image_versioning(tool_input: dict):
-        cmd = tool_input.get("command", "")
-        # cp 또는 mv로 기존 이미지 덮어쓰기 감지
-        if re.search(r"\b(cp|mv)\b.*scene_\d+.*_gen_01\.png", cmd):
-            raise ValueError("기존 이미지 덮어쓰기 금지 — 새 버전 번호 사용 (_gen_02, _gen_03)")
-    hm.register_pre_tool("Bash", guard_image_versioning)
+    # 도구 호출 가드(이미지 삭제·덮어쓰기)는 여기가 아니라 CLI 훅이 맡는다 —
+    # 에이전트가 claude CLI 서브프로세스라 register_pre_tool 은 호출될 길이 없었다.
+    # auto_agent/scripts/hooks/guard_agent_tools.py (execution.agent_hook_settings)
 
     # ── post-step: 캐릭터 이름 규칙 검증 (step_2 완료 후) ──
     def post_validate_characters(context: dict):
@@ -2428,6 +2396,7 @@ class PipelineRunner:
         cmd = [
             cli_path, "--print", "--output-format", "json",
             "--dangerously-skip-permissions",
+            "--settings", agent_hook_settings(),
             "--model", model, "--max-turns", str(chapter_max_turns),
             "--allowedTools", "Read", "--allowedTools", "Write", "--allowedTools", "Edit",
         ]
@@ -4906,6 +4875,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "--model", model,
             "--max-turns", str(max_turns),
             "--dangerously-skip-permissions",
+            "--settings", agent_hook_settings(),
         ]
 
         # 허용 도구 설정
