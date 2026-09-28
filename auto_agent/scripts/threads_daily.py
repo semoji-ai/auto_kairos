@@ -118,7 +118,7 @@ JSON만 출력하세요.
 
     try:
         result = subprocess.run(
-            ["claude", "--print", "--model", "claude-sonnet-4-6",
+            ["claude", "--print", "--model", "sonnet",
              "--max-turns", "1", "-p", prompt],
             capture_output=True, text=True, timeout=120,
             cwd=str(workspace),

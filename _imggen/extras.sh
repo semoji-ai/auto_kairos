@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /Users/jleavens_macmini/LocalProjects/auto_kairos_v3
+cd "$(dirname "$0")/.."
 for ep in "$@"; do
   .venv/bin/python - "$ep" <<'PY' > _imggen/${ep}_extras_in.json
 import json,sys,pathlib

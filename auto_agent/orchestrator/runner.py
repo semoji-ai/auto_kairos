@@ -49,7 +49,7 @@ from auto_agent.orchestrator.vault_rag import VaultRAG
 from auto_agent.orchestrator.claude_client import CachingClaudeClient
 from auto_agent.orchestrator.local_tools import LOCAL_TOOL_SCHEMAS, handle_local_tool
 from auto_agent.utils.platform import get_env_with_node, subprocess_kwargs
-from auto_agent.orchestrator.execution import execution_options, execution_profile, resolve_execution, resolve_provider, run_cli
+from auto_agent.orchestrator.execution import execution_options, execution_profile, resolve_execution, resolve_provider, run_cli, agent_hook_settings
 
 # ── Agent Messenger 브릿지 ──
 _MESSENGER_URL = "http://localhost:8080/api/agent-messages/send"
@@ -642,41 +642,9 @@ def _build_default_hooks() -> HookManager:
     """기본 가드레일 훅 등록."""
     hm = HookManager()
 
-    # ── guard: 이미지 삭제 차단 (CLAUDE.md §9) ──
-    def guard_image_delete(tool_input: dict):
-        cmd = tool_input.get("command", "")
-        if re.search(r"\brm\b", cmd):
-            img_patterns = [r"scene_\d+", r"\.png\b", r"\.jpg\b", r"\.webp\b", r"_gen_\d+"]
-            for p in img_patterns:
-                if re.search(p, cmd, re.IGNORECASE):
-                    raise ValueError(f"이미지 삭제 차단: {cmd[:100]}")
-    hm.register_pre_tool("Bash", guard_image_delete)
-
-    # ── guard: scene_specs 중첩 구조 차단 ──
-    def guard_scene_specs_schema(tool_input: dict):
-        content = tool_input.get("content", "")
-        if '"visualization"' in content and '"creative"' in content:
-            raise ValueError("scene_specs에 visualization.creative 중첩 구조 사용 금지 — 플랫 스키마 사용")
-    hm.register_pre_tool("Write", guard_scene_specs_schema)
-
-    # ── guard: 이미지 프롬프트 규칙 (아트스타일 키워드 금지) ──
-    def guard_image_prompt(tool_input: dict):
-        content = json.dumps(tool_input, ensure_ascii=False) if isinstance(tool_input, dict) else str(tool_input)
-        # imageAsset.prompt에 아트스타일 키워드 삽입 금지
-        blocked = ["semoji style", "quirky cartoon", "flat staging", "2D illustration"]
-        lower = content.lower()
-        for kw in blocked:
-            if kw in lower and "imageAsset" in content:
-                raise ValueError(f"이미지 프롬프트에 아트스타일 키워드 금지: {kw}")
-    hm.register_pre_tool("Write", guard_image_prompt)
-
-    # ── guard: 이미지 버저닝 (덮어쓰기 금지) ──
-    def guard_image_versioning(tool_input: dict):
-        cmd = tool_input.get("command", "")
-        # cp 또는 mv로 기존 이미지 덮어쓰기 감지
-        if re.search(r"\b(cp|mv)\b.*scene_\d+.*_gen_01\.png", cmd):
-            raise ValueError("기존 이미지 덮어쓰기 금지 — 새 버전 번호 사용 (_gen_02, _gen_03)")
-    hm.register_pre_tool("Bash", guard_image_versioning)
+    # 도구 호출 가드(이미지 삭제·덮어쓰기)는 여기가 아니라 CLI 훅이 맡는다 —
+    # 에이전트가 claude CLI 서브프로세스라 register_pre_tool 은 호출될 길이 없었다.
+    # auto_agent/scripts/hooks/guard_agent_tools.py (execution.agent_hook_settings)
 
     # ── post-step: 캐릭터 이름 규칙 검증 (step_2 완료 후) ──
     def post_validate_characters(context: dict):
@@ -707,10 +675,13 @@ def _build_default_hooks() -> HookManager:
                     )
 
         # 규칙 2: 동일 인물 동일 문자열 확인
-        name_base = {}  # {이름부분: [전체문자열들]}
+        # 연령대만 다른 것(「구인회(창업주, 20대)」·「구인회(창업주, 40대)」)은 의도된 분리다 —
+        # 시트가 따로 있다. 연령 표기를 걷어 낸 뒤에도 다르면 그때만 불일치로 본다.
+        _age = re.compile(r"\s*,?\s*(\d+\s*대|\d+\s*세|유년|소년|청년|중년|장년|노년)\s*")
+        name_base = {}  # {이름부분: [연령 표기를 뺀 전체문자열들]}
         for char in all_chars:
             base = char.split("(")[0].strip()
-            name_base.setdefault(base, set()).add(char)
+            name_base.setdefault(base, set()).add(_age.sub("", char).replace("(,", "(").replace(", )", ")"))
         for base, variants in name_base.items():
             if len(variants) > 1:
                 issues.append(
@@ -1570,7 +1541,7 @@ class PipelineRunner:
             proc = subprocess.run(
                 [cli_path, "--print", "--output-format", "json",
                  "--dangerously-skip-permissions",
-                 "--model", "claude-sonnet-4-6", "--max-turns", "1"],
+                 "--model", "sonnet", "--max-turns", "1"],
                 input=supplement_prompt, capture_output=True, text=True, encoding="utf-8",
                 cwd=str(self.project_dir), timeout=180,
                 env={**os.environ, "CLAUDECODE": ""},
@@ -1648,7 +1619,7 @@ class PipelineRunner:
                 proc = subprocess.run(
                     [cli_path, "--print", "--output-format", "json",
                      "--dangerously-skip-permissions",
-                     "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
+                     "--model", "haiku", "--max-turns", "1"],
                     input=verify_prompt, capture_output=True, text=True, encoding="utf-8",
                     cwd=str(self.project_dir), timeout=30,
                     env={**os.environ, "CLAUDECODE": ""},
@@ -1697,7 +1668,7 @@ class PipelineRunner:
                             proc2 = subprocess.run(
                                 [cli_path, "--print", "--output-format", "json",
                                  "--dangerously-skip-permissions",
-                                 "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
+                                 "--model", "haiku", "--max-turns", "1"],
                                 input=verify2_prompt, capture_output=True, text=True, encoding="utf-8",
                                 cwd=str(self.project_dir), timeout=30,
                                 env={**os.environ, "CLAUDECODE": ""},
@@ -2386,7 +2357,7 @@ class PipelineRunner:
         prompt = self._build_chapter_prompt(chapter_step, chapter_specs)
 
         # 3. Claude CLI agent 모드 (Write 도구 허용, multi-turn)
-        model = step.get("single_call_model", "claude-opus-4-6")
+        model = step.get("single_call_model", "opus")
         timeout_sec = self._get_agent_timeout(agent_name)
 
         # 프롬프트에 파일 저장 지시 추가
@@ -2428,6 +2399,7 @@ class PipelineRunner:
         cmd = [
             cli_path, "--print", "--output-format", "json",
             "--dangerously-skip-permissions",
+            "--settings", agent_hook_settings(),
             "--model", model, "--max-turns", str(chapter_max_turns),
             "--allowedTools", "Read", "--allowedTools", "Write", "--allowedTools", "Edit",
         ]
@@ -2573,9 +2545,9 @@ class PipelineRunner:
         # 컨텍스트 파일 빌드 (챕터 스코프)
         context_block = ""
         # 리서치: 챕터별 facts 우선 (compact), 없으면 digest fallback
-        chapter_facts_path = self.project_dir / "chapter_facts" / f"chapter_{chapter_num}.json"
+        chapter_facts_path = self.project_dir / "chapter_facts" / f"chapter_{int(chapter_num):02d}.json"
         if chapter_facts_path.exists():
-            context_block += f'\n<file name="chapter_facts/chapter_{chapter_num}.json">\n{chapter_facts_path.read_text(encoding="utf-8")[:10000]}\n</file>\n'
+            context_block += f'\n<file name="chapter_facts/chapter_{int(chapter_num):02d}.json">\n{chapter_facts_path.read_text(encoding="utf-8")[:10000]}\n</file>\n'
         else:
             for fname in ["research_digest.json", "research_report.json"]:
                 fpath = self.project_dir / fname
@@ -2808,9 +2780,9 @@ class PipelineRunner:
         # 공통 컨텍스트 파일 (챕터 스코프 — 글로벌 전체 반복 금지)
         context_block = ""
         # 리서치: 챕터별 facts 우선 (compact), 없으면 digest fallback
-        chapter_facts_path = self.project_dir / "chapter_facts" / f"chapter_{chapter_num}.json"
+        chapter_facts_path = self.project_dir / "chapter_facts" / f"chapter_{int(chapter_num):02d}.json"
         if chapter_facts_path.exists():
-            context_block += f'\n<file name="chapter_facts/chapter_{chapter_num}.json">\n{chapter_facts_path.read_text(encoding="utf-8")[:10000]}\n</file>\n'
+            context_block += f'\n<file name="chapter_facts/chapter_{int(chapter_num):02d}.json">\n{chapter_facts_path.read_text(encoding="utf-8")[:10000]}\n</file>\n'
         else:
             for fname in ["research_digest.json", "research_report.json"]:
                 fpath = self.project_dir / fname
@@ -3529,6 +3501,17 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         if step_id == "step_2":
             ledger = json.loads((self.project_dir / "sentence_inventory.json").read_text(encoding="utf-8"))
             sentence_rows = [r for r in ledger["sentences"] if r["chapter"] == chapter_num]
+            # 챕터를 병렬로 나눠 맡으므로 경계 문장의 앞뒤 문맥이 잘린다.
+            # 옆 챕터의 끝·처음 몇 문장을 읽기 전용으로 붙여 「앞을 받는 말」 판단을 살린다.
+            _prev = [r for r in ledger["sentences"] if r["chapter"] < chapter_num][-3:]
+            _next = [r for r in ledger["sentences"] if r["chapter"] > chapter_num][:3]
+            neighbor_block = ""
+            if _prev or _next:
+                fmt = lambda rows: "\n".join(f"  {r['text']}" for r in rows) or "  (없음)"
+                neighbor_block = (
+                    "<neighbor_context>\n읽기 전용 — 배분하지 마세요. 경계 문장이 앞을 받는지, 뒤를 여는지 판단할 때만 봅니다.\n"
+                    f"앞 챕터 끝:\n{fmt(_prev)}\n다음 챕터 처음:\n{fmt(_next)}\n</neighbor_context>\n"
+                )
 
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
@@ -3579,11 +3562,12 @@ JSON 구조:
 SCRIPT_DIRECTOR_MODE: chapters
 SCRIPT_DIRECTOR_CHAPTER: {chapter_num}
 아래는 최종 씬이 아닌 문장 전수 목록입니다. 모든 id를 정확히 한 번, 원문 순서로 사용하세요.
-각 문장의 앞뒤를 보고 같은 화면/행동/의미면 묶고, 시간·장소·주체·시각적 초점이 달라지면 나누세요.
-문장 수나 글자 수는 강제 경계가 아닙니다. 기존 --- 경계나 계획의 병합 지시보다 문맥과 원문 보존이 우선입니다.
+한 씬은 한 화면입니다. 문장이 혼자 화면으로 서는지, 화면이 바뀌어야 하는지 앞뒤를 보고 판단해
+묶거나 나누세요(판단 자료: 공유 스킬 scene-splitting). 문장 수나 글자 수는 강제 경계가 아닙니다.
+기존 --- 경계나 계획의 병합 지시보다 문맥과 원문 보존이 우선입니다.
 먼저 씬 배분을 결정하고 그 다음 장면/도해/자료 연출을 결정하세요. narration은 코드가 원문으로 채웁니다.
 {context_block}
-<sentence_inventory>
+{neighbor_block}<sentence_inventory>
 {json.dumps(sentence_rows, ensure_ascii=False)}
 </sentence_inventory>
 {tmp_path} 에 JSON을 저장하세요:
@@ -3600,7 +3584,7 @@ captions는 블록 공통 참고입니다. 자동 표시 기본 위치는 captio
 지정한 임시 JSON 외에 원고·목록·기존 scene_specs.json을 수정하지 마세요.
 {context_memory_block}"""
 
-        model = step.get("single_call_model", "claude-opus-4-6")
+        model = step.get("single_call_model", "opus")
         timeout_sec = self._get_agent_timeout(agent_name)
 
         # Preserve main's shared Claude system-prefix cache, while Codex receives
@@ -4195,7 +4179,7 @@ captions는 블록 공통 참고입니다. 자동 표시 기본 위치는 captio
         step_id = step["id"]
         step_name = step.get("name", step_id)
         agent = step.get("agent", "")
-        target_model = step.get("single_call_model", "claude-opus-4-6")
+        target_model = step.get("single_call_model", "opus")
         outputs = step.get("output", [])
         if isinstance(outputs, str):
             outputs = [outputs]
@@ -4830,7 +4814,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 error=f"agents.json에 '{agent}' 정의 없음",
             )
 
-        model = step.get("model") or agent_def.get("model", "claude-sonnet-4-5-20250929")
+        model = step.get("model") or agent_def.get("model", "sonnet")
         max_turns = agent_def.get("max_turns", 30)
         allowed_tools = agent_def.get("allowed_tools", ["Read", "Write", "Glob"])
         budget = self._get_agent_budget(agent)
@@ -4906,6 +4890,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
             "--model", model,
             "--max-turns", str(max_turns),
             "--dangerously-skip-permissions",
+            "--settings", agent_hook_settings(),
         ]
 
         # 허용 도구 설정
@@ -5645,7 +5630,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 return best_match[:2000]
 
         except Exception as e:
-            print(f"    [WARN] \1", flush=True)
+            print(f"    [WARN] 원고 참고 자료를 불러오지 못했습니다: {e}", flush=True)
         return ""
 
     def _build_manuscript_reference_block(self) -> str:
@@ -5706,15 +5691,15 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                         flush=True,
                     )
         except Exception as e:
-            print(f"    [WARN] \1", flush=True)
+            print(f"    [WARN] 원고 참고 자료를 불러오지 못했습니다: {e}", flush=True)
 
         if not sections:
             return ""
 
         return (
             "<manuscript_references>\n"
-            "⚠️ 매력적인 prose 작성을 위한 강제 reference입니다.\n"
-            "이 톤/리듬/후킹 패턴을 그대로 따르세요. 추상적 규칙이 아니라 실제 예시입니다.\n\n"
+            "같은 채널의 실제 원고입니다. 구성·후킹·전개를 보는 참고 자료이며 흉내 낼 대상이 아닙니다.\n"
+            "문체(어미·시그니처 장치)는 이 단계의 일이 아닙니다 — 윤문(step_2_polish)이 입힙니다.\n\n"
             + "\n".join(sections)
             + "\n</manuscript_references>"
         )

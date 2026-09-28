@@ -1,8 +1,6 @@
 ---
 name: character-planner
 description: Use when extracting recurring characters from scene specs and manuscript to generate character_plan.json with appearance tracking and variant analysis
-model: claude-sonnet-4-5-20250929
-max_turns: 20
 allowed_tools:
   - Read
   - Write

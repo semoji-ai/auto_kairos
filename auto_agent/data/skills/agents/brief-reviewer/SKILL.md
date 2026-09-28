@@ -179,7 +179,7 @@ Stage 2 `script-reviewer`의 래칫 방식을 기획 단계에 이식한 에이�
 
 ## 금지 사항
 
-- ❌ 85점 이하인데 PASS 처리 금지
+- ❌ 90점 미만인데 PASS 처리 금지 (brief_review_module.PASS_THRESHOLD)
 - ❌ 점수 내리고 PASS 처리 금지 (단조 증가 위반)
 - ❌ 필드 하나만 보고 종합 점수 내리지 말 것 — 루브릭 전 항목 채점
 - ❌ 추상 답변에 관대하게 점수 주지 말 것 — "애매하면 감점" 원칙 유지
@@ -200,7 +200,7 @@ while round <= 3:
     1. editorial_brief.{current_version}.json 읽기
     2. 100점 만점 채점 → brief_review_feedback.{current_version}.json 저장
        (round 필드에 현재 라운드 번호 기록)
-    3. verdict == "PASS" (≥85점) → 루프 종료, 성공 처리
+    3. verdict == "PASS" (≥90점) → 루프 종료, 성공 처리
     4. verdict in ("REVISE", "FAIL"):
        a. revision_instructions 목록 + field_feedback 활용
        b. 새 버전 생성: next_version = f"v{int(current_version[1:]) + 1}"

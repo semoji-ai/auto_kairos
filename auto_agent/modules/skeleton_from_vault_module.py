@@ -558,7 +558,7 @@ def _build_outline_with_llm(
         claude_bin = "claude"
         cmd = [
             claude_bin,
-            "--model", "claude-opus-4-6",
+            "--model", "opus",
             "--max-turns", "1",
             "--output-format", "text",
         ]

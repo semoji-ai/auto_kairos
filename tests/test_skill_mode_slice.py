@@ -50,7 +50,7 @@ def test_only_active_mode_section_kept(skill_text):
 def test_chapters_keeps_scene_direction_rules(skill_text):
     """챕터 모드는 씬 연출 규칙이 반드시 남아야 한다."""
     out = slice_agent_skill(skill_text, "script-director", "chapters")
-    for required in ("씬 스키마", "에셋 결정 규칙", "headline 규칙", "모션 프리셋"):
+    for required in ("씬 스키마", "에셋 결정 규칙", "headline 규칙", "모션 선택", "씬 분할 규칙"):
         assert required in out, f"chapters 모드에 {required} 누락"
     # 씬 작성 실무(Step 2)는 유지, 아웃라인/검증 단계는 제거
     assert "Step 2: 챕터별 씬 작성" in out
@@ -61,7 +61,7 @@ def test_manuscript_drops_scene_direction(skill_text):
     """manuscript 모드는 prose 전용 — 연출 섹션 제거 (SKILL.md 모드 1.5 명시)."""
     out = slice_agent_skill(skill_text, "script-director", "manuscript")
     assert "모드 1.5: Manuscript Mode" in out
-    for dropped in ("## 씬 스키마", "## 에셋 결정 규칙", "## 모션 프리셋"):
+    for dropped in ("## 씬 스키마", "## 에셋 결정 규칙", "## 모션 선택"):
         assert dropped not in out, f"manuscript 모드에 {dropped} 잔존"
     # 기획 의도/금지 사항 같은 공통 규칙은 유지
     assert "Editorial Brief 준수 체크리스트" in out

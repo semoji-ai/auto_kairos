@@ -12,8 +12,9 @@ EP02·EP07은 0개였고, 그 탓에 '오도 방지' 7점을 전부 잃었다.
      독립 근거 미확인 — 널리 알려졌으나 독립 자료가 없는 일화
 
 2. 숫자 시각화 (지식 전달 15점)
-   나레이션에 숫자가 나오면 화면에도 띄운다. metric 계열 레이아웃인데
-   values가 비어 있으면 나레이션에서 뽑아 채운다.
+   metric 계열 레이아웃인데 values가 비었으면 **알린다**(2026-09-28부터).
+   예전에는 나레이션 숫자를 뽑아 채웠지만, 라벨 자리에 단위 문자열(「명」「개」)이
+   들어가고 연도까지 값으로 잡혔다. 옛 동작은 --legacy-fill-values.
    단위가 섞이면 unit을 비우고 라벨에 넣는다(direction-standard 5절).
 
     python3 scripts/apply_direction_fixes.py <project_dir> [--dry-run]
@@ -28,10 +29,13 @@ import sys
 from pathlib import Path
 
 # 회사 기록에만 남은 내용을 가리키는 말
-CORPORATE = re.compile(r"(사사|사보|회사 기록|기업 기록|공식 연혁|자서전|평전|전기에)")
+# 「전기에」는 전기(電氣)까지 잡아 전자회사 편을 통째로 사사 기록으로 만들었다 — 뺀다
+CORPORATE = re.compile(r"(사사|사보|회사 기록|기업 기록|공식 연혁|자서전|평전)")
 # 독립 근거가 없다고 본문이 스스로 밝히는 경우
+# 「~고 합니다」는 뺀다. 출처가 있는 사실도 전달체로 말하고, verify_voice 는 전달체를
+# 최소 한 번 쓰라고 요구한다 — 문체 관문을 통과한 문장마다 「미확인」이 붙었다.
 UNVERIFIED = re.compile(r"(전해집니다|전해진다|알려져 있습니다|확인되지 않|기록은 없|"
-                        r"일화|말이 있습니다|한다고 합니다|고 합니다)")
+                        r"일화|말이 있습니다)")
 
 METRIC_LAYOUTS = {"counter", "metric_spotlight", "metric_wall", "bar", "bar_horizontal",
                   "pie", "donut", "line", "icon_stat", "annotated_chart"}
@@ -42,6 +46,7 @@ NUM = re.compile(r"(\d[\d,]*(?:\.\d+)?)\s*(억원|만원|조원|억|만|원|달�
 
 
 def pick_badge(scene: dict) -> str | None:
+    """연출이 badge 를 정하지 않은 생성 씬에만 쓰는 대비책. 표면 어휘로 짐작한다."""
     ia = scene.get("imageAsset") or {}
     if ia.get("source") != "generate":
         return None
@@ -151,13 +156,15 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("project", type=Path)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--legacy-fill-values", action="store_true",
+                    help="옛 동작: metric 레이아웃의 빈 values 를 나레이션 숫자로 채운다")
     args = ap.parse_args()
 
     spec = args.project / "scene_specs.json"
     data = json.loads(spec.read_text(encoding="utf-8"))
     scenes = data.get("scenes", data)
 
-    badged, valued, aligned = 0, 0, []
+    badged, valued, aligned, missing_values = 0, 0, [], []
     for s in scenes:
         if not s.get("badge"):
             b = pick_badge(s)
@@ -167,8 +174,12 @@ def main() -> int:
         ch = align_layout(s)
         if ch:
             aligned.append(f"{s.get('sceneNumber')} {ch}")
-        if fill_values(s):
-            valued += 1
+        if args.legacy_fill_values:
+            if fill_values(s):
+                valued += 1
+        elif s.get("layout") in METRIC_LAYOUTS and not s.get("values") and NUM.search(s.get("narration") or ""):
+            # 단위 문자열을 라벨로 넣고 연도까지 값으로 잡던 자동 채움 대신 알린다
+            missing_values.append(s.get("sceneNumber"))
 
     if not args.dry_run:
         spec.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -180,6 +191,8 @@ def main() -> int:
           + (" [dry-run]" if args.dry_run else ""))
     for a in aligned:
         print(f"      씬 {a}")
+    if missing_values:
+        print(f"      ⚠ 수치 레이아웃인데 values 가 빈 씬 {missing_values} — 연출에서 채우거나 레이아웃을 바꾸세요")
     return 0
 
 

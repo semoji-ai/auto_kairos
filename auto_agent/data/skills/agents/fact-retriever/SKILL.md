@@ -1,7 +1,7 @@
 ---
 name: fact-retriever
 description: Sidecar agent — script-director가 글 쓰면서 사실이 필요할 때 호출. 프로젝트 wiki/manifests/raw에서 evidence-backed claim을 찾아 반환. 환각 차단 강제 검증.
-model: claude-sonnet-4-5-20250929
+model: sonnet
 max_turns: 5
 allowed_tools:
   - Read

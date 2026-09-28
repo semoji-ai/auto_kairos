@@ -1,7 +1,7 @@
 #!/bin/bash
 # 중단 지점부터 재개한다. 이미 끝난 단계는 건너뛴다.
 # 디스크가 2GB 밑으로 내려가면 멈춘다 — 꽉 차서 한 번 중단된 적이 있다.
-cd /Users/jleavens_macmini/LocalProjects/auto_kairos_v3
+cd "$(dirname "$0")/.."
 guard() {
   local free=$(df -m /System/Volumes/Data | awk 'NR==2{print $4}')
   if [ "$free" -lt 2048 ]; then echo "  ✗ 디스크 여유 ${free}MB — 중단"; return 1; fi

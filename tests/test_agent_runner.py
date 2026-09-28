@@ -125,8 +125,8 @@ class TestBuildCommand:
         vault_dir.mkdir()
         monkeypatch.setenv("KAIROS_VAULT_DIR", str(vault_dir))
         runner = AgentRunner(provider="codex")
-        assert runner._resolve_model("opus") == "gpt-5.4"
-        assert runner._resolve_model("sonnet") == "gpt-5.4-mini"
+        assert runner._resolve_model("opus") == "gpt-6-astra"
+        assert runner._resolve_model("sonnet") == "gpt-5.6-sol"
 
     def test_parse_usage_from_codex_jsonl(self, tmp_path, monkeypatch):
         vault_dir = tmp_path / "vault"

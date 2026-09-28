@@ -442,7 +442,9 @@
           "output": [
             "direction_plan.json"
           ],
-          "skills": [],
+          "skills": [
+            "shared/scene-splitting"
+          ],
           "notes": "출력은 씬당 한 줄로 작게. 이미지 프롬프트·헤드라인 문구는 여기서 쓰지 않는다(모드 2의 일). infoStructure/beat는 렌더러 중립 값이라 After Effects 연동 시 매핑 테이블만 교체하면 된다."
         },
         {
@@ -471,10 +473,12 @@
           "skills": [
             "style/narrative",
             "style/direction",
+            "shared/scene-splitting",
+            "shared/motion-dogam-semoji",
             "shared/motion-presets",
             "shared/remotion-design-system"
           ],
-          "notes": "final_manuscript.md의 prose를 의미 단위로 분할 + 각 씬에 layout/motion/mood/imageAsset/headline 결정. ⚠️ narration 재작성 금지 — manuscript에서 substring으로만 가져옴 (post-validation hook 검증)."
+          "notes": "sentence_inventory의 모든 문장을 한 화면 단위로 배분(sourceSentences/sourceSpans)하고 연출을 정한다. 경계 판단 자료는 shared/scene-splitting, 모션 판단 자료는 shared/motion-dogam-semoji. narration은 코드가 원문으로 조립하고 step_2_coverage가 대조한다."
         },
         {
           "id": "step_2_coverage",
@@ -510,7 +514,9 @@
           "skills": [
             "style/narrative",
             "style/voice",
-            "style/direction"
+            "style/direction",
+            "shared/scene-splitting",
+            "shared/motion-dogam-semoji"
           ]
         },
         {
@@ -676,21 +682,12 @@
             "remotion/public/manifest.json",
             "assembly_report.json"
           ],
-          "tools": [
-            "tts_tool",
-            "image_tool",
-            "subtitle_tool",
-            "manifest_tool",
-            "validate_tool"
-          ],
           "skills": [
-            "shared/motion-presets",
-            "shared/remotion-design-system",
             "shared/korean-tts-rules",
             "shared/image-generation",
             "shared/image-prompt-rules"
           ],
-          "notes": "이미지는 step_3a에서 이미 생성됨. 에이전트는 TTS + 이미지 검수 + 매니페스트에 집중. 렌더링은 대시보드 검토 후 수동."
+          "notes": "에이전트가 image_batch_module 로 이미지를 만들고 직접 보고 검수한다. 이어서 TTS·자막·매니페스트. 렌더링은 대시보드 검토 후 수동."
         },
         {
           "id": "step_3b_image_check",

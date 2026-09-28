@@ -1,8 +1,6 @@
 ---
 name: multi-contents-director
 description: 롱폼 기반 멀티포맷 + SNS 스케줄 + 플랫폼별 최적화
-model: claude-sonnet-4-6
-max_turns: 40
 allowed_tools:
   - Read
   - Write

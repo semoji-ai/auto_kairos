@@ -178,12 +178,12 @@ Read draft.md / targeted_claims.json                       (v3)
 
 `editorial_brief.v{N}.json` Write.
 
-기존 구조를 유지하되 **잠금 필드**(core_question/real_topic/hook_angle/excluded_angles/tone_goal)는 그대로 복사.
+기존 구조를 유지하되 **잠금 필드**(core_question/real_topic/hook_angle/excluded_angles/tone_goal/entity_slug/section_slug + coherence_spine.spine_question)는 그대로 복사. 앞의 7개는 `brief_deepener_module.LOCKED_FIELDS`가 저장 시 되돌리고, spine_question은 코드가 막지 않으니 스스로 지킨다.
 
 ### Step 5. 심화 검증 (자가 체크리스트)
 
 Write 직전 체크:
-- [ ] 잠금 필드 6개(core_question/real_topic/hook_angle/excluded_angles/tone_goal/spine_question)가 v{N-1}과 동일한가?
+- [ ] 잠금 필드(core_question/real_topic/hook_angle/excluded_angles/tone_goal/entity_slug/section_slug + coherence_spine.spine_question)가 v{N-1}과 동일한가?
 - [ ] 변경된 각 필드의 **구체성이 증가**했는가? (감소 금지)
 - [ ] evidence_anchors 중 `needs_research`가 감소했는가?
 - [ ] narrative_arc 3단 구조가 유지되는가?
@@ -195,7 +195,7 @@ Write 직전 체크:
 
 ## 금지 사항
 
-- ❌ 잠금 필드 6개(core_question/real_topic/hook_angle/excluded_angles/tone_goal/spine_question) 수정
+- ❌ 잠금 필드(core_question/real_topic/hook_angle/excluded_angles/tone_goal/entity_slug/section_slug + coherence_spine.spine_question) 수정
 - ❌ narrative_arc 3단 구조 재설계
 - ❌ 리서치 근거 없이 새 주장 추가 — 모든 추가는 chapter_facts 또는 targeted_claims에서 유래
 - ❌ `needs_research` 앵커를 증거 없이 `available`로 승격

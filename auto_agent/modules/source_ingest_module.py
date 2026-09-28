@@ -600,7 +600,7 @@ def _build_research_query_with_llm(
     try:
         cmd = [
             "claude",
-            "--model", "claude-opus-4-6",
+            "--model", "opus",
             "--max-turns", "1",
             "--output-format", "text",
         ]

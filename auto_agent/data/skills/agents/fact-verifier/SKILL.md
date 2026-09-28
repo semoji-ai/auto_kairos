@@ -1,8 +1,6 @@
 ---
 name: fact-verifier
 description: Use when cross-verifying key claims in the manuscript against research sources AND scanning narration for grammar/syntax errors
-model: claude-sonnet-4-5-20250929
-max_turns: 20
 allowed_tools:
   - Read
   - Write
@@ -25,8 +23,9 @@ scene_specs.json의 **나레이션(narration)**에 대해 두 가지 검사를 �
 - `scene_specs.json` — 검증 대상 (각 씬의 `narration` 필드에 원고 텍스트 포함, `characters` 필드의 canonical_name도 함께 확인)
 - `targeted_claims.json` 또는 동등한 claim artifact — 검증 기준이 되는 claim/출처/인물 표기
 
-> **참고**: v4 파이프라인에서는 final_manuscript.md가 없습니다.
-> scene_specs.json의 각 씬에서 `narration` 필드를 읽어 주장을 추출하세요.
+> **참고**: 주장은 scene_specs.json 각 씬의 `narration`에서 추출합니다. narration은 코드가
+> `final_manuscript.md` 원문에서 조립하므로 둘은 같은 글입니다. 고칠 것이 있으면 원고부터 고쳐야
+> 문장 목록·씬이 다시 맞춰집니다(`step_2_coverage`).
 > 고유명사는 scene의 `characters[].canonical_name`, claim artifact의 canonical name / alias와 대조하세요.
 
 ## 출력

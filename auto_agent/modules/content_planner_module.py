@@ -9,6 +9,7 @@ must_cover, key_persons 필드를 포함한 풍부한 초안을 생성한다.
 출력: editorial_brief.json (step_0b가 존재 시 스킵하는 파일과 동일)
 """
 from __future__ import annotations
+from auto_agent.utils.models import CLAUDE_SONNET
 
 import json
 import os
@@ -155,7 +156,7 @@ def generate_planner_brief(
     try:
         client = anthropic.Anthropic(api_key=api_key)
         resp = client.messages.create(
-            model="claude-sonnet-4-6",
+            model=CLAUDE_SONNET,
             max_tokens=1500,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -325,7 +326,7 @@ JSON만 반환. 설명/주석 없이.
     try:
         client = anthropic.Anthropic(api_key=api_key)
         resp = client.messages.create(
-            model="claude-sonnet-4-6",
+            model=CLAUDE_SONNET,
             max_tokens=4000,
             messages=[{"role": "user", "content": prompt}],
         )

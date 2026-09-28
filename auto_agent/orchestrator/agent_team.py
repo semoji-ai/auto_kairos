@@ -11,6 +11,7 @@ Director가 전체를 총괄하고, Researcher/Writer/Reviewer를
     result = team.run()
 """
 from __future__ import annotations
+from auto_agent.utils.models import CLAUDE_OPUS, CLAUDE_SONNET
 
 import json
 import math
@@ -282,7 +283,7 @@ class AgentTeam:
 
         tool_executor = self._make_tool_executor()
         config = AgentConfig(
-            model="claude-sonnet-4-5-20250929",
+            model=CLAUDE_SONNET,
             max_turns=15,
             max_tokens_per_turn=8192,
             budget_usd=1.0,
@@ -318,7 +319,7 @@ JSON 형식으로만 출력하세요 (episodes, statistics 포함)."""
 
         tool_executor = ToolExecutor(workspace_dir=None, allowed_paths=["/tmp"])
         config = AgentConfig(
-            model="claude-sonnet-4-5-20250929",
+            model=CLAUDE_SONNET,
             max_turns=10,
             budget_usd=0.5,
             timeout_sec=90,
@@ -384,7 +385,7 @@ JSON 형식으로만 출력하세요 (episodes, statistics 포함)."""
 
         tool_executor = ToolExecutor(workspace_dir=None, allowed_paths=["/tmp"])
         config = AgentConfig(
-            model="claude-opus-4-6",
+            model=CLAUDE_OPUS,
             max_turns=5,
             max_tokens_per_turn=16384,
             budget_usd=2.0,
@@ -482,7 +483,7 @@ JSON 형식으로만 출력하세요 (episodes, statistics 포함)."""
 
         tool_executor = ToolExecutor(workspace_dir=None, allowed_paths=["/tmp"])
         config = AgentConfig(
-            model="claude-opus-4-6",
+            model=CLAUDE_OPUS,
             max_turns=5,
             max_tokens_per_turn=16384,
             budget_usd=3.0,
@@ -528,7 +529,7 @@ JSON 형식으로만 출력하세요 (episodes, statistics 포함)."""
 
         tool_executor = ToolExecutor(workspace_dir=None, allowed_paths=["/tmp"])
         config = AgentConfig(
-            model="claude-opus-4-6",
+            model=CLAUDE_OPUS,
             max_turns=5,
             max_tokens_per_turn=16384,
             budget_usd=3.0,
@@ -588,7 +589,7 @@ JSON 형식으로만 출력하세요 (episodes, statistics 포함)."""
 
             tool_executor = ToolExecutor(workspace_dir=None, allowed_paths=["/tmp"])
             config = AgentConfig(
-                model="claude-sonnet-4-5-20250929",
+                model=CLAUDE_SONNET,
                 max_turns=3,
                 budget_usd=0.5,
                 timeout_sec=60,

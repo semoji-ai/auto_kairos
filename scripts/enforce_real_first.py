@@ -11,8 +11,13 @@ scene_specs를 재생성하면 에이전트가 `source`를 다시 판단해 실�
     python3 scripts/enforce_real_first.py <project_dir> --ledger <search_assets.json>
     python3 scripts/enforce_real_first.py <project_dir> --restore <이전 scene_specs.json>
 
---ledger  조사 원장 기준으로 확정 (권장)
---restore 조사 전이라면 이전 판정을 되살려 최소한 뒤집힘만 막는다
+--ledger     조사 원장 기준으로 확정 (권장)
+--restore    조사 전이라면 이전 판정을 되살려 최소한 뒤집힘만 막는다
+--relevance  check_asset_relevance.py --judge 결과. wrong·risky 자료는 화면에 올리지 않는다
+
+**연출이 근거를 남긴 판단은 존중한다.** 실물이 있어도 그림이 낫다고 본 씬은
+`imageAsset.keepGenerateReason`에 구체적 이유를 적는다(direction-standard 1절 3행).
+그 씬은 search로 되돌리지 않고, 찾은 실물을 그릴 때 보는 참조(refAssets)로만 붙인다.
 """
 
 from __future__ import annotations
@@ -34,13 +39,40 @@ def holder_cleared(holder: str, allow: list[str]) -> bool:
     return any(a.replace(" ", "").lower() in h for a in allow if a)
 
 
-def apply_ledger(scenes: list[dict], ledger: dict, allow: list[str] | None = None) -> dict:
+def _as_reference(ia: dict, e: dict) -> None:
+    refs = ia.setdefault("refAssets", [])
+    if not any(r.get("url") == e.get("image_url") for r in refs):
+        refs.append({
+            "desc": e.get("desc", ""), "url": e.get("image_url", ""),
+            "page": e.get("page_url", ""), "holder": e.get("holder", ""),
+            "license": e.get("license"), "checked": e.get("checked", ""),
+            "relevance": e.get("relevance", ""),
+        })
+
+
+def apply_ledger(scenes: list[dict], ledger: dict, allow: list[str] | None = None,
+                 verdicts: dict | None = None) -> dict:
     allow = allow or []
+    verdicts = verdicts or {}
     by_n = {e["n"]: e for e in ledger.get("scenes", ledger)}
     stat = {"clear": 0, "negotiate": 0, "no_asset": 0, "flipped_back": 0, "owner_ok": 0}
     for s in scenes:
         e = by_n.get(s.get("sceneNumber"))
         if not e:
+            continue
+        v = verdicts.get(s.get("sceneNumber")) or {}
+        if e.get("found") and v.get("verdict") in ("wrong", "risky"):
+            # 진짜 자료여도 이 씬과 이어지지 않으면 화면에 올리지 않는다(direction-standard 1-0).
+            # 버리지 않고 판정과 대안을 남긴다 — 다시 찾을 때 쓴다.
+            ia = s.get("imageAsset")
+            if ia is not None:
+                ia["assetNote"] = f"관련성 {v['verdict']}: {v.get('why', '')} / 대신: {v.get('instead', '')}"
+            stat["relevance_rejected"] = stat.get("relevance_rejected", 0) + 1
+            continue
+        keep = ((s.get("imageAsset") or {}).get("keepGenerateReason") or "").strip()
+        if e.get("found") and keep and (s.get("imageAsset") or {}).get("source") == "generate":
+            _as_reference(s["imageAsset"], e)
+            stat["kept_generate"] = stat.get("kept_generate", 0) + 1
             continue
         ia = s.get("imageAsset")
         if ia is None:
@@ -66,14 +98,7 @@ def apply_ledger(scenes: list[dict], ledger: dict, allow: list[str] | None = Non
         # 참조용 사진이 화면에 뜬다 — 인물 초상이나 설비 도면이 그대로 나간다.
         if e.get("use") == "reference":
             ia.setdefault("source", "generate")
-            refs = ia.setdefault("refAssets", [])
-            if not any(r.get("url") == e.get("image_url") for r in refs):
-                refs.append({
-                    "desc": e.get("desc", ""), "url": e.get("image_url", ""),
-                    "page": e.get("page_url", ""), "holder": e.get("holder", ""),
-                    "license": lic, "checked": e.get("checked", ""),
-                    "relevance": e.get("relevance", ""),
-                })
+            _as_reference(ia, e)
             stat["reference"] = stat.get("reference", 0) + 1
             continue
 
@@ -128,6 +153,8 @@ def main() -> int:
     ap.add_argument("project", type=Path)
     ap.add_argument("--ledger", type=Path)
     ap.add_argument("--restore", type=Path)
+    ap.add_argument("--relevance", type=Path,
+                    help="check_asset_relevance.py --judge -o 결과 (wrong·risky 는 올리지 않는다)")
     ap.add_argument("--allow-holder", nargs="*", default=[],
                     help="협의 없이 쓰기로 한 권리자 (부분 일치)")
     ap.add_argument("--dry-run", action="store_true")
@@ -141,8 +168,12 @@ def main() -> int:
     scenes = data.get("scenes", data)
 
     if args.ledger:
+        verdicts = {}
+        if args.relevance and args.relevance.exists():
+            judged = json.loads(args.relevance.read_text(encoding="utf-8")).get("judged", [])
+            verdicts = {j.get("n"): j for j in judged}
         stat = apply_ledger(scenes, json.loads(args.ledger.read_text(encoding="utf-8")),
-                            args.allow_holder)
+                            args.allow_holder, verdicts)
     else:
         prev = json.loads(args.restore.read_text(encoding="utf-8"))
         stat = apply_restore(scenes, prev.get("scenes", prev))

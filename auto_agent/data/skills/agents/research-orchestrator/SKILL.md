@@ -1,7 +1,7 @@
 ---
 name: research-orchestrator
 description: 심층 리서치 탐색 전담. Explorer 병렬 배포 → 탐색 완료 → 종료.
-model: claude-sonnet-4-6
+model: sonnet
 max_turns: 50
 allowed_tools:
   - Bash

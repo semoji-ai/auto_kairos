@@ -1,6 +1,6 @@
 #!/bin/bash
 # 화풍 재정비 — 무명 인물 조사 → 프롬프트 재빌드 → 전 컷 재생성 → 등록 → 검수
-cd /Users/jleavens_macmini/LocalProjects/auto_kairos_v3
+cd "$(dirname "$0")/.."
 for ep in "$@"; do
   L="_imggen/${ep}_restyle.log"
   D=$(.venv/bin/python -c "

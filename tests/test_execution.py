@@ -21,11 +21,11 @@ def test_routing_precedence_and_models():
     config = {"execution": {"provider": "claude", "agents": {
         "script-director": {"provider": "codex", "profile": "quality"}}}}
     assert ex.resolve_execution("script-director", {}, config).model == "gpt-6-astra"
-    assert ex.resolve_execution("reviewer", {}, config).model == "claude-opus-5"
+    assert ex.resolve_execution("reviewer", {}, config).model == "claude-opus-5-5"
     selected = ex.resolve_execution("script-director", {}, config,
                                     {"execution": {"provider": "claude", "model": "claude-fable-5-1"}})
     assert selected.model == "claude-fable-5-1"
-    assert ex.resolve_execution("writer", {}, {"execution": {"provider": "codex"}}).model == "gpt-5.6-sol"
+    assert ex.resolve_execution("writer", {}, {"execution": {"provider": "codex"}}).model == "gpt-6-astra"
 
 
 def test_bad_provider_or_model_does_not_silently_fallback():
@@ -35,7 +35,7 @@ def test_bad_provider_or_model_does_not_silently_fallback():
         ex.resolve_execution("writer", {}, {"execution": {"provider": "codex", "model": "opus"}})
 
 
-@pytest.mark.parametrize("provider,model", [("claude", "claude-opus-5"), ("codex", "gpt-5.6-sol")])
+@pytest.mark.parametrize("provider,model", [("claude", "claude-opus-5-5"), ("codex", "gpt-6-astra")])
 def test_shared_chapter_instructions_survive_provider_selection(tmp_path, monkeypatch, provider, model):
     monkeypatch.setattr(ex.shutil, "which", lambda name: "/bin/" + name)
     proc = Mock(returncode=0)
@@ -203,7 +203,7 @@ def test_dry_run_resolves_models_without_execution_or_notifications(capsys):
     runner.pipeline = {"phases": [{"steps": [{"id": "step_2", "agent": "writer"}]}]}
     runner._load_agents_config = lambda: {"subagents": {}}
     runner.run(dry_run=True, execution={"provider": "codex"})
-    assert "codex/gpt-5.6-sol" in capsys.readouterr().out
+    assert "codex/gpt-6-astra" in capsys.readouterr().out
 
 
 def test_single_call_missing_output_fails_before_writing(tmp_path):

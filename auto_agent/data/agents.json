@@ -62,6 +62,9 @@
         "Write"
       ],
       "skill_file": "agents/brief-interviewer/SKILL.md",
+      "skills": [
+        "shared/brief-dna.md"
+      ],
       "notes": "phase_0 step_0b. editorial_brief.json이 이미 존재하면 스킵. /auto-kairos 스킬에서 CLI 인터뷰로 생성된 경우도 스킵."
     },
     "skeleton-researcher": {
@@ -81,12 +84,13 @@
     "research-strategist": {
       "description": "editorial_brief + skeleton 기반으로 outline / research_queries / hook_strategy를 설계하는 전략가. 챕터 서사 흐름, 검색 쿼리, 훅 전략을 한 번에 결정.",
       "model": "opus",
-      "max_turns": 5,
+      "max_turns": 15,
       "budget": "$0.5",
       "max_duration_minutes": 5,
       "allowed_tools": [
         "Read",
-        "Write"
+        "Write",
+        "Glob"
       ],
       "skill_file": "agents/research-strategist/SKILL.md",
       "notes": "step_1_strategy. skeleton.json + editorial_brief.json → outline.json + research_queries.json + hook_strategy.json. 외부 검색 없음."
@@ -119,7 +123,8 @@
       "allowed_tools": [
         "Read",
         "Write",
-        "Glob"
+        "Glob",
+        "Grep"
       ],
       "skill_file": "agents/draft-writer/SKILL.md",
       "shared_skills": [
@@ -154,7 +159,8 @@
         "Read",
         "Write",
         "Edit",
-        "Glob"
+        "Glob",
+        "Bash"
       ],
       "skill_file": "agents/script-director/SKILL.md",
       "shared_skills": [
@@ -162,10 +168,6 @@
         "shared/motion-presets",
         "shared/remotion-design-system"
       ],
-      "skill_limits": {
-        "remotion-design-system": 10000,
-        "motion-presets": 7000
-      },
       "chunked_parallel": {
         "split_by": "chapter",
         "max_parallel": 3,
@@ -197,7 +199,8 @@
       "max_duration_minutes": 15,
       "allowed_tools": [
         "Read",
-        "Write"
+        "Write",
+        "Glob"
       ],
       "skill_file": "agents/data-mapper/SKILL.md",
       "notes": "Stage 2 Pass 2. script-director가 비워둔 데이터 필드를 research_report.json에서 매핑."
@@ -219,10 +222,6 @@
         "shared/motion-presets",
         "shared/remotion-design-system"
       ],
-      "skill_limits": {
-        "remotion-design-system": 8000,
-        "motion-presets": 6000
-      },
       "notes": "Stage 2 래칫. 시청자(이탈예측) + 전문가(시각화적합성) 2관점 평가. 85점 이상 PASS."
     },
     "manuscript-reviewer": {
@@ -265,7 +264,8 @@
       "allowed_tools": [
         "Read",
         "Write",
-        "WebSearch"
+        "WebSearch",
+        "WebFetch"
       ],
       "skill_file": "agents/fact-verifier/SKILL.md",
       "notes": "Stage 2에서 비차단 실행. v4: scene_specs.json의 narration에서 주장 추출."
@@ -317,7 +317,8 @@
         "Read",
         "Write",
         "Glob",
-        "Bash"
+        "Bash",
+        "Edit"
       ],
       "skill_file": "agents/assembly-director/SKILL.md",
       "shared_skills": [
@@ -326,11 +327,6 @@
         "shared/image-generation",
         "shared/image-prompt-rules"
       ],
-      "skill_limits": {
-        "motion-presets": 7000,
-        "image-generation": 6000,
-        "korean-tts-rules": 6000
-      },
       "tools": {
         "tts_tool": {
           "module": "tts_generator",
@@ -420,7 +416,8 @@
         "Read",
         "Write",
         "Bash",
-        "WebSearch"
+        "WebSearch",
+        "WebFetch"
       ],
       "skill_file": "agents/threads-publisher/SKILL.md",
       "notes": "운영 계층. 매일 KST 07:00 자동 실행. 볼트 세션 로그 → 포스트 생성."

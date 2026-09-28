@@ -8,6 +8,7 @@
 출력: stdout에 JSON {"status": "completed", ...}
 """
 from __future__ import annotations
+from auto_agent.utils.models import CLAUDE_HAIKU
 import json
 import logging
 import os
@@ -485,7 +486,7 @@ def run_batch(
                 f"위 {len(img_parts)}장의 이미지 중 이 씬에 가장 적합한 이미지 번호를 숫자 하나만 답하세요. (예: 2)"
             )})
             resp = client.messages.create(
-                model="claude-haiku-4-5-20251001",
+                model=CLAUDE_HAIKU,
                 max_tokens=10,
                 messages=[{"role": "user", "content": content}],
             )

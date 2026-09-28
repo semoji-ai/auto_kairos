@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /Users/jleavens_macmini/LocalProjects/auto_kairos_v3
+cd "$(dirname "$0")/.."
 for ep in "$@"; do
   sed -e "s|__INPUT__|_imggen/${ep}_viewer_in.json|" \
       -e "s|__REVIEW__|_imggen/${ep}_viewer.json|" \

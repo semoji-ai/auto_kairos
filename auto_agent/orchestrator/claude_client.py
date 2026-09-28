@@ -5,7 +5,7 @@
 
     # 단일 호출 (no tools)
     text, usage = client.call_single(
-        model="claude-sonnet-4-6",
+        model=CLAUDE_SONNET,
         static_system=skill_md + shared_skills,   # 캐시 대상
         dynamic_system=project_context + task,    # 캐시 제외
         user_message="작업 내용",
@@ -13,7 +13,7 @@
 
     # 멀티턴 에이전트 루프 (tool_use)
     text, usage = client.call_agent(
-        model="claude-opus-4-6",
+        model=CLAUDE_OPUS,
         static_system=skill_md + shared_skills,   # 캐시 대상
         dynamic_system=project_context,           # 캐시 제외
         initial_message=task,
@@ -28,6 +28,7 @@
     #  'cache_read_input_tokens': 12000, 'cache_creation_input_tokens': 0}
 """
 from __future__ import annotations
+from auto_agent.utils.models import CLAUDE_OPUS, CLAUDE_SONNET
 
 import os
 from typing import Any, Callable, Optional

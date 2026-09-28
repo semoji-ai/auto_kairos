@@ -8,6 +8,7 @@ Anthropic API 기반 에이전트 루프.
   - 콜백 지원 (로깅/대시보드)
 """
 
+from auto_agent.utils.models import CLAUDE_SONNET
 import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional
@@ -35,7 +36,7 @@ class AgentResult:
 class AgentConfig:
     """에이전트 실행 설정."""
 
-    model: str = "claude-sonnet-4-5-20250929"
+    model: str = CLAUDE_SONNET
     max_turns: int = 30
     max_tokens_per_turn: int = 16384
     budget_usd: float = 3.0

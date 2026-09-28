@@ -1,8 +1,6 @@
 ---
 name: threads-publisher
 description: 세모지 Threads 콘텐츠 기획 + 작성 + 게시 에이전트 — 매일 5-6개 AI 영상 제작 과정 공유
-model: claude-sonnet-4-6
-max_turns: 20
 allowed_tools:
   - Read
   - Write

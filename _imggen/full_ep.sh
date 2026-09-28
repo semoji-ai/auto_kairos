@@ -2,7 +2,7 @@
 # 한 편을 연출 완성까지 돌린다.
 # 순서가 중요하다 — TTS는 시작 시점에 읽은 scene_specs를 끝에 다시 쓴다.
 # 뒤에 두면 그 사이의 모든 수정이 날아간다(EP02·EP07에서 실제로 겪음).
-cd /Users/jleavens_macmini/LocalProjects/auto_kairos_v3
+cd "$(dirname "$0")/.."
 for key in "$@"; do
   D=$(.venv/bin/python -c "
 import json;m=json.load(open('_imggen/ep_map.json'))
@@ -30,7 +30,7 @@ PY
   echo "[$key] TTS $(ls $D/audio/*.mp3 2>/dev/null | wc -l)개 $(date +%H:%M)"
 
   # 2) 자료 조사 — 선별해서 전 씬에서 고른다
-  .venv/bin/python scripts/select_asset_candidates.py "$D" -o "_imggen/${key}_candidates.json" >> $L 2>&1
+  .venv/bin/python scripts/select_asset_candidates.py "$D" -o "_imggen/${key}_candidates.json" --judge >> $L 2>&1
   if [ ! -f "_imggen/${key}_search_assets.json" ]; then
     codex --search exec --skip-git-repo-check --sandbox workspace-write "
 _imggen/${key}_candidates.json 의 각 씬에 쓸 **실제 사진·문서·사료**를 찾으세요.
@@ -71,13 +71,18 @@ _imggen/${key}_candidates.json 의 각 씬에 쓸 **실제 사진·문서·사�
       -o "_imggen/${key}_relevance.json" >> $L 2>&1 \
     || echo "[$key] ⚠ 관련성 미달 자료 있음 — ${key}_relevance.json 확인"
 
-  # 3) 실물 우선 확정 → 4) 배지·레이아웃 → 5) 채점표 채우기
-  .venv/bin/python scripts/enforce_real_first.py "$D" --ledger "_imggen/${key}_search_assets.json" >> $L 2>&1
+  # 3) 실물 우선 확정(관련성 판정 반영) → 4) 빈 배지·사라지는 레이아웃 → 5) 채점 신호 검출
+  .venv/bin/python scripts/enforce_real_first.py "$D" --ledger "_imggen/${key}_search_assets.json" \
+      --relevance "_imggen/${key}_relevance.json" >> $L 2>&1
   .venv/bin/python scripts/apply_direction_fixes.py "$D" >> $L 2>&1
   .venv/bin/python scripts/rubric_autofill.py "$D" >> $L 2>&1
   echo "[$key] 연출 보정 완료 $(date +%H:%M)"
 
-  bash _imggen/score_ep.sh "$key" >> $L 2>&1
+  if [ -f _imggen/score_ep.sh ]; then
+    bash _imggen/score_ep.sh "$key" >> $L 2>&1
+  else
+    echo "[$key] 채점 스크립트(_imggen/score_ep.sh)가 없어 채점을 건너뜁니다" | tee -a $L
+  fi
   .venv/bin/python -c "
 import json
 d=json.load(open('_imggen/${key}_score.json'))
