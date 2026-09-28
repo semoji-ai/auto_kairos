@@ -95,7 +95,7 @@ def gemini_analyze(audio_path: str) -> dict:
 
     if file_size_mb <= 19:
         response = gemini_client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=[
                 gtypes.Part.from_bytes(data=audio_bytes, mime_type=mime_type),
                 GEMINI_PROMPT,
@@ -112,7 +112,7 @@ def gemini_analyze(audio_path: str) -> dict:
         if uploaded.state == "FAILED":
             raise RuntimeError("Gemini 파일 업로드 실패")
         response = gemini_client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=[
                 gtypes.Part.from_uri(file_uri=uploaded.uri, mime_type=mime_type),
                 GEMINI_PROMPT,

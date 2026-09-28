@@ -1570,7 +1570,7 @@ class PipelineRunner:
             proc = subprocess.run(
                 [cli_path, "--print", "--output-format", "json",
                  "--dangerously-skip-permissions",
-                 "--model", "claude-sonnet-4-6", "--max-turns", "1"],
+                 "--model", "sonnet", "--max-turns", "1"],
                 input=supplement_prompt, capture_output=True, text=True, encoding="utf-8",
                 cwd=str(self.project_dir), timeout=180,
                 env={**os.environ, "CLAUDECODE": ""},
@@ -1648,7 +1648,7 @@ class PipelineRunner:
                 proc = subprocess.run(
                     [cli_path, "--print", "--output-format", "json",
                      "--dangerously-skip-permissions",
-                     "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
+                     "--model", "haiku", "--max-turns", "1"],
                     input=verify_prompt, capture_output=True, text=True, encoding="utf-8",
                     cwd=str(self.project_dir), timeout=30,
                     env={**os.environ, "CLAUDECODE": ""},
@@ -1697,7 +1697,7 @@ class PipelineRunner:
                             proc2 = subprocess.run(
                                 [cli_path, "--print", "--output-format", "json",
                                  "--dangerously-skip-permissions",
-                                 "--model", "claude-haiku-4-5-20251001", "--max-turns", "1"],
+                                 "--model", "haiku", "--max-turns", "1"],
                                 input=verify2_prompt, capture_output=True, text=True, encoding="utf-8",
                                 cwd=str(self.project_dir), timeout=30,
                                 env={**os.environ, "CLAUDECODE": ""},
@@ -2386,7 +2386,7 @@ class PipelineRunner:
         prompt = self._build_chapter_prompt(chapter_step, chapter_specs)
 
         # 3. Claude CLI agent 모드 (Write 도구 허용, multi-turn)
-        model = step.get("single_call_model", "claude-opus-4-6")
+        model = step.get("single_call_model", "opus")
         timeout_sec = self._get_agent_timeout(agent_name)
 
         # 프롬프트에 파일 저장 지시 추가
@@ -3600,7 +3600,7 @@ captions는 블록 공통 참고입니다. 자동 표시 기본 위치는 captio
 지정한 임시 JSON 외에 원고·목록·기존 scene_specs.json을 수정하지 마세요.
 {context_memory_block}"""
 
-        model = step.get("single_call_model", "claude-opus-4-6")
+        model = step.get("single_call_model", "opus")
         timeout_sec = self._get_agent_timeout(agent_name)
 
         # Preserve main's shared Claude system-prefix cache, while Codex receives
@@ -4195,7 +4195,7 @@ captions는 블록 공통 참고입니다. 자동 표시 기본 위치는 captio
         step_id = step["id"]
         step_name = step.get("name", step_id)
         agent = step.get("agent", "")
-        target_model = step.get("single_call_model", "claude-opus-4-6")
+        target_model = step.get("single_call_model", "opus")
         outputs = step.get("output", [])
         if isinstance(outputs, str):
             outputs = [outputs]
@@ -4830,7 +4830,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 error=f"agents.json에 '{agent}' 정의 없음",
             )
 
-        model = step.get("model") or agent_def.get("model", "claude-sonnet-4-5-20250929")
+        model = step.get("model") or agent_def.get("model", "sonnet")
         max_turns = agent_def.get("max_turns", 30)
         allowed_tools = agent_def.get("allowed_tools", ["Read", "Write", "Glob"])
         budget = self._get_agent_budget(agent)

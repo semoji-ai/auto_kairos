@@ -83,7 +83,7 @@ def _transcribe_with_gemini(audio_path: Path) -> str:
             audio_data = f.read()
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=[
                 {
                     "parts": [

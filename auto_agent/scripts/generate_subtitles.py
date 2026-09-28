@@ -439,7 +439,7 @@ def get_gemini_word_timestamps(gemini_client, audio_path: Path, narration: str) 
 - 실제 발화 타이밍에 맞춰 정확하게"""
 
     response = gemini_client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=[
             types.Content(
                 parts=[

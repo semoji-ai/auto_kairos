@@ -2195,7 +2195,7 @@ def cmd_multi_contents(args):
         [
             cli_path, "-p", prompt,
             "--allowedTools", "Read", "Write", "Edit", "Bash", "Glob", "Grep",
-            "--model", "claude-sonnet-4-5-20250929",
+            "--model", "sonnet",
             "--max-turns", "80",
         ],
         cwd=str(project_dir),

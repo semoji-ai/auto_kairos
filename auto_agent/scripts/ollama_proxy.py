@@ -10,7 +10,7 @@ Usage:
 
 테스트:
   curl http://localhost:8090/v1/messages -X POST -H "Content-Type: application/json" \\
-    -d '{"model":"claude-sonnet-4-6","messages":[{"role":"user","content":"안녕"}],"max_tokens":100}'
+    -d '{"model":"claude-sonnet-5","messages":[{"role":"user","content":"안녕"}],"max_tokens":100}'
 """
 import argparse
 import json

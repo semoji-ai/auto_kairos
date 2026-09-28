@@ -1,4 +1,5 @@
 """trend-analyst / performance-analyst 실행 래퍼."""
+from auto_agent.utils.models import CODEX_DEFAULT, CODEX_LIGHT
 import json
 import logging
 import os
@@ -1422,9 +1423,9 @@ Stage 0 피드백을 insights/feedback/ 에 저장하세요."""
         if override:
             return override
         mapped = {
-            "opus": "gpt-5.4",
-            "sonnet": "gpt-5.4-mini",
-            "haiku": "gpt-5.4-mini",
+            "opus": CODEX_DEFAULT,
+            "sonnet": CODEX_LIGHT,
+            "haiku": CODEX_LIGHT,
         }
         return mapped.get(model, model)
 

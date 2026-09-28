@@ -2288,7 +2288,7 @@ layout, mood, imageAsset, motion, title, concept, headline/items 등 연출 요�
             env = os.environ.copy()
             env.pop("CLAUDECODE", None)
             result = subprocess.run(
-                ["claude", "--model", "claude-sonnet-4-6", "--max-turns", "3",
+                ["claude", "--model", "sonnet", "--max-turns", "3",
                  "--output-format", "text"],
                 input=prompt, capture_output=True, text=True, env=env,
                 cwd=str(get_workspace_dir()), timeout=180,
@@ -2730,7 +2730,7 @@ async def auto_prompt(request: Request, project_ref: str, scene_num: int):
         import shutil
         cli_path = shutil.which("claude") or str(Path.home() / ".local/bin/claude")
         proc = subprocess.run(
-            [cli_path, "--print", "--model", "claude-sonnet-4-5-20250929", "--max-turns", "1"],
+            [cli_path, "--print", "--model", "sonnet", "--max-turns", "1"],
             input=prompt_input, capture_output=True, text=True, encoding="utf-8", timeout=30,
             env={**dict(os.environ), "CLAUDECODE": ""},
         )
@@ -3216,7 +3216,7 @@ layout, mood, imageAsset, motion, headline/items 등 연출 요소만 개선합�
         env = os.environ.copy()
         env.pop("CLAUDECODE", None)
         result = subprocess.run(
-            ["claude", "--model", "claude-sonnet-4-6", "--max-turns", "3",
+            ["claude", "--model", "sonnet", "--max-turns", "3",
              "--output-format", "text"],
             input=prompt, capture_output=True, text=True, env=env,
             cwd=str(get_workspace_dir()), timeout=120,

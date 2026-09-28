@@ -15,10 +15,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from auto_agent.utils.codex_cli import build_codex_exec_cmd
+from auto_agent.utils.models import CLAUDE_OPUS, CODEX_DEFAULT
 from auto_agent.utils.platform import subprocess_kwargs
 
 PROFILES = {
-    "balanced": {"claude": "claude-opus-5", "codex": "gpt-5.6-sol"},
+    "balanced": {"claude": CLAUDE_OPUS, "codex": CODEX_DEFAULT},
     "quality": {"claude": "claude-fable-5-1", "codex": "gpt-6-astra"},
 }
 
@@ -72,7 +73,7 @@ def resolve_execution(agent: str, agent_def: dict, config: dict, step: dict | No
     model = model or os.getenv(f"AUTO_AGENT_{provider.upper()}_MODEL")
     if not model:
         if profile == "legacy":
-            model = agent_def.get("codex_model", "gpt-5.6-sol") if provider == "codex" else (
+            model = agent_def.get("codex_model", CODEX_DEFAULT) if provider == "codex" else (
                 (step or {}).get("model") or (step or {}).get("single_call_model") or agent_def.get("model", "sonnet"))
         else:
             model = PROFILES[profile][provider]

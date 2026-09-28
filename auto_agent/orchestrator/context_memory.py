@@ -7,6 +7,7 @@
   - 웹 UI에서 조회/수동 편집
 """
 
+from auto_agent.utils.models import CLAUDE_HAIKU
 import json
 import os
 import re
@@ -18,7 +19,7 @@ from typing import Optional
 
 from auto_agent.utils.platform import subprocess_kwargs
 
-HAIKU_MODEL = "claude-haiku-4-5-20251001"
+HAIKU_MODEL = CLAUDE_HAIKU
 MAX_COLLECT_FILES = 5
 MAX_FILE_SIZE = 50_000  # bytes
 MAX_SNIPPET_LENGTH = 10_000  # chars

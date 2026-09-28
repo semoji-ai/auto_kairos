@@ -7,6 +7,7 @@ Editorial Brief Module — 기획 의도 고정 모듈
 
 /auto-kairos 스킬에서 CLI 인터랙티브 인터뷰 후 직접 생성된 경우도 스킵됨.
 """
+from auto_agent.utils.models import CLAUDE_SONNET
 import json
 import os
 import sys
@@ -107,7 +108,7 @@ def generate_brief_from_topic(topic: str, writing_style: str = "") -> dict:
     try:
         client = anthropic.Anthropic(api_key=api_key)
         response = client.messages.create(
-            model="claude-sonnet-4-6",
+            model=CLAUDE_SONNET,
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
         )
