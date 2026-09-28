@@ -2,7 +2,7 @@
 # 한 편을 연출 완성까지 돌린다.
 # 순서가 중요하다 — TTS는 시작 시점에 읽은 scene_specs를 끝에 다시 쓴다.
 # 뒤에 두면 그 사이의 모든 수정이 날아간다(EP02·EP07에서 실제로 겪음).
-cd /Users/jleavens_macmini/LocalProjects/auto_kairos_v3
+cd "$(dirname "$0")/.."
 for key in "$@"; do
   D=$(.venv/bin/python -c "
 import json;m=json.load(open('_imggen/ep_map.json'))
@@ -77,7 +77,11 @@ _imggen/${key}_candidates.json 의 각 씬에 쓸 **실제 사진·문서·사�
   .venv/bin/python scripts/rubric_autofill.py "$D" >> $L 2>&1
   echo "[$key] 연출 보정 완료 $(date +%H:%M)"
 
-  bash _imggen/score_ep.sh "$key" >> $L 2>&1
+  if [ -f _imggen/score_ep.sh ]; then
+    bash _imggen/score_ep.sh "$key" >> $L 2>&1
+  else
+    echo "[$key] 채점 스크립트(_imggen/score_ep.sh)가 없어 채점을 건너뜁니다" | tee -a $L
+  fi
   .venv/bin/python -c "
 import json
 d=json.load(open('_imggen/${key}_score.json'))

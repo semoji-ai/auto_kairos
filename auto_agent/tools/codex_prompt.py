@@ -41,7 +41,10 @@ VALIDATOR_PATH = Path.home() / ".claude/skills/image-prompt/scripts/check_prompt
 # style_keywords 쪽에 이미 조명/카메라 지시가 있어도 중복 주입은 검증기 통과에
 # 문제 없으므로(중복 경고 없음) 항상 붙인다.
 _DEFAULT_CAMERA = "eye-level composition, clear central focal subject, balanced framing"
-_DEFAULT_LIGHTING = "soft natural light, gentle key light with subtle fill"
+# 평면 일러스트에서 조명은 빛이 아니라 색면의 밝기 차다 — 키라이트·필 같은 사진 조명
+# 어휘는 회화적 렌더링을 부른다(docs/rules/character-sheet-rules.md 4-1절 실측).
+_DEFAULT_LIGHTING = ("light expressed as a wide contrast between darker and lighter flat colour planes, "
+                     "each shadow a single flat plane one step darker than its base colour")
 
 
 def _translate(text: str) -> str:

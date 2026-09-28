@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /Users/jleavens_macmini/LocalProjects/auto_kairos_v3
+cd "$(dirname "$0")/.."
 for ep in "$@"; do
   free=$(df -m /System/Volumes/Data | awk 'NR==2{print $4}')
   [ "$free" -lt 2048 ] && { echo "  ✗ 디스크 ${free}MB — 중단"; exit 1; }

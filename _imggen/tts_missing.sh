@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /Users/jleavens_macmini/LocalProjects/auto_kairos_v3
+cd "$(dirname "$0")/.."
 run() {
   ep=$1; shift
   D=$(.venv/bin/python -c "

@@ -2542,9 +2542,9 @@ class PipelineRunner:
         # 컨텍스트 파일 빌드 (챕터 스코프)
         context_block = ""
         # 리서치: 챕터별 facts 우선 (compact), 없으면 digest fallback
-        chapter_facts_path = self.project_dir / "chapter_facts" / f"chapter_{chapter_num}.json"
+        chapter_facts_path = self.project_dir / "chapter_facts" / f"chapter_{int(chapter_num):02d}.json"
         if chapter_facts_path.exists():
-            context_block += f'\n<file name="chapter_facts/chapter_{chapter_num}.json">\n{chapter_facts_path.read_text(encoding="utf-8")[:10000]}\n</file>\n'
+            context_block += f'\n<file name="chapter_facts/chapter_{int(chapter_num):02d}.json">\n{chapter_facts_path.read_text(encoding="utf-8")[:10000]}\n</file>\n'
         else:
             for fname in ["research_digest.json", "research_report.json"]:
                 fpath = self.project_dir / fname
@@ -2777,9 +2777,9 @@ class PipelineRunner:
         # 공통 컨텍스트 파일 (챕터 스코프 — 글로벌 전체 반복 금지)
         context_block = ""
         # 리서치: 챕터별 facts 우선 (compact), 없으면 digest fallback
-        chapter_facts_path = self.project_dir / "chapter_facts" / f"chapter_{chapter_num}.json"
+        chapter_facts_path = self.project_dir / "chapter_facts" / f"chapter_{int(chapter_num):02d}.json"
         if chapter_facts_path.exists():
-            context_block += f'\n<file name="chapter_facts/chapter_{chapter_num}.json">\n{chapter_facts_path.read_text(encoding="utf-8")[:10000]}\n</file>\n'
+            context_block += f'\n<file name="chapter_facts/chapter_{int(chapter_num):02d}.json">\n{chapter_facts_path.read_text(encoding="utf-8")[:10000]}\n</file>\n'
         else:
             for fname in ["research_digest.json", "research_report.json"]:
                 fpath = self.project_dir / fname
