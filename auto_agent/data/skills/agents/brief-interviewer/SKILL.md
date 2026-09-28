@@ -100,8 +100,13 @@ hook이 real_topic보다 크면 콘텐츠가 드리프트됩니다.
 
 ### Step 4. editorial_brief.v1.json 생성
 
+필드 형식의 정본은 `brief-dna`(함께 주입)다. 특히 **`coherence_spine`을 다른 레버보다 먼저**
+정하고, narrative_arc·human_truth·hidden_truth 등에는 `spine_link`를 붙인다(brief-dna Lever 6).
+아래는 뼈대다.
+
 ```json
 {
+  "coherence_spine": {"spine_question": "...", "spine_answer": "...", "layer_map": {...}, "must_include_links": [...]},
   "core_question": "이 영상이 답해야 하는 단 하나의 질문",
   "real_topic": "진짜 설명 대상 — hook_angle이 아님",
   "hook_angle": "처음 5~15초 도입 장치",

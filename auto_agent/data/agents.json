@@ -62,6 +62,9 @@
         "Write"
       ],
       "skill_file": "agents/brief-interviewer/SKILL.md",
+      "skills": [
+        "shared/brief-dna.md"
+      ],
       "notes": "phase_0 step_0b. editorial_brief.json이 이미 존재하면 스킵. /auto-kairos 스킬에서 CLI 인터뷰로 생성된 경우도 스킵."
     },
     "skeleton-researcher": {
