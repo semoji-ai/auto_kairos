@@ -281,7 +281,7 @@
 | 캐릭터 연기 | eye-blink | 눈 깜빡임 | LayeredCover | partial | 까딱·깜빡임 native, 패럴랙스 drift 미이식 |  | core-28 |
 | 캐릭터 연기 | flip-turn | 뒷모습→앞모습 뒤집기 턴 | FlipTurn | partial | Y축 뒤집기(3D 레이어) |  | core-35 |
 | 캐릭터 연기 | hop-arc | 포물선 점프 + 먼지 링 | HopArc | partial | 포물선 → 키 굽기 |  | characters-09 |
-| 캐릭터 연기 | idle-bob | 아이들 까딱(바디 밥) | LayeredCover | partial | 까딱·깜빡임 native, 패럴랙스 drift 미이식 | ✅ AE 이식(native) | core-28 |
+| 캐릭터 연기 | idle-bob | 아이들 까딱(바디 밥) | LayeredCover | partial | 까딱·깜빡임 native, 패럴랙스 drift 미이식 | ✅ AE 이식(partial) | core-28 |
 | 캐릭터 연기 | logo-face-mask | 브랜드 로고 얼굴 가면 | LogoFaceMask | partial | 얼굴 로고 마스크 |  | characters-03 |
 | 캐릭터 연기 | marionette-puppeteer | 꼭두각시 조종자 | Marionette | partial | 줄 인형 물리 |  | x_acting-20 |
 | 캐릭터 연기 | rope-swing-traverse | 밧줄 건너뛰기(카메라 추적) | RopeSwing | partial | 진자 물리 → 키 굽기 |  | x_acting-16 |
