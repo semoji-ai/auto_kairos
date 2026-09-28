@@ -1,0 +1,1789 @@
+{
+ "version": 1,
+ "source": "semoji-motion/dogam",
+ "total_catalog": 343,
+ "count": 12,
+ "categories": [
+  "사진·자료 처리",
+  "전환",
+  "차트·인포그래픽",
+  "카메라",
+  "캐릭터 연기",
+  "콜아웃·라벨"
+ ],
+ "techniques": [
+  {
+   "id": "bar-chart-v",
+   "name": "세로 막대그래프 + 리본 헤더 + 마스코트",
+   "category": "차트·인포그래픽",
+   "summary": "리본 헤더가 내려오고 막대가 동시에 자라며 강조 막대 위에 마스코트가 올라탄다.",
+   "spec": "리본 9f ease-out. 막대 3개 동시 15f ease-out, 강조 #FB0000 130×300, 나머지 #555. 그룹 간격 약 45f.",
+   "tags": [
+    "막대",
+    "마스코트",
+    "[옵션] icons(막대 끝 아이콘 팝 4f back-out)·staggerF(그룹 안 막대 스태거) — 데모 x_pirates-08"
+   ],
+   "preview": "charts-04",
+   "previewJpg": "jsx/dogam/assets/previews/charts-04.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/charts-04.mp4",
+   "kind": "element",
+   "create": false,
+   "support": "native",
+   "aeNote": "",
+   "params": [
+    {
+     "key": "ribbonDrop",
+     "default": 9,
+     "min": 0,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "제목 리본 낙하 시간",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "groupDelay",
+     "default": 12,
+     "min": 0,
+     "max": 60,
+     "step": 1,
+     "type": "number",
+     "label": "첫 그룹 등장 지연",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "groupStagger",
+     "default": 45,
+     "min": 0,
+     "max": 150,
+     "step": 1,
+     "type": "number",
+     "label": "그룹 간 간격",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "growDur",
+     "default": 15,
+     "min": 1,
+     "max": 60,
+     "step": 1,
+     "type": "number",
+     "label": "막대 자라는 시간",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "ease",
+     "default": "auto",
+     "options": [
+      "auto",
+      "snappy",
+      "bar",
+      "inout",
+      "out",
+      "linear"
+     ],
+     "type": "string",
+     "label": "막대 이징 (auto=원래값)",
+     "group": "motion"
+    },
+    {
+     "key": "mascotOvershoot",
+     "default": 1.15,
+     "min": 1,
+     "max": 1.6,
+     "step": 0.01,
+     "type": "number",
+     "label": "마스코트 팝 오버슈트(배)",
+     "group": "motion",
+     "unit": "배"
+    },
+    {
+     "key": "maxH",
+     "default": 380,
+     "min": 100,
+     "max": 700,
+     "step": 10,
+     "type": "number",
+     "label": "최대 막대 높이",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "barW",
+     "default": 130,
+     "min": 30,
+     "max": 260,
+     "step": 2,
+     "type": "number",
+     "label": "막대 폭",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "gap",
+     "default": 44,
+     "min": 0,
+     "max": 150,
+     "step": 2,
+     "type": "number",
+     "label": "막대 간격",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "hiColor",
+     "default": "#FB0000",
+     "type": "color",
+     "label": "강조 막대 색",
+     "group": "look"
+    },
+    {
+     "key": "color",
+     "default": "#555",
+     "type": "color",
+     "label": "막대 색",
+     "group": "look"
+    },
+    {
+     "key": "textColor",
+     "default": "#1b1b1b",
+     "type": "color",
+     "label": "글자·기준선 색",
+     "group": "look"
+    },
+    {
+     "key": "staggerF",
+     "default": 0,
+     "min": 0,
+     "max": 20,
+     "step": 1,
+     "type": "number",
+     "label": "그룹 안 막대 스태거(0=동시, 기존)",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "iconPop",
+     "default": 4,
+     "min": 1,
+     "max": 20,
+     "step": 1,
+     "type": "number",
+     "label": "막대 끝 아이콘 팝 길이(icons 있을 때)",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "iconSize",
+     "default": 110,
+     "min": 20,
+     "max": 260,
+     "step": 1,
+     "type": "number",
+     "label": "막대 끝 아이콘 크기",
+     "group": "size",
+     "unit": "px"
+    }
+   ],
+   "content": {
+    "title": "1인당 연간 소비량",
+    "max": 80,
+    "baseY": 830,
+    "unit": "그릇",
+    "mascot": "demo/s06_kid.png",
+    "mascotSize": 150,
+    "icons": [],
+    "groups": [
+     {
+      "x": 520,
+      "caption": "2014년",
+      "bars": [
+       {
+        "label": "짜장면",
+        "value": 72,
+        "hi": true
+       },
+       {
+        "label": "짬뽕",
+        "value": 41
+       },
+       {
+        "label": "탕수육",
+        "value": 23
+       }
+      ]
+     },
+     {
+      "x": 1400,
+      "caption": "2024년",
+      "bars": [
+       {
+        "label": "짜장면",
+        "value": 58,
+        "hi": true
+       },
+       {
+        "label": "짬뽕",
+        "value": 49
+       },
+       {
+        "label": "마라탕",
+        "value": 37
+       }
+      ]
+     }
+    ]
+   },
+   "file": "jsx/dogam/techniques/bar-chart-v.jsx"
+  },
+  {
+   "id": "dim-cutaway-drop-exit",
+   "name": "딤 컷어웨이 낙하 퇴장(옵션)",
+   "category": "전환",
+   "summary": "딤·블러 컷어웨이로 나온 해설 인물·말풍선이 퇴장할 때 아래로 툭 떨어지며 배경 딤이 풀린다.",
+   "spec": "BlurDimInterrupt p.exit='drop'(기본 'none'), exitAt(at 기준 f)부터 낙하 dropLen 8f(6f@24) ease-in(quad)·dropDist 1100px + 세로 모션블러(feGaussianBlur 0×10px), 딤·블러 해제 undimLen 10f(8f@24).",
+   "tags": [
+    "딤",
+    "낙하",
+    "퇴장",
+    "옵션",
+    "ref_pirates",
+    "지식해적단",
+    "옵션→blur-dim-interrupt"
+   ],
+   "preview": "x_pirates-06",
+   "previewJpg": "jsx/dogam/assets/previews/x_pirates-06.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/x_pirates-06.mp4",
+   "kind": "layer",
+   "create": true,
+   "support": "native",
+   "aeNote": "",
+   "params": [
+    {
+     "key": "dimLen",
+     "default": 8,
+     "min": 1,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "블러·딤 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "blur",
+     "default": 12,
+     "min": 0,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "배경 블러",
+     "group": "look",
+     "unit": "px"
+    },
+    {
+     "key": "dim",
+     "default": 0.4,
+     "min": 0,
+     "max": 0.9,
+     "step": 0.05,
+     "type": "number",
+     "label": "밝기 감소",
+     "group": "look"
+    },
+    {
+     "key": "slideDelay",
+     "default": 4,
+     "min": 0,
+     "max": 60,
+     "step": 1,
+     "type": "number",
+     "label": "인물 등장 지연",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "slideLen",
+     "default": 10,
+     "min": 1,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "슬라이드업 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "slideDist",
+     "default": 720,
+     "min": 0,
+     "max": 1400,
+     "step": 10,
+     "type": "number",
+     "label": "슬라이드 거리",
+     "group": "motion",
+     "unit": "px"
+    },
+    {
+     "key": "bubbleDelay",
+     "default": 20,
+     "min": 0,
+     "max": 90,
+     "step": 1,
+     "type": "number",
+     "label": "말풍선 지연",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "bubblePop",
+     "default": 6,
+     "min": 1,
+     "max": 30,
+     "step": 1,
+     "type": "number",
+     "label": "말풍선 블러 팝",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "reveal",
+     "default": "wipe",
+     "options": [
+      "pop",
+      "wipe"
+     ],
+     "type": "string",
+     "label": "말풍선 등장(pop=블러 팝 · wipe=좌→우 폭 펼침)",
+     "group": "motion"
+    },
+    {
+     "key": "wipeLen",
+     "default": 12,
+     "min": 1,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "wipe: 펼침 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "exit",
+     "default": "drop",
+     "options": [
+      "none",
+      "drop"
+     ],
+     "type": "string",
+     "label": "퇴장(none · drop=아래로 낙하 + 딤 해제)",
+     "group": "motion"
+    },
+    {
+     "key": "exitAt",
+     "default": 62,
+     "min": 0,
+     "max": 300,
+     "step": 1,
+     "type": "number",
+     "label": "drop: 퇴장 시작(at 기준)",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "dropLen",
+     "default": 8,
+     "min": 1,
+     "max": 30,
+     "step": 1,
+     "type": "number",
+     "label": "drop: 낙하 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "dropDist",
+     "default": 1100,
+     "min": 100,
+     "max": 1600,
+     "step": 10,
+     "type": "number",
+     "label": "drop: 낙하 거리",
+     "group": "motion",
+     "unit": "px"
+    },
+    {
+     "key": "dropBlur",
+     "default": 10,
+     "min": 0,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "drop: 세로 모션블러",
+     "group": "look",
+     "unit": "px"
+    },
+    {
+     "key": "undimLen",
+     "default": 10,
+     "min": 1,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "drop: 딤 해제 길이",
+     "group": "timing",
+     "unit": "f"
+    }
+   ],
+   "content": {
+    "cast": "walker1",
+    "x": 760,
+    "y": 1110,
+    "h": 1500,
+    "armR": "arm_palm_stop",
+    "seed": "x06",
+    "bubble": {
+     "x": 1180,
+     "y": 330,
+     "w": 420,
+     "h": 250,
+     "text": "CPU에서의\n아키텍처란?",
+     "size": 44
+    }
+   },
+   "file": "jsx/dogam/techniques/dim-cutaway-drop-exit.jsx"
+  },
+  {
+   "id": "idle-bob",
+   "name": "아이들 까딱(바디 밥)",
+   "category": "캐릭터 연기",
+   "summary": "캐릭터가 발을 기준으로 상시 위아래로 까딱인다. 두 명이면 위상을 엇갈린다. 단체 정지 샷에는 안 넣는다.",
+   "spec": "실측: 주기 40f(1.33s), 머리 약 11–15px, 발 앵커 scaleY ±0.8%, 사인형(하단 약 6f 머묾). 두 인물 180° 역위상 ±4px(삼각파). 구현(사용자 사양): 10f 핑퐁 100↔101% 이지이지.",
+   "tags": [
+    "까딱",
+    "상시"
+   ],
+   "preview": "core-28",
+   "previewJpg": "jsx/dogam/assets/previews/core-28.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/core-28.mp4",
+   "kind": "layer",
+   "create": false,
+   "support": "native",
+   "aeNote": "",
+   "params": [
+    {
+     "key": "bobFrames",
+     "default": 10,
+     "min": 1,
+     "max": 60,
+     "step": 1,
+     "type": "number",
+     "label": "까딱 반주기(한 번 늘거나 줄어드는 길이)",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "bobAmp",
+     "default": 1,
+     "min": 0,
+     "max": 6,
+     "step": 0.1,
+     "type": "number",
+     "label": "까딱 세기(세로 늘어남)",
+     "group": "motion",
+     "unit": "%"
+    },
+    {
+     "key": "blink",
+     "default": true,
+     "type": "boolean",
+     "label": "눈 깜빡임",
+     "group": "motion"
+    },
+    {
+     "key": "blinkEvery",
+     "default": 120,
+     "min": 10,
+     "max": 400,
+     "step": 5,
+     "type": "number",
+     "label": "깜빡임 최소 간격",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "blinkJitter",
+     "default": 90,
+     "min": 0,
+     "max": 300,
+     "step": 5,
+     "type": "number",
+     "label": "깜빡임 간격 랜덤 폭",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "blinkLen",
+     "default": 3,
+     "min": 1,
+     "max": 12,
+     "step": 1,
+     "type": "number",
+     "label": "눈 감는 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "blinkTwice",
+     "default": 0.2,
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "type": "number",
+     "label": "두 번 깜빡일 확률",
+     "group": "motion"
+    },
+    {
+     "key": "drift",
+     "default": 0,
+     "min": -600,
+     "max": 600,
+     "step": 10,
+     "type": "number",
+     "label": "패럴랙스 흐름 거리",
+     "group": "motion",
+     "unit": "px"
+    },
+    {
+     "key": "bgPar",
+     "default": 0.45,
+     "min": 0,
+     "max": 2,
+     "step": 0.05,
+     "type": "number",
+     "label": "배경 패럴랙스 배율",
+     "group": "motion"
+    },
+    {
+     "key": "fgPar",
+     "default": 0.5,
+     "min": 0,
+     "max": 2,
+     "step": 0.05,
+     "type": "number",
+     "label": "전경 패럴랙스 배율",
+     "group": "motion"
+    }
+   ],
+   "content": {
+    "seeds": null,
+    "bboxes": null,
+    "until": 0
+   },
+   "file": "jsx/dogam/techniques/idle-bob.jsx"
+  },
+  {
+   "id": "map-route",
+   "name": "지도 항로 드로우",
+   "category": "차트·인포그래픽",
+   "summary": "지도 위 항로가 스트로크로 그려지고 배가 따라 움직이며 지명 라벨이 팝한다.",
+   "spec": "위경도 단순 투영, 2차 베지어 위 배 이동, 라벨 팝.",
+   "tags": [
+    "지도",
+    "[옵션] stroke=brush(붓 화살표 30px 테이퍼·흰 테두리 5px·25f) — 데모 x_pirates-10"
+   ],
+   "preview": "core-42",
+   "previewJpg": "jsx/dogam/assets/previews/core-42.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/core-42.mp4",
+   "kind": "scene",
+   "create": false,
+   "support": "partial",
+   "aeNote": "지도 배경은 프리렌더 PNG(바다·육지 색 변경 시 MapBg 재렌더). 붓 화살표(stroke=brush)는 굵은 선 + 흰 테두리로 근사.",
+   "params": [
+    {
+     "key": "routeLen",
+     "default": 36,
+     "min": 2,
+     "max": 120,
+     "step": 1,
+     "type": "number",
+     "label": "항로 드로우 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "labelStagger",
+     "default": 1,
+     "min": 0,
+     "max": 4,
+     "step": 0.05,
+     "type": "number",
+     "label": "라벨 스태거(배)",
+     "group": "timing"
+    },
+    {
+     "key": "dotLen",
+     "default": 6,
+     "min": 1,
+     "max": 30,
+     "step": 1,
+     "type": "number",
+     "label": "항구 점 팝 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "camLen",
+     "default": 90,
+     "min": 0,
+     "max": 300,
+     "step": 1,
+     "type": "number",
+     "label": "카메라 푸시인 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "boatRock",
+     "default": 4,
+     "min": 0,
+     "max": 20,
+     "step": 0.5,
+     "type": "number",
+     "label": "배 흔들림 각도",
+     "group": "motion",
+     "unit": "°"
+    },
+    {
+     "key": "zoom0",
+     "default": 5.9,
+     "min": 3,
+     "max": 9,
+     "step": 0.05,
+     "type": "number",
+     "label": "시작 줌",
+     "group": "motion"
+    },
+    {
+     "key": "zoom1",
+     "default": 6.2,
+     "min": 3,
+     "max": 9,
+     "step": 0.05,
+     "type": "number",
+     "label": "끝 줌",
+     "group": "motion"
+    },
+    {
+     "key": "centerLng",
+     "default": 123.4,
+     "min": 110,
+     "max": 135,
+     "step": 0.1,
+     "type": "number",
+     "label": "지도 중심 경도(독도가 화면 안에)",
+     "group": "motion",
+     "unit": "°"
+    },
+    {
+     "key": "centerLat",
+     "default": 37.4,
+     "min": 30,
+     "max": 45,
+     "step": 0.1,
+     "type": "number",
+     "label": "지도 중심 위도",
+     "group": "motion",
+     "unit": "°"
+    },
+    {
+     "key": "routeW",
+     "default": 9,
+     "min": 2,
+     "max": 30,
+     "step": 1,
+     "type": "number",
+     "label": "항로 두께",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "dotR",
+     "default": 13,
+     "min": 4,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "항구 점 크기",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "routeColor",
+     "default": "#C0392B",
+     "type": "color",
+     "label": "항로·점 색",
+     "group": "look"
+    },
+    {
+     "key": "seaColor",
+     "default": "#8FBFD6",
+     "type": "color",
+     "label": "바다 색",
+     "group": "look"
+    },
+    {
+     "key": "landColor",
+     "default": "#EAD9B6",
+     "type": "color",
+     "label": "육지 색",
+     "group": "look"
+    },
+    {
+     "key": "stroke",
+     "default": "line",
+     "options": [
+      "line",
+      "brush"
+     ],
+     "type": "string",
+     "label": "항로 선(line=기존 · brush=붓 화살표 테이퍼+흰 테두리)",
+     "group": "motion"
+    },
+    {
+     "key": "brushW",
+     "default": 30,
+     "min": 6,
+     "max": 80,
+     "step": 1,
+     "type": "number",
+     "label": "brush: 최대 두께",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "brushTail",
+     "default": 0.25,
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "type": "number",
+     "label": "brush: 꼬리 두께 비율",
+     "group": "size"
+    },
+    {
+     "key": "brushBorder",
+     "default": 5,
+     "min": 0,
+     "max": 16,
+     "step": 0.5,
+     "type": "number",
+     "label": "brush: 흰 테두리",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "brushHead",
+     "default": 2,
+     "min": 1,
+     "max": 4,
+     "step": 0.1,
+     "type": "number",
+     "label": "brush: 화살촉(두께 배)",
+     "group": "size"
+    },
+    {
+     "key": "brushLen",
+     "default": 25,
+     "min": 2,
+     "max": 120,
+     "step": 1,
+     "type": "number",
+     "label": "brush: 드로우 길이(ease-in-out)",
+     "group": "timing",
+     "unit": "f"
+    }
+   ],
+   "content": {
+    "routeAt": 20,
+    "labelsAt": 6,
+    "dur": 0,
+    "mapImage": "map/map_bg.png",
+    "mapLng": 123.4,
+    "mapLat": 37.4,
+    "mapZoom": 6.2,
+    "from": [
+     121.39,
+     37.54
+    ],
+    "to": [
+     126.62,
+     37.46
+    ],
+    "ctrl": [
+     124,
+     38.5
+    ],
+    "labels": [
+     {
+      "text": "산둥(山東)",
+      "ll": [
+       118.6,
+       36.3
+      ],
+      "dx": 0,
+      "dy": 0,
+      "dl": 0,
+      "big": true
+     },
+     {
+      "text": "인천",
+      "ll": [
+       126.62,
+       37.46
+      ],
+      "dx": 0,
+      "dy": -66,
+      "dl": 6,
+      "big": false
+     },
+     {
+      "text": "청(淸)",
+      "ll": [
+       116.4,
+       39.9
+      ],
+      "dx": 0,
+      "dy": 0,
+      "dl": 10,
+      "big": true
+     },
+     {
+      "text": "조선",
+      "ll": [
+       127.8,
+       38.9
+      ],
+      "dx": 0,
+      "dy": 0,
+      "dl": 14,
+      "big": true
+     }
+    ],
+    "sea": {
+     "text": "황 해",
+     "ll": [
+      123.6,
+      36.2
+     ]
+    },
+    "boat": "junk_sailboat"
+   },
+   "file": "jsx/dogam/techniques/map-route.jsx"
+  },
+  {
+   "id": "photo-pop",
+   "name": "원형·사진 팝(줌블러)",
+   "category": "사진·자료 처리",
+   "summary": "원형 사진이나 로고가 작게 시작해 살짝 넘쳤다가 자리잡는다. 단어마다 한 개씩.",
+   "spec": "0.40→0.70→1.00→1.08→1.03→1.00 6f + 방사형 줌블러 6→0 3f. 흰 링 6~10px, 지름 약 300. 다음 원 약 45~48f 뒤. 큰 로고 변형: 0.3→1.15→1.0 12f.",
+   "tags": [
+    "팝",
+    "원형"
+   ],
+   "preview": "core-15",
+   "previewJpg": "jsx/dogam/assets/previews/core-15.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/core-15.mp4",
+   "kind": "layer",
+   "create": false,
+   "support": "native",
+   "aeNote": "",
+   "params": [
+    {
+     "key": "popLen",
+     "default": 5,
+     "min": 1,
+     "max": 30,
+     "step": 1,
+     "type": "number",
+     "label": "팝 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "popFrom",
+     "default": 0.4,
+     "min": 0,
+     "max": 1.5,
+     "step": 0.05,
+     "type": "number",
+     "label": "팝 시작 크기(배)",
+     "group": "motion"
+    },
+    {
+     "key": "popOver",
+     "default": 0.08,
+     "min": 0,
+     "max": 0.5,
+     "step": 0.01,
+     "type": "number",
+     "label": "오버슈트 크기(배)",
+     "group": "motion"
+    },
+    {
+     "key": "popBlur",
+     "default": 6,
+     "min": 0,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "팝 줌블러",
+     "group": "look",
+     "unit": "px"
+    },
+    {
+     "key": "popBlurLen",
+     "default": 3,
+     "min": 1,
+     "max": 20,
+     "step": 1,
+     "type": "number",
+     "label": "줌블러 해제 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "ringW",
+     "default": 10,
+     "min": 0,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "링 두께",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "shadow",
+     "default": 0.4,
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "type": "number",
+     "label": "그림자 진하기",
+     "group": "look"
+    },
+    {
+     "key": "border",
+     "default": "#fff",
+     "type": "color",
+     "label": "링 색",
+     "group": "look"
+    }
+   ],
+   "content": {
+    "circle": true
+   },
+   "file": "jsx/dogam/techniques/photo-pop.jsx"
+  },
+  {
+   "id": "pullback-reveal",
+   "name": "대형 풀백 리빌",
+   "category": "카메라",
+   "summary": "확대 상태에서 1.0으로 크게 빠지며 전경을 드러내는 이벤트성 카메라. 새 인물이 프레임에 들어오게 할 때도 쓴다.",
+   "spec": "scale 1.45~1.75 → 1.0, 45~110f easeInOutCubic(최고 -20~-64%/s), 위로 틸트 -50~-120px/s. 리빌 줌아웃 -6~9%를 60–70f로 쓰는 약한 버전도 있다.",
+   "tags": [
+    "풀백",
+    "리빌"
+   ],
+   "preview": "core-07",
+   "previewJpg": "jsx/dogam/assets/previews/core-07.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/core-07.mp4",
+   "kind": "scene",
+   "create": false,
+   "support": "native",
+   "aeNote": "",
+   "params": [
+    {
+     "key": "s0",
+     "default": 1.5,
+     "min": 1,
+     "max": 3,
+     "step": 0.05,
+     "type": "number",
+     "label": "시작 배율(배)",
+     "group": "motion"
+    },
+    {
+     "key": "s1",
+     "default": 1,
+     "min": 0.5,
+     "max": 2,
+     "step": 0.05,
+     "type": "number",
+     "label": "끝 배율(배)",
+     "group": "motion"
+    },
+    {
+     "key": "y0",
+     "default": 255,
+     "min": -600,
+     "max": 600,
+     "step": 5,
+     "type": "number",
+     "label": "시작 세로 오프셋",
+     "group": "motion",
+     "unit": "px"
+    },
+    {
+     "key": "moveF",
+     "default": 55,
+     "min": 1,
+     "max": 90,
+     "step": 1,
+     "type": "number",
+     "label": "카메라 이동 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "delay",
+     "default": 6,
+     "min": 0,
+     "max": 60,
+     "step": 1,
+     "type": "number",
+     "label": "이동 시작 지연",
+     "group": "timing",
+     "unit": "f"
+    }
+   ],
+   "content": {
+    "x0": 0,
+    "x1": 0,
+    "y1": 0
+   },
+   "file": "jsx/dogam/techniques/pullback-reveal.jsx"
+  },
+  {
+   "id": "scroll-label",
+   "name": "가로 두루마리 라벨",
+   "category": "콜아웃·라벨",
+   "summary": "닫힌 막대에서 가운데로부터 좌우로 펼쳐지는 족자 라벨. 요약 샷에서는 색별로 스태거.",
+   "spec": "13~18f ease-out 펼침. 녹색·주황·황금 테두리 + 크림 속지, 붓글씨체. 펼친 뒤 약 1초 동안 서로 다가가며 10% 확대. 요약 샷 좌→우 0.6초 스태거.",
+   "tags": [
+    "두루마리"
+   ],
+   "preview": "core-12",
+   "previewJpg": "jsx/dogam/assets/previews/core-12.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/core-12.mp4",
+   "kind": "element",
+   "create": false,
+   "support": "native",
+   "aeNote": "",
+   "params": [
+    {
+     "key": "unrollDelay",
+     "default": 3,
+     "min": 0,
+     "max": 20,
+     "step": 1,
+     "type": "number",
+     "label": "펼침 시작 지연",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "unrollLen",
+     "default": 11,
+     "min": 1,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "펼침 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "startW",
+     "default": 0.06,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "type": "number",
+     "label": "접힌 폭 비율",
+     "group": "motion"
+    },
+    {
+     "key": "damping",
+     "default": 11,
+     "min": 2,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "팝 스프링 감쇠",
+     "group": "motion"
+    },
+    {
+     "key": "stiffness",
+     "default": 190,
+     "min": 30,
+     "max": 500,
+     "step": 5,
+     "type": "number",
+     "label": "팝 스프링 강성",
+     "group": "motion"
+    },
+    {
+     "key": "outLen",
+     "default": 6,
+     "min": 1,
+     "max": 30,
+     "step": 1,
+     "type": "number",
+     "label": "퇴장 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "size",
+     "default": 70,
+     "min": 30,
+     "max": 140,
+     "step": 1,
+     "type": "number",
+     "label": "글자 크기",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "color",
+     "default": "#2E7D4F",
+     "type": "color",
+     "label": "롤러·테두리 색",
+     "group": "look"
+    },
+    {
+     "key": "paperColor",
+     "default": "#F6E6C2",
+     "type": "color",
+     "label": "종이 색",
+     "group": "look"
+    }
+   ],
+   "content": {
+    "text": "공화춘",
+    "sub": "",
+    "x": 960,
+    "y": 540,
+    "w": 420,
+    "outAfter": 0
+   },
+   "file": "jsx/dogam/techniques/scroll-label.jsx"
+  },
+  {
+   "id": "smoke-wipe",
+   "name": "만화 연기 전환",
+   "category": "전환",
+   "summary": "회색 만화 연기가 아래에서 화면을 덮고, 덮인 사이 컷한 뒤 위로 흩어지며 걷힌다.",
+   "spec": "총 약 40f: 커버 4~5f → 홀드 5f(컷) → 걷힘 15f → 잔여 연기 20f. 회색 #A8A29E + 흰 하이라이트 곡선.",
+   "tags": [
+    "연기"
+   ],
+   "preview": "core-33",
+   "previewJpg": "jsx/dogam/assets/previews/core-33.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/core-33.mp4",
+   "kind": "scene",
+   "create": false,
+   "support": "native",
+   "aeNote": "",
+   "params": [
+    {
+     "key": "inLen",
+     "default": 5,
+     "min": 1,
+     "max": 30,
+     "step": 1,
+     "type": "number",
+     "label": "덮는 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "holdLen",
+     "default": 5,
+     "min": 0,
+     "max": 30,
+     "step": 1,
+     "type": "number",
+     "label": "덮은 채 유지(컷)",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "outLen",
+     "default": 15,
+     "min": 1,
+     "max": 60,
+     "step": 1,
+     "type": "number",
+     "label": "걷히는 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "tailLen",
+     "default": 15,
+     "min": 1,
+     "max": 60,
+     "step": 1,
+     "type": "number",
+     "label": "잔여 페이드 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "puffs",
+     "default": 22,
+     "min": 6,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "연기 덩어리 수",
+     "group": "size"
+    },
+    {
+     "key": "puffSize",
+     "default": 260,
+     "min": 80,
+     "max": 500,
+     "step": 10,
+     "type": "number",
+     "label": "연기 덩어리 크기",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "wobble",
+     "default": 0.15,
+     "min": 0,
+     "max": 0.5,
+     "step": 0.01,
+     "type": "number",
+     "label": "몽글거림 세기",
+     "group": "motion"
+    },
+    {
+     "key": "color",
+     "default": "#A8A29E",
+     "type": "color",
+     "label": "연기 색",
+     "group": "look"
+    },
+    {
+     "key": "highlight",
+     "default": "#EDEBE8",
+     "type": "color",
+     "label": "하이라이트 선 색",
+     "group": "look"
+    }
+   ],
+   "content": {},
+   "file": "jsx/dogam/techniques/smoke-wipe.jsx"
+  },
+  {
+   "id": "stamp-slam",
+   "name": "도장 슬램 + 깜빡임",
+   "category": "콜아웃·라벨",
+   "summary": "빨간 도장이 크게 떨어져 박히고 몇 번 깜빡인다. 슬램 순간 캐릭터 포즈를 바꾼다.",
+   "spec": "scale 2.0·반투명 → 1.5 → 1.15 → 1.0 4f. 슬램 후 불투명↔55% 약 4f 주기 3~4회.",
+   "tags": [
+    "도장",
+    "[옵션] blink(깜빡임 끄기)·slamEase(expoOut) — 지식해적단 기울어진 도장 유지, 데모 x_pirates-12"
+   ],
+   "preview": "core-16",
+   "previewJpg": "jsx/dogam/assets/previews/core-16.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/core-16.mp4",
+   "kind": "layer",
+   "create": true,
+   "support": "native",
+   "aeNote": "",
+   "params": [
+    {
+     "key": "slamDur",
+     "default": 5,
+     "min": 1,
+     "max": 20,
+     "step": 1,
+     "type": "number",
+     "label": "내리꽂는 시간",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "startScale",
+     "default": 2.6,
+     "min": 1,
+     "max": 5,
+     "step": 0.1,
+     "type": "number",
+     "label": "시작 크기(배)",
+     "group": "motion"
+    },
+    {
+     "key": "wobble",
+     "default": 0.05,
+     "min": 0,
+     "max": 0.2,
+     "step": 0.01,
+     "type": "number",
+     "label": "착지 흔들림 세기",
+     "group": "motion"
+    },
+    {
+     "key": "wobbleDecay",
+     "default": 3,
+     "min": 1,
+     "max": 10,
+     "step": 0.5,
+     "type": "number",
+     "label": "흔들림 감쇠(f)",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "echoDur",
+     "default": 8,
+     "min": 0,
+     "max": 20,
+     "step": 1,
+     "type": "number",
+     "label": "잔상 링 시간",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "blinkDelay",
+     "default": 8,
+     "min": 0,
+     "max": 30,
+     "step": 1,
+     "type": "number",
+     "label": "깜빡임 시작 지연",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "blinkCount",
+     "default": 3,
+     "min": 0,
+     "max": 8,
+     "step": 1,
+     "type": "number",
+     "label": "깜빡임 횟수",
+     "group": "motion"
+    },
+    {
+     "key": "blinkPeriod",
+     "default": 8,
+     "min": 2,
+     "max": 20,
+     "step": 1,
+     "type": "number",
+     "label": "깜빡임 주기",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "blinkDim",
+     "default": 0.55,
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "type": "number",
+     "label": "깜빡일 때 불투명도",
+     "group": "look"
+    },
+    {
+     "key": "rot",
+     "default": -12,
+     "min": -45,
+     "max": 45,
+     "step": 1,
+     "type": "number",
+     "label": "기울기",
+     "group": "motion",
+     "unit": "°"
+    },
+    {
+     "key": "size",
+     "default": 120,
+     "min": 40,
+     "max": 260,
+     "step": 2,
+     "type": "number",
+     "label": "글자 크기",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "color",
+     "default": "#EC2D5C",
+     "type": "color",
+     "label": "도장 색",
+     "group": "look"
+    },
+    {
+     "key": "blink",
+     "default": true,
+     "type": "boolean",
+     "label": "슬램 후 깜빡임(끄면 그대로 유지)",
+     "group": "motion"
+    },
+    {
+     "key": "slamEase",
+     "default": "in",
+     "options": [
+      "in",
+      "expoOut"
+     ],
+     "type": "string",
+     "label": "슬램 이징(in=기존 가속 · expoOut=빠르게 붙고 감속)",
+     "group": "motion"
+    }
+   ],
+   "content": {
+    "text": "폐업",
+    "x": 960,
+    "y": 560
+   },
+   "file": "jsx/dogam/techniques/stamp-slam.jsx"
+  },
+  {
+   "id": "starburst-echo",
+   "name": "스타버스트 말풍선 에코 팝",
+   "category": "콜아웃·라벨",
+   "summary": "노란 스타버스트 말풍선이 3f에 팝하고 큰 반투명 복제본이 줄어들며 사라진다. 포즈 스왑 1f 뒤에 발동.",
+   "spec": "본체 0→100% 3f. 고스트 150%·α50% → 100%·0% 12~14f. 노랑 #F7D84A + 검정 손글씨, 테두리 보일링.",
+   "tags": [
+    "말풍선",
+    "에코"
+   ],
+   "preview": "core-17",
+   "previewJpg": "jsx/dogam/assets/previews/core-17.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/core-17.mp4",
+   "kind": "element",
+   "create": false,
+   "support": "native",
+   "aeNote": "",
+   "params": [
+    {
+     "key": "popLen",
+     "default": 3,
+     "min": 1,
+     "max": 20,
+     "step": 1,
+     "type": "number",
+     "label": "본체 팝 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "echoLen",
+     "default": 13,
+     "min": 0,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "고스트 에코 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "echoScale",
+     "default": 1.5,
+     "min": 1,
+     "max": 3,
+     "step": 0.05,
+     "type": "number",
+     "label": "에코 시작 크기(배)",
+     "group": "motion"
+    },
+    {
+     "key": "echoOp",
+     "default": 0.5,
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "type": "number",
+     "label": "에코 시작 불투명도",
+     "group": "look"
+    },
+    {
+     "key": "spikes",
+     "default": 18,
+     "min": 6,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "가시 개수",
+     "group": "size"
+    },
+    {
+     "key": "innerR",
+     "default": 0.72,
+     "min": 0.3,
+     "max": 1,
+     "step": 0.01,
+     "type": "number",
+     "label": "가시 안쪽 반지름 비율",
+     "group": "size"
+    },
+    {
+     "key": "boilEvery",
+     "default": 4,
+     "min": 1,
+     "max": 20,
+     "step": 1,
+     "type": "number",
+     "label": "보일링 교체 간격",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "boilAmt",
+     "default": 0.025,
+     "min": 0,
+     "max": 0.2,
+     "step": 0.005,
+     "type": "number",
+     "label": "보일링 떨림 세기",
+     "group": "motion"
+    },
+    {
+     "key": "outLen",
+     "default": 6,
+     "min": 1,
+     "max": 30,
+     "step": 1,
+     "type": "number",
+     "label": "퇴장 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "rot",
+     "default": -8,
+     "min": -45,
+     "max": 45,
+     "step": 1,
+     "type": "number",
+     "label": "기울기",
+     "group": "motion",
+     "unit": "°"
+    },
+    {
+     "key": "size",
+     "default": 58,
+     "min": 20,
+     "max": 140,
+     "step": 1,
+     "type": "number",
+     "label": "글자 크기",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "color",
+     "default": "#F7D84A",
+     "type": "color",
+     "label": "말풍선 색",
+     "group": "look"
+    }
+   ],
+   "content": {
+    "text": "짜장면!",
+    "x": 1360,
+    "y": 400,
+    "w": 500,
+    "h": 340,
+    "outAfter": 0,
+    "dur": 0
+   },
+   "file": "jsx/dogam/techniques/starburst-echo.jsx"
+  },
+  {
+   "id": "wipe-reveal-bubble",
+   "name": "와이프 리빌 말풍선(옵션)",
+   "category": "콜아웃·라벨",
+   "summary": "세모지 흰 타원 말풍선이 팝 대신 왼쪽→오른쪽으로 폭이 펼쳐지며 등장하고, 글자도 같은 방향으로 드러난다. 퇴장은 짧게 축소·페이드.",
+   "spec": "SpeechBubble p.reveal='wipe'(기본 'pop' = 기존 정적). 펼침 wipeLen 12f(10f@24) ease-out, 퇴장 outLen 3f(2~3f@24) scale→0.85 + 페이드. BlurDimInterrupt 도 reveal/wipeLen 변수로 같은 등장을 쓴다.",
+   "tags": [
+    "말풍선",
+    "와이프",
+    "옵션",
+    "ref_pirates",
+    "지식해적단",
+    "옵션→blur-dim-interrupt"
+   ],
+   "preview": "x_pirates-05",
+   "previewJpg": "jsx/dogam/assets/previews/x_pirates-05.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/x_pirates-05.mp4",
+   "kind": "element",
+   "create": false,
+   "support": "native",
+   "aeNote": "",
+   "params": [
+    {
+     "key": "reveal",
+     "default": "wipe",
+     "options": [
+      "pop",
+      "wipe"
+     ],
+     "type": "string",
+     "label": "등장 방식(pop=정적·호출측 팝 · wipe=좌→우 폭 펼침)",
+     "group": "motion"
+    },
+    {
+     "key": "wipeLen",
+     "default": 12,
+     "min": 1,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "wipe: 펼침 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "outLen",
+     "default": 3,
+     "min": 1,
+     "max": 20,
+     "step": 1,
+     "type": "number",
+     "label": "wipe: 퇴장 축소·페이드",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "outScale",
+     "default": 0.85,
+     "min": 0.3,
+     "max": 1,
+     "step": 0.01,
+     "type": "number",
+     "label": "wipe: 퇴장 끝 크기(배)",
+     "group": "motion"
+    }
+   ],
+   "content": {
+    "text": "짜장면이\n뭔고?",
+    "x": 1260,
+    "y": 330,
+    "w": 560,
+    "h": 260,
+    "tail": "left",
+    "size": 64,
+    "outAfter": 44
+   },
+   "file": "jsx/dogam/techniques/wipe-reveal-bubble.jsx"
+  },
+  {
+   "id": "year-tag",
+   "name": "연도 두루마리 태그",
+   "category": "콜아웃·라벨",
+   "summary": "좌상단에 연도 태그가 두루마리처럼 들어오고, 교체 시 새 태그가 밀고 들어온다.",
+   "spec": "좌측에서 약 16~18f 감속 슬라이드(롤러 포함), 위치 좌상단 y≈95–175. 교체 12f(두 태그가 잠시 나란히). 변형: 흰 박스+빨간 테두리 빈 박스 슬라이드 → 텍스트 10f.",
+   "tags": [
+    "연도",
+    "두루마리"
+   ],
+   "preview": "core-11",
+   "previewJpg": "jsx/dogam/assets/previews/core-11.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/core-11.mp4",
+   "kind": "element",
+   "create": false,
+   "support": "native",
+   "aeNote": "",
+   "params": [
+    {
+     "key": "slideLen",
+     "default": 16,
+     "min": 1,
+     "max": 40,
+     "step": 1,
+     "type": "number",
+     "label": "슬라이드 입장 길이",
+     "group": "timing",
+     "unit": "f"
+    },
+    {
+     "key": "fontSize",
+     "default": 70,
+     "min": 30,
+     "max": 120,
+     "step": 1,
+     "type": "number",
+     "label": "글자 크기",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "charW",
+     "default": 58,
+     "min": 30,
+     "max": 100,
+     "step": 1,
+     "type": "number",
+     "label": "글자당 태그 폭",
+     "group": "size",
+     "unit": "px"
+    },
+    {
+     "key": "skew",
+     "default": -5,
+     "min": -20,
+     "max": 20,
+     "step": 1,
+     "type": "number",
+     "label": "글자 기울임",
+     "group": "motion",
+     "unit": "°"
+    },
+    {
+     "key": "paperColor",
+     "default": "#F7E1C4",
+     "type": "color",
+     "label": "종이 색",
+     "group": "look"
+    },
+    {
+     "key": "bandColor",
+     "default": "#B03A2E",
+     "type": "color",
+     "label": "띠·롤러 색",
+     "group": "look"
+    },
+    {
+     "key": "textColor",
+     "default": "#4B2420",
+     "type": "color",
+     "label": "글자 색",
+     "group": "look"
+    }
+   ],
+   "content": {
+    "text": "1912년 무렵",
+    "top": 175,
+    "outAfter": 0
+   },
+   "file": "jsx/dogam/techniques/year-tag.jsx"
+  }
+ ]
+}
