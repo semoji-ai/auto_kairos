@@ -60,9 +60,18 @@
   </span>
 </div>
 
+{% if cut_review %}
+<div class="sb-cut-summary">
+  <b>{% if cut_review.flat %}{{ cut_review.scene_count }}개 독립 씬 · 화면 검토{% else %}{{ cut_review.scene_count }}씬 · {{ cut_review.total }}컷 검토 연결{% endif %}</b>
+  <p>{% for key, count in cut_review.counts.items() %}{{ cut_review.labels[key] }} {{ count }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+  <label>판정별 보기 <select id="sb-cut-filter" onchange="sbFind(document.getElementById('sb-find-input').value)">
+    <option value="">{% if cut_review.flat %}전체 씬{% else %}전체 컷{% endif %}</option>{% for key,count in cut_review.counts.items() %}<option value="{{ key }}">{{ cut_review.labels[key] }} ({{ count }})</option>{% endfor %}
+  </select></label>
+</div>
+{% endif %}
 <div class="scene-list" id="scene-list">
   {% for scene in scenes %}
-  <div class="sb-card sv-host" data-scene="{{ scene.sceneNumber }}" data-chapter="{{ scene.chapter }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
+  <div class="sb-card sv-host" data-scene="{{ scene.sceneNumber }}" data-chapter="{{ scene.chapter }}" data-cut-decisions="{{ scene._cut_decisions or '' }}" data-has-image="{{ 'true' if scene._image_url else 'false' }}">
     {# 씬 고르기 — 체크한 씬에 일괄로 레이어 나누기를 건다 #}
     <input type="checkbox" class="sb-pick" data-scene="{{ scene.sceneNumber }}"
            onchange="sbPickChanged()" title="이 씬 고르기">
@@ -70,6 +79,17 @@
     <div class="sb-preview-wrap">
       {# 이미지/레이어/영상 — 씬 상세와 **같은 조각**을 쓴다 #}
       {% include "partials/_scene_switch.html" %}
+      {% if scene._scene_review %}
+      <div class="sb-preview sb-review-preview">
+        {% if scene._scene_review.image_url %}<a href="{{ scene._scene_review.image_url }}" target="_blank" rel="noopener"><img src="{{ scene._scene_review.image_url }}" loading="lazy" alt="Scene {{ scene.sceneNumber }} 검토용 참조"></a>{% else %}<span>{% if scene._scene_review.decision == 'remake' %}이미지 없음 · 신규 제작 필요{% else %}씬 이미지 확보 필요{% endif %}</span>{% endif %}
+      </div>
+      {% if scene._scene_review.image_url %}<p class="sb-cut-preview-label">{{ scene._scene_review.selected_label }}</p>{% elif scene._scene_review.reference_url %}<p class="sb-cut-preview-label"><a href="{{ scene._scene_review.reference_url }}" target="_blank" rel="noopener">기존 그룹 이미지 참조 보기 · 이 씬에 선택된 이미지는 아님</a></p>{% endif %}
+      {% elif scene._cuts %}
+      <div class="sb-preview sb-review-preview">
+        {% if scene._cuts[0].image_url %}<a href="{{ scene._cuts[0].image_url }}" target="_blank" rel="noopener"><img src="{{ scene._cuts[0].image_url }}" loading="lazy" alt="첫 컷 검토용 참조"></a>{% else %}<span>첫 컷 이미지 확보 필요</span>{% endif %}
+      </div>
+      <p class="sb-cut-preview-label">첫 컷 검토용 참조 · {{ scene._cuts|length }}컷 구성</p>
+      {% else %}
       <div class="sb-preview sv-image" onclick="openSceneDetail('{{ slug }}', {{ scene.sceneNumber }})">
         {% if scene.isTurnCard %}
         {# 반전 접속사 카드 — 흰 화면에 한 마디. 빠르게 넘어간다. #}
@@ -120,6 +140,7 @@
         <div class="sb-player-mount" data-scene-num="{{ scene.sceneNumber }}"></div>
         {% endif %}
       </div>
+      {% endif %}
       {% set _vk = scene.visual_kind or '' %}
       {# 자료 종류 전환 버튼 넷은 걷어냈다. 씬마다 무엇으로 보여줄지는 이미
          정해져 있고, 지도·차트를 새로 만들 일은 씬을 골라 위에서 일괄로 건다. #}
@@ -168,6 +189,9 @@
           {% if scene.narration_dirty %}<span class="narr-dirty">TTS 재생성 필요</span>{% endif %}
         </div>
       </div>
+
+      {% include "partials/_storyboard_scene_review.html" %}
+      {% include "partials/_storyboard_cuts.html" %}
 
       {# 레이어 — **스크립트 아래**에 둔다(어도비 패널과 같은 자리).
          여는 것은 미리보기 왼쪽 위 전환 단추가 한다.
@@ -2732,6 +2756,13 @@ function sbNarrBlur(slug, sn) {
         return;
       }
       el.dataset.orig = text;
+      var review = el.closest('.sb-card').querySelector('.sb-scene-review, .sb-cut-review');
+      if (review && !review.querySelector('.sb-cut-stale')) {
+        var warning = document.createElement('p');
+        warning.className = 'sb-cut-stale';
+        warning.textContent = '원고가 변경되었습니다. 컷 원문과 판정을 재검토해야 합니다.';
+        review.prepend(warning);
+      }
       // 말이 바뀌었으면 이미 만든 음성과 어긋난다 — 그 사실을 남긴다
       if (state) state.innerHTML = '<span class="narr-dirty">TTS 재생성 필요</span>';
     })
@@ -2762,19 +2793,23 @@ function sbMakePicked(slug, kind) {
 /* 나레이션 찾기 — 맞는 씬만 남긴다. 씬이 백 개를 넘으면 눈으로 못 훑는다. */
 function sbFind(q) {
   q = (q || '').trim().toLowerCase();
-  var cards = document.querySelectorAll('#scene-list .sb-card');
+  var filter = document.getElementById('sb-cut-filter');
+  var decision = filter ? filter.value : '';
   var hit = 0;
-  cards.forEach(function (c) {
-    if (!q) { c.style.display = ''; c.classList.remove('sb-find-hit'); return; }
-    var el = c.querySelector('.sb-narration, textarea, [data-narration]');
-    var txt = ((el ? (el.value || el.textContent) : '') || c.textContent || '').toLowerCase();
-    var on = txt.indexOf(q) >= 0;
-    c.style.display = on ? '' : 'none';
-    c.classList.toggle('sb-find-hit', on);
-    if (on) hit++;
+  document.querySelectorAll('#scene-list .sb-card').forEach(function(c) {
+    var narration = c.querySelector('.narration');
+    var txt = (narration ? narration.textContent : c.textContent).toLowerCase();
+    var matches = !q || txt.indexOf(q) >= 0;
+    var status = !decision || (c.dataset.cutDecisions || '').split(' ').indexOf(decision) >= 0;
+    c.style.display = matches && status ? '' : 'none';
+    c.classList.toggle('sb-find-hit', !!q && matches && status);
+    c.querySelectorAll('.sb-cut-item').forEach(function(cut) {
+      cut.hidden = !!decision && cut.dataset.decision !== decision;
+    });
+    if (matches && status) hit++;
   });
   var m = document.getElementById('sb-find-msg');
-  if (m) m.textContent = q ? (hit + '개 씬') : '';
+  if (m) m.textContent = q || decision ? hit + '개 씬' : '';
 }
 
 /* 「1-10, 25, 40-52」를 씬 번호로 편다.
