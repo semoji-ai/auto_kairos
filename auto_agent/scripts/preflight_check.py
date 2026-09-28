@@ -92,6 +92,28 @@ def check_node_version() -> bool:
         return False
 
 
+def _fill_missing_from_template(template_dir: Path, remotion_dir: Path) -> int:
+    """템플릿에서 **없는 파일만** 복사한다. 이미 있는 것은 절대 지우거나 덮어쓰지 않는다.
+
+    예전에는 package.json 이 없으면 remotion/ 을 통째로 rmtree 한 뒤 복사했다.
+    그 폴더에는 추적 중인 배경 영상·이미지(public/background)와 프로젝트 정적 파일이
+    있다 — 새 작업 폴더에서 파이프라인을 처음 돌리자 6개가 조용히 사라졌다
+    (CLAUDE.md 필수 규칙 2: 이미지 파일 삭제 금지).
+    """
+    import shutil as _sh
+    added = 0
+    for src in template_dir.rglob("*"):
+        if src.is_dir():
+            continue
+        dst = remotion_dir / src.relative_to(template_dir)
+        if dst.exists():
+            continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        _sh.copy2(src, dst)
+        added += 1
+    return added
+
+
 def _ensure_remotion_setup() -> bool:
     """remotion/ 디렉토리에 package.json과 node_modules 검증. 누락 시 자동 복구."""
     remotion_dir = PROJECT_ROOT / "remotion"
@@ -101,12 +123,9 @@ def _ensure_remotion_setup() -> bool:
     if not pkg_json.exists():
         template_dir = Path(__file__).resolve().parent.parent / "remotion_template"
         if template_dir.exists():
-            print("  [AUTO] remotion/ 누락 -- 템플릿에서 복사 중...")
-            import shutil as _sh
-            if remotion_dir.exists():
-                _sh.rmtree(remotion_dir)
-            _sh.copytree(template_dir, remotion_dir)
-            print("  [AUTO] remotion/ 템플릿 복사 완료")
+            print("  [AUTO] remotion/ 누락 -- 템플릿에서 없는 파일만 채우는 중...")
+            added = _fill_missing_from_template(template_dir, remotion_dir)
+            print(f"  [AUTO] remotion/ 템플릿 보충 완료 ({added}개 파일)")
         else:
             print("  [FAIL] remotion/package.json 없음 + 템플릿도 없음")
             return False
