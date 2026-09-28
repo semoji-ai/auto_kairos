@@ -3,6 +3,9 @@
 (function () {
   var OUT = "%OUT%", ROOT = "%JSX%", ASSETS = "%ASSETS%";
   var R = { ok: false, checks: [], log: [] };
+  %GUARD%
+  var UNSAFE = akdSafeProject("%TMPROOT%");
+  if (UNSAFE) { var fz = new File(OUT); fz.encoding = "UTF-8"; fz.open("w"); fz.write('{"ok":false,"aborted":true,"log":["중단: ' + UNSAFE.replace(/["\\]/g, "") + '"]}'); fz.close(); return; }
   function rd(p) { var f = new File(p); f.encoding = "UTF-8"; f.open("r"); var s = f.read(); f.close(); return s; }
   function chk(name, cond, info) { R.checks.push({ name: name, ok: !!cond, info: info === undefined ? "" : String(info) }); }
   var snap = {}, i;
@@ -13,6 +16,7 @@
     var T = ["stamp-slam", "idle-bob", "photo-pop", "smoke-wipe", "pullback-reveal", "dim-cutaway-drop-exit"];
     for (i = 0; i < T.length; i++) { eval(rd(ROOT + "/dogam/techniques/" + T[i] + ".jsx")); }
     var comp = app.project.items.addComp("akd_roundtrip", 1920, 1080, 1, 5, 30);
+    comp.parentFolder = app.project.items.addFolder("_AKD_VERIFY");
     var par = comp.layers.addNull(); par.name = "원래 부모";
     var L = comp.layers.addSolid([0.2, 0.4, 0.8], "대상", 400, 300, 1);
     L.parent = par;

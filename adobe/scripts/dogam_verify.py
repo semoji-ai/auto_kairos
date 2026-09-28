@@ -118,11 +118,36 @@ R.push(AKD.apply("pullback-reveal", {comp: comp, layers: LY.all, t: 0, assetsRoo
 """),
 }
 
+GUARD = r"""
+/* 안전 관문(필수): 우리 테스트 환경일 때만 진행합니다.
+   (a) 파일 없는 untitled 프로젝트이고 "_AKD_VERIFY" 폴더(와 그 안) 말고는 아이템이 없거나
+   (b) worktree tmp 아래의 테스트 .aep 인 경우. 그 외(사용자 프로젝트)는 아무것도 하지 않고 중단합니다. */
+function akdSafeProject(tmpRoot) {
+  try {
+    var P = app.project;
+    if (!P) { return "열린 프로젝트 없음"; }
+    if (P.file) {
+      var fp = P.file.fsName;
+      return (fp.indexOf(tmpRoot + "/") === 0 && /\.aep$/i.test(fp)) ? "" : ("사용자 프로젝트가 열려 있음: " + fp);
+    }
+    for (var i = 1; i <= P.numItems; i++) {
+      var it = P.item(i), ok = false, cur = it;
+      while (cur && cur !== P.rootFolder) { if (cur instanceof FolderItem && cur.name === "_AKD_VERIFY") { ok = true; break; } cur = cur.parentFolder; }
+      if (!ok) { return "untitled 프로젝트에 다른 아이템이 있음: " + it.name; }
+    }
+    return "";
+  } catch (e) { return "프로젝트 확인 실패"; }
+}
+"""
+
 PRELUDE = r"""
 (function () {
 var RES = { ok: false, results: [], frames: [], log: [] };
 var OUTDIR = %(outdir)s, ASSETS = %(assets)s, PLATE = %(plate)s, PLATE_B = %(plateB)s;
 function readFile(p) { var f = new File(p); f.encoding = "UTF-8"; f.open("r"); var s = f.read(); f.close(); return s; }
+%(guard)s
+var UNSAFE = akdSafeProject(%(tmproot)s);
+if (UNSAFE) { var fx0 = new File(OUTDIR + "/result.json"); fx0.encoding = "UTF-8"; fx0.open("w"); fx0.write('{"ok":false,"aborted":true,"log":["중단: ' + UNSAFE.replace(/["\\\\]/g, "") + '"],"results":[],"frames":[]}'); fx0.close(); return; }
 function writeRes() { var f = new File(OUTDIR + "/result.json"); f.encoding = "UTF-8"; f.lineFeed = "Unix"; f.open("w"); f.write(AKD_S(RES)); f.close(); }
 var AKD_S = function (o) { try { return AKD.stringify(o); } catch (e) { return '{"ok":false,"log":["stringify ' + e + '"]}'; } };
 var snap = {}, i;
@@ -270,6 +295,7 @@ def run_case(tid: str, case: dict, with_ae: bool) -> dict:
             f.unlink()
         jsx = PRELUDE % {
             "outdir": js(str(d)), "assets": js(str(ASSETS)), "plate": js(str(plate) if plate else ""), "plateB": js(str(plate_b) if plate_b else ""),
+            "guard": GUARD, "tmproot": js(str(ADOBE / "tmp")),
             "json2": js(str(JSX / "json2.jsx")), "core": js(str(JSX / "dogam/core.jsx")),
             "techs": "\n  ".join(f"eval(readFile({js(str(JSX / 'dogam/techniques' / (t + '.jsx')))}));" for t in techs),
             "id": tid, "dur": n_frames, "debug": "true" if os.environ.get("AKD_DEBUG") else "false", "setup": case["setup"], "frames": js(case["frames"]),
@@ -281,6 +307,8 @@ def run_case(tid: str, case: dict, with_ae: bool) -> dict:
         run_ae(jp)
         print(f"  AE {time.time() - t0:.1f}s")
     res = json.loads((d / "result.json").read_text(encoding="utf-8")) if (d / "result.json").exists() else {"ok": False, "log": ["result.json 없음"]}
+    if res.get("aborted"):
+        sys.exit("⛔ AE 안전 관문에서 중단: " + " ".join(res.get("log", [])))
     cmp_ = compare(tid, case, d)
     cmp_["ae"] = res
     (d / "compare.json").write_text(json.dumps(cmp_, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -299,9 +327,11 @@ def main() -> None:
         out = OUT / "roundtrip.json"
         out.unlink(missing_ok=True)
         jp = OUT / "roundtrip_run.jsx"
-        jp.write_text(src.replace("%OUT%", str(out)).replace("%JSX%", str(JSX)).replace("%ASSETS%", str(ASSETS)), encoding="utf-8")
+        jp.write_text(src.replace("%GUARD%", GUARD).replace("%TMPROOT%", str(ADOBE / "tmp")).replace("%OUT%", str(out)).replace("%JSX%", str(JSX)).replace("%ASSETS%", str(ASSETS)), encoding="utf-8")
         run_ae(jp)
         r = json.loads(out.read_text(encoding="utf-8")) if out.exists() else {"ok": False, "log": ["결과 없음"]}
+        if r.get("aborted"):
+            sys.exit("⛔ AE 안전 관문에서 중단: " + " ".join(r.get("log", [])))
         for c in r.get("checks", []):
             print(("  ✅ " if c["ok"] else "  ❌ ") + c["name"], c["info"])
         print("  log:", r.get("log"))
