@@ -1,8 +1,6 @@
 ---
 name: script-reviewer
 description: scene_specs 검수 — 시청자 리뷰어 + 콘텐츠 전문가 2관점 평가 + 래칫 게이트
-model: claude-sonnet-4-6
-max_turns: 30
 allowed_tools:
   - Read
   - Write

@@ -84,12 +84,13 @@
     "research-strategist": {
       "description": "editorial_brief + skeleton 기반으로 outline / research_queries / hook_strategy를 설계하는 전략가. 챕터 서사 흐름, 검색 쿼리, 훅 전략을 한 번에 결정.",
       "model": "opus",
-      "max_turns": 5,
+      "max_turns": 15,
       "budget": "$0.5",
       "max_duration_minutes": 5,
       "allowed_tools": [
         "Read",
-        "Write"
+        "Write",
+        "Glob"
       ],
       "skill_file": "agents/research-strategist/SKILL.md",
       "notes": "step_1_strategy. skeleton.json + editorial_brief.json → outline.json + research_queries.json + hook_strategy.json. 외부 검색 없음."
@@ -122,7 +123,8 @@
       "allowed_tools": [
         "Read",
         "Write",
-        "Glob"
+        "Glob",
+        "Grep"
       ],
       "skill_file": "agents/draft-writer/SKILL.md",
       "shared_skills": [
@@ -196,7 +198,8 @@
       "max_duration_minutes": 15,
       "allowed_tools": [
         "Read",
-        "Write"
+        "Write",
+        "Glob"
       ],
       "skill_file": "agents/data-mapper/SKILL.md",
       "notes": "Stage 2 Pass 2. script-director가 비워둔 데이터 필드를 research_report.json에서 매핑."
@@ -260,7 +263,8 @@
       "allowed_tools": [
         "Read",
         "Write",
-        "WebSearch"
+        "WebSearch",
+        "WebFetch"
       ],
       "skill_file": "agents/fact-verifier/SKILL.md",
       "notes": "Stage 2에서 비차단 실행. v4: scene_specs.json의 narration에서 주장 추출."
@@ -411,7 +415,8 @@
         "Read",
         "Write",
         "Bash",
-        "WebSearch"
+        "WebSearch",
+        "WebFetch"
       ],
       "skill_file": "agents/threads-publisher/SKILL.md",
       "notes": "운영 계층. 매일 KST 07:00 자동 실행. 볼트 세션 로그 → 포스트 생성."

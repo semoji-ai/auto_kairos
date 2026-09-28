@@ -1,8 +1,6 @@
 ---
 name: fact-verifier
 description: Use when cross-verifying key claims in the manuscript against research sources AND scanning narration for grammar/syntax errors
-model: claude-sonnet-4-5-20250929
-max_turns: 20
 allowed_tools:
   - Read
   - Write

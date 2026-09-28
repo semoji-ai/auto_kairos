@@ -1,8 +1,6 @@
 ---
 name: data-mapper
 description: scene_specs의 데이터 필드를 research_report.json에서 정확히 매핑
-model: claude-sonnet-4-6
-max_turns: 30
 allowed_tools:
   - Read
   - Write

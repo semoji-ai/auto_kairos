@@ -1,8 +1,6 @@
 ---
 name: script-polisher
 description: 사실·구성이 확정된 원고에 채널 문체를 입히는 윤문 전담 에이전트. 표현만 바꾸고 내용은 건드리지 않는다.
-model: sonnet
-max_turns: 40
 allowed_tools:
   - Read
   - Write

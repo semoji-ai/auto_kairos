@@ -1,8 +1,6 @@
 ---
 name: manuscript-reviewer
 description: final_manuscript.md 래칫 검수 — 원고 자체만 평가(연출 제외) + 자체 재작성 루프. 씬분할 전에 분량·서사·문체를 잡는다.
-model: claude-sonnet-4-6
-max_turns: 40
 allowed_tools:
   - Read
   - Write

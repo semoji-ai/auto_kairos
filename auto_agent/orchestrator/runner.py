@@ -5627,7 +5627,7 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                 return best_match[:2000]
 
         except Exception as e:
-            print(f"    [WARN] \1", flush=True)
+            print(f"    [WARN] 원고 참고 자료를 불러오지 못했습니다: {e}", flush=True)
         return ""
 
     def _build_manuscript_reference_block(self) -> str:
@@ -5688,15 +5688,15 @@ Step: {step.get("id", "")} — {step.get("name", "")}
                         flush=True,
                     )
         except Exception as e:
-            print(f"    [WARN] \1", flush=True)
+            print(f"    [WARN] 원고 참고 자료를 불러오지 못했습니다: {e}", flush=True)
 
         if not sections:
             return ""
 
         return (
             "<manuscript_references>\n"
-            "⚠️ 매력적인 prose 작성을 위한 강제 reference입니다.\n"
-            "이 톤/리듬/후킹 패턴을 그대로 따르세요. 추상적 규칙이 아니라 실제 예시입니다.\n\n"
+            "같은 채널의 실제 원고입니다. 구성·후킹·전개를 보는 참고 자료이며 흉내 낼 대상이 아닙니다.\n"
+            "문체(어미·시그니처 장치)는 이 단계의 일이 아닙니다 — 윤문(step_2_polish)이 입힙니다.\n\n"
             + "\n".join(sections)
             + "\n</manuscript_references>"
         )
