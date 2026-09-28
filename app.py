@@ -54,6 +54,7 @@ from auto_agent.dashboard.helpers import (
     render_scene_preview,
     get_recent_images,
 )
+from auto_agent.dashboard.storyboard_cuts import attach_storyboard_cuts
 from auto_agent.dashboard.actions import router as actions_router
 from auto_agent.dashboard.json_editor import router as json_editor_router
 from auto_agent.dashboard.sse import router as sse_router
@@ -977,6 +978,8 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
                 sc["visual_kind"] = get_visual_kind(sc)
         except Exception:
             pass
+        context["cut_review"] = attach_storyboard_cuts(scenes, out_dir)
+        context["project"] = {**project, "scene_count": len(scenes)}
         context["scenes"] = scenes
         ch_set = sorted(set(s.get("chapter", 0) for s in scenes))
         context["chapters_list"] = ch_set
@@ -1739,6 +1742,7 @@ async def storyboard_scene_detail_by_slug(request: Request, project_ref: str, sc
                 scene_subs = sub
                 break
 
+    attach_storyboard_cuts([scene], out_dir)
     return templates.TemplateResponse(request, "partials/_storyboard_scene.html", {
         "scene": scene,
         "subtitles": scene_subs,

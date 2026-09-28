@@ -1,0 +1,1097 @@
+[
+  {
+    "id": "J01",
+    "stage": "소재 발굴",
+    "capability": "채널 적합성",
+    "input": "기사 요약+채널 기준",
+    "output": "적합/보류/부적합",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/auto_research_loop.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J02",
+    "stage": "소재 발굴",
+    "capability": "중복 소재 판별",
+    "input": "신규 소재+기존 편 요약",
+    "output": "중복/후속편/새 주제",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/auto_research_loop.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J03",
+    "stage": "소재 발굴",
+    "capability": "기사별 기획 각도 선택",
+    "input": "기사+미리 만든 각도 목록",
+    "output": "각도ID/없음",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/auto_research_loop.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J04",
+    "stage": "소재 발굴",
+    "capability": "조사 우선순위",
+    "input": "후보+수집된 시의성 지표",
+    "output": "우선/보통/후순위",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/auto_research_loop.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J05",
+    "stage": "소재 발굴",
+    "capability": "시청자 관점별 훅 선별",
+    "input": "후보 훅+시청자 정의",
+    "output": "후보ID/둘다미달",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/auto_research_loop.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J06",
+    "stage": "기획·시리즈",
+    "capability": "추가 인터뷰 질문 선택",
+    "input": "답변 현황+질문 후보",
+    "output": "질문ID/충분",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/content_planner_module.py",
+      "auto_agent/modules/series_planner_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J07",
+    "stage": "기획·시리즈",
+    "capability": "핵심 질문 후보 선택",
+    "input": "브리프+후보 질문",
+    "output": "후보ID/부적합",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/content_planner_module.py",
+      "auto_agent/modules/series_planner_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J08",
+    "stage": "기획·시리즈",
+    "capability": "범위와 제외 방향 분류",
+    "input": "원본 요구+내용 후보",
+    "output": "본편/부록/제외/보류",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/content_planner_module.py",
+      "auto_agent/modules/series_planner_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J09",
+    "stage": "기획·시리즈",
+    "capability": "편별 에피소드 배정",
+    "input": "에피소드 후보+편 목표",
+    "output": "편ID/보류",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/content_planner_module.py",
+      "auto_agent/modules/series_planner_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J10",
+    "stage": "기획·시리즈",
+    "capability": "원본 소구점 반영 검사",
+    "input": "원본 요구+기획안",
+    "output": "충족/부분/누락",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/content_planner_module.py",
+      "auto_agent/modules/series_planner_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J11",
+    "stage": "자료 수집·볼트",
+    "capability": "검색 채널 선택",
+    "input": "질문+허용된 검색 도구",
+    "output": "뉴스/논문/백과/볼트",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/vault_lookup_module.py",
+      "auto_agent/modules/fresh_collector_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J12",
+    "stage": "자료 수집·볼트",
+    "capability": "검색결과 열람 우선순위",
+    "input": "검색결과+질문",
+    "output": "우선/보통/제외",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/vault_lookup_module.py",
+      "auto_agent/modules/fresh_collector_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J13",
+    "stage": "자료 수집·볼트",
+    "capability": "볼트 주제 연결",
+    "input": "질문+검색으로 좁힌 토픽 목록",
+    "output": "토픽ID/없음",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/vault_lookup_module.py",
+      "auto_agent/modules/fresh_collector_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J14",
+    "stage": "자료 수집·볼트",
+    "capability": "의미 중복 자료 선별",
+    "input": "후보 문서쌍",
+    "output": "중복/보완/독립 주제",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/vault_lookup_module.py",
+      "auto_agent/modules/fresh_collector_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J15",
+    "stage": "자료 수집·볼트",
+    "capability": "자료 주제 태깅",
+    "input": "문서 발췌+분류체계",
+    "output": "주제별 해당 여부",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/vault_lookup_module.py",
+      "auto_agent/modules/fresh_collector_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J16",
+    "stage": "근거·조사 전략",
+    "capability": "주장-출처 관계",
+    "input": "주장+원문 발췌",
+    "output": "지지/모순/판단불가",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/chapter_projection_module.py",
+      "auto_agent/data/skills/agents/targeted-researcher/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J17",
+    "stage": "근거·조사 전략",
+    "capability": "자료의 역할 구분",
+    "input": "본문+출처 메타데이터",
+    "output": "당사자 발표/독립 분석/의견/불명",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/chapter_projection_module.py",
+      "auto_agent/data/skills/agents/targeted-researcher/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J18",
+    "stage": "근거·조사 전략",
+    "capability": "근거의 챕터 배정",
+    "input": "근거+챕터 질문",
+    "output": "챕터ID/미배정",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/chapter_projection_module.py",
+      "auto_agent/data/skills/agents/targeted-researcher/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J19",
+    "stage": "근거·조사 전략",
+    "capability": "미해결 질문 우선순위",
+    "input": "미해결 목록+핵심질문",
+    "output": "필수조사/보완/생략",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/chapter_projection_module.py",
+      "auto_agent/data/skills/agents/targeted-researcher/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J20",
+    "stage": "근거·조사 전략",
+    "capability": "추가 검색 또는 집필 전환",
+    "input": "질문별 근거 상태",
+    "output": "재검색/집필/검토",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/chapter_projection_module.py",
+      "auto_agent/data/skills/agents/targeted-researcher/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J21",
+    "stage": "원고 구성·표현",
+    "capability": "도입 후보 선택",
+    "input": "훅 후보+기획",
+    "output": "후보ID/모두수정",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/draft-writer/SKILL.md",
+      "auto_agent/data/skills/agents/script-polisher/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J22",
+    "stage": "원고 구성·표현",
+    "capability": "정의·예시 필요성",
+    "input": "문단+앞 문맥",
+    "output": "정의필요/예시필요/충분",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/draft-writer/SKILL.md",
+      "auto_agent/data/skills/agents/script-polisher/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J23",
+    "stage": "원고 구성·표현",
+    "capability": "사례 후보 선택",
+    "input": "논점+근거 있는 사례 목록",
+    "output": "사례ID/없음",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/draft-writer/SKILL.md",
+      "auto_agent/data/skills/agents/script-polisher/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J24",
+    "stage": "원고 구성·표현",
+    "capability": "분량 축소 대상",
+    "input": "문단+필수목록+코드로 계산한 분량",
+    "output": "유지/압축/삭제후보",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/draft-writer/SKILL.md",
+      "auto_agent/data/skills/agents/script-polisher/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J25",
+    "stage": "원고 구성·표현",
+    "capability": "문체 수정안 선택",
+    "input": "원문+동일 의미 수정안",
+    "output": "후보ID/원문유지",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/draft-writer/SKILL.md",
+      "auto_agent/data/skills/agents/script-polisher/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J26",
+    "stage": "래칫·수정",
+    "capability": "요구 충족",
+    "input": "원본 요구+원고",
+    "output": "충족/부분/누락",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/manuscript-reviewer/SKILL.md",
+      "adobe/backend/pipeline.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J27",
+    "stage": "래칫·수정",
+    "capability": "문단 연결",
+    "input": "인접 문단+핵심질문",
+    "output": "연결충분/설명누락/검토",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/manuscript-reviewer/SKILL.md",
+      "adobe/backend/pipeline.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J28",
+    "stage": "래칫·수정",
+    "capability": "수정 의미 회귀",
+    "input": "이전/수정 문단+근거",
+    "output": "유지/왜곡/검토",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/manuscript-reviewer/SKILL.md",
+      "adobe/backend/pipeline.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J29",
+    "stage": "래칫·수정",
+    "capability": "금지 방향·역할 혼동",
+    "input": "원고+금지 기준",
+    "output": "위반/비위반/검토",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/manuscript-reviewer/SKILL.md",
+      "adobe/backend/pipeline.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J30",
+    "stage": "래칫·수정",
+    "capability": "개정안 채택",
+    "input": "익명 A/B+기준",
+    "output": "A/B/동률/둘다미달",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/manuscript-reviewer/SKILL.md",
+      "adobe/backend/pipeline.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J31",
+    "stage": "씬·화면 구성",
+    "capability": "씬 경계 후보 선택",
+    "input": "문장ID+인접 맥락",
+    "output": "여기서분할/유지",
+    "integration": "C",
+    "code_anchors": [
+      "scripts/plan_screens.py",
+      "auto_agent/modules/visual_decision_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J32",
+    "stage": "씬·화면 구성",
+    "capability": "시각화 방식 선택",
+    "input": "씬 의도+인접씬",
+    "output": "재연/도해/실물/지도/검토",
+    "integration": "D",
+    "code_anchors": [
+      "scripts/plan_screens.py",
+      "auto_agent/modules/visual_decision_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J33",
+    "stage": "씬·화면 구성",
+    "capability": "컷 연속성",
+    "input": "전후씬의 인물·장소·행동",
+    "output": "이어짐/새장면/검토",
+    "integration": "D",
+    "code_anchors": [
+      "scripts/plan_screens.py",
+      "auto_agent/modules/visual_decision_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J34",
+    "stage": "씬·화면 구성",
+    "capability": "샷 크기 선택",
+    "input": "강조 대상+장면 의도",
+    "output": "wide/medium/close",
+    "integration": "D",
+    "code_anchors": [
+      "scripts/plan_screens.py",
+      "auto_agent/modules/visual_decision_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J35",
+    "stage": "씬·화면 구성",
+    "capability": "정보 제시 순서",
+    "input": "요소ID+전제관계",
+    "output": "다음요소ID/검토",
+    "integration": "C",
+    "code_anchors": [
+      "scripts/plan_screens.py",
+      "auto_agent/modules/visual_decision_module.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J36",
+    "stage": "캐릭터·자료·에셋",
+    "capability": "반복 등장인물 연결",
+    "input": "인물 언급+등장인물 후보",
+    "output": "인물ID/신규후보/불명",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/roster_builder_module.py",
+      "auto_agent/modules/character_library.py",
+      "scripts/select_asset_candidates.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J37",
+    "stage": "캐릭터·자료·에셋",
+    "capability": "캐릭터 변형 재사용",
+    "input": "나이·복장·시점 메타데이터+후보",
+    "output": "variantID/새변형",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/roster_builder_module.py",
+      "auto_agent/modules/character_library.py",
+      "scripts/select_asset_candidates.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J38",
+    "stage": "캐릭터·자료·에셋",
+    "capability": "실물자료 검색 대상",
+    "input": "씬 내용",
+    "output": "검색유망/생성우선/검토",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/modules/roster_builder_module.py",
+      "auto_agent/modules/character_library.py",
+      "scripts/select_asset_candidates.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J39",
+    "stage": "캐릭터·자료·에셋",
+    "capability": "검색 에셋 후보 선택",
+    "input": "제목·캡션·검증된 내용 요약",
+    "output": "에셋ID/없음",
+    "integration": "M",
+    "code_anchors": [
+      "auto_agent/modules/roster_builder_module.py",
+      "auto_agent/modules/character_library.py",
+      "scripts/select_asset_candidates.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J40",
+    "stage": "캐릭터·자료·에셋",
+    "capability": "이미지 재생성 필요 분류",
+    "input": "시각검수의 구조화된 결함 목록",
+    "output": "재생성/부분수정/유지/검토",
+    "integration": "M",
+    "code_anchors": [
+      "auto_agent/modules/roster_builder_module.py",
+      "auto_agent/modules/character_library.py",
+      "scripts/select_asset_candidates.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J41",
+    "stage": "레이아웃·모션·조립",
+    "capability": "레이아웃 템플릿 선택",
+    "input": "정보구조+실제 템플릿 목록",
+    "output": "템플릿ID/설계요청",
+    "integration": "C",
+    "code_anchors": [
+      "scripts/plan_infographic_layout.py",
+      "scripts/plan_scene_layers.py",
+      "adobe/backend/motion.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J42",
+    "stage": "레이아웃·모션·조립",
+    "capability": "레이어 분리 우선순위",
+    "input": "인식된 객체ID+연출 의도",
+    "output": "분리/합성유지/검토",
+    "integration": "M",
+    "code_anchors": [
+      "scripts/plan_infographic_layout.py",
+      "scripts/plan_scene_layers.py",
+      "adobe/backend/motion.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J43",
+    "stage": "레이아웃·모션·조립",
+    "capability": "모션 프리셋 선택",
+    "input": "나레이션+레이어 목록+허용enum",
+    "output": "프리셋ID",
+    "integration": "C",
+    "code_anchors": [
+      "scripts/plan_infographic_layout.py",
+      "scripts/plan_scene_layers.py",
+      "adobe/backend/motion.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J44",
+    "stage": "레이아웃·모션·조립",
+    "capability": "카메라 동작 선택",
+    "input": "대상 위치 요약+컷 의도+후보",
+    "output": "고정/줌/팬/검토",
+    "integration": "M",
+    "code_anchors": [
+      "scripts/plan_infographic_layout.py",
+      "scripts/plan_scene_layers.py",
+      "adobe/backend/motion.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J45",
+    "stage": "레이아웃·모션·조립",
+    "capability": "장면 전환 선택",
+    "input": "전후씬 의미+허용프리셋",
+    "output": "전환ID/기본컷",
+    "integration": "C",
+    "code_anchors": [
+      "scripts/plan_infographic_layout.py",
+      "scripts/plan_scene_layers.py",
+      "adobe/backend/motion.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J46",
+    "stage": "음성·자막·제작 흐름",
+    "capability": "발음 후보 선택",
+    "input": "문맥+발음사전 후보",
+    "output": "발음ID/검토",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/tools/tts_regenerate.py",
+      "auto_agent/tools/subtitle_sync.py",
+      "auto_agent/tools/korean_tts_preprocessor.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J47",
+    "stage": "음성·자막·제작 흐름",
+    "capability": "낭독 끊어읽기 선택",
+    "input": "문장+허용 경계ID",
+    "output": "경계별끊기/유지",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/tools/tts_regenerate.py",
+      "auto_agent/tools/subtitle_sync.py",
+      "auto_agent/tools/korean_tts_preprocessor.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J48",
+    "stage": "음성·자막·제작 흐름",
+    "capability": "TTS 재시도 대상",
+    "input": "ASR차이+음성검수 결과",
+    "output": "재생성/사전수정/검토",
+    "integration": "M",
+    "code_anchors": [
+      "auto_agent/tools/tts_regenerate.py",
+      "auto_agent/tools/subtitle_sync.py",
+      "auto_agent/tools/korean_tts_preprocessor.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J49",
+    "stage": "음성·자막·제작 흐름",
+    "capability": "자막 의미 단위 분리",
+    "input": "단어ID+허용길이 후보",
+    "output": "경계ID",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/tools/tts_regenerate.py",
+      "auto_agent/tools/subtitle_sync.py",
+      "auto_agent/tools/korean_tts_preprocessor.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J50",
+    "stage": "음성·자막·제작 흐름",
+    "capability": "검토 작업 분류",
+    "input": "결함리포트+허용작업",
+    "output": "원고/음성/자막/이미지/연출",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/tools/tts_regenerate.py",
+      "auto_agent/tools/subtitle_sync.py",
+      "auto_agent/tools/korean_tts_preprocessor.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J51",
+    "stage": "배포·멀티포맷",
+    "capability": "제목·썸네일 문구 조합",
+    "input": "문구후보+본문+관점",
+    "output": "조합ID/수정",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/release-manager/SKILL.md",
+      "auto_agent/data/skills/agents/multiformat-director/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J52",
+    "stage": "배포·멀티포맷",
+    "capability": "쇼츠 구간 선별",
+    "input": "씬요약+의존관계+실측길이",
+    "output": "구간후보ID/불가",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/release-manager/SKILL.md",
+      "auto_agent/data/skills/agents/multiformat-director/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J53",
+    "stage": "배포·멀티포맷",
+    "capability": "카드뉴스·스레드 핵심 선택",
+    "input": "주장ID+근거+매체기준",
+    "output": "포함/제외/보류",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/release-manager/SKILL.md",
+      "auto_agent/data/skills/agents/multiformat-director/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J54",
+    "stage": "배포·멀티포맷",
+    "capability": "재가공 형식 선택",
+    "input": "본편특성+지원형식",
+    "output": "쇼츠/카드/블로그/스레드별적합",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/release-manager/SKILL.md",
+      "auto_agent/data/skills/agents/multiformat-director/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J55",
+    "stage": "배포·멀티포맷",
+    "capability": "업로드 문안 정합",
+    "input": "제목·설명·고지+원고",
+    "output": "항목별충족/불일치",
+    "integration": "D",
+    "code_anchors": [
+      "auto_agent/data/skills/agents/release-manager/SKILL.md",
+      "auto_agent/data/skills/agents/multiformat-director/SKILL.md"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J56",
+    "stage": "성과 학습·운영 제어",
+    "capability": "시청자 피드백 분류",
+    "input": "확보된 댓글·수정피드백",
+    "output": "흥미/혼란/불신/기타",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/agent_runner.py",
+      "auto_agent/modules/playbook_updater.py",
+      "auto_agent/orchestrator/runner.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J57",
+    "stage": "성과 학습·운영 제어",
+    "capability": "성과 패턴 가설 분류",
+    "input": "코드집계 성과+콘텐츠 태그",
+    "output": "기존가설ID/추가검토",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/agent_runner.py",
+      "auto_agent/modules/playbook_updater.py",
+      "auto_agent/orchestrator/runner.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J58",
+    "stage": "성과 학습·운영 제어",
+    "capability": "다음 실험 후보 선택",
+    "input": "가설+실험 후보+예산상태",
+    "output": "실험ID/보류",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/agent_runner.py",
+      "auto_agent/modules/playbook_updater.py",
+      "auto_agent/orchestrator/runner.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J59",
+    "stage": "성과 학습·운영 제어",
+    "capability": "작업·모델 라우팅",
+    "input": "요청+단계상태+허용담당",
+    "output": "담당ID/검토",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/agent_runner.py",
+      "auto_agent/modules/playbook_updater.py",
+      "auto_agent/orchestrator/runner.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  },
+  {
+    "id": "J60",
+    "stage": "성과 학습·운영 제어",
+    "capability": "실패 후 다음 행동",
+    "input": "오류분류+산출물상태+허용작업",
+    "output": "재시도/재조사/수정/중단/검토",
+    "integration": "C",
+    "code_anchors": [
+      "auto_agent/modules/agent_runner.py",
+      "auto_agent/modules/playbook_updater.py",
+      "auto_agent/orchestrator/runner.py"
+    ],
+    "status": "candidate_not_proven",
+    "experiment": {
+      "metric": "사람 기준 일치·작업 시간·총비용·재작업",
+      "baseline": "현재 담당 또는 코드 결과",
+      "fixture": "실제 프로젝트에서 추출 필요"
+    }
+  }
+]

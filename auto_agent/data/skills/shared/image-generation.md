@@ -108,7 +108,9 @@ artstyle/styles/
 ```
 - base_image는 색감/질감/분위기/기법만 참고
 - base_image의 캐릭터/인물은 절대 복사 금지
-- 캐릭터는 텍스트 묘사로 새로 생성
+- 캐릭터는 역할·시대·나이·헤어스타일·상의·하의를 텍스트로 구체적으로 지정해 새로 생성
+- 프롬프트에 "Change the reference character's hairstyle and clothing for every scene person"를 명시
+- 세모지 기준 시트의 짧은 검은 머리+파란 반팔 셔츠+흰 이너+남색 바지 조합을 그대로 사용한 결과는 QA 실패
 ```
 
 ### 3.3 스타일별 프롬프트 프리펜드

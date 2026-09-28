@@ -15,6 +15,7 @@ scene_enricher_module — 씬별 시각자료 자동·반자동 보강 (세모�
 from __future__ import annotations
 
 import json
+import copy
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
@@ -219,6 +220,9 @@ def enrich_project(project_output_dir: Path, *, dry_run: bool = False,
     spec = json.loads(spec_path.read_text(encoding="utf-8"))
     scenes = spec.get("scenes", [])
 
+    from auto_agent.research.jev_scene import SceneJudge
+    jev = SceneJudge.from_project(project_output_dir)
+
     queue: list[dict[str, Any]] = []
     summary = {
         "total_scenes": len(scenes),
@@ -241,16 +245,21 @@ def enrich_project(project_output_dir: Path, *, dry_run: bool = False,
         # generate_image, map, chart, none 은 step_2d 대상 아님
         if kind == "generate_image":
             summary["generate_scenes"] += 1
-            continue
         if kind not in ("video", "search_image"):
+            if jev is not None:
+                jev.apply(scene, {"scene_index": i, "asset_kind": "plan", "candidates": []}, copy.deepcopy(scene))
             continue
 
+        original_scene = copy.deepcopy(scene)
         if kind == "video":
             summary["video_scenes"] += 1
             entry = _enrich_video_scene(scene, i, limit=limit_per_scene)
         else:
             summary["search_image_scenes"] += 1
             entry = _enrich_image_scene(scene, i, limit=limit_per_scene)
+
+        if jev is not None:
+            jev.apply(scene, entry, original_scene)
 
         if entry.get("auto_selected"):
             summary["auto_selected"] += 1
@@ -265,6 +274,8 @@ def enrich_project(project_output_dir: Path, *, dry_run: bool = False,
             queue.append(entry)
 
     if not dry_run:
+        if jev is not None:
+            jev.save(project_output_dir)
         spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2), encoding="utf-8")
         (project_output_dir / "enrichment_queue.json").write_text(
             json.dumps({"summary": summary, "queue": queue}, ensure_ascii=False, indent=2),

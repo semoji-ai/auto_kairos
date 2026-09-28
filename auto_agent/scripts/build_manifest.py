@@ -72,6 +72,23 @@ def _load_project_config(project_id: str, project_dir: str = None) -> dict:
     return {}
 
 
+def _background_preset_path(scene: dict, image_path: str, public_dir: Path) -> str:
+    """이미지 없는 text_overlay 씬의 backgroundPreset → 렌더러가 읽는 /background/... 경로.
+
+    선택 이미지가 있으면 그 이미지가 우선이다. 파일이 public/ 에 없으면 빈 값 —
+    없는 배경을 가리키면 렌더러가 깨진 이미지를 그린다.
+    """
+    preset = (scene.get("backgroundPreset") or "").strip().lstrip("/")
+    if image_path or not preset or scene.get("visual_mode") != "text_overlay":
+        return ""
+    # 「이미지 없음」을 명시한 씬은 배경도 비운다 — 렌더러의 source:none 분기와 같은 뜻
+    if (scene.get("imageAsset") or {}).get("source") == "none":
+        return ""
+    if not (public_dir / preset).exists():
+        return ""
+    return "/" + preset
+
+
 def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
     """로컬 파일 기반 manifest 빌드.
     이미지/오디오 경로를 Remotion staticFile() 상대 경로로 설정.
@@ -379,12 +396,18 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
         # Image — image_assets.json selected 우선 → 루트 → generated/ 순 탐색
         selected_file = image_assets_lookup.get(num) if _scene_kind in ("search_image", "generate_image") and _ia_source != "none" else None
         if selected_file:
-            # 절대경로가 들어온 경우 → 상대 파일명만 추출
             selected_file = selected_file.replace("\\", "/")
-            if "/" in selected_file and not selected_file.startswith(("generated/", "search/")):
-                # C:/Users/.../images/scene_001.png → scene_001.png
+            image_root = out_dir / "images"
+            if selected_file.startswith("images/"):
+                selected_file = selected_file[len("images/"):]
+            elif Path(selected_file).is_absolute():
+                try:
+                    selected_file = Path(selected_file).relative_to(image_root).as_posix()
+                except ValueError:
+                    selected_file = Path(selected_file).name
+            elif len(selected_file) > 2 and selected_file[1:3] == ":/":
                 selected_file = Path(selected_file).name
-            img_src = out_dir / "images" / selected_file
+            img_src = image_root / selected_file
             if img_src.exists():
                 image_path = link_asset(img_src, "images", selected_file)
         if not image_path and _scene_kind in ("search_image", "generate_image") and _ia_source != "none":
@@ -568,6 +591,12 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
             "transition": transition,
             "vizAnimation": viz_animation,
         }
+        _preset_bg = _background_preset_path(scene, image_path, workspace / "remotion" / "public")
+        if _preset_bg:
+            entry["vizBackgroundPath"] = _preset_bg
+            # imageAsset이 없으면 렌더러가 배경 이미지를 0.35로 흐리게 그린다.
+            # 문구 배경은 원래 명도로 화면을 꽉 채운다.
+            entry["imageAsset"] = {"placement": "background", "opacity": 1.0, "fit": "cover"}
         if person_images:
             entry["images"] = person_images
         elif scene.get("layout") in ("person_card", "images_grid") and scene.get("images"):
@@ -606,7 +635,14 @@ def build_manifest(project_id: str, storage_key: str, project_dir: str = None):
                 # cinematic/quote 레이아웃은 무조건 opacity 1
                 layout = scene_layout or viz.get("creative", {}).get("layout", "")
                 _is_quote = layout in ("quote", "quote_portrait")
-                if layout == "cinematic":
+                if ia.get("placement") == "source_insert":
+                    entry["imageAsset"] = {
+                        "placement": "source_insert",
+                        "opacity": 1.0,
+                        "insert": ia["insert"],
+                        "nativePixels": ia["nativePixels"],
+                    }
+                elif layout == "cinematic":
                     entry["imageAsset"] = {"placement": "fullscreen", "opacity": 1.0}
                 else:
                     p = ia.get("placement", "background")

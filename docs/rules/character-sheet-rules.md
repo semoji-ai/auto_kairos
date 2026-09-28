@@ -126,6 +126,28 @@ python3 scripts/gen_character_sheets.py <roster.json> -o <out_dir>
 그 씬에 등장하는 **인물 시트를 첨부해서** 장면을 그린다.
 같은 인물이 편마다 같은 얼굴로 나온다.
 
+**공식 기준 시트를 직접 첨부하는 씬은 인물의 헤어스타일과 의상을 반드시 새로 지정한다.**
+기준 시트는 얼굴·신체 비율과 색면을 그리는 방법의 참조이지, 화면 속 인물의
+외형을 복사하는 캐스팅 시트가 아니다. 특히 기준 시트의 짧은 검은 머리와
+파란 반팔 셔츠·흰 이너·남색 바지 조합을 무명 작업자에게 그대로 쓰지 않는다.
+
+씬 프롬프트의 인물마다 **역할·시대/나이·머리·상의/하의**를 구체적으로 적고,
+다음 문장을 포함한다. 인물이 여러 명이면 각자 다른 머리와 옷을 적는다.
+
+```
+Use the attached Semoji master sheet only for drawing style and body/face proportions.
+Change the reference character's hairstyle and clothing for every scene person.
+Draw [role, age, era] with [specific hairstyle] and [specific top/bottom outfit].
+Do not reuse the master sheet's short black quiff, blue short-sleeve shirt,
+white undershirt and navy pants as one outfit.
+```
+
+실존 인물의 별도 시트를 첨부하는 씬은 그 시트의 **식별 가능한 얼굴 특징**을
+유지하되, 시트 자체를 만들 때 위 기준 시트의 헤어·의상을 복제하지 않았는지
+먼저 확인한다. 씬 생성 후 기준 시트와 나란히 놓고 머리·상의·하의를 검수한다.
+기준 인물과 동일한 조합이 보이면 화풍이 맞더라도 실패로 기록하고, 기존 파일을
+보존한 채 새 버전을 생성해 선택을 바꾼다.
+
 ---
 
 ## 3-0. 빗금은 프롬프트가 만든다 — 강조한 자리에 생긴다
