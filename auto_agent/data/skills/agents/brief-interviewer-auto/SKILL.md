@@ -11,10 +11,9 @@
 
 ## 핵심 원칙
 
-### 1. Best-of-N 선택
+### 1. 견줘서 고른다
 
-각 필드에 대해 **후보 3~5개** 생성 → 자가 평가 → 최고점 선택.
-기계적 템플릿 채움이 아닌, 다양한 앵글을 고려한 후 선택.
+첫 생각을 그대로 적지 않는다. 필드마다 다른 앵글을 견준 뒤 가장 강한 것을 고른다(Step 2).
 
 ### 2. DNA 레버 우선 고려
 
@@ -79,30 +78,16 @@ spine_question 후보 2~3개 생성 (서로 다른 척추)
 
 **선택 기준**: spine_question이 확정되면 이후 모든 후보 생성/선택은 그 spine_question에 기여하는 것만 채택. 아무리 매력적인 hook 후보라도 spine과 어긋나면 폐기.
 
-### Step 2. 후보 생성 (병렬 5개 앵글)
+### Step 2. 앵글을 견줘 고른다
 
-각 DNA 레버에 대해 서로 다른 앵글의 후보 여러 개를 **한 번의 LLM 호출**로 생성:
+hook_angle·hidden_truth·narrative_arc·(인물형이면) human_truth.failure마다 **서로 다른 앵글을
+여럿 떠올려 견준 뒤** 가장 강한 것을 고른다. 몇 개를 떠올릴지는 주제가 정한다.
 
-```
-후보 생성 프롬프트 (하나의 LLM call에 통합):
-
-주제 "{topic}"에 대해:
-1. hook_angle 후보 3개 (서로 다른 관점 — 뉴스 / 일화 / 수치)
-2. hidden_truth 후보 3개 (서로 다른 반전 지점)
-3. narrative_arc.entry_trend 후보 3개
-4. narrative_arc.deep_knowledge 후보 3개
-5. human_truth.failure 후보 3개 (인물형일 때만)
-```
-
-### Step 3. 자가 채점
-
-각 후보 세트에 대해 4축 평가:
-- **spine 정합도** (1순위, 합/불 게이트): spine_question 답에 기여하지 않으면 0점 → 즉시 탈락
-- **구체성** (10점): 검증 가능한 사실/수치/연도 포함 여부
-- **반전 강도** (10점): 시청자 기존 인식을 얼마나 깨는가
-- **세모지 DNA 부합** (10점): narrative-semoji 공식 부합도
-
-spine 정합 통과한 후보 중 총점 최고를 선택.
+견줄 때 묻는 것 — 순서가 곧 우선순위다.
+1. **spine에 기여하는가** — 아니면 아무리 매력적이어도 버린다(합/불)
+2. 검증 가능한 사실·수치·연도가 있는가
+3. 시청자의 기존 인식을 얼마나 깨는가
+4. narrative-semoji의 서사 공식에 맞는가
 
 ### Step 4. 통합 및 일관성 검증
 
@@ -175,37 +160,6 @@ spine 정합 통과한 후보 중 총점 최고를 선택.
   "_generated_by": "auto",
   "_topic": "{원본 topic}",
   "_version": "v1"
-}
-```
-
----
-
-## 후보 생성 프롬프트 템플릿
-
-```
-주제: {topic}
-채널: {channel}
-문체: {writing_style}
-제외 방향: {excluded_angles}
-
-아래 각 필드에 대해 **서로 다른 앵글의 후보 3개**를 생성하고,
-각 후보마다 (구체성/반전성/DNA부합도) 3축 자가 평가하세요.
-
-- hook_angle: 처음 5~15초 도입 장치
-- hidden_truth: 시청자 기존 인식을 깨뜨리는 반전 포인트
-- narrative_arc.entry_trend: 현재 화제/트렌드
-- narrative_arc.deep_knowledge: 본문에서 파헤칠 심층 지식
-- human_truth.failure: (인물형일 때) 구체적 실패 에피소드
-
-JSON으로 반환:
-{
-  "candidates": {
-    "hook_angle": [
-      {"content": "...", "scores": {"구체성": 8, "반전성": 6, "DNA부합도": 7}},
-      ...
-    ],
-    ...
-  }
 }
 ```
 
