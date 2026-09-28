@@ -79,3 +79,8 @@ projects/**/*.mp3
 projects/**/*.wav
 projects/**/*.mp4
 projects/**/*.mov
+
+# 기법 도감 에셋(세모지 도감 복사본 — scripts/sync_dogam.py 로 재생성)
+cep/com.autokairos.pd/jsx/dogam/assets/
+# 검증 하네스 산출물
+tmp/
