@@ -12,14 +12,21 @@ generate로 기울고, 한 번 generate로 찍힌 씬은 조사 대상에서 빠
 전 씬을 다 조사하면 편당 한 시간이 넘고, 은유·심리 장면은 조사해도 빈손이다.
 그래서 **사료가 있을 자리만 골라낸다.**
 
-    python3 scripts/select_asset_candidates.py <project_dir> -o <out.json>
+    python3 scripts/select_asset_candidates.py <project_dir> -o <out.json> [--judge]
+
+**--judge (권장).** 아래 SIGNALS 는 LG편 고유명사 사전이라 소재가 바뀌면 거의 걸리지 않는다
+(디아지오편 142씬 중 7씬). --judge 는 전 씬을 한 번에 모델에게 보여 주고 「이 씬의 말과
+직접 이어지는 실물이 남아 있을 법한가, 있다면 무엇인가」를 판정받는다. 정규식 신호는
+판정의 힌트로만 넘긴다.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -97,11 +104,58 @@ def classify(scene: dict) -> tuple[bool, list[str], str]:
     return worth, hits, reason
 
 
+JUDGE_PROMPT = """브랜드·기업사 다큐멘터리의 씬 목록입니다. 실물 자료(보도사진, 제품 사진, 광고·신문 지면,
+공문서, 인물 초상, 기록 영상 캡처)를 찾아볼 값어치가 있는 씬을 고르세요.
+
+판정 기준:
+- 그 씬의 나레이션을 들은 사람이 자료를 보고 「이게 방금 그 이야기구나」 하고 알 수 있는
+  **특정한** 실물이 세상에 남아 있을 법한가. 「같은 시대라서」「분위기가 맞아서」는 이유가 아니다
+- 특정할 수 있어야 검색어를 만들 수 있다 — 인물·제품·사건·장소·문서가 구체적인가
+- 은유·심리·가정·명제 씬, 「어느 공장」처럼 특정할 수 없는 씬은 제외
+- 개수보다 정확도. 애매하면 제외
+
+signals 는 키워드 기반 참고 힌트일 뿐 판단 근거가 아닙니다.
+
+씬 목록(JSON):
+__SCENES__
+
+JSON 한 덩어리로만 답하세요:
+{"items":[{"n":씬번호,"worth":true|false,"expected_asset":"찾을 실물을 한 문장으로","query":"검색어","reason":"판정 이유 한 줄"}]}
+모든 씬에 대해 한 항목씩 답합니다."""
+
+
+def judge_with_model(scenes: list[dict]) -> dict[int, dict]:
+    """전 씬을 한 번에 판정받는다. claude CLI 는 stdin 으로 부른다(-p 인자 없이)."""
+    rows = []
+    for s in scenes:
+        ia = s.get("imageAsset") or {}
+        _, hits, _ = classify(s)
+        rows.append({"n": s.get("sceneNumber"), "layout": s.get("layout"),
+                     "narration": (s.get("narration") or "")[:300],
+                     "hint": (ia.get("query") or ia.get("prompt") or "")[:120],
+                     "signals": hits})
+    prompt = JUDGE_PROMPT.replace("__SCENES__", json.dumps(rows, ensure_ascii=False))
+    env = dict(os.environ)
+    env.pop("CLAUDECODE", None)
+    cli = os.getenv("CLAUDE_CLI") or "claude"
+    proc = subprocess.run([cli, "--print", "--output-format", "json", "--model", "opus",
+                           "--max-turns", "1", "--tools", ""],
+                          input=prompt, capture_output=True, text=True, timeout=1800, env=env)
+    text = json.loads(proc.stdout).get("result", "") if proc.stdout.strip().startswith("{") else proc.stdout
+    m = re.search(r"\{[\s\S]*\}", text)
+    if proc.returncode != 0 or not m:
+        raise RuntimeError(f"판정 실패: {proc.stderr[:300] or text[:300]}")
+    items = json.loads(m.group(0)).get("items", [])
+    return {it.get("n"): it for it in items}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("project", type=Path)
     ap.add_argument("-o", "--out", required=True, type=Path)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--judge", action="store_true",
+                    help="모델이 전 씬을 보고 판정한다(정규식 신호는 힌트로만)")
     ap.add_argument("--signals", type=Path,
                     help="편별 어휘 JSON. 기본 SIGNALS 는 LG편 어휘라 다른 소재에서는 "
                          "거의 걸리지 않는다(디아지오편 142씬 중 7씬). "
@@ -120,9 +174,15 @@ def main() -> int:
     data = json.loads((args.project / "scene_specs.json").read_text(encoding="utf-8"))
     scenes = data.get("scenes", data)
 
+    judged = judge_with_model(scenes) if args.judge else {}
+
     picked = []
     for s in scenes:
         worth, hits, reason = classify(s)
+        j = judged.get(s.get("sceneNumber"))
+        if args.judge:
+            worth = bool(j and j.get("worth"))
+            reason = (j or {}).get("reason") or "판정 없음"
         if not worth:
             if args.verbose:
                 print(f"    - {s.get('sceneNumber'):>3} 제외  {reason}")
@@ -134,8 +194,9 @@ def main() -> int:
             "signals": hits,
             "narration": (s.get("narration") or "")[:200],
             "headline": s.get("headline"),
-            "hint": (s.get("imageAsset") or {}).get("query")
+            "hint": (j or {}).get("query") or (s.get("imageAsset") or {}).get("query")
                     or (s.get("imageAsset") or {}).get("prompt", "")[:120],
+            **({"expected_asset": j.get("expected_asset", ""), "reason": reason} if j else {}),
         })
 
     args.out.write_text(json.dumps({"scenes": picked}, ensure_ascii=False, indent=1),

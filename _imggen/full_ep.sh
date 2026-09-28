@@ -30,7 +30,7 @@ PY
   echo "[$key] TTS $(ls $D/audio/*.mp3 2>/dev/null | wc -l)개 $(date +%H:%M)"
 
   # 2) 자료 조사 — 선별해서 전 씬에서 고른다
-  .venv/bin/python scripts/select_asset_candidates.py "$D" -o "_imggen/${key}_candidates.json" >> $L 2>&1
+  .venv/bin/python scripts/select_asset_candidates.py "$D" -o "_imggen/${key}_candidates.json" --judge >> $L 2>&1
   if [ ! -f "_imggen/${key}_search_assets.json" ]; then
     codex --search exec --skip-git-repo-check --sandbox workspace-write "
 _imggen/${key}_candidates.json 의 각 씬에 쓸 **실제 사진·문서·사료**를 찾으세요.
