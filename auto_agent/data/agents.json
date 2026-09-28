@@ -312,7 +312,8 @@
         "Read",
         "Write",
         "Glob",
-        "Bash"
+        "Bash",
+        "Edit"
       ],
       "skill_file": "agents/assembly-director/SKILL.md",
       "shared_skills": [
@@ -321,11 +322,6 @@
         "shared/image-generation",
         "shared/image-prompt-rules"
       ],
-      "skill_limits": {
-        "motion-presets": 7000,
-        "image-generation": 6000,
-        "korean-tts-rules": 6000
-      },
       "tools": {
         "tts_tool": {
           "module": "tts_generator",

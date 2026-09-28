@@ -682,21 +682,12 @@
             "remotion/public/manifest.json",
             "assembly_report.json"
           ],
-          "tools": [
-            "tts_tool",
-            "image_tool",
-            "subtitle_tool",
-            "manifest_tool",
-            "validate_tool"
-          ],
           "skills": [
-            "shared/motion-presets",
-            "shared/remotion-design-system",
             "shared/korean-tts-rules",
             "shared/image-generation",
             "shared/image-prompt-rules"
           ],
-          "notes": "이미지는 step_3a에서 이미 생성됨. 에이전트는 TTS + 이미지 검수 + 매니페스트에 집중. 렌더링은 대시보드 검토 후 수동."
+          "notes": "에이전트가 image_batch_module 로 이미지를 만들고 직접 보고 검수한다. 이어서 TTS·자막·매니페스트. 렌더링은 대시보드 검토 후 수동."
         },
         {
           "id": "step_3b_image_check",
