@@ -71,8 +71,9 @@ _imggen/${key}_candidates.json 의 각 씬에 쓸 **실제 사진·문서·사�
       -o "_imggen/${key}_relevance.json" >> $L 2>&1 \
     || echo "[$key] ⚠ 관련성 미달 자료 있음 — ${key}_relevance.json 확인"
 
-  # 3) 실물 우선 확정 → 4) 배지·레이아웃 → 5) 채점표 채우기
-  .venv/bin/python scripts/enforce_real_first.py "$D" --ledger "_imggen/${key}_search_assets.json" >> $L 2>&1
+  # 3) 실물 우선 확정(관련성 판정 반영) → 4) 빈 배지·사라지는 레이아웃 → 5) 채점 신호 검출
+  .venv/bin/python scripts/enforce_real_first.py "$D" --ledger "_imggen/${key}_search_assets.json" \
+      --relevance "_imggen/${key}_relevance.json" >> $L 2>&1
   .venv/bin/python scripts/apply_direction_fixes.py "$D" >> $L 2>&1
   .venv/bin/python scripts/rubric_autofill.py "$D" >> $L 2>&1
   echo "[$key] 연출 보정 완료 $(date +%H:%M)"

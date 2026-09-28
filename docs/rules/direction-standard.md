@@ -195,7 +195,8 @@ python3 scripts/enforce_real_first.py <project> --ledger <search_assets.json>
 cinematic은 이미지 전체화면이라 텍스트가 없어서, **그 편이 하려는 말이 화면에
 아예 뜨지 않는다.** `causal → headline_only`도 인과의 단계가 통째로 사라진다.
 
-`scripts/apply_direction_fixes.py`가 허용 목록 밖만 표준으로 되돌린다.
+`scripts/apply_direction_fixes.py`는 **담긴 내용이 화면에서 사라지는 경우만**(headline_only에
+items·values가 담긴 것 등) 레이아웃을 바로잡는다. 허용 목록 밖이라는 이유만으로 되돌리지 않는다.
 
 ### 재미 30점
 
@@ -230,8 +231,8 @@ cinematic은 이미지 전체화면이라 텍스트가 없어서, **그 편이 �
 # 1) 나레이션 전처리 + TTS   ← 반드시 먼저
 # 2) select_asset_candidates → codex 조사 → search_assets.json
 # 3) enforce_real_first.py   --ledger
-# 4) apply_direction_fixes.py   (배지·레이아웃 정렬)
-# 5) rubric_autofill.py         (keyVisual·숫자·지도·페이싱)
+# 4) apply_direction_fixes.py   (빈 배지 대비책·내용이 사라지는 레이아웃만 정렬)
+# 5) rubric_autofill.py         (검출만 — rubric_signals.json 에 다시 볼 자리를 남긴다)
 # 6) 채점
 ```
 

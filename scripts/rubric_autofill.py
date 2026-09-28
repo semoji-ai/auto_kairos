@@ -15,12 +15,21 @@
 `apply_direction_fixes.py`(배지·레이아웃 정렬)와 짝을 이룬다. 그쪽이 신뢰도를,
 이쪽이 지식 전달과 재미를 담당한다.
 
-    python3 scripts/rubric_autofill.py <project_dir> [--dry-run]
+**2026-09-28 — 기본은 검출이다.** 채점 기준이 「형식」에서 「전달」로 바뀌었는데
+(direction-standard 3절, 커밋 6f83eec8) 이 스크립트는 옛 기준대로 헤드라인·레이아웃·
+모션·지도를 매 편 덮어쓰고 있었다. 「지나가는 숫자까지 띄울 필요는 없다」,
+「12초는 눈금이지 기준선이 아니다」와 정면으로 어긋난다. 이제 기본 실행은
+덮어쓰지 않고 `rubric_signals.json`에 「다시 볼 자리」만 남긴다 — 띄울지·바꿀지는
+연출(step_2)과 사람이 판단한다. 계약에 해당하는 values↔items 1:1 정렬과
+씬 길이 기록만 적용한다. 옛 동작은 `--legacy-autofill`.
+
+    python3 scripts/rubric_autofill.py <project_dir> [--dry-run] [--legacy-autofill]
 """
 
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import re
 import sys
@@ -85,15 +94,6 @@ def fill_keyvisual(scenes: list[dict]) -> list[int]:
         best["keyVisual"] = True
         picked.append(best["sceneNumber"])
     return picked
-
-
-def _on_screen(scene: dict) -> str:
-    parts = [str(scene.get("headline") or "")]
-    parts += [str(i) for i in (scene.get("items") or [])]
-    parts += [str(v) for v in (scene.get("values") or [])]
-    ov = scene.get("cinematicOverlay") or {}
-    parts.append(str(ov.get("text") or ""))
-    return re.sub(r"[,\s]", "", " ".join(parts))
 
 
 # 한글 수사도 수치다 — '스무 명', '아흔아홉 통', '열 달'
@@ -298,15 +298,77 @@ def fill_pacing(scene: dict, project: Path | None = None) -> tuple[float, str | 
     return sec, f"{old}→{want}"
 
 
+def measure_duration(scene: dict, project: Path | None) -> float:
+    """씬 길이를 기록한다 — TTS 실측이 있으면 그것을, 없으면 나레이션으로 추정한다."""
+    real = audio_seconds(project, scene) if project else None
+    if real is not None:
+        scene["durationSec"] = real
+        scene.pop("estimatedDurationSec", None)
+        return real
+    n = len(re.sub(r"\s", "", scene.get("narration") or ""))
+    sec = round(n / CHARS_PER_MIN * 60, 1)
+    scene["estimatedDurationSec"] = sec
+    return sec
+
+
+def detect(scenes: list[dict], project: Path | None) -> dict:
+    """덮어쓰지 않고 「다시 볼 자리」만 모은다. 원본은 길이·짝 정렬만 바뀐다."""
+    probe = copy.deepcopy(scenes)
+    kv = fill_keyvisual(probe)
+    signals = {
+        "keyVisual_missing": bool(kv),
+        "keyVisual_beat_candidates": kv,
+        "numbers_not_on_screen": [], "chart_candidates": [],
+        "map_candidates": [], "long_static_scenes": [], "values_items_aligned": [],
+    }
+    for real, s in zip(scenes, probe):
+        num = s.get("sceneNumber")
+        t = fill_numbers(s)
+        if t:
+            signals["numbers_not_on_screen"].append(t)
+        c = fill_chart(s)
+        if c:
+            signals["chart_candidates"].append(c)
+        m = fill_mapscene(s)
+        if m:
+            signals["map_candidates"].append(f"{num} {m}")
+        a = align_values_items(real)        # 계약 — 원본에 적용
+        if a:
+            signals["values_items_aligned"].append(f"{num} {a}")
+        sec = measure_duration(real, project)
+        if sec > HOLD_LIMIT_SEC and real.get("motion") in STATIC_MOTION:
+            signals["long_static_scenes"].append({"scene": num, "sec": sec, "motion": real.get("motion")})
+    return signals
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("project", type=Path)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--legacy-autofill", action="store_true",
+                    help="옛 동작: keyVisual·숫자·차트·지도·모션을 직접 덮어쓴다")
     args = ap.parse_args()
 
     spec = args.project / "scene_specs.json"
     data = json.loads(spec.read_text(encoding="utf-8"))
     scenes = data.get("scenes", data)
+
+    if not args.legacy_autofill:
+        signals = detect(scenes, args.project)
+        if not args.dry_run:
+            spec.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+            (args.project / "rubric_signals.json").write_text(
+                json.dumps(signals, ensure_ascii=False, indent=1), encoding="utf-8")
+        total = sum(s.get("durationSec") or s.get("estimatedDurationSec") or 0 for s in scenes)
+        print(f"  {args.project.name} — 검출만" + (" [dry-run]" if args.dry_run else ""))
+        print(f"    keyVisual 없음   {signals['keyVisual_missing']}")
+        print(f"    화면에 없는 수치 {len(signals['numbers_not_on_screen'])}씬")
+        print(f"    차트 후보        {len(signals['chart_candidates'])}씬")
+        print(f"    지도 후보        {len(signals['map_candidates'])}씬")
+        print(f"    12초+ 정적       {len(signals['long_static_scenes'])}씬")
+        print(f"    짝 정렬(적용)    {len(signals['values_items_aligned'])}씬")
+        print(f"    길이             {total/60:.1f}분")
+        return 0
 
     kv = fill_keyvisual(scenes)
     ov, mp, pace, fixed, charts = [], [], [], [], []
@@ -332,7 +394,7 @@ def main() -> int:
     if not args.dry_run:
         spec.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    print(f"  {args.project.name}" + (" [dry-run]" if args.dry_run else ""))
+    print(f"  {args.project.name} [legacy-autofill]" + (" [dry-run]" if args.dry_run else ""))
     print(f"    keyVisual   {kv or '이미 있음'}")
     print(f"    숫자 표기   {len(ov)}씬  {', '.join(ov[:5])}")
     print(f"    짝 정렬     {len(fixed)}씬")
