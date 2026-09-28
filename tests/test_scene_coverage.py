@@ -275,3 +275,23 @@ def test_block_caption_is_not_repeated_on_every_split_scene():
 def test_nested_cuts_rejected_instead_of_silently_creating_nonflat_scenes():
     with pytest.raises(ValueError):
         allocate(inventory('원문.')['sentences'], [{'sourceSentences': [1], 'cuts': [{'angle': 'wide'}]}])
+
+
+def test_chapter_prompt_shows_neighbor_sentences_read_only(tmp_path, monkeypatch):
+    r = runner_for_project(tmp_path, monkeypatch)
+    prompts = {}
+
+    def capture(step, prompt, **kwargs):
+        prompts[step.get('_chapter_num')] = prompt
+        return fake_allocation_cli(step, prompt, **kwargs)
+
+    monkeypatch.setattr(r, '_run_selected_cli', capture)
+    (tmp_path / 'final_manuscript.md').write_text(
+        '# Ch 1\n앞 챕터 마지막 문장입니다.\n# Ch 2\n실제로도 그랬습니다. 다음 이야기입니다.')
+    result = r._run_chunked_parallel({'id': 'step_2', 'mode': 'chapters'})
+    assert result.status == 'completed', result.error
+    ch2 = prompts[2]
+    neighbor = ch2.split('<neighbor_context>')[1].split('</neighbor_context>')[0]
+    assert '앞 챕터 마지막 문장입니다.' in neighbor
+    inventory_rows = json.loads(ch2.split('<sentence_inventory>')[1].split('</sentence_inventory>')[0])
+    assert all('앞 챕터' not in row['text'] for row in inventory_rows)

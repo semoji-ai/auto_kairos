@@ -50,6 +50,8 @@ RULE_MANIFEST = {
     "skills/shared/direction-semoji.md": "skill",
     "skills/shared/direction-iromism.md": "skill",
     "skills/shared/motion-presets.md": "skill",
+    "skills/shared/motion-dogam-semoji.md": "skill",
+    "skills/shared/scene-splitting.md": "skill",
     "skills/shared/remotion-design-system.md": "skill",
     "skills/shared/korean-tts-rules.md": "skill",
     "skills/shared/image-generation.md": "skill",

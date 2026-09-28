@@ -3498,6 +3498,17 @@ narration, chapter, durationFrames 등 기존 필드는 수정하지 마세요.
         if step_id == "step_2":
             ledger = json.loads((self.project_dir / "sentence_inventory.json").read_text(encoding="utf-8"))
             sentence_rows = [r for r in ledger["sentences"] if r["chapter"] == chapter_num]
+            # 챕터를 병렬로 나눠 맡으므로 경계 문장의 앞뒤 문맥이 잘린다.
+            # 옆 챕터의 끝·처음 몇 문장을 읽기 전용으로 붙여 「앞을 받는 말」 판단을 살린다.
+            _prev = [r for r in ledger["sentences"] if r["chapter"] < chapter_num][-3:]
+            _next = [r for r in ledger["sentences"] if r["chapter"] > chapter_num][:3]
+            neighbor_block = ""
+            if _prev or _next:
+                fmt = lambda rows: "\n".join(f"  {r['text']}" for r in rows) or "  (없음)"
+                neighbor_block = (
+                    "<neighbor_context>\n읽기 전용 — 배분하지 마세요. 경계 문장이 앞을 받는지, 뒤를 여는지 판단할 때만 봅니다.\n"
+                    f"앞 챕터 끝:\n{fmt(_prev)}\n다음 챕터 처음:\n{fmt(_next)}\n</neighbor_context>\n"
+                )
 
         prompt = f"""<system_context>
 프로젝트: {self.project_slug}
@@ -3548,11 +3559,12 @@ JSON 구조:
 SCRIPT_DIRECTOR_MODE: chapters
 SCRIPT_DIRECTOR_CHAPTER: {chapter_num}
 아래는 최종 씬이 아닌 문장 전수 목록입니다. 모든 id를 정확히 한 번, 원문 순서로 사용하세요.
-각 문장의 앞뒤를 보고 같은 화면/행동/의미면 묶고, 시간·장소·주체·시각적 초점이 달라지면 나누세요.
-문장 수나 글자 수는 강제 경계가 아닙니다. 기존 --- 경계나 계획의 병합 지시보다 문맥과 원문 보존이 우선입니다.
+한 씬은 한 화면입니다. 문장이 혼자 화면으로 서는지, 화면이 바뀌어야 하는지 앞뒤를 보고 판단해
+묶거나 나누세요(판단 자료: 공유 스킬 scene-splitting). 문장 수나 글자 수는 강제 경계가 아닙니다.
+기존 --- 경계나 계획의 병합 지시보다 문맥과 원문 보존이 우선입니다.
 먼저 씬 배분을 결정하고 그 다음 장면/도해/자료 연출을 결정하세요. narration은 코드가 원문으로 채웁니다.
 {context_block}
-<sentence_inventory>
+{neighbor_block}<sentence_inventory>
 {json.dumps(sentence_rows, ensure_ascii=False)}
 </sentence_inventory>
 {tmp_path} 에 JSON을 저장하세요:

@@ -113,55 +113,14 @@ Remotion 렌더러가 구체적인 애니메이션 조합으로 변환합니다.
 
 ---
 
-## 선택 가이드
+## 고르는 법
 
-### layout × motion 추천 조합
+이 파일은 렌더러가 읽는 **프리셋 어휘**를 정의한다. 어느 씬에 무엇을 쓸지는
+표로 정하지 않는다 — `motion-dogam-semoji`(세모지 모션 도감에서 추린 기법과 리듬
+실측)를 보고 **이 씬의 말이 무엇을 요구하는지**로 판단한다. 도감 기법마다
+「가까운 프리셋」이 적혀 있으니 `motion`에는 그것을, 기법 id는 `techniques`에 적는다.
 
-| layout | 1순위 motion | 2순위 | 피할 것 |
-|--------|-------------|-------|---------|
-| headline_only | type_and_draw | fade_rise | stagger_wave |
-| items_grid | stagger_wave | bounce_celebrate | type_and_draw |
-| items_list | stagger_wave | cascade_rank | split_compare |
-| counter | number_spotlight | count_and_grow | stagger_wave |
-| bar / bar_horizontal | count_and_grow | stagger_wave | calm_float |
-| pie / donut | pie_spin | fade_rise | dramatic_shake |
-| line | count_and_grow | fade_rise | bounce_celebrate |
-| rank_list | cascade_rank | stagger_wave | calm_float |
-| split / before_after | split_compare | fade_rise | cascade_rank |
-| flow / timeline | build_sequence | stagger_wave | number_spotlight |
-| metric_spotlight | number_spotlight | dramatic_shake | stagger_wave |
-| metric_wall | stagger_wave | count_and_grow | type_and_draw |
-| quote / quote_portrait | calm_float | type_and_draw | dramatic_shake |
-| person_card | fade_rise | bounce_celebrate | glitch_alert |
-| logo_grid | stagger_wave | fade_rise | dramatic_shake |
-| cinematic | cinematic_fade | (유일) | 다른 모든 것 |
-| card_carousel | stagger_wave | build_sequence | number_spotlight |
-| comparison_table | stagger_wave | split_compare | cinematic_fade |
-| icon_stat | number_spotlight | fade_rise | glitch_alert |
-| stacked_progress | count_and_grow | stagger_wave | type_and_draw |
-| annotated_chart | count_and_grow | build_sequence | calm_float |
-
-### mood × motion 궁합
-
-| mood | 잘 맞는 motion | 어울리지 않는 motion |
-|------|---------------|-------------------|
-| dramatic | dramatic_shake, number_spotlight, split_compare | calm_float |
-| contemplative | calm_float, type_and_draw, fade_rise | dramatic_shake, glitch_alert |
-| urgent | dramatic_shake, stagger_wave(빠른), count_and_grow | calm_float, cinematic_fade |
-| triumphant | bounce_celebrate, number_spotlight, cascade_rank | calm_float, glitch_alert |
-| somber | calm_float, fade_rise, cinematic_fade | bounce_celebrate, dramatic_shake |
-| informative | stagger_wave, count_and_grow, fade_rise | dramatic_shake, glitch_alert |
-| suspense | type_and_draw, fade_rise(느린), number_spotlight | bounce_celebrate |
-
----
-
-## 연속 규칙
-
-1. **같은 motion 3회 연속 금지** — 시각적 단조로움 방지
-2. **fade_rise 비율 30% 이하** — 기본이지만 남용 금지
-3. **dramatic_shake + glitch_alert 합산 10% 이하** — 강한 효과는 희소해야
-4. **cinematic_fade는 전체의 10~15% 이내** — 정보 전달력 유지
-5. **calm_float는 3-5씬마다 1회** — 브리딩 포인트 역할
+같은 장치를 이어 쓰면 장치가 눈에 띄고, 강한 효과는 드물 때만 센다.
 
 ---
 
