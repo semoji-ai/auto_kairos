@@ -5903,6 +5903,9 @@ Step: {step.get("id", "")} — {step.get("name", "")}
 {self._build_progress_block(step.get('id', ''))}
 
 {context_memory_block}"""
+        if agent_name == "targeted-researcher":
+            from auto_agent.research.jev_targeted import prepare_targeted_context
+            prompt += prepare_targeted_context(self.project_dir)
         return prompt
 
     def _load_agents_config(self) -> dict:
