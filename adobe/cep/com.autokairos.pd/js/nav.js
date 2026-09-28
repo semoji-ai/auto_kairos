@@ -18,16 +18,28 @@ function enterProject(pid, label) {
   if (typeof loadStepper === "function") loadStepper();
 }
 
+/* 프로젝트 없이 기법 도감만 — 상세 뷰를 빌려 도감 탭만 보인다(SELECTED_PROJECT 는 건드리지 않는다) */
+function openDogamStandalone() {
+  _$("detailTitle").textContent = "기법 도감";
+  _$("view-list").hidden = true;
+  _$("view-detail").hidden = false;
+  switchTab("dogam");
+}
+
 function exitProject() {
   showListView();
 }
 
 function switchTab(name) {
-  var planning = name === "planning";
+  // 탭 셋: 기획 · 스토리보드 · 기법 도감
+  var planning = name === "planning", dogam = name === "dogam", story = !planning && !dogam;
   _$("tab-planning").hidden = !planning;
-  _$("tab-storyboard").hidden = planning;
+  _$("tab-storyboard").hidden = !story;
+  if (_$("tab-dogam")) _$("tab-dogam").hidden = !dogam;
   _$("btnTabPlanning").classList.toggle("active", planning);
-  _$("btnTabStoryboard").classList.toggle("active", !planning);
+  _$("btnTabStoryboard").classList.toggle("active", story);
+  if (_$("btnTabDogam")) _$("btnTabDogam").classList.toggle("active", dogam);
+  if (dogam) { if (typeof dogamInit === "function") dogamInit(); return; }
   if (!planning && typeof loadSheet === "function") loadSheet();
   // 소스 칸은 **즐겨찾기만** 보인다. 프로젝트 이미지를 여기 깔지 않는다 —
   // 1044장이고 그중 565장이 같은 내용의 사본이라, 다 깔면 정작 자주 쓰는
@@ -39,4 +51,6 @@ document.addEventListener("DOMContentLoaded", function () {
   _$("btnBackToList").addEventListener("click", exitProject);
   _$("btnTabPlanning").addEventListener("click", function () { switchTab("planning"); });
   _$("btnTabStoryboard").addEventListener("click", function () { switchTab("storyboard"); });
+  if (_$("btnTabDogam")) _$("btnTabDogam").addEventListener("click", function () { switchTab("dogam"); });
+  if (_$("btnOpenDogam")) _$("btnOpenDogam").addEventListener("click", openDogamStandalone);
 });
