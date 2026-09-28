@@ -70,6 +70,28 @@ export const ImageBg: React.FC<{
   </AbsoluteFill>
 );
 
+/** 자료 원본을 자르거나 원본 픽셀보다 키우지 않는 1920×1080 인서트. */
+const SourceInsert: React.FC<{
+  src: string;
+  insert: { x: number; y: number; width: number; height: number };
+  nativePixels: { width: number; height: number };
+  opacity: number;
+}> = ({ src, insert, nativePixels, opacity }) => {
+  const { width: canvasWidth, height: canvasHeight } = useVideoConfig();
+  const targetWidth = insert.width * canvasWidth / 1920;
+  const targetHeight = insert.height * canvasHeight / 1080;
+  const ratio = Math.min(1, targetWidth / nativePixels.width, targetHeight / nativePixels.height);
+  const width = nativePixels.width * ratio;
+  const height = nativePixels.height * ratio;
+  const centerX = (insert.x + insert.width / 2) * canvasWidth / 1920;
+  const centerY = (insert.y + insert.height / 2) * canvasHeight / 1080;
+  return <Img src={resolveUrl(src)} style={{
+    position: "absolute", left: centerX - width / 2, top: centerY - height / 2,
+    width, height, objectFit: "contain", opacity,
+    filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.28))",
+  }} />;
+};
+
 /* ── 비디오 배경 ── */
 export const VideoBg: React.FC<{
   src: string;
@@ -297,6 +319,17 @@ const SceneRendererBase: React.FC<SceneRendererProps> = ({ scene, fps = 30 }) =>
     ? (scene.imageAsset?.fit ?? "contain")
     : "cover";
   const imgSrc = sceneImage || effectiveDefaultBg || "";
+
+  // 실물 자료는 cinematic 레이아웃이어도 원본 크기 인서트 규칙이 우선이다.
+  if (hasSceneImage && placement === "source_insert" && scene.imageAsset?.insert && scene.imageAsset?.nativePixels) {
+    return (
+      <AbsoluteFill style={{ backgroundColor: "#E8EADF", fontFamily }}>
+        <SourceInsert src={imgSrc} insert={scene.imageAsset.insert} nativePixels={scene.imageAsset.nativePixels} opacity={imgOpacity} />
+        <AttributionTag text={scene.attribution} status={scene.attributionStatus} />
+        {renderTextureHere && <TextureOverlay src={textureCfg.src} blendMode={textureCfg.blendMode} opacity={textureCfg.opacity} />}
+      </AbsoluteFill>
+    );
+  }
 
   // ── 비디오 우선 — videoAsset이 있으면 placement 분기 전에 먼저 처리 ──
   if (hasVideo) {
