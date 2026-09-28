@@ -36,12 +36,22 @@ def codex_available() -> bool:
     return _avail()
 
 
-def _build_instruction(prompt: str, out_path: Path, has_refs: bool) -> str:
+def _build_instruction(
+    prompt: str, out_path: Path, has_refs: bool, *, semoji_master_ref: bool = False
+) -> str:
     task = "Edit the attached reference image(s)" if has_refs else "Generate a new image"
+    character_guard = (
+        "When the Semoji master character sheet is attached, use it only for drawing "
+        "style and proportions. Change that reference person's hairstyle and clothing "
+        "for every scene person. Give each person role- and era-specific hair, top, "
+        "and trousers/skirt; never reproduce the master short black quiff with blue "
+        "short-sleeve shirt, white undershirt, and navy pants.\n\n"
+        if semoji_master_ref else ""
+    )
     return (
         "Use ONLY your built-in image_gen tool — never the fallback CLI "
         "(scripts/image_gen.py), never any OPENAI_API_KEY/OpenAI-SDK path.\n\n"
-        f"{task} per this description:\n\n{prompt}\n\n"
+        f"{task} per this description:\n\n{character_guard}{prompt}\n\n"
         f"After it is generated, copy the final image to: {out_path}\n"
         f"On the LAST line of your response print exactly: RESULT_PATH={out_path}\n"
         "Do not modify, create, or delete any other files. Do not run git."
@@ -93,7 +103,12 @@ def codex_generate(
     work = str(cd or out_path.parent)
 
     refs = [Path(r) for r in (ref_images or []) if r and Path(r).exists()]
-    instr = _build_instruction(prompt, out_path, has_refs=bool(refs))
+    instr = _build_instruction(
+        prompt,
+        out_path,
+        has_refs=bool(refs),
+        semoji_master_ref=any(r.name == "semoji_character_sheet.png" for r in refs),
+    )
 
     cmd = [
         codex, "exec",
