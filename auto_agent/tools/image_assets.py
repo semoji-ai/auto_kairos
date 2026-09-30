@@ -27,6 +27,40 @@ from pathlib import Path
 from typing import Optional
 
 _file_lock = threading.Lock()
+_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+
+
+def store_unique_image(images_dir: Path, file_name: str, content: bytes) -> tuple[str, bool]:
+    """Store an imported image once per project and return its images/-relative path.
+
+    Existing assets are never renamed or removed. A selection can reference the
+    same physical file from multiple scenes through their registry entries.
+    """
+    relative = Path(file_name)
+    if relative.is_absolute() or ".." in relative.parts or relative.suffix.lower() not in _IMAGE_EXTENSIONS:
+        raise ValueError("invalid image file name")
+    if not content:
+        raise ValueError("empty image")
+
+    digest = hashlib.sha256(content).digest()
+    with _file_lock:
+        if images_dir.exists():
+            for existing in images_dir.rglob("*"):
+                if (not existing.is_file() or existing.suffix.lower() not in _IMAGE_EXTENSIONS
+                        or "thumbnails" in existing.relative_to(images_dir).parts):
+                    continue
+                if existing.stat().st_size == len(content) and hashlib.sha256(existing.read_bytes()).digest() == digest:
+                    return existing.relative_to(images_dir).as_posix(), False
+
+        target = images_dir / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        index = 2
+        while target.exists():
+            target = images_dir / relative.with_name(f"{relative.stem}_{index}{relative.suffix}")
+            index += 1
+        with target.open("xb") as handle:
+            handle.write(content)
+        return target.relative_to(images_dir).as_posix(), True
 
 
 def _load(images_dir: Path) -> dict:
@@ -222,6 +256,7 @@ def add_version(images_dir: Path, scene_num: int, file_name: str,
                 if auto_select:
                     for img in scene["images"]:
                         img["selected"] = img["file"] == file_name
+                    scene["selected"] = file_name
                     _save(images_dir, data)
                 return existing
 
@@ -232,6 +267,7 @@ def add_version(images_dir: Path, scene_num: int, file_name: str,
             for img in scene["images"]:
                 img["selected"] = False
             img_entry["selected"] = True
+            scene["selected"] = file_name
 
         scene["images"].append(img_entry)
         _save(images_dir, data)
@@ -254,8 +290,22 @@ def select_version(images_dir: Path, scene_num: int, file_name: str) -> bool:
                 img["selected"] = False
 
         if found:
+            scene["selected"] = file_name
             _save(images_dir, data)
         return found
+
+
+def clear_selection(images_dir: Path, scene_num: int) -> None:
+    """Select the explicit 'no image' state without changing image files."""
+    with _file_lock:
+        data = _load(images_dir)
+        scene = _find_scene_match(data["scenes"], scene_num, None)
+        if scene is None:
+            return
+        for img in scene.get("images", []):
+            img["selected"] = False
+        scene.pop("selected", None)
+        _save(images_dir, data)
 
 
 def get_selected(images_dir: Path, scene_num: int) -> Optional[str]:

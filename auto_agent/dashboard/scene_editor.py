@@ -321,8 +321,8 @@ async def get_all_images(project_ref: str, request: Request):
                         f = img["file"]
                         selected_map[f] = sn
                         selected_map[f.split("/")[-1]] = sn
-                # 구 포맷 fallback
-                sel = entry.get("selected", "")
+                # 구 포맷 fallback (현행 images[].selected와 섞지 않음)
+                sel = entry.get("selected", "") if not entry.get("images") else ""
                 if sel and sel not in selected_map:
                     selected_map[sel] = sn
                     selected_map[sel.split("/")[-1]] = sn
@@ -479,7 +479,10 @@ async def get_scene_images(project_ref: str, scene_num: int, request: Request):
             for entry in assets.get("scenes", []):
                 if entry.get("sceneNumber") != scene_num:
                     continue
-                raw_selected = entry.get("selected", "")
+                raw_selected = next(
+                    (v.get("file", "") for v in entry.get("images", []) if v.get("selected")),
+                    "",
+                ) if entry.get("images") else entry.get("selected", "")
                 for v in entry.get("images") or entry.get("versions") or []:
                     fname = v.get("file", "")
                     if not fname:
@@ -594,14 +597,7 @@ async def select_scene_image(project_ref: str, scene_num: int, request: Request)
                 # 이미 images/ 하위에 있는 기존 버전이면 복사 없이 직접 선택
                 image_url = f"/output/{dir_name}/images/{src_file}"
             else:
-                # 갤러리 드래그 등 외부 파일: search/로 복사
-                ext = Path(src_file).suffix
-                dest_name = f"{prefix}{next_idx:02d}{ext}"
-                try:
-                    shutil.copy2(src_path, search_dir / dest_name)
-                    image_url = f"/output/{dir_name}/images/search/{dest_name}"
-                except Exception:
-                    pass
+                return JSONResponse({"error": "선택한 이미지 파일이 없습니다"}, status_code=404)
         elif image_url.startswith("http://") or image_url.startswith("https://"):
             # 외부 URL: 다운로드 후 로컬 저장
             try:
@@ -631,18 +627,21 @@ async def select_scene_image(project_ref: str, scene_num: int, request: Request)
                     if _pil.mode in ("RGBA", "P", "LA"):
                         _pil = _pil.convert("RGB")
                     # 원본 포맷 → 저장 포맷 매핑 (PNG는 유지, 나머지는 JPEG)
+                    encoded = _BytesIO()
                     if _pil.format == "PNG":
                         dest_name = f"{prefix}{next_idx:02d}.png"
-                        _pil.save(search_dir / dest_name, "PNG", optimize=True)
+                        _pil.save(encoded, "PNG", optimize=True)
                     else:
                         dest_name = f"{prefix}{next_idx:02d}.jpg"
-                        _pil.save(search_dir / dest_name, "JPEG", quality=90)
+                        _pil.save(encoded, "JPEG", quality=90)
+                    from auto_agent.tools.image_assets import store_unique_image
+                    rel_path, _ = store_unique_image(img_dir, f"search/{dest_name}", encoded.getvalue())
                 except Exception as _img_err:
                     ctype = resp.headers.get("Content-Type", "?")
                     raise ValueError(
                         f"이미지 디코드 실패 (Content-Type: {ctype}): {_img_err}"
                     )
-                image_url = f"/output/{dir_name}/images/search/{dest_name}"
+                image_url = f"/output/{dir_name}/images/{rel_path}"
             except Exception as e:
                 print(f"[ERROR] URL 다운로드 실패: {e}")
                 return {"ok": False, "error": f"외부 이미지 다운로드 실패: {e}"}
@@ -697,56 +696,17 @@ async def select_scene_image(project_ref: str, scene_num: int, request: Request)
     specs_path = Path(out_dir) / "scene_specs.json"
     specs_path.write_text(json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # ── image_assets.json selected 동기화 ──
-    assets_path = img_dir / "image_assets.json"
-    if assets_path.exists():
-        try:
-            assets = json.loads(assets_path.read_text(encoding="utf-8"))
-            dir_name = Path(out_dir).name
-            prefix = f"/output/{dir_name}/images/"
-
-            # 씬 엔트리 찾기 (없으면 생성)
-            scene_entry = None
-            for entry in assets.get("scenes", []):
-                if entry.get("sceneNumber") == scene_num:
-                    scene_entry = entry
-                    break
-            if scene_entry is None:
-                scene_entry = {"sceneNumber": scene_num, "images": []}
-                assets.setdefault("scenes", []).append(scene_entry)
-                assets["scenes"].sort(key=lambda x: x.get("sceneNumber", 0))
-
-            if is_none:
-                # 이미지 없음: 모든 images[].selected = False, selected 필드 제거
-                for img in scene_entry.get("images", []):
-                    img["selected"] = False
-                scene_entry.pop("selected", None)
-            else:
-                rel_path = image_url[len(prefix):] if image_url.startswith(prefix) else ""
-                if rel_path:
-                    # 모든 기존 images[].selected = False
-                    for img in scene_entry.get("images", []):
-                        img["selected"] = False
-                    # 새 파일이 images[]에 없으면 추가
-                    existing_files = [img.get("file", "") for img in scene_entry.get("images", [])]
-                    if rel_path not in existing_files:
-                        new_type = "search" if rel_path.startswith("search/") else "generated"
-                        scene_entry.setdefault("images", []).append({
-                            "file": rel_path,
-                            "type": new_type,
-                            "selected": True,
-                        })
-                    else:
-                        for img in scene_entry.get("images", []):
-                            if img.get("file") == rel_path:
-                                img["selected"] = True
-                                break
-                    # 구 포맷 호환 (get_all_images에서 사용)
-                    scene_entry["selected"] = rel_path
-
-            assets_path.write_text(json.dumps(assets, ensure_ascii=False, indent=2), encoding="utf-8")
-        except Exception as e:
-            print(f"[WARN] image_assets sync failed: {e}")
+    # ── 이미지 파일을 복사하지 않고 씬별 선택 플래그만 변경 ──
+    from auto_agent.tools.image_assets import add_version, clear_selection
+    if is_none:
+        clear_selection(img_dir, scene_num)
+    else:
+        prefix = f"/output/{Path(out_dir).name}/images/"
+        if image_url.startswith(prefix):
+            rel_path = image_url[len(prefix):]
+            add_version(img_dir, scene_num, rel_path,
+                        "search" if rel_path.startswith("search/") else "generate",
+                        scene_id=scene_id_for_file)
 
     # 매니페스트 리빌드
     _rebuild_manifest_sync(project)
@@ -832,17 +792,17 @@ async def upload_scene_image(project_ref: str, scene_num: int, request: Request,
     if suffix not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
         suffix = ".jpg"
     dest_name = f"scene_{scene_num:03d}_search_{next_idx:02d}{suffix}"
-    dest_path = search_dir / dest_name
-    dest_path.write_bytes(await file.read())
+    from auto_agent.tools.image_assets import add_version, store_unique_image
+    rel_path, _ = store_unique_image(img_dir, f"search/{dest_name}", await file.read())
 
     dir_name = Path(out_dir).name
-    image_url = f"/output/{dir_name}/images/search/{dest_name}"
+    image_url = f"/output/{dir_name}/images/{rel_path}"
 
     # image_assets.json 등록
     assets_path = img_dir / "image_assets.json"
     try:
-        from auto_agent.tools.image_assets import add_version
-        add_version(img_dir, scene_num, f"search/{dest_name}", "search")
+        add_version(img_dir, scene_num, rel_path,
+                    "search" if rel_path.startswith("search/") else "generate")
     except Exception:
         pass
 

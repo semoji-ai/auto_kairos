@@ -1990,7 +1990,7 @@ async def image_candidates(request: Request, project_ref: str, scene_num: int, q
 @app.post("/api/p/{project_ref}/images/select/{scene_num}")
 async def select_image(request: Request, project_ref: str, scene_num: int):
     """이미지 선택 — URL 다운로드 또는 기존 버전 선택."""
-    from auto_agent.tools.image_assets import add_version, select_version, next_filename
+    from auto_agent.tools.image_assets import add_version, select_version, next_filename, store_unique_image
     pm = get_pm()
     project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
@@ -2025,23 +2025,27 @@ async def select_image(request: Request, project_ref: str, scene_num: int):
         return JSONResponse({"error": "url or file required"}, 400)
 
     # URL 다운로드 → images/search/ 에 저장
-    from auto_agent.tools.wikimedia_search import download_image
+    from auto_agent.tools.wikimedia_search import download_image_bytes
     from urllib.parse import urlparse
-    ext = Path(urlparse(url).path).suffix or ".jpg"
+    ext = Path(urlparse(url).path).suffix.lower()
+    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+        ext = ".jpg"
     search_dir = img_dir / "search"
     search_dir.mkdir(parents=True, exist_ok=True)
     fname = next_filename(img_dir, scene_num, "search", ext)
-    result = download_image(url, str(search_dir / fname))
+    result = download_image_bytes(url)
 
     if result.get("success"):
+        rel_path, _ = store_unique_image(img_dir, "search/" + fname, result["content"])
         title = body.get("title", "")
         license_info = body.get("license", "")
-        add_version(img_dir, scene_num, "search/" + fname, "search",
+        add_version(img_dir, scene_num, rel_path,
+                    "search" if rel_path.startswith("search/") else "generate",
                     query=body.get("query", ""), source_url=url,
                     title=title, license=license_info)
         _update_scene_specs_src(out_dir, slug, scene_num)
         _setup_studio_project(slug)
-        return JSONResponse({"ok": True, "file": fname})
+        return JSONResponse({"ok": True, "file": rel_path})
     return JSONResponse({"error": result.get("error", "download failed")}, 500)
 
 
@@ -2671,8 +2675,9 @@ def _update_scene_specs_src(out_dir: str, slug: str, scene_num: int):
             if s.get("sceneNumber") == scene_num:
                 if not s.get("imageAsset"):
                     s["imageAsset"] = {}
-                ext = Path(selected).suffix
-                s["imageAsset"]["src"] = f"/output/{dir_name}/images/scene_{scene_num:03d}{ext}"
+                selected_url = f"/output/{dir_name}/images/{selected}"
+                s["imageAsset"]["src"] = selected_url
+                s["imagePath"] = selected_url
                 break
         specs_path.write_text(_json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -3080,7 +3085,7 @@ async def images_all(request: Request, project_ref: str):
     result = []
     for entry in assets.get("scenes", []):
         sn = entry.get("sceneNumber")
-        raw_selected = entry.get("selected", "")
+        raw_selected = entry.get("selected", "") if not entry.get("images") else ""
         # selected 값은 "images/search/..." 형태일 수 있음 — 파일명 부분만 비교
         def _basename(p): return p.split("/")[-1] if p else ""
         sel_base = _basename(raw_selected)
@@ -3096,7 +3101,9 @@ async def images_all(request: Request, project_ref: str):
             if not fpath.exists():
                 continue
             fname_base = _basename(fname)
-            is_selected = (fname == raw_selected or fname_base == sel_base) if raw_selected else False
+            is_selected = bool(v.get("selected")) if entry.get("images") else (
+                (fname == raw_selected or fname_base == sel_base) if raw_selected else False
+            )
             result.append({
                 "sceneNumber": sn,
                 "file": fname,
@@ -3379,18 +3386,16 @@ async def download_candidate_image(request: Request, project_ref: str, scene_num
 
         scene_key = f"scene_{scene_num:03d}"
         filename = f"{scene_key}_dl_{url_hash}{ext}"
-        save_path = search_dir / filename
-        save_path.write_bytes(resp.content)
-
-        # 최종 이미지로 복사
-        final_path = images_dir / f"{scene_key}{ext}"
-        import shutil
-        shutil.copy2(save_path, final_path)
+        from auto_agent.tools.image_assets import add_version, store_unique_image
+        rel_path, _ = store_unique_image(images_dir, f"search/{filename}", resp.content)
+        add_version(images_dir, scene_num, rel_path,
+                    "search" if rel_path.startswith("search/") else "generate",
+                    source_url=image_url)
 
         # scene_specs.json 업데이트
         _out_dir = project.get("output_dir", "")
         _dir_name = Path(_out_dir).name if _out_dir else slug
-        local_url = f"/output/{_dir_name}/images/{final_path.name}"
+        local_url = f"/output/{_dir_name}/images/{rel_path}"
         specs = load_project_json(project.get("output_dir", ""),"scene_specs.json")
         if specs:
             for scene in specs.get("scenes", []):
@@ -3400,7 +3405,7 @@ async def download_candidate_image(request: Request, project_ref: str, scene_num
                     break
             pm.save_project_json(project["id"], "scene_specs.json", specs)
 
-        return {"ok": True, "image_url": local_url, "saved_path": str(save_path)}
+        return {"ok": True, "image_url": local_url, "saved_path": str(images_dir / rel_path)}
 
     except Exception as e:
         return JSONResponse({"error": f"다운로드 실패: {e}"}, status_code=500)
