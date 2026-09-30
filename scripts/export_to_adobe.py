@@ -125,6 +125,10 @@ def main() -> int:
             "attribution": s.get("attribution"),
             "attributionStatus": s.get("attributionStatus"),
             "assetSource": ia.get("source"),
+            # 모션 의도만 전달한다. AE에서 실제 지원·적용 여부는 별도 검수한다.
+            "motion": s.get("motion"),
+            "techniques": list(s.get("techniques") or []),
+            "motionNote": s.get("motionNote"),
         }
         if sel.get(n):
             row["imageRef"] = (f"images/{sel[n]}" if args.in_place

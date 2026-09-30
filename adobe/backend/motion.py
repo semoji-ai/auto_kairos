@@ -3,11 +3,26 @@
 from __future__ import annotations
 
 import json
+from functools import lru_cache
 from pathlib import Path
 
 from backend import scenes, llm, tts, imagegen, camera_plan
 
 _SCHEMA = Path(__file__).resolve().parent / "schemas" / "motion_plan.schema.json"
+_DOGAM_CATALOG = Path(__file__).resolve().parents[1] / "data/semoji-motion/dogam/techniques.json"
+_DOGAM_REGISTRY = Path(__file__).resolve().parents[1] / "cep/com.autokairos.pd/jsx/dogam/registry.json"
+
+
+@lru_cache(maxsize=1)
+def _dogam_lookup() -> tuple[dict, set]:
+    """번들 도감의 뜻과 AE 직접 적용 가능 ID를 구분한다."""
+    try:
+        catalog = json.loads(_DOGAM_CATALOG.read_text(encoding="utf-8"))
+        registry = json.loads(_DOGAM_REGISTRY.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}, set()
+    return ({x["id"]: x for x in catalog if isinstance(x, dict) and x.get("id")},
+            {x["id"] for x in registry.get("techniques", []) if isinstance(x, dict) and x.get("id")})
 
 # ── 까딱임 기본값 (단일 소스) ──────────────────────────────────────────────
 #
@@ -163,6 +178,41 @@ def plan_scene_motion(proj_dir: Path, scene_number: int, *, on_line=None) -> dic
             intents.append(f"- {spec['layer']}: {spec['intent']}")
     intent_block = ("\n## 분리 시점의 연출 의도(참고)\n" + "\n".join(intents) + "\n") if intents else ""
 
+    # 프로젝트 화풍과 도감 기법은 별개다. 도감 ID는 움직임의 참고 근거이며,
+    # 원본 채널의 색·그림·폰트를 AE 씬에 복사하라는 뜻이 아니다.
+    style = {}
+    style_path = proj_dir / "art_style.json"
+    if style_path.is_file():
+        try:
+            style = json.loads(style_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            pass
+    if not isinstance(style, dict):
+        style = {}
+    style_name = style.get("name") or style.get("channel") or style.get("id") or "프로젝트 기존 화풍"
+    raw_techniques = s.get("techniques")
+    technique_ids = [x for x in raw_techniques if isinstance(x, str) and x.strip()] if isinstance(raw_techniques, list) else []
+    catalog, ae_ids = _dogam_lookup()
+    technique_lines = []
+    for tid in technique_ids:
+        entry = catalog.get(tid)
+        if not entry:
+            technique_lines.append(f"- {tid}: 도감에서 찾을 수 없음. 모션 구현 근거로 쓰지 않는다.")
+            continue
+        support = "AE 패널 직접 적용 가능" if tid in ae_ids else "AE 직접 적용 불가 — 참고만"
+        technique_lines.append(f"- {tid}: {entry.get('summary', '')} ({support})")
+    motion_intent = (
+        f"## 프로젝트 화풍과 씬 모션 의도\n"
+        f"화풍: {style_name}. 기존 이미지·캐릭터·색·선·폰트의 화풍을 유지한다. "
+        "도감의 움직임·등장 순서·타이밍만 현재 씬의 레이어에 맞게 응용한다. "
+        "도감 원본의 그림체나 장식 효과를 가져오지 않는다.\n"
+        f"Remotion 근사 프리셋: {s.get('motion') or '(없음)'}\n"
+        "도감 기법(참고, 자동 실행 아님):\n" + ("\n".join(technique_lines) or "(없음)") + "\n"
+        f"연출 메모: {s.get('motionNote') or '(없음)'}\n"
+        "아래 허용 프리셋으로 표현할 수 없는 도감 기법은 구현했다고 주장하지 말고, "
+        "가능한 범위의 레이어 모션만 계획한다.\n\n"
+    )
+
     def _lines(names):
         return "\n".join(f"- {e}" for e in names) or "- (없음)"
     prompt = (
@@ -170,8 +220,8 @@ def plan_scene_motion(proj_dir: Path, scene_number: int, *, on_line=None) -> dic
         f"## 내레이션(씬 길이 {dur:.1f}초)\n{s.get('narration', '') or '(없음)'}\n\n"
         f"## 인물 레이어(이 이름을 정확히 그대로 사용)\n{_lines(chars)}\n"
         f"## 사물 레이어(이 이름을 정확히 그대로 사용)\n{_lines(objs)}\n"
-        + intent_block + "\n"
-        f"## 사용 가능한 모션 프리셋\n{_PRESET_GUIDE}\n"
+        + intent_block + "\n" + motion_intent
+        + f"## 사용 가능한 모션 프리셋\n{_PRESET_GUIDE}\n"
         "## 연출 원칙(엄수)\n"
         "1) 인물에는 bob(까딱임 idle)과 zoom_emphasis만 쓴다. 인물 기본은 bob 1개.\n"
         "2) 사물 기본은 모션 없음이다. 내레이션이 그 사물을 언급하거나 연출상 필요할 때만 준다 — "
