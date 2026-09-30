@@ -49,6 +49,7 @@ remotion/public/project
 
 # Large binary files
 *.mp4
+!/adobe/data/semoji-motion/dogam/previews/*.mp4
 # BGM mp3는 remotion_template/public/assets/에 보존
 !/auto_agent/remotion_template/public/assets/*.mp3
 
@@ -203,6 +204,11 @@ logs/
 .kiro/
 .cache/
 .agents/
+!.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/semoji-motion-ae/
 .auto_agent/
 fontagent_vault/
 _archive_*/

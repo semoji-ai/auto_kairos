@@ -7,7 +7,7 @@ AE 구현(jsx/dogam/techniques/*.jsx)이 있는 기법만 모아 registry.json �
     python3 adobe/scripts/sync_dogam.py --check  # 복사 없이 registry 만 검증
 
 경로
-  원본: 환경변수 SEMOJI_MOTION_DIR (기본 ~/Projects/semoji-motion)
+  원본: 환경변수 SEMOJI_MOTION_DIR → ~/Projects/semoji-motion → 저장소 내 번들 순
   대상: adobe/cep/com.autokairos.pd/jsx/dogam/assets/   ← .gitignore (재생성 가능한 복사본)
         adobe/cep/com.autokairos.pd/jsx/dogam/registry.json  ← 커밋(작고, 패널이 바로 읽음)
 
@@ -15,8 +15,8 @@ AE 구현(jsx/dogam/techniques/*.jsx)이 있는 기법만 모아 registry.json �
 링크 밖(CEP/extensions)으로 풀립니다. 확장 폴더 안이면 패널(img/video src)과
 JSX(assetsRoot) 가 같은 상대 경로로 닿습니다 — tylenol/assets 와 같은 방식입니다.
 
-미리보기 mp4(도감 전체 약 80MB)는 복사하지 않고 원본 폴더를 가리키는 링크(previews_src)로
-둡니다(--mp4 copy 로 복사 가능). 썸네일 jpg 는 복사합니다.
+외부 원본의 미리보기 mp4는 기본적으로 링크하고, 저장소 번들의 12개 미리보기는
+복사합니다. 따라서 다른 컴퓨터에는 별도 semoji-motion 저장소가 필요 없습니다.
 """
 from __future__ import annotations
 
@@ -34,6 +34,7 @@ DOGAM_JSX = EXT / "jsx" / "dogam"
 ASSETS = DOGAM_JSX / "assets"
 REGISTRY = DOGAM_JSX / "registry.json"
 TECH_DIR = DOGAM_JSX / "techniques"
+BUNDLED = ADOBE / "data" / "semoji-motion"
 
 CASTS = ["walker1", "c2_boss", "c3_woman", "c4_elder", "c5_chef"]
 # 기법 기본값(도감 미리보기와 같은 결과)에 쓰는 데모 에셋 — video/public 기준
@@ -41,7 +42,11 @@ DEMO_ASSETS = ["img/s06_kid.png"]
 
 
 def semoji_dir() -> Path:
-    return Path(os.environ.get("SEMOJI_MOTION_DIR") or Path.home() / "Projects" / "semoji-motion").expanduser()
+    explicit = os.environ.get("SEMOJI_MOTION_DIR")
+    if explicit:
+        return Path(explicit).expanduser()
+    sibling = Path.home() / "Projects" / "semoji-motion"
+    return sibling if (sibling / "dogam" / "techniques.json").is_file() else BUNDLED
 
 
 def _same(a: Path, b: Path) -> bool:
@@ -158,14 +163,21 @@ def build_registry(sm: Path) -> tuple[dict, list[str]]:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--mp4", choices=["link", "copy", "none"], default="link", help="미리보기 mp4: 링크(기본)·복사·생략")
+    ap.add_argument("--mp4", choices=["auto", "link", "copy", "none"], default="auto", help="미리보기 mp4: 원본이면 링크, 번들이면 복사(기본)·강제 링크·복사·생략")
+    ap.add_argument("--assets-only", action="store_true", help="추가 도구 없이 포함된 registry를 유지하며 패널 에셋만 설치")
     ap.add_argument("--check", action="store_true", help="에셋 복사 없이 registry 만 만들고 검증")
     a = ap.parse_args()
     sm = semoji_dir()
     if not (sm / "dogam/techniques.json").exists():
         sys.exit(f"세모지 도감을 찾지 못했습니다: {sm} (SEMOJI_MOTION_DIR)")
+    mp4_mode = ("copy" if sm == BUNDLED else "link") if a.mp4 == "auto" else a.mp4
     if not a.check:
-        print("에셋 동기화:", sync_assets(sm, a.mp4))
+        print("에셋 동기화:", sync_assets(sm, mp4_mode))
+    if a.assets_only:
+        if not REGISTRY.is_file():
+            sys.exit(f"도감 registry가 없습니다: {REGISTRY}")
+        print("기존 registry.json 유지 — 도감 패널 에셋 설치 완료")
+        return
     reg, warns = build_registry(sm)
     REGISTRY.write_text(json.dumps(reg, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"registry.json — AE 구현 {reg['count']} / 도감 {reg['total_catalog']}")

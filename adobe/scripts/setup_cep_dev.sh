@@ -19,6 +19,9 @@ ln -sfn "$SRC" "$EXT_DIR/com.autokairos.pd"
 echo "   $SRC"
 echo "   -> $EXT_DIR/com.autokairos.pd"
 
+echo "== 3) 세모지 모션 도감 에셋 설치 =="
+python3 "$(cd "$(dirname "$0")/.." && pwd)/scripts/sync_dogam.py" --assets-only
+
 echo ""
 echo "완료. 이제:"
 echo "  1) 백엔드 실행:  cd \"$(cd "$(dirname "$0")/.." && pwd)\" && python3 -m backend.app"
