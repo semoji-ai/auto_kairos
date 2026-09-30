@@ -129,5 +129,6 @@ layers/<sid>__elements.json                  ← 정본
 
 ## 함께 볼 것
 
+- `docs/contracts/semoji-renderer-handoff-v1.md` — 다른 컴퓨터의 Remotion·AE로 넘길 때의 파일 계약
 - `docs/adobe-project-unification.md` — 저장소를 합친 경위와 남은 단계
 - `docs/rules/scene-video-rules.md` — 비디오 프롬프트

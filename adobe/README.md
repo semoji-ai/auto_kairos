@@ -8,3 +8,5 @@ After Effects(1차)/Premiere(2차) 내 영상 제작 보조 패널.
 환경 키: `OPENAI_API_KEY`(codex 이미지), `ELEVENLABS_API_KEY`(TTS), `FAL_KEY`(레이어 분리 — `FAL_API_KEY` 이름도 인식).
 
 세모지 모션 도감의 343개 항목 스냅샷과 AE 이식 12개 기법의 필수 에셋은 저장소에 포함됩니다. 다른 macOS 컴퓨터에서는 `bash adobe/scripts/setup_cep_dev.sh`로 패널과 도감 에셋을 설치하세요. AE 작업 절차와 지원 범위는 [semoji-motion-ae 스킬](../.agents/skills/semoji-motion-ae/SKILL.md)을 따릅니다.
+
+컴퓨터 간 프로젝트 전달과 각자의 Remotion·AE 연결 기준은 [렌더러 연결 계약](../docs/contracts/semoji-renderer-handoff-v1.md)에 정의했습니다.

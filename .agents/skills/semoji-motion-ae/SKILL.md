@@ -7,6 +7,8 @@ description: 세모지 모션 도감으로 씬의 움직임을 설계하고 Auto
 
 저장소 루트를 기준으로 경로를 찾는다. 개인 컴퓨터의 `~/Projects/semoji-motion`은 선택 사항이다. 도감의 343개 항목 스냅샷은 `adobe/data/semoji-motion/dogam/techniques.json`에 있고, AE에서 바로 적용 가능한 기법은 `adobe/cep/com.autokairos.pd/jsx/dogam/registry.json`의 12개다. 나머지 항목은 **연출 참고 자료**이며 AE 구현이 있다고 가정하지 않는다.
 
+다른 컴퓨터의 Remotion과 같은 프로젝트를 이어받을 때는 먼저 `docs/contracts/semoji-renderer-handoff-v1.md`의 전달 파일·경로·검증 계약을 따른다. Remotion은 각 컴퓨터에 설치된 것을 사용하며 이 스킬은 AE 쪽 작업을 담당한다.
+
 ## 연출 선택
 
 1. `auto_agent/data/skills/shared/motion-dogam-semoji.md`를 읽고, 씬의 나레이션·자료·이미지가 요구하는 움직임을 결정한다. 원고·씬 경계를 모션에 맞춰 바꾸지 않는다.
