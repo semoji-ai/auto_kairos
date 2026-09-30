@@ -1,7 +1,5 @@
 <!-- Storyboard 탭 — 원고 + 미리보기 + TTS 통합 -->
 <!-- scene-thumb.js (썸네일 프리뷰) + scene-editor.js (에디터) -->
-<script src="/static/scene-thumb.js?v={{ static_version('scene-thumb.js') }}"></script>
-<script src="/static/scene-editor.js?v={{ static_version('scene-editor.js') }}"></script>
 <script src="/static/video-tracks.js?v={{ static_version('video-tracks.js') }}"></script>
 {% if scenes %}
 {# 아트스타일·캐릭터까지는 위에 붙여 둔다. 씬만 흘러야 고른 씬에 거는
@@ -81,7 +79,7 @@
       {% include "partials/_scene_switch.html" %}
       {% if scene._scene_review %}
       <div class="sb-preview sb-review-preview">
-        {% if scene._scene_review.image_url %}<a href="{{ scene._scene_review.image_url }}" target="_blank" rel="noopener"><img src="{{ scene._scene_review.image_url }}" loading="lazy" alt="Scene {{ scene.sceneNumber }} 검토용 참조"></a>{% else %}<span>{% if scene._scene_review.decision == 'remake' %}이미지 없음 · 신규 제작 필요{% else %}씬 이미지 확보 필요{% endif %}</span>{% endif %}
+        {% if scene._scene_review.image_url %}<a href="{{ scene._scene_review.image_url }}" target="_blank" rel="noopener"><img src="/api/p/{{ slug }}/images/preview/{{ scene.sceneNumber }}" data-original="{{ scene._scene_review.image_url }}" onerror="this.onerror=null;this.src=this.dataset.original" loading="lazy" decoding="async" alt="Scene {{ scene.sceneNumber }} 검토용 참조"></a>{% else %}<span>{% if scene._scene_review.decision == 'remake' %}이미지 없음 · 신규 제작 필요{% else %}씬 이미지 확보 필요{% endif %}</span>{% endif %}
       </div>
       {% if scene._scene_review.image_url %}<p class="sb-cut-preview-label">{{ scene._scene_review.selected_label }}</p>{% elif scene._scene_review.reference_url %}<p class="sb-cut-preview-label"><a href="{{ scene._scene_review.reference_url }}" target="_blank" rel="noopener">기존 그룹 이미지 참조 보기 · 이 씬에 선택된 이미지는 아님</a></p>{% endif %}
       {% elif scene._cuts %}
@@ -137,7 +135,7 @@
           {% endfor %}
         </div>
         {% else %}
-        <div class="sb-player-mount" data-scene-num="{{ scene.sceneNumber }}"></div>
+        <div class="sb-player-mount" data-scene-num="{{ scene.sceneNumber }}">{% if scene._image_url %}<img class="sb-poster" src="/api/p/{{ slug }}/images/preview/{{ scene.sceneNumber }}" data-original="{{ scene._image_url }}" alt="Scene {{ scene.sceneNumber }} 선택 이미지" loading="lazy" decoding="async"{% if loop.index0 < 3 %} fetchpriority="high"{% endif %} onerror="this.onerror=null;this.src=this.dataset.original">{% endif %}</div>
         {% endif %}
       </div>
       {% endif %}
@@ -339,6 +337,9 @@
   </div>
 </div>
 
+{# 먼저 카드와 작은 이미지를 파싱한 뒤 무거운 Remotion 미리보기 번들을 로드한다. #}
+<script src="/static/scene-thumb.js?v={{ static_version('scene-thumb.js') }}"></script>
+<script src="/static/scene-editor.js?v={{ static_version('scene-editor.js') }}"></script>
 <script>
 function filterStoryboard(ch, btn) {
   document.querySelectorAll('.storyboard-filter .chapter-btn').forEach(b => b.classList.remove('active'));
@@ -1053,6 +1054,11 @@ function sbLoadImageGrid(sn) {
   if (!grid) return;
   var isMulti = MULTI_LAYOUTS.includes(grid.dataset.layout);
 
+  function versionThumb(v) {
+    return '/api/p/' + encodeURIComponent(slug) + '/images/preview/' + sn
+      + '?file=' + encodeURIComponent(v.file);
+  }
+
   // 멀티셀렉 초기 상태
   if (isMulti && !_multiSel[sn]) {
     try { _multiSel[sn] = JSON.parse(grid.dataset.multiImages || '[]'); } catch(e) { _multiSel[sn] = []; }
@@ -1103,7 +1109,7 @@ function sbLoadImageGrid(sn) {
           html += '<div class="sb-grid-thumb selected" '
             + 'onclick="sbSelectVersion(' + sn + ',\'' + v.file + '\')" '
             + 'title="' + typeIcon + ' ' + v.file + '">'
-            + '<img src="' + v.url + '" loading="lazy">'
+            + '<img src="' + versionThumb(v) + '" loading="lazy">'
             + '</div>';
         } else {
           others.push(v);
@@ -1123,7 +1129,7 @@ function sbLoadImageGrid(sn) {
           var ti = v.type === 'generate' ? '🎨' : '🔍';
           var sf = String(v.file).replace(/'/g, "\\'");
           oh += '<div class="sb-grid-thumb" onclick="sbSelectVersion(' + sn + ',\'' + sf + '\')" '
-            + 'title="' + ti + ' ' + v.file + '"><img src="' + v.url + '" loading="lazy"></div>';
+            + 'title="' + ti + ' ' + v.file + '"><img src="' + versionThumb(v) + '" loading="lazy"></div>';
         });
         html += '<div class="sb-versions-others" id="sb-versions-others-' + sn + '" '
           + 'style="display:none;flex-basis:100%;flex-wrap:wrap;gap:3px">' + oh + '</div>';
@@ -1138,7 +1144,7 @@ function sbLoadImageGrid(sn) {
           html += '<div class="sb-grid-thumb' + (isSel ? ' multi-sel' : '') + '" '
             + 'onclick="sbToggleMultiSel(' + sn + ',\'' + v.url.replace(/'/g, "\\'") + '\')" '
             + 'title="' + typeIcon + ' ' + v.file + '">'
-            + '<img src="' + v.url + '" loading="lazy">'
+            + '<img src="' + versionThumb(v) + '" loading="lazy">'
             + (isSel ? '<span class="sb-multi-num">' + (idx + 1) + '</span>' : '')
             + '</div>';
         } else {
@@ -1146,7 +1152,7 @@ function sbLoadImageGrid(sn) {
           html += '<div class="sb-grid-thumb' + (isSel ? ' selected' : '') + '" '
             + 'onclick="sbSelectVersion(' + sn + ',\'' + v.file + '\')" '
             + 'title="' + typeIcon + ' ' + v.file + '">'
-            + '<img src="' + v.url + '" loading="lazy">'
+            + '<img src="' + versionThumb(v) + '" loading="lazy">'
             + '</div>';
         }
       });

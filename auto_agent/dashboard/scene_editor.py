@@ -26,6 +26,48 @@ from fastapi import APIRouter as _AR
 manifest_router = _AR(prefix="/api/p/{project_ref}", tags=["manifest-utils"])
 
 
+@manifest_router.get("/images/preview/{scene_num}")
+async def selected_scene_image_preview(project_ref: str, scene_num: int, request: Request,
+                                       file: str = ""):
+    """스토리보드 카드·버전 후보용 작은 이미지. 등록된 해당 씬 파일만 읽는다."""
+    from fastapi.concurrency import run_in_threadpool
+    from fastapi.responses import FileResponse
+    from auto_agent.db.project_manager import ProjectManager
+    from auto_agent.tools.image_assets import _load as load_image_assets
+    from auto_agent.dashboard.image_preview import selected_image_preview
+
+    project, needs_redirect = resolve_project_ref(ProjectManager(), project_ref)
+    if not project:
+        return JSONResponse({"error": "프로젝트 없음"}, status_code=404)
+    if needs_redirect:
+        return RedirectResponse(
+            url=canonical_uuid_url(str(request.url.path), project["uuid"]),
+            status_code=307,
+        )
+    output_dir = Path(project.get("output_dir") or "")
+    images_dir = output_dir / "images"
+    if not project.get("output_dir"):
+        return JSONResponse({"error": "프로젝트 경로 없음"}, status_code=404)
+    registry = load_image_assets(images_dir)
+    entry = next((s for s in registry.get("scenes", [])
+                  if s.get("sceneNumber") == scene_num), {})
+    versions = entry.get("images") or []
+    if file and not any(im.get("file") == file for im in versions):
+        return JSONResponse({"error": "이 씬에 등록되지 않은 이미지"}, status_code=404)
+    selected = file or next((im.get("file") for im in versions if im.get("selected")), None)
+    if not selected:
+        return JSONResponse({"error": "선택 이미지 없음"}, status_code=404)
+    try:
+        preview = await run_in_threadpool(
+            selected_image_preview, images_dir, selected,
+            output_dir / "thumbnails", scene_num,
+        )
+    except (FileNotFoundError, OSError, ValueError):
+        return JSONResponse({"error": "이미지 미리보기 실패"}, status_code=404)
+    return FileResponse(preview, media_type="image/webp",
+                        headers={"Cache-Control": "no-cache"})
+
+
 @manifest_router.get("/manifest-meta")
 async def manifest_meta(project_ref: str, request: Request):
     """매니페스트 메타 데이터 반환 (get_editor_manifest_meta로 위임)."""

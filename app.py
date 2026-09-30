@@ -744,13 +744,25 @@ def _scan_and_register_output_projects() -> int:
 
         uuid_prefix, slug = m.group(1), m.group(2)
 
-        # 이미 같은 uuid가 DB에 있는 경우 — 경로만 갱신 (다른 머신 import 대응)
+        # 이미 같은 uuid가 DB에 있는 경우 — 실제 프로젝트 폴더만 경로 후보로 쓴다.
+        # 같은 UUID를 단 옛 빈 폴더가 있으면 정렬상 마지막 폴더가 기존 경로를
+        # 덮어써 스토리보드 전체가 사라진 것처럼 보일 수 있다.
         if uuid_prefix in uuid_to_project:
-            existing_path = uuid_to_project[uuid_prefix].get("output_dir", "")
-            if existing_path != str(d):
-                pm.update_project_path(uuid_prefix, str(d))
-                updated += 1
-                print(f"  [SCAN] 경로 갱신: {d.name} ({existing_path} → {d})")
+            existing = uuid_to_project[uuid_prefix]
+            existing_path = existing.get("output_dir", "")
+            if existing_path == str(d):
+                continue
+            if slug != existing.get("slug"):
+                continue
+            markers = ("scene_specs.json", "pipeline_state.json", "final_manuscript.md", "plan.md")
+            if existing_path and any((Path(existing_path) / name).is_file() for name in markers):
+                continue
+            if not any((d / name).is_file() for name in markers):
+                continue
+            pm.update_project_path(uuid_prefix, str(d))
+            existing["output_dir"] = str(d)
+            updated += 1
+            print(f"  [SCAN] 경로 갱신: {d.name} ({existing_path} → {d})")
             continue
 
         # 빈 디렉토리(orphan)는 등록하지 않음

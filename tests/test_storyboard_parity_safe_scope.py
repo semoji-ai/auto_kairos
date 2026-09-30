@@ -7,6 +7,62 @@ import app as dashboard_app
 from auto_agent.dashboard.helpers import enrich_scenes_with_media
 
 
+def test_storyboard_enrichment_reads_image_assets_once(tmp_path, monkeypatch):
+    from auto_agent.tools import image_assets
+
+    output_dir = tmp_path / "output" / "abcd1234_demo"
+    images_dir = output_dir / "images"
+    images_dir.mkdir(parents=True)
+    (images_dir / "scene_001.png").write_bytes(b"image")
+    (images_dir / "image_assets.json").write_text(json.dumps({"scenes": [
+        {"sceneNumber": 1, "images": [{"file": "scene_001.png", "selected": True}],
+         "qa": {"passed": True, "issues": []}},
+        {"sceneNumber": 2, "images": [{"file": "missing.png", "selected": False}]},
+    ]}), encoding="utf-8")
+    calls = 0
+    original_load = image_assets._load
+
+    def counted_load(directory):
+        nonlocal calls
+        calls += 1
+        return original_load(directory)
+
+    monkeypatch.setattr(image_assets, "_load", counted_load)
+    rows = enrich_scenes_with_media(
+        [{"sceneNumber": n, "narration": "test"} for n in (1, 2, 3)],
+        output_dir.name, str(output_dir),
+    )
+    assert calls == 1
+    assert rows[0]["_image_url"].endswith("/images/scene_001.png")
+    assert rows[0]["qa"]["passed"] is True
+    assert rows[1]["_image_url"] is None
+    assert rows[2]["_image_url"] is None
+
+
+def test_startup_scan_keeps_matching_project_when_duplicate_uuid_folder_exists(tmp_path, monkeypatch):
+    output = tmp_path / "output"
+    output.mkdir()
+    proper = output / "3920f0be_마이디어_브랜드백과사전"
+    stale = output / "3920f0be_마이디어_브랜드백科事典"
+    proper.mkdir()
+    stale.mkdir()
+    (proper / "scene_specs.json").write_text('{"scenes": []}', encoding="utf-8")
+    project = {"id": 1, "uuid": "3920f0be", "slug": "마이디어_브랜드백과사전",
+               "output_dir": str(proper)}
+
+    class FakePM:
+        def list_projects(self):
+            return [dict(project)]
+
+        def update_project_path(self, uuid, path):
+            project["output_dir"] = path
+
+    monkeypatch.setattr(dashboard_app, "get_pm", lambda: FakePM())
+    monkeypatch.setattr(dashboard_app, "get_workspace_dir", lambda: tmp_path)
+    dashboard_app._scan_and_register_output_projects()
+    assert project["output_dir"] == str(proper)
+
+
 def test_enrich_scenes_uses_manifest_layout_when_available(tmp_path, monkeypatch):
     workspace = tmp_path / "workspace"
     manifest_dir = workspace / "remotion" / "public" / "manifests"
