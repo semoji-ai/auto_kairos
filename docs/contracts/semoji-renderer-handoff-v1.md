@@ -23,6 +23,8 @@
 
 현재 코드에는 `scene_specs.json`과 `scenes.json`이 **둘 다 필요**하다. AE 패널은 주요 텍스트와 이미지 선택을 상대 파일에 되비추지만, 파일 하나만 옮기거나 한쪽만 손으로 수정하면 화면이 갈릴 수 있다. 이동 전후에 씬 번호·순서·내레이션·선택 이미지를 대조한다. **두 파일의 `sceneId`를 같게 만들기 위해 기존 ID를 다시 발급하거나 자산 이름을 바꾸지 않는다.** 현재 프로젝트는 양쪽 ID가 달라도 씬 번호와 각자의 에셋 참조로 연결된다.
 
+`scenes.json` 없이 `scene_specs.json`만 옮긴 프로젝트는 `python3 adobe/scripts/prepare_ae_project.py output/<project>`로 점검한다. 기존 AE 편집이 없고 결과가 `ready_to_create`일 때에만 `--write`로 씬 목록을 새로 만든다. 이 작업은 `output/<project>/` 내부의 선택 이미지 경로를 참조하며 파일을 복제하지 않는다. 기존 `scenes.json`은 절대로 자동 덮어쓰지 않는다.
+
 ## 3. 렌더러별 어댑터
 
 | | Remotion 컴퓨터 | AE 컴퓨터 |
@@ -60,3 +62,4 @@ Remotion의 `remotion/public/project` 링크, `remotion/public/manifest.json`, A
 계약 위반이 발견되면 자동 복사나 ID 재발급으로 덮지 말고, 어떤 파일과 씬이 갈렸는지 기록한 뒤 정본의 선택 상태를 확인한다. 기존 이미지·세션·프로젝트 파일은 삭제하지 않는다.
 
 관련 구현: [공유/분기 규칙](../rules/shared-vs-branch.md), [Remotion 매니페스트 생성기](../../auto_agent/scripts/build_manifest.py), [AE 매니페스트 생성기](../../adobe/backend/manifest.py), [세모지 AE 모션 스킬](../../.agents/skills/semoji-motion-ae/SKILL.md).
+연출·편집 기준: [세모지·지식해적단식 AE 운영 규칙](../../adobe/docs/editorial-motion-playbook.md).
