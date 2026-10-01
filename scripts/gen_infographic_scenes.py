@@ -42,6 +42,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from auto_agent.paths import resolve_project  # noqa: E402
+from auto_agent.utils.codex_cli import imagegen_model_args  # noqa: E402
 
 PALETTE = "#A8BFB4, #8FAECF, #E8C4B0, #2F3E52, #F2F2F0"
 
@@ -260,7 +261,7 @@ def main() -> int:
             "생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:\n"
             f"{out}"
         )
-        subprocess.run(["codex", "exec", "--skip-git-repo-check",
+        subprocess.run(["codex", "exec", *imagegen_model_args(), "--skip-git-repo-check",
                         "--sandbox", "workspace-write", prompt],
                        stdin=subprocess.DEVNULL, capture_output=True, text=True,
                        timeout=int(os.environ.get("GEN_TIMEOUT", "2400")))

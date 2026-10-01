@@ -24,6 +24,9 @@ from pathlib import Path
 
 from PIL import Image
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.utils.codex_cli import imagegen_model_args  # noqa: E402
+
 FPS = 30
 DUR = 5.0
 
@@ -142,7 +145,7 @@ def _ask_vision(image: Path, instructions: str, out_file: Path) -> dict | None:
     prompt = ("$imagegen\n\n**먼저 view_image로 아래 그림을 불러오세요.**\n"
               f"{image}\n\n{instructions}\n\n결과를 {out_file} 에 저장하세요.")
     try:
-        subprocess.run(["codex", "exec", "--skip-git-repo-check",
+        subprocess.run(["codex", "exec", *imagegen_model_args(), "--skip-git-repo-check",
                         "--sandbox", "workspace-write", prompt],
                        stdin=subprocess.DEVNULL, capture_output=True,
                        text=True, timeout=900)

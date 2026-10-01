@@ -251,6 +251,7 @@ def main() -> int:
     prev_of = dict(zip(order[1:], order))
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from auto_agent.tools.image_assets import get_selected
+    from auto_agent.utils.codex_cli import imagegen_model_args  # noqa: E402
 
     def prev_cut(n: int) -> Path | None:
         """앞 컷의 고른 그림. 앞 컷도 아직 안 그렸으면 없다."""
@@ -418,7 +419,7 @@ def main() -> int:
         out = next_version(args.out, n)
         prompt = SCENE.format(prompt=body, ref_block=ref, size=job.get("size", "1792x1024"), out=out)
         subprocess.run(
-            ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
+            ["codex", "exec", *imagegen_model_args(), "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
             stdin=subprocess.DEVNULL, capture_output=True, text=True,
             # 프롬프트가 길고 참조 그림이 여러 장인 컷은 20분을 넘긴다
             # (디아지오 126씬은 병 4종 라벨 + 잔 4종 + 참조 사진 4장이라 7.5KB).

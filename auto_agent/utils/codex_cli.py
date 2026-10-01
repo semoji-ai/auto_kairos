@@ -4,6 +4,7 @@ agent_runner(파이프라인 외부)와 orchestrator/runner(파이프라인)가 
 """
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 from typing import List, Optional
@@ -19,6 +20,18 @@ def find_codex_cli() -> str:
 
 def codex_available() -> bool:
     return shutil.which("codex") is not None
+
+
+# $imagegen 배치를 지휘하는 모델. 그림을 그리는 것은 codex 내장 image_gen 이고,
+# 이 모델은 프롬프트를 읽고 view_image·image_gen 을 부르는 역할이다.
+# 전역 ~/.codex/config.toml 이 바뀌어도 이미지 작업은 흔들리지 않게 여기서 고정한다.
+DEFAULT_IMAGEGEN_MODEL = "gpt-6.1-sol"
+
+
+def imagegen_model_args() -> List[str]:
+    """$imagegen 용 codex exec 에 붙일 모델 인자. CODEX_IMAGEGEN_MODEL 로 바꾼다."""
+    model = os.environ.get("CODEX_IMAGEGEN_MODEL", "").strip() or DEFAULT_IMAGEGEN_MODEL
+    return ["-m", model]
 
 
 def build_codex_exec_cmd(

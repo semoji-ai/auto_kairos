@@ -36,6 +36,7 @@ from pathlib import Path
 
 # 저장소 뿌리를 먼저 잡는다 — auto_agent.paths 의 경로 규칙을 쓰기 위해
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.utils.codex_cli import imagegen_model_args  # noqa: E402
 
 
 def _quality(path: Path) -> tuple[float, float]:
@@ -138,7 +139,7 @@ def main() -> int:
             if out.exists():
                 out.replace(out.with_suffix(f".try{attempt - 1}.png"))
             subprocess.run(
-                ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
+                ["codex", "exec", *imagegen_model_args(), "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
                 stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=900,
             )
             if not out.exists():

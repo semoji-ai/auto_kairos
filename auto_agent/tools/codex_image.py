@@ -22,6 +22,8 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
+from auto_agent.utils.codex_cli import imagegen_model_args
+
 # CODEX_HOME 기본값은 ~/.codex (codex CLI 규약). 절대경로 하드코딩 금지.
 CODEX_HOME = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex")))
 
@@ -112,6 +114,7 @@ def codex_generate(
 
     cmd = [
         codex, "exec",
+        *imagegen_model_args(),
         "--cd", work,
         "--skip-git-repo-check",
         "-s", "workspace-write",
