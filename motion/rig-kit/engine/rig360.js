@@ -89,11 +89,21 @@ function crease(a,j,b,w,col){const d1=[a[0]-j[0],a[1]-j[1]],d2=[b[0]-j[0],b[1]-j
  const an=Math.atan2(uy,ux),g=c.globalAlpha;c.globalAlpha=g*al;line(()=>{c.beginPath();for(const da of[-0.5,0.5]){const cx=Math.cos(an+da),sx=Math.sin(an+da);c.moveTo(j[0]+cx*w*0.5,j[1]+sx*w*0.5);c.lineTo(j[0]+cx*w*0.14,j[1]+sx*w*0.14)}},0.02,col||'rgba(70,30,10,0.2)');c.globalAlpha=g}
 const PANTW={std:[0.36,0.34,0.3,0.275,0.25],wide:[0.37,0.355,0.33,0.315,0.3],slim:[0.35,0.32,0.275,0.24,0.215]};
 function drawLeg3(P,L,ch){const p3=[L.h,L.k,L.a],pts=five(p3),fz=cl(-L.h[2]/0.13),f=lerp(1,0.82,fz),fs=lerp(1,0.86,fz),pn=ch.pants,pc=dk(pn.col,f);
- if(pn.type==='shorts'){const ws=[0.29,0.275,0.215,0.228,0.158],wp=[0.38,0.37,0.3];limb(pts,ws,dk(ch.skin,fs),true,false);
+ if(pn.type==='skirt'||pn.type==='bare'){const ws=[0.29,0.275,0.215,0.228,0.158];limb(pts,ws,dk(pn.tights||ch.skin,fs),true,false);if(ch.sock)bandOf(pts,ws,0.78,1,dk(ch.sock,fs),1.12)}
+ else if(pn.type==='shorts'){const ws=[0.29,0.275,0.215,0.228,0.158],wp=[0.38,0.37,0.3];limb(pts,ws,dk(ch.skin,fs),true,false);
   if(ch.sock){bandOf(pts,ws,0.78,1,dk(ch.sock,fs),1.12);if(ch.sockStripe)bandOf(pts,ws,0.82,0.86,dk(ch.sockStripe,fs),1.12)}
   {const[Q,Wd]=part(p3,wp,0,0.4);limb(Q,Wd,pc,true,false)}bandOf(p3,wp,0.35,0.4,dk(pn.col,f*0.86));bandOf(p3,wp,0,0.19,SHC)}
  else{const ws=PANTW[pn.fit||'std'];limb(pts,ws,pc,true,false);crease(L.h,L.k,L.a,ws[2]);if(pn.cuff)bandOf(pts,ws,0.86,1,dk(pn.cuff,f),1.09);else bandOf(pts,ws,0.955,1,'rgba(70,30,10,0.13)');bandOf(pts,ws,0,0.19,SHC)}
  drawShoe3(L.a,L.ang,ch,fz,P)}
+
+/* skirt (pants.type 'skirt') or the lower half of a dress (top.type 'dress'): hangs from the hips, its hem spreads with the knees.
+   len: 0.35 short … 0.55 knee … 1 ankle. Side panels are a step darker and travel round with the yaw, like the tops. */
+function drawSkirt3(P,ch){const T=ch.top,pn=ch.pants,dr=T.type==='dress';if(!dr&&pn.type!=='skirt')return;const col=dr?(T.skirt||T.col):pn.col,len=(dr?T.len:pn.len)||0.55,H=P.hip;
+ const yt=H[1]-0.16,tw=P.Wt*0.93,along=(L,u)=>{const f=u*2;return f<1?[lerp(L.h[0],L.k[0],f),lerp(L.h[1],L.k[1],f)]:[lerp(L.k[0],L.a[0],f-1),lerp(L.k[1],L.a[1],f-1)]};
+ const kp=P.legs.map(L=>along(L,cl(len*0.95))),xs=kp.map(q=>q[0]-H[0]),fl=0.2+0.1*len,bx0=Math.min(-tw-fl*0.6,Math.min(...xs)-0.24),bx1=Math.max(tw+fl*0.6,Math.max(...xs)+0.24),sw=0.04*P.sway,yb=Math.max(H[1]+0.12+len*1.3,Math.max(...kp.map(q=>q[1]))+0.08);
+ const sk=()=>{c.beginPath();c.moveTo(-tw,yt);c.quadraticCurveTo(-tw-0.05,(yt+yb)/2,bx0+sw,yb-0.03);c.quadraticCurveTo((bx0+bx1)/2+sw,yb+0.07,bx1+sw,yb-0.03);c.quadraticCurveTo(tw+0.05,(yt+yb)/2,tw,yt);c.closePath()};
+ c.save();c.translate(H[0],0);shape(sk,col);c.save();sk();c.clip();_PS=P.yaw;_R=(bx1-bx0)/2;const D=k=>dk(col,k);
+ panel(66,114,D(0.88),yt,yb-yt+0.2);panel(-114,-66,D(0.88),yt,yb-yt+0.2);F(D(0.88),-3,yb-0.06,6,0.2);if(dr&&T.hem)F(T.hem,-3,yb-0.1,6,0.06);c.restore();c.restore()}
 
 /* ---------- arms & hands ---------- */
 const HANDS={open:[0.125,0.15,0.14,0.105],grip:[0.07,0.085,0.08,0.065],point:[0.21,0.075,0.07,0.06],wave:[0.16,0.19,0.18,0.14]};
@@ -103,7 +113,7 @@ function hand3(A,col,lc,st,sy){const dx=A.wr[0]-A.el[0],dy=A.wr[1]-A.el[1],l=Mat
  line(()=>{c.beginPath();for(let i=0;i<3;i++){const y=(Y[i]+Y[i+1])/2;c.moveTo(0.13,y);c.lineTo(0.08+Math.min(L[i],L[i+1])+0.012,y)}},0.012,lc);c.restore()}
 /* build = [half-width, half-depth, forward offset] at chest, waist and hem */
 const BUILD={std:[[0.43,0.385,0],[0.4,0.355,0],[0.385,0.34,0]],slim:[[0.415,0.37,0.012],[0.355,0.31,0],[0.39,0.345,-0.004]],broad:[[0.452,0.39,0.012],[0.408,0.36,0],[0.385,0.34,0]],round:[[0.43,0.39,0.012],[0.435,0.425,0.05],[0.405,0.39,0.032]]};
-const WAISTF=0.64,SOFT={tee:1,stripe:1,hoodie:1,cardigan:1,chef:1,apron:1};
+const WAISTF=0.64,SOFT={tee:1,dress:1,stripe:1,hoodie:1,cardigan:1,chef:1,apron:1};
 const bodyP=(P,ch)=>{const B=BUILD[ch.build||'std'],y0=-P.TL-0.03,y1=0.13,E=B.map(([a,b,z])=>{const e=Math.hypot(a*P.cy,b*P.sy),m=z*P.sy;return[m-e,m+e]}),C=E[0],Wa=E[1],He=E[2],yC=y0+0.34,yW=y0+(y1-y0)*WAISTF,yH=y1-0.06,mC=(C[0]+C[1])/2,eC=(C[1]-C[0])/2,mH=(He[0]+He[1])/2,eH=(He[1]-He[0])/2;
  return sub=>{if(!sub)c.beginPath();c.moveTo(He[0],yH);c.lineTo((He[0]+Wa[0])/2,(yH+yW)/2);c.quadraticCurveTo(Wa[0],yW,(Wa[0]+C[0])/2,(yW+yC)/2);c.lineTo(C[0],yC);c.bezierCurveTo(C[0],y0+0.1,mC-eC*0.78,y0,mC-eC*0.36,y0);c.lineTo(mC+eC*0.36,y0);c.bezierCurveTo(mC+eC*0.78,y0,C[1],y0+0.1,C[1],yC);c.lineTo((Wa[1]+C[1])/2,(yW+yC)/2);c.quadraticCurveTo(Wa[1],yW,(He[1]+Wa[1])/2,(yH+yW)/2);c.lineTo(He[1],yH);c.quadraticCurveTo(He[1],y1,mH+eH*0.82,y1);c.lineTo(mH-eH*0.82,y1);c.quadraticCurveTo(He[0],y1,He[0],yH);c.closePath()}};
 function drawArm3(P,A,ch,inFront){const p3=[A.s0,A.el,A.wr],pts=five(p3),T=ch.top,fz=cl(-A.s0[2]/0.3),f=lerp(1,0.82,fz),sk=dk(ch.skin,lerp(1,0.86,fz)),tc=dk(T.sleeve||T.col,f),hc=ch.glove?dk(ch.glove,f):sk,lc=ch.glove?'rgba(255,255,255,0.25)':ch.nc;
@@ -144,7 +154,7 @@ function drawTorso3(P,ch){c.save();c.translate(P.hip[0],P.hip[1]);c.rotate(P.tro
  case'chef':panel(-78,78,'#EEE9E1',-0.3,0.6);F('rgba(70,30,10,0.14)',-1,-0.3,2,0.03);vline(-9,y0+0.1,-0.3,0.018);for(const f of[-18,18])for(const y of[-TL*0.78,-TL*0.58])spot(f,y,0.024,'rgba(70,30,10,0.4)');break;
  case'hoodie':{const v=vis(-44,44);if(v)shape(rr(v[0],-0.36,v[1]-v[0],0.27,0.08),D(lum(T.col)>90?0.9:1.25));if(T.hem)F(T.hem,-1,-0.02,2,0.2);vline(-9,y0+0.06,y0+0.3,0.024,'#FFFFFF');vline(9,y0+0.08,y0+0.28,0.024,'#FFFFFF')}break;
  case'stripe':c.fillStyle=T.col2;for(let y=-TL+0.12;y<0.1;y+=0.2)c.fillRect(-1,y,2,0.09);spot(24,-0.2,0.04,'#F2B705');spot(-34,-0.3,0.028,'#E5484D');spot(50,-0.36,0.025,'#18B7A0');break;
- case'tee':panel(68,112,D(0.86),y0-0.1,TL+0.5);panel(-112,-68,D(0.86),y0-0.1,TL+0.5);{const v=vis(-30,30),p=at(0);if(v){shape(rr(v[0],-TL*0.66,v[1]-v[0],0.24,0.03),'#FFFFFF');if(p){const k=Math.max(0.35,p.k),y=-TL*0.66+0.07;F('rgba(40,30,30,0.75)',p.x-0.075*k,y,0.035*k,0.11);F('rgba(40,30,30,0.75)',p.x-0.01*k,y,0.085*k,0.035);F('rgba(40,30,30,0.75)',p.x+0.045*k,y,0.035*k,0.11)}}}F(D(0.86),-1,0.06,2,0.1);break;
+ case'tee':case'dress':panel(68,112,D(0.86),y0-0.1,TL+0.5);panel(-112,-68,D(0.86),y0-0.1,TL+0.5);if(T.type==='dress'&&T.col2){F(T.col2,-1,yW-0.06,2,0.12);const p=at(-30);if(p)shape(circ(p.x,yW,0.06),dk(T.col2,0.85))}if(T.bib){const v=vis(-30,30),p=at(0);if(v){shape(rr(v[0],-TL*0.66,v[1]-v[0],0.24,0.03),'#FFFFFF');if(p){const k=Math.max(0.35,p.k),y=-TL*0.66+0.07;F('rgba(40,30,30,0.75)',p.x-0.075*k,y,0.035*k,0.11);F('rgba(40,30,30,0.75)',p.x-0.01*k,y,0.085*k,0.035);F('rgba(40,30,30,0.75)',p.x+0.045*k,y,0.035*k,0.11)}}}if(T.type==='tee')F(D(0.86),-1,0.06,2,0.1);break;
  case'suit':if(Math.cos(P.yaw)>-0.3){const xl=px(-15),xr=px(15),x0=px(0),p0=at(0),k0=p0?Math.max(0.3,p0.k):0.3;shape(poly(xl,y0-0.02,xr,y0-0.02,x0,y0+0.66),T.col2);
    if(p0){shape(poly(x0-0.05*k0,y0+0.04,x0+0.05*k0,y0+0.04,x0+0.06*k0,y0+0.5,x0,y0+0.6,x0-0.06*k0,y0+0.5),T.tie||'#D64545');shape(poly(x0-0.07*k0,y0+0.03,x0+0.07*k0,y0+0.03,x0+0.045*k0,y0+0.14,x0-0.045*k0,y0+0.14),dk(T.tie||'#D64545',0.82))}
    for(const s of[1,-1])if(at(s*17))shape(poly(px(s*15),y0-0.02,x0,y0+0.66,(x0+px(s*8))/2,y0+0.56,px(s*30),y0+0.14),D(1.22));
@@ -157,7 +167,7 @@ function drawTorso3(P,ch){c.save();c.translate(P.hip[0],P.hip[1]);c.rotate(P.tro
  if(SOFT[T.type])for(const s of[1,-1]){const p=at(s*68);if(p){c.globalAlpha=cl(p.k*1.8);line(()=>{c.beginPath();c.moveTo(p.x+s*0.03,yW-0.075);c.quadraticCurveTo(p.x-s*0.03*p.k,yW-0.03,p.x-s*0.1*p.k,yW-0.02);c.moveTo(p.x+s*0.03,yW+0.04);c.quadraticCurveTo(p.x-s*0.02*p.k,yW+0.075,p.x-s*0.065*p.k,yW+0.08)},0.02,'rgba(70,30,10,0.15)');c.globalAlpha=1}}
  if(ch.pack)for(const s of[1,-1]){const a=at(s*33),b=at(s*62);if(a)line(()=>{c.beginPath();c.moveTo(a.x,y0+0.03);c.quadraticCurveTo(a.x+(b?(b.x-a.x)*0.2:0),-TL*0.6,b?b.x:px(s*62),-TL*0.3)},0.08*Math.max(0.5,a.k),dk(ch.pack.col,0.8))}
  /* one-step form shade: light comes from the top-left */
- c.save();c.beginPath();c.rect(-2,-3,4,5);c.translate(-0.035,-0.045);body(true);c.fillStyle='rgba(70,30,10,0.085)';c.fill('evenodd');c.restore();
+ c.save();c.beginPath();c.rect(-2,-3,4,5);c.translate(-0.035,-0.045);body(true);c.fillStyle='rgba(70,30,10,0.085)';c.fill('evenodd');c.restore();charShade(w);
  c.restore();
  /* open neckline with a rib band for tops without a collar */
  if(!T.collar&&!ch.scarf&&!ch.towel&&T.type!=='chef'){const fr=cl(0.5+0.62*P.cy),ry=lerp(0.03,0.105,fr),nk=()=>{c.beginPath();c.ellipse(0,y0-0.006,0.262,ry,0,0,Math.PI)};shape(nk,ch.skin);c.save();nk();c.clip();F(SHC,-0.3,y0-0.02,0.6,0.035+0.03*fr);c.restore();line(nk,0.036,T.neck||D(lum(T.col)>90?0.84:1.35))}
@@ -197,7 +207,7 @@ function hairSub(style,psi){const h=HL[style]||HL.part,N=60;for(let i=0;i<=N;i++
 function beardSub(psi){const N=40;for(let i=0;i<=N;i++){const a=-Math.PI/2+Math.PI*i/N,f=Math.abs(nrm(a-psi)/D2R),x=0.47*Math.sin(a),y=f>108?0.2:lerp(-0.365,-0.6,Math.pow(cl(f/88),1.5));i?c.lineTo(x,y):c.moveTo(x,y)}c.lineTo(0.6,0.3);c.lineTo(-0.6,0.3);c.closePath()}
 const dome=(ry,y0)=>()=>{c.beginPath();c.moveTo(-0.6,y0);c.bezierCurveTo(-0.62,y0-ry*1.3,0.62,y0-ry*1.3,0.6,y0);c.closePath()};
 const HATSH={beanie:rr(-0.63,-0.36,1.26,0.2,0.07),cap:rr(-0.6,-0.5,1.2,0.3,0),capBack:rr(-0.6,-0.5,1.2,0.3,0),bucket:poly(-0.62,-0.3,0.62,-0.3,0.9,-0.1,-0.9,-0.1),straw:rr(-1.02,-0.3,2.04,0.13,0.06),toque:rr(-0.46,-0.52,0.92,0.26,0.05),
- beret:()=>{c.beginPath();c.ellipse(0,-0.44,0.66,0.24,0,0,TAU)},helmet:rr(-0.64,-0.6,1.28,0.5,0),headband:rr(-0.6,-0.36,1.2,0.15,0.04)};
+ beret:()=>{c.beginPath();c.ellipse(0,-0.44,0.66,0.24,0,0,TAU)},helmet:rr(-0.64,-0.6,1.28,0.5,0),tophat:rr(-0.5,-0.42,1.0,0.3,0.05),headband:rr(-0.6,-0.36,1.2,0.15,0.04)};
 function drawHead3(P,ch){const psi=P.headYaw,cyh=Math.cos(psi),syh=Math.sin(psi);c.save();headXf3(P,ch);
  const H=ch.hair||{},hc=H.col||'#2B2320',hat=ch.hat||{},dark=lum(ch.skin)<150,hasHair=H.type&&H.type!=='bald',Fc=P.face||{},mood=Fc.mood||ch.mood,st=H.type==='long'?'long':(H.style||'part'),b=P.bob2;
  const on=(f,R)=>{const a=nrm(f*D2R+psi),k=Math.cos(a);return{x:(R||HW)*Math.sin(a),k,vis:k>0.03}};
@@ -225,7 +235,7 @@ function drawHead3(P,ch){const psi=P.headYaw,cyh=Math.cos(psi),syh=Math.sin(psi)
   else if(pk>0)shape(()=>{c.beginPath();c.moveTo(xb,EY-0.05);c.quadraticCurveTo(xb+0.07*syh,EY+0.11,xt,EY+0.2);c.quadraticCurveTo(xt+0.014*syh,EY+0.275,xt-0.065*syh,EY+0.285);c.lineTo(xb,EY+0.34);c.closePath()},ch.skin)}
  c.save();headPath();c.clip();
  /* form shade under the jaw (top-left light) */
- c.save();c.beginPath();c.rect(-1,-2,2,3);c.translate(-0.022,-0.05);headSub();c.fillStyle='rgba(70,30,10,0.075)';c.fill('evenodd');c.restore();
+ c.save();c.beginPath();c.rect(-1,-2,2,3);c.translate(-0.022,-0.05);headSub();c.fillStyle='rgba(70,30,10,0.075)';c.fill('evenodd');c.restore();charShade(HW);
  if(ch.blush!==0)for(const s of[1,-1]){const p=on(36*s);if(p.vis){c.fillStyle=dark?'rgba(255,95,85,.3)':'rgba(255,120,125,.36)';c.beginPath();c.ellipse(p.x,EY+0.15,0.105*Math.max(0.35,p.k),0.105,0,0,TAU);c.fill()}}
  if(ch.freckle)for(const s of[1,-1])for(const[df,y]of[[-4,0.11],[4,0.15],[0,0.19]]){const p=on(36*s+df);if(p.vis){c.fillStyle=ch.nc;c.beginPath();c.arc(p.x,EY+y,0.013,0,TAU);c.fill()}}
  if(ch.beard){c.beginPath();beardSub(psi);c.fillStyle=ch.beard;c.fill()}
@@ -301,8 +311,14 @@ function drawHead3(P,ch){const psi=P.headYaw,cyh=Math.cos(psi),syh=Math.sin(psi)
  if(hat.type==='toque'){const tq=()=>{c.beginPath();c.moveTo(-0.42,-0.4);c.bezierCurveTo(-0.8,-0.7,-0.56,-1.2,-0.16,-1.02);c.bezierCurveTo(0,-1.24,0.36,-1.18,0.36,-0.98);c.bezierCurveTo(0.78,-1.0,0.7,-0.56,0.42,-0.4);c.closePath()};shape(tq,'#FFFFFF');inDome(tq,()=>{line(()=>{c.beginPath();for(const f of[0,72,144,216,288]){const p=on(f,0.5);if(p.vis){c.moveTo(p.x*0.6,-0.5);c.quadraticCurveTo(p.x*0.9,-0.8,p.x*0.75,-1.0)}}},0.02,'rgba(70,30,10,0.14)')});lifted(rr(-0.46,-0.52,0.92,0.26,0.05),'#FFFFFF',0,-0.03)}
  if(hat.type==='beret'){line(()=>{c.beginPath();c.moveTo(0,-0.66);c.lineTo(0.03,-0.8)},0.06,dk(hcol,0.8));const br=()=>{c.beginPath();c.ellipse(-0.1*syh,-0.44,0.66,0.24,-0.1*syh,0,TAU)};shape(br,hcol);inDome(br,()=>{c.fillStyle=GLOSS;c.beginPath();c.ellipse(0.06,-0.52,0.4,0.1,0,0,TAU);c.fill();F(dk(hcol,0.82),-0.9,-0.28,1.8,0.2)})}
  if(hat.type==='helmet'){const hm=()=>{c.beginPath();c.moveTo(-0.64,-0.1);c.bezierCurveTo(-0.7,-0.92,0.7,-0.92,0.64,-0.1);c.closePath()};if(cyh<0.25)brim(psi,-0.14,0.2,0.3,0.05,0.05,h2);shape(hm,hcol);
-  inDome(hm,()=>{F(h2,-0.7,-0.2,1.4,0.1);const xs=0.6*syh*(cyh>=0?1:-1),wk=0.14*Math.max(0.25,Math.abs(cyh));F('#FFFFFF',xs-wk/2,-1,wk,0.8);c.fillStyle=GLOSS;c.beginPath();c.ellipse(0.3,-0.56,0.2,0.07,0.5,0,TAU);c.fill()});if(cyh>=0.25)brim(psi,-0.14,0.2,0.3,0.05,0.05,h2)}
+  inDome(hm,()=>{F(h2,-0.7,-0.2,1.4,0.1);const xs=0.6*syh*(cyh>=0?1:-1),wk=0.14*Math.max(0.25,Math.abs(cyh));F('#FFFFFF',xs-wk/2,-1,wk,0.8);c.fillStyle=GLOSS;c.beginPath();c.ellipse(0.3,-0.56,0.2,0.07,0.5,0,TAU);c.fill()});if(cyh>=0.25)brim(psi,-0.14,0.2,0.3,0.05,0.05,h2);
+  /* hat.lamp: a headlamp on the front of the helmet (azimuth 0) */
+  if(hat.lamp){const p=on(0,0.6);if(p.k>-0.15){const k=Math.max(0,p.k),ex=Math.max(-0.56,Math.min(0.56,p.x)),lw=0.13+0.13*k;shape(rr(ex-lw/2,-0.58,lw,0.16,0.05),hat.lampBody||'#3A3F4A');if(p.k>0.4){c.save();c.globalAlpha*=cl((p.k-0.4)*4);shape(()=>{c.beginPath();c.ellipse(ex,-0.5,0.075*k,0.06,0,0,TAU)},hat.lampCol||'#FFF4C2');shape(circ(ex-0.022*k,-0.52,0.02),'#FFFFFF');c.restore()}}}}
  if(hat.type==='headband'){shape(rr(-0.6,-0.36,1.2,0.15,0.04),hcol);F('rgba(255,255,255,0.3)',-0.6,-0.3,1.2,0.03)}
+ if(hat.type==='tophat'){const ry=0.1+0.1*Math.max(0,cyh),band=hat.col2||dk(hcol,0.7),bx=0.04*syh,rim=()=>{c.beginPath();c.ellipse(bx,-0.29,0.78,ry,0,0,TAU)};shape(rim,dk(hcol,0.9));
+  const cw=()=>{c.beginPath();c.moveTo(-0.46,-0.3);c.lineTo(-0.49,-1.3);c.quadraticCurveTo(0,-1.37,0.49,-1.3);c.lineTo(0.46,-0.3);c.quadraticCurveTo(0,-0.24,-0.47,-0.3);c.closePath()};shape(cw,hcol);
+  inDome(cw,()=>{F(band,-0.6,-0.6,1.2,0.22);F(GLOSS,-0.36,-1.4,0.12,1.1)});shape(()=>{c.beginPath();c.ellipse(0,-1.31,0.49,0.05,0,0,TAU)},dk(hcol,1.2));
+  shape(()=>{c.beginPath();c.ellipse(bx,-0.29,0.78,ry,0,0,Math.PI);c.lineTo(-0.47,-0.3);c.quadraticCurveTo(0,-0.24,0.47,-0.3);c.closePath()},dk(hcol,1.12))}
  c.restore()}
 /* things that wrap around the back of the body (long hair, hood, pack) are split by azimuth:
    the part turned toward the camera is drawn in front of the torso, the rest behind it, so nothing flips at once */
@@ -312,11 +328,11 @@ function drawLongHair3(P,ch,front){const H=ch.hair||{};if(H.type!=='long')return
 function drawHood3(P,ch,front){if(ch.top.type!=='hoodie')return;c.save();headXf3(P,ch);if(front){const v=vis(105,255,0.66,P.yaw);if(!v){c.restore();return}c.beginPath();c.rect(v[0],-1,v[1]-v[0],2);c.clip()}
  const ac=Math.abs(P.cy),x=-0.3*P.sy*(1-0.3*ac),wd=lerp(0.4,0.52,ac),col=ch.top.col;shape(()=>{c.beginPath();c.ellipse(x,0.1,wd,0.24,-0.25*P.sy,0,TAU)},col);
  const al=cl((0.2-P.cy)/0.3);if(al>0.02){c.globalAlpha*=al;shape(()=>{c.beginPath();c.ellipse(x*0.8,0.06,wd*0.65,0.13,-0.25*P.sy,0,TAU)},dk(col,lum(col)>90?0.84:1.4));c.globalAlpha/=al}c.restore()}
-function prep(ch){if(!ch.nc){const d=lum(ch.skin)<150;ch.nc=mix(ch.skin,'#8E2F1E',d?0.62:0.42);ch.mc=d?mix(ch.skin,'#4A140E',0.62):mix(ch.skin,'#B02E22',0.6);ch.n2=mix(ch.skin,'#C2452F',d?0.4:0.3)}}
+function prep(ch){if(!ch.pants)ch.pants={type:'bare',col:ch.skin};if(!ch.nc){const d=lum(ch.skin)<150;ch.nc=mix(ch.skin,'#8E2F1E',d?0.62:0.42);ch.mc=d?mix(ch.skin,'#4A140E',0.62):mix(ch.skin,'#B02E22',0.6);ch.n2=mix(ch.skin,'#C2452F',d?0.4:0.3)}}
 /* layer order comes from depth */
 function drawChar3(ch,P){prep(ch);const beh=a=>(a.s0[2]<-0.02&&a.wr[2]<0.12)||a.Zm<-0.1,back=P.arms.filter(beh),front=P.arms.filter(a=>!beh(a)).sort((a,b)=>a.Zm-b.Zm),legs=P.legs.slice().sort((a,b)=>a.h[2]-b.h[2]);
  drawLongHair3(P,ch,false);for(const a of back)drawArm3(P,a,ch,false);drawPack3(P,ch,false);drawHood3(P,ch,false);
- for(const l of legs)drawLeg3(P,l,ch);drawNeck3(P,ch);drawTorso3(P,ch);drawPack3(P,ch,true);drawLongHair3(P,ch,true);drawHood3(P,ch,true);drawHead3(P,ch);for(const a of front)drawArm3(P,a,ch,true)}
+ for(const l of legs)drawLeg3(P,l,ch);drawSkirt3(P,ch);drawNeck3(P,ch);drawTorso3(P,ch);drawPack3(P,ch,true);drawLongHair3(P,ch,true);drawHood3(P,ch,true);drawHead3(P,ch);for(const a of front)drawArm3(P,a,ch,true)}
 
 /* ---------- cast ---------- */
 const SK=['#F9C6AA','#F2B896','#D59A6E','#99643F','#FBD3BC','#C4855A'];
@@ -328,7 +344,7 @@ const CAST=[
  {name:'학생',h:0.96,hd:1.04,nose:'short',disc:'#BFD7FF',skin:SK[1],hair:{type:'short',col:'#1F1B24',style:'bang'},hat:{type:'capBack',col:'#3D6BE0',col2:'#2F56B8'},eyes:'dot',mood:'grin',seed:0.3,top:{type:'hoodie',col:'#FFD23F',arms:'long',cuff:'#F2B705',hem:'#F2B705'},pants:{type:'long',col:'#5B8FD9',cuff:'#BBD6F7'},shoe:{col:'#FFFFFF',sole:'#E5484D',toe:'#E5484D'},pack:{col:'#E5484D',charm:'#FFD23F'}},
  {name:'할머니',build:'round',h:0.92,hd:1.02,nose:'short',brow:0.75,disc:'#E3D0F5',skin:SK[4],hair:{type:'curly',col:'#C2C2CC',style:'perm'},eyes:'glasses',frame:'#B0496F',wrinkle:1,seed:1.6,top:{type:'cardigan',col:'#9B6FD0',col2:'#F6E7C8',arms:'long',collar:'#F6E7C8'},pants:{type:'long',col:'#B9A892',fit:'wide'},shoe:{type:'dress',col:'#8A5A3B',sole:'#5C3B26'}},
  {name:'화가',build:'slim',h:0.98,lash:1,nose:'short',brow:0.8,jaw:0.2,lip:'#D9596A',disc:'#FFD3A8',skin:SK[0],hair:{type:'long',col:'#B5532E',style:'arch'},hat:{type:'beret',col:'#D64545'},eyes:'dot',freckle:1,seed:0.8,top:{type:'stripe',col:'#FFFFFF',col2:'#27365E',neck:'#27365E',arms:'long',sleeve:'#27365E',cuff:'#FFFFFF'},pants:{type:'long',col:'#7A8F4A',cuff:'#96AA66'},shoe:{col:'#8A5A3B',sole:'#F3EFE6'}},
- {name:'러너',build:'slim',lash:1,brow:0.9,jaw:0.21,disc:'#FFC2DD',skin:SK[3],hair:{type:'pony',col:'#1F1B24',style:'arch'},hat:{type:'headband',col:'#FF5FA2'},eyes:'dot',mood:'grin',seed:0.2,watch:'#1F1B24',top:{type:'tee',col:'#18B7A0',arms:'none'},pants:{type:'shorts',col:'#2F3140'},sock:'#FFFFFF',shoe:{col:'#C6F432',sole:'#FFFFFF',toe:'#FF5FA2',stripe:'#FF5FA2'}},
+ {name:'러너',build:'slim',lash:1,brow:0.9,jaw:0.21,disc:'#FFC2DD',skin:SK[3],hair:{type:'pony',col:'#1F1B24',style:'arch'},hat:{type:'headband',col:'#FF5FA2'},eyes:'dot',mood:'grin',seed:0.2,watch:'#1F1B24',top:{type:'tee',col:'#18B7A0',arms:'none',bib:1},pants:{type:'shorts',col:'#2F3140'},sock:'#FFFFFF',shoe:{col:'#C6F432',sole:'#FFFFFF',toe:'#FF5FA2',stripe:'#FF5FA2'}},
  {name:'직장인',build:'broad',h:1.03,brow:1.15,jaw:0.27,disc:'#C9D3E0',skin:SK[1],hair:{type:'short',col:'#2B2320',style:'sweep'},eyes:'glasses',seed:1.3,top:{type:'suit',col:'#2F3E63',col2:'#FFFFFF',arms:'long',tie:'#D64545',cuff:'#FFFFFF',collar:'#FFFFFF'},pants:{type:'long',col:'#27345A'},shoe:{type:'dress',col:'#5A3620',sole:'#3A2416'}},
  {name:'농부',build:'broad',h:1.02,nose:'round',brow:1.35,jaw:0.29,disc:'#F4E3A1',skin:SK[5],hair:{type:'short',col:'#3A2A22'},hat:{type:'straw',col:'#F2D27A',col2:'#D64545'},eyes:'dot',wrinkle:1,seed:0.6,beard:'#3A2A22',towel:'#FFFFFF',top:{type:'overall',col:'#E5484D',col2:'#4F86D9',arms:'short'},pants:{type:'long',col:'#4F86D9',fit:'wide'},shoe:{type:'boot',col:'#4A9B62',sole:'#2F6B41'}},
  {name:'디제이',h:1.02,jaw:0.26,disc:'#D4C4FF',skin:SK[2],hair:{type:'curly',col:'#1F1B24',style:'perm'},hat:{type:'headphones',col:'#F3EFE6',col2:'#7A5AF5'},eyes:'shades',top:{type:'hoodie',col:'#2F3140',arms:'long',cuff:'#7A5AF5',hem:'#7A5AF5',sleeveStripe:'#7A5AF5'},pants:{type:'long',col:'#8C93A1',cuff:'#B5BAC6',fit:'slim'},shoe:{col:'#FFFFFF',sole:'#7A5AF5',stripe:'#7A5AF5'}},

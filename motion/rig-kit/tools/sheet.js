@@ -6,7 +6,7 @@ const { open } = require('./pw');
   const { browser, page } = await open(file);
   await page.evaluate(() => { c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = BG; c.fillRect(0, 0, W, H);
     const n = CAST.length, cols = Math.ceil(n / 2), cw = W / cols;
-    CAST.forEach((ch, i) => { const col = i % cols, row = (i / cols) | 0, x = cw * (col + 0.5), gy = row ? 1010 : 480, U = Math.min(112, cw / 2.6);
+    CAST.forEach((ch, i) => { const col = i % cols, row = (i / cols) | 0, x = cw * (col + 0.5), gy = row ? 1010 : 480, U = Math.min(105, cw / 2.6);
       actor(ch, { yaw: (row ? -25 : 25) * Math.PI / 180, walk: 0, seed: 0 }, 0.5, x, gy, U); c.font = `900 26px ${FONT}`; c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ch.name, x, gy + 42); }); });
   await page.screenshot({ path: castOut });
   if (propsOut) { await page.evaluate(() => { c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = BG; c.fillRect(0, 0, W, H);

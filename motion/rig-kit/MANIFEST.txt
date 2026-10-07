@@ -3,11 +3,13 @@ README.md
 cast.png
 engine/base.js
 engine/ctl.js
+engine/look.js
 engine/props.js
 engine/rig360.js
 engine/seq.js
 engine/stage.js
 examples/coffee_story.js
+examples/planet_story.js
 examples/template_story.js
 props.png
 tools/board.js

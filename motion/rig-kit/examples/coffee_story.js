@@ -15,7 +15,7 @@ const A1=(()=>{const N=nar(['매일 아침 손에 쥐는 커피 한 잔.','이 �
   shape(rr(x+w-1.15,-3.05,0.85,3.05,[0.06,0.06,0,0]),door);shape(rr(x+w-1.03,-2.9,0.61,1.35,0.04),'#BFE3F5');shape(circ(x+w-0.44,-1.25,0.045),'#F2D27A');
   const a=poly(x+0.12,-4.2,x+w-0.12,-4.2,x+w+0.06,-3.66,x-0.06,-3.66);shape(a,awn);c.save();a();c.clip();c.fillStyle='rgba(255,255,255,0.82)';for(let xx=x+0.3;xx<x+w;xx+=0.64)c.fillRect(xx,-4.3,0.32,0.7);c.restore();F('rgba(70,30,10,0.14)',x-0.06,-3.66,w+0.12,0.07);
   shape(rr(x+w/2-0.95,-4.93,1.9,0.5,0.08),'#FFFFFF');label(sign,x+w/2,-4.67,0.26,INK)};
- function back(t){F('#CFE9F7',0,-6.3,VW,6.3);shape(circ(9.15,-5.65,0.95),'rgba(255,236,170,0.45)');shape(circ(9.15,-5.65,0.55),'#FFE9A8');cloud(5.0+0.1*t,-5.75,0.75);cloud(11.3+0.07*t,-5.9,0.55);
+ function back(t){F(lin(0,-6.3,0,-2,'#A9D6F2','#D8EEF7','#F6EEDC'),0,-6.3,VW,6.3);glow(9.15,-5.65,3.0,'#FFE7B0',0.9);shape(circ(9.15,-5.65,0.55),'#FFF1C4');cloud(5.0+0.1*t,-5.75,0.75);cloud(11.3+0.07*t,-5.9,0.55);
   for(const[x,w,h,cc]of[[0,1.5,5.7,'#C3DCE8'],[1.7,1.1,6.3,'#B6D2E0'],[3.1,1.7,5.6,'#C3DCE8'],[5.6,1.2,6.3,'#B6D2E0'],[7.0,1.5,5.75,'#C3DCE8'],[9.9,1.0,6.0,'#B6D2E0'],[10.9,1.2,5.6,'#C3DCE8'],[12.0,0.9,6.2,'#B6D2E0']]){F(cc,x,-h,w,h);c.fillStyle='rgba(255,255,255,0.45)';for(let yy=-h+0.25;yy<-5.15;yy+=0.36)for(let xx=x+0.18;xx<x+w-0.25;xx+=0.36)c.fillRect(xx,yy,0.16,0.2)}
   shop(0.25,3.95,'#F4D6B8','#E5484D','BAKERY','#B5553A');shop(4.4,4.2,'#F7E8D2','#2E7D5B','COFFEE','#2E7D5B');shop(8.8,4.0,'#DCE6EE','#3D6BE0','BOOKS','#3A5BA8');
   /* lamp + planters */
@@ -24,10 +24,10 @@ const A1=(()=>{const N=nar(['매일 아침 손에 쥐는 커피 한 잔.','이 �
   F('#DAD3C7',0,0,VW,1.3);F('#C9C1B4',0,0,VW,0.06);c.fillStyle='rgba(70,30,10,0.07)';for(let x=0.4;x<VW;x+=1.6)c.fillRect(x,0.06,0.03,1.3)}
  function fx(t){const k=popK(t,t2+0.3,0.3);if(k>0){for(let i=0;i<2;i++){const kk=popK(t,t2+0.12+i*0.09,0.2);shape(circ(8.2+i*0.2,-3.95-i*0.19,(0.06+i*0.035)*kk),'#FFFFFF')}
    bubble(9.0,-4.7,1.25,1.15,k,0);c.rotate(0.12*Math.sin(t*3));label('?',0,0.03,0.82,'#C8553A');c.restore()}}
- return{N,dur:N.dur,tag:'01',title:'아침의 한 잔',cam:[7.7,-2.7,1,1.045],draw(t){back(t);drawActor3(kid,t);drawActor3(man,t);fx(t)}}})();
+ return{N,dur:N.dur,tag:'01',title:'아침의 한 잔',cam:[7.7,-2.7,1,1.045],look:{light:{dir:[0.55,-0.85]},palette:{light:'#FFF0CF',sky:'#D8EEF7'},air:'motes'},draw(t){back(t);drawActor3(kid,t);drawActor3(man,t);fx(t)}}})();
 
 /* ---------- farm backdrop (used by 02 and 03) ---------- */
-function farmBack(t,soil,soil2){F('#BFE6F2',0,-6.3,VW,6.3);F('#E2F2EC',0,-3.6,VW,1.6);cloud(5.6+0.08*t,-5.45,0.8);cloud(9.0+0.05*t,-5.0,0.6);
+function farmBack(t,soil,soil2){F(lin(0,-6.3,0,-2,'#9ED3EE','#CBEAF2','#EAF5EC'),0,-6.3,VW,6.3);glow(11.6,-5.6,3.4,'#FFF0C8',0.55);cloud(5.6+0.08*t,-5.45,0.8);cloud(9.0+0.05*t,-5.0,0.6);
  shape(()=>{c.beginPath();c.moveTo(0,-2.4);c.bezierCurveTo(1.5,-4.0,3.2,-4.1,4.6,-3.0);c.bezierCurveTo(6.0,-4.0,7.8,-4.4,9.6,-3.1);c.bezierCurveTo(10.8,-3.8,12,-3.7,12.8,-3.2);c.lineTo(12.8,0);c.lineTo(0,0);c.closePath()},'#A5D6B4');
  shape(()=>{c.beginPath();c.moveTo(0,-2.0);c.bezierCurveTo(3,-3.0,6,-2.3,8,-2.6);c.bezierCurveTo(10,-2.9,12,-2.4,12.8,-2.5);c.lineTo(12.8,0);c.lineTo(0,0);c.closePath()},'#84C48E');
  for(let r=0;r<3;r++){const y=-1.95+r*0.42,sz=0.15+r*0.045;F(['#7FBF89','#78B982','#70B27B'][r],0,y+sz*0.4,VW,0.7);for(let i=0;i<70;i++){const x=i*(0.27+r*0.07)+(r%2)*0.13+hash(i+r*17)*0.06;if(x>VW+0.3)break;shape(circ(x,y,sz),hash(i*3+r)>0.5?'#5FA873':'#68B07B');if(hash(i*7+r)>0.62)shape(circ(x+sz*0.3,y+sz*0.1,sz*0.2),'#D9584C')}}
@@ -60,14 +60,14 @@ const A2=(()=>{const N=nar(['시작은 적도 근처의 커피 농장입니다.'
   const b=0.06*Math.abs(Math.sin(t*4));shape(poly(-0.2,-0.02-b,-0.11,-0.3-b,-0.29,-0.3-b),'#D63A2F');shape(circ(-0.2,-0.34-b,0.12),'#D63A2F');shape(circ(-0.2,-0.34-b,0.045),'#FFFFFF');
   shape(rr(1.0,-0.27,1.95,0.54,0.27),'#FFFFFF');shape(circ(1.27,0,0.11),'#F28A2E');label('커피 벨트',2.08,0.01,0.25,INK);c.restore()}
  function fx(t){hits.forEach((h,i)=>{const u=(t-h)/0.7;if(u>0&&u<1){c.globalAlpha=1-u*u;const y=-1.7-u*0.5;shape(circ(8.78,y,0.27),'#FFFFFF');label('+1',8.78,y+0.01,0.27,'#D63A2F');c.globalAlpha=1}})}
- return{N,dur:N.dur,tag:'02',title:'농장 · 수확',cam:[8.0,-2.4,1,1.05],draw(t){farmBack(t);coffeeTree(TX,picked(t),t);globe(t);drawActor3(farmer,t);fx(t)}}})();
+ return{N,dur:N.dur,tag:'02',title:'농장 · 수확',cam:[8.0,-2.4,1,1.05],look:{light:{dir:[0.6,-0.8]},palette:{light:'#FFF2D0',sky:'#CBEAF2'},air:{preset:'motes',n:22}},draw(t){farmBack(t);coffeeTree(TX,picked(t),t);globe(t);drawActor3(farmer,t);fx(t)}}})();
 
 /* ============ 03 — 건조 ============ */
 const A3=(()=>{const N=nar(['열매에서 씨앗을 꺼내 햇볕에 말리면','연둣빛 생두가 됩니다.']),xs=3.25,te=N[1].t0+0.45;
  const arm=[{t:0,d:0,armR:{hand:[3.85,-2.04,0.8]},propR:'rake',propRot:0.33,armL:{a:-0.25,b:0.5}}];for(let i=0,t=0.25;t<te-0.55;i++,t+=0.6)arm.push({t,d:0.55,armR:{hand:[i%2?3.8:4.22,-2.04,0.8]}});arm.push({t:te,d:0.4,armR:{a:0.45,b:0.95},propRot:1.2});   /* stands the rake up like a staff when he turns */
  const farmer={ch:who('농부'),seed:0.2,kicks:[te+0.35],tracks:[[{t:0,d:0,x:xs,z:0.35,yaw:80,lean:0.13,mood:'smile',look:[0.6,0.5]},{t:te,d:0.45,yaw:42,lean:0.03,look:[0,0]},{t:te+0.3,d:0.3,mood:'grin',brow:0.7,nod:-0.35,headTurn:14}],arm,
   [{t:0,d:0,x:xs}].concat(arm.slice(1,-1).map((k,i)=>({t:k.t,d:0.55,x:xs+(i%2?-0.06:0.1)})))]};
- function sun(t,k){c.save();c.translate(11.75,-5.2);const p=1+0.05*Math.sin(t*3);c.rotate(t*0.25);c.fillStyle='rgba(255,214,102,'+(0.35+0.4*k)+')';for(let i=0;i<12;i++){c.rotate(TAU/12);c.beginPath();c.moveTo(-0.09,-0.82*p);c.lineTo(0.09,-0.82*p);c.lineTo(0,-(1.12+0.25*k)*p);c.closePath();c.fill()}c.restore();shape(circ(11.75,-5.2,0.95+0.1*k),'rgba(255,236,170,0.4)');shape(circ(11.75,-5.2,0.64),'#FFD666')}
+ function sun(t,k){glow(11.75,-5.2,3.2+0.8*k,'#FFE4A0',0.6+0.4*k);c.save();c.translate(11.75,-5.2);const p=1+0.05*Math.sin(t*3);c.rotate(t*0.25);c.fillStyle='rgba(255,214,102,'+(0.35+0.4*k)+')';for(let i=0;i<12;i++){c.rotate(TAU/12);c.beginPath();c.moveTo(-0.09,-0.82*p);c.lineTo(0.09,-0.82*p);c.lineTo(0,-(1.12+0.25*k)*p);c.closePath();c.fill()}c.restore();shape(circ(11.75,-5.2,0.95+0.1*k),'rgba(255,236,170,0.4)');shape(circ(11.75,-5.2,0.64),'#FFD666')}
  function bed(t,k){for(const x of[4.6,7.25,9.9,12.4]){F('#8A6238',x,-1.3,0.12,1.3);F('#74502C',x+0.12,-1.3,0.045,1.3)}F('#74502C',4.5,-0.62,8.4,0.07);
   shape(poly(4.55,-1.7,12.8,-1.7,12.8,-1.28,4.28,-1.28),'#A47A48');shape(poly(4.68,-1.65,12.8,-1.65,12.8,-1.34,4.46,-1.34),'#F3E7C9');F('#8A6238',4.28,-1.28,8.6,0.13);
   for(let i=0;i<190;i++){const u=hash(i*3.1),v=hash(i*7.7+1),x=lerp(4.72,12.9,u)-(1-v)*0.14,y=lerp(-1.62,-1.37,v),kk=cl(k*1.7-hash(i*1.3)*0.7);beanShape(x,y,0.15,mix('#E7D29A','#93B863',kk),hash(i*2.3)*3)}
@@ -82,7 +82,7 @@ const A3=(()=>{const N=nar(['열매에서 씨앗을 꺼내 햇볕에 말리면',
   arrow(0.8,ks);if(ks>0){c.save();c.translate(0.78,-0.5);c.scale(ks,ks);c.rotate(t*0.8);c.fillStyle='#FFD666';for(let i=0;i<8;i++){c.rotate(TAU/8);c.fillRect(-0.02,-0.22,0.04,0.09)}shape(circ(0,0,0.1),'#FFD666');c.restore()}
   c.save();c.translate(1.55,-0.12);c.scale(kc,kc);shape(circ(0,0,0.46),'#EAF3D8');beanShape(0,0,0.62,'#93B863',-0.5);c.restore();if(kc>0.5){const s=0.5+0.5*Math.sin(t*6);sparkle(2.0,-0.55,0.09+0.04*s,'#FFD666');sparkle(1.12,0.22,0.06+0.03*(1-s),'#FFD666')}
   c.globalAlpha=cl(ka);label('열매',-1.55,0.6,0.22,INK,null,700);c.globalAlpha=cl(kb);label('씨앗',-0.02,0.6,0.22,INK,null,700);c.globalAlpha=cl(kc);label('생두',1.55,0.6,0.25,'#5E8A2E');c.globalAlpha=1;c.restore()}
- return{N,dur:N.dur,tag:'03',title:'건조',cam:[7.4,-2.2,1,1.04],draw(t){const k=sm((t-N[0].t0-1.4)/(N[1].t1-N[0].t0-1.6));farmBack(t,'#E6D6B8','#D3C09C');sun(t,k);bed(t,k);card(t);drawActor3(farmer,t)}}})();
+ return{N,dur:N.dur,tag:'03',title:'건조',cam:[7.4,-2.2,1,1.04],look:{light:{dir:[0.75,-0.65]},palette:{light:'#FFE9B8',sky:'#CBEAF2'},air:{preset:'dust',col:'#FFE6B0',n:30}},draw(t){const k=sm((t-N[0].t0-1.4)/(N[1].t1-N[0].t0-1.6));farmBack(t,'#E6D6B8','#D3C09C');sun(t,k);bed(t,k);card(t);drawActor3(farmer,t)}}})();
 
 /* ============ 04 — 항해 ============ */
 const A4=(()=>{const N=nar(['자루에 담긴 생두는 배를 타고 바다를 건너고,'],0.4,0.35);
@@ -101,10 +101,10 @@ const A4=(()=>{const N=nar(['자루에 담긴 생두는 배를 타고 바다를 
   c.strokeStyle='#C9B9A6';c.lineWidth=0.04;c.setLineDash([0.1,0.09]);c.beginPath();c.moveTo(-1.3,0.05);c.quadraticCurveTo(0,-0.75,1.3,0.05);c.stroke();c.setLineDash([]);
   shape(circ(-1.3,0.05,0.12),'#5E9B4A');shape(circ(1.3,0.05,0.12),'#8B5A3C');label('농장',-1.3,0.42,0.2,INK,null,700);label('로스터리',1.3,0.42,0.2,INK,null,700);
   const p=sm(lerp(0.08,0.92,t/N.dur)),x=lerp(lerp(-1.3,0,p),lerp(0,1.3,p),p),y=lerp(lerp(0.05,-0.75,p),lerp(-0.75,0.05,p),p);shape(poly(x-0.2,y-0.05,x+0.2,y-0.05,x+0.13,y+0.08,x-0.15,y+0.08),'#27365E');F('#E5484D',x-0.1,y-0.17,0.12,0.12);c.restore()}
- function back(t){F('#CDEBF7',0,-6.3,VW,6.3);F('#E6F5F4',0,-3.4,VW,1.6);shape(circ(6.7,-5.0,1.0),'rgba(255,236,170,0.4)');shape(circ(6.7,-5.0,0.6),'#FFE9A8');cloud(3.6+0.12*t,-5.3,0.8);cloud(8.6+0.09*t,-3.75,0.65);cloud(0.5+0.1*t,-3.3,0.55);
+ function back(t){F('#CDEBF7',0,-6.3,VW,6.3);F('#E6F5F4',0,-3.4,VW,1.6);glow(6.7,-5.0,3.0,'#FFE9B8',0.8);shape(circ(6.7,-5.0,0.6),'#FFF1C4');cloud(3.6+0.12*t,-5.3,0.8);cloud(8.6+0.09*t,-3.75,0.65);cloud(0.5+0.1*t,-3.3,0.55);
   /* the coast it left behind */shape(()=>{c.beginPath();c.moveTo(0,-1.9);c.bezierCurveTo(0.4,-2.6,1.5,-2.7,2.6,-1.9);c.closePath()},'#8FCB98');for(const[x,h]of[[0.7,0.5],[1.35,0.62]]){line(()=>{c.beginPath();c.moveTo(x,-2.35);c.quadraticCurveTo(x+0.05,-2.35-h*0.6,x+0.1,-2.35-h)},0.04,'#7A5236');for(const a of[-2.4,-1.6,-0.8,0])shape(ell(x+0.1+0.2*Math.cos(a),-2.35-h+0.14*Math.sin(a)+0.04,0.2,0.06,a+Math.PI/2*0.2),'#3F8F5C')}
   F('#58B9DD',0,-1.9,VW,3.2);F('#7CCBE8',0,-1.9,VW,0.2);for(let i=0;i<3;i++){const x=((2+i*4.1+t*0.6)%14)-0.6,y=-4.6+i*0.5+0.1*Math.sin(t*2+i);line(()=>{c.beginPath();c.moveTo(x-0.16,y-0.07-0.05*Math.sin(t*9+i));c.quadraticCurveTo(x-0.07,y-0.1,x,y);c.quadraticCurveTo(x+0.07,y-0.1,x+0.16,y-0.07-0.05*Math.sin(t*9+i))},0.035,'#5B6B78')}}
- return{N,dur:N.dur,tag:'04',title:'항해',draw(t){back(t);wave(-1.6,0.05,0.5,'#4FB0D6',t);ship(t);wave(-1.2,0.06,0,'#3FA2CC',t);wave(-0.62,0.07,1.7,'#3192BD',t*0.8);wave(-0.02,0.07,3.1,'#2882AB',t*0.65);route(t)}}})();
+ return{N,dur:N.dur,tag:'04',title:'항해',look:{light:{dir:[0.1,-1]}},draw(t){back(t);wave(-1.6,0.05,0.5,'#4FB0D6',t);ship(t);wave(-1.2,0.06,0,'#3FA2CC',t);wave(-0.62,0.07,1.7,'#3192BD',t*0.8);wave(-0.02,0.07,3.1,'#2882AB',t*0.65);route(t)}}})();
 
 /* ============ 05 — 로스팅 ============ */
 const A5=(()=>{const N=nar(['로스터리에서 뜨거운 불을 만나 갈색 원두로 바뀝니다.'],0.25,0.8),T0=N[0].t0,xs=6.95,tOpen=T0+2.95,TR=[7.62,-2.8,0.8],LV=[7.66,-2.22,0.8];
