@@ -1,0 +1,6 @@
+{
+  "name": "semoji-rig-kit",
+  "private": true,
+  "description": "세모지 2D 리깅 캐릭터 엔진 (HTML Canvas → MP4). 도구 실행용 playwright만 둔다.",
+  "devDependencies": { "playwright": "1.61.1" }
+}

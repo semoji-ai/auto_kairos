@@ -1,0 +1,78 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Semoji Rig Kit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;700;900&display=swap">
+<style>
+/* layout: one reading column; the two sheets run full width inside it; file table is the only dense block */
+:root{--bg:#F3EFE6;--panel:#FBF8F1;--ink:#3B2416;--muted:#7A6657;--line:#DDD3C2;--accent:#2E7D5B;--code:#EDE6D8;
+ --display:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;--body:'Gowun Dodum','Noto Sans KR','Apple SD Gothic Neo',sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F1813;--panel:#2A211A;--ink:#F1E8DA;--muted:#B3A08E;--line:#43362B;--accent:#6CC59C;--code:#33281F;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1F1813;--panel:#2A211A;--ink:#F1E8DA;--muted:#B3A08E;--line:#43362B;--accent:#6CC59C;--code:#33281F;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.7;padding-inline:20px;padding-block:40px 64px}
+main{max-width:760px;margin-inline:auto;display:flex;flex-direction:column;gap:36px}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(30px,6vw,44px);line-height:1.15;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:700;font-size:20px;margin:0 0 10px}
+p{margin:0;max-width:65ch}
+.tag{font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;color:var(--accent);margin-bottom:10px}
+.lead{font-size:18px;color:var(--muted);margin-top:14px}
+section{display:flex;flex-direction:column;gap:12px}
+ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;max-width:65ch}
+code{font-family:var(--mono);font-size:.88em;background:var(--code);padding:.1em .38em;border-radius:4px}
+pre{margin:0;background:var(--code);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65}
+figure{margin:0;display:flex;flex-direction:column;gap:8px}
+figure img{width:100%;border-radius:10px;border:1px solid var(--line);display:block}
+figcaption{font-size:14px;color:var(--muted)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-family:var(--display);font-weight:700;font-size:13px;color:var(--muted)}
+td:first-child{font-family:var(--mono);font-size:13px;white-space:nowrap}
+.note{border-left:3px solid var(--accent);padding-left:14px;color:var(--muted);font-size:15px}
+</style>
+<main>
+ <header>
+  <div class="tag">semoji-rig-kit · 2026-10-05</div>
+  <h1>Semoji Rig Kit</h1>
+  <p class="lead">나레이션 문장에 맞춰 2D 리깅 캐릭터가 연기하는 장면을 코드로 그리고 MP4로 뽑는 엔진입니다. <code>semoji-rig-animation</code> 스킬이 이 키트를 씁니다.</p>
+ </header>
+
+ <section>
+  <h2>이 페이지가 하는 일</h2>
+  <p>키트 파일을 보관하는 자리입니다. 엔진, 도구, 예제 파일이 이 페이지와 함께 <code>kit/</code> 아래에 올라가 있어서, Claude가 새 대화에서 첨부 없이 바로 내려받아 쓸 수 있습니다.</p>
+  <p class="note">Claude에게: 이 아티팩트를 <code>read</code>할 때 <code>path: "kit/MANIFEST.txt"</code>로 파일 목록을 받고, 목록의 경로에 <code>kit/</code>를 붙여 <code>paths</code>로 한 번에 내려받으세요. 저장된 <code>kit</code> 폴더를 작업 폴더로 복사한 뒤 <code>README.md</code>부터 읽습니다.</p>
+ </section>
+
+ <section>
+  <h2>캐릭터 13명</h2>
+  <figure><img src="kit/cast.png" alt="키트에 들어 있는 캐릭터 13명의 전신 모습과 이름"><figcaption>바리스타, 라이더, 등산객, 요리사, 학생, 할머니, 화가, 러너, 직장인, 농부, 디제이, 비 오는 날, 로스터. 모두 360° 회전이 됩니다.</figcaption></figure>
+ </section>
+
+ <section>
+  <h2>소품 12종</h2>
+  <figure><img src="kit/props.png" alt="컵, 서류가방, 택배 상자, 가방, 바구니, 열매, 갈퀴, 스쿱, 샘플 스푼, 주전자, 생두 자루, 원두 봉투"><figcaption>빨간 점이 손이 쥐는 지점입니다.</figcaption></figure>
+ </section>
+
+ <section>
+  <h2>들어 있는 것</h2>
+  <div class="tbl"><table>
+   <tr><th>경로</th><th>내용</th></tr>
+   <tr><td>README.md</td><td>좌표계, 손이 닿는 범위, 포즈 키 필드, 캐릭터·소품 만드는 법, 명령</td></tr>
+   <tr><td>engine/</td><td>캔버스 도구, 360° 리그, 무대·나레이션 타이밍, 포즈 키, 소품, 장면 이어 붙이기</td></tr>
+   <tr><td>tools/</td><td>빌드, 프레임 뽑기, 움직임 8컷 시트, 손 도달 검사, 보드, 렌더, 급변 프레임 검사, SRT, 일람 시트, 회전 튐 검사</td></tr>
+   <tr><td>examples/</td><td>최소 템플릿 1장면, 커피 이야기 7장면 완성본</td></tr>
+   <tr><td>cast.png, props.png</td><td>위의 두 일람 시트</td></tr>
+  </table></div>
+ </section>
+
+ <section>
+  <h2>가장 짧은 사용 순서</h2>
+  <pre>python3 tools/build.py my_story.js my_story.html
+node tools/reach.js my_story.html            # "OK"가 나올 때까지 고친다
+node tools/shot.js my_story.html '[[1.6,"a.png"]]'
+node tools/render.js my_story.html out.mp4 60
+node tools/jumps.js my_story.html out.mp4</pre>
+  <p>필요한 것은 node, playwright와 chromium, ffmpeg, python3, 그리고 한글 폰트(Noto Sans CJK KR)입니다.</p>
+ </section>
+</main>
+
+</body></html>

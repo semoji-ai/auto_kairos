@@ -17,6 +17,7 @@ AE 패널(`adobe/`)은 여기서 만든 도감을 `adobe/scripts/sync_dogam.py` 
 | `assets/` | 원화·키트 생성 스크립트와 프롬프트 기록(이미지 원본은 NAS) |
 | `ref*/`, `ref_story/` | 레퍼런스 분석 노트·측정 스크립트 — 출처와 원본 위치는 [REFERENCES.md](REFERENCES.md) |
 | `*.py`, `script.json` | 짜장면편 파일럿용 원고·TTS·레이어 분리·타임라인 스크립트 |
+| `rig-kit/` | 세모지 2D 리깅 캐릭터 엔진(순수 JS Canvas → MP4). 나레이션 문장 → 시간 슬롯 → 캐릭터 연기 장면. 캐릭터 13명·소품 12종·검사 도구 — [rig-kit/README.md](rig-kit/README.md). `semoji-rig-animation` 스킬이 쓰는 키트의 원본 |
 
 ## 저장소 밖(NAS)에 있는 것
 

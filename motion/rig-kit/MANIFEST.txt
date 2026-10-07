@@ -1,0 +1,23 @@
+semoji-rig-kit — file list (2026-10-05). Fetch all of these with one Artifact read (paths), prefixing each with kit/ , then keep the folder layout.
+README.md
+cast.png
+engine/base.js
+engine/ctl.js
+engine/props.js
+engine/rig360.js
+engine/seq.js
+engine/stage.js
+examples/coffee_story.js
+examples/template_story.js
+props.png
+tools/board.js
+tools/build.py
+tools/jumps.js
+tools/probe.js
+tools/pw.js
+tools/reach.js
+tools/render.js
+tools/sheet.js
+tools/shot.js
+tools/srt.js
+tools/strip.js
