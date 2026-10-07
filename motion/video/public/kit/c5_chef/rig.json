@@ -1,0 +1,28 @@
+{
+ "dir": "kit/c5_chef",
+ "w": 1024,
+ "h": 1536,
+ "feet": [
+  504,
+  1444
+ ],
+ "top": 83,
+ "shoulderR": [
+  334,
+  495
+ ],
+ "shoulderL": [
+  673,
+  495
+ ],
+ "torsoBottom": 931,
+ "extras": [
+  "arm_guard_fist",
+  "arm_hold",
+  "arm_raise_fist",
+  "face_grit",
+  "face_smile",
+  "face_squint",
+  "face_worried"
+ ]
+}

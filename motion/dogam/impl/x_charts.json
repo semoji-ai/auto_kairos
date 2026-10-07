@@ -1,0 +1,132 @@
+{
+ "mascot-step-bars": {
+  "component": "MascotStepBars",
+  "preview": "x_charts-01",
+  "note": "Teleport(lib/characters) 재사용. 원본은 순간이동 직전 노랑 섬광 원이 겹침 — Teleport 퍼프로 대체 · 세모지 에셋: LogoChar = 원판 마스코트(xc_logo_disc/eyes, mascot_disc 파생) 안쪽 bg 곱하기 틴트 + 로고 글자 코드"
+ },
+ "tictactoe-win-line": {
+  "component": "TicTacToeWin",
+  "preview": "x_charts-02",
+  "note": ""
+ },
+ "road-lane-analogy": {
+  "component": "RoadLaneAnalogy",
+  "preview": "x_charts-03",
+  "note": "원본 대조: 탑뷰 루프가 아니라 측면 자동차가 달리는 가로 차선을 하단 기준 풀백(2→4차선)으로 구현 · 세모지 에셋: FlatCar = car_body + 차체 틴트 레이어(xc_car_paint) + car_wheel×2(뒷바퀴 +857px), 6색 유지"
+ },
+ "silhouette-rival-price-compare": {
+  "component": "SilhouettePriceCompare",
+  "preview": "x_charts-04",
+  "note": ""
+ },
+ "dday-calendar-equation": {
+  "component": "DDayEquation",
+  "preview": "x_charts-05",
+  "note": "세모지 에셋: 달력 = desk_calendar(글자 코드, header 색 변수는 그림 고정), 아이콘·배경 패턴 = pc_icon(xc_pc) 곱하기/단색 틴트"
+ },
+ "device-tessellation-fill": {
+  "component": "DeviceTessellation",
+  "preview": "x_charts-06",
+  "note": "세모지 에셋: 태블릿 = tablet_device(xc_tablet), 가로 타일은 90° 눕힘. bezel·screen 변수는 그림 고정"
+ },
+ "record-milestone-badge": {
+  "component": "RecordMilestoneBadge",
+  "preview": "x_charts-07",
+  "note": "원본 대조: 색종이는 중심 방사가 아니라 양옆 하단에서 솟는 분수형 점 파티클 · 세모지 에셋: 왕관 = crown PNG"
+ },
+ "flag-map-stat-link": {
+  "component": "FlagMapStatLink",
+  "preview": "x_charts-08",
+  "note": "지도=us-atlas nation clipPath + SVG 성조기 패턴 · 세모지 에셋: 원판 아이콘 = record_disc PNG"
+ },
+ "pictogram-crowd-marquee": {
+  "component": "PictogramCrowdMarquee",
+  "preview": "x_charts-09",
+  "note": "지도=Natural Earth 110m land · 세모지 에셋: 픽토그램 = 세모지 캐스트(SemojiRig) 걷기 행진 — 행 방향 따라 반전, 캐스트는 seed 변주(person 색 변수는 호환용), 병 = bottle_silhouette_q 검정 틴트 + 회색 ? 코드"
+ },
+ "product-anchor-value-pill": {
+  "component": "ProductAnchorValuePill",
+  "preview": "x_charts-10",
+  "note": "세모지 에셋: Jug = syrup_jug(라벨 SYRUP 코드)"
+ },
+ "map-spread-pullback": {
+  "component": "MapSpreadPullback",
+  "preview": "x_charts-11",
+  "note": "지도=us-atlas 주 경계(public/img/x/geo.json) · 세모지 에셋: Jug = syrup_jug 소형"
+ },
+ "bottom-up-rank-stack": {
+  "component": "BottomUpRankStack",
+  "preview": "x_charts-12",
+  "note": "원본 대조: 기존 행은 밀려 올라가지 않고 고정, 윗순위가 위 칸에 쌓임(spec의 \"위로 밀어 올림\"은 오독 — 그러면 순위가 뒤집힘). shift 변수 제거 · 세모지 에셋: 트로피 = trophy_icon"
+ },
+ "esports-vs-scoreboard": {
+  "component": "EsportsVsScoreboard",
+  "preview": "x_charts-13",
+  "note": "워프 스트릭은 방사형이 아닌 평행 대각선(광선 금지 규칙) · 세모지 에셋: 달 = moon, UFO = ufo, VS 방패 = vs_shield_emblem(VS 코드, shield 색 변수는 그림 고정)"
+ },
+ "segmented-thermometer-drain": {
+  "component": "SegmentedThermometerDrain",
+  "preview": "x_charts-14",
+  "note": "세모지 에셋: spray_can + hand_press_nozzle(검지 끝 = 노즐)"
+ },
+ "hand-held-document-lineup": {
+  "component": "HandHeldDocLineup",
+  "preview": "x_charts-15",
+  "note": "첫 카드 좌측 플립 등장(원본) 대신 모든 카드 아래→위 들어올림으로 통일 · 세모지 에셋: 손 = hand_hold_bottom(카드 뒤에서 받침, 소매 오른쪽 아래라 빠질 때 오른쪽 아래로). 카드는 CSS 유지(글자 가독). sleeve·skin 변수는 그림 고정"
+ },
+ "proportion-ruler-road": {
+  "component": "ProportionRulerRoad",
+  "preview": "x_charts-16",
+  "note": ""
+ },
+ "tunnel-section-length-compare": {
+  "component": "TunnelLengthCompare",
+  "preview": "x_charts-17",
+  "note": "세모지 에셋: 터널 = tunnel_portal(키잉으로 빠진 풀밭 메운 xc_tunnel). portal 색 변수는 그림 고정"
+ },
+ "map-lecturer-country-fill": {
+  "component": "MapLecturerCountryFill",
+  "preview": "x_charts-18",
+  "note": "한반도 슬라이드인 변형은 미구현(같은 컴포넌트에 country/zoom 변경으로 대체 가능) · 세모지 에셋: 지시봉 = pointer_stick(손잡이→끝 좌표 맞춰 회전) · 한반도 확대 지도라 geo.json(50m)에 빠진 울릉도·독도 섬 형상 보강(KoreaIslands, 라벨 없음; 투영 = Mercator s1369.19 역산)"
+ },
+ "corp-lineage-flow": {
+  "component": "CorpLineageFlow",
+  "preview": "x_charts-19",
+  "note": ""
+ },
+ "election-poster-drop-rank": {
+  "component": "ElectionPosterDropRank",
+  "preview": "x_charts-20",
+  "note": ""
+ },
+ "split-flag-exchange": {
+  "component": "SplitFlagExchange",
+  "preview": "x_charts-21",
+  "note": ""
+ },
+ "alternating-photo-timeline": {
+  "component": "AlternatingPhotoTimeline",
+  "preview": "x_charts-22",
+  "note": ""
+ },
+ "vs-boxing-gloves": {
+  "component": "VsBoxingGloves",
+  "preview": "x_charts-23",
+  "note": "세모지 에셋: 글러브 = boxing_glove_blue(반전)/xc_glove_red(색 변수 붉은 계열이면 빨강), 로봇팔 = robot_arm_segment 2마디(팔꿈치 관절 겹침)"
+ },
+ "fin-table-row-append": {
+  "component": "FinTableRowAppend",
+  "preview": "x_charts-24",
+  "note": ""
+ },
+ "signal-wave-diagram": {
+  "component": "SignalWaveDiagram",
+  "preview": "x_charts-25",
+  "note": "CDMA 색 코드 막대 변형은 미구현 · 세모지 에셋: 사람 = 세모지 캐스트 3명(c3_woman·c2_boss·walker1) + 발밑 원판 = 태그 색, 송신탑 = antenna_tower"
+ },
+ "candlestick-growth": {
+  "component": "CandlestickGrowth",
+  "preview": "x_charts-26",
+  "note": "ZigzagArrow(lib/charts) 재사용"
+ }
+}

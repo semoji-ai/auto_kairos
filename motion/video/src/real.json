@@ -1,0 +1,10 @@
+{
+ "port": {"file": "real/port.jpg", "pos": "50% 60%", "credit": "Wikimedia Commons, 1890 제물포 (퍼블릭 도메인)"},
+ "ghcClosed": {"file": "real/ghc_closed.jpg", "pos": "50% 30%", "credit": "Lawinc82 / CC BY-SA 3.0"},
+ "ghcNow": {"file": "real/ghc_now.jpg", "pos": "50% 50%", "credit": "Mobius6 / CC BY-SA 4.0"},
+ "museum": {"file": "real/museum.jpg", "pos": "50% 50%", "credit": "Jjw / CC BY-SA 4.0"},
+ "chinatown": {"file": "real/chinatown.jpg", "pos": "50% 40%", "credit": "이강철 / CC BY-SA 4.0"},
+ "jjajang": {"file": "real/jjajang.jpg", "pos": "50% 50%", "credit": "KFoodaddict / CC BY 2.0"},
+ "chunjang": {"file": "real/chunjang.jpg", "pos": "45% 50%", "credit": "우정사업본부 / CC BY 2.0 KR"},
+ "zhajiang": {"file": "real/zhajiang.jpg", "pos": "0% 45%", "credit": "Battlesnake1 / CC0"}
+}

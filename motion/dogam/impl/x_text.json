@@ -1,0 +1,112 @@
+{
+  "calligraphy-title-slam": {
+    "component": "CalligraphySlam",
+    "preview": "x_text-01",
+    "note": "원본 대조: 흰 글씨가 아니라 검정 붓글씨 + 흐린 흰 외곽(헤일로). 색은 변수"
+  },
+  "glow-cloud-text": {
+    "component": "GlowCloudText",
+    "preview": "x_text-02",
+    "note": "원본 타임코드 없음(ref2 0~39분 '기타') — 스펙 서술대로 흰 블러 원 뭉치"
+  },
+  "gradient-band-spec-label": {
+    "component": "SpecBandLabel",
+    "preview": "x_text-03",
+    "note": ""
+  },
+  "title-strip-flyoff": {
+    "component": "TitleStripFlyoff",
+    "preview": "x_text-04",
+    "note": "원본 대조: 포스터 ~680×760, 직함 줄 총 회전 ≈200°(세로로 선 뒤 뒤집히며 우상단으로). 분석문 70°/370×470 과 다름"
+  },
+  "four-corner-char-tiles": {
+    "component": "CornerCharTiles",
+    "preview": "x_text-05",
+    "note": "원본 대조(1:16:52): 타일 ~245px 주황→빨강 그라데이션+크림 안쪽 선, 1.8배 반투명 고스트가 5f 슬램·간격 ~8f. 분석문 120px 과 다름"
+  },
+  "repeated-word-wallpaper": {
+    "component": "WordWallpaper",
+    "preview": "x_text-06",
+    "note": "원본 대조: 격자 전체가 ≈200px/s 아래로 흐름, 글자 ~72px·행 피치 ~165px. 지퍼 전환은 전환 그룹 소관이라 제외, compressAt 으로 2행×5 하드 교체"
+  },
+  "line-blur-rise-definition": {
+    "component": "DefinitionReveal",
+    "preview": "x_text-07",
+    "note": "칩은 SVG 아이소메트릭(입자 기둥 루프). 하단 보조 설명 박스는 미구현 [세모지 에셋] 아이소 칩 SVG → isochip_base + isochip_core(같은 크롭 정렬), 발광 기둥·입자는 코드"
+  },
+  "year-chip-rapid-roll": {
+    "component": "YearChipRoll",
+    "preview": "x_text-08",
+    "note": ""
+  },
+  "sage-date-typing-card": {
+    "component": "SageDateCard",
+    "preview": "x_text-09",
+    "note": "원본 대조: 글자 ~110px, 최종 가운데 위치에 미리 배치한 채 왼쪽부터 드러남(분석문 64px 과 다름)"
+  },
+  "brush-title-blur-in": {
+    "component": "BrushHeadline",
+    "preview": "x_text-10",
+    "note": ""
+  },
+  "stacked-fact-pills": {
+    "component": "FactPillStack",
+    "preview": "x_text-11",
+    "note": ""
+  },
+  "headline-band-slam": {
+    "component": "HeadlineBandSlam",
+    "preview": "x_text-12",
+    "note": "30fps 원본 대조: 좌측 슬라이드가 아니라 가운데에서 가로로 늘어나는 스트레치 팝(scaleX 0.3→1.12→1.0 4f + 가로 모션블러)"
+  },
+  "text-behind-character": {
+    "component": "TextBehindCharacter",
+    "preview": "x_text-13",
+    "note": "리그: img prop 캐릭터 + 연기는 characters.SmokeSwap 재사용, 캐릭터는 연기 앞"
+  },
+  "defocus-hanja-medallion": {
+    "component": "HanjaMedallion",
+    "preview": "x_text-14",
+    "note": "원본 대조: 원판 지름 ≈470px(분석문 270 과 다름). 간판 크로스페이드는 out 에서 페이드+줌 1.0→1.3 으로 일반화"
+  },
+  "slogan-slash-banner": {
+    "component": "SloganBanner",
+    "preview": "x_text-15",
+    "note": "모서리 4각 반짝이 포함(원본)"
+  },
+  "subtitle-band-legacy": {
+    "component": "LegacySubtitleBand",
+    "preview": "x_text-16",
+    "note": ""
+  },
+  "source-chip-draw-on": {
+    "component": "SourceChipDrawOn",
+    "preview": "x_text-17",
+    "note": ""
+  },
+  "hud-tabbed-chapter-bar": {
+    "component": "TabbedChapterHUD",
+    "preview": "x_text-18",
+    "note": "activeAt 로 하드 교체, dark 모드 내장"
+  },
+  "hud-dark-invert": {
+    "component": "HUDDarkInvert",
+    "preview": "x_text-19",
+    "note": "TabbedChapterHUD 의 dark 모드를 컷 목록(darkCuts)으로 스위치"
+  },
+  "legacy-format-v1": {
+    "component": "LegacyFormat",
+    "preview": "x_text-20",
+    "note": "TabbedChapterHUD + 흰 챕터카드 + SageDateCard(음절 5f) + 흰 반투명 자막띠 조합"
+  },
+  "era-palette-shift": {
+    "component": "EraPalette",
+    "preview": "x_text-21",
+    "note": "팔레트 이름(sage/cream/bluegray/crimson/cobalt/yellow) 또는 HEX, 컷 단위 전환"
+  },
+  "channel-logo-intro": {
+    "component": "LegacyLogoIntro",
+    "preview": "x_text-22",
+    "note": "기존 ui/sting_logo·sting_sub·sting_like 재사용. 원본 대조 로고 ≈980×570(분석문 560×330 과 다름)"
+  }
+}

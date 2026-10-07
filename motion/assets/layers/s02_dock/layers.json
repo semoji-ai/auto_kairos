@@ -1,0 +1,91 @@
+{
+  "source": "$SEMOJI_NAS/assets/gen/s02_dock.png",
+  "size": [
+    1659,
+    948
+  ],
+  "key_color": "#00B140",
+  "upscale": {
+    "applied": false,
+    "scale": 2,
+    "model": null
+  },
+  "layers": [
+    {
+      "index": 1,
+      "name": "왼쪽 부두 노동자와 그릇",
+      "kind": "character",
+      "motion": "그릇을 든 팔과 몸통이 함께 오른쪽으로 살짝 기울었다 돌아오며, 고개가 한 번 까딱인다.",
+      "importance": 95,
+      "key_color": "#00B140",
+      "png": "01_왼쪽_부두_노동자와_그릇_char.png",
+      "bbox": [
+        0.178,
+        0.284,
+        0.389,
+        0.879
+      ],
+      "fitted": false,
+      "raw": "raw/01_왼쪽_부두_노동자와_그릇_char.green.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.909961773525305,
+        "position_score": 0.11411627214854496,
+        "retried": false
+      }
+    },
+    {
+      "index": 2,
+      "name": "가운데 부두 노동자와 그릇·국수",
+      "kind": "character",
+      "motion": "젓가락을 든 팔이 국수를 조금 들어 올렸다 내리는 동안 고개와 몸통이 국수 쪽으로 까딱인다.",
+      "importance": 100,
+      "key_color": "#00B140",
+      "png": "02_가운데_부두_노동자와_그릇_국수_char.png",
+      "bbox": [
+        0.401,
+        0.289,
+        0.613,
+        0.872
+      ],
+      "fitted": false,
+      "raw": "raw/02_가운데_부두_노동자와_그릇_국수_char.green.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.06232148897587129,
+        "position_score": 0.02542435622354035,
+        "retried": false
+      }
+    },
+    {
+      "index": 3,
+      "name": "오른쪽 부두 노동자와 그릇",
+      "kind": "character",
+      "motion": "양손의 그릇을 입 쪽으로 기울였다 되돌리며 고개와 상체가 짧게 까딱인다.",
+      "importance": 95,
+      "key_color": "#00B140",
+      "png": "03_오른쪽_부두_노동자와_그릇_char.png",
+      "bbox": [
+        0.654,
+        0.338,
+        0.881,
+        0.902
+      ],
+      "fitted": false,
+      "raw": "raw/03_오른쪽_부두_노동자와_그릇_char.green.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.9040879183484535,
+        "position_score": 0.2826194560655271,
+        "retried": false
+      }
+    }
+  ],
+  "background": {
+    "name": "배경",
+    "png": "bg.png",
+    "raw": "raw/bg.png",
+    "status": "completed"
+  },
+  "dropped": []
+}

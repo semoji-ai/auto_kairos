@@ -1,0 +1,45 @@
+{
+  "source": "$SEMOJI_NAS/assets/gen/s05_factory.png",
+  "size": [
+    1660,
+    948
+  ],
+  "key_color": "#00B140",
+  "upscale": {
+    "applied": false,
+    "scale": 2,
+    "model": null
+  },
+  "layers": [
+    {
+      "index": 1,
+      "name": "남자(주걱·구리 냄비 포함)",
+      "kind": "character",
+      "motion": "몸을 좌우로 짧게 까딱이며 왼손의 긴 주걱으로 춘장을 원을 그리듯 젓고, 오른손의 구리 냄비를 살짝 기울인다.",
+      "importance": 100,
+      "key_color": "#00B140",
+      "png": "01_남자_주걱_구리_냄비_포함_char.png",
+      "bbox": [
+        0.263,
+        0.022,
+        0.759,
+        0.972
+      ],
+      "fitted": false,
+      "raw": "raw/01_남자_주걱_구리_냄비_포함_char.green.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.6662351939403183,
+        "position_score": 0.3622528635837446,
+        "retried": false
+      }
+    }
+  ],
+  "background": {
+    "name": "배경",
+    "png": "bg.png",
+    "raw": "raw/bg.png",
+    "status": "completed"
+  },
+  "dropped": []
+}

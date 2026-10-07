@@ -7,7 +7,7 @@ description: Use when planning or editing Semoji-style motion (built from variou
 
 세모지 연출 규칙(여러 레퍼런스 참고)에 따른 **편집 판단과 완성 검수**는 `adobe/docs/editorial-motion-playbook.md`가 정본이다. 레퍼런스는 연출의 정보 순서·리듬만 참고하며 현재 프로젝트의 화풍을 바꾸지 않는다. 도감 자동 적용과 수동 AE 구현을 구분한다.
 
-저장소 루트를 기준으로 경로를 찾는다. 개인 컴퓨터의 `~/Projects/semoji-motion`은 선택 사항이다. 도감의 343개 항목 스냅샷은 `adobe/data/semoji-motion/dogam/techniques.json`에 있고, AE에서 바로 적용 가능한 기법은 `adobe/cep/com.autokairos.pd/jsx/dogam/registry.json`의 12개다. 나머지 항목은 **연출 참고 자료**이며 AE 구현이 있다고 가정하지 않는다.
+저장소 루트를 기준으로 경로를 찾는다. 도감 원본(Remotion 구현·빌더·분석 노트)은 저장소 `motion/`(구 `~/Projects/semoji-motion`)에 있고, 영상 미디어와 도감 미리보기 전체는 NAS에 있다([motion/README.md](../../../motion/README.md)). 도감의 343개 항목 스냅샷은 `adobe/data/semoji-motion/dogam/techniques.json`에 있고, AE에서 바로 적용 가능한 기법은 `adobe/cep/com.autokairos.pd/jsx/dogam/registry.json`의 12개다. 나머지 항목은 **연출 참고 자료**이며 AE 구현이 있다고 가정하지 않는다.
 
 다른 컴퓨터의 Remotion과 같은 프로젝트를 이어받을 때는 먼저 `docs/contracts/semoji-renderer-handoff-v1.md`의 전달 파일·경로·검증 계약을 따른다. Remotion은 각 컴퓨터에 설치된 것을 사용하며 이 스킬은 AE 쪽 작업을 담당한다.
 
@@ -31,7 +31,7 @@ bash adobe/scripts/setup_cep_dev.sh
 cd adobe && python3 -m backend.app
 ```
 
-설치 스크립트는 CEP 패널 링크와 함께 **저장소에 포함된 도감 미리보기·지도·기본 에셋**을 패널에 복사한다. 외부 `semoji-motion` 저장소가 있으면 그것을 우선 사용한다. 다른 위치에 있다면 `SEMOJI_MOTION_DIR`로 지정한다. 설치 후 AE를 재시작하고 `Window > Extensions > auto_kairos PD`에서 **기법 도감** 탭을 연다. 프로젝트는 기본적으로 저장소 `output/`을 바라보며, 필요하면 `AK_PROJECTS_ROOT`로 바꾼다.
+설치 스크립트는 CEP 패널 링크와 함께 **저장소에 포함된 도감 미리보기·지도·기본 에셋**을 패널에 복사한다. 카탈로그 원본은 저장소 `motion/dogam`이고, 미리보기 전체(NAS 또는 `motion/dogam/previews` 로컬 캐시)가 보이면 그것을 링크하며 없으면 번들 12개를 복사한다. 다른 원본을 쓰려면 `SEMOJI_MOTION_DIR`로 지정한다. 설치 후 AE를 재시작하고 `Window > Extensions > auto_kairos PD`에서 **기법 도감** 탭을 연다. 프로젝트는 기본적으로 저장소 `output/`을 바라보며, 필요하면 `AK_PROJECTS_ROOT`로 바꾼다.
 
 완성 검수는 씬의 내용과 화면, 자막·상단 텍스트 가림, 챕터 프리컴프, 누락 에셋을 실제 AE 프레임에서 확인한다. 도해는 승인된 완성 화면을 만든 뒤 레이어를 분리해 움직인다. 자세한 판정 순서는 작업 규칙서를 따른다.
 
@@ -42,6 +42,6 @@ cd adobe && python3 -m backend.app
 - `adobe/cep/com.autokairos.pd/jsx/dogam/registry.json`: AE 적용 가능 기법·변수·미리보기.
 - `adobe/data/semoji-motion/dogam/techniques.json`: 343개 전체 카탈로그 스냅샷. `구현`은 원본 Remotion 구현 상태일 수 있으며 AE 지원 여부는 registry로만 판단한다.
 - `adobe/scripts/sync_dogam.py --check`: 원본 또는 번들 카탈로그와 AE 구현 변수의 정합성 확인(Node 필요).
-- `adobe/scripts/dogam_verify.py`: 실제 AE 렌더 비교. 이 스크립트의 전체 검증은 별도 원본 `semoji-motion`의 영상 레이어·미리보기를 필요로 한다. 다른 컴퓨터에서 번들만 있을 때는 도감 패널의 AE 적용·프레임 확인을 수행한다.
+- `adobe/scripts/dogam_verify.py`: 실제 AE 렌더 비교. 이 스크립트의 전체 검증은 `motion/video/public` 미디어(`bash motion/video/scripts/fetch_public.sh`로 NAS에서 받음)와 NAS의 도감 미리보기를 필요로 한다. 다른 컴퓨터에서 번들만 있을 때는 도감 패널의 AE 적용·프레임 확인을 수행한다.
 
 자산을 새로 만들거나 레이어를 나눌 때는 저장소 `AGENTS.md`의 이미지 생성·기존 파일 보존 규칙을 따른다.

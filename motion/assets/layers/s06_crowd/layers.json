@@ -1,0 +1,114 @@
+{
+  "source": "$SEMOJI_NAS/assets/gen/s06_crowd.png",
+  "size": [
+    1659,
+    948
+  ],
+  "key_color": "#00B140",
+  "upscale": {
+    "applied": false,
+    "scale": 2,
+    "model": null
+  },
+  "layers": [
+    {
+      "index": 1,
+      "name": "왼쪽 파란 옷 인물과 짜장면 그릇",
+      "kind": "character",
+      "motion": "발을 축으로 몸을 좌우로 작게 까딱이고, 든 그릇도 팔과 함께 같은 박자로 움직인다.",
+      "importance": 100,
+      "key_color": "#00B140",
+      "png": "01_왼쪽_파란_옷_인물과_짜장면_그릇_char.png",
+      "bbox": [
+        0.017,
+        0.133,
+        0.279,
+        0.937
+      ],
+      "fitted": false,
+      "raw": "raw/01_왼쪽_파란_옷_인물과_짜장면_그릇_char.green.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.9108875510894419,
+        "position_score": 0.24243141134553484,
+        "retried": false
+      }
+    },
+    {
+      "index": 2,
+      "name": "회색 작업복 인물과 짜장면 그릇",
+      "kind": "character",
+      "motion": "발을 축으로 몸을 좌우로 작게 까딱이고, 든 그릇도 팔과 함께 움직인다.",
+      "importance": 100,
+      "key_color": "#00B140",
+      "png": "02_회색_작업복_인물과_짜장면_그릇_char.png",
+      "bbox": [
+        0.248,
+        0.157,
+        0.496,
+        0.936
+      ],
+      "fitted": false,
+      "raw": "raw/02_회색_작업복_인물과_짜장면_그릇_char.green.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.7365870345360812,
+        "position_score": 0.23750642878356548,
+        "retried": false
+      }
+    },
+    {
+      "index": 3,
+      "name": "검은 교복 인물과 짜장면 그릇",
+      "kind": "character",
+      "motion": "발을 축으로 상체를 좌우로 작게 까딱이고, 들어 올린 그릇도 팔과 함께 움직인다.",
+      "importance": 100,
+      "key_color": "#00B140",
+      "png": "03_검은_교복_인물과_짜장면_그릇_char.png",
+      "bbox": [
+        0.475,
+        0.137,
+        0.727,
+        0.936
+      ],
+      "fitted": false,
+      "raw": "raw/03_검은_교복_인물과_짜장면_그릇_char.green.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.804455558861904,
+        "position_score": 0.3552061461334375,
+        "retried": false
+      }
+    },
+    {
+      "index": 4,
+      "name": "오른쪽 흰 셔츠 인물과 짜장면 그릇",
+      "kind": "character",
+      "motion": "발을 축으로 몸을 좌우로 작게 까딱이고, 든 그릇도 팔과 함께 움직인다.",
+      "importance": 100,
+      "key_color": "#00B140",
+      "png": "04_오른쪽_흰_셔츠_인물과_짜장면_그릇_char.png",
+      "bbox": [
+        0.7,
+        0.159,
+        0.968,
+        0.936
+      ],
+      "fitted": false,
+      "raw": "raw/04_오른쪽_흰_셔츠_인물과_짜장면_그릇_char.green.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.7607469041133518,
+        "position_score": 0.23411866714896695,
+        "retried": false
+      }
+    }
+  ],
+  "background": {
+    "name": "배경",
+    "png": "bg.png",
+    "raw": "raw/bg.png",
+    "status": "completed"
+  },
+  "dropped": []
+}

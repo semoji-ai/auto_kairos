@@ -1,0 +1,145 @@
+{
+  "bw-photo-inset": {
+    "component": "RoughPhotoInset",
+    "preview": "x_media-01",
+    "note": ""
+  },
+  "dark-vignette-portrait": {
+    "component": "DarkVignettePortrait",
+    "preview": "x_media-02",
+    "note": ""
+  },
+  "photo-illust-composite": {
+    "component": "PhotoIllustComposite",
+    "preview": "x_media-03",
+    "note": ""
+  },
+  "bw-past-person": {
+    "component": "InstantMono",
+    "preview": "x_media-04",
+    "note": "자식을 감싸는 래퍼. rampLen 0 = 컷 전환."
+  },
+  "face-cover-box": {
+    "component": "FaceCoverBox",
+    "preview": "x_media-05",
+    "note": ""
+  },
+  "logo-wall-tint-flash": {
+    "component": "TintFlash",
+    "preview": "x_media-06",
+    "note": "원본 710~715s 대조 시 느린 팬만 보여 분석 기술(1~2f 핑크·보라·주황) 기반 재현. 자식 위에 덮는 래퍼."
+  },
+  "card-slide-in": {
+    "component": "CardSlideIn",
+    "preview": "x_media-07",
+    "note": "[세모지 에셋] 카드=kit id_card(글자·사진만 코드, color 는 머리띠에 color 블렌드)"
+  },
+  "photo-panel-slideup": {
+    "component": "PhotoPanelSlideUp",
+    "preview": "x_media-08",
+    "note": ""
+  },
+  "white-stroke-archive-cutout": {
+    "component": "WhiteStrokeCutout",
+    "preview": "x_media-09",
+    "note": "[세모지 에셋] 왕관 SVG → kit crown"
+  },
+  "boarding-pass-drop": {
+    "component": "BoardingPassDrop",
+    "preview": "x_media-10",
+    "note": "뒷장은 원본 프레임상 짙은 회색이라 기본값 #4A4A4A(스펙의 오렌지 대신). 손은 FlatHand 리그. [세모지 에셋] 탑승권 boarding_pass_front(회색 자리표시 막대를 종이색으로 덮고 글자 인쇄, stub 색=머리띠 color 블렌드)·뒷장 boarding_pass_back 실루엣(backColor), 손 hand_open→집을 때 hand_grip"
+  },
+  "xray-silhouette-reveal": {
+    "component": "XraySilhouette",
+    "preview": "x_media-11",
+    "note": "원본(9345s 부근; 도감 표기 02:35:30은 부정확)은 틸트업이 아니라 전신→몸통 푸시인 후 옷 입은 인물로 디졸브. endMode 로 dissolve/tiltUp 선택. [세모지 에셋] SVG 인체·골격 → xray_body_silhouette + xray_skeleton(bodyColor=color 블렌드, boneColor=multiply), 병변 클러스터는 코드"
+  },
+  "archive-photo-title-band": {
+    "component": "ArchiveTitleBand",
+    "preview": "x_media-12",
+    "note": ""
+  },
+  "archive-newsreel-insert": {
+    "component": "ArchiveNewsreel",
+    "preview": "x_media-13",
+    "note": "원본 영상 대신 스틸+필름 그레인·깜빡임·흔들림으로 재현."
+  },
+  "newspaper-slam-stack": {
+    "component": "NewspaperSlamStack",
+    "preview": "x_media-14",
+    "note": "[세모지 에셋] 신문 = kit newspaper(폭 맞춤·위에서 paperH 만큼 크롭), 헤드라인만 코드"
+  },
+  "card-swipe-montage": {
+    "component": "CardSwipeMontage",
+    "preview": "x_media-15",
+    "note": "손은 FlatHand 리그. 회사명·색은 cards prop. [세모지 에셋] 서류 paper_docs_collage×2·paper_sheet, 단말기 card_terminal(화면 글자만 코드, termColor 는 에셋 고정), 영수증 receipt_strip, 카드 credit_card(card.color=color 블렌드), 손 hand_pinch_back(카드 뒤)+hand_thumb_front(카드 앞)"
+  },
+  "doc-zoom-red-underline": {
+    "component": "DocZoomUnderline",
+    "preview": "x_media-16",
+    "note": ""
+  },
+  "brush-mask-portrait-quote": {
+    "component": "BrushMaskQuote",
+    "preview": "x_media-17",
+    "note": "카드 크기는 원본 프레임 실측(~620×600)으로 스펙(560×440)보다 크게."
+  },
+  "archival-ad-on-paper": {
+    "component": "ArchivalAdOnPaper",
+    "preview": "x_media-18",
+    "note": ""
+  },
+  "lantern-sway": {
+    "component": "LanternSway",
+    "preview": "x_media-19",
+    "note": "[세모지 에셋] 홍등 = 새 에셋 xm_lantern_red(codex 생성). color/rib/gold 는 줄·매듭에만 적용"
+  },
+  "sparkle-dots": {
+    "component": "SparkleDots",
+    "preview": "x_media-20",
+    "note": ""
+  },
+  "repeat-object-wallpaper": {
+    "component": "RepeatObjectWallpaper",
+    "preview": "x_media-21",
+    "note": "[세모지 에셋] 사과 SVG → kit apple_icon"
+  },
+  "hypno-spiral-bg": {
+    "component": "SpiralTunnelBg",
+    "preview": "x_media-22",
+    "note": "나선 터널(자주·보라·핑크). 푯말은 데모 소품."
+  },
+  "fire-background-loop": {
+    "component": "FireBgLoop",
+    "preview": "x_media-23",
+    "note": ""
+  },
+  "hypno-spiral-suck": {
+    "component": "SpiralSuck",
+    "preview": "x_media-24",
+    "note": "배경은 SpiralTunnelBg(어두운 1팔 나선) 재사용, 사물 기본값은 그린 구형 휴대폰(objects 로 이미지 교체). [세모지 에셋] 구형 휴대폰 SVG → phone_bar_light/phone_bar_dark 번갈아"
+  },
+  "sky-gradient-ascent": {
+    "component": "SkyGradientAscent",
+    "preview": "x_media-25",
+    "note": "[세모지 에셋] 우주왕복선 → kit space_shuttle(비대칭이라 부스터 노즐 x 실측, 연기 기둥을 부스터에 정렬), 불꽃만 코드"
+  },
+  "snowfall-loop": {
+    "component": "SnowfallLoop",
+    "preview": "x_media-26",
+    "note": "뒤뚱 워크인은 WaddleIn 리그(이미지 prop)로 분리, 손 흔들기는 몸 흔들기로 일반화."
+  },
+  "lightning-versus-split": {
+    "component": "LightningVersusSplit",
+    "preview": "x_media-27",
+    "note": "원본 번개는 우상→좌하(거의 세로) 기울기라 topX 0.58/botX 0.44 기본. 에너지 슬래시 대신 흰 플래시 옵션."
+  },
+  "hypnotic-spiral-bg": {
+    "component": "RippleRingsBg",
+    "preview": "x_media-28",
+    "note": "보라 2톤 일렁이는 동심 링. hypnotic-swirl-bg 병합(색 #4F42B5/#8680ED·bandW 90 으로 재현)."
+  },
+  "hypnotic-swirl-bg": {
+    "mergedInto": "hypnotic-spiral-bg"
+  }
+}

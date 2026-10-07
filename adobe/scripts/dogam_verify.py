@@ -14,6 +14,9 @@ AKD.apply 로 기법을 건 뒤 지정 프레임을 PNG 로 뽑아, 도감 미�
   · 스크립트 전체를 try/finally 로 감싸고 대화상자를 끕니다(모달이 뜨면 AE 가 멈춥니다). 결과는 파일로만.
   · 배경은 도감 미리보기의 "기법 시작 전" 프레임을 2배로 키운 판(plate)을 씁니다 — 비교 대상은 기법이지 배경이 아닙니다.
 
+준비물: 도감 미리보기(NAS — motion/dogam/README.md "미리보기 파일 위치")와 video/public 미디어
+        (bash motion/video/scripts/fetch_public.sh 로 NAS 에서 받아 옴). 둘 다 저장소에는 없습니다.
+
 산출물: adobe/tmp/dogam_verify/<id>/ (시트 sheet.png, ae_fNNN.png, ref_fNNN.png, result.json), summary.json
 """
 from __future__ import annotations
@@ -38,12 +41,25 @@ AE_APP = os.environ.get("AE_APP_NAME", "Adobe After Effects 2026")
 
 
 def semoji_dir() -> Path:
-    return Path(os.environ.get("SEMOJI_MOTION_DIR") or Path.home() / "Projects" / "semoji-motion").expanduser()
+    """도감 원본: SEMOJI_MOTION_DIR → 저장소 motion/ (구 semoji-motion)."""
+    return Path(os.environ.get("SEMOJI_MOTION_DIR") or ADOBE.parent / "motion").expanduser()
+
+
+def previews_dir(sm: Path) -> Path:
+    """motion/dogam/previews_dir.py 규칙(DOGAM_PREVIEWS_DIR → 로컬 캐시 → NAS). 없으면 sm/dogam/previews."""
+    helper = sm / "dogam" / "previews_dir.py"
+    if helper.is_file():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("motion_previews_dir", helper)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.previews_dir()
+    return sm / "dogam" / "previews"
 
 
 SM = semoji_dir()
 PUB = SM / "video" / "public"
-PREV = SM / "dogam" / "previews"
+PREV = previews_dir(SM)
 LAYERS = json.loads((SM / "video/src/layers.json").read_text(encoding="utf-8"))
 
 

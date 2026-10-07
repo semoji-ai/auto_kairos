@@ -322,3 +322,16 @@ _imggen/characters/roster.pre_split.json
 # 폴더 전체를 무시하면 ARCHIVED.json 등 작은 보관 기록까지 가려진다.
 # 챕터 캐싱용 시스템 프롬프트 (내용 해시 파일명, 재생성 가능)
 .chapter_system_*.txt
+
+# motion/ (구 semoji-motion): 코드·데이터만 커밋. 렌더 결과·의존성·미디어·미리보기는 NAS/로컬
+/motion/video/node_modules/
+/motion/video/out/
+/motion/video/public/**
+!/motion/video/public/**/
+!/motion/video/public/**/*.json
+!/motion/video/public/**/*.md
+/motion/dogam/previews
+/motion/dogam/*.log
+/motion/dogam/.stop_watch
+/motion/explainer_demo/imagegen/out/
+/motion/explainer_demo/imagegen/keyed/

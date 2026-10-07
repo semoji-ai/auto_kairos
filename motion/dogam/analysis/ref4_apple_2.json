@@ -1,0 +1,463 @@
+[
+ {
+  "id": "fighting-game-vs-hud",
+  "name": "격투게임 VS 대결 HUD",
+  "category": "콜아웃·라벨",
+  "summary": "두 인물의 갈등·대결 구도를 격투게임 화면(체력바·원형 초상·VS 배지·픽셀 배경)으로 패러디",
+  "spec": "@1080p: 중앙 VS 배지 ≈180×140px(네이비 #1E2A44 팔각 판, 흰 굵은 VS, y120-260) / 좌우 원형 초상 지름≈140px(좌 초록 링, 우 빨강 링, 중심 y≈265, x≈275·1650) / 체력바 2단: 상단 초록 사선바(길이≈560px, 높이≈40) + 하단 노랑→주황 그라데이션 사선바(≈300×35) — 중앙으로 갈수록 좁아지는 평행사변형 / 이름 라벨 흰 외곽선 검정 굵은 글씨 ≈48px / 배경=도트(픽셀) 하늘·바다·구름 + 흰 사각 픽셀 눈송이 드리프트. 등장: 만화 연기 전환(기존)이 걷히는 동안 HUD는 이미 존재, VS 배지는 연기 해소 ~9f 후 하드 등장. 이후 인물 분노 기호·말풍선으로 연기",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:41:17",
+    "note": "길 아멜리오 VS 스티브 잡스"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "패러디",
+   "대결",
+   "게임"
+  ]
+ },
+ {
+  "id": "glass-crack-hardcut",
+  "name": "유리 깨짐 크랙 오버레이",
+  "category": "감정·효과 FX",
+  "summary": "프로젝트·제품 실패 순간 스크린샷/모니터 위에 검은 유리 균열을 하드컷으로 얹고 연쇄 균열→실패 도장으로 마무리",
+  "spec": "검정 크랙 실루엣(중심 방사 균열 ≈360px 폭) 1f 하드 등장(애니 없음) → +15f 우하단 작은 2차 크랙(≈150px) 하드 등장 → +~3s 빨간 '실패' 도장 슬램(기존) → 캐릭터 땀방울. 크랙은 대상 UI 사각 안에 클리핑되지 않고 살짝 삐져나옴. 배경은 레드 비네트",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:36:10",
+    "note": "코플랜드 프로젝트 실패"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "실패",
+   "파괴"
+  ]
+ },
+ {
+  "id": "zipper-close-transition",
+  "name": "지퍼 잠금/열림 전환(압축 은유)",
+  "category": "전환",
+  "summary": "'압축·정리'를 말할 때 화면 가득한 반복 요소를 지퍼가 닫히며 쓸어 없애고, 다시 열리면 줄어든 결과가 보이는 은유 전환",
+  "spec": "사실적 회색 지퍼 톱니 2줄이 화면 좌상·우상 코너에서 현수선(catenary) 곡선으로 진입 → 중앙에서 V자로 만나 슬라이더가 위→아래로 내려가며 닫힘(≈25~30f, ease-in-out) → 닫힌 지퍼는 화면 중앙 세로선(x≈960, 폭≈14px)으로 크림 배경(#F1EEE9) 위 약 1.5s 유지 → 슬라이더가 위로 열리며 V자로 벌어져 뒤 레이어(노랑 보케 + PROJECT 2행 = 150→10개 압축) 리빌. 직전 컷은 컬러 틴트 플리커로 진입",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:45:17",
+    "note": "150개 프로젝트→10개 압축"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "은유",
+   "리빌"
+  ]
+ },
+ {
+  "id": "repeated-word-wallpaper",
+  "name": "반복 단어 월페이퍼",
+  "category": "텍스트·타이포",
+  "summary": "'무분별하게 늘어난 N개'를 같은 단어의 격자 반복으로 시각화(수량 과잉 표현)",
+  "spec": "PROJECT(검정 굵은 산세리프 ≈40px 캡) 흰 박스 타일 5열×7행 이상, 행간 ≈40px, 행마다 x 오프셋 교차, 가장자리에서 잘림(PRT…) / 배경 노랑-크림 보케(#F7E7A8 계열) / 틴트 플리커로 등장 후 정지, 지퍼 전환으로 제거 → 2행×5개로 축소된 버전으로 '압축 결과' 제시",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:45:16",
+    "note": ""
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "수량",
+   "타이포패턴"
+  ]
+ },
+ {
+  "id": "boxing-glove-punch-swap",
+  "name": "권투 글러브 펀치 교체",
+  "category": "캐릭터 연기",
+  "summary": "자리(왕좌·직책)의 인물이 교체될 때 화면 밖 빨간 권투 글러브가 기존 인물을 날려버리고 새 인물이 앉음",
+  "spec": "직전 확률 pill 블러-디졸브 아웃 8f → 빨간 글러브(≈220px) 좌측 화면 밖에서 진입 7f(linear 빠름) → 임팩트 f0: 노랑-주황 폭발 스타(≈120px)+파편 2f 확대 → 인물 컷아웃 반시계 회전(≈-60°/5f)하며 우상단으로 튕겨나감 + 주황 파편 트레일 → 빈 왕좌 ~1s → 새 인물 하드 등장 → 새 확률 pill 팝",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:41:49",
+    "note": "길→스티브 CEO 교체"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "교체",
+   "코믹"
+  ]
+ },
+ {
+  "id": "probability-pill-label",
+  "name": "확률 수치 pill 라벨",
+  "category": "콜아웃·라벨",
+  "summary": "인물 몸통 앞에 '~할 확률' 네이비 pill + 큰 빨강 %를 붙여 시나리오별 수치 비교",
+  "spec": "네이비 라운드 pill(≈330×55px, #2B3F7A, 흰 텍스트 ≈26px) 아래 빨강 굵은 % (≈44px, #E0302A, 흰 외곽) 겹침 / 위치: 인물 무릎 높이 중앙 / 등장 팝(기존 0.4→1.08→1.0), 퇴장=가로 블러+페이드 8f / 시나리오 전환 시 인물만 교체, 동일 포맷 60%로 재등장",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:41:47",
+    "note": ""
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "수치",
+   "비교"
+  ]
+ },
+ {
+  "id": "device-tessellation-fill",
+  "name": "기기 외곽 타일 채움",
+  "category": "차트·인포그래픽",
+  "summary": "'N종의 시제품/샘플'을 크기·비율이 다른 기기 아이콘이 화면을 빈틈없이 덮으며 채워 수량감 표현",
+  "spec": "머스터드 배경 #C99A45 / 중앙 기준 태블릿 아이콘(검정 베젤 ≈8px, 회색 #6E6E6E 화면, ≈130×170px) 정지 → 화면 가장자리부터 다양한 크기(80~260px)·가로/세로 태블릿이 슬라이드/팝으로 스태거 등장(간격 ≈2~3f, 총 ≈20f), 서로 겹치며 화면 전체를 덮음 / 직전에 손가락 프레임(양손 ㄱ자) 줌아웃 샷으로 연결 / 다음 컷 '9.7인치' 대각 치수선",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "02:28:48",
+    "note": "20종 샘플 모델"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "수량",
+   "패턴"
+  ]
+ },
+ {
+  "id": "hypno-spiral-suck",
+  "name": "최면 나선 배경 + 소용돌이 흡입",
+  "category": "배경·루프",
+  "summary": "황당·멘붕 리액션 때 배경을 어두운 동심 나선으로 바꾸고 관련 사물이 회전하며 중심으로 빨려 사라짐",
+  "spec": "원래 배경이 20f 디졸브로 짙은 회색 나선(#1A1A1A/#2A2A2A 교차 링, 느린 회전) 전환 / 사물 컷아웃 6개(구형 휴대폰) 흩어진 배치에서 회전(±90°)+스케일 1.0→0.1로 중심(≈x520,y330)으로 나선 궤적 흡입 ≈40f, ease-in / 인물은 전경 정지(눈 흰자 동공점, 입 벌림) 후 땀방울 / 나선은 이후 10s 이상 루프 BG로 유지",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "02:21:03",
+    "note": "디자인 전면 교체 멘붕"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "멘붕",
+   "루프"
+  ]
+ },
+ {
+  "id": "big-x-strike",
+  "name": "대형 X 표 스트라이크",
+  "category": "콜아웃·라벨",
+  "summary": "금지·지원 중단된 대상(로고·앱 아이콘) 위에 커다란 X를 겹쳐 '불가'를 선언",
+  "spec": "대상 아이콘(≈280px) 팝 0.2→1.15→1.0(6f, 방향블러) 후 ~15f 유지 → X(두 막대 교차, 각 ≈420×80px) 반투명 회색 α0.35·스케일 1.3에서 4f 만에 1.0 슬램 → 다음 프레임 불투명 검정 #111 확정. 스트로크 드로우 아님(두 획 동시). iPad 제품 이미지 위 Flash 로고",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:59:38",
+    "note": "iPad 플래시 미지원"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "금지",
+   "부정"
+  ]
+ },
+ {
+  "id": "bookshelf-series-spines",
+  "name": "백과사전 책장 시리즈 리캡",
+  "category": "구성·엔딩",
+  "summary": "시리즈 결산/엔딩에서 번호 매긴 책등(1~15권)이 꽂힌 책장을 보여주고 각 시대 라벨을 리더선으로 책에 연결",
+  "spec": "와인색 책장(#6E2334/#8A3040 목재) 초록 책등 15권(#6F6A3A, 금박 번호 1~15) / 카메라 느린 드리프트(수평 ≈-20px/s + 미세 줌) / 라벨: 검정 라운드 pill 흰 굵은 글씨(≈24px) + 가는 검정 수직 리더선이 책 위→pill로 5f 드로우, pill 0.3→1.1→1.0 5f 팝 / 라벨 5개 VO 싱크 스태거(≈1~1.5s), 높이 교차 배치(지그재그) / 앞에 여자 인물 뒷모습 '드디어 완결!'",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "02:52:07",
+    "note": "엔딩 직전 리캡"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "엔딩",
+   "리캡",
+   "리더선"
+  ]
+ },
+ {
+  "id": "camera-tiltup-sign-reveal",
+  "name": "카메라 틸트업 표지판 리빌",
+  "category": "카메라",
+  "summary": "갈림길(방향 전환) 장면에서 카메라가 도로에서 하늘로 틸트업하며 방향 표지판이 위에서 순차 내려와 선택지를 제시",
+  "spec": "원근 Y자 갈림길 도로 + 노을 그라데이션 하늘(#F5C13A→#E8736A) / 카메라 세로 이동: 도로가 1.5s 동안 ≈-80px(@1080) 아래로 흐름, 하늘 색 노랑→핑크 전환(패럴랙스) / 초록 도로표지판 2개(≈200×55px, 흰 외곽, 화살표) 화면 위 밖에서 드롭: 1번 f6→f18 안착, 2번 +10f 스태거, ease-out 미세 바운스 / 이후 인물 뒷모습 하단에서 등장, 한쪽 표지판에 빨간 동심원 강조",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:27:50",
+    "note": "하드웨어(캐논) vs 소프트웨어(넥스트)"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "선택",
+   "갈림길"
+  ]
+ },
+ {
+  "id": "idea-warm-bloom",
+  "name": "깨달음 웜 블룸",
+  "category": "감정·효과 FX",
+  "summary": "인물이 핵심 결론을 깨닫는 순간 인물 주변을 따뜻한 빛 번짐으로 채우고 곧바로 다음 씬으로 전환",
+  "spec": "어두운 배경(#2A2A2A) 위 인물 컷아웃에 주황-노랑 소프트 글로우(반경 ≈500px, 가우시안, 광선 없음) 6~8f 램프업 + 인물 노출 +30% → 피크에서 하드컷 다음 씬. 방사 줄무늬 없는 원형 블룸이라 사용 가능",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:27:49",
+    "note": "'소프트웨어가 답이다'"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "깨달음",
+   "글로우"
+  ]
+ },
+ {
+  "id": "line-blur-rise-definition",
+  "name": "정의문 줄단위 블러 상승 리빌",
+  "category": "텍스트·타이포",
+  "summary": "용어 정의 카드(아이소메트릭 오브젝트 + 제목 배너 + 설명 3~4줄)를 VO에 맞춰 한 줄씩 아래서 블러로 떠오르게 표시",
+  "spec": "딥 인디고 배경 #1E1650 / 좌측 아이소메트릭 칩(≈300px, 청록 발광 + 위로 흐르는 입자 기둥 루프) / 우측 검정 리본 배너 제목 '중앙처리장치 CPU'(흰 ≈26px) / 설명 줄: 흰 굵은 ≈28px, 키워드는 노랑 #F5B82E / 각 줄: y+15px→0, 블러 8→0px, α0→1, ≈12f ease-out, 줄 간격 VO 싱크(≈1~1.5s) / 이후 하단에 반투명 흰 박스로 보조 설명 추가",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:32:29",
+    "note": ""
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "정의",
+   "용어"
+  ]
+ },
+ {
+  "id": "blur-dim-interrupt",
+  "name": "배경 블러·딤 인터럽트 등장",
+  "category": "캐릭터 연기",
+  "summary": "본 설명 도중 '여기서 잠깐' 곁가지 설명을 위해 현재 화면을 흐리고 어둡게 한 뒤 해설 인물이 손바닥 멈춤 포즈로 튀어나옴",
+  "spec": "기존 장면 가우시안 블러 ≈12px + 밝기 -40% 를 ≈8f 동안 적용(정지 배경으로 유지) → 해설 인물(상반신 ≈700px) 하단에서 슬라이드업 + '손바닥 STOP' 포즈 → 말풍선(흰 타원, 꼬리) 블러→선명 팝 ≈6f / 복귀는 하드컷",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:32:23",
+    "note": "CPU 아키텍처란?"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "곁가지",
+   "해설"
+  ]
+ },
+ {
+  "id": "record-milestone-badge",
+  "name": "기록 달성 원형 배지 스텝업",
+  "category": "차트·인포그래픽",
+  "summary": "시가총액 등 누적 기록을 연한 원형 배지 안 숫자로 보여주고 단계별(1조→2조→3조)로 교체, 최초 달성 시 왕관·버스트",
+  "spec": "크림 배경 #F4F1EA / 회색 원(지름 ≈500px, #D9D8D5) 안 애플 로고 워터마크 + 상단 '애플' 라벨·날짜(회색 ≈20px) / 숫자 '1조 달러' 진회색 #4A4A4A 굵은 ≈64px 팝 + 보라·자주 점 색종이 방사 버스트(기존) / 다음 단계: 숫자·날짜 크로스페이드 10f로 교체, 금색 왕관(≈90px, 15° 기울임) 원 우상단 부착, 3조 때 노랑 스타버스트 '전세계 최초' / 비교: 우측 → 화살표 + 연주황 원 '코스피 시가총액'",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "02:42:52",
+    "note": "애플 시총 1·2·3조 달러"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "수치",
+   "기록"
+  ]
+ },
+ {
+  "id": "xray-silhouette-reveal",
+  "name": "엑스레이 실루엣 투시",
+  "category": "사진·자료 처리",
+  "summary": "질병·내부 문제를 설명할 때 인물 실루엣을 회색 투시체로 바꾸고 흰 뼈대 + 분홍 병변 덩어리를 보여준 뒤 얼굴로 틸트업",
+  "spec": "어두운 대리석 텍스처 배경 / 인물 몸통 → 회색 반투명 실루엣(#8C8C8C α0.8) + 흰 골격 라인아트 + 분홍 세포 클러스터(#E0457B, 지름 ≈60~90px) 5개가 미세 펄스(스케일 ±5%, 1s 주기) / 이후 카메라 세로 틸트업 ≈30f로 몸통→얼굴(눈 감음, 우울 세로선 기호)",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "02:35:30",
+    "note": "암 전이"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "의학",
+   "투시"
+  ]
+ },
+ {
+  "id": "flag-map-stat-link",
+  "name": "국기 채움 지도 + 점선 연결 통계",
+  "category": "차트·인포그래픽",
+  "summary": "국가 인구 등 수치를 국기 텍스처로 채운 국토 실루엣과 비교 대상 아이콘을 점선으로 이어 두 수치를 나란히 제시",
+  "spec": "청회색 배경 #4E7F8F / 좌측 미국 실루엣(≈560×330px) 성조기 텍스처 채움, 팝 등장 / 상단 수치 '2억 8,100만 명' 검정 굵은 ≈44px 글자단위 타이핑(≈2f/글자) / 흰 점선(대시 ≈14px) 좌→우 ≈10f 드로우 → 우측 CD 원판 아이콘(≈270px) 팝 → 두번째 수치 타이핑 / 이후 하단 군중 실루엣 상승(기존)",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "02:00:37",
+    "note": "미국 인구 vs 공CD 판매량"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "지도",
+   "통계"
+  ]
+ },
+ {
+  "id": "energy-portal-ring",
+  "name": "에너지 포탈 링",
+  "category": "감정·효과 FX",
+  "summary": "순식간에 무언가를 만들어냄/소환을 인물 가슴 앞 푸른 발광 링으로 표현",
+  "spec": "시안 발광 도넛(외경 ≈250px, 내경 ≈90px, #9FE3FF 코어 + 외곽 글로우) 0→1 스케일 ≈8f 후 전기 아크 링 회전 루프, 다음 컷에서 오브젝트(CD)가 링 중앙에서 등장",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "02:01:31",
+    "note": "사운드잼 뚝딱 개발"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "소환",
+   "발광"
+  ]
+ },
+ {
+  "id": "manga-speedline-rage-bg",
+  "name": "만화 집중선 분노 배경",
+  "category": "감정·효과 FX",
+  "summary": "캐릭터 폭발적 분노(초사이어인 패러디) 시 연두색 방사 집중선 배경 + 근육 과장 + 노랑 폭발 말풍선",
+  "spec": "연두 #7BC77B 바탕에 흰/짙은 초록 방사 집중선, 하드컷 등장. ※방사형 줄무늬라 욱일기 연상 → 사용 금지. 대체안: 평행 속도선 또는 동심원 링",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "02:16:47",
+    "note": "'으아아아 짜증나!!!'"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "금지",
+  "tags": [
+   "분노",
+   "방사"
+  ]
+ },
+ {
+  "id": "throne-starburst-glow",
+  "name": "왕좌 뒤 금색 스타버스트",
+  "category": "감정·효과 FX",
+  "summary": "'다음 후계자는?' 제시 때 빈 왕좌 뒤 금색 방사 광선 버스트",
+  "spec": "금색 방사 스파이크 광선(≈500px) + 빨간 왕좌 컷아웃, 영어 손글씨 'Who is next?' ※방사형 광선 → 금지. 대체안: 원형 소프트 블룸(idea-warm-bloom)",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "02:35:57",
+    "note": ""
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "금지",
+  "tags": [
+   "방사"
+  ]
+ }
+]

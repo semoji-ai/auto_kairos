@@ -39,4 +39,5 @@
 ## After Effects 모션 작업
 
 - 세모지 연출 규칙(여러 레퍼런스 참고) AE 편집 요청에는 [semoji-motion-ae 스킬](.agents/skills/semoji-motion-ae/SKILL.md)과 [편집 운영 규칙](adobe/docs/editorial-motion-playbook.md)을 읽으세요. 도감 참고 기법과 패널에서 직접 적용되는 기법을 구분하고 프로젝트 `art_style.json`의 화풍을 유지하세요.
+- 세모지 모션 도감 원본(Remotion 4 + React 19 독립 npm 프로젝트, 빌더, 레퍼런스 분석 노트)은 [`motion/`](motion/README.md)에 있습니다(구 `~/Projects/semoji-motion`). `remotion/`(React 18)과 의존성을 합치지 마세요. 영상 미디어·도감 미리보기는 NAS 보관이며 `motion/REFERENCES.md`에 위치가 있습니다.
 - 다른 컴퓨터에서 프로젝트를 받으면 [렌더러 전달 계약](docs/contracts/semoji-renderer-handoff-v1.md)을 따르고 `python3 adobe/scripts/prepare_ae_project.py output/<project>`로 먼저 점검하세요. `scenes.json`이 없는 경우에만 `--write`로 생성하며 기존 AE 편집 파일은 덮어쓰지 않습니다.
