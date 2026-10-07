@@ -337,24 +337,14 @@ class SubtitleSync:
                 effective_len = len(sentence)
                 if self._is_complete_quote(sentence):
                     effective_len = len(sentence) - 2
-                ratio = effective_len / self.max_chars
-                if ratio <= 1:
+                if self._is_complete_quote(sentence) and effective_len <= self.max_chars:
                     final_lines.append(sentence)
                 else:
-                    cuts = max(1, int(ratio))
-                    parts = self.split_long_sentence(sentence, cuts)
-                    # 재귀 분할: 조각이 여전히 max_chars 초과 시 추가 분할
-                    resolved = []
-                    for part in parts:
-                        if len(part) > self.max_chars:
-                            sub_parts = self.split_long_sentence(part, 1)
-                            if len(sub_parts) > 1:
-                                resolved.extend(sub_parts)
-                            else:
-                                resolved.extend(self._simple_split(part))
-                        else:
-                            resolved.append(part)
-                    final_lines.extend(resolved)
+                    # 줄 나누기 규칙은 generate_subtitles 와 같은 한 곳(subtitle_linebreak, 통합보고 §2-1).
+                    # 예전 split_long_sentence(목표 길이에 가장 가까운 조사)는 서술어 한 단어만
+                    # 넘기거나 목적어를 서술어와 떼어 놓았다.
+                    from auto_agent.tools.subtitle_linebreak import break_lines
+                    final_lines.extend(break_lines(sentence, self.max_chars))
         # 소수점 분리 후처리 (e.g. "125." + "8%" → "125.8%")
         final_lines = self._fix_decimal_splits(final_lines)
         return final_lines
