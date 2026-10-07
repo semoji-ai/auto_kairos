@@ -308,6 +308,15 @@ _imggen/characters/roster.pre_split.json
 !/scripts/ask_removal.py
 !/scripts/pick_unselected.py
 !/scripts/publish_assets.py
+# 초안 생성기(TTS v4·레이어 분리·AE 조립·BGM·반복 검사) — 한 대 Mac 에만 있던 것을 추적
+!/scripts/tts_v4_chapters.py
+!/scripts/layerize_scenes.py
+!/scripts/build_ae_layer_scenes.py
+!/scripts/codex_matte_layers.py
+!/scripts/upscale_layers.py
+!/scripts/gen_asset_sheets.py
+!/scripts/bgm_select.py
+!/scripts/check_repetition.py
 
 # 기존 프로젝트 사본 삭제는 유지하되, main의 산출물 가드를 따른다.
 # 폴더 전체를 무시하면 ARCHIVED.json 등 작은 보관 기록까지 가려진다.
