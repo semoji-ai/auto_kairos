@@ -62,7 +62,7 @@ def test_missing_selected_image_blocks_creation(tmp_path):
     assert not (project / "scenes.json").exists()
 
 
-def test_unported_pirates_technique_is_manual_and_unknown_id_blocks(tmp_path):
+def test_unported_reference_technique_is_manual_and_unknown_id_blocks(tmp_path):
     project = _project(tmp_path, technique="chat-parody")
     result = prepare_ae_project.prepare(project)
     assert result["ok"]
