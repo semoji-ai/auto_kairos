@@ -85,7 +85,7 @@ R.push(AKD.apply("stamp-slam", {comp: comp, layers: [], t: 8/30, params: {size: 
     "idle-bob": dict(preview="core-28", plate=None, frames=[0, 5, 10, 15, 20, 40, 75, 110, 149], setup=layered_setup("s02_dock", "02") + """
 R.push(AKD.apply("idle-bob", {comp: comp, layers: LY.chars, t: 0, content: {seeds: LY.seeds, bboxes: LY.bboxes}, assetsRoot: ASSETS}));
 """),
-    "dim-cutaway-drop-exit": dict(preview="x_ref_b-06", plate=0, frames=[8, 12, 16, 20, 28, 34, 40, 50, 62, 64, 66, 70, 75, 99], setup="""
+    "dim-cutaway-drop-exit": dict(preview="demo-dim-cutaway-drop-exit", plate=0, frames=[8, 12, 16, 20, 28, 34, 40, 50, 62, 64, 66, 70, 75, 99], setup="""
 R.push(AKD.apply("dim-cutaway-drop-exit", {comp: comp, layers: [], t: 8/30, assetsRoot: ASSETS}));
 """),
     "starburst-echo": dict(preview="core-17", plate=0, frames=[6, 7, 8, 9, 11, 14, 19, 30, 60], setup="""
@@ -98,7 +98,7 @@ R.push(AKD.apply("year-tag", {comp: comp, layers: [], t: 60/30, content: {text: 
     "scroll-label": dict(preview="core-12", plate=0, frames=[6, 8, 10, 12, 15, 18, 22, 30, 60, 80, 82, 84, 86], setup="""
 R.push(AKD.apply("scroll-label", {comp: comp, layers: [], t: 6/30, params: {size: 78}, content: {text: "공화춘", sub: "共和春", x: 960, y: 540, w: 460, outAfter: 74}, assetsRoot: ASSETS}));
 """),
-    "wipe-reveal-bubble": dict(preview="x_ref_b-05", plate=0, frames=[8, 11, 14, 17, 20, 40, 52, 53, 54, 58, 62, 66, 70, 104, 106], setup="""
+    "wipe-reveal-bubble": dict(preview="demo-wipe-reveal-bubble", plate=0, frames=[8, 11, 14, 17, 20, 40, 52, 53, 54, 58, 62, 66, 70, 104, 106], setup="""
 R.push(AKD.apply("wipe-reveal-bubble", {comp: comp, layers: [], t: 8/30, content: {x: 1260, y: 330, w: 560, h: 260, text: "짜장면이\\n뭔고?", size: 64, outAfter: 44}, assetsRoot: ASSETS}));
 R.push(AKD.apply("wipe-reveal-bubble", {comp: comp, layers: [], t: 58/30, content: {x: 1300, y: 360, w: 640, h: 280, text: "춘장에 비빈\\n국수라니!", size: 64, outAfter: 46}, assetsRoot: ASSETS}));
 """),

@@ -22,9 +22,9 @@
 | 세모지식 이야기 | 사건·인물·반전에서 컷과 정지 화면을 살리고, 말하는 단어에 맞춰 요소를 하나씩 누적 | 하드컷, 짧은 단어 카드, 자료 사진 팝, 인물의 발끝 기준 까딱임, 연도 태그·도장 |
 | 설명형 연출 | 비교·분류·지도·수치의 관계를 먼저 보여주고, 읽는 순서를 모션으로 지정 | 점선 열 비교, 지도 항로와 통계, 단계별 차트, 한 항목씩 올라오는 카드·말풍선 |
 
-세모지의 실측 리듬과 기법별 적합·부적합 조건은 `auto_agent/data/skills/shared/motion-dogam-semoji.md`를 본다. 평균 컷 길이·팝 빈도는 관찰값이지 할당량이 아니다. 연결어 “그런데”를 언제나 별도 카드로 만들거나 모든 장면에 느린 줌을 넣지 않는다. 설명형 레퍼런스(여러 레퍼런스 중 하나) 항목은 카탈로그에서 `sources[].ref == "ref_b"`로 찾는다.
+세모지의 실측 리듬과 기법별 적합·부적합 조건은 `auto_agent/data/skills/shared/motion-dogam-semoji.md`를 본다. 평균 컷 길이·팝 빈도는 관찰값이지 할당량이 아니다. 연결어 “그런데”를 언제나 별도 카드로 만들거나 모든 장면에 느린 줌을 넣지 않는다. 설명형 레퍼런스(여러 레퍼런스 중 하나) 항목은 카탈로그에서 `sources[].ref == "ref_explainer_editorial"`로 찾는다.
 
-현재 `ref_b` 레퍼런스 12개 중 `wipe-reveal-bubble`, `dim-cutaway-drop-exit` 두 기법만 AE 패널에 직접 이식되어 있다. `globe-spin-scatter`, `dashed-column-compare`, `chat-parody`, `map-stat-overlay`, `rack-defocus-drop-exit`, `bar-end-icon-pop`, `bar-end-icon-pop-h`, `brush-arrow-route`, `random-mouth-talk`, `tilted-stamp-hold`는 **연출 참고**다. 예컨대 비교는 점선·패널·값을 순차 키프레임으로 만들고, 채팅은 텍스트 레이어와 마스크의 푸시업으로, 지도는 승인된 지도 이미지 위 경로 패스로 재현한다. 수동 구현을 자동 적용 결과로 기록하지 않는다.
+현재 `ref_explainer_editorial` 레퍼런스 12개 중 `wipe-reveal-bubble`, `dim-cutaway-drop-exit` 두 기법만 AE 패널에 직접 이식되어 있다. `globe-spin-scatter`, `dashed-column-compare`, `chat-parody`, `map-stat-overlay`, `rack-defocus-drop-exit`, `bar-end-icon-pop`, `bar-end-icon-pop-h`, `brush-arrow-route`, `random-mouth-talk`, `tilted-stamp-hold`는 **연출 참고**다. 예컨대 비교는 점선·패널·값을 순차 키프레임으로 만들고, 채팅은 텍스트 레이어와 마스크의 푸시업으로, 지도는 승인된 지도 이미지 위 경로 패스로 재현한다. 수동 구현을 자동 적용 결과로 기록하지 않는다.
 
 ## AE 타임라인과 화면 검수
 

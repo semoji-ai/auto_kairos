@@ -20,7 +20,7 @@ description: Use when planning or editing Semoji-style motion (built from variou
 3. 해당 `id`가 AE `registry.json`에 있으면 패널의 **기법 도감** 탭에서 적용할 수 있다. 없으면 그 효과를 새 JSX로 구현하거나 기존 AE 레이어·키프레임으로 재현할지 판단한다. 이때 구현·검증 없이 자동 적용했다고 기록하지 않는다.
 4. `scene_specs.json`에 `techniques`가 있다면 연출 의도로 존중한다. 이는 AE 자동 적용 명령이 아니다. Remotion으로도 출력한다면 기존 `motion` 프리셋을 별도로 유지한다.
 5. 이로미즘 등 다른 화풍에서는 도감의 **타이밍·등장 순서·시선 이동**만 차용한다. `art_style.json` 및 현재 씬 이미지의 캐릭터·선·색·배경·폰트를 유지한다. 레퍼런스·세모지 원본의 시각 자산이나 장식은 그대로 가져오지 않는다. 씬의 `motionNote`를 확인하고, 효과의 룩 옵션이 화풍과 충돌하면 조정하거나 해당 기법 대신 같은 의미의 수동 레이어 모션으로 구현한다.
-6. 설명형 레퍼런스(여러 레퍼런스 중 하나, `ref_b`) 항목은 `techniques.json`의 `sources[].ref == "ref_b"`에서 찾는다. 12개 중 현재 AE 직접 적용은 `wipe-reveal-bubble`, `dim-cutaway-drop-exit` 둘뿐이다. 나머지는 작업 규칙서의 수동 AE 구현 기준을 따른다. 실제 AE 구현을 검수하지 않고 적용 완료로 표시하지 않는다.
+6. 설명형 편집 레퍼런스(여러 레퍼런스 중 하나, `ref_explainer_editorial`) 항목은 `techniques.json`의 `sources[].ref == "ref_explainer_editorial"`에서 찾는다. 12개 중 현재 AE 직접 적용은 `wipe-reveal-bubble`, `dim-cutaway-drop-exit` 둘뿐이다. 나머지는 작업 규칙서의 수동 AE 구현 기준을 따른다. 실제 AE 구현을 검수하지 않고 적용 완료로 표시하지 않는다.
 
 ## 다른 macOS 컴퓨터에서 처음 실행
 
