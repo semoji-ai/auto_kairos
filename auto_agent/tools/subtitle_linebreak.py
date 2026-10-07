@@ -5,7 +5,11 @@
     2. 마지막 조각은 두 어절 이상. 서술어 한 단어만 넘기지 않는다
        ("…성장 방식을 / 선택합니다." ✕).
     3. 목적어는 서술어 줄로 ("~로 몸집을 / 점점 불려" ✕ → "~로 / 몸집을 점점 불려").
-    4. 날짜+쉼표로 시작하는 문장은 날짜만 첫 자막 ("1975년," / "작업장은…").
+    4. 날짜+쉼표로 시작하는 문장의 날짜를 따로 첫 자막으로 떼는 것은 **연출이 그 연도를
+       별도 타이포(연도 태그·타이핑 카드 등)로 보여 줄 때만**이다 ("1975년," / "작업장은…").
+       그렇지 않으면 한 줄에 들어가는 문장은 날짜와 함께 둔다. 씬 표시는
+       `scene_splits_lead_date(scene)` — 명시 필드 `subtitle_split_lead_date` 가 우선,
+       없으면 씬 `techniques` 에 연도 타이포 기법 id 가 있는지로 본다.
     5. 따옴표·괄호로 묶인 이름은 조사까지 한 줄에 — 묶음 안에서는 끊지 않는다.
     6. 숫자는 원고 표기 그대로 — 어절 안에서는 끊지 않는다("3,500여명").
 
@@ -26,6 +30,30 @@ _TOGGLE = "'\""
 DATE_LEAD = re.compile(
     r"^((?:\d{1,4}년(?:\s*\d{1,2}월)?(?:\s*\d{1,2}일)?|\d{1,2}월(?:\s*\d{1,2}일)?)"
     r"(?:\s*(?:초|말|봄|여름|가을|겨울|무렵|당시))?),\s+")
+
+# 연도·날짜를 별도 타이포로 보여 주는 도감 기법 — 이 기법이 씬에 있으면 자막에서 날짜를 뗀다.
+YEAR_TYPO_TECHNIQUES = frozenset({
+    "year-tag", "calendar-tag-smoke-pop", "sage-date-typing-card", "typewriter-interstitial",
+    "year-chip-rapid-roll", "legacy-format-v1", "timeline-bar",
+})
+
+
+def scene_splits_lead_date(scene: dict | None) -> bool:
+    """이 씬의 자막에서 앞머리 "연도," 를 따로 뗄지.
+
+    1) 연출 단계가 적은 `subtitle_split_lead_date`(bool)가 있으면 그것.
+    2) 없으면 `techniques` 에 YEAR_TYPO_TECHNIQUES 가 하나라도 있으면 True.
+    둘 다 없으면 False — 날짜를 문장과 함께 둔다."""
+    if not isinstance(scene, dict):
+        return False
+    v = scene.get("subtitle_split_lead_date")
+    if isinstance(v, bool):
+        return v
+    tech = scene.get("techniques") or []
+    if isinstance(tech, str):
+        tech = [tech]
+    return any(isinstance(t, str) and t in YEAR_TYPO_TECHNIQUES for t in tech)
+
 
 _SENT_END = re.compile(r"[.!?…][\"'”’)\]」』]*$")
 _CLAUSE_LONG = re.compile(r"(지만|는데|인데|한데|던데|면서|어서|아서|니까|으니|때문에|위해서?|도록|듯이|다가|려고|으며|으면|"
@@ -100,7 +128,7 @@ def _eojeol(s: str) -> int:
     return len(s.split())
 
 
-def _choose(text: str, max_chars: int) -> int | None:
+def _choose(text: str, max_chars: int, split_lead_date: bool = False) -> int | None:
     """끊을 공백 위치(그 공백 인덱스). 마땅한 자리가 없으면 None."""
     prot = _protected_spaces(text, max_chars)
     best, best_key = None, None
@@ -111,6 +139,8 @@ def _choose(text: str, max_chars: int) -> int | None:
         if not left or not right:
             continue
         score = _boundary_score(left)
+        if not split_lead_date and DATE_LEAD.match(text) and len(left) <= DATE_LEAD.match(text).end(1) + 1:
+            score += 6.0          # 연도 타이포 연출이 없으면 날짜만 따로 떼지 않는다
         over = len(left) - max_chars
         if over > SLACK:
             continue
@@ -134,19 +164,22 @@ def _choose(text: str, max_chars: int) -> int | None:
     return best
 
 
-def break_lines(text: str, max_chars: int = MAX_CHARS) -> list[str]:
-    """말자막 한 덩어리(씬 나레이션)를 줄 목록으로 나눈다."""
+def break_lines(text: str, max_chars: int = MAX_CHARS, split_lead_date: bool = False) -> list[str]:
+    """말자막 한 덩어리(씬 나레이션)를 줄 목록으로 나눈다.
+
+    split_lead_date: 앞머리 "연도," 를 따로 첫 자막으로 뗀다 — 씬 연출이 연도를 별도
+    타이포로 보여 줄 때만 True (`scene_splits_lead_date(scene)`)."""
     text = re.sub(r"\s+", " ", text or "").strip()
     if not text:
         return []
-    m = DATE_LEAD.match(text)
+    m = DATE_LEAD.match(text) if split_lead_date else None
     if m:
         rest = text[m.end():].strip()
         if _eojeol(rest) >= 2:
-            return [m.group(1) + ","] + break_lines(rest, max_chars)
+            return [m.group(1) + ","] + break_lines(rest, max_chars)   # 나머지는 날짜 규칙 없이
     if len(text) <= max_chars:
         return [text]
-    pos = _choose(text, max_chars)
+    pos = _choose(text, max_chars, split_lead_date)
     if pos is None:
         if " " not in text:
             # 띄어쓰기 없는 긴 덩어리 — 예전 동작대로 글자 수로 자른다

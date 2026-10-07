@@ -50,7 +50,7 @@ def test_generate_subtitles_uses_actual_audio_duration_when_sidecar_ends_early(t
     monkeypatch.setitem(sys.modules, "whisperx", whisperx_mod)
 
     monkeypatch.setattr(subtitle_script, "get_project_dir", lambda: project_dir)
-    monkeypatch.setattr(subtitle_script, "smart_split", lambda text: [text])
+    monkeypatch.setattr(subtitle_script, "smart_split", lambda text, **_kw: [text])
     monkeypatch.setattr(subtitle_script, "fix_decimal_splits", lambda lines: lines)
     monkeypatch.setattr(subtitle_script, "fix_quote_splits", lambda lines: lines)
     monkeypatch.setattr(subtitle_script, "_upload_subtitles_to_supabase", lambda *args, **kwargs: None)

@@ -160,16 +160,17 @@ def find_split_points(text: str) -> List[Tuple[int, int]]:
     return sorted(points, key=lambda x: x[0])
 
 
-def smart_split(text: str) -> List[str]:
+def smart_split(text: str, split_lead_date: bool = False) -> List[str]:
     """말자막 줄 나누기 — 규칙은 auto_agent/tools/subtitle_linebreak.py (통합보고 §2-1).
 
     예전 방식(가장 뒤쪽 조사에서 끊기)은 "…성장 방식을 / 선택합니다." 처럼 서술어 한
     단어만 넘기거나, 쉼표 뒤 다음 절 앞부분을 앞 줄에 딸려 보냈다. 이제는 어절 경계마다
     점수를 매긴다 — 문장 끝 > 쉼표 > 절 경계 > 주어·부사어 조사 > … > 목적어·관형어(피함),
-    마지막 조각은 두 어절 이상, 따옴표·괄호 묶음 안에서는 끊지 않고, 날짜+쉼표는 따로.
+    마지막 조각은 두 어절 이상, 따옴표·괄호 묶음 안에서는 끊지 않는다.
+    split_lead_date=True(씬 연출이 연도를 별도 타이포로 보여 줄 때)면 앞머리 "연도," 를 뗀다.
     """
     from auto_agent.tools.subtitle_linebreak import break_lines
-    return break_lines(text, MAX_CHARS_PER_LINE)
+    return break_lines(text, MAX_CHARS_PER_LINE, split_lead_date=split_lead_date)
 
 
 def chars_to_words(sidecar: dict) -> list:
@@ -644,10 +645,12 @@ def main():
             # 디스플레이용 라인 분할 (원본 narration)
             # subtitle_lines 필드가 있으면 에이전트가 미리 분할한 결과를 사용 (우선)
             pre_split = scene.get("subtitle_lines")
+            from auto_agent.tools.subtitle_linebreak import scene_splits_lead_date
+            _lead_date = scene_splits_lead_date(scene)   # 연도 타이포 연출이 있을 때만 날짜를 뗀다
             if pre_split and isinstance(pre_split, list) and len(pre_split) > 0:
                 display_lines = [l.strip() for l in pre_split if l.strip()]
             else:
-                display_lines = smart_split(narration)
+                display_lines = smart_split(narration, split_lead_date=_lead_date)
                 display_lines = fix_decimal_splits(display_lines)
                 display_lines = fix_quote_splits(display_lines)
                 display_lines = fix_dangling_connectors(display_lines)
@@ -660,7 +663,7 @@ def main():
             if pre_split_tts and isinstance(pre_split_tts, list) and len(pre_split_tts) > 0:
                 candidate_tts_lines = [l.strip() for l in pre_split_tts if l.strip()]
             else:
-                candidate_tts_lines = smart_split(narration_tts)
+                candidate_tts_lines = smart_split(narration_tts, split_lead_date=_lead_date)
                 candidate_tts_lines = fix_decimal_splits(candidate_tts_lines)
                 candidate_tts_lines = fix_quote_splits(candidate_tts_lines)
                 candidate_tts_lines = fix_dangling_connectors(candidate_tts_lines)

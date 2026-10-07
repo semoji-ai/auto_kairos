@@ -44,10 +44,37 @@ def test_object_goes_with_predicate(split):
 
 
 @pytest.mark.parametrize("split", SPLITTERS)
-def test_date_with_comma_is_its_own_first_line(split):
-    assert split("1975년, 작업장은 마을 공터에 세운 작은 창고였습니다.")[:2] == \
+def test_date_split_only_when_direction_shows_year_typo(split):
+    # 연출이 연도를 별도 타이포로 보여 줄 때만 "연도," 를 따로 뗀다
+    assert split("1975년, 작업장은 마을 공터에 세운 작은 창고였습니다.", split_lead_date=True)[:2] == \
         ["1975년,", "작업장은 마을 공터에 세운 작은 창고였습니다."]
-    assert split("1922년 11월 12일, 충남 천안군 북일면 부대리.")[0] == "1922년 11월 12일,"
+    assert split("1922년 11월 12일, 충남 천안군 북일면 부대리.", split_lead_date=True)[0] == "1922년 11월 12일,"
+    # 그렇지 않으면 한 줄에 들어가는 문장은 날짜와 함께
+    assert split("1922년 11월 12일, 충남 천안군 북일면 부대리.") == ["1922년 11월 12일, 충남 천안군 북일면 부대리."]
+    # 길어서 나눠야 해도 날짜만 따로 남기지 않는다
+    lines = split("2026년, 창립 74년 만에 처음으로 재계 서열 5위에 오른 기업이 있습니다.")
+    assert lines[0] != "2026년," and lines[0].startswith("2026년,")
+
+
+def test_scene_marker_for_lead_date_split():
+    from auto_agent.tools.subtitle_linebreak import scene_splits_lead_date
+    assert scene_splits_lead_date({"subtitle_split_lead_date": True}) is True
+    assert scene_splits_lead_date({"techniques": ["year-tag"]}) is True
+    assert scene_splits_lead_date({"techniques": ["sage-date-typing-card", "photo-pop"]}) is True
+    # 명시 필드가 기법보다 우선
+    assert scene_splits_lead_date({"techniques": ["year-tag"], "subtitle_split_lead_date": False}) is False
+    assert scene_splits_lead_date({"techniques": ["photo-pop"]}) is False
+    assert scene_splits_lead_date({}) is False and scene_splits_lead_date(None) is False
+
+
+def test_generate_tts_subtitle_contract_uses_scene_marker():
+    from auto_agent.scripts import generate_tts as g
+    scene = {"narration": "1922년 11월 12일, 충남 천안군 북일면 부대리.", "techniques": ["year-tag"]}
+    g._ensure_subtitle_line_contract(scene, scene["narration"], scene["narration"], [])
+    assert scene["subtitle_lines"][0] == "1922년 11월 12일,"
+    plain = {"narration": "1922년 11월 12일, 충남 천안군 북일면 부대리."}
+    g._ensure_subtitle_line_contract(plain, plain["narration"], plain["narration"], [])
+    assert plain["subtitle_lines"] == ["1922년 11월 12일, 충남 천안군 북일면 부대리."]
 
 
 @pytest.mark.parametrize("split", SPLITTERS)

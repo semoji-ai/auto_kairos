@@ -89,6 +89,12 @@
 ## 8. 말자막
 
 - 줄 나누기: `auto_agent/tools/subtitle_linebreak.py`(통합보고 §2-1, 테스트 `tests/test_subtitle_linebreak.py`). — **구현**
+- 앞머리 "연도," 를 따로 첫 자막으로 떼는 것은 **그 씬 연출이 연도를 별도 타이포(연도 태그·타이핑
+  카드 등)로 보여 줄 때만**이다. 표시: 씬(scene_specs)의 `subtitle_split_lead_date: true` — 연출 단계가
+  적는다. 이 필드가 없으면 씬 `techniques` 에 연도 타이포 기법(`year-tag`, `calendar-tag-smoke-pop`,
+  `sage-date-typing-card`, `typewriter-interstitial`, `year-chip-rapid-roll`, `legacy-format-v1`,
+  `timeline-bar`)이 있는지로 판단한다(`subtitle_linebreak.scene_splits_lead_date`). 그 밖에는 한 줄에
+  들어가는 문장을 날짜와 함께 두고, 길어서 나눠도 날짜만 따로 남기지 않는다. — **구현**
 - 앞 줄 out = 다음 줄 in(빈틈 없음). **opacity 키를 넣지 않는다**(100% 고정, in/out 으로만).
   상태: AE 말자막 생성은 미구현 — 만들 때 이 두 줄이 기본값이다.
 

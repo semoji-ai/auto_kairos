@@ -227,12 +227,12 @@ def _normalize_alignment_text(text: str) -> str:
     return re.sub(r"\s+", "", text or "")
 
 
-def _split_subtitle_lines(text: str) -> list[str]:
+def _split_subtitle_lines(text: str, split_lead_date: bool = False) -> list[str]:
     if not text or not text.strip():
         return []
     from auto_agent.scripts.generate_subtitles import smart_split, fix_decimal_splits, fix_quote_splits
 
-    lines = smart_split(text)
+    lines = smart_split(text, split_lead_date=split_lead_date)
     lines = fix_decimal_splits(lines)
     lines = fix_quote_splits(lines)
     return [line.strip() for line in lines if line and line.strip()]
@@ -263,7 +263,8 @@ def _ensure_subtitle_line_contract(scene: dict, raw_text: str, tts_text: str, sc
     if display_lines and isinstance(display_lines, list) and len(display_lines) > 0:
         display_lines = [line.strip() for line in display_lines if str(line).strip()]
     else:
-        display_lines = _split_subtitle_lines(raw_text)
+        from auto_agent.tools.subtitle_linebreak import scene_splits_lead_date
+        display_lines = _split_subtitle_lines(raw_text, scene_splits_lead_date(scene))
         if display_lines:
             scene["subtitle_lines"] = display_lines
             changed = True
@@ -276,7 +277,9 @@ def _ensure_subtitle_line_contract(scene: dict, raw_text: str, tts_text: str, sc
             existing_tts_lines = None
 
         derived_tts_lines, line_changes = _derive_subtitle_lines_tts(display_lines, tts_text)
-        final_tts_lines = derived_tts_lines or existing_tts_lines or _split_subtitle_lines(tts_text)
+        from auto_agent.tools.subtitle_linebreak import scene_splits_lead_date
+        final_tts_lines = (derived_tts_lines or existing_tts_lines
+                           or _split_subtitle_lines(tts_text, scene_splits_lead_date(scene)))
         if final_tts_lines and scene.get("subtitle_lines_tts") != final_tts_lines:
             scene["subtitle_lines_tts"] = final_tts_lines
             changed = True
