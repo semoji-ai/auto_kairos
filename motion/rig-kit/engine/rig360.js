@@ -266,7 +266,12 @@ function drawHead3(P,ch){const psi=P.headYaw,cyh=Math.cos(psi),syh=Math.sin(psi)
  /* nose line + mouth at azimuth 0 (they fade only once the face has turned past the profile) */
  if(cyh>-0.12){const al=cl((cyh+0.05)*4),am=cl((cyh+0.12)*6),hk=-0.057*cl2((nrm(psi)+0.15)/0.15)*Math.max(0.3,cyh),xb=HW*0.9*syh,xt=(HW+0.03)*syh,k=Math.max(0.35,cyh),mx=inX(HW*0.94*syh,0.13*k),tk=Fc.talk||0;c.globalAlpha=al;
   if(ch.nose==='round'){shape(()=>{c.beginPath();c.ellipse(xt+hk*0.55,EY+0.215,0.07*Math.max(0.55,k),0.062,0,0,TAU)},ch.n2);c.fillStyle='rgba(255,255,255,0.22)';c.beginPath();c.ellipse(xt+hk*0.55-0.02*k,EY+0.195,0.022*k,0.016,0,0,TAU);c.fill()}
-  else{const sh=ch.nose==='short',u0=sh?0.62:0;line(()=>{c.beginPath();if(ch.eyes==='shades')c.moveTo(xb,EY+0.1);else c.moveTo(lerp(xb,xt,u0),lerp(EY-0.14,EY+0.215,u0));c.lineTo(xt,EY+0.215);c.quadraticCurveTo(xt,EY+0.262,xt+hk,EY+0.262)},0.022,ch.nc);
+  else{const sh=ch.nose==='short',u0=sh?0.62:0,ra=cl((cyh-0.6)/0.3);
+   /* bridge line reads as volume from the front and 3/4; it fades out as the head turns to the side (the silhouette bump takes over) */
+   if(ra>0&&ch.eyes!=='shades'){c.globalAlpha=al*ra;line(()=>{c.beginPath();c.moveTo(lerp(xb,xt,u0),lerp(EY-0.14,EY+0.215,u0));c.lineTo(xt,EY+0.165)},0.022,ch.nc);c.globalAlpha=al}
+   /* the tip hook also fades once the nose starts to stick out of the silhouette, so the two never show together */
+   const ha=cl((0.89-Math.abs(syh))/0.05);if(ha>0){c.globalAlpha=al*ha;
+   line(()=>{c.beginPath();if(ch.eyes==='shades')c.moveTo(xb,EY+0.1);else c.moveTo(xt,EY+0.165);c.lineTo(xt,EY+0.215);c.quadraticCurveTo(xt,EY+0.262,xt+hk,EY+0.262)},0.022,ch.nc);c.globalAlpha=al}
    c.globalAlpha=al*0.4;c.fillStyle=ch.nc;c.beginPath();c.ellipse(xt+hk*0.5,EY+0.296,0.05*k,0.013,0,0,TAU);c.fill()}c.globalAlpha=am;c.save();headPath();c.clip();
   if(ch.wrinkle)line(()=>{c.beginPath();for(const s of[1,-1]){c.moveTo(mx+s*0.15*k,EY+0.29);c.quadraticCurveTo(mx+s*0.2*k,EY+0.37,mx+s*0.185*k,EY+0.45)}},0.016,ch.nc);
   if(ch.stache)shape(()=>{c.beginPath();c.moveTo(mx-0.17*k,EY+0.37);c.quadraticCurveTo(mx-0.09*k,EY+0.27,mx,EY+0.31);c.quadraticCurveTo(mx+0.09*k,EY+0.27,mx+0.17*k,EY+0.37);c.quadraticCurveTo(mx+0.07*k,EY+0.38,mx,EY+0.355);c.quadraticCurveTo(mx-0.07*k,EY+0.38,mx-0.17*k,EY+0.37);c.closePath()},ch.stache);
