@@ -42,8 +42,15 @@ for i in "${!FONT_IDS[@]}"; do
 
     installed=false
 
+    # ── 방법 0: remotion_template 에 이미 있으면 그대로 복사 ──
+    if [ -f "$TEMPLATE_FONTS_DIR/$dst_name" ]; then
+        cp "$TEMPLATE_FONTS_DIR/$dst_name" "$target"
+        echo "  [OK] $dst_name (remotion_template 사본 복사)"
+        installed=true
+    fi
+
     # ── 방법 1: FontAgent ──
-    if [ -f "$VENV_PYTHON" ] && "$VENV_PYTHON" -c "import fontagent" 2>/dev/null; then
+    if ! $installed && [ -f "$VENV_PYTHON" ] && "$VENV_PYTHON" -c "import fontagent" 2>/dev/null; then
         echo "  [FontAgent] $dst_name 설치 중..."
         TEMP_DIR=$(mktemp -d)
         if "$VENV_PYTHON" -m fontagent.cli install "$font_id" --output-dir "$TEMP_DIR" >/dev/null 2>&1; then
@@ -80,11 +87,15 @@ for i in "${!FONT_IDS[@]}"; do
             rm -rf "$TEMP_DIR" "$TEMP_ZIP"
         else
             rm -f "$TEMP_ZIP"
-            echo "  [FAIL] $dst_name 다운로드 실패"
-            echo "         FontAgent를 설치하거나 수동으로 폰트를 복사하세요:"
-            echo "         $target"
-            all_ok=false
         fi
+    fi
+
+    # 어느 방법으로도 못 넣었으면 실패로 남긴다(다운로드는 됐는데 zip 이 아니거나 ttf 가 없을 때도).
+    if ! $installed; then
+        echo "  [FAIL] $dst_name 설치 실패"
+        echo "         FontAgent를 설치하거나 수동으로 폰트를 복사하세요:"
+        echo "         $target"
+        all_ok=false
     fi
 
     # remotion_template 동기화
@@ -103,3 +114,5 @@ else
     echo "  FontAgent 설치: pip install -e /path/to/fontagent"
 fi
 echo "================================================"
+
+$all_ok || exit 1

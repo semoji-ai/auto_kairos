@@ -183,7 +183,7 @@ echo "  post-merge hook 활성화 완료 (git pull 후 자동 폰트 설치)"
 # ── 폰트 설치 ──
 echo ""
 echo "🔤 폰트 설치"
-bash "$PROJECT_DIR/scripts/setup_fonts.sh"
+bash "$PROJECT_DIR/scripts/setup_fonts.sh" || echo "  ⚠️  일부 폰트 설치 실패 — 위 [FAIL] 안내대로 수동 설치 후 계속하세요"
 
 # ── 아트스타일 TS 프리셋 동기화 ──
 echo ""
