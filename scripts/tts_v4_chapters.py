@@ -26,11 +26,16 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import sys
+
 import requests
 
-VOICE_ID = "W7FnAxJNpD5WGjrF5GLp"     # 세모지
-MODEL = "eleven_v4"
-SETTINGS = {"stability": 0.5, "similarity_boost": 0.9}
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from auto_agent.tools import tts_config  # noqa: E402  모델별 설정의 단일 출처
+
+VOICE_ID = tts_config.STYLE_VOICES["semoji"]     # 세모지
+MODEL = tts_config.V4
+SETTINGS = tts_config.voice_settings_for(MODEL)  # stability 0.5 · similarity 0.9
 
 
 def api_key(root: Path) -> str:
@@ -45,8 +50,7 @@ def api_key(root: Path) -> str:
 
 def spoken(text: str) -> str:
     """발화문 — 각주 표시만 걷어낸다. 원고 문장은 그대로 둔다."""
-    t = re.sub(r"\[\d+\]\s*", "", text)
-    return re.sub(r"[ \t]+", " ", t).strip()
+    return tts_config.strip_footnotes(text)
 
 
 def duration(p: Path) -> float:
@@ -66,8 +70,7 @@ def run_chapter(ch: int, scenes: list, out: Path, key: str) -> dict:
         parts.append(t)
         pos += len(t)
     text = "".join(parts)
-    body = {"text": text, "model_id": MODEL, "voice_settings": SETTINGS,
-            "language_code": "ko", "apply_text_normalization": "auto"}
+    body = tts_config.request_body(text, MODEL)   # + language_code ko · 정규화 auto
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}/with-timestamps"
     for attempt in range(3):
         r = requests.post(url, params={"output_format": "mp3_44100_128"},

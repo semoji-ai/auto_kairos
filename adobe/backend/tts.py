@@ -16,13 +16,41 @@ from pathlib import Path
 
 from backend import env
 
-# ElevenLabs 기본값(v3 narrator와 동일 계열 — semoji)
+# ElevenLabs 기본값 — semoji 보이스, 모델 eleven_v4.
+# 모델별 설정은 auto_agent/tools/tts_config.py 와 같은 값이다(이 백엔드는 stdlib 만 쓰는
+# 별도 패키지라 복사해 둔다 — 바꿀 때는 두 곳을 같이). v4: stability·similarity 만,
+# language_code ko·정규화 auto, style·speed·SSML 없음. v2 는 폴백.
 DEFAULT_VOICE_ID = "W7FnAxJNpD5WGjrF5GLp"
-DEFAULT_MODEL = "eleven_multilingual_v2"
-VOICE_SETTINGS = {
-    "stability": 1.0, "similarity_boost": 0.9, "style": 0.9,
-    "use_speaker_boost": True, "speed": 1.1,
+DEFAULT_MODEL = "eleven_v4"
+MODEL_SETTINGS = {
+    "eleven_v4": {"voice_settings": {"stability": 0.5, "similarity_boost": 0.9},
+                  "allowed": ("stability", "similarity_boost"),
+                  "extra": {"language_code": "ko", "apply_text_normalization": "auto"}},
+    "eleven_multilingual_v2": {"voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9,
+                                                  "use_speaker_boost": True, "speed": 1.1},
+                               "allowed": ("stability", "similarity_boost", "style", "use_speaker_boost", "speed"),
+                               "extra": {}},
 }
+VOICE_SETTINGS = MODEL_SETTINGS["eleven_multilingual_v2"]["voice_settings"]   # 옛 이름 보존(v2 값)
+
+
+def request_body(text: str, model: str | None, settings: dict | None) -> dict:
+    """모델에 맞는 요청 본문. 평평한 settings 는 v2 튜닝값으로 보고 v4 에는 쓰지 않는다
+    ({"eleven_v4": {...}} 처럼 모델 이름 아래 두면 그 모델에 쓴다). 모델이 받지 않는 키는 뺀다."""
+    model = model or DEFAULT_MODEL
+    v4 = model.startswith("eleven_v4")
+    prof = MODEL_SETTINGS["eleven_v4" if v4 else "eleven_multilingual_v2"]
+    vs = dict(prof["voice_settings"])
+    settings = settings or {}
+    nested = {k: v for k, v in settings.items() if isinstance(v, dict)}
+    if nested:
+        vs.update(nested.get(model) or nested.get("eleven_v4" if v4 else "eleven_multilingual_v2") or {})
+    elif settings and not v4:
+        vs.update(settings)
+    body = {"text": text, "model_id": model,
+            "voice_settings": {k: v for k, v in vs.items() if k in prof["allowed"]}}
+    body.update(prof["extra"])
+    return body
 SAY_VOICE = os.environ.get("TTS_SAY_VOICE", "Yuna")     # 폴백용 한국어 보이스
 
 _VOICES_FILE = Path(__file__).resolve().parents[1] / "data" / "artstyle" / "voices.json"
@@ -184,8 +212,7 @@ def _eleven_fetch(text: str, cfg: dict | None = None):
     key = env.get_key("ELEVENLABS_API_KEY")
     vid = cfg.get("voice_id") or DEFAULT_VOICE_ID
     model = cfg.get("model") or DEFAULT_MODEL
-    settings = cfg.get("voice_settings") or VOICE_SETTINGS
-    body = json.dumps({"text": text, "model_id": model, "voice_settings": settings}).encode("utf-8")
+    body = json.dumps(request_body(text, model, cfg.get("voice_settings"))).encode("utf-8")
     headers = {"xi-api-key": key, "Content-Type": "application/json"}
     try:
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{vid}/with-timestamps?output_format=mp3_44100_128"

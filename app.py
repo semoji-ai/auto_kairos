@@ -2175,11 +2175,12 @@ async def regenerate_tts(request: Request, project_ref: str, scene_num: int):
         # 대시보드 재생성: 사용자가 입력한 텍스트 그대로 전송 (전처리 안 함)
         # 처음 표시되는 텍스트가 이미 전처리된 narration_tts이므로, 사용자 수정본을 존중
 
-        voice_settings = {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": True}
+        # 모델·voice_settings 는 tts_config 한 곳에서 (기본 eleven_v4 — style·speed 없음)
+        from auto_agent.tools import tts_config as _ttsc
         resp = _requests.post(
             f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
             headers={"xi-api-key": api_key, "Content-Type": "application/json"},
-            json={"text": text, "model_id": "eleven_multilingual_v2", "voice_settings": voice_settings},
+            json=_ttsc.request_body(text, voice_id=voice_id),
             timeout=60,
         )
         if resp.status_code == 200:
@@ -2271,11 +2272,11 @@ async def _bg_split_postprocess(slug: str, project: dict, scene_a: int, scene_b:
             fname = audio_next(audio_dir, scene_num, scene_id=scene_id)
             output_path = audio_dir / fname
 
-            voice_settings = {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": True}
+            from auto_agent.tools import tts_config as _ttsc
             resp = _requests.post(
                 f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
                 headers={"xi-api-key": os.environ.get("ELEVENLABS_API_KEY", ""), "Content-Type": "application/json"},
-                json={"text": narration, "model_id": "eleven_multilingual_v2", "voice_settings": voice_settings},
+                json=_ttsc.request_body(narration, voice_id=voice_id),
                 timeout=60,
             )
             if resp.status_code == 200:

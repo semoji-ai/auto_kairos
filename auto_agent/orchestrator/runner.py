@@ -989,18 +989,18 @@ class PipelineRunner:
 
             # 2순위: writing_style 기반 하드코딩 매핑 (artstyle JSON 없는 경우 fallback)
             if not config.get("voice_id"):
-                STYLE_VOICE_MAP = {
-                    "semoji": {"voice_id": "W7FnAxJNpD5WGjrF5GLp", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
-                    "semoji_3d": {"voice_id": "W7FnAxJNpD5WGjrF5GLp", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
-                    "iromism": {"voice_id": "9Sj8ugvpK1DmcAXyvi3a", "voice_settings": {"stability": 1.0, "similarity_boost": 0.6, "style": 0.9, "speed": 1.1}},
-                    "default": {"voice_id": "4JJwo477JUAx3HV0T7n7", "voice_settings": {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "speed": 1.1}},
-                }
+                # 보이스·모델별 설정은 tts_config 한 곳에서. voice_settings 는 모델별로 담는다
+                # ({"eleven_v4": {...}, "eleven_multilingual_v2": {...}}) — v4 에 v2 의
+                # style·speed 가 섞여 들어가지 않게.
+                from auto_agent.tools import tts_config
                 ws = config.get("writing_style", "default").lower().replace("-", "_")
-                voice = STYLE_VOICE_MAP.get(ws, STYLE_VOICE_MAP.get("default", {}))
-                if voice:
-                    config["voice_id"] = voice["voice_id"]
-                    config["voice_settings"] = voice["voice_settings"]
-                    print(f"    voice_id 자동 설정 (writing_style): {ws} → {voice['voice_id']}")
+                vid = tts_config.style_voice(ws)
+                config["voice_id"] = vid
+                config["voice_settings"] = {
+                    tts_config.V4: tts_config.voice_settings_for(tts_config.V4, voice_id=vid),
+                    tts_config.V2: tts_config.voice_settings_for(tts_config.V2, voice_id=vid),
+                }
+                print(f"    voice_id 자동 설정 (writing_style): {ws} → {vid}")
 
         return config
 

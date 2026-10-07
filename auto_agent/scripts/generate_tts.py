@@ -20,18 +20,17 @@ if not logger.handlers:
 from auto_agent.paths import get_workspace_dir; load_dotenv(get_workspace_dir() / ".env")
 from auto_agent.tools.scene_id import load_scene_specs
 
+from auto_agent.tools import tts_config
+
 API_KEY = os.getenv("ELEVENLABS_API_KEY")
-MODEL_ID = "eleven_multilingual_v2"
+# 기본 eleven_v4 — ELEVENLABS_MODEL_ID=eleven_multilingual_v2 로 v2 폴백(전처리기 사용).
+# 모델별 voice_settings·요청 본문은 auto_agent/tools/tts_config.py 한 곳에서 정한다.
+MODEL_ID = tts_config.default_model()
 
 # 기본값 — DB config로 오버라이드 가능
 _DEFAULT_VOICE_ID = "9Sj8ugvpK1DmcAXyvi3a"
-_DEFAULT_VOICE_SETTINGS = {
-    "stability": 1.0,
-    "similarity_boost": 0.6,
-    "style": 0.9,
-    "use_speaker_boost": True,
-    "speed": 1.1,
-}
+# 평평한 옛 형식 = v2 튜닝값. v4 에서는 tts_config 의 v4 프로필이 쓰인다.
+_DEFAULT_VOICE_SETTINGS = tts_config.voice_settings_for(tts_config.V2, voice_id=_DEFAULT_VOICE_ID)
 
 
 def _resolve_voice_config() -> tuple:
@@ -117,11 +116,7 @@ def _resolve_voice_config() -> tuple:
 
     # 4) writing_style 기반 자동 매핑 (DB voice_id=None인 semoji/iromism 프로젝트)
     if not voice_id:
-        _STYLE_VOICE_MAP = {
-            "semoji": "W7FnAxJNpD5WGjrF5GLp",
-            "semoji_3d": "W7FnAxJNpD5WGjrF5GLp",
-            "iromism": "9Sj8ugvpK1DmcAXyvi3a",
-        }
+        _STYLE_VOICE_MAP = {k: v for k, v in tts_config.STYLE_VOICES.items() if k != "default"}
         writing_style = os.getenv("WRITING_STYLE", "")
         if not writing_style:
             # PROJECT_DIR 또는 PROJECT_NAME으로 DB에서 writing_style 조회
@@ -208,11 +203,16 @@ def _is_suspect(text: str) -> list:
 def _preprocess_tts_text(text: str) -> tuple:
     """TTS 전처리 — 공용 TTSPreprocessor를 통해 direct/script 경로를 정렬.
 
+    v4(기본)는 전처리하지 않는다 — 원고 그대로(각주 표시만 걷음) 보낸다.
+    v2 폴백일 때만 KoreanTTSPreprocessor 를 거친다.
+
     Returns:
         (processed_text, changes_list). silent failure 없음 — 예외는 위로 전파.
     """
     if not text:
         return text, []
+    if not tts_config.uses_preprocessor(MODEL_ID):
+        return tts_config.strip_footnotes(text), []
 
     from auto_agent.tools.korean_tts_preprocessor import KoreanTTSPreprocessor
 
@@ -387,9 +387,8 @@ def main():
         raw = scene.get("narration", "") or ""
         existing_tts = scene.get("narration_tts") or ""
 
-        # 정책: Python 전처리기를 단일 진실로 사용 — LLM 이 채운 narration_tts 는 신뢰하지 않음.
-        # 이유: LLM 은 연도 하이픈 규칙(천-팔백-십년)을 누락하기 쉬워 발음 품질이 떨어진다.
-        # raw 가 있으면 항상 전처리해서 표준형을 강제하고, 결과가 LLM 본과 다르면 narration_tts 갱신.
+        # 정책: narration_tts 는 항상 raw 에서 다시 만든다 — LLM 이 채운 값은 신뢰하지 않음.
+        # v4(기본): 원고 그대로(각주만 걷음). v2 폴백: Python 전처리기로 표준형을 강제.
         scene_changes: list = []
         if not raw:
             text = existing_tts or ""
