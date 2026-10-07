@@ -1,4 +1,4 @@
-/* 와이프 리빌 말풍선 — wipe-reveal-bubble  [도감 x_pirates-05 · x_acting.tsx SpeechBubble(reveal=wipe)]
+/* 와이프 리빌 말풍선 — wipe-reveal-bubble  [도감 x_ref_b-05 · x_acting.tsx SpeechBubble(reveal=wipe)]
    세모지 흰 타원 말풍선이 왼쪽→오른쪽으로 펼쳐지고(wipeLen f, cubicOut — 마스크 오른쪽 끝 키),
    outAfter 뒤 꼬리 끝을 축으로 outScale 까지 줄며 사라집니다(outLen f, 선형).
    reveal=pop 이면 펼침 없이 정적으로 놓습니다(도감 기본 pop 은 "호출측이 팝을 건다").

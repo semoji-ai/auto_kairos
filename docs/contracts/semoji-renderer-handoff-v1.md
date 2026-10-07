@@ -37,7 +37,7 @@
 
 ### 이로미즘 등 다른 화풍에서 도감 활용
 
-화풍은 프로젝트 `art_style.json`이 결정하고, 도감은 움직임의 의미·등장 순서·타이밍만 제공한다. 예를 들어 지식해적단 자료가 포함된 `bar-chart-v`를 이로미즘 씬에 선택할 수 있지만, 원본 리본·마스코트·색을 복사하지 않고 이로미즘 손그림 막대와 타이포그래피로 다시 만든다.
+화풍은 프로젝트 `art_style.json`이 결정하고, 도감은 움직임의 의미·등장 순서·타이밍만 제공한다. 예를 들어 레퍼런스 관찰값이 포함된 `bar-chart-v`를 이로미즘 씬에 선택할 수 있지만, 원본 리본·마스코트·색을 복사하지 않고 이로미즘 손그림 막대와 타이포그래피로 다시 만든다.
 
 ```json
 {
@@ -62,4 +62,4 @@ Remotion의 `remotion/public/project` 링크, `remotion/public/manifest.json`, A
 계약 위반이 발견되면 자동 복사나 ID 재발급으로 덮지 말고, 어떤 파일과 씬이 갈렸는지 기록한 뒤 정본의 선택 상태를 확인한다. 기존 이미지·세션·프로젝트 파일은 삭제하지 않는다.
 
 관련 구현: [공유/분기 규칙](../rules/shared-vs-branch.md), [Remotion 매니페스트 생성기](../../auto_agent/scripts/build_manifest.py), [AE 매니페스트 생성기](../../adobe/backend/manifest.py), [세모지 AE 모션 스킬](../../.agents/skills/semoji-motion-ae/SKILL.md).
-연출·편집 기준: [세모지·지식해적단식 AE 운영 규칙](../../adobe/docs/editorial-motion-playbook.md).
+연출·편집 기준: [세모지 연출 규칙(여러 레퍼런스 참고) AE 운영 규칙](../../adobe/docs/editorial-motion-playbook.md).

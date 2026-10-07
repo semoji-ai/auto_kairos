@@ -120,7 +120,7 @@
 | 사진·자료 처리 | bw-photo-inset | 흑백 사진 인셋(거친 흰 비네트) | RoughPhotoInset | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_media-01 |
 | 사진·자료 처리 | capture-scroll | 유튜브 채널 캡처 스크롤 | CaptureScroll | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | backgrounds-13 |
 | 사진·자료 처리 | card-slide-in | 카드 슬라이드인(회전 겹침) | CardSlideIn | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_media-07 |
-| 사진·자료 처리 | chat-parody | 역사 인물 메신저 대화 패러디 | ChatParody | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_pirates-03 |
+| 사진·자료 처리 | chat-parody | 역사 인물 메신저 대화 패러디 | ChatParody | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_ref_b-03 |
 | 사진·자료 처리 | dark-vignette-portrait | 원형 다크 비네트 인물 사진 | DarkVignettePortrait | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_media-02 |
 | 사진·자료 처리 | doc-zoom-red-underline | 원문 문서 줌인 + 빨간 밑줄 | DocZoomUnderline | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_media-16 |
 | 사진·자료 처리 | face-cover-box | 사진 속 얼굴 가림 박스 | FaceCoverBox | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_media-05 |
@@ -148,7 +148,7 @@
 | 전환 | cover-slide | 커버 슬라이드 | Scene | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | core-03 |
 | 전환 | cross-dissolve | 크로스 디졸브 | Scene | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | core-02 |
 | 전환 | cyan-energy-ring-wipe | 시안 에너지 링 와이프 | CyanRingWipe | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_transitions-09 |
-| 전환 | dim-cutaway-drop-exit | 딤 컷어웨이 낙하 퇴장(옵션) | BlurDimInterrupt | native | 트랜스폼·마스크·도형·텍스트 키프레임 | ✅ AE 이식(native) | x_pirates-06 |
+| 전환 | dim-cutaway-drop-exit | 딤 컷어웨이 낙하 퇴장(옵션) | BlurDimInterrupt | native | 트랜스폼·마스크·도형·텍스트 키프레임 | ✅ AE 이식(native) | x_ref_b-06 |
 | 전환 | dip-to-black | 딥 투 블랙 | DipToBlack | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | transitions-10 |
 | 전환 | element-slide-transition | 캐릭터·요소 슬라이드로 씬 전환 | SlideCut | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_transitions-03 |
 | 전환 | elevator-door-reveal | 엘리베이터 문 열림 리빌 | ElevatorReveal | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_transitions-07 |
@@ -179,7 +179,7 @@
 | 전환 | newspaper-pullout | 장면→신문 풀아웃 | NewspaperPullout | partial | 신문 3D 회전 |  | transitions-04 |
 | 전환 | orange-flare | 오렌지 플레어(부드러운 라이트릭) | OrangeFlare | partial | 플레어 → 그라디언트 근사 |  | transitions-11 |
 | 전환 | pink-color-wash | 핑크 컬러 워시 디졸브 | PinkColorWash | partial | 컬러 워시 블렌드 |  | x_transitions-01 |
-| 전환 | rack-defocus-drop-exit | 디포커스 레이어 낙하 퇴장(옵션) | RackDefocus | partial | 디포커스 → 블러 키 |  | x_pirates-07 |
+| 전환 | rack-defocus-drop-exit | 디포커스 레이어 낙하 퇴장(옵션) | RackDefocus | partial | 디포커스 → 블러 키 |  | x_ref_b-07 |
 | 전환 | slat-mosaic | 세로 슬랫 모자이크 리빌 | SlatMosaic | partial | 슬랫 모자이크 → 도형 반복 |  | transitions-03 |
 | 전환 | theater-curtain | 극장 커튼 | TheaterCurtain | partial | 커튼 주름 → 도형 근사 |  | transitions-01 |
 | 전환 | yellow-burst | 노란 번(라이트릭 번) | YellowBurst | partial | 번짐 radial-gradient → 램프 근사 |  | core-32 |
@@ -192,12 +192,12 @@
 | 차트·인포그래픽 | avatar-pop | 인원수 증가 아바타 | AvatarPop | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | core-45 |
 | 차트·인포그래픽 | bar-chart-h | 가로 막대그래프 빌드 | BarChartH | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | charts-03 |
 | 차트·인포그래픽 | bar-chart-v | 세로 막대그래프 + 리본 헤더 + 마스코트 | BarChartV | native | 트랜스폼·마스크·도형·텍스트 키프레임 | ✅ AE 이식(native) | charts-04 |
-| 차트·인포그래픽 | bar-end-icon-pop | 막대 끝 아이콘 팝(옵션) | BarChartV | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_pirates-08 |
-| 차트·인포그래픽 | bar-end-icon-pop-h | 가로 막대 끝 아이콘 팝(옵션) | BarChartH | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_pirates-09 |
+| 차트·인포그래픽 | bar-end-icon-pop | 막대 끝 아이콘 팝(옵션) | BarChartV | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_ref_b-08 |
+| 차트·인포그래픽 | bar-end-icon-pop-h | 가로 막대 끝 아이콘 팝(옵션) | BarChartH | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_ref_b-09 |
 | 차트·인포그래픽 | bottom-up-rank-stack | 역순 순위 리스트 적층 | BottomUpRankStack | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_charts-12 |
 | 차트·인포그래픽 | corp-lineage-flow | 기업 계보 플로차트 | CorpLineageFlow | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_charts-19 |
 | 차트·인포그래픽 | counter-badge | 알림 배지 카운터 + 원→필 확장 | CounterBadge | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | charts-11 |
-| 차트·인포그래픽 | dashed-column-compare | 점선 세로 구분 N열 비교(대상 성장) | DashedColumnCompare | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_pirates-02 |
+| 차트·인포그래픽 | dashed-column-compare | 점선 세로 구분 N열 비교(대상 성장) | DashedColumnCompare | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_ref_b-02 |
 | 차트·인포그래픽 | dday-calendar-equation | D-DAY 달력 → 화살표 → 산출량 공식 | DDayEquation | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_charts-05 |
 | 차트·인포그래픽 | device-tessellation-fill | 기기 외곽 타일 채움 | DeviceTessellation | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_charts-06 |
 | 차트·인포그래픽 | election-poster-drop-rank | 포스터 드롭 + 순위 필 | ElectionPosterDropRank | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_charts-20 |
@@ -225,17 +225,17 @@
 | 차트·인포그래픽 | waterfall-stairs | 폭포수 계단 다이어그램 + 마스코트 호핑 | WaterfallStairs | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | charts-13 |
 | 차트·인포그래픽 | zigzag-arrow-down | 하락 화살표 + 번개 섬광 | ZigzagArrow | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | charts-10 |
 | 차트·인포그래픽 | zigzag-arrow-up | 지그재그 성장 화살표 | ZigzagArrow | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | charts-09 |
-| 차트·인포그래픽 | brush-arrow-route | 붓 화살표 항로(옵션) | MapRoute | partial | 지도 배경 프리렌더 |  | x_pirates-10 |
+| 차트·인포그래픽 | brush-arrow-route | 붓 화살표 항로(옵션) | MapRoute | partial | 지도 배경 프리렌더 |  | x_ref_b-10 |
 | 차트·인포그래픽 | candlestick-growth | 캔들차트 순차 성장 + 떡상 화살표 | CandlestickGrowth | partial | 캔들 다수(데이터 많음) |  | x_charts-26 |
 | 차트·인포그래픽 | flag-map-stat-link | 국기 채움 지도 + 점선 연결 통계 | FlagMapStatLink | partial | 지도 프리렌더 |  | x_charts-08 |
 | 차트·인포그래픽 | map-route | 지도 항로 드로우 | MapRoute | partial | 지도 배경 프리렌더 | ✅ AE 이식(partial) | core-42 |
 | 차트·인포그래픽 | map-spread-pullback | 확산 풀백(아이콘 증식) + 레이더 파문 | MapSpreadPullback | partial | 지도 프리렌더 + 증식 |  | x_charts-11 |
-| 차트·인포그래픽 | map-stat-overlay | 지도 전력 통계 오버레이 | MapStatOverlay | partial | 지도 프리렌더 |  | x_pirates-04 |
+| 차트·인포그래픽 | map-stat-overlay | 지도 전력 통계 오버레이 | MapStatOverlay | partial | 지도 프리렌더 |  | x_ref_b-04 |
 | 차트·인포그래픽 | pictogram-crowd-marquee | 픽토그램 군중 행진 채움 | PictogramCrowdMarquee | partial | 픽토그램 다수 마키 |  | x_charts-09 |
 | 차트·인포그래픽 | signal-wave-diagram | 신호 파형 드로우 다이어그램 | SignalWaveDiagram | partial | 파형 절차 패스 |  | x_charts-25 |
 | 차트·인포그래픽 | walk-path-timeline | 인생 경로 타임라인(걷는 캐릭터) | WalkPath | partial | 걷기 사이클(리그) |  | characters-16 |
 | 차트·인포그래픽 | disc-pie-3d | 3D 원판 파이 | DiscPie3D | render | 3D 원반 파이 |  | charts-15 |
-| 차트·인포그래픽 | globe-spin-scatter | 회전 지구본 감속 정지 + 히트맵 + 아이콘 산포 | GlobeSpinScatter | render | 3D 지구본 회전(WebGL) |  | x_pirates-01 |
+| 차트·인포그래픽 | globe-spin-scatter | 회전 지구본 감속 정지 + 히트맵 + 아이콘 산포 | GlobeSpinScatter | render | 3D 지구본 회전(WebGL) |  | x_ref_b-01 |
 | 차트·인포그래픽 | map-lecturer-country-fill | 지시봉 강의 + 국가 하이라이트 채움 | MapLecturerCountryFill | render | 지도 국가 채움(벡터 타일) |  | x_charts-18 |
 | 카메라 | binocular-mask-pov | 쌍안경 마스크 시점 | BinocularPOV | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_transitions-16 |
 | 카메라 | camera-static-default | 카메라 기본 고정 · 앞 1/3 이동 후 정지 | Scene | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | core-07 |
@@ -268,7 +268,7 @@
 | 캐릭터 연기 | mouth-swap | 말하는 입 교체 | MouthSwap | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_acting-01 |
 | 캐릭터 연기 | pose-swap | 포즈 하드 스왑 + 효과 싱크 | PoseSwap | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | characters-19 |
 | 캐릭터 연기 | q-silhouette | 물음표 실루엣 | QSilhouette | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | core-27 |
-| 캐릭터 연기 | random-mouth-talk | 불규칙 입 교체(옵션) | SemojiRig | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_pirates-11 |
+| 캐릭터 연기 | random-mouth-talk | 불규칙 입 교체(옵션) | SemojiRig | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_ref_b-11 |
 | 캐릭터 연기 | repeat-arm-gesture | 반복 팔 동작(주먹 흔들기) | RepeatGesture | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_acting-05 |
 | 캐릭터 연기 | rise-from-behind | 소품 뒤에서 솟아오름 | Sticker | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | core-14 |
 | 캐릭터 연기 | rival-enter | 라이벌 낙하 + 밀어내기 | RivalEnter | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | characters-02 |
@@ -329,7 +329,7 @@
 | 콜아웃·라벨 | term-card | 용어 설명 카드 | TermCard | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | core-46 |
 | 콜아웃·라벨 | tree-droplines | 트리 드롭라인 다이어그램 | TreeDroplines | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | callouts-19 |
 | 콜아웃·라벨 | version-stack | 로고 버전 히스토리 스택 | VersionStack | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | callouts-17 |
-| 콜아웃·라벨 | wipe-reveal-bubble | 와이프 리빌 말풍선(옵션) | SpeechBubble | native | 트랜스폼·마스크·도형·텍스트 키프레임 | ✅ AE 이식(native) | x_pirates-05 |
+| 콜아웃·라벨 | wipe-reveal-bubble | 와이프 리빌 말풍선(옵션) | SpeechBubble | native | 트랜스폼·마스크·도형·텍스트 키프레임 | ✅ AE 이식(native) | x_ref_b-05 |
 | 콜아웃·라벨 | year-tag | 연도 두루마리 태그 | YearTag | native | 트랜스폼·마스크·도형·텍스트 키프레임 | ✅ AE 이식(native) | core-11 |
 | 콜아웃·라벨 | clipboard-swing-drop-doc | 클립보드 문서 스윙 드롭 + 줄별 리빌 | ClipboardSwingDrop | partial | 진자 흔들림 |  | x_callouts-04 |
 | 콜아웃·라벨 | dotted-path-draw | 점선 직교 경로 드로우 | DottedPathDraw | partial | 점선 드로우 |  | callouts-02 |
@@ -357,7 +357,7 @@
 | 텍스트·타이포 | stacked-fact-pills | 네이비 팩트 필 스택 | FactPillStack | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_text-11 |
 | 텍스트·타이포 | text-behind-character | 인물 뒤 대형 수치 + 불꽃 | TextBehindCharacter | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_text-13 |
 | 텍스트·타이포 | text-pop | 텍스트 팝(크게→작게) · 의성어 | Onoma | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | core-30 |
-| 텍스트·타이포 | tilted-stamp-hold | 기울어진 도장 유지(옵션) | Stamp | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_pirates-12 |
+| 텍스트·타이포 | tilted-stamp-hold | 기울어진 도장 유지(옵션) | Stamp | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_ref_b-12 |
 | 텍스트·타이포 | title-box-center-out | 제목 박스 center-out 리빌 | TitleBox | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | callouts-08 |
 | 텍스트·타이포 | title-strip-flyoff | 직함 떼어 날리기 | TitleStripFlyoff | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_text-04 |
 | 텍스트·타이포 | year-chip-rapid-roll | 연도 칩 고속 롤 + 라인업 몽타주 | YearChipRoll | native | 트랜스폼·마스크·도형·텍스트 키프레임 |  | x_text-08 |

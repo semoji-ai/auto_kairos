@@ -32409,7 +32409,7 @@
    }
   ]
  },
- "x_pirates-01": {
+ "x_ref_b-01": {
   "name": "GlobeSpinScatter — 회전 지구본 감속 정지 + 히트맵 + 아이콘 산포",
   "params": [
    {
@@ -32634,7 +32634,7 @@
    }
   ]
  },
- "x_pirates-02": {
+ "x_ref_b-02": {
   "name": "DashedColumnCompare — 점선 N열 비교(대상 성장)",
   "params": [
    {
@@ -32795,7 +32795,7 @@
    }
   ]
  },
- "x_pirates-03": {
+ "x_ref_b-03": {
   "name": "ChatParody — 역사 인물 메신저 대화 패러디",
   "params": [
    {
@@ -32919,7 +32919,7 @@
    }
   ]
  },
- "x_pirates-04": {
+ "x_ref_b-04": {
   "name": "MapStatOverlay — 지도 딤 + 타자 제목 + 통계 행 팝",
   "params": [
    {
@@ -33073,7 +33073,7 @@
    }
   ]
  },
- "x_pirates-05": {
+ "x_ref_b-05": {
   "name": "SpeechBubble — 와이프 리빌 말풍선(reveal=wipe)",
   "params": [
    {
@@ -33121,7 +33121,7 @@
    }
   ]
  },
- "x_pirates-06": {
+ "x_ref_b-06": {
   "name": "BlurDimInterrupt — wipe 말풍선 + 낙하 퇴장(exit=drop)",
   "params": [
    {
@@ -33301,7 +33301,7 @@
    }
   ]
  },
- "x_pirates-07": {
+ "x_ref_b-07": {
   "name": "RackDefocus — 레이어 낙하 퇴장(exit=drop)",
   "params": [
    {
@@ -33468,7 +33468,7 @@
    }
   ]
  },
- "x_pirates-08": {
+ "x_ref_b-08": {
   "name": "BarChartV — 막대 끝 아이콘 팝(icons · staggerF)",
   "params": [
    {
@@ -33630,7 +33630,7 @@
    }
   ]
  },
- "x_pirates-09": {
+ "x_ref_b-09": {
   "name": "BarChartH — 막대 끝 아이콘 팝(icons)",
   "params": [
    {
@@ -33803,7 +33803,7 @@
    }
   ]
  },
- "x_pirates-10": {
+ "x_ref_b-10": {
   "name": "MapRoute — 붓 화살표 항로(stroke=brush)",
   "params": [
    {
@@ -34011,7 +34011,7 @@
    }
   ]
  },
- "x_pirates-11": {
+ "x_ref_b-11": {
   "name": "SemojiRig — 불규칙 입 교체(talkMode=random)",
   "params": [
    {
@@ -34093,7 +34093,7 @@
    }
   ]
  },
- "x_pirates-12": {
+ "x_ref_b-12": {
   "name": "Stamp — 기울어진 도장 유지(blink 끔 · expoOut)",
   "params": [
    {

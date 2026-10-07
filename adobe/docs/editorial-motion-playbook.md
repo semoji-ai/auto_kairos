@@ -1,4 +1,4 @@
-# 세모지·지식해적단식 AE 편집 운영 규칙
+# 세모지 연출 규칙(여러 레퍼런스 참고) — AE 편집 운영 규칙
 
 이 문서는 Auto Kairos 프로젝트를 **다른 macOS 컴퓨터의 After Effects**에서 이어 편집할 때 쓰는 연출 기준이다. 기법의 출처는 `adobe/data/semoji-motion/dogam/techniques.json`, 실제 AE 적용 범위는 `adobe/cep/com.autokairos.pd/jsx/dogam/registry.json`이 정한다. 도감의 343개는 참고 항목이며, 현재 패널에서 바로 적용되는 것은 12개다. `status: 구현`은 AE 구현을 뜻하지 않는다.
 
@@ -15,16 +15,16 @@
 
 `scene_specs.json`의 `motion`은 Remotion 근사 프리셋, `techniques`는 도감 ID, `motionNote`는 이 편의 실제 AE 연출 의도다. AE 패널은 `scenes.json`에 값이 없을 때 같은 씬 번호의 의도를 읽기 전용으로 보완한다. **도감 ID를 기록한 것과 AE에 적용한 것은 다르다.** AE registry에 없는 ID는 수동 키프레임·마스크·텍스트·도형으로 구현하거나 씬의 뜻에 맞는 다른 동작을 설계한다. 구현한 방법과 차이를 `motionNote` 또는 작업 기록에 남긴다.
 
-화풍은 프로젝트의 `art_style.json`과 승인된 씬 이미지가 정한다. 다른 채널의 **등장 순서·속도·시선 이동·정보 계층**을 차용할 수 있지만, 그 채널의 캐릭터·색·폰트·장식·자료 이미지를 그대로 복제하지 않는다. 방사형 줄무늬 광선·선버스트·집중선은 사용하지 않는다. 패널 registry에 `starburst-echo`가 있어도 이 금지 규칙이 우선한다.
+화풍은 프로젝트의 `art_style.json`과 승인된 씬 이미지가 정한다. 레퍼런스의 **등장 순서·속도·시선 이동·정보 계층**을 차용할 수 있지만, 레퍼런스의 캐릭터·색·폰트·장식·자료 이미지를 그대로 복제하지 않는다. 방사형 줄무늬 광선·선버스트·집중선은 사용하지 않는다. 패널 registry에 `starburst-echo`가 있어도 이 금지 규칙이 우선한다.
 
 | 연출 방향 | 주로 쓰는 판단 | AE 구현 예 |
 |---|---|---|
 | 세모지식 이야기 | 사건·인물·반전에서 컷과 정지 화면을 살리고, 말하는 단어에 맞춰 요소를 하나씩 누적 | 하드컷, 짧은 단어 카드, 자료 사진 팝, 인물의 발끝 기준 까딱임, 연도 태그·도장 |
-| 지식해적단식 설명 | 비교·분류·지도·수치의 관계를 먼저 보여주고, 읽는 순서를 모션으로 지정 | 점선 열 비교, 지도 항로와 통계, 단계별 차트, 한 항목씩 올라오는 카드·말풍선 |
+| 설명형 연출 | 비교·분류·지도·수치의 관계를 먼저 보여주고, 읽는 순서를 모션으로 지정 | 점선 열 비교, 지도 항로와 통계, 단계별 차트, 한 항목씩 올라오는 카드·말풍선 |
 
-세모지의 실측 리듬과 기법별 적합·부적합 조건은 `auto_agent/data/skills/shared/motion-dogam-semoji.md`를 본다. 평균 컷 길이·팝 빈도는 관찰값이지 할당량이 아니다. 연결어 “그런데”를 언제나 별도 카드로 만들거나 모든 장면에 느린 줌을 넣지 않는다. 지식해적단 레퍼런스 항목은 카탈로그에서 `sources[].ref == "ref_pirates"`로 찾는다.
+세모지의 실측 리듬과 기법별 적합·부적합 조건은 `auto_agent/data/skills/shared/motion-dogam-semoji.md`를 본다. 평균 컷 길이·팝 빈도는 관찰값이지 할당량이 아니다. 연결어 “그런데”를 언제나 별도 카드로 만들거나 모든 장면에 느린 줌을 넣지 않는다. 설명형 레퍼런스(여러 레퍼런스 중 하나) 항목은 카탈로그에서 `sources[].ref == "ref_b"`로 찾는다.
 
-현재 지식해적단 레퍼런스 12개 중 `wipe-reveal-bubble`, `dim-cutaway-drop-exit` 두 기법만 AE 패널에 직접 이식되어 있다. `globe-spin-scatter`, `dashed-column-compare`, `chat-parody`, `map-stat-overlay`, `rack-defocus-drop-exit`, `bar-end-icon-pop`, `bar-end-icon-pop-h`, `brush-arrow-route`, `random-mouth-talk`, `tilted-stamp-hold`는 **연출 참고**다. 예컨대 비교는 점선·패널·값을 순차 키프레임으로 만들고, 채팅은 텍스트 레이어와 마스크의 푸시업으로, 지도는 승인된 지도 이미지 위 경로 패스로 재현한다. 수동 구현을 자동 적용 결과로 기록하지 않는다.
+현재 `ref_b` 레퍼런스 12개 중 `wipe-reveal-bubble`, `dim-cutaway-drop-exit` 두 기법만 AE 패널에 직접 이식되어 있다. `globe-spin-scatter`, `dashed-column-compare`, `chat-parody`, `map-stat-overlay`, `rack-defocus-drop-exit`, `bar-end-icon-pop`, `bar-end-icon-pop-h`, `brush-arrow-route`, `random-mouth-talk`, `tilted-stamp-hold`는 **연출 참고**다. 예컨대 비교는 점선·패널·값을 순차 키프레임으로 만들고, 채팅은 텍스트 레이어와 마스크의 푸시업으로, 지도는 승인된 지도 이미지 위 경로 패스로 재현한다. 수동 구현을 자동 적용 결과로 기록하지 않는다.
 
 ## AE 타임라인과 화면 검수
 
