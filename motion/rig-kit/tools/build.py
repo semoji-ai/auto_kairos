@@ -6,7 +6,7 @@ import sys, os
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rd = lambda p: open(os.path.join(root, p), encoding='utf-8').read()
 HEAD = '<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#F3EFE6}canvas{display:block}</style></head><body>\n<canvas id="cv"></canvas>\n<script>\n'
-parts = [rd('engine/base.js'), rd('engine/rig360.js'), rd('engine/stage.js'), rd('engine/ctl.js'), rd('engine/props.js')]
+parts = [rd('engine/base.js'), rd('engine/rig360.js'), rd('engine/stage.js'), rd('engine/look.js'), rd('engine/ctl.js'), rd('engine/props.js')]
 if sys.argv[1] == '--engine-only':
     out = sys.argv[2]
 else:

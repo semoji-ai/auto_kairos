@@ -1,6 +1,6 @@
 /* base: canvas, constants, 2-bone IK, lineless drawing primitives */
 const Q=new URLSearchParams(location.search);const W=1920,H=1080;
-const cv=document.getElementById('cv');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+const cv=document.getElementById('cv');cv.width=W;cv.height=H;let c=cv.getContext('2d',{willReadFrequently:true});/* CPU-backed: renders read every frame back and canvas→canvas copies stay cheap; `c` is swapped while a layer is drawn off-screen (look.js withCtx) */
 const TAU=Math.PI*2,INK='#3B2416',BG='#F3EFE6';
 const lerp=(a,b,u)=>a+(b-a)*u,cl=x=>Math.max(0,Math.min(1,x)),sm=x=>{x=cl(x);return x*x*(3-2*x)},cl2=x=>Math.max(-1,Math.min(1,x));
 const ANK=0.17,L1=0.67,L2=0.67,TL0=0.88,UA=0.5,FA=0.46;

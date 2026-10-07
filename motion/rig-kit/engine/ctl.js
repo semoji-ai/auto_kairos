@@ -12,7 +12,7 @@ function poseOfK(ac,t){const q=Object.assign({},REST3);for(const tr of ac.tracks
  let w=0;for(const t0 of ac.kicks||[]){const u=t-t0;if(u>0&&u<1.6)w+=Math.exp(-6*u)*Math.sin(17*u)}q.kick=w;q.yaw*=D2R;q.headTurn*=D2R;
  q.face={mood:q.mood,talk:q.talk,look:q.look,brow:q.brow,blink:q.blink};if(ac.live)ac.live(q,t);return pose360(q,t+q.seed)}
 function drawActor3(ac,t){const P=poseOfK(ac,t),sc=(ac.sc||1)*(ac.ch.h||1);c.save();c.translate(P.x,(ac.gy||0)+P.z*PITCH);c.scale(sc,sc);
- if(!ac.noShadow)for(const L of P.legs){const h=cl((L.lift+P.y)/0.3);c.beginPath();c.ellipse(L.a[0]+0.14*P.sy,ANK+L.a[1]+L.lift+0.02,0.4*(1-0.35*h),0.07*(1-0.35*h),0,0,TAU);c.fillStyle=`rgba(60,30,10,${0.18*(1-0.6*h)})`;c.fill()}
+ if(!ac.noShadow)footShadows(P);
  c.translate(0,-P.y);drawChar3(ac.ch,P);
  /* a hand target the arm cannot reach is logged (tools/reach.js) and, with ?debug=1, marked in red */
  for(const A of P.arms)if(A.miss>0.03){(window.MISS=window.MISS||[]).push([ac.ch.name,A.side<0?'armR':'armL',+A.miss.toFixed(2),A.shw.map(v=>+v.toFixed(2)),+A.reach.toFixed(2)]);if(Q.get('debug')){c.beginPath();c.arc(A.wr[0],A.wr[1],0.16,0,TAU);c.strokeStyle='#FF2D2D';c.lineWidth=0.05;c.stroke()}}

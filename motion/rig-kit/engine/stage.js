@@ -21,4 +21,4 @@ function sparkle(x,y,s,col){c.save();c.translate(x,y);c.fillStyle=col||'#FFFFFF'
 function card(x,y,w,h,k){c.save();c.translate(x,y);c.scale(k,k);const r=Math.min(w,h)*0.17;shape(rr(-w/2,-h/2+0.05,w,h,r),'rgba(70,30,10,0.1)');shape(rr(-w/2,-h/2,w,h,r),'#FFFFFF')}
 function bubble(x,y,w,h,k,tail){c.save();c.translate(x,y);c.scale(k,k);shape(rr(-w/2,-h/2,w,h,Math.min(w,h)*0.3),'#FFFFFF');if(tail)shape(poly(tail*0.15*w,h/2-0.02,tail*0.38*w,h/2-0.02,tail*0.5*w,h/2+0.34),'#FFFFFF')}
 /* one character in pixel space (turnarounds, sheets, probes) */
-function actor(ch,q,t,x,gy,Upx){const hh=ch.h||1,P=pose360(Object.assign({sc:hh},q),t);c.save();c.translate(x,gy);c.scale(Upx*hh,Upx*hh);for(const L of P.legs){const h=cl(L.lift/0.3);c.beginPath();c.ellipse(L.a[0]+0.14*P.sy,ANK+L.a[1]+L.lift+0.02,0.4*(1-0.35*h),0.07*(1-0.35*h),0,0,TAU);c.fillStyle=`rgba(60,30,10,${0.18*(1-0.6*h)})`;c.fill()}drawChar3(ch,P);c.restore();return P}
+function actor(ch,q,t,x,gy,Upx){const hh=ch.h||1,P=pose360(Object.assign({sc:hh},q),t);c.save();c.translate(x,gy);c.scale(Upx*hh,Upx*hh);footShadows(P);drawChar3(ch,P);c.restore();return P}
