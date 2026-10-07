@@ -214,7 +214,15 @@ function drawHead3(P,ch){const psi=P.headYaw,cyh=Math.cos(psi),syh=Math.sin(psi)
  if(!earHidden)for(const e of ears)if(e.k<0.3)ear(e);
  shape(headPath,ch.skin);
  /* nose: a small bump that only shows on the silhouette */
- {const pk=cl((cyh+0.32)/0.3),nb=ch.nose==='round'?1.18:ch.nose==='short'?0.86:1,xb=HW*0.88*syh,xt=(HW+0.1*pk*nb)*syh;if(pk>0)shape(()=>{c.beginPath();c.moveTo(xb,EY-0.05);c.quadraticCurveTo(xb+0.07*syh,EY+0.11,xt,EY+0.2);c.quadraticCurveTo(xt+0.014*syh,EY+0.275,xt-0.065*syh,EY+0.285);c.lineTo(xb,EY+0.34);c.closePath()},ch.skin)}
+ {const pk=cl((cyh+0.32)/0.3),nb=ch.nose==='round'?1.18:ch.nose==='short'?0.86:1,xb=HW*0.88*syh,xt=(HW+0.1*pk*nb)*syh,as=Math.abs(syh);
+  /* one nose on the head surface (azimuth 0): filled with skin, its outer edge drawn as a soft line. Turning the head just rotates
+     the same shape — a faint bridge from the front, an angled nose at 3/4, the profile at the side — so it can never double up. */
+  if(pk>0&&ch.nose!=='round'){const by=ch.nose==='short'?EY+0.06:EY-0.05;
+   shape(()=>{c.beginPath();c.moveTo(xb,by);c.quadraticCurveTo(xb+0.07*syh,EY+0.11,xt,EY+0.2);c.quadraticCurveTo(xt+0.014*syh,EY+0.275,xt-0.065*syh,EY+0.285);c.lineTo(xb,EY+0.34);c.closePath()},ch.skin);
+   const soft=ch.nl||(ch.nl=dk(ch.skin,0.82)),prof=1-0.75*cl((as-0.72)/0.2);c.save();c.globalAlpha=pk*prof*cl(0.3+as*1.6);
+   line(()=>{c.beginPath();c.moveTo(xb,by);c.quadraticCurveTo(xb+0.07*syh,EY+0.11,xt,EY+0.2)},0.02,soft);c.globalAlpha=pk*prof;
+   line(()=>{c.beginPath();c.moveTo(xt,EY+0.2);c.quadraticCurveTo(xt+0.014*syh,EY+0.275,xt-0.065*syh,EY+0.285)},0.022,soft);c.restore()}
+  else if(pk>0)shape(()=>{c.beginPath();c.moveTo(xb,EY-0.05);c.quadraticCurveTo(xb+0.07*syh,EY+0.11,xt,EY+0.2);c.quadraticCurveTo(xt+0.014*syh,EY+0.275,xt-0.065*syh,EY+0.285);c.lineTo(xb,EY+0.34);c.closePath()},ch.skin)}
  c.save();headPath();c.clip();
  /* form shade under the jaw (top-left light) */
  c.save();c.beginPath();c.rect(-1,-2,2,3);c.translate(-0.022,-0.05);headSub();c.fillStyle='rgba(70,30,10,0.075)';c.fill('evenodd');c.restore();
@@ -266,13 +274,8 @@ function drawHead3(P,ch){const psi=P.headYaw,cyh=Math.cos(psi),syh=Math.sin(psi)
  /* nose line + mouth at azimuth 0 (they fade only once the face has turned past the profile) */
  if(cyh>-0.12){const al=cl((cyh+0.05)*4),am=cl((cyh+0.12)*6),hk=-0.057*cl2((nrm(psi)+0.15)/0.15)*Math.max(0.3,cyh),xb=HW*0.9*syh,xt=(HW+0.03)*syh,k=Math.max(0.35,cyh),mx=inX(HW*0.94*syh,0.13*k),tk=Fc.talk||0;c.globalAlpha=al;
   if(ch.nose==='round'){shape(()=>{c.beginPath();c.ellipse(xt+hk*0.55,EY+0.215,0.07*Math.max(0.55,k),0.062,0,0,TAU)},ch.n2);c.fillStyle='rgba(255,255,255,0.22)';c.beginPath();c.ellipse(xt+hk*0.55-0.02*k,EY+0.195,0.022*k,0.016,0,0,TAU);c.fill()}
-  else{const sh=ch.nose==='short',u0=sh?0.62:0,ra=cl((cyh-0.6)/0.3);
-   /* bridge line reads as volume from the front and 3/4; it fades out as the head turns to the side (the silhouette bump takes over) */
-   if(ra>0&&ch.eyes!=='shades'){c.globalAlpha=al*ra;line(()=>{c.beginPath();c.moveTo(lerp(xb,xt,u0),lerp(EY-0.14,EY+0.215,u0));c.lineTo(xt,EY+0.165)},0.022,ch.nc);c.globalAlpha=al}
-   /* the tip hook also fades once the nose starts to stick out of the silhouette, so the two never show together */
-   const ha=cl((0.89-Math.abs(syh))/0.05);if(ha>0){c.globalAlpha=al*ha;
-   line(()=>{c.beginPath();if(ch.eyes==='shades')c.moveTo(xb,EY+0.1);else c.moveTo(xt,EY+0.165);c.lineTo(xt,EY+0.215);c.quadraticCurveTo(xt,EY+0.262,xt+hk,EY+0.262)},0.022,ch.nc);c.globalAlpha=al}
-   c.globalAlpha=al*0.4;c.fillStyle=ch.nc;c.beginPath();c.ellipse(xt+hk*0.5,EY+0.296,0.05*k,0.013,0,0,TAU);c.fill()}c.globalAlpha=am;c.save();headPath();c.clip();
+  else{
+   c.globalAlpha=al*0.22;c.fillStyle=ch.nc;c.beginPath();c.ellipse(xt+hk*0.5,EY+0.296,0.05*k,0.013,0,0,TAU);c.fill()}c.globalAlpha=am;c.save();headPath();c.clip();
   if(ch.wrinkle)line(()=>{c.beginPath();for(const s of[1,-1]){c.moveTo(mx+s*0.15*k,EY+0.29);c.quadraticCurveTo(mx+s*0.2*k,EY+0.37,mx+s*0.185*k,EY+0.45)}},0.016,ch.nc);
   if(ch.stache)shape(()=>{c.beginPath();c.moveTo(mx-0.17*k,EY+0.37);c.quadraticCurveTo(mx-0.09*k,EY+0.27,mx,EY+0.31);c.quadraticCurveTo(mx+0.09*k,EY+0.27,mx+0.17*k,EY+0.37);c.quadraticCurveTo(mx+0.07*k,EY+0.38,mx,EY+0.355);c.quadraticCurveTo(mx-0.07*k,EY+0.38,mx-0.17*k,EY+0.37);c.closePath()},ch.stache);
   if(tk>0.02||mood==='o'){const o=mood==='o'&&tk<=0.02,my=EY+(ch.stache?0.46:0.43),rx=(o?0.062:0.085)*k,ry=o?0.078:0.02+0.065*tk*Math.abs(Math.sin(P.t*13+(ch.seed||0)*5)),Mo=()=>{c.beginPath();c.ellipse(mx,my,rx,ry,0,0,TAU)};shape(Mo,dark?'#5E1F1A':'#9C352E');c.save();Mo();c.clip();c.fillStyle='#F2817F';c.beginPath();c.ellipse(mx,my+ry*0.9,rx*0.8,ry*0.7,0,0,TAU);c.fill();c.restore()}
