@@ -36,7 +36,7 @@ from pathlib import Path
 
 # 저장소 뿌리를 먼저 잡는다 — auto_agent.paths 의 경로 규칙을 쓰기 위해
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from auto_agent.utils.codex_cli import imagegen_model_args  # noqa: E402
+from auto_agent.utils.codex_cli import claim_session_image, imagegen_model_args  # noqa: E402
 
 
 def _quality(path: Path) -> tuple[float, float]:
@@ -60,7 +60,7 @@ SHEET = """$imagegen
 
 size는 1536x1024입니다.
 
-생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:
+생성 후 이번 세션에서 만든 그림을 아래로 복사하세요:
 {out}
 """
 
@@ -129,6 +129,14 @@ def main() -> int:
         note = ""
         if e.get("sheet_note"):
             note = f"{e['sheet_note']}\n"
+        # 실존 인물은 「닮아 보이는 것」이 시트의 목적이다. 사진만 붙이고 말을 안
+        # 하면 모델이 기준 시트의 표준 얼굴로 끌려간다 — 한화편 박정희가 귀도
+        # 머리도 평범한 얼굴로 나왔다. 식별을 가르는 실루엣(얼굴형·귀·미간·코·
+        # 머리 모양)만 짚는다. 눈 모양은 쓰지 않는다 — 점 눈과 부딪혀 빗금이 생긴다.
+        if e.get("likeness") and ref and ref.exists():
+            note += ("\n이 시트는 2번 사진의 실제 인물과 **닮아 보여야** 합니다. "
+                     "그림체는 1번 그대로 두고, 아래 특징을 2번 사진에서 그대로 옮기세요.\n"
+                     f"{e['likeness']}\n")
         prompt = SHEET.format(who=who, outfit_line=f"의상: {e['outfit']}\n",
                               note_line=note, out=out)
         prompt = prompt.replace("첨부한 1번 이미지는 세모지 기준 캐릭터 시트입니다.",
@@ -137,11 +145,19 @@ def main() -> int:
         best = None
         for attempt in range(1, args.tries + 1):
             if out.exists():
-                out.replace(out.with_suffix(f".try{attempt - 1}.png"))
-            subprocess.run(
-                ["codex", "exec", *imagegen_model_args(), "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
-                stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=900,
-            )
+                # 이전 판을 덮어쓰지 않는다 — 다시 돌리면 .try1 이 겹쳐 지난 시도가 사라졌다
+                k = attempt - 1
+                while out.with_suffix(f".try{k}.png").exists():
+                    k += 1
+                out.replace(out.with_suffix(f".try{k}.png"))
+            try:
+                res = subprocess.run(
+                    ["codex", "exec", *imagegen_model_args(), "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
+                    stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=900,
+                )
+                claim_session_image((res.stdout or "") + (res.stderr or ""), out)
+            except subprocess.TimeoutExpired:
+                pass
             if not out.exists():
                 continue
             g, ed = _quality(out)
@@ -155,6 +171,7 @@ def main() -> int:
         if best and out.with_suffix(".best.png").exists():
             shutil.move(out.with_suffix(".best.png"), out)
         got = out.exists()
+        ok += got
         tail = f" (최선 시도 {best[0]}: 결 {best[1]:.1f} 경계 {best[2]:.1f})" if best else ""
         print(f"  {'✓' if got else '✗'} {e['id']:18s} {e['name']} {e.get('age','')}{tail}")
 

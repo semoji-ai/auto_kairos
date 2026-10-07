@@ -42,7 +42,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from auto_agent.paths import resolve_project  # noqa: E402
-from auto_agent.utils.codex_cli import imagegen_model_args  # noqa: E402
+from auto_agent.utils.codex_cli import claim_session_image, imagegen_model_args  # noqa: E402
 
 PALETTE = "#A8BFB4, #8FAECF, #E8C4B0, #2F3E52, #F2F2F0"
 
@@ -173,9 +173,13 @@ def build(plan: dict) -> str:
         "Lighting: 색면끼리 밝기가 또렷이 구분돼 층이 바로 읽힌다. "
         "그림자는 같은 색의 한 단계 어두운 색면 하나로만",
         f"Color grading: 채도를 낮춘 레트로 플랫 팔레트 {PALETTE}",
+        # 한반도 지도에는 제주도·울릉도·독도를 반드시 넣는다(사용자 확정 규칙).
+        ("Map: 한반도 지도를 그릴 때는 본토와 함께 남쪽의 제주도 하나, 동해의 울릉도 하나, 울릉도 동쪽의 독도 하나를 반드시 섬으로 그려 넣는다. 동해에 그리는 섬은 울릉도와 독도 둘뿐이고, 독도는 울릉도보다 훨씬 작은 점 하나로 그린다. 섬들은 작아도 또렷한 색면으로 보이게 한다" if ("한반도" in plan["scene"] or "지도" in plan["scene"]) else ""),
         PROPORTION,
         f"Texture/Medium: 매끈한 플랫 질감. {STYLE}",
-        f"Text-in-image: {plan['text']} 글자는 획이 또렷한 한글이며 "
+        # 공냥 검증기는 렌더할 글자를 큰따옴표로 고정해야 통과시킨다. 서술이 낫표로
+        # 오면 한화편 도해 9장이 전부 E-TEXT-QUOTE 로 막혔다.
+        f"Text-in-image: {plan['text'].replace('「', '\"').replace('」', '\"')} 글자는 획이 또렷한 한글이며 "
         "여기 적은 말만 넣습니다.",
         "AR 16:9",
     ])
@@ -189,6 +193,8 @@ def main() -> int:
     ap.add_argument("--use-check", action="store_true",
                     help="지난 검수의 지적을 물려준다 (check_infographic.py 결과)")
     ap.add_argument("-j", "--jobs", type=int, default=3)
+    ap.add_argument("--reuse-plan", action="store_true",
+                    help="이미 쓴 화면 서술(scene_NNNN.txt)이 있으면 다시 쓰지 않는다")
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent.parent
@@ -198,8 +204,11 @@ def main() -> int:
     by_n = {s.get("sceneNumber"): s for s in data["scenes"]}
 
     want = [int(x) for x in args.scenes.split(",")]
+    # 씬 그림과 도해를 둘 다 그려 견줄 씬(infographic_candidate)도 받는다.
+    # 이런 씬은 --apply 로 명세를 바꾸지 않는다 — 견준 뒤에 고른다.
     todo = [n for n in want
-            if by_n.get(n, {}).get("visual_kind") == "infographic"]
+            if by_n.get(n, {}).get("visual_kind") in ("infographic", "map")
+            or by_n.get(n, {}).get("infographic_candidate")]
     skipped = [n for n in want if n not in todo]
     if skipped:
         print(f"  도해가 아니라 건너뜁니다: {skipped}")
@@ -211,6 +220,14 @@ def main() -> int:
     print(f"{ep}  도해 {len(todo)}장을 한 장씩 그립니다")
 
     def plan_one(n):
+        txt = out_dir / f"scene_{n:04d}.txt"
+        if args.reuse_plan and txt.exists():
+            body = txt.read_text(encoding="utf-8")
+            body = body.replace("「", '"').replace("」", '"')
+            if ("한반도" in body or "지도" in body) and "Map:" not in body:
+                body = body.replace("\nCHARACTER PROPORTIONS", "\n" + "Map: 한반도 지도를 그릴 때는 본토와 함께 남쪽의 제주도 하나, 동해의 울릉도 하나, 울릉도 동쪽의 독도 하나를 반드시 섬으로 그려 넣는다. 동해에 그리는 섬은 울릉도와 독도 둘뿐이고, 독도는 울릉도보다 훨씬 작은 점 하나로 그린다. 섬들은 작아도 또렷한 색면으로 보이게 한다" + "\n\nCHARACTER PROPORTIONS", 1)
+            txt.write_text(body, encoding="utf-8")
+            return n, {"scene": "(재사용)", "count_check": "재사용"}
         sp = spec_text(by_n[n])
         if args.use_check:
             fb = check_text(root, ep, n)
@@ -248,6 +265,21 @@ def main() -> int:
 
     base = (root / "auto_agent/data/artstyle/styles/semoji_character_sheet.png").resolve()
 
+    def refs_block(n):
+        """씬이 들고 있는 고증 시트(63빌딩 등)를 함께 붙인다.
+
+        화풍 기준 그림만 붙이고 「63빌딩」을 말로만 적으니 금빛 기둥이 나왔다 —
+        한화편 도해 #1. 씬 그림 생성기(gen_scenes)처럼 생김새는 그림으로 보여 준다.
+        """
+        refs = [r for r in ((by_n[n].get("imageAsset") or {}).get("refAssets") or [])
+                if r.get("local") and (root / r["local"]).exists()]
+        if not refs:
+            return ""
+        lines = "\n".join(f"- {r.get('desc') or r.get('subject')}: {(root / r['local']).resolve()}"
+                          for r in refs[:3])
+        return ("고증 참조 그림 — 건물·사물의 생김새는 여기서 그대로 가져옵니다"
+                f"(그림체는 화풍 기준 그림을 따릅니다):\n{lines}\n\n")
+
     def draw(n):
         out = (out_dir / f"scene_{n:04d}.png").resolve()
         body = (out_dir / f"scene_{n:04d}.txt").read_text(encoding="utf-8")
@@ -257,14 +289,25 @@ def main() -> int:
             "경로를 읽고 말로 옮기지 마세요 — 그림 자체가 맥락에 있어야 합니다.\n\n"
             f"{body}\n\n"
             f"화풍 기준 그림(사람 몸 비율과 그리는 방식만 참고): {base}\n\n"
+            + refs_block(n) +
             "size는 1792x1024입니다.\n\n"
-            "생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:\n"
+            "생성 후 이번 세션에서 만든 그림을 아래로 복사하세요:\n"
             f"{out}"
         )
-        subprocess.run(["codex", "exec", *imagegen_model_args(), "--skip-git-repo-check",
-                        "--sandbox", "workspace-write", prompt],
-                       stdin=subprocess.DEVNULL, capture_output=True, text=True,
-                       timeout=int(os.environ.get("GEN_TIMEOUT", "2400")))
+        if out.exists():   # 지난 판은 지우지 않고 버전을 올려 비켜 둔다
+            k = 2
+            while out.with_name(f"scene_{n:04d}_v{k}.png").exists():
+                k += 1
+            out.replace(out.with_name(f"scene_{n:04d}_v{k}.png"))
+        try:
+            res = subprocess.run(["codex", "exec", *imagegen_model_args(), "--skip-git-repo-check",
+                                  "--sandbox", "workspace-write", prompt],
+                                 stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                                 timeout=int(os.environ.get("GEN_TIMEOUT", "2400")))
+            # 병렬로 돌면 codex 가 남의 「최신 PNG」를 집어 온다 — 세션 폴더가 정본
+            claim_session_image((res.stdout or "") + (res.stderr or ""), out)
+        except subprocess.TimeoutExpired:
+            pass
         return n, out.exists()
 
     drawn = []
@@ -280,6 +323,8 @@ def main() -> int:
 
     shutil.copy2(f, f.with_suffix(f".json.bak_infoscene_{datetime.now():%Y%m%d_%H%M%S}"))
     for n in drawn:
+        if by_n[n].get("infographic_candidate"):
+            continue
         g = by_n[n].get("infographic") or {}
         # 조각과 좌표는 지우지 않고 남긴다 — 되돌릴 수 있어야 한다
         if "composed_backup" not in g:
