@@ -1,0 +1,2304 @@
+{
+"OR-55EGPOLY": [
+{
+"t": 2.44,
+"len": 10,
+"max": 58.1,
+"tot": 127.9,
+"kind": "gradual"
+},
+{
+"t": 4.24,
+"len": 1,
+"max": 33.4,
+"tot": 33.4,
+"kind": "hard"
+},
+{
+"t": 6.44,
+"len": 1,
+"max": 30.1,
+"tot": 30.1,
+"kind": "hard"
+},
+{
+"t": 7.94,
+"len": 20,
+"max": 64.1,
+"tot": 164.4,
+"kind": "gradual"
+},
+{
+"t": 9.08,
+"len": 96,
+"max": 77.4,
+"tot": 158.1,
+"kind": "gradual"
+},
+{
+"t": 12.45,
+"len": 6,
+"max": 6.0,
+"tot": 18.1,
+"kind": "gradual"
+},
+{
+"t": 14.81,
+"len": 12,
+"max": 59.6,
+"tot": 100.8,
+"kind": "gradual"
+},
+{
+"t": 18.69,
+"len": 18,
+"max": 33.3,
+"tot": 73.9,
+"kind": "gradual"
+},
+{
+"t": 21.12,
+"len": 9,
+"max": 13.4,
+"tot": 91.2,
+"kind": "gradual"
+},
+{
+"t": 21.49,
+"len": 29,
+"max": 52.1,
+"tot": 51.0,
+"kind": "gradual"
+},
+{
+"t": 24.06,
+"len": 9,
+"max": 7.2,
+"tot": 49.8,
+"kind": "gradual"
+},
+{
+"t": 24.39,
+"len": 10,
+"max": 35.3,
+"tot": 188.7,
+"kind": "gradual"
+},
+{
+"t": 25.83,
+"len": 1,
+"max": 55.0,
+"tot": 55.0,
+"kind": "hard"
+},
+{
+"t": 27.29,
+"len": 1,
+"max": 49.6,
+"tot": 49.6,
+"kind": "hard"
+},
+{
+"t": 28.76,
+"len": 1,
+"max": 31.1,
+"tot": 31.1,
+"kind": "hard"
+},
+{
+"t": 30.23,
+"len": 1,
+"max": 33.0,
+"tot": 33.0,
+"kind": "hard"
+},
+{
+"t": 31.1,
+"len": 31,
+"max": 33.3,
+"tot": 98.0,
+"kind": "gradual"
+},
+{
+"t": 36.2,
+"len": 29,
+"max": 24.9,
+"tot": 74.5,
+"kind": "gradual"
+},
+{
+"t": 37.54,
+"len": 7,
+"max": 23.5,
+"tot": 21.6,
+"kind": "gradual"
+},
+{
+"t": 38.24,
+"len": 7,
+"max": 23.4,
+"tot": 24.8,
+"kind": "gradual"
+},
+{
+"t": 38.91,
+"len": 7,
+"max": 18.6,
+"tot": 23.3,
+"kind": "gradual"
+},
+{
+"t": 40.61,
+"len": 5,
+"max": 55.4,
+"tot": 91.6,
+"kind": "gradual"
+},
+{
+"t": 44.01,
+"len": 11,
+"max": 24.7,
+"tot": 38.4,
+"kind": "gradual"
+},
+{
+"t": 45.08,
+"len": 8,
+"max": 30.8,
+"tot": 75.9,
+"kind": "gradual"
+},
+{
+"t": 46.21,
+"len": 1,
+"max": 127.4,
+"tot": 127.4,
+"kind": "hard"
+},
+{
+"t": 46.38,
+"len": 10,
+"max": 27.9,
+"tot": 76.4,
+"kind": "gradual"
+},
+{
+"t": 49.92,
+"len": 10,
+"max": 59.3,
+"tot": 107.0,
+"kind": "gradual"
+},
+{
+"t": 59.46,
+"len": 9,
+"max": 36.1,
+"tot": 76.9,
+"kind": "gradual"
+},
+{
+"t": 64.16,
+"len": 6,
+"max": 53.4,
+"tot": 100.9,
+"kind": "gradual"
+},
+{
+"t": 68.5,
+"len": 7,
+"max": 137.9,
+"tot": 141.5,
+"kind": "gradual"
+},
+{
+"t": 73.47,
+"len": 10,
+"max": 67.1,
+"tot": 115.8,
+"kind": "gradual"
+},
+{
+"t": 79.48,
+"len": 197,
+"max": 89.6,
+"tot": 85.0,
+"kind": "gradual"
+},
+{
+"t": 91.12,
+"len": 7,
+"max": 62.7,
+"tot": 142.0,
+"kind": "gradual"
+},
+{
+"t": 91.42,
+"len": 11,
+"max": 8.4,
+"tot": 20.0,
+"kind": "gradual"
+},
+{
+"t": 94.09,
+"len": 10,
+"max": 13.8,
+"tot": 19.7,
+"kind": "gradual"
+},
+{
+"t": 96.56,
+"len": 10,
+"max": 51.2,
+"tot": 91.5,
+"kind": "gradual"
+},
+{
+"t": 101.33,
+"len": 12,
+"max": 5.7,
+"tot": 19.4,
+"kind": "gradual"
+},
+{
+"t": 102.17,
+"len": 25,
+"max": 7.6,
+"tot": 18.9,
+"kind": "gradual"
+},
+{
+"t": 104.44,
+"len": 6,
+"max": 52.9,
+"tot": 87.3,
+"kind": "gradual"
+},
+{
+"t": 106.01,
+"len": 23,
+"max": 7.5,
+"tot": 30.3,
+"kind": "gradual"
+},
+{
+"t": 109.11,
+"len": 22,
+"max": 29.1,
+"tot": 64.4,
+"kind": "gradual"
+},
+{
+"t": 113.58,
+"len": 10,
+"max": 45.8,
+"tot": 69.6,
+"kind": "gradual"
+},
+{
+"t": 115.48,
+"len": 10,
+"max": 42.2,
+"tot": 70.4,
+"kind": "gradual"
+},
+{
+"t": 117.08,
+"len": 22,
+"max": 54.4,
+"tot": 193.0,
+"kind": "gradual"
+},
+{
+"t": 117.88,
+"len": 6,
+"max": 60.1,
+"tot": 144.0,
+"kind": "gradual"
+},
+{
+"t": 121.19,
+"len": 7,
+"max": 40.5,
+"tot": 94.7,
+"kind": "gradual"
+},
+{
+"t": 126.33,
+"len": 93,
+"max": 30.9,
+"tot": 46.3,
+"kind": "gradual"
+},
+{
+"t": 133.6,
+"len": 6,
+"max": 24.3,
+"tot": 44.4,
+"kind": "gradual"
+},
+{
+"t": 134.03,
+"len": 15,
+"max": 21.7,
+"tot": 23.2,
+"kind": "gradual"
+},
+{
+"t": 136.74,
+"len": 24,
+"max": 15.1,
+"tot": 29.6,
+"kind": "gradual"
+},
+{
+"t": 145.51,
+"len": 13,
+"max": 22.0,
+"tot": 53.5,
+"kind": "gradual"
+},
+{
+"t": 149.88,
+"len": 10,
+"max": 26.2,
+"tot": 52.4,
+"kind": "gradual"
+},
+{
+"t": 156.36,
+"len": 10,
+"max": 35.9,
+"tot": 44.1,
+"kind": "gradual"
+},
+{
+"t": 156.79,
+"len": 9,
+"max": 32.6,
+"tot": 18.9,
+"kind": "gradual"
+},
+{
+"t": 159.29,
+"len": 7,
+"max": 33.4,
+"tot": 33.4,
+"kind": "gradual"
+},
+{
+"t": 159.66,
+"len": 42,
+"max": 56.7,
+"tot": 97.8,
+"kind": "gradual"
+},
+{
+"t": 162.53,
+"len": 33,
+"max": 34.6,
+"tot": 75.5,
+"kind": "gradual"
+},
+{
+"t": 169.3,
+"len": 138,
+"max": 59.1,
+"tot": 98.9,
+"kind": "gradual"
+},
+{
+"t": 174.07,
+"len": 96,
+"max": 102.3,
+"tot": 171.6,
+"kind": "gradual"
+},
+{
+"t": 180.45,
+"len": 1,
+"max": 32.5,
+"tot": 32.5,
+"kind": "hard"
+},
+{
+"t": 181.21,
+"len": 4,
+"max": 17.3,
+"tot": 25.8,
+"kind": "gradual"
+},
+{
+"t": 183.42,
+"len": 322,
+"max": 82.4,
+"tot": 146.8,
+"kind": "gradual"
+},
+{
+"t": 196.46,
+"len": 24,
+"max": 38.6,
+"tot": 79.6,
+"kind": "gradual"
+},
+{
+"t": 201.57,
+"len": 15,
+"max": 46.5,
+"tot": 85.5,
+"kind": "gradual"
+},
+{
+"t": 206.84,
+"len": 8,
+"max": 54.9,
+"tot": 82.9,
+"kind": "gradual"
+},
+{
+"t": 210.01,
+"len": 1,
+"max": 113.4,
+"tot": 113.4,
+"kind": "hard"
+},
+{
+"t": 213.51,
+"len": 44,
+"max": 82.0,
+"tot": 124.5,
+"kind": "gradual"
+},
+{
+"t": 216.88,
+"len": 25,
+"max": 28.6,
+"tot": 45.5,
+"kind": "gradual"
+},
+{
+"t": 220.55,
+"len": 1,
+"max": 29.3,
+"tot": 29.3,
+"kind": "hard"
+},
+{
+"t": 223.39,
+"len": 12,
+"max": 80.6,
+"tot": 163.9,
+"kind": "gradual"
+},
+{
+"t": 229.6,
+"len": 10,
+"max": 38.0,
+"tot": 73.3,
+"kind": "gradual"
+},
+{
+"t": 232.03,
+"len": 10,
+"max": 61.8,
+"tot": 105.4,
+"kind": "gradual"
+},
+{
+"t": 234.47,
+"len": 1,
+"max": 82.2,
+"tot": 82.2,
+"kind": "hard"
+},
+{
+"t": 236.84,
+"len": 10,
+"max": 115.5,
+"tot": 129.4,
+"kind": "gradual"
+},
+{
+"t": 240.94,
+"len": 10,
+"max": 18.9,
+"tot": 53.4,
+"kind": "gradual"
+},
+{
+"t": 242.84,
+"len": 117,
+"max": 67.5,
+"tot": 185.9,
+"kind": "gradual"
+},
+{
+"t": 250.38,
+"len": 23,
+"max": 50.3,
+"tot": 89.3,
+"kind": "gradual"
+},
+{
+"t": 253.69,
+"len": 144,
+"max": 55.4,
+"tot": 108.7,
+"kind": "gradual"
+},
+{
+"t": 262.23,
+"len": 4,
+"max": 41.7,
+"tot": 81.5,
+"kind": "gradual"
+},
+{
+"t": 268.8,
+"len": 4,
+"max": 18.0,
+"tot": 35.0,
+"kind": "gradual"
+},
+{
+"t": 278.65,
+"len": 8,
+"max": 58.2,
+"tot": 112.2,
+"kind": "gradual"
+},
+{
+"t": 283.35,
+"len": 10,
+"max": 54.0,
+"tot": 84.0,
+"kind": "gradual"
+},
+{
+"t": 286.15,
+"len": 15,
+"max": 52.6,
+"tot": 70.4,
+"kind": "gradual"
+},
+{
+"t": 288.45,
+"len": 9,
+"max": 3.1,
+"tot": 21.8,
+"kind": "gradual"
+},
+{
+"t": 288.79,
+"len": 87,
+"max": 56.7,
+"tot": 88.7,
+"kind": "gradual"
+},
+{
+"t": 291.79,
+"len": 9,
+"max": 32.7,
+"tot": 18.9,
+"kind": "gradual"
+},
+{
+"t": 294.29,
+"len": 7,
+"max": 33.4,
+"tot": 33.4,
+"kind": "gradual"
+},
+{
+"t": 294.66,
+"len": 10,
+"max": 74.0,
+"tot": 145.6,
+"kind": "gradual"
+},
+{
+"t": 299.73,
+"len": 9,
+"max": 60.9,
+"tot": 121.9,
+"kind": "gradual"
+},
+{
+"t": 303.04,
+"len": 123,
+"max": 64.4,
+"tot": 158.2,
+"kind": "gradual"
+},
+{
+"t": 311.81,
+"len": 17,
+"max": 43.5,
+"tot": 96.7,
+"kind": "gradual"
+},
+{
+"t": 316.92,
+"len": 17,
+"max": 78.1,
+"tot": 119.9,
+"kind": "gradual"
+},
+{
+"t": 317.52,
+"len": 174,
+"max": 56.5,
+"tot": 107.9,
+"kind": "gradual"
+},
+{
+"t": 330.36,
+"len": 1,
+"max": 107.3,
+"tot": 107.3,
+"kind": "hard"
+},
+{
+"t": 330.53,
+"len": 10,
+"max": 27.0,
+"tot": 75.8,
+"kind": "gradual"
+},
+{
+"t": 333.27,
+"len": 10,
+"max": 58.0,
+"tot": 55.7,
+"kind": "gradual"
+},
+{
+"t": 341.54,
+"len": 10,
+"max": 48.7,
+"tot": 92.9,
+"kind": "gradual"
+},
+{
+"t": 344.04,
+"len": 39,
+"max": 6.7,
+"tot": 18.0,
+"kind": "gradual"
+},
+{
+"t": 345.38,
+"len": 39,
+"max": 46.1,
+"tot": 111.3,
+"kind": "gradual"
+},
+{
+"t": 346.71,
+"len": 6,
+"max": 10.5,
+"tot": 21.1,
+"kind": "gradual"
+},
+{
+"t": 350.18,
+"len": 11,
+"max": 75.0,
+"tot": 80.1,
+"kind": "gradual"
+},
+{
+"t": 357.32,
+"len": 30,
+"max": 67.7,
+"tot": 77.3,
+"kind": "gradual"
+},
+{
+"t": 362.66,
+"len": 1,
+"max": 131.7,
+"tot": 131.7,
+"kind": "hard"
+},
+{
+"t": 362.8,
+"len": 10,
+"max": 23.4,
+"tot": 73.6,
+"kind": "gradual"
+},
+{
+"t": 366.47,
+"len": 6,
+"max": 41.5,
+"tot": 55.8,
+"kind": "gradual"
+},
+{
+"t": 371.0,
+"len": 18,
+"max": 51.0,
+"tot": 114.9,
+"kind": "gradual"
+},
+{
+"t": 371.64,
+"len": 91,
+"max": 32.0,
+"tot": 72.2,
+"kind": "gradual"
+},
+{
+"t": 380.21,
+"len": 67,
+"max": 35.8,
+"tot": 103.7,
+"kind": "gradual"
+},
+{
+"t": 384.75,
+"len": 207,
+"max": 44.9,
+"tot": 88.2,
+"kind": "gradual"
+},
+{
+"t": 397.6,
+"len": 5,
+"max": 44.8,
+"tot": 89.5,
+"kind": "gradual"
+},
+{
+"t": 401.6,
+"len": 7,
+"max": 44.6,
+"tot": 92.4,
+"kind": "gradual"
+},
+{
+"t": 410.94,
+"len": 7,
+"max": 39.0,
+"tot": 56.0,
+"kind": "gradual"
+},
+{
+"t": 416.82,
+"len": 10,
+"max": 43.7,
+"tot": 69.5,
+"kind": "gradual"
+},
+{
+"t": 417.25,
+"len": 9,
+"max": 32.7,
+"tot": 18.9,
+"kind": "gradual"
+},
+{
+"t": 419.75,
+"len": 7,
+"max": 33.4,
+"tot": 33.4,
+"kind": "gradual"
+},
+{
+"t": 420.12,
+"len": 10,
+"max": 72.2,
+"tot": 134.3,
+"kind": "gradual"
+},
+{
+"t": 425.29,
+"len": 6,
+"max": 53.1,
+"tot": 118.3,
+"kind": "gradual"
+},
+{
+"t": 440.91,
+"len": 6,
+"max": 31.1,
+"tot": 60.7,
+"kind": "gradual"
+},
+{
+"t": 446.21,
+"len": 26,
+"max": 80.4,
+"tot": 58.0,
+"kind": "gradual"
+},
+{
+"t": 447.11,
+"len": 330,
+"max": 85.2,
+"tot": 121.7,
+"kind": "gradual"
+}
+],
+"jb0NxoZHuu8": [
+{
+"t": 2.67,
+"len": 10,
+"max": 36.1,
+"tot": 106.7,
+"kind": "gradual"
+},
+{
+"t": 4.47,
+"len": 84,
+"max": 40.3,
+"tot": 55.8,
+"kind": "gradual"
+},
+{
+"t": 8.07,
+"len": 19,
+"max": 19.2,
+"tot": 59.4,
+"kind": "gradual"
+},
+{
+"t": 9.81,
+"len": 175,
+"max": 53.7,
+"tot": 121.6,
+"kind": "gradual"
+},
+{
+"t": 17.65,
+"len": 307,
+"max": 99.9,
+"tot": 49.9,
+"kind": "gradual"
+},
+{
+"t": 29.3,
+"len": 12,
+"max": 33.7,
+"tot": 79.3,
+"kind": "gradual"
+},
+{
+"t": 30.03,
+"len": 40,
+"max": 52.1,
+"tot": 95.4,
+"kind": "gradual"
+},
+{
+"t": 33.4,
+"len": 184,
+"max": 37.1,
+"tot": 71.1,
+"kind": "gradual"
+},
+{
+"t": 44.28,
+"len": 210,
+"max": 61.7,
+"tot": 75.5,
+"kind": "gradual"
+},
+{
+"t": 51.65,
+"len": 14,
+"max": 3.2,
+"tot": 21.8,
+"kind": "gradual"
+},
+{
+"t": 52.62,
+"len": 129,
+"max": 44.1,
+"tot": 83.0,
+"kind": "gradual"
+},
+{
+"t": 58.66,
+"len": 15,
+"max": 6.9,
+"tot": 21.0,
+"kind": "gradual"
+},
+{
+"t": 59.86,
+"len": 8,
+"max": 41.8,
+"tot": 136.5,
+"kind": "gradual"
+},
+{
+"t": 60.16,
+"len": 167,
+"max": 39.9,
+"tot": 74.3,
+"kind": "gradual"
+},
+{
+"t": 67.4,
+"len": 305,
+"max": 32.4,
+"tot": 70.3,
+"kind": "gradual"
+},
+{
+"t": 81.75,
+"len": 9,
+"max": 10.2,
+"tot": 19.8,
+"kind": "gradual"
+},
+{
+"t": 88.49,
+"len": 1,
+"max": 50.2,
+"tot": 50.2,
+"kind": "hard"
+},
+{
+"t": 93.39,
+"len": 3,
+"max": 27.7,
+"tot": 43.9,
+"kind": "gradual"
+},
+{
+"t": 93.66,
+"len": 5,
+"max": 8.5,
+"tot": 19.4,
+"kind": "gradual"
+},
+{
+"t": 98.23,
+"len": 10,
+"max": 26.2,
+"tot": 55.9,
+"kind": "gradual"
+},
+{
+"t": 105.27,
+"len": 18,
+"max": 52.7,
+"tot": 64.4,
+"kind": "gradual"
+},
+{
+"t": 110.38,
+"len": 342,
+"max": 74.5,
+"tot": 71.2,
+"kind": "gradual"
+},
+{
+"t": 123.82,
+"len": 9,
+"max": 37.5,
+"tot": 87.6,
+"kind": "gradual"
+},
+{
+"t": 128.03,
+"len": 3,
+"max": 25.6,
+"tot": 57.1,
+"kind": "gradual"
+},
+{
+"t": 128.19,
+"len": 4,
+"max": 30.9,
+"tot": 67.3,
+"kind": "gradual"
+},
+{
+"t": 137.67,
+"len": 113,
+"max": 28.1,
+"tot": 69.2,
+"kind": "gradual"
+},
+{
+"t": 143.54,
+"len": 10,
+"max": 19.9,
+"tot": 38.9,
+"kind": "gradual"
+},
+{
+"t": 146.15,
+"len": 11,
+"max": 20.0,
+"tot": 55.5,
+"kind": "gradual"
+},
+{
+"t": 149.25,
+"len": 3,
+"max": 33.2,
+"tot": 51.9,
+"kind": "gradual"
+},
+{
+"t": 149.48,
+"len": 13,
+"max": 49.2,
+"tot": 96.4,
+"kind": "gradual"
+},
+{
+"t": 152.09,
+"len": 58,
+"max": 56.3,
+"tot": 82.6,
+"kind": "gradual"
+},
+{
+"t": 158.93,
+"len": 10,
+"max": 48.1,
+"tot": 139.5,
+"kind": "gradual"
+},
+{
+"t": 159.39,
+"len": 9,
+"max": 10.6,
+"tot": 28.6,
+"kind": "gradual"
+},
+{
+"t": 163.63,
+"len": 19,
+"max": 32.4,
+"tot": 55.3,
+"kind": "gradual"
+},
+{
+"t": 166.57,
+"len": 19,
+"max": 69.6,
+"tot": 150.1,
+"kind": "gradual"
+},
+{
+"t": 167.3,
+"len": 9,
+"max": 32.6,
+"tot": 18.9,
+"kind": "gradual"
+},
+{
+"t": 167.63,
+"len": 10,
+"max": 11.9,
+"tot": 47.9,
+"kind": "gradual"
+},
+{
+"t": 169.6,
+"len": 7,
+"max": 58.2,
+"tot": 57.7,
+"kind": "gradual"
+},
+{
+"t": 169.97,
+"len": 10,
+"max": 49.5,
+"tot": 71.3,
+"kind": "gradual"
+},
+{
+"t": 174.77,
+"len": 201,
+"max": 42.6,
+"tot": 84.3,
+"kind": "gradual"
+},
+{
+"t": 182.85,
+"len": 204,
+"max": 38.2,
+"tot": 96.5,
+"kind": "gradual"
+},
+{
+"t": 194.63,
+"len": 150,
+"max": 45.2,
+"tot": 163.3,
+"kind": "gradual"
+},
+{
+"t": 205.67,
+"len": 70,
+"max": 67.8,
+"tot": 139.0,
+"kind": "gradual"
+},
+{
+"t": 214.01,
+"len": 35,
+"max": 52.4,
+"tot": 111.0,
+"kind": "gradual"
+},
+{
+"t": 215.22,
+"len": 32,
+"max": 57.5,
+"tot": 126.7,
+"kind": "gradual"
+},
+{
+"t": 223.06,
+"len": 9,
+"max": 3.6,
+"tot": 20.2,
+"kind": "gradual"
+},
+{
+"t": 225.59,
+"len": 4,
+"max": 34.8,
+"tot": 69.3,
+"kind": "gradual"
+},
+{
+"t": 225.79,
+"len": 187,
+"max": 47.9,
+"tot": 111.8,
+"kind": "gradual"
+},
+{
+"t": 233.07,
+"len": 10,
+"max": 33.3,
+"tot": 100.7,
+"kind": "gradual"
+},
+{
+"t": 238.54,
+"len": 4,
+"max": 22.5,
+"tot": 50.4,
+"kind": "gradual"
+},
+{
+"t": 238.74,
+"len": 136,
+"max": 52.9,
+"tot": 92.2,
+"kind": "gradual"
+},
+{
+"t": 247.98,
+"len": 75,
+"max": 46.2,
+"tot": 106.8,
+"kind": "gradual"
+},
+{
+"t": 255.25,
+"len": 125,
+"max": 60.4,
+"tot": 165.2,
+"kind": "gradual"
+},
+{
+"t": 259.53,
+"len": 9,
+"max": 32.6,
+"tot": 18.9,
+"kind": "gradual"
+},
+{
+"t": 259.86,
+"len": 10,
+"max": 8.5,
+"tot": 47.9,
+"kind": "gradual"
+},
+{
+"t": 261.13,
+"len": 1,
+"max": 42.7,
+"tot": 42.7,
+"kind": "hard"
+},
+{
+"t": 262.4,
+"len": 7,
+"max": 37.9,
+"tot": 38.1,
+"kind": "gradual"
+},
+{
+"t": 262.76,
+"len": 10,
+"max": 80.7,
+"tot": 161.7,
+"kind": "gradual"
+},
+{
+"t": 263.36,
+"len": 11,
+"max": 13.9,
+"tot": 20.0,
+"kind": "gradual"
+},
+{
+"t": 264.6,
+"len": 12,
+"max": 14.9,
+"tot": 22.4,
+"kind": "gradual"
+},
+{
+"t": 267.0,
+"len": 13,
+"max": 88.2,
+"tot": 100.4,
+"kind": "gradual"
+},
+{
+"t": 270.54,
+"len": 72,
+"max": 78.0,
+"tot": 118.0,
+"kind": "gradual"
+},
+{
+"t": 274.07,
+"len": 9,
+"max": 47.6,
+"tot": 77.1,
+"kind": "gradual"
+},
+{
+"t": 276.94,
+"len": 168,
+"max": 6.3,
+"tot": 31.8,
+"kind": "gradual"
+},
+{
+"t": 282.58,
+"len": 47,
+"max": 4.4,
+"tot": 18.7,
+"kind": "gradual"
+},
+{
+"t": 284.25,
+"len": 7,
+"max": 42.3,
+"tot": 87.0,
+"kind": "gradual"
+},
+{
+"t": 284.55,
+"len": 17,
+"max": 12.0,
+"tot": 45.4,
+"kind": "gradual"
+},
+{
+"t": 285.45,
+"len": 17,
+"max": 9.4,
+"tot": 25.6,
+"kind": "gradual"
+},
+{
+"t": 292.19,
+"len": 16,
+"max": 100.1,
+"tot": 128.6,
+"kind": "gradual"
+},
+{
+"t": 296.1,
+"len": 5,
+"max": 162.8,
+"tot": 204.5,
+"kind": "gradual"
+},
+{
+"t": 296.3,
+"len": 3,
+"max": 31.7,
+"tot": 58.9,
+"kind": "gradual"
+},
+{
+"t": 296.43,
+"len": 6,
+"max": 10.8,
+"tot": 22.2,
+"kind": "gradual"
+},
+{
+"t": 301.07,
+"len": 8,
+"max": 29.2,
+"tot": 67.7,
+"kind": "gradual"
+},
+{
+"t": 308.51,
+"len": 4,
+"max": 64.7,
+"tot": 110.4,
+"kind": "gradual"
+},
+{
+"t": 308.68,
+"len": 16,
+"max": 75.6,
+"tot": 177.0,
+"kind": "gradual"
+},
+{
+"t": 312.48,
+"len": 7,
+"max": 5.6,
+"tot": 18.3,
+"kind": "gradual"
+},
+{
+"t": 312.75,
+"len": 15,
+"max": 6.2,
+"tot": 35.1,
+"kind": "gradual"
+},
+{
+"t": 313.71,
+"len": 9,
+"max": 80.9,
+"tot": 204.0,
+"kind": "gradual"
+},
+{
+"t": 320.99,
+"len": 5,
+"max": 68.6,
+"tot": 162.4,
+"kind": "gradual"
+},
+{
+"t": 325.22,
+"len": 379,
+"max": 51.6,
+"tot": 140.8,
+"kind": "gradual"
+},
+{
+"t": 338.47,
+"len": 59,
+"max": 21.6,
+"tot": 54.1,
+"kind": "gradual"
+},
+{
+"t": 343.18,
+"len": 8,
+"max": 25.3,
+"tot": 53.0,
+"kind": "gradual"
+},
+{
+"t": 343.81,
+"len": 14,
+"max": 11.1,
+"tot": 22.4,
+"kind": "gradual"
+},
+{
+"t": 344.64,
+"len": 1,
+"max": 20.9,
+"tot": 20.9,
+"kind": "hard"
+},
+{
+"t": 344.91,
+"len": 1,
+"max": 20.9,
+"tot": 20.9,
+"kind": "hard"
+},
+{
+"t": 345.11,
+"len": 1,
+"max": 20.9,
+"tot": 20.9,
+"kind": "hard"
+},
+{
+"t": 345.35,
+"len": 1,
+"max": 20.9,
+"tot": 20.9,
+"kind": "hard"
+},
+{
+"t": 345.58,
+"len": 1,
+"max": 20.9,
+"tot": 20.9,
+"kind": "hard"
+},
+{
+"t": 345.85,
+"len": 1,
+"max": 20.9,
+"tot": 20.9,
+"kind": "hard"
+},
+{
+"t": 346.38,
+"len": 10,
+"max": 20.6,
+"tot": 54.5,
+"kind": "gradual"
+},
+{
+"t": 349.82,
+"len": 25,
+"max": 130.1,
+"tot": 150.4,
+"kind": "gradual"
+},
+{
+"t": 354.39,
+"len": 18,
+"max": 108.5,
+"tot": 131.1,
+"kind": "gradual"
+},
+{
+"t": 357.19,
+"len": 23,
+"max": 14.0,
+"tot": 39.7,
+"kind": "gradual"
+},
+{
+"t": 360.89,
+"len": 22,
+"max": 47.7,
+"tot": 102.4,
+"kind": "gradual"
+},
+{
+"t": 362.6,
+"len": 80,
+"max": 21.7,
+"tot": 42.9,
+"kind": "gradual"
+},
+{
+"t": 368.0,
+"len": 154,
+"max": 69.4,
+"tot": 44.1,
+"kind": "gradual"
+},
+{
+"t": 375.81,
+"len": 4,
+"max": 5.6,
+"tot": 19.7,
+"kind": "gradual"
+},
+{
+"t": 378.75,
+"len": 10,
+"max": 61.5,
+"tot": 139.0,
+"kind": "gradual"
+},
+{
+"t": 379.18,
+"len": 9,
+"max": 32.6,
+"tot": 18.9,
+"kind": "gradual"
+},
+{
+"t": 381.68,
+"len": 7,
+"max": 33.4,
+"tot": 33.5,
+"kind": "gradual"
+},
+{
+"t": 382.05,
+"len": 10,
+"max": 44.7,
+"tot": 60.6,
+"kind": "gradual"
+},
+{
+"t": 385.52,
+"len": 24,
+"max": 9.8,
+"tot": 129.6,
+"kind": "gradual"
+},
+{
+"t": 388.42,
+"len": 5,
+"max": 80.4,
+"tot": 167.7,
+"kind": "gradual"
+},
+{
+"t": 397.73,
+"len": 330,
+"max": 85.1,
+"tot": 120.6,
+"kind": "gradual"
+}
+],
+"mBhCwJK1xR4": [
+{
+"t": 3.44,
+"len": 7,
+"max": 56.9,
+"tot": 151.7,
+"kind": "gradual"
+},
+{
+"t": 3.97,
+"len": 15,
+"max": 13.8,
+"tot": 57.3,
+"kind": "gradual"
+},
+{
+"t": 4.5,
+"len": 7,
+"max": 12.2,
+"tot": 26.8,
+"kind": "gradual"
+},
+{
+"t": 4.77,
+"len": 15,
+"max": 11.5,
+"tot": 36.1,
+"kind": "gradual"
+},
+{
+"t": 7.01,
+"len": 11,
+"max": 37.6,
+"tot": 68.8,
+"kind": "gradual"
+},
+{
+"t": 11.24,
+"len": 49,
+"max": 32.1,
+"tot": 40.4,
+"kind": "gradual"
+},
+{
+"t": 15.22,
+"len": 57,
+"max": 27.8,
+"tot": 72.9,
+"kind": "gradual"
+},
+{
+"t": 17.15,
+"len": 25,
+"max": 9.4,
+"tot": 46.2,
+"kind": "gradual"
+},
+{
+"t": 20.19,
+"len": 7,
+"max": 96.7,
+"tot": 173.7,
+"kind": "gradual"
+},
+{
+"t": 20.49,
+"len": 6,
+"max": 4.1,
+"tot": 18.5,
+"kind": "gradual"
+},
+{
+"t": 21.45,
+"len": 10,
+"max": 17.2,
+"tot": 42.6,
+"kind": "gradual"
+},
+{
+"t": 22.62,
+"len": 9,
+"max": 10.0,
+"tot": 21.4,
+"kind": "gradual"
+},
+{
+"t": 24.36,
+"len": 6,
+"max": 130.0,
+"tot": 159.1,
+"kind": "gradual"
+},
+{
+"t": 31.4,
+"len": 28,
+"max": 52.1,
+"tot": 51.0,
+"kind": "gradual"
+},
+{
+"t": 34.37,
+"len": 9,
+"max": 7.4,
+"tot": 49.5,
+"kind": "gradual"
+},
+{
+"t": 34.7,
+"len": 10,
+"max": 26.1,
+"tot": 163.9,
+"kind": "gradual"
+},
+{
+"t": 35.14,
+"len": 24,
+"max": 20.2,
+"tot": 78.5,
+"kind": "gradual"
+},
+{
+"t": 37.9,
+"len": 86,
+"max": 49.5,
+"tot": 90.4,
+"kind": "gradual"
+},
+{
+"t": 41.84,
+"len": 12,
+"max": 48.4,
+"tot": 66.9,
+"kind": "gradual"
+},
+{
+"t": 45.51,
+"len": 8,
+"max": 23.8,
+"tot": 49.3,
+"kind": "gradual"
+},
+{
+"t": 47.68,
+"len": 11,
+"max": 29.8,
+"tot": 47.1,
+"kind": "gradual"
+},
+{
+"t": 49.25,
+"len": 10,
+"max": 207.5,
+"tot": 215.0,
+"kind": "gradual"
+},
+{
+"t": 51.32,
+"len": 11,
+"max": 63.2,
+"tot": 191.4,
+"kind": "gradual"
+},
+{
+"t": 56.96,
+"len": 12,
+"max": 29.3,
+"tot": 78.0,
+"kind": "gradual"
+},
+{
+"t": 58.76,
+"len": 17,
+"max": 104.8,
+"tot": 62.9,
+"kind": "gradual"
+},
+{
+"t": 59.53,
+"len": 7,
+"max": 3.7,
+"tot": 19.1,
+"kind": "gradual"
+},
+{
+"t": 60.49,
+"len": 7,
+"max": 3.9,
+"tot": 20.1,
+"kind": "gradual"
+},
+{
+"t": 62.1,
+"len": 7,
+"max": 55.7,
+"tot": 101.9,
+"kind": "gradual"
+},
+{
+"t": 62.4,
+"len": 8,
+"max": 4.8,
+"tot": 27.1,
+"kind": "gradual"
+},
+{
+"t": 62.76,
+"len": 16,
+"max": 8.9,
+"tot": 69.0,
+"kind": "gradual"
+},
+{
+"t": 63.43,
+"len": 9,
+"max": 7.3,
+"tot": 39.9,
+"kind": "gradual"
+},
+{
+"t": 64.73,
+"len": 10,
+"max": 52.9,
+"tot": 108.0,
+"kind": "gradual"
+},
+{
+"t": 67.57,
+"len": 10,
+"max": 60.2,
+"tot": 136.1,
+"kind": "gradual"
+},
+{
+"t": 70.2,
+"len": 5,
+"max": 168.8,
+"tot": 172.6,
+"kind": "gradual"
+},
+{
+"t": 74.34,
+"len": 12,
+"max": 52.4,
+"tot": 79.7,
+"kind": "gradual"
+},
+{
+"t": 78.24,
+"len": 6,
+"max": 3.7,
+"tot": 18.8,
+"kind": "gradual"
+},
+{
+"t": 79.98,
+"len": 7,
+"max": 33.8,
+"tot": 36.4,
+"kind": "gradual"
+},
+{
+"t": 87.52,
+"len": 5,
+"max": 21.7,
+"tot": 45.3,
+"kind": "gradual"
+},
+{
+"t": 91.22,
+"len": 15,
+"max": 33.9,
+"tot": 49.2,
+"kind": "gradual"
+},
+{
+"t": 93.26,
+"len": 116,
+"max": 36.3,
+"tot": 32.8,
+"kind": "gradual"
+},
+{
+"t": 110.08,
+"len": 10,
+"max": 178.1,
+"tot": 179.3,
+"kind": "gradual"
+},
+{
+"t": 111.88,
+"len": 7,
+"max": 3.3,
+"tot": 22.3,
+"kind": "gradual"
+},
+{
+"t": 112.78,
+"len": 7,
+"max": 3.0,
+"tot": 20.6,
+"kind": "gradual"
+},
+{
+"t": 114.31,
+"len": 6,
+"max": 40.8,
+"tot": 72.5,
+"kind": "gradual"
+},
+{
+"t": 116.12,
+"len": 7,
+"max": 95.8,
+"tot": 177.7,
+"kind": "gradual"
+},
+{
+"t": 122.92,
+"len": 10,
+"max": 36.1,
+"tot": 74.1,
+"kind": "gradual"
+},
+{
+"t": 127.76,
+"len": 10,
+"max": 79.2,
+"tot": 175.6,
+"kind": "gradual"
+},
+{
+"t": 128.19,
+"len": 9,
+"max": 32.7,
+"tot": 18.9,
+"kind": "gradual"
+},
+{
+"t": 130.7,
+"len": 7,
+"max": 33.4,
+"tot": 33.4,
+"kind": "gradual"
+},
+{
+"t": 131.06,
+"len": 10,
+"max": 83.1,
+"tot": 182.3,
+"kind": "gradual"
+},
+{
+"t": 133.67,
+"len": 10,
+"max": 5.4,
+"tot": 45.2,
+"kind": "gradual"
+},
+{
+"t": 138.0,
+"len": 10,
+"max": 88.6,
+"tot": 105.7,
+"kind": "gradual"
+},
+{
+"t": 138.47,
+"len": 16,
+"max": 14.1,
+"tot": 76.7,
+"kind": "gradual"
+},
+{
+"t": 141.57,
+"len": 24,
+"max": 7.3,
+"tot": 43.9,
+"kind": "gradual"
+},
+{
+"t": 146.08,
+"len": 12,
+"max": 10.6,
+"tot": 39.7,
+"kind": "gradual"
+},
+{
+"t": 150.32,
+"len": 6,
+"max": 63.5,
+"tot": 72.8,
+"kind": "gradual"
+},
+{
+"t": 151.68,
+"len": 20,
+"max": 12.8,
+"tot": 28.6,
+"kind": "gradual"
+},
+{
+"t": 154.52,
+"len": 1,
+"max": 75.0,
+"tot": 75.0,
+"kind": "hard"
+},
+{
+"t": 160.56,
+"len": 7,
+"max": 57.3,
+"tot": 116.6,
+"kind": "gradual"
+},
+{
+"t": 169.74,
+"len": 40,
+"max": 29.3,
+"tot": 65.6,
+"kind": "gradual"
+},
+{
+"t": 174.34,
+"len": 5,
+"max": 19.5,
+"tot": 35.7,
+"kind": "gradual"
+},
+{
+"t": 183.02,
+"len": 1,
+"max": 80.0,
+"tot": 80.0,
+"kind": "hard"
+},
+{
+"t": 183.18,
+"len": 7,
+"max": 30.4,
+"tot": 71.7,
+"kind": "gradual"
+},
+{
+"t": 186.82,
+"len": 1,
+"max": 76.3,
+"tot": 76.3,
+"kind": "hard"
+},
+{
+"t": 186.99,
+"len": 6,
+"max": 11.1,
+"tot": 19.5,
+"kind": "gradual"
+},
+{
+"t": 190.09,
+"len": 10,
+"max": 85.8,
+"tot": 93.6,
+"kind": "gradual"
+},
+{
+"t": 193.96,
+"len": 10,
+"max": 65.7,
+"tot": 108.2,
+"kind": "gradual"
+},
+{
+"t": 196.56,
+"len": 79,
+"max": 73.9,
+"tot": 64.1,
+"kind": "gradual"
+},
+{
+"t": 199.3,
+"len": 9,
+"max": 32.7,
+"tot": 18.9,
+"kind": "gradual"
+},
+{
+"t": 201.8,
+"len": 7,
+"max": 33.4,
+"tot": 33.4,
+"kind": "gradual"
+},
+{
+"t": 202.17,
+"len": 10,
+"max": 40.0,
+"tot": 37.5,
+"kind": "gradual"
+},
+{
+"t": 206.31,
+"len": 1,
+"max": 155.0,
+"tot": 155.0,
+"kind": "hard"
+},
+{
+"t": 209.58,
+"len": 10,
+"max": 31.9,
+"tot": 58.8,
+"kind": "gradual"
+},
+{
+"t": 215.22,
+"len": 8,
+"max": 44.1,
+"tot": 75.4,
+"kind": "gradual"
+},
+{
+"t": 218.48,
+"len": 10,
+"max": 25.9,
+"tot": 56.1,
+"kind": "gradual"
+},
+{
+"t": 224.56,
+"len": 11,
+"max": 39.2,
+"tot": 80.5,
+"kind": "gradual"
+},
+{
+"t": 227.69,
+"len": 1,
+"max": 175.6,
+"tot": 175.6,
+"kind": "hard"
+},
+{
+"t": 231.56,
+"len": 28,
+"max": 35.4,
+"tot": 98.7,
+"kind": "gradual"
+},
+{
+"t": 232.57,
+"len": 85,
+"max": 104.9,
+"tot": 133.7,
+"kind": "gradual"
+},
+{
+"t": 238.17,
+"len": 48,
+"max": 71.6,
+"tot": 150.8,
+"kind": "gradual"
+},
+{
+"t": 242.94,
+"len": 7,
+"max": 63.3,
+"tot": 66.4,
+"kind": "gradual"
+},
+{
+"t": 243.54,
+"len": 129,
+"max": 43.8,
+"tot": 94.4,
+"kind": "gradual"
+},
+{
+"t": 250.18,
+"len": 10,
+"max": 22.0,
+"tot": 56.0,
+"kind": "gradual"
+},
+{
+"t": 252.12,
+"len": 62,
+"max": 27.0,
+"tot": 80.7,
+"kind": "gradual"
+},
+{
+"t": 261.53,
+"len": 25,
+"max": 80.3,
+"tot": 129.8,
+"kind": "gradual"
+},
+{
+"t": 264.06,
+"len": 14,
+"max": 8.1,
+"tot": 18.2,
+"kind": "gradual"
+},
+{
+"t": 268.3,
+"len": 10,
+"max": 104.8,
+"tot": 61.7,
+"kind": "gradual"
+},
+{
+"t": 271.04,
+"len": 4,
+"max": 94.4,
+"tot": 204.1,
+"kind": "gradual"
+},
+{
+"t": 280.11,
+"len": 7,
+"max": 21.7,
+"tot": 40.8,
+"kind": "gradual"
+},
+{
+"t": 285.25,
+"len": 10,
+"max": 53.3,
+"tot": 103.7,
+"kind": "gradual"
+},
+{
+"t": 289.66,
+"len": 10,
+"max": 39.2,
+"tot": 84.3,
+"kind": "gradual"
+},
+{
+"t": 296.4,
+"len": 10,
+"max": 28.0,
+"tot": 65.9,
+"kind": "gradual"
+},
+{
+"t": 305.31,
+"len": 6,
+"max": 104.2,
+"tot": 122.4,
+"kind": "gradual"
+},
+{
+"t": 310.24,
+"len": 10,
+"max": 73.6,
+"tot": 99.8,
+"kind": "gradual"
+},
+{
+"t": 315.72,
+"len": 10,
+"max": 36.2,
+"tot": 71.2,
+"kind": "gradual"
+},
+{
+"t": 321.09,
+"len": 10,
+"max": 36.4,
+"tot": 77.4,
+"kind": "gradual"
+},
+{
+"t": 327.93,
+"len": 8,
+"max": 63.9,
+"tot": 80.0,
+"kind": "gradual"
+},
+{
+"t": 335.87,
+"len": 15,
+"max": 75.6,
+"tot": 159.3,
+"kind": "gradual"
+},
+{
+"t": 340.97,
+"len": 6,
+"max": 25.9,
+"tot": 40.6,
+"kind": "gradual"
+},
+{
+"t": 347.45,
+"len": 48,
+"max": 55.9,
+"tot": 77.7,
+"kind": "gradual"
+},
+{
+"t": 354.02,
+"len": 8,
+"max": 33.1,
+"tot": 67.8,
+"kind": "gradual"
+},
+{
+"t": 361.39,
+"len": 10,
+"max": 33.5,
+"tot": 73.5,
+"kind": "gradual"
+},
+{
+"t": 365.8,
+"len": 88,
+"max": 80.4,
+"tot": 100.6,
+"kind": "gradual"
+},
+{
+"t": 368.77,
+"len": 330,
+"max": 84.7,
+"tot": 122.2,
+"kind": "gradual"
+}
+]
+}

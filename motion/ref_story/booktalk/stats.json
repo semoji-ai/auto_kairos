@@ -1,0 +1,170 @@
+{
+ "0utk3wm8cJU": {
+  "dur": 2248.0,
+  "chars_per_min": 346,
+  "eoj_per_min": 102,
+  "n_sent": 488,
+  "sent_eoj_mean": 7.8,
+  "sent_eoj_median": 7.0,
+  "p90": 14,
+  "style": {
+   "해요": 11,
+   "합니다": 25,
+   "기타/반말·연결": 64
+  },
+  "q_per_min": 2.07,
+  "q_total": 77,
+  "conj": {
+   "하지만": 6,
+   "그런데": 4,
+   "사실": 6,
+   "근데": 1,
+   "그래서": 3,
+   "그러나": 1
+  },
+  "conj_contrast_per_min": 0.32,
+  "nums_per_min": 0.16,
+  "i_we": 46,
+  "you": 10
+ },
+ "34g2xZ0DpIE": {
+  "dur": 808.0,
+  "chars_per_min": 395,
+  "eoj_per_min": 126,
+  "n_sent": 305,
+  "sent_eoj_mean": 5.5,
+  "sent_eoj_median": 5,
+  "p90": 11,
+  "style": {
+   "해요": 39,
+   "합니다": 33,
+   "기타/반말·연결": 28
+  },
+  "q_per_min": 3.32,
+  "q_total": 44,
+  "conj": {
+   "그러나": 1,
+   "그런데": 6,
+   "사실": 1,
+   "하지만": 3,
+   "그래서": 2
+  },
+  "conj_contrast_per_min": 0.75,
+  "nums_per_min": 1.21,
+  "i_we": 30,
+  "you": 26
+ },
+ "IQ7UH43tDH0": {
+  "dur": 935.0,
+  "chars_per_min": 412,
+  "eoj_per_min": 119,
+  "n_sent": 303,
+  "sent_eoj_mean": 6.1,
+  "sent_eoj_median": 5,
+  "p90": 11,
+  "style": {
+   "합니다": 33,
+   "기타/반말·연결": 31,
+   "해요": 36
+  },
+  "q_per_min": 1.76,
+  "q_total": 27,
+  "conj": {
+   "사실": 7,
+   "하지만": 12,
+   "근데": 1,
+   "그럼에도": 1,
+   "그런데": 8,
+   "그래서": 4
+  },
+  "conj_contrast_per_min": 1.43,
+  "nums_per_min": 0.26,
+  "i_we": 14,
+  "you": 1
+ },
+ "RZBnwqjK_CY": {
+  "dur": 1554.0,
+  "chars_per_min": 352,
+  "eoj_per_min": 106,
+  "n_sent": 440,
+  "sent_eoj_mean": 6.1,
+  "sent_eoj_median": 6.0,
+  "p90": 11,
+  "style": {
+   "해요": 21,
+   "합니다": 49,
+   "기타/반말·연결": 30
+  },
+  "q_per_min": 1.92,
+  "q_total": 49,
+  "conj": {
+   "그러나": 4,
+   "그런데": 9,
+   "사실": 8,
+   "그럼에도": 1,
+   "결국": 6,
+   "하지만": 9
+  },
+  "conj_contrast_per_min": 0.9,
+  "nums_per_min": 0.35,
+  "i_we": 14,
+  "you": 18
+ },
+ "TmJGenL0z-o": {
+  "dur": 1695.0,
+  "chars_per_min": 397,
+  "eoj_per_min": 126,
+  "n_sent": 596,
+  "sent_eoj_mean": 5.9,
+  "sent_eoj_median": 5.0,
+  "p90": 11,
+  "style": {
+   "합니다": 30,
+   "해요": 28,
+   "기타/반말·연결": 42
+  },
+  "q_per_min": 3.11,
+  "q_total": 87,
+  "conj": {
+   "그런데": 10,
+   "그래서": 2,
+   "하지만": 16,
+   "결국": 4,
+   "사실": 6,
+   "그러나": 8,
+   "그럼에도": 1
+  },
+  "conj_contrast_per_min": 1.25,
+  "nums_per_min": 0.57,
+  "i_we": 18,
+  "you": 19
+ },
+ "a4D5wX01vV0": {
+  "dur": 444.0,
+  "chars_per_min": 384,
+  "eoj_per_min": 123,
+  "n_sent": 147,
+  "sent_eoj_mean": 6.0,
+  "sent_eoj_median": 5,
+  "p90": 11,
+  "style": {
+   "합니다": 35,
+   "해요": 44,
+   "기타/반말·연결": 21
+  },
+  "q_per_min": 2.36,
+  "q_total": 17,
+  "conj": {
+   "근데": 2,
+   "그런데": 5,
+   "그래서": 9,
+   "하지만": 2,
+   "사실": 2,
+   "결국": 2
+  },
+  "conj_contrast_per_min": 1.25,
+  "nums_per_min": 0.42,
+  "i_we": 3,
+  "you": 5
+ }
+}

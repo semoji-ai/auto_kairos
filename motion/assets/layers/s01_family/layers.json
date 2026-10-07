@@ -1,0 +1,91 @@
+{
+  "source": "$SEMOJI_NAS/assets/gen/s01_family.png",
+  "size": [
+    1659,
+    948
+  ],
+  "key_color": "#FF00FF",
+  "upscale": {
+    "applied": false,
+    "scale": 2,
+    "model": null
+  },
+  "layers": [
+    {
+      "index": 1,
+      "name": "아빠",
+      "kind": "character",
+      "motion": "웃는 표정을 유지하며 고개와 상체를 오른쪽으로 3도 기울였다가 제자리로 돌아온다.",
+      "importance": 95,
+      "key_color": "#FF00FF",
+      "png": "01_아빠_char.png",
+      "bbox": [
+        0.633,
+        0.127,
+        0.932,
+        0.797
+      ],
+      "fitted": false,
+      "raw": "raw/01_아빠_char.magenta.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.8474412678065939,
+        "position_score": 0.3648617108180651,
+        "retried": false
+      }
+    },
+    {
+      "index": 2,
+      "name": "엄마",
+      "kind": "character",
+      "motion": "모은 두 손을 유지한 채 고개와 상체를 아들 쪽으로 3도 까딱였다가 돌아온다.",
+      "importance": 95,
+      "key_color": "#00B140",
+      "png": "02_엄마_char.png",
+      "bbox": [
+        0.116,
+        0.165,
+        0.342,
+        0.775
+      ],
+      "fitted": false,
+      "raw": "raw/02_엄마_char.green.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.6878508226449261,
+        "position_score": 0.18712187570023017,
+        "retried": false
+      }
+    },
+    {
+      "index": 3,
+      "name": "졸업생 아들",
+      "kind": "character",
+      "motion": "젓가락과 꽃다발을 든 자세를 유지하며 고개와 상체를 왼쪽으로 3도 까딱였다가 돌아온다.",
+      "importance": 100,
+      "key_color": "#FF00FF",
+      "png": "03_졸업생_아들_char.png",
+      "bbox": [
+        0.336,
+        0.152,
+        0.674,
+        0.738
+      ],
+      "fitted": false,
+      "raw": "raw/03_졸업생_아들_char.magenta.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.76322030708347,
+        "position_score": 0.34877044667817847,
+        "retried": false
+      }
+    }
+  ],
+  "background": {
+    "name": "배경",
+    "png": "bg.png",
+    "raw": "raw/bg.png",
+    "status": "completed"
+  },
+  "dropped": []
+}

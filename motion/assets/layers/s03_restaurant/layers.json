@@ -1,0 +1,30 @@
+{
+ "bg": "$SEMOJI_NAS/assets/layers/s03_restaurant/bg.png",
+ "lanterns": [
+  [
+   380.0,
+   172
+  ],
+  [
+   684.0,
+   172
+  ],
+  [
+   1234.5,
+   172
+  ],
+  [
+   1542.0,
+   172
+  ]
+ ],
+ "lantern_png": "$SEMOJI_NAS/assets/layers/s03_restaurant/lantern.png",
+ "lantern_size": [
+  770,
+  1383
+ ],
+ "clouds": [
+  "$SEMOJI_NAS/assets/layers/s03_restaurant/cloud1.png",
+  "$SEMOJI_NAS/assets/layers/s03_restaurant/cloud2.png"
+ ]
+}

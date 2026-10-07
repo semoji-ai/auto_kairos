@@ -1,0 +1,2967 @@
+{
+ "_meta": {
+  "generated": "2026-09-27",
+  "scope": "video/src/gallery/*.tsx 도감 데모 중 코드(SVG/CSS)로 그린 인물·소품. PNG/JPG 사용부·순수 그래픽(도형 배경·선·텍스트·파티클·차트 막대·지도)은 제외, 차트 속 픽토그램 사람은 포함",
+  "demo_id": "<gallery 파일>-NN (각 파일 DEMOS 배열의 1-based 순번; core는 기본 DEMOS 뒤 push된 Main 부품이 51~57)",
+  "text_rule": "소품에 들어가는 글자·숫자는 전부 코드로 올림 — 그림에는 빈 칸만"
+ },
+ "cast": [
+  {
+   "id": "walker1",
+   "status": "완성(assets/kit/walk, public/kit/walker1 리그)",
+   "desc": "1930년대 청년, 회청색 반팔 셔츠·짙은 바지, 짧은 검은 머리",
+   "roles": [
+    "대화 청년(x_acting-01)",
+    "권투선수 A(-10)",
+    "STOP 해설자(-13)",
+    "칼싸움 A(-14)",
+    "관찰자(-15)",
+    "새 CEO(-12, 캐주얼 변형)",
+    "노동자 3인(-33, 작업복·안전모 변형)",
+    "군중 앞 인물(-35)",
+    "경영진(-36, 정장 변형)"
+   ],
+   "costume_variants": [
+    "기본(회청 반팔)",
+    "작업복+hard_hat",
+    "정장/넥타이",
+    "검정 상의 캐주얼",
+    "빨강·회색 셔츠 색변형"
+   ],
+   "poses_needed": [
+    "stand",
+    "walk(완성)",
+    "stand_bust",
+    "guard_gloves",
+    "arm_palm_stop",
+    "arm_hold_sword",
+    "arms_folded",
+    "arm_raise_fist",
+    "arms_up_fists",
+    "sit_legs"
+   ],
+   "expressions_needed": [
+    "기본",
+    "눈감음(완성)",
+    "말하기(완성)",
+    "화남(각진 눈썹)",
+    "이 악묾",
+    "실망(frown)",
+    "웃음"
+   ]
+  },
+  {
+   "id": "c2_boss",
+   "status": "프롬프트 있음(assets/kit/cast/prompts.jsonl) — 생성 대기",
+   "desc": "50대 한국 기업가(창업주형), 약간 통통, 단정한 검은 머리 옆 새치, 남색 정장·흰 셔츠·빨간 넥타이",
+   "roles": [
+    "왕좌의 구 CEO(-12)",
+    "권투선수 B(-10)",
+    "칼싸움 B(-14)",
+    "천지창조 손 뻗는 인물(-15)",
+    "밧줄 매달림(-16, 전신)",
+    "꼭두각시 조종자(-20)",
+    "테크 발표자(-27)",
+    "지폐 떠올림(-34)",
+    "경영진(-36)",
+    "가슴 통증(-39)",
+    "TCG 카드 흉상(x_callouts-18)"
+   ],
+   "costume_variants": [
+    "남색 정장(기본)",
+    "파란 정장(-20)",
+    "정장 색 변형(TCG 카드)"
+   ],
+   "poses_needed": [
+    "stand",
+    "stand_bust",
+    "sit_legs",
+    "guard_gloves",
+    "arm_hold_sword",
+    "lean_back + arm_reach_forward",
+    "hang_arms_up + legs_dangle",
+    "arms_out_side",
+    "arms_present_palms_up",
+    "hand_on_chest"
+   ],
+   "expressions_needed": [
+    "기본",
+    "입다묾",
+    "눈감음",
+    "화남",
+    "이 악묾+걱정 눈썹",
+    "놀람(wide)",
+    "고통(> < + 이마 그늘)",
+    "말하기"
+   ]
+  },
+  {
+   "id": "c3_woman",
+   "status": "생성됨(assets/kit/cast/out/c3_woman.png)",
+   "desc": "20대 후반 직장인 여성, 어깨 길이 검은 단발, 크림 블라우스·짙은 초록 스커트",
+   "roles": [
+    "주먹 흔드는 인물(-05)",
+    "딤섬의 여왕(-07, 조리복 변형)",
+    "두더지 구멍 인물(-11)",
+    "박수받는 발표자(-28)",
+    "생각→깨달음(-30)",
+    "(선택) 지시봉 강연자(x_charts-18)"
+   ],
+   "costume_variants": [
+    "기본 블라우스",
+    "흰 조리복",
+    "검은 상의",
+    "흰 셔츠"
+   ],
+   "poses_needed": [
+    "stand",
+    "stand_bust",
+    "arm_raise_fist",
+    "arms_folded_front",
+    "arms_up_near_head",
+    "arms_hold_front",
+    "hand_to_chin",
+    "arm_point_stick(선택)"
+   ],
+   "expressions_needed": [
+    "기본",
+    "말하기",
+    "반짝눈(sparkle)",
+    "입다묾"
+   ]
+  },
+  {
+   "id": "c4_elder",
+   "status": "프롬프트 있음 — 생성 대기",
+   "desc": "70대 노인, 흰 한복(저고리·바지), 회색 머리·짧은 회색 수염",
+   "roles": [
+    "대화 노인(-01)",
+    "원로 명예회장(-18, 정장 변형)",
+    "왕좌 옆 노신사(-12, 정장 변형)",
+    "경영진(-36, 정장 변형)"
+   ],
+   "costume_variants": [
+    "흰 한복(기본)",
+    "베이지/짙은 정장+넥타이"
+   ],
+   "poses_needed": [
+    "stand",
+    "stand_bust",
+    "arm_raise_fist"
+   ],
+   "expressions_needed": [
+    "기본",
+    "말하기",
+    "눈감음(웃는 눈)",
+    "이 악묾"
+   ]
+  },
+  {
+   "id": "c5_chef",
+   "status": "신규 제안(프롬프트 없음)",
+   "desc": "중년 중식 요리사, 흰 조리복(차이나 칼라), 회색 짧은 머리 — 세모지 짜장면편 등 요리 장면 공용",
+   "roles": [
+    "웍 앞 요리사(-04, -23)",
+    "주먹 흔드는 요리사(-05)",
+    "클로슈 뚜껑 드는 요리사(-06)"
+   ],
+   "costume_variants": [
+    "흰 조리복"
+   ],
+   "poses_needed": [
+    "stand_bust",
+    "arm_raise_fist",
+    "arm_bent_fist",
+    "arm_lift_item",
+    "arms_bent_hold"
+   ],
+   "expressions_needed": [
+    "기본",
+    "찡그림(> < 눈·이 악묾·걱정 눈썹)",
+    "눈감음 웃음",
+    "말하기"
+   ]
+  }
+ ],
+ "rig_parts": {
+  "method": "세모지 리그 = 같은 캔버스(1024×1536)·같은 좌표의 부위별 투명 PNG를 겹침. 팔은 어깨 축 회전, 포즈 변화는 그림 교체. 얼굴은 패치 레이어 교체",
+  "parts_per_character": {
+   "torso": [
+    "torso(머리 포함, 기본 표정)",
+    "torso_bust(흉상 크롭은 코드로 가능)"
+   ],
+   "arms(좌/우 각각)": [
+    "arm_down",
+    "arm_raise_fist",
+    "arm_bent_fist",
+    "arm_palm_stop",
+    "arm_point",
+    "arm_reach_forward(palm)",
+    "arm_hold_item(손 비우고 소품 별도)",
+    "arm_guard_glove",
+    "arm_out_side",
+    "arm_hand_chest",
+    "arm_hand_chin",
+    "arm_hold_front",
+    "arms_folded(양팔 한 장)",
+    "arm_up_hang"
+   ],
+   "legs": [
+    "legs_stand",
+    "walk 4포즈(walker1 완성)",
+    "sit_legs",
+    "legs_dangle"
+   ],
+   "face_patches": [
+    "eyes_closed",
+    "eyes_smile(^^)",
+    "eyes_squint(> <)",
+    "eyes_wide",
+    "eyes_sparkle",
+    "brows_angry",
+    "brows_worried",
+    "mouth_open",
+    "mouth_grit",
+    "mouth_frown",
+    "mouth_closed"
+   ]
+  },
+  "notes": "상반신 전용 데모가 대부분(legs=false) → 전신은 x_acting-16(매달림)·-12(앉기)만 필요. 소품(칼·글러브·뚜껑)은 손을 비운 팔 그림 + 별도 소품 레이어로"
+ },
+ "characters": [
+  {
+   "use": "x_acting-01 MouthSwap",
+   "role": "대화하는 두 인물(청년·노인) 흉상 클로즈업",
+   "poses": [
+    "stand_bust(상반신 정면, 팔 내림)"
+   ],
+   "expressions": [
+    "기본(smile)",
+    "말하기(mouth_open)",
+    "입다묾(closed)"
+   ],
+   "costume_hint": "왼쪽: 남색 셔츠 청년 / 오른쪽: 흰 셔츠·회색 머리 노인",
+   "cast": [
+    "walker1",
+    "c4_elder"
+   ]
+  },
+  {
+   "use": "x_acting-04 ExpressionSwap",
+   "role": "웍 앞에서 힘겨워하는 요리사",
+   "poses": [
+    "arm_raise_fist(오른팔 들어 주먹)",
+    "arm_bent_fist(왼팔 굽혀 주먹, 웍 손잡이 잡는 느낌)"
+   ],
+   "expressions": [
+    "기본(smile)",
+    "찡그림(> < 눈·이 악묾·걱정 눈썹)"
+   ],
+   "costume_hint": "흰 조리복, 회색 머리",
+   "cast": [
+    "c5_chef"
+   ]
+  },
+  {
+   "use": "x_acting-05 RepeatGesture",
+   "role": "주먹 흔들며 응원/호응하는 두 인물(엇갈린 박자)",
+   "poses": [
+    "arm_raise_fist(한 팔 들어 주먹 — 어깨 축 회전으로 반복 흔들기)",
+    "arm_down(다른 팔 내림)"
+   ],
+   "expressions": [
+    "기본(smile)",
+    "말하기(mouth_open)"
+   ],
+   "costume_hint": "왼쪽: 검은 옷 단발 여성 / 오른쪽: 흰 조리복 요리사",
+   "cast": [
+    "c3_woman",
+    "c5_chef"
+   ]
+  },
+  {
+   "use": "x_acting-06 ArmTween",
+   "role": "요리 뚜껑(클로슈)을 들어올리는 요리사",
+   "poses": [
+    "arm_lift_item(오른팔 위로 뻗어 뚜껑 손잡이 잡기 — 어깨 축 들어올림)",
+    "arm_down"
+   ],
+   "expressions": [
+    "눈감음(웃는 눈)",
+    "기본"
+   ],
+   "costume_hint": "흰 조리복",
+   "cast": [
+    "c5_chef"
+   ]
+  },
+  {
+   "use": "x_acting-07 CostumeAdd",
+   "role": "왕관·망토가 씌워지는 '딤섬의 여왕'(요리사)",
+   "poses": [
+    "arms_folded_front(두 팔 앞으로 모음/팔짱)"
+   ],
+   "expressions": [
+    "기본",
+    "입다묾"
+   ],
+   "costume_hint": "흰 조리복, 단발 — 왕관·망토는 별도 소품 레이어",
+   "cast": [
+    "c3_woman(조리복 변형) 또는 c5_chef"
+   ]
+  },
+  {
+   "use": "x_acting-10 BoxingRound",
+   "role": "링 위 라이벌 두 권투선수(주장 대립)",
+   "poses": [
+    "guard_gloves(두 팔 굽혀 글러브 얼굴 앞 가드)",
+    "bob(제자리 들썩임은 코드)"
+   ],
+   "expressions": [
+    "화남(각진 눈썹·이 악묾)"
+   ],
+   "costume_hint": "빨강 셔츠 vs 노랑 셔츠, 권투 글러브 손(빨강/노랑) — 오른쪽은 좌우반전",
+   "cast": [
+    "walker1",
+    "c2_boss"
+   ]
+  },
+  {
+   "use": "x_acting-11 WhackAMole",
+   "role": "두더지 구멍에서 솟아오른 인물(뿅망치 맞기 직전, 흥분해 외침)",
+   "poses": [
+    "arms_up_near_head(두 손 머리 옆으로 들어올림)"
+   ],
+   "expressions": [
+    "반짝눈(sparkle)",
+    "말하기(mouth_open)"
+   ],
+   "costume_hint": "긴 머리, 연회청 셔츠, 상반신만",
+   "cast": [
+    "c3_woman"
+   ]
+  },
+  {
+   "use": "x_acting-12 GlovePunchSwap",
+   "role": "왕좌에 앉은 기업가(펀치 맞고 날아감) → 새로 앉는 대머리 CEO / 옆에 선 노신사",
+   "poses": [
+    "sit_legs(왕좌에 앉기 — 다리 앞으로 내림)",
+    "arm_rest(팔 내림)",
+    "arm_raise_fist(옆 인물: 한 팔 치켜듦)"
+   ],
+   "expressions": [
+    "기본",
+    "입다묾",
+    "눈감음",
+    "웃음(새 CEO)"
+   ],
+   "costume_hint": "구 CEO: 정장·회색머리 / 새 CEO: 대머리·검정 상의·파란 바지 / 서 있는 인물: 정장·흰머리",
+   "cast": [
+    "c2_boss(구 CEO)",
+    "walker1(새 CEO 캐주얼 변형)",
+    "c4_elder(정장 변형, 서 있는 인물)"
+   ]
+  },
+  {
+   "use": "x_acting-13 BlurDimInterrupt",
+   "role": "해설자 — 손바닥 내밀어 STOP",
+   "poses": [
+    "arm_palm_stop(한 팔 들어 손바닥 정면)",
+    "arm_down"
+   ],
+   "expressions": [
+    "기본(smile)"
+   ],
+   "costume_hint": "회녹색 셔츠, 갈색 머리",
+   "cast": [
+    "walker1"
+   ]
+  },
+  {
+   "use": "x_acting-14 SwordDuel",
+   "role": "칼싸움하는 두 인물(대립)",
+   "poses": [
+    "arm_hold_sword(한 팔 앞으로 뻗어 칼자루 쥠 — 칼은 별도 레이어)",
+    "arm_down"
+   ],
+   "expressions": [
+    "화남(각진 눈썹·이 악묾)"
+   ],
+   "costume_hint": "왼쪽: 회색 셔츠 대머리 / 오른쪽: 정장 — 오른쪽 좌우반전",
+   "cast": [
+    "walker1(회색 셔츠 변형)",
+    "c2_boss"
+   ]
+  },
+  {
+   "use": "x_acting-15 CreationHand",
+   "role": "천지창조 패러디 — 몸 기울여 손 뻗는 인물 + 팔짱 낀 관찰자",
+   "poses": [
+    "lean_back(몸 -14° 기울임)",
+    "arm_reach_forward(손바닥 펴서 앞으로)",
+    "arms_folded(관찰자 팔짱)"
+   ],
+   "expressions": [
+    "눈감음",
+    "걱정 눈썹",
+    "말하기(mouth_open)"
+   ],
+   "costume_hint": "뻗는 인물: 정장 / 관찰자: 회색 셔츠·검은 넥타이",
+   "cast": [
+    "c2_boss",
+    "walker1"
+   ]
+  },
+  {
+   "use": "x_acting-16 RopeSwing",
+   "role": "밧줄을 건너뛰는 인물(전신, 매달림)",
+   "poses": [
+    "hang_arms_up(두 팔 위로 뻗어 밧줄 잡기)",
+    "legs_dangle(다리 늘어뜨림, 약간 벌림)"
+   ],
+   "expressions": [
+    "걱정 눈썹",
+    "이 악묾(grit)"
+   ],
+   "costume_hint": "정장 — 전신(다리 포함) 필요",
+   "cast": [
+    "c2_boss"
+   ]
+  },
+  {
+   "use": "x_acting-18 CrownKnockoff",
+   "role": "왕관('명예회장')이 날아가는 원로 회장",
+   "poses": [
+    "stand_bust(상반신, 팔 내림)"
+   ],
+   "expressions": [
+    "눈감음(웃는 눈)"
+   ],
+   "costume_hint": "베이지 셔츠·검정 넥타이, 흰머리 — 원로 회장",
+   "cast": [
+    "c4_elder(정장 변형)"
+   ]
+  },
+  {
+   "use": "x_acting-20 Marionette",
+   "role": "받침대 위 꼭두각시 조종자(양손에서 '권력' 구슬 줄이 늘어짐)",
+   "poses": [
+    "arms_out_side(두 팔 수평으로 벌려 주먹 — 어깨 축 ±6° 스윙)"
+   ],
+   "expressions": [
+    "기본",
+    "입다묾"
+   ],
+   "costume_hint": "파란 정장·남색 넥타이",
+   "cast": [
+    "c2_boss"
+   ]
+  },
+  {
+   "use": "x_acting-23 FlameSprite",
+   "role": "불 위에서 웍을 잡은 요리사",
+   "poses": [
+    "arms_bent_hold(두 팔 굽혀 앞으로 — 웍 손잡이 잡기)"
+   ],
+   "expressions": [
+    "기본(smile)"
+   ],
+   "costume_hint": "흰 조리복, 회색 머리",
+   "cast": [
+    "c5_chef"
+   ]
+  },
+  {
+   "use": "x_acting-27 TechAura",
+   "role": "양손바닥 위로 노트북 홀로그램을 띄우는 발표자",
+   "poses": [
+    "arms_present_palms_up(두 팔 옆으로 내밀어 손바닥 위로)"
+   ],
+   "expressions": [
+    "기본",
+    "입다묾"
+   ],
+   "costume_hint": "정장(회색 넥타이)",
+   "cast": [
+    "c2_boss"
+   ]
+  },
+  {
+   "use": "x_acting-28 ClappingHands",
+   "role": "박수받는 발표자(상자/보드를 가슴 앞에 듦)",
+   "poses": [
+    "arms_hold_front(두 손 가슴 앞으로 모아 물건 들기)"
+   ],
+   "expressions": [
+    "기본(smile)"
+   ],
+   "costume_hint": "검은 옷, 단발",
+   "cast": [
+    "c3_woman"
+   ]
+  },
+  {
+   "use": "x_acting-30 IdeaWarmBloom",
+   "role": "생각하다 깨닫는 인물('소프트웨어가 답이다')",
+   "poses": [
+    "hand_to_chin(한 손 턱/얼굴 옆)",
+    "arm_down"
+   ],
+   "expressions": [
+    "기본",
+    "입다묾"
+   ],
+   "costume_hint": "흰 셔츠, 단발 갈색 머리",
+   "cast": [
+    "c3_woman"
+   ]
+  },
+  {
+   "use": "x_acting-33 FloodRise",
+   "role": "물에 잠겨 주먹 흔드는 노동자 3명(가운데는 안전모)",
+   "poses": [
+    "arms_up_fists(두 팔 들어 주먹 — 교대로 펌프)"
+   ],
+   "expressions": [
+    "화남(이 악묾)"
+   ],
+   "costume_hint": "푸른 작업복, 가운데 인물 주황 안전모 — 머리~가슴만 수면 위",
+   "cast": [
+    "walker1(작업복 변형, 색 변형 3인 재사용)"
+   ]
+  },
+  {
+   "use": "x_acting-34 ThoughtMaterialize",
+   "role": "돈(지폐)을 떠올리며 놀라는 사업가",
+   "poses": [
+    "stand_bust"
+   ],
+   "expressions": [
+    "놀람(wide eyes)",
+    "기본(smile)"
+   ],
+   "costume_hint": "정장",
+   "cast": [
+    "c2_boss"
+   ]
+  },
+  {
+   "use": "x_acting-35 ColorDrain",
+   "role": "군중 앞에서 주먹 들었다 내리고 실망하는 인물",
+   "poses": [
+    "arm_raise_fist",
+    "arm_down"
+   ],
+   "expressions": [
+    "말하기(mouth_open)",
+    "실망(frown)"
+   ],
+   "costume_hint": "남색 셔츠·넥타이",
+   "cast": [
+    "walker1(넥타이 변형)"
+   ]
+  },
+  {
+   "use": "x_acting-36 BurdenBallChain",
+   "role": "자금 압박을 받는 경영진 3명(배경, 블러)",
+   "poses": [
+    "stand_bust"
+   ],
+   "expressions": [
+    "기본(입다묾)",
+    "이 악묾(grit)"
+   ],
+   "costume_hint": "짙은 정장, 넥타이 색만 다름(파랑/검정/초록)",
+   "cast": [
+    "c2_boss",
+    "walker1(정장 변형)",
+    "c4_elder(정장 변형)"
+   ]
+  },
+  {
+   "use": "x_acting-39 EcgChestGlow",
+   "role": "가슴을 움켜쥐고 고통스러워하는 사업가",
+   "poses": [
+    "hand_on_chest(한 손 가슴에 얹기)",
+    "arm_down"
+   ],
+   "expressions": [
+    "고통(> < 찡그림·걱정 눈썹·이 악묾 + 이마 푸른 그늘·땀 선)"
+   ],
+   "costume_hint": "정장, 회색 머리",
+   "cast": [
+    "c2_boss"
+   ]
+  },
+  {
+   "use": "x_media-11 XraySilhouette",
+   "role": "엑스레이 투시 인체(정면 전신, 팔 내림)",
+   "poses": [
+    "stand(정면 차렷)"
+   ],
+   "expressions": [
+    "없음(실루엣)"
+   ],
+   "costume_hint": "회색 반투명 몸 실루엣 + 흰 골격(두개골·척추·갈비 7쌍·쇄골·팔다리뼈·골반) 2레이어",
+   "cast": "없음 → props: xray_body_silhouette, xray_skeleton"
+  },
+  {
+   "use": "x_media-10 BoardingPassDrop / FlatHand",
+   "role": "탑승권을 집어 드는 손",
+   "poses": [
+    "hand_open",
+    "hand_grip"
+   ],
+   "expressions": [],
+   "costume_hint": "짙은 소매·흰 셔츠 커프, 피부 #F2C7A5, 우하단에서 -35° 진입",
+   "cast": "없음 → props: hand_kit"
+  },
+  {
+   "use": "x_media-15 CardSwipeMontage / FlatHand×2",
+   "role": "법인카드를 쥔 손(뒷손 + 앞 엄지)",
+   "poses": [
+    "hand_pinch_card_back",
+    "thumb_front"
+   ],
+   "expressions": [],
+   "costume_hint": "뒷손 소매 있음(300px), 앞 엄지 맨손(120px) — 카드 사이에 끼우는 2레이어",
+   "cast": "없음 → props: hand_kit"
+  },
+  {
+   "use": "x_charts-15 HandHeldDocLineup",
+   "role": "아래에서 종이 카드를 들어 올리는 손",
+   "poses": [
+    "hand_hold_paper_bottom(아래 가장자리 집기)"
+   ],
+   "expressions": [],
+   "costume_hint": "남색 소매 #1f2a44, 피부 #F2C4A0",
+   "cast": "없음 → props: hand_kit"
+  },
+  {
+   "use": "x_charts-14 SegmentedThermometerDrain",
+   "role": "스프레이 캔을 누르는 팔·손",
+   "poses": [
+    "hand_press_nozzle(캔 감싸고 검지로 노즐 누름)"
+   ],
+   "expressions": [],
+   "costume_hint": "맨팔(#EDB88F), 화면 우하단에 잘려 들어옴",
+   "cast": "없음 → props: hand_kit, spray_can"
+  },
+  {
+   "use": "x_callouts-04 ClipboardSwingDrop / PenHand",
+   "role": "서류에 서명하는 손",
+   "poses": [
+    "hand_hold_pen",
+    "hand_write_slide(서명선 따라 이동 — 코드)"
+   ],
+   "expressions": [],
+   "costume_hint": "남색 정장 소매 #2D3A55 + 피부, 펜 끝 앵커",
+   "cast": "없음 → props: hand_kit"
+  },
+  {
+   "use": "characters-14 FingerFromCorner",
+   "role": "화면 모서리에서 대각선으로 들어와 톡 치는 거대 검지 손",
+   "poses": [
+    "arm_point(검지 내밀기)",
+    "tap(살짝 밀기 — 코드)"
+   ],
+   "expressions": [],
+   "costume_hint": "파란 소매 #2E5FB0 + 흰 셔츠 커프(walker1 회청 소매 또는 c2_boss 정장 소매로 맞출 수 있음)",
+   "cast": "없음 → props: hand_kit"
+  },
+  {
+   "use": "characters-01/02/10 Mascot, x_callouts-05",
+   "role": "PNG 마스코트(춘장·그릇·빌딩)에 붙는 만화 흰 장갑 손",
+   "poses": [
+    "idle",
+    "wave",
+    "point",
+    "surprised",
+    "v_sign"
+   ],
+   "expressions": [],
+   "costume_hint": "흰 4손가락 장갑+커프, 현재 검은 외곽선(세모지와 불일치) — 세모지 플랫으로 재그리기",
+   "cast": "없음 → props: cartoon_glove_hand, sneaker"
+  },
+  {
+   "use": "x_callouts-18 TcgCardMarquee",
+   "role": "TCG 카드 창 속 인물 흉상(현재 '?' 흰 실루엣 자리)",
+   "poses": [
+    "stand_bust(정면 흉상)"
+   ],
+   "expressions": [
+    "기본"
+   ],
+   "costume_hint": "1940~50년대 사업가 정장 흉상 — 카드마다 정장 색 변형",
+   "cast": "c2_boss(흉상 크롭, 정장 색 변형)"
+  },
+  {
+   "use": "characters-15 CrowdRise",
+   "role": "화면 아래에서 솟아오르며 환호하는 군중 실루엣 10~11명",
+   "poses": [
+    "arms_up_cheer(양팔 V)",
+    "arm_raise(한 팔 들기)",
+    "arms_down_sway"
+   ],
+   "expressions": [
+    "없음(실루엣)"
+   ],
+   "costume_hint": "얼굴 없는 파스텔 단색 실루엣(틴트 가능 흰/회색 PNG), 팔 레이어 분리(±12° 흔들기)",
+   "cast": "없음 → props: crowd_silhouette_front"
+  },
+  {
+   "use": "charts-06 LineChart → CrowdRow",
+   "role": "그래프 아래 줄지어 솟아 들썩이는 관객 픽토그램 15명",
+   "poses": [
+    "stand"
+   ],
+   "expressions": [
+    "없음"
+   ],
+   "costume_hint": "원형 머리 + 돔형 몸 주황 픽토그램(틴트)",
+   "cast": "없음 → props: pictogram_person"
+  },
+  {
+   "use": "x_charts-09 PictogramCrowdMarquee / Person",
+   "role": "세계지도 위를 행진하는 사람 픽토그램(5줄×20)",
+   "poses": [
+    "stand",
+    "walk_a/walk_b(선택)"
+   ],
+   "expressions": [
+    "없음"
+   ],
+   "costume_hint": "단색 사람 아이콘(틴트용 흰/회색)",
+   "cast": "없음 → props: pictogram_person"
+  },
+  {
+   "use": "x_charts-25 SignalWaveDiagram / Person",
+   "role": "신호를 받는 사용자 3명(픽토그램)",
+   "poses": [
+    "stand"
+   ],
+   "expressions": [
+    "없음"
+   ],
+   "costume_hint": "260px, 3색 틴트",
+   "cast": "없음 → props: pictogram_person"
+  },
+  {
+   "use": "core-45 AvatarPop",
+   "role": "지도 위에 팝 되는 사람 아바타 아이콘 6개",
+   "poses": [
+    "stand_bust"
+   ],
+   "expressions": [
+    "없음"
+   ],
+   "costume_hint": "흰 사람 글리프(머리+어깨), 원판은 코드",
+   "cast": "없음 → props: person_avatar_icon"
+  },
+  {
+   "use": "core-27 QSilhouette",
+   "role": "정체불명 인물 — 검은 흉상 실루엣(얼굴에 흰 '?')",
+   "poses": [
+    "stand_bust"
+   ],
+   "expressions": [
+    "없음"
+   ],
+   "costume_hint": "검정 틴트 가능 흉상, '?'는 코드",
+   "cast": "없음 → props: question_silhouette"
+  },
+  {
+   "use": "backgrounds-08 CrowdBokeh, x_transitions-20 GameshowDoors",
+   "role": "관객 뒷모습 실루엣(일부 폰 든 팔 들기)",
+   "poses": [
+    "back_stand",
+    "back_arm_raise_phone"
+   ],
+   "expressions": [
+    "없음"
+   ],
+   "costume_hint": "검정 머리·어깨 뒷모습, 머리 모양 2~3종",
+   "cast": "없음 → props: crowd_back_silhouette"
+  },
+  {
+   "use": "x_charts-01 MascotStepBars, charts-07 Podium / LogoChar",
+   "role": "막대 위를 걷고 점프하는 원형 로고 마스코트",
+   "poses": [
+    "walk",
+    "hop_jump",
+    "land_squash",
+    "stand"
+   ],
+   "expressions": [
+    "기본(흰 눈·검은 눈동자)"
+   ],
+   "costume_hint": "틴트 원판 + 눈·발 오버레이, 로고 글자는 코드 — 또는 캐스트 캐릭터로 대체",
+   "cast": "없음 → props: logo_mascot"
+  }
+ ],
+ "props": [
+  {
+   "id": "crown",
+   "name": "왕관",
+   "desc": "금색 5갈래 왕관, 아래 짙은 금 띠, 꼭짓점 노란 구슬, 가운데 빨간 보석. 정면·플랫, 외곽선 없음",
+   "used_in": [
+    "x_acting-07 CostumeAdd",
+    "x_acting-18 CrownKnockoff",
+    "x_media-09 WhiteStrokeCutout",
+    "x_charts-07 RecordMilestoneBadge"
+   ],
+   "size_px": "150~200 폭",
+   "needs_parts": null,
+   "notes": "'명예회장' 등 글자는 코드로 띠 위에 올림 → 띠 부분은 글자 없이 비워 둘 것"
+  },
+  {
+   "id": "royal_cape",
+   "name": "왕의 망토(털 칼라 포함)",
+   "desc": "진홍색 사다리꼴 망토(뒤에서 펼쳐짐) + 목둘레 흰 담비털 칼라(검은 꼬리 점)",
+   "used_in": [
+    "x_acting-07 CostumeAdd"
+   ],
+   "size_px": "640×560",
+   "needs_parts": "망토 본체(인물 뒤) / 털 칼라(인물 앞) 2장 분리",
+   "notes": "인물 어깨폭에 맞출 것"
+  },
+  {
+   "id": "cloche_platter",
+   "name": "요리 접시 + 돔 뚜껑(클로슈)",
+   "desc": "은색 돔 뚜껑(위 손잡이·하이라이트) + 흰 타원 접시, 접시 앞 검은 명판",
+   "used_in": [
+    "x_acting-06 ArmTween"
+   ],
+   "size_px": "뚜껑 500×190, 접시 540×70",
+   "needs_parts": "뚜껑 / 접시 분리(뚜껑이 들리며 스윙)",
+   "notes": "명판 글자('광동요리')는 코드"
+  },
+  {
+   "id": "wok",
+   "name": "웍(중식 팬)",
+   "desc": "검은 무쇠 웍 측면 + 긴 손잡이",
+   "used_in": [
+    "x_acting-04 ExpressionSwap",
+    "x_acting-23 FlameSprite"
+   ],
+   "size_px": "560×120(손잡이 포함 800)",
+   "needs_parts": null,
+   "notes": "불꽃은 FX(FlameSprite)로 유지"
+  },
+  {
+   "id": "gavel_set",
+   "name": "의사봉 + 받침",
+   "desc": "갈색 나무 의사봉(원통 머리 + 금색 띠 2줄, 긴 자루) 측면 + 둥근 나무 받침대",
+   "used_in": [
+    "x_acting-08 MalletStrike"
+   ],
+   "size_px": "봉 430×200, 받침 340×70",
+   "needs_parts": "의사봉(자루 끝 피벗 회전) / 받침대 분리",
+   "notes": "피벗=자루 끝(왼쪽) 좌표 기록"
+  },
+  {
+   "id": "boxing_glove",
+   "name": "권투 글러브",
+   "desc": "빨간 권투 글러브 측면(주먹 뻗는 방향) + 흰 손목 커프",
+   "used_in": [
+    "x_acting-12 GlovePunchSwap",
+    "x_acting-10 BoxingRound(손 부위)"
+   ],
+   "size_px": "240~300",
+   "needs_parts": null,
+   "notes": "10번은 인물 팔 끝 손 대체용(빨강·노랑 2색 또는 색 틴트). x_charts-23 boxing_glove_robot_arm과 스타일 통일"
+  },
+  {
+   "id": "throne",
+   "name": "왕좌",
+   "desc": "금색 왕좌 정면 — 높은 등받이(위 금구슬 5개), 진홍 쿠션, 양쪽 팔걸이·다리",
+   "used_in": [
+    "x_acting-12 GlovePunchSwap"
+   ],
+   "size_px": "420×630",
+   "needs_parts": "등받이(인물 뒤) / 좌판 앞턱(인물 다리 앞) 필요 시 분리",
+   "notes": "sit_legs 포즈와 좌판 높이 맞출 것"
+  },
+  {
+   "id": "toy_hammer",
+   "name": "뿅망치",
+   "desc": "노란 긴 자루 + 분홍 원통 머리(가로 주름 줄무늬) 장난감 망치",
+   "used_in": [
+    "x_acting-11 WhackAMole"
+   ],
+   "size_px": "자루 900, 머리 180×340",
+   "needs_parts": null,
+   "notes": "자루 끝 피벗으로 흔들기"
+  },
+  {
+   "id": "sword",
+   "name": "칼(장검)",
+   "desc": "회색 곧은 칼날 + 짙은 회색 코등이 + 손잡이·폼멜",
+   "used_in": [
+    "x_acting-14 SwordDuel"
+   ],
+   "size_px": "길이 760~840",
+   "needs_parts": null,
+   "notes": "손잡이 중심 피벗 좌표 기록"
+  },
+  {
+   "id": "creation_arm",
+   "name": "천지창조 명화풍 팔",
+   "desc": "왼쪽 위에서 대각으로 뻗어오는 팔 + 검지 내민 손(미켈란젤로 패러디) — 세모지 플랫 스타일로 단순화",
+   "used_in": [
+    "x_acting-15 CreationHand"
+   ],
+   "size_px": "약 1000×520",
+   "needs_parts": "팔 / 손(손끝 떨림 회전) 분리",
+   "notes": "손끝 좌표 기록"
+  },
+  {
+   "id": "union_flag",
+   "name": "영국 국기",
+   "desc": "유니언잭 플랫",
+   "used_in": [
+    "x_acting-16 RopeSwing"
+   ],
+   "size_px": "170×102",
+   "needs_parts": null,
+   "notes": "코드 SVG 유지도 가능(국기는 도형이라 우선순위 낮음)"
+  },
+  {
+   "id": "flower_pot",
+   "name": "화분(잎 포함)",
+   "desc": "주황 테라코타 화분 + 테두리, 흙면, 뒤로 뻗은 초록 잎 6장",
+   "used_in": [
+    "x_acting-17 GrowthPot"
+   ],
+   "size_px": "330×270(잎 포함 높이 ~600)",
+   "needs_parts": "잎(뒤) / 화분 몸통(앞) 분리 — 사이로 건물이 솟아오름",
+   "notes": "3개 재사용"
+  },
+  {
+   "id": "watering_can",
+   "name": "물뿌리개",
+   "desc": "빨간 물뿌리개 측면(몸통·손잡이·긴 주둥이·꽃 머리)",
+   "used_in": [
+    "x_acting-17 GrowthPot"
+   ],
+   "size_px": "380×160",
+   "needs_parts": null,
+   "notes": "주둥이 끝 좌표 기록(물방울은 코드)"
+  },
+  {
+   "id": "office_building_small",
+   "name": "작은 사옥 건물",
+   "desc": "회청색 빌딩, 하늘색 창문 격자, 옥상 흰 간판 띠",
+   "used_in": [
+    "x_acting-17 GrowthPot"
+   ],
+   "size_px": "200×330",
+   "needs_parts": null,
+   "notes": "간판 글자('(주)현대양행')는 코드"
+  },
+  {
+   "id": "octopus_monster",
+   "name": "은유 괴물(보라 문어)",
+   "desc": "보라 문어 몸통(하이라이트), 노란 큰 눈 1개 + 눈꺼풀, 분홍 빨판 달린 촉수 4개",
+   "used_in": [
+    "x_acting-19 OctopusMonster"
+   ],
+   "size_px": "약 950×400",
+   "needs_parts": "몸통+눈 / 촉수 4개 각각(뿌리 피벗 흔들기)",
+   "notes": "라벨('인플레이션')은 코드"
+  },
+  {
+   "id": "cargo_ship",
+   "name": "화물선(작은 배)",
+   "desc": "화물선 옆모습 — 짙은/흰 선체·빨간(초록) 흘수선, 선교·빨간 굴뚝, 갑판 컨테이너(선택)",
+   "used_in": [
+    "x_acting-19 OctopusMonster",
+    "x_transitions-16 BinocularPOV"
+   ],
+   "size_px": "450×190 ~ 900×370",
+   "needs_parts": null,
+   "notes": "연기 선·'질질' 글자는 코드"
+  },
+  {
+   "id": "ink_blob_figure",
+   "name": "먹덩이 의인화 인물",
+   "desc": "검은 불규칙 먹덩이 머리 + 분홍 선 졸린 얼굴(감은 눈·코·일자 입) + 회색 사다리꼴 몸통",
+   "used_in": [
+    "x_acting-21 BlobHead"
+   ],
+   "size_px": "머리 420, 전체 ~800 높이",
+   "needs_parts": "머리 / 몸통 분리(호흡 스케일)",
+   "notes": "몸통 글자('우진조선')는 코드"
+  },
+  {
+   "id": "tree_round",
+   "name": "둥근 나무",
+   "desc": "보라 톤 굵은 줄기 + 둥근 수관(겨울 풍경용)",
+   "used_in": [
+    "x_acting-24 WindLines"
+   ],
+   "size_px": "480×900",
+   "needs_parts": null,
+   "notes": "배경 요소 — 우선순위 낮음"
+  },
+  {
+   "id": "sauce_jar_hand",
+   "name": "소스 병 쥔 손",
+   "desc": "빨간 소스 병(주황 원형 라벨) + 병 옆면을 감싼 손(흰 소매·손바닥·손가락 4개가 병 앞에 걸침)",
+   "used_in": [
+    "x_acting-25 SaucePour"
+   ],
+   "size_px": "병 220×280, 소매 포함 ~640",
+   "needs_parts": "소매+손바닥(병 뒤) / 병 / 손가락(병 앞) / 뚜껑(날아감) 분리",
+   "notes": "라벨 글자('두반장')는 코드, 병 입구 좌표 기록(소스 줄기 코드)"
+  },
+  {
+   "id": "laptop",
+   "name": "노트북",
+   "desc": "보라회색 노트북 비스듬한 3/4 뷰, 청록 화면, 키보드 줄",
+   "used_in": [
+    "x_acting-27 TechAura"
+   ],
+   "size_px": "320",
+   "needs_parts": null,
+   "notes": "화면의 '?'는 코드로 올림 → 화면 비워 둘 것"
+  },
+  {
+   "id": "clapping_palm",
+   "name": "박수 치는 손(측면)",
+   "desc": "손가락 모은 손바닥 측면 + 엄지 + 흰 소매 커프, 살구색",
+   "used_in": [
+    "x_acting-28 ClappingHands"
+   ],
+   "size_px": "380 높이",
+   "needs_parts": "왼손/오른손(좌우반전으로 1장 가능) — 손목 피벗",
+   "notes": "전경 3~4쌍 재사용"
+  },
+  {
+   "id": "held_box",
+   "name": "들고 있는 상자/보드",
+   "desc": "황토색 상자(발표자가 가슴 앞에 듦)",
+   "used_in": [
+    "x_acting-28 ClappingHands"
+   ],
+   "size_px": "260×300",
+   "needs_parts": null,
+   "notes": "무엇인지 미정 — 스토리에 맞는 제품 상자로 대체 가능"
+  },
+  {
+   "id": "dram_chip",
+   "name": "메모리 칩(DRAM)",
+   "desc": "검은 칩 몸체 + 아래 금속 핀 줄무늬",
+   "used_in": [
+    "x_acting-31 ElectricVortexSpawn"
+   ],
+   "size_px": "460×150",
+   "needs_parts": null,
+   "notes": "'256K DRAM' 글자는 코드"
+  },
+  {
+   "id": "cpu_chip",
+   "name": "CPU 칩 타일",
+   "desc": "청록 둥근 사각 칩(빛남)",
+   "used_in": [
+    "x_acting-13 BlurDimInterrupt"
+   ],
+   "size_px": "460×460",
+   "needs_parts": null,
+   "notes": "'X86' 글자는 코드"
+  },
+  {
+   "id": "chips_box",
+   "name": "칩(과자) 상자",
+   "desc": "흰 과자 상자/봉지 정면",
+   "used_in": [
+    "x_acting-13 BlurDimInterrupt"
+   ],
+   "size_px": "520×700",
+   "needs_parts": null,
+   "notes": "'CHIPS' 글자는 코드 — 말장난 소품, 우선순위 낮음"
+  },
+  {
+   "id": "powder_pile",
+   "name": "흰 가루 더미",
+   "desc": "크림색 흰 가루 더미(구름형 윤곽 + 결 줄)",
+   "used_in": [
+    "x_acting-32 ConcentricDarkPulse"
+   ],
+   "size_px": "480×260",
+   "needs_parts": null,
+   "notes": "라벨('코카인')은 코드"
+  },
+  {
+   "id": "hard_hat",
+   "name": "안전모",
+   "desc": "주황 공사 안전모(챙 포함)",
+   "used_in": [
+    "x_acting-33 FloodRise"
+   ],
+   "size_px": "머리 폭(약 230)",
+   "needs_parts": null,
+   "notes": "인물 머리 위 의상 레이어"
+  },
+  {
+   "id": "banknote_500",
+   "name": "오백원 지폐",
+   "desc": "옛 오백원권 — 연녹회색 지폐, 테두리, 인물 원형 도안(단순화)",
+   "used_in": [
+    "x_acting-34 ThoughtMaterialize"
+   ],
+   "size_px": "420×200",
+   "needs_parts": null,
+   "notes": "'오백원/500' 글자는 코드 또는 그림 일체형(고정 텍스트라 그림 포함 허용). backgrounds-03 banknote_won과 도안 통일 가능"
+  },
+  {
+   "id": "crowd_silhouette",
+   "name": "군중 실루엣",
+   "desc": "짙은 회색 사람 실루엣 16명(머리+몸, 일부 팔 치켜듦) 가로 띠",
+   "used_in": [
+    "x_acting-35 ColorDrain"
+   ],
+   "size_px": "1920×500 띠",
+   "needs_parts": null,
+   "notes": "1장 띠 또는 3종 실루엣 반복"
+  },
+  {
+   "id": "money_sack",
+   "name": "돈자루",
+   "desc": "크림색 돈자루(금색 끈) + 위에 초록 지폐 다발 띠",
+   "used_in": [
+    "x_acting-36 BurdenBallChain"
+   ],
+   "size_px": "300×240 ×3",
+   "needs_parts": null,
+   "notes": "3개 겹쳐 배치"
+  },
+  {
+   "id": "iron_ball_chain",
+   "name": "족쇄 쇳덩이",
+   "desc": "짙은 남청 쇳구슬(하이라이트) + 고리 + 사슬 고리",
+   "used_in": [
+    "x_acting-36 BurdenBallChain"
+   ],
+   "size_px": "구슬 300",
+   "needs_parts": "구슬 / 사슬 고리 1개(반복 배치) 분리",
+   "notes": "'자금 압박' 글자는 코드"
+  },
+  {
+   "id": "car_sedan_side",
+   "name": "세단 옆모습",
+   "desc": "민트~연보라 그라데이션 세단 측면, 창문 2개, 바퀴 2개(흰 휠·스포크)",
+   "used_in": [
+    "x_acting-37 TechCircuitGlow"
+   ],
+   "size_px": "1080×390",
+   "needs_parts": "차체 / 바퀴 2개 분리(바퀴 중심 좌표 = 전륜·후륜 하이라이트 위치)",
+   "notes": "x_charts FlatCar와 스타일 통일 검토"
+  },
+  {
+   "id": "lightning_heart",
+   "name": "번개 하트",
+   "desc": "빨간 하트(짙은 테두리·하이라이트) + 가운데 흰 번개",
+   "used_in": [
+    "x_acting-39 EcgChestGlow"
+   ],
+   "size_px": "420",
+   "needs_parts": null,
+   "notes": ""
+  },
+  {
+   "id": "hand_kit",
+   "name": "손 키트(소매 포함)",
+   "desc": "세모지 플랫 손 — 피부 #F2C7A5, 흰 셔츠 커프 + 소매(남색/검정/파랑 틴트 또는 색별). 포즈: hand_open, hand_grip, hand_pinch_card_back + thumb_front(별도), hand_hold_paper_bottom, hand_press_nozzle, hand_hold_pen, hand_point_index(대형, 소매 포함 ~600×1300), clap_side(손가락 모은 측면), grip_jar_back + fingers_front(병 감싸기)",
+   "used_in": [
+    "x_media-10 BoardingPassDrop",
+    "x_media-15 CardSwipeMontage",
+    "x_charts-14 SegmentedThermometerDrain",
+    "x_charts-15 HandHeldDocLineup",
+    "x_callouts-04 ClipboardSwingDrop",
+    "characters-14 FingerFromCorner",
+    "x_acting-25 SaucePour",
+    "x_acting-28 ClappingHands"
+   ],
+   "size_px": "120~430 (FingerFromCorner만 ~600×1300)",
+   "needs_parts": "포즈별 1장 + 물건 앞에 오는 엄지/손가락은 별도 레이어(thumb_front, fingers_front). 손목 피벗 좌표 기록",
+   "notes": "왼손은 좌우반전. 소매 색은 캐스트(walker1 회청·c2_boss 남색)와 맞추면 재사용 쉬움"
+  },
+  {
+   "id": "xray_body_silhouette",
+   "name": "엑스레이 인체 실루엣",
+   "desc": "정면 전신(팔 내림) 회색 반투명 몸",
+   "used_in": [
+    "x_media-11 XraySilhouette"
+   ],
+   "size_px": "전신 ~900 높이(몸통까지 줌)",
+   "needs_parts": null,
+   "notes": "골격 레이어와 같은 캔버스·좌표"
+  },
+  {
+   "id": "xray_skeleton",
+   "name": "엑스레이 골격",
+   "desc": "흰 단순 골격 — 두개골·척추·갈비 7쌍·쇄골·팔다리뼈·골반",
+   "used_in": [
+    "x_media-11 XraySilhouette"
+   ],
+   "size_px": "실루엣과 동일",
+   "needs_parts": null,
+   "notes": "분홍 병변 점들은 코드"
+  },
+  {
+   "id": "cartoon_glove_hand",
+   "name": "만화 흰 장갑 손",
+   "desc": "흰 4손가락 장갑 + 커프(세모지 플랫으로 — 외곽선 없이 명암 한 톤). 포즈: idle, wave, point, surprised(쫙 폄), v_sign",
+   "used_in": [
+    "characters-01 Mascot",
+    "characters-02 RivalEnter",
+    "characters-10 Mascot",
+    "x_callouts-05 OrangePillStack"
+   ],
+   "size_px": "64~150",
+   "needs_parts": "포즈별 1장, 손목 피벗(커프 아래 중앙)",
+   "notes": "현재 만화체(검은 외곽선)는 의도된 스타일일 수 있음 — 교체 선택"
+  },
+  {
+   "id": "sneaker",
+   "name": "흰 운동화",
+   "desc": "흰 로우탑 운동화 측면, 밑창 줄",
+   "used_in": [
+    "characters-01 Mascot",
+    "characters-02 RivalEnter",
+    "characters-10 Mascot"
+   ],
+   "size_px": "56~85 폭",
+   "needs_parts": "1장(좌우반전), 발목 피벗",
+   "notes": "다리 선은 코드"
+  },
+  {
+   "id": "crowd_silhouette_front",
+   "name": "군중 정면 실루엣",
+   "desc": "얼굴 없는 단순 사람 실루엣(원형 머리 + 종형 몸) 3~4종: 양팔 V 환호, 한 팔 들기, 팔 내림. x_acting-35용 짙은 회색 가로 띠 군중(일부 팔 치켜듦)도 이 세트로 구성",
+   "used_in": [
+    "characters-15 CrowdRise",
+    "x_acting-35 ColorDrain"
+   ],
+   "size_px": "인물 ~380 높이 / 띠 1920×500",
+   "needs_parts": "몸 / 팔 분리(±12° 흔들기)",
+   "notes": "흰/회색으로 그려 코드에서 틴트"
+  },
+  {
+   "id": "crowd_back_silhouette",
+   "name": "관객 뒷모습 실루엣",
+   "desc": "검정 머리·어깨 뒷모습 2~3종(머리 모양 변형) + 폰 들고 팔 든 변형",
+   "used_in": [
+    "backgrounds-08 CrowdBokeh",
+    "x_transitions-20 GameshowDoors"
+   ],
+   "size_px": "160~300",
+   "needs_parts": "폰 든 팔 별도(선택)",
+   "notes": "우선순위 낮음"
+  },
+  {
+   "id": "pictogram_person",
+   "name": "사람 픽토그램",
+   "desc": "원형 머리 + 몸통 단색 사람 아이콘(서기, 선택: 걷기 2프레임)",
+   "used_in": [
+    "x_charts-09 PictogramCrowdMarquee",
+    "x_charts-25 SignalWaveDiagram",
+    "charts-06 LineChart(CrowdRow)"
+   ],
+   "size_px": "150~260",
+   "needs_parts": null,
+   "notes": "흰/회색으로 그려 틴트. 차트 속 '그림'이라 포함"
+  },
+  {
+   "id": "person_avatar_icon",
+   "name": "사람 아바타 글리프",
+   "desc": "흰 사람 아이콘(머리 원 + 어깨 호)",
+   "used_in": [
+    "core-45 AvatarPop"
+   ],
+   "size_px": "76(원판 포함)",
+   "needs_parts": null,
+   "notes": "색 원판·흰 링은 코드. icon_user와 같은 글리프로 통일 가능"
+  },
+  {
+   "id": "question_silhouette",
+   "name": "물음표 실루엣 흉상",
+   "desc": "검은 흉상 실루엣(둥근 머리 + 어깨)",
+   "used_in": [
+    "core-27 QSilhouette"
+   ],
+   "size_px": "570×650",
+   "needs_parts": null,
+   "notes": "'?'는 코드 텍스트, 색은 파라미터 → 틴트 가능하게"
+  },
+  {
+   "id": "logo_mascot",
+   "name": "원형 로고 마스코트",
+   "desc": "틴트용 원판(흰 링) + 흰 눈·검은 눈동자 + 작은 검은 발 2개",
+   "used_in": [
+    "x_charts-01 MascotStepBars",
+    "charts-07 Podium"
+   ],
+   "size_px": "150~190",
+   "needs_parts": "원판 / 눈 / 발(걷기·점프용 좌우) 분리",
+   "notes": "로고 글자('짜장','홍콩' 등)는 코드. 캐스트 캐릭터로 대체하는 안도 가능"
+  },
+  {
+   "id": "boarding_pass",
+   "name": "탑승권",
+   "desc": "흰 탑승권 — 주황 헤더 띠, 점선 절취선 오른쪽 주황 스텁, 바코드 블록. 뒤에 짙은 회색(#4A4A4A) 탑승권 1장(-4°)",
+   "used_in": [
+    "x_media-10 BoardingPassDrop"
+   ],
+   "size_px": "860×330",
+   "needs_parts": "앞 탑승권 / 뒤 탑승권 분리",
+   "notes": "모든 글자(SEMOJI AIR·이름·편명·목적지·게이트·좌석)는 코드 — 빈 칸으로, 바코드는 그림에 포함"
+  },
+  {
+   "id": "card_terminal",
+   "name": "카드 단말기 + 영수증",
+   "desc": "둥근 회색 결제 단말기 — 청록 테 어두운 화면, 초록/빨강 LED, 2×4 키패드. 아래로 나오는 흰 영수증 띠",
+   "used_in": [
+    "x_media-15 CardSwipeMontage"
+   ],
+   "size_px": "520×640 (영수증 280×170)",
+   "needs_parts": "단말기 / 화면(투명 창 또는 별도) / 영수증 분리",
+   "notes": "'구매 완료' 글자는 코드"
+  },
+  {
+   "id": "credit_card",
+   "name": "법인 카드",
+   "desc": "플랫 신용카드 — 금색 칩, 흰 줄 몇 개",
+   "used_in": [
+    "x_media-15 CardSwipeMontage"
+   ],
+   "size_px": "520×300",
+   "needs_parts": null,
+   "notes": "색 변경(초록/보라/빨강) → 흰/회색 틴트용 또는 3색. 회사명은 코드"
+  },
+  {
+   "id": "paper_docs_collage",
+   "name": "서류 더미",
+   "desc": "기울어진 흰 서류들(회색 글줄·체크박스) + 갈색 봉투",
+   "used_in": [
+    "x_media-15 CardSwipeMontage"
+   ],
+   "size_px": "620×900 / 600×760",
+   "needs_parts": null,
+   "notes": "배경용, 우선순위 낮음"
+  },
+  {
+   "id": "newspaper",
+   "name": "신문",
+   "desc": "미색 신문 한 면 — 빈 헤드라인 영역, 굵은 괘선, 회색 사진 박스 2개, 회색 글줄",
+   "used_in": [
+    "x_media-14 NewspaperSlamStack"
+   ],
+   "size_px": "620×460",
+   "needs_parts": null,
+   "notes": "헤드라인은 코드"
+  },
+  {
+   "id": "lantern_red",
+   "name": "중국 홍등",
+   "desc": "빨간 타원 등롱(세로 살), 금색 위·아래 캡, 빨간 술. 금색 끈 + 작은 빨간 매듭",
+   "used_in": [
+    "x_media-19 LanternSway"
+   ],
+   "size_px": "110×187 + 끈 60~100",
+   "needs_parts": "등롱 / 끈 분리, 피벗=끈 윗끝(±3° 흔들림)",
+   "notes": ""
+  },
+  {
+   "id": "apple_icon",
+   "name": "사과 아이콘",
+   "desc": "빨간 사과 + 갈색 꼭지 + 초록 잎 + 흰 하이라이트",
+   "used_in": [
+    "x_media-21 RepeatObjectWallpaper"
+   ],
+   "size_px": "150",
+   "needs_parts": null,
+   "notes": "분홍 배경 벽지로 반복"
+  },
+  {
+   "id": "old_phone",
+   "name": "구형 휴대폰",
+   "desc": "바형 옛 휴대폰 — 작은 녹회색 화면, 3×4 키패드. 2~3종(연회색/짙은회색, 둥근/각진)",
+   "used_in": [
+    "x_media-24 SpiralSuck"
+   ],
+   "size_px": "100×200",
+   "needs_parts": null,
+   "notes": "나선으로 빨려 들어감"
+  },
+  {
+   "id": "space_shuttle",
+   "name": "우주왕복선",
+   "desc": "빨간 코 중앙 로켓 + 흰 궤도선 + 흰 부스터 2개",
+   "used_in": [
+    "x_media-25 SkyGradientAscent"
+   ],
+   "size_px": "310×620",
+   "needs_parts": "본체 / 노란 불꽃(스케일·깜빡임) 분리",
+   "notes": "연기·구름은 코드"
+  },
+  {
+   "id": "id_card",
+   "name": "자격증 카드",
+   "desc": "흰 카드 — 색 제목 띠, 사진 칸, 회색 글줄",
+   "used_in": [
+    "x_media-07 CardSlideIn"
+   ],
+   "size_px": "440×280",
+   "needs_parts": null,
+   "notes": "선택(사진은 이미 PNG, 글자는 코드)"
+  },
+  {
+   "id": "car_side",
+   "name": "자동차 옆모습",
+   "desc": "플랫 승용차 측면 — 창문(하늘색), 노란 전조등, 짙은 타이어 + 회색 휠. 세단형(x_acting-37 민트~연보라)·해치백형(x_charts-03)",
+   "used_in": [
+    "x_acting-37 TechCircuitGlow",
+    "x_charts-03 RoadLaneAnalogy"
+   ],
+   "size_px": "420×200 ~ 1080×390",
+   "needs_parts": "차체 / 바퀴 2개 분리(바퀴 중심 좌표 = 전륜·후륜 하이라이트 위치, 회전 가능)",
+   "notes": "x_charts-03은 6색(노랑·하늘·빨강·초록) → 차체 틴트 가능하게 흰/회색 또는 색별"
+  },
+  {
+   "id": "car_front_driver",
+   "name": "자동차 정면(운전석 보임)",
+   "desc": "짙은 차콜 세단 정면 — 둥근 지붕, 앞유리(#6F8EA8), 흰 전조등 주황 테, 줄무늬 그릴, 연회색 범퍼",
+   "used_in": [
+    "x_transitions-08 CrashImpact"
+   ],
+   "size_px": "1000×560",
+   "needs_parts": "차체 / 앞유리·프레임(위) 분리 — 사이에 운전자 PNG 삽입",
+   "notes": "도로·차선·유리 크랙은 코드"
+  },
+  {
+   "id": "pc_icon",
+   "name": "구형 컴퓨터 실루엣",
+   "desc": "단색 옛 데스크톱(모니터·받침·키보드)",
+   "used_in": [
+    "x_charts-05 DDayEquation"
+   ],
+   "size_px": "220×210",
+   "needs_parts": null,
+   "notes": "배경 패턴으로도 반복 → 단색 틴트용"
+  },
+  {
+   "id": "desk_calendar",
+   "name": "탁상 달력",
+   "desc": "흰 달력 한 장 — 빨간 헤더, 검정/링 바인더 7개, 오른쪽 아래 넘겨진 모서리",
+   "used_in": [
+    "x_charts-05 DDayEquation",
+    "x_callouts-09 CalendarTagSmoke"
+   ],
+   "size_px": "240×197 ~ 360×342",
+   "needs_parts": null,
+   "notes": "'D-DAY'·'30일'·연도 글자는 코드"
+  },
+  {
+   "id": "tablet_device",
+   "name": "태블릿",
+   "desc": "검은 베젤 태블릿, 회색 화면",
+   "used_in": [
+    "x_charts-06 DeviceTessellation"
+   ],
+   "size_px": "150×195~",
+   "needs_parts": null,
+   "notes": "선택(둥근 사각형에 가까움)"
+  },
+  {
+   "id": "record_disc",
+   "name": "원판(레코드/접시)",
+   "desc": "크림색 원판 + 동심원",
+   "used_in": [
+    "x_charts-08 FlagMapStatLink"
+   ],
+   "size_px": "360",
+   "needs_parts": null,
+   "notes": "선택"
+  },
+  {
+   "id": "bottle_silhouette_q",
+   "name": "병 실루엣",
+   "desc": "검은 콜라병형 실루엣",
+   "used_in": [
+    "x_charts-09 PictogramCrowdMarquee"
+   ],
+   "size_px": "260×650",
+   "needs_parts": null,
+   "notes": "회색 '?'는 코드"
+  },
+  {
+   "id": "syrup_jug",
+   "name": "원액 통(Jug)",
+   "desc": "베이지 플라스틱 통 — 검정 뚜껑·띠, 검정 라벨 판",
+   "used_in": [
+    "x_charts-10 ProductAnchorValuePill",
+    "x_charts-11 MapSpreadPullback"
+   ],
+   "size_px": "330 (지도 위 아이콘 44)",
+   "needs_parts": null,
+   "notes": "라벨 글자('SYRUP')는 코드. 44px에서도 읽혀야 함"
+  },
+  {
+   "id": "trophy_icon",
+   "name": "트로피",
+   "desc": "작은 금색 우승컵(손잡이 2개)",
+   "used_in": [
+    "x_charts-12 BottomUpRankStack"
+   ],
+   "size_px": "44",
+   "needs_parts": null,
+   "notes": ""
+  },
+  {
+   "id": "ufo_and_moon",
+   "name": "UFO·달",
+   "desc": "회색 비행접시(돔) + 크레이터 있는 회색 달",
+   "used_in": [
+    "x_charts-13 EsportsVsScoreboard"
+   ],
+   "size_px": "UFO 180×60, 달 92",
+   "needs_parts": "UFO / 달 분리",
+   "notes": "배경, 우선순위 낮음"
+  },
+  {
+   "id": "vs_shield_emblem",
+   "name": "VS 방패 엠블럼",
+   "desc": "남색 방패 + 흰 테두리",
+   "used_in": [
+    "x_charts-13 EsportsVsScoreboard"
+   ],
+   "size_px": "170×190",
+   "needs_parts": null,
+   "notes": "'VS'는 코드"
+  },
+  {
+   "id": "spray_can",
+   "name": "스프레이 캔",
+   "desc": "하늘색 스프레이 캔 + 회색 노즐",
+   "used_in": [
+    "x_charts-14 SegmentedThermometerDrain"
+   ],
+   "size_px": "캔+손 ~800 높이",
+   "needs_parts": "캔 / 손(hand_kit: hand_press_nozzle) 분리",
+   "notes": ""
+  },
+  {
+   "id": "paper_sheet",
+   "name": "서류 한 장 / 견적서 카드",
+   "desc": "흰 종이(약한 그림자)",
+   "used_in": [
+    "x_charts-15 HandHeldDocLineup",
+    "x_callouts-16 RippleRings"
+   ],
+   "size_px": "280×380 ~ 640×900",
+   "needs_parts": null,
+   "notes": "선택(사각형에 가까움). 제목·금액·서명은 코드"
+  },
+  {
+   "id": "tunnel_portal",
+   "name": "터널 입구",
+   "desc": "짙은 콘크리트 아치 + 밝은 안쪽 테, 출구 너머 풀밭, 흰 중앙선 도로",
+   "used_in": [
+    "x_charts-17 TunnelLengthCompare"
+   ],
+   "size_px": "620×520 ×2",
+   "needs_parts": null,
+   "notes": ""
+  },
+  {
+   "id": "pointer_stick",
+   "name": "지시봉",
+   "desc": "짙은 빨강 나무 지시봉 + 크림색 끝",
+   "used_in": [
+    "x_charts-18 MapLecturerCountryFill"
+   ],
+   "size_px": "570×12",
+   "needs_parts": null,
+   "notes": "강연자는 현재 PNG — 이상적으론 캐스트(c3_woman 등)가 지시봉 드는 포즈(arm_point_stick)"
+  },
+  {
+   "id": "boxing_glove_robot_arm",
+   "name": "복싱 글러브 + 로봇팔",
+   "desc": "큰 복싱 글러브(왼쪽 파랑/오른쪽 빨강, 흰 커프·로고 칸) + 회색 관절 로봇팔",
+   "used_in": [
+    "x_charts-23 VsBoxingGloves"
+   ],
+   "size_px": "글러브 600×520",
+   "needs_parts": "글러브 / 윗팔 / 아랫팔 / 관절 분리, 좌우 한 쌍",
+   "notes": "커프 로고는 코드. x_acting boxing_glove와 스타일 통일"
+  },
+  {
+   "id": "flag_kr",
+   "name": "태극기",
+   "desc": "태극기 플랫",
+   "used_in": [
+    "backgrounds-16 FlagWave",
+    "x_charts-21 SplitFlagExchange"
+   ],
+   "size_px": "840×560 ~ 960×1080 크롭",
+   "needs_parts": null,
+   "notes": "국기 기하 정확성 필요 — 코드 유지도 가능(선택)"
+  },
+  {
+   "id": "flag_cn",
+   "name": "오성홍기",
+   "desc": "중국 국기 플랫",
+   "used_in": [
+    "backgrounds-16 FlagWave"
+   ],
+   "size_px": "840×560",
+   "needs_parts": null,
+   "notes": "선택(코드 유지 가능)"
+  },
+  {
+   "id": "flag_star_red",
+   "name": "붉은 별 국기",
+   "desc": "진홍 깃발 + 회색 원 + 빨간 별",
+   "used_in": [
+    "x_charts-21 SplitFlagExchange"
+   ],
+   "size_px": "960×1080 크롭",
+   "needs_parts": null,
+   "notes": "선택"
+  },
+  {
+   "id": "antenna_tower",
+   "name": "송신탑",
+   "desc": "분홍 격자 라디오 송신탑",
+   "used_in": [
+    "x_charts-25 SignalWaveDiagram"
+   ],
+   "size_px": "80×300",
+   "needs_parts": null,
+   "notes": "선택(선화에 가까움)"
+  },
+  {
+   "id": "smartphone_ringing",
+   "name": "스마트폰(통화 화면)",
+   "desc": "검은 베젤 폰, 연파랑 화면, 초록 통화 버튼 + 흰 수화기, 상단 스피커",
+   "used_in": [
+    "characters-12 PhoneRing"
+   ],
+   "size_px": "132×240",
+   "needs_parts": null,
+   "notes": "'따르릉'·진동 지그재그는 코드"
+  },
+  {
+   "id": "building_brick",
+   "name": "벽돌 건물(가림막)",
+   "desc": "갈색 4층 건물 — 평지붕 턱, 노란 불 켜진 창 3×4, 어두운 문",
+   "used_in": [
+    "characters-16 WalkPath"
+   ],
+   "size_px": "260×560",
+   "needs_parts": null,
+   "notes": "불투명(걷는 인물을 가림)"
+  },
+  {
+   "id": "globe",
+   "name": "지구본",
+   "desc": "파란 구 + 초록 대륙 + 옅은 위경선",
+   "used_in": [
+    "charts-02 PieSweep"
+   ],
+   "size_px": "640 지름",
+   "needs_parts": null,
+   "notes": "원형·중앙 정렬 필수(파이로 모핑)"
+  },
+  {
+   "id": "money_pile",
+   "name": "지폐·동전 더미",
+   "desc": "초록 지폐 다발 3 + 금화 더미 4, 바닥 그림자",
+   "used_in": [
+    "charts-14 MoneyTitle"
+   ],
+   "size_px": "1000×360",
+   "needs_parts": null,
+   "notes": "아래에서 통째로 솟음"
+  },
+  {
+   "id": "caramel_drop_icon",
+   "name": "캐러멜 방울 아이콘",
+   "desc": "호박색 캐러멜 방울 + 하이라이트",
+   "used_in": [
+    "core-38 IconPop"
+   ],
+   "size_px": "190",
+   "needs_parts": null,
+   "notes": "'캐러멜' 라벨은 코드"
+  },
+  {
+   "id": "sugar_cubes_icon",
+   "name": "각설탕 아이콘",
+   "desc": "흰 각설탕 3개 피라미드 쌓기(아이소)",
+   "used_in": [
+    "core-38 IconPop"
+   ],
+   "size_px": "190",
+   "needs_parts": null,
+   "notes": "'단맛' 라벨은 코드"
+  },
+  {
+   "id": "junk_sailboat",
+   "name": "돛단배(정크선)",
+   "desc": "작은 갈색 나무 선체 + 돛대 1 + 크림색 돛 2",
+   "used_in": [
+    "core-42 MapRoute"
+   ],
+   "size_px": "90×70",
+   "needs_parts": null,
+   "notes": "바닥 피벗 ±4° 흔들림"
+  },
+  {
+   "id": "clipboard_board",
+   "name": "클립보드",
+   "desc": "황갈색 보드 + 회색 클립 + 크림색 종이",
+   "used_in": [
+    "x_callouts-04 ClipboardSwingDrop"
+   ],
+   "size_px": "560×720",
+   "needs_parts": null,
+   "notes": "제목·줄·서명은 코드"
+  },
+  {
+   "id": "building_mascot_body",
+   "name": "빌딩(마스코트 몸)",
+   "desc": "흰 빌딩 정면 — 파란 창 3×4, 빈 간판 판",
+   "used_in": [
+    "x_callouts-05 OrangePillStack"
+   ],
+   "size_px": "380×620",
+   "needs_parts": null,
+   "notes": "'SEMO' 글자는 코드, 장갑 손(cartoon_glove_hand) 부착"
+  },
+  {
+   "id": "line_icon_calendar",
+   "name": "달력 라인 아이콘",
+   "desc": "흰 외곽선 달력 아이콘",
+   "used_in": [
+    "x_callouts-10 HangingIconDrop"
+   ],
+   "size_px": "250",
+   "needs_parts": null,
+   "notes": "끈에 매달림(끈은 코드)"
+  },
+  {
+   "id": "line_icon_stopwatch",
+   "name": "스톱워치 라인 아이콘",
+   "desc": "흰 외곽선 스톱워치 아이콘",
+   "used_in": [
+    "x_callouts-10 HangingIconDrop"
+   ],
+   "size_px": "250",
+   "needs_parts": null,
+   "notes": ""
+  },
+  {
+   "id": "megaphone",
+   "name": "확성기",
+   "desc": "플랫 확성기(손잡이 포함)",
+   "used_in": [
+    "x_callouts-20 MegaphoneCone"
+   ],
+   "size_px": "~530×460",
+   "needs_parts": null,
+   "notes": "소리 원뿔·글자는 코드"
+  },
+  {
+   "id": "banknote_won",
+   "name": "지폐(일반)",
+   "desc": "플랫 원화 지폐(단순 도안)",
+   "used_in": [
+    "backgrounds-03 MoneyRain"
+   ],
+   "size_px": "120~200",
+   "needs_parts": null,
+   "notes": "x_acting banknote_500과 디자인 통일 가능"
+  },
+  {
+   "id": "coin_won",
+   "name": "동전",
+   "desc": "플랫 금/은색 동전",
+   "used_in": [
+    "backgrounds-03 MoneyRain"
+   ],
+   "size_px": "60~100",
+   "needs_parts": null,
+   "notes": ""
+  },
+  {
+   "id": "iso_chip",
+   "name": "아이소메트릭 반도체 칩",
+   "desc": "위에서 본 마름모 적층 — 연보라 베이스(#D8D4F4/#8C86C8), 중간층(#6E68B8), 청록 발광 코어(#2FE0C8)",
+   "used_in": [
+    "x_text-07 DefinitionReveal"
+   ],
+   "size_px": "420",
+   "needs_parts": "코어층 분리(발광색 틴트)",
+   "notes": "빛 기둥·입자는 코드"
+  },
+  {
+   "id": "iso_port_kit",
+   "name": "아이소메트릭 항만 키트",
+   "desc": "2:1 아이소 — 컨테이너(틴트용 또는 4색), 빨간 갠트리 크레인, 크림벽 파란지붕 창고, 화물선",
+   "used_in": [
+    "x_transitions-15 IsoBuildPullback"
+   ],
+   "size_px": "컨테이너 120, 크레인 250, 배 500",
+   "needs_parts": "크레인 다리 / 붐 분리(다리가 위로 자람)",
+   "notes": "경계선 — 현재 추상 박스. 바다·부두·도로는 코드"
+  },
+  {
+   "id": "book_spine_set",
+   "name": "백과사전 책등·장식 책",
+   "desc": "올리브 가죽 책등(#6F6A3A) + 금색 띠·라벨 틀, 분홍·보라 장식 책(일부 기울임)",
+   "used_in": [
+    "x_transitions-21 BookshelfRecap"
+   ],
+   "size_px": "92×360",
+   "needs_parts": null,
+   "notes": "권 번호는 코드"
+  },
+  {
+   "id": "zipper_slider",
+   "name": "지퍼 슬라이더",
+   "desc": "회색 금속 슬라이더 + 손잡이 탭",
+   "used_in": [
+    "x_transitions-04 ZipperTransition"
+   ],
+   "size_px": "50",
+   "needs_parts": "몸체 / 탭(방향 따라 위·아래) 분리",
+   "notes": "우선순위 낮음, 이빨 트랙은 코드"
+  },
+  {
+   "id": "blossom_corner",
+   "name": "종이 모서리 꽃장식",
+   "desc": "연분홍 5잎 꽃(#F2B8C6) + 진분홍 중심",
+   "used_in": [
+    "x_transitions-22 CrowdCreditCard"
+   ],
+   "size_px": "60",
+   "needs_parts": null,
+   "notes": "우선순위 낮음"
+  },
+  {
+   "id": "icon_factory",
+   "name": "공장 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 공장 글리프 — 단색 틴트용(현재 lib/callouts Icon name='factory' 코드 SVG)",
+   "used_in": [
+    "callouts-01 CalloutConnector",
+    "callouts-02 DottedPathDraw",
+    "x_callouts-15 LogoEdgeIconsGather"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_truck",
+   "name": "트럭 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 트럭 글리프 — 단색 틴트용(현재 lib/callouts Icon name='truck' 코드 SVG)",
+   "used_in": [
+    "callouts-01 CalloutConnector",
+    "callouts-03 CircuitBranch",
+    "callouts-18 IconRowGrid",
+    "x_callouts-15 LogoEdgeIconsGather"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_bowl",
+   "name": "그릇 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 그릇 글리프 — 단색 틴트용(현재 lib/callouts Icon name='bowl' 코드 SVG)",
+   "used_in": [
+    "callouts-01 CalloutConnector",
+    "callouts-18 IconRowGrid"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트). icon_bowl은 img/s05_bowl.png 축소 재사용 가능"
+  },
+  {
+   "id": "icon_ship",
+   "name": "배 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 배 글리프 — 단색 틴트용(현재 lib/callouts Icon name='ship' 코드 SVG)",
+   "used_in": [
+    "callouts-02 DottedPathDraw",
+    "x_callouts-15 LogoEdgeIconsGather"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_chip",
+   "name": "칩 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 칩 글리프 — 단색 틴트용(현재 lib/callouts Icon name='chip' 코드 SVG)",
+   "used_in": [
+    "callouts-03 CircuitBranch"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_phone",
+   "name": "전화기 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 전화기 글리프 — 단색 틴트용(현재 lib/callouts Icon name='phone' 코드 SVG)",
+   "used_in": [
+    "callouts-03 CircuitBranch",
+    "callouts-18 IconRowGrid"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_cloud",
+   "name": "클라우드 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 클라우드 글리프 — 단색 틴트용(현재 lib/callouts Icon name='cloud' 코드 SVG)",
+   "used_in": [
+    "callouts-03 CircuitBranch"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_gear",
+   "name": "톱니 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 톱니 글리프 — 단색 틴트용(현재 lib/callouts Icon name='gear' 코드 SVG)",
+   "used_in": [
+    "x_callouts-15 LogoEdgeIconsGather"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_money",
+   "name": "돈 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 돈 글리프 — 단색 틴트용(현재 lib/callouts Icon name='money' 코드 SVG)",
+   "used_in": [
+    "callouts-18 IconRowGrid"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_user",
+   "name": "사람 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 사람 글리프 — 단색 틴트용(현재 lib/callouts Icon name='user' 코드 SVG)",
+   "used_in": [
+    "callouts-18 IconRowGrid"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트). person_avatar_icon과 통일"
+  },
+  {
+   "id": "icon_heart",
+   "name": "하트 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 하트 글리프 — 단색 틴트용(현재 lib/callouts Icon name='heart' 코드 SVG)",
+   "used_in": [
+    "callouts-18 IconRowGrid",
+    "callouts-20 ShieldWings"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_star",
+   "name": "별 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 별 글리프 — 단색 틴트용(현재 lib/callouts Icon name='star' 코드 SVG)",
+   "used_in": [
+    "callouts-18 IconRowGrid",
+    "callouts-20 ShieldWings"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_chart",
+   "name": "차트 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 차트 글리프 — 단색 틴트용(현재 lib/callouts Icon name='chart' 코드 SVG)",
+   "used_in": [
+    "callouts-18 IconRowGrid"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_globe",
+   "name": "지구 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 지구 글리프 — 단색 틴트용(현재 lib/callouts Icon name='globe' 코드 SVG)",
+   "used_in": [
+    "callouts-18 IconRowGrid",
+    "callouts-20 ShieldWings"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_doc",
+   "name": "문서 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 문서 글리프 — 단색 틴트용(현재 lib/callouts Icon name='doc' 코드 SVG)",
+   "used_in": [
+    "callouts-13 BrowserMockup"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  },
+  {
+   "id": "icon_cart",
+   "name": "장바구니 아이콘(Icon 세트)",
+   "desc": "세모지 플랫 장바구니 글리프 — 단색 틴트용(현재 lib/callouts Icon name='cart' 코드 SVG)",
+   "used_in": [
+    "callouts-14 BrowserMockup"
+   ],
+   "size_px": "60~260",
+   "needs_parts": null,
+   "notes": "한 장의 아이콘 시트로 일괄 생성 권장(흰/단색으로 그려 코드에서 color 틴트)"
+  }
+ ],
+ "demos_to_update": [
+  {
+   "demo": "x_acting-01",
+   "component": "MouthSwap",
+   "current": "Puppet 흉상 2명(입 open/smile/closed 교체)",
+   "replace_with": [
+    "walker1",
+    "c4_elder",
+    "expr:mouth_open"
+   ]
+  },
+  {
+   "demo": "x_acting-04",
+   "component": "ExpressionSwap",
+   "current": "Puppet 요리사(주먹 쥔 팔) 표정 스왑 + 타원 웍",
+   "replace_with": [
+    "c5_chef",
+    "wok"
+   ]
+  },
+  {
+   "demo": "x_acting-05",
+   "component": "RepeatGesture",
+   "current": "Puppet 2명 한 팔 주먹 반복 흔들기",
+   "replace_with": [
+    "c3_woman",
+    "c5_chef"
+   ]
+  },
+  {
+   "demo": "x_acting-06",
+   "component": "ArmTween",
+   "current": "Puppet 요리사 + SVG 돔 뚜껑·접시",
+   "replace_with": [
+    "c5_chef",
+    "cloche_platter"
+   ]
+  },
+  {
+   "demo": "x_acting-07",
+   "component": "CostumeAdd",
+   "current": "Puppet 요리사 + CrownSvg + SVG 망토·털 칼라",
+   "replace_with": [
+    "c3_woman",
+    "crown",
+    "royal_cape"
+   ]
+  },
+  {
+   "demo": "x_acting-08",
+   "component": "MalletStrike / GavelSvg",
+   "current": "SVG 의사봉 + 받침",
+   "replace_with": [
+    "gavel_set"
+   ]
+  },
+  {
+   "demo": "x_acting-10",
+   "component": "BoxingRound",
+   "current": "Puppet 권투선수 2명(glove 손)",
+   "replace_with": [
+    "walker1",
+    "c2_boss",
+    "boxing_glove"
+   ]
+  },
+  {
+   "demo": "x_acting-11",
+   "component": "WhackAMole",
+   "current": "Puppet 긴머리 인물 + SVG 뿅망치",
+   "replace_with": [
+    "c3_woman",
+    "toy_hammer"
+   ]
+  },
+  {
+   "demo": "x_acting-12",
+   "component": "GlovePunchSwap / ThroneSvg / BoxingGloveSvg",
+   "current": "왕좌 위 앉은 Puppet(구·신) + 서 있는 Puppet + SVG 글러브·왕좌",
+   "replace_with": [
+    "c2_boss",
+    "walker1",
+    "c4_elder",
+    "throne",
+    "boxing_glove"
+   ]
+  },
+  {
+   "demo": "x_acting-13",
+   "component": "BlurDimInterrupt",
+   "current": "Puppet 해설자 STOP 손 + CSS 칩 상자·CPU 타일",
+   "replace_with": [
+    "walker1",
+    "cpu_chip",
+    "chips_box"
+   ]
+  },
+  {
+   "demo": "x_acting-14",
+   "component": "SwordDuel / SwordSvg",
+   "current": "Puppet 2명 + SVG 칼",
+   "replace_with": [
+    "walker1",
+    "c2_boss",
+    "sword"
+   ]
+  },
+  {
+   "demo": "x_acting-15",
+   "component": "CreationHand / ReachArmSvg",
+   "current": "Puppet 2명 + 명화풍 SVG 팔",
+   "replace_with": [
+    "c2_boss",
+    "walker1",
+    "creation_arm"
+   ]
+  },
+  {
+   "demo": "x_acting-16",
+   "component": "RopeSwing / UnionFlagSvg",
+   "current": "전신 Puppet 매달림 + SVG 영국기",
+   "replace_with": [
+    "c2_boss",
+    "union_flag"
+   ]
+  },
+  {
+   "demo": "x_acting-17",
+   "component": "GrowthPot",
+   "current": "SVG 화분 3개·잎·건물·물뿌리개",
+   "replace_with": [
+    "flower_pot",
+    "watering_can",
+    "office_building_small"
+   ]
+  },
+  {
+   "demo": "x_acting-18",
+   "component": "CrownKnockoff",
+   "current": "Puppet 원로 + CrownSvg(글자)",
+   "replace_with": [
+    "c4_elder",
+    "crown"
+   ]
+  },
+  {
+   "demo": "x_acting-19",
+   "component": "OctopusMonster",
+   "current": "SVG 보라 문어 + 배",
+   "replace_with": [
+    "octopus_monster",
+    "cargo_ship"
+   ]
+  },
+  {
+   "demo": "x_acting-20",
+   "component": "Marionette",
+   "current": "받침대 위 Puppet(양팔 수평)",
+   "replace_with": [
+    "c2_boss"
+   ]
+  },
+  {
+   "demo": "x_acting-21",
+   "component": "BlobHead",
+   "current": "SVG 먹덩이 머리 + 얼굴 선 + 몸통",
+   "replace_with": [
+    "ink_blob_figure"
+   ]
+  },
+  {
+   "demo": "x_acting-23",
+   "component": "FlameSprite(데모 배경)",
+   "current": "Puppet 요리사 + SVG 웍",
+   "replace_with": [
+    "c5_chef",
+    "wok"
+   ]
+  },
+  {
+   "demo": "x_acting-24",
+   "component": "WindLines(데모 배경)",
+   "current": "SVG 나무(막대+원)",
+   "replace_with": [
+    "tree_round"
+   ]
+  },
+  {
+   "demo": "x_acting-25",
+   "component": "SaucePour",
+   "current": "SVG 손+소스병+뚜껑",
+   "replace_with": [
+    "sauce_jar_hand"
+   ]
+  },
+  {
+   "demo": "x_acting-27",
+   "component": "TechAura / LaptopSvg",
+   "current": "Puppet 발표자 + SVG 노트북",
+   "replace_with": [
+    "c2_boss",
+    "laptop"
+   ]
+  },
+  {
+   "demo": "x_acting-28",
+   "component": "ClappingHands / PalmSvg",
+   "current": "Puppet 발표자 + CSS 상자 + SVG 박수 손",
+   "replace_with": [
+    "c3_woman",
+    "held_box",
+    "clapping_palm"
+   ]
+  },
+  {
+   "demo": "x_acting-30",
+   "component": "IdeaWarmBloom",
+   "current": "Puppet 생각하는 인물",
+   "replace_with": [
+    "c3_woman"
+   ]
+  },
+  {
+   "demo": "x_acting-31",
+   "component": "ElectricVortexSpawn(데모)",
+   "current": "CSS DRAM 칩",
+   "replace_with": [
+    "dram_chip"
+   ]
+  },
+  {
+   "demo": "x_acting-32",
+   "component": "ConcentricDarkPulse(데모)",
+   "current": "SVG 흰 가루 더미",
+   "replace_with": [
+    "powder_pile"
+   ]
+  },
+  {
+   "demo": "x_acting-33",
+   "component": "FloodRise",
+   "current": "Puppet 노동자 3명 + SVG 안전모",
+   "replace_with": [
+    "walker1",
+    "hard_hat"
+   ]
+  },
+  {
+   "demo": "x_acting-34",
+   "component": "ThoughtMaterialize / BanknoteSvg",
+   "current": "Puppet 정장 + SVG 오백원권",
+   "replace_with": [
+    "c2_boss",
+    "banknote_500"
+   ]
+  },
+  {
+   "demo": "x_acting-35",
+   "component": "ColorDrain(데모)",
+   "current": "Puppet + SVG 군중 실루엣",
+   "replace_with": [
+    "walker1",
+    "crowd_silhouette"
+   ]
+  },
+  {
+   "demo": "x_acting-36",
+   "component": "BurdenBallChain / MoneySacksSvg",
+   "current": "Puppet 3명 + SVG 돈자루·쇳덩이",
+   "replace_with": [
+    "c2_boss",
+    "walker1",
+    "c4_elder",
+    "money_sack",
+    "iron_ball_chain"
+   ]
+  },
+  {
+   "demo": "x_acting-37",
+   "component": "TechCircuitGlow / CarSideSvg",
+   "current": "SVG 세단 옆모습",
+   "replace_with": [
+    "car_sedan_side"
+   ]
+  },
+  {
+   "demo": "x_acting-39",
+   "component": "EcgChestGlow / LightningHeartSvg",
+   "current": "Puppet 고통 표정 + SVG 번개 하트",
+   "replace_with": [
+    "c2_boss",
+    "lightning_heart"
+   ]
+  },
+  {
+   "demo": "x_media-07",
+   "component": "CardSlideIn",
+   "current": "CSS 자격증 카드",
+   "replace_with": [
+    "id_card(선택)"
+   ]
+  },
+  {
+   "demo": "x_media-09",
+   "component": "WhiteStrokeCutout",
+   "current": "Crown SVG",
+   "replace_with": [
+    "crown"
+   ]
+  },
+  {
+   "demo": "x_media-10",
+   "component": "BoardingPassDrop / FlatHand",
+   "current": "CSS 탑승권 + FlatHand",
+   "replace_with": [
+    "boarding_pass",
+    "hand_kit(hand_open, hand_grip)"
+   ]
+  },
+  {
+   "demo": "x_media-11",
+   "component": "XraySilhouette",
+   "current": "SVG 인체 + 골격",
+   "replace_with": [
+    "xray_body_silhouette",
+    "xray_skeleton"
+   ]
+  },
+  {
+   "demo": "x_media-14",
+   "component": "NewspaperSlamStack",
+   "current": "CSS 신문",
+   "replace_with": [
+    "newspaper"
+   ]
+  },
+  {
+   "demo": "x_media-15",
+   "component": "CardSwipeMontage / FlatHand",
+   "current": "FlatHand×2 + CSS 카드·단말기·서류·영수증",
+   "replace_with": [
+    "hand_kit(hand_pinch_card_back, thumb_front)",
+    "credit_card",
+    "card_terminal",
+    "paper_docs_collage"
+   ]
+  },
+  {
+   "demo": "x_media-19",
+   "component": "LanternSway / Lantern",
+   "current": "SVG 홍등",
+   "replace_with": [
+    "lantern_red"
+   ]
+  },
+  {
+   "demo": "x_media-21",
+   "component": "RepeatObjectWallpaper / AppleIcon",
+   "current": "SVG 사과",
+   "replace_with": [
+    "apple_icon"
+   ]
+  },
+  {
+   "demo": "x_media-24",
+   "component": "SpiralSuck / OldPhoneIcon",
+   "current": "SVG 구형 휴대폰",
+   "replace_with": [
+    "old_phone"
+   ]
+  },
+  {
+   "demo": "x_media-25",
+   "component": "SkyGradientAscent / Shuttle",
+   "current": "SVG 우주왕복선",
+   "replace_with": [
+    "space_shuttle"
+   ]
+  },
+  {
+   "demo": "x_charts-01",
+   "component": "MascotStepBars / LogoChar",
+   "current": "CSS 원형 로고 마스코트",
+   "replace_with": [
+    "logo_mascot"
+   ]
+  },
+  {
+   "demo": "x_charts-03",
+   "component": "RoadLaneAnalogy / FlatCar",
+   "current": "SVG 자동차 6대",
+   "replace_with": [
+    "car_side"
+   ]
+  },
+  {
+   "demo": "x_charts-05",
+   "component": "DDayEquation",
+   "current": "PCIcon + 패턴, CSS 달력",
+   "replace_with": [
+    "pc_icon",
+    "desk_calendar"
+   ]
+  },
+  {
+   "demo": "x_charts-06",
+   "component": "DeviceTessellation",
+   "current": "CSS 태블릿",
+   "replace_with": [
+    "tablet_device(선택)"
+   ]
+  },
+  {
+   "demo": "x_charts-07",
+   "component": "RecordMilestoneBadge",
+   "current": "인라인 왕관 SVG",
+   "replace_with": [
+    "crown"
+   ]
+  },
+  {
+   "demo": "x_charts-08",
+   "component": "FlagMapStatLink",
+   "current": "CSS 원판 아이콘",
+   "replace_with": [
+    "record_disc(선택)"
+   ]
+  },
+  {
+   "demo": "x_charts-09",
+   "component": "PictogramCrowdMarquee / Person",
+   "current": "사람 픽토그램 + 병 실루엣 SVG",
+   "replace_with": [
+    "pictogram_person",
+    "bottle_silhouette_q"
+   ]
+  },
+  {
+   "demo": "x_charts-10",
+   "component": "ProductAnchorValuePill / Jug",
+   "current": "SVG 원액 통",
+   "replace_with": [
+    "syrup_jug"
+   ]
+  },
+  {
+   "demo": "x_charts-11",
+   "component": "MapSpreadPullback / Jug",
+   "current": "Jug 소형 아이콘 다수",
+   "replace_with": [
+    "syrup_jug"
+   ]
+  },
+  {
+   "demo": "x_charts-12",
+   "component": "BottomUpRankStack",
+   "current": "SVG 트로피",
+   "replace_with": [
+    "trophy_icon"
+   ]
+  },
+  {
+   "demo": "x_charts-13",
+   "component": "EsportsVsScoreboard",
+   "current": "SVG UFO·달·방패",
+   "replace_with": [
+    "ufo_and_moon",
+    "vs_shield_emblem"
+   ]
+  },
+  {
+   "demo": "x_charts-14",
+   "component": "SegmentedThermometerDrain",
+   "current": "SVG 스프레이 캔 + 팔",
+   "replace_with": [
+    "spray_can",
+    "hand_kit(hand_press_nozzle)"
+   ]
+  },
+  {
+   "demo": "x_charts-15",
+   "component": "HandHeldDocLineup",
+   "current": "SVG 손·소매 + CSS 카드",
+   "replace_with": [
+    "hand_kit(hand_hold_paper_bottom)",
+    "paper_sheet"
+   ]
+  },
+  {
+   "demo": "x_charts-17",
+   "component": "TunnelLengthCompare",
+   "current": "SVG 터널",
+   "replace_with": [
+    "tunnel_portal"
+   ]
+  },
+  {
+   "demo": "x_charts-18",
+   "component": "MapLecturerCountryFill",
+   "current": "지시봉 선 SVG(강연자는 PNG)",
+   "replace_with": [
+    "pointer_stick"
+   ]
+  },
+  {
+   "demo": "x_charts-21",
+   "component": "SplitFlagExchange",
+   "current": "FLAGS.kr + StarFlag SVG",
+   "replace_with": [
+    "flag_kr",
+    "flag_star_red"
+   ]
+  },
+  {
+   "demo": "x_charts-23",
+   "component": "VsBoxingGloves",
+   "current": "SVG 글러브 + 로봇팔",
+   "replace_with": [
+    "boxing_glove_robot_arm"
+   ]
+  },
+  {
+   "demo": "x_charts-25",
+   "component": "SignalWaveDiagram / Person",
+   "current": "사람 픽토그램×3 + 송신탑",
+   "replace_with": [
+    "pictogram_person",
+    "antenna_tower"
+   ]
+  },
+  {
+   "demo": "characters-01",
+   "component": "Mascot",
+   "current": "PNG 몸에 SVG 흰 장갑 손(idle/wave/point/surprised)·운동화",
+   "replace_with": [
+    "cartoon_glove_hand",
+    "sneaker"
+   ]
+  },
+  {
+   "demo": "characters-02",
+   "component": "RivalEnter → Mascot",
+   "current": "SVG 장갑 손·운동화",
+   "replace_with": [
+    "cartoon_glove_hand",
+    "sneaker"
+   ]
+  },
+  {
+   "demo": "characters-10",
+   "component": "Mascot (+RivalBeam)",
+   "current": "SVG 장갑 손·운동화",
+   "replace_with": [
+    "cartoon_glove_hand",
+    "sneaker"
+   ]
+  },
+  {
+   "demo": "characters-12",
+   "component": "PhoneRing",
+   "current": "SVG 스마트폰",
+   "replace_with": [
+    "smartphone_ringing"
+   ]
+  },
+  {
+   "demo": "characters-14",
+   "component": "FingerFromCorner",
+   "current": "SVG 검지 손 + 파란 소매",
+   "replace_with": [
+    "hand_kit(hand_point_index)"
+   ]
+  },
+  {
+   "demo": "characters-15",
+   "component": "CrowdRise",
+   "current": "SVG 환호 군중 실루엣(선 팔)",
+   "replace_with": [
+    "crowd_silhouette_front"
+   ]
+  },
+  {
+   "demo": "characters-16",
+   "component": "WalkPath (갤러리 Building)",
+   "current": "SVG 벽돌 건물 가림막(걷는 인물은 PNG)",
+   "replace_with": [
+    "building_brick"
+   ]
+  },
+  {
+   "demo": "charts-02",
+   "component": "PieSweep globe",
+   "current": "SVG 지구본",
+   "replace_with": [
+    "globe"
+   ]
+  },
+  {
+   "demo": "charts-06",
+   "component": "LineChart → CrowdRow",
+   "current": "CSS 주황 관객 픽토그램",
+   "replace_with": [
+    "pictogram_person"
+   ]
+  },
+  {
+   "demo": "charts-07",
+   "component": "Podium → LogoChar",
+   "current": "CSS 원형 로고(눈·발)",
+   "replace_with": [
+    "logo_mascot"
+   ]
+  },
+  {
+   "demo": "charts-14",
+   "component": "MoneyTitle → MoneyPile",
+   "current": "SVG 지폐·동전 더미",
+   "replace_with": [
+    "money_pile"
+   ]
+  },
+  {
+   "demo": "core-27",
+   "component": "QSilhouette",
+   "current": "SVG 검은 흉상 + '?'",
+   "replace_with": [
+    "question_silhouette"
+   ]
+  },
+  {
+   "demo": "core-38",
+   "component": "IconPop / IconCaramel·IconSugar",
+   "current": "SVG 캐러멜 방울·각설탕",
+   "replace_with": [
+    "caramel_drop_icon",
+    "sugar_cubes_icon"
+   ]
+  },
+  {
+   "demo": "core-42",
+   "component": "MapRoute",
+   "current": "SVG 돛단배",
+   "replace_with": [
+    "junk_sailboat"
+   ]
+  },
+  {
+   "demo": "core-45",
+   "component": "AvatarPop",
+   "current": "SVG 원 속 사람 픽토그램",
+   "replace_with": [
+    "person_avatar_icon"
+   ]
+  },
+  {
+   "demo": "x_callouts-04",
+   "component": "ClipboardSwingDrop / PenHand",
+   "current": "PenHand + CSS 클립보드",
+   "replace_with": [
+    "hand_kit(hand_hold_pen)",
+    "clipboard_board"
+   ]
+  },
+  {
+   "demo": "x_callouts-05",
+   "component": "OrangePillStack(데모 배경: 갤러리 Building+Glove)",
+   "current": "CSS 빌딩 + 외곽선 장갑 손(검지·V)",
+   "replace_with": [
+    "building_mascot_body",
+    "cartoon_glove_hand"
+   ]
+  },
+  {
+   "demo": "x_callouts-09",
+   "component": "CalendarTagSmoke",
+   "current": "CSS 탁상달력",
+   "replace_with": [
+    "desk_calendar"
+   ]
+  },
+  {
+   "demo": "x_callouts-10",
+   "component": "HangingIconDrop",
+   "current": "라인 달력 + 스톱워치",
+   "replace_with": [
+    "line_icon_calendar",
+    "line_icon_stopwatch"
+   ]
+  },
+  {
+   "demo": "x_callouts-15",
+   "component": "LogoEdgeIconsGather",
+   "current": "Icon ship·truck·gear·factory",
+   "replace_with": [
+    "icon_ship",
+    "icon_truck",
+    "icon_gear",
+    "icon_factory"
+   ]
+  },
+  {
+   "demo": "x_callouts-16",
+   "component": "RippleRings(데모 배경: 갤러리 Doc 서류)",
+   "current": "CSS 서류 한 장",
+   "replace_with": [
+    "paper_sheet(선택)"
+   ]
+  },
+  {
+   "demo": "x_callouts-18",
+   "component": "TcgCardMarquee",
+   "current": "'?' 흰 흉상 플레이스홀더",
+   "replace_with": [
+    "c2_boss(흉상, 정장 색 변형)"
+   ]
+  },
+  {
+   "demo": "x_callouts-20",
+   "component": "MegaphoneCone",
+   "current": "SVG 확성기",
+   "replace_with": [
+    "megaphone"
+   ]
+  },
+  {
+   "demo": "callouts-01",
+   "component": "CalloutConnector",
+   "current": "Icon factory·truck·bowl",
+   "replace_with": [
+    "icon_factory",
+    "icon_truck",
+    "icon_bowl"
+   ]
+  },
+  {
+   "demo": "callouts-02",
+   "component": "DottedPathDraw",
+   "current": "Icon ship·factory",
+   "replace_with": [
+    "icon_ship",
+    "icon_factory"
+   ]
+  },
+  {
+   "demo": "callouts-03",
+   "component": "CircuitBranch",
+   "current": "Icon chip·phone·cloud·truck",
+   "replace_with": [
+    "icon_chip",
+    "icon_phone",
+    "icon_cloud",
+    "icon_truck"
+   ]
+  },
+  {
+   "demo": "callouts-13",
+   "component": "BrowserMockup · graph",
+   "current": "Icon doc",
+   "replace_with": [
+    "icon_doc"
+   ]
+  },
+  {
+   "demo": "callouts-14",
+   "component": "BrowserMockup · shop",
+   "current": "Icon cart",
+   "replace_with": [
+    "icon_cart"
+   ]
+  },
+  {
+   "demo": "callouts-18",
+   "component": "IconRowGrid",
+   "current": "Icon 9종",
+   "replace_with": [
+    "icon_bowl",
+    "icon_truck",
+    "icon_money",
+    "icon_phone",
+    "icon_user",
+    "icon_heart",
+    "icon_star",
+    "icon_chart",
+    "icon_globe"
+   ]
+  },
+  {
+   "demo": "callouts-20",
+   "component": "ShieldWings",
+   "current": "방패 속 Icon globe·heart·star",
+   "replace_with": [
+    "icon_globe",
+    "icon_heart",
+    "icon_star"
+   ]
+  },
+  {
+   "demo": "backgrounds-03",
+   "component": "MoneyRain",
+   "current": "SVG 지폐·동전",
+   "replace_with": [
+    "banknote_won",
+    "coin_won"
+   ]
+  },
+  {
+   "demo": "backgrounds-08",
+   "component": "CrowdBokeh",
+   "current": "SVG 관객 뒷모습 실루엣(선택)",
+   "replace_with": [
+    "crowd_back_silhouette"
+   ]
+  },
+  {
+   "demo": "backgrounds-16",
+   "component": "FlagWave",
+   "current": "SVG 태극기·오성홍기(선택)",
+   "replace_with": [
+    "flag_kr",
+    "flag_cn"
+   ]
+  },
+  {
+   "demo": "x_text-07",
+   "component": "DefinitionReveal",
+   "current": "SVG 아이소 칩",
+   "replace_with": [
+    "iso_chip"
+   ]
+  },
+  {
+   "demo": "x_transitions-04",
+   "component": "ZipperTransition",
+   "current": "SVG 지퍼 슬라이더",
+   "replace_with": [
+    "zipper_slider"
+   ]
+  },
+  {
+   "demo": "x_transitions-08",
+   "component": "CrashImpact (Driving)",
+   "current": "CSS 자동차 정면 + 운전자 PNG",
+   "replace_with": [
+    "car_front_driver"
+   ]
+  },
+  {
+   "demo": "x_transitions-15",
+   "component": "IsoBuildPullback",
+   "current": "폴리곤 창고·컨테이너·크레인·배",
+   "replace_with": [
+    "iso_port_kit"
+   ]
+  },
+  {
+   "demo": "x_transitions-16",
+   "component": "BinocularPOV (Ship)",
+   "current": "SVG 화물선",
+   "replace_with": [
+    "cargo_ship"
+   ]
+  },
+  {
+   "demo": "x_transitions-20",
+   "component": "GameshowDoors",
+   "current": "SVG 관객 실루엣 16",
+   "replace_with": [
+    "crowd_back_silhouette"
+   ]
+  },
+  {
+   "demo": "x_transitions-21",
+   "component": "BookshelfRecap",
+   "current": "CSS 책등·장식 책",
+   "replace_with": [
+    "book_spine_set"
+   ]
+  },
+  {
+   "demo": "x_transitions-22",
+   "component": "CrowdCreditCard",
+   "current": "SVG 꽃장식",
+   "replace_with": [
+    "blossom_corner"
+   ]
+  }
+ ],
+ "excluded_borderline": [
+  "x_acting-02/03/09/38: PNG(woo, crowd 레이어) 사용 — 제외",
+  "x_acting-22 TreadmillWalk: 이미 SemojiWalker(walker1 PNG 리그) — 제외(이정표 삼각 깃발은 도형)",
+  "x_acting-26 FlowerParticles: 꽃 파티클 — 파티클로 제외",
+  "x_acting-29 GlassCrack: UI 창 목업·크랙 FX — 제외",
+  "x_acting-38 FlameSticker: 불꽃 스티커 FX — 제외",
+  "x_acting-20 받침대(사다리꼴)·권력 구슬(원+글자) — 도형으로 제외",
+  "x_acting-17 물방울·반짝이, x_acting-19 연기선 — 파티클/선",
+  "x_media WaddleIn(x_media-26 등): PNG(kid)만 애니메이트 — 제외. 눈밭·소나무는 배경 도형",
+  "Main.tsx ChapterCard/Signboard/StingCard/EndCard: 텍스트·PNG — 제외",
+  "SweatDrop·Steam·Confetti·Sparkles·Starburst·Stamp·Onoma·SmokeWipe 등 fx 효과, lib/characters 만화 효과(AngerMark·SurpriseLines·DizzySwirl·FallingBlocks·RivalBeam·EyeBeam 등) — 파티클/효과로 제외",
+  "Mascot 다리 선, CounterBadge/StatGauge 텍스트 글리프 아이콘, ZigzagArrow·AgileRings·TimelineBar·DiscPie3D — 차트/그래픽",
+  "LogoFaceMask·LogoCard(characters-03/10), x_charts-19 로고 도형 — 텍스트/로고",
+  "x_callouts-08 모니터 틀·앱 타일, -12 체크리스트·도장, -13 퀘스트 창, callouts-10 화이트보드, -20 방패, -23 퍼즐, 마우스 커서, 인스타 UI, 인증 배지 — UI/도형",
+  "x_transitions-07 엘리베이터 문(원하면 elevator_set 가능), -13 도로 표지판, -12 무대, -24 버스트 — 도형/텍스트",
+  "x_text-13 불꽃, x_media-23·x_charts-23 불꽃 배경, x_charts-14 온도계, -16 자, -13 7세그먼트 — 효과/그래픽",
+  "transitions.tsx 전체: 사진 + 커튼·책상·신문·잡지 텍스처 — 제외"
+ ],
+ "summary": {
+  "demos_to_update": 101,
+  "demos_by_gallery": {
+   "x_acting": 32,
+   "x_media": 10,
+   "x_charts": 18,
+   "characters": 7,
+   "charts": 4,
+   "core": 4,
+   "x_callouts": 8,
+   "callouts": 7,
+   "backgrounds": 3,
+   "x_text": 1,
+   "x_transitions": 7
+  },
+  "character_entries": 40,
+  "cast": 5,
+  "props": 109,
+  "props_icon_set": 16
+ }
+}
