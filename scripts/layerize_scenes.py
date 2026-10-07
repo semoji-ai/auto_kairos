@@ -22,6 +22,7 @@ Codex 마젠타 매트(codex_matte_layers.py)·OCR 사각 자르기·layerkit �
   · 응답 누락 — 보낸 이름의 레이어가 안 돌아오면 elements.json `missing_layers` 에 남긴다.
   · 배경판 잔상 — 요소가 z0 배경판에 그대로 남았는지(이중 표시) 원본과 비교해
     elements.json 요소마다 `bg_residue` 를 달고 `<out>/layer_report.json` 에 모은다.
+    점수 0.25 이상이면 flag 하나로 본다(다시 고칠 대상 — 이름을 고쳐 다시 나누거나 그 자리를 지운다).
     이미 나눈 폴더는 `--recheck` 로 호출 없이 점검만 한다.
 
     python3 scripts/layerize_scenes.py <names.json> -o <out_dir> [--only k1,k2] [-j 4]
@@ -158,12 +159,12 @@ def main() -> int:
                 if "error" in x:
                     print(f"      ? 잔상 점검 못 함: {x['error']}")
                 else:
-                    print(f"      {'✗' if x['level'] == 'flag' else '!'} 배경판 잔상 {x['score']}: {x['name']}")
+                    print(f"      ✗ 배경판 잔상 {x['score']}: {x['name']} — 다시 고칠 것")
             if r.get("missing_layers"):
                 print(f"      ! 안 돌아온 레이어: {r['missing_layers']}")
     (args.out / "layer_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
-    n_flag = sum(1 for x in report["residue"] if x["level"] == "flag")
-    print(f"\n새로 나눈 레이어 {total}장 · 배경판 잔상 {n_flag}건(+확인 {len(report['residue']) - n_flag}) · "
+    n_flag = len(report["residue"])
+    print(f"\n새로 나눈 레이어 {total}장 · 배경판 잔상 {n_flag}건(점수 0.25 이상) · "
           f"이름 누락 {len(gaps)}키 → {args.out / 'layer_report.json'}")
     return 0
 

@@ -106,6 +106,7 @@
 ## 10. 레이어 분리 · BGM
 
 - 레이어 분리: fal Seedream 5.0 layerize 단일 경로 — `docs/rules/scene-visual-decision.md` ⑥.
+  배경 잔상 점수 0.25 이상 = flag(다시 고칠 대상), 단일 기준.
 - BGM: `scripts/bgm_select.py` — 챕터당 한 곡(디코드 길이 ≥ 챕터), 0.1s 해상도 브레이크
   검출(1~2마디 −8dB) 후 0.25s 크로스페이드로 잘라 냄, 페이드 0.6/1.2, −14.4 LUFS 정규화 후 재측정,
   AE 레이어 −25dB. — **구현**

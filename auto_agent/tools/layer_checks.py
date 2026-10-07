@@ -10,6 +10,7 @@
    색 차이만 보면 밝은 벽 위 밝은 간판처럼 대비가 낮은 요소를 잔상으로 잘못 잡는다
    (한화 S158 간판 — 실제로는 잘 지워짐). 한화 EP01 554개 요소 실측: 중앙값 0.001,
    95% 0.11, 잔상이 눈으로 확인된 S186 달리는 아이 1.03, S157 사무실 집기 1.15.
+   기준은 하나 — 0.25 이상이면 flag(다시 고칠 대상). 한화 EP01 에서 11개 요소(2%)가 걸린다.
 """
 from __future__ import annotations
 
@@ -19,8 +20,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageFilter
 
-RESIDUE_FLAG = 0.5      # 이 이상이면 요소가 배경판에 남아 있다(이중 표시)
-RESIDUE_WARN = 0.25     # 희미한 흔적 — 확인 권장
+RESIDUE_FLAG = 0.25     # 이 이상이면 요소가 배경판에 남아 있다(이중 표시) — 다시 고칠 대상. 단일 기준
 MIN_DETAIL = 2.0        # 원본 요소 안 무늬 표준편차가 이보다 작으면(민무늬) 판정하지 않는다
 
 _STOP = {"the", "a", "an", "of", "with", "and", "on", "in", "at", "to", "for", "left", "right",
@@ -69,7 +69,7 @@ def _detail(rgb: np.ndarray) -> np.ndarray:
 
 def residue_score(original: Image.Image, plate: Image.Image, element: Image.Image,
                   bbox) -> dict:
-    """요소가 배경판에 남은 정도. {"score", "level": ok|warn|flag|flat, "px"}.
+    """요소가 배경판에 남은 정도. {"score", "level": ok|flag|flat, "px"}.
 
     score = 원본 무늬에 대한 판 무늬의 회귀 계수(요소 알파 안). 1 이면 그대로 남음, 0 이면 지워짐."""
     W, H = original.size
@@ -90,14 +90,14 @@ def residue_score(original: Image.Image, plate: Image.Image, element: Image.Imag
     if do.std() < MIN_DETAIL:
         return {"score": None, "level": "flat", "px": px}
     beta = float(((do - do.mean()) * (dp - dp.mean())).mean() / (do.var() + 1e-6))
-    level = "flag" if beta >= RESIDUE_FLAG else ("warn" if beta >= RESIDUE_WARN else "ok")
+    level = "flag" if beta >= RESIDUE_FLAG else "ok"
     return {"score": round(beta, 3), "level": level, "px": px}
 
 
 def check_layer_dir(d: Path, source: Path | None = None) -> list[dict]:
     """layerize 결과 폴더(elements.json) 하나를 점검해 요소마다 bg_residue 를 단다.
 
-    elements.json 을 고쳐 쓰고, 잔상(flag/warn) 요소 목록을 돌려준다."""
+    elements.json 을 고쳐 쓰고, 잔상(flag) 요소 목록을 돌려준다."""
     import json
     d = Path(d)
     m = json.loads((d / "elements.json").read_text(encoding="utf-8"))
@@ -118,7 +118,7 @@ def check_layer_dir(d: Path, source: Path | None = None) -> list[dict]:
             continue
         res = residue_score(orig, plate, Image.open(f), e["bbox"])
         e["bg_residue"] = res
-        if res["level"] in ("flag", "warn"):
+        if res["level"] == "flag":
             issues.append({"key": m.get("key"), "name": e["name"], **res})
     (d / "elements.json").write_text(json.dumps(m, ensure_ascii=False, indent=1), encoding="utf-8")
     return issues

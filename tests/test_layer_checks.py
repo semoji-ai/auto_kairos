@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image, ImageDraw
 
 from auto_agent.tools.layer_checks import (check_layer_dir, covers, missing_expected,
@@ -116,3 +117,16 @@ def test_codex_matte_refuses_without_approval(tmp_path):
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / "codex_matte_layers.py"), str(jobs),
                         "-o", str(tmp_path)], capture_output=True, text=True, cwd=ROOT)
     assert r.returncode == 2 and "폐기" in r.stderr
+
+
+@pytest.mark.parametrize("keep,level", [(0.35, "flag"), (0.15, "ok")])
+def test_single_cutoff_025_flags_faint_residue(keep, level):
+    # 판에 원본 무늬가 keep 비율만큼 희미하게 남은 경우 — 0.25 이상이면 flag 하나뿐(warn 없음)
+    orig = _textured_box(_scene(), BOX).astype(np.float32)
+    wall = _scene(seed=3).astype(np.float32)
+    plate = wall.copy()
+    l, t, r, b = BOX
+    plate[t:b, l:r] = wall[t:b, l:r] + keep * (orig[t:b, l:r] - wall[t:b, l:r])
+    res = residue_score(Image.fromarray(orig.astype(np.uint8)), Image.fromarray(np.clip(plate, 0, 255).astype(np.uint8)),
+                        _element(BOX), BOX)
+    assert res["level"] == level
