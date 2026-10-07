@@ -1,6 +1,6 @@
 # 기법 도감 → AE (dogam_ae)
 
-세모지 **기법 도감**(`semoji-motion/dogam`, 343기법)의 연출을 **고치기 쉬운 AE 레이어·키프레임**으로 옮기는 층입니다.
+세모지 **기법 도감**(저장소 `motion/dogam`, 구 `semoji-motion/dogam`, 343기법)의 연출을 **고치기 쉬운 AE 레이어·키프레임**으로 옮기는 층입니다.
 오토카이로스 결과물을 AE 에서 다듬을 때, 패널 **「기법 도감」 탭**에서 카드를 누르면 지금 열린 컴프에 그 연출이 걸립니다.
 
 - 1단계 기반: 공용 코어 `core.jsx` · 동기화 `sync_dogam.py` · 검증 하네스 `dogam_verify.py`
@@ -33,7 +33,7 @@ adobe/
 **에셋을 확장 폴더 안(`jsx/dogam/assets`)에 두는 이유.** 패널은 심볼릭 링크로 설치돼 있어
 `file://…/extensions/com.autokairos.pd/../../data` 처럼 `..` 로 나가면 링크 밖으로 풀립니다.
 확장 폴더 안이면 패널(`<img src>`)과 JSX(`assetsRoot`)가 같은 상대 경로로 닿습니다 — `jsx/tylenol/assets` 와 같은 방식입니다.
-미리보기 mp4(약 80MB)는 복사하지 않고 `assets/previews_src` → 세모지 도감 폴더 링크로 둡니다(`--mp4 copy` 가능).
+미리보기 mp4(약 80MB)는 복사하지 않고 `assets/previews_src` → 도감 미리보기 폴더(NAS 또는 `motion/dogam/previews` 로컬 캐시, `motion/dogam/previews_dir.py` 규칙) 링크로 둡니다(`--mp4 copy` 가능). 둘 다 없으면 번들 12개를 복사합니다.
 
 ### 1-1. 코어 API (`AKD`)
 
