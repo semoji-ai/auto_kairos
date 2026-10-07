@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""완성 장면 한 장을 codex 매트로 나눈다 — 픽셀은 원본 그대로 (마이디어편 방식).
+"""[폐기 — 2026-10-07] 완성 장면 한 장을 codex 매트로 나눈다 (마이디어편 방식).
+
+**레이어 분리 규칙은 fal Seedream 5.0(bytedance/seedream/v5/pro/layerize) 단일 경로다**
+(scripts/layerize_scenes.py, docs/rules/scene-visual-decision.md ⑥). 이 스크립트는
+마이디어편 재현·비교용으로만 남긴다. 실행하려면 사용자 승인 사유를 `--approved "<사유>"`
+로 적어야 한다. 알려진 한계: 마젠타 거리 키 40 고정(alpha_from_matte), 매트가 원본과
+어긋나면 가장자리에 배경이 묻는다. 색은 원본에서 오리므로 마젠타 번짐(디스필)은 생기지 않는다.
+
+---
+완성 장면 한 장을 codex 매트로 나눈다 — 픽셀은 원본 그대로 (마이디어편 방식).
 
 Seedream 처럼 레이어를 다시 그리지 않는다. codex(`$imagegen` 편집)에게 두 장을 시킨다.
 
@@ -33,7 +42,6 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from auto_agent.utils.codex_cli import claim_session_image, imagegen_model_args  # noqa: E402
 
 MATTE = """$imagegen
 
@@ -71,6 +79,9 @@ PLATE = """$imagegen
 
 
 def codex(prompt: str, out: Path, timeout: int) -> bool:
+    # 늦게 불러온다 — 이 브랜치의 codex_cli 에는 claim_session_image 가 없어(로컬 전용이던
+    # 스크립트) import 가 실패하면 폐기 안내조차 못 띄운다.
+    from auto_agent.utils.codex_cli import claim_session_image, imagegen_model_args
     try:
         r = subprocess.run(["codex", "exec", *imagegen_model_args(), "--skip-git-repo-check",
                             "--sandbox", "workspace-write", prompt],
@@ -161,7 +172,14 @@ def main() -> int:
     ap.add_argument("--only")
     ap.add_argument("-j", "--jobs-n", type=int, default=3)
     ap.add_argument("--timeout", type=int, default=1800)
+    ap.add_argument("--approved", default="",
+                    help="폐기된 경로 — 사용자 승인 사유(예외). 없으면 실행하지 않는다")
     a = ap.parse_args()
+    if not a.approved.strip():
+        print("codex 매트 분리는 폐기됐다 — scripts/layerize_scenes.py(fal Seedream 5.0)를 쓴다.\n"
+              "예외로 꼭 써야 하면 사용자 승인 사유를 --approved \"…\" 로 적는다.", file=sys.stderr)
+        return 2
+    print(f"[예외 실행] 승인 사유: {a.approved}", flush=True)
     jobs = json.loads(a.jobs.read_text(encoding="utf-8"))
     keys = [k for k in jobs if not a.only or k in a.only.split(",")]
     with ThreadPoolExecutor(max_workers=a.jobs_n) as ex:
