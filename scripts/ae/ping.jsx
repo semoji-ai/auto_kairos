@@ -1,0 +1,1 @@
+﻿(function(){var f=new File("/Users/jleavens_macmini/LocalProjects/semoji_global/episodes/B209/raster/ping.txt");f.open("w");f.write("pong "+app.version);f.close();})();

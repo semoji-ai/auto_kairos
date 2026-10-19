@@ -86,3 +86,48 @@ def test_mixed_colors_without_spatial_split_are_not_two_tone():
         d.rectangle([x, 25, x + 20, 55], fill=(250, 250, 250, 255))       # 흰 획
     _, colors, two = erase_text(np.array(im), [[35, 20], [385, 20], [385, 60], [35, 60]])
     assert not two
+
+
+def test_text_on_transparent_background_is_cleared():
+    """받침판 없이 투명 위에 그려진 글자는 투명도를 0으로 지운다."""
+    im = Image.new("RGBA", (300, 80), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    for x in range(40, 260, 35):
+        d.rectangle([x, 25, x + 18, 55], fill=(20, 20, 20, 255))
+    out, colors, two = erase_text(np.array(im), [[35, 22], [265, 22], [265, 58], [35, 58]])
+    assert out[25:56, 40:260, 3].max() <= 10
+    assert max(colors[0]) < 60
+
+
+def test_shape_corners_survive_when_text_is_near_edges():
+    """검은 띠(불투명) 끝까지 꽉 찬 노란 글자 → 지운 뒤에도 띠 모서리 투명도가 그대로."""
+    im = Image.new("RGBA", (320, 100), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rectangle([10, 20, 310, 80], fill=(0, 0, 0, 255))
+    for x in range(14, 300, 30):
+        d.rectangle([x, 26, x + 22, 74], fill=(250, 235, 60, 255))
+    arr = np.array(im)
+    out, _, _ = erase_text(arr, [[12, 24], [308, 24], [308, 76], [12, 76]])
+    for (y, x) in [(20, 10), (20, 310), (80, 10), (80, 310), (22, 12), (78, 308)]:
+        assert out[y, x, 3] == 255, (y, x, out[y, x, 3])
+    assert out[0:18, :, 3].max() == 0
+
+
+
+def _two_lines():
+    im = Image.new("RGBA", (300, 140), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    for y in (20, 58):
+        for x in range(40, 260, 35):
+            d.rectangle([x, y, x + 18, y + 30], fill=(20, 20, 20, 255))
+    return im, [[35, 17], [265, 17], [265, 53], [35, 53]], [[35, 55], [265, 55], [265, 91], [35, 91]]
+
+
+def test_replace_items_keeps_first_line_intact_when_second_is_erased(tmp_path):
+    from sg.raster import replace_items
+    im, q1, q2 = _two_lines()
+    src = tmp_path / "a.png"; im.save(src)
+    replace_items(str(src), str(tmp_path / "two.png"), [{"quad": q1, "en": "FIRST"}, {"quad": q2, "en": "SECOND"}], SB)
+    blank = np.zeros((140, 300, 4), np.uint8)
+    one = draw_text(blank, q1, "FIRST", [(20, 20, 20)], False, SB)[10:50, :, 3] > 200   # 첫 줄만 그렸을 때
+    two = np.array(Image.open(tmp_path / "two.png"))[10:50, :, 3] > 200
+    assert two.sum() >= 0.9 * one.sum()

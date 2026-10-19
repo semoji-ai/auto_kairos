@@ -17,15 +17,18 @@ def quad_geom(q):
     return ang, w, h, (x0 + x1 + x2 + x3) / 4, (y0 + y1 + y2 + y3) / 4
 
 
-def _region(shape, quad, sx=1.12, sy=1.5):
+def _region(shape, quad, pad_x=0.6, pad_y=0.3):
+    """글자 사변형을 글자 방향 기준으로 넓힌 영역(가로 ±pad_x·h, 세로 ±pad_y·h)."""
     q = np.array(quad, np.float32)
     c = q.mean(0)
     ang, w, h, _, _ = quad_geom(quad)
-    # 글자 방향 기준으로 넓힘(가로 sx, 세로 sy)
     ux = np.array([math.cos(math.radians(ang)), math.sin(math.radians(ang))])
     uy = np.array([-ux[1], ux[0]])
     rel = q - c
-    qq = c + np.outer(rel @ ux * sx, ux) + np.outer(rel @ uy * sy, uy)
+    px, py = rel @ ux, rel @ uy
+    px = px + np.sign(px) * pad_x * h
+    py = py + np.sign(py) * pad_y * h
+    qq = c + np.outer(px, ux) + np.outer(py, uy)
     m = np.zeros(shape, np.uint8)
     cv2.fillPoly(m, [qq.astype(np.int32)], 255)
     return m > 0
@@ -52,7 +55,8 @@ def erase_text(rgba, quad):
     pm = lambda x: x[:, :, :3] * x[:, :, 3:4] / 255.0
     diff = np.abs(pm(cur) - pm(bg)).sum(2) + np.abs(cur[:, :, 3] - bg[:, :, 3]) * 1.5
     inside = cv2.erode((bg[:, :, 3] > 128).astype(np.uint8), np.ones((5, 5), np.uint8)) > 0
-    txt = region & (diff > 45) & inside
+    thr = 30 if h < 40 else 45
+    txt = region & (diff > thr) & inside
     cdiff = np.abs(cur[:, :, :3] - bg[:, :, :3]).sum(2)
     strong = region & inside & (cdiff > 180) & (a > 200)
     cols = rgba[:, :, :3][strong] if strong.sum() > 30 else rgba[:, :, :3][txt & (a > 128)]
@@ -77,11 +81,42 @@ def erase_text(rgba, quad):
                 span = max(1.0, np.percentile(proj, 98) - np.percentile(proj, 2))
                 two = overlap < span * 0.15
     inside2 = cv2.erode((a > 200).astype(np.uint8), np.ones((3, 3), np.uint8)) | inside.astype(np.uint8)
-    mask = (cv2.dilate(txt.astype(np.uint8) * 255, np.ones((5, 5), np.uint8), iterations=2) * (inside2 > 0)).astype(np.uint8)
-    a2 = np.where((mask > 0) & inside, bg[:, :, 3], a).astype(np.uint8)
+    dil = 1 if h < 30 else 2   # 작은 글자만 좁게 메움(번짐 방지), 보통 글자는 그림자까지 덮게 2
+    mask = (cv2.dilate(txt.astype(np.uint8) * 255, np.ones((5, 5), np.uint8), iterations=dil) * (inside2 > 0)).astype(np.uint8)
+    plate = region & ~txt & (a > 30) & (bg[:, :, 3] >= 128)
+    plate_a = int(np.median(a[plate])) if plate.sum() > 20 else 255
+    ai = a.astype(np.int16)   # uint8과 255 초과 정수를 비교하면 이 numpy 버전에서 비정상 종료
+    # 받침판 깊은 안쪽: 픽셀별 배경 투명도(그라데이션 바 대응) / 가장자리 근처: 대표값 규칙(모서리 보존)
+    ek = max(3, int(h / 2) | 1)
+    deep = cv2.erode((bg[:, :, 3] > 128).astype(np.uint8), np.ones((ek, ek), np.uint8)) > 0
+    a2 = np.where((mask > 0) & deep, np.minimum(ai, bg[:, :, 3]), ai)
+    a2 = np.where((mask > 0) & ~deep & (ai > plate_a + 8), plate_a, a2).astype(np.uint8)
+    # 거의 투명한 곳(그라데이션 바 끝 등)에 걸친 글자 조각: 배경보다 훨씬 불투명하고 색도 다르면 배경값으로
+    # 거의 투명한 곳의 작은 불투명 덩어리(글자 그림자 조각)는 색과 무관하게 지움 — 받침판 같은 큰 덩어리는 제외
+    n_cc, lab_cc, st_cc, _ = cv2.connectedComponentsWithStats((ai > 128).astype(np.uint8), 8)
+    small_cc = np.zeros_like(region)
+    small_ids = [i for i in range(1, n_cc) if st_cc[i, cv2.CC_STAT_AREA] < h * h * 0.6]
+    if small_ids:
+        small_cc = np.isin(lab_cc, small_ids)
+    faint = region & small_cc & (((bg[:, :, 3] < 128) & (ai > bg[:, :, 3] + 40) & (cdiff > 150))
+                                 | ((bg[:, :, 3] < 60) & (ai > bg[:, :, 3] + 60)))
+    if faint.sum() > 0:
+        ff = cv2.dilate(faint.astype(np.uint8), np.ones((3, 3), np.uint8), iterations=dil) > 0
+        ff &= region & (bg[:, :, 3] < 128)
+        a2 = np.where(ff, bg[:, :, 3], a2).astype(np.uint8)
+    # 받침판 없이 투명 위에 그려진 글자: 투명도를 0으로
+    floating = _region((H, W), quad, 0.8, 0.6) & (bg[:, :, 3] < 64) & (a > 20)
+    has_plate = plate.sum() > 0.05 * max(1, region.sum())   # 받침판이 있으면 이 규칙을 쓰지 않음(모서리 보호)
+    if floating.sum() > 0 and not has_plate:
+        fl = cv2.dilate(floating.astype(np.uint8), np.ones((3, 3), np.uint8), iterations=dil) > 0
+        a2 = np.where(fl & (bg[:, :, 3] < 64), 0, a2).astype(np.uint8)
+        if len(cols) == 0 or strong.sum() <= 30:
+            fc = rgba[:, :, :3][floating & (a > 200)]
+            if len(fc):
+                colors = [tuple(int(v) for v in np.median(fc, axis=0))]
     fill = rgba[:, :, :3].copy()
     fill[a2 < 30] = bg[:, :, :3][a2 < 30]
-    rgb = cv2.inpaint(fill.astype(np.uint8), mask, 7, cv2.INPAINT_TELEA)
+    rgb = cv2.inpaint(fill.astype(np.uint8), mask, max(3, min(7, int(h // 10))), cv2.INPAINT_TELEA)
     return np.dstack([rgb, a2]).astype(np.uint8), colors, bool(two)
 
 
@@ -134,9 +169,13 @@ def draw_text(rgba, quad, text, colors, two_tone, font_path, size_ratio=0.72, fo
 
 
 def replace_items(png_in, png_out, items, font_path, font_index=0):
-    """items: [{"quad", "en"}] → 지우고 그린 PNG 저장."""
+    """items: [{"quad", "en", ("colors")}] → 모두 지운 뒤 한꺼번에 그린 PNG 저장(앞 줄이 다음 줄 지우기에 휩쓸리지 않게)."""
     arr = np.array(Image.open(png_in).convert("RGBA"))
+    styles = []
     for it in items:
         arr, colors, two = erase_text(arr, it["quad"])
-        arr = draw_text(arr, it["quad"], it["en"], colors, two, font_path, font_index=font_index)
+        styles.append((it.get("colors") or colors, two))
+    for it, (colors, two) in zip(items, styles):
+        arr = draw_text(arr, it["quad"], it["en"], colors, it.get("two_tone", two), font_path,
+                        size_ratio=it.get("size_ratio", 0.72), font_index=font_index)
     Image.fromarray(arr).save(png_out)

@@ -2,7 +2,10 @@
 → raster/src/<id>.png, raster/ocr.jsonl, raster/items.json"""
 import glob, json, os, re, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+import numpy as np
+from PIL import Image
 from sg.graph import reach_items
+from sg.plate import unpremultiply
 from sg.edl import part_span_to_master
 
 ep = os.path.abspath(sys.argv[1]); root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -37,6 +40,8 @@ if "--skip-export" not in sys.argv:
     for t in glob.glob(os.path.join(src, "*_0.tif")):
         subprocess.run(["sips", "-s", "format", "png", t, "--out", t[:-6] + ".png"], check=True, capture_output=True)
         os.remove(t)
+        im = np.array(Image.open(t[:-6] + ".png").convert("RGBA"))   # AE TIFF는 프리멀티플라이드
+        Image.fromarray(unpremultiply(im)).save(t[:-6] + ".png")
 
 log = {str(x["id"]): x for x in json.load(open(os.path.join(rd, "build_export_log.json")))["queued"]}
 pngs = sorted(glob.glob(os.path.join(src, "*.png")))
@@ -58,7 +63,7 @@ for line in open(os.path.join(rd, "ocr.jsonl")):
     entries = []
     for i in ko:
         t = re.sub(r"\s+", "", i["text"])
-        keep = t in brands
+        keep = t in brands and len(ko) == 1   # 간판처럼 브랜드명 하나만 있는 레이어만 유지(문장 속 브랜드명은 번역)
         small = news and i["box"][3] < d["h"] * 0.03
         entries.append({"text": i["text"], "quad": i["quad"], "box": i["box"], "conf": i["conf"],
                         "keep": keep, "blur": bool(small and not keep)})
