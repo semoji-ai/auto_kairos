@@ -33,3 +33,15 @@
 - 테스트 패턴(×0.9/×1.15): 미나 0~120 mean 0.989 bad 0
 - 균일 ×1.3: 미나 0~120 mean 0.986 bad 0 / 가을 140~185(유튜브 컷 포함, 앵커 13개) mean 0.986 bad 0
 - localize 로그: 오류·경고 0 (로컬에 없는 미사용 footage 레이어는 missing_footage_layers로 집계)
+
+## 4. 영어판 (계획 2)
+1. 번역: `python3 scripts/translate.py episodes/<EP> en` → `l10n/en.json`, `en_review.md` (헤드리스 `claude -p`, 구간별 글자 예산 = 길이 × profiles cps)
+2. TTS: `python3 scripts/tts.py episodes/<EP> en --rewrite-loop` → `tts/en/*.mp3`, `durs.json`, `fit.json` (eleven_v4, 세모지 보이스, 0.75~1.35배 밖이면 재번역 최대 2회)
+3. 발음 검수: `python3 scripts/asr_check.py episodes/<EP> en` → `asr.json` (유사도 0.85 미만은 표기 차이인지 들어서 확인, 발음 문제면 l10n에 "tts" 필드)
+4. 화면 문자열: `python3 scripts/patch_text.py episodes/<EP> en` → `scripts/ae/run.sh $PWD/scripts/ae/patch_text.jsx` → `build/en/<EP>_en_text.aep` (넓으면 글자 축소, 최소 70%)
+5. 워프: `python3 scripts/timewarp.py episodes/<EP> en --durs episodes/<EP>/tts/en/durs.json --keep-subs --aep episodes/<EP>/build/en/<EP>_en_text.aep` → `run.sh localize.jsx` → `build/en/<EP>_en.aep`
+6. 자막: `python3 scripts/subtitles.py episodes/<EP> en` → `run.sh subtitles.jsx` → `build/en/<EP>_en_subs.aep`, `render/en/en.srt`
+7. 파트 렌더: 파트마다 `render.sh build/en/<EP>_en_subs.aep <MAIN_*> 0 <warp.json parts[pid].dur_new> render/en/part_<pid>.mp4 29.97 "H.264 - Match Render Settings - 15 Mbps"`
+8. 미리보기: `python3 scripts/preview.py episodes/<EP> en` → `render/en/<EP>_EN_preview.mp4` (길이 = warp.json length_new, 아웃트로는 edl 길이만큼)
+
+검증 기록(B209, 2026-10-19): 번역 172구간·문자열 42, TTS 172 전부 범위 안(1차 재작성 10), 829s/922s, 문자열 42/42 교체, 워프 979.35→886.15s, 자막 417큐, 미리보기 886.19s. 남은 한글: .ai 일러스트 속 글자(계획 3).

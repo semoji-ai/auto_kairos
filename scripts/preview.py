@@ -1,0 +1,56 @@
+"""영어 미리보기 조립.  usage: preview.py <EP> <lang>"""
+import json, os, subprocess, sys, unicodedata
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from sg.preview import plan_audio
+from sg.timemap import PiecewiseMap
+from sg.edl import master_to_part
+
+ep, lang = sys.argv[1], sys.argv[2]
+cfg = json.load(open(os.path.join(ep, "master_config.json")))
+edl = json.load(open(os.path.join(ep, "master/edl.json")))
+src = json.load(open(os.path.join(ep, "master/source.json")))
+W = json.load(open(os.path.join(ep, "build", lang, "warp.json")))
+warp = PiecewiseMap(W["master"])
+out_dir = os.path.join(ep, "render", lang)
+order = []
+for c in edl["parts"]:
+    if c["id"] not in order:
+        order.append(c["id"])
+vids = [os.path.join(out_dir, f"part_{p}.mp4") for p in order] + [os.path.join(ep, "assets", "outro.mov")]
+outro_dur = edl["outro"]["dur"] if edl.get("outro") else None   # 프리미어에서 쓴 길이만큼만(원본 파일은 더 김)
+filt = "".join(f"[{i}:v]" + (f"trim=duration={outro_dur},setpts=PTS-STARTPTS," if i == len(vids) - 1 and outro_dur else "")
+               + f"scale=1920:1080,fps=30000/1001,format=yuv420p,setsar=1[v{i}];" for i in range(len(vids)))
+filt += "".join(f"[v{i}]" for i in range(len(vids))) + f"concat=n={len(vids)}:v=1:a=0[v]"
+video = os.path.join(out_dir, "video_only.mp4")
+args = ["ffmpeg", "-v", "error", "-y"]
+for v in vids:
+    args += ["-i", v]
+subprocess.run(args + ["-filter_complex", filt, "-map", "[v]", "-c:v", "libx264", "-crf", "20", "-preset", "veryfast", video], check=True)
+
+# 오디오: TTS + nonverbal 원래 녹음 조각
+G = json.load(open(os.path.join(ep, cfg["graph"])))
+nar_file = {}
+for pid, P in cfg["parts"].items():
+    for it in G["items"].values():
+        if it["name"] == P["narration"]:
+            rel = os.path.relpath(unicodedata.normalize("NFC", it["file"]), unicodedata.normalize("NFC", cfg["nas_ep"]))
+            nar_file[pid] = os.path.join(ep, "src", rel)
+plan = plan_audio(src["segments"], warp, os.path.join(ep, "tts", lang))
+ins, flt = [], []
+for k, p in enumerate(plan):
+    if p.get("kind") == "nonverbal":
+        pid, u = master_to_part(edl, p["src_in"])
+        ins += ["-ss", f"{u:.3f}", "-t", f"{p['src_out'] - p['src_in']:.3f}", "-i", nar_file[pid]]
+    else:
+        ins += ["-i", p["file"]]
+    flt.append(f"[{k}:a]aresample=48000,adelay={int(p['t'] * 1000)}|{int(p['t'] * 1000)}[a{k}]")
+mix = ";".join(flt) + ";" + "".join(f"[a{k}]" for k in range(len(plan))) + f"amix=inputs={len(plan)}:normalize=0[a]"
+audio = os.path.join(out_dir, "narration.wav")
+subprocess.run(["ffmpeg", "-v", "error", "-y"] + ins + ["-filter_complex", mix, "-map", "[a]", "-ac", "2", audio], check=True)
+final = os.path.join(out_dir, f"{os.path.basename(os.path.abspath(ep))}_{lang.upper()}_preview.mp4")
+vdur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", video],
+                      capture_output=True, text=True).stdout.strip()
+# 아웃트로 구간엔 내레이션이 없으므로 -shortest 대신 오디오를 무음으로 채워 영상 길이에 맞춘다
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", video, "-i", audio, "-map", "0:v", "-map", "1:a", "-c:v", "copy",
+                "-af", "apad", "-t", vdur, "-c:a", "aac", "-b:a", "192k", final], check=True)
+print(final)
