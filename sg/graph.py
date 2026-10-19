@@ -26,8 +26,10 @@ def walk(graph, root_id, t0, t1):
             if lo >= hi:
                 continue
             key = (cid, L["i"])
-            e = acc.setdefault(key, {"comp_id": cid, "layer": L["i"], "src": L["src"], "spans": [], "path": path})
+            e = acc.setdefault(key, {"comp_id": cid, "layer": L["i"], "src": L["src"], "spans": [], "path": path, "occ": []})
             e["spans"].append([lo * k + off, hi * k + off])
+            # 루트 시간 = 이 컴프의 로컬 시간 * k + off (레이어 자체 startTime/stretch는 L에서 따로 적용)
+            e["occ"].append({"k": k, "off": off, "span": [lo * k + off, hi * k + off]})
             sid = str(L["src"]) if L["src"] is not None else None
             if sid in comps:
                 sx = (L["sx"] or 100) / 100.0

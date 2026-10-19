@@ -33,3 +33,10 @@ def test_reach_items():
     r = reach_items(G, "1", 0, 100)
     assert set(r) == {"7"}
     assert r["7"]["spans"] == [[10, 14], [50, 53]]
+
+
+def test_walk_records_local_to_root_transform_per_occurrence():
+    res = walk(G, "1", 0, 100)
+    occ = [r["occ"] for r in res if r["comp_id"] == "2" and r["layer"] == 1][0]
+    # 첫 사용: 루트 = 로컬*1 + 10, 두 번째 사용: 루트 = 로컬*2 + 45
+    assert sorted((o["k"], o["off"]) for o in occ) == [(1.0, 10.0), (2.0, 45.0)]
