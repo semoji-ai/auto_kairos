@@ -1,0 +1,8 @@
+episodes/*/src/
+episodes/*/ko_final.mp4
+episodes/*/render/
+episodes/*/tts/
+episodes/*/build/
+reports/*.json
+reports/*.jsonl
+*.log
