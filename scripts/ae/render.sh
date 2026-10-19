@@ -6,7 +6,10 @@ AER="/Applications/Adobe After Effects 2026/aerender"
 LOCK=/tmp/brand_cn_ae.lock
 TMPD=/private/var/folders/7b/rf80z6797v31y66xgdw2ybvh0000gn/T
 until mkdir "$LOCK" 2>/dev/null; do sleep 10; done
-trap 'rm -f "$TMPD"/Acr*.tmp 2>/dev/null; rmdir "$LOCK" 2>/dev/null' EXIT
+# 렌더 후 AE 디스크 캐시 비움(맥미니 228GB — 렌더 한 번에 10GB까지 참). AE 앱이 떠 있으면 건드리지 않음.
+AECACHE="$HOME/Library/Caches/Adobe/After Effects"
+cleanup(){ rm -f "$TMPD"/Acr*.tmp 2>/dev/null; pgrep -f "MacOS/After Effects$" >/dev/null || rm -rf "$AECACHE"/[0-9]*; rmdir "$LOCK" 2>/dev/null; }
+trap cleanup EXIT
 free=$(df -g /System/Volumes/Data | awk 'NR==2{print $4}')
 [ "$free" -lt 10 ] && { echo "DISK LOW"; exit 3; }
 FPS=${6:-30}

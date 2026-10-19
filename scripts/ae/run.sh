@@ -14,7 +14,7 @@ end timeout" >/dev/null 2>&1
     for i in $(seq 1 60); do pgrep -f "MacOS/After Effects$" >/dev/null || break; sleep 5; done
     if pgrep -f "MacOS/After Effects$" >/dev/null; then echo "WARN: AE did not quit; leaving it running (lock released)"; fi
   fi
-  pgrep -f "MacOS/After Effects$" >/dev/null || rm -f "$TMPD"/Acr*.tmp
+  pgrep -f "MacOS/After Effects$" >/dev/null || { rm -f "$TMPD"/Acr*.tmp; rm -rf "$HOME/Library/Caches/Adobe/After Effects"/[0-9]*; }
   rmdir "$LOCK" 2>/dev/null
 }
 trap cleanup EXIT
