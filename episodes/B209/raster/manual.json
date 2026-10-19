@@ -1,0 +1,8 @@
+{
+ "3134#0": {"skip": true, "why": "셔츠의 Costco 로고를 OCR이 'Costs요'로 오인"},
+ "3719#0": {"skip": true, "why": "얼굴의 Costco 로고를 OCR이 'COST요'로 오인"},
+ "3670#0": {"skip": true, "why": "신세계 로고(실제 브랜드) 유지"},
+ "20447#0": {"text": "1998", "font": "hand"},
+ "20447#1": {"text": "Enters Korea", "font": "hand"},
+ "3118#0": {"text": "Membership Card"}
+}
