@@ -12,6 +12,8 @@ def build_edl(seq, part_clips, outro_clip, cuts_pr):
         if it["name"] == outro_clip:
             outro = {"clip": it["name"], "pr_in": it["start"], "dur": dur}
         elif it["name"] in part_clips:
+            if abs((it.get("speed") or 1.0) - 1.0) > 1e-6:
+                raise ValueError(f"clip speed change not supported: {it['name']} x{it['speed']}")
             parts.append({"id": part_clips[it["name"]], "clip": it["name"],
                           "pr_in": it["start"], "src_in": it["in"] or 0.0, "dur": dur})
         else:
@@ -54,6 +56,42 @@ def part_to_master(edl, part_id, u):
     return None
 
 
+def part_span_to_master(edl, part_id, a, b):
+    """파트 로컬 구간 [a,b] → 마스터 구간 목록. 클립 밖(건너뛴 소스)과 컷 안은 잘라 내고, 이어지는 조각은 합친다."""
+    pieces = []
+    for c in edl["parts"]:
+        if c["id"] != part_id:
+            continue
+        lo, hi = max(a, c["src_in"]), min(b, c["src_in"] + c["dur"])
+        if hi <= lo:
+            continue
+        pa, pb = c["pr_in"] + (lo - c["src_in"]), c["pr_in"] + (hi - c["src_in"])
+        segs = [(pa, pb)]
+        for cut in edl["cuts"]:
+            nxt = []
+            for x, y in segs:
+                if y <= cut["pr_in"] or x >= cut["pr_out"]:
+                    nxt.append((x, y))
+                    continue
+                if x < cut["pr_in"]:
+                    nxt.append((x, cut["pr_in"]))
+                if y > cut["pr_out"]:
+                    nxt.append((cut["pr_out"], y))
+            segs = nxt
+        for x, y in segs:
+            pieces.append([pr_to_master(edl, x), pr_to_master(edl, y)])
+    pieces.sort()
+    out = []
+    for x, y in pieces:
+        if y - x <= 1e-6:
+            continue
+        if out and x <= out[-1][1] + 1e-6:
+            out[-1][1] = max(out[-1][1], y)
+        else:
+            out.append([x, y])
+    return [[round(x, 3), round(y, 3)] for x, y in out]
+
+
 def part_anchors(edl, warp, part_id):
     clips = [c for c in edl["parts"] if c["id"] == part_id]
     if not clips:
@@ -76,11 +114,15 @@ def part_anchors(edl, warp, part_id):
             u = c["src_in"] + (p - a)
             n = warp(pr_to_master(edl, p)) - base
             if pts and u <= pts[-1][0] + 1e-9:
+                if abs(n - pts[-1][1]) > FRAME:
+                    raise ValueError(f"part {part_id}: same source time {u} maps to {pts[-1][1]} and {n}")
                 pts[-1] = (pts[-1][0], max(pts[-1][1], n))
             else:
                 pts.append((u, n))
-    for i in range(1, len(pts)):   # 부동소수 오차로 new가 줄어드는 것 방지
+    for i in range(1, len(pts)):   # 부동소수 오차만 보정, 실제로 줄어들면 오류
         if pts[i][1] < pts[i - 1][1]:
+            if pts[i - 1][1] - pts[i][1] > 1e-6:
+                raise ValueError(f"part {part_id}: new time goes backwards at source {pts[i][0]}")
             pts[i] = (pts[i][0], pts[i - 1][1])
     m = PiecewiseMap(pts)
     end = clips[-1]["src_in"] + clips[-1]["dur"]

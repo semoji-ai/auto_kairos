@@ -63,3 +63,21 @@ def test_consecutive_speech_chunks_merge_into_reachable_neighbor():
                        [{"text": "A", "in": 0.0, "out": 3.0}, {"text": "B", "in": 9.0, "out": 10.0}])
     out = merge_textless(segs, is_speech=lambda g: True)
     assert [(g["in"], g["out"]) for g in out] == [(0.0, 4.0), (9.0, 10.0)]
+
+
+import pytest
+
+
+def test_far_subtitle_is_attached_but_flagged_for_review():
+    segs = attach_text([(0.0, 3.0)], [{"text": "가", "in": 0.0, "out": 3.0}, {"text": "멀다", "in": 10.0, "out": 11.0}])
+    assert segs[0]["review"] is True and "멀다" in segs[0]["ko"]
+
+
+def test_near_subtitle_does_not_flag_review():
+    segs = attach_text([(0.0, 3.0)], [{"text": "가", "in": 3.5, "out": 4.0}])
+    assert not segs[0].get("review")
+
+
+def test_subtitles_without_any_speech_span_raise():
+    with pytest.raises(ValueError):
+        attach_text([], [{"text": "가", "in": 0.0, "out": 1.0}])

@@ -4,7 +4,7 @@
 var SELF=$.fileName;
 $.evalFile(File(SELF).parent.fsName+"/lib.jsx");
 var C=jobConfig(SELF), LOG={parts:[], warnings:[], errors:[]}, ST=null;
-var FR=1/29.97;
+var FR=1/29.97, BR='';
 
 function Map(a){ this.a=a; }
 Map.prototype.f=function(t){ var a=this.a,n=a.length;
@@ -20,7 +20,6 @@ function isSpatial(p){ return p.propertyValueType===PropertyValueType.TwoD_SPATI
 function recordKeys(group, out){
   for(var i=1;i<=group.numProperties;i++){
     var p=group.property(i);
-    if(p.matchName==="ADBE Marker") continue;
     if(p.propertyType===PropertyType.PROPERTY){
       if(p.numKeys>0){
         // 숨겨진 속성(프리셋 내부 등)은 키를 다시 쓸 수 없다 → 지우기 전에 확인하고 건너뜀
@@ -55,15 +54,29 @@ function rewriteKeys(rec, map){
   }
   for(var i=0;i<keep.length;i++){
     var o=keep[i], idx=p.nearestKeyIndex(o.at);
+    // 이즈 speed는 초당 단위 → 구간이 r배가 되면 1/r배 (influence는 그대로)
+    var rIn=1, rOut=1;
+    if(i>0){ var dn=keep[i].nt-keep[i-1].nt; if(dn>1e-6) rIn=(keep[i].t-keep[i-1].t)/dn; }
+    if(i+1<keep.length){ var dn2=keep[i+1].nt-keep[i].nt; if(dn2>1e-6) rOut=(keep[i+1].t-keep[i].t)/dn2; }
     try{ p.setInterpolationTypeAtKey(idx,o.ii,o.oi);}catch(e){}
-    try{ if(o.ie) p.setTemporalEaseAtKey(idx,o.ie,o.oe);}catch(e){}
+    try{ if(o.ie) p.setTemporalEaseAtKey(idx,scaleEase(o.ie,rIn),scaleEase(o.oe,rOut));}catch(e){}
     try{ if(o.tc!==undefined){ p.setTemporalContinuousAtKey(idx,o.tc); p.setTemporalAutoBezierAtKey(idx,o.ta);} }catch(e){}
     if(rec.sp){ try{ p.setSpatialTangentsAtKey(idx,o.ist,o.ost); p.setSpatialContinuousAtKey(idx,o.sc); p.setSpatialAutoBezierAtKey(idx,o.sa); p.setRovingAtKey(idx,o.rv);}catch(e){} }
   }
   if(p.numKeys!==keep.length) LOG.warnings.push("key count mismatch "+p.name+" "+p.numKeys+"/"+keep.length);
   return keep.length;
 }
-function setInOut(L,a,b){ if(a>=L.outPoint){ L.outPoint=b; L.inPoint=a; } else { L.inPoint=a; L.outPoint=b; } }
+function scaleEase(arr,r){ if(Math.abs(r-1)<1e-9) return arr; var out=[]; for(var i=0;i<arr.length;i++) out.push(new KeyframeEase(arr[i].speed*r, arr[i].influence)); return out; }
+// AE는 inPoint를 바꾸면 길이를 유지하려고 outPoint도 같이 민다 → 시작점 먼저, 그다음 끝점, 마지막에 둘 다 확인
+function setInOut(L,a,b,tol){
+  tol=tol||FR/2;
+  L.inPoint=a; L.outPoint=b;
+  if(Math.abs(L.inPoint-a)>1e-4) L.inPoint=a;
+  if(Math.abs(L.outPoint-b)>1e-4) L.outPoint=b;
+  var miss=false; try{ miss=(L.source instanceof FootageItem) && L.source.footageMissing; }catch(e){}
+  if(miss){ ST.missing++; return; }   // 로컬에 없는(렌더에 안 쓰이는) footage 자리표시자는 길이 비교 생략
+  if(Math.abs(L.inPoint-a)>tol || Math.abs(L.outPoint-b)>tol) LOG.warnings.push("in/out mismatch ["+BR+"] "+L.containingComp.name+"/"+L.name+" hv="+L.hasVideo+" ha="+L.hasAudio+" want "+a.toFixed(3)+"-"+b.toFixed(3)+" got "+L.inPoint.toFixed(3)+"-"+L.outPoint.toFixed(3));
+}
 function srcName(L){ try{ return L.source?L.source.name:""; }catch(e){ return ""; } }
 function muted(L){ var n=srcName(L); for(var i=0;i<C.mute_sources.length;i++) if(n===C.mute_sources[i]) return true; return false; }
 function usesIn(parent, item){ var c=0; for(var j=1;j<=parent.numLayers;j++){ try{ if(parent.layer(j).source===item) c++; }catch(e){} } return c; }
@@ -88,14 +101,18 @@ function warpComp(comp, map, depth){
       if(nout-nin<FR){ L.enabled=false; try{L.audioEnabled=false;}catch(e){} continue; }
       if(sx<0){ LOG.warnings.push("reversed layer skipped "+comp.name+"/"+L.name); continue; }
       var stNew;
-      if(L.source instanceof CompItem && !L.timeRemapEnabled){
+      BR='gen';
+      if(L.source instanceof CompItem && !L.timeRemapEnabled){ BR='comp';
         var child=L.source;
         if(child.usedIn.length>1 || usesIn(comp, child)>1 || ST.done[child.id]){ child=child.duplicate(); L.replaceSource(child,false); ST.dups++; }
         stNew=map.f(ost);
-        L.startTime=stNew; setInOut(L,nin,nout);
+        L.startTime=stNew;
+        var need=(nout-stNew)/sx+FR; if(need>child.duration) child.duration=need;   // 아웃점이 소스 끝에 막히지 않게
         ST.done[child.id]=true;
         warpComp(child, map.child(ost, stNew, sx), depth+1);
-      } else if(L.source instanceof FootageItem && L.hasVideo && !L.source.mainSource.isStill && !L.timeRemapEnabled){
+        setInOut(L,nin,nout);
+        if(Math.abs(L.outPoint-nout)>FR || Math.abs(L.inPoint-nin)>FR) LOG.warnings.push("precomp in/out clamped "+comp.name+"/"+L.name+" want "+nin.toFixed(2)+"-"+nout.toFixed(2)+" got "+L.inPoint.toFixed(2)+"-"+L.outPoint.toFixed(2));
+      } else if(L.source instanceof FootageItem && L.hasVideo && !L.source.mainSource.isStill && !L.timeRemapEnabled){ BR='video';
         var r=(nout-nin)/(oout-oin), u=(oin-ost)/sx;
         if(r>=0.8 && r<=1.25){ L.stretch=L.stretch*r; stNew=nin-u*sx*r; L.startTime=stNew; setInOut(L,nin,nout); }
         else if(r<0.8){ L.stretch=L.stretch*0.8; stNew=nin-u*sx*0.8; L.startTime=stNew; setInOut(L,nin,nout); LOG.warnings.push("clip squeezed+trimmed r="+r.toFixed(2)+" "+comp.name+"/"+L.name); }
@@ -107,8 +124,13 @@ function warpComp(comp, map, depth){
                  var tr=L.property("ADBE Time Remapping"); var lastSrc=L.source.duration-FR;
                  tr.setValueAtTime(natEnd-FR,lastSrc); tr.setValueAtTime(nout,lastSrc); ST.holds++; }
         }
-      } else if(!L.hasVideo && L.hasAudio){
-        stNew=ost+(nin-oin); L.startTime=stNew; setInOut(L,nin,nin+(oout-oin));
+      } else if(!L.hasVideo && L.hasAudio){ BR='audio';
+        stNew=ost+(nin-oin); L.startTime=stNew;
+        var aEnd=nin+(oout-oin); try{ aEnd=Math.min(aEnd, stNew+L.source.duration*sx); }catch(e){}   // 소스 끝을 넘지 않게
+        setInOut(L,nin,aEnd,FR*1.5);   // AE가 아웃점을 프레임 격자에 맞춰 효과음 꼬리가 1프레임 이내로 줄 수 있음
+        var shift=new Map([[0, nin-oin]]);   // 볼륨 페이드 등은 레이어와 같이 평행이동
+        for(var q=0;q<recs.length;q++) ST.keys+=rewriteKeys(recs[q], shift);
+        ST.layers++; continue;
       } else {
         stNew=nin-(oin-ost); L.startTime=stNew; setInOut(L,nin,nout);
       }
@@ -116,6 +138,7 @@ function warpComp(comp, map, depth){
       ST.layers++;
     }catch(e){ LOG.errors.push(comp.name+"/"+L.name+": "+String(e)+" line "+e.line); }
   }
+  try{ var cm=[]; recordKeys({numProperties:1, property:function(){ return comp.markerProperty; }}, cm); for(var q=0;q<cm.length;q++) rewriteKeys(cm[q], map); }catch(e){ LOG.warnings.push("comp markers "+comp.name+": "+String(e)); }
   for(var q=0;q<relock.length;q++){ try{ comp.layer(relock[q]).locked=true; }catch(e){} }
   comp.duration=newDur;
   try{ comp.workAreaStart=0; comp.workAreaDuration=newDur; }catch(e){}
@@ -128,9 +151,9 @@ try{
     var part=C.parts[k], comp=null;
     for(var i=1;i<=P.numItems;i++){ var it=P.item(i); if(it instanceof CompItem && it.name===part.comp) comp=it; }
     if(!comp){ LOG.errors.push("comp not found "+part.comp); continue; }
-    ST={layers:0, keys:0, dups:0, holds:0, done:{}};
+    ST={layers:0, keys:0, dups:0, holds:0, missing:0, done:{}};
     warpComp(comp, new Map(part.anchors), 0);
-    LOG.parts.push({comp:part.comp, layers:ST.layers, keys:ST.keys, dups:ST.dups, holds:ST.holds, dur_new:comp.duration, dur_expected:part.dur_new});
+    LOG.parts.push({comp:part.comp, missing_footage_layers:ST.missing, layers:ST.layers, keys:ST.keys, dups:ST.dups, holds:ST.holds, dur_new:comp.duration, dur_expected:part.dur_new});
   }
   P.save(new File(C.save_as)); P.close(CloseOptions.DO_NOT_SAVE_CHANGES);
 }catch(e){ LOG.errors.push(String(e)+" line "+e.line); }

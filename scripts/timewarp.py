@@ -1,4 +1,4 @@
-"""변환표 생성.  usage: timewarp.py <EP> <tag> (--durs durs.json | --test-pattern) [--job path]
+"""변환표 생성.  usage: timewarp.py <EP> <tag> (--durs durs.json | --test-pattern | --test-scale k) [--keep-subs] [--job path]
 --test-pattern: 말 구간(nonverbal 제외) 순번 1부터 홀수 ×0.9, 짝수 ×1.15 (번역 길이 변화 흉내)."""
 import json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -14,6 +14,9 @@ segs = src["segments"]
 if "--test-pattern" in args:
     spoken = [g for g in segs if not g.get("nonverbal")]
     durs = {g["id"]: (g["out"] - g["in"]) * (0.9 if (i % 2 == 1) else 1.15) for i, g in enumerate(spoken, 1)}
+elif "--test-scale" in args:
+    k = float(args[args.index("--test-scale") + 1])
+    durs = {g["id"]: (g["out"] - g["in"]) * k for g in segs if not g.get("nonverbal")}
 else:
     durs = json.load(open(args[args.index("--durs") + 1]))
 cuts = [(c["in"], c["out"]) for c in src.get("korea_only", [])]

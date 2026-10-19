@@ -71,3 +71,37 @@ def test_subframe_source_overlap_between_clips_is_tolerated():
 def test_real_source_overlap_raises():
     with pytest.raises(ValueError):
         build_edl(_seq([(0, 10, 0.0, "B"), (10, 20, 9.0, "B")]), {"B": "b"}, None, [])
+
+
+from sg.edl import part_span_to_master
+
+
+def test_span_crossing_skipped_source_and_cut_keeps_pieces_outside():
+    # 파트 b: src 0~4 → pr 10~14, src 6~12 → pr 14~20, 컷 pr 16~17
+    # src 1~9: [1~4]→마스터 11~14, [6~9]→pr 14~17 → 컷 앞 14~16 → 마스터 14~16 → 이어 붙여 [11,16]
+    assert part_span_to_master(edl(), "b", 1.0, 9.0) == [[11.0, 16.0]]
+
+
+def test_span_starting_inside_cut_keeps_tail():
+    # src 8.5~11 → pr 16.5~19 → 컷 뒤 17~19 → 마스터 16~18
+    assert part_span_to_master(edl(), "b", 8.5, 11.0) == [[16.0, 18.0]]
+
+
+def test_span_entirely_inside_cut_or_skipped_source_is_empty():
+    assert part_span_to_master(edl(), "b", 8.2, 8.8) == []
+    assert part_span_to_master(edl(), "b", 4.2, 5.8) == []
+
+
+def test_clip_speed_change_is_rejected():
+    seq = seq_fixture()
+    seq["tracks"][0]["items"][0]["speed"] = 1.5
+    with pytest.raises(ValueError):
+        build_edl(seq, {"A.mp4": "a", "B.mp4": "b"}, "OUT.mov", [])
+
+
+def test_part_anchors_raises_when_new_time_goes_backwards_beyond_float_noise():
+    bad = {"parts": [{"id": "b", "clip": "B", "pr_in": 14, "src_in": 4, "dur": 2},
+                     {"id": "b", "clip": "B", "pr_in": 10, "src_in": 6, "dur": 2}],
+           "cuts": [], "outro": None, "pr_length": 20, "length": 20}
+    with pytest.raises(ValueError):
+        part_anchors(bad, PiecewiseMap.identity(), "b")

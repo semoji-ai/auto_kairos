@@ -37,3 +37,12 @@ def test_keep_subs_disables_subtitle_hiding_for_verification(tmp_path):
     subprocess.run([sys.executable, str(root / "scripts/timewarp.py"), str(ep), "t2", "--test-pattern", "--keep-subs",
                     "--job", str(tmp_path / "job.json")], check=True)
     assert json.load(open(tmp_path / "job.json"))["hide_comp_prefix"] is None
+
+
+def test_test_scale_stretches_every_spoken_segment(tmp_path):
+    ep = make_ep(tmp_path)
+    root = Path(__file__).resolve().parents[1]
+    subprocess.run([sys.executable, str(root / "scripts/timewarp.py"), str(ep), "t3", "--test-scale", "1.3",
+                    "--job", str(tmp_path / "job.json")], check=True)
+    w = json.load(open(ep / "build/t3/warp.json"))
+    assert abs(w["length_new"] - (20 + 0.3 * 7)) < 1e-6        # 구간 3초+4초가 각각 1.3배

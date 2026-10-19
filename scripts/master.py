@@ -1,8 +1,8 @@
 """편 마스터 생성: master/edl.json, master/source.json.  usage: python3 scripts/master.py episodes/B209"""
 import json, os, sys, unicodedata
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from sg.audio import decode, speech_spans
-from sg.edl import build_edl, part_to_master
+from sg.audio import decode, speech_spans, split_long
+from sg.edl import build_edl, part_span_to_master
 from sg.graph import walk
 from sg.segments import attach_text, merge_textless, looks_like_speech
 import subprocess, tempfile
@@ -42,11 +42,10 @@ def main(ep_dir):
         layers = walk(G, P["comp_id"], 0, P["dur"])
 
         def to_master(spans):
+            # 클립 밖(건너뛴 소스)·컷 안은 잘라 내고 남은 조각만(컷을 걸친 말도 잃지 않음)
             out = []
             for a, b in spans:
-                ma, mb = part_to_master(edl, pid, a), part_to_master(edl, pid, max(a, b - 1e-3))
-                if ma is not None and mb is not None and mb > ma:
-                    out.append([round(ma, 3), round(mb, 3)])
+                out += part_span_to_master(edl, pid, a, b)
             return out
 
         subs = []
@@ -76,7 +75,7 @@ def main(ep_dir):
         wav = local_file(G["items"][str(L["src"])]["file"], C["nas_ep"], ep_dir)
         x = decode(wav)
         spans, wav_of = [], {}
-        for a, b in speech_spans(x, 16000):
+        for a, b in split_long(x, 16000, speech_spans(x, 16000)):
             for o in r["occ"]:
                 ua, ub = (L["st"] + a * sx) * o["k"] + o["off"], (L["st"] + b * sx) * o["k"] + o["off"]
                 ua, ub = max(ua, o["span"][0]), min(ub, o["span"][1])
@@ -90,7 +89,10 @@ def main(ep_dir):
             heard[g["in"]] = whisper_text(wav, wa, wb)
             return looks_like_speech(heard[g["in"]])
 
-        for g in merge_textless(attach_text(spans, subs), is_speech):
+        part_segs = merge_textless(attach_text(spans, subs), is_speech)
+        if not [g for g in part_segs if not g.get("nonverbal")]:
+            raise ValueError(f"{pid}: no narration segments")
+        for g in part_segs:
             g["part"] = pid
             if g["in"] in heard and g.get("nonverbal"):
                 g["heard"] = heard[g["in"]]
@@ -104,6 +106,8 @@ def main(ep_dir):
               open(os.path.join(ep_dir, "master/source.json"), "w"), ensure_ascii=False, indent=1)
     nv = [g["id"] for g in segments if g.get("nonverbal")]
     empty = [g["id"] for g in segments if not g["ko"] and not g.get("nonverbal")]
+    rv = [g["id"] for g in segments if g.get("review")]
+    print(f"review {len(rv)} {rv}")
     print(f"segments {len(segments)}  strings {len(strings)}  length {edl['length']}  nonverbal {len(nv)} {nv}  no-text {len(empty)}")
 
 

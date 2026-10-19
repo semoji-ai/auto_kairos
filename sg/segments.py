@@ -1,9 +1,14 @@
 """말 구간에 자막 텍스트를 붙여 내레이션 구간을 만든다."""
 
 
+FAR_SUB = 1.0
+
+
 def attach_text(spans, subs):
     segs = [{"in": a, "out": b, "ko": "", "subs": []} for a, b in spans]
     if not segs:
+        if subs:
+            raise ValueError(f"{len(subs)} subtitles but no speech spans")
         return segs
     for s in sorted(subs, key=lambda x: x["in"]):
         best, score = None, -1e9
@@ -14,6 +19,8 @@ def attach_text(spans, subs):
             if ov > score:
                 best, score = i, ov
         segs[best]["subs"].append(s)
+        if score < -FAR_SUB:  # 어느 말 구간과도 1초 넘게 떨어진 자막 → 붙이되 검수 표시
+            segs[best]["review"] = True
     for g in segs:
         g["subs"].sort(key=lambda x: x["in"])
         g["ko"] = " ".join(x["text"].replace("\r", " ").strip() for x in g["subs"])
