@@ -75,3 +75,14 @@ def test_draw_text_paints_emphasis_in_second_color():
     left = out[20:80, 10:250, :3].astype(int)
     assert ((right[:, :, 0] > 180) & (right[:, :, 1] < 100)).sum() > 50       # 강조(빨강)
     assert ((left.max(2) < 60)).sum() > 50                                     # 기본(검정)
+
+
+def test_mixed_colors_without_spatial_split_are_not_two_tone():
+    """흰 글자 + 회색 외곽선이 섞여 있으면(위치로 갈리지 않으면) 두 색 강조가 아니다."""
+    im = Image.new("RGBA", (400, 80), (30, 30, 30, 255))
+    d = ImageDraw.Draw(im)
+    for x in range(40, 360, 40):
+        d.rectangle([x - 3, 22, x + 23, 58], fill=(150, 150, 150, 255))   # 회색 외곽
+        d.rectangle([x, 25, x + 20, 55], fill=(250, 250, 250, 255))       # 흰 획
+    _, colors, two = erase_text(np.array(im), [[35, 20], [385, 20], [385, 60], [35, 60]])
+    assert not two

@@ -645,5 +645,1303 @@
   "s5848_21": {
    "text": "Src: E-Mart"
   }
+ },
+ "raster": {
+  "20425#0": {
+   "text": "Each runs 100+ stores nationwide",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "전국에 각각 100개 매장 이상 보유"
+  },
+  "20443#0": {
+   "text": "Stores & sales [[up KRW 100B+ a year]]",
+   "font": "gothic",
+   "two_tone": true,
+   "ko": "매장 수 및 매출 매년 수천 억씩 증가•·•"
+  },
+  "20447#0": {
+   "text": "[[1998]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1998년"
+  },
+  "20447#1": {
+   "text": "[[Korea]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "한국 진출"
+  },
+  "20451#0": {
+   "text": "19 stores nationwide",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "전국 매장 수 19개"
+  },
+  "20453#0": {
+   "text": "[[100+]] stores nationwide",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "전국 매장 수 100개 이상"
+  },
+  "20465#0": {
+   "text": "Sales WIN",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "매출 WIN"
+  },
+  "20479#1": {
+   "text": "Overtaking!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "뛰여 넘을며.!"
+  },
+  "20481#0": {
+   "text": "[[2024]] revenue",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2024년 기준 매출액"
+  },
+  "20481#1": {
+   "text": "KRW [[6.5T]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "6.5조"
+  },
+  "20485#0": {
+   "text": "[[2024]] revenue",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2024년 기준 매출액"
+  },
+  "20485#1": {
+   "text": "KRW 7.3T",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "7.3조"
+  },
+  "20489#0": {
+   "text": "[[2024]] revenue",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2024년 기준 매출액"
+  },
+  "20489#1": {
+   "text": "KRW [[16.9T]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "16.9조"
+  },
+  "20515#0": {
+   "text": "Stock up 10x in 10 years",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "10년간 주가 10배 상승"
+  },
+  "20529#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "COSTC요"
+  },
+  "20531#0": {
+   "text": "[[Costco]] founder",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 창업자"
+  },
+  "20531#1": {
+   "text": "Jim Sinegal",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "짐 시네갈"
+  },
+  "20533#0": {
+   "text": "[[Retail's]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "유통업계의"
+  },
+  "20533#1": {
+   "text": "[[Steve Jobs]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "스티브 잡스"
+  },
+  "20535#0": {
+   "text": "Jim Sinegal: [[Costco on NASDAQ]] 2 years in...",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "짐 시네갈, 코스트코 창업 2년 만에 나스닥 상장•••"
+  },
+  "20541#0": {
+   "text": "\"[[Father of US Retail]]\"",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"미국 유통업의 아버지\""
+  },
+  "20541#1": {
+   "text": "Sol Price",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "솔 프라이스"
+  },
+  "20543#0": {
+   "text": "Founded [[1954]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1954년 창업"
+  },
+  "20545#0": {
+   "text": "Founded [[1976]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1976년 창업"
+  },
+  "20551#0": {
+   "text": "[[Walmart]] founder",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "월마트 창업자"
+  },
+  "20551#1": {
+   "text": "[[S. Walton]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "샘 월튼"
+  },
+  "20553#0": {
+   "text": "[[Sol Price]] is",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "솔 프라이스는"
+  },
+  "20553#1": {
+   "text": "[[Retail's dad]]!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "유통업의 아버지!"
+  },
+  "20571#0": {
+   "text": "Lawyer",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "변호사"
+  },
+  "20583#0": {
+   "text": "The estate,",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "유산 관리 좀"
+  },
+  "20583#1": {
+   "text": "Please!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "부탁해!"
+  },
+  "20595#0": {
+   "text": "[[Tenant]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "임차인"
+  },
+  "20595#1": {
+   "text": "[[wanted]]~",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "구합니다~"
+  },
+  "20599#0": {
+   "text": "[[Hey]]..",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "혹시.."
+  },
+  "20599#1": {
+   "text": "Know [[Fedco]]?",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "페드코 아세요?"
+  },
+  "20607#0": {
+   "text": "Federal workers' [[members-only]] mart",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "공무원 전용 회원제 할인마트"
+  },
+  "20607#1": {
+   "text": "\"[[Fedco]]\"",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"페드코(Fedco)\""
+  },
+  "20609#0": {
+   "text": "([[Fed Workers' Co.]])",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "(연방 공무원 회사)"
+  },
+  "20619#0": {
+   "text": "All the way [[to LA]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "LA까지 가서"
+  },
+  "20619#1": {
+   "text": "[[to shop]]!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "쇼핑한대요!"
+  },
+  "20631#0": {
+   "text": "Let's go!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "가보자고!"
+  },
+  "20649#0": {
+   "text": "Why?",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "굳이?"
+  },
+  "20667#0": {
+   "text": "Golden",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "절로의"
+  },
+  "20669#0": {
+   "text": "shot!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "기획!"
+  },
+  "20675#0": {
+   "text": "$3M in sales in just 1 year",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1년 만에 매출 300만 달러 달성"
+  },
+  "20675#1": {
+   "text": "(~[[KRW 4B]])",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "(약 40억 원)"
+  },
+  "20677#0": {
+   "text": "1954",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1954년"
+  },
+  "21059#0": {
+   "text": "Brand",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "브랜드"
+  },
+  "21059#1": {
+   "text": "Even hypermarts wobble... No. 2 [[Homeplus]] enters receivership",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "대형마트도 휘청인다••• 업계 2위 홈플러스 결국 회생절차"
+  },
+  "21059#2": {
+   "text": "\"[[Save us]]\"",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"살려주세요\""
+  },
+  "21351#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "오8VH-대권A"
+  },
+  "21893#0": {
+   "text": "US Fair Trade Act",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "미국 '공정거래법'"
+  },
+  "21899#0": {
+   "text": "No [[discounts]]..",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "할인이 없다니.."
+  },
+  "21899#1": {
+   "text": "[[Too pricey]]..",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "너무 비싸.."
+  },
+  "21905#0": {
+   "text": "Fair Trade Act",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"공정거래법\""
+  },
+  "21905#1": {
+   "text": "[[Fair Trade Act]] rule",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "공정거래법 규정"
+  },
+  "21905#2": {
+   "text": "Covers [[general retailers]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "일반 소매 유통업체에"
+  },
+  "21905#3": {
+   "text": "[[FedMart]] exempt",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "페드마트 해당X"
+  },
+  "21911#0": {
+   "text": "A loophole..",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "허점이 있군.."
+  },
+  "21913#0": {
+   "text": "Lawyer",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "변호사"
+  },
+  "21917#0": {
+   "text": "FedMart members",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "페드마트 회원"
+  },
+  "21917#1": {
+   "text": "Exempt from Fair Trade Law",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "공정거래법 적용X"
+  },
+  "21935#0": {
+   "text": "1962",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1962년"
+  },
+  "21949#0": {
+   "text": "\"Fair Trade\"",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"공정거래법\""
+  },
+  "21951#0": {
+   "text": "1975",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1975년"
+  },
+  "21969#0": {
+   "text": "Discount Mart Boom",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "할인마트 전성시대"
+  },
+  "21971#0": {
+   "text": "Backers",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "투자자"
+  },
+  "21971#1": {
+   "text": "Wanted!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "모집합니다!"
+  },
+  "21983#0": {
+   "text": "\"[[Father]] of US retail\"",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"미국 유통업의 아버지\""
+  },
+  "21983#1": {
+   "text": "Sol Price",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "솔 프라이스"
+  },
+  "21987#0": {
+   "text": "\"[[German]] retailer\"",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"독일의 유통 사업가\""
+  },
+  "21987#1": {
+   "text": "Hugo Mann",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "후고 만"
+  },
+  "21995#0": {
+   "text": "[[FedMart]] Board",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "페드마트 이사회"
+  },
+  "21995#1": {
+   "text": "Sol Price",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "솔 프라이스"
+  },
+  "21995#2": {
+   "text": "Firing vote",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "해고 안건"
+  },
+  "21997#0": {
+   "text": "Passed",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "통과"
+  },
+  "22007#0": {
+   "text": "[[Realty]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "솔 부동산"
+  },
+  "22007#1": {
+   "text": "[[All mine]]~!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "다내꼬양~"
+  },
+  "22037#0": {
+   "text": "How dare",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "감히 날"
+  },
+  "22037#1": {
+   "text": "you?!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "배신해?!"
+  },
+  "22039#0": {
+   "text": "A [[new start]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "새로운 창업을"
+  },
+  "22039#1": {
+   "text": "[[Now!!]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "하겠어!!"
+  },
+  "22049#0": {
+   "text": "For small biz",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "자영업자 대상"
+  },
+  "22049#1": {
+   "text": "Bargains!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "할인마트!"
+  },
+  "22057#0": {
+   "text": "[[Warehouse]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "도매 창고형"
+  },
+  "22057#1": {
+   "text": "[[Store]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "할인마트"
+  },
+  "22071#0": {
+   "text": "No markup",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "마진 없이"
+  },
+  "22071#1": {
+   "text": "[[So cheap]]!!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "싸게싸게!!"
+  },
+  "22081#0": {
+   "text": "Members",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "회원제"
+  },
+  "22095#0": {
+   "text": "July 1976",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1976년 7월"
+  },
+  "22103#0": {
+   "text": "[[Price Club]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "프라이스 클럽"
+  },
+  "22103#1": {
+   "text": "[[Try it!]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": ",이용해 보세요!"
+  },
+  "22111#0": {
+   "text": "A pass..?",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "회원권..?"
+  },
+  "22121#0": {
+   "text": "Company / Agency Deals",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "기업 / 공공기관 제휴"
+  },
+  "22159#0": {
+   "text": "Hotdog",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "핫모고"
+  },
+  "22159#1": {
+   "text": "time!!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "말아야!!"
+  },
+  "22167#0": {
+   "text": "[[Perk!]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "서비스!"
+  },
+  "22187#0": {
+   "text": "[[Walmart]] founder",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "월마트 창업자"
+  },
+  "22187#1": {
+   "text": "[[S. Walton]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "샘 월튼"
+  },
+  "22191#0": {
+   "text": "[[Lawyer]]/Executive",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "변호사/사업가"
+  },
+  "22191#1": {
+   "text": "Jeff Brotman",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제프 브로트만"
+  },
+  "22195#0": {
+   "text": "Price Club",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "프라이스클럽"
+  },
+  "22209#0": {
+   "text": "OK!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "이!"
+  },
+  "22211#0": {
+   "text": "I want my own",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "저도 창고형 매장"
+  },
+  "22211#1": {
+   "text": "[[warehouse!]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "열고싶어요 !"
+  },
+  "22219#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "SAMS WH:L튜SALE"
+  },
+  "22221#0": {
+   "text": "[[Join]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "회원"
+  },
+  "22221#1": {
+   "text": "the club!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "모집합니다!"
+  },
+  "22231#0": {
+   "text": "[[Lawyer]]/Executive",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "변호사/사업가"
+  },
+  "22231#1": {
+   "text": "Jeff Brotman",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제프 브로트만"
+  },
+  "22233#0": {
+   "text": "A [[NEW]] members",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "NEW 회원제"
+  },
+  "22233#1": {
+   "text": "[[warehouse?]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "창고형 매장?"
+  },
+  "22241#0": {
+   "text": "[[Costco]] founder",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 창업자"
+  },
+  "22241#1": {
+   "text": "Jim Sinegal",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "짐 시네갈"
+  },
+  "2845#0": {
+   "text": "1993",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1993년"
+  },
+  "3017#0": {
+   "text": "1955",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1955년"
+  },
+  "3026#0": {
+   "text": "FedMart rocks!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "페드마트 최고!"
+  },
+  "3031#0": {
+   "text": "Health insurance",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "건강보험 혜택"
+  },
+  "3033#0": {
+   "text": "Top industry pay",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "업계 최고 임금"
+  },
+  "3039#0": {
+   "text": "[[Full-time]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "정식 직원"
+  },
+  "3039#1": {
+   "text": "[[Hired!]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "임명!"
+  },
+  "3054#0": {
+   "text": "Jeff Brotman",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제프 브로트만"
+  },
+  "3071#0": {
+   "text": "Wanna [[team]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "사업 같이"
+  },
+  "3071#1": {
+   "text": "[[up?]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "해볼래?"
+  },
+  "3077#0": {
+   "text": "[[Jim Sinegal]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "짐 시네갈"
+  },
+  "3083#0": {
+   "text": "I want my own",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "저도 창고형 매장"
+  },
+  "3083#1": {
+   "text": "[[warehouse!]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "열고싶어요 !"
+  },
+  "3087#0": {
+   "text": "September 15, 1983",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1983년 9월 15일"
+  },
+  "3088#0": {
+   "text": "Sell at the [[lowest prices]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "최저가에 물건을 판매해"
+  },
+  "3088#1": {
+   "text": "Be the company that [[minds your spending]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "고객의 지출을 책임지는 기업이 되겠다"
+  },
+  "3099#0": {
+   "text": "We never advertise",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "절대 광고를 하지 않는다"
+  },
+  "3113#0": {
+   "text": "Why buy?",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "왜 삼.?"
+  },
+  "3116#0": {
+   "text": "Lowest prices, period!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "누구보다 저렴한 가격!"
+  },
+  "3118#0": {
+   "text": "[[Member]] card",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "멤버십 카드"
+  },
+  "3121#0": {
+   "text": "[[Costco]] member",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 회원"
+  },
+  "3127#0": {
+   "text": "Costco Membership",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 멤버십"
+  },
+  "3133#0": {
+   "text": "Only need",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "저거만 있으면"
+  },
+  "3133#1": {
+   "text": "that?",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "된다고?"
+  },
+  "3134#0": {
+   "text": "It's [[Costs]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "Costs요"
+  },
+  "3136#0": {
+   "text": "$1.50 for 40 years",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "40년간 1.5달러"
+  },
+  "3138#0": {
+   "text": "[[Member]] card",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "멤버십 카드"
+  },
+  "3141#0": {
+   "text": "1988",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1988년"
+  },
+  "3144#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "#음ㅷ딥밥ㅂ욥"
+  },
+  "3146#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "#음ㅷ딥밥ㅂ욥"
+  },
+  "3147#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "#음ㅷ딥밥ㅂ욥"
+  },
+  "3149#0": {
+   "text": "Retire",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "운퇴"
+  },
+  "3185#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "기s"
+  },
+  "3531#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "?0rott 언거"
+  },
+  "3533#0": {
+   "text": "[[Members]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "회원들은"
+  },
+  "3533#1": {
+   "text": "Not [[variety]]",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "다양한 제품보다"
+  },
+  "3533#2": {
+   "text": "Want [[cheap]]!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "싼가격을 원해!"
+  },
+  "3534#0": {
+   "text": "Just [[4,000 hand-picked]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "4000개 종류의 엄선된"
+  },
+  "3534#1": {
+   "text": "[[products]] on the shelves",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제품만을 매장에 비치"
+  },
+  "3537#0": {
+   "text": "[[Over 100,000]] kinds of items",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "10만 개가 넘는 종류의 물건을"
+  },
+  "3537#1": {
+   "text": "[[in stock]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "매장에 구비"
+  },
+  "3543#0": {
+   "text": "[[Vendors]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "납품업체"
+  },
+  "3557#0": {
+   "text": "Make our own",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "직접 PB제품을"
+  },
+  "3557#1": {
+   "text": "label!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "만들자!"
+  },
+  "3558#0": {
+   "text": "Retail price",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제품 가격"
+  },
+  "3559#0": {
+   "text": "Material costs",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "원자재 가격"
+  },
+  "3560#0": {
+   "text": "Price,",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가력을"
+  },
+  "3560#1": {
+   "text": "Why lower it~",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "왜 내려~"
+  },
+  "3574#0": {
+   "text": "Into one brand",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "하나의 브랜드로"
+  },
+  "3574#1": {
+   "text": "Unite!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "통합하자!"
+  },
+  "3575#0": {
+   "text": "Kirkland",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "커클랜드"
+  },
+  "3578#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "오카움요"
+  },
+  "3585#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": true,
+   "ko": "MTWTA과"
+  },
+  "3586#0": {
+   "text": "Than existing supplier goods",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "기존에 납품되던 제품보다"
+  },
+  "3586#1": {
+   "text": "Sold for 20% less",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "20% 저렴한 가격에 판매"
+  },
+  "3591#0": {
+   "text": "It's",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "품질이"
+  },
+  "3591#1": {
+   "text": "[[THIS good]]!?",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "이렇게 좋다구!?"
+  },
+  "3593#0": {
+   "text": "So cheap..",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "저렴한데.."
+  },
+  "3598#0": {
+   "text": "Price!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가격 !"
+  },
+  "3599#0": {
+   "text": "Price!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가격 !"
+  },
+  "3600#0": {
+   "text": "Price!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가격 !"
+  },
+  "3605#0": {
+   "text": "[[Millions]] of",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "수천만 명에"
+  },
+  "3605#1": {
+   "text": "[[buyers]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "회원"
+  },
+  "3607#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "공목0? -여?"
+  },
+  "3613#0": {
+   "text": "[[Brand]] makers",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "브랜드 기업들"
+  },
+  "3614#0": {
+   "text": "Sell",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "판매"
+  },
+  "3616#0": {
+   "text": "Supplies",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제품 제공"
+  },
+  "3617#0": {
+   "text": "Price!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가격 !"
+  },
+  "3619#0": {
+   "text": "Member",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "회원"
+  },
+  "3626#0": {
+   "text": "[[Kirkland]] line",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "커틀랜드 제품"
+  },
+  "3626#1": {
+   "text": "Best!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "최고!"
+  },
+  "3637#0": {
+   "text": "Of all [[4,000]] Costco products",
+   "font": "gothic",
+   "two_tone": true,
+   "ko": "코스트코 전체 제품 4000개 중"
+  },
+  "3637#1": {
+   "text": "550 are Kirkland Signature",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "550개가 커클랜드 제품"
+  },
+  "3639#0": {
+   "text": "Costco's total sales",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 전체 매출"
+  },
+  "3644#0": {
+   "text": "$56 billion",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "560억 달러"
+  },
+  "3645#0": {
+   "text": "$51 billion",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "510억 달러"
+  },
+  "3646#0": {
+   "text": "$46 billion",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "460억 달러"
+  },
+  "3649#0": {
+   "text": "2023 revenue",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2023년 매출액"
+  },
+  "3652#0": {
+   "text": "1990s",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1990년대"
+  },
+  "3661#0": {
+   "text": "[[Go global]]?",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "가자 세계로?"
+  },
+  "3667#0": {
+   "text": "1994",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1994년"
+  },
+  "3670#0": {
+   "text": "Shinsegae",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "신세계"
+  },
+  "3671#0": {
+   "text": "Korea's first warehouse club",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "국내 최초 회원제 창고형 매장"
+  },
+  "3674#0": {
+   "text": "1998",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1998년"
+  },
+  "3676#0": {
+   "text": "[[Costco Korea]] Inc.",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "(주) 코스트코코리아"
+  },
+  "3686#0": {
+   "text": "Foreign retailers [[exit]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "해외 유통업체 철수"
+  },
+  "3690#0": {
+   "text": "2017",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2017년"
+  },
+  "3697#0": {
+   "text": "In an interview, Jim Sinegal",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "인터뷰에서 짐 시네갈 회장은"
+  },
+  "3697#1": {
+   "text": "asked which Costco store sells the most,",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"가장 매출이 높은 코스트코 지점이 어디냐\"는 질문에"
+  },
+  "3697#2": {
+   "text": "said \"Korea. It's incredible. It brings tears to my eyes.\"",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"한국에 있다. 엄청나다\"라며 \"생각만 해도 눈물이 난다\"고 답했다."
+  },
+  "3697#3": {
+   "text": "He added, \"Seoul is a very densely populated area.",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "그러면서 그는 \"서울은 인구가 아주 밀집한 지역이다."
+  },
+  "3697#4": {
+   "text": "There, we have value that sets us apart from others,\" he said,",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "그곳에서 우리는 (타사와) 차별화할 수 있는 가치를 가지고 있다\"며"
+  },
+  "3697#5": {
+   "text": "\"Koreans really love American products.",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"한국인들은 미국 제품을 아주 좋아한다."
+  },
+  "3697#6": {
+   "text": "About a third of what we sell is made in the USA,\" he explained.",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "우리가 판매하는 물품 중 3분의 1 가량이 미국 제품이다\"라고 설명했다."
+  },
+  "3697#7": {
+   "text": "As Jim Sinegal noted, among all Costco stores worldwide",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "짐 시네갈 회장이 언급했듯 전세계 코스트코 매장 중"
+  },
+  "3697#8": {
+   "text": "Costco's Yangjae store in Seoul is reportedly its top-grossing location.",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가장 큰 매출을 올리는 매장은 코스트코 서울 양재점인 것으로 알려졌다."
+  },
+  "3711#0": {
+   "text": "[[Members]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "멤버심의"
+  },
+  "3711#1": {
+   "text": "Adds [[Value]]",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가치를 더하다"
+  },
+  "3712#0": {
+   "text": "Can E-Mart Traders beat [[Costco]], the original warehouse club?",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "이마트 트레이더스 창고형 매장 원조 코스트코 이길 수 있을까?"
+  },
+  "3716#0": {
+   "text": "Korea #1",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "국내 1위"
+  },
+  "3719#0": {
+   "text": "[[COST]]CO!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "COST요"
+  }
  }
 }

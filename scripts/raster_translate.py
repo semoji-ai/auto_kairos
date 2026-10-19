@@ -1,0 +1,60 @@
+"""일러스트 문구 번역.  usage: raster_translate.py <EP> <lang>  → l10n/<lang>.json 의 "raster" 섹션
+키 "<footage id>#<n>": {"text", "font", "two_tone"}  (text == "__SKIP__"면 OCR 잡음 → 건드리지 않음)"""
+import json, os, sys
+import numpy as np
+from PIL import Image
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from sg.raster import erase_text, missing_glyphs, quad_geom
+from sg.translate import translate_batch, claude_runner
+
+ep, lang = sys.argv[1], sys.argv[2]
+root = os.path.join(os.path.dirname(__file__), "..")
+gloss = json.load(open(os.path.join(root, "glossary", f"{lang}.json")))
+FONTS = {"gothic": os.path.expanduser("~/Library/Fonts/SBAggroOTF-B.otf"), "hand": "/System/Library/Fonts/Noteworthy.ttc"}
+segs = json.load(open(os.path.join(ep, "master/source.json")))["segments"]
+items = json.load(open(os.path.join(ep, "raster/items.json")))
+lp = os.path.join(ep, "l10n", f"{lang}.json"); L = json.load(open(lp)); L.setdefault("raster", {})
+
+
+def context(spans):
+    if not spans:
+        return ""
+    a, b = spans[0]
+    return " ".join(g["ko"] for g in segs if g["out"] > a - 1 and g["in"] < b + 1 and not g.get("nonverbal"))[:300]
+
+
+todo = []
+for x in items:
+    if x["mode"] == "keep_brand" or not x["master_spans"]:
+        continue
+    arr = np.array(Image.open(os.path.join(ep, "raster/src", f"{x['id']}.png")).convert("RGBA"))
+    font = "hand" if "말" in x["name"].split("/")[0] else "gothic"
+    for n, e in enumerate(x["items"]):
+        if e["keep"] or e["blur"]:
+            continue
+        key = f"{x['id']}#{n}"
+        if key in L["raster"]:
+            continue
+        _, w, h, _, _ = quad_geom(e["quad"])
+        _, _, two = erase_text(arr, e["quad"])
+        todo.append({"id": key, "ko": e["text"], "max_chars": max(6, int(w / (0.4 * h) * 1.3)), "two_tone": two,
+                     "layer": x["name"].split("/")[0], "context": context(x["master_spans"]), "_font": font})
+print("to translate", len(todo))
+for k in range(0, len(todo), 30):
+    batch = todo[k:k + 30]
+    pending = batch
+    for attempt in range(3):
+        res = translate_batch([{kk: v for kk, v in it.items() if not kk.startswith("_")} for it in pending], gloss, lang, "raster", claude_runner)
+        bad = []
+        for it in pending:
+            t = res[it["id"]].strip()
+            if t != "__SKIP__" and missing_glyphs(t, FONTS[it["_font"]]):
+                bad.append(it); continue
+            L["raster"][it["id"]] = {"text": t, "font": it["_font"], "two_tone": it["two_tone"], "ko": it["ko"]}
+        if not bad:
+            break
+        pending = [{**it, "context": it["context"] + " (previous answer used characters the font lacks; use plain ASCII)"} for it in bad]
+    json.dump(L, open(lp, "w"), ensure_ascii=False, indent=1)
+    print(f"{min(k + 30, len(todo))}/{len(todo)}", flush=True)
+skip = sum(1 for v in L["raster"].values() if v["text"] == "__SKIP__")
+print("done", len(L["raster"]), "skip", skip)

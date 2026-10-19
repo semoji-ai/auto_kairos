@@ -57,6 +57,7 @@ def erase_text(rgba, quad):
     strong = region & inside & (cdiff > 180) & (a > 200)
     cols = rgba[:, :, :3][strong] if strong.sum() > 30 else rgba[:, :, :3][txt & (a > 128)]
     colors, two = [(255, 255, 255)], False
+    sel = strong if strong.sum() > 30 else (txt & (a > 128))
     if len(cols) > 0:
         Z = cols.astype(np.float32)
         k = 2 if len(Z) > 50 else 1
@@ -64,7 +65,17 @@ def erase_text(rgba, quad):
                                  cv2.KMEANS_PP_CENTERS)
         counts = np.bincount(lab.ravel(), minlength=k)
         colors = [tuple(int(v) for v in cen[i]) for i in np.argsort(-counts)]
-        two = k == 2 and min(counts) / max(counts) > 0.25 and np.abs(cen[0] - cen[1]).sum() > 150
+        if k == 2 and min(counts) / max(counts) > 0.15 and np.abs(cen[0] - cen[1]).sum() > 150:
+            # 두 색이 글자 방향으로 갈려 있어야 강조(앞/뒤 구간). 섞여 있으면 외곽선·그림자.
+            ys, xs = np.where(sel)
+            ang = math.radians(quad_geom(quad)[0])
+            proj = xs * math.cos(ang) + ys * math.sin(ang)
+            lab = lab.ravel()
+            p0, p1 = proj[lab == 0], proj[lab == 1]
+            if len(p0) and len(p1):
+                overlap = max(0.0, min(np.percentile(p0, 90), np.percentile(p1, 90)) - max(np.percentile(p0, 10), np.percentile(p1, 10)))
+                span = max(1.0, np.percentile(proj, 98) - np.percentile(proj, 2))
+                two = overlap < span * 0.15
     inside2 = cv2.erode((a > 200).astype(np.uint8), np.ones((3, 3), np.uint8)) | inside.astype(np.uint8)
     mask = (cv2.dilate(txt.astype(np.uint8) * 255, np.ones((5, 5), np.uint8), iterations=2) * (inside2 > 0)).astype(np.uint8)
     a2 = np.where((mask > 0) & inside, bg[:, :, 3], a).astype(np.uint8)
