@@ -32,6 +32,9 @@ for x in items:
     for n, e in targets:                       # 판은 차례로 채움(뉴스 사진은 흐림)
         arr = blur_text(arr, e["quad"]) if news else clean_plate(arr, e["quad"])
     Image.fromarray(arr).save(os.path.join(od, f"{x['id']}.png")); done.append(x)
+for f in os.listdir(od):                       # 이번에 판을 만들지 않은 footage(수동 건너뛰기 등)의 옛 판은 지움
+    if f.endswith(".png") and f[:-4] not in {str(x["id"]) for x in done}:
+        os.remove(os.path.join(od, f))
 json.dump(styles, open(os.path.join(ep, "raster/styles.json"), "w"), indent=1)
 pairs = []
 for x in done:
