@@ -16,7 +16,7 @@
 ## 2. 마스터
 - `episodes/<EP>/master_config.json` 작성(파트·원래 컴프 id·로컬 컴프 이름·내레이션 파일명·프리미어 시퀀스 uid·유튜브 컷 `cuts_pr`)
 - `python3 scripts/master.py episodes/<EP>` → `master/edl.json`, `master/source.json`
-  - 내레이션 wav(프리컴프 안이어도 찾음)를 무음 기준으로 나누고 자막 레이어 텍스트를 붙인다.
+  - 내레이션 wav(프리컴프 안이어도 찾음)를 무음 기준으로 나누고(15초 넘는 구간은 구간 중앙값 −12dB 쉼에서 재분할) 자막 레이어 텍스트를 붙인다. 컷·건너뛴 소스에 걸친 말은 바깥 조각만 남긴다.
   - 텍스트 없는 조각은 로컬 whisper(small)로 판정: 말이면 0.5초 이내로 이어지는 이웃 문장에 합치고, 환각/무음이면 `nonverbal`(번역 안 함, 원래 소리 유지). 양쪽이 막힌 말은 `nonverbal`+`review` → 사람이 확인.
   - 출력 확인: 구간 수, `nonverbal` 목록(heard 필드), `no-text 0`, `build_warp(segments, {}, [], length)`가 겹침 오류 없이 통과.
 
@@ -27,6 +27,9 @@
 - 파트 렌더: `scripts/ae/render.sh <aep> <MAIN_*> 0 <warp.json parts[pid].dur_new> <out.mp4> 29.97 "H.264 - Match Render Settings - 15 Mbps"` (파트 컴프 자체 길이는 1230초라 렌더 범위는 dur_new를 쓸 것)
 - 대조: `python3 scripts/compare_warped.py <원본 파트 렌더> <변환 렌더> build/<tag>/warp.json <part> <out_dir> --t0 <> --t1 <>` → mean_sim ≥ 0.90, 연속 bad 없음
 
-## 검증 기록 (B209, 2026-10-19)
+## 검증 기록 (B209, 2026-10-19, 최종 리뷰 수정 후)
+- 마스터: 177구간(최대 14.8초), 화면 문자열 42, nonverbal 5(review 1), 길이 979.354
 - 항등 변환: 미나 0~120초 mean 0.99998, bad 0
-- 테스트 패턴(×0.9/×1.15): 미나 0~120 mean 0.988 bad 0 / 가을 140~185(유튜브 컷 포함) mean 0.984, 단발 bad 1, 컷 9초가 0으로 접힘
+- 테스트 패턴(×0.9/×1.15): 미나 0~120 mean 0.989 bad 0
+- 균일 ×1.3: 미나 0~120 mean 0.986 bad 0 / 가을 140~185(유튜브 컷 포함, 앵커 13개) mean 0.986 bad 0
+- localize 로그: 오류·경고 0 (로컬에 없는 미사용 footage 레이어는 missing_footage_layers로 집계)
