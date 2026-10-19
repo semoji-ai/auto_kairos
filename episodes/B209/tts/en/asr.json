@@ -1,0 +1,690 @@
+{
+ "n001": {
+  "sim": 0.667,
+  "heard": "Korea's Big Three Marts, E Mart, Home Plus, Lotte Mart."
+ },
+ "n002": {
+  "sim": 1.0,
+  "heard": "Each operates over 100 stores."
+ },
+ "n003": {
+  "sim": 1.0,
+  "heard": "But as sales fall, stores are closing."
+ },
+ "n004": {
+  "sim": 0.75,
+  "heard": "Number two, Homeplus recently filed for bankruptcy protection."
+ },
+ "n005": {
+  "sim": 1.0,
+  "heard": "But one chain is doing the opposite. More stores sales up hundreds of millions a year."
+ },
+ "n006": {
+  "sim": 0.889,
+  "heard": "It's Costco, the U.S. member's only warehouse club that came to Korea in 1998."
+ },
+ "n007": {
+  "sim": 0.829,
+  "heard": "In 2024, with just 19 stores in Korea, Costco outsold Look Them Art and its 100+ stores stunning the retail industry."
+ },
+ "n008": {
+  "sim": 0.762,
+  "heard": "In a year or two, it may pass home plus two."
+ },
+ "n009": {
+  "sim": 0.588,
+  "heard": "and reportedly become Korea's number two big box chain."
+ },
+ "n010": {
+  "sim": 1.0,
+  "heard": "Meanwhile, Costco is thriving not just in Korea but in the US against giants Amazon and Walmart."
+ },
+ "n011": {
+  "sim": 0.914,
+  "heard": "with its stock up nearly tenfold over the past decade. So how did Costco, a member's only store,"
+ },
+ "n012": {
+  "sim": 1.0,
+  "heard": "Win over so many shoppers around the world?"
+ },
+ "n013": {
+  "sim": 1.0,
+  "heard": "In this video, we'll explore Costco's history."
+ },
+ "n017": {
+  "sim": 0.944,
+  "heard": "Costco's founder, Jim Senegal, he started it in 1983 and listed it on NASDAQ just two years later."
+ },
+ "n018": {
+  "sim": 1.0,
+  "heard": "earning the nickname The Steve Jobs of Retail. But in an interview, Jim said his retail know-how."
+ },
+ "n019": {
+  "sim": 1.0,
+  "heard": "was all learned from this man."
+ },
+ "n020": {
+  "sim": 1.0,
+  "heard": "He founded FedMart in 1954."
+ },
+ "n021": {
+  "sim": 0.941,
+  "heard": "and then Price Club in 1976. He was sole price, known as the father of American retail."
+ },
+ "n022": {
+  "sim": 1.0,
+  "heard": "Sam Walton, founder of Walmart, the world's largest retailer, also called Sol the father of retail, saying he'd stolen many of Sol's ideas."
+ },
+ "n023": {
+  "sim": 0.909,
+  "heard": "To understand Costco's history, we first need to know sole price."
+ },
+ "n024": {
+  "sim": 1.0,
+  "heard": "Surprisingly, until he founded FedMart in his late 30s, Sol was a lawyer with no retail background at all."
+ },
+ "n025": {
+  "sim": 1.0,
+  "heard": "He got into retail after his father-in-law died."
+ },
+ "n026": {
+  "sim": 1.0,
+  "heard": "and his mother-in-law asked him to manage the estate."
+ },
+ "n027": {
+  "sim": 0.909,
+  "heard": "Looking to lease the estate's empty 21,000-square-foot San Diego warehouse, Seoul."
+ },
+ "n028": {
+  "sim": 0.8,
+  "heard": "Heard of a then hot LA discount store?"
+ },
+ "n029": {
+  "sim": 1.0,
+  "heard": "and he heard about FedCo."
+ },
+ "n030": {
+  "sim": 1.0,
+  "heard": "In FedCo, L.A.'s federal employees pooled their dues."
+ },
+ "n031": {
+  "sim": 1.0,
+  "heard": "to buy goods in bulk and resell them cheaply to members. It was a members-only discount store for federal workers, named for."
+ },
+ "n032": {
+  "sim": 1.0,
+  "heard": "Federal Employees Company, or FEDCO."
+ },
+ "n033": {
+  "sim": 0.915,
+  "heard": "Fedco's prices were so low that even civil servants from San Diego, a five to six hour round trip, drove up to shop. Hearing this, Sol went to see it himself."
+ },
+ "n034": {
+  "sim": 0.75,
+  "heard": "Arriving in LA, sold toward Fedco's packed store."
+ },
+ "n035": {
+  "sim": 0.857,
+  "heard": "and pictured Fedko in his father-in-law's warehouse."
+ },
+ "n036": {
+  "sim": 1.0,
+  "heard": "But Fedco wasn't a for-profit business."
+ },
+ "n037": {
+  "sim": 0.968,
+  "heard": "It was a co-op built to serve LA's government workers, so Fedco saw no reason to expand to other areas and flatly turned down Seoul's offer to open a store there."
+ },
+ "n038": {
+  "sim": 1.0,
+  "heard": "So, Sol went home empty-handed."
+ },
+ "n039": {
+  "sim": 0.933,
+  "heard": "But instead of disappointment, he felt something else swelling up. This was his big chance."
+ },
+ "n040": {
+  "sim": 0.848,
+  "heard": "In 1954, in that empty warehouse, Seoul copied Fedco, a member's only discount store for civil servants."
+ },
+ "n041": {
+  "sim": 1.0,
+  "heard": "called FedMart, launching his retail career."
+ },
+ "n042": {
+  "sim": 1.0,
+  "heard": "since the business was all but guaranteed to succeed from day one."
+ },
+ "n043": {
+  "sim": 1.0,
+  "heard": "FedMart made $3 million in year one."
+ },
+ "n044": {
+  "sim": 1.0,
+  "heard": "And unlike Fedco, FedMart was purely for profit."
+ },
+ "n045": {
+  "sim": 1.0,
+  "heard": "so it expanded fast elsewhere."
+ },
+ "n046": {
+  "sim": 1.0,
+  "heard": "soon becoming a major retailer with dozens of stores across the US Southwest."
+ },
+ "n047": {
+  "sim": 0.897,
+  "heard": "But Fed Mart's success ended up shaking the entire U.S. retail industry, quite by accident."
+ },
+ "n048": {
+  "sim": 1.0,
+  "heard": "Back then, the U.S. had fair trade laws that let manufacturers, not retailers, set the prices of the goods stores sold."
+ },
+ "n049": {
+  "sim": 1.0,
+  "heard": "These laws were meant to stop big chains from buying from manufacturers and selling at a discount to undercut small retailers. But with no discounts allowed and goods always sold at full price,"
+ },
+ "n050": {
+  "sim": 1.0,
+  "heard": "The laws did nothing for consumers."
+ },
+ "n051": {
+  "sim": 0.857,
+  "heard": "But Saul, a lawyer, had seen a loophole in these laws from the day he founded Fed Mart."
+ },
+ "n052": {
+  "sim": 1.0,
+  "heard": "The laws covered general retailers and FedMart, a membership store serving only government employees, wasn't one."
+ },
+ "n053": {
+  "sim": 1.0,
+  "heard": "In other words, FEDMART members could buy goods cheaply, free from those laws."
+ },
+ "n054": {
+  "sim": 1.0,
+  "heard": "As FedMart grew across regions, word spread that it sold cheaply to government workers."
+ },
+ "n055": {
+  "sim": 1.0,
+  "heard": "Then, in 1962, Walmart, Kmart, and other discounters arrived and found ways around fair trade laws, most opened in rural towns and small cities where enforcement was lax."
+ },
+ "n056": {
+  "sim": 1.0,
+  "heard": "As everyday shoppers began enjoying the savings, fair trade laws slowly lost their teeth."
+ },
+ "n057": {
+  "sim": 1.0,
+  "heard": "In 1975, unable to hold back the tide, the laws were finally repealed."
+ },
+ "n058": {
+  "sim": 0.889,
+  "heard": "Meanwhile, Seoul, who had unwittingly helped kill a bad law and launch America's discount store boom, sought new investors to grow Fed Mart."
+ },
+ "n059": {
+  "sim": 0.923,
+  "heard": "But the partner he chose would once again steer soul's life off course."
+ },
+ "n061": {
+  "sim": 0.6,
+  "heard": "Seoul partnered with Hugo Man."
+ },
+ "n062": {
+  "sim": 1.0,
+  "heard": "A successful German retailer, hoping to grow FedMart further."
+ },
+ "n063": {
+  "sim": 0.818,
+  "heard": "But after paying a fortune for a stake in Fed Mart, Hugo didn't about face, seized the board, and voted to fire Sol, the company's founder. In fact, Hugo wasn't after Fed Mart's business."
+ },
+ "n064": {
+  "sim": 1.0,
+  "heard": "He wanted the real estate under its dozens of stores all along."
+ },
+ "n065": {
+  "sim": 1.0,
+  "heard": "Sol was 60 when he was fired from the company he'd built over 20 years."
+ },
+ "n066": {
+  "sim": 0.897,
+  "heard": "He had actually planned to hand Fed Mart over to Hugo and ease into retirement."
+ },
+ "n067": {
+  "sim": 0.947,
+  "heard": "But Hugo's betrayal made Saul furious, and at 60, he decided to start a new business all over again."
+ },
+ "n068": {
+  "sim": 1.0,
+  "heard": "but the discount market was already packed."
+ },
+ "n069": {
+  "sim": 0.952,
+  "heard": "It was a tough field for any newcomer. That's when Soul came up with a whole new kind of discount store."
+ },
+ "n070": {
+  "sim": 1.0,
+  "heard": "not for consumers, but for restaurants."
+ },
+ "n071": {
+  "sim": 1.0,
+  "heard": "shops, and other small business owners."
+ },
+ "n072": {
+  "sim": 0.959,
+  "heard": "His store for business owners differed from consumer discount stores in many ways. It was a huge bare bones warehouse where goods sat on display in bulk, still in the manufacturer's packaging, much like a wholesale depot."
+ },
+ "n073": {
+  "sim": 1.0,
+  "heard": "So the warehouse store you find at Costco today was originally Sol's idea."
+ },
+ "n074": {
+  "sim": 1.0,
+  "heard": "On top of that, Sol brought back FedMart's membership fee model."
+ },
+ "n075": {
+  "sim": 1.0,
+  "heard": "He believed earning money from membership fees rather than from sales was a better way to draw customers."
+ },
+ "n076": {
+  "sim": 1.0,
+  "heard": "With no markup needed on prices, he could sell goods far cheaper than his competitors."
+ },
+ "n077": {
+  "sim": 0.923,
+  "heard": "And so, having dreamed up the idea of a membership warehouse store, Seoul."
+ },
+ "n078": {
+  "sim": 0.914,
+  "heard": "In July 1976, he opened Price Club, combining his last name with \"Club\" for a member's only store."
+ },
+ "n079": {
+  "sim": 1.0,
+  "heard": "But contrary to Sol's hopes, Price Club didn't take off right away."
+ },
+ "n080": {
+  "sim": 1.0,
+  "heard": "Small business owners weren't used to paying a fee just to shop."
+ },
+ "n081": {
+  "sim": 1.0,
+  "heard": "and convincing them one by one to try price club was a real struggle."
+ },
+ "n082": {
+  "sim": 1.0,
+  "heard": "That's when Sol had another idea."
+ },
+ "n083": {
+  "sim": 1.0,
+  "heard": "He dropped the idea of a store just for business owners and partnered with companies and public agencies, so their employees naturally became price club members. As more people joined, word spread that you could shop for less."
+ },
+ "n084": {
+  "sim": 1.0,
+  "heard": "And soon, business owners and everyday shoppers alike flocked to join."
+ },
+ "n085": {
+  "sim": 1.0,
+  "heard": "Meanwhile, as crowds grew, hot dog vendors began popping up outside price club stores."
+ },
+ "n086": {
+  "sim": 0.933,
+  "heard": "Watching shoppers happily munching on hot dogs, Seoul decided Price Club should sell its own."
+ },
+ "n087": {
+  "sim": 1.0,
+  "heard": "The hot dog and soda combo they started selling was priced at just $1.50."
+ },
+ "n088": {
+  "sim": 0.833,
+  "heard": "Saul explained it wasn't about profit."
+ },
+ "n089": {
+  "sim": 1.0,
+  "heard": "But a service for members who came to shop at Price Club, he explained."
+ },
+ "n090": {
+  "sim": 1.0,
+  "heard": "That combo is the origin of the $1.50 hot dog deal Costco still sells today, 40 years later."
+ },
+ "n091": {
+  "sim": 0.933,
+  "heard": "As Price Club grew, two people became very interested in Seoul's membership warehouse business model."
+ },
+ "n092": {
+  "sim": 1.0,
+  "heard": "Walmart Founder Sam Walton and..."
+ },
+ "n093": {
+  "sim": 1.0,
+  "heard": "Jeff Brotman, a lawyer and entrepreneur."
+ },
+ "n094": {
+  "sim": 1.0,
+  "heard": "Sam Walton visited Sol in person, saying he wanted to model a Walmart warehouse store on Price Club. Sol gladly agreed and let him explore the stores as much as he liked."
+ },
+ "n095": {
+  "sim": 1.0,
+  "heard": "A year later."
+ },
+ "n096": {
+  "sim": 1.0,
+  "heard": "Sam began recruiting members for his membership warehouse store, Sam's Club."
+ },
+ "n097": {
+  "sim": 0.943,
+  "heard": "Jeff Brotman, meanwhile, didn't go to Seoul. He tracked down a price club executive and pitched starting a membership warehouse business. The man who got that call was Jim Senegal, who would later found Costco."
+ },
+ "n098": {
+  "sim": 0.952,
+  "heard": "In 1955, Jim Senegal, a college student looking for a part-time job, started as a cashier at FedMart, which was hiring."
+ },
+ "n099": {
+  "sim": 0.939,
+  "heard": "FedMart's unique management style won Jim over. So it believed employees had to be proud of their workplace to give customers the best value, so..."
+ },
+ "n100": {
+  "sim": 1.0,
+  "heard": "FedMart paid the highest wages in the industry and even offered health insurance, rare at the time."
+ },
+ "n101": {
+  "sim": 1.0,
+  "heard": "Sol, the boss, noticed that even as a part-timer,"
+ },
+ "n102": {
+  "sim": 1.0,
+  "heard": "Jim worked as hard as full-time staff."
+ },
+ "n103": {
+  "sim": 1.0,
+  "heard": "Eventually, FedMart hired Jim full-time."
+ },
+ "n104": {
+  "sim": 0.878,
+  "heard": "And when Seoul later left Fed Mart to found Price Club, Jim followed him and became one of its key executives."
+ },
+ "n105": {
+  "sim": 0.667,
+  "heard": "with nearly 30 years besides soul."
+ },
+ "n106": {
+  "sim": 1.0,
+  "heard": "Jim was a seasoned retail veteran."
+ },
+ "n107": {
+  "sim": 1.0,
+  "heard": "Then one day, a man named Jeff Brotman pitched Jim a new membership warehouse business. Instead of the Southwest, where Price Club already ruled,"
+ },
+ "n108": {
+  "sim": 1.0,
+  "heard": "He argued they could succeed by targeting a niche in the northwest around Seattle."
+ },
+ "n109": {
+  "sim": 1.0,
+  "heard": "Copying the model of his mentor of 30 years bothered Jim."
+ },
+ "n110": {
+  "sim": 0.889,
+  "heard": "but Seoul, who'd let Sam Walton start Sam's Club."
+ },
+ "n111": {
+  "sim": 0.947,
+  "heard": "was very relaxed about others copying his business model. So on September 15th, 1983, in Seattle, Jim and Jeff."
+ },
+ "n112": {
+  "sim": 1.0,
+  "heard": "They founded Costco, their very own membership warehouse company."
+ },
+ "n113": {
+  "sim": 1.0,
+  "heard": "Costco is short for cost company."
+ },
+ "n114": {
+  "sim": 0.857,
+  "heard": "A promise to keep members spending low with rock bottom prices."
+ },
+ "n115": {
+  "sim": 0.857,
+  "heard": "Jim took what he'd learned at Fed Mart and Price Club."
+ },
+ "n116": {
+  "sim": 0.933,
+  "heard": "and applied it to Costco one step at a time. The first lesson from Seoul?"
+ },
+ "n117": {
+  "sim": 1.0,
+  "heard": "Never ever advertise."
+ },
+ "n118": {
+  "sim": 1.0,
+  "heard": "Spending on needless ads."
+ },
+ "n119": {
+  "sim": 1.0,
+  "heard": "means raising prices to cover the cost."
+ },
+ "n120": {
+  "sim": 1.0,
+  "heard": "And then, you can't offer members the lowest prices."
+ },
+ "n121": {
+  "sim": 0.957,
+  "heard": "Seoul taught Jim back at Price Club that if members can't get the lowest prices, they have no reason to buy a membership."
+ },
+ "n122": {
+  "sim": 1.0,
+  "heard": "So instead of advertising, Costco sold goods cheaper than anyone."
+ },
+ "n123": {
+  "sim": 1.0,
+  "heard": "letting word of mouth turn shoppers into Costco members."
+ },
+ "n124": {
+  "sim": 1.0,
+  "heard": "Jim also put gas stations, pharmacies, and optical shops in stores."
+ },
+ "n125": {
+  "sim": 1.0,
+  "heard": "offering services far cheaper than regular gas stations, pharmacies and optical shops. This too was a tactic Sol had used at FedMart."
+ },
+ "n126": {
+  "sim": 1.0,
+  "heard": "Costco could charge less than ordinary stores because it never intended to make money from its gas stations, pharmacies, or optical shops."
+ },
+ "n127": {
+  "sim": 1.0,
+  "heard": "The promise of cheap gas, meds, and glasses."
+ },
+ "n128": {
+  "sim": 1.0,
+  "heard": "was enough to drive sign-ups."
+ },
+ "n129": {
+  "sim": 1.0,
+  "heard": "The Hot Dog Combo, copied from Price Club."
+ },
+ "n130": {
+  "sim": 1.0,
+  "heard": "It's price held for 40 years."
+ },
+ "n131": {
+  "sim": 1.0,
+  "heard": "was that it wasn't for profit."
+ },
+ "n132": {
+  "sim": 1.0,
+  "heard": "but as a benefit for the loyal members who shop at Costco."
+ },
+ "n133": {
+  "sim": 1.0,
+  "heard": "One way it differed from Price Club?"
+ },
+ "n134": {
+  "sim": 1.0,
+  "heard": "Costco expanded much, much faster, while Price Club cautiously added stores one by one."
+ },
+ "n135": {
+  "sim": 0.8,
+  "heard": "Costco opened store number two a month after the first and number three three months later."
+ },
+ "n136": {
+  "sim": 0.929,
+  "heard": "growing at a breathtaking pace. Price Club, however, after sole price retired in 1988,"
+ },
+ "n137": {
+  "sim": 1.0,
+  "heard": "Began losing ground, squeezed by the aggressive expansion of Costco and Walmart's Sam's Club."
+ },
+ "n138": {
+  "sim": 1.0,
+  "heard": "In 1993, it merged into Costco."
+ },
+ "n139": {
+  "sim": 1.0,
+  "heard": "Passing the warehouse club crown to Costco and fading into history."
+ },
+ "n140": {
+  "sim": 1.0,
+  "heard": "After absorbing Price Club, Costco kept growing, and in 1995 came the private label. No Costco story is complete without."
+ },
+ "n141": {
+  "sim": 1.0,
+  "heard": "Kirkland Signature, a big hit."
+ },
+ "n143": {
+  "sim": 1.0,
+  "heard": "Costco's product strategy is pretty unique."
+ },
+ "n144": {
+  "sim": 1.0,
+  "heard": "While discount stores like Walmart stock over 100,000 different items, Costco carries only 4,000 hand-picked products."
+ },
+ "n145": {
+  "sim": 0.889,
+  "heard": "That's because Costco believes members don't want endless variety. They want the best price."
+ },
+ "n146": {
+  "sim": 0.902,
+  "heard": "In the early to mid-90s, Jim noticed suppliers raising prices when raw material costs rose, but never lowering them when costs fell. He took bold action."
+ },
+ "n147": {
+  "sim": 0.909,
+  "heard": "His solution, Costco would make its own private label, or store brand products, and sell them for less than the supplier's goods. But at first, each kind of product carried its own brand name."
+ },
+ "n148": {
+  "sim": 0.667,
+  "heard": "like Die Hard and Craftsman."
+ },
+ "n149": {
+  "sim": 1.0,
+  "heard": "as random brand names piled up."
+ },
+ "n150": {
+  "sim": 1.0,
+  "heard": "Jim started thinking of one name to unite them all."
+ },
+ "n151": {
+  "sim": 1.0,
+  "heard": "Then, thanks to one employee's idea, the brand we now link with Costco was born."
+ },
+ "n152": {
+  "sim": 1.0,
+  "heard": "Kirkland Signature, named for Kirkland, Costco's home base at the time."
+ },
+ "n153": {
+  "sim": 0.914,
+  "heard": "Costco picked certain product lines and began selling Kirkland branded versions at 20% less than the supplier brands."
+ },
+ "n154": {
+  "sim": 1.0,
+  "heard": "but cheap as it was."
+ },
+ "n155": {
+  "sim": 1.0,
+  "heard": "Kirkland never skimped on quality."
+ },
+ "n156": {
+  "sim": 1.0,
+  "heard": "Costco's secret to quality at low prices?"
+ },
+ "n157": {
+  "sim": 0.889,
+  "heard": "Kirkland's signature products were made by top industry players."
+ },
+ "n158": {
+  "sim": 0.878,
+  "heard": "For example, Starbucks made Kirkland signature coffee beans. Kimberly Clark, known for huggies, made the diapers, and Juracell made the batteries."
+ },
+ "n159": {
+  "sim": 0.727,
+  "heard": "So members got Starbucks quality beans, Huggies quality diapers, and Duracell quality batteries at low Kirkland signature prices."
+ },
+ "n160": {
+  "sim": 1.0,
+  "heard": "It worked because tens of millions of Costco members."
+ },
+ "n161": {
+  "sim": 0.875,
+  "heard": "where an opportunity no manufacturer could pass up."
+ },
+ "n162": {
+  "sim": 1.0,
+  "heard": "Costco took products from great brand makers."
+ },
+ "n163": {
+  "sim": 0.941,
+  "heard": "stripped the brand premium out of the price and sold them under its own Kirkland Signature brand, so members got top quality goods at low prices."
+ },
+ "n164": {
+  "sim": 0.884,
+  "heard": "As members came to see Kirkland's signature as both high quality and affordable, sales kept growing and the brand's value rose too."
+ },
+ "n165": {
+  "sim": 0.955,
+  "heard": "Today, 550 of Costco's 4,000 products are Kirkland's signature, and the brand drives 25% of Costco's total sales. It's become a giant."
+ },
+ "n166": {
+  "sim": 0.933,
+  "heard": "In 2023, Kirkland's signature sales alone even topped the total revenue of Nike and Coca-Cola."
+ },
+ "n167": {
+  "sim": 1.0,
+  "heard": "Meanwhile, with strong member perks and cheap private labels, Costco took hold in the U.S. and went global in the 1990s."
+ },
+ "n168": {
+  "sim": 1.0,
+  "heard": "In 1994, it teamed up with Shinsegae to open Korea's first membership warehouse store."
+ },
+ "n169": {
+  "sim": 1.0,
+  "heard": "But from 1998, it set up Costco Korea as its own company and began running the stores directly."
+ },
+ "n170": {
+  "sim": 1.0,
+  "heard": "as homegrown discount chains thrived."
+ },
+ "n171": {
+  "sim": 0.95,
+  "heard": "Foreign rivals like Walmart and Carefor all pulled out. Only Costco survived, slowly growing around Seoul and other big cities."
+ },
+ "n172": {
+  "sim": 0.957,
+  "heard": "In 2017, co-founder Jim Cinegal said in an interview that Korea's Yangjae store topped sales among hundreds worldwide, thanking Koreans for loving Costco."
+ },
+ "n173": {
+  "sim": 0.867,
+  "heard": "As he suggested, Costco now rivals Korea's number two hypermarket and keeps opening stores nationwide."
+ },
+ "n174": {
+  "sim": 1.0,
+  "heard": "E-Mart has answered with its own warehouse chain, Traders, but..."
+ },
+ "n175": {
+  "sim": 1.0,
+  "heard": "Many observers say it'll be hard to stop Costco, the original membership warehouse."
+ },
+ "n176": {
+  "sim": 1.0,
+  "heard": "Let's keep an eye on how Costco's rivalry with E-Mart, Korea's top retailer, plays out."
+ },
+ "n177": {
+  "sim": 1.0,
+  "heard": "That's Costco on brand encyclopedia."
+ }
+}

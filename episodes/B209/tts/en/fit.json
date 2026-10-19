@@ -1,0 +1,862 @@
+{
+ "n001": {
+  "orig": 3.42,
+  "new": 4.43,
+  "status": "ok"
+ },
+ "n002": {
+  "orig": 2.15,
+  "new": 2.59,
+  "status": "ok"
+ },
+ "n003": {
+  "orig": 2.69,
+  "new": 2.75,
+  "status": "ok"
+ },
+ "n004": {
+  "orig": 3.97,
+  "new": 3.95,
+  "status": "ok"
+ },
+ "n005": {
+  "orig": 5.6,
+  "new": 5.15,
+  "status": "ok"
+ },
+ "n006": {
+  "orig": 4.96,
+  "new": 5.07,
+  "status": "ok"
+ },
+ "n007": {
+  "orig": 8.93,
+  "new": 8.59,
+  "status": "ok"
+ },
+ "n008": {
+  "orig": 3.02,
+  "new": 2.83,
+  "status": "ok"
+ },
+ "n009": {
+  "orig": 3.57,
+  "new": 3.39,
+  "status": "ok"
+ },
+ "n010": {
+  "orig": 6.83,
+  "new": 6.19,
+  "status": "ok"
+ },
+ "n011": {
+  "orig": 6.88,
+  "new": 6.19,
+  "status": "ok"
+ },
+ "n012": {
+  "orig": 3.16,
+  "new": 2.43,
+  "status": "ok"
+ },
+ "n013": {
+  "orig": 3.06,
+  "new": 2.83,
+  "status": "ok"
+ },
+ "n017": {
+  "orig": 6.59,
+  "new": 6.67,
+  "status": "ok"
+ },
+ "n018": {
+  "orig": 6.5,
+  "new": 6.16,
+  "status": "ok"
+ },
+ "n019": {
+  "orig": 2.3,
+  "new": 1.87,
+  "status": "ok"
+ },
+ "n020": {
+  "orig": 2.74,
+  "new": 2.59,
+  "status": "ok"
+ },
+ "n021": {
+  "orig": 6.35,
+  "new": 6.19,
+  "status": "ok"
+ },
+ "n022": {
+  "orig": 9.09,
+  "new": 8.99,
+  "status": "ok"
+ },
+ "n023": {
+  "orig": 4.49,
+  "new": 3.95,
+  "status": "ok"
+ },
+ "n024": {
+  "orig": 7.03,
+  "new": 6.51,
+  "status": "ok"
+ },
+ "n025": {
+  "orig": 3.47,
+  "new": 2.91,
+  "status": "ok"
+ },
+ "n026": {
+  "orig": 3.66,
+  "new": 2.83,
+  "status": "ok"
+ },
+ "n027": {
+  "orig": 5.29,
+  "new": 4.96,
+  "status": "ok"
+ },
+ "n028": {
+  "orig": 2.53,
+  "new": 2.43,
+  "status": "ok"
+ },
+ "n029": {
+  "orig": 1.9,
+  "new": 1.47,
+  "status": "ok"
+ },
+ "n030": {
+  "orig": 3.47,
+  "new": 3.76,
+  "status": "ok"
+ },
+ "n031": {
+  "orig": 8.28,
+  "new": 7.44,
+  "status": "ok"
+ },
+ "n032": {
+  "orig": 2.77,
+  "new": 2.78,
+  "status": "ok"
+ },
+ "n033": {
+  "orig": 10.39,
+  "new": 9.95,
+  "status": "ok"
+ },
+ "n034": {
+  "orig": 3.65,
+  "new": 3.68,
+  "status": "ok"
+ },
+ "n035": {
+  "orig": 3.5,
+  "new": 2.83,
+  "status": "ok"
+ },
+ "n036": {
+  "orig": 2.76,
+  "new": 2.51,
+  "status": "ok"
+ },
+ "n037": {
+  "orig": 10.62,
+  "new": 9.23,
+  "status": "ok"
+ },
+ "n038": {
+  "orig": 2.29,
+  "new": 2.19,
+  "status": "ok"
+ },
+ "n039": {
+  "orig": 5.96,
+  "new": 5.55,
+  "status": "ok"
+ },
+ "n040": {
+  "orig": 6.72,
+  "new": 7.44,
+  "status": "ok"
+ },
+ "n041": {
+  "orig": 2.9,
+  "new": 2.83,
+  "status": "ok"
+ },
+ "n042": {
+  "orig": 4.11,
+  "new": 3.71,
+  "status": "ok"
+ },
+ "n043": {
+  "orig": 2.58,
+  "new": 2.83,
+  "status": "ok"
+ },
+ "n044": {
+  "orig": 3.62,
+  "new": 3.39,
+  "status": "ok"
+ },
+ "n045": {
+  "orig": 2.01,
+  "new": 2.19,
+  "status": "ok"
+ },
+ "n046": {
+  "orig": 5.25,
+  "new": 4.67,
+  "status": "ok"
+ },
+ "n047": {
+  "orig": 5.99,
+  "new": 5.47,
+  "status": "ok"
+ },
+ "n048": {
+  "orig": 8.5,
+  "new": 7.23,
+  "status": "ok"
+ },
+ "n049": {
+  "orig": 12.76,
+  "new": 10.19,
+  "status": "ok"
+ },
+ "n050": {
+  "orig": 2.74,
+  "new": 2.11,
+  "status": "ok"
+ },
+ "n051": {
+  "orig": 5.64,
+  "new": 4.99,
+  "status": "ok"
+ },
+ "n052": {
+  "orig": 7.96,
+  "new": 6.59,
+  "status": "ok"
+ },
+ "n053": {
+  "orig": 5.62,
+  "new": 4.67,
+  "status": "ok"
+ },
+ "n054": {
+  "orig": 6.24,
+  "new": 5.15,
+  "status": "ok"
+ },
+ "n055": {
+  "orig": 11.01,
+  "new": 11.07,
+  "status": "ok"
+ },
+ "n056": {
+  "orig": 5.83,
+  "new": 5.23,
+  "status": "ok"
+ },
+ "n057": {
+  "orig": 5.02,
+  "new": 5.47,
+  "status": "ok"
+ },
+ "n058": {
+  "orig": 9.05,
+  "new": 8.11,
+  "status": "ok"
+ },
+ "n059": {
+  "orig": 4.71,
+  "new": 4.19,
+  "status": "ok"
+ },
+ "n061": {
+  "orig": 2.12,
+  "new": 1.87,
+  "status": "ok"
+ },
+ "n062": {
+  "orig": 3.86,
+  "new": 3.63,
+  "status": "ok"
+ },
+ "n063": {
+  "orig": 12.6,
+  "new": 10.83,
+  "status": "ok"
+ },
+ "n064": {
+  "orig": 4.53,
+  "new": 3.63,
+  "status": "ok"
+ },
+ "n065": {
+  "orig": 4.65,
+  "new": 4.51,
+  "status": "ok"
+ },
+ "n066": {
+  "orig": 5.29,
+  "new": 4.43,
+  "status": "ok"
+ },
+ "n067": {
+  "orig": 7.11,
+  "new": 6.35,
+  "status": "ok"
+ },
+ "n068": {
+  "orig": 2.99,
+  "new": 2.43,
+  "status": "ok"
+ },
+ "n069": {
+  "orig": 6.89,
+  "new": 5.63,
+  "status": "ok"
+ },
+ "n070": {
+  "orig": 2.74,
+  "new": 2.51,
+  "status": "ok"
+ },
+ "n071": {
+  "orig": 2.8,
+  "new": 2.19,
+  "status": "ok"
+ },
+ "n072": {
+  "orig": 14.71,
+  "new": 11.87,
+  "status": "ok"
+ },
+ "n073": {
+  "orig": 5.39,
+  "new": 4.35,
+  "status": "ok"
+ },
+ "n074": {
+  "orig": 4.36,
+  "new": 3.63,
+  "status": "ok"
+ },
+ "n075": {
+  "orig": 7.04,
+  "new": 5.87,
+  "status": "ok"
+ },
+ "n076": {
+  "orig": 6.31,
+  "new": 4.83,
+  "status": "ok"
+ },
+ "n077": {
+  "orig": 4.4,
+  "new": 4.72,
+  "status": "ok"
+ },
+ "n078": {
+  "orig": 6.71,
+  "new": 6.67,
+  "status": "ok"
+ },
+ "n079": {
+  "orig": 4.51,
+  "new": 3.95,
+  "status": "ok"
+ },
+ "n080": {
+  "orig": 4.33,
+  "new": 3.47,
+  "status": "ok"
+ },
+ "n081": {
+  "orig": 5.31,
+  "new": 4.03,
+  "status": "ok"
+ },
+ "n082": {
+  "orig": 2.56,
+  "new": 2.11,
+  "status": "ok"
+ },
+ "n083": {
+  "orig": 14.85,
+  "new": 11.79,
+  "status": "ok"
+ },
+ "n084": {
+  "orig": 4.5,
+  "new": 4.11,
+  "status": "ok"
+ },
+ "n085": {
+  "orig": 5.89,
+  "new": 5.23,
+  "status": "ok"
+ },
+ "n086": {
+  "orig": 6.83,
+  "new": 5.23,
+  "status": "ok"
+ },
+ "n087": {
+  "orig": 6.13,
+  "new": 4.99,
+  "status": "ok"
+ },
+ "n088": {
+  "orig": 2.98,
+  "new": 2.35,
+  "status": "ok"
+ },
+ "n089": {
+  "orig": 3.48,
+  "new": 3.71,
+  "status": "ok"
+ },
+ "n090": {
+  "orig": 7.3,
+  "new": 6.67,
+  "status": "ok"
+ },
+ "n091": {
+  "orig": 7.19,
+  "new": 5.55,
+  "status": "ok"
+ },
+ "n092": {
+  "orig": 2.14,
+  "new": 2.48,
+  "status": "ok"
+ },
+ "n093": {
+  "orig": 2.99,
+  "new": 2.59,
+  "status": "ok"
+ },
+ "n094": {
+  "orig": 11.81,
+  "new": 9.87,
+  "status": "ok"
+ },
+ "n095": {
+  "orig": 0.93,
+  "new": 0.91,
+  "status": "ok"
+ },
+ "n096": {
+  "orig": 3.85,
+  "new": 4.03,
+  "status": "ok"
+ },
+ "n097": {
+  "orig": 13.44,
+  "new": 10.75,
+  "status": "ok"
+ },
+ "n098": {
+  "orig": 8.29,
+  "new": 7.55,
+  "status": "ok"
+ },
+ "n099": {
+  "orig": 9.52,
+  "new": 8.8,
+  "status": "ok"
+ },
+ "n100": {
+  "orig": 6.91,
+  "new": 5.31,
+  "status": "ok"
+ },
+ "n101": {
+  "orig": 3.55,
+  "new": 3.39,
+  "status": "ok"
+ },
+ "n102": {
+  "orig": 2.77,
+  "new": 2.51,
+  "status": "ok"
+ },
+ "n103": {
+  "orig": 2.69,
+  "new": 2.83,
+  "status": "ok"
+ },
+ "n104": {
+  "orig": 7.74,
+  "new": 6.19,
+  "status": "ok"
+ },
+ "n105": {
+  "orig": 2.57,
+  "new": 2.35,
+  "status": "ok"
+ },
+ "n106": {
+  "orig": 2.42,
+  "new": 2.27,
+  "status": "ok"
+ },
+ "n107": {
+  "orig": 10.38,
+  "new": 8.43,
+  "status": "ok"
+ },
+ "n108": {
+  "orig": 5.91,
+  "new": 4.51,
+  "status": "ok"
+ },
+ "n109": {
+  "orig": 4.31,
+  "new": 3.79,
+  "status": "ok"
+ },
+ "n110": {
+  "orig": 3.01,
+  "new": 3.07,
+  "status": "ok"
+ },
+ "n111": {
+  "orig": 7.09,
+  "new": 8.48,
+  "status": "ok"
+ },
+ "n112": {
+  "orig": 3.72,
+  "new": 3.63,
+  "status": "ok"
+ },
+ "n113": {
+  "orig": 2.67,
+  "new": 2.64,
+  "status": "ok"
+ },
+ "n114": {
+  "orig": 4.3,
+  "new": 3.63,
+  "status": "ok"
+ },
+ "n115": {
+  "orig": 3.33,
+  "new": 2.88,
+  "status": "ok"
+ },
+ "n116": {
+  "orig": 4.78,
+  "new": 4.35,
+  "status": "ok"
+ },
+ "n117": {
+  "orig": 2.27,
+  "new": 2.03,
+  "status": "ok"
+ },
+ "n118": {
+  "orig": 1.66,
+  "new": 2.08,
+  "status": "ok"
+ },
+ "n119": {
+  "orig": 2.65,
+  "new": 2.51,
+  "status": "ok"
+ },
+ "n120": {
+  "orig": 3.4,
+  "new": 3.07,
+  "status": "ok"
+ },
+ "n121": {
+  "orig": 8.04,
+  "new": 6.19,
+  "status": "ok"
+ },
+ "n122": {
+  "orig": 4.7,
+  "new": 4.27,
+  "status": "ok"
+ },
+ "n123": {
+  "orig": 4.06,
+  "new": 3.23,
+  "status": "ok"
+ },
+ "n124": {
+  "orig": 4.38,
+  "new": 4.51,
+  "status": "ok"
+ },
+ "n125": {
+  "orig": 8.92,
+  "new": 8.43,
+  "status": "ok"
+ },
+ "n126": {
+  "orig": 9.83,
+  "new": 7.63,
+  "status": "ok"
+ },
+ "n127": {
+  "orig": 2.92,
+  "new": 3.36,
+  "status": "ok"
+ },
+ "n128": {
+  "orig": 2.21,
+  "new": 1.79,
+  "status": "ok"
+ },
+ "n129": {
+  "orig": 2.76,
+  "new": 2.67,
+  "status": "ok"
+ },
+ "n130": {
+  "orig": 2.71,
+  "new": 2.32,
+  "status": "ok"
+ },
+ "n131": {
+  "orig": 1.85,
+  "new": 2.0,
+  "status": "ok"
+ },
+ "n132": {
+  "orig": 3.61,
+  "new": 3.15,
+  "status": "ok"
+ },
+ "n133": {
+  "orig": 2.38,
+  "new": 1.87,
+  "status": "ok"
+ },
+ "n134": {
+  "orig": 6.49,
+  "new": 5.95,
+  "status": "ok"
+ },
+ "n135": {
+  "orig": 4.82,
+  "new": 5.39,
+  "status": "ok"
+ },
+ "n136": {
+  "orig": 5.6,
+  "new": 6.19,
+  "status": "ok"
+ },
+ "n137": {
+  "orig": 6.5,
+  "new": 5.71,
+  "status": "ok"
+ },
+ "n138": {
+  "orig": 2.32,
+  "new": 2.99,
+  "status": "ok"
+ },
+ "n139": {
+  "orig": 4.97,
+  "new": 3.95,
+  "status": "ok"
+ },
+ "n140": {
+  "orig": 9.5,
+  "new": 8.35,
+  "status": "ok"
+ },
+ "n141": {
+  "orig": 2.14,
+  "new": 2.35,
+  "status": "ok"
+ },
+ "n143": {
+  "orig": 2.78,
+  "new": 2.67,
+  "status": "ok"
+ },
+ "n144": {
+  "orig": 8.389,
+  "new": 7.39,
+  "status": "ok"
+ },
+ "n145": {
+  "orig": 6.18,
+  "new": 4.99,
+  "status": "ok"
+ },
+ "n146": {
+  "orig": 10.11,
+  "new": 9.63,
+  "status": "ok"
+ },
+ "n147": {
+  "orig": 11.57,
+  "new": 10.43,
+  "status": "ok"
+ },
+ "n148": {
+  "orig": 2.07,
+  "new": 1.87,
+  "status": "ok"
+ },
+ "n149": {
+  "orig": 2.14,
+  "new": 2.03,
+  "status": "ok"
+ },
+ "n150": {
+  "orig": 3.42,
+  "new": 2.99,
+  "status": "ok"
+ },
+ "n151": {
+  "orig": 5.08,
+  "new": 4.83,
+  "status": "ok"
+ },
+ "n152": {
+  "orig": 5.07,
+  "new": 4.19,
+  "status": "ok"
+ },
+ "n153": {
+  "orig": 8.21,
+  "new": 6.67,
+  "status": "ok"
+ },
+ "n154": {
+  "orig": 1.39,
+  "new": 1.55,
+  "status": "ok"
+ },
+ "n155": {
+  "orig": 2.75,
+  "new": 2.19,
+  "status": "ok"
+ },
+ "n156": {
+  "orig": 2.96,
+  "new": 2.59,
+  "status": "ok"
+ },
+ "n157": {
+  "orig": 4.4,
+  "new": 3.39,
+  "status": "ok"
+ },
+ "n158": {
+  "orig": 9.7,
+  "new": 8.43,
+  "status": "ok"
+ },
+ "n159": {
+  "orig": 9.27,
+  "new": 7.63,
+  "status": "ok"
+ },
+ "n160": {
+  "orig": 3.76,
+  "new": 3.28,
+  "status": "ok"
+ },
+ "n161": {
+  "orig": 3.73,
+  "new": 3.23,
+  "status": "ok"
+ },
+ "n162": {
+  "orig": 3.09,
+  "new": 2.67,
+  "status": "ok"
+ },
+ "n163": {
+  "orig": 9.81,
+  "new": 7.95,
+  "status": "ok"
+ },
+ "n164": {
+  "orig": 8.68,
+  "new": 7.31,
+  "status": "ok"
+ },
+ "n165": {
+  "orig": 9.79,
+  "new": 9.87,
+  "status": "ok"
+ },
+ "n166": {
+  "orig": 6.97,
+  "new": 6.19,
+  "status": "ok"
+ },
+ "n167": {
+  "orig": 8.08,
+  "new": 7.23,
+  "status": "ok"
+ },
+ "n168": {
+  "orig": 5.66,
+  "new": 5.55,
+  "status": "ok"
+ },
+ "n169": {
+  "orig": 6.621,
+  "new": 6.03,
+  "status": "ok"
+ },
+ "n170": {
+  "orig": 2.65,
+  "new": 2.27,
+  "status": "ok"
+ },
+ "n171": {
+  "orig": 8.77,
+  "new": 7.87,
+  "status": "ok"
+ },
+ "n172": {
+  "orig": 10.31,
+  "new": 9.71,
+  "status": "ok"
+ },
+ "n173": {
+  "orig": 6.72,
+  "new": 6.27,
+  "status": "ok"
+ },
+ "n174": {
+  "orig": 4.08,
+  "new": 4.08,
+  "status": "ok"
+ },
+ "n175": {
+  "orig": 5.55,
+  "new": 4.75,
+  "status": "ok"
+ },
+ "n176": {
+  "orig": 5.81,
+  "new": 5.15,
+  "status": "ok"
+ },
+ "n177": {
+  "orig": 2.3,
+  "new": 2.35,
+  "status": "ok"
+ }
+}

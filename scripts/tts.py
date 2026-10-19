@@ -49,7 +49,11 @@ def run(ids):
 
 
 L0 = json.load(open(lp))
-ids = a[a.index("--only") + 1].split(",") if "--only" in a else [i for i in L0["segments"] if not src[i].get("nonverbal")]
+ids = a[a.index("--only") + 1].split(",") if "--only" in a else list(L0["segments"])
+skip = [i for i in ids if i not in L0["segments"] or src[i].get("nonverbal")]
+if skip:
+    print("skip (nonverbal or untranslated):", skip)
+ids = [i for i in ids if i not in skip]
 fit = run(ids)
 if "--rewrite-loop" in a:
     for rnd in range(prof["fit"]["max_rewrites"]):
