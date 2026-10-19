@@ -12,3 +12,5 @@ episodes/*/tail/
 episodes/*/*.prproj
 episodes/*/*.xml
 .superpowers/
+scripts/ae/*_job.json
+episodes/*/build_*.json
