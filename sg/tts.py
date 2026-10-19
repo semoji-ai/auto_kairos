@@ -1,5 +1,7 @@
 """ElevenLabs TTS(세모지 보이스)와 정렬 기반 트림."""
 import base64
+import hashlib
+import os
 import json
 import subprocess
 import urllib.request
@@ -36,3 +38,14 @@ def trim(mp3_in, mp3_out, t0, t1, pad=0.03):
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{a:.3f}", "-t", f"{(t1 + pad) - a:.3f}", "-i", mp3_in,
                     "-c:a", "libmp3lame", "-b:a", "192k", mp3_out], check=True)
     return a
+
+
+def text_hash(text):
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
+
+
+def should_synth(fit, seg_id, text, mp3_path, force=False):
+    """같은 텍스트로 이미 만든 mp3가 있으면 다시 합성하지 않는다(과금 방지)."""
+    if force or not os.path.exists(mp3_path):
+        return True
+    return fit.get(seg_id, {}).get("hash") != text_hash(text)

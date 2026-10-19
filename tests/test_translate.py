@@ -37,3 +37,24 @@ def test_batch_rerequests_only_missing_ids():
 def test_batch_gives_up_after_retries():
     with pytest.raises(MissingIds):
         translate_batch(ITEMS, {}, "en", "segments", lambda p: '{"n001": "A"}', retries=1)
+
+
+def test_parse_ignores_trailing_prose_with_braces():
+    txt = '{"n001": "A", "n002": "B"}\nNote: I kept {brand} names as-is.'
+    assert parse_response(txt, ["n001", "n002"]) == {"n001": "A", "n002": "B"}
+
+
+def test_non_string_value_counts_as_missing():
+    with pytest.raises(MissingIds) as e:
+        parse_response('{"n001": "A", "n002": ["x", "y"]}', ["n001", "n002"])
+    assert e.value.missing == ["n002"]
+
+
+def test_broken_json_is_retried_not_fatal():
+    calls = []
+
+    def runner(prompt):
+        calls.append(1)
+        return '{"n001": "He said "never" ok"}' if len(calls) == 1 else '{"n001": "A", "n002": "B"}'
+
+    assert translate_batch(ITEMS, {}, "en", "segments", runner) == {"n001": "A", "n002": "B"}

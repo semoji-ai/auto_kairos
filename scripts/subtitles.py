@@ -1,7 +1,7 @@
 """영어 자막 큐 → AE job + SRT.  usage: subtitles.py <EP> <lang>"""
 import json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from sg.subs import split_cues
+from sg.subs import split_cues, resolve_overlaps, retext
 from sg.timemap import PiecewiseMap
 from sg.edl import master_to_part
 
@@ -27,6 +27,7 @@ for pid, P in cfg["parts"].items():
 
 parts = {pid: [] for pid in cfg["parts"]}
 srt = []
+L10N = json.load(open(os.path.join(ep, "l10n", f"{lang}.json")))
 for g in src["segments"]:
     if g.get("nonverbal"):
         continue
@@ -39,11 +40,18 @@ for g in src["segments"]:
     base_master = warp(g["in"])
     sc_id, sc_st = subcomp[pid]
     sc_st_new = pmap[pid](sc_st)                   # localize.jsx는 프리컴프 startTime을 map(ost)로 옮김
-    for c in split_cues(al["characters"], al["character_start_times_seconds"], al["character_end_times_seconds"],
-                        prof["subs"]["max_chars"], prof["subs"]["min_dur"]):
+    cues = split_cues(al["characters"], al["character_start_times_seconds"], al["character_end_times_seconds"],
+                      prof["subs"]["max_chars"], prof["subs"]["min_dur"])
+    seg_l = L10N["segments"].get(g["id"], {})
+    if seg_l.get("tts"):          # 발음용 표기로 읽었으면 화면 문구는 원래 번역문으로
+        cues = retext(cues, seg_l["text"])
+    for c in cues:
         parts[pid].append({"in": round(base_part + c["t0"] - sc_st_new, 3),
-                           "out": round(base_part + c["t1"] - sc_st_new - prof["subs"]["gap"], 3), "text": c["text"]})
-        srt.append((base_master + c["t0"], base_master + c["t1"], c["text"]))
+                           "out": round(base_part + c["t1"] - sc_st_new, 3), "text": c["text"]})
+        srt.append({"in": base_master + c["t0"], "out": base_master + c["t1"], "text": c["text"]})
+# 구간 사이 겹침 정리(다음 큐 시작 - gap)
+parts = {pid: resolve_overlaps(c, prof["subs"]["gap"]) for pid, c in parts.items()}
+srt = resolve_overlaps(srt, prof["subs"]["gap"])
 
 abs_ep = os.path.abspath(ep); name = os.path.basename(abs_ep)
 json.dump({"aep": os.path.join(abs_ep, "build", lang, f"{name}_{lang}.aep"),
@@ -54,6 +62,6 @@ json.dump({"aep": os.path.join(abs_ep, "build", lang, f"{name}_{lang}.aep"),
 os.makedirs(os.path.join(ep, "render", lang), exist_ok=True)
 fmt = lambda t: f"{int(t // 3600):02d}:{int(t % 3600 // 60):02d}:{int(t % 60):02d},{int(round((t % 1) * 1000)) % 1000:03d}"
 with open(os.path.join(ep, "render", lang, f"{lang}.srt"), "w") as f:
-    for n, (a, b, t) in enumerate(sorted(srt), 1):
-        f.write(f"{n}\n{fmt(a)} --> {fmt(b)}\n{t}\n\n")
+    for n, c in enumerate(srt, 1):
+        f.write(f"{n}\n{fmt(c['in'])} --> {fmt(c['out'])}\n{c['text']}\n\n")
 print({pid: len(c) for pid, c in parts.items()}, "srt", len(srt))

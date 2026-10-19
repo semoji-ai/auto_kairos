@@ -31,11 +31,11 @@ def build_prompt(items, glossary, lang, kind):
 
 def parse_response(text, ids):
     t = re.sub(r"```(?:json)?", "", text)
-    i, j = t.find("{"), t.rfind("}")
-    if i < 0 or j < i:
+    i = t.find("{")
+    if i < 0:
         raise ValueError(f"no JSON object in response: {text[:200]!r}")
-    obj = json.loads(t[i:j + 1])
-    out = {k: str(obj[k]).strip() for k in ids if k in obj and str(obj[k]).strip()}
+    obj, _ = json.JSONDecoder().raw_decode(t, i)   # 첫 객체만 읽음(뒤에 붙은 설명의 중괄호 무시)
+    out = {k: obj[k].strip() for k in ids if isinstance(obj.get(k), str) and obj[k].strip()}
     missing = [k for k in ids if k not in out]
     if missing:
         e = MissingIds(missing)
@@ -56,6 +56,9 @@ def translate_batch(items, glossary, lang, kind, runner, retries=2):
             todo = [x for x in todo if x["id"] in e.missing]
             if attempt == retries:
                 raise MissingIds(e.missing)
+        except ValueError:   # JSON 깨짐(이스케이프 안 된 따옴표 등) → 같은 묶음 재요청
+            if attempt == retries:
+                raise
     return done
 
 

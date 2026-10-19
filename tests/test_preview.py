@@ -10,3 +10,14 @@ def test_plan_places_tts_and_nonverbal_at_warped_starts():
     assert p[0] == {"file": "/t/n001.mp3", "t": w(1.0), "id": "n001"}
     assert p[1]["kind"] == "nonverbal" and p[1]["src_in"] == 4.0 and p[1]["t"] == w(4.0)
     assert p[2]["t"] == w(5.0)
+
+
+from sg.preview import part_to_wav
+
+
+def test_part_time_to_wav_time_through_precomp_offset_and_layer_start():
+    # 파트 시간 = (L.st + wav*sx) * k + off  → wav = ((u - off)/k - L.st)/sx
+    L = {"st": 0.5, "sx": 100}
+    occ = [{"k": 1.0, "off": 1.735, "span": [1.735, 337.6]}]
+    assert abs(part_to_wav(10.0, L, occ) - (10.0 - 1.735 - 0.5)) < 1e-9
+    assert part_to_wav(0.5, L, occ) is None          # 프리컴프 구간 밖

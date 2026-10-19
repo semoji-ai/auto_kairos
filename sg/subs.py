@@ -1,5 +1,10 @@
 """정렬(글자 시각) 기반 자막 큐 분할."""
 _PUNCT = ".,?!;:"
+_ABBR = {"no.", "mr.", "mrs.", "ms.", "dr.", "st.", "vs.", "u.s.", "u.k.", "inc.", "co.", "jr.", "sr.", "etc."}
+
+
+def _ends_sentence(word):
+    return word[-1] in ".?!" and word.lower() not in _ABBR
 
 
 def _words(chars):
@@ -24,14 +29,14 @@ def split_cues(chars, starts, ends, max_chars=42, min_dur=0.8):
         trial = " ".join(x[2] for x in cur + [w])
         if cur and len(trial) > max_chars:
             # 쉼표 등 뒤에서 끊을 수 있으면 그 지점까지만 현재 그룹으로
-            cut = max((k for k in range(len(cur)) if cur[k][2][-1] in _PUNCT), default=None)
+            cut = max((k for k in range(len(cur)) if cur[k][2][-1] in _PUNCT and cur[k][2].lower() not in _ABBR), default=None)
             if cut is not None and cut < len(cur) - 1 and len(" ".join(x[2] for x in cur[:cut + 1])) >= max_chars * 0.5:
                 groups.append(cur[:cut + 1]); cur = cur[cut + 1:] + [w]
             else:
                 groups.append(cur); cur = [w]
         else:
             cur.append(w)
-            if w[2][-1] in ".?!" and len(" ".join(x[2] for x in cur)) >= max_chars * 0.6:
+            if _ends_sentence(w[2]) and len(" ".join(x[2] for x in cur)) >= max_chars * 0.6:
                 groups.append(cur); cur = []
     if cur:
         groups.append(cur)
@@ -56,3 +61,27 @@ def split_cues(chars, starts, ends, max_chars=42, min_dur=0.8):
                 prv = cues[i - 1]["t1"] if i > 0 else 0.0
                 c["t0"] = max(prv, c["t1"] - min_dur - 1e-6)
     return cues
+
+
+def resolve_overlaps(cues, gap=0.04):
+    """여러 구간에서 모은 큐(in/out)를 시각순으로 정렬하고, 다음 큐 시작 - gap 을 넘는 끝을 자른다."""
+    out = sorted((dict(c) for c in cues), key=lambda c: c["in"])
+    for i in range(len(out) - 1):
+        lim = round(out[i + 1]["in"] - gap, 3)
+        if out[i]["out"] > lim:
+            out[i]["out"] = max(lim, out[i]["in"] + 0.05)
+    return out
+
+
+def retext(cues, display):
+    """발음용 텍스트로 만든 큐의 시각은 그대로 두고, 문구는 화면용 텍스트 단어를 글자 비율로 나눠 넣는다."""
+    words = display.split()
+    total = sum(len(c["text"]) for c in cues) or 1
+    out, k, acc = [], 0, 0
+    for i, c in enumerate(cues):
+        acc += len(c["text"])
+        upto = len(words) if i == len(cues) - 1 else round(len(words) * acc / total)
+        upto = max(upto, k + 1) if k < len(words) else k
+        out.append({**c, "text": " ".join(words[k:upto])})
+        k = upto
+    return [c for c in out if c["text"]]

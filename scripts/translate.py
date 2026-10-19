@@ -38,6 +38,7 @@ for k in range(0, len(items), 25):
     res = translate_batch(items[k:k + 25], gloss, lang, "segments", claude_runner)
     for i, t in res.items():
         L["segments"].setdefault(i, {})["text"] = t
+        L["segments"][i].pop("tts", None)   # 문장이 바뀌면 옛 발음용 표기는 무효
     json.dump(L, open(out_p, "w"), ensure_ascii=False, indent=1)
     print(f"segments {min(k + 25, len(items))}/{len(items)}", flush=True)
 

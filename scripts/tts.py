@@ -1,8 +1,10 @@
-"""구간 TTS.  usage: tts.py <EP> <lang> [--only id,…] [--model m] [--out-dir tts/<lang>] [--rewrite-loop]"""
+"""구간 TTS.  usage: tts.py <EP> <lang> [--only id,…] [--model m] [--out-dir tts/<lang>] [--rewrite-loop] [--force]
+같은 텍스트로 이미 만든 구간은 건너뜀(--force로 강제 재생성)."""
 import json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from sg.budget import fit_status
-from sg.tts import speech_bounds, synthesize, trim, load_key
+from sg.tts import speech_bounds, synthesize, trim, load_key, text_hash, should_synth
+import time
 
 ep, lang = sys.argv[1], sys.argv[2]
 a = sys.argv[3:]
@@ -27,7 +29,16 @@ def run(ids):
     fit = json.load(open(fp)) if os.path.exists(fp) else {}
     for i in ids:
         text = L["segments"][i].get("tts") or L["segments"][i]["text"]
-        audio, al = synthesize(text, prof["tts_voice"], model, prof["language_code"], prof["tts_settings"], key)
+        if not should_synth(fit, i, text, os.path.join(out_dir, f"{i}.mp3"), force=FORCE):
+            continue
+        for attempt in range(4):
+            try:
+                audio, al = synthesize(text, prof["tts_voice"], model, prof["language_code"], prof["tts_settings"], key)
+                break
+            except Exception as e:   # 429/5xx 등 → 잠시 후 재시도
+                if attempt == 3:
+                    raise
+                print("retry", i, e, flush=True); time.sleep(5 * (attempt + 1))
         raw = os.path.join(out_dir, f"{i}.raw.mp3")
         open(raw, "wb").write(audio)
         t0, t1 = speech_bounds(al) if al else (0.0, dur(raw))
@@ -40,14 +51,15 @@ def run(ids):
         json.dump(al, open(os.path.join(out_dir, f"{i}.align.json"), "w"), ensure_ascii=False)
         g = src[i]
         d = dur(os.path.join(out_dir, f"{i}.mp3"))
-        fit[i] = {"orig": round(g["out"] - g["in"], 3), "new": round(d, 3),
+        fit[i] = {"orig": round(g["out"] - g["in"], 3), "new": round(d, 3), "hash": text_hash(text),
                   "status": fit_status(g["out"] - g["in"], d, prof["fit"]["lo"], prof["fit"]["hi"])}
         print(i, fit[i], flush=True)
         json.dump(fit, open(fp, "w"), indent=1)
-    json.dump({k: v["new"] for k, v in fit.items()}, open(os.path.join(out_dir, "durs.json"), "w"), indent=1)
+        json.dump({k: v["new"] for k, v in fit.items()}, open(os.path.join(out_dir, "durs.json"), "w"), indent=1)
     return fit
 
 
+FORCE = "--force" in a
 L0 = json.load(open(lp))
 ids = a[a.index("--only") + 1].split(",") if "--only" in a else list(L0["segments"])
 skip = [i for i in ids if i not in L0["segments"] or src[i].get("nonverbal")]
@@ -57,7 +69,7 @@ ids = [i for i in ids if i not in skip]
 fit = run(ids)
 if "--rewrite-loop" in a:
     for rnd in range(prof["fit"]["max_rewrites"]):
-        bad = {k: v for k, v in fit.items() if v["status"] != "ok"}
+        bad = {k: v for k, v in fit.items() if v["status"] != "ok" and k in ids}   # 이번 실행 범위만
         if not bad:
             break
         rew = {}
@@ -69,5 +81,5 @@ if "--rewrite-loop" in a:
         json.dump(rew, open(rp, "w"), indent=1)
         subprocess.run([sys.executable, os.path.join(root, "scripts/translate.py"), ep, lang, "--rewrite", rp], check=True)
         fit = run(list(bad))
-    bad = [k for k, v in fit.items() if v["status"] != "ok"]
+    bad = [k for k, v in fit.items() if v["status"] != "ok" and k in ids]
     print("still out of range:", bad)

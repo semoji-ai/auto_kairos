@@ -1,7 +1,8 @@
 """영어 미리보기 조립.  usage: preview.py <EP> <lang>"""
 import json, os, subprocess, sys, unicodedata
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from sg.preview import plan_audio
+from sg.preview import plan_audio, part_to_wav
+from sg.graph import walk
 from sg.timemap import PiecewiseMap
 from sg.edl import master_to_part
 
@@ -27,20 +28,27 @@ for v in vids:
     args += ["-i", v]
 subprocess.run(args + ["-filter_complex", filt, "-map", "[v]", "-c:v", "libx264", "-crf", "20", "-preset", "veryfast", video], check=True)
 
-# 오디오: TTS + nonverbal 원래 녹음 조각
+# 오디오: TTS + nonverbal 원래 녹음 조각 (파트 시각 → 내레이션 wav 시각: 프리컴프 안 레이어 startTime 반영)
 G = json.load(open(os.path.join(ep, cfg["graph"])))
-nar_file = {}
+nar = {}
 for pid, P in cfg["parts"].items():
-    for it in G["items"].values():
-        if it["name"] == P["narration"]:
-            rel = os.path.relpath(unicodedata.normalize("NFC", it["file"]), unicodedata.normalize("NFC", cfg["nas_ep"]))
-            nar_file[pid] = os.path.join(ep, "src", rel)
+    r = [x for x in walk(G, P["comp_id"], 0, P["dur"]) if x["src"] is not None
+         and G["items"].get(str(x["src"]), {}).get("name") == P["narration"]][0]
+    Lw = [x for x in G["comps"][r["comp_id"]]["layers"] if x["i"] == r["layer"]][0]
+    rel = os.path.relpath(unicodedata.normalize("NFC", G["items"][str(Lw["src"])]["file"]), unicodedata.normalize("NFC", cfg["nas_ep"]))
+    nar[pid] = (os.path.join(ep, "src", rel), Lw, r["occ"])
 plan = plan_audio(src["segments"], warp, os.path.join(ep, "tts", lang))
 ins, flt = [], []
 for k, p in enumerate(plan):
     if p.get("kind") == "nonverbal":
-        pid, u = master_to_part(edl, p["src_in"])
-        ins += ["-ss", f"{u:.3f}", "-t", f"{p['src_out'] - p['src_in']:.3f}", "-i", nar_file[pid]]
+        loc = master_to_part(edl, p["src_in"])
+        if loc is None:
+            raise ValueError(f"nonverbal {p['id']} outside parts")
+        f_w, Lw, occ = nar[loc[0]]
+        wt = part_to_wav(loc[1], Lw, occ)
+        if wt is None:
+            raise ValueError(f"nonverbal {p['id']} not inside narration layer")
+        ins += ["-ss", f"{wt:.3f}", "-t", f"{p['src_out'] - p['src_in']:.3f}", "-i", f_w]
     else:
         ins += ["-i", p["file"]]
     flt.append(f"[{k}:a]aresample=48000,adelay={int(p['t'] * 1000)}|{int(p['t'] * 1000)}[a{k}]")
