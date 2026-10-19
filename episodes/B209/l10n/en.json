@@ -1942,6 +1942,12 @@
    "font": "gothic",
    "two_tone": false,
    "ko": "COST요"
+  },
+  "20479#0": {
+   "text": "Home+",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "홈플러스"
   }
  }
 }
