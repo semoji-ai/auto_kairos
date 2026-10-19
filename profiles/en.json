@@ -1,0 +1,13 @@
+{
+  "lang": "en",
+  "language_code": "en",
+  "cps": 14.0,
+  "fit": {"lo": 0.75, "hi": 1.35, "max_rewrites": 2},
+  "tts_model": "eleven_v3",
+  "tts_voice": "W7FnAxJNpD5WGjrF5GLp",
+  "tts_settings": {"stability": 0.5, "similarity_boost": 0.9, "style": 0.6, "use_speaker_boost": true},
+  "subs": {"max_chars": 42, "min_dur": 0.8, "gap": 0.04},
+  "fonts": {"OTSBAggroM": "OTSBAggroM", "OTSBAggroL": "OTSBAggroL", "OTSBAggroB": "OTSBAggroB",
+            "HakgyoansimAllimjangTTF-R": "OTSBAggroM", "GeekbleMalang2": "OTSBAggroB", "BMYEONSUNG": "OTSBAggroM"},
+  "min_font_scale": 0.7
+}

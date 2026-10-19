@@ -127,3 +127,12 @@ def part_anchors(edl, warp, part_id):
     m = PiecewiseMap(pts)
     end = clips[-1]["src_in"] + clips[-1]["dur"]
     return m, m(end) - m(clips[0]["src_in"])
+
+
+def master_to_part(edl, m):
+    """마스터 시각 → (파트 id, 파트 로컬 소스 시각). 아웃트로·범위 밖이면 None."""
+    p = master_to_pr(edl, m)
+    for c in edl["parts"]:
+        if c["pr_in"] <= p < c["pr_in"] + c["dur"]:
+            return c["id"], round(c["src_in"] + (p - c["pr_in"]), 6)
+    return None

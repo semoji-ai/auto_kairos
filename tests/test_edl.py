@@ -105,3 +105,15 @@ def test_part_anchors_raises_when_new_time_goes_backwards_beyond_float_noise():
            "cuts": [], "outro": None, "pr_length": 20, "length": 20}
     with pytest.raises(ValueError):
         part_anchors(bad, PiecewiseMap.identity(), "b")
+
+
+from sg.edl import master_to_part
+
+
+def test_master_to_part_inverts_part_to_master():
+    e = edl()
+    assert master_to_part(e, 5.0) == ("a", 5.0)
+    assert master_to_part(e, 12.0) == ("b", 2.0)
+    assert master_to_part(e, 15.0) == ("b", 7.0)     # pr 15 → 두 번째 b 클립(pr 14, src 6) → src 7
+    assert master_to_part(e, 17.0) == ("b", 10.0)    # 컷(pr 16~17) 뒤: 마스터 17 = pr 18 → src 10
+    assert master_to_part(e, 20.5) is None           # 마스터 20.5 = pr 21.5 → 아웃트로
