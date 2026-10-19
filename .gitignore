@@ -11,3 +11,4 @@ episodes/*/assets/
 episodes/*/tail/
 episodes/*/*.prproj
 episodes/*/*.xml
+.superpowers/
