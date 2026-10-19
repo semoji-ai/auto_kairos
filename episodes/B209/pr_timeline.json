@@ -1,0 +1,725 @@
+[
+ {
+  "sequence": "B209_코스트코_음악전_미나",
+  "uid": "54a2a221-da6d-4036-aa04-acd3eea793c1",
+  "tracks": [
+   {
+    "kind": "video",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 282.649,
+      "in": 0.0,
+      "out": 282.649,
+      "name": "B209_코스트코_음악전_미나.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_미나.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 282.649,
+      "end": 283.183,
+      "in": 282.649,
+      "out": 283.183,
+      "name": "B209_코스트코_음악전_미나.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_미나.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 283.183,
+      "end": 534.134,
+      "in": 283.183,
+      "out": 534.134,
+      "name": "B209_코스트코_음악전_미나.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_미나.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 534.134,
+      "end": 751.451,
+      "in": 0.0,
+      "out": 217.317,
+      "name": "B209_코스트코_음악전_가영.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_가영.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 751.451,
+      "end": 759.792,
+      "in": 0.0,
+      "out": 8.342,
+      "name": "B209_코스트코_음악전_가을.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_가을.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 759.792,
+      "end": 764.664,
+      "in": 8.342,
+      "out": 13.213,
+      "name": "B209_코스트코_음악전_가을.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_가을.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 764.664,
+      "end": 978.077,
+      "in": 13.213,
+      "out": 226.626,
+      "name": "B209_코스트코_음악전_가을.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_가을.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 978.077,
+      "end": 988.354,
+      "in": 0.0,
+      "out": 10.277,
+      "name": "세모지 아웃트로_최종.mov",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B183_나이키2편_마스터링완\\세모지 아웃트로_최종.mov",
+      "speed": 1.0
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": [
+     {
+      "start": 221.922,
+      "end": 246.379,
+      "in": 0.0,
+      "out": 24.458,
+      "name": "B209_코스트코_음악전_수정2.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_수정2.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 352.853,
+      "end": 369.035,
+      "in": 0.0,
+      "out": 16.183,
+      "name": "B209_코스트코_음악전_수정1.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_수정1.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 434.067,
+      "end": 447.213,
+      "in": 0.0,
+      "out": 13.146,
+      "name": "B209_코스트코_음악전_수정3.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_수정3.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 771.237,
+      "end": 786.552,
+      "in": 0.033,
+      "out": 15.349,
+      "name": "B209_코스트코_음악전_수정4.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_수정4.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 978.077,
+      "end": 988.354,
+      "in": 3600.03,
+      "out": 3610.307,
+      "name": "Graphic",
+      "file": "1196574294",
+      "speed": 1.0
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": [
+     {
+      "start": 978.077,
+      "end": 988.354,
+      "in": 3599.996,
+      "out": 3610.273,
+      "name": "Graphic",
+      "file": "1196574294",
+      "speed": 1.0
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 3,
+    "items": [
+     {
+      "start": 978.077,
+      "end": 988.354,
+      "in": 3599.996,
+      "out": 3610.273,
+      "name": "63517.jpg",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B183_나이키2편_마스터링완\\63517.jpg",
+      "speed": 1.0
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 282.649,
+      "in": 0.0,
+      "out": 282.649,
+      "name": "B209_코스트코_음악전_미나.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_미나.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 282.649,
+      "end": 283.183,
+      "in": 282.649,
+      "out": 283.183,
+      "name": "B209_코스트코_음악전_미나.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_미나.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 283.183,
+      "end": 534.134,
+      "in": 283.183,
+      "out": 534.134,
+      "name": "B209_코스트코_음악전_미나.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_미나.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 534.134,
+      "end": 751.451,
+      "in": 0.0,
+      "out": 217.317,
+      "name": "B209_코스트코_음악전_가영.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_가영.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 751.451,
+      "end": 756.99,
+      "in": 0.0,
+      "out": 5.539,
+      "name": "B209_코스트코_음악전_가을.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_가을.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 756.99,
+      "end": 757.423,
+      "in": 282.649,
+      "out": 283.083,
+      "name": "B209_코스트코_음악전_미나.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_미나.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 757.423,
+      "end": 757.69,
+      "in": 6.039,
+      "out": 6.306,
+      "name": "B209_코스트코_음악전_가을.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_가을.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 757.69,
+      "end": 759.726,
+      "in": 1289.889,
+      "out": 1291.924,
+      "name": "B209_코스트코_오디오원본.wav",
+      "file": "C:\\Users\\niceg\\OneDrive\\바탕 화면\\작업중\\임시녹음\\B209_코스트코\\B209_코스트코_오디오원본.wav",
+      "speed": 1.0
+     },
+     {
+      "start": 759.726,
+      "end": 764.597,
+      "in": 8.342,
+      "out": 13.213,
+      "name": "B209_코스트코_음악전_가을.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_가을.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 764.831,
+      "end": 978.077,
+      "in": 13.38,
+      "out": 226.626,
+      "name": "B209_코스트코_음악전_가을.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_음악전_가을.mp4",
+      "speed": 1.0
+     },
+     {
+      "start": 978.077,
+      "end": 988.354,
+      "in": 0.0,
+      "out": 10.277,
+      "name": "Sand_Castle.mp3",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B183_나이키2편_마스터링완\\bgm\\Sand_Castle.mp3",
+      "speed": 1.0
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 534.134,
+      "in": 0.0,
+      "out": 534.134,
+      "name": "B209_코스트코_효과음_미나.wav",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_효과음_미나.wav",
+      "speed": 1.0
+     },
+     {
+      "start": 534.134,
+      "end": 751.451,
+      "in": 0.0,
+      "out": 217.317,
+      "name": "B209_코스트코_효과음_가영.wav",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_효과음_가영.wav",
+      "speed": 1.0
+     },
+     {
+      "start": 751.451,
+      "end": 776.342,
+      "in": 0.0,
+      "out": 24.892,
+      "name": "B209_코스트코_효과음_가을.wav",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_효과음_가을.wav",
+      "speed": 1.0
+     },
+     {
+      "start": 777.143,
+      "end": 777.71,
+      "in": 25.692,
+      "out": 26.26,
+      "name": "B209_코스트코_효과음_가을.wav",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_효과음_가을.wav",
+      "speed": 1.0
+     },
+     {
+      "start": 777.71,
+      "end": 778.111,
+      "in": 24.892,
+      "out": 25.292,
+      "name": "B209_코스트코_효과음_가을.wav",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_효과음_가을.wav",
+      "speed": 1.0
+     },
+     {
+      "start": 778.111,
+      "end": 978.077,
+      "in": 26.66,
+      "out": 226.626,
+      "name": "B209_코스트코_효과음_가을.wav",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_효과음_가을.wav",
+      "speed": 1.0
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 69.163,
+      "in": 0.0,
+      "out": 0.0,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": null,
+      "speed": 1.0
+     },
+     {
+      "start": 203.904,
+      "end": 310.076,
+      "in": 0.0,
+      "out": 106.173,
+      "name": "150708_Kickin'.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\150708_Kickin'.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 418.918,
+      "end": 534.701,
+      "in": 0.0,
+      "out": 115.782,
+      "name": "149116_Eclipse Enigma.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\149116_Eclipse Enigma.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 751.05,
+      "end": 912.148,
+      "in": 0.0,
+      "out": 0.0,
+      "name": "252509_sometimes you gotta sprint.mp3",
+      "file": null,
+      "speed": 1.0
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 3,
+    "items": [
+     {
+      "start": 65.132,
+      "end": 208.575,
+      "in": 0.0,
+      "out": 143.443,
+      "name": "142324_Bruiser.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\142324_Bruiser.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 309.776,
+      "end": 419.486,
+      "in": 0.0,
+      "out": 109.71,
+      "name": "250195_Pop Up.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\250195_Pop Up.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 534.134,
+      "end": 755.572,
+      "in": 0.0,
+      "out": 0.0,
+      "name": "146021_Horse Power Brass.mp3",
+      "file": null,
+      "speed": 1.0
+     },
+     {
+      "start": 899.732,
+      "end": 978.077,
+      "in": 0.0,
+      "out": 78.345,
+      "name": "253831_scratch that itch.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\253831_scratch that itch.mp3",
+      "speed": 1.0
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "sequence": "B209_코스트코_오디오원본",
+  "uid": "b9374118-2952-4226-889a-0dd727c6cfd1",
+  "tracks": [
+   {
+    "kind": "video",
+    "index": 0,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 1288.287,
+      "in": 0.0,
+      "out": 1288.287,
+      "name": "B209_코스트코_오디오원본.wav",
+      "file": "C:\\Users\\niceg\\OneDrive\\바탕 화면\\작업중\\임시녹음\\B209_코스트코\\B209_코스트코_오디오원본.wav",
+      "speed": 1.0
+     },
+     {
+      "start": 1288.287,
+      "end": 1289.889,
+      "in": 1288.287,
+      "out": 1289.889,
+      "name": "B209_코스트코_오디오원본.wav",
+      "file": "C:\\Users\\niceg\\OneDrive\\바탕 화면\\작업중\\임시녹음\\B209_코스트코\\B209_코스트코_오디오원본.wav",
+      "speed": 1.0
+     },
+     {
+      "start": 1289.889,
+      "end": 1291.924,
+      "in": 1289.889,
+      "out": 1291.924,
+      "name": "B209_코스트코_오디오원본.wav",
+      "file": "C:\\Users\\niceg\\OneDrive\\바탕 화면\\작업중\\임시녹음\\B209_코스트코\\B209_코스트코_오디오원본.wav",
+      "speed": 1.0
+     },
+     {
+      "start": 1291.924,
+      "end": 1658.679,
+      "in": 1291.924,
+      "out": 1658.679,
+      "name": "B209_코스트코_오디오원본.wav",
+      "file": "C:\\Users\\niceg\\OneDrive\\바탕 화면\\작업중\\임시녹음\\B209_코스트코\\B209_코스트코_오디오원본.wav",
+      "speed": 1.0
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": []
+   }
+  ]
+ },
+ {
+  "sequence": "B209_코스트코_썸네일",
+  "uid": "906ddf98-5875-4a01-abcb-8ba2dcc917ab",
+  "tracks": [
+   {
+    "kind": "video",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 4.972,
+      "in": 3599.996,
+      "out": 3604.968,
+      "name": "B209_코스트코_썸네일.jpg",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_썸네일.jpg",
+      "speed": 1.0
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 4.972,
+      "in": 3599.996,
+      "out": 3604.968,
+      "name": "B209_코스트코_썸네일2.jpg",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B209_코스트코_미나_편집완\\B209_코스트코_썸네일2.jpg",
+      "speed": 1.0
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": []
+   }
+  ]
+ },
+ {
+  "sequence": "B209_코스트코_음악전_미나",
+  "uid": "80c9ef83-68c5-4154-bd79-795317d26bb4",
+  "tracks": [
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 1.931,
+      "in": 0.0,
+      "out": 1.931,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146468_High Energy Bad Attitude.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 1.931,
+      "end": 16.112,
+      "in": 6.293,
+      "out": 20.475,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146468_High Energy Bad Attitude.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 16.112,
+      "end": 18.843,
+      "in": 24.837,
+      "out": 27.568,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146468_High Energy Bad Attitude.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 18.843,
+      "end": 20.485,
+      "in": 45.019,
+      "out": 46.661,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146468_High Energy Bad Attitude.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 20.485,
+      "end": 21.04,
+      "in": 81.568,
+      "out": 82.123,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146468_High Energy Bad Attitude.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 21.04,
+      "end": 27.589,
+      "in": 90.848,
+      "out": 97.397,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146468_High Energy Bad Attitude.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 27.589,
+      "end": 34.133,
+      "in": 110.485,
+      "out": 117.029,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146468_High Energy Bad Attitude.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 34.133,
+      "end": 41.776,
+      "in": 121.387,
+      "out": 129.029,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146468_High Energy Bad Attitude.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 41.776,
+      "end": 54.325,
+      "in": 129.573,
+      "out": 142.123,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146468_High Energy Bad Attitude.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 54.325,
+      "end": 57.051,
+      "in": 155.216,
+      "out": 157.941,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146468_High Energy Bad Attitude.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 57.051,
+      "end": 69.163,
+      "in": 166.667,
+      "out": 178.779,
+      "name": "146468_High Energy Bad Attitude.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146468_High Energy Bad Attitude.mp3",
+      "speed": 1.0
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "sequence": "B209_코스트코_음악전_미나",
+  "uid": "c792d859-695d-4d86-8693-83bbc72a37e2",
+  "tracks": [
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 19.024,
+      "in": 0.0,
+      "out": 19.024,
+      "name": "252509_sometimes you gotta sprint.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\252509_sometimes you gotta sprint.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 19.024,
+      "end": 161.097,
+      "in": 8.811,
+      "out": 150.884,
+      "name": "252509_sometimes you gotta sprint.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\252509_sometimes you gotta sprint.mp3",
+      "speed": 1.0
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "sequence": "B209_코스트코_음악전_미나",
+  "uid": "7e051725-84d4-4b10-9313-1d4b2255abf9",
+  "tracks": [
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 13.483,
+      "in": 0.0,
+      "out": 13.483,
+      "name": "146021_Horse Power Brass.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146021_Horse Power Brass.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 13.483,
+      "end": 21.616,
+      "in": 5.349,
+      "out": 13.483,
+      "name": "146021_Horse Power Brass.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146021_Horse Power Brass.mp3",
+      "speed": 1.0
+     },
+     {
+      "start": 21.616,
+      "end": 221.438,
+      "in": 5.349,
+      "out": 205.172,
+      "name": "146021_Horse Power Brass.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\146021_Horse Power Brass.mp3",
+      "speed": 1.0
+     }
+    ]
+   }
+  ]
+ }
+]

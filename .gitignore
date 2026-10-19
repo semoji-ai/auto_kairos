@@ -6,3 +6,8 @@ episodes/*/build/
 reports/*.json
 reports/*.jsonl
 *.log
+episodes/*/yt_master.mp4
+episodes/*/assets/
+episodes/*/tail/
+episodes/*/*.prproj
+episodes/*/*.xml

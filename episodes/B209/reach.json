@@ -1,0 +1,6791 @@
+{
+ "15003": {
+  "name": "63517.jpg",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/Comp/63517.jpg",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    980.0
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "15008": {
+  "name": "세모지타이틀.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/Comp/세모지타이틀.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    60.861,
+    64.665
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "15049": {
+  "name": "세모지 로고/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    980.0
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "15525": {
+  "name": "리뉴얼 또롱.wav",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/Comp/리뉴얼 또롱.wav",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    64.665,
+    66.4
+   ],
+   [
+    309.576,
+    311.311
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "15057": {
+  "name": "챕터 자막/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    64.665,
+    66.4
+   ],
+   [
+    309.576,
+    311.311
+   ]
+  ],
+  "via": [
+   "comp",
+   "챕터2 배경"
+  ]
+ },
+ "15053": {
+  "name": "챕터 패턴/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    64.665,
+    66.4
+   ],
+   [
+    309.576,
+    311.311
+   ]
+  ],
+  "via": [
+   "comp",
+   "챕터2 배경"
+  ]
+ },
+ "15243": {
+  "name": "Medium Orange Solid 1",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    8.842,
+    13.046
+   ],
+   [
+    24.057,
+    33.1
+   ],
+   [
+    64.665,
+    75.876
+   ],
+   [
+    187.254,
+    204.271
+   ],
+   [
+    309.576,
+    317.718
+   ],
+   [
+    407.841,
+    419.286
+   ],
+   [
+    515.115,
+    534.134
+   ]
+  ],
+  "via": [
+   "comp",
+   "챕터2 배경"
+  ]
+ },
+ "20240": {
+  "name": "Null 29",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    0.0,
+    980.0
+   ]
+  ],
+  "via": [
+   "comp",
+   "#자막"
+  ]
+ },
+ "20238": {
+  "name": "B209_코스트코_오디오편집완_미나.wav",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/Comp/B209_코스트코_오디오편집완_미나.wav",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    534.134
+   ]
+  ],
+  "via": [
+   "comp",
+   "#자막"
+  ]
+ },
+ "22235": {
+  "name": "42 통화/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    522.623,
+    534.134
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22241": {
+  "name": "42 시네이름/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    530.297,
+    534.134
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22239": {
+  "name": "42 물음/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    520.22,
+    529.596
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22237": {
+  "name": "42 시네/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    520.22,
+    534.134
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22233": {
+  "name": "42 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    525.092,
+    534.134
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22231": {
+  "name": "42 제프이름/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    520.587,
+    534.134
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22229": {
+  "name": "42 제프/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    520.22,
+    534.134
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "15067": {
+  "name": "배경  패턴2/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    24.057,
+    33.1
+   ],
+   [
+    311.311,
+    317.718
+   ],
+   [
+    520.22,
+    534.134
+   ]
+  ],
+  "via": [
+   "comp",
+   "자료 배경2"
+  ]
+ },
+ "22227": {
+  "name": "42 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    520.22,
+    534.134
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22225": {
+  "name": "41 남자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    515.11,
+    520.22
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22603": {
+  "name": "Null 53",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    515.11,
+    520.22
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22223": {
+  "name": "41 남자 팔/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    515.11,
+    520.22
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22221": {
+  "name": "41 남자 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    516.45,
+    520.22
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22219": {
+  "name": "41 사진/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    515.11,
+    520.22
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "15063": {
+  "name": "배경 패턴1/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    8.842,
+    13.046
+   ],
+   [
+    187.254,
+    204.271
+   ],
+   [
+    515.115,
+    520.22
+   ]
+  ],
+  "via": [
+   "comp",
+   "자료 배경1"
+  ]
+ },
+ "22217": {
+  "name": "41 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    515.11,
+    520.22
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22215": {
+  "name": "40 남자 손/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    503.05,
+    515.115
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22213": {
+  "name": "40 남자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    503.05,
+    515.115
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22605": {
+  "name": "Null 54",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    503.05,
+    515.115
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22211": {
+  "name": "40 남자 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    504.872,
+    515.115
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22209": {
+  "name": "40 솔 오케/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    510.143,
+    515.115
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22207": {
+  "name": "40 솔 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    503.05,
+    515.115
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22607": {
+  "name": "Null 55",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    503.05,
+    515.115
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22205": {
+  "name": "40 솔 든팔/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    510.143,
+    515.115
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22203": {
+  "name": "40 솔 내린팔/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    503.05,
+    510.143
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22201": {
+  "name": "40 프라/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    503.05,
+    515.115
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22199": {
+  "name": "40 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    503.05,
+    515.115
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22197": {
+  "name": "40 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    503.05,
+    515.115
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22195": {
+  "name": "39 프라이스 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    490.14,
+    503.07
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22609": {
+  "name": "Null 56",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    490.14,
+    503.07
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22193": {
+  "name": "39 바닥/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    490.14,
+    503.07
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22191": {
+  "name": "39 이름2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    499.6,
+    503.07
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22189": {
+  "name": "39 2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    490.14,
+    503.07
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22187": {
+  "name": "39 이름1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    497.598,
+    503.07
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22185": {
+  "name": "39 1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    490.14,
+    503.07
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22183": {
+  "name": "39 빛/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    490.14,
+    503.07
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22181": {
+  "name": "39 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    490.14,
+    503.07
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22179": {
+  "name": "39 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    490.14,
+    503.07
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16759": {
+  "name": "Black Solid 4",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    75.876,
+    91.959
+   ],
+   [
+    384.017,
+    389.656
+   ],
+   [
+    482.683,
+    490.157
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16474": {
+  "name": "MOSTLY USE Dust Particles Overlay Green Screen __ By Green Pedia (1080p).mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/MOSTLY USE Dust Particles Overlay Green Screen __ By Green Pedia (1080p).mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    50.35,
+    60.861
+   ],
+   [
+    75.876,
+    91.959
+   ],
+   [
+    352.853,
+    369.002
+   ],
+   [
+    384.017,
+    389.656
+   ],
+   [
+    482.683,
+    490.157
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "25434": {
+  "name": "GettyImages-1409705963.jpg",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/GettyImages-1409705963.jpg",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    482.683,
+    490.157
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22177": {
+  "name": "38 솔 달러/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    472.706,
+    482.683
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22175": {
+  "name": "38 솔 핫독/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    471.071,
+    482.683
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "18191": {
+  "name": "#광효과.mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/#광효과.mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    178.478,
+    187.254
+   ],
+   [
+    215.749,
+    221.922
+   ],
+   [
+    304.571,
+    309.576
+   ],
+   [
+    315.082,
+    317.718
+   ],
+   [
+    389.656,
+    407.841
+   ],
+   [
+    439.773,
+    447.181
+   ],
+   [
+    471.071,
+    482.683
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22171": {
+  "name": "38 솔 팔2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    469.58,
+    482.683
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22169": {
+  "name": "38 솔 팔1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    469.58,
+    482.683
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22167": {
+  "name": "38 솔 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    478.679,
+    482.683
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22165": {
+  "name": "38 솔 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    469.58,
+    482.683
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22611": {
+  "name": "Null 57",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    469.58,
+    482.683
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22163": {
+  "name": "38 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    469.58,
+    482.683
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22161": {
+  "name": "38 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    469.58,
+    482.683
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22159": {
+  "name": "37 솔 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    466.633,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22157": {
+  "name": "37 솔 눈2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    462.563,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22155": {
+  "name": "37 솔 눈1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    462.563,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22153": {
+  "name": "37 솔 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    462.563,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22613": {
+  "name": "Null 58",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    446.503,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22151": {
+  "name": "37 여자4 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    456.924,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22615": {
+  "name": "Null 59",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    446.503,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22149": {
+  "name": "37 핫독남 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    456.924,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22617": {
+  "name": "Null 60",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22147": {
+  "name": "37 트럭2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    456.49,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22143": {
+  "name": "37 사람6 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22619": {
+  "name": "Null 61",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22141": {
+  "name": "37 사람5 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22621": {
+  "name": "Null 62",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    446.503,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22139": {
+  "name": "37 사람4 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22623": {
+  "name": "Null 63",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22137": {
+  "name": "37 사람3 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22625": {
+  "name": "Null 64",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    446.503,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22135": {
+  "name": "37 사람2 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22627": {
+  "name": "Null 65",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22133": {
+  "name": "37 사람1 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22629": {
+  "name": "Null 66",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    446.503,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22131": {
+  "name": "37 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22129": {
+  "name": "37 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    447.17,
+    469.603
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22127": {
+  "name": "36 남자 팔/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    434.05,
+    447.181
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16791": {
+  "name": "세모지감정12_아이디어.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정12_아이디어.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    360.06,
+    369.002
+   ],
+   [
+    435.068,
+    447.181
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22125": {
+  "name": "36 남자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    434.05,
+    447.181
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22631": {
+  "name": "Null 67",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    434.05,
+    447.181
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22123": {
+  "name": "36 어둠/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    252.252,
+    266.266
+   ],
+   [
+    434.05,
+    447.181
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22121": {
+  "name": "36 악수 글/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    439.773,
+    447.181
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22119": {
+  "name": "36 악수 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    435.068,
+    447.181
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22633": {
+  "name": "Null 68",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    434.05,
+    447.181
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22115": {
+  "name": "36 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    434.05,
+    447.181
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22113": {
+  "name": "36 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    434.05,
+    447.181
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22111": {
+  "name": "35 캐릭 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    420.287,
+    434.067
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22109": {
+  "name": "35 캐릭 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    419.286,
+    434.067
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22635": {
+  "name": "Null 69",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    418.619,
+    434.067
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22107": {
+  "name": "35 남자 손/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    419.286,
+    434.067
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16790": {
+  "name": "세모지감정11_실망.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정11_실망.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    431.598,
+    434.067
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22105": {
+  "name": "35 남자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    419.286,
+    434.067
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22637": {
+  "name": "Null 70",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    419.286,
+    434.067
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22103": {
+  "name": "35 남자 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    424.992,
+    434.067
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22101": {
+  "name": "35 프라이스/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    419.286,
+    434.067
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22099": {
+  "name": "35 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    419.286,
+    434.067
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22097": {
+  "name": "35 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    419.286,
+    434.067
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22095": {
+  "name": "34 연도/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    407.83,
+    419.286
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22093": {
+  "name": "34 2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    413.714,
+    419.286
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22091": {
+  "name": "34 1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    412.98,
+    419.286
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22089": {
+  "name": "34 말풍/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    412.346,
+    419.286
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22087": {
+  "name": "34 사진/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    407.83,
+    419.286
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "15071": {
+  "name": "배경 패턴3/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    66.4,
+    75.876
+   ],
+   [
+    407.841,
+    419.286
+   ]
+  ],
+  "via": [
+   "comp",
+   "자료 배경3"
+  ]
+ },
+ "22085": {
+  "name": "34 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    407.83,
+    419.286
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22083": {
+  "name": "33 회원제/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    390.257,
+    407.841
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22081": {
+  "name": "33 회원/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    390.257,
+    407.841
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22077": {
+  "name": "33 남자 팔/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    389.63,
+    407.841
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22075": {
+  "name": "33 남자 팔1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    389.63,
+    407.841
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22073": {
+  "name": "33 남자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    389.63,
+    407.841
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22639": {
+  "name": "Null 71",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    389.63,
+    407.841
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22071": {
+  "name": "33 남자 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    401.335,
+    407.841
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22069": {
+  "name": "33 빛/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    389.63,
+    407.841
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22067": {
+  "name": "33 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    389.63,
+    407.841
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22065": {
+  "name": "33 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    389.63,
+    407.841
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22063": {
+  "name": "32 로고/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    384.017,
+    386.286
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22061": {
+  "name": "32 사진/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    384.017,
+    389.647
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22059": {
+  "name": "32 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    384.017,
+    389.647
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22057": {
+  "name": "31 도매/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    380.714,
+    384.017
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22055": {
+  "name": "31 여자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    369.0,
+    384.017
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22641": {
+  "name": "Null 72",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    369.0,
+    384.017
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22053": {
+  "name": "31 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    369.0,
+    384.017
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22051": {
+  "name": "31 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    369.0,
+    384.017
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22049": {
+  "name": "30 남자 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    363.13,
+    369.002
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22047": {
+  "name": "30 남자 팔/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    359.393,
+    369.002
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22045": {
+  "name": "30 남자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    359.393,
+    369.002
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22643": {
+  "name": "Null 73",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    359.393,
+    369.002
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "23746": {
+  "name": "Black Solid 13",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    352.853,
+    369.002
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "23744": {
+  "name": "줄다리기.mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/줄다리기.mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    352.853,
+    369.002
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22043": {
+  "name": "30 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    352.853,
+    369.002
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22039": {
+  "name": "29 남자 말2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    348.282,
+    352.853
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22037": {
+  "name": "29 남자 말1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    345.546,
+    352.853
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22035": {
+  "name": "29 남자 든손/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    345.546,
+    352.853
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22033": {
+  "name": "29 남자 표정2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    345.546,
+    352.853
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22031": {
+  "name": "29 남자 표정1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    335.21,
+    345.546
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16788": {
+  "name": "세모지감정09_빠직.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정09_빠직.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    345.546,
+    352.853
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16789": {
+  "name": "세모지감정10_생각중.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정10_생각중.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    246.413,
+    266.266
+   ],
+   [
+    335.202,
+    345.546
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22029": {
+  "name": "29 남자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    335.21,
+    352.853
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22645": {
+  "name": "Null 74",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    335.21,
+    352.853
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22027": {
+  "name": "29 남자 든팔뚝/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    335.21,
+    352.853
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22025": {
+  "name": "29 남자 내린팔/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    335.21,
+    345.546
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22023": {
+  "name": "29 빛/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    335.21,
+    352.853
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22021": {
+  "name": "29 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    335.21,
+    352.853
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22019": {
+  "name": "29 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    335.21,
+    352.853
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22017": {
+  "name": "28 책상/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    317.718,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22015": {
+  "name": "28 의자2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    317.718,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22013": {
+  "name": "28 사람2 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    317.718,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22647": {
+  "name": "Null 75",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    317.723,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22011": {
+  "name": "28 의자1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    317.718,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22009": {
+  "name": "28 사람1 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    317.718,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22649": {
+  "name": "Null 76",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    317.423,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22007": {
+  "name": "28 남자 생각/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    330.33,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22005": {
+  "name": "28 남자 입2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    329.396,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22003": {
+  "name": "28 남자 입1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    317.718,
+    329.396
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16793": {
+  "name": "세모지감정14_킥킥.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정14_킥킥.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    329.396,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22001": {
+  "name": "28 남자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    317.718,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22651": {
+  "name": "Null 77",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    317.089,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21999": {
+  "name": "28 남자 팣/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    317.718,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21997": {
+  "name": "28 통과/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    326.86,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21995": {
+  "name": "28 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    317.718,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21993": {
+  "name": "28 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    317.718,
+    335.235
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21991": {
+  "name": "27 건물/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    315.082,
+    317.718
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21987": {
+  "name": "27 이름2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    312.312,
+    317.718
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21985": {
+  "name": "27 2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    311.311,
+    317.718
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21983": {
+  "name": "27 이름1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    312.312,
+    317.718
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21981": {
+  "name": "27 1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    311.311,
+    317.718
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21979": {
+  "name": "27 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    311.311,
+    317.718
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21977": {
+  "name": "26 악수 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    304.571,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22653": {
+  "name": "Null 78",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    304.571,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21973": {
+  "name": "26 어둠/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    304.571,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22732": {
+  "name": "Leak 1.mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/AC Precomps/Organic Light Leak 1 (3)/Footage/Leak 1.mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    294.761,
+    294.761
+   ]
+  ],
+  "via": [
+   "comp",
+   "Organic Light Leak 1 (3)"
+  ]
+ },
+ "21971": {
+  "name": "26 남자 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    302.536,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21969": {
+  "name": "26 남자 전성/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    295.295,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21967": {
+  "name": "26 남자 눈2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    295.295,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21965": {
+  "name": "26 남자 눈1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    295.295,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21963": {
+  "name": "26 남자 팔2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    295.295,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21961": {
+  "name": "26 남자 팔1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    295.295,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21959": {
+  "name": "26 남자 입/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    295.295,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21957": {
+  "name": "26 남자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    295.295,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22655": {
+  "name": "Null 79",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    295.295,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21955": {
+  "name": "26 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    295.295,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21953": {
+  "name": "26 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    295.295,
+    309.576
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21951": {
+  "name": "25 연도/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    289.99,
+    295.295
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21949": {
+  "name": "25 법/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    289.99,
+    295.295
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22727": {
+  "name": "Black Solid 12",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    289.99,
+    295.295
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21316": {
+  "name": "변호사.mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/변호사.mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    105.906,
+    113.113
+   ],
+   [
+    246.413,
+    266.266
+   ],
+   [
+    289.99,
+    295.295
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21947": {
+  "name": "25 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    289.99,
+    295.295
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21945": {
+  "name": "25 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    289.99,
+    295.295
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16797": {
+  "name": "세모지감정18_행복.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정18_행복.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    266.266,
+    279.513
+   ],
+   [
+    284.751,
+    289.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21943": {
+  "name": "24 여자2 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    279.5,
+    289.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22657": {
+  "name": "Null 80",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    279.5,
+    289.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21941": {
+  "name": "24 여자1 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    279.5,
+    289.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22659": {
+  "name": "Null 81",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    278.833,
+    289.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21939": {
+  "name": "24 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    279.5,
+    289.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21937": {
+  "name": "24 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    279.5,
+    289.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21935": {
+  "name": "23 연도/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    271.605,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21933": {
+  "name": "23 2/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    272.573,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21931": {
+  "name": "23 1/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    272.573,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22720": {
+  "name": "Black Solid 11",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    271.605,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21929": {
+  "name": "23 여자 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    268.368,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16794": {
+  "name": "세모지감정15_하트.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정15_하트.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    266.266,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21927": {
+  "name": "23 여자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    266.266,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22661": {
+  "name": "Null 82",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    266.266,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21925": {
+  "name": "23 남자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    266.266,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22663": {
+  "name": "Null 83",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    265.566,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21923": {
+  "name": "23 건물/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    266.266,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21921": {
+  "name": "23 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    266.266,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21919": {
+  "name": "23 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    266.266,
+    279.513
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21917": {
+  "name": "22 글/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    260.394,
+    266.266
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21915": {
+  "name": "22 자막/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    260.394,
+    266.266
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22683": {
+  "name": "Adjustment Layer 8",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    260.394,
+    266.266
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21905": {
+  "name": "22 법/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    252.252,
+    266.266
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21913": {
+  "name": "22 변호/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    246.413,
+    266.266
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21911": {
+  "name": "22 솔 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    249.416,
+    266.266
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21909": {
+  "name": "22 솔 팔/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    246.413,
+    266.266
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21907": {
+  "name": "22 솔 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    246.413,
+    266.266
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22665": {
+  "name": "Null 84",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    246.413,
+    266.266
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21903": {
+  "name": "22 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    246.413,
+    266.266
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21901": {
+  "name": "22 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    246.413,
+    266.266
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21899": {
+  "name": "21 여자 말/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    240.474,
+    246.413
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21897": {
+  "name": "21 여자 메인/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    239.806,
+    246.413
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22667": {
+  "name": "Null 85",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    239.806,
+    246.413
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22674": {
+  "name": "Black Solid 10",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    239.806,
+    246.413
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21893": {
+  "name": "21 제목/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    222.289,
+    246.413
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21891": {
+  "name": "21 자막/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    221.922,
+    246.413
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "22710": {
+  "name": "0_American_Usa_1920x1080.mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/0_American_Usa_1920x1080.mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    221.922,
+    246.38
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21889": {
+  "name": "21 배경/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    221.922,
+    246.413
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21887": {
+  "name": "21 가이드/B209_코스트코_미나_에펙사용2.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용2 Layers/B209_코스트코_미나_에펙사용2.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    221.922,
+    246.413
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16785": {
+  "name": "세모지감정06_반짝반짝.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정06_반짝반짝.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    73.473,
+    75.876
+   ],
+   [
+    218.085,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20711": {
+  "name": "20 큰건물/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    215.749,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20709": {
+  "name": "20 13/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    209.943,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20707": {
+  "name": "20 12/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    209.776,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20705": {
+  "name": "20 11/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    209.61,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20703": {
+  "name": "20 10/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    209.443,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20701": {
+  "name": "20 9/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    209.276,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20699": {
+  "name": "20 8/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    209.109,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20697": {
+  "name": "20 7/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    208.942,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20695": {
+  "name": "20 6/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    208.775,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20693": {
+  "name": "20 5/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    208.609,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20691": {
+  "name": "20 4/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    208.442,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20689": {
+  "name": "20 3/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    208.275,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20687": {
+  "name": "20 2/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    204.271,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20685": {
+  "name": "20 1/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    208.108,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20683": {
+  "name": "20 지도/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    204.271,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "19671": {
+  "name": "glow sphere.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/glow sphere.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    18.819,
+    24.057
+   ],
+   [
+    204.271,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20681": {
+  "name": "20 배경/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    204.271,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20679": {
+  "name": "20 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    204.271,
+    221.922
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20677": {
+  "name": "19 년도/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    24.057,
+    33.1
+   ],
+   [
+    187.254,
+    204.271
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20675": {
+  "name": "19 자막/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    199.132,
+    204.271
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "18040": {
+  "name": "컨페티 축하포1.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/컨페티 축하포1.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    202.97,
+    204.271
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21351": {
+  "name": "옛 페드마트.jpg",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/옛 페드마트.jpg",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    187.254,
+    204.271
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20669": {
+  "name": "18 기회/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    184.785,
+    187.254
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20667": {
+  "name": "18 절호/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    184.785,
+    187.254
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20665": {
+  "name": "18 솔 눈2/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    178.478,
+    187.254
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20663": {
+  "name": "18 솔 눈1/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    178.478,
+    187.254
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20661": {
+  "name": "18 솔 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    178.478,
+    187.254
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21013": {
+  "name": "Null 30",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    178.478,
+    187.254
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20657": {
+  "name": "18 배경/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    178.478,
+    187.254
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20655": {
+  "name": "18 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    178.478,
+    187.254
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20653": {
+  "name": "17 직원 팔/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    160.861,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20651": {
+  "name": "17 직원 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    160.861,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21015": {
+  "name": "Null 31",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    160.861,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20649": {
+  "name": "17 직원 말/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    171.305,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20647": {
+  "name": "17 솔 팔/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    160.861,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20645": {
+  "name": "17 솔 생각/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    161.862,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16782": {
+  "name": "세모지감정03_당황.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정03_당황.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    172.039,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20643": {
+  "name": "17 솔 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    160.861,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21017": {
+  "name": "Null 32",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    160.494,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20641": {
+  "name": "17 어둠/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    160.861,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20639": {
+  "name": "17 사람들 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    156.99,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21019": {
+  "name": "Null 33",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    156.323,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20637": {
+  "name": "17 사람들2 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    156.99,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21021": {
+  "name": "Null 34",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    156.99,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20635": {
+  "name": "17 배경/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    156.99,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20633": {
+  "name": "17 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    156.99,
+    178.478
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20631": {
+  "name": "16 솔 말/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    154.721,
+    156.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16780": {
+  "name": "세모지감정01_놀람.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정01_놀람.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    148.982,
+    154.721
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20629": {
+  "name": "16 솔 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    146.33,
+    156.96
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21023": {
+  "name": "Null 35",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    146.33,
+    156.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20627": {
+  "name": "16 솔 든팔2/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    154.721,
+    156.96
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20625": {
+  "name": "16 솔 든팔1/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    154.721,
+    156.96
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20623": {
+  "name": "16 솔 든팔뚝/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    154.721,
+    156.96
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20621": {
+  "name": "16 솔 내린팔/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    146.33,
+    154.721
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20619": {
+  "name": "16 남자 말/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    148.182,
+    156.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16799": {
+  "name": "세모지감정20_화색.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정20_화색.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    146.346,
+    156.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20617": {
+  "name": "16 남자 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    146.33,
+    156.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21025": {
+  "name": "Null 36",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    145.663,
+    156.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20615": {
+  "name": "16 남자 팔/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    146.33,
+    156.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20613": {
+  "name": "16 배경/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    146.33,
+    156.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20611": {
+  "name": "16 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    146.33,
+    156.99
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20609": {
+  "name": "15 말풍/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    140.908,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20607": {
+  "name": "15 자막/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    131.498,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20605": {
+  "name": "15 로고/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    131.16,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20603": {
+  "name": "15 흰배경/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    131.16,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20599": {
+  "name": "14 남자 말/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    127.16,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20597": {
+  "name": "14 남자 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    126.293,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21027": {
+  "name": "Null 37",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    120.721,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20595": {
+  "name": "14 솔 말/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    122.723,
+    127.194
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20593": {
+  "name": "14 솔 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    120.721,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "16792": {
+  "name": "세모지감정13_충격.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/세모지용/세모지감정13_충격.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    127.694,
+    137.738
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21029": {
+  "name": "Null 38",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    120.053,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20591": {
+  "name": "14 솔 팔2/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    120.721,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20589": {
+  "name": "14 솔 팔1/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    120.721,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20587": {
+  "name": "14 배경/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    120.721,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20585": {
+  "name": "14 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    120.721,
+    146.346
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20583": {
+  "name": "13 여자 말/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    116.683,
+    120.721
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20581": {
+  "name": "13 여자 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    113.113,
+    120.721
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21031": {
+  "name": "Null 39",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    112.412,
+    120.721
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20579": {
+  "name": "13 여자 팔/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    113.113,
+    120.721
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20577": {
+  "name": "13 솔 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    113.113,
+    120.721
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21033": {
+  "name": "Null 40",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    113.113,
+    120.721
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20575": {
+  "name": "13 배경/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    113.113,
+    120.721
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20573": {
+  "name": "13 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    113.113,
+    120.721
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20571": {
+  "name": "12 변호사/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    109.476,
+    113.113
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20569": {
+  "name": "12 솔 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    105.906,
+    113.113
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21035": {
+  "name": "Null 41",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    105.906,
+    113.113
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20567": {
+  "name": "12 영상/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    105.906,
+    113.113
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20565": {
+  "name": "12 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    105.906,
+    113.113
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20561": {
+  "name": "11 솔/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    102.97,
+    105.906
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21220": {
+  "name": "필름 데미지.mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/필름 데미지.mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    102.97,
+    105.906
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20559": {
+  "name": "11 어둠/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    102.97,
+    105.906
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20557": {
+  "name": "11 사진/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    101.2,
+    105.906
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20555": {
+  "name": "11 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    101.2,
+    105.906
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20553": {
+  "name": "10 말/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    94.995,
+    101.201
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20551": {
+  "name": "10 이름/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    91.959,
+    101.201
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20549": {
+  "name": "10 사진/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    91.291,
+    101.201
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20545": {
+  "name": "9 2/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    82.549,
+    91.959
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20543": {
+  "name": "9 1/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    82.549,
+    91.959
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20541": {
+  "name": "9 이름/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    89.356,
+    91.959
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20539": {
+  "name": "9 배경/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    82.549,
+    91.959
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20537": {
+  "name": "9 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    82.549,
+    91.959
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21187": {
+  "name": "Doing the Right Thing When Dollars Are on the Line_ Jim Sinegal (720p).mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/Doing the Right Thing When Dollars Are on the Line_ Jim Sinegal (720p).mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    75.876,
+    82.549
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20535": {
+  "name": "8 기사/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    68.368,
+    75.876
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20533": {
+  "name": "8 잡스/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    73.073,
+    75.876
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20531": {
+  "name": "8 이름/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    66.4,
+    75.876
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20529": {
+  "name": "8 사진/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    66.4,
+    75.876
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20527": {
+  "name": "8 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    66.4,
+    75.876
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20525": {
+  "name": "7 로고/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.591,
+    60.861
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20523": {
+  "name": "7 카드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    50.35,
+    57.591
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20521": {
+  "name": "7 어둠/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    50.35,
+    60.861
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20519": {
+  "name": "7 배경/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    50.35,
+    60.861
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20517": {
+  "name": "7 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    50.35,
+    60.861
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20515": {
+  "name": "6 자막/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    47.181,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20513": {
+  "name": "6 로고/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    46.513,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21137": {
+  "name": "White Solid 2",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    46.513,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20509": {
+  "name": "5 코코 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    40.207,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21037": {
+  "name": "Null 42",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    40.207,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20507": {
+  "name": "5 코코 팔/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    40.207,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20505": {
+  "name": "5 코코 화살2/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    45.779,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20503": {
+  "name": "5 코코 화살1/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    45.779,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20501": {
+  "name": "5 월마 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    40.207,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21039": {
+  "name": "Null 43",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    40.207,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20499": {
+  "name": "5 월마 팔/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    40.207,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20497": {
+  "name": "5 아마 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    40.207,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21041": {
+  "name": "Null 44",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    39.54,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20495": {
+  "name": "5 아마 팔/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    40.207,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20493": {
+  "name": "5 배경/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    40.207,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20491": {
+  "name": "5 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    40.207,
+    50.35
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20489": {
+  "name": "4 1등자막/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    34.768,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20487": {
+  "name": "4 이마트 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    33.1,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21043": {
+  "name": "Null 45",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    33.1,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20485": {
+  "name": "4 2등자막/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    34.768,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20483": {
+  "name": "4 홈플 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    33.1,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21045": {
+  "name": "Null 46",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    33.1,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20481": {
+  "name": "4 3등자막/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    34.768,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20479": {
+  "name": "4 코코 말/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    36.203,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20477": {
+  "name": "4 코코 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    33.1,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21047": {
+  "name": "Null 47",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    33.1,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20475": {
+  "name": "4 1기둥/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    33.1,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20473": {
+  "name": "4 2기둥/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    33.433,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20471": {
+  "name": "4 3기둥/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    33.767,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20469": {
+  "name": "4 배경/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    33.1,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20467": {
+  "name": "4 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    33.1,
+    40.207
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20465": {
+  "name": "3 윈/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    30.03,
+    33.1
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20463": {
+  "name": "3 화살2/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    29.496,
+    33.1
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20461": {
+  "name": "3 화살1/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    29.496,
+    33.1
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20459": {
+  "name": "3 코코 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    24.057,
+    33.1
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21049": {
+  "name": "Null 48",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    23.39,
+    33.1
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20457": {
+  "name": "3 롯데 윽/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    30.764,
+    33.1
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20455": {
+  "name": "3 롯데 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    24.057,
+    33.1
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21051": {
+  "name": "Null 49",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    24.057,
+    33.1
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20453": {
+  "name": "3 자막2/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    27.427,
+    33.1
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20451": {
+  "name": "3 자막1/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    24.758,
+    33.1
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20449": {
+  "name": "3 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    24.057,
+    33.1
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20447": {
+  "name": "2 증가/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    19.152,
+    24.057
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20445": {
+  "name": "2 로고/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    18.819,
+    24.057
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21073": {
+  "name": "Black Solid 9",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    18.151,
+    24.057
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21069": {
+  "name": "코스트코 전경.jpg",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/코스트코 전경.jpg",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    18.151,
+    24.057
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20443": {
+  "name": "2 자막/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    14.147,
+    24.057
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21067": {
+  "name": "코스트코.jpg",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/코스트코.jpg",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    13.046,
+    24.057
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20441": {
+  "name": "2 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    13.046,
+    24.057
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21059": {
+  "name": "B204_홈플러스B안썸네일.png",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/B204_홈플러스B안썸네일.png",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    8.842,
+    13.046
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20439": {
+  "name": "1 화살/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    5.439,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20437": {
+  "name": "1 롯데 윽/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    6.507,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20435": {
+  "name": "1 롯데 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.667,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21053": {
+  "name": "Null 50",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    0.0,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20433": {
+  "name": "1 홈플 윽/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    6.507,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20431": {
+  "name": "1 홈플 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.334,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21055": {
+  "name": "Null 51",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    0.0,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20429": {
+  "name": "1 이마트 윽/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    6.507,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20427": {
+  "name": "1 이마트 메인/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21057": {
+  "name": "Null 52",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    0.0,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20425": {
+  "name": "1 자막/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    3.504,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20423": {
+  "name": "1 어둠/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21062": {
+  "name": "Adjustment Layer 6",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    0.0,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "21060": {
+  "name": "마트배경.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#영상-자료/마트배경.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "20419": {
+  "name": "1 가이드/B209_코스트코_미나_에펙사용1.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/(Footage)/#일러소스/B209_코스트코_미나_에펙사용1 Layers/B209_코스트코_미나_에펙사용1.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    8.842
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ },
+ "15021": {
+  "name": "Pale Turquoise Solid 2",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    0.0,
+    980.0
+   ]
+  ],
+  "via": [
+   "comp"
+  ]
+ }
+}

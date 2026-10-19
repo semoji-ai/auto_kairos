@@ -1,0 +1,3149 @@
+{
+ "2368": {
+  "name": "63517.jpg",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/Comp/63517.jpg",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    217.32
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2642": {
+  "name": "세모지 로고/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    217.32
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2650": {
+  "name": "챕터 자막/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    1.735
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "챕터2 배경"
+  ]
+ },
+ "2646": {
+  "name": "챕터 패턴/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    1.735
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "챕터2 배경"
+  ]
+ },
+ "2758": {
+  "name": "Medium Orange Solid 1",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    0.0,
+    1.735
+   ],
+   [
+    19.92,
+    27.027
+   ],
+   [
+    98.899,
+    103.971
+   ],
+   [
+    120.587,
+    139.373
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "챕터2 배경"
+  ]
+ },
+ "2598": {
+  "name": "리뉴얼 또롱.wav",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/Comp/리뉴얼 또롱.wav",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    0.0,
+    1.735
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2809": {
+  "name": "Null 76",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    1.735,
+    217.32
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "#자막"
+  ]
+ },
+ "2764": {
+  "name": "Null 31",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    1.735,
+    217.32
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "#자막"
+  ]
+ },
+ "2279": {
+  "name": "B209_코스트코_오디오가영.wav",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/B209_코스트코_오디오가영.wav",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    1.735,
+    217.284
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "#자막"
+  ]
+ },
+ "669": {
+  "name": "Leak 2.mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/AC Precomps/Organic Light Leak 2 (3)/Footage/Leak 2.mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    208.275,
+    208.275
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "Organic Light Leak 2 (5)"
+  ]
+ },
+ "2742": {
+  "name": "glow sphere.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/glow sphere.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    209.176,
+    217.317
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3177": {
+  "name": "kr.PNG",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/자료/kr.PNG",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    209.176,
+    217.317
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2845": {
+  "name": "1993.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/1993.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    196.23,
+    197.898
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3165": {
+  "name": "17 프라이스/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    196.23,
+    197.898
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3169": {
+  "name": "17 코스트/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    196.23,
+    209.176
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3": {
+  "name": "#광효과.mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/#광효과.mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    41.909,
+    44.678
+   ],
+   [
+    167.734,
+    169.97
+   ],
+   [
+    197.898,
+    209.176
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3175": {
+  "name": "5565701_Coll_wavebreak_Animation_1920x1080.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/자료/5565701_Coll_wavebreak_Animation_1920x1080.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    205.372,
+    209.176
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3166": {
+  "name": "17 배경2/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    196.23,
+    197.898
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3167": {
+  "name": "17 배경/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    196.23,
+    209.176
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2842": {
+  "name": "Null 109",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    196.23,
+    209.176
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3161": {
+  "name": "16 화살/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    194.728,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3162": {
+  "name": "16 검/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    194.161,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3149": {
+  "name": "16 은퇴/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    189.99,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3163": {
+  "name": "16 말풍선/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    189.656,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3147": {
+  "name": "16 프라6/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    177.377,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3146": {
+  "name": "16 프라5/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    178.045,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3145": {
+  "name": "16 프라4/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    177.711,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3144": {
+  "name": "16 프라3/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    177.044,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3143": {
+  "name": "16 프라2/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    176.71,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3141": {
+  "name": "16 19/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    187.421,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3159": {
+  "name": "16 코10/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    176.243,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3158": {
+  "name": "16 코9/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    175.909,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3157": {
+  "name": "16 코8/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    175.576,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3156": {
+  "name": "16 코7/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    175.242,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3155": {
+  "name": "16 코6/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    174.908,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3154": {
+  "name": "16 코5/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    174.575,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3153": {
+  "name": "16 코4/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    174.241,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3152": {
+  "name": "16 코3/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    173.907,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3151": {
+  "name": "16 코2/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    173.574,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3142": {
+  "name": "16 프라1/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    169.97,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3148": {
+  "name": "16 파/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    169.97,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3160": {
+  "name": "16 코/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    169.97,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3150": {
+  "name": "16 빨/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    169.97,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2756": {
+  "name": "Black Solid 9",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    169.97,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2841": {
+  "name": "Null 108",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    169.97,
+    196.23
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3138": {
+  "name": "15 카드/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    167.067,
+    169.97
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2754": {
+  "name": "Adjustment Layer 83",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    56.957,
+    67.067
+   ],
+   [
+    167.067,
+    169.97
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "733": {
+  "name": "Adjustment Layer 1",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    158.725,
+    158.725
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "Simple Zoom In"
+  ]
+ },
+ "734": {
+  "name": "Transition Basic 05.wav",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/AC Precomps/Simple Zoom In-to-Out/Footage/Transition Basic 05.wav",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    158.725,
+    158.725
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "Simple Zoom In"
+  ]
+ },
+ "3136": {
+  "name": "15 네모/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    162.029,
+    169.97
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3178": {
+  "name": "핫도그.PNG",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/자료/핫도그.PNG",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    158.959,
+    169.97
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2840": {
+  "name": "Null 107",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    158.959,
+    169.97
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3133": {
+  "name": "14 뒤 말/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    156.523,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3131": {
+  "name": "14 뒤 팔/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    155.522,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3132": {
+  "name": "14 뒤 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    155.522,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2837": {
+  "name": "Null 104",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    155.122,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3128": {
+  "name": "14 카운터2/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    151.885,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3129": {
+  "name": "14 카운터/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    151.885,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3130": {
+  "name": "14 남 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    151.885,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2838": {
+  "name": "Null 105",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    151.251,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3134": {
+  "name": "14 여 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    151.885,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2839": {
+  "name": "Null 106",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    151.885,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3127": {
+  "name": "14 배경/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    151.885,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2836": {
+  "name": "Null 103",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    151.885,
+    158.959
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2755": {
+  "name": "Adjustment Layer 84",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    139.373,
+    151.885
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3179": {
+  "name": "Quick & Easy_ See what Costco Optical can do for you!.mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/자료/Quick & Easy_ See what Costco Optical can do for you!.mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    139.373,
+    151.885
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "688": {
+  "name": "Leak 2.mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/AC Precomps/Organic Light Leak 2 (3)/Footage/Leak 2.mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    128.762,
+    128.762
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "Organic Light Leak 2 (6)"
+  ]
+ },
+ "3124": {
+  "name": "13 사진3/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    129.663,
+    139.373
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3123": {
+  "name": "13 사진2/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    130.33,
+    139.373
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3125": {
+  "name": "13 사진/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    129.997,
+    139.373
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2634": {
+  "name": "배경  패턴2/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    98.899,
+    103.971
+   ],
+   [
+    129.663,
+    139.373
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "자료 배경2"
+  ]
+ },
+ "2835": {
+  "name": "Null 102",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    129.663,
+    139.373
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3121": {
+  "name": "12 회원/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    127.528,
+    129.663
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3118": {
+  "name": "12 카드/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    126.66,
+    129.663
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3120": {
+  "name": "12 사람/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    126.326,
+    129.663
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3116": {
+  "name": "12 누구/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    122.756,
+    129.663
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3119": {
+  "name": "12 매장/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    120.587,
+    129.663
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2639": {
+  "name": "배경 패턴3/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    120.587,
+    129.663
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "자료 배경3"
+  ]
+ },
+ "2248": {
+  "name": "Medium Orange Solid 1",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    120.587,
+    129.663
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "자료 배경3"
+  ]
+ },
+ "2834": {
+  "name": "Null 101",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    120.587,
+    129.663
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3109": {
+  "name": "11 옷장/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    112.346,
+    120.587
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3111": {
+  "name": "11 여 땀/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    115.549,
+    120.587
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3114": {
+  "name": "11 여 입/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    112.346,
+    120.587
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3113": {
+  "name": "11 여 말/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    116.216,
+    120.587
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3110": {
+  "name": "11 여 팔/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    112.346,
+    120.587
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3112": {
+  "name": "11 여 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    112.346,
+    120.587
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2833": {
+  "name": "Null 100",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    112.346,
+    120.587
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3108": {
+  "name": "11 배경/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    112.346,
+    120.587
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2832": {
+  "name": "Null 99",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    112.346,
+    120.587
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3103": {
+  "name": "10 박스/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    103.971,
+    112.346
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3106": {
+  "name": "10 검/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    103.971,
+    112.346
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3174": {
+  "name": "0_Money_American_3840x2160.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/자료/0_Money_American_3840x2160.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    103.971,
+    112.346
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3104": {
+  "name": "10 배경/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    103.971,
+    112.346
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2831": {
+  "name": "Null 98",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    103.971,
+    112.346
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3099": {
+  "name": "9 절대/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    101.468,
+    103.971
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3101": {
+  "name": "9 사진/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    98.899,
+    103.971
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3100": {
+  "name": "9 배경/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    98.899,
+    103.971
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2830": {
+  "name": "Null 97",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    98.899,
+    103.971
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3095": {
+  "name": "8 남 손가락/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    92.926,
+    98.899
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3096": {
+  "name": "8 원2/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    92.926,
+    98.899
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3097": {
+  "name": "8 원/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    92.926,
+    98.899
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3094": {
+  "name": "8 남 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    92.926,
+    98.899
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2829": {
+  "name": "Null 96",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    92.926,
+    98.899
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3093": {
+  "name": "8 배경/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    92.926,
+    98.899
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2828": {
+  "name": "Null 95",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    92.926,
+    98.899
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "650": {
+  "name": "Leak 2.mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/AC Precomps/Organic Light Leak 2 (3)/Footage/Leak 2.mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    77.511,
+    77.511
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "Organic Light Leak 2 (4)"
+  ]
+ },
+ "3088": {
+  "name": "7 최저가/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    88.455,
+    92.926
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3090": {
+  "name": "7 검정/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    83.517,
+    92.926
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3087": {
+  "name": "7 1983/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    79.446,
+    92.926
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2743": {
+  "name": "MOSTLY USE Dust Particles Overlay Green Screen __ By Green Pedia (1080p).mp4",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/MOSTLY USE Dust Particles Overlay Green Screen __ By Green Pedia (1080p).mp4",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    78.412,
+    92.926
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3180": {
+  "name": "The-first-Costco-in-Seattle-1983.jpg",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/자료/The-first-Costco-in-Seattle-1983.jpg",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    78.412,
+    92.926
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2827": {
+  "name": "Null 94",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    78.412,
+    92.926
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3084": {
+  "name": "6 남 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    71.238,
+    78.412
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2825": {
+  "name": "Null 92",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    70.637,
+    78.412
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3083": {
+  "name": "6 남 저도/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    71.238,
+    78.412
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3081": {
+  "name": "6 남2 ok/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    73.34,
+    78.412
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3082": {
+  "name": "6 남2 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    71.238,
+    78.412
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2826": {
+  "name": "Null 93",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    71.238,
+    78.412
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3080": {
+  "name": "6 건물/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    71.238,
+    78.412
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3079": {
+  "name": "6 배경/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    71.238,
+    78.412
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2824": {
+  "name": "Null 91",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    71.238,
+    78.412
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3074": {
+  "name": "5 시애틀/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    61.361,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3075": {
+  "name": "5 원/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    60.694,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3068": {
+  "name": "5 건13/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.891,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3067": {
+  "name": "5 건12/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.991,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3066": {
+  "name": "5 건11/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.824,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3065": {
+  "name": "5 건10/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.791,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3064": {
+  "name": "5 건9/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.958,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3063": {
+  "name": "5 건8/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.758,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3062": {
+  "name": "5 건7/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    58.025,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3061": {
+  "name": "5 건6/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.891,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3060": {
+  "name": "5 건5/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.724,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3059": {
+  "name": "5 건4/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.958,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3058": {
+  "name": "5 건3/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    58.091,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3057": {
+  "name": "5 건2/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.758,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3069": {
+  "name": "5 건/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    57.624,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3056": {
+  "name": "5 국가/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    56.957,
+    67.067
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3070": {
+  "name": "5 말풍선/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    67.501,
+    71.238
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3071": {
+  "name": "5 사업/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    53.487,
+    71.238
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3054": {
+  "name": "5 제프/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    50.784,
+    71.238
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3072": {
+  "name": "5 사진2/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    50.784,
+    71.238
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3077": {
+  "name": "5 짐/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    50.117,
+    71.238
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2709": {
+  "name": "종목백과감정11_실망.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/emotion_source/종목백과감정11_실망.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    69.57,
+    71.238
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3073": {
+  "name": "5 사진/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    50.117,
+    71.238
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3055": {
+  "name": "5 배경/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    50.117,
+    71.238
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2823": {
+  "name": "Null 90",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    50.117,
+    71.238
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3176": {
+  "name": "6830959_Storage_Industrial_4096x2160.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/자료/6830959_Storage_Industrial_4096x2160.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    44.678,
+    50.117
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3050": {
+  "name": "4 남2 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    36.703,
+    44.678
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2822": {
+  "name": "Null 89",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    36.103,
+    44.678
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3051": {
+  "name": "4 남 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    36.703,
+    44.678
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2821": {
+  "name": "Null 88",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    36.703,
+    44.678
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3046": {
+  "name": "4 프라이스/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    36.703,
+    44.678
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3052": {
+  "name": "4 페드/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    36.703,
+    44.678
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3048": {
+  "name": "4 조명/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    36.703,
+    44.678
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3047": {
+  "name": "4 배경/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    36.703,
+    44.678
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2820": {
+  "name": "Null 87",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    36.703,
+    44.678
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3039": {
+  "name": "3 남2 정식/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    33.7,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3040": {
+  "name": "3 남2 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    27.027,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2816": {
+  "name": "Null 83",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    26.627,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3038": {
+  "name": "3 남2 팔/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    27.027,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3043": {
+  "name": "3 뒤2 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    27.027,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2818": {
+  "name": "Null 85",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    27.027,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3044": {
+  "name": "3 뒤 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    27.027,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2817": {
+  "name": "Null 84",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    26.26,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3037": {
+  "name": "3 계산기/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    27.027,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3041": {
+  "name": "3 남 팔/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    27.027,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3042": {
+  "name": "3 남 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    27.027,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2819": {
+  "name": "Null 86",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    27.027,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3036": {
+  "name": "3 배경/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    27.027,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2815": {
+  "name": "Null 82",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    27.027,
+    36.703
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3031": {
+  "name": "2 건강/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    24.424,
+    27.027
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3034": {
+  "name": "2 페드/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    19.92,
+    27.027
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3029": {
+  "name": "2 차트/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    24.424,
+    27.027
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3033": {
+  "name": "2 업계/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    21.255,
+    27.027
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3032": {
+  "name": "2 돈/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    21.255,
+    27.027
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2636": {
+  "name": "배경 패턴1/리뉴얼 베이스 가이드.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/Comp/리뉴얼 베이스 가이드 Layers/리뉴얼 베이스 가이드.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    19.92,
+    27.027
+   ]
+  ],
+  "via": [
+   "comp_가영",
+   "자료 배경1"
+  ]
+ },
+ "2814": {
+  "name": "Null 81",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    19.92,
+    27.027
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3027": {
+  "name": "1 뒤 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    2.402,
+    6.173
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2811": {
+  "name": "Null 78",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    2.402,
+    6.173
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3017": {
+  "name": "1 1955/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    1.735,
+    6.173
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3020": {
+  "name": "1 건물/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    1.735,
+    6.173
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3018": {
+  "name": "1 배경2/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    1.735,
+    6.173
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3026": {
+  "name": "1 남 페드/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    14.047,
+    19.92
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2716": {
+  "name": "종목백과감정18_행복.mov",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/emotion_source/종목백과감정18_행복.mov",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    12.246,
+    19.92
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3022": {
+  "name": "1 남 눈/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    5.506,
+    12.246
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3024": {
+  "name": "1 남 표정/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    12.246,
+    19.92
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3021": {
+  "name": "1 계산대/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    5.506,
+    19.92
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3023": {
+  "name": "1 남 팔/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    12.246,
+    19.92
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3025": {
+  "name": "1 남 메인/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    5.506,
+    19.92
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2813": {
+  "name": "Null 80",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    5.506,
+    19.92
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "3019": {
+  "name": "1 배경/B_코스트코_가영.ai",
+  "file": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완/B_코스트코_가영편집완/(Footage)/일러/B_코스트코_가영 Layers/B_코스트코_가영.ai",
+  "missing": false,
+  "mpath": "",
+  "solid": false,
+  "spans": [
+   [
+    5.506,
+    19.92
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2812": {
+  "name": "Null 79",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    5.506,
+    19.92
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2810": {
+  "name": "Null 77",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    1.735,
+    19.92
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ },
+ "2843": {
+  "name": "Pale Turquoise Solid 2",
+  "file": "",
+  "missing": false,
+  "mpath": null,
+  "solid": true,
+  "spans": [
+   [
+    0.0,
+    124.825
+   ]
+  ],
+  "via": [
+   "comp_가영"
+  ]
+ }
+}
