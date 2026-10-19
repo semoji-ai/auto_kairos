@@ -3,15 +3,15 @@
 Korea's big three marts: E-Mart, Homeplus,
 
 2
-00:00:03,790 --> 00:00:04,670
+00:00:03,790 --> 00:00:04,590
 Lotte Mart.
 
 3
-00:00:04,630 --> 00:00:07,430
+00:00:04,630 --> 00:00:07,380
 Each operates over 100 stores,
 
 4
-00:00:07,420 --> 00:00:10,380
+00:00:07,420 --> 00:00:10,320
 but as sales fall, stores are closing.
 
 5
@@ -19,7 +19,7 @@ but as sales fall, stores are closing.
 No. 2 Homeplus recently filed for
 
 6
-00:00:13,160 --> 00:00:14,520
+00:00:13,160 --> 00:00:14,470
 bankruptcy protection.
 
 7
@@ -31,7 +31,7 @@ But one chain is doing the opposite:
 more stores, sales up hundreds of millions
 
 9
-00:00:19,270 --> 00:00:20,070
+00:00:19,270 --> 00:00:19,840
 a year.
 
 10
@@ -39,7 +39,7 @@ a year.
 It's Costco, the US members-only warehouse
 
 11
-00:00:22,520 --> 00:00:25,160
+00:00:22,520 --> 00:00:25,110
 club that came to Korea in 1998.
 
 12
@@ -51,7 +51,7 @@ In 2024, with just 19 stores in Korea,
 Costco outsold Lotte Mart and its 100-plus
 
 14
-00:00:31,710 --> 00:00:33,950
+00:00:31,710 --> 00:00:33,900
 stores, stunning the retail industry.
 
 15
@@ -59,16 +59,16 @@ stores, stunning the retail industry.
 In a year or two, it may pass Homeplus
 
 16
-00:00:36,580 --> 00:00:37,380
+00:00:36,580 --> 00:00:36,960
 too,
 
 17
-00:00:37,000 --> 00:00:39,000
-and reportedly become Korea's No.
+00:00:37,000 --> 00:00:39,400
+and reportedly become Korea's No. 2
 
 18
-00:00:39,160 --> 00:00:40,680
-2 big-box chain.
+00:00:39,560 --> 00:00:40,600
+big-box chain.
 
 19
 00:00:40,640 --> 00:00:43,040
@@ -79,7 +79,7 @@ Meanwhile, Costco is thriving not just in
 Korea but in the US, against giants Amazon
 
 21
-00:00:46,160 --> 00:00:47,120
+00:00:46,160 --> 00:00:46,940
 and Walmart,
 
 22
@@ -91,7 +91,7 @@ with its stock up nearly tenfold over the
 past decade. So how did Costco,
 
 24
-00:00:51,940 --> 00:00:53,460
+00:00:51,940 --> 00:00:53,300
 a members-only store,
 
 25
@@ -99,7 +99,7 @@ a members-only store,
 win over so many shoppers around the
 
 26
-00:00:55,340 --> 00:00:56,140
+00:00:55,340 --> 00:00:55,900
 world?
 
 27
@@ -119,7 +119,7 @@ Costco's founder, Jim Sinegal.
 He started it in 1983 and listed it on
 
 31
-00:01:09,690 --> 00:01:11,530
+00:01:09,690 --> 00:01:11,380
 NASDAQ just two years later,
 
 32
@@ -139,7 +139,7 @@ Jim said his retail know-how
 was all learned from 'this man.'
 
 36
-00:01:19,910 --> 00:01:22,790
+00:01:19,910 --> 00:01:22,620
 He founded FedMart in 1954,
 
 37
@@ -151,7 +151,7 @@ and then Price Club in 1976.
 He was Sol Price, known as the father of
 
 39
-00:01:28,020 --> 00:01:29,060
+00:01:28,020 --> 00:01:29,050
 American retail.
 
 40
@@ -167,7 +167,7 @@ the world's largest retailer,
 also called Sol the father of retail,
 
 43
-00:01:35,650 --> 00:01:38,290
+00:01:35,650 --> 00:01:38,200
 saying he'd stolen many of Sol's ideas.
 
 44
@@ -175,7 +175,7 @@ saying he'd stolen many of Sol's ideas.
 To understand Costco's history,
 
 45
-00:01:40,360 --> 00:01:42,400
+00:01:40,360 --> 00:01:42,370
 we first need to know Sol Price.
 
 46
@@ -187,7 +187,7 @@ Surprisingly, until he founded FedMart in
 his late 30s, Sol was a lawyer with no
 
 48
-00:01:47,610 --> 00:01:49,130
+00:01:47,610 --> 00:01:49,040
 retail background at all.
 
 49
@@ -195,7 +195,7 @@ retail background at all.
 He got into retail after his father-in-law
 
 50
-00:01:51,560 --> 00:01:52,360
+00:01:51,560 --> 00:01:52,230
 died,
 
 51
@@ -215,15 +215,15 @@ Looking to lease the estate's empty
 21,000-square-foot San Diego warehouse,
 
 55
-00:01:59,940 --> 00:02:00,740
+00:01:59,940 --> 00:02:00,550
 Sol
 
 56
-00:02:00,590 --> 00:02:03,310
+00:02:00,590 --> 00:02:03,220
 heard of a then-hot LA discount store:
 
 57
-00:02:03,260 --> 00:02:05,020
+00:02:03,260 --> 00:02:04,880
 And he heard about Fedco.
 
 58
@@ -247,7 +247,7 @@ cheaply to members. It was a members-only
 discount store for federal workers,
 
 63
-00:02:15,660 --> 00:02:16,460
+00:02:15,660 --> 00:02:16,390
 named for
 
 64
@@ -271,7 +271,7 @@ a five-to-six-hour round trip,
 drove up to shop. Hearing this,
 
 69
-00:02:28,110 --> 00:02:29,710
+00:02:28,110 --> 00:02:29,680
 Sol went to see it himself.
 
 70
@@ -291,7 +291,7 @@ and pictured Fedco in his father-in-law's
 warehouse.
 
 74
-00:02:36,800 --> 00:02:39,520
+00:02:36,800 --> 00:02:39,420
 But Fedco wasn't a for-profit business.
 
 75
@@ -311,11 +311,11 @@ to expand to other areas,
 and flatly turned down Sol's offer to open
 
 79
-00:02:48,100 --> 00:02:48,900
+00:02:48,100 --> 00:02:48,880
 a store there.
 
 80
-00:02:48,920 --> 00:02:51,320
+00:02:48,920 --> 00:02:51,310
 So Sol went home empty-handed,
 
 81
@@ -327,7 +327,7 @@ but instead of disappointment,
 he felt something else welling up:
 
 83
-00:02:55,270 --> 00:02:57,110
+00:02:55,270 --> 00:02:57,100
 this was his big chance.
 
 84
@@ -347,7 +347,7 @@ store for civil servants
 called FedMart, launching his retail
 
 88
-00:03:07,150 --> 00:03:07,950
+00:03:07,150 --> 00:03:07,700
 career.
 
 89
@@ -355,7 +355,7 @@ career.
 Since the business was all but guaranteed
 
 90
-00:03:10,020 --> 00:03:11,660
+00:03:10,020 --> 00:03:11,610
 to succeed from day one,
 
 91
@@ -367,11 +367,11 @@ FedMart made $3 million in year one.
 And unlike Fedco, FedMart was purely for
 
 93
-00:03:17,700 --> 00:03:18,500
+00:03:17,700 --> 00:03:18,320
 profit,
 
 94
-00:03:18,360 --> 00:03:20,760
+00:03:18,360 --> 00:03:20,690
 so it expanded fast elsewhere,
 
 95
@@ -379,7 +379,7 @@ so it expanded fast elsewhere,
 soon becoming a major retailer with dozens
 
 96
-00:03:23,250 --> 00:03:25,610
+00:03:23,250 --> 00:03:25,520
 of stores across the US Southwest.
 
 97
@@ -391,7 +391,7 @@ But FedMart's success ended up shaking the
 entire US retail industry,
 
 99
-00:03:30,160 --> 00:03:31,320
+00:03:30,160 --> 00:03:31,170
 quite by accident.
 
 100
@@ -403,7 +403,7 @@ Back then, the US had "fair trade" laws
 that let manufacturers, not retailers,
 
 102
-00:03:36,490 --> 00:03:38,730
+00:03:36,490 --> 00:03:38,570
 set the prices of the goods stores sold.
 
 103
@@ -423,11 +423,11 @@ at a discount to undercut small retailers.
 But with no discounts allowed and goods
 
 107
-00:03:47,330 --> 00:03:49,010
+00:03:47,330 --> 00:03:48,920
 always sold at full price,
 
 108
-00:03:48,960 --> 00:03:51,280
+00:03:48,960 --> 00:03:51,210
 the laws did nothing for consumers.
 
 109
@@ -439,7 +439,7 @@ But Sol, a lawyer, had seen a loophole in
 these laws from the day he founded
 
 111
-00:03:55,650 --> 00:03:56,450
+00:03:55,650 --> 00:03:56,410
 FedMart.
 
 112
@@ -451,7 +451,7 @@ The laws covered "general retailers," and
 FedMart, a membership store serving only
 
 114
-00:04:01,170 --> 00:04:03,250
+00:04:01,170 --> 00:04:03,160
 government employees, wasn't one.
 
 115
@@ -491,7 +491,7 @@ found ways around fair trade laws.
 Most opened in rural towns and small
 
 124
-00:04:22,730 --> 00:04:24,810
+00:04:22,730 --> 00:04:24,740
 cities where enforcement was lax.
 
 125
@@ -503,7 +503,7 @@ As everyday shoppers began enjoying the
 savings, fair trade laws slowly lost their
 
 127
-00:04:29,660 --> 00:04:30,460
+00:04:29,660 --> 00:04:30,170
 teeth.
 
 128
@@ -527,7 +527,7 @@ kill a bad law and launch America's
 discount store boom, sought new investors
 
 133
-00:04:43,080 --> 00:04:44,280
+00:04:43,080 --> 00:04:44,220
 to grow FedMart.
 
 134
@@ -539,7 +539,7 @@ But the partner he chose would once again
 steer Sol's life off course.
 
 136
-00:04:50,550 --> 00:04:52,630
+00:04:50,550 --> 00:04:52,560
 Sol partnered with Hugo Mann,
 
 137
@@ -547,7 +547,7 @@ Sol partnered with Hugo Mann,
 a successful German retailer,
 
 138
-00:04:54,640 --> 00:04:56,520
+00:04:54,640 --> 00:04:56,430
 hoping to grow FedMart further.
 
 139
@@ -567,7 +567,7 @@ seized the board and voted to fire Sol,
 the company's founder. In fact,
 
 143
-00:05:05,190 --> 00:05:07,510
+00:05:05,190 --> 00:05:07,420
 Hugo wasn't after FedMart's business.
 
 144
@@ -575,7 +575,7 @@ Hugo wasn't after FedMart's business.
 He wanted the real estate under its dozens
 
 145
-00:05:09,700 --> 00:05:11,300
+00:05:09,700 --> 00:05:11,250
 of stores all along.
 
 146
@@ -583,7 +583,7 @@ of stores all along.
 Sol was 60 when he was fired from the
 
 147
-00:05:13,610 --> 00:05:16,010
+00:05:13,610 --> 00:05:15,920
 company he'd built over 20 years.
 
 148
@@ -591,7 +591,7 @@ company he'd built over 20 years.
 He had actually planned to hand FedMart
 
 149
-00:05:17,920 --> 00:05:20,600
+00:05:17,920 --> 00:05:20,560
 over to Hugo and ease into retirement.
 
 150
@@ -603,7 +603,7 @@ But Hugo's betrayal made Sol furious,
 and at 60, he decided to start a new
 
 152
-00:05:25,800 --> 00:05:27,160
+00:05:25,800 --> 00:05:27,130
 business all over again.
 
 153
@@ -611,7 +611,7 @@ business all over again.
 But the discount market was already
 
 154
-00:05:29,090 --> 00:05:29,890
+00:05:29,090 --> 00:05:29,820
 packed.
 
 155
@@ -623,15 +623,15 @@ It was a tough field for any newcomer.
 That's when Sol came up with a whole new
 
 157
-00:05:34,460 --> 00:05:35,780
+00:05:34,460 --> 00:05:35,610
 kind of discount store.
 
 158
-00:05:35,650 --> 00:05:38,370
+00:05:35,650 --> 00:05:38,280
 Not for consumers, but for restaurants,
 
 159
-00:05:38,320 --> 00:05:40,720
+00:05:38,320 --> 00:05:40,660
 shops, and other small business owners.
 
 160
@@ -655,7 +655,7 @@ where goods sat on display in bulk,
 still in the manufacturer's packaging,
 
 165
-00:05:51,380 --> 00:05:52,860
+00:05:51,380 --> 00:05:52,790
 much like a wholesale depot.
 
 166
@@ -663,7 +663,7 @@ much like a wholesale depot.
 So the warehouse store you find at Costco
 
 167
-00:05:55,190 --> 00:05:57,470
+00:05:55,190 --> 00:05:57,350
 today was originally Sol's idea.
 
 168
@@ -671,7 +671,7 @@ today was originally Sol's idea.
 On top of that, Sol brought back FedMart's
 
 169
-00:06:00,190 --> 00:06:01,310
+00:06:00,190 --> 00:06:01,140
 membership fee model.
 
 170
@@ -683,7 +683,7 @@ He believed earning money from membership
 fees, rather than from sales,
 
 172
-00:06:05,260 --> 00:06:07,260
+00:06:05,260 --> 00:06:07,190
 was a better way to draw customers.
 
 173
@@ -695,7 +695,7 @@ With no markup needed on prices,
 he could sell goods far cheaper than his
 
 175
-00:06:11,470 --> 00:06:12,270
+00:06:11,470 --> 00:06:12,200
 competitors.
 
 176
@@ -715,7 +715,7 @@ In July 1976, he opened Price Club,
 combining his last name with 'club' for a
 
 180
-00:06:22,750 --> 00:06:24,030
+00:06:22,750 --> 00:06:23,940
 members-only store.
 
 181
@@ -723,7 +723,7 @@ members-only store.
 But contrary to Sol's hopes,
 
 182
-00:06:25,980 --> 00:06:28,140
+00:06:25,980 --> 00:06:28,080
 Price Club didn't take off right away.
 
 183
@@ -731,7 +731,7 @@ Price Club didn't take off right away.
 Small business owners weren't used to
 
 184
-00:06:30,120 --> 00:06:31,800
+00:06:30,120 --> 00:06:31,730
 paying a fee just to shop,
 
 185
@@ -739,11 +739,11 @@ paying a fee just to shop,
 and convincing them one by one to try
 
 186
-00:06:33,930 --> 00:06:36,090
+00:06:33,930 --> 00:06:35,980
 Price Club was a real struggle.
 
 187
-00:06:36,020 --> 00:06:38,340
+00:06:36,020 --> 00:06:38,300
 That's when Sol had another idea.
 
 188
@@ -767,7 +767,7 @@ so their employees naturally became Price
 Club members. As more people joined,
 
 193
-00:06:48,300 --> 00:06:50,420
+00:06:48,300 --> 00:06:50,250
 word spread that you could shop for less,
 
 194
@@ -775,7 +775,7 @@ word spread that you could shop for less,
 and soon business owners and everyday
 
 195
-00:06:52,530 --> 00:06:54,690
+00:06:52,530 --> 00:06:54,550
 shoppers alike flocked to join.
 
 196
@@ -787,7 +787,7 @@ Meanwhile, as crowds grew,
 hot dog vendors began popping up outside
 
 198
-00:06:58,830 --> 00:07:00,030
+00:06:58,830 --> 00:06:59,940
 Price Club stores.
 
 199
@@ -799,7 +799,7 @@ Watching shoppers happily munching on hot
 dogs, Sol decided Price Club should sell
 
 201
-00:07:04,780 --> 00:07:05,580
+00:07:04,780 --> 00:07:05,360
 its own.
 
 202
@@ -807,11 +807,11 @@ its own.
 The hot dog and soda combo they started
 
 203
-00:07:07,600 --> 00:07:10,600
+00:07:07,600 --> 00:07:10,520
 selling was priced at just $1.50.
 
 204
-00:07:10,560 --> 00:07:13,200
+00:07:10,560 --> 00:07:13,030
 Sol explained it wasn't about profit,
 
 205
@@ -819,7 +819,7 @@ Sol explained it wasn't about profit,
 but a service for members who came to shop
 
 206
-00:07:15,070 --> 00:07:16,990
+00:07:15,070 --> 00:07:16,910
 at Price Club, he explained.
 
 207
@@ -831,7 +831,7 @@ That combo is the origin of the $1.50 hot
 dog deal Costco still sells today,
 
 209
-00:07:22,630 --> 00:07:23,830
+00:07:22,630 --> 00:07:23,770
 40 years later.
 
 210
@@ -843,7 +843,7 @@ As Price Club grew, two people became very
 interested in Sol's membership warehouse
 
 212
-00:07:28,690 --> 00:07:29,650
+00:07:28,690 --> 00:07:29,500
 business model.
 
 213
@@ -851,7 +851,7 @@ business model.
 Walmart founder Sam Walton and
 
 214
-00:07:32,190 --> 00:07:35,070
+00:07:32,190 --> 00:07:35,030
 Jeff Brotman, a lawyer and entrepreneur.
 
 215
@@ -871,11 +871,11 @@ warehouse store on Price Club.
 Sol gladly agreed and let him explore the
 
 219
-00:07:43,390 --> 00:07:45,150
+00:07:43,390 --> 00:07:45,090
 stores as much as he liked.
 
 220
-00:07:45,130 --> 00:07:46,170
+00:07:45,130 --> 00:07:46,160
 A year later,
 
 221
@@ -883,7 +883,7 @@ A year later,
 Sam began recruiting members for his
 
 222
-00:07:48,120 --> 00:07:50,440
+00:07:48,120 --> 00:07:50,370
 membership warehouse store, Sam's Club.
 
 223
@@ -919,7 +919,7 @@ a college student looking for a part-time
 job, started as a cashier at FedMart,
 
 231
-00:08:10,299 --> 00:08:11,259
+00:08:10,299 --> 00:08:11,089
 which was hiring.
 
 232
@@ -947,7 +947,7 @@ FedMart paid the highest wages in the
 industry and even offered health
 
 238
-00:08:23,769 --> 00:08:25,609
+00:08:23,769 --> 00:08:25,529
 insurance, rare at the time.
 
 239
@@ -955,11 +955,11 @@ insurance, rare at the time.
 Sol, the boss, noticed that even as a
 
 240
-00:08:28,329 --> 00:08:29,249
+00:08:28,329 --> 00:08:29,129
 part-timer,
 
 241
-00:08:29,169 --> 00:08:31,889
+00:08:29,169 --> 00:08:31,879
 Jim worked as hard as full-time staff.
 
 242
@@ -979,11 +979,11 @@ Price Club, Jim followed him and became
 one of its key executives.
 
 246
-00:08:41,479 --> 00:08:44,119
+00:08:41,479 --> 00:08:43,999
 With nearly 30 years beside Sol,
 
 247
-00:08:44,039 --> 00:08:46,519
+00:08:44,039 --> 00:08:46,429
 Jim was a seasoned retail veteran.
 
 248
@@ -999,7 +999,7 @@ pitched Jim a new membership warehouse
 business. Instead of the Southwest,
 
 251
-00:08:53,349 --> 00:08:55,269
+00:08:53,349 --> 00:08:55,039
 where Price Club already ruled,
 
 252
@@ -1007,7 +1007,7 @@ where Price Club already ruled,
 He argued they could succeed by targeting
 
 253
-00:08:57,279 --> 00:08:59,879
+00:08:57,279 --> 00:08:59,729
 a niche in the Northwest, around Seattle.
 
 254
@@ -1015,7 +1015,7 @@ a niche in the Northwest, around Seattle.
 Copying the model of his mentor of 30
 
 255
-00:09:02,169 --> 00:09:03,769
+00:09:02,169 --> 00:09:03,679
 years bothered Jim,
 
 256
@@ -1023,7 +1023,7 @@ years bothered Jim,
 but Sol, who'd let Sam Walton start Sam's
 
 257
-00:09:06,599 --> 00:09:07,399
+00:09:06,599 --> 00:09:06,919
 Club,
 
 258
@@ -1043,7 +1043,7 @@ in Seattle, Jim and Jeff
 they founded Costco, their very own
 
 262
-00:09:18,079 --> 00:09:19,519
+00:09:18,079 --> 00:09:19,369
 membership warehouse company.
 
 263
@@ -1075,7 +1075,7 @@ and applied it to Costco,
 one step at a time. The first lesson from
 
 270
-00:09:33,219 --> 00:09:34,019
+00:09:33,219 --> 00:09:33,749
 Sol?
 
 271
@@ -1087,7 +1087,7 @@ Never, ever advertise.
 Spending on needless ads
 
 273
-00:09:38,359 --> 00:09:41,079
+00:09:38,359 --> 00:09:41,029
 means raising prices to cover the cost,
 
 274
@@ -1095,7 +1095,7 @@ means raising prices to cover the cost,
 and then you can't offer members the
 
 275
-00:09:43,149 --> 00:09:44,349
+00:09:43,149 --> 00:09:44,259
 lowest prices.
 
 276
@@ -1107,7 +1107,7 @@ Sol taught Jim back at Price Club that if
 members can't get the lowest prices,
 
 278
-00:09:48,619 --> 00:09:50,699
+00:09:48,619 --> 00:09:50,659
 they have no reason to buy a membership.
 
 279
@@ -1115,7 +1115,7 @@ they have no reason to buy a membership.
 So instead of advertising,
 
 280
-00:09:52,619 --> 00:09:55,179
+00:09:52,619 --> 00:09:55,089
 Costco sold goods cheaper than anyone,
 
 281
@@ -1131,7 +1131,7 @@ Costco members.
 Jim also put gas stations, pharmacies,
 
 284
-00:10:01,379 --> 00:10:03,259
+00:10:01,379 --> 00:10:03,199
 and optical shops in stores,
 
 285
@@ -1147,7 +1147,7 @@ gas stations, pharmacies,
 and optical shops. This, too,
 
 288
-00:10:09,559 --> 00:10:11,879
+00:10:09,559 --> 00:10:11,839
 was a tactic Sol had used at FedMart.
 
 289
@@ -1199,7 +1199,7 @@ but as a benefit for the loyal members who
 shop at Costco.
 
 301
-00:10:36,569 --> 00:10:38,649
+00:10:36,569 --> 00:10:38,579
 One way it differed from Price Club?
 
 302
@@ -1211,7 +1211,7 @@ Costco expanded much, much faster.
 While Price Club cautiously added stores
 
 304
-00:10:43,899 --> 00:10:44,859
+00:10:43,899 --> 00:10:44,689
 one by one,
 
 305
@@ -1219,7 +1219,7 @@ one by one,
 Costco opened store #2 a month after the
 
 306
-00:10:47,529 --> 00:10:50,329
+00:10:47,529 --> 00:10:50,259
 first, and #3 three months later,
 
 307
@@ -1231,7 +1231,7 @@ growing at a breathtaking pace.
 Price Club, however, after Sol Price
 
 309
-00:10:54,939 --> 00:10:56,699
+00:10:54,939 --> 00:10:56,649
 retired in 1988,
 
 310
@@ -1243,11 +1243,11 @@ began losing ground, squeezed by the
 aggressive expansion of Costco and
 
 312
-00:11:01,169 --> 00:11:02,609
+00:11:01,169 --> 00:11:02,529
 Walmart's Sam's Club.
 
 313
-00:11:02,569 --> 00:11:05,769
+00:11:02,569 --> 00:11:05,719
 In 1993, it merged into Costco,
 
 314
@@ -1255,7 +1255,7 @@ In 1993, it merged into Costco,
 passing the warehouse club crown to Costco
 
 315
-00:11:08,239 --> 00:11:09,919
+00:11:08,239 --> 00:11:09,849
 and fading into history.
 
 316
@@ -1271,7 +1271,7 @@ Costco kept growing. And in 1995 came the
 private label no Costco story is complete
 
 319
-00:11:17,729 --> 00:11:18,529
+00:11:17,729 --> 00:11:18,379
 without:
 
 320
@@ -1283,7 +1283,7 @@ Kirkland Signature, a big hit.
 Costco's product strategy is pretty
 
 322
-00:11:24,791 --> 00:11:25,591
+00:11:24,791 --> 00:11:25,491
 unique.
 
 323
@@ -1299,7 +1299,7 @@ over 100,000 different items,
 Costco carries only 4,000 hand-picked
 
 326
-00:11:32,411 --> 00:11:33,211
+00:11:32,411 --> 00:11:33,152
 products.
 
 327
@@ -1311,7 +1311,7 @@ That's because Costco believes members
 don't want endless variety—they want the
 
 329
-00:11:37,352 --> 00:11:38,392
+00:11:37,352 --> 00:11:38,382
 best price.
 
 330
@@ -1331,7 +1331,7 @@ raw material costs rose,
 but never lowering them when costs fell.
 
 334
-00:11:46,662 --> 00:11:48,262
+00:11:46,662 --> 00:11:48,172
 He took bold action.
 
 335
@@ -1355,7 +1355,7 @@ suppliers' goods. But at first,
 each kind of product carried its own brand
 
 340
-00:11:58,372 --> 00:11:59,172
+00:11:58,372 --> 00:11:58,862
 name.
 
 341
@@ -1371,7 +1371,7 @@ As random brand names piled up,
 Jim started thinking of one name to unite
 
 344
-00:12:05,812 --> 00:12:06,612
+00:12:05,812 --> 00:12:06,542
 them all.
 
 345
@@ -1383,7 +1383,7 @@ Then, thanks to one employee's idea,
 the brand we now link with Costco was
 
 347
-00:12:11,182 --> 00:12:11,982
+00:12:11,182 --> 00:12:11,592
 born.
 
 348
@@ -1403,19 +1403,19 @@ Costco picked certain product lines and
 began selling Kirkland-branded versions at
 
 352
-00:12:20,522 --> 00:12:22,962
+00:12:20,522 --> 00:12:22,932
 20% less than the supplier brands.
 
 353
-00:12:22,972 --> 00:12:24,732
+00:12:22,972 --> 00:12:24,682
 But cheap as it was,
 
 354
-00:12:24,722 --> 00:12:27,202
+00:12:24,722 --> 00:12:27,082
 Kirkland never skimped on quality.
 
 355
-00:12:27,122 --> 00:12:29,922
+00:12:27,122 --> 00:12:29,912
 Costco's secret to quality at low prices?
 
 356
@@ -1439,7 +1439,7 @@ Signature coffee beans, Kimberly-Clark,
 known for Huggies, made the diapers,
 
 361
-00:12:40,312 --> 00:12:42,232
+00:12:40,312 --> 00:12:42,212
 and Duracell made the batteries.
 
 362
@@ -1455,7 +1455,7 @@ Huggies-quality diapers and
 Duracell-quality batteries at low Kirkland
 
 365
-00:12:48,972 --> 00:12:50,092
+00:12:48,972 --> 00:12:50,062
 Signature prices.
 
 366
@@ -1471,7 +1471,7 @@ Costco members
 were an opportunity no manufacturer could
 
 369
-00:12:56,322 --> 00:12:57,122
+00:12:56,322 --> 00:12:57,052
 pass up.
 
 370
@@ -1479,7 +1479,7 @@ pass up.
 Costco took products from great brand
 
 371
-00:12:59,252 --> 00:13:00,052
+00:12:59,252 --> 00:12:59,922
 makers,
 
 372
@@ -1499,7 +1499,7 @@ Kirkland Signature brand,
 so members got top-quality goods at low
 
 376
-00:13:07,402 --> 00:13:08,202
+00:13:07,402 --> 00:13:08,122
 prices.
 
 377
@@ -1515,7 +1515,7 @@ as both high-quality and affordable,
 sales kept growing and the brand's value
 
 380
-00:13:14,882 --> 00:13:15,762
+00:13:14,882 --> 00:13:15,682
 rose too.
 
 381
@@ -1531,7 +1531,7 @@ Kirkland Signature, and the brand drives
 25% of Costco's total sales.
 
 384
-00:13:24,402 --> 00:13:25,802
+00:13:24,402 --> 00:13:25,762
 It's become a giant.
 
 385
@@ -1543,7 +1543,7 @@ In 2023, Kirkland Signature sales alone
 even topped the total revenue of Nike and
 
 387
-00:13:31,322 --> 00:13:32,202
+00:13:31,322 --> 00:13:32,192
 Coca-Cola.
 
 388
@@ -1571,7 +1571,7 @@ In 1994, it teamed up with Shinsegae to
 open Korea's first membership warehouse
 
 394
-00:13:44,992 --> 00:13:45,792
+00:13:44,992 --> 00:13:45,391
 store.
 
 395
@@ -1583,11 +1583,11 @@ But from 1998, it set up Costco Korea as
 its own company and began running the
 
 397
-00:13:50,551 --> 00:13:51,671
+00:13:50,551 --> 00:13:51,581
 stores directly.
 
 398
-00:13:51,621 --> 00:13:54,101
+00:13:51,621 --> 00:13:54,071
 As homegrown discount chains thrived,
 
 399
@@ -1603,7 +1603,7 @@ all pulled out. Only Costco survived,
 slowly growing around Seoul and other big
 
 402
-00:14:01,551 --> 00:14:02,351
+00:14:01,551 --> 00:14:02,171
 cities.
 
 403
@@ -1619,7 +1619,7 @@ interview that Korea's Yangjae store
 topped sales among hundreds worldwide,
 
 406
-00:14:09,971 --> 00:14:12,211
+00:14:09,971 --> 00:14:12,161
 thanking Koreans for loving Costco.
 
 407
@@ -1647,7 +1647,7 @@ chain, Traders, but
 many observers say it'll be hard to stop
 
 413
-00:14:25,371 --> 00:14:28,011
+00:14:25,371 --> 00:14:28,001
 Costco, the original membership warehouse.
 
 414
@@ -1659,7 +1659,7 @@ Let's keep an eye on how Costco's rivalry
 with E-Mart, Korea's top retailer,
 
 416
-00:14:32,681 --> 00:14:33,481
+00:14:32,681 --> 00:14:33,341
 plays out.
 
 417
