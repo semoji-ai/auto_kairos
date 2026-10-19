@@ -46,3 +46,11 @@ def test_test_scale_stretches_every_spoken_segment(tmp_path):
                     "--job", str(tmp_path / "job.json")], check=True)
     w = json.load(open(ep / "build/t3/warp.json"))
     assert abs(w["length_new"] - (20 + 0.3 * 7)) < 1e-6        # 구간 3초+4초가 각각 1.3배
+
+
+def test_aep_option_overrides_input(tmp_path):
+    ep = make_ep(tmp_path)
+    root = Path(__file__).resolve().parents[1]
+    subprocess.run([sys.executable, str(root / "scripts/timewarp.py"), str(ep), "t4", "--test-pattern",
+                    "--aep", str(tmp_path / "x.aep"), "--job", str(tmp_path / "job.json")], check=True)
+    assert json.load(open(tmp_path / "job.json"))["aep"] == str(tmp_path / "x.aep")

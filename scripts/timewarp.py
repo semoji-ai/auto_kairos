@@ -31,7 +31,7 @@ json.dump(out, open(os.path.join(bd, "warp.json"), "w"), indent=1)
 job_path = args[args.index("--job") + 1] if "--job" in args else os.path.join(os.path.dirname(__file__), "ae/localize_job.json")
 abs_ep = os.path.abspath(ep)
 name = os.path.basename(abs_ep)
-json.dump({"aep": os.path.join(abs_ep, "src", f"{name}_main_ko.aep"),
+json.dump({"aep": os.path.abspath(args[args.index("--aep") + 1]) if "--aep" in args else os.path.join(abs_ep, "src", f"{name}_main_ko.aep"),
            "save_as": os.path.join(abs_ep, "build", tag, f"{name}_{tag}.aep"),
            "out": os.path.join(abs_ep, "build", tag, "localize_log.json"),
            "mute_sources": [P["narration"] for P in cfg["parts"].values()],
