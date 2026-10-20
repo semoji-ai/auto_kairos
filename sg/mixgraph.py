@@ -1,25 +1,26 @@
-"""ffmpeg 오디오 믹스 조각: 소스 자르기·지연·볼륨(키프레임 선형)·페이드."""
+"""numpy 오디오 믹스: 볼륨 포락선(키프레임 선형)과 버퍼에 더하기(지연·끝 페이드)."""
+import numpy as np
 
 
-def volume_expr(gain, keys, key_base, clip_src_in, clip_t):
-    """볼륨 표현식(출력 타임라인 t 기준). keys=[[시각, 선형값]]: key_base='clip'이면 조각 시작 기준,
-    'media'면 소스 시각(→ 조각이 소스 clip_src_in부터 출력 clip_t에 놓임)."""
+def envelope(t, gain, keys):
+    """시각 배열 t(초)에서의 선형 볼륨. keys=[[시각, 값]](같은 시각축) — 첫 키 앞은 첫 값, 마지막 뒤는 마지막 값."""
     if not keys:
-        return f"{gain:g}"
-    pts = sorted(((k - clip_src_in if key_base == "media" else k) + clip_t, v) for k, v in keys)
-    expr = f"{pts[-1][1]:g}"
-    for (t0, v0), (t1, v1) in reversed(list(zip(pts, pts[1:]))):
-        lin = f"({v0:g}+({v1:g}-{v0:g})*(t-{t0})/{max(1e-6, t1 - t0)})"
-        expr = f"if(between(t,{t0},{t1}),{lin},if(gte(t,{t1}),{expr},{expr}))"
-    return f"if(lt(t,{pts[0][0]}),{pts[0][1]:g},{expr})"
+        return np.full(len(t), float(gain), np.float32)
+    k = sorted(keys)
+    return np.interp(t, [a for a, _ in k], [v for _, v in k]).astype(np.float32)
 
 
-def entry(file, t, src_in, dur, gain, keys, key_base, fade_out, k=0):
-    """입력 인자(소스 구간)와 필터 체인(48k 스테레오, 지연, 볼륨, 끝 페이드)."""
-    args = ["-ss", f"{src_in}", "-t", f"{dur}", "-i", file]
-    ms = int(round(t * 1000))
-    flt = f"aresample=48000,aformat=channel_layouts=stereo,adelay={ms}|{ms}"
-    flt += f",volume='{volume_expr(gain, keys, key_base, src_in, t)}':eval=frame"
+def place(buf, x, t, sr, gain, fade_out=0.0):
+    """buf[샘플, 채널]의 t초 위치에 x를 gain(샘플별)로 더함. 끝 fade_out초 선형 페이드. 버퍼 밖은 잘림."""
+    s = int(round(t * sr))
+    if s >= len(buf) or len(x) == 0:
+        return
+    if s < 0:
+        x, gain, s = x[-s:], gain[-s:], 0
+    n = min(len(x), len(buf) - s)
+    g = np.asarray(gain[:n], np.float32).copy()
     if fade_out > 0:
-        flt += f",afade=t=out:st={t + dur - fade_out:.3f}:d={fade_out:.3f}"
-    return args, flt
+        f = min(n, int(round(fade_out * sr)))
+        if f > 0:
+            g[n - f:] *= np.linspace(1.0, 0.0, f, dtype=np.float32)
+    buf[s:s + n] += x[:n] * g[:, None]

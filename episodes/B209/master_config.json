@@ -48,5 +48,23 @@
   "Homeplus",
   "COSTCO",
   "신세계"
- ]
+ ],
+ "audio": {
+  "main_seq_uid": "54a2a221-da6d-4036-aa04-acd3eea793c1",
+  "sfx_track": 1,
+  "bgm_tracks": [
+   2,
+   3
+  ],
+  "outro_bgm": "Sand_Castle.mp3",
+  "narration_ref": "B209_코스트코_오디오원본.wav",
+  "key_base": "clip",
+  "identity_exclude": [
+   [
+    745,
+    785
+   ]
+  ],
+  "identity_exclude_why": "프리미어가 덧댄 원본 녹음 2초(오디오원본.wav, NAS에 없음) — 한국어 내레이션이라 영어판과 무관"
+ }
 }

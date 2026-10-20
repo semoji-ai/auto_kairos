@@ -5,8 +5,9 @@ from sg.edl import pr_to_master
 FADE = 10 / 29.97
 
 
-def flatten(timeline, main_uid, track_indices, _off=0.0, _gain=1.0, _win=None):
-    """메인 시퀀스의 지정 audio 트랙을 중첩 시퀀스까지 풀어 프리미어 시각 조각 목록으로."""
+def flatten(timeline, main_uid, track_indices, _off=0.0, _gain=1.0, _win=None, _levels=()):
+    """메인 시퀀스의 지정 audio 트랙을 중첩 시퀀스까지 풀어 프리미어 시각 조각 목록으로.
+    levels = 바깥→안 클립마다 {clip_start(절대 프리미어 시각), clip_in, gain, keys} — 볼륨은 단계별로 곱한다."""
     seqs = {s["uid"]: s for s in timeline}
     out = []
     for t in seqs[main_uid]["tracks"]:
@@ -18,14 +19,17 @@ def flatten(timeline, main_uid, track_indices, _off=0.0, _gain=1.0, _win=None):
                 a, b = max(a, _win[0]), min(b, _win[1])
                 if b <= a:
                     continue
+            lv = {"clip_start": round(_off + it["start"], 4), "clip_in": it["in"], "gain": it.get("gain", 1.0),
+                  "keys": it.get("gain_keys", [])}
             if it["seq_uid"]:
                 shift = _off + it["start"] - it["in"]
-                out += flatten(timeline, it["seq_uid"], None, shift, _gain * it.get("gain", 1.0), (it["in"], it["out"]))
+                w_out = it["out"] if it["out"] > it["in"] else it["in"] + (it["end"] - it["start"])   # 중첩 클립은 out=0으로 저장됨
+                out += flatten(timeline, it["seq_uid"], None, shift, _gain * it.get("gain", 1.0), (it["in"], w_out),
+                               _levels + (lv,))
                 continue
             out.append({"name": it["name"], "file": it["file"], "pr_in": round(_off + a, 4), "pr_out": round(_off + b, 4),
                         "src_in": round(it["in"] + (a - it["start"]), 4), "gain": _gain * it.get("gain", 1.0),
-                        "gain_keys": it.get("gain_keys", []), "clip_start": round(_off + it["start"], 4),
-                        "clip_in": it["in"]})
+                        "gain_keys": it.get("gain_keys", []), "levels": list(_levels) + [lv]})
     return sorted(out, key=lambda x: x["pr_in"])
 
 
