@@ -65,7 +65,11 @@ if __name__ == "__main__":
     json.dump(job, open(os.path.join(root, "scripts/ae/replace_items_job.json"), "w"), ensure_ascii=False, indent=1)
     print("footage", len(jobs), "text layers", sum(len(j["texts"]) for j in jobs))
     if "--dry" not in sys.argv:
+        if os.path.exists(job["out"]):
+            os.remove(job["out"])                 # 옛 기록을 성공으로 오인하지 않게
         subprocess.run([os.path.join(root, "scripts/ae/run.sh"), os.path.join(root, "scripts/ae/replace_items.jsx")], check=True)
+        if not os.path.exists(job["out"]):
+            sys.exit("replace_items.jsx가 기록을 남기지 않음(AE 스크립트 오류 대화상자 확인)")
         log = json.load(open(job["out"]))
         print({k: (v if not isinstance(v, list) else len(v)) for k, v in log.items()})
         print("errors", log.get("errors", [])[:10])
