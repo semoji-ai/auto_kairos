@@ -17,7 +17,13 @@ order = []
 for c in edl["parts"]:
     if c["id"] not in order:
         order.append(c["id"])
-vids = [os.path.join(out_dir, f"part_{p}.mp4") for p in order] + [os.path.join(ep, "assets", "outro.mov")]
+# 아웃트로: 언어별 공용 에셋 대체 표에 있으면 그 파일(예: Semoji 영어판), 없으면 편 폴더의 원본
+_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+_swap = os.path.join(_root, "assets", "global", f"swap_{lang}.json")
+_tbl = {unicodedata.normalize("NFC", k): v for k, v in (json.load(open(_swap)).items() if os.path.exists(_swap) else [])}
+_oc = unicodedata.normalize("NFC", (edl.get("outro") or {}).get("clip", ""))
+outro_file = os.path.join(_root, _tbl[_oc]) if _oc in _tbl else os.path.join(ep, "assets", "outro.mov")
+vids = [os.path.join(out_dir, f"part_{p}.mp4") for p in order] + [outro_file]
 outro_dur = edl["outro"]["dur"] if edl.get("outro") else None   # 프리미어에서 쓴 길이만큼만(원본 파일은 더 김)
 filt = "".join(f"[{i}:v]" + (f"trim=duration={outro_dur},setpts=PTS-STARTPTS," if i == len(vids) - 1 and outro_dur else "")
                + f"scale=1920:1080,fps=30000/1001,format=yuv420p,setsar=1[v{i}];" for i in range(len(vids)))
