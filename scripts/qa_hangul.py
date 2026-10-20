@@ -15,6 +15,14 @@ def is_problem(text, brands):
     return bool(HANGUL.search(rest))
 
 
+SYL = re.compile(r"[가-힣]")
+
+
+def is_noise(text, conf):
+    """OCR 오독으로 보이는 것: 낮은 신뢰도, 완성형 한글 1자 이하(영어 끝에 붙은 글자·자모 반복)."""
+    return conf < 0.5 or len(SYL.findall(text)) < 2
+
+
 if __name__ == "__main__":
     ep, lang = os.path.abspath(sys.argv[1]), sys.argv[2]
     step = float(sys.argv[sys.argv.index("--step") + 1]) if "--step" in sys.argv else 1.0
@@ -37,8 +45,11 @@ if __name__ == "__main__":
             t = (int(os.path.basename(d["file"])[2:7]) - 1) * step
             bad = [it for it in d["items"] if is_problem(it["text"], brands)]
             if bad:
-                out.append({"t": round(t, 2), "file": d["file"], "items": [{"text": b["text"], "box": b["box"], "conf": b["conf"]} for b in bad]})
+                out.append({"t": round(t, 2), "file": d["file"],
+                            "items": [{"text": b["text"], "box": b["box"], "conf": b["conf"], "noise": is_noise(b["text"], b["conf"])} for b in bad]})
     json.dump(out, open(os.path.join(qd, "hangul.json"), "w"), ensure_ascii=False, indent=1)
+    out = [dict(o, items=[b for b in o["items"] if not b["noise"]]) for o in out]   # 시트·게이트는 잡음 제외
+    out = [o for o in out if o["items"]]
     from PIL import Image, ImageDraw
     for si in range(0, len(out), 12):
         chunk = out[si:si + 12]
