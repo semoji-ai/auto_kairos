@@ -21,6 +21,15 @@ def build_prompt(items, glossary, lang, kind):
                  "(e.g. explain a Korean institution in a few words). Convert Korean-specific expressions naturally.\n"
                  "Each item has a character budget for the spoken line (spaces included). Stay within ±15% of the budget.\n"
                  "Each item is spoken separately, so it must read naturally on its own while flowing from 'prev' to 'next'.\n")
+    elif kind == "raster":
+        rules = (f"You localize Korean text drawn inside illustrations of a Korean explainer video into {target}.\n"
+                 "Each item is text recognized by OCR inside one illustration layer ('layer' is the designer's layer name, "
+                 "'context' is the narration playing while it is on screen). OCR sometimes misreads drawings, logos or "
+                 "patterns as text: if the item is not real meaningful Korean text, return exactly \"__SKIP__\".\n"
+                 "Otherwise translate it short and punchy, never longer than max_chars. Keep numbers and years. "
+                 "Use only plain ASCII characters (no ₩, no curly quotes); write Korean won as KRW. "
+                 "If two_tone is true, the original emphasized part of the phrase in a second color: wrap the "
+                 "corresponding emphasized English words in [[ ]] (exactly one [[...]] span).\n")
     else:
         rules = (f"You localize short on-screen texts (titles, labels, captions, source credits) of a Korean video into {target}.\n"
                  "Keep them short and punchy. Never exceed max_chars. Keep numbers, years and brand names. 'Source: ...' for 출처.\n")

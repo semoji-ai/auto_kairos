@@ -58,3 +58,9 @@ def test_broken_json_is_retried_not_fatal():
         return '{"n001": "He said "never" ok"}' if len(calls) == 1 else '{"n001": "A", "n002": "B"}'
 
     assert translate_batch(ITEMS, {}, "en", "segments", runner) == {"n001": "A", "n002": "B"}
+
+
+def test_raster_prompt_allows_skip_and_emphasis_markers():
+    p = build_prompt([{"id": "1#0", "ko": "매장 수 및 매출 매년 증가", "max_chars": 40, "two_tone": True,
+                       "layer": "2 자막", "context": "매장 수도 늘고"}], {}, "en", "raster")
+    assert "__SKIP__" in p and "[[" in p and "max_chars" in p
