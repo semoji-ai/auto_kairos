@@ -58,6 +58,10 @@ subprocess.run(["ffmpeg", "-v", "error", "-y"] + ins + ["-filter_complex", mix, 
 final = os.path.join(out_dir, f"{os.path.basename(os.path.abspath(ep))}_{lang.upper()}_preview.mp4")
 vdur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", video],
                       capture_output=True, text=True).stdout.strip()
+# 프리미어 층까지 섞은 믹스(audio_mix.py)가 있으면 그것을 최종 오디오로
+mix = os.path.join(out_dir, "mix.wav")
+if os.path.exists(mix) and "--narration-only" not in sys.argv:
+    audio = mix
 # 아웃트로 구간엔 내레이션이 없으므로 -shortest 대신 오디오를 무음으로 채워 영상 길이에 맞춘다
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", video, "-i", audio, "-map", "0:v", "-map", "1:a", "-c:v", "copy",
                 "-af", "apad", "-t", vdur, "-c:a", "aac", "-b:a", "192k", final], check=True)

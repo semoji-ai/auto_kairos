@@ -145,10 +145,16 @@ if __name__ == "__main__":
                    pr_in=it["start"], pr_out=it["end"], src_in=it["in"]) for it in tr[0]["items"] if nfc(it["name"]) == nfc(A["outro_bgm"])]
         place_pieces(buf, to_master(ob, edl), T, files, key_base, log, "outro_bgm")
         out = rd
+        cut_to = int(round(vdur * SR))                 # 영상 길이와 정확히 같게(쓸 때 자름)
     place_sfx(buf, tr[A["sfx_track"]]["items"], edl, T, files, key_base, log)
     place_pieces(buf, to_master(flatten(P, A["main_seq_uid"], A["bgm_tracks"]), edl), T, files, key_base, log, "bgm_pieces")
     name = "identity_mix.wav" if mode == "ko-identity" else "mix.wav"
-    peak = float(np.abs(buf).max()); log["peak"] = round(peak, 3); log["clipped"] = int((np.abs(buf) >= 1.0).sum())
+    peak = float(np.abs(buf).max()); log["peak"] = round(peak, 3)
+    if peak > 0.97:                                  # 클리핑 방지: 전체를 같은 비율로 낮춤(상대 레벨 유지)
+        buf *= 0.97 / peak; log["master_gain_db"] = round(20 * np.log10(0.97 / peak), 2)
+    log["clipped"] = int((np.abs(buf) >= 1.0).sum())
+    if mode != "ko-identity":
+        buf = buf[:cut_to]
     import wave
     with wave.open(os.path.join(out, name), "wb") as wv:
         wv.setnchannels(2); wv.setsampwidth(2); wv.setframerate(SR)
