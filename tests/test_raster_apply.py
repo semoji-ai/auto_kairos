@@ -27,3 +27,13 @@ def test_text_spec_passes_outline_scaled():
     assert t["stroke"] == [255, 255, 255] and t["stroke_w"] == 3.0
     del st["stroke"], st["stroke_w"]
     assert text_spec("Hi", st, 0.25, "hand")["stroke"] is None
+
+
+def test_check_entry_flags_key_drift_missing_emph_and_glyphs():
+    from scripts.raster_apply import check_entry
+    font = "/Users/jleavens_macmini/Library/Fonts/SBAggroOTF-B.otf"
+    ok = check_entry("1#0", "회원", {"ko": "회원", "text": "Members"}, {}, {"two_tone": False}, font)
+    assert ok == []
+    assert any("키" in e for e in check_entry("1#0", "회비", {"ko": "회원", "text": "Members"}, {}, {"two_tone": False}, font))
+    assert any("강조" in e for e in check_entry("1#0", "회원", {"ko": "회원", "text": "Members"}, {}, {"two_tone": True}, font))
+    assert any("글리프" in e for e in check_entry("1#0", "회원", {"ko": "회원", "text": "x"}, {"text": "₩5"}, {"two_tone": False}, font))

@@ -18,3 +18,8 @@ def test_low_conf_base_item_does_not_block_clear_reading():
     base = [it("공목0? -여?", 20, 15, 190, 60, 0.3)]
     extra = [it("자사 제품을", 30, 20, 150, 25), it("팔 수 있다니!", 30, 50, 160, 25)]
     assert [o["text"] for o in merge_items(base, extra)] == ["공목0? -여?", "자사 제품을", "팔 수 있다니!"]
+
+
+def test_short_number_unit_labels_are_appended():
+    out = merge_items([], [it("1998년", 0, 0, 80, 20), it("5조", 0, 40, 40, 20, 0.5), it("엚", 0, 80, 20, 20, 0.5)])
+    assert [o["text"] for o in out] == ["1998년", "5조"]

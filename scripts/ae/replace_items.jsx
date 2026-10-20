@@ -33,6 +33,7 @@ try{
         else td.applyStroke=false;
         td.justification=ParagraphJustification.CENTER_JUSTIFY; td.tracking=0;
         sp.setValue(td);
+        if(sp.value.font!==T.font) LOG.errors.push(T.key+": 폰트 대체됨 "+T.font+" → "+sp.value.font);   // 폰트 없으면 AE가 조용히 바꿈
         var r=L.sourceRectAtTime(0,false);
         if(r.width>T.wmax && r.width>0){
           td=sp.value; td.fontSize=T.size*T.wmax/r.width; sp.setValue(td); LOG.shrunk++;

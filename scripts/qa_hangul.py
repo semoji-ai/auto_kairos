@@ -18,9 +18,17 @@ def is_problem(text, brands):
 SYL = re.compile(r"[가-힣]")
 
 
+NUM_UNIT = re.compile(r"\d[\d.,]*\s*[가-힣]")
+LATIN = re.compile(r"[A-Za-z]")
+
+
 def is_noise(text, conf):
-    """OCR 오독으로 보이는 것: 낮은 신뢰도, 완성형 한글 1자 이하(영어 끝에 붙은 글자·자모 반복)."""
-    return conf < 0.5 or len(SYL.findall(text)) < 2
+    """OCR 오독 '형태'만 잡음으로 본다(진짜 한글을 숨기지 않게 좁게):
+    신뢰도 1.0·숫자+단위·한글 2자 이상은 절대 잡음 아님. 잡음 = 자모/기호만, 또는 영문 사이에 낀 한글 1자."""
+    syl = len(SYL.findall(text))
+    if conf >= 1.0 or NUM_UNIT.search(text) or syl >= 2:
+        return False
+    return syl == 0 or len(LATIN.findall(text)) >= 3
 
 
 if __name__ == "__main__":
@@ -63,3 +71,5 @@ if __name__ == "__main__":
             sheet.paste(im, (px, py)); d.text((px + 6, py + 542), f"{o['t']:.0f}s  " + " | ".join(b["text"] for b in o["items"])[:120], fill=(255, 220, 0))
         sheet.save(os.path.join(qd, f"hangul_sheet_{si // 12 + 1:02d}.png"))
     print("frames", len(frames), "problem frames", len(out))
+    if "--gate" in sys.argv and out:
+        sys.exit(1)
