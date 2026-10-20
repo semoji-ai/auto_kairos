@@ -16,3 +16,8 @@ scripts/ae/*_job.json
 episodes/*/build_*.json
 tools/ocr
 episodes/*/raster/
+
+# 공용 에셋 결과물(레시피·대체 표만 커밋)
+assets/global/*/*.mov
+assets/global/*/build/
+assets/global/*/review_*.png

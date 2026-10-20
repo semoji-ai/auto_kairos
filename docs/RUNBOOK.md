@@ -42,6 +42,24 @@
 5. 워프: `python3 scripts/timewarp.py episodes/<EP> en --durs episodes/<EP>/tts/en/durs.json --keep-subs --aep episodes/<EP>/build/en/<EP>_en_text.aep` → `run.sh localize.jsx` → `build/en/<EP>_en.aep`
 6. 자막: `python3 scripts/subtitles.py episodes/<EP> en` → `run.sh subtitles.jsx` → `build/en/<EP>_en_subs.aep`, `render/en/en.srt`
 7. 파트 렌더: 파트마다 `render.sh build/en/<EP>_en_subs.aep <MAIN_*> 0 <warp.json parts[pid].dur_new> render/en/part_<pid>.mp4 29.97 "H.264 - Match Render Settings - 15 Mbps"`
-8. 미리보기: `python3 scripts/preview.py episodes/<EP> en` → `render/en/<EP>_EN_preview.mp4` (길이 = warp.json length_new, 아웃트로는 edl 길이만큼)
+8. 미리보기: `python3 scripts/preview.py episodes/<EP> en --narration-only` → `audio_mix.py` → `preview.py` (mix.wav가 파트 렌더·워프보다 오래되면 preview가 멈춤; 보통은 7절 `rebuild_lang.sh`가 이 순서로 함)
 
 검증 기록(B209, 2026-10-19): 번역 172구간·문자열 42, TTS 172 전부 범위 안(1차 재작성 10), 829s/922s, 문자열 42/42 교체, 워프 979.35→886.15s, 자막 417큐, 미리보기 886.19s. 남은 한글: .ai 일러스트 속 글자(계획 3).
+
+## 5. 화면 속 글자(계획 3a) — 일러스트·이미지
+1. 내보내기·OCR: `python3 scripts/raster_scan.py episodes/<EP>` (벡터 k=4, 긴 변 1200px 이상; TIFF는 언프리멀티플라이; OCR은 투명·흰·검은 배경 3번) → `raster/items.json`. 이미 번역한 편에서 놓친 작은 벡터만 다시: `--upscale-small`(기존 항목 번호 유지)
+2. 번역: `python3 scripts/raster_translate.py episodes/<EP> <lang>` → `l10n/<lang>.json` raster
+3. 판: `python3 scripts/raster_plates.py episodes/<EP>` → `raster/plate/*.png`, `styles.json`, 검수 시트 `raster/plate_review_NN.png`(눈으로 확인)
+4. 사람 보정: `raster/manual.json` — `"<id>#<n>": {"skip"|"text"|"font"}`, `"_hand_footage": [...]`(손글씨 폰트)
+5. AE 적용은 아래 7의 `rebuild_lang.sh`가 함(`raster_apply.py` — 적용 전 검사 실패·AE 오류면 멈춤)
+
+## 6. 오디오(계획 3b) — 프리미어 층
+1. 재료: `python3 scripts/audio_fetch.py episodes/<EP>` → `src/audio/`(효과음 wav·BGM·아웃트로 BGM, NAS에서 NFC 비교로 찾아 복사). `master_config.json`의 `audio` 설정 필요(main_seq_uid, sfx_track, bgm_tracks, outro_bgm).
+2. 믹서 검증(편마다 한 번): `python3 scripts/audio_mix.py episodes/<EP> ko-identity` — 유튜브 원본과 상관 ≥ 0.95, 30초 최솟값 ≥ 0.85. 재료가 없는 구간은 `audio.identity_exclude`에 사유와 함께.
+3. 언어 믹스는 7에서 자동(`audio_mix.py <EP> <lang>` → `render/<lang>/mix.wav`; 내레이션은 한국어 녹음 LUFS에 맞춤, 피크 0.97 보호)
+
+## 7. 공용 에셋 + 전체 재빌드
+- 공용 에셋(언어마다 한 번, 모든 편 공유): `python3 scripts/build_global_assets.py <lang> emotion|title|outro <원본 파일>` → `assets/global/<lang>/`, 비교 시트 `review_*.png`. 대체 표 `assets/global/swap_<lang>.json`(키 = 원본 파일명).
+- 재빌드: `scripts/rebuild_lang.sh episodes/<EP> <lang>` = 래스터 적용 → 에셋 교체 → 워프 → 자막 → 파트 렌더 → 내레이션 → 믹스 → 미리보기 → 한글 검사(0.5초)
+
+검증 기록(B209 영어, 2026-10-20): 래스터 텍스트 213·소스 교체 309, 에셋 교체 7(타이틀 4·킥킥 3), 미리보기 886.19s, -18.9 LUFS(한국어 원본 -18.3)·피크 -0.5dBFS·클리핑 0, 항등 믹스 상관 0.970. 한글 검사 남은 것 = 실제 브랜드(롯데마트 간판·트레이더스 사진)와 OCR 오독뿐.

@@ -17,7 +17,13 @@ order = []
 for c in edl["parts"]:
     if c["id"] not in order:
         order.append(c["id"])
-vids = [os.path.join(out_dir, f"part_{p}.mp4") for p in order] + [os.path.join(ep, "assets", "outro.mov")]
+# 아웃트로: 언어별 공용 에셋 대체 표에 있으면 그 파일(예: Semoji 영어판), 없으면 편 폴더의 원본
+_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+_swap = os.path.join(_root, "assets", "global", f"swap_{lang}.json")
+_tbl = {unicodedata.normalize("NFC", k): v for k, v in (json.load(open(_swap)).items() if os.path.exists(_swap) else [])}
+_oc = unicodedata.normalize("NFC", (edl.get("outro") or {}).get("clip", ""))
+outro_file = os.path.join(_root, _tbl[_oc]) if _oc in _tbl else os.path.join(ep, "assets", "outro.mov")
+vids = [os.path.join(out_dir, f"part_{p}.mp4") for p in order] + [outro_file]
 outro_dur = edl["outro"]["dur"] if edl.get("outro") else None   # 프리미어에서 쓴 길이만큼만(원본 파일은 더 김)
 filt = "".join(f"[{i}:v]" + (f"trim=duration={outro_dur},setpts=PTS-STARTPTS," if i == len(vids) - 1 and outro_dur else "")
                + f"scale=1920:1080,fps=30000/1001,format=yuv420p,setsar=1[v{i}];" for i in range(len(vids)))
@@ -58,6 +64,14 @@ subprocess.run(["ffmpeg", "-v", "error", "-y"] + ins + ["-filter_complex", mix, 
 final = os.path.join(out_dir, f"{os.path.basename(os.path.abspath(ep))}_{lang.upper()}_preview.mp4")
 vdur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", video],
                       capture_output=True, text=True).stdout.strip()
+# 프리미어 층까지 섞은 믹스(audio_mix.py)가 있으면 그것을 최종 오디오로
+mix = os.path.join(out_dir, "mix.wav")
+if os.path.exists(mix) and "--narration-only" not in sys.argv:
+    from sg.preview import mix_is_fresh
+    deps = [os.path.join(out_dir, f"part_{p}.mp4") for p in order] + [os.path.join(ep, "build", lang, "warp.json")]
+    if not mix_is_fresh(mix, deps):
+        sys.exit("mix.wav가 파트 렌더·워프보다 오래됨 — audio_mix.py를 다시 돌리거나 --narration-only로")
+    audio = mix
 # 아웃트로 구간엔 내레이션이 없으므로 -shortest 대신 오디오를 무음으로 채워 영상 길이에 맞춘다
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", video, "-i", audio, "-map", "0:v", "-map", "1:a", "-c:v", "copy",
                 "-af", "apad", "-t", vdur, "-c:a", "aac", "-b:a", "192k", final], check=True)

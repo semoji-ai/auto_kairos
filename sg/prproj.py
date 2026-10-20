@@ -52,6 +52,28 @@ def parse(path):
             src = ref(src.find(".//OriginalClip")) or ref(src.find(".//Source"))
         return None, None
 
+    def level_of(item):
+        """AudioClipTrackItem → (선형 gain, [[초, 선형], ...]). 볼륨 이펙트가 없으면 (1.0, [])."""
+        chain = ref(item.find(".//Components"))
+        if chain is None:
+            return 1.0, []
+        for c in chain.iter("Component"):
+            comp = ref(c)
+            if comp is None:
+                continue
+            for p in comp.iter("Param"):
+                prm = ref(p)
+                if prm is None or prm.findtext("Name") != "Level":
+                    continue
+                g = float(prm.findtext("CurrentValue") or 1.0)
+                keys = []
+                for kf in (prm.findtext("Keyframes") or "").split(";"):
+                    f = kf.split(",")
+                    if len(f) >= 2 and f[0]:
+                        keys.append([round(int(f[0]) / TICKS, 4), float(f[1] or 0.0)])
+                return g, keys
+        return 1.0, []
+
     out = []
     for seq in [e for e in root if e.tag == "Sequence"]:
         tracks = []
@@ -74,12 +96,14 @@ def parse(path):
                     clip = ref(sub.find("Clip")) if sub is not None else None
                     f, su = source_of(clip)
                     sp = clip.find(".//PlaybackSpeed") if clip is not None else None
+                    g, gk = level_of(item) if kind == "audio" else (1.0, [])
                     items.append({"start": round(num(t, "Start") or 0.0, 3), "end": round(num(t, "End") or 0.0, 3),
                                   "in": round(num(clip, "InPoint") or 0.0, 3),
                                   "out": round(num(clip, "OutPoint") or 0.0, 3),
                                   "name": sub.findtext("Name") if sub is not None else None,
                                   "file": f, "seq_uid": su,
-                                  "speed": float(sp.text) if sp is not None and sp.text else 1.0})
+                                  "speed": float(sp.text) if sp is not None and sp.text else 1.0,
+                                  "gain": g, "gain_keys": gk, "oid": item.get("ObjectID")})
                 items.sort(key=lambda x: x["start"])
                 idx = len([x for x in tracks if x["kind"] == kind])
                 tracks.append({"kind": kind, "index": idx, "items": items})
