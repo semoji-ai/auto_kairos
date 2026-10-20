@@ -47,7 +47,8 @@ def to_master(pieces, edl):
         if a < p["pr_out"]:
             segs.append((a, p["pr_out"]))
         for s, e in segs:
-            out.append({**p, "m_in": round(pr_to_master(edl, s), 4), "m_out": round(pr_to_master(edl, e), 4),
+            out.append({**p, "pr_in": round(s, 4), "pr_out": round(e, 4),
+                        "m_in": round(pr_to_master(edl, s), 4), "m_out": round(pr_to_master(edl, e), 4),
                         "src_in": round(p["src_in"] + (s - p["pr_in"]), 4)})
     return out
 
@@ -59,6 +60,21 @@ def warp_piece(p, T, src_len):
     room = src_len - p["src_in"]
     fade = FADE if (dur < orig - 1e-6 or dur > room + 1e-6) else 0.0
     return {"t": round(t0, 4), "dur": round(min(dur, room), 4), "src_in": p["src_in"], "fade_out": round(fade, 4)}
+
+
+def join_fades(warped):
+    """같은 곡의 다음 조각이 출력에서 바로 이어지면(하위 클립 편집점) 끝 페이드를 빼서 소리 구멍을 막는다."""
+    out = [dict(w) for w in warped]
+    for a, b in zip(out, out[1:]):
+        if a["name"] == b["name"] and abs(b["t"] - (a["t"] + a["dur"])) < 0.02:
+            a["fade_out"] = 0.0
+    return out
+
+
+def chunk_segments(a, b, file_pr_in, file_src_in, edl):
+    """효과음 wav 덩어리 [a,b](wav 시각) → 컷을 뺀 [(src_a, src_b, 마스터 시작)] — 컷에 걸치면 앞뒤만 남김."""
+    piece = {"pr_in": file_pr_in + (a - file_src_in), "pr_out": file_pr_in + (b - file_src_in), "src_in": a}
+    return [(x["src_in"], round(x["src_in"] + (x["pr_out"] - x["pr_in"]), 4), x["m_in"]) for x in to_master([piece], edl)]
 
 
 def sound_chunks(x, sr, thresh_db=-45.0, min_silence=0.15):

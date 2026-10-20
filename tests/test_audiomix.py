@@ -50,3 +50,24 @@ def test_place_chunk_inside_cut_is_dropped():
     T = PiecewiseMap([[0, 0], [200, 200]])
     assert place_chunk(101.0, 102.0, 0.0, 0.0, EDL, T) is None
     assert place_chunk(110.0, 111.0, 0.0, 0.0, EDL, T)["t"] == 101.0
+
+
+def test_to_master_second_piece_gets_its_own_pr_in():
+    p = to_master([{"name": "c", "file": "c", "pr_in": 95.0, "pr_out": 115.0, "src_in": 0.0, "gain": 1.0, "gain_keys": []}], EDL)
+    assert [(x["pr_in"], x["pr_out"]) for x in p] == [(95.0, 100.0), (109.0, 115.0)]
+
+
+def test_chunk_segments_split_across_cut():
+    from sg.audiomix import chunk_segments
+    # 효과음 wav가 프리미어 90초에 src 0으로 놓임, 덩어리 wav 8~14초 = 프리미어 98~104 → 컷(100~109)에 걸침
+    seg = chunk_segments(8.0, 14.0, 90.0, 0.0, EDL)
+    assert seg == [(8.0, 10.0, 98.0)]                      # 컷 안(100~104)은 사라짐
+    seg = chunk_segments(17.0, 21.0, 90.0, 0.0, EDL)      # 프리미어 107~111 → 컷 뒤 109~111만, 마스터 100~102
+    assert seg == [(19.0, 21.0, 100.0)]
+
+
+def test_contiguous_same_song_pieces_have_no_fade_between():
+    from sg.audiomix import join_fades
+    w = [{"name": "a", "t": 0.0, "dur": 5.0, "fade_out": 0.33}, {"name": "a", "t": 5.0, "dur": 4.0, "fade_out": 0.33},
+         {"name": "b", "t": 9.0, "dur": 3.0, "fade_out": 0.33}]
+    assert [x["fade_out"] for x in join_fades(w)] == [0.0, 0.33, 0.33]

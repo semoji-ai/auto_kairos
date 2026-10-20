@@ -42,7 +42,7 @@
 5. 워프: `python3 scripts/timewarp.py episodes/<EP> en --durs episodes/<EP>/tts/en/durs.json --keep-subs --aep episodes/<EP>/build/en/<EP>_en_text.aep` → `run.sh localize.jsx` → `build/en/<EP>_en.aep`
 6. 자막: `python3 scripts/subtitles.py episodes/<EP> en` → `run.sh subtitles.jsx` → `build/en/<EP>_en_subs.aep`, `render/en/en.srt`
 7. 파트 렌더: 파트마다 `render.sh build/en/<EP>_en_subs.aep <MAIN_*> 0 <warp.json parts[pid].dur_new> render/en/part_<pid>.mp4 29.97 "H.264 - Match Render Settings - 15 Mbps"`
-8. 미리보기: `python3 scripts/preview.py episodes/<EP> en` → `render/en/<EP>_EN_preview.mp4` (길이 = warp.json length_new, 아웃트로는 edl 길이만큼)
+8. 미리보기: `python3 scripts/preview.py episodes/<EP> en --narration-only` → `audio_mix.py` → `preview.py` (mix.wav가 파트 렌더·워프보다 오래되면 preview가 멈춤; 보통은 7절 `rebuild_lang.sh`가 이 순서로 함)
 
 검증 기록(B209, 2026-10-19): 번역 172구간·문자열 42, TTS 172 전부 범위 안(1차 재작성 10), 829s/922s, 문자열 42/42 교체, 워프 979.35→886.15s, 자막 417큐, 미리보기 886.19s. 남은 한글: .ai 일러스트 속 글자(계획 3).
 

@@ -67,6 +67,10 @@ vdur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=durati
 # 프리미어 층까지 섞은 믹스(audio_mix.py)가 있으면 그것을 최종 오디오로
 mix = os.path.join(out_dir, "mix.wav")
 if os.path.exists(mix) and "--narration-only" not in sys.argv:
+    from sg.preview import mix_is_fresh
+    deps = [os.path.join(out_dir, f"part_{p}.mp4") for p in order] + [os.path.join(ep, "build", lang, "warp.json")]
+    if not mix_is_fresh(mix, deps):
+        sys.exit("mix.wav가 파트 렌더·워프보다 오래됨 — audio_mix.py를 다시 돌리거나 --narration-only로")
     audio = mix
 # 아웃트로 구간엔 내레이션이 없으므로 -shortest 대신 오디오를 무음으로 채워 영상 길이에 맞춘다
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", video, "-i", audio, "-map", "0:v", "-map", "1:a", "-c:v", "copy",

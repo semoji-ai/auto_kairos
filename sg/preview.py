@@ -19,3 +19,10 @@ def part_to_wav(u, L, occ):
         if o["span"][0] - 1e-6 <= u <= o["span"][1] + 1e-6 and o["k"]:
             return ((u - o["off"]) / o["k"] - L["st"]) / sx
     return None
+
+
+def mix_is_fresh(mix, deps):
+    """mix.wav가 그 재료(파트 렌더·워프)보다 나중에 만들어졌는지. 아니면 옛 워프의 믹스가 새 영상에 붙는다."""
+    import os
+    m = os.path.getmtime(mix)
+    return all(os.path.getmtime(d) <= m for d in deps if os.path.exists(d))

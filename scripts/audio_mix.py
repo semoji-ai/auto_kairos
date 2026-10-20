@@ -5,7 +5,7 @@
 import json, os, re, subprocess, sys, unicodedata
 import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from sg.audiomix import flatten, to_master, warp_piece, sound_chunks
+from sg.audiomix import flatten, to_master, warp_piece, sound_chunks, chunk_segments, join_fades
 from sg.mixgraph import envelope, place
 from sg.timemap import PiecewiseMap
 from sg.edl import pr_to_master
@@ -32,13 +32,26 @@ def lufs(path):
     return float(re.findall(r"I:\s+(-?[\d.]+) LUFS", err)[-1])
 
 
-def level_gain(piece, w_t, n, key_base):
-    """조각이 출력 w_t초에 놓일 때 샘플별 볼륨(중첩 단계 곱). 조각 안은 소스 그대로 흐르므로 프리미어 시각 = pr_in + (출력-w_t)."""
-    pr = piece["pr_in"] + np.arange(n, dtype=np.float64) / SR
+def narration_gain_db(ref_lufs, en_lufs):
+    """영어 내레이션을 한국어 원본 녹음 라우드니스(평균)에 맞추는 dB. 기준 녹음이 없으면 실패(NaN 믹스 방지)."""
+    if not ref_lufs:
+        sys.exit("한국어 내레이션 기준 녹음을 찾지 못함(master_config parts.narration 파일이 src 안에 있어야 함)")
+    return round(float(np.mean(ref_lufs)) - en_lufs, 2)
+
+
+def level_gain(piece, w_t, n, key_base, edl=None, T=None):
+    """조각이 출력 w_t초에 놓일 때 샘플별 볼륨(중첩 단계 곱).
+    키프레임은 프리미어 시각 → 마스터 → 워프 T 로 출력 시각에 옮겨 평가(곡 전환 페이드가 줄어든 조각 안으로 따라옴).
+    edl·T가 없으면 조각 안을 원래 속도로 본다(프리미어 시각 = pr_in + (출력-w_t))."""
+    out = w_t + np.arange(n, dtype=np.float64) / SR
     g = np.ones(n, np.float32)
     for L in piece.get("levels") or [{"clip_start": piece["pr_in"], "clip_in": piece["src_in"], "gain": piece["gain"], "keys": piece["gain_keys"]}]:
-        keys = [[(L["clip_start"] + k) if key_base == "clip" else (L["clip_start"] + k - L["clip_in"]), v] for k, v in L["keys"]]
-        g *= envelope(pr, L["gain"], keys)
+        prk = [((L["clip_start"] + k) if key_base == "clip" else (L["clip_start"] + k - L["clip_in"]), v) for k, v in L["keys"]]
+        if T is not None:
+            keys = [[T(pr_to_master(edl, p)), v] for p, v in prk]
+        else:
+            keys = [[w_t + (p - piece["pr_in"]), v] for p, v in prk]
+        g *= envelope(out, L["gain"], keys)
     return g
 
 
@@ -55,16 +68,18 @@ class Files:
         return None
 
 
-def place_pieces(buf, pieces, T, files, key_base, log, label):
+def place_pieces(buf, pieces, T, files, key_base, log, label, edl):
+    plan = []
     for p in pieces:
         f = files.path(p["name"], p.get("file"))
         if not f:
             log.setdefault("missing", []).append(p["name"]); continue
         w = warp_piece(p, T, duration(f))
-        if w["dur"] <= 0:
-            continue
-        x = decode(f, w["src_in"], w["dur"])
-        place(buf, x, w["t"], SR, level_gain(p, w["t"], len(x), key_base), w["fade_out"])
+        if w["dur"] > 0:
+            plan.append({**w, "name": p["name"], "_p": p, "_f": f})
+    for w in join_fades(sorted(plan, key=lambda w: w["t"])):
+        x = decode(w["_f"], w["src_in"], w["dur"])
+        place(buf, x, w["t"], SR, level_gain(w["_p"], w["t"], len(x), key_base, edl, T), w["fade_out"])
         log[label] = log.get(label, 0) + 1
 
 
@@ -77,16 +92,13 @@ def place_sfx(buf, items, edl, T, files, key_base, log):
         x = decode(f, it["in"], win)
         mono = x.mean(1)
         for a, b in sound_chunks(mono, SR):
-            pa = it["start"] + a
-            m = pr_to_master(edl, pa, clamp=False)
-            if m is None:
-                continue
-            seg = x[int(a * SR):int(b * SR)]
-            piece = {"pr_in": pa, "src_in": it["in"] + a, "gain": it["gain"], "gain_keys": it["gain_keys"],
-                     "levels": [{"clip_start": it["start"], "clip_in": it["in"], "gain": it["gain"], "keys": it["gain_keys"]}]}
-            t = T(m)
-            place(buf, seg, t, SR, level_gain(piece, t, len(seg), key_base))
-            log["sfx_chunks"] = log.get("sfx_chunks", 0) + 1
+            for sa, sb, m in chunk_segments(a, b, it["start"], 0.0, edl):     # 컷에 걸친 덩어리는 앞뒤만
+                seg = x[int(sa * SR):int(sb * SR)]
+                piece = {"pr_in": it["start"] + sa, "src_in": it["in"] + sa, "gain": it["gain"], "gain_keys": it["gain_keys"],
+                         "levels": [{"clip_start": it["start"], "clip_in": it["in"], "gain": it["gain"], "keys": it["gain_keys"]}]}
+                t = T(m)
+                place(buf, seg, t, SR, level_gain(piece, t, len(seg), key_base, edl, T))
+                log["sfx_chunks"] = log.get("sfx_chunks", 0) + 1
 
 
 def env_db(x, sr, win=0.5):
@@ -112,7 +124,7 @@ if __name__ == "__main__":
         buf = np.zeros((int(total * SR) + SR, 2), np.float32)
         base = [dict(it, levels=[{"clip_start": it["start"], "clip_in": it["in"], "gain": it["gain"], "keys": it["gain_keys"]}],
                      pr_in=it["start"], pr_out=it["end"], src_in=it["in"]) for it in tr[0]["items"]]
-        place_pieces(buf, to_master(base, edl), T, files, key_base, log, "track0")
+        place_pieces(buf, to_master(base, edl), T, files, key_base, log, "track0", edl)
         out = os.path.join(ep, "render", "ko"); os.makedirs(out, exist_ok=True)
     else:
         lang = mode
@@ -126,8 +138,8 @@ if __name__ == "__main__":
         nar = os.path.join(rd, "narration.wav")
         ref = [os.path.join(dp, f) for dp, _, fs in os.walk(os.path.join(ep, "src")) for f in fs
                if nfc(f) in {nfc(p["narration"]) for p in cfg["parts"].values()}]
-        ko_l = float(np.mean([lufs(r) for r in ref])); en_l = lufs(nar)
-        g = 10 ** ((ko_l - en_l) / 20); log["narration_gain_db"] = round(ko_l - en_l, 2)
+        gdb = narration_gain_db([lufs(r) for r in ref], lufs(nar))
+        g = 10 ** (gdb / 20); log["narration_gain_db"] = gdb
         place(buf, decode(nar), 0.0, SR, np.full(len(buf), g, np.float32))
         # AE 효과음: 파트 mp4 오디오를 미리보기와 같은 순서·시각으로
         t = 0.0
@@ -143,11 +155,11 @@ if __name__ == "__main__":
         # 아웃트로 BGM(0트랙의 outro_bgm 클립)
         ob = [dict(it, levels=[{"clip_start": it["start"], "clip_in": it["in"], "gain": it["gain"], "keys": it["gain_keys"]}],
                    pr_in=it["start"], pr_out=it["end"], src_in=it["in"]) for it in tr[0]["items"] if nfc(it["name"]) == nfc(A["outro_bgm"])]
-        place_pieces(buf, to_master(ob, edl), T, files, key_base, log, "outro_bgm")
+        place_pieces(buf, to_master(ob, edl), T, files, key_base, log, "outro_bgm", edl)
         out = rd
         cut_to = int(round(vdur * SR))                 # 영상 길이와 정확히 같게(쓸 때 자름)
     place_sfx(buf, tr[A["sfx_track"]]["items"], edl, T, files, key_base, log)
-    place_pieces(buf, to_master(flatten(P, A["main_seq_uid"], A["bgm_tracks"]), edl), T, files, key_base, log, "bgm_pieces")
+    place_pieces(buf, to_master(flatten(P, A["main_seq_uid"], A["bgm_tracks"]), edl), T, files, key_base, log, "bgm_pieces", edl)
     name = "identity_mix.wav" if mode == "ko-identity" else "mix.wav"
     peak = float(np.abs(buf).max()); log["peak"] = round(peak, 3)
     if peak > 0.97:                                  # 클리핑 방지: 전체를 같은 비율로 낮춤(상대 레벨 유지)
@@ -160,6 +172,8 @@ if __name__ == "__main__":
         wv.setnchannels(2); wv.setsampwidth(2); wv.setframerate(SR)
         wv.writeframes((np.clip(buf, -1, 1) * 32767).astype("<i2").tobytes())
     print(json.dumps(log, ensure_ascii=False))
+    if log.get("missing") and mode != "ko-identity":
+        sys.exit(f"오디오 재료 없음 {sorted(set(log['missing']))} — audio_fetch.py 먼저")
     if mode == "ko-identity":
         sr = 8000
         ref = decode(os.path.join(ep, "yt_master.mp4"), sr=sr, ch=1)[:, 0]

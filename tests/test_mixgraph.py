@@ -33,3 +33,23 @@ def test_level_gain_places_premiere_fade_at_clip_relative_time():
     assert abs(g[int(5 * SR)] - 0.1413) < 1e-4            # 페이드 전
     assert abs(g[int(9.4044 * SR)] - 0.0707) < 2e-3        # 페이드 중간
     assert g[int(10.5 * SR)] == 0.0                        # 페이드 끝 뒤
+
+
+def test_level_gain_warps_fade_keys_into_shortened_piece():
+    # 조각 프리미어 0~10초, 페이드 키 8→10(1→0). 영어 워프로 10초가 8초로 줄면 페이드도 출력 6.4~8초로 따라와야 함
+    from scripts.audio_mix import level_gain, SR
+    from sg.timemap import PiecewiseMap
+    edl = {"parts": [], "cuts": [], "outro": None, "pr_length": 10.0, "length": 10.0}
+    T = PiecewiseMap([[0, 0], [10, 8]])
+    piece = {"pr_in": 0.0, "src_in": 0.0, "gain": 1.0, "gain_keys": [],
+             "levels": [{"clip_start": 0.0, "clip_in": 0.0, "gain": 1.0, "keys": [[8.0, 1.0], [10.0, 0.0]]}]}
+    g = level_gain(piece, 0.0, int(8 * SR), "clip", edl, T)
+    assert abs(g[int(7.2 * SR)] - 0.5) < 0.02 and g[int(6.0 * SR)] == 1.0 and g[-1] < 0.01
+
+
+def test_narration_gain_requires_reference():
+    import pytest
+    from scripts.audio_mix import narration_gain_db
+    assert narration_gain_db([-20.0, -22.0], -26.0) == 5.0
+    with pytest.raises(SystemExit):
+        narration_gain_db([], -26.0)
