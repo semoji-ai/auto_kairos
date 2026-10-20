@@ -1,4 +1,6 @@
-"""일러스트·이미지 내보내기 + OCR + 교체 대상 선별.  usage: raster_scan.py <EP> [--skip-export]
+"""일러스트·이미지 내보내기 + OCR + 교체 대상 선별.  usage: raster_scan.py <EP> [--skip-export | --upscale-small]
+--upscale-small: 한글이 안 잡힌 작은 벡터(내보낸 긴 변 < 400px)만 긴 변 1200px 이상으로 다시 내보내고 그것만 다시 OCR
+                 (다른 footage의 PNG·OCR·항목 번호 = 번역 키는 그대로)
 → raster/src/<id>.png, raster/ocr.jsonl, raster/items.json"""
 import glob, json, os, re, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -26,16 +28,14 @@ for pid, P in cfg["parts"].items():
                 e["master_spans"] += part_span_to_master(edl, pid, a, b)
 print("footage", len(items))
 
-if "--skip-export" not in sys.argv:
-    for f in glob.glob(os.path.join(src, "*")):
-        os.remove(f)
-    json.dump({"aep": os.path.join(ep, "src", f"{os.path.basename(ep)}_main_ko.aep"), "ids": [int(k) for k in items],
-               "k": 4, "max_px": 3000, "out_dir": src, "save_as": os.path.join(rd, "export.aep"),
-               "out": os.path.join(rd, "build_export_log.json")},
+def export(ids, min_px, log_name):
+    json.dump({"aep": os.path.join(ep, "src", f"{os.path.basename(ep)}_main_ko.aep"), "ids": [int(k) for k in ids],
+               "k": 4, "min_px": min_px, "max_px": 3000, "out_dir": src, "save_as": os.path.join(rd, "export.aep"),
+               "out": os.path.join(rd, log_name)},
               open(os.path.join(root, "scripts/ae/build_export_job.json"), "w"), ensure_ascii=False)
     subprocess.run([os.path.join(root, "scripts/ae/run.sh"), os.path.join(root, "scripts/ae/build_export.jsx")], check=True)
-    log = json.load(open(os.path.join(rd, "build_export_log.json")))
-    print("queued", len(log["queued"]), "errors", log["errors"][:5])
+    lg = json.load(open(os.path.join(rd, log_name)))
+    print("queued", len(lg["queued"]), "errors", lg["errors"][:5])
     subprocess.run(["/Applications/Adobe After Effects 2026/aerender", "-project", os.path.join(rd, "export.aep")],
                    check=True, capture_output=True)
     for t in glob.glob(os.path.join(src, "*_0.tif")):
@@ -43,6 +43,43 @@ if "--skip-export" not in sys.argv:
         os.remove(t)
         im = np.array(Image.open(t[:-6] + ".png").convert("RGBA"))   # AE TIFF는 프리멀티플라이드
         Image.fromarray(unpremultiply(im)).save(t[:-6] + ".png")
+    return lg
+
+
+def ocr_lines(files):
+    out = []
+    for k in range(0, len(files), 50):
+        out += subprocess.run([os.path.join(root, "tools/ocr")] + files[k:k + 50], capture_output=True, text=True).stdout.splitlines()
+    return out
+
+
+def bg_versions(f):
+    im = Image.open(f).convert("RGBA"); bgd = os.path.join(rd, "bg"); os.makedirs(bgd, exist_ok=True); res = []
+    for nm, c in (("w", (255, 255, 255, 255)), ("k", (0, 0, 0, 255))):
+        b = Image.new("RGBA", im.size, c); b.alpha_composite(im)
+        o = os.path.join(bgd, os.path.basename(f)[:-4] + "_" + nm + ".png"); b.convert("RGB").save(o); res.append(o)
+    return res
+
+
+if "--upscale-small" in sys.argv:
+    have = {x["id"] for x in json.load(open(os.path.join(rd, "items.json")))}
+    old = {str(x["id"]): x for x in json.load(open(os.path.join(rd, "build_export_log.json")))["queued"]}
+    small = [i for i, x in old.items() if i not in have and x["k"] > 1 and max(x["w"], x["h"]) * x["k"] < 400]
+    print("small vectors without hangul", len(small))
+    lg = export(small, 1200, "build_export_small_log.json")
+    for x in lg["queued"]:
+        old[str(x["id"])] = x
+    full = json.load(open(os.path.join(rd, "build_export_log.json"))); full["queued"] = list(old.values())
+    json.dump(full, open(os.path.join(rd, "build_export_log.json"), "w"), ensure_ascii=False)
+    redo = {os.path.join(src, f"{i}.png") for i in small}
+    for name, files in (("ocr.jsonl", sorted(redo)), ("ocr_bg.jsonl", sorted(o for f in redo for o in bg_versions(f)))):
+        keep = [l for l in open(os.path.join(rd, name)) if os.path.basename(json.loads(l)["file"]).split("_")[0].replace(".png", "") not in small]
+        with open(os.path.join(rd, name), "w") as f:
+            f.writelines(keep); f.write("\n".join(ocr_lines(files)) + "\n")
+elif "--skip-export" not in sys.argv:
+    for f in glob.glob(os.path.join(src, "*")):
+        os.remove(f)
+    export(list(items), 1200, "build_export_log.json")
     for f in ("ocr.jsonl", "ocr_bg.jsonl"):                  # 새로 내보냈으면 OCR도 새로
         if os.path.exists(os.path.join(rd, f)):
             os.remove(os.path.join(rd, f))

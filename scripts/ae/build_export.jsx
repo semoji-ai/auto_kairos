@@ -1,5 +1,5 @@
 ﻿// 렌더 없이 내보내기 준비만: footage마다 k배 컴프를 만들어 렌더 큐(TIFF+알파, 1프레임)에 넣고 저장.
-// 실제 렌더는 aerender -project <save_as> (화면 잠김에서도 동작). 설정 build_export_job.json {aep, ids, k, max_px, out_dir, save_as, out}
+// 실제 렌더는 aerender -project <save_as> (화면 잠김에서도 동작). 설정 build_export_job.json {aep, ids, k, min_px, max_px, out_dir, save_as, out}
 (function(){
 var SELF=$.fileName;
 $.evalFile(File(SELF).parent.fsName+"/lib.jsx");
@@ -15,7 +15,9 @@ try{
     try{
       var fn=(it.mainSource && it.mainSource.file)?it.mainSource.file.name:it.name;
       var isVec=/\.(ai|eps|pdf)$/i.test(fn);
-      var kk=isVec?Math.min(C.k, C.max_px/Math.max(it.width,it.height)):1; if(kk<1) kk=1;
+      // 벡터: 기본 k배, 긴 변이 min_px보다 작으면 그만큼 더 키움(작은 라벨이 OCR에 읽히게), max_px 상한
+      var side=Math.max(it.width,it.height);
+      var kk=isVec?Math.min(Math.max(C.k, (C.min_px||0)/side), C.max_px/side):1; if(kk<1) kk=1;
       var w=Math.max(4,Math.round(it.width*kk)), h=Math.max(4,Math.round(it.height*kk));
       var comp=P.items.addComp("__exp_"+it.id, w, h, 1, 1/29.97, 29.97);
       var L=comp.layers.add(it); L.startTime=0;

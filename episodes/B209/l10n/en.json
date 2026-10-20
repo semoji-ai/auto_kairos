@@ -2032,6 +2032,66 @@
    "font": "hand",
    "two_tone": false,
    "ko": "가자 세계로!"
+  },
+  "3123#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "금388883"
+  },
+  "3125#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "NeeN, 'S부의"
+  },
+  "3125#1": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": ".니C"
+  },
+  "3155#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "CosTs으"
+  },
+  "3156#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "CosTC으"
+  },
+  "3602#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "Biapeas coubhes) paiables늉"
+  },
+  "3647#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "Coa Colia옓"
+  },
+  "3653#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "CoSTC으"
+  },
+  "3662#0": {
+   "text": "Costco member perks",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 회원 혜택"
+  },
+  "3663#0": {
+   "text": "Cheap store brands",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "저렴한 PB 상품"
   }
  }
 }

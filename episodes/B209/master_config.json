@@ -1,51 +1,52 @@
 {
-  "episode": "B209",
-  "nas_ep": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완",
-  "prproj_timeline": "pr_timeline.json",
-  "sequence_uid": "54a2a221",
-  "outro_clip": "세모지 아웃트로_최종.mov",
-  "cuts_pr": [
-    {
-      "pr_in": 914.3,
-      "pr_out": 923.3,
-      "reason": "유튜브 업로드본에서 잘림"
-    }
-  ],
-  "graph": "graph_nas.json",
-  "inventory": "inventory_nas.json",
-  "parts": {
-    "mina": {
-      "clip": "B209_코스트코_음악전_미나.mp4",
-      "comp_id": "14989",
-      "comp": "MAIN_KO",
-      "dur": 534.133,
-      "narration": "B209_코스트코_오디오편집완_미나.wav"
-    },
-    "gayoung": {
-      "clip": "B209_코스트코_음악전_가영.mp4",
-      "comp_id": "2370",
-      "comp": "MAIN_GAYOUNG",
-      "dur": 217.317,
-      "narration": "B209_코스트코_오디오가영.wav"
-    },
-    "gaeul": {
-      "clip": "B209_코스트코_음악전_가을.mp4",
-      "comp_id": "5848",
-      "comp": "MAIN_GAEUL",
-      "dur": 226.626,
-      "narration": "B209_코스트코_오디오가을편집완.wav"
-    }
+ "episode": "B209",
+ "nas_ep": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B209_코스트코_미나_편집완",
+ "prproj_timeline": "pr_timeline.json",
+ "sequence_uid": "54a2a221",
+ "outro_clip": "세모지 아웃트로_최종.mov",
+ "cuts_pr": [
+  {
+   "pr_in": 914.3,
+   "pr_out": 923.3,
+   "reason": "유튜브 업로드본에서 잘림"
+  }
+ ],
+ "graph": "graph_nas.json",
+ "inventory": "inventory_nas.json",
+ "parts": {
+  "mina": {
+   "clip": "B209_코스트코_음악전_미나.mp4",
+   "comp_id": "14989",
+   "comp": "MAIN_KO",
+   "dur": 534.133,
+   "narration": "B209_코스트코_오디오편집완_미나.wav"
   },
-  "subtitle_comp_prefix": "#자막",
-  "keep_brands": [
-    "롯데마트",
-    "이마트",
-    "홈플러스",
-    "코스트코",
-    "트레이더스",
-    "emart",
-    "LOTTE",
-    "Homeplus",
-    "COSTCO"
-  ]
+  "gayoung": {
+   "clip": "B209_코스트코_음악전_가영.mp4",
+   "comp_id": "2370",
+   "comp": "MAIN_GAYOUNG",
+   "dur": 217.317,
+   "narration": "B209_코스트코_오디오가영.wav"
+  },
+  "gaeul": {
+   "clip": "B209_코스트코_음악전_가을.mp4",
+   "comp_id": "5848",
+   "comp": "MAIN_GAEUL",
+   "dur": 226.626,
+   "narration": "B209_코스트코_오디오가을편집완.wav"
+  }
+ },
+ "subtitle_comp_prefix": "#자막",
+ "keep_brands": [
+  "롯데마트",
+  "이마트",
+  "홈플러스",
+  "코스트코",
+  "트레이더스",
+  "emart",
+  "LOTTE",
+  "Homeplus",
+  "COSTCO",
+  "신세계"
+ ]
 }
