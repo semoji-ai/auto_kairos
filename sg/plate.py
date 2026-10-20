@@ -132,7 +132,8 @@ def text_style(rgba, quad):
     clean = clean_plate(rgba, quad)
     inq = _region((H, W), quad, 0.0, 0.0)
     diff = np.abs(rgba[:, :, :3].astype(int) - clean[:, :, :3].astype(int)).sum(2)
-    txt = inq & (diff > 150) & (rgba[:, :, 3] > 200)
+    # 글자 잉크: 판과 색이 크게 다르거나, 판이 투명한 곳의 불투명 픽셀(받침판 없는 글자는 검은 속까지 포함)
+    txt = inq & (rgba[:, :, 3] > 200) & ((diff > 150) | (clean[:, :, 3] < 30))
     if txt.sum() < 10:
         txt = inq & (rgba[:, :, 3] > 200) & (np.abs(rgba[:, :, 3].astype(int) - clean[:, :, 3].astype(int)) > 60)
     st = {"angle": ang, "w": w, "h": h, "cx": float(c[0]), "cy": float(c[1]), "two_tone": False,
@@ -157,6 +158,16 @@ def text_style(rgba, quad):
             a_, b_ = tuple(int(x) for x in cen[0]), tuple(int(x) for x in cen[1])
             st["emph"], st["base"] = (a_, b_) if sat(a_) >= sat(b_) else (b_, a_)
             st["two_tone"] = True
+        else:
+            # 두 색이 겹쳐 있음 = 외곽선. 잉크 가장자리에서 먼 쪽 색이 글자 속, 가까운 쪽이 외곽선
+            dist = cv2.distanceTransform(txt.astype(np.uint8), cv2.DIST_L2, 3)[txt]
+            fill_i, stroke_i = (0, 1) if dist[lab == 0].mean() > dist[lab == 1].mean() else (1, 0)
+            sw = float(np.median(dist[lab == stroke_i]) * 2)
+            # 가장자리 중간색 띠(안티에일리어싱, 두께 ~2px)는 외곽선이 아님 → 원래 다수 색 그대로
+            if sw >= 3.0:
+                st["base"] = st["emph"] = tuple(int(x) for x in cen[fill_i])
+                st["stroke"] = tuple(int(x) for x in cen[stroke_i])
+                st["stroke_w"] = sw
     return st
 
 

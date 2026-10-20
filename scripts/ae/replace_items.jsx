@@ -27,7 +27,9 @@ try{
         var T=J.texts[t], L=comp.layers.addText(T.text);
         var sp=L.property("ADBE Text Properties").property("ADBE Text Document"), td=sp.value;
         td.resetCharStyle(); td.resetParagraphStyle();
-        td.font=T.font; td.fontSize=T.size; td.applyFill=true; td.applyStroke=false; td.fillColor=rgb(T.base);
+        td.font=T.font; td.fontSize=T.size; td.applyFill=true; td.fillColor=rgb(T.base);
+        if(T.stroke){ td.applyStroke=true; td.strokeColor=rgb(T.stroke); td.strokeWidth=Math.max(1,T.stroke_w*2);   // 글자 속이 위를 덮으므로 보이는 두께는 절반 td.strokeOverFill=false; }
+        else td.applyStroke=false;
         td.justification=ParagraphJustification.CENTER_JUSTIFY; td.tracking=0;
         sp.setValue(td);
         var r=L.sourceRectAtTime(0,false);

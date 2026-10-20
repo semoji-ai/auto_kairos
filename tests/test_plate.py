@@ -186,3 +186,27 @@ def test_unpremultiply_restores_straight_color():
     assert tuple(out[0, 1]) == (0, 0, 0, 0)
     assert tuple(out[0, 2][:3]) == (40, 20, 0)
     assert tuple(out[0, 3]) == (9, 9, 9, 255)
+
+
+def test_text_style_outlined_text_gives_fill_and_stroke():
+    # 투명 위 검은 글자 + 두꺼운 흰 외곽선 → 글자색 검정, 외곽선 흰색
+    im = Image.new("RGBA", (300, 100), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    for x in range(30, 260, 50):
+        d.rectangle([x - 7, 18, x + 32, 82], fill=(255, 255, 255, 255))
+        d.rectangle([x, 25, x + 25, 75], fill=(0, 0, 0, 255))
+    st = text_style(np.array(im), [[22, 18], [283, 18], [283, 82], [22, 82]])
+    assert max(st["base"]) < 60
+    assert st.get("stroke") and min(st["stroke"]) > 200
+    assert st["two_tone"] is False
+
+
+def test_text_style_antialiased_edges_are_not_an_outline():
+    from PIL import ImageFont
+    # 작은 글자를 4배로 키운 것처럼(내보내기 k=4) 가장자리 중간색 띠가 넓음
+    im = Image.new("RGBA", (105, 25), (30, 30, 30, 255)); d = ImageDraw.Draw(im)
+    f = ImageFont.truetype("/Users/jleavens_macmini/Library/Fonts/SBAggroOTF-B.otf", 12)
+    d.text((5, 6), "Costco members", font=f, fill=(250, 250, 250, 255))
+    im = im.resize((420, 100), Image.BICUBIC)
+    st = text_style(np.array(im), [[18, 24], [400, 24], [400, 80], [18, 80]])
+    assert not st.get("stroke")
+    assert min(st["base"]) > 200

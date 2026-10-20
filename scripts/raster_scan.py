@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 from sg.graph import reach_items
 from sg.plate import unpremultiply
+from sg.ocr import merge_items
 from sg.edl import part_span_to_master
 
 ep = os.path.abspath(sys.argv[1]); root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -42,19 +43,41 @@ if "--skip-export" not in sys.argv:
         os.remove(t)
         im = np.array(Image.open(t[:-6] + ".png").convert("RGBA"))   # AE TIFF는 프리멀티플라이드
         Image.fromarray(unpremultiply(im)).save(t[:-6] + ".png")
+    for f in ("ocr.jsonl", "ocr_bg.jsonl"):                  # 새로 내보냈으면 OCR도 새로
+        if os.path.exists(os.path.join(rd, f)):
+            os.remove(os.path.join(rd, f))
 
 log = {str(x["id"]): x for x in json.load(open(os.path.join(rd, "build_export_log.json")))["queued"]}
 pngs = sorted(glob.glob(os.path.join(src, "*.png")))
-with open(os.path.join(rd, "ocr.jsonl"), "w") as f:
-    for k in range(0, len(pngs), 50):
-        f.write(subprocess.run([os.path.join(root, "tools/ocr")] + pngs[k:k + 50], capture_output=True, text=True).stdout)
+ocr_p = os.path.join(rd, "ocr.jsonl")
+if not os.path.exists(ocr_p) or "--reocr" in sys.argv:   # 기존 결과가 있으면 그대로(항목 번호 = 번역 키가 바뀌지 않게)
+    with open(ocr_p, "w") as f:
+        for k in range(0, len(pngs), 50):
+            f.write(subprocess.run([os.path.join(root, "tools/ocr")] + pngs[k:k + 50], capture_output=True, text=True).stdout)
+# 투명 배경에선 검은 글자가 안 읽힘 → 흰/검은 배경에 합성해 한 번 더 읽고, 겹치지 않는 새 항목만 뒤에 덧붙임
+bg_p = os.path.join(rd, "ocr_bg.jsonl")
+if not os.path.exists(bg_p) or "--reocr" in sys.argv:
+    bgd = os.path.join(rd, "bg"); os.makedirs(bgd, exist_ok=True)
+    comp = []
+    for f in pngs:
+        im = Image.open(f).convert("RGBA")
+        for nm, c in (("w", (255, 255, 255, 255)), ("k", (0, 0, 0, 255))):
+            b = Image.new("RGBA", im.size, c); b.alpha_composite(im)
+            o = os.path.join(bgd, os.path.basename(f)[:-4] + "_" + nm + ".png"); b.convert("RGB").save(o); comp.append(o)
+    with open(bg_p, "w") as f:
+        for k in range(0, len(comp), 50):
+            f.write(subprocess.run([os.path.join(root, "tools/ocr")] + comp[k:k + 50], capture_output=True, text=True).stdout)
+extra = {}
+for line in open(bg_p):
+    d = json.loads(line)
+    extra.setdefault(os.path.basename(d["file"])[:-4].rsplit("_", 1)[0], []).extend(d["items"])
 
 brands = set(cfg.get("keep_brands", []))
 out = []
 for line in open(os.path.join(rd, "ocr.jsonl")):
     d = json.loads(line)
     iid = os.path.basename(d["file"])[:-4]
-    ko = [i for i in d.get("items", []) if HANGUL.search(i["text"])]
+    ko = merge_items([i for i in d.get("items", []) if HANGUL.search(i["text"])], extra.get(iid, []))
     if not ko:
         continue
     meta = log[iid]; name = meta["name"]

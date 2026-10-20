@@ -18,3 +18,12 @@ def test_text_spec_scales_to_footage_and_uses_emph_only_for_two_tone():
     st["two_tone"] = True
     t = text_spec("Go [[now]]", st, 0.25, "hand")
     assert t["emph"] == [[3, 6]] and t["font"] == "Noteworthy-Bold"
+
+
+def test_text_spec_passes_outline_scaled():
+    st = {"angle": 0.0, "w": 400.0, "h": 40.0, "cx": 0.0, "cy": 0.0, "two_tone": False,
+          "base": [0, 0, 0], "emph": [0, 0, 0], "stroke": [255, 255, 255], "stroke_w": 12.0}
+    t = text_spec("Hi", st, 0.25, "hand")
+    assert t["stroke"] == [255, 255, 255] and t["stroke_w"] == 3.0
+    del st["stroke"], st["stroke_w"]
+    assert text_spec("Hi", st, 0.25, "hand")["stroke"] is None

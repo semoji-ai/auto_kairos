@@ -23,7 +23,8 @@ def text_spec(text, st, s, font):
     return {"text": plain, "emph": rng if st.get("two_tone") else [],
             "font": FONTS[font], "size": st["h"] * 0.72 * s,
             "cx": st["cx"] * s, "cy": st["cy"] * s, "angle": st["angle"], "wmax": st["w"] * s,
-            "base": list(st["base"]), "emph_color": list(st["emph"])}
+            "base": list(st["base"]), "emph_color": list(st["emph"]),
+            "stroke": list(st["stroke"]) if st.get("stroke") else None, "stroke_w": st.get("stroke_w", 0) * s}
 
 
 if __name__ == "__main__":

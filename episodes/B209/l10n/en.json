@@ -1948,6 +1948,90 @@
    "font": "hand",
    "two_tone": false,
    "ko": "홈플러스"
+  },
+  "20551#2": {
+   "text": "S. Walton",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "샘 월튼"
+  },
+  "21929#0": {
+   "text": "So cheap~",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "너무 싸~"
+  },
+  "22081#1": {
+   "text": "Members",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "회원제"
+  },
+  "22083#0": {
+   "text": "Fees",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "회비"
+  },
+  "22091#0": {
+   "text": "(Sol Price's surname)",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "(솔 프라이스의 성)"
+  },
+  "22093#0": {
+   "text": "(Member store)",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "(회원제 매장)"
+  },
+  "22159#2": {
+   "text": "Hotdog",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "핫도그"
+  },
+  "22159#3": {
+   "text": "Let's sell!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "팔아야지!"
+  },
+  "22187#2": {
+   "text": "S. Walton",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "샘 월튼"
+  },
+  "3070#0": {
+   "text": "Master..",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "스승님..."
+  },
+  "3074#0": {
+   "text": "SEA",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "시애틀"
+  },
+  "3607#1": {
+   "text": "Our products",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "자사 제품을"
+  },
+  "3607#2": {
+   "text": "sold here!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "팔 수 있다니!"
+  },
+  "3661#1": {
+   "text": "Go global!",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "가자 세계로!"
   }
  }
 }
