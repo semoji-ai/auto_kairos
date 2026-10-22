@@ -38,6 +38,8 @@ def match_bars(scan, items_by_id):
             u1, _ = to_local(x1, (y0 + y1) / 2, t)
             best = None
             for ln in t["lines"]:
+                if ln["key"].endswith("_stroke"):               # 외곽선 전용 복제 레이어는 문장 줄이 아님
+                    continue
                 cy = ln["pos"][1]; hh = ln["height"] * ln["scale"][1] / 100
                 if abs(v - cy) < hh * 0.9 and (best is None or abs(v - cy) < abs(v - best["pos"][1])):
                     best = ln
