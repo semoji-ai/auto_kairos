@@ -140,7 +140,8 @@ if __name__ == "__main__":
                if nfc(f) in {nfc(p["narration"]) for p in cfg["parts"].values()}]
         gdb = narration_gain_db([lufs(r) for r in ref], lufs(nar))
         g = 10 ** (gdb / 20); log["narration_gain_db"] = gdb
-        place(buf, decode(nar), 0.0, SR, np.full(len(buf), g, np.float32))
+        if "--bed" not in a:                      # --bed: 내레이션 빼고(삽입 구간 배경음용) → bed.wav
+            place(buf, decode(nar), 0.0, SR, np.full(len(buf), g, np.float32))
         # AE 효과음: 파트 mp4 오디오를 미리보기와 같은 순서·시각으로
         t = 0.0
         order = []
@@ -160,7 +161,7 @@ if __name__ == "__main__":
         cut_to = int(round(vdur * SR))                 # 영상 길이와 정확히 같게(쓸 때 자름)
     place_sfx(buf, tr[A["sfx_track"]]["items"], edl, T, files, key_base, log)
     place_pieces(buf, to_master(flatten(P, A["main_seq_uid"], A["bgm_tracks"]), edl), T, files, key_base, log, "bgm_pieces", edl)
-    name = "identity_mix.wav" if mode == "ko-identity" else "mix.wav"
+    name = "identity_mix.wav" if mode == "ko-identity" else ("bed.wav" if "--bed" in a else "mix.wav")
     peak = float(np.abs(buf).max()); log["peak"] = round(peak, 3)
     if peak > 0.97:                                  # 클리핑 방지: 전체를 같은 비율로 낮춤(상대 레벨 유지)
         buf *= 0.97 / peak; log["master_gain_db"] = round(20 * np.log10(0.97 / peak), 2)

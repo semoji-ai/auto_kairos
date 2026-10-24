@@ -210,3 +210,17 @@ def srt_time(t):
     """초 → SRT 시각. 전체를 밀리초로 먼저 반올림(부분별로 버림·반올림하면 82.99999초가 01:22,000이 됨)."""
     ms = max(0, int(round(t * 1000)))
     return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
+
+
+def cues_for_segment(chars, starts, ends, display=None, max_chars=42, min_dur=0.8, cjk=False, protect=()):
+    """정렬(읽은 글자 시각)로 큐를 만들고, 화면 문장(display)이 읽은 문장과 다르면(발음용 표기) 화면 문장으로 바꿈.
+    cjk: 화면 문장을 같은 규칙으로 다시 나누고 시각은 읽은 전체 구간에 글자 비율로 펼침. 그 외: 단어를 글자 비율로 배분."""
+    cues = split_cues(chars, starts, ends, max_chars, min_dur, cjk=cjk, protect=protect)
+    if display is None or display == "".join(chars) or not cues or not display:
+        return cues
+    if cjk:
+        disp = list(display); a0, a1 = cues[0]["t0"], cues[-1]["t1"]
+        st = [a0 + (a1 - a0) * i / len(disp) for i in range(len(disp))]
+        en = [a0 + (a1 - a0) * (i + 1) / len(disp) for i in range(len(disp))]
+        return split_cues(disp, st, en, max_chars, min_dur, cjk=True, protect=protect)
+    return retext(cues, display)

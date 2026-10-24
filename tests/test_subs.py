@@ -132,3 +132,12 @@ def test_snap_never_moves_a_cue_past_the_next_cue_start():
     out = snap_to_onsets(cues, [0.0, 2.15], max_shift=1.2)
     assert [c["t0"] for c in out] == sorted(c["t0"] for c in out)
     assert out[1]["t0"] < 1.9
+
+
+def test_cues_for_segment_uses_display_text_when_tts_differs():
+    from sg.subs import cues_for_segment
+    tts = "二零一九年，开市客来了。"
+    ch, st, en = even(tts, cps=5.0)
+    cues = cues_for_segment(ch, st, en, display="2019年，开市客来了。", max_chars=18, min_dur=0.8, cjk=True)
+    assert "".join(c["text"] for c in cues) == "2019年，开市客来了。"
+    assert abs(cues[0]["t0"] - 0.0) < 1e-6 and abs(cues[-1]["t1"] - len(tts) / 5.0) < 1e-6

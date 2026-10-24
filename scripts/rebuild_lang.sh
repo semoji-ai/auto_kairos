@@ -33,4 +33,13 @@ python3 scripts/audio_mix.py "$EP" "$L"
 python3 scripts/preview.py "$EP" "$L"
 ffprobe -v error -show_entries format=duration -of csv=p=0 "$EP/render/$L/${CODE}_$(echo "$L" | tr a-z A-Z)_preview.mp4"
 python3 scripts/qa_hangul.py "$EP" "$L" --step 0.5 || true
+# 언어별 삽입 구간(예: 중국어판 도입·결말)이 있으면 새 장면 조립·렌더 → 배경음 → 본편에 이어 붙임
+if [ -f "$EP/l10n/${L}_inserts.json" ]; then
+  python3 scripts/inserts.py "$EP" "$L" tts
+  python3 scripts/inserts.py "$EP" "$L" plan
+  python3 scripts/inserts.py "$EP" "$L" build
+  python3 scripts/audio_mix.py "$EP" "$L" --bed
+  python3 scripts/inserts.py "$EP" "$L" audio
+  python3 scripts/inserts.py "$EP" "$L" splice
+fi
 echo REBUILD_DONE
