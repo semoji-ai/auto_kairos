@@ -1,0 +1,70 @@
+{
+  "lang": "zh",
+  "language_code": "zh",
+  "cps": 5.4,
+  "fit": {
+    "lo": 0.75,
+    "hi": 1.35,
+    "max_rewrites": 2
+  },
+  "tts_model": "eleven_v4",
+  "tts_voice": "W7FnAxJNpD5WGjrF5GLp",
+  "tts_settings": {
+    "stability": 1.0,
+    "similarity_boost": 0.9,
+    "style": 0.9,
+    "speed": 1.1,
+    "use_speaker_boost": true
+  },
+  "subs": {
+    "max_chars": 18,
+    "min_dur": 0.8,
+    "gap": 0.04,
+    "cjk": true,
+    "font": "SourceHanSansCN-Bold"
+  },
+  "fonts": {
+    "OTSBAggroL": "SourceHanSansCN-Bold",
+    "OTSBAggroM": "SmileySans-Oblique",
+    "OTSBAggroB": "SourceHanSansCN-Heavy",
+    "HakgyoansimAllimjangTTF-R": "ZCOOLKuaiLe-Regular",
+    "GeekbleMalang2": "SourceHanSansCN-Heavy",
+    "BMYEONSUNG": "SmileySans-Oblique"
+  },
+  "min_font_scale": 0.7,
+  "raster_fonts": {
+    "label": {
+      "ps": "SourceHanSansCN-Heavy",
+      "file": "~/Library/Fonts/SourceHanSansCN-Heavy.otf"
+    },
+    "title": {
+      "ps": "SmileySans-Oblique",
+      "file": "~/Library/Fonts/SmileySans-Oblique.otf"
+    },
+    "hand": {
+      "ps": "ZCOOLKuaiLe-Regular",
+      "file": "~/Library/Fonts/ZCOOLKuaiLe-Regular.ttf"
+    },
+    "brush": {
+      "ps": "ZhiMangXing-Regular",
+      "file": "~/Library/Fonts/ZhiMangXing-Regular.ttf"
+    }
+  },
+  "assets_text": {
+    "laugh": "哈",
+    "logo_rows": [
+      "SE",
+      "MO",
+      "JI"
+    ],
+    "subscribe": "关注",
+    "like": "点赞",
+    "outro": "Semoji"
+  },
+  "assets_fonts": {
+    "gothic": "SourceHanSansCN-Heavy",
+    "hand": "ZCOOLKuaiLe-Regular",
+    "logo": "OTSBAggroB"
+  },
+  "fonts_license_dir": "docs/fonts/zh"
+}
