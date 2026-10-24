@@ -6,7 +6,8 @@ $.evalFile(File(SELF).parent.fsName+"/lib.jsx");
 var C=jobConfig(SELF), LOG={replaced:0, keys_replaced:0, shrunk:[], overflow:[], not_found:[], mismatch:[], errors:[]};
 function norm(s){ return String(s).replace(/\r\n|\n/g,"\r"); }
 function width(L,t){ try{ var r=L.sourceRectAtTime(t,false); return r.width; }catch(e){ return 0; } }
-function apply(td,txt){ td.text=txt; if(C.font_map[td.font]) td.font=C.font_map[td.font]; return td; }
+var UNMAPPED={};
+function apply(td,txt){ td.text=txt; if(C.font_map[td.font]) td.font=C.font_map[td.font]; else UNMAPPED[td.font]=1; return td; }
 app.beginSuppressDialogs();
 try{
   var P=openProject(C.aep), byId={};
@@ -44,6 +45,7 @@ try{
     }catch(err){ LOG.errors.push(e.id+": "+String(err)); }
     L.locked=wasLocked;
   }
+  for(var u in UNMAPPED) if(UNMAPPED.hasOwnProperty(u)) LOG.errors.push("폰트 대응표에 없음: "+u+" (profiles/<lang>.json fonts)");
   P.save(new File(C.save_as)); P.close(CloseOptions.DO_NOT_SAVE_CHANGES);
 }catch(e){ LOG.errors.push(String(e)+" line "+e.line); }
 writeText(C.out, S(LOG));

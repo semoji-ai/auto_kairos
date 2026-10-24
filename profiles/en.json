@@ -27,7 +27,11 @@
     "OTSBAggroB": "OTSBAggroB",
     "HakgyoansimAllimjangTTF-R": "OTSBAggroM",
     "GeekbleMalang2": "OTSBAggroB",
-    "BMYEONSUNG": "OTSBAggroM"
+    "BMYEONSUNG": "OTSBAggroM",
+    "SBAggroM": "OTSBAggroM",
+    "SBAggroL": "OTSBAggroL",
+    "SBAggroB": "OTSBAggroB",
+    "AppleGothic": "AppleGothic"
   },
   "min_font_scale": 0.7,
   "raster_fonts": {

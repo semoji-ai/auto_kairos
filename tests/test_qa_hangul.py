@@ -27,3 +27,12 @@ def test_real_short_hangul_is_never_noise():
     assert not is_noise("6.5조", 0.5)
     assert not is_noise("상", 1.0)              # 신뢰도 1은 잡음으로 치지 않음
     assert not is_noise("구독", 0.3)            # 낮은 신뢰도라도 한글 2자 이상은 사람이 본다
+
+
+def test_hangul_reading_overlapping_confident_chinese_is_not_a_problem():
+    from scripts.qa_hangul import read_as_chinese
+    ko_item = {"text": "꽃WT 후ㅅB1", "box": [100, 900, 400, 60], "conf": 0.5}
+    zh = [{"text": "实现了惊人的增长，", "box": [98, 902, 410, 58], "conf": 1.0}]
+    assert read_as_chinese(ko_item, zh)
+    assert not read_as_chinese(ko_item, [{"text": "实现", "box": [900, 100, 50, 50], "conf": 1.0}])   # 다른 위치
+    assert not read_as_chinese(ko_item, [{"text": "实现了", "box": [98, 902, 410, 58], "conf": 0.3}])  # 자신 없음

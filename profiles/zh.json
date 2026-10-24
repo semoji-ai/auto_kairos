@@ -29,7 +29,11 @@
     "OTSBAggroB": "SourceHanSansCN-Heavy",
     "HakgyoansimAllimjangTTF-R": "ZCOOLKuaiLe-Regular",
     "GeekbleMalang2": "SourceHanSansCN-Heavy",
-    "BMYEONSUNG": "SmileySans-Oblique"
+    "BMYEONSUNG": "SmileySans-Oblique",
+    "SBAggroL": "SourceHanSansCN-Bold",
+    "SBAggroM": "SmileySans-Oblique",
+    "SBAggroB": "SourceHanSansCN-Heavy",
+    "AppleGothic": "SourceHanSansCN-Bold"
   },
   "min_font_scale": 0.7,
   "raster_fonts": {

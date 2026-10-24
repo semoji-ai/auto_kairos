@@ -1,9 +1,12 @@
 #!/bin/bash
 # 언어판 전체 재빌드.  usage: scripts/rebuild_lang.sh <EP 폴더> <lang>
-# 래스터 교체 → 형광펜 맞춤 → 공용 에셋 교체 → 타임 워프 → 자막 → 파트 렌더 → 내레이션 미리보기 → 프리미어 층 믹스 → 최종 미리보기 → 한글 검사
+# 화면 문자열 → 래스터 교체 → 형광펜 맞춤 → 공용 에셋 교체 → 타임 워프 → 자막 → 파트 렌더 → 내레이션 미리보기 → 프리미어 층 믹스 → 최종 미리보기 → 한글 검사
 set -euo pipefail
 cd "$(dirname "$0")/.."
 EP="$(cd "$1" && pwd)"; L="$2"; CODE="$(basename "$EP")"; B="$EP/build/$L"
+python3 scripts/patch_text.py "$EP" "$L"
+rm -f "$B/patch_text_log.json"; scripts/ae/run.sh "$PWD/scripts/ae/patch_text.jsx"
+python3 -c "import json,sys; d=json.load(open('$B/patch_text_log.json')); print('patch_text replaced', d['replaced'], 'errors', d['errors'], 'mismatch', d['mismatch']); sys.exit(1 if d['errors'] or d['mismatch'] or d['not_found'] else 0)"
 python3 scripts/raster_apply.py "$EP" "$L"
 python3 scripts/highlights.py "$EP" "$L"
 python3 scripts/swap_assets.py "$EP" "$L"

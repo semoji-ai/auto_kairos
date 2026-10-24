@@ -1,4 +1,4 @@
-// macOS Vision OCR: usage: ocr <png>... → JSON lines {"file","w","h","items":[{"text","conf","box":[x,y,w,h] (픽셀, 왼쪽 위 기준)}]}
+// macOS Vision OCR: usage: [OCR_LANGS=zh-Hans,en-US] ocr <png>... → JSON lines {"file","w","h","items":[{"text","conf","box":[x,y,w,h] (픽셀, 왼쪽 위 기준)}]}
 import Foundation
 import Vision
 import AppKit
@@ -8,7 +8,9 @@ for path in CommandLine.arguments.dropFirst() {
     let W = Double(cg.width), H = Double(cg.height)
     let req = VNRecognizeTextRequest()
     req.recognitionLevel = .accurate
-    req.recognitionLanguages = ["ko-KR", "en-US"]
+    // 인식 언어(기본 한국어·영어). 중국어판 검사 등은 OCR_LANGS 환경변수로(예: zh-Hans,en-US)
+    let langs = ProcessInfo.processInfo.environment["OCR_LANGS"].map { $0.split(separator: ",").map(String.init) } ?? ["ko-KR", "en-US"]
+    req.recognitionLanguages = langs
     req.usesLanguageCorrection = false
     try? VNImageRequestHandler(cgImage: cg, options: [:]).perform([req])
     var items: [[String: Any]] = []
