@@ -42,6 +42,12 @@ function rectShape(comp, w, h, color, radius, name){
   v.addProperty("ADBE Vector Graphic - Fill").property("ADBE Vector Fill Color").setValue(rgb(color));
   return L;
 }
+function fadeChildren(layers, kind, t){   // null의 불투명도는 자식에 안 먹음 → 자식마다 같은 등장 시각에 불투명도 키
+  if(!kind || kind==="none") return;
+  var d=(kind==="fade")?0.3:(kind==="slam"?0.05:(kind==="pop"?0.08:0.2));
+  for(var i=0;i<layers.length;i++){ var op=layers[i].property("ADBE Transform Group").property("ADBE Opacity");
+    op.setValueAtTime(Math.max(0,t-0.01),0); op.setValueAtTime(t,0); op.setValueAtTime(t+d,100); }
+}
 function grouped(comp, layers, name){   // 여러 레이어를 한 null에 붙여 함께 움직임
   var N=comp.layers.addNull(); N.name=name||"grp"; N.property("ADBE Transform Group").property("ADBE Position").setValue([0,0]);
   N.property("ADBE Transform Group").property("ADBE Anchor Point").setValue([0,0]);
@@ -77,11 +83,11 @@ function buildScene(sc, fonts){
         var T2=addText(comp, S.text, fonts.label, S.size, S.color), pad=S.size*0.45;
         var R=rectShape(comp, T2.w+pad*2, T2.h+pad*1.1, S.bg, S.size*0.25, "badge_bg"); R.moveAfter(T2.layer);
         T2.layer.property("ADBE Transform Group").property("ADBE Position").setValue([0,0]); R.property("ADBE Transform Group").property("ADBE Position").setValue([0,0]);
-        var G=grouped(comp,[T2.layer,R],"badge"); animate(G, S.anim, t, S.x, S.y, S.rot);
+        var G=grouped(comp,[T2.layer,R],"badge"); animate(G, S.anim, t, S.x, S.y, S.rot); fadeChildren([T2.layer,R], S.anim, t);
       } else if(S.type==="phone"){
         var P1=rectShape(comp, S.w, S.h, [40,40,40], 60, "phone"), P2=rectShape(comp, S.w-36, S.h-110, [255,255,255], 28, "screen");
         P1.property("ADBE Transform Group").property("ADBE Position").setValue([0,0]); P2.property("ADBE Transform Group").property("ADBE Position").setValue([0,0]);
-        P2.moveBefore(P1); var G2=grouped(comp,[P1,P2],"phone"); animate(G2, S.anim, t, S.x, S.y);
+        P2.moveBefore(P1); var G2=grouped(comp,[P1,P2],"phone"); animate(G2, S.anim, t, S.x, S.y); fadeChildren([P1,P2], S.anim, t);
       } else if(S.type==="bar"){
         var R2=rectShape(comp, S.w, S.h, S.color, 8, "bar"); var tr=R2.property("ADBE Transform Group");
         tr.property("ADBE Anchor Point").setValue([0, S.h/2]); tr.property("ADBE Position").setValue([S.x, S.base_y]);
