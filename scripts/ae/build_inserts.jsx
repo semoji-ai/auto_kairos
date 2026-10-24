@@ -48,6 +48,18 @@ function fadeChildren(layers, kind, t){   // null의 불투명도는 자식에 �
   for(var i=0;i<layers.length;i++){ var op=layers[i].property("ADBE Transform Group").property("ADBE Opacity");
     op.setValueAtTime(Math.max(0,t-0.01),0); op.setValueAtTime(t,0); op.setValueAtTime(t+d,100); }
 }
+// 규칙(도장·팝 등 스케일 등장 효과): 스케일 키로 등장하는 것은 "실제로 그려지는 레이어"마다 첫 스케일 키 시각에
+// 불투명도 0→100 키가 있어야 한다. null·부모는 자식의 불투명도를 바꾸지 못하므로 부모에만 넣으면 처음부터 보인다.
+// checkReveal이 장면마다 이 규칙을 검사해 어기면 오류로 멈춘다.
+function firstScaleKey(L){ for(var p=L;p;p=p.parent){ var sc=p.property("ADBE Transform Group").property("ADBE Scale"); if(sc.numKeys>0) return sc.keyTime(1); } return null; }
+function checkReveal(comp, sid){
+  for(var i=1;i<=comp.numLayers;i++){ var L=comp.layer(i); if(L.nullLayer) continue;
+    var t=firstScaleKey(L); if(t===null) continue;
+    var op=L.property("ADBE Transform Group").property("ADBE Opacity");
+    if(op.numKeys===0 || op.keyValue(1)>0.5 || op.keyTime(1)>t+0.02)
+      LOG.errors.push(sid+": '"+L.name+"' 스케일 등장(t="+t.toFixed(2)+")인데 자기 불투명도 0 키가 없음 — 처음부터 보임");
+  }
+}
 function grouped(comp, layers, name){   // 여러 레이어를 한 null에 붙여 함께 움직임
   var N=comp.layers.addNull(); N.name=name||"grp"; N.property("ADBE Transform Group").property("ADBE Position").setValue([0,0]);
   N.property("ADBE Transform Group").property("ADBE Anchor Point").setValue([0,0]);
@@ -91,7 +103,7 @@ function buildScene(sc, fonts){
       } else if(S.type==="bar"){
         var R2=rectShape(comp, S.w, S.h, S.color, 8, "bar"); var tr=R2.property("ADBE Transform Group");
         tr.property("ADBE Anchor Point").setValue([0, S.h/2]); tr.property("ADBE Position").setValue([S.x, S.base_y]);
-        var scp=tr.property("ADBE Scale"); scp.setValueAtTime(t,[100,0]); scp.setValueAtTime(t+0.5,[100,100]); ease(scp);
+        var scp=tr.property("ADBE Scale"); scp.setValueAtTime(t,[100,0]); scp.setValueAtTime(t+0.5,[100,100]); ease(scp); fadeChildren([R2], "pop", t);
         var TL=addText(comp, S.label, fonts.label, 54, [40,40,40]); animate(TL.layer, "fade", t, S.x, S.base_y+60);
       } else if(S.type==="cover"){
         var E=comp.layers.addShape(); E.name="cover"; var g=E.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group"), v=g.property("ADBE Vectors Group");
@@ -103,6 +115,7 @@ function buildScene(sc, fonts){
       LOG.layers++;
     }catch(e){ LOG.errors.push(sc.id+" layer "+i+" ("+S.type+"): "+String(e)+" line "+e.line); }
   }
+  checkReveal(comp, sc.id);
   return comp;
 }
 app.beginSuppressDialogs();
