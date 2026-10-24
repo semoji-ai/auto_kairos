@@ -4,6 +4,12 @@ import re
 import subprocess
 
 LANG_NAMES = {"en": "English (US)", "ja": "Japanese", "zh": "Simplified Chinese"}
+# 그림 속 문구의 글자 규칙(폰트에 있는 글자만 쓰게) — 언어별
+SCRIPT_RULES = {
+    "en": "Use only plain ASCII characters (no ₩, no curly quotes); write Korean won as KRW. ",
+    "zh": "使用简体中文（不要繁体字），数字用阿拉伯数字，韩元写作“韩元”，不要表情符号或生僻字。"
+          "Count max_chars as Chinese characters. ",
+}
 
 
 class MissingIds(ValueError):
@@ -27,12 +33,13 @@ def build_prompt(items, glossary, lang, kind):
                  "'context' is the narration playing while it is on screen). OCR sometimes misreads drawings, logos or "
                  "patterns as text: if the item is not real meaningful Korean text, return exactly \"__SKIP__\".\n"
                  "Otherwise translate it short and punchy, never longer than max_chars. Keep numbers and years. "
-                 "Use only plain ASCII characters (no ₩, no curly quotes); write Korean won as KRW. "
+                 + SCRIPT_RULES.get(lang, SCRIPT_RULES["en"]) +
                  "If two_tone is true, the original emphasized part of the phrase in a second color: wrap the "
                  "corresponding emphasized English words in [[ ]] (exactly one [[...]] span).\n")
     else:
         rules = (f"You localize short on-screen texts (titles, labels, captions, source credits) of a Korean video into {target}.\n"
-                 "Keep them short and punchy. Never exceed max_chars. Keep numbers, years and brand names. 'Source: ...' for 출처.\n")
+                 "Keep them short and punchy. Never exceed max_chars. Keep numbers, years and brand names. "
+                 + {"en": "'Source: ...' for 출처.\n", "zh": "出处写作“来源：…”。只用简体中文。\n"}.get(lang, "\n"))
     body = json.dumps(items, ensure_ascii=False, indent=0)
     return (rules + f"Glossary (use exactly):\n{gl}\n\n"
             "Return ONLY a JSON object mapping each id to its translation. No commentary, no code fences.\n\nITEMS\n" + body)

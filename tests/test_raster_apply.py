@@ -37,3 +37,19 @@ def test_check_entry_flags_key_drift_missing_emph_and_glyphs():
     assert any("키" in e for e in check_entry("1#0", "회비", {"ko": "회원", "text": "Members"}, {}, {"two_tone": False}, font))
     assert any("강조" in e for e in check_entry("1#0", "회원", {"ko": "회원", "text": "Members"}, {}, {"two_tone": True}, font))
     assert any("글리프" in e for e in check_entry("1#0", "회원", {"ko": "회원", "text": "x"}, {"text": "₩5"}, {"two_tone": False}, font))
+
+
+def test_font_role_by_kind_outline_and_angle():
+    from scripts.raster_apply import font_role
+    assert font_role("hand", has_stroke=True, angle=0) == "brush"
+    assert font_role("hand", has_stroke=False, angle=0) == "hand"
+    assert font_role("gothic", has_stroke=False, angle=-10.9) == "title"
+    assert font_role("gothic", has_stroke=False, angle=0.5) == "label"
+
+
+def test_text_spec_uses_profile_fonts_for_role():
+    zh = {"label": {"ps": "SourceHanSansCN-Heavy"}, "title": {"ps": "SmileySans-Oblique"},
+          "hand": {"ps": "ZCOOLKuaiLe-Regular"}, "brush": {"ps": "ZhiMangXing-Regular"}}
+    st = {"angle": 0.0, "w": 40.0, "h": 10.0, "cx": 0.0, "cy": 0.0, "two_tone": False, "base": [0, 0, 0], "emph": [0, 0, 0]}
+    assert text_spec("你好", st, 1.0, "brush", zh)["font"] == "ZhiMangXing-Regular"
+    assert text_spec("Hi", st, 1.0, "gothic")["font"] == "OTSBAggroB"      # 영어 기존 호출 그대로

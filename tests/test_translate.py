@@ -64,3 +64,11 @@ def test_raster_prompt_allows_skip_and_emphasis_markers():
     p = build_prompt([{"id": "1#0", "ko": "매장 수 및 매출 매년 증가", "max_chars": 40, "two_tone": True,
                        "layer": "2 자막", "context": "매장 수도 늘고"}], {}, "en", "raster")
     assert "__SKIP__" in p and "[[" in p and "max_chars" in p
+
+
+def test_raster_prompt_rules_are_per_language():
+    from sg.translate import build_prompt
+    en = build_prompt([{"id": "a", "ko": "회원"}], {}, "en", "raster")
+    zh = build_prompt([{"id": "a", "ko": "회원"}], {}, "zh", "raster")
+    assert "ASCII" in en
+    assert "ASCII" not in zh and "简体" in zh and "[[ ]]" in zh

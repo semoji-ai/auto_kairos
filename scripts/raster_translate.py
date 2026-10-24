@@ -11,7 +11,9 @@ from sg.translate import translate_batch, claude_runner
 ep, lang = sys.argv[1], sys.argv[2]
 root = os.path.join(os.path.dirname(__file__), "..")
 gloss = json.load(open(os.path.join(root, "glossary", f"{lang}.json")))
-FONTS = {"gothic": os.path.expanduser("~/Library/Fonts/SBAggroOTF-B.otf"), "hand": "/System/Library/Fonts/Noteworthy.ttc"}
+_prof = json.load(open(os.path.join(root, "profiles", f"{lang}.json")))
+_rf = {k: os.path.expanduser(v["file"]) for k, v in _prof["raster_fonts"].items()}
+FONTS = {"gothic": [_rf["label"], _rf["title"]], "hand": [_rf["hand"], _rf["brush"]]}   # 종류별로 쓰일 수 있는 폰트 전부
 segs = json.load(open(os.path.join(ep, "master/source.json")))["segments"]
 items = json.load(open(os.path.join(ep, "raster/items.json")))
 lp = os.path.join(ep, "l10n", f"{lang}.json"); L = json.load(open(lp)); L.setdefault("raster", {})
@@ -51,12 +53,12 @@ for k in range(0, len(todo), 30):
         bad = []
         for it in pending:
             t = res[it["id"]].strip()
-            if t != "__SKIP__" and missing_glyphs(t, FONTS[it["_font"]]):
+            if t != "__SKIP__" and any(missing_glyphs(t, f) for f in FONTS[it["_font"]]):
                 bad.append(it); continue
             L["raster"][it["id"]] = {"text": t, "font": it["_font"], "two_tone": it["two_tone"], "ko": it["ko"]}
         if not bad:
             break
-        pending = [{**it, "context": it["context"] + " (previous answer used characters the font lacks; use plain ASCII)"} for it in bad]
+        pending = [{**it, "context": it["context"] + " (previous answer used characters the font lacks; use only common characters)"} for it in bad]
     json.dump(L, open(lp, "w"), ensure_ascii=False, indent=1)
     print(f"{min(k + 30, len(todo))}/{len(todo)}", flush=True)
 skip = sum(1 for v in L["raster"].values() if v["text"] == "__SKIP__")

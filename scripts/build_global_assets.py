@@ -10,8 +10,20 @@ from sg.blobs import track_blobs
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 AERENDER = "/Applications/Adobe After Effects 2026/aerender"
-TEXT = {"en": {"laugh": "ha", "logo_rows": ["SE", "MO", "JI"], "subscribe": "Subscribe", "like": "Like",
-               "outro": "Semoji"}}
+def _prof(lang):
+    return json.load(open(os.path.join(ROOT, "profiles", f"{lang}.json")))
+
+
+class _Text(dict):
+    def __missing__(self, lang):
+        return _prof(lang)["assets_text"]
+
+
+TEXT = _Text()                                         # 언어별 에셋 문구: profiles/<lang>.json assets_text
+
+
+def afont(lang, kind):
+    return _prof(lang)["assets_fonts"][kind]           # gothic / hand
 
 
 def probe(path):
@@ -64,7 +76,7 @@ def emotion(lang, src):
     name = os.path.basename(src)
     od = os.path.join(ROOT, "assets", "global", lang); bd = os.path.join(od, "build"); os.makedirs(bd, exist_ok=True)
     out = os.path.join(od, unicodedata.normalize("NFC", name))
-    job = {"w": P["w"], "h": P["h"], "fps": P["fps"], "dur": P["dur"], "text": TEXT[lang]["laugh"], "font": "OTSBAggroB",
+    job = {"w": P["w"], "h": P["h"], "fps": P["fps"], "dur": P["dur"], "text": TEXT[lang]["laugh"], "font": afont(lang, "gothic"),
            "tracks": out_tracks, "save_as": os.path.join(bd, "emotion_" + os.path.splitext(name)[0] + ".aep"),
            "render_to": os.path.join(bd, "emotion_render.mov"), "out": os.path.join(bd, "emotion_log.json")}
     run_jsx("build_emotion_en", job)
@@ -184,7 +196,7 @@ def title(lang, src):
     keep_still = os.path.join(bd, "title_logo_still.png"); shutil.copy(still, keep_still)
     logo = {"still": keep_still, "keys": keys, "anchor": [Lc[0], Lc[1]],
             "plates": [{"box": pad_box(text_box, 3), "color": logo_bg, "from": 0}],      # 여백 작게(로고 테두리 보존)
-            "texts": [{"text": T["logo_rows"][k], "font": "OTSBAggroB", "h": r["box"][3] * 0.78, "color": ink,
+            "texts": [{"text": T["logo_rows"][k], "font": afont(lang, "logo"), "h": r["box"][3] * 0.78, "color": ink,
                        "x": r["box"][0], "y": r["box"][1] + r["box"][3] / 2, "just": "left", "wmax": text_box[2], "from": 0}
                       for k, r in enumerate(rows)]}
     fx = lambda it: appear_time_box(fr, it["box"], bg, P["fps"])
@@ -202,10 +214,10 @@ def title(lang, src):
             "images": [{"png": bg_patch(U, "title_hide_logo.png"), "from": 0},          # 원래 로고(애니메이션 포함)를 가림
                        {"png": bg_patch(pad_box(like["box"], 6), "title_hide_like.png"), "from": fx(like)}],
             "plates": [{"box": pad_box(sub["box"], 4), "color": sub_bg, "from": fx(sub)}],
-            "texts": [{"text": T["subscribe"], "font": "OTSBAggroB", "h": sub["box"][3] * 0.6, "color": sub_ink,
+            "texts": [{"text": T["subscribe"], "font": afont(lang, "gothic"), "h": sub["box"][3] * 0.6, "color": sub_ink,
                        "x": sub["box"][0] + sub["box"][2] / 2, "y": sub["box"][1] + sub["box"][3] / 2, "just": "center",
                        "wmax": sub["box"][2] + 16, "from": fx(sub)},
-                      {"text": T["like"], "font": "OTSBAggroB", "h": like["box"][3] * 0.6, "color": like_ink,
+                      {"text": T["like"], "font": afont(lang, "gothic"), "h": like["box"][3] * 0.6, "color": like_ink,
                        "x": like["box"][0], "y": like["box"][1] + like["box"][3] / 2, "just": "left",
                        "wmax": like["box"][2] + 40, "from": fx(like)}]}
     build_overlay(lang, src, "title", [base, logo], P)
@@ -225,7 +237,7 @@ def outro(lang, src):
     it = [i for i in ocr(f) if any("가" <= c <= "힣" for c in i["text"])][0]
     card = ring_color(img, it["box"], 10); ink = ink_color(img, it["box"], card)
     g = {"still": None, "keys": None, "plates": [{"box": pad_box(it["box"], 10), "color": card, "from": 0}],
-         "texts": [{"text": TEXT[lang]["outro"], "font": "Noteworthy-Bold", "h": it["box"][3] * 0.9, "color": ink,
+         "texts": [{"text": TEXT[lang]["outro"], "font": afont(lang, "hand"), "h": it["box"][3] * 0.9, "color": ink,
                     "x": it["box"][0] + it["box"][2] / 2, "y": it["box"][1] + it["box"][3] / 2, "just": "center",
                     "wmax": it["box"][2], "from": 0}]}
     build_overlay(lang, src, "outro", [g], P)

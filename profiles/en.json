@@ -29,5 +29,39 @@
     "GeekbleMalang2": "OTSBAggroB",
     "BMYEONSUNG": "OTSBAggroM"
   },
-  "min_font_scale": 0.7
+  "min_font_scale": 0.7,
+  "raster_fonts": {
+    "label": {
+      "ps": "OTSBAggroB",
+      "file": "~/Library/Fonts/SBAggroOTF-B.otf"
+    },
+    "title": {
+      "ps": "OTSBAggroB",
+      "file": "~/Library/Fonts/SBAggroOTF-B.otf"
+    },
+    "hand": {
+      "ps": "Noteworthy-Bold",
+      "file": "/System/Library/Fonts/Noteworthy.ttc"
+    },
+    "brush": {
+      "ps": "Noteworthy-Bold",
+      "file": "/System/Library/Fonts/Noteworthy.ttc"
+    }
+  },
+  "assets_text": {
+    "laugh": "ha",
+    "logo_rows": [
+      "SE",
+      "MO",
+      "JI"
+    ],
+    "subscribe": "Subscribe",
+    "like": "Like",
+    "outro": "Semoji"
+  },
+  "assets_fonts": {
+    "gothic": "OTSBAggroB",
+    "hand": "Noteworthy-Bold",
+    "logo": "OTSBAggroB"
+  }
 }

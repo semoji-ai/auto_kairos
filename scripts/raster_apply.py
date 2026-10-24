@@ -9,6 +9,22 @@ FONTS = {"gothic": "OTSBAggroB", "hand": "Noteworthy-Bold"}
 FONT_FILES = {"gothic": os.path.expanduser("~/Library/Fonts/SBAggroOTF-B.otf"), "hand": "/System/Library/Fonts/Noteworthy.ttc"}
 
 
+def font_role(kind, has_stroke, angle):
+    """그림 속 글자 역할: 손글씨+외곽선=brush(붓글씨 외침), 손글씨=hand(말풍선), 고딕+기울어짐=title(강조 띠), 고딕=label."""
+    if kind == "hand":
+        return "brush" if has_stroke else "hand"
+    return "title" if abs(angle) > 3 else "label"
+
+
+def manual_for(mm, lang):
+    """manual.json 항목에서 이 언어에 맞는 값만: text는 text_<lang>(영어는 옛 키 text도)."""
+    out = {k: v for k, v in mm.items() if not k.startswith("text")}
+    t = mm.get(f"text_{lang}", mm.get("text") if lang == "en" else None)
+    if t is not None:
+        out["text"] = t
+    return out
+
+
 def check_entry(key, ocr_text, tr, mm, st, font_file):
     """적용 전 검사 → 문제 목록. 번역 키가 다른 글자를 가리키는지(재OCR로 번호가 밀림), 두 색인데 강조 구간이 없는지,
     최종 문구에 폰트에 없는 글자가 있는지."""
@@ -36,11 +52,13 @@ def split_emph(text):
     return plain, ranges
 
 
-def text_spec(text, st, s, font):
-    """styles.json 한 항목(내보낸 PNG 좌표) → footage 좌표의 AE 텍스트 레이어 사양. s = footage폭/PNG폭."""
+def text_spec(text, st, s, font, fonts=None):
+    """styles.json 한 항목(내보낸 PNG 좌표) → footage 좌표의 AE 텍스트 레이어 사양. s = footage폭/PNG폭.
+    font: 역할 이름(label/title/hand/brush, fonts=프로필 raster_fonts) 또는 옛 이름(gothic/hand, 영어 기본)."""
     plain, rng = split_emph(text)
+    ps = fonts[font]["ps"] if fonts and font in fonts else FONTS[font]
     return {"text": plain, "emph": rng if st.get("two_tone") else [],
-            "font": FONTS[font], "size": st["h"] * 0.72 * s,
+            "font": ps, "size": st["h"] * 0.72 * s,
             "cx": st["cx"] * s, "cy": st["cy"] * s, "angle": st["angle"], "wmax": st["w"] * s,
             "base": list(st["base"]), "emph_color": list(st["emph"]),
             "stroke": list(st["stroke"]) if st.get("stroke") else None, "stroke_w": st.get("stroke_w", 0) * s}
@@ -58,6 +76,8 @@ if __name__ == "__main__":
     mp = os.path.join(rd, "manual.json")
     manual = json.load(open(mp)) if os.path.exists(mp) else {}
     hand = set(manual.get("_hand_footage", []))
+    prof = json.load(open(os.path.join(root, "profiles", f"{lang}.json")))
+    rfonts = {k: {"ps": v["ps"], "file": os.path.expanduser(v["file"])} for k, v in prof["raster_fonts"].items()}
     jobs, problems = [], []
     for x in items:
         png = os.path.join(rd, "plate", f"{x['id']}.png")
@@ -67,15 +87,16 @@ if __name__ == "__main__":
         texts = []
         for n, _ in enumerate(x["items"]):
             key = f"{x['id']}#{n}"
-            st, tr, mm = styles.get(key), R.get(key, {}), manual.get(key, {})
+            st, tr, mm = styles.get(key), R.get(key, {}), manual_for(manual.get(key, {}), lang)
             if not st or st.get("blur_only") or mm.get("skip"):
                 continue
             t = mm.get("text", tr.get("text"))
             if not t or t == "__SKIP__":
                 continue
-            font = mm.get("font") or ("hand" if x["id"] in hand else "gothic")
-            problems += check_entry(key, x["items"][n]["text"], tr, mm, st, FONT_FILES[font])
-            texts.append({"key": key, **text_spec(t, st, s, font)})
+            kind = mm.get("font") or ("hand" if x["id"] in hand else "gothic")
+            role = font_role(kind, bool(st.get("stroke")), st["angle"])
+            problems += check_entry(key, x["items"][n]["text"], tr, mm, st, rfonts[role]["file"])
+            texts.append({"key": key, "role": role, **text_spec(t, st, s, role, rfonts)})
         jobs.append({"id": int(x["id"]), "name": x["name"].split("/")[-1], "png": png,
                      "w": x["w"], "h": x["h"], "scale": s * 100, "texts": texts})
     bd = os.path.join(ep, "build", lang)

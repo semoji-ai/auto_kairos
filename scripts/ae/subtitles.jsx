@@ -20,7 +20,8 @@ try{
       var q=part.cues[c], N=tmpl.duplicate();
       var sp=N.property("ADBE Text Properties").property("ADBE Text Document");
       while(sp.numKeys>0) sp.removeKey(1);
-      var td=sp.value; td.text=q.text; sp.setValue(td);
+      var td=sp.value; td.text=q.text; if(C.font) td.font=C.font; sp.setValue(td);
+      if(C.font && c===0 && sp.value.font!==C.font) LOG.errors.push("자막 폰트 대체됨 "+C.font+" → "+sp.value.font);
       N.startTime=0; N.inPoint=q["in"]; N.outPoint=q["out"]; if(Math.abs(N.inPoint-q["in"])>1e-3) N.inPoint=q["in"];
       N.name="EN "+(c+1); N.enabled=true; made++;
     }

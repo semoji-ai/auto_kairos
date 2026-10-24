@@ -41,10 +41,10 @@ for g in src["segments"]:
     sc_id, sc_st = subcomp[pid]
     sc_st_new = pmap[pid](sc_st)                   # localize.jsx는 프리컴프 startTime을 map(ost)로 옮김
     cues = split_cues(al["characters"], al["character_start_times_seconds"], al["character_end_times_seconds"],
-                      prof["subs"]["max_chars"], prof["subs"]["min_dur"])
+                      prof["subs"]["max_chars"], prof["subs"]["min_dur"], cjk=prof["subs"].get("cjk", False))
     seg_l = L10N["segments"].get(g["id"], {})
     if seg_l.get("tts"):          # 발음용 표기로 읽었으면 화면 문구는 원래 번역문으로
-        cues = retext(cues, seg_l["text"])
+        cues = retext(cues, seg_l["text"], cjk=prof["subs"].get("cjk", False))
     for c in cues:
         parts[pid].append({"in": round(base_part + c["t0"] - sc_st_new, 3),
                            "out": round(base_part + c["t1"] - sc_st_new, 3), "text": c["text"]})
@@ -58,6 +58,7 @@ json.dump({"aep": os.path.join(abs_ep, "build", lang, f"{name}_{lang}.aep"),
            "save_as": os.path.join(abs_ep, "build", lang, f"{name}_{lang}_subs.aep"),
            "out": os.path.join(abs_ep, "build", lang, "subtitles_log.json"),
            "bar_layers": cfg.get("subtitle_bar_layers", ["자막바", "자막바그림자"]),
+           "font": prof["subs"].get("font"),            # 없으면 템플릿 폰트 그대로(영어)
            "parts": [{"comp": cfg["parts"][pid]["comp"], "sub_comp_id": subcomp[pid][0], "cues": cues,
                       # 자막 바는 자막이 있을 때만(영어는 큐 사이 공백이 길어 빈 바가 드러남)
                       "bar": bar_intervals(cues, pmap[pid](subcomp[pid][1]))} for pid, cues in parts.items()]},
