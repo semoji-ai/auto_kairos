@@ -34,7 +34,7 @@ for i in range(len(vids)):
             + f"scale=1920:1080,fps=30000/1001,format=yuv420p,setsar=1" + ("[o0];" if last and _tex else f"[v{i}];")
 if _tex:
     k = len(vids)
-    filt += f"[{k}:v]scale=1920:1080,format=yuv420p,setsar=1[tx];[o0][tx]blend=all_mode=multiply:all_opacity=0.1:shortest=0[v{k - 1}];"
+    filt += f"[{k}:v]scale=1920:1080,format=yuv420p,setsar=1[tx];[o0][tx]blend=all_mode=multiply:all_opacity=0.1:shortest=1[v{k - 1}];"
 filt += "".join(f"[v{i}]" for i in range(len(vids))) + f"concat=n={len(vids)}:v=1:a=0[v]"
 video = os.path.join(out_dir, "video_only.mp4")
 args = ["ffmpeg", "-v", "error", "-y"]
