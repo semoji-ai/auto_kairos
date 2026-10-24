@@ -1,7 +1,7 @@
 """영어 자막 큐 → AE job + SRT.  usage: subtitles.py <EP> <lang>"""
 import json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from sg.subs import split_cues, resolve_overlaps, retext
+from sg.subs import split_cues, resolve_overlaps, retext, bar_intervals, close_gaps
 from sg.timemap import PiecewiseMap
 from sg.edl import master_to_part
 
@@ -50,14 +50,17 @@ for g in src["segments"]:
                            "out": round(base_part + c["t1"] - sc_st_new, 3), "text": c["text"]})
         srt.append({"in": base_master + c["t0"], "out": base_master + c["t1"], "text": c["text"]})
 # 구간 사이 겹침 정리(다음 큐 시작 - gap)
-parts = {pid: resolve_overlaps(c, prof["subs"]["gap"]) for pid, c in parts.items()}
-srt = resolve_overlaps(srt, prof["subs"]["gap"])
+parts = {pid: close_gaps(resolve_overlaps(c, prof["subs"]["gap"])) for pid, c in parts.items()}
+srt = resolve_overlaps(srt, prof["subs"]["gap"])      # SRT는 플레이어가 그리므로 틈 유지
 
 abs_ep = os.path.abspath(ep); name = os.path.basename(abs_ep)
 json.dump({"aep": os.path.join(abs_ep, "build", lang, f"{name}_{lang}.aep"),
            "save_as": os.path.join(abs_ep, "build", lang, f"{name}_{lang}_subs.aep"),
            "out": os.path.join(abs_ep, "build", lang, "subtitles_log.json"),
-           "parts": [{"comp": cfg["parts"][pid]["comp"], "sub_comp_id": subcomp[pid][0], "cues": cues} for pid, cues in parts.items()]},
+           "bar_layers": cfg.get("subtitle_bar_layers", ["자막바", "자막바그림자"]),
+           "parts": [{"comp": cfg["parts"][pid]["comp"], "sub_comp_id": subcomp[pid][0], "cues": cues,
+                      # 자막 바는 자막이 있을 때만(영어는 큐 사이 공백이 길어 빈 바가 드러남)
+                      "bar": bar_intervals(cues, pmap[pid](subcomp[pid][1]))} for pid, cues in parts.items()]},
           open(os.path.join(root, "scripts/ae/subtitles_job.json"), "w"), ensure_ascii=False, indent=1)
 os.makedirs(os.path.join(ep, "render", lang), exist_ok=True)
 fmt = lambda t: f"{int(t // 3600):02d}:{int(t % 3600 // 60):02d}:{int(t % 60):02d},{int(round((t % 1) * 1000)) % 1000:03d}"

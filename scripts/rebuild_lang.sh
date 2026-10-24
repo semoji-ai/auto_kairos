@@ -1,10 +1,11 @@
 #!/bin/bash
 # 언어판 전체 재빌드.  usage: scripts/rebuild_lang.sh <EP 폴더> <lang>
-# 래스터 교체 → 공용 에셋 교체 → 타임 워프 → 자막 → 파트 렌더 → 내레이션 미리보기 → 프리미어 층 믹스 → 최종 미리보기 → 한글 검사
+# 래스터 교체 → 형광펜 맞춤 → 공용 에셋 교체 → 타임 워프 → 자막 → 파트 렌더 → 내레이션 미리보기 → 프리미어 층 믹스 → 최종 미리보기 → 한글 검사
 set -euo pipefail
 cd "$(dirname "$0")/.."
 EP="$(cd "$1" && pwd)"; L="$2"; CODE="$(basename "$EP")"; B="$EP/build/$L"
 python3 scripts/raster_apply.py "$EP" "$L"
+python3 scripts/highlights.py "$EP" "$L"
 python3 scripts/swap_assets.py "$EP" "$L"
 python3 scripts/timewarp.py "$EP" "$L" --durs "$EP/tts/$L/durs.json" --keep-subs --aep "$B/${CODE}_${L}_swapped.aep"
 rm -f "$B/localize_log.json"; scripts/ae/run.sh "$PWD/scripts/ae/localize.jsx"

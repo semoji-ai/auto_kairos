@@ -49,3 +49,17 @@ def test_retext_maps_display_words_onto_cues_from_pronunciation_text():
     out = retext(cues, "Kirkland Signature is cheap.")
     assert " ".join(c["text"] for c in out) == "Kirkland Signature is cheap."
     assert len(out) == 2 and out[0]["t1"] == 1
+
+
+def test_bar_intervals_merge_short_gaps_and_shift_to_main_time():
+    from sg.subs import bar_intervals
+    cues = [{"in": 1.0, "out": 3.0}, {"in": 3.3, "out": 5.0}, {"in": 9.0, "out": 10.0}]
+    # 자막 프리컴프가 메인 컴프 2초에 놓임 → 메인 시각 = 큐 + 2. 0.6초 미만 공백(0.3)은 이어 붙임
+    assert bar_intervals(cues, 2.0, merge_gap=0.6) == [[3.0, 7.0], [11.0, 12.0]]
+
+
+def test_close_gaps_extends_cue_to_next_when_gap_is_tiny():
+    from sg.subs import close_gaps
+    cues = [{"in": 0.0, "out": 2.19, "text": "a"}, {"in": 2.27, "out": 3.0, "text": "b"}, {"in": 4.0, "out": 5.0, "text": "c"}]
+    out = close_gaps(cues, max_gap=0.3)
+    assert [(c["in"], c["out"]) for c in out] == [(0.0, 2.27), (2.27, 3.0), (4.0, 5.0)]   # 0.08초 틈만 메움

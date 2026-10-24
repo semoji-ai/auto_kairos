@@ -28,9 +28,7 @@ try{
         var sp=L.property("ADBE Text Properties").property("ADBE Text Document"), td=sp.value;
         td.resetCharStyle(); td.resetParagraphStyle();
         td.font=T.font; td.fontSize=T.size; td.applyFill=true; td.fillColor=rgb(T.base);
-        // 외곽선: 글자 속이 위를 덮으므로 보이는 두께는 strokeWidth의 절반 → 2배로
-        if(T.stroke){ td.applyStroke=true; td.strokeColor=rgb(T.stroke); td.strokeWidth=Math.max(1,T.stroke_w*2); td.strokeOverFill=false; }
-        else td.applyStroke=false;
+        td.applyStroke=false;
         td.justification=ParagraphJustification.CENTER_JUSTIFY; td.tracking=0;
         sp.setValue(td);
         if(sp.value.font!==T.font) LOG.errors.push(T.key+": 폰트 대체됨 "+T.font+" → "+sp.value.font);   // 폰트 없으면 AE가 조용히 바꿈
@@ -51,6 +49,15 @@ try{
         tr.property("ADBE Position").setValue([T.cx, T.cy]);
         tr.property("ADBE Rotate Z").setValue(T.angle);
         L.outPoint=dur; L.name=T.key;
+        // 외곽선은 아래쪽 복제 레이어에 따로: 한 레이어에 외곽선을 켜면 다음 글자의 외곽선이 앞 글자 획을 덮어
+        // 붙은 손글씨가 깨짐(Let's → Le'ts). 외곽선 레이어는 글자 속까지 외곽선 색으로 채워 틈이 없게, 보이는 두께 = strokeWidth/2
+        if(T.stroke){
+          var SL=L.duplicate(); SL.moveAfter(L); SL.name=T.key+"_stroke";
+          var ssp=SL.property("ADBE Text Properties").property("ADBE Text Document"), std=ssp.value;
+          std.applyFill=true; std.fillColor=rgb(T.stroke);
+          std.applyStroke=true; std.strokeColor=rgb(T.stroke); std.strokeWidth=Math.max(1,T.stroke_w*2); std.strokeOverFill=true;
+          ssp.setValue(std);
+        }
         LOG.text_layers++;
       }
       made[J.id]=comp; LOG.comps++;

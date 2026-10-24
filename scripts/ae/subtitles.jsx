@@ -25,7 +25,25 @@ try{
       N.name="EN "+(c+1); N.enabled=true; made++;
     }
     for(var j=0;j<olds.length;j++) olds[j].remove();
-    LOG.parts.push({comp:part.comp, sub:sub.name, created:made, deleted:olds.length});
+    // 자막 바: 자막 구간에만 보이게 불투명도 키(3프레임 페이드), 원래 불투명도 값은 유지
+    var fr=3/main.frameRate, bars=0;
+    for(var j=1;j<=main.numLayers;j++){
+      var BL=main.layer(j), isBar=false;
+      for(var b=0;b<C.bar_layers.length;b++) if(BL.name===C.bar_layers[b]) isBar=true;
+      if(!isBar) continue;
+      var wasLocked=BL.locked; BL.locked=false;
+      var op=BL.property("ADBE Transform Group").property("ADBE Opacity"), v0=op.value;
+      while(op.numKeys>0) op.removeKey(1);
+      op.setValueAtTime(0,0);
+      for(var q=0;q<part.bar.length;q++){
+        var a=part.bar[q][0], e=part.bar[q][1];
+        op.setValueAtTime(Math.max(0,a-fr),0); op.setValueAtTime(a,v0);
+        op.setValueAtTime(e,v0); op.setValueAtTime(e+fr,0);
+      }
+      BL.locked=wasLocked; bars++;
+    }
+    if(bars===0) LOG.errors.push("no subtitle bar layer in "+part.comp);
+    LOG.parts.push({comp:part.comp, sub:sub.name, created:made, deleted:olds.length, bar_layers:bars, bar_spans:part.bar.length});
   }
   P.save(new File(C.save_as)); P.close(CloseOptions.DO_NOT_SAVE_CHANGES);
 }catch(e){ LOG.errors.push(String(e)+" line "+e.line); }

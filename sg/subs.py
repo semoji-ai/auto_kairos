@@ -85,3 +85,24 @@ def retext(cues, display):
         out.append({**c, "text": " ".join(words[k:upto])})
         k = upto
     return [c for c in out if c["text"]]
+
+
+def bar_intervals(cues, sub_start, merge_gap=0.6):
+    """자막 바를 보일 구간(메인 컴프 시각). 큐 시각 + 자막 프리컴프 시작, merge_gap 미만 공백은 이어 붙임(깜빡임 방지)."""
+    out = []
+    for c in sorted(cues, key=lambda c: c["in"]):
+        a, b = round(c["in"] + sub_start, 3), round(c["out"] + sub_start, 3)
+        if out and a - out[-1][1] < merge_gap:
+            out[-1][1] = max(out[-1][1], b)
+        else:
+            out.append([a, b])
+    return out
+
+
+def close_gaps(cues, max_gap=0.6):
+    """큐 사이 틈이 max_gap(=자막 바 이어 붙임 기준) 미만이면 앞 큐를 다음 큐 시작까지 늘림(자막이 바뀔 때 빈 바가 2~3프레임 깜빡이는 것 방지)."""
+    out = [dict(c) for c in sorted(cues, key=lambda c: c["in"])]
+    for a, b in zip(out, out[1:]):
+        if 0 < b["in"] - a["out"] < max_gap:
+            a["out"] = b["in"]
+    return out
