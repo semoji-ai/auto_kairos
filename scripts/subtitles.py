@@ -1,7 +1,8 @@
 """영어 자막 큐 → AE job + SRT.  usage: subtitles.py <EP> <lang>"""
 import json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from sg.subs import split_cues, resolve_overlaps, retext, bar_intervals, close_gaps
+from sg.subs import split_cues, resolve_overlaps, retext, bar_intervals, close_gaps, snap_to_onsets, srt_time
+from sg.audio import decode, speech_spans
 from sg.timemap import PiecewiseMap
 from sg.edl import master_to_part
 
@@ -42,6 +43,9 @@ for g in src["segments"]:
     sc_st_new = pmap[pid](sc_st)                   # localize.jsx는 프리컴프 startTime을 map(ost)로 옮김
     cues = split_cues(al["characters"], al["character_start_times_seconds"], al["character_end_times_seconds"],
                       prof["subs"]["max_chars"], prof["subs"]["min_dur"], cjk=prof["subs"].get("cjk", False))
+    if prof["subs"].get("snap_pauses"):           # 글자 시각이 균등 분배인 언어(중국어): 실제 쉼 뒤 소리 시작으로 보정
+        x = decode(os.path.join(ep, "tts", lang, f"{g['id']}.mp3"), 16000)
+        cues = snap_to_onsets(cues, [a for a, b in speech_spans(x, 16000, min_silence=0.12, pad=0.0)])
     seg_l = L10N["segments"].get(g["id"], {})
     if seg_l.get("tts"):          # 발음용 표기로 읽었으면 화면 문구는 원래 번역문으로
         cues = retext(cues, seg_l["text"], cjk=prof["subs"].get("cjk", False))
@@ -64,7 +68,7 @@ json.dump({"aep": os.path.join(abs_ep, "build", lang, f"{name}_{lang}.aep"),
                       "bar": bar_intervals(cues, pmap[pid](subcomp[pid][1]))} for pid, cues in parts.items()]},
           open(os.path.join(root, "scripts/ae/subtitles_job.json"), "w"), ensure_ascii=False, indent=1)
 os.makedirs(os.path.join(ep, "render", lang), exist_ok=True)
-fmt = lambda t: f"{int(t // 3600):02d}:{int(t % 3600 // 60):02d}:{int(t % 60):02d},{int(round((t % 1) * 1000)) % 1000:03d}"
+fmt = srt_time
 with open(os.path.join(ep, "render", lang, f"{lang}.srt"), "w") as f:
     for n, c in enumerate(srt, 1):
         f.write(f"{n}\n{fmt(c['in'])} --> {fmt(c['out'])}\n{c['text']}\n\n")

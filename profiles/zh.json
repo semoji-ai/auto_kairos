@@ -21,7 +21,8 @@
     "min_dur": 0.8,
     "gap": 0.04,
     "cjk": true,
-    "font": "SourceHanSansCN-Bold"
+    "font": "SourceHanSansCN-Bold",
+    "snap_pauses": true
   },
   "fonts": {
     "OTSBAggroL": "SourceHanSansCN-Bold",

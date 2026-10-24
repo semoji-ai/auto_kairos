@@ -4,6 +4,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 EP="$(cd "$1" && pwd)"; L="$2"; CODE="$(basename "$EP")"; B="$EP/build/$L"
+FROM="${4:-start}"   # usage: rebuild_lang.sh <EP> <lang> [--from subtitles|render] — 앞 단계 결과를 그대로 쓰고 그 단계부터
+if [ "$FROM" = "start" ]; then
 python3 scripts/patch_text.py "$EP" "$L"
 rm -f "$B/patch_text_log.json"; scripts/ae/run.sh "$PWD/scripts/ae/patch_text.jsx"
 python3 -c "import json,sys; d=json.load(open('$B/patch_text_log.json')); print('patch_text replaced', d['replaced'], 'errors', d['errors'], 'mismatch', d['mismatch']); sys.exit(1 if d['errors'] or d['mismatch'] or d['not_found'] else 0)"
@@ -13,9 +15,12 @@ python3 scripts/swap_assets.py "$EP" "$L"
 python3 scripts/timewarp.py "$EP" "$L" --durs "$EP/tts/$L/durs.json" --keep-subs --aep "$B/${CODE}_${L}_swapped.aep"
 rm -f "$B/localize_log.json"; scripts/ae/run.sh "$PWD/scripts/ae/localize.jsx"
 python3 -c "import json,sys; d=json.load(open('$B/localize_log.json')); print('localize warnings', len(d['warnings']), 'errors', d['errors']); sys.exit(1 if d['errors'] else 0)"
+fi
+if [ "$FROM" = "start" ] || [ "$FROM" = "subtitles" ]; then
 python3 scripts/subtitles.py "$EP" "$L"
 rm -f "$B/subtitles_log.json"; scripts/ae/run.sh "$PWD/scripts/ae/subtitles.jsx"
 python3 -c "import json,sys; d=json.load(open('$B/subtitles_log.json')); print('subtitles errors', d['errors']); sys.exit(1 if d['errors'] else 0)"
+fi
 for pid in $(python3 -c "import json; print(' '.join(json.load(open('$B/warp.json'))['parts']))"); do
   read COMP DUR < <(python3 -c "import json; v=json.load(open('$B/warp.json'))['parts']['$pid']; print(v['comp'], round(v['dur_new'],3))")
   scripts/ae/render.sh "$B/${CODE}_${L}_subs.aep" "$COMP" 0 "$DUR" "$EP/render/$L/part_$pid.mp4" 29.97 "H.264 - Match Render Settings - 15 Mbps" | tail -1

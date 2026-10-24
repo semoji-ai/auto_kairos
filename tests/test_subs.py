@@ -85,3 +85,20 @@ def test_cjk_retext_splits_by_characters():
     cues = [{"t0": 0, "t1": 1, "text": "一九九八年，"}, {"t0": 1, "t1": 2, "text": "开市客来了。"}]
     out = retext(cues, "1998年，开市客来了。", cjk=True)
     assert "".join(c["text"] for c in out) == "1998年，开市客来了。" and len(out) == 2
+
+
+def test_snap_cue_starts_to_speech_onsets_after_pauses():
+    from sg.subs import snap_to_onsets
+    cues = [{"t0": 0.0, "t1": 2.0, "text": "a，"}, {"t0": 2.0, "t1": 4.0, "text": "b，"}, {"t0": 4.0, "t1": 6.0, "text": "c。"}]
+    onsets = [0.05, 2.9, 4.1]                      # 실제 소리는 2.9초·4.1초에 다시 시작
+    out = snap_to_onsets(cues, onsets, max_shift=1.2)
+    assert [round(c["t0"], 2) for c in out] == [0.0, 2.9, 4.1]      # 첫 큐는 그대로, 나머지는 가까운 쉼 뒤 시작으로
+    assert round(out[0]["t1"], 2) == 2.9 and round(out[1]["t1"], 2) == 4.1   # 앞 큐 끝은 다음 시작까지
+    far = snap_to_onsets(cues, [0.05, 5.5], max_shift=1.2)
+    assert far[1]["t0"] == 2.0                                       # 먼 쉼은 무시
+
+
+def test_srt_time_rounds_whole_value_not_parts():
+    from sg.subs import srt_time
+    assert srt_time(82.99999) == "00:01:23,000"     # 초 버림 + 밀리초 반올림으로 1초 이르게 적히던 버그
+    assert srt_time(83.0004) == "00:01:23,000" and srt_time(3725.5) == "01:02:05,500"

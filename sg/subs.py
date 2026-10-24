@@ -123,3 +123,24 @@ def close_gaps(cues, max_gap=0.6):
         if 0 < b["in"] - a["out"] < max_gap:
             a["out"] = b["in"]
     return out
+
+
+def snap_to_onsets(cues, onsets, max_shift=1.2):
+    """구간 안 큐 시작(첫 큐 제외)을 가장 가까운 '쉼 뒤 소리 시작'으로 옮김(max_shift 안). 앞 큐 끝은 새 시작까지.
+    중국어처럼 TTS 글자 시각이 균등 분배로만 오는 언어에서 자막이 말보다 앞서거나 늦는 것을 줄임."""
+    out = [dict(c) for c in cues]
+    for i in range(1, len(out)):
+        t = out[i]["t0"]
+        cand = [o for o in onsets if abs(o - t) <= max_shift and o > out[i - 1]["t0"] + 0.3]
+        if cand:
+            o = min(cand, key=lambda o: abs(o - t))
+            out[i]["t0"] = o
+            out[i - 1]["t1"] = o
+            out[i]["t1"] = max(out[i]["t1"], o + 0.3)
+    return out
+
+
+def srt_time(t):
+    """초 → SRT 시각. 전체를 밀리초로 먼저 반올림(부분별로 버림·반올림하면 82.99999초가 01:22,000이 됨)."""
+    ms = int(round(t * 1000))
+    return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
