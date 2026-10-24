@@ -4,6 +4,7 @@ import json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from sg.budget import char_budget
 from sg.translate import translate_batch, claude_runner
+from sg.l10n import update_entries
 
 ep, lang = sys.argv[1], sys.argv[2]
 a = sys.argv[3:]
@@ -39,7 +40,7 @@ for k in range(0, len(items), 25):
     for i, t in res.items():
         L["segments"].setdefault(i, {})["text"] = t
         L["segments"][i].pop("tts", None)   # 문장이 바뀌면 옛 발음용 표기는 무효
-    json.dump(L, open(out_p, "w"), ensure_ascii=False, indent=1)
+    update_entries(out_p, "segments", {i: L["segments"][i] for i in res}, replace=True)   # 다른 단계의 수정을 덮지 않게
     print(f"segments {min(k + 25, len(items))}/{len(items)}", flush=True)
 
 if rew is None and not only:
@@ -49,7 +50,7 @@ if rew is None and not only:
         res = translate_batch(sitems[k:k + 40], gloss, lang, "strings", claude_runner)
         for i, t in res.items():
             L["strings"][i] = {"text": t.replace(" / ", "\r")}
-        json.dump(L, open(out_p, "w"), ensure_ascii=False, indent=1)
+        update_entries(out_p, "strings", {i: L["strings"][i] for i in res}, replace=True)
 
 with open(os.path.join(ep, "l10n", f"{lang}_review.md"), "w") as f:
     f.write(f"# {lang} 번역 대조표\n\n| id | 길이(초) | 예산 | 한국어 | 번역 |\n|---|---|---|---|---|\n")

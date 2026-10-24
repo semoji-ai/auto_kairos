@@ -7,6 +7,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from sg.raster import missing_glyphs, quad_geom
 from sg.plate import text_style
 from sg.translate import translate_batch, claude_runner
+from sg.l10n import update_entries
+done_now = {}
 
 ep, lang = sys.argv[1], sys.argv[2]
 root = os.path.join(os.path.dirname(__file__), "..")
@@ -56,10 +58,12 @@ for k in range(0, len(todo), 30):
             if t != "__SKIP__" and any(missing_glyphs(t, f) for f in FONTS[it["_font"]]):
                 bad.append(it); continue
             L["raster"][it["id"]] = {"text": t, "font": it["_font"], "two_tone": it["two_tone"], "ko": it["ko"]}
+            done_now[it["id"]] = L["raster"][it["id"]]
         if not bad:
             break
         pending = [{**it, "context": it["context"] + " (previous answer used characters the font lacks; use only common characters)"} for it in bad]
-    json.dump(L, open(lp, "w"), ensure_ascii=False, indent=1)
+    update_entries(lp, "raster", done_now, replace=True)          # 다른 단계가 쓴 segments 등을 덮지 않게
+    done_now.clear()
     print(f"{min(k + 30, len(todo))}/{len(todo)}", flush=True)
 skip = sum(1 for v in L["raster"].values() if v["text"] == "__SKIP__")
 print("done", len(L["raster"]), "skip", skip)

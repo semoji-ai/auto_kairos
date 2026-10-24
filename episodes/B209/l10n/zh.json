@@ -2,7 +2,7 @@
  "lang": "zh",
  "segments": {
   "n001": {
-   "text": "韩国三大超市：易买得（E-Mart）、Homeplus、乐天玛特。"
+   "text": "韩国三大超市易买得、Homeplus、乐天玛特。"
   },
   "n002": {
    "text": "各自在全国拥有上百家门店，"
@@ -50,7 +50,7 @@
    "text": "全都是跟“这个人”学的。"
   },
   "n020": {
-   "text": "他生于1916年，1954年创办FedMart，"
+   "text": "他在1954年创办了FedMart，"
   },
   "n021": {
    "text": "1976年再创Price Club（普来斯会员店），是美国零售之父索尔·普莱斯。"
@@ -86,7 +86,7 @@
    "text": "大量团购商品，再以低价卖给会员，是一家公务员专属的会员制折扣店，名字也取自意为“联邦雇员公司”的"
   },
   "n032": {
-   "text": "英文缩写——Fedco。"
+   "text": "取联邦雇员公司英文缩写：Fedco。"
   },
   "n033": {
    "text": "Fedco的价格便宜到连开车往返要五六个小时的圣地亚哥公务员都跑去洛杉矶购物。索尔听说后，决定亲自去Fedco看看。"
@@ -173,7 +173,7 @@
    "text": "索尔联手德国零售商雨果·曼"
   },
   "n062": {
-   "text": "希望进一步扩大FedMart的业务。"
+   "text": "希望借助他的力量，进一步扩大FedMart的业务版图。"
   },
   "n063": {
    "text": "但雨果砸下巨资拿到FedMart的股份后，态度一百八十度大转弯，掌控了董事会，还通过了解雇创始人索尔的议案。其实雨果看中的根本不是FedMart的生意，"
@@ -644,6 +644,1448 @@
   },
   "s5848_21": {
    "text": "来源：易买得（E-Mart）"
+  }
+ },
+ "raster": {
+  "20425#0": {
+   "text": "全国各拥有100家以上门店",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "전국에 각각 100개 매장 이상 보유"
+  },
+  "20443#0": {
+   "text": "门店数与销售额[[每年增长数千亿韩元]]",
+   "font": "gothic",
+   "two_tone": true,
+   "ko": "매장 수 및 매출 매년 수천 억씩 증가•·•"
+  },
+  "20447#0": {
+   "text": "1998年",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "1998년"
+  },
+  "20447#1": {
+   "text": "进军韩国",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "한국 진출"
+  },
+  "20451#0": {
+   "text": "全国门店仅19家",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "전국 매장 수 19개"
+  },
+  "20453#0": {
+   "text": "全国门店100家以上",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "전국 매장 수 100개 이상"
+  },
+  "20465#0": {
+   "text": "销售额 WIN",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "매출 WIN"
+  },
+  "20479#0": {
+   "text": "Homeplus",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "홈플러스"
+  },
+  "20479#1": {
+   "text": "要超越啦！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "뛰여 넘을며.!"
+  },
+  "20481#0": {
+   "text": "2024年销售额",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2024년 기준 매출액"
+  },
+  "20481#1": {
+   "text": "6.5万亿",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "6.5조"
+  },
+  "20485#0": {
+   "text": "2024年销售额",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2024년 기준 매출액"
+  },
+  "20485#1": {
+   "text": "7.3万亿",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "7.3조"
+  },
+  "20489#0": {
+   "text": "2024年销售额",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2024년 기준 매출액"
+  },
+  "20489#1": {
+   "text": "16.9万亿",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "16.9조"
+  },
+  "20515#0": {
+   "text": "10年间股价上涨10倍",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "10년간 주가 10배 상승"
+  },
+  "20529#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "COSTC요"
+  },
+  "20531#0": {
+   "text": "开市客（Costco）创始人",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 창업자"
+  },
+  "20531#1": {
+   "text": "吉姆·辛内加尔",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "짐 시네갈"
+  },
+  "20533#0": {
+   "text": "零售业的",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "유통업계의"
+  },
+  "20535#0": {
+   "text": "吉姆·辛内加尔：开市客创立仅2年即[[登陆纳斯达克]]",
+   "font": "gothic",
+   "two_tone": true,
+   "ko": "짐 시네갈, 코스트코 창업 2년 만에 나스닥 상장•••"
+  },
+  "20541#0": {
+   "text": "“美国零售业之父”",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"미국 유통업의 아버지\""
+  },
+  "20541#1": {
+   "text": "索尔·普莱斯",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "솔 프라이스"
+  },
+  "20543#0": {
+   "text": "1954年创立",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1954년 창업"
+  },
+  "20545#0": {
+   "text": "1976年创立",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1976년 창업"
+  },
+  "20551#0": {
+   "text": "沃尔玛创始人",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "월마트 창업자"
+  },
+  "20551#1": {
+   "text": "山姆·沃尔顿",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "샘 월튼"
+  },
+  "20551#2": {
+   "text": "山姆·沃尔顿",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "샘 월튼"
+  },
+  "20533#1": {
+   "text": "乔布斯",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "스티브 잡스"
+  },
+  "20553#0": {
+   "text": "索尔普莱斯",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "솔 프라이스는"
+  },
+  "20553#1": {
+   "text": "零售业之父！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "유통업의 아버지!"
+  },
+  "20571#0": {
+   "text": "律师",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "변호사"
+  },
+  "20583#0": {
+   "text": "遗产就拜托",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "유산 관리 좀"
+  },
+  "20583#1": {
+   "text": "你了！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "부탁해!"
+  },
+  "20595#0": {
+   "text": "招租客",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "임차인"
+  },
+  "20595#1": {
+   "text": "啦~",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "구합니다~"
+  },
+  "20599#0": {
+   "text": "请问..",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "혹시.."
+  },
+  "20599#1": {
+   "text": "您知道Fedco吗？",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "페드코 아세요?"
+  },
+  "20607#0": {
+   "text": "公务员专享会员制折扣店",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "공무원 전용 회원제 할인마트"
+  },
+  "20607#1": {
+   "text": "“Fedco”",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"페드코(Fedco)\""
+  },
+  "20609#0": {
+   "text": "（联邦公务员公司）",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "(연방 공무원 회사)"
+  },
+  "20619#0": {
+   "text": "专程跑到LA",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "LA까지 가서"
+  },
+  "20619#1": {
+   "text": "去购物！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "쇼핑한대요!"
+  },
+  "20631#0": {
+   "text": "走，去看看！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "가보자고!"
+  },
+  "20649#0": {
+   "text": "何必呢？",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "굳이?"
+  },
+  "20667#0": {
+   "text": "千载难逢的",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "절로의"
+  },
+  "20669#0": {
+   "text": "良机！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "기획!"
+  },
+  "20675#0": {
+   "text": "1年销售额突破300万美元",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1년 만에 매출 300만 달러 달성"
+  },
+  "20675#1": {
+   "text": "（约40亿韩元）",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "(약 40억 원)"
+  },
+  "20677#0": {
+   "text": "1954年",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1954년"
+  },
+  "21059#0": {
+   "text": "品牌",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "브랜드"
+  },
+  "21059#1": {
+   "text": "大卖场也摇摇欲坠… 业界第二Homeplus终申请企业重整",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "대형마트도 휘청인다••• 업계 2위 홈플러스 결국 회생절차"
+  },
+  "21059#2": {
+   "text": "“救救我们”",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"살려주세요\""
+  },
+  "21351#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "오8VH-대권A"
+  },
+  "21893#0": {
+   "text": "美国《公平交易法》",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "미국 '공정거래법'"
+  },
+  "21899#0": {
+   "text": "居然没有折扣..",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "할인이 없다니.."
+  },
+  "21899#1": {
+   "text": "太贵了..",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "너무 비싸.."
+  },
+  "21905#0": {
+   "text": "“公平交易法”",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"공정거래법\""
+  },
+  "21905#1": {
+   "text": "公平交易法规定",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "공정거래법 규정"
+  },
+  "21905#2": {
+   "text": "适用于一般零售企业",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "일반 소매 유통업체에"
+  },
+  "21905#3": {
+   "text": "FedMart不适用",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "페드마트 해당X"
+  },
+  "21911#0": {
+   "text": "有漏洞啊..",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "허점이 있군.."
+  },
+  "21913#0": {
+   "text": "律师",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "변호사"
+  },
+  "21917#0": {
+   "text": "FedMart会员",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "페드마트 회원"
+  },
+  "21917#1": {
+   "text": "不受公平交易法约束",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "공정거래법 적용X"
+  },
+  "21929#0": {
+   "text": "太便宜啦~",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "너무 싸~"
+  },
+  "21935#0": {
+   "text": "1962年",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1962년"
+  },
+  "21949#0": {
+   "text": "“公平交易法”",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"공정거래법\""
+  },
+  "21951#0": {
+   "text": "1975年",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1975년"
+  },
+  "21969#0": {
+   "text": "折扣店全盛时代",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "할인마트 전성시대"
+  },
+  "21971#0": {
+   "text": "招募投资人",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "투자자"
+  },
+  "21971#1": {
+   "text": "快来加入！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "모집합니다!"
+  },
+  "21983#0": {
+   "text": "“美国零售业之父”",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"미국 유통업의 아버지\""
+  },
+  "21983#1": {
+   "text": "索尔·普莱斯",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "솔 프라이스"
+  },
+  "21987#0": {
+   "text": "“德国零售商人”",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"독일의 유통 사업가\""
+  },
+  "21987#1": {
+   "text": "雨果·曼",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "후고 만"
+  },
+  "21995#0": {
+   "text": "FedMart董事会",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "페드마트 이사회"
+  },
+  "21995#1": {
+   "text": "索尔·普莱斯",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "솔 프라이스"
+  },
+  "21995#2": {
+   "text": "解雇议案",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "해고 안건"
+  },
+  "21997#0": {
+   "text": "通过",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "통과"
+  },
+  "22007#0": {
+   "text": "索尔的地产",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "솔 부동산"
+  },
+  "22007#1": {
+   "text": "全是我的~",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "다내꼬양~"
+  },
+  "22037#0": {
+   "text": "竟敢",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "감히 날"
+  },
+  "22037#1": {
+   "text": "背叛我？！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "배신해?!"
+  },
+  "22039#0": {
+   "text": "我要重新创业",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "새로운 창업을"
+  },
+  "22039#1": {
+   "text": "走着瞧！！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "하겠어!!"
+  },
+  "22049#0": {
+   "text": "面向个体商户的",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "자영업자 대상"
+  },
+  "22049#1": {
+   "text": "折扣店！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "할인마트!"
+  },
+  "22057#0": {
+   "text": "批发仓储式",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "도매 창고형"
+  },
+  "22057#1": {
+   "text": "折扣店",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "할인마트"
+  },
+  "22071#0": {
+   "text": "零利润",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "마진 없이"
+  },
+  "22071#1": {
+   "text": "便宜卖！！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "싸게싸게!!"
+  },
+  "22081#0": {
+   "text": "会员制",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "회원제"
+  },
+  "22081#1": {
+   "text": "会员制",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "회원제"
+  },
+  "22083#0": {
+   "text": "会费",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "회비"
+  },
+  "22091#0": {
+   "text": "（索尔·普莱斯的姓）",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "(솔 프라이스의 성)"
+  },
+  "22093#0": {
+   "text": "（会员制商店）",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "(회원제 매장)"
+  },
+  "22095#0": {
+   "text": "1976年7月",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1976년 7월"
+  },
+  "22103#0": {
+   "text": "Price Club",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "프라이스 클럽"
+  },
+  "22103#1": {
+   "text": "快来试试吧！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": ",이용해 보세요!"
+  },
+  "22111#0": {
+   "text": "会员卡..?",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "회원권..?"
+  },
+  "22121#0": {
+   "text": "企业 / 公共机构合作",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "기업 / 공공기관 제휴"
+  },
+  "22159#0": {
+   "text": "热狗",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "핫모고"
+  },
+  "22159#1": {
+   "text": "得卖！！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "말아야!!"
+  },
+  "22159#2": {
+   "text": "热狗",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "핫도그"
+  },
+  "22159#3": {
+   "text": "要卖！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "팔아야지!"
+  },
+  "22167#0": {
+   "text": "回馈会员！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "서비스!"
+  },
+  "22187#0": {
+   "text": "沃尔玛创始人",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "월마트 창업자"
+  },
+  "22187#1": {
+   "text": "山姆·沃尔顿",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "샘 월튼"
+  },
+  "22187#2": {
+   "text": "山姆·沃尔顿",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "샘 월튼"
+  },
+  "22191#0": {
+   "text": "律师/企业家",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "변호사/사업가"
+  },
+  "22191#1": {
+   "text": "杰夫·布罗特曼",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제프 브로트만"
+  },
+  "22195#0": {
+   "text": "Price Club",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "프라이스클럽"
+  },
+  "22209#0": {
+   "text": "好！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "이!"
+  },
+  "22211#0": {
+   "text": "我也想开",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "저도 창고형 매장"
+  },
+  "22211#1": {
+   "text": "仓储式卖场！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "열고싶어요 !"
+  },
+  "22219#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "SAMS WH:L튜SALE"
+  },
+  "22221#0": {
+   "text": "会员",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "회원"
+  },
+  "22221#1": {
+   "text": "火热招募中！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "모집합니다!"
+  },
+  "22231#0": {
+   "text": "律师/企业家",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "변호사/사업가"
+  },
+  "22231#1": {
+   "text": "杰夫·布罗特曼",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제프 브로트만"
+  },
+  "22233#0": {
+   "text": "全新会员制",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "NEW 회원제"
+  },
+  "22233#1": {
+   "text": "仓储式卖场？",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "창고형 매장?"
+  },
+  "22241#0": {
+   "text": "开市客（Costco）创始人",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 창업자"
+  },
+  "22241#1": {
+   "text": "吉姆·辛内加尔",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "짐 시네갈"
+  },
+  "2845#0": {
+   "text": "1993年",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1993년"
+  },
+  "3017#0": {
+   "text": "1955年",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1955년"
+  },
+  "3026#0": {
+   "text": "FedMart最棒！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "페드마트 최고!"
+  },
+  "3031#0": {
+   "text": "健康保险福利",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "건강보험 혜택"
+  },
+  "3033#0": {
+   "text": "业界最高工资",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "업계 최고 임금"
+  },
+  "3039#0": {
+   "text": "正式员工",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "정식 직원"
+  },
+  "3039#1": {
+   "text": "任命！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "임명!"
+  },
+  "3054#0": {
+   "text": "杰夫·布罗特曼",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제프 브로트만"
+  },
+  "3070#0": {
+   "text": "老师……",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "스승님..."
+  },
+  "3071#0": {
+   "text": "一起创业",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "사업 같이"
+  },
+  "3071#1": {
+   "text": "怎么样？",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "해볼래?"
+  },
+  "3074#0": {
+   "text": "西雅图",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "시애틀"
+  },
+  "3077#0": {
+   "text": "吉姆·辛内加尔",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "짐 시네갈"
+  },
+  "3083#0": {
+   "text": "我也想开一家",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "저도 창고형 매장"
+  },
+  "3083#1": {
+   "text": "仓储式卖场！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "열고싶어요 !"
+  },
+  "3087#0": {
+   "text": "1983年9月15日",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1983년 9월 15일"
+  },
+  "3088#0": {
+   "text": "以最低价销售商品",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "최저가에 물건을 판매해"
+  },
+  "3088#1": {
+   "text": "成为为顾客开支负责的企业",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "고객의 지출을 책임지는 기업이 되겠다"
+  },
+  "3099#0": {
+   "text": "绝不做广告",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "절대 광고를 하지 않는다"
+  },
+  "3113#0": {
+   "text": "为什么买？",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "왜 삼.?"
+  },
+  "3116#0": {
+   "text": "比谁都便宜！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "누구보다 저렴한 가격!"
+  },
+  "3118#0": {
+   "text": "会员卡",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "멤버십 카드"
+  },
+  "3121#0": {
+   "text": "开市客会员",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 회원"
+  },
+  "3127#0": {
+   "text": "开市客会员资格",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 멤버십"
+  },
+  "3133#0": {
+   "text": "有了那个就……",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "저거만 있으면"
+  },
+  "3133#1": {
+   "text": "真的吗？",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "된다고?"
+  },
+  "3134#0": {
+   "text": "开市客！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "Costs요"
+  },
+  "3136#0": {
+   "text": "40年1.5美元",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "40년간 1.5달러"
+  },
+  "3138#0": {
+   "text": "会员卡",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "멤버십 카드"
+  },
+  "3141#0": {
+   "text": "1988年",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1988년"
+  },
+  "3144#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "#음ㅷ딥밥ㅂ욥"
+  },
+  "3146#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "#음ㅷ딥밥ㅂ욥"
+  },
+  "3147#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "#음ㅷ딥밥ㅂ욥"
+  },
+  "3149#0": {
+   "text": "退休",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "운퇴"
+  },
+  "3185#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "기s"
+  },
+  "3531#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "?0rott 언거"
+  },
+  "3533#0": {
+   "text": "会员们",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "회원들은"
+  },
+  "3533#1": {
+   "text": "比起种类多",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "다양한 제품보다"
+  },
+  "3533#2": {
+   "text": "更想要低价！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "싼가격을 원해!"
+  },
+  "3534#0": {
+   "text": "精选4000种",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "4000개 종류의 엄선된"
+  },
+  "3534#1": {
+   "text": "只把这些商品摆进店里",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제품만을 매장에 비치"
+  },
+  "3537#0": {
+   "text": "超过10万种商品",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "10만 개가 넘는 종류의 물건을"
+  },
+  "3537#1": {
+   "text": "摆满货架",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "매장에 구비"
+  },
+  "3543#0": {
+   "text": "供应商",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "납품업체"
+  },
+  "3557#0": {
+   "text": "自己做PB商品",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "직접 PB제품을"
+  },
+  "3557#1": {
+   "text": "干吧！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "만들자!"
+  },
+  "3558#0": {
+   "text": "商品价格",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제품 가격"
+  },
+  "3559#0": {
+   "text": "原材料价格",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "원자재 가격"
+  },
+  "3560#0": {
+   "text": "价格",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "가력을"
+  },
+  "3560#1": {
+   "text": "凭什么降~",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "왜 내려~"
+  },
+  "3574#0": {
+   "text": "统一成一个品牌",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "하나의 브랜드로"
+  },
+  "3574#1": {
+   "text": "整合吧！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "통합하자!"
+  },
+  "3575#0": {
+   "text": "科克兰",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "커클랜드"
+  },
+  "3578#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "오카움요"
+  },
+  "3585#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "MTWTA과"
+  },
+  "3586#0": {
+   "text": "比原有供货产品",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "기존에 납품되던 제품보다"
+  },
+  "3586#1": {
+   "text": "便宜20%出售",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "20% 저렴한 가격에 판매"
+  },
+  "3591#0": {
+   "text": "品质竟然",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "품질이"
+  },
+  "3591#1": {
+   "text": "这么好？！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "이렇게 좋다구!?"
+  },
+  "3593#0": {
+   "text": "价格便宜…",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "저렴한데.."
+  },
+  "3598#0": {
+   "text": "价格！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가격 !"
+  },
+  "3599#0": {
+   "text": "价格！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가격 !"
+  },
+  "3600#0": {
+   "text": "价格！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가격 !"
+  },
+  "3605#0": {
+   "text": "数千万",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "수천만 명에"
+  },
+  "3605#1": {
+   "text": "会员",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "회원"
+  },
+  "3607#0": {
+   "text": "__SKIP__",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "공목0? -여?"
+  },
+  "3607#1": {
+   "text": "自家产品",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "자사 제품을"
+  },
+  "3607#2": {
+   "text": "竟然能卖！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "팔 수 있다니!"
+  },
+  "3613#0": {
+   "text": "品牌企业",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "브랜드 기업들"
+  },
+  "3614#0": {
+   "text": "销售",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "판매"
+  },
+  "3616#0": {
+   "text": "提供产品",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "제품 제공"
+  },
+  "3617#0": {
+   "text": "价格！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가격 !"
+  },
+  "3619#0": {
+   "text": "会员",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "회원"
+  },
+  "3626#0": {
+   "text": "科克兰产品",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "커틀랜드 제품"
+  },
+  "3626#1": {
+   "text": "最棒！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "최고!"
+  },
+  "3637#0": {
+   "text": "开市客全部[[4000种]]商品中",
+   "font": "gothic",
+   "two_tone": true,
+   "ko": "코스트코 전체 제품 4000개 중"
+  },
+  "3637#1": {
+   "text": "550种是科克兰产品",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "550개가 커클랜드 제품"
+  },
+  "3639#0": {
+   "text": "开市客总销售额",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 전체 매출"
+  },
+  "3644#0": {
+   "text": "560亿美元",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "560억 달러"
+  },
+  "3645#0": {
+   "text": "510亿美元",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "510억 달러"
+  },
+  "3646#0": {
+   "text": "460亿美元",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "460억 달러"
+  },
+  "3649#0": {
+   "text": "2023年销售额",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2023년 매출액"
+  },
+  "3652#0": {
+   "text": "1990年代",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1990년대"
+  },
+  "3661#0": {
+   "text": "走向世界？",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "가자 세계로?"
+  },
+  "3661#1": {
+   "text": "走向世界！",
+   "font": "hand",
+   "two_tone": false,
+   "ko": "가자 세계로!"
+  },
+  "3667#0": {
+   "text": "1994年",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1994년"
+  },
+  "3671#0": {
+   "text": "韩国首家会员制仓储式卖场",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "국내 최초 회원제 창고형 매장"
+  },
+  "3674#0": {
+   "text": "1998年",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1998년"
+  },
+  "3676#0": {
+   "text": "开市客韩国有限公司",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "(주) 코스트코코리아"
+  },
+  "3686#0": {
+   "text": "外资零售商纷纷撤离",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "해외 유통업체 철수"
+  },
+  "3690#0": {
+   "text": "2017年",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2017년"
+  },
+  "3697#0": {
+   "text": "在采访中，吉姆·辛内加尔会长",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "인터뷰에서 짐 시네갈 회장은"
+  },
+  "3697#1": {
+   "text": "被问到“销售额最高的开市客门店在哪里”时，",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"가장 매출이 높은 코스트코 지점이 어디냐\"는 질문에"
+  },
+  "3697#2": {
+   "text": "他回答“在韩国，非常惊人”，还说“一想到就要落泪”。",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"한국에 있다. 엄청나다\"라며 \"생각만 해도 눈물이 난다\"고 답했다."
+  },
+  "3697#3": {
+   "text": "他接着说：“首尔是人口非常密集的地区。",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "그러면서 그는 \"서울은 인구가 아주 밀집한 지역이다."
+  },
+  "3697#4": {
+   "text": "在那里，我们拥有能与（其他公司）区别开来的价值。”",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "그곳에서 우리는 (타사와) 차별화할 수 있는 가치를 가지고 있다\"며"
+  },
+  "3697#5": {
+   "text": "“韩国人非常喜欢美国产品。",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "\"한국인들은 미국 제품을 아주 좋아한다."
+  },
+  "3697#6": {
+   "text": "我们销售的商品中约有1/3是美国产品。”他解释道。",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "우리가 판매하는 물품 중 3분의 1 가량이 미국 제품이다\"라고 설명했다."
+  },
+  "3697#7": {
+   "text": "正如吉姆·辛内加尔会长所说，在全球开市客门店中，",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "짐 시네갈 회장이 언급했듯 전세계 코스트코 매장 중"
+  },
+  "3697#8": {
+   "text": "据悉销售额最高的门店是开市客首尔良才店。",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가장 큰 매출을 올리는 매장은 코스트코 서울 양재점인 것으로 알려졌다."
+  },
+  "3711#0": {
+   "text": "会员制的",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "멤버심의"
+  },
+  "3711#1": {
+   "text": "增添价值",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "가치를 더하다"
+  },
+  "3712#0": {
+   "text": "易买得（E-Mart）Traders能否战胜仓储式卖场鼻祖开市客？",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "이마트 트레이더스 창고형 매장 원조 코스트코 이길 수 있을까?"
+  },
+  "3716#0": {
+   "text": "韩国第一",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "국내 1위"
+  },
+  "3719#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "COST요"
+  },
+  "3123#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "금388883"
+  },
+  "3125#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "NeeN, 'S부의"
+  },
+  "3125#1": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": ".니C"
+  },
+  "3155#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "CosTs으"
+  },
+  "3156#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "CosTC으"
+  },
+  "3602#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "Biapeas coubhes) paiables늉"
+  },
+  "3647#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "Coa Colia옓"
+  },
+  "3653#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "CoSTC으"
+  },
+  "3662#0": {
+   "text": "开市客（Costco）会员福利",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "코스트코 회원 혜택"
+  },
+  "3663#0": {
+   "text": "低价自有品牌（PB）商品",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "저렴한 PB 상품"
   }
  }
 }
