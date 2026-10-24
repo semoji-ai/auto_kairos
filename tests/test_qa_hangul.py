@@ -36,3 +36,10 @@ def test_hangul_reading_overlapping_confident_chinese_is_not_a_problem():
     assert read_as_chinese(ko_item, zh)
     assert not read_as_chinese(ko_item, [{"text": "实现", "box": [900, 100, 50, 50], "conf": 1.0}])   # 다른 위치
     assert not read_as_chinese(ko_item, [{"text": "实现了", "box": [98, 902, 410, 58], "conf": 0.3}])  # 자신 없음
+
+
+def test_small_chinese_box_inside_big_hangul_box_does_not_hide_it():
+    from scripts.qa_hangul import read_as_chinese
+    ko = {"text": "가장 매출이 높은 지점", "box": [100, 100, 600, 50], "conf": 1.0}
+    assert not read_as_chinese(ko, [{"text": "店", "box": [650, 100, 50, 50], "conf": 1.0}])
+    assert not read_as_chinese(ko, [{"text": "店", "box": [0, 0, 0, 0], "conf": 1.0}])

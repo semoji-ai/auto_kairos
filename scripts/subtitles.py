@@ -47,12 +47,9 @@ for g in src["segments"]:
     sc_st_new = pmap[pid](sc_st)                   # localize.jsx는 프리컴프 startTime을 map(ost)로 옮김
     cues = split_cues(al["characters"], al["character_start_times_seconds"], al["character_end_times_seconds"],
                       prof["subs"]["max_chars"], prof["subs"]["min_dur"], cjk=prof["subs"].get("cjk", False), protect=PROTECT)
-    if prof["subs"].get("snap_pauses"):           # 글자 시각이 균등 분배인 언어(중국어): 실제 쉼 뒤 소리 시작으로 보정
-        x = decode(os.path.join(ep, "tts", lang, f"{g['id']}.mp3"), 16000)
-        cues = snap_to_onsets(cues, [a for a, b in speech_spans(x, 16000, min_silence=0.12, pad=0.0)])
     seg_l = L10N["segments"].get(g["id"], {})
     if seg_l.get("tts"):          # 발음용 표기로 읽었으면 화면 문구는 원래 번역문으로
-        if prof["subs"].get("cjk"):
+        if prof["subs"].get("cjk") and cues and seg_l["text"]:
             # 화면 문장을 같은 규칙으로 다시 나누고, 시각은 읽은 전체 구간에 글자 비율로 펼침
             disp = list(seg_l["text"]); a0, a1 = cues[0]["t0"], cues[-1]["t1"]
             st = [a0 + (a1 - a0) * i / len(disp) for i in range(len(disp))]
@@ -60,6 +57,9 @@ for g in src["segments"]:
             cues = split_cues(disp, st, en_, prof["subs"]["max_chars"], prof["subs"]["min_dur"], cjk=True, protect=PROTECT)
         else:
             cues = retext(cues, seg_l["text"])
+    if prof["subs"].get("snap_pauses"):           # 글자 시각이 균등 분배인 언어(중국어, 발음용 표기 구간 포함): 실제 쉼 뒤 소리 시작으로 보정
+        x = decode(os.path.join(ep, "tts", lang, f"{g['id']}.mp3"), 16000)
+        cues = snap_to_onsets(cues, [a for a, b in speech_spans(x, 16000, min_silence=0.12, pad=0.0)])
     for c in cues:
         parts[pid].append({"in": round(base_part + c["t0"] - sc_st_new, 3),
                            "out": round(base_part + c["t1"] - sc_st_new, 3), "text": c["text"]})

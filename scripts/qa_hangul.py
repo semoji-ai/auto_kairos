@@ -34,17 +34,22 @@ def is_noise(text, conf):
 HAN = re.compile(r"[一-鿿]")
 
 
-def read_as_chinese(item, zh_items, min_conf=0.5, min_overlap=0.5):
-    """한국어 판독에서 한글로 나온 상자를 중국어 판독이 같은 자리에서 한자로 자신 있게 읽었으면 → 실제로는 중국어."""
+def read_as_chinese(item, zh_items, min_conf=0.5, min_overlap=0.6):
+    """한국어 판독에서 한글로 나온 상자를 중국어 판독이 같은 자리에서 한자로 자신 있게 읽었으면 → 실제로는 중국어.
+    한글 상자 넓이의 min_overlap 이상을 덮고, 한자 수가 한글 글자 수의 절반 이상일 때만(작은 한자 하나로 한글 줄을 숨기지 않게)."""
     x, y, w, h = item["box"]
+    if w <= 0 or h <= 0:
+        return False
+    n_ko = max(1, len(re.findall(r"[가-힣]", item["text"])))
+    cover, n_zh = 0.0, 0
     for z in zh_items:
-        if z["conf"] < min_conf or not HAN.search(z["text"]):
-            continue
         zx, zy, zw, zh_ = z["box"]
+        if z["conf"] < min_conf or not HAN.search(z["text"]) or zw <= 0 or zh_ <= 0:
+            continue
         ix = max(0, min(x + w, zx + zw) - max(x, zx)); iy = max(0, min(y + h, zy + zh_) - max(y, zy))
-        if ix * iy >= min_overlap * min(w * h, zw * zh_):
-            return True
-    return False
+        if ix * iy > 0:
+            cover += ix * iy; n_zh += len(HAN.findall(z["text"]))
+    return cover >= min_overlap * w * h and n_zh >= 0.5 * n_ko
 
 
 if __name__ == "__main__":

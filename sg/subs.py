@@ -196,7 +196,8 @@ def snap_to_onsets(cues, onsets, max_shift=1.2):
     out = [dict(c) for c in cues]
     for i in range(1, len(out)):
         t = out[i]["t0"]
-        cand = [o for o in onsets if abs(o - t) <= max_shift and o > out[i - 1]["t0"] + 0.3]
+        hi = cues[i + 1]["t0"] - 0.3 if i + 1 < len(cues) else float("inf")      # 다음 큐를 넘지 않게(순서 유지)
+        cand = [o for o in onsets if abs(o - t) <= max_shift and out[i - 1]["t0"] + 0.3 < o < hi]
         if cand:
             o = min(cand, key=lambda o: abs(o - t))
             out[i]["t0"] = o
@@ -207,5 +208,5 @@ def snap_to_onsets(cues, onsets, max_shift=1.2):
 
 def srt_time(t):
     """초 → SRT 시각. 전체를 밀리초로 먼저 반올림(부분별로 버림·반올림하면 82.99999초가 01:22,000이 됨)."""
-    ms = int(round(t * 1000))
+    ms = max(0, int(round(t * 1000)))
     return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"

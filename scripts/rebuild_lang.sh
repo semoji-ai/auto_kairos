@@ -4,11 +4,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 EP="$(cd "$1" && pwd)"; L="$2"; CODE="$(basename "$EP")"; B="$EP/build/$L"
-FROM="${4:-start}"   # usage: rebuild_lang.sh <EP> <lang> [--from subtitles|render] — 앞 단계 결과를 그대로 쓰고 그 단계부터
+FROM="start"
+if [ "${3:-}" = "--from" ]; then FROM="${4:-}"; elif [ -n "${3:-}" ]; then echo "알 수 없는 인자: $3 (--from start|subtitles|render)"; exit 1; fi
+case "$FROM" in start|subtitles|render) ;; *) echo "--from 값 오류: '$FROM' (start|subtitles|render)"; exit 1;; esac
+:   # usage: rebuild_lang.sh <EP> <lang> [--from subtitles|render] — 앞 단계 결과를 그대로 쓰고 그 단계부터
 if [ "$FROM" = "start" ]; then
 python3 scripts/patch_text.py "$EP" "$L"
 rm -f "$B/patch_text_log.json"; scripts/ae/run.sh "$PWD/scripts/ae/patch_text.jsx"
-python3 -c "import json,sys; d=json.load(open('$B/patch_text_log.json')); print('patch_text replaced', d['replaced'], 'errors', d['errors'], 'mismatch', d['mismatch']); sys.exit(1 if d['errors'] or d['mismatch'] or d['not_found'] else 0)"
+python3 -c "import json,sys; d=json.load(open('$B/patch_text_log.json')); print('patch_text replaced', d['replaced'], 'errors', d['errors'], 'mismatch', d['mismatch'], 'not_found', d['not_found'], 'overflow', d['overflow']); sys.exit(1 if d['errors'] or d['mismatch'] or d['not_found'] else 0)"
 python3 scripts/raster_apply.py "$EP" "$L"
 python3 scripts/highlights.py "$EP" "$L"
 python3 scripts/swap_assets.py "$EP" "$L"

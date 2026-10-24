@@ -124,3 +124,11 @@ def test_cjk_protected_terms_are_not_split():
     t = "就是1998年来韩的美国仓储会员店开市客，它改变了韩国零售业。"
     cues = split_cues(*even(t, cps=5.0), max_chars=16, cjk=True, protect=["开市客"])
     assert not any(c["text"].endswith(("开", "开市")) for c in cues)
+
+
+def test_snap_never_moves_a_cue_past_the_next_cue_start():
+    from sg.subs import snap_to_onsets
+    cues = [{"t0": 0.0, "t1": 1.0, "text": "a"}, {"t0": 1.0, "t1": 1.9, "text": "b"}, {"t0": 1.9, "t1": 2.8, "text": "c"}]
+    out = snap_to_onsets(cues, [0.0, 2.15], max_shift=1.2)
+    assert [c["t0"] for c in out] == sorted(c["t0"] for c in out)
+    assert out[1]["t0"] < 1.9
