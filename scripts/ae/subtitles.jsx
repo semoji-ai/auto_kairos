@@ -20,7 +20,12 @@ try{
       var q=part.cues[c], N=tmpl.duplicate();
       var sp=N.property("ADBE Text Properties").property("ADBE Text Document");
       while(sp.numKeys>0) sp.removeKey(1);
-      var td=sp.value; td.text=q.text; if(C.font) td.font=C.font; sp.setValue(td);
+      var td=sp.value; td.text=q.text; if(C.font) td.font=C.font;
+      td.justification=ParagraphJustification.CENTER_JUSTIFY; sp.setValue(td);
+      // 원본 템플릿은 왼쪽 정렬 + 한국어 문장 폭에 맞춘 고정 앵커 → 번역문 길이가 달라지면 한쪽으로 쏠림.
+      // 가운데 정렬 점 텍스트는 원점(x=0)이 가운데이므로 앵커 x=0, 위치 x는 템플릿 그대로(자막바 가운데)
+      var tg=N.property("ADBE Transform Group"), ap=tg.property("ADBE Anchor Point"), av=ap.value;
+      if(ap.numKeys===0) ap.setValue([0, av[1], av.length>2?av[2]:0]);
       if(C.font && c===0 && sp.value.font!==C.font) LOG.errors.push("자막 폰트 대체됨 "+C.font+" → "+sp.value.font);
       N.startTime=0; N.inPoint=q["in"]; N.outPoint=q["out"]; if(Math.abs(N.inPoint-q["in"])>1e-3) N.inPoint=q["in"];
       N.name="EN "+(c+1); N.enabled=true; made++;

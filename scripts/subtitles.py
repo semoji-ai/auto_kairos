@@ -26,6 +26,10 @@ for pid, P in cfg["parts"].items():
         raise ValueError(f"{pid}: subtitle comp layers {len(Ls)}")
     subcomp[pid] = (Ls[0]["src"], Ls[0]["st"])
 
+# 자막 줄을 나눌 때 끊지 않을 낱말: 용어집 번역의 고유명사(괄호·설명 앞부분)
+import re as _re
+_gl = json.load(open(os.path.join(root, "glossary", f"{lang}.json")))
+PROTECT = sorted({w for v in _gl.values() for w in _re.split(r"[（(—\s/，,;；]", v) if len(w) >= 2}, key=len, reverse=True)
 parts = {pid: [] for pid in cfg["parts"]}
 srt = []
 L10N = json.load(open(os.path.join(ep, "l10n", f"{lang}.json")))
@@ -42,13 +46,20 @@ for g in src["segments"]:
     sc_id, sc_st = subcomp[pid]
     sc_st_new = pmap[pid](sc_st)                   # localize.jsx는 프리컴프 startTime을 map(ost)로 옮김
     cues = split_cues(al["characters"], al["character_start_times_seconds"], al["character_end_times_seconds"],
-                      prof["subs"]["max_chars"], prof["subs"]["min_dur"], cjk=prof["subs"].get("cjk", False))
+                      prof["subs"]["max_chars"], prof["subs"]["min_dur"], cjk=prof["subs"].get("cjk", False), protect=PROTECT)
     if prof["subs"].get("snap_pauses"):           # 글자 시각이 균등 분배인 언어(중국어): 실제 쉼 뒤 소리 시작으로 보정
         x = decode(os.path.join(ep, "tts", lang, f"{g['id']}.mp3"), 16000)
         cues = snap_to_onsets(cues, [a for a, b in speech_spans(x, 16000, min_silence=0.12, pad=0.0)])
     seg_l = L10N["segments"].get(g["id"], {})
     if seg_l.get("tts"):          # 발음용 표기로 읽었으면 화면 문구는 원래 번역문으로
-        cues = retext(cues, seg_l["text"], cjk=prof["subs"].get("cjk", False))
+        if prof["subs"].get("cjk"):
+            # 화면 문장을 같은 규칙으로 다시 나누고, 시각은 읽은 전체 구간에 글자 비율로 펼침
+            disp = list(seg_l["text"]); a0, a1 = cues[0]["t0"], cues[-1]["t1"]
+            st = [a0 + (a1 - a0) * i / len(disp) for i in range(len(disp))]
+            en_ = [a0 + (a1 - a0) * (i + 1) / len(disp) for i in range(len(disp))]
+            cues = split_cues(disp, st, en_, prof["subs"]["max_chars"], prof["subs"]["min_dur"], cjk=True, protect=PROTECT)
+        else:
+            cues = retext(cues, seg_l["text"])
     for c in cues:
         parts[pid].append({"in": round(base_part + c["t0"] - sc_st_new, 3),
                            "out": round(base_part + c["t1"] - sc_st_new, 3), "text": c["text"]})

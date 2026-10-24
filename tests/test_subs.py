@@ -102,3 +102,25 @@ def test_srt_time_rounds_whole_value_not_parts():
     from sg.subs import srt_time
     assert srt_time(82.99999) == "00:01:23,000"     # 초 버림 + 밀리초 반올림으로 1초 이르게 적히던 버그
     assert srt_time(83.0004) == "00:01:23,000" and srt_time(3725.5) == "01:02:05,500"
+
+
+_NOSTART = "，。！？、；：）」”』…"
+
+
+def test_cjk_cue_never_starts_with_punctuation_or_closing_mark():
+    t = "而是为方便洛杉矶公务员而成立的合作社。所以Fedco表示无意到其他地区开店扩张，也拒绝了索尔的提议（这是关键）。"
+    cues = split_cues(*even(t, cps=5.0), max_chars=18, cjk=True)
+    assert "".join(c["text"] for c in cues) == t
+    assert all(c["text"][0] not in _NOSTART for c in cues)
+
+
+def test_cjk_long_clause_is_split_evenly_without_orphan_tail():
+    t = "仿照Price Club推出的热狗套餐"           # 18자 상한에 1자 넘침 → '…套' + '餐'이 되면 안 됨
+    cues = split_cues(*even(t, cps=5.0), max_chars=16, cjk=True)
+    assert len(cues) == 2 and min(len(c["text"]) for c in cues) >= 6 and max(len(c["text"]) for c in cues) <= 16
+
+
+def test_cjk_protected_terms_are_not_split():
+    t = "就是1998年来韩的美国仓储会员店开市客，它改变了韩国零售业。"
+    cues = split_cues(*even(t, cps=5.0), max_chars=16, cjk=True, protect=["开市客"])
+    assert not any(c["text"].endswith(("开", "开市")) for c in cues)

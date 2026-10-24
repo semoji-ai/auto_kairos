@@ -36,12 +36,75 @@ def _tokens_cjk(chars):
     return out
 
 
-def split_cues(chars, starts, ends, max_chars=42, min_dur=0.8, cjk=False):
-    """cjk=True(중국어·일본어): 글자 단위로 나누고 문장부호 우선으로 끊으며 공백 없이 잇는다."""
+_CLAUSE_END = "，。！？；：、"
+_NO_START = "，。！？、；：）」”』…）》"
+_NO_END = "（「“『《"
+
+
+def _cjk_groups(tokens, max_chars, protect=()):
+    """띄어쓰기 없는 언어의 큐 묶음: 구(문장부호까지)로 자르고, 구들을 max_chars 안에서 채움.
+    max_chars를 넘는 구는 고르게 n등분(보호어·영문 묶음 안, 닫는 부호 앞, 여는 부호 뒤에서는 끊지 않음)."""
+    text = "".join(t[2] for t in tokens)
+    pos, acc = [], 0
+    for t in tokens:
+        pos.append(acc); acc += len(t[2])
+    blocked = set()
+    for w in protect:
+        k = text.find(w)
+        while k >= 0:
+            blocked.update(range(k + 1, k + len(w))); k = text.find(w, k + 1)
+
+    def ok(i):                                  # tokens[i] 앞에서 끊어도 되는가
+        return (0 < i < len(tokens) and pos[i] not in blocked and tokens[i][2][0] not in _NO_START
+                and tokens[i - 1][2][-1] not in _NO_END and not tokens[i][2].isspace()
+                and not tokens[i - 1][2].isspace())            # 'Kirkland Signature'처럼 공백으로 이은 영문은 한 덩어리
+
+    clauses, cur = [], []
+    for i, t in enumerate(tokens):
+        cur.append(i)
+        nxt_closes = i + 1 < len(tokens) and tokens[i + 1][2][0] in _NO_START
+        if t[2][-1] in _CLAUSE_END and not nxt_closes:
+            clauses.append(cur); cur = []
+    if cur:
+        clauses.append(cur)
+    L = lambda idx: sum(len(tokens[i][2]) for i in idx)
+    pieces = []
+    for c in clauses:
+        n = -(-L(c) // max_chars)
+        if n <= 1:
+            pieces.append(c); continue
+        target = L(c) / n; start, run = 0, 0
+        cuts = []
+        for k in range(1, n):
+            goal = target * k
+            best = None
+            for j in range(start + 1, len(c)):
+                if not ok(c[j]):
+                    continue
+                d = abs(sum(len(tokens[i][2]) for i in c[:j]) - goal)
+                if best is None or d < best[0]:
+                    best = (d, j)
+            if best is None:
+                break
+            cuts.append(best[1]); start = best[1]
+        bounds = [0] + cuts + [len(c)]
+        pieces += [c[a:b] for a, b in zip(bounds, bounds[1:]) if b > a]
+    groups, cur = [], []
+    for pc in pieces:
+        if cur and L(cur) + L(pc) > max_chars:
+            groups.append(cur); cur = []
+        cur = cur + pc
+    if cur:
+        groups.append(cur)
+    return [[tokens[i] for i in g] for g in groups]
+
+
+def split_cues(chars, starts, ends, max_chars=42, min_dur=0.8, cjk=False, protect=()):
+    """cjk=True(중국어·일본어): 구 단위로 채우고 긴 구는 고르게 나누며 공백 없이 잇는다(protect: 끊지 않을 낱말)."""
     J = "" if cjk else " "
     words = _tokens_cjk(chars) if cjk else _words(chars)
     groups, cur = [], []
-    for w in words:
+    for w in ([] if cjk else words):
         trial = J.join(x[2] for x in cur + [w])
         if cur and len(trial) > max_chars:
             # 쉼표 등 뒤에서 끊을 수 있으면 그 지점까지만 현재 그룹으로
@@ -56,6 +119,8 @@ def split_cues(chars, starts, ends, max_chars=42, min_dur=0.8, cjk=False):
                 groups.append(cur); cur = []
     if cur:
         groups.append(cur)
+    if cjk:
+        groups = _cjk_groups(words, max_chars, protect)
     cues = [{"t0": starts[g[0][0]], "t1": ends[g[-1][1]], "text": J.join(x[2] for x in g)} for g in groups]
     i = 0
     while i < len(cues):
@@ -64,7 +129,7 @@ def split_cues(chars, starts, ends, max_chars=42, min_dur=0.8, cjk=False):
             if i > 0 and len(cues[i - 1]["text"]) + len(J) + len(c["text"]) <= max_chars:
                 cues[i - 1] = {"t0": cues[i - 1]["t0"], "t1": c["t1"], "text": cues[i - 1]["text"] + J + c["text"]}
                 cues.pop(i); continue
-            if i + 1 < len(cues):
+            if i + 1 < len(cues) and (not cjk or len(c["text"]) + len(cues[i + 1]["text"]) <= max_chars):
                 cues[i + 1] = {"t0": c["t0"], "t1": cues[i + 1]["t1"], "text": c["text"] + J + cues[i + 1]["text"]}
                 cues.pop(i); continue
         i += 1
