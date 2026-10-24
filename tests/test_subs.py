@@ -63,3 +63,25 @@ def test_close_gaps_extends_cue_to_next_when_gap_is_tiny():
     cues = [{"in": 0.0, "out": 2.19, "text": "a"}, {"in": 2.27, "out": 3.0, "text": "b"}, {"in": 4.0, "out": 5.0, "text": "c"}]
     out = close_gaps(cues, max_gap=0.3)
     assert [(c["in"], c["out"]) for c in out] == [(0.0, 2.27), (2.27, 3.0), (4.0, 5.0)]   # 0.08초 틈만 메움
+
+
+def test_cjk_splits_at_chinese_punctuation_without_spaces():
+    t = "1998年，开市客进入韩国。如今它已是全球第三大零售商，年销售额超过两千亿美元。"
+    cues = split_cues(*even(t, cps=5.0), max_chars=18, cjk=True)
+    assert "".join(c["text"] for c in cues) == t                 # 공백 없이 이어 붙음
+    assert all(len(c["text"]) <= 18 for c in cues)
+    assert cues[0]["text"].endswith(("，", "。"))                  # 문장부호 뒤에서 끊음
+
+
+def test_cjk_keeps_latin_and_digit_runs_whole():
+    t = "Costco的Kirkland Signature品牌在1995年诞生，它的价格非常便宜。"
+    cues = split_cues(*even(t, cps=5.0), max_chars=12, cjk=True)
+    joined = "|".join(c["text"] for c in cues)
+    assert "Kirk|land" not in joined and "19|95" not in joined and "Cost|co" not in joined
+
+
+def test_cjk_retext_splits_by_characters():
+    from sg.subs import retext
+    cues = [{"t0": 0, "t1": 1, "text": "一九九八年，"}, {"t0": 1, "t1": 2, "text": "开市客来了。"}]
+    out = retext(cues, "1998年，开市客来了。", cjk=True)
+    assert "".join(c["text"] for c in out) == "1998年，开市客来了。" and len(out) == 2
