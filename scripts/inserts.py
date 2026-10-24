@@ -9,7 +9,7 @@ import json, os, re, subprocess, sys, time
 import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from sg.tts import synthesize, load_key, speech_bounds, trim
-from sg.subs import cues_for_segment, snap_to_onsets, close_gaps, resolve_overlaps, srt_time
+from sg.subs import cues_for_segment, snap_to_onsets, close_gaps, resolve_overlaps, srt_time, bar_intervals
 from sg.audio import decode as decode16, speech_spans
 from sg.timemap import PiecewiseMap
 
@@ -77,7 +77,8 @@ def cmd_plan(ep, lang):
             scenes.append({**sc, "start": round(t, 3), "dur": d, "narr_at": round(t + LEAD, 3), "narr_dur": nd})
             t = round(t + d, 3)
         cues = close_gaps(resolve_overlaps(cues, prof["subs"]["gap"]))
-        plan[name] = {"replace_master": ins["replace_master"], "dur": t, "scenes": scenes, "cues": cues}
+        plan[name] = {"replace_master": ins["replace_master"], "dur": t, "scenes": scenes, "cues": cues,
+                      "bar": bar_intervals(cues, 0.0)}           # 자막바는 자막 있을 때만(본편과 같은 규칙)
     bd = os.path.join(ep, "build", lang); os.makedirs(bd, exist_ok=True)
     json.dump(plan, open(os.path.join(bd, "inserts_plan.json"), "w"), ensure_ascii=False, indent=1)
     for n, p in plan.items():
@@ -165,6 +166,7 @@ def cmd_audio(ep, lang):
            __import__("unicodedata").normalize("NFC", f) in {p["narration"] for p in cfg["parts"].values()}]
     ko = [lufs(r) for r in ref]
     od = os.path.join(ep, "tts", lang, "inserts")
+    S = load(ep, lang)
     for n, p in plan.items():
         a, b = T(p["replace_master"][0]), T(p["replace_master"][1])
         N = int(round(p["dur"] * SR))
@@ -174,13 +176,25 @@ def cmd_audio(ep, lang):
             g = 10 ** (narration_gain_db(ko, lufs(f)) / 20)
             x = _decode(f) * g; s = int(round(sc["narr_at"] * SR))
             m = min(len(x), N - s); buf[s:s + m] += x[:m]
+        # 효과음: 장면 요소의 등장 애니메이션마다(종류별 소리, 반복 요소는 묶음당 1번)
+        sfx = {k: _decode(os.path.join(ep, v)) for k, v in S.get("sfx", {}).items() if not k.startswith("_")}
+        n_sfx = 0
+        for sc in p["scenes"]:
+            for L in sc["layers"]:
+                kind = "bar" if L.get("type") == "bar" else L.get("anim")
+                if kind not in sfx:
+                    continue
+                t = sc["narr_at"] + L.get("at", 0) * sc["narr_dur"]
+                x = sfx[kind]; s0 = int(round(t * SR)); m = min(len(x), N - s0)
+                if m > 0:
+                    buf[s0:s0 + m] += x[:m]; n_sfx += 1
         pk = float(np.abs(buf).max())
         if pk > 0.97:
             buf *= 0.97 / pk
         import wave
         with wave.open(os.path.join(rd, f"insert_{n}.wav"), "wb") as w:
             w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR); w.writeframes((np.clip(buf, -1, 1) * 32767).astype("<i2").tobytes())
-        print(n, "audio", round(N / SR, 3), "s, bed from", round(a, 2), "-", round(b, 2), "peak", round(pk, 3))
+        print(n, "audio", round(N / SR, 3), "s, bed(BGM) from", round(a, 2), "-", round(b, 2), "sfx", n_sfx, "peak", round(pk, 3))
 
 
 def cmd_splice(ep, lang):

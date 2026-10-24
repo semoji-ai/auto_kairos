@@ -29,7 +29,7 @@
        "y": 470,
        "w": 620,
        "at": 0.0,
-       "anim": "pop"
+       "anim": "none"
       },
       {
        "type": "badge",
@@ -1185,5 +1185,14 @@
     }
    ]
   }
+ },
+ "sfx": {
+  "_doc": "애니메이션 종류별 효과음(본편 효과음 트랙에서 잘라 냄). 반복 요소는 묶음당 1번",
+  "pop": "assets/sfx/pop.wav",
+  "slam": "assets/sfx/stamp.wav",
+  "slide_right": "assets/sfx/whoosh.wav",
+  "slide_left": "assets/sfx/whoosh.wav",
+  "slide_up": "assets/sfx/whoosh.wav",
+  "bar": "assets/sfx/whoosh.wav"
  }
 }

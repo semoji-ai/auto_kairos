@@ -128,23 +128,31 @@ try{
     var P=C.plan[name], ins=PROJ.items.addComp("INSERT_"+name, W, H, 1, P.dur, FPS); ins.parentFolder=FOLDER;
     for(var s=0;s<P.scenes.length;s++){ var sc=P.scenes[s], SC=buildScene(sc, C.fonts), L=ins.layers.add(SC); L.startTime=sc.start; L.moveToEnd(); }
     // 본편에서 채널 로고·자막바·자막 글자 스타일 복사
-    var bars=[], tmpl=null, logo=null;
+    var bars=[], tmpl=null, logo=null, tex=null;
     for(var j=1;j<=main.numLayers;j++){ var M=main.layer(j);
       if(M.name==="자막바"||M.name==="자막바그림자") bars.push(M);
       if(M.name==="세모지 로고") logo=M;
+      if(M.name==="텍스쳐") tex=M;
       if(M.source instanceof CompItem && M.source.name.indexOf("#자막")===0){ for(var q=1;q<=M.source.numLayers;q++) if(M.source.layer(q) instanceof TextLayer){ tmpl=M.source.layer(q); break; } } }
     var copied=function(L){ var before=ins.numLayers; L.copyToComp(ins);
       var c=null; for(var z=1;z<=ins.numLayers;z++){ if(ins.layer(z).name===L.name){ c=ins.layer(z); break; } }
       if(!c){ LOG.errors.push("복사 실패: "+L.name+" ("+before+"→"+ins.numLayers+")"); return null; }
       c.locked=false; c.startTime=0; c.inPoint=0; c.outPoint=P.dur; c.moveToBeginning(); return c; };   // 장면 위로
     if(logo){ var LL=copied(logo); }
-    for(var b=bars.length-1;b>=0;b--){ var BL=copied(bars[b]); if(!BL) continue; var op=BL.property("ADBE Transform Group").property("ADBE Opacity"); while(op.numKeys>0) op.removeKey(1); op.setValue(100); }
+    // 자막바: 자막이 있을 때만 보이게(본편 subtitles.jsx와 같은 규칙, 3프레임 페이드)
+    var fr=3/FPS;
+    for(var b=bars.length-1;b>=0;b--){ var BL=copied(bars[b]); if(!BL) continue; var op=BL.property("ADBE Transform Group").property("ADBE Opacity");
+      while(op.numKeys>0) op.removeKey(1); op.setValueAtTime(0,0);
+      for(var q=0;q<P.bar.length;q++){ var a0=P.bar[q][0], e0=P.bar[q][1];
+        op.setValueAtTime(Math.max(0,a0-fr),0); op.setValueAtTime(a0,100); op.setValueAtTime(e0,100); op.setValueAtTime(e0+fr,0); } }
+    var TX=tex?copied(tex):null; if(!TX) LOG.errors.push("본편 '텍스쳐' 레이어 없음");   // 종이 텍스처(본편처럼 맨 위)
     if(!tmpl){ LOG.errors.push("자막 글자 템플릿 없음"); }
     else { var TT=copied(tmpl); if(!TT) throw new Error("자막 템플릿 복사 실패");
       for(var c=0;c<P.cues.length;c++){ var Q=P.cues[c], N=TT.duplicate(); var sp=N.property("ADBE Text Properties").property("ADBE Text Document");
         while(sp.numKeys>0) sp.removeKey(1); var td=sp.value; td.text=Q.text; sp.setValue(td);
         N.startTime=0; N.inPoint=Q["in"]; N.outPoint=Q["out"]; N.name="SUB "+(c+1); LOG.cues++; }
       TT.remove(); }
+    if(TX) TX.moveToBeginning();
     LOG.comps.push({name:"INSERT_"+name, dur:P.dur, scenes:P.scenes.length});
   }
   PROJ.save(new File(C.save_as)); PROJ.close(CloseOptions.DO_NOT_SAVE_CHANGES);

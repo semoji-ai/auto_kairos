@@ -25,13 +25,23 @@ _oc = unicodedata.normalize("NFC", (edl.get("outro") or {}).get("clip", ""))
 outro_file = os.path.join(_root, _tbl[_oc]) if _oc in _tbl else os.path.join(ep, "assets", "outro.mov")
 vids = [os.path.join(out_dir, f"part_{p}.mp4") for p in order] + [outro_file]
 outro_dur = edl["outro"]["dur"] if edl.get("outro") else None   # 프리미어에서 쓴 길이만큼만(원본 파일은 더 김)
-filt = "".join(f"[{i}:v]" + (f"trim=duration={outro_dur},setpts=PTS-STARTPTS," if i == len(vids) - 1 and outro_dur else "")
-               + f"scale=1920:1080,fps=30000/1001,format=yuv420p,setsar=1[v{i}];" for i in range(len(vids)))
+# 프리미어에서 아웃트로 위에 얹던 종이 텍스처(본편 AE '텍스쳐' 레이어와 같은 63517.jpg, 곱하기 10%)
+_tex = [os.path.join(dp, f) for dp, _, fs in os.walk(os.path.join(ep, "src")) for f in fs if f == cfg.get("texture", "63517.jpg")]
+filt = ""
+for i in range(len(vids)):
+    last = i == len(vids) - 1
+    filt += f"[{i}:v]" + (f"trim=duration={outro_dur},setpts=PTS-STARTPTS," if last and outro_dur else "") \
+            + f"scale=1920:1080,fps=30000/1001,format=yuv420p,setsar=1" + ("[o0];" if last and _tex else f"[v{i}];")
+if _tex:
+    k = len(vids)
+    filt += f"[{k}:v]scale=1920:1080,format=yuv420p,setsar=1[tx];[o0][tx]blend=all_mode=multiply:all_opacity=0.1:shortest=0[v{k - 1}];"
 filt += "".join(f"[v{i}]" for i in range(len(vids))) + f"concat=n={len(vids)}:v=1:a=0[v]"
 video = os.path.join(out_dir, "video_only.mp4")
 args = ["ffmpeg", "-v", "error", "-y"]
 for v in vids:
     args += ["-i", v]
+if _tex:
+    args += ["-loop", "1", "-i", _tex[0]]
 subprocess.run(args + ["-filter_complex", filt, "-map", "[v]", "-c:v", "libx264", "-crf", "20", "-preset", "veryfast", video], check=True)
 
 # 오디오: TTS + nonverbal 원래 녹음 조각 (파트 시각 → 내레이션 wav 시각: 프리컴프 안 레이어 startTime 반영)

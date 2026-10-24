@@ -101,5 +101,7 @@ if __name__ == "__main__":
             sheet.paste(im, (px, py)); d.text((px + 6, py + 542), f"{o['t']:.0f}s  " + " | ".join(b["text"] for b in o["items"])[:120], fill=(255, 220, 0))
         sheet.save(os.path.join(qd, f"hangul_sheet_{si // 12 + 1:02d}.png"))
     print("frames", len(frames), "problem frames", len(out))
+    import shutil
+    shutil.rmtree(fd, ignore_errors=True)        # 검사용 프레임(편당 약 3GB)은 시트를 만든 뒤 지움
     if "--gate" in sys.argv and out:
         sys.exit(1)
