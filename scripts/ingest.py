@@ -78,7 +78,10 @@ if __name__ == "__main__":
         if not os.path.exists(dst):
             os.makedirs(os.path.dirname(dst), exist_ok=True); shutil.copy2(best, dst); copied += 1
     # relink: 원래 경로 → 로컬 사본
-    aep_local = os.path.join(E, "nas_aep", aep_name); out_aep = os.path.join(src, f"{ep}_main_ko.aep")
+    # aep를 src/(원래 편 폴더와 같은 구조)에 두고 열면 AE가 상대경로로 footage를 스스로 찾음.
+    # 레이어별로 불러온 .ai/.psd는 replace()하면 레이어 선택이 풀려(빈 그림) 이 방식이어야 함.
+    aep_local = os.path.join(src, "_orig_" + aep_name); out_aep = os.path.join(src, f"{ep}_main_ko.aep")
+    shutil.copy2(os.path.join(E, "nas_aep", aep_name), aep_local)
     job = {"jobs": [{"aep": aep_local, "save_as": out_aep, "map": {o: os.path.join(src, r) for o, (b, r) in plan.items()}}],
            "log": os.path.join(E, "relink_log.json")}
     json.dump(job, open(os.path.join(ROOT, "scripts/ae/relink_job.json"), "w"), ensure_ascii=False)

@@ -1,0 +1,664 @@
+[
+ {
+  "sequence": "B053_코카콜라2편_음악전",
+  "uid": "de7eef0a-5411-470b-b269-1a88550f09dc",
+  "tracks": [
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 7.407,
+      "in": 0.0,
+      "out": 7.407,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "479"
+     },
+     {
+      "start": 7.407,
+      "end": 9.076,
+      "in": 7.541,
+      "out": 9.209,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "528"
+     },
+     {
+      "start": 9.209,
+      "end": 278.411,
+      "in": 9.209,
+      "out": 278.411,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "481"
+     },
+     {
+      "start": 278.411,
+      "end": 280.08,
+      "in": 7.541,
+      "out": 9.209,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "529"
+     },
+     {
+      "start": 280.08,
+      "end": 381.848,
+      "in": 280.08,
+      "out": 381.848,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "530"
+     },
+     {
+      "start": 381.848,
+      "end": 383.516,
+      "in": 7.541,
+      "out": 9.209,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "531"
+     },
+     {
+      "start": 383.516,
+      "end": 467.834,
+      "in": 383.516,
+      "out": 467.834,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "532"
+     },
+     {
+      "start": 467.934,
+      "end": 468.601,
+      "in": 467.834,
+      "out": 468.501,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "533"
+     },
+     {
+      "start": 468.601,
+      "end": 525.859,
+      "in": 468.601,
+      "out": 525.859,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "534"
+     },
+     {
+      "start": 525.859,
+      "end": 527.527,
+      "in": 7.541,
+      "out": 9.209,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "535"
+     },
+     {
+      "start": 527.527,
+      "end": 733.266,
+      "in": 527.527,
+      "out": 733.266,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "536"
+     },
+     {
+      "start": 733.266,
+      "end": 743.543,
+      "in": 0.0,
+      "out": 10.277,
+      "name": "Sand_Castle.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\귀염\\Sand_Castle.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        8.6753,
+        0.036082472652
+       ],
+       [
+        10.2763,
+        0.0
+       ]
+      ],
+      "oid": "537"
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 7.407,
+      "in": 2.002,
+      "out": 9.409,
+      "name": "At_Odds.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\극적\\At_Odds.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        9.1758,
+        0.016070485115
+       ],
+       [
+        9.4094,
+        0.0
+       ]
+      ],
+      "oid": "541"
+     },
+     {
+      "start": 9.209,
+      "end": 48.582,
+      "in": 0.0,
+      "out": 39.373,
+      "name": "Gypsy_Stroll.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\낭만적\\Gypsy_Stroll.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.028735632076859474,
+      "gain_keys": [],
+      "oid": "542"
+     },
+     {
+      "start": 48.582,
+      "end": 102.035,
+      "in": 0.033,
+      "out": 53.487,
+      "name": "Djinn.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\극적\\Djinn.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.013811688870191574,
+      "gain_keys": [],
+      "oid": "543"
+     },
+     {
+      "start": 102.035,
+      "end": 243.777,
+      "in": 0.0,
+      "out": 141.742,
+      "name": "Eyes_of_Glory.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\극적\\Eyes_of_Glory.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.017241379246115685,
+      "gain_keys": [],
+      "oid": "544"
+     },
+     {
+      "start": 243.777,
+      "end": 278.411,
+      "in": 0.801,
+      "out": 35.435,
+      "name": "Resolution.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\극적\\Resolution.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        34.5679,
+        0.028735632077
+       ],
+       [
+        35.4354,
+        0.0
+       ]
+      ],
+      "oid": "545"
+     },
+     {
+      "start": 280.28,
+      "end": 381.848,
+      "in": 0.067,
+      "out": 101.635,
+      "name": "Standing_Here.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\낭만적\\Standing_Here.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        101.101,
+        0.017241379246
+       ],
+       [
+        101.6072,
+        0.0
+       ]
+      ],
+      "oid": "546"
+     },
+     {
+      "start": 383.717,
+      "end": 525.859,
+      "in": 0.267,
+      "out": 142.409,
+      "name": "Erykah.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\낭만적\\Erykah.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        141.8083,
+        0.017241379246
+       ],
+       [
+        142.3748,
+        0.0
+       ]
+      ],
+      "oid": "547"
+     },
+     {
+      "start": 527.694,
+      "end": 638.872,
+      "in": 0.033,
+      "out": 111.211,
+      "name": "Species.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\힙합\\Species.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.012276808731257915,
+      "gain_keys": [],
+      "oid": "548"
+     },
+     {
+      "start": 638.872,
+      "end": 733.266,
+      "in": 0.834,
+      "out": 95.228,
+      "name": "Spanish_Rose.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\낭만적\\Spanish_Rose.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.023256400600075722,
+      "gain_keys": [],
+      "oid": "549"
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": [
+     {
+      "start": 467.1,
+      "end": 468.268,
+      "in": 21.889,
+      "out": 23.056,
+      "name": "도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "file": "C:\\work\\편집소스\\source\\효과음\\도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.06716418266296387,
+      "gain_keys": [],
+      "oid": "561"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 7.407,
+      "in": 0.0,
+      "out": 7.407,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "480"
+     },
+     {
+      "start": 7.407,
+      "end": 9.209,
+      "in": 7.407,
+      "out": 9.209,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "568"
+     },
+     {
+      "start": 9.209,
+      "end": 733.266,
+      "in": 9.209,
+      "out": 733.266,
+      "name": "B053_코카콜라2편_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "482"
+     },
+     {
+      "start": 733.266,
+      "end": 743.543,
+      "in": 0.0,
+      "out": 10.277,
+      "name": "세모지 아웃트로_최종.mov",
+      "file": "C:\\work\\001_유튜브\\필수이미지\\세모지 아웃트로_최종.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "569"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": [
+     {
+      "start": 267.801,
+      "end": 272.139,
+      "in": 0.0,
+      "out": 4.338,
+      "name": "B053_코카콜라2편_수정2.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_수정2.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "570"
+     },
+     {
+      "start": 392.692,
+      "end": 401.568,
+      "in": 0.0,
+      "out": 8.876,
+      "name": "B053_코카콜라2편_수정1.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\B053_코카콜라2편_수정1.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "571"
+     },
+     {
+      "start": 733.266,
+      "end": 743.543,
+      "in": 3600.03,
+      "out": 3610.307,
+      "name": "Graphic",
+      "file": "1196574294",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "572"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": [
+     {
+      "start": 733.266,
+      "end": 743.543,
+      "in": 3599.996,
+      "out": 3610.273,
+      "name": "63517.jpg",
+      "file": "C:\\work\\세모지_자주쓰는효과\\텍스쳐\\63517.jpg",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "573"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 3,
+    "items": [
+     {
+      "start": 733.266,
+      "end": 743.543,
+      "in": 3599.996,
+      "out": 3610.273,
+      "name": "Graphic",
+      "file": "1196574294",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "574"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "sequence": "도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p)",
+  "uid": "4a69b01c-fd21-4535-8fed-22206160b833",
+  "tracks": [
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 21.875,
+      "in": 0.0,
+      "out": 21.875,
+      "name": "도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "file": "C:\\work\\편집소스\\source\\효과음\\도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "502"
+     },
+     {
+      "start": 21.875,
+      "end": 23.042,
+      "in": 21.875,
+      "out": 23.042,
+      "name": "도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "file": "C:\\work\\편집소스\\source\\효과음\\도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "504"
+     },
+     {
+      "start": 23.042,
+      "end": 42.792,
+      "in": 23.042,
+      "out": 42.792,
+      "name": "도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "file": "C:\\work\\편집소스\\source\\효과음\\도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "506"
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 21.875,
+      "in": 0.0,
+      "out": 21.875,
+      "name": "도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "file": "C:\\work\\편집소스\\source\\효과음\\도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "503"
+     },
+     {
+      "start": 21.875,
+      "end": 23.042,
+      "in": 21.875,
+      "out": 23.042,
+      "name": "도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "file": "C:\\work\\편집소스\\source\\효과음\\도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "505"
+     },
+     {
+      "start": 23.042,
+      "end": 42.792,
+      "in": 23.042,
+      "out": 42.792,
+      "name": "도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "file": "C:\\work\\편집소스\\source\\효과음\\도전 골든벨 효과음 10초카운트 재생 ♪ [통합] (720p).mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "507"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": []
+   }
+  ]
+ },
+ {
+  "sequence": "코카콜라2_썸네일",
+  "uid": "91fef786-b6a8-4224-9b5a-0b9c6cb3d372",
+  "tracks": [
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 4.972,
+      "in": 3599.996,
+      "out": 3604.968,
+      "name": "코카콜라2_썸네일.jpg",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\코카콜라2_편집완\\코카콜라2_썸네일.jpg",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "605"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": []
+   }
+  ]
+ }
+]

@@ -1,0 +1,19 @@
+{
+ "reached": 812,
+ "planned": 84,
+ "copied": 0,
+ "not_found_on_nas": [],
+ "relink": {
+  "aep": "/Users/jleavens_macmini/LocalProjects/semoji_global/episodes/B052/src/_orig_코카콜라1.aep",
+  "relinked": 5,
+  "still_missing": 17,
+  "error": null,
+  "saved": true
+ },
+ "prep": {
+  "missing_used": [],
+  "ok": 812,
+  "dur": 794.994994994995,
+  "errors": []
+ }
+}
