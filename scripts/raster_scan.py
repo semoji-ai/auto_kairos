@@ -75,7 +75,9 @@ if "--upscale-small" in sys.argv:
     for name, files in (("ocr.jsonl", sorted(redo)), ("ocr_bg.jsonl", sorted(o for f in redo for o in bg_versions(f)))):
         keep = [l for l in open(os.path.join(rd, name)) if os.path.basename(json.loads(l)["file"]).split("_")[0].replace(".png", "") not in small]
         with open(os.path.join(rd, name), "w") as f:
-            f.writelines(keep); f.write("\n".join(ocr_lines(files)) + "\n")
+            f.writelines(keep)
+            if files:                                       # 다시 읽을 게 없으면 빈 줄을 쓰지 않음(JSONL 깨짐)
+                f.write("\n".join(ocr_lines(files)) + "\n")
 elif "--skip-export" not in sys.argv:
     for f in glob.glob(os.path.join(src, "*")):
         os.remove(f)

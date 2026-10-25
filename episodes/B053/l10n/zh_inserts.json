@@ -1,0 +1,798 @@
+{
+ "_doc": "중국어판 전용 삽입 구간: 마스터 구간 replace_master를 새 장면들로 바꿈. 좌표 1920x1080, at = 그 장면 내레이션 진행 비율(0~1). 사실 출처는 docs/zh/B052_B053_china_framing_draft.md. 지구본·세계지도 그림은 쓰지 않음(대만·남중국해 누락 위험) — 세계지도 장면(190.55~197.66)은 표준지도(审图号) 받으면 별도 삽입",
+ "fonts": {
+  "label": "SourceHanSansCN-Heavy",
+  "body": "SourceHanSansCN-Bold",
+  "title": "SmileySans-Oblique",
+  "hand": "ZCOOLKuaiLe-Regular"
+ },
+ "sfx": {
+  "_doc": "애니메이션 종류별 효과음(B209 본편 효과음에서 잘라 낸 것 재사용). 반복 요소는 묶음당 1번",
+  "pop": "assets/sfx/pop.wav",
+  "slam": "assets/sfx/stamp.wav",
+  "slide_right": "assets/sfx/whoosh.wav",
+  "slide_left": "assets/sfx/whoosh.wav",
+  "slide_up": "assets/sfx/whoosh.wav",
+  "bar": "assets/sfx/whoosh.wav"
+ },
+ "inserts": {
+  "china": {
+   "replace_master": [
+    257.42,
+    278.45
+   ],
+   "scenes": [
+    {
+     "id": "zc01",
+     "text": "说到中国，可口可乐和中国的缘分，要从1927年说起。那一年，它在天津和上海开始销售。",
+     "tts": "说到中国，可口可乐和中国的缘分，要从一九二七年说起。那一年，它在天津和上海开始销售。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/1324225402.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324225406.png",
+       "x": 700,
+       "y": 600,
+       "w": 820,
+       "at": 0.0,
+       "anim": "none"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324225408.png",
+       "x": 1450,
+       "y": 270,
+       "w": 520,
+       "at": 0.0,
+       "anim": "slide_left"
+      },
+      {
+       "type": "badge",
+       "text": "1927年",
+       "x": 300,
+       "y": 190,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.3,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "天津",
+       "x": 1330,
+       "y": 640,
+       "size": 68,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.72,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "上海",
+       "x": 1620,
+       "y": 640,
+       "size": 68,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.82,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "zc02",
+     "text": "据说当时还没有正式的中文名，有商贩把它音译成“蝌蚪啃蜡”。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/1324225306.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324225322.png",
+       "x": 620,
+       "y": 640,
+       "w": 360,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324225496.png",
+       "x": 930,
+       "y": 690,
+       "w": 190,
+       "at": 0.15,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "据说……",
+       "font": "hand",
+       "size": 64,
+       "x": 1380,
+       "y": 250,
+       "color": [
+        90,
+        90,
+        90
+       ],
+       "at": 0.0,
+       "anim": "fade"
+      },
+      {
+       "type": "badge",
+       "text": "蝌蚪啃蜡？",
+       "x": 1380,
+       "y": 420,
+       "size": 100,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.62,
+       "anim": "slam",
+       "rot": -5
+      }
+     ]
+    },
+    {
+     "id": "zc03",
+     "text": "后来，它有了一个好听的名字——可口可乐。既保留了发音，又“可口”又“可乐”。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/1324226305.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324226311.png",
+       "x": 960,
+       "y": 300,
+       "w": 1500,
+       "at": 0.0,
+       "anim": "fade"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324226307.png",
+       "x": 960,
+       "y": 680,
+       "w": 380,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "可口可乐",
+       "font": "title",
+       "size": 150,
+       "x": 960,
+       "y": 200,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.22,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "可口",
+       "x": 480,
+       "y": 620,
+       "size": 110,
+       "color": [
+        226,
+        28,
+        52
+       ],
+       "bg": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.6,
+       "anim": "slam",
+       "rot": -4
+      },
+      {
+       "type": "badge",
+       "text": "可乐",
+       "x": 1440,
+       "y": 620,
+       "size": 110,
+       "color": [
+        226,
+        28,
+        52
+       ],
+       "bg": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.8,
+       "anim": "slam",
+       "rot": 4
+      }
+     ]
+    },
+    {
+     "id": "zc04",
+     "text": "1933年，上海已经成为可口可乐在美国以外产量最高的地方。",
+     "tts": "一九三三年，上海已经成为可口可乐在美国以外产量最高的地方。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/1324225368.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324225370.png",
+       "x": 960,
+       "y": 820,
+       "w": 1700,
+       "at": 0.0,
+       "anim": "none"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324225372.png",
+       "x": 960,
+       "y": 752,
+       "w": 1700,
+       "at": 0.0,
+       "anim": "slide_left"
+      },
+      {
+       "type": "badge",
+       "text": "1933年 · 上海",
+       "x": 960,
+       "y": 210,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "美国以外 产量第一",
+       "x": 960,
+       "y": 430,
+       "size": 90,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.55,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "zc05",
+     "text": "新中国成立后，可口可乐退出了中国大陆。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/1324225402.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324225406.png",
+       "x": 700,
+       "y": 600,
+       "w": 820,
+       "at": 0.0,
+       "anim": "none"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324225408.png",
+       "x": 1450,
+       "y": 300,
+       "w": 520,
+       "at": 0.35,
+       "anim": "slide_right"
+      },
+      {
+       "type": "badge",
+       "text": "退出中国大陆",
+       "x": 1400,
+       "y": 640,
+       "size": 80,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        90,
+        90,
+        90
+       ],
+       "at": 0.55,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "zc06",
+     "text": "1978年12月，就在中美宣布建交前夕，可口可乐和中粮签下协议。第二年，第一批三千箱可口可乐经香港运进北京和广州。",
+     "tts": "一九七八年十二月，就在中美宣布建交前夕，可口可乐和中粮签下协议。第二年，第一批三千箱可口可乐经香港运进北京和广州。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/1324225458.png"
+      },
+      {
+       "type": "badge",
+       "text": "1978年12月",
+       "x": 330,
+       "y": 170,
+       "size": 66,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.0,
+       "anim": "slide_right"
+      },
+      {
+       "type": "text",
+       "text": "可口可乐 × 中粮",
+       "font": "title",
+       "size": 110,
+       "x": 960,
+       "y": 330,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "at": 0.3,
+       "anim": "pop"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324225386.png",
+       "x": 360,
+       "y": 790,
+       "w": 150,
+       "at": 0.62,
+       "anim": "pop",
+       "repeat": {
+        "n": 6,
+        "dx": 240,
+        "dy": 0,
+        "stagger": 0.03
+       }
+      },
+      {
+       "type": "badge",
+       "text": "首批 3000箱",
+       "x": 960,
+       "y": 540,
+       "size": 76,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.66,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "经香港 → 北京 · 广州",
+       "x": 1530,
+       "y": 170,
+       "size": 56,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.8,
+       "anim": "slide_left"
+      }
+     ]
+    },
+    {
+     "id": "zc07",
+     "text": "可口可乐也成了改革开放后第一个重返中国的外国消费品。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/1324226305.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324225496.png",
+       "x": 520,
+       "y": 560,
+       "w": 300,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "改革开放后",
+       "font": "label",
+       "size": 76,
+       "x": 1220,
+       "y": 380,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.15,
+       "anim": "fade"
+      },
+      {
+       "type": "badge",
+       "text": "第一个重返中国的外国消费品",
+       "x": 1220,
+       "y": 540,
+       "size": 58,
+       "color": [
+        226,
+        28,
+        52
+       ],
+       "bg": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.45,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "zc08",
+     "text": "1981年，北京五里店的装瓶厂正式投产，一瓶卖四毛五，是北冰洋汽水的三倍。",
+     "tts": "一九八一年，北京五里店的装瓶工厂正式投产，一瓶卖四毛五，是北冰洋汽水的三倍。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/1324224260.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324224264.png",
+       "x": 1080,
+       "y": 700,
+       "w": 1300,
+       "at": 0.0,
+       "anim": "none"
+      },
+      {
+       "type": "badge",
+       "text": "1981年 · 北京五里店",
+       "x": 470,
+       "y": 180,
+       "size": 62,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.0,
+       "anim": "slide_right"
+      },
+      {
+       "type": "badge",
+       "text": "一瓶 0.45元",
+       "x": 620,
+       "y": 420,
+       "size": 84,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.55,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "北冰洋汽水的 3倍",
+       "x": 1320,
+       "y": 420,
+       "size": 84,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.82,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "zc09",
+     "text": "如今，中国已经是可口可乐全球最大的市场之一。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/1324226305.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324226311.png",
+       "x": 960,
+       "y": 300,
+       "w": 1500,
+       "at": 0.0,
+       "anim": "fade"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324226307.png",
+       "x": 960,
+       "y": 680,
+       "w": 380,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "中国 · 全球最大市场之一",
+       "x": 960,
+       "y": 230,
+       "size": 76,
+       "color": [
+        226,
+        28,
+        52
+       ],
+       "bg": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.4,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "zc10",
+     "text": "深受全世界喜爱的可口可乐，旗下饮料每天被喝掉约22亿杯，平均每秒约2.5万杯。",
+     "tts": "深受全世界喜爱的可口可乐，旗下饮料每天被喝掉约二十二亿杯，平均每秒约两点五万杯。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/1324226305.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324226309.png",
+       "x": 520,
+       "y": 220,
+       "w": 560,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324226307.png",
+       "x": 520,
+       "y": 690,
+       "w": 360,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324226313.png",
+       "x": 1150,
+       "y": 242,
+       "w": 220,
+       "at": 0.35,
+       "anim": "slide_up"
+      },
+      {
+       "type": "badge",
+       "text": "每天 约22亿杯",
+       "x": 1150,
+       "y": 600,
+       "size": 70,
+       "color": [
+        226,
+        28,
+        52
+       ],
+       "bg": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.45,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "每秒 约2.5万杯",
+       "x": 1560,
+       "y": 760,
+       "size": 62,
+       "color": [
+        226,
+        28,
+        52
+       ],
+       "bg": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.75,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "zc11",
+     "text": "它是饮料行业稳居第一的品牌，在2025年Interbrand全球品牌榜上也排名第七。",
+     "tts": "它是饮料行业稳居第一的品牌，在二零二五年Interbrand全球品牌榜上也排名第七。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/1324226325.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324224030.png",
+       "x": 540,
+       "y": 330,
+       "w": 600,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "饮料品牌 第1",
+       "x": 540,
+       "y": 620,
+       "size": 80,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.15,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "Interbrand 2025 全球品牌榜",
+       "font": "label",
+       "size": 56,
+       "x": 1380,
+       "y": 360,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.5,
+       "anim": "fade"
+      },
+      {
+       "type": "badge",
+       "text": "第7名",
+       "x": 1380,
+       "y": 560,
+       "size": 130,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.75,
+       "anim": "slam"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

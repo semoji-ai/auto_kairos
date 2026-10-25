@@ -3,7 +3,8 @@
 import json, os, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from sg.budget import fit_status
-from sg.tts import speech_bounds, synthesize, trim, load_key, text_hash, should_synth
+from sg.tts import speech_bounds, synthesize, trim, load_key, text_hash, should_synth, zh_spoken, context_text, slice_alignment, cut_bounds
+from sg.audio import decode, speech_spans
 import time
 
 ep, lang = sys.argv[1], sys.argv[2]
@@ -27,13 +28,21 @@ def run(ids):
     L = json.load(open(lp))
     fp = os.path.join(out_dir, "fit.json")
     fit = json.load(open(fp)) if os.path.exists(fp) else {}
+    order = [g for g in src if g in L["segments"] and not src[g].get("nonverbal")]   # 앞뒤 문맥(context_text)용 순서
     for i in ids:
         text = L["segments"][i].get("tts") or L["segments"][i]["text"]
+        if lang == "zh":
+            text = zh_spoken(text)   # 숫자 연도·월일을 한자 읽기로(v4가 아라비아 숫자 연도를 잘못 읽음)
+        k = order.index(i) if i in order else -1
+        say = lambda j: (lambda t: zh_spoken(t) if lang == "zh" else t)(L["segments"][j].get("tts") or L["segments"][j]["text"])
+        prev = say(order[k - 1]) if k > 0 else ""
+        nxt = say(order[k + 1]) if 0 <= k < len(order) - 1 else ""
         if not should_synth(fit, i, text, os.path.join(out_dir, f"{i}.mp3"), force=FORCE):
             continue
+        comp, ca, cb = context_text(prev, text, nxt) if lang == "zh" else (text, 0, len(text))
         for attempt in range(4):
             try:
-                audio, al = synthesize(text, prof["tts_voice"], model, prof["language_code"], prof["tts_settings"], key)
+                audio, al = synthesize(comp, prof["tts_voice"], model, prof["language_code"], prof["tts_settings"], key)
                 break
             except Exception as e:   # 429/5xx 등 → 잠시 후 재시도
                 if attempt == 3:
@@ -41,7 +50,13 @@ def run(ids):
                 print("retry", i, e, flush=True); time.sleep(5 * (attempt + 1))
         raw = os.path.join(out_dir, f"{i}.raw.mp3")
         open(raw, "wb").write(audio)
+        if al and len(al.get("characters", [])) == len(comp):
+            al = slice_alignment(al, ca, cb)          # 이웃 문맥을 빼고 본문 글자만
+        elif comp != text:
+            sys.exit(f"{i}: 정렬 글자 수가 합성 문장과 다름 — 본문만 잘라 낼 수 없음")
         t0, t1 = speech_bounds(al) if al else (0.0, dur(raw))
+        if comp != text:                              # 이웃 문맥과 함께 읽혔으면 경계를 실제 쉼에 맞춤
+            t0, t1 = cut_bounds(speech_spans(decode(raw), 16000, min_silence=0.08, pad=0.0), t0, t1, ca > 0, cb < len(comp))
         start = trim(raw, os.path.join(out_dir, f"{i}.mp3"), t0, t1)
         os.remove(raw)
         if al:
@@ -69,7 +84,9 @@ ids = [i for i in ids if i not in skip]
 fit = run(ids)
 if "--rewrite-loop" in a:
     for rnd in range(prof["fit"]["max_rewrites"]):
-        bad = {k: v for k, v in fit.items() if v["status"] != "ok" and k in ids}   # 이번 실행 범위만
+        notes = json.load(open(lp))["segments"]
+        bad = {k: v for k, v in fit.items() if v["status"] != "ok" and k in ids   # 이번 실행 범위만
+               and not notes[k].get("note")}                                     # 손으로 고친 문장(note)은 다시 번역하지 않음
         if not bad:
             break
         rew = {}

@@ -8,7 +8,7 @@
 import json, os, re, subprocess, sys, time
 import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from sg.tts import synthesize, load_key, speech_bounds, trim
+from sg.tts import synthesize, load_key, speech_bounds, trim, zh_spoken
 from sg.subs import cues_for_segment, snap_to_onsets, close_gaps, resolve_overlaps, srt_time, bar_intervals
 from sg.audio import decode as decode16, speech_spans
 from sg.timemap import PiecewiseMap
@@ -35,6 +35,8 @@ def cmd_tts(ep, lang, force=False):
     for name, ins in load(ep, lang)["inserts"].items():
         for sc in ins["scenes"]:
             say = sc.get("tts") or sc["text"]
+            if lang == "zh":
+                say = zh_spoken(say)
             if not force and meta.get(sc["id"], {}).get("say") == say and os.path.exists(os.path.join(od, f"{sc['id']}.mp3")):
                 continue
             for k in range(4):
