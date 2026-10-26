@@ -16,7 +16,8 @@ def probe(path):
     out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
                           "stream=width,height:format=duration", "-of", "json", path], capture_output=True, text=True).stdout
     d = json.loads(out)
-    return {"w": d["streams"][0]["width"], "h": d["streams"][0]["height"], "dur": float(d["format"]["duration"])}
+    return {"w": d["streams"][0]["width"], "h": d["streams"][0]["height"],
+            "dur": float(d["format"].get("duration", 0.0))}     # 정지 이미지(PNG 로고 등)는 길이 없음
 
 
 if __name__ == "__main__":
