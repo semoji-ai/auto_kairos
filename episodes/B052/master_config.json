@@ -34,5 +34,8 @@
   "outro_bgm": "Sand_Castle.mp3",
   "narration_ref": "코카콜라1 오디오 편집완.wav",
   "key_base": "clip"
- }
+ },
+ "subtitle_bar_layers": [
+  "#자막바"
+ ]
 }
