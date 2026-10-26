@@ -1,0 +1,7 @@
+Scene: A single flat vector illustration matching image 1 in style, size and layout, with the coconuts replaced by cocoa pods. On the left, one whole ripe cocoa pod lying at a slight angle: an elongated oval gourd shape with pointed tip and about ten deep vertical ridges running from end to end, warm orange to reddish brown. On the right, overlapping it slightly in front, one cocoa pod cut lengthwise in half, showing a thick orange rind ring and creamy white pulp packed with rows of plump light purple brown cocoa beans. Both sit on a soft pale beige oval ground shadow, filling the frame the same way the coconuts fill image 1.
+Camera: straight-on side view, same scale and framing as image 1, the pair centered with a small margin.
+Lighting: flat even illumination with simple cel shading, a few short light streaks on the rind like image 1.
+Color grading: rind orange #D9822B, ridge shadow #8E4A1E, deep brown outline #5A2D12, pulp cream #F4EEDC, beans #8B5E6B, ground shadow #E8D2A6.
+Texture/Medium: clean flat vector clip art, smooth fills, thin dark brown outlines, short hand-drawn rind strokes, matching image 1 exactly.
+Text-in-image: the image holds only the two cocoa pods and their shadow, background fully transparent alpha.
+AR 4:3
