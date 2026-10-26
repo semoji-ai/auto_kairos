@@ -67,3 +67,12 @@ def test_plate_overrides_adds_textless_footage_for_that_language_only(tmp_path):
     assert out == [{"id": "1324225412", "name": "21 세계지도/x.ai", "w": 321, "h": 181, "png_w": 1284,
                     "items": [], "png": str(png)}]
     assert plate_overrides(manual, "en", inv, items) == []
+
+
+def test_manual_quad_overrides_ocr_quad():
+    from sg.raster_manual import apply_manual
+    items = [{"id": "5", "items": [{"text": "능이..", "quad": [[1, 1], [2, 1], [2, 2], [1, 2]], "keep": False, "blur": False}]}]
+    q = [[210, 215], [960, 215], [960, 440], [210, 440]]
+    out = apply_manual(items, {"5#0": {"quad": q, "text": "呃……啊"}})
+    assert out[0]["items"][0]["quad"] == q
+    assert items[0]["items"][0]["quad"] == [[1, 1], [2, 1], [2, 2], [1, 2]]      # 원본은 그대로

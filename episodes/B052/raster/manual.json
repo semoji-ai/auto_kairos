@@ -1,8 +1,37 @@
 {
  "_plate_override": {
   "zh": {
-   "1324221953": "assets/zh/world_map_cn.png"
+   "1324221953": "assets/zh/world_map_cn.png",
+   "1324213697": "assets/zh/k_hidden.png",
+   "1324213699": "assets/zh/c_hidden.png"
   },
-  "_doc": "중국어판: 도입 \"전 세계 200개국\" 세계지도(국경선 있음)를 중국 관점 데이터로 다시 그림(scripts/cn_world_map.py, 밀러 투영 정합, 자체 심의 docs/zh/map_self_review.md)"
+  "_doc": "중국어판: 도입 \"전 세계 200개국\" 세계지도(국경선 있음)를 중국 관점 데이터로 다시 그림(scripts/cn_world_map.py, 밀러 투영 정합, 자체 심의 docs/zh/map_self_review.md) / 콜라 라벨의 C·K 별도 그림(C→K 바뀜 연출)은 중국어 글자 배치와 안 맞아 숨기고 라벨을 처음부터 可乐果（Kola）로"
+ },
+ "1324210786#0": {
+  "quad": [
+   [
+    205,
+    215
+   ],
+   [
+    965,
+    215
+   ],
+   [
+    965,
+    445
+   ],
+   [
+    205,
+    445
+   ]
+  ],
+  "text_zh": "呃……啊",
+  "font": "hand",
+  "why": "OCR이 말풍선 \"으...으윽\"을 거꾸로 읽음(능이..)"
+ },
+ "1324210786#1": {
+  "skip": true,
+  "why": "#0에 합침"
  }
 }

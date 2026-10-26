@@ -1103,10 +1103,11 @@
    "ko": "중령"
   },
   "1324210786#0": {
-   "text": "__SKIP__",
-   "font": "gothic",
+   "text": "呃……啊",
+   "font": "hand",
    "two_tone": false,
-   "ko": "능이.."
+   "ko": "능이..",
+   "note": "manual: OCR 거꾸로 읽음"
   },
   "1324210786#1": {
    "text": "__SKIP__",

@@ -4,6 +4,7 @@ import json, os, sys
 import numpy as np
 from PIL import Image
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from sg.raster_manual import load_items
 from sg.raster import missing_glyphs, quad_geom
 from sg.plate import text_style
 from sg.translate import translate_batch, claude_runner
@@ -17,7 +18,7 @@ _prof = json.load(open(os.path.join(root, "profiles", f"{lang}.json")))
 _rf = {k: os.path.expanduser(v["file"]) for k, v in _prof["raster_fonts"].items()}
 FONTS = {"gothic": [_rf["label"], _rf["title"]], "hand": [_rf["hand"], _rf["brush"]]}   # 종류별로 쓰일 수 있는 폰트 전부
 segs = json.load(open(os.path.join(ep, "master/source.json")))["segments"]
-items = json.load(open(os.path.join(ep, "raster/items.json")))
+items = load_items(os.path.join(ep, "raster"))
 lp = os.path.join(ep, "l10n", f"{lang}.json"); L = json.load(open(lp)); L.setdefault("raster", {})
 mp = os.path.join(ep, "raster/manual.json")
 hand = set(json.load(open(mp)).get("_hand_footage", [])) if os.path.exists(mp) else set()   # 적용 단계와 같은 폰트 규칙

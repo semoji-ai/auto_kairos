@@ -4,10 +4,11 @@ import glob, json, os, sys
 import numpy as np
 from PIL import Image, ImageDraw
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from sg.raster_manual import load_items
 from sg.plate import clean_plate, text_style, blur_text
 
 ep = sys.argv[1]
-items = json.load(open(os.path.join(ep, "raster/items.json")))
+items = load_items(os.path.join(ep, "raster"))   # manual.json 의 quad 보정 반영
 R = {}                                    # __SKIP__(그림 잡음) 판정만 사용 — 판은 언어 무관이라 있는 번역 아무거나(편마다 만든 언어가 다름)
 for _f in sorted(glob.glob(os.path.join(ep, "l10n", "*.json"))):
     if not os.path.basename(_f).startswith("_") and "_" not in os.path.basename(_f)[:-5]:

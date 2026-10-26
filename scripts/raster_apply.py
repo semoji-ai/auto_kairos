@@ -4,6 +4,7 @@ usage: raster_apply.py <EP> <lang> [--dry]
 → scripts/ae/replace_items_job.json → run.sh replace_items.jsx → build/<lang>/<EP>_<lang>_text_raster.aep"""
 import json, os, re, subprocess, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from sg.raster_manual import load_items
 
 FONTS = {"gothic": "OTSBAggroB", "hand": "Noteworthy-Bold"}
 FONT_FILES = {"gothic": os.path.expanduser("~/Library/Fonts/SBAggroOTF-B.otf"), "hand": "/System/Library/Fonts/Noteworthy.ttc"}
@@ -88,7 +89,7 @@ if __name__ == "__main__":
     ep = os.path.abspath(ep)
     code = os.path.basename(ep)
     rd = os.path.join(ep, "raster")
-    items = json.load(open(os.path.join(rd, "items.json")))
+    items = load_items(rd)
     styles = json.load(open(os.path.join(rd, "styles.json")))
     R = json.load(open(os.path.join(ep, "l10n", f"{lang}.json"))).get("raster", {})
     mp = os.path.join(rd, "manual.json")
