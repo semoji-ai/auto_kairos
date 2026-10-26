@@ -1,6 +1,6 @@
 """글자 없는 판 생성(언어 무관) + 글자 스타일 추출.  usage: raster_plates.py <EP>
 → raster/plate/<id>.png, raster/styles.json {"<id>#<n>": {angle,w,h,cx,cy,base,emph,two_tone}}, raster/plate_review_NN.png"""
-import json, os, sys
+import glob, json, os, sys
 import numpy as np
 from PIL import Image, ImageDraw
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -8,7 +8,10 @@ from sg.plate import clean_plate, text_style, blur_text
 
 ep = sys.argv[1]
 items = json.load(open(os.path.join(ep, "raster/items.json")))
-R = json.load(open(os.path.join(ep, "l10n/en.json"))).get("raster", {})   # __SKIP__(그림 잡음) 판정만 사용
+R = {}                                    # __SKIP__(그림 잡음) 판정만 사용 — 판은 언어 무관이라 있는 번역 아무거나(편마다 만든 언어가 다름)
+for _f in sorted(glob.glob(os.path.join(ep, "l10n", "*.json"))):
+    if not os.path.basename(_f).startswith("_") and "_" not in os.path.basename(_f)[:-5]:
+        R.update(json.load(open(_f)).get("raster", {}))
 mp = os.path.join(ep, "raster/manual.json")
 manual = json.load(open(mp)) if os.path.exists(mp) else {}   # {"<id>#<n>": {"skip"|"text"|"font"}} 사람이 고친 값
 od = os.path.join(ep, "raster/plate"); os.makedirs(od, exist_ok=True)

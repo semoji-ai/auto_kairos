@@ -53,3 +53,17 @@ def test_text_spec_uses_profile_fonts_for_role():
     st = {"angle": 0.0, "w": 40.0, "h": 10.0, "cx": 0.0, "cy": 0.0, "two_tone": False, "base": [0, 0, 0], "emph": [0, 0, 0]}
     assert text_spec("你好", st, 1.0, "brush", zh)["font"] == "ZhiMangXing-Regular"
     assert text_spec("Hi", st, 1.0, "gothic")["font"] == "OTSBAggroB"      # 영어 기존 호출 그대로
+
+
+def test_plate_overrides_adds_textless_footage_for_that_language_only(tmp_path):
+    from scripts.raster_apply import plate_overrides
+    png = tmp_path / "map.png"
+    from PIL import Image
+    Image.new("RGB", (1284, 724)).save(png)
+    manual = {"_plate_override": {"zh": {"1324225412": str(png)}}}
+    inv = {"footage": [{"id": 1324225412, "name": "21 세계지도/x.ai", "w": 321, "h": 181}]}
+    items = [{"id": "7", "name": "a/x.ai", "w": 10, "h": 10, "png_w": 40, "items": []}]
+    out = plate_overrides(manual, "zh", inv, items)
+    assert out == [{"id": "1324225412", "name": "21 세계지도/x.ai", "w": 321, "h": 181, "png_w": 1284,
+                    "items": [], "png": str(png)}]
+    assert plate_overrides(manual, "en", inv, items) == []

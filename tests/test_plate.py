@@ -210,3 +210,30 @@ def test_text_style_antialiased_edges_are_not_an_outline():
     st = text_style(np.array(im), [[18, 24], [400, 24], [400, 80], [18, 80]])
     assert not st.get("stroke")
     assert min(st["base"]) > 200
+
+
+def test_clean_plate_with_huge_text_keeps_memory_bounded():
+    # 말풍선 속 큰 글자(높이 335px, 1200px 그림): 블러 반경이 글자 높이×5라 OpenCV가 수십 GB 버퍼를 잡던 문제(실측)
+    import subprocess, sys, textwrap, os
+    code = textwrap.dedent("""
+        import sys, resource, numpy as np
+        sys.path.insert(0, %r)
+        from sg.plate import text_style
+        a = np.zeros((1200, 1200, 4), np.uint8); a[..., 2] = 200; a[..., 3] = 255
+        a[450:780, 200:1000, :3] = 20
+        text_style(a, [[150, 430], [1050, 430], [1050, 765], [150, 765]])
+        print(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    """ % os.path.join(os.path.dirname(__file__), ".."))
+    p = subprocess.Popen([sys.executable, "-c", code], stdout=subprocess.PIPE, text=True)
+    import time
+    t0 = time.time(); peak = 0
+    while p.poll() is None:
+        try:
+            peak = max(peak, int(subprocess.run(["ps", "-o", "rss=", "-p", str(p.pid)], capture_output=True, text=True).stdout or 0))
+        except ValueError:
+            pass
+        if peak > 2_000_000 or time.time() - t0 > 60:     # KB
+            p.kill(); break
+        time.sleep(0.2)
+    p.wait()
+    assert peak <= 2_000_000 and time.time() - t0 <= 60, f"peak RSS {peak / 1e6:.1f} GB"

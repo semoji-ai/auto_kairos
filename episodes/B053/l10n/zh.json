@@ -722,5 +722,535 @@
   "s1324185482_55": {
    "text": "肯·斯图尔特"
   }
+ },
+ "raster": {
+  "1324224028#0": {
+   "text": "第2集",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2편"
+  },
+  "1324224062#0": {
+   "text": "2500万美元",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2,500만 달러"
+  },
+  "1324224072#0": {
+   "text": "佐治亚信托公司",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "조지아 트러스트 컴보니"
+  },
+  "1324224076#0": {
+   "text": "配方",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "레시피"
+  },
+  "1324224076#1": {
+   "text": "配方",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "레시피"
+  },
+  "1324224090#0": {
+   "text": "银行",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "은행"
+  },
+  "1324224100#0": {
+   "text": "配方",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "레시피"
+  },
+  "1324224118#0": {
+   "text": "白糖",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "설탕"
+  },
+  "1324224136#0": {
+   "text": "约1200家",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "약 1,200명"
+  },
+  "1324224140#0": {
+   "text": "可乐",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "콜라"
+  },
+  "1324224140#1": {
+   "text": "可乐",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "콜라"
+  },
+  "1324224142#0": {
+   "text": "XX可乐",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "00 콜라"
+  },
+  "1324224144#0": {
+   "text": "商标诉讼",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "상표권 소송"
+  },
+  "1324224162#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "은"
+  },
+  "1324224164#0": {
+   "text": "儿子啊",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "아들아"
+  },
+  "1324224164#1": {
+   "text": "帮帮我！！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "도와다오!!"
+  },
+  "1324224184#0": {
+   "text": "[[怀特汽车]]公司",
+   "font": "gothic",
+   "two_tone": true,
+   "ko": "화이트 모터 컴퍼니"
+  },
+  "1324224192#0": {
+   "text": "副总裁",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "부사장"
+  },
+  "1324224228#0": {
+   "text": "哈哈…",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "하핫;;"
+  },
+  "1324224232#0": {
+   "text": "5万美元",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "5만 달러"
+  },
+  "1324224246#0": {
+   "text": "董事长",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "회장"
+  },
+  "1324224735#0": {
+   "text": "佐治亚信托公司董事长",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "조지아 트러스트 컴퍼니 회장"
+  },
+  "1324225244#0": {
+   "text": "挑战！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "도전~!"
+  },
+  "1324225308#0": {
+   "text": "装瓶商",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "보틀러"
+  },
+  "1324225328#0": {
+   "text": "味道",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "맛이"
+  },
+  "1324225328#1": {
+   "text": "不一样？",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "다른데..?"
+  },
+  "1324225346#0": {
+   "text": "味道",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "맛"
+  },
+  "1324225348#0": {
+   "text": "服务",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "서비스"
+  },
+  "1324225356#0": {
+   "text": "质量管理部",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "품질관리부"
+  },
+  "1324225360#0": {
+   "text": "糖浆",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "시럽"
+  },
+  "1324225362#0": {
+   "text": "碳酸水",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "탄산수"
+  },
+  "1324225364#0": {
+   "text": "卫生规范",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "위생규정"
+  },
+  "1324225374#0": {
+   "text": "A阶段",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "A단계"
+  },
+  "1324225376#0": {
+   "text": "B阶段",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "B단계"
+  },
+  "1324225376#1": {
+   "text": "B阶段",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "B단계"
+  },
+  "1324225378#0": {
+   "text": "C阶段",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "C단계"
+  },
+  "1324225384#0": {
+   "text": "销售",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "판매"
+  },
+  "1324225436#0": {
+   "text": "免费",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "무료"
+  },
+  "1324225440#0": {
+   "text": "真好喝！！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "맛있어!!"
+  },
+  "1324225472#0": {
+   "text": "每瓶",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1병당"
+  },
+  "1324225472#1": {
+   "text": "5美分",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "5센트"
+  },
+  "1324225478#0": {
+   "text": "50亿瓶",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "50억 병"
+  },
+  "1324225775#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "Cua Cota얧"
+  },
+  "1324226270#0": {
+   "text": "停供！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "중단!"
+  },
+  "1324226309#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "Coca Cola얧"
+  },
+  "1324226315#0": {
+   "text": "19亿杯",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "19억 잔"
+  },
+  "1324226319#0": {
+   "text": "21990杯",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2만 1990만 잔"
+  },
+  "1324226327#0": {
+   "text": "饮料品牌排名",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "음료 브랜드 순위"
+  },
+  "1324226329#0": {
+   "text": "品牌排名",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "브랜드 순위"
+  },
+  "1324226363#0": {
+   "text": "技术部",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "기술부"
+  },
+  "1324226743#0": {
+   "text": "Dole Master饮料机",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "돌 마스터 디스펜서"
+  },
+  "1324227239#0": {
+   "text": "Mills 47",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "밀스 47"
+  },
+  "1324227389#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "Coke얧"
+  },
+  "1324227409#0": {
+   "text": "Dole Deluxe饮料机",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "돌 디럭스 디스펜서"
+  },
+  "1324227411#0": {
+   "text": "Vendo 44",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "벤도 44"
+  },
+  "1324227413#0": {
+   "text": "Dole Citation饮料机",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "돌 시테이션 디스펜서"
+  },
+  "1324227415#0": {
+   "text": "野餐冷藏箱",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "피크닉 쿨러"
+  },
+  "1324227430#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "cherry옓"
+  },
+  "1324227550#0": {
+   "text": "太空可乐大战",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "우주 콜라전쟁"
+  },
+  "1324227602#0": {
+   "text": "啊~真爽！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "키야~"
+  },
+  "1324227616#0": {
+   "text": "二氧化碳",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "이산화탄소"
+  },
+  "1324227620#0": {
+   "text": "刺激口感 X",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "독쏘는맛 X"
+  },
+  "1324227674#0": {
+   "text": "太空可乐大战",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "우주콜라전쟁"
+  },
+  "1324227680#0": {
+   "text": "失败",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "실패"
+  },
+  "1324228743#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": true,
+   "ko": "해이"
+  },
+  "1324228792#0": {
+   "text": "原理相同！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "같은 원리!"
+  },
+  "1324228794#0": {
+   "text": "1400万美元",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1400만 달러"
+  },
+  "1324228953#0": {
+   "text": "难喝..",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "맛없다.."
+  },
+  "1324228997#0": {
+   "text": "碳酸",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "탄산"
+  },
+  "1324229001#0": {
+   "text": "嗝~",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "끄으억~"
+  },
+  "1324229013#0": {
+   "text": "温吞吞的!!",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "미지근해!!"
+  },
+  "1324229021#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "Cca Cola셿"
+  },
+  "1324229025#0": {
+   "text": "内置冷藏装置",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "자체 냉장 장치 내짱"
+  },
+  "1324229027#0": {
+   "text": "运行失败",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "작동 실패"
+  },
+  "1324229059#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "Coca Cola얧"
+  },
+  "1324229063#0": {
+   "text": "热天喝的饮料",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "더울 때 마시는 음료"
+  },
+  "1324229121#0": {
+   "text": "写实",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "현실적"
+  },
+  "1324229125#0": {
+   "text": "积极",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "긍정적"
+  },
+  "1324229127#0": {
+   "text": "象征性",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "상징적"
+  },
+  "1324229143#0": {
+   "text": "前辈~~",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "선배~~"
+  },
+  "1324229159#0": {
+   "text": "电脑",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "컴퓨터"
+  },
+  "1324229159#1": {
+   "text": "动画广告",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "애니메이션 광고"
+  },
+  "1324229197#0": {
+   "text": "北极熊",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "북극곰"
+  },
+  "1324229281#0": {
+   "text": "第1代饮料机",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "1세대 디스펜서"
+  },
+  "1324229283#0": {
+   "text": "第2代饮料机",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "2세대 디스펜서"
+  },
+  "1324230364#0": {
+   "text": "看电影时！",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "영화 볼 때!"
+  },
+  "1324230370#0": {
+   "text": "北极熊",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "북극곰"
+  },
+  "979573224#0": {
+   "text": "__SKIP__",
+   "font": "gothic",
+   "two_tone": false,
+   "ko": "상"
+  }
  }
 }

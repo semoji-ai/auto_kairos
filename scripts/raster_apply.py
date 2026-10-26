@@ -42,6 +42,24 @@ def check_entry(key, ocr_text, tr, mm, st, font_file):
     return errs
 
 
+def plate_overrides(manual, lang, inv, items):
+    """manual["_plate_override"][lang] = {footage id: png} — 글자가 없어 items에 없는 그림도 언어별 판으로 교체
+    (예: 중국어판 세계지도). items에 이미 있는 id면 그 항목의 판만 바꾼다(반환 목록에는 새 항목만)."""
+    from PIL import Image
+    ov = manual.get("_plate_override", {}).get(lang, {})
+    have = {str(x["id"]): x for x in items}
+    F = {str(f["id"]): f for f in inv["footage"]}
+    out = []
+    for i, png in ov.items():
+        if i in have:
+            have[i]["png"] = png
+            continue
+        f = F[i]
+        out.append({"id": i, "name": f["name"], "w": f["w"], "h": f["h"], "png_w": Image.open(png).size[0],
+                    "items": [], "png": png})
+    return out
+
+
 def split_emph(text):
     """'a [[b]] c' → ('a b c', [[2, 3]])  (강조 구간: 글자 위치 [시작, 끝))"""
     plain, ranges, pos = "", [], 0
@@ -79,8 +97,15 @@ if __name__ == "__main__":
     prof = json.load(open(os.path.join(root, "profiles", f"{lang}.json")))
     rfonts = {k: {"ps": v["ps"], "file": os.path.expanduser(v["file"])} for k, v in prof["raster_fonts"].items()}
     jobs, problems = [], []
+    cfg = json.load(open(os.path.join(ep, "master_config.json")))
+    inv = json.load(open(os.path.join(ep, cfg.get("inventory", "inventory_nas.json"))))
+    for v in manual.get("_plate_override", {}).get(lang, {}).values():
+        if not os.path.exists(os.path.join(ep, v)):
+            sys.exit(f"판 교체 파일 없음: {v}")
+    manual.setdefault("_plate_override", {})[lang] = {k: os.path.join(ep, v) for k, v in manual.get("_plate_override", {}).get(lang, {}).items()}
+    items = items + plate_overrides(manual, lang, inv, items)
     for x in items:
-        png = os.path.join(rd, "plate", f"{x['id']}.png")
+        png = x.get("png") or os.path.join(rd, "plate", f"{x['id']}.png")
         if not os.path.exists(png):
             continue
         s = x["w"] / x["png_w"]

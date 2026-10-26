@@ -20,6 +20,18 @@ def _axes(quad):
     return ang, w, h, np.array([cx, cy]), ux, uy
 
 
+def _gblur(img, sig, max_sig=12.0):
+    """가우시안 블러. 반경이 크면 줄여서 걸고 다시 키움 — OpenCV는 반경만큼 버퍼를 덧대
+    큰 글자(높이 수백 px × 5배 반경)에서 수십 GB를 잡음(실측). 판 색 보간처럼 완만한 값에만 씀."""
+    if sig <= max_sig:
+        return cv2.GaussianBlur(img, (0, 0), sig)
+    H, W = img.shape[:2]
+    f = sig / max_sig
+    small = cv2.resize(img, (max(1, int(round(W / f))), max(1, int(round(H / f)))), interpolation=cv2.INTER_AREA)
+    b = cv2.GaussianBlur(small, (0, 0), max_sig)
+    return cv2.resize(b, (W, H), interpolation=cv2.INTER_LINEAR)
+
+
 def clean_plate(rgba, quad, pad_x=0.5, pad_y=0.3):
     """글자 영역을 판 색으로 채운 RGBA. 판 색은 판 그룹 픽셀만으로 2차원 보간(그라데이션·글로우 유지),
     지우는 것은 대부분이 글자 영역 안에 있는 덩어리뿐(테두리·이웃 줄 보존). 받침판 없는 글자는 투명으로."""
@@ -86,9 +98,9 @@ def clean_plate(rgba, quad, pad_x=0.5, pad_y=0.3):
         f = np.zeros((H, W, 4), np.float32); g = np.zeros((H, W), bool)
         sigs = (0.15, 0.3, 0.6, 1.2, 2.4, 5.0)
         for i, sg_ in enumerate(sigs):
-            sig = max(1.0, h * sg_)
-            wb = cv2.GaussianBlur(wk, (0, 0), sig)
-            vb = cv2.GaussianBlur(val * wk[:, :, None], (0, 0), sig)
+            sig = min(max(1.0, h * sg_), max(H, W))
+            wb = _gblur(wk, sig)
+            vb = _gblur(val * wk[:, :, None], sig)
             ok = (wb > (0.08 if i < len(sigs) - 1 else 1e-6)) & ~g
             f[ok] = vb[ok] / wb[ok][:, None]; g |= ok
         return f, g
@@ -101,7 +113,7 @@ def clean_plate(rgba, quad, pad_x=0.5, pad_y=0.3):
     band2 = band & (err < 30)
     if band2.sum() >= 0.5 * band.sum():
         fill, got = interp(band2)
-    fill = cv2.GaussianBlur(fill, (0, 0), max(1.0, h * 0.2))   # 반경이 바뀌는 경계의 계단 제거
+    fill = _gblur(fill, max(1.0, h * 0.2))   # 반경이 바뀌는 경계의 계단 제거
     pa = np.maximum(fill[:, :, 3:4], 1e-3)
     fill[:, :, :3] = np.where(fill[:, :, 3:4] > 0.5, fill[:, :, :3] * 255.0 / pa, 0)
     plate_a = fill[:, :, 3]

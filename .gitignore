@@ -21,3 +21,4 @@ episodes/*/raster/
 assets/global/*/*.mov
 assets/global/*/build/
 assets/global/*/review_*.png
+data/
