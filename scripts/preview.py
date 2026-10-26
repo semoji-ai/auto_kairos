@@ -52,7 +52,14 @@ for pid, P in cfg["parts"].items():
          and G["items"].get(str(x["src"]), {}).get("name") == P["narration"]][0]
     Lw = [x for x in G["comps"][r["comp_id"]]["layers"] if x["i"] == r["layer"]][0]
     rel = os.path.relpath(unicodedata.normalize("NFC", G["items"][str(Lw["src"])]["file"]), unicodedata.normalize("NFC", cfg["nas_ep"]))
-    nar[pid] = (os.path.join(ep, "src", rel), Lw, r["occ"])
+    f_local = os.path.join(ep, "src", rel)
+    if rel.startswith("..") or not os.path.exists(f_local):   # 옛 PD 경로로 링크된 편(ingest)은 src/ 안 같은 이름 파일
+        nm = unicodedata.normalize("NFC", os.path.basename(G["items"][str(Lw["src"])]["file"]))
+        hits = [os.path.join(d, f) for d, _, fs in os.walk(os.path.join(ep, "src")) for f in fs if unicodedata.normalize("NFC", f) == nm]
+        if len(hits) != 1:
+            raise FileNotFoundError(f"내레이션 wav 로컬 사본을 못 찾음: {nm} ({len(hits)}개)")
+        f_local = hits[0]
+    nar[pid] = (f_local, Lw, r["occ"])
 plan = plan_audio(src["segments"], warp, os.path.join(ep, "tts", lang))
 ins, flt = [], []
 for k, p in enumerate(plan):
