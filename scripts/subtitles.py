@@ -5,6 +5,7 @@ from sg.subs import resolve_overlaps, bar_intervals, close_gaps, snap_to_onsets,
 from sg.audio import decode, speech_spans
 from sg.timemap import PiecewiseMap
 from sg.edl import master_to_part
+from sg.tts import zh_spoken
 
 ep, lang = sys.argv[1], sys.argv[2]
 root = os.path.join(os.path.dirname(__file__), "..")
@@ -49,7 +50,7 @@ for g in src["segments"]:
     sc_st_new = pmap[pid](sc_st)                   # localize.jsx는 프리컴프 startTime을 map(ost)로 옮김
     seg_l = L10N["segments"].get(g["id"], {})
     cues = cues_for_segment(al["characters"], al["character_start_times_seconds"], al["character_end_times_seconds"],
-                            seg_l.get("text") if seg_l.get("tts") else None,   # 발음용 표기로 읽었으면 화면 문구는 원래 번역문
+                            seg_l.get("text") if (seg_l.get("tts") or (lang == "zh" and zh_spoken(seg_l.get("text", "")) != seg_l.get("text", ""))) else None,   # 발음용 표기(tts 필드·연도 한자 읽기)로 읽었으면 화면 문구는 원래 번역문
                             prof["subs"]["max_chars"], prof["subs"]["min_dur"], cjk=prof["subs"].get("cjk", False), protect=PROTECT)
     if prof["subs"].get("snap_pauses"):           # 글자 시각이 균등 분배인 언어(중국어, 발음용 표기 구간 포함): 실제 쉼 뒤 소리 시작으로 보정
         x = decode(os.path.join(ep, "tts", lang, f"{g['id']}.mp3"), 16000)
