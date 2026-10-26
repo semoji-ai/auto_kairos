@@ -1,0 +1,6 @@
+Scene: A tidy flat lay of Chinese-style fast-food breakfast and snack items arranged in one neat horizontal row on a plain off-white background: a rolled chicken wrap with crispy fried chicken strips, scallion and sweet bean sauce wrapped in a thin pancake, a golden Portuguese egg tart with caramelized spots, a pair of long golden fried youtiao dough sticks, a white paper cup of warm soy milk with a lid, and a small bowl of rice congee with a spoon. Each item sits separately with generous even spacing.
+Camera: straight-on slightly elevated product view, all five items the same visual scale, centered in a single row across the middle of the frame.
+Lighting: flat soft daylight with gentle cel shadows under each item.
+Color grading: background off-white #FAF9F4, golden fried #E3A23B, egg custard yellow #F4C542, soy milk cream #F1E7D2, scallion green #6FA05A.
+Texture/Medium: clean flat vector food illustration matching image 1, simple shapes, smooth fills, plain unbranded packaging.
+AR 16:9

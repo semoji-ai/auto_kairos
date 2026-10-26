@@ -57,7 +57,8 @@ if __name__ == "__main__":
                     elif it["name"]:
                         want.setdefault(it["name"], it["file"])
     collect(A["main_seq_uid"], [A["sfx_track"]] + A["bgm_tracks"])
-    want.setdefault(A["outro_bgm"], None)
+    if A.get("outro_bgm"):                           # 아웃트로 없는 편(KFC)은 null
+        want.setdefault(A["outro_bgm"], None)
     out = os.path.join(ep, "src", "audio"); os.makedirs(out, exist_ok=True)
     index, copied, missing = None, 0, []
     for name, f in sorted(want.items()):

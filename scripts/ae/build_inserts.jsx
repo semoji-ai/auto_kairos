@@ -133,7 +133,7 @@ try{
     for(var j=1;j<=main.numLayers;j++){ var M=main.layer(j), srcName=(M.source&&M.source.name)||"";
       for(var b=0;b<BN.length;b++) if(M.name===BN[b]) bars.push(M);
       if(!logo && (M.name==="세모지 로고" || srcName.indexOf("세모지로고")===0)) logo=M;
-      if(M.name==="텍스쳐") tex=M;
+      if(M.name==="텍스쳐" || (C.texture && srcName===C.texture)) tex=M;   // KFC 편은 이름이 63517.jpg
       if(M.source instanceof CompItem && (M.source.name===SN || (!subL && M.source.name.indexOf(SN)===0 && M.source.name.indexOf("자막바")<0))) subL=M; }
     if(subL) for(var q=1;q<=subL.source.numLayers;q++) if(subL.source.layer(q) instanceof TextLayer){ tmpl=subL.source.layer(q); break; }
     var copied=function(L){ var before=ins.numLayers; L.copyToComp(ins);

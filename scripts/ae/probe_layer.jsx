@@ -1,13 +1,16 @@
-﻿(function(){
-var SELF=$.fileName; $.evalFile(File(SELF).parent.fsName+"/lib.jsx");
-var C=jobConfig(SELF), out=[];
+// 한 레이어의 이펙트(속성값·키 포함)와 소스 텍스트 표현식 덤프. 설정: probe_layer_job.json {"aep","comp_id","layer","out"}
+(function(){
+function R(p){var f=new File(p);f.encoding="UTF-8";f.open("r");var s=f.read();f.close();return s;}
+var C=eval("("+R($.fileName.replace(/\.jsx$/,"_job.json"))+")"), out=[];
 app.beginSuppressDialogs();
-try{
-var P=openProject(C.aep), comp=null;
-for(var i=1;i<=P.numItems;i++){ var it=P.item(i); if(it instanceof CompItem && it.name===C.comp) comp=it; }
-for(var j=1;j<=comp.numLayers;j++){ var L=comp.layer(j); if(L.name.indexOf(C.match)<0) continue;
-  out.push("hasVideo="+L.hasVideo+" hasAudio="+L.hasAudio+" audioEnabled="+L.audioEnabled+" isFootage="+(L.source instanceof FootageItem)+" still="+(L.source&&L.source.mainSource?L.source.mainSource.isStill:"")); out.push(L.name+" in="+L.inPoint.toFixed(3)+" out="+L.outPoint.toFixed(3)+" st="+L.startTime.toFixed(3)+" sx="+L.stretch+" srcDur="+(L.source?L.source.duration.toFixed(3):"")+" src="+(L.source?L.source.name:"")+" usedIn="+(L.source&&L.source.usedIn?L.source.usedIn.length:""));
-  break; }
-}catch(e){ out.push("ERR "+e+" "+e.line); }
-writeText(C.out, out.join("\n"));
+app.open(new File(C.aep)); var P=app.project, comp=P.itemByID(C.comp_id), L=comp.layer(C.layer);
+out.push("name="+L.name);
+if(L instanceof TextLayer){var st=L.property("ADBE Text Properties").property("ADBE Text Document"); out.push("expr="+st.expression+" | text="+st.value.text+" | keys="+st.numKeys);}
+function dump(g,ind){ for(var k=1;k<=g.numProperties;k++){var p=g.property(k);
+  if(p.propertyType===PropertyType.PROPERTY){ var v=""; try{v=String(p.value);}catch(e){} var ks=[]; try{for(var q=1;q<=p.numKeys;q++) ks.push(p.keyTime(q).toFixed(2)+"="+String(p.keyValue(q)));}catch(e){}
+    out.push(ind+p.matchName+"|"+p.name+"="+v+(p.expressionEnabled?" EXPR:"+p.expression:"")+(ks.length?" KEYS:"+ks.join(";"):""));}
+  else { out.push(ind+"["+p.matchName+"|"+p.name+"]"); dump(p,ind+"  "); } } }
+var fx=L.property("ADBE Effect Parade"); if(fx) dump(fx,"");
+var f=new File(C.out);f.encoding="UTF-8";f.open("w");f.write(out.join("\r\n"));f.close();
+P.close(CloseOptions.DO_NOT_SAVE_CHANGES); app.endSuppressDialogs(false);
 })();

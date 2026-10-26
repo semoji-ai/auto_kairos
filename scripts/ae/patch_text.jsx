@@ -45,6 +45,35 @@ try{
     }catch(err){ LOG.errors.push(e.id+": "+String(err)); }
     L.locked=wasLocked;
   }
+  // 이펙트 값 덮어쓰기(l10n의 _fx: 예) 숫자 카운터 끝값). ko = 원래 값(다르면 mismatch)
+  LOG.fx=0;
+  for(var f=0;f<(C.fx||[]).length;f++){
+    var X=C.fx[f], fc=byId[X.comp_id], id="fx:"+X.comp_id+":"+X.layer+":"+X.prop;
+    try{
+      var FL=fc.layer(X.layer), FP=null, par=FL.property("ADBE Effect Parade");
+      for(var z=1;z<=par.numProperties;z++) if(par.property(z).matchName===X.effect){ FP=par.property(z).property(X.prop); break; }
+      if(!FP){ LOG.not_found.push(id); continue; }
+      var cur=X.key?FP.keyValue(X.key):FP.value;
+      if(Math.abs(cur-X.ko)>1e-6){ LOG.mismatch.push(id+" ("+cur+")"); continue; }
+      if(X.key) FP.setValueAtKey(X.key,X.value); else FP.setValue(X.value);
+      LOG.fx++;
+    }catch(err){ LOG.errors.push(id+": "+String(err)); }
+  }
+  // 글자 레이어를 표현식 카운터로(l10n의 _expr: Numbers 이펙트 한계 30000을 넘는 수 등). disable_layer = 끌 레이어, disable_fx = 끌 이펙트
+  LOG.expr=0;
+  for(var x=0;x<(C.expr||[]).length;x++){
+    var Q=C.expr[x], qc=byId[Q.comp_id], qid="expr:"+Q.comp_id+":"+Q.layer;
+    try{
+      var QL=qc.layer(Q.layer), qs=QL.property("ADBE Text Properties").property("ADBE Text Document"), qd=qs.value;
+      if(Q.font) qd.font=Q.font; if(Q.size) qd.fontSize=Q.size; qd.justification=ParagraphJustification.CENTER_JUSTIFY; qs.setValue(qd);
+      qs.expression=Q.expr;
+      if(Q.pos){ var tr=QL.property("ADBE Transform Group"); QL.parent=null; tr.property("ADBE Anchor Point").setValue([0,0]); tr.property("ADBE Position").setValue(Q.pos); tr.property("ADBE Scale").setValue([100,100]); }
+      if(Q.disable_layer) qc.layer(Q.disable_layer).enabled=false;   // 이펙트만 끄면 솔리드가 드러나 아래를 덮음
+      if(Q.disable_fx){ var DL=qc.layer(Q.disable_fx.layer), dp=DL.property("ADBE Effect Parade");
+        for(var z2=1;z2<=dp.numProperties;z2++) if(dp.property(z2).matchName===Q.disable_fx.effect) dp.property(z2).enabled=false; }
+      LOG.expr++;
+    }catch(err){ LOG.errors.push(qid+": "+String(err)); }
+  }
   for(var u in UNMAPPED) if(UNMAPPED.hasOwnProperty(u)) LOG.errors.push("폰트 대응표에 없음: "+u+" (profiles/<lang>.json fonts)");
   P.save(new File(C.save_as)); P.close(CloseOptions.DO_NOT_SAVE_CHANGES);
 }catch(e){ LOG.errors.push(String(e)+" line "+e.line); }

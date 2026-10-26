@@ -1,0 +1,6 @@
+Scene: A lively winter street in Beijing in the late 1980s in the same flat vector illustration style as image 1. In the center stands a bright new three-storey Western fast-food restaurant with large glass windows, a plain red and white striped awning and a blank white signboard across the top. In front of it a long winding queue of about 25 cheerful local people in late 1980s winter clothes waits patiently: navy and green padded cotton coats, knitted scarves, fur hats, a father carrying a small child on his shoulders, a young couple holding hands, an elderly man in a Mao-style cap. Bicycles parked along the curb, bare winter trees, a traditional grey-roofed archway gate in the far background.
+Camera: wide eye-level street view, the restaurant slightly right of center, the queue curving from the doorway toward the lower left corner, full figures visible.
+Lighting: flat bright winter daylight with soft cel shadows, warm glow from the restaurant windows.
+Color grading: winter sky #DCE6EE, awning red #D63A3A, padded coat navy #2E3A59, coat green #5E7A5A, warm window glow #F6D28A.
+Texture/Medium: clean flat vector stock illustration matching image 1, simple shapes, smooth fills, friendly faces, blank plain signboard surface.
+AR 16:9

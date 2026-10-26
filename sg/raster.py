@@ -39,7 +39,8 @@ def _background(rgba, h):
     kz = max(3, int(h * 1.6 / 4) | 1)
     H, W = rgba.shape[:2]
     small = cv2.resize(rgba, (max(1, W // 4), max(1, H // 4)), interpolation=cv2.INTER_AREA)
-    bgs = np.dstack([cv2.medianBlur(np.ascontiguousarray(small[:, :, i]), kz) for i in range(4)])
+    kz = max(1, min(kz, (min(small.shape[:2]) - 1) | 1 if min(small.shape[:2]) > 2 else 1))   # 아주 작은 그림: 창이 그림보다 크면 OpenCV 오류
+    bgs = np.dstack([cv2.medianBlur(np.ascontiguousarray(small[:, :, i]), kz) if kz > 1 else small[:, :, i] for i in range(4)])
     return cv2.resize(bgs, (W, H), interpolation=cv2.INTER_LINEAR).astype(int)
 
 

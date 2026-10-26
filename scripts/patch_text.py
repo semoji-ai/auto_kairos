@@ -12,6 +12,6 @@ os.makedirs(os.path.join(abs_ep, "build", lang), exist_ok=True)
 json.dump({"aep": os.path.join(abs_ep, "src", f"{name}_main_ko.aep"),
            "save_as": os.path.join(abs_ep, "build", lang, f"{name}_{lang}_text.aep"),
            "out": os.path.join(abs_ep, "build", lang, "patch_text_log.json"),
-           "items": items, "font_map": prof["fonts"], "min_scale": prof["min_font_scale"]},
+           "items": items, "fx": L.get("_fx", []), "expr": L.get("_expr", []), "font_map": prof["fonts"], "min_scale": prof["min_font_scale"]},
           open(os.path.join(root, "scripts/ae/patch_text_job.json"), "w"), ensure_ascii=False, indent=1)
-print("items", len(items))
+print("items", len(items), "fx", len(L.get("_fx", [])))

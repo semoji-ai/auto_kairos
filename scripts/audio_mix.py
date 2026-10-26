@@ -138,7 +138,10 @@ if __name__ == "__main__":
         nar = os.path.join(rd, "narration.wav")
         ref = [os.path.join(dp, f) for dp, _, fs in os.walk(os.path.join(ep, "src")) for f in fs
                if nfc(f) in {nfc(p["narration"]) for p in cfg["parts"].values()}]
-        gdb = narration_gain_db([lufs(r) for r in ref], lufs(nar))
+        # narration_ref_lufs: 유튜브판에서 실제로 들리던 한국어 내레이션 라우드니스(AE 안 레이어 볼륨 포함). 녹음 원본이 길거나
+        # (B020: 47분 녹음에서 조각만 씀) AE에서 키워 쓴 편은 파일 측정값이 틀림 → 설정값 우선
+        ref_l = [A["narration_ref_lufs"]] if A.get("narration_ref_lufs") is not None else [lufs(r) for r in ref]
+        gdb = narration_gain_db(ref_l, lufs(nar))
         g = 10 ** ((gdb + A.get("ae_gain_db", 0.0)) / 20); log["narration_gain_db"] = gdb
         g_ae = 10 ** (A.get("ae_gain_db", 0.0) / 20)   # 프리미어 트랙 볼륨(파서가 못 읽음) 보정 — ko-identity 회귀로 정함
         BED = "--bed" in a                        # --bed: 배경음악만(삽입 구간용 — 원래 장면의 효과음·내레이션은 새 장면과 안 맞음) → bed.wav

@@ -1,0 +1,6 @@
+Scene: A single takeaway coffee cup with a plain red sleeve and a white lid standing next to a small paper bag of fried chicken drumsticks, both centered on a plain off-white background, a few small coffee beans scattered in front.
+Camera: straight-on product view, the pair centered and filling about 60 percent of the frame height.
+Lighting: flat soft daylight with gentle cel shadows.
+Color grading: background off-white #FAF9F4, sleeve red #D63A3A, coffee brown #6B4226, fried chicken gold #E3A23B, cup white #FFFFFF.
+Texture/Medium: clean flat vector illustration matching image 1, simple shapes, smooth fills, plain unbranded cup and bag surfaces.
+AR 1:1

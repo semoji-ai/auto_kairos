@@ -1,5 +1,7 @@
 """중국어판용 세계지도 다시 그리기(원본 그림체·범위 유지, 중국 영토 표현은 중국 관점).
-usage: cn_world_map.py <원본 지도 png> <출력 png> [--review 검토용 png]
+usage: cn_world_map.py <원본 지도 png> <출력 png> [--review 검토용 png] [--countries [--keep x0,y0,x1,y1]]
+--countries: 나라별 색칠 + 국경선 지도(예: B019 KFC 진출국 빨강/미진출 검정). 나라 색은 원본에서 그 나라 자리의 다수 색으로 옮김,
+             중국(대만·홍콩·마카오 포함)은 대륙 색 하나, 국경선은 원본 선 색 1px. --keep 영역(로고 등)은 원본 그대로
 - 데이터: Natural Earth 10m admin-0 worldview CHN(대만·장난·악사이친·西沙·南沙·钓鱼岛가 중국) → data/ne/ 에 받아 둠
 - 원본 육지 마스크에 정거원통 투영 축척·위치를 맞춤(모멘트 초기값 + 국소 탐색)
 - 국경선 없이 원본 육지색 한 색으로 칠함. 중국 섬(작아서 안 보이는 것 포함)은 최소 점 크기로, 黄岩岛도 표시
@@ -161,6 +163,74 @@ def render(polys, f, size, sea, land, line):
     return img
 
 
+def country_mask(im, keep=None):
+    """나라별 색 지도: 바다(모서리 색)와 다른 곳 = 육지(국경선 포함). keep 영역은 맞춤에서 뺌."""
+    a = np.array(im.convert("RGB")).astype(int)
+    sea = a[5, 5]
+    m = (np.abs(a - sea).sum(2) > 60).astype(np.uint8)
+    if keep:
+        x0, y0, x1, y1 = keep; m[y0:y1, x0:x1] = 0
+    return cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((2, 2), np.uint8)), tuple(int(x) for x in sea), a
+
+
+def render_countries(polys, f, size, sea, a, keep=None):
+    """나라마다 원본 다수 색으로 칠하고 국경선. 반환: (그림, 나라→색, 선 색)"""
+    W, H = size
+    sx, sy, ox, oy = f
+    P = lambda lon, lat: (lambda u, v: (float(u * sx + ox), float(-v * sy + oy)))(*proj(lon, lat))
+    land = a[np.abs(a - np.array(sea)).sum(2) > 60]
+    dark = land[land.sum(1) < 120]
+    line = tuple(int(x) for x in np.median(dark, axis=0)) if len(dark) else (0, 0, 0)
+    # 원본 칠 색 후보: 육지 화소 색을 묶어 많이 쓰인 2~3색
+    q = (land // 64) * 64 + 32; cols, cnt = np.unique(q, axis=0, return_counts=True)
+    pal = [tuple(int(v) for v in c) for c in cols[np.argsort(-cnt)][:2]]
+    lab = np.argmin(np.stack([((land - np.array(c)) ** 2).sum(1) for c in pal]), 0)      # 칠 색 = 묶음별 실제 화소 중앙값
+    canon = [tuple(int(x) for x in np.median(land[lab == i], axis=0)) for i in range(len(pal))]
+    names = {}
+    for (p, china), name in zip(polys, BORDER_OF):
+        key = "China" if (china or name in SAME_AS_CHINA) else name
+        names.setdefault(key, []).append(p)
+    colour = {}
+    for key, ps in names.items():
+        mk = Image.new("L", (W, H), 0); d = ImageDraw.Draw(mk)
+        for p in ps:
+            d.polygon([P(*x) for x in p], fill=1)
+        mk = cv2.erode(np.array(mk), np.ones((3, 3), np.uint8))
+        if keep:
+            x0, y0, x1, y1 = keep; mk[y0:y1, x0:x1] = 0
+        px = a[mk > 0]
+        if key == "China":                                       # 대륙 본토 자리 색(대만 등 섬도 같은 색)
+            u, v = P(105, 35); px = a[int(v) - 3:int(v) + 4, int(u) - 3:int(u) + 4].reshape(-1, 3)
+        if len(px) < 3:
+            continue
+        dist = [((px - np.array(c)) ** 2).sum(1) for c in pal]
+        idx = np.argmin(np.stack(dist), 0)
+        colour[key] = canon[int(np.bincount(idx, minlength=len(pal)).argmax())]
+    fill_default = min(canon, key=sum)                           # 알 수 없는 작은 나라: 어두운 색(원본 미표시국)
+    img = Image.new("RGB", (W, H), sea); d = ImageDraw.Draw(img)
+    for key, ps in names.items():
+        for p in ps:
+            q2 = [P(*x) for x in p]
+            qa = np.array(q2); area = 0.5 * abs(np.dot(qa[:, 0], np.roll(qa[:, 1], 1)) - np.dot(qa[:, 1], np.roll(qa[:, 0], 1)))
+            if area < 2 and key != "China":
+                continue
+            d.polygon(q2, fill=colour.get(key, fill_default), outline=line)
+    china_col = colour["China"]
+    r = 1.3
+    for p, china in polys:                                       # 중국 섬 최소 점(작아서 안 보이는 섬만)
+        if china:
+            qa = np.array([P(*x) for x in p]); area = 0.5 * abs(np.dot(qa[:, 0], np.roll(qa[:, 1], 1)) - np.dot(qa[:, 1], np.roll(qa[:, 0], 1)))
+            if area < 6:
+                x, y = P(*p.mean(0)); d.ellipse([x - r, y - r, x + r, y + r], fill=china_col, outline=line)
+    x, y = P(*SCARBOROUGH); d.ellipse([x - r, y - r, x + r, y + r], fill=china_col, outline=line)
+    for (p, china), name in zip(polys, BORDER_OF):              # 홍콩·마카오: 대륙과 같은 색, 경계선 없이
+        if name in SAME_AS_CHINA:
+            d.polygon([P(*x) for x in p], fill=china_col)
+    for a_, b_, c_, e_ in DASHES:
+        d.line([P(a_, b_), P(c_, e_)], fill=line, width=2)
+    return img, colour, line, china_col
+
+
 def checks(img, f, land, line):
     """자체 심의 자동 점검: 각 요소 위치에 육지색/단속선 색이 칠해졌는지."""
     a = np.array(img).astype(int)
@@ -180,6 +250,26 @@ def checks(img, f, land, line):
 if __name__ == "__main__":
     src, out = sys.argv[1], sys.argv[2]
     im = Image.open(src)
+    if "--countries" in sys.argv:
+        keep = tuple(int(v) for v in sys.argv[sys.argv.index("--keep") + 1].split(",")) if "--keep" in sys.argv else None
+        mask, sea, a = country_mask(im, keep)
+        polys = load_polys()
+        f, sc = fit(polys, mask)
+        img, colour, line, china_col = render_countries(polys, f, im.size, sea, a, keep)
+        if keep:
+            x0, y0, x1, y1 = keep; img.paste(im.convert("RGB").crop(keep), (x0, y0))
+        img.save(out)
+        res = checks(img, f, china_col, line)
+        print(json.dumps({"proj": PROJ[0], "fit_iou": round(float(sc), 3), "fit": [round(x, 4) for x in f], "line": line,
+                          "colours": {k: v for k, v in sorted(colour.items())}, "checks": res}, ensure_ascii=False, indent=1))
+        if "--review" in sys.argv:
+            sx, sy, ox, oy = f
+            (u0, v0), (u1, v1) = [tuple(map(float, proj(a_, b_))) for a_, b_ in ((70, 45), (135, 2))]
+            x0, x1 = int(u0 * sx + ox), int(u1 * sx + ox); y0, y1 = int(-v0 * sy + oy), int(-v1 * sy + oy)
+            img.crop((x0, y0, x1, y1)).resize(((x1 - x0) * 5, (y1 - y0) * 5), Image.NEAREST).save(sys.argv[sys.argv.index("--review") + 1])
+        if not all(res.values()):
+            sys.exit("자체 심의 자동 점검 실패: " + ", ".join(k for k, v in res.items() if not v))
+        sys.exit(0)
     mask, sea, land = land_mask(im)
     polys = load_polys()
     f, sc = fit(polys, mask)

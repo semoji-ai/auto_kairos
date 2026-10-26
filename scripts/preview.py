@@ -23,10 +23,12 @@ _swap = os.path.join(_root, "assets", "global", f"swap_{lang}.json")
 _tbl = {unicodedata.normalize("NFC", k): v for k, v in (json.load(open(_swap)).items() if os.path.exists(_swap) else [])}
 _oc = unicodedata.normalize("NFC", (edl.get("outro") or {}).get("clip", ""))
 outro_file = os.path.join(_root, _tbl[_oc]) if _oc in _tbl else os.path.join(ep, "assets", "outro.mov")
-vids = [os.path.join(out_dir, f"part_{p}.mp4") for p in order] + [outro_file]
+vids = [os.path.join(out_dir, f"part_{p}.mp4") for p in order] + ([outro_file] if edl.get("outro") else [])   # 아웃트로 없는 편(예: KFC)
 outro_dur = edl["outro"]["dur"] if edl.get("outro") else None   # 프리미어에서 쓴 길이만큼만(원본 파일은 더 김)
 # 프리미어에서 아웃트로 위에 얹던 종이 텍스처(본편 AE '텍스쳐' 레이어와 같은 63517.jpg, 곱하기 10%)
 _tex = [os.path.join(dp, f) for dp, _, fs in os.walk(os.path.join(ep, "src")) for f in fs if f == cfg.get("texture", "63517.jpg")]
+if not edl.get("outro"):
+    _tex = []
 filt = ""
 for i in range(len(vids)):
     last = i == len(vids) - 1

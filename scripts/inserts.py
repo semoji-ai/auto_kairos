@@ -64,6 +64,7 @@ def cmd_plan(ep, lang):
     protect = sorted({w for v in gl.values() for w in re.split(r"[（(—\s/，,;；]", v) if len(w) >= 2}, key=len, reverse=True)
     od = os.path.join(ep, "tts", lang, "inserts"); meta = json.load(open(os.path.join(od, "meta.json")))
     S = load(ep, lang); plan = {}
+    protect = sorted(set(protect) | set(S.get("protect", [])), key=len, reverse=True)   # 자막 큐를 끊지 않을 낱말(예: 第一家)
     for name, ins in S["inserts"].items():
         t, scenes, cues = 0.0, [], []
         for sc in ins["scenes"]:
@@ -112,7 +113,7 @@ def cmd_build(ep, lang):
                         sys.exit(f"없는 이미지: {L['src']}")
     job = {"aep": os.path.join(bd, f"{code}_{lang}_subs.aep"), "save_as": os.path.join(bd, f"{code}_{lang}_inserts.aep"),
            "out": os.path.join(bd, "build_inserts_log.json"), "fonts": S["fonts"], "plan": plan, "fps": 29.97,
-           "sub_name": cfg["subtitle_comp_prefix"], "bar_layers": cfg.get("subtitle_bar_layers", ["자막바", "자막바그림자"])}
+           "sub_name": cfg["subtitle_comp_prefix"], "bar_layers": cfg.get("subtitle_bar_layers", ["자막바", "자막바그림자"]), "texture": cfg.get("texture", "63517.jpg")}
     jp = os.path.join(ROOT, "scripts", "ae", "build_inserts_job.json")
     json.dump(job, open(jp, "w"), ensure_ascii=False, indent=1)
     if os.path.exists(job["out"]):
@@ -168,7 +169,7 @@ def cmd_audio(ep, lang):
     ref = [os.path.join(dp, f) for dp, _, fs in os.walk(os.path.join(ep, "src")) for f in fs
            if f in {p["narration"] for p in cfg["parts"].values()} or
            __import__("unicodedata").normalize("NFC", f) in {p["narration"] for p in cfg["parts"].values()}]
-    ko = [lufs(r) for r in ref]
+    ko = [cfg["audio"]["narration_ref_lufs"]] if cfg["audio"].get("narration_ref_lufs") is not None else [lufs(r) for r in ref]
     od = os.path.join(ep, "tts", lang, "inserts")
     S = load(ep, lang)
     for n, p in plan.items():

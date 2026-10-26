@@ -1,0 +1,52 @@
+{
+ "episode": "B019",
+ "nas_ep": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B019_KFC",
+ "prproj_timeline": "pr_timeline.json",
+ "sequence_uid": "aemain00",
+ "_sequence_doc": "영상은 AE 메인 컴프와 1:1(프리미어는 렌더 조각·오타수정 패치 이어붙임뿐) → 합성 타임라인 AE_MAIN_IDENTITY",
+ "outro_clip": null,
+ "cuts_pr": [],
+ "graph": "graph_nas.json",
+ "inventory": "inventory_nas.json",
+ "parts": {
+  "main": {
+   "clip": "AE_MAIN",
+   "comp_id": "254125892",
+   "comp": "MAIN_KO",
+   "dur": 930.564,
+   "narration": "브랜드백과20_KFC_1.wav"
+  }
+ },
+ "subtitle_comp_prefix": "kfc 자막",
+ "keep_brands": [
+  "KFC",
+  "Kentucky Fried Chicken",
+  "KENTUCKY FRIED CHICKEN",
+  "Colonel",
+  "Pepsi",
+  "PEPSI",
+  "McDonald's"
+ ],
+ "audio": {
+  "main_seq_uid": "865231b9-eb47-4aae-9f9b-c5f2a76d894c",
+  "sfx_track": 1,
+  "bgm_tracks": [
+   2
+  ],
+  "outro_bgm": null,
+  "narration_ref": "브랜드백과20_KFC_1.wav",
+  "key_base": "clip",
+  "narration_ref_lufs": -18.3,
+  "_narration_ref_doc": "AE 한국어 렌더 -18.2 LUFS, 같은 AE에서 내레이션만 뺀 중국어 파트 -39.9 → AE 소리 = 내레이션. 최소제곱 +1.9dB 추정은 정렬 어긋남으로 과소",
+  "bgm_gain_db": 13.9,
+  "_bgm_gain_doc": "유튜브판 오디오 = AE 한국어 렌더×a + 프리미어 효과음·BGM×b 를 50ms 에너지 최소제곱으로 분해(R2 0.91/0.90, AE 0dB) — 프리미어 트랙 볼륨을 파서가 못 읽음"
+ },
+ "subtitle_bar_layers": [
+  "Shape Layer 112",
+  "Shape Layer 113",
+  "Shape Layer 119",
+  "Shape Layer 121",
+  "Shape Layer 129",
+  "Shape Layer 133"
+ ]
+}

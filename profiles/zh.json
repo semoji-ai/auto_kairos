@@ -38,7 +38,9 @@
     "NotoSansCJKkr-Black": "SourceHanSansCN-Heavy",
     "NotoSansCJKkr-Regular": "SourceHanSansCN-Bold",
     "GodoB": "SourceHanSansCN-Bold",
-    "BMEULJIROTTF": "SmileySans-Oblique"
+    "BMEULJIROTTF": "SmileySans-Oblique",
+    "BMJUA": "SourceHanSansCN-Heavy",
+    "TmonMonsoriBlack": "SourceHanSansCN-Heavy"
   },
   "min_font_scale": 0.7,
   "raster_fonts": {
