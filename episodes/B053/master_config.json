@@ -33,6 +33,18 @@
   ],
   "outro_bgm": "Sand_Castle.mp3",
   "narration_ref": "코카콜라2 오디오 편집완.wav",
-  "key_base": "clip"
+  "key_base": "clip",
+  "ae_gain_db": 0.0,
+  "bgm_gain_db": 0.0,
+  "_gain_doc": "ko-identity 대조로 보정 불필요 확인(BGM -6.3dB 시험 시 상관 하락) (2026-10-26)",
+  "_sfx_doc": "프리미어 2번 트랙 효과음(골든벨 10초 카운트, 467.1~468.3초, 게인 0.067≈-23dB)은 NAS에 원본 없음 → 생략",
+  "ae_duck": [
+   [
+    354.0,
+    361.5,
+    -8.0
+   ]
+  ],
+  "_duck_doc": "354~361.5초 Freestyle 유튜브 영상 클립 소리: 유튜브판이 AE 렌더보다 5~10dB 작음(ko-identity 구간 비교) → 중국어판도 -8dB"
  }
 }

@@ -33,7 +33,10 @@
   ],
   "outro_bgm": "Sand_Castle.mp3",
   "narration_ref": "코카콜라1 오디오 편집완.wav",
-  "key_base": "clip"
+  "key_base": "clip",
+  "ae_gain_db": 8.1,
+  "bgm_gain_db": 8.1,
+  "_gain_doc": "유튜브판이 전체적으로 8.1dB 큼(내보내기 마스터 게인 추정) — AE·BGM 같은 양으로 올려 균형 유지 (2026-10-26)"
  },
  "subtitle_bar_layers": [
   "#자막바"

@@ -69,13 +69,15 @@ for k, p in enumerate(plan):
             raise ValueError(f"nonverbal {p['id']} outside parts")
         f_w, Lw, occ = nar[loc[0]]
         wt = part_to_wav(loc[1], Lw, occ)
-        if wt is None:
-            raise ValueError(f"nonverbal {p['id']} not inside narration layer")
+        if wt is None:                             # 내레이션 녹음 밖(인트로 효과음을 ASR이 말로 오인한 구간 등) — 소리는 AE 파트 쪽에 있음
+            print(f"skip nonverbal {p['id']}: outside narration layer", file=sys.stderr)
+            continue
         ins += ["-ss", f"{wt:.3f}", "-t", f"{p['src_out'] - p['src_in']:.3f}", "-i", f_w]
     else:
         ins += ["-i", p["file"]]
-    flt.append(f"[{k}:a]aresample=48000,adelay={int(p['t'] * 1000)}|{int(p['t'] * 1000)}[a{k}]")
-mix = ";".join(flt) + ";" + "".join(f"[a{k}]" for k in range(len(plan))) + f"amix=inputs={len(plan)}:normalize=0[a]"
+    j = len(flt)                                   # 건너뛴 구간이 있어도 입력 번호가 어긋나지 않게
+    flt.append(f"[{j}:a]aresample=48000,adelay={int(p['t'] * 1000)}|{int(p['t'] * 1000)}[a{j}]")
+mix = ";".join(flt) + ";" + "".join(f"[a{j}]" for j in range(len(flt))) + f"amix=inputs={len(flt)}:normalize=0[a]"
 audio = os.path.join(out_dir, "narration.wav")
 subprocess.run(["ffmpeg", "-v", "error", "-y"] + ins + ["-filter_complex", mix, "-map", "[a]", "-ac", "2", audio], check=True)
 final = os.path.join(out_dir, f"{os.path.basename(os.path.abspath(ep))}_{lang.upper()}_preview.mp4")

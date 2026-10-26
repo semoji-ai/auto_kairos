@@ -68,7 +68,7 @@ class Files:
         return None
 
 
-def place_pieces(buf, pieces, T, files, key_base, log, label, edl):
+def place_pieces(buf, pieces, T, files, key_base, log, label, edl, db=0.0):
     plan = []
     for p in pieces:
         f = files.path(p["name"], p.get("file"))
@@ -79,7 +79,7 @@ def place_pieces(buf, pieces, T, files, key_base, log, label, edl):
             plan.append({**w, "name": p["name"], "_p": p, "_f": f})
     for w in join_fades(sorted(plan, key=lambda w: w["t"])):
         x = decode(w["_f"], w["src_in"], w["dur"])
-        place(buf, x, w["t"], SR, level_gain(w["_p"], w["t"], len(x), key_base, edl, T), w["fade_out"])
+        place(buf, x, w["t"], SR, level_gain(w["_p"], w["t"], len(x), key_base, edl, T) * 10 ** (db / 20), w["fade_out"])
         log[label] = log.get(label, 0) + 1
 
 
@@ -124,7 +124,7 @@ if __name__ == "__main__":
         buf = np.zeros((int(total * SR) + SR, 2), np.float32)
         base = [dict(it, levels=[{"clip_start": it["start"], "clip_in": it["in"], "gain": it["gain"], "keys": it["gain_keys"]}],
                      pr_in=it["start"], pr_out=it["end"], src_in=it["in"]) for it in tr[0]["items"]]
-        place_pieces(buf, to_master(base, edl), T, files, key_base, log, "track0", edl)
+        place_pieces(buf, to_master(base, edl), T, files, key_base, log, "track0", edl, A.get("ae_gain_db", 0.0))
         out = os.path.join(ep, "render", "ko"); os.makedirs(out, exist_ok=True)
     else:
         lang = mode
@@ -139,7 +139,8 @@ if __name__ == "__main__":
         ref = [os.path.join(dp, f) for dp, _, fs in os.walk(os.path.join(ep, "src")) for f in fs
                if nfc(f) in {nfc(p["narration"]) for p in cfg["parts"].values()}]
         gdb = narration_gain_db([lufs(r) for r in ref], lufs(nar))
-        g = 10 ** (gdb / 20); log["narration_gain_db"] = gdb
+        g = 10 ** ((gdb + A.get("ae_gain_db", 0.0)) / 20); log["narration_gain_db"] = gdb
+        g_ae = 10 ** (A.get("ae_gain_db", 0.0) / 20)   # 프리미어 트랙 볼륨(파서가 못 읽음) 보정 — ko-identity 회귀로 정함
         BED = "--bed" in a                        # --bed: 배경음악만(삽입 구간용 — 원래 장면의 효과음·내레이션은 새 장면과 안 맞음) → bed.wav
         if not BED:
             place(buf, decode(nar), 0.0, SR, np.full(len(buf), g, np.float32))
@@ -152,7 +153,11 @@ if __name__ == "__main__":
         for pid in (order if not BED else []):
             pf = os.path.join(rd, f"part_{pid}.mp4")
             x = decode(pf)
-            place(buf, x, t, SR, np.ones(len(x), np.float32)); t += W["parts"][pid]["dur_new"]
+            ga = np.full(len(x), g_ae, np.float32)
+            for m0, m1, db in A.get("ae_duck", []):    # 유튜브판에서 줄인 AE 안 영상 클립 소리(원래 시각, dB) — 내레이션은 그대로
+                a0, a1 = int((T(m0) - t) * SR), int((T(m1) - t) * SR)
+                ga[max(0, a0):max(0, a1)] *= 10 ** (db / 20)
+            place(buf, x, t, SR, ga); t += W["parts"][pid]["dur_new"]
             log["ae_parts"] = log.get("ae_parts", 0) + 1
         # 아웃트로 BGM(0트랙의 outro_bgm 클립)
         ob = [dict(it, levels=[{"clip_start": it["start"], "clip_in": it["in"], "gain": it["gain"], "keys": it["gain_keys"]}],
@@ -160,9 +165,10 @@ if __name__ == "__main__":
         place_pieces(buf, to_master(ob, edl), T, files, key_base, log, "outro_bgm", edl)
         out = rd
         cut_to = int(round(vdur * SR))                 # 영상 길이와 정확히 같게(쓸 때 자름)
-    if not (mode != "ko-identity" and BED):
+    if A.get("sfx_track") is not None and not (mode != "ko-identity" and BED):   # 프리미어 효과음 트랙 없는 편(효과음이 AE 안에만)
         place_sfx(buf, tr[A["sfx_track"]]["items"], edl, T, files, key_base, log)
-    place_pieces(buf, to_master(flatten(P, A["main_seq_uid"], A["bgm_tracks"]), edl), T, files, key_base, log, "bgm_pieces", edl)
+    place_pieces(buf, to_master(flatten(P, A["main_seq_uid"], A["bgm_tracks"]), edl), T, files, key_base, log, "bgm_pieces", edl,
+                 A.get("bgm_gain_db", 0.0))   # BGM 트랙 볼륨 보정
     name = "identity_mix.wav" if mode == "ko-identity" else ("bed.wav" if "--bed" in a else "mix.wav")
     peak = float(np.abs(buf).max()); log["peak"] = round(peak, 3)
     if peak > 0.97:                                  # 클리핑 방지: 전체를 같은 비율로 낮춤(상대 레벨 유지)
