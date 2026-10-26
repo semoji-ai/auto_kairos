@@ -89,6 +89,7 @@ def cmd_plan(ep, lang):
 
 
 def cmd_build(ep, lang):
+    cfg = json.load(open(os.path.join(ep, "master_config.json")))
     ep = os.path.abspath(ep); code = os.path.basename(ep); bd = os.path.join(ep, "build", lang)
     plan = json.load(open(os.path.join(bd, "inserts_plan.json")))
     S = load(ep, lang)
@@ -110,7 +111,8 @@ def cmd_build(ep, lang):
                     if not os.path.exists(L["src"]):
                         sys.exit(f"없는 이미지: {L['src']}")
     job = {"aep": os.path.join(bd, f"{code}_{lang}_subs.aep"), "save_as": os.path.join(bd, f"{code}_{lang}_inserts.aep"),
-           "out": os.path.join(bd, "build_inserts_log.json"), "fonts": S["fonts"], "plan": plan, "fps": 29.97}
+           "out": os.path.join(bd, "build_inserts_log.json"), "fonts": S["fonts"], "plan": plan, "fps": 29.97,
+           "sub_name": cfg["subtitle_comp_prefix"], "bar_layers": cfg.get("subtitle_bar_layers", ["자막바", "자막바그림자"])}
     jp = os.path.join(ROOT, "scripts", "ae", "build_inserts_job.json")
     json.dump(job, open(jp, "w"), ensure_ascii=False, indent=1)
     if os.path.exists(job["out"]):

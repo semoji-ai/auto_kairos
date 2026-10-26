@@ -129,11 +129,13 @@ try{
     for(var s=0;s<P.scenes.length;s++){ var sc=P.scenes[s], SC=buildScene(sc, C.fonts), L=ins.layers.add(SC); L.startTime=sc.start; L.moveToEnd(); }
     // 본편에서 채널 로고·자막바·자막 글자 스타일 복사
     var bars=[], tmpl=null, logo=null, tex=null;
-    for(var j=1;j<=main.numLayers;j++){ var M=main.layer(j);
-      if(M.name==="자막바"||M.name==="자막바그림자") bars.push(M);
-      if(M.name==="세모지 로고") logo=M;
+    var SN=C.sub_name||"#자막", BN=C.bar_layers||["자막바","자막바그림자"], subL=null;   // 편마다 이름이 다름(B053: '자막', 로고 '세모지로고만).png')
+    for(var j=1;j<=main.numLayers;j++){ var M=main.layer(j), srcName=(M.source&&M.source.name)||"";
+      for(var b=0;b<BN.length;b++) if(M.name===BN[b]) bars.push(M);
+      if(!logo && (M.name==="세모지 로고" || srcName.indexOf("세모지로고")===0)) logo=M;
       if(M.name==="텍스쳐") tex=M;
-      if(M.source instanceof CompItem && M.source.name.indexOf("#자막")===0){ for(var q=1;q<=M.source.numLayers;q++) if(M.source.layer(q) instanceof TextLayer){ tmpl=M.source.layer(q); break; } } }
+      if(M.source instanceof CompItem && (M.source.name===SN || (!subL && M.source.name.indexOf(SN)===0 && M.source.name.indexOf("자막바")<0))) subL=M; }
+    if(subL) for(var q=1;q<=subL.source.numLayers;q++) if(subL.source.layer(q) instanceof TextLayer){ tmpl=subL.source.layer(q); break; }
     var copied=function(L){ var before=ins.numLayers; L.copyToComp(ins);
       var c=null; for(var z=1;z<=ins.numLayers;z++){ if(ins.layer(z).name===L.name){ c=ins.layer(z); break; } }
       if(!c){ LOG.errors.push("복사 실패: "+L.name+" ("+before+"→"+ins.numLayers+")"); return null; }
