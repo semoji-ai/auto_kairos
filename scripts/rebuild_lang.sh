@@ -42,4 +42,6 @@ if [ -f "$EP/l10n/${L}_inserts.json" ]; then
   python3 scripts/inserts.py "$EP" "$L" audio
   python3 scripts/inserts.py "$EP" "$L" splice
 fi
+# 원래 아웃트로가 없는 편: 언어별 아웃트로 클립을 끝에 붙임(master_config append_outro)
+python3 scripts/append_outro.py "$EP" "$L"
 echo REBUILD_DONE

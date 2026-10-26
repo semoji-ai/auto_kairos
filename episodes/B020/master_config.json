@@ -44,5 +44,9 @@
  "subtitle_bar_layers": [
   "Shape Layer 112",
   "Shape Layer 113"
- ]
+ ],
+ "append_outro": {
+  "zh": "assets/global/zh/build/outro_cn_cocacola.mp4",
+  "_doc": "원래 아웃트로 없음 → 코카콜라(B052) 중국어판 아웃트로 10.277초(Sand_Castle BGM·종이 텍스처 포함)를 그대로 붙임(사용자 결정 2026-10-27)"
+ }
 }

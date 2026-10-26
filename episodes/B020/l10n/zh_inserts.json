@@ -32,19 +32,14 @@
        "src": "assets/zh/gen/p1_store.png"
       },
       {
-       "type": "text",
-       "text": "肯德基",
-       "font": "label",
-       "size": 84,
-       "x": 1520,
-       "y": 150,
-       "color": [
-        200,
-        16,
-        46
-       ],
+       "type": "image",
+       "src": "assets/zh/sign_kfc_text.png",
+       "x": 1354.5,
+       "y": 171,
+       "w": 249,
        "at": 0.45,
-       "anim": "pop"
+       "anim": "fade",
+       "_doc": "간판 원근에 맞춰 변형한 글자(간판 꼭짓점 899,164/1552,6/1552,133/897,256 @1672×941)"
       },
       {
        "type": "badge",
@@ -112,6 +107,16 @@
       {
        "type": "bg",
        "src": "assets/zh/gen/p1_store.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/sign_kfc_text.png",
+       "x": 1354.5,
+       "y": 171,
+       "w": 249,
+       "at": 0.0,
+       "anim": "none",
+       "_doc": "간판 원근에 맞춰 변형한 글자(간판 꼭짓점 899,164/1552,6/1552,133/897,256 @1672×941)"
       },
       {
        "type": "text",

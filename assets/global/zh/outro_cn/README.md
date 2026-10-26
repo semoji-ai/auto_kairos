@@ -8,3 +8,11 @@
 ```
 ffmpeg -loop 1 -framerate 30000/1001 -i preview_1.png -t 19.986633 -c:v libx264 -pix_fmt yuv420p -crf 16 -r 30000/1001 ../outro.mov
 ```
+
+## 아웃트로가 없는 편용 완성 클립 (2026-10-27)
+KFC(B019·B020)처럼 원래 아웃트로가 없는 편은 코카콜라 1편 중국어판 끝 10.277초(아웃트로 정지 화면 + 종이 텍스처 + Sand_Castle BGM)를 그대로 붙인다(사용자 결정).
+`assets/global/zh/build/outro_cn_cocacola.mp4`(gitignore) 다시 만들기:
+```
+ffmpeg -ss 775.908 -i episodes/B052/render/zh/B052_ZH_preview.mp4 -t 10.277 -c:v libx264 -crf 18 -pix_fmt yuv420p -r 30000/1001 -c:a aac -b:a 192k -ar 48000 assets/global/zh/build/outro_cn_cocacola.mp4
+```
+편 설정 `master_config.json` → `"append_outro": {"zh": "assets/global/zh/build/outro_cn_cocacola.mp4"}`, `scripts/append_outro.py`가 rebuild 끝에 붙임.
