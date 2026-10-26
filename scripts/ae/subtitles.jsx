@@ -9,8 +9,11 @@ try{
   for(var k=0;k<C.parts.length;k++){
     var part=C.parts[k], main=null, sub=null;
     for(var i=1;i<=P.numItems;i++){ var it=P.item(i); if(it instanceof CompItem && it.name===part.comp) main=it; }
-    for(var j=1;j<=main.numLayers;j++){ var L=main.layer(j); if(L.source instanceof CompItem && L.source.name.indexOf("#자막")===0){ sub=L.source; L.enabled=true; } }
-    if(!sub){ LOG.errors.push("no #자막 under "+part.comp); continue; }
+    var SN=C.sub_name||"#자막", subL=null;   // '#자막'과 '#자막바'처럼 접두어가 겹치면 이름이 정확히 같은 것 우선
+    for(var j=1;j<=main.numLayers;j++){ var L=main.layer(j); if(L.source instanceof CompItem && L.source.name===SN) subL=L; }
+    if(!subL) for(var j=1;j<=main.numLayers;j++){ var L=main.layer(j); if(L.source instanceof CompItem && L.source.name.indexOf(SN)===0) subL=L; }
+    if(subL){ sub=subL.source; subL.enabled=true; }
+    if(!sub){ LOG.errors.push("no "+SN+" under "+part.comp); continue; }
     var tmpl=null, olds=[];
     for(var j=1;j<=sub.numLayers;j++){ var L=sub.layer(j); if(L instanceof TextLayer){ olds.push(L); if(!tmpl) tmpl=L; } }
     if(!tmpl){ LOG.errors.push("no text template in "+sub.name); continue; }

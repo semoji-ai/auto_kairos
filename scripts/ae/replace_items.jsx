@@ -19,7 +19,7 @@ try{
     try{
       var png=P.importFile(new ImportOptions(new File(J.png))); png.parentFolder=folder;
       var dur=Math.max(src.duration||0, 3600);
-      var comp=P.items.addComp("__en_"+J.id, J.w, J.h, src.pixelAspect||1, dur, 30); comp.parentFolder=folder;
+      var comp=P.items.addComp("__en_"+J.id, Math.max(4,J.w), Math.max(4,J.h), src.pixelAspect||1, dur, 30); comp.parentFolder=folder;   /* AE 컴프 최소 4px(6x3 같은 작은 벡터) — 내용은 원래 좌표 그대로라 위치 불변 */
       var pl=comp.layers.add(png); pl.property("ADBE Transform Group").property("ADBE Scale").setValue([J.scale, J.scale]);
       pl.property("ADBE Transform Group").property("ADBE Position").setValue([J.w/2, J.h/2]);
       pl.outPoint=dur;

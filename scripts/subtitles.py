@@ -22,6 +22,8 @@ subcomp = {}
 for pid, P in cfg["parts"].items():
     Ls = [L for L in G["comps"][P["comp_id"]]["layers"]
           if L["src"] is not None and G["comps"].get(str(L["src"]), {}).get("name", "").startswith(cfg["subtitle_comp_prefix"])]
+    if len(Ls) > 1:                                # '#자막'과 '#자막바'처럼 접두어가 겹치면 이름이 정확히 같은 것
+        Ls = [L for L in Ls if G["comps"][str(L["src"])]["name"] == cfg["subtitle_comp_prefix"]] or Ls
     if len(Ls) != 1:
         raise ValueError(f"{pid}: subtitle comp layers {len(Ls)}")
     subcomp[pid] = (Ls[0]["src"], Ls[0]["st"])
@@ -66,6 +68,7 @@ json.dump({"aep": os.path.join(abs_ep, "build", lang, f"{name}_{lang}.aep"),
            "out": os.path.join(abs_ep, "build", lang, "subtitles_log.json"),
            "bar_layers": cfg.get("subtitle_bar_layers", ["자막바", "자막바그림자"]),
            "font": prof["subs"].get("font"),            # 없으면 템플릿 폰트 그대로(영어)
+           "sub_name": cfg["subtitle_comp_prefix"],      # 자막 컴프 이름(같은 이름 우선, 없으면 이 이름으로 시작하는 것)
            "parts": [{"comp": cfg["parts"][pid]["comp"], "sub_comp_id": subcomp[pid][0], "cues": cues,
                       # 자막 바는 자막이 있을 때만(영어는 큐 사이 공백이 길어 빈 바가 드러남)
                       "bar": bar_intervals(cues, pmap[pid](subcomp[pid][1]))} for pid, cues in parts.items()]},
