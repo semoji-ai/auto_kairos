@@ -34,7 +34,11 @@
     "SBAggroL": "SourceHanSansCN-Bold",
     "SBAggroM": "SmileySans-Oblique",
     "SBAggroB": "SourceHanSansCN-Heavy",
-    "AppleGothic": "SourceHanSansCN-Bold"
+    "AppleGothic": "SourceHanSansCN-Bold",
+    "NotoSansCJKkr-Black": "SourceHanSansCN-Heavy",
+    "NotoSansCJKkr-Regular": "SourceHanSansCN-Bold",
+    "GodoB": "SourceHanSansCN-Bold",
+    "BMEULJIROTTF": "SmileySans-Oblique"
   },
   "min_font_scale": 0.7,
   "raster_fonts": {
