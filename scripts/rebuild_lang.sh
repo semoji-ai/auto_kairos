@@ -15,6 +15,7 @@ python3 -c "import json,sys; d=json.load(open('$B/patch_text_log.json')); print(
 python3 scripts/raster_apply.py "$EP" "$L"
 python3 scripts/highlights.py "$EP" "$L"
 python3 scripts/swap_assets.py "$EP" "$L"
+python3 scripts/format_costco.py "$EP" "$L"   # master_config costco_format 있을 때만: 코스트코 포맷(목차 제거·자막바·챕터 판)
 python3 scripts/timewarp.py "$EP" "$L" --durs "$EP/tts/$L/durs.json" --keep-subs --aep "$B/${CODE}_${L}_swapped.aep"
 rm -f "$B/localize_log.json"; scripts/ae/run.sh "$PWD/scripts/ae/localize.jsx"
 python3 -c "import json,sys; d=json.load(open('$B/localize_log.json')); print('localize warnings', len(d['warnings']), 'errors', d['errors']); sys.exit(1 if d['errors'] else 0)"

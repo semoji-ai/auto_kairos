@@ -169,7 +169,8 @@ if __name__ == "__main__":
         out = rd
         cut_to = int(round(vdur * SR))                 # 영상 길이와 정확히 같게(쓸 때 자름)
     if A.get("sfx_track") is not None and not (mode != "ko-identity" and BED):   # 프리미어 효과음 트랙 없는 편(효과음이 AE 안에만)
-        place_sfx(buf, tr[A["sfx_track"]]["items"], edl, T, files, key_base, log)
+        skip = {nfc(x) for x in A.get("sfx_skip", [])}   # 언어판에서 다른 소리로 바꾼 효과음(예: 코스트코 포맷 챕터 소리)
+        place_sfx(buf, [it for it in tr[A["sfx_track"]]["items"] if mode == "ko-identity" or nfc(it["name"]) not in skip], edl, T, files, key_base, log)
     place_pieces(buf, to_master(flatten(P, A["main_seq_uid"], A["bgm_tracks"]), edl), T, files, key_base, log, "bgm_pieces", edl,
                  A.get("bgm_gain_db", 0.0))   # BGM 트랙 볼륨 보정
     name = "identity_mix.wav" if mode == "ko-identity" else ("bed.wav" if "--bed" in a else "mix.wav")

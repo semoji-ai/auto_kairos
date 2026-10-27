@@ -39,14 +39,47 @@
   "narration_ref_lufs": -23.1,
   "_narration_ref_doc": "Audio 1_2.wav(47분 녹음)에서 쓴 334조각을 이어 붙이면 -35.8 LUFS, AE에서 +12.7dB(상관 0.98)",
   "bgm_gain_db": 9.3,
-  "_bgm_gain_doc": "유튜브판 오디오 = AE 한국어 렌더×a + 프리미어 효과음·BGM×b 를 50ms 에너지 최소제곱으로 분해(R2 0.91/0.90, AE 0dB) — 프리미어 트랙 볼륨을 파서가 못 읽음"
+  "_bgm_gain_doc": "유튜브판 오디오 = AE 한국어 렌더×a + 프리미어 효과음·BGM×b 를 50ms 에너지 최소제곱으로 분해(R2 0.91/0.90, AE 0dB) — 프리미어 트랙 볼륨을 파서가 못 읽음",
+  "sfx_skip": [
+   "또롱_02.wav"
+  ]
  },
  "subtitle_bar_layers": [
-  "Shape Layer 112",
-  "Shape Layer 113"
+  "자막바",
+  "자막바그림자"
  ],
  "append_outro": {
   "zh": "assets/global/zh/build/outro_cn_cocacola.mp4",
   "_doc": "원래 아웃트로 없음 → 코카콜라(B052) 중국어판 아웃트로 10.277초(Sand_Castle BGM·종이 텍스처 포함)를 그대로 붙임(사용자 결정 2026-10-27)"
+ },
+ "costco_format": {
+  "hide_layers": [
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   17,
+   20,
+   21
+  ],
+  "chapter_layers": [
+   26,
+   25,
+   24,
+   23,
+   22
+  ],
+  "mute_layers": [
+   12,
+   13,
+   14,
+   15,
+   16
+  ],
+  "_doc": "코스트코 중국어판 포맷(사용자 결정 2026-10-27): 상단 목차(4~13)·기존 반투명 자막바(Shape Layer 112·113…) 끄고, 장 제목 글자 대신 코스트코 챕터 판, AE 장 효과음 끔(프리미어 또롱은 audio.sfx_skip)"
  }
 }
