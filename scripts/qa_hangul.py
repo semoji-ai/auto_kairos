@@ -60,6 +60,9 @@ if __name__ == "__main__":
     cfg = json.load(open(os.path.join(ep, "master_config.json")))
     brands = cfg.get("keep_brands", [])
     video = os.path.join(ep, "render", lang, f"{code}_{lang.upper()}_preview.mp4")
+    if "--video" in sys.argv:                      # 완성본(삽입·cut 반영) 검사: --video final 또는 경로
+        v = sys.argv[sys.argv.index("--video") + 1]
+        video = os.path.join(ep, "render", lang, f"{code}_{lang.upper()}_final.mp4") if v == "final" else v
     qd = os.path.join(ep, "render", lang, "qa"); fd = os.path.join(qd, "frames")
     os.makedirs(fd, exist_ok=True)
     for f in glob.glob(os.path.join(fd, "*.png")):

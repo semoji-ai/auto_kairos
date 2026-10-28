@@ -28,7 +28,7 @@ def run(ids):
     L = json.load(open(lp))
     fp = os.path.join(out_dir, "fit.json")
     fit = json.load(open(fp)) if os.path.exists(fp) else {}
-    order = [g for g in src if g in L["segments"] and not src[g].get("nonverbal")]   # 앞뒤 문맥(context_text)용 순서
+    order = [g for g in src if g in L["segments"] and not src[g].get("nonverbal") and (L["segments"][g].get("tts") or L["segments"][g].get("text", "")).strip()]   # 앞뒤 문맥(context_text)용 순서
     for i in ids:
         text = L["segments"][i].get("tts") or L["segments"][i]["text"]
         if lang == "zh":
@@ -77,7 +77,8 @@ def run(ids):
 FORCE = "--force" in a
 L0 = json.load(open(lp))
 ids = a[a.index("--only") + 1].split(",") if "--only" in a else list(L0["segments"])
-skip = [i for i in ids if i not in L0["segments"] or src[i].get("nonverbal")]
+skip = [i for i in ids if i not in L0["segments"] or src[i].get("nonverbal")
+        or not (L0["segments"][i].get("tts") or L0["segments"][i].get("text", "")).strip()]   # 빈 문장(삽입으로 교체·cut된 구간)
 if skip:
     print("skip (nonverbal or untranslated):", skip)
 ids = [i for i in ids if i not in skip]
