@@ -33,7 +33,7 @@ def cmd_tts(ep, lang, force=False):
     od = os.path.join(ep, "tts", lang, "inserts"); os.makedirs(od, exist_ok=True)
     meta_p = os.path.join(od, "meta.json"); meta = json.load(open(meta_p)) if os.path.exists(meta_p) else {}
     for name, ins in load(ep, lang)["inserts"].items():
-        for sc in ins["scenes"]:
+        for sc in ins.get("scenes", []):
             say = sc.get("tts") or sc["text"]
             if lang == "zh":
                 say = zh_spoken(say)
@@ -66,6 +66,9 @@ def cmd_plan(ep, lang):
     S = load(ep, lang); plan = {}
     protect = sorted(set(protect) | set(S.get("protect", [])), key=len, reverse=True)   # 자막 큐를 끊지 않을 낱말(예: 第一家)
     for name, ins in S["inserts"].items():
+        if ins.get("cut"):                      # 빈 삽입: 그 구간(영상·소리·자막)을 빼기만
+            plan[name] = {"replace_master": ins["replace_master"], "dur": 0.0, "scenes": [], "cues": [], "bar": [], "cut": True}
+            continue
         t, scenes, cues = 0.0, [], []
         for sc in ins["scenes"]:
             nd = meta[sc["id"]]["dur"]; d = round(LEAD + nd + TAIL, 3)
@@ -94,6 +97,7 @@ def cmd_build(ep, lang):
     ep = os.path.abspath(ep); code = os.path.basename(ep); bd = os.path.join(ep, "build", lang)
     plan = json.load(open(os.path.join(bd, "inserts_plan.json")))
     S = load(ep, lang)
+    plan = {n: p for n, p in plan.items() if not p.get("cut")}   # 빈 삽입은 조립·렌더 안 함
     from PIL import Image
     ad = os.path.join(bd, "insert_assets"); os.makedirs(ad, exist_ok=True)
     def fix(p):                       # 투명 여백을 잘라낸 사본(크기·위치 지정이 보이는 그림 기준이 되게)
@@ -173,6 +177,8 @@ def cmd_audio(ep, lang):
     od = os.path.join(ep, "tts", lang, "inserts")
     S = load(ep, lang)
     for n, p in plan.items():
+        if p.get("cut"):
+            continue
         a, b = T(p["replace_master"][0]), T(p["replace_master"][1])
         N = int(round(p["dur"] * SR))
         buf = fit_bed(_decode(bed, a, b - a), N)
@@ -202,21 +208,27 @@ def cmd_audio(ep, lang):
         print(n, "audio", round(N / SR, 3), "s, bed(BGM) from", round(a, 2), "-", round(b, 2), "sfx", n_sfx, "peak", round(pk, 3))
 
 
+def splice_segments(plan, T, total):
+    """조각 목록: ("prev", a, b) 또는 ("ins", name). cut 항목(빈 삽입)은 그 구간을 빼기만 함."""
+    segs, cur = [], 0.0
+    for n, p in sorted(plan.items(), key=lambda kv: kv[1]["replace_master"][0]):
+        a, b = T(p["replace_master"][0]), T(p["replace_master"][1])
+        if a > cur + 1e-3:
+            segs.append(("prev", cur, a))
+        if not p.get("cut"):
+            segs.append(("ins", n))
+        cur = b
+    if cur < total - 1e-3:
+        segs.append(("prev", cur, total))
+    return segs
+
+
 def cmd_splice(ep, lang):
     ep = os.path.abspath(ep); code = os.path.basename(ep); bd = os.path.join(ep, "build", lang); rd = os.path.join(ep, "render", lang)
     plan = json.load(open(os.path.join(bd, "inserts_plan.json")))
     T = PiecewiseMap(json.load(open(os.path.join(bd, "warp.json")))["master"])
     prev = os.path.join(rd, f"{code}_{lang.upper()}_preview.mp4"); total = dur(prev)
-    ins = sorted(plan.items(), key=lambda kv: kv[1]["replace_master"][0])
-    # 조각 목록: ("prev", a, b) 또는 ("ins", name)
-    segs, cur = [], 0.0
-    for n, p in ins:
-        a, b = T(p["replace_master"][0]), T(p["replace_master"][1])
-        if a > cur + 1e-3:
-            segs.append(("prev", cur, a))
-        segs.append(("ins", n)); cur = b
-    if cur < total - 1e-3:
-        segs.append(("prev", cur, total))
+    segs = splice_segments(plan, T, total)
     args, filt, k = ["ffmpeg", "-v", "error", "-y", "-i", prev], [], 1
     vlabels = []
     for i, s in enumerate(segs):
