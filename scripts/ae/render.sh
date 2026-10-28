@@ -14,5 +14,7 @@ free=$(df -g /System/Volumes/Data | awk 'NR==2{print $4}')
 [ "$free" -lt 10 ] && { echo "DISK LOW"; exit 3; }
 FPS=${6:-30}
 S=$(python3 -c "print(round($3*$FPS))"); E=$(python3 -c "print(round($4*$FPS)-1)")
+rm -f "$5"   # 실패했는데 옛 파일이 남아 성공처럼 보이는 일 방지
 "$AER" -project "$1" -comp "$2" -s $S -e $E -OMtemplate "${7:-H.264 - Match Render Settings - 40 Mbps}" -output "$5" -sound OFF 2>&1 | tail -5
+[ -s "$5" ] || { echo "RENDER FAILED: $5 없음"; exit 4; }
 ls -la "$5"
