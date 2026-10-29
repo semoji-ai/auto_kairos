@@ -1,0 +1,71 @@
+{
+  "lang": "en",
+  "language_code": "en",
+  "cps": 13.5,
+  "fit": {
+    "lo": 0.75,
+    "hi": 1.35,
+    "max_rewrites": 2
+  },
+  "tts_model": "eleven_v4",
+  "tts_voice": "W7FnAxJNpD5WGjrF5GLp",
+  "tts_settings": {
+    "stability": 1.0,
+    "similarity_boost": 0.9,
+    "style": 0.9,
+    "speed": 1.1,
+    "use_speaker_boost": true
+  },
+  "subs": {
+    "max_chars": 42,
+    "min_dur": 0.8,
+    "gap": 0.04
+  },
+  "fonts": {
+    "OTSBAggroM": "OTSBAggroM",
+    "OTSBAggroL": "OTSBAggroL",
+    "OTSBAggroB": "OTSBAggroB",
+    "HakgyoansimAllimjangTTF-R": "OTSBAggroM",
+    "GeekbleMalang2": "OTSBAggroB",
+    "BMYEONSUNG": "OTSBAggroM",
+    "SBAggroM": "OTSBAggroM",
+    "SBAggroL": "OTSBAggroL",
+    "SBAggroB": "OTSBAggroB",
+    "AppleGothic": "AppleGothic"
+  },
+  "min_font_scale": 0.7,
+  "raster_fonts": {
+    "label": {
+      "ps": "OTSBAggroB",
+      "file": "~/Library/Fonts/SBAggroOTF-B.otf"
+    },
+    "title": {
+      "ps": "OTSBAggroB",
+      "file": "~/Library/Fonts/SBAggroOTF-B.otf"
+    },
+    "hand": {
+      "ps": "Noteworthy-Bold",
+      "file": "/System/Library/Fonts/Noteworthy.ttc"
+    },
+    "brush": {
+      "ps": "Noteworthy-Bold",
+      "file": "/System/Library/Fonts/Noteworthy.ttc"
+    }
+  },
+  "assets_text": {
+    "laugh": "ha",
+    "logo_rows": [
+      "SE",
+      "MO",
+      "JI"
+    ],
+    "subscribe": "Subscribe",
+    "like": "Like",
+    "outro": "Semoji"
+  },
+  "assets_fonts": {
+    "gothic": "OTSBAggroB",
+    "hand": "Noteworthy-Bold",
+    "logo": "OTSBAggroB"
+  }
+}

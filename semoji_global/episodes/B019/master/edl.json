@@ -1,0 +1,15 @@
+{
+ "parts": [
+  {
+   "id": "main",
+   "clip": "AE_MAIN",
+   "pr_in": 0.0,
+   "src_in": 0.0,
+   "dur": 930.564
+  }
+ ],
+ "cuts": [],
+ "outro": null,
+ "pr_length": 930.564,
+ "length": 930.564
+}

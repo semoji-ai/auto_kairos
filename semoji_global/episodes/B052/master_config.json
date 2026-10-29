@@ -1,0 +1,44 @@
+{
+ "episode": "B052",
+ "nas_ep": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B052_코카콜라1",
+ "prproj_timeline": "pr_timeline.json",
+ "sequence_uid": "ae9646d1",
+ "outro_clip": "세모지 아웃트로_최종.mov",
+ "cuts_pr": [],
+ "graph": "graph_nas.json",
+ "inventory": "inventory_nas.json",
+ "parts": {
+  "main": {
+   "clip": "B052_코카콜라1_음악전.mov",
+   "comp_id": "1324185482",
+   "comp": "MAIN_KO",
+   "dur": 794.995,
+   "narration": "코카콜라1 오디오 편집완.wav"
+  }
+ },
+ "subtitle_comp_prefix": "#자막",
+ "keep_brands": [
+  "Coca-Cola",
+  "Coca Cola",
+  "COCA-COLA",
+  "Coke",
+  "PEPSI",
+  "Pepsi"
+ ],
+ "audio": {
+  "main_seq_uid": "ae9646d1-c68e-4a7a-9231-562034a09204",
+  "sfx_track": null,
+  "bgm_tracks": [
+   1
+  ],
+  "outro_bgm": "Sand_Castle.mp3",
+  "narration_ref": "코카콜라1 오디오 편집완.wav",
+  "key_base": "clip",
+  "ae_gain_db": 8.1,
+  "bgm_gain_db": 8.1,
+  "_gain_doc": "유튜브판이 전체적으로 8.1dB 큼(내보내기 마스터 게인 추정) — AE·BGM 같은 양으로 올려 균형 유지 (2026-10-26)"
+ },
+ "subtitle_bar_layers": [
+  "#자막바"
+ ]
+}

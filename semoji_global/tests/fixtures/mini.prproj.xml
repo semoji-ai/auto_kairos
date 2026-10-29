@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PremiereData>
+  <Sequence ObjectUID="seq-main"><Name>MAIN</Name><TrackGroups><TrackGroup><Second ObjectRef="10"/></TrackGroup></TrackGroups></Sequence>
+  <VideoTrackGroup ObjectID="10"><TrackGroup><Tracks><Track ObjectURef="trk-v1"/></Tracks></TrackGroup></VideoTrackGroup>
+  <VideoClipTrack ObjectUID="trk-v1"><ClipTrack><ClipItems><TrackItems><TrackItem ObjectRef="20"/><TrackItem ObjectRef="21"/></TrackItems></ClipItems></ClipTrack></VideoClipTrack>
+  <VideoClipTrackItem ObjectID="20"><ClipTrackItem><TrackItem><Start>0</Start><End>2540160000000</End></TrackItem><SubClip ObjectRef="30"/></ClipTrackItem></VideoClipTrackItem>
+  <VideoClipTrackItem ObjectID="21"><ClipTrackItem><TrackItem><Start>2540160000000</Start><End>3810240000000</End></TrackItem><SubClip ObjectRef="31"/></ClipTrackItem></VideoClipTrackItem>
+  <SubClip ObjectID="30"><Clip ObjectRef="40"/><Name>part_a.mp4</Name></SubClip>
+  <SubClip ObjectID="31"><Clip ObjectRef="41"/><Name>BGM_nest</Name></SubClip>
+  <VideoClip ObjectID="40"><Clip><Source ObjectRef="50"/><InPoint>254016000000</InPoint><OutPoint>2794176000000</OutPoint></Clip></VideoClip>
+  <RemixClip ObjectID="41"><Clip><Source ObjectRef="51"/><InPoint>0</InPoint><OutPoint>1270080000000</OutPoint></Clip></RemixClip>
+  <VideoMediaSource ObjectID="50"><MediaSource><Media ObjectURef="media-a"/></MediaSource></VideoMediaSource>
+  <Media ObjectUID="media-a"><FilePath>C:\work\part_a.mp4</FilePath></Media>
+  <AudioSequenceSource ObjectID="51"><SequenceSource><Sequence ObjectURef="seq-nest"/></SequenceSource></AudioSequenceSource>
+  <Sequence ObjectUID="seq-nest"><Name>NEST</Name></Sequence>
+</PremiereData>

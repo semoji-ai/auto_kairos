@@ -1,0 +1,19 @@
+{
+ "reached": 343,
+ "planned": 93,
+ "copied": 93,
+ "not_found_on_nas": [],
+ "relink": {
+  "aep": "/Users/jleavens_macmini/LocalProjects/semoji_global/episodes/B019/src/_orig_브랜드백과_KFC_1.aep",
+  "relinked": 19,
+  "still_missing": 215,
+  "error": null,
+  "saved": true
+ },
+ "prep": {
+  "missing_used": [],
+  "ok": 343,
+  "dur": 930.563897230564,
+  "errors": []
+ }
+}

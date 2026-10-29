@@ -1,0 +1,6 @@
+Scene: Edit image 1 and keep the whole scene exactly as it is — the same warehouse, crowd, carts, cars, parking attendant, sky and city. Mount the official store logo from image 2 on the warehouse facade as the main store sign: a wide white sign panel on the red band above the entrance carrying the logo with the exact letterforms, red COSTCO wordmark and blue WHOLESALE line with stripes from image 2.
+Camera: identical framing and viewpoint to image 1.
+Lighting: identical to image 1, the sign panel lit by the same flat daylight with one soft shadow tone.
+Color grading: logo red #E31837, logo blue #005DAA, sign panel white #FFFFFF, all other colors as in image 1.
+Texture/Medium: same flat vector illustration as image 1, the logo reproduced crisp and faithful to image 2.
+AR 16:9

@@ -1,0 +1,6 @@
+Scene: Inside a warehouse membership store on opening day. Tall pallet racks with flat cardboard boxes frame a wide aisle; a crowd of about eight shoppers in the character style of images 1 and 2 pushes overflowing carts down the aisle with excited faces. In the right foreground, one shelf section stands completely empty and a staff member in a vest shrugs beside it while two shoppers stare at it in surprise.
+Camera: straight-on front view down the aisle, simplified perspective, empty shelf in the right foreground.
+Lighting: flat even indoor light, one soft shadow tone per surface.
+Color grading: background warm grey #E9E4DA, racks dusty orange #D9895B, boxes beige #D8BE92, staff vest #8FAF8C, shopper accents #7D9CC0 #D99A9A.
+Texture/Medium: flat vector character illustration in exactly the same style as images 1 and 2 — the same character design as those episode scenes: adult proportions about 6 heads tall, smooth flat fills with soft simple shading, rosy blush on the cheeks, small friendly eyes, simple rounded hands, clean vector edges, soft paper grain.
+AR 16:9

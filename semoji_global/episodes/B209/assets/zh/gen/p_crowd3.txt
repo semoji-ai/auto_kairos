@@ -1,0 +1,6 @@
+Scene: Opening day of a big warehouse membership store in a Chinese city, drawn like the store-front scene in image 1. A simple flat grey warehouse facade with a plain blank red band across the top stands on the right; a long cheerful crowd of about twelve shoppers in the character style of images 1 and 2 pushes oversized shopping carts toward the wide entrance, some raising phones to take photos, a child riding in a cart. On the left, a short row of simple rounded cars waits bumper to bumper and a parking attendant waves a small flag.
+Camera: straight-on side view like image 1, characters lined up across the lower half, warehouse on the right third, wide horizontal composition, open sky in the upper half.
+Lighting: flat even daylight, one soft shadow tone under characters and cars.
+Color grading: sky #CFE3F2, warehouse grey #9AA3AD, band red #D7473F, shopper accents #8FAF8C #7D9CC0 #E2B65A, cars #C9CED6.
+Texture/Medium: flat vector character illustration in exactly the same style as images 1 and 2 — the same character design as those episode scenes: adult proportions about 6 heads tall, smooth flat fills with soft simple shading, rosy blush on the cheeks, small friendly eyes, simple rounded hands, clean vector edges, soft paper grain.
+AR 16:9

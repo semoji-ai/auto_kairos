@@ -1,0 +1,663 @@
+[
+ {
+  "sequence": "B052_코카콜라1_음악전",
+  "uid": "ae9646d1-c68e-4a7a-9231-562034a09204",
+  "tracks": [
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 33.066,
+      "in": 0.0,
+      "out": 33.066,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "534"
+     },
+     {
+      "start": 33.066,
+      "end": 34.735,
+      "in": 33.2,
+      "out": 34.868,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "572"
+     },
+     {
+      "start": 34.868,
+      "end": 158.358,
+      "in": 34.868,
+      "out": 158.358,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "573"
+     },
+     {
+      "start": 158.358,
+      "end": 160.06,
+      "in": 158.492,
+      "out": 160.193,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "574"
+     },
+     {
+      "start": 160.193,
+      "end": 295.295,
+      "in": 160.193,
+      "out": 295.295,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "575"
+     },
+     {
+      "start": 295.295,
+      "end": 296.963,
+      "in": 295.428,
+      "out": 297.097,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "576"
+     },
+     {
+      "start": 297.097,
+      "end": 459.359,
+      "in": 297.097,
+      "out": 459.359,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "577"
+     },
+     {
+      "start": 459.359,
+      "end": 461.027,
+      "in": 459.492,
+      "out": 461.161,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "578"
+     },
+     {
+      "start": 461.161,
+      "end": 535.568,
+      "in": 461.161,
+      "out": 535.568,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "579"
+     },
+     {
+      "start": 535.568,
+      "end": 537.237,
+      "in": 535.702,
+      "out": 537.37,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "580"
+     },
+     {
+      "start": 537.37,
+      "end": 646.646,
+      "in": 537.37,
+      "out": 646.646,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "581"
+     },
+     {
+      "start": 646.646,
+      "end": 648.348,
+      "in": 646.779,
+      "out": 648.481,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "582"
+     },
+     {
+      "start": 648.481,
+      "end": 766.366,
+      "in": 648.481,
+      "out": 766.366,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "583"
+     },
+     {
+      "start": 766.432,
+      "end": 788.121,
+      "in": 766.432,
+      "out": 788.121,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "584"
+     },
+     {
+      "start": 788.121,
+      "end": 798.398,
+      "in": 0.0,
+      "out": 10.277,
+      "name": "Sand_Castle.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\귀염\\Sand_Castle.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        8.6753,
+        0.036082472652
+       ],
+       [
+        10.2763,
+        0.0
+       ]
+      ],
+      "oid": "585"
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 33.066,
+      "in": 0.0,
+      "out": 33.066,
+      "name": "Gypsy_Stroll.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\낭만적\\Gypsy_Stroll.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        32.2656,
+        0.015463917516
+       ],
+       [
+        33.0664,
+        0.0
+       ]
+      ],
+      "oid": "588"
+     },
+     {
+      "start": 34.902,
+      "end": 113.647,
+      "in": 2.002,
+      "out": 80.747,
+      "name": "A_Dusty_Road.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\극적\\A_Dusty_Road.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.00964262243360281,
+      "gain_keys": [],
+      "oid": "589"
+     },
+     {
+      "start": 113.647,
+      "end": 158.325,
+      "in": 0.434,
+      "out": 45.112,
+      "name": "Spanish_Rose.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\낭만적\\Spanish_Rose.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        44.1107,
+        0.015004768036
+       ],
+       [
+        45.1018,
+        0.0
+       ]
+      ],
+      "oid": "590"
+     },
+     {
+      "start": 160.193,
+      "end": 187.821,
+      "in": 0.868,
+      "out": 28.495,
+      "name": "Resolution.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\극적\\Resolution.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.036082472652196884,
+      "gain_keys": [],
+      "oid": "591"
+     },
+     {
+      "start": 187.821,
+      "end": 295.295,
+      "in": 0.0,
+      "out": 107.474,
+      "name": "Djinn.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\극적\\Djinn.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        106.4063,
+        0.009814796038
+       ],
+       [
+        107.4732,
+        0.0
+       ]
+      ],
+      "oid": "592"
+     },
+     {
+      "start": 297.13,
+      "end": 459.359,
+      "in": 0.3,
+      "out": 162.529,
+      "name": "Erykah.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\낭만적\\Erykah.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        161.3278,
+        0.015463917516
+       ],
+       [
+        162.529,
+        0.0
+       ]
+      ],
+      "oid": "593"
+     },
+     {
+      "start": 461.161,
+      "end": 535.568,
+      "in": 0.067,
+      "out": 74.474,
+      "name": "Standing_Here.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\낭만적\\Standing_Here.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        74.2075,
+        0.009235559031
+       ],
+       [
+        74.4744,
+        0.0
+       ]
+      ],
+      "oid": "594"
+     },
+     {
+      "start": 537.37,
+      "end": 646.646,
+      "in": 0.033,
+      "out": 109.309,
+      "name": "Species.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\힙합\\Species.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        108.1747,
+        0.012820512988
+       ],
+       [
+        109.2572,
+        0.0
+       ]
+      ],
+      "oid": "595"
+     },
+     {
+      "start": 648.481,
+      "end": 788.121,
+      "in": 0.0,
+      "out": 139.639,
+      "name": "Triumph.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\힙합\\Triumph.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.012997998856008053,
+      "gain_keys": [],
+      "oid": "596"
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 788.121,
+      "in": 0.0,
+      "out": 788.121,
+      "name": "B052_코카콜라1_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "535"
+     },
+     {
+      "start": 788.121,
+      "end": 798.398,
+      "in": 0.0,
+      "out": 10.277,
+      "name": "세모지 아웃트로_최종.mov",
+      "file": "C:\\work\\001_유튜브\\필수이미지\\세모지 아웃트로_최종.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "604"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": [
+     {
+      "start": 167.501,
+      "end": 180.08,
+      "in": 0.0,
+      "out": 12.579,
+      "name": "B052_코카콜라1_음악전_수정1.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전_수정1.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "605"
+     },
+     {
+      "start": 187.821,
+      "end": 200.1,
+      "in": 0.0,
+      "out": 12.279,
+      "name": "B052_코카콜라1_음악전_수정2.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전_수정2.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "606"
+     },
+     {
+      "start": 220.921,
+      "end": 232.299,
+      "in": 0.0,
+      "out": 11.378,
+      "name": "B052_코카콜라1_음악전_수정3.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전_수정3.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "607"
+     },
+     {
+      "start": 707.74,
+      "end": 712.912,
+      "in": 0.0,
+      "out": 5.172,
+      "name": "B052_코카콜라1_음악전_수정4.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\B052_코카콜라1_음악전_수정4.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "608"
+     },
+     {
+      "start": 788.121,
+      "end": 798.398,
+      "in": 3600.03,
+      "out": 3610.307,
+      "name": "Graphic",
+      "file": "1196574294",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "609"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": [
+     {
+      "start": 788.121,
+      "end": 798.398,
+      "in": 3599.996,
+      "out": 3610.273,
+      "name": "63517.jpg",
+      "file": "C:\\work\\세모지_자주쓰는효과\\텍스쳐\\63517.jpg",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "610"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 3,
+    "items": [
+     {
+      "start": 788.121,
+      "end": 798.398,
+      "in": 3599.996,
+      "out": 3610.273,
+      "name": "Graphic",
+      "file": "1196574294",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "611"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "sequence": "코카콜라1 오디오 원본1",
+  "uid": "2f2d4fae-ca19-40aa-8c2c-3b852bd54136",
+  "tracks": [
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 0,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": []
+   }
+  ]
+ },
+ {
+  "sequence": "3기신도시_고양창릉_오디오_원본",
+  "uid": "45da5f77-577b-4025-8d1f-5c837002f1d0",
+  "tracks": [
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 0,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": []
+   }
+  ]
+ },
+ {
+  "sequence": "코카콜라1_썸네일",
+  "uid": "2a423136-ac5a-4729-9efc-07179b784320",
+  "tracks": [
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 4.972,
+      "in": 3599.996,
+      "out": 3604.968,
+      "name": "코카콜라1_썸네일.jpg",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B052_코카콜라1\\코카콜라1_썸네일.jpg",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "639"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": []
+   }
+  ]
+ }
+]

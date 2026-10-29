@@ -1,0 +1,1034 @@
+{
+ "n001": {
+  "orig": 3.42,
+  "new": 4.43,
+  "status": "ok",
+  "hash": "bc04dafb1ac8"
+ },
+ "n002": {
+  "orig": 2.15,
+  "new": 2.59,
+  "status": "ok",
+  "hash": "0b5409f15da5"
+ },
+ "n003": {
+  "orig": 2.69,
+  "new": 2.75,
+  "status": "ok",
+  "hash": "4fa4434d446a"
+ },
+ "n004": {
+  "orig": 3.97,
+  "new": 3.95,
+  "status": "ok",
+  "hash": "6281dc17f421"
+ },
+ "n005": {
+  "orig": 5.6,
+  "new": 5.15,
+  "status": "ok",
+  "hash": "d296c1cfdd29"
+ },
+ "n006": {
+  "orig": 4.96,
+  "new": 5.07,
+  "status": "ok",
+  "hash": "8605d7f72039"
+ },
+ "n007": {
+  "orig": 8.93,
+  "new": 8.59,
+  "status": "ok",
+  "hash": "8df63f3e38e4"
+ },
+ "n008": {
+  "orig": 3.02,
+  "new": 2.83,
+  "status": "ok",
+  "hash": "8738a8d26721"
+ },
+ "n009": {
+  "orig": 3.57,
+  "new": 3.39,
+  "status": "ok",
+  "hash": "96329ff4d4dd"
+ },
+ "n010": {
+  "orig": 6.83,
+  "new": 6.19,
+  "status": "ok",
+  "hash": "78762029e1b7"
+ },
+ "n011": {
+  "orig": 6.88,
+  "new": 6.19,
+  "status": "ok",
+  "hash": "0dfaf4a07614"
+ },
+ "n012": {
+  "orig": 3.16,
+  "new": 2.43,
+  "status": "ok",
+  "hash": "7d957fe00540"
+ },
+ "n013": {
+  "orig": 3.06,
+  "new": 2.83,
+  "status": "ok",
+  "hash": "a22e7d526116"
+ },
+ "n017": {
+  "orig": 6.59,
+  "new": 6.67,
+  "status": "ok",
+  "hash": "849999a83def"
+ },
+ "n018": {
+  "orig": 6.5,
+  "new": 6.16,
+  "status": "ok",
+  "hash": "05a9c2976f77"
+ },
+ "n019": {
+  "orig": 2.3,
+  "new": 1.87,
+  "status": "ok",
+  "hash": "22a9e8746995"
+ },
+ "n020": {
+  "orig": 2.74,
+  "new": 2.59,
+  "status": "ok",
+  "hash": "9319f11e6497"
+ },
+ "n021": {
+  "orig": 6.35,
+  "new": 6.19,
+  "status": "ok",
+  "hash": "2916234b82bd"
+ },
+ "n022": {
+  "orig": 9.09,
+  "new": 8.99,
+  "status": "ok",
+  "hash": "83b1cb2078a7"
+ },
+ "n023": {
+  "orig": 4.49,
+  "new": 3.95,
+  "status": "ok",
+  "hash": "a7136904f370"
+ },
+ "n024": {
+  "orig": 7.03,
+  "new": 6.51,
+  "status": "ok",
+  "hash": "18e163d87748"
+ },
+ "n025": {
+  "orig": 3.47,
+  "new": 2.91,
+  "status": "ok",
+  "hash": "3d1272e15a66"
+ },
+ "n026": {
+  "orig": 3.66,
+  "new": 2.83,
+  "status": "ok",
+  "hash": "1acc51319bd3"
+ },
+ "n027": {
+  "orig": 5.29,
+  "new": 4.96,
+  "status": "ok",
+  "hash": "fe69f0bb1b93"
+ },
+ "n028": {
+  "orig": 2.53,
+  "new": 2.43,
+  "status": "ok",
+  "hash": "d951c21b6a45"
+ },
+ "n029": {
+  "orig": 1.9,
+  "new": 1.47,
+  "status": "ok",
+  "hash": "06353e1e90a7"
+ },
+ "n030": {
+  "orig": 3.47,
+  "new": 3.76,
+  "status": "ok",
+  "hash": "0c11cdff9485"
+ },
+ "n031": {
+  "orig": 8.28,
+  "new": 7.44,
+  "status": "ok",
+  "hash": "c3b87faf3b0d"
+ },
+ "n032": {
+  "orig": 2.77,
+  "new": 2.78,
+  "status": "ok",
+  "hash": "d9514ca3a068"
+ },
+ "n033": {
+  "orig": 10.39,
+  "new": 9.95,
+  "status": "ok",
+  "hash": "a41e0c2e2677"
+ },
+ "n034": {
+  "orig": 3.65,
+  "new": 3.68,
+  "status": "ok",
+  "hash": "3ac44c202407"
+ },
+ "n035": {
+  "orig": 3.5,
+  "new": 2.83,
+  "status": "ok",
+  "hash": "a7b5ee06b00b"
+ },
+ "n036": {
+  "orig": 2.76,
+  "new": 2.51,
+  "status": "ok",
+  "hash": "c14f42085bfa"
+ },
+ "n037": {
+  "orig": 10.62,
+  "new": 9.23,
+  "status": "ok",
+  "hash": "8dc0609926dd"
+ },
+ "n038": {
+  "orig": 2.29,
+  "new": 2.19,
+  "status": "ok",
+  "hash": "b3ed4b941f93"
+ },
+ "n039": {
+  "orig": 5.96,
+  "new": 5.55,
+  "status": "ok",
+  "hash": "36a23cbca7d6"
+ },
+ "n040": {
+  "orig": 6.72,
+  "new": 7.44,
+  "status": "ok",
+  "hash": "b7f4b2e5e6d4"
+ },
+ "n041": {
+  "orig": 2.9,
+  "new": 2.83,
+  "status": "ok",
+  "hash": "b3627c27c7e1"
+ },
+ "n042": {
+  "orig": 4.11,
+  "new": 3.71,
+  "status": "ok",
+  "hash": "2ef52b82ce83"
+ },
+ "n043": {
+  "orig": 2.58,
+  "new": 2.83,
+  "status": "ok",
+  "hash": "518dc095bc4e"
+ },
+ "n044": {
+  "orig": 3.62,
+  "new": 3.39,
+  "status": "ok",
+  "hash": "9c4a57b3c13e"
+ },
+ "n045": {
+  "orig": 2.01,
+  "new": 2.19,
+  "status": "ok",
+  "hash": "87a919fe50ee"
+ },
+ "n046": {
+  "orig": 5.25,
+  "new": 4.67,
+  "status": "ok",
+  "hash": "1c69c151a417"
+ },
+ "n047": {
+  "orig": 5.99,
+  "new": 5.47,
+  "status": "ok",
+  "hash": "4603e0e60529"
+ },
+ "n048": {
+  "orig": 8.5,
+  "new": 7.23,
+  "status": "ok",
+  "hash": "8bae975e0162"
+ },
+ "n049": {
+  "orig": 12.76,
+  "new": 10.19,
+  "status": "ok",
+  "hash": "191055955205"
+ },
+ "n050": {
+  "orig": 2.74,
+  "new": 2.11,
+  "status": "ok",
+  "hash": "df5a9d76910e"
+ },
+ "n051": {
+  "orig": 5.64,
+  "new": 4.99,
+  "status": "ok",
+  "hash": "3780b083ea52"
+ },
+ "n052": {
+  "orig": 7.96,
+  "new": 6.59,
+  "status": "ok",
+  "hash": "83489a9f70f4"
+ },
+ "n053": {
+  "orig": 5.62,
+  "new": 4.67,
+  "status": "ok",
+  "hash": "6f5a770b4f48"
+ },
+ "n054": {
+  "orig": 6.24,
+  "new": 5.15,
+  "status": "ok",
+  "hash": "332a51e73800"
+ },
+ "n055": {
+  "orig": 11.01,
+  "new": 11.07,
+  "status": "ok",
+  "hash": "8ab1f6ef7db0"
+ },
+ "n056": {
+  "orig": 5.83,
+  "new": 5.23,
+  "status": "ok",
+  "hash": "9c6baef70fd5"
+ },
+ "n057": {
+  "orig": 5.02,
+  "new": 5.47,
+  "status": "ok",
+  "hash": "2618747bb7b2"
+ },
+ "n058": {
+  "orig": 9.05,
+  "new": 8.11,
+  "status": "ok",
+  "hash": "d828e7dca091"
+ },
+ "n059": {
+  "orig": 4.71,
+  "new": 4.19,
+  "status": "ok",
+  "hash": "f0521b12fd44"
+ },
+ "n061": {
+  "orig": 2.12,
+  "new": 1.87,
+  "status": "ok",
+  "hash": "67854c56aefa"
+ },
+ "n062": {
+  "orig": 3.86,
+  "new": 3.63,
+  "status": "ok",
+  "hash": "ecbc220c2cdb"
+ },
+ "n063": {
+  "orig": 12.6,
+  "new": 10.83,
+  "status": "ok",
+  "hash": "ada176fe92cb"
+ },
+ "n064": {
+  "orig": 4.53,
+  "new": 3.63,
+  "status": "ok",
+  "hash": "e9da7857b996"
+ },
+ "n065": {
+  "orig": 4.65,
+  "new": 4.51,
+  "status": "ok",
+  "hash": "5286e4ab3a62"
+ },
+ "n066": {
+  "orig": 5.29,
+  "new": 4.43,
+  "status": "ok",
+  "hash": "975eb45654ca"
+ },
+ "n067": {
+  "orig": 7.11,
+  "new": 6.35,
+  "status": "ok",
+  "hash": "67889a862e69"
+ },
+ "n068": {
+  "orig": 2.99,
+  "new": 2.43,
+  "status": "ok",
+  "hash": "40729f18b407"
+ },
+ "n069": {
+  "orig": 6.89,
+  "new": 5.63,
+  "status": "ok",
+  "hash": "e4d58df0a32a"
+ },
+ "n070": {
+  "orig": 2.74,
+  "new": 2.51,
+  "status": "ok",
+  "hash": "0b58c91bef7e"
+ },
+ "n071": {
+  "orig": 2.8,
+  "new": 2.19,
+  "status": "ok",
+  "hash": "6622a52a05cd"
+ },
+ "n072": {
+  "orig": 14.71,
+  "new": 11.87,
+  "status": "ok",
+  "hash": "8bebfd1fb683"
+ },
+ "n073": {
+  "orig": 5.39,
+  "new": 4.35,
+  "status": "ok",
+  "hash": "79677a113650"
+ },
+ "n074": {
+  "orig": 4.36,
+  "new": 3.63,
+  "status": "ok",
+  "hash": "a729d8f88a50"
+ },
+ "n075": {
+  "orig": 7.04,
+  "new": 5.87,
+  "status": "ok",
+  "hash": "74b4cc3ef3e0"
+ },
+ "n076": {
+  "orig": 6.31,
+  "new": 4.83,
+  "status": "ok",
+  "hash": "d1650678ea65"
+ },
+ "n077": {
+  "orig": 4.4,
+  "new": 4.72,
+  "status": "ok",
+  "hash": "8d85326ed68d"
+ },
+ "n078": {
+  "orig": 6.71,
+  "new": 6.67,
+  "status": "ok",
+  "hash": "28a2bd2561e3"
+ },
+ "n079": {
+  "orig": 4.51,
+  "new": 3.95,
+  "status": "ok",
+  "hash": "7924b99d22fc"
+ },
+ "n080": {
+  "orig": 4.33,
+  "new": 3.47,
+  "status": "ok",
+  "hash": "37cb9b3acce3"
+ },
+ "n081": {
+  "orig": 5.31,
+  "new": 4.03,
+  "status": "ok",
+  "hash": "d44a4a5708ad"
+ },
+ "n082": {
+  "orig": 2.56,
+  "new": 2.11,
+  "status": "ok",
+  "hash": "63f42018f207"
+ },
+ "n083": {
+  "orig": 14.85,
+  "new": 11.79,
+  "status": "ok",
+  "hash": "d3d589a49e49"
+ },
+ "n084": {
+  "orig": 4.5,
+  "new": 4.11,
+  "status": "ok",
+  "hash": "007e981af063"
+ },
+ "n085": {
+  "orig": 5.89,
+  "new": 5.23,
+  "status": "ok",
+  "hash": "0e64d53691c0"
+ },
+ "n086": {
+  "orig": 6.83,
+  "new": 5.23,
+  "status": "ok",
+  "hash": "00036bd114c4"
+ },
+ "n087": {
+  "orig": 6.13,
+  "new": 4.99,
+  "status": "ok",
+  "hash": "5c3c500bfb82"
+ },
+ "n088": {
+  "orig": 2.98,
+  "new": 2.35,
+  "status": "ok",
+  "hash": "3afe1c9e7d1d"
+ },
+ "n089": {
+  "orig": 3.48,
+  "new": 3.71,
+  "status": "ok",
+  "hash": "e9b4b3c224b5"
+ },
+ "n090": {
+  "orig": 7.3,
+  "new": 6.67,
+  "status": "ok",
+  "hash": "2c55b62a8128"
+ },
+ "n091": {
+  "orig": 7.19,
+  "new": 5.55,
+  "status": "ok",
+  "hash": "0b3ce86bc902"
+ },
+ "n092": {
+  "orig": 2.14,
+  "new": 2.48,
+  "status": "ok",
+  "hash": "52b8571ea232"
+ },
+ "n093": {
+  "orig": 2.99,
+  "new": 2.59,
+  "status": "ok",
+  "hash": "4021709d12fd"
+ },
+ "n094": {
+  "orig": 11.81,
+  "new": 9.87,
+  "status": "ok",
+  "hash": "da0394efb7a6"
+ },
+ "n095": {
+  "orig": 0.93,
+  "new": 0.91,
+  "status": "ok",
+  "hash": "46beb1451c37"
+ },
+ "n096": {
+  "orig": 3.85,
+  "new": 4.03,
+  "status": "ok",
+  "hash": "d9802af02cc1"
+ },
+ "n097": {
+  "orig": 13.44,
+  "new": 10.75,
+  "status": "ok",
+  "hash": "a647fd685153"
+ },
+ "n098": {
+  "orig": 8.29,
+  "new": 7.55,
+  "status": "ok",
+  "hash": "6de3b5a32069"
+ },
+ "n099": {
+  "orig": 9.52,
+  "new": 8.8,
+  "status": "ok",
+  "hash": "9bd76cc550c8"
+ },
+ "n100": {
+  "orig": 6.91,
+  "new": 5.31,
+  "status": "ok",
+  "hash": "a0125cfc6695"
+ },
+ "n101": {
+  "orig": 3.55,
+  "new": 3.39,
+  "status": "ok",
+  "hash": "100180af527e"
+ },
+ "n102": {
+  "orig": 2.77,
+  "new": 2.51,
+  "status": "ok",
+  "hash": "027095c19837"
+ },
+ "n103": {
+  "orig": 2.69,
+  "new": 2.83,
+  "status": "ok",
+  "hash": "cba2872e85e4"
+ },
+ "n104": {
+  "orig": 7.74,
+  "new": 6.19,
+  "status": "ok",
+  "hash": "8c2ab35de71d"
+ },
+ "n105": {
+  "orig": 2.57,
+  "new": 2.35,
+  "status": "ok",
+  "hash": "25d56efde9f3"
+ },
+ "n106": {
+  "orig": 2.42,
+  "new": 2.27,
+  "status": "ok",
+  "hash": "800dec59a30d"
+ },
+ "n107": {
+  "orig": 10.38,
+  "new": 8.43,
+  "status": "ok",
+  "hash": "5aae11f17e27"
+ },
+ "n108": {
+  "orig": 5.91,
+  "new": 4.51,
+  "status": "ok",
+  "hash": "fef4baf97de9"
+ },
+ "n109": {
+  "orig": 4.31,
+  "new": 3.79,
+  "status": "ok",
+  "hash": "02825987a2e7"
+ },
+ "n110": {
+  "orig": 3.01,
+  "new": 3.07,
+  "status": "ok",
+  "hash": "abd8a082a5b0"
+ },
+ "n111": {
+  "orig": 7.09,
+  "new": 8.48,
+  "status": "ok",
+  "hash": "0a96b57b8104"
+ },
+ "n112": {
+  "orig": 3.72,
+  "new": 3.63,
+  "status": "ok",
+  "hash": "b0c6a2c72a01"
+ },
+ "n113": {
+  "orig": 2.67,
+  "new": 2.64,
+  "status": "ok",
+  "hash": "eb2d46bb65b6"
+ },
+ "n114": {
+  "orig": 4.3,
+  "new": 3.63,
+  "status": "ok",
+  "hash": "397d745c1a03"
+ },
+ "n115": {
+  "orig": 3.33,
+  "new": 2.88,
+  "status": "ok",
+  "hash": "6e9a8f025314"
+ },
+ "n116": {
+  "orig": 4.78,
+  "new": 4.35,
+  "status": "ok",
+  "hash": "29b2d2c56b66"
+ },
+ "n117": {
+  "orig": 2.27,
+  "new": 2.03,
+  "status": "ok",
+  "hash": "9a98d27eb69b"
+ },
+ "n118": {
+  "orig": 1.66,
+  "new": 2.08,
+  "status": "ok",
+  "hash": "065018ee2daa"
+ },
+ "n119": {
+  "orig": 2.65,
+  "new": 2.51,
+  "status": "ok",
+  "hash": "c859e1b678dc"
+ },
+ "n120": {
+  "orig": 3.4,
+  "new": 3.07,
+  "status": "ok",
+  "hash": "a66109cef1f8"
+ },
+ "n121": {
+  "orig": 8.04,
+  "new": 6.19,
+  "status": "ok",
+  "hash": "e32946d99eea"
+ },
+ "n122": {
+  "orig": 4.7,
+  "new": 4.27,
+  "status": "ok",
+  "hash": "8c849086f791"
+ },
+ "n123": {
+  "orig": 4.06,
+  "new": 3.23,
+  "status": "ok",
+  "hash": "5ccf94dba2a4"
+ },
+ "n124": {
+  "orig": 4.38,
+  "new": 4.51,
+  "status": "ok",
+  "hash": "a1ac90738ecb"
+ },
+ "n125": {
+  "orig": 8.92,
+  "new": 8.43,
+  "status": "ok",
+  "hash": "4348e9f1411e"
+ },
+ "n126": {
+  "orig": 9.83,
+  "new": 7.63,
+  "status": "ok",
+  "hash": "29673d3051ab"
+ },
+ "n127": {
+  "orig": 2.92,
+  "new": 3.36,
+  "status": "ok",
+  "hash": "1410c0c0fe86"
+ },
+ "n128": {
+  "orig": 2.21,
+  "new": 1.79,
+  "status": "ok",
+  "hash": "08f8409735e2"
+ },
+ "n129": {
+  "orig": 2.76,
+  "new": 2.67,
+  "status": "ok",
+  "hash": "10e3bce13562"
+ },
+ "n130": {
+  "orig": 2.71,
+  "new": 2.32,
+  "status": "ok",
+  "hash": "3c4bca0569dc"
+ },
+ "n131": {
+  "orig": 1.85,
+  "new": 2.0,
+  "status": "ok",
+  "hash": "2020b5da0ef8"
+ },
+ "n132": {
+  "orig": 3.61,
+  "new": 3.15,
+  "status": "ok",
+  "hash": "e29720226881"
+ },
+ "n133": {
+  "orig": 2.38,
+  "new": 1.87,
+  "status": "ok",
+  "hash": "9e7f52d8e849"
+ },
+ "n134": {
+  "orig": 6.49,
+  "new": 5.95,
+  "status": "ok",
+  "hash": "a4cbb9368ed6"
+ },
+ "n135": {
+  "orig": 4.82,
+  "new": 5.39,
+  "status": "ok",
+  "hash": "98fddae90fac"
+ },
+ "n136": {
+  "orig": 5.6,
+  "new": 6.19,
+  "status": "ok",
+  "hash": "ae73a1a0943e"
+ },
+ "n137": {
+  "orig": 6.5,
+  "new": 5.71,
+  "status": "ok",
+  "hash": "d98b0528bd5d"
+ },
+ "n138": {
+  "orig": 2.32,
+  "new": 2.99,
+  "status": "ok",
+  "hash": "1a185e373f5e"
+ },
+ "n139": {
+  "orig": 4.97,
+  "new": 3.95,
+  "status": "ok",
+  "hash": "2739b6be6189"
+ },
+ "n140": {
+  "orig": 9.5,
+  "new": 8.35,
+  "status": "ok",
+  "hash": "2496f8cf9370"
+ },
+ "n141": {
+  "orig": 2.14,
+  "new": 2.35,
+  "status": "ok",
+  "hash": "60fb27178470"
+ },
+ "n143": {
+  "orig": 2.78,
+  "new": 2.67,
+  "status": "ok",
+  "hash": "6b839de55445"
+ },
+ "n144": {
+  "orig": 8.389,
+  "new": 7.39,
+  "status": "ok",
+  "hash": "2c6ba9e7f94e"
+ },
+ "n145": {
+  "orig": 6.18,
+  "new": 4.99,
+  "status": "ok",
+  "hash": "7abf7ca6d4b1"
+ },
+ "n146": {
+  "orig": 10.11,
+  "new": 9.63,
+  "status": "ok",
+  "hash": "fcc1b1216ad2"
+ },
+ "n147": {
+  "orig": 11.57,
+  "new": 10.43,
+  "status": "ok",
+  "hash": "689007e6a26a"
+ },
+ "n148": {
+  "orig": 2.07,
+  "new": 1.87,
+  "status": "ok",
+  "hash": "3be449abf504"
+ },
+ "n149": {
+  "orig": 2.14,
+  "new": 2.03,
+  "status": "ok",
+  "hash": "ca1fd48d4853"
+ },
+ "n150": {
+  "orig": 3.42,
+  "new": 2.99,
+  "status": "ok",
+  "hash": "6433bda6d7c8"
+ },
+ "n151": {
+  "orig": 5.08,
+  "new": 4.83,
+  "status": "ok",
+  "hash": "b31e7709a6d8"
+ },
+ "n152": {
+  "orig": 5.07,
+  "new": 4.19,
+  "status": "ok",
+  "hash": "9516a7948b7c"
+ },
+ "n153": {
+  "orig": 8.21,
+  "new": 6.67,
+  "status": "ok",
+  "hash": "f0c4a70f25db"
+ },
+ "n154": {
+  "orig": 1.39,
+  "new": 1.55,
+  "status": "ok",
+  "hash": "5ebd980e00c8"
+ },
+ "n155": {
+  "orig": 2.75,
+  "new": 2.19,
+  "status": "ok",
+  "hash": "542eda8ae476"
+ },
+ "n156": {
+  "orig": 2.96,
+  "new": 2.59,
+  "status": "ok",
+  "hash": "e58db110c3d4"
+ },
+ "n157": {
+  "orig": 4.4,
+  "new": 3.39,
+  "status": "ok",
+  "hash": "f422c53110ed"
+ },
+ "n158": {
+  "orig": 9.7,
+  "new": 8.43,
+  "status": "ok",
+  "hash": "1e6b4b1b254c"
+ },
+ "n159": {
+  "orig": 9.27,
+  "new": 7.63,
+  "status": "ok",
+  "hash": "2434e483bd80"
+ },
+ "n160": {
+  "orig": 3.76,
+  "new": 3.28,
+  "status": "ok",
+  "hash": "10eb0eac0629"
+ },
+ "n161": {
+  "orig": 3.73,
+  "new": 3.23,
+  "status": "ok",
+  "hash": "e0dd455f10ea"
+ },
+ "n162": {
+  "orig": 3.09,
+  "new": 2.67,
+  "status": "ok",
+  "hash": "22a51c2c18b8"
+ },
+ "n163": {
+  "orig": 9.81,
+  "new": 7.95,
+  "status": "ok",
+  "hash": "ab09a561fa60"
+ },
+ "n164": {
+  "orig": 8.68,
+  "new": 7.31,
+  "status": "ok",
+  "hash": "531ba791e5d5"
+ },
+ "n165": {
+  "orig": 9.79,
+  "new": 9.87,
+  "status": "ok",
+  "hash": "022b80337d89"
+ },
+ "n166": {
+  "orig": 6.97,
+  "new": 6.19,
+  "status": "ok",
+  "hash": "af796007ccfc"
+ },
+ "n167": {
+  "orig": 8.08,
+  "new": 7.23,
+  "status": "ok",
+  "hash": "232e59218741"
+ },
+ "n168": {
+  "orig": 5.66,
+  "new": 5.55,
+  "status": "ok",
+  "hash": "52f555f02c09"
+ },
+ "n169": {
+  "orig": 6.621,
+  "new": 6.03,
+  "status": "ok",
+  "hash": "c898540d0427"
+ },
+ "n170": {
+  "orig": 2.65,
+  "new": 2.27,
+  "status": "ok",
+  "hash": "dbb0db755d2f"
+ },
+ "n171": {
+  "orig": 8.77,
+  "new": 7.87,
+  "status": "ok",
+  "hash": "a7541cd3444a"
+ },
+ "n172": {
+  "orig": 10.31,
+  "new": 9.71,
+  "status": "ok",
+  "hash": "ce5e8205e597"
+ },
+ "n173": {
+  "orig": 6.72,
+  "new": 6.27,
+  "status": "ok",
+  "hash": "cf5d8a0a015c"
+ },
+ "n174": {
+  "orig": 4.08,
+  "new": 4.08,
+  "status": "ok",
+  "hash": "8fe47ac23ef6"
+ },
+ "n175": {
+  "orig": 5.55,
+  "new": 4.75,
+  "status": "ok",
+  "hash": "043628df21d2"
+ },
+ "n176": {
+  "orig": 5.81,
+  "new": 5.15,
+  "status": "ok",
+  "hash": "1670f7bea9e2"
+ },
+ "n177": {
+  "orig": 2.3,
+  "new": 2.35,
+  "status": "ok",
+  "hash": "ce9e1870ae98"
+ }
+}

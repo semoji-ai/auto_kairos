@@ -1,0 +1,17 @@
+{
+ "_plate_override": {
+  "zh": {
+   "1324225412": "assets/zh/world_map_cn.png",
+   "1324225416": "assets/zh/pin_hidden.png",
+   "1324225492": "assets/zh/globe_cn.png",
+   "1324224162": "assets/zh/sigh_zh.png",
+   "1324225314": "assets/zh/tag_sales_zh.png",
+   "1324225418": "assets/zh/pin_ph_small.png"
+  },
+  "_doc": "중국어판: 세계지도는 중국 관점으로 다시 그린 것(scripts/cn_world_map.py, 자체 심의 docs/zh/map_self_review.md), 신장·몽골 경계에 걸친 \"중국\" 핀은 숨기고 광둥의 홍콩 핀을 중국 핀으로 씀 / 끙..→唉.., 판매원 꼬리표→销售员(OCR 누락), 필리핀 핀 65%(머리가 대만 근처를 덮지 않게)"
+ },
+ "1324224162#0": {
+  "skip": true,
+  "why": "판 교체로 처리(sigh_zh.png)"
+ }
+}

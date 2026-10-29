@@ -1,0 +1,8 @@
+{
+ "_plate_override": {
+  "zh": {
+   "272289889": "assets/zh/world_map_cn.png"
+  }
+ },
+ "_doc": "중국어판: 도입 KFC 진출국 세계지도(국경선 있음)는 중국 관점으로 다시 그린 것(scripts/cn_world_map.py --countries, 자체 심의 docs/zh/map_self_review.md)"
+}
