@@ -491,109 +491,122 @@
      "layers": [
       {
        "type": "bg",
-       "src": "raster/src/3651.png"
+       "src": "raster/src/3180.png",
+       "dim": 0.15
       },
       {
-       "type": "image",
-       "src": "raster/src/20459.png",
-       "x": 960,
-       "y": 300,
-       "w": 420,
+       "type": "badge",
+       "text": "1983 西雅图",
+       "x": 330,
+       "y": 140,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
        "at": 0.0,
        "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "1985 加拿大",
+       "x": 330,
+       "y": 260,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        31,
+        79,
+        168
+       ],
+       "at": 0.55,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "走向全球",
+       "x": 330,
+       "y": 380,
+       "size": 60,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.85,
+       "anim": "slam"
       }
      ]
     },
     {
      "id": "ze02",
      "text": "但在中国大陆，山姆比它早到了整整23年：1996年，山姆在深圳开出了第一家会员店。",
+     "tts": "但在中国大陆，山姆比它早到了整整二十三年：1996年，山姆在深圳开出了第一家会员店。",
      "layers": [
       {
-       "type": "split",
-       "left": [
-        200,
-        16,
-        46
-       ],
-       "right": [
-        31,
-        79,
-        168
-       ]
-      },
-      {
-       "type": "image",
-       "src": "raster/src/20459.png",
-       "x": 480,
-       "y": 480,
-       "w": 600,
-       "at": 0.0,
-       "anim": "pop"
-      },
-      {
-       "type": "image",
-       "src": "assets/zh/blue_store.png",
-       "x": 1440,
-       "y": 480,
-       "w": 640,
-       "at": 0.55,
-       "anim": "pop"
-      },
-      {
-       "type": "text",
-       "text": "山姆",
-       "font": "label",
-       "size": 70,
-       "x": 1440,
-       "y": 400,
-       "color": [
-        31,
-        79,
-        168
-       ],
-       "at": 0.55,
-       "anim": "pop"
-      },
-      {
-       "type": "badge",
-       "text": "开市客",
-       "x": 480,
-       "y": 800,
-       "size": 60,
-       "color": [
-        255,
-        255,
-        255
-       ],
-       "bg": [
-        30,
-        30,
-        30
-       ],
-       "at": 0.0,
-       "anim": "fade"
+       "type": "bg",
+       "src": "assets/zh/gen/e_sam1996.png"
       },
       {
        "type": "badge",
        "text": "1996 深圳",
-       "x": 1440,
-       "y": 800,
-       "size": 60,
+       "x": 330,
+       "y": 130,
+       "size": 64,
        "color": [
         255,
         255,
         255
        ],
        "bg": [
+        31,
+        79,
+        168
+       ],
+       "at": 0.55,
+       "anim": "slide_right"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 23,
+       "prefix": "早到",
+       "suffix": "年",
+       "font": "label",
+       "size": 110,
+       "x": 560,
+       "y": 300,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "stroke": [
         30,
         30,
         30
        ],
-       "at": 0.6,
-       "anim": "fade"
+       "stroke_w": 10,
+       "at": 0.15,
+       "count_dur": 1.0,
+       "anim": "pop"
       }
-     ],
-     "tts": "但在中国大陆，山姆比它早到了整整二十三年：1996年，山姆在深圳开出了第一家会员店。"
+     ]
     },
     {
      "id": "ze03",
@@ -601,47 +614,33 @@
      "layers": [
       {
        "type": "bg",
-       "src": "raster/src/3651.png"
-      },
-      {
-       "type": "phone",
-       "x": 960,
-       "y": 500,
-       "w": 420,
-       "h": 760,
-       "at": 0.35,
-       "anim": "slide_up"
-      },
-      {
-       "type": "image",
-       "src": "raster/src/20445.png",
-       "x": 960,
-       "y": 430,
-       "w": 340,
-       "at": 0.45,
-       "anim": "pop"
-      },
-      {
-       "type": "text",
-       "text": "海外旗舰店",
-       "font": "label",
-       "size": 52,
-       "x": 960,
-       "y": 560,
-       "color": [
-        40,
-        40,
-        40
-       ],
-       "at": 0.5,
-       "anim": "fade"
+       "src": "assets/zh/gen/p_crowd4.png"
       },
       {
        "type": "badge",
-       "text": "2014年",
-       "x": 200,
-       "y": 120,
-       "size": 54,
+       "text": "2014 天猫海外旗舰店",
+       "x": 420,
+       "y": 130,
+       "size": 56,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.05,
+       "anim": "slide_right"
+      },
+      {
+       "type": "badge",
+       "text": "2019 上海 首家门店",
+       "x": 420,
+       "y": 250,
+       "size": 56,
        "color": [
         255,
         255,
@@ -652,228 +651,180 @@
         28,
         52
        ],
-       "at": 0.35,
-       "anim": "slide_right"
+       "at": 0.6,
+       "anim": "slam"
       }
      ]
     },
     {
      "id": "ze04",
      "text": "到今天，山姆在中国大陆约有70家门店、付费会员超过1000万；开市客，只有7家。",
+     "tts": "到今天，山姆在中国大陆约有七十家门店、付费会员超过一千万；开市客，只有七家。",
      "layers": [
       {
-       "type": "split",
-       "left": [
-        200,
-        16,
-        46
-       ],
-       "right": [
-        31,
-        79,
-        168
-       ]
+       "type": "bg",
+       "src": "assets/zh/gen/e_twostores.png"
       },
       {
-       "type": "image",
-       "src": "raster/src/20459.png",
-       "x": 150,
-       "y": 330,
-       "w": 150,
-       "at": 0.75,
-       "anim": "pop",
-       "repeat": {
-        "n": 7,
-        "dx": 0,
-        "dy": 0,
-        "grid": [
-         4,
-         165,
-         140
-        ],
-        "stagger": 0.02
-       }
-      },
-      {
-       "type": "image",
-       "src": "assets/zh/blue_store.png",
-       "x": 1050,
-       "y": 230,
-       "w": 120,
-       "at": 0.0,
-       "anim": "pop",
-       "repeat": {
-        "n": 30,
-        "dx": 0,
-        "dy": 0,
-        "grid": [
-         6,
-         140,
-         90
-        ],
-        "stagger": 0.01
-       }
-      },
-      {
-       "type": "badge",
-       "text": "约70家",
-       "x": 1440,
-       "y": 690,
-       "size": 90,
+       "type": "counter",
+       "from": 0,
+       "to": 70,
+       "prefix": "约",
+       "suffix": "家",
+       "font": "label",
+       "size": 110,
+       "x": 330,
+       "y": 110,
        "color": [
         254,
         235,
         58
        ],
-       "bg": [
+       "stroke": [
         30,
         30,
         30
        ],
+       "stroke_w": 10,
        "at": 0.1,
+       "count_dur": 1.2,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 1000,
+       "prefix": "会员 ",
+       "suffix": "万+",
+       "font": "label",
+       "size": 54,
+       "x": 330,
+       "y": 210,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "stroke": [
+        31,
+        79,
+        168
+       ],
+       "stroke_w": 10,
+       "at": 0.35,
+       "count_dur": 1.0,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 7,
+       "suffix": "家",
+       "font": "label",
+       "size": 120,
+       "x": 1480,
+       "y": 150,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "stroke": [
+        30,
+        30,
+        30
+       ],
+       "stroke_w": 10,
+       "at": 0.8,
+       "count_dur": 0.6,
        "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "ze04b",
+     "text": "为什么山姆跑在了前面？除了早到23年，它还把会员店搬进了手机——据报道，山姆一半以上的生意，已经来自线上。",
+     "tts": "为什么山姆跑在了前面？除了早到二十三年，它还把会员店搬进了手机——据报道，山姆一半以上的生意，已经来自线上。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/e_online_v2.png"
       },
       {
        "type": "badge",
-       "text": "会员 1000万+",
-       "x": 1440,
-       "y": 820,
-       "size": 54,
+       "text": "为什么是山姆？",
+       "x": 960,
+       "y": 80,
+       "size": 60,
        "color": [
         255,
         255,
         255
        ],
        "bg": [
-        30,
-        30,
-        30
+        31,
+        79,
+        168
        ],
-       "at": 0.35,
-       "anim": "pop"
+       "at": 0.0,
+       "anim": "slam"
       },
       {
-       "type": "badge",
-       "text": "7家",
-       "x": 480,
-       "y": 690,
-       "size": 90,
+       "type": "counter",
+       "from": 0,
+       "to": 50,
+       "prefix": "线上 超过",
+       "suffix": "%",
+       "font": "label",
+       "size": 84,
+       "x": 330,
+       "y": 640,
        "color": [
         254,
         235,
         58
        ],
-       "bg": [
+       "stroke": [
         30,
         30,
         30
        ],
-       "at": 0.78,
-       "anim": "slam"
-      }
-     ],
-     "tts": "到今天，山姆在中国大陆约有七十家门店、付费会员超过一千万；开市客，只有七家。"
-    },
-    {
-     "id": "ze04b",
-     "text": "为什么山姆跑在了前面？除了早到23年，它还把会员店搬进了手机——据报道，山姆一半以上的生意，已经来自线上。",
-     "layers": [
-      {
-       "type": "bg",
-       "src": "raster/src/3651.png"
-      },
-      {
-       "type": "phone",
-       "x": 960,
-       "y": 500,
-       "w": 420,
-       "h": 760,
-       "at": 0.35,
-       "anim": "slide_up"
-      },
-      {
-       "type": "image",
-       "src": "raster/src/20445.png",
-       "x": 960,
-       "y": 430,
-       "w": 340,
-       "at": 0.45,
+       "stroke_w": 10,
+       "at": 0.55,
+       "count_dur": 1.0,
        "anim": "pop"
       },
       {
        "type": "text",
-       "text": "线上 过半",
-       "font": "label",
-       "size": 52,
-       "x": 960,
-       "y": 560,
+       "text": "据报道",
+       "font": "body",
+       "size": 34,
+       "x": 330,
+       "y": 730,
        "color": [
         40,
         40,
         40
        ],
-       "at": 0.5,
+       "at": 0.6,
        "anim": "fade"
-      },
-      {
-       "type": "badge",
-       "text": "据报道",
-       "x": 200,
-       "y": 120,
-       "size": 54,
-       "color": [
-        255,
-        255,
-        255
-       ],
-       "bg": [
-        226,
-        28,
-        52
-       ],
-       "at": 0.35,
-       "anim": "slide_right"
       }
-     ],
-     "tts": "为什么山姆跑在了前面？除了早到二十三年，它还把会员店搬进了手机——据报道，山姆一半以上的生意，已经来自线上。"
+     ]
     },
     {
      "id": "ze05",
      "text": "2025年8月底，盒马X会员店全部关闭。会员店这门生意，并不好做。",
+     "tts": "2025年8月底，盒马叉会员店全部关闭。会员店这门生意，并不好做。",
      "layers": [
       {
        "type": "bg",
-       "src": "raster/src/3691.png"
-      },
-      {
-       "type": "image",
-       "src": "assets/zh/grey_store.png",
-       "x": 960,
-       "y": 460,
-       "w": 640,
-       "at": 0.0,
-       "anim": "pop"
-      },
-      {
-       "type": "text",
-       "text": "盒马X会员店",
-       "font": "label",
-       "size": 54,
-       "x": 960,
-       "y": 382,
-       "color": [
-        90,
-        90,
-        90
-       ],
-       "at": 0.0,
-       "anim": "pop"
+       "src": "assets/zh/gen/e_closed.png"
       },
       {
        "type": "badge",
        "text": "全部关闭",
        "x": 960,
-       "y": 620,
+       "y": 560,
        "size": 130,
        "color": [
         255,
@@ -885,16 +836,16 @@
         28,
         52
        ],
-       "at": 0.3,
+       "at": 0.35,
        "anim": "slam",
        "rot": -6
       }
-     ],
-     "tts": "2025年8月底，盒马叉会员店全部关闭。会员店这门生意，并不好做。"
+     ]
     },
     {
      "id": "ze06",
      "text": "2023年有报道称，开市客在中国大陆的续卡率约六成，全球接近九成；据报道，它还计划再开9家店。",
+     "tts": "2023年有报道称，开市客在中国大陆的续卡率约六成，全球接近九成；据报道，它还计划再开九家店。",
      "layers": [
       {
        "type": "bg",
@@ -904,8 +855,8 @@
        "type": "badge",
        "text": "据报道 再开9家",
        "x": 960,
-       "y": 170,
-       "size": 66,
+       "y": 105,
+       "size": 60,
        "color": [
         255,
         255,
@@ -916,8 +867,8 @@
         30,
         30
        ],
-       "at": 0.0,
-       "anim": "pop"
+       "at": 0.8,
+       "anim": "slam"
       },
       {
        "type": "bar",
@@ -931,7 +882,7 @@
         46
        ],
        "label": "中国 约60%",
-       "at": 0.45
+       "at": 0.15
       },
       {
        "type": "bar",
@@ -945,82 +896,115 @@
         168
        ],
        "label": "全球 约90%",
-       "at": 0.75
+       "at": 0.45
       },
       {
        "type": "text",
        "text": "续卡率",
        "font": "label",
-       "size": 60,
+       "size": 72,
        "x": 960,
-       "y": 300,
+       "y": 215,
        "color": [
         40,
         40,
         40
        ],
-       "at": 0.4,
-       "anim": "fade"
-      }
-     ],
-     "tts": "2023年有报道称，开市客在中国大陆的续卡率约六成，全球接近九成；据报道，它还计划再开九家店。"
-    },
-    {
-     "id": "ze07",
-     "text": "同一个师父，两个徒弟。在美国，开市客遥遥领先；在中国大陆，早到23年的山姆跑在了前面。",
-     "layers": [
-      {
-       "type": "bg",
-       "src": "raster/src/3680.png"
-      },
-      {
-       "type": "image",
-       "src": "raster/src/3718.png",
-       "x": 620,
-       "y": 600,
-       "w": 520,
        "at": 0.0,
-       "anim": "slide_right"
+       "anim": "pop"
       },
       {
-       "type": "cover",
-       "x": 663,
-       "y": 272,
-       "r": 70,
+       "type": "counter",
+       "from": 0,
+       "to": 60,
+       "prefix": "约",
+       "suffix": "%",
+       "font": "label",
+       "size": 80,
+       "x": 700,
+       "y": 440,
+       "color": [
+        226,
+        28,
+        52
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 8,
+       "at": 0.15,
+       "count_dur": 0.8,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 90,
+       "prefix": "约",
+       "suffix": "%",
+       "font": "label",
+       "size": 80,
+       "x": 1220,
+       "y": 300,
        "color": [
         31,
         79,
         168
        ],
-       "text": "山姆",
-       "text_color": [
+       "stroke": [
         255,
         255,
         255
        ],
-       "size": 44,
-       "at": 0.0
-      },
-      {
-       "type": "image",
-       "src": "raster/src/3717.png",
-       "x": 1300,
-       "y": 600,
-       "w": 480,
-       "at": 0.0,
-       "anim": "slide_left"
-      },
-      {
-       "type": "image",
-       "src": "raster/src/3719.png",
-       "x": 1268,
-       "y": 168,
-       "w": 160,
-       "at": 0.0,
-       "anim": "slide_left"
+       "stroke_w": 8,
+       "at": 0.45,
+       "count_dur": 0.8,
+       "anim": "pop"
       }
-     ],
-     "tts": "同一个师父，两个徒弟。在美国，开市客遥遥领先；在中国大陆，早到二十三年的山姆跑在了前面。"
+     ]
+    },
+    {
+     "id": "ze07",
+     "text": "同一个师父，两个徒弟。在美国，开市客遥遥领先；在中国大陆，早到23年的山姆跑在了前面。",
+     "tts": "同一个师父，两个徒弟。在美国，开市客遥遥领先；在中国大陆，早到二十三年的山姆跑在了前面。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/e_twostores.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/20539.png",
+       "x": 960,
+       "y": 300,
+       "w": 520,
+       "at": 0.0,
+       "anim": "fade"
+      },
+      {
+       "type": "text",
+       "text": "同一个师父 · 两个徒弟",
+       "font": "title",
+       "size": 96,
+       "x": 960,
+       "y": 620,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "stroke": [
+        30,
+        30,
+        30
+       ],
+       "stroke_w": 8,
+       "at": 0.1,
+       "anim": "slam"
+      }
+     ]
     },
     {
      "id": "ze08",
@@ -1037,7 +1021,7 @@
        "y": 600,
        "w": 520,
        "at": 0.0,
-       "anim": "none"
+       "anim": "slide_right"
       },
       {
        "type": "cover",
@@ -1065,7 +1049,7 @@
        "y": 600,
        "w": 480,
        "at": 0.0,
-       "anim": "none"
+       "anim": "slide_left"
       },
       {
        "type": "image",
@@ -1074,7 +1058,64 @@
        "y": 168,
        "w": 160,
        "at": 0.0,
-       "anim": "none"
+       "anim": "slide_left"
+      },
+      {
+       "type": "badge",
+       "text": "山姆派？",
+       "x": 420,
+       "y": 150,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        31,
+        79,
+        168
+       ],
+       "at": 0.15,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "开市客派？",
+       "x": 1500,
+       "y": 150,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.3,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "评论区见",
+       "x": 960,
+       "y": 930,
+       "size": 64,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.7,
+       "anim": "slam"
       }
      ]
     },
@@ -1084,53 +1125,16 @@
      "layers": [
       {
        "type": "bg",
-       "src": "raster/src/3680.png"
+       "src": "raster/src/20493.png"
       },
       {
        "type": "image",
-       "src": "raster/src/3718.png",
-       "x": 620,
-       "y": 600,
-       "w": 520,
+       "src": "raster/src/20445.png",
+       "x": 960,
+       "y": 480,
+       "w": 900,
        "at": 0.0,
-       "anim": "none"
-      },
-      {
-       "type": "cover",
-       "x": 663,
-       "y": 272,
-       "r": 70,
-       "color": [
-        31,
-        79,
-        168
-       ],
-       "text": "山姆",
-       "text_color": [
-        255,
-        255,
-        255
-       ],
-       "size": 44,
-       "at": 0.0
-      },
-      {
-       "type": "image",
-       "src": "raster/src/3717.png",
-       "x": 1300,
-       "y": 600,
-       "w": 480,
-       "at": 0.0,
-       "anim": "none"
-      },
-      {
-       "type": "image",
-       "src": "raster/src/3719.png",
-       "x": 1268,
-       "y": 168,
-       "w": 160,
-       "at": 0.0,
-       "anim": "none"
+       "anim": "pop"
       }
      ]
     }

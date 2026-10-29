@@ -1,0 +1,7 @@
+Scene: Opening day of the first Sam's Club in Shenzhen in 1996, drawn like the store-front scene in image 1. A large blue-and-white warehouse store stands on the right with a wide blue sign band reading "山姆会员商店" in bold white Chinese lettering; red ribbon banners and balloons decorate the entrance. A cheerful crowd in mid-1990s clothing (short-sleeve shirts, high-waisted trousers, bicycles, a few people holding large paper shopping bags) lines up toward the doors, palm trees and low-rise 1990s buildings in the background.
+Camera: straight-on side view like image 1, crowd across the lower half, store on the right third, open sky above.
+Lighting: warm subtropical afternoon, flat even light, one soft shadow tone.
+Color grading: sky #CFE3F2, store blue #1F5FA8, sign lettering white #FFFFFF, ribbon red #D7473F, palm green #5E9B5A, crowd accents #E2B65A #8FAF8C.
+Texture/Medium: flat vector character illustration in exactly the same style as images 1 and 2 — the same character design as those episode scenes: adult proportions about 6 heads tall, smooth flat fills with soft simple shading, rosy blush on the cheeks, small friendly eyes, simple rounded hands, clean vector edges, soft paper grain.
+Text-in-image: the sign band reads "山姆会员商店" in clean bold white Chinese characters. Every text appears exactly once, crisp and clearly legible.
+AR 16:9

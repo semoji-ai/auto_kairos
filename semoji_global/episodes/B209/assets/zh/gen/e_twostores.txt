@@ -1,0 +1,7 @@
+Scene: Two warehouse membership stores face each other across a wide road in a Chinese city. On the left, a big blue store with a sign band reading "山姆会员商店" in bold white Chinese lettering has a very long queue of shoppers with carts stretching off the left edge. On the right, a smaller red-and-grey warehouse carries the official logo from image 3 on a white sign panel, with a shorter line of shoppers. The two buildings mirror each other like rivals.
+Camera: straight-on wide view, the blue store filling the left half and the red store the right half, road in the center foreground.
+Lighting: flat even daylight, one soft shadow tone.
+Color grading: sky #DCE9F4, Sam store blue #1F5FA8, Costco red #E31837, logo blue #005DAA, road grey #A7ADB5, shopper accents #E2B65A #8FAF8C.
+Texture/Medium: flat vector character illustration in exactly the same style as images 1 and 2 — the same character design as those episode scenes: adult proportions about 6 heads tall, smooth flat fills with soft simple shading, rosy blush on the cheeks, small friendly eyes, simple rounded hands, clean vector edges, soft paper grain.
+Text-in-image: the left sign reads "山姆会员商店" in clean bold white Chinese characters; the right sign shows the logo from image 3 with its exact letterforms and colors. Every text appears exactly once, crisp and clearly legible.
+AR 16:9
