@@ -91,6 +91,12 @@ function buildScene(sc, fonts){
         continue;
       } else if(S.type==="text"){
         var T=addText(comp, S.text, fonts[S.font]||S.font, S.size, S.color, S.stroke, S.stroke_w); animate(T.layer, S.anim, t, S.x, S.y, S.rot);
+      } else if(S.type==="counter"){      // 숫자 카운터: from→to를 count_dur초 동안(장면 시각 t부터), 앞뒤 글자 prefix/suffix
+        var CT=addText(comp, (S.prefix||"")+S.to+(S.suffix||""), fonts[S.font]||S.font||fonts.label, S.size, S.color, S.stroke, S.stroke_w);
+        var cd=S.count_dur||1.0, esc=function(x){ return String(x||"").replace(/\\/g,"\\\\").replace(/"/g,'\\"'); };
+        CT.layer.property("ADBE Text Properties").property("ADBE Text Document").expression=
+          'var v=Math.round(linear(time,'+t.toFixed(3)+','+(t+cd).toFixed(3)+','+(S.from||0)+','+S.to+')); "'+esc(S.prefix)+'"+v+"'+esc(S.suffix)+'"';
+        animate(CT.layer, S.anim, t, S.x, S.y, S.rot);
       } else if(S.type==="badge"){
         var T2=addText(comp, S.text, fonts.label, S.size, S.color), pad=S.size*0.45;
         var R=rectShape(comp, T2.w+pad*2, T2.h+pad*1.1, S.bg, S.size*0.25, "badge_bg"); R.moveAfter(T2.layer);

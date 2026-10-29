@@ -74,7 +74,7 @@ def cmd_plan(ep, lang):
             nd = meta[sc["id"]]["dur"]; d = round(LEAD + nd + TAIL, 3)
             al = json.load(open(os.path.join(od, f"{sc['id']}.align.json")))
             cs = cues_for_segment(al["characters"], al["character_start_times_seconds"], al["character_end_times_seconds"],
-                                  sc["text"] if sc.get("tts") else None, prof["subs"]["max_chars"], prof["subs"]["min_dur"],
+                                  sc["text"] if (sc.get("tts") or (lang == "zh" and zh_spoken(sc["text"]) != sc["text"])) else None, prof["subs"]["max_chars"], prof["subs"]["min_dur"],
                                   cjk=prof["subs"].get("cjk", False), protect=protect)
             if prof["subs"].get("snap_pauses"):
                 x = decode16(os.path.join(od, f"{sc['id']}.mp3"), 16000)
