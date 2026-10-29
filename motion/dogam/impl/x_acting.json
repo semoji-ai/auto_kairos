@@ -1,0 +1,200 @@
+{
+  "mouth-swap": {
+    "component": "MouthSwap",
+    "preview": "x_acting-01",
+    "note": "세모지 캐스트 흉상(walker1·c4_elder) — 입 = mouth_open 패치 교체(XRig pose.mouth) [옵션] talkMode=random(talkMin~talkMax 4~8f 시드 랜덤) — 데모 demo-wipe-reveal-bubble·demo-random-mouth-talk"
+  },
+  "giant-blur-entry": {
+    "component": "GiantBlurEntry",
+    "preview": "x_acting-02",
+    "note": "등장 인물 = c2_boss 전신(세모지 캐스트)"
+  },
+  "fade-in-accumulate": {
+    "component": "FadeAccumulate",
+    "preview": "x_acting-03",
+    "note": "세모지 캐스트 4인 라인업(c5_chef·c3_woman·walker1·c2_boss)이 한 명씩 페이드, 이후 인물은 -spread 에서 겹쳐 나타나 벌어짐"
+  },
+  "expression-swap": {
+    "component": "ExpressionSwap",
+    "preview": "x_acting-04",
+    "note": "c5_chef 흉상(arm_raise_fist + arm_guard_fist) 기본 → face_grit 하드 스왑, wok PNG"
+  },
+  "repeat-arm-gesture": {
+    "component": "RepeatGesture",
+    "preview": "x_acting-05",
+    "note": "c3_woman·c5_chef arm_raise_fist 를 어깨 축 회전(주먹 이동 = amp px)으로 흔듦"
+  },
+  "arm-tween": {
+    "component": "ArmTween",
+    "preview": "x_acting-06",
+    "note": "c5_chef arm_raise_fist 어깨 회전(각도 키 보간) + cloche_lid 가 주먹을 따라감(handScreen), cloche_plate·명판 글자 코드"
+  },
+  "costume-add": {
+    "component": "CostumeAdd",
+    "preview": "x_acting-07",
+    "note": "c3_woman 팔짱 + crown PNG·royal_cape_back(인물 뒤)/collar(인물 앞). capeColor 제거(그림 색)"
+  },
+  "mallet-strike": {
+    "component": "MalletStrike",
+    "preview": "x_acting-08",
+    "note": "gavel_hammer(자루 끝 피벗 회전)/gavel_block PNG"
+  },
+  "extras-face-blur": {
+    "component": "FaceBlur",
+    "preview": "x_acting-09",
+    "note": "세모지 캐스트 4인 라인업, 블러 사본을 원형 마스크로 덮음(카메라 변환은 바깥에서 감싸면 추종)"
+  },
+  "boxing-round-rivalry": {
+    "component": "BoxingRound",
+    "preview": "x_acting-10",
+    "note": "walker1·c2_boss(반전) arm_guard_fist + boxing_glove_red/blue PNG(팔 레이어 안 itemR/itemL)"
+  },
+  "whack-a-mole-hammer": {
+    "component": "WhackAMole",
+    "preview": "x_acting-11",
+    "note": "c3_woman 양 주먹 + face_sparkle·mouth_open, toy_hammer PNG(머리 위치·스윙 유지). headColor 제거"
+  },
+  "boxing-glove-punch-swap": {
+    "component": "GlovePunchSwap",
+    "preview": "x_acting-12",
+    "note": "throne PNG 위 legs_sit 인물(c2_boss → walker1), 옆 c4_elder 주먹, 펀치 = boxing_glove_red PNG. gloveColor 제거"
+  },
+  "blur-dim-interrupt": {
+    "component": "BlurDimInterrupt",
+    "preview": "x_acting-13",
+    "note": "walker1 arm_palm_stop, 배경 chips_box·cpu_chip PNG(글자 코드) [옵션] reveal=wipe(말풍선 좌→우 12f)·exit=drop(낙하 8f ease-in + 딤 해제 10f, exitAt) — 데모 demo-dim-cutaway-drop-exit"
+  },
+  "sword-duel-flame-clash": {
+    "component": "SwordDuel",
+    "preview": "x_acting-14",
+    "note": "walker1(arm_raise_fist)·c2_boss(반전, arm_up_hang) 팔을 aimRot 으로 겨누고 sword PNG 를 손에서 충돌점으로"
+  },
+  "creation-hand-parody": {
+    "component": "CreationHand",
+    "preview": "x_acting-15",
+    "note": "c2_boss tilt + arm_reach 회전, 관찰자 walker1 팔짱, creation_forearm/creation_hand PNG(손끝 떨림 = 손목 축 회전)"
+  },
+  "rope-swing-traverse": {
+    "component": "RopeSwing",
+    "preview": "x_acting-16",
+    "note": "c2_boss 전신 arm_up_hang ±8° + legs_dangle(두 주먹 사이 = 잡는 점). 국기는 SVG 유지"
+  },
+  "growth-pot-metaphor": {
+    "component": "GrowthPot",
+    "preview": "x_acting-17",
+    "note": "pot_leaves/pot_body 사이로 office_building_small 솟음(흙면 클립), watering_can PNG(꽃 위치에서 물방울)"
+  },
+  "crown-knockoff": {
+    "component": "CrownKnockoff",
+    "preview": "x_acting-18",
+    "note": "c4_elder face_smile 흉상 + crown PNG(명예회장 글자는 띠 위 코드 패치)"
+  },
+  "octopus-metaphor-monster": {
+    "component": "OctopusMonster",
+    "preview": "x_acting-19",
+    "note": "octopus_body + octopus_tentacle 4개(밑동 축 회전 흔들림) + cargo_ship PNG. color 제거"
+  },
+  "marionette-puppeteer": {
+    "component": "Marionette",
+    "preview": "x_acting-20",
+    "note": "c2_boss 전신 arm_out_side 양팔을 수평으로 회전, 손 위치(handScreen)에서 구슬 줄. look→cast"
+  },
+  "blob-head-personification": {
+    "component": "BlobHead",
+    "preview": "x_acting-21",
+    "note": "c2_boss 흉상 몸 + inkblob_head PNG 머리(먹덩이 의인화), 셔츠 글자 코드. head/face 색 제거, cast prop 추가"
+  },
+  "treadmill-walk-milestones": {
+    "component": "TreadmillWalk",
+    "preview": "x_acting-22",
+    "note": "원본 대조: 인물이 전진하며 발자국 누적(scroll>0 이면 트랙 스크롤)"
+  },
+  "flame-sprite-loop": {
+    "component": "FlameSprite",
+    "preview": "x_acting-23",
+    "note": "c5_chef arm_hold(몸 앞) + wok PNG"
+  },
+  "wind-lines": {
+    "component": "WindLines",
+    "preview": "x_acting-24",
+    "note": "tree_round PNG"
+  },
+  "sauce-pour": {
+    "component": "SaucePour",
+    "preview": "x_acting-25",
+    "note": "sauce_jar PNG(뚜껑 = 위 150px 클립으로 분리해 날림) + hand_press_nozzle(반전)으로 쥔 손 근사, 라벨 코드"
+  },
+  "flower-particles": {
+    "component": "FlowerParticles",
+    "preview": "x_acting-26",
+    "note": "세모지 캐스트 4인 라인업 머리 위 꽃"
+  },
+  "tech-aura": {
+    "component": "TechAura",
+    "preview": "x_acting-27",
+    "note": "c2_boss arm_out_side(손바닥 위) + laptop PNG(화면 글자 코드)"
+  },
+  "clapping-hands-foreground": {
+    "component": "ClappingHands",
+    "preview": "x_acting-28",
+    "note": "c3_woman arm_hold + held_box PNG, 전경 박수 = clapping_palm PNG. color 제거"
+  },
+  "glass-crack-hardcut": {
+    "component": "GlassCrack",
+    "preview": "x_acting-29",
+    "note": ""
+  },
+  "idea-warm-bloom": {
+    "component": "IdeaWarmBloom",
+    "preview": "x_acting-30",
+    "note": "c3_woman arm_hand_chin(생각)"
+  },
+  "electric-vortex-spawn": {
+    "component": "ElectricVortexSpawn",
+    "preview": "x_acting-31",
+    "note": "dram_chip PNG(글자 코드)"
+  },
+  "concentric-dark-pulse": {
+    "component": "ConcentricDarkPulse",
+    "preview": "x_acting-32",
+    "note": "powder_pile PNG"
+  },
+  "flood-water-rise": {
+    "component": "FloodRise",
+    "preview": "x_acting-33",
+    "note": "walker1 3명 양 주먹 펌프(어깨 회전) + face_angry, 가운데 hard_hat PNG"
+  },
+  "thought-image-blur-materialize": {
+    "component": "ThoughtMaterialize",
+    "preview": "x_acting-34",
+    "note": "c3_woman 가리킴(arm_point) + c2_boss 놀람(face_wide) + banknote_500 PNG"
+  },
+  "color-drain-desaturate": {
+    "component": "ColorDrain",
+    "preview": "x_acting-35",
+    "note": "세모지 캐스트 군중 11명(크기·반전·seed·밝기 변주) + walker1(주먹 → face_frown), 흑백화 = ColorDrain 필터"
+  },
+  "burden-ballchain-slam": {
+    "component": "BurdenBallChain",
+    "preview": "x_acting-36",
+    "note": "배경 c2_boss·walker1·c4_elder, money_sack·iron_ball·chain_link PNG. ball 색 제거"
+  },
+  "tech-circuit-part-glow": {
+    "component": "TechCircuitGlow",
+    "preview": "x_acting-37",
+    "note": "car_sedan_side PNG(왼쪽 = 앞바퀴, CAR_WHEELS 좌표)"
+  },
+  "photo-flame-eyes": {
+    "component": "PhotoFlameEyes",
+    "preview": "x_acting-38",
+    "note": "c2_boss 흉상(face_angry), 눈 위치 = 캔버스 눈 좌표 → rigToScreen"
+  },
+  "ecg-chest-glow": {
+    "component": "EcgChestGlow",
+    "preview": "x_acting-39",
+    "note": "c2_boss face_squint + arm_hand_chest(몸 앞) + 이마 그늘 코드, lightning_heart PNG"
+  },
+  "energy-portal-ring": {
+    "mergedInto": "electric-vortex-spawn"
+  }
+}

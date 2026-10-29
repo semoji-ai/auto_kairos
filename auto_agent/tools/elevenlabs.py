@@ -246,14 +246,12 @@ class ElevenLabsClient:
         # ElevenLabs
         self.api_key = elevenlabs_api_key or os.getenv("ELEVENLABS_API_KEY", "")
         self.voice_id = voice_id or os.getenv("ELEVENLABS_VOICE_ID", "9Sj8ugvpK1DmcAXyvi3a")
-        self.model_id = model_id or os.getenv("ELEVENLABS_MODEL_ID", "eleven_multilingual_v2")
-        self.voice_settings = voice_settings or {
-            "stability": 1.0,
-            "similarity_boost": 0.6,
-            "style": 0.9,
-            "use_speaker_boost": True,
-            "speed": 1.1,
-        }
+        # 모델 기본값은 eleven_v4 (tts_config). v4 에는 style·speed 를 보내지 않고
+        # language_code·apply_text_normalization 을 보낸다 — 본문은 tts_config.request_body.
+        from auto_agent.tools import tts_config
+        self.model_id = tts_config.resolve_model(model_id)
+        self._settings_override = voice_settings
+        self.voice_settings = tts_config.voice_settings_for(self.model_id, voice_settings, self.voice_id)
 
         # Gemini TTS
         self.gemini_api_key = gemini_api_key or os.getenv("GOOGLE_API_KEY", "")
@@ -272,7 +270,8 @@ class ElevenLabsClient:
         import base64
         import requests
         headers = {"Content-Type": "application/json", "xi-api-key": self.api_key}
-        body = {"text": text, "model_id": self.model_id, "voice_settings": self.voice_settings}
+        from auto_agent.tools import tts_config
+        body = tts_config.request_body(text, self.model_id, self._settings_override, self.voice_id)
 
         # /with-timestamps 엔드포인트 시도
         try:
@@ -351,9 +350,16 @@ class ElevenLabsClient:
             return self._generate_tts_gemini(processed_text, output_path)
         return self._generate_tts_elevenlabs(processed_text, output_path)
 
+    def _prepare_text(self, text: str, language: str = "ko") -> str:
+        """v4 는 원고 그대로(각주만 걷음), v2·Gemini 는 한국어 전처리기를 거친다."""
+        from auto_agent.tools import tts_config
+        if self.tts_provider == "elevenlabs" and not tts_config.uses_preprocessor(self.model_id):
+            return tts_config.strip_footnotes(text)
+        return self.preprocessor.preprocess(text, language)
+
     def generate_tts(self, text: str, output_path: Path, language: str = "ko") -> float:
-        """TTS 생성 (전처리 포함)"""
-        processed = self.preprocessor.preprocess(text, language)
+        """TTS 생성 (v2 는 전처리 포함, v4 는 원고 그대로)"""
+        processed = self._prepare_text(text, language)
         return self.generate_preprocessed_tts(processed, output_path)
 
     def generate_from_storyboard(
@@ -394,7 +400,7 @@ class ElevenLabsClient:
 
             processed_text = scene.get("processed_script_text", "")
             if not processed_text:
-                processed_text = self.preprocessor.preprocess(original_text, language)
+                processed_text = self._prepare_text(original_text, language)
 
             result = TTSResult(
                 scene_number=scene_number,

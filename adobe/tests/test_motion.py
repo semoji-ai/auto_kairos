@@ -37,6 +37,31 @@ def test_plan_scene_motion(tmp_path, monkeypatch):
     assert "m1__bg" not in json.dumps(res)            # 배경은 모션 대상에서 제외 권고(프롬프트에 명시)
 
 
+def test_plan_scene_motion_uses_cross_style_dogam_intent(tmp_path, monkeypatch):
+    d = _proj(tmp_path, [{"sceneNumber": 1, "sceneId": "ir1", "narration": "기술이 모인다",
+                          "motion": "build_sequence", "techniques": ["icon-pop-suck"],
+                          "motionNote": "손그림 아이콘 셋을 순서대로 모은다"}])
+    (d / "art_style.json").write_text(json.dumps({"id": "iromism", "name": "이로미즘"}), encoding="utf-8")
+    lay = d / "layers"; lay.mkdir()
+    (lay / "ir1__0_아이콘.png").write_bytes(b"x")
+    (lay / "ir1__kinds.json").write_text('{"ir1__0_아이콘":"object"}', encoding="utf-8")
+    cap = {}
+
+    def fake_run(prompt, cwd, **kw):
+        cap["prompt"] = prompt
+        Path(kw["output_last"]).write_text(json.dumps({"layers": [], "camera": {"type": "none"}}), encoding="utf-8")
+        return {"returncode": 0}
+
+    monkeypatch.setattr(motion.llm, "run_orchestrator", fake_run)
+    motion.plan_scene_motion(d, 1)
+    assert "이로미즘" in cap["prompt"]
+    assert "icon-pop-suck" in cap["prompt"]
+    assert "중심 오브젝트" in cap["prompt"]
+    assert "AE 직접 적용 불가" in cap["prompt"]
+    assert "손그림 아이콘 셋" in cap["prompt"]
+    assert "화풍" in cap["prompt"]
+
+
 def test_plan_scene_motion_no_layers(tmp_path):
     d = _proj(tmp_path, [{"sceneNumber": 1, "sceneId": "m2", "narration": "n"}])
     res = motion.plan_scene_motion(d, 1)

@@ -1,0 +1,2780 @@
+{
+ "antenna_tower": {
+  "bbox": [
+   272,
+   35,
+   753,
+   1446
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   481,
+   1411
+  ]
+ },
+ "apple_icon": {
+  "bbox": [
+   0,
+   80,
+   1254,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1254,
+   1174
+  ]
+ },
+ "banknote_500": {
+  "bbox": [
+   0,
+   162,
+   1536,
+   1024
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1536,
+   862
+  ]
+ },
+ "banknote_won": {
+  "bbox": [
+   0,
+   306,
+   1254,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1254,
+   948
+  ]
+ },
+ "blossom_corner": {
+  "bbox": [
+   98,
+   99,
+   1157,
+   1107
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1059,
+   1008
+  ]
+ },
+ "boarding_pass_back": {
+  "bbox": [
+   0,
+   0,
+   1482,
+   784
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1482,
+   784
+  ]
+ },
+ "boarding_pass_front": {
+  "bbox": [
+   52,
+   174,
+   1486,
+   811
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1434,
+   637
+  ]
+ },
+ "book_spine_set": {
+  "bbox": [
+   40,
+   237,
+   997,
+   1236
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   957,
+   999
+  ]
+ },
+ "bottle_silhouette_q": {
+  "bbox": [
+   325,
+   99,
+   699,
+   1435
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   374,
+   1336
+  ]
+ },
+ "boxing_glove": {
+  "bbox": [
+   56,
+   218,
+   1200,
+   1035
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1144,
+   817
+  ]
+ },
+ "boxing_glove_blue": {
+  "bbox": [
+   71,
+   159,
+   1186,
+   1091
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1115,
+   932
+  ]
+ },
+ "boxing_glove_red": {
+  "bbox": [
+   0,
+   0,
+   1210,
+   1063
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1210,
+   1063
+  ]
+ },
+ "building_brick": {
+  "bbox": [
+   115,
+   108,
+   908,
+   1356
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   793,
+   1248
+  ]
+ },
+ "building_mascot_body": {
+  "bbox": [
+   122,
+   155,
+   902,
+   1373
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   780,
+   1218
+  ]
+ },
+ "car_body": {
+  "bbox": [
+   96,
+   257,
+   1433,
+   686
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "car_side",
+  "crop": [
+   96,
+   257,
+   1433,
+   760
+  ],
+  "size": [
+   1337,
+   503
+  ]
+ },
+ "car_front_driver": {
+  "bbox": [
+   178,
+   94,
+   1358,
+   934
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "car_front_driver",
+  "crop": [
+   178,
+   94,
+   1358,
+   934
+  ],
+  "size": [
+   1180,
+   840
+  ]
+ },
+ "car_sedan_side": {
+  "bbox": [
+   53,
+   260,
+   1483,
+   771
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "car_sedan_side",
+  "crop": [
+   53,
+   260,
+   1483,
+   771
+  ],
+  "size": [
+   1430,
+   511
+  ]
+ },
+ "car_side": {
+  "bbox": [
+   96,
+   257,
+   1432,
+   760
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "car_side",
+  "crop": [
+   96,
+   257,
+   1433,
+   760
+  ],
+  "size": [
+   1337,
+   503
+  ]
+ },
+ "car_wheel": {
+  "bbox": [
+   221,
+   520,
+   460,
+   759
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "car_side",
+  "crop": [
+   96,
+   257,
+   1433,
+   760
+  ],
+  "size": [
+   1337,
+   503
+  ]
+ },
+ "caramel_drop_icon": {
+  "bbox": [
+   269,
+   110,
+   983,
+   1142
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   714,
+   1032
+  ]
+ },
+ "card_terminal": {
+  "bbox": [
+   136,
+   123,
+   888,
+   1410
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   752,
+   1287
+  ]
+ },
+ "carfront_body": {
+  "bbox": [
+   178,
+   302,
+   1358,
+   934
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "car_front_driver",
+  "crop": [
+   178,
+   94,
+   1358,
+   934
+  ],
+  "size": [
+   1180,
+   840
+  ]
+ },
+ "carfront_glass": {
+  "bbox": [
+   311,
+   94,
+   1226,
+   382
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "car_front_driver",
+  "crop": [
+   178,
+   94,
+   1358,
+   934
+  ],
+  "size": [
+   1180,
+   840
+  ]
+ },
+ "cargo_ship": {
+  "bbox": [
+   0,
+   0,
+   1493,
+   806
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1493,
+   806
+  ]
+ },
+ "chain_link": {
+  "bbox": [
+   302,
+   70,
+   952,
+   1183
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   650,
+   1113
+  ]
+ },
+ "chips_box": {
+  "bbox": [
+   0,
+   0,
+   1067,
+   1192
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1067,
+   1192
+  ]
+ },
+ "clapping_palm": {
+  "bbox": [
+   276,
+   85,
+   1000,
+   1196
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   724,
+   1111
+  ]
+ },
+ "clipboard_board": {
+  "bbox": [
+   0,
+   0,
+   1015,
+   1183
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1015,
+   1183
+  ]
+ },
+ "cloche_lid": {
+  "bbox": [
+   202,
+   61,
+   1334,
+   785
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "cloche_platter",
+  "crop": [
+   67,
+   61,
+   1469,
+   931
+  ],
+  "size": [
+   1402,
+   870
+  ]
+ },
+ "cloche_plate": {
+  "bbox": [
+   67,
+   523,
+   1469,
+   929
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "cloche_platter",
+  "crop": [
+   67,
+   61,
+   1469,
+   931
+  ],
+  "size": [
+   1402,
+   870
+  ]
+ },
+ "cloche_platter": {
+  "bbox": [
+   67,
+   62,
+   1469,
+   931
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "cloche_platter",
+  "crop": [
+   67,
+   61,
+   1469,
+   931
+  ],
+  "size": [
+   1402,
+   870
+  ]
+ },
+ "coin_won": {
+  "bbox": [
+   83,
+   80,
+   1173,
+   1171
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1090,
+   1091
+  ]
+ },
+ "cpu_chip": {
+  "bbox": [
+   126,
+   124,
+   1128,
+   1118
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1002,
+   994
+  ]
+ },
+ "creation_arm": {
+  "bbox": [
+   0,
+   25,
+   1359,
+   835
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "creation_arm",
+  "crop": [
+   0,
+   25,
+   1359,
+   835
+  ],
+  "size": [
+   1359,
+   810
+  ]
+ },
+ "creation_forearm": {
+  "bbox": [
+   0,
+   25,
+   981,
+   614
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "creation_arm",
+  "crop": [
+   0,
+   25,
+   1359,
+   835
+  ],
+  "size": [
+   1359,
+   810
+  ]
+ },
+ "creation_hand": {
+  "bbox": [
+   744,
+   387,
+   1359,
+   835
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "creation_arm",
+  "crop": [
+   0,
+   25,
+   1359,
+   835
+  ],
+  "size": [
+   1359,
+   810
+  ]
+ },
+ "credit_card": {
+  "bbox": [
+   146,
+   123,
+   1391,
+   897
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1245,
+   774
+  ]
+ },
+ "crowd_back_a": {
+  "bbox": [
+   22,
+   77,
+   1233,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1211,
+   1177
+  ]
+ },
+ "crowd_back_b": {
+  "bbox": [
+   27,
+   50,
+   1228,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1201,
+   1204
+  ]
+ },
+ "crowd_back_phone": {
+  "bbox": [
+   133,
+   39,
+   1093,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   960,
+   1215
+  ]
+ },
+ "crowd_down": {
+  "bbox": [
+   246,
+   110,
+   777,
+   1430
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   531,
+   1320
+  ]
+ },
+ "crowd_one": {
+  "bbox": [
+   179,
+   123,
+   906,
+   1419
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   727,
+   1296
+  ]
+ },
+ "crowd_silhouette": {
+  "bbox": [
+   0,
+   0,
+   1492,
+   706
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1492,
+   706
+  ]
+ },
+ "crowd_v": {
+  "bbox": [
+   98,
+   147,
+   926,
+   1422
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   828,
+   1275
+  ]
+ },
+ "crown": {
+  "bbox": [
+   57,
+   147,
+   1198,
+   1064
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1141,
+   917
+  ]
+ },
+ "desk_calendar": {
+  "bbox": [
+   58,
+   128,
+   1197,
+   1125
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1139,
+   997
+  ]
+ },
+ "dram_chip": {
+  "bbox": [
+   98,
+   153,
+   1439,
+   819
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1341,
+   666
+  ]
+ },
+ "flower_pot": {
+  "bbox": [
+   129,
+   64,
+   1125,
+   1197
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "flower_pot",
+  "crop": [
+   0,
+   60,
+   1254,
+   1254
+  ],
+  "size": [
+   1254,
+   1194
+  ]
+ },
+ "gavel_block": {
+  "bbox": [
+   107,
+   660,
+   802,
+   908
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "gavel_set",
+  "crop": [
+   107,
+   98,
+   1463,
+   909
+  ],
+  "size": [
+   1356,
+   811
+  ]
+ },
+ "gavel_hammer": {
+  "bbox": [
+   266,
+   99,
+   1463,
+   753
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "gavel_set",
+  "crop": [
+   107,
+   98,
+   1463,
+   909
+  ],
+  "size": [
+   1356,
+   811
+  ]
+ },
+ "gavel_set": {
+  "bbox": [
+   107,
+   98,
+   1463,
+   909
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "gavel_set",
+  "crop": [
+   107,
+   98,
+   1463,
+   909
+  ],
+  "size": [
+   1356,
+   811
+  ]
+ },
+ "globe": {
+  "bbox": [
+   0,
+   73,
+   1254,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1254,
+   1181
+  ]
+ },
+ "hand_clap": {
+  "bbox": [
+   69,
+   254,
+   1200,
+   999
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1131,
+   745
+  ]
+ },
+ "hand_grip": {
+  "bbox": [
+   276,
+   186,
+   1254,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   978,
+   1068
+  ]
+ },
+ "hand_hold_bottom": {
+  "bbox": [
+   149,
+   150,
+   1254,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1105,
+   1104
+  ]
+ },
+ "hand_open": {
+  "bbox": [
+   136,
+   104,
+   941,
+   1536
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   805,
+   1432
+  ]
+ },
+ "hand_pen": {
+  "bbox": [
+   170,
+   198,
+   1196,
+   1035
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1026,
+   837
+  ]
+ },
+ "hand_pinch_back": {
+  "bbox": [
+   0,
+   139,
+   1020,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1020,
+   1115
+  ]
+ },
+ "hand_point_big": {
+  "bbox": [
+   309,
+   85,
+   720,
+   1536
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   411,
+   1451
+  ]
+ },
+ "hand_press_nozzle": {
+  "bbox": [
+   131,
+   0,
+   1254,
+   1033
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1123,
+   1033
+  ]
+ },
+ "hand_thumb_front": {
+  "bbox": [
+   96,
+   392,
+   1158,
+   928
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1062,
+   536
+  ]
+ },
+ "hard_hat": {
+  "bbox": [
+   57,
+   123,
+   1197,
+   1092
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1140,
+   969
+  ]
+ },
+ "held_box": {
+  "bbox": [
+   63,
+   144,
+   1193,
+   1104
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1130,
+   960
+  ]
+ },
+ "icon_bowl": {
+  "bbox": [
+   73,
+   265,
+   1182,
+   1062
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1109,
+   797
+  ]
+ },
+ "icon_cart": {
+  "bbox": [
+   94,
+   148,
+   1161,
+   1105
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1067,
+   957
+  ]
+ },
+ "icon_chart": {
+  "bbox": [
+   153,
+   184,
+   1130,
+   1074
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   977,
+   890
+  ]
+ },
+ "icon_chip": {
+  "bbox": [
+   118,
+   118,
+   1136,
+   1135
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1018,
+   1017
+  ]
+ },
+ "icon_cloud": {
+  "bbox": [
+   102,
+   288,
+   1160,
+   1015
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1058,
+   727
+  ]
+ },
+ "icon_doc": {
+  "bbox": [
+   0,
+   0,
+   1019,
+   1129
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1019,
+   1129
+  ]
+ },
+ "icon_factory": {
+  "bbox": [
+   153,
+   126,
+   1101,
+   1124
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   948,
+   998
+  ]
+ },
+ "icon_gear": {
+  "bbox": [
+   100,
+   94,
+   1154,
+   1151
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1054,
+   1057
+  ]
+ },
+ "icon_globe": {
+  "bbox": [
+   123,
+   123,
+   1132,
+   1130
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1009,
+   1007
+  ]
+ },
+ "icon_heart": {
+  "bbox": [
+   0,
+   0,
+   1145,
+   1067
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1145,
+   1067
+  ]
+ },
+ "icon_money": {
+  "bbox": [
+   95,
+   338,
+   1160,
+   916
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1065,
+   578
+  ]
+ },
+ "icon_phone": {
+  "bbox": [
+   58,
+   169,
+   1196,
+   1116
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1138,
+   947
+  ]
+ },
+ "icon_ship": {
+  "bbox": [
+   0,
+   0,
+   1226,
+   887
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1226,
+   887
+  ]
+ },
+ "icon_star": {
+  "bbox": [
+   93,
+   106,
+   1161,
+   1094
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1068,
+   988
+  ]
+ },
+ "icon_truck": {
+  "bbox": [
+   0,
+   0,
+   1195,
+   999
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1195,
+   999
+  ]
+ },
+ "icon_user": {
+  "bbox": [
+   399,
+   38,
+   852,
+   1215
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   453,
+   1177
+  ]
+ },
+ "id_card": {
+  "bbox": [
+   112,
+   109,
+   1424,
+   915
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1312,
+   806
+  ]
+ },
+ "ink_blob_figure": {
+  "bbox": [
+   0,
+   0,
+   1035,
+   1210
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "ink_blob_figure",
+  "crop": [
+   0,
+   0,
+   1035,
+   1210
+  ],
+  "size": [
+   1035,
+   1210
+  ]
+ },
+ "inkblob_body": {
+  "bbox": [
+   402,
+   728,
+   851,
+   1053
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "ink_blob_figure",
+  "crop": [
+   0,
+   0,
+   1035,
+   1210
+  ],
+  "size": [
+   1035,
+   1210
+  ]
+ },
+ "inkblob_head": {
+  "bbox": [
+   235,
+   44,
+   1035,
+   761
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "ink_blob_figure",
+  "crop": [
+   0,
+   0,
+   1035,
+   1210
+  ],
+  "size": [
+   1035,
+   1210
+  ]
+ },
+ "iron_ball": {
+  "bbox": [
+   184,
+   51,
+   1066,
+   1174
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   882,
+   1123
+  ]
+ },
+ "iso_chip": {
+  "bbox": [
+   57,
+   164,
+   1198,
+   1065
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "iso_chip",
+  "crop": [
+   57,
+   164,
+   1198,
+   1065
+  ],
+  "size": [
+   1141,
+   901
+  ]
+ },
+ "iso_container": {
+  "bbox": [
+   47,
+   172,
+   1208,
+   1116
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1161,
+   944
+  ]
+ },
+ "iso_crane": {
+  "bbox": [
+   129,
+   66,
+   1169,
+   1187
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1040,
+   1121
+  ]
+ },
+ "iso_ship": {
+  "bbox": [
+   71,
+   47,
+   1483,
+   975
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1412,
+   928
+  ]
+ },
+ "iso_warehouse": {
+  "bbox": [
+   44,
+   144,
+   1219,
+   1096
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1175,
+   952
+  ]
+ },
+ "isochip_base": {
+  "bbox": [
+   57,
+   164,
+   1198,
+   1065
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "iso_chip",
+  "crop": [
+   57,
+   164,
+   1198,
+   1065
+  ],
+  "size": [
+   1141,
+   901
+  ]
+ },
+ "isochip_core": {
+  "bbox": [
+   409,
+   448,
+   845,
+   784
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "iso_chip",
+  "crop": [
+   57,
+   164,
+   1198,
+   1065
+  ],
+  "size": [
+   1141,
+   901
+  ]
+ },
+ "junk_sailboat": {
+  "bbox": [
+   73,
+   40,
+   1191,
+   1184
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1118,
+   1144
+  ]
+ },
+ "laptop": {
+  "bbox": [
+   61,
+   94,
+   1226,
+   1168
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1165,
+   1074
+  ]
+ },
+ "lightning_heart": {
+  "bbox": [
+   86,
+   128,
+   1166,
+   1132
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1080,
+   1004
+  ]
+ },
+ "mascot_disc": {
+  "bbox": [
+   0,
+   0,
+   1111,
+   1158
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1111,
+   1158
+  ]
+ },
+ "megaphone": {
+  "bbox": [
+   73,
+   86,
+   1181,
+   1154
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1108,
+   1068
+  ]
+ },
+ "money_pile": {
+  "bbox": [
+   105,
+   99,
+   1432,
+   898
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1327,
+   799
+  ]
+ },
+ "money_sack": {
+  "bbox": [
+   0,
+   0,
+   1128,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1128,
+   1254
+  ]
+ },
+ "moon": {
+  "bbox": [
+   86,
+   82,
+   1168,
+   1160
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1082,
+   1078
+  ]
+ },
+ "newspaper": {
+  "bbox": [
+   118,
+   98,
+   1141,
+   1157
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1023,
+   1059
+  ]
+ },
+ "octopus_body": {
+  "bbox": [
+   107,
+   105,
+   1145,
+   1170
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1038,
+   1065
+  ]
+ },
+ "octopus_tentacle": {
+  "bbox": [
+   266,
+   0,
+   799,
+   1462
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   533,
+   1462
+  ]
+ },
+ "office_building_small": {
+  "bbox": [
+   124,
+   128,
+   900,
+   1369
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   776,
+   1241
+  ]
+ },
+ "paper_docs_collage": {
+  "bbox": [
+   95,
+   62,
+   1178,
+   1186
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1083,
+   1124
+  ]
+ },
+ "paper_sheet": {
+  "bbox": [
+   104,
+   171,
+   925,
+   1326
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   821,
+   1155
+  ]
+ },
+ "pc_icon": {
+  "bbox": [
+   0,
+   0,
+   1172,
+   1149
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1172,
+   1149
+  ]
+ },
+ "person_avatar_icon": {
+  "bbox": [
+   0,
+   0,
+   1096,
+   1145
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1096,
+   1145
+  ]
+ },
+ "phone_bar_dark": {
+  "bbox": [
+   253,
+   63,
+   771,
+   1420
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   518,
+   1357
+  ]
+ },
+ "phone_bar_light": {
+  "bbox": [
+   0,
+   0,
+   821,
+   1536
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   821,
+   1536
+  ]
+ },
+ "pictogram_person": {
+  "bbox": [
+   366,
+   74,
+   888,
+   1181
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   522,
+   1107
+  ]
+ },
+ "pointer_stick": {
+  "bbox": [
+   89,
+   99,
+   1444,
+   921
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1355,
+   822
+  ]
+ },
+ "pot_body": {
+  "bbox": [
+   0,
+   416,
+   1254,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "flower_pot",
+  "crop": [
+   0,
+   60,
+   1254,
+   1254
+  ],
+  "size": [
+   1254,
+   1194
+  ]
+ },
+ "pot_leaves": {
+  "bbox": [
+   0,
+   60,
+   1254,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "flower_pot",
+  "crop": [
+   0,
+   60,
+   1254,
+   1254
+  ],
+  "size": [
+   1254,
+   1194
+  ]
+ },
+ "powder_pile": {
+  "bbox": [
+   0,
+   0,
+   1498,
+   934
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1498,
+   934
+  ]
+ },
+ "question_silhouette": {
+  "bbox": [
+   125,
+   107,
+   1128,
+   1181
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1003,
+   1074
+  ]
+ },
+ "receipt_strip": {
+  "bbox": [
+   197,
+   138,
+   829,
+   1380
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   632,
+   1242
+  ]
+ },
+ "record_disc": {
+  "bbox": [
+   92,
+   90,
+   1162,
+   1154
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1070,
+   1064
+  ]
+ },
+ "robot_arm_segment": {
+  "bbox": [
+   45,
+   150,
+   1499,
+   851
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1454,
+   701
+  ]
+ },
+ "royal_cape": {
+  "bbox": [
+   45,
+   96,
+   1211,
+   1131
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "royal_cape",
+  "crop": [
+   45,
+   96,
+   1211,
+   1131
+  ],
+  "size": [
+   1166,
+   1035
+  ]
+ },
+ "royal_cape_back": {
+  "bbox": [
+   68,
+   152,
+   1179,
+   1090
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "royal_cape",
+  "crop": [
+   45,
+   96,
+   1211,
+   1131
+  ],
+  "size": [
+   1166,
+   1035
+  ]
+ },
+ "royal_cape_collar": {
+  "bbox": [
+   411,
+   98,
+   844,
+   322
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "royal_cape",
+  "crop": [
+   45,
+   96,
+   1211,
+   1131
+  ],
+  "size": [
+   1166,
+   1035
+  ]
+ },
+ "sauce_jar": {
+  "bbox": [
+   259,
+   96,
+   765,
+   1440
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   506,
+   1344
+  ]
+ },
+ "sedan_body": {
+  "bbox": [
+   55,
+   260,
+   1483,
+   695
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "car_sedan_side",
+  "crop": [
+   53,
+   260,
+   1483,
+   771
+  ],
+  "size": [
+   1430,
+   511
+  ]
+ },
+ "sedan_wheel": {
+  "bbox": [
+   186,
+   526,
+   430,
+   771
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": "car_sedan_side",
+  "crop": [
+   53,
+   260,
+   1483,
+   771
+  ],
+  "size": [
+   1430,
+   511
+  ]
+ },
+ "shuttle_body": {
+  "bbox": [
+   192,
+   38,
+   775,
+   1437
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": "space_shuttle",
+  "crop": [
+   192,
+   38,
+   776,
+   1437
+  ],
+  "size": [
+   584,
+   1399
+  ]
+ },
+ "shuttle_flame": {
+  "bbox": [
+   154,
+   57,
+   871,
+   1479
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   717,
+   1422
+  ]
+ },
+ "smartphone_ringing": {
+  "bbox": [
+   0,
+   0,
+   836,
+   1426
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   836,
+   1426
+  ]
+ },
+ "sneaker": {
+  "bbox": [
+   0,
+   0,
+   1217,
+   911
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1217,
+   911
+  ]
+ },
+ "space_shuttle": {
+  "bbox": [
+   192,
+   38,
+   776,
+   1437
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": "space_shuttle",
+  "crop": [
+   192,
+   38,
+   776,
+   1437
+  ],
+  "size": [
+   584,
+   1399
+  ]
+ },
+ "spray_can": {
+  "bbox": [
+   295,
+   116,
+   728,
+   1414
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   433,
+   1298
+  ]
+ },
+ "sugar_cubes_icon": {
+  "bbox": [
+   139,
+   137,
+   1115,
+   1116
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   976,
+   979
+  ]
+ },
+ "sword": {
+  "bbox": [
+   469,
+   19,
+   785,
+   1226
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   316,
+   1207
+  ]
+ },
+ "syrup_jug": {
+  "bbox": [
+   255,
+   67,
+   999,
+   1186
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   744,
+   1119
+  ]
+ },
+ "tablet_device": {
+  "bbox": [
+   0,
+   0,
+   1040,
+   1164
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1040,
+   1164
+  ]
+ },
+ "throne": {
+  "bbox": [
+   92,
+   76,
+   932,
+   1368
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": "throne",
+  "crop": [
+   92,
+   76,
+   932,
+   1368
+  ],
+  "size": [
+   840,
+   1292
+  ]
+ },
+ "throne_back": {
+  "bbox": [
+   92,
+   76,
+   932,
+   939
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": "throne",
+  "crop": [
+   92,
+   76,
+   932,
+   1368
+  ],
+  "size": [
+   840,
+   1292
+  ]
+ },
+ "throne_front": {
+  "bbox": [
+   105,
+   874,
+   918,
+   1336
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": "throne",
+  "crop": [
+   92,
+   76,
+   932,
+   1368
+  ],
+  "size": [
+   840,
+   1292
+  ]
+ },
+ "toy_hammer": {
+  "bbox": [
+   109,
+   131,
+   919,
+   1421
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   810,
+   1290
+  ]
+ },
+ "tree_round": {
+  "bbox": [
+   24,
+   146,
+   999,
+   1390
+  ],
+  "canvas": [
+   1024,
+   1536
+  ],
+  "family": null,
+  "size": [
+   975,
+   1244
+  ]
+ },
+ "trophy_icon": {
+  "bbox": [
+   97,
+   91,
+   1157,
+   1164
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1060,
+   1073
+  ]
+ },
+ "tunnel_portal": {
+  "bbox": [
+   0,
+   86,
+   1254,
+   1254
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   1254,
+   1168
+  ]
+ },
+ "ufo": {
+  "bbox": [
+   34,
+   144,
+   1502,
+   878
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1468,
+   734
+  ]
+ },
+ "vs_shield_emblem": {
+  "bbox": [
+   169,
+   108,
+   1085,
+   1141
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   916,
+   1033
+  ]
+ },
+ "watering_can": {
+  "bbox": [
+   0,
+   129,
+   1536,
+   1024
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1536,
+   895
+  ]
+ },
+ "wok": {
+  "bbox": [
+   48,
+   149,
+   1515,
+   869
+  ],
+  "canvas": [
+   1536,
+   1024
+  ],
+  "family": null,
+  "size": [
+   1467,
+   720
+  ]
+ },
+ "xray_body_silhouette": {
+  "bbox": [
+   385,
+   36,
+   863,
+   1217
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   478,
+   1181
+  ]
+ },
+ "xray_skeleton": {
+  "bbox": [
+   397,
+   36,
+   856,
+   1219
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": null,
+  "size": [
+   459,
+   1183
+  ]
+ },
+ "zipper_body": {
+  "bbox": [
+   370,
+   45,
+   883,
+   603
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "zipper_slider",
+  "crop": [
+   0,
+   0,
+   883,
+   1209
+  ],
+  "size": [
+   883,
+   1209
+  ]
+ },
+ "zipper_slider": {
+  "bbox": [
+   0,
+   0,
+   883,
+   1209
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "zipper_slider",
+  "crop": [
+   0,
+   0,
+   883,
+   1209
+  ],
+  "size": [
+   883,
+   1209
+  ]
+ },
+ "zipper_tab": {
+  "bbox": [
+   388,
+   169,
+   866,
+   1153
+  ],
+  "canvas": [
+   1254,
+   1254
+  ],
+  "family": "zipper_slider",
+  "crop": [
+   0,
+   0,
+   883,
+   1209
+  ],
+  "size": [
+   883,
+   1209
+  ]
+ }
+}

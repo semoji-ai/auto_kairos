@@ -1,0 +1,561 @@
+[
+ {
+  "id": "hud-tabbed-chapter-bar",
+  "name": "탭형 챕터 바 HUD(사각 스케치 로고)",
+  "category": "HUD·자막·포맷",
+  "summary": "상단 전폭 외곽선 pill 바를 챕터 수만큼 칸으로 나누고 현재 챕터 칸만 회색 채움+흰 볼드 라벨. 통합편에서 에피소드마다 칸 수·번호가 리셋됨.",
+  "spec": "@1080p: 로고 사각 x28–220,y25–137(흑백 스케치 인물+'세상의 모든 지식' 3행). 바 x250–1828, y45–112(높이≈67px, 외곽선 ~3px #9A9696). 활성 칸 채움 ≈#A09A9A, 라벨 흰 볼드 ~30px; 비활성 라벨 회색 레귤러. 칸 수 에피소드별 3~5칸(0:00~ 5칸, 48:10~ 3칸). 활성 칸 교체는 챕터카드 직후 하드 교체(진행 필 이동 애니 없음). 전 화면 종이 그레인 위에 반투명으로 얹힘.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:28:20",
+    "note": "3칸: 전화위복/해외진출 도전/경부고속도로"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:01:00",
+    "note": "5칸 버전"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:48:10",
+    "note": "'1. 포드와의 이별' 이후 3칸으로 리셋"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "HUD",
+   "챕터",
+   "통합편"
+  ]
+ },
+ {
+  "id": "sage-date-typing-card",
+  "name": "세이지 연월 타이핑 카드",
+  "category": "텍스트·타이포",
+  "summary": "사진/장면에서 하드컷 → 연한 세이지 단색 카드 중앙에 '1942년 5월'을 글자 단위로 찍어냄. '그런데' 같은 접속어 한 단어도 같은 카드로 끊어줌. (기존 타자 인터스티셜과 배경·속도 상이)",
+  "spec": "배경 #C2CCC3 단색(그레인). 텍스트 중앙 검정 볼드 ~64px. 컷 후 2f 빈 카드 → 글리프당 ≈2.5f(1→19→194→1942→1942년… 1942년 5월 완성까지 ≈0.6s). 커서·효과음 시각요소 없음. 완성 후 ~1.0s 홀드 → 하드컷. 자막띠는 같은 문구 반복.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:12:58",
+    "note": "19→1942→1942년 5월"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:39:43",
+    "note": "1970년 7월 7"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:52:18",
+    "note": "1974년 10월"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:08:20",
+    "note": "'그런' 단어 카드"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "날짜",
+   "인터스티셜",
+   "타자"
+  ]
+ },
+ {
+  "id": "archive-photo-title-band",
+  "name": "사료 사진 반투명 띠 제목",
+  "category": "사진·자료 처리",
+  "summary": "흑백 사료 사진 중앙을 가로지르는 반투명 검정 띠 위에 흰 굵은 제목+노란 키워드. 변화는 '원(圓) → 환(圜)'처럼 화살표 채움 후 결과어 팝.",
+  "spec": "띠: 전폭, y≈290–550(높이≈260px, 화면의 24%), 검정 α≈0.5(240→120 밝기). 제목 흰 볼드 ~70px 좌정렬 x≈50; 키워드 노랑 #F8E550. 화살표: 회색 외곽→흰 채움 ~6f, 이후 결과어 1.25→1.0 가로블러 팝 ~7f. 우하단 '출처:' 칩 유지.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:23:35",
+    "note": "제2차 긴급통화조치 원→환"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:28:06",
+    "note": "1961년 무교동 사옥"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:32:10",
+    "note": "아스팔트 대량생산 가능"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "사료",
+   "자막 바",
+   "흑백"
+  ]
+ },
+ {
+  "id": "elevator-door-reveal",
+  "name": "엘리베이터 문 열림 리빌",
+  "category": "전환",
+  "summary": "정면 엘리베이터 문이 가운데서 양쪽으로 열리며 안에 서 있던 인물이 드러나고, 인물이 걸어 나와 옆으로 비킴. '최신식 설비' 같은 공간 소개에.",
+  "spec": "문 중앙 슬릿 등장 → 완전 개방 ≈9f(easeInOut; f12 슬릿, f17 절반, f20 완개). 개방 직후 10f 동안 미세 푸시인(≈1.0→1.05). 인물 퇴장: 문 앞→우측 x+≈420px @1080, ≈45f 선형 워킹(상하 바운스 ~6px/12f 주기). 층 표시등 상단 소형.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:28:11",
+    "note": "무교동 사옥 엘리베이터"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "리빌",
+   "공간",
+   "문"
+  ]
+ },
+ {
+  "id": "hand-held-document-lineup",
+  "name": "손에 든 서류 순차 라인업(견적 비교)",
+  "category": "차트·인포그래픽",
+  "summary": "화면 밖 손(소매 포함)이 '견적서 650억' 카드를 하나씩 아래에서 들어올려 좌→우로 나란히 세움. 숫자 비교를 막대 대신 '사람이 제출하는 서류'로.",
+  "spec": "배경 단색 다크브라운 #4A2E22. 카드 흰 종이 ~150×210px(@1080), '견적서' 소제목+금액 볼드 ~46px+제출처 소문자. 카드+손 등장: 자막띠 아래(y>1080)→목표 y, ≈9f easeOut 상승 후 우측으로 ~60px 아크 이동 10f(총≈20f, 미세 오버슛). 다음 카드는 이전 카드와 ~25% 겹치며 x+≈170px 계단식(y 각 +~40px). 간격 내레이션 싱크(≈2.4~3s). 마지막 두 장은 '실현 불가!' 스탬프/스파클로 대비.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:33:47",
+    "note": "650억→490억→330억→280억→180억"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:34:06",
+    "note": "280억 vs 180억 최종 비교"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "비교",
+   "숫자",
+   "손"
+  ]
+ },
+ {
+  "id": "proportion-ruler-road",
+  "name": "도로 비율 눈금자 채움",
+  "category": "차트·인포그래픽",
+  "summary": "평면 도로 위에 5등분 눈금자를 두고, 담당 구간 비율만큼 굵은 바가 왼쪽부터 자라며 끝에 화살촉이 붙고 담당자 pill이 팝. 이어 다음 주체가 다른 색으로 나머지 구간을 채움.",
+  "spec": "배경 흙색 #CA8C4F, 도로 #3E3A47 전폭 밴드(흰 점선 중앙). 눈금자 흰 2px선+세로틱 4개(5등분). 채움바 #37290D 두께 ~10px: 0→2/5 ≈26f easeOut, 화살촉은 f24에 부착. pill(다크브라운, 흰 볼드) 0.3→1.1→1.0 ≈6f, 채움 완료 +7f. 2번째 구간 네이비 #1E1E5A로 2/5→끝 ≈20f + pill 동일 팝.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:36:07",
+    "note": "현대건설 2/5"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:36:10",
+    "note": "15개 국내 건설업체 나머지"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "비율",
+   "진행바",
+   "도로"
+  ]
+ },
+ {
+  "id": "brush-title-blur-in",
+  "name": "붓글씨 헤드라인 블러 인",
+  "category": "텍스트·타이포",
+  "summary": "시대 사건(칙령·공포)을 흰 거친 붓글씨체 대형 문구로 장면 중앙에 가로질러 표시. 블러에서 선명으로 떠오름.",
+  "spec": "흰 붓/마커 손글씨체 ~120px, 화면 폭 70%, 약한 드롭섀도. 가우시안 블러 ≈20px→0 + 불투명 0→1 ≈12f(easeOut), 스케일 변화 없음. 배경 장면은 명도 -40% 암부. 약 5s 홀드.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:13:01",
+    "note": "기업정비령 공포!"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "헤드라인",
+   "붓글씨"
+  ]
+ },
+ {
+  "id": "lightning-versus-split",
+  "name": "번개 지그재그 대결 분할",
+  "category": "배경·루프",
+  "summary": "대립하는 두 인물 사이를 검정 지그재그 번개선이 대각으로 가르고 좌 레드/우 블루 배경으로 나눔. 에너지 슬래시 전환으로 진입.",
+  "spec": "좌 #C0616B 계열 레드, 우 #5F6BA8 블루, 번개 검정 폭 ~40px 3~4꺾임 대각(좌상→우하). 진입: 에너지 링 슬래시(기존) 후 번개/배경 하드 등장, 인물은 각 측면에서 슬라이드인 ~8f. 이후 말풍선 버스트 2f 팝. 컷 전체 정적 홀드.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:42:26",
+    "note": "포드 vs 정주영 경영권"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "대결",
+   "분할",
+   "번개"
+  ]
+ },
+ {
+  "id": "flood-water-rise",
+  "name": "홍수 수위 상승 + 줌아웃",
+  "category": "감정·효과 FX",
+  "summary": "만세 부르던 인물 클로즈업 → 급 줌아웃되며 청록 물이 화면 하단 60%를 채우고 인물 머리만 떠 있음. 이후 인물이 실루엣화되어 가라앉음.",
+  "spec": "클로즈업 중 양팔 교대 주먹 펌핑 루프(≈6f 주기). 전환: 스케일 ≈2.2→1.0 ≈6f 줌아웃 동시 수면 상승(물 #4A8EA3, 상단 물결 가장자리 흰 거품). 수면 y≈540→유지, 물결 좌우 루프(~40f). 인물 머리 상하 bob ±6px. 익사 표현: 인물→진회색 실루엣 크로스페이드 ~10f.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:47:26",
+    "note": "울산 대홍수"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:47:32",
+    "note": "실루엣화"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "재난",
+   "물",
+   "줌아웃"
+  ]
+ },
+ {
+  "id": "tunnel-section-length-compare",
+  "name": "터널 단면 길이 비교(먼지 스폰)",
+  "category": "차트·인포그래픽",
+  "summary": "터널 입구 두 개를 나란히 두고 먼지 구름 퍼프에서 차례로 표지판+길이 pill이 튀어나옴. 같은 방식으로 산맥 위 '4km' 구간 표시.",
+  "spec": "배경 청회색 방사 비네트. 먼지 퍼프 ≈10f(회색 구름 확산→소멸) → 표지판 흰 카드 드롭 ~6f → 네이비 pill(#1E1E5A, 흰 볼드 ~40px) 0.3→1.1→1.0 ≈6f. 두 번째 터널 ≈1.6s 스태거.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:37:07",
+    "note": "692m / 530m"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:37:30",
+    "note": "소백산맥 4km"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "비교",
+   "수치",
+   "스폰"
+  ]
+ },
+ {
+  "id": "map-lecturer-country-fill",
+  "name": "지시봉 강의 + 국가 하이라이트 채움",
+  "category": "차트·인포그래픽",
+  "summary": "지도 앞에 선 인물이 지시봉을 들고, 가리키는 나라 윤곽이 노랗게 채워지며 국가명 pill·로고·검정 캡션이 순차 등장.",
+  "spec": "지도: 바다 #7AA7C6, 육지 녹색 플랫. 인물 우측 1/3. 국가 채움 노랑 #F2C230 ≈8f 불투명 인. pill 네이비 팝 ~6f → 로고 팝 → 캡션: 검정 박스+흰 손글씨체, α 0→1 ≈12f(회색 반투명에서 불투명으로). 요소 간격 ≈0.6–1.0s. 한반도 녹색 지도 우측 슬라이드인 변형(≈10f).",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:45:22",
+    "note": "일본+포드 로고+엔지니어 기술 연수"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:54:48",
+    "note": "한국 지도 슬라이드인+'한 해 생산량 30만 대'"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "지도",
+   "강의",
+   "하이라이트"
+  ]
+ },
+ {
+  "id": "feathered-smoke-speech-bubble",
+  "name": "연기 가장자리 말풍선(어두운 장면)",
+  "category": "콜아웃·라벨",
+  "summary": "어두운 그런지 배경에서 흰 말풍선 대신 가장자리가 흐린 연기형 흰 구름에 대사를 넣고, 끝날 때 연기처럼 흩어지며 다음 요소(지도)가 들어옴.",
+  "spec": "흰 구름, 외곽 페더 ~40px, 중앙 불투명. 퇴장: 블러 증가+α 1→0 ≈10f, 동시에 다음 요소 우측 슬라이드인.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:54:47",
+    "note": "미국 대사 대사→지도"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "말풍선",
+   "디졸브"
+  ]
+ },
+ {
+  "id": "sword-duel-flame-clash",
+  "name": "칼싸움 대결 + 스파크 클래시",
+  "category": "캐릭터 연기",
+  "summary": "협상 결렬을 두 인물이 불꽃 배경에서 칼을 맞대는 장면으로 은유. 칼끝 충돌마다 스파크 버스트, 카메라가 두 얼굴 사이를 팬.",
+  "spec": "배경 주황 #F08A24 + 빨강 불꽃 모양 레이어(느린 흐름). 카메라 스케일 ≈1.3에서 좌→우 팬 ≈20f, 이후 1.0으로 풀백. 칼 흔들림 ±4° 루프 ~8f. 클래시 스파크: 노랑/주황 8각 별 0→1.2→0 ≈6f, 약 1s 간격 반복. 분노 기호·버스트 대사 병행.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:55:37",
+    "note": "미국 대사 vs 정주영"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "01:02:46",
+    "note": "보라 배경 칼싸움(조선 기술/차관)"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "대결",
+   "은유",
+   "불꽃"
+  ]
+ },
+ {
+  "id": "creation-hand-parody",
+  "name": "'천지창조' 손 패러디",
+  "category": "캐릭터 연기",
+  "summary": "절박한 제안 장면에 명화 풍 사실적 팔이 좌상단에서 뻗어 오고 캐릭터가 몸을 기울여 손을 뻗는 오마주. 금색 보케 배경.",
+  "spec": "배경 따뜻한 금색 그라데이션 + 핑크/흰 보케 원 부유. 캐릭터 좌하단 기울어진 포즈로 ≈8f 슬라이드인(좌하→). 명화 팔 좌상단 밖→대각 인 ≈12f easeOut, 손끝 떨림 루프. 상대 인물 우측 팔짱(대비).",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "01:00:24",
+    "note": "가와사키 중공업 사장에게 제안"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "패러디",
+   "명화",
+   "절박"
+  ]
+ },
+ {
+  "id": "rope-swing-traverse",
+  "name": "밧줄 건너뛰기(카메라 추적)",
+  "category": "캐릭터 연기",
+  "summary": "동굴 배경 여러 가닥 밧줄을 붙잡고 건너가는 인물—마지막 기회를 향해 도약. 잡을 때마다 별 버스트, 카메라가 오른쪽으로 따라감.",
+  "spec": "밧줄 진자 흔들림 ±8° ≈40f 주기. 도약: 포물선 ≈12f, 몸 회전 ±15°, 착지(잡기) 순간 주황 8각 별 버스트 ~6f. 카메라 우측 팬 ≈30f easeInOut(배경 x -~400px). 목표 밧줄 끝에 영국 국기(목적지 표기).",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "01:02:42",
+    "note": "영국으로 향하다"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "도약",
+   "은유",
+   "추적"
+  ]
+ },
+ {
+  "id": "hypnotic-spiral-bg",
+  "name": "최면 나선 배경",
+  "category": "배경·루프",
+  "summary": "충격·혼란(실패 통보) 순간 인물 뒤 배경을 보라 동심 나선 무늬로 교체.",
+  "spec": "보라 #7B6FD6 / 라벤더 #A89CF0 교차 굵은 나선 밴드(폭 ~80px). 나선 느린 회전/확장 루프(체감 ≈0.2 rev/s). 인물 중앙 정지, 얼굴 창백·식은땀. 하드컷 진입.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "01:00:50",
+    "note": "일본 합작 무산"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "감정",
+   "배경",
+   "충격"
+  ]
+ },
+ {
+  "id": "ots-silhouette-foreground",
+  "name": "어깨너머 검정 실루엣 전경",
+  "category": "구성·엔딩",
+  "summary": "대화 장면에서 청자를 화면 우측 전경의 검정 뒷모습 실루엣(머리+어깨)으로 크게 배치해 화자와 원근·대립감을 만듦.",
+  "spec": "실루엣 #111 근단색, 화면 높이 ~80%, 우측 1/3 차지, 화자는 좌측 소형(스케일 비 ≈1:1.8). 배경은 회색 원형 스포트 비네트. 정적; 말풍선만 팝.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:42:17",
+    "note": "포드 측 vs 정주영(뒷모습)"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "구도",
+   "대화"
+  ]
+ },
+ {
+  "id": "archive-newsreel-insert",
+  "name": "방송 아카이브 영상 인서트(원 로고 유지)",
+  "category": "사진·자료 처리",
+  "summary": "KTV 등 뉴스 필름을 그대로 삽입, 우상단 방송 로고와 우하단 '출처:' 칩을 함께 노출. 저해상 흑백 지도 영상에 경로가 그려지는 원본 애니 그대로 사용.",
+  "spec": "원본 4:3/저해상 흑백을 전폭 크롭(블러 채움 없음 케이스) 또는 블러 채움 사용. 출처 칩 우하단 검정 반투명+흰 소문자 ~18px. HUD·자막은 그대로 위에.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:35:20",
+    "note": "경부고속도로 준공 KTV 지도"
+   },
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:57:40",
+    "note": "KTV 조선소"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "사료",
+   "영상",
+   "출처"
+  ]
+ },
+ {
+  "id": "radial-sunburst-bg",
+  "name": "방사 선버스트 배경(주황)",
+  "category": "배경·루프",
+  "summary": "결단·선언 순간 인물 뒤 주황 방사형 줄무늬 배경. 욱일기 연상으로 사용 금지.",
+  "spec": "주황 #F5A623/#F7C04A 교차 방사 쐐기 ~24개, 중심 인물 얼굴 뒤. 정적 또는 느린 회전.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "00:59:00",
+    "note": "1969년 초 결단"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "금지",
+  "tags": [
+   "금지",
+   "방사"
+  ]
+ },
+ {
+  "id": "radial-speedline-burst",
+  "name": "보라 집중선 버스트",
+  "category": "감정·효과 FX",
+  "summary": "장면 전환 직전 보라 배경에 흰 방사 집중선이 튀어나오는 강조 컷. 방사 패턴이라 금지 처리.",
+  "spec": "보라 #5B2BB5 배경, 흰 쐐기 집중선 ~30개 중심 방사, 2~3f 스트로브. 이후 칼싸움 장면 하드컷.",
+  "sources": [
+   {
+    "ref": "ref4-hyundai",
+    "video": "https://youtu.be/iB5cA-rKGRA",
+    "time": "01:02:46",
+    "note": "조선소 사업 문제 제기"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "금지",
+  "tags": [
+   "금지",
+   "집중선"
+  ]
+ }
+]

@@ -3114,6 +3114,7 @@ interface CreativeSceneProps {
 }
 
 export const CreativeScene: React.FC<CreativeSceneProps> = (props) => {
+  const preset = useDesignPreset();
   const safeData = props.data || {};
   const source = safeData.source || "";
   const creative = safeData.creative || {};
@@ -3128,7 +3129,7 @@ export const CreativeScene: React.FC<CreativeSceneProps> = (props) => {
           bottom: 16,
           right: 40,
           fontSize: 22,
-          color: "rgba(255,255,255,0.4)",
+          color: props.imageAssetPlacement === "center" ? preset.colors.text : "rgba(255,255,255,0.4)",
           pointerEvents: "none",
           zIndex: 5,
           transform: (srcX || srcY) ? `translate(${srcX}px, ${srcY}px)` : undefined,

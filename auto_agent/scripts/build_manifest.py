@@ -18,7 +18,14 @@ from auto_agent.modules.scene_helpers import get_visual_kind
 
 
 def _probe_mp3_duration_local(path: Path) -> float:
-    """로컬 MP3 파일에서 duration 측정."""
+    """선택된 로컬 오디오의 길이. PCM WAV는 샘플 수로 정확히 측정한다."""
+    if path.suffix.lower() == ".wav":
+        import wave
+        try:
+            with wave.open(str(path), "rb") as audio:
+                return round(audio.getnframes() / audio.getframerate(), 3)
+        except (OSError, EOFError, wave.Error):
+            return 0.0
     try:
         from mutagen.mp3 import MP3
         mp3 = MP3(str(path))

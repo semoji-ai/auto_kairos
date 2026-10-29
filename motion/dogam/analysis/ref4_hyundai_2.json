@@ -1,0 +1,689 @@
+[
+  {
+    "id": "thought-image-blur-materialize",
+    "name": "떠오른 이미지 블러 물질화",
+    "category": "감정·효과 FX",
+    "summary": "인물이 뭔가를 '번뜩 떠올릴' 때 두 인물 사이 허공에 해당 사물(지폐 등)이 블러 덩어리에서 선명해지며 나타남",
+    "spec": "자막 교체 직후 시작, gaussian blur 약 40px→0 + opacity 0→1 동시 ~18f(linear에 가까움), 크기·위치 고정(약 420×200px, 머리 사이 y≈260), 테두리/말풍선 없음. 이후 다음 컷에서 실물 사진으로 하드컷 교체",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:04:38",
+        "note": "스윌 배경 위 '!!' 인물 옆"
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "idea",
+      "blur",
+      "reveal"
+    ]
+  },
+  {
+    "id": "hypnotic-swirl-bg",
+    "name": "최면 스윌 배경",
+    "category": "배경·루프",
+    "summary": "당혹·압박·충격 대화 장면에서 배경을 보라색 동심 물결 무늬로 교체해 심리 상태를 표현",
+    "spec": "2톤 #4F42B5 / #8680ED 두꺼운 곡선 동심 줄무늬(폭 ~90px), 움직임 매우 느림(2s 간 평균 픽셀차 5/255), 인물 컷아웃만 올림. 발화자 교체 시 배경 유지한 채 인물만 하드컷",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:04:20",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "background",
+      "psychology"
+    ]
+  },
+  {
+    "id": "checklist-tick-sync",
+    "name": "체크리스트 순차 체크",
+    "category": "콜아웃·라벨",
+    "summary": "검증·조사 항목을 클립보드 체크리스트로 보여주고 내레이션에 맞춰 하나씩 초록 체크, 마지막에 APPROVED 도장",
+    "spec": "클립보드 약 270×420px(우측), 항목 4줄 간격 ~100px. 체크마크 2f 드로우(거의 컷), 항목 간 간격=내레이션 싱크(2~3s). 완료 시 하단 초록 테두리 APPROVED 도장 팝. 등장은 비행기 컷에서 하드컷",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:06:14",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "checklist",
+      "sync"
+    ]
+  },
+  {
+    "id": "stacked-fact-pills",
+    "name": "네이비 팩트 필 스택",
+    "category": "텍스트·타이포",
+    "summary": "실사/일러스트 배경 위에 수치 사실을 네이비 필로 한 줄씩 아래로 쌓아 누적",
+    "spec": "필 1128×166px(@1080), 중앙정렬, 세로 간격 196px(gap 30), 색 #1D1951~#261F69, 흰 볼드 텍스트. 새 필은 blur(~15px)→0 + opacity 0→1 ~12f, scale/이동 없음. 기존 필은 그대로 유지",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:12:25",
+        "note": "조선소 사진 위 4줄 누적"
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "pill",
+      "list",
+      "stats"
+    ]
+  },
+  {
+    "id": "iso-buildup-pullback",
+    "name": "아이소메트릭 빌드업 풀백",
+    "category": "카메라",
+    "summary": "아이소메트릭 항만/공장 일러스트가 줌아웃되는 동안 크레인·컨테이너·선박이 차례로 생겨나며 '건설 과정'을 압축",
+    "spec": "scale ≈1.8→1.0 약 60f easeInOut + 좌상향 팬. 풀백 중 요소가 pop-in(0.6→1.0 ~6f)·크레인 수직 상승·컨테이너 드롭(위→아래 ~8f), 요소 간 스태거 3~5f. 이후 '3년' 연도칩 팝",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:12:34",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "isometric",
+      "pullback",
+      "build"
+    ]
+  },
+  {
+    "id": "corp-lineage-flow",
+    "name": "기업 계보 플로차트",
+    "category": "차트·인포그래픽",
+    "summary": "인수·사명 변경 계보를 로고→화살표→로고, 아래로 자회사 필을 그려 설명",
+    "spec": "좌측 원 로고 고정 후 다음 로고 opacity 0→1 ~10f + 연도 네이비 필(상단) 동시 블러인, 연결 화살표는 opacity 20%→100% ~20f(드로우 아님). 아래 화살표 fade ~10f 후 자식 네이비 필 blur+scale 0.8→1 ~5f. 단계 간격=내레이션(~3s). 배경 단색 #78A9D0",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:16:46",
+        "note": "한라→대우→두산"
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "flowchart",
+      "logo",
+      "M&A"
+    ]
+  },
+  {
+    "id": "growth-pot-metaphor",
+    "name": "화분 성장 은유",
+    "category": "캐릭터 연기",
+    "summary": "회사를 '키운다'는 서술을 화분에 심긴 건물 + 물뿌리개 + 반짝임으로 시각화",
+    "spec": "화분 3개 가로 배치(간격 ~420px), 우상단 빨간 물뿌리개가 기울어 물줄기 루프, 대상 화분의 건물이 scaleY 0.9→1.0 ~10f 성장 후 4각 별 반짝임 2개(기존 트윙클 재사용). 배경 베이지 단색",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:16:32",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "metaphor",
+      "growth"
+    ]
+  },
+  {
+    "id": "game-quest-window-drop",
+    "name": "게임 퀘스트 창 드롭",
+    "category": "콜아웃·라벨",
+    "summary": "성과/연속 수주를 RPG 퀘스트 UI(탭·체크리스트·NPC 카드)로 제시해 '임무 완수' 느낌",
+    "spec": "2단 패널(좌: 퀘스트 목록 체크, 우: NPC 초상+설명) 약 1300×840px, 화면 위(-900px)에서 드롭 ~18f ease-out, 약한 오버슈트 없음. 상단 '퀘스트' 헤더·탭 3개(시작가능/진행중/완료, 완료=연두 #8BC34A). 배경 씬은 그대로",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:20:06",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "game-ui",
+      "quest"
+    ]
+  },
+  {
+    "id": "election-poster-drop-rank",
+    "name": "포스터 드롭 + 순위 필",
+    "category": "차트·인포그래픽",
+    "summary": "선거 결과 등 순위를 실물 포스터 3장 드롭 후 각 아래 '순위+득표율' 필을 순차 팝",
+    "spec": "남색 배경 #242A45 하드컷, 포스터(약 430×580px, 흰 테두리 6px) 3장이 화면 위에서 드롭, 스태거 ~3f, 각 ~24f quint-out(긴 감속). 순위 필: 1위=금색 #E0B400 계열 pill, 2·3위=흰/회색, blur+scale 0.3→1.0 ~4f, 내레이션 수치 언급 시점마다 개별 팝",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:28:10",
+        "note": "14대 대선"
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "ranking",
+      "poster",
+      "drop"
+    ]
+  },
+  {
+    "id": "color-drain-desaturate",
+    "name": "컬러 드레인(점진 흑백화)",
+    "category": "감정·효과 FX",
+    "summary": "좌절·한계를 말할 때 컷 전환 없이 인물·배경 채도가 서서히 빠져 회색이 됨",
+    "spec": "채도 100%→~10% 약 25f linear, 동시에 인물 팔 내림 포즈 스왑·모자 프레임아웃, 배경 군중 실루엣 상승(기존). 하늘색 → 회청(#8A9CA3)으로 톤다운. 기존 '흑백 비트'(전환)와 달리 한 샷 안에서 서서히",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:28:06",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "desaturate",
+      "mood"
+    ]
+  },
+  {
+    "id": "burden-ballchain-slam",
+    "name": "족쇄 쇳덩이 슬램",
+    "category": "감정·효과 FX",
+    "summary": "'자금 압박' 같은 부담을 돈자루(좌) + 쇠사슬 쇳덩이(우) 오브젝트로 전경에 던져 넣음",
+    "spec": "돈자루 더미 좌측 프레임 밖→x≈350 슬라이드 ~15f ease-out, 이때 배경 인물 blur 0→~8px 디포커스(~6f). 쇳덩이(지름 ~300px, 네이비 #2E4A6B, 흰 텍스트 2줄)는 우측에서 휩 인(모션블러) ~3f 후 좌우 진자 오버슈트 2회 ~8f 감쇠, 사슬이 자루와 연결",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:28:42",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "burden",
+      "object",
+      "slam"
+    ]
+  },
+  {
+    "id": "diagonal-tape-wipe-tags",
+    "name": "대각 테이프 드로우 + 태그",
+    "category": "콜아웃·라벨",
+    "summary": "실사 자료 위에 흰 테이프 띠를 대각선으로 긋고 그 위에 키워드 태그를 순차 부착(3저 호황 등 나열)",
+    "spec": "띠 색 #F9F7F3, 두께 ~155px, 각도 약 19°(좌상→우하), 붓끝처럼 둥근 선단이 ~11f에 화면 횡단(ease-out). 이후 띠 전체 미세 드리프트. 태그: 금색 #D09B1F 라운드 사각+흰 볼드, 띠와 같은 각도, scale 0.3→1.1→1.0 ~4f, 스태거 ~10f. 마지막에 차량 사진이 우상단에서 슬라이드인",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:37:42",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "tape",
+      "diagonal",
+      "tags"
+    ]
+  },
+  {
+    "id": "logo-edge-icons-gather",
+    "name": "로고 주위 사업 아이콘 입장",
+    "category": "콜아웃·라벨",
+    "summary": "회사 로고를 중앙에 두고 사업 분야 아이콘(항공기·열차·로봇팔·자동차)이 각 모서리 방향 프레임 밖에서 밀려 들어옴",
+    "spec": "크림 배경 #F7F4EE, 로고 중앙 고정. 아이콘마다 가장 가까운 화면 가장자리에서 슬라이드 ~10f quart-out, 스태거 = 내레이션 단어(~1~2s), 최종 위치는 절반쯤 프레임에 걸침(잘린 구도)",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:37:32",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "logo",
+      "icons",
+      "business"
+    ]
+  },
+  {
+    "id": "signature-ripple-rings",
+    "name": "서명 파문 링",
+    "category": "콜아웃·라벨",
+    "summary": "문서 속 서명·도장 등 핵심 지점을 빨간 동심원 파문으로 강조",
+    "spec": "빨간 점(#D0302A) 팝 ~3f → 동심원 3개가 ~4f 간격으로 확장(지름 ~40→~420px), 선폭 ~6px, 확장 ~15f ease-out 후 원이 호 조각으로 트림되며 사라짐(~10f). 총 ~30f",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:42:26",
+        "note": "공개 서류 서명"
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "ripple",
+      "highlight",
+      "document"
+    ]
+  },
+  {
+    "id": "newspaper-slam-stack",
+    "name": "신문 스택 슬램",
+    "category": "사진·자료 처리",
+    "summary": "언론 반응을 신문 일러스트가 크게·반투명하게 떨어져 책상 위에 겹쳐 쌓이는 것으로 표현",
+    "spec": "각 신문: scale ~2.2→1.0, opacity ~40%→100%, 회전 -8°~+6° 유지, ~20f expo-out(착지 후 정지). 2~3장 스태거 ~40f(내레이션), 뒤 장은 가려짐. 목재 배경 위",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:42:33",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "newspaper",
+      "stack",
+      "press"
+    ]
+  },
+  {
+    "id": "split-flag-exchange",
+    "name": "분할 국기 교환 화살표",
+    "category": "차트·인포그래픽",
+    "summary": "두 주체(남·북 등)가 무엇을 주고받는지 반반 분할 국기 배경 위 필 2개 + 양방향 화살표로 설명",
+    "spec": "좌우 50:50 분할(국기 일러스트 배경), 네이비 필(약 480×200px, 2줄) blur-in ~8f, 흰 화살표 ←(먼저)→(나중) 각 opacity ~6f. 줄 간격 ~40px, 필은 각 패널 중앙",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:44:07",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "exchange",
+      "flags",
+      "deal"
+    ]
+  },
+  {
+    "id": "crown-knockoff",
+    "name": "왕관 날아감",
+    "category": "캐릭터 연기",
+    "summary": "퇴진·몰락을 머리 위 '직함 왕관'이 흔들리다 튕겨 날아가는 것으로 표현",
+    "spec": "왕관(직함 텍스트 포함) 좌우 wobble ±6° 3f×2 → 우상향으로 튀어오른 뒤 포물선 낙하해 우하단 프레임아웃 ~18f, 회전 누적 약 +110°, 모션블러. 배경 흑색 붓질 텍스처",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:45:18",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "crown",
+      "fall",
+      "demotion"
+    ]
+  },
+  {
+    "id": "crash-impact-zoom-crack",
+    "name": "충돌 임팩트 줌 + 유리 균열",
+    "category": "전환",
+    "summary": "교통사고 등 비극을 주행 샷에서 급 줌인·블러 후 흑백 + 깨진 유리 오버레이로 복귀시켜 표현",
+    "spec": "정면 주행 루프(차 bob) → 급줌 1.0→~2.5 + 방향블러 ~4f → 블러 홀드 ~3f → 줌아웃 복귀 ~6f와 동시에 채도 0, 방사형 유리 균열 선 오버레이, 하단 회색 연기. 직후 레드 배경 조문 샷 하드컷",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:46:50",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "crash",
+      "impact",
+      "tragedy"
+    ]
+  },
+  {
+    "id": "card-swipe-montage",
+    "name": "카드 결제 몽타주",
+    "category": "사진·자료 처리",
+    "summary": "여러 계열사가 지분을 매입했다는 내용을 손이 회사명 카드들을 차례로 단말기에 대는 반복으로 표현",
+    "spec": "손+카드(약 520×300px, 회사별 색 녹/보라/적/진녹)가 좌하단에서 들어와 ~20f ease-out, 단말기 화면에 '구매 완료' 텍스트 컷 등장 + 영수증 종이 돌출 ~6f, 손 퇴장 ~6f 후 다음 카드. 사이클 ~50~60f. 배경은 서류 콜라주+단말기 고정",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:50:36",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "montage",
+      "card",
+      "repeat"
+    ]
+  },
+  {
+    "id": "binocular-mask-pov",
+    "name": "쌍안경 마스크 시점",
+    "category": "카메라",
+    "summary": "시장 전망·관찰을 쌍안경 시점(검정 마스크 속 두 원)으로 보여주고 안에서 배·화물이 지나감",
+    "spec": "두 원 지름 ~975px, 겹침 ~316px, 전체 x146–1780 / y45–1020, 테두리 소프트 브라운 비네트. 마스크 밖 순흑(화면 31%). 챕터카드에서 하드컷, 내부 씬 선박 좌→우 등속 이동·미세 팬",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:55:59",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "mask",
+      "pov",
+      "binocular"
+    ]
+  },
+  {
+    "id": "headline-band-slam",
+    "name": "헤드라인 밴드 슬램",
+    "category": "텍스트·타이포",
+    "summary": "결론 한 줄(예: '해운 단가 폭락!')을 화면 가로 반투명 어두운 띠 위 초대형 글자로 박음",
+    "spec": "배경 전체 gaussian blur ~20px + 띠(y≈256–820, 검정 50%) fade ~6f → 텍스트(흰 #FBF6F1, 캡 높이 ~240px, x85–1821) 좌측에서 가로 모션블러 슬라이드 ~5f, 약간 오버슈트 후 2~3f 되돌림. 이후 미세 좌측 드리프트",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:56:52",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "headline",
+      "band",
+      "blur"
+    ]
+  },
+  {
+    "id": "alternating-photo-timeline",
+    "name": "교차 사진 타임라인",
+    "category": "차트·인포그래픽",
+    "summary": "모델 연표를 굵은 가로 레일 위아래 교대로 사진 카드+핀으로 배치",
+    "spec": "레일: 하늘색 #5A9BD5 캡슐, 두께 ~70px, 좌→우 wipe ~6f. 카드: 흰 테두리 사진 ~230×150px+라벨(이름(연.월)) 위/아래 교대, 핀 선 드로우 후 카드 scale 0.3→1.1→1.0 ~8f(핀 기준 확대), 스태거=내레이션. 배경 브랜드 워터마크 로고(저채도)",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:58:15",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "timeline",
+      "photo",
+      "alternate"
+    ]
+  },
+  {
+    "id": "product-spec-pin-callouts",
+    "name": "제품 스펙 핀 콜아웃",
+    "category": "콜아웃·라벨",
+    "summary": "실제 제품 사진 위 부위마다 네이비 라벨 + 짧은 지시선·점을 달아 스펙을 누적",
+    "spec": "제목 필(상단 중앙) blur-in ~6f, 각 스펙 라벨(네이비 #2B2A7A 사각, 흰 2줄) blur+scale 0.8→1 ~5f, 흰 선+점(지름~12px)으로 부위 연결, 내레이션 순 스태거. 강조 라벨은 금색 텍스트로 교체",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "02:00:22",
+        "note": "아반떼MD"
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "product",
+      "spec",
+      "callout"
+    ]
+  },
+  {
+    "id": "tech-circuit-part-glow",
+    "name": "회로 배경 부품 발광",
+    "category": "감정·효과 FX",
+    "summary": "기술 설명에서 제품을 청록 회로 배경 위에 두고 해당 부품(구동륜 등)을 네온 그린 발광+라벨로 강조",
+    "spec": "배경 #0E3A45 회로 트레이스+노드 글로우 펄스 루프. 라벨 필(#3C7BD9) blur+scale 1.3→1.0 ~6f + 수직 핀선. 부품: 네온 그린 #3EE04A 오버레이 opacity 0→1 ~6f 후 연기형 글로우 파티클 루프(깜빡임 ~8f 주기). 전→후 전환 시 반대 바퀴로 이동",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "02:02:33",
+        "note": "전륜→후륜 구동"
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "tech",
+      "glow",
+      "highlight"
+    ]
+  },
+  {
+    "id": "doc-zoom-red-underline",
+    "name": "원문 문서 줌인 + 빨간 밑줄",
+    "category": "사진·자료 처리",
+    "summary": "조사 보고서 썸네일을 전체화면으로 휩 확대한 뒤 순위 행에 빨간 밑줄을 순차로 긋기",
+    "spec": "썸네일(좌측 ~290×390px)이 좌측 이동+확대 ~14f(가로 모션블러, 배경 텍스트 동반 블러아웃), 전체화면 도달 후 느린 세로 스크롤. 밑줄: 빨강 #E53935 두께 ~4px, 행마다 좌→우 ~4f, 스태거 ~8f(내레이션 순서), 대상 행 막대는 금색 #C9A227 하이라이트",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "02:04:56",
+        "note": "J.D Power 순위표"
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "document",
+      "underline",
+      "zoom"
+    ]
+  },
+  {
+    "id": "octopus-metaphor-monster",
+    "name": "은유 괴물 + 라벨",
+    "category": "캐릭터 연기",
+    "summary": "'인플레이션' 같은 추상 위협을 거대 문어가 배를 휘감는 캐릭터로 의인화하고 라벨을 붙임",
+    "spec": "보라 문어(촉수 루프 흔들림 ~20f 주기), 배는 흔들림+'질질' 의성어 곡선. 라벨은 검정 사각+흰 텍스트+아래 꼬리(기존 이름표 스타일). 배경 파스텔 하늘+빛줄기",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:11:20",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "metaphor",
+      "monster"
+    ]
+  },
+  {
+    "id": "credits-crowd-endcard",
+    "name": "등장인물 군상 크레딧",
+    "category": "구성·엔딩",
+    "summary": "통합편 끝에 전 편 등장인물 일러스트를 좌측에 빽빽이 쌓고 우측 종이 카드에 제작진 크레딧",
+    "spec": "필름스트립 회고 스크롤(기존) 후 컷 → 세이지 #A9BFA5 배경, 좌 40% 인물 군상(정지, 미세 bob), 꽃장식 종이 카드(~620×360px) 손글씨 제목 '세상의 모든지식' + 이름 2열. 약 15s 정지",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "02:05:36",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "ending",
+      "credits"
+    ]
+  },
+  {
+    "id": "hud-dark-invert",
+    "name": "HUD 다크 반전",
+    "category": "HUD·자막·포맷",
+    "summary": "어두운 씬에서 상단 챕터 탭 바를 흑색 채움+흰 글씨로 반전해 가독성 유지(밝은 씬은 투명+회색 스트로크)",
+    "spec": "좌상단 정사각 종이 로고 배지 ~190×110(+) 고정. 챕터 바 x250–1828, y45–110, 4분할 탭, 활성 탭 #A8A4A0 채움+흰 볼드, 비활성=밝은 씬 연한 회색 글씨/어두운 씬 흰 글씨. 스트로크 ~4px #9A9A9A. 씬 밝기에 따라 컷 단위로 스위치",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "01:53:40",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "분석만",
+    "tags": [
+      "hud",
+      "dark-mode"
+    ]
+  },
+  {
+    "id": "radial-sunburst-logo",
+    "name": "방사 광선 로고 배경",
+    "category": "배경·루프",
+    "summary": "엔딩 직전 그룹 로고 뒤 크림/베이지 방사 광선 — 욱일기 연상으로 사용 금지",
+    "spec": "로고 중심 방사선 ~24줄, 크림 #F4EFE3 / 베이지 #E2DACB 교대, 회전 없음. 인물 코멘트 '역시~' 동반",
+    "sources": [
+      {
+        "ref": "ref4-hyundai",
+        "video": "https://youtu.be/iB5cA-rKGRA",
+        "time": "02:05:21",
+        "note": ""
+      }
+    ],
+    "component": null,
+    "file": null,
+    "preview": null,
+    "status": "금지",
+    "tags": [
+      "radial",
+      "banned"
+    ]
+  }
+]

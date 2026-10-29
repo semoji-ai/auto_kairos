@@ -1,0 +1,602 @@
+[
+ {
+  "id": "numbered-reason-tab",
+  "name": "번호 사유 탭(좌측 도킹)",
+  "category": "콜아웃·라벨",
+  "summary": "실패 원인·이유를 '1.비싼 가격대 / 2.성능과 호환성 문제 / 3.마케팅 실패'처럼 번호 매겨 좌상단 탭으로 도킹, 항목 바뀔 때 탭만 교체",
+  "spec": "화면 왼쪽 끝에 붙은 반쪽 pill(왼쪽 모서리 없음, 오른쪽 r≈40px) x0–425, y195–315(h120) @1080p; 배경 #3a3a3a 불투명, 흰 글자 굵은 60px + 하단 드롭섀도. 등장=화면 밖 왼쪽에서 x 슬라이드인 ~10f quart-out(글자 오른쪽부터 드러남), 흐림 없음. 항목 사이 하드컷으로 교체",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:10:45",
+    "note": "1.비싼 가격대 등장"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:11:40",
+    "note": "2.성능과 호환성 문제"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:11:50",
+    "note": "3.마케팅 실패"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "리스트",
+   "원인분석",
+   "탭"
+  ]
+ },
+ {
+  "id": "gradient-band-spec-label",
+  "name": "그라데이션 밴드 스펙 라벨",
+  "category": "텍스트·타이포",
+  "summary": "제품 사진 위에 핵심 사양(MOS 6502 프로세서 내장, 1MHz…)을 좌우가 투명하게 사라지는 검은 가로 띠 위 흰 굵은 글자로 얹음. 여러 줄 스펙이면 띠를 세로로 쌓음",
+  "spec": "띠: 가로 ~620px(x1180–1800), 세로 ~185px, 가운데 #2e292b 알파≈0.85 → 좌·우 끝 0까지 가로 그라데이션(가장자리 ~120px 페이드). 글자 흰색 굵은 산세리프 ~64px 2줄 가운데 정렬. 등장=가우시안 블러 걷히며 알파 페이드 ~5f, 스케일 변화 없음. 뒤 배경은 흰 워시로 ~40% 흐리게, 기존 말풍선이 비쳐 보임. 2번째 라벨은 ~1.2s 뒤 아래 줄에 같은 방식",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:31:43",
+    "note": "애플1 기판 MOS 6502"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:31:49",
+    "note": "1MHz 개인용 컴퓨터 모델 추가"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "스펙",
+   "제품",
+   "라벨"
+  ]
+ },
+ {
+  "id": "silhouette-rival-price-compare",
+  "name": "회색 실루엣 경쟁품 + 가격표 비교",
+  "category": "차트·인포그래픽",
+  "summary": "주인공 제품만 실사진·좌대 위에 두고 경쟁 제품은 납작한 회색 실루엣으로 양옆에 띄운 뒤 각각 흰 가격표를 붙여 가격 격차를 보여줌",
+  "spec": "좌대(갈색 #8a6a4a 계열) 앞면에 흰 가격표 358×140px, 검정 굵은 72px '$ 9,995'. 가격표 팝 ~6f(0.6→1.05→1.0, 블러 동반). 실루엣 #6d6b69 단색(윤곽선 없음), 오른쪽 먼저 작게 블러 상태에서 커지며 ~5f 팝, 왼쪽은 ~8f 뒤. 약간 기울어진 원근 모양. 이후 실루엣에 작은 회색 태그 '$1,500'·'$2,000' 흰 테두리로 팝(~6f). 배경=짙은 버건디 세로 줄무늬 벽지 #331c1b",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:10:47",
+    "note": "$9,995 가격표 팝"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:10:50",
+    "note": "실루엣 등장"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:10:53",
+    "note": "$1,500 태그"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "가격",
+   "비교",
+   "실루엣"
+  ]
+ },
+ {
+  "id": "white-stroke-archive-cutout",
+  "name": "흰 윤곽선 흑백 인물 컷아웃 + 로고·왕관",
+  "category": "사진·자료 처리",
+  "summary": "실존 인물의 흑백 사진을 잘라내 두꺼운 흰 윤곽선을 두르고, 같은 장면을 흐리고 어둡게 깐 배경 위 오른쪽에 크게 배치. 왼쪽 빈 공간에는 소속 로고와 '왕관+최연소CEO' 같은 타이틀을 쌓음",
+  "spec": "컷아웃 오른쪽 하단 기준으로 화면의 ~55%(x830–1920, y115–1080), 흰 선 ~8px, 그림자 없음. 배경=같은 영상을 블러+어둡게 #1d1d1d~#202020. 인물은 흑백 처리. 왼쪽 열: 로고(PEPSI #1f6fb5, 폭 ~490px) → 왕관 아이콘(~180px) → 흰 굵은 '최연소CEO' ~120px, 가운데 정렬 x≈440. 출처 칩은 컷아웃 위 오른쪽 하단에 겹침",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:07:12",
+    "note": "존 스컬리 펩시 CEO 소개"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "인물소개",
+   "아카이브",
+   "컷아웃"
+  ]
+ },
+ {
+  "id": "clipboard-swing-drop-doc",
+  "name": "클립보드 문서 스윙 드롭 + 줄별 리빌",
+  "category": "콜아웃·라벨",
+  "summary": "계약서·사퇴서 같은 문서를 클립보드째 화면 위에서 흔들리며 떨어뜨리고, 본문을 내레이션에 맞춰 한 줄씩 드러낸 뒤 손이 들어와 서명함",
+  "spec": "단색 머스터드 배경 #d0a060 계열. 클립보드(검정 판+흰 종이, 세로형 ~480×620px) 등장 22f 동안 화면 위쪽 밖에서 회전하며 떨어짐: 약 -70°에서 +10°를 지나 약 -5°로 한 번 넘쳤다가 0°에 정착(ease-out + 오버슈트 1회), 회전축은 위쪽 클립. 정착 뒤 느린 푸시인 1.0→~1.08(~3s). 본문은 줄마다 아래→위 마스크와 블러 해제로 ~8–10f씩, 내레이션 어절에 맞춰 드러남. 마지막에 펜 쥔 손이 오른쪽 아래에서 슬라이드인해 서명",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:27:23",
+    "note": "파트너 사퇴서 드롭"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:27:29",
+    "note": "본문 줄별 리빌"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:27:40",
+    "note": "손 서명"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "문서",
+   "계약",
+   "서명"
+  ]
+ },
+ {
+  "id": "dday-calendar-equation",
+  "name": "D-DAY 달력 → 화살표 → 산출량 공식",
+  "category": "차트·인포그래픽",
+  "summary": "'30일 안에 50대' 같은 기한·생산량 조건을 [D-DAY 달력]→[화살표]→[제품 아이콘 ×2 + '하루에 2대']의 가로 공식으로 풀어 보여줌",
+  "spec": "달력 아이콘(빨간 헤더 #e0303a 'D-DAY' + 흰 몸통 '30일' 검정 굵은 글자) ~200×190px 왼쪽 x≈150 팝. ~2.4s 뒤 흰 화살표가 알파 페이드와 왼→오른쪽 이동으로 ~12f. 이어서 제품 실루엣 2개(민트 #b0d0cc)가 블러 상태에서 0.3→1.1→1.0으로 ~6f 팝, 두 개 동시. 마지막 '하루에 2대' 흰 굵은 ~80px 블러 해제 ~6f. 배경=제품 실루엣을 짙은 청회색 #4a5f60 패턴으로 깔고 가장자리 비네트",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:30:38",
+    "note": "달력 팝"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:30:41",
+    "note": "화살표→아이콘→텍스트"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "공식",
+   "기한",
+   "생산량"
+  ]
+ },
+ {
+  "id": "orange-pill-stack-list",
+  "name": "오렌지 pill 세로 스택 목록",
+  "category": "콜아웃·라벨",
+  "summary": "기업·인물의 연구 분야나 특징을 오렌지 pill 태그로 왼쪽 위에서부터 한 개씩 세로로 쌓아 나열(복사기 기술/컴퓨터 과학/정보 기술/전자 공학)",
+  "spec": "pill 너비는 글자에 맞춤(~230×56px @1080p, r=28), 채움 #f0a830 계열 + 아래쪽이 더 진한 오렌지 테두리/그림자, 흰 굵은 ~40px. 등장=작게 블러+글로우 상태에서 0.4→1.08→1.0 ~6f. 내레이션 어절에 맞춰 스태거(측정 간격 0.6–1.0s), 세로 간격 ~62px. 한 번 쌓이면 끝까지 유지. 오른쪽엔 흰 장갑 손(가리키기·브이) 달린 건물 마스코트",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:50:08",
+    "note": "복사기 기술"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:50:12",
+    "note": "4개 쌓임 완료"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "목록",
+   "태그",
+   "스태거"
+  ]
+ },
+ {
+  "id": "gameshow-door-reveal",
+  "name": "게임쇼 번호문 순차 공개",
+  "category": "구성·엔딩",
+  "summary": "퀴즈쇼 무대의 번호 달린 문(1~4)을 하나씩 열어 인물을 차례로 공개(스티브와 함께 떠난 직원들). 여러 인물을 극적으로 한 명씩 소개할 때",
+  "spec": "빨간 무대 커튼 + 금색 테두리 문 4개(각 ~300×470px, 위에 금색 번호판), 가운데 위 원형 '히든 직원' 엠블럼, 아래 관객 검은 실루엣, 스포트라이트 빔이 좌우로 느리게 흔들림(루프). 문 열림=빨간 문짝이 오른쪽 가장자리에서 왼쪽으로 가로 와이프 ~12f ease-in-out. 문 사이 스태거 ~19f(0.63s). 문 뒤 인물은 정적, 문 안은 어두운 배경. 앞 장면에서 세로+가로 모션블러 휩 ~6f로 진입",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:24:41",
+    "note": "문1~4 순차 공개"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "공개",
+   "게임쇼",
+   "스태거"
+  ]
+ },
+ {
+  "id": "clapping-hands-foreground",
+  "name": "전경 박수 손 루프",
+  "category": "감정·효과 FX",
+  "summary": "화면 아래 좌우 앞쪽에 커다란 박수 치는 손 여러 쌍을 깔고 흔들어, 인물이 환호·지지받는 분위기를 만듦",
+  "spec": "살구색 손(#f0b0a0 계열) 3~4쌍이 화면 아래 40%를 가림. 손 크기 ~350px, 약간 반투명 겹침. 박수 사이클 ~8–10f 핑퐁(서로 모였다 벌어짐), 쌍마다 위상 어긋남. 가운데 인물은 정적, 뒤 군중은 회색 실루엣",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:24:32",
+    "note": "이사진 박수"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "환호",
+   "루프",
+   "전경"
+  ]
+ },
+ {
+  "id": "boarding-pass-drop",
+  "name": "탑승권 소품 드롭",
+  "category": "사진·자료 처리",
+  "summary": "출장·이동 사실을 탑승권 그래픽(이름·편명·도착지)으로 보여줌. 두 장을 겹친 티켓이 위에서 떨어지고 손이 집어감",
+  "spec": "하드컷 뒤 단색 머스터드 #d09a40 배경. 탑승권 2장(앞=흰색+오렌지 스텁, 뒤=오렌지, 약 -4° 어긋남) ~860×330px가 화면 위 밖에서 떨어짐 ~10f ease-out, 약 +6°에서 0°로 회전 정착. 이후 느린 푸시인 ~1.05, ~1.5s 뒤 손이 오른쪽 아래에서 들어와 집음. 티켓 글자: 이름 '존 스컬리' 굵게, 'CBX 63', '도착지: 중국'",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:22:02",
+    "note": "존 스컬리 중국행 탑승권"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "소품",
+   "이동",
+   "티켓"
+  ]
+ },
+ {
+  "id": "title-strip-flyoff",
+  "name": "직함 떼어 날리기",
+  "category": "텍스트·타이포",
+  "summary": "인물 포스터의 직함 줄(예: [연구 및 개발 담당 부사장])이 종이 조각처럼 떨어져 나가 회전하며 날아가고 빈 자리만 남음 = 직함 박탈",
+  "spec": "흰 종이 포스터(가장자리 찢김, ~370×470px): 제목 '구조조정 대상' + 흑백 원형 인물 + 이름 + 직함 줄. 직함 줄 퇴장 ~20f: 먼저 제자리에서 ~+15° 기울고 아래로 조금 처진 뒤 오른쪽 위로 호를 그리며 날아감(총 회전 ~+70°, 이동 ~400px), 마지막 ~6f는 알파 페이드와 블러. 포스터 본체는 움직이지 않음. 이후 새 직함 '[비집행 이사회 의장]'이 포스터 클로즈업으로 들어옴",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:59:02",
+    "note": "부사장 직함 날아감"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:59:10",
+    "note": "새 직함 클로즈업"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "직함",
+   "박탈",
+   "텍스트퇴장"
+  ]
+ },
+ {
+  "id": "extras-face-blur",
+  "name": "비핵심 인물 얼굴 블러",
+  "category": "캐릭터 연기",
+  "summary": "이사회처럼 여러 명이 나오는 장면에서 발언하지 않는 인물의 얼굴만 가우시안 블러로 뭉개 초점을 주인공에게 모음(실존 인물 특정도 피함)",
+  "spec": "얼굴 영역만(머리 ~160px 원) 블러 반경 ~12–16px, 몸은 선명하게 둠. 발언자·주인공 얼굴만 선명. 블러는 장면 내내 유지되며 카메라 이동 때도 따라감. 'OK!' 같은 대사는 블러 얼굴 옆에 선명하게 둠",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:15:00",
+    "note": "애플 이사회"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:21:56",
+    "note": "이사회 찬성 장면"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "초점",
+   "익명화",
+   "군중"
+  ]
+ },
+ {
+  "id": "truck-pan-push-door",
+  "name": "가로 팬 → 문 안 인물 푸시인",
+  "category": "카메라",
+  "summary": "회의 장면에서 카메라가 옆으로 이동해 유리문 밖에 혼자 선 주인공을 드러내고, 그 문틀을 향해 계속 밀고 들어가 고립감을 줌",
+  "spec": "1단계: 오른쪽으로 가로 트럭 ~15f(무대 ~500px 이동) ease-in-out, 이동 중 전경의 블러 인물들이 왼쪽으로 빠짐. 2단계: 이어서 끊김 없이 푸시인 1.0→~1.8, ~1.3s ease-in-out, 문틀이 화면 폭의 ~70%가 될 때까지. 도착 뒤 우는 표정 클로즈업으로 하드컷",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:21:56",
+    "note": "이사회→문밖 스티브"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "고립",
+   "팬",
+   "푸시인"
+  ]
+ },
+ {
+  "id": "boxing-round-rivalry",
+  "name": "복싱 링 라이벌 구도 + ROUND 표기",
+  "category": "캐릭터 연기",
+  "summary": "두 인물의 갈등을 복싱 경기로 보여줌: 빨강/노랑 글러브·트렁크, 링 로프, 스포트라이트, 'ROUND2' 표기로 몇 번째 충돌인지 알림. 양쪽 주장은 손글씨 라벨로 붙임",
+  "spec": "앞 장면에서 불꽃 와이프 전환(implemented) 뒤 진입. 두 캐릭터 상반신이 화면 좌우 절반씩, 빨강 #d83a3a / 노랑 #e0b030 글러브. 배경=링 로프와 경기장 보케, 가장자리에 흰 속도선. 'ROUND2' 빨강 굵은 아웃라인 ~70px, 오른쪽 위 x≈1500 y≈80, 블러 팝 ~6f. 주장 라벨은 검정 손글씨가 각 캐릭터 주변에 순차 팝. 캐릭터는 가볍게 들썩임 루프",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:45:41",
+    "note": "ROUND2 워즈니악 vs 잡스"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:17:00",
+    "note": "가격 논쟁 재등장"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "갈등",
+   "대결",
+   "라이벌"
+  ]
+ },
+ {
+  "id": "whack-a-mole-hammer",
+  "name": "두더지 게임 뿅망치 개그",
+  "category": "캐릭터 연기",
+  "summary": "인물을 두더지 구멍 속 상반신으로 두고 머리 위에서 거대한 장난감 뿅망치가 내려오게 해 '두들겨 맞는' 처지를 과장",
+  "spec": "구멍=갈색 흙 테두리(화면 아래 가운데), 녹색 잔디와 경기장 보케·조명 원 배경. 뿅망치(핑크 주름 머리 + 금색 손잡이)는 오른쪽 위에서 대각선으로 들어와 머리 위 프레임 밖에 걸침, 앞뒤로 흔들림. 캐릭터는 입을 가리고 눈은 반짝이는 흰 동그라미. 주장은 노란 폭발형 말풍선 손글씨, 블러 팝 ~6f",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:14:57",
+    "note": "광고를 꼭 내보내야 한다는 워즈니악"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "개그",
+   "과장",
+   "곤경"
+  ]
+ },
+ {
+  "id": "repeat-object-wallpaper",
+  "name": "반복 오브젝트 벽지 배경",
+  "category": "배경·루프",
+  "summary": "주제 오브젝트(빨간 사과)를 규칙적인 도트 패턴처럼 반복한 파스텔 벽지를 인물 배경으로 깔아 프로젝트나 브랜드를 암시",
+  "spec": "배경 연분홍 #f8dede, 사과 일러스트 ~110px를 엇갈린 격자(가로 ~200px, 세로 ~170px, 행마다 반 칸 어긋남)로 반복. 정적(스크롤 없음). 인물은 가운데, 앞에 오렌지 pill 이름표 '매킨토시 프로젝트'",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:59:50",
+    "note": "제프 래스킨 매킨토시 프로젝트"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:12:00",
+    "note": "재등장"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "패턴",
+   "벽지",
+   "브랜드"
+  ]
+ },
+ {
+  "id": "hypno-spiral-bg",
+  "name": "최면 소용돌이 배경",
+  "category": "배경·루프",
+  "summary": "충격적인 사실(판매 실적 부진 등)을 밝힐 때 보라·자주 소용돌이 배경을 깔고, 인물은 푯말을 든 채 몸만 보이게 함",
+  "spec": "보라 #5a1a6a~자주 #c02a7a~핑크 소용돌이가 가운데로 빨려 들어가는 모양으로 천천히 회전(느린 루프). 앞쪽에 흰 푯말 '매킨토시 판매 실적' 검정 굵은 ~80px, 약 -8° 기울임. 방사형 광선이 아닌 나선형",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:16:40",
+    "note": "매킨토시 판매 실적"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "충격",
+   "반전",
+   "배경"
+  ]
+ },
+ {
+  "id": "four-corner-char-tiles",
+  "name": "네 모서리 빨간 글자 타일",
+  "category": "텍스트·타이포",
+  "summary": "네 글자 키워드(비전실현·비싼가격)를 한 글자씩 빨간 정사각 타일로 나눠 인물 주위 네 모서리에 배치하는 강조 타이포",
+  "spec": "타일 ~120×120px, 채움 #d02a2a, 흰 굵은 글자 ~80px, 캐릭터를 둘러싼 2×2 배치(좌상·우상·좌하·우하). 뒤에는 불꽃 배경. 타일은 순서대로 팝(~6f)",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:10:40",
+    "note": "비전실현(불꽃 배경)"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:16:50",
+    "note": "비싼 가격"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "키워드",
+   "타일",
+   "강조"
+  ]
+ },
+ {
+  "id": "fire-background-loop",
+  "name": "분노 불꽃 배경 루프",
+  "category": "배경·루프",
+  "summary": "인물이 분노하거나 충돌할 때 배경 전체를 주황·빨강 만화풍 불꽃으로 바꾸고 계속 일렁이게 함(전환용 불꽃과는 다름)",
+  "spec": "배경 #f05030 바탕에 짙은 주황·노랑 불꽃 혀 모양이 화면 아래에서 위로 일렁임, 루프 ~12–15f. 캐릭터는 그 위에 정적으로 배치, 분노 기호와 노란 폭발형 말풍선을 함께 사용",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:37:10",
+    "note": "워즈니악-잡스 수익 갈등"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:43:30",
+    "note": "마쿨라 분노"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "분노",
+   "루프",
+   "불꽃"
+  ]
+ },
+ {
+  "id": "source-chip-draw-on",
+  "name": "출처 칩 드로우온(측정값)",
+  "category": "HUD·자막·포맷",
+  "summary": "implemented의 '우하단 출처 칩'과 모양은 같지만 나타나는 방식이 다름: 왼쪽 화살표 윤곽선이 먼저 생기고 상자가 오른쪽으로 늘어난 뒤 글자가 나옴",
+  "spec": "모양: 흰 윤곽선 삼각 화살표(왼쪽 방향, ~70×90px) + 흰 테두리 2px 상자 ~385×78px(반투명 검정 채움), 흰 '출처 : GettyImages' ~36px. 등장: 화살표 선 ~3f → 상자 너비 0→100% 오른쪽 확장 ~6f ease-out → 약 8f 뒤 글자 알파 페이드 ~3f. 위치 x1405–1865, y838–918 @1080p",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:07:12",
+    "note": "GettyImages 칩 드로우온"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "출처",
+   "HUD",
+   "측정"
+  ]
+ },
+ {
+  "id": "manga-focus-lines",
+  "name": "만화 집중선 배경",
+  "category": "감정·효과 FX",
+  "summary": "놀람·충격 리액션 때 하늘색이나 흰 배경에 가운데로 모이는 흰 만화 집중선을 깔고 인물을 가운데 둠",
+  "spec": "하늘색 #40c0e0 바탕, 흰 가는 선 수십 개가 가장자리에서 가운데로 모임(가운데 ~40%는 비움). 1–2f 간격으로 선 패턴이 바뀌며 떨림. 가운데 중심 방사형 선이라 금지 규칙에 해당",
+  "sources": [
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "00:54:10",
+    "note": "스티브 충격"
+   },
+   {
+    "ref": "ref4-apple",
+    "video": "https://youtu.be/-KlzkB3b46c",
+    "time": "01:14:57",
+    "note": "뿅망치 장면 흰 속도선"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "금지",
+  "tags": [
+   "충격",
+   "방사",
+   "만화"
+  ]
+ }
+]

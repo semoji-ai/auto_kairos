@@ -1,13 +1,16 @@
 """세모지 기법 도감 → AE 패널 동기화.
 
-세모지 도감(semoji-motion/dogam)의 카탈로그·미리보기·키트 에셋을 패널 안으로 가져오고,
+세모지 도감(motion/dogam, 구 semoji-motion)의 카탈로그·미리보기·키트 에셋을 패널 안으로 가져오고,
 AE 구현(jsx/dogam/techniques/*.jsx)이 있는 기법만 모아 registry.json 을 만듭니다.
 
     python3 -m scripts.sync_dogam                # adobe/ 에서 실행
     python3 adobe/scripts/sync_dogam.py --check  # 복사 없이 registry 만 검증
 
 경로
-  원본: 환경변수 SEMOJI_MOTION_DIR → ~/Projects/semoji-motion → 저장소 내 번들 순
+  원본: 환경변수 SEMOJI_MOTION_DIR → 저장소 motion/ → 저장소 내 번들(adobe/data/semoji-motion) 순
+        원본에 없는 파일(미리보기·지도·키트 PNG 등 NAS 보관 미디어)은 파일마다 번들로 대신합니다.
+        motion/ 의 미리보기 폴더는 motion/dogam/previews_dir.py 규칙
+        (DOGAM_PREVIEWS_DIR → motion/dogam/previews → NAS 백업)으로 찾습니다.
   대상: adobe/cep/com.autokairos.pd/jsx/dogam/assets/   ← .gitignore (재생성 가능한 복사본)
         adobe/cep/com.autokairos.pd/jsx/dogam/registry.json  ← 커밋(작고, 패널이 바로 읽음)
 
@@ -15,12 +18,13 @@ AE 구현(jsx/dogam/techniques/*.jsx)이 있는 기법만 모아 registry.json �
 링크 밖(CEP/extensions)으로 풀립니다. 확장 폴더 안이면 패널(img/video src)과
 JSX(assetsRoot) 가 같은 상대 경로로 닿습니다 — tylenol/assets 와 같은 방식입니다.
 
-외부 원본의 미리보기 mp4는 기본적으로 링크하고, 저장소 번들의 12개 미리보기는
-복사합니다. 따라서 다른 컴퓨터에는 별도 semoji-motion 저장소가 필요 없습니다.
+번들 밖 미리보기 폴더(로컬 캐시·NAS)의 mp4는 기본적으로 링크하고, 저장소 번들의 12개
+미리보기는 복사합니다. 따라서 다른 컴퓨터에는 NAS 나 별도 저장소가 없어도 됩니다.
 """
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import shutil
@@ -35,6 +39,7 @@ ASSETS = DOGAM_JSX / "assets"
 REGISTRY = DOGAM_JSX / "registry.json"
 TECH_DIR = DOGAM_JSX / "techniques"
 BUNDLED = ADOBE / "data" / "semoji-motion"
+MOTION = ADOBE.parent / "motion"
 
 CASTS = ["walker1", "c2_boss", "c3_woman", "c4_elder", "c5_chef"]
 # 기법 기본값(도감 미리보기와 같은 결과)에 쓰는 데모 에셋 — video/public 기준
@@ -45,8 +50,25 @@ def semoji_dir() -> Path:
     explicit = os.environ.get("SEMOJI_MOTION_DIR")
     if explicit:
         return Path(explicit).expanduser()
-    sibling = Path.home() / "Projects" / "semoji-motion"
-    return sibling if (sibling / "dogam" / "techniques.json").is_file() else BUNDLED
+    return MOTION if (MOTION / "dogam" / "techniques.json").is_file() else BUNDLED
+
+
+def _src(sm: Path, rel: str) -> Path:
+    """원본에 있으면 원본, 없으면 저장소 번들(미디어는 NAS 보관이라 motion/ 에 없을 수 있음)."""
+    p = sm / rel
+    return p if p.exists() else BUNDLED / rel
+
+
+def previews_src(sm: Path) -> Path:
+    helper = sm / "dogam" / "previews_dir.py"   # motion/ 의 규칙: DOGAM_PREVIEWS_DIR → 로컬 캐시 → NAS
+    if helper.is_file():
+        spec = importlib.util.spec_from_file_location("motion_previews_dir", helper)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        d = mod.previews_dir()
+        if d.is_dir():
+            return d
+    return _src(sm, "dogam/previews")
 
 
 def _same(a: Path, b: Path) -> bool:
@@ -75,23 +97,24 @@ def copy_tree(src: Path, dst: Path, pattern: str = "*") -> int:
 
 def sync_assets(sm: Path, mp4_mode: str) -> dict:
     stats = {}
+    pv = previews_src(sm)
     stats["kit"] = sum(copy_tree(sm / "video/public/kit" / c, ASSETS / "kit" / c) for c in CASTS)
     stats["props"] = copy_tree(sm / "video/public/kit/props", ASSETS / "kit" / "props")
-    stats["map"] = copy_file(sm / "ae/assets/map_bg.png", ASSETS / "map" / "map_bg.png")
-    stats["demo"] = sum(copy_file(sm / "video/public" / rel, ASSETS / "demo" / Path(rel).name) for rel in DEMO_ASSETS)
+    stats["map"] = copy_file(_src(sm, "ae/assets/map_bg.png"), ASSETS / "map" / "map_bg.png")
+    stats["demo"] = sum(copy_file(_src(sm, f"video/public/{rel}"), ASSETS / "demo" / Path(rel).name) for rel in DEMO_ASSETS)
     stats["catalog"] = copy_file(sm / "dogam/techniques.json", ASSETS / "catalog" / "techniques.json") + \
         copy_file(sm / "dogam/params.json", ASSETS / "catalog" / "params.json")
-    stats["previews_jpg"] = copy_tree(sm / "dogam/previews", ASSETS / "previews", "*.jpg")
+    stats["previews_jpg"] = copy_tree(pv, ASSETS / "previews", "*.jpg")
     link = ASSETS / "previews_src"
     if mp4_mode == "copy":
         if link.is_symlink():
             link.unlink()
-        stats["previews_mp4"] = copy_tree(sm / "dogam/previews", link, "*.mp4")
+        stats["previews_mp4"] = copy_tree(pv, link, "*.mp4")
     elif mp4_mode == "link":
         if link.is_symlink() or not link.exists():
             if link.is_symlink():
                 link.unlink()
-            link.symlink_to(sm / "dogam/previews", target_is_directory=True)
+            link.symlink_to(pv, target_is_directory=True)
         stats["previews_mp4"] = "link"
     return stats
 
@@ -163,14 +186,15 @@ def build_registry(sm: Path) -> tuple[dict, list[str]]:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--mp4", choices=["auto", "link", "copy", "none"], default="auto", help="미리보기 mp4: 원본이면 링크, 번들이면 복사(기본)·강제 링크·복사·생략")
+    ap.add_argument("--mp4", choices=["auto", "link", "copy", "none"], default="auto", help="미리보기 mp4: 번들 밖(로컬 캐시·NAS)이면 링크, 번들이면 복사(기본)·강제 링크·복사·생략")
     ap.add_argument("--assets-only", action="store_true", help="추가 도구 없이 포함된 registry를 유지하며 패널 에셋만 설치")
     ap.add_argument("--check", action="store_true", help="에셋 복사 없이 registry 만 만들고 검증")
     a = ap.parse_args()
     sm = semoji_dir()
     if not (sm / "dogam/techniques.json").exists():
         sys.exit(f"세모지 도감을 찾지 못했습니다: {sm} (SEMOJI_MOTION_DIR)")
-    mp4_mode = ("copy" if sm == BUNDLED else "link") if a.mp4 == "auto" else a.mp4
+    bundled_pv = previews_src(sm).resolve() == (BUNDLED / "dogam/previews").resolve()
+    mp4_mode = ("copy" if bundled_pv else "link") if a.mp4 == "auto" else a.mp4
     if not a.check:
         print("에셋 동기화:", sync_assets(sm, mp4_mode))
     if a.assets_only:

@@ -63,7 +63,7 @@ def test_generate_subtitles_partial_scene_preserves_other_scene_entries(tmp_path
     monkeypatch.setitem(sys.modules, "whisperx", whisperx_mod)
 
     monkeypatch.setattr(subtitle_script, "get_project_dir", lambda: project_dir)
-    monkeypatch.setattr(subtitle_script, "smart_split", lambda text: [text])
+    monkeypatch.setattr(subtitle_script, "smart_split", lambda text, **_kw: [text])
     monkeypatch.setattr(subtitle_script, "fix_decimal_splits", lambda lines: lines)
     monkeypatch.setattr(subtitle_script, "fix_quote_splits", lambda lines: lines)
     monkeypatch.setattr(

@@ -107,6 +107,22 @@ PREV_CUT = """
 다른 자리에서 본 그림입니다.
 """
 
+CROWD_LIST = """
+**화면 앞쪽에 또렷하게 그릴 사람은 {count}명입니다.**
+
+{people}
+
+{count}명은 서로 다른 사람입니다. 얼굴형, 머리 모양, 나이가 각각 다르게 보이도록
+그리세요.
+
+**그 뒤에는 무리가 있습니다 — 이 장면의 규모를 보여 주는 사람들입니다.**
+{crowd}
+
+무리는 중경과 원경을 실제로 메웁니다. 크기는 앞쪽 인물보다 작게, 얼굴은 단순하게
+그리되 **한 사람 한 사람의 머리 모양·옷 색·자세를 다르게** 해서 같은 사람이
+복사된 것처럼 보이지 않게 합니다.
+"""
+
 NO_PEOPLE = """
 **이 화면에는 사람이 나오지 않습니다.** 사물·문서·건물·풍경만으로 채웁니다.
 빈자리는 소품과 공간으로 메우세요.
@@ -198,7 +214,7 @@ SCENE = """$imagegen
 {ref_block}
 size는 {size}입니다.
 
-생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:
+생성 후 이번 세션에서 만든 그림을 아래로 복사하세요:
 {out}
 """
 
@@ -214,6 +230,20 @@ _COUNT = {"둘": 2, "두 사람": 2, "두 명": 2, "셋": 3, "세 사람": 3, "�
 # 수가 없는 무리 — 「상인들」·「아이들」·「사람들」. 몇 명인지 못 박을 수 없다.
 # 「줄」은 빼 둔다 — 「사원증 줄」처럼 물건 이름 끝에 붙어 한 사람을 무리로 셌다(EP08 1015).
 _CROWD = re.compile(r"(들|무리|행렬)\s*$")
+
+
+# 같은 문장으로 여럿을 갈라 적으면 **같은 얼굴이 복제된다.** 한화편 씬30 의
+# 「럭비복 일본인 학생, 둘」이 쌍둥이로 나왔다. 자리만 다르게 적어서는 모자라
+# 사람마다 얼굴형·머리·눈썹을 다르게 붙인다(옷과 배역은 그대로 둔다).
+# 체격은 쓰지 않는다 — 몸을 말로 쓰면 등신이 흔들린다(character-sheet-rules 3-2절).
+_DISTINCT = [
+    "갸름한 얼굴, 이마를 드러내 뒤로 넘긴 머리, 짙은 일자 눈썹",
+    "둥근 얼굴, 아주 짧게 깎은 까까머리, 짧고 둥근 눈썹",
+    "각진 턱, 앞머리를 내린 머리, 굵고 치켜 올라간 눈썹",
+    "넓적한 얼굴, 옆으로 빗어 넘긴 머리, 처진 눈썹",
+    "긴 얼굴, 숱 많은 부스스한 머리, 가는 눈썹",
+    "뾰족한 턱, 짧은 곱슬머리, 뺨의 주근깨",
+]
 
 
 def split_plural(people: list) -> tuple[list, list]:
@@ -233,7 +263,8 @@ def split_plural(people: list) -> tuple[list, list]:
             if n and base:
                 for i in range(n):
                     tag = where[i] if i < len(where) else str(i + 1)
-                    out.append(f"{base} — {tag}에 선 사람")
+                    look = _DISTINCT[i % len(_DISTINCT)]
+                    out.append(f"{base} — {tag}에 선 사람, {look}")
                 touched.append((s, n))
                 continue
         if _CROWD.search(s):
@@ -310,6 +341,7 @@ def main() -> int:
                 break
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from auto_agent.tools.image_assets import get_selected
+    from auto_agent.utils.codex_cli import claim_session_image, imagegen_model_args, log_codex_usage  # noqa: E402
 
     def prev_cut(n: int) -> Path | None:
         """앞 컷의 고른 그림. 앞 컷도 아직 안 그렸으면 없다."""
@@ -445,7 +477,13 @@ def main() -> int:
         roster = [f"- {nm} (첨부한 시트의 인물)" for nm, _ in used]
         roster += [f"- {d}" for d in extra if "여럿" not in str(d)]
         crowd = [d for d in extra if "여럿" in str(d)]
-        if roster:
+        if roster and crowd:
+            # 「n명 말고 아무도 그리지 마세요」 뒤에 무리를 덧붙이면 모델은 앞의
+            # 금지를 따른다 — 한화편 씬60 은 트럭이 텅 비었고, 씬167 은 「인부들」이
+            # 하나도 없었다. 무리가 있는 화면은 처음부터 앞쪽과 뒤쪽을 나눠 말한다.
+            ref += CROWD_LIST.format(count=len(roster), people="\n".join(roster),
+                                     crowd="\n".join(f"- {d}" for d in crowd))
+        elif roster:
             ref += CASE_LIST.format(count=len(roster), people="\n".join(roster))
             if crowd:
                 ref += ("\n**그 밖에 화면 뒤를 채우는 사람들이 있습니다.** "
@@ -559,25 +597,19 @@ def main() -> int:
         # 이 씬의 기존 버전 · 이번 판에 나온 다른 그림과 내용이 같으면 실패로 친다.
         before = sorted(args.out.glob(f"scene_{n:03d}*.png"))
         prompt = SCENE.format(prompt=body, ref_block=ref, size=job.get("size", "1792x1024"), out=out)
-        r = subprocess.run(
-            ["codex", "exec", "--json", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
-            stdin=subprocess.DEVNULL, capture_output=True, text=True,
-            # 프롬프트가 길고 참조 그림이 여러 장인 컷은 20분을 넘긴다
-            # (디아지오 126씬은 병 4종 라벨 + 잔 4종 + 참조 사진 4장이라 7.5KB).
-            timeout=int(os.environ.get('GEN_TIMEOUT', '2400')),
-        )
-        # 병렬로 돌리면 「generated_images 의 최신 PNG」가 다른 씬의 그림일 수 있다
-        # (코리안에어 씬46 자리에 씬7 공항 그림이 들어갔다). 이 세션의
-        # thread_id 폴더에서 나온 그림으로 덮어쓴다.
-        tid = next((m.group(1) for m in re.finditer(r'"thread_id"\s*:\s*"([^"]+)"', r.stdout or "")), None)
-        if tid:
-            gdir = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))) / "generated_images" / tid
-            own = sorted(gdir.glob("*.png"), key=lambda p: p.stat().st_mtime) if gdir.exists() else []
-            if own:
-                shutil.copy2(own[-1], out)
-            elif out.exists():
-                # 이 세션은 그림을 만들지 않았다 — 복사된 것은 남의 그림이다
-                out.replace(out.with_suffix(".foreign_rejected.png"))
+        try:
+            res = subprocess.run(
+                ["codex", "exec", *imagegen_model_args(), "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
+                stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                # 프롬프트가 길고 참조 그림이 여러 장인 컷은 20분을 넘긴다
+                # (디아지오 126씬은 병 4종 라벨 + 잔 4종 + 참조 사진 4장이라 7.5KB).
+                timeout=int(os.environ.get('GEN_TIMEOUT', '2400')),
+            )
+            # 병렬로 돌면 codex 가 남의 「최신 PNG」를 집어 온다 — 세션 폴더가 정본
+            claim_session_image((res.stdout or "") + (res.stderr or ""), out)
+            log_codex_usage((res.stdout or "") + (res.stderr or ""), args.out / "codex_usage.jsonl", out.name)
+        except subprocess.TimeoutExpired:
+            pass
         if out.exists():
             with _made_lock:
                 others = before + list(_made)

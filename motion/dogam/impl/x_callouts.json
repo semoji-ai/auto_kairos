@@ -1,0 +1,105 @@
+{
+  "hand-drawn-loop-arrow": {
+    "component": "LoopArrow",
+    "preview": "x_callouts-01",
+    "note": "원본 대조: 약 8f가 아니라 3~4f에 모션블러를 끌며 그려지고, 이후 4f 간격으로 보일링(떨림)이 있다. 기본 drawLen=4"
+  },
+  "label-chip-sparkle": {
+    "component": "LabelChipSparkle",
+    "preview": "x_callouts-02",
+    "note": "초록 발광 파티클이 칩 주위에서 떠올라 흩어지는 형태(원본 1080p 칩 약 150×48)"
+  },
+  "numbered-reason-tab": {
+    "component": "NumberedReasonTab",
+    "preview": "x_callouts-03",
+    "note": "첫 항목만 슬라이드인, 이후 교체는 하드컷(slideEach 로 전환 가능)"
+  },
+  "clipboard-swing-drop-doc": {
+    "component": "ClipboardSwingDrop",
+    "preview": "x_callouts-04",
+    "note": "손은 SVG 플랫 손(펜)으로 일반화. 원본 1080p 클립보드 약 560×720(분석 수치 480×620보다 큼). 27:39 소스는 실제로 파이차트 위 빨간 X 장면이라 서명 손은 스펙 문구 기준으로 구현 [세모지 에셋] 클립보드 = clipboard_board(board/paper 색은 에셋 고정), 펜 손 = hand_pen(펜 끝 앵커)"
+  },
+  "orange-pill-stack-list": {
+    "component": "OrangePillStack",
+    "preview": "x_callouts-05",
+    "note": "1080p 원본 재실측: pill ≈480×120·글자 ≈80px·간격 ≈155 (분석 문서 수치는 절반 스케일로 기록돼 있었음). 데모 마스코트는 CSS 건물+장갑 손 [세모지 에셋] 데모 배경 빌딩 = building_mascot_body(간판 글자 코드). 만화 흰 장갑 손은 의도된 스타일로 유지"
+  },
+  "fighting-game-vs-hud": {
+    "component": "FightingVsHud",
+    "preview": "x_callouts-06",
+    "note": "픽셀 하늘·바다 배경은 PixelSeaBg 로 절차 생성, 초상은 이미지 prop. 연기 전환은 기존 컴포넌트와 조합 전제(여기선 vsDelay 만)"
+  },
+  "probability-pill-label": {
+    "component": "ProbabilityPill",
+    "preview": "x_callouts-07",
+    "note": "1080p 재실측으로 pill ≈680×92, 라벨 ≈50px, % ≈78px(분석 수치는 절반 스케일)"
+  },
+  "big-x-strike": {
+    "component": "BigXStrike",
+    "preview": "x_callouts-08",
+    "note": "원본 대조로 확정 직후 더 큰 반투명 고스트 X 잔상(echoLen 10f)을 추가. color 로 빨간 X 변형(27:39 파이차트 장면) 가능"
+  },
+  "calendar-tag-smoke-pop": {
+    "component": "CalendarTagSmoke",
+    "preview": "x_callouts-09",
+    "note": "1080p 재실측 x≈80·y≈230·크기 ≈240·연도 ≈62px. 퇴장은 out 프레임에서 블러+페이드. SmokePuff·DeskCalendar 도 export [세모지 에셋] 탁상달력 = desk_calendar, 연도 글자만 코드(head=글자색, body 는 에셋 고정)"
+  },
+  "hanging-icon-drop": {
+    "component": "HangingIconDrop",
+    "preview": "x_callouts-10",
+    "note": "1080p 재실측 아이콘 ≈250px, 라벨 ≈190×66. 아이콘은 LineIcon(calendar/stopwatch/clock/bottle) 또는 node prop 으로 임의 요소 [세모지 에셋] 라인 아이콘은 규칙상 코드 유지(교체 없음)"
+  },
+  "feathered-smoke-speech-bubble": {
+    "component": "FeatheredSmokeBubble",
+    "preview": "x_callouts-11",
+    "note": "구름 ≈900×520·글자 ≈56px(1080p). 대사 줄은 위→아래 블러 해제로 ~9f 간격, next prop 이 퇴장과 동시에 오른쪽에서 슬라이드인"
+  },
+  "checklist-tick-sync": {
+    "component": "ChecklistTick",
+    "preview": "x_callouts-12",
+    "note": "1080p 재실측 보드 ≈520×740·글자 ≈56px(분석 수치 270×420 은 축소 스케일)"
+  },
+  "game-quest-window-drop": {
+    "component": "QuestWindowDrop",
+    "preview": "x_callouts-13",
+    "note": ""
+  },
+  "diagonal-tape-wipe-tags": {
+    "component": "DiagonalTapeTags",
+    "preview": "x_callouts-14",
+    "note": "태그 글자 ≈76px(1080p). 차량 사진은 '우상단 슬라이드인'이 아니라 띠를 따라 좌상단에서 미끄러져 내려옴 → rider prop(이미지)로 일반화"
+  },
+  "logo-edge-icons-gather": {
+    "component": "LogoEdgeIconsGather",
+    "preview": "x_callouts-15",
+    "note": "아이콘은 임의 node, from 생략 시 가장 가까운 가장자리 자동 선택. 데모는 기존 Icon 디스크 사용 [세모지 에셋] 아이콘 = callouts Icon → 키트 icon_*(truck·gear) + 새 xm_icon_ship·xm_icon_factory, color 틴트(마스크+multiply 음영)"
+  },
+  "signature-ripple-rings": {
+    "component": "RippleRings",
+    "preview": "x_callouts-16",
+    "note": "ripple-ring-marker 를 변수로 흡수(dot=false, maxD 240, width 4, color #B74E47, trim=false 면 알파 페이드). 데모 두 번째 펄스가 마커 프리셋 [세모지 에셋] 데모 배경 서류 = paper_sheet(제목·서명 코드)"
+  },
+  "ripple-ring-marker": {
+    "mergedInto": "signature-ripple-rings"
+  },
+  "product-spec-pin-callouts": {
+    "component": "ProductSpecPins",
+    "preview": "x_callouts-17",
+    "note": "1080p 재실측 제목 ≈64px, 라벨 ≈56px, 점 지름 ≈30"
+  },
+  "tcg-profile-card-marquee": {
+    "component": "TcgCardMarquee",
+    "preview": "x_callouts-18",
+    "note": "기본 startX=W(오른쪽 밖 진입), 데모는 startX 620 으로 카드가 바로 보이게. TcgCard 단품도 export [세모지 에셋] 사진 없는 카드 자리표시 = SemojiRig c2_boss 흉상"
+  },
+  "headline-strip-stack": {
+    "component": "HeadlineStripStack",
+    "preview": "x_callouts-19",
+    "note": ""
+  },
+  "megaphone-cone-text": {
+    "component": "MegaphoneCone",
+    "preview": "x_callouts-20",
+    "note": "원본 1080p 원뿔 길이 ≈1000·끝 폭 ≈820. 확성기 팝 후 ~12f 뒤 원뿔이 입구에서 펼쳐지고 문구가 순차 팝(1fps 분석을 30fps 원본으로 보정) [세모지 에셋] 확성기 = kit megaphone 좌우반전(rim 색=color 블렌드), 원뿔·문구는 코드"
+  }
+}

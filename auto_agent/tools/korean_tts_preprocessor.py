@@ -377,8 +377,8 @@ class KoreanTTSPreprocessor:
         return re.sub(pattern, replace_range, text)
 
     # ── 날짜 연음 규칙 (korean-tts-rules.md §4) ──
-    # 연도: 1/6/7/8로 끝나면 "년" → "련"
-    YEAR_LIAISON_DIGITS = {1, 6, 7, 8}
+    # 연도는 붙여 쓴 "천구백육십팔년"(련·하이픈 없음) — _hyphenate_year 참고.
+    YEAR_LIAISON_DIGITS = {1, 6, 7, 8}   # 더 이상 쓰지 않음(외부 참조 호환용)
 
     # 월 특수 발음 (구어/낭독 표준)
     MONTH_LIAISON = {
@@ -403,50 +403,40 @@ class KoreanTTSPreprocessor:
 
     @classmethod
     def _hyphenate_year(cls, year: int) -> str:
-        """연도를 음절 단위로 하이픈 분할 + 1/6/7/8 끝이면 '련' 발음.
+        """연도를 붙여 쓴 한자어 수 + '년'으로 (v2 폴백 전용 — v4 는 전처리하지 않는다).
 
-        3자리(100~999) + 4자리(1000~9999) 지원.
+        예전에는 음절마다 하이픈을 넣고 1/6/7/8 로 끝나면 '련'으로 적었다
+        ("천-구백-육십-팔련"). B231 마이디어편에서 이 표기가 끊긴 억양을 만들어
+        수십 문장을 다시 생성했다 — 붙여 쓴 "천구백육십팔년"이 자연스럽다
+        (세모지 영상제작 통합보고 §1-2). 이름은 호출부 호환을 위해 그대로 둔다.
+
         예:
-            845  → 팔백-사십-오년
-            1955 → 천-구백-오십-오년
-            1956 → 천-구백-오십-륙련
-            1597 → 천-오백-구십-칠련
-            2024 → 이천-이십-사년
-            2001 → 이천-일련
-            1876 → 천-팔백-칠십-륙련
-            1990 → 천-구백-구십년
+            845  → 팔백사십오년
+            1968 → 천구백육십팔년
+            1956 → 천구백오십육년
+            2024 → 이천이십사년
+            2001 → 이천일년
+            1990 → 천구백구십년
         """
         if year < 100 or year > 9999:
-            # 범위 밖은 fallback
             return KoreanNumberConverter.number_to_korean(year) + '년'
 
         thousands = year // 1000
         hundreds = (year % 1000) // 100
         tens = (year % 100) // 10
         ones = year % 10
+        ones_tbl = KoreanNumberConverter.SINO_ONES
 
         parts: list[str] = []
-        # 천 (4자리만)
         if thousands > 0:
-            parts.append('천' if thousands == 1 else KoreanNumberConverter.SINO_ONES[thousands] + '천')
-        # 백
+            parts.append('천' if thousands == 1 else ones_tbl[thousands] + '천')
         if hundreds > 0:
-            parts.append('백' if hundreds == 1 else KoreanNumberConverter.SINO_ONES[hundreds] + '백')
-        # 십
+            parts.append('백' if hundreds == 1 else ones_tbl[hundreds] + '백')
         if tens > 0:
-            parts.append('십' if tens == 1 else KoreanNumberConverter.SINO_ONES[tens] + '십')
-
-        # 일의 자리 — 6은 "륙"으로 변환 (련 규칙과 함께)
+            parts.append('십' if tens == 1 else ones_tbl[tens] + '십')
         if ones > 0:
-            ones_char = KoreanNumberConverter.SINO_ONES[ones]
-            if ones == 6:
-                ones_char = '륙'  # 천구백오십육 → 천-구백-오십-륙
-            parts.append(ones_char + ('련' if ones in cls.YEAR_LIAISON_DIGITS else '년'))
-        else:
-            # 일의 자리가 0이면 십의 자리 끝에 년 붙임 (예: 1990 → 천-구백-구십년)
-            parts[-1] = parts[-1] + '년'
-
-        return '-'.join(parts)
+            parts.append(ones_tbl[ones])
+        return ''.join(parts) + '년'
 
     def _convert_numbers(self, text: str) -> str:
         """Convert all numeric formats to Korean text."""

@@ -159,6 +159,18 @@ def test_map_scene_without_visualization_is_unchanged():
     assert out["narration"] == "말"
 
 
+def test_map_scene_preserves_motion_intent():
+    src = {"sceneNumber": 1, "narration": "말", "motion": "build_sequence",
+           "techniques": ["icon-pop-suck", "hard-cut"],
+           "motionNote": "아이콘을 이로미즘 손그림으로 순차 등장"}
+    out = v3_import._map_scene(src)
+    assert out["motion"] == src["motion"]
+    assert out["techniques"] == src["techniques"]
+    assert out["motionNote"] == src["motionNote"]
+    out["techniques"].append("extra")
+    assert src["techniques"] == ["icon-pop-suck", "hard-cut"]
+
+
 # --- 지도 씬 임포트 ---
 # 실제 v3 데이터(이란 공습 씬)의 값으로 고정한다.
 MAP_SCENE = {

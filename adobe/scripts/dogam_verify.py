@@ -14,6 +14,9 @@ AKD.apply 로 기법을 건 뒤 지정 프레임을 PNG 로 뽑아, 도감 미�
   · 스크립트 전체를 try/finally 로 감싸고 대화상자를 끕니다(모달이 뜨면 AE 가 멈춥니다). 결과는 파일로만.
   · 배경은 도감 미리보기의 "기법 시작 전" 프레임을 2배로 키운 판(plate)을 씁니다 — 비교 대상은 기법이지 배경이 아닙니다.
 
+준비물: 도감 미리보기(NAS — motion/dogam/README.md "미리보기 파일 위치")와 video/public 미디어
+        (bash motion/video/scripts/fetch_public.sh 로 NAS 에서 받아 옴). 둘 다 저장소에는 없습니다.
+
 산출물: adobe/tmp/dogam_verify/<id>/ (시트 sheet.png, ae_fNNN.png, ref_fNNN.png, result.json), summary.json
 """
 from __future__ import annotations
@@ -38,12 +41,25 @@ AE_APP = os.environ.get("AE_APP_NAME", "Adobe After Effects 2026")
 
 
 def semoji_dir() -> Path:
-    return Path(os.environ.get("SEMOJI_MOTION_DIR") or Path.home() / "Projects" / "semoji-motion").expanduser()
+    """도감 원본: SEMOJI_MOTION_DIR → 저장소 motion/ (구 semoji-motion)."""
+    return Path(os.environ.get("SEMOJI_MOTION_DIR") or ADOBE.parent / "motion").expanduser()
+
+
+def previews_dir(sm: Path) -> Path:
+    """motion/dogam/previews_dir.py 규칙(DOGAM_PREVIEWS_DIR → 로컬 캐시 → NAS). 없으면 sm/dogam/previews."""
+    helper = sm / "dogam" / "previews_dir.py"
+    if helper.is_file():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("motion_previews_dir", helper)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.previews_dir()
+    return sm / "dogam" / "previews"
 
 
 SM = semoji_dir()
 PUB = SM / "video" / "public"
-PREV = SM / "dogam" / "previews"
+PREV = previews_dir(SM)
 LAYERS = json.loads((SM / "video/src/layers.json").read_text(encoding="utf-8"))
 
 
@@ -85,7 +101,7 @@ R.push(AKD.apply("stamp-slam", {comp: comp, layers: [], t: 8/30, params: {size: 
     "idle-bob": dict(preview="core-28", plate=None, frames=[0, 5, 10, 15, 20, 40, 75, 110, 149], setup=layered_setup("s02_dock", "02") + """
 R.push(AKD.apply("idle-bob", {comp: comp, layers: LY.chars, t: 0, content: {seeds: LY.seeds, bboxes: LY.bboxes}, assetsRoot: ASSETS}));
 """),
-    "dim-cutaway-drop-exit": dict(preview="x_pirates-06", plate=0, frames=[8, 12, 16, 20, 28, 34, 40, 50, 62, 64, 66, 70, 75, 99], setup="""
+    "dim-cutaway-drop-exit": dict(preview="demo-dim-cutaway-drop-exit", plate=0, frames=[8, 12, 16, 20, 28, 34, 40, 50, 62, 64, 66, 70, 75, 99], setup="""
 R.push(AKD.apply("dim-cutaway-drop-exit", {comp: comp, layers: [], t: 8/30, assetsRoot: ASSETS}));
 """),
     "starburst-echo": dict(preview="core-17", plate=0, frames=[6, 7, 8, 9, 11, 14, 19, 30, 60], setup="""
@@ -98,7 +114,7 @@ R.push(AKD.apply("year-tag", {comp: comp, layers: [], t: 60/30, content: {text: 
     "scroll-label": dict(preview="core-12", plate=0, frames=[6, 8, 10, 12, 15, 18, 22, 30, 60, 80, 82, 84, 86], setup="""
 R.push(AKD.apply("scroll-label", {comp: comp, layers: [], t: 6/30, params: {size: 78}, content: {text: "공화춘", sub: "共和春", x: 960, y: 540, w: 460, outAfter: 74}, assetsRoot: ASSETS}));
 """),
-    "wipe-reveal-bubble": dict(preview="x_pirates-05", plate=0, frames=[8, 11, 14, 17, 20, 40, 52, 53, 54, 58, 62, 66, 70, 104, 106], setup="""
+    "wipe-reveal-bubble": dict(preview="demo-wipe-reveal-bubble", plate=0, frames=[8, 11, 14, 17, 20, 40, 52, 53, 54, 58, 62, 66, 70, 104, 106], setup="""
 R.push(AKD.apply("wipe-reveal-bubble", {comp: comp, layers: [], t: 8/30, content: {x: 1260, y: 330, w: 560, h: 260, text: "짜장면이\\n뭔고?", size: 64, outAfter: 44}, assetsRoot: ASSETS}));
 R.push(AKD.apply("wipe-reveal-bubble", {comp: comp, layers: [], t: 58/30, content: {x: 1300, y: 360, w: 640, h: 280, text: "춘장에 비빈\\n국수라니!", size: 64, outAfter: 46}, assetsRoot: ASSETS}));
 """),

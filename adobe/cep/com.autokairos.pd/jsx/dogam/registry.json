@@ -21,7 +21,7 @@
    "tags": [
     "막대",
     "마스코트",
-    "[옵션] icons(막대 끝 아이콘 팝 4f back-out)·staggerF(그룹 안 막대 스태거) — 데모 x_pirates-08"
+    "[옵션] icons(막대 끝 아이콘 팝 4f back-out)·staggerF(그룹 안 막대 스태거) — 데모 demo-bar-end-icon-pop"
    ],
    "preview": "charts-04",
    "previewJpg": "jsx/dogam/assets/previews/charts-04.jpg",
@@ -251,13 +251,12 @@
     "낙하",
     "퇴장",
     "옵션",
-    "ref_pirates",
-    "지식해적단",
+    "ref_explainer_editorial",
     "옵션→blur-dim-interrupt"
    ],
-   "preview": "x_pirates-06",
-   "previewJpg": "jsx/dogam/assets/previews/x_pirates-06.jpg",
-   "previewMp4": "jsx/dogam/assets/previews_src/x_pirates-06.mp4",
+   "preview": "demo-dim-cutaway-drop-exit",
+   "previewJpg": "jsx/dogam/assets/previews/demo-dim-cutaway-drop-exit.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/demo-dim-cutaway-drop-exit.mp4",
    "kind": "layer",
    "create": true,
    "support": "native",
@@ -594,7 +593,7 @@
    "spec": "위경도 단순 투영, 2차 베지어 위 배 이동, 라벨 팝.",
    "tags": [
     "지도",
-    "[옵션] stroke=brush(붓 화살표 30px 테이퍼·흰 테두리 5px·25f) — 데모 x_pirates-10"
+    "[옵션] stroke=brush(붓 화살표 30px 테이퍼·흰 테두리 5px·25f) — 데모 demo-brush-arrow-route"
    ],
    "preview": "core-42",
    "previewJpg": "jsx/dogam/assets/previews/core-42.jpg",
@@ -1303,7 +1302,7 @@
    "spec": "scale 2.0·반투명 → 1.5 → 1.15 → 1.0 4f. 슬램 후 불투명↔55% 약 4f 주기 3~4회.",
    "tags": [
     "도장",
-    "[옵션] blink(깜빡임 끄기)·slamEase(expoOut) — 지식해적단 기울어진 도장 유지, 데모 x_pirates-12"
+    "[옵션] blink(깜빡임 끄기)·slamEase(expoOut) — 기울어진 도장 유지, 데모 demo-tilted-stamp-hold"
    ],
    "preview": "core-16",
    "previewJpg": "jsx/dogam/assets/previews/core-16.jpg",
@@ -1626,13 +1625,12 @@
     "말풍선",
     "와이프",
     "옵션",
-    "ref_pirates",
-    "지식해적단",
+    "ref_explainer_editorial",
     "옵션→blur-dim-interrupt"
    ],
-   "preview": "x_pirates-05",
-   "previewJpg": "jsx/dogam/assets/previews/x_pirates-05.jpg",
-   "previewMp4": "jsx/dogam/assets/previews_src/x_pirates-05.mp4",
+   "preview": "demo-wipe-reveal-bubble",
+   "previewJpg": "jsx/dogam/assets/previews/demo-wipe-reveal-bubble.jpg",
+   "previewMp4": "jsx/dogam/assets/previews_src/demo-wipe-reveal-bubble.mp4",
    "kind": "element",
    "create": false,
    "support": "native",

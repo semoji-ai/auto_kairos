@@ -140,20 +140,28 @@ def get_scene_layer_urls(project_dir_name: str, output_dir: str, sid: str) -> li
     return out
 
 
-def get_scene_image_url(project_dir_name: str, scene_num: int, output_dir: str) -> Optional[str]:
+def get_scene_image_url(project_dir_name: str, scene_num: int, output_dir: str,
+                        assets_by_scene: Optional[dict] = None) -> Optional[str]:
     """씬 이미지 URL 반환 (/output/ 마운트 기준). image_assets.json의 selected 우선."""
     img_dir = Path(output_dir) / "images"
 
     # 1) image_assets.json에서 selected 파일
-    from auto_agent.tools.image_assets import get_selected
-    selected = get_selected(img_dir, scene_num)
+    if assets_by_scene is None:
+        from auto_agent.tools.image_assets import get_selected
+        selected = get_selected(img_dir, scene_num)
+    else:
+        entry = assets_by_scene.get(scene_num) or {}
+        selected = next((im.get("file") for im in entry.get("images", [])
+                         if im.get("selected")), None)
     if selected and (img_dir / selected).exists():
         return f"/output/{project_dir_name}/images/{selected}"
+    has_entry = (_has_asset_entry(img_dir, scene_num) if assets_by_scene is None
+                 else bool(entry.get("images")))
 
     # 등록은 돼 있는데 고른 것이 없으면 「일부러 비웠다」는 뜻이다.
     # 도표로 바꾼 씬이 그렇다 — 이미지가 없어야 맞다. 여기서 파일 탐색으로
     # 넘어가면 관련성 관문에서 버린 사진이 썸네일에 그대로 되살아난다.
-    if _has_asset_entry(img_dir, scene_num):
+    if has_entry:
         return None
 
     # 2) 파일 시스템 탐색 fallback
@@ -483,6 +491,15 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         for r in tts_results.get("results", []):
             tts_map[r["scene"]] = r
 
+    # 이미지 선택·QA는 같은 image_assets.json에 있다. 씬마다 파일을 다시 읽고
+    # 전체 이미지 폴더를 스캔하면 큰 프로젝트의 스토리보드 첫 화면이 늦어진다.
+    from auto_agent.tools.image_assets import _load as load_image_assets
+    image_assets_by_scene = {
+        s["sceneNumber"]: s
+        for s in load_image_assets(Path(output_dir) / "images").get("scenes", [])
+        if isinstance(s, dict) and "sceneNumber" in s
+    } if output_dir else {}
+
     # 썸네일 디렉토리 확인
     thumb_dir = Path(output_dir) / "thumbnails" if output_dir else None
     has_thumbs = thumb_dir and thumb_dir.exists()
@@ -566,7 +583,8 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         else:
             scene["_video_thumb_url"] = ""
 
-        scene["_image_url"] = get_scene_image_url(project_dir_name, sn, output_dir)
+        scene["_image_url"] = get_scene_image_url(project_dir_name, sn, output_dir,
+                                                  assets_by_scene=image_assets_by_scene)
         # 어도비 패널이 만든 비디오·레이어 — 같은 폴더에 있는데 대시보드가
         # 몰라 안 보였다. 씬 번호로 어도비 sceneId 를 찾아 잇는다.
         _asid = _ADOBE_IDS.get(float(sn)) if _ADOBE_IDS else None
@@ -611,9 +629,8 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
                 scene["_thumbnail_url"] = f"/api/p/{slug_part}/thumbnails/scene/{sn}"
 
         # QA 결과 병합
-        from auto_agent.tools.image_assets import get_qa_result
         sn_key = scene.get("sceneNumber") or scene.get("scene_number") or (scenes.index(scene) + 1)
-        qa_result = get_qa_result(Path(output_dir) / "images", sn_key)
+        qa_result = (image_assets_by_scene.get(sn_key) or {}).get("qa")
         if qa_result:
             scene["qa"] = qa_result
 

@@ -680,6 +680,9 @@ tr:hover { background: var(--surface2); }
   border-radius: 4px; overflow: hidden;
   background: #0A0A0A;
 }
+.sb-player-mount > .sb-poster {
+  width: 100%; height: 100%; object-fit: contain; display: block;
+}
 
 /* ── HTML 미리보기 (폴백) ── */
 .sb-html-thumb {

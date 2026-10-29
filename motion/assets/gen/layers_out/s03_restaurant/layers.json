@@ -1,0 +1,183 @@
+{
+  "source": "$SEMOJI_NAS/assets/gen/s03_restaurant.png",
+  "size": [
+    1659,
+    948
+  ],
+  "key_color": "#FF00FF",
+  "upscale": {
+    "applied": true,
+    "scale": 2,
+    "model": "digital-art-4x"
+  },
+  "layers": [
+    {
+      "index": 1,
+      "name": "왼쪽 구름",
+      "kind": "object",
+      "motion": "형태를 유지한 채 오른쪽으로 천천히 이동한다.",
+      "importance": 65,
+      "key_color": "#FF00FF",
+      "png": "01_왼쪽_구름.png",
+      "bbox": [
+        0.047,
+        0.049,
+        0.146,
+        0.114
+      ],
+      "fitted": false,
+      "raw": "raw/01_왼쪽_구름.magenta.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.9968112812608887,
+        "position_score": 0.10375099760574621,
+        "retried": false
+      }
+    },
+    {
+      "index": 2,
+      "name": "오른쪽 구름",
+      "kind": "object",
+      "motion": "형태를 유지한 채 오른쪽으로 천천히 이동한다.",
+      "importance": 65,
+      "key_color": "#FF00FF",
+      "png": "02_오른쪽_구름.png",
+      "bbox": [
+        0.868,
+        0.115,
+        0.961,
+        0.178
+      ],
+      "fitted": false,
+      "raw": "raw/02_오른쪽_구름.magenta.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.9956337125460664,
+        "position_score": 0.2042243262927895,
+        "retried": false
+      }
+    },
+    {
+      "index": 3,
+      "name": "왼쪽 홍등",
+      "kind": "object",
+      "motion": "상단 고정점을 축으로 좌우 10도씩 천천히 회전하며 흔들린다.",
+      "importance": 85,
+      "key_color": "#FF00FF",
+      "png": "03_왼쪽_홍등.png",
+      "bbox": [
+        0.178,
+        0.171,
+        0.219,
+        0.284
+      ],
+      "fitted": false,
+      "raw": "raw/03_왼쪽_홍등.magenta.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.9949927896170485,
+        "position_score": 0.20259113425631906,
+        "retried": false
+      }
+    },
+    {
+      "index": 4,
+      "name": "왼쪽 가운데 홍등",
+      "kind": "object",
+      "motion": "상단 고정점을 축으로 좌우 9도씩 흔들리며 왼쪽 홍등보다 늦게 방향을 바꾼다.",
+      "importance": 85,
+      "key_color": "#FF00FF",
+      "png": "04_왼쪽_가운데_홍등.png",
+      "bbox": [
+        0.336,
+        0.171,
+        0.378,
+        0.284
+      ],
+      "fitted": false,
+      "raw": "raw/04_왼쪽_가운데_홍등.magenta.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.9962383928094551,
+        "position_score": 0.22265426880811495,
+        "retried": false
+      }
+    },
+    {
+      "index": 5,
+      "name": "오른쪽 가운데 홍등",
+      "kind": "object",
+      "motion": "상단 고정점을 축으로 좌우 10도씩 흔들리며 왼쪽 홍등들과 위상을 달리한다.",
+      "importance": 85,
+      "key_color": "#FF00FF",
+      "png": "05_오른쪽_가운데_홍등.png",
+      "bbox": [
+        0.621,
+        0.171,
+        0.663,
+        0.284
+      ],
+      "fitted": false,
+      "raw": "raw/05_오른쪽_가운데_홍등.magenta.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.9951879913424537,
+        "position_score": 0.17787762653627592,
+        "retried": false
+      }
+    },
+    {
+      "index": 6,
+      "name": "오른쪽 홍등",
+      "kind": "object",
+      "motion": "상단 고정점을 축으로 좌우 8도씩 흔들리며 다른 홍등들과 위상을 달리한다.",
+      "importance": 85,
+      "key_color": "#FF00FF",
+      "png": "06_오른쪽_홍등.png",
+      "bbox": [
+        0.781,
+        0.171,
+        0.824,
+        0.284
+      ],
+      "fitted": false,
+      "raw": "raw/06_오른쪽_홍등.magenta.png",
+      "status": "lowq",
+      "qc": {
+        "transparent_ratio": 0.9963007047608874,
+        "position_score": 0.0,
+        "retried": false
+      }
+    },
+    {
+      "index": 7,
+      "name": "가운데 검은 간판",
+      "kind": "object",
+      "motion": "세로축을 중심으로 180도 3D 회전한 뒤 새 글자가 있는 면을 보여준다.",
+      "importance": 100,
+      "key_color": "#FF00FF",
+      "png": "07_가운데_검은_간판.png",
+      "bbox": [
+        0.373,
+        0.388,
+        0.627,
+        0.511
+      ],
+      "fitted": true,
+      "raw": "raw/07_가운데_검은_간판.magenta.png",
+      "status": "completed",
+      "qc": {
+        "transparent_ratio": 0.969846102196687,
+        "position_score": 0.9145051015041549,
+        "retried": false
+      }
+    }
+  ],
+  "background": {
+    "name": "배경",
+    "png": "bg.png",
+    "raw": "raw/bg.png",
+    "status": "completed"
+  },
+  "dropped": []
+}

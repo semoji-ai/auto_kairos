@@ -1,0 +1,24 @@
+{
+ "dir": "kit/c4_elder",
+ "w": 1024,
+ "h": 1536,
+ "feet": [
+  506,
+  1445
+ ],
+ "top": 89,
+ "shoulderR": [
+  334,
+  459
+ ],
+ "shoulderL": [
+  678,
+  459
+ ],
+ "torsoBottom": 889,
+ "extras": [
+  "arm_raise_fist",
+  "face_grit",
+  "face_smile"
+ ]
+}

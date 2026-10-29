@@ -37,7 +37,7 @@ def test_generate_subtitles_prefers_reverse_mapped_tts_lines_over_proportional_f
 
     captured = {}
 
-    def fake_smart_split(text):
+    def fake_smart_split(text, **_kw):
         if text == narration:
             return [narration]
         if text == narration_tts:

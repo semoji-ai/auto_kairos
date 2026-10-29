@@ -1,0 +1,32 @@
+{
+ "dir": "kit/walker1",
+ "w": 1024,
+ "h": 1536,
+ "feet": [
+  509,
+  1433
+ ],
+ "top": 98,
+ "shoulderR": [
+  360,
+  506
+ ],
+ "shoulderL": [
+  657,
+  506
+ ],
+ "torsoBottom": 877,
+ "extras": [
+  "arm_guard_fist",
+  "arm_hold",
+  "arm_palm_stop",
+  "arm_raise_fist",
+  "arm_up_hang",
+  "arms_folded",
+  "face_angry",
+  "face_frown",
+  "face_grit",
+  "face_smile",
+  "legs_sit"
+ ]
+}

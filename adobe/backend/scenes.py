@@ -94,8 +94,25 @@ def load_scenes(proj_dir: Path) -> dict:
     if not fp.is_file():
         return {"scenes": [], "dir": ""}
     data = ensure_scene_ids(proj_dir)
+    # 패널이 v3 output/을 직접 여는 경우, 이전에 만든 scenes.json에는
+    # scene_specs의 도감 의도가 없을 수 있다. 저장 파일을 덮지 않고 읽기 결과만 보완한다.
+    motion_by_number = {}
+    specs_path = proj_dir / "scene_specs.json"
+    if specs_path.is_file():
+        try:
+            specs_data = json.loads(specs_path.read_text(encoding="utf-8"))
+            spec_scenes = specs_data.get("scenes", []) if isinstance(specs_data, dict) else []
+            motion_by_number = {s["sceneNumber"]: s for s in spec_scenes
+                                if isinstance(s, dict) and "sceneNumber" in s}
+        except (OSError, json.JSONDecodeError):
+            pass
     lay_dir = proj_dir / "layers"
     for s in data.get("scenes", []):
+        motion_spec = motion_by_number.get(s.get("sceneNumber"), {})
+        for key in ("motion", "techniques", "motionNote"):
+            if key not in s and key in motion_spec:
+                value = motion_spec[key]
+                s[key] = list(value) if key == "techniques" and isinstance(value, list) else value
         sid = s.get("sceneId")
         ref = s.get("imageRef") or ""
         s["_image"] = ref if (ref and (proj_dir / ref).is_file()) else None

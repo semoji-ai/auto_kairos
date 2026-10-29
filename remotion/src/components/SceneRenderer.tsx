@@ -186,7 +186,8 @@ const CenterLayout: React.FC<{
 }> = ({ src, opacity, offsetX = 50, offsetY = 50, scale = 1.0, children }) => (
   <AbsoluteFill style={{ display: "flex", flexDirection: "column" }}>
     <div style={{
-      flex: "0 0 45%", display: "flex", alignItems: "center",
+      flex: "0 0 45%", height: "45%", minHeight: 0, boxSizing: "border-box",
+      display: "flex", alignItems: "center",
       justifyContent: "center", padding: "16px 40px", position: "relative",
     }}>
       <Img src={resolveUrl(src)} style={{
@@ -196,7 +197,7 @@ const CenterLayout: React.FC<{
         transform: scale !== 1.0 ? `scale(${scale})` : undefined,
       }} />
     </div>
-    <div style={{ flex: 1, position: "relative" }}>{children}</div>
+    <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{children}</div>
   </AbsoluteFill>
 );
 

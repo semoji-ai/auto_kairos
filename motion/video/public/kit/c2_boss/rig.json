@@ -1,0 +1,34 @@
+{
+ "dir": "kit/c2_boss",
+ "w": 1024,
+ "h": 1536,
+ "feet": [
+  503,
+  1442
+ ],
+ "top": 89,
+ "shoulderR": [
+  344,
+  468
+ ],
+ "shoulderL": [
+  662,
+  468
+ ],
+ "torsoBottom": 934,
+ "extras": [
+  "arm_guard_fist",
+  "arm_hand_chest",
+  "arm_hold",
+  "arm_out_side",
+  "arm_reach",
+  "arm_up_hang",
+  "face_angry",
+  "face_grit",
+  "face_squint",
+  "face_wide",
+  "face_worried",
+  "legs_dangle",
+  "legs_sit"
+ ]
+}

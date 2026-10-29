@@ -326,7 +326,7 @@ class SubtitleSync:
                 merged.append(curr)
         return merged
 
-    def smart_split_text(self, text: str) -> List[str]:
+    def smart_split_text(self, text: str, split_lead_date: bool = False) -> List[str]:
         # 1. 줄바꿈으로 먼저 분할 (작가의 의도적 구분 = 따옴표/문단 경계)
         paragraphs = [p.strip() for p in text.split('\n') if p.strip()]
         final_lines = []
@@ -337,24 +337,14 @@ class SubtitleSync:
                 effective_len = len(sentence)
                 if self._is_complete_quote(sentence):
                     effective_len = len(sentence) - 2
-                ratio = effective_len / self.max_chars
-                if ratio <= 1:
+                if self._is_complete_quote(sentence) and effective_len <= self.max_chars:
                     final_lines.append(sentence)
                 else:
-                    cuts = max(1, int(ratio))
-                    parts = self.split_long_sentence(sentence, cuts)
-                    # 재귀 분할: 조각이 여전히 max_chars 초과 시 추가 분할
-                    resolved = []
-                    for part in parts:
-                        if len(part) > self.max_chars:
-                            sub_parts = self.split_long_sentence(part, 1)
-                            if len(sub_parts) > 1:
-                                resolved.extend(sub_parts)
-                            else:
-                                resolved.extend(self._simple_split(part))
-                        else:
-                            resolved.append(part)
-                    final_lines.extend(resolved)
+                    # 줄 나누기 규칙은 generate_subtitles 와 같은 한 곳(subtitle_linebreak, 통합보고 §2-1).
+                    # 예전 split_long_sentence(목표 길이에 가장 가까운 조사)는 서술어 한 단어만
+                    # 넘기거나 목적어를 서술어와 떼어 놓았다.
+                    from auto_agent.tools.subtitle_linebreak import break_lines
+                    final_lines.extend(break_lines(sentence, self.max_chars, split_lead_date=split_lead_date))
         # 소수점 분리 후처리 (e.g. "125." + "8%" → "125.8%")
         final_lines = self._fix_decimal_splits(final_lines)
         return final_lines
@@ -474,13 +464,13 @@ class SubtitleSync:
         return entries
 
     def generate_subtitles(self, original_text: str, audio_source: str = "",
-                           scene_number: int = 1) -> SubtitleResult:
+                           scene_number: int = 1, split_lead_date: bool = False) -> SubtitleResult:
         """원본 텍스트 + TTS 오디오로 자막 생성"""
         whisper_result = self.whisper.analyze_audio(audio_source) if audio_source else {}
         audio_duration = whisper_result.get("duration", 0)
         whisper_words = whisper_result.get("words", [])
 
-        subtitle_lines = self.smart_split_text(original_text)
+        subtitle_lines = self.smart_split_text(original_text, split_lead_date=split_lead_date)
         entries = self.match_to_timestamps(subtitle_lines, whisper_words, audio_duration)
 
         return SubtitleResult(
@@ -494,6 +484,7 @@ class SubtitleSync:
 
     def generate_batch(self, scenes: List[Dict], output_dir: Path) -> List[SubtitleResult]:
         """여러 씬 자막 일괄 생성"""
+        from auto_agent.tools.subtitle_linebreak import scene_splits_lead_date
         results = []
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -504,6 +495,7 @@ class SubtitleSync:
                     original_text=scene.get("original_text", ""),
                     audio_source=audio_source,
                     scene_number=scene.get("scene_number", 1),
+                    split_lead_date=scene_splits_lead_date(scene),
                 )
                 results.append(result)
 

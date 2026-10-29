@@ -32,6 +32,22 @@ def test_load_scenes_imageref_missing_file(tmp_path):
     assert s["_image"] is None                    # 파일 없으면 끊김
 
 
+def test_load_scenes_inherits_motion_intent_without_overwriting_ae_edits(tmp_path):
+    d = _proj(tmp_path, [{"sceneNumber": 1, "sceneId": "mot1", "motion": "calm_float"},
+                         {"sceneNumber": 2, "sceneId": "mot2", "techniques": []}])
+    (d / "scene_specs.json").write_text(json.dumps({"scenes": [
+        {"sceneNumber": 1, "motion": "build_sequence", "techniques": ["icon-pop-suck"],
+         "motionNote": "이로미즘 손그림 아이콘"},
+        {"sceneNumber": 2, "techniques": ["bar-chart-v"]},
+    ]}, ensure_ascii=False), encoding="utf-8")
+    loaded = scenes.load_scenes(d)["scenes"]
+    assert loaded[0]["motion"] == "calm_float"
+    assert loaded[0]["techniques"] == ["icon-pop-suck"]
+    assert loaded[0]["motionNote"] == "이로미즘 손그림 아이콘"
+    assert loaded[1]["techniques"] == []
+    assert "techniques" not in _scene(d, 1)  # scenes.json 원본은 수정하지 않는다
+
+
 def test_load_scenes_backfills_imageref_from_sb(tmp_path):
     d = _proj(tmp_path, [{"sceneNumber": 1, "sceneId": "bf000001", "image_prompt": "x"}])
     sb = d / "storyboard"; sb.mkdir(); (sb / "sb_bf000001.png").write_bytes(b"\x89PNG")

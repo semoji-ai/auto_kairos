@@ -1,0 +1,219 @@
+{
+ "0s6A0hkg11U": {
+  "dur": 5736.0,
+  "chars_per_min": 390,
+  "eoj_per_min": 112,
+  "n_sent": 828,
+  "sent_eoj_mean": 12.9,
+  "sent_eoj_median": 12.0,
+  "p90": 20,
+  "style": {
+   "합니다": 96,
+   "기타/반말·연결": 4,
+   "해요": 0
+  },
+  "q_per_min": 0.07,
+  "q_total": 7,
+  "conj": {
+   "하지만": 38,
+   "그런데": 54,
+   "결국": 21,
+   "사실": 14,
+   "그래서": 25,
+   "그럼에도": 2
+  },
+  "conj_contrast_per_min": 0.99,
+  "nums_per_min": 5.01,
+  "i_we": 31,
+  "you": 0
+ },
+ "Lh0drBozqck": {
+  "dur": 1024.0,
+  "chars_per_min": 428,
+  "eoj_per_min": 129,
+  "n_sent": 214,
+  "sent_eoj_mean": 10.2,
+  "sent_eoj_median": 9.5,
+  "p90": 16,
+  "style": {
+   "해요": 23,
+   "합니다": 71,
+   "기타/반말·연결": 7
+  },
+  "q_per_min": 0.47,
+  "q_total": 8,
+  "conj": {
+   "사실": 5,
+   "하지만": 8,
+   "그런데": 10,
+   "결국": 11,
+   "그래서": 1
+  },
+  "conj_contrast_per_min": 1.06,
+  "nums_per_min": 5.58,
+  "i_we": 4,
+  "you": 0
+ },
+ "NZsB8vnv1FU": {
+  "dur": 868.0,
+  "chars_per_min": 393,
+  "eoj_per_min": 134,
+  "n_sent": 93,
+  "sent_eoj_mean": 20.5,
+  "sent_eoj_median": 19,
+  "p90": 31,
+  "style": {
+   "해요": 46,
+   "합니다": 54
+  },
+  "q_per_min": 0.0,
+  "q_total": 0,
+  "conj": {
+   "사실": 2,
+   "그런데": 2,
+   "그래서": 1,
+   "하지만": 7,
+   "그러나": 1,
+   "결국": 1
+  },
+  "conj_contrast_per_min": 0.7,
+  "nums_per_min": 3.5,
+  "i_we": 2,
+  "you": 0
+ },
+ "QMQ5HasZrxA": {
+  "dur": 1958.0,
+  "chars_per_min": 368,
+  "eoj_per_min": 128,
+  "n_sent": 217,
+  "sent_eoj_mean": 19.2,
+  "sent_eoj_median": 16,
+  "p90": 34,
+  "style": {
+   "합니다": 100
+  },
+  "q_per_min": 0.06,
+  "q_total": 2,
+  "conj": {
+   "그런데": 10,
+   "사실": 14,
+   "그래서": 18,
+   "결국": 4,
+   "하지만": 12,
+   "그럼에도": 1,
+   "반면": 1
+  },
+  "conj_contrast_per_min": 0.74,
+  "nums_per_min": 4.19,
+  "i_we": 6,
+  "you": 0
+ },
+ "TwN-w76uzzo": {
+  "dur": 480.0,
+  "chars_per_min": 405,
+  "eoj_per_min": 123,
+  "n_sent": 67,
+  "sent_eoj_mean": 13.5,
+  "sent_eoj_median": 13,
+  "p90": 24,
+  "style": {
+   "기타/반말·연결": 6,
+   "합니다": 84,
+   "해요": 10
+  },
+  "q_per_min": 0.14,
+  "q_total": 1,
+  "conj": {
+   "사실": 2,
+   "하지만": 1,
+   "그런데": 1,
+   "결국": 1
+  },
+  "conj_contrast_per_min": 0.27,
+  "nums_per_min": 3.55,
+  "i_we": 1,
+  "you": 0
+ },
+ "dJntbYXPgbU": {
+  "dur": 741.0,
+  "chars_per_min": 410,
+  "eoj_per_min": 129,
+  "n_sent": 190,
+  "sent_eoj_mean": 8.3,
+  "sent_eoj_median": 7.5,
+  "p90": 14,
+  "style": {
+   "합니다": 38,
+   "해요": 49,
+   "기타/반말·연결": 12
+  },
+  "q_per_min": 0.57,
+  "q_total": 7,
+  "conj": {
+   "그래서": 3,
+   "그런데": 10,
+   "사실": 4,
+   "결국": 3,
+   "하지만": 6
+  },
+  "conj_contrast_per_min": 1.3,
+  "nums_per_min": 3.67,
+  "i_we": 3,
+  "you": 2
+ },
+ "jsK4Ez9eky0": {
+  "dur": 866.0,
+  "chars_per_min": 393,
+  "eoj_per_min": 126,
+  "n_sent": 105,
+  "sent_eoj_mean": 17.1,
+  "sent_eoj_median": 15,
+  "p90": 28,
+  "style": {
+   "해요": 44,
+   "합니다": 56
+  },
+  "q_per_min": 0.21,
+  "q_total": 3,
+  "conj": {
+   "그런데": 7,
+   "하지만": 8,
+   "사실": 4,
+   "결국": 3,
+   "그럼에도": 1,
+   "그래서": 3
+  },
+  "conj_contrast_per_min": 1.12,
+  "nums_per_min": 2.6,
+  "i_we": 3,
+  "you": 0
+ },
+ "mkXBgbcehXM": {
+  "dur": 849.0,
+  "chars_per_min": 403,
+  "eoj_per_min": 121,
+  "n_sent": 96,
+  "sent_eoj_mean": 17.6,
+  "sent_eoj_median": 17.0,
+  "p90": 27,
+  "style": {
+   "합니다": 45,
+   "해요": 49,
+   "기타/반말·연결": 6
+  },
+  "q_per_min": 0.0,
+  "q_total": 0,
+  "conj": {
+   "하지만": 11,
+   "그러나": 3,
+   "그런데": 2,
+   "사실": 2,
+   "그래서": 2,
+   "결국": 3
+  },
+  "conj_contrast_per_min": 1.15,
+  "nums_per_min": 4.73,
+  "i_we": 1,
+  "you": 1
+ }
+}

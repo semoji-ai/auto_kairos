@@ -25,5 +25,5 @@ python3 "$(cd "$(dirname "$0")/.." && pwd)/scripts/sync_dogam.py" --assets-only
 echo ""
 echo "완료. 이제:"
 echo "  1) 백엔드 실행:  cd \"$(cd "$(dirname "$0")/.." && pwd)\" && python3 -m backend.app"
-echo "  2) After Effects 2026 실행"
+echo "  2) 설치된 After Effects를 재시작"
 echo "  3) 메뉴: Window > Extensions > auto_kairos PD (PoC)"

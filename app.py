@@ -744,13 +744,25 @@ def _scan_and_register_output_projects() -> int:
 
         uuid_prefix, slug = m.group(1), m.group(2)
 
-        # 이미 같은 uuid가 DB에 있는 경우 — 경로만 갱신 (다른 머신 import 대응)
+        # 이미 같은 uuid가 DB에 있는 경우 — 실제 프로젝트 폴더만 경로 후보로 쓴다.
+        # 같은 UUID를 단 옛 빈 폴더가 있으면 정렬상 마지막 폴더가 기존 경로를
+        # 덮어써 스토리보드 전체가 사라진 것처럼 보일 수 있다.
         if uuid_prefix in uuid_to_project:
-            existing_path = uuid_to_project[uuid_prefix].get("output_dir", "")
-            if existing_path != str(d):
-                pm.update_project_path(uuid_prefix, str(d))
-                updated += 1
-                print(f"  [SCAN] 경로 갱신: {d.name} ({existing_path} → {d})")
+            existing = uuid_to_project[uuid_prefix]
+            existing_path = existing.get("output_dir", "")
+            if existing_path == str(d):
+                continue
+            if slug != existing.get("slug"):
+                continue
+            markers = ("scene_specs.json", "pipeline_state.json", "final_manuscript.md", "plan.md")
+            if existing_path and any((Path(existing_path) / name).is_file() for name in markers):
+                continue
+            if not any((d / name).is_file() for name in markers):
+                continue
+            pm.update_project_path(uuid_prefix, str(d))
+            existing["output_dir"] = str(d)
+            updated += 1
+            print(f"  [SCAN] 경로 갱신: {d.name} ({existing_path} → {d})")
             continue
 
         # 빈 디렉토리(orphan)는 등록하지 않음
@@ -1986,7 +1998,7 @@ async def image_candidates(request: Request, project_ref: str, scene_num: int, q
 @app.post("/api/p/{project_ref}/images/select/{scene_num}")
 async def select_image(request: Request, project_ref: str, scene_num: int):
     """이미지 선택 — URL 다운로드 또는 기존 버전 선택."""
-    from auto_agent.tools.image_assets import add_version, select_version, next_filename
+    from auto_agent.tools.image_assets import add_version, select_version, next_filename, store_unique_image
     pm = get_pm()
     project, needs_redirect = resolve_project_ref(pm, project_ref)
     if not project:
@@ -2021,23 +2033,27 @@ async def select_image(request: Request, project_ref: str, scene_num: int):
         return JSONResponse({"error": "url or file required"}, 400)
 
     # URL 다운로드 → images/search/ 에 저장
-    from auto_agent.tools.wikimedia_search import download_image
+    from auto_agent.tools.wikimedia_search import download_image_bytes
     from urllib.parse import urlparse
-    ext = Path(urlparse(url).path).suffix or ".jpg"
+    ext = Path(urlparse(url).path).suffix.lower()
+    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+        ext = ".jpg"
     search_dir = img_dir / "search"
     search_dir.mkdir(parents=True, exist_ok=True)
     fname = next_filename(img_dir, scene_num, "search", ext)
-    result = download_image(url, str(search_dir / fname))
+    result = download_image_bytes(url)
 
     if result.get("success"):
+        rel_path, _ = store_unique_image(img_dir, "search/" + fname, result["content"])
         title = body.get("title", "")
         license_info = body.get("license", "")
-        add_version(img_dir, scene_num, "search/" + fname, "search",
+        add_version(img_dir, scene_num, rel_path,
+                    "search" if rel_path.startswith("search/") else "generate",
                     query=body.get("query", ""), source_url=url,
                     title=title, license=license_info)
         _update_scene_specs_src(out_dir, slug, scene_num)
         _setup_studio_project(slug)
-        return JSONResponse({"ok": True, "file": fname})
+        return JSONResponse({"ok": True, "file": rel_path})
     return JSONResponse({"error": result.get("error", "download failed")}, 500)
 
 
@@ -2167,11 +2183,12 @@ async def regenerate_tts(request: Request, project_ref: str, scene_num: int):
         # 대시보드 재생성: 사용자가 입력한 텍스트 그대로 전송 (전처리 안 함)
         # 처음 표시되는 텍스트가 이미 전처리된 narration_tts이므로, 사용자 수정본을 존중
 
-        voice_settings = {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": True}
+        # 모델·voice_settings 는 tts_config 한 곳에서 (기본 eleven_v4 — style·speed 없음)
+        from auto_agent.tools import tts_config as _ttsc
         resp = _requests.post(
             f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
             headers={"xi-api-key": api_key, "Content-Type": "application/json"},
-            json={"text": text, "model_id": "eleven_multilingual_v2", "voice_settings": voice_settings},
+            json=_ttsc.request_body(text, voice_id=voice_id),
             timeout=60,
         )
         if resp.status_code == 200:
@@ -2263,11 +2280,11 @@ async def _bg_split_postprocess(slug: str, project: dict, scene_a: int, scene_b:
             fname = audio_next(audio_dir, scene_num, scene_id=scene_id)
             output_path = audio_dir / fname
 
-            voice_settings = {"stability": 1.0, "similarity_boost": 0.9, "style": 0.9, "use_speaker_boost": True}
+            from auto_agent.tools import tts_config as _ttsc
             resp = _requests.post(
                 f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
                 headers={"xi-api-key": os.environ.get("ELEVENLABS_API_KEY", ""), "Content-Type": "application/json"},
-                json={"text": narration, "model_id": "eleven_multilingual_v2", "voice_settings": voice_settings},
+                json=_ttsc.request_body(narration, voice_id=voice_id),
                 timeout=60,
             )
             if resp.status_code == 200:
@@ -2667,8 +2684,9 @@ def _update_scene_specs_src(out_dir: str, slug: str, scene_num: int):
             if s.get("sceneNumber") == scene_num:
                 if not s.get("imageAsset"):
                     s["imageAsset"] = {}
-                ext = Path(selected).suffix
-                s["imageAsset"]["src"] = f"/output/{dir_name}/images/scene_{scene_num:03d}{ext}"
+                selected_url = f"/output/{dir_name}/images/{selected}"
+                s["imageAsset"]["src"] = selected_url
+                s["imagePath"] = selected_url
                 break
         specs_path.write_text(_json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -3076,7 +3094,7 @@ async def images_all(request: Request, project_ref: str):
     result = []
     for entry in assets.get("scenes", []):
         sn = entry.get("sceneNumber")
-        raw_selected = entry.get("selected", "")
+        raw_selected = entry.get("selected", "") if not entry.get("images") else ""
         # selected 값은 "images/search/..." 형태일 수 있음 — 파일명 부분만 비교
         def _basename(p): return p.split("/")[-1] if p else ""
         sel_base = _basename(raw_selected)
@@ -3092,7 +3110,9 @@ async def images_all(request: Request, project_ref: str):
             if not fpath.exists():
                 continue
             fname_base = _basename(fname)
-            is_selected = (fname == raw_selected or fname_base == sel_base) if raw_selected else False
+            is_selected = bool(v.get("selected")) if entry.get("images") else (
+                (fname == raw_selected or fname_base == sel_base) if raw_selected else False
+            )
             result.append({
                 "sceneNumber": sn,
                 "file": fname,
@@ -3375,18 +3395,16 @@ async def download_candidate_image(request: Request, project_ref: str, scene_num
 
         scene_key = f"scene_{scene_num:03d}"
         filename = f"{scene_key}_dl_{url_hash}{ext}"
-        save_path = search_dir / filename
-        save_path.write_bytes(resp.content)
-
-        # 최종 이미지로 복사
-        final_path = images_dir / f"{scene_key}{ext}"
-        import shutil
-        shutil.copy2(save_path, final_path)
+        from auto_agent.tools.image_assets import add_version, store_unique_image
+        rel_path, _ = store_unique_image(images_dir, f"search/{filename}", resp.content)
+        add_version(images_dir, scene_num, rel_path,
+                    "search" if rel_path.startswith("search/") else "generate",
+                    source_url=image_url)
 
         # scene_specs.json 업데이트
         _out_dir = project.get("output_dir", "")
         _dir_name = Path(_out_dir).name if _out_dir else slug
-        local_url = f"/output/{_dir_name}/images/{final_path.name}"
+        local_url = f"/output/{_dir_name}/images/{rel_path}"
         specs = load_project_json(project.get("output_dir", ""),"scene_specs.json")
         if specs:
             for scene in specs.get("scenes", []):
@@ -3396,7 +3414,7 @@ async def download_candidate_image(request: Request, project_ref: str, scene_num
                     break
             pm.save_project_json(project["id"], "scene_specs.json", specs)
 
-        return {"ok": True, "image_url": local_url, "saved_path": str(save_path)}
+        return {"ok": True, "image_url": local_url, "saved_path": str(images_dir / rel_path)}
 
     except Exception as e:
         return JSONResponse({"error": f"다운로드 실패: {e}"}, status_code=500)

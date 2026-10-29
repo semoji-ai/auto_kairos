@@ -1,4 +1,4 @@
-/* 딤 컷어웨이 낙하 퇴장 — dim-cutaway-drop-exit  [도감 x_pirates-06 · x_acting.tsx BlurDimInterrupt(reveal=wipe, exit=drop)]
+/* 딤 컷어웨이 낙하 퇴장 — dim-cutaway-drop-exit  [도감 demo-dim-cutaway-drop-exit · x_acting.tsx BlurDimInterrupt(reveal=wipe, exit=drop)]
    해설 인물이 끼어드는 컷어웨이: 뒤 장면 블러·딤(8f) → 인물 슬라이드업 → 말풍선 와이프 → 인물·말풍선 아래로 낙하 + 딤 해제.
    선택한 레이어 = 컷어웨이 요소(이름에 "말풍선"이 있으면 말풍선, 나머지는 인물). 선택이 없으면 세모지 캐스트 흉상 + 말풍선을 만듭니다.
    AE 구성

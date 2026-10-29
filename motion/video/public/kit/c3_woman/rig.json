@@ -1,0 +1,29 @@
+{
+ "dir": "kit/c3_woman",
+ "w": 1024,
+ "h": 1536,
+ "feet": [
+  505,
+  1448
+ ],
+ "top": 85,
+ "shoulderR": [
+  379,
+  479
+ ],
+ "shoulderL": [
+  630,
+  479
+ ],
+ "torsoBottom": 687,
+ "extras": [
+  "arm_hand_chin",
+  "arm_hold",
+  "arm_point",
+  "arm_raise_fist",
+  "arm_up_hang",
+  "arms_folded",
+  "face_smile",
+  "face_sparkle"
+ ]
+}

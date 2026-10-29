@@ -14,6 +14,8 @@ FAKE_MP3 = b"\xff\xfb" + b"\x00" * 100
 @pytest.fixture()
 def generate_tts_module(monkeypatch):
     monkeypatch.setenv("ELEVENLABS_API_KEY", "test-key")
+    # 이 테스트는 v2 폴백의 전처리 계약을 본다 — 기본 모델은 eleven_v4(전처리 없음)
+    monkeypatch.setenv("ELEVENLABS_MODEL_ID", "eleven_multilingual_v2")
     import auto_agent.scripts.generate_tts as module
 
     module = importlib.reload(module)

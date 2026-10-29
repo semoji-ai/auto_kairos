@@ -82,8 +82,8 @@ def search_wikimedia(query: str, limit: int = 8) -> list:
     return results
 
 
-def download_image(url: str, output_path: str) -> dict:
-    """이미지 다운로드. 1080px 리사이즈 우선 (rate limit 방지)."""
+def download_image_bytes(url: str) -> dict:
+    """이미지 바이트 다운로드. 저장 위치는 호출자가 결정한다."""
     import time, re
     # 원본 URL → 1080px 썸네일 URL 변환 시도 (Wikimedia CDN)
     download_url = url
@@ -108,18 +108,26 @@ def download_image(url: str, output_path: str) -> dict:
                 continue
             resp.raise_for_status()
 
-            from pathlib import Path
-            out = Path(output_path)
-            out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_bytes(resp.content)
             return {
                 "success": True,
-                "path": str(out),
+                "content": resp.content,
                 "size_bytes": len(resp.content),
             }
         return {"success": False, "error": "429 rate limit 3회 초과"}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+def download_image(url: str, output_path: str) -> dict:
+    """기존 호출자를 위한 파일 다운로드 API."""
+    result = download_image_bytes(url)
+    if result.get("success"):
+        from pathlib import Path
+        out = Path(output_path)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(result.pop("content"))
+        result["path"] = str(out)
+    return result
 
 
 def save_candidates(scene_number: int, query: str, candidates: list, images_dir: str):

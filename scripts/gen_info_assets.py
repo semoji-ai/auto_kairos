@@ -143,6 +143,7 @@ def main() -> int:
     root = Path(__file__).resolve().parent.parent
     sys.path.insert(0, str(root))
     from auto_agent.paths import resolve_project  # noqa: E402
+    from auto_agent.utils.codex_cli import imagegen_model_args  # noqa: E402
 
     _proj, ep = resolve_project(args.ep)
     mode_f = root / "_imggen" / f"{ep}_mode.json"
@@ -206,7 +207,7 @@ def main() -> int:
                 "## 그릴 것",
                 COLLAGE_REF.format(refs=lines) + COLLAGE_STYLE + "\n## 그릴 것", 1)
         subprocess.run(
-            ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
+            ["codex", "exec", *imagegen_model_args(), "--skip-git-repo-check", "--sandbox", "workspace-write", prompt],
             stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=900)
         if not raw.exists():
             return n, a["id"], False

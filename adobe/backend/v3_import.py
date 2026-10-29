@@ -128,6 +128,13 @@ def _map_scene(s: dict) -> dict:
     }
     if s.get("narration_tts"):
         out["narration_tts"] = s["narration_tts"]
+    # 도감 기법은 연출 의도다. AE 적용 여부와 별개로 원본 씬의 선택을 보존한다.
+    if s.get("motion"):
+        out["motion"] = s["motion"]
+    if isinstance(s.get("techniques"), list):
+        out["techniques"] = list(s["techniques"])
+    if s.get("motionNote"):
+        out["motionNote"] = s["motionNote"]
     # 도해 — 요소마다 배경이 빠진 PNG 한 장과 백분율 좌표가 있다. 어도비가
     # 원하는 모양 그대로다(레이어 하나 = 요소 하나). 이 매핑이 없어서 도해
     # 씬은 어도비로 넘어오면 배경만 남았다.

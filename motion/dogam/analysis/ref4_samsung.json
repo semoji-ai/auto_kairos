@@ -1,0 +1,678 @@
+[
+ {
+  "id": "ripple-ring-marker",
+  "name": "리플 링 마커(동심원 펄스)",
+  "category": "콜아웃·라벨",
+  "summary": "문서 칸·진열대 물건 등 '여기'를 짚을 때 동심원 2~3겹이 퍼지며 사라지는 펄스 마커. 원/박스 하이라이트보다 가볍다.",
+  "spec": "빨강 #B74E47(문서 위) / 주황(배경 일러스트 위). 링 3겹, 최대 지름 ≈240px@1080. 1회 펄스 ≈16f(0→최대 확장+알파 1→0, easeOut), 줌인 후 같은 칸에 한 번 더 반복. 선두께 ≈4px.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:03:28",
+    "note": "성적통지표 칸 지목, 이후 2x 크롭 줌인 뒤 재펄스"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:09:23",
+    "note": "중국시장 청과물 진열대 지목(주황)"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "pulse",
+   "marker",
+   "highlight"
+  ]
+ },
+ {
+  "id": "cyan-energy-ring-wipe",
+  "name": "시안 에너지 링 와이프",
+  "category": "전환",
+  "summary": "광선검 같은 사선 빛줄기가 번쩍인 뒤 발광 링이 화면을 덮었다가 다음 장면에서 수축하며 사라지는 SF풍 전환. 공식 명칭·제품 '등장' 순간에 사용.",
+  "spec": "총 ≈20f: f0~1 얇은 사선 광선 2~3줄 / f2~11 발광 링(시안, 외곽 글로우)+링 회전·확대 / f11~12 전면 플랫 시안 #B8F7F5 2f 홀드 / f13~19 새 장면 위에서 링 수축(1.0→0.4)+알파 페이드. 링 굵기 ≈30px+블룸. ※링 안쪽 방사형 쐐기 광선 요소는 욱일 연상 → 구현 시 링·사선만 채택.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:19:22",
+    "note": "제일모직 공장 → 골덴텍스 광고 전환"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:20:40",
+    "note": "유사 링+사선 오버레이"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "transition",
+   "glow",
+   "ring"
+  ]
+ },
+ {
+  "id": "spectral-tilt-zoomthrough",
+  "name": "스펙트럼 틸트 줌스루(날짜카드 탈출)",
+  "category": "전환",
+  "summary": "날짜 카드 텍스트가 기울며 확대되고 무지개(청·주황·노랑) 색분리 잔상으로 번지다 다음 사진 장면의 방사 줌블러로 착지. 기존 '줌스루(RGB 분리)'보다 회전·스펙트럼 스미어가 강한 변형.",
+  "spec": "텍스트 기울기 0→-12°+scale 1→3.5 (≈9f, easeIn), 색분리 오프셋 0→60px, 채널 = 파랑#2B5BFF/주황#FF8A1E/노랑. f10 하드컷 → 새 장면 방사 줌블러 강도 100%→0 (≈12f easeOut)+RGB 분리 잔존 ≈16f. 총 ≈27f.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:52:02",
+    "note": "1993년 6월 7일 → 프랑크푸르트 사진"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:40:50",
+    "note": "1985 숫자 동일 처리"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "transition",
+   "chromatic",
+   "date-card"
+  ]
+ },
+ {
+  "id": "ink-blob-burst-reveal",
+  "name": "먹물 방울 흩어짐 리빌",
+  "category": "전환",
+  "summary": "화면을 가득 덮은 진회색 동글동글 방울들이 사방으로 흩어지며 다음 장면(가계도)을 드러내는 전환. 편(에피소드) 경계·'지난 영상에 이어' 시점에 사용.",
+  "spec": "f0 하드컷으로 전면 커버(방울색 #3E3841, 약한 셰이딩 구체) → f1~24 방울이 바깥으로 흩어지며 축소(1.0→0.2)·알파 페이드, 중앙부터 개방(easeOut). 방울 지름 60~260px 랜덤, 45~60개. 잔여 방울 ≈f30까지 가장자리에 남음.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:52:24",
+    "note": "총수 사진 → 삼성가 가계도"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "transition",
+   "particles",
+   "reveal"
+  ]
+ },
+ {
+  "id": "photo-flame-eyes",
+  "name": "실사 사진 불꽃 눈",
+  "category": "감정·효과 FX",
+  "summary": "실제 인물 사진/영상 위 눈 위치에 불꽃 이모지를 붙여 '결연·분노·의지'를 코믹하게 표현. 사진 자료를 감정 연출에 쓰는 방법.",
+  "spec": "불꽃 스티커 2개 각 ≈110x140px(@1080, 얼굴 폭의 ~25%), 주황→노랑 그라데이션, 흔들림 루프(scaleY 0.95↔1.05, 8f 주기 비동기), 사진은 줌블러 전환 착지 후 0.5s 내 부착.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:52:03",
+    "note": "'신경영' 선언 장면"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "photo",
+   "meme",
+   "fire"
+  ]
+ },
+ {
+  "id": "text-behind-character",
+  "name": "인물 뒤 대형 수치 + 불꽃",
+  "category": "텍스트·타이포",
+  "summary": "큰 손글씨 금액 텍스트를 캐릭터 '뒤' 레이어에 깔아 인물과 겹치게 배치, 이후 연기 퍼프 전환과 함께 글자에 불꽃이 붙어 '인플레이션' 같은 과열을 표현.",
+  "spec": "텍스트 '20억' 폭≈820px·높이≈280px, 색 #3A230B(진갈색 브러시체). 블러 12px→0 + 알파 0→1 ≈30f(easeOut). 캐릭터는 동시 scale 1.0→0.85 풀백. 이후 회색 연기 퍼프 커버(≈6f) 후 글자 가장자리 불꽃 6개 부착, 각 불꽃 8~10f 흔들림 루프.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:14:47",
+    "note": "20억 → 불타는 20억(악성 인플레)"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "typography",
+   "depth",
+   "fire"
+  ]
+ },
+ {
+  "id": "tcg-profile-card-marquee",
+  "name": "TCG 인물 카드 마키",
+  "category": "콜아웃·라벨",
+  "summary": "경쟁사·인물 목록을 트레이딩 카드(색 테두리·별 등급·이름 띠) 형태로 가로 무한 스크롤. 얼굴 모르는 인물은 흰 실루엣+'?'로.",
+  "spec": "카드 ≈540x750px, 테두리 색 갈색/보라/겨자/빨강/파랑 순환, 상단 이름 띠+★★★(빨강/주황), 하단 설명 줄 2개. 카드 간격 ≈90px. 좌측 선형 스크롤 ≈230px/s(linear, 서술 길이만큼 지속 ≈6s). 첫 카드 등장은 오른쪽 밖에서 진입.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:13:08",
+    "note": "1949년 무역회사 경쟁사 나열"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "card",
+   "carousel",
+   "roster"
+  ]
+ },
+ {
+  "id": "brush-mask-portrait-quote",
+  "name": "붓자국 마스크 인물 + 손글씨 타자 인용",
+  "category": "사진·자료 처리",
+  "summary": "캐릭터 옆에 크림 종이 카드가 뜨고 손글씨체 인용문이 한 글자씩 타이핑, 실제 인물 사진은 거친 붓 가장자리 마스크로 스며들듯 페이드인. 증언·발언 인용.",
+  "spec": "종이 카드 #F3DFC4 약 560x440px 알파 페이드 ≈8f. 사진: 붓 마스크(불규칙 가장자리 20~40px), 알파 0→1 ≈20f + 약한 블러→선명. 타이핑 1글자/≈3f(≈10자/s), 손글씨체 진갈색 ≈34px, 줄바꿈 수동.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:56:03",
+    "note": "이맹희 증언 인용"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:56:20",
+    "note": "유사 레이아웃 반복"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "quote",
+   "photo",
+   "typewriter"
+  ]
+ },
+ {
+  "id": "ecg-chest-glow",
+  "name": "심전도 배경 + 가슴 통증 글로우",
+  "category": "감정·효과 FX",
+  "summary": "건강 이상 장면에서 배경을 진홍색으로 바꾸고 심전도 파형이 흐르며, 캐릭터 가슴에 붉은 발광이 번지고 번개 하트·'으..윽!' 버블이 튄다.",
+  "spec": "배경 #93403F 하드컷. ECG 라인(연분홍 #D09996, 2px) 가로 스크롤 루프. 붉은 방사 글로우 지름 0→≈260px, 컷 후 ≈30f 지연 뒤 ≈10f 성장, 이후 알파 0.7↔1 펄스(≈12f). 번개 하트 ≈420px 정지. 노란 스파이크 버블 0→1.1→1.0 ≈5f. 캐릭터 이마 파란 셰이드+고통 선.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:31:00",
+    "note": "이건희 심근경색"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "health",
+   "pulse",
+   "background"
+  ]
+ },
+ {
+  "id": "marionette-puppeteer",
+  "name": "꼭두각시 조종자",
+  "category": "캐릭터 연기",
+  "summary": "흐린 사진 배경 위 받침대에 선 정장 인물이 양손 줄로 '권력' 구슬을 매달고 흔드는 '배후 조종' 은유.",
+  "spec": "인물 하단→상단 슬라이드인 ≈5f(모션블러), 받침대 #C8553D. 줄 끝 분홍 원형 라벨('권력', 지름≈50px) 5개 팝 스태거 ≈2f. 이후 팔·줄 진자 흔들림 ±6° 루프(≈24f). 배경 사진 가우시안 블러≈20px. 앞선 '합병' 빨간 도장과 병치.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:34:28",
+    "note": "합병에 정치권력 개입 의혹"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "metaphor",
+   "puppet",
+   "politics"
+  ]
+ },
+ {
+  "id": "blob-head-personification",
+  "name": "먹덩이 얼굴 의인화(부실 회사)",
+  "category": "캐릭터 연기",
+  "summary": "회사를 검은 둥근 먹덩이 머리+졸린 분홍 선 얼굴 캐릭터로 의인화해 흑백 사진 위에 올림. 부실·침체한 조직 표현.",
+  "spec": "머리 #000 불규칙 원 ≈420px, 얼굴 분홍 #E07A7A 선. 아래에서 팝 0→1.35(f2)→1.0(f8) overshoot, 이후 호흡 루프. 몸통 셔츠에 회사명. 배경은 흑백 처리(채도 0) 실사. 이후 풀백으로 인물들 사이 소형 배치.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:42:22",
+    "note": "우진조선"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "personification",
+   "mascot",
+   "bw-photo"
+  ]
+ },
+ {
+  "id": "electric-vortex-spawn",
+  "name": "전기 소용돌이 등장",
+  "category": "감정·효과 FX",
+  "summary": "신제품/신기술 오브젝트가 나타날 때 푸른 전기 링이 점에서 커졌다가 조각나며 소용돌이쳐 흩어지고 그 안에서 물체가 드러남.",
+  "spec": "총 ≈25f: f0 점 → f3 링 최대(≈240px, 1.1 overshoot) → f5~10 링 수축+물체 페이드인 → f10~24 링이 호 조각 12~16개로 분해되어 회전(≈90°)하며 알파 0. 색 #7FD8FF 코어+#2E7BFF 글로우. 직후 빨간 리본 라벨이 위에서 ≈4f 슬라이드다운.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:47:22",
+    "note": "256K D램"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "spawn",
+   "electric",
+   "product"
+  ]
+ },
+ {
+  "id": "defocus-hanja-medallion",
+  "name": "배경 디포커스 + 한자 메달리온",
+  "category": "텍스트·타이포",
+  "summary": "배경 장면을 서서히 흐리고 흰 원판 위에 굵은 붓 한자(三·星)와 음(석삼·별성)을 팝, 보라 리본으로 뜻 설명. 이후 원판이 간판 한자에 크로스페이드로 합류.",
+  "spec": "배경 블러 0→≈18px ≈10f(easeOut). 원판 지름 ≈270px 흰색, 팝 0→1.1→1.0 ≈5f+모션블러. 보라 리본 #5A4FB0 왼→오 펼침 ≈4f. 두 번째 원판 +≈2.8s 뒤. 퇴장: 간판 장면과 크로스페이드 ≈8f + 줌 1.3→1.0 풀백.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:09:35",
+    "note": "三星 상호 유래"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "hanja",
+   "etymology",
+   "defocus"
+  ]
+ },
+ {
+  "id": "vs-boxing-gloves",
+  "name": "VS 로봇팔 복싱 글러브",
+  "category": "차트·인포그래픽",
+  "summary": "라이벌 구도를 파랑·빨강 복싱 글러브가 로봇팔에 달려 맞부딪치는 그림+불꽃 배경으로 표현. 로고는 글러브에 박음.",
+  "spec": "배경 노랑 #FBD27D + 주황 불꽃 실루엣 루프(≈10f 형태 교체). 글러브 각 ≈600px, 좌우 ±15px 전후 보빙(≈20f 주기, 반위상). 중앙 흰 스파이크 버스트+'VS' 굵은 검정 ≈120px. 약 7s 홀드.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:32:20",
+    "note": "삼성전자 vs LG전자"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "rivalry",
+   "versus",
+   "loop"
+  ]
+ },
+ {
+  "id": "fin-table-row-append",
+  "name": "연도 실적표 행 추가 + 적자/흑자 배지",
+  "category": "차트·인포그래픽",
+  "summary": "연도별 손익 표를 한 행씩 추가하고 마지막에 원형 배지('적자' 빨강/'흑자' 파랑)를 팝. 이후 빨간 도장으로 반전('회계 기준 변경').",
+  "spec": "좌측 로고/우측 표 분할(연파랑 #C9E3EA 패널). 행 높이 ≈46px, 연도 흰 굵은체, 음수 빨강 (-)79, 양수 네이비 굵게 확대(1.2x). 새 행 페이드+아래→위 12px ≈6f. 배지 지름 ≈90px 0→1.1→1 ≈5f. 이후 빨간 테두리 도장 기울기 -12° 슬램.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:32:25",
+    "note": "삼성바이오로직스 2011~2015"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:32:48",
+    "note": "회계기준 변경 도장"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "table",
+   "finance",
+   "badge"
+  ]
+ },
+ {
+  "id": "narrator-silhouette-interrupt",
+  "name": "'잠깐!!' 내레이터 실루엣 끼어들기",
+  "category": "구성·엔딩",
+  "summary": "설명 중 배경을 흐리고 노란 스파이크 버스트 '잠깐!!' 후, 채널 마스코트(검은 실루엣, 가슴에 '구독♥좋아요')가 화면 우하단에서 올라와 해명·고백(머쓱;;).",
+  "spec": "배경 블러 ≈12f. 노란 12각 스파이크 #F5C242 ≈620px, '잠깐!!' 검정 ≈110px, 팝 ≈5f 후 ≈0.8s 홀드 → 회전하며 페이드 ≈6f. 실루엣 #2E2E33 아래→위 슬라이드 ≈18f(quart-out), 머리에 '세모지' 세로쓰기, 땀방울·'머쓱;;'. 좌상단 작은 이모지 스티커 말풍선.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:32:40",
+    "note": "회계 설명 전 '전문가가 아니라..'"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:35:20",
+    "note": "엔딩 전 사과 멘트"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "narrator",
+   "mascot",
+   "break-fourth-wall"
+  ]
+ },
+ {
+  "id": "treadmill-walk-milestones",
+  "name": "제자리 걷기 + 이정표 트랙",
+  "category": "캐릭터 연기",
+  "summary": "캐릭터는 제자리 걷기, 하단 초록 트랙이 왼쪽으로 흘러가며 발자국과 깃발 이정표(학교명)가 지나감. 학업·경력 경로 서사.",
+  "spec": "트랙 #1E7A45 높이 ≈170px(화면 하단 1/6), 스크롤 ≈210px/s linear. 발자국 검정 반복 패턴. 깃발 빨강/초록 ≈60px+라벨 흰 글씨. 걷기 사이클 ≈16f(다리 2포즈 교대+몸 bob 4px). 'EXPRESS 단기속성' 스톱워치 배지 팝.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:03:40",
+    "note": "이병철 학력 경로"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:24:50",
+    "note": "이재용 유학 경로 유사"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "walk",
+   "path",
+   "timeline"
+  ]
+ },
+ {
+  "id": "signal-wave-diagram",
+  "name": "신호 파형 드로우 다이어그램",
+  "category": "차트·인포그래픽",
+  "summary": "통신 방식 설명: 갈색 사인파가 화살표와 함께 왼→오로 그려지고, 파형 위 A/B/C 원형 태그가 스태거 팝, 각 사용자에게 번개 지그재그 선이 연결.",
+  "spec": "파형 스트로크 ≈8px #6B3A1F, 진폭 ≈80px, 드로우 ≈1.8s linear(끝 흰 화살표). 태그 지름 ≈60px(빨강/파랑/노랑) 스태거 ≈0.6s, 팝 5f. 연결선 지그재그 각 색 2px ≈6f 드로우. CDMA 편은 색 코드 막대 버전.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:09:20",
+    "note": "TDMA"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:09:40",
+    "note": "CDMA 코드 막대"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "diagram",
+   "wave",
+   "telecom"
+  ]
+ },
+ {
+  "id": "candlestick-growth",
+  "name": "캔들차트 순차 성장 + 떡상 화살표",
+  "category": "차트·인포그래픽",
+  "summary": "주가 급등 설명: 배경 디포커스 후 격자 위 캔들이 하나씩 자라며 얇은 추세선이 따라 그려지고, 마지막 굵은 초록 지그재그 화살표+'떡상' 라벨.",
+  "spec": "배경 블러 ≈12f. 격자 흰 반투명. 캔들 #E0105A 폭≈30px, 스태거 ≈6f, 각 scaleY 0→1 ≈5f. 추세선 1px 동색. 초록 화살표 #3E8E4A 12px 드로우 ≈10f, 라벨 pill 팝.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:27:40",
+    "note": "제일기획 상장 후 상한가"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "chart",
+   "stock",
+   "candlestick"
+  ]
+ },
+ {
+  "id": "headline-strip-stack",
+  "name": "기사 헤드라인 종이띠 스택",
+  "category": "콜아웃·라벨",
+  "summary": "실제 기사 제목을 흰 종이띠(+하드 그림자)로 재조판해 2~3줄 엇갈려 배치. 기사 스크린샷 대신 텍스트만 인용.",
+  "spec": "띠 높이 ≈70px, 흰 #FFFFFF, 검정 텍스트 ≈36px, 그림자 오프셋 4px 연회색. 엇갈림 x 오프셋 ≈40px, 각 -1°~+1° 기울기. 순차 팝 ≈8f 간격.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:35:10",
+    "note": "상속소송 기사"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:55:55",
+    "note": "이숙희 소송 기사"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:26:20",
+    "note": "이재용 인터넷사업 기사"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "news",
+   "headline",
+   "typography"
+  ]
+ },
+ {
+  "id": "slogan-slash-banner",
+  "name": "사선 구호 배너",
+  "category": "텍스트·타이포",
+  "summary": "정권 구호·선전 문구를 빨간 사선(-8°) 사각 배너에 흰 붓글씨로 크게. 캐릭터 옆에 붙어 선동 느낌.",
+  "spec": "배너 #E0303C 약 620x260px, 회전 -8°, 흰 브러시체 2줄 ≈70px. 등장 ≈6f 스케일 팝(추정, 1fps 샘플).",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:22:40",
+    "note": "'무너진 경제를 재건하자'"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "banner",
+   "propaganda"
+  ]
+ },
+ {
+  "id": "megaphone-cone-text",
+  "name": "확성기 원뿔 텍스트",
+  "category": "콜아웃·라벨",
+  "summary": "확성기에서 노란 원뿔(사다리꼴)이 뻗고 그 안에 주장 문구를 기울여 적음. 여론전·홍보 표현.",
+  "spec": "원뿔 #F4D35E 반투명 없음, 길이 ≈900px, 기울기 ≈-25°. 텍스트 빨강/검정 굵게. 흐린 모니터 배경(블러). (1fps 샘플 기반)",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:26:00",
+    "note": "'3세 승계 부당!!' 반박 홍보"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "megaphone",
+   "claim"
+  ]
+ },
+ {
+  "id": "era-palette-shift",
+  "name": "시대별 배경 팔레트 전환",
+  "category": "HUD·자막·포맷",
+  "summary": "통합편 안에서 배경 기본색이 파트마다 바뀜: 세이지 → 크림(휴대폰·실사 광고 파트) → 블루그레이(이재용 파트), 감정 장면은 단색 풀필드(진홍·코발트·노랑).",
+  "spec": "세이지 #C2CCC3(1~4편), 크림 #FEF9F6(챕터카드·1:04~1:20 제품사 파트 전면), 블루그레이 #9DA5B3(1:21 이후 일부), 감정 풀필드: 진홍 #93403F·코발트(레슬링 회상 0:37)·노랑 #FBD27D(VS). HUD(좌상단 소형 로고 스탬프+상단 전폭 챕터 탭바, 활성 탭 회색 채움)와 하단 흰 반투명 자막띠는 전 구간 동일.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:00:40",
+    "note": "세이지 기본"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:05:00",
+    "note": "크림 전환"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:30:50",
+    "note": "블루그레이"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "format",
+   "palette",
+   "evolution"
+  ]
+ },
+ {
+  "id": "archival-ad-on-paper",
+  "name": "실사 광고 클립 종이 배경 삽입",
+  "category": "사진·자료 처리",
+  "summary": "옛 TV 광고·뉴스 영상을 크림 종이 배경 위 중앙 박스(여백 넓게)로 재생하고 해시태그형 캡션(#세계최초 #…)을 옆에 손글씨로.",
+  "spec": "영상 박스 ≈1050x590px(화면의 55%), 그림자 없음, 크림 #FEF9F6 배경. 해시태그 캡션 ≈26px 검정, 박스 우측 상단. 전환은 하드컷 위주. 휴대폰 제품사 파트(1:10~1:20) 전체가 이 포맷.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:10:10",
+    "note": "애니콜 광고"
+   },
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "01:12:00",
+    "note": "#세계최초 캡션"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "archive",
+   "video",
+   "hashtag"
+  ]
+ },
+ {
+  "id": "channel-logo-intro",
+  "name": "채널 로고 스탬프 인트로(구포맷)",
+  "category": "HUD·자막·포맷",
+  "summary": "오프닝 직후 크림 배경 중앙에 선화 인물+'세상의 모든 지식' 스탬프 로고가 점에서 커지고, 아래 '구독' 체크박스·'좋아요' 아이콘이 차례로 팝. HUD 자리에서 날아오는 현행 로고 스팅과 다른 구포맷.",
+  "spec": "로고 0→1.05(f6)→1.0(f7) ≈7f, 크기 ≈560x330px, 회색 #6E6E6E 선. 체크박스 +≈20f 팝, 좋아요 +≈15f. 전체 ≈2.3s 후 챕터카드로 하드컷.",
+  "sources": [
+   {
+    "ref": "ref4-samsung",
+    "video": "https://youtu.be/0s6A0hkg11U",
+    "time": "00:00:26",
+    "note": "통합편 시작"
+   }
+  ],
+  "component": null,
+  "file": null,
+  "preview": null,
+  "status": "분석만",
+  "tags": [
+   "intro",
+   "logo",
+   "legacy"
+  ]
+ }
+]

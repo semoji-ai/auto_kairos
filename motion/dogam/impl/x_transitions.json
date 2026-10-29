@@ -1,0 +1,125 @@
+{
+  "pink-color-wash": {
+    "component": "PinkColorWash",
+    "preview": "x_transitions-01",
+    "note": ""
+  },
+  "in-place-swap": {
+    "component": "InPlaceSwap",
+    "preview": "x_transitions-02",
+    "note": "base(인물)는 유지, 오버레이 a→b 교체 + 풀백, 섹션 라벨 크로스페이드"
+  },
+  "element-slide-transition": {
+    "component": "SlideCut",
+    "preview": "x_transitions-03",
+    "note": "원본은 하드컷 직후 인물이 화면 밖에서 미끄러져 들어오는 형태(밀어내기 아님)"
+  },
+  "zipper-close-transition": {
+    "component": "ZipperTransition",
+    "preview": "x_transitions-04",
+    "note": "[세모지 에셋] 슬라이더 = zipper_slider(닫힐 땐 180° 회전), 톱니 트랙은 코드"
+  },
+  "twirl-liquid-transition": {
+    "component": "TwirlLiquid",
+    "preview": "x_transitions-05",
+    "note": "트월은 나선 띠+feTurbulence 액체 변위로 근사"
+  },
+  "gradient-light-wash": {
+    "component": "GradientLightWash",
+    "preview": "x_transitions-06",
+    "note": "글자는 fg(color) 렌더 함수로 워시 위에 그려 빨강 전환"
+  },
+  "elevator-door-reveal": {
+    "component": "ElevatorReveal",
+    "preview": "x_transitions-07",
+    "note": ""
+  },
+  "crash-impact-zoom-crack": {
+    "component": "CrashImpact",
+    "preview": "x_transitions-08",
+    "note": "균열은 불규칙 지그재그 가지+동심 고리(광선형 금지 준수) [세모지 에셋] 데모 자동차 = carfront_glass → 운전자 컷 → 유리 반사 → carfront_body 레이어"
+  },
+  "cyan-energy-ring-wipe": {
+    "component": "CyanRingWipe",
+    "preview": "x_transitions-09",
+    "note": "링 안 방사형 쐐기 제외, 링+사선만"
+  },
+  "spectral-tilt-zoomthrough": {
+    "component": "SpectralZoomThrough",
+    "preview": "x_transitions-10",
+    "note": ""
+  },
+  "ink-blob-burst-reveal": {
+    "component": "InkBlobReveal",
+    "preview": "x_transitions-11",
+    "note": ""
+  },
+  "truck-pan-push-door": {
+    "component": "TruckPushIn",
+    "preview": "x_transitions-12",
+    "note": ""
+  },
+  "camera-tiltup-sign-reveal": {
+    "component": "TiltUpSignReveal",
+    "preview": "x_transitions-13",
+    "note": ""
+  },
+  "rack-defocus-backdrop": {
+    "component": "RackDefocus",
+    "preview": "x_transitions-14",
+    "note": "entry=pop|drop [옵션] exit=drop(레이어 낙하 8f + 블러 해제 10f, exitAt) — 데모 demo-rack-defocus-drop-exit"
+  },
+  "iso-buildup-pullback": {
+    "component": "IsoBuildPullback",
+    "preview": "x_transitions-15",
+    "note": "아이소 도형은 SVG 로 직접 생성(DEFAULT_PORT) [세모지 에셋] 폴리곤 → iso_warehouse·iso_container(색 multiply 틴트)·iso_crane(세로 상승)·iso_ship, 부두·도로·물결은 코드"
+  },
+  "binocular-mask-pov": {
+    "component": "BinocularPOV",
+    "preview": "x_transitions-16",
+    "note": "[세모지 에셋] 데모 화물선 SVG → cargo_ship"
+  },
+  "word-card": {
+    "component": "WordCard",
+    "preview": "x_transitions-17",
+    "note": ""
+  },
+  "intro-montage": {
+    "component": "IntroMontage",
+    "preview": "x_transitions-18",
+    "note": ""
+  },
+  "outro-recap-sequence": {
+    "component": "OutroRecap",
+    "preview": "x_transitions-19",
+    "note": "데모는 시간 압축 기본값(원본 33s → 180f)"
+  },
+  "gameshow-door-reveal": {
+    "component": "GameshowDoors",
+    "preview": "x_transitions-20",
+    "note": "[세모지 에셋] 관객 SVG 16명 → crowd_back_a/b/phone 을 어둡게(brightness .22)"
+  },
+  "bookshelf-series-spines": {
+    "component": "BookshelfRecap",
+    "preview": "x_transitions-21",
+    "note": "[세모지 에셋] 책등 = book_spine_set 의 초록 책 앞면 크롭(spine=color 블렌드 60%, 번호 코드), 윗칸 장식 = book_spine_set 묶음. 금박 줄은 에셋 고정"
+  },
+  "patron-credit-ending": {
+    "component": "CrowdCreditCard",
+    "preview": "x_transitions-22",
+    "note": "credits-crowd-endcard 변형은 leftW 0.4·rightW 0·cardW 620·cardH 360·cols 2·bg #A9BFA5 [세모지 에셋] 꽃 장식 SVG → blossom_corner(flower 색은 에셋 고정)"
+  },
+  "ots-silhouette-foreground": {
+    "component": "OTSSilhouette",
+    "preview": "x_transitions-23",
+    "note": "실루엣 = 이미지 마스크 단색(CutImg color)"
+  },
+  "narrator-silhouette-interrupt": {
+    "component": "NarratorInterrupt",
+    "preview": "x_transitions-24",
+    "note": "마스코트 실루엣 = 이미지 마스크 리그"
+  },
+  "credits-crowd-endcard": {
+    "mergedInto": "patron-credit-ending"
+  }
+}

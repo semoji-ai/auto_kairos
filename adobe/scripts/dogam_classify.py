@@ -16,7 +16,7 @@ import os
 from pathlib import Path
 
 ADOBE = Path(__file__).resolve().parents[1]
-SM = Path(os.environ.get("SEMOJI_MOTION_DIR") or Path.home() / "Projects" / "semoji-motion").expanduser()
+SM = Path(os.environ.get("SEMOJI_MOTION_DIR") or ADOBE.parent / "motion").expanduser()   # 구 ~/Projects/semoji-motion
 REG = ADOBE / "cep/com.autokairos.pd/jsx/dogam/registry.json"
 OUT = ADOBE / "docs" / "dogam_ae_classification.md"
 
