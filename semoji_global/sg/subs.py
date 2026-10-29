@@ -53,6 +53,14 @@ def _cjk_groups(tokens, max_chars, protect=()):
         k = text.find(w)
         while k >= 0:
             blocked.update(range(k + 1, k + len(w))); k = text.find(w, k + 1)
+    try:                                        # 중국어 낱말 안(八竿|子)에서는 끊지 않음 — jieba 분절
+        import jieba
+        jieba.setLogLevel(60)
+        k = 0
+        for w in jieba.lcut(text):
+            blocked.update(range(k + 1, k + len(w))); k += len(w)
+    except ImportError:
+        pass
 
     def ok(i):                                  # tokens[i] 앞에서 끊어도 되는가
         return (0 < i < len(tokens) and pos[i] not in blocked and tokens[i][2][0] not in _NO_START

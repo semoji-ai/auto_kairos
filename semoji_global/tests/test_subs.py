@@ -141,3 +141,11 @@ def test_cues_for_segment_uses_display_text_when_tts_differs():
     cues = cues_for_segment(ch, st, en, display="2019年，开市客来了。", max_chars=18, min_dur=0.8, cjk=True)
     assert "".join(c["text"] for c in cues) == "2019年，开市客来了。"
     assert abs(cues[0]["t0"] - 0.0) < 1e-6 and abs(cues[-1]["t1"] - len(tts) / 5.0) < 1e-6
+
+
+def test_cjk_long_clause_is_not_cut_inside_a_word():
+    t = "说出来你可能不信，这位零售之父，直到快四十岁，干的还是一份跟零售八竿子打不着的工作——律师。"   # 실제로 「八竿|子」로 끊겼던 문장
+    cues = split_cues(*even(t, cps=5.0), max_chars=18, cjk=True)
+    joined = "|".join(c["text"] for c in cues)
+    assert "".join(c["text"] for c in cues) == t
+    assert "八竿|子" not in joined and "竿子|打" not in joined and "打不|着" not in joined

@@ -1,0 +1,7 @@
+Scene: Year 2014 in a cozy Chinese apartment. A young woman (mid 20s, black ponytail, lilac hoodie, light jeans) sits cross-legged on the sofa holding a smartphone; the phone screen shows an online shop page with the red-and-blue COSTCO WHOLESALE logo from attached image 3 at the top and a grid of colorful imported products below. On the coffee table in front of her sits an opened cardboard parcel spilling out imported goods — a big jar of mixed nuts, a box of cookies, a bottle of olive oil. A man (late 20s, short black hair, grey T-shirt) leans in from the side looking at the phone, smiling. Exactly these two people.
+Camera: medium-wide eye-level interior view, full bodies visible, the phone screen turned slightly toward the viewer so the logo is readable.
+Lighting: flat colour planes with one darker shade per colour for shadow, warm afternoon daylight from a window.
+Color grading: walls cream #F3EBDD, sofa teal #4F8A8B, parcel kraft #C69C6D, hoodie lilac #B9A6D9, logo red #E31837 and blue #005DAA.
+Texture/Medium: draw both people with exactly the same body and face as the people in attached image 1 — large simple head, small dark oval eyes, round pink cheek blush, flat skin tone, simple rounded hands — and paint the whole room in the same flat vector style as attached image 2, smooth colour planes, clean edges, soft paper grain texture.
+Text-in-image: the only lettering is the COSTCO WHOLESALE logo on the phone screen, copied exactly from attached image 3; the parcel and product labels stay plain colour blocks.
+AR 16:9

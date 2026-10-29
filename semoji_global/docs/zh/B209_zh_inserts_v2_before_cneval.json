@@ -1,0 +1,1230 @@
+{
+ "_doc": "중국판 v2(재구성, 2026-10-28): 도입=개장 대란→7 vs 약70→같은 스승, 결말=山姆 23년 먼저·盒马X 철수·갱신율→두 제자 대결·댓글 질문. 사실은 docs/zh/B209_remake_facts.md. v1 백업 docs/zh/B209_zh_inserts_v1_backup.json",
+ "fonts": {
+  "label": "SourceHanSansCN-Heavy",
+  "body": "SourceHanSansCN-Bold",
+  "title": "SmileySans-Oblique",
+  "hand": "ZCOOLKuaiLe-Regular"
+ },
+ "inserts": {
+  "intro": {
+   "replace_master": [
+    0.0,
+    57.6
+   ],
+   "scenes": [
+    {
+     "id": "zi01",
+     "text": "山姆和开市客，这两家会员店，其实是同一个师父教出来的。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/3680.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/3718.png",
+       "x": 620,
+       "y": 600,
+       "w": 520,
+       "at": 0.0,
+       "anim": "slide_right"
+      },
+      {
+       "type": "cover",
+       "x": 663,
+       "y": 272,
+       "r": 70,
+       "color": [
+        31,
+        79,
+        168
+       ],
+       "text": "山姆",
+       "text_color": [
+        255,
+        255,
+        255
+       ],
+       "size": 44,
+       "at": 0.0
+      },
+      {
+       "type": "image",
+       "src": "raster/src/3717.png",
+       "x": 1300,
+       "y": 600,
+       "w": 480,
+       "at": 0.0,
+       "anim": "slide_left"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/3719.png",
+       "x": 1268,
+       "y": 168,
+       "w": 160,
+       "at": 0.0,
+       "anim": "slide_left"
+      },
+      {
+       "type": "badge",
+       "text": "同一个师父？",
+       "x": 960,
+       "y": 150,
+       "size": 80,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.55,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "zi02",
+     "text": "先说一件事：2019年8月27日，上海闵行，一家会员店开业不到半天，就被挤爆了。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/p_crowd4.png"
+      },
+      {
+       "type": "badge",
+       "text": "2019年8月27日",
+       "x": 300,
+       "y": 110,
+       "size": 56,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.15,
+       "anim": "slide_right"
+      },
+      {
+       "type": "badge",
+       "text": "上海闵行",
+       "x": 300,
+       "y": 215,
+       "size": 52,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.3,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "开业不到半天 挤爆",
+       "x": 960,
+       "y": 540,
+       "size": 80,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.75,
+       "anim": "slam",
+       "rot": -3
+      }
+     ]
+    },
+    {
+     "id": "zi03",
+     "text": "停车要等3个小时，结账要排2个小时，当天下午，门店不得不暂停营业。",
+     "tts": "停车要等三个小时，结账要排两个小时，当天下午，门店不得不暂停营业。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/p_crowd4.png"
+      },
+      {
+       "type": "badge",
+       "text": "停车 3小时",
+       "x": 330,
+       "y": 160,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.05,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "结账 2小时",
+       "x": 330,
+       "y": 290,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.3,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "暂停营业",
+       "x": 1250,
+       "y": 480,
+       "size": 120,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.72,
+       "anim": "slam",
+       "rot": -6
+      }
+     ]
+    },
+    {
+     "id": "zi04",
+     "text": "开业当天，约14万人办了会员卡，1498元一瓶的飞天茅台，很快就被抢光。这家店，就是开市客。",
+     "tts": "开业当天，约十四万人办了会员卡，一千四百九十八元一瓶的飞天茅台，很快就被抢光。这家店，就是开市客。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/p_inside3.png"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 14,
+       "prefix": "约",
+       "suffix": "万人办卡",
+       "font": "label",
+       "size": 84,
+       "x": 520,
+       "y": 140,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "stroke": [
+        226,
+        28,
+        52
+       ],
+       "stroke_w": 12,
+       "at": 0.05,
+       "count_dur": 1.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "1498元茅台 很快抢光",
+       "x": 1380,
+       "y": 140,
+       "size": 58,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.45,
+       "anim": "slam",
+       "rot": 4
+      },
+      {
+       "type": "badge",
+       "text": "开市客",
+       "x": 960,
+       "y": 290,
+       "size": 110,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.85,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "zi05",
+     "text": "可七年过去，开市客在中国大陆只有7家店；而山姆，已经开到了约70家。",
+     "tts": "可七年过去，开市客在中国大陆只有七家店；而山姆，已经开到了约七十家。",
+     "layers": [
+      {
+       "type": "split",
+       "left": [
+        200,
+        16,
+        46
+       ],
+       "right": [
+        31,
+        79,
+        168
+       ]
+      },
+      {
+       "type": "image",
+       "src": "raster/src/20459.png",
+       "x": 150,
+       "y": 330,
+       "w": 150,
+       "at": 0.75,
+       "anim": "pop",
+       "repeat": {
+        "n": 7,
+        "dx": 0,
+        "dy": 0,
+        "grid": [
+         4,
+         165,
+         140
+        ],
+        "stagger": 0.02
+       }
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/blue_store.png",
+       "x": 1050,
+       "y": 230,
+       "w": 120,
+       "at": 0.0,
+       "anim": "pop",
+       "repeat": {
+        "n": 30,
+        "dx": 0,
+        "dy": 0,
+        "grid": [
+         6,
+         140,
+         90
+        ],
+        "stagger": 0.01
+       }
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 7,
+       "suffix": "家",
+       "font": "label",
+       "size": 120,
+       "x": 480,
+       "y": 700,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "stroke": [
+        30,
+        30,
+        30
+       ],
+       "stroke_w": 10,
+       "at": 0.35,
+       "count_dur": 0.8,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 70,
+       "prefix": "约",
+       "suffix": "家",
+       "font": "label",
+       "size": 120,
+       "x": 1440,
+       "y": 700,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "stroke": [
+        30,
+        30,
+        30
+       ],
+       "stroke_w": 10,
+       "at": 0.7,
+       "count_dur": 1.2,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "zi06",
+     "text": "这两家死对头，其实师出同门——拜的，是同一个师父。他是谁？",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/20539.png",
+       "dim": 0.55
+      },
+      {
+       "type": "text",
+       "text": "同一个师父",
+       "font": "title",
+       "size": 150,
+       "x": 960,
+       "y": 470,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "stroke": [
+        30,
+        30,
+        30
+       ],
+       "stroke_w": 8,
+       "at": 0.25,
+       "anim": "slam"
+      },
+      {
+       "type": "text",
+       "text": "他是谁？",
+       "font": "title",
+       "size": 110,
+       "x": 960,
+       "y": 650,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "stroke": [
+        30,
+        30,
+        30
+       ],
+       "stroke_w": 8,
+       "at": 0.85,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "来源：latimes.com",
+       "font": "body",
+       "size": 24,
+       "x": 1760,
+       "y": 1040,
+       "color": [
+        220,
+        220,
+        220
+       ],
+       "at": 0.0,
+       "anim": "none"
+      }
+     ]
+    }
+   ]
+  },
+  "ending": {
+   "replace_master": [
+    900.1,
+    969.077
+   ],
+   "scenes": [
+    {
+     "id": "ze01",
+     "text": "靠着会员费和科克兰，开市客在美国站稳了脚跟。1985年先进入加拿大，后来一步步走向全球。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/3180.png",
+       "dim": 0.15
+      },
+      {
+       "type": "badge",
+       "text": "1983 西雅图",
+       "x": 330,
+       "y": 140,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "1985 加拿大",
+       "x": 330,
+       "y": 260,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        31,
+        79,
+        168
+       ],
+       "at": 0.55,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "走向全球",
+       "x": 330,
+       "y": 380,
+       "size": 60,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.85,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "ze02",
+     "text": "但在中国大陆，山姆比它早到了整整23年：1996年，山姆在深圳开出了第一家会员店。",
+     "tts": "但在中国大陆，山姆比它早到了整整二十三年：1996年，山姆在深圳开出了第一家会员店。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/e_sam1996.png"
+      },
+      {
+       "type": "badge",
+       "text": "1996 深圳",
+       "x": 330,
+       "y": 130,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        31,
+        79,
+        168
+       ],
+       "at": 0.55,
+       "anim": "slide_right"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 23,
+       "prefix": "早到",
+       "suffix": "年",
+       "font": "label",
+       "size": 110,
+       "x": 560,
+       "y": 300,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "stroke": [
+        30,
+        30,
+        30
+       ],
+       "stroke_w": 10,
+       "at": 0.15,
+       "count_dur": 1.0,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "ze03",
+     "text": "开市客则先在天猫开了海外旗舰店，直到2019年，才在上海开出中国大陆首家门店。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/p_crowd4.png"
+      },
+      {
+       "type": "badge",
+       "text": "2014 天猫海外旗舰店",
+       "x": 420,
+       "y": 130,
+       "size": 56,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.05,
+       "anim": "slide_right"
+      },
+      {
+       "type": "badge",
+       "text": "2019 上海 首家门店",
+       "x": 420,
+       "y": 250,
+       "size": 56,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.6,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "ze04",
+     "text": "到今天，山姆在中国大陆约有70家门店、付费会员超过1000万；开市客，只有7家。",
+     "tts": "到今天，山姆在中国大陆约有七十家门店、付费会员超过一千万；开市客，只有七家。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/e_twostores.png"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 70,
+       "prefix": "约",
+       "suffix": "家",
+       "font": "label",
+       "size": 110,
+       "x": 330,
+       "y": 110,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "stroke": [
+        30,
+        30,
+        30
+       ],
+       "stroke_w": 10,
+       "at": 0.1,
+       "count_dur": 1.2,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 1000,
+       "prefix": "会员 ",
+       "suffix": "万+",
+       "font": "label",
+       "size": 54,
+       "x": 330,
+       "y": 210,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "stroke": [
+        31,
+        79,
+        168
+       ],
+       "stroke_w": 10,
+       "at": 0.35,
+       "count_dur": 1.0,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 7,
+       "suffix": "家",
+       "font": "label",
+       "size": 120,
+       "x": 1480,
+       "y": 150,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "stroke": [
+        30,
+        30,
+        30
+       ],
+       "stroke_w": 10,
+       "at": 0.8,
+       "count_dur": 0.6,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "ze04b",
+     "text": "为什么山姆跑在了前面？除了早到23年，它还把会员店搬进了手机——据报道，山姆一半以上的生意，已经来自线上。",
+     "tts": "为什么山姆跑在了前面？除了早到二十三年，它还把会员店搬进了手机——据报道，山姆一半以上的生意，已经来自线上。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/e_online_v2.png"
+      },
+      {
+       "type": "badge",
+       "text": "为什么是山姆？",
+       "x": 960,
+       "y": 80,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        31,
+        79,
+        168
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 50,
+       "prefix": "线上 超过",
+       "suffix": "%",
+       "font": "label",
+       "size": 84,
+       "x": 330,
+       "y": 640,
+       "color": [
+        254,
+        235,
+        58
+       ],
+       "stroke": [
+        30,
+        30,
+        30
+       ],
+       "stroke_w": 10,
+       "at": 0.55,
+       "count_dur": 1.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "据报道",
+       "font": "body",
+       "size": 34,
+       "x": 330,
+       "y": 730,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "at": 0.6,
+       "anim": "fade"
+      }
+     ]
+    },
+    {
+     "id": "ze05",
+     "text": "2025年8月底，盒马X会员店全部关闭。会员店这门生意，并不好做。",
+     "tts": "2025年8月底，盒马叉会员店全部关闭。会员店这门生意，并不好做。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/e_closed.png"
+      },
+      {
+       "type": "badge",
+       "text": "全部关闭",
+       "x": 960,
+       "y": 560,
+       "size": 130,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.35,
+       "anim": "slam",
+       "rot": -6
+      }
+     ]
+    },
+    {
+     "id": "ze06",
+     "text": "2023年有报道称，开市客在中国大陆的续卡率约六成，全球接近九成；据报道，它还计划再开9家店。",
+     "tts": "2023年有报道称，开市客在中国大陆的续卡率约六成，全球接近九成；据报道，它还计划再开九家店。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/3701.png"
+      },
+      {
+       "type": "badge",
+       "text": "据报道 再开9家",
+       "x": 960,
+       "y": 105,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.8,
+       "anim": "slam"
+      },
+      {
+       "type": "bar",
+       "x": 700,
+       "base_y": 770,
+       "w": 220,
+       "h": 288,
+       "color": [
+        200,
+        16,
+        46
+       ],
+       "label": "中国 约60%",
+       "at": 0.15
+      },
+      {
+       "type": "bar",
+       "x": 1220,
+       "base_y": 770,
+       "w": 220,
+       "h": 432,
+       "color": [
+        31,
+        79,
+        168
+       ],
+       "label": "全球 约90%",
+       "at": 0.45
+      },
+      {
+       "type": "text",
+       "text": "续卡率",
+       "font": "label",
+       "size": 72,
+       "x": 960,
+       "y": 215,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 60,
+       "prefix": "约",
+       "suffix": "%",
+       "font": "label",
+       "size": 80,
+       "x": 700,
+       "y": 440,
+       "color": [
+        226,
+        28,
+        52
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 8,
+       "at": 0.15,
+       "count_dur": 0.8,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 90,
+       "prefix": "约",
+       "suffix": "%",
+       "font": "label",
+       "size": 80,
+       "x": 1220,
+       "y": 300,
+       "color": [
+        31,
+        79,
+        168
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 8,
+       "at": 0.45,
+       "count_dur": 0.8,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "ze07",
+     "text": "同一个师父，两个徒弟。在美国，开市客遥遥领先；在中国大陆，早到23年的山姆跑在了前面。",
+     "tts": "同一个师父，两个徒弟。在美国，开市客遥遥领先；在中国大陆，早到二十三年的山姆跑在了前面。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/e_twostores.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/20539.png",
+       "x": 960,
+       "y": 300,
+       "w": 520,
+       "at": 0.0,
+       "anim": "fade"
+      },
+      {
+       "type": "text",
+       "text": "同一个师父 · 两个徒弟",
+       "font": "title",
+       "size": 96,
+       "x": 960,
+       "y": 620,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "stroke": [
+        30,
+        30,
+        30
+       ],
+       "stroke_w": 8,
+       "at": 0.1,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "ze08",
+     "text": "你是山姆派，还是开市客派？评论区说说，你最常买的是哪一样。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/3680.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/3718.png",
+       "x": 620,
+       "y": 600,
+       "w": 520,
+       "at": 0.0,
+       "anim": "slide_right"
+      },
+      {
+       "type": "cover",
+       "x": 663,
+       "y": 272,
+       "r": 70,
+       "color": [
+        31,
+        79,
+        168
+       ],
+       "text": "山姆",
+       "text_color": [
+        255,
+        255,
+        255
+       ],
+       "size": 44,
+       "at": 0.0
+      },
+      {
+       "type": "image",
+       "src": "raster/src/3717.png",
+       "x": 1300,
+       "y": 600,
+       "w": 480,
+       "at": 0.0,
+       "anim": "slide_left"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/3719.png",
+       "x": 1268,
+       "y": 168,
+       "w": 160,
+       "at": 0.0,
+       "anim": "slide_left"
+      },
+      {
+       "type": "badge",
+       "text": "山姆派？",
+       "x": 420,
+       "y": 150,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        31,
+        79,
+        168
+       ],
+       "at": 0.15,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "开市客派？",
+       "x": 1500,
+       "y": 150,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.3,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "评论区见",
+       "x": 960,
+       "y": 930,
+       "size": 64,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.7,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "ze09",
+     "text": "以上就是品牌百科开市客篇。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "raster/src/20493.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/20445.png",
+       "x": 960,
+       "y": 480,
+       "w": 900,
+       "at": 0.0,
+       "anim": "pop"
+      }
+     ]
+    }
+   ]
+  },
+  "cut1": {
+   "cut": true,
+   "replace_master": [
+    131.18,
+    146.35
+   ],
+   "_ids": [
+    "n030",
+    "n030",
+    "n031",
+    "n032"
+   ]
+  },
+  "cut2": {
+   "cut": true,
+   "replace_master": [
+    204.27,
+    221.89
+   ],
+   "_ids": [
+    "n044",
+    "n044",
+    "n045",
+    "n046",
+    "n047"
+   ]
+  },
+  "cut3": {
+   "cut": true,
+   "replace_master": [
+    230.56,
+    246.4
+   ],
+   "_ids": [
+    "n049",
+    "n049",
+    "n050"
+   ]
+  },
+  "cut4": {
+   "cut": true,
+   "replace_master": [
+    260.37,
+    295.26
+   ],
+   "_ids": [
+    "n053",
+    "n053",
+    "n054",
+    "n055",
+    "n056",
+    "n057"
+   ]
+  },
+  "cut5": {
+   "cut": true,
+   "replace_master": [
+    654.699,
+    663.799
+   ],
+   "_ids": [
+    "n122",
+    "n122",
+    "n123"
+   ]
+  },
+  "cut6": {
+   "cut": true,
+   "replace_master": [
+    677.499,
+    687.579
+   ],
+   "_ids": [
+    "n126",
+    "n126"
+   ]
+  }
+ },
+ "sfx": {
+  "_doc": "애니메이션 종류별 효과음(본편 효과음 트랙에서 잘라 냄). 반복 요소는 묶음당 1번",
+  "pop": "assets/sfx/pop.wav",
+  "slam": "assets/sfx/stamp.wav",
+  "slide_right": "assets/sfx/whoosh.wav",
+  "slide_left": "assets/sfx/whoosh.wav",
+  "slide_up": "assets/sfx/whoosh.wav",
+  "bar": "assets/sfx/whoosh.wav"
+ }
+}
