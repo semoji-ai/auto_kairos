@@ -154,5 +154,11 @@
   "text_zh": "10年股价涨约8倍",
   "text_en": "Stock up ~8x in 10 years",
   "why": "주가 10년 10배는 최신 수치와 다름(배당 포함 약 8배, 2026-10 기준)"
+ },
+ "_plate_override": {
+  "zh": {
+   "3572": "/Users/jleavens_macmini/LocalProjects/auto_kairos/semoji_global/episodes/B209/assets/zh/plates/3572_zh.png",
+   "3573": "/Users/jleavens_macmini/LocalProjects/auto_kairos/semoji_global/episodes/B209/assets/zh/plates/3573_zh.png"
+  }
  }
 }

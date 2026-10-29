@@ -208,6 +208,16 @@ def cmd_audio(ep, lang):
         print(n, "audio", round(N / SR, 3), "s, bed(BGM) from", round(a, 2), "-", round(b, 2), "sfx", n_sfx, "peak", round(pk, 3))
 
 
+def carry_cues(old, a0, a1, pos, tol=0.15):
+    """미리보기 SRT 큐 중 [a0, a1) 구간에 남는 것을 이어붙인 시각(pos 기준)으로 옮긴다.
+    경계보다 tol초 안쪽으로 앞서 시작한 큐(영상엔 음성·자막이 그대로 남음)도 경계에서 시작하게 남긴다."""
+    out = []
+    for a, b, t in old:
+        if a >= a0 - tol and a < a1 - 1e-3 and b > a0:
+            out.append((pos + max(a, a0) - a0, pos + min(b, a1) - a0, t))
+    return out
+
+
 def splice_segments(plan, T, total):
     """조각 목록: ("prev", a, b) 또는 ("ins", name). cut 항목(빈 삽입)은 그 구간을 빼기만 함."""
     segs, cur = [], 0.0
@@ -254,9 +264,7 @@ def cmd_splice(ep, lang):
     new, pos = [], 0.0
     for s in segs:
         if s[0] == "prev":
-            for a, b, t in old:
-                if a >= s[1] - 1e-3 and a < s[2] - 1e-3:
-                    new.append((pos + a - s[1], pos + min(b, s[2]) - s[1], t))
+            new += carry_cues(old, s[1], s[2], pos)
             pos += s[2] - s[1]
         else:
             for c in plan[s[1]]["cues"]:
