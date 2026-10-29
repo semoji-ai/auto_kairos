@@ -73,7 +73,7 @@ def build_image_prompt(image_prompt: str, style_desc: str, rel_out: str,
         f"{style_desc}\n\n## 장면\n{image_prompt}\n\n{explainer}\n\n## 생성 지시\n"
         f"image_gen 도구로 위 아트스타일을 적용한 이미지 1장을 생성해 현재 폴더의 {rel_out} 로 저장.\n"
         f"비율을 텍스트로 새로 지정하지 말 것(비율은 첨부 이미지가 정함). "
-        f"텍스트 없음. 저장되면 'OK'만 답해."
+        f"글자는 장면이 정한 간판·현판·중요한 문서에만 또렷하게 넣고, 실제 브랜드 로고는 첨부한 공식 로고 그대로 그린다. 그 밖의 면은 빈 색면. 저장되면 'OK'만 답해."
     )
 
 

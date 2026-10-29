@@ -16,4 +16,6 @@ BACKGROUND: Single solid muted color (sage green, off-white, dusty rose, cream) 
 
 PALETTE: Muted warm — dusty pastels, sage green, off-white, dusty blue, soft beige.
 
-EXPLICITLY NOT: Disney/Pixar, painterly, comic-book outlines, 3D, photorealistic, film grain, noise, texture, halftone, grunge. NO text, NO captions, NO logos.
+EXPLICITLY NOT: Disney/Pixar, painterly, comic-book outlines, 3D, photorealistic, film grain, noise, texture, halftone, grunge.
+
+TEXT: Text appears only where the scene names it: signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering, and real brand logos are reproduced from the attached official logo image; every other surface stays smooth plain color.

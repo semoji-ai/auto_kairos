@@ -35,7 +35,9 @@ BACKGROUND: Single solid muted color (sage green, off-white, dusty rose, cream) 
 
 PALETTE: Muted warm — dusty pastels, sage green, off-white, dusty blue, soft beige.
 
-EXPLICITLY NOT: Disney/Pixar, painterly, comic-book outlines, 3D, photorealistic, film grain, noise, texture, halftone, grunge. NO text, NO captions, NO logos.
+EXPLICITLY NOT: Disney/Pixar, painterly, comic-book outlines, 3D, photorealistic, film grain, noise, texture, halftone, grunge.
+
+TEXT: Text appears only where the scene names it: signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering, and real brand logos are reproduced from the attached official logo image; every other surface stays smooth plain color.
 ```
 
 > 이 스타일 블록의 NO~ 조항은 세모지 경로(이미지 첨부 리스타일)에서 검증된 원문 그대로 유지한다.
