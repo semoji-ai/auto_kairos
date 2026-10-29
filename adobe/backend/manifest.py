@@ -108,6 +108,27 @@ def fit_transform(sw, sh, comp_w: int = W, comp_h: int = H):
     return (f, (comp_w - sw * f) / 2)
 
 
+def _corner_rgb(path):
+    """그림 왼쪽 위 모서리 색 — 줄여 올린 도해 둘레를 같은 바탕색으로 채운다."""
+    try:
+        from PIL import Image
+        with Image.open(path) as im:
+            r, g, b = im.convert("RGB").getpixel((4, 4))
+        return [r, g, b]
+    except Exception:
+        return None
+
+
+def _still_fit(s, layers, pos, scale):
+    """레이어 없는 그림(도해)에 safeFit 이 있으면 그림 전체를 화면 위쪽 가운데(960, 70) 기준으로 줄여 올린다
+    — 맨 아래 정보가 말자막바에 덮이지 않게(10/3 점검: 7편 992, 4편 1023)."""
+    k = s.get("safeFit")
+    if k and not any(e.get("kind") == "element" for e in (layers or [])):
+        k = float(k); ax, ay = W / 2.0, 70.0
+        return {"position": [ax + (pos[0] - ax) * k, ay + (pos[1] - ay) * k], "scale": scale * k}
+    return {"position": pos, "scale": scale}
+
+
 def camera_keys(cam, *, sw, sh, f: float, ox: float, dur: float,
                 comp_w: int = W, comp_h: int = H) -> list:
     """카메라를 가이드 널 키프레임 [{t, scale, position, ease?}]로 굽는다.
@@ -421,6 +442,27 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
             proj_dir, s.get("_layers") or [], sid, sw,
             prefix=prefix, f=f, ox=ox, scene_height=sh,
             vector=want("vector")) if want("layers") else []
+        # 자막 피하기(safeFit) — 도해처럼 화면 아래까지 정보가 있는 씬은 말자막바(y≈906~984)에
+        # 덮인다. 배경판은 그대로 두고 요소 레이어만 화면 위쪽 가운데(960, 70)를 기준으로
+        # 줄여 올린다. 0.82 면 화면 맨 아래(1080)가 약 900 에서 끝난다.
+        safe = s.get("safeFit")
+        # 도해는 정보가 화면 맨 아래까지 있다 — 요소 발밑이 말자막바(y≈906)에 닿으면 자동으로 줄여 올린다(10/3 전 편 점검)
+        if not safe and layers and s.get("visual_kind") == "infographic":
+            feet = [e["foot"][1] for e in layers if e.get("kind") == "element" and e.get("foot")]
+            if feet and max(feet) > 890:
+                safe = round(max(0.7, (880.0 - 70.0) / (max(feet) - 70.0)), 3)
+        if safe and layers:
+            k = float(safe)
+            ax, ay = W / 2.0, 70.0
+            for entry in layers:
+                if entry.get("kind") != "element":
+                    continue
+                px, py = entry["position"][:2]
+                entry["position"] = [ax + (px - ax) * k, ay + (py - ay) * k]
+                entry["scale"] = entry["scale"] * k
+                if entry.get("foot"):
+                    fx, fy = entry["foot"][:2]
+                    entry["foot"] = [ax + (fx - ax) * k, ay + (fy - ay) * k]
         # 레이어 종류(캐릭터/사물) — 옛 모션 사이드카·기본 bob 규칙 둘 다 이걸 쓴다.
         kinds = {}
         kp = proj_dir / "layers" / f"{sid}__kinds.json"
@@ -461,7 +503,21 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
             cam = s["camera"]
         if is_map and cam is None:
             cam = {"type": "slow_zoom_in", "amount": 6}   # 지도 씬 기본 — 천천히 푸시인
+        # 도해는 카메라를 밀지 않는다 — 줌하면 라벨이 화면 밖·자막바 뒤로 나간다(10/3 전 편 점검)
+        if s.get("visual_kind") == "infographic" and not is_map:
+            cam = None
+        if isinstance(cam, list) and sw and sh:      # 저장된 화각 키도 지금 최대 배율로 다시 조인다
+            from backend import camera_plan as _cp
+            cam = [dict(k, rect=_cp._limit_zoom(k["rect"], sw, sh)) if k.get("rect") else k for k in cam]
         cam = camera_keys(cam, sw=sw, sh=sh, f=f, ox=ox, dur=dur) or None
+        # 그림이 16:9 보다 좁으면(1659x948 등) 좌우에 띠가 남는다 — 카메라 배율을 화면을 채우는 값 아래로 두지 않는다
+        fill = (max(1.0, W / (sw * f), H / (sh * f)) if sw and sh and f and 1.6 <= sw / sh <= 1.95 else 1.0)  # 실물 사진·세로 그림은 띠를 둔 채 둔다
+        if fill > 1.001:
+            if cam:
+                for k in cam:
+                    k["scale"] = round(max(k["scale"], fill * 100), 3)
+            else:
+                cam = [{"t": 0.0, "scale": round(fill * 100, 3), "position": [W / 2, H / 2]}]
         # 차트 명세서 사이드카(chart_{sid}.spec.json) — chartagent 패턴/모티프 토큰을 jsx bar에 전달
         chart_spec = None
         csp = proj_dir / f"chart_{sid}.spec.json"
@@ -521,9 +577,11 @@ def build_manifest(proj_dir: Path, only_scene: int | None = None,
             # fit — jsx는 읽지 않는다(레이어 좌표는 이미 컴프 공간으로 구워서 낸다).
             # 테스트·디버깅에서 fit_transform 계산값을 매니페스트만 보고 검증하려고 남긴다.
             "fit": {"f": f, "ox": ox, "w": sw, "h": sh},
-            "bgFill": (sw * f) < (W - 1),
-            **({"imageFit": {"position": [sw * f / 2 + ox, sh * f / 2],
-                             "scale": sw * f / float((_img_size(proj_dir / s["_image"]) or (sw, sh))[0] or sw) * 100}}
+            "bgFill": (sw * f) < (W - 1) or bool(s.get("safeFit") and not any(e.get("kind") == "element" for e in layers)),
+            **({"fillRgb": _corner_rgb(proj_dir / s["_image"])}
+               if (s.get("safeFit") and s.get("_image") and not any(e.get("kind") == "element" for e in layers)) else {}),
+            **({"imageFit": _still_fit(s, layers, [sw * f / 2 + ox, sh * f / 2],
+                             sw * f / float((_img_size(proj_dir / s["_image"]) or (sw, sh))[0] or sw) * 100)}
                if (want("image") and s.get("_image")) else {}),
             "layout": layout,
             **({"infoTexts": info_texts} if info_texts else {}),

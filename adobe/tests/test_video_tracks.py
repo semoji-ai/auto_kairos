@@ -50,6 +50,28 @@ def test_no_file_resolves_empty_and_manifest_unchanged(tmp_path):
     assert "videoClips" not in mf and "videoClipErrors" not in mf
 
 
+def test_inline_preview_keeps_legacy_reference(tmp_path):
+    d = _proj(tmp_path)
+    (d / "video_tracks.json").write_text(json.dumps(_tracks()), encoding="utf-8")
+    data = {"scenes": [{"sceneNumber": 2, "videoRef": "video/old.mp4"}]}
+    video_tracks.enrich_previews(d, data)
+    assert data["scenes"][0]["videoRef"] == "video/old.mp4"
+    assert data["scenes"][0]["_track_previews"][0]["sourceIn"] == 4
+    assert data["scenes"][0]["_track_previews"][0]["sourceOut"] == 8
+
+
+def test_inline_preview_rejects_adobe_order_drift(tmp_path):
+    d = _proj(tmp_path)
+    specs = json.loads((d / "scenes.json").read_text())
+    specs["scenes"].reverse()
+    (d / "scene_specs.json").write_text(json.dumps(specs))
+    (d / "video_tracks.json").write_text(json.dumps(_tracks()))
+    data = {"scenes": [{"sceneNumber": 2}]}
+    video_tracks.enrich_previews(d, data)
+    assert data["videoTrackErrors"]
+    assert not data["scenes"][0]["_track_previews"]
+
+
 def test_resolve_places_at_first_scene_in_point(tmp_path):
     d = _proj(tmp_path)
     (d / "video_tracks.json").write_text(json.dumps(_tracks()), encoding="utf-8")

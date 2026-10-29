@@ -87,6 +87,10 @@ def _load(images_dir: Path) -> dict:
         for s in result["scenes"]:
             for img in s.get("images", []):
                 registered.add(img.get("file", ""))
+            # 내용이 같아 후보에서 뺀 파일(scripts/dedupe_image_assets.py)은 다시 끌어오지 않는다.
+            # 이걸 빼먹어서 정리한 중복이 목록을 열 때마다 되살아났다(9/30).
+            for d in (s.get("duplicates") or []) + (s.get("shared_candidates") or []):
+                registered.add(d.get("file", ""))
 
         scan_dirs = [(images_dir, "")]
         for sub in ("generated", "search"):
@@ -204,6 +208,13 @@ def has_search_version(images_dir: Path, scene_num: int, scene_id: Optional[str]
     return any(img.get("type") == "search" for img in s.get("images", []))
 
 
+def _now() -> str:
+    """선택 시각. 다시 그리기 표시(needs_image_at)보다 뒤면 그 표시는 해결된 것이다
+    — `auto_agent/utils/redraw_flag.py` 가 이 값을 읽는다."""
+    from datetime import datetime
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
 def add_version(images_dir: Path, scene_num: int, file_name: str,
                 version_type: str, auto_select: bool = True,
                 scene_id: Optional[str] = None, **meta) -> dict:
@@ -222,6 +233,7 @@ def add_version(images_dir: Path, scene_num: int, file_name: str,
                 if auto_select:
                     for img in scene["images"]:
                         img["selected"] = img["file"] == file_name
+                    existing["selected_at"] = _now()
                     _save(images_dir, data)
                 return existing
 
@@ -232,6 +244,7 @@ def add_version(images_dir: Path, scene_num: int, file_name: str,
             for img in scene["images"]:
                 img["selected"] = False
             img_entry["selected"] = True
+            img_entry["selected_at"] = _now()
 
         scene["images"].append(img_entry)
         _save(images_dir, data)
@@ -248,6 +261,8 @@ def select_version(images_dir: Path, scene_num: int, file_name: str) -> bool:
         found = False
         for img in scene["images"]:
             if img["file"] == file_name:
+                if not img.get("selected"):
+                    img["selected_at"] = _now()
                 img["selected"] = True
                 found = True
             else:

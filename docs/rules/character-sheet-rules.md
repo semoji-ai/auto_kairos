@@ -344,7 +344,8 @@ codex image_gen 특성으로 보인다. 안경알을 채우면 렌즈 안쪽은 
 
 검수 프롬프트에 그림체를 **말로 설명하면 매번 재해석된다.** 시트를 만들 때
 세 번 실패한 그 방식이다. 기준 시트 이미지를 첨부하니 지적이 구체적으로 바뀌었다
-(「안개·빛 번짐」처럼). `scripts/review_images_gemini.py`가 그렇게 한다.
+(「안개·빛 번짐」처럼). 현재는 GPT가 직접 확인하거나 `scripts/review_images_gpt.py`를 쓴다.
+검수는 `image-review-rules.md`의 GPT 단일 경로를 따른다. 과거 Gemini·Codex 실적은 이력이다.
 
 ### 첨부 조합에 따라 지시를 나눈다 — 그리고 대신 그릴 것을 준다
 

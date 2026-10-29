@@ -21,6 +21,11 @@
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _P
+_sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
+from auto_agent.utils import redraw_flag  # noqa: E402  표시는 시각·이유와 함께 켠다
+
 import argparse
 import json
 import os
@@ -247,7 +252,7 @@ def main() -> int:
         if pick:
             by_n[n].pop("needs_image", None)
         else:
-            by_n[n]["needs_image"] = True
+            redraw_flag.mark(by_n[n], "rematch: 맞는 기존 그림 없음", "rematch_images")
 
     db["scenes"] = [ent[k] for k in sorted(ent)]
     img_f.write_text(json.dumps(db, ensure_ascii=False, indent=2), encoding="utf-8")

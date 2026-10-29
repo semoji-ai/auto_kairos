@@ -329,6 +329,11 @@ function loadSheet() {
               + msg.join(" · ") + '</div>' + tools;
       }
       var tb = $("sheet-tools");
+      tools += '<div role="group" aria-label="전체 씬 미리보기">전체 씬 미리보기 '
+        + ['image', 'video', 'layers'].map(function (m, i) {
+          return '<button type="button" data-all-preview="' + m + '" aria-pressed="'
+            + (GLOBAL_PREVIEW_MODE === m) + '">' + ['🖼 이미지', '🎞 영상', '🧩 레이어'][i] + '</button>';
+        }).join('') + '<small> 영상 없는 씬은 이미지 유지</small></div>';
       if (tb) tb.innerHTML = tools;
 
       var head = '<div class="sheet-head">'
@@ -524,7 +529,37 @@ function _lyrHead(s) {
 
 /* 씬마다 미리보기를 무엇으로 볼지 — "image" | "layers" | "video".
    행을 다시 그려도 보던 것이 유지되게 밖에 둔다. */
-var PV_MODE = {};
+var GLOBAL_PREVIEW_MODE = "image";
+var previewObserver = new IntersectionObserver(function (entries) {
+  entries.forEach(function (entry) {
+    if (entry.isIntersecting && GLOBAL_PREVIEW_MODE === "video") window.initTrackPreviews(entry.target);
+  });
+}, {rootMargin: "150px"});
+function applyGlobalPreview(scope) {
+  var rows = scope.classList && scope.classList.contains("sheet-row")
+    ? [scope] : scope.querySelectorAll(".sheet-row");
+  Array.prototype.forEach.call(rows, function (row) {
+    var mode = GLOBAL_PREVIEW_MODE;
+    if (!row.querySelector('.img-wrap [data-pv-pane="' + mode + '"]')) mode = "image";
+    row.querySelectorAll("[data-pv-pane]").forEach(function (pane) {
+      pane.style.display = pane.getAttribute("data-pv-pane") === mode ? "" : "none";
+    });
+    previewObserver.unobserve(row);
+    if (mode === "video") previewObserver.observe(row);
+    else row.querySelectorAll("video").forEach(function (v) { v.pause(); });
+  });
+}
+document.addEventListener("click", function (event) {
+  var button = event.target.closest("[data-all-preview]");
+  if (!button) return;
+  GLOBAL_PREVIEW_MODE = button.getAttribute("data-all-preview");
+  document.querySelectorAll("[data-all-preview]").forEach(function (b) {
+    var selected = b === button;
+    b.setAttribute("aria-pressed", String(selected));
+    b.style.background = selected ? "#3a6df0" : "";
+  });
+  applyGlobalPreview($("sheet"));
+});
 /* 씬별 못 뗀 요소 — ➕ 버튼이 그대로 다시 보낸다 */
 var _layerMissing = {};
 
@@ -543,28 +578,42 @@ function _pvSwitch(n, mode, hasLayers, hasVideo) {
 
 function renderRow(s, dir) {
   var n = s.sceneNumber;
+  var tracks = s._track_previews || [];
+  var hasVideo = tracks.length > 0 || !!s.videoRef;
   // 레이어가 있으면 합성 미리보기(눈 토글이 즉시 보인다), 없으면 기존 컴프 미리보기.
   var comp = renderComposite(s, dir);
   var hasLayers = (s._layers || []).length > 0;
   /* 미리보기는 **한 자리에서 갈아 낀다** — 이미지 / 레이어 / 영상.
      따로따로 두면 같은 씬 그림이 여러 번 나와 자리만 잡아먹는다.
      레이어가 있으면 레이어가 기본이다(전에도 그랬다). */
-  var mode = PV_MODE[n] || (comp ? "layers" : "image");
+  var mode = GLOBAL_PREVIEW_MODE;
   if (mode === "layers" && !comp) mode = "image";
-  if (mode === "video" && !s.videoRef) mode = comp ? "layers" : "image";
-  PV_MODE[n] = mode;
-  var media = mode === "video"
-    ? ('<video class="vid-el" controls preload="metadata" src="file://'
-       + dir + '/' + s.videoRef + '"></video>')
-    : (mode === "layers" ? comp : _previewHTML(s, dir));
+  if (mode === "video" && !hasVideo) mode = comp ? "layers" : "image";
+  var videoMedia = s.videoRef ? '<video class="vid-el" controls preload="none" src="file://'
+       + dir + '/' + s.videoRef + '"></video>' : '';
+  if (tracks.length) {
+    videoMedia = '<div class="track-preview"><select aria-label="통합 영상 구간">'
+      + tracks.map(function (t) {
+        var url = encodeURI("file://" + dir + "/" + t.sourcePath).replace(/#/g, "%23").replace(/\?/g, "%3F");
+        return '<option value="' + _esc(url) + '" data-in="' + t.sourceIn
+          + '" data-out="' + t.sourceOut + '">' + _esc(t.clipId)
+          + (t.previewOnly ? ' · 검토용·미적용' : ' · 적용 중')
+          + ' · 씬 내 ' + t.sceneOffset.toFixed(2) + '–'
+          + (t.sceneOffset + t.sourceOut - t.sourceIn).toFixed(2) + '초</option>';
+      }).join("") + '</select><video class="vid-el" controls muted preload="none"></video>'
+      + '<small>해당 씬 구간만 재생 · 나머지는 기존 씬 화면</small></div>';
+  }
+  var media = '<div data-pv-pane="image">' + _previewHTML(s, dir) + '</div>'
+    + (comp ? '<div data-pv-pane="layers">' + comp + '</div>' : '')
+    + (videoMedia ? '<div data-pv-pane="video">' + videoMedia + '</div>' : '');
   /* 레이어 목록은 **레이어 보기일 때만** 낸다. 늘 깔아 두면 이미지만 보고
      싶을 때도 파일 이름이 줄줄이 붙어 행이 어수선하다.
      자리는 **스크립트 칸 아래**다 — 좁은 이미지 칸에 넣었더니 목록이
      칸 너비에 눌려 행이 통째로 늘어났다(112씬이 그랬다). */
   if (mode === "layers" && hasLayers && LYR_OPEN[n] === undefined) LYR_OPEN[n] = true;
-  var layerBlock = (mode === "layers" && hasLayers)
-    ? (_lyrHead(s) + (LYR_OPEN[n] ? renderLayerList(s, dir)
-                                  : '<div class="lyr-strip">' + _lyrStrip(s, dir) + '</div>'))
+  var layerBlock = hasLayers
+    ? ('<div data-pv-pane="layers">' + _lyrHead(s) + (LYR_OPEN[n] ? renderLayerList(s, dir)
+                                  : '<div class="lyr-strip">' + _lyrStrip(s, dir) + '</div>') + '</div>')
     : "";
   var chars = (s.characters || []).join(", ");
   var st = s._status || {};
@@ -583,7 +632,6 @@ function renderRow(s, dir) {
     +      (s._image ? '<button class="fav-add" data-rel="' + _esc(s._image) + '" title="즐겨찾기에 담습니다">☆</button>' : '')
     /* 볼 수 있는 것만 단추로 낸다 — 레이어가 없는 씬에 「레이어」가 있으면
        눌러도 아무 일이 안 일어나 고장으로 보인다. */
-    +      _pvSwitch(n, mode, !!comp, !!s.videoRef)
     + '    <div class="img-wrap">' + media + '</div>'
     /* 후보 판본 — 씬마다 여러 판을 쌓아 두고 하나를 고르는 구조인데
        패널에는 고른 것만 보였다. 눌러서 바로 되돌릴 수 있게 띠로 깐다. */
@@ -727,19 +775,7 @@ function bindRows(scope) {
 
   /* 미리보기 전환 — 이미지 / 레이어 / 영상. 행을 통째로 다시 그린다:
      레이어 보기는 목록까지 함께 펴야 하고, 영상은 재생을 멈춰야 한다. */
-  var pvs = scope.querySelectorAll("button.pvs");
-  for (var pv = 0; pv < pvs.length; pv++) {
-    pvs[pv].addEventListener("click", function (ev) {
-      ev.stopPropagation();                    // 확대 보기가 같이 뜨지 않게
-      var n = this.getAttribute("data-scene");
-      if (PV_MODE[n] === this.getAttribute("data-mode")) return;
-      var row = this.closest(".sheet-row");
-      var vid = row && row.querySelector("video.vid-el");
-      if (vid) vid.pause();                    // 떠나면서 소리를 남기지 않는다
-      PV_MODE[n] = this.getAttribute("data-mode");
-      refreshRow(n);
-    });
-  }
+  applyGlobalPreview(scope);
 
   // ➕ 빠진 N개 — 남은 배경판에서 다시 뗀다. 기존 레이어는 건드리지 않는다.
   var more = scope.querySelectorAll("button.lyr-more");

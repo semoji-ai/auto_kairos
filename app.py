@@ -857,6 +857,14 @@ def _load_tab_data(pm, project: dict, tab: str) -> dict:
     dir_name = Path(out_dir).name if out_dir else slug
     context = {"project": project, "tab": tab, "slug": slug, "dir_name": dir_name}
 
+    # 사이드바·개요의 씬 수는 DB `scene_count` 인데, 그 값은 runner 가 step_2 를
+    # 시작할 때 한 번만 쓴다. 그 뒤 스크립트로 씬을 다시 나누면 DB 는 그대로라
+    # LG 1편이 실제 121씬인데 68로 떴다. 정본 scene_specs.json 에서 센다.
+    # DB 에는 쓰지 않는다 — 쓰면 updated_at 트리거가 돌아 목록 순서가 바뀐다.
+    _live_scenes = (load_project_json(out_dir, "scene_specs.json") or {}).get("scenes")
+    if isinstance(_live_scenes, list) and _live_scenes:
+        context["project"] = {**project, "scene_count": len(_live_scenes)}
+
     def _load_json(filename):
         return load_project_json(out_dir, filename)
 

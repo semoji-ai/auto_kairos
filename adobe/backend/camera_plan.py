@@ -22,6 +22,7 @@ MOVE = 1.8                # 한 동작의 길이(실측 10.45→12.25)
 MIN_HOLD = 0.6            # 동작 사이 최소 정지
 END_HOLD = 0.4            # 씬 끝 정지
 TIGHT = 0.6               # 전신이 화면 세로에서 차지하는 비율
+MAX_ZOOM = 1.15           # 전체 화각 대비 최대 확대 — 1.25 도 얼굴·인물이 잘렸다(10/2 사용자, 10/3 전 편 점검)
 MAX_MOVES = 2
 
 
@@ -100,6 +101,20 @@ def first_mention(chars: list, starts: list, name: str):
         return None
 
 
+def _limit_zoom(rect, sw: float, sh: float, max_zoom: float = MAX_ZOOM) -> list:
+    """화각을 전체 화각의 1/max_zoom 보다 작게 좁히지 않는다 — 중심은 대상에 둔 채 넓히고 캔버스 안으로 조인다."""
+    base = full_rect(sw, sh)
+    min_w = base[2] / max_zoom
+    x, y, w, h = rect
+    if w >= min_w:
+        return rect
+    cx, cy = x + w / 2, y + h / 2
+    w, h = min_w, min_w / AR
+    x = min(max(cx - w / 2, 0.0), max(sw - w, 0.0))
+    y = min(max(cy - h / 2, 0.0), max(sh - h, 0.0))
+    return [round(x, 2), round(y, 2), round(w, 2), round(h, 2)]
+
+
 def plan_scene_camera(proj_dir: Path, s: dict, *, duration: float | None = None) -> list:
     """씬의 화각 키 [{t, rect, ease?}]. 만들 수 없으면 [] — 정지 화면 유지.
 
@@ -137,6 +152,7 @@ def plan_scene_camera(proj_dir: Path, s: dict, *, duration: float | None = None)
         rect = rect_for_bbox(sp["bbox"], sw, sh)
         if not rect:
             continue
+        rect = _limit_zoom(rect, sw, sh)
         is_char = sp.get("kind") == "character" or "_char" in str(sp.get("layer") or "")
         cues.append({"t": t_cue, "rect": rect, "char": is_char})
     if not cues:

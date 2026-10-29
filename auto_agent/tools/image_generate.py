@@ -61,15 +61,11 @@ ENDPOINT_CHARACTER = "fal-ai/nano-banana-2/edit"
 
 PROJECT_ROOT = get_workspace_dir()  # 하위 호환
 
-NO_TEXT_RULES = (
-    "**CRITICAL: NO TEXT IN IMAGE**\n"
-    "- ZERO text: NO Korean, NO English, NO Chinese, NO Japanese, NO alphabet\n"
-    "- ZERO captions, subtitles, titles, labels, signs, banners, text overlays\n"
-    "- ZERO speech bubbles, dialogue boxes, thought bubbles\n"
-    "- ZERO watermarks, signatures, logos with text, credits\n"
-    "- ZERO random numbers or percentages\n"
-    "- ZERO book covers, documents, screens, newspapers with text\n"
-    "- All surfaces must be blank or contain abstract patterns only\n\n"
+NO_TEXT_RULES = (   # 이름은 하위 호환으로 유지 — 내용은 "필요한 글자만" 규칙(2026-10-29 사용자 지시: 전면 글자 금지 삭제)
+    "**TEXT IN IMAGE — only where it matters**\n"
+    "- Signboards, plaques and key documents named in the scene carry exactly the specified words in crisp, clearly legible lettering\n"
+    "- Every other surface (passing street signs, book covers, boxes, posters) stays smooth plain color\n"
+    "- Captions, subtitles and dialogue are added later in video editing\n\n"
 )
 
 ANATOMY_RULES = (
@@ -360,7 +356,7 @@ def generate_character(
       3. critical_requirements
       4. 스타일 복사 지시 (눈, 선, 비율 = 반드시 따를 것)
       5. 캐릭터 묘사
-      6. NO TEXT (간결하게, 끝에)
+      6. 글자 규칙: 장면이 정한 간판·중요 문서만 (간결하게, 끝에)
     """
     art_style = _load_art_style(style_path)
     style_json_str = _get_style_json_str(art_style)
@@ -410,7 +406,7 @@ def generate_character(
     parts.append(f"Character: {prompt}\n\n")
 
     parts.append(
-        "No text, letters, numbers, captions, watermarks, or speech bubbles in the image."
+        "Text appears only where the scene names it: signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering; every other surface stays smooth plain color."
     )
 
     full_prompt = "".join(parts)
@@ -470,7 +466,7 @@ def _build_character_fal_input(
             "Do NOT copy the appearance of the character in the reference image.\n\n"
         )
     parts.append(f"Character: {prompt}\n\n")
-    parts.append("No text, letters, numbers, captions, watermarks, or speech bubbles in the image.")
+    parts.append("Text appears only where the scene names it: signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering; every other surface stays smooth plain color.")
 
     full_prompt = "".join(parts)
     endpoint = ENDPOINT_CHARACTER if image_urls else ENDPOINT_GENERATE
@@ -611,21 +607,20 @@ def generate_scene(
     if has_character_refs:
         parts.append(
             f"aspect ratio {aspect_ratio}\n"
-            "No text or speech bubbles.\n"
+            "Text appears only where the scene names it: signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering; every other surface stays smooth plain color.\n"
             "Draw characters with consistent proportions.\n"
             "Match the overall drawing style to the character reference images."
         )
     else:
         parts.append(
             f"aspect ratio {aspect_ratio}\n"
-            "No text or speech bubbles.\n"
+            "Text appears only where the scene names it: signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering; every other surface stays smooth plain color.\n"
             "Draw characters with consistent proportions.\n"
             "Match the overall drawing style to the attached reference image."
         )
 
     parts.append(
-        "IMPORTANT: Do NOT include any text, letters, numbers, words, captions, watermarks, "
-        "signatures, or any written characters in the image. The image must be completely text-free."
+        "Text appears only where the scene names it: signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering; every other surface stays smooth plain color."
     )
 
     full_prompt = "\n\n".join(parts)
@@ -969,9 +964,7 @@ def generate_viz_background(
 
     parts.append(
         f"aspect ratio {aspect_ratio}\n"
-        "IMPORTANT: Do NOT include any text, letters, numbers, words, captions, "
-        "watermarks, signatures, or any written characters in the image. "
-        "The image must be completely text-free."
+        "Text appears only where the scene names it: signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering; every other surface stays smooth plain color."
     )
 
     full_prompt = "\n\n".join(parts)

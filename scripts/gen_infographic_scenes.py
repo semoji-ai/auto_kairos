@@ -260,10 +260,20 @@ def main() -> int:
             "생성 후 $CODEX_HOME/generated_images/ 의 최신 PNG를 아래로 복사하세요:\n"
             f"{out}"
         )
-        subprocess.run(["codex", "exec", "--skip-git-repo-check",
-                        "--sandbox", "workspace-write", prompt],
-                       stdin=subprocess.DEVNULL, capture_output=True, text=True,
-                       timeout=int(os.environ.get("GEN_TIMEOUT", "2400")))
+        r = subprocess.run(["codex", "exec", "--json", "--skip-git-repo-check",
+                            "--sandbox", "workspace-write", prompt],
+                           stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                           timeout=int(os.environ.get("GEN_TIMEOUT", "2400")))
+        # 병렬이면 「최신 PNG」가 다른 씬 것일 수 있다 — 이 세션 폴더의 그림으로 덮어쓴다
+        import re as _re
+        tid = next((m.group(1) for m in _re.finditer(r'"thread_id"\s*:\s*"([^"]+)"', r.stdout or "")), None)
+        if tid:
+            gdir = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))) / "generated_images" / tid
+            own = sorted(gdir.glob("*.png"), key=lambda p: p.stat().st_mtime) if gdir.exists() else []
+            if own:
+                shutil.copy2(own[-1], out)
+            elif out.exists():
+                out.replace(out.with_suffix(".foreign_rejected.png"))
         return n, out.exists()
 
     drawn = []

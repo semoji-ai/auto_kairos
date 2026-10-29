@@ -38,6 +38,21 @@ from auto_agent.ui import (
 )
 
 
+def _is_disabled_art_style(value) -> bool:
+    """styles/<name>.json 에 enabled: false 가 있으면 True (선택 목록에서 숨긴 스타일)."""
+    if not isinstance(value, str) or not value:
+        return False
+    import json as _json
+    from pathlib import Path as _Path
+    from auto_agent.paths import get_data_dir
+    name = _Path(value).stem  # "semoji_3D" / "artstyle/styles/semoji_3D.json" 둘 다 허용
+    path = get_data_dir() / "artstyle" / "styles" / f"{name}.json"
+    try:
+        return _json.loads(path.read_text(encoding="utf-8")).get("enabled", True) is False
+    except (OSError, ValueError):
+        return False
+
+
 def _get_pm():
     """로컬 SQLite ProjectManager 반환."""
     from auto_agent.db.project_manager import ProjectManager
@@ -213,6 +228,10 @@ def cmd_config(args):
                 console.print("  [dim]사용 가능한 프리셋: auto-agent voice list[/dim]")
                 return
 
+        if key == "art_style" and _is_disabled_art_style(value):
+            print_error(f"아트스타일 '{value}' 은(는) 비활성화되어 있습니다 (styles/*.json 의 enabled: false).")
+            return
+
         pm.update_config(project["id"], **{key: value})
         print_success(f"{key} = {value}  (프로젝트: {project['name']})")
 
@@ -233,6 +252,9 @@ def cmd_config(args):
         except json.JSONDecodeError as e:
             print_error(f"잘못된 JSON: {e}")
             sys.exit(1)
+        if _is_disabled_art_style(config.get("art_style")):
+            print_error(f"아트스타일 '{config.get('art_style')}' 은(는) 비활성화되어 있습니다 (styles/*.json 의 enabled: false).")
+            return
         pm.set_config(project["id"], config)
         print_success(f"Config 교체 완료: {project['name']}")
         console.print(config_panel(config, project["name"]))

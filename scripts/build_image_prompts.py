@@ -220,7 +220,7 @@ def main() -> int:
     jobs = []
     for s in scenes:
         ia = s.get("imageAsset") or {}
-        if ia.get("source") != "generate":
+        if ia.get("source") not in ("generate", "reuse"):
             continue
         n = s.get("sceneNumber")
         prompt = build(s)

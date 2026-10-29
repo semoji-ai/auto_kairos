@@ -63,7 +63,8 @@ CAMERA_GUIDE = (
 # 레이어 종류별 허용 프리셋 — 인물은 오퍼시티 키프레임 금지 규칙 때문에 fade류가 없다.
 # 배경은 목록 자체가 없다(카메라가 담당).
 ALLOWED_BY_KIND = {
-    "character": {"bob", "zoom_emphasis"},
+    # 인물 강조는 카메라가 한다 — 인물 레이어를 키우면 앞의 책상·소품을 뚫고 커진다(10/2 사용자).
+    "character": {"bob"},
     "object": {"slide_in", "fade_in", "pop", "drift", "shake",
                "zoom_emphasis", "exit_fade", "stamp", "wiggle"},
 }
@@ -96,6 +97,37 @@ def filter_plan_moves(plan: dict, kinds: dict) -> dict:
     plan["layers"] = filtered
     return plan
 
+# 크기·자리가 바뀌는 프리셋. 앞에 다른 레이어가 겹친 요소에 걸면 그 레이어를 뚫고 나온다.
+_EXTENT_MOVES = {"zoom_emphasis", "pop", "shake", "drift", "wiggle", "slide_in", "stamp"}
+
+
+def drop_occluded_moves(plan: dict, specs: dict, min_frac: float = 0.03) -> dict:
+    """앞(z 가 더 작은 쪽 — 전경이 1)에 겹친 레이어가 있으면 크기·자리 프리셋을 뺀다.
+
+    10/2 사용자 지적: 책상 뒤 인물에 zoom_emphasis 를 걸어 인물이 책상 위로 뚫고 커졌다 줄었다.
+    겹침은 bbox 교집합이 자기 bbox 의 min_frac 이상일 때로 본다."""
+    def area(b):
+        return max(0, b[2] - b[0]) * max(0, b[3] - b[1])
+    out = []
+    for L in plan.get("layers", []):
+        me = specs.get(L.get("layer")) or {}
+        b, z = me.get("bbox"), me.get("z")
+        blocked = False
+        if b and z is not None and area(b):
+            for o in specs.values():
+                ob, oz = o.get("bbox"), o.get("z")
+                if o is me or not ob or oz is None or oz >= z or o.get("removed"):
+                    continue
+                ix = [max(b[0], ob[0]), max(b[1], ob[1]), min(b[2], ob[2]), min(b[3], ob[3])]
+                if area(ix) >= min_frac * area(b):
+                    blocked = True
+                    break
+        mvs = [m for m in L.get("moves", []) if not (blocked and m.get("type") in _EXTENT_MOVES)]
+        if mvs:
+            out.append(dict(L, moves=mvs))
+    plan["layers"] = out
+    return plan
+
 
 _PRESET_GUIDE = PRESET_GUIDE        # 기존 사용처(plan_scene_motion) 보존
 
@@ -110,6 +142,32 @@ def _scene_duration(proj_dir: Path, s: dict) -> float:
         if d:
             return d
     return float(s.get("duration_estimate_sec") or 3.0)
+
+
+def _normalize_plan(plan: dict) -> dict:
+    """모델이 스키마와 다른 이름으로 낸 플랜을 정규 형태로 옮긴다.
+
+    실측(9/30): 스키마를 줘도 `name/motions/preset`, `camera: "slow_zoom_in"`(문자열)로
+    돌아온 적이 있다. 그대로 두면 _clamp_plan 이 죽거나 모션이 전부 걸러진다."""
+    plan = dict(plan or {})
+    cam = plan.get("camera")
+    if isinstance(cam, str):
+        plan["camera"] = {"type": cam}
+    layers = []
+    for L in plan.get("layers", []) or []:
+        if not isinstance(L, dict):
+            continue
+        moves = []
+        for m in L.get("moves") or L.get("motions") or []:
+            if isinstance(m, dict):
+                m = dict(m)
+                if "type" not in m and m.get("preset"):
+                    m["type"] = m.pop("preset")
+                moves.append(m)
+        layers.append({**{k: v for k, v in L.items() if k not in ("name", "motions")},
+                       "layer": L.get("layer") or L.get("name"), "moves": moves})
+    plan["layers"] = layers
+    return plan
 
 
 def _clamp_plan(plan: dict, dur: float) -> dict:
@@ -134,6 +192,39 @@ def _clamp_plan(plan: dict, dur: float) -> dict:
             amt = max(20.0, min(amt, 160.0))    # 팬 20~160px
         cam["amount"] = round(amt, 2)
     return plan
+
+
+def _word_timing_block(proj_dir: Path, sid: str) -> str:
+    """음성 타임스탬프(tts_<sid>.timestamps.json)에서 어절별 시작 시각을 뽑는다.
+
+    등장·강조를 **그 말이 나오는 순간**에 맞추려면 모델이 시각을 알아야 한다.
+    씬 길이만 주면 「앞부분에 등장」으로 뭉뚱그려진다."""
+    fp = Path(proj_dir) / "audio" / f"tts_{sid}.timestamps.json"
+    if not sid or not fp.is_file():
+        return ""
+    try:
+        ts = json.loads(fp.read_text(encoding="utf-8"))
+    except Exception:
+        return ""
+    chars, starts = ts.get("characters") or [], ts.get("starts") or []
+    words, cur, t0 = [], "", None
+    for ch, st in zip(chars, starts):
+        if ch.isspace():
+            if cur:
+                words.append((t0, cur))
+            cur, t0 = "", None
+            continue
+        if t0 is None:
+            t0 = st
+        cur += ch
+    if cur:
+        words.append((t0, cur))
+    if not words:
+        return ""
+    lines = " ".join(f"[{t:.2f}]{w}" for t, w in words)
+    return ("\n## 말 타이밍(초 — 어절이 시작하는 시각)\n" + lines + "\n"
+            "사물·글자·선의 등장과 강조는 **그것을 가리키는 말이 시작하는 시각**에 맞춘다"
+            "(말보다 0.1~0.2초 먼저). 말에 나오지 않는 사물은 씬 첫 0.3초 안에 등장시킨다.\n")
 
 
 def plan_scene_motion(proj_dir: Path, scene_number: int, *, on_line=None) -> dict:
@@ -162,6 +253,7 @@ def plan_scene_motion(proj_dir: Path, scene_number: int, *, on_line=None) -> dic
         if spec.get("layer") in (chars + objs) and (spec.get("intent") or "").strip():
             intents.append(f"- {spec['layer']}: {spec['intent']}")
     intent_block = ("\n## 분리 시점의 연출 의도(참고)\n" + "\n".join(intents) + "\n") if intents else ""
+    timing_block = _word_timing_block(proj_dir, sid)
 
     def _lines(names):
         return "\n".join(f"- {e}" for e in names) or "- (없음)"
@@ -170,7 +262,7 @@ def plan_scene_motion(proj_dir: Path, scene_number: int, *, on_line=None) -> dic
         f"## 내레이션(씬 길이 {dur:.1f}초)\n{s.get('narration', '') or '(없음)'}\n\n"
         f"## 인물 레이어(이 이름을 정확히 그대로 사용)\n{_lines(chars)}\n"
         f"## 사물 레이어(이 이름을 정확히 그대로 사용)\n{_lines(objs)}\n"
-        + intent_block + "\n"
+        + intent_block + timing_block + "\n"
         f"## 사용 가능한 모션 프리셋\n{_PRESET_GUIDE}\n"
         "## 연출 원칙(엄수)\n"
         "1) 인물에는 bob(까딱임 idle)과 zoom_emphasis만 쓴다. 인물 기본은 bob 1개.\n"
@@ -186,11 +278,18 @@ def plan_scene_motion(proj_dir: Path, scene_number: int, *, on_line=None) -> dic
                                output_last=str(out), on_line=on_line)
     if res.get("returncode") != 0 or not out.is_file():
         return {"error": "모션 플랜 생성 실패"}
+    raw = out.read_text(encoding="utf-8")
     try:
-        plan = json.loads(out.read_text(encoding="utf-8"))
+        plan = json.loads(raw)
     except Exception:
-        return {"error": "모션 플랜 파싱 실패"}
+        # 스키마를 못 받은 모델이 ```json 블록 뒤에 설명을 붙이는 경우 — 첫 JSON 객체만 읽는다
+        try:
+            plan, _ = json.JSONDecoder().raw_decode(raw[raw.index("{"):])
+        except Exception:
+            return {"error": "모션 플랜 파싱 실패"}
+    plan = _normalize_plan(plan)
     plan = filter_plan_moves(plan, kind_map)
+    plan = drop_occluded_moves(plan, specs)
     plan = _clamp_plan(plan, dur)
     # 나레이션 기반 화각 키 — 타임스탬프와 bbox가 있으면 LLM의 카메라 type을 대체한다.
     # 결정적이라 검증 가능하고, "말보다 먼저 도착" 규칙을 기계가 지킨다.

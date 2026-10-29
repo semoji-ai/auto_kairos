@@ -24,6 +24,11 @@ weak 은 여기서 고친다. 지금 프롬프트를 살려 두고 빠진 것만
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _P
+_sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
+from auto_agent.utils import redraw_flag  # noqa: E402  표시는 시각·이유와 함께 켠다
+
 import argparse
 import json
 import os
@@ -85,8 +90,8 @@ PROMPT = """그림이 **한 걸음 모자란** 씬들입니다. 프롬프트에 
 **부정문을 쓰지 마세요.** 「안경 없이」라고 쓰면 안경이 그려집니다.
 빼고 싶은 것은 있는 것으로 바꿔 씁니다.
 
-**화면에 글자를 넣지 마세요.** 글씨는 늘 빈 칸으로 나옵니다.
-말을 물건으로 옮기세요 — 부고는 글씨가 아니라 검은 테두리로 읽힙니다.
+**글자는 그 장면의 뜻이 되는 자리에만 넣습니다.** 간판·현판·중요한 문서처럼 글자가 곧 장면의 뜻인 곳에는
+장면 명세에 적힌 말을 또렷한 한글로 씁니다. 그 밖의 면(거리 간판·책 표지·상자·벽보)은 매끈한 빈 색면으로 둡니다.
 
 **구인회의 안경은 나이로 갈립니다.** 마흔 전에는 맨눈입니다.
 챕터1 스물넷 · 2 스물아홉 · 3 서른셋~다섯 · 4 서른여덟 · 5 마흔.
@@ -234,7 +239,7 @@ def main() -> int:
         s["imageAsset"]["source"] = "generate"
         if isinstance(m.get("people"), list) and m["people"]:
             s["people"] = [str(x).strip() for x in m["people"] if str(x).strip()]
-        s["needs_image"] = True
+        redraw_flag.mark(s, "apply_image_fixes: 검수 fix/reject", "apply_image_fixes")
     f.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n{len(made)}개 씬을 손봤습니다.")
     print("  다음: build_image_prompts.py → gen_scenes.py → check_image_says.py")

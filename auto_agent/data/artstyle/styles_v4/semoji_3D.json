@@ -37,7 +37,7 @@
       "Cinematic scene framing — multiple characters allowed in environment",
       "Aesthetic anchor: Animal Crossing 3D / Toca Boca 3D / Apple Memoji softened / mobile-game cute 3D / Pixar Soul simplified",
       "EXPLICITLY NOT: fuzzy felt/plush, fabric/cotton doll, clay/sculpey/pottery, Funko Pop/KAWS/Pop Mart designer toy, glossy/lacquered plastic, photorealistic 3D",
-      "NO text, NO captions, NO logos, NO speech bubbles"
+      "Text appears only where the scene names it — signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering; every other surface stays smooth plain color, and brand marks are original simple shapes"
     ]
   },
   "image": {
@@ -73,7 +73,7 @@
       "Cinematic scene framing — multiple characters allowed in environment",
       "Aesthetic anchor: Animal Crossing 3D / Toca Boca 3D / Apple Memoji softened / mobile-game cute 3D / Pixar Soul simplified",
       "EXPLICITLY NOT: fuzzy felt/plush, fabric/cotton doll, clay/sculpey/pottery, Funko Pop/KAWS/Pop Mart designer toy, glossy/lacquered plastic, photorealistic 3D",
-      "NO text, NO captions, NO logos, NO speech bubbles"
+      "Text appears only where the scene names it — signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering; every other surface stays smooth plain color, and brand marks are original simple shapes"
     ],
     "prompt_language": "ko"
   },

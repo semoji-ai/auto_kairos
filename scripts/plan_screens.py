@@ -24,6 +24,11 @@
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _P
+_sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
+from auto_agent.utils import redraw_flag  # noqa: E402  표시는 시각·이유와 함께 켠다
+
 import argparse
 import json
 import os
@@ -320,7 +325,7 @@ def main() -> int:
                        "camera": r.get("camera", ""),
                        "shot_size": r.get("size", ""),
                        "continuity": r.get("link", "new")})
-            s["needs_image"] = True
+            redraw_flag.mark(s, "plan_screens: 화면 재설계", "plan_screens")
         hit += 1
 
     f.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")

@@ -28,6 +28,11 @@ LG 1편에서 판정문과 종류가 정반대로 저장돼 있었다.
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _P
+_sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
+from auto_agent.utils import redraw_flag  # noqa: E402  표시는 시각·이유와 함께 켠다
+
 import argparse
 import json
 import shutil
@@ -86,7 +91,7 @@ def main() -> int:
         if not isinstance(s.get("imageAsset"), dict):
             s["imageAsset"] = {}
         s["imageAsset"]["source"] = "generate"
-        s["needs_image"] = True
+        redraw_flag.mark(s, "check_kind_reason: 근거 없는 실물 → 재현", "check_kind_reason")
     f.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n{len(ns)}개 씬을 재현으로 되돌렸습니다: {sorted(ns)}")
     print("  다음: replan_direction.py → build_image_prompts.py → gen_scenes.py")

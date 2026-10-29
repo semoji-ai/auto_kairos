@@ -38,6 +38,93 @@ def test_no_file_legacy_unchanged(project):
     assert manifest == original
 
 
+def test_inline_preview_offsets_and_partial_tail(project):
+    assert vt.save(project, tracks(sourceOutSec=4), expect_revision=0)["ok"]
+    previews = vt.project_previews(project)
+    assert previews[1][0]["sourceIn"] == 1
+    assert previews[1][0]["sourceOut"] == 3
+    assert previews[2][0]["sourceIn"] == 3
+    assert previews[2][0]["sourceOut"] == 4
+    assert previews[2][0]["sceneDuration"] == 2
+    assert 3 not in previews
+
+
+def test_inline_preview_anchor_and_disabled(project):
+    assert vt.save(project, tracks(anchor={"sceneId": "s1", "offsetFrames": 15}),
+                   expect_revision=0)["ok"]
+    previews = vt.project_previews(project)
+    assert previews[1][0]["sceneOffset"] == 0.5
+    assert previews[2][0]["sourceIn"] == 2.5
+    assert vt.save(project, tracks(enabled=False), expect_revision=1)["ok"]
+    assert vt.project_previews(project) == {}
+
+
+def test_inline_preview_stale_fingerprint_hidden(project):
+    assert vt.save(project, tracks(), expect_revision=0)["ok"]
+    path = project / "scene_specs.json"
+    data = json.loads(path.read_text())
+    data["scenes"][0]["narration"] = "changed"
+    path.write_text(json.dumps(data))
+    assert vt.project_previews(project) == {}
+    assert vt.project_previews(project, include_candidates=True) == {}
+
+
+def test_disabled_clip_preview_does_not_activate_or_write(project):
+    assert vt.save(project, tracks(enabled=False), expect_revision=0)["ok"]
+    path = project / vt.FILE_NAME
+    before = path.read_bytes()
+    previews = vt.project_previews(project, include_candidates=True)
+    assert previews[2][0]["sourceIn"] == 3
+    assert previews[2][0]["previewOnly"] is True
+    assert path.read_bytes() == before
+    assert vt.resolve(project, vt.load(project))["clips"] == []
+
+
+def test_mapping_draft_preview_without_import(project):
+    folder = project / "video_sources/planning/test"
+    folder.mkdir(parents=True)
+    draft = folder / "video_tracks.draft.json"
+    draft.write_text(json.dumps({"data": tracks(enabled=False)}))
+    before = draft.read_bytes()
+    previews = vt.project_previews(project, include_candidates=True)
+    assert len(previews) == 2
+    assert previews[1][0]["previewOnly"] is True
+    assert previews[2][0]["sourceIn"] == 3
+    assert not (project / vt.FILE_NAME).exists()
+    assert draft.read_bytes() == before
+    # An explicit saved contract, even empty, supersedes older mapping drafts.
+    (project / vt.FILE_NAME).write_text(json.dumps({"schemaVersion": 1, "tracks": []}))
+    assert vt.project_previews(project, include_candidates=True) == {}
+
+
+def test_draft_invalid_path_not_previewed(project):
+    folder = project / "video_sources/planning/test"
+    folder.mkdir(parents=True)
+    (folder / "video_tracks.draft.json").write_text(json.dumps({
+        "data": tracks(enabled=False, sourcePath="../outside.mp4")}))
+    assert vt.project_previews(project, include_candidates=True) == {}
+
+
+def test_inline_template_and_shared_player():
+    from jinja2 import Environment, FileSystemLoader
+    root = Path(__file__).resolve().parents[1]
+    env = Environment(loader=FileSystemLoader(root / "auto_agent/dashboard/templates"), autoescape=True)
+    html = env.get_template("partials/_scene_switch.html").render(scene={
+        "sceneNumber": 2, "_video_url": "/clip.mp4", "_layers": [],
+        "_track_previews": [{"url": '/clip.mp4?a="b"', "sourceIn": 3, "sourceOut": 4,
+                             "sceneOffset": 0, "clipId": "<unsafe>"}],
+    })
+    assert 'data-mode="video"' in html
+    assert 'data-in="3"' in html and 'data-out="4"' in html
+    assert "&lt;unsafe&gt;" in html and "<unsafe>" not in html
+    global_html = env.get_template("partials/_scene_switch.html").render(
+        global_preview=True, scene={"sceneNumber": 1, "_video_url": "/clip.mp4", "_layers": []})
+    assert 'class="svb' not in global_html
+    assert '<video ' in global_html
+    assert (root / "auto_agent/dashboard/static/track-preview.js").read_bytes() == (
+        root / "adobe/cep/com.autokairos.pd/js/track-preview.js").read_bytes()
+
+
 def test_manifest_clip_once_and_preview_offset(project):
     assert vt.save(project, tracks(), expect_revision=0)["ok"]
     manifest = {"meta": {"fps": 30}, "scenes": [{"sceneNumber": i} for i in [1, 2, 3]]}

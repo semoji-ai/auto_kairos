@@ -21,7 +21,7 @@ from auto_agent.paths import get_workspace_dir; load_dotenv(get_workspace_dir() 
 from auto_agent.tools.scene_id import load_scene_specs
 
 API_KEY = os.getenv("ELEVENLABS_API_KEY")
-MODEL_ID = "eleven_multilingual_v2"
+MODEL_ID = os.getenv("ELEVENLABS_MODEL_ID", "eleven_multilingual_v2")  # 9/30 LG편: eleven_v4 시험
 
 # 기본값 — DB config로 오버라이드 가능
 _DEFAULT_VOICE_ID = "9Sj8ugvpK1DmcAXyvi3a"
@@ -395,6 +395,12 @@ def main():
             text = existing_tts or ""
             if not text:
                 logger.info("Scene %s: narration/narration_tts 모두 없음 — skip", num)
+        elif os.getenv("TTS_SKIP_PREPROCESS") == "1":
+            # eleven_v4 는 숫자·연도를 스스로 잘 읽는다 — 원문 그대로 보낸다
+            text = raw.strip()
+            if text != existing_tts:
+                scene["narration_tts"] = text
+                specs_updated = True
         else:
             text, scene_changes = _preprocess_tts_text(raw)
             if text and text != existing_tts:

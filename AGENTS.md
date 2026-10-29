@@ -24,6 +24,8 @@
 
 ## 안전 규칙
 
+- 이미지 검수는 GPT(Codex)가 직접 담당합니다. Gemini·Claude 별도 호출이나 3모델 승인을 기다리지 않습니다. 기준은 `docs/rules/image-review-rules.md`, 자동화 명령은 `scripts/review_images_gpt.py`입니다.
+
 - 이미지 파일은 삭제하지 마세요. 새 버전 파일을 만들고 선택 상태만 바꾸세요.
 - Remotion 소스를 바꾸면 `remotion/src/`와 `auto_agent/remotion_template/src/`를 함께 동기화하세요.
 - 프로젝트 경로는 하드코딩하지 말고 `auto_agent.paths.get_workspace_dir()` 또는 `pathlib.Path` 기반으로 처리하세요.
@@ -31,6 +33,11 @@
 - `scene_specs.json`은 flat schema를 유지하고, legacy v3 필드는 기존 normalizer/validator를 우선 사용하세요.
 
 ## Codex 전환 메모
+
+- 세모지 **원고만** 작성·보강할 때는 `auto_agent.scripts.lg_episode_benchmark manuscript-run --provider codex --model <명시한 모델>`의 원고 스튜디오를 사용합니다. 준비된 입력은 `--root`, 결과는 새 `--output` 폴더로 지정합니다. [실행·입력 준비 안내](docs/codex-semoji-manuscript-agent-design.md)를 참고하세요.
+- 이 경로의 Codex 기본값은 이야기꾼 역할 + 재미/유용/다음 기대/신뢰 검토입니다. 초고→개선 목표→부분 수정 또는 재구성→전후 득실/전체 재검토로 진행하며, 자료 부족은 조사 질문으로 반환합니다. 기본 수정 상한 3회는 의무 횟수가 아닙니다. READY는 사용자 승인이나 Claude 동급 판정이 아닙니다.
+- `--draft`와 `--packet`으로 기존 원고·검증된 재료를 재사용할 수 있습니다. 이전 실험 재현에만 `--no-quality-review --no-codex-manuscript-persona`를 사용하세요. 원고 요청을 장면·TTS·영상 생성으로 확대하지 않습니다.
+- 세모지 원고 비교는 `compare_manuscript_pair --focus engagement`로 흡인력을 우선합니다. 다른 항목의 다수결로 재미 부족을 상쇄하지 않습니다. 구성 선택이 막힌 경우 `opening_audition`으로 같은 사실의 도입~첫 전환 두 안만 시험할 수 있습니다. 매번 의무 실행하지 않으며, 부분 선호는 전편 승인이나 사실 검증이 아닙니다.
 
 - v3의 `auto_agent/modules/agent_runner.py`에는 Stage 0/4용 Codex provider가 이미 있습니다.
 - `runner.py`의 일반·챕터·단일 응답 실행은 공통 `execution.py`로 라우팅합니다. legacy SDK 및 일부 독립 보조 모듈은 여전히 Claude 의존 경로입니다.

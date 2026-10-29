@@ -8,23 +8,126 @@ from pathlib import Path
 
 from backend import scenes, timeline, tts
 
-MAX_LINE = 20      # 자막 한 줄 최대 글자(어절 경계 분할)
+MAX_LINE = 32      # 자막 한 줄 최대 글자 — 뜻 단락으로 나누되 이보다 길면 더 쪼갠다(디아지오 최대 35)
 DEFAULT_DUR = timeline.DEFAULT_DUR   # 길이 규칙은 timeline이 단일 기준
 
 
 def split_lines(text: str, max_len: int = MAX_LINE) -> list:
-    """어절(공백) 경계로 max_len 이하 줄들로 분할."""
-    words = (text or "").split()
+    """자막 한 줄씩 — 글자 수가 아니라 **뜻 단락**으로 나눈다(세모지 디아지오편 실측).
+
+    디아지오 자막 413줄: 중앙값 20자·최대 35자, 끝자리는 마침 198 · 쉼표 80 · 구 경계 135.
+    「이 시기 서덜랜드 영지에서만 / 약 1만 5천 명이 …」처럼 말의 덩어리에서 끊는다.
+
+      ① 문장 단위 — max_len 이하면 한 줄
+      ② 길면 쉼표에서
+      ③ 그래도 길면 절 끝(-고·-며·-는데·-지만·-면서 …) > 주어·주제(은·는·이·가) >
+         목적어·부사어(을·를·에서·으로 …) 뒤에서, 가운데에 가까운 자리
+    어느 줄도 너무 짧게(6자 미만) 남기지 않는다.
+    """
+    forced = _forced_lines(text)
+    if forced:
+        return forced
+    out = []
+    for sent in split_sentences(text) or [(text or "").strip()]:
+        for chunk in _split_commas(sent, max_len):
+            out.extend(_split_phrase(chunk, max_len))
+    return [x for x in out if x]
+
+
+# 사람이 정한 줄나눔(subtitle_breaks.json — {씬번호: [줄, …]}) — 규칙으로는 「몇 명이 / 꾸리는」처럼
+# 관형절 안의 주어에서 끊는 것을 못 막는다(10/3 점검). 줄을 이어 붙인 글자가 원문과 같을 때만 쓴다.
+_FORCE: list = []
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"\s+", "", s or "")
+
+
+def _forced_lines(text: str):
+    key = _norm(text)
+    if not key:
+        return None
+    for lines in _FORCE:
+        nl = [_norm(x) for x in lines]
+        for i in range(len(nl)):
+            acc = ""
+            for j in range(i, len(nl)):
+                acc += nl[j]
+                if acc == key:
+                    return [x.strip() for x in lines[i:j + 1]]
+                if not key.startswith(acc):
+                    break
+    return None
+
+
+def load_breaks(proj_dir: Path) -> int:
+    """프로젝트의 subtitle_breaks.json 을 읽어 _FORCE 에 싣는다. 원문과 글자가 다른 항목은 버린다."""
+    global _FORCE
+    _FORCE = []
+    fp = Path(proj_dir) / "subtitle_breaks.json"
+    if not fp.is_file():
+        return 0
+    try:
+        d = json.loads(fp.read_text(encoding="utf-8"))
+    except Exception:
+        return 0
+    texts = {}
+    for s in scenes.load_scenes(Path(proj_dir)).get("scenes", []):
+        texts[str(s.get("sceneNumber"))] = scenes.subtitle_text(s)
+    for k, lines in d.items():
+        if isinstance(lines, list) and lines and _norm("".join(lines)) == _norm(texts.get(str(k), "")):
+            _FORCE.append(lines)
+    return len(_FORCE)
+
+
+_CLAUSE = ("는데", "지만", "면서", "니까", "으며", "거나", "든지", "고", "며", "서", "면", "데", "듯",
+           "려", "아", "어", "여", "해", "워", "져", "쳐", "고서")
+# 꾸미는 말(관형형) — 뒤 명사와 한 덩어리라 여기서 끊지 않는다(「넘는 / 돈을」 방지)
+_ADNOMINAL = ("하는", "되는", "있는", "없는", "넘는", "오는", "가는", "주는", "보는", "받는", "리는", "치는",
+              "르는", "드는", "지는", "내는", "놓는", "쓰는", "파는", "사는", "던", "될", "할", "갈", "올", "한", "된")
+_TOPIC = ("은", "는", "이", "가", "도", "만")
+_OBJECT = ("을", "를", "에서", "에게", "으로", "로", "에", "와", "과", "께서", "부터", "까지", "처럼")
+
+
+def _split_commas(sent: str, max_len: int) -> list:
+    if len(sent) <= max_len:
+        return [sent]
+    # 숫자 안의 쉼표(2,000·1,800)는 세 자리 구분이지 끊는 자리가 아니다 — 숫자 사이 쉼표는 건너뛴다
+    parts = [p.strip() + "," for p in re.split(r"(?<!\d),|,(?!\d)", sent)]
+    parts[-1] = parts[-1][:-1]
     lines, cur = [], ""
-    for w in words:
-        if cur and len(cur) + 1 + len(w) > max_len:
-            lines.append(cur)
-            cur = w
+    for p in parts:
+        if cur and len(cur) + 1 + len(p) > max_len:
+            lines.append(cur); cur = p
         else:
-            cur = (cur + " " + w).strip()
+            cur = (cur + " " + p).strip()
     if cur:
         lines.append(cur)
     return lines
+
+
+def _split_phrase(chunk: str, max_len: int, min_len: int = 6) -> list:
+    if len(chunk) <= max_len:
+        return [chunk]
+    words = chunk.split()
+    if len(words) < 2:
+        return [chunk]
+    mid, best = len(chunk) / 2, None
+    for i in range(1, len(words)):
+        left, right = " ".join(words[:i]), " ".join(words[i:])
+        if len(left) < min_len or len(right) < min_len:
+            continue
+        w = words[i - 1].rstrip(",.?!")
+        if w.endswith(_ADNOMINAL):
+            rank = 9
+        else:
+            rank = 0 if w.endswith(_CLAUSE) else 1 if w.endswith(_TOPIC) else 2 if w.endswith(_OBJECT) else 3
+        score = rank * 100 + abs(len(left) - mid)
+        if best is None or score < best[0]:
+            best = (score, left, right)
+    if not best:
+        return [chunk]
+    return _split_phrase(best[1], max_len, min_len) + _split_phrase(best[2], max_len, min_len)
 
 
 def split_sentences(text: str) -> list:
@@ -165,6 +268,7 @@ def build_subtitles(proj_dir: Path, only_scenes: list | None = None) -> dict:
     only_scenes 를 주면 그 씬들의 자막만 담는다. 오프셋은 전체 씬 기준으로 누적하므로
     부분 빌드도 전체 빌드와 같은 시각에 놓인다."""
     proj_dir = Path(proj_dir)
+    load_breaks(proj_dir)
     data = scenes.load_scenes(proj_dir)
     durs = _scene_durations(proj_dir, data)
     picked = {_num(x) for x in only_scenes} if only_scenes else None

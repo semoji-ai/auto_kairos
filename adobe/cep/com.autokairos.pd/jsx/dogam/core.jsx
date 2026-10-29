@@ -373,11 +373,11 @@ var AKD = (typeof AKD === "object" && AKD) ? AKD : {};
   // ── 텍스트 ───────────────────────────────────────────────────────────
   /** 세모지 폰트(PostScript 이름). 연성·주아·잘난·나눔스퀘어네오엔 한자 글리프가 없습니다 */
   A.FONT = {
-    yeonsung: "BMYEONSUNG", jua: "BMJUAOTF", jalnan: "Jalnan", dohyeon: "BMDOHYEON",
+    yeonsung: "BMYEONSUNG-OTF", jua: "BMJUAOTF", jalnan: "Jalnan", dohyeon: "BMDoHyeon-OTF",
     neoHv: "NanumSquareNeo-eHv", neoEb: "NanumSquareNeo-dEb",
     myeongjo: "NanumMyeongjoExtraBold", songti: "STSongti-SC-Bold"
   };
-  var NO_HANJA = { "BMYEONSUNG": 1, "BMJUAOTF": 1, "Jalnan": 1, "BMDOHYEON": 1, "NanumSquareNeo-eHv": 1, "NanumSquareNeo-dEb": 1 };
+  var NO_HANJA = { "BMYEONSUNG-OTF": 1, "BMJUAOTF": 1, "Jalnan": 1, "BMDoHyeon-OTF": 1, "NanumSquareNeo-eHv": 1, "NanumSquareNeo-dEb": 1 };
   /** 텍스트 레이어. o = {font, size, fill, stroke, strokeW, just:"center"|"left"|"right", tracking, leading, fauxBold}
       한자가 섞이면 한자 구간만 송티로 바꿉니다(AE 24.3+ characterRange). 지원 안 되면 명조로 통째로 바꿉니다 */
   A.text = function (comp, str, name, o) {

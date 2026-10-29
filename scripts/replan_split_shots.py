@@ -21,6 +21,11 @@
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _P
+_sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
+from auto_agent.utils import redraw_flag  # noqa: E402  표시는 시각·이유와 함께 켠다
+
 import argparse
 import json
 import os
@@ -209,7 +214,7 @@ def _work(args, f, data, scenes, todo):
         ia["continuity"] = sh.get("link", "new")
         if (sh.get("extra_ref") or "").strip():
             ia["extra_ref"] = sh["extra_ref"].strip()
-        s["needs_image"] = True          # 새로 그려야 한다
+        redraw_flag.mark(s, "replan_split_shots: 쪼갠 조각 새 화면", "replan_split_shots")
         hit += 1
 
     f.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")

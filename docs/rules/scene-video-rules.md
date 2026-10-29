@@ -180,15 +180,24 @@ frame. Nothing is redrawn, added or removed.
 
 ---
 
-## 6. 계정은 결재일 순서로 쓴다
+## 6. 계정은 크레딧 리셋일 순서로 쓴다
 
-구독이 여럿이면 크레딧이 계정마다 따로 들어오고 **결재일에 초기화된다.**
-많이 남은 쪽부터 쓰면 갱신이 코앞인 계정이 끝까지 안 쓰이고 매달 그만큼
-날아간다.
+구독이 여럿이면 크레딧이 계정마다 따로 들어오고 **리셋일에 초기화된다.**
+**결재일과 리셋일은 별개다**(리셋이 이틀쯤 앞선다). 많이 남은 쪽부터 쓰면
+리셋이 코앞인 계정이 끝까지 안 쓰이고 매달 그만큼 날아간다.
+
+| 이름 | 계정 | 크레딧 리셋일 |
+|---|---|---|
+| sub03 | jleavens.sub03 | 매달 23일 |
+| main | ksjeaea | 매달 24일 |
+| sub01 | jleavens.sub01 | 매달 5일 |
+
+순서는 **오늘에서 가장 가까운 리셋일부터**다. 6~23일에는 sub03 → main → sub01,
+24일~다음 달 5일에는 sub01 → sub03 → main. 날짜가 넘어가면 `order` 로 다시 맞춘다.
 
 ```bash
 python3 -m backend.hf_accounts list          # 계정과 잔액(쓸 순서대로)
-python3 -m backend.hf_accounts order a,b,c   # 갱신 임박순으로
+python3 -m backend.hf_accounts order a,b,c   # 리셋 임박순으로
 ```
 
 `backend/hf_accounts.py` 가 `HOME` 을 갈아 계정을 나눈다. 생성할 때 앞선

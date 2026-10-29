@@ -13,6 +13,7 @@
 > 5. **scene_specs 플랫 스키마** — 중첩 구조 사용 안 함, imageAsset.source 존중
 > 6. **경로: pathlib.Path** — 절대경로 하드코딩 금지, `get_workspace_dir()` 사용
 > 7. **에이전트 호출은 stdin** — `-p` 플래그 사용 안 함
+> 8. **이미지 검수는 GPT(Codex)** — Gemini·Claude 별도 검수/3모델 승인 대기 없음. `docs/rules/image-review-rules.md`와 `scripts/review_images_gpt.py` 사용.
 
 ---
 
@@ -237,6 +238,7 @@ step_2(씬분할) → scene_specs.json
 @docs/rules/image-review-rules.md
 @docs/rules/content-evaluation-rules.md
 @docs/rules/manuscript-redundancy-rules.md
+@docs/rules/manuscript-revision-playbook.md
 @docs/rules/scene-splitting-rules.md
 @docs/rules/scene-visual-decision.md
 @docs/rules/direction-recipes.md

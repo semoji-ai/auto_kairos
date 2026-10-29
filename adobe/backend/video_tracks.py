@@ -14,6 +14,21 @@ SCHEMA_VERSION = shared.SCHEMA_VERSION
 load = shared.load
 
 
+def enrich_previews(root, scene_data):
+    """UI-only fields; never persist or overwrite videoRef."""
+    data = load(root)
+    try:
+        resolved = resolve(root, data)
+        scene_data["videoTrackErrors"] = resolved["errors"]
+        previews = shared.project_previews(
+            root, include_candidates=True, timings=_timings(root),
+            resolver=lambda candidate: resolve(root, candidate))
+        for scene in scene_data.get("scenes", []):
+            scene["_track_previews"] = previews.get(scene["sceneNumber"], [])
+    except (ValueError, OSError, KeyError, TypeError) as exc:
+        scene_data["videoTrackErrors"] = [str(exc)]
+
+
 def _timings(root, fps=30):
     if (Path(root) / "scene_specs.json").exists():
         return shared.project_timings(root, fps)

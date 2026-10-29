@@ -5,7 +5,7 @@
 
    쓰는 쪽은 바깥에 `sv-host` 를 두고 이미지 요소에 `sv-image` 를 단다 —
    그리드는 카드가 142개라 id 로는 못 잡는다. #}
-{% if scene._video_url or scene._layers %}
+{% if not global_preview and (scene._video_url or scene._layers) %}
 <div class="sv-switch" data-scene="{{ scene.sceneNumber }}">
   <button type="button" class="svb on" data-mode="image">🖼 이미지</button>
   {% if scene._layers %}<button type="button" class="svb" data-mode="layers">🧩 레이어{% if scene._layers|length %} {{ scene._layers|length }}{% endif %}</button>{% endif %}
@@ -13,6 +13,19 @@
 </div>
 {% endif %}
 {% if scene._video_url %}
-<video src="{{ scene._video_url }}" controls preload="metadata"
-       class="sv-video sv-pane" style="display:none"></video>
+<div class="sv-video sv-pane" style="display:none">
+{% if scene._track_previews %}
+<div class="track-preview">
+  <select class="track-preview-select" aria-label="통합 영상 구간">
+  {% for segment in scene._track_previews %}
+    <option value="{{ segment.url }}" data-in="{{ segment.sourceIn }}" data-out="{{ segment.sourceOut }}">{{ segment.clipId }} · {{ '검토용·미적용' if segment.previewOnly else '적용 중' }} · 씬 내 {{ '%.2f'|format(segment.sceneOffset) }}–{{ '%.2f'|format(segment.sceneOffset + segment.sourceOut - segment.sourceIn) }}초</option>
+  {% endfor %}
+  </select>
+  <video controls muted preload="none" style="width:100%"></video>
+  <small>해당 씬 구간만 미리봅니다. 검토용 영상은 재생해도 최종 영상에 적용되지 않습니다.</small>
+</div>
+{% else %}
+<video src="{{ scene._video_url }}" controls preload="metadata" style="width:100%"></video>
+{% endif %}
+</div>
 {% endif %}

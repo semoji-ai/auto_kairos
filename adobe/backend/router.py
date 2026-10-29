@@ -261,6 +261,8 @@ def _dispatch(method: str, path: str, query: dict, body: dict | None, ctx: dict)
     if method == "GET" and p == "/api/scenes":
         pid = query.get("project_id", "")
         data = scenes.load_scenes(root / pid)
+        from backend.video_tracks import enrich_previews
+        enrich_previews(root / pid, data)
         # 한 행만 갱신할 때 142씬을 통째로 보내는 것은 낭비다. `sceneNumber` 를
         # 주면 그 씬만 돌려준다 — 후보를 바꿀 때마다 전체를 받아 오면
         # 그 시간이 그대로 「바꾸는 중…」으로 보인다.

@@ -58,7 +58,11 @@ def main() -> int:
 
     for key in sorted(emap, key=lambda x: x[:4]):
         ep = key[:4]
-        led = root / "_imggen" / f"{ep}_ledger.json"
+        # 9/30 원고 수정·씬 재분할 뒤 새로 만든 원장이 있으면 그것이 정본이다.
+        # 옛 원장은 씬 번호가 달라져 엉뚱한 씬에 출처를 심는다.
+        led = root / "_imggen" / f"{ep}_search_assets_opus55.json"
+        if not led.exists():
+            led = root / "_imggen" / f"{ep}_ledger.json"
         if not led.exists():
             continue
         D = Path(emap[key]["dir"])

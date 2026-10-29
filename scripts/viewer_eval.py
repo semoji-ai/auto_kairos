@@ -111,6 +111,11 @@ def describe(s: dict, proj: Path, root: Path, sel: str | None) -> str:
     if s.get("isTurnCard"):
         return f"{head}  [반전 카드] {(s.get('narration') or '').strip()[:40]}"
     lines = [f"{head}  말: {(s.get('narration') or '').strip()}"]
+    # 완성된 영상에서 뽑은 프레임(시작·가운데·끝을 한 장에 이어 붙인 것)이 있으면 그것을 본다 —
+    # 모션·실물 영상·자막·태그가 다 얹힌 실제 화면이다(10/5 공개 편 영상 평가)
+    if s.get("_frame_strip"):
+        lines.append(f"      화면(완성 영상 — 왼쪽부터 시작·가운데·끝 프레임, {s.get('_kind','')}): {s['_frame_strip']}")
+        return "\n".join(lines)
     kind = s.get("visual_kind")
     if kind == "infographic":
         g = s.get("infographic") or {}

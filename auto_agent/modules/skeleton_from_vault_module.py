@@ -26,6 +26,13 @@ from auto_agent.tools.crossref_lane import search_academic
 _PROGRESS_FILE: Path | None = None
 
 
+def _brief_text(value) -> str:
+    """editorial_brief 필드는 문자열 또는 {"text": ...} 구조(5대 레버 v1)일 수 있다."""
+    if isinstance(value, dict):
+        value = value.get("text", "")
+    return value.strip() if isinstance(value, str) else ""
+
+
 def _progress(message: str, level: str = "info") -> None:
     print(f"[skeleton_from_vault] {message}", flush=True)
     if not _PROGRESS_FILE:
@@ -470,7 +477,7 @@ def _build_outline_with_llm(
     import subprocess
     chapter_count = _chapter_count_for_duration(duration_minutes)
     core_question = brief.get("core_question", "")
-    hook_angle = brief.get("hook_angle", "").strip()
+    hook_angle = _brief_text(brief.get("hook_angle", ""))
     audience_takeaway = brief.get("audience_takeaway", "")
     excluded_angles = brief.get("excluded_angles", [])
     tone_goal = brief.get("tone_goal", "해설형")
@@ -783,7 +790,7 @@ def build_skeleton_and_outline(project_dir: Path) -> dict:
         _progress("lane 기반 뼈대 리서치 수행 중")
         seed_summary, seed_timeline, seed_sources, seed_figures = _build_seed_research(
             topic=topic,
-            core_question=brief.get("core_question", "").strip(),
+            core_question=_brief_text(brief.get("core_question", "")),
         )
         if not summary_bullets:
             summary_bullets = seed_summary
@@ -795,9 +802,9 @@ def build_skeleton_and_outline(project_dir: Path) -> dict:
             key_figures = seed_figures
 
     if not summary_bullets:
-        core_question = brief.get("core_question", "").strip()
-        hook_angle = brief.get("hook_angle", "").strip()
-        excluded_angles = [a.strip() for a in brief.get("excluded_angles", []) if a and a.strip()]
+        core_question = _brief_text(brief.get("core_question", ""))
+        hook_angle = _brief_text(brief.get("hook_angle", ""))
+        excluded_angles = [_brief_text(a) for a in brief.get("excluded_angles", []) if _brief_text(a)]
         summary_bullets = [item for item in [core_question, hook_angle] if item][:4]
         if excluded_angles:
             summary_bullets.append(f"제외할 관점: {', '.join(excluded_angles[:2])}")
@@ -809,8 +816,8 @@ def build_skeleton_and_outline(project_dir: Path) -> dict:
         duration_minutes = int(config.get("duration_minutes") or 10)
         chapter_count = _chapter_count_for_duration(duration_minutes)
         base_prompts = [
-            brief.get("core_question", "").strip(),
-            brief.get("hook_angle", "").strip(),
+            _brief_text(brief.get("core_question", "")),
+            _brief_text(brief.get("hook_angle", "")),
             f"{topic}의 배경과 출발점",
             f"{topic}의 성장과 전환점",
             f"{topic}의 현재적 의미",

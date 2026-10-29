@@ -32,6 +32,13 @@
       <span style="color:#71717A;font-size:12px">로딩 중...</span>
     </div>
   </div>
+  <div class="sb-preview-modes" role="group" aria-label="전체 씬 미리보기">
+    <span>전체 씬 미리보기</span>
+    <button type="button" class="on" data-sb-preview-mode="image" aria-pressed="true">🖼 이미지</button>
+    <button type="button" data-sb-preview-mode="video" aria-pressed="false">🎞 영상</button>
+    <button type="button" data-sb-preview-mode="layers" aria-pressed="false">🧩 레이어</button>
+    <small>영상·레이어가 없는 씬은 이미지로 표시됩니다.</small>
+  </div>
 </div>
 
 <div class="sb-main-layout">
@@ -78,7 +85,7 @@
     <!-- 좌측: Remotion Player 경량 임베드 -->
     <div class="sb-preview-wrap">
       {# 이미지/레이어/영상 — 씬 상세와 **같은 조각**을 쓴다 #}
-      {% include "partials/_scene_switch.html" %}
+      {% with global_preview=true %}{% include "partials/_scene_switch.html" %}{% endwith %}
       {% if scene._scene_review %}
       <div class="sb-preview sb-review-preview">
         {% if scene._scene_review.image_url %}<a href="{{ scene._scene_review.image_url }}" target="_blank" rel="noopener"><img src="{{ scene._scene_review.image_url }}" loading="lazy" alt="Scene {{ scene.sceneNumber }} 검토용 참조"></a>{% else %}<span>{% if scene._scene_review.decision == 'remake' %}이미지 없음 · 신규 제작 필요{% else %}씬 이미지 확보 필요{% endif %}</span>{% endif %}

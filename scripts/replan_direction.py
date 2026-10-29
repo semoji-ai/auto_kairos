@@ -25,6 +25,11 @@ LG 1편이 무너진 경로는 이랬다.
 
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _P
+_sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
+from auto_agent.utils import redraw_flag  # noqa: E402  표시는 시각·이유와 함께 켠다
+
 import argparse
 import json
 import os
@@ -293,7 +298,7 @@ def main() -> int:
         if r.get("shot"):
             s["shot"] = r["shot"]
         # 다시 그려야 하는 씬임을 표시한다 — 옛 그림이 붙은 채 넘어가지 않게
-        s["needs_image"] = True
+        redraw_flag.mark(s, "replan_direction: 제 문장으로 화면 재설계", "replan_direction")
     f.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n{len(new)}개 씬의 화면을 다시 짰습니다.")
     print("  다음: build_image_prompts.py → gen_scenes.py")

@@ -1,4 +1,4 @@
-// auto_kairos — manifest 기반 AE 컴프 생성 (PoC, 최소 모션)
+﻿// auto_kairos — manifest 기반 AE 컴프 생성 (PoC, 최소 모션)
 // 입력: manifest 경로(JSON). 출력: 씬별 컴프 + Final 컴프(순서 배치).
 // JSON 파싱: json2.jsx 폴리필(JSON.parse) 우선, 없으면 eval 폴백.
 
@@ -745,6 +745,30 @@ function akBuildScene(manifestPath) {
     // 프리셋 모션 → 키프레임(결정적). 실패해도 빌드는 계속(try/catch).
     // 발밑(불투명 하단 중앙) 피벗 null 생성 + 페어런팅 + 세로 스케일 100↔(100+amt) 이지이즈 핑퐁 루프.
     // foot = manifest가 계산한 알파 bbox 하단 중앙(전신=발, 상반신=절단점) — 까딱까딱 idle.
+    // 이지이즈(F9) — 보간을 베지어로 바꾼 뒤 영향 33.33 을 차원 수만큼 준다.
+    // 전에는 [ez, ez] 두 개만 넘겨 Scale(3차원)에서 조용히 실패하고 기본(선형) 키로 남았다(10/2).
+    function akEaseDims(prop, k) {
+        if (prop.propertyValueType === PropertyValueType.TwoD_SPATIAL || prop.propertyValueType === PropertyValueType.ThreeD_SPATIAL) return 1;
+        var v = prop.keyValue(k);
+        return (v instanceof Array) ? v.length : 1;
+    }
+    function akEaseArr(n, inf) { var e = []; for (var d = 0; d < n; d++) e.push(new KeyframeEase(0, inf)); return e; }
+    function akEasyEase(prop, inInf, outInf) {
+        var ii = (inInf == null) ? 33.33 : inInf, oo = (outInf == null) ? ii : outInf;
+        for (var k = 1; k <= prop.numKeys; k++) {
+            try {
+                prop.setInterpolationTypeAtKey(k, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+                var n = akEaseDims(prop, k);
+                prop.setTemporalEaseAtKey(k, akEaseArr(n, ii), akEaseArr(n, oo));
+            } catch (eE) { }
+        }
+    }
+    // 카메라와 같은 텐션 — 들어옴 30 / 나감 70. 줌·위치 키가 카메라 무브와 겹쳐도 같은 속도 곡선을
+    // 타야 어색하지 않다(10/2 사용자). 인물 까딱임(이지이즈 핑퐁)에는 쓰지 않는다.
+    var AK_TENSION_IN = 30, AK_TENSION_OUT = 70;
+    function akTensionEase(prop) { akEasyEase(prop, AK_TENSION_IN, AK_TENSION_OUT); }
+    // 같은 씬 인물들의 까딱임이 한꺼번에 움직이지 않게 — 씬마다 몇 번째 인물인지 센다.
+    var AK_BOB_COUNT = {};
     function addBobNull(comp, il, layer, t0, amt, tEnd, halfFrames) {
         var prevParent = il.parent;
         il.parent = null;
@@ -762,11 +786,8 @@ function akBuildScene(manifestPath) {
         var half = (halfFrames || 10) * comp.frameDuration;
         sp.setValueAtTime(t0, [100, 100]);
         sp.setValueAtTime(Math.min(tEnd, t0 + half), [100, 100 + amt]);
-        try {                                             // easy ease 양 키
-            var ez = new KeyframeEase(0, 33.34);
-            sp.setTemporalEaseAtKey(1, [ez, ez], [ez, ez]);
-            sp.setTemporalEaseAtKey(2, [ez, ez], [ez, ez]);
-        } catch (e) { }
+        akEasyEase(sp);                                   // 이지이즈(F9) 양 키
+
         try { sp.expression = 'loopOut("pingpong")'; } catch (e) { }
         return nl;
     }
@@ -817,8 +838,11 @@ function akBuildScene(manifestPath) {
                     pd.setValueAtTime(t1, [P[0] + d2, P[1] - d2 * 0.4]);
                 } else if (mv.type === "bob") {
                     if (layer.foot) {                     // 발밑 피벗 null 스쿼시 루프(우월 경로)
-                        addBobNull(comp, il, layer, t0, (amt && amt <= 5 ? amt : 1),
-                                   sceneStart + sceneDur, mv.half_frames);
+                        // 같은 씬 인물은 타이밍이 모두 달라야 한다(10/2 사용자) — 시작 5f씩 어긋내고 반주기도 바꾼다.
+                        var bk = String(sceneStart), bi0 = AK_BOB_COUNT[bk] || 0; AK_BOB_COUNT[bk] = bi0 + 1;
+                        var hf0 = (mv.half_frames || 10) + [0, 3, -2, 5, 1, -3, 4][bi0 % 7];
+                        addBobNull(comp, il, layer, t0 + bi0 * 5 * (fps ? 1 / fps : comp.frameDuration), (amt && amt <= 5 ? amt : 1),
+                                   sceneStart + sceneDur, Math.max(6, hf0));
                     } else {                              // foot 없으면 구식 y 진동 폴백
                         var b2 = amt || 8, pb = il.property("Position");
                         var steps = Math.max(2, Math.floor((t1 - t0) / 0.6));
@@ -826,6 +850,7 @@ function akBuildScene(manifestPath) {
                             var tb = t0 + (t1 - t0) * bi / steps;
                             pb.setValueAtTime(tb, [P[0], P[1] + ((bi % 2) ? -b2 : 0)]);
                         }
+                        akEasyEase(pb);
                     }
                 } else if (mv.type === "shake") {
                     var s2 = amt || 10, ps = il.property("Position");
@@ -867,9 +892,12 @@ function akBuildScene(manifestPath) {
         try {
             var ki = prop.nearestKeyIndex(keyTime);
             var eIn = [], eOut = [], d;
+            try { prop.setInterpolationTypeAtKey(ki, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER); } catch (eI) { }
+            dims = akEaseDims(prop, ki);
             for (d = 0; d < dims; d++) { eIn.push(new KeyframeEase(0, inInf)); }
             prop.setTemporalEaseAtKey(ki, eIn, eIn);
             if (ki > 1) {
+                try { prop.setInterpolationTypeAtKey(ki - 1, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER); } catch (eI2) { }
                 for (d = 0; d < dims; d++) { eOut.push(new KeyframeEase(0, outInf)); }
                 prop.setTemporalEaseAtKey(ki - 1, eOut, eOut);
             }
@@ -931,9 +959,16 @@ function akBuildScene(manifestPath) {
         tp.setValue(doc);
         textL.inPoint = t0; textL.outPoint = t1;
 
-        // 판 크기 — 텍스트 폭을 따라가는 익스프레션(SEMOJI 그대로)
+        // 판 크기 — 텍스트 폭 + 50. 표시 이름("Size")으로는 속성을 못 찾아 익스프레션이 조용히
+        // 빠지고 기본 100×100 정사각형이 남은 적이 있다(10/1, 출처판 5개). 내부 이름으로 잡고,
+        // 먼저 정적 크기를 넣은 뒤 익스프레션을 얹는다 — 익스프레션이 실패해도 판은 글자 폭이다.
+        // 텍스트 레이어를 추가하면 앞서 잡은 속성 참조(rect)가 무효가 된다(「Object is invalid」,
+        // 10/2 EP02 출처판 8개) — 판 레이어에서 다시 찾는다.
+        var rsz = plate.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group")
+            .property("ADBE Vector Shape - Rect").property("ADBE Vector Rect Size");
+        try { rsz.setValue([textL.sourceRectAtTime(t0, false).width + 50, 50]); } catch (eS) { }
         try {
-            rect.property("Size").expression =
+            rsz.expression =
                 'var t = thisComp.layer("' + textL.name + '");\n' +
                 'var w = t.sourceRectAtTime(time, false).width;\n' +
                 '[w + 50, 50]';
@@ -971,7 +1006,7 @@ function akBuildScene(manifestPath) {
         guide.inPoint = t0; guide.outPoint = t1;
 
         if (s.bgFill) {                                   // 좌우 여백 — 테마 배경색으로
-            var c = TK.colors.bgRgb;
+            var c = (s.fillRgb && s.fillRgb.length === 3) ? s.fillRgb : TK.colors.bgRgb;   // 줄여 올린 도해는 그 그림의 바탕색
             var fill = comp.layers.addSolid([c[0] / 255, c[1] / 255, c[2] / 255], pf + "판", W, H, 1.0);
             fill.inPoint = t0; fill.outPoint = t1;
             fill.parent = guide;
@@ -1024,7 +1059,14 @@ function akBuildScene(manifestPath) {
                     il.name = lay.aeName || lay.name;
                     akSpan(il, t0, t1);
                     il.parent = guide;
-                    if (lay.moves) { applyMoves(comp, il, lay, t0, dur, W, H, fps); }
+                    if (lay.moves) {
+                        applyMoves(comp, il, lay, t0, dur, W, H, fps);
+                        try {                                 // 줌·위치 키는 카메라와 같은 텐션
+                            var spE = il.property("Scale"), ppE = il.property("Position");
+                            if (spE.numKeys > 1) akTensionEase(spE);
+                            if (ppE.numKeys > 1 && !ppE.expressionEnabled) akTensionEase(ppE);
+                        } catch (eTn) { }
+                    }
                     var top = il;                         // 까딱까딱 널이 끼면 그 널이 가이드의 자식
                     while (top.parent && top.parent !== guide) { top = top.parent; }
                     if (top !== guide && !top.parent) { top.parent = guide; }

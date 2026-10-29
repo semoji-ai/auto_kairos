@@ -31,7 +31,7 @@
       "1-2 characters max — clean editorial staging",
       "Aesthetic anchor: modern brand illustration (Slack / Asana / Notion / Behance hero art)",
       "EXPLICITLY NOT: Disney concept art, Pixar, painterly digital illustration, comic-book outlines, 3D, photorealistic",
-      "NO text, NO captions, NO logos, NO speech bubbles"
+      "Text appears only where the scene names it — signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering; every other surface stays smooth plain color, and brand marks are original simple shapes"
     ]
   },
   "image": {
@@ -62,7 +62,7 @@
       "1-2 characters max — clean editorial staging",
       "Aesthetic anchor: modern brand illustration (Slack / Asana / Notion / Behance hero art)",
       "EXPLICITLY NOT: Disney concept art, Pixar, painterly digital illustration, comic-book outlines, 3D, photorealistic",
-      "NO text, NO captions, NO logos, NO speech bubbles"
+      "Text appears only where the scene names it — signboards, plaques and key documents carry exactly the specified words in crisp, clearly legible lettering; every other surface stays smooth plain color, and brand marks are original simple shapes"
     ],
     "prompt_language": "ko"
   },

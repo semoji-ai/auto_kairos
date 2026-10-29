@@ -654,6 +654,21 @@ def enrich_scenes_with_media(scenes: list, project_dir_name: str, output_dir: st
         scene["_cast"] = cast
         scene["_layer_count"] = layer_count.get(scene.get("sceneNumber"), 0)
 
+    if output_dir:
+        from auto_agent.video_tracks import project_previews
+        from urllib.parse import quote
+        try:
+            previews = project_previews(Path(output_dir), include_candidates=True)
+        except (ValueError, OSError, KeyError, TypeError):
+            previews = {}
+        for scene in scenes:
+            segments = previews.get(scene["sceneNumber"], [])
+            scene["_track_previews"] = [
+                {**s, "url": "/output/" + quote(project_dir_name) + "/" + quote(s["sourcePath"])}
+                for s in segments
+            ]
+            if segments:
+                scene["_video_url"] = scene["_track_previews"][0]["url"]
     return scenes
 
 

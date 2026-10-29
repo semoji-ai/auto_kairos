@@ -64,6 +64,8 @@ def project_timings(root: Path, fps: float = 30) -> list:
     data = json.loads(path.read_text(encoding="utf-8"))
     result, frame = [], 0
     for scene in data.get("scenes", []):
+        if scene.get("merge_cut"):
+            continue  # 합쳐 공개할 때 잘라 내는 도입 멘트·로고 — 애펙 scenes.json 에도 없다
         sid = scene.get("sceneId")
         if not sid:
             raise ValueError("씬 ID가 없어 트랙 시간 기준을 만들 수 없습니다")
@@ -190,6 +192,78 @@ def resolve(root: Path, data: dict, *, fps: float = 30, timings: list | None = N
                               **({"warnings": warnings} if warnings else {})})
             except (ValueError, TypeError, KeyError, OSError) as e:
                 errors.append(f"[{tid}/{c.get('clipId', '?') if isinstance(c, dict) else '?'}] {e}")
+    return result
+
+
+def preview_segments(root, timings, resolved):
+    """Read-only scene-number mapping, using the same clipped timeline as render."""
+    root = Path(root).resolve()
+    result = {}
+    for scene, start, duration in timings:
+        segments = []
+        for clip in resolved["clips"]:
+            lo = max(start, clip["start"])
+            hi = min(start + duration, clip["start"] + clip["duration"])
+            if hi - lo < 1e-7:
+                continue
+            segments.append({
+                "clipId": clip["clipId"],
+                "sourcePath": Path(clip["sourcePath"]).relative_to(root).as_posix(),
+                "sourceIn": clip["sourceIn"] + lo - clip["start"],
+                "sourceOut": clip["sourceIn"] + hi - clip["start"],
+                "sceneOffset": lo - start,
+                "sceneDuration": duration,
+            })
+        if segments:
+            result[scene["sceneNumber"]] = segments
+    return result
+
+
+def project_previews(root, *, include_candidates=False, timings=None, resolver=None):
+    """Preview is read-only. Candidates never change the render activation contract."""
+    root = Path(root)
+    data = load(root)
+    documents = []
+    if include_candidates:
+        if data.get("tracks"):
+            documents.append((data, "saved"))
+        elif not (root / FILE_NAME).exists():
+            # Explicit pipeline mapping drafts only; never guess mappings from MP4 names.
+            for path in sorted((root / "video_sources" / "planning").glob("*/video_tracks.draft.json")):
+                if root.resolve() not in path.resolve().parents:
+                    continue
+                try:
+                    doc = json.loads(path.read_text(encoding="utf-8"))
+                    doc = doc.get("data", doc)
+                    if isinstance(doc, dict):
+                        documents.append((doc, path.relative_to(root).as_posix()))
+                except (ValueError, OSError, AttributeError):
+                    continue
+    if not data.get("tracks") and not documents:
+        return {}
+    timings = timings if timings is not None else project_timings(root)
+    checked = resolver or (lambda d: resolve(root, d, timings=timings))
+    active = checked(data)
+    result = preview_segments(root, timings, active)
+    for segments in result.values():
+        for segment in segments:
+            segment["previewOnly"] = False
+    active_keys = {(c["trackId"], c["clipId"]) for c in active["clips"]}
+    for document, origin in documents:
+        if document.get("schemaVersion", 1) != 1 or document.get("error"):
+            continue
+        for track in document.get("tracks", []):
+            for clip in track.get("clips", []):
+                if origin == "saved" and (track.get("trackId"), clip.get("clipId")) in active_keys:
+                    continue
+                # Validate each alternative independently: alternative clips may overlap.
+                candidate = {**document, "tracks": [
+                    {**track, "enabled": True, "clips": [{**clip, "enabled": True}]}]}
+                mapped = preview_segments(root, timings, checked(candidate))
+                for number, segments in mapped.items():
+                    for segment in segments:
+                        segment.update(previewOnly=True, previewOrigin=origin)
+                    result.setdefault(number, []).extend(segments)
     return result
 
 
