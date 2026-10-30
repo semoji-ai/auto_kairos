@@ -1,0 +1,7 @@
+Scene: Inside a small Chinese apartment in a far suburb, a woman (mid 30s, short black bob, mustard cardigan, grey trousers) sits at a dining table looking at her smartphone with a tired, hesitant face; the phone screen shows a map app with a very long winding route line from a small home icon to a far-away red store pin. On the table lies a plain red membership card and a wall calendar behind her has only one day circled this month. Through the window, rows of residential towers stretch far into the distance under a pale sky. Exactly one person.
+Camera: medium-wide eye-level interior view, full body seated, the phone screen tilted toward the viewer so the long route line is clearly visible.
+Lighting: flat colour planes with one darker shade per colour for shadow, soft late-afternoon daylight from the window.
+Color grading: walls pale grey #E4E1DA, cardigan mustard #D9A441, table wood #B07A4F, map route red #E31837, sky #C9D6E2.
+Texture/Medium: draw the woman with exactly the same body and face as the people in attached image 1 — large simple head, small dark oval eyes, round pink cheek blush, flat skin tone, simple rounded hands — and paint the whole room in the same flat vector style as attached image 2, smooth colour planes, clean edges, soft paper grain texture.
+Text-in-image: the phone map, membership card and calendar stay plain colour blocks and simple icons.
+AR 16:9
