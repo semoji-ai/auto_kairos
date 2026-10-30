@@ -37,8 +37,15 @@ def _tokens_cjk(chars):
 
 
 _CLAUSE_END = "，。！？；：、"
-_NO_START = "，。！？、；：）」”』…）》"
+_NO_START = "，。！？、；：）」”』…）》—"
 _NO_END = "（「“『《"
+
+
+def protect_terms(glossary):
+    """용어집 번역문에서 자막 줄을 끊지 않을 낱말(괄호·설명을 떼어 낸 고유명사, 두 글자 이상)."""
+    import re
+    return sorted({w for v in glossary.values() for w in re.split(r"[（）()—\s/，,;；]", v) if len(w) >= 2},
+                  key=len, reverse=True)
 
 
 def _cjk_groups(tokens, max_chars, protect=()):
@@ -57,8 +64,13 @@ def _cjk_groups(tokens, max_chars, protect=()):
         import jieba
         jieba.setLogLevel(60)
         k = 0
-        for w in jieba.lcut(text):
-            blocked.update(range(k + 1, k + len(w))); k += len(w)
+        ws = jieba.lcut(text)
+        for j, w in enumerate(ws):
+            blocked.update(range(k + 1, k + len(w)))
+            nxt = ws[j + 1] if j + 1 < len(ws) else "。"
+            if len(w) == 1 and not w.isascii() and w not in _CLAUSE_END + "—…" and nxt[0] in _CLAUSE_END + "—…）」”』":
+                blocked.add(k)                  # 「那个|人——」: 구두점 앞 한 글자 낱말은 앞말에 붙여 둔다
+            k += len(w)
     except ImportError:
         pass
 

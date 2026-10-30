@@ -149,3 +149,22 @@ def test_cjk_long_clause_is_not_cut_inside_a_word():
     joined = "|".join(c["text"] for c in cues)
     assert "".join(c["text"] for c in cues) == t
     assert "八竿|子" not in joined and "竿子|打" not in joined and "打不|着" not in joined
+
+
+def test_cjk_single_char_word_is_not_pushed_alone_to_next_cue():
+    t = "他盯上的，是索尔身边最得力的那个人——吉姆·辛内加尔。"   # 「那个|人——」처럼 한 글자만 다음 줄 맨 앞에 남기지 않음
+    cues = split_cues(*even(t, cps=5.0), max_chars=18, cjk=True)
+    joined = "|".join(c["text"] for c in cues)
+    assert "".join(c["text"] for c in cues) == t
+    assert "|人" not in joined
+
+
+def test_cjk_cue_never_starts_with_dash():
+    t = "他盯上的，是索尔身边最得力的那个人——吉姆·辛内加尔。"
+    cues = split_cues(*even(t, cps=5.0), max_chars=18, cjk=True)
+    assert all(not c["text"].startswith("—") for c in cues)
+
+
+def test_glossary_protect_terms_drop_closing_brackets():
+    from sg.subs import protect_terms
+    assert "普莱斯会员店" in protect_terms({"프라이스클럽": "Price Club（普莱斯会员店）"})

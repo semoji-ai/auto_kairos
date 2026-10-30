@@ -9,7 +9,7 @@ import json, os, re, subprocess, sys, time
 import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from sg.tts import synthesize, load_key, speech_bounds, trim, zh_spoken
-from sg.subs import cues_for_segment, snap_to_onsets, close_gaps, resolve_overlaps, srt_time, bar_intervals
+from sg.subs import protect_terms, cues_for_segment, snap_to_onsets, close_gaps, resolve_overlaps, srt_time, bar_intervals
 from sg.audio import decode as decode16, speech_spans
 from sg.timemap import PiecewiseMap
 
@@ -61,7 +61,7 @@ def cmd_tts(ep, lang, force=False):
 def cmd_plan(ep, lang):
     prof = json.load(open(os.path.join(ROOT, "profiles", f"{lang}.json")))
     gl = json.load(open(os.path.join(ROOT, "glossary", f"{lang}.json")))
-    protect = sorted({w for v in gl.values() for w in re.split(r"[（(—\s/，,;；]", v) if len(w) >= 2}, key=len, reverse=True)
+    protect = protect_terms(gl)
     od = os.path.join(ep, "tts", lang, "inserts"); meta = json.load(open(os.path.join(od, "meta.json")))
     S = load(ep, lang); plan = {}
     protect = sorted(set(protect) | set(S.get("protect", [])), key=len, reverse=True)   # 자막 큐를 끊지 않을 낱말(예: 第一家)

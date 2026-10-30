@@ -6,6 +6,7 @@ from sg.audio import decode, speech_spans
 from sg.timemap import PiecewiseMap
 from sg.edl import master_to_part
 from sg.tts import zh_spoken
+from sg.subs import protect_terms
 
 ep, lang = sys.argv[1], sys.argv[2]
 root = os.path.join(os.path.dirname(__file__), "..")
@@ -32,7 +33,7 @@ for pid, P in cfg["parts"].items():
 # 자막 줄을 나눌 때 끊지 않을 낱말: 용어집 번역의 고유명사(괄호·설명 앞부분)
 import re as _re
 _gl = json.load(open(os.path.join(root, "glossary", f"{lang}.json")))
-PROTECT = sorted({w for v in _gl.values() for w in _re.split(r"[（(—\s/，,;；]", v) if len(w) >= 2}, key=len, reverse=True)
+PROTECT = protect_terms(_gl)
 parts = {pid: [] for pid in cfg["parts"]}
 srt = []
 L10N = json.load(open(os.path.join(ep, "l10n", f"{lang}.json")))
