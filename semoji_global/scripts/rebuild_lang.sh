@@ -25,10 +25,8 @@ python3 scripts/subtitles.py "$EP" "$L"
 rm -f "$B/subtitles_log.json"; scripts/ae/run.sh "$PWD/scripts/ae/subtitles.jsx"
 python3 -c "import json,sys; d=json.load(open('$B/subtitles_log.json')); print('subtitles errors', d['errors']); sys.exit(1 if d['errors'] else 0)"
 fi
-for pid in $(python3 -c "import json; print(' '.join(json.load(open('$B/warp.json'))['parts']))"); do
-  read COMP DUR < <(python3 -c "import json; v=json.load(open('$B/warp.json'))['parts']['$pid']; print(v['comp'], round(v['dur_new'],3))")
-  scripts/ae/render.sh "$B/${CODE}_${L}_subs.aep" "$COMP" 0 "$DUR" "$EP/render/$L/part_$pid.mp4" 29.97 "H.264 - Match Render Settings - 15 Mbps" | tail -1
-done
+# 파트 렌더: 기본은 부분 렌더(직전 렌더 대비 바뀐 구간만 AE, 나머지는 이어 붙임). FULL=1이면 전체 렌더.
+if [ "${FULL:-0}" = "1" ]; then python3 scripts/render_parts.py "$EP" "$L"; else python3 scripts/render_parts.py "$EP" "$L" --incremental; fi
 python3 scripts/preview.py "$EP" "$L" --narration-only
 python3 scripts/audio_mix.py "$EP" "$L"
 python3 scripts/preview.py "$EP" "$L"
