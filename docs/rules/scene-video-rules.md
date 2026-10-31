@@ -178,6 +178,15 @@ frame. Nothing is redrawn, added or removed.
 씬보다 비디오가 짧아지는 경우(15초 상한)는 마지막 프레임을 정지로 늘리거나
 그 씬만 이미지로 둔다.
 
+**긴 클립은 중간에 딴 장면으로 넘어갈 수 있다.** 코스트코 두 매장 14초 클립이
+7초에 노을 진 빈 주차장으로 컷이 바뀌었다(같은 프롬프트의 9초판은 멀쩡). 받으면
+장면 전환부터 검사하고, 걸리면 프롬프트 첫머리에 「One continuous single shot of
+the same … from the first frame to the last frame」을 넣어 다시 뽑는다.
+
+```bash
+ffmpeg -i clip.mp4 -vf "select='gt(scene,0.25)',showinfo" -f null - 2>&1 | grep pts_time
+```
+
 ---
 
 ## 6. 계정은 크레딧 리셋일 순서로 쓴다
