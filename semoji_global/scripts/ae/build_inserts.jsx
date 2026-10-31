@@ -75,6 +75,17 @@ function buildScene(sc, fonts){
       if(S.type==="bg"){ L=comp.layers.add(footage(S.src)); var sx=Math.max(W/L.source.width,H/L.source.height)*100;
         L.property("ADBE Transform Group").property("ADBE Scale").setValue([sx,sx]); L.property("ADBE Transform Group").property("ADBE Position").setValue([W/2,H/2]);
         L.moveToEnd();
+        // 배경이 영상(미니맥스 등)이면: 소리 끄고, offset초부터 재생(한 영상을 두 장면이 나눠 씀), 짧으면 마지막 프레임에서 멈춤
+        if(!L.source.mainSource.isStill && L.source.duration>0){
+          try{ L.audioEnabled=false; }catch(e){}
+          var off=S.offset||0; L.startTime=-off;
+          if(L.source.duration-off < sc.dur){
+            var last=L.source.duration-1/FPS;
+            L.timeRemapEnabled=true; var TR=L.property("ADBE Time Remapping");
+            TR.setValueAtTime(Math.max(0,last-off), last); TR.setValueAtTime(sc.dur, last);
+            L.outPoint=sc.dur;
+          }
+        }
         if(S.dim){ var D=comp.layers.addSolid([0,0,0],"dim",W,H,1,sc.dur); D.property("ADBE Transform Group").property("ADBE Opacity").setValue(S.dim*100); D.moveBefore(L); }
       } else if(S.type==="split"){
         var A=comp.layers.addSolid(rgb(S.left),"left",W/2,H,1,sc.dur); A.property("ADBE Transform Group").property("ADBE Position").setValue([W/4,H/2]); A.moveToEnd();

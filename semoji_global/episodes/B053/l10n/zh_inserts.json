@@ -848,7 +848,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e53_space_v3.png"
+       "src": "assets/zh/vid/e53_space_v3_h3_9s_03.mp4"
       },
       {
        "type": "badge",
@@ -1018,7 +1018,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e53_cny_v2.png"
+       "src": "assets/zh/vid/e53_cny_v2_h3_15s_04.mp4"
       },
       {
        "type": "badge",
@@ -1047,7 +1047,8 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e53_cny_v2.png"
+       "src": "assets/zh/vid/e53_cny_v2_h3_15s_04.mp4",
+       "offset": 8.47
       },
       {
        "type": "badge",

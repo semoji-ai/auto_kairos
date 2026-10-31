@@ -102,8 +102,8 @@ def cmd_build(ep, lang):
     ad = os.path.join(bd, "insert_assets"); os.makedirs(ad, exist_ok=True)
     def fix(p):                       # 투명 여백을 잘라낸 사본(크기·위치 지정이 보이는 그림 기준이 되게)
         src = os.path.join(ep, p) if p and not os.path.isabs(p) else p
-        if not os.path.exists(src):
-            return src
+        if not os.path.exists(src) or src.lower().endswith((".mp4", ".mov", ".webm", ".m4v")):
+            return src                # 영상 배경(미니맥스 등)은 그대로
         im = Image.open(src).convert("RGBA"); bb = im.getchannel("A").point(lambda v: 255 if v > 8 else 0).getbbox()
         out = os.path.join(ad, os.path.basename(os.path.dirname(src)) + "_" + os.path.basename(src))
         (im.crop(bb) if bb else im).save(out)

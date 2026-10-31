@@ -28,7 +28,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e52_shanghai_v2.png"
+       "src": "assets/zh/vid/e52_shanghai_v2_h3_14s_00.mp4"
       },
       {
        "type": "badge",
@@ -57,7 +57,8 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e52_shanghai_v2.png"
+       "src": "assets/zh/vid/e52_shanghai_v2_h3_14s_00.mp4",
+       "offset": 6.47
       },
       {
        "type": "badge",
@@ -102,7 +103,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e53_cny_v2.png"
+       "src": "assets/zh/vid/e53_cny_v2_h3_13s_01.mp4"
       },
       {
        "type": "badge",
@@ -354,7 +355,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e52_cn_v2.png"
+       "src": "assets/zh/vid/e52_cn_v2_h3_10s_02.mp4"
       },
       {
        "type": "badge",

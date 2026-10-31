@@ -94,7 +94,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/p_crowd5.png"
+       "src": "assets/zh/vid/p_crowd5_h3_15s_05.mp4"
       },
       {
        "type": "badge",
@@ -163,7 +163,8 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/p_crowd5.png"
+       "src": "assets/zh/vid/p_crowd5_h3_15s_05.mp4",
+       "offset": 7.67
       },
       {
        "type": "badge",
@@ -232,7 +233,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/p_inside4.png"
+       "src": "assets/zh/vid/p_inside4_h3_11s_06.mp4"
       },
       {
        "type": "counter",
@@ -560,7 +561,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_sam1996_v2.png"
+       "src": "assets/zh/vid/e_sam1996_v2_h3_9s_07.mp4"
       },
       {
        "type": "badge",
@@ -614,7 +615,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_tmall_v2.png"
+       "src": "assets/zh/vid/e_tmall_v2_h3_9s_08.mp4"
       },
       {
        "type": "badge",
@@ -672,7 +673,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_twostores_v3.png"
+       "src": "assets/zh/vid/e_twostores_v3_h3_9s_09.mp4"
       },
       {
        "type": "counter",
@@ -756,7 +757,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_online_v3.png"
+       "src": "assets/zh/vid/e_online_v3_h3_15s_11.mp4"
       },
       {
        "type": "badge",
@@ -962,7 +963,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_far_v2.png"
+       "src": "assets/zh/vid/e_far_v2_h3_9s_12.mp4"
       },
       {
        "type": "counter",
@@ -1016,7 +1017,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_twostores_v3.png"
+       "src": "assets/zh/vid/e_twostores_v3_h3_14s_13.mp4"
       },
       {
        "type": "image",
