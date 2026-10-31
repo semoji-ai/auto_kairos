@@ -848,7 +848,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e53_space.png"
+       "src": "assets/zh/gen/e53_space_v3.png"
       },
       {
        "type": "badge",
@@ -1018,7 +1018,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e53_cny.png"
+       "src": "assets/zh/gen/e53_cny_v2.png"
       },
       {
        "type": "badge",
@@ -1047,7 +1047,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e53_cny.png"
+       "src": "assets/zh/gen/e53_cny_v2.png"
       },
       {
        "type": "badge",

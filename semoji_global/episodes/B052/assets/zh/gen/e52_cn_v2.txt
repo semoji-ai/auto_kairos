@@ -1,0 +1,7 @@
+Scene: A bottling line in a modern Chinese factory, shown as one long simple conveyor of glass Coca-Cola bottles with the script logo from attached image 3, in front of a flat pale wall with two big simple steel tanks. A woman worker with black hair under a white cap holds a clipboard and a man worker with short brown hair, teal glasses and thick eyebrows lifts one bottle to look at it; both in light blue work uniforms. Exactly these two people.
+Camera: straight-on medium view at eye level, the people fully visible from the waist up or more, simple layered staging.
+Lighting: flat colour planes with one darker shade per colour for shadow.
+Color grading: wall #E8E4DA, uniform blue #9CC3E6, steel grey #B8C2CC, cola #4A2416, logo red #E41E2B.
+Texture/Medium: redraw everything in exactly the drawing style of attached image 1 — the same minimal flat vector shapes, the background as one or two large flat color areas with soft paper grain and only a few big simple props, people drawn exactly like the people in attached image 1 and image 2: slim oval faces, small dark dot eyes, thick dark eyebrows, round pink cheek blush, flat clothing color blocks, simple mitten-like hands, gentle front-facing staging with little depth. The whole frame matches attached image 1 so closely that it reads as the next scene of the same video.
+Text-in-image: the only lettering is the Coca-Cola script logo copied exactly from attached image 3; every other surface stays a plain color block. Every text appears exactly once, crisp and clearly legible.
+AR 16:9

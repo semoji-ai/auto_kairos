@@ -28,7 +28,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e52_shanghai.png"
+       "src": "assets/zh/gen/e52_shanghai_v2.png"
       },
       {
        "type": "badge",
@@ -57,7 +57,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e52_shanghai.png"
+       "src": "assets/zh/gen/e52_shanghai_v2.png"
       },
       {
        "type": "badge",
@@ -102,7 +102,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e53_cny.png"
+       "src": "assets/zh/gen/e53_cny_v2.png"
       },
       {
        "type": "badge",
@@ -274,7 +274,7 @@
    "scenes": [
     {
      "id": "ze01",
-     "text": "回头看，可口可乐手里有两张王牌。第一张：瓶子交给各地装瓶商去灌，总公司只卖原液；",
+     "text": "回头看，可口可乐手里有两张王牌。第一张：瓶子交给各地装瓶商，厂房和本钱由他们出，总公司只卖原液，所以它铺得又快又省；",
      "layers": [
       {
        "type": "bg",
@@ -312,7 +312,7 @@
     },
     {
      "id": "ze02",
-     "text": "第二张：配方不申请专利，靠保密，守了一百多年。",
+     "text": "第二张：配方不申请专利，靠保密守了一百多年——别人可以模仿味道，却拿不到配方。",
      "layers": [
       {
        "type": "bg",
@@ -354,7 +354,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e52_cn.png"
+       "src": "assets/zh/gen/e52_cn_v2.png"
       },
       {
        "type": "badge",
@@ -559,6 +559,17 @@
    ],
    "_ids": [
     "n133"
+   ]
+  },
+  "cut_cocaine_repeat": {
+   "cut": true,
+   "replace_master": [
+    667.9,
+    675.5
+   ],
+   "_ids": [
+    "n206",
+    "n207"
    ]
   }
  }
