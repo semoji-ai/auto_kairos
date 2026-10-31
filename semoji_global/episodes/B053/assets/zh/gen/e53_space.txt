@@ -1,0 +1,7 @@
+Scene: Inside the cramped cabin of a 1985 space shuttle, two astronauts float weightless in light lavender flight suits. The astronaut on the left holds a small red-and-white can with a push nozzle on top, printed with the Coca-Cola script logo exactly as in attached image 3; he has just taken a sip and is burping, and a few round wobbling droplets of brown soda float out of his mouth in front of him. The astronaut on the right floats beside him, laughing with one hand over his mouth. A round window behind them shows the blue curve of Earth against black space. Exactly these two people, each a different face and hairstyle.
+Camera: medium-wide interior view at eye level, both astronauts fully visible from head to feet, drifting at slight angles.
+Lighting: flat colour planes with one darker shade per colour for shadow, cool cabin light.
+Color grading: suits lavender #D9CFE6, cabin panels grey #B9C0C8, Earth blue #3E7CC4, space #10172A, can red #E41E2B.
+Texture/Medium: draw both astronauts with exactly the same body and face as the person in attached image 1 — simple head, small dark oval eyes, pink cheek blush, flat skin tone, simple rounded hands — and paint the whole cabin in the same flat vector style as attached image 2, smooth colour planes, clean edges, soft paper grain texture.
+Text-in-image: the only lettering is the Coca-Cola script logo on the can, copied exactly from attached image 3; cabin panels stay plain colour blocks.
+AR 16:9

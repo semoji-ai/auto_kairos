@@ -1,0 +1,455 @@
+{
+ "_doc": "중국어판 재구성(2026-10-31, 축 \"从蝌蚪啃蜡到可口可乐\"): 도입=1927 상하이 蝌蚪啃蜡(据说)→중국 최대 시장 중 하나→약·코카인→상하 2편, 결말=두 가지 패→中粮·太古→2편 예고, 장면 삭제 3곳. 사실 docs/zh/B052_B053_facts_cneval.md",
+ "fonts": {
+  "label": "SourceHanSansCN-Heavy",
+  "body": "SourceHanSansCN-Bold",
+  "title": "SmileySans-Oblique",
+  "hand": "ZCOOLKuaiLe-Regular"
+ },
+ "sfx": {
+  "_doc": "애니메이션 종류별 효과음(B209 본편 효과음에서 잘라 낸 것 재사용). 반복 요소는 묶음당 1번",
+  "pop": "assets/sfx/pop.wav",
+  "slam": "assets/sfx/stamp.wav",
+  "slide_right": "assets/sfx/whoosh.wav",
+  "slide_left": "assets/sfx/whoosh.wav",
+  "slide_up": "assets/sfx/whoosh.wav",
+  "bar": "assets/sfx/whoosh.wav"
+ },
+ "inserts": {
+  "intro": {
+   "replace_master": [
+    0.0,
+    29.3
+   ],
+   "scenes": [
+    {
+     "id": "zi01",
+     "text": "1927年，上海。一种深褐色、冒着气泡的洋饮料，摆上了店里的柜台。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/e52_shanghai.png"
+      },
+      {
+       "type": "badge",
+       "text": "1927 上海",
+       "x": 1560,
+       "y": 120,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.05,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "zi02",
+     "text": "据说，当时它还没有正式的中文名，有商贩照着发音，叫它“蝌蚪啃蜡”。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/e52_shanghai.png"
+      },
+      {
+       "type": "badge",
+       "text": "蝌蚪啃蜡？",
+       "x": 1450,
+       "y": 200,
+       "size": 110,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.6,
+       "anim": "slam",
+       "rot": -5
+      },
+      {
+       "type": "text",
+       "text": "据说",
+       "font": "body",
+       "size": 40,
+       "x": 1450,
+       "y": 320,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "at": 0.6,
+       "anim": "fade"
+      }
+     ]
+    },
+    {
+     "id": "zi03",
+     "text": "这名字，听着就不像能喝的东西。可就是这瓶饮料，如今在中国，已是它全球最大的市场之一。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/e53_cny.png"
+      },
+      {
+       "type": "badge",
+       "text": "全球最大的市场之一",
+       "x": 960,
+       "y": 120,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.55,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "zi04",
+     "text": "更让人想不到的是：它最早是美国药店里卖的药，里面还真加过可卡因。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/bg_red.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/bottle_1900.png",
+       "x": 960,
+       "y": 560,
+       "w": 420,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "药？",
+       "x": 560,
+       "y": 330,
+       "size": 110,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.3,
+       "anim": "slam",
+       "rot": -6
+      },
+      {
+       "type": "badge",
+       "text": "可卡因？！",
+       "x": 1400,
+       "y": 700,
+       "size": 96,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.7,
+       "anim": "slam",
+       "rot": 5
+      }
+     ]
+    },
+    {
+     "id": "zi05",
+     "text": "一瓶药，是怎么变成全世界的饮料，又是怎么走进中国的？品牌百科，可口可乐，上下两集。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/bg_red.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/logo_white.png",
+       "x": 960,
+       "y": 420,
+       "w": 900,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "品牌百科 · 上下两集",
+       "font": "title",
+       "size": 90,
+       "x": 960,
+       "y": 720,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.6,
+       "anim": "slam"
+      }
+     ]
+    }
+   ]
+  },
+  "cut_thomson": {
+   "cut": true,
+   "replace_master": [
+    69.8,
+    99.1
+   ],
+   "_ids": [
+    "n023",
+    "n024",
+    "n025",
+    "n026",
+    "n027",
+    "n028",
+    "n029",
+    "n030",
+    "n031"
+   ]
+  },
+  "cut_hutchinson": {
+   "cut": true,
+   "replace_master": [
+    537.5,
+    559.1
+   ],
+   "_ids": [
+    "n168",
+    "n169",
+    "n170",
+    "n171",
+    "n172",
+    "n173"
+   ]
+  },
+  "cut_vault": {
+   "cut": true,
+   "replace_master": [
+    747.0,
+    761.1
+   ],
+   "_ids": [
+    "n230",
+    "n231",
+    "n232",
+    "n233"
+   ]
+  },
+  "ending": {
+   "replace_master": [
+    781.5,
+    788.2
+   ],
+   "scenes": [
+    {
+     "id": "ze01",
+     "text": "回头看，可口可乐手里有两张王牌。第一张：配方不申请专利，靠保密，守了一百多年；",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/bg_red.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324219572.png",
+       "x": 960,
+       "y": 580,
+       "w": 1000,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "王牌一：配方保密",
+       "x": 960,
+       "y": 150,
+       "size": 80,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.35,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "ze02",
+     "text": "第二张：瓶子交给各地装瓶商去灌，总公司只卖原液。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/bg_red.png"
+      },
+      {
+       "type": "image",
+       "src": "raster/src/1324219033.png",
+       "x": 960,
+       "y": 580,
+       "w": 1000,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "王牌二：装瓶交给别人",
+       "x": 960,
+       "y": 150,
+       "size": 80,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.1,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "ze03",
+     "text": "这套打法，今天在中国也一样：你手里的可口可乐，出自中粮和太古两家装瓶集团，全国有四十多家工厂。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/gen/e52_cn.png"
+      },
+      {
+       "type": "badge",
+       "text": "中粮",
+       "x": 300,
+       "y": 140,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.45,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "太古",
+       "x": 560,
+       "y": 140,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        226,
+        28,
+        52
+       ],
+       "at": 0.55,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "四十多家工厂",
+       "x": 430,
+       "y": 270,
+       "size": 64,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.8,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "ze04",
+     "text": "那这瓶糖水，是怎么走向世界，又是怎么走进中国的？我们下期见。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/bg_red.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/logo_white.png",
+       "x": 960,
+       "y": 400,
+       "w": 900,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "下期见",
+       "font": "title",
+       "size": 110,
+       "x": 960,
+       "y": 720,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "at": 0.6,
+       "anim": "slam"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

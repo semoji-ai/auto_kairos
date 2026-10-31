@@ -1,0 +1,7 @@
+Scene: A warm Chinese family Spring Festival dinner at home. Around a round table full of dishes — whole steamed fish, dumplings, a hotpot — sit four people: a grandmother (70s, short grey hair, red padded jacket), a father (40s, short black hair, navy sweater), a mother (40s, shoulder-length black hair, burgundy cardigan) and a girl (about 8, two black pigtails, red quilted coat) raising a glass in a toast. In the middle of the table stand three classic glass contour bottles of Coca-Cola with the red script logo exactly as in attached image 3, and glasses of cola. Red paper lanterns and a plain red paper-cut window decoration hang behind them. Exactly these four people.
+Camera: medium-wide eye-level view across the table, all four people visible from the waist up, the bottles clearly in the centre foreground.
+Lighting: flat colour planes with one darker shade per colour for shadow, warm evening indoor light.
+Color grading: lantern red #D7262E, wall cream #F2E6D3, table wood #9C6B43, gold accents #E8B64C, cola brown #4A2416.
+Texture/Medium: draw every person with exactly the same body and face as the person in attached image 1 — simple head, small dark oval eyes, pink cheek blush, flat skin tone, simple rounded hands — and paint the whole room in the same flat vector style as attached image 2, smooth colour planes, clean edges, soft paper grain texture.
+Text-in-image: the only lettering is the Coca-Cola script logo on the bottles, copied exactly from attached image 3; lanterns and paper-cuts stay plain shapes.
+AR 16:9

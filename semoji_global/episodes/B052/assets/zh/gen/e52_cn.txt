@@ -1,0 +1,7 @@
+Scene: Inside a bright modern bottling plant in China. A long conveyor line runs diagonally across the frame carrying rows of filled glass contour bottles of Coca-Cola, each with the red script logo exactly as in attached image 3. Two workers stand beside the line checking bottles: a woman (30s, black hair tied back under a white cap, light blue work uniform) holding a clipboard, and a man (40s, short black hair, light blue work uniform, white cap) lifting one bottle to the light. Behind them, shiny steel tanks and more conveyor lines fill the large hall. Exactly these two people.
+Camera: wide eye-level view, the conveyor line leading the eye from front left to back right, both workers fully visible.
+Lighting: flat colour planes with one darker shade per colour for shadow, even daylight from high windows.
+Color grading: uniform blue #9CC3E6, steel grey #B8C2CC, floor green-grey #A9B8AE, cola brown #4A2416, logo red #E41E2B.
+Texture/Medium: draw both workers with exactly the same body and face as the person in attached image 1 — simple head, small dark eyes, pink cheek blush, flat skin tone, simple rounded hands — and paint the whole plant in the same flat vector style as attached image 2, smooth colour planes, clean edges, soft paper grain texture.
+Text-in-image: the only lettering is the Coca-Cola script logo on the bottles, copied exactly from attached image 3; tanks and machines stay plain colour blocks.
+AR 16:9

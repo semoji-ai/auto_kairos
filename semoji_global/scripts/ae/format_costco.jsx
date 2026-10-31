@@ -24,7 +24,9 @@ try{
   if(!fmt) throw new Error("COSTCO_FMT 없음");
   var fl={}; for(var k=1;k<=fmt.numLayers;k++) fl[fmt.layer(k).name]=fmt.layer(k);
   // 1) 끄기·음소거
-  for(var i=0;i<hide.length;i++){ hide[i].locked=false; hide[i].enabled=false; LOG.hidden.push(hide[i].name); }
+  for(var i=0;i<hide.length;i++){ hide[i].locked=false; hide[i].enabled=false; LOG.hidden.push(hide[i].name);
+    // 원래 자막바 이름이 템플릿과 같으면(B053 "자막바") 새 바 찾기·자막 불투명도 키가 옛 바로 섞임 → 이름을 바꿔 둠
+    if(hide[i].name==="자막바"||hide[i].name==="자막바그림자") hide[i].name=hide[i].name+"_old"; }
   for(var i=0;i<chap.length;i++){ chap[i].locked=false; chap[i].enabled=false; LOG.hidden.push(chap[i].name); }
   for(var i=0;i<mute.length;i++){ mute[i].locked=false; try{ mute[i].audioEnabled=false; }catch(e){} mute[i].enabled=false; LOG.muted.push(mute[i].name); }
   // 2) 챕터 판 + 소리(로고 바로 아래 = 본편 그림 위)

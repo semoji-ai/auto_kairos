@@ -1,0 +1,7 @@
+Scene: A small general store on a busy Shanghai street in 1927. Behind a wooden shop counter, a shopkeeper (40s, round face, short black hair parted in the middle, grey long gown) holds up a glass contour bottle of dark brown fizzy soda with the Coca-Cola script logo exactly as in attached image 3, a few more bottles lined up on the counter. In front of the counter, two curious customers lean in to look at it: a young man (20s, short side-parted black hair, white shirt with dark vest and flat cap) and a young woman (20s, black bob with bangs, light blue qipao). Behind the shop, a street with shikumen stone-gate houses and a rickshaw. Exactly these three people, each a different face.
+Camera: medium-wide eye-level view from the street into the shop, all three people visible from the waist up, the bottle held up clearly in the centre.
+Lighting: flat colour planes with one darker shade per colour for shadow, warm afternoon daylight.
+Color grading: wood counter #8A5A3B, wall cream #EFE3CC, qipao blue #8DB3D8, gown grey #8C8F94, cola brown #4A2416.
+Texture/Medium: draw every person with exactly the same body and face as the person in attached image 1 — simple head, small dark eyes, pink cheek blush, flat skin tone, simple rounded hands — and paint the whole scene in the same flat vector style as attached image 2, smooth colour planes, clean edges, soft paper grain texture.
+Text-in-image: the only lettering is the Coca-Cola script logo on the bottles, copied exactly from attached image 3; shop signs and boxes stay plain colour blocks.
+AR 16:9
