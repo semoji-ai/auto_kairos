@@ -1,0 +1,7 @@
+Scene: A young woman with a black ponytail in a lilac hoodie sits on a simple flat sofa holding a smartphone that shows an online shop page with the COSTCO WHOLESALE logo from attached image 3 at the top; beside her a man with short black hair in a grey T-shirt leans in, smiling. On a low table in front, an opened cardboard parcel with a jar of nuts and a box of cookies. Plain cream wall. Exactly these two people.
+Camera: straight-on wide view at eye level, people fully visible, simple layered staging.
+Lighting: flat colour planes with one darker shade per colour for shadow.
+Color grading: wall cream #F3EBDD, sofa teal #4F8A8B, hoodie lilac #B9A6D9, parcel kraft #C69C6D, logo red #E31837.
+Texture/Medium: redraw everything in exactly the drawing style of attached image 1 — the same flat vector shapes, buildings as simple flat colour blocks with plain window grids, a plain flat sky and simple flat skyline, people drawn exactly like the people in attached image 1 and image 2: adult proportions, long slim faces, small dark eyes, rosy cheek blush, simple flat clothing colour blocks, simple hands, with soft paper grain over everything. The whole frame matches attached image 1 so closely that it reads as the next scene of the same video.
+Text-in-image: the only lettering is the COSTCO WHOLESALE logo on the phone screen, copied exactly from attached image 3; other surfaces stay plain colour blocks. Every text appears exactly once, crisp and clearly legible.
+AR 16:9

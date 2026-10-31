@@ -1,0 +1,7 @@
+Scene: At the open front door of a simple flat apartment, a young couple (woman with long black hair in a coral sweater holding a smartphone that shows a simple member card screen with a row of product squares; man with short black hair in a mustard sweater) receive two big silver insulated grocery bags from a smiling delivery rider in a blue cap and blue jacket. Plain cream wall, one simple sofa shape. Exactly these three people.
+Camera: straight-on wide view at eye level, people fully visible, simple layered staging.
+Lighting: flat colour planes with one darker shade per colour for shadow.
+Color grading: wall cream #F3EBDD, rider blue #1F5FA8, bags silver #C9CED6, sweater coral #E07A5F, mustard #D9A441.
+Texture/Medium: redraw everything in exactly the drawing style of attached image 1 — the same flat vector shapes, buildings as simple flat colour blocks with plain window grids, a plain flat sky and simple flat skyline, people drawn exactly like the people in attached image 1 and image 2: adult proportions, long slim faces, small dark eyes, rosy cheek blush, simple flat clothing colour blocks, simple hands, with soft paper grain over everything. The whole frame matches attached image 1 so closely that it reads as the next scene of the same video.
+Text-in-image: the phone and bags stay plain colour blocks and simple icons. Every text appears exactly once, crisp and clearly legible.
+AR 16:9

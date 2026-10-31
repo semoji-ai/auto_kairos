@@ -1,0 +1,7 @@
+Scene: Opening day of a big blue warehouse store in Shenzhen in 1996. A flat blue store front with a large sign reading "山姆会员商店" in white letters and a red ribbon over the door. A modest line of about twelve shoppers in 1990s clothes waits at the door, each a different face, hairstyle and outfit; a few palm trees and a simple flat city skyline behind.
+Camera: straight-on wide view at eye level, people fully visible, simple layered staging.
+Lighting: flat colour planes with one darker shade per colour for shadow.
+Color grading: store blue #1F4FA8, sky #BFE3F2, ribbon red #D9262E, ground #D8D2C4, skin #F2C9A8.
+Texture/Medium: redraw everything in exactly the drawing style of attached image 1 — the same flat vector shapes, buildings as simple flat colour blocks with plain window grids, a plain flat sky and simple flat skyline, people drawn exactly like the people in attached image 1 and image 2: adult proportions, long slim faces, small dark eyes, rosy cheek blush, simple flat clothing colour blocks, simple hands, with soft paper grain over everything. The whole frame matches attached image 1 so closely that it reads as the next scene of the same video.
+Text-in-image: the store sign reads "山姆会员商店"; other surfaces stay plain colour blocks. Every text appears exactly once, crisp and clearly legible.
+AR 16:9

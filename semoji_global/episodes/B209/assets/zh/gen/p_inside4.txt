@@ -1,0 +1,7 @@
+Scene: Inside a warehouse store on opening day: tall flat orange-and-grey shelving. On one shelf section, a row of empty spaces where liquor boxes used to be, with a small white sign reading "飞天茅台 已售罄" taped to the shelf edge. In front, surprised shoppers with full carts look at the empty shelf, and a store clerk in a green vest spreads his hands apologetically. About five people, each a different face.
+Camera: straight-on wide view at eye level, people fully visible, simple layered staging.
+Lighting: flat colour planes with one darker shade per colour for shadow.
+Color grading: shelf orange #E07A3A, shelf grey #5B6670, boxes kraft #C9A27A, floor #D8D2C4, vest green #6E8B5B.
+Texture/Medium: redraw everything in exactly the drawing style of attached image 1 — the same flat vector shapes, buildings as simple flat colour blocks with plain window grids, a plain flat sky and simple flat skyline, people drawn exactly like the people in attached image 1 and image 2: adult proportions, long slim faces, small dark eyes, rosy cheek blush, simple flat clothing colour blocks, simple hands, with soft paper grain over everything. The whole frame matches attached image 1 so closely that it reads as the next scene of the same video.
+Text-in-image: the small shelf sign reads "飞天茅台 已售罄"; boxes and other surfaces stay plain colour blocks. Every text appears exactly once, crisp and clearly legible.
+AR 16:9

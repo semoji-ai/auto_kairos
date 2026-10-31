@@ -1,0 +1,7 @@
+Scene: Opening day of a COSTCO WHOLESALE warehouse in Shanghai in 2019: a flat red-and-white store front with the COSTCO WHOLESALE logo from attached image 3 on the sign. A dense crowd of shoppers with full carts squeezes toward the single entrance, packed shoulder to shoulder in a bottleneck, more people streaming in from both sides; a security guard in a yellow vest raises a hand at the door. Simple flat sky and skyline behind.
+Camera: straight-on wide view at eye level, people fully visible, simple layered staging.
+Lighting: flat colour planes with one darker shade per colour for shadow.
+Color grading: store red #E31837, wall white #F4F4F4, sky #BFE3F2, vest yellow #F2C230, crowd mixed muted colours.
+Texture/Medium: redraw everything in exactly the drawing style of attached image 1 — the same flat vector shapes, buildings as simple flat colour blocks with plain window grids, a plain flat sky and simple flat skyline, people drawn exactly like the people in attached image 1 and image 2: adult proportions, long slim faces, small dark eyes, rosy cheek blush, simple flat clothing colour blocks, simple hands, with soft paper grain over everything. The whole frame matches attached image 1 so closely that it reads as the next scene of the same video.
+Text-in-image: the sign shows the COSTCO WHOLESALE logo copied exactly from attached image 3; other surfaces stay plain colour blocks. Every text appears exactly once, crisp and clearly legible.
+AR 16:9

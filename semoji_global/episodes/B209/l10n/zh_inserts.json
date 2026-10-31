@@ -94,7 +94,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/p_crowd4.png"
+       "src": "assets/zh/gen/p_crowd5.png"
       },
       {
        "type": "badge",
@@ -163,7 +163,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/p_crowd4.png"
+       "src": "assets/zh/gen/p_crowd5.png"
       },
       {
        "type": "badge",
@@ -232,7 +232,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/p_inside3.png"
+       "src": "assets/zh/gen/p_inside4.png"
       },
       {
        "type": "counter",
@@ -560,7 +560,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_sam1996.png"
+       "src": "assets/zh/gen/e_sam1996_v2.png"
       },
       {
        "type": "badge",
@@ -614,7 +614,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_tmall.png"
+       "src": "assets/zh/gen/e_tmall_v2.png"
       },
       {
        "type": "badge",
@@ -637,7 +637,7 @@
       },
       {
        "type": "image",
-       "src": "assets/zh/gen/p_crowd4.png",
+       "src": "assets/zh/gen/p_crowd5.png",
        "x": 960,
        "y": 540,
        "w": 1920,
@@ -672,7 +672,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_twostores.png"
+       "src": "assets/zh/gen/e_twostores_v3.png"
       },
       {
        "type": "counter",
@@ -756,7 +756,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_online_v2.png"
+       "src": "assets/zh/gen/e_online_v3.png"
       },
       {
        "type": "badge",
@@ -962,7 +962,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_far.png"
+       "src": "assets/zh/gen/e_far_v2.png"
       },
       {
        "type": "counter",
@@ -1016,7 +1016,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/e_twostores.png"
+       "src": "assets/zh/gen/e_twostores_v3.png"
       },
       {
        "type": "image",

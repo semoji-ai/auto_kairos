@@ -1,0 +1,7 @@
+Scene: A woman with a short black bob in a mustard cardigan sits at a simple dining table looking at her smartphone with a hesitant face; the phone shows a map with a very long winding route line from a small home icon to a far-away red store pin. A plain red membership card lies on the table and a simple wall calendar with one day circled hangs behind her. Plain pale wall and a window with flat tower blocks far away. Exactly one person.
+Camera: straight-on wide view at eye level, people fully visible, simple layered staging.
+Lighting: flat colour planes with one darker shade per colour for shadow.
+Color grading: wall #E4E1DA, cardigan mustard #D9A441, table wood #B07A4F, route red #E31837, sky #C9D6E2.
+Texture/Medium: redraw everything in exactly the drawing style of attached image 1 — the same flat vector shapes, buildings as simple flat colour blocks with plain window grids, a plain flat sky and simple flat skyline, people drawn exactly like the people in attached image 1 and image 2: adult proportions, long slim faces, small dark eyes, rosy cheek blush, simple flat clothing colour blocks, simple hands, with soft paper grain over everything. The whole frame matches attached image 1 so closely that it reads as the next scene of the same video.
+Text-in-image: the phone map, card and calendar stay plain colour blocks and simple icons. Every text appears exactly once, crisp and clearly legible.
+AR 16:9
