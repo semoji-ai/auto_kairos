@@ -1,0 +1,15 @@
+Edit image 1 and keep its composition, the queue, the restaurant, the sign "肯德基" with the round Colonel logo, the Qianmen tower and the paper grain exactly in place. Change only how the people and the buildings are painted so they match the drawing style of image 2 and image 3 from the original video: each coat becomes one or two flat colour blocks with a single darker block for shadow, each face becomes the same simple face drawing as the people in image 3, each person keeps the same slim body as the people in image 3, and the tower and building walls become a few large flat colour blocks.
+
+Scene: the same Beijing street queue in front of the restaurant in November 1987 as in image 1.
+
+Camera: identical framing to image 1.
+
+Lighting: flat as in image 2, light shown only as a lighter or darker colour block.
+
+Color grading: KFC red #C8102E, window yellow #F6C453, army green #5B6B3A, navy #2B3A55, pale sky #DDE6EC.
+
+Texture/Medium: flat 2D vector illustration with the same paper grain as image 2.
+
+Text-in-image: only the sign characters "肯德基" as in image 1, each character drawn once, crisp and legible; every other surface is plain colour.
+
+AR 16:9

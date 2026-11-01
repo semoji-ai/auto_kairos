@@ -40,6 +40,8 @@ L10N = json.load(open(os.path.join(ep, "l10n", f"{lang}.json")))
 for g in src["segments"]:
     if g.get("nonverbal"):
         continue
+    if "text" in L10N["segments"].get(g["id"], {}) and not L10N["segments"][g["id"]]["text"]:
+        continue                                   # 번역문을 비운 구간(장면 삭제): 옛 TTS 정렬로 자막을 만들지 않음
     al = json.load(open(os.path.join(ep, "tts", lang, f"{g['id']}.align.json")))
     loc = master_to_part(edl, g["in"])
     if loc is None:

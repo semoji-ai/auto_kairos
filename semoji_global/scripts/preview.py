@@ -62,7 +62,9 @@ for pid, P in cfg["parts"].items():
             raise FileNotFoundError(f"내레이션 wav 로컬 사본을 못 찾음: {nm} ({len(hits)}개)")
         f_local = hits[0]
     nar[pid] = (f_local, Lw, r["occ"])
-plan = plan_audio(src["segments"], warp, os.path.join(ep, "tts", lang))
+_L = json.load(open(os.path.join(ep, "l10n", f"{lang}.json")))["segments"]
+plan = plan_audio(src["segments"], warp, os.path.join(ep, "tts", lang),
+                  blank={k for k, v in _L.items() if "text" in v and not v["text"]})   # 비운 구간의 옛 TTS는 빼기
 ins, flt = [], []
 for k, p in enumerate(plan):
     if p.get("kind") == "nonverbal":

@@ -7,7 +7,7 @@ var C=jobConfig(SELF), LOG={replaced:0, keys_replaced:0, shrunk:[], overflow:[],
 function norm(s){ return String(s).replace(/\r\n|\n/g,"\r"); }
 function width(L,t){ try{ var r=L.sourceRectAtTime(t,false); return r.width; }catch(e){ return 0; } }
 var UNMAPPED={};
-function apply(td,txt){ td.text=txt; if(C.font_map[td.font]) td.font=C.font_map[td.font]; else UNMAPPED[td.font]=1; return td; }
+function apply(td,txt,font){ td.text=txt; if(font) td.font=font; else if(C.font_map[td.font]) td.font=C.font_map[td.font]; else UNMAPPED[td.font]=1; return td; }   // font: l10n strings의 글꼴 지정(대응표보다 우선)
 app.beginSuppressDialogs();
 try{
   var P=openProject(C.aep), byId={};
@@ -32,7 +32,7 @@ try{
       else targets.push({t:midOf(L.inPoint,L.outPoint), key:0});
       for(var n=0;n<targets.length;n++){
         var tg=targets[n], w0=width(L,tg.t);
-        var td=tg.key?sp.keyValue(tg.key):sp.value; apply(td,e.text);
+        var td=tg.key?sp.keyValue(tg.key):sp.value; apply(td,e.text,e.font);
         if(tg.key){ sp.setValueAtKey(tg.key,td); LOG.keys_replaced++; } else { sp.setValue(td); LOG.replaced++; }
         var w1=width(L,tg.t);
         if(w0>0 && w1>w0*1.05){

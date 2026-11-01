@@ -1,0 +1,310 @@
+{
+ "_doc": "중국어판 1편: 결말에 관점 한 줄(8분 압력솥+배합=어느 가게서나 같은 맛→특허경영의 전제)과 2편 다리(이름의 유래)를 원래 '下集敬请期待' 카드 앞(926.75초)에 끼움. 그림은 원본 요소 재조립(raster/src). 직업 나열 n038~n042 장면 삭제",
+ "fonts": {
+  "label": "SourceHanSansCN-Heavy",
+  "body": "SourceHanSansCN-Bold",
+  "title": "SmileySans-Oblique",
+  "hand": "ZCOOLKuaiLe-Regular"
+ },
+ "sfx": {
+  "_doc": "애니메이션 종류별 효과음(B209 본편 효과음에서 잘라 낸 것 재사용). 반복 요소는 묶음당 1번",
+  "pop": "assets/sfx/pop.wav",
+  "slam": "assets/sfx/stamp.wav",
+  "slide_right": "assets/sfx/whoosh.wav",
+  "slide_left": "assets/sfx/whoosh.wav",
+  "slide_up": "assets/sfx/whoosh.wav",
+  "bar": "assets/sfx/whoosh.wav"
+ },
+ "protect": [
+  "肯德基爷爷",
+  "特许经营",
+  "压力锅"
+ ],
+ "inserts": {
+  "cut_jobs": {
+   "cut": true,
+   "replace_master": [
+    169.1,
+    206.8
+   ],
+   "_ids": [
+    "n036",
+    "n037",
+    "n038",
+    "n039",
+    "n040",
+    "n041",
+    "n042",
+    "n043"
+   ]
+  },
+  "cut_open": {
+   "cut": true,
+   "replace_master": [
+    0.0,
+    10.6
+   ],
+   "_ids": [
+    "n001",
+    "n002",
+    "n003",
+    "n004"
+   ]
+  },
+  "cut_war": {
+   "cut": true,
+   "replace_master": [
+    633.5,
+    647.3
+   ],
+   "_ids": [
+    "n123",
+    "n124",
+    "n125",
+    "n126"
+   ]
+  },
+  "cut_title2": {
+   "cut": true,
+   "replace_master": [
+    672.3,
+    678.45
+   ],
+   "_ids": [
+    "n131"
+   ]
+  },
+  "cut_fired": {
+   "cut": true,
+   "replace_master": [
+    217.0,
+    230.9
+   ],
+   "_ids": [
+    "n047",
+    "n048",
+    "n049"
+   ]
+  },
+  "ending": {
+   "replace_master": [
+    926.75,
+    926.75
+   ],
+   "scenes": [
+    {
+     "id": "ze01",
+     "text": "一家开了12年、从没卖过炸鸡的餐厅，几天就把炸鸡卖疯了。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/harman_cafe_sign.png",
+       "x": 960,
+       "y": 500,
+       "w": 1150,
+       "at": 0.0,
+       "anim": "fade"
+      },
+      {
+       "type": "badge",
+       "text": "开业12年",
+       "x": 420,
+       "y": 150,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        200,
+        16,
+        46
+       ],
+       "at": 0.15,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "第一次卖炸鸡",
+       "x": 1500,
+       "y": 150,
+       "size": 72,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.55,
+       "anim": "slam",
+       "rot": -4
+      }
+     ]
+    },
+    {
+     "id": "ze02",
+     "text": "秘密就在那口8分钟出锅的压力锅和那份配方——同样的味道，在别人的店里也能照着做出来。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/cooker.png",
+       "x": 680,
+       "y": 520,
+       "w": 760,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "8分钟",
+       "x": 680,
+       "y": 140,
+       "size": 80,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        200,
+        16,
+        46
+       ],
+       "at": 0.2,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "同样的味道",
+       "x": 1450,
+       "y": 420,
+       "size": 72,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.55,
+       "anim": "slam",
+       "rot": -4
+      },
+      {
+       "type": "badge",
+       "text": "别人的店也能做",
+       "x": 1450,
+       "y": 560,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.75,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "ze03",
+     "text": "这，正是特许经营能做起来的前提。可“肯塔基炸鸡”这个名字，又是怎么来的？",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/sanders.png",
+       "x": 960,
+       "y": 520,
+       "w": 230,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "特许经营的前提",
+       "x": 960,
+       "y": 130,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        200,
+        16,
+        46
+       ],
+       "at": 0.1,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "名字从哪来？",
+       "x": 1470,
+       "y": 470,
+       "size": 64,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        254,
+        235,
+        58
+       ],
+       "at": 0.6,
+       "anim": "slam",
+       "rot": -4
+      },
+      {
+       "type": "badge",
+       "text": "下集揭晓",
+       "x": 450,
+       "y": 470,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.85,
+       "anim": "pop"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

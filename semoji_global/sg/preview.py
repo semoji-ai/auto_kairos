@@ -2,9 +2,12 @@
 import os
 
 
-def plan_audio(segments, warp, tts_dir):
+def plan_audio(segments, warp, tts_dir, blank=()):
+    """blank: 번역문을 비운 구간 id(장면 삭제) — 옛 TTS가 남아 있어도 넣지 않음."""
     out = []
     for g in segments:
+        if g["id"] in blank:
+            continue
         if g.get("nonverbal"):
             out.append({"src_in": g["in"], "src_out": g["out"], "t": warp(g["in"]), "kind": "nonverbal", "id": g["id"]})
         else:

@@ -1,0 +1,15 @@
+Image 1 is a frame from the original video; draw the whole frame in exactly the drawing style of image 1 so it reads as the next scene of the same video: big simple flat colour blocks, very little shading, the fine paper grain over the whole picture like image 1. Draw every person with exactly the same face drawing and the same body as the elderly man and woman in image 1 and the people in image 2, large in the frame. Image 3 is the official KFC Colonel logo.
+
+Scene: Beijing, a cold dry morning in November 1987. Medium shot of five people standing in a queue on the pavement, large in the frame from left to right, each one different: a young man in an army green padded coat with hands in his sleeves, a woman in a navy cotton jacket and red scarf, an old man in a fur cap, a father holding a small child in a red hood, a young woman in a brown coat looking ahead with excitement, small white puffs of breath. On the right, the front of a fast food restaurant drawn as simple flat shapes: a red sign board with the round Colonel logo from image 3 and the white Chinese characters "肯德基", a red and white striped awning, a warm yellow window. Far in the left background, the grey Qianmen arrow tower as one small flat shape under a pale sky.
+
+Camera: eye-level medium shot like image 1, people filling the lower two thirds, sign in the upper right.
+
+Lighting: flat as in image 1, light shown only as a lighter or darker colour block.
+
+Color grading: KFC red #C8102E, window yellow #F6C453, army green #5B6B3A, navy #2B3A55, pale sky #DDE6EC.
+
+Texture/Medium: flat 2D vector illustration with the same paper grain as image 1.
+
+Text-in-image: only the sign characters "肯德基" next to the round Colonel logo, each character drawn once, crisp and legible; every other surface is plain colour.
+
+AR 16:9

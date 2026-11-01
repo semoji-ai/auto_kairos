@@ -32,3 +32,11 @@ def test_mix_is_stale_when_older_than_parts_or_warp(tmp_path):
     assert mix_is_fresh(str(mix), [str(part), str(warp)])
     os.utime(part, (time.time() + 5, time.time() + 5))     # 파트를 다시 렌더함
     assert not mix_is_fresh(str(mix), [str(part), str(warp)])
+
+
+def test_plan_skips_segments_blanked_in_translation():
+    # 번역문을 비운 구간(장면 삭제)은 옛 TTS가 남아 있어도 내레이션에 넣지 않는다
+    segs = [{"id": "n001", "in": 1.0, "out": 3.0}, {"id": "n002", "in": 4.0, "out": 6.0}]
+    w = PiecewiseMap([(0, 0), (20, 20)])
+    p = plan_audio(segs, w, "/t", blank={"n002"})
+    assert [x["id"] for x in p] == ["n001"]

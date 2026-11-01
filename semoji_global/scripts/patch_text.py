@@ -6,7 +6,7 @@ prof = json.load(open(os.path.join(root, "profiles", f"{lang}.json")))
 src = json.load(open(os.path.join(ep, "master/source.json")))
 L = json.load(open(os.path.join(ep, "l10n", f"{lang}.json")))
 abs_ep = os.path.abspath(ep); name = os.path.basename(abs_ep)
-items = [{"comp_id": s["comp_id"], "layer": s["layer"], "ko": s["ko"], "text": L["strings"][s["id"]]["text"], "id": s["id"]}
+items = [{"comp_id": s["comp_id"], "layer": s["layer"], "ko": s["ko"], "text": L["strings"][s["id"]]["text"], "id": s["id"], "font": L["strings"][s["id"]].get("font")}
          for s in src["strings"] if s["id"] in L["strings"]]
 os.makedirs(os.path.join(abs_ep, "build", lang), exist_ok=True)
 json.dump({"aep": os.path.join(abs_ep, "src", f"{name}_main_ko.aep"),
