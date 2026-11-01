@@ -26,6 +26,8 @@ for pid, P in cfg["parts"].items():
           if L["src"] is not None and G["comps"].get(str(L["src"]), {}).get("name", "").startswith(cfg["subtitle_comp_prefix"])]
     if len(Ls) > 1:                                # '#자막'과 '#자막바'처럼 접두어가 겹치면 이름이 정확히 같은 것
         Ls = [L for L in Ls if G["comps"][str(L["src"])]["name"] == cfg["subtitle_comp_prefix"]] or Ls
+    if len(Ls) > 1 and len({L["src"] for L in Ls}) == 1:   # 같은 자막 컴프를 두 레이어가 나눠 씀(B023·B024): 시작 0인 쪽 하나를 파트 전체로 늘려 씀(subtitles.jsx)
+        Ls = [min(Ls, key=lambda L: abs(L["st"]))]
     if len(Ls) != 1:
         raise ValueError(f"{pid}: subtitle comp layers {len(Ls)}")
     subcomp[pid] = (Ls[0]["src"], Ls[0]["st"])
@@ -74,6 +76,7 @@ json.dump({"aep": os.path.join(abs_ep, "build", lang, f"{name}_{lang}.aep"),
            "font": prof["subs"].get("font"),            # 없으면 템플릿 폰트 그대로(영어)
            "sub_name": cfg["subtitle_comp_prefix"],      # 자막 컴프 이름(같은 이름 우선, 없으면 이 이름으로 시작하는 것)
            "parts": [{"comp": cfg["parts"][pid]["comp"], "sub_comp_id": subcomp[pid][0], "cues": cues,
+                      "sub_st": pmap[pid](subcomp[pid][1]),   # 같은 자막 컴프 레이어가 여럿이면 이 시작 시각인 것을 씀
                       # 자막 바는 자막이 있을 때만(영어는 큐 사이 공백이 길어 빈 바가 드러남)
                       "bar": bar_intervals(cues, pmap[pid](subcomp[pid][1]))} for pid, cues in parts.items()]},
           open(os.path.join(root, "scripts/ae/subtitles_job.json"), "w"), ensure_ascii=False, indent=1)

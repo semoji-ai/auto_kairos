@@ -1,0 +1,19 @@
+{
+ "reached": 368,
+ "planned": 127,
+ "copied": 1,
+ "not_found_on_nas": [],
+ "relink": {
+  "aep": "/Users/jleavens_macmini/LocalProjects/auto_kairos/semoji_global/episodes/B024/src/_orig_브랜드백과_맥도날드_2_rerere.aep",
+  "relinked": 73,
+  "still_missing": 268,
+  "error": null,
+  "saved": true
+ },
+ "prep": {
+  "missing_used": [],
+  "ok": 368,
+  "dur": 698.298298298298,
+  "errors": []
+ }
+}

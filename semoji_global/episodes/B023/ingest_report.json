@@ -1,0 +1,23 @@
+{
+ "reached": 371,
+ "planned": 69,
+ "copied": 69,
+ "not_found_on_nas": [
+  "/Volumes/C/work/001_유튜브/마블백과/3초인트로(MOV).mov"
+ ],
+ "relink": {
+  "aep": "/Users/jleavens_macmini/LocalProjects/auto_kairos/semoji_global/episodes/B023/src/_orig_브랜드백과_맥도날드_1_re.aep",
+  "relinked": 20,
+  "still_missing": 180,
+  "error": null,
+  "saved": true
+ },
+ "prep": {
+  "missing_used": [
+   "3초인트로(MOV).mov"
+  ],
+  "ok": 370,
+  "dur": 606.039372706039,
+  "errors": []
+ }
+}

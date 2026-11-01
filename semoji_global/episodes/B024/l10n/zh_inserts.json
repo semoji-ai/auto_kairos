@@ -1,0 +1,914 @@
+{
+ "_doc": "중국어판 2편: 도입=질문 훅(최초 로고에 가장 크게 쓴 글자는 햄버거가 아니다 → n006에서 답), 채널 카드 삭제, 사실 정정(2003·Forever Young·빅킹 연도·13억·한국 원화 빅맥지수·맥모닝 시간), 끝=중국 이야기(1990 深圳~2026 매장 수, 원래 맺음말 앞). 사실 출처 docs/zh/B023_B024_china_framing_draft.md. 1990 深圳 매장은 새로 그림 + 미니맥스 H3",
+ "fonts": {
+  "label": "SourceHanSansCN-Heavy",
+  "body": "SourceHanSansCN-Bold",
+  "title": "SmileySans-Oblique",
+  "hand": "ZCOOLKuaiLe-Regular"
+ },
+ "sfx": {
+  "_doc": "애니메이션 종류별 효과음",
+  "pop": "assets/sfx/pop.wav",
+  "slam": "assets/sfx/stamp.wav",
+  "slide_right": "assets/sfx/whoosh.wav",
+  "slide_left": "assets/sfx/whoosh.wav",
+  "slide_up": "assets/sfx/whoosh.wav",
+  "bar": "assets/sfx/whoosh.wav"
+ },
+ "protect": [
+  "金拱门",
+  "金拱门（中国）有限公司",
+  "麦当劳（中国）有限公司",
+  "俏老头",
+  "麦门",
+  "中国内地第一家",
+  "品牌百科",
+  "深圳东门",
+  "王府井",
+  "中信",
+  "凯雷",
+  "8114",
+  "13789"
+ ],
+ "inserts": {
+  "intro": {
+   "replace_master": [
+    0.0,
+    3.2
+   ],
+   "scenes": [
+    {
+     "id": "zi01",
+     "text": "如今，全世界麦当劳的招牌上，都是这个金色的“M”。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/mcd_logo.png",
+       "x": 960,
+       "y": 470,
+       "w": 460,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "全世界的招牌",
+       "x": 960,
+       "y": 140,
+       "size": 70,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.35,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "zi02",
+     "text": "可最早的麦当劳标志上，写得最大的字，却不是“汉堡”。那会是什么呢？",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "最早的标志",
+       "x": 960,
+       "y": 140,
+       "size": 70,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "汉堡？",
+       "font": "title",
+       "size": 150,
+       "x": 700,
+       "y": 480,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "at": 0.25,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "×",
+       "font": "label",
+       "size": 260,
+       "x": 700,
+       "y": 480,
+       "color": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.5,
+       "anim": "slam"
+      },
+      {
+       "type": "text",
+       "text": "？",
+       "font": "title",
+       "size": 260,
+       "x": 1260,
+       "y": 480,
+       "color": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.72,
+       "anim": "slam",
+       "rot": 8
+      }
+     ]
+    }
+   ]
+  },
+  "cut_card": {
+   "cut": true,
+   "replace_master": [
+    25.5,
+    29.3
+   ],
+   "_ids": [],
+   "_doc": "채널 구독 카드(세상의 모든 지식) — 코스트코 포맷엔 없음"
+  },
+  "cut_13yi": {
+   "cut": true,
+   "replace_master": [
+    490.29,
+    494.73
+   ],
+   "_ids": [
+    "n089"
+   ]
+  },
+  "cut_krw": {
+   "cut": true,
+   "replace_master": [
+    520.69,
+    540.44
+   ],
+   "_ids": [
+    "n092",
+    "n093"
+   ]
+  },
+  "china": {
+   "replace_master": [
+    682.21,
+    682.21
+   ],
+   "scenes": [
+    {
+     "id": "m1",
+     "text": "而在中国，麦当劳的故事要从1990年说起。那年10月8日，中国内地第一家麦当劳在深圳东门开业。",
+     "tts": "而在中国，麦当劳的故事要从一九九零年说起。那年十月八日，中国内地第一家麦当劳在深圳东门开业。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/m1_shenzhen_h3_v3.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "1990.10.8",
+       "x": 1380,
+       "y": 140,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.15,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "深圳东门",
+       "x": 1380,
+       "y": 280,
+       "size": 64,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        255,
+        188,
+        13
+       ],
+       "at": 0.45,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "中国内地第一家麦当劳",
+       "x": 1380,
+       "y": 420,
+       "size": 64,
+       "color": [
+        255,
+        188,
+        13
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.7,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "m2",
+     "text": "据说开业那天，排队的人绕着大楼转了好几圈。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/m1_shenzhen_h3_v3.mp4",
+       "offset": 5.0
+      },
+      {
+       "type": "text",
+       "text": "据说……",
+       "font": "hand",
+       "size": 72,
+       "x": 1380,
+       "y": 150,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "at": 0.0,
+       "anim": "fade"
+      },
+      {
+       "type": "badge",
+       "text": "排队绕楼好几圈",
+       "x": 1380,
+       "y": 320,
+       "size": 88,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.4,
+       "anim": "slam",
+       "rot": -4
+      }
+     ]
+    },
+    {
+     "id": "m3",
+     "text": "1992年4月23日，北京第一家麦当劳在王府井开业，开业当天就接待了4万多名顾客。",
+     "tts": "一九九二年四月二十三日，北京第一家麦当劳在王府井开业，开业当天就接待了四万多名顾客。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "1992.4.23 · 北京王府井",
+       "x": 960,
+       "y": 150,
+       "size": 70,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/store_icon.png",
+       "x": 560,
+       "y": 540,
+       "w": 520,
+       "at": 0.15,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 4,
+       "suffix": "万+",
+       "font": "label",
+       "size": 170,
+       "x": 1330,
+       "y": 470,
+       "color": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.6,
+       "count_dur": 1.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "开业当天的顾客",
+       "x": 1330,
+       "y": 640,
+       "size": 60,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        255,
+        188,
+        13
+       ],
+       "at": 0.75,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "m4",
+     "text": "不过在中国，麦当劳其实是“后来者”。早在1987年，肯德基就在北京前门开出了第一家店，比麦当劳早了三年。",
+     "tts": "不过在中国，麦当劳其实是“后来者”。早在一九八七年，肯德基就在北京前门开出了第一家店，比麦当劳早了三年。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/kfc_logo.png",
+       "x": 520,
+       "y": 430,
+       "w": 400,
+       "at": 0.3,
+       "anim": "pop"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/mcd_logo.png",
+       "x": 1400,
+       "y": 430,
+       "w": 380,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "1987 · 北京前门",
+       "x": 520,
+       "y": 720,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        200,
+        16,
+        46
+       ],
+       "at": 0.45,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "1990 · 深圳",
+       "x": 1400,
+       "y": 720,
+       "size": 64,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        255,
+        188,
+        13
+       ],
+       "at": 0.1,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "早了3年",
+       "font": "title",
+       "size": 120,
+       "x": 960,
+       "y": 180,
+       "color": [
+        200,
+        16,
+        46
+       ],
+       "at": 0.8,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "m5",
+     "text": "有分析认为，抢先一步、更早放手让本地团队做决定、菜单也更早贴近中国口味，是肯德基一路领先的原因。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "text",
+       "text": "有分析认为",
+       "font": "hand",
+       "size": 80,
+       "x": 960,
+       "y": 150,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "at": 0.0,
+       "anim": "fade"
+      },
+      {
+       "type": "badge",
+       "text": "抢先一步",
+       "x": 960,
+       "y": 330,
+       "size": 76,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        200,
+        16,
+        46
+       ],
+       "at": 0.15,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "本地团队做决定",
+       "x": 960,
+       "y": 500,
+       "size": 76,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        200,
+        16,
+        46
+       ],
+       "at": 0.35,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "菜单贴近中国口味",
+       "x": 960,
+       "y": 670,
+       "size": 76,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        200,
+        16,
+        46
+       ],
+       "at": 0.58,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "m6",
+     "text": "2017年，中信和凯雷入股了麦当劳中国业务，麦当劳自己保留两成股份。同年10月，“麦当劳（中国）有限公司”改名为“金拱门（中国）有限公司”——用的正是理查德当年想出的那两道金色拱门。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "2017",
+       "x": 300,
+       "y": 140,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "中信 · 凯雷 入股",
+       "x": 960,
+       "y": 300,
+       "size": 70,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        255,
+        188,
+        13
+       ],
+       "at": 0.08,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "麦当劳（中国）有限公司",
+       "font": "label",
+       "size": 84,
+       "x": 960,
+       "y": 500,
+       "color": [
+        150,
+        150,
+        150
+       ],
+       "at": 0.45,
+       "anim": "fade"
+      },
+      {
+       "type": "text",
+       "text": "金拱门（中国）有限公司",
+       "font": "label",
+       "size": 96,
+       "x": 960,
+       "y": 680,
+       "color": [
+        218,
+        41,
+        28
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 8,
+       "at": 0.72,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "m7",
+     "text": "消息一出就上了热搜，还有网友调侃：“那肯德基是不是也该改名叫‘俏老头’了？”其实餐厅的招牌一个字都没变，改的只是公司名。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "热搜",
+       "x": 300,
+       "y": 140,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      },
+      {
+       "type": "text",
+       "text": "肯德基改名叫“俏老头”？",
+       "font": "hand",
+       "size": 96,
+       "x": 960,
+       "y": 360,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "at": 0.15,
+       "anim": "pop",
+       "rot": -3
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/mcd_logo.png",
+       "x": 960,
+       "y": 620,
+       "w": 240,
+       "at": 0.6,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "招牌没变，只改公司名",
+       "x": 960,
+       "y": 830,
+       "size": 60,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        255,
+        188,
+        13
+       ],
+       "at": 0.75,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "m8",
+     "text": "后来，网友又给它起了个外号：“麦门”。2022年底，“麦门”在网上流行开来，麦当劳官方也很快“认领”了这个梗。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "text",
+       "text": "麦门",
+       "font": "title",
+       "size": 300,
+       "x": 960,
+       "y": 430,
+       "color": [
+        218,
+        41,
+        28
+       ],
+       "stroke": [
+        255,
+        188,
+        13
+       ],
+       "stroke_w": 12,
+       "at": 0.05,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "2022年底",
+       "x": 420,
+       "y": 160,
+       "size": 66,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.35,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "官方认领",
+       "x": 1400,
+       "y": 720,
+       "size": 80,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        255,
+        188,
+        13
+       ],
+       "at": 0.75,
+       "anim": "slam",
+       "rot": -5
+      }
+     ]
+    },
+    {
+     "id": "m9",
+     "text": "据公开财报数据，到2026年6月底，麦当劳在中国内地已有8114家餐厅，中国也成了它全球第二大市场。同一时间，肯德基在中国有13789家门店。差距还在，但麦当劳给自己定下的目标是：2028年，在中国开到一万家。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "2026年6月底",
+       "x": 960,
+       "y": 110,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/mcd_logo.png",
+       "x": 540,
+       "y": 330,
+       "w": 220,
+       "at": 0.02,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 8114,
+       "suffix": "家",
+       "font": "label",
+       "size": 120,
+       "x": 540,
+       "y": 560,
+       "color": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.05,
+       "count_dur": 1.0,
+       "anim": "pop"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/kfc_logo.png",
+       "x": 1380,
+       "y": 330,
+       "w": 230,
+       "at": 0.42,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 13789,
+       "suffix": "家",
+       "font": "label",
+       "size": 120,
+       "x": 1380,
+       "y": 560,
+       "color": [
+        200,
+        16,
+        46
+       ],
+       "at": 0.45,
+       "count_dur": 1.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "目标：2028年 一万家",
+       "x": 960,
+       "y": 770,
+       "size": 70,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        255,
+        188,
+        13
+       ],
+       "at": 0.78,
+       "anim": "slam"
+      }
+     ]
+    }
+   ]
+  },
+  "cut_recap": {
+   "cut": true,
+   "replace_master": [
+    7.41,
+    22.5
+   ],
+   "_ids": [
+    "n002",
+    "n003"
+   ],
+   "_doc": "지난 편 요약 압축(원고 평가: 질문 훅 뒤 요약이 길다)"
+  },
+  "cut_turner": {
+   "cut": true,
+   "replace_master": [
+    121.85,
+    129.4
+   ],
+   "_ids": [
+    "n022",
+    "n023"
+   ],
+   "_doc": "로고 담당자 릴레이 압축(시청자 평가 3/3)"
+  },
+  "cut_logo_versions": {
+   "cut": true,
+   "replace_master": [
+    188.2,
+    197.5
+   ],
+   "_ids": [
+    "n033",
+    "n034",
+    "n035"
+   ],
+   "_doc": "로고 3D판·웃는 얼굴판 나열 압축(시청자 평가 3/3)"
+  }
+ }
+}

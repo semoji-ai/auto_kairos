@@ -34,7 +34,7 @@ name = os.path.basename(abs_ep)
 json.dump({"aep": os.path.abspath(args[args.index("--aep") + 1]) if "--aep" in args else os.path.join(abs_ep, "src", f"{name}_main_ko.aep"),
            "save_as": os.path.join(abs_ep, "build", tag, f"{name}_{tag}.aep"),
            "out": os.path.join(abs_ep, "build", tag, "localize_log.json"),
-           "mute_sources": [P["narration"] for P in cfg["parts"].values()],
+           "mute_sources": [P["narration"] for P in cfg["parts"].values()] + cfg.get("extra_narration_sources", []),   # 오타 패치 재녹음 등 내레이션 조각
            "hide_comp_prefix": None if "--keep-subs" in args else "#자막",
            "parts": [{"comp": v["comp"], "anchors": v["anchors"], "dur_new": v["dur_new"]} for v in out["parts"].values()]},
           open(job_path, "w"), ensure_ascii=False, indent=1)

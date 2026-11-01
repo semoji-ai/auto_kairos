@@ -12,6 +12,14 @@ try{
     var SN=C.sub_name||"#자막", subL=null;   // '#자막'과 '#자막바'처럼 접두어가 겹치면 이름이 정확히 같은 것 우선
     for(var j=1;j<=main.numLayers;j++){ var L=main.layer(j); if(L.source instanceof CompItem && L.source.name===SN) subL=L; }
     if(!subL) for(var j=1;j<=main.numLayers;j++){ var L=main.layer(j); if(L.source instanceof CompItem && L.source.name.indexOf(SN)===0) subL=L; }
+    if(subL && part.sub_st!==undefined){   // 같은 자막 컴프를 여러 레이어가 나눠 쓰면: 시작 시각이 맞는 하나를 파트 전체로 늘리고 나머지는 끔
+      var same=[]; for(var j=1;j<=main.numLayers;j++){ var L=main.layer(j); if(L.source instanceof CompItem && (L.source===subL.source || L.source.name.replace(/ \d+$/,"")===subL.source.name.replace(/ \d+$/,""))) same.push(L); }   // localize가 레이어마다 컴프를 복제했을 수 있음(이름은 같음)
+      for(var j=0;j<same.length;j++) same[j].locked=false;
+      if(same.length>1){ var best=same[0];
+        for(var j=0;j<same.length;j++) if(Math.abs(same[j].startTime-part.sub_st)<Math.abs(best.startTime-part.sub_st)) best=same[j];
+        for(var j=0;j<same.length;j++) if(same[j]!==best) same[j].enabled=false;
+        subL=best; subL.inPoint=Math.max(0,subL.startTime); subL.outPoint=main.duration; }
+    }
     if(subL){ sub=subL.source; subL.enabled=true; }
     if(!sub){ LOG.errors.push("no "+SN+" under "+part.comp); continue; }
     var tmpl=null, olds=[];

@@ -1,0 +1,255 @@
+{
+ "_doc": "중국어판 1편: 도입=金拱门 훅(원래 n001~n004 CF송·빅맥지수·매장 수 0~34.2초 대체), 끝=2편 다리(상징들). 크록 어록(화면 글자만 있던 대목) 내레이션. 사실 출처 docs/zh/B023_B024_china_framing_draft.md",
+ "fonts": {
+  "label": "SourceHanSansCN-Heavy",
+  "body": "SourceHanSansCN-Bold",
+  "title": "SmileySans-Oblique",
+  "hand": "ZCOOLKuaiLe-Regular"
+ },
+ "sfx": {
+  "_doc": "애니메이션 종류별 효과음(B209 본편 효과음에서 잘라 낸 것 재사용)",
+  "pop": "assets/sfx/pop.wav",
+  "slam": "assets/sfx/stamp.wav",
+  "slide_right": "assets/sfx/whoosh.wav",
+  "slide_left": "assets/sfx/whoosh.wav",
+  "slide_up": "assets/sfx/whoosh.wav",
+  "bar": "assets/sfx/whoosh.wav"
+ },
+ "protect": [
+  "金拱门",
+  "金拱门（中国）有限公司",
+  "麦当劳",
+  "品牌百科"
+ ],
+ "inserts": {
+  "intro": {
+   "replace_master": [
+    0.0,
+    34.2
+   ],
+   "scenes": [
+    {
+     "id": "zi01",
+     "text": "在中国，麦当劳的公司叫什么名字？答案是：金拱门。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "麦当劳的公司名？",
+       "x": 960,
+       "y": 130,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/mcd_logo.png",
+       "x": 960,
+       "y": 450,
+       "w": 420,
+       "at": 0.1,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "金拱门",
+       "font": "title",
+       "size": 190,
+       "x": 960,
+       "y": 780,
+       "color": [
+        218,
+        41,
+        28
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 10,
+       "at": 0.62,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "zi02",
+     "text": "2017年改名那天，不少网友还以为是个玩笑。可这三个字，说的正是麦当劳最醒目的标志——那两道金色的拱门。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "2017",
+       "x": 300,
+       "y": 130,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "金拱门（中国）有限公司",
+       "font": "label",
+       "size": 80,
+       "x": 960,
+       "y": 290,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "at": 0.05,
+       "anim": "fade"
+      },
+      {
+       "type": "text",
+       "text": "开玩笑吧？",
+       "font": "hand",
+       "size": 96,
+       "x": 1500,
+       "y": 140,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "at": 0.2,
+       "anim": "pop",
+       "rot": 6
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/mcd_logo.png",
+       "x": 960,
+       "y": 600,
+       "w": 380,
+       "at": 0.55,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "两道金色拱门",
+       "x": 960,
+       "y": 850,
+       "size": 64,
+       "color": [
+        40,
+        40,
+        40
+       ],
+       "bg": [
+        255,
+        188,
+        13
+       ],
+       "at": 0.75,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "zi03",
+     "text": "这两道拱门是怎么来的？故事要从美国一户穷人家的两兄弟说起。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/mcd_logo.png",
+       "x": 960,
+       "y": 280,
+       "w": 300,
+       "at": 0.0,
+       "anim": "fade"
+      },
+      {
+       "type": "text",
+       "text": "？",
+       "font": "title",
+       "size": 160,
+       "x": 1210,
+       "y": 230,
+       "color": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.1,
+       "anim": "pop"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/brothers.png",
+       "x": 960,
+       "y": 640,
+       "w": 360,
+       "at": 0.45,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "麦当劳兄弟",
+       "x": 1400,
+       "y": 620,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        218,
+        41,
+        28
+       ],
+       "at": 0.65,
+       "anim": "pop"
+      }
+     ]
+    }
+   ]
+  },
+  "cut_card": {
+   "cut": true,
+   "replace_master": [
+    37.4,
+    41.17
+   ],
+   "_ids": [
+    "n006",
+    "n007"
+   ],
+   "_doc": "채널 구독 카드(세상의 모든 지식) — 코스트코 포맷엔 없음"
+  }
+ }
+}

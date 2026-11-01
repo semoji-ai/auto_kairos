@@ -1,0 +1,93 @@
+{
+ "episode": "B024",
+ "nas_ep": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B024_맥도날드2",
+ "prproj_timeline": "pr_timeline.json",
+ "sequence_uid": "aemain00",
+ "_sequence_doc": "영상은 AE 메인 컴프와 1:1(프리미어는 AE 렌더를 그대로 이어붙임, 2편 528~532.6초 오타 패치·재녹음은 중국어판에선 불필요) → 합성 타임라인 AE_MAIN_IDENTITY",
+ "outro_clip": null,
+ "cuts_pr": [],
+ "graph": "graph_nas.json",
+ "inventory": "inventory_nas.json",
+ "parts": {
+  "main": {
+   "clip": "AE_MAIN",
+   "comp_id": "399246662",
+   "comp": "MAIN_KO",
+   "dur": 698.264,
+   "narration": "브랜드백과EP24_맥도날드2.wav"
+  }
+ },
+ "subtitle_comp_prefix": "자막",
+ "keep_brands": [
+  "McDonald's",
+  "McDONALD'S",
+  "Big Mac",
+  "BIG MAC",
+  "Burger King",
+  "KFC",
+  "Speedee",
+  "Happy Meal",
+  "McCafé"
+ ],
+ "audio": {
+  "main_seq_uid": "81e2c845-add8-4a44-9535-61829a1251d0",
+  "sfx_track": null,
+  "bgm_tracks": [],
+  "outro_bgm": null,
+  "narration_ref": "브랜드백과EP24_맥도날드2.wav",
+  "key_base": "clip",
+  "_audio_doc": "프리미어 최종 시퀀스엔 AE 렌더 한 줄뿐 — 효과음·BGM은 AE 안(2026-11-01)",
+  "identity_exclude": [
+   [
+    527.5,
+    533.1
+   ]
+  ],
+  "identity_exclude_why": "프리미어 오타 패치(Audio 2_7.wav 재녹음) 구간 — 중국어판과 무관"
+ },
+ "subtitle_bar_layers": [
+  "자막바",
+  "자막바그림자"
+ ],
+ "append_outro": {
+  "zh": "assets/global/zh/build/outro_cn_cocacola.mp4",
+  "_doc": "원래 아웃트로 없음 → 코카콜라(B052) 중국어판 아웃트로를 그대로 붙임(KFC와 같음)"
+ },
+ "costco_format": {
+  "hide_layers": [
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   35,
+   36
+  ],
+  "chapter_layers": [
+   14,
+   13,
+   12,
+   11,
+   10,
+   9
+  ],
+  "mute_layers": [
+   2,
+   3,
+   4,
+   5,
+   6,
+   7
+  ],
+  "_doc": "코스트코 중국어판 포맷(B019·B020과 같음): 상단 목차·반투명 자막바 끄고, 장 제목 글자 대신 코스트코 챕터 판, AE 장 효과음(또롱) 끔"
+ },
+ "extra_narration_sources": [
+  "Audio 1.wav"
+ ],
+ "_extra_narration_doc": "MAIN 690.6~692.2초 한국어 내레이션 재녹음 조각 — 중국어판에선 꺼야 함"
+}

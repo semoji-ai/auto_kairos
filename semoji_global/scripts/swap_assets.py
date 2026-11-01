@@ -25,6 +25,9 @@ if __name__ == "__main__":
     code = os.path.basename(ep)
     cfg = json.load(open(os.path.join(ep, "master_config.json")))
     table = json.load(open(os.path.join(ROOT, "assets", "global", f"swap_{lang}.json")))
+    ep_table = os.path.join(ep, "l10n", f"swap_{lang}.json")   # 편 전용 대체(예: 한글 자막이 박힌 광고 영상 → 글자 가린 사본), 경로는 편 폴더 기준
+    if os.path.exists(ep_table):
+        table.update({k: os.path.relpath(os.path.join(ep, v), ROOT) for k, v in json.load(open(ep_table)).items() if not k.startswith("_")})
     inv = json.load(open(os.path.join(ep, cfg.get("inventory", "inventory_nas.json"))))
     t = swap_targets([f["name"] for f in inv["footage"]], table)
     items = []

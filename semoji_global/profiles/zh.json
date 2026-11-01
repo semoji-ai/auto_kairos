@@ -40,7 +40,8 @@
     "GodoB": "SourceHanSansCN-Bold",
     "BMEULJIROTTF": "SmileySans-Oblique",
     "BMJUA": "SourceHanSansCN-Heavy",
-    "TmonMonsoriBlack": "SourceHanSansCN-Heavy"
+    "TmonMonsoriBlack": "SourceHanSansCN-Heavy",
+    "BMDoHyeon": "SourceHanSansCN-Heavy"
   },
   "min_font_scale": 0.7,
   "raster_fonts": {
