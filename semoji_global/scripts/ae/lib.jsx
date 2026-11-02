@@ -7,7 +7,7 @@ function S(v){
   var t=typeof v;
   if(t==="number") return isFinite(v)?String(v):"null";
   if(t==="boolean") return String(v);
-  if(t==="string") return '"'+v.replace(/\\/g,"\\\\").replace(/"/g,'\\"').replace(/\n/g,"\\n").replace(/\r/g,"\\r").replace(/\t/g,"\\t")+'"';
+  if(t==="string") return '"'+v.replace(/\\/g,"\\\\").replace(/"/g,'\\"').replace(/\n/g,"\\n").replace(/\r/g,"\\r").replace(/\t/g,"\\t").replace(/[\u0000-\u001f]/g,function(c){ return "\\u"+("000"+c.charCodeAt(0).toString(16)).slice(-4); })+'"';   // AE 글자 속 제어문자(\u0003 줄바꿈 등)
   if(v instanceof Array){ var a=[]; for(var i=0;i<v.length;i++) a.push(S(v[i])); return "["+a.join(",")+"]"; }
   var o=[]; for(var k in v) if(v.hasOwnProperty(k)) o.push(S(k)+":"+S(v[k])); return "{"+o.join(",")+"}";
 }

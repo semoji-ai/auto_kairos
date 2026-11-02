@@ -1,0 +1,11 @@
+{
+ "a": "render/part_main_ko.mp4",
+ "b": "yt_master.mp4",
+ "fps": 2.0,
+ "offset_sec": 0.0,
+ "align_score": 1.032131314277649,
+ "frames": 881,
+ "mean_sim": 0.999539999699349,
+ "below_thresh": 0,
+ "segments": []
+}

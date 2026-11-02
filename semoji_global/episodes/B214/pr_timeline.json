@@ -1,0 +1,581 @@
+[
+ {
+  "sequence": "B214_불닭볶음면_음악전",
+  "uid": "6f6b3c26-cf56-4da2-a2f1-210d7d324a37",
+  "tracks": [
+   {
+    "kind": "video",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 440.34,
+      "in": 0.0,
+      "out": 440.34,
+      "name": "B214_불닭볶음면_음악전.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_음악전.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "405"
+     },
+     {
+      "start": 440.34,
+      "end": 460.327,
+      "in": 0.0,
+      "out": 19.987,
+      "name": "세모지 아웃트로_최종.mov",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B183_나이키2편_마스터링완\\세모지 아웃트로_최종.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "415"
+     },
+     {
+      "start": 460.327,
+      "end": 480.313,
+      "in": 0.0,
+      "out": 19.987,
+      "name": "세모지 아웃트로_최종.mov",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B183_나이키2편_마스터링완\\세모지 아웃트로_최종.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "416"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": [
+     {
+      "start": 249.883,
+      "end": 256.389,
+      "in": 0.0,
+      "out": 6.506,
+      "name": "B214_불닭볶음면_수정1.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_수정1.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "417"
+     },
+     {
+      "start": 392.759,
+      "end": 398.298,
+      "in": 0.0,
+      "out": 5.539,
+      "name": "B214_불닭볶음면_수정2.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_수정2.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "418"
+     },
+     {
+      "start": 440.34,
+      "end": 480.88,
+      "in": 3600.03,
+      "out": 3640.57,
+      "name": "Graphic",
+      "file": "1196574294",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "419"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": [
+     {
+      "start": 440.34,
+      "end": 480.88,
+      "in": 3599.996,
+      "out": 3640.537,
+      "name": "Graphic",
+      "file": "1196574294",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "420"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 3,
+    "items": [
+     {
+      "start": 440.34,
+      "end": 480.88,
+      "in": 3599.996,
+      "out": 3640.537,
+      "name": "63517.jpg",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B183_나이키2편_마스터링완\\63517.jpg",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "421"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 4,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 97.364,
+      "in": 0.0,
+      "out": 97.364,
+      "name": "B214_불닭볶음면_음악전.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_음악전.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "406"
+     },
+     {
+      "start": 97.364,
+      "end": 100.5,
+      "in": 0.0,
+      "out": 3.136,
+      "name": "매운맛이꼴.mp3",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\매운맛이꼴.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "422"
+     },
+     {
+      "start": 100.5,
+      "end": 249.883,
+      "in": 100.5,
+      "out": 249.883,
+      "name": "B214_불닭볶음면_음악전.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_음악전.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "423"
+     },
+     {
+      "start": 249.883,
+      "end": 253.754,
+      "in": 0.0,
+      "out": 3.871,
+      "name": "들이키면서도.mp3",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\들이키면서도.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "424"
+     },
+     {
+      "start": 253.754,
+      "end": 291.558,
+      "in": 253.754,
+      "out": 291.558,
+      "name": "B214_불닭볶음면_음악전.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_음악전.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "425"
+     },
+     {
+      "start": 291.558,
+      "end": 293.86,
+      "in": 0.0,
+      "out": 2.302,
+      "name": "자발적인인증.mp3",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\자발적인인증.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "426"
+     },
+     {
+      "start": 293.86,
+      "end": 319.92,
+      "in": 293.86,
+      "out": 319.92,
+      "name": "B214_불닭볶음면_음악전.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_음악전.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "427"
+     },
+     {
+      "start": 320.02,
+      "end": 321.288,
+      "in": 0.0,
+      "out": 1.268,
+      "name": "사실까르보불닭.mp3",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\사실까르보불닭.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "428"
+     },
+     {
+      "start": 321.288,
+      "end": 372.606,
+      "in": 321.288,
+      "out": 372.606,
+      "name": "B214_불닭볶음면_음악전.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_음악전.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "429"
+     },
+     {
+      "start": 372.606,
+      "end": 383.85,
+      "in": 372.606,
+      "out": 383.85,
+      "name": "B214_불닭볶음면_음악전.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_음악전.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "430"
+     },
+     {
+      "start": 383.85,
+      "end": 386.887,
+      "in": 383.85,
+      "out": 386.887,
+      "name": "B214_불닭볶음면_음악전.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_음악전.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "431"
+     },
+     {
+      "start": 386.887,
+      "end": 389.522,
+      "in": 0.1,
+      "out": 2.736,
+      "name": "콘불닭볶음면.mp3",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\콘불닭볶음면.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "432"
+     },
+     {
+      "start": 389.522,
+      "end": 414.114,
+      "in": 389.522,
+      "out": 414.114,
+      "name": "B214_불닭볶음면_음악전.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_음악전.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "433"
+     },
+     {
+      "start": 414.214,
+      "end": 416.016,
+      "in": 0.0,
+      "out": 1.802,
+      "name": "천오백퍼센트.mp3",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\천오백퍼센트.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "434"
+     },
+     {
+      "start": 416.016,
+      "end": 440.34,
+      "in": 416.016,
+      "out": 440.34,
+      "name": "B214_불닭볶음면_음악전.mp4",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_음악전.mp4",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "435"
+     },
+     {
+      "start": 440.34,
+      "end": 480.88,
+      "in": 0.0,
+      "out": 40.541,
+      "name": "Sand_Castle.mp3",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B183_나이키2편_마스터링완\\bgm\\Sand_Castle.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.1412537693977356,
+      "gain_keys": [
+       [
+        8.6458,
+        0.141253754497
+       ]
+      ],
+      "oid": "436"
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 440.34,
+      "in": 0.0,
+      "out": 440.34,
+      "name": "B214_불닭볶음면_효과음.wav",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면_효과음.wav",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "439"
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 37.905,
+      "in": 0.0,
+      "out": 37.905,
+      "name": "254177_Fire (Instrumental Version).mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\254177_Fire (Instrumental Version).mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.022999146953225136,
+      "gain_keys": [],
+      "oid": "442"
+     },
+     {
+      "start": 167.134,
+      "end": 225.225,
+      "in": 0.0,
+      "out": 58.091,
+      "name": "147764_Catch a Fire.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\147764_Catch a Fire.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        57.2216,
+        0.011973103508
+       ],
+       [
+        58.0914,
+        0.0
+       ]
+      ],
+      "oid": "443"
+     },
+     {
+      "start": 295.829,
+      "end": 359.993,
+      "in": 0.0,
+      "out": 64.164,
+      "name": "60374_Fire and Ice (Instrumental Version).mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\60374_Fire and Ice (Instrumental Version).mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        63.7697,
+        0.010049054399
+       ],
+       [
+        64.1641,
+        0.0
+       ]
+      ],
+      "oid": "444"
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 3,
+    "items": [
+     {
+      "start": 36.603,
+      "end": 167.401,
+      "in": 0.0,
+      "out": 130.797,
+      "name": "149949_Fire (Instrumental Version).mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\149949_Fire (Instrumental Version).mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        130.3726,
+        0.012882863171
+       ],
+       [
+        130.7973,
+        0.0
+       ]
+      ],
+      "oid": "447"
+     },
+     {
+      "start": 224.691,
+      "end": 296.196,
+      "in": 0.0,
+      "out": 71.505,
+      "name": "149028_Just Like a Fire.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\149028_Just Like a Fire.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        71.0489,
+        0.014603210613
+       ],
+       [
+        71.5048,
+        0.0
+       ]
+      ],
+      "oid": "448"
+     },
+     {
+      "start": 359.659,
+      "end": 440.34,
+      "in": 0.0,
+      "out": 80.681,
+      "name": "142587_Fire and Sword.mp3",
+      "file": "C:\\Users\\niceg\\Documents\\Epidemic Sound\\Music\\142587_Fire and Sword.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.008424774743616581,
+      "gain_keys": [],
+      "oid": "449"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "sequence": "B214_불닭볶음면1",
+  "uid": "c89318de-46ab-440e-a0f4-f46cd35b94f8",
+  "tracks": [
+   {
+    "kind": "video",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 4.972,
+      "in": 3599.996,
+      "out": 3604.968,
+      "name": "B214_불닭볶음면1.jpg",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면1.jpg",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "455"
+     },
+     {
+      "start": 4.972,
+      "end": 9.943,
+      "in": 3599.996,
+      "out": 3604.968,
+      "name": "B214_불닭볶음면2 copy.png",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면2 copy.png",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "456"
+     },
+     {
+      "start": 9.943,
+      "end": 14.915,
+      "in": 3599.996,
+      "out": 3604.968,
+      "name": "B214_불닭볶음면2.jpg",
+      "file": "\\\\jleavens_NAS\\jleavens\\002_intra\\001_세상의모든지식\\◆브랜드백과사전\\B214_불닭볶음면\\B214_불닭볶음면2.jpg",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "457"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": []
+   }
+  ]
+ }
+]

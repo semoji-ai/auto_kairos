@@ -1,0 +1,162 @@
+{
+ "_doc": "AI 영상 클립에 박힌 한글 간판·라벨 → 중국어(바탕색으로 덮고 같은 글자색으로 다시 씀, 매 프레임 위치 추적)",
+ "3.mp4": {
+  "src": "src/(Footage)/영상/3.mp4",
+  "out": "assets/zh/vid/swap/3.mp4",
+  "items": [
+   {
+    "box": [
+     379,
+     133,
+     130,
+     27
+    ],
+    "t": 0.2,
+    "text": "泡面鼻祖",
+    "pad": 4,
+    "search": 60
+   }
+  ],
+  "mode": "ocr"
+ },
+ "6.mp4": {
+  "src": "src/(Footage)/영상/6.mp4",
+  "out": "assets/zh/vid/swap/6.mp4",
+  "items": [
+   {
+    "box": [
+     809,
+     407,
+     505,
+     133
+    ],
+    "t": 6.0,
+    "text": "三养食品",
+    "pad": 6
+   }
+  ]
+ },
+ "15.mp4": {
+  "src": "src/(Footage)/영상/15.mp4",
+  "out": "assets/zh/vid/swap/15.mp4",
+  "items": [
+   {
+    "box": [
+     692,
+     306,
+     545,
+     146
+    ],
+    "t": 6.0,
+    "text": "火辣烤鸡",
+    "pad": 6
+   }
+  ],
+  "mode": "ocr"
+ },
+ "18.mp4": {
+  "src": "src/(Footage)/영상/18.mp4",
+  "out": "assets/zh/vid/swap/18.mp4",
+  "items": [
+   {
+    "box": [
+     128,
+     436,
+     430,
+     122
+    ],
+    "t": 6.0,
+    "text": "火辣烤鸡",
+    "pad": 6
+   },
+   {
+    "box": [
+     790,
+     434,
+     518,
+     112
+    ],
+    "t": 6.0,
+    "text": "火辣烤肠",
+    "pad": 6
+   },
+   {
+    "box": [
+     1537,
+     499,
+     428,
+     113
+    ],
+    "t": 6.0,
+    "text": "火辣鸡爪",
+    "pad": 6
+   }
+  ]
+ },
+ "32.mp4": {
+  "src": "src/(Footage)/영상/32.mp4",
+  "out": "assets/zh/vid/swap/32.mp4",
+  "items": [
+   {
+    "box": [
+     1162,
+     1161,
+     170,
+     113
+    ],
+    "t": 6.0,
+    "text": "牛奶",
+    "pad": 4
+   }
+  ],
+  "mode": "ocr"
+ },
+ "34-2.mp4": {
+  "src": "src/(Footage)/영상/34-2.mp4",
+  "out": "assets/zh/vid/swap/34-2.mp4",
+  "items": [
+   {
+    "box": [
+     794,
+     130,
+     314,
+     84
+    ],
+    "t": 6.0,
+    "text": "火鸡面挑战",
+    "pad": 4
+   }
+  ],
+  "mode": "ocr"
+ },
+ "36-2.mp4": {
+  "src": "src/(Footage)/영상/36-2.mp4",
+  "out": "assets/zh/vid/swap/36-2.mp4",
+  "items": [
+   {
+    "box": [
+     711,
+     699,
+     351,
+     50
+    ],
+    "t": 6.0,
+    "text": "火鸡面挑战",
+    "pad": 4
+   },
+   {
+    "box": [
+     778,
+     756,
+     215,
+     49
+    ],
+    "t": 6.0,
+    "text": "为你们加油！",
+    "pad": 4
+   }
+  ],
+  "mode": "ocr"
+ },
+ "_doc_42": "42.mp4(우유·크림소스 라벨, 손에 들고 움직임)는 추적이 안 돼 그림 편집+미니맥스로 새로 만듦: assets/zh/gen/s42_zh_v1.png → vid/s42_zh_h3.mp4 → swap/42.mp4(2160x1200, 241프레임)"
+}

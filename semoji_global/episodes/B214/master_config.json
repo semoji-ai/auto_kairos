@@ -1,0 +1,71 @@
+{
+ "episode": "B214",
+ "nas_ep": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B214_불닭볶음면",
+ "prproj_timeline": "pr_timeline.json",
+ "sequence_uid": "6f6b3c26",
+ "outro_clip": "세모지 아웃트로_최종.mov",
+ "cuts_pr": [],
+ "graph": "graph_nas.json",
+ "inventory": "inventory_nas.json",
+ "parts": {
+  "main": {
+   "clip": "B214_불닭볶음면_음악전.mp4",
+   "comp_id": "14989",
+   "comp": "MAIN_KO",
+   "dur": 440.34,
+   "narration": "B214_불닭볶음면 오디오 편집완.wav"
+  }
+ },
+ "subtitle_comp_prefix": "#자막",
+ "audio": {
+  "main_seq_uid": "6f6b3c26-cf56-4da2-a2f1-210d7d324a37",
+  "sfx_track": 1,
+  "bgm_tracks": [
+   2,
+   3
+  ],
+  "outro_bgm": "Sand_Castle.mp3",
+  "narration_ref": "B214_불닭볶음면 오디오 편집완.wav",
+  "key_base": "clip",
+  "identity_exclude": [
+   [
+    97.3,
+    100.6
+   ],
+   [
+    249.8,
+    253.9
+   ],
+   [
+    291.5,
+    294.0
+   ],
+   [
+    319.9,
+    321.4
+   ],
+   [
+    386.8,
+    389.6
+   ],
+   [
+    414.1,
+    416.1
+   ]
+  ],
+  "identity_exclude_why": "프리미어가 덧댄 한국어 내레이션 패치 mp3(매운맛이꼴 등) — 중국어판과 무관",
+  "ae_gain_db": 7.1,
+  "bgm_gain_db": 7.1,
+  "_gain_doc": "ko-identity: 유튜브판이 전체 7.1dB 큼(프리미어 트랙 볼륨, 파서가 못 읽음) → AE·BGM 같은 양 올림 (2026-11-02)"
+ },
+ "keep_brands": [
+  "Buldak",
+  "BULDAK",
+  "SAMYANG",
+  "Samyang",
+  "Costco",
+  "COSTCO",
+  "TikTok",
+  "YouTube"
+ ]
+}

@@ -1,0 +1,19 @@
+{
+ "reached": 307,
+ "planned": 82,
+ "copied": 81,
+ "not_found_on_nas": [],
+ "relink": {
+  "aep": "/Users/jleavens_macmini/LocalProjects/auto_kairos/semoji_global/episodes/B214/src/_orig_B214_불닭볶음면_지환B.aep",
+  "relinked": 0,
+  "still_missing": 34,
+  "error": null,
+  "saved": true
+ },
+ "prep": {
+  "missing_used": [],
+  "ok": 307,
+  "dur": 1830.03003003003,
+  "errors": []
+ }
+}

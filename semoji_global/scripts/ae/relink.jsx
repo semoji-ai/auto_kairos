@@ -42,8 +42,8 @@ for(var k=0;k<C.jobs.length;k++){
         res.relinked.push({name:it.name, from:mp, to:tgt, seq:seq});
       }catch(e){ res.still_missing.push({name:it.name, path:mp, tried:tgt, err:String(e)}); }
     }
-    if(res.relinked.length) P.save(new File(jb.save_as));
-    res.saved = res.relinked.length>0;
+    P.save(new File(jb.save_as));   // 상대경로로 이미 다 찾았으면 relinked 0이어도 저장(prep_main이 이 파일을 엶)
+    res.saved = true;
     P.close(CloseOptions.DO_NOT_SAVE_CHANGES);
   }catch(e){ res.error=String(e); }
   out.push(res);

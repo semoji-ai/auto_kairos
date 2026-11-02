@@ -1,0 +1,969 @@
+{
+ "_doc": "중국어판 불닭볶음면: 도입=火鸡 이름 반전 훅, 채널 카드·우지 파동·지민·역수입·원화 주가 장면 삭제, 실적 장면 교체, 끝=중국 이야기 11장면(맺음말 앞). 사실 출처 docs/zh/B214_china_framing_draft.md",
+ "fonts": {
+  "label": "SourceHanSansCN-Heavy",
+  "body": "SourceHanSansCN-Bold",
+  "title": "SmileySans-Oblique",
+  "hand": "ZCOOLKuaiLe-Regular"
+ },
+ "sfx": {
+  "pop": "assets/sfx/pop.wav",
+  "slam": "assets/sfx/stamp.wav",
+  "slide_right": "assets/sfx/whoosh.wav",
+  "slide_left": "assets/sfx/whoosh.wav",
+  "slide_up": "assets/sfx/whoosh.wav",
+  "bar": "assets/sfx/whoosh.wav"
+ },
+ "protect": [
+  "火鸡面",
+  "三养",
+  "代购",
+  "1688",
+  "嘉兴",
+  "奠基",
+  "进博会",
+  "小红书",
+  "불닭"
+ ],
+ "inserts": {
+  "intro": {
+   "replace_master": [
+    0.0,
+    0.0
+   ],
+   "scenes": [
+    {
+     "id": "zi01",
+     "text": "在中国，大家都叫它“火鸡面”。可这碗面里，一块火鸡肉都没有。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/package.png",
+       "x": 560,
+       "y": 470,
+       "w": 560,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "火鸡？",
+       "font": "title",
+       "size": 170,
+       "x": 1360,
+       "y": 330,
+       "color": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.25,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "一块火鸡肉都没有",
+       "x": 1360,
+       "y": 560,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.6,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "zi02",
+     "text": "它的韩文原名，前一个字是“火”，后一个字是“鸡”，说的是一道辣得冒火的炒鸡。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "text",
+       "text": "불",
+       "font": "AppleSDGothicNeo-Heavy",
+       "size": 150,
+       "x": 780,
+       "y": 300,
+       "color": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.15,
+       "anim": "slam"
+      },
+      {
+       "type": "text",
+       "text": "=  火",
+       "font": "label",
+       "size": 150,
+       "x": 1080,
+       "y": 300,
+       "color": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.15,
+       "anim": "slam"
+      },
+      {
+       "type": "text",
+       "text": "닭",
+       "font": "AppleSDGothicNeo-Heavy",
+       "size": 150,
+       "x": 780,
+       "y": 520,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.4,
+       "anim": "slam"
+      },
+      {
+       "type": "text",
+       "text": "=  鸡",
+       "font": "label",
+       "size": 150,
+       "x": 1080,
+       "y": 520,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.4,
+       "anim": "slam"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/chicken.png",
+       "x": 1560,
+       "y": 620,
+       "w": 300,
+       "at": 0.55,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "辣得冒火的炒鸡",
+       "x": 960,
+       "y": 760,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.7,
+       "anim": "pop"
+      }
+     ]
+    }
+   ]
+  },
+  "cut_card": {
+   "cut": true,
+   "replace_master": [
+    32.5,
+    38.04
+   ],
+   "_ids": [
+    "n005",
+    "n006",
+    "n007"
+   ],
+   "_doc": "채널 구독 카드"
+  },
+  "cut_ujii": {
+   "cut": true,
+   "replace_master": [
+    48.35,
+    54.05
+   ],
+   "_ids": [
+    "n010"
+   ],
+   "_doc": "우지 파동(식품 안전 소재)"
+  },
+  "cut_jimin": {
+   "cut": true,
+   "replace_master": [
+    281.21,
+    285.6
+   ],
+   "_ids": [
+    "n048"
+   ],
+   "_doc": "BTS 지민 장면(중국 내 민감)"
+  },
+  "cut_reimport": {
+   "cut": true,
+   "replace_master": [
+    383.9,
+    398.26
+   ],
+   "_ids": [
+    "n064"
+   ],
+   "_doc": "해외 전용 제품·역수입(한국 소비자 이야기)"
+  },
+  "perf": {
+   "replace_master": [
+    406.64,
+    418.02
+   ],
+   "scenes": [
+    {
+     "id": "p1",
+     "text": "2025年，三养的年销售额第一次突破2万亿韩元。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/samyang_logo.png",
+       "x": 960,
+       "y": 160,
+       "w": 420,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "2025年 年销售额 突破2万亿韩元",
+       "x": 960,
+       "y": 480,
+       "size": 90,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.1,
+       "anim": "slam"
+      }
+     ]
+    }
+   ]
+  },
+  "china": {
+   "replace_master": [
+    418.02,
+    418.02
+   ],
+   "scenes": [
+    {
+     "id": "c1",
+     "text": "三养火鸡面在中国的故事，是从“代购”开始的。2014年前后，网上的试吃挑战让很多人第一次知道了它，可那时候，三养在中国还没有自己的销售渠道。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/c1_daigou_h3.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "2014年前后",
+       "x": 230,
+       "y": 90,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "代购",
+       "x": 230,
+       "y": 210,
+       "size": 72,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        255,
+        200,
+        40
+       ],
+       "at": 0.3,
+       "anim": "slam",
+       "rot": -4
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "text": "2016年，三养开始通过经销商正式进入中国市场。据三养的海外负责人回忆，从那年下半年起，出口突然大幅增长。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "text",
+       "text": "2016",
+       "font": "title",
+       "size": 220,
+       "x": 960,
+       "y": 260,
+       "color": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "通过经销商 正式进入中国",
+       "x": 960,
+       "y": 500,
+       "size": 66,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.1,
+       "anim": "slam"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/package.png",
+       "x": 960,
+       "y": 740,
+       "w": 300,
+       "at": 0.0,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "c3",
+     "text": "2017年1月，三养把进口货源的全国代理交给了阿里巴巴旗下的批发平台1688。当时的报道说，一个月里，订单就超过了上百个集装箱，接近一千万包。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/c3_containers_h3.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "2017.1 · 1688",
+       "x": 260,
+       "y": 90,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "1个月 上百个集装箱",
+       "x": 360,
+       "y": 210,
+       "size": 60,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        255,
+        200,
+        40
+       ],
+       "at": 0.55,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "c5",
+     "text": "2021年9月，三养在上海虹桥设立了中国公司，开始自己经营中国市场。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/c5_shanghai_h3.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "2021.9 · 上海",
+       "x": 240,
+       "y": 90,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "三养食品（上海）有限公司",
+       "x": 520,
+       "y": 210,
+       "size": 52,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        255,
+        200,
+        40
+       ],
+       "at": 0.4,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "c6",
+     "text": "中国公司成立后，营收增长明显加快：按三养公布的数据，2022年约6.8亿元，2024年约21亿元，两年涨到了约三倍。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "三养中国公司 营收",
+       "x": 960,
+       "y": 110,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "bar",
+       "x": 440,
+       "base_y": 760,
+       "w": 220,
+       "h": 160,
+       "color": [
+        230,
+        150,
+        140
+       ],
+       "label": "2022 约6.8亿元",
+       "at": 0.3
+      },
+      {
+       "type": "bar",
+       "x": 850,
+       "base_y": 760,
+       "w": 220,
+       "h": 290,
+       "color": [
+        225,
+        90,
+        80
+       ],
+       "label": "2023 约12亿元",
+       "at": 0.5
+      },
+      {
+       "type": "bar",
+       "x": 1260,
+       "base_y": 760,
+       "w": 220,
+       "h": 500,
+       "color": [
+        215,
+        38,
+        30
+       ],
+       "label": "2024 约21亿元",
+       "at": 0.7
+      }
+     ]
+    },
+    {
+     "id": "c7",
+     "text": "中国消费者的口味，也开始反过来影响产品。2023年，三养推出了专门为中国做的韩式甜辣炸鸡味；据报道，上线20天就卖断了货。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "中国限定 2023",
+       "x": 960,
+       "y": 300,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.2,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "韩式甜辣炸鸡味",
+       "x": 960,
+       "y": 450,
+       "size": 64,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        255,
+        200,
+        40
+       ],
+       "at": 0.35,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "上线20天 卖断货",
+       "x": 960,
+       "y": 600,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.7,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "c8",
+     "text": "2024年的中国限定款，是泰式咖喱蟹味，口味由中国消费者投票选出——跟当年的奶油火鸡面一样，新口味又是消费者自己选出来的。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "中国限定 2024",
+       "x": 960,
+       "y": 300,
+       "size": 72,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.1,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "泰式咖喱蟹味",
+       "x": 960,
+       "y": 450,
+       "size": 64,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        255,
+        200,
+        40
+       ],
+       "at": 0.25,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "中国消费者投票选出",
+       "x": 960,
+       "y": 600,
+       "size": 58,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.45,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "c10",
+     "text": "2025年7月，三养在浙江嘉兴为第一座海外工厂奠基——以后，中国人吃的火鸡面，将在中国生产。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/c10_jiaxing_h3.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "2025.7.3 · 浙江嘉兴",
+       "x": 300,
+       "y": 90,
+       "size": 58,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "第一座海外工厂",
+       "x": 300,
+       "y": 210,
+       "size": 62,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        255,
+        200,
+        40
+       ],
+       "at": 0.4,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "c11",
+     "text": "工厂预计在2026年底到2027年初建成，建成后，每年能生产十亿多份火鸡面。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "嘉兴工厂 最新计划",
+       "x": 960,
+       "y": 110,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "2026年底～2027年初 建成",
+       "x": 960,
+       "y": 360,
+       "size": 60,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        255,
+        200,
+        40
+       ],
+       "at": 0.5,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "年产 十亿多份",
+       "x": 960,
+       "y": 560,
+       "size": 90,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.75,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "c14",
+     "text": "2026年5月底，三养火鸡面系列累计卖出了100亿份，卖到了全球100多个国家和地区。而它在中国的下一个故事，正在嘉兴的工厂里开始。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 100,
+       "suffix": "亿份",
+       "font": "label",
+       "size": 170,
+       "x": 960,
+       "y": 300,
+       "color": [
+        215,
+        38,
+        30
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 12,
+       "at": 0.05,
+       "count_dur": 1.2,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "2026年5月底 累计销量",
+       "x": 960,
+       "y": 130,
+       "size": 56,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "全球100多个国家和地区",
+       "x": 960,
+       "y": 500,
+       "size": 60,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "bg": [
+        255,
+        200,
+        40
+       ],
+       "at": 0.4,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "下一站：嘉兴",
+       "x": 960,
+       "y": 660,
+       "size": 70,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.75,
+       "anim": "slam"
+      }
+     ]
+    }
+   ]
+  },
+  "cut_outro_line": {
+   "cut": true,
+   "replace_master": [
+    438.1,
+    440.34
+   ],
+   "_ids": [
+    "n070"
+   ],
+   "_doc": "맺음 반복"
+  },
+  "cut_lianjie": {
+   "cut": true,
+   "replace_master": [
+    93.95,
+    100.6
+   ],
+   "_ids": [
+    "n018"
+   ],
+   "_doc": "吃辣=解压 반복(평가 지적)"
+  },
+  "cut_fanhong": {
+   "cut": true,
+   "replace_master": [
+    361.3,
+    372.5
+   ],
+   "_ids": [
+    "n061",
+    "n062"
+   ],
+   "_doc": "重新翻红 반복(평가 지적)"
+  },
+  "concl": {
+   "replace_master": [
+    424.72,
+    431.03
+   ],
+   "scenes": [
+    {
+     "id": "e1",
+     "text": "与其说靠广告，不如说靠消费者自己发明的吃法和挑战——三养做的，是及时跟上他们。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/swap/42.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "消费者发明的吃法",
+       "x": 420,
+       "y": 110,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        215,
+        38,
+        30
+       ],
+       "at": 0.2,
+       "anim": "pop"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}
