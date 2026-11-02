@@ -67,6 +67,7 @@ function grouped(comp, layers, name){   // 여러 레이어를 한 null에 붙�
   return N;
 }
 function buildScene(sc, fonts){
+  sc.dur=(Math.ceil(sc.dur*FPS-1e-6)+1)/FPS;   // 컴프 길이가 프레임 단위로 내림돼 장면 사이에 검은 1프레임이 생김 → 올림+1프레임(앞 장면이 위라 다음 장면 첫 프레임만 덮음)
   var comp=PROJ.items.addComp("SCENE_"+sc.id, W, H, 1, sc.dur, FPS); comp.parentFolder=FOLDER;
   var na=sc.narr_at-sc.start, nd=sc.narr_dur;
   for(var i=0;i<sc.layers.length;i++){

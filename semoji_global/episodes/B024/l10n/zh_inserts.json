@@ -309,14 +309,14 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/paper_bg.png"
+       "src": "assets/zh/m3_wangfujing.png"
       },
       {
        "type": "badge",
        "text": "1992.4.23 · 北京王府井",
        "x": 960,
-       "y": 150,
-       "size": 70,
+       "y": 80,
+       "size": 60,
        "color": [
         255,
         255,
@@ -331,28 +331,25 @@
        "anim": "pop"
       },
       {
-       "type": "image",
-       "src": "assets/zh/store_icon.png",
-       "x": 560,
-       "y": 540,
-       "w": 520,
-       "at": 0.15,
-       "anim": "pop"
-      },
-      {
        "type": "counter",
        "from": 0,
        "to": 4,
        "suffix": "万+",
        "font": "label",
-       "size": 170,
-       "x": 1330,
-       "y": 470,
+       "size": 130,
+       "x": 1690,
+       "y": 200,
        "color": [
         218,
         41,
         28
        ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 10,
        "at": 0.6,
        "count_dur": 1.0,
        "anim": "pop"
@@ -360,9 +357,9 @@
       {
        "type": "badge",
        "text": "开业当天的顾客",
-       "x": 1330,
-       "y": 640,
-       "size": 60,
+       "x": 1690,
+       "y": 330,
+       "size": 50,
        "color": [
         40,
         40,
@@ -389,28 +386,28 @@
       },
       {
        "type": "image",
-       "src": "assets/zh/kfc_logo.png",
-       "x": 520,
-       "y": 430,
-       "w": 400,
+       "src": "assets/zh/kfc_1987_store.png",
+       "x": 500,
+       "y": 470,
+       "w": 860,
        "at": 0.3,
        "anim": "pop"
       },
       {
        "type": "image",
-       "src": "assets/zh/mcd_logo.png",
-       "x": 1400,
-       "y": 430,
-       "w": 380,
+       "src": "assets/zh/m1_shenzhen.png",
+       "x": 1420,
+       "y": 470,
+       "w": 860,
        "at": 0.0,
        "anim": "pop"
       },
       {
        "type": "badge",
        "text": "1987 · 北京前门",
-       "x": 520,
-       "y": 720,
-       "size": 64,
+       "x": 500,
+       "y": 790,
+       "size": 60,
        "color": [
         255,
         255,
@@ -427,9 +424,9 @@
       {
        "type": "badge",
        "text": "1990 · 深圳",
-       "x": 1400,
-       "y": 720,
-       "size": 64,
+       "x": 1420,
+       "y": 790,
+       "size": 60,
        "color": [
         40,
         40,
@@ -449,7 +446,7 @@
        "font": "title",
        "size": 120,
        "x": 960,
-       "y": 180,
+       "y": 120,
        "color": [
         200,
         16,
@@ -466,29 +463,14 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/paper_bg.png"
-      },
-      {
-       "type": "text",
-       "text": "有分析认为",
-       "font": "hand",
-       "size": 80,
-       "x": 960,
-       "y": 150,
-       "color": [
-        40,
-        40,
-        40
-       ],
-       "at": 0.0,
-       "anim": "fade"
+       "src": "assets/zh/m5_localteam.png"
       },
       {
        "type": "badge",
        "text": "抢先一步",
-       "x": 960,
-       "y": 330,
-       "size": 76,
+       "x": 380,
+       "y": 90,
+       "size": 54,
        "color": [
         255,
         255,
@@ -506,8 +488,8 @@
        "type": "badge",
        "text": "本地团队做决定",
        "x": 960,
-       "y": 500,
-       "size": 76,
+       "y": 90,
+       "size": 54,
        "color": [
         255,
         255,
@@ -524,9 +506,9 @@
       {
        "type": "badge",
        "text": "菜单贴近中国口味",
-       "x": 960,
-       "y": 670,
-       "size": 76,
+       "x": 1540,
+       "y": 90,
+       "size": 54,
        "color": [
         255,
         255,
@@ -548,14 +530,14 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/paper_bg.png"
+       "src": "assets/zh/m6_rename.png"
       },
       {
        "type": "badge",
        "text": "2017",
-       "x": 300,
-       "y": 140,
-       "size": 72,
+       "x": 160,
+       "y": 90,
+       "size": 64,
        "color": [
         255,
         255,
@@ -572,9 +554,9 @@
       {
        "type": "badge",
        "text": "中信 · 凯雷 入股",
-       "x": 960,
-       "y": 300,
-       "size": 70,
+       "x": 540,
+       "y": 90,
+       "size": 56,
        "color": [
         40,
         40,
@@ -587,42 +569,6 @@
        ],
        "at": 0.08,
        "anim": "pop"
-      },
-      {
-       "type": "text",
-       "text": "麦当劳（中国）有限公司",
-       "font": "label",
-       "size": 84,
-       "x": 960,
-       "y": 500,
-       "color": [
-        150,
-        150,
-        150
-       ],
-       "at": 0.45,
-       "anim": "fade"
-      },
-      {
-       "type": "text",
-       "text": "金拱门（中国）有限公司",
-       "font": "label",
-       "size": 96,
-       "x": 960,
-       "y": 680,
-       "color": [
-        218,
-        41,
-        28
-       ],
-       "stroke": [
-        255,
-        255,
-        255
-       ],
-       "stroke_w": 8,
-       "at": 0.72,
-       "anim": "slam"
       }
      ]
     },
@@ -632,14 +578,14 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/paper_bg.png"
+       "src": "assets/zh/m7_netizens.png"
       },
       {
        "type": "badge",
        "text": "热搜",
-       "x": 300,
-       "y": 140,
-       "size": 72,
+       "x": 160,
+       "y": 90,
+       "size": 64,
        "color": [
         255,
         255,
@@ -654,36 +600,11 @@
        "anim": "slam"
       },
       {
-       "type": "text",
-       "text": "肯德基改名叫“俏老头”？",
-       "font": "hand",
-       "size": 96,
-       "x": 960,
-       "y": 360,
-       "color": [
-        40,
-        40,
-        40
-       ],
-       "at": 0.15,
-       "anim": "pop",
-       "rot": -3
-      },
-      {
-       "type": "image",
-       "src": "assets/zh/mcd_logo.png",
-       "x": 960,
-       "y": 620,
-       "w": 240,
-       "at": 0.6,
-       "anim": "pop"
-      },
-      {
        "type": "badge",
        "text": "招牌没变，只改公司名",
-       "x": 960,
-       "y": 830,
-       "size": 60,
+       "x": 1600,
+       "y": 90,
+       "size": 50,
        "color": [
         40,
         40,
@@ -705,15 +626,15 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/paper_bg.png"
+       "src": "assets/zh/m8_maimen.png"
       },
       {
        "type": "text",
        "text": "麦门",
        "font": "title",
-       "size": 300,
-       "x": 960,
-       "y": 430,
+       "size": 230,
+       "x": 330,
+       "y": 220,
        "color": [
         218,
         41,
@@ -731,9 +652,9 @@
       {
        "type": "badge",
        "text": "2022年底",
-       "x": 420,
-       "y": 160,
-       "size": 66,
+       "x": 330,
+       "y": 400,
+       "size": 56,
        "color": [
         255,
         255,
@@ -750,9 +671,9 @@
       {
        "type": "badge",
        "text": "官方认领",
-       "x": 1400,
-       "y": 720,
-       "size": 80,
+       "x": 1680,
+       "y": 200,
+       "size": 70,
        "color": [
         40,
         40,
@@ -775,14 +696,14 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/paper_bg.png"
+       "src": "assets/zh/m9_city.png"
       },
       {
        "type": "badge",
        "text": "2026年6月底",
        "x": 960,
-       "y": 110,
-       "size": 64,
+       "y": 90,
+       "size": 60,
        "color": [
         255,
         255,
@@ -797,65 +718,49 @@
        "anim": "pop"
       },
       {
-       "type": "image",
-       "src": "assets/zh/mcd_logo.png",
-       "x": 540,
-       "y": 330,
-       "w": 220,
-       "at": 0.02,
-       "anim": "pop"
-      },
-      {
-       "type": "counter",
-       "from": 0,
-       "to": 8114,
-       "suffix": "家",
-       "font": "label",
-       "size": 120,
-       "x": 540,
-       "y": 560,
+       "type": "badge",
+       "text": "麦当劳 8114家",
+       "x": 560,
+       "y": 230,
+       "size": 76,
        "color": [
+        255,
+        188,
+        13
+       ],
+       "bg": [
         218,
         41,
         28
        ],
        "at": 0.05,
-       "count_dur": 1.0,
        "anim": "pop"
       },
       {
-       "type": "image",
-       "src": "assets/zh/kfc_logo.png",
-       "x": 1380,
-       "y": 330,
-       "w": 230,
-       "at": 0.42,
-       "anim": "pop"
-      },
-      {
-       "type": "counter",
-       "from": 0,
-       "to": 13789,
-       "suffix": "家",
-       "font": "label",
-       "size": 120,
-       "x": 1380,
-       "y": 560,
+       "type": "badge",
+       "text": "肯德基 13789家",
+       "x": 1360,
+       "y": 230,
+       "size": 76,
        "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
         200,
         16,
         46
        ],
-       "at": 0.45,
-       "count_dur": 1.0,
+       "at": 0.42,
        "anim": "pop"
       },
       {
        "type": "badge",
        "text": "目标：2028年 一万家",
        "x": 960,
-       "y": 770,
-       "size": 70,
+       "y": 370,
+       "size": 66,
        "color": [
         40,
         40,

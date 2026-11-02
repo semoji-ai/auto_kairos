@@ -404,29 +404,14 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/paper_bg.png"
-      },
-      {
-       "type": "text",
-       "text": "2016",
-       "font": "title",
-       "size": 220,
-       "x": 960,
-       "y": 300,
-       "color": [
-        200,
-        16,
-        46
-       ],
-       "at": 0.0,
-       "anim": "pop"
+       "src": "assets/zh/gen/k4_listing_v2.png"
       },
       {
        "type": "badge",
-       "text": "百胜中国",
-       "x": 960,
-       "y": 540,
-       "size": 96,
+       "text": "2016",
+       "x": 200,
+       "y": 110,
+       "size": 72,
        "color": [
         255,
         255,
@@ -437,15 +422,15 @@
         16,
         46
        ],
-       "at": 0.3,
-       "anim": "slam"
+       "at": 0.0,
+       "anim": "pop"
       },
       {
        "type": "badge",
        "text": "纽约 · 独立上市",
-       "x": 960,
-       "y": 720,
-       "size": 70,
+       "x": 1640,
+       "y": 110,
+       "size": 60,
        "color": [
         40,
         40,
@@ -456,8 +441,8 @@
         235,
         58
        ],
-       "at": 0.75,
-       "anim": "pop"
+       "at": 0.7,
+       "anim": "slam"
       }
      ]
     },
@@ -467,14 +452,14 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/paper_bg.png"
+       "src": "assets/zh/gen/k5_10000_v1.png"
       },
       {
        "type": "badge",
        "text": "2023年12月 · 杭州",
-       "x": 960,
-       "y": 200,
-       "size": 70,
+       "x": 420,
+       "y": 110,
+       "size": 64,
        "color": [
         255,
         255,
@@ -489,26 +474,11 @@
        "anim": "pop"
       },
       {
-       "type": "text",
-       "text": "第10000家",
-       "font": "title",
-       "size": 200,
-       "x": 960,
-       "y": 450,
-       "color": [
-        200,
-        16,
-        46
-       ],
-       "at": 0.3,
-       "anim": "slam"
-      },
-      {
        "type": "badge",
        "text": "首个破万店的海外餐饮品牌",
-       "x": 960,
-       "y": 720,
-       "size": 64,
+       "x": 560,
+       "y": 230,
+       "size": 56,
        "color": [
         254,
         235,
@@ -530,14 +500,14 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/paper_bg.png"
+       "src": "assets/zh/gen/k6_stores_v1.png"
       },
       {
        "type": "badge",
        "text": "2026年6月",
        "x": 960,
-       "y": 220,
-       "size": 70,
+       "y": 110,
+       "size": 64,
        "color": [
         255,
         255,
@@ -555,14 +525,20 @@
        "type": "text",
        "text": "13,789家",
        "font": "title",
-       "size": 220,
+       "size": 200,
        "x": 960,
-       "y": 500,
+       "y": 330,
        "color": [
         200,
         16,
         46
        ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 14,
        "at": 0.45,
        "anim": "slam"
       }
@@ -574,20 +550,26 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/paper_bg.png"
+       "src": "assets/zh/gen/k7_thursday_v1.png"
       },
       {
        "type": "text",
        "text": "疯狂星期四",
        "font": "title",
-       "size": 190,
-       "x": 960,
-       "y": 330,
+       "size": 150,
+       "x": 560,
+       "y": 150,
        "color": [
         200,
         16,
         46
        ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 12,
        "at": 0.0,
        "anim": "slam",
        "rot": -3
@@ -595,9 +577,9 @@
       {
        "type": "badge",
        "text": "2018",
-       "x": 420,
-       "y": 140,
-       "size": 64,
+       "x": 1640,
+       "y": 90,
+       "size": 60,
        "color": [
         255,
         255,
@@ -612,26 +594,11 @@
        "anim": "pop"
       },
       {
-       "type": "text",
-       "text": "疯四文学",
-       "font": "hand",
-       "size": 90,
-       "x": 620,
-       "y": 640,
-       "color": [
-        40,
-        40,
-        40
-       ],
-       "at": 0.4,
-       "anim": "pop"
-      },
-      {
        "type": "badge",
-       "text": "V我50",
-       "x": 1360,
-       "y": 660,
-       "size": 110,
+       "text": "疯四文学",
+       "x": 1640,
+       "y": 200,
+       "size": 60,
        "color": [
         40,
         40,
@@ -642,9 +609,8 @@
         235,
         58
        ],
-       "at": 0.58,
-       "anim": "slam",
-       "rot": 5
+       "at": 0.4,
+       "anim": "pop"
       }
      ]
     }
