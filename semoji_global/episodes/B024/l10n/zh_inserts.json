@@ -309,7 +309,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/m3_wangfujing.png"
+       "src": "assets/zh/vid/m3_wangfujing_h3.mp4"
       },
       {
        "type": "badge",
@@ -386,7 +386,7 @@
       },
       {
        "type": "image",
-       "src": "assets/zh/kfc_1987_store.png",
+       "src": "assets/zh/vid/kfc_1987_store_h3.mp4",
        "x": 500,
        "y": 470,
        "w": 860,
@@ -395,7 +395,7 @@
       },
       {
        "type": "image",
-       "src": "assets/zh/m1_shenzhen.png",
+       "src": "assets/zh/vid/m1_shenzhen_h3_v3.mp4",
        "x": 1420,
        "y": 470,
        "w": 860,
@@ -463,7 +463,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/m5_localteam.png"
+       "src": "assets/zh/vid/m5_localteam_h3.mp4"
       },
       {
        "type": "badge",
@@ -530,7 +530,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/m6_rename.png"
+       "src": "assets/zh/vid/m6_rename_h3.mp4"
       },
       {
        "type": "badge",
@@ -578,7 +578,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/m7_netizens.png"
+       "src": "assets/zh/vid/m7_netizens_h3.mp4"
       },
       {
        "type": "badge",
@@ -626,7 +626,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/m8_maimen.png"
+       "src": "assets/zh/vid/m8_maimen_h3.mp4"
       },
       {
        "type": "text",
@@ -696,7 +696,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/m9_city.png"
+       "src": "assets/zh/vid/m9_city_h3.mp4"
       },
       {
        "type": "badge",

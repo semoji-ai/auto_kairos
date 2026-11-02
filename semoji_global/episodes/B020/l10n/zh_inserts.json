@@ -404,7 +404,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/k4_listing_v2.png"
+       "src": "assets/zh/vid/k4_listing_h3.mp4"
       },
       {
        "type": "badge",
@@ -452,7 +452,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/k5_10000_v1.png"
+       "src": "assets/zh/vid/k5_10000_h3.mp4"
       },
       {
        "type": "badge",
@@ -500,7 +500,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/k6_stores_v1.png"
+       "src": "assets/zh/vid/k6_stores_h3.mp4"
       },
       {
        "type": "badge",
@@ -550,7 +550,7 @@
      "layers": [
       {
        "type": "bg",
-       "src": "assets/zh/gen/k7_thursday_v1.png"
+       "src": "assets/zh/vid/k7_thursday_h3.mp4"
       },
       {
        "type": "text",
