@@ -1,0 +1,73 @@
+{
+ "episode": "B060",
+ "nas_ep": "/Volumes/jleavens/002_intra/001_세상의모든지식/◆브랜드백과사전/B060_버거킹",
+ "prproj_timeline": "pr_timeline.json",
+ "sequence_uid": "237ccd77",
+ "outro_clip": "세모지 아웃트로_최종.mov",
+ "cuts_pr": [],
+ "graph": "graph_nas.json",
+ "inventory": "inventory_nas.json",
+ "parts": {
+  "main": {
+   "clip": "059_버거킹_1편_음악전.mov",
+   "comp_id": "1324185482",
+   "comp": "MAIN_KO",
+   "dur": 565.498,
+   "narration": "버거킹 오디오 편집완.wav"
+  }
+ },
+ "subtitle_comp_prefix": "자막",
+ "keep_brands": [
+  "Burger King",
+  "BURGER KING",
+  "BURGER\nKING",
+  "Whopper",
+  "WHOPPER",
+  "McDonald's",
+  "Hungry Jack's",
+  "HUNGRY JACK'S",
+  "Insta-Burger King",
+  "Pillsbury",
+  "Diageo",
+  "3G",
+  "RBI",
+  "Impossible"
+ ],
+ "audio": {
+  "main_seq_uid": "237ccd77-ba6a-4f30-b894-aa4f327c5b15",
+  "sfx_track": null,
+  "bgm_tracks": [
+   1
+  ],
+  "outro_bgm": "Sand_Castle.mp3",
+  "narration_ref": "버거킹 오디오 편집완.wav",
+  "key_base": "clip",
+  "_audio_doc": "프리미어: 0트랙 AE 렌더(장 소리 또롱 구간 반복 붙임) + 1트랙 BGM mp3, 효과음은 AE 안(2026-11-03)",
+  "ae_gain_db": 10.4,
+  "bgm_gain_db": 10.4,
+  "_gain_doc": "ko-identity: 유튜브판이 전체 10.4dB 큼(프리미어 트랙 볼륨, 파서가 못 읽음) → AE·BGM 같은 양 올림 (2026-11-04)"
+ },
+ "costco_format": {
+  "hide_layers": [
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   20
+  ],
+  "chapter_layers": [
+   13,
+   12,
+   11
+  ],
+  "mute_layers": [
+   15,
+   16,
+   17
+  ],
+  "_doc": "코스트코 중국어판 포맷(B023과 같은 옛 템플릿): 상단 목차·자막바 끄고, 장 제목 글자 대신 코스트코 챕터 판, AE 장 효과음(또롱) 끔"
+ }
+}

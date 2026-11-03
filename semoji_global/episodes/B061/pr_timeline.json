@@ -1,0 +1,534 @@
+[
+ {
+  "sequence": "B060_버거킹2_음악전",
+  "uid": "3f3cfe5f-fbef-48db-a1bc-45644145b8dd",
+  "tracks": [
+   {
+    "kind": "video",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 15.849,
+      "in": 0.0,
+      "out": 15.849,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "804"
+     },
+     {
+      "start": 15.849,
+      "end": 19.686,
+      "in": 15.849,
+      "out": 19.686,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "806"
+     },
+     {
+      "start": 19.686,
+      "end": 21.421,
+      "in": 19.686,
+      "out": 21.421,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "883"
+     },
+     {
+      "start": 21.421,
+      "end": 708.942,
+      "in": 21.421,
+      "out": 708.942,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "808"
+     },
+     {
+      "start": 708.942,
+      "end": 719.218,
+      "in": 0.0,
+      "out": 10.277,
+      "name": "세모지 아웃트로_최종.mov",
+      "file": "C:\\work\\001_유튜브\\필수이미지\\세모지 아웃트로_최종.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "884"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": [
+     {
+      "start": 189.923,
+      "end": 198.799,
+      "in": 0.0,
+      "out": 8.876,
+      "name": "B060_버거킹2_수정1.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_수정1.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "885"
+     },
+     {
+      "start": 553.62,
+      "end": 573.44,
+      "in": 0.0,
+      "out": 19.82,
+      "name": "B060_버거킹2_수정2.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_수정2.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "886"
+     },
+     {
+      "start": 603.603,
+      "end": 606.239,
+      "in": 0.0,
+      "out": 2.636,
+      "name": "B060_버거킹2_수정3.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_수정3.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "887"
+     },
+     {
+      "start": 708.942,
+      "end": 719.218,
+      "in": 3600.03,
+      "out": 3610.307,
+      "name": "Graphic",
+      "file": "1196574294",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "888"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": [
+     {
+      "start": 708.942,
+      "end": 719.218,
+      "in": 3599.996,
+      "out": 3610.273,
+      "name": "Graphic",
+      "file": "1196574294",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "889"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 3,
+    "items": [
+     {
+      "start": 708.942,
+      "end": 719.218,
+      "in": 3599.996,
+      "out": 3610.273,
+      "name": "63517.jpg",
+      "file": "C:\\work\\세모지_자주쓰는효과\\텍스쳐\\63517.jpg",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "890"
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 15.849,
+      "in": 0.0,
+      "out": 15.849,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "805"
+     },
+     {
+      "start": 15.849,
+      "end": 19.686,
+      "in": 15.849,
+      "out": 19.686,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "807"
+     },
+     {
+      "start": 19.686,
+      "end": 21.288,
+      "in": 19.82,
+      "out": 21.421,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "891"
+     },
+     {
+      "start": 21.421,
+      "end": 233.467,
+      "in": 21.421,
+      "out": 233.467,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "809"
+     },
+     {
+      "start": 233.467,
+      "end": 235.068,
+      "in": 19.82,
+      "out": 21.421,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "892"
+     },
+     {
+      "start": 235.068,
+      "end": 336.937,
+      "in": 235.068,
+      "out": 336.937,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "893"
+     },
+     {
+      "start": 336.937,
+      "end": 338.538,
+      "in": 19.82,
+      "out": 21.421,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "894"
+     },
+     {
+      "start": 338.538,
+      "end": 437.404,
+      "in": 338.538,
+      "out": 437.404,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "895"
+     },
+     {
+      "start": 437.404,
+      "end": 439.005,
+      "in": 19.82,
+      "out": 21.421,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "896"
+     },
+     {
+      "start": 439.005,
+      "end": 708.942,
+      "in": 439.005,
+      "out": 708.942,
+      "name": "B060_버거킹2_음악전.mov",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\B060_버거킹2_음악전.mov",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "897"
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 19.686,
+      "in": 0.0,
+      "out": 19.686,
+      "name": "Eyes_of_Glory.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\극적\\Eyes_of_Glory.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        19.019,
+        0.006989062764
+       ],
+       [
+        19.6863,
+        0.0
+       ]
+      ],
+      "oid": "900"
+     },
+     {
+      "start": 21.421,
+      "end": 121.955,
+      "in": 0.0,
+      "out": 100.534,
+      "name": "Cologne_1983.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\닥파해외채널용\\Cologne_1983.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.00314967124722898,
+      "gain_keys": [],
+      "oid": "901"
+     },
+     {
+      "start": 121.955,
+      "end": 233.433,
+      "in": 0.0,
+      "out": 111.478,
+      "name": "Two_Step.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\닥파해외채널용\\Two_Step.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        110.9775,
+        0.003954140469
+       ],
+       [
+        111.478,
+        0.0
+       ]
+      ],
+      "oid": "902"
+     },
+     {
+      "start": 235.068,
+      "end": 336.937,
+      "in": 0.0,
+      "out": 101.868,
+      "name": "Trapped.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\닥파해외채널용\\Trapped.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        101.4347,
+        0.005874054041
+       ],
+       [
+        101.8684,
+        0.0
+       ]
+      ],
+      "oid": "903"
+     },
+     {
+      "start": 338.538,
+      "end": 437.404,
+      "in": 0.467,
+      "out": 99.333,
+      "name": "Surfing_Llama.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\닥파해외채널용\\Surfing_Llama.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.0,
+      "gain_keys": [
+       [
+        98.9655,
+        0.002571952995
+       ],
+       [
+        99.3326,
+        0.0
+       ]
+      ],
+      "oid": "904"
+     },
+     {
+      "start": 439.239,
+      "end": 548.048,
+      "in": 0.0,
+      "out": 108.809,
+      "name": "Skuba_Drive.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\닥파해외채널용\\Skuba_Drive.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.004334250930696726,
+      "gain_keys": [],
+      "oid": "905"
+     },
+     {
+      "start": 548.048,
+      "end": 615.815,
+      "in": 1.935,
+      "out": 69.703,
+      "name": "Seven_Twenty.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\닥파해외채널용\\Seven_Twenty.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.004994263872504234,
+      "gain_keys": [],
+      "oid": "906"
+     },
+     {
+      "start": 615.815,
+      "end": 708.942,
+      "in": 0.0,
+      "out": 93.126,
+      "name": "Eyes_of_Glory.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\극적\\Eyes_of_Glory.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 0.007881653495132923,
+      "gain_keys": [],
+      "oid": "907"
+     },
+     {
+      "start": 708.942,
+      "end": 719.218,
+      "in": 0.0,
+      "out": 10.277,
+      "name": "Sand_Castle.mp3",
+      "file": "C:\\work\\편집소스\\source\\유투브용 무료음악\\귀염\\Sand_Castle.mp3",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 2.1565329006989487e-06,
+      "gain_keys": [
+       [
+        8.6753,
+        0.01283294335
+       ],
+       [
+        10.2763,
+        0.0
+       ]
+      ],
+      "oid": "908"
+     }
+    ]
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": []
+   }
+  ]
+ },
+ {
+  "sequence": "버거킹2_썸네일",
+  "uid": "d4dec23d-2f37-4e7d-aa5a-999eb067e044",
+  "tracks": [
+   {
+    "kind": "video",
+    "index": 0,
+    "items": [
+     {
+      "start": 0.0,
+      "end": 4.972,
+      "in": 3599.996,
+      "out": 3604.968,
+      "name": "버거킹2_썸네일.jpg",
+      "file": "C:\\work\\001_유튜브\\브랜드백과\\B060_버거킹2_편집완\\버거킹2_썸네일.jpg",
+      "seq_uid": null,
+      "speed": 1.0,
+      "gain": 1.0,
+      "gain_keys": [],
+      "oid": "916"
+     }
+    ]
+   },
+   {
+    "kind": "video",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "video",
+    "index": 2,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 0,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 1,
+    "items": []
+   },
+   {
+    "kind": "audio",
+    "index": 2,
+    "items": []
+   }
+  ]
+ }
+]

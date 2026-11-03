@@ -41,7 +41,8 @@
     "BMEULJIROTTF": "SmileySans-Oblique",
     "BMJUA": "SourceHanSansCN-Heavy",
     "TmonMonsoriBlack": "SourceHanSansCN-Heavy",
-    "BMDoHyeon": "SourceHanSansCN-Heavy"
+    "BMDoHyeon": "SourceHanSansCN-Heavy",
+    "BRB": "SourceHanSansCN-Heavy"
   },
   "min_font_scale": 0.7,
   "raster_fonts": {

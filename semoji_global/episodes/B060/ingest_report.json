@@ -1,0 +1,19 @@
+{
+ "reached": 568,
+ "planned": 42,
+ "copied": 42,
+ "not_found_on_nas": [],
+ "relink": {
+  "aep": "/Users/jleavens_macmini/LocalProjects/auto_kairos/semoji_global/episodes/B060/src/_orig_B059_버거킹.aep",
+  "relinked": 0,
+  "still_missing": 0,
+  "error": null,
+  "saved": true
+ },
+ "prep": {
+  "missing_used": [],
+  "ok": 568,
+  "dur": 600,
+  "errors": []
+ }
+}

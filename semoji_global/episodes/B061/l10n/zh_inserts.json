@@ -1,0 +1,1129 @@
+{
+ "_doc": "중국어판 버거킹 2편: 사딸라 도입·불고기와퍼·콰트로치즈 블록·한국 비교광고/사딸라 삭제, 도입=2020 中国 植物基皇堡, 콰트로 자리=중국 맛, 끝=중국 이야기 블록(맺음말 앞). 출처 docs/zh/B060_B061_china_framing_draft.md",
+ "fonts": {
+  "label": "SourceHanSansCN-Heavy",
+  "body": "SourceHanSansCN-Bold",
+  "title": "SmileySans-Oblique",
+  "hand": "ZCOOLKuaiLe-Regular"
+ },
+ "sfx": {
+  "pop": "assets/sfx/pop.wav",
+  "slam": "assets/sfx/stamp.wav",
+  "slide_right": "assets/sfx/whoosh.wav",
+  "slide_left": "assets/sfx/whoosh.wav",
+  "slide_up": "assets/sfx/whoosh.wav",
+  "bar": "assets/sfx/whoosh.wav"
+ },
+ "protect": [
+  "汉堡王",
+  "皇堡",
+  "我选我味",
+  "RBI",
+  "CPE源峰",
+  "BK Veggie"
+ ],
+ "inserts": {
+  "intro": {
+   "replace_master": [
+    0.0,
+    14.45
+   ],
+   "_ids": [
+    "n001",
+    "n002",
+    "n003",
+    "n004",
+    "n005"
+   ],
+   "_doc": "한국 사딸라 광고 도입 교체",
+   "scenes": [
+    {
+     "id": "bi01",
+     "text": "2020年12月，北京、上海、杭州、深圳的325家汉堡王，同时上了一款新皇堡。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/whopper.png",
+       "x": 620,
+       "y": 500,
+       "w": 640,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "2020年12月",
+       "x": 330,
+       "y": 110,
+       "size": 54,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      },
+      {
+       "type": "text",
+       "text": "北京 · 上海 · 杭州 · 深圳",
+       "font": "label",
+       "size": 64,
+       "x": 1350,
+       "y": 330,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.3,
+       "anim": "slam"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 325,
+       "prefix": "",
+       "suffix": "家门店",
+       "font": "label",
+       "size": 160,
+       "x": 1350,
+       "y": 520,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 12,
+       "at": 0.55,
+       "count_dur": 1.2,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "bi02",
+     "text": "样子、做法、价格都和原来一样，只有一处不同：中间那块火烤肉饼，不是牛肉，是植物做的。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/whopper.png",
+       "x": 560,
+       "y": 460,
+       "w": 520,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/whopper.png",
+       "x": 1360,
+       "y": 460,
+       "w": 520,
+       "at": 0.05,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "同价",
+       "font": "label",
+       "size": 90,
+       "x": 960,
+       "y": 300,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.25,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "牛肉",
+       "x": 560,
+       "y": 760,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        214,
+        40,
+        40
+       ],
+       "at": 0.5,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "植物基",
+       "x": 1360,
+       "y": 760,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        60,
+        140,
+        70
+       ],
+       "at": 0.6,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "bi03",
+     "text": "一个靠火烤牛肉出名的品牌，为什么要这么做？答案，要从皇堡几十年的变化说起，最后再回到中国。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/logo_bk2021.png",
+       "x": 960,
+       "y": 430,
+       "w": 480,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "为什么？",
+       "font": "title",
+       "size": 120,
+       "x": 1500,
+       "y": 250,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "at": 0.25,
+       "anim": "slam"
+      }
+     ]
+    }
+   ]
+  },
+  "cut_bulgogi": {
+   "cut": true,
+   "replace_master": [
+    77.3,
+    96.4
+   ],
+   "_ids": [
+    "n036",
+    "n037",
+    "n038",
+    "n039",
+    "n040"
+   ],
+   "_doc": "원조 와퍼 재료 목록+한국 불고기와퍼(같은 화면에 치즈·할라피뇨 이름표)"
+  },
+  "local": {
+   "replace_master": [
+    172.3,
+    233.3
+   ],
+   "_ids": [
+    "n072..n102"
+   ],
+   "_doc": "한국 콰트로치즈와퍼·한국 와퍼 라인업 → 중국 현지화 메뉴",
+   "scenes": [
+    {
+     "id": "l1",
+     "text": "皇堡到了中国，也慢慢有了中国味道。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/cnflavor_h3.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "中国味道",
+       "x": 330,
+       "y": 110,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        214,
+        40,
+        40
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "l2",
+     "text": "据说早在2005年，中国的菜单上就有加了四川麻辣酱的辣味皇堡。2024年，汉堡王用甘肃甘谷的辣椒，做了一款天水麻辣烫风味的鸡排堡；2025年，又推出了火烤猪颈肉皇堡。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/cnflavor_h3.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "2005 · 四川麻辣酱",
+       "x": 420,
+       "y": 110,
+       "size": 48,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "2024 · 甘谷辣椒鸡排堡",
+       "x": 420,
+       "y": 190,
+       "size": 48,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        214,
+        40,
+        40
+       ],
+       "at": 0.35,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "2025 · 火烤猪颈肉皇堡",
+       "x": 420,
+       "y": 270,
+       "size": 48,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        120,
+        70,
+        40
+       ],
+       "at": 0.75,
+       "anim": "slam"
+      }
+     ]
+    }
+   ]
+  },
+  "cut_korea_ads": {
+   "cut": true,
+   "replace_master": [
+    610.2,
+    666.1
+   ],
+   "_ids": [
+    "n269..n283"
+   ],
+   "_doc": "한국에 비교광고 없음 + 사딸라 광고(야인시대·미군 협상)"
+  },
+  "china": {
+   "replace_master": [
+    704.6,
+    704.6
+   ],
+   "scenes": [
+    {
+     "id": "c1",
+     "text": "汉堡王在中国的故事，从2005年6月开始。第一家店开在上海南京西路，静安寺附近，一栋两层的老洋房里。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/sh2005_h3.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "2005年6月 · 上海",
+       "x": 330,
+       "y": 110,
+       "size": 54,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "中国第一家店",
+       "x": 330,
+       "y": 190,
+       "size": 48,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        214,
+        40,
+        40
+       ],
+       "at": 0.6,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "text": "那时候，它带来的口号就是“我选我味”，主打火烤牛肉做的皇堡。最初几年，汉堡王在中国全是直营，开店并不快。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/hiyw.png",
+       "x": 620,
+       "y": 480,
+       "w": 820,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "我选我味",
+       "font": "title",
+       "size": 130,
+       "x": 1400,
+       "y": 330,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "at": 0.15,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "Have It Your Way",
+       "x": 1400,
+       "y": 480,
+       "size": 48,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.25,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "最初全部直营",
+       "x": 1400,
+       "y": 640,
+       "size": 56,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        31,
+        79,
+        168
+       ],
+       "at": 0.6,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "c4",
+     "text": "2009年12月，西单开出了北京城区的第一家汉堡王。据报道，那是汉堡王在全球的第12000家餐厅。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/bj2009_v3_h3.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "2009年12月 · 北京西单",
+       "x": 330,
+       "y": 110,
+       "size": 54,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 12000,
+       "prefix": "全球第",
+       "suffix": "家",
+       "font": "label",
+       "size": 110,
+       "x": 470,
+       "y": 330,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 12,
+       "at": 0.5,
+       "count_dur": 1.2,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "据报道",
+       "x": 470,
+       "y": 450,
+       "size": 40,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        90,
+        90,
+        90
+       ],
+       "at": 0.6,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "c5",
+     "text": "2012年，汉堡王在中国换了一种开法：和一家土耳其的老牌加盟商、一家投资公司成立合资公司，拿下中国市场的独家开发权，开始开放加盟。那时，中国只有63家汉堡王，目标是五到七年开到1000家。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "2012年",
+       "x": 960,
+       "y": 110,
+       "size": 56,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/logo_bk1999.png",
+       "x": 480,
+       "y": 480,
+       "w": 420,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "合资公司 · 开放加盟",
+       "x": 1300,
+       "y": 320,
+       "size": 56,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        31,
+        79,
+        168
+       ],
+       "at": 0.2,
+       "anim": "slam"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 63,
+       "prefix": "",
+       "suffix": "家",
+       "font": "label",
+       "size": 140,
+       "x": 1300,
+       "y": 500,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 12,
+       "at": 0.6,
+       "count_dur": 1.2,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "目标：5~7年 → 1000家",
+       "font": "label",
+       "size": 64,
+       "x": 1300,
+       "y": 690,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.8,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "c6",
+     "text": "到2018年底，汉堡王在中国的门店超过了1000家。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/art/bj2009_v3.png",
+       "x": 600,
+       "y": 500,
+       "w": 820,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "2018年底",
+       "x": 1400,
+       "y": 250,
+       "size": 56,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      },
+      {
+       "type": "counter",
+       "from": 63,
+       "to": 1000,
+       "prefix": "",
+       "suffix": "+家",
+       "font": "label",
+       "size": 170,
+       "x": 1400,
+       "y": 470,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 12,
+       "at": 0.15,
+       "count_dur": 1.2,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "c8",
+     "text": "后来，菜单上的中国味道越来越多。开头说到的植物基皇堡，也是一次尝试；从定位看，它更像是在瞄准想少吃点肉的普通顾客。2025年，汉堡王在中国提出了“全球经典＋本土定制”：皇堡留着，同时多做中国人爱吃的口味。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/art/cnflavor.png",
+       "x": 620,
+       "y": 500,
+       "w": 820,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "全球经典",
+       "font": "title",
+       "size": 100,
+       "x": 1400,
+       "y": 330,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "at": 0.4,
+       "anim": "slam"
+      },
+      {
+       "type": "text",
+       "text": "＋本土定制",
+       "font": "title",
+       "size": 100,
+       "x": 1400,
+       "y": 480,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.5,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "2025年",
+       "x": 1400,
+       "y": 170,
+       "size": 52,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.35,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "c9",
+     "text": "不过，2024年，汉堡王在中国的门店比前一年少了一百多家。2025年初，母公司RBI收回了中国业务的全部股份；同年11月，又宣布和中国投资机构CPE源峰成立新的合资公司。据公司公布，CPE源峰持股约83%，RBI保留约17%。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/logo_bk2021.png",
+       "x": 960,
+       "y": 170,
+       "w": 200,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "新的合资公司",
+       "x": 960,
+       "y": 310,
+       "size": 56,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        31,
+        79,
+        168
+       ],
+       "at": 0.45,
+       "anim": "slam"
+      },
+      {
+       "type": "bar",
+       "x": 700,
+       "base_y": 760,
+       "w": 240,
+       "h": 330,
+       "color": [
+        200,
+        60,
+        50
+       ],
+       "label": "CPE源峰 约83%",
+       "at": 0.6
+      },
+      {
+       "type": "bar",
+       "x": 1220,
+       "base_y": 760,
+       "w": 240,
+       "h": 68,
+       "color": [
+        240,
+        150,
+        60
+       ],
+       "label": "RBI 约17%",
+       "at": 0.7
+      }
+     ]
+    },
+    {
+     "id": "c10",
+     "text": "2026年初，交易完成。新公司投入3.5亿美元，拿到了在中国独家发展汉堡王品牌20年的权利。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/logo_bk2021.png",
+       "x": 520,
+       "y": 470,
+       "w": 420,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "2026年初 交易完成",
+       "x": 1320,
+       "y": 280,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "投入3.5亿美元",
+       "x": 1320,
+       "y": 460,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        214,
+        40,
+        40
+       ],
+       "at": 0.35,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "独家发展20年",
+       "x": 1320,
+       "y": 640,
+       "size": 64,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        31,
+        79,
+        168
+       ],
+       "at": 0.6,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "c11",
+     "text": "现在，汉堡王在中国大约有1250家餐厅。新的目标是：2030年前翻一番，2035年超过4000家。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "bar",
+       "x": 560,
+       "base_y": 760,
+       "w": 220,
+       "h": 140,
+       "color": [
+        240,
+        150,
+        60
+       ],
+       "label": "现在 约1250家",
+       "at": 0.0
+      },
+      {
+       "type": "bar",
+       "x": 960,
+       "base_y": 760,
+       "w": 220,
+       "h": 280,
+       "color": [
+        230,
+        110,
+        50
+       ],
+       "label": "2030 翻一番",
+       "at": 0.5
+      },
+      {
+       "type": "bar",
+       "x": 1360,
+       "base_y": 760,
+       "w": 220,
+       "h": 420,
+       "color": [
+        200,
+        50,
+        40
+       ],
+       "label": "2035 4000+家",
+       "at": 0.75
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 1250,
+       "prefix": "约",
+       "suffix": "家",
+       "font": "label",
+       "size": 110,
+       "x": 560,
+       "y": 230,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 12,
+       "at": 0.05,
+       "count_dur": 1.2,
+       "anim": "pop"
+      }
+     ]
+    },
+    {
+     "id": "c12",
+     "text": "2005年，上海老洋房里卖出了第一个皇堡；二十年后，它要在中国开出几千家店。火烤的皇堡还是那个皇堡，只是越来越多的中国口味，被放进了“我选我味”里。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/sh2005_h3.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "我选我味",
+       "x": 330,
+       "y": 110,
+       "size": 60,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        214,
+        40,
+        40
+       ],
+       "at": 0.7,
+       "anim": "slam"
+      }
+     ]
+    }
+   ]
+  },
+  "cut_chicken": {
+   "cut": true,
+   "replace_master": [
+    116.8,
+    136.8
+   ],
+   "_ids": [
+    "n049..n057"
+   ],
+   "_doc": "BK 바게트·텐더그릴·치킨버거 실패 연쇄(평가: 메뉴 연표 늘어짐)"
+  },
+  "cut_whopperbar": {
+   "cut": true,
+   "replace_master": [
+    155.5,
+    165.0
+   ],
+   "_ids": [
+    "n065..n067"
+   ],
+   "_doc": "BK 와퍼바(부정확·늘어짐)"
+  },
+  "cut_dup_order": {
+   "cut": true,
+   "replace_master": [
+    69.5,
+    74.3
+   ],
+   "_ids": [
+    "n033"
+   ],
+   "_doc": "「点单自由搭配」 중복"
+  },
+  "cut_king_ad": {
+   "cut": true,
+   "replace_master": [
+    447.6,
+    465.3
+   ],
+   "_ids": [
+    "n202..n207"
+   ],
+   "_doc": "상편에서 설명한 국왕·마법사 광고 반복"
+  },
+  "cut_logo_font": {
+   "cut": true,
+   "replace_master": [
+    383.8,
+    400.8
+   ],
+   "_ids": [
+    "n176",
+    "n177",
+    "n178",
+    "n179",
+    "n181"
+   ],
+   "_doc": "로고 서체·1994 로고(로고 나열 압축)"
+  },
+  "cut_veggie_list": {
+   "cut": true,
+   "replace_master": [
+    240.6,
+    250.2
+   ],
+   "_ids": [
+    "n108",
+    "n112"
+   ],
+   "_doc": "BK Veggie 재료 나열"
+  },
+  "cut_logo_early": {
+   "cut": true,
+   "replace_master": [
+    338.8,
+    362.3
+   ],
+   "_ids": [
+    "n155..n164"
+   ],
+   "_doc": "1953 반쪽 태양·1954 글자 로고 + 상편 반복(로고 대목 압축)"
+  }
+ }
+}

@@ -1,0 +1,338 @@
+{
+ "_doc": "중국어판 버거킹 1편: 도입=2009 北京西单 全球第12000家(据报道) 훅 → 约2万家 → Insta. 2014 RBI 장면 추가. 사실 출처 docs/zh/B060_B061_china_framing_draft.md",
+ "fonts": {
+  "label": "SourceHanSansCN-Heavy",
+  "body": "SourceHanSansCN-Bold",
+  "title": "SmileySans-Oblique",
+  "hand": "ZCOOLKuaiLe-Regular"
+ },
+ "sfx": {
+  "pop": "assets/sfx/pop.wav",
+  "slam": "assets/sfx/stamp.wav",
+  "slide_right": "assets/sfx/whoosh.wav",
+  "slide_left": "assets/sfx/whoosh.wav",
+  "slide_up": "assets/sfx/whoosh.wav",
+  "bar": "assets/sfx/whoosh.wav"
+ },
+ "protect": [
+  "汉堡王",
+  "皇堡",
+  "Insta",
+  "RBI",
+  "Tim Hortons",
+  "Hungry Jack's"
+ ],
+ "inserts": {
+  "intro": {
+   "replace_master": [
+    0.0,
+    24.35
+   ],
+   "_ids": [
+    "n001",
+    "n002",
+    "n003",
+    "n004",
+    "n005",
+    "n006",
+    "n007"
+   ],
+   "_doc": "원래 도입(몰드 와퍼·세계 2위 1.5만 개) → 3·15 연상·순위 표현 피해서 교체",
+   "scenes": [
+    {
+     "id": "zi01",
+     "text": "2009年12月，北京西单开出了一家汉堡店。据报道，它是这个品牌在全球开出的第12000家餐厅。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/vid/bj2009_v3_h3.mp4"
+      },
+      {
+       "type": "badge",
+       "text": "2009年12月 · 北京西单",
+       "x": 330,
+       "y": 110,
+       "size": 54,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      },
+      {
+       "type": "text",
+       "text": "全球第",
+       "font": "label",
+       "size": 70,
+       "x": 300,
+       "y": 330,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.45,
+       "anim": "slam"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 12000,
+       "prefix": "",
+       "suffix": "家",
+       "font": "label",
+       "size": 150,
+       "x": 330,
+       "y": 470,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 12,
+       "at": 0.5,
+       "count_dur": 1.2,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "据报道",
+       "x": 330,
+       "y": 610,
+       "size": 40,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        90,
+        90,
+        90
+       ],
+       "at": 0.6,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "zi02",
+     "text": "这个品牌，就是汉堡王。如今，它在全球大约有2万家餐厅。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/logo_bk2021.png",
+       "x": 620,
+       "y": 450,
+       "w": 520,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "counter",
+       "from": 0,
+       "to": 20000,
+       "prefix": "约",
+       "suffix": "家",
+       "font": "label",
+       "size": 150,
+       "x": 1300,
+       "y": 400,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "stroke": [
+        255,
+        255,
+        255
+       ],
+       "stroke_w": 12,
+       "at": 0.45,
+       "count_dur": 1.2,
+       "anim": "pop"
+      },
+      {
+       "type": "badge",
+       "text": "2025年底 全球19,900家",
+       "x": 1300,
+       "y": 580,
+       "size": 48,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.6,
+       "anim": "slam"
+      }
+     ]
+    },
+    {
+     "id": "zi03",
+     "text": "可它最早的名字里，还多了一个词——“Insta”。而最早创办它的两个人，后来并没能守住它。这期品牌百科，就从这里说起。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "image",
+       "src": "src/자료/인스타버거킹.png",
+       "x": 760,
+       "y": 470,
+       "w": 1000,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "Insta？",
+       "font": "title",
+       "size": 150,
+       "x": 1530,
+       "y": 360,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "at": 0.3,
+       "anim": "slam"
+      }
+     ]
+    }
+   ]
+  },
+  "rbi": {
+   "replace_master": [
+    533.9,
+    533.9
+   ],
+   "scenes": [
+    {
+     "id": "r1",
+     "text": "2014年，汉堡王又和加拿大的咖啡连锁Tim Hortons合并，组成了今天的母公司“餐饮品牌国际”，也就是RBI。",
+     "layers": [
+      {
+       "type": "bg",
+       "src": "assets/zh/paper_bg.png"
+      },
+      {
+       "type": "badge",
+       "text": "2014年",
+       "x": 960,
+       "y": 110,
+       "size": 56,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.0,
+       "anim": "slam"
+      },
+      {
+       "type": "image",
+       "src": "assets/zh/logo_bk2021.png",
+       "x": 560,
+       "y": 420,
+       "w": 380,
+       "at": 0.0,
+       "anim": "pop"
+      },
+      {
+       "type": "text",
+       "text": "+",
+       "font": "label",
+       "size": 160,
+       "x": 960,
+       "y": 420,
+       "color": [
+        30,
+        30,
+        30
+       ],
+       "at": 0.3,
+       "anim": "slam"
+      },
+      {
+       "type": "badge",
+       "text": "Tim Hortons",
+       "x": 1360,
+       "y": 420,
+       "size": 80,
+       "color": [
+        255,
+        255,
+        255
+       ],
+       "bg": [
+        200,
+        16,
+        46
+       ],
+       "at": 0.35,
+       "anim": "slam"
+      },
+      {
+       "type": "text",
+       "text": "= 餐饮品牌国际（RBI）",
+       "font": "label",
+       "size": 96,
+       "x": 960,
+       "y": 720,
+       "color": [
+        214,
+        40,
+        40
+       ],
+       "at": 0.65,
+       "anim": "slam"
+      }
+     ]
+    }
+   ]
+  },
+  "cut_chart_struct": {
+   "cut": true,
+   "replace_master": [
+    421.1,
+    430.9
+   ],
+   "_ids": [
+    "n161",
+    "n162",
+    "n164"
+   ],
+   "_doc": "「加盟里的加盟」 구조 설명(평가: 추상적, 이탈)"
+  }
+ }
+}
