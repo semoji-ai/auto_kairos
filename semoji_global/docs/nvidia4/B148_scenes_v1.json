@@ -1,0 +1,3534 @@
+{
+ "episode": "B148 브랜드백과사전 엔비디아 4편",
+ "source": "B148_엔비디아4_ko_draft.md",
+ "source_version": "확정본 v10 (2026-11-04)",
+ "speech_rate_chars_per_min": 440,
+ "kinds": {
+  "illust": "①기본체 일러스트",
+  "meme": "②밈 버전",
+  "info": "③도해/인포그래픽",
+  "real": "④실사 자료",
+  "card": "⑤카드",
+  "reuse": "⑥장면 재사용"
+ },
+ "character_sheets": {
+  "젠슨 황(기본체)": "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png",
+  "젠슨 황(밈)": "_imggen/nvidia4/characters/jensen_2026_meme_sheet.png",
+  "샘 올트먼(기본체)": "_imggen/nvidia4/characters/altman_brand_sheet.png",
+  "일론 머스크(기본체)": "_imggen/nvidia4/characters/musk_brand_sheet.png"
+ },
+ "notes": [
+  "narration은 원고 줄에서 〔#번호〕 주석만 뺀 원문. lines는 원고 파일 줄 번호.",
+  "K-only = 한국판 전용(중국판에서 빠짐). C-only = 중국판 교체 3장(id c###).",
+  "real_asset.status found = 이 문서 작성 시 URL을 직접 열어 확인함, to_source = 찾을 것.",
+  "minimax = 미니맥스(힉스필드) i2v로 움직일지. 도해·실사·카드·재사용은 AE 레이어 모션.",
+  "실존 인물 얼굴은 시트 인물(젠슨 황·샘 올트먼·일론 머스크)만 그린다. 정치 인물은 얼굴 없는 인용 카드."
+ ],
+ "scenes": [
+  {
+   "chapter": "도입",
+   "lines": [
+    22
+   ],
+   "narration": "2025년 1월 27일.",
+   "est_sec": 1.5,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "날짜 카드. 검은 화면에 초록 날짜 배지가 타이핑되고, 뒤로 빨간 하락 시세판이 흐릿하게 흐른다.",
+   "on_screen_text": "2025년 1월 27일",
+   "minimax": false,
+   "fact_refs": [],
+   "card": "date",
+   "id": "s001"
+  },
+  {
+   "chapter": "도입",
+   "lines": [
+    23,
+    24
+   ],
+   "narration": "하루 만에 한 회사의 시가총액 5,890억 달러가 사라졌습니다. 미국 증시 역사상, 한 기업이 하루에 잃은 금액으로는 가장 컸는데요.",
+   "est_sec": 7.8,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "이름이 가려진 거대한 회사 건물(간판은 천으로 덮임) 위로 돈다발이 바람에 흩어져 날아간다. 시세판 숫자가 빨갛게 줄어든다.",
+   "on_screen_text": "배지: −5,890억 달러 / 미국 증시 사상 하루 최대 손실",
+   "minimax": true,
+   "fact_refs": [
+    "#26"
+   ],
+   "id": "s002"
+  },
+  {
+   "chapter": "도입",
+   "lines": [
+    25
+   ],
+   "narration": "그 회사가 엔비디아였습니다.",
+   "est_sec": 1.8,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "건물 간판을 덮은 천이 벗겨지며 엔비디아 로고가 드러난다(공개 연출).",
+   "on_screen_text": "엔비디아",
+   "minimax": true,
+   "fact_refs": [],
+   "note": "엔비디아 공식 로고(nvidianews 미디어 자료)를 -i로 첨부해 정확히",
+   "id": "s003"
+  },
+  {
+   "chapter": "도입",
+   "lines": [
+    27
+   ],
+   "narration": "엔비디아는 GPU, 그래픽 처리 장치를 설계하는 회사입니다.",
+   "est_sec": 3.7,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "GPU 실물 사진 한 장(데이터센터 GPU)이 화면 가운데로 들어오고 「GPU = 그래픽 처리 장치」 라벨이 붙는다.",
+   "on_screen_text": "GPU · 그래픽 처리 장치",
+   "minimax": false,
+   "fact_refs": [],
+   "real_asset": {
+    "what": "H100 GPU 공식 제품 이미지",
+    "where": "엔비디아 공식 제품 페이지",
+    "url": "https://www.nvidia.com/en-us/data-center/h100/",
+    "status": "found",
+    "relevance": "엔비디아가 설계하는 GPU 실물 그 자체를 보여 준다",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s004"
+  },
+  {
+   "chapter": "도입",
+   "lines": [
+    28,
+    29
+   ],
+   "narration": "컴퓨터의 두뇌인 CPU가 복잡한 일을 하나씩 빠르게 처리한다면, GPU는 단순한 계산 수천 개를 한꺼번에 해치우죠.",
+   "est_sec": 6.8,
+   "kind": "reuse",
+   "kind_label": "⑥장면 재사용",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "3편의 CPU 로봇 1대 vs GPU 로봇 여럿 장면을 그대로 쓴다. CPU 쪽 로봇은 하나씩, GPU 쪽은 여럿이 동시에 일한다.",
+   "on_screen_text": "CPU: 복잡한 일 하나씩 / GPU: 단순 계산 수천 개 한꺼번에",
+   "minimax": false,
+   "fact_refs": [
+    "2편"
+   ],
+   "reuse": {
+    "from": "3편",
+    "frame": "/private/tmp/claude-501/-Users-jleavens-macmini/7cf44c15-9613-44eb-8454-4637dec8240a/scratchpad/nv/frames/e3_023.png",
+    "note": "「비트코인 채굴」 자막만 지우고 위 글자로 교체"
+   },
+   "id": "s005"
+  },
+  {
+   "chapter": "도입",
+   "lines": [
+    30
+   ],
+   "narration": "원래 게임 화면을 그리던 이 칩이, AI를 가르치는 데 꼭 맞는 칩이었습니다.",
+   "est_sec": 4.4,
+   "kind": "reuse",
+   "kind_label": "⑥장면 재사용",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "3편 딥러닝 큐브(GPU 칩 격자) 장면. 게임 화면 썸네일이 큐브 안으로 빨려 들어가는 짧은 전환을 얹는다.",
+   "on_screen_text": "AI를 가르치는 칩",
+   "minimax": false,
+   "fact_refs": [
+    "3편"
+   ],
+   "reuse": {
+    "from": "3편",
+    "frame": "/private/tmp/claude-501/-Users-jleavens-macmini/7cf44c15-9613-44eb-8454-4637dec8240a/scratchpad/nv/frames/e3_051.png",
+    "note": "게임 화면 → AI 전환 레이어만 추가"
+   },
+   "id": "s006"
+  },
+  {
+   "chapter": "도입",
+   "lines": [
+    32,
+    33
+   ],
+   "narration": "지난 영상에서 엔비디아는 2023년 6월, 처음으로 종가 기준 시가총액 1조 달러를 넘겼죠.",
+   "est_sec": 5.5,
+   "kind": "reuse",
+   "kind_label": "⑥장면 재사용",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "3편 로켓에 탄 젠슨 황 장면. 날짜 배지를 바꾼다(3편 「5월 30일 장중」 → 정정된 종가 기준).",
+   "on_screen_text": "배지: 2023년 6월 · 종가 기준 시총 1조 달러",
+   "minimax": false,
+   "fact_refs": [
+    "6절 3편 정정"
+   ],
+   "reuse": {
+    "from": "3편",
+    "frame": "/private/tmp/claude-501/-Users-jleavens-macmini/7cf44c15-9613-44eb-8454-4637dec8240a/scratchpad/nv/frames/e3_063.png",
+    "note": "원장 6절 정정: 배지 글자 반드시 교체"
+   },
+   "id": "s007"
+  },
+  {
+   "chapter": "도입",
+   "lines": [
+    34
+   ],
+   "narration": "그 무렵 발표한 최근 분기, 2023년 2~4월의 매출은 72억 달러였습니다.",
+   "est_sec": 4.6,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "분기 매출 막대 하나(72억 달러). 이후 4장·5장 매출 비교의 기준값으로 같은 디자인을 다시 쓴다.",
+   "on_screen_text": "2023년 2~4월 분기 매출 72억 달러",
+   "minimax": false,
+   "fact_refs": [
+    "A16"
+   ],
+   "id": "s008"
+  },
+  {
+   "chapter": "도입",
+   "lines": [
+    35,
+    36,
+    37
+   ],
+   "narration": "1조 달러 클럽에 막 들어간 회사가 어쩌다 하루에 5,890억 달러를 잃는 회사가 됐을까요. 그리고 그다음엔 어떻게 됐을까요.",
+   "est_sec": 7.4,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "갈림길에 선 젠슨 황 뒷모습. 왼쪽엔 「1조 달러 클럽」 트로피, 오른쪽엔 낭떠러지와 「−5,890억」 표지판, 길 끝은 안개 속 물음표.",
+   "on_screen_text": "1조 달러 클럽 → −5,890억 달러? / 그다음은?",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s009"
+  },
+  {
+   "chapter": "도입",
+   "lines": [
+    39
+   ],
+   "narration": "지난 영상에 이어 엔비디아 4편 바로 시작하겠습니다.",
+   "est_sec": 3.1,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "엔비디아 공식 키노트 영상의 오프닝 몇 초(사옥·로고·칩이 또렷하고 움직임이 잔잔한 구간). 위에 시리즈 자막.",
+   "on_screen_text": "엔비디아 4편",
+   "minimax": false,
+   "fact_refs": [],
+   "real_asset": {
+    "what": "GTC 2026 키노트 공식 영상 오프닝",
+    "where": "NVIDIA GTC 키노트 다시보기",
+    "url": "https://www.nvidia.com/gtc/keynote/",
+    "status": "found",
+    "relevance": "시리즈 선언 컷은 그 브랜드 공식 영상으로 받는다(되풀이 규칙 7절). 4편이 다루는 시기(2026)의 엔비디아 현재 모습",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s010"
+  },
+  {
+   "chapter": "도입",
+   "lines": [
+    40
+   ],
+   "narration": "",
+   "est_sec": 5.0,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "세모지 오프닝(기존 1~3편 오프닝 그대로).",
+   "on_screen_text": "(오프닝)",
+   "minimax": false,
+   "fact_refs": [],
+   "card": "opening",
+   "note": "비발화 표시 (오프닝)",
+   "id": "s011"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    44
+   ],
+   "narration": "",
+   "est_sec": 2.0,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "장 카드. 상단 장 탭 바가 1장으로 넘어간다.",
+   "on_screen_text": "1. 없어서 못 파는 칩, 그리고 세계 1위",
+   "minimax": false,
+   "fact_refs": [],
+   "card": "chapter",
+   "id": "s012"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    46,
+    47
+   ],
+   "narration": "2023년 여름, 실리콘밸리에서 가장 귀한 물건은 엔비디아의 AI 칩, H100이었습니다.",
+   "est_sec": 5.6,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "H100 실물 사진을 진열장 속 보석처럼 조명. 연도 배지.",
+   "on_screen_text": "배지: 2023년 여름 · H100",
+   "minimax": false,
+   "fact_refs": [],
+   "real_asset": {
+    "what": "H100 공식 제품 이미지",
+    "where": "엔비디아 공식 제품 페이지",
+    "url": "https://www.nvidia.com/en-us/data-center/h100/",
+    "status": "found",
+    "relevance": "나레이션이 지목하는 바로 그 칩 H100",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s013"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    48,
+    49
+   ],
+   "narration": "그해 5월, 일론 머스크는 월스트리트저널이 연 행사에서 \"지금 GPU는 마약보다 구하기 어렵다\"고 말했다고 합니다.",
+   "est_sec": 7.0,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "일론 머스크(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/musk_brand_sheet.png"
+   ],
+   "screen": "행사 무대의 일론 머스크(기본체). 말풍선이 튀어나온다. 배경에 행사 이름 배지.",
+   "on_screen_text": "말풍선: \"GPU는 마약보다 구하기 어렵다\" / 배지: 2023년 5월 · WSJ 행사",
+   "minimax": true,
+   "fact_refs": [
+    "#1"
+   ],
+   "note": "중국판은 「마약」 비유 삭제(一卡难求) — 중국판 메모 B",
+   "id": "s014"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    51,
+    52,
+    53,
+    54,
+    55
+   ],
+   "narration": "칩을 빌려 쓰는 쪽도 사정은 같았습니다. GPU 수급을 추적하던 업계 자료 'GPU 유틸스'에 따르면, 마이크로소프트 애저와 구글 클라우드에서 수백, 수천 장 단위로 빌릴 수 있는 H100은 사실상 바닥났고, 아마존 AWS도 거의 바닥이었습니다.",
+   "est_sec": 14.5,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "클라우드 「GPU 대여」 창구 앞 긴 줄로 시작해, 카메라가 창구 위 재고 게이지 3개로 다가간다. 애저·구글 클라우드 게이지가 차례로 0, AWS 게이지는 바닥 근처에서 멈춘다(발화에 맞춰 순차).",
+   "on_screen_text": "",
+   "minimax": false,
+   "fact_refs": [
+    "#2"
+   ],
+   "note": "세 회사 공식 로고 첨부. 출처 페이지 https://gpus.llm-utils.org/nvidia-h100-gpus-supply-and-demand/ (확인함)",
+   "id": "s015"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    56,
+    57
+   ],
+   "narration": "챗GPT를 만든 오픈AI의 샘 올트먼조차 GPU가 모자라 단기 계획이 늦어진다고 털어놨을 정도였죠.",
+   "est_sec": 6.0,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "샘 올트먼(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/altman_brand_sheet.png"
+   ],
+   "screen": "샘 올트먼(기본체)이 빈 GPU 상자를 들고 난감한 표정, 옆 달력의 계획표에 「연기」 스티커가 붙는다.",
+   "on_screen_text": "배지: 오픈AI · GPU 부족으로 단기 계획 지연",
+   "minimax": true,
+   "fact_refs": [
+    "#2"
+   ],
+   "id": "s016"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    58
+   ],
+   "narration": "칩 한 장 값은 언론 보도로 2만 5천에서 4만 달러쯤이었는데요.",
+   "est_sec": 3.7,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "H100 실물 사진(컷아웃)에 커다란 가격표가 매달린다.",
+   "on_screen_text": "$25,000 ~ $40,000 (언론 보도)",
+   "minimax": false,
+   "fact_refs": [
+    "#3"
+   ],
+   "id": "s017"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    59
+   ],
+   "narration": "돈이 있어도 바로 손에 넣기 어려운 칩이었죠.",
+   "est_sec": 2.6,
+   "kind": "meme",
+   "kind_label": "②밈 버전",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "돈다발을 쥔 채 울부짖는 남자(실사 캐리커처). 품귀 대목을 닫는 펀치라인.",
+   "on_screen_text": "폭발 글자: \"돈 줄게!! H100 좀 제발!!!!\"",
+   "minimax": true,
+   "fact_refs": [],
+   "meme": {
+    "type": "실사 캐리커처 반응",
+    "ref_id": "nv3_please_buy_crying",
+    "ref_image": "auto_agent/data/artstyle/meme_library/img/nv3_please_buy_crying.jpg",
+    "punchline_role": "품귀 대목의 마지막 반응 — 「돈이 있어도 손에 넣기 어렵다」"
+   },
+   "id": "s018"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    61,
+    62,
+    63,
+    64
+   ],
+   "narration": "그 와중인 8월 8일, 엔비디아는 다음 칩까지 꺼내 보였습니다. 그레이스 CPU와 호퍼 GPU를 한 판에 묶고, 141기가바이트짜리 최신 메모리 HBM3e를 얹은 GH200 그레이스 호퍼 슈퍼칩이었습니다.",
+   "est_sec": 12.3,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "무대 위 젠슨 황(기본체)이 칩을 꺼내 들면(날짜 배지), 화면이 GH200 공식 이미지로 넘어가 세 부분 라벨이 차례로 붙는다.",
+   "on_screen_text": "2023년 8월 8일 · GH200 그레이스 호퍼 슈퍼칩 / 그레이스 CPU + 호퍼 GPU / HBM3e 141GB",
+   "minimax": false,
+   "fact_refs": [
+    "#3",
+    "A2"
+   ],
+   "real_asset": {
+    "what": "GH200(HBM3e) 발표 보도자료 이미지",
+    "where": "엔비디아 뉴스룸",
+    "url": "https://nvidianews.nvidia.com/news/gh200-grace-hopper-superchip-with-hbm3e-memory",
+    "status": "found",
+    "relevance": "2023년 8월 8일 발표한 바로 그 칩의 공식 자료",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s019"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    65,
+    66
+   ],
+   "narration": "이 고대역폭 메모리, HBM을 엔비디아에 가장 많이 대는 곳은 한국의 SK하이닉스였습니다. 삼성전자는 그로부터 2년 뒤인 2025년 9월에야 엔비디아의 품질 시험을 통과했다고 보도됐죠.",
+   "est_sec": 11.2,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "분할 화면: 왼쪽 SK하이닉스 HBM3E 공식 제품 사진 「엔비디아 최대 공급사」, 오른쪽 삼성전자 보도 화면 캡처 「2025년 9월 품질 시험 통과(보도)」.",
+   "on_screen_text": "HBM(고대역폭 메모리) · SK하이닉스 최대 공급 / 삼성전자 2025년 9월 품질 시험 통과(보도)",
+   "minimax": false,
+   "fact_refs": [
+    "A26"
+   ],
+   "real_asset": {
+    "what": "SK하이닉스 HBM3E 공식 제품 이미지",
+    "where": "SK하이닉스 뉴스룸 https://news.skhynix.com/ (사이트 확인, 해당 이미지 찾을 것)",
+    "url": null,
+    "status": "to_source",
+    "relevance": "HBM을 엔비디아에 가장 많이 대는 회사의 그 제품",
+    "credit": "출처 : SK hynix"
+   },
+   "note": "중국판 삭제(A26) · 중국판 삭제(A26) · 보도 화면: https://www.koreajoongangdaily.com/business/samsung-electronics-passes-nvidias-quality-test-for-hbm3e-chip-supply/11989896 (확인함)",
+   "edition": "K-only",
+   "real_asset_2": {
+    "what": "코리아중앙데일리 보도 화면",
+    "where": "언론 기사",
+    "url": "https://www.koreajoongangdaily.com/business/samsung-electronics-passes-nvidias-quality-test-for-hbm3e-chip-supply/11989896",
+    "status": "found",
+    "relevance": "나레이션의 「보도됐죠」가 가리키는 그 보도",
+    "credit": "출처 : Korea JoongAng Daily"
+   },
+   "id": "s020"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    68
+   ],
+   "narration": "그렇다면 다른 회사 칩을 쓰면 되지 않았을까요.",
+   "est_sec": 2.7,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "개발자가 상표 없는 다른 회사 칩을 들고 엔비디아 칩과 번갈아 보며 고민한다.",
+   "on_screen_text": "다른 칩을 쓰면?",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s021"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    69,
+    70
+   ],
+   "narration": "여기서 2편에 잠깐 나왔던 이름이 다시 등장합니다. 2006년, 지포스 8과 함께 처음 발표된 쿠다(CUDA)입니다.",
+   "est_sec": 7.1,
+   "kind": "reuse",
+   "kind_label": "⑥장면 재사용",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "2편 GeForce 8 장면(「CUDA 기술 도입」 배지)을 다시 띄우고, 쿠다 이름표를 크게 키운다.",
+   "on_screen_text": "2006년 · 지포스 8 · 쿠다(CUDA)",
+   "minimax": false,
+   "fact_refs": [
+    "2편"
+   ],
+   "reuse": {
+    "from": "2편",
+    "frame": "/private/tmp/claude-501/-Users-jleavens-macmini/7cf44c15-9613-44eb-8454-4637dec8240a/scratchpad/nv/frames/e2_058.png",
+    "note": "「출처 : WIKIPEDIA」 표기 유지. 쿠다 배지 강조만 추가"
+   },
+   "id": "s022"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    71
+   ],
+   "narration": "쿠다는 개발자가 GPU에 계산을 시킬 때 쓰는 소프트웨어 도구인데요.",
+   "est_sec": 4.1,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "노트북 앞 개발자가 코드를 치면 화면 속 명령이 옆 GPU로 줄지어 들어간다.",
+   "on_screen_text": "쿠다 = GPU에 계산을 시키는 소프트웨어 도구",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s023"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    72,
+    73,
+    74
+   ],
+   "narration": "스마트폰에 빗대 보면 쉽습니다. 새 폰으로 바꿨는데, 그동안 쓰던 앱이 하나도 돌아가지 않는다면 어떨까요. 폰이 아무리 좋아도 선뜻 바꾸기 어렵겠죠.",
+   "est_sec": 8.7,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "새 스마트폰을 켜니 앱 아이콘이 전부 회색으로 잠겨 있다. 손 클로즈업으로 넘어가며 새 폰을 내려놓고 헌 폰을 꼭 쥔다.",
+   "on_screen_text": "",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s024"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    75
+   ],
+   "narration": "연구자와 개발자들이 17년 가까이 쿠다로 짜 온 코드가 바로 그 앱이었습니다.",
+   "est_sec": 4.5,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "폰 화면 속 앱 아이콘들이 하나씩 튀어나와 「쿠다 코드」 상자로 바뀌고, 연구자·개발자들이 그 상자를 17층 탑처럼 쌓아 올린다.",
+   "on_screen_text": "연구자·개발자가 17년 가까이 짠 쿠다 코드 = 그 앱",
+   "minimax": true,
+   "fact_refs": [
+    "2편"
+   ],
+   "id": "s025"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    76
+   ],
+   "narration": "다른 칩으로 옮기려면 그 코드부터 다시 손봐야 했습니다.",
+   "est_sec": 3.3,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "개발자가 산더미 같은 코드 종이를 상자에 담아 다른 칩 쪽으로 낑낑 옮긴다.",
+   "on_screen_text": "코드부터 다시",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s026"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    77,
+    78
+   ],
+   "narration": "이듬해인 2024년, 시장조사업체 IoT 애널리틱스는 데이터센터 GPU 시장에서 엔비디아의 매출 점유율을 92%로 집계했습니다.",
+   "est_sec": 8.0,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "도넛 차트가 92%까지 초록으로 찬다.",
+   "on_screen_text": "2024년 데이터센터 GPU 매출 점유율 92% · 출처: IoT Analytics",
+   "minimax": false,
+   "fact_refs": [
+    "A27"
+   ],
+   "note": "출처 페이지 https://iot-analytics.com/leading-generative-ai-companies/ (확인함)",
+   "id": "s027"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    80,
+    81,
+    82
+   ],
+   "narration": "주문은 곧 숫자로 돌아왔습니다. 2023년 5~7월 분기, 매출이 바로 앞 분기보다 88% 늘었습니다. 그 매출 대부분은 게임 그래픽카드가 아니라 데이터센터 부문, 그러니까 AI 칩에서 나왔습니다.",
+   "est_sec": 11.7,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "분기 매출 막대(도입의 72억 달러 막대와 같은 디자인) 옆에 새 막대가 솟고 「+88%」 화살표. 이어 새 막대가 부문별 색으로 갈라져 데이터센터(크게)·게임(작게)이 드러난다(비율은 원장 2절 계산값).",
+   "on_screen_text": "2023년 5~7월 분기 · 직전 분기 대비 +88% / 대부분 데이터센터(AI 칩)",
+   "minimax": false,
+   "fact_refs": [
+    "#4",
+    "2절 계산값"
+   ],
+   "real_asset": {
+    "what": "2024 회계연도 2분기 실적 보도자료(표 참고용)",
+    "where": "엔비디아 뉴스룸",
+    "url": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-second-quarter-fiscal-2024",
+    "status": "found",
+    "relevance": "나레이션의 그 분기 실적 원문",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s028"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    83
+   ],
+   "narration": "게임 쪽이 줄어든 건 아닙니다. 2년 뒤, 2026년 1월에 끝난 회계연도 게임 매출은 160억 달러로 사상 최고였죠.",
+   "est_sec": 6.8,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "지포스 RTX 50 시리즈 공식 제품 사진 + 기록 배지.",
+   "on_screen_text": "2026년 1월 끝난 회계연도 게임 매출 160억 달러 · 사상 최고",
+   "minimax": false,
+   "fact_refs": [
+    "A28"
+   ],
+   "real_asset": {
+    "what": "지포스 RTX 50 시리즈 공식 제품 이미지",
+    "where": "엔비디아 공식 제품 페이지",
+    "url": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/",
+    "status": "found",
+    "relevance": "그 회계연도 게임 매출을 이끈 현행 게임 그래픽카드",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s029"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    84
+   ],
+   "narration": "2024년 2월 젠슨 황은 \"가속 컴퓨팅과 생성형 AI가 티핑 포인트에 도달했다\"고 말했습니다.",
+   "est_sec": 5.7,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "보도자료 캡처에서 인용문 문장에 형광 밑줄이 그어진다. 옆에 젠슨 황(기본체) 작은 컷.",
+   "on_screen_text": "\"가속 컴퓨팅과 생성형 AI가 티핑 포인트에 도달했다\" · 2024년 2월",
+   "minimax": false,
+   "fact_refs": [
+    "#10"
+   ],
+   "real_asset": {
+    "what": "2024 회계연도 4분기 실적 보도자료의 CEO 인용",
+    "where": "엔비디아 뉴스룸",
+    "url": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-fourth-quarter-and-fiscal-2024",
+    "status": "found",
+    "relevance": "나레이션 인용문의 원문이 실린 문서",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s030"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    86,
+    87,
+    88
+   ],
+   "narration": "칩을 찾는 건 회사만이 아니었습니다. 2024년 2월 두바이 세계정부정상회의에서 젠슨 황은 각국 정상과 관료들 앞에서 이렇게 말합니다.",
+   "est_sec": 8.0,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "지구본 둘레로 여러 손이 칩을 향해 뻗는 짧은 일러스트에서, 세계정부정상회의 대담 영상(무대 위 젠슨 황)으로 넘어간다.",
+   "on_screen_text": "",
+   "minimax": false,
+   "fact_refs": [],
+   "real_asset": {
+    "what": "World Governments Summit 공식 유튜브 「A Conversation with the Founder of NVIDIA」",
+    "where": "세계정부정상회의 공식 채널",
+    "url": "https://www.youtube.com/watch?v=8Pm2xEViNIo",
+    "status": "found",
+    "relevance": "나레이션의 그 행사·그 발언 자리의 원본 영상",
+    "credit": "출처 : World Governments Summit"
+   },
+   "id": "s031"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    89,
+    90
+   ],
+   "narration": "\"모든 나라는 자기 나라의 지능, 그러니까 AI를 스스로 만들어 가져야 합니다.\" 그는 이것을 '소버린 AI', 주권 AI라고 불렀습니다.",
+   "est_sec": 8.2,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "연단의 젠슨 황(기본체)이 손을 펼치며 말한다. 말이 끝나면 아래에 키워드 카드가 붙는다.",
+   "on_screen_text": "\"모든 나라는 자기 나라의 지능, AI를 스스로 만들어 가져야 합니다\" / 소버린 AI = 주권 AI",
+   "minimax": true,
+   "fact_refs": [
+    "#9"
+   ],
+   "id": "s032"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    91
+   ],
+   "narration": "젠슨 황의 논리대로라면, 나라마다 자기 AI를 갖추는 데에도 칩이 필요했습니다.",
+   "est_sec": 4.8,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "여러 나라 땅(색면 지도)에 작은 데이터센터가 하나씩 서고, 칩을 실은 트럭이 그리로 향한다.",
+   "on_screen_text": "나라마다 자기 AI → 칩 필요",
+   "minimax": true,
+   "fact_refs": [
+    "#9"
+   ],
+   "id": "s033"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    93,
+    94,
+    95
+   ],
+   "narration": "주식시장은 더 빨랐습니다. 연간 실적이 나온 다음 날인 2024년 2월 22일, 하루 만에 시가총액이 2,770억 달러 불어났는데요.",
+   "est_sec": 7.9,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "시가총액 그래프가 하루 만에 수직으로 뛴다. 날짜 배지.",
+   "on_screen_text": "2024년 2월 22일 · 하루 +2,770억 달러",
+   "minimax": false,
+   "fact_refs": [],
+   "id": "s034"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    96
+   ],
+   "narration": "당시 미국 증시에서 한 기업이 하루에 늘린 금액으로는 가장 컸습니다.",
+   "est_sec": 4.0,
+   "kind": "meme",
+   "kind_label": "②밈 버전",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "성조기 앞에서 흥분해 손가락을 치켜든 노인(텍스트 폭발). 주가 열풍 대목의 반응.",
+   "on_screen_text": "폭발 글자: \"하루에 2,770억 달러 Go!\" / 배지: 당시 하루 최대 증가",
+   "minimax": true,
+   "fact_refs": [
+    "#11",
+    "A17"
+   ],
+   "meme": {
+    "type": "텍스트 폭발",
+    "ref_id": "nv3_750_go_flag",
+    "ref_image": "auto_agent/data/artstyle/meme_library/img/nv3_750_go_flag.jpg",
+    "punchline_role": "기록적인 하루 상승에 대한 시장 반응"
+   },
+   "id": "s035"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    97,
+    98
+   ],
+   "narration": "3월 초 2조 달러, 6월 초 3조 달러. 1조에서 2조까지는 1년이 채 안 걸렸고, 2조에서 3조까지는 석 달 남짓이었습니다.",
+   "est_sec": 7.2,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "계단 그래프 1조 → 2조(3월 초) → 3조(6월 초)가 차례로 서고, 이어 계단 사이에 구간 괄호가 붙는다.",
+   "on_screen_text": "3월 초 2조 · 6월 초 3조 / 1조→2조 1년 미만 · 2조→3조 석 달 남짓",
+   "minimax": false,
+   "fact_refs": [
+    "#12",
+    "#17"
+   ],
+   "id": "s036"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    99,
+    100
+   ],
+   "narration": "6월 10일에는 주식 1주를 10주로 쪼개 1주 가격이 10분의 1이 되기도 했고요.",
+   "est_sec": 4.9,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "젠슨 황(기본체)이 「엔비디아 주식 1주」라고 적힌 커다란 케이크를 10조각으로 자르고, 조각마다 작은 가격표가 붙는다.",
+   "on_screen_text": "2024년 6월 10일 · 1주 → 10주 분할",
+   "minimax": true,
+   "fact_refs": [
+    "#14",
+    "#18"
+   ],
+   "id": "s037"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    102,
+    103,
+    104
+   ],
+   "narration": "그리고 2024년 6월 18일, 엔비디아는 마이크로소프트를 제치고 처음으로 세계에서 가장 비싼 상장 회사가 됩니다.",
+   "est_sec": 7.0,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "시상대 1위에 오르는 젠슨 황(기본체), 2위 자리에 마이크로소프트 로고 판. 이 편의 핵심 장면.",
+   "on_screen_text": "2024년 6월 18일 · 세계에서 가장 비싼 상장 회사",
+   "minimax": true,
+   "fact_refs": [
+    "#19"
+   ],
+   "note": "마이크로소프트 공식 로고 첨부. 5장 s(애플) 장면과 같은 구도로 짝을 맞춘다",
+   "id": "s038"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    106
+   ],
+   "narration": "같은 해 11월에는 미국 다우지수에도 이름을 올렸는데요.",
+   "est_sec": 3.4,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "S&P 다우존스 지수 발표문 캡처, 엔비디아 이름에 밑줄.",
+   "on_screen_text": "2024년 11월 · 다우지수 편입",
+   "minimax": false,
+   "fact_refs": [
+    "#23"
+   ],
+   "real_asset": {
+    "what": "S&P 다우존스 지수 공식 발표(2024-11-01)",
+    "where": "S&P 다우존스 지수 보도자료",
+    "url": "https://press.spglobal.com/2024-11-01-NVIDIA-and-Sherwin-Williams-Set-to-Join-Dow-Jones-Industrial-Average-Vistra-to-Join-Dow-Jones-Utility-Average",
+    "status": "found",
+    "relevance": "다우 편입을 알린 원문 그 자체",
+    "credit": "출처 : S&P Dow Jones Indices"
+   },
+   "id": "s039"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    107,
+    108
+   ],
+   "narration": "엔비디아가 들어간 자리는 바로 인텔이 빠진 자리였습니다.",
+   "est_sec": 3.4,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "의자 등판의 명패 교체: 인텔 명패가 빠지고 엔비디아 명패가 꽂힌다.",
+   "on_screen_text": "들어간 자리 = 인텔이 빠진 자리",
+   "minimax": true,
+   "fact_refs": [
+    "#23"
+   ],
+   "note": "인텔·엔비디아 공식 로고 첨부",
+   "id": "s040"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    109,
+    110
+   ],
+   "narration": "1편에서 엔비디아가 막 창업했을 때, 인텔은 이미 CPU 시장을 거의 독점하던 거인이었죠.",
+   "est_sec": 5.3,
+   "kind": "reuse",
+   "kind_label": "⑥장면 재사용",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "1편의 「인텔 로고 얼굴 정장 남자」 장면 — 당시의 거인 인텔.",
+   "on_screen_text": "1편 · 1993년 CPU 시장의 거인 인텔",
+   "minimax": false,
+   "fact_refs": [
+    "1편"
+   ],
+   "reuse": {
+    "from": "1편",
+    "frame": "/private/tmp/claude-501/-Users-jleavens-macmini/7cf44c15-9613-44eb-8454-4637dec8240a/scratchpad/nv/frames/e1_051.png",
+    "note": "자막 교체만"
+   },
+   "id": "s041"
+  },
+  {
+   "chapter": "1장",
+   "lines": [
+    111,
+    112
+   ],
+   "narration": "발표 당시 인텔의 시가총액은 엔비디아의 34분의 1 정도였습니다.",
+   "est_sec": 4.0,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "큰 원(엔비디아)과 아주 작은 원(인텔)을 나란히. 작은 원 34개를 모아야 큰 원이 된다는 걸 겹쳐 보인다.",
+   "on_screen_text": "발표 당시 시가총액 인텔 ≈ 엔비디아의 34분의 1",
+   "minimax": false,
+   "fact_refs": [
+    "#23"
+   ],
+   "id": "s042"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    116
+   ],
+   "narration": "",
+   "est_sec": 2.0,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "장 카드.",
+   "on_screen_text": "2. 블랙웰과 1년 주기",
+   "minimax": false,
+   "fact_refs": [],
+   "card": "chapter",
+   "id": "s043"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    118,
+    119
+   ],
+   "narration": "2024년 3월 18일, 엔비디아의 개발자 행사 GTC. 젠슨 황이 새 칩 블랙웰을 공개했습니다.",
+   "est_sec": 5.7,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "GTC 2024 키노트에서 젠슨 황이 블랙웰(오른손)과 호퍼(왼손)를 들어 보이는 대목.",
+   "on_screen_text": "2024년 3월 18일 · GTC · 블랙웰 공개",
+   "minimax": false,
+   "fact_refs": [
+    "#13"
+   ],
+   "real_asset": {
+    "what": "GTC March 2024 Keynote 공식 영상",
+    "where": "엔비디아 공식 유튜브",
+    "url": "https://www.youtube.com/watch?v=Y2F8yisiS6E",
+    "status": "found",
+    "relevance": "블랙웰을 처음 공개한 바로 그 무대",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s044"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    120,
+    121
+   ],
+   "narration": "칩 두 개를 하나처럼 이어 붙여, 트랜지스터 2,080억 개를 한 몸에 담은 칩이었습니다.",
+   "est_sec": 5.2,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "블랙웰 공식 이미지 위에서 칩 두 개가 하나로 이어 붙는 선이 빛나고, 숫자 카운터가 2,080억까지 오른다.",
+   "on_screen_text": "칩 두 개 → 하나처럼 / 트랜지스터 2,080억 개",
+   "minimax": false,
+   "fact_refs": [
+    "#13"
+   ],
+   "real_asset": {
+    "what": "블랙웰 플랫폼 발표 보도자료 이미지",
+    "where": "엔비디아 뉴스룸",
+    "url": "https://nvidianews.nvidia.com/news/nvidia-blackwell-platform-arrives-to-power-a-new-era-of-computing",
+    "status": "found",
+    "relevance": "나레이션이 설명하는 칩의 공식 이미지",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s045"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    122,
+    123,
+    124
+   ],
+   "narration": "석 달 뒤인 6월 2일, 젠슨 황은 블랙웰 다음 세대인 루빈을 처음 공개하면서 앞으로는 1년 주기로 신제품을 내겠다고 발표합니다. 그전까지는 대략 2년에 한 번이었죠.",
+   "est_sec": 9.5,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "컴퓨텍스 2024 키노트에서 루빈과 1년 주기 로드맵 슬라이드를 띄운 대목 위에 세대 눈금자 오버레이(약 2년 → 1년).",
+   "on_screen_text": "2024년 6월 2일 · 루빈 첫 공개 · 1년 주기 (그전: 약 2년)",
+   "minimax": false,
+   "fact_refs": [
+    "#16"
+   ],
+   "real_asset": {
+    "what": "NVIDIA CEO Jensen Huang Keynote at COMPUTEX 2024 공식 영상",
+    "where": "엔비디아 공식 유튜브 (블로그 https://blogs.nvidia.com/blog/computex-2024-jensen-huang/ 도 확인함)",
+    "url": "https://www.youtube.com/watch?v=pKXDVsWZmUU",
+    "status": "found",
+    "relevance": "루빈 공개와 1년 주기 발표가 나온 그 키노트",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s046"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    126
+   ],
+   "narration": "그런데,",
+   "est_sec": 1.2,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "반전 카드. 흰 화면에 한 마디가 타이핑된다(1.2초).",
+   "on_screen_text": "그런데",
+   "minimax": false,
+   "fact_refs": [],
+   "card": "turn",
+   "id": "s047"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    127,
+    128
+   ],
+   "narration": "그해 8월 초, 블랙웰에 설계 결함이 있어 출시가 석 달쯤 늦어진다고 디인포메이션이 보도했습니다.",
+   "est_sec": 5.7,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "블랙웰 칩에 금이 가 있고, 옆 달력의 출시일 종이가 석 장 넘어간다.",
+   "on_screen_text": "배지: 2024년 8월 초 · 디인포메이션 보도 · 출시 석 달 지연?",
+   "minimax": true,
+   "fact_refs": [
+    "#20"
+   ],
+   "id": "s048"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    129,
+    130
+   ],
+   "narration": "보도 뒤 첫 거래일인 8월 5일, 엔비디아 주가는 크게 떨어졌는데요. 그날은 미국 증시 전체가 함께 급락한 날이기도 했습니다.",
+   "est_sec": 7.2,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "하루 주가 그래프 두 줄(엔비디아·미국 증시 전체)이 같은 날 함께 꺾인다.",
+   "on_screen_text": "2024년 8월 5일 · 엔비디아 급락 / 같은 날 미국 증시 전체 급락",
+   "minimax": false,
+   "fact_refs": [
+    "#20",
+    "A18"
+   ],
+   "id": "s049"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    132,
+    133,
+    134
+   ],
+   "narration": "엔비디아는 8월 실적 발표에서 수율을 높이려고 GPU 마스크를 바꿨다고 설명했는데요. 수율은 만든 칩 가운데 제대로 쓸 수 있는 칩의 비율이고, 마스크는 칩에 회로를 새기는 원판입니다.",
+   "est_sec": 10.8,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "실적 보도자료 캡처(작은 창)에서 「마스크 변경」 문장에 밑줄 → 두 칸 풀이: 왼쪽 웨이퍼 위 쓸 수 있는 칩만 초록(수율), 오른쪽 회로가 새겨진 원판(마스크).",
+   "on_screen_text": "8월 실적 발표 · GPU 마스크 변경 / 수율 = 제대로 쓸 수 있는 칩의 비율 / 마스크 = 회로를 새기는 원판",
+   "minimax": false,
+   "fact_refs": [
+    "#20"
+   ],
+   "real_asset": {
+    "what": "2025 회계연도 2분기 실적 보도자료",
+    "where": "엔비디아 뉴스룸",
+    "url": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-second-quarter-fiscal-2025",
+    "status": "found",
+    "relevance": "나레이션의 「8월 실적 발표」 원문(마스크 변경 설명 위치는 보도자료·콜에서 확인 후 밑줄)",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s050"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    135
+   ],
+   "narration": "기능은 그대로이고, 블랙웰 샘플은 이미 출하 중이라고 덧붙였습니다.",
+   "est_sec": 4.1,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "블랙웰 샘플 상자가 트럭에 실려 나간다. 상자에 「기능 동일」 스티커.",
+   "on_screen_text": "기능 그대로 · 샘플 출하 중",
+   "minimax": true,
+   "fact_refs": [
+    "#20",
+    "#21"
+   ],
+   "id": "s051"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    137,
+    138
+   ],
+   "narration": "두 달 뒤인 10월 23일, 덴마크 코펜하겐의 한 행사. 젠슨 황은 이 일을 직접 꺼냅니다.",
+   "est_sec": 5.0,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "덴마크 AI 슈퍼컴퓨터 개시 행사 사진(젠슨 황 부분 크롭).",
+   "on_screen_text": "2024년 10월 23일 · 덴마크 코펜하겐",
+   "minimax": false,
+   "fact_refs": [
+    "A6"
+   ],
+   "real_asset": {
+    "what": "NVIDIA 블로그 「Denmark Launches Leading Sovereign AI Supercomputer」 대표 사진",
+    "where": "엔비디아 블로그",
+    "url": "https://blogs.nvidia.com/blog/denmark-sovereign-ai-supercomputer/",
+    "status": "found",
+    "relevance": "2024년 10월 23일 코펜하겐 행사 그 자리(발언 장소)",
+    "credit": "출처 : Nvidia"
+   },
+   "note": "사진에 덴마크 국왕이 함께 있음 → 젠슨 황 부분만 크롭",
+   "id": "s052"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    139,
+    140
+   ],
+   "narration": "\"블랙웰에 설계 결함이 있었습니다. 작동은 했지만, 그 결함 때문에 수율이 낮았죠.",
+   "est_sec": 4.9,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "마이크 앞 젠슨 황(기본체), 진지한 표정. 손에 든 블랙웰 칩에 작은 금.",
+   "on_screen_text": "\"블랙웰에 설계 결함이 있었습니다. 작동은 했지만 수율이 낮았죠\"",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s053"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    141
+   ],
+   "narration": "100% 엔비디아의 잘못입니다.\"",
+   "est_sec": 2.2,
+   "kind": "meme",
+   "kind_label": "②밈 버전",
+   "cast": [
+    "젠슨 황(밈)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_meme_sheet.png"
+   ],
+   "screen": "젠슨 황(밈 버전)이 고개를 깊이 숙이며 두 손을 모은다. 뒤로 집중선, 폭발 말풍선. 2장의 펀치라인.",
+   "on_screen_text": "폭발 글자: \"100% 엔비디아의 잘못입니다!!\"",
+   "minimax": true,
+   "fact_refs": [
+    "#20",
+    "A6"
+   ],
+   "meme": {
+    "type": "실사 캐리커처 반응",
+    "ref_id": "nv1_jensen_angry_study",
+    "ref_image": "auto_agent/data/artstyle/meme_library/img/nv1_jensen_angry_study.jpg",
+    "punchline_role": "회사가 잘못을 통째로 인정하는 반전 순간(클로즈업 감정 컷 구도 참고)"
+   },
+   "id": "s054"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    142
+   ],
+   "narration": "엔비디아는 칩을 설계하고, 실제로 찍어 내는 일은 TSMC 같은 위탁 생산 회사에 맡기는데요.",
+   "est_sec": 5.5,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "흐름 도해: 엔비디아(설계도) → TSMC(공장) → 완성 칩.",
+   "on_screen_text": "엔비디아: 설계 / TSMC: 위탁 생산",
+   "minimax": false,
+   "fact_refs": [
+    "A31"
+   ],
+   "note": "TSMC 공식 로고 첨부(중국판: 「대만」 수식어 없이 회사명만)",
+   "id": "s055"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    143
+   ],
+   "narration": "그 TSMC와 갈등이 있다는 소문에는 \"가짜 뉴스\"라고 잘라 말했고,",
+   "est_sec": 4.1,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "「엔비디아–TSMC 갈등?」 신문 위에 붉은 도장이 꽝 찍힌다(도장 레시피).",
+   "on_screen_text": "도장: 가짜 뉴스",
+   "minimax": true,
+   "fact_refs": [
+    "#20"
+   ],
+   "id": "s056"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    144
+   ],
+   "narration": "오히려 TSMC가 블랙웰 생산을 놀라운 속도로 다시 올리도록 도왔다고 했습니다.",
+   "est_sec": 4.8,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "공장 생산 라인이 빨라지며 블랙웰 칩이 줄지어 나온다. TSMC 로고 공장.",
+   "on_screen_text": "생산 속도 다시 ↑",
+   "minimax": true,
+   "fact_refs": [
+    "A6"
+   ],
+   "id": "s057"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    146,
+    147
+   ],
+   "narration": "잘못을 인정한 그 칩은 어떻게 됐을까요. 블랙웰은 판매 첫 분기, 2024년 11월부터 석 달 동안에만 110억 달러어치가 팔렸습니다.",
+   "est_sec": 7.9,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "어두운 무대 조명 아래 블랙웰 칩 하나(물음표)가 놓이고, 그 아래 숫자 카운터가 110억 달러까지 오른다.",
+   "on_screen_text": "",
+   "minimax": false,
+   "fact_refs": [
+    "A8"
+   ],
+   "real_asset": {
+    "what": "2025 회계연도 4분기 실적 보도자료",
+    "where": "엔비디아 뉴스룸",
+    "url": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-fourth-quarter-and-fiscal-2025",
+    "status": "found",
+    "relevance": "블랙웰 첫 분기 판매액을 밝힌 원문",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s058"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    148
+   ],
+   "narration": "엔비디아는 회사 역사상 가장 빠른 판매 증가라고 했죠.",
+   "est_sec": 3.1,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "젠슨 황(기본체)이 웃으며 가파르게 솟는 판매 화살표에 올라탄다.",
+   "on_screen_text": "회사 역사상 가장 빠른 판매 증가",
+   "minimax": true,
+   "fact_refs": [
+    "A8"
+   ],
+   "id": "s059"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    149
+   ],
+   "narration": "다음 순서는 수학자 블랙웰에 이어 천문학자 베라 루빈, 물리학자 파인만. 칩 이름은 모두 과학자에게서 왔습니다.",
+   "est_sec": 6.5,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "세 칸 초상: 데이비드 블랙웰(수학자) · 베라 루빈(천문학자) · 리처드 파인만(물리학자), 아래에 칩 이름표.",
+   "on_screen_text": "블랙웰 → 베라 루빈 → 파인만 · 칩 이름은 모두 과학자",
+   "minimax": false,
+   "fact_refs": [
+    "#28",
+    "A1",
+    "A3",
+    "A4",
+    "A5"
+   ],
+   "real_asset": {
+    "what": "세 과학자 초상(위키미디어 커먼즈 공개 사진)",
+    "where": "위키백과 문서 확인함: https://en.wikipedia.org/wiki/David_Blackwell , https://en.wikipedia.org/wiki/Vera_Rubin , https://en.wikipedia.org/wiki/Richard_Feynman — 문서 안 사진의 커먼즈 라이선스 확인 찾을 것",
+    "url": null,
+    "status": "to_source",
+    "relevance": "칩 이름의 주인공인 바로 그 세 사람",
+    "credit": "출처 : Wikimedia Commons"
+   },
+   "note": "시트 밖 실존 인물이라 그림이 아닌 실사 초상",
+   "id": "s060"
+  },
+  {
+   "chapter": "2장",
+   "lines": [
+    150
+   ],
+   "narration": "2026년 3월, 젠슨 황은 블랙웰과 루빈을 두고 \"2027년까지 적어도 1조 달러가 보인다\"고 말했습니다.",
+   "est_sec": 6.5,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "GTC 2026 키노트 장면 위에 인용 자막.",
+   "on_screen_text": "2026년 3월 · \"2027년까지 적어도 1조 달러가 보인다\"",
+   "minimax": false,
+   "fact_refs": [
+    "#55",
+    "A40"
+   ],
+   "real_asset": {
+    "what": "GTC 2026 키노트 공식 다시보기",
+    "where": "NVIDIA GTC 공식 페이지",
+    "url": "https://www.nvidia.com/gtc/keynote/",
+    "status": "found",
+    "relevance": "그 발언이 나온 2026년 3월 GTC 무대",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s061"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    154
+   ],
+   "narration": "",
+   "est_sec": 2.0,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "장 카드.",
+   "on_screen_text": "3. 규제의 벽",
+   "minimax": false,
+   "fact_refs": [],
+   "card": "chapter",
+   "edition": "K-only",
+   "id": "s062"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    156,
+    157,
+    158
+   ],
+   "narration": "엔비디아 칩이 모든 곳으로 갈 수 있었던 건 아닙니다. 2023년 10월, 미국은 H100은 물론 중국용으로 따로 만든 칩까지 허가 없이는 중국에 팔 수 없게 막았습니다.",
+   "est_sec": 9.7,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "칩 화물이 차단기 앞에서 멈추고, 카메라가 빠지며 지도 도해: 미국 → 중국 화살표가 차단선에 막히고 막힌 칩 카드(H100 · 중국용 칩)가 쌓인다.",
+   "on_screen_text": "",
+   "minimax": false,
+   "fact_refs": [
+    "#5"
+   ],
+   "edition": "K-only",
+   "id": "s063"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    159
+   ],
+   "narration": "지나 러몬도 상무장관이 밝힌 목표는 \"중국의 군사적 활용을 제한하는 것\"이었죠.",
+   "est_sec": 4.8,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "인용 카드(얼굴 없음): 이름·직함과 인용문만.",
+   "on_screen_text": "지나 러몬도 미국 상무장관 · \"중국의 군사적 활용을 제한하는 것\"",
+   "minimax": false,
+   "fact_refs": [
+    "A30"
+   ],
+   "card": "quote",
+   "edition": "K-only",
+   "id": "s064"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    160
+   ],
+   "narration": "중국을 비롯한 규제 대상 지역은 엔비디아 데이터센터 매출의 20~25%가 나오던 곳이었습니다.",
+   "est_sec": 5.7,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "데이터센터 매출 도넛에서 20~25% 조각이 따로 떨어져 나온다.",
+   "on_screen_text": "규제 대상 지역 = 데이터센터 매출의 20~25%",
+   "minimax": false,
+   "fact_refs": [
+    "#5"
+   ],
+   "edition": "K-only",
+   "id": "s065"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    162,
+    163,
+    164
+   ],
+   "narration": "엔비디아는 다시 중국 전용 칩을 준비했습니다. 이번 이야기의 주인공, H20입니다. 계산 속도는 규제선 아래로 크게 낮추되, 메모리는 H100보다 넉넉하게 단 중국 시장용 칩이었죠.",
+   "est_sec": 10.8,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "받침대 조명 아래 「H20」 칩이 등장한 뒤, 옆에 H100 vs H20 막대 두 줄(계산 속도: H20이 규제선 아래 / 메모리: H20이 더 높음, 수치는 원장 A29·A38).",
+   "on_screen_text": "이번 이야기의 주인공 H20 / 계산 속도: 규제선 아래 · 메모리: H100보다 넉넉",
+   "minimax": false,
+   "fact_refs": [
+    "#29",
+    "#8",
+    "A29",
+    "A38"
+   ],
+   "edition": "K-only",
+   "id": "s066"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    166,
+    167
+   ],
+   "narration": "2025년 4월, 미국 정부는 엔비디아에 통보합니다. 이제 H20도 중국에 팔려면 허가를 받으라는 것이었죠.",
+   "est_sec": 6.5,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "엔비디아 사무실 책상 위에 정부 봉투가 도착, 봉투에 「허가 필요」 도장.",
+   "on_screen_text": "2025년 4월 · H20도 허가제",
+   "minimax": true,
+   "fact_refs": [
+    "#29"
+   ],
+   "edition": "K-only",
+   "id": "s067"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    168,
+    169
+   ],
+   "narration": "중국 고객을 위해 만들어 둔 H20은 실어 보낼 곳을 잃었습니다. 팔지 못한 칩이 창고에 쌓였고, 이미 주문해 둔 부품과 생산 물량도 그대로 남았죠.",
+   "est_sec": 8.3,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "배가 떠난 부두에 남겨진 H20 상자에서, 카메라가 창고 안으로 들어가 벽 한 면을 메운 상자 벽(한 덩어리)과 부품 상자 더미를 보인다.",
+   "on_screen_text": "",
+   "minimax": true,
+   "fact_refs": [],
+   "edition": "K-only",
+   "id": "s068"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    170
+   ],
+   "narration": "엔비디아는 결국 이 재고와 구매 약정으로 45억 달러를 비용으로 털어 냈습니다.",
+   "est_sec": 4.6,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "상자 벽이 장부로 빨려 들어가며 「비용」 칸에 숫자가 찍힌다.",
+   "on_screen_text": "재고·구매 약정 비용 45억 달러",
+   "minimax": false,
+   "fact_refs": [
+    "#29"
+   ],
+   "edition": "K-only",
+   "id": "s069"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    172,
+    173
+   ],
+   "narration": "판매 중단 통보에서 석 달이 지난 7월, 엔비디아는 H20 판매를 다시 하겠다고 발표합니다. 미국 정부가 판매 허가를 내줄 거라는 보장을 받았다는 것이었죠.",
+   "est_sec": 9.0,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "같은 창고 문이 다시 열리고 상자들이 움직이기 시작한다. 앞쪽에 「판매 허가 보장」 문서를 펼치는 손.",
+   "on_screen_text": "2025년 7월 · H20 판매 재개 발표 · 허가 보장",
+   "minimax": true,
+   "fact_refs": [
+    "#33"
+   ],
+   "edition": "K-only",
+   "id": "s070"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    174,
+    175
+   ],
+   "narration": "8월에 알려진 조건은 이랬습니다. 중국에 판 금액의 15%를 미국 정부에 낸다.",
+   "est_sec": 4.6,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "흐름 도해: 중국 판매 금액 동전 더미 → 15% 조각이 미국 정부 건물로 간다.",
+   "on_screen_text": "8월 · 조건: 중국 판매 금액의 15%를 미국 정부에",
+   "minimax": false,
+   "fact_refs": [
+    "#35"
+   ],
+   "edition": "K-only",
+   "id": "s071"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    176,
+    177
+   ],
+   "narration": "트럼프 대통령은 기자회견에서 \"처음엔 20%를 원했는데 젠슨이 15%로 깎았다\"고 말했습니다.",
+   "est_sec": 5.9,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "인용 카드(얼굴 없음): 기자회견 연단 실루엣 아이콘 + 인용문.",
+   "on_screen_text": "트럼프 대통령 · \"처음엔 20%를 원했는데 젠슨이 15%로 깎았다\"",
+   "minimax": false,
+   "fact_refs": [
+    "#35"
+   ],
+   "card": "quote",
+   "edition": "K-only",
+   "id": "s072"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    178,
+    179
+   ],
+   "narration": "미국기업연구소의 데릭 시저스는 \"전례가 없는 일\"이라며, 이름만 수수료일 뿐 사실상 세금이라고 지적했습니다.",
+   "est_sec": 6.7,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "「수수료」 라벨이 벗겨지며 아래 「세금」 라벨이 드러난다. 옆에 인용 박스(얼굴 없음).",
+   "on_screen_text": "데릭 시저스(미국기업연구소) · \"전례가 없는 일\" · 이름만 수수료, 사실상 세금",
+   "minimax": false,
+   "fact_refs": [
+    "A32"
+   ],
+   "edition": "K-only",
+   "id": "s073"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    181,
+    182,
+    183
+   ],
+   "narration": "하지만 8월 말 실적 발표에서 나온 숫자는 0이었습니다. 그 분기 중국 고객에게 판 H20은 하나도 없었죠. 엔비디아는 다음 분기 전망에서도 중국으로 갈 H20을 빼 두었습니다.",
+   "est_sec": 10.2,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "실적표의 중국 칸에 커다란 「0」이 찍히고, 아래 「다음 분기 전망」 표에서 중국 줄이 지워진다.",
+   "on_screen_text": "8월 말 실적 · 중국 H20 판매 0 / 다음 분기 전망에서도 제외",
+   "minimax": false,
+   "fact_refs": [
+    "#36"
+   ],
+   "edition": "K-only",
+   "id": "s074"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    184,
+    185
+   ],
+   "narration": "9월에는 중국 당국이 자국 기업들에 엔비디아 중국용 칩을 사지 말라고 했다고 파이낸셜타임스가 보도했습니다.",
+   "est_sec": 6.4,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "보도 헤드라인 화면(블룸버그의 FT 인용 기사) 캡처.",
+   "on_screen_text": "2025년 9월 · 중국 당국 「엔비디아 중국용 칩 사지 말라」(FT 보도)",
+   "minimax": false,
+   "fact_refs": [
+    "#38"
+   ],
+   "real_asset": {
+    "what": "FT 보도 화면 또는 그것을 인용한 블룸버그 기사 화면",
+    "where": "원장 URL https://www.bloomberg.com/news/articles/2025-09-17/china-agency-orders-firms-to-stop-buying-nvidia-ai-chip-ft-says (유료 벽 — 캡처 가능 화면 찾을 것)",
+    "url": null,
+    "status": "to_source",
+    "relevance": "나레이션의 「파이낸셜타임스가 보도」 그 기사",
+    "credit": "출처 : Financial Times"
+   },
+   "edition": "K-only",
+   "id": "s075"
+  },
+  {
+   "chapter": "3장",
+   "lines": [
+    186,
+    187
+   ],
+   "narration": "10월, 젠슨 황은 고급 AI 칩 시장을 두고 이렇게 말합니다. \"중국 시장 점유율이 95%에서 0%가 됐습니다.\"",
+   "est_sec": 6.7,
+   "kind": "meme",
+   "kind_label": "②밈 버전",
+   "cast": [
+    "젠슨 황(밈)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_meme_sheet.png"
+   ],
+   "screen": "젠슨 황(밈 버전)이 텅 빈 파이 접시를 들고 허탈하게 웃는다. 뒤 숫자판이 95에서 0으로 굴러 떨어진다. 3장 절정의 반응.",
+   "on_screen_text": "폭발 글자: \"95% → 0%\" / 배지: 2025년 10월 · 고급 AI 칩 중국 점유율",
+   "minimax": true,
+   "fact_refs": [
+    "#43"
+   ],
+   "meme": {
+    "type": "실사 캐리커처 반응",
+    "ref_id": "nv3_tesla_card_believe",
+    "ref_image": "auto_agent/data/artstyle/meme_library/img/nv3_tesla_card_believe.jpg",
+    "punchline_role": "3장을 닫는 숫자 반전에 대한 반응(칩을 든 확신 컷 구도를 허탈 표정으로)"
+   },
+   "edition": "K-only",
+   "id": "s076"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    191
+   ],
+   "narration": "",
+   "est_sec": 2.0,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "장 카드.",
+   "on_screen_text": "4. 딥시크 쇼크와 5조 달러",
+   "minimax": false,
+   "fact_refs": [],
+   "card": "chapter",
+   "note": "중국판 장 제목 순화 검토(算力需求再评估与5万亿美元)",
+   "id": "s077"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    193,
+    194
+   ],
+   "narration": "다시, 영상 처음에 말씀드린 그날입니다. 2025년 1월 27일.",
+   "est_sec": 4.0,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "날짜 카드 — 도입 첫 장면과 같은 디자인으로 되감기.",
+   "on_screen_text": "2025년 1월 27일",
+   "minimax": false,
+   "fact_refs": [],
+   "card": "date",
+   "id": "s078"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    195,
+    196
+   ],
+   "narration": "딥시크라는 회사가 내놓은 AI 모델 R1이 적은 비용으로 높은 성능을 냈다는 소식이 퍼졌습니다.",
+   "est_sec": 5.6,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "스마트폰·모니터 화면들에 같은 소식이 퍼진다. 화면 속에는 딥시크 공식 로고와 「R1」.",
+   "on_screen_text": "딥시크 R1 · 적은 비용, 높은 성능",
+   "minimax": true,
+   "fact_refs": [
+    "#26"
+   ],
+   "note": "딥시크 공식 로고(https://www.deepseek.com/ 확인함) 첨부. 중국판은 긍정 서술로",
+   "id": "s079"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    197,
+    198
+   ],
+   "narration": "R1은 딥시크가 앞서 공개한 V3 모델을 바탕으로, 답하기 전에 오래 생각하도록 만든 '생각하는 AI', 이른바 추론 모델인데요.",
+   "est_sec": 7.6,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "V3 상자 → R1 상자. R1 쪽에는 답하기 전 길게 이어지는 생각 풍선.",
+   "on_screen_text": "V3 기반 · R1 = 생각하는 AI(추론 모델)",
+   "minimax": false,
+   "fact_refs": [],
+   "id": "s080"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    199
+   ],
+   "narration": "딥시크는 그 V3의 마지막 학습에 든 비용이 약 560만 달러였다고 밝혔습니다.",
+   "est_sec": 4.6,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "DeepSeek-V3 기술 보고서 첫 장 캡처, 학습 비용 표에 밑줄.",
+   "on_screen_text": "V3 마지막 학습 비용 약 560만 달러(딥시크 발표)",
+   "minimax": false,
+   "fact_refs": [
+    "#26",
+    "A13"
+   ],
+   "real_asset": {
+    "what": "DeepSeek-V3 Technical Report(arXiv 2412.19437)",
+    "where": "arXiv",
+    "url": "https://arxiv.org/abs/2412.19437",
+    "status": "found",
+    "relevance": "나레이션의 560만 달러가 실린 회사 공개 문서",
+    "credit": "출처 : DeepSeek-V3 Technical Report"
+   },
+   "id": "s081"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    200,
+    201
+   ],
+   "narration": "학습에 쓴 칩은 엔비디아 H800 2,048개. 2022년 규제 뒤 엔비디아가 중국 시장용으로 만든 칩이었습니다.",
+   "est_sec": 6.8,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "같은 칩 아이콘 2,048개가 격자로 깔린다(같은 것 여럿). 칩 이름표 H800.",
+   "on_screen_text": "H800 2,048개 · 2022년 규제 뒤 나온 중국 시장용 칩",
+   "minimax": false,
+   "fact_refs": [
+    "#5",
+    "A33"
+   ],
+   "id": "s082"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    202
+   ],
+   "narration": "그날 엔비디아 주가는 17% 떨어졌습니다.",
+   "est_sec": 2.6,
+   "kind": "reuse",
+   "kind_label": "⑥장면 재사용",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "3편 「2008년 가라앉는 보트」 장면 — 배지와 숫자만 바꿔 다시 가라앉는다.",
+   "on_screen_text": "2025년 1월 27일 · 주가 −17%",
+   "minimax": false,
+   "fact_refs": [
+    "#26"
+   ],
+   "reuse": {
+    "from": "3편",
+    "frame": "/private/tmp/claude-501/-Users-jleavens-macmini/7cf44c15-9613-44eb-8454-4637dec8240a/scratchpad/nv/frames/e3_014.png",
+    "note": "날짜 배지·「주가 30%↓」 → 「주가 17%↓」 교체"
+   },
+   "id": "s083"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    203,
+    204
+   ],
+   "narration": "그만한 돈으로 된다면 비싼 칩이 그렇게 많이 필요하겠느냐, 시장이 AI에 드는 계산의 양을 다시 따지기 시작했다는 해석이 뒤따랐죠.",
+   "est_sec": 7.6,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "투자자들이 계산기를 두드리며 칩 더미를 다시 센다. 생각 풍선 속 칩 더미가 줄었다 늘었다.",
+   "on_screen_text": "「그 돈으로 된다면 비싼 칩이 그렇게 많이 필요할까?」",
+   "minimax": true,
+   "fact_refs": [
+    "5절 딥시크"
+   ],
+   "id": "s084"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    205,
+    206,
+    207
+   ],
+   "narration": "그전 하루 최대 손실 기록도 엔비디아 것이었는데요. 2024년 9월 3일, 하루 9%가 빠지며 2,790억 달러가 사라진 날이었죠. 다섯 달 만에 그 두 배가 넘는 기록이 새로 쓰였습니다.",
+   "est_sec": 10.8,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "하루 손실 막대 하나(2024년 9월 3일 −2,790억)에, 카메라가 뒤로 빠지며 옆 새 막대(−5,890억)가 두 배 넘게 솟는다.",
+   "on_screen_text": "이전 기록 2024년 9월 3일 −9% −2,790억 달러 → 다섯 달 만에 −5,890억 달러",
+   "minimax": false,
+   "fact_refs": [
+    "#22",
+    "#26"
+   ],
+   "id": "s085"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    209,
+    210,
+    211,
+    212
+   ],
+   "narration": "엔비디아는 그날 바로 성명을 냈습니다. \"딥시크는 훌륭한 AI 발전\"이라고 평가하면서, 다 배운 AI가 질문을 받아 답을 내는 계산에도 상당한 수의 엔비디아 GPU와 고성능 네트워크가 필요하다고 덧붙였죠.",
+   "est_sec": 12.1,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "엔비디아 로고 성명서 한 장의 문장이 형광으로 칠해지고(작은 창), 아래로 질문 → AI → 답 흐름과 그 밑의 GPU 랙·네트워크 선이 깔린다.",
+   "on_screen_text": "\"딥시크는 훌륭한 AI 발전\" / 답을 내는 계산에도 상당한 GPU + 고성능 네트워크",
+   "minimax": false,
+   "fact_refs": [
+    "#26",
+    "A7"
+   ],
+   "id": "s086"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    213
+   ],
+   "narration": "그리고 다음 날, 약 2,600억 달러가 돌아왔습니다.",
+   "est_sec": 3.3,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "같은 주가 그래프가 다음 날 반등한다.",
+   "on_screen_text": "다음 날 · +약 2,600억 달러",
+   "minimax": false,
+   "fact_refs": [
+    "#26"
+   ],
+   "id": "s087"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    215,
+    216
+   ],
+   "narration": "AI가 쓰는 계산은 크게 둘입니다. 학생이 교과서를 통째로 공부하는 것이 '학습'이라면,",
+   "est_sec": 5.3,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "두 칸 제목판(「학습」 | 「답을 내는 계산」)이 뜨고, 왼쪽 칸으로 카메라가 들어가 교과서를 쌓아 놓고 공부하는 학생.",
+   "on_screen_text": "AI 계산 두 가지 / 학습 = 교과서 공부",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s088"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    217
+   ],
+   "narration": "시험장에서 문제를 푸는 것이 '답을 내는 계산'이죠.",
+   "est_sec": 3.1,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "시험장에서 문제를 푸는 같은 학생.",
+   "on_screen_text": "답을 내는 계산 = 시험장",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s089"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    218
+   ],
+   "narration": "딥시크가 아낀 건 앞의 공부 쪽이었는데요.",
+   "est_sec": 2.5,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "같은 학생이 얇아진 교과서 몇 권만 덮고, 남은 동전을 주머니에 넣는다.",
+   "on_screen_text": "딥시크가 아낀 것 = 공부 쪽",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s090"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    219
+   ],
+   "narration": "생각하는 AI는 문제 하나를 풀 때마다 연습장을 몇 장씩 채우는 학생과 같습니다.",
+   "est_sec": 4.6,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "시험장 학생이 문제 하나에 연습장을 몇 장씩 빽빽이 채운다. 연습장이 책상 밑으로 쌓인다.",
+   "on_screen_text": "생각하는 AI = 연습장을 몇 장씩 채우는 학생",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s091"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    220
+   ],
+   "narration": "쓰는 사람이 늘수록, 오래 생각할수록, 시험장에서 쓰는 칩도 늘어납니다.",
+   "est_sec": 4.4,
+   "kind": "meme",
+   "kind_label": "②밈 버전",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "수많은 학생의 연습장을 떠안은 GPU(의인화)가 땀을 뻘뻘 흘리며 비명. 비유 대목의 펀치라인.",
+   "on_screen_text": "폭발 글자: \"그.. 그만..! 칩 더 데려와!!\" / 배지: 쓰는 사람↑ 생각↑ → 칩↑",
+   "minimax": true,
+   "fact_refs": [],
+   "meme": {
+    "type": "의인화",
+    "ref_id": "nv2_card_stop_overload",
+    "ref_image": "auto_agent/data/artstyle/meme_library/img/nv2_card_stop_overload.jpg",
+    "punchline_role": "학습/시험 비유를 닫는 결론 — 답을 내는 계산이 늘수록 칩이 늘어난다"
+   },
+   "id": "s092"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    222,
+    223,
+    224
+   ],
+   "narration": "한 달 뒤인 2월 26일 실적 발표. 2025년 1월에 끝난 회계연도 매출은 1,305억 달러, 그중 데이터센터에서만 1,152억 달러가 나왔습니다.",
+   "est_sec": 8.9,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "도입 72억 달러 막대와 같은 디자인으로 연간 막대 1,305억, 그 안에 데이터센터 1,152억이 채워진다.",
+   "on_screen_text": "2025년 2월 26일 실적 · 연매출 1,305억 달러 · 데이터센터 1,152억 달러",
+   "minimax": false,
+   "fact_refs": [
+    "#27"
+   ],
+   "real_asset": {
+    "what": "2025 회계연도 4분기·연간 실적 보도자료",
+    "where": "엔비디아 뉴스룸",
+    "url": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-fourth-quarter-and-fiscal-2025",
+    "status": "found",
+    "relevance": "나레이션 수치·인용의 원문",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s093"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    225,
+    226,
+    227
+   ],
+   "narration": "젠슨 황은 이렇게 말합니다. \"생각하는 AI가 성능을 끌어올리는 법칙을 하나 더 보탰고, 블랙웰 수요는 놀라울 정도입니다.\"",
+   "est_sec": 7.4,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "젠슨 황(기본체)이 실적 발표 무대에서 말한다. 말풍선 두 줄.",
+   "on_screen_text": "\"생각하는 AI가 성능을 끌어올리는 법칙을 하나 더 보탰고, 블랙웰 수요는 놀라울 정도입니다\"",
+   "minimax": true,
+   "fact_refs": [
+    "#27"
+   ],
+   "id": "s094"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    228,
+    229
+   ],
+   "narration": "효율이 오르면 칩 수요는 줄지 않고 오히려 커진다는 것이 엔비디아가 내놓은 답이었습니다.",
+   "est_sec": 5.2,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "흐름 도해: 효율 ↑ → 칩 수요 ↑(화살표 굵어짐).",
+   "on_screen_text": "효율이 오르면 → 칩 수요는 더 커진다 · 엔비디아의 답",
+   "minimax": false,
+   "fact_refs": [
+    "#27",
+    "5절 딥시크",
+    "A7"
+   ],
+   "id": "s095"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    231
+   ],
+   "narration": "4월에는 앞으로 4년 동안 미국 안에서 최대 5,000억 달러어치 AI 인프라를 만들겠다고 발표했습니다.",
+   "est_sec": 6.3,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "미국 내 AI 슈퍼컴퓨터 생산 발표 블로그 대표 사진.",
+   "on_screen_text": "2025년 4월 · 4년간 미국 안에서 최대 5,000억 달러 AI 인프라",
+   "minimax": false,
+   "fact_refs": [
+    "#30"
+   ],
+   "real_asset": {
+    "what": "NVIDIA 블로그 「NVIDIA to Manufacture American-Made AI Supercomputers in US for First Time」",
+    "where": "엔비디아 블로그",
+    "url": "https://blogs.nvidia.com/blog/nvidia-manufacture-american-made-ai-supercomputers-us/",
+    "status": "found",
+    "relevance": "나레이션의 그 발표 원문",
+    "credit": "출처 : Nvidia"
+   },
+   "note": "중국판 삭제(#30)",
+   "edition": "K-only",
+   "id": "s096"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    233,
+    234,
+    235
+   ],
+   "narration": "2025년 7월 9일, 엔비디아는 장중 시가총액 4조 달러를 넘긴 세계 첫 회사가 됩니다. 3조 달러를 넘은 지 13개월 만이었죠.",
+   "est_sec": 7.5,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "젠슨 황(기본체)이 돈다발 계단을 오르며 「4조」 칸에 깃발을 꽂고, 아래 칸 「3조」와의 사이에 「13개월」 괄호.",
+   "on_screen_text": "2025년 7월 9일 · 장중 시총 4조 달러 · 세계 최초 / 3조 → 4조 13개월",
+   "minimax": true,
+   "fact_refs": [
+    "#32"
+   ],
+   "id": "s097"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    236
+   ],
+   "narration": "석 달 뒤인 10월 28일, 종가 기준 시가총액은 4조 8,900억 달러.",
+   "est_sec": 4.2,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "계기판 바늘이 4조 8,900억에서 5조 눈금 바로 앞에 멈춘다.",
+   "on_screen_text": "2025년 10월 28일 · 종가 4조 8,900억 달러",
+   "minimax": false,
+   "fact_refs": [
+    "#44"
+   ],
+   "id": "s098"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    238,
+    239
+   ],
+   "narration": "그리고 다음 날, 10월 29일. 세계 최초, 시가총액 5조 달러.",
+   "est_sec": 3.8,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "이 편의 절정 장면. 쏟아지는 돈다발 속 젠슨 황(기본체)이 두 팔을 번쩍 든다(3편 1조 클럽 장면의 구도 회수), 위로 「5조」 폭죽.",
+   "on_screen_text": "2025년 10월 29일 · 세계 최초 시가총액 5조 달러",
+   "minimax": true,
+   "fact_refs": [
+    "#45"
+   ],
+   "note": "3편 e3_064(돈 더미 속 만세) 구도를 1번 이미지로 붙여 새로 그림",
+   "id": "s099"
+  },
+  {
+   "chapter": "4장",
+   "lines": [
+    240,
+    241,
+    242,
+    243
+   ],
+   "narration": "4조를 넘은 지 석 달 남짓, 1조 달러를 처음 넘긴 2023년 여름에서는 2년 4개월 만이었습니다. 하루에 5,890억 달러가 사라진, 바로 그해였습니다.",
+   "est_sec": 9.1,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "전체 타임라인 1조(2023.6) → 5조(2025.10.29) 위에 구간 괄호, 이어 2025년 1월 27일 깊은 골짜기를 함께 강조(같은 해의 대비).",
+   "on_screen_text": "4조→5조 석 달 남짓 · 1조→5조 2년 4개월 / 같은 해 −5,890억 달러 ↔ 5조 달러",
+   "minimax": false,
+   "fact_refs": [
+    "#26",
+    "#45"
+   ],
+   "id": "s100"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    247
+   ],
+   "narration": "",
+   "est_sec": 2.0,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "장 카드.",
+   "on_screen_text": "5. 흔들리는 왕좌",
+   "minimax": false,
+   "fact_refs": [],
+   "card": "chapter",
+   "id": "s101"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    249,
+    250
+   ],
+   "narration": "5조 달러에 이르는 동안, 엔비디아는 번 돈을 다른 회사에도 넣기 시작했습니다. 상대는 경쟁사, 그리고 엔비디아 칩을 사 가는 고객들이었습니다.",
+   "est_sec": 8.5,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "젠슨 황(기본체)이 금고에서 돈 가방을 꺼내고, 가방에서 두 갈래 화살표 「경쟁사」 / 「엔비디아 칩을 사 가는 고객」이 뻗는다.",
+   "on_screen_text": "투자 상대 · 경쟁사 / 고객",
+   "minimax": false,
+   "fact_refs": [],
+   "id": "s102"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    252,
+    253
+   ],
+   "narration": "먼저 경쟁사. 2025년 9월, 엔비디아는 인텔에 50억 달러를 넣고 데이터센터용 CPU와 PC 칩을 함께 만들기로 했습니다.",
+   "est_sec": 7.5,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "엔비디아–인텔 공동 발표 보도자료 캡처.",
+   "on_screen_text": "먼저 경쟁사 · 2025년 9월 · 인텔에 50억 달러 · 데이터센터 CPU·PC 칩 공동 개발",
+   "minimax": false,
+   "fact_refs": [
+    "#40"
+   ],
+   "real_asset": {
+    "what": "NVIDIA and Intel to Develop AI Infrastructure and Personal Computing Products(보도자료)",
+    "where": "엔비디아 뉴스룸",
+    "url": "https://nvidianews.nvidia.com/news/nvidia-and-intel-to-develop-ai-infrastructure-and-personal-computing-products",
+    "status": "found",
+    "relevance": "나레이션의 그 투자·협력 발표 원문",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s103"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    254,
+    255
+   ],
+   "narration": "1편에서 CPU 하나로 그래픽까지 해결하겠다던 그 인텔, 열 달 전 다우지수에서 엔비디아에 자리를 내준 바로 그 인텔이었습니다.",
+   "est_sec": 7.5,
+   "kind": "meme",
+   "kind_label": "②밈 버전",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "1편 「인텔 얼굴 정장 남자」를 밈 버전 「왕좌의 왕」으로: 인텔 로고 얼굴의 왕이 왕관을 벗어 든 채, 엔비디아가 건넨 돈 가방을 받는다. 1편 회수 펀치라인.",
+   "on_screen_text": "말풍선: \"그.. 그때 그 인텔입니다\" / 배지: 1편 거인 · 열 달 전 다우지수 자리",
+   "minimax": true,
+   "fact_refs": [
+    "#23",
+    "#40",
+    "1편"
+   ],
+   "meme": {
+    "type": "의인화",
+    "ref_id": "nv2_king_hulk_rival",
+    "ref_image": "auto_agent/data/artstyle/meme_library/img/nv2_king_hulk_rival.jpg",
+    "punchline_role": "1편·1장 복선을 회수하는 아이러니 반응"
+   },
+   "note": "인텔·엔비디아 공식 로고 첨부. 1편 e1_051 인물 의상 참고",
+   "id": "s104"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    257,
+    258,
+    259,
+    260
+   ],
+   "narration": "그리고 고객. 나흘 뒤인 9월 22일, 엔비디아와 오픈AI가 함께 발표문을 냈습니다. 오픈AI는 엔비디아 시스템을 최소 10기가와트 규모로 깔고, 엔비디아는 단계적으로 최대 1,000억 달러를 오픈AI에 투자하겠다는 의향서였죠.",
+   "est_sec": 13.9,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "공동 발표문 캡처(작은 창)에서 양방향 화살표 도해로: 엔비디아 → 오픈AI 「최대 1,000억 달러 단계적 투자」, 오픈AI → 엔비디아 「최소 10기가와트 시스템」. 하단 「의향서」 도장.",
+   "on_screen_text": "2025년 9월 22일 · 오픈AI: 엔비디아 시스템 최소 10GW / 엔비디아: 최대 1,000억 달러 투자 · 의향서",
+   "minimax": false,
+   "fact_refs": [
+    "#41"
+   ],
+   "real_asset": {
+    "what": "OpenAI and NVIDIA Announce Strategic Partnership to Deploy 10 Gigawatts(보도자료)",
+    "where": "엔비디아 뉴스룸",
+    "url": "https://nvidianews.nvidia.com/news/openai-and-nvidia-announce-strategic-partnership-to-deploy-10gw-of-nvidia-systems",
+    "status": "found",
+    "relevance": "나레이션의 그 발표문 원문",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s105"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    261,
+    262,
+    263
+   ],
+   "narration": "기가와트는 전력의 단위인데요. 젠슨 황은 이 10기가와트를 GPU 400만~500만 개, 엔비디아가 그해 한 해 동안 내보낸 양과 맞먹는다고 설명했습니다.",
+   "est_sec": 9.3,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "환산 도해: 번개 아이콘 「10기가와트」 = GPU 400만~500만 개 = 엔비디아의 그해 연간 출하량(칩 상자 더미).",
+   "on_screen_text": "기가와트 = 전력 단위 / 10GW ≈ GPU 400만~500만 개 ≈ 한 해 출하량(젠슨 황 설명)",
+   "minimax": false,
+   "fact_refs": [
+    "A34"
+   ],
+   "id": "s106"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    265,
+    266
+   ],
+   "narration": "엔비디아가 오픈AI에 돈을 대고, 오픈AI는 엔비디아 시스템을 삽니다. 증권사 번스타인의 애널리스트는 이 일이 '순환' 우려를 키울 거라고 썼는데요.",
+   "est_sec": 9.0,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "돈과 시스템이 둥글게 도는 순환 화살표 고리 위에, 얼굴 없는 애널리스트의 손이 「순환?」 도장을 찍는다.",
+   "on_screen_text": "엔비디아 → 돈 → 오픈AI → 시스템 구매 → 엔비디아 / 번스타인: 「순환」 우려",
+   "minimax": false,
+   "fact_refs": [
+    "A12"
+   ],
+   "id": "s107"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    267,
+    268,
+    269
+   ],
+   "narration": "걱정은 이런 것이었습니다. 고객이 칩을 사는 돈의 일부가 엔비디아에서 나온다면, 매출이 늘어나는 만큼 실제 수요도 늘고 있는 건지 가려 보기 어렵다는 거죠.",
+   "est_sec": 9.0,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "동전 무더기가 엔비디아 → 고객 → 다시 엔비디아로 도는 점선 경로가 그려지고, 이어 매출 막대가 커지지만 그 절반에 물음표 무늬가 덮인다.",
+   "on_screen_text": "걱정: 고객이 칩을 사는 돈 일부가 엔비디아에서 나온다면 / 매출↑ = 실제 수요↑ ?",
+   "minimax": false,
+   "fact_refs": [],
+   "id": "s108"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    270,
+    271
+   ],
+   "narration": "가게 주인이 손님에게 돈을 대 주고, 그 돈으로 자기 가게 물건을 사게 하는 장면을 떠올리면 쉽습니다. 장부에 매출은 찍히지만, 손님이 스스로 돈을 낼 수 있는지는 따로 물어야 하죠.",
+   "est_sec": 10.2,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "가게 주인이 손님에게 돈을 건네고 손님이 그 돈으로 같은 가게 물건을 산다. 카메라가 장부로 다가가 「매출」 칸에 도장이 찍히고, 손님 지갑은 비어 있다.",
+   "on_screen_text": "장부엔 매출 · 손님의 지불 능력은 따로",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s109"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    272,
+    273,
+    274
+   ],
+   "narration": "그해 11월 엔비디아는 애널리스트들에게 7쪽짜리 메모를 돌립니다. 3분기 전략 투자는 약 37억 달러로 매출의 작은 부분이고, 투자받은 회사들은 대부분 다른 곳에서 돈을 구하며,",
+   "est_sec": 10.5,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "7쪽짜리 메모 묶음이 애널리스트 책상 위로 놓이고, 펼쳐진 메모에서 카드 두 개: 매출 도넛의 아주 작은 조각 「37억 달러」 / 투자받은 회사 → 여러 외부 자금 화살표.",
+   "on_screen_text": "2025년 11월 · 7쪽 메모 / 3분기 전략 투자 약 37억 달러 = 매출의 작은 부분 / 투자받은 회사는 대부분 다른 곳에서 자금",
+   "minimax": false,
+   "fact_refs": [
+    "A35"
+   ],
+   "id": "s110"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    275,
+    276
+   ],
+   "narration": "고객들은 칩을 산 뒤 평균 53일 안에 값을 치른다는 내용이었습니다. 장부의 숫자가 아니라 실제 현금이 들어오고 있다는 반박이었죠.",
+   "est_sec": 7.6,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "달력에 53일째 동그라미가 그려지고, 그 칸에서 나온 현금이 장부를 지나 엔비디아 금고로 흘러든다.",
+   "on_screen_text": "고객 평균 53일 안에 대금 지불 → 장부의 숫자가 아니라 실제 현금(엔비디아 반박)",
+   "minimax": false,
+   "fact_refs": [
+    "A35"
+   ],
+   "id": "s111"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    278,
+    279
+   ],
+   "narration": "해가 바뀐 2026년 초, 오픈AI 투자 계획이 멈춰 섰다고 월스트리트저널이 보도합니다.",
+   "est_sec": 5.3,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "「오픈AI 투자 계획」 열차가 선로 위에서 멈춰 서 있다.",
+   "on_screen_text": "2026년 초 · 투자 계획 정체(WSJ 보도)",
+   "minimax": true,
+   "fact_refs": [
+    "A14",
+    "A20"
+   ],
+   "id": "s112"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    280,
+    281
+   ],
+   "narration": "2월 1일, 기자들 앞에 선 젠슨 황은 이렇게 말했습니다. \"그건 처음부터 약속이 아니었습니다.\"",
+   "est_sec": 5.7,
+   "kind": "meme",
+   "kind_label": "②밈 버전",
+   "cast": [
+    "젠슨 황(밈)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_meme_sheet.png"
+   ],
+   "screen": "기자들의 마이크에 둘러싸인 젠슨 황(밈 버전)이 어깨를 으쓱하며 시치미 떼는 표정. 순환 대목의 반응 펀치라인.",
+   "on_screen_text": "말풍선: \"그건 처음부터 약속이 아니었습니다\" / 배지: 2026년 2월 1일",
+   "minimax": true,
+   "fact_refs": [
+    "#54",
+    "A20"
+   ],
+   "meme": {
+    "type": "유명 밈 패러디",
+    "ref_id": "nv1_youdontsay",
+    "ref_image": "auto_agent/data/artstyle/meme_library/img/nv1_youdontsay.jpg",
+    "punchline_role": "투자 정체 보도에 대한 당사자의 받아치기(과장된 표정 반응)"
+   },
+   "id": "s113"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    282
+   ],
+   "narration": "투자는 한 걸음씩 하겠다는 말도 덧붙였죠.",
+   "est_sec": 2.5,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "젠슨 황(기본체)이 돈 가방을 들고 징검다리를 하나씩 건넌다.",
+   "on_screen_text": "투자는 한 걸음씩",
+   "minimax": true,
+   "fact_refs": [
+    "A20"
+   ],
+   "id": "s114"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    283,
+    284,
+    285
+   ],
+   "narration": "그달 27일, 오픈AI는 1,100억 달러를 모은 투자 라운드를 발표합니다. 아마존이 500억 달러, 소프트뱅크가 300억 달러를 넣었고, 엔비디아가 실제로 넣은 돈도 300억 달러였습니다.",
+   "est_sec": 11.6,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "1,100억 달러 막대가 투자자별 색으로 쌓인다: 아마존 500억 · 소프트뱅크 300억 · 엔비디아 300억.",
+   "on_screen_text": "2026년 2월 27일 · 오픈AI 1,100억 달러 투자 라운드 / 아마존 500억 · 소프트뱅크 300억 · 엔비디아 300억",
+   "minimax": false,
+   "fact_refs": [
+    "#54"
+   ],
+   "note": "각 회사 공식 로고 첨부",
+   "id": "s115"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    287,
+    288
+   ],
+   "narration": "고객들은 다른 칩도 찾고 있었습니다. 오픈AI는 엔비디아 의향서 보름 뒤 AMD와도 계약을 맺었고,",
+   "est_sec": 5.9,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "칩 가게 고객이 다른 진열대를 들여다보는 짧은 일러스트에서 AMD–오픈AI 공동 발표 보도자료 캡처로 넘어간다.",
+   "on_screen_text": "고객들은 다른 칩도 · 오픈AI × AMD 계약(엔비디아 의향서 보름 뒤)",
+   "minimax": false,
+   "fact_refs": [
+    "#42"
+   ],
+   "real_asset": {
+    "what": "AMD and OpenAI Announce Strategic Partnership to Deploy 6 Gigawatts of AMD GPUs(보도자료)",
+    "where": "AMD 투자자 관계 보도자료",
+    "url": "https://ir.amd.com/news-events/press-releases/detail/1260/amd-and-openai-announce-strategic-partnership-to-deploy-6-gigawatts-of-amd-gpus",
+    "status": "found",
+    "relevance": "나레이션의 그 계약 원문",
+    "credit": "출처 : AMD"
+   },
+   "id": "s116"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    289,
+    290
+   ],
+   "narration": "2025년 11월에는 메타가 구글이 직접 만든 AI 칩 TPU를 들일 수 있다고 디인포메이션이 보도했죠. 그날 엔비디아 주가는 2.6% 내린 채 마감했습니다.",
+   "est_sec": 9.3,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "구글 클라우드 TPU 공식 이미지 + 메타 로고 「검토」 배지, 아래 그날 엔비디아 주가 −2.6% 마감 띠.",
+   "on_screen_text": "2025년 11월 · 메타, 구글 TPU 도입 검토(디인포메이션 보도) · 그날 엔비디아 −2.6%",
+   "minimax": false,
+   "fact_refs": [
+    "#48"
+   ],
+   "real_asset": {
+    "what": "구글 클라우드 TPU 공식 페이지 이미지",
+    "where": "구글 클라우드",
+    "url": "https://cloud.google.com/tpu",
+    "status": "found",
+    "relevance": "나레이션이 말하는 「구글이 직접 만든 AI 칩 TPU」 실물",
+    "credit": "출처 : Google Cloud"
+   },
+   "id": "s117"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    291,
+    292
+   ],
+   "narration": "갈아타기는 쉽지 않습니다. 조사기관 세미애널리시스는 AMD 칩과 AMD의 소프트웨어 ROCm으로 AI 학습을 시켜 본 뒤,",
+   "est_sec": 7.4,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "세미애널리시스 보고서 제목 화면 캡처(「CUDA Moat Still Alive」).",
+   "on_screen_text": "갈아타기는 쉽지 않다 · 세미애널리시스: AMD 칩 + ROCm 학습 시험",
+   "minimax": false,
+   "fact_refs": [],
+   "real_asset": {
+    "what": "SemiAnalysis 「MI300X vs H100 vs H200 Benchmark Part 1: Training – CUDA Moat Still Alive」",
+    "where": "세미애널리시스",
+    "url": "https://semianalysis.com/2024/12/22/mi300x-vs-h100-vs-h200-benchmark-part-1-training/",
+    "status": "found",
+    "relevance": "나레이션이 인용하는 그 시험 보고서",
+    "credit": "출처 : SemiAnalysis"
+   },
+   "id": "s118"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    293,
+    294
+   ],
+   "narration": "AMD 엔지니어들이 직접 버그를 고쳐 줘야 엔비디아와의 격차가 좁혀졌다며 \"쿠다 해자는 여전히 살아 있다\"고 결론 냈습니다.",
+   "est_sec": 7.4,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "엔비디아 성을 두른 깊은 해자에 「쿠다」 팻말. AMD 작업복 엔지니어들이 다리를 고치며 건너려 한다.",
+   "on_screen_text": "\"쿠다 해자는 여전히 살아 있다\"",
+   "minimax": true,
+   "fact_refs": [
+    "A36"
+   ],
+   "note": "AMD 로고는 작업복 가슴에만, 공식 로고 첨부",
+   "id": "s119"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    295,
+    296
+   ],
+   "narration": "그래도 시도는 이어집니다. 칩값을 치르는 쪽에서 보면, 그 값에서 엔비디아에 남는 몫이 큽니다.",
+   "est_sec": 5.6,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "고객이 긴 청구서를 내밀고, 그 돈 대부분이 엔비디아 돼지저금통으로 들어간다.",
+   "on_screen_text": "그래도 시도는 이어진다",
+   "minimax": true,
+   "fact_refs": [],
+   "id": "s120"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    297,
+    298
+   ],
+   "narration": "엔비디아의 매출총이익률은 75%, 칩을 팔아 받은 100달러 가운데 75달러가 원가를 빼고 남는 회사입니다.",
+   "est_sec": 6.5,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "100달러 = 같은 1달러 묶음 100개 중 25개는 「원가」로 빠지고 75개가 남는다(같은 것 여럿).",
+   "on_screen_text": "매출총이익률 75% · 100달러 중 75달러가 남는다",
+   "minimax": false,
+   "fact_refs": [
+    "A37"
+   ],
+   "id": "s121"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    300,
+    301
+   ],
+   "narration": "2026년 여름, 엔비디아 주가는 5월의 사상 최고치에서 두 달 동안 크게 미끄러졌습니다. 실적은 늘고 있었는데 왜 그랬을까요.",
+   "est_sec": 7.5,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "주가 그래프가 5월 꼭대기에서 두 달 미끄러지는 화면 앞에, 젠슨 황(기본체)이 위로 가는 실적 화살표와 아래로 가는 주가 화살표 사이에서 고개를 갸웃한다.",
+   "on_screen_text": "2026년 여름 · 5월 최고치에서 두 달 하락 / 실적↑ 주가↓ 왜?",
+   "minimax": true,
+   "fact_refs": [
+    "#59"
+   ],
+   "id": "s122"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    302,
+    303
+   ],
+   "narration": "블룸버그는 AI 투자금이 메모리 반도체로 옮겨 간 영향으로 보면서, 7월 초 엔비디아의 PER, 그러니까 주가를 앞으로 벌 이익으로 나눈 배수가 약 18배라고 전했습니다.",
+   "est_sec": 10.0,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "돈 화살표가 엔비디아 칩에서 메모리 반도체로 옮겨 가고(블룸버그 배지), 이어 나눗셈 도해 「주가 ÷ 앞으로 벌 이익 = 약 18배」.",
+   "on_screen_text": "블룸버그: AI 투자금 → 메모리 반도체 / PER(주가 ÷ 앞으로 벌 이익) · 7월 초 약 18배",
+   "minimax": false,
+   "fact_refs": [
+    "#59",
+    "A39"
+   ],
+   "id": "s123"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    304
+   ],
+   "narration": "이익 전망은 오르는데 주가가 따라가지 않으면, 이 배수는 낮아집니다.",
+   "est_sec": 4.1,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "같은 나눗셈에서 분모(이익 전망)가 커지고 분자(주가)가 그대로면 결과 숫자가 작아지는 애니메이션.",
+   "on_screen_text": "이익 전망 ↑ + 주가 그대로 → 배수 ↓",
+   "minimax": false,
+   "fact_refs": [],
+   "id": "s124"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    305,
+    306
+   ],
+   "narration": "8월 26일에 나온 분기 매출은 962억 달러, 3년 전 같은 분기의 7배쯤이었습니다.",
+   "est_sec": 5.0,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "3년 전 같은 분기 막대 하나와 같은 막대 7개를 이어 붙인 962억 달러 막대(같은 것 여럿).",
+   "on_screen_text": "2026년 8월 26일 · 분기 매출 962억 달러 ≈ 3년 전 같은 분기의 7배",
+   "minimax": false,
+   "fact_refs": [
+    "#4",
+    "#60",
+    "2절 메모"
+   ],
+   "real_asset": {
+    "what": "2027 회계연도 2분기 실적 보도자료",
+    "where": "엔비디아 뉴스룸",
+    "url": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-second-quarter-fiscal-2027",
+    "status": "found",
+    "relevance": "962억 달러 수치의 원문",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s125"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    308
+   ],
+   "narration": "주가는 가을 들어 다시 사상 최고치를 넘봤습니다.",
+   "est_sec": 2.9,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "가을 주가 그래프가 다시 사상 최고치 선을 향해 오른다.",
+   "on_screen_text": "가을 · 다시 사상 최고치 근처",
+   "minimax": false,
+   "fact_refs": [
+    "#64"
+   ],
+   "id": "s126"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    309
+   ],
+   "narration": "그런데,",
+   "est_sec": 1.2,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "반전 카드(1.2초).",
+   "on_screen_text": "그런데",
+   "minimax": false,
+   "fact_refs": [],
+   "card": "turn",
+   "id": "s127"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    310,
+    311
+   ],
+   "narration": "10월 30일 종가에서 세계에서 가장 비싼 회사 자리는 애플에게 넘어갔습니다.",
+   "est_sec": 4.6,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "1장 시상대 장면과 같은 구도. 이번엔 애플 로고 판이 1위에 오르고 엔비디아가 내려선다.",
+   "on_screen_text": "2026년 10월 30일 종가 · 세계에서 가장 비싼 회사 = 애플",
+   "minimax": true,
+   "fact_refs": [
+    "#66"
+   ],
+   "note": "애플·엔비디아 공식 로고 첨부. 1장 시상대 씬과 짝",
+   "id": "s128"
+  },
+  {
+   "chapter": "5장",
+   "lines": [
+    312,
+    313
+   ],
+   "narration": "2024년 6월, 엔비디아가 처음 올랐던 그 자리였습니다. 엔비디아 주가는 10월 한 달 동안 약 10% 내렸습니다.",
+   "est_sec": 6.8,
+   "kind": "reuse",
+   "kind_label": "⑥장면 재사용",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "이 편 1장 시상대 장면(엔비디아 1위)을 회상 테두리로 잠깐 띄우고, 아래 10월 주가 막대 −약 10%.",
+   "on_screen_text": "2024년 6월 · 엔비디아가 처음 오른 그 자리 / 10월 한 달 주가 약 −10%",
+   "minimax": false,
+   "fact_refs": [
+    "#19",
+    "#66"
+   ],
+   "reuse": {
+    "from": "4편(같은 편) 1장",
+    "frame": "1장 「2024년 6월 18일」 씬 그림",
+    "note": "회상 효과(세피아 테두리)만 추가"
+   },
+   "id": "s129"
+  },
+  {
+   "chapter": "엔딩",
+   "lines": [
+    319,
+    320
+   ],
+   "narration": "새 폰으로 바꿨는데, 쓰던 앱이 하나도 안 돌아간다면. 앞에서 던진 그 질문을 두고, 오픈AI는 AMD와 계약을 맺었고, 메타가 구글 TPU를 검토한다는 보도도 나왔습니다.",
+   "est_sec": 10.1,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "1장 「새 폰, 회색 앱」 그림이 왼쪽으로 밀리고, 오른쪽에 두 사례 카드(오픈AI × AMD 계약 / 메타 × 구글 TPU 검토 보도)가 차례로 붙는다.",
+   "on_screen_text": "새 폰, 쓰던 앱이 안 돌아간다면 / 오픈AI → AMD 계약 · 메타 → 구글 TPU 검토(보도)",
+   "minimax": false,
+   "fact_refs": [
+    "#42",
+    "#48"
+   ],
+   "reuse": {
+    "from": "4편(같은 편) 1장",
+    "frame": "1장 「새 폰 회색 앱」 씬 그림",
+    "note": "그대로"
+   },
+   "id": "s130"
+  },
+  {
+   "chapter": "엔딩",
+   "lines": [
+    322
+   ],
+   "narration": "다음 성적표는 2026년 11월 17일에 나옵니다.",
+   "est_sec": 3.1,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "엔비디아 실적 발표 일정 공지 캡처, 날짜에 동그라미.",
+   "on_screen_text": "다음 성적표 · 2026년 11월 17일",
+   "minimax": false,
+   "fact_refs": [
+    "#69",
+    "A22"
+   ],
+   "real_asset": {
+    "what": "NVIDIA Sets Conference Call for Third-Quarter Financial Results",
+    "where": "엔비디아 뉴스룸",
+    "url": "https://nvidianews.nvidia.com/news/nvidia-sets-conference-call-for-third-quarter-financial-results-6928873",
+    "status": "found",
+    "relevance": "11월 17일(화) 실적 발표 일정 원문(본문 「Tuesday, November 17」 확인함)",
+    "credit": "출처 : Nvidia"
+   },
+   "id": "s131"
+  },
+  {
+   "chapter": "엔딩",
+   "lines": [
+    324,
+    325
+   ],
+   "narration": "1993년 4월 5일, 세 사람이 모은 자본금은 4만 달러였습니다. 2026년 5~7월, 그 회사가 석 달 동안 남긴 순이익은, 보유 주식 평가이익까지 더해 596억 달러였습니다.",
+   "est_sec": 10.5,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "1편 창업자 세 사람 장면(작은 창) 옆 동전 몇 개 「4만 달러」에서, 화면을 꽉 채운 돈 산 「596억 달러」로 크기 대비.",
+   "on_screen_text": "1993년 4월 5일 자본금 4만 달러 ↔ 2026년 5~7월 순이익 596억 달러(보유 주식 평가이익 포함)",
+   "minimax": false,
+   "fact_refs": [
+    "#60",
+    "1편",
+    "A21"
+   ],
+   "reuse": {
+    "from": "1편",
+    "frame": "auto_agent/data/artstyle/templates/semoji_brand/refs/nv1_three_founders.jpg (1편 396초)",
+    "note": "배지만 추가"
+   },
+   "id": "s132"
+  },
+  {
+   "chapter": "엔딩",
+   "lines": [
+    327
+   ],
+   "narration": "이상 엔비디아에 대해 알아봤습니다.",
+   "est_sec": 2.2,
+   "kind": "reuse",
+   "kind_label": "⑥장면 재사용",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "1~3편과 같은 세상의 모든 지식 엔딩 크레딧 화면.",
+   "on_screen_text": "",
+   "minimax": false,
+   "fact_refs": [],
+   "reuse": {
+    "from": "3편",
+    "frame": "/private/tmp/claude-501/-Users-jleavens-macmini/7cf44c15-9613-44eb-8454-4637dec8240a/scratchpad/nv/frames/e3_069.png",
+    "note": "후원자 명단만 최신으로"
+   },
+   "id": "s133"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    340
+   ],
+   "narration": "",
+   "est_sec": 2.0,
+   "kind": "card",
+   "kind_label": "⑤카드",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "장 카드.",
+   "on_screen_text": "3. 英伟达与中国市场 (엔비디아와 중국 시장)",
+   "minimax": false,
+   "fact_refs": [],
+   "card": "chapter",
+   "note": "원고의 장 제목 줄(비발화)",
+   "edition": "C-only",
+   "id": "c001"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    342,
+    343,
+    344
+   ],
+   "narration": "엔비디아는 미국의 수출 관리 정책이 바뀔 때마다 중국 시장용 제품을 여러 번 고쳐 내놓았습니다. 데이터센터용 A800과 H800,",
+   "est_sec": 7.6,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "제품 타임라인 띠가 깔리고 「정책 변경」 눈금마다 카드 자리가 생긴 뒤, 첫 카드 두 장(A800 · H800)이 붙는다.",
+   "on_screen_text": "수출 관리 정책이 바뀔 때마다 → 중국 시장용 제품 / 데이터센터용 A800 · H800",
+   "minimax": false,
+   "fact_refs": [
+    "#5",
+    "5절"
+   ],
+   "edition": "C-only",
+   "id": "c002"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    345,
+    346
+   ],
+   "narration": "2024년 1월에 나온 게이머용 RTX 4090 D. 가격은 12,999위안이었는데요.",
+   "est_sec": 5.5,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "RTX 4090 D 공식 제품 이미지 + 가격표.",
+   "on_screen_text": "2024년 1월 · RTX 4090 D · 12,999위안",
+   "minimax": false,
+   "fact_refs": [
+    "#7"
+   ],
+   "real_asset": {
+    "what": "엔비디아 중국 공식 RTX 4090 D 제품 페이지 이미지",
+    "where": "엔비디아 중국 공식 페이지",
+    "url": "https://www.nvidia.cn/geforce/graphics-cards/40-series/rtx-4090-d/",
+    "status": "found",
+    "relevance": "나레이션의 바로 그 제품",
+    "credit": "출처 : Nvidia"
+   },
+   "edition": "C-only",
+   "id": "c003"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    347
+   ],
+   "narration": "이름의 'D'가 용의 해를 뜻한다는 말도 돌았습니다.",
+   "est_sec": 3.1,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "4090 D 상자 위로 귀여운 용이 휘감고, 「D」 글자가 반짝인다.",
+   "on_screen_text": "「D」 = 용의 해? (据说)",
+   "minimax": true,
+   "fact_refs": [
+    "#7"
+   ],
+   "edition": "C-only",
+   "id": "c004"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    348,
+    349,
+    350
+   ],
+   "narration": "그리고 데이터센터용 H20과 H200. 2026년 1월에는 바이트댄스, 알리바바, 텐센트 같은 중국 기업들이 H200 구매 승인을 받았다고 보도됐습니다.",
+   "est_sec": 9.4,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "타임라인 끝에 데이터센터 카드 두 장(H20 · H200)이 붙고, 이어 세 회사 로고 카드(바이트댄스 · 알리바바 · 텐센트) 위에 「H200 구매 승인」 도장이 찍힌다.",
+   "on_screen_text": "데이터센터용 H20 · H200 / 2026년 1월 H200 구매 승인(据报道)",
+   "minimax": false,
+   "fact_refs": [
+    "#53",
+    "#8"
+   ],
+   "edition": "C-only",
+   "note": "각 회사 공식 로고 첨부",
+   "id": "c005"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    352,
+    353,
+    354,
+    355
+   ],
+   "narration": "엔비디아 매출에서 중국이 차지하는 몫은 2024년 1월에 끝난 회계연도 약 17%, 2026년 1월에 끝난 회계연도 약 9%였습니다. 그사이 집계 기준이 청구지에서 고객 본사 소재지로 바뀌었습니다.",
+   "est_sec": 11.7,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "두 막대(약 17% → 약 9%) 아래 각주 카드가 펼쳐진다: 청구지 → 고객 본사 소재지.",
+   "on_screen_text": "매출 중 중국 비중 약 17% → 약 9% · 집계 기준 변경(청구지 → 고객 본사 소재지)",
+   "minimax": false,
+   "fact_refs": [
+    "#70"
+   ],
+   "edition": "C-only",
+   "id": "c006"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    356,
+    357
+   ],
+   "narration": "2025년 10월, 젠슨 황은 고급 AI 칩 시장에서 엔비디아의 중국 점유율이 95%에서 0%가 됐다고 말했는데요.",
+   "est_sec": 6.8,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "대담 자리의 젠슨 황(기본체), 옆 숫자판 「95% → 0%」.",
+   "on_screen_text": "2025년 10월 · 고급 AI 칩 중국 점유율 95% → 0%(젠슨 황)",
+   "minimax": true,
+   "fact_refs": [
+    "#43"
+   ],
+   "edition": "C-only",
+   "id": "c007"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    359,
+    360
+   ],
+   "narration": "2025년 7월 16일, 베이징. 제3회 중국국제공급망촉진박람회 개막식 무대에 젠슨 황이 섰습니다.",
+   "est_sec": 6.1,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "중국국제공급망촉진박람회 개막식 무대의 젠슨 황 보도사진.",
+   "on_screen_text": "2025년 7월 16일 · 베이징 · 제3회 链博会",
+   "minimax": false,
+   "fact_refs": [
+    "#33"
+   ],
+   "real_asset": {
+    "what": "신화통신·글로벌타임스 박람회 보도사진",
+    "where": "글로벌타임스(신화 https://english.news.cn/20250718/973d3cd8e00a4747beaefb1daf409721/c.html 도 열림 확인)",
+    "url": "https://www.globaltimes.cn/page/202507/1338497.shtml",
+    "status": "found",
+    "relevance": "그 개막식 무대에 선 장면 보도(중국어 연설 기사)",
+    "credit": "출처 : Global Times"
+   },
+   "edition": "C-only",
+   "id": "c008"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    361,
+    362
+   ],
+   "narration": "이날 그는 연설의 일부를 중국어로 했는데요. \"중국의 공급망은 기적입니다.\"",
+   "est_sec": 4.6,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "연단의 젠슨 황(기본체)이 중국어로 말하는 말풍선.",
+   "on_screen_text": "\"中国的供应链是奇迹\" (중국의 공급망은 기적입니다)",
+   "minimax": true,
+   "fact_refs": [
+    "#33"
+   ],
+   "edition": "C-only",
+   "id": "c009"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    363,
+    364,
+    365
+   ],
+   "narration": "딥시크, 알리바바, 텐센트, 미니맥스, 바이두 어니 같은 중국 모델은 \"세계적 수준\"이라고 평가했고, 중국 개발자 150만 명 이상이 엔비디아 위에서 개발하고 있다는 숫자도 꺼냈습니다.",
+   "est_sec": 11.0,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "모델 이름 카드 다섯 장(딥시크 · 알리바바 · 텐센트 · 미니맥스 · 바이두 어니)이 「세계적 수준」 띠로 묶이고, 아래 개발자 아이콘 카운터 150만+.",
+   "on_screen_text": "중국 모델 「세계적 수준」 / 중국 개발자 150만 명 이상",
+   "minimax": false,
+   "fact_refs": [
+    "#33",
+    "#71"
+   ],
+   "edition": "C-only",
+   "id": "c010"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    366,
+    367
+   ],
+   "narration": "나흘 뒤에는 CCTV의 대담 프로그램에도 나왔죠. 젠슨 황은 중국을 세계 2위 컴퓨터 시장이라고 평가합니다.",
+   "est_sec": 6.4,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "CCTV 「面对面」 대담 화면(작은 창, 찾을 것) 옆 세계 지도 위 컴퓨터 시장 순위, 중국에 「2위」 배지.",
+   "on_screen_text": "나흘 뒤 CCTV 面对面 / 중국 = 세계 2위 컴퓨터 시장(젠슨 황)",
+   "minimax": false,
+   "fact_refs": [
+    "#33 비고",
+    "#43",
+    "5절 소재 7"
+   ],
+   "real_asset": {
+    "what": "CCTV 「面对面」 젠슨 황 대담 화면",
+    "where": "정리 기사 https://www.geopolitechs.org/p/jensen-huangs-interview-on-cctvs (열림 확인) — 방송 원본 화면은 찾을 것",
+    "url": null,
+    "status": "to_source",
+    "relevance": "나레이션의 그 프로그램 출연 장면",
+    "credit": "출처 : CCTV"
+   },
+   "edition": "C-only",
+   "id": "c011"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    369,
+    370
+   ],
+   "narration": "2026년 1월 하순, 젠슨 황은 그해 첫 중국 방문길에 오릅니다. 첫 행선지는 상하이 장장의 새 사무소,",
+   "est_sec": 6.0,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "상하이 장장 새 사무소 방문 보도사진.",
+   "on_screen_text": "2026년 1월 하순 · 그해 첫 중국 방문 · 상하이 장장",
+   "minimax": false,
+   "fact_refs": [
+    "#52"
+   ],
+   "real_asset": {
+    "what": "디지타임스·글로벌타임스 방문 보도사진",
+    "where": "디지타임스(글로벌타임스 https://www.globaltimes.cn/page/202601/1354183.shtml 도 열림 확인)",
+    "url": "https://www.digitimes.com/news/a20260126PD231/nvidia-shanghai-ceo-jensen-huang-sales.html",
+    "status": "found",
+    "relevance": "그 방문 일정 보도(사진 사용 가능 여부 확인)",
+    "credit": "출처 : DIGITIMES"
+   },
+   "edition": "C-only",
+   "id": "c012"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    371,
+    372
+   ],
+   "narration": "그리고 루자쭈이의 한 시장이었는데요. 과일을 사고, 상인에게 600위안짜리 홍바오를 건넸습니다.",
+   "est_sec": 6.0,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "루자쭈이 시장 과일 가게 앞 젠슨 황(기본체)이 과일 봉지를 들고 상인(이름 없는 중년 상인, 앞치마)에게 빨간 홍바오를 건넨다.",
+   "on_screen_text": "600위안 红包",
+   "minimax": true,
+   "fact_refs": [
+    "#52"
+   ],
+   "edition": "C-only",
+   "id": "c013"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    373,
+    374
+   ],
+   "narration": "베이징과 선전으로 이어진 일정에는 춘절을 앞둔 직원 행사도 있었죠.",
+   "est_sec": 4.0,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "춘절 장식(붉은 등) 아래 직원 행사, 젠슨 황(기본체)이 무대에서 손을 흔든다. 지도 위 베이징·선전 핀.",
+   "on_screen_text": "베이징 · 선전 · 춘절 직원 행사",
+   "minimax": true,
+   "fact_refs": [
+    "#52"
+   ],
+   "edition": "C-only",
+   "id": "c014"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    375,
+    376
+   ],
+   "narration": "엔비디아의 중국 직원은 약 4,000명, 그중 2,000명 넘게 상하이 연구개발센터에서 일한다고 보도됐습니다.",
+   "est_sec": 6.8,
+   "kind": "info",
+   "kind_label": "③도해/인포그래픽",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "사람 아이콘 4,000개 덩어리 중 절반 넘게가 상하이 연구개발센터 건물로 모인다.",
+   "on_screen_text": "중국 직원 약 4,000명 · 2,000명+ 상하이 R&D(据报道)",
+   "minimax": false,
+   "fact_refs": [
+    "#52"
+   ],
+   "edition": "C-only",
+   "id": "c015"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    377
+   ],
+   "narration": "5월에는 미국 기업인 대표단과 함께 다시 중국을 찾았습니다.",
+   "est_sec": 3.5,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "비행기가 중국 공항에 내린다(인물 얼굴 없이 기체만).",
+   "on_screen_text": "2026년 5월 · 미국 기업인 대표단과 재방문",
+   "minimax": true,
+   "fact_refs": [
+    "#57",
+    "5절"
+   ],
+   "edition": "C-only",
+   "id": "c016"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    379,
+    380,
+    381
+   ],
+   "narration": "자동차 회사들과의 협력도 이어졌습니다. 2026년 3월 GTC에서 엔비디아는 BYD, 지리와의 자율주행 협력을 소개했는데요.",
+   "est_sec": 7.8,
+   "kind": "real",
+   "kind_label": "④실사 자료",
+   "cast": [],
+   "cast_sheets": [],
+   "screen": "GTC 2026 키노트의 자율주행 협력 파트너 대목 + BYD · 지리 로고.",
+   "on_screen_text": "2026년 3월 GTC · BYD · 지리 자율주행 협력",
+   "minimax": false,
+   "fact_refs": [
+    "#55"
+   ],
+   "real_asset": {
+    "what": "GTC 2026 키노트 공식 다시보기",
+    "where": "NVIDIA GTC 공식 페이지",
+    "url": "https://www.nvidia.com/gtc/keynote/",
+    "status": "found",
+    "relevance": "협력을 소개한 그 GTC 무대(정확한 시점은 영상에서 찾을 것)",
+    "credit": "출처 : Nvidia"
+   },
+   "edition": "C-only",
+   "id": "c017"
+  },
+  {
+   "chapter": "3장(중국판)",
+   "lines": [
+    382,
+    383
+   ],
+   "narration": "같은 행사 무렵 젠슨 황은 중국의 많은 고객에게서 H200 주문을 받았다고 말한 것으로 전해졌습니다.",
+   "est_sec": 5.9,
+   "kind": "illust",
+   "kind_label": "①기본체 일러스트",
+   "cast": [
+    "젠슨 황(기본체)"
+   ],
+   "cast_sheets": [
+    "_imggen/nvidia4/characters/jensen_2026_brand_sheet.png"
+   ],
+   "screen": "젠슨 황(기본체) 책상 위로 주문서가 수북이 쌓인다.",
+   "on_screen_text": "중국 고객들의 H200 주문(전해짐)",
+   "minimax": true,
+   "fact_refs": [
+    "#55 비고"
+   ],
+   "edition": "C-only",
+   "id": "c018"
+  }
+ ]
+}
