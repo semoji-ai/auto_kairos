@@ -98,6 +98,7 @@ Thumbs.db
 !/scripts/promote_cuts_to_scenes.py
 !/scripts/make_source_captions.py
 !/scripts/check_manuscript_sources.py
+!/scripts/sub_timing_check.py
 !/scripts/make_thumbnail.py
 !/scripts/enforce_real_first.py
 !/scripts/apply_direction_fixes.py

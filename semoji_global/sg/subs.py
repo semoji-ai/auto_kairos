@@ -210,9 +210,10 @@ def close_gaps(cues, max_gap=0.6):
     return out
 
 
-def snap_to_onsets(cues, onsets, max_shift=1.2):
+def snap_to_onsets(cues, onsets, max_shift=0.25):
     """구간 안 큐 시작(첫 큐 제외)을 가장 가까운 '쉼 뒤 소리 시작'으로 옮김(max_shift 안). 앞 큐 끝은 새 시작까지.
-    중국어처럼 TTS 글자 시각이 균등 분배로만 오는 언어에서 자막이 말보다 앞서거나 늦는 것을 줄임."""
+    중국어처럼 TTS 글자 시각이 균등 분배로만 오는 언어에서 자막이 말보다 앞서거나 늦는 것을 줄임.
+    max_shift 는 작게 둔다 — 1.2초였을 때 말 중간에서 바뀌는 큐가 다음 쉼으로 끌려가 0.3~1.9초 늦었다(B148 zh 38줄)."""
     out = [dict(c) for c in cues]
     for i in range(1, len(out)):
         t = out[i]["t0"]
